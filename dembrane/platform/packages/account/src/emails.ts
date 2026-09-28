@@ -1,8 +1,11 @@
 /**
- * Transactional emails of the account area, ported from the Jinja templates in
- * the Python API's email_templates with the same copy and layout. HTML values are escaped the
- * way Jinja's autoescape did; the text part is sent alongside every HTML part.
+ * Transactional emails of the account area, ported from the Jinja templates in the Python
+ * API's email_templates with the same layout. Every sentence comes from the server catalog
+ * (@dembrane/i18n, packages/i18n/locales) in the recipient's language; English renders
+ * byte for byte as the old templates did. HTML values are escaped the way Jinja's
+ * autoescape did; the text part is sent alongside every HTML part.
  */
+import { type Translate, translator } from "@dembrane/i18n";
 
 export interface RenderedEmail {
   readonly subject: string;
@@ -36,23 +39,26 @@ function cta(label: string, url: string): string {
 </table>`;
 }
 
-function fallback(url: string): string {
+function fallback(tr: Translate, url: string): string {
   return `<p style="font-size:13px; line-height:1.65; margin:0 0 28px; color:#2D2D2C; font-weight: 400;">
-  Or paste this into your browser:<br>
+  ${tr("email.common.fallback")}<br>
   <span style="color:#4169E1; word-break:break-all;">${esc(url)}</span>
 </p>`;
 }
 
 /** The shared frame: letter-style card, logo, heading, body, sign-off and banner. */
-function layout(b: {
-  title: string;
-  preview: string;
-  heading: string;
-  body: string;
-  cta?: string;
-  fallback?: string;
-  disclaim?: string;
-}): string {
+function layout(
+  tr: Translate,
+  b: {
+    title: string;
+    preview: string;
+    heading: string;
+    body: string;
+    cta?: string;
+    fallback?: string;
+    disclaim?: string;
+  },
+): string {
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -89,7 +95,7 @@ function layout(b: {
               ${b.fallback ?? ""}
               ${b.disclaim ?? ""}
               <p style="font-size:17px; line-height:1.65; margin:0 0 32px; color:#2D2D2C; font-weight: 400;">
-                The dembrane team
+                ${tr("email.common.signoff")}
               </p>
             </td>
           </tr>
@@ -105,8 +111,6 @@ function layout(b: {
 </body>
 </html>`;
 }
-
-const IGNORE = "Didn't expect this? You can ignore this email. Nothing will happen.";
 
 export type EmailTemplate =
   | {
@@ -138,7 +142,7 @@ export type EmailTemplate =
     }
   | {
       readonly template: "account_task_reminder";
-      readonly data: { org_name: string; task_title: string; task_url: string; language?: string };
+      readonly data: { org_name: string; task_title: string; task_url: string };
     }
   | {
       readonly template: "account_invite";
@@ -146,186 +150,207 @@ export type EmailTemplate =
     }
   | { readonly template: "plain"; readonly data: { text: string } };
 
-/** Renders the body of an email; the subject is chosen by the caller, as it was before. */
-export function render(t: EmailTemplate): { html: string; text: string } {
+/** The subject line of a catalog email in `locale`; null for "plain", whose caller writes it. */
+export function subjectOf(t: EmailTemplate, locale?: string | null): string | null {
+  const tr = translator(locale);
+  switch (t.template) {
+    case "workspace_invite":
+      return tr("email.workspace_invite.subject", t.data);
+    case "workspace_added":
+      return tr("email.workspace_added.subject", t.data);
+    case "org_invite":
+      return tr("email.org_invite.subject", t.data);
+    case "registration_existing_account":
+      return tr("email.registration_existing_account.subject");
+    case "verify_email":
+      return tr("email.verify_email.subject");
+    case "sign_in_code":
+      return tr("email.sign_in_code.subject");
+    case "account_signer_invite":
+      return tr("email.account_signer_invite.subject", t.data);
+    case "account_task_reminder":
+      return tr("email.account_task_reminder.subject", t.data);
+    case "account_invite":
+      return tr("email.account_invite.subject", t.data);
+    case "plain":
+      return null;
+  }
+}
+
+/** Escapes every value, for the parts of the HTML that show values as plain text. */
+const escAll = (d: Readonly<Record<string, string>>) =>
+  Object.fromEntries(Object.entries(d).map(([k, v]) => [k, esc(v)]));
+
+/**
+ * Renders the body of an email in `locale` (any stored language value; English when
+ * absent). The subject comes from subjectOf.
+ */
+export function render(t: EmailTemplate, locale?: string | null): { html: string; text: string } {
+  const tr = translator(locale);
+  const signoff = tr("email.common.signoff");
+  const ignore = P(15, "0 0 28px", tr("email.common.ignore"));
+  const ignoreText = tr("email.common.ignore_text");
   switch (t.template) {
     case "workspace_invite": {
       const d = t.data;
+      const k = "email.workspace_invite";
       return {
-        html: layout({
-          title: "You're invited to collaborate on dembrane",
-          preview: `${esc(d.inviter_name)} invited you to join ${esc(d.workspace_name)} on dembrane.`,
-          heading: "You've been invited to collaborate.",
+        html: layout(tr, {
+          title: tr(`${k}.title`),
+          preview: tr(`${k}.preview`, escAll(d)),
+          heading: tr(`${k}.heading`),
           body: P(
             17,
             "0 0 28px",
-            `${esc(d.inviter_name)} invited you to join ${em(d.workspace_name)} on dembrane. The invite expires in 7 days.`,
+            tr(`${k}.body`, { ...escAll(d), workspace_name: em(d.workspace_name) }),
           ),
-          cta: cta("Accept invitation", d.invite_url),
-          fallback: fallback(d.invite_url),
-          disclaim: P(15, "0 0 28px", IGNORE),
+          cta: cta(tr(`${k}.cta`), d.invite_url),
+          fallback: fallback(tr, d.invite_url),
+          disclaim: ignore,
         }),
-        text: `${d.inviter_name} invited you to join ${d.workspace_name} on dembrane. The invite expires in 7 days.\n\nAccept the invitation:\n${d.invite_url}\n\nDidn't expect this? Ignore this email. Nothing will happen.\n\nThe dembrane team`,
+        text: `${tr(`${k}.body`, d)}\n\n${tr(`${k}.text_cta`)}\n${d.invite_url}\n\n${ignoreText}\n\n${signoff}`,
       };
     }
     case "workspace_added": {
       const d = t.data;
+      const k = "email.workspace_added";
       return {
-        html: layout({
-          title: `You've been added to ${esc(d.workspace_name)}`,
-          preview: `${esc(d.inviter_name)} added you to ${esc(d.workspace_name)} on dembrane.`,
-          heading: "You're in.",
+        html: layout(tr, {
+          title: tr(`${k}.subject`, escAll(d)),
+          preview: tr(`${k}.preview`, escAll(d)),
+          heading: tr(`${k}.heading`),
           body: P(
             17,
             "0 0 28px",
-            `${esc(d.inviter_name)} added you to ${em(d.workspace_name)} on dembrane. You can start collaborating right away.`,
+            tr(`${k}.body`, { ...escAll(d), workspace_name: em(d.workspace_name) }),
           ),
-          cta: cta("Open workspace", d.invite_url),
+          cta: cta(tr(`${k}.cta`), d.invite_url),
         }),
-        text: `${d.inviter_name} added you to ${d.workspace_name} on dembrane. You can start collaborating right away.\n\nOpen the workspace:\n${d.invite_url}\n\nThe dembrane team`,
+        text: `${tr(`${k}.body`, d)}\n\n${tr(`${k}.text_cta`)}\n${d.invite_url}\n\n${signoff}`,
       };
     }
     case "org_invite": {
       const d = t.data;
+      const k = "email.org_invite";
       const asRole = d.role && d.role !== "member";
+      const bodyKey = asRole ? `${k}.body_role` : `${k}.body`;
       return {
-        html: layout({
-          title: `${esc(d.inviter_name)} invited you to ${esc(d.org_name)} on dembrane`,
-          preview: `${esc(d.inviter_name)} invited you to join ${esc(d.org_name)} on dembrane.`,
-          heading: `You've been invited to ${esc(d.org_name)}.`,
-          body: `${P(17, "0 0 28px", `${esc(d.inviter_name)} invited you to join ${em(d.org_name)} on dembrane${asRole ? ` as ${em(d.role)}` : ""}. The invite expires in 7 days.`)}\n${P(15, "0 0 28px", "Once you accept, you can discover and request access to the workspaces your team is using.")}`,
-          cta: cta("Accept invitation", d.invite_url),
-          fallback: fallback(d.invite_url),
-          disclaim: P(15, "0 0 28px", IGNORE),
+        html: layout(tr, {
+          title: tr(`${k}.subject`, escAll(d)),
+          preview: tr(`${k}.preview`, escAll(d)),
+          heading: tr(`${k}.heading`, escAll(d)),
+          body: `${P(17, "0 0 28px", tr(bodyKey, { ...escAll(d), org_name: em(d.org_name), role: em(d.role) }))}\n${P(15, "0 0 28px", tr(`${k}.next`))}`,
+          cta: cta(tr(`${k}.cta`), d.invite_url),
+          fallback: fallback(tr, d.invite_url),
+          disclaim: ignore,
         }),
-        text: `${d.inviter_name} invited you to join ${d.org_name} on dembrane${asRole ? ` as ${d.role}` : ""}. The invite expires in 7 days.\n\nAccept the invitation:\n${d.invite_url}\n\nOnce you accept, you can discover and request access to the workspaces your team is using.\n\nDidn't expect this? Ignore this email. Nothing will happen.\n\nThe dembrane team`,
+        text: `${tr(bodyKey, d)}\n\n${tr(`${k}.text_cta`)}\n${d.invite_url}\n\n${tr(`${k}.next`)}\n\n${ignoreText}\n\n${signoff}`,
       };
     }
     case "registration_existing_account": {
       const d = t.data;
+      const k = "email.registration_existing_account";
+      const link = `<a href="${esc(d.reset_url)}" style="color:#4169E1;">${tr(`${k}.reset_link`)}</a>`;
       return {
-        html: layout({
-          title: "You already have a dembrane account",
-          preview: "You already have a dembrane account. Sign in to continue.",
-          heading: "You already have an account.",
-          body: P(
-            17,
-            "0 0 28px",
-            "It looks like an account with this email already exists. You can sign in using your existing credentials.",
-          ),
-          cta: cta("Sign in", d.login_url),
-          fallback: fallback(d.login_url),
-          disclaim: `${P(15, "0 0 8px", `If you forgot your password, you can <a href="${esc(d.reset_url)}" style="color:#4169E1;">reset it here</a>.`)}\n${P(15, "0 0 28px", "If you didn't try to sign up, you can safely ignore this email. No changes have been made to your account.")}`,
+        html: layout(tr, {
+          title: tr(`${k}.subject`),
+          preview: tr(`${k}.preview`),
+          heading: tr(`${k}.heading`),
+          body: P(17, "0 0 28px", tr(`${k}.body`)),
+          cta: cta(tr(`${k}.cta`), d.login_url),
+          fallback: fallback(tr, d.login_url),
+          disclaim: `${P(15, "0 0 8px", tr(`${k}.reset`, { reset_link: link }))}\n${P(15, "0 0 28px", tr(`${k}.ignore`))}`,
         }),
-        text: `You already have an account.\n\nIt looks like an account with this email already exists. You can sign in using your existing credentials.\n\nSign in:\n${d.login_url}\n\nIf you forgot your password, you can reset it here:\n${d.reset_url}\n\nIf you didn't try to sign up, you can safely ignore this email. No changes have been made to your account.\n\nThe dembrane team`,
+        text: `${tr(`${k}.heading`)}\n\n${tr(`${k}.body`)}\n\n${tr(`${k}.text_cta`)}\n${d.login_url}\n\n${tr(`${k}.reset_text`)}\n${d.reset_url}\n\n${tr(`${k}.ignore`)}\n\n${signoff}`,
       };
     }
     case "verify_email": {
       const d = t.data;
+      const k = "email.verify_email";
       return {
-        html: layout({
-          title: "Verify your email",
-          preview: "Confirm your email to finish setting up your dembrane account.",
-          heading: "Verify your email.",
-          body: P(
-            17,
-            "0 0 28px",
-            "Confirm this is your email address to finish setting up your dembrane account.",
-          ),
-          cta: cta("Verify email", d.verify_url),
-          fallback: fallback(d.verify_url),
-          disclaim: P(15, "0 0 28px", "If you didn't sign up, you can safely ignore this email."),
+        html: layout(tr, {
+          title: tr(`${k}.subject`),
+          preview: tr(`${k}.preview`),
+          heading: tr(`${k}.heading`),
+          body: P(17, "0 0 28px", tr(`${k}.body`)),
+          cta: cta(tr(`${k}.cta`), d.verify_url),
+          fallback: fallback(tr, d.verify_url),
+          disclaim: P(15, "0 0 28px", tr(`${k}.ignore`)),
         }),
-        text: `Verify your email.\n\nConfirm this is your email address to finish setting up your dembrane account:\n${d.verify_url}\n\nIf you didn't sign up, you can safely ignore this email.\n\nThe dembrane team`,
+        text: `${tr(`${k}.heading`)}\n\n${tr(`${k}.text_cta`)}\n${d.verify_url}\n\n${tr(`${k}.ignore`)}\n\n${signoff}`,
       };
     }
     case "sign_in_code": {
       const d = t.data;
+      const k = "email.sign_in_code";
       return {
-        html: layout({
-          title: "Your dembrane sign-in code",
-          preview: `Your sign-in code is ${esc(d.code)}.`,
-          heading: "Your sign-in code.",
-          body: P(
-            17,
-            "0 0 28px",
-            `Enter this code to continue: ${em(d.code)}. It expires in 10 minutes.`,
-          ),
-          disclaim: P(
-            15,
-            "0 0 28px",
-            "If you didn't try to sign in, you can safely ignore this email.",
-          ),
+        html: layout(tr, {
+          title: tr(`${k}.subject`),
+          preview: tr(`${k}.preview`, escAll(d)),
+          heading: tr(`${k}.heading`),
+          body: P(17, "0 0 28px", tr(`${k}.body`, { code: em(d.code) })),
+          disclaim: P(15, "0 0 28px", tr(`${k}.ignore`)),
         }),
-        text: `Your sign-in code is ${d.code}. It expires in 10 minutes.\n\nIf you didn't try to sign in, you can safely ignore this email.\n\nThe dembrane team`,
+        text: `${tr(`${k}.text_body`, d)}\n\n${tr(`${k}.ignore`)}\n\n${signoff}`,
       };
     }
     case "account_signer_invite": {
       // Someone named as the signer of one document: the link signs them in with a
       // one-time code and opens only that document.
       const d = t.data;
+      const k = "email.account_signer_invite";
       return {
-        html: layout({
-          title: `${esc(d.inviter_name)} asked you to sign for ${esc(d.org_name)}`,
-          preview: `${esc(d.inviter_name)} asked you to sign ${esc(d.document_title)} on dembrane.`,
-          heading: "You've been asked to sign.",
+        html: layout(tr, {
+          title: tr(`${k}.title`, escAll(d)),
+          preview: tr(`${k}.preview`, escAll(d)),
+          heading: tr(`${k}.heading`),
           body: P(
             17,
             "0 0 28px",
-            `${esc(d.inviter_name)} named you as the person who signs ${em(d.document_title)} for ${em(d.org_name)}. Sign in with a code sent to this address to read and sign it.`,
+            tr(`${k}.body`, {
+              ...escAll(d),
+              document_title: em(d.document_title),
+              org_name: em(d.org_name),
+            }),
           ),
-          cta: cta("Read and sign", d.sign_url),
-          fallback: fallback(d.sign_url),
-          disclaim: P(15, "0 0 28px", IGNORE),
+          cta: cta(tr(`${k}.cta`), d.sign_url),
+          fallback: fallback(tr, d.sign_url),
+          disclaim: ignore,
         }),
-        text: `${d.inviter_name} named you as the person who signs ${d.document_title} for ${d.org_name}. Sign in with a code sent to this address to read and sign it.\n\nRead and sign:\n${d.sign_url}\n\nDidn't expect this? Ignore this email. Nothing will happen.\n\nThe dembrane team`,
+        text: `${tr(`${k}.body`, d)}\n\n${tr(`${k}.text_cta`)}\n${d.sign_url}\n\n${ignoreText}\n\n${signoff}`,
       };
     }
     case "account_task_reminder": {
       // Sent every few days while a task waits on the customer; stops when it is done.
-      // In the recipient's language: Dutch or English.
       const d = t.data;
-      const nl = d.language === "nl";
-      const line = nl
-        ? `${em(d.task_title)} staat nog open voor ${esc(d.org_name)} op dembrane. Het kost een minuut, en het houdt de zaken bij ons in beweging.`
-        : `${em(d.task_title)} is still waiting for ${esc(d.org_name)} on dembrane. It takes a minute, and it keeps things moving on our side.`;
-      const plain = nl
-        ? `${d.task_title} staat nog open voor ${d.org_name} op dembrane. Het kost een minuut, en het houdt de zaken bij ons in beweging.\n\nOpen de stap:\n${d.task_url}\n\nHet dembrane-team`
-        : `${d.task_title} is still waiting for ${d.org_name} on dembrane. It takes a minute, and it keeps things moving on our side.\n\nOpen the step:\n${d.task_url}\n\nThe dembrane team`;
+      const k = "email.account_task_reminder";
       return {
-        html: layout({
-          title: nl
-            ? `Een stap wacht op ${esc(d.org_name)}`
-            : `A step is waiting for ${esc(d.org_name)}`,
-          preview: nl
-            ? `${esc(d.task_title)} staat nog open.`
-            : `${esc(d.task_title)} is still open on dembrane.`,
-          heading: nl ? "Er staat nog een stap open." : "One step is still open.",
-          body: P(17, "0 0 28px", line),
-          cta: cta(nl ? "Open de stap" : "Open the step", d.task_url),
-          fallback: fallback(d.task_url),
+        html: layout(tr, {
+          title: tr(`${k}.title`, escAll(d)),
+          preview: tr(`${k}.preview`, escAll(d)),
+          heading: tr(`${k}.heading`),
+          body: P(17, "0 0 28px", tr(`${k}.body`, { ...escAll(d), task_title: em(d.task_title) })),
+          cta: cta(tr(`${k}.cta`), d.task_url),
+          fallback: fallback(tr, d.task_url),
         }),
-        text: plain,
+        text: `${tr(`${k}.body`, d)}\n\n${tr(`${k}.text_cta`)}\n${d.task_url}\n\n${signoff}`,
       };
     }
     case "account_invite": {
       // The contact of a demo made in echo, invited when staff publish it.
       const d = t.data;
+      const k = "email.account_invite";
       return {
-        html: layout({
-          title: `Your dembrane account for ${esc(d.org_name)}`,
-          preview: `Your dembrane account for ${esc(d.org_name)} is ready.`,
-          heading: "Your account is ready.",
-          body: P(
-            17,
-            "0 0 28px",
-            `We set up ${em(d.org_name)} on dembrane for you. Sign in with a code we send to this address: no password needed.`,
-          ),
-          cta: cta("Sign in", d.sign_in_url),
-          fallback: fallback(d.sign_in_url),
-          disclaim: P(15, "0 0 28px", IGNORE),
+        html: layout(tr, {
+          title: tr(`${k}.subject`, escAll(d)),
+          preview: tr(`${k}.preview`, escAll(d)),
+          heading: tr(`${k}.heading`),
+          body: P(17, "0 0 28px", tr(`${k}.body`, { org_name: em(d.org_name) })),
+          cta: cta(tr(`${k}.cta`), d.sign_in_url),
+          fallback: fallback(tr, d.sign_in_url),
+          disclaim: ignore,
         }),
-        text: `We set up ${d.org_name} on dembrane for you. Sign in with a code we send to this address: no password needed.\n\nSign in:\n${d.sign_in_url}\n\nDidn't expect this? Ignore this email. Nothing will happen.\n\nThe dembrane team`,
+        text: `${tr(`${k}.body`, d)}\n\n${tr(`${k}.text_cta`)}\n${d.sign_in_url}\n\n${ignoreText}\n\n${signoff}`,
       };
     }
     case "plain":

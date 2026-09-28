@@ -1,6 +1,6 @@
-import { t } from "@lingui/core/macro";
 import { useQuery } from "@tanstack/react-query";
 import { API_BASE_URL } from "@/config";
+import { ApiRequestError } from "@/lib/errors/read";
 import type { TierPricing } from "@/lib/tiers";
 
 export interface UsageGates {
@@ -66,11 +66,7 @@ async function fetchWorkspaceUsage(
 	const res = await fetch(url, { credentials: "include" });
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(
-			typeof data.detail === "string"
-				? data.detail
-				: t`Couldn't load usage (${res.status})`,
-		);
+		throw new ApiRequestError(res.status, data);
 	}
 	return res.json();
 }
@@ -101,7 +97,7 @@ export function useWorkspaceUsage(
 
 	return {
 		...query,
-		usageGates,
 		freeTier,
+		usageGates,
 	};
 }

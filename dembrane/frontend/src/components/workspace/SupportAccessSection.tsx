@@ -11,7 +11,9 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import { API_BASE_URL } from "@/config";
+import { ApiRequestError } from "@/lib/errors/read";
 
 type PendingRequest = {
 	id: string;
@@ -69,9 +71,9 @@ const formatWhen = (iso: string | null): string => {
 	if (Number.isNaN(d.getTime())) return "";
 	return d.toLocaleString(undefined, {
 		day: "numeric",
-		month: "short",
 		hour: "2-digit",
 		minute: "2-digit",
+		month: "short",
 	});
 };
 
@@ -92,7 +94,6 @@ export function SupportAccessSection({
 	const eventsKey = ["v2", "support-access", "events", workspaceId, limit];
 
 	const { data: requestsData } = useQuery({
-		queryKey: requestsKey,
 		enabled: canEdit,
 		queryFn: async () => {
 			const res = await fetch(
@@ -102,10 +103,10 @@ export function SupportAccessSection({
 			if (!res.ok) throw new Error(`Failed (${res.status})`);
 			return res.json() as Promise<{ requests: PendingRequest[] }>;
 		},
+		queryKey: requestsKey,
 	});
 
 	const { data: eventsData, isFetching: eventsFetching } = useQuery({
-		queryKey: eventsKey,
 		enabled: canEdit,
 		placeholderData: keepPreviousData,
 		queryFn: async () => {
@@ -119,6 +120,7 @@ export function SupportAccessSection({
 				has_more: boolean;
 			}>;
 		},
+		queryKey: eventsKey,
 	});
 
 	const invalidateAll = () => {
@@ -140,12 +142,12 @@ export function SupportAccessSection({
 			);
 			if (!res.ok) {
 				const err = await res.json().catch(() => ({}));
-				throw new Error(err.detail || `Failed (${res.status})`);
+				throw new ApiRequestError(res.status, err);
 			}
 			return res.json();
 		},
 		onError: (e) => {
-			toast.error((e as Error).message);
+			void notifyError(e);
 			invalidateAll();
 		},
 		onSuccess: (_data, vars) => {
@@ -158,7 +160,9 @@ export function SupportAccessSection({
 		},
 	});
 
-	const [confirmTarget, setConfirmTarget] = useState<PendingRequest | null>(null);
+	const [confirmTarget, setConfirmTarget] = useState<PendingRequest | null>(
+		null,
+	);
 	const [confirmOpened, { open: openConfirm, close: closeConfirm }] =
 		useDisclosure(false);
 
@@ -172,7 +176,10 @@ export function SupportAccessSection({
 		if (!canEdit || !hasContent) return;
 		const hash = window.location.hash.replace(/^#/, "");
 		if (hash === "support-access" || hash === "support-access-requests") {
-			sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+			sectionRef.current?.scrollIntoView({
+				behavior: "smooth",
+				block: "start",
+			});
 		}
 	}, [canEdit, hasContent]);
 
@@ -203,8 +210,8 @@ export function SupportAccessSection({
 										disabled={resolveMutation.isPending}
 										onClick={() =>
 											resolveMutation.mutate({
-												requestId: req.id,
 												decision: "deny",
+												requestId: req.id,
 											})
 										}
 									>
@@ -264,8 +271,8 @@ export function SupportAccessSection({
 					}}
 					onConfirm={() => {
 						resolveMutation.mutate({
-							requestId: confirmTarget.id,
 							decision: "approve",
+							requestId: confirmTarget.id,
 						});
 						closeConfirm();
 						setConfirmTarget(null);
@@ -276,8 +283,8 @@ export function SupportAccessSection({
 					confirmLabel={<Trans>Approve for 24 hours</Trans>}
 					message={
 						<Trans>
-							Give {confirmTarget.requested_by_name} from dembrane admin access to
-							this workspace for 24 hours? Access ends automatically.
+							Give {confirmTarget.requested_by_name} from dembrane admin access
+							to this workspace for 24 hours? Access ends automatically.
 						</Trans>
 					}
 				/>

@@ -1,5 +1,5 @@
 import { AudioError } from "@dembrane/audio";
-import { BadRequestError, NotFoundError, newId, PlatformError } from "@dembrane/core";
+import { BadRequestError, NotFoundError, newId, PlatformError, StatusError } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import { type Env, requireUser, type Signed } from "@dembrane/http";
 import { p } from "@dembrane/legacy-shape";
@@ -7,7 +7,6 @@ import { and, eq, isNotNull } from "drizzle-orm";
 import { Hono } from "hono";
 import { conversationForV1 } from "../access";
 import type { ConversationsDeps } from "../deps";
-import { InternalError } from "../errors";
 import { liveServices } from "../live/routes";
 import { type MergeDeps, mergeConversationAudio } from "../merge";
 import { processChunk } from "../pipeline/defs";
@@ -40,7 +39,7 @@ async function mergeNow(d: MergeDeps, conversationId: string) {
     return await mergeConversationAudio(d, conversationId, newId());
   } catch (err) {
     if (err instanceof AudioError)
-      throw new BadRequestError(`Failed to merge audio files: ${err.message}`);
+      throw new BadRequestError("conversation.merge_failed", { params: { reason: err.message } });
     throw err;
   }
 }
@@ -69,9 +68,9 @@ export function conversationAudioRoutes(d: ConversationsDeps) {
     const { query } = await p.validate(c.req, { query: ContentQuery });
     const store = conversationStore(d.db);
     const chunks = await store.chunks(cid, 1000);
-    if (!chunks.length) throw new NotFoundError("Conversation not found");
+    if (!chunks.length) throw new NotFoundError("conversation.not_found");
     const conv = await store.conversationIncludingDeleted(cid);
-    if (!conv) throw new NotFoundError("Conversation not found");
+    if (!conv) throw new NotFoundError("conversation.not_found");
     let path = conv.merged_audio_path;
     if (query.force_merge || !path?.startsWith("http")) {
       // Merging here keeps the Python contract (the first play builds the file); the
@@ -88,10 +87,10 @@ export function conversationAudioRoutes(d: ConversationsDeps) {
     await conversationForV1(d, who, cid);
     const { query } = await p.validate(c.req, { query: ChunkContentQuery });
     const chunk = await conversationStore(d.db).chunk(c.req.param("chunk_id"));
-    if (!chunk || chunk.conversation_id !== cid) throw new NotFoundError("Conversation not found");
-    if (!chunk.path) throw new NotFoundError("No content found");
+    if (!chunk || chunk.conversation_id !== cid) throw new NotFoundError("conversation.not_found");
+    if (!chunk.path) throw new NotFoundError("conversation.no_content");
     if (!chunk.path.startsWith("http"))
-      throw new BadRequestError("File is not valid (URL type not implemented)");
+      throw new BadRequestError("conversation.file_url_unsupported");
     const out = deliver(chunk.path, query.signed, query.return_url);
     return out.redirect ? c.redirect(out.redirect, 307) : c.json(out.url);
   });
@@ -114,7 +113,9 @@ export function conversationAudioRoutes(d: ConversationsDeps) {
         .set({ deleted_at: now, updated_at: now })
         .where(eq(conversation.id, cid));
     } catch (err) {
-      throw new InternalError(`Failed to delete conversation: ${(err as Error).message}`);
+      throw new StatusError(500, "conversation.delete_failed", {
+        params: { reason: (err as Error).message },
+      });
     }
     // A deleted conversation stops counting as a live recording.
     await liveServices(d).meter.meter(conv.project_id, cid, "close", d.now());
@@ -144,13 +145,13 @@ async function retranscribe(
     await conversationForV1(d, who, conversationId, "project:update");
     const store = conversationStore(d.db);
     const original = await store.conversationIncludingDeleted(conversationId);
-    if (!original) throw new NotFoundError("Conversation not found");
+    if (!original) throw new NotFoundError("conversation.not_found");
     let pii = body.use_pii_redaction;
     if (pii === null)
       pii = Boolean((await store.project(original.project_id))?.anonymize_transcripts);
 
     const chunks = await store.chunks(conversationId, 1000);
-    if (!chunks.length) throw new NotFoundError("Conversation not found");
+    if (!chunks.length) throw new NotFoundError("conversation.not_found");
     const { path: merged, duration } = await mergeNow(d, conversationId);
 
     const newConversationId = newId();

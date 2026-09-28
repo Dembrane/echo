@@ -93,7 +93,7 @@ export async function conversations(
     transcriptQuery?: string | null;
   },
 ) {
-  if (!(await projectRow(d, projectId))) throw new NotFoundError("Project not found");
+  if (!(await projectRow(d, projectId))) throw new NotFoundError("project.not_found");
   const access = await agentProject(d.access, who, projectId);
   const limit = Math.max(1, Math.min(q.limit, 100));
   const offset = Math.max(0, q.offset ?? 0);
@@ -195,11 +195,9 @@ export async function conversations(
  */
 export async function requireChatOfProject(d: DataDeps, chatId: string, projectId: string | null) {
   const chat = await chatsStorage(d.db).chat(chatId, true);
-  if (!chat)
-    throw new UnavailableError("Could not verify the chat for this request. Please try again.");
-  if (!projectId) throw new BadRequestError("project_id is required to read this chat");
-  if (chat.project_id?.id !== projectId)
-    throw new BadRequestError("project_id does not match this chat");
+  if (!chat) throw new UnavailableError("chat.verify_unavailable");
+  if (!projectId) throw new BadRequestError("chat.project_required");
+  if (chat.project_id?.id !== projectId) throw new BadRequestError("chat.project_mismatch");
   return chat;
 }
 
@@ -212,8 +210,7 @@ export async function focusedList(d: DataDeps, chatId: string | null, projectId:
   if (!chatId) return [];
   const chat = await chatsStorage(d.db).chat(chatId, true);
   if (!chat) return [];
-  if (chat.project_id?.id !== projectId)
-    throw new BadRequestError("project_id does not match this chat");
+  if (chat.project_id?.id !== projectId) throw new BadRequestError("chat.project_mismatch");
   const out: { id: string; name: string }[] = [];
   const seen = new Set<string>();
   for (const link of chat.used_conversations ?? []) {
@@ -260,7 +257,7 @@ export async function transcript(d: DataDeps, who: Signed, conversationId: strin
     ? await sql`select id, project_id, deleted_at from conversation where id = ${conversationId}`
     : [];
   if (!conv || conv.deleted_at || !conv.project_id)
-    throw new NotFoundError("Conversation not found");
+    throw new NotFoundError("conversation.not_found");
   await projectFor(d.access, who, String(conv.project_id), "conversation:read");
   const chunks = await sql`
     select transcript from conversation_chunk where conversation_id = ${conversationId}

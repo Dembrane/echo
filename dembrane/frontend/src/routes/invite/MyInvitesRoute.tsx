@@ -1,3 +1,4 @@
+import { i18n } from "@lingui/core";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
@@ -18,12 +19,14 @@ import { modals } from "@mantine/modals";
 import { useState } from "react";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import {
 	useAcceptInvite,
 	useDeclineInvite,
 	useMyInvites,
 } from "@/hooks/useMyInvites";
+import { presentError } from "@/lib/errors/present";
 import { displayRole } from "@/lib/roles";
 
 export const MyInvitesRoute = () => {
@@ -57,7 +60,7 @@ export const MyInvitesRoute = () => {
 				navigate(`/w/${data.workspace_id}/home`);
 			}
 		} catch (err) {
-			const msg = err instanceof Error ? err.message : "Failed to accept";
+			const msg = (await presentError(err, i18n)).message;
 			setErrorByInvite((prev) => ({ ...prev, [inviteId]: msg }));
 			toast.error(msg);
 		}
@@ -80,7 +83,7 @@ export const MyInvitesRoute = () => {
 					await declineMutation.mutateAsync(inviteId);
 					toast.success(t`Invite declined`);
 				} catch (err) {
-					toast.error(err instanceof Error ? err.message : "Failed to decline");
+					void notifyError(err);
 				}
 			},
 			title: t`Decline invite`,
@@ -151,7 +154,7 @@ export const MyInvitesRoute = () => {
 						const isOrgInvite = inv.type === "org";
 						const subjectName = isOrgInvite
 							? inv.org_name
-							: inv.workspace_name ?? inv.org_name;
+							: (inv.workspace_name ?? inv.org_name);
 						return (
 							<Paper key={inv.id} p="lg" radius="md" withBorder>
 								<Stack gap={16}>

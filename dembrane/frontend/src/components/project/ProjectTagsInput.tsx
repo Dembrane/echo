@@ -33,6 +33,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconX } from "@tabler/icons-react";
 import { useState } from "react";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { useProjectById } from "@/components/project/hooks";
 import { testId } from "@/lib/testUtils";
 import { FormLabel } from "../form/FormLabel";
@@ -45,7 +46,10 @@ import {
 export const ProjectTagPill = ({
 	tag,
 	projectId,
-}: { tag: ProjectTag; projectId: string }) => {
+}: {
+	tag: ProjectTag;
+	projectId: string;
+}) => {
 	const deleteTagMutation = useDeleteTagByIdMutation();
 	const [confirmOpened, { open: openConfirm, close: closeConfirm }] =
 		useDisclosure(false);
@@ -118,7 +122,7 @@ export const ProjectTagPill = ({
 				confirmLabel={<Trans>Delete</Trans>}
 				confirmColor="red"
 				onConfirm={() => {
-					deleteTagMutation.mutate({ tagId: tag.id, projectId });
+					deleteTagMutation.mutate({ projectId, tagId: tag.id });
 					closeConfirm();
 				}}
 			/>
@@ -244,9 +248,7 @@ export const ProjectTagsInput = (props: { project: Project }) => {
 			<LoadingOverlay visible={projectQuery.isLoading} />
 			<Box>
 				{createTagMutation.isError && (
-					<Text c="red" size="sm">
-						{createTagMutation.error.message}
-					</Text>
+					<ErrorNotice error={createTagMutation.error} />
 				)}
 				<Stack gap="sm">
 					<Group align="end">

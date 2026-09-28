@@ -32,8 +32,12 @@ export function supportAccessService(deps: TenancyDeps) {
    */
   async function loadPending(ctx: WorkspaceContext, requestId: string) {
     const req = await supportRequest(db, requestId);
-    if (!req || req.workspace_id !== ctx.workspaceId) throw new NotFoundError("Request not found");
-    if (req.status !== "pending") throw new ConflictError(`Request is already ${req.status}.`);
+    if (!req || req.workspace_id !== ctx.workspaceId)
+      throw new NotFoundError("workspace.access_request_not_found");
+    if (req.status !== "pending")
+      throw new ConflictError("workspace.support_request_handled", {
+        params: { status: req.status },
+      });
     const now = clock(deps);
     if (req.expires_at && new Date(req.expires_at).getTime() <= now.getTime()) {
       await db.transaction(async (tx) => {
@@ -45,7 +49,7 @@ export function supportAccessService(deps: TenancyDeps) {
           params: { request_id: req.id },
         });
       });
-      throw new ConflictError("Request expired.");
+      throw new ConflictError("workspace.support_request_expired");
     }
     return req;
   }

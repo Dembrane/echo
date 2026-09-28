@@ -6,28 +6,41 @@ import { readStoredLanguage } from "@/lib/language";
 
 export const defaultLanguage = "en-US";
 
-import { messages as deMessages } from "../locales/de-DE";
+// English is the fallback every screen can render at once; each other language is its own
+// chunk, fetched when it is chosen, so the participant portal's first load carries one
+// catalog instead of eight.
 import { messages as enMessages } from "../locales/en-US";
-import { messages as esMessages } from "../locales/es-ES";
-import { messages as frMessages } from "../locales/fr-FR";
-import { messages as itMessages } from "../locales/it-IT";
-import { messages as nlMessages } from "../locales/nl-NL";
-import { messages as ukMessages } from "../locales/uk-UA";
-import { messages as csMessages } from "../locales/cs-CZ";
 
-i18n.load({
-	"de-DE": deMessages,
-	"en-US": enMessages,
-	"es-ES": esMessages,
-	"fr-FR": frMessages,
-	"it-IT": itMessages,
-	"nl-NL": nlMessages,
-	"uk-UA": ukMessages,
-	"cs-CZ": csMessages,
-});
+i18n.load("en-US", enMessages);
+i18n.activate(defaultLanguage);
 
-// Seed from the saved preference so a prefix-less entry doesn't flash English.
-i18n.activate(readStoredLanguage() ?? defaultLanguage);
+const catalogs = import.meta.glob<{ messages: Record<string, string> }>([
+	"../locales/*.ts",
+	"!../locales/en-US.ts",
+]);
+const loaded = new Set<string>(["en-US"]);
+
+/** Loads a language's catalog (once) and makes it the active one. */
+export async function activateLanguage(locale: string): Promise<void> {
+	if (!loaded.has(locale)) {
+		const loader = catalogs[`../locales/${locale}.ts`];
+		if (!loader) {
+			i18n.activate(defaultLanguage);
+			return;
+		}
+		const { messages } = await loader();
+		i18n.load(locale, messages);
+		loaded.add(locale);
+	}
+	i18n.activate(locale);
+}
+
+// Start fetching the saved language right away, so it is usually there by first render.
+const stored = readStoredLanguage();
+const storedReady =
+	stored && stored !== defaultLanguage
+		? activateLanguage(stored).catch(() => {})
+		: Promise.resolve();
 
 export const useLanguage = () => {
 	const params = useParams();
@@ -37,13 +50,23 @@ export const useLanguage = () => {
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
-		if ([...SUPPORTED_LANGUAGES.map((l) => l.toString())].includes(language)) {
-			i18n.activate(language);
-		} else {
-			console.log("Unsupported language", language);
-			i18n.activate(defaultLanguage);
-		}
-		setLoading(false);
+		let live = true;
+		const supported = SUPPORTED_LANGUAGES.map((l) => l.toString()).includes(
+			language,
+		);
+		if (!supported) console.log("Unsupported language", language);
+		// The screen waits (I18nProvider shows its overlay) until the catalog is in, so
+		// explicit message ids never render raw.
+		if (!loaded.has(supported ? language : defaultLanguage)) setLoading(true);
+		storedReady
+			.then(() => activateLanguage(supported ? language : defaultLanguage))
+			.catch(() => i18n.activate(defaultLanguage))
+			.finally(() => {
+				if (live) setLoading(false);
+			});
+		return () => {
+			live = false;
+		};
 	}, [language]);
 
 	return {

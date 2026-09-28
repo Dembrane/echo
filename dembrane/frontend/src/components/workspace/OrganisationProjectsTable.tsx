@@ -17,8 +17,10 @@ import { IconDots, IconSearch, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import { API_BASE_URL } from "@/config";
 import { useUrlSearch } from "@/hooks/useUrlSearch";
+import { ApiRequestError } from "@/lib/errors/read";
 import { formatDurationFromHours } from "@/lib/time";
 
 interface OrgProject {
@@ -48,9 +50,7 @@ async function deleteProject(projectId: string) {
 	});
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(
-			typeof data.detail === "string" ? data.detail : "Couldn't delete",
-		);
+		throw new ApiRequestError(res.status, data);
 	}
 	return res.json().catch(() => ({}));
 }
@@ -121,7 +121,7 @@ export const OrganisationProjectsTable = ({ orgId }: { orgId: string }) => {
 
 	const deleteMutation = useMutation({
 		mutationFn: deleteProject,
-		onError: (e: Error) => toast.error(e.message),
+		onError: (e: Error) => void notifyError(e),
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "org", orgId, "projects"],

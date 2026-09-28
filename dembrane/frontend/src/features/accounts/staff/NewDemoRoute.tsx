@@ -21,6 +21,7 @@ import { useDocumentTitle } from "@mantine/hooks";
 import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { I18nLink } from "@/components/common/i18nLink";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { AccountsApiError, call } from "../api/client";
 import { AccountsI18n } from "../i18n";
@@ -244,11 +245,7 @@ function NewDemo() {
 					</Box>
 				)}
 
-				{error && !Object.keys(fields).length && (
-					<Text size="sm" c="red">
-						{error.message}
-					</Text>
-				)}
+				{error && !Object.keys(fields).length && <ErrorNotice error={error} />}
 				<Group>
 					<Button
 						size="md"

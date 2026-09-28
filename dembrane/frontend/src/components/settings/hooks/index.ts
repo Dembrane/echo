@@ -1,7 +1,9 @@
 import { t } from "@lingui/core/macro";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import { API_BASE_URL } from "@/config";
+import { ApiRequestError, errorCode } from "@/lib/errors/read";
 
 export * from "./useAuditLogsQuery";
 
@@ -23,7 +25,7 @@ const postApi = async <TResponse>(
 
 	if (!response.ok) {
 		const data = await response.json().catch(() => ({}));
-		throw new Error(data.detail || "Request failed");
+		throw new ApiRequestError(response.status, data);
 	}
 
 	// Some endpoints return 204 No Content
@@ -34,16 +36,20 @@ const postApi = async <TResponse>(
 export const useGenerateTwoFactorMutation = () => {
 	return useMutation({
 		mutationFn: async ({ password }: { password: string }) => {
-			return postApi<GenerateTwoFactorResponse>(
-				"/user-settings/tfa/generate",
-				{ password },
-			);
+			return postApi<GenerateTwoFactorResponse>("/user-settings/tfa/generate", {
+				password,
+			});
 		},
 		onError: (error: Error) => {
-			toast.error(error.message);
+			void notifyError(error);
 		},
 	});
 };
+
+// The platform sends account.otp_invalid; the text check covers the Python API until cutover.
+const isOtpInvalid = (error: Error) =>
+	errorCode(error) === "account.otp_invalid" ||
+	error.message.includes('Invalid payload. "otp" is invalid');
 
 export const useEnableTwoFactorMutation = () => {
 	const queryClient = useQueryClient();
@@ -53,10 +59,10 @@ export const useEnableTwoFactorMutation = () => {
 			await postApi("/user-settings/tfa/enable", { otp, secret });
 		},
 		onError: (error: Error) => {
-			if (error.message.includes('Invalid payload. "otp" is invalid')) {
+			if (isOtpInvalid(error)) {
 				toast.error(t`The code didn't work, please try again.`);
 			} else {
-				toast.error(error.message);
+				void notifyError(error);
 			}
 		},
 		onSuccess: () => {
@@ -76,10 +82,10 @@ export const useDisableTwoFactorMutation = () => {
 			await postApi("/user-settings/tfa/disable", { otp });
 		},
 		onError: (error: Error) => {
-			if (error.message.includes('Invalid payload. "otp" is invalid')) {
+			if (isOtpInvalid(error)) {
 				toast.error(t`The code didn't work, please try again.`);
 			} else {
-				toast.error(error.message);
+				void notifyError(error);
 			}
 		},
 		onSuccess: () => {

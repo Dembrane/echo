@@ -15,7 +15,7 @@ export interface Limit {
   readonly windowSeconds: number;
 }
 
-/** The body the old API sends on every rate-limit refusal; the frontend shows it. */
+/** The detail of rate_limit.exceeded: the body the old API sends on every rate-limit refusal. */
 export const TOO_MANY = "Too many requests. Try again later.";
 
 /**
@@ -31,12 +31,12 @@ export class RateLimiter {
   ) {}
 
   async check(limit: Limit, identifier: string): Promise<void> {
-    if (!(await this.allow(limit, identifier))) throw new RateLimitedError(TOO_MANY);
+    if (!(await this.allow(limit, identifier))) throw new RateLimitedError("rate_limit.exceeded");
   }
 
   /** Per signed-in user; an empty user id is refused, as the old user limiter did. */
   async checkUser(limit: Limit, userId: string): Promise<void> {
-    if (!userId) throw new ForbiddenError("Authenticated user required.");
+    if (!userId) throw new ForbiddenError("auth.user_required");
     await this.check(limit, userId);
   }
 

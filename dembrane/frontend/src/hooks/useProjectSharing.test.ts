@@ -30,9 +30,9 @@ describe("shareWithEmails", () => {
 		expect(add).toHaveBeenCalledWith({ email: "member@example.com" });
 		expect(result.shared).toEqual(["member@example.com"]);
 		expect(result.needsInvite).toEqual(["new@example.com"]);
-		expect(result.failed).toEqual([
-			{ email: "broken@example.com", message: "Boom" },
-		]);
+		expect(result.failed).toHaveLength(1);
+		expect(result.failed[0]?.email).toBe("broken@example.com");
+		expect((result.failed[0]?.error as Error).message).toBe("Boom");
 	});
 
 	it("keeps going after a failure so every email is attempted once", async () => {

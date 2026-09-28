@@ -5,9 +5,9 @@ import {
 	useQuery,
 	useQueryClient,
 } from "@tanstack/react-query";
+import { useParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
-import { useParams } from "react-router";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import {
 	addChatContext,
@@ -37,21 +37,42 @@ export const useTogglePinMutation = () => {
 		}) => {
 			return api.patch(`/projects/${projectId}/pin`, { pin_order });
 		},
+		onError: (
+			error: unknown,
+			_vars,
+			// Typed here: onError sorts before onMutate, which TanStack infers the context from.
+			ctx: { snapshots?: [readonly unknown[], unknown][] } | undefined,
+		) => {
+			if (ctx?.snapshots) {
+				for (const [key, data] of ctx.snapshots) {
+					queryClient.setQueryData(key, data);
+				}
+			}
+			void notifyError(error);
+		},
 		// Optimistic update: move the project between pinned / list
 		// immediately so the UI responds to the click. Without this the
 		// user waits on the full refetch before the card jumps — on a
 		// slow connection it looks like nothing happened. Rolls back
 		// on error.
 		onMutate: async ({ projectId, pin_order }) => {
-			await queryClient.cancelQueries({ queryKey: ["v2", "workspace-projects"] });
+			await queryClient.cancelQueries({
+				queryKey: ["v2", "workspace-projects"],
+			});
 
 			type PageShape = {
-				pinned: Array<{ id: string; pin_order: number | null } & Record<string, unknown>>;
-				projects: Array<{ id: string; pin_order: number | null } & Record<string, unknown>>;
+				pinned: Array<
+					{ id: string; pin_order: number | null } & Record<string, unknown>
+				>;
+				projects: Array<
+					{ id: string; pin_order: number | null } & Record<string, unknown>
+				>;
 			};
 			type CacheShape = { pages: PageShape[]; pageParams: unknown[] };
 
-			const applyOptimistic = (data: CacheShape | undefined): CacheShape | undefined => {
+			const applyOptimistic = (
+				data: CacheShape | undefined,
+			): CacheShape | undefined => {
 				if (!data?.pages?.length) return data;
 				const firstPage = data.pages[0];
 				const moving =
@@ -67,9 +88,7 @@ export const useTogglePinMutation = () => {
 							: [
 									...firstPage.pinned.filter((p) => p.id !== projectId),
 									{ ...moving, pin_order },
-								].sort(
-									(a, b) => (a.pin_order ?? 0) - (b.pin_order ?? 0),
-								),
+								].sort((a, b) => (a.pin_order ?? 0) - (b.pin_order ?? 0)),
 					projects: firstPage.projects.map((p) =>
 						p.id === projectId ? { ...p, pin_order } : p,
 					),
@@ -96,15 +115,6 @@ export const useTogglePinMutation = () => {
 			}
 			return { snapshots };
 		},
-		onError: (error: any, _vars, ctx) => {
-			if (ctx?.snapshots) {
-				for (const [key, data] of ctx.snapshots) {
-					queryClient.setQueryData(key, data);
-				}
-			}
-			const detail = error?.response?.data?.detail;
-			toast.error(detail ?? t`Failed to update pin`);
-		},
 		onSettled: () => {
 			// Reconcile with the server regardless — optimistic state is a
 			// guess; this is the ground truth.
@@ -118,15 +128,15 @@ export const useDeleteProjectByIdMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: (projectId: string) => deleteProjectById(projectId),
+		onError: (error: Error) => {
+			void notifyError(error);
+		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: ["projects"],
 			});
 			queryClient.resetQueries();
 			toast.success(t`Project deleted`);
-		},
-		onError: (error: Error) => {
-			toast.error(error.message || t`Failed to delete project`);
 		},
 	});
 };
@@ -147,7 +157,7 @@ export const useCloneProjectByIdMutation = () => {
 			}),
 		onError: (error) => {
 			console.error(error);
-			toast.error("Error cloning project");
+			void notifyError(error);
 		},
 		onSuccess: (newProjectId, variables) => {
 			queryClient.invalidateQueries({ queryKey: ["projects"] });
@@ -174,23 +184,23 @@ export const useMoveProjectMutation = () => {
 			projectId: string;
 			targetWorkspaceId: string;
 		}) => {
-			const res = await fetch(
-				`${API_BASE_URL}/v2/projects/${projectId}/move`,
-				{
-					body: JSON.stringify({ target_workspace_id: targetWorkspaceId }),
-					credentials: "include",
-					headers: { "Content-Type": "application/json" },
-					method: "POST",
-				},
-			);
+			const res = await fetch(`${API_BASE_URL}/v2/projects/${projectId}/move`, {
+				body: JSON.stringify({ target_workspace_id: targetWorkspaceId }),
+				credentials: "include",
+				headers: { "Content-Type": "application/json" },
+				method: "POST",
+			});
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
-				throw new Error(data.detail || t`Failed to move project`);
+				throw new ApiRequestError(res.status, data);
 			}
 			return (await res.json()) as {
 				project_id: string;
 				workspace_id: string;
 			};
+		},
+		onError: (error: Error) => {
+			void notifyError(error);
 		},
 		onSuccess: (_data, variables) => {
 			queryClient.invalidateQueries({ queryKey: ["projects"] });
@@ -201,9 +211,6 @@ export const useMoveProjectMutation = () => {
 				queryKey: ["v2", "workspace-projects"],
 			});
 			toast.success(t`Project moved`);
-		},
-		onError: (error: Error) => {
-			toast.error(error.message || t`Failed to move project`);
 		},
 	});
 };
@@ -229,17 +236,17 @@ export const useBulkMoveProjectsMutation = () => {
 			});
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
-				throw new Error(data.detail || t`Failed to move projects`);
+				throw new ApiRequestError(res.status, data);
 			}
 			return (await res.json()) as { moved: string[]; count: number };
+		},
+		onError: (error: Error) => {
+			void notifyError(error);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["projects"] });
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-projects"] });
 			toast.success(t`Projects moved`);
-		},
-		onError: (error: Error) => {
-			toast.error(error.message || t`Failed to move projects`);
 		},
 	});
 };
@@ -254,8 +261,8 @@ export const createProjectTag = async (payload: {
 	const res = await fetch(`${API_BASE_URL}/v2/bff/tags`, {
 		body: JSON.stringify({
 			project_id: payload.projectId,
-			text: payload.text,
 			sort: payload.sort,
+			text: payload.text,
 		}),
 		credentials: "include",
 		headers: { "Content-Type": "application/json" },
@@ -263,7 +270,7 @@ export const createProjectTag = async (payload: {
 	});
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(data.detail || "Failed to create tag");
+		throw new ApiRequestError(res.status, data);
 	}
 	return res.json();
 };
@@ -312,7 +319,7 @@ export const useUpdateProjectTagByIdMutation = () => {
 			});
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
-				throw new Error(data.detail || "Failed to update tag");
+				throw new ApiRequestError(res.status, data);
 			}
 			return (await res.json()) as ProjectTag;
 		},
@@ -330,14 +337,14 @@ export const useDeleteTagByIdMutation = () => {
 	return useMutation({
 		mutationFn: (payload: { tagId: string; projectId: string }) =>
 			deleteTagById(payload.projectId, payload.tagId),
+		onError: (error: Error) => {
+			void notifyError(error);
+		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: ["projects"],
 			});
 			toast.success(t`Tag deleted`);
-		},
-		onError: (error: Error) => {
-			toast.error(error.message || t`Failed to delete tag`);
 		},
 	});
 };
@@ -365,7 +372,7 @@ export const useCreateChatMutation = () => {
 			});
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
-				throw new Error(data.detail || "Failed to create chat");
+				throw new ApiRequestError(res.status, data);
 			}
 			const chat = (await res.json()) as { id: string };
 
@@ -447,7 +454,8 @@ export const useAttachChatConversationsMutation = () => {
 				toast.error(
 					plural(empty, {
 						one: "# conversation has no transcript yet, so it was left out.",
-						other: "# conversations have no transcript yet, so they were left out.",
+						other:
+							"# conversations have no transcript yet, so they were left out.",
 					}),
 				);
 				return;
@@ -481,7 +489,7 @@ export const useUpdateProjectByIdMutation = () => {
 			});
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
-				throw new Error(data.detail || "Failed to update project");
+				throw new ApiRequestError(res.status, data);
 			}
 			return (await res.json()) as Project;
 		},
@@ -513,7 +521,7 @@ export const useUpdateProjectHostGuideMutation = () => {
 			});
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
-				throw new Error(data.detail || "Failed to save the host guide");
+				throw new ApiRequestError(res.status, data);
 			}
 			return (await res.json()) as Project;
 		},
@@ -609,8 +617,9 @@ export const useProjectById = ({
 			// forward it to the BFF so the response stays small — used
 			// by summary-card callers who just need one boolean. Empty
 			// or `*` means "give me everything".
-			const scalarFields = rawFields
-				.filter((f): f is string => typeof f === "string" && f !== "*" && f !== "tags");
+			const scalarFields = rawFields.filter(
+				(f): f is string => typeof f === "string" && f !== "*" && f !== "tags",
+			);
 			const url = new URL(
 				`${API_BASE_URL}/v2/projects/${projectId}/bff`,
 				window.location.origin,
@@ -622,7 +631,7 @@ export const useProjectById = ({
 			const res = await fetch(url.toString(), { credentials: "include" });
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
-				throw new Error(data.detail || "Failed to load project");
+				throw new ApiRequestError(res.status, data);
 			}
 			return (await res.json()) as Project;
 		},
@@ -650,9 +659,7 @@ export const useCreateCustomTopicMutation = () => {
 			payload: CreateCustomTopicPayload;
 		}) => createCustomVerificationTopic(projectId, payload),
 		onError: (error: any) => {
-			toast.error(
-				error?.response?.data?.detail || t`Failed to create custom topic`,
-			);
+			void notifyError(error);
 		},
 		onSuccess: (data: VerificationTopicsResponse, variables) => {
 			queryClient.setQueryData(["verify", "topics", variables.projectId], data);
@@ -677,9 +684,7 @@ export const useUpdateCustomTopicMutation = () => {
 			payload: UpdateCustomTopicPayload;
 		}) => updateCustomVerificationTopic(projectId, topicKey, payload),
 		onError: (error: any) => {
-			toast.error(
-				error?.response?.data?.detail || t`Failed to update custom topic`,
-			);
+			void notifyError(error);
 		},
 		onSuccess: (data: VerificationTopicsResponse, variables) => {
 			queryClient.setQueryData(["verify", "topics", variables.projectId], data);
@@ -702,9 +707,7 @@ export const useDeleteCustomTopicMutation = () => {
 			topicKey: string;
 		}) => deleteCustomVerificationTopic(projectId, topicKey),
 		onError: (error: any) => {
-			toast.error(
-				error?.response?.data?.detail || t`Failed to delete custom topic`,
-			);
+			void notifyError(error);
 		},
 		onSuccess: (data: VerificationTopicsResponse, variables) => {
 			queryClient.setQueryData(["verify", "topics", variables.projectId], data);
@@ -720,6 +723,7 @@ export const useDeleteCustomTopicMutation = () => {
 // Webhook Hooks
 // =============================================================================
 
+import { notifyError } from "@/components/error/notifyError";
 import {
 	createProjectWebhook,
 	deleteProjectWebhook,
@@ -730,6 +734,7 @@ import {
 	type WebhookCreatePayload,
 	type WebhookUpdatePayload,
 } from "@/lib/api";
+import { ApiRequestError } from "@/lib/errors/read";
 
 export const useProjectWebhooks = (projectId: string | undefined) => {
 	return useQuery({
@@ -760,9 +765,7 @@ export const useCreateWebhookMutation = () => {
 			payload: WebhookCreatePayload;
 		}) => createProjectWebhook(projectId, payload),
 		onError: (error: any) => {
-			const message =
-				error?.response?.data?.detail || "Failed to create webhook";
-			toast.error(message);
+			void notifyError(error);
 		},
 		onSuccess: (_, variables) => {
 			queryClient.invalidateQueries({
@@ -786,9 +789,7 @@ export const useUpdateWebhookMutation = () => {
 			payload: WebhookUpdatePayload;
 		}) => updateProjectWebhook(projectId, webhookId, payload),
 		onError: (error: any) => {
-			const message =
-				error?.response?.data?.detail || "Failed to update webhook";
-			toast.error(message);
+			void notifyError(error);
 		},
 		onSuccess: (_, variables) => {
 			queryClient.invalidateQueries({
@@ -810,9 +811,7 @@ export const useDeleteWebhookMutation = () => {
 			webhookId: string;
 		}) => deleteProjectWebhook(projectId, webhookId),
 		onError: (error: any) => {
-			const message =
-				error?.response?.data?.detail || "Failed to delete webhook";
-			toast.error(message);
+			void notifyError(error);
 		},
 		onSuccess: (_, variables) => {
 			queryClient.invalidateQueries({
@@ -833,8 +832,7 @@ export const useTestWebhookMutation = () => {
 			webhookId: string;
 		}) => testProjectWebhook(projectId, webhookId),
 		onError: (error: any) => {
-			const message = error?.response?.data?.detail || "Failed to test webhook";
-			toast.error(message);
+			void notifyError(error);
 		},
 		onSuccess: (result) => {
 			if (result.success) {

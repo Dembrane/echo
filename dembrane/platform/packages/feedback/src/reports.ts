@@ -11,11 +11,11 @@ import {
   BadRequestError,
   NotFoundError,
   newId,
-  PlatformError,
+  StatusError,
   ValidationError,
 } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
-import { type Env, requireUser } from "@dembrane/http";
+import { type Env, requireUser, v } from "@dembrane/http";
 import type { Limit, RateLimiter } from "@dembrane/ratelimit";
 import type { ObjectStorage } from "@dembrane/storage";
 import { Hono } from "hono";
@@ -44,11 +44,6 @@ export interface ReportDeps {
   readonly apiBaseUrl: string;
   /** Test seam; defaults to Postgres. */
   readonly store?: Pick<FeedbackStore, "directusProfile" | "insertSupportRequest">;
-}
-
-class BadGateway extends PlatformError {
-  readonly status = 502;
-  readonly code = "bad_gateway";
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -103,8 +98,8 @@ export function reportRoutes(deps: ReportDeps) {
           ? await c.req.parseBody({ all: true })
           : {};
       const rawMessage = formString(form.message);
-      if (rawMessage === null)
-        throw new ValidationError("Request validation failed", [
+      if (rawMessage === null) {
+        const issues = [
           {
             type: "missing",
             loc: ["body", "message"],
@@ -112,21 +107,36 @@ export function reportRoutes(deps: ReportDeps) {
             input: null,
             url: "https://errors.pydantic.dev/2.12/v/missing",
           },
-        ] as unknown as Record<string, unknown>);
+        ];
+        throw new ValidationError("validation.invalid_input", {
+          details: issues,
+          params: { fields: v.fieldProblems(issues) },
+        });
+      }
       const rawFiles = form.attachments;
       const files = (Array.isArray(rawFiles) ? rawFiles : rawFiles ? [rawFiles] : []).filter(
         (f): f is File => f instanceof File,
       );
 
       const message = rawMessage.trim();
-      if (!message) throw new BadRequestError("Message is required.");
-      if (message.length > MAX_MESSAGE_LENGTH) throw new BadRequestError("Message is too long.");
+      if (!message) throw new BadRequestError("feedback.message_required");
+      if (message.length > MAX_MESSAGE_LENGTH)
+        throw new BadRequestError("feedback.message_too_long");
       if (files.length > MAX_ATTACHMENTS)
-        throw new BadRequestError(`At most ${MAX_ATTACHMENTS} attachments.`);
+        throw new BadRequestError("feedback.too_many_attachments", {
+          params: { max: MAX_ATTACHMENTS },
+        });
       for (const f of files) {
-        if (!ALLOWED_IMAGE_TYPES.has(f.type)) throw new BadRequestError("Only image attachments.");
+        if (!ALLOWED_IMAGE_TYPES.has(f.type))
+          throw new BadRequestError("upload.unsupported_type", {
+            message: "Only image attachments.",
+            params: { accepted: "image", content_type: f.type },
+          });
         if (f.size > MAX_ATTACHMENT_MB * 1024 * 1024)
-          throw new BadRequestError(`Images must be under ${MAX_ATTACHMENT_MB}MB.`);
+          throw new BadRequestError("upload.too_large", {
+            message: `Images must be under ${MAX_ATTACHMENT_MB}MB.`,
+            params: { max_mb: MAX_ATTACHMENT_MB },
+          });
       }
       // After validation: a malformed request must not spend rate-limit budget.
       await deps.limiter.checkUser(REPORT_LIMIT, who.directusUserId);
@@ -185,7 +195,7 @@ export function reportRoutes(deps: ReportDeps) {
           });
         } catch (err) {
           c.get("logger")?.error({ err, reportId }, "support request create failed");
-          throw new BadGateway("Could not save the report.");
+          throw new StatusError(502, "feedback.save_failed");
         }
       } catch (err) {
         // No partial success: stored images go when the report does not land.
@@ -219,7 +229,7 @@ export function reportRoutes(deps: ReportDeps) {
         "Staff only.",
       );
       if ([reportId, filename].some((s) => s.includes("/") || s.includes("..")))
-        throw new BadRequestError("Invalid path.");
+        throw new BadRequestError("feedback.attachment_path_invalid");
       const key = `feedback/${reportId}/${filename}`;
       let exists = false;
       try {
@@ -227,7 +237,7 @@ export function reportRoutes(deps: ReportDeps) {
       } catch (err) {
         c.get("logger")?.warn({ err, key }, "attachment head failed");
       }
-      if (!exists) throw new NotFoundError("Not found.");
+      if (!exists) throw new NotFoundError("feedback.attachment_not_found");
       return c.redirect(
         deps.storage.presignDownload(key, { expiresInSeconds: ATTACHMENT_URL_TTL_SECONDS }),
         307,

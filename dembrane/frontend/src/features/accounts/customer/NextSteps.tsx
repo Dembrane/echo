@@ -15,9 +15,10 @@ import {
 } from "@mantine/core";
 import { CheckIcon, LockSimpleIcon } from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { call, submitTaskWithFile } from "../api/client";
 import { accountKeys } from "../api/hooks";
 import type { TaskT } from "../contract/contract.gen";
@@ -260,12 +261,18 @@ function TaskResponseModal({
 	const [text, setText] = useState("");
 	const [file, setFile] = useState<File | null>(null);
 	const [pending, setPending] = useState(false);
+	// Shown inside the modal, next to the file it is about, until the next try.
+	const [error, setError] = useState<unknown>(null);
 	const queryClient = useQueryClient();
 	const needsFile = task?.kind === "upload";
+	const taskId = task?.id;
+	// biome-ignore lint/correctness/useExhaustiveDependencies: a new task starts clean
+	useEffect(() => setError(null), [taskId]);
 
 	const submit = async () => {
 		if (!task) return;
 		setPending(true);
+		setError(null);
 		try {
 			if (file) {
 				await submitTaskWithFile(
@@ -285,9 +292,7 @@ function TaskResponseModal({
 			setFile(null);
 			onClose();
 		} catch (e) {
-			toast.error(
-				e instanceof Error ? e.message : t`That did not go through. Try again.`,
-			);
+			setError(e);
 		} finally {
 			setPending(false);
 		}
@@ -308,7 +313,12 @@ function TaskResponseModal({
 				)}
 				{needsFile && (
 					<Group gap="sm">
-						<FileButton onChange={setFile}>
+						<FileButton
+							onChange={(f) => {
+								setFile(f);
+								setError(null);
+							}}
+						>
 							{(props) => (
 								<Button variant="default" {...props}>
 									<Trans>Choose a file</Trans>
@@ -328,6 +338,7 @@ function TaskResponseModal({
 					value={text}
 					onChange={(e) => setText(e.currentTarget.value)}
 				/>
+				{error ? <ErrorNotice error={error} /> : null}
 				<Group justify="flex-end">
 					<Button
 						loading={pending}

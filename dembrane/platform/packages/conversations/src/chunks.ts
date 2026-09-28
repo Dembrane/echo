@@ -1,4 +1,4 @@
-import { BadRequestError, ForbiddenError, NotFoundError } from "@dembrane/core";
+import { BadRequestError, type ErrorCode, ForbiddenError, NotFoundError } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
 import { and, eq, gt, isNull, ne, or } from "drizzle-orm";
@@ -8,12 +8,11 @@ import { type ChunkRow, type ConversationRow, conversationStore, transaction } f
 
 const { conversation, conversation_chunk } = schema;
 
-export const NOT_OPEN = "Conversation not open for participation";
 // How far ahead of server time a client-supplied timestamp may sit.
 const SKEW_TOLERANCE_MS = 5 * 60_000;
 
 /** A service error the routes answer with 400 and its text (ConversationServiceException). */
-export class ChunkError extends BadRequestError {}
+export class ChunkError<C extends ErrorCode = ErrorCode> extends BadRequestError<C> {}
 
 export interface NewChunk {
   readonly conversationId: string;
@@ -39,7 +38,7 @@ export async function createChunk(
 ): Promise<ChunkRow> {
   const store = conversationStore(d.db);
   const conv = await store.conversation(input.conversationId);
-  if (!conv) throw new NotFoundError("Conversation not found");
+  if (!conv) throw new NotFoundError("conversation.not_found");
   const now = d.now();
 
   // A conversation finished and merged (auto-finished after a pause) gets more audio:
@@ -61,15 +60,12 @@ export async function createChunk(
   const project = await store.project(conv.project_id);
   // project_service raised ProjectNotFoundException here, which no route caught.
   if (!project) throw new Error(`project ${conv.project_id} of conversation ${conv.id} not found`);
-  if (project.is_conversation_allowed !== true) throw new ForbiddenError(NOT_OPEN);
+  if (project.is_conversation_allowed !== true) throw new ForbiddenError("conversation.not_open");
 
   const fileUrl = input.fileUrl ?? null;
   const hasFile = Boolean(fileUrl?.trim());
   const hasTranscript = Boolean(input.transcript?.trim());
-  if (!hasFile && !hasTranscript)
-    throw new ChunkError(
-      "Chunk must have either an audio file (file_obj or file_url) or a transcript.",
-    );
+  if (!hasFile && !hasTranscript) throw new ChunkError("conversation.chunk_empty");
 
   return transaction(d.db, async (tx) => {
     const [row] = await tx.db

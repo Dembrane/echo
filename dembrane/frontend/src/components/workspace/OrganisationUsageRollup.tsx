@@ -41,11 +41,12 @@ import {
 	type VisibilityState,
 } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
-import { toast } from "@/components/common/Toaster";
 import { UsageFreshness } from "@/components/common/UsageFreshness";
+import { notifyError } from "@/components/error/notifyError";
 import { PeriodSelect } from "@/components/workspace/PeriodSelect";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { ApiRequestError } from "@/lib/errors/read";
 import { formatDurationFromHours } from "@/lib/time";
 
 const TIER_ORDER = [
@@ -125,11 +126,7 @@ async function fetchOrgUsage(
 	const res = await fetch(url, { credentials: "include" });
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(
-			typeof data.detail === "string"
-				? data.detail
-				: t`Couldn't load usage (${res.status})`,
-		);
+		throw new ApiRequestError(res.status, data);
 	}
 	return res.json();
 }
@@ -263,11 +260,7 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 			const fresh = await fetchOrgUsage(orgId, monthOffset, true);
 			queryClient.setQueryData(["v2", "org-usage", orgId, monthOffset], fresh);
 		} catch (err) {
-			toast.error(
-				err instanceof Error
-					? err.message
-					: t`Couldn't refresh usage. Try again.`,
-			);
+			void notifyError(err);
 		} finally {
 			setRefreshing(false);
 		}

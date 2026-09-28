@@ -1,4 +1,4 @@
-import { BadRequestError, NotFoundError, newId, PlatformError } from "@dembrane/core";
+import { BadRequestError, NotFoundError, newId, StatusError } from "@dembrane/core";
 import type { Env } from "@dembrane/http";
 import { p } from "@dembrane/legacy-shape";
 import { Hono } from "hono";
@@ -7,12 +7,6 @@ import { PARTICIPANT_TOKEN_HEADER } from "../participant-token";
 import { reportsStorage } from "./reports-storage";
 
 const { model, required, optional, str, int, bool, list, literal } = p;
-
-/** The old unsubscribe route turned every failure, a missing token included, into this. */
-class InternalError extends PlatformError {
-  readonly status = 500;
-  readonly code = "internal";
-}
 
 // M-19: subscribing was unlimited; one portal enrols a handful of addresses at most.
 const SUBSCRIBE_LIMIT = { name: "participant_report_subscribe", capacity: 20, windowSeconds: 600 };
@@ -59,7 +53,7 @@ export function publicReportRoutes(d: ConversationsDeps) {
       query: { token: required(str()), project_id: required(str()) },
     });
     if (!query.token || !query.project_id)
-      throw new BadRequestError("Invalid or missing unsubscribe link.");
+      throw new BadRequestError("participant.unsubscribe_link_invalid");
     const [row] = await store.subscribersByToken(query.project_id, query.token);
     return c.json({ data: { eligible: Boolean(row?.email_opt_in) } });
   });
@@ -69,7 +63,7 @@ export function publicReportRoutes(d: ConversationsDeps) {
       path: { project_id: required(str()), report_id: required(int()) },
     });
     const row = await store.publishedDetail(path.project_id, path.report_id);
-    if (!row) throw new NotFoundError("Report not found");
+    if (!row) throw new NotFoundError("participant.report_not_found");
     return c.json({
       id: reportId(row.id),
       content: row.content,
@@ -89,7 +83,7 @@ export function publicReportRoutes(d: ConversationsDeps) {
     });
     const projectId = c.req.param("project_id");
     const row = await store.publishedDetail(projectId, body.data.project_report_id);
-    if (!row) throw new NotFoundError("Report not found");
+    if (!row) throw new NotFoundError("participant.report_not_found");
     await store.addMetric(body.data.project_report_id, body.data.type, d.now());
     return c.json({ status: "ok" });
   });
@@ -109,7 +103,7 @@ export function publicReportRoutes(d: ConversationsDeps) {
     d.tokens.check(c.req.header(PARTICIPANT_TOKEN_HEADER), conversation_id, project_id);
     await d.limiter.check(SUBSCRIBE_LIMIT, clientIp(c));
     if (!(await store.conversationInProject(project_id, conversation_id)))
-      throw new NotFoundError("Conversation not found");
+      throw new NotFoundError("conversation.not_found");
     const failed: string[] = [];
     for (const raw of emails) {
       const email = raw.toLowerCase();
@@ -131,9 +125,8 @@ export function publicReportRoutes(d: ConversationsDeps) {
       }
     }
     if (failed.length)
-      throw new BadRequestError("Some emails failed to process", {
-        message: "Some emails failed to process",
-        failed,
+      throw new BadRequestError("participant.subscribe_failed", {
+        details: { message: "Some emails failed to process", failed },
       });
     return c.json({ status: "success" });
   });
@@ -143,7 +136,7 @@ export function publicReportRoutes(d: ConversationsDeps) {
       body: model({ token: required(str()), email_opt_in: required(bool()) }),
     });
     const rows = await store.subscribersByToken(c.req.param("project_id"), body.data.token);
-    if (!rows.length) throw new InternalError("Internal Server Error");
+    if (!rows.length) throw new StatusError(500, "participant.unsubscribe_link_unknown");
     for (const r of rows) await store.setOptIn(r.id, body.data.email_opt_in, d.now());
     return c.json({ success: true });
   });

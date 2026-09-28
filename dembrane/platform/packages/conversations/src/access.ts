@@ -27,7 +27,7 @@ export async function conversationForBff(
   policy?: Policy,
 ): Promise<ConversationAccess & { project: ProjectAccess }> {
   const conv = await conversationStore(d.db).conversation(conversationId);
-  if (!conv) throw new NotFoundError("Conversation not found");
+  if (!conv) throw new NotFoundError("conversation.not_found");
   const project = await projectFor(d.access, who, conv.project_id, "conversation:read");
   if (policy && policy !== "conversation:read")
     await projectFor(d.access, who, conv.project_id, policy);

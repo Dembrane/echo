@@ -41,9 +41,9 @@ const PNG_MAGIC = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 export function pngBytes(b64: string, what: string): Uint8Array {
   const bytes = new Uint8Array(Buffer.from(b64, "base64"));
   if (bytes.byteLength > MAX_SIGNATURE_BYTES)
-    throw new ValidationError(`The ${what} image is larger than 512 KB`);
+    throw new ValidationError("document.image_too_large", { params: { what } });
   if (!PNG_MAGIC.every((b, i) => bytes[i] === b))
-    throw new ValidationError(`The ${what} image must be a PNG`);
+    throw new ValidationError("document.image_not_png", { params: { what } });
   return bytes;
 }
 
@@ -75,20 +75,21 @@ export function checkValues(
 ): void {
   const ids = new Set(fields.map((f) => f.id));
   for (const key of Object.keys(values))
-    if (!ids.has(key)) throw new ValidationError(`Unknown field ${key}`);
+    if (!ids.has(key)) throw new ValidationError("document.field_unknown", { params: { key } });
   for (const f of fields) {
     if (f.kind === "signature" || f.kind === "initials") continue;
     const v = values[f.id];
     if (f.kind === "checkbox") {
       if (v !== undefined && typeof v !== "boolean")
-        throw new ValidationError(`${f.label}: tick or untick`);
-      if (f.required && v !== true) throw new ValidationError(`${f.label} must be ticked`);
+        throw new ValidationError("document.field_tick_invalid", { params: { label: f.label } });
+      if (f.required && v !== true)
+        throw new ValidationError("document.field_must_tick", { params: { label: f.label } });
       continue;
     }
     if (v !== undefined && typeof v !== "string")
-      throw new ValidationError(`${f.label}: expected text`);
+      throw new ValidationError("document.field_text_invalid", { params: { label: f.label } });
     if (f.required && !(typeof v === "string" && v.trim()))
-      throw new ValidationError(`${f.label} is required`);
+      throw new ValidationError("document.field_required", { params: { label: f.label } });
   }
 }
 
@@ -110,18 +111,15 @@ export async function signDocument(
   const access = await documentFor(d, who, orgId, docId, "account:sign");
   assertMaySign(access);
   const { doc, org } = access;
-  if (!access.email) throw new ForbiddenError("Sign in with a verified email address to sign");
-  if (!doc.requiresSignature) throw new ConflictError("This document does not need a signature");
-  if (doc.status === "signed") throw new ConflictError("This document is already signed");
-  if (doc.status === "declined") throw new ConflictError("This document was declined");
-  if (doc.status === "void") throw new ConflictError("This document was withdrawn");
+  if (!access.email) throw new ForbiddenError("document.verified_email_required");
+  if (!doc.requiresSignature) throw new ConflictError("document.no_signature_needed");
+  if (doc.status === "signed") throw new ConflictError("document.already_signed");
+  if (doc.status === "declined") throw new ConflictError("document.declined");
+  if (doc.status === "void") throw new ConflictError("document.withdrawn");
   const now = d.now();
   if (doc.kind === "offer" && doc.validUntil && doc.validUntil < now.toISOString().slice(0, 10))
-    throw new ConflictError(`This offer expired on ${doc.validUntil}; ask us for a new one`);
-  if (input.sha256 !== doc.sha256)
-    throw new ConflictError(
-      "The document changed since you opened it. Reload it and read it again before signing.",
-    );
+    throw new ConflictError("document.offer_expired", { params: { valid_until: doc.validUntil } });
+  if (input.sha256 !== doc.sha256) throw new ConflictError("document.changed");
   const file = doc.fileKey ? await d.files.get(doc.fileKey) : null;
   const unsigned = file ? new Uint8Array(await file.arrayBuffer()) : null;
   if (!unsigned || sha256Hex(unsigned) !== doc.sha256) {
@@ -129,10 +127,10 @@ export async function signDocument(
       { document_id: doc.id, signal: "accounts.document_hash_mismatch" },
       "stored document PDF is missing or no longer matches its sha256",
     );
-    throw new ConflictError("This document cannot be signed right now; we have been told.");
+    throw new ConflictError("document.signing_unavailable");
   }
   if (doc.kind === "dpa" && !input.dpa_authorised)
-    throw new ValidationError("Only someone authorised to agree to data processing signs this");
+    throw new ValidationError("document.dpa_not_authorised");
   const fields = await store.fields(d.db, doc.id);
   checkValues(fields, input.values);
   const facts = signerFacts(fields, input.values, org.name);
@@ -146,9 +144,7 @@ export async function signDocument(
     dpa_authorised: input.dpa_authorised,
   });
   if (!sameText(expected, input.confirmation_text))
-    throw new ValidationError(
-      `The confirmation text does not match what this document asks: ${expected}`,
-    );
+    throw new ValidationError("document.confirmation_mismatch", { params: { expected } });
   const signaturePng = pngBytes(input.signature.png_base64, "signature");
   const initialsPng = input.initials ? pngBytes(input.initials.png_base64, "initials") : null;
 
@@ -202,7 +198,7 @@ export async function signDocument(
   } catch (err) {
     // pdf-lib refuses a PNG it cannot decode; that is the signer's image, not our fault.
     if (/png/i.test((err as Error).message))
-      throw new ValidationError("The signature image could not be read as a PNG");
+      throw new ValidationError("document.signature_unreadable");
     throw err;
   }
   const base = `accounts/${org.id}/documents/${doc.id}`;
@@ -217,7 +213,7 @@ export async function signDocument(
     await d.db.transaction(async (tx) => {
       const locked = await store.documentForUpdate(tx, org.id, doc.id);
       if (!locked || !["sent", "viewed"].includes(locked.status))
-        throw new ConflictError("This document is already signed");
+        throw new ConflictError("document.already_signed");
       await store.insertSignature(tx, {
         id: signatureId,
         documentId: doc.id,
@@ -267,7 +263,7 @@ export async function signDocument(
   } catch (err) {
     // Two signatures racing: the unique document id lets exactly one row in.
     if ((err as { code?: string }).code === "23505")
-      throw new ConflictError("This document is already signed");
+      throw new ConflictError("document.already_signed");
     throw err;
   }
   return { signature_id: signatureId, signed_at: signedAt, confirmation_text: expected };

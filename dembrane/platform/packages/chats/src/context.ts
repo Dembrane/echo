@@ -130,7 +130,7 @@ export async function chatContext(d: ChatDeps, who: Signed, chat: ChatRow): Prom
     );
     // Fail closed: a missing count would read as zero and let add-context pass the limit.
     if (meta.some(([id]) => !counts.has(id)))
-      throw new UnavailableError("Could not compute chat context size. Please try again.");
+      throw new UnavailableError("chat.context_size_unavailable");
   }
   for (const [id, name, isLocked] of meta) {
     ctx.conversations.push({

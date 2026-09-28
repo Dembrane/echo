@@ -15,8 +15,10 @@ import { AxiosError } from "axios";
 import { memo, useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import { useCooldown } from "@/hooks/useCooldown";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { errorCode } from "@/lib/errors/read";
 import { testId } from "@/lib/testUtils";
 import { Logo } from "../../common/Logo";
 import { Markdown } from "../../common/Markdown";
@@ -138,7 +140,7 @@ export const VerifyArtefact = () => {
 				setIsApproving(false);
 			}, 100);
 		} catch (error) {
-			toast.error(t`Failed to approve outcome. Please try again.`);
+			void notifyError(error);
 			console.error("error approving artefact: ", error);
 		} finally {
 			setIsApproving(false);
@@ -179,15 +181,16 @@ export const VerifyArtefact = () => {
 			toast.success(t`Outcome revised successfully!`);
 		} catch (error) {
 			if (
-				error instanceof AxiosError &&
-				error?.response?.data.detail.code === "NO_NEW_FEEDBACK"
+				errorCode(error) === "verify.no_new_feedback" ||
+				(error instanceof AxiosError &&
+					error?.response?.data?.detail?.code === "NO_NEW_FEEDBACK")
 			) {
 				reviseCooldown.trigger();
 				toast.info(
 					t`No new feedback detected yet. Please continue your discussion and try again soon.`,
 				);
 			} else {
-				toast.error(t`Failed to revise outcome. Please try again.`);
+				void notifyError(error);
 			}
 			console.error("error revising artefact: ", error);
 		} finally {

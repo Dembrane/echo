@@ -1,4 +1,4 @@
-import { BadRequestError, ForbiddenError, NotFoundError, newId } from "@dembrane/core";
+import { BadRequestError, ForbiddenError, NotFoundError, newId, StatusError } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { projectFor } from "@dembrane/http";
 import { agentProject } from "../access";
@@ -8,7 +8,6 @@ import {
   projectWorkspaceId,
   type Row,
   row,
-  ServerError,
   sqlOf,
   text,
   workspaceGate,
@@ -58,12 +57,14 @@ export async function writeMemory(
   await agentProject(d.access, who, projectId);
   const scope = body.scope.trim().toLowerCase();
   if (!(MEMORY_SCOPES as readonly string[]).includes(scope))
-    throw new BadRequestError(`Invalid scope. Use one of: ${MEMORY_SCOPES.join(", ")}`);
+    throw new BadRequestError("memory.invalid_scope", {
+      params: { scopes: MEMORY_SCOPES.join(", ") },
+    });
   const content = body.content.trim();
-  if (!content) throw new BadRequestError("content is required");
+  if (!content) throw new BadRequestError("memory.content_required");
   const workspaceId = await projectWorkspaceId(d, projectId);
   if (scope !== "user" && workspaceId === null) {
-    throw new ServerError("Project is missing a workspace reference");
+    throw new StatusError(500, "agent.project_missing_workspace");
   }
   const owner: Record<string, string | null> =
     scope === "user"
@@ -96,9 +97,9 @@ export async function writeMemory(
 }
 
 async function memoryOr404(d: DataDeps, memoryId: string): Promise<Row> {
-  if (!isUuid(memoryId)) throw new NotFoundError("Memory not found");
+  if (!isUuid(memoryId)) throw new NotFoundError("memory.not_found");
   const [r] = await sqlOf(d)`select * from agent_memory where id = ${memoryId}`;
-  if (!r) throw new NotFoundError("Memory not found");
+  if (!r) throw new NotFoundError("memory.not_found");
   return row(r as Row);
 }
 
@@ -112,7 +113,7 @@ async function requireMemoryAccess(d: DataDeps, who: Signed, mem: Row, intent: "
   const scope = String(mem.scope ?? "");
   if (scope === "user") {
     if (text(mem.directus_user_id) !== who.directusUserId)
-      throw new NotFoundError("Memory not found");
+      throw new NotFoundError("memory.not_found");
     return;
   }
   const projectId = text(mem.project_id);
@@ -126,15 +127,15 @@ async function requireMemoryAccess(d: DataDeps, who: Signed, mem: Row, intent: "
       () => true,
       () => false,
     );
-    if (!reach) throw new NotFoundError("Memory not found");
+    if (!reach) throw new NotFoundError("memory.not_found");
     if (intent === "forget") {
       await d.access.workspace(who, workspaceId, "settings:manage").catch(() => {
-        throw new ForbiddenError("Not allowed");
+        throw new ForbiddenError("access.forbidden");
       });
     }
     return;
   }
-  throw new NotFoundError("Memory not found");
+  throw new NotFoundError("memory.not_found");
 }
 
 /** PATCH /agentic/memories/{id}: a correction edits the same row instead of layering another. */
@@ -142,7 +143,7 @@ export async function amendMemory(d: DataDeps, who: Signed, memoryId: string, co
   const mem = await memoryOr404(d, memoryId);
   await requireMemoryAccess(d, who, mem, "amend");
   const trimmed = content.trim();
-  if (!trimmed) throw new BadRequestError("content is required");
+  if (!trimmed) throw new BadRequestError("memory.content_required");
   await sqlOf(d)`
     update agent_memory set content = ${trimmed}, updated_at = ${d.now().toISOString()}
     where id = ${memoryId}`;
@@ -195,13 +196,13 @@ export async function deleteMemory(d: DataDeps, who: Signed, memoryId: string) {
   const workspaceId = text(mem.workspace_id);
   if (scope === "user") {
     if (text(mem.directus_user_id) !== who.directusUserId)
-      throw new NotFoundError("Memory not found");
+      throw new NotFoundError("memory.not_found");
   } else if (scope === "project" && projectId) {
     await projectFor(d.access, who, projectId, "chat:use");
   } else if (scope === "workspace" && workspaceId) {
     await workspaceGate(d, who, workspaceId, "chat:use");
   } else {
-    throw new NotFoundError("Memory not found");
+    throw new NotFoundError("memory.not_found");
   }
   await sqlOf(d)`delete from agent_memory where id = ${memoryId}`;
   return { status: "deleted" };

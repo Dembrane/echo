@@ -2,7 +2,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
-	Alert,
 	Box,
 	Button,
 	Group,
@@ -11,12 +10,12 @@ import {
 	Stack,
 	TextInput,
 } from "@mantine/core";
-import { AxiosError } from "axios";
 import posthog from "posthog-js";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSearchParams } from "react-router";
 import { z } from "zod";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { initiateConversation as requestConversation } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
@@ -41,13 +40,6 @@ type FormValues = z.infer<typeof FormSchema>;
 export const portalHasNothingToAsk = (project: Project) =>
 	!project.default_conversation_ask_for_participant_name &&
 	project.tags.length === 0;
-
-/** The detail the server sent, or a generic apology. */
-const initiateErrorMessage = (error: unknown): string => {
-	const detail =
-		error instanceof AxiosError ? error.response?.data?.detail : undefined;
-	return typeof detail === "string" ? detail : t`Something went wrong`;
-};
 
 /** In-flight (or settled) auto-started conversations, keyed by project.
  *
@@ -260,16 +252,10 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 		>
 			<Stack className="relative">
 				{Boolean(initiateConversationMutation.error || autoStartError) && (
-					<Box>
-						<Alert
-							color="red"
-							variant="light"
-							{...testId("portal-initiate-error-alert")}
-						>
-							{initiateErrorMessage(
-								initiateConversationMutation.error ?? autoStartError,
-							)}
-						</Alert>
+					<Box {...testId("portal-initiate-error-alert")}>
+						<ErrorNotice
+							error={initiateConversationMutation.error ?? autoStartError}
+						/>
 					</Box>
 				)}
 

@@ -80,32 +80,33 @@ export function staffRoutes(deps: StaffRouteDeps) {
   /** The caller's app_user; staff act on customer workspaces as themselves. */
   async function appUser(directusUserId: string) {
     const u = await s.appUserByDirectusId(directusUserId);
-    if (!u) throw new ForbiddenError("User not onboarded");
+    if (!u) throw new ForbiddenError("access.not_onboarded");
     return u;
   }
 
   async function liveWorkspace(id: string) {
     const ws = isUuid(id) ? await s.workspace(id) : null;
-    if (!ws || ws.deleted_at) throw new NotFoundError("Workspace not found");
+    if (!ws || ws.deleted_at) throw new NotFoundError("workspace.not_found");
     return ws;
   }
 
   async function liveAccount(id: string) {
     const acc = isUuid(id) ? await billingStore.account(id) : null;
-    if (!acc || acc.deleted_at) throw new NotFoundError("Billing account not found");
+    if (!acc || acc.deleted_at) throw new NotFoundError("billing.account_not_found");
     return acc;
   }
 
   async function accountManager(appUserId: string) {
     const user = isUuid(appUserId) ? await billingStore.appUser(appUserId) : null;
-    if (!user) throw new BadRequestError("Account manager user not found");
+    if (!user) throw new BadRequestError("billing.account_manager_not_found");
     if (!(user.email ?? "").trim().toLowerCase().endsWith(STAFF_EMAIL_DOMAIN))
-      throw new BadRequestError("Account manager must be a dembrane staff member (@dembrane.com).");
+      throw new BadRequestError("billing.account_manager_not_staff");
     return user;
   }
 
   const billingBad = (e: unknown): never => {
-    if (e instanceof BillingError) throw new BadRequestError(e.message);
+    if (e instanceof BillingError)
+      throw new BadRequestError("staff.billing_refused", { params: { reason: e.message } });
     throw e;
   };
 
@@ -127,7 +128,8 @@ export function staffRoutes(deps: StaffRouteDeps) {
     else if (b.type_discount !== null) patch.type_discount = b.type_discount;
     if (b.clear_percent_discount) patch.percent_discount = null;
     else if (b.percent_discount !== null) patch.percent_discount = b.percent_discount;
-    if (!Object.keys(patch).length) throw new BadRequestError("Nothing to update");
+    if (!Object.keys(patch).length)
+      throw new BadRequestError("request.nothing_to_update", { message: "Nothing to update" });
     return patch;
   }
 
@@ -329,7 +331,7 @@ export function staffRoutes(deps: StaffRouteDeps) {
     const id = c.req.param("org_id");
     await staff(c, "staff:workspaces", "org.partner.update", ["org", id], body);
     const org = isUuid(id) ? await s.org(id) : null;
-    if (!org || org.deleted_at) throw new NotFoundError("Organisation not found");
+    if (!org || org.deleted_at) throw new NotFoundError("organisation.not_found");
     await s.updateOrg(id, { is_partner: body.is_partner }, clock());
     return c.json({ status: "ok", org_id: id, is_partner: body.is_partner });
   });
@@ -396,11 +398,9 @@ export function staffRoutes(deps: StaffRouteDeps) {
     await liveWorkspace(id);
     const m = isUuid(body.membership_id) ? await s.membership(body.membership_id) : null;
     if (!m || m.deleted_at || m.workspace_id !== id)
-      throw new NotFoundError("Membership not found in this workspace");
+      throw new NotFoundError("member.not_in_workspace");
     if (m.role === "external" || m.role === "observer")
-      throw new BadRequestError(
-        "Cannot promote an outside collaborator to admin. Add them to the org first.",
-      );
+      throw new BadRequestError("staff.outsider_cannot_be_admin");
     if (m.role !== "admin" && m.role !== "owner")
       await s.updateMembership(m.id, { role: "admin" }, clock());
     return c.json({
@@ -441,8 +441,7 @@ export function staffRoutes(deps: StaffRouteDeps) {
     const id = c.req.param("workspace_id");
     const who = await staff(c, "staff:support_join", "workspace.support.join", ["workspace", id]);
     const ws = await liveWorkspace(id);
-    if (!ws.allow_support_access)
-      throw new ForbiddenError("This workspace has not enabled dembrane staff support access.");
+    if (!ws.allow_support_access) throw new ForbiddenError("staff.support_access_disabled");
     const me = await appUser(who.directusUserId);
     const g = await support.grant(id, me.id, ws.org_id);
     if (g.status !== "already_member")
@@ -540,8 +539,7 @@ export function staffRoutes(deps: StaffRouteDeps) {
       id,
     ]);
     const ws = await liveWorkspace(id);
-    if (ws.allow_support_access)
-      throw new ConflictError("Support access is already on for this workspace; join directly.");
+    if (ws.allow_support_access) throw new ConflictError("staff.support_access_already_on");
     const me = await appUser(who.directusUserId);
     const [existing] = await s.ownRequests(id, me.id, "pending");
     if (existing) return c.json(requestOut(existing));
@@ -646,9 +644,7 @@ export function staffRoutes(deps: StaffRouteDeps) {
     await staff(c, "staff:set_tier", "billing_account.managed.set", ["billing_account", id], body);
     const acc = await liveAccount(id);
     if (acc.payment_mode === "mollie" && acc.mollie_subscription_id)
-      throw new ConflictError(
-        "This account has an active subscription. Ask the customer to cancel it from their billing page first.",
-      );
+      throw new ConflictError("staff.active_subscription");
     const patch: Parameters<typeof billingStore.updateAccount>[1] = {
       payment_mode: "offline",
       tier: body.tier,
@@ -674,11 +670,9 @@ export function staffRoutes(deps: StaffRouteDeps) {
     const id = c.req.param("account_id");
     await staff(c, "staff:set_tier", "billing_account.saas.set", ["billing_account", id], body);
     const acc = await liveAccount(id);
-    if (acc.payment_mode === "mollie")
-      throw new BadRequestError("Account already bills through Mollie.");
-    if (acc.payment_mode !== "offline") throw new BadRequestError("Account is not managed.");
-    if (!body.to_free && !body.expires_at)
-      throw new BadRequestError("An expiry date is required when keeping the tier.");
+    if (acc.payment_mode === "mollie") throw new BadRequestError("staff.already_mollie");
+    if (acc.payment_mode !== "offline") throw new BadRequestError("staff.not_managed");
+    if (!body.to_free && !body.expires_at) throw new BadRequestError("staff.expiry_required");
     await billingStore.updateAccount(
       id,
       body.to_free

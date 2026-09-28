@@ -1,4 +1,5 @@
 import { directusTime } from "@dembrane/http";
+import { localeOfEmail } from "@dembrane/i18n";
 import type { InviteCtx } from "./invites/accept";
 import { hashMatches, urlencode } from "./invites/hash";
 import { sendEmail } from "./jobs";
@@ -108,8 +109,11 @@ export async function register(
 
   if (known) {
     const qs = urlencode({ email });
+    // They have an account: the email speaks the language their dashboard is set to.
+    const language = await localeOfEmail(deps.db, email).catch(() => null);
     try {
       await deps.jobs.enqueue(sendEmail, {
+        ...(language && { language }),
         to: email,
         subject: "You already have a dembrane account",
         template: "registration_existing_account",

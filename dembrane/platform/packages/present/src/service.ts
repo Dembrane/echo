@@ -45,7 +45,6 @@ import type { MapStore } from "./map";
  * publishes it, or puts a few opening words live straight from the slide.
  */
 
-export const DRAFT_CONFLICT_DETAIL = "The presentation draft changed elsewhere.";
 /** How a translation tick writes a failure into its run detail. */
 const TRANSLATION_FAILURE_PREFIX = "translation failed: ";
 
@@ -70,7 +69,7 @@ const FALLBACK_TITLES: Record<string, string> = {
   cs: "Prezentace",
 };
 
-export const draftConflict = () => new ConflictError(DRAFT_CONFLICT_DETAIL);
+export const draftConflict = () => new ConflictError("present.draft_conflict");
 
 /** datetime.now(timezone.utc).isoformat(): the Python clock carries microseconds. */
 function savedAt(now: Date): string {

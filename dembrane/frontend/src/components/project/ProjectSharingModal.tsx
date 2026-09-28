@@ -1,3 +1,4 @@
+import { i18n } from "@lingui/core";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
@@ -12,23 +13,24 @@ import {
 	Text,
 } from "@mantine/core";
 import { usePostHog } from "@posthog/react";
-import { useQueryClient } from "@tanstack/react-query";
 import { IconAlertTriangle, IconTrash, IconX } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
+import { ApiError } from "@/components/invite/api";
 import {
 	type EmailChip,
 	EmailChipsInput,
 } from "@/components/invite/EmailChipsInput";
-import { ApiError } from "@/components/invite/api";
 import { type InviteRole, RoleSelect } from "@/components/invite/RoleSelect";
 import { useRevokeInvite } from "@/components/members/hooks";
 import {
 	type InviteBatchResult,
 	invalidateProjectSharing,
-	summarizeInviteResults,
 	projectInvitesKey,
 	shareWithEmails,
+	summarizeInviteResults,
 	useAddProjectShare,
 	useInviteToWorkspaceWithProject,
 	useProjectPendingInvites,
@@ -39,6 +41,7 @@ import {
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { avatarUrl, memberInitials } from "@/lib/avatar";
+import { toastForEmail } from "@/lib/errors/toastForEmail";
 import { displayRole, isAdminRole } from "@/lib/roles";
 
 interface ProjectSharingModalProps {
@@ -102,9 +105,7 @@ export function ProjectSharingModal({
 			queryClient.invalidateQueries({ queryKey: projectInvitesKey(projectId) });
 			toast.success(t`Invite revoked`);
 		} catch (err) {
-			toast.error(
-				err instanceof Error ? err.message : t`Couldn't revoke invite`,
-			);
+			void notifyError(err);
 		}
 	};
 	// RoleSelect filters options by the inviter's level; non-admins never reach it.
@@ -154,7 +155,7 @@ export function ProjectSharingModal({
 				invalidateProjectSharing(queryClient, projectId, workspaceId);
 			}
 			for (const f of result.failed) {
-				toast.error(`${f.email}: ${f.message}`);
+				toastForEmail(f.email, f.error, i18n);
 			}
 			// Same local name as the invite path so both sites share one message id.
 			const granted = result.shared.length;
@@ -195,7 +196,7 @@ export function ProjectSharingModal({
 				role: inviteRole,
 			});
 		} catch (err) {
-			toast.error(err instanceof Error ? err.message : t`Couldn't send invite`);
+			void notifyError(err);
 			return;
 		}
 		const summary = summarizeInviteResults(results);
@@ -206,16 +207,14 @@ export function ProjectSharingModal({
 		posthog?.capture("invite_sent", {
 			count: pendingInvites.length,
 			role: inviteRole,
-			workspace_count: 1,
 			source: "project_sharing",
+			workspace_count: 1,
 		});
 		for (const { email, reason } of summary.failed) {
 			if (reason instanceof ApiError && reason.status === 403) {
 				toast.error(t`Ask a workspace admin to invite this collaborator.`);
 			} else {
-				toast.error(
-					`${email}: ${reason instanceof Error ? reason.message : t`Couldn't send invite`}`,
-				);
+				toastForEmail(email, reason, i18n);
 			}
 		}
 		for (const email of summary.otherProject) {
@@ -256,9 +255,7 @@ export function ProjectSharingModal({
 			// the next action without preaching.
 			toast.success(t`Private. Add people to share it.`);
 		} catch (err) {
-			const msg =
-				err instanceof Error ? err.message : t`Couldn't change visibility`;
-			toast.error(msg);
+			void notifyError(err);
 		}
 	};
 
@@ -272,9 +269,7 @@ export function ProjectSharingModal({
 			);
 			handleClose();
 		} catch (err) {
-			toast.error(
-				err instanceof Error ? err.message : t`Couldn't change visibility`,
-			);
+			void notifyError(err);
 		}
 	};
 
@@ -384,7 +379,7 @@ export function ProjectSharingModal({
 								onClick={() => {
 									revoke
 										.mutateAsync(share.user_id)
-										.catch((err: Error) => toast.error(err.message));
+										.catch((err: Error) => void notifyError(err));
 								}}
 							>
 								<IconTrash size={14} />

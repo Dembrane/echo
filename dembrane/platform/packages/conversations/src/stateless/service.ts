@@ -1,5 +1,5 @@
 import { durationOf } from "@dembrane/audio";
-import { newId, type PlatformError } from "@dembrane/core";
+import { newId, StatusError } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import { projectFor } from "@dembrane/http";
@@ -32,7 +32,6 @@ export interface StatelessHooks {
   gate(): Promise<void>;
   /** Content type and size of an uploaded file. */
   checkFile(file: File): void;
-  fail(status: number, message: string): PlatformError;
 }
 
 function parseHotwords(raw: string | null): string[] | null {
@@ -55,19 +54,17 @@ function uploadKey(filename: string): string {
  * Python API fetched any URL server-side and read any bucket key, other tenants' audio
  * included.
  */
-async function ownedKey(
-  d: ConversationsDeps,
-  input: StatelessInput,
-  fail: StatelessHooks["fail"],
-): Promise<string> {
+async function ownedKey(d: ConversationsDeps, input: StatelessInput): Promise<string> {
   const uri = input.audioFileUri as string;
   if (/^https?:\/\//i.test(uri.trim()))
-    throw fail(400, "audio_file_uri must be a storage key of this project's audio, not a URL");
+    throw new StatusError(400, "upload.audio_key_invalid", {
+      message: "audio_file_uri must be a storage key of this project's audio, not a URL",
+    });
   let key: string;
   try {
     key = d.audioUrls.keyOf(uri);
   } catch (err) {
-    throw fail(400, (err as Error).message);
+    throw new StatusError(400, "upload.audio_key_invalid", { message: (err as Error).message });
   }
   const cid = /^conversation\/([^/]+)\//.exec(key)?.[1];
   const { conversation } = schema;
@@ -79,8 +76,7 @@ async function ownedKey(
           .where(and(eq(conversation.id, cid), eq(conversation.project_id, input.projectId)))
           .limit(1)
       : [];
-  if (!owned.length)
-    throw fail(400, "audio_file_uri must be a storage key of this project's audio");
+  if (!owned.length) throw new StatusError(400, "upload.audio_key_invalid");
   return key;
 }
 
@@ -99,7 +95,7 @@ export async function transcribeStateless(
   if (input.projectId) await projectFor(d.access, who, input.projectId, "project:update");
   else await hooks.gate();
   if ((input.file === null) === (input.audioFileUri === null))
-    throw hooks.fail(400, "Provide exactly one of file or audio_file_uri");
+    throw new StatusError(400, "upload.source_ambiguous");
   if (input.file) hooks.checkFile(input.file);
 
   let parked: string | null = null;
@@ -111,9 +107,9 @@ export async function transcribeStateless(
     await d.audio.put(key, audio, input.file.type || undefined);
     parked = key;
   } else {
-    key = await ownedKey(d, input, hooks.fail);
+    key = await ownedKey(d, input);
     const blob = await d.audio.get(key);
-    if (!blob) throw hooks.fail(400, `Audio not found: ${key}`);
+    if (!blob) throw new StatusError(400, "upload.audio_not_found", { params: { key } });
     audio = new Uint8Array(await blob.arrayBuffer());
   }
 
@@ -134,7 +130,8 @@ export async function transcribeStateless(
       transcript = r.transcript;
       note = r.note;
     } catch (err) {
-      if (err instanceof TranscriptionError) throw hooks.fail(502, err.message);
+      if (err instanceof TranscriptionError)
+        throw new StatusError(502, "upload.transcription_failed", { message: err.message });
       throw err;
     }
     // After transcription, so a probe failure never costs the caller a transcript. A

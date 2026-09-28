@@ -1,0 +1,69 @@
+import type { Codes } from "./types";
+
+/** Canvases: live report walls a loop refreshes on a cadence. */
+export const canvas = {
+  "canvas.feature_off": {
+    action: "none",
+    detail: "Not found",
+    description:
+      "Canvas is a beta: switched off here or not opted into by the project. Answers 404 before authentication.",
+  },
+  "canvas.not_found": {
+    action: "none",
+    detail: "Canvas not found",
+    description: "The canvas does not exist, was deleted, or belongs to another project.",
+  },
+  "canvas.loop_not_found": {
+    action: "none",
+    detail: "Canvas loop not found",
+    description: "The canvas has no refresh loop.",
+  },
+  "canvas.loop_action_not_found": {
+    action: "none",
+    detail: "Canvas loop action not found",
+    audience: "developer",
+    description: "The loop action in the path is not pause, resume or stop.",
+  },
+  "canvas.loop_action_unsupported": {
+    action: "none",
+    detail: "Unsupported loop action: {action}",
+    audience: "developer",
+    description: "The service was asked for a loop action it does not know.",
+  },
+  "canvas.loop_ended": {
+    action: "none",
+    detail: "This loop has ended",
+    description: "The canvas loop was stopped or expired, so it cannot be changed or resumed.",
+  },
+  "canvas.invalid_value": {
+    action: "fix_input",
+    detail: "Invalid canvas value",
+    description:
+      "A ledger or the HTML sanitiser refused the host's input; the message carries its reason.",
+  },
+  "canvas.expiry_in_past": {
+    action: "fix_input",
+    detail: "expires_at must be in the future",
+    description: "The loop's end date is in the past.",
+  },
+  "canvas.expiry_too_far": {
+    action: "fix_input",
+    detail: "expires_at must be within 7 days",
+    description: "The loop's end date is more than 7 days away.",
+  },
+  "canvas.just_refreshed": {
+    action: "wait",
+    detail: "Just refreshed",
+    description: "A manual refresh ran moments ago; refreshes are spaced out.",
+  },
+  "canvas.just_previewed": {
+    action: "wait",
+    detail: "Just previewed",
+    description: "A preview ran moments ago; previews are spaced out.",
+  },
+  "canvas.extraction_failed": {
+    action: "retry",
+    detail: "Canvas extraction failed: {reason}",
+    description: "The model behind the canvas preview failed (502); reason is its error text.",
+  },
+} as const satisfies Codes<"canvas">;

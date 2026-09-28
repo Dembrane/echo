@@ -199,14 +199,12 @@ export async function updateAccount(
         const user = isUuid(patch.account_manager_id)
           ? await store.appUser(tx, patch.account_manager_id)
           : null;
-        if (!user) throw new BadRequestError("Account manager user not found");
+        if (!user) throw new BadRequestError("billing.account_manager_not_found");
         if (!(user.email ?? "").toLowerCase().endsWith("@dembrane.com"))
-          throw new BadRequestError(
-            "Account manager must be a dembrane staff member (@dembrane.com).",
-          );
+          throw new BadRequestError("billing.account_manager_not_staff");
       }
       const account = await store.billing(tx, org.id);
-      if (!account) throw new ConflictError("This organisation has no billing account yet");
+      if (!account) throw new ConflictError("billing.no_billing_account");
       await store.updateBilling(tx, account.id, {
         account_manager_id: patch.account_manager_id,
         updated_at: now.toISOString(),
@@ -260,8 +258,8 @@ async function supersede(
   kind: string,
 ) {
   const prev = isUuid(id) ? await store.document(tx, orgId, id) : null;
-  if (!prev || prev.kind !== kind) throw new NotFoundError("Document to supersede not found");
-  if (prev.status === "signed") throw new ConflictError("A signed document cannot be superseded");
+  if (!prev || prev.kind !== kind) throw new NotFoundError("document.supersede_not_found");
+  if (prev.status === "signed") throw new ConflictError("document.signed_cannot_supersede");
   const now = d.now();
   if (prev.status !== "void")
     await store.updateDocument(tx, prev.id, { status: "void", voidedAt: now, updatedAt: now });
@@ -512,8 +510,8 @@ export async function pushDocument(
     title = title ?? `${pinned.dpa.title} ${pinned.dpa.version}`;
     dpaTextId = pinned.dpa.id;
   }
-  if (!title) throw new ValidationError("A document needs a title");
-  if (!body && !input.pdf) throw new ValidationError("A document needs a body or a PDF");
+  if (!title) throw new ValidationError("document.title_required");
+  if (!body && !input.pdf) throw new ValidationError("document.content_required");
   const id = newId();
   let file: { fileKey: string; sha256: string; pageCount: number };
   let fields: readonly PlacedField[] = [];
@@ -522,7 +520,7 @@ export async function pushDocument(
     try {
       pages = await pageCountOf(input.pdf);
     } catch {
-      throw new ValidationError("pdf_base64 is not a readable PDF");
+      throw new ValidationError("document.pdf_unreadable");
     }
     file = await storePdf(d, org.id, id, input.pdf, pages);
     fields = input.fields ?? [];
@@ -537,7 +535,7 @@ export async function pushDocument(
   const problem = fields.length
     ? fieldProblems(fields, file.pageCount, input.requires_signature)
     : null;
-  if (problem) throw new ValidationError(problem);
+  if (problem) throw new ValidationError("document.fields_invalid", { params: { problem } });
   // Sent now unless asked not to, or unless it needs a signature and has no fields yet.
   const send = input.send && !(input.requires_signature && !fields.length);
   const now = d.now();
@@ -629,9 +627,9 @@ export async function setDocumentFields(
   fields: readonly PlacedField[],
 ) {
   const doc = await staffDocument(d, orgId, docId);
-  if (doc.status !== "draft") throw new ConflictError("Fields are fixed once a document is sent");
+  if (doc.status !== "draft") throw new ConflictError("document.fields_fixed");
   const problem = fieldProblems(fields, doc.pageCount, false);
-  if (problem) throw new ValidationError(problem);
+  if (problem) throw new ValidationError("document.fields_invalid", { params: { problem } });
   await d.db.transaction(async (tx) => {
     await writeFields(tx, doc.id, fields);
     await emit(d, tx, {
@@ -653,7 +651,7 @@ export async function sendDocument(
   task: { title: string; body: string | null } | null,
 ) {
   let doc = await staffDocument(d, orgId, docId);
-  if (doc.status !== "draft") throw new ConflictError("This document was already sent");
+  if (doc.status !== "draft") throw new ConflictError("document.already_sent");
   if (doc.kind === "offer") {
     await repinDraftOffer(d, doc);
     doc = await staffDocument(d, orgId, docId);
@@ -666,7 +664,7 @@ export async function sendDocument(
   }
   const fields = await store.fields(d.db, doc.id);
   const problem = fieldProblems(fields, doc.pageCount, doc.requiresSignature);
-  if (problem) throw new ValidationError(problem);
+  if (problem) throw new ValidationError("document.fields_invalid", { params: { problem } });
   await d.db.transaction((tx) => markSent(d, tx, who, doc.orgId, doc.id, task));
   return documentDetail(d, (await store.document(d.db, doc.orgId, doc.id)) as DocumentRow, "staff");
 }
@@ -680,8 +678,8 @@ export async function voidDocument(
 ) {
   const org = await staffOrg(d, orgId);
   const doc = isUuid(docId) ? await store.document(d.db, org.id, docId) : null;
-  if (!doc) throw new NotFoundError("Document not found");
-  if (doc.status === "signed") throw new ConflictError("A signed document cannot be voided");
+  if (!doc) throw new NotFoundError("document.not_found");
+  if (doc.status === "signed") throw new ConflictError("document.signed_cannot_void");
   if (doc.status === "void") return documentDetail(d, doc, "staff");
   await d.db.transaction(async (tx) => {
     await supersede(d, tx, org.id, doc.id, doc.kind);
@@ -699,7 +697,7 @@ export async function voidDocument(
 export async function staffDocument(d: AccountsDeps, orgId: string, docId: string) {
   const org = await staffOrg(d, orgId);
   const doc = isUuid(docId) ? await store.document(d.db, org.id, docId) : null;
-  if (!doc) throw new NotFoundError("Document not found");
+  if (!doc) throw new NotFoundError("document.not_found");
   return doc;
 }
 
@@ -745,10 +743,10 @@ export async function upsertInvoice(
 ) {
   const org = await staffOrg(d, orgId);
   if (input.subtotal_cents + input.vat_cents !== input.total_cents)
-    throw new ValidationError("subtotal_cents plus vat_cents must equal total_cents");
+    throw new ValidationError("billing.invoice_total_mismatch");
   const existing = await store.documentByExactId(d.db, exactId);
   if (existing && existing.orgId !== org.id)
-    throw new ConflictError("This Exact invoice belongs to another organisation");
+    throw new ConflictError("billing.invoice_other_organisation");
   const now = d.now();
   const body = [
     `Invoice ${input.number}`,
@@ -772,10 +770,7 @@ export async function upsertInvoice(
   };
   await d.db.transaction(async (tx) => {
     if (existing) {
-      if (existing.body !== body)
-        throw new ConflictError(
-          "An invoice's number, dates and amounts cannot change; void it in Exact and push the new one",
-        );
+      if (existing.body !== body) throw new ConflictError("billing.invoice_immutable");
       await store.updateDocument(tx, existing.id, payment);
     } else {
       const offer =
@@ -839,7 +834,7 @@ export async function staffCreateTask(
   const org = await staffOrg(d, orgId);
   for (const ref of [input.document_id, input.locked_until_document_id])
     if (ref && !(isUuid(ref) && (await store.document(d.db, org.id, ref))))
-      throw new NotFoundError("Document not found");
+      throw new NotFoundError("document.not_found");
   let id = "";
   await d.db.transaction(async (tx) => {
     const task = await createTask(d, tx, {
@@ -880,12 +875,11 @@ export async function reviewTask(
 ) {
   const org = await staffOrg(d, orgId);
   const task = isUuid(taskId) ? await store.task(d.db, org.id, taskId) : null;
-  if (!task) throw new NotFoundError("Task not found");
-  if (["done", "withdrawn"].includes(task.status))
-    throw new ConflictError("This task is already closed");
+  if (!task) throw new NotFoundError("task.not_found");
+  if (["done", "withdrawn"].includes(task.status)) throw new ConflictError("task.already_closed");
   if (decision !== "withdraw" && task.status !== "submitted")
-    throw new ConflictError("Only a submitted task can be approved or sent back");
-  if (decision === "send_back" && !note) throw new ValidationError("Say what to change in `note`");
+    throw new ConflictError("task.not_submitted");
+  if (decision === "send_back" && !note) throw new ValidationError("task.note_required");
   const now = d.now();
   await d.db.transaction(async (tx) => {
     const review = { reviewedAt: now, reviewedBy: who.directusUserId, reviewNote: note };
@@ -965,7 +959,7 @@ export async function staffReply(
 ) {
   const org = await staffOrg(d, orgId);
   const ticket = isUuid(ticketId) ? await store.ticket(d.db, org.id, ticketId) : null;
-  if (!ticket) throw new NotFoundError("Question not found");
+  if (!ticket) throw new NotFoundError("question.not_found");
   const now = d.now();
   await d.db.transaction(async (tx) => {
     await store.insertMessage(tx, {
@@ -994,7 +988,7 @@ export async function staffReply(
 export async function closeTicket(d: AccountsDeps, who: Signed, orgId: string, ticketId: string) {
   const org = await staffOrg(d, orgId);
   const ticket = isUuid(ticketId) ? await store.ticket(d.db, org.id, ticketId) : null;
-  if (!ticket) throw new NotFoundError("Question not found");
+  if (!ticket) throw new NotFoundError("question.not_found");
   const now = d.now();
   await d.db.transaction(async (tx) => {
     await store.updateTicket(tx, ticket.id, { status: "closed", closedAt: now, updatedAt: now });

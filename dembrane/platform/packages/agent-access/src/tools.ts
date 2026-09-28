@@ -94,9 +94,9 @@ async function projectOut(d: ToolDeps, row: Row, orgId: string | null) {
 }
 
 const tokenHint = () =>
-  new BadRequestError(
-    `query needs at least one word of ${MIN_TOKEN_LENGTH} letters or more; shorter words are ignored`,
-  );
+  new BadRequestError("agent_access.query_too_short", {
+    params: { min_length: MIN_TOKEN_LENGTH },
+  });
 
 // ── identity and discovery ─────────────────────────────────────────────
 
@@ -163,7 +163,7 @@ export async function findProjects(
   ctx: AgentContext,
   a: { query: string | null; workspace_id: string | null; limit: number },
 ) {
-  if (!ctx.who.appUserId) throw new ForbiddenError("User not onboarded");
+  if (!ctx.who.appUserId) throw new ForbiddenError("access.not_onboarded");
   const now = d.now();
   let wsIds = await d.store.reachableWorkspaceIds(ctx.who.appUserId);
   if (a.workspace_id) wsIds = wsIds.filter((w) => w === a.workspace_id);
@@ -230,7 +230,7 @@ export async function updateProject(
   ctx.requireWrite();
   const { orgId } = await projectAccess(d, ctx, projectId);
   await projectAs(d, ctx, projectId, "project:update");
-  if (!Object.keys(payload).length) throw new BadRequestError("No fields to update");
+  if (!Object.keys(payload).length) throw new BadRequestError("request.nothing_to_update");
   const row = await d.store.updateProject(projectId, payload, d.now());
   return projectOut(d, row ?? { id: projectId, ...payload }, orgId);
 }
@@ -337,7 +337,7 @@ export async function searchTranscripts(
   limit: number,
   offset: number,
 ) {
-  if (!query.trim()) throw new BadRequestError("query is required");
+  if (!query.trim()) throw new BadRequestError("agent_access.query_required");
   await projectAccess(d, ctx, projectId);
   const pa = await projectAs(d, ctx, projectId, "conversation:read");
   const result = await searchChunks(d, pa, projectId, query, limit, offset);
@@ -352,7 +352,7 @@ export async function grepConversation(
   query: string,
   maxMatches: number,
 ) {
-  if (!query.trim()) throw new BadRequestError("query is required");
+  if (!query.trim()) throw new BadRequestError("agent_access.query_required");
   const tokens = normalizeQueryTokens(query);
   if (!tokens.length) throw tokenHint();
   const { locked } = await conversationAccess(d, ctx, conversationId);
@@ -451,7 +451,7 @@ export async function reportIssue(
   projectIdIn: string | null,
   conversationId: string | null,
 ) {
-  if (!message.trim()) throw new BadRequestError("message is required");
+  if (!message.trim()) throw new BadRequestError("agent_access.message_required");
   let projectId = projectIdIn;
   let workspaceId: string | null = null;
   let orgId: string | null = null;
@@ -461,7 +461,7 @@ export async function reportIssue(
     // whenever a project was given, so a ticket could point at another tenant's data).
     const { conversation } = await conversationForBff(d, ctx.who, conversationId);
     if (projectId && conversation.project_id !== projectId)
-      throw new NotFoundError("Conversation not found");
+      throw new NotFoundError("conversation.not_found");
     projectId = conversation.project_id;
   }
   if (projectId) {
@@ -501,7 +501,7 @@ export async function requestTool(
   example: string | null,
 ) {
   if (!name.trim() || !description.trim())
-    throw new BadRequestError("name and description are required");
+    throw new BadRequestError("agent_access.name_description_required");
   let content = `[${ctx.clientName} via MCP] ${clip(description)}`;
   if (example) content += `\nExample: ${clip(example, 1000)}`;
   const suggested = Array.from(name.trim()).slice(0, 120).join("").trim();

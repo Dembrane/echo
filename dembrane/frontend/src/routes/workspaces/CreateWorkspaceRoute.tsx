@@ -27,15 +27,17 @@ import posthog from "posthog-js";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
+import { FeatureGatePopover } from "@/components/workspace/FeatureGatePopover";
+import type { WallKey } from "@/components/workspace/gateWalls";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { ApiRequestError } from "@/lib/errors/read";
 import { isFreeTierLimitError } from "@/lib/freeTier";
 import type { Tier } from "@/lib/tiers";
-import { UpgradeModal } from "@/components/workspace/FeatureGate";
-import { FeatureGatePopover } from "@/components/workspace/FeatureGatePopover";
-import type { WallKey } from "@/components/workspace/gateWalls";
 
 interface CreatedWorkspace {
 	id: string;
@@ -60,16 +62,8 @@ async function createWorkspace(payload: {
 	});
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		// Preserve the structured detail (e.g. the free-tier 402 body) so
-		// isFreeTierLimitError can read it; new Error(obj) would stringify it.
-		throw Object.assign(
-			new Error(
-				typeof data.detail === "string"
-					? data.detail
-					: "Failed to create workspace",
-			),
-			{ detail: data.detail },
-		);
+		// Keeps the whole body, so isFreeTierLimitError and the error presenter read it.
+		throw new ApiRequestError(res.status, data);
 	}
 	return res.json();
 }
@@ -88,7 +82,7 @@ async function addWorkspaceMember(workspaceId: string, email: string) {
 	);
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(data.detail || "Failed to add member");
+		throw new ApiRequestError(res.status, data);
 	}
 	return res.json();
 }
@@ -243,7 +237,10 @@ export const CreateWorkspaceRoute = () => {
 
 	// Single source for the three-state visibility the workspace is created with,
 	// shared by the create payload and the analytics event.
-	const visibilityForCreate: "open_to_organisation" | "invite_only" | "private" =
+	const visibilityForCreate:
+		| "open_to_organisation"
+		| "invite_only"
+		| "private" =
 		access === "everyone"
 			? "open_to_organisation"
 			: access === "invite"
@@ -257,9 +254,9 @@ export const CreateWorkspaceRoute = () => {
 			}
 			const isClient = billFor === "client";
 			const ws = await createWorkspace({
-				visibility: visibilityForCreate,
 				name: name.trim(),
 				org_id: targetOrganisationId,
+				visibility: visibilityForCreate,
 				// Sending a data owner is what makes the workspace external/separate.
 				...(isClient
 					? {
@@ -296,7 +293,7 @@ export const CreateWorkspaceRoute = () => {
 				upgradeHandlers.open();
 				return;
 			}
-			toast.error(error.message);
+			void notifyError(error);
 		},
 		onSuccess: async (ws) => {
 			posthog.capture("workspace_created", {
@@ -685,7 +682,9 @@ export const CreateWorkspaceRoute = () => {
 
 							<Text size="xs" c="dimmed">
 								{canGoPrivate ? (
-									<Trans>You can change this later in workspace settings.</Trans>
+									<Trans>
+										You can change this later in workspace settings.
+									</Trans>
 								) : (
 									<Trans>
 										You can change this later in workspace settings after you

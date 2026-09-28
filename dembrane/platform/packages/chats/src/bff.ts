@@ -58,7 +58,7 @@ export async function listChats(
 export async function getChat(d: ChatDeps, who: Signed, chatId: string) {
   await bffChat(d, who, chatId);
   const item = await d.store.chatItem(chatId);
-  if (!item) throw new NotFoundError("Chat not found");
+  if (!item) throw new NotFoundError("chat.not_found");
   return {
     id: item.id,
     name: item.name ?? null,
@@ -80,7 +80,7 @@ export async function updateChat(
   const values: Record<string, unknown> = {};
   if (body.name !== null) values.name = body.name;
   if (body.chat_mode !== null) values.chat_mode = body.chat_mode;
-  if (!Object.keys(values).length) throw new BadRequestError("No fields to update");
+  if (!Object.keys(values).length) throw new BadRequestError("request.nothing_to_update");
   await d.store.updateChat(chatId, values, who.directusUserId, d.now());
   return (await d.store.chatItem(chatId)) ?? {};
 }

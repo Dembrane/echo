@@ -53,16 +53,12 @@ export async function reconcileOutsider(
 ): Promise<void> {
   const roles = await store.workspaceRolesInOrg(orgId, userId);
   if (roles.some((r) => ["member", "billing", "admin", "owner"].includes(r))) {
-    throw new BadRequestError(
-      "This person is already a member of the organisation and cannot also be added as an outside collaborator. Remove them from the organisation first.",
-    );
+    throw new BadRequestError("invite.outsider_is_member");
   }
   const rows = await store.orgMemberships(orgId, userId, { activeOnly: true });
   // A privileged org member is never demoted silently; only a stale plain member row goes.
   if (rows.some((r) => ["admin", "owner", "billing"].includes(r.role))) {
-    throw new BadRequestError(
-      "This person is an organisation admin, owner, or billing member and cannot be added as an outside collaborator. Change their organisation role first.",
-    );
+    throw new BadRequestError("invite.outsider_is_admin");
   }
   for (const r of rows)
     await store.updateMembership("org", r.id, { deleted_at: now.toISOString() }, now);

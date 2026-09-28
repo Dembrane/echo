@@ -51,14 +51,14 @@ export async function createAccount(
 ): Promise<CreateAccountResult> {
   const email = input.contact_email.trim().toLowerCase();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
-    throw new ValidationError("contact_email is not an email address");
+    throw new ValidationError("demo.contact_email_invalid");
   const now = d.now();
   const nowIso = now.toISOString();
   const pricing = input.pricing_configuration_reference
     ? await store.pricingByReference(d.db, input.pricing_configuration_reference)
     : null;
   if (input.pricing_configuration_reference && !pricing)
-    throw new NotFoundError("No needs form with that reference");
+    throw new NotFoundError("demo.needs_form_not_found");
   const passwordHash = opts.password
     ? await Bun.password.hash(opts.password, { algorithm: "argon2id" })
     : null;
@@ -81,7 +81,7 @@ export async function createAccount(
         .limit(1);
       existing = row ?? null;
     }
-    if (existing?.deleted_at) throw new ValidationError("That organisation was deleted");
+    if (existing?.deleted_at) throw new ValidationError("demo.organisation_deleted");
     orgId = existing?.id ?? orgId ?? newId();
     if (!existing)
       await store.insertOrg(tx, {

@@ -12,7 +12,9 @@ import { IconKey } from "@tabler/icons-react";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { PasswordRequirements } from "@/components/auth/PasswordRequirements";
+import { notifyError } from "@/components/error/notifyError";
 import { API_BASE_URL } from "@/config";
+import { ApiRequestError } from "@/lib/errors/read";
 import { validatePassword } from "@/lib/passwordPolicy";
 import { toast } from "../common/Toaster";
 
@@ -34,11 +36,11 @@ export const ChangePasswordCard = () => {
 			});
 			if (!response.ok) {
 				const data = await response.json().catch(() => ({}));
-				throw new Error(data.detail || "Failed to change password");
+				throw new ApiRequestError(response.status, data);
 			}
 		},
 		onError: (error: Error) => {
-			toast.error(error.message);
+			void notifyError(error);
 		},
 		onSuccess: () => {
 			toast.success(t`Password changed`);

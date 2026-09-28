@@ -1,3 +1,4 @@
+import { i18n } from "@lingui/core";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
@@ -18,12 +19,15 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import { InviteEmailList } from "@/components/organisation/InviteEmailList";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useMyInvites } from "@/hooks/useMyInvites";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { ApiRequestError } from "@/lib/errors/read";
+import { toastForEmail } from "@/lib/errors/toastForEmail";
 import { isOutsiderRole } from "@/lib/roles";
 
 async function completeOnboarding(orgName: string) {
@@ -35,7 +39,7 @@ async function completeOnboarding(orgName: string) {
 	});
 	if (!response.ok) {
 		const data = await response.json().catch(() => ({}));
-		throw new Error(data.detail || "Something went wrong");
+		throw new ApiRequestError(response.status, data);
 	}
 	return response.json();
 }
@@ -52,7 +56,7 @@ async function sendInvite(workspaceId: string, email: string) {
 	);
 	if (!response.ok) {
 		const data = await response.json().catch(() => ({}));
-		throw new Error(data.detail || "Failed to send invite");
+		throw new ApiRequestError(response.status, data);
 	}
 	return response.json();
 }
@@ -72,17 +76,17 @@ export const OnboardingRoute = () => {
 	});
 	const displayName = (user.data as Record<string, string>)?.first_name || "";
 	const hasInvites = meV2?.has_pending_invites === true;
-		const inviteOrganisations = Array.from(
-			new Set(
-				(pendingInvites ?? [])
-					.map((i) => i.org_name?.trim())
-					.filter((name): name is string => Boolean(name)),
-			),
-		);
-		const isOnlyOutsiderInvite =
-			pendingInvites &&
-			pendingInvites.length > 0 &&
-			pendingInvites.every((i) => isOutsiderRole(i.role));
+	const inviteOrganisations = Array.from(
+		new Set(
+			(pendingInvites ?? [])
+				.map((i) => i.org_name?.trim())
+				.filter((name): name is string => Boolean(name)),
+		),
+	);
+	const isOnlyOutsiderInvite =
+		pendingInvites &&
+		pendingInvites.length > 0 &&
+		pendingInvites.every((i) => isOutsiderRole(i.role));
 	// The designer's onboarding split:
 	// users with projects from before workspaces existed see the "migration"
 	// copy; users with no legacy projects see the fresh-setup copy. hasInvites
@@ -186,7 +190,7 @@ export const OnboardingRoute = () => {
 	const onboardingMutation = useMutation({
 		mutationFn: () => completeOnboarding(orgName.trim() || defaultOrgName),
 		onError: (error: Error) => {
-			toast.error(error.message || t`Something went wrong`);
+			void notifyError(error);
 		},
 		onSuccess: (data) => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "me"] });
@@ -241,8 +245,7 @@ export const OnboardingRoute = () => {
 				await sendInvite(workspaceId, email.trim());
 				sent++;
 			} catch (err) {
-				const message = err instanceof Error ? err.message : "Failed";
-				toast.error(`${email}: ${message}`);
+				toastForEmail(email, err, i18n);
 			}
 		}
 		setSendingInvites(false);
@@ -592,44 +595,45 @@ export const OnboardingRoute = () => {
 									<Trans>Set up your organisation</Trans>
 								)}
 							</Title>
-								<Text size="sm" lh={1.6}>
-									{hasInvites ? (
-										isOnlyOutsiderInvite ? (
-											inviteOrganisations.length === 1 ? (
-												<Trans>
-													You've been invited to collaborate with{" "}
-													<em>{inviteOrganisations[0]}</em>. We'll take you there in
-													a moment.
-												</Trans>
-											) : inviteOrganisations.length > 1 ? (
-												<Trans>
-													You've been invited to collaborate with {inviteOrganisations.length}{" "}
-													organisations. We'll take you in once you continue.
-												</Trans>
-											) : (
-												<Trans>
-													Your workspace is waiting for you. Click continue to
-													collaborate.
-												</Trans>
-											)
-										) : inviteOrganisations.length === 1 ? (
+							<Text size="sm" lh={1.6}>
+								{hasInvites ? (
+									isOnlyOutsiderInvite ? (
+										inviteOrganisations.length === 1 ? (
 											<Trans>
-												You've been invited to join{" "}
-												<em>{inviteOrganisations[0]}</em>. We'll take you there in
-												a moment.
+												You've been invited to collaborate with{" "}
+												<em>{inviteOrganisations[0]}</em>. We'll take you there
+												in a moment.
 											</Trans>
 										) : inviteOrganisations.length > 1 ? (
 											<Trans>
-												You've been invited to join {inviteOrganisations.length}{" "}
-												organisations. We'll take you in once you continue.
+												You've been invited to collaborate with{" "}
+												{inviteOrganisations.length} organisations. We'll take
+												you in once you continue.
 											</Trans>
 										) : (
 											<Trans>
-												Your organisation is waiting for you. Click continue to
-												join.
+												Your workspace is waiting for you. Click continue to
+												collaborate.
 											</Trans>
 										)
-									) : isLegacyUser ? (
+									) : inviteOrganisations.length === 1 ? (
+										<Trans>
+											You've been invited to join{" "}
+											<em>{inviteOrganisations[0]}</em>. We'll take you there in
+											a moment.
+										</Trans>
+									) : inviteOrganisations.length > 1 ? (
+										<Trans>
+											You've been invited to join {inviteOrganisations.length}{" "}
+											organisations. We'll take you in once you continue.
+										</Trans>
+									) : (
+										<Trans>
+											Your organisation is waiting for you. Click continue to
+											join.
+										</Trans>
+									)
+								) : isLegacyUser ? (
 									<Trans>
 										We've added organisations so you can organize projects and
 										share them with colleagues. Everything you had before is

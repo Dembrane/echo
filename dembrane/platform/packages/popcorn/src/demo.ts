@@ -19,8 +19,6 @@ export const PRODUCTION_HOSTS = new Set([
   "api.dembrane.com",
   "dashboard.dembrane.com",
 ]);
-export const PRODUCTION_REFUSAL =
-  "This seed is for a staging environment; production waits for the MCP upsert.";
 
 const PARTICIPANT_CODES: Readonly<Record<string, string>> = {
   en: "en-US",
@@ -97,7 +95,7 @@ const hostOf = (url: string) => {
 /** Refuses production as the seed does, including this deployment's own address. */
 export function refuseProduction(urls: readonly string[]): void {
   if (urls.some((u) => PRODUCTION_HOSTS.has(hostOf(u))))
-    throw new ForbiddenError(PRODUCTION_REFUSAL);
+    throw new ForbiddenError("popcorn.demo_production_refused");
 }
 
 /** Python's datetime.fromisoformat(start) + timedelta(seconds), then isoformat(). */
@@ -106,7 +104,10 @@ export function chunkTimestamp(start: string, seconds: number): string {
     /^(\d{4}-\d{2}-\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,6}))?)?(Z|[+-]\d{2}:?\d{2})?$/.exec(
       start,
     );
-  if (!m) throw new ValidationError(`Invalid isoformat string: '${start}'`);
+  if (!m)
+    throw new ValidationError("popcorn.demo_fixture_invalid", {
+      message: `Invalid isoformat string: '${start}'`,
+    });
   const [, date, hh, mm, ss = "00", frac = "", zone] = m;
   const micros = Number(frac.padEnd(6, "0") || "0");
   const base = Date.UTC(
@@ -210,13 +211,17 @@ class DryRun extends Error {
 function check(input: DemoInput, languages: readonly string[]) {
   for (const language of languages) {
     if (!(language in PARTICIPANT_CODES))
-      throw new ValidationError(`No participant portal language for '${language}'`);
+      throw new ValidationError("popcorn.demo_fixture_invalid", {
+        message: `No participant portal language for '${language}'`,
+      });
     if (!isRecord(input.out[language]?.state) || !isRecord(input.out[language]?.settings))
-      throw new ValidationError(
-        `out/state-${language}.json and out/settings-${language}.json are needed`,
-      );
+      throw new ValidationError("popcorn.demo_fixture_invalid", {
+        message: `out/state-${language}.json and out/settings-${language}.json are needed`,
+      });
     if (!isRecord(input.salesPortal[language]))
-      throw new ValidationError(`sales-portal.json has no '${language}' words`);
+      throw new ValidationError("popcorn.demo_fixture_invalid", {
+        message: `sales-portal.json has no '${language}' words`,
+      });
   }
 }
 
@@ -229,7 +234,7 @@ export async function seedDemo(db: Db, input: DemoInput, now: Date): Promise<Dem
   const slug = pyStr(session.slug);
   const languages = Object.keys(dict(session.title));
   check(input, languages);
-  if (!isUuid(input.workspaceId)) throw new NotFoundError("Workspace not found");
+  if (!isUuid(input.workspaceId)) throw new NotFoundError("popcorn.demo_workspace_not_found");
   const sql = client(db);
   const nowIso = pyIso(now);
   const plan: string[] = [];
@@ -237,11 +242,11 @@ export async function seedDemo(db: Db, input: DemoInput, now: Date): Promise<Dem
     return (await sql.begin(async (tx) => {
       const [ws] =
         await tx`select id from workspace where id = ${input.workspaceId} and deleted_at is null`;
-      if (!ws) throw new NotFoundError("Workspace not found");
+      if (!ws) throw new NotFoundError("popcorn.demo_workspace_not_found");
       const [owner] = isUuid(input.ownerId)
         ? await tx`select id from directus_users where id = ${input.ownerId}`
         : [];
-      if (!owner) throw new NotFoundError("Owner not found");
+      if (!owner) throw new NotFoundError("popcorn.demo_owner_not_found");
       const put = async (collection: string, id: string | number, payload: Json) => {
         const [existing] = await tx`select id from ${tx(collection)} where id = ${id}`;
         plan.push(`${existing ? "update" : "create"} ${collection} ${id}`);
@@ -368,7 +373,9 @@ export function corpusFrom(raw: readonly unknown[]): DemoCorpusEntry[] {
   return raw.map((entry, i) => {
     const e = dict(entry);
     if (typeof e.id !== "string" || typeof e.label !== "string" || typeof e.start !== "string")
-      throw new ValidationError(`corpus[${i}] needs id, label and start`);
+      throw new ValidationError("popcorn.demo_fixture_invalid", {
+        message: `corpus[${i}] needs id, label and start`,
+      });
     return {
       id: e.id,
       label: e.label,

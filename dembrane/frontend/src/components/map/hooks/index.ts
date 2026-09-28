@@ -11,6 +11,7 @@ import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
 import { type ServerEvent, useServerEvents } from "@/hooks/useServerEvents";
 import { bff } from "@/lib/bff";
+import { ApiRequestError } from "@/lib/errors/read";
 import { budgetRequestParams, type CustomBudgets } from "../budgets";
 import type {
 	FactCheckState,
@@ -492,9 +493,7 @@ export async function requestSelectionTitle(
 	});
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		const error = new Error(
-			typeof data?.detail === "string" ? data.detail : `HTTP ${res.status}`,
-		) as HttpError;
+		const error = new ApiRequestError(res.status, data) as HttpError;
 		error.status = res.status;
 		throw error;
 	}

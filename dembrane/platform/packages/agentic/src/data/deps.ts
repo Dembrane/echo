@@ -1,5 +1,4 @@
 import type { Access, Policy, WorkspaceAccess } from "@dembrane/access";
-import { PlatformError } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import { workspaceFor } from "@dembrane/http";
@@ -60,10 +59,4 @@ export function workspaceGate(
     const [ws] = await sqlOf(d)`select id from workspace where id = ${id} and deleted_at is null`;
     return Boolean(ws);
   });
-}
-
-/** A 500 that carries its detail to the client, as the Python API raised these. */
-export class ServerError extends PlatformError {
-  readonly status = 500;
-  readonly code = "internal";
 }

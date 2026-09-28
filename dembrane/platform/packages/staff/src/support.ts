@@ -1,8 +1,8 @@
 import {
   type BillingStore,
-  emailsOf,
   type Notifier,
   pyIso,
+  recipientsOf,
   workspaceAdmins,
 } from "@dembrane/billing";
 import { ConflictError, newId } from "@dembrane/core";
@@ -119,7 +119,7 @@ export class SupportAccess {
         const winner = (await this.s.userMemberships(workspaceId, appUserId)).find(
           (r) => r.deleted_at === null,
         );
-        if (!winner) throw new ConflictError("Membership changed concurrently, please retry.");
+        if (!winner) throw new ConflictError("member.changed_concurrently");
         if (winner.source !== "staff_support")
           return { status: "already_member", membershipId: winner.id, expiresIso: null };
         membershipId = winner.id;
@@ -191,14 +191,19 @@ export class SupportAccess {
     }
   }
 
+  /** One email per recipient, in the language their dashboard is set to. */
   private async mail(
-    to: readonly string[],
+    to: readonly { email: string; locale: string | null }[],
     kind: Parameters<typeof supportEmail>[0],
     data: Record<string, string>,
   ) {
-    for (const addr of to) {
+    for (const r of to) {
       try {
-        await this.d.mailer.send({ to: addr, ...supportEmail(kind, data), tags: [kind] });
+        await this.d.mailer.send({
+          to: r.email,
+          ...supportEmail(kind, data, r.locale),
+          tags: [kind],
+        });
       } catch (err) {
         this.d.logger.warn({ err, kind }, "support access email failed");
       }
@@ -244,7 +249,7 @@ export class SupportAccess {
         },
         now,
       );
-      await this.mail(await emailsOf(store, admins), "support_access_request", {
+      await this.mail(await recipientsOf(store, admins), "support_access_request", {
         subject: title,
         workspace_name: wsName,
         staff_name: staffName,
@@ -269,7 +274,7 @@ export class SupportAccess {
         },
         now,
       );
-      await this.mail(await emailsOf(store, admins), "support_access_joined", {
+      await this.mail(await recipientsOf(store, admins), "support_access_joined", {
         subject: title,
         workspace_name: wsName,
         staff_name: staffName,
@@ -326,7 +331,7 @@ export class SupportAccess {
         now,
       );
       await this.mail(
-        await emailsOf(store, admins),
+        await recipientsOf(store, admins),
         ended ? "support_access_ended" : "support_access_reminder",
         { subject: title, workspace_name: wsName, settings_url: settingsUrl },
       );
@@ -349,7 +354,7 @@ export class SupportAccess {
         },
         now,
       );
-      await this.mail(await emailsOf(store, [staffUserId]), "support_access_request_resolved", {
+      await this.mail(await recipientsOf(store, [staffUserId]), "support_access_request_resolved", {
         subject: title,
         workspace_name: wsName,
         decision,

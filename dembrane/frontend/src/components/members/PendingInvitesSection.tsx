@@ -2,7 +2,6 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
-	Alert,
 	Badge,
 	Box,
 	Divider,
@@ -19,6 +18,8 @@ import { IconLink, IconRefresh, IconX } from "@tabler/icons-react";
 import { useState } from "react";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { toast } from "@/components/common/Toaster";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
+import { notifyError } from "@/components/error/notifyError";
 import { displayRole } from "@/lib/roles";
 import {
 	type PendingInvite,
@@ -60,17 +61,15 @@ export function PendingInvitesSection({ orgId, scope, workspaceId }: Props) {
 
 	const [confirmOpened, { open: openConfirm, close: closeConfirm }] =
 		useDisclosure(false);
-	const [pendingRevoke, setPendingRevoke] = useState<PendingInvite | null>(null);
+	const [pendingRevoke, setPendingRevoke] = useState<PendingInvite | null>(
+		null,
+	);
 
 	if (isLoading) return null;
 	if (isError) {
 		return (
 			<Box mt="xl">
-				<Alert color="red" variant="light">
-					{error instanceof Error
-						? error.message
-						: t`Couldn't load pending invites.`}
-				</Alert>
+				<ErrorNotice error={error} />
 			</Box>
 		);
 	}
@@ -92,7 +91,7 @@ export function PendingInvitesSection({ orgId, scope, workspaceId }: Props) {
 
 	const handleResend = (inv: PendingInvite) => {
 		resend.mutate(inv.id, {
-			onError: (err) => toast.error(err.message),
+			onError: (err) => void notifyError(err),
 			onSuccess: (data) => {
 				if (data.email_sent) {
 					toast.success(t`Invite resent`);
@@ -114,7 +113,7 @@ export function PendingInvitesSection({ orgId, scope, workspaceId }: Props) {
 		if (!pendingRevoke) return;
 		const inv = pendingRevoke;
 		revoke.mutate(inv.id, {
-			onError: (err) => toast.error(err.message),
+			onError: (err) => void notifyError(err),
 			onSuccess: () => toast.success(t`Invite revoked`),
 		});
 		closeConfirm();

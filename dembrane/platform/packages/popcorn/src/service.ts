@@ -117,7 +117,7 @@ async function locked<T>(
   d: PopcornDeps,
   key: string,
   waitMs: number,
-  busy: string,
+  busy: "popcorn.settings_busy" | "popcorn.creation_busy",
   fn: (store: PopcornStore, tx: Sql) => Promise<T>,
 ): Promise<T> {
   const sql = client(d.db);
@@ -142,7 +142,7 @@ export function settingsLock<T>(
     d,
     `popcorn:settings-write:${reportId}`,
     SETTINGS_LOCK_WAIT_MS,
-    "Settings are busy; try again",
+    "popcorn.settings_busy",
     fn,
   );
 }
@@ -156,7 +156,7 @@ export function createLock<T>(
     d,
     `popcorn:presentation-create:${projectId}`,
     CREATE_LOCK_WAIT_MS,
-    "Presentation creation is busy; try again",
+    "popcorn.creation_busy",
     fn,
   );
 }
@@ -167,7 +167,7 @@ export async function rateLimit(d: PopcornDeps, popcornId: string, action = "ref
     { name: `popcorn:${action}`, capacity: 1, windowSeconds: REFRESH_TTL_SECONDS },
     popcornId,
   );
-  if (!ok) throw new RateLimitedError("Just read");
+  if (!ok) throw new RateLimitedError("popcorn.just_refreshed");
 }
 
 // ── reads ─────────────────────────────────────────────────────────────
@@ -486,7 +486,7 @@ export async function retargetTranslation(
   }
   const loop = await d.store.loopForReport(reportId);
   if (!loop) {
-    if (args.requireLoop ?? true) throw new NotFoundError("Popcorn loop not found");
+    if (args.requireLoop ?? true) throw new NotFoundError("popcorn.loop_not_found");
     return true;
   }
   await sql.begin((tx) => dispatchTick(d, tx, String(loop.id), "translation"));

@@ -11,6 +11,7 @@ import {
 } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { toast } from "@/components/common/Toaster";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { AccountsApiError } from "../api/client";
 import { useAccountsMutation } from "../api/hooks";
 import type { AccountPageT } from "../contract/contract.gen";
@@ -155,11 +156,7 @@ export function BillingForm({
 							!(
 								mutation.error instanceof AccountsApiError &&
 								Object.keys(serverFields).length
-							) && (
-								<Text size="sm" c="red">
-									{mutation.error.message}
-								</Text>
-							)}
+							) && <ErrorNotice error={mutation.error} />}
 					</Group>
 				</Stack>
 			</Box>

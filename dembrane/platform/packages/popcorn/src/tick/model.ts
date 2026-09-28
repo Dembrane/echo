@@ -1,12 +1,12 @@
 import { readFileSync } from "node:fs";
 import { popcornShared } from "@dembrane/analysis";
 import { assetPath } from "@dembrane/core";
-import type { Completer, Completion } from "@dembrane/llm";
+import { type Completer, type Completion, LANGUAGE_NAMES, translateTexts } from "@dembrane/llm";
 import { type Json, pyJson } from "../py";
 import { KIND_SCHEMA, QUESTION_SCHEMA, VALIDATE_SCHEMA } from "./enrichment";
 import { POPCORN_SCHEMA, STAKEHOLDERS_SCHEMA } from "./shapes";
 import { AnswerError, PROMPT_NAMES as TENSION_PROMPTS } from "./tensions";
-import { Semaphore, withTimeout } from "./util";
+import { withTimeout } from "./util";
 
 /**
  * Model calls for popcorn (popcorn model.py). The prompt files under packages/popcorn/
@@ -44,32 +44,6 @@ const TRANSLATE_TIMEOUT_MS = 120_000;
 const TRANSLATE_BATCH = 40;
 const TRANSLATE_PARALLEL = 4;
 const TRANSLATE_MAX_TOKENS = 16000;
-
-const LANGUAGE_NAMES: Readonly<Record<string, string>> = {
-  en: "English",
-  nl: "Dutch",
-  de: "German",
-  fr: "French",
-  es: "Spanish",
-  it: "Italian",
-  uk: "Ukrainian",
-  cs: "Czech",
-};
-
-const TRANSLATE_SCHEMA: Json = {
-  type: "object",
-  properties: {
-    translations: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: { i: { type: "integer" }, text: { type: "string" } },
-        required: ["i", "text"],
-      },
-    },
-  },
-  required: ["translations"],
-};
 
 const prompts = new Map<string, string>();
 
@@ -207,60 +181,24 @@ export class PopcornModel {
    * `texts` in the target language, in order; a text left out comes back null and is asked
    * for again next tick. `onBatch` is awaited as each batch lands; a failed batch skips it.
    */
+  /** The room's texts in `target`, through the shared batched translator in @dembrane/llm. */
   async translate(
     texts: readonly string[],
     target: string,
     onBatch?: (batch: string[], answers: (string | null)[]) => Promise<void>,
     warn: (msg: string) => void = () => {},
   ): Promise<(string | null)[]> {
-    const slots = new Semaphore(TRANSLATE_PARALLEL);
-    const batch = async (start: number): Promise<(string | null)[]> => {
-      const chunk = texts.slice(start, start + TRANSLATE_BATCH);
-      const payload = {
-        target: LANGUAGE_NAMES[target],
-        texts: chunk.map((text, i) => ({ i, text })),
-      };
-      const out: (string | null)[] = chunk.map(() => null);
-      let answer: Json;
-      try {
-        answer = await slots.run(() =>
-          structured(this.completer, {
-            system: promptText(TRANSLATE_PROMPT),
-            user: pyJson(payload),
-            schema: TRANSLATE_SCHEMA,
-            maxTokens: TRANSLATE_MAX_TOKENS,
-            fast: true,
-            timeoutMs: TRANSLATE_TIMEOUT_MS,
-          }),
-        );
-      } catch (exc) {
-        // One failed batch leaves its texts in the original until the next tick.
-        warn(`popcorn translation batch failed: ${(exc as Error).message}`);
-        return out;
-      }
-      for (const entry of Array.isArray(answer.translations) ? answer.translations : []) {
-        const e = entry as Json;
-        const index = e.i;
-        if (
-          typeof index === "number" &&
-          Number.isInteger(index) &&
-          index >= 0 &&
-          index < chunk.length &&
-          typeof e.text === "string"
-        )
-          out[index] = e.text.trim() || null;
-      }
-      if (onBatch) await onBatch([...chunk], out);
-      return out;
-    };
-    // Bounded both in flight and in scheduled work, as a long deck may owe hundreds.
-    const results: (string | null)[][] = [];
-    const wave = TRANSLATE_BATCH * TRANSLATE_PARALLEL;
-    for (let w = 0; w < texts.length; w += wave) {
-      const starts: number[] = [];
-      for (let i = w; i < Math.min(texts.length, w + wave); i += TRANSLATE_BATCH) starts.push(i);
-      results.push(...(await Promise.all(starts.map(batch))));
-    }
-    return results.flat();
+    return translateTexts(this.completer, texts, {
+      system: promptText(TRANSLATE_PROMPT),
+      target: LANGUAGE_NAMES[target] ?? target,
+      render: (payload) => pyJson(payload as Json),
+      batch: TRANSLATE_BATCH,
+      parallel: TRANSLATE_PARALLEL,
+      maxTokens: TRANSLATE_MAX_TOKENS,
+      timeoutMs: TRANSLATE_TIMEOUT_MS,
+      // One failed batch leaves its texts in the original until the next tick.
+      warn: (message) => warn(`popcorn translation batch failed: ${message}`),
+      ...(onBatch && { onBatch }),
+    });
   }
 }

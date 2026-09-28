@@ -127,9 +127,9 @@ export async function updateMe(
   now: Date,
 ) {
   if (body.display_name === null && body.settings === null)
-    throw new BadRequestError("Nothing to update");
+    throw new BadRequestError("request.nothing_to_update", { message: "Nothing to update" });
   const user = await store.appUser(who.directusUserId);
-  if (!user) throw new ForbiddenError("User not onboarded");
+  if (!user) throw new ForbiddenError("access.not_onboarded");
   await store.updateAppUserLocked(user.id, now, (fresh) => {
     const patch: { display_name?: string; settings?: Record<string, unknown> } = {};
     // display_name lands in email subjects ("{inviter} invited you"), so CR/LF never pass.

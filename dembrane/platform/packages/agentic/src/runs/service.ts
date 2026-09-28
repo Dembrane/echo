@@ -7,6 +7,7 @@ import {
   NotFoundError,
   newId,
   PlatformError,
+  StatusError,
   UnavailableError,
 } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
@@ -67,14 +68,14 @@ async function assertChatInProject(d: RunsDeps, chatId: string | null, projectId
   }
   if (!chat) {
     d.logger.warn({ chatId }, "could not load the chat to verify it for this run");
-    throw new UnavailableError("Could not verify the chat for this request. Please try again.");
+    throw new UnavailableError("chat.verify_unavailable");
   }
   mismatch(chat.project_id?.id ?? null, projectId);
 }
 
 function mismatch(chatProjectId: string | null, projectId: string | null) {
-  if (!projectId) throw new BadRequestError("project_id is required to read this chat");
-  if (chatProjectId !== projectId) throw new BadRequestError("project_id does not match this chat");
+  if (!projectId) throw new BadRequestError("chat.project_required");
+  if (chatProjectId !== projectId) throw new BadRequestError("chat.project_mismatch");
 }
 
 /**
@@ -148,7 +149,7 @@ function scheduleTitle(d: RunsDeps, chatId: string | null, text: string, languag
 
 async function runOr404(d: RunsDeps, runId: string): Promise<Row> {
   const run = await d.store.get(runId);
-  if (!run) throw new NotFoundError("Run not found");
+  if (!run) throw new NotFoundError("agent.run_not_found");
   return run;
 }
 
@@ -157,14 +158,13 @@ async function runOr404(d: RunsDeps, runId: string): Promise<Row> {
  * appending to their runs; the project gate now applies as well.
  */
 async function authorizeRun(d: RunsDeps, who: Signed, run: Row) {
-  if (run.directus_user_id !== who.directusUserId)
-    throw new ForbiddenError("Not authorized for this run");
+  if (run.directus_user_id !== who.directusUserId) throw new ForbiddenError("agent.run_forbidden");
   const projectId = relatedId(run.project_id);
   if (projectId) {
     try {
       await agentProject(d.access, who, projectId);
     } catch (err) {
-      if (err instanceof PlatformError) throw new ForbiddenError("Not authorized for this run");
+      if (err instanceof PlatformError) throw new ForbiddenError("agent.run_forbidden");
       throw err;
     }
   }
@@ -176,7 +176,7 @@ export async function createRun(
   body: { project_id: string; project_chat_id: string | null; message: string; language: string },
 ): Promise<Row> {
   const project = await liveProject(d.store.sql, body.project_id);
-  if (!project) throw new NotFoundError("Project not found");
+  if (!project) throw new NotFoundError("project.not_found");
   await agentProject(d.access, who, body.project_id);
   await assertChatInProject(d, body.project_chat_id, body.project_id);
   const focused = await focusedConversations(d, body.project_chat_id, body.project_id);
@@ -268,7 +268,7 @@ export async function claimTurn(d: RunsDeps, who: Signed, runId: string): Promis
   const turn = await latestUserTurn(d, runId);
   if (!turn) return run;
   const projectId = relatedId(run.project_id);
-  if (!projectId) throw new PlatformErrorWith500("Run is missing project reference");
+  if (!projectId) throw new StatusError(500, "agent.run_missing_project");
   await d.queue.enqueue(
     startTurn,
     {
@@ -283,11 +283,6 @@ export async function claimTurn(d: RunsDeps, who: Signed, runId: string): Promis
   return run;
 }
 
-class PlatformErrorWith500 extends PlatformError {
-  readonly status = 500;
-  readonly code = "internal";
-}
-
 /**
  * Stop. The turn runs in the worker, never in this process, so the stop always takes the
  * path the old API took for a turn on another replica: write the terminal shape the
@@ -298,7 +293,7 @@ export async function stopRun(d: RunsDeps, who: Signed, runId: string) {
   const run = await runOr404(d, runId);
   await authorizeRun(d, who, run);
   const turn = await latestUserTurn(d, runId);
-  if (!turn) throw new ConflictError("No active turn to stop");
+  if (!turn) throw new ConflictError("agent.no_active_turn");
   if (!TERMINAL_RUN_STATUSES.has(String(run.status ?? ""))) {
     const ev = await d.store.appendEvent(
       runId,
@@ -323,7 +318,7 @@ export async function getRun(d: RunsDeps, who: Signed, runId: string): Promise<R
 
 export async function latestChatRun(d: RunsDeps, who: Signed, chatId: string): Promise<Row> {
   const run = await d.store.latestForChat(chatId);
-  if (!run) throw new NotFoundError("Agentic run not found");
+  if (!run) throw new NotFoundError("agent.run_not_found", { message: "Agentic run not found" });
   await authorizeRun(d, who, run);
   return run;
 }

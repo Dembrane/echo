@@ -7,7 +7,7 @@ import { z } from "zod";
 import type { Billing } from "./create";
 import { previewDowngrade } from "./downgrade";
 import { tierExpiredEmail, tierExpiringSoonEmail } from "./emails";
-import { emailsOf, workspaceAdminsAndBilling } from "./notify";
+import { recipientsOf, workspaceAdminsAndBilling } from "./notify";
 import {
   closeFinishedEpisodes,
   type Forwarder,
@@ -125,15 +125,16 @@ function workspaceUrl(base: string, workspaceId: string): string {
   return b ? `${b}/w/${workspaceId}/settings/billing` : `/w/${workspaceId}/settings/billing`;
 }
 
+/** One email per recipient, each rendered in their own language. */
 async function sendAll(
   d: BillingJobDeps,
-  to: readonly string[],
-  mail: { subject: string; html: string; text: string },
+  to: readonly { email: string; locale: string | null }[],
+  mail: (locale: string | null) => { subject: string; html: string; text: string },
   tag: string,
 ) {
-  for (const addr of to) {
+  for (const r of to) {
     try {
-      await d.mailer.send({ to: addr, ...mail, tags: [tag] });
+      await d.mailer.send({ to: r.email, ...mail(r.locale), tags: [tag] });
     } catch (err) {
       d.logger.warn({ err, tag }, "billing email failed");
     }
@@ -207,14 +208,19 @@ export async function runExpireTiers(d: BillingJobDeps): Promise<void> {
           },
           now,
         );
-        const mail = tierExpiredEmail({
+        const content = {
           workspaceName: name,
           fromTier,
           freezeItems: effects.filter((e) => e.effect === "freeze").map((e) => e.human),
           revertItems: effects.filter((e) => e.effect === "revert").map((e) => e.human),
           workspaceUrl: workspaceUrl(d.dashboardUrl, wsId),
-        });
-        await sendAll(d, await emailsOf(store, audience), mail, "tier_expired");
+        };
+        await sendAll(
+          d,
+          await recipientsOf(store, audience),
+          (locale) => tierExpiredEmail(content, locale),
+          "tier_expired",
+        );
       } catch (err) {
         d.logger.error({ err, workspaceId: wsId }, "failed to expire workspace tier");
       }
@@ -262,13 +268,18 @@ export async function runTierPrewarning(d: BillingJobDeps): Promise<void> {
         },
         now,
       );
-      const mail = tierExpiringSoonEmail({
+      const content = {
         workspaceName: name,
         currentTier: tier,
         expiresDate,
         workspaceUrl: workspaceUrl(d.dashboardUrl, ws.id),
-      });
-      await sendAll(d, await emailsOf(store, audience), mail, "tier_expiring_soon");
+      };
+      await sendAll(
+        d,
+        await recipientsOf(store, audience),
+        (locale) => tierExpiringSoonEmail(content, locale),
+        "tier_expiring_soon",
+      );
     } catch (err) {
       d.logger.error({ err, workspaceId: ws.id }, "failed to send tier pre-warning");
     }

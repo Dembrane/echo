@@ -15,10 +15,9 @@ export const isFreeTier = (tier: string | null | undefined) => tier === "free";
 
 /** The 402 the dashboard turns into the upgrade prompt for `limit` (chats, chat_turns). */
 export function freeTierLimit(limit: string): PaymentRequiredError {
-  return new PaymentRequiredError("Free tier limit", {
-    error: "FREE_TIER_LIMIT",
-    limit,
-    upgrade_cta_tier: "changemaker",
+  return new PaymentRequiredError("billing.tier_limit", {
+    params: { limit },
+    details: { error: "FREE_TIER_LIMIT", limit, upgrade_cta_tier: "changemaker" },
   });
 }
 

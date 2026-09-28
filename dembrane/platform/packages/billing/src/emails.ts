@@ -1,9 +1,12 @@
+import { type MessageParams, translator } from "@dembrane/i18n";
 import { escapeHtml } from "@dembrane/mail";
 
 /**
  * The transactional email frame (the old _layout.html): a letter-style card, heading,
  * body, one pill button, sign-off and the crowd banner. Values are escaped here, the
- * way Jinja autoescaped them; `body` is trusted HTML built by the templates below.
+ * way Jinja autoescaped them; `body` is trusted HTML built by the templates below. Every
+ * sentence comes from the server catalog (@dembrane/i18n) in the recipient's language;
+ * English renders as the old templates did.
  */
 export interface EmailParts {
   readonly title: string;
@@ -11,6 +14,8 @@ export interface EmailParts {
   readonly heading: string;
   readonly bodyHtml: string;
   readonly cta?: { readonly label: string; readonly url: string };
+  /** The sign-off line, in the email's language. */
+  readonly signoff?: string;
 }
 
 const P17 =
@@ -43,7 +48,7 @@ export function emailLayout(p: EmailParts): string {
           <h1 style="margin:0 0 20px; font-family:inherit; font-size:32px; font-weight: 400; letter-spacing:-0.01em; line-height:1.15; color:#2D2D2C;">${escapeHtml(p.heading)}</h1>
           <div style="font-size:17px; line-height:1.65; color:#2D2D2C; font-weight: 400;">${p.bodyHtml}</div>
           ${cta}
-          <p style="font-size:17px; line-height:1.65; margin:0 0 32px; color:#2D2D2C; font-weight: 400;">The dembrane team</p>
+          <p style="font-size:17px; line-height:1.65; margin:0 0 32px; color:#2D2D2C; font-weight: 400;">${escapeHtml(p.signoff ?? "The dembrane team")}</p>
         </td></tr>
         <tr><td style="background-color:#FFFFFF;"><img src="https://directus.dembrane.com/assets/a75db1e0-4dd9-4660-a6fb-24e0dd4cd104" alt="" width="600" border="0" style="width:100%; max-width:600px; height:auto; display:block; border:0;"></td></tr>
       </table>
@@ -62,85 +67,114 @@ export interface RenderedEmail {
 const list = (items: readonly string[]) =>
   `<ul style="margin:0 0 20px; padding-left:20px; color:#2D2D2C; font-size:15px; line-height:1.7; font-weight:400;">${items.map((i) => `<li>${escapeHtml(i)}</li>`).join("")}</ul>`;
 
-export function paymentFailedEmail(billingUrl: string): RenderedEmail {
+const em = (v: string) => `<em ${EM}>${escapeHtml(v)}</em>`;
+const escAll = (d: MessageParams) =>
+  Object.fromEntries(Object.entries(d).map(([k, v]) => [k, escapeHtml(String(v))]));
+
+export function paymentFailedEmail(billingUrl: string, locale?: string | null): RenderedEmail {
+  const tr = translator(locale);
+  const k = "email.payment_failed";
+  const signoff = tr("email.common.signoff");
   return {
-    subject: "Action needed: update your payment method",
+    subject: tr(`${k}.subject`),
     html: emailLayout({
-      title: "Update your payment method",
-      preview: "A recent payment didn't go through. Update your method to keep your plan.",
-      heading: "We couldn't charge your payment method.",
-      bodyHtml: `<p ${P17}>A recent payment for your dembrane plan didn't go through. This usually means a card expired or a bank declined the charge.</p><p ${P15}>Your plan stays fully active while you sort this out. Update your payment method to settle the balance and keep things running.</p>`,
-      cta: { label: "Update payment method", url: billingUrl },
+      title: tr(`${k}.title`),
+      preview: tr(`${k}.preview`),
+      heading: tr(`${k}.heading`),
+      bodyHtml: `<p ${P17}>${tr(`${k}.body`)}</p><p ${P15}>${tr(`${k}.next`)}</p>`,
+      cta: { label: tr(`${k}.cta`), url: billingUrl },
+      signoff,
     }),
-    text: `We couldn't charge your payment method.
+    text: `${tr(`${k}.heading`)}
 
-A recent payment for your dembrane plan didn't go through. This usually means a card expired or a bank declined the charge.
+${tr(`${k}.body`)}
 
-Your plan stays fully active while you sort this out. Update your payment method to settle the balance and keep things running.
+${tr(`${k}.next`)}
 
-Update your payment method:
+${tr(`${k}.text_cta`)}
 ${billingUrl}
 
-The dembrane team
+${signoff}
 `,
   };
 }
 
-export function tierExpiredEmail(p: {
-  workspaceName: string;
-  fromTier: string;
-  freezeItems: readonly string[];
-  revertItems: readonly string[];
-  workspaceUrl: string;
-}): RenderedEmail {
-  const ws = escapeHtml(p.workspaceName);
-  let body = `<p ${P17}>Your <em ${EM}>${escapeHtml(p.fromTier)}</em> tier on <em ${EM}>${ws}</em> has expired. The workspace is now on the free tier.</p>`;
+export function tierExpiredEmail(
+  p: {
+    workspaceName: string;
+    fromTier: string;
+    freezeItems: readonly string[];
+    revertItems: readonly string[];
+    workspaceUrl: string;
+  },
+  locale?: string | null,
+): RenderedEmail {
+  const tr = translator(locale);
+  const k = "email.tier_expired";
+  const d = "email.tier_downgraded";
+  const signoff = tr("email.common.signoff");
+  const v = { workspace_name: p.workspaceName, from_tier: p.fromTier };
+  let body = `<p ${P17}>${tr(`${k}.body`, { from_tier: em(p.fromTier), workspace_name: em(p.workspaceName) })}</p>`;
+  if (p.freezeItems.length) body += `<p ${P15}>${tr(`${d}.frozen`)}</p>${list(p.freezeItems)}`;
+  if (p.revertItems.length) body += `<p ${P15}>${tr(`${d}.reverted`)}</p>${list(p.revertItems)}`;
+  body += `<p ${P15}>${tr(`${k}.rest`)}</p>`;
+  let text = `${tr(`${k}.text_body`, v)}\n\n`;
   if (p.freezeItems.length)
-    body += `<p ${P15}>These features are frozen. Existing state stays, with no new use until upgrade:</p>${list(p.freezeItems)}`;
+    text += `${tr(`${d}.frozen_text`)}\n${p.freezeItems.map((i) => `- ${i}\n`).join("")}\n`;
   if (p.revertItems.length)
-    body += `<p ${P15}>These features were reverted:</p>${list(p.revertItems)}`;
-  body += `<p ${P15}>Your existing content stays accessible. Request an upgrade to restore full features.</p>`;
-  let text = `${p.workspaceName}: your ${p.fromTier} tier has expired. The workspace is now on free.\n\n`;
-  if (p.freezeItems.length)
-    text += `Frozen. Existing state stays, with no new use until upgrade:\n${p.freezeItems.map((i) => `- ${i}\n`).join("")}\n`;
-  if (p.revertItems.length) text += `Reverted:\n${p.revertItems.map((i) => `- ${i}\n`).join("")}\n`;
-  text += `Your existing content stays accessible. Request an upgrade to restore full features.\n\nOpen the workspace:\n${p.workspaceUrl}\n\nThe dembrane team\n`;
+    text += `${tr(`${d}.reverted_text`)}\n${p.revertItems.map((i) => `- ${i}\n`).join("")}\n`;
+  text += `${tr(`${k}.rest`)}\n\n${tr(`${d}.text_cta`)}\n${p.workspaceUrl}\n\n${signoff}\n`;
   return {
-    subject: `${p.workspaceName} moved to free`,
+    subject: tr(`${k}.subject`, v),
     html: emailLayout({
-      title: `${p.workspaceName} tier expired`,
-      preview: `${p.workspaceName} moved to free. Some features are limited.`,
-      heading: `${p.workspaceName} is now on free.`,
+      title: tr(`${k}.title`, v),
+      preview: tr(`${k}.preview`, v),
+      heading: tr(`${k}.heading`, v),
       bodyHtml: body,
-      cta: { label: "Open workspace", url: p.workspaceUrl },
+      cta: { label: tr(`${k}.cta`), url: p.workspaceUrl },
+      signoff,
     }),
     text,
   };
 }
 
-export function tierExpiringSoonEmail(p: {
-  workspaceName: string;
-  currentTier: string;
-  expiresDate: string;
-  workspaceUrl: string;
-}): RenderedEmail {
+export function tierExpiringSoonEmail(
+  p: {
+    workspaceName: string;
+    currentTier: string;
+    expiresDate: string;
+    workspaceUrl: string;
+  },
+  locale?: string | null,
+): RenderedEmail {
+  const tr = translator(locale);
+  const k = "email.tier_expiring";
+  const signoff = tr("email.common.signoff");
+  const v = { workspace_name: p.workspaceName, tier: p.currentTier, date: p.expiresDate };
+  const bodyV = {
+    ...escAll(v),
+    tier: em(p.currentTier),
+    workspace_name: em(p.workspaceName),
+    date: em(p.expiresDate),
+  };
   return {
-    subject: `${p.workspaceName} tier expires ${p.expiresDate}`,
+    subject: tr(`${k}.subject`, v),
     html: emailLayout({
-      title: `${p.workspaceName} tier expiring soon`,
-      preview: `${p.workspaceName} moves to free on ${p.expiresDate}.`,
-      heading: `${p.workspaceName} tier expires ${p.expiresDate}.`,
-      bodyHtml: `<p ${P17}>Your <em ${EM}>${escapeHtml(p.currentTier)}</em> tier on <em ${EM}>${escapeHtml(p.workspaceName)}</em> expires on <em ${EM}>${escapeHtml(p.expiresDate)}</em>. After that, the workspace moves to free and some features will be limited.</p><p ${P15}>Your existing content stays accessible. Request an upgrade to keep full features.</p>`,
-      cta: { label: "Request upgrade", url: p.workspaceUrl },
+      title: tr(`${k}.title`, v),
+      preview: tr(`${k}.preview`, v),
+      heading: tr(`${k}.heading`, v),
+      bodyHtml: `<p ${P17}>${tr(`${k}.body`, bodyV)}</p><p ${P15}>${tr(`${k}.rest`)}</p>`,
+      cta: { label: tr(`${k}.cta`), url: p.workspaceUrl },
+      signoff,
     }),
-    text: `${p.workspaceName}: your ${p.currentTier} tier expires on ${p.expiresDate}. After that, the workspace moves to free and some features will be limited.
+    text: `${tr(`${k}.text_body`, v)}
 
-Your existing content stays accessible. Request an upgrade to keep full features.
+${tr(`${k}.rest`)}
 
-Open the workspace:
+${tr("email.tier_downgraded.text_cta")}
 ${p.workspaceUrl}
 
-The dembrane team
+${signoff}
 `,
   };
 }

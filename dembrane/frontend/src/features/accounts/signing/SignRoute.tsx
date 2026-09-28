@@ -30,6 +30,7 @@ import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
 import { useV2Me } from "@/hooks/useV2Me";
+import { presentError } from "@/lib/errors/present";
 import { AccountsApiError, call } from "../api/client";
 import {
 	accountKeys,
@@ -287,7 +288,7 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 			});
 			await queryClient.invalidateQueries({ queryKey: accountKeys.all });
 		} catch (e) {
-			setError(e instanceof Error ? e.message : t`Signing failed. Try again.`);
+			setError((await presentError(e, i18n)).message);
 		} finally {
 			setSubmitting(false);
 		}

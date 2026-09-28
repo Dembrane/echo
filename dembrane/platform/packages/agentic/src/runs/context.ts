@@ -107,10 +107,10 @@ export const FREE_TIER_MAX_CHAT_USER_TURNS = 3;
 
 /** The shared 402 the frontend keys on (error FREE_TIER_LIMIT) to offer the upgrade. */
 export function freeTierLimitError(limit: string): PaymentRequiredError {
-  return new PaymentRequiredError("FREE_TIER_LIMIT", {
-    error: "FREE_TIER_LIMIT",
-    limit,
-    upgrade_cta_tier: "changemaker",
+  return new PaymentRequiredError("billing.tier_limit", {
+    message: "FREE_TIER_LIMIT",
+    params: { limit },
+    details: { error: "FREE_TIER_LIMIT", limit, upgrade_cta_tier: "changemaker" },
   });
 }
 

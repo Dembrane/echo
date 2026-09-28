@@ -39,25 +39,26 @@ export function vatOf(netCents: number, bps: number): number {
 }
 
 export function priceLines(lines: readonly OfferLine[]): Totals {
-  if (!lines.length) throw new ValidationError("An offer needs at least one line");
+  if (!lines.length) throw new ValidationError("offer.no_lines");
   const priced = lines.map((l, i) => {
     if (!Number.isSafeInteger(l.quantity) || l.quantity < 1)
-      throw new ValidationError(`Line ${i + 1}: quantity must be a whole number of at least 1`);
+      throw new ValidationError("offer.line_quantity", { params: { line: i + 1 } });
     if (!Number.isSafeInteger(l.unit_price_cents))
-      throw new ValidationError(`Line ${i + 1}: unit price must be whole cents`);
+      throw new ValidationError("offer.line_unit_price", { params: { line: i + 1 } });
     if (!(VAT_RATES_BPS as readonly number[]).includes(l.vat_rate_bps))
-      throw new ValidationError(
-        `Line ${i + 1}: VAT rate must be one of ${VAT_RATES_BPS.join(", ")} basis points`,
-      );
+      throw new ValidationError("offer.line_vat_rate", {
+        params: { line: i + 1, rates: VAT_RATES_BPS.join(", ") },
+      });
     const net = l.quantity * l.unit_price_cents;
-    if (!Number.isSafeInteger(net)) throw new ValidationError(`Line ${i + 1}: amount too large`);
+    if (!Number.isSafeInteger(net))
+      throw new ValidationError("offer.line_amount_too_large", { params: { line: i + 1 } });
     const vat = vatOf(net, l.vat_rate_bps);
     return { ...l, net_cents: net, vat_cents: vat, total_cents: net + vat };
   });
   const subtotal = priced.reduce((s, l) => s + l.net_cents, 0);
   const vat = priced.reduce((s, l) => s + l.vat_cents, 0);
   // A discount line may be negative (a scholarship); the offer as a whole may not.
-  if (subtotal + vat < 0) throw new ValidationError("An offer cannot total less than zero");
+  if (subtotal + vat < 0) throw new ValidationError("offer.negative_total");
   return { lines: priced, subtotal_cents: subtotal, vat_cents: vat, total_cents: subtotal + vat };
 }
 

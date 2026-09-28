@@ -355,10 +355,9 @@ export function liveRoutes(d: ConversationsDeps) {
     const conversationIds = clean(c.req.query("conversation_ids"));
     const projectIds = clean(c.req.query("project_ids"));
     if (!conversationIds.length && !projectIds.length)
-      throw new BadRequestError("At least one of conversation_ids or project_ids must be provided");
+      throw new BadRequestError("conversation.ids_required");
     const total = conversationIds.length + projectIds.length;
-    if (total > 20)
-      throw new BadRequestError(`Too many IDs provided (${total}). Maximum allowed is 20.`);
+    if (total > 20) throw new BadRequestError("conversation.too_many_ids", { params: { total } });
     for (const [k, v] of Object.entries(SSE_HEADERS)) c.header(k, v);
     return boundedEventResponse(
       stream(c, async (s) => {

@@ -21,6 +21,7 @@ import { usePostHog } from "@posthog/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import { useUpdateProjectByIdMutation } from "@/components/project/hooks";
 import { KeyTermsInput } from "@/components/project/KeyTermsInput";
 import { ProjectContextInput } from "@/components/project/ProjectContextInput";
@@ -33,6 +34,7 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useCreateWorkspaceProject } from "@/hooks/useWorkspaceProjects";
+import { ApiRequestError } from "@/lib/errors/read";
 
 type Access = "workspace" | "private";
 
@@ -50,7 +52,7 @@ async function setVisibility(projectId: string, visibility: Access) {
 	);
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(data.detail || "Failed to set project visibility");
+		throw new ApiRequestError(res.status, data);
 	}
 	return res.json();
 }
@@ -127,7 +129,7 @@ export const CreateProjectRoute = () => {
 			return project;
 		},
 		onError: (error: Error) => {
-			toast.error(error.message);
+			void notifyError(error);
 		},
 		onSuccess: (project) => {
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-projects"] });

@@ -1,7 +1,10 @@
+import { type MessageParams, type Translate, translator } from "@dembrane/i18n";
+
 /**
- * The transactional emails this namespace sends, rendered to the same subject, HTML and text
- * as the old API's Jinja templates (server/email_templates). HTML values are escaped; the
- * text part is not, matching Jinja's autoescape rules for .html and .txt.
+ * The transactional emails this namespace sends, in the recipient's language: every
+ * sentence comes from the server catalog (@dembrane/i18n). English renders to the same
+ * subject, HTML and text as the old API's Jinja templates (server/email_templates). HTML
+ * values are escaped; the text part is not, matching Jinja's autoescape rules.
  */
 
 export interface RenderedEmail {
@@ -36,29 +39,32 @@ function cta(label: string, url: string): string {
 </table>`;
 }
 
-function fallback(url: string): string {
+function fallback(tr: Translate, url: string): string {
   return `<p style="font-size:13px; line-height:1.65; margin:0 0 28px; color:#2D2D2C; font-weight: 400;">
-  Or paste this into your browser:<br>
+  ${tr("email.common.fallback")}<br>
   <span style="color:#4169E1; word-break:break-all;">${esc(url)}</span>
 </p>`;
 }
 
-const DISCLAIM = P(
-  15,
-  "0 0 28px",
-  "Didn't expect this? You can ignore this email. Nothing will happen.",
-);
+const disclaim = (tr: Translate) => P(15, "0 0 28px", tr("email.common.ignore"));
+
+/** Escapes every value, for the parts of the HTML that show values as plain text. */
+const escAll = (d: MessageParams) =>
+  Object.fromEntries(Object.entries(d).map(([k, v]) => [k, esc(v)]));
 
 /** The shared letter-style frame (email_templates/_layout.html). */
-function layout(b: {
-  title: string;
-  preview: string;
-  heading: string;
-  body: string;
-  cta?: string;
-  fallback?: string;
-  disclaim?: string;
-}): string {
+function layout(
+  tr: Translate,
+  b: {
+    title: string;
+    preview: string;
+    heading: string;
+    body: string;
+    cta?: string;
+    fallback?: string;
+    disclaim?: string;
+  },
+): string {
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -95,7 +101,7 @@ function layout(b: {
               ${b.fallback ?? ""}
               ${b.disclaim ?? ""}
               <p style="font-size:17px; line-height:1.65; margin:0 0 32px; color:#2D2D2C; font-weight: 400;">
-                The dembrane team
+                ${tr("email.common.signoff")}
               </p>
             </td>
           </tr>
@@ -112,149 +118,134 @@ function layout(b: {
 </html>`;
 }
 
-const asRole = (role: string, html: boolean) =>
-  role && role !== "member" ? ` as ${html ? EM(role) : role}` : "";
-
 /** org_invite: someone without an account is invited to an org. */
-export function orgInviteEmail(d: {
-  inviterName: string;
-  orgName: string;
-  role: string;
-  inviteUrl: string;
-}): RenderedEmail {
+export function orgInviteEmail(
+  d: { inviterName: string; orgName: string; role: string; inviteUrl: string },
+  locale?: string | null,
+): RenderedEmail {
+  const tr = translator(locale);
+  const k = "email.org_invite";
+  const p = { inviter_name: d.inviterName, org_name: d.orgName, role: d.role };
+  const bodyKey = d.role && d.role !== "member" ? `${k}.body_role` : `${k}.body`;
   return {
-    subject: `${d.inviterName} invited you to ${d.orgName} on dembrane`,
-    html: layout({
-      title: `${esc(d.inviterName)} invited you to ${esc(d.orgName)} on dembrane`,
-      preview: `${esc(d.inviterName)} invited you to join ${esc(d.orgName)} on dembrane.`,
-      heading: `You've been invited to ${esc(d.orgName)}.`,
-      body: `${P(17, "0 0 28px", `${esc(d.inviterName)} invited you to join ${EM(d.orgName)} on dembrane${asRole(d.role, true)}. The invite expires in 7 days.`)}\n${P(15, "0 0 28px", "Once you accept, you can discover and request access to the workspaces your team is using.")}`,
-      cta: cta("Accept invitation", d.inviteUrl),
-      fallback: fallback(d.inviteUrl),
-      disclaim: DISCLAIM,
+    subject: tr(`${k}.subject`, p),
+    html: layout(tr, {
+      title: tr(`${k}.subject`, escAll(p)),
+      preview: tr(`${k}.preview`, escAll(p)),
+      heading: tr(`${k}.heading`, escAll(p)),
+      body: `${P(17, "0 0 28px", tr(bodyKey, { ...escAll(p), org_name: EM(d.orgName), role: EM(d.role) }))}\n${P(15, "0 0 28px", tr(`${k}.next`))}`,
+      cta: cta(tr(`${k}.cta`), d.inviteUrl),
+      fallback: fallback(tr, d.inviteUrl),
+      disclaim: disclaim(tr),
     }),
-    text: `${d.inviterName} invited you to join ${d.orgName} on dembrane${asRole(d.role, false)}. The invite expires in 7 days.
-
-Accept the invitation:
-${d.inviteUrl}
-
-Once you accept, you can discover and request access to the workspaces your team is using.
-
-Didn't expect this? Ignore this email. Nothing will happen.
-
-The dembrane team`,
+    text: `${tr(bodyKey, p)}\n\n${tr(`${k}.text_cta`)}\n${d.inviteUrl}\n\n${tr(`${k}.next`)}\n\n${tr("email.common.ignore_text")}\n\n${tr("email.common.signoff")}`,
   };
 }
 
 /** org_added: an existing user was added (or re-added) to an org. */
-export function orgAddedEmail(d: {
-  subject: string;
-  inviterName: string;
-  orgName: string;
-  role: string;
-  inviteUrl: string;
-}): RenderedEmail {
+export function orgAddedEmail(
+  d: { readded: boolean; inviterName: string; orgName: string; role: string; inviteUrl: string },
+  locale?: string | null,
+): RenderedEmail {
+  const tr = translator(locale);
+  const k = "email.org_added";
+  const p = { inviter_name: d.inviterName, org_name: d.orgName, role: d.role };
+  const bodyKey = d.role && d.role !== "member" ? `${k}.body_role` : `${k}.body`;
   return {
-    subject: d.subject,
-    html: layout({
-      title: `You've been added to ${esc(d.orgName)}`,
-      preview: `${esc(d.inviterName)} added you to ${esc(d.orgName)} on dembrane.`,
-      heading: "You're in.",
-      body: `${P(17, "0 0 28px", `${esc(d.inviterName)} added you to ${EM(d.orgName)} on dembrane${asRole(d.role, true)}.`)}\n${P(15, "0 0 28px", "You can discover and request access to the workspaces your team is using.")}`,
-      cta: cta("Open dembrane", d.inviteUrl),
+    subject: tr(d.readded ? `${k}.subject_again` : `${k}.subject`, p),
+    html: layout(tr, {
+      title: tr(`${k}.subject`, escAll(p)),
+      preview: tr(`${k}.preview`, escAll(p)),
+      heading: tr(`${k}.heading`),
+      body: `${P(17, "0 0 28px", tr(bodyKey, { ...escAll(p), org_name: EM(d.orgName), role: EM(d.role) }))}\n${P(15, "0 0 28px", tr(`${k}.next`))}`,
+      cta: cta(tr(`${k}.cta`), d.inviteUrl),
     }),
-    text: `${d.inviterName} added you to ${d.orgName} on dembrane${asRole(d.role, false)}.
-
-You can discover and request access to the workspaces your team is using.
-
-Open dembrane:
-${d.inviteUrl}
-
-The dembrane team`,
+    text: `${tr(bodyKey, p)}\n\n${tr(`${k}.next`)}\n\n${tr(`${k}.text_cta`)}\n${d.inviteUrl}\n\n${tr("email.common.signoff")}`,
   };
 }
 
 /** workspace_invite, used for the data owner of an external-client workspace. */
-export function workspaceInviteEmail(d: {
-  subject: string;
-  inviterName: string;
-  workspaceName: string;
-  inviteUrl: string;
-}): RenderedEmail {
+export function workspaceInviteEmail(
+  d: { subject?: string; inviterName: string; workspaceName: string; inviteUrl: string },
+  locale?: string | null,
+): RenderedEmail {
+  const tr = translator(locale);
+  const k = "email.workspace_invite";
+  const p = { inviter_name: d.inviterName, workspace_name: d.workspaceName };
   return {
-    subject: d.subject,
-    html: layout({
-      title: "You're invited to collaborate on dembrane",
-      preview: `${esc(d.inviterName)} invited you to join ${esc(d.workspaceName)} on dembrane.`,
-      heading: "You've been invited to collaborate.",
+    subject: d.subject ?? tr("email.data_owner_invite.subject", p),
+    html: layout(tr, {
+      title: tr(`${k}.title`),
+      preview: tr(`${k}.preview`, escAll(p)),
+      heading: tr(`${k}.heading`),
       body: P(
         17,
         "0 0 28px",
-        `${esc(d.inviterName)} invited you to join ${EM(d.workspaceName)} on dembrane. The invite expires in 7 days.`,
+        tr(`${k}.body`, { ...escAll(p), workspace_name: EM(d.workspaceName) }),
       ),
-      cta: cta("Accept invitation", d.inviteUrl),
-      fallback: fallback(d.inviteUrl),
-      disclaim: DISCLAIM,
+      cta: cta(tr(`${k}.cta`), d.inviteUrl),
+      fallback: fallback(tr, d.inviteUrl),
+      disclaim: disclaim(tr),
     }),
-    text: `${d.inviterName} invited you to join ${d.workspaceName} on dembrane. The invite expires in 7 days.
-
-Accept the invitation:
-${d.inviteUrl}
-
-Didn't expect this? Ignore this email. Nothing will happen.
-
-The dembrane team`,
+    text: `${tr(`${k}.body`, p)}\n\n${tr(`${k}.text_cta`)}\n${d.inviteUrl}\n\n${tr("email.common.ignore_text")}\n\n${tr("email.common.signoff")}`,
   };
 }
 
 /** tier_downgraded: sent to admins and billing after a staff downgrade. */
-export function tierDowngradedEmail(d: {
-  workspaceName: string;
-  fromTier: string;
-  toTier: string;
-  downgradedAtHuman: string;
-  freezeItems: readonly string[];
-  revertItems: readonly string[];
-  workspaceUrl: string;
-}): RenderedEmail {
+export function tierDowngradedEmail(
+  d: {
+    workspaceName: string;
+    fromTier: string;
+    toTier: string;
+    downgradedAtHuman: string;
+    freezeItems: readonly string[];
+    revertItems: readonly string[];
+    workspaceUrl: string;
+  },
+  locale?: string | null,
+): RenderedEmail {
+  const tr = translator(locale);
+  const k = "email.tier_downgraded";
+  const p = {
+    workspace_name: d.workspaceName,
+    from_tier: d.fromTier,
+    to_tier: d.toTier,
+    date: d.downgradedAtHuman,
+  };
   const list = (items: readonly string[]) =>
     `<ul style="margin:0 0 20px; padding-left:20px; color:#2D2D2C; font-size:15px; line-height:1.7; font-weight:400;">\n  ${items.map((i) => `<li>${esc(i)}</li>`).join("")}\n</ul>`;
   const body = [
-    `<p style="font-size:17px; line-height:1.65; margin:0 0 20px; color:#2D2D2C; font-weight:400;">\n  As of ${esc(d.downgradedAtHuman)}, ${EM(d.workspaceName)} moved from ${esc(d.fromTier)} to ${esc(d.toTier)}.\n</p>`,
+    `<p style="font-size:17px; line-height:1.65; margin:0 0 20px; color:#2D2D2C; font-weight:400;">\n  ${tr(`${k}.body`, { ...escAll(p), workspace_name: EM(d.workspaceName) })}\n</p>`,
     d.freezeItems.length
-      ? `<p style="font-size:15px; line-height:1.65; margin:0 0 8px; color:#2D2D2C; font-weight:400;">\n  These features are frozen. Existing state stays, with no new use until upgrade:\n</p>\n${list(d.freezeItems)}`
+      ? `<p style="font-size:15px; line-height:1.65; margin:0 0 8px; color:#2D2D2C; font-weight:400;">\n  ${tr(`${k}.frozen`)}\n</p>\n${list(d.freezeItems)}`
       : "",
     d.revertItems.length
-      ? `<p style="font-size:15px; line-height:1.65; margin:0 0 8px; color:#2D2D2C; font-weight:400;">\n  These features were reverted:\n</p>\n${list(d.revertItems)}`
+      ? `<p style="font-size:15px; line-height:1.65; margin:0 0 8px; color:#2D2D2C; font-weight:400;">\n  ${tr(`${k}.reverted`)}\n</p>\n${list(d.revertItems)}`
       : "",
-    P(
-      15,
-      "0 0 24px",
-      "Everything else keeps working as it did. Open the workspace to review your options or request a different tier.",
-    ),
+    P(15, "0 0 24px", tr(`${k}.rest`)),
   ]
     .filter(Boolean)
     .join("\n\n");
   const textList = (items: readonly string[]) => items.map((i) => `- ${i}\n`).join("");
   return {
-    subject: `${d.workspaceName} moved to ${d.toTier}`.replace(/[\r\n]/g, " "),
-    html: layout({
-      title: `${esc(d.workspaceName)} moved to ${esc(d.toTier)}`,
-      preview: `${esc(d.workspaceName)} is now on ${esc(d.toTier)}. Some features are limited.`,
-      heading: `${esc(d.workspaceName)} is on ${esc(d.toTier)}.`,
+    subject: tr(`${k}.subject`, p).replace(/[\r\n]/g, " "),
+    html: layout(tr, {
+      title: tr(`${k}.subject`, escAll(p)),
+      preview: tr(`${k}.preview`, escAll(p)),
+      heading: tr(`${k}.heading`, escAll(p)),
       body,
-      cta: cta("Open workspace", d.workspaceUrl),
+      cta: cta(tr(`${k}.cta`), d.workspaceUrl),
     }),
-    text: `${d.workspaceName} moved from ${d.fromTier} to ${d.toTier} on ${d.downgradedAtHuman}.
+    text: `${tr(`${k}.text_body`, p)}
 
-${d.freezeItems.length ? `Frozen. Existing state stays, with no new use until upgrade:\n${textList(d.freezeItems)}\n` : ""}
-${d.revertItems.length ? `Reverted:\n${textList(d.revertItems)}\n` : ""}
-Everything else keeps working as it did.
+${d.freezeItems.length ? `${tr(`${k}.frozen_text`)}\n${textList(d.freezeItems)}\n` : ""}
+${d.revertItems.length ? `${tr(`${k}.reverted_text`)}\n${textList(d.revertItems)}\n` : ""}
+${tr(`${k}.rest_text`)}
 
-Open the workspace:
+${tr(`${k}.text_cta`)}
 ${d.workspaceUrl}
 
-The dembrane team`,
+${tr("email.common.signoff")}`,
   };
 }
 
@@ -268,90 +259,70 @@ type SupportTemplate =
 /** The support access emails; these templates have no text part in the old API either. */
 export function supportAccessEmail(
   workspaceName: string,
-  subject: string,
   t: SupportTemplate,
+  locale?: string | null,
 ): RenderedEmail {
+  const tr = translator(locale);
   const ws = EM(workspaceName);
-  const name = esc(workspaceName);
+  const staff = "staffName" in t ? t.staffName : "";
+  const plain = { workspace_name: workspaceName, staff_name: staff };
+  const html = escAll(plain);
+  const inBody = { ...html, workspace_name: ws };
+  const k =
+    t.kind === "request"
+      ? "email.support_request"
+      : t.kind === "joined"
+        ? "email.support_joined"
+        : t.kind === "ended"
+          ? "email.support_ended"
+          : t.kind === "reminder"
+            ? "email.support_reminder"
+            : `email.support_${t.decision}`;
+  const head = {
+    title: tr(`${k}.subject`, html),
+    preview: tr(`${k}.preview`, html),
+    heading: tr(`${k}.heading`),
+  };
+  const subject = tr(`${k}.subject`, plain);
   switch (t.kind) {
     case "request":
       return {
         subject,
         text: "",
-        html: layout({
-          title: `dembrane staff requested access to ${name}`,
-          preview: `${esc(t.staffName)} asked to join ${name} for support.`,
-          heading: "Staff access request",
+        html: layout(tr, {
+          ...head,
           body: P(
             17,
             "0 0 28px",
-            `${esc(t.staffName)} from dembrane asked to join ${ws} to help with support.\n  ${t.note ? `Their note: ${esc(t.note)}.` : ""}\n  If you approve, their access ends automatically after 24 hours.`,
+            `${tr(`${k}.body`, inBody)}\n  ${t.note ? tr(`${k}.note`, { note: esc(t.note) }) : ""}\n  ${tr(`${k}.end`)}`,
           ),
-          cta: cta("Review request", t.settingsUrl),
+          cta: cta(tr(`${k}.cta`), t.settingsUrl),
         }),
       };
     case "joined":
-      return {
-        subject,
-        text: "",
-        html: layout({
-          title: `dembrane staff joined ${name} for support`,
-          preview: `${esc(t.staffName)} joined ${name} to help with support.`,
-          heading: "Staff joined for support",
-          body: P(
-            17,
-            "0 0 28px",
-            `${esc(t.staffName)} from dembrane joined ${ws} to help with support.\n  Their access ends automatically after 24 hours. You can follow what happens in the access history in your workspace settings.`,
-          ),
-          cta: cta("View access history", t.settingsUrl),
-        }),
-      };
     case "ended":
-      return {
-        subject,
-        text: "",
-        html: layout({
-          title: `Support access to ${name} turned off`,
-          preview: `The support session in ${name} ended and staff access was turned off.`,
-          heading: "Support session ended",
-          body: P(
-            17,
-            "0 0 28px",
-            `The support session in ${ws} ended and staff access was turned off.\n  Turn it back on in workspace settings if you need more help.`,
-          ),
-          cta: cta("Open workspace settings", t.settingsUrl),
-        }),
-      };
     case "reminder":
       return {
         subject,
         text: "",
-        html: layout({
-          title: `Support access to ${name} is still on`,
-          preview: `No staff joined ${name} in the last 7 days.`,
-          heading: "Support access is still on",
-          body: P(
-            17,
-            "0 0 28px",
-            `Support access for ${ws} is still on and no staff joined in the last 7 days.\n  Turn it off in workspace settings if you no longer need help. You can turn it back on at any time.`,
-          ),
-          cta: cta("Open workspace settings", t.settingsUrl),
+        html: layout(tr, {
+          ...head,
+          body: P(17, "0 0 28px", `${tr(`${k}.body`, inBody)}\n  ${tr(`${k}.end`)}`),
+          cta: cta(tr(`${k}.cta`), t.settingsUrl),
         }),
       };
     case "resolved":
       return {
         subject,
         text: "",
-        html: layout({
-          title: `Access request for ${name} ${t.decision}`,
-          preview: `Your access request for ${name} was ${t.decision}.`,
-          heading: `Request ${t.decision}`,
+        html: layout(tr, {
+          ...head,
           body: P(
             17,
             "0 0 28px",
-            `Your access request for ${ws} was ${t.decision}.\n  ${t.decision === "approved" ? "You have admin access for 24 hours." : ""}`,
+            `${tr(`${k}.body`, inBody)}\n  ${t.decision === "approved" ? tr(`${k}.end`) : ""}`,
           ),
-          ...(t.decision === "approved" && { cta: cta("Open workspace", t.workspaceUrl) }),
+          ...(t.decision === "approved" && { cta: cta(tr(`${k}.cta`), t.workspaceUrl) }),
         }),
       };
   }

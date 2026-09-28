@@ -2,7 +2,6 @@ import { NotFoundError, RateLimitedError } from "@dembrane/core";
 import type { Env } from "@dembrane/http";
 import { p } from "@dembrane/legacy-shape";
 import type { Limit } from "@dembrane/ratelimit";
-import { TOO_MANY } from "@dembrane/ratelimit";
 import type { Hub } from "@dembrane/realtime";
 import { type Context, Hono } from "hono";
 import { getConnInfo } from "hono/bun";
@@ -37,7 +36,7 @@ export type AudienceMap = (args: {
 
 /** The answer while no map exists for the project, which is the answer Present gives too. */
 export const mapNotReady: AudienceMap = async () => {
-  throw new NotFoundError("Map results are not ready.");
+  throw new NotFoundError("present.map_results_not_ready");
 };
 
 export interface PublicRoutesDeps extends PopcornDeps {
@@ -95,14 +94,15 @@ export function publicRoutes(deps: PublicRoutesDeps) {
   const gate = () => requirePopcornEnabled(d.flags);
 
   const published = async (token: string): Promise<{ report: Row; project: Row }> => {
-    if (!TOKEN.test(token)) throw new NotFoundError("Not found");
+    if (!TOKEN.test(token)) throw new NotFoundError("popcorn.public_not_found");
     const report = token.length >= 16 ? await d.store.reportByToken(token) : null;
-    if (!report) throw new NotFoundError("Not found");
+    if (!report) throw new NotFoundError("popcorn.public_not_found");
     const projectId = asId(report.project_id);
     const project = projectId ? await d.store.project(projectId) : null;
-    if (!project || project.deleted_at) throw new NotFoundError("Not found");
+    if (!project || project.deleted_at) throw new NotFoundError("popcorn.public_not_found");
     requireProjectPopcornEnabled(d.flags, project);
-    if (!(await loadSettingsFor(d.store, report)).public) throw new NotFoundError("Not found");
+    if (!(await loadSettingsFor(d.store, report)).public)
+      throw new NotFoundError("popcorn.public_not_found");
     return { report, project };
   };
 
@@ -170,13 +170,14 @@ export function publicRoutes(deps: PublicRoutesDeps) {
     const name = webpName(c.req.param("file"));
     if (name === null) return c.notFound();
     const bytes = illustrationBytes(name);
-    if (!bytes) throw new NotFoundError("Not found");
+    if (!bytes) throw new NotFoundError("popcorn.illustration_not_found");
     return binary(bytes, "image/webp", { "Cache-Control": "public, max-age=86400" });
   });
 
   app.get(`${base}/:token/data/bundle.json`, async (c) => {
     gate();
-    if (!(await d.limiter.allow(DATA_LIMIT, clientIp(c)))) throw new RateLimitedError(TOO_MANY);
+    if (!(await d.limiter.allow(DATA_LIMIT, clientIp(c))))
+      throw new RateLimitedError("rate_limit.exceeded");
     const { report, project } = await published(c.req.param("token"));
     return c.json(await bundleForReport(d, report, project), 200, NO_STORE);
   });
@@ -225,7 +226,7 @@ export function publicRoutes(deps: PublicRoutesDeps) {
     const { report, project } = await published(c.req.param("token"));
     const settings = await loadSettingsFor(d.store, report);
     if (!(audienceManifest(settings).blocks as string[]).includes("map"))
-      throw new NotFoundError("Map is not in this presentation.");
+      throw new NotFoundError("present.map_not_in_presentation");
     return c.json(
       await d.audienceMap({
         projectId: String(project.id),

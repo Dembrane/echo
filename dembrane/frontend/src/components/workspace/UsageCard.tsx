@@ -1,4 +1,3 @@
-import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
 import {
 	Badge,
@@ -12,14 +11,15 @@ import {
 } from "@mantine/core";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { toast } from "@/components/common/Toaster";
 import { UsageFreshness } from "@/components/common/UsageFreshness";
+import { notifyError } from "@/components/error/notifyError";
 import { PeriodSelect } from "@/components/workspace/PeriodSelect";
 import { API_BASE_URL } from "@/config";
 import {
 	useWorkspaceUsage,
 	type WorkspaceUsageData,
 } from "@/hooks/useWorkspaceUsage";
+import { ApiRequestError } from "@/lib/errors/read";
 import { formatDurationFromHours } from "@/lib/time";
 
 async function fetchUsageFresh(
@@ -34,11 +34,7 @@ async function fetchUsageFresh(
 	const res = await fetch(url, { credentials: "include" });
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(
-			typeof data.detail === "string"
-				? data.detail
-				: t`Couldn't load usage (${res.status})`,
-		);
+		throw new ApiRequestError(res.status, data);
 	}
 	return res.json();
 }
@@ -79,11 +75,7 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 				fresh,
 			);
 		} catch (err) {
-			toast.error(
-				err instanceof Error
-					? err.message
-					: t`Couldn't refresh usage. Try again.`,
-			);
+			void notifyError(err);
 		} finally {
 			setRefreshing(false);
 		}

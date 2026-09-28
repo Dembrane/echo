@@ -27,6 +27,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
+import { presentError } from "@/lib/errors/present";
 import { call } from "../api/client";
 import { accountKeys } from "../api/hooks";
 import type { DemoStatusT } from "../contract/contract.gen";
@@ -94,7 +95,7 @@ function Demo() {
 			queryClient.setQueryData(demoKey(demoId), next);
 			await queryClient.invalidateQueries({ queryKey: accountKeys.all });
 		} catch (e) {
-			setError(e instanceof Error ? e.message : String(e));
+			setError((await presentError(e, i18n)).message);
 		} finally {
 			setBusy(null);
 		}

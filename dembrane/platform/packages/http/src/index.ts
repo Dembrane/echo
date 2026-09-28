@@ -28,7 +28,7 @@ export type Ctx = Context<Env>;
 /** The signed-in caller, or 401 with the body the old API sends. */
 export function requireUser(c: Ctx): Signed {
   const p = c.get("principal");
-  if (!p) throw new UnauthenticatedError("Invalid session");
+  if (!p) throw new UnauthenticatedError("auth.session_expired");
   return p;
 }
 

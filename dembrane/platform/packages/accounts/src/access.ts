@@ -18,10 +18,10 @@ export async function customerOrg(
   orgId: string,
   policy: OrgPolicy,
 ): Promise<OrgRow> {
-  if (!isUuid(orgId)) throw new NotFoundError("Organisation not found");
+  if (!isUuid(orgId)) throw new NotFoundError("organisation.not_found");
   await d.access.org(who, orgId, policy);
   const org = await store.org(d.db, orgId);
-  if (!org || org.deleted_at) throw new NotFoundError("Organisation not found");
+  if (!org || org.deleted_at) throw new NotFoundError("organisation.not_found");
   return org;
 }
 
@@ -48,7 +48,7 @@ export async function documentFor(
   docId: string,
   policy: "account:read" | "account:sign",
 ): Promise<DocumentAccess> {
-  if (!isUuid(orgId) || !isUuid(docId)) throw new NotFoundError("Document not found");
+  if (!isUuid(orgId) || !isUuid(docId)) throw new NotFoundError("document.not_found");
   const identity = await store.identity(d.db, who.directusUserId);
   const email = identity?.verified ? identity.email.toLowerCase() : null;
   let org: OrgRow | null = null;
@@ -62,7 +62,7 @@ export async function documentFor(
   }
   const doc = await store.document(d.db, orgId, docId);
   if (org) {
-    if (!doc || doc.status === "draft") throw new NotFoundError("Document not found");
+    if (!doc || doc.status === "draft") throw new NotFoundError("document.not_found");
     return { org, doc, via: "member", email };
   }
   const named =
@@ -73,17 +73,19 @@ export async function documentFor(
     ["sent", "viewed", "signed"].includes(doc.status);
   if (!named || !doc) {
     if (refused instanceof ForbiddenError) throw refused;
-    throw new NotFoundError("Document not found");
+    throw new NotFoundError("document.not_found");
   }
   const orgRow = await store.org(d.db, orgId);
-  if (!orgRow || orgRow.deleted_at) throw new NotFoundError("Document not found");
+  if (!orgRow || orgRow.deleted_at) throw new NotFoundError("document.not_found");
   return { org: orgRow, doc, via: "signer", email };
 }
 
 /** Only the named signer signs once one is named; otherwise any member with account:sign. */
 export function assertMaySign(a: DocumentAccess): void {
   if (a.doc.signerEmail && a.doc.signerEmail.toLowerCase() !== a.email)
-    throw new ForbiddenError(`Only ${a.doc.signerEmail} can sign this document`);
+    throw new ForbiddenError("document.signer_only", {
+      params: { signer_email: a.doc.signerEmail },
+    });
 }
 
 /** Staff permission check with its audit row, before anything else happens. */
@@ -107,6 +109,6 @@ export async function staffCan(
 /** An organisation staff may manage: any live one. */
 export async function staffOrg(d: AccountsDeps, orgId: string): Promise<OrgRow> {
   const org = isUuid(orgId) ? await store.org(d.db, orgId) : null;
-  if (!org || org.deleted_at) throw new NotFoundError("Organisation not found");
+  if (!org || org.deleted_at) throw new NotFoundError("organisation.not_found");
   return org;
 }

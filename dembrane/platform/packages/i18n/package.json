@@ -1,0 +1,24 @@
+{
+  "name": "@dembrane/i18n",
+  "description": "Server-rendered texts in the recipient's language, and the catalog translator.",
+  "private": true,
+  "type": "module",
+  "dembrane": {
+    "layer": "capability"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./fill": "./src/fill.ts"
+  },
+  "scripts": {
+    "test": "bun test",
+    "translate": "bun src/cli.ts"
+  },
+  "dependencies": {
+    "@dembrane/config": "workspace:*",
+    "@dembrane/core": "workspace:*",
+    "@dembrane/db": "workspace:*",
+    "@dembrane/llm": "workspace:*",
+    "drizzle-orm": "^0.45.3"
+  }
+}

@@ -1,3 +1,4 @@
+import type { ErrorCode, ParamValue } from "@dembrane/core";
 import { pyRound } from "@dembrane/legacy-shape";
 
 /**
@@ -83,8 +84,16 @@ export function computeMonthlyBillingPrice(annualPerMonth: number): number {
   return pyRound(annualPerMonth * (1 + MONTHLY_BILLING_PREMIUM_PCT / 100));
 }
 
+/**
+ * A billing operation refused. Routes answer it as a 400 with `code` and the message as
+ * the legacy detail text.
+ */
 export class BillingError extends Error {
-  constructor(message: string) {
+  constructor(
+    message: string,
+    readonly code: ErrorCode = "billing.request_failed",
+    readonly params: Readonly<Record<string, ParamValue>> = {},
+  ) {
     super(message);
     this.name = "BillingError";
   }
@@ -100,7 +109,8 @@ export function perIntervalAmount(
   billingPeriod: string,
 ): { amount: number; interval: string } {
   const cap = getCapacity(tier);
-  if (!cap || cap.priceEurMonthly === null) throw new BillingError(`tier ${tier} is not payable`);
+  if (!cap || cap.priceEurMonthly === null)
+    throw new BillingError(`tier ${tier} is not payable`, "billing.tier_not_payable", { tier });
   const n = Math.max(seats, 1);
   if (billingPeriod === "monthly") {
     return {

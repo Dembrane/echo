@@ -18,7 +18,7 @@ export interface Member extends Signed {
 
 /** 403 with the old API's text for a signed-in user who never onboarded. */
 export function requireOnboarded(who: Signed): Member {
-  if (!who.appUserId) throw new ForbiddenError("User not onboarded");
+  if (!who.appUserId) throw new ForbiddenError("access.not_onboarded");
   return who as Member;
 }
 
@@ -55,7 +55,8 @@ export class WorkspaceContext {
   }
 
   require(policy: Policy): void {
-    if (!this.allows(policy)) throw new ForbiddenError("Access denied");
+    if (!this.allows(policy))
+      throw new ForbiddenError("access.forbidden", { message: "Access denied" });
   }
 
   /**
@@ -63,7 +64,8 @@ export class WorkspaceContext {
    * grant reads and helps but never makes them (spec H-13, CTO Q4).
    */
   requireCustomer(): void {
-    if (this.isSupportSession) throw new ForbiddenError("Access denied");
+    if (this.isSupportSession)
+      throw new ForbiddenError("access.support_session_limited", { message: "Access denied" });
   }
 }
 
@@ -75,8 +77,8 @@ export async function workspaceContext(
 ): Promise<WorkspaceContext> {
   const member = requireOnboarded(who);
   const ws = isUuid(workspaceId) ? await store.workspace(workspaceId) : null;
-  if (!ws || ws.deleted) throw new NotFoundError("Workspace not found");
+  if (!ws || ws.deleted) throw new NotFoundError("workspace.not_found");
   const access = await resolveWorkspace(store, workspaceId, member, now);
-  if (!access) throw new ForbiddenError("No access to this workspace");
+  if (!access) throw new ForbiddenError("workspace.no_access");
   return new WorkspaceContext(member, access);
 }

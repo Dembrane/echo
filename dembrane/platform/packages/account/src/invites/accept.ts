@@ -33,7 +33,7 @@ export interface InviteCtx {
 
 export async function onboardedUser(store: InviteStorage, who: Signed): Promise<AppUser> {
   const u = who.appUserId ? await store.appUser(who.appUserId) : null;
-  if (!u) throw new ForbiddenError("User not onboarded");
+  if (!u) throw new ForbiddenError("access.not_onboarded");
   return u;
 }
 
@@ -131,16 +131,16 @@ export async function acceptMyInvite(ctx: InviteCtx, who: Signed, inviteId: stri
   const invite = await store.workspaceInvite(inviteId, { liveOnly: true });
   if (!invite) {
     const orgInv = await store.orgInvite(inviteId, { liveOnly: true });
-    if (!orgInv) throw new NotFoundError("Invite not found");
+    if (!orgInv) throw new NotFoundError("invite.not_found");
     return acceptOrgInvite(ctx, me, email, orgInv);
   }
 
-  if (invite.email.toLowerCase() !== email) throw new ForbiddenError("This invite isn't for you");
-  if (invite.accepted_at) throw new BadRequestError("Invite already accepted");
-  if (expired(invite.expires_at, now)) throw new BadRequestError("Invite has expired");
+  if (invite.email.toLowerCase() !== email) throw new ForbiddenError("invite.not_for_you");
+  if (invite.accepted_at) throw new BadRequestError("invite.already_accepted");
+  if (expired(invite.expires_at, now)) throw new BadRequestError("invite.expired");
 
   const ws = await store.workspace(invite.workspace_id);
-  if (!ws || ws.deleted_at) throw new NotFoundError("Workspace no longer exists");
+  if (!ws || ws.deleted_at) throw new NotFoundError("workspace.deleted");
   const role = invite.role || "member";
   const outsider = isOutsider(role);
 
@@ -199,12 +199,12 @@ export async function acceptMyInvite(ctx: InviteCtx, who: Signed, inviteId: stri
 /** The id is the proof here; the email match proves ownership. */
 async function acceptOrgInvite(ctx: InviteCtx, me: AppUser, email: string, inv: OrgInvite) {
   const { store, now } = ctx;
-  if (inv.email.toLowerCase() !== email) throw new ForbiddenError("This invite isn't for you");
-  if (inv.accepted_at) throw new BadRequestError("Invite already accepted");
-  if (expired(inv.expires_at, now)) throw new BadRequestError("Invite has expired");
+  if (inv.email.toLowerCase() !== email) throw new ForbiddenError("invite.not_for_you");
+  if (inv.accepted_at) throw new BadRequestError("invite.already_accepted");
+  if (expired(inv.expires_at, now)) throw new BadRequestError("invite.expired");
   const role = inv.role || "member";
   const org = await store.org(inv.org_id);
-  if (!org || org.deleted_at) throw new NotFoundError("Organisation no longer exists");
+  if (!org || org.deleted_at) throw new NotFoundError("organisation.deleted");
   await ctx.deps.limiter.check(ACCEPT_LIMIT, me.id);
   const status = await ensureActiveOrgMembership(store, inv.org_id, me.id, role, now);
   await store.updateOrgInvite(inv.id, { accepted_at: now.toISOString() });
@@ -232,10 +232,10 @@ export async function declineMyInvite(ctx: InviteCtx, who: Signed, inviteId: str
   const wsInv = await store.workspaceInvite(inviteId, { liveOnly: false });
   const orgInv = wsInv ? null : await store.orgInvite(inviteId, { liveOnly: false });
   const invite = wsInv ?? orgInv;
-  if (!invite) throw new NotFoundError("Invite not found");
-  if (invite.email.toLowerCase() !== email) throw new ForbiddenError("This invite isn't for you");
-  if (invite.accepted_at) throw new BadRequestError("Invite already accepted");
-  if (invite.deleted_at) throw new NotFoundError("Invite not found");
+  if (!invite) throw new NotFoundError("invite.not_found");
+  if (invite.email.toLowerCase() !== email) throw new ForbiddenError("invite.not_for_you");
+  if (invite.accepted_at) throw new BadRequestError("invite.already_accepted");
+  if (invite.deleted_at) throw new NotFoundError("invite.not_found");
 
   if (invite.invited_by && wsInv) {
     const ws = await store.workspace(wsInv.workspace_id);
@@ -295,7 +295,7 @@ const state = (s: Partial<HashState> & { status: string }): HashState => ({
 async function myEmailOrRaise(store: InviteStorage, who: Signed) {
   const me = await onboardedUser(store, who);
   const email = await store.verifiedEmail(who.directusUserId);
-  if (!email) throw new BadRequestError("User has no email");
+  if (!email) throw new BadRequestError("account.email_missing");
   return { me, email };
 }
 
@@ -383,10 +383,10 @@ export async function acceptByHash(
       const role = orgTarget.role || "member";
       if (body.claimed_role && rank(body.claimed_role, -1) > rank(role)) {
         ctx.deps.logger?.warn({ email, claimed: body.claimed_role, role }, "invite honeypot (org)");
-        throw new TamperedRequestError(HONEYPOT);
+        throw new TamperedRequestError("request.tampered", { message: HONEYPOT });
       }
       const org = await store.org(orgTarget.org_id);
-      if (!org || org.deleted_at) throw new NotFoundError("Organisation no longer exists");
+      if (!org || org.deleted_at) throw new NotFoundError("organisation.deleted");
       await ctx.deps.limiter.check(ACCEPT_LIMIT, me.id);
       const status = await ensureActiveOrgMembership(store, orgTarget.org_id, me.id, role, now);
       await store.updateOrgInvite(orgTarget.id, { accepted_at: now.toISOString() });
@@ -410,10 +410,10 @@ export async function acceptByHash(
   const outsider = isOutsider(role);
   if (body.claimed_role && rank(body.claimed_role, -1) > rank(role)) {
     ctx.deps.logger?.warn({ email, claimed: body.claimed_role, role }, "invite honeypot");
-    throw new TamperedRequestError(HONEYPOT);
+    throw new TamperedRequestError("request.tampered", { message: HONEYPOT });
   }
   const ws = await store.workspace(target.workspace_id);
-  if (!ws || ws.deleted_at) throw new NotFoundError("Workspace no longer exists");
+  if (!ws || ws.deleted_at) throw new NotFoundError("workspace.deleted");
   await ctx.deps.limiter.check(ACCEPT_LIMIT, me.id);
 
   let hadOrgRow = false;
@@ -477,10 +477,10 @@ async function healByHash(ctx: InviteCtx, me: AppUser, email: string, hash: stri
   const inv = (await store.liveWorkspaceInvites(email)).find((i) =>
     hashMatches(secret, i.id, hash),
   );
-  if (inv && !inv.accepted_at) throw new BadRequestError("Invite has expired");
+  if (inv && !inv.accepted_at) throw new BadRequestError("invite.expired");
   if (inv) {
     const ws = await store.workspace(inv.workspace_id);
-    if (!ws || ws.deleted_at) throw new NotFoundError("Workspace no longer exists");
+    if (!ws || ws.deleted_at) throw new NotFoundError("workspace.deleted");
     const already =
       (await store.workspaceMemberships(inv.workspace_id, me.id, { activeOnly: true })).length > 0;
     if (already) {
@@ -525,10 +525,10 @@ async function healByHash(ctx: InviteCtx, me: AppUser, email: string, hash: stri
   }
 
   const orgInv = (await store.liveOrgInvites(email)).find((i) => hashMatches(secret, i.id, hash));
-  if (orgInv && !orgInv.accepted_at) throw new BadRequestError("Invite has expired");
+  if (orgInv && !orgInv.accepted_at) throw new BadRequestError("invite.expired");
   if (orgInv) {
     const org = await store.org(orgInv.org_id);
-    if (!org || org.deleted_at) throw new NotFoundError("Organisation no longer exists");
+    if (!org || org.deleted_at) throw new NotFoundError("organisation.deleted");
     ctx.deps.logger?.warn(
       { inviteId: orgInv.id, orgId: orgInv.org_id },
       "accept-by-hash healed a missing org membership",
@@ -553,7 +553,7 @@ async function healByHash(ctx: InviteCtx, me: AppUser, email: string, hash: stri
       org_name: org.name ?? "",
     };
   }
-  throw new NotFoundError("Invite not found or already handled");
+  throw new NotFoundError("invite.not_found", { message: "Invite not found or already handled" });
 }
 
 // ── effects ──

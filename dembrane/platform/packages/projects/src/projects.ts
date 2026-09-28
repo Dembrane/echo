@@ -14,7 +14,7 @@ export interface ProjectDeps {
   readonly now: () => Date;
 }
 
-const notFound = () => new NotFoundError("Project not found");
+const notFound = () => new NotFoundError("project.not_found");
 
 async function liveProject(store: ProjectsStorage, id: string) {
   const p = await store.project(id);
@@ -36,7 +36,7 @@ export async function pinProject(
   pinOrder: number | null,
 ) {
   if (pinOrder !== null && ![1, 2, 3].includes(pinOrder))
-    throw new BadRequestError("pin_order must be 1, 2, or 3");
+    throw new BadRequestError("project.pin_order_invalid");
   await liveProject(d.store, projectId);
   await projectFor(d.access, who, projectId, "project:update", "any");
   await d.store.updateProject(projectId, {
@@ -126,7 +126,7 @@ export async function exportTranscripts(d: ProjectDeps, who: Signed, projectId: 
   await projectFor(d.access, who, projectId, "conversation:read", "v1");
   const project = await liveProject(d.store, projectId);
   const conversations = await d.store.conversationsWithChunks(projectId);
-  if (!conversations.length) throw new NotFoundError("No conversations found for this project");
+  if (!conversations.length) throw new NotFoundError("project.no_conversations");
   const enc = new TextEncoder();
   const files = conversations.flatMap((c) => {
     const lines = c.chunks.filter((t): t is string => Boolean(t));
@@ -143,7 +143,7 @@ export async function exportTranscripts(d: ProjectDeps, who: Signed, projectId: 
       { name: `${name}-transcript.md`, data: enc.encode(lines.map((l) => `${l}\n`).join("")) },
     ];
   });
-  if (!files.length) throw new NotFoundError("No transcripts available for this project");
+  if (!files.length) throw new NotFoundError("project.no_transcripts");
   const label = (project.name ?? projectId).replace(/[/\\ ]/g, "_");
   return { filename: `${label}_transcripts.zip`, body: zip(files, d.now()) };
 }
@@ -174,7 +174,7 @@ export async function projectBff(
   projectId: string,
   opts: { includeTags: boolean; includeLegal: boolean; fields: string | null },
 ) {
-  if (!who.appUserId) throw new ForbiddenError("User not onboarded");
+  if (!who.appUserId) throw new ForbiddenError("access.not_onboarded");
   const item = await d.store.projectItem(projectId);
   if (!item || item.deleted_at) throw notFound();
   const pa = await projectFor(d.access, who, projectId, "project:read");
@@ -218,16 +218,13 @@ async function authorizeMove(
   const src = project.workspace_id;
   if (!src) {
     if (project.directus_user_id !== who.directusUserId)
-      throw new ForbiddenError("Not the owner of this project");
+      throw new ForbiddenError("project.not_owner");
   } else await canMove(d, who, src, "source");
   await canMove(d, who, target.id, "target");
   const sameContext = src
     ? await sameBillingContext(d.store, src, target.id)
     : !isExternalClient(target);
-  if (!sameContext)
-    throw new ForbiddenError(
-      "Projects can only move between workspaces in the same billing and data-ownership context. External-client workspaces keep their projects within their own context.",
-    );
+  if (!sameContext) throw new ForbiddenError("project.move_context_mismatch");
   return src;
 }
 
@@ -235,9 +232,10 @@ async function canMove(d: ProjectDeps, who: Signed, wsId: string, side: "source"
   try {
     await d.access.workspace(who, wsId, "project:move");
   } catch (err) {
-    if (err instanceof NotFoundError) throw new ForbiddenError(`No access to ${side} workspace`);
+    if (err instanceof NotFoundError)
+      throw new ForbiddenError("project.move_no_workspace_access", { params: { side } });
     if (err instanceof ForbiddenError)
-      throw new ForbiddenError(`Must be admin or owner of ${side} workspace`);
+      throw new ForbiddenError("project.move_needs_admin", { params: { side } });
     throw err;
   }
 }
@@ -284,10 +282,10 @@ export async function moveProject(
   projectId: string,
   targetId: string,
 ) {
-  if (!who.appUserId) throw new ForbiddenError("User not onboarded");
+  if (!who.appUserId) throw new ForbiddenError("access.not_onboarded");
   const project = await liveProject(d.store, projectId);
   const target = await d.store.liveWorkspace(targetId);
-  if (!target) throw new NotFoundError("Target workspace not found");
+  if (!target) throw new NotFoundError("project.move_target_not_found");
   const src = await authorizeMove(d, who, project, target);
   const me = await d.store.appUser(who.appUserId);
   const fromLabel = src ? ((await d.store.workspace(src))?.name ?? null) : null;
@@ -318,19 +316,24 @@ export async function bulkMoveProjects(
   projectIds: string[],
   targetId: string,
 ) {
-  if (!projectIds.length) throw new BadRequestError("No projects selected");
+  if (!projectIds.length) throw new BadRequestError("project.move_none_selected");
   const ids = [...new Set(projectIds)];
-  if (ids.length > 500) throw new BadRequestError("Too many projects (max 500)");
-  if (!who.appUserId) throw new ForbiddenError("User not onboarded");
+  if (ids.length > 500)
+    throw new BadRequestError("project.move_too_many", { params: { max: 500 } });
+  if (!who.appUserId) throw new ForbiddenError("access.not_onboarded");
   const target = await d.store.liveWorkspace(targetId);
-  if (!target) throw new NotFoundError("Target workspace not found");
+  if (!target) throw new NotFoundError("project.move_target_not_found");
   const pending: {
     project: NonNullable<Awaited<ReturnType<ProjectsStorage["project"]>>>;
     src: string | null;
   }[] = [];
   for (const id of ids) {
     const project = await d.store.project(id);
-    if (!project || project.deleted_at) throw new NotFoundError(`Project ${id} not found`);
+    if (!project || project.deleted_at)
+      throw new NotFoundError("project.not_found", {
+        message: `Project ${id} not found`,
+        params: { project_id: id },
+      });
     pending.push({ project, src: await authorizeMove(d, who, project, target) });
   }
   const me = await d.store.appUser(who.appUserId);
@@ -382,26 +385,25 @@ export async function setVisibility(
   projectId: string,
   visibility: "workspace" | "private",
 ) {
-  if (!who.appUserId) throw new ForbiddenError("User not onboarded");
+  if (!who.appUserId) throw new ForbiddenError("access.not_onboarded");
   const project = await liveProject(d.store, projectId);
   const wsId = project.workspace_id;
-  if (!wsId) throw new BadRequestError("Project is not attached to a workspace");
+  if (!wsId) throw new BadRequestError("project.no_workspace");
   const ws = await d.store.liveWorkspace(wsId);
   try {
     await d.access.workspace(who, wsId, "project:set_private");
   } catch (err) {
     // A deleted workspace grants nobody a role, so it reads as no access, as before.
-    if (err instanceof NotFoundError) throw new ForbiddenError("No access to this project");
+    if (err instanceof NotFoundError) throw new ForbiddenError("project.no_access");
     if (!(err instanceof ForbiddenError)) throw err;
     const details = err.details;
     const tierGate = !!details && !Array.isArray(details) && "requiredTier" in details;
-    if (!tierGate) throw new ForbiddenError("Only workspace admins can change project visibility");
+    if (!tierGate) throw new ForbiddenError("project.visibility_admin_only");
     const current = project.visibility || "workspace";
     if (current === visibility) return { status: "unchanged", visibility: current };
-    if (visibility === "private")
-      throw new ForbiddenError("Private projects require innovator tier or above.");
+    if (visibility === "private") throw new ForbiddenError("project.private_requires_tier");
   }
-  if (!ws) throw new NotFoundError("Workspace not found");
+  if (!ws) throw new NotFoundError("workspace.not_found");
   const current = project.visibility || "workspace";
   if (current === visibility) return { status: "unchanged", visibility: current };
 
@@ -484,7 +486,7 @@ export async function listMyProjects(
   who: Signed,
   opts: { limit: number; offset: number; search: string | null },
 ) {
-  if (!who.appUserId) throw new ForbiddenError("User not onboarded");
+  if (!who.appUserId) throw new ForbiddenError("access.not_onboarded");
   const wsIds = await d.store.reachableWorkspaceIds(who.appUserId);
   if (!wsIds.length) return [];
   const rows = await d.store.projectsInWorkspaces(wsIds, {
@@ -550,12 +552,11 @@ export async function updateProject(
   const project = await liveProject(d.store, projectId);
   const payload: Record<string, unknown> = {};
   for (const k of PROJECT_UPDATE_FIELDS) if (fieldsSet.has(k)) payload[k] = body[k];
-  if (!Object.keys(payload).length) throw new BadRequestError("No fields to update");
+  if (!Object.keys(payload).length) throw new BadRequestError("request.nothing_to_update");
 
   if (payload.is_dembrane_event_cta_enabled === false) {
     const tier = project.workspace_id ? await d.store.workspaceTier(project.workspace_id) : null;
-    if (tier === "free")
-      throw new ForbiddenError("Hiding the dembrane event invitation comes with a paid plan");
+    if (tier === "free") throw new ForbiddenError("project.event_invite_paid");
   }
 
   const legal = legalWrite({
@@ -570,11 +571,11 @@ export async function updateProject(
       .project(who, projectId, "settings:manage")
       .then(() => true)
       .catch(() => false);
-    if (!canSetLegal) throw new ForbiddenError("Only workspace admins can change the legal basis");
+    if (!canSetLegal) throw new ForbiddenError("project.legal_basis_admin_only");
     if (legal.requiresDembraneEmail) {
       const email = (await d.store.directusUser(who.directusUserId))?.email ?? "";
       if (!email.toLowerCase().endsWith("@dembrane.com"))
-        throw new ForbiddenError("dembrane-events is only available for dembrane accounts");
+        throw new ForbiddenError("project.events_dembrane_only");
     }
     Object.assign(payload, legal.payload);
   }

@@ -34,9 +34,16 @@ export function isOwnedFile(value: string | null | undefined): value is string {
 
 export function checkLogoFile(file: File): File {
   if (file.type && !ALLOWED.has(file.type))
-    throw new BadRequestError("Logo must be PNG, JPEG, or WebP");
-  if (file.size > MAX_BYTES) throw new BadRequestError("Logo file is too large (max 5 MB)");
-  if (file.size === 0) throw new BadRequestError("Empty file");
+    throw new BadRequestError("upload.unsupported_type", {
+      message: "Logo must be PNG, JPEG, or WebP",
+      params: { accepted: "PNG, JPEG, WebP" },
+    });
+  if (file.size > MAX_BYTES)
+    throw new BadRequestError("upload.too_large", {
+      message: "Logo file is too large (max 5 MB)",
+      params: { max_mb: 5 },
+    });
+  if (file.size === 0) throw new BadRequestError("upload.empty", { message: "Empty file" });
   return file;
 }
 
@@ -64,7 +71,10 @@ export async function saveLogo(
   now: Date,
   file: File,
 ): Promise<string> {
-  if (!store) throw new UnavailableError("Logo uploads are not configured");
+  if (!store)
+    throw new UnavailableError("internal.unavailable", {
+      message: "Logo uploads are not configured",
+    });
   const id = newId();
   const type = file.type || "image/png";
   const diskName = `${id}${EXT[type] ?? ""}`;

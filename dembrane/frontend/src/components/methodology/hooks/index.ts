@@ -1,6 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import { APP_ENVIRONMENT } from "@/config";
 import { bff } from "@/lib/bff";
 import { createFixtureMethodologies } from "../fixtures";
@@ -51,8 +52,9 @@ export type MethodologyEditPayload = {
 type BffError = Error & { status?: number };
 
 export const methodologyQueryKeys = {
+	detail: (methodologyId: string) =>
+		["methodologies", "detail", methodologyId] as const,
 	list: (workspaceId: string) => ["methodologies", workspaceId] as const,
-	detail: (methodologyId: string) => ["methodologies", "detail", methodologyId] as const,
 };
 
 function isFixtureEligibleMiss(error: unknown): boolean {
@@ -67,7 +69,9 @@ function isFixtureEligibleMiss(error: unknown): boolean {
 	);
 }
 
-async function listMethodologies(workspaceId: string): Promise<MethodologyListItem[]> {
+async function listMethodologies(
+	workspaceId: string,
+): Promise<MethodologyListItem[]> {
 	try {
 		return await bff.get<MethodologyListItem[]>("/methodologies", {
 			workspace_id: workspaceId,
@@ -94,7 +98,8 @@ export function useMethodologies(workspaceId: string | null | undefined) {
 export function useMethodologyDetail(methodologyId: string | null | undefined) {
 	return useQuery({
 		enabled: !!methodologyId,
-		queryFn: () => bff.get<MethodologyDetail>(`/methodologies/${methodologyId}`),
+		queryFn: () =>
+			bff.get<MethodologyDetail>(`/methodologies/${methodologyId}`),
 		queryKey: methodologyQueryKeys.detail(methodologyId ?? ""),
 	});
 }
@@ -108,7 +113,7 @@ export function useCreateMethodologyMutation(workspaceId: string) {
 				workspace_id: workspaceId,
 			}),
 		onError: (error: BffError) => {
-			toast.error(error.message || t`Could not create this methodology`);
+			void notifyError(error);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
@@ -125,7 +130,7 @@ export function useEditMethodologyMutation(workspaceId: string) {
 		mutationFn: ({ id, ...payload }: MethodologyEditPayload) =>
 			bff.post<MethodologyListItem>(`/methodologies/${id}/versions`, payload),
 		onError: (error: BffError) => {
-			toast.error(error.message || t`Could not save this methodology`);
+			void notifyError(error);
 		},
 		onSuccess: (methodology) => {
 			queryClient.invalidateQueries({
@@ -139,7 +144,10 @@ export function useEditMethodologyMutation(workspaceId: string) {
 	});
 }
 
-export function useSelectProjectMethodologyMutation(projectId: string, workspaceId: string) {
+export function useSelectProjectMethodologyMutation(
+	projectId: string,
+	workspaceId: string,
+) {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: (methodologyVersionId: string) =>
@@ -147,7 +155,7 @@ export function useSelectProjectMethodologyMutation(projectId: string, workspace
 				methodology_version_id: methodologyVersionId,
 			}),
 		onError: (error: BffError) => {
-			toast.error(error.message || t`Could not update this project's methodology`);
+			void notifyError(error);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["projects", projectId] });

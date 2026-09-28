@@ -116,8 +116,14 @@ export function billingStorage(db: Db): BillingStore {
     async appUsers(ids) {
       if (!ids.length) return [];
       return db
-        .select({ id: app_user.id, email: app_user.email, display_name: app_user.display_name })
+        .select({
+          id: app_user.id,
+          email: app_user.email,
+          display_name: app_user.display_name,
+          language: schema.directus_users.language,
+        })
         .from(app_user)
+        .leftJoin(schema.directus_users, eq(schema.directus_users.id, app_user.directus_user_id))
         .where(inArray(app_user.id, [...ids]))
         .orderBy(asc(app_user.id));
     },

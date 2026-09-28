@@ -25,16 +25,17 @@ export async function workspaceAccess(
   workspaceId: string,
   now: Date,
 ): Promise<WorkspaceAccess & { appUserId: string }> {
-  if (!who.appUserId) throw new ForbiddenError("User not onboarded");
-  if (!isUuid(workspaceId)) throw new NotFoundError("Workspace not found");
+  if (!who.appUserId) throw new ForbiddenError("access.not_onboarded");
+  if (!isUuid(workspaceId)) throw new NotFoundError("workspace.not_found");
   const access = await resolveWorkspace(new DrizzleAccessStore(db), workspaceId, who, now);
-  if (!access) throw new NotFoundError("Workspace not found");
+  if (!access) throw new NotFoundError("workspace.not_found");
   return { ...access, appUserId: who.appUserId };
 }
 
 /** The resolver's policy and tier rules, answered with the old API's "Access denied". */
 export function requirePolicy(access: WorkspaceAccess, policy: Policy): void {
-  if (!hasPolicy(access, policy)) throw new ForbiddenError("Access denied");
+  if (!hasPolicy(access, policy))
+    throw new ForbiddenError("access.forbidden", { message: "Access denied" });
 }
 
 export function hasPolicy(access: WorkspaceAccess, policy: Policy): boolean {

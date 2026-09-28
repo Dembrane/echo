@@ -80,17 +80,16 @@ export class AgentContext {
 
   requireWrite(): void {
     if (!this.hasScope(SCOPE_WRITE))
-      throw new ForbiddenError(`This grant does not include the '${SCOPE_WRITE}' scope`);
+      throw new ForbiddenError("agent_access.scope_missing", { params: { scope: SCOPE_WRITE } });
   }
 
   /** The org must be in the grant and switched on. */
   async requireOrg(orgId: string | null): Promise<string> {
-    if (!orgId || !this.orgIds.includes(orgId)) throw new NotFoundError("Not found");
+    if (!orgId || !this.orgIds.includes(orgId))
+      throw new NotFoundError("agent_access.organisation_not_granted");
     this.touchedOrgId = orgId;
     if (!(await orgAgentAccessEnabled(this.d, orgId)))
-      throw new ForbiddenError(
-        "An organisation admin has switched off agent access for this organisation",
-      );
+      throw new ForbiddenError("agent_access.disabled_by_admin");
     return orgId;
   }
 
@@ -100,9 +99,9 @@ export class AgentContext {
     const now = this.d.now();
     const count = await this.d.store.usageIncrement(orgId, monthKey(now), now);
     if (count > FREE_TIER_MONTHLY_CALLS)
-      throw new RateLimitedError(
-        `This organisation is on the free tier and has used its ${FREE_TIER_MONTHLY_CALLS} agent calls for this month`,
-      );
+      throw new RateLimitedError("agent_access.free_tier_calls_used", {
+        params: { limit: FREE_TIER_MONTHLY_CALLS },
+      });
   }
 
   /** The audit row. Best effort: a failed write never changes the answer it records. */
@@ -145,11 +144,11 @@ export async function contextForGrant(d: AgentDeps, grantId: string): Promise<Ag
   const now = d.now();
   const grant = await d.store.grant(grantId);
   if (!grant || !grantIsLive(grant, now))
-    throw new UnauthenticatedError("Grant is no longer active");
+    throw new UnauthenticatedError("agent_access.grant_inactive");
   const directusUserId = String(grant.directus_user_id);
   const status = await d.store.directusStatus(directusUserId);
   if (status === "suspended" || status === "archived")
-    throw new UnauthenticatedError("Grant is no longer active");
+    throw new UnauthenticatedError("agent_access.grant_inactive");
   // The Python session resolved the app user from the Directus id on every call; one whose
   // app_user row is gone reads as not onboarded (403), as there.
   const appUser = await d.store.appUserOfDirectus(directusUserId);

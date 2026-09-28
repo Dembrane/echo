@@ -1,0 +1,38 @@
+import type { Codes } from "./types";
+
+/** The participant portal: anonymous people recording or reading a published report. */
+export const participant = {
+  "participant.token_required": {
+    action: "retry",
+    detail: "Participant token required",
+    description:
+      "A portal request for a conversation came without the participant token initiate handed out (a lost tab, cleared storage).",
+  },
+  "participant.token_invalid": {
+    action: "none",
+    detail: "Invalid participant token",
+    description: "The participant token does not match this conversation or project.",
+  },
+  "participant.report_not_found": {
+    action: "none",
+    detail: "Report not found",
+    description: "The project has no published report under that id, or it was unpublished.",
+  },
+  "participant.subscribe_failed": {
+    action: "retry",
+    detail: "Some emails failed to process",
+    description:
+      "Signing some addresses up for the report notification failed; details.failed lists them.",
+  },
+  "participant.unsubscribe_link_invalid": {
+    action: "none",
+    detail: "Invalid or missing unsubscribe link.",
+    description: "The unsubscribe page was opened without a token, or with one that is malformed.",
+  },
+  "participant.unsubscribe_link_unknown": {
+    action: "none",
+    detail: "Internal Server Error",
+    description:
+      "No subscription matches the unsubscribe token. The old API answered a 500 with this text, and the portal reads it.",
+  },
+} as const satisfies Codes<"participant">;

@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import { initiateAndUploadConversationChunk } from "@/lib/api";
 
 export const useUploadConversation = () => {
@@ -19,9 +20,7 @@ export const useUploadConversation = () => {
 			source?: "DASHBOARD_UPLOAD" | "PORTAL_AUDIO" | "PORTAL_TEXT" | "SPLIT";
 		}) => initiateAndUploadConversationChunk(payload),
 		onError: (error) => {
-			toast.error(
-				`Upload failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-			);
+			void notifyError(error);
 		},
 		onMutate: () => {
 			// When the mutation starts, cancel any in-progress queries

@@ -357,7 +357,7 @@ async function seed(d: DemoBuildDeps, row: Row, input: DemoInput) {
     offerDocumentId = offerId;
   }
   const contact = await store.identityByEmail(d.db, input.contact_email);
-  if (!contact) throw new ValidationError("The contact was not created");
+  if (!contact) throw new ValidationError("demo.contact_not_created");
   await d.db.transaction((tx) =>
     emit(d, tx, {
       orgId: account.org_id,

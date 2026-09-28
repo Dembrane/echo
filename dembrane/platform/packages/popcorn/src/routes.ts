@@ -58,7 +58,7 @@ const VERSION_ID = /^[0-9a-fA-F-]{36}$/;
 
 function versionId(value: string | undefined): string | null {
   if (value === undefined) return null;
-  if (!VERSION_ID.test(value)) throw new NotFoundError("Version not found");
+  if (!VERSION_ID.test(value)) throw new NotFoundError("popcorn.version_not_found");
   return value;
 }
 
@@ -124,7 +124,7 @@ export function popcornRoutes(deps: PopcornRoutesDeps) {
   const gate = () => requirePopcornEnabled(d.flags);
   const loopOf = async (report: Row) => {
     const loop = await d.store.loopForReport(String(report.id));
-    if (!loop) throw new NotFoundError("Popcorn loop not found");
+    if (!loop) throw new NotFoundError("popcorn.loop_not_found");
     return loop;
   };
   const payload = (report: Row) => popcornPayload(d.store, report);
@@ -191,7 +191,7 @@ export function popcornRoutes(deps: PopcornRoutesDeps) {
     const name = webpName(c.req.param("file"));
     if (name === null) return c.notFound();
     const bytes = illustrationBytes(name);
-    if (!bytes) throw new NotFoundError("Not found");
+    if (!bytes) throw new NotFoundError("popcorn.illustration_not_found");
     return binary(bytes, "image/webp");
   });
 
@@ -270,7 +270,10 @@ export function popcornRoutes(deps: PopcornRoutesDeps) {
     try {
       await goLive(d, loop, body.data.hours);
     } catch (err) {
-      if (err instanceof InvalidHours) throw new ValidationError(err.message);
+      if (err instanceof InvalidHours)
+        throw new ValidationError("popcorn.invalid_live_hours", {
+          params: { hours: LIVE_HOURS.join(", ") },
+        });
       throw err;
     }
     return c.json(await payload(report));
@@ -291,7 +294,7 @@ export function popcornRoutes(deps: PopcornRoutesDeps) {
     const who = requireUser(c);
     const action = c.req.param("action");
     if (!["pause", "resume", "stop", "go-live"].includes(action))
-      throw new NotFoundError("Popcorn loop action not found");
+      throw new NotFoundError("popcorn.loop_action_not_found");
     const { report } = await popcornReport(ad, who, c.req.param("popcorn_id"), "project:update");
     const loop = await loopOf(report);
     if (action === "go-live" || action === "resume") await goLive(d, loop, 8);
@@ -344,7 +347,7 @@ export function popcornRoutes(deps: PopcornRoutesDeps) {
     gate();
     const who = requireUser(c);
     await popcornReport(ad, who, c.req.param("popcorn_id"));
-    if (!d.showFlow) throw new NotFoundError("Not found");
+    if (!d.showFlow) throw new NotFoundError("popcorn.feature_disabled");
     return html(renderFlowPage());
   });
 
@@ -361,7 +364,7 @@ export function popcornRoutes(deps: PopcornRoutesDeps) {
     const name = webpName(c.req.param("file"));
     if (name === null) return c.notFound();
     const bytes = illustrationBytes(name);
-    if (!bytes) throw new NotFoundError("Not found");
+    if (!bytes) throw new NotFoundError("popcorn.illustration_not_found");
     await popcornReport(ad, who, c.req.param("popcorn_id"));
     return binary(bytes, "image/webp", { "Cache-Control": "private, max-age=86400" });
   });
@@ -374,7 +377,7 @@ export function popcornRoutes(deps: PopcornRoutesDeps) {
     const view = c.req.query("view");
     if (version) {
       let files = await versionFiles(d.store, String(report.id), version);
-      if (files === null) throw new NotFoundError("Version not found");
+      if (files === null) throw new NotFoundError("popcorn.version_not_found");
       if (view === "room") {
         // The wall never sees a passage, a dashboard link or a name the setting withholds.
         const settings = await loadSettingsFor(d.store, report);

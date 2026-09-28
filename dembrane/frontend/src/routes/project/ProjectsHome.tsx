@@ -3,7 +3,6 @@ import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
-	Alert,
 	Badge,
 	Box,
 	Button,
@@ -31,6 +30,7 @@ import { useSearchParams } from "react-router";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { AccessDeniedPanel } from "@/components/common/AccessDeniedPanel";
 import { toast } from "@/components/common/Toaster";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { BulkMoveProjectsModal } from "@/components/project/BulkMoveProjectsModal";
 import { useTogglePinMutation } from "@/components/project/hooks";
 import { PinnedProjectCard } from "@/components/project/PinnedProjectCard";
@@ -43,7 +43,6 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceProjects } from "@/hooks/useWorkspaceProjects";
 import { Icons } from "@/icons";
 import { WorkspaceAccessDeniedError } from "@/lib/accessDenied";
-import { getApiErrorString } from "@/lib/errors";
 import { isOutsiderRole, isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 import { formatDurationFromHours } from "@/lib/time";
@@ -385,11 +384,7 @@ export const ProjectsHomeRoute = () => {
 									</Text>
 								)}
 
-							{isError && (
-								<Alert color="red" title="Error">
-									{getApiErrorString(error)}
-								</Alert>
-							)}
+							{isError && <ErrorNotice error={error} />}
 
 							{status === "pending" && (
 								<ProjectListSkeleton searchValue={debouncedSearchValue} />

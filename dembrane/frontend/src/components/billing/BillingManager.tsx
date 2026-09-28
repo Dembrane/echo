@@ -29,10 +29,12 @@ import { useCallback, useEffect, useState } from "react";
 
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import { usePricingConfigurator } from "@/components/pricing";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { ApiRequestError } from "@/lib/errors/read";
 import type { BillingPeriod, Tier } from "@/lib/tiers";
 
 export function tierLabel(tier: string | null | undefined): string {
@@ -409,12 +411,12 @@ function BillingDetailsForm({
 			);
 			if (!res.ok) {
 				const err = await res.json().catch(() => ({}));
-				throw new Error(err.detail || `Failed (${res.status})`);
+				throw new ApiRequestError(res.status, err);
 			}
 			toast.success(t`Billing details saved.`);
 			onSaved();
 		} catch (e) {
-			toast.error((e as Error).message);
+			void notifyError(e);
 		} finally {
 			setSaving(false);
 		}
@@ -548,7 +550,7 @@ function CancelSubscriptionModal({
 			);
 			if (!res.ok) {
 				const err = await res.json().catch(() => ({}));
-				throw new Error(err.detail || `Failed (${res.status})`);
+				throw new ApiRequestError(res.status, err);
 			}
 			posthog.capture("subscription_canceled", { reason, source });
 			toast.success(
@@ -557,7 +559,7 @@ function CancelSubscriptionModal({
 			onCancelled();
 			onClose();
 		} catch (e) {
-			toast.error((e as Error).message);
+			void notifyError(e);
 		} finally {
 			setSubmitting(false);
 		}
@@ -713,7 +715,7 @@ async function openInvoicePdf(accountId: string, salesInvoiceId: string) {
 		if (data.pdf_url) window.open(data.pdf_url, "_blank", "noopener");
 		else toast.error(t`No PDF available for this invoice.`);
 	} catch (e) {
-		toast.error((e as Error).message);
+		void notifyError(e);
 	}
 }
 
@@ -989,7 +991,7 @@ export function BillingManager({
 			);
 			if (!res.ok) {
 				const err = await res.json().catch(() => ({}));
-				throw new Error(err.detail || `Failed (${res.status})`);
+				throw new ApiRequestError(res.status, err);
 			}
 			const data = await res.json();
 			if (data.resumed) {
@@ -1002,7 +1004,7 @@ export function BillingManager({
 				);
 			}
 		} catch (e) {
-			toast.error((e as Error).message);
+			void notifyError(e);
 		} finally {
 			setSubmitting(false);
 		}
@@ -1028,12 +1030,12 @@ export function BillingManager({
 			);
 			if (!res.ok) {
 				const err = await res.json().catch(() => ({}));
-				throw new Error(err.detail || `Failed (${res.status})`);
+				throw new ApiRequestError(res.status, err);
 			}
 			const data = await res.json();
 			window.location.href = data.checkout_url; // hosted Mollie checkout
 		} catch (e) {
-			toast.error((e as Error).message);
+			void notifyError(e);
 			setUpdatingMethod(false);
 		}
 	};
@@ -1051,7 +1053,7 @@ export function BillingManager({
 			);
 			if (!res.ok) {
 				const err = await res.json().catch(() => ({}));
-				throw new Error(err.detail || `Failed (${res.status})`);
+				throw new ApiRequestError(res.status, err);
 			}
 			const data = await res.json();
 			// The endpoint answers with the account state its charge left behind.
@@ -1068,7 +1070,7 @@ export function BillingManager({
 			}
 			refreshAll();
 		} catch (e) {
-			toast.error((e as Error).message);
+			void notifyError(e);
 		} finally {
 			setRetrying(false);
 		}

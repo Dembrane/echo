@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
-import { MemoryRateCounter, RateLimiter } from "../src";
+import { ERROR_CATALOG } from "@dembrane/core";
+import { MemoryRateCounter, RateLimiter, TOO_MANY } from "../src";
 
 test("the hit after capacity is refused until the window passes", async () => {
   let now = new Date("2026-09-27T00:00:00Z");
@@ -35,4 +36,8 @@ test("the per-user check refuses a caller without a user id", async () => {
   await expect(
     limiter.checkUser({ name: "t", capacity: 1, windowSeconds: 60 }, ""),
   ).rejects.toThrow("Authenticated user required.");
+});
+
+test("TOO_MANY is the catalog's detail, so routes that send it by name match the code", () => {
+  expect(TOO_MANY).toBe(ERROR_CATALOG["rate_limit.exceeded"].detail);
 });

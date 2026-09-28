@@ -1,0 +1,173 @@
+import type { Codes } from "./types";
+
+export const project = {
+  "project.not_found": {
+    action: "none",
+    detail: "Project not found",
+    params: ["project_id"],
+    description:
+      "The project does not exist, was deleted, or the caller cannot see it. project_id names it when a bulk request listed several.",
+  },
+  "project.no_access": {
+    action: "contact_admin",
+    detail: "No access to this project",
+    params: ["admin_name", "admin_email"],
+    description: "The caller can see the project's workspace but not this project.",
+  },
+  "project.not_owner": {
+    action: "contact_admin",
+    detail: "Not the owner of this project",
+    description: "Only the project's owner may do this (move it between workspaces).",
+  },
+  "project.no_workspace": {
+    action: "contact_support",
+    detail: "Project is not attached to a workspace",
+    description: "A legacy project without a workspace cannot change visibility.",
+  },
+  "project.pin_order_invalid": {
+    action: "fix_input",
+    detail: "pin_order must be 1, 2, or 3",
+    description: "A pinned project's slot must be 1, 2 or 3.",
+  },
+  "project.no_conversations": {
+    action: "none",
+    detail: "No conversations found for this project",
+    description: "An export or download was asked for a project with no conversations.",
+  },
+  "project.no_transcripts": {
+    action: "none",
+    detail: "No transcripts available for this project",
+    description: "The transcripts download found no transcript text in the project.",
+  },
+  "project.move_context_mismatch": {
+    action: "none",
+    detail:
+      "Projects can only move between workspaces in the same billing and data-ownership context. External-client workspaces keep their projects within their own context.",
+    description:
+      "A move between workspaces with different billing or data ownership (external-client workspaces keep their projects).",
+  },
+  "project.move_no_workspace_access": {
+    action: "contact_admin",
+    detail: "No access to {side} workspace",
+    params: ["admin_name", "admin_email"],
+    description:
+      "The caller has no role in the move's source or target workspace (side says which).",
+  },
+  "project.move_needs_admin": {
+    action: "contact_admin",
+    detail: "Must be admin or owner of {side} workspace",
+    params: ["admin_name", "admin_email"],
+    description: "Moving projects needs admin or owner on both workspaces (side says which fails).",
+  },
+  "project.move_target_not_found": {
+    action: "none",
+    detail: "Target workspace not found",
+    description: "The workspace projects are moved into does not exist or was deleted.",
+  },
+  "project.move_none_selected": {
+    action: "fix_input",
+    detail: "No projects selected",
+    description: "A bulk move listed no projects.",
+  },
+  "project.move_too_many": {
+    action: "fix_input",
+    detail: "Too many projects (max {max})",
+    description: "A bulk move listed more projects than one request may move.",
+  },
+  "project.visibility_admin_only": {
+    action: "contact_admin",
+    detail: "Only workspace admins can change project visibility",
+    params: ["admin_name", "admin_email"],
+    description: "Making a project private or workspace-visible needs a workspace admin.",
+  },
+  "project.private_requires_tier": {
+    action: "upgrade",
+    detail: "Private projects require innovator tier or above.",
+    description: "Private projects need the Innovator plan or above.",
+  },
+  "project.event_invite_paid": {
+    action: "upgrade",
+    detail: "Hiding the dembrane event invitation comes with a paid plan",
+    description: "Only paid plans may hide the dembrane event invitation in the portal.",
+  },
+  "project.events_dembrane_only": {
+    action: "none",
+    detail: "dembrane-events is only available for dembrane accounts",
+    description: "The dembrane-events setting is reserved for dembrane's own accounts.",
+  },
+  "project.legal_basis_admin_only": {
+    action: "contact_admin",
+    detail: "Only workspace admins can change the legal basis",
+    params: ["admin_name", "admin_email"],
+    description: "Changing a project's legal basis for processing needs a workspace admin.",
+  },
+  "project.legal_basis_invalid": {
+    action: "fix_input",
+    detail: "Invalid legal basis",
+    description: "The legal basis is not one of the known values.",
+  },
+  "project.privacy_policy_required": {
+    action: "fix_input",
+    detail: "A privacy policy link is required for consent-based processing",
+    description: "Consent-based processing needs a privacy policy link.",
+  },
+  "project.privacy_policy_too_long": {
+    action: "fix_input",
+    detail: "Privacy policy URL must be 255 characters or fewer",
+    description: "The privacy policy link is longer than 255 characters.",
+  },
+  "project.privacy_policy_invalid_url": {
+    action: "fix_input",
+    detail: "Privacy policy URL must start with http:// or https://",
+    description: "The privacy policy link is not an http or https address.",
+  },
+  "project.methodology_not_found": {
+    action: "none",
+    detail: "Methodology not found",
+    description: "The methodology does not exist or the caller cannot see it.",
+  },
+  "project.methodology_read_only": {
+    action: "none",
+    detail: "The dembrane methodology is read-only",
+    description: "The seeded dembrane methodology cannot be edited; copy it instead.",
+  },
+  "project.not_in_workspace": {
+    action: "fix_input",
+    detail: "Project not found in this workspace",
+    description: "A project named in the request does not belong to the workspace it acts on.",
+  },
+  "project.share_needs_private": {
+    action: "fix_input",
+    detail:
+      "This project is visible to the whole workspace. Mark it private before adding individual shares.",
+    description: "Individual shares were asked for on a project the whole workspace already sees.",
+  },
+  "project.share_admin_only": {
+    action: "contact_admin",
+    detail: "Only workspace admins can share projects",
+    params: ["admin_name", "admin_email"],
+    description: "A workspace member without the admin role tried to share a private project.",
+  },
+  "project.sharing_tier_required": {
+    action: "upgrade",
+    detail: "Private project sharing requires the {tier} plan or above.",
+    description: "Sharing a private project with individuals needs a higher plan.",
+  },
+  "project.share_not_member": {
+    action: "fix_input",
+    detail: "not a member",
+    description:
+      "The person to share with is not in the project's workspace; details carry code NOT_A_MEMBER and a message.",
+  },
+  "project.share_role_cannot_access": {
+    action: "fix_input",
+    detail: "role cannot access projects",
+    description:
+      "The person to share with holds the billing role, which never opens projects; details carry code and message.",
+  },
+  "project.share_not_found": {
+    action: "none",
+    detail: "Share not found",
+    description: "The project share to change or remove does not exist.",
+  },
+} as const satisfies Codes<"project">;

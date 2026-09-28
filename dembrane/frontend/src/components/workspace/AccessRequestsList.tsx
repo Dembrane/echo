@@ -19,7 +19,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import { API_BASE_URL } from "@/config";
+import { ApiRequestError } from "@/lib/errors/read";
 
 interface AccessRequestRow {
 	id: string;
@@ -52,7 +54,7 @@ async function postAction(
 	);
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(data.detail || `Couldn't ${action}`);
+		throw new ApiRequestError(res.status, data);
 	}
 	return res.json();
 }
@@ -95,7 +97,7 @@ export const AccessRequestsList = ({
 
 	const approveMutation = useMutation({
 		mutationFn: (reqId: string) => postAction(workspaceId, reqId, "approve"),
-		onError: (e: Error) => toast.error(e.message),
+		onError: (e: Error) => void notifyError(e),
 		onSuccess: (_data, reqId) => {
 			posthog?.capture("workspace_access_actioned", {
 				action: "approved",
@@ -109,7 +111,7 @@ export const AccessRequestsList = ({
 
 	const rejectMutation = useMutation({
 		mutationFn: (reqId: string) => postAction(workspaceId, reqId, "reject"),
-		onError: (e: Error) => toast.error(e.message),
+		onError: (e: Error) => void notifyError(e),
 		onSuccess: (_data, reqId) => {
 			posthog?.capture("workspace_access_actioned", {
 				action: "rejected",

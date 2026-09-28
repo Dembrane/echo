@@ -18,7 +18,7 @@ export async function conversationTranscript(store: V1Store, conversationId: str
 /** project_service.get_context_for_prompt: the project facts the summary prompt reads. */
 export async function projectContext(store: V1Store, projectId: string): Promise<string | null> {
   const p = await store.liveProject(projectId);
-  if (!p) throw new NotFoundError("Project not found");
+  if (!p) throw new NotFoundError("project.not_found");
   const parts: string[] = [];
   if (p.name) parts.push(`name: ${p.name}`);
   if (p.context) parts.push(`context: ${p.context}`);
@@ -43,7 +43,8 @@ export async function assertNotLocked(
 ) {
   const conv = await v1Store(d.db).conversation(conversationId);
   const tier = conv?.project_id ? await resolveProjectTier(d.db, conv.project_id) : null;
-  if (isConversationLocked(conv ?? {}, tier)) throw new PaymentRequiredError(detail);
+  if (isConversationLocked(conv ?? {}, tier))
+    throw new PaymentRequiredError("conversation.locked", { message: detail });
   return conv;
 }
 
@@ -63,7 +64,7 @@ export async function summarizeAndStore(
     conversationId,
     "Conversation is locked. Upgrade to generate a summary.",
   );
-  if (!conv) throw new NotFoundError("Conversation not found");
+  if (!conv) throw new NotFoundError("conversation.not_found");
   const project = await store.projectAny(conv.project_id);
   const title = conv.title ?? null;
 
@@ -163,9 +164,8 @@ export async function generateTitleAndStore(
     conversationId,
     "Conversation is locked. Upgrade to generate a title.",
   );
-  if (!conv) throw new NotFoundError("Conversation not found");
-  if (!conv.summary)
-    throw new BadRequestError("Conversation has no summary. Generate a summary first.");
+  if (!conv) throw new NotFoundError("conversation.not_found");
+  if (!conv.summary) throw new BadRequestError("conversation.no_summary");
   const project = await store.projectAny(conv.project_id);
   const language = project?.language ?? "en";
   const existing = await store.recentTitles(conv.project_id, 10);

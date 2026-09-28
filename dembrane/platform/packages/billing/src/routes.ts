@@ -4,6 +4,7 @@ import {
   ForbiddenError,
   isUuid,
   NotFoundError,
+  StatusError,
   UnauthenticatedError,
   ValidationError,
 } from "@dembrane/core";
@@ -61,22 +62,22 @@ export function billingRoutes(deps: BillingRouteDeps) {
   ) {
     const who = requireUser(c);
     if (await staffPass(c, who, action, target[0], target[1])) return who;
-    if (!who.appUserId) throw new ForbiddenError("Not allowed");
+    if (!who.appUserId) throw new ForbiddenError("access.forbidden");
     if (!isUuid(orgId) || !(await store.hasOrgRole(orgId, who.appUserId, BILLING_ROLES)))
-      throw new ForbiddenError("You must be an organisation owner, admin, or billing role.");
+      throw new ForbiddenError("billing.role_required");
     return who;
   }
 
   /** Loads a live account (404 otherwise) and checks the caller may view or manage it. */
   async function account(c: Ctx, mode: Mode, action: string): Promise<AccountRow> {
     const who = c.get("principal");
-    if (!who) throw new UnauthenticatedError("Invalid session");
+    if (!who) throw new UnauthenticatedError("auth.session_expired");
     const id = c.req.param("account_id") ?? "";
     const acct = isUuid(id) ? await store.account(id) : null;
-    if (!acct || acct.deleted_at) throw new NotFoundError("Billing account not found");
+    if (!acct || acct.deleted_at) throw new NotFoundError("billing.account_not_found");
     if (!acct.org_id && acct.workspace_id) {
       if (await staffPass(c, who, action, "billing_account", acct.id)) return acct;
-      if (!who.appUserId) throw new ForbiddenError("Not allowed");
+      if (!who.appUserId) throw new ForbiddenError("access.forbidden");
       try {
         await deps.access.workspace(
           who,
@@ -86,7 +87,7 @@ export function billingRoutes(deps: BillingRouteDeps) {
       } catch (e) {
         // The account exists either way; answer as the org path does, not with a 404.
         if (e instanceof NotFoundError || e instanceof ForbiddenError)
-          throw new ForbiddenError("You must be an organisation owner, admin, or billing role.");
+          throw new ForbiddenError("billing.role_required");
         throw e;
       }
       return acct;
@@ -96,7 +97,12 @@ export function billingRoutes(deps: BillingRouteDeps) {
   }
 
   const badRequest = (e: unknown): never => {
-    if (e instanceof BillingError) throw new BadRequestError(e.message);
+    if (e instanceof BillingError)
+      // The code's detail template may name params; the message is the text sent before.
+      throw new BadRequestError(e.code as "billing.request_failed", {
+        message: e.message,
+        params: { reason: e.message, ...e.params },
+      });
     throw e;
   };
 
@@ -185,7 +191,7 @@ export function billingRoutes(deps: BillingRouteDeps) {
     .get("/api/v2/billing-accounts/:account_id/invoices/:invoice_id/pdf", async (c) => {
       const acct = await account(c, "view", "billing_account.invoice_pdf.read");
       const url = await service.salesInvoicePdfUrlFor(acct.id, c.req.param("invoice_id"));
-      if (!url) throw new NotFoundError("No PDF available for this invoice");
+      if (!url) throw new NotFoundError("billing.invoice_pdf_missing");
       return c.json({ pdf_url: url });
     })
     .post("/api/v2/billing-accounts/:account_id/cancel", async (c) => {
@@ -228,21 +234,26 @@ export function mollieWebhookRoutes(deps: Pick<BillingRouteDeps, "billing">) {
     if (type.includes("application/x-www-form-urlencoded") || type.includes("multipart/form-data"))
       id = (await c.req.parseBody()).id;
     if (typeof id !== "string")
-      throw new ValidationError("Request validation failed", [
-        {
-          type: "missing",
-          loc: ["body", "id"],
-          msg: "Field required",
-          input: null,
-          url: "https://errors.pydantic.dev/2.12/v/missing",
+      throw new ValidationError("validation.invalid_input", {
+        details: [
+          {
+            type: "missing",
+            loc: ["body", "id"],
+            msg: "Field required",
+            input: null,
+            url: "https://errors.pydantic.dev/2.12/v/missing",
+          },
+        ],
+        params: {
+          fields: [{ field: "id", loc: ["body", "id"], code: "field.required", params: {} }],
         },
-      ] as unknown as Record<string, unknown>);
+      });
     try {
       await deps.billing.service.handleWebhook(id);
     } catch (err) {
       // 500 makes Mollie retry; the handler is idempotent.
       c.get("logger")?.error({ err, paymentId: id }, "mollie webhook processing failed");
-      return c.json({ detail: "webhook processing failed" }, 500);
+      throw new StatusError(500, "billing.webhook_failed");
     }
     return c.json({ status: "ok" });
   });

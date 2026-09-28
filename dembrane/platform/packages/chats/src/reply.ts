@@ -51,8 +51,7 @@ export async function reply(
   const { chat } = await chatFor({ access: d.access, store: d.store }, who, chatId, {
     withUsed: true,
   });
-  if (chat.chat_mode === "agentic")
-    throw new BadRequestError("Agentic chats must use /api/agentic endpoints");
+  if (chat.chat_mode === "agentic") throw new BadRequestError("chat.agentic_endpoint_required");
   const projectId = chatProjectId(chat);
   if (!projectId) throw new Error("Chat is missing a project reference");
   if (

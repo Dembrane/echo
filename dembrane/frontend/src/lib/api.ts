@@ -1,5 +1,7 @@
 // @FIXME: this file must be decomposed into @/components/xxx/api/index.ts
 
+import { i18n } from "@lingui/core";
+import { t } from "@lingui/core/macro";
 import axios, {
 	type AxiosError,
 	type AxiosRequestConfig,
@@ -9,6 +11,7 @@ import { toast } from "@/components/common/Toaster";
 import { VOICE_TRANSCRIBE_TIMEOUT_MS } from "@/components/voice/voiceInput";
 import { API_BASE_URL, USE_PARTICIPANT_ROUTER } from "@/config";
 import { bff } from "./bff";
+import { loadErrorMessages } from "./errors/present";
 
 export const apiCommonConfig: CreateAxiosDefaults = {
 	baseURL: API_BASE_URL,
@@ -20,7 +23,9 @@ export const apiNoAuth = axios.create(apiCommonConfig);
 apiNoAuth.interceptors.response.use(
 	(response) => response.data,
 	(error) => {
-		// Pass through errors
+		// Start loading the error messages now, so the screen that shows this error has
+		// them by the time it renders (see lib/errors/present.ts).
+		void loadErrorMessages(i18n);
 		throw error;
 	},
 );
@@ -103,7 +108,7 @@ api.interceptors.response.use(
 				throw e;
 			}
 		}
-		// Pass through other errors
+		void loadErrorMessages(i18n);
 		throw error;
 	},
 );
@@ -750,9 +755,13 @@ export const initiateAndUploadConversationChunk = async (payload: {
 
 	if (failures.length > 0) {
 		console.error(`${failures.length} file(s) failed to upload`);
-		toast.error(`${failures.length} file(s) failed to upload`);
+		toast.error(
+			t`${failures.length} file(s) failed to upload. Try those again.`,
+		);
 	} else {
-		toast.success(`All ${payload.chunks.length} file(s) uploaded successfully`);
+		toast.success(
+			t`All ${payload.chunks.length} file(s) uploaded successfully`,
+		);
 	}
 
 	// Collect conversation IDs for files that uploaded successfully.
@@ -1702,34 +1711,18 @@ export const deleteTagById = async (projectId: string, tagId: string) => {
 };
 
 export const deleteChatById = async (chatId: string) => {
-	try {
-		const response = await api.delete(`/chats/${chatId}`);
-		return response;
-	} catch (error: any) {
-		const message = error?.response?.data?.detail || "Failed to delete chat";
-		throw new Error(message);
-	}
+	// Callers present the error with the error presenter (lib/errors).
+	return api.delete(`/chats/${chatId}`);
 };
 
 export const deleteProjectById = async (projectId: string) => {
-	try {
-		const response = await api.delete(`/projects/${projectId}`);
-		return response;
-	} catch (error: any) {
-		const message = error?.response?.data?.detail || "Failed to delete project";
-		throw new Error(message);
-	}
+	// Callers present the error with the error presenter (lib/errors).
+	return api.delete(`/projects/${projectId}`);
 };
 
 export const deleteConversationById = async (conversationId: string) => {
-	try {
-		const response = await api.delete(`/conversations/${conversationId}`);
-		return response;
-	} catch (error: any) {
-		const message =
-			error?.response?.data?.detail || "Failed to delete conversation";
-		throw new Error(message);
-	}
+	// Callers present the error with the error presenter (lib/errors).
+	return api.delete(`/conversations/${conversationId}`);
 };
 
 // check if the participant is eligible to unsubscribe

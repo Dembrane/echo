@@ -71,15 +71,15 @@ export function responseRoutes(deps: ResponseDeps) {
   /** The message, its chat and the caller's chat:use on the project, with the old 404s. */
   async function resolveChatMessage(who: Signed, targetId: string) {
     const msg = UUID.test(targetId) ? await store.chatMessage(targetId) : null;
-    if (!msg?.project_chat_id) throw new NotFoundError("Message not found");
+    if (!msg?.project_chat_id) throw new NotFoundError("feedback.message_not_found");
     const chat = await store.chat(msg.project_chat_id);
-    if (!chat || chat.deleted_at || !chat.project_id) throw new NotFoundError("Chat not found");
-    if (!who.appUserId) throw new ForbiddenError("User not onboarded");
+    if (!chat || chat.deleted_at || !chat.project_id) throw new NotFoundError("chat.not_found");
+    if (!who.appUserId) throw new ForbiddenError("access.not_onboarded");
     try {
       await deps.access.project(who, chat.project_id, "chat:use");
     } catch (e) {
       // The old resolver answered policy denials with this detail.
-      if (e instanceof ForbiddenError && !e.details) throw new ForbiddenError("Not allowed");
+      if (e instanceof ForbiddenError && !e.details) throw new ForbiddenError("access.forbidden");
       throw e;
     }
     return { msg, chat };
@@ -101,17 +101,18 @@ export function responseRoutes(deps: ResponseDeps) {
       });
       await deps.limiter.checkUser(RESPONSE_LIMIT, who.directusUserId);
       if (!IMPLEMENTED_TARGET_TYPES.includes(body.target_type))
-        throw new BadRequestError("Unknown target type");
+        throw new BadRequestError("feedback.target_unknown");
       if (!RATING_VALUES.includes(body.rating))
-        throw new BadRequestError("Rating must be up or down");
+        throw new BadRequestError("feedback.rating_invalid");
       const unknown = body.reasons.find((r) => !REASON_KEYS.includes(r));
-      if (unknown !== undefined) throw new BadRequestError(`Unknown reason: ${unknown}`);
+      if (unknown !== undefined)
+        throw new BadRequestError("feedback.reason_unknown", { params: { reason: unknown } });
       const reasons = body.rating === "up" ? [] : [...new Set(body.reasons)];
       const comment = (body.comment ?? "").trim() || null;
 
       const { msg, chat } = await resolveChatMessage(who, body.target_id);
       if (String(msg.message_from ?? "").toLowerCase() !== "assistant")
-        throw new BadRequestError("Only assistant messages can be rated");
+        throw new BadRequestError("feedback.not_assistant_message");
       const context: Record<string, unknown> = {
         project_chat_id: chat.id,
         chat_mode: chat.chat_mode,
@@ -155,14 +156,14 @@ export function responseRoutes(deps: ResponseDeps) {
         query: { target_type: v.str(), target_ids: v.str() },
       });
       if (!TARGET_TYPES.includes(query.target_type))
-        throw new BadRequestError("Unknown target type");
+        throw new BadRequestError("feedback.target_unknown");
       const ids = query.target_ids
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean);
       if (!ids.length) return c.json([]);
       if (ids.length > MAX_LIST_IDS)
-        throw new BadRequestError(`At most ${MAX_LIST_IDS} ids per request`);
+        throw new BadRequestError("feedback.too_many_ids", { params: { max: MAX_LIST_IDS } });
       const rows = await store.ownRows(who.directusUserId, query.target_type, ids, MAX_LIST_IDS);
       return c.json(rows.map(rowOut));
     })
@@ -189,27 +190,30 @@ export function responseRoutes(deps: ResponseDeps) {
       });
       const f: AdminFilter = {};
       if (query.rating) {
-        if (!RATING_VALUES.includes(query.rating)) throw new BadRequestError("Unknown rating");
+        if (!RATING_VALUES.includes(query.rating))
+          throw new BadRequestError("feedback.filter_invalid", { params: { filter: "rating" } });
         f.rating = query.rating;
       }
       if (query.target_type) {
         if (!TARGET_TYPES.includes(query.target_type))
-          throw new BadRequestError("Unknown target type");
+          throw new BadRequestError("feedback.target_unknown");
         f.target_type = query.target_type;
       }
       if (query.reason) {
-        if (!REASON_KEYS.includes(query.reason)) throw new BadRequestError("Unknown reason");
+        if (!REASON_KEYS.includes(query.reason))
+          throw new BadRequestError("feedback.filter_invalid", { params: { filter: "reason" } });
         f.reason = query.reason;
       }
       if (query.chat_mode) {
-        if (!CHAT_MODES.includes(query.chat_mode)) throw new BadRequestError("Unknown chat mode");
+        if (!CHAT_MODES.includes(query.chat_mode))
+          throw new BadRequestError("feedback.filter_invalid", { params: { filter: "chat mode" } });
         f.chat_mode = query.chat_mode;
       }
       for (const k of ["date_from", "date_to"] as const) {
         const val = query[k];
         if (!val) continue;
         if (!isIsoDatetime(val.replace(/Z$/, "+00:00")))
-          throw new BadRequestError(`${k} must be an ISO-8601 datetime`);
+          throw new BadRequestError("feedback.date_invalid", { params: { field: k } });
         f[k] = val;
       }
       const { rows, total } = await store.adminPage(f, query.page, query.limit);
@@ -234,7 +238,7 @@ export function responseRoutes(deps: ResponseDeps) {
       const who = requireUser(c);
       await deps.limiter.checkUser(RESPONSE_LIMIT, who.directusUserId);
       const targetType = c.req.param("target_type");
-      if (!TARGET_TYPES.includes(targetType)) throw new BadRequestError("Unknown target type");
+      if (!TARGET_TYPES.includes(targetType)) throw new BadRequestError("feedback.target_unknown");
       const existing = await store.ownRow(who.directusUserId, targetType, c.req.param("target_id"));
       if (existing) await store.deleteFeedback(existing.id);
       return c.body(null, 204);

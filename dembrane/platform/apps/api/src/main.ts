@@ -1,5 +1,5 @@
 import { Access, DrizzleAccessStore, DrizzleStaffAudit } from "@dembrane/access";
-import { render, sendEmail } from "@dembrane/account";
+import { render, sendEmail, subjectOf } from "@dembrane/account";
 import { accountsApiJobs, codeSignInGate } from "@dembrane/accounts";
 import { analysisJobs } from "@dembrane/analysis";
 import { HttpMedia, LocalMedia, metadataIdToken } from "@dembrane/audio";
@@ -16,6 +16,7 @@ import {
 import { conversationApiJobs } from "@dembrane/conversations";
 import { bootAssets } from "@dembrane/core";
 import { connect, createDb, withDatabase } from "@dembrane/db";
+import { localeOfEmail } from "@dembrane/i18n";
 import { createModels } from "@dembrane/llm";
 import { type Mailer, MemoryMailer, SendGridMailer } from "@dembrane/mail";
 import { mapJobs } from "@dembrane/map";
@@ -84,11 +85,14 @@ const auth = createAuth({
   // Codes go only to people with an account or a pending invitation (org, workspace, or
   // named to sign a document); anyone else gets the same answer and no email.
   codeSignInAllowed: codeSignInGate({ db: database.db, now: () => new Date() }),
+  // Both speak the language the person's dashboard is set to, English for a new account.
   sendCode: async (email, code, purpose) => {
+    const language = await localeOfEmail(database.db, email).catch(() => null);
+    const mail = { template: "sign_in_code", data: { code } } as const;
     await mailer.send({
       to: email,
-      subject: "Your dembrane sign-in code",
-      ...render({ template: "sign_in_code", data: { code } }),
+      subject: subjectOf(mail, language) as string,
+      ...render(mail, language),
       tags: ["sign_in_code", purpose],
     });
   },
@@ -97,10 +101,12 @@ const auth = createAuth({
   sendVerification: async (email, url, token) => {
     const page = new URL(url).searchParams.get("callbackURL");
     const link = page ? `${page}${page.includes("?") ? "&" : "?"}token=${token}` : url;
+    const language = await localeOfEmail(database.db, email).catch(() => null);
+    const mail = { template: "verify_email", data: { verify_url: link } } as const;
     await mailer.send({
       to: email,
-      subject: "Verify your email",
-      ...render({ template: "verify_email", data: { verify_url: link } }),
+      subject: subjectOf(mail, language) as string,
+      ...render(mail, language),
       tags: ["verify_email"],
     });
   },

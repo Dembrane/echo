@@ -16,7 +16,7 @@ import {
 /** The project must exist before anything else is said about it, staff included. */
 async function existingProject(d: DataDeps, projectId: string): Promise<Row> {
   const p = await projectRow(d, projectId);
-  if (!p) throw new NotFoundError("Project not found");
+  if (!p) throw new NotFoundError("project.not_found");
   return p;
 }
 
@@ -170,7 +170,7 @@ export async function report(d: DataDeps, who: Signed, projectId: string, report
             and deleted_at is null
           limit 1`
       : [];
-  if (!r) throw new NotFoundError("Report not found");
+  if (!r) throw new NotFoundError("report.not_found");
   const out = row(r as Row);
   return { ...reportFields(out), content: out.content ?? null, title: reportTitle(out.content) };
 }

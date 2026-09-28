@@ -31,6 +31,7 @@
         "@dembrane/db": "workspace:*",
         "@dembrane/feedback": "workspace:*",
         "@dembrane/http": "workspace:*",
+        "@dembrane/i18n": "workspace:*",
         "@dembrane/llm": "workspace:*",
         "@dembrane/mail": "workspace:*",
         "@dembrane/map": "workspace:*",
@@ -109,6 +110,7 @@
         "@dembrane/core": "workspace:*",
         "@dembrane/db": "workspace:*",
         "@dembrane/feedback": "workspace:*",
+        "@dembrane/i18n": "workspace:*",
         "@dembrane/llm": "workspace:*",
         "@dembrane/mail": "workspace:*",
         "@dembrane/map": "workspace:*",
@@ -152,6 +154,7 @@
         "@dembrane/core": "workspace:*",
         "@dembrane/db": "workspace:*",
         "@dembrane/http": "workspace:*",
+        "@dembrane/i18n": "workspace:*",
         "@dembrane/mail": "workspace:*",
         "@dembrane/notifications": "workspace:*",
         "@dembrane/observability": "workspace:*",
@@ -172,6 +175,7 @@
         "@dembrane/core": "workspace:*",
         "@dembrane/db": "workspace:*",
         "@dembrane/http": "workspace:*",
+        "@dembrane/i18n": "workspace:*",
         "@dembrane/llm": "workspace:*",
         "@dembrane/mail": "workspace:*",
         "@dembrane/observability": "workspace:*",
@@ -282,6 +286,7 @@
         "@dembrane/core": "workspace:*",
         "@dembrane/db": "workspace:*",
         "@dembrane/http": "workspace:*",
+        "@dembrane/i18n": "workspace:*",
         "@dembrane/legacy-shape": "workspace:*",
         "@dembrane/mail": "workspace:*",
         "@dembrane/observability": "workspace:*",
@@ -419,10 +424,21 @@
         "hono": "^4.9.0",
       },
     },
+    "packages/i18n": {
+      "name": "@dembrane/i18n",
+      "dependencies": {
+        "@dembrane/config": "workspace:*",
+        "@dembrane/core": "workspace:*",
+        "@dembrane/db": "workspace:*",
+        "@dembrane/llm": "workspace:*",
+        "drizzle-orm": "^0.45.3",
+      },
+    },
     "packages/legacy-shape": {
       "name": "@dembrane/legacy-shape",
       "dependencies": {
         "@dembrane/core": "workspace:*",
+        "@dembrane/http": "workspace:*",
       },
     },
     "packages/llm": {
@@ -630,6 +646,7 @@
         "@dembrane/core": "workspace:*",
         "@dembrane/db": "workspace:*",
         "@dembrane/http": "workspace:*",
+        "@dembrane/i18n": "workspace:*",
         "@dembrane/legacy-shape": "workspace:*",
         "@dembrane/mail": "workspace:*",
         "@dembrane/observability": "workspace:*",
@@ -666,6 +683,7 @@
         "@dembrane/core": "workspace:*",
         "@dembrane/db": "workspace:*",
         "@dembrane/http": "workspace:*",
+        "@dembrane/i18n": "workspace:*",
         "@dembrane/legacy-shape": "workspace:*",
         "@dembrane/mail": "workspace:*",
         "@dembrane/observability": "workspace:*",
@@ -731,6 +749,7 @@
         "@dembrane/core": "workspace:*",
         "@dembrane/db": "workspace:*",
         "@dembrane/http": "workspace:*",
+        "@dembrane/i18n": "workspace:*",
         "@dembrane/legacy-shape": "workspace:*",
         "@dembrane/observability": "workspace:*",
         "@dembrane/queue": "workspace:*",
@@ -844,6 +863,8 @@
     "@dembrane/feedback": ["@dembrane/feedback@workspace:packages/feedback"],
 
     "@dembrane/http": ["@dembrane/http@workspace:packages/http"],
+
+    "@dembrane/i18n": ["@dembrane/i18n@workspace:packages/i18n"],
 
     "@dembrane/legacy-shape": ["@dembrane/legacy-shape@workspace:packages/legacy-shape"],
 

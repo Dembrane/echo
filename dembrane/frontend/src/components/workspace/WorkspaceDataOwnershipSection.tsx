@@ -13,7 +13,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import posthog from "posthog-js";
 import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import { API_BASE_URL } from "@/config";
+import { ApiRequestError } from "@/lib/errors/read";
 
 type UsageContext = "internal" | "external";
 
@@ -37,11 +39,7 @@ async function updateDataOwnership(
 	);
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(
-			typeof data.detail === "string"
-				? data.detail
-				: "Failed to update data ownership",
-		);
+		throw new ApiRequestError(res.status, data);
 	}
 }
 
@@ -97,7 +95,7 @@ export const WorkspaceDataOwnershipSection = ({
 				partner_agreement_accepted: goingExternalFresh ? true : undefined,
 				usage_context: usage,
 			}),
-		onError: (err: Error) => toast.error(err.message),
+		onError: (err: Error) => void notifyError(err),
 		onSuccess: () => {
 			posthog.capture("workspace_data_ownership_updated", {
 				usage_context: usage,

@@ -2,6 +2,7 @@ import { sendEmail } from "@dembrane/account";
 import { ConflictError, NotFoundError, newId, ValidationError } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
+import { localeOfEmail, resolveLocale } from "@dembrane/i18n";
 import { refuseProduction } from "@dembrane/popcorn";
 import { desc, eq } from "drizzle-orm";
 import type { AccountsDeps } from "../deps";
@@ -73,7 +74,7 @@ async function load(d: AccountsDeps, id: string): Promise<Row> {
   const [row] = isUuid(id)
     ? await d.db.select().from(schema.account_demo).where(eq(schema.account_demo.id, id)).limit(1)
     : [];
-  if (!row) throw new NotFoundError("Demo not found");
+  if (!row) throw new NotFoundError("demo.not_found");
   return row;
 }
 
@@ -88,8 +89,7 @@ export async function createDemo(
   input: DemoInput,
 ) {
   refuseProduction([...demo.ownUrls, demo.portalUrl, demo.apiUrl]);
-  if (!/^https?:\/\//i.test(input.website_url))
-    throw new ValidationError("website_url must be a web address");
+  if (!/^https?:\/\//i.test(input.website_url)) throw new ValidationError("demo.website_invalid");
   const id = newId();
   const now = d.now();
   await d.db.transaction(async (tx) => {
@@ -127,7 +127,7 @@ export async function listDemos(d: AccountsDeps) {
 /** A failed demo runs again from the step that failed; the steps before it are kept. */
 export async function retryDemo(d: AccountsDeps, id: string) {
   const row = await load(d, id);
-  if (row.status !== "failed") throw new ConflictError("Only a failed demo can be retried");
+  if (row.status !== "failed") throw new ConflictError("demo.retry_not_failed");
   const steps = row.steps as Steps;
   for (const name of DEMO_STEPS)
     if (steps[name].status !== "done")
@@ -161,7 +161,7 @@ export async function publishDemo(
 ) {
   const row = await load(d, id);
   if (row.status === "published") return demoView(d, row);
-  if (row.status !== "draft") throw new ConflictError("Only a finished draft can be published");
+  if (row.status !== "draft") throw new ConflictError("demo.publish_not_draft");
   const input = row.input as DemoInput;
   const seed = row.seed as SeedOutput;
   const signIn = opts.sign_in ?? input.sign_in;
@@ -195,9 +195,13 @@ export async function publishDemo(
     }
     if (signIn) {
       await releaseSignIn(tx, seed.contact_user_id);
+      // The contact's own language when they already had an account, else the demo's.
+      const language =
+        (await localeOfEmail(tx, input.contact_email)) ?? resolveLocale(input.language);
       await d.jobs.enqueue(
         sendEmail,
         {
+          language,
           to: input.contact_email,
           subject: `Your dembrane account for ${input.organisation_name}`,
           template: "account_invite",

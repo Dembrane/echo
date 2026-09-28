@@ -5,8 +5,10 @@ import {
   ForbiddenError,
   NotFoundError,
   newId,
+  StatusError,
 } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
+import { localeOfEmail, localesOfAppUsers } from "@dembrane/i18n";
 import { isoTimestamp } from "@dembrane/legacy-shape";
 import {
   blocksNewWorkspace,
@@ -21,7 +23,7 @@ import { requireOnboarded, type WorkspaceContext } from "../context";
 import { iso, type Tx } from "../db";
 import { clock, type TenancyDeps } from "../deps";
 import { tierDowngradedEmail, workspaceInviteEmail } from "../emails";
-import { InternalError, PaymentRequiredError } from "../errors";
+import { PaymentRequiredError } from "../errors";
 import { emailJob } from "../jobs";
 import { dashboardPath, inviteAcceptUrl, inviteHash } from "../links";
 import { effectiveMembers, seatState, workspaceAdmins } from "../members";
@@ -147,12 +149,14 @@ export function workspaceService(deps: TenancyDeps) {
       role: "observer",
       email: o.email,
     });
-    const mail = workspaceInviteEmail({
-      subject: `You're the data owner for ${o.workspaceName} on dembrane`,
-      inviterName,
-      workspaceName: o.workspaceName,
-      inviteUrl: url,
-    });
+    // The data owner's own language when they have an account, else the inviter's.
+    const language =
+      (await localeOfEmail(tx, o.email)) ??
+      (await localesOfAppUsers(tx, [o.invitedBy])).get(o.invitedBy);
+    const mail = workspaceInviteEmail(
+      { inviterName, workspaceName: o.workspaceName, inviteUrl: url },
+      language,
+    );
     await deps.jobs.enqueue(emailJob, { to: o.email, ...mail, tags: ["workspace_invite"] }, { tx });
   }
 
@@ -165,10 +169,7 @@ export function workspaceService(deps: TenancyDeps) {
   /** 409 unless the workspace bills on its own account; handoff moves exactly one workspace. */
   async function requireWorkspaceScopedBilling(ws: WorkspaceRowFull) {
     const account = await billingAccountById(db, ws.billing_account_id);
-    if (!account || account.org_id)
-      throw new ConflictError(
-        "This workspace is billed under its organisation's shared plan, so it can't be handed off. Only workspaces billed on their own (for an external client) can be transferred.",
-      );
+    if (!account || account.org_id) throw new ConflictError("workspace.handoff_shared_plan");
     return account;
   }
 
@@ -340,7 +341,10 @@ export function workspaceService(deps: TenancyDeps) {
       let orgId = body.org_id;
       if (!orgId) {
         const first = await firstManagedOrg(db, member.appUserId);
-        if (!first) throw new ForbiddenError("No organisation found. Complete onboarding first.");
+        if (!first)
+          throw new ForbiddenError("access.not_onboarded", {
+            message: "No organisation found. Complete onboarding first.",
+          });
         orgId = first;
       } else if (!(await adminsOrg(orgId, member.appUserId))) {
         // Staff creating inside a customer's organisation is a named, audited staff action
@@ -362,18 +366,17 @@ export function workspaceService(deps: TenancyDeps) {
       const dataOwnerOrgName = (body.data_owner_org_name ?? "").trim() || null;
       const separate = Boolean(dataOwnerEmail);
       if (separate) {
-        if (!dataOwnerOrgName)
-          throw new BadRequestError(
-            "The owning organisation's name is required when you name a data owner.",
-          );
+        if (!dataOwnerOrgName) throw new BadRequestError("workspace.data_owner_org_required");
         if (!body.partner_agreement_accepted)
-          throw new BadRequestError(
-            "You must accept the partner agreement to create an external-client workspace.",
-          );
+          throw new BadRequestError("workspace.partner_agreement_required", {
+            message:
+              "You must accept the partner agreement to create an external-client workspace.",
+          });
         if (dataOwnerEmail && (await isOrgMemberByEmail(orgId, dataOwnerEmail)))
-          throw new BadRequestError(
-            "That data owner is already a member of your organisation. External-client workspaces need a data owner outside your organisation; for internal collaborators, create an internal workspace instead.",
-          );
+          throw new BadRequestError("workspace.data_owner_is_member", {
+            message:
+              "That data owner is already a member of your organisation. External-client workspaces need a data owner outside your organisation; for internal collaborators, create an internal workspace instead.",
+          });
       }
 
       const created = await db.transaction(async (tx) => {
@@ -393,15 +396,17 @@ export function workspaceService(deps: TenancyDeps) {
             account?.tier === "free" &&
             (await countOrgWorkspaces(tx, orgId, accountId)) >= FREE_TIER_MAX_WORKSPACES
           )
-            throw new PaymentRequiredError("free tier limit", freeTierLimit("workspaces"));
+            throw new PaymentRequiredError("billing.tier_limit", {
+              message: "free tier limit",
+              params: { limit: "workspaces" },
+              details: freeTierLimit("workspaces"),
+            });
         }
         if (body.visibility !== "open_to_organisation" && !who.isStaff) {
           const acct = await billingAccountById(tx, accountId);
           const tier = acct?.tier || "free";
           if (!["innovator", "changemaker", "guardian"].includes(tier))
-            throw new PaymentRequiredError(
-              "Invite-only and private workspaces require the Innovator plan or above. Create the workspace as open, then change its visibility after upgrading.",
-            );
+            throw new PaymentRequiredError("workspace.visibility_requires_tier");
         }
         const wsId = newId();
         await insertWorkspace(tx, {
@@ -467,13 +472,10 @@ export function workspaceService(deps: TenancyDeps) {
      */
     async remove(ctx: WorkspaceContext) {
       if (!ctx.allows("settings:manage") || ctx.isSupportSession)
-        throw new ForbiddenError("Only a workspace admin or owner can delete this workspace");
+        throw new ForbiddenError("workspace.delete_admin_only");
       const now = clock(deps);
       const count = await countLiveProjects(db, ctx.workspaceId);
-      if (count > 0)
-        throw new ConflictError(
-          `This workspace has ${count} project(s). Delete or move them first — you can do this from the organisation's Projects view.`,
-        );
+      if (count > 0) throw new ConflictError("workspace.has_projects", { params: { count } });
       const ws = await workspaceById(db, ctx.workspaceId);
       await db.transaction(async (tx) => {
         await updateWorkspace(tx, ctx.workspaceId, { deleted_at: iso(now), updated_at: iso(now) });
@@ -500,17 +502,15 @@ export function workspaceService(deps: TenancyDeps) {
       );
       const now = clock(deps);
       const ws = await workspaceById(db, workspaceId);
-      if (!ws || ws.deleted_at) throw new NotFoundError("Workspace not found");
+      if (!ws || ws.deleted_at) throw new NotFoundError("workspace.not_found");
       const account = await billingAccountById(db, ws.billing_account_id);
       if (hasLiveMollieSubscription(account))
-        throw new ConflictError(
-          "This account has an active subscription. Ask the customer to cancel it from their billing page before you change the tier.",
-        );
+        throw new ConflictError("workspace.tier_change_active_subscription");
       const fromTier = account?.tier || "pioneer";
       const toTier = body.tier;
       const fromIdx = (TIER_ORDER as readonly string[]).indexOf(fromTier);
       const toIdx = (TIER_ORDER as readonly string[]).indexOf(toTier);
-      if (fromIdx < 0 || toIdx < 0) throw new InternalError("Unknown tier value");
+      if (fromIdx < 0 || toIdx < 0) throw new StatusError(500, "workspace.unknown_tier");
       const direction = fromIdx === toIdx ? "no-change" : toIdx > fromIdx ? "upgrade" : "downgrade";
       const effects = direction === "downgrade" ? downgradeEffects(fromTier, toTier) : [];
       const paymentMode = toTier === "free" ? "none" : "offline";
@@ -556,23 +556,35 @@ export function workspaceService(deps: TenancyDeps) {
           workspaceId,
         });
         if (direction === "downgrade" && audience.length) {
+          // One email per language, each recipient in the one their dashboard is set to.
           const users = await appUsersByIds(tx, audience);
-          const emails = [
-            ...new Set(users.map((u) => (u.email ?? "").trim()).filter(Boolean)),
-          ].sort();
-          if (emails.length) {
-            const mail = tierDowngradedEmail({
-              workspaceName: wsName,
-              fromTier,
-              toTier,
-              downgradedAtHuman: humanDate(now),
-              freezeItems: effects.filter((e) => e.effect === "freeze").map((e) => e.human),
-              revertItems: effects.filter((e) => e.effect === "revert").map((e) => e.human),
-              workspaceUrl: dashboardPath(deps.dashboardUrl, `/w/${workspaceId}/settings/billing`),
-            });
+          const langs = await localesOfAppUsers(tx, audience);
+          const byLocale = new Map<string, Set<string>>();
+          for (const u of users) {
+            const email = (u.email ?? "").trim();
+            if (!email) continue;
+            const l = langs.get(u.id) ?? "en-US";
+            byLocale.set(l, (byLocale.get(l) ?? new Set()).add(email));
+          }
+          for (const [locale, set] of [...byLocale].sort(([a], [b]) => (a < b ? -1 : 1))) {
+            const mail = tierDowngradedEmail(
+              {
+                workspaceName: wsName,
+                fromTier,
+                toTier,
+                downgradedAtHuman: humanDate(now),
+                freezeItems: effects.filter((e) => e.effect === "freeze").map((e) => e.human),
+                revertItems: effects.filter((e) => e.effect === "revert").map((e) => e.human),
+                workspaceUrl: dashboardPath(
+                  deps.dashboardUrl,
+                  `/w/${workspaceId}/settings/billing`,
+                ),
+              },
+              locale,
+            );
             await deps.jobs.enqueue(
               emailJob,
-              { to: emails, ...mail, tags: ["tier_downgraded"] },
+              { to: [...set].sort(), ...mail, tags: ["tier_downgraded"] },
               { tx },
             );
           }
@@ -614,7 +626,7 @@ export function workspaceService(deps: TenancyDeps) {
     async usage(ctx: WorkspaceContext, monthOffset: number) {
       ctx.require("workspace:view_usage");
       if (monthOffset < 0 || monthOffset > 12)
-        throw new BadRequestError("month_offset must be 0–12");
+        throw new BadRequestError("request.month_offset_out_of_range");
       const now = clock(deps);
       const isCurrent = monthOffset === 0;
       const seesFinancials = ctx.allows("workspace:view_invoices");
@@ -687,20 +699,18 @@ export function workspaceService(deps: TenancyDeps) {
     async initiateHandoff(ctx: WorkspaceContext, body: { target_organisation_id: string }) {
       const now = clock(deps);
       const ws = await workspaceById(db, ctx.workspaceId);
-      if (!ws) throw new NotFoundError("Workspace not found");
+      if (!ws) throw new NotFoundError("workspace.not_found");
       const billingOrg = ws.billed_to_team_id || ws.org_id;
-      if (!billingOrg) throw new InternalError("Workspace has no billing organisation set");
+      if (!billingOrg) throw new StatusError(500, "workspace.no_billing_org");
       if (!(await adminsOrg(billingOrg, ctx.who.appUserId)))
-        throw new ForbiddenError("Only the billing organisation's admins can initiate handoff");
+        throw new ForbiddenError("workspace.handoff_admin_only");
       await requireWorkspaceScopedBilling(ws);
       const target = body.target_organisation_id;
-      if (target === billingOrg)
-        throw new BadRequestError("Target organisation is already the billing organisation");
+      if (target === billingOrg) throw new BadRequestError("workspace.handoff_same_org");
       const targetOrg = await orgById(db, target);
       if (!targetOrg || targetOrg.deleted_at)
-        throw new NotFoundError("Target organisation not found");
-      if (ws.handoff_status === "pending")
-        throw new ConflictError("A handoff is already pending on this workspace");
+        throw new NotFoundError("workspace.handoff_target_not_found");
+      if (ws.handoff_status === "pending") throw new ConflictError("workspace.handoff_pending");
       await db.transaction(async (tx) => {
         await updateWorkspace(tx, ws.id, {
           handoff_status: "pending",
@@ -724,14 +734,13 @@ export function workspaceService(deps: TenancyDeps) {
     async acceptHandoff(ctx: WorkspaceContext) {
       const now = clock(deps);
       const ws = await workspaceById(db, ctx.workspaceId);
-      if (!ws) throw new NotFoundError("Workspace not found");
+      if (!ws) throw new NotFoundError("workspace.not_found");
       if (ws.handoff_status !== "pending")
-        throw new ConflictError("No pending handoff on this workspace");
+        throw new ConflictError("workspace.handoff_none_pending");
       const target = ws.handoff_target_team_id;
-      if (!target)
-        throw new InternalError("Pending handoff has no target organisation — inconsistent state");
+      if (!target) throw new StatusError(500, "workspace.handoff_inconsistent");
       if (!(await adminsOrg(target, ctx.who.appUserId)))
-        throw new ForbiddenError("Only the target organisation's admins can accept this handoff");
+        throw new ForbiddenError("workspace.handoff_accept_target_admin_only");
       await requireWorkspaceScopedBilling(ws);
       const prior = ws.billed_to_team_id || ws.org_id;
       await db.transaction(async (tx) => {
@@ -777,11 +786,14 @@ export function workspaceService(deps: TenancyDeps) {
     async cancelHandoff(ctx: WorkspaceContext) {
       const now = clock(deps);
       const ws = await workspaceById(db, ctx.workspaceId);
-      if (!ws) throw new NotFoundError("Workspace not found");
-      if (ws.handoff_status !== "pending") throw new ConflictError("No pending handoff to cancel");
+      if (!ws) throw new NotFoundError("workspace.not_found");
+      if (ws.handoff_status !== "pending")
+        throw new ConflictError("workspace.handoff_none_pending", {
+          message: "No pending handoff to cancel",
+        });
       const billingOrg = ws.billed_to_team_id || ws.org_id;
       if (!billingOrg || !(await adminsOrg(billingOrg, ctx.who.appUserId)))
-        throw new ForbiddenError("Only the initiating organisation's admins can cancel");
+        throw new ForbiddenError("workspace.handoff_cancel_initiator_only");
       await updateWorkspace(db, ws.id, {
         handoff_status: null,
         handoff_target_team_id: null,

@@ -67,7 +67,7 @@ export function accessRequestService(deps: TenancyDeps) {
 
   async function loadWorkspace(id: string) {
     const ws = await workspaceById(db, id);
-    if (!ws || ws.deleted_at) throw new NotFoundError("Workspace not found");
+    if (!ws || ws.deleted_at) throw new NotFoundError("workspace.not_found");
     return ws;
   }
 
@@ -88,14 +88,14 @@ export function accessRequestService(deps: TenancyDeps) {
     }
     const role = await orgRole(db, orgId, who.appUserId);
     if (role === "admin" || role === "owner") return;
-    throw new ForbiddenError("Access denied");
+    throw new ForbiddenError("access.forbidden", { message: "Access denied" });
   }
 
   async function loadPending(wsId: string, reqId: string) {
     const req = await accessRequestById(db, reqId);
     if (!req || req.deleted_at || req.workspace_id !== wsId)
-      throw new NotFoundError("Request not found");
-    if (req.status !== "pending") throw new ConflictError("Request already actioned");
+      throw new NotFoundError("workspace.access_request_not_found");
+    if (req.status !== "pending") throw new ConflictError("workspace.access_request_actioned");
     return req;
   }
 
@@ -111,16 +111,16 @@ export function accessRequestService(deps: TenancyDeps) {
       const ws = await loadWorkspace(workspaceId);
       const role = await orgRole(db, ws.org_id, member.appUserId);
       if (role !== "admin" && role !== "owner")
-        throw new ForbiddenError("Organisation admins only");
+        throw new ForbiddenError("organisation.admin_only", {
+          message: "Organisation admins only",
+        });
       if (await activeMembership(db, ws.id, member.appUserId))
         return { status: "already_member", workspace_id: ws.id, role: "admin" };
       const view = derivationView(ws);
       if (view.stickyRemoved.includes(member.appUserId))
-        throw new ForbiddenError(
-          "You were removed from this workspace. Ask a workspace admin to invite you back.",
-        );
+        throw new ForbiddenError("workspace.removed_from");
       if (view.visibility === "private" && role !== "owner")
-        throw new ForbiddenError("This workspace is private. Ask a workspace admin to invite you.");
+        throw new ForbiddenError("workspace.private");
       await db.transaction(async (tx) => {
         await insertMembership(tx, {
           id: newId(),
@@ -151,13 +151,13 @@ export function accessRequestService(deps: TenancyDeps) {
       const now = clock(deps);
       const ws = await loadWorkspace(workspaceId);
       // Anything but open answers as missing, so a restricted workspace's existence stays hidden.
-      if (ws.visibility !== "open_to_organisation") throw new NotFoundError("Workspace not found");
+      if (ws.visibility !== "open_to_organisation") throw new NotFoundError("workspace.not_found");
       const role = await orgRole(db, ws.org_id, member.appUserId);
-      if (role === null) throw new ForbiddenError("Not a member of this organisation");
+      if (role === null) throw new ForbiddenError("organisation.not_member");
       if (role === "admin" || role === "owner")
-        throw new BadRequestError("Organisation admins can join directly, no approval needed");
+        throw new BadRequestError("workspace.admin_joins_directly");
       if (await isOrgExternalOnly(db, ws.org_id, member.appUserId))
-        throw new ForbiddenError("Not a member of this organisation");
+        throw new ForbiddenError("organisation.not_member");
       if (await activeMembership(db, ws.id, member.appUserId))
         return { status: "already_member", request_id: null };
       const pending = await pendingRequestFor(db, ws.id, member.appUserId);
@@ -274,7 +274,7 @@ export function accessRequestService(deps: TenancyDeps) {
     async discoverable(who: Signed, orgId: string) {
       const member = requireOnboarded(who);
       const role = await orgRole(db, orgId, member.appUserId);
-      if (role === null) throw new ForbiddenError("Not a member of this organisation");
+      if (role === null) throw new ForbiddenError("organisation.not_member");
       if (await isOrgExternalOnly(db, orgId, member.appUserId)) return { workspaces: [] };
       const isAdmin = role === "admin" || role === "owner";
       const rows = await discoverableWorkspaces(db, orgId, !isAdmin);

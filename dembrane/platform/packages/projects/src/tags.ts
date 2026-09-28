@@ -34,7 +34,7 @@ export async function createTag(
 /** A tag and the access its project grants; a tag is never reachable past its project. */
 async function tagFor(d: ProjectDeps, who: Signed, tagId: string) {
   const tag = await d.store.tag(tagId);
-  if (!tag) throw new NotFoundError("Tag not found");
+  if (!tag) throw new NotFoundError("tag.not_found");
   await projectFor(d.access, who, tag.project_id, "project:update");
   return tag;
 }
@@ -50,7 +50,7 @@ export async function updateTag(
     ...(body.text !== null && { text: body.text }),
     ...(body.sort !== null && { sort: body.sort }),
   };
-  if (!Object.keys(payload).length) throw new BadRequestError("No fields to update");
+  if (!Object.keys(payload).length) throw new BadRequestError("request.nothing_to_update");
   await d.store.updateTag(tagId, { ...payload, updated_at: d.now().toISOString() });
   const tag = await d.store.tag(tagId);
   return tag ? { ...directusRow(tag), conversations: await tagLinks(d, tagId) } : {};
@@ -71,7 +71,7 @@ export async function deleteProjectTag(
 ) {
   await projectFor(d.access, who, projectId, "project:update", "v1");
   const tag = await d.store.tag(tagId);
-  if (!tag || tag.project_id !== projectId) throw new NotFoundError("Tag not found");
+  if (!tag || tag.project_id !== projectId) throw new NotFoundError("tag.not_found");
   await d.store.transaction(async ({ store }) => {
     await store.deleteTagLinks(tagId);
     await store.deleteTag(tagId);

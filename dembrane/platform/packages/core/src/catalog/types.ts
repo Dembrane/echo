@@ -1,0 +1,82 @@
+/**
+ * The shape every error code is declared in. This file and its siblings in catalog/ are
+ * copied verbatim into the frontend (echo/frontend/scripts/sync-error-codes.mjs), so they
+ * import nothing but each other and hold only data and types.
+ */
+
+/**
+ * What the person can do about an error; the frontend turns it into one button. A closed
+ * set: a new action is a new button in every client, so it is added here on purpose.
+ */
+export const ERROR_ACTIONS = [
+  "retry",
+  "sign_in",
+  "contact_admin",
+  "contact_support",
+  "upgrade",
+  "fix_input",
+  "wait",
+  "none",
+] as const;
+export type ErrorAction = (typeof ERROR_ACTIONS)[number];
+
+/**
+ * Who reads the error. "user" codes need a friendly message in the frontend (its type check
+ * enforces that); "staff" codes surface on staff screens only; "developer" codes reach
+ * programs and developers (MCP clients, CLIs, broken invariants) and never a person's
+ * screen, so the frontend shows its generic message for them.
+ */
+export type ErrorAudience = "user" | "staff" | "developer";
+
+export interface CodeSpec {
+  readonly action: ErrorAction;
+  /** English for developers, logs and sam: what happened and when the code is thrown. */
+  readonly description: string;
+  /**
+   * The text the response's `detail` carries while clients read FastAPI's shape; `{name}`
+   * placeholders are filled from params. It matches what the Python API sent, for parity.
+   */
+  readonly detail: string;
+  /** Params the error carries beyond the placeholders in `detail`. */
+  readonly params?: readonly string[];
+  /** Defaults to "user". */
+  readonly audience?: ErrorAudience;
+}
+
+/** One namespace's codes: every key starts with the namespace and a dot. */
+export type Codes<N extends string> = Readonly<Record<`${N}.${string}`, CodeSpec>>;
+
+/** The `{name}` placeholders of a detail template. */
+export type Placeholders<S extends string> = S extends `${string}{${infer P}}${infer R}`
+  ? P | Placeholders<R>
+  : never;
+
+/** A value a param may take: plain JSON, so every client can read it. */
+export type ParamValue =
+  | string
+  | number
+  | boolean
+  | null
+  | readonly ParamValue[]
+  | { readonly [key: string]: ParamValue };
+
+/** The params a spec declares: its placeholders (required) plus its extra `params` (optional). */
+export type SpecParams<S extends CodeSpec> = {
+  readonly [K in Placeholders<S["detail"]>]: ParamValue;
+} & {
+  readonly [K in S["params"] extends readonly (infer P extends string)[] ? P : never]?: ParamValue;
+};
+
+/**
+ * For the few legacy details that carry an em dash: the code base keeps none, and biome's
+ * formatter turns an escaped one back into the character, so it is built at runtime.
+ */
+export const EM_DASH = String.fromCharCode(0x2014);
+
+/** Fills `{name}` placeholders; a missing param keeps its placeholder so the gap shows. */
+export function interpolate(template: string, params: Readonly<Record<string, unknown>>): string {
+  return template.replace(/\{([a-z0-9_]+)\}/g, (whole, name: string) => {
+    const v = params[name];
+    return v === undefined ? whole : String(v);
+  });
+}

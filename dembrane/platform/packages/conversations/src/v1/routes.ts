@@ -1,4 +1,4 @@
-import { ForbiddenError, NotFoundError } from "@dembrane/core";
+import { ForbiddenError, NotFoundError, RateLimitedError } from "@dembrane/core";
 import { type Env, requireUser } from "@dembrane/http";
 import { p } from "@dembrane/legacy-shape";
 import { TOO_MANY } from "@dembrane/ratelimit";
@@ -94,14 +94,13 @@ export function conversationV1Routes(d: ConversationsDeps) {
     const { body } = await p.validate(c.req, { body: model({ language: required(str()) }) });
     const store = conversationStore(d.db);
     const conv = await store.conversation(id);
-    if (!conv) throw new NotFoundError("Conversation not found");
+    if (!conv) throw new NotFoundError("conversation.not_found");
     d.tokens.check(c.req.header(PARTICIPANT_TOKEN_HEADER), id, conv.project_id);
     const project = await store.project(conv.project_id);
-    if (!project) throw new NotFoundError("Conversation not found");
-    if (!project.is_conversation_allowed)
-      throw new ForbiddenError("Conversation not open for participation");
+    if (!project) throw new NotFoundError("conversation.not_found");
+    if (!project.is_conversation_allowed) throw new ForbiddenError("conversation.not_open");
     if (!(await d.limiter.allow(REPLY_LIMIT, id))) {
-      return c.json({ detail: TOO_MANY }, 429);
+      throw new RateLimitedError("rate_limit.exceeded", { message: TOO_MANY });
     }
     const lines = withStatus(replyProtocol(d, id, body.data.language));
     const stream = new ReadableStream<Uint8Array>({

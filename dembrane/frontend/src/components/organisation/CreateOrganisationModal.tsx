@@ -1,3 +1,4 @@
+import { i18n } from "@lingui/core";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
@@ -13,8 +14,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import posthog from "posthog-js";
 import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { ApiRequestError } from "@/lib/errors/read";
+import { toastForEmail } from "@/lib/errors/toastForEmail";
 import { InviteEmailList } from "./InviteEmailList";
 
 type CreatedOrg = { org_id: string; workspace_id: string };
@@ -28,7 +32,7 @@ async function createOrganisation(name: string): Promise<CreatedOrg> {
 	});
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(data.detail || "Could not create the organisation");
+		throw new ApiRequestError(res.status, data);
 	}
 	return res.json();
 }
@@ -45,7 +49,7 @@ async function sendInvite(workspaceId: string, email: string) {
 	);
 	if (!res.ok) {
 		const data = await res.json().catch(() => ({}));
-		throw new Error(data.detail || "Failed to send invite");
+		throw new ApiRequestError(res.status, data);
 	}
 	return res.json();
 }
@@ -90,8 +94,7 @@ export const CreateOrganisationModal = ({
 
 	const createMutation = useMutation({
 		mutationFn: (name: string) => createOrganisation(name),
-		onError: (err: Error) =>
-			toast.error(err.message || t`Could not create the organisation`),
+		onError: (err: Error) => void notifyError(err),
 		onSuccess: (result) => {
 			posthog.capture("org_created", {
 				org_id: result.org_id,
@@ -117,9 +120,7 @@ export const CreateOrganisationModal = ({
 					await sendInvite(workspaceId, email.trim());
 					sent++;
 				} catch (err) {
-					toast.error(
-						`${email}: ${err instanceof Error ? err.message : t`Failed`}`,
-					);
+					toastForEmail(email, err, i18n);
 				}
 			}
 			return sent;

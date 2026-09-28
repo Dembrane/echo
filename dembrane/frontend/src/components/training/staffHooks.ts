@@ -1,7 +1,9 @@
 import { t } from "@lingui/core/macro";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import { API_BASE_URL } from "@/config";
+import { ApiRequestError } from "@/lib/errors/read";
 
 // Staff training tools (ISSUE-020) — call the /v2/admin/trainings endpoints.
 // Self-contained so this wires into ISSUE-022's `training` Tabs.Panel at
@@ -76,15 +78,11 @@ export const useCreateTraining = () => {
 			});
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
-				throw new Error(
-					typeof data.detail === "string"
-						? data.detail
-						: "Couldn't create training",
-				);
+				throw new ApiRequestError(res.status, data);
 			}
 			return res.json();
 		},
-		onError: (err: Error) => toast.error(err.message),
+		onError: (err: Error) => void notifyError(err),
 		onSuccess: () => {
 			toast.success(t`Training created`);
 			queryClient.invalidateQueries({ queryKey: ["v2", "admin", "trainings"] });
@@ -118,15 +116,11 @@ export const useCompleteTraining = () => {
 			);
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
-				throw new Error(
-					typeof data.detail === "string"
-						? data.detail
-						: "Couldn't mark complete",
-				);
+				throw new ApiRequestError(res.status, data);
 			}
 			return res.json();
 		},
-		onError: (err: Error) => toast.error(err.message),
+		onError: (err: Error) => void notifyError(err),
 		onSuccess: () => {
 			toast.success(t`Licenses granted`);
 			queryClient.invalidateQueries({ queryKey: ["v2", "admin", "trainings"] });
@@ -163,15 +157,11 @@ export const useUpdateTraining = () => {
 			);
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
-				throw new Error(
-					typeof data.detail === "string"
-						? data.detail
-						: "Couldn't update training",
-				);
+				throw new ApiRequestError(res.status, data);
 			}
 			return res.json();
 		},
-		onError: (err: Error) => toast.error(err.message),
+		onError: (err: Error) => void notifyError(err),
 		onSuccess: () => {
 			toast.success(t`Training updated`);
 			queryClient.invalidateQueries({ queryKey: ["v2", "admin", "trainings"] });
@@ -198,6 +188,7 @@ export interface StaffOrgRoster {
 
 export const useStaffOrgRoster = (orgId: string | null, enabled: boolean) =>
 	useQuery({
+		enabled: enabled && !!orgId,
 		queryFn: async (): Promise<StaffOrgRoster> => {
 			const res = await fetch(
 				`${API_BASE_URL}/v2/admin/trainings/orgs/${orgId}/roster`,
@@ -207,7 +198,6 @@ export const useStaffOrgRoster = (orgId: string | null, enabled: boolean) =>
 			return res.json();
 		},
 		queryKey: ["v2", "admin", "trainings", "roster", orgId] as const,
-		enabled: enabled && !!orgId,
 		staleTime: 30_000,
 	});
 
@@ -223,6 +213,7 @@ export interface TrainingLicense {
 
 export const useTrainingLicenses = (trainingId: string, enabled: boolean) =>
 	useQuery({
+		enabled,
 		queryFn: async (): Promise<TrainingLicense[]> => {
 			const res = await fetch(
 				`${API_BASE_URL}/v2/admin/trainings/${trainingId}/licenses`,
@@ -232,7 +223,6 @@ export const useTrainingLicenses = (trainingId: string, enabled: boolean) =>
 			return res.json();
 		},
 		queryKey: ["v2", "admin", "trainings", "licenses", trainingId] as const,
-		enabled,
 		staleTime: 30_000,
 	});
 
@@ -246,15 +236,11 @@ export const useRevokeLicense = () => {
 			);
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
-				throw new Error(
-					typeof data.detail === "string"
-						? data.detail
-						: "Couldn't revoke license",
-				);
+				throw new ApiRequestError(res.status, data);
 			}
 			return res.json();
 		},
-		onError: (err: Error) => toast.error(err.message),
+		onError: (err: Error) => void notifyError(err),
 		onSuccess: () => {
 			toast.success(t`License revoked`);
 			queryClient.invalidateQueries({ queryKey: ["v2", "admin", "trainings"] });

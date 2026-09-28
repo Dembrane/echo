@@ -1,6 +1,5 @@
-import { t } from "@lingui/core/macro";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import { APP_ENVIRONMENT } from "@/config";
 import { bff } from "@/lib/bff";
 import { createFixtureProjectGoal } from "../fixtures";
@@ -76,7 +75,7 @@ export function useSaveProjectGoalMutation(projectId: string) {
 				typeof input === "string" ? { content: input } : input,
 			),
 		onError: (error: BffError) => {
-			toast.error(error.message || t`Could not save this project goal`);
+			void notifyError(error);
 		},
 		onSuccess: (revision) => {
 			queryClient.setQueryData<ProjectGoalResponse | undefined>(

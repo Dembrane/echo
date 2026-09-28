@@ -153,6 +153,22 @@ export async function billingAccountAdmins(
 }
 
 /** Distinct trimmed addresses of the given users, sorted, as the old email fan-out built them. */
+/**
+ * Each recipient's address with the language their dashboard is set to (null: English),
+ * one entry per address, sorted by address.
+ */
+export async function recipientsOf(store: BillingStore, userIds: readonly string[]) {
+  if (!userIds.length) return [];
+  const byEmail = new Map<string, string | null>();
+  for (const r of await store.appUsers(userIds)) {
+    const email = (r.email ?? "").trim();
+    if (email && !byEmail.has(email)) byEmail.set(email, r.language ?? null);
+  }
+  return [...byEmail]
+    .sort(([a], [b]) => (a < b ? -1 : 1))
+    .map(([email, locale]) => ({ email, locale }));
+}
+
 export async function emailsOf(store: BillingStore, userIds: readonly string[]) {
   if (!userIds.length) return [];
   const rows = await store.appUsers(userIds);

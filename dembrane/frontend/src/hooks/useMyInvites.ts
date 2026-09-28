@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { API_BASE_URL } from "@/config";
+import { ApiRequestError } from "@/lib/errors/read";
 
 // Org-only invites have no workspace_id/workspace_name; consumers must branch on `type` before dereferencing workspace fields.
 export interface MyPendingInvite {
@@ -44,7 +45,7 @@ export const useAcceptInvite = () => {
 			);
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
-				const err = new Error(data.detail || "Failed to accept invite");
+				const err = new ApiRequestError(res.status, data);
 				// Plumb status so callers can branch on 402 (cap reached)
 				// without parsing the message — keeps UI tone i18n-safe.
 				(err as Error & { status?: number }).status = res.status;
@@ -70,7 +71,7 @@ export const useDeclineInvite = () => {
 			);
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
-				throw new Error(data.detail || "Failed to decline invite");
+				throw new ApiRequestError(res.status, data);
 			}
 		},
 		onSuccess: () => {
@@ -190,7 +191,7 @@ export const useAcceptInviteByHash = () => {
 			});
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
-				const err = new Error(data.detail || "Failed to accept invite");
+				const err = new ApiRequestError(res.status, data);
 				(err as Error & { status?: number }).status = res.status;
 				throw err;
 			}

@@ -5,7 +5,7 @@ import { pydanticIso } from "@dembrane/legacy-shape";
 import { effectiveLegalBasis, isExternalClient } from "@dembrane/projects";
 import { enqueueConversationEvent, webhooksStorage } from "@dembrane/webhooks";
 import { and, eq, inArray } from "drizzle-orm";
-import { createChunk, deleteChunk, type NewChunk, NOT_OPEN } from "../chunks";
+import { createChunk, deleteChunk, type NewChunk } from "../chunks";
 import type { ConversationsDeps } from "../deps";
 import { finishConversation } from "../pipeline/defs";
 import { type ChunkRow, type ConversationRow, conversationStore, transaction } from "../storage";
@@ -61,7 +61,7 @@ export async function initiate(d: PortalDeps, projectId: string, input: Initiate
   const project = await store.project(projectId);
   // project_service raised ProjectNotFoundException here, which the route did not catch.
   if (!project) throw new Error(`project ${projectId} not found`);
-  if (project.is_conversation_allowed !== true) throw new ForbiddenError(NOT_OPEN);
+  if (project.is_conversation_allowed !== true) throw new ForbiddenError("conversation.not_open");
   const id = newId();
   const now = d.now().toISOString();
   const row = await transaction(d.db, async (tx) => {
@@ -124,8 +124,8 @@ const isUuidLike = (v: string) => /^[0-9a-f-]{36}$/i.test(v);
 export async function publicProject(d: PortalDeps, projectId: string) {
   const store = conversationStore(d.db);
   const project = await store.project(projectId);
-  if (!project) throw new NotFoundError("Project not found");
-  if (project.is_conversation_allowed !== true) throw new ForbiddenError(NOT_OPEN);
+  if (!project) throw new NotFoundError("project.not_found");
+  if (project.is_conversation_allowed !== true) throw new ForbiddenError("conversation.not_open");
   const portal = portalStore(d.db);
   const [tags, rows] = await Promise.all([
     portal.projectTags(project.id),
@@ -185,8 +185,8 @@ async function ownConversation(d: PortalDeps, projectId: string, conversationId:
   const project = await store.project(projectId);
   const conv = await store.conversation(conversationId);
   if (!project || !conv || conv.project_id !== project.id)
-    throw new NotFoundError("Conversation not found");
-  if (project.is_conversation_allowed !== true) throw new ForbiddenError(NOT_OPEN);
+    throw new NotFoundError("conversation.not_found");
+  if (project.is_conversation_allowed !== true) throw new ForbiddenError("conversation.not_open");
   return conv;
 }
 
@@ -207,7 +207,7 @@ export async function participantChunks(d: PortalDeps, projectId: string, id: st
  */
 export async function participantReplies(d: PortalDeps, projectId: string, id: string) {
   const conv = await conversationStore(d.db).conversation(id);
-  if (!conv || conv.project_id !== projectId) throw new NotFoundError("Conversation not found");
+  if (!conv || conv.project_id !== projectId) throw new NotFoundError("conversation.not_found");
   const rows = await portalStore(d.db).replies(conv.id);
   return rows.map((r) => ({ ...r, date_created: directusTime(r.date_created) }));
 }
@@ -219,7 +219,7 @@ export async function participantReplies(d: PortalDeps, projectId: string, id: s
 export async function removeChunk(d: PortalDeps, projectId: string, id: string, chunkId: string) {
   const store = conversationStore(d.db);
   const conv = await store.conversation(id);
-  if (!conv || conv.project_id !== projectId) throw new NotFoundError("Conversation not found");
+  if (!conv || conv.project_id !== projectId) throw new NotFoundError("conversation.not_found");
   const chunk = await store.chunk(chunkId);
   if (!chunk || chunk.conversation_id !== conv.id) return;
   await deleteChunk(d, chunkId);

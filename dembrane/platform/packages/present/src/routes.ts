@@ -141,7 +141,7 @@ export function presentRoutes(deps: PresentRoutesDeps) {
     query: { node_limit: number | null; edge_limit: number | null },
   ) => {
     if (!(audienceManifest(settings).blocks as string[]).includes("map"))
-      throw new NotFoundError("Map is not in this presentation.");
+      throw new NotFoundError("present.map_not_in_presentation");
     return audienceMap(d.map, {
       projectId: String(project.id),
       settings,
@@ -209,7 +209,7 @@ export function presentRoutes(deps: PresentRoutesDeps) {
     const words = dict(excludeNone(body.patch));
     const patch: Json = {};
     for (const [block, value] of Object.entries(words)) if (truthy(value)) patch[block] = value;
-    if (!Object.keys(patch).length) throw new ValidationError("The patch names no opening field.");
+    if (!Object.keys(patch).length) throw new ValidationError("present.opening_patch_empty");
     const state = await publishOpening(d, report, patch, (published) =>
       validateDraft(report, access.tier, published),
     );
@@ -379,7 +379,7 @@ export function presentRoutes(deps: PresentRoutesDeps) {
       if (name === null) return c.notFound();
       await popcornReport(ad, who, id(c));
       const bytes = illustrationBytes(name);
-      if (!bytes) throw new NotFoundError("Not found");
+      if (!bytes) throw new NotFoundError("popcorn.illustration_not_found");
       return binary(bytes, "image/webp");
     });
   }
@@ -397,7 +397,7 @@ export function presentRoutes(deps: PresentRoutesDeps) {
     const who = requireUser(c);
     const { report, project } = await popcornReport(ad, who, id(c), "project:update");
     const loop = await d.store.loopForReport(String(report.id));
-    if (!loop) throw new NotFoundError("Popcorn loop not found");
+    if (!loop) throw new NotFoundError("popcorn.loop_not_found");
     // Translation only: no transcripts are read and no analysis runs.
     await dispatchNow(d, String(loop.id), "translation");
     return c.json(await payload(d, report, project), 202);
@@ -425,7 +425,7 @@ export function presentRoutes(deps: PresentRoutesDeps) {
     const block = c.req.param("block");
     const settings = await loadSettingsFor(d.store, report);
     if (!(audienceManifest(settings).blocks as string[]).includes(block))
-      throw new NotFoundError("Activity is not in this presentation.");
+      throw new NotFoundError("present.activity_not_in_presentation");
     await prepareBlock(report, String(project.id), who.directusUserId, block);
     return c.json({ status: "queued" });
   });

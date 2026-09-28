@@ -1,4 +1,7 @@
+import { i18n } from "@lingui/core";
 import { API_BASE_URL } from "@/config";
+import { loadErrorMessages } from "@/lib/errors/present";
+import { ApiRequestError } from "@/lib/errors/read";
 
 /**
  * Thin fetch wrapper for /v2/bff/* endpoints.
@@ -26,18 +29,15 @@ function buildUrl(path: string, params?: Params): string {
 	return url.toString();
 }
 
-async function parseError(res: Response): Promise<Error> {
+/**
+ * A failed bff call as an ApiRequestError: `message` keeps the backend detail for logs,
+ * `detail` the structured body (a 409 answers with the conflicting revision), and the
+ * error presenter reads the code from `body`.
+ */
+async function parseError(res: Response): Promise<ApiRequestError> {
 	const data = await res.json().catch(() => ({}));
-	const detail =
-		typeof data?.detail === "string" ? data.detail : `HTTP ${res.status}`;
-	const error = new Error(detail) as Error & {
-		status?: number;
-		detail?: unknown;
-	};
-	error.status = res.status;
-	// A 409 answers with a body, not a sentence: the conflicting revision, for
-	// the screen that has to show both wordings.
-	error.detail = data?.detail;
+	const error = new ApiRequestError(res.status, data);
+	void loadErrorMessages(i18n);
 	return error;
 }
 

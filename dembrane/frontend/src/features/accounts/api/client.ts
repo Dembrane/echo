@@ -1,5 +1,7 @@
+import { i18n } from "@lingui/core";
 import type { z } from "zod4";
 import { API_BASE_URL } from "@/config";
+import { presentError } from "@/lib/errors/present";
 import { ErrorBody, ROUTES, type RouteName } from "../contract/contract.gen";
 
 /**
@@ -38,15 +40,19 @@ export interface CallOptions<N extends RouteName> {
 export class AccountsApiError extends Error {
 	readonly status: number;
 	/** Field-level problems from a 422, keyed by the field name. */
-	readonly fields: Record<string, string>;
+	fields: Record<string, string>;
+	/** The response body; the error presenter (lib/errors) reads its code. */
+	readonly body: unknown;
 	constructor(
 		status: number,
 		message: string,
 		fields: Record<string, string> = {},
+		body: unknown = null,
 	) {
 		super(message);
 		this.status = status;
 		this.fields = fields;
+		this.body = body;
 	}
 }
 
@@ -68,34 +74,103 @@ export const loadFixtures = (): Promise<FixtureModule> => {
 	return fixtures;
 };
 
-const toApiError = (status: number, raw: unknown): AccountsApiError => {
+const toApiError = async (
+	status: number,
+	raw: unknown,
+): Promise<AccountsApiError> => {
 	const parsed = ErrorBody.safeParse(raw);
-	if (!parsed.success) return new AccountsApiError(status, `HTTP ${status}`);
+	if (!parsed.success)
+		return new AccountsApiError(status, `HTTP ${status}`, {}, raw);
 	const { detail } = parsed.data;
-	if (typeof detail === "string") return new AccountsApiError(status, detail);
+	if (typeof detail === "string")
+		return new AccountsApiError(status, detail, {}, raw);
 	const fields: Record<string, string> = {};
 	for (const issue of detail) {
 		const key = issue.loc.filter((l) => l !== "body").join(".");
 		fields[key] ??= issue.msg;
 	}
-	return new AccountsApiError(
+	const error = new AccountsApiError(
 		status,
 		detail[0]?.msg ?? `HTTP ${status}`,
 		fields,
+		raw,
 	);
+	// Field messages by field code in the person's language, where the API sent codes.
+	const presented = await presentError(error, i18n);
+	if (Object.keys(presented.fields).length)
+		error.fields = { ...presented.fields };
+	return error;
 };
 
-/** Turns a zod failure on our own request into the same error a 422 would give. */
-const requestError = (error: z.ZodError): AccountsApiError => {
-	const fields: Record<string, string> = {};
-	for (const issue of error.issues) {
-		fields[issue.path.join(".")] ??= issue.message;
+/**
+ * The field code for a zod issue, the same mapping the platform's accounts validator uses
+ * (platform/packages/accounts/src/validate.ts), so a check that fails here reads exactly
+ * like the 422 the API would send.
+ */
+function zodFieldCode(i: z.core.$ZodIssue): string {
+	switch (i.code) {
+		case "invalid_type":
+			return i.input === undefined ? "field.required" : "field.invalid_type";
+		case "too_small":
+			if (i.origin === "string") return "field.too_short";
+			if (i.origin === "array" || i.origin === "set")
+				return "field.too_few_items";
+			return "field.too_small";
+		case "too_big":
+			return i.origin === "string" ? "field.too_long" : "field.too_large";
+		case "invalid_format":
+			if (i.format === "email") return "field.invalid_email";
+			if (i.format === "url") return "field.invalid_url";
+			if (i.format === "date" || i.format === "datetime")
+				return "field.invalid_date";
+			return "field.invalid";
+		case "invalid_value":
+			return "field.invalid_choice";
+		default:
+			return "field.invalid";
 	}
-	return new AccountsApiError(
+}
+
+function zodFieldParams(i: z.core.$ZodIssue): Record<string, string | number> {
+	if (i.code === "too_small") {
+		const min = Number(i.minimum);
+		return i.origin === "string" || i.origin === "array" || i.origin === "set"
+			? { min_length: min }
+			: { min };
+	}
+	if (i.code === "too_big") {
+		const max = Number(i.maximum);
+		return i.origin === "string" ? { max_length: max } : { max };
+	}
+	return {};
+}
+
+/**
+ * Turns a zod failure on our own request into the same error a 422 would give: field
+ * codes, worded by the error presenter in the person's language (never zod's English).
+ */
+const requestError = async (error: z.ZodError): Promise<AccountsApiError> => {
+	const body = {
+		action: "fix_input",
+		code: "validation.invalid_input",
+		detail: "Request validation failed",
+		params: {
+			fields: error.issues.map((i) => ({
+				code: zodFieldCode(i),
+				field: i.path.map(String).join("."),
+				params: zodFieldParams(i),
+			})),
+		},
+	};
+	const result = new AccountsApiError(
 		422,
-		error.issues[0]?.message ?? "Invalid",
-		fields,
+		"Request validation failed",
+		{},
+		body,
 	);
+	const presented = await presentError(result, i18n);
+	result.fields = { ...presented.fields };
+	return result;
 };
 
 export async function call<N extends RouteName>(
@@ -113,7 +188,7 @@ export async function call<N extends RouteName>(
 	let body: unknown;
 	if (spec.request) {
 		const parsed = spec.request.safeParse(options.body ?? {});
-		if (!parsed.success) throw requestError(parsed.error);
+		if (!parsed.success) throw await requestError(parsed.error);
 		body = parsed.data;
 	}
 
@@ -137,7 +212,7 @@ export async function call<N extends RouteName>(
 			method: spec.method,
 		});
 		const raw = await res.json().catch(() => null);
-		if (!res.ok) throw toApiError(res.status, raw);
+		if (!res.ok) throw await toApiError(res.status, raw);
 		json = raw;
 	}
 	if (!spec.response) return json as ResponseOf<N>;
@@ -175,7 +250,7 @@ export async function submitTaskWithFile(
 			method: "POST",
 		});
 		const raw = await res.json().catch(() => null);
-		if (!res.ok) throw toApiError(res.status, raw);
+		if (!res.ok) throw await toApiError(res.status, raw);
 		json = raw;
 	}
 	return spec.response.parse(json);

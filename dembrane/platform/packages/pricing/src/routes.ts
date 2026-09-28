@@ -1,6 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 import { requireStaff, type StaffAudit } from "@dembrane/access";
-import { BadRequestError, PlatformError, ValidationError } from "@dembrane/core";
+import { BadRequestError, PlatformError, StatusError, ValidationError } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { type Ctx, type Env, requireUser, v } from "@dembrane/http";
 import type { Logger } from "@dembrane/observability";
@@ -32,15 +32,6 @@ export interface PricingRouteDeps {
   readonly staffAudit: StaffAudit;
   /** Test seam; defaults to Postgres. */
   readonly store?: PricingStore;
-}
-
-class Unconfigured extends PlatformError {
-  readonly status = 503;
-  readonly code = "unavailable";
-}
-class InvalidToken extends PlatformError {
-  readonly status = 401;
-  readonly code = "unauthenticated";
 }
 
 const s255 = () => v.str({ max: 255 });
@@ -78,7 +69,7 @@ function validatePayload<E extends v.Shape>(body: Record<string, unknown>, extra
       ...rest,
       loc: loc.slice(1),
     }));
-    throw new ValidationError(e.message, errors as unknown as Record<string, unknown>);
+    throw new ValidationError("validation.invalid_input", { details: errors, params: e.params });
   }
 }
 
@@ -90,24 +81,23 @@ async function readBody(c: Ctx, logger: Logger): Promise<[Record<string, unknown
     try {
       body = JSON.parse(await c.req.text());
     } catch {
-      throw new BadRequestError("Body is not valid JSON");
+      throw new BadRequestError("request.invalid_json");
     }
     if (!body || typeof body !== "object" || Array.isArray(body))
-      throw new BadRequestError("Body must be a JSON object");
+      throw new BadRequestError("pricing.body_not_object");
     return [body as Record<string, unknown>, []];
   }
   const form = await c.req.formData();
   const raw = form.get("payload");
-  if (typeof raw !== "string")
-    throw new BadRequestError("Multipart body needs a `payload` part holding the JSON");
+  if (typeof raw !== "string") throw new BadRequestError("pricing.payload_missing");
   let body: unknown;
   try {
     body = JSON.parse(raw);
   } catch {
-    throw new BadRequestError("`payload` is not valid JSON");
+    throw new BadRequestError("pricing.payload_invalid_json");
   }
   if (!body || typeof body !== "object" || Array.isArray(body))
-    throw new BadRequestError("`payload` must be a JSON object");
+    throw new BadRequestError("pricing.payload_not_object");
   const attachments: Attachment[] = [];
   for (const [key, value] of form.entries()) {
     if (!key.startsWith("audio_") || key.endsWith("_duration_ms")) continue;
@@ -206,9 +196,9 @@ export function pricingRoutes(deps: PricingRouteDeps) {
         );
       })
       .post("/api/v2/pricing-configurations/site", async (c) => {
-        if (!deps.siteToken) throw new Unconfigured("Site writes are not configured");
+        if (!deps.siteToken) throw new StatusError(503, "pricing.site_not_configured");
         if (!tokenMatches(c.req.header("x-site-token") ?? "", deps.siteToken))
-          throw new InvalidToken("Invalid site token");
+          throw new StatusError(401, "pricing.site_token_invalid");
         // Per visitor as the site's function reports it (spec 7 L-20 keeps trusting it).
         await deps.limiter.check(
           PRICING_LIMITS.site,

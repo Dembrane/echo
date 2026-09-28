@@ -15,9 +15,11 @@ import {
 } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect } from "react";
 import { RouterProvider } from "react-router/dom";
+import { notifyError } from "./components/error/notifyError";
 import { I18nProvider } from "./components/layout/I18nProvider";
 import { ENABLE_AGENTATION, USE_PARTICIPANT_ROUTER } from "./config";
 import { watchForNewVersion } from "./lib/appVersion";
+import { errorCode, readApiError } from "./lib/errors/read";
 import { detectAndEmitPilotBlock } from "./lib/pilotBlock";
 
 // Gated at runtime by ENABLE_AGENTATION (config.ts), not at build time, so no
@@ -48,15 +50,40 @@ import { theme } from "./theme";
 // host-side mutations and fan out a level-3 modal. Detection is
 // copy-substring since we control both the backend body and the frontend
 // match — see lib/pilotBlock.ts.
+// The query layer's side of the error presenter (lib/errors): a mutation that handles
+// none of its own errors gets the friendly toast with its action, and a query whose
+// session ran out says so once, with a sign-in button. Screens that show an error inline
+// (ErrorNotice) pass `meta: { errorToast: false }` or their own onError.
 const queryClient = new QueryClient({
+	defaultOptions: {
+		queries: {
+			// A refused request (an ended session, a missing project, no access) answers the
+			// same way on every retry: say so at once instead of after three backoffs.
+			retry: (failures, error) => {
+				const status = readApiError(error).status;
+				if (
+					status &&
+					status >= 400 &&
+					status < 500 &&
+					![408, 429].includes(status)
+				)
+					return false;
+				return failures < 3;
+			},
+		},
+	},
 	mutationCache: new MutationCache({
-		onError: (error) => {
-			detectAndEmitPilotBlock(error);
+		onError: (error, _variables, _context, mutation) => {
+			if (detectAndEmitPilotBlock(error)) return;
+			if (mutation.options.onError) return;
+			if (mutation.meta?.errorToast === false) return;
+			void notifyError(error);
 		},
 	}),
 	queryCache: new QueryCache({
 		onError: (error) => {
 			detectAndEmitPilotBlock(error);
+			if (errorCode(error) === "auth.session_expired") void notifyError(error);
 		},
 	}),
 });

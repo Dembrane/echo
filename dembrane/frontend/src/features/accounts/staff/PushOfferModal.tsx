@@ -2,23 +2,19 @@ import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import {
-	ActionIcon,
 	Button,
 	Divider,
 	Group,
 	Modal,
-	NumberInput,
-	Paper,
 	SegmentedControl,
 	SimpleGrid,
 	Stack,
 	Text,
-	Textarea,
 	TextInput,
 } from "@mantine/core";
-import { TrashIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { AccountsApiError } from "../api/client";
 import { useAccountsMutation } from "../api/hooks";
 import { formatMoney } from "../format";
@@ -172,9 +168,7 @@ export function PushOfferModal({
 					</Button>
 				</Group>
 				{push.error && !Object.keys(fields).length && (
-					<Text size="sm" c="red">
-						{push.error.message}
-					</Text>
+					<ErrorNotice error={push.error} />
 				)}
 			</Stack>
 		</Modal>

@@ -1,4 +1,5 @@
 import { ValidationError } from "@dembrane/core";
+import { v } from "@dembrane/http";
 
 /**
  * Request validation that answers exactly like FastAPI with pydantic 2.12 in lax mode:
@@ -480,10 +481,10 @@ export function nested<S extends Shape>(m: Model<S>): Type<Infer<S>> {
 
 function fail(issues: Issue[]): never {
   // The body is the bare list, as FastAPI sends it.
-  throw new ValidationError(
-    "Request validation failed",
-    issues as unknown as Record<string, unknown>,
-  );
+  throw new ValidationError("validation.invalid_input", {
+    details: issues,
+    params: { fields: v.fieldProblems(issues as unknown as v.Issue[]) },
+  });
 }
 
 function collectParams<S extends Shape>(

@@ -65,7 +65,7 @@ export function sseResponse(
   opts: SseOptions = {},
 ) {
   if (!openStreams.take(opts.key, opts.maxStreams, opts.maxStreamsPerKey)) {
-    throw new RateLimitedError("Too many open streams. Try again later.");
+    throw new RateLimitedError("rate_limit.too_many_streams");
   }
   for (const [k, v] of Object.entries(HEADERS)) c.header(k, v);
   c.header("Content-Type", "text/event-stream");

@@ -33,7 +33,7 @@ export function privacyRoutes(deps: PrivacyRouteDeps) {
   /** Refuses before the lookup, so only staff learn whether an address has an account. */
   const gate = (c: Ctx) => {
     const who = requireUser(c);
-    if (!hasStaffPolicy(who, "staff:privacy")) throw new ForbiddenError("Staff-only");
+    if (!hasStaffPolicy(who, "staff:privacy")) throw new ForbiddenError("access.staff_only");
     return who;
   };
   const audit = (c: Ctx, action: string, userId: string, detail: Record<string, unknown>) =>
@@ -85,7 +85,7 @@ export function privacyRoutes(deps: PrivacyRouteDeps) {
       return c.json({ status: "dry_run", ...(await erasurePlan(store, person)) });
     }
     if ((body.confirm_email ?? "").trim().toLowerCase() !== person.email)
-      throw new BadRequestError("confirm_email must repeat the email to erase");
+      throw new BadRequestError("privacy.confirm_email_mismatch");
     await audit(c, "person.erase", person.id, { allow_orphan_orgs: body.allow_orphan_orgs });
     return c.json(
       await erasePerson({ store, files: deps.files, logger: deps.logger }, person, {

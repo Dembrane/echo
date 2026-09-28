@@ -1,22 +1,11 @@
-import { ForbiddenError, PlatformError, ValidationError } from "@dembrane/core";
-import { type Env, requireUser } from "@dembrane/http";
+import { ForbiddenError, StatusError, ValidationError } from "@dembrane/core";
+import { type Env, requireUser, v } from "@dembrane/http";
 import { type Issue, p } from "@dembrane/legacy-shape";
 import { Hono } from "hono";
 import type { ConversationsDeps } from "../deps";
 import { type StatelessInput, transcribeStateless } from "./service";
 
 const { str, bool, nullable } = p;
-
-/** A status with the Python API's detail text, for the few codes @dembrane/core does not name. */
-class StatusError extends PlatformError {
-  readonly code = "stateless";
-  constructor(
-    readonly status: number,
-    message: string,
-  ) {
-    super(message);
-  }
-}
 
 // The one purposes a caller may name to transcribe without a project to bill.
 const UNMETERED = ["pricing_intake", "issue_report"] as const;
@@ -84,7 +73,11 @@ async function readForm(req: Request) {
   }
   const f = form?.get("file");
   if (f instanceof File) file = new File([f], f.name, { type: fileType ?? f.type });
-  if (issues.length) throw new ValidationError("Request validation failed", issues as never);
+  if (issues.length)
+    throw new ValidationError("validation.invalid_input", {
+      details: issues,
+      params: { fields: v.fieldProblems(issues as never) },
+    });
   return {
     file,
     project_id: (values.project_id as string | null | undefined) ?? null,
@@ -110,7 +103,7 @@ export function statelessRoutes(d: ConversationsDeps) {
     const who = requireUser(c);
     const f = await readForm(c.req.raw);
     if (f.purpose !== null && !(UNMETERED as readonly string[]).includes(f.purpose))
-      throw new StatusError(422, `Unsupported purpose: ${f.purpose}`);
+      throw new StatusError(422, "upload.unsupported_purpose", { params: { purpose: f.purpose } });
     const purpose = f.purpose as (typeof UNMETERED)[number] | null;
     const input: StatelessInput = {
       projectId: f.project_id,
@@ -130,16 +123,21 @@ export function statelessRoutes(d: ConversationsDeps) {
           // person; staff alone may name neither.
           if (input.projectId) return;
           if (purpose) await d.limiter.check(PURPOSE_LIMITS[purpose], who.directusUserId);
-          else if (!who.isStaff) throw new ForbiddenError("project_id is required");
+          else if (!who.isStaff) throw new ForbiddenError("upload.project_required");
         },
         checkFile(file) {
           if (file.type && !ALLOWED_TYPES.some((t) => file.type.startsWith(t)))
-            throw new StatusError(400, `Unsupported content type: ${file.type}`);
-          if (file.size === 0) throw new StatusError(400, "Uploaded file is empty");
+            throw new StatusError(400, "upload.unsupported_type", {
+              message: `Unsupported content type: ${file.type}`,
+              params: { content_type: file.type },
+            });
+          if (file.size === 0) throw new StatusError(400, "upload.empty");
           if (file.size > MAX_BYTES)
-            throw new StatusError(413, `File size exceeds ${MAX_BYTES / 1024 / 1024}MB limit`);
+            throw new StatusError(413, "upload.too_large", {
+              message: `File size exceeds ${MAX_BYTES / 1024 / 1024}MB limit`,
+              params: { max_mb: MAX_BYTES / 1024 / 1024 },
+            });
         },
-        fail: (status, message) => new StatusError(status, message),
       }),
     );
   });

@@ -32,15 +32,14 @@ const s = (v: unknown): string | null => (v === null || v === undefined ? null :
 
 /** The signed-in person's app user id; 403 before onboarding, as get_app_user_or_raise. */
 function appUserOf(who: Signed): string {
-  if (!who.appUserId) throw new ForbiddenError("User not onboarded");
+  if (!who.appUserId) throw new ForbiddenError("access.not_onboarded");
   return who.appUserId;
 }
 
 async function requireOrgRole(d: AgentDeps, orgId: string, appUserId: string): Promise<string> {
   const role = await d.store.orgRole(orgId, appUserId);
-  if (role === null) throw new ForbiddenError("No access to this organisation");
-  if (role !== "admin" && role !== "owner")
-    throw new ForbiddenError("Organisation admins or owners only");
+  if (role === null) throw new ForbiddenError("organisation.no_access");
+  if (role !== "admin" && role !== "owner") throw new ForbiddenError("organisation.admin_only");
   return role;
 }
 
@@ -150,10 +149,7 @@ export function manageRoutes(d: AgentDeps, capture: Capture) {
     const appUserId = appUserOf(who(c));
     const requestId = c.req.param("id");
     const pending = await loadAuthorizeRequest(d, requestId);
-    if (!pending)
-      throw new NotFoundError(
-        "This authorisation request has expired. Start again from your agent.",
-      );
+    if (!pending) throw new NotFoundError("agent_access.request_expired");
     const scopes =
       Array.isArray(pending.scopes) && pending.scopes.length ? pending.scopes : [SCOPE_READ];
     return c.json({
@@ -179,9 +175,9 @@ export function manageRoutes(d: AgentDeps, capture: Capture) {
       },
     });
     const appUserId = appUserOf(signed);
-    if (!body.consent_accepted) throw new BadRequestError("The data risk notice must be accepted");
+    if (!body.consent_accepted) throw new BadRequestError("agent_access.risk_not_accepted");
     if (!(GRANT_EXPIRY_CHOICES_DAYS as readonly number[]).includes(body.expires_in_days))
-      throw new BadRequestError("Unsupported expiry");
+      throw new BadRequestError("agent_access.expiry_unsupported");
     const scopes = body.scopes.filter((x) => (VALID_SCOPES as readonly string[]).includes(x));
     if (!scopes.includes(SCOPE_READ)) scopes.unshift(SCOPE_READ);
     // Only orgs the person belongs to and that an admin has switched on.
@@ -189,8 +185,7 @@ export function manageRoutes(d: AgentDeps, capture: Capture) {
       (await myOrgs(d, appUserId)).filter((o) => o.agent_access_enabled).map((o) => o.id),
     );
     const orgIds = body.org_ids.filter((o) => allowed.has(o));
-    if (!orgIds.length)
-      throw new BadRequestError("Pick at least one organisation where agent access is switched on");
+    if (!orgIds.length) throw new BadRequestError("agent_access.no_enabled_organisation");
     let redirectUrl: string;
     try {
       redirectUrl = await approveAuthorizeRequest(d, {
@@ -203,7 +198,8 @@ export function manageRoutes(d: AgentDeps, capture: Capture) {
         consentVersion: CONSENT_VERSION,
       });
     } catch (err) {
-      if (err instanceof ExpiredRequest) throw new NotFoundError(err.message);
+      if (err instanceof ExpiredRequest)
+        throw new NotFoundError("agent_access.request_expired", { message: err.message });
       throw err;
     }
     await capture(signed.directusUserId, "agent_grant_created", {
@@ -219,7 +215,8 @@ export function manageRoutes(d: AgentDeps, capture: Capture) {
     try {
       return c.json({ redirect_url: await denyAuthorizeRequest(d, c.req.param("id")) });
     } catch (err) {
-      if (err instanceof ExpiredRequest) throw new NotFoundError(err.message);
+      if (err instanceof ExpiredRequest)
+        throw new NotFoundError("agent_access.request_expired", { message: err.message });
       throw err;
     }
   });
@@ -237,7 +234,7 @@ export function manageRoutes(d: AgentDeps, capture: Capture) {
     const appUserId = appUserOf(signed);
     const grant = await d.store.grant(c.req.param("id"));
     if (!grant || String(grant.app_user_id) !== appUserId)
-      throw new NotFoundError("Grant not found");
+      throw new NotFoundError("agent_access.grant_not_found");
     await d.store.revokeGrant(String(grant.id), d.now());
     await capture(signed.directusUserId, "agent_grant_revoked", { by: "owner" });
     return c.json({ status: "revoked" });
@@ -286,7 +283,7 @@ export function manageRoutes(d: AgentDeps, capture: Capture) {
     await requireOrgRole(d, orgId, appUserId);
     const grant = await d.store.grant(c.req.param("grant"));
     if (!grant || !(Array.isArray(grant.org_ids) && grant.org_ids.map(String).includes(orgId)))
-      throw new NotFoundError("Grant not found");
+      throw new NotFoundError("agent_access.grant_not_found");
     await d.store.revokeGrant(String(grant.id), d.now());
     await capture(signed.directusUserId, "agent_grant_revoked", { by: "org_admin", org_id: orgId });
     return c.json({ status: "revoked" });

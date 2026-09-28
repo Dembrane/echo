@@ -30,6 +30,7 @@ import {
 	useDenyAuthorizeRequestMutation,
 	useSetOrgAgentAccessMutation,
 } from "@/components/agent-access/hooks";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 
 const DEFAULT_EXPIRY_DAYS = 90;
@@ -215,11 +216,7 @@ export const AgentConsentRoute = () => {
 								Start again from your agent. It will open a fresh request here.
 							</Trans>
 						</Text>
-						{error && !expired && (
-							<Alert color="red" variant="light">
-								{error.message}
-							</Alert>
-						)}
+						{error && !expired && <ErrorNotice error={error} />}
 						<Group>
 							<Button
 								variant="subtle"

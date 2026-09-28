@@ -1,4 +1,5 @@
 import type { Access } from "@dembrane/access";
+import { NotFoundError } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { type Env, requireUser } from "@dembrane/http";
 import { p } from "@dembrane/legacy-shape";
@@ -127,7 +128,7 @@ export function analysisRoutes(deps: AnalysisRoutesDeps) {
 
   app.post(`${BASE}/projects/:project_id/objects/:object_id/revisions`, async (c) => {
     // The Present flag is a route dependency in the Python: it answers before anything else.
-    if (!d.enablePresent) return c.json({ detail: "Not found" }, 404);
+    if (!d.enablePresent) throw new NotFoundError("analysis.feature_disabled");
     const who = requireUser(c);
     const { body } = await p.validate(c.req, { body: revisionEditBody });
     return c.json(
@@ -142,7 +143,7 @@ export function analysisRoutes(deps: AnalysisRoutesDeps) {
   });
 
   app.post(`${BASE}/projects/:project_id/objects/:object_id/rollback`, async (c) => {
-    if (!d.enablePresent) return c.json({ detail: "Not found" }, 404);
+    if (!d.enablePresent) throw new NotFoundError("analysis.feature_disabled");
     const who = requireUser(c);
     const { body } = await p.validate(c.req, {
       body: model({
@@ -164,7 +165,7 @@ export function analysisRoutes(deps: AnalysisRoutesDeps) {
   });
 
   app.post(`${BASE}/projects/:project_id/objects/:object_id/membership`, async (c) => {
-    if (!d.enablePresent) return c.json({ detail: "Not found" }, 404);
+    if (!d.enablePresent) throw new NotFoundError("analysis.feature_disabled");
     const who = requireUser(c);
     const { body } = await p.validate(c.req, {
       body: model({

@@ -23,6 +23,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { call } from "../api/client";
 import { accountKeys, useDocument, usePdfData } from "../api/hooks";
@@ -195,7 +196,7 @@ function Editor() {
 			setDirty(false);
 			toast.success(t`Fields saved`);
 		} catch (e) {
-			toast.error(e instanceof Error ? e.message : t`Saving failed`);
+			void notifyError(e);
 		} finally {
 			setBusy(null);
 		}
@@ -209,7 +210,7 @@ function Editor() {
 			toast.success(t`Sent. The customer has a signing task.`);
 			navigate(`/admin/accounts/${orgId}`);
 		} catch (e) {
-			toast.error(e instanceof Error ? e.message : t`Sending failed`);
+			void notifyError(e);
 		} finally {
 			setBusy(null);
 		}

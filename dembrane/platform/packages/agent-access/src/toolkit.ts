@@ -148,7 +148,7 @@ function isoBound(value: string, name: string): string {
   const m = ISO_DATE.test(t) ? t.match(/^(\d{4})-?(\d{2})-?(\d{2})/) : null;
   const [y, mo, day] = m ? [Number(m[1]), Number(m[2]), Number(m[3])] : [0, 0, 0];
   const real = m && new Date(Date.UTC(y, mo - 1, day)).getUTCDate() === day && mo >= 1 && mo <= 12;
-  if (!real) throw new BadRequestError(`${name} must be an ISO 8601 date or datetime`);
+  if (!real) throw new BadRequestError("agent_access.invalid_date", { params: { name } });
   return t;
 }
 

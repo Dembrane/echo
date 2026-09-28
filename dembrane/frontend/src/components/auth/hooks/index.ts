@@ -5,8 +5,8 @@ import { useLocation, useSearchParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { emitAuthCacheBoundary } from "@/lib/authCacheBoundary";
 import {
+	AuthError,
 	hasSession,
 	requestPasswordReset,
 	resetPassword,
@@ -15,8 +15,10 @@ import {
 	signOut,
 	verifyEmail,
 } from "@/lib/auth";
+import { emitAuthCacheBoundary } from "@/lib/authCacheBoundary";
+import { ensureOk } from "@/lib/errors/read";
 import { isAuthPath } from "../utils/authPaths";
-import { throwWithMessage } from "../utils/errorUtils";
+import { describeAuthError } from "../utils/errorUtils";
 
 const buildLoginQuery = ({
 	next,
@@ -63,19 +65,11 @@ export const useResetPasswordMutation = () => {
 			token: string;
 			password: string;
 		}) => {
-			try {
-				await resetPassword(token, password);
-				return true;
-			} catch (e) {
-				throwWithMessage(e);
-			}
+			await resetPassword(token, password);
+			return true;
 		},
 		onError: (e) => {
-			try {
-				toast.error(e.message);
-			} catch (_e) {
-				toast.error("Error resetting password. Please contact support.");
-			}
+			toast.error(describeAuthError(e));
 		},
 		onSuccess: () => {
 			toast.success("Password reset. Log in with your new password.");
@@ -88,15 +82,11 @@ export const useRequestPasswordResetMutation = () => {
 	const navigate = useI18nNavigate();
 	return useMutation({
 		mutationFn: async (email: string) => {
-			try {
-				await requestPasswordReset(email);
-				return true;
-			} catch (e) {
-				throwWithMessage(e);
-			}
+			await requestPasswordReset(email);
+			return true;
 		},
 		onError: (e) => {
-			toast.error(e.message);
+			toast.error(describeAuthError(e));
 		},
 		onSuccess: () => {
 			toast.success("Check your email for reset instructions.");
@@ -113,19 +103,14 @@ export const useVerifyMutation = (doRedirect = true) => {
 			// 15s ceiling: a hung API or proxy must not leave the page spinning.
 			const timeout = new Promise<never>((_, reject) =>
 				setTimeout(
-					() => reject(new Error("Verification timed out. Try again.")),
+					() =>
+						reject(
+							new AuthError("Verification timed out. Try again.", "TIMEOUT"),
+						),
 					15_000,
 				),
 			);
-			try {
-				const response = await Promise.race([
-					verifyEmail(data.token),
-					timeout,
-				]);
-				return response;
-			} catch (e) {
-				throwWithMessage(e);
-			}
+			return Promise.race([verifyEmail(data.token), timeout]);
 		},
 		// No toast here — the verify page shows the status inline, so a
 		// parallel toast is double-signalling. Errors surface via the
@@ -159,16 +144,8 @@ export const useRegisterMutation = () => {
 				headers: { "Content-Type": "application/json" },
 				method: "POST",
 			});
-			if (!res.ok) {
-				const data = await res.json().catch(() => ({}));
-				let message = "Registration failed. Please try again.";
-				if (typeof data.detail === "string") {
-					message = data.detail;
-				} else if (Array.isArray(data.detail) && data.detail.length > 0) {
-					message = data.detail[0].msg ?? message;
-				}
-				throw new Error(message);
-			}
+			// The page presents the error (field problems inline, the rest as a notice).
+			await ensureOk(res);
 		},
 	});
 };
@@ -228,7 +205,7 @@ export const useLogoutMutation = () => {
 				if (status === 401 || status === 403) {
 					return;
 				}
-				throwWithMessage(e);
+				throw e;
 			}
 		},
 		onError: (_error, { next, reason, doRedirect }) => {
