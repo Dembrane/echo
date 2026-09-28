@@ -13,16 +13,28 @@ export {
   MIN_TITLE_NODES,
   SelectionTooLarge,
   SelectionTooSmall,
+  type Transcript,
   titleLines,
   titleSelectionKey,
 } from "./maprecipe";
 export * from "./mapview";
+export * as popcornShared from "./popcorn-shared";
 export {
   ASSESSMENT_RECIPE_ID,
   countConversationsWithTranscripts,
+  POPCORN_SOURCES_KEY,
+  type PopcornSources,
+  PRODUCERS_KEY,
+  type ProducerServices,
   recordAssessment,
 } from "./recipes";
 export { dataBlock, jsonFromText } from "./recipes/model";
+export {
+  type ConversationPhrases,
+  phraseRecords,
+  RECIPE_ID as POPCORN_RECIPE_ID,
+  scopeKeyFor as popcornScopeKey,
+} from "./recipes/popcorn";
 export * from "./registry";
 export { type AnalysisRoutesDeps, analysisRoutes } from "./routes";
 export * from "./runtime";

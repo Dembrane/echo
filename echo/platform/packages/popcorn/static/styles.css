@@ -1,0 +1,1425 @@
+/* popcorn — live session slides
+   dembrane brand: parchment ground, graphite ink, institution blue,
+   bright accents used categorically (one marker per conversation).
+   DM Sans everywhere, body weight 300, radius 0, hairline rules. */
+
+@font-face {
+  font-family: "DM Sans Local";
+  src: local("DM Sans");
+  font-weight: 100 900;
+}
+
+:root {
+  --parchment: #F6F4F1;
+  --brand-grey: #EAE8E5;
+  --graphite: #2D2D2C;
+  --blue: #4169E1;
+  --hairline: #E6E3DF;
+  --ink-soft: rgba(45, 45, 44, 0.62);
+  --ink-faint: rgba(45, 45, 44, 0.38);
+  --text-weight: 320;
+  --text-leading: 1.42;
+  --display-leading: 1.15;
+
+  /* categorical markers — assigned per transcript, never semantic */
+  --m0: #00FFFF;
+  --m1: #1EFFA1;
+  --m2: #FFC2FF;
+  --m3: #F4FF81;
+  --m4: #FFD166;
+  --m5: #FF9AA2;
+
+  /* pinned: these never follow the theme, because what they colour is an
+     object in the room rather than a surface of the page. */
+  /* graphite on a bright marker: a highlighted phrase is a sticky note, and a
+     sticky note does not invert when the lights go down */
+  --on-marker: #2D2D2C;
+  /* a filled blue surface keeps the brand blue with parchment on it. Only blue
+     used as text or as a thin line lifts on dark. */
+  --blue-fill: #4169E1;
+  --on-blue: #F6F4F1;
+
+  /* the QR card and the modules drawn on it. The pair turns over with the
+     room; the card's padding is the code's quiet zone, so it always carries
+     the colour the modules sit on. */
+  --qr-card: #F6F4F1;
+  --qr-ink: #2D2D2C;
+
+  /* the raised card over the ground: white on parchment, one step up on dark */
+  --paper: #FFFFFF;
+  /* a stakeholder card for a group that spoke for itself */
+  --card-voiced: #FFFFFF;
+  /* the kind legend asks for --ink; it is the page's ink by another name */
+  --ink: var(--graphite);
+
+  --font: "DM Sans Local", "DM Sans", system-ui, sans-serif;
+  --pad-x: clamp(24px, 4vw, 72px);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  font-family: var(--font);
+  font-weight: var(--text-weight);
+  font-feature-settings: "ss01" 1, "ss02" 1, "ss03" 1, "ss04" 1, "ss05" 1, "ss06" 1;
+  background: var(--parchment);
+  color: var(--graphite);
+  font-size: clamp(16px, 1.35vw, 21px);
+  line-height: var(--text-leading);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+.session-notice { flex-shrink: 0; padding: .55em var(--pad-x); background: var(--blue-fill); color: var(--on-blue); font-size: .85em; }
+.session-notice[hidden] { display: none; }
+.session-notice button { font: inherit; color: inherit; background: none; border: none; text-decoration: underline; cursor: pointer; margin-left: 1em; }
+.popcorn-intro { width: 100vw; height: 100dvh; max-width: none; max-height: none; border: none; padding: var(--pad-x); background: var(--parchment); color: var(--graphite); font: inherit; }
+.popcorn-intro::backdrop { background: var(--parchment); }
+.intro-content { max-width: 52em; margin: auto; min-height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 1.4em; }
+.intro-eyebrow { color: var(--blue); text-transform: uppercase; letter-spacing: .12em; font-size: .8em; }
+.intro-content h1 { font-size: clamp(2rem, 5vw, 4.5rem); font-weight: 400; line-height: var(--display-leading); max-width: 15em; }
+.intro-subtitle { font-size: 1.4em; max-width: 32em; }
+.intro-content > p { max-width: 43em; }
+.intro-source { border-top: 1px solid var(--hairline); padding-top: 1em; font-size: .85em; }
+.intro-continue { font: inherit; background: var(--blue-fill); color: var(--on-blue); border: none; border-radius: 9999px; padding: .8em 1.6em; cursor: pointer; transition: background-color .15s ease; }
+.intro-continue:hover { background: var(--graphite); color: var(--on-blue); }
+.popcorn-intro { overflow-y: auto; }
+/* A host who may edit types straight into the opening's words. Outlines and a
+   wash only, so the words sit exactly where the room will see them. */
+.popcorn-intro [data-edit] { cursor: text; border-radius: .2em; outline: 1px dashed transparent; outline-offset: .3em; transition: outline-color .15s ease, background-color .15s ease; }
+/* With an editable heading the screen itself takes the resting focus: no ring around the page. */
+.popcorn-intro .intro-content:focus-visible { outline: none; }
+/* An empty optional field, shown to an editing host only: the words are drawn here, never in the text. */
+.popcorn-intro [data-edit][data-placeholder]:empty::before { content: attr(data-placeholder); opacity: .45; }
+.popcorn-intro [data-edit]:hover { outline-color: color-mix(in srgb, currentColor 35%, transparent); }
+.popcorn-intro [data-edit]:focus { outline: 2px solid var(--blue); background: color-mix(in srgb, currentColor 6%, transparent); white-space: pre-wrap; }
+.intro-data { max-width: 64em; justify-content: flex-start; padding: 1.5em 0; }
+.intro-data h1 { font-size: clamp(1.8rem, 3.4vw, 3.2rem); max-width: 22em; }
+.data-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.6em; counter-reset: step; }
+.data-steps li { display: flex; flex-direction: column; gap: .6em; counter-increment: step; }
+.data-steps img { width: 100%; max-width: 13em; height: auto; aspect-ratio: 1; }
+.data-steps p::before { content: counter(step) ". "; color: var(--blue); }
+.data-notes { border-top: 1px solid var(--hairline); padding-top: 1em; font-size: .85em; max-width: 52em; }
+.data-notes p + p { margin-top: .4em; }
+@media (max-width: 720px) {
+  .data-steps { grid-template-columns: 1fr; }
+  .data-steps li { flex-direction: row; align-items: center; }
+  .data-steps img { width: 6.5em; flex: none; }
+}
+.qr-panel a { display: flex; flex-direction: column; align-items: center; color: inherit; }
+.pop-disclaimer-note { display: block; margin-top: .4em; }
+@media print { .session-notice { color: var(--graphite); border: 2px solid var(--graphite); } }
+
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+/* ---------- chrome ---------- */
+
+.topbar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2em;
+  padding: 0.9em var(--pad-x) 0;
+  border-bottom: 1px solid var(--hairline);
+  flex: none;
+}
+
+/* The Present shell owns the persistent frame: navigation, notice, QR and
+   footer. Its deck iframe renders only the stage; standalone pages retain
+   their complete original chrome. */
+.present-shell .topbar { display: none; }
+.present-shell .session-notice,
+.present-shell .colophon,
+.present-shell .qr-panel { display: none; }
+/* Inside the shell the deck is no longer a page of its own: it is the content
+   of a frame whose header, footer and map tab all sit at
+   `--audience-pad-x: clamp(12px, 2vw, 36px)`. Repeat that value here so the
+   first word of a slide starts under the first word of the header. The deck's
+   iframe is flush to the left edge of the window, so the two agree exactly
+   whenever the iframe is as wide as the window; with the QR card open the
+   iframe is narrower and its `2vw` is a little smaller, off by a few pixels
+   in the middle of the clamp. Closing that gap would mean the shell passing
+   its own measured inset in. */
+.present-shell { --pad-x: clamp(12px, 2vw, 36px); }
+
+.session-id { display: flex; flex-direction: column; padding-bottom: 0.8em; min-width: 0; }
+.session-title { font-weight: 500; font-size: 0.85em; letter-spacing: 0.01em; white-space: nowrap; }
+.session-meta { font-size: 0.7em; color: var(--ink-soft); }
+
+.tabs { display: flex; gap: clamp(0.8em, 2vw, 2em); overflow-x: auto; }
+
+.tab {
+  appearance: none;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font: inherit;
+  font-size: 0.85em;
+  font-weight: 400;
+  color: var(--ink-soft);
+  padding: 0.5em 0.1em 0.9em;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.tab:hover { color: var(--graphite); }
+.tab[aria-selected="true"] {
+  color: var(--blue);
+  font-weight: 500;
+  border-bottom-color: var(--blue);
+}
+
+/* host controls in the tab row: quiet, royal, only on hover */
+.tab-wrap { position: relative; display: inline-flex; align-items: stretch; }
+/* Out of the flow, so the row measures exactly as the public deck; same
+   padding and 3px rule as the tab, so the × sits on the label's baseline. */
+body.presenting .pop-sourced { cursor: default; }
+body.presenting .tail-sourced { cursor: default; }
+body.presenting .tail-sourced:hover { outline: none; }
+
+.stage {
+  flex: 1;
+  overflow-y: auto;
+  padding: clamp(20px, 3vh, 44px) var(--pad-x) clamp(28px, 4vh, 56px);
+}
+/* popcorn slide: the stage owns the full fold, the long tail starts 100% below it;
+   the scroll snaps to its three beats (stage, stage with keys, settings) */
+.stage.stage-flush { padding: 0; scroll-snap-type: y proximity; }
+/* deck tabs: a horizontal full-screen deck in the fold, list below it */
+.deck { position: relative; height: 100%; overflow: hidden; }
+.deck-track {
+  height: 100%;
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.deck-track::-webkit-scrollbar { display: none; }
+.deck-slide {
+  flex: 0 0 100%;
+  min-width: 100%;
+  height: 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 0 calc(var(--pad-x) + 1vw);
+  overflow: hidden;
+}
+.deck-dots {
+  position: absolute;
+  bottom: 1.8em;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  max-width: 80vw;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.deck-dot {
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  background: var(--hairline);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.deck-dot:hover { background: var(--ink-faint); }
+.deck-dot.active, .deck-dot.active:hover { background: var(--blue); }
+.deck-tail { border-top: 1px solid var(--hairline); padding: 1.4em var(--pad-x) 1.6em; }
+
+.deck-eyebrow { font-size: 0.75em; font-weight: 600; letter-spacing: 0.03em; color: var(--ink-soft); margin-bottom: 1em; }
+.deck-headline { font-weight: 380; line-height: var(--display-leading); letter-spacing: -0.015em; }
+.deck-headline[data-size="xl"] { font-size: clamp(36px, 4.4vw, 72px); max-width: 22ch; }
+.deck-headline[data-size="lg"] { font-size: clamp(30px, 3.6vw, 58px); max-width: 28ch; }
+.deck-headline[data-size="md"] { font-size: clamp(24px, 2.8vw, 46px); max-width: 36ch; }
+.deck-desc { font-size: clamp(18px, 1.7vw, 28px); color: var(--ink-soft); max-width: 56ch; margin-top: 1.2em; line-height: var(--text-leading); }
+.deck-so { margin-top: 1.8em; max-width: 52ch; }
+.deck-so .label { display: block; font-size: 0.85em; font-weight: 600; letter-spacing: 0.03em; color: var(--blue); margin-bottom: 0.3em; }
+.deck-so p { font-size: clamp(19px, 1.8vw, 30px); font-weight: var(--text-weight); line-height: var(--text-leading); }
+.deck-quotes { margin-top: 1.5em; display: flex; gap: 0.8em; flex-wrap: wrap; justify-content: center; }
+.bt-mark { color: var(--blue); }
+.row-glyph { color: var(--blue); font-weight: 300; }
+
+.colophon {
+  flex: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.55em var(--pad-x);
+  border-top: 1px solid var(--hairline);
+  font-size: 0.68em;
+  color: var(--ink-soft);
+}
+.wordmark { font-weight: 500; color: var(--graphite); }
+.colophon-left { display: flex; align-items: center; gap: 1.2em; }
+.progress-note { display: flex; align-items: center; gap: 0.6em; }
+.reset-data { appearance: none; background: none; border: none; font: inherit; color: var(--ink-faint); cursor: pointer; padding: 0; }
+.reset-data:hover { color: var(--blue); }
+
+/* full-window drop target */
+.drop-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(246, 244, 241, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+.drop-veil.show { opacity: 1; }
+.drop-veil p {
+  border: 2px dashed var(--blue);
+  color: var(--blue);
+  padding: 0.9em 1.8em;
+  font-size: clamp(26px, 2.8vw, 44px);
+  font-weight: 400;
+}
+
+/* pulsing dot while transcripts are still being read */
+.live-dot {
+  width: 0.55em; height: 0.55em;
+  background: var(--blue);
+  border-radius: 50%;
+  animation: breathe 1.6s ease-in-out infinite;
+}
+@keyframes breathe { 0%,100% { opacity: 0.25 } 50% { opacity: 1 } }
+
+/* ---------- shared slide furniture ---------- */
+
+.slide-head { max-width: 62ch; margin-bottom: clamp(1.2em, 3vh, 2.2em); }
+.slide-head h2 {
+  font-size: clamp(26px, 2.6vw, 40px);
+  font-weight: 380;
+  letter-spacing: -0.01em;
+  line-height: var(--display-leading);
+}
+.slide-note { color: var(--ink-soft); font-size: 0.85em; margin-top: 0.5em; }
+.slide-note em { color: var(--blue); font-style: normal; }
+
+.chip {
+  display: inline-block;
+  width: 0.62em; height: 0.62em;
+  background: var(--marker, var(--hairline));
+  flex: none;
+}
+.attribution {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  font-size: 0.72em;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.quote-link {
+  appearance: none;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4em;
+  max-width: 100%;
+  border: none;
+  padding: 0;
+  background: none;
+  font-family: inherit;
+  line-height: var(--text-leading);
+  text-align: left;
+  font-size: 0.72em;
+  font-weight: var(--text-weight);
+  color: var(--ink-soft);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+.quote-link .ql-mark { color: var(--blue); font-weight: 500; flex: none; }
+.quote-link:hover { color: var(--blue); text-decoration: none; }
+
+/* the big quote tooltip: a light speech bubble, veil dimming everything else */
+.quote-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 130;
+  background: rgba(45, 45, 44, 0.45);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+/* the veil holds the screen: it swallows every pointer event aimed at what is
+   behind it, and takes the click that dismisses */
+.quote-veil.show { opacity: 1; pointer-events: auto; cursor: pointer; }
+
+/* A quote is always this: a centred modal over a held screen. */
+.quote-tip {
+  position: fixed;
+  z-index: 140;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(30ch, calc(100vw - 3em));
+  background: #FFFFFF;
+  color: var(--graphite);
+  padding: 1.3em 1.6em 1.5em;
+  box-shadow: 0 24px 70px rgba(45, 45, 44, 0.22);
+  outline: none;
+  /* twice the old size: this popover is where a quote is read now, so it
+     carries the presence the retired quotes slide used to */
+  font-size: clamp(30px, 3.2vw, 54px);
+  font-weight: var(--text-weight);
+  line-height: 1.28;
+  letter-spacing: -0.012em;
+  /* closed, the modal must be fully absent: it sits centred over the stage,
+     so a merely-transparent box would swallow the pointer events meant for
+     whatever is beneath it */
+  pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.15s ease, visibility 0s 0.15s;
+  /* a very long quote on a short screen scrolls rather than overflowing */
+  max-height: calc(100vh - 3em);
+  overflow-y: auto;
+}
+.quote-tip.show {
+  pointer-events: auto;
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 0.15s ease, visibility 0s;
+}
+.quote-tip-close {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.7rem;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 0.32em;
+  line-height: 1;
+  cursor: pointer;
+}
+.quote-tip-close:hover { color: var(--graphite); background: var(--parchment); }
+.quote-tip-close:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+/* belt and braces on the freeze: no phrase animates behind a held screen */
+body:has(.quote-veil.show) .pop { animation-play-state: paused; }
+.quote-tip .attribution { margin-top: 0.6em; font-size: 0.42em; color: var(--ink-soft); }
+.quote-tip .quote-context {
+  margin-top: 0.5em; font-size: 0.38em; line-height: var(--text-leading);
+  color: var(--ink-soft); max-width: 46ch;
+}
+.quote-tip .quote-source {
+  display: inline-block; margin-top: 0.85em;
+  font-size: 0.36em; color: var(--blue); text-decoration: none;
+  border-bottom: 1px solid currentColor; padding-bottom: 0.1em;
+}
+.quote-tip .quote-source:hover { color: var(--graphite); }
+
+.empty-note { color: var(--ink-faint); font-size: 0.9em; }
+
+/* ---------- shared chrome: search bars and the deck's close button ----------
+   (named for the quotes slide that first used them; every searchable tab and
+   every deck now shares them) */
+
+.quote-tools { display: flex; align-items: center; gap: 1.5em; margin-bottom: clamp(1.2em, 3vh, 2em); }
+.quote-search {
+  flex: 1;
+  max-width: 34ch;
+  font: inherit;
+  font-size: 0.95em;
+  color: var(--graphite);
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--graphite);
+  padding: 0.35em 0.1em;
+}
+.quote-search::placeholder { color: var(--ink-faint); }
+.quote-count { font-size: 0.75em; color: var(--ink-soft); }
+.quote-unpin {
+  position: absolute;
+  top: 0.6em;
+  right: 0.9em;
+  appearance: none;
+  background: none;
+  border: none;
+  font: inherit;
+  font-size: 1.1em;
+  color: var(--ink-soft);
+  cursor: pointer;
+  padding: 0.3em;
+}
+.quote-unpin:hover { color: var(--blue); }
+
+/* ---------- popcorn ---------- */
+
+/* the fold: the stage pinned at the top while the keys strip, in flow after
+   it, slides up over its foot on the first scroll */
+.pop-fold { height: calc(100% + var(--keys-h, 120px)); scroll-snap-align: start; }
+.popcorn {
+  position: sticky;
+  top: 0;
+  height: calc(100% - var(--keys-h, 120px));
+  overflow: hidden;
+}
+
+.pop-stage { position: absolute; inset: 0; }
+
+/* host only: an unverified phrase opens the passage behind it */
+.pop-sourced { cursor: help; }
+.tail-sourced, .tail-rooted { cursor: pointer; }
+.tail-sourced:hover, .tail-rooted:hover { outline: 1px solid var(--blue); outline-offset: 2px; }
+.source-kicker { font-size: 0.72em; color: var(--ink-faint); letter-spacing: 0.02em; margin-bottom: 0.6em; }
+.source-phrase { font-weight: 500; margin-bottom: 0.7em; }
+.source-text { font-size: 0.9em; }
+
+/* the room's way in: the portal QR, floating over the whole deck, bottom
+   right, foldable to a chip; a scroll into the keys shrinks it, the weeds
+   hide it */
+.qr-panel {
+  position: fixed;
+  right: var(--pad-x);
+  bottom: 3.4em;
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45em;
+  padding: 0.7em 0.7em 0.55em;
+  /* the padding is the code's quiet zone, so the card is the colour the
+     modules are drawn on */
+  background: var(--qr-card);
+  color: var(--qr-ink);
+  border: 1px solid var(--hairline);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+  transform-origin: bottom right;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+.qr-panel.small { transform: scale(0.55); }
+.qr-panel.gone { opacity: 0; transform: scale(0.4); pointer-events: none; }
+.qr-panel.minimised { padding: 0; border: none; background: transparent; box-shadow: none; }
+.qr-image { display: block; width: clamp(96px, 12vw, 200px); height: auto; aspect-ratio: 1; pointer-events: none; }
+.qr-image svg { display: block; width: 100%; height: 100%; }
+/* the server draws the modules as one stroked path and leaves the field
+   transparent, so the card's ink colours them in either room. The white disc
+   it puts behind the logomark is a circle, not a path, and stays light. */
+.qr-image svg path { stroke: var(--qr-ink); }
+/* the label and the fold button sit on the card, so they carry its ink */
+.qr-label { font-size: 0.72em; color: var(--qr-ink); opacity: 0.62; letter-spacing: 0.01em; white-space: nowrap; }
+.qr-min {
+  position: absolute; top: 0.15em; right: 0.25em;
+  border: none; background: transparent; color: var(--qr-ink); opacity: 0.38; font: inherit; font-size: 1em; line-height: 1;
+  padding: 0.1em 0.3em; cursor: pointer;
+}
+.qr-min:hover { opacity: 1; }
+.qr-chip {
+  border: 1px solid var(--hairline); background: var(--parchment); color: var(--ink-soft);
+  font: inherit; font-size: 0.72em; letter-spacing: 0.06em; padding: 0.45em 0.7em; cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+.qr-chip:hover { color: var(--graphite); }
+
+.stage-hint {
+  position: absolute;
+  bottom: 0.4em;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.68em;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
+/* the long tail below the fold: when, then every phrase so far */
+.pop-tail { border-top: 1px solid var(--hairline); padding: 1.4em var(--pad-x) 1.6em; }
+/* a small callout at the bottom of the popcorn tab's scroll */
+.pop-disclaimer {
+  display: block; margin: 2.2em 0 0.6em; max-width: 62ch;
+  padding: 0.7em 1em; border: 1px solid var(--hairline);
+  font-size: 0.78em; color: var(--ink-soft); background: var(--paper, #fff);
+}
+
+/* the keys strip: below the fold at rest, over the foot of the stage after
+   the first scroll, gone with the fold on the next */
+.pop-keys {
+  position: relative; z-index: 5; scroll-snap-align: end;
+  background: var(--parchment); border-top: 1px solid var(--hairline);
+  padding: 0.55em var(--pad-x) 0.35em;
+}
+.pop-tail { scroll-snap-align: start; }
+.pop-keys-hint { margin-left: auto; color: var(--ink-faint); }
+
+/* how the stage plays: one switch. Off, the popcorns play in the order they
+   were said, charcoal; on, shuffled with the conversations taking turns,
+   blue. The thumb carries the icon of the mode that is on; the label names it. */
+.pop-play { display: flex; align-items: center; flex-wrap: wrap; gap: 0.2em 1em; margin: 0; font-size: 0.78em; color: var(--ink-soft); }
+.pop-shuffle { display: inline-flex; align-items: center; gap: 0.55em; cursor: pointer; user-select: none; }
+.pop-shuffle input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+.pop-switch {
+  position: relative; display: inline-block; width: 3.4em; height: 1.75em; box-sizing: border-box;
+  border-radius: 1em; background: var(--graphite); transition: background 0.18s ease;
+}
+.pop-switch-thumb {
+  position: absolute; top: 0.18em; left: 0.18em; width: 1.39em; height: 1.39em; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--paper, #fff); color: var(--graphite); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  transition: left 0.18s ease, color 0.18s ease;
+}
+.pop-switch-icon { width: 0.95em; height: 0.95em; fill: currentColor; display: block; }
+.pop-switch-icon-off, .pop-switch-icon-on { display: none; line-height: 0; }
+.pop-shuffle input:not(:checked) + .pop-switch .pop-switch-icon-off { display: inline-flex; }
+.pop-shuffle input:checked + .pop-switch { background: var(--blue); }
+.pop-shuffle input:checked + .pop-switch .pop-switch-thumb { left: calc(100% - 1.39em - 0.18em); color: var(--blue); }
+.pop-shuffle input:checked + .pop-switch .pop-switch-icon-on { display: inline-flex; }
+.pop-shuffle input:focus-visible + .pop-switch { outline: 2px solid var(--blue); outline-offset: 2px; }
+.pop-shuffle-text { letter-spacing: 0.02em; color: var(--graphite); font-weight: 500; }
+.pop-shuffle input:checked ~ .pop-shuffle-text { color: var(--blue); }
+.pop-play-note { color: var(--ink-faint); margin-left: 0.4em; }
+
+/* the timeline: a histogram over the day. The track is cut into bins of
+   equal width; each bin stacks its popcorns as circles in their
+   conversations' colours. Circle size comes from the JS (--sq), sized to
+   the bin and to the tallest stack. */
+.pop-timeline { margin: 0 0 1.35em; }   /* room under the rule for the sitting labels */
+.tl-track { padding-bottom: 0.2em; }
+.tl-inner {
+  position: relative; display: flex; align-items: flex-end; width: 100%; min-height: 2.6em;
+  padding: 0.4em 0 0.3em; border-bottom: 1px solid var(--graphite);
+}
+.tl-bin { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column-reverse; align-items: center; gap: 1px; }
+/* a circle is a key: hover swells it, a click bounces it while its phrase pops on stage */
+.tl-dot {
+  appearance: none; border: none; padding: 0; cursor: pointer;
+  display: grid; place-items: center; width: var(--sq, 8px); height: var(--sq, 8px); border-radius: 50%; background: var(--marker);
+  transition: scale 90ms ease;
+}
+
+.tl-dot:hover { scale: 1.5; position: relative; z-index: 2; }
+.tl-dot.popped { animation: dot-pop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1); }
+@keyframes dot-pop { 0% { scale: 1; } 50% { scale: 2.2; } 100% { scale: 1; } }
+.tl-dot.off { background: var(--hairline); }
+/* the ring says: this one is on the stage right now */
+.tl-dot.on { box-shadow: 0 0 0 2px var(--blue); }
+.tl-bin.out { opacity: 0.35; }
+.tl-time { position: absolute; top: 100%; margin-top: 0.3em; font-size: 0.68em; color: var(--ink-soft); white-space: nowrap; }
+/* the crop window: two handles on the track; the tint disappears when the
+   window is the whole session */
+.tl-window {
+  position: absolute; top: 0; bottom: 0; pointer-events: none;
+  background: rgba(65, 105, 225, 0.07); border-left: 2px solid var(--blue); border-right: 2px solid var(--blue);
+}
+.tl-window.tl-window-all { background: none; border-color: var(--hairline); }
+/* the grip: a bar along the top of the window; drag it to move the whole window, length kept */
+.tl-grip { position: absolute; left: 0; right: 0; top: 0; height: 0.8em; pointer-events: auto; cursor: grab; touch-action: none;
+  background: var(--blue); opacity: 0.3; }
+.tl-grip:hover, .tl-grip:focus-visible { opacity: 0.6; }
+.tl-grip.dragging { opacity: 0.85; cursor: grabbing; }
+.tl-window.tl-window-all .tl-grip { display: none; }   /* the whole session is the window: nothing to move */
+.tl-handle {
+  position: absolute; top: 0; bottom: 0; width: 1.4em; pointer-events: auto;
+  cursor: ew-resize; touch-action: none;
+}
+.tl-handle::after {
+  content: ""; position: absolute; top: 50%; width: 6px; height: 1.4em; transform: translateY(-50%);
+  background: var(--blue);
+}
+.tl-window.tl-window-all .tl-handle::after { background: var(--graphite); opacity: 0.5; }
+.tl-handle[data-edge="start"] { left: -0.7em; }
+.tl-handle[data-edge="start"]::after { left: calc(0.7em - 3px); }
+.tl-handle[data-edge="end"] { right: -0.7em; }
+.tl-handle[data-edge="end"]::after { right: calc(0.7em - 3px); }
+.tl-handle:hover::after, .tl-handle.dragging::after, .tl-handle:focus-visible::after { height: 2em; }
+
+/* the list, grouped by conversation in time order */
+.pop-tables { display: flex; flex-direction: column; gap: 1.2em; padding-bottom: 1em; }
+.pop-table-name {
+  appearance: none; background: none; border: none; padding: 0; margin: 0 0 0.55em; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 0.5em; font: inherit;
+  font-size: 0.78em; font-weight: 500; letter-spacing: 0.04em; color: var(--ink-soft); text-align: left;
+}
+.pop-table-name:hover { color: var(--graphite); }
+.pop-table-name .chip { width: 0.75em; height: 0.75em; }
+.pop-table-meta { font-weight: var(--text-weight); letter-spacing: 0; color: var(--ink-faint); }
+.pop-table.hidden .pop-table-name, .pop-table.out .pop-table-name { color: var(--ink-faint); }
+.pop-table.hidden .pop-table-name .chip { background: var(--hairline); }
+.pop-table.hidden .tail-phrase, .tail-phrase.out { opacity: 0.4; }
+.pop-list { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.7em 1em; }
+.tail-phrase {
+  appearance: none; border: none; cursor: pointer; text-align: left;
+  background: var(--marker);
+  color: var(--on-marker);
+  font: inherit;
+  padding: 0.08em 0.35em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  font-size: clamp(15px, 1.2vw, 19px);
+  font-weight: var(--text-weight);
+  line-height: var(--text-leading);
+}
+.tail-phrase:hover { outline: 1px solid var(--graphite); outline-offset: 1px; }
+.tail-phrase[aria-pressed="true"] { background: var(--hairline); color: var(--ink-faint); text-decoration: line-through; }
+
+.pop {
+  position: absolute;
+  left: var(--x, 50%);
+  top: var(--y, 50%);
+  max-width: 80%;
+  text-align: center;
+  text-wrap: balance;   /* even lines, never a lone word on the last one */
+  transform: translate(-50%, -50%) rotate(var(--tilt, 0deg));
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+/* The entrance is a class the page takes off when it has played: left on the
+   element, it would start over each time a flip hands the animation back.
+   Linear overall: every stage of the pop carries its own easing. */
+.pop.pop-enter { z-index: 70; animation: pop-in var(--enter-ms, 1300ms) linear both; }
+.pop.center { max-width: 88%; }
+/* hover: hold, straighten, expand, and reveal the group */
+.pop:hover {
+  transform: translate(-50%, -50%) scale(1.1) rotate(0deg);
+  z-index: 60;
+}
+.pop-rooted { cursor: pointer; }
+.pop-att { display: block; margin-top: 0.55em; opacity: 0; transition: opacity 0.15s ease; }
+.pop-att .attribution { font-size: 0.78em; }
+.pop:hover .pop-att { opacity: 1; }
+.pop.pop-out {
+  opacity: 0;
+  transform: translate(-50%, -58%) rotate(var(--tilt, 0deg));
+  transition: opacity 0.9s ease, transform 0.9s ease;
+}
+.pop-phrase {
+  display: inline;
+  background: var(--marker);
+  /* the phrase and its icons ride the marker, so they keep graphite in both
+     themes; currentColor carries it into .pop-kind and .pop-translated */
+  color: var(--on-marker);
+  padding: 0.06em 0.3em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  font-weight: 420;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+.pop-words { white-space: pre-wrap; }
+/* A popcorn pops once per language. It squats, jumps off the screen and
+   turns over in the air; it is edge-on at the top, where the words change,
+   so it lands in the next language. */
+.pop.pop-flip {
+  z-index: 70;
+  animation: pop-flip var(--flip-ms, 620ms) linear both;
+}
+.pop-translated-wrap { white-space: nowrap; }
+.pop-translated { width: 0.8em; height: 0.8em; vertical-align: -0.06em; margin-left: 0.36em; fill: currentColor; opacity: 0.55; }
+.pop-translated-code { margin-left: 0.22em; font-size: 0.52em; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.6; vertical-align: 0.12em; }
+
+/* The kernel: what draws the eye to where a phrase is about to pop. */
+.pop-kernel {
+  position: absolute;
+  left: var(--x, 50%);
+  top: var(--y, 50%);
+  width: 0.7em;
+  aspect-ratio: 1;
+  pointer-events: none;
+  font-size: clamp(24px, 2.6vw, 42px);
+  background: var(--marker);
+  /* a slightly odd circle, not a perfect one, and no outline */
+  border-radius: 58% 42% 53% 47% / 46% 57% 43% 54%;
+  transform: translate(-50%, -50%) rotate(var(--tilt, 0deg));
+  animation: kernel var(--enter-ms, 1300ms) linear both;
+}
+.pop-kernel.center { font-size: clamp(32px, 3.6vw, 58px); }
+.screen-frozen .pop,
+.screen-frozen .pop-kernel { animation-play-state: paused; }
+/* one size for every phrase; a phrase steps down only to fit the stage */
+.pop .pop-phrase { font-size: clamp(24px, 2.6vw, 42px); }
+.pop[data-weight="1"] .pop-phrase { font-size: clamp(19px, 1.9vw, 30px); }
+.pop.center .pop-phrase { font-size: clamp(32px, 3.6vw, 58px); }
+.pop.center[data-weight="1"] .pop-phrase { font-size: clamp(26px, 2.8vw, 46px); }
+.pop .attribution { display: block; margin-top: 0.6em; justify-content: center; }
+
+/* The pop, after the host's storyboard, as percentages of --enter-ms (1300 ms):
+   0-8%    pop...          the kernel appears
+   8-46%   tension builds  it sits there and swells, twice, a little more
+   46-62%  wiggle!
+   62-74%  Explode!        the phrase bursts out of it, a little way off the
+                           screen (toned down once: it came at the room too hard)
+   74-90%  --- Land ---    back down, a squash
+   90-100% settled at its tilt */
+@keyframes kernel {
+  0%   { opacity: 0; transform: translate(-50%, -50%) rotate(var(--tilt, 0deg)) scale(0); animation-timing-function: cubic-bezier(0.2, 1.7, 0.4, 1); }
+  8%   { opacity: 1; transform: translate(-50%, -50%) rotate(var(--tilt, 0deg)) scale(1); animation-timing-function: ease-in-out; }
+  20%  { transform: translate(-50%, -50%) rotate(var(--tilt, 0deg)) scale(1.1); animation-timing-function: ease-in-out; }
+  27%  { transform: translate(-50%, -50%) rotate(var(--tilt, 0deg)) scale(1.02); animation-timing-function: ease-in-out; }
+  39%  { transform: translate(-50%, -50%) rotate(var(--tilt, 0deg)) scale(1.2); animation-timing-function: ease-in-out; }
+  46%  { transform: translate(-50%, -50%) rotate(var(--tilt, 0deg)) scale(1.12); }
+  50%  { transform: translate(-58%, -50%) rotate(calc(var(--tilt, 0deg) - 16deg)) scale(1.16); }
+  54%  { transform: translate(-42%, -53%) rotate(calc(var(--tilt, 0deg) + 14deg)) scale(1.2); }
+  58%  { transform: translate(-57%, -47%) rotate(calc(var(--tilt, 0deg) - 12deg)) scale(1.24); }
+  62%  { opacity: 1; transform: translate(-50%, -50%) rotate(var(--tilt, 0deg)) scale(1.3); animation-timing-function: cubic-bezier(0.12, 0.9, 0.2, 1); }
+  70%  { opacity: 0; transform: translate(-50%, -50%) rotate(var(--tilt, 0deg)) scale(4.5); }
+  100% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--tilt, 0deg)) scale(4.5); }
+}
+@keyframes pop-in {
+  0%   { opacity: 0; transform: translate(-50%, -50%) perspective(900px) translateZ(0) rotate(var(--tilt, 0deg)) scale(0.06); }
+  62%  { opacity: 0; transform: translate(-50%, -50%) perspective(900px) translateZ(0) rotate(var(--tilt, 0deg)) scale(0.06); animation-timing-function: cubic-bezier(0.12, 0.9, 0.2, 1); }
+  66%  { opacity: 1; }
+  74%  { opacity: 1; transform: translate(-50%, -52.5%) perspective(900px) translateZ(140px) rotate(calc(var(--tilt, 0deg) * 1.4)) scale(1.08); animation-timing-function: cubic-bezier(0.55, 0, 0.85, 0.4); }
+  90%  { transform: translate(-50%, -49.5%) perspective(900px) translateZ(0) rotate(var(--tilt, 0deg)) scale(1.03, 0.96); animation-timing-function: cubic-bezier(0.2, 1.4, 0.4, 1); }
+  100% { opacity: 1; transform: translate(-50%, -50%) perspective(900px) translateZ(0) rotate(var(--tilt, 0deg)) scale(1); }
+}
+/* FLLLLIP, popped: a neighbour goes off under the phrase and knocks it over.
+   No wind-up. 0-6% the knock (a jolt and a kick of rotation), 6-36% thrown up
+   off the screen, most of the height and most of the turn at once, tumbling
+   top over bottom to edge-on, where the words change; 36-68% down hard on the
+   other side, a squash and an over-lean; 68-100% a little hop and it settles.
+   It stays where it is on the stage. --flip-dir picks which way it tumbles and
+   --kick how it was knocked, both at random per flip, so a stage of phrases
+   never flips in step. The tilt crosses over: the back of a tilted card leans
+   the other way. */
+@keyframes pop-flip {
+  0% { transform: translate(-50%, -50%) perspective(1100px) translateZ(0px) rotate(calc(var(--tilt, 0deg) * 1)) rotateX(0deg) scale(1); animation-timing-function: cubic-bezier(0.3, 0, 0.1, 1); }
+  6% { transform: translate(-50%, -49.4%) perspective(1100px) translateZ(0px) rotate(calc(var(--tilt, 0deg) * 1 + var(--kick, 0deg) * 1)) rotateX(0deg) scale(1.1, 0.86); animation-timing-function: cubic-bezier(0.08, 0.82, 0.25, 1); }
+  22% { transform: translate(-50%, -54%) perspective(1100px) translateZ(215px) rotate(calc(var(--tilt, 0deg) * 0.55 + var(--kick, 0deg) * 0.6)) rotateX(calc(64deg * var(--flip-dir, 1))) scale(1.14); animation-timing-function: linear; }
+  36% { transform: translate(-50%, -56%) perspective(1100px) translateZ(280px) rotate(calc(var(--tilt, 0deg) * 0.1)) rotateX(calc(90deg * var(--flip-dir, 1))) scale(1.1); animation-timing-function: step-end; }
+  36.01% { transform: translate(-50%, -56%) perspective(1100px) translateZ(280px) rotate(calc(var(--tilt, 0deg) * -0.1)) rotateX(calc(-90deg * var(--flip-dir, 1))) scale(1.1); animation-timing-function: linear; }
+  48% { transform: translate(-50%, -55%) perspective(1100px) translateZ(262px) rotate(calc(var(--tilt, 0deg) * -0.5)) rotateX(calc(-52deg * var(--flip-dir, 1))) scale(1.08); animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.45); }
+  68% { transform: translate(-50%, -49%) perspective(1100px) translateZ(0px) rotate(calc(var(--tilt, 0deg) * -1.5 + var(--kick, 0deg) * -0.5)) rotateX(0deg) scale(1.12, 0.84); animation-timing-function: cubic-bezier(0.08, 0.82, 0.25, 1); }
+  79% { transform: translate(-50%, -51.6%) perspective(1100px) translateZ(46px) rotate(calc(var(--tilt, 0deg) * -0.8)) rotateX(0deg) scale(0.97, 1.05); animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.45); }
+  90% { transform: translate(-50%, -49.7%) perspective(1100px) translateZ(0px) rotate(calc(var(--tilt, 0deg) * -1.12)) rotateX(0deg) scale(1.04, 0.95); animation-timing-function: ease-out; }
+  100% { transform: translate(-50%, -50%) perspective(1100px) translateZ(0px) rotate(calc(var(--tilt, 0deg) * -1)) rotateX(0deg) scale(1); }
+}
+
+/* the count to the first popcorn, then a spinner if it is late */
+.popcorn-waiting .countdown { font-size: clamp(64px, 9vw, 160px); font-weight: 300; line-height: 1; color: var(--graphite); display: inline-block; animation: count-in 0.5s cubic-bezier(0.2, 1.4, 0.4, 1); }
+@keyframes count-in { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }
+.popcorn-waiting .spinner { display: inline-block; width: 0.8em; height: 0.8em; border: 2px solid var(--hairline); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.9s linear infinite; vertical-align: -0.1em; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.popcorn-waiting {
+  position: absolute;
+  left: 50%; top: 45%;
+  transform: translate(-50%, -50%);
+  color: var(--ink-faint);
+  font-size: clamp(22px, 2.4vw, 36px);
+  font-weight: 300;
+  white-space: nowrap;
+}
+
+
+/* ---------- recommendations ---------- */
+
+details.theme-block { border-top: 1px solid var(--graphite); }
+details.theme-block:first-of-type { border-top: none; }
+details.theme-block:last-of-type { border-bottom: 1px solid var(--graphite); }
+.recommendation-tools { margin-bottom: clamp(1.5em, 3.6vh, 2.4em); }
+summary.theme-title {
+  display: flex;
+  align-items: baseline;
+  gap: 1em;
+  padding: clamp(0.5em, 1.6vh, 0.8em) 0;
+  cursor: pointer;
+  list-style: none;
+  font-size: clamp(22px, 2.2vw, 34px);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+summary.theme-title::-webkit-details-marker { display: none; }
+summary.theme-title:hover .theme-name { color: var(--blue); }
+.theme-count { color: var(--ink-faint); font-weight: 300; font-size: 0.55em; }
+.acc-mark { margin-left: auto; color: var(--blue); font-weight: 300; }
+.acc-mark::before { content: "+"; }
+details[open] .acc-mark::before { content: "−"; }
+.theme-body { padding: 0.3em 0 1.8em clamp(1.4em, 3.5vw, 3em); animation: acc-open 0.22s ease; }
+@keyframes acc-open { from { opacity: 0; transform: translateY(-6px); } }
+
+/* One uniform column of action rows. Only rows with supporting detail are
+   buttons; plain recommendations remain readable without implying a slide. */
+.action-list { display: flex; flex-direction: column; }
+.action-row {
+  border-top: 1px solid var(--hairline);
+  text-align: left;
+  width: 100%;
+  display: flex;
+  align-items: baseline;
+  gap: 1.5em;
+  padding: 0.55em 0;
+}
+button.action-row {
+  appearance: none;
+  background: none;
+  border-right: none;
+  border-bottom: none;
+  border-left: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.action-list > .action-row:first-child { border-top: none; }
+button.action-row:hover .action-sentence { color: var(--blue); }
+.action-sentence { font-size: clamp(21px, 1.9vw, 31px); font-weight: 400; line-height: 1.3; letter-spacing: -0.01em; }
+.action-sentence mark { background: var(--m3); color: var(--on-marker); padding: 0 0.1em; }
+.row-theme { margin-left: auto; font-size: 0.68em; color: var(--ink-faint); white-space: nowrap; }
+.recommendation-list .action-sentence {
+  flex: 1 1 42ch;
+  min-width: min(24ch, 100%);
+  max-width: 58ch;
+  font-size: clamp(18px, 1.6vw, 27px);
+  text-wrap: balance;
+}
+.recommendation-list .action-row { gap: 0.75em; }
+.recommendation-list .action-row::before {
+  content: "";
+  flex: none;
+  align-self: flex-start;
+  width: 0.48em;
+  height: 0.48em;
+  margin: 0.48em 0.08em 0;
+  background: var(--graphite);
+  transform: rotate(45deg);
+}
+.recommendation-list button.action-row::before { background: var(--blue); }
+.rec-row-meta {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.35em;
+}
+.rec-row-meta .row-theme { margin-left: 0; }
+.rec-meta-tag {
+  flex: none;
+  border: 1px solid var(--ink-faint);
+  padding: 0.12em 0.55em;
+  font-size: clamp(10px, 0.85vw, 13px);
+  font-weight: 380;
+  line-height: var(--display-leading);
+  color: rgba(45, 45, 44, 0.78);
+  white-space: nowrap;
+}
+
+/* the why / trade / pulls-against row on a recommendation slide */
+.rec-facts {
+  display: flex;
+  gap: clamp(1.5em, 4vw, 4em);
+  margin-top: 1.8em;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  text-align: left;
+}
+.rec-fact { max-width: 30ch; font-size: 0.92em; }
+.rec-fact .label { display: block; font-size: 0.72em; font-weight: 600; letter-spacing: 0.03em; color: var(--ink-soft); margin-bottom: 0.25em; }
+.rec-fact.trade { border-left: 3px solid var(--graphite); padding-left: 0.8em; }
+.rec-fact.pulls { border-left: 3px solid var(--blue); padding-left: 0.8em; }
+.rec-fact.pulls .label { color: var(--blue); }
+
+/* ---------- tensions ---------- */
+
+.deck-slide .tension-poles { width: 100%; }
+.tension-poles {
+  display: grid;
+  grid-template-columns: 1fr clamp(80px, 10vw, 200px) 1fr;
+  align-items: center;
+}
+.pole-block {
+  font-size: clamp(26px, 3vw, 50px);
+  font-weight: 420;
+  line-height: 1.2;
+  letter-spacing: -0.012em;
+  padding: 0.5em 0.75em;
+  max-width: 16ch;
+  transform: rotate(var(--tk, 0deg));
+  animation: pole-pull 3.4s ease-in-out infinite alternate;
+}
+.pole-a {
+  background: var(--graphite);
+  color: var(--parchment);
+  justify-self: end;
+  text-align: center;
+  --pull: -8px; --tk: -0.7deg;
+}
+.pole-b {
+  /* a filled pole: the brand blue, not the lifted one, with parchment on it */
+  background: var(--blue-fill);
+  color: var(--on-blue);
+  justify-self: start;
+  text-align: center;
+  --pull: 8px; --tk: 0.7deg;
+}
+@keyframes pole-pull {
+  from { transform: translateX(0) rotate(var(--tk, 0deg)); }
+  to   { transform: translateX(var(--pull, 0)) rotate(var(--tk, 0deg)); }
+}
+
+/* the rope: dashes march outward from the middle — the pull made visible */
+.rope { position: relative; height: 2px; margin: 0 0.6em; }
+.rope::before, .rope::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  height: 2px;
+  width: 50%;
+  background: repeating-linear-gradient(90deg, var(--graphite) 0 7px, transparent 7px 13px);
+  opacity: 0.5;
+}
+.rope::before { left: 0; animation: march-left 1.8s linear infinite; }
+.rope::after { right: 0; animation: march-right 1.8s linear infinite; }
+@keyframes march-left { to { background-position: -13px 0; } }
+@keyframes march-right { to { background-position: 13px 0; } }
+
+.tension-resolve { text-align: center; max-width: 46ch; margin: clamp(1.4em, 4vh, 2.6em) auto 0; }
+.tension-resolve .label { display: block; font-size: 0.85em; font-weight: 600; letter-spacing: 0.03em; color: var(--blue); margin-bottom: 0.3em; }
+.tension-resolve p { font-size: clamp(20px, 1.9vw, 31px); font-weight: var(--text-weight); line-height: var(--text-leading); }
+/* the knot: one line under the poles, what each side pays; the only
+   explanation the room gets, so it is set to be read from the back */
+.tension-knot { text-align: center; font-size: clamp(22px, 2.1vw, 34px); font-weight: var(--text-weight); line-height: var(--display-leading); max-width: 34ch; text-wrap: balance; margin: clamp(1.4em, 4vh, 2.6em) auto 0; }
+.tension-knot + .tension-resolve { margin-top: clamp(1em, 3vh, 1.8em); }
+.tension-quotes { margin-top: clamp(0.6em, 1.5vh, 1em); }
+
+/* custom slides (breakthroughs, insights, and whatever a facilitator defines)
+   render through the shared deck + list pattern */
+
+/* ---------- stakeholder map ---------- */
+
+.stake-map { position: relative; height: clamp(380px, 64vh, 640px); }
+
+/* The stakeholders slide gives the map and its key the whole visible stage:
+   the viewport minus the chrome that is actually on screen above and below it
+   (--deck-chrome, measured in app.js; zero in the Present shell, where the
+   topbar and colophon are hidden). The stage runs flush so the fold, not the
+   stage's padding, owns the spacing, and "who you could involve next" begins
+   exactly under the fold. */
+.stage.stage-fold { padding: 0; }
+.stake-fold {
+  height: calc(100vh - var(--deck-chrome, 0px));
+  height: calc(100dvh - var(--deck-chrome, 0px));
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(20px, 3vh, 44px) var(--pad-x) clamp(14px, 2vh, 28px);
+}
+/* the map takes whatever the key leaves; height: auto overrides the inline
+   dense height, min-height: 0 lets it shrink inside the flex column */
+.stake-fold .stake-map { flex: 1 1 auto; height: auto; min-height: 220px; }
+.stake-fold .flow-key { flex: none; }
+.stake-view .bring-in {
+  margin: 0;
+  padding: clamp(32px, 5vh, 72px) var(--pad-x) clamp(28px, 4vh, 56px);
+}
+.stake-map svg { position: absolute; inset: 0; }
+/* Line colour carries sentiment in five steps: hot red (strained) through
+   magenta, royal blue (neutral) and a bluish green to pure green (working),
+   looked up per relation in app.js (sentColor). Each is the brightest
+   colour of its hue that holds its contrast as a stroke on the parchment:
+   3.5:1 at the red end, the institution blue as it is, and 2.8:1 at the
+   green pole, a deliberate trade so the green pops as much as the red
+   does. Blue is kept to a sliver around zero; the two steps between lean
+   hard toward their pole. Line weight carries intensity, and a dashed line
+   means nobody owns the relation. All three are named in the legend, and
+   each relation is spelled out in words in its tooltip. */
+:root {
+  --flow-neutral: #4169E1;
+}
+.stake-line { stroke: var(--flow-neutral); stroke-width: var(--w, 1.5); fill: none; }
+/* an unowned relation is dashed: present, active, and nobody's job */
+.stake-line.rel-unowned { stroke-dasharray: 6 5; }
+
+/* inferred relationships are drawn lighter: a claim the analyst assembled,
+   not one anybody said out loud */
+.stake-line.rung-inferred { stroke-opacity: 0.45; }
+
+.stake-line-label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  background: var(--parchment);
+  color: var(--ink-soft);
+  font-size: 0.68em;
+  padding: 0.15em 0.5em;
+  max-width: 24ch;
+  text-align: center;
+}
+.stake-node {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  touch-action: none;
+  appearance: none;
+  --card: var(--brand-grey);
+  background: var(--card);
+  border: 1px solid var(--card);
+  padding: 0.7em 1em;
+  cursor: pointer;
+  font: inherit;
+  color: var(--graphite);
+  text-align: center;
+  max-width: 22ch;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15em;
+}
+/* The ladder of evidence, on the card itself. Fill says who spoke: white
+   for a group that spoke for itself, the brand grey for a group others
+   spoke about. An inferred group keeps the grey, marked by its tag and a
+   dotted inner rule. Nothing here filters, so an inferred group with a
+   high stake still survives to the coarsest view. */
+.stake-node.rung-voiced { --card: var(--card-voiced); }
+.stake-node.rung-inferred { outline: 1px dotted var(--ink-faint); outline-offset: -4px; }
+.stake-node.rung-inferred .stake-name { color: var(--ink-soft); }
+.stake-node .rung-mark {
+  position: absolute;
+  top: -0.62em;
+  right: 0.5em;
+  background: var(--parchment);
+  color: var(--ink-soft);
+  font-size: 0.58em;
+  letter-spacing: 0.03em;
+  padding: 0 0.35em;
+}
+.stake-node.rung-voiced .rung-mark { display: none; }
+.stake-node .rung-mark.invoked { color: var(--blue); }
+
+/* hover grows the card a touch; `scale` composes with the inline
+   translate that positions it, so the card swells in place */
+.stake-node { transition: scale 120ms ease; }
+.stake-node:hover { scale: 1.05; cursor: grab; }
+.stake-node:active { cursor: grabbing; }
+.stake-node.dim { opacity: 0.3; }
+.stake-name { font-size: clamp(17px, 1.5vw, 24px); font-weight: 420; line-height: var(--display-leading); letter-spacing: -0.01em; }
+
+/* dense mode (10+ groups): smaller chips and labels */
+.stake-map.dense .stake-node { padding: 0.45em 0.75em; max-width: 17ch; }
+.stake-map.dense .stake-name { font-size: clamp(15px, 1.15vw, 19px); }
+.stake-map.dense .stake-line-label { font-size: 0.62em; max-width: 18ch; padding: 0.1em 0.4em; }
+
+/* stake drives card size, so the coarse read is "who has the most riding on
+   this" rather than "who talked most" */
+.stake-name { font-size: calc(clamp(15px, 1.15vw, 19px) * var(--stake-scale, 1)); }
+
+/* ---------- who to bring in next ---------- */
+
+.bring-in { margin-top: 1.6em; border-top: 1px solid var(--hairline); padding-top: 1.1em; }
+.bring-in h3 {
+  font-size: 0.78em; font-weight: 420; letter-spacing: 0.04em;
+  color: var(--ink-soft); margin: 0 0 0.1em;
+}
+.bring-in .bring-why { font-size: 0.72em; color: var(--ink-soft); margin: 0 0 0.9em; max-width: 62ch; }
+.bring-in ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.55em; }
+.bring-in li { display: grid; grid-template-columns: 1.6em 1fr; gap: 0.6em; align-items: baseline; }
+.bring-in .bring-rank { color: var(--ink-faint); font-size: 0.85em; }
+.bring-in .bring-name { font-weight: 420; }
+.bring-in .bring-rung {
+  font-size: 0.68em; color: var(--ink-soft); border: 1px solid var(--hairline);
+  padding: 0 0.35em; margin-left: 0.5em; white-space: nowrap;
+}
+.bring-in .bring-rung.inferred { border-style: dotted; }
+.bring-in .bring-rung.invoked { color: var(--blue); border-color: var(--blue); }
+.bring-in .bring-note { display: block; font-size: 0.74em; color: var(--ink-soft); max-width: 68ch; }
+
+/* ---------- density slider ---------- */
+
+.map-tools { display: flex; align-items: center; gap: 0.8em; margin-bottom: 0.5em; }
+.map-tools label { font-size: 0.72em; color: var(--ink-soft); letter-spacing: 0.03em; }
+.map-tools input[type="range"] { width: 12em; accent-color: var(--blue); }
+.map-tools .map-count { font-size: 0.72em; color: var(--ink-faint); }
+
+/* ---------- flow legend ---------- */
+
+.flow-key { display: flex; flex-wrap: wrap; gap: 1.1em; margin: 0.7em 0 0; font-size: 0.68em; color: var(--ink-soft); }
+.flow-key span { display: inline-flex; align-items: center; gap: 0.4em; }
+.flow-key svg { display: block; }
+
+
+.rel-sentence { font-size: 0.9em; line-height: var(--text-leading); }
+.rel-why { font-size: 0.78em; color: var(--ink-soft); line-height: var(--text-leading); margin-top: 0.5em; }
+.rel-why .rel-quotes { display: flex; flex-wrap: wrap; gap: 0.35em; margin: 0.35em 0 0; }
+.rel-quotes { margin-top: 0.7em; display: flex; flex-wrap: wrap; gap: 0.35em; }
+.rel-quotes .quote-link { font-size: 0.66em; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ---------- small screens (preview / laptop) ---------- */
+
+@media (max-width: 900px) {
+  .topbar { flex-direction: column; align-items: flex-start; gap: 0; }
+  .tension-poles { grid-template-columns: 1fr; gap: 0.5em; }
+  .rope { display: none; }
+  .pole-a { justify-self: start; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pop.pop-enter { animation: none; }
+  .pop.pop-flip { animation: none; }
+  .pop-kernel { display: none; }
+  .pop.pop-out { transition: none; }
+  .live-dot { animation: none; opacity: 0.7; }
+  .pole-block { animation: none; }
+  .rope::before, .rope::after { animation: none; }
+  .theme-body { animation: none; }
+  .quote-tip, .quote-veil { transition: none; }
+  .stake-node { transition: none; }
+  .tl-dot { transition: none; animation: none; }
+}
+
+/* ---------- stakeholder relation slide ---------- */
+
+/* 16:9 is the normal case: identity column left, relations spread right.
+   The slide fills its frame; the identity column centres itself and stays
+   put, and the rows column scrolls on its own when an open row outgrows
+   the frame. */
+.rel-slide {
+  --col-gap: clamp(2.5em, 7vw, 7em);
+  display: grid;
+  grid-template-columns: minmax(16em, 2fr) minmax(0, 3fr);
+  gap: var(--col-gap);
+  align-items: center;
+  height: 100%; width: 100%;
+  max-width: 96em; margin: 0 auto; text-align: left;
+}
+/* The connector is drawn, not composed: one measured path per slide (see
+   drawRelConnector) runs from the headline's rule across the gap and turns
+   down the spine, which spans branch to branch and stretches only as far as
+   the trunk needs. Every coordinate is snapped to a device pixel and the
+   path renders with crispEdges, so the rules stay hairline sharp. */
+.rel-slide { position: relative; }
+.rel-id .deck-headline { padding-bottom: 0.45em; }
+.rel-connector {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  overflow: visible;
+  opacity: 0;
+  transition: opacity 0.26s cubic-bezier(0.25, 0.8, 0.3, 1);
+}
+/* the draw carries the entrance, so appearing is instant; only leaving fades */
+.rel-connector.on { opacity: 1; transition: none; }
+.rel-slide .rel-row-words { padding-left: 1em; }
+.rel-slide .rel-row-body { margin-left: 1em; }
+.rel-id {
+  align-self: stretch;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.rel-evidence {
+  margin-top: 0.8em;
+  font-size: clamp(13px, 1.2vw, 18px); color: var(--ink-soft);
+}
+.rel-slide .rel-rows { max-height: 100%; overflow-y: auto; padding: 0.5em 0; scrollbar-width: none; }
+.rel-slide .rel-rows::-webkit-scrollbar { display: none; }
+.rel-slide .deck-quotes { justify-content: flex-start; }
+@media (max-width: 900px) {
+  .rel-slide { display: block; height: auto; max-width: 46em; }
+  .rel-connector { display: none; }
+  .rel-slide .rel-row-words, .rel-slide .rel-row-body { padding-left: 0; margin-left: 0; }
+  .rel-id { display: block; }
+  .rel-slide .rel-rows { max-height: none; margin-top: clamp(1.6em, 4.5vh, 3em); }
+}
+.rel-row { padding: clamp(0.4em, 1.1vh, 0.8em) 0 clamp(0.55em, 1.5vh, 1em); }
+.rel-row-words {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 1.5em; margin-bottom: 0.3em;
+}
+.rel-row-other {
+  flex: none; font-size: clamp(19px, 2.1vw, 34px); font-weight: 380;
+  line-height: var(--display-leading);
+  color: var(--graphite); text-decoration: none;
+}
+.rel-row-other:hover { color: var(--blue); }
+.rel-row-line { display: block; width: 100%; }
+.rel-row.inferred .rel-row-line { opacity: 0.45; }
+
+
+/* relation rows expand in place */
+/* Tags keep to one line. When they outgrow their room they clip and scroll
+   sideways instead of wrapping, so a tag-heavy relation is never taller than
+   a plain one; the faded edge is the sign there is more to drag. */
+.rel-row-toggle {
+  appearance: none; border: none; background: none; padding: 0;
+  font: inherit; cursor: pointer;
+  display: flex; flex-wrap: nowrap; gap: 0.45em;
+  min-width: 0; overflow-x: auto;
+  scrollbar-width: none;
+}
+.rel-row-toggle::-webkit-scrollbar { display: none; }
+.rel-row-toggle.overflowing {
+  -webkit-mask-image: linear-gradient(to right, #000 82%, transparent);
+  mask-image: linear-gradient(to right, #000 82%, transparent);
+}
+.rel-tag { flex: none; }
+.rel-tag {
+  border: 1px solid var(--ink-faint);
+  padding: 0.12em 0.55em;
+  font-size: clamp(12px, 1.1vw, 17px); font-weight: 380;
+  color: rgba(45, 45, 44, 0.78);
+  white-space: nowrap;
+}
+.rel-row-toggle:hover .rel-tag, .rel-row-toggle:focus-visible .rel-tag { color: var(--blue); }
+.rel-row-body {
+  display: grid; grid-template-rows: 0fr;
+  visibility: hidden;
+  transition: grid-template-rows 0.38s cubic-bezier(0.25, 0.8, 0.3, 1), visibility 0s 0.38s;
+  max-width: 52ch;
+}
+.rel-row-body-in { overflow: hidden; min-height: 0; }
+.rel-row-body-content {
+  padding: 0.75em 0 0.5em;
+  transform: translateY(1.6em); opacity: 0;
+  transition: transform 0.38s cubic-bezier(0.25, 0.8, 0.3, 1), opacity 0.3s ease;
+}
+.rel-row-body.open {
+  grid-template-rows: 1fr;
+  visibility: visible;
+  transition: grid-template-rows 0.38s cubic-bezier(0.25, 0.8, 0.3, 1), visibility 0s;
+}
+.rel-row-body.open .rel-row-body-content { transform: none; opacity: 1; }
+.rel-row-body .rel-sentence { font-size: clamp(17px, 1.75vw, 28px); font-weight: var(--text-weight); }
+.rel-row-body .rel-why { font-size: clamp(14px, 1.4vw, 22px); color: var(--graphite); font-weight: var(--text-weight); }
+.rel-row-body .rel-quotes { margin-top: 0.35em; }
+.rel-row-body .rel-quotes .quote-link {
+  font-size: clamp(13px, 1.25vw, 19px);
+}
+
+
+/* theme accordions open with the same rising reveal (Chrome's animatable
+   details; other engines snap open, which is fine) */
+:root { interpolate-size: allow-keywords; }
+details.theme-block::details-content {
+  block-size: 0; overflow-y: clip;
+  transition: block-size 0.38s cubic-bezier(0.25, 0.8, 0.3, 1), content-visibility 0.38s allow-discrete;
+}
+details.theme-block[open]::details-content { block-size: auto; }
+details.theme-block[open] .theme-body { animation: rise-in 0.38s cubic-bezier(0.25, 0.8, 0.3, 1); }
+@keyframes rise-in {
+  from { transform: translateY(1.6em); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rel-row-body, .rel-row-body-content, details.theme-block::details-content { transition: none; }
+  details.theme-block[open] .theme-body { animation: none; }
+}
+
+/* the kind of a popcorn: an icon before the phrase (PROMPTS/popcorn-ontology.md) */
+.pop-kind { width: 1.07em; height: 1.07em; vertical-align: -0.14em; margin-right: 0.3em; fill: currentColor; opacity: 0.92; flex: none; }
+.tail-phrase .pop-kind { width: 1.17em; height: 1.17em; margin-right: 0.4em; }
+.kind-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 8px 0 4px; font-size: 12px; color: var(--ink-faint, #666); }
+.kind-key { display: inline-flex; align-items: center; gap: 4px; appearance: none; border: none; background: none; padding: 2px 4px; margin: 0;
+  font: inherit; color: inherit; cursor: pointer; border-radius: 2px; }
+.kind-key:hover { color: var(--ink, #1d1d1f); }
+.kind-key .pop-kind { width: 1.3em; height: 1.3em; margin: 0; opacity: 0.9; }
+.kind-key.only { color: var(--ink, #1d1d1f); background: var(--hairline, #e5e0d6); }
+.kind-key.except { color: var(--ink, #1d1d1f); background: var(--hairline, #e5e0d6); text-decoration: line-through; }
+.kind-key.except .pop-kind { opacity: 0.45; }
+.kind-key.dim { opacity: 0.45; }
+
+/* the icon's tooltip: the definition of the kind, on the icon only */
+.pop-kind-wrap { position: relative; display: inline-block; }
+.pop-kind-wrap::after { content: attr(data-tip); position: absolute; left: 50%; bottom: calc(100% + 0.45em); transform: translateX(-50%);
+  white-space: nowrap; font-size: clamp(11px, 0.8vw, 14px); font-weight: 400; line-height: 1.2; letter-spacing: 0; padding: 0.35em 0.6em;
+  background: var(--graphite, #1d1d1f); color: var(--parchment, #f7f4ee); border-radius: 2px; opacity: 0; pointer-events: none; transition: opacity 120ms; z-index: 5; }
+.pop-kind-wrap:hover::after { opacity: 1; }
+.pop-kind-wrap:hover .pop-kind { opacity: 1; }
+/* air between the colour chip and the name of the recording under a hovered popcorn */
+.pop .attribution .chip { margin-right: 0.6em; }
+
+/* the platform's tensions still carry a narrative paragraph until its prompt moves to the knot */
+.tension-narrative { text-align: center; color: var(--ink-soft); font-size: clamp(17px, 1.5vw, 24px); max-width: 60ch; margin: clamp(0.9em, 2.5vh, 1.6em) auto 0; }
+
+/* local development only: the footer's link to how popcorn works */
+.flow-link { margin-left: 1em; color: var(--ink-faint); text-decoration: none; border-bottom: 1px solid var(--hairline); }
+.flow-link:hover { color: var(--graphite); border-bottom-color: var(--graphite); }
+
+/* ---------- dark theme ----------
+   The host switches it on for the room; session.json carries
+   `theme: "light" | "dark"` and app.js writes it to <html data-theme>, so a
+   change lands on the next bundle read without a reload.
+
+   The tokens above are named for their colour and used for their role, and
+   the roles are what turn over: --parchment is the ground, --graphite is the
+   ink, whichever way round they are. So the names stay and the values swap.
+   Blue lifts to #7C9BFF wherever it is read as text or drawn as a hairline;
+   it stays #4169E1 (--blue-fill) wherever it is a filled surface with
+   parchment on it. The markers do not move at all. */
+
+:root[data-theme="dark"] {
+  --parchment: #1B1B1A;       /* the ground: a warm near-black, not a blue one */
+  --paper: #262625;           /* a card one step up off the ground */
+  --brand-grey: #2F2E2C;      /* a stakeholder card for a group spoken about */
+  --card-voiced: #44433E;     /* ...and the lighter one for a group that spoke */
+  --graphite: #F6F4F1;        /* the ink */
+  --ink-soft: rgba(246, 244, 241, 0.64);
+  --ink-faint: rgba(246, 244, 241, 0.40);
+  --hairline: #3A3A38;
+  --blue: #7C9BFF;            /* blue as text and as a line, lifted to clear */
+  --flow-neutral: #7C9BFF;    /* the neutral stakeholder line */
+  --qr-card: #1B1B1A;         /* the QR turns over too: light modules... */
+  --qr-ink: #F6F4F1;          /* ...on the dark card that is their quiet zone */
+}
+
+/* the continue button is filled blue; on dark its hover lifts rather than
+   going to ink, which would now be parchment */
+:root[data-theme="dark"] .intro-continue:hover { background: var(--blue); color: var(--on-marker); }
+
+/* the veils, the modal and the drop target all assumed a light page */
+:root[data-theme="dark"] .drop-veil { background: rgba(27, 27, 26, 0.9); }
+:root[data-theme="dark"] .quote-veil { background: rgba(0, 0, 0, 0.62); }
+:root[data-theme="dark"] .quote-tip {
+  background: var(--paper);
+  border: 1px solid var(--hairline);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
+}
+:root[data-theme="dark"] .qr-panel:not(.minimised) { box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5); }
+:root[data-theme="dark"] .qr-chip { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5); }
+
+/* the shuffle switch is a physical thing: a grey track and a light knob with
+   a graphite icon, the same object in both rooms */
+:root[data-theme="dark"] .pop-switch { background: #55554F; }
+:root[data-theme="dark"] .pop-switch-thumb {
+  background: #F6F4F1;
+  color: #2D2D2C;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+:root[data-theme="dark"] .pop-shuffle input:checked + .pop-switch .pop-switch-thumb { color: var(--blue-fill); }
+
+/* the crop window's tint has to be a shade lighter than the ground, not darker;
+   the whole session is still no window at all */
+:root[data-theme="dark"] .tl-window:not(.tl-window-all) { background: rgba(124, 155, 255, 0.14); }
+
+/* the little outlined tags carry ink at 78% either way */
+:root[data-theme="dark"] .rec-meta-tag,
+:root[data-theme="dark"] .rel-tag { color: rgba(246, 244, 241, 0.78); }
+
+/* the kind tooltip is an inverted chip on light; on dark it rises off the
+   ground instead of flashing white */
+:root[data-theme="dark"] .pop-kind-wrap::after { background: #3A3A38; color: var(--graphite); }
+
+/* the data-policy illustrations are line drawings in dark strokes on
+   transparent: they would vanish. Each has a dark twin (light strokes, dark
+   paper, the same fills) and the theme shows one of the pair. */
+.data-steps img.illustration-dark { display: none; }
+:root[data-theme="dark"] .data-steps img.illustration { display: none; }
+:root[data-theme="dark"] .data-steps img.illustration-dark { display: block; }

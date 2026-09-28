@@ -146,6 +146,7 @@ const regs = registrations({
   completer,
   embedder,
   models,
+  popcorn: { databaseUrl: config.database.url, portalUrl: config.http.portalUrl },
 });
 await queue.start(regs.flatMap((r) => r.jobs));
 for (const r of regs) await r.register(queue);

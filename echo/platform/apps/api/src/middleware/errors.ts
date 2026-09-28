@@ -9,7 +9,7 @@ import type { Env } from "../deps";
  */
 export const onError: ErrorHandler<Env> = (err, c) => {
   if (err instanceof PlatformError) {
-    return c.json({ detail: err.details ?? err.message }, err.status as 400);
+    return c.json({ detail: err.details ?? err.message }, err.status as 400, err.headers);
   }
   if (err instanceof HTTPException) {
     return c.json({ detail: err.message }, err.status);

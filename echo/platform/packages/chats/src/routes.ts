@@ -1,4 +1,5 @@
 import type { Access } from "@echo/access";
+import type { Capture } from "@echo/analytics";
 import { newId } from "@echo/core";
 import type { Db } from "@echo/db";
 import { type Env, requireUser } from "@echo/http";
@@ -8,7 +9,6 @@ import type { Logger } from "@echo/observability";
 import type { RateLimiter } from "@echo/ratelimit";
 import { Hono } from "hono";
 import * as bff from "./bff";
-import type { Capture } from "./capture";
 import { chatReads } from "./conversations";
 import type { ChatDeps } from "./deps";
 import { reply } from "./reply";

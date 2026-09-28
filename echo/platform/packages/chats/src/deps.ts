@@ -1,8 +1,8 @@
 import type { Access } from "@echo/access";
+import type { Capture } from "@echo/analytics";
 import type { Models } from "@echo/llm";
 import type { Logger } from "@echo/observability";
 import type { RateLimiter } from "@echo/ratelimit";
-import type { Capture } from "./capture";
 import type { ChatReads } from "./conversations";
 import type { ChatsStorage } from "./storage";
 

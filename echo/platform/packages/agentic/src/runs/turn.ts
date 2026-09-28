@@ -1,5 +1,5 @@
 import { APICallError } from "@ai-sdk/provider";
-import type { Capture } from "@echo/chats";
+import type { Capture } from "@echo/analytics";
 import type { Signed } from "@echo/http";
 import type { Models } from "@echo/llm";
 import type { Emit } from "@echo/notifications";

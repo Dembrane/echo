@@ -6,6 +6,8 @@
 export abstract class PlatformError extends Error {
   abstract readonly status: number;
   abstract readonly code: string;
+  /** Response headers the error carries (Retry-After on a busy lock). */
+  readonly headers?: Readonly<Record<string, string>>;
   constructor(
     message: string,
     /** Structured detail when the old API returned an object or a list instead of a string. */
@@ -56,4 +58,8 @@ export class RateLimitedError extends PlatformError {
 export class UnavailableError extends PlatformError {
   readonly status = 503;
   readonly code = "unavailable";
+}
+/** A lock was busy or its store away; nothing was written, and the caller retries in a second. */
+export class LockUnavailableError extends UnavailableError {
+  override readonly headers = { "Retry-After": "1" };
 }

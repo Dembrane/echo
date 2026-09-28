@@ -10,4 +10,5 @@ export default {
   observability: { logLevel: "debug", traceSampleRatio: 1 },
   web: { apiOrigin: "http://localhost:8080", distDir: "../frontend/dist" },
   webhooks: { allowPrivateTargets: true },
+  popcorn: { showFlow: true },
 } satisfies Environment;

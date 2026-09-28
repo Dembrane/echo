@@ -10,6 +10,8 @@ import type { Completer, Embedder, Models } from "@echo/llm";
 import type { Mailer } from "@echo/mail";
 import { mapWorker } from "@echo/map";
 import type { Logger } from "@echo/observability";
+import { popcornDeckHook, popcornFlags, popcornWorker, runtimeAnalysis } from "@echo/popcorn";
+import { presentAdoption } from "@echo/present";
 import { environmentName, httpForwarder, pricingRegistration, pricingStorage } from "@echo/pricing";
 import {
   createLibrary,
@@ -73,6 +75,8 @@ export function registrations(deps: {
   embedder: Embedder;
   /** The model groups the chat assistant runs on. */
   models: Models;
+  /** Where the popcorn tick enqueues its workflows and where participant links point. */
+  popcorn: { databaseUrl: string; portalUrl: string };
 }): Registration[] {
   const { logger, db, config } = deps;
   // Pricing bookings and overage notices share the team's webhook.
@@ -80,6 +84,16 @@ export function registrations(deps: {
     config.support.forwardWebhookUrl && config.support.forwardWebhookToken
       ? httpForwarder(config.support.forwardWebhookUrl, config.support.forwardWebhookToken)
       : null;
+  const analysisDeps = {
+    db,
+    logger,
+    completer: deps.completer,
+    embedder: deps.embedder,
+    config: {
+      embeddingModel: config.llm.embeddingModel,
+      embeddingLocation: config.llm.embeddingLocation,
+    },
+  };
   return [
     {
       jobs: [heartbeat],
@@ -134,6 +148,31 @@ export function registrations(deps: {
         environment: environmentName(deps.dashboardUrl),
       },
     }),
+    popcornWorker({
+      db,
+      logger,
+      completer: deps.completer,
+      flags: popcornFlags(config),
+      participantBaseUrl: deps.popcorn.portalUrl,
+      adminBaseUrl: deps.dashboardUrl,
+      databaseUrl: deps.popcorn.databaseUrl,
+      analysis: runtimeAnalysis(analysisDeps, (rt, deck, jobs) =>
+        presentAdoption({
+          rt,
+          deck,
+          jobs,
+          db,
+          logger,
+          flags: popcornFlags(config),
+          participantBaseUrl: deps.popcorn.portalUrl,
+          adminBaseUrl: deps.dashboardUrl,
+          ceilings: {
+            nodeLimit: config.analysis.nodeLimitCeiling ?? null,
+            edgeLimit: config.analysis.edgeLimitCeiling ?? null,
+          },
+        }),
+      ),
+    }),
     pricingRegistration({
       store: pricingStorage(db),
       forwarder: teamWebhook,
@@ -148,16 +187,8 @@ export function registrations(deps: {
       canvasEnabled: config.canvas.enabled,
     }),
     reportsWorker(deps),
-    analysisWorker({
-      db: deps.db,
-      logger,
-      completer: deps.completer,
-      embedder: deps.embedder,
-      config: {
-        embeddingModel: config.llm.embeddingModel,
-        embeddingLocation: config.llm.embeddingLocation,
-      },
-    }),
+    // The deck view follows the popcorn, tensions and stakeholders publications.
+    analysisWorker({ ...analysisDeps, snapshotHooks: [popcornDeckHook(db, logger)] }),
     mapWorker({
       db: deps.db,
       logger,

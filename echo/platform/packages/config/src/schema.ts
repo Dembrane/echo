@@ -336,6 +336,12 @@ export const schema = defineSchema({
       secret: true,
     }),
   },
+  popcorn: {
+    showFlow: key("POPCORN_SHOW_FLOW", bool.default(false), {
+      description:
+        "Serves the page that shows what a popcorn read does to a session's words, and links the host deck to it. Local development only.",
+    }),
+  },
 });
 
 export type Schema = typeof schema;

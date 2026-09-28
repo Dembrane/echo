@@ -1,5 +1,5 @@
 import type { Access } from "@echo/access";
-import type { Capture } from "@echo/chats";
+import type { Capture } from "@echo/analytics";
 import type { Config } from "@echo/config";
 import type { Db } from "@echo/db";
 import type { Env } from "@echo/http";

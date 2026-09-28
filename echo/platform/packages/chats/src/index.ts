@@ -1,5 +1,4 @@
 export { type ChatAccessDeps, chatFor, chatProjectId } from "./access";
-export { type Capture, noCapture, posthogCapture } from "./capture";
 export { conversationTranscript } from "./context";
 export { type ChatReads, chatReads } from "./conversations";
 export type { ChatDeps, Suggestion } from "./deps";

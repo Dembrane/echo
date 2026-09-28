@@ -22,6 +22,14 @@ Needs a Directus admin static token for the target, in DEMO_DIRECTUS_TOKEN:
         --portal-base-url https://portal.echo-next.dembrane.com \
         --api-base-url https://api.echo-next.dembrane.com \
         --workspace-id <workspace> --owner-id <directus user> [--dry-run]
+
+On the platform (echo/platform), where Directus is gone, `--platform` sends the same
+inputs to the staff route POST /api/v2/admin/popcorn/demos, which writes the same rows
+with the same ids and answers with the same links. It needs a staff session token for
+that API in DEMO_API_TOKEN, and no --directus-url:
+
+    DEMO_API_TOKEN=... python3 seed_demo.py --platform --demo <folder> \
+        --portal-base-url ... --api-base-url ... --workspace-id ... --owner-id ...
 """
 
 from __future__ import annotations
@@ -239,23 +247,82 @@ def seed_language(
     }
 
 
+def platform_inputs(demo: Path, session: dict) -> dict:
+    """Exactly what seed_language and seed_sales_portals read, for the platform route."""
+    corpus = [
+        json.loads(path.read_text()) for path in sorted((demo / "corpus").glob("[0-9][0-9]-*.json"))
+    ]
+    out = {
+        language: {
+            "state": json.loads((demo / "out" / f"state-{language}.json").read_text()),
+            "settings": json.loads((demo / "out" / f"settings-{language}.json").read_text()),
+        }
+        for language in session["title"]
+    }
+    return {
+        "session": session,
+        "research": (demo / "research.md").read_text(),
+        "corpus": corpus,
+        "out": out,
+        "sales_portal": json.loads((TOOLS / "sales-portal.json").read_text()),
+    }
+
+
+def seed_platform(args: argparse.Namespace, demo: Path, session: dict) -> dict:
+    token = os.environ.get("DEMO_API_TOKEN")
+    if not token:
+        sys.exit("Set DEMO_API_TOKEN to a staff session token for the platform API.")
+    body = {
+        **platform_inputs(demo, session),
+        "workspace_id": args.workspace_id,
+        "owner_id": args.owner_id,
+        "portal_base_url": args.portal_base_url,
+        "api_base_url": args.api_base_url,
+        "dry_run": args.dry_run,
+    }
+    r = httpx.post(
+        f"{args.api_base_url.rstrip('/')}/api/v2/admin/popcorn/demos",
+        json=body,
+        headers={"Authorization": f"Bearer {token}"},
+        timeout=120,
+    )
+    if r.is_error:
+        sys.exit(f"The platform refused the demo: {r.status_code} {r.text[:400]}")
+    return r.json()
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument("--demo", type=Path, required=True, help="the demo's folder")
-    parser.add_argument("--directus-url", required=True)
+    parser.add_argument("--platform", action="store_true", help="seed through the platform API")
+    parser.add_argument("--directus-url")
     parser.add_argument("--portal-base-url", required=True)
     parser.add_argument("--api-base-url", required=True)
     parser.add_argument("--workspace-id", required=True)
     parser.add_argument("--owner-id", required=True)
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
+    if not args.platform and not args.directus_url:
+        parser.error("--directus-url is required unless --platform is given")
     hosts = {
-        urlparse(u).hostname for u in (args.directus_url, args.portal_base_url, args.api_base_url)
+        urlparse(u).hostname
+        for u in (args.directus_url, args.portal_base_url, args.api_base_url)
+        if u
     }
     if hosts & PRODUCTION_HOSTS:
         sys.exit("This seed is for a staging environment; production waits for the MCP upsert.")
+    if args.platform:
+        demo = args.demo.resolve()
+        session = json.loads((demo / "session.json").read_text())
+        result = seed_platform(args, demo, session)
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+        if not args.dry_run:
+            (demo / "out" / f"seeded-{urlparse(args.api_base_url).hostname}.json").write_text(
+                json.dumps(result, indent=2, ensure_ascii=False)
+            )
+        return
     token = os.environ.get("DEMO_DIRECTUS_TOKEN")
     if not token:
         sys.exit("Set DEMO_DIRECTUS_TOKEN to a Directus admin static token for the target.")

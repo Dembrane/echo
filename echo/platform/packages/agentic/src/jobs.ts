@@ -1,6 +1,6 @@
 import { DBOSClient } from "@dbos-inc/dbos-sdk";
 import { Access, DrizzleAccessStore } from "@echo/access";
-import { type Capture, posthogCapture } from "@echo/chats";
+import { type Capture, posthogCapture } from "@echo/analytics";
 import type { Config } from "@echo/config";
 import type { Db } from "@echo/db";
 import type { Signed } from "@echo/http";

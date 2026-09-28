@@ -1,10 +1,11 @@
 import { DrizzleAccessStore } from "@echo/access";
 import { accountRoutes } from "@echo/account";
 import { agenticRoutes } from "@echo/agentic";
-import { analysisRoutes } from "@echo/analysis";
+import { analysisRoutes, analysisRuntime, clientOf } from "@echo/analysis";
+import { posthogCapture } from "@echo/analytics";
 import { billingRoutes, mollieWebhookRoutes } from "@echo/billing";
 import { canvasRoutes } from "@echo/canvas";
-import { chatRoutes, posthogCapture } from "@echo/chats";
+import { chatRoutes } from "@echo/chats";
 import {
   AudioUrls,
   type ConversationsDeps,
@@ -14,10 +15,21 @@ import {
 } from "@echo/conversations";
 import { reportRoutes as feedbackReportRoutes, responseRoutes } from "@echo/feedback";
 import { vertexCompleter, vertexEmbedder } from "@echo/llm";
-import { mapRoutes } from "@echo/map";
+import { MapStore, mapRoutes } from "@echo/map";
 import { notificationRoutes } from "@echo/notifications";
+import {
+  analysisDeck,
+  popcornDemoRoutes,
+  popcornDeps,
+  popcornFlags,
+  popcornRoutes,
+  publicRoutes,
+  queueDispatch,
+} from "@echo/popcorn";
+import { analysisMapStore, presentRoutes, publicAudienceMap } from "@echo/present";
 import { pricingRoutes } from "@echo/pricing";
 import { projectRoutes } from "@echo/projects";
+import { sharedHub } from "@echo/realtime";
 import { reportRoutes } from "@echo/reports";
 import { staffRoutes } from "@echo/staff";
 import { statsRoutes } from "@echo/stats";
@@ -65,23 +77,26 @@ export function buildApp(deps: Deps) {
   );
   app.route("/", notificationRoutes(deps));
   app.route("/", reportRoutes(deps));
+  // One set of model calls for the analysis, map, canvas and popcorn routes.
+  const completer = vertexCompleter(deps.models, {
+    groups: {
+      text_fast: deps.config.llm.textFast,
+      multi_modal_fast: deps.config.llm.multiModalFast,
+      multi_modal_pro: deps.config.llm.multiModalPro,
+    },
+  });
+  const embedder = vertexEmbedder(deps.models, {
+    project: deps.config.llm.vertexProject,
+    location: deps.config.llm.embeddingLocation,
+    model: deps.config.llm.embeddingModel,
+  });
   app.route(
     "/",
     analysisRoutes({
       ...deps,
       jobs: deps.queue,
-      completer: vertexCompleter(deps.models, {
-        groups: {
-          text_fast: deps.config.llm.textFast,
-          multi_modal_fast: deps.config.llm.multiModalFast,
-          multi_modal_pro: deps.config.llm.multiModalPro,
-        },
-      }),
-      embedder: vertexEmbedder(deps.models, {
-        project: deps.config.llm.vertexProject,
-        location: deps.config.llm.embeddingLocation,
-        model: deps.config.llm.embeddingModel,
-      }),
+      completer,
+      embedder,
       enablePresent: deps.config.analysis.enablePresent,
       embeddingModel: deps.config.llm.embeddingModel,
       embeddingLocation: deps.config.llm.embeddingLocation,
@@ -92,18 +107,8 @@ export function buildApp(deps: Deps) {
     mapRoutes({
       ...deps,
       jobs: deps.queue,
-      completer: vertexCompleter(deps.models, {
-        groups: {
-          text_fast: deps.config.llm.textFast,
-          multi_modal_fast: deps.config.llm.multiModalFast,
-          multi_modal_pro: deps.config.llm.multiModalPro,
-        },
-      }),
-      embedder: vertexEmbedder(deps.models, {
-        project: deps.config.llm.vertexProject,
-        location: deps.config.llm.embeddingLocation,
-        model: deps.config.llm.embeddingModel,
-      }),
+      completer,
+      embedder,
       embeddingModel: deps.config.llm.embeddingModel,
       embeddingLocation: deps.config.llm.embeddingLocation,
       nodeLimitCeiling: deps.config.analysis.nodeLimitCeiling ?? null,
@@ -114,13 +119,7 @@ export function buildApp(deps: Deps) {
     "/",
     canvasRoutes({
       ...deps,
-      completer: vertexCompleter(deps.models, {
-        groups: {
-          text_fast: deps.config.llm.textFast,
-          multi_modal_fast: deps.config.llm.multiModalFast,
-          multi_modal_pro: deps.config.llm.multiModalPro,
-        },
-      }),
+      completer,
       canvasEnabled: deps.config.canvas.enabled,
     }),
   );
@@ -185,6 +184,52 @@ export function buildApp(deps: Deps) {
   const capture = posthogCapture(deps.config.http.dashboardUrl, deps.logger);
   app.route("/", chatRoutes({ ...deps, capture }));
   app.route("/", agenticRoutes({ ...deps, capture }));
+  const sql = clientOf(deps.db);
+  // Popcorn and Present read the deck and the map from the analysis store, and a deck
+  // snapshot they assemble is dispatched through the analysis outbox like any other.
+  const analysis = analysisRuntime({
+    db: deps.db,
+    logger: deps.logger,
+    completer,
+    embedder,
+    jobs: deps.queue,
+    config: {
+      embeddingModel: deps.config.llm.embeddingModel,
+      embeddingLocation: deps.config.llm.embeddingLocation,
+    },
+  });
+  const popcorn = popcornDeps({
+    db: deps.db,
+    deck: analysisDeck(analysis.store),
+    flags: popcornFlags(deps.config),
+    participantBaseUrl: deps.config.http.portalUrl,
+    adminBaseUrl: deps.config.http.dashboardUrl,
+    showFlow: deps.config.popcorn.showFlow,
+    dispatchTick: queueDispatch(deps.queue),
+    limiter: deps.limiter,
+    logger: deps.logger,
+  });
+  const hub = () => sharedHub(sql, deps.logger);
+  app.route("/", popcornRoutes({ ...popcorn, access: deps.access, hub, capture }));
+  const map = analysisMapStore(analysis, new MapStore(sql), {
+    nodeLimit: deps.config.analysis.nodeLimitCeiling ?? null,
+    edgeLimit: deps.config.analysis.edgeLimitCeiling ?? null,
+  });
+  const presentDeps = { ...popcorn, access: deps.access, hub, map };
+  app.route("/", presentRoutes(presentDeps));
+  app.route("/", publicRoutes({ ...popcorn, hub, audienceMap: publicAudienceMap(presentDeps) }));
+  app.route(
+    "/",
+    popcornDemoRoutes({
+      db: deps.db,
+      staffAudit: deps.staffAudit,
+      ownUrls: [
+        deps.config.http.publicUrl,
+        deps.config.http.dashboardUrl,
+        deps.config.http.portalUrl,
+      ],
+    }),
+  );
   app.onError(onError);
   app.notFound(notFound);
   return app;
