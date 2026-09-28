@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import { type Context, Hono } from "hono";
 import type { Deps, Env } from "../deps";
 
 /** A worker heartbeats every 10 seconds; one silent this long is not running jobs. */
@@ -6,15 +6,19 @@ export const WORKER_STALE_AFTER_S = 90;
 
 /**
  * Liveness at /health, readiness at /ready (not /healthz: Cloud Run's front end reserves it),
- * the worker's at /ready/worker. Plus the public config.
+ * the worker's at /ready/worker. Plus the public config. Liveness also answers at
+ * /api/health, the path the Python API served and the one that reaches the API through
+ * the dashboard's and portal's /api proxy.
  *
  * /ready/worker is 503 unless a worker heartbeat is newer than WORKER_STALE_AFTER_S. With
  * ?release=<tag> only a worker running that build counts: the deploy waits on it. It is
  * public, so it says a status and ages only, never which executors exist.
  */
 export function systemRoutes(deps: Deps) {
+  const health = (c: Context<Env>) => c.json({ status: "ok", release: deps.config.app.release });
   return new Hono<Env>()
-    .get("/health", (c) => c.json({ status: "ok", release: deps.config.app.release }))
+    .get("/health", health)
+    .get("/api/health", health)
     .get("/ready", async (c) => {
       try {
         await withTimeout(deps.pingDb(), 2000);

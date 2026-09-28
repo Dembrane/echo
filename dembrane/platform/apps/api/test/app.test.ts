@@ -59,10 +59,12 @@ function deps(overrides: Partial<Deps> = {}): Deps {
   };
 }
 
-test("health answers with the release", async () => {
-  const res = await buildApp(deps()).request("/health");
-  expect(res.status).toBe(200);
-  expect(await res.json()).toEqual({ status: "ok", release: "dev" });
+test("health answers with the release, at /health and through the /api proxy", async () => {
+  for (const path of ["/health", "/api/health"]) {
+    const res = await buildApp(deps()).request(path);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ status: "ok", release: "dev" });
+  }
 });
 
 test("ready fails when the database does not answer", async () => {

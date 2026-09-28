@@ -257,6 +257,7 @@ run("bun run seed:accounts-demo", () => {
       app_user: schema.app_user,
       org_membership: schema.org_membership,
       workspace: schema.workspace,
+      workspace_membership: schema.workspace_membership,
       project: schema.project,
       conversation: schema.conversation,
       account_document: schema.account_document,
@@ -330,6 +331,37 @@ run("bun run seed:accounts-demo", () => {
       .innerJoin(schema.auth_user, eq(schema.auth_user.id, schema.directus_users.id))
       .where(eq(schema.auth_user.email, STAFF_EMAIL));
     expect(staffRole?.name).toBe("Administrator");
+  });
+
+  test("the customer owns the demo workspace, by app user id, and a removed membership comes back", async () => {
+    const [customer] = await database.db
+      .select({ id: schema.app_user.id })
+      .from(schema.app_user)
+      .innerJoin(schema.auth_user, eq(schema.auth_user.id, schema.app_user.directus_user_id))
+      .where(eq(schema.auth_user.email, CUSTOMER_EMAIL));
+    const memberships = () =>
+      database.db
+        .select()
+        .from(schema.workspace_membership)
+        .where(eq(schema.workspace_membership.workspace_id, DEMO_IDS.workspace));
+    const [owner, ...others] = await memberships();
+    expect(others).toEqual([]);
+    expect([owner?.user_id, owner?.role, owner?.source, owner?.deleted_at]).toEqual([
+      customer?.id,
+      "owner",
+      "direct",
+      null,
+    ]);
+
+    await database.db
+      .update(schema.workspace_membership)
+      .set({ role: "member", deleted_at: new Date().toISOString() })
+      .where(eq(schema.workspace_membership.workspace_id, DEMO_IDS.workspace));
+    await seedAccountsDemo(await options());
+    const after = await memberships();
+    expect(after.map((m) => ({ id: m.id, role: m.role, deleted_at: m.deleted_at }))).toEqual([
+      { id: owner?.id as string, role: "owner", deleted_at: null },
+    ]);
   });
 
   test("DEMO_LANGUAGE: English by default; a Dutch run rewords the demo and replaces the offer", async () => {

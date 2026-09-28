@@ -26,6 +26,8 @@ export interface PostPolicyInput {
 /**
  * The form fields of a SigV4 POST policy, in the order boto3's generate_presigned_post
  * returns them. S3, Spaces, MinIO and GCS (interoperability) all accept this form.
+ * No acl field: objects are private by default on every provider, and GCS refuses any
+ * ACL on a bucket with uniform bucket-level access, which ours have.
  */
 export function postPolicyFields(p: PostPolicyInput): Record<string, string> {
   const amzDate = p.now
@@ -41,7 +43,6 @@ export function postPolicyFields(p: PostPolicyInput): Record<string, string> {
     pythonJson({
       expiration,
       conditions: [
-        { acl: "private" },
         { "Content-Type": p.contentType },
         ["content-length-range", 0, p.maxBytes],
         { bucket: p.bucket },
@@ -56,7 +57,6 @@ export function postPolicyFields(p: PostPolicyInput): Record<string, string> {
     .update(policy)
     .digest("hex");
   return {
-    acl: "private",
     "Content-Type": p.contentType,
     key: p.key,
     "x-amz-algorithm": "AWS4-HMAC-SHA256",

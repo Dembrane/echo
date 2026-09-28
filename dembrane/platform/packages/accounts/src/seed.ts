@@ -43,6 +43,7 @@ const id = (kind: string) => demoIdentity(DEMO_SLUG, kind);
 export const DEMO_IDS = {
   org: id("org"),
   workspace: id("workspace"),
+  workspaceOwner: id("workspace-owner"),
   poTask: id("task-po"),
   logoTask: id("task-logo"),
   ticket: id("ticket"),
@@ -248,6 +249,7 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
       updated_at: nowIso,
     })
     .onConflictDoNothing();
+  await ensureWorkspaceOwner(o.db, customerApp.id, nowIso);
 
   const fixture = (await Bun.file(join(o.demosDir, `${w.example}/fixture.json`)).json()) as Json;
   const research = await Bun.file(join(o.demosDir, `${w.example}/research.md`)).text();
@@ -499,4 +501,43 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
     customer_email: CUSTOMER_EMAIL,
     staff_email: STAFF_EMAIL,
   };
+}
+
+/**
+ * The customer owns the demo workspace: without the membership they sign in to onboarding,
+ * because the workspace list is membership-based even for an org admin. Keyed on the app
+ * user id (workspace_membership.user_id references app_user), and it revives a row a
+ * person removed or downgraded instead of adding a second one.
+ */
+async function ensureWorkspaceOwner(db: Db, appUserId: string, nowIso: string) {
+  const rows = await db
+    .select({ id: schema.workspace_membership.id })
+    .from(schema.workspace_membership)
+    .where(
+      and(
+        eq(schema.workspace_membership.workspace_id, DEMO_IDS.workspace),
+        eq(schema.workspace_membership.user_id, appUserId),
+      ),
+    );
+  const live = { role: "owner", source: "direct", deleted_at: null, expires_at: null };
+  if (rows.length) {
+    await db
+      .update(schema.workspace_membership)
+      .set({ ...live, updated_at: nowIso })
+      .where(
+        and(
+          eq(schema.workspace_membership.workspace_id, DEMO_IDS.workspace),
+          eq(schema.workspace_membership.user_id, appUserId),
+        ),
+      );
+    return;
+  }
+  await db.insert(schema.workspace_membership).values({
+    id: DEMO_IDS.workspaceOwner,
+    workspace_id: DEMO_IDS.workspace,
+    user_id: appUserId,
+    ...live,
+    created_at: nowIso,
+    updated_at: nowIso,
+  });
 }

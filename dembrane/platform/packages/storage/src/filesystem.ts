@@ -54,7 +54,6 @@ export class FilesystemStorage implements ObjectStorage {
     return {
       url: `${this.publicBase}${this.routePath}`,
       fields: {
-        acl: "private",
         "Content-Type": opts.contentType,
         key: checkKey(key),
         expires: String(Date.now() + opts.expiresInSeconds * 1000),
