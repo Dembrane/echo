@@ -41,7 +41,7 @@ preview_body() {
       echo
       echo "$links"
       echo
-      echo "<sub>Updated on every push while the PR has the preview label. Seeded with the Millbrook sample and the accounts demo.</sub>"
+      echo "<sub>Updated on every push while the PR has the preview label.</sub>"
       ;;
     failed)
       echo "**Preview deploy failed** at **$what** for $commit, $(now). ${run}"

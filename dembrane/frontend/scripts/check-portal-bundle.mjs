@@ -11,6 +11,9 @@
 //   node scripts/check-portal-bundle.mjs              build into a temp dir, then check
 //   node scripts/check-portal-bundle.mjs --dist dist  check an existing `vite build --manifest`
 //
+// CI runs the second form on the bundle inside the web image (apps/web/Dockerfile keeps its
+// manifest at /app/build-meta/.vite), so the frontend is bundled once per commit.
+//
 // Raising the budget is a decision, not a fix: change BASELINE_GZIP_BYTES in the same PR
 // and say why in its description.
 import { execFileSync } from "node:child_process";

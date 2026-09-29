@@ -5,7 +5,8 @@
 #   deploy-env.sh deploy pr-<n> <tag>      a PR preview (echo-pr-<n>-*, database echo_pr_<n>)
 #   deploy-env.sh deploy next <tag>        echo-next (echo-next-*)
 #   deploy-env.sh deploy prod <tag>        production (echo-prod-*)
-#   deploy-env.sh make-room <n>            tears down the oldest PR previews until <n> fits
+#   deploy-env.sh make-room <n>            tears down the oldest PR previews until <n> fits,
+#                                          printing "removed PR preview <m>" for each
 #   deploy-env.sh teardown <n>             removes PR <n>'s services and drops its database
 #   deploy-env.sh list                     PR previews, oldest first
 #
@@ -30,7 +31,7 @@ case "$target" in
   next | prod) ENV=$target ;;
   # A PR preview, or a PR number for make-room and teardown. There is no branch preview.
   pr-* | [0-9]*) ENV=preview ;;
-  *) if [ "${1:-}" = list ]; then ENV=preview; else sed -n '2,10p' "$0"; exit 2; fi ;;
+  *) if [ "${1:-}" = list ]; then ENV=preview; else sed -n '2,11p' "$0"; exit 2; fi ;;
 esac
 case "$ENV" in
   preview) project=dembrane-web-previews number=218237812097 ;;
@@ -79,14 +80,12 @@ pr_previews() {
 }
 
 deploy() {
-  local name=$1 tag=$2 prefix db_env="" labels="" job_labels=""
+  local name=$1 tag=$2 prefix db_env="" n=""
   prefix=echo-$name
   if [[ $name == pr-* ]]; then
-    local n=${name#pr-}
+    n=${name#pr-}
     [[ $n =~ ^[0-9]+$ ]] || { echo "bad PR number: $n" >&2; exit 2; }
     db_env=",DATABASE_NAME=echo_pr_$n"
-    labels="--update-labels preview-pr=$n"
-    job_labels="--labels preview-pr=$n"
   fi
   local api web_dash web_portal media public_api
   api=$(url "$prefix-api") web_dash=$(url "$prefix-dashboard") web_portal=$(url "$prefix-portal")
@@ -127,55 +126,117 @@ deploy() {
 
   local hold=${HOLD_DATA:-0} run_now="--execute-now --wait"
   [ "$hold" = 1 ] && run_now="" && echo "HOLD_DATA: migrate job deployed, not run; worker pool at 0"
+
+  # A PR preview leaves alone every unit whose image digest and settings match what it already
+  # runs: a frontend-only push rolls out the dashboard and portal and nothing else, and skips
+  # the migrate job. next and prod roll out everything, so each revision names its release.
+  # SKIP_UNCHANGED=0 forces a full rollout (a rotated secret is only read by a new revision).
+  local skip=0
+  [[ $name == pr-* ]] && skip=${SKIP_UNCHANGED:-1}
+  local state
+  state=$(mktemp -d)
+  if [ "$skip" = 1 ]; then
+    local app
+    for app in api worker migrate media web; do
+      g artifacts docker images describe "$REGISTRY/$app:$tag" --format 'value(image_summary.digest)' \
+        >"$state/digest-$app" &
+    done
+    wait
+  fi
+
   # Migrations first: a failure stops the rollout before new code takes traffic. On a PR
-  # preview's first deploy this also creates its database, and every deploy reseeds it.
+  # preview's first deploy this also creates its database, and every rollout of the job
+  # reseeds it.
   # shellcheck disable=SC2086
-  g run jobs deploy "$prefix-migrate" --region "$REGION" --image "$REGISTRY/migrate:$tag" \
+  rollout job "$prefix-migrate" migrate --image "$REGISTRY/migrate:$tag" \
     --service-account "$(SA migrate)" --set-cloudsql-instances "$SQL" \
     --set-secrets "MIGRATION_DATABASE_URL=$(secret migration-database-url)$seed_secrets" \
     --set-env-vars "APP_ENV=$ENV,APP_DB_ROLE=echo_app$db_env$seed_env" \
-    --task-timeout 600 --max-retries 0 $job_labels $run_now
+    --task-timeout 600 --max-retries 0 $run_now
 
   local fail=0 pids=()
   # Media: public ingress, IAM required; only the worker and API identities may invoke it.
-  (
-    # shellcheck disable=SC2086,SC2046
-    g run deploy "$prefix-media" --region "$REGION" --image "$REGISTRY/media:$tag" \
-      --service-account "$(SA media)" --set-env-vars "APP_ENV=$ENV,APP_RELEASE=$tag" \
-      $(scale media) --timeout 3600 --ingress all --no-allow-unauthenticated $labels --quiet
-    for sa in worker api; do
-      g run services add-iam-policy-binding "$prefix-media" --region "$REGION" \
-        --member "serviceAccount:$(SA $sa)" --role roles/run.invoker --quiet >/dev/null
-    done
-  ) & pids+=($!)
   # shellcheck disable=SC2086,SC2046
-  g run deploy "$prefix-api" --region "$REGION" --image "$REGISTRY/api:$tag" \
+  rollout service "$prefix-media" media --image "$REGISTRY/media:$tag" \
+    --service-account "$(SA media)" --set-env-vars "APP_ENV=$ENV,APP_RELEASE=$tag" \
+    $(scale media) --timeout 3600 --ingress all --no-allow-unauthenticated & pids+=($!)
+  # shellcheck disable=SC2086,SC2046
+  rollout service "$prefix-api" api --image "$REGISTRY/api:$tag" \
     --service-account "$(SA api)" --add-cloudsql-instances "$SQL" \
     --set-secrets "DATABASE_URL=$(secret database-url),AUTH_SECRET=$(secret auth-secret),INVITE_HASH_SECRET=$(secret invite-hash-secret),$keys$filled" \
     --set-env-vars "$common,$files,MEDIA_URL=$media" \
-    $(scale api) --timeout 3600 --cpu-boost --allow-unauthenticated $labels --quiet & pids+=($!)
+    $(scale api) --timeout 3600 --cpu-boost --allow-unauthenticated & pids+=($!)
   local wmin
   wmin=$(jq -r '.services.worker.min' "$TFVARS")
   [ "$hold" = 1 ] && wmin=0
-  # shellcheck disable=SC2086
-  g beta run worker-pools deploy "$prefix-worker" --region "$REGION" --image "$REGISTRY/worker:$tag" \
+  rollout pool "$prefix-worker" worker --image "$REGISTRY/worker:$tag" \
     --service-account "$(SA worker)" --add-cloudsql-instances "$SQL" \
     --set-secrets "DATABASE_URL=$(secret database-url),$keys$filled" \
     --set-env-vars "$common,$files,MEDIA_URL=$media" \
     --cpu "$(jq -r '.services.worker.cpu' "$TFVARS")" --memory "$(jq -r '.services.worker.memory' "$TFVARS")" \
-    --instances "$wmin" $labels --quiet & pids+=($!)
+    --instances "$wmin" & pids+=($!)
   for role in dashboard portal; do
     # shellcheck disable=SC2086,SC2046
-    g run deploy "$prefix-$role" --region "$REGION" --image "$REGISTRY/web:$tag" \
+    rollout service "$prefix-$role" web --image "$REGISTRY/web:$tag" \
       --service-account "$(SA web)" --set-env-vars "$common,WEB_ROLE=$role$web_pr" \
-      $(scale $role) --allow-unauthenticated $web_ingress $labels --quiet & pids+=($!)
+      $(scale $role) --allow-unauthenticated $web_ingress & pids+=($!)
   done
   for p in "${pids[@]}"; do wait "$p" || fail=1; done
   [ "$fail" = 0 ] || exit 1
+  # Media's invokers; a rollout that left media alone left its policy alone too.
+  if [ -e "$state/rolled-$prefix-media" ]; then
+    pids=()
+    for sa in worker api; do
+      g run services add-iam-policy-binding "$prefix-media" --region "$REGION" \
+        --member "serviceAccount:$(SA $sa)" --role roles/run.invoker --quiet >/dev/null & pids+=($!)
+    done
+    for p in "${pids[@]}"; do wait "$p" || fail=1; done
+    [ "$fail" = 0 ] || exit 1
+  fi
 
   if [[ $name == pr-* ]]; then route_add "$n"; fi
-  smoke "$prefix" "$tag" "$hold"
+  local api_rolled=0 worker_rolled=0
+  [ -e "$state/rolled-$prefix-api" ] && api_rolled=1
+  [ -e "$state/rolled-$prefix-worker" ] && worker_rolled=1
+  smoke "$prefix" "$tag" "$hold" "$api_rolled" "$worker_rolled"
+  rm -rf "$state"
   echo "api=$public_api dashboard=$web_dash portal=$web_portal"
+}
+
+# rollout job|service|pool <name> <app> <gcloud deploy args...>: deploys one unit, with the
+# preview-pr label on a PR preview. When skipping is on, the unit is left alone if its label
+# deploy-key matches a hash of the image digest and every argument except the commit, and its
+# last rollout (or, for the job, its last run) succeeded. Uses deploy()'s n, skip and state.
+rollout() {
+  local kind=$1 unit=$2 app=$3 key="" now labels=""
+  shift 3
+  if [ "$skip" = 1 ]; then
+    key=$(printf '%s\n' "$kind" "$(cat "$state/digest-$app")" "$@" | sed "s/$tag//g" | sha256sum | cut -c1-16)
+    case $kind in
+      job) now=$(g run jobs describe "$unit" --region "$REGION" \
+        --format 'value(metadata.labels.deploy-key,status.latestCreatedExecution.completionStatus)' 2>/dev/null |
+        awk '$2 == "EXECUTION_SUCCEEDED" { print $1 }') || true ;;
+      service) now=$(g run services describe "$unit" --region "$REGION" \
+        --format 'value(metadata.labels.deploy-key,status.latestReadyRevisionName,status.latestCreatedRevisionName)' 2>/dev/null |
+        awk '$2 != "" && $2 == $3 { print $1 }') || true ;;
+      pool) now=$(g beta run worker-pools describe "$unit" --region "$REGION" --format json 2>/dev/null |
+        jq -r 'select(.status.latestReadyRevisionName == .status.latestCreatedRevisionName) | .metadata.labels["deploy-key"] // empty') || true ;;
+    esac
+    if [ -n "$now" ] && [ "$now" = "$key" ]; then
+      echo "$unit: image and settings unchanged, not redeployed"
+      return 0
+    fi
+  fi
+  [[ ${n:-} ]] && labels="preview-pr=$n"
+  [ -n "$key" ] && labels+="${labels:+,}deploy-key=$key"
+  local flags=(--region "$REGION" --quiet)
+  [ -n "$labels" ] && flags+=(--update-labels "$labels")
+  case $kind in
+    job) g run jobs deploy "$unit" "${flags[@]}" "$@" ;;
+    service) g run deploy "$unit" "${flags[@]}" "$@" ;;
+    pool) g beta run worker-pools deploy "$unit" "${flags[@]}" "$@" ;;
+  esac
+  touch "$state/rolled-$unit"
 }
 
 pr_host() { echo "https://$1-$2.$PREVIEW_DOMAIN"; }
@@ -271,8 +332,10 @@ route_remove() {
 
 lb_ip() { g compute addresses describe "$PR_LB" --global --format 'value(address)'; }
 
+# smoke <prefix> <tag> [hold] [api rolled out] [worker rolled out]: a unit the rollout left
+# alone still serves the release it was deployed with, so only rolled-out units must name <tag>.
 smoke() {
-  local prefix=$1 tag=$2 api media code release
+  local prefix=$1 tag=$2 api media code release want
   api=$(url "$prefix-api") media=$(url "$prefix-media")
   # A PR preview's dashboard and portal answer only through the load balancer. curl pins
   # the hostname to its address, so this works before DNS; -k because the wildcard
@@ -287,29 +350,32 @@ smoke() {
   fi
   curl -sf "$api/ready" >/dev/null
   release=$(curl -sf "$api/health" | jq -r .release)
-  [ "$release" = "$tag" ] || { echo "serving $release, expected $tag" >&2; exit 1; }
+  want=$tag
+  [ "${4:-1}" = 1 ] || want=$release
+  [ "$release" = "$want" ] || { echo "serving $release, expected $want" >&2; exit 1; }
   code=$(curl -s -o /dev/null -w '%{http_code}' "$media/health")
   [ "$code" = 403 ] || { echo "media answered $code without a token, expected 403" >&2; exit 1; }
   for role in dashboard portal; do
     local web
     web=$(url "$prefix-$role")
     [ -n "$n" ] && web=$(pr_host "$role" "$n")
-    # A new route can take a minute to reach every load balancer front end.
+    # A new route can take a minute to reach every load balancer front end; an existing one
+    # answers on the first try.
     local tries=1
-    [ -n "$n" ] && tries=24
+    [ -n "$n" ] && tries=60
     until curl -sf "${via[@]}" "$web/runtime-config.js" | grep -q "\"role\":\"$role\""; do
       tries=$((tries - 1))
       [ "$tries" -gt 0 ] || { echo "$web/runtime-config.js did not name role $role" >&2; exit 1; }
-      sleep 5
+      sleep 2
     done
     code=$(curl -s "${via[@]}" -o /dev/null -w '%{http_code}' "$web/api/v2/me")
     [ "$code" = 401 ] || { echo "$role /api proxy answered $code, expected 401" >&2; exit 1; }
   done
   if [ -n "$n" ]; then
     release=$(curl -sf "${via[@]}" "$(pr_host api "$n")/health" | jq -r .release)
-    [ "$release" = "$tag" ] || { echo "api-$n through the load balancer serves $release, expected $tag" >&2; exit 1; }
+    [ "$release" = "$want" ] || { echo "api-$n through the load balancer serves $release, expected $want" >&2; exit 1; }
   fi
-  [ "${3:-0}" = 1 ] || wait_worker "$prefix" "$tag"
+  [ "${3:-0}" = 1 ] || [ "${5:-1}" = 0 ] || wait_worker "$prefix" "$tag"
 }
 
 # The worker pool's rollout returns once the revision exists, not once it runs: a worker
@@ -322,7 +388,7 @@ wait_worker() {
   while [ "$SECONDS" -lt "$end" ]; do
     body=$(curl -s -w ' %{http_code}' "$api/ready/worker?release=$tag") || true
     [[ $body == *" 200" ]] && { echo "worker $tag: ${body% *}"; return 0; }
-    sleep 5
+    sleep 2
   done
   echo "worker $tag never wrote a fresh heartbeat within ${WORKER_WAIT_S:-180}s; last answer: $body" >&2
   g logging read "resource.type=\"cloud_run_worker_pool\" AND resource.labels.worker_pool_name=\"$prefix-worker\" AND jsonPayload.signal=\"worker.boot_failed\"" \
@@ -365,6 +431,7 @@ make_room() {
   for old in $others; do
     [ "$count" -lt "$MAX_PR_PREVIEWS" ] && break
     teardown "$old"
+    echo "removed PR preview $old"
     count=$((count - 1))
   done
 }
@@ -374,5 +441,5 @@ case "${1:-}" in
   teardown) teardown "$2" ;;
   make-room) make_room "$2" ;;
   list) pr_previews ;;
-  *) sed -n '2,10p' "$0"; exit 2 ;;
+  *) sed -n '2,11p' "$0"; exit 2 ;;
 esac

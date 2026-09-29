@@ -4,13 +4,20 @@ name: platform
 # serves. Checks and image builds run in parallel; images are built once and pushed, and a
 # deploy only migrates, rolls out and verifies.
 #
+# A run checks only the side it changed: 00-plan diffs the commit against its base (a PR's base
+# branch, or the previous commit of a push) and skips the server checks when only
+# dembrane/frontend changed, and the frontend checks the other way round. Each image is tagged
+# with a hash of its inputs, and an image whose inputs are already in the registry is tagged
+# for the new commit instead of built again (scripts/build-images.sh). A PR preview rolls out
+# only the services whose image or settings changed (scripts/deploy-env.sh).
+#
 # Each environment is its own GCP project, reached through its own keyless GitHub trust, and
 # pushes images to its own registry: a preview identity has no role in next or prod.
 #
 # PR previews (dembrane-web-previews): adding the "preview" label deploys one (echo-pr-<n>-*,
 # database echo_pr_<n>, dashboard-<n>, portal-<n> and api-<n>.preview.dembrane.com), each push
 # to a labelled PR redeploys it, and removing the label, closing or merging removes it. Every
-# deploy seeds the preview admin, the Millbrook sample and the accounts demo. At most three
+# deploy seeds the preview admin, the fictional sample project and the accounts demo. At most three
 # exist; a fourth tears down the oldest. One comment on the PR carries the links.
 #
 # next (dembrane-web-next) deploys main: by hand, and on every push to main once the
@@ -25,7 +32,8 @@ name: platform
 # Only failures reach Slack (#alerts-ci). Checks on PRs without a preview stay in the PR.
 #
 # Caches: pull request runs only restore them. Pushes to main (and runs by hand) check trusted
-# code and save them, so code from a PR never writes a cache that another run reads. A PR can
+# code and save them, so code from a PR never writes a cache that another run reads. Images
+# have no layer cache: 40-build-images builds each changed image once and pushes that build. A PR can
 # only read caches saved on its base branch, so until the cutover, when main starts running
 # this workflow, PR runs start cold. feat/bun-migration has no push run: its PR checks every
 # commit, and a second run would only duplicate every check.
@@ -77,9 +85,9 @@ jobs:
   # Decides what this run does: checks only, a PR preview deploy or teardown, or a next or
   # prod deploy.
   plan:
-    name: 00 Plan
+    name: 00-plan
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 3
     defaults:
       run:
         working-directory: .
@@ -90,6 +98,9 @@ jobs:
       deploy_env: ${{ steps.plan.outputs.deploy_env }}
       release_tag: ${{ steps.plan.outputs.release_tag }}
       teardown: ${{ steps.plan.outputs.teardown }}
+      server: ${{ steps.changes.outputs.server }}
+      frontend: ${{ steps.changes.outputs.frontend }}
+      images: ${{ steps.changes.outputs.images }}
     steps:
       - name: Plan the run
         id: plan
@@ -147,11 +158,56 @@ jobs:
             echo "sha=$sha"; echo "pr=$pr"; echo "deploy_pr=$deploy_pr"; echo "deploy_env=$deploy_env"
             echo "release_tag=$release_tag"; echo "teardown=$teardown"
           } >> "$GITHUB_OUTPUT"
+      # A pull request's merge commit has the base branch tip as its first parent, so two
+      # commits of history are enough to diff what the PR changes. Trees only, no file contents.
+      - name: Check out history for the diff
+        if: steps.plan.outputs.teardown != 'true'
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          ref: ${{ env.REF }}
+          persist-credentials: false
+          fetch-depth: 2
+          filter: blob:none
+          sparse-checkout: dembrane/platform/scripts
+      # Which sides this run checks and which images it builds. Runs by hand, tags and anything
+      # the diff cannot be computed for check and build everything.
+      - name: Find what changed
+        id: changes
+        if: steps.plan.outputs.teardown != 'true'
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          all() { echo "server=true"; echo "frontend=true"; echo "images=api worker migrate media web"; }
+          base=''
+          case "$EVENT/$GITHUB_REF" in
+            pull_request/*) base=$(git rev-parse HEAD^1 2>/dev/null) || base='' ;;
+            push/refs/heads/*)
+              if [[ $BEFORE =~ ^[0-9a-f]{40}$ && $BEFORE != 0000000000000000000000000000000000000000 ]] &&
+                git fetch -q --depth=1 --filter=blob:none origin "$BEFORE" 2>/dev/null; then base=$BEFORE; fi ;;
+          esac
+          if [ -z "$base" ]; then
+            echo "Checking and building everything (no base to diff against)"
+            all >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          files=$(git diff --name-only "$base" HEAD)
+          if grep -qx .github/workflows/platform.yml <<<"$files"; then
+            echo "The workflow changed: checking and building everything"
+            all >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          server=false frontend=false
+          grep -qE '^dembrane/(platform|demos)/' <<<"$files" && server=true
+          grep -q '^dembrane/frontend/' <<<"$files" && frontend=true
+          images=$(dembrane/platform/scripts/build-images.sh changed "$base" HEAD)
+          echo "server=$server frontend=$frontend images=[$images] (against ${base:0:7})"
+          { echo "server=$server"; echo "frontend=$frontend"; echo "images=$images"; } >> "$GITHUB_OUTPUT"
 
   check-server:
-    name: 10 Check server
+    name: 10-check-server
     needs: plan
-    if: needs.plan.outputs.teardown != 'true'
+    if: needs.plan.outputs.teardown != 'true' && needs.plan.outputs.server == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     services:
@@ -226,6 +282,13 @@ jobs:
       - name: Check schema matches migrations
         working-directory: dembrane/platform/packages/db
         run: bunx drizzle-kit generate < /dev/null | tee /dev/stderr | grep -q "No schema changes"
+      # The frontend keeps generated copies of the accounts contract and the error catalog. The
+      # scripts need only Node, so a server-only change is held to them without the frontend job.
+      - name: Check the frontend's API types are in sync
+        working-directory: dembrane/frontend
+        run: |
+          node scripts/sync-accounts-contract.mjs --check
+          node scripts/sync-error-codes.mjs --check
       # Files in parallel, each database test on its own database.
       - name: Run tests
         run: bun test --parallel
@@ -243,9 +306,9 @@ jobs:
           key: tsc-${{ github.sha }}
 
   check-frontend:
-    name: 20 Check frontend
+    name: 20-check-frontend
     needs: plan
-    if: needs.plan.outputs.teardown != 'true'
+    if: needs.plan.outputs.teardown != 'true' && needs.plan.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -293,9 +356,6 @@ jobs:
         run: |
           node scripts/sync-accounts-contract.mjs --check
           node scripts/sync-error-codes.mjs --check
-      # The participant portal loads on phones at events, so its first download must not grow.
-      - name: Check portal bundle size
-        run: node scripts/check-portal-bundle.mjs
       - name: Save pnpm cache
         if: env.SAVE_CACHE == 'true' && steps.pnpm-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -305,9 +365,9 @@ jobs:
 
   # The test suite runs beside the checks: together they took most of the frontend's time.
   test-frontend:
-    name: 21 Test frontend
+    name: 21-test-frontend
     needs: plan
-    if: needs.plan.outputs.teardown != 'true'
+    if: needs.plan.outputs.teardown != 'true' && needs.plan.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -363,54 +423,115 @@ jobs:
           path: dembrane/frontend/node_modules/.vite/vitest
           key: vitest-${{ runner.os }}-${{ hashFiles('dembrane/frontend/pnpm-lock.yaml', 'dembrane/frontend/vite.config.ts') }}-${{ github.sha }}
 
-  # Builds the five images to prove they build and start; a deploy job pushes them from the
-  # Docker layer cache this writes. A pull request run writes that cache under the PR's own
-  # ref, which only that PR's runs can read.
+  # Builds the images whose inputs changed and proves they start. A run that deploys a PR
+  # preview or next also pushes them, to that environment's registry, and tags every image
+  # it did not need to build for this commit, so the deploy job only rolls out. prod pushes in
+  # its own job, after the prod environment's approval.
   images:
-    name: 40 Build images
+    name: 40-build-images
     needs: plan
-    if: needs.plan.outputs.teardown != 'true'
+    if: >-
+      needs.plan.outputs.teardown != 'true'
+      && (needs.plan.outputs.images != '' || needs.plan.outputs.deploy_pr == 'true' || needs.plan.outputs.deploy_env == 'next')
     runs-on: ubuntu-latest
     timeout-minutes: 12
+    # The preview trust accepts a PR's jobs only in this environment. It has no reviewers; it
+    # marks the jobs that may push and deploy a preview. An empty name is no environment.
+    environment: ${{ needs.plan.outputs.deploy_pr == 'true' && 'pr-preview' || '' }}
+    permissions:
+      contents: read
+      id-token: write
     env:
       TAG: ${{ needs.plan.outputs.sha }}
+      PUSH: ${{ needs.plan.outputs.deploy_pr == 'true' && 'preview' || needs.plan.outputs.deploy_env == 'next' && 'next' || '' }}
+      REGISTRY: ${{ needs.plan.outputs.deploy_env == 'next' && 'europe-west4-docker.pkg.dev/dembrane-web-next/echo-next' || 'europe-west4-docker.pkg.dev/dembrane-web-previews/echo-preview' }}
+      IMAGES: ${{ needs.plan.outputs.images }}
     steps:
       - name: Check out code
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with: { ref: "${{ env.REF }}", persist-credentials: false }
+      # The runner is thrown away after the job, and removing the builder took half a minute.
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+        with: { cleanup: false }
+      - name: Authenticate to Google Cloud (preview)
+        if: env.PUSH == 'preview'
+        uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2.1.13
+        with:
+          workload_identity_provider: projects/218237812097/locations/global/workloadIdentityPools/echo-preview-github/providers/github
+          service_account: echo-preview-deployer@dembrane-web-previews.iam.gserviceaccount.com
+      - name: Authenticate to Google Cloud (next)
+        if: env.PUSH == 'next'
+        uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2.1.13
+        with:
+          workload_identity_provider: projects/488580804029/locations/global/workloadIdentityPools/echo-next-github/providers/github
+          service_account: echo-next-deployer@dembrane-web-next.iam.gserviceaccount.com
+      - name: Set up gcloud
+        if: env.PUSH != ''
+        uses: google-github-actions/setup-gcloud@e427ad8a34f8676edf47cf7d7925499adf3eb74f # v2.2.1
+        with: { skip_install: true }
+      - name: Configure Docker for Artifact Registry
+        if: env.PUSH != ''
+        run: gcloud auth configure-docker europe-west4-docker.pkg.dev --quiet
       - name: Build images
-        run: scripts/build-images.sh --load --cache-to
+        id: build
+        run: |
+          built=$RUNNER_TEMP/built
+          # shellcheck disable=SC2086
+          if [ -n "$PUSH" ]; then BUILT_FILE=$built scripts/build-images.sh --push
+          else BUILT_FILE=$built scripts/build-images.sh --load $IMAGES; fi
+          echo "built=$(tr '\n' ' ' < "$built")" >> "$GITHUB_OUTPUT"
       - name: Smoke test containers
+        if: steps.build.outputs.built != ''
+        env:
+          BUILT: ${{ steps.build.outputs.built }}
         run: |
           # Each binary checks at boot that its image carries the files it reads and exits
           # non-zero naming any that are missing. The worker and migrate job need a database
-          # to go further, so they stop after the check.
-          docker run --rm "$REGISTRY/worker:$TAG" --check-assets
-          docker run --rm "$REGISTRY/migrate:$TAG" --check-assets
-          docker run -d --name api -p 8080:8080 -e APP_ENV=test -e DATABASE_URL=postgres://u:p@127.0.0.1:1/d \
-            -e AUTH_SECRET=smoke-test-secret-that-is-long-enough-000 -e INVITE_HASH_SECRET=smoke-test-invite-secret-000 \
-            "$REGISTRY/api:$TAG"
-          docker run -d --name media -p 8081:8080 -e APP_ENV=test "$REGISTRY/media:$TAG"
-          ok=
-          for _ in $(seq 1 25); do curl -sf localhost:8080/health && ok=1 && break; sleep 0.2; done
-          [ -n "$ok" ] || { docker logs api; exit 1; }
-          # Asset-backed routes that need no database: popcorn's logo and a drawing read from
-          # /app/assets, the same tree the deck page template comes from.
-          for f in logo.png illustrations/scan.webp; do
-            curl -sf "localhost:8080/api/v2/popcorn/public/smoke/$f" -o /dev/null || { docker logs api; exit 1; }
-          done
-          # The media image must ship the ffmpeg it runs, not only answer HTTP.
-          for _ in $(seq 1 25); do curl -sf localhost:8081/health && break; sleep 0.2; done
-          curl -sf -X POST localhost:8081/probe-url -H 'content-type: application/json' -d '{"url":"http://127.0.0.1:9/x.mp3"}' -o /dev/null -w '%{http_code}' | grep -q 422 \
-            || { docker logs media; exit 1; }
+          # to go further, so they stop after the check. Only images built in this run are
+          # here; a reused one passed this test when it was built.
+          built() { grep -qw "$1" <<<"$BUILT"; }
+          if built worker; then docker run --rm "$REGISTRY/worker:$TAG" --check-assets; fi
+          if built migrate; then docker run --rm "$REGISTRY/migrate:$TAG" --check-assets; fi
+          if built api; then
+            docker run -d --name api -p 8080:8080 -e APP_ENV=test -e DATABASE_URL=postgres://u:p@127.0.0.1:1/d \
+              -e AUTH_SECRET=smoke-test-secret-that-is-long-enough-000 -e INVITE_HASH_SECRET=smoke-test-invite-secret-000 \
+              "$REGISTRY/api:$TAG"
+            ok=
+            for _ in $(seq 1 25); do curl -sf localhost:8080/health && ok=1 && break; sleep 0.2; done
+            [ -n "$ok" ] || { docker logs api; exit 1; }
+            # Asset-backed routes that need no database: popcorn's logo and a drawing read from
+            # /app/assets, the same tree the deck page template comes from.
+            for f in logo.png illustrations/scan.webp; do
+              curl -sf "localhost:8080/api/v2/popcorn/public/smoke/$f" -o /dev/null || { docker logs api; exit 1; }
+            done
+          fi
+          if built media; then
+            # The media image must ship the ffmpeg it runs, not only answer HTTP.
+            docker run -d --name media -p 8081:8080 -e APP_ENV=test "$REGISTRY/media:$TAG"
+            for _ in $(seq 1 25); do curl -sf localhost:8081/health && break; sleep 0.2; done
+            curl -sf -X POST localhost:8081/probe-url -H 'content-type: application/json' -d '{"url":"http://127.0.0.1:9/x.mp3"}' -o /dev/null -w '%{http_code}' | grep -q 422 \
+              || { docker logs media; exit 1; }
+          fi
+      # The participant portal loads on phones at events, so its first download must not grow.
+      # Measured on the bundle the web image just built (its manifest sits beside the served
+      # files), so the frontend is bundled once per commit.
+      - name: Check portal bundle size
+        if: contains(steps.build.outputs.built, 'web')
+        run: |
+          dist=$RUNNER_TEMP/web-dist
+          id=$(docker create "$REGISTRY/web:$TAG")
+          docker cp "$id:/app/dist" "$dist"
+          docker cp "$id:/app/build-meta/.vite" "$dist/.vite"
+          docker rm "$id" >/dev/null
+          node ../frontend/scripts/check-portal-bundle.mjs --dist "$dist"
 
-  # A PR preview: its own services and database, built from the PR. Serialized across PRs so
-  # two new previews cannot both take the last slot. It runs when a check failed too, only to
-  # say so in the PR comment.
+  # A PR preview: its own services and database, from the images 40-build-images pushed.
+  # Serialized across PRs so two new previews cannot both take the last slot. It runs when a
+  # check failed too, only to say so in the PR comment. A check the plan skipped counts as
+  # passed: its side did not change.
   deploy-pr:
-    name: 50 Deploy PR preview
+    name: 50-deploy-pr-preview
     if: ${{ !cancelled() && needs.plan.outputs.deploy_pr == 'true' }}
     needs: [plan, check-server, check-frontend, test-frontend, images]
     runs-on: ubuntu-latest
@@ -435,11 +556,12 @@ jobs:
         id: gate
         env:
           RESULTS: |
-            10 Check server=${{ needs.check-server.result }}
-            20 Check frontend=${{ needs.check-frontend.result }}
-            40 Build images=${{ needs.images.result }}
+            10-check-server=${{ needs.check-server.result }}
+            20-check-frontend=${{ needs.check-frontend.result }}
+            21-test-frontend=${{ needs.test-frontend.result }}
+            40-build-images=${{ needs.images.result }}
         run: |
-          failed=$(awk -F= '$2 != "success" { printf "%s%s", (n++ ? ", " : ""), $1 }' <<<"$RESULTS")
+          failed=$(awk -F= '$2 != "success" && $2 != "skipped" { printf "%s%s", (n++ ? ", " : ""), $1 }' <<<"$RESULTS")
           [ -z "$failed" ] && exit 0
           echo "failed=$failed" >> "$GITHUB_OUTPUT"
           echo "::error::Not deploying: $failed did not pass"
@@ -453,22 +575,12 @@ jobs:
       - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@e427ad8a34f8676edf47cf7d7925499adf3eb74f # v2.2.1
         with: { skip_install: true }
-      - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker europe-west4-docker.pkg.dev --quiet
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
-      # The images job built these moments ago; its layer cache makes this a push.
-      - name: Push images
-        id: push
-        run: scripts/build-images.sh --push
       - name: Make room (at most 3 previews)
         id: room
         run: |
-          before=$(scripts/deploy-env.sh list | awk '{ print $1 }')
-          scripts/deploy-env.sh make-room "$PR"
-          after=$(scripts/deploy-env.sh list | awk '{ print $1 }')
-          for n in $before; do
-            grep -qx "$n" <<<"$after" || scripts/ci-notify.sh preview removed "$n" "to make room for #$PR" || true
+          removed=$(scripts/deploy-env.sh make-room "$PR" | tee /dev/stderr | awk '/^removed PR preview / { print $4 }')
+          for n in $removed; do
+            scripts/ci-notify.sh preview removed "$n" "to make room for #$PR" || true
           done
       - name: Deploy and verify
         id: deploy
@@ -485,7 +597,6 @@ jobs:
           OUTCOMES: |
             gate=${{ steps.gate.outcome }}
             Authenticate to Google Cloud=${{ steps.auth.outcome }}
-            Push images=${{ steps.push.outcome }}
             Make room=${{ steps.room.outcome }}
             Deploy and verify=${{ steps.deploy.outcome }}
         run: |
@@ -495,7 +606,7 @@ jobs:
           else scripts/ci-notify.sh preview deployed "$PR"; fi
 
   teardown-pr:
-    name: 51 Tear down PR preview
+    name: 51-teardown-pr-preview
     if: needs.plan.outputs.teardown == 'true'
     needs: plan
     runs-on: ubuntu-latest
@@ -534,11 +645,12 @@ jobs:
           WHY: ${{ github.event.action == 'closed' && 'the PR was closed' || 'the preview label was removed' }}
         run: scripts/ci-notify.sh preview removed "$PR" "$WHY"
 
-  # next and prod: each pushes the images into its own project's registry (the layer cache
-  # makes that an upload) and deploys with its own identity.
+  # next and prod each deploy from their own project's registry with their own identity. next
+  # rolls out what 40-build-images pushed; prod builds and pushes here, after the approval.
+  # A check the plan skipped counts as passed, as on a PR preview.
   deploy-next:
-    name: 60 Deploy next
-    if: needs.plan.outputs.deploy_env == 'next'
+    name: 60-deploy-next
+    if: ${{ !cancelled() && !failure() && needs.plan.outputs.deploy_env == 'next' }}
     needs: [plan, check-server, check-frontend, test-frontend, images]
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -568,12 +680,6 @@ jobs:
       - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@e427ad8a34f8676edf47cf7d7925499adf3eb74f # v2.2.1
         with: { skip_install: true }
-      - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker europe-west4-docker.pkg.dev --quiet
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
-      - name: Push images
-        run: scripts/build-images.sh --push
       - name: Deploy and verify
         env:
           HOLD_DATA: ${{ inputs.hold_data && '1' || '0' }}
@@ -587,8 +693,8 @@ jobs:
         run: scripts/release.sh announce-next "$TAG"
 
   deploy-prod:
-    name: 70 Deploy prod
-    if: needs.plan.outputs.deploy_env == 'prod'
+    name: 70-deploy-prod
+    if: ${{ !cancelled() && !failure() && needs.plan.outputs.deploy_env == 'prod' }}
     needs: [plan, check-server, check-frontend, test-frontend, images]
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -622,6 +728,8 @@ jobs:
         run: gcloud auth configure-docker europe-west4-docker.pkg.dev --quiet
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+        with: { cleanup: false }
+      # Tags an image already in the prod registry with the same inputs; builds the rest.
       - name: Push images
         run: scripts/build-images.sh --push
       - name: Deploy and verify
@@ -643,7 +751,7 @@ jobs:
   # Any failed job posts to #alerts-ci, naming the job and the step, except checks on a PR
   # without a preview (they stay in the PR).
   notify-failure:
-    name: 90 Notify on failure
+    name: 90-notify-failure
     if: >-
       failure()
       && (github.event_name != 'pull_request' || needs.plan.outputs.deploy_pr == 'true' || needs.plan.outputs.teardown == 'true')
