@@ -18,7 +18,8 @@
 # load balancer in infra/preview/lb.tf. The deploy adds the PR's serverless NEGs, backend
 # services and host rules; teardown removes them. After its migrations each PR preview's
 # migrate job seeds the preview admin (sameer+admin@dembrane.com, password in the
-# preview-admin-password secret), the Millbrook sample project and the accounts demo.
+# preview-admin-password secret) and fictional data only: the generated Millbrook sample in
+# the org Acme Civic (sample), and the accounts demo for Example Town Council (sample).
 #
 # HOLD_DATA=1 deploys everything but leaves the data alone: the migrate job is deployed and
 # not run, and the worker pool gets 0 instances. For prod before the cutover (CUTOVER.md),
