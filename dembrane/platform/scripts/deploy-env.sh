@@ -105,6 +105,8 @@ deploy() {
   local hosts=""
   [ "$ENV" = preview ] && hosts=",API_PUBLIC_URL=$public_api,DASHBOARD_URL=$web_dash,PORTAL_URL=$web_portal,WEB_API_ORIGIN=$api"
   local files="FILES_S3_ENDPOINT=https://storage.googleapis.com,FILES_S3_BUCKET=$BUCKET,STORAGE_S3_ENDPOINT=https://storage.googleapis.com,STORAGE_S3_BUCKET=$BUCKET"
+  # A PR preview keeps its objects under pr-<n>/ in the shared bucket, so teardown can delete them.
+  if [[ $name == pr-* ]]; then files+=",FILES_S3_PREFIX=pr-$n/,STORAGE_S3_PREFIX=pr-$n/"; fi
   local keys
   keys="FILES_S3_ACCESS_KEY_ID=$(secret s3-access-key-id),FILES_S3_SECRET_ACCESS_KEY=$(secret s3-secret-access-key),STORAGE_S3_KEY=$(secret s3-access-key-id),STORAGE_S3_SECRET=$(secret s3-secret-access-key)"
   local filled
@@ -344,6 +346,11 @@ teardown() {
   for s in media dashboard portal; do
     g run services delete "$prefix-$s" --region "$REGION" --quiet 2>/dev/null || true
   done
+  # The PR's files and audio: everything under its prefix in the shared bucket. Objects older
+  # than 30 days go by the bucket's lifecycle rule anyway (infra/modules/platform/storage.tf).
+  if g storage ls "gs://$BUCKET/pr-$n/" >/dev/null 2>&1; then
+    g storage rm --recursive "gs://$BUCKET/pr-$n/" --quiet
+  fi
 }
 
 make_room() {

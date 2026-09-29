@@ -17,3 +17,20 @@ for (const name of Object.keys(environments)) {
     expect(values.app.env).toBe(name as typeof values.app.env);
   });
 }
+
+test("a PR preview's key prefix is read; no environment sets it", () => {
+  const plain = loadConfig({ APP_ENV: "preview", ...secrets }).values;
+  expect(plain.files.s3Prefix).toBeUndefined();
+  expect(plain.audio.s3Prefix).toBeUndefined();
+
+  const pr = loadConfig({
+    APP_ENV: "preview",
+    ...secrets,
+    FILES_S3_PREFIX: "pr-12/",
+    STORAGE_S3_PREFIX: "pr-12/",
+  }).values;
+  expect(pr.files.s3Prefix).toBe("pr-12/");
+  expect(pr.audio.s3Prefix).toBe("pr-12/");
+
+  expect(() => loadConfig({ APP_ENV: "preview", ...secrets, FILES_S3_PREFIX: "../x" })).toThrow();
+});

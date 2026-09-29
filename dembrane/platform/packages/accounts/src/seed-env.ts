@@ -11,7 +11,7 @@ type Env = Readonly<Record<string, string | undefined>>;
 /**
  * The accounts demo with its URLs, bucket and company details read from the environment:
  * APP_ENV picks the environment's URLs unless DASHBOARD_URL, PORTAL_URL or API_PUBLIC_URL
- * name them, and FILES_S3_* the bucket its PDFs and logo go to. Shared by
+ * name them, and FILES_S3_* the bucket (and key prefix) its PDFs and logo go to. Shared by
  * `bun run seed:accounts-demo` and the PR preview seed in the migrate job.
  */
 export async function seedAccountsDemoFromEnv(
@@ -30,6 +30,7 @@ export async function seedAccountsDemoFromEnv(
         region: e.FILES_S3_REGION ?? "auto",
         accessKeyId: e.FILES_S3_ACCESS_KEY_ID ?? "",
         secretAccessKey: e.FILES_S3_SECRET_ACCESS_KEY ?? "",
+        prefix: e.FILES_S3_PREFIX,
       })
     : new FilesystemStorage(e.FILES_LOCAL_ROOT ?? ".data/files", apiUrl);
   // A demo on preview or next writes its PDFs and logo to the bucket the API serves from.

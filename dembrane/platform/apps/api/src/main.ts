@@ -158,6 +158,7 @@ const files = config.files.s3Bucket
       region: config.files.s3Region,
       accessKeyId: config.files.s3AccessKeyId ?? "",
       secretAccessKey: config.files.s3SecretAccessKey ?? "",
+      prefix: config.files.s3Prefix,
     })
   : new FilesystemStorage(config.files.localRoot, config.http.publicUrl);
 
@@ -185,6 +186,7 @@ const audio = config.audio.s3Bucket
       region: config.audio.s3Region,
       accessKeyId: config.audio.s3AccessKeyId ?? "",
       secretAccessKey: config.audio.s3SecretAccessKey ?? "",
+      prefix: config.audio.s3Prefix,
     })
   : new FilesystemStorage(config.audio.localRoot, config.http.publicUrl, "/_local-audio");
 

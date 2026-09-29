@@ -219,6 +219,17 @@ export const schema = defineSchema({
       description: "Secret key for that bucket.",
       secret: true,
     }),
+    s3Prefix: key(
+      "FILES_S3_PREFIX",
+      z
+        .string()
+        .regex(/^[a-z0-9][a-z0-9._-]*\/?$/)
+        .optional(),
+      {
+        description:
+          "Prepended to every key in that bucket, so deployments sharing it (PR previews, pr-<n>/) can each be deleted by prefix. Unset writes at the bucket root.",
+      },
+    ),
   },
   audio: {
     s3Endpoint: key("STORAGE_S3_ENDPOINT", z.url().optional(), {
@@ -239,6 +250,17 @@ export const schema = defineSchema({
       description: "Secret for the audio bucket key.",
       secret: true,
     }),
+    s3Prefix: key(
+      "STORAGE_S3_PREFIX",
+      z
+        .string()
+        .regex(/^[a-z0-9][a-z0-9._-]*\/?$/)
+        .optional(),
+      {
+        description:
+          "Prepended to every key in the audio bucket, so deployments sharing it (PR previews, pr-<n>/) can each be deleted by prefix. Unset writes at the bucket root.",
+      },
+    ),
     localRoot: key("AUDIO_LOCAL_ROOT", z.string().default(".data/audio"), {
       description: "Where audio lands when no bucket is configured (local, test).",
     }),

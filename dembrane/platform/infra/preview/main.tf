@@ -66,6 +66,14 @@ resource "google_secret_manager_secret_iam_member" "migrate_seed" {
   member    = "serviceAccount:${module.platform.migrate_service_account}"
 }
 
+# Teardown (scripts/deploy-env.sh) deletes a PR preview's objects under pr-<n>/ in the
+# uploads bucket, as the deployer.
+resource "google_storage_bucket_iam_member" "deployer_teardown" {
+  bucket = module.platform.uploads_bucket
+  role   = "roles/storage.objectUser"
+  member = "serviceAccount:${module.platform.deployer}"
+}
+
 # A new project already has a _Default sink; the module repoints it at the EU bucket.
 import {
   to = module.platform.google_logging_project_sink.default
