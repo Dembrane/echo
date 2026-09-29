@@ -6,6 +6,8 @@ import { type V1Store, v1Store } from "./storage";
 
 type SummaryDeps = Pick<ConversationsDeps, "db" | "models" | "logger" | "now">;
 
+export const NO_TRANSCRIPT_SUMMARY = "[No transcript available]";
+
 /** get_conversation_transcript without the access check: chunk transcripts joined by newlines. */
 export async function conversationTranscript(store: V1Store, conversationId: string) {
   const chunks = await store.transcriptChunks(conversationId);
@@ -77,11 +79,7 @@ export async function summarizeAndStore(
 
   if (transcript === "") {
     if (conv.is_all_chunks_transcribed || conv.is_finished)
-      await store.updateConversation(
-        conversationId,
-        { summary: "[No transcript available]" },
-        d.now(),
-      );
+      await store.updateConversation(conversationId, { summary: NO_TRANSCRIPT_SUMMARY }, d.now());
     return { status: "success", message: "Transcript is empty, so no summary was generated" };
   }
 

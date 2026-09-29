@@ -21,6 +21,13 @@ export function step<R>(
   return DBOS.runStep(fn, { name, ...retry });
 }
 
+/** Inside a step: whether a failure now is final, with no retry after it. True outside a step. */
+export function isFinalAttempt(): boolean {
+  const s = DBOS.stepStatus;
+  if (!s?.maxAttempts || s.currentAttempt === undefined) return true;
+  return s.currentAttempt >= s.maxAttempts;
+}
+
 /** Starts a registered workflow once per id: a second call with the same id returns the first run. */
 export function startWorkflow<Args extends unknown[], R>(
   fn: (...args: Args) => Promise<R>,

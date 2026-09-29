@@ -2,8 +2,8 @@ import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "
 import { join } from "node:path";
 import { newId } from "@dembrane/core";
 import { createChunk } from "../src/chunks";
-import { finishConversation } from "../src/pipeline/defs";
-import { pieceId } from "../src/pipeline/steps";
+import { catchUpSummaries, finishConversation } from "../src/pipeline/defs";
+import { pieceId, unsummarizedConversations } from "../src/pipeline/steps";
 import {
   admin,
   freshDatabase,
@@ -184,6 +184,73 @@ run("conversation pipeline", () => {
     });
     expect(c.summary).toBe("A short summary.");
     h.transcriber.transcribe = original;
+  });
+
+  test("finishing while a chunk waits to retry its transcription summarises the transcript", async () => {
+    const cid = newId();
+    await seed(h.sql, cid);
+    // The first attempt fails; the retry waits on the gate, so the finish lands in between.
+    let release: () => void = () => {};
+    const gate = new Promise<void>((r) => {
+      release = r;
+    });
+    const original = h.transcriber.transcribe.bind(h.transcriber);
+    let attempts = 0;
+    h.transcriber.transcribe = async (i) => {
+      attempts++;
+      if (attempts === 1) throw new Error("vertex 503");
+      await gate;
+      return original(i);
+    };
+    await upload(cid, await tone(join(h.bucket.root, "r.webm"), 2), "r.webm");
+    await until(async () => attempts >= 2);
+    await h.queue.enqueue(finishConversation, { conversationId: cid }, { singletonKey: cid });
+    await until(async () => (await conversation(cid)).is_finished);
+    // Longer than a queue poll, so a finalize queued by the finish would have run.
+    await Bun.sleep(2500);
+    const waiting = await conversation(cid);
+    expect(waiting.is_all_chunks_transcribed).not.toBe(true);
+    expect(waiting.summary).toBeNull();
+    release();
+    const c = await until(async () => {
+      const x = await conversation(cid);
+      return x.is_all_chunks_transcribed && x.summary ? x : null;
+    });
+    expect(c.summary).toBe("A short summary.");
+    const [row] = await chunks(cid);
+    expect(row?.error).toBeNull();
+    h.transcriber.transcribe = original;
+  });
+
+  test("the catch-up replaces a no-transcript summary once the conversation has a transcript", async () => {
+    const withText = newId();
+    const empty = newId();
+    const blank = newId();
+    for (const cid of [withText, empty, blank]) {
+      await seed(h.sql, cid);
+      await h.sql`update conversation set is_finished = true, is_all_chunks_transcribed = true,
+        summary = '[No transcript available]' where id = ${cid}`;
+    }
+    await h.sql`insert into conversation_chunk (id, conversation_id, timestamp, transcript, source)
+      values (${newId()}, ${withText}, now(), 'words that arrived late', 'PORTAL_AUDIO')`;
+    await h.sql`insert into conversation_chunk (id, conversation_id, timestamp, error, source)
+      values (${newId()}, ${empty}, now(), 'Audio not playable', 'PORTAL_AUDIO')`;
+    // The summariser skips an empty transcript, so picking this one would repeat every tick.
+    await h.sql`insert into conversation_chunk (id, conversation_id, timestamp, transcript, source)
+      values (${newId()}, ${blank}, now(), '', 'PORTAL_AUDIO')`;
+
+    const due = await unsummarizedConversations(h.deps.db, new Date(), 1000);
+    expect(due).toContain(withText);
+    expect(due).not.toContain(empty);
+    expect(due).not.toContain(blank);
+
+    await h.queue.enqueue(catchUpSummaries, {});
+    const c = await until(async () => {
+      const x = await conversation(withText);
+      return x.summary !== "[No transcript available]" ? x : null;
+    });
+    expect(c.summary).toBe("A short summary.");
+    expect((await conversation(empty)).summary).toBe("[No transcript available]");
   });
 
   test("finishing twice finalizes once", async () => {

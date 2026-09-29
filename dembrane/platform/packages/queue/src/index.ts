@@ -20,4 +20,11 @@ export {
   type WorkerFreshness,
   workerFreshness,
 } from "./recovery";
-export { currentWorkflowId, durableSleep, startWorkflow, step, workflow } from "./workflow";
+export {
+  currentWorkflowId,
+  durableSleep,
+  isFinalAttempt,
+  startWorkflow,
+  step,
+  workflow,
+} from "./workflow";
