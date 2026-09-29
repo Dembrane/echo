@@ -26,7 +26,15 @@ vi.mock("@/hooks/useLanguage", () => ({
 	useLanguage: () => ({ language: "en-US" }),
 }));
 vi.mock("@/components/common/Logo", () => ({
-	Logo: () => <img alt="" />,
+	// The logo owns its home link (to, linkLabel), so the stand-in keeps it.
+	Logo: ({ to, linkLabel }: { to?: string; linkLabel?: string }) =>
+		to ? (
+			<a href={to} aria-label={linkLabel}>
+				<img alt="" />
+			</a>
+		) : (
+			<img alt="" />
+		),
 }));
 vi.mock("@/components/release/ReleaseVideoModal", () => ({
 	ReleaseVideoModal: () => null,

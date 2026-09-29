@@ -10,6 +10,18 @@ export interface WebOptions {
   readonly release: string;
 }
 
+/**
+ * A PR preview names its pull request, so the frontend can show which PR it is and link to
+ * it. Every other environment adds nothing, so next and prod render exactly as before.
+ */
+export function previewRuntime(
+  env: string,
+  web: { readonly previewPr?: number | undefined; readonly previewRepo: string },
+): { previewPr?: number; previewRepo?: string } {
+  if (env !== "preview" || !web.previewPr) return {};
+  return { previewPr: web.previewPr, previewRepo: web.previewRepo };
+}
+
 const HOP_BY_HOP = [
   "connection",
   "keep-alive",

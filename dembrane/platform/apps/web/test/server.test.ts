@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { securityHeaders } from "../src/headers";
-import { createHandler } from "../src/server";
+import { createHandler, previewRuntime } from "../src/server";
 
 const dist = mkdtempSync(join(tmpdir(), "echo-web-"));
 mkdirSync(join(dist, "assets"));
@@ -133,4 +133,13 @@ test("a browser that goes away cancels the upstream stream", async () => {
     Bun.sleep(2000).then(() => false),
   ]);
   expect(cancelled).toBe(true);
+});
+
+test("only a PR preview names its pull request in the runtime config", () => {
+  const web = { previewPr: 1234, previewRepo: "Dembrane/echo" };
+  expect(previewRuntime("preview", web)).toEqual({ previewPr: 1234, previewRepo: "Dembrane/echo" });
+  expect(previewRuntime("preview", { previewRepo: "Dembrane/echo" })).toEqual({});
+  // next and prod never carry one, even if the variable leaked into their deploy.
+  expect(previewRuntime("next", web)).toEqual({});
+  expect(previewRuntime("prod", web)).toEqual({});
 });

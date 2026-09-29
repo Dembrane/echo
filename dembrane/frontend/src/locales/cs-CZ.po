@@ -4401,7 +4401,7 @@ msgid "dembrane at your event?"
 msgstr "dembrane na vaší akci?"
 
 #. placeholder {0}: new Date().getFullYear()
-#: src/components/layout/Footer.tsx:19
+#: src/components/layout/Footer.tsx:38
 msgid "dembrane B.V. {0}, all rights reserved."
 msgstr "dembrane B.V. {0}, všechna práva vyhrazena."
 
@@ -4701,7 +4701,7 @@ msgstr "Download transcript"
 msgid "Download Transcript Options"
 msgstr "Download Transcript Options"
 
-#: src/components/layout/Footer.tsx:15
+#: src/components/layout/Footer.tsx:34
 msgid "DPA"
 msgstr "DPA"
 
@@ -10111,6 +10111,10 @@ msgstr "Pozitivní"
 msgid "Postal code"
 msgstr "PSČ"
 
+#: src/components/common/Logo.tsx:43
+msgid "PR #{number}"
+msgstr "PR #{number}"
+
 #: src/components/chat/InsightNoteCard.tsx:21
 msgid "praise"
 msgstr "pochvala"
@@ -10190,6 +10194,10 @@ msgstr "Stisknutím klávesy Enter položku přidáte. Více položek oddělte �
 msgid "Preview"
 msgstr "Náhled"
 
+#: src/components/layout/Footer.tsx:20
+msgid "Preview of PR #{number}"
+msgstr "Náhled PR #{number}"
+
 #: src/components/settings/FontSizeSettingsCard.tsx:98
 msgid "Preview: The quick brown fox jumps over the lazy dog."
 msgstr "Preview: The quick brown fox jumps over the lazy dog."
@@ -10214,7 +10222,7 @@ msgstr "Print / Save PDF"
 msgid "Print report"
 msgstr "Print report"
 
-#: src/components/layout/Footer.tsx:12
+#: src/components/layout/Footer.tsx:31
 msgid "Privacy"
 msgstr "Soukromí"
 
@@ -13453,7 +13461,7 @@ msgstr "Napětí"
 msgid "Tensions tab"
 msgstr "Záložka Tenze"
 
-#: src/components/layout/Footer.tsx:9
+#: src/components/layout/Footer.tsx:28
 msgid "Terms"
 msgstr "Podmínky"
 

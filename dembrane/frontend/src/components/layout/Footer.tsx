@@ -1,6 +1,25 @@
 import { Trans } from "@lingui/react/macro";
 import { Anchor, Group, Stack, Text } from "@mantine/core";
-import { LEGAL_DPA_URL, LEGAL_PRIVACY_URL, LEGAL_TERMS_URL } from "@/config";
+import {
+	LEGAL_DPA_URL,
+	LEGAL_PRIVACY_URL,
+	LEGAL_TERMS_URL,
+	PREVIEW_PR,
+} from "@/config";
+
+// PR previews only: which pull request this deployment was built from.
+const PreviewLine = ({ number, url }: { number: number; url: string }) => (
+	<Anchor
+		size="xs"
+		c="dimmed"
+		target="_blank"
+		rel="noreferrer"
+		href={url}
+		data-testid="footer-preview-pr"
+	>
+		<Trans>Preview of PR #{number}</Trans>
+	</Anchor>
+);
 
 export const Footer = () => (
 	<Stack gap="xs" justify="center" align="center">
@@ -20,5 +39,6 @@ export const Footer = () => (
 				dembrane B.V. {new Date().getFullYear()}, all rights reserved.
 			</Trans>
 		</Text>
+		{PREVIEW_PR && <PreviewLine {...PREVIEW_PR} />}
 	</Stack>
 );
