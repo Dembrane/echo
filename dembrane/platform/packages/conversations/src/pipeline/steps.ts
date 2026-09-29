@@ -4,6 +4,7 @@ import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
 import type { Models } from "@dembrane/llm";
 import type { Logger } from "@dembrane/observability";
+import { isFinalAttempt } from "@dembrane/queue";
 import type { ObjectStorage } from "@dembrane/storage";
 import {
   isRecoverableTranscriptionError,
@@ -17,7 +18,7 @@ import type { ConversationsDeps, JobSink } from "../deps";
 import { mergeConversationAudio, NoContent, NoMergeableChunks } from "../merge";
 import { type ChunkRow, conversationStore, type Tx, transaction } from "../storage";
 import { computeIsOverCap } from "../tiers";
-import { summarizeAndStore } from "../v1/summary";
+import { NO_TRANSCRIPT_SUMMARY, summarizeAndStore } from "../v1/summary";
 import { computeTokenCount } from "../v1/token-count";
 import { finalizeConversation } from "./defs";
 
@@ -279,6 +280,28 @@ async function convertAndSplit(d: PipelineDeps, chunk: ChunkRow): Promise<string
 }
 
 /**
+ * A write that must land: five attempts, 2 s doubling, as the pipeline's db steps retry.
+ * Returns null once it lands, or the last error when every attempt failed.
+ */
+export async function retryWrite(
+  write: () => Promise<unknown>,
+  opts: { sleep?: (ms: number) => Promise<void> } = {},
+): Promise<unknown> {
+  const sleep = opts.sleep ?? ((ms: number) => Bun.sleep(ms));
+  let last: unknown = null;
+  for (let attempt = 1; attempt <= 5; attempt++) {
+    try {
+      await write();
+      return null;
+    } catch (err) {
+      last = err;
+      if (attempt < 5) await sleep(2000 * 2 ** (attempt - 1));
+    }
+  }
+  return last;
+}
+
+/**
  * conversation_service.update_chunk: strips NUL bytes (Postgres text cannot hold them and
  * Gemini occasionally emits them), and a new transcript clears the conversation's token
  * count so readers never see the count of the old text.
@@ -319,9 +342,10 @@ export interface TranscribeOutcome {
 }
 
 /**
- * transcribe_conversation_chunk for one piece. Every failure is saved on the chunk (the
- * error is visible in the dashboard); a recoverable one (no speech, bad audio, truncated
- * output) returns normally so the run moves on, anything else throws so the step retries.
+ * transcribe_conversation_chunk for one piece. A recoverable failure (no speech, bad audio,
+ * truncated output) is saved on the chunk and returns normally so the run moves on; anything
+ * else throws so the step retries, and is saved only on the last attempt. A saved error
+ * counts the chunk as done, so saving one mid-retry let a finish summarise without it.
  *
  * Idempotent: the transcript is an update of one row; a retry after a crash overwrites
  * it with a new transcript of the same audio.
@@ -373,9 +397,22 @@ export async function transcribePiece(
         return { ok: true };
       } catch (err) {
         const message = (err as Error).message ?? String(err);
-        await updateChunk(d, chunkId, chunk.conversation_id, { error: message }, false).catch(
-          () => {},
-        );
+        // This write is what marks the chunk done; lost, the chunk stays pending for good.
+        if (isRecoverableTranscriptionError(err) || isFinalAttempt()) {
+          const failure = await retryWrite(() =>
+            updateChunk(d, chunkId, chunk.conversation_id, { error: message }, false),
+          );
+          if (failure)
+            d.logger.error(
+              {
+                chunkId,
+                conversationId: chunk.conversation_id,
+                err: failure,
+                signal: "chunk.error_not_saved",
+              },
+              "chunk error could not be saved; the chunk stays pending",
+            );
+        }
         d.logger.warn(
           {
             chunkId,
@@ -581,13 +618,14 @@ export async function mergeAudio(d: PipelineDeps, conversationId: string, run: s
 
 /**
  * task_summarize_conversation: skips a finished conversation that has a summary and a
- * tier-locked one (it stays in the catch-up set and summarises after an upgrade).
+ * tier-locked one (it stays in the catch-up set and summarises after an upgrade). The
+ * no-transcript placeholder is not a summary: the catch-up retries it once text exists.
  * Returns whether a summary was written, so the webhook step knows to fire.
  */
 export async function summarize(d: PipelineDeps, conversationId: string): Promise<boolean> {
   const conv = await conversationStore(d.db).conversation(conversationId);
   if (!conv) return false;
-  if (conv.is_finished && conv.summary) return false;
+  if (conv.is_finished && conv.summary && conv.summary !== NO_TRANSCRIPT_SUMMARY) return false;
   try {
     await withStatus(d, { conversationId }, "task_summarize_conversation", "", () =>
       summarizeAndStore(d, conversationId),
@@ -648,7 +686,9 @@ export async function idleConversations(db: Db, now: Date, limit = 100): Promise
  * collect_unsummarized_conversations: transcribed, no summary, not locked (over the cap
  * on a tier without overage), not deleted, created over five minutes ago. The one
  * product-level catch-up kept: a locked conversation summarises once its workspace
- * upgrades, and a summary that failed all its retries gets another chance.
+ * upgrades, and a summary that failed all its retries gets another chance. The
+ * no-transcript placeholder counts as no summary once a chunk has text, which repairs
+ * conversations summarised before their last transcript landed.
  */
 export async function unsummarizedConversations(db: Db, now: Date, limit = 50): Promise<string[]> {
   const cutoff = new Date(now.getTime() - 5 * 60_000).toISOString();
@@ -658,7 +698,10 @@ export async function unsummarizedConversations(db: Db, now: Date, limit = 50): 
     left join workspace w on w.id = p.workspace_id
     left join billing_account b on b.id = w.billing_account_id
     where c.is_all_chunks_transcribed = true
-      and (c.summary is null or c.summary = '')
+      and (c.summary is null or c.summary = ''
+           or (c.summary = ${NO_TRANSCRIPT_SUMMARY} and exists (
+             select 1 from conversation_chunk ch
+             where ch.conversation_id = c.id and octet_length(ch.transcript) > 0)))
       and (c.is_over_cap is not true or b.tier is null
            or b.tier in ('innovator', 'changemaker', 'guardian'))
       and c.deleted_at is null and c.created_at <= ${cutoff}
