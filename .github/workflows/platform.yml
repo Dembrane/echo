@@ -24,15 +24,17 @@ name: platform
 #
 # Only failures reach Slack (#alerts-ci). Checks on PRs without a preview stay in the PR.
 #
-# Caches: pull request runs only restore them. Pushes to main and feat/bun-migration (and runs
-# by hand) check trusted code and save them, so code from a PR never writes a cache that
-# another run reads.
+# Caches: pull request runs only restore them. Pushes to main (and runs by hand) check trusted
+# code and save them, so code from a PR never writes a cache that another run reads. A PR can
+# only read caches saved on its base branch, so until the cutover, when main starts running
+# this workflow, PR runs start cold. feat/bun-migration has no push run: its PR checks every
+# commit, and a second run would only duplicate every check.
 on:
   pull_request:
     types: [opened, synchronize, reopened, labeled, unlabeled, closed]
     paths: ["dembrane/platform/**", "dembrane/frontend/**", ".github/workflows/platform.yml"]
   push:
-    branches: [main, feat/bun-migration]
+    branches: [main]
     # Tag pushes ignore the path filter.
     tags: ["v[0-9]+.[0-9]+.[0-9]+"]
     paths: ["dembrane/platform/**", "dembrane/frontend/**", ".github/workflows/platform.yml"]
@@ -58,7 +60,7 @@ permissions:
 concurrency:
   group: platform-${{ github.event.pull_request.number || inputs.target || github.ref }}
   # A newer push replaces a running check or preview; a next or prod rollout runs to the end.
-  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/feat/bun-migration' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 defaults:
   run:
@@ -597,14 +599,12 @@ jobs:
         run: scripts/release.sh publish-release "$RELEASE_TAG"
 
   # Any failed job posts to #alerts-ci, naming the job and the step, except checks on a PR
-  # without a preview (they stay in the PR) and pushes to feat/bun-migration (its PR's run
-  # already reports them).
+  # without a preview (they stay in the PR).
   notify-failure:
     name: 90 Notify on failure
     if: >-
       failure()
       && (github.event_name != 'pull_request' || needs.plan.outputs.deploy_pr == 'true' || needs.plan.outputs.teardown == 'true')
-      && !(github.event_name == 'push' && github.ref == 'refs/heads/feat/bun-migration')
     needs: [plan, check-server, check-frontend, images, deploy-pr, teardown-pr, deploy-next, deploy-prod]
     runs-on: ubuntu-latest
     timeout-minutes: 2
