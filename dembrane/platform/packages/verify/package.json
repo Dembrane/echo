@@ -10,7 +10,8 @@
     }
   },
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./defaults": "./src/defaults.ts"
   },
   "scripts": {
     "test": "bun test"

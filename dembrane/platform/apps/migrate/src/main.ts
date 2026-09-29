@@ -13,6 +13,7 @@ import {
   withDatabase,
 } from "@dembrane/db";
 import { installQueueSchema } from "@dembrane/queue";
+import { seedDefaultTopics } from "@dembrane/verify/defaults";
 import { PREVIEW_SEED_ASSETS, seedPreview } from "./preview-seed";
 
 /**
@@ -65,9 +66,11 @@ log("identities synced", await syncIdentitiesFromDirectus(sql));
 await sql.end();
 // The first legal texts (terms, SLA, DPA) an offer can pin, for an environment whose daily
 // refresh has not reached dembrane.com yet. A kind that has rows is left alone.
-const legalDb = createDb({ url, poolMax: 1 });
-log("legal texts seeded", { added: await seedLegalTexts(legalDb.db, new Date()) });
-await legalDb.close();
+const seedDb = createDb({ url, poolMax: 1 });
+log("legal texts seeded", { added: await seedLegalTexts(seedDb.db, new Date()) });
+// The global verification topics participants pick from, which the Python API seeded at startup.
+log("verification topics seeded", await seedDefaultTopics(seedDb.db));
+await seedDb.close();
 if (role) {
   await grantRuntimeRole(url, role, ["public", "dbos"]);
   log("runtime role granted", { role });

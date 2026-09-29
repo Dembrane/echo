@@ -21,6 +21,7 @@
     "packages": "bun scripts/package-map.ts",
     "test": "bun test --parallel",
     "test:changed": "bun test --parallel --changed=origin/feat/bun-migration",
+    "seed:verification-topics": "bun --env-file=.env.local packages/verify/src/seed-cli.ts",
     "seed:accounts-demo": "bun --env-file=.env.local packages/accounts/src/seed-cli.ts",
     "accounts:staff-key": "bun --env-file=.env.local packages/accounts/src/staff-key-cli.ts",
     "translations:fill": "bun packages/i18n/src/cli.ts --write",
