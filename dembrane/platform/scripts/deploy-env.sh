@@ -14,6 +14,10 @@
 # infra/<env>.tfvars.json, the file the connection budget check reads. PR previews reuse
 # the preview identities, secrets, bucket and Cloud SQL instance.
 #
+# PR previews are served at dashboard-<n>, portal-<n> and api-<n>.preview.dembrane.com by the
+# load balancer in infra/preview/lb.tf. The deploy adds the PR's serverless NEGs, backend
+# services and host rules; teardown removes them.
+#
 # HOLD_DATA=1 deploys everything but leaves the data alone: the migrate job is deployed and
 # not run, and the worker pool gets 0 instances. For prod before the cutover (CUTOVER.md),
 # whose database stays empty until the restore; W4 runs the job and W6 scales the workers.
@@ -39,6 +43,8 @@ TFVARS=${TFVARS:-$here/../infra/$ENV.tfvars.json}
 MAX_PR_PREVIEWS=${MAX_PR_PREVIEWS:-3}
 SQL=$PROJECT:$REGION:echo-$ENV
 BUCKET=$PROJECT-echo-$ENV-uploads
+PREVIEW_DOMAIN=${PREVIEW_DOMAIN:-preview.dembrane.com}
+PR_LB=${PR_LB:-echo-preview-pr-lb}
 SA() { echo "echo-$ENV-$1@$PROJECT.iam.gserviceaccount.com"; }
 secret() { echo "echo-$ENV-$1:latest"; }
 url() { echo "https://$1-$PROJECT_NUMBER.$REGION.run.app"; }
@@ -80,13 +86,24 @@ deploy() {
     labels="--update-labels preview-pr=$n"
     job_labels="--labels preview-pr=$n"
   fi
-  local api web_dash web_portal media
+  local api web_dash web_portal media public_api
   api=$(url "$prefix-api") web_dash=$(url "$prefix-dashboard") web_portal=$(url "$prefix-portal")
-  media=$(url "$prefix-media")
-  # next and prod serve their domains from environments/<env>.ts. Previews serve Cloud Run
-  # URLs, which carry the project number, so the deploy sets them.
+  media=$(url "$prefix-media") public_api=$api
+  # next and prod serve their domains from environments/<env>.ts. The branch preview serves
+  # Cloud Run URLs, which carry the project number, so the deploy sets them.
+  # A PR preview serves its own hostnames behind the load balancer. api-<n> exists because the
+  # MCP OAuth issuer and its /.well-known documents live at the API origin's root, which the
+  # web servers do not forward. The web servers still forward /api to the API's run.app URL:
+  # server to server, and working before DNS points at the load balancer.
+  local web_ingress=""
+  if [[ $name == pr-* ]]; then
+    public_api=$(pr_host api "$n") web_dash=$(pr_host dashboard "$n") web_portal=$(pr_host portal "$n")
+    # Dashboard and portal answer only through the load balancer. The API keeps public
+    # ingress: the web servers reach it from outside any VPC.
+    web_ingress="--ingress internal-and-cloud-load-balancing"
+  fi
   local hosts=""
-  [ "$ENV" = preview ] && hosts=",API_PUBLIC_URL=$api,DASHBOARD_URL=$web_dash,PORTAL_URL=$web_portal,WEB_API_ORIGIN=$api"
+  [ "$ENV" = preview ] && hosts=",API_PUBLIC_URL=$public_api,DASHBOARD_URL=$web_dash,PORTAL_URL=$web_portal,WEB_API_ORIGIN=$api"
   local files="FILES_S3_ENDPOINT=https://storage.googleapis.com,FILES_S3_BUCKET=$BUCKET,STORAGE_S3_ENDPOINT=https://storage.googleapis.com,STORAGE_S3_BUCKET=$BUCKET"
   local keys
   keys="FILES_S3_ACCESS_KEY_ID=$(secret s3-access-key-id),FILES_S3_SECRET_ACCESS_KEY=$(secret s3-secret-access-key),STORAGE_S3_KEY=$(secret s3-access-key-id),STORAGE_S3_SECRET=$(secret s3-secret-access-key)"
@@ -138,18 +155,123 @@ deploy() {
     # shellcheck disable=SC2086,SC2046
     g run deploy "$prefix-$role" --region "$REGION" --image "$REGISTRY/web:$tag" \
       --service-account "$(SA web)" --set-env-vars "$common,WEB_ROLE=$role" \
-      $(scale $role) --allow-unauthenticated $labels --quiet & pids+=($!)
+      $(scale $role) --allow-unauthenticated $web_ingress $labels --quiet & pids+=($!)
   done
   for p in "${pids[@]}"; do wait "$p" || fail=1; done
   [ "$fail" = 0 ] || exit 1
 
+  if [[ $name == pr-* ]]; then route_add "$n"; fi
   smoke "$prefix" "$tag" "$hold"
-  echo "api=$api dashboard=$web_dash portal=$web_portal"
+  echo "api=$public_api dashboard=$web_dash portal=$web_portal"
 }
+
+pr_host() { echo "https://$1-$2.$PREVIEW_DOMAIN"; }
+
+# ── PR preview routes ───────────────────────────────────────────────────────
+# Each PR gets a serverless NEG and a backend service per role, named like its Cloud Run
+# service, and a host rule per role in the shared URL map. NEGs and backend services belong
+# to one PR, so concurrent jobs never touch each other's. The URL map is shared: every edit
+# reads it, changes only this PR's rules and writes it back with the fingerprint it read.
+# The API rejects a stale fingerprint (412), and the edit is retried on a fresh read.
+PR_ROLES="api dashboard portal"
+
+compute() {
+  # compute <method> <path under the project> [body]; prints the response, fails on non-2xx
+  # (3 for a stale fingerprint). A POST passes a body, even empty: Google wants a length.
+  local out code
+  out=$(curl -sS -X "$1" "https://compute.googleapis.com/compute/v1/projects/$PROJECT/$2" \
+    -H "Authorization: Bearer $(gcloud auth print-access-token)" -H 'content-type: application/json' \
+    ${3+--data-binary "$3"} -w '\n%{http_code}')
+  code=${out##*$'\n'}
+  out=${out%$'\n'*}
+  printf '%s' "$out"
+  [[ $code == 2* ]] || return "$([ "$code" = 412 ] && echo 3 || echo 1)"
+}
+
+urlmap_edit() {
+  local op=$1 n=$2 map new op_name try rc
+  for try in 1 2 3 4 5 6 7 8; do
+    map=$(compute GET "global/urlMaps/$PR_LB") || { echo "URL map $PR_LB not readable" >&2; return 1; }
+    new=$(jq -c --arg op "$op" --arg n "$n" --arg d "$PREVIEW_DOMAIN" --arg roles "$PR_ROLES" \
+      --arg base "https://www.googleapis.com/compute/v1/projects/$PROJECT/global/backendServices" '
+      ($roles | split(" ")) as $roles | "pr-\($n)-" as $mine
+      | .hostRules = [(.hostRules // [])[] | select(.pathMatcher | startswith($mine) | not)]
+      | .pathMatchers = [(.pathMatchers // [])[] | select(.name | startswith($mine) | not)]
+      | if $op == "add" then
+          .hostRules += [$roles[] | {hosts: ["\(.)-\($n).\($d)"], pathMatcher: "\($mine)\(.)"}]
+          | .pathMatchers += [$roles[] | {name: "\($mine)\(.)", defaultService: "\($base)/echo-pr-\($n)-\(.)"}]
+        else . end' <<<"$map")
+    if [ "$(jq -S '[.hostRules, .pathMatchers]' <<<"$map")" = "$(jq -S '[.hostRules, .pathMatchers]' <<<"$new")" ]; then
+      return 0
+    fi
+    rc=0
+    op_name=$(compute PUT "global/urlMaps/$PR_LB" "$new" | jq -r .name) || rc=$?
+    if [ "$rc" = 0 ]; then
+      # The operation must finish before a backend service it drops can be deleted.
+      compute POST "global/operations/$op_name/wait" "" | jq -e '.status == "DONE" and (.error == null)' >/dev/null ||
+        { echo "URL map update $op_name did not finish cleanly" >&2; return 1; }
+      echo "URL map: PR $n routes: $op done"
+      return 0
+    fi
+    [ "$rc" = 3 ] || { echo "URL map update failed" >&2; return 1; }
+    echo "URL map changed underneath (412); retrying" >&2
+    sleep $((RANDOM % 5 + try))
+  done
+  echo "URL map: gave up after $try conflicting updates" >&2
+  return 1
+}
+
+route_add() {
+  local n=$1 role pids=() fail=0
+  for role in $PR_ROLES; do
+    (
+      name=echo-pr-$n-$role
+      g compute network-endpoint-groups describe "$name" --region "$REGION" >/dev/null 2>&1 ||
+        g compute network-endpoint-groups create "$name" --region "$REGION" \
+          --network-endpoint-type serverless --cloud-run-service "$name" --quiet
+      g compute backend-services describe "$name" --global >/dev/null 2>&1 ||
+        g compute backend-services create "$name" --global \
+          --load-balancing-scheme EXTERNAL_MANAGED --protocol HTTPS --quiet
+      [ -n "$(g compute backend-services describe "$name" --global --format 'value(backends)')" ] ||
+        g compute backend-services add-backend "$name" --global \
+          --network-endpoint-group "$name" --network-endpoint-group-region "$REGION" --quiet
+    ) & pids+=($!)
+  done
+  for p in "${pids[@]}"; do wait "$p" || fail=1; done
+  [ "$fail" = 0 ] || return 1
+  urlmap_edit add "$n"
+}
+
+route_remove() {
+  local n=$1 role name
+  urlmap_edit remove "$n"
+  for role in $PR_ROLES; do
+    name=echo-pr-$n-$role
+    if g compute backend-services describe "$name" --global >/dev/null 2>&1; then
+      g compute backend-services delete "$name" --global --quiet
+    fi
+    if g compute network-endpoint-groups describe "$name" --region "$REGION" >/dev/null 2>&1; then
+      g compute network-endpoint-groups delete "$name" --region "$REGION" --quiet
+    fi
+  done
+}
+
+lb_ip() { g compute addresses describe "$PR_LB" --global --format 'value(address)'; }
 
 smoke() {
   local prefix=$1 tag=$2 api media code release
   api=$(url "$prefix-api") media=$(url "$prefix-media")
+  # A PR preview's dashboard and portal answer only through the load balancer. curl pins
+  # the hostname to its address, so this works before DNS; -k because the wildcard
+  # certificate is not active until its DNS authorization record exists.
+  local via=() n=""
+  if [[ $prefix == echo-pr-* ]]; then
+    n=${prefix#echo-pr-}
+    local ip
+    ip=$(lb_ip)
+    via=(-k)
+    for role in $PR_ROLES; do via+=(--resolve "$role-$n.$PREVIEW_DOMAIN:443:$ip"); done
+  fi
   curl -sf "$api/ready" >/dev/null
   release=$(curl -sf "$api/health" | jq -r .release)
   [ "$release" = "$tag" ] || { echo "serving $release, expected $tag" >&2; exit 1; }
@@ -158,10 +280,22 @@ smoke() {
   for role in dashboard portal; do
     local web
     web=$(url "$prefix-$role")
-    curl -sf "$web/runtime-config.js" | grep -q "\"role\":\"$role\""
-    code=$(curl -s -o /dev/null -w '%{http_code}' "$web/api/v2/me")
+    [ -n "$n" ] && web=$(pr_host "$role" "$n")
+    # A new route can take a minute to reach every load balancer front end.
+    local tries=1
+    [ -n "$n" ] && tries=24
+    until curl -sf "${via[@]}" "$web/runtime-config.js" | grep -q "\"role\":\"$role\""; do
+      tries=$((tries - 1))
+      [ "$tries" -gt 0 ] || { echo "$web/runtime-config.js did not name role $role" >&2; exit 1; }
+      sleep 5
+    done
+    code=$(curl -s "${via[@]}" -o /dev/null -w '%{http_code}' "$web/api/v2/me")
     [ "$code" = 401 ] || { echo "$role /api proxy answered $code, expected 401" >&2; exit 1; }
   done
+  if [ -n "$n" ]; then
+    release=$(curl -sf "${via[@]}" "$(pr_host api "$n")/health" | jq -r .release)
+    [ "$release" = "$tag" ] || { echo "api-$n through the load balancer serves $release, expected $tag" >&2; exit 1; }
+  fi
   [ "${3:-0}" = 1 ] || wait_worker "$prefix" "$tag"
 }
 
@@ -189,6 +323,8 @@ teardown() {
   [[ $n =~ ^[0-9]+$ ]] || { echo "bad PR number: $n" >&2; exit 2; }
   prefix=echo-pr-$n
   echo "tearing down PR $n's preview"
+  # Routes first, so the load balancer stops sending traffic before the services go.
+  route_remove "$n"
   # The API and worker go first so their connections close before the database is dropped.
   g run services delete "$prefix-api" --region "$REGION" --quiet 2>/dev/null || true
   g beta run worker-pools delete "$prefix-worker" --region "$REGION" --quiet 2>/dev/null || true
