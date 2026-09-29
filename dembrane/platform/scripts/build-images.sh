@@ -9,8 +9,9 @@
 # Every image is also tagged src-<key>, where the key hashes the files that go into it (see
 # inputs below). --push first looks for src-<key> in the registry: when it is there, the image
 # is only tagged $TAG (a manifest copy, a second or two) instead of being built and uploaded
-# again, so a frontend-only change reuses the four server images and the reverse. --push also
-# loads what it builds, so the smoke test runs on the exact image that was pushed.
+# again, so a frontend-only change reuses the four server images and the reverse (the key reads
+# committed files at HEAD, not the working tree). --push also loads what it builds, so the
+# smoke test runs on the exact image that was pushed.
 #
 # The images carry APP_RELEASE only as a default: every deploy sets it per service, so an image
 # reused from an older commit still reports the commit it was deployed from.
@@ -51,20 +52,20 @@ filter_paths() {
 
 changed() {
   local base=$1 head=${2:-HEAD} app files
-  files=$(git -C "$repo" diff --name-only "$base" "$head" | filter_paths)
+  files=$(git -C "$repo" diff --no-renames --name-only "$base" "$head" | filter_paths)
   # A change to how images are built rebuilds all of them.
   if grep -qE '^dembrane/platform/scripts/build-images\.sh$|^dembrane/platform/apps/[^/]+/Dockerfile$' \
-    <<<"$(git -C "$repo" diff --name-only "$base" "$head")"; then
+    <<<"$(git -C "$repo" diff --no-renames --name-only "$base" "$head")"; then
     echo "$ALL_APPS"
     return
   fi
-  local out=()
+  local picked=()
   for app in $ALL_APPS; do
     for p in $(inputs "$app"); do
-      if grep -q "^$p/" <<<"$files"; then out+=("$app"); break; fi
+      if grep -q "^$p/" <<<"$files"; then picked+=("$app"); break; fi
     done
   done
-  echo "${out[*]}"
+  echo "${picked[*]}"
 }
 
 exists() { docker buildx imagetools inspect "$1" >/dev/null 2>&1; }

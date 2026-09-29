@@ -191,7 +191,7 @@ jobs:
             all >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          files=$(git diff --name-only "$base" HEAD)
+          files=$(git diff --no-renames --name-only "$base" HEAD)
           if grep -qx .github/workflows/platform.yml <<<"$files"; then
             echo "The workflow changed: checking and building everything"
             all >> "$GITHUB_OUTPUT"
