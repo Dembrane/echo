@@ -5,16 +5,17 @@ description: Ship a release of the dembrane platform (dembrane/platform, the Bun
 
 # Product release
 
-## What a merge sets off
+## What the workflow does
 
-`.github/workflows/platform.yml` runs on every push to `feat/bun-migration`:
+`.github/workflows/platform.yml`:
 
-1. `check`: `biome ci`, typecheck, `bun run config check`, drizzle "No schema changes", every test.
-2. `frontend`: lint, `tsc`, the accounts contract copy, the portal first-load size.
-3. `images`: api, worker, migrate, media and web, built once and pushed.
-4. `deploy-preview`: the migrate job runs first (a failure stops the rollout before new code takes traffic), then media, API, worker, dashboard and portal roll out together, then a smoke test checks `/health` reports the new sha.
+- Every PR and every push to `main` or `feat/bun-migration`: `10 Check server` (`biome ci`, typecheck, config, package layers, drizzle "No schema changes", every test), `20 Check frontend` (lint, `tsc`, tests, translations, API types in sync, portal first-load size) and `40 Build images`.
+- A PR with the `preview` label: `50 Deploy PR preview` to dashboard-<n>, portal-<n> and api-<n>.preview.dembrane.com, and one comment on the PR with the links, edited on each deploy. Removing the label or closing the PR runs `51 Tear down PR preview`.
+- next: `60 Deploy next` from main, by hand (and on each push to main once `NEXT_DEPLOY_ON_MAIN` is `true`). It posts the PRs it carried to #team-engineering and comments "Now on dembrane-next" on each.
+- prod: `70 Deploy prod` from a release tag `vX.Y.Z` on main, by hand with the tag (and on pushing the tag once `PROD_DEPLOY_ON_TAG` is `true`), after the `prod` environment's approval. It creates the GitHub Release (an annotated tag's first line becomes its headline), posts to #team-engineering, comments "Released in vX.Y.Z" on each PR and sends `release.published` to sam.
+- `90 Notify on failure` posts any failed job and step to #alerts-ci. Successes never reach Slack.
 
-Preview is the only environment the workflow deploys. `next` and `prod` have config (`packages/config/environments`) but no deploy job. Until one exists, a production rollout is a person's call and a person's run: write down what they ran, do not improvise one.
+`scripts/release.sh` with `DRY_RUN=1` prints any of these messages without sending them.
 
 ## The order
 
@@ -72,9 +73,15 @@ Walk the flows the release touches as a host and as a participant, and the scree
 
 ## 6. Production
 
-Run only what a person approved, in the same order as preview: migrate job, then the services, then `/health` on `https://api.dembrane.com` reports the sha. A bad release rolls forward with a fix; migrations do not roll back, which is why schema changes expand first and contract later.
+Tag the release on main with an annotated tag whose first line is the headline (`git tag -a v2.5.0 -m "Popcorn ticks on their own worker"`), push it, and run the workflow for prod with that tag. A person approves the `prod` environment. The deploy runs the migrate job, then the services, then checks `/health` reports the sha. A bad release rolls forward with a fix; migrations do not roll back, which is why schema changes expand first and contract later.
 
 ## 7. Announce
+
+`release.published` reaches sam with the tag, the notes and every PR (number, title, author). From it, draft, never publish:
+
+- the in-app release notes entry: a PR that prepends a release to `getReleases()` in `dembrane/frontend/src/components/release/releases.ts` (customer-facing changes only, each typed feature, improvement or fix, `publication: { tag, date }`), with `messages:extract` run; a person reviews the copy and the translations before it merges, and it ships with the next deploy;
+- documentation updates the changes call for;
+- a video suggestion when a change is worth showing.
 
 Record the release videos (a person), then publish the in-app announcement (`create-announcement.md`).
 

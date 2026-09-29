@@ -30,7 +30,7 @@ case "$target" in
   next | prod) ENV=$target ;;
   # A PR preview, or a PR number for make-room and teardown. There is no branch preview.
   pr-* | [0-9]*) ENV=preview ;;
-  *) [ "${1:-}" = list ] && ENV=preview || { sed -n '2,10p' "$0"; exit 2; } ;;
+  *) if [ "${1:-}" = list ]; then ENV=preview; else sed -n '2,10p' "$0"; exit 2; fi ;;
 esac
 case "$ENV" in
   preview) project=dembrane-web-previews number=218237812097 ;;

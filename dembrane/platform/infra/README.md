@@ -64,7 +64,7 @@ sizes an environment.
 
 | | preview | next | prod |
 |---|---|---|---|
-| Deploys | PR previews from the `preview` label | main, by hand until cutover | main or a tag, by hand after approval |
+| Deploys | PR previews from the `preview` label | main, by hand (every push once `NEXT_DEPLOY_ON_MAIN` is true) | a release tag on main, after approval |
 | API | 0 to 1, concurrency 1000 | 2 to 2 | 2 to 10 |
 | Dashboard, portal | 0 to 1 each | 2 to 2 each | 2 to 4 each |
 | Media (ffmpeg, one job per instance) | 0 to 1 | 0 to 4 | 1 to 20 |

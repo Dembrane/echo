@@ -20,8 +20,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 
-/** Measured on feat/bun-migration at c9a3e48c (2026-09-28), before the accounts screens. */
-const BASELINE_GZIP_BYTES = 1_603_594;
+/** Measured on feat/bun-migration at 53e53cf6 (2026-09-29). */
+const BASELINE_GZIP_BYTES = 1_090_272;
 /** Room for ordinary drift (a few strings, a small fix) before the check objects. */
 const MARGIN_BYTES = 8 * 1024;
 const START_ROUTE = "src/routes/participant/ParticipantStart.tsx";
