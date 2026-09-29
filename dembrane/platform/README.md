@@ -84,17 +84,17 @@ Most namespaces use core, db, observability, access, http, legacy-shape, queue; 
 
 - **billing** (in 6, out 9): Plans, seats, Mollie payments, invoices and overage. Used by account, tenancy, staff, training and 2 more. Uses i18n, mail.
 - **webhooks** (in 5, out 7): A project's outbound webhooks: settings, signed delivery, retries. Used by conversations, accounts, reports, api and 1 more. Uses only the common ones.
-- **analysis** (in 5, out 10): The analysis engine: recipes, runs, snapshots and revisions that maps and popcorn build on. Used by popcorn, map, present, api and 1 more. Uses realtime, llm, ratelimit.
+- **analysis** (in 5, out 10): The analysis engine: recipes, runs, snapshots and revisions that maps and popcorn build on. Used by popcorn, map, present, api and 1 more. Uses realtime, ratelimit, llm.
 - **conversations** (in 5, out 16): Conversations, the participant portal, the audio pipeline, live monitoring and search. Used by agentic, verify, agent-access, api and 1 more. Uses projects, webhooks, prompts, transcription, audio and 4 more.
 - **projects** (in 4, out 7): Projects, tags, goals, methodologies, prompt templates and the report request. Used by conversations, agentic, reports, api. Uses realtime.
 - **notifications** (in 4, out 5): In-app notifications and announcements, and the Notifier other namespaces emit through. Used by account, agentic, reports, api. Uses only the common ones.
-- **popcorn** (in 4, out 12): Popcorn: one live deck per project, refreshed on a tick, with demos and translations. Used by accounts, present, api, worker. Uses analysis, analytics, realtime, llm, ratelimit.
+- **popcorn** (in 4, out 12): Popcorn: one live deck per project, refreshed on a tick, with demos and translations. Used by accounts, present, api, worker. Uses analysis, analytics, realtime, ratelimit, llm.
 - **account** (in 3, out 14): The signed-in user's own account: profile, onboarding, settings, invites, transactional email. Used by accounts, api, worker. Uses notifications, billing, auth, i18n, mail and 3 more.
 - **accounts** (in 3, out 14): Customer accounts as sales runs them: offers, contracts, signing, demos, reminders. Used by api, migrate, worker. Uses account, popcorn, webhooks, i18n, mail and 3 more.
-- **map** (in 3, out 11): Argument maps: saved maps, the graph, generation, titles and fact-checks. Used by present, api, worker. Uses analysis, realtime, llm, ratelimit.
-- **chats** (in 2, out 9): Chat with a project's conversations (the v1 chats and the chat BFF). Used by agentic, api. Uses analytics, llm, ratelimit.
+- **map** (in 3, out 11): Argument maps: saved maps, the graph, generation, titles and fact-checks. Used by present, api, worker. Uses analysis, realtime, ratelimit, llm.
+- **chats** (in 2, out 9): Chat with a project's conversations (the v1 chats and the chat BFF). Used by agentic, api. Uses analytics, ratelimit, llm.
 - **agentic** (in 2, out 15): The assistant: agent runs, their event streams, memory, and its own canvas tools. Used by api, worker. Uses chats, notifications, projects, conversations, analytics and 3 more.
-- **canvas** (in 2, out 10): Dynamic canvases: a live wall built from recent transcript, redrawn on a tick. Used by api, worker. Uses realtime, llm, ratelimit.
+- **canvas** (in 2, out 10): Dynamic canvases: a live wall built from recent transcript, redrawn on a tick. Used by api, worker. Uses realtime, ratelimit, llm.
 - **feedback** (in 2, out 9): Bug reports, feedback responses and the forward to support. Used by api, worker. Uses storage, ratelimit.
 - **present** (in 2, out 11): Present: the published, audience-facing view of a popcorn deck and a map. Used by api, worker. Uses map, popcorn, analysis, realtime, ratelimit.
 - **pricing** (in 2, out 8): The pricing configurator and the bookings it forwards. Used by api, worker. Uses storage, ratelimit.
@@ -102,7 +102,7 @@ Most namespaces use core, db, observability, access, http, legacy-shape, queue; 
 - **tenancy** (in 2, out 11): Orgs and workspaces: members, settings, access requests, support access, project shares. Used by api, worker. Uses billing, i18n, mail, storage.
 - **verify** (in 2, out 7): Verification topics and artifacts participants see in the portal. Used by api, migrate. Uses conversations, prompts.
 - **agent-access** (in 1, out 10): Outside AI agents reaching dembrane: the MCP server, OAuth, and the tools it exposes. Used by api. Uses conversations, analytics, realtime, ratelimit.
-- **samples** (in 1, out 1): Sample data every PR preview carries: the Millbrook (sample) workspace with its conversations, report and chat. Used by migrate. Uses only the common ones.
+- **samples** (in 1, out 3): Sample data every PR preview carries: the Millbrook (sample) workspace in the Acme Civic (sample) org, with generated conversations, a report and a chat. Used by migrate. Uses config, llm.
 - **staff** (in 1, out 11): The staff console: support tools, billing rollups, privacy exports and erasure. Used by api. Uses billing, i18n, mail, storage.
 - **stats** (in 1, out 4): Public usage numbers the website shows. Used by api. Uses ratelimit.
 - **training** (in 1, out 8): Training as its own product: catalog, rosters, licences, staff provisioning. Used by api. Uses billing, mail.
@@ -116,10 +116,10 @@ Most namespaces use core, db, observability, access, http, legacy-shape, queue; 
 - **http** (in 25, out 3): What every route shares: the signed-in caller, body validation, project and workspace guards. Used by legacy-shape, billing, webhooks, analysis and 21 more. Uses access, observability, core.
 - **legacy-shape** (in 19, out 2): Response shapes and number and time formats the Python API and Directus produced, kept byte for byte. Used by billing, webhooks, analysis, conversations and 15 more. Uses http, core.
 - **queue** (in 19, out 2): Durable background jobs and workflows on Postgres (DBOS): define, enqueue, run. Used by billing, webhooks, analysis, conversations and 15 more. Uses observability, db.
-- **llm** (in 13, out 0): Language model and embedding calls on Vertex, with fallbacks and fakes for tests. Used by i18n, transcription, analysis, conversations and 9 more. Uses nothing.
+- **llm** (in 14, out 0): Language model and embedding calls on Vertex, with fallbacks and fakes for tests. Used by i18n, transcription, analysis, conversations and 10 more. Uses nothing.
 - **ratelimit** (in 13, out 2): Rate limits counted in Postgres or memory. Used by analysis, conversations, popcorn, account and 9 more. Uses db, core.
 - **realtime** (in 10, out 2): Live updates: Postgres LISTEN fanned out to server-sent event streams. Used by analysis, conversations, projects, popcorn and 6 more. Uses observability, core.
-- **config** (in 9, out 0): Typed configuration per environment, and the `bun run config` checks. Used by i18n, account, accounts, agentic and 5 more. Uses nothing.
+- **config** (in 10, out 0): Typed configuration per environment, and the `bun run config` checks. Used by i18n, account, accounts, agentic and 6 more. Uses nothing.
 - **storage** (in 9, out 0): Object storage (S3 or local disk) and presigned uploads. Used by conversations, account, accounts, feedback and 5 more. Uses nothing.
 - **mail** (in 8, out 0): Sending email (SendGrid, or memory in tests). Used by billing, account, accounts, tenancy and 4 more. Uses nothing.
 - **i18n** (in 7, out 4): Server-rendered texts in the recipient's language, and the catalog translator. Used by billing, account, accounts, tenancy and 3 more. Uses config, llm, db, core.

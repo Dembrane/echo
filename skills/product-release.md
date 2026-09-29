@@ -9,11 +9,11 @@ description: Ship a release of the dembrane platform (dembrane/platform, the Bun
 
 `.github/workflows/platform.yml`:
 
-- Every PR and every push to `main` or `feat/bun-migration`: `10 Check server` (`biome ci`, typecheck, config, package layers, drizzle "No schema changes", every test), `20 Check frontend` (lint, `tsc`, tests, translations, API types in sync, portal first-load size) and `40 Build images`.
-- A PR with the `preview` label: `50 Deploy PR preview` to dashboard-<n>, portal-<n> and api-<n>.preview.dembrane.com, and one comment on the PR with the links, edited on each deploy. Removing the label or closing the PR runs `51 Tear down PR preview`.
-- next: `60 Deploy next` from main, by hand (and on each push to main once `NEXT_DEPLOY_ON_MAIN` is `true`). It posts the PRs it carried to #team-engineering and comments "Now on dembrane-next" on each.
-- prod: `70 Deploy prod` from a release tag `vX.Y.Z` on main, by hand with the tag (and on pushing the tag once `PROD_DEPLOY_ON_TAG` is `true`), after the `prod` environment's approval. It creates the GitHub Release (an annotated tag's first line becomes its headline), posts to #team-engineering, comments "Released in vX.Y.Z" on each PR and sends `release.published` to sam.
-- `90 Notify on failure` posts any failed job and step to #alerts-ci. Successes never reach Slack.
+- Every PR and every push to `main`: `00-plan` diffs the commit against its base and picks what runs. `10-check-server` (`biome ci`, typecheck, config, package layers, drizzle "No schema changes", every test, the frontend's API type copies) runs when `dembrane/platform` or `dembrane/demos` changed; `20-check-frontend` (lint, `tsc`, translations, API types in sync) and `21-test-frontend` (vitest) when `dembrane/frontend` changed; a change to the workflow runs everything. `40-build-images` builds the images whose inputs changed, smoke tests them and checks the portal's first-load size on the web image's bundle.
+- A PR with the `preview` label: `40-build-images` pushes to the preview registry (an image whose inputs are already there is only tagged), then `50-deploy-pr-preview` rolls out only the services whose image or settings changed, to dashboard-<n>, portal-<n> and api-<n>.preview.dembrane.com, and edits one comment on the PR with the links. Removing the label or closing the PR runs `51-teardown-pr-preview`.
+- next: `60-deploy-next` from main, by hand (and on each push to main once `NEXT_DEPLOY_ON_MAIN` is `true`). It posts the PRs it carried to #team-engineering and comments "Now on dembrane-next" on each.
+- prod: `70-deploy-prod` from a release tag `vX.Y.Z` on main, by hand with the tag (and on pushing the tag once `PROD_DEPLOY_ON_TAG` is `true`), after the `prod` environment's approval. It creates the GitHub Release (an annotated tag's first line becomes its headline), posts to #team-engineering, comments "Released in vX.Y.Z" on each PR and sends `release.published` to sam.
+- `90-notify-failure` posts any failed job and step to #alerts-ci. Successes never reach Slack.
 
 `scripts/release.sh` with `DRY_RUN=1` prints any of these messages without sending them.
 

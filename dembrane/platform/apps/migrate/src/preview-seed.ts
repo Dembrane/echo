@@ -6,8 +6,10 @@ import { and, eq, isNull } from "drizzle-orm";
 
 /**
  * What every PR preview holds after its migrations: a staff Administrator who signs in with
- * email and password, the Millbrook sample project (conversations, a report, a chat) in an
- * org that admin owns, and the accounts demo, whose two logins get the same password. It
+ * email and password, the Millbrook sample project (generated conversations, a report, a
+ * chat) in the fictional org Acme Civic (sample) that admin owns, and the accounts demo for
+ * the fictional customer Example Town Council (sample), whose two logins get the same
+ * password. Every organisation, person and conversation in it is invented. It
  * runs only on a PR preview's own database (APP_ENV preview, DATABASE_NAME echo_pr_<n>), so
  * a mistaken switch on next or prod refuses before touching anything.
  */

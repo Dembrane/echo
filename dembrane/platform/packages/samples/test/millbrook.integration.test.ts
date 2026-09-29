@@ -2,7 +2,12 @@ import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "
 import { createDb, migrate, schema } from "@dembrane/db";
 import { count, eq, inArray } from "drizzle-orm";
 import postgres from "postgres";
+import chat from "../fixtures/millbrook/chat.json";
+import conversations from "../fixtures/millbrook/conversations.json";
 import { MILLBROOK, MILLBROOK_IDS, seedMillbrook } from "../src";
+
+const conversationKeys = conversations.map((c) => c.key);
+const chatKeys = chat.conversation_keys;
 
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
 const run = admin ? describe : describe.skip;
@@ -120,9 +125,29 @@ run("the Millbrook sample", () => {
       memberships: 1,
     });
     expect(first.chunks).toBeGreaterThan(25 * 20);
-    expect(after1.chatConversations).toBeGreaterThan(0);
+    expect(after1.chatConversations).toBe(chatKeys.length);
 
-    // A reviewer's edits on a preview: a deleted conversation and an extra chat turn.
+    const [org] = await database.db
+      .select({ name: schema.org.name })
+      .from(schema.org)
+      .where(eq(schema.org.id, MILLBROOK_IDS.org));
+    expect(org?.name).toBe("Acme Civic (sample)");
+
+    // A reviewer's edits on a preview, and leftovers of an older fixture: a deleted
+    // conversation, an extra chat turn, a chunk past the fixture's last and a chat link to a
+    // conversation the chat does not quote.
+    await database.db.insert(schema.conversation_chunk).values({
+      id: crypto.randomUUID(),
+      conversation_id: MILLBROOK_IDS.conversation("table-1"),
+      transcript: "text from an older fixture",
+      timestamp: "2026-07-02T09:00:00Z",
+      created_at: "2026-07-02T09:00:00Z",
+    });
+    const unquoted = conversationKeys.find((k) => !chatKeys.includes(k)) as string;
+    await database.db.insert(schema.project_chat_conversation).values({
+      project_chat_id: MILLBROOK_IDS.chat,
+      conversation_id: MILLBROOK_IDS.conversation(unquoted),
+    });
     await database.db
       .update(schema.conversation)
       .set({ deleted_at: "2026-09-29T11:00:00Z" })

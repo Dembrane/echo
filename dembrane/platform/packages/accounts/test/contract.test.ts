@@ -40,7 +40,7 @@ describe("contract fixtures", () => {
 
   test("the demo scenario is all there", () => {
     const page = F.accountPage;
-    expect(page.organisation.name).toBe("Gemeente Voorbeeldstad");
+    expect(page.organisation.name).toBe("Example Town Council (sample)");
     expect(page.tasks.find((t) => t.kind === "sign")?.status).toBe("open");
     expect(page.tasks.find((t) => t.kind === "billing_details")?.locked).toBe(true);
     const offer = page.documents.find((d) => d.kind === "offer");

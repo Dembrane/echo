@@ -8,17 +8,17 @@ import report from "../fixtures/millbrook/report.md" with { type: "text" };
 /**
  * The sample every PR preview carries, so a reviewer opens a project that already has
  * conversations, a report and a chat instead of an empty dashboard. It is the fictional
- * Millbrook Citizens' Assembly (fixtures/millbrook, synthetic: no real participants), in
- * its own org that the preview admin owns, so it stands whether or not the accounts demo
- * seeds.
+ * Millbrook Citizens' Assembly (fixtures/millbrook, written by scripts/generate-millbrook.ts:
+ * no real people, places or organisations), in its own fictional org, Acme Civic (sample),
+ * that the preview admin owns, so it stands whether or not the accounts demo seeds.
  *
  * Every id derives from a fixed name, so a rerun writes the same rows. A rerun also puts
- * the fixture back: edits, deletions and extra chat turns made on a preview are undone on
- * its next deploy, which is what a sample is for.
+ * the fixture back: edits, deletions, extra chunks and chat turns made on a preview are
+ * undone on its next deploy, and text from an older fixture is replaced, not left behind.
  */
 
 export const MILLBROOK = {
-  org: "dembrane previews",
+  org: project.org,
   workspace: project.workspace,
   project: project.project,
   conversations: conversations.length,
@@ -178,6 +178,20 @@ export async function seedMillbrook(db: Db, owner: SampleOwner, now: Date): Prom
         created_at: at(c.started_at, x.at_s),
       })),
     );
+    // Chunks the fixture no longer has (an older, longer fixture, or one added on the
+    // preview) would otherwise stay in the transcript view and in search.
+    await tx.delete(schema.conversation_chunk).where(
+      and(
+        inArray(
+          schema.conversation_chunk.conversation_id,
+          convRows.map((c) => c.id),
+        ),
+        notInArray(
+          schema.conversation_chunk.id,
+          chunkRows.map((c) => c.id),
+        ),
+      ),
+    );
     // Well under Postgres's 65535 bind parameters per statement at five columns a row.
     for (let i = 0; i < chunkRows.length; i += 2000)
       await tx
@@ -269,6 +283,16 @@ export async function seedMillbrook(db: Db, owner: SampleOwner, now: Date): Prom
         set: { message_from: sql`excluded.message_from`, text: sql`excluded.text` },
       });
     const wanted = chat.conversation_keys.map((k) => I.conversation(k));
+    // The chat answers from exactly the conversations it quotes, so a link an older fixture
+    // or a reviewer added goes.
+    await tx
+      .delete(schema.project_chat_conversation)
+      .where(
+        and(
+          eq(schema.project_chat_conversation.project_chat_id, I.chat),
+          notInArray(schema.project_chat_conversation.conversation_id, wanted),
+        ),
+      );
     const linked = new Set(
       (
         await tx

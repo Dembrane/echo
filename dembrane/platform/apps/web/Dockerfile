@@ -8,8 +8,10 @@ COPY frontend/package.json frontend/pnpm-lock.yaml frontend/pnpm-workspace.yaml 
 # The pnpm store survives between builds, so only changed packages are downloaded.
 RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store pnpm install --frozen-lockfile
 COPY frontend/ ./
-# Types are checked in CI's frontend job; the image only bundles.
-RUN pnpm exec vite build
+# Types are checked in CI's frontend job; the image only bundles. The manifest is what CI's
+# portal first-load check reads from this image, so the bundle is built once per commit; it
+# moves out of dist so the web server never serves it.
+RUN pnpm exec vite build --manifest && mkdir -p /f/meta && mv dist/.vite /f/meta/.vite
 
 FROM oven/bun:1.4 AS server
 WORKDIR /src
@@ -20,6 +22,7 @@ RUN bun build apps/web/src/main.ts --compile --minify --sourcemap --target=bun-l
 FROM gcr.io/distroless/cc-debian12:nonroot
 COPY --from=server /out/web /app/web
 COPY --from=frontend /f/dist /app/dist
+COPY --from=frontend /f/meta /app/build-meta
 ARG RELEASE=dev
 ENV APP_RELEASE=${RELEASE} WEB_DIST_DIR=/app/dist NODE_ENV=production
 USER nonroot

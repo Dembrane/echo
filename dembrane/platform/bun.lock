@@ -649,6 +649,8 @@
         "drizzle-orm": "^0.45.3",
       },
       "devDependencies": {
+        "@dembrane/config": "workspace:*",
+        "@dembrane/llm": "workspace:*",
         "postgres": "^3.4.9",
       },
     },
