@@ -48,8 +48,11 @@ export interface LanguageCards {
 const ParticipantOnboardingCards = ({
 	project,
 	onFunnelStage,
+	notice,
 }: {
 	project: ParticipantProject;
+	/** Shown under the logo; the cards shrink around it so their button stays on screen. */
+	notice?: React.ReactNode;
 	/** Reports this participant's funnel stage up to the visitor beacon owned
 	 * by the landing route (so "scanned" can fire before this deck mounts). */
 	onFunnelStage?: (report: {
@@ -300,6 +303,7 @@ const ParticipantOnboardingCards = ({
 			<div className="w-full border-b border-gray-800 px-4 py-3">
 				<Logo />
 			</div>
+			{notice}
 
 			{/* Content area */}
 			<div className="flex flex-grow flex-col items-center justify-center p-4 text-center">
