@@ -15,7 +15,7 @@ import {
   renderPopcornPage,
 } from "@dembrane/popcorn";
 import { FilesystemStorage } from "@dembrane/storage";
-import { count, eq } from "drizzle-orm";
+import { and, count, eq, ne } from "drizzle-orm";
 import { demoProspectHook } from "../src/demo-hook";
 import { accountsRoutes } from "../src/routes";
 import { CUSTOMER_EMAIL, DEMO_IDS, STAFF_EMAIL, seedAccountsDemo } from "../src/seed";
@@ -396,10 +396,13 @@ run("bun run seed:accounts-demo", () => {
   });
 
   test("after the demo offer is signed or withdrawn, the next run pushes a fresh one", async () => {
+    // The earlier tests leave voided offers behind; withdraw the one that is still live.
     const [offer] = await database.db
       .select()
       .from(schema.account_document)
-      .where(eq(schema.account_document.kind, "offer"));
+      .where(
+        and(eq(schema.account_document.kind, "offer"), ne(schema.account_document.status, "void")),
+      );
     await database.db
       .update(schema.account_document)
       .set({ status: "void" })
