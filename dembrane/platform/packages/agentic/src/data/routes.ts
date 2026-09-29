@@ -16,6 +16,7 @@ const { model, optional, required, nullable, str, int, bool, literal, list } = p
 export const dataDeps = (deps: AgenticRoutesDeps): DataDeps => ({
   db: deps.db,
   access: deps.access,
+  logger: deps.logger,
   now: deps.now ?? (() => new Date()),
 });
 

@@ -12,7 +12,7 @@ export interface BindingDeps {
   readonly db: Db;
   readonly access: Access;
   readonly enableCanvas: boolean;
-  readonly logger?: Logger;
+  readonly logger: Logger;
   readonly now?: () => Date;
 }
 
@@ -27,7 +27,7 @@ const generationChannel = (reportId: string) => `canvas:generation:${reportId}`;
  */
 export function bindAgentData(deps: BindingDeps, who: Signed, ctx: TurnContext): AgentData {
   const now = deps.now ?? (() => new Date());
-  const d: data.DataDeps = { db: deps.db, access: deps.access, now };
+  const d: data.DataDeps = { db: deps.db, access: deps.access, logger: deps.logger, now };
   const store = canvasStorage(deps.db);
   const c: canvas.CanvasDeps = {
     store,

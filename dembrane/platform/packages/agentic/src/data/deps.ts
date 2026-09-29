@@ -3,6 +3,7 @@ import type { Db } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import { workspaceFor } from "@dembrane/http";
 import { directusRow } from "@dembrane/legacy-shape";
+import type { Logger } from "@dembrane/observability";
 import type postgres from "postgres";
 
 export type Row = Record<string, unknown>;
@@ -11,6 +12,7 @@ export type Row = Record<string, unknown>;
 export interface DataDeps {
   readonly db: Db;
   readonly access: Access;
+  readonly logger: Logger;
   readonly now: () => Date;
 }
 

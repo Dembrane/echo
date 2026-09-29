@@ -7,6 +7,7 @@
     "layer": "namespace",
     "allow": {
       "chats": "Agent runs live inside chats and name them.",
+      "conversations": "The live-status tool reads the host monitor over conversations' presence store.",
       "notifications": "Notifies the user when a run needs them or finishes.",
       "projects": "The assistant reads and edits project fields through projects' storage."
     }
@@ -24,6 +25,7 @@
     "@dembrane/analytics": "workspace:*",
     "@dembrane/chats": "workspace:*",
     "@dembrane/config": "workspace:*",
+    "@dembrane/conversations": "workspace:*",
     "@dembrane/core": "workspace:*",
     "@dembrane/db": "workspace:*",
     "@dembrane/http": "workspace:*",

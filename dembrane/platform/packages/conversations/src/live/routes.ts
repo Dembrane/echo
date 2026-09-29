@@ -76,6 +76,30 @@ export function liveServices(d: Pick<ConversationsDeps, "db" | "logger">): LiveS
 }
 
 /**
+ * The host monitor payload for a caller that has enforced access itself, read straight
+ * from the presence store the pings write, with no snapshot cache: the assistant's
+ * live-status tool, which answered from the same gather in the Python API.
+ */
+export async function projectMonitor(
+  d: Pick<ConversationsDeps, "db" | "logger">,
+  projectId: string,
+  windowSeconds: number,
+  gate: { workspaceId: string | null; tier: string | null },
+  now: Date,
+): Promise<MonitorPayload> {
+  const overCapActive = await workspaceOverCapActive(d.db, gate.workspaceId, gate.tier);
+  return gatherProjectMonitor(
+    d.db,
+    liveServices(d).presence,
+    d.logger,
+    projectId,
+    windowSeconds,
+    { tier: gate.tier, overCapActive },
+    now,
+  );
+}
+
+/**
  * Nudges a project's open monitor streams to recompute (a ping, a transcription result,
  * a finish). Best effort, like the Redis publish it replaces.
  */

@@ -18,6 +18,7 @@ export {
   liveRecordings,
   liveServices,
   monitorChannel,
+  projectMonitor,
   publishMonitorDirty,
 } from "./live/routes";
 export { mergeConversationAudio, type NoContent, type NoMergeableChunks } from "./merge";

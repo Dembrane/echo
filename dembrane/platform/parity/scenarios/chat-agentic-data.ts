@@ -10,12 +10,24 @@ import {
 } from "../chat-agentic-setup";
 import { chats, conversations, projects } from "../fixtures";
 import { P2_OPEN } from "../projects-setup";
-import { scenarios } from "../runner/scenario";
+import { type Side, scenarios } from "../runner/scenario";
 
 const { p1, p2, p3, legacy } = projects;
 const A = "/api/agentic";
 const proj = (p: string, rest: string) => `${A}/projects/${p}/${rest}`;
 const MISSING = "f0000000-0000-4000-8000-000000000999";
+
+const post = (side: Side, path: string, body: unknown) =>
+  side.fetch(path, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+// Participant pings, so the monitor's presence store holds the same state on both sides.
+const ping = (side: Side, cid: string, body: unknown) =>
+  post(side, `/api/participant/conversations/${cid}/ping`, body);
+const visit = (side: Side, pid: string, vid: string, body: unknown) =>
+  post(side, `/api/participant/projects/${pid}/visitors/${vid}/ping`, body);
 
 const H14 =
   "H-14: staff reach a tenant's data only through a support session, never a blanket bypass";
@@ -226,6 +238,42 @@ export default scenarios([
     query: { window_seconds: "2" },
   },
   { name: "agentic monitor: other tenant", as: "bob", method: "GET", path: proj(p1, "monitor") },
+  {
+    name: "agentic monitor: live from a ping before new audio",
+    as: "alice",
+    method: "GET",
+    path: proj(p1, "monitor"),
+    prepare: async (side) => {
+      const res = await ping(side, conversations.c2, {
+        project_id: p1,
+        state: "recording",
+        mode: "voice",
+        battery: { level: 0.8, charging: false },
+      });
+      return { _ping: res.status };
+    },
+  },
+  {
+    name: "agentic monitor: pre-conversation funnel",
+    as: "alice",
+    method: "GET",
+    path: proj(p1, "monitor"),
+    prepare: async (side) => {
+      const codes: number[] = [];
+      for (const [vid, body] of [
+        ["v-1", { stage: "scanned", device: "phone" }],
+        ["v-2", { stage: "terms", name: "  Ada  ", tags: ["energy"] }],
+        ["v-3", { stage: "profile" }],
+      ] as const)
+        codes.push((await visit(side, p1, vid, body)).status);
+      const res = await ping(side, conversations.c2, {
+        project_id: p1,
+        state: "recording",
+        visitor_id: "v-3",
+      });
+      return { _codes: [...codes, res.status].join(",") };
+    },
+  },
 
   // ── chats ─────────────────────────────────────────────────────────
   {

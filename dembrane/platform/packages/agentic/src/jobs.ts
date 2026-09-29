@@ -83,7 +83,16 @@ export function agenticWorker(deps: AgenticWorkerDeps): {
     bindData:
       deps.bindData ??
       ((who, ctx) =>
-        bindAgentData({ db: deps.db, access, enableCanvas: deps.config.canvas.enabled }, who, ctx)),
+        bindAgentData(
+          {
+            db: deps.db,
+            access,
+            logger: deps.logger,
+            enableCanvas: deps.config.canvas.enabled,
+          },
+          who,
+          ctx,
+        )),
     capture: deps.capture ?? posthogCapture(deps.config.http.dashboardUrl, deps.logger),
     notify: (e) => notifier.emit(e),
     now: deps.now ?? (() => new Date()),
