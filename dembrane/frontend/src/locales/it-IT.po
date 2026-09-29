@@ -1769,7 +1769,7 @@ msgstr "Ripristinata una formulazione precedente"
 msgid "An email notification will be sent to {0} participant{1}. Do you want to proceed?"
 msgstr "An email notification will be sent to {0} participant{1}. Do you want to proceed?"
 
-#: src/routes/participant/ParticipantStart.tsx:77
+#: src/routes/participant/ParticipantStart.tsx:78
 msgid "An error occurred while loading the Portal. Please contact the support team."
 msgstr "An error occurred while loading the Portal. Please contact the support team."
 
@@ -2378,7 +2378,7 @@ msgid "Back"
 msgstr "Back"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:419
+#: src/components/participant/ParticipantOnboardingCards.tsx:423
 #: src/components/layout/ParticipantHeader.tsx:90
 msgid "participant.button.back"
 msgstr "Back"
@@ -3612,6 +3612,7 @@ msgstr "Cooling down. Available in {0}"
 #: src/components/project/ProjectQRCode.tsx:157
 #: src/components/popcorn/PopcornShare.tsx:141
 #: src/components/participant/ParticipantShareModal.tsx:110
+#: src/components/participant/InAppBrowserNotice.tsx:65
 #: src/components/conversation/CopyConversationTranscript.tsx:44
 #: src/components/conversation/ConversationEdit.tsx:51
 #: src/components/common/CopyRichTextIconButton.tsx:37
@@ -3659,6 +3660,7 @@ msgstr "Copia link di invito"
 #: src/routes/project/report/ProjectReportRoute.tsx:1164
 #: src/components/project/ProjectQRCode.tsx:157
 #: src/components/participant/ParticipantShareModal.tsx:110
+#: src/components/participant/InAppBrowserNotice.tsx:65
 msgid "Copy link"
 msgstr "Copy link"
 
@@ -8275,7 +8277,7 @@ msgid "Next"
 msgstr "Next"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:436
+#: src/components/participant/ParticipantOnboardingCards.tsx:440
 msgid "participant.button.next"
 msgstr "Next"
 
@@ -9269,6 +9271,14 @@ msgstr "Apri la pagina pubblica"
 #: src/components/voice/VoiceInputError.tsx:90
 msgid "Open the troubleshooting guide"
 msgstr "Apri la guida alla risoluzione dei problemi"
+
+#: src/components/participant/InAppBrowserNotice.tsx:53
+msgid "Open this page in {browserName} from the app's menu, or copy the link."
+msgstr "Apri questa pagina in {browserName} dal menu dell'app, oppure copia il link."
+
+#: src/components/participant/InAppBrowserNotice.tsx:54
+msgid "Open this page in your browser from the app's menu, or copy the link."
+msgstr "Apri questa pagina nel tuo browser dal menu dell'app, oppure copia il link."
 
 #: src/routes/project/CreateProjectRoute.tsx:276
 #: src/routes/project/CreateProjectRoute.tsx:366
@@ -10653,7 +10663,7 @@ msgid "Reads every 2 minutes. Refresh reads now."
 msgstr "Legge ogni 2 minuti. Aggiorna per leggere ora."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:313
+#: src/components/participant/ParticipantOnboardingCards.tsx:317
 msgid "participant.ready.to.begin"
 msgstr "Ready to Begin?"
 
@@ -16655,6 +16665,10 @@ msgstr "Your latest report generation was cancelled. Showing your most recent co
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1707
 msgid "Your logo is still active but can't be changed on this tier."
 msgstr "Il tuo logo è ancora attivo, ma non può essere modificato con questo piano."
+
+#: src/components/participant/InAppBrowserNotice.tsx:50
+msgid "Your microphone may not work inside {appName}."
+msgstr "Il tuo microfono potrebbe non funzionare dentro {appName}."
 
 #: src/components/settings/AccountSettingsCard.tsx:182
 msgid "Your name"

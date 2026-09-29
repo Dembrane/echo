@@ -1770,7 +1770,7 @@ msgstr "Een eerdere formulering hersteld"
 msgid "An email notification will be sent to {0} participant{1}. Do you want to proceed?"
 msgstr "Een e-mail melding wordt naar {0} deelnemer{1} verstuurd. Wilt u doorgaan?"
 
-#: src/routes/participant/ParticipantStart.tsx:77
+#: src/routes/participant/ParticipantStart.tsx:78
 msgid "An error occurred while loading the Portal. Please contact the support team."
 msgstr "Er is een fout opgetreden bij het laden van de Portal. Neem contact op met de ondersteuningsteam."
 
@@ -2376,7 +2376,7 @@ msgid "Back"
 msgstr "Terug"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:419
+#: src/components/participant/ParticipantOnboardingCards.tsx:423
 #: src/components/layout/ParticipantHeader.tsx:90
 msgid "participant.button.back"
 msgstr "Terug"
@@ -3610,6 +3610,7 @@ msgstr "Even afkoelen. Beschikbaar over {0}"
 #: src/components/project/ProjectQRCode.tsx:157
 #: src/components/popcorn/PopcornShare.tsx:141
 #: src/components/participant/ParticipantShareModal.tsx:110
+#: src/components/participant/InAppBrowserNotice.tsx:65
 #: src/components/conversation/CopyConversationTranscript.tsx:44
 #: src/components/conversation/ConversationEdit.tsx:51
 #: src/components/common/CopyRichTextIconButton.tsx:37
@@ -3657,6 +3658,7 @@ msgstr "Uitnodigingslink kopiëren"
 #: src/routes/project/report/ProjectReportRoute.tsx:1164
 #: src/components/project/ProjectQRCode.tsx:157
 #: src/components/participant/ParticipantShareModal.tsx:110
+#: src/components/participant/InAppBrowserNotice.tsx:65
 msgid "Copy link"
 msgstr "Kopieer link"
 
@@ -8273,7 +8275,7 @@ msgid "Next"
 msgstr "Volgende"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:436
+#: src/components/participant/ParticipantOnboardingCards.tsx:440
 msgid "participant.button.next"
 msgstr "Volgende"
 
@@ -9267,6 +9269,14 @@ msgstr "Open de openbare pagina"
 #: src/components/voice/VoiceInputError.tsx:90
 msgid "Open the troubleshooting guide"
 msgstr "Open de probleemoplossingsgids"
+
+#: src/components/participant/InAppBrowserNotice.tsx:53
+msgid "Open this page in {browserName} from the app's menu, or copy the link."
+msgstr "Open deze pagina in {browserName} via het menu van de app, of kopieer de link."
+
+#: src/components/participant/InAppBrowserNotice.tsx:54
+msgid "Open this page in your browser from the app's menu, or copy the link."
+msgstr "Open deze pagina in je browser via het menu van de app, of kopieer de link."
 
 #: src/routes/project/CreateProjectRoute.tsx:276
 #: src/routes/project/CreateProjectRoute.tsx:366
@@ -10651,7 +10661,7 @@ msgid "Reads every 2 minutes. Refresh reads now."
 msgstr "Leest elke 2 minuten uit. Ververs nu handmatig."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:313
+#: src/components/participant/ParticipantOnboardingCards.tsx:317
 msgid "participant.ready.to.begin"
 msgstr "Klaar om te beginnen"
 
@@ -16649,6 +16659,10 @@ msgstr "De generatie van je laatste rapport is geannuleerd. Je meest recente vol
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1707
 msgid "Your logo is still active but can't be changed on this tier."
 msgstr "Je logo is nog actief, maar kan op dit niveau niet worden gewijzigd."
+
+#: src/components/participant/InAppBrowserNotice.tsx:50
+msgid "Your microphone may not work inside {appName}."
+msgstr "Je microfoon werkt misschien niet in {appName}."
 
 #: src/components/settings/AccountSettingsCard.tsx:182
 msgid "Your name"

@@ -1770,7 +1770,7 @@ msgstr "Eine frühere Formulierung wiederhergestellt"
 msgid "An email notification will be sent to {0} participant{1}. Do you want to proceed?"
 msgstr "Eine E-Mail-Benachrichtigung wird an {0} Teilnehmer{1} gesendet. Möchten Sie fortfahren?"
 
-#: src/routes/participant/ParticipantStart.tsx:77
+#: src/routes/participant/ParticipantStart.tsx:78
 msgid "An error occurred while loading the Portal. Please contact the support team."
 msgstr "Beim Laden des Portals ist ein Fehler aufgetreten. Bitte kontaktieren Sie das Support-Team."
 
@@ -2379,7 +2379,7 @@ msgid "Back"
 msgstr "Zurück"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:419
+#: src/components/participant/ParticipantOnboardingCards.tsx:423
 #: src/components/layout/ParticipantHeader.tsx:90
 msgid "participant.button.back"
 msgstr "Zurück"
@@ -3613,6 +3613,7 @@ msgstr "Abkühlung läuft. Verfügbar in {0}"
 #: src/components/project/ProjectQRCode.tsx:157
 #: src/components/popcorn/PopcornShare.tsx:141
 #: src/components/participant/ParticipantShareModal.tsx:110
+#: src/components/participant/InAppBrowserNotice.tsx:65
 #: src/components/conversation/CopyConversationTranscript.tsx:44
 #: src/components/conversation/ConversationEdit.tsx:51
 #: src/components/common/CopyRichTextIconButton.tsx:37
@@ -3660,6 +3661,7 @@ msgstr "Einladungslink kopieren"
 #: src/routes/project/report/ProjectReportRoute.tsx:1164
 #: src/components/project/ProjectQRCode.tsx:157
 #: src/components/participant/ParticipantShareModal.tsx:110
+#: src/components/participant/InAppBrowserNotice.tsx:65
 msgid "Copy link"
 msgstr "Link kopieren"
 
@@ -8276,7 +8278,7 @@ msgid "Next"
 msgstr "Weiter"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:436
+#: src/components/participant/ParticipantOnboardingCards.tsx:440
 msgid "participant.button.next"
 msgstr "Weiter"
 
@@ -9270,6 +9272,14 @@ msgstr "Öffentliche Seite öffnen"
 #: src/components/voice/VoiceInputError.tsx:90
 msgid "Open the troubleshooting guide"
 msgstr "Leitfaden zur Fehlerbehebung öffnen"
+
+#: src/components/participant/InAppBrowserNotice.tsx:53
+msgid "Open this page in {browserName} from the app's menu, or copy the link."
+msgstr "Öffnen Sie diese Seite über das Menü der App in {browserName} oder kopieren Sie den Link."
+
+#: src/components/participant/InAppBrowserNotice.tsx:54
+msgid "Open this page in your browser from the app's menu, or copy the link."
+msgstr "Öffnen Sie diese Seite über das Menü der App in Ihrem Browser oder kopieren Sie den Link."
 
 #: src/routes/project/CreateProjectRoute.tsx:276
 #: src/routes/project/CreateProjectRoute.tsx:366
@@ -10654,7 +10664,7 @@ msgid "Reads every 2 minutes. Refresh reads now."
 msgstr "Liest alle 2 Minuten. Jetzt aktualisieren."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantOnboardingCards.tsx:313
+#: src/components/participant/ParticipantOnboardingCards.tsx:317
 msgid "participant.ready.to.begin"
 msgstr "Bereit zum Beginn"
 
@@ -16654,6 +16664,10 @@ msgstr "Die Erstellung deines neuesten Berichts wurde abgebrochen. Dein letzter 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1707
 msgid "Your logo is still active but can't be changed on this tier."
 msgstr "Ihr Logo ist weiterhin aktiv, kann in dieser Stufe jedoch nicht geändert werden."
+
+#: src/components/participant/InAppBrowserNotice.tsx:50
+msgid "Your microphone may not work inside {appName}."
+msgstr "Ihr Mikrofon funktioniert in {appName} möglicherweise nicht."
 
 #: src/components/settings/AccountSettingsCard.tsx:182
 msgid "Your name"
