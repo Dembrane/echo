@@ -231,7 +231,7 @@ route_add() {
           --network-endpoint-type serverless --cloud-run-service "$name" --quiet
       g compute backend-services describe "$name" --global >/dev/null 2>&1 ||
         g compute backend-services create "$name" --global \
-          --load-balancing-scheme EXTERNAL_MANAGED --protocol HTTPS --quiet
+          --load-balancing-scheme EXTERNAL_MANAGED --quiet
       [ -n "$(g compute backend-services describe "$name" --global --format 'value(backends)')" ] ||
         g compute backend-services add-backend "$name" --global \
           --network-endpoint-group "$name" --network-endpoint-group-region "$REGION" --quiet
