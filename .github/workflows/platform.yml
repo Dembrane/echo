@@ -276,22 +276,10 @@ jobs:
           restore-keys: pnpm-${{ runner.os }}-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      # Vitest's prebundled dependencies and its timing file, which orders slow files first.
-      - name: Restore Vitest cache
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: dembrane/frontend/node_modules/.vite/vitest
-          key: vitest-${{ runner.os }}-${{ hashFiles('dembrane/frontend/pnpm-lock.yaml', 'dembrane/frontend/vite.config.ts') }}-${{ github.sha }}
-          restore-keys: |
-            vitest-${{ runner.os }}-${{ hashFiles('dembrane/frontend/pnpm-lock.yaml', 'dembrane/frontend/vite.config.ts') }}-
-            vitest-${{ runner.os }}-
       - name: Lint
         run: pnpm lint
       - name: Type check
         run: pnpm exec tsc
-      # Every vitest file under src; the Playwright specs in e2e/ are excluded in vite.config.ts.
-      - name: Run tests
-        run: pnpm exec vitest run
       # Fails when extract or compile changes a catalog, or when a locale lacks a message
       # English has. Fill gaps locally with `pnpm translations:fill` (Gemini EU; entries land
       # in each catalog's machine-translations.json for review) and commit the result.
@@ -308,6 +296,60 @@ jobs:
       # The participant portal loads on phones at events, so its first download must not grow.
       - name: Check portal bundle size
         run: node scripts/check-portal-bundle.mjs
+      - name: Save pnpm cache
+        if: env.SAVE_CACHE == 'true' && steps.pnpm-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ steps.pnpm.outputs.store }}
+          key: pnpm-${{ runner.os }}-${{ hashFiles('dembrane/frontend/pnpm-lock.yaml') }}
+
+  # The test suite runs beside the checks: together they took most of the frontend's time.
+  test-frontend:
+    name: 21 Test frontend
+    needs: plan
+    if: needs.plan.outputs.teardown != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: dembrane/frontend
+    env:
+      SAVE_CACHE: ${{ github.event_name != 'pull_request' }}
+    steps:
+      - name: Check out code
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with: { ref: "${{ env.REF }}", persist-credentials: false }
+      - name: Set up pnpm
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
+        with: { version: 10 }
+      - name: Set up Node
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version-file: .tool-versions
+      - name: Find pnpm store
+        id: pnpm
+        run: echo "store=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+      - name: Restore pnpm cache
+        id: pnpm-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ steps.pnpm.outputs.store }}
+          key: pnpm-${{ runner.os }}-${{ hashFiles('dembrane/frontend/pnpm-lock.yaml') }}
+          restore-keys: pnpm-${{ runner.os }}-
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      # Vitest's prebundled dependencies and its timing file, which orders slow files first.
+      - name: Restore Vitest cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: dembrane/frontend/node_modules/.vite/vitest
+          key: vitest-${{ runner.os }}-${{ hashFiles('dembrane/frontend/pnpm-lock.yaml', 'dembrane/frontend/vite.config.ts') }}-${{ github.sha }}
+          restore-keys: |
+            vitest-${{ runner.os }}-${{ hashFiles('dembrane/frontend/pnpm-lock.yaml', 'dembrane/frontend/vite.config.ts') }}-
+            vitest-${{ runner.os }}-
+      # Every vitest file under src; the Playwright specs in e2e/ are excluded in vite.config.ts.
+      - name: Run tests
+        run: pnpm exec vitest run
       - name: Save pnpm cache
         if: env.SAVE_CACHE == 'true' && steps.pnpm-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -370,7 +412,7 @@ jobs:
   deploy-pr:
     name: 50 Deploy PR preview
     if: ${{ !cancelled() && needs.plan.outputs.deploy_pr == 'true' }}
-    needs: [plan, check-server, check-frontend, images]
+    needs: [plan, check-server, check-frontend, test-frontend, images]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: pr-preview
@@ -497,7 +539,7 @@ jobs:
   deploy-next:
     name: 60 Deploy next
     if: needs.plan.outputs.deploy_env == 'next'
-    needs: [plan, check-server, check-frontend, images]
+    needs: [plan, check-server, check-frontend, test-frontend, images]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     # Records each deploy as a GitHub Deployment: the last successful one is where the next
@@ -547,7 +589,7 @@ jobs:
   deploy-prod:
     name: 70 Deploy prod
     if: needs.plan.outputs.deploy_env == 'prod'
-    needs: [plan, check-server, check-frontend, images]
+    needs: [plan, check-server, check-frontend, test-frontend, images]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     # The prod trust accepts only jobs in this environment; its required reviewers approve
@@ -605,7 +647,7 @@ jobs:
     if: >-
       failure()
       && (github.event_name != 'pull_request' || needs.plan.outputs.deploy_pr == 'true' || needs.plan.outputs.teardown == 'true')
-    needs: [plan, check-server, check-frontend, images, deploy-pr, teardown-pr, deploy-next, deploy-prod]
+    needs: [plan, check-server, check-frontend, test-frontend, images, deploy-pr, teardown-pr, deploy-next, deploy-prod]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     permissions:
