@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds the five images as $REGISTRY/<app>:$TAG, in parallel, from dembrane/platform.
+# Builds the five images as $REGISTRY/<app>:$TAG, in parallel, from dembrane/platform (test: preview domains).
 #   build-images.sh --push [--cache-to]    push them (and write the GitHub Actions layer cache)
 #   build-images.sh --load [--cache-to]    keep them in the local Docker daemon
 # The layer cache is shared across jobs, so a deploy job pushing what the images job built
