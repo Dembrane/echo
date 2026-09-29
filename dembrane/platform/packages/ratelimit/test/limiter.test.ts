@@ -41,3 +41,21 @@ test("the per-user check refuses a caller without a user id", async () => {
 test("TOO_MANY is the catalog's detail, so routes that send it by name match the code", () => {
   expect(TOO_MANY).toBe(ERROR_CATALOG["rate_limit.exceeded"].detail);
 });
+
+test("the memory counter sweeps expired windows when full and stops tracking past its bound", async () => {
+  const counter = new MemoryRateCounter(2);
+  const t0 = new Date("2026-09-27T00:00:00Z");
+  expect(await counter.hit("a", 60, t0)).toBe(1);
+  expect(await counter.hit("b", 10, t0)).toBe(1);
+  // Full with both live: a third key goes uncounted, the held ones keep counting.
+  expect(await counter.hit("c", 60, t0)).toBe(1);
+  expect(await counter.hit("c", 60, t0)).toBe(1);
+  expect(await counter.hit("a", 60, t0)).toBe(2);
+  expect(counter.size).toBe(2);
+  // b's window has passed: the sweep frees its slot for c.
+  const later = new Date(t0.getTime() + 11_000);
+  expect(await counter.hit("c", 60, later)).toBe(1);
+  expect(await counter.hit("c", 60, later)).toBe(2);
+  expect(await counter.hit("a", 60, later)).toBe(3);
+  expect(counter.size).toBe(2);
+});

@@ -2,7 +2,8 @@ import { BadRequestError } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { type Ctx, type Env, projectFor, requireUser } from "@dembrane/http";
 import { p } from "@dembrane/legacy-shape";
-import { boundedEventResponse, publish } from "@dembrane/realtime";
+import { MemoryRateCounter, RateLimiter } from "@dembrane/ratelimit";
+import { boundedEventResponse, notification, publish } from "@dembrane/realtime";
 import { pythonJson } from "@dembrane/webhooks";
 import { Hono } from "hono";
 import { stream } from "hono/streaming";
@@ -19,7 +20,7 @@ import {
   MonitorSnapshots,
   workspaceOverCapActive,
 } from "./monitor";
-import { Presence } from "./presence";
+import { type PingOutcome, Presence } from "./presence";
 import {
   type ConversationPing,
   conversationPingModel,
@@ -165,59 +166,79 @@ const windowQuery = (fallback: number) => ({
 export function liveRoutes(d: ConversationsDeps) {
   const app = new Hono<Env>();
   const live = () => liveServices(d);
+  // Per process, not in Postgres: a counter row per client address was a second write on
+  // every ping. Each API instance allows the full capacity, so across N instances an
+  // address gets up to N times it; the address comes from X-Forwarded-For (L-20), so a
+  // determined flood rotates it anyway, and the limit's job is to cap a runaway client.
+  const pingLimiter = new RateLimiter(new MemoryRateCounter(), d.now);
 
   app.post("/api/participant/conversations/:conversation_id/ping", async (c) => {
     const conversationId = c.req.param("conversation_id");
     const body = await optionalBody<ConversationPing>(c, conversationPingModel);
     if (!tokenTrusted(d, c, conversationId)) return c.json({ ok: true });
     // Over the limit: drop the beacon and skip metering. Recording carries on.
-    if (!(await d.limiter.allow(CONVERSATION_PING_LIMIT, clientIp(c)))) return c.json({ ok: true });
+    if (!(await pingLimiter.allow(CONVERSATION_PING_LIMIT, clientIp(c))))
+      return c.json({ ok: true });
     const now = d.now();
     const { presence, meter } = live();
     const projectId = body?.project_id ?? null;
-    if (
+    const idsOk = conversationId.length <= MAX_PING_ID_LEN;
+    // The meter's part: terminal states close, winding down only refreshes (never re-adds:
+    // it races finish and would revive the entry), anything else keeps the session counted.
+    const session =
       body &&
       projectId &&
       projectId.length <= MAX_PING_ID_LEN &&
-      conversationId.length <= MAX_PING_ID_LEN &&
+      idsOk &&
       (body.mode || "voice") !== "text"
-    ) {
-      if (body.state && TERMINAL_PING_STATES.has(body.state))
-        await meter.meter(projectId, conversationId, "close", now);
-      // Never re-add while winding down: it races finish and would revive the entry.
-      else if (body.state === WINDING_DOWN_PING_STATE)
-        await meter.meter(projectId, conversationId, "refresh", now);
-      else await meter.meter(projectId, conversationId, "present", now);
-    }
-    if (!d.settings.monitorEnabled) return c.json({ ok: true });
-    if (conversationId.length > MAX_PING_ID_LEN) return c.json({ ok: true });
+        ? await meter.pingSession(
+            projectId,
+            body.state && TERMINAL_PING_STATES.has(body.state)
+              ? "close"
+              : body.state === WINDING_DOWN_PING_STATE
+                ? "refresh"
+                : "present",
+          )
+        : null;
+    const monitor = d.settings.monitorEnabled && idsOk;
+    // Index the conversation as active so the monitor shows it before any chunk exists,
+    // and nudge the project's monitor streams.
+    const activeProject =
+      monitor && projectId && projectId.length <= MAX_PING_ID_LEN ? projectId : null;
+    if (!session && !monitor) return c.json({ ok: true });
+    let outcome: PingOutcome;
     try {
-      const telemetry = pingTelemetry(body);
-      const first = await presence.markConversationSeen(
+      const telemetry = monitor ? pingTelemetry(body) : {};
+      outcome = await presence.recordPing({
         conversationId,
-        Object.keys(telemetry).length ? telemetry : null,
         now,
-      );
-      if (first)
-        await stampRecordingStartedAt(d, conversationId, first).catch((err) =>
-          d.logger.warn(
-            { err: (err as Error).message, conversationId },
-            "recording_started_at stamp failed",
-          ),
-        );
+        liveness: monitor ? { telemetry: Object.keys(telemetry).length ? telemetry : null } : null,
+        activeProjectId: activeProject,
+        session,
+        notify: activeProject
+          ? notification(monitorChannel(activeProject), { type: "dirty" })
+          : null,
+      });
     } catch (err) {
+      if (!monitor) {
+        d.logger.warn(
+          { err: (err as Error).message, projectId, conversationId },
+          "recording meter failed open",
+        );
+        return c.json({ ok: true });
+      }
       d.logger.warn({ err: (err as Error).message, conversationId }, "liveness ping failed");
       return c.json({ ok: false });
     }
-    if (body?.project_id && body.project_id.length <= MAX_PING_ID_LEN) {
-      // Index the conversation as active so the monitor shows it before any chunk exists.
-      await presence
-        .registerActive(body.project_id, conversationId, now)
-        .catch((err) =>
-          d.logger.warn({ err: (err as Error).message }, "monitor active-index add failed"),
-        );
-      await publishMonitorDirty(d.db, body.project_id);
-    }
+    if (session && projectId)
+      await meter.settlePing(session, projectId, conversationId, now, outcome);
+    if (outcome.first)
+      await stampRecordingStartedAt(d, conversationId, outcome.first).catch((err) =>
+        d.logger.warn(
+          { err: (err as Error).message, conversationId },
+          "recording_started_at stamp failed",
+        ),
+      );
     return c.json({ ok: true });
   });
 

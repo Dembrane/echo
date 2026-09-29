@@ -14,6 +14,24 @@ export function encode(event: LiveEvent): string {
 }
 
 /**
+ * The pg_notify arguments that publish sends, for a caller that folds the nudge into a
+ * statement it already makes (the participant ping). Null when there is nothing to send.
+ */
+export function notification(
+  channel: string,
+  event: LiveEvent,
+  logger?: Logger,
+): { pgChannel: string; payload: string } | null {
+  if (!channel) return null;
+  const payload = JSON.stringify({ c: channel, e: event });
+  if (payload.length > MAX_PAYLOAD) {
+    logger?.warn({ channel, bytes: payload.length }, "live event too large; send ids, not data");
+    return null;
+  }
+  return { pgChannel: PG_CHANNEL, payload };
+}
+
+/**
  * Publishes a nudge on a named channel. Inside a transaction it is delivered on commit, so
  * a page never reloads before the row it will read exists. Best effort, like before: an
  * event nobody listens to is gone, and pages catch up when their stream reconnects.
@@ -24,14 +42,10 @@ export async function publish(
   event: LiveEvent,
   logger?: Logger,
 ) {
-  if (!channel) return;
-  const payload = JSON.stringify({ c: channel, e: event });
-  if (payload.length > MAX_PAYLOAD) {
-    logger?.warn({ channel, bytes: payload.length }, "live event too large; send ids, not data");
-    return;
-  }
+  const n = notification(channel, event, logger);
+  if (!n) return;
   try {
-    await sql`select pg_notify(${PG_CHANNEL}, ${payload})`;
+    await sql`select pg_notify(${n.pgChannel}, ${n.payload})`;
   } catch (err) {
     logger?.warn({ err, channel }, "live event publish failed");
   }
