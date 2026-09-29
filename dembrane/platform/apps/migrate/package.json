@@ -1,6 +1,6 @@
 {
   "name": "@dembrane/migrate",
-  "description": "The job that runs before every rollout: schema migrations, the queue schema, database grants, and on PR previews the sample data.",
+  "description": "The job that runs before every rollout: schema migrations, the queue schema, database grants, the default verification topics, and on PR previews the sample data.",
   "private": true,
   "type": "module",
   "scripts": {
@@ -16,6 +16,7 @@
     "@dembrane/projects": "workspace:*",
     "@dembrane/queue": "workspace:*",
     "@dembrane/samples": "workspace:*",
+    "@dembrane/verify": "workspace:*",
     "@dembrane/webhooks": "workspace:*",
     "drizzle-orm": "^0.45.3"
   }
