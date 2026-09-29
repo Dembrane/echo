@@ -1,7 +1,7 @@
 import { loadSections } from "@dembrane/config";
 import { createLogger } from "@dembrane/observability";
 import { securityHeaders } from "./headers";
-import { createHandler } from "./server";
+import { createHandler, previewRuntime } from "./server";
 
 const { values: config } = loadSections(["app", "http", "web", "observability"]);
 const logger = createLogger({
@@ -34,6 +34,7 @@ const handle = createHandler({
     dashboardUrl: config.http.dashboardUrl,
     portalUrl: config.http.portalUrl,
     release: config.app.release,
+    ...previewRuntime(config.app.env, config.web),
   },
   headers: securityHeaders({
     own: [

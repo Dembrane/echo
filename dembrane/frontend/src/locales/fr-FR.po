@@ -4402,7 +4402,7 @@ msgid "dembrane at your event?"
 msgstr "dembrane pour votre événement ?"
 
 #. placeholder {0}: new Date().getFullYear()
-#: src/components/layout/Footer.tsx:19
+#: src/components/layout/Footer.tsx:38
 msgid "dembrane B.V. {0}, all rights reserved."
 msgstr "dembrane B.V. {0}, tous droits réservés."
 
@@ -4702,7 +4702,7 @@ msgstr "Télécharger la transcription"
 msgid "Download Transcript Options"
 msgstr "Options de téléchargement de la transcription"
 
-#: src/components/layout/Footer.tsx:15
+#: src/components/layout/Footer.tsx:34
 msgid "DPA"
 msgstr "DPA"
 
@@ -10112,6 +10112,10 @@ msgstr "Positif"
 msgid "Postal code"
 msgstr "Code postal"
 
+#: src/components/common/Logo.tsx:43
+msgid "PR #{number}"
+msgstr "PR #{number}"
+
 #: src/components/chat/InsightNoteCard.tsx:21
 msgid "praise"
 msgstr "éloge"
@@ -10191,6 +10195,10 @@ msgstr "Appuyez sur Entrée pour ajouter. Séparez-en plusieurs par des virgules
 msgid "Preview"
 msgstr "Aperçu"
 
+#: src/components/layout/Footer.tsx:20
+msgid "Preview of PR #{number}"
+msgstr "Aperçu de la PR #{number}"
+
 #: src/components/settings/FontSizeSettingsCard.tsx:98
 msgid "Preview: The quick brown fox jumps over the lazy dog."
 msgstr "Aperçu : Le rapide brun fox saute sur le chien paresseux."
@@ -10215,7 +10223,7 @@ msgstr "Imprimer / Enregistrer PDF"
 msgid "Print report"
 msgstr "Imprimer le rapport"
 
-#: src/components/layout/Footer.tsx:12
+#: src/components/layout/Footer.tsx:31
 msgid "Privacy"
 msgstr "Confidentialité"
 
@@ -13454,7 +13462,7 @@ msgstr "Tensions"
 msgid "Tensions tab"
 msgstr "Onglet Tensions"
 
-#: src/components/layout/Footer.tsx:9
+#: src/components/layout/Footer.tsx:28
 msgid "Terms"
 msgstr "Conditions"
 

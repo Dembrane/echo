@@ -22,9 +22,25 @@ interface RuntimeConfig {
 	apiBase: string;
 	dashboardUrl: string;
 	portalUrl: string;
+	// Set on PR previews only: the pull request the preview was built from.
+	previewPr?: number;
+	previewRepo?: string;
 }
 const RUNTIME = (globalThis as { __ECHO_RUNTIME__?: RuntimeConfig })
 	.__ECHO_RUNTIME__;
+
+/**
+ * The pull request a PR preview was built from, or null everywhere else. The
+ * logo shows it in place of the env badge and the sign-in footer links to it,
+ * so a tester always knows which PR they are looking at.
+ */
+export const PREVIEW_PR: { number: number; url: string } | null =
+	RUNTIME?.previewPr
+		? {
+				number: RUNTIME.previewPr,
+				url: `https://github.com/${RUNTIME.previewRepo ?? "Dembrane/echo"}/pull/${RUNTIME.previewPr}`,
+			}
+		: null;
 
 const ENV_HOSTNAMES: Record<"production" | "next" | "testing", string[]> = {
 	next: ["dashboard.echo-next.dembrane.com", "portal.echo-next.dembrane.com"],

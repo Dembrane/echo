@@ -18,19 +18,23 @@ for (const name of Object.keys(environments)) {
   });
 }
 
-test("a PR preview's key prefix is read; no environment sets it", () => {
+test("a PR preview's key prefix and pull request are read; no environment sets them", () => {
   const plain = loadConfig({ APP_ENV: "preview", ...secrets }).values;
   expect(plain.files.s3Prefix).toBeUndefined();
   expect(plain.audio.s3Prefix).toBeUndefined();
+  expect(plain.web.previewPr).toBeUndefined();
 
   const pr = loadConfig({
     APP_ENV: "preview",
     ...secrets,
     FILES_S3_PREFIX: "pr-12/",
     STORAGE_S3_PREFIX: "pr-12/",
+    WEB_PREVIEW_PR: "12",
   }).values;
   expect(pr.files.s3Prefix).toBe("pr-12/");
   expect(pr.audio.s3Prefix).toBe("pr-12/");
+  expect(pr.web.previewPr).toBe(12);
+  expect(pr.web.previewRepo).toBe("Dembrane/echo");
 
   expect(() => loadConfig({ APP_ENV: "preview", ...secrets, FILES_S3_PREFIX: "../x" })).toThrow();
 });

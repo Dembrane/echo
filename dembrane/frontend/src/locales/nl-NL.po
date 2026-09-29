@@ -4399,7 +4399,7 @@ msgid "dembrane at your event?"
 msgstr "Ook dembrane inzetten?"
 
 #. placeholder {0}: new Date().getFullYear()
-#: src/components/layout/Footer.tsx:19
+#: src/components/layout/Footer.tsx:38
 msgid "dembrane B.V. {0}, all rights reserved."
 msgstr "dembrane B.V. {0}, alle rechten voorbehouden."
 
@@ -4699,7 +4699,7 @@ msgstr "Transcript downloaden"
 msgid "Download Transcript Options"
 msgstr "Download transcript opties"
 
-#: src/components/layout/Footer.tsx:15
+#: src/components/layout/Footer.tsx:34
 msgid "DPA"
 msgstr "DPA"
 
@@ -10109,6 +10109,10 @@ msgstr "Positief"
 msgid "Postal code"
 msgstr "Postcode"
 
+#: src/components/common/Logo.tsx:43
+msgid "PR #{number}"
+msgstr "PR #{number}"
+
 #: src/components/chat/InsightNoteCard.tsx:21
 msgid "praise"
 msgstr "compliment"
@@ -10188,6 +10192,10 @@ msgstr "Druk op Enter om toe te voegen. Scheid meerdere begrippen met komma's."
 msgid "Preview"
 msgstr "Voorbeeld"
 
+#: src/components/layout/Footer.tsx:20
+msgid "Preview of PR #{number}"
+msgstr "Voorbeeld van PR #{number}"
+
 #: src/components/settings/FontSizeSettingsCard.tsx:98
 msgid "Preview: The quick brown fox jumps over the lazy dog."
 msgstr "Voorbeeld: De snelle bruine vos springt over de luiende hond."
@@ -10212,7 +10220,7 @@ msgstr "Afdrukken / PDF opslaan"
 msgid "Print report"
 msgstr "Rapport afdrukken"
 
-#: src/components/layout/Footer.tsx:12
+#: src/components/layout/Footer.tsx:31
 msgid "Privacy"
 msgstr "Privacy"
 
@@ -13451,7 +13459,7 @@ msgstr "Spanningen"
 msgid "Tensions tab"
 msgstr "Tabblad Spanningen"
 
-#: src/components/layout/Footer.tsx:9
+#: src/components/layout/Footer.tsx:28
 msgid "Terms"
 msgstr "Voorwaarden"
 

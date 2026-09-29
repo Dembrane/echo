@@ -53,13 +53,7 @@ export const SidebarHeader = () => {
 			className="flex h-[57px] shrink-0 items-center justify-between border-b pl-[12.5px] pr-3"
 			style={{ borderColor: "rgba(45, 45, 44, 0.06)" }}
 		>
-			<I18nLink
-				to="/o"
-				className="flex items-center gap-2 transition-opacity hover:opacity-80"
-				aria-label="dembrane home"
-			>
-				<Logo hideTitle={false} />
-			</I18nLink>
+			<Logo hideTitle={false} to="/o" linkLabel="dembrane home" />
 
 			<ActionIcon
 				variant="subtle"

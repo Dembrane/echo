@@ -107,6 +107,9 @@ deploy() {
   local files="FILES_S3_ENDPOINT=https://storage.googleapis.com,FILES_S3_BUCKET=$BUCKET,STORAGE_S3_ENDPOINT=https://storage.googleapis.com,STORAGE_S3_BUCKET=$BUCKET"
   # A PR preview keeps its objects under pr-<n>/ in the shared bucket, so teardown can delete them.
   if [[ $name == pr-* ]]; then files+=",FILES_S3_PREFIX=pr-$n/,STORAGE_S3_PREFIX=pr-$n/"; fi
+  # The dashboard and portal show which PR a preview is, linking to it.
+  local web_pr=""
+  if [[ $name == pr-* ]]; then web_pr=",WEB_PREVIEW_PR=$n,WEB_PREVIEW_REPO=${GITHUB_REPOSITORY:-Dembrane/echo}"; fi
   local keys
   keys="FILES_S3_ACCESS_KEY_ID=$(secret s3-access-key-id),FILES_S3_SECRET_ACCESS_KEY=$(secret s3-secret-access-key),STORAGE_S3_KEY=$(secret s3-access-key-id),STORAGE_S3_SECRET=$(secret s3-secret-access-key)"
   local filled
@@ -164,7 +167,7 @@ deploy() {
   for role in dashboard portal; do
     # shellcheck disable=SC2086,SC2046
     g run deploy "$prefix-$role" --region "$REGION" --image "$REGISTRY/web:$tag" \
-      --service-account "$(SA web)" --set-env-vars "$common,WEB_ROLE=$role" \
+      --service-account "$(SA web)" --set-env-vars "$common,WEB_ROLE=$role$web_pr" \
       $(scale $role) --allow-unauthenticated $web_ingress $labels --quiet & pids+=($!)
   done
   for p in "${pids[@]}"; do wait "$p" || fail=1; done

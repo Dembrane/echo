@@ -109,6 +109,22 @@ export const schema = defineSchema({
     distDir: key("WEB_DIST_DIR", z.string().default("/app/dist"), {
       description: "The built frontend the web server serves.",
     }),
+    previewPr: key("WEB_PREVIEW_PR", int.min(1).optional(), {
+      description:
+        "Pull request a PR preview was built from. The frontend shows it under the logo and on the sign-in page; unset elsewhere.",
+      public: true,
+    }),
+    previewRepo: key(
+      "WEB_PREVIEW_REPO",
+      z
+        .string()
+        .regex(/^[\w.-]+\/[\w.-]+$/)
+        .default("Dembrane/echo"),
+      {
+        description: "GitHub repository (owner/name) the preview's pull request belongs to.",
+        public: true,
+      },
+    ),
   },
   llm: {
     vertexProject: key("LLM_VERTEX_PROJECT", z.string().default("dembrane-web-previews"), {

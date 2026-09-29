@@ -3,7 +3,6 @@ import { type PropsWithChildren, useEffect } from "react";
 import { Outlet, useLocation, useSearchParams } from "react-router";
 import { useAuthenticated } from "@/components/auth/hooks";
 import { resolveNextPath } from "@/components/auth/utils/nextPath";
-import { I18nLink } from "@/components/common/i18nLink";
 import { Logo } from "@/components/common/Logo";
 import { LanguagePicker } from "@/components/language/LanguagePicker";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -24,11 +23,9 @@ const AuthHeader = () => (
 		style={{ backgroundColor: "var(--app-background)" }}
 	>
 		<Group justify="space-between" align="center" h={60} px="md">
-			<I18nLink to="/">
-				<Group align="center">
-					<Logo hideTitle={false} alwaysDembrane />
-				</Group>
-			</I18nLink>
+			<Group align="center">
+				<Logo hideTitle={false} alwaysDembrane to="/" />
+			</Group>
 			<LanguagePicker />
 		</Group>
 	</Paper>
