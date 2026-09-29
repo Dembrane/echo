@@ -6,6 +6,7 @@ import { useParams } from "react-router";
 import useSessionStorageState from "use-session-storage-state";
 import DembraneLoadingSpinner from "@/components/common/DembraneLoadingSpinner";
 import { useParticipantProjectById } from "@/components/participant/hooks";
+import { InAppBrowserNotice } from "@/components/participant/InAppBrowserNotice";
 import ParticipantOnboardingCards from "@/components/participant/ParticipantOnboardingCards";
 import { ENABLE_MONITOR } from "@/config";
 import { useVisitorBeacon } from "@/hooks/useVisitorBeacon";
@@ -90,6 +91,7 @@ export const ParticipantStartRoute = () => {
 				<ParticipantOnboardingCards
 					project={project as ParticipantProject}
 					onFunnelStage={setFunnel}
+					notice={<InAppBrowserNotice projectId={projectId} />}
 				/>
 			)}
 		</div>
