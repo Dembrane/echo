@@ -39,9 +39,9 @@ const none = { initials: false, signature: false };
 const signed = { initials: false, signature: true };
 
 const filled: Values = {
-	[name.id]: "Sameer",
-	[org.id]: "Gemeente Voorbeeldstad",
-	[address.id]: "Stadhuisplein 1",
+	[name.id]: "Robin Example",
+	[org.id]: "Example Town Council (sample)",
+	[address.id]: "Example Street 1",
 	[role.id]: "Wethouder",
 	[date.id]: "28-09-2026",
 };
@@ -176,7 +176,7 @@ describe("the confirmation", () => {
 		const text = fillConfirmation(template, fields, filled);
 		expect(
 			text.startsWith(
-				"Ik, Sameer, Wethouder, bevestig dat ik namens Gemeente Voorbeeldstad mag tekenen",
+				"Ik, Robin Example, Wethouder, bevestig dat ik namens Example Town Council (sample) mag tekenen",
 			),
 		).toBe(true);
 		expect(text).not.toMatch(/\{(name|role|organisation)\}/);

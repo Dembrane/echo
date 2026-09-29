@@ -215,7 +215,7 @@ describe("the fixture backend, through the client", () => {
 		const template = sent.confirmation?.dpa_authorised ?? "";
 		expect(template).toContain("{name}");
 		expect(template).not.toContain("{role}");
-		expect(template).toContain("Gemeente Voorbeeldstad");
+		expect(template).toContain("Example Town Council (sample)");
 		const card = await client.call("accountCard", { params: { orgId: org } });
 		// The task given with the draft is created on send.
 		expect(
@@ -253,11 +253,11 @@ describe("the fixture backend, through the client", () => {
 		await client.call("updateBilling", {
 			body: {
 				address_line1: "Stadhuisplein 1",
-				billing_email: "crediteuren@voorbeeldstad.example",
-				city: "Voorbeeldstad",
+				billing_email: "accounts@example-town.example",
+				city: "Example Town",
 				country: "Nederland",
 				kvk_number: "12345678",
-				legal_name: "Gemeente Voorbeeldstad",
+				legal_name: "Example Town Council (sample)",
 				postal_code: "1234 AB",
 			},
 			params: { orgId: org },
@@ -304,7 +304,7 @@ describe("the fixture backend, through the client", () => {
 			"Stichting Vrije Proef",
 		]);
 		const byName = await client.call("listAccounts", {
-			query: { q: "voorbeeld" },
+			query: { q: "sample" },
 		});
 		expect(byName.accounts.length).toBe(2);
 	});
@@ -326,7 +326,7 @@ describe("the fixture backend, through the client", () => {
 				async () =>
 					new Response(
 						JSON.stringify({
-							orgs: [{ id: org, name: "Gemeente Voorbeeldstad" }],
+							orgs: [{ id: org, name: "Example Town Council (sample)" }],
 						}),
 					),
 			),
@@ -356,7 +356,7 @@ describe("the fixture backend, through the client", () => {
 		const started = await client.call("createDemo", {
 			body: {
 				...fx.demoCreateRequest,
-				website_url: "https://fail.voorbeeldstad.example/",
+				website_url: "https://fail.example-town.example/",
 			},
 		});
 		expect(started.steps[0]?.status).toBe("running");

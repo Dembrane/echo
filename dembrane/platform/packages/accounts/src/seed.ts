@@ -25,8 +25,8 @@ import { store } from "./storage";
 import { createTask, settleTask } from "./tasks";
 
 /**
- * The accounts demo on a non-production database: a fictional
- * customer, Gemeente Voorbeeldstad, with the example synthetic demo, a sent subscription
+ * The accounts demo on a non-production database: a fictional customer, Example Town
+ * Council (sample), with a fictional contact, the example synthetic demo, a sent subscription
  * offer and its signing task, the locked billing task, a PO task (open), a logo task
  * (submitted, waiting for our review), an open invoice, a question answered once, and the
  * timeline all of that writes. Two people sign in with email and password: the customer's
@@ -37,7 +37,11 @@ import { createTask, settleTask } from "./tasks";
 export const DEMO_SLUG = "accounts-demo-28sep";
 export const CUSTOMER_EMAIL = "sameer+28sep@dembrane.com";
 export const STAFF_EMAIL = "sameer+28sep-staff@dembrane.com";
-export const ORG_NAME = "Gemeente Voorbeeldstad";
+export const ORG_NAME = "Example Town Council (sample)";
+/** The customer contact the offer greets; fictional, like the organisation. */
+export const CONTACT_FIRST_NAME = "Robin";
+const STAFF_NAME = "Staff demo";
+const LOGO_FILE = "example-town-logo.svg";
 
 const id = (kind: string) => demoIdentity(DEMO_SLUG, kind);
 export const DEMO_IDS = {
@@ -74,7 +78,7 @@ export interface SeedOptions {
 /** Everything the demo writes in words, per language. */
 const WORDS = {
   en: {
-    contact: "Sameer (customer demo)",
+    contact: "Robin Example (customer demo)",
     workspace: "Example town",
     example: "example-en",
     portal: "en-US",
@@ -106,7 +110,7 @@ const WORDS = {
     },
   },
   nl: {
-    contact: "Sameer (klant demo)",
+    contact: "Robin Voorbeeld (klant demo)",
     workspace: "Voorbeeldstad",
     example: "example",
     portal: "nl-NL",
@@ -202,7 +206,7 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
   const staffUser = await o.db.transaction((tx) =>
     ensureUser(tx, {
       email: STAFF_EMAIL,
-      name: "Sameer (staff demo)",
+      name: STAFF_NAME,
       passwordHash: hash,
       nowIso,
       directusRoleId: adminRole,
@@ -228,10 +232,17 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
     },
     { password: o.password },
   );
-  await store.updateOrg(o.db, account.org_id, { account_stage: "customer", updated_at: nowIso });
+  // The name too: a database seeded before the demo's names changed gets the current ones.
+  await store.updateOrg(o.db, account.org_id, {
+    name: ORG_NAME,
+    account_stage: "customer",
+    updated_at: nowIso,
+  });
   const customer = await store.identityByEmail(o.db, CUSTOMER_EMAIL);
   const customerApp = customer ? await store.appUserByDirectusId(o.db, customer.id) : null;
   if (!customer || !customerApp) throw new Error("demo customer was not created");
+  await renameUser(o.db, customer.id, w.contact);
+  await renameUser(o.db, staffUser.userId, STAFF_NAME);
 
   // A workspace for the synthetic demo, on the organisation's own billing account.
   const billing = await store.billing(o.db, account.org_id);
@@ -296,8 +307,9 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
   // is pushed only when no demo offer is still waiting for a signature.
   const docs = await store.documents(o.db, account.org_id);
   let waiting = docs.find((x) => x.kind === "offer" && ["sent", "viewed"].includes(x.status));
-  // A demo rebuilt in the other language withdraws the offer in the old one.
-  if (waiting && waiting.language !== lang) {
+  // A demo rebuilt in the other language, or under another organisation name, withdraws
+  // the offer that shows the old words.
+  if (waiting && (waiting.language !== lang || !waiting.title.startsWith(ORG_NAME))) {
     await store.updateDocument(o.db, waiting.id, {
       status: "void",
       voidedAt: o.now,
@@ -324,7 +336,7 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
         template: "subscription",
         language: lang,
         offer_name: ORG_NAME,
-        person_name: "Sameer",
+        person_name: CONTACT_FIRST_NAME,
         attention: null,
         reference: `DMB-DEMO-${generation}`,
         title: null,
@@ -395,16 +407,16 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
         kind: "upload",
         createdBy: staff.directusUserId,
       });
-      const key = `accounts/${account.org_id}/tasks/${DEMO_IDS.logoTask}/voorbeeldstad-logo.svg`;
+      const key = `accounts/${account.org_id}/tasks/${DEMO_IDS.logoTask}/${LOGO_FILE}`;
       await o.files.put(
         key,
-        '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="60"><text x="10" y="40" font-size="28" font-family="sans-serif">Voorbeeldstad</text></svg>',
+        '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="60"><text x="10" y="40" font-size="28" font-family="sans-serif">Example Town</text></svg>',
         "image/svg+xml",
       );
       await settleTask(d, tx, DEMO_IDS.logoTask, "submitted", {
         responseText: w.logo.reply,
         responseFileKey: key,
-        responseFileName: "voorbeeldstad-logo.svg",
+        responseFileName: LOGO_FILE,
         submittedAt: o.now,
         submittedBy: customer.id,
       });
@@ -467,8 +479,9 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
         issuedOn: nowIso.slice(0, 10),
         dueOn: new Date(o.now.getTime() + 30 * 86_400_000).toISOString().slice(0, 10),
         invoiceStatus: "open",
-        // A placeholder, not a payable link: the demo shows where Mollie's link appears.
-        paymentUrl: "https://www.mollie.com/checkout/test-mode?demo=voorbeeldstad",
+        // A placeholder on a reserved domain, not a payable link: the demo shows where
+        // Mollie's link appears without sending anyone to a real checkout.
+        paymentUrl: "https://mollie.test/pay/demo-2026-0421",
         paymentReference: "2026-0421",
         sentAt: o.now,
         createdAt: o.now,
@@ -502,6 +515,16 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
     customer_email: CUSTOMER_EMAIL,
     staff_email: STAFF_EMAIL,
   };
+}
+
+/** Keeps the demo people's display names current on a database seeded before they changed. */
+async function renameUser(db: Db, userId: string, name: string) {
+  const [first, ...rest] = name.split(" ");
+  await db.update(schema.auth_user).set({ name }).where(eq(schema.auth_user.id, userId));
+  await db
+    .update(schema.directus_users)
+    .set({ first_name: first || null, last_name: rest.join(" ") || null })
+    .where(eq(schema.directus_users.id, userId));
 }
 
 /**

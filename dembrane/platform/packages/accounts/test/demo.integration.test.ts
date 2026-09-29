@@ -18,7 +18,7 @@ import { FilesystemStorage } from "@dembrane/storage";
 import { and, count, eq, ne } from "drizzle-orm";
 import { demoProspectHook } from "../src/demo-hook";
 import { accountsRoutes } from "../src/routes";
-import { CUSTOMER_EMAIL, DEMO_IDS, STAFF_EMAIL, seedAccountsDemo } from "../src/seed";
+import { CUSTOMER_EMAIL, DEMO_IDS, ORG_NAME, STAFF_EMAIL, seedAccountsDemo } from "../src/seed";
 import { admin, dropDatabase, FakeWeb, freshDatabase, silent, type World, world } from "./helpers";
 
 // The prospect block of the demo seed route, and the accounts demo seed.
@@ -308,7 +308,7 @@ run("bun run seed:accounts-demo", () => {
       .select()
       .from(schema.org)
       .where(eq(schema.org.id, DEMO_IDS.org));
-    expect([org?.name, org?.account_stage]).toEqual(["Gemeente Voorbeeldstad", "customer"]);
+    expect([org?.name, org?.account_stage]).toEqual([ORG_NAME, "customer"]);
     // Both logins work with the demo password, and the password is stored only hashed.
     for (const email of [CUSTOMER_EMAIL, STAFF_EMAIL]) {
       const [user] = await database.db
@@ -393,6 +393,51 @@ run("bun run seed:accounts-demo", () => {
     // Back to English for the tests after this one.
     await seedAccountsDemo(await options());
     expect((await tasks())[0]?.title).toBe("Send us your PO number");
+  });
+
+  test("a database seeded under the old names gets the fictional ones, and a fresh offer", async () => {
+    const live = async () =>
+      (
+        await database.db
+          .select()
+          .from(schema.account_document)
+          .where(
+            and(
+              eq(schema.account_document.kind, "offer"),
+              ne(schema.account_document.status, "void"),
+            ),
+          )
+      )[0];
+    const old = await live();
+    await database.db
+      .update(schema.org)
+      .set({ name: "Gemeente Voorbeeldstad" })
+      .where(eq(schema.org.id, DEMO_IDS.org));
+    await database.db
+      .update(schema.account_document)
+      .set({ title: "Gemeente Voorbeeldstad x dembrane" })
+      .where(eq(schema.account_document.id, old?.id as string));
+    await database.db
+      .update(schema.auth_user)
+      .set({ name: "Old demo name" })
+      .where(eq(schema.auth_user.email, CUSTOMER_EMAIL));
+
+    const again = await seedAccountsDemo(await options());
+    expect(again.offer_created).toBe(true);
+    const [org] = await database.db
+      .select({ name: schema.org.name })
+      .from(schema.org)
+      .where(eq(schema.org.id, DEMO_IDS.org));
+    expect(org?.name).toBe(ORG_NAME);
+    expect(ORG_NAME).toEndWith("(sample)");
+    const fresh = await live();
+    expect(fresh?.id).toBe(again.offer_id);
+    expect(fresh?.title).toBe(`${ORG_NAME} x dembrane`);
+    const [customer] = await database.db
+      .select({ name: schema.auth_user.name })
+      .from(schema.auth_user)
+      .where(eq(schema.auth_user.email, CUSTOMER_EMAIL));
+    expect(customer?.name).toBe("Robin Example (customer demo)");
   });
 
   test("after the demo offer is signed or withdrawn, the next run pushes a fresh one", async () => {

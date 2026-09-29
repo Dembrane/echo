@@ -33,7 +33,7 @@ export { type OfferContent, offerText } from "./offer";
 export { offerPdf, signedPdf, textPdf } from "./pdf";
 export { codeSignInGate, continueUrl, createAccount, ensureUser } from "./prospect";
 export { accountsRoutes } from "./routes";
-export { administratorRole, DEMO_IDS, seedAccountsDemo } from "./seed";
+export { administratorRole, DEMO_IDS, ORG_NAME, seedAccountsDemo } from "./seed";
 export { seedAccountsDemoFromEnv } from "./seed-env";
 export { type AccountsJobs, MemoryJobs, queueJobs } from "./sink";
 export {

@@ -9,7 +9,7 @@ import { ErrorBody, ROUTES, type RouteName } from "../contract/contract.gen";
  * validated and the response parsed by the route's own schema in contract.gen.ts.
  *
  * Fixture mode (VITE_ACCOUNTS_FIXTURES=1 at build or dev time) answers the same calls from
- * an in-memory copy of the Gemeente Voorbeeldstad demo, parsed by the same schemas, so
+ * an in-memory copy of the Example Town Council (sample) demo, parsed by the same schemas, so
  * the screens run before the backend handlers land and switch to the real API with no
  * change. The check is a build-time constant, so a normal build drops the fixture code.
  */

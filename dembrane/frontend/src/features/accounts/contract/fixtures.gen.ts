@@ -23,7 +23,7 @@ import type {
 
 /**
  * The demo scenario as the API returns it, for building the UI before the backend runs:
- * Gemeente Voorbeeldstad with a sent subscription offer (lines, pinned legal versions and
+ * Example Town Council (sample), a fictional customer, with a sent subscription offer (lines, pinned legal versions and
  * its fields), "Review and sign the offer" open, the billing details task locked, a signed
  * DPA with its PDF, an open invoice with bank details, a question answered once, the
  * one-page read, and the staff list and card. Every fixture parses against contract.ts
@@ -88,8 +88,8 @@ const items = [
 export const pushOfferRequest: Out<typeof PushOfferRequest> = {
   template: "subscription",
   language: "nl",
-  offer_name: "Gemeente Voorbeeldstad",
-  person_name: "Sameer",
+  offer_name: "Example Town Council (sample)",
+  person_name: "Robin",
   attention: null,
   reference: "DMB-DEMO-1",
   title: null,
@@ -127,7 +127,7 @@ const offerFields = [
 const offerSummary: Out<typeof DocumentSummary> = {
   id: OFFER,
   kind: "offer",
-  title: "Gemeente Voorbeeldstad x dembrane",
+  title: "Example Town Council (sample) x dembrane",
   reference: "DMB-DEMO-1",
   language: "nl",
   version: 1,
@@ -150,14 +150,14 @@ const offerSummary: Out<typeof DocumentSummary> = {
 
 export const offerDetail: Out<typeof DocumentDetail> = {
   ...offerSummary,
-  body: "dembrane B.V.\nAddress: Sint Janssingel 88, ‘s-Hertogenbosch, NL\n...\n# Gemeente Voorbeeldstad x dembrane\n28-09-2026 | Offer ID: DMB-DEMO-1\n...",
+  body: "dembrane B.V.\nAddress: Sint Janssingel 88, ‘s-Hertogenbosch, NL\n...\n# Example Town Council (sample) x dembrane\n28-09-2026 | Offer ID: DMB-DEMO-1\n...",
   content: {
     template: "subscription",
     language: "nl",
-    offer_name: "Gemeente Voorbeeldstad",
+    offer_name: "Example Town Council (sample)",
     date: "2026-09-28",
     reference: "DMB-DEMO-1",
-    person_name: "Sameer",
+    person_name: "Robin",
     attention: null,
     currency: "EUR",
     valid_days: 14,
@@ -210,9 +210,9 @@ export const offerDetail: Out<typeof DocumentDetail> = {
     "Met je handtekening is de overeenkomst compleet: wij kunnen factureren, en je voorwaarden, SLA en verwerkersovereenkomst gelden.",
   confirmation: {
     dpa_authorised:
-      'Ik, {name}, {role}, bevestig dat ik namens {organisation} mag tekenen, en ik onderteken "Gemeente Voorbeeldstad x dembrane" (DMB-DEMO-1) zoals aan mij getoond, SHA-256 9b4f3c1e2a7d8e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f. Ik ben ook bevoegd om namens deze organisatie verwerkingsafspraken aan te gaan.',
+      'Ik, {name}, {role}, bevestig dat ik namens {organisation} mag tekenen, en ik onderteken "Example Town Council (sample) x dembrane" (DMB-DEMO-1) zoals aan mij getoond, SHA-256 9b4f3c1e2a7d8e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f. Ik ben ook bevoegd om namens deze organisatie verwerkingsafspraken aan te gaan.',
     dpa_not_authorised:
-      'Ik, {name}, {role}, bevestig dat ik namens {organisation} mag tekenen, en ik onderteken "Gemeente Voorbeeldstad x dembrane" (DMB-DEMO-1) zoals aan mij getoond, SHA-256 9b4f3c1e2a7d8e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f. Ik ben niet bevoegd om namens deze organisatie verwerkingsafspraken aan te gaan; de verwerkersovereenkomst wordt apart ondertekend.',
+      'Ik, {name}, {role}, bevestig dat ik namens {organisation} mag tekenen, en ik onderteken "Example Town Council (sample) x dembrane" (DMB-DEMO-1) zoals aan mij getoond, SHA-256 9b4f3c1e2a7d8e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f. Ik ben niet bevoegd om namens deze organisatie verwerkingsafspraken aan te gaan; de verwerkersovereenkomst wordt apart ondertekend.',
   },
   signature: null,
   access: "member",
@@ -238,8 +238,8 @@ const dpaSummary: Out<typeof DocumentSummary> = {
   declined_at: null,
   voided_at: null,
   signer: {
-    email: "privacy@voorbeeldstad.example",
-    name: "Anna de Vries",
+    email: "privacy@example-town.example",
+    name: "Alex Example",
     role: "Functionaris gegevensbescherming",
   },
   file_url: `${C}/documents/${DPA}/file`,
@@ -341,10 +341,10 @@ export const signedDpaDetail: Out<typeof DocumentDetail> = {
   },
   signature: {
     id: SIGNATURE,
-    name: "Anna de Vries",
+    name: "Alex Example",
     role: "Functionaris gegevensbescherming",
-    email: "privacy@voorbeeldstad.example",
-    organisation: "Gemeente Voorbeeldstad",
+    email: "privacy@example-town.example",
+    organisation: "Example Town Council (sample)",
     address: null,
     vat_number: null,
     dpa_authorised: true,
@@ -353,9 +353,9 @@ export const signedDpaDetail: Out<typeof DocumentDetail> = {
     method: "drawn",
     image_sha256: "5e4d3c2b1a0f9e8d7c6b5a4938271605f4e3d2c1b0a9f8e7d6c5b4a392817060",
     values: {
-      "0199a1b9-0000-7000-8000-000000000001": "Anna de Vries",
+      "0199a1b9-0000-7000-8000-000000000001": "Alex Example",
       "0199a1b9-0000-7000-8000-000000000002": "Functionaris gegevensbescherming",
-      "0199a1b9-0000-7000-8000-000000000003": "Gemeente Voorbeeldstad",
+      "0199a1b9-0000-7000-8000-000000000003": "Example Town Council (sample)",
       "0199a1b9-0000-7000-8000-000000000004": "21-09-2026",
     },
   },
@@ -392,14 +392,14 @@ const invoiceSummary: Out<typeof DocumentSummary> = {
     status: "open",
     paid_at: null,
     bank_transfer: { ...bank, reference: "2026-0421" },
-    payment_url: "https://www.mollie.com/checkout/test-mode?demo=voorbeeldstad",
+    payment_url: "https://mollie.test/pay/demo-2026-0421",
   },
 };
 
 export const signTask: Out<typeof Task> = {
   id: SIGN_TASK,
   code: "sign_offer",
-  params: { document_title: "Gemeente Voorbeeldstad x dembrane" },
+  params: { document_title: "Example Town Council (sample) x dembrane" },
   title: null,
   body: null,
   kind: "sign",
@@ -431,7 +431,7 @@ export const billingTask: Out<typeof Task> = {
   status: "locked",
   locked: true,
   locked_until_document_id: OFFER,
-  locked_until_title: "Gemeente Voorbeeldstad x dembrane",
+  locked_until_title: "Example Town Council (sample) x dembrane",
   document_id: null,
   opened_at: null,
   next_reminder_at: null,
@@ -459,7 +459,7 @@ const logoTask: Out<typeof Task> = {
   status: "submitted",
   document_id: null,
   response_text: "Hierbij ons logo.",
-  response_file_name: "voorbeeldstad-logo.svg",
+  response_file_name: "example-town-logo.svg",
   submitted_at: "2026-09-28T09:10:00.000Z",
   next_reminder_at: null,
 };
@@ -489,7 +489,7 @@ export const ticket: Out<typeof Ticket> = {
 
 const organisation = {
   id: ORG,
-  name: "Gemeente Voorbeeldstad",
+  name: "Example Town Council (sample)",
   account_stage: "customer" as const,
 };
 const emptyBilling = {
@@ -497,7 +497,7 @@ const emptyBilling = {
   vat_id: null,
   kvk_number: null,
   kbo_number: null,
-  billing_email: "sameer+28sep@dembrane.com",
+  billing_email: "robin@example-town.example",
   po_number: null,
   peppol_id: null,
   address_line1: null,
@@ -532,10 +532,10 @@ export const accountPage: Out<typeof AccountPage> = {
 export const signRequest: Out<typeof SignRequest> = {
   sha256: offerDetail.sha256 as string,
   values: {
-    [offerFields[0]?.id as string]: "Sameer",
-    [offerFields[1]?.id as string]: "Gemeente Voorbeeldstad",
-    [offerFields[2]?.id as string]: "Stadhuisplein 1, 1234 AB Voorbeeldstad",
-    [offerFields[3]?.id as string]: "NL001234567B01",
+    [offerFields[0]?.id as string]: "Robin Example",
+    [offerFields[1]?.id as string]: "Example Town Council (sample)",
+    [offerFields[2]?.id as string]: "Example Street 1, 0000 XX Example Town",
+    [offerFields[3]?.id as string]: "NL000099998B57",
     [offerFields[4]?.id as string]: "Wethouder",
     [offerFields[5]?.id as string]: "28-09-2026",
   },
@@ -546,7 +546,7 @@ export const signRequest: Out<typeof SignRequest> = {
   initials: null,
   dpa_authorised: true,
   confirmation_text:
-    'Ik, Sameer, Wethouder, bevestig dat ik namens Gemeente Voorbeeldstad mag tekenen, en ik onderteken "Gemeente Voorbeeldstad x dembrane" (DMB-DEMO-1) zoals aan mij getoond, SHA-256 9b4f3c1e2a7d8e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f. Ik ben ook bevoegd om namens deze organisatie verwerkingsafspraken aan te gaan.',
+    'Ik, Robin Example, Wethouder, bevestig dat ik namens Example Town Council (sample) mag tekenen, en ik onderteken "Example Town Council (sample) x dembrane" (DMB-DEMO-1) zoals aan mij getoond, SHA-256 9b4f3c1e2a7d8e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f. Ik ben ook bevoegd om namens deze organisatie verwerkingsafspraken aan te gaan.',
 };
 
 export const signResponse: Out<typeof SignResponse> = {
@@ -556,7 +556,7 @@ export const signResponse: Out<typeof SignResponse> = {
 };
 
 export const signingRequests: Out<typeof SigningRequests> = [
-  { organisation: { id: ORG, name: "Gemeente Voorbeeldstad" }, document: offerSummary },
+  { organisation: { id: ORG, name: "Example Town Council (sample)" }, document: offerSummary },
 ];
 
 /** GET /api/v2/admin/accounts */
@@ -564,7 +564,7 @@ export const accountList: Out<typeof AccountList> = {
   accounts: [
     {
       id: ORG,
-      name: "Gemeente Voorbeeldstad",
+      name: "Example Town Council (sample)",
       stage: "customer",
       created_at: "2026-09-28T08:55:00.000Z",
       open_tasks: 2,
@@ -587,7 +587,7 @@ export const accountCard: Out<typeof AccountCard> = {
     id: "0199a1bb-0000-7000-8000-000000000001",
     reference: "DEM-7K2P",
     status: "submitted",
-    email: "sameer+28sep@dembrane.com",
+    email: "robin@example-town.example",
     answers: { volume: "20-50 conversations a month", use: "participatie bij de omgevingsvisie" },
     config: { tier: "changemaker", seats: 5 },
     booking_status: "accepted",
@@ -600,8 +600,8 @@ export const accountCard: Out<typeof AccountCard> = {
   members: [
     {
       app_user_id: CUSTOMER_APP_USER,
-      email: "sameer+28sep@dembrane.com",
-      name: "Sameer (klant demo)",
+      email: "robin@example-town.example",
+      name: "Robin Voorbeeld (klant demo)",
       role: "admin",
       since: "2026-09-28T08:55:00.000Z",
     },
@@ -647,7 +647,7 @@ export const accountCard: Out<typeof AccountCard> = {
       actor_user_id: STAFF_USER,
       subject_type: null,
       subject_id: null,
-      detail: { stage: "customer", contact: "sameer+28sep@dembrane.com" },
+      detail: { stage: "customer", contact: "robin@example-town.example" },
       created_at: "2026-09-28T08:55:00.000Z",
     },
   ],
@@ -679,14 +679,14 @@ export { signedDpaDetail as signedDocument };
 export const tasksSummary: Out<typeof TasksSummary> = [
   {
     org_id: ORG,
-    name: "Gemeente Voorbeeldstad",
+    name: "Example Town Council (sample)",
     logo_url: null,
     account_stage: "customer",
     tasks_done: 0,
     tasks_total: 4,
     next_task_title: null,
     next_task_code: "sign_offer",
-    next_task_params: { document_title: "Gemeente Voorbeeldstad x dembrane" },
+    next_task_params: { document_title: "Example Town Council (sample) x dembrane" },
   },
 ];
 
@@ -694,19 +694,19 @@ const DEMO = "0199a1bd-0000-7000-8000-000000000001";
 
 /** POST /api/v2/admin/accounts/demos */
 export const demoCreateRequest: Out<typeof DemoCreateRequest> = {
-  organisation_name: "Gemeente Voorbeeldstad",
-  website_url: "https://www.voorbeeldstad.example/",
+  organisation_name: "Example Town Council (sample)",
+  website_url: "https://www.example-town.example/",
   brief:
     "Participatie bij de nieuwe omgevingsvisie: bewoners, ondernemers en jongeren denken mee over wonen en groen in de binnenstad.",
   language: "nl",
   example: "Een avond in de bibliotheek met zestig bewoners, in maart.",
-  contact_name: "Anna de Vries",
-  contact_email: "anna@voorbeeldstad.example",
+  contact_name: "Alex Example",
+  contact_email: "robin@example-town.example",
   sign_in: true,
   offer: {
     template: "subscription",
     language: "nl",
-    person_name: "Anna",
+    person_name: "Robin",
     attention: null,
     items,
     external_ref: null,
@@ -733,10 +733,10 @@ const steps = (done: number, failed?: number) =>
 export const demoRunning: Out<typeof DemoStatus> = {
   id: DEMO,
   status: "running",
-  organisation_name: "Gemeente Voorbeeldstad",
-  website_url: "https://www.voorbeeldstad.example/",
+  organisation_name: "Example Town Council (sample)",
+  website_url: "https://www.example-town.example/",
   language: "nl",
-  contact_email: "anna@voorbeeldstad.example",
+  contact_email: "robin@example-town.example",
   sign_in: true,
   org_id: null,
   slug: null,
@@ -763,7 +763,7 @@ export const demoDraft: Out<typeof DemoStatus> = {
   ...demoRunning,
   status: "draft",
   org_id: ORG,
-  slug: "gemeente-voorbeeldstad",
+  slug: "example-town-council-sample",
   steps: steps(6),
   links: {
     public: [
@@ -784,7 +784,7 @@ export const demoDraft: Out<typeof DemoStatus> = {
     continue_url: `https://dashboard.example.test/login?next=${encodeURIComponent(`/o/${ORG}/account`)}`,
   },
   research:
-    "# Gemeente Voorbeeldstad: research\n\nRetrieved 28-09-2026 from https://www.voorbeeldstad.example/ ...\n\n## Verified facts\n- ...\n\n## Unknowns\n- ...\n\n## Invented themes (fiction)\n- ...",
+    "# Example Town Council (sample): research\n\nRetrieved 28-09-2026 from https://www.example-town.example/ ...\n\n## Verified facts\n- ...\n\n## Unknowns\n- ...\n\n## Invented themes (fiction)\n- ...",
   conversations: 6,
   offer_document_id: OFFER,
 };

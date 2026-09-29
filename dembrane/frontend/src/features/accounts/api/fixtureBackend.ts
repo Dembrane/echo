@@ -18,8 +18,8 @@ import { AccountsApiError, type Params } from "./client";
 import { pageCountOf, renderSigned, renderUnsigned } from "./fixturePdf";
 
 /**
- * The accounts API answered in the page, for fixture mode. It starts from the Gemeente
- * Voorbeeldstad demo in fixtures.gen.ts and keeps one store per organisation, so the staff
+ * The accounts API answered in the page, for fixture mode. It starts from the Example Town
+ * Council (sample) demo in fixtures.gen.ts and keeps one store per organisation, so the staff
  * card and the customer page see the same documents, tasks and questions, and every flow
  * (sign, unlock billing, push an offer, place fields, send) changes that store the way the
  * design says the backend does. Responses go through the contract schemas in client.ts.
@@ -114,7 +114,7 @@ function otherStores(): Store[] {
 	const rows: [string, string, Store["stage"], string][] = [
 		[
 			"0199a2c0-0000-7000-8000-000000000001",
-			"Waterschap De Voorbeeldstroom",
+			"Example Water Board (sample)",
 			"prospect",
 			"2026-09-24T10:00:00.000Z",
 		],
@@ -987,7 +987,7 @@ export async function handle(
 				d.signature = {
 					address: pick("text", "address"),
 					dpa_authorised: dpaAuthorised,
-					email: "sameer+28sep@dembrane.com",
+					email: "robin@example-town.example",
 					id: uuid(),
 					image_sha256: await sha256Hex(
 						Uint8Array.from(atob(sig.png_base64), (c) => c.charCodeAt(0)),
