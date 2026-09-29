@@ -8,16 +8,17 @@ name: platform
 # pushes images to its own registry: a preview identity has no role in next or prod.
 #
 # Previews (dembrane-web-previews): the branch preview (echo-preview-*) follows
-# feat/bun-migration until cutover. A PR gets its own preview (echo-pr-<n>-*, database
-# echo_pr_<n>) only on request: the "preview" label, or running this workflow by hand with
-# target pr and the PR number. At most three PR previews exist; a fourth tears down the
-# oldest. Closing or merging a PR removes its preview.
+# feat/bun-migration on push until cutover; it is not a PR preview. A PR gets its own preview
+# (echo-pr-<n>-*, database echo_pr_<n>, dashboard-<n> and portal-<n>.preview.dembrane.com)
+# only from pull request events: adding the "preview" label deploys it, and each push to a
+# labelled PR redeploys it. At most three PR previews exist; a fourth tears down the oldest.
+# Removing the label, closing or merging the PR removes its preview.
 #
 # next (dembrane-web-next) and prod (dembrane-web-prod) deploy only when run by hand until
 # cutover: next from main, prod from main or a tag and after the prod environment's approval.
 on:
   pull_request:
-    types: [opened, synchronize, reopened, labeled, closed]
+    types: [opened, synchronize, reopened, labeled, unlabeled, closed]
     paths: ["dembrane/platform/**", "dembrane/frontend/**", ".github/workflows/platform.yml"]
   push:
     branches: [feat/bun-migration]
@@ -25,23 +26,19 @@ on:
   workflow_dispatch:
     inputs:
       target:
-        description: What to deploy
+        description: What to deploy (PR previews come only from the "preview" label on a PR)
         type: choice
-        options: [pr, next, prod]
-        default: pr
-      pr:
-        description: PR number to deploy a preview for (target pr)
-        required: false
-        type: number
+        options: [next, prod]
+        default: next
       hold_data:
         description: "next or prod: deploy the migrate job without running it and keep the workers at 0 (before the cutover's data move)"
         type: boolean
         default: true
 
 concurrency:
-  group: platform-${{ github.event.pull_request.number || (inputs.target == 'pr' && inputs.pr) || inputs.target || github.ref }}
+  group: platform-${{ github.event.pull_request.number || inputs.target || github.ref }}
   # A newer push replaces a running check or preview; a next or prod rollout runs to the end.
-  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' || inputs.target == 'pr' }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 
 defaults:
   run:
@@ -80,29 +77,24 @@ jobs:
           ACTION: ${{ github.event.action }}
           PR_EVENT: ${{ github.event.pull_request.number }}
           TARGET: ${{ inputs.target }}
-          PR_INPUT: ${{ inputs.pr }}
           PR_SHA: ${{ github.event.pull_request.head.sha }}
           HAS_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'preview') }}
-          ADDED_LABEL: ${{ github.event.label.name }}
+          EVENT_LABEL: ${{ github.event.label.name }}
         run: |
           sha=$GITHUB_SHA pr='' deploy_pr=false deploy_env='' teardown=false
-          if [ "$EVENT" = workflow_dispatch ] && [ "$TARGET" != pr ]; then
+          if [ "$EVENT" = workflow_dispatch ]; then
             # The GCP trust enforces the same refs; failing here says why before any build.
             case "$TARGET:$GITHUB_REF" in
               next:refs/heads/main | prod:refs/heads/main | prod:refs/tags/*) deploy_env=$TARGET ;;
               *) echo "$TARGET does not deploy from $GITHUB_REF (next: main; prod: main or a tag)"; exit 1 ;;
             esac
-          elif [ "$EVENT" = workflow_dispatch ]; then
-            pr=$PR_INPUT
-            [ -n "$pr" ] || { echo "target pr needs a PR number"; exit 1; }
-            read -r state sha < <(gh pr view "$pr" --repo "$GITHUB_REPOSITORY" --json state,headRefOid -q '.state + " " + .headRefOid')
-            [ "$state" = OPEN ] || { echo "PR $pr is $state; previews are for open PRs"; exit 1; }
-            deploy_pr=true
           elif [ "$EVENT" = pull_request ]; then
             pr=$PR_EVENT sha=$PR_SHA
             if [ "$ACTION" = closed ]; then teardown=true
+            elif [ "$ACTION" = unlabeled ]; then
+              if [ "$EVENT_LABEL" = preview ]; then teardown=true; fi
             # Adding some other label to a preview PR is not a reason to redeploy it.
-            elif [ "$ACTION" = labeled ] && [ "$ADDED_LABEL" != preview ]; then :
+            elif [ "$ACTION" = labeled ] && [ "$EVENT_LABEL" != preview ]; then :
             elif [ "$HAS_LABEL" = true ]; then deploy_pr=true; fi
           fi
           echo "sha=$sha pr=$pr deploy_pr=$deploy_pr deploy_env=$deploy_env teardown=$teardown"
@@ -357,7 +349,7 @@ jobs:
           service_account: echo-preview-deployer@dembrane-web-previews.iam.gserviceaccount.com
       - uses: google-github-actions/setup-gcloud@v2
         with: { skip_install: true }
-      - name: Remove the preview's services and drop its database
+      - name: Remove the preview's routes and services and drop its database
         run: scripts/deploy-env.sh teardown "${{ needs.plan.outputs.pr }}"
 
   # next and prod: each pushes the images into its own project's registry (the layer cache

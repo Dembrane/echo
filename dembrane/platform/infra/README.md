@@ -64,7 +64,7 @@ sizes an environment.
 
 | | preview | next | prod |
 |---|---|---|---|
-| Deploys | branch preview from feat/bun-migration; PR previews on request | main, by hand until cutover | main or a tag, by hand after approval |
+| Deploys | branch preview from feat/bun-migration; PR previews from the `preview` label | main, by hand until cutover | main or a tag, by hand after approval |
 | API | 0 to 1, concurrency 1000 | 2 to 2 | 2 to 10 |
 | Dashboard, portal | 0 to 1 each | 2 to 2 each | 2 to 4 each |
 | Media (ffmpeg, one job per instance) | 0 to 1 | 0 to 4 | 1 to 20 |
@@ -72,13 +72,47 @@ sizes an environment.
 | Cloud SQL | db-custom-1-3840, 100 connections, shared by all previews | db-custom-1-3840, 100 | db-custom-2-8192, 400, regional HA |
 | Database | `echo` (branch), `echo_pr_<n>` (PRs) | `echo` | `echo` |
 
-PR previews: the `preview` label on a PR, or running the workflow by hand with the PR
-number, creates `echo-pr-<n>-*` and database `echo_pr_<n>` on the preview instance. At most
-three exist; a fourth tears down the oldest, and closing or merging a PR tears its own down.
-Previews share the preview identities, secrets and bucket. The branch preview stays until
-cutover and takes no PR slot. Jobs deploying PR previews run in the GitHub environment
-`pr-preview`, the only non-branch identity the preview deploy trust accepts; add required
-reviewers there to limit who can deploy a PR.
+PR previews come only from pull request events. Adding the `preview` label to a PR creates
+`echo-pr-<n>-*` and database `echo_pr_<n>` on the preview instance, and each push to a
+labelled PR redeploys it. There is no manual path: the workflow's manual run deploys next or
+prod only. At most three exist; a fourth tears down the oldest. Removing the label, closing
+or merging the PR tears its own down. Previews share the preview identities, secrets and
+bucket. Jobs deploying PR previews run in the GitHub environment `pr-preview`, the only
+non-branch identity the preview deploy trust accepts; add required reviewers there to limit
+who can deploy a PR.
+
+The branch preview (`echo-preview-*`) is not a PR preview: it deploys on every push to
+feat/bun-migration until cutover, serves its run.app URLs and takes no PR slot.
+
+PR preview hostnames, where n is the PR number:
+- `dashboard-<n>.preview.dembrane.com` and `portal-<n>.preview.dembrane.com`, which forward
+  `/api` to the API server to server, so the browser stays same-origin;
+- `api-<n>.preview.dembrane.com`, the API's public URL: the MCP OAuth issuer and its
+  `/.well-known` documents live at the API origin's root, which the web servers do not forward.
+
+`preview/lb.tf` holds the shared front door: one global external HTTPS load balancer, one
+Certificate Manager certificate for `*.preview.dembrane.com` authorised by DNS, and a URL
+map whose default route answers unknown hosts with a plain 404. `deploy-env.sh` owns each
+PR's part: a serverless NEG and backend service per role, named like its Cloud Run service,
+and one host rule per hostname. The deploy adds them and teardown removes them, routes
+first. NEGs and backend services belong to one PR, so concurrent jobs never share them; the
+URL map is shared, so each edit reads it, changes only `pr-<n>-*` rules and writes it back
+with the fingerprint it read, retrying when Google rejects a stale one. Terraform ignores
+the URL map's host rules, so an apply never drops a live preview's routes. A per-PR
+Terraform workspace could not do this: the URL map is one resource, and each workspace would
+overwrite the others' rules.
+
+A PR preview's dashboard and portal have ingress `internal-and-cloud-load-balancing`, so they
+answer only through the load balancer. Its API keeps public ingress, because the web servers
+reach it from outside any VPC. Sign-in cookies stay host-only (`AUTH_COOKIE_DOMAIN` unset):
+all PR previews share `AUTH_SECRET`, and a cookie scoped to `preview.dembrane.com` would
+cross from one preview's database to another's.
+
+DNS is in Cloudflare. `terraform output pr_preview_dns` gives the two records, both DNS only
+(not proxied): the wildcard `A` record to the load balancer, and the `_acme-challenge` CNAME
+that lets the certificate issue. Until that CNAME exists the certificate stays in
+provisioning and the load balancer serves a self-signed placeholder, so the routes can be
+checked with `curl --resolve dashboard-<n>.preview.dembrane.com:443:<ip> -k`.
 
 CPU is always allocated on the API: it holds a LISTEN connection that feeds live streams,
 DBOS's client pool and fire-and-forget work (analytics, pool keepalives) outside any request.
