@@ -3108,7 +3108,7 @@ msgstr "Effacer les filtres"
 msgid "Clear search"
 msgstr "Effacer la recherche"
 
-#: src/components/conversation/hooks/index.ts:520
+#: src/components/conversation/hooks/index.ts:519
 msgid "Cleared {cleared} of {total} conversations"
 msgstr "{cleared} sur {total} conversations effacées"
 
@@ -3517,7 +3517,7 @@ msgstr "Conversation"
 msgid "Conversation {0}"
 msgstr "Conversation {0}"
 
-#: src/components/conversation/hooks/index.ts:366
+#: src/components/conversation/hooks/index.ts:365
 msgid "Conversation added to chat"
 msgstr "Conversation ajoutée à la discussion"
 
@@ -3546,7 +3546,7 @@ msgstr "Le nom des conversations s'affiche dans la bibliothèque et l'écran de 
 msgid "Conversation pages and data loading are streamlined."
 msgstr "Les pages de conversation et le chargement des données sont fluidifiés."
 
-#: src/components/conversation/hooks/index.ts:474
+#: src/components/conversation/hooks/index.ts:473
 msgid "Conversation removed from chat"
 msgstr "Conversation retirée de la discussion"
 
@@ -3589,7 +3589,7 @@ msgstr "conversations"
 msgid "Conversations"
 msgstr "Conversations"
 
-#: src/components/conversation/hooks/index.ts:510
+#: src/components/conversation/hooks/index.ts:509
 msgid "Conversations cleared"
 msgstr "Conversations effacées"
 
@@ -5449,8 +5449,8 @@ msgstr "Échec de l'ajout de conversations au contexte"
 #~ msgid "Failed to approve outcome. Please try again."
 #~ msgstr "Échec de l'approbation du résultat. Veuillez réessayer."
 
-#: src/components/conversation/hooks/index.ts:501
-#: src/components/conversation/hooks/index.ts:517
+#: src/components/conversation/hooks/index.ts:500
+#: src/components/conversation/hooks/index.ts:516
 msgid "Failed to clear conversations"
 msgstr "Échec de l'effacement des conversations"
 
@@ -5563,7 +5563,7 @@ msgstr "Échec de la suppression du logo"
 msgid "Failed to reschedule. Please choose a time further in the future and try again."
 msgstr "Replanification echouee. Veuillez choisir un horaire plus eloigne et reessayer."
 
-#: src/components/conversation/hooks/index.ts:617
+#: src/components/conversation/hooks/index.ts:614
 msgid "Failed to retranscribe conversation. Please try again."
 msgstr "Échec de la transcription de la conversation. Veuillez réessayer."
 
@@ -7515,7 +7515,7 @@ msgstr "chargement..."
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:164
 #: src/components/conversation/ConversationAccordion.tsx:119
-#: src/components/conversation/hooks/index.ts:339
+#: src/components/conversation/hooks/index.ts:338
 msgid "Loading..."
 msgstr "Chargement..."
 

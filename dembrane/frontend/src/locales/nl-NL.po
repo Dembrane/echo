@@ -3105,7 +3105,7 @@ msgstr "Filters wissen"
 msgid "Clear search"
 msgstr "Zoekopdracht wissen"
 
-#: src/components/conversation/hooks/index.ts:520
+#: src/components/conversation/hooks/index.ts:519
 msgid "Cleared {cleared} of {total} conversations"
 msgstr "{cleared} van {total} gesprekken gewist"
 
@@ -3514,7 +3514,7 @@ msgstr "Gesprek"
 msgid "Conversation {0}"
 msgstr "Gesprek {0}"
 
-#: src/components/conversation/hooks/index.ts:366
+#: src/components/conversation/hooks/index.ts:365
 msgid "Conversation added to chat"
 msgstr "Gesprek toegevoegd aan chat"
 
@@ -3543,7 +3543,7 @@ msgstr "Gespreksnamen verschijnen in de Library en het eindscherm van het portaa
 msgid "Conversation pages and data loading are streamlined."
 msgstr "Gesprekspagina's en het laden van gegevens zijn vereenvoudigd."
 
-#: src/components/conversation/hooks/index.ts:474
+#: src/components/conversation/hooks/index.ts:473
 msgid "Conversation removed from chat"
 msgstr "Gesprek verwijderd uit chat"
 
@@ -3586,7 +3586,7 @@ msgstr "gesprekken"
 msgid "Conversations"
 msgstr "Gesprekken"
 
-#: src/components/conversation/hooks/index.ts:510
+#: src/components/conversation/hooks/index.ts:509
 msgid "Conversations cleared"
 msgstr "Gesprekken gewist"
 
@@ -5446,8 +5446,8 @@ msgstr "Mislukt om gesprekken aan context toe te voegen"
 #~ msgid "Failed to approve outcome. Please try again."
 #~ msgstr "Fout bij het goedkeuren van het resultaat. Probeer het opnieuw."
 
-#: src/components/conversation/hooks/index.ts:501
-#: src/components/conversation/hooks/index.ts:517
+#: src/components/conversation/hooks/index.ts:500
+#: src/components/conversation/hooks/index.ts:516
 msgid "Failed to clear conversations"
 msgstr "Gesprekken wissen is mislukt"
 
@@ -5560,7 +5560,7 @@ msgstr "Fout bij het verwijderen van het logo"
 msgid "Failed to reschedule. Please choose a time further in the future and try again."
 msgstr "Opnieuw plannen mislukt. Kies een tijdstip verder in de toekomst en probeer het opnieuw."
 
-#: src/components/conversation/hooks/index.ts:617
+#: src/components/conversation/hooks/index.ts:614
 msgid "Failed to retranscribe conversation. Please try again."
 msgstr "Fout bij het hertranscriptie van het gesprek. Probeer het opnieuw."
 
@@ -7512,7 +7512,7 @@ msgstr "bezig met laden..."
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:164
 #: src/components/conversation/ConversationAccordion.tsx:119
-#: src/components/conversation/hooks/index.ts:339
+#: src/components/conversation/hooks/index.ts:338
 msgid "Loading..."
 msgstr "Bezig met laden..."
 
