@@ -84,6 +84,7 @@
         "@dembrane/observability": "workspace:*",
         "@dembrane/projects": "workspace:*",
         "@dembrane/queue": "workspace:*",
+        "@dembrane/samples": "workspace:*",
         "@dembrane/webhooks": "workspace:*",
       },
     },
@@ -639,6 +640,16 @@
         "zod": "^4.1.0",
       },
     },
+    "packages/samples": {
+      "name": "@dembrane/samples",
+      "dependencies": {
+        "@dembrane/db": "workspace:*",
+        "drizzle-orm": "^0.45.3",
+      },
+      "devDependencies": {
+        "postgres": "^3.4.9",
+      },
+    },
     "packages/staff": {
       "name": "@dembrane/staff",
       "dependencies": {
@@ -904,6 +915,8 @@
     "@dembrane/realtime": ["@dembrane/realtime@workspace:packages/realtime"],
 
     "@dembrane/reports": ["@dembrane/reports@workspace:packages/reports"],
+
+    "@dembrane/samples": ["@dembrane/samples@workspace:packages/samples"],
 
     "@dembrane/staff": ["@dembrane/staff@workspace:packages/staff"],
 

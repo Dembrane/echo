@@ -2,7 +2,6 @@
 # Rolls out, lists and tears down deployments on Cloud Run. Called by
 # .github/workflows/platform.yml; runnable by hand with gcloud signed in.
 #
-#   deploy-env.sh deploy preview <tag>     the branch preview (echo-preview-*, database echo)
 #   deploy-env.sh deploy pr-<n> <tag>      a PR preview (echo-pr-<n>-*, database echo_pr_<n>)
 #   deploy-env.sh deploy next <tag>        echo-next (echo-next-*)
 #   deploy-env.sh deploy prod <tag>        production (echo-prod-*)
@@ -16,7 +15,9 @@
 #
 # PR previews are served at dashboard-<n>, portal-<n> and api-<n>.preview.dembrane.com by the
 # load balancer in infra/preview/lb.tf. The deploy adds the PR's serverless NEGs, backend
-# services and host rules; teardown removes them.
+# services and host rules; teardown removes them. After its migrations each PR preview's
+# migrate job seeds the preview admin (sameer+admin@dembrane.com, password in the
+# preview-admin-password secret), the Millbrook sample project and the accounts demo.
 #
 # HOLD_DATA=1 deploys everything but leaves the data alone: the migrate job is deployed and
 # not run, and the worker pool gets 0 instances. For prod before the cutover (CUTOVER.md),
@@ -24,10 +25,12 @@
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 
-target=${2:-preview}
+target=${2:-}
 case "$target" in
   next | prod) ENV=$target ;;
-  *) ENV=preview ;;
+  # A PR preview, or a PR number for make-room and teardown. There is no branch preview.
+  pr-* | [0-9]*) ENV=preview ;;
+  *) [ "${1:-}" = list ] && ENV=preview || { sed -n '2,10p' "$0"; exit 2; } ;;
 esac
 case "$ENV" in
   preview) project=dembrane-web-previews number=218237812097 ;;
@@ -39,7 +42,6 @@ PROJECT_NUMBER=${PROJECT_NUMBER:-$number}
 REGION=${REGION:-europe-west4}
 REGISTRY=${REGISTRY:-$REGION-docker.pkg.dev/$PROJECT/echo-$ENV}
 TFVARS=${TFVARS:-$here/../infra/$ENV.tfvars.json}
-# Includes the branch preview, which does not take one of these slots.
 MAX_PR_PREVIEWS=${MAX_PR_PREVIEWS:-3}
 SQL=$PROJECT:$REGION:echo-$ENV
 BUCKET=$PROJECT-echo-$ENV-uploads
@@ -89,9 +91,7 @@ deploy() {
   local api web_dash web_portal media public_api
   api=$(url "$prefix-api") web_dash=$(url "$prefix-dashboard") web_portal=$(url "$prefix-portal")
   media=$(url "$prefix-media") public_api=$api
-  # next and prod serve their domains from environments/<env>.ts. The branch preview serves
-  # Cloud Run URLs, which carry the project number, so the deploy sets them.
-  # A PR preview serves its own hostnames behind the load balancer. api-<n> exists because the
+  # next and prod serve their domains from environments/<env>.ts. A PR preview serves its own hostnames behind the load balancer. api-<n> exists because the
   # MCP OAuth issuer and its /.well-known documents live at the API origin's root, which the
   # web servers do not forward. The web servers still forward /api to the API's run.app URL:
   # server to server, and working before DNS points at the load balancer.
@@ -112,15 +112,23 @@ deploy() {
   # Logs, and Vertex calls, stay in the environment's own project.
   local common="APP_ENV=$ENV,APP_RELEASE=$tag,GCP_PROJECT=$PROJECT,LLM_VERTEX_PROJECT=$PROJECT$hosts$db_env"
 
+  # A PR preview's migrate job also seeds it (apps/migrate/src/preview-seed.ts): it needs the
+  # preview's URLs, the bucket the accounts demo writes its PDFs to, and the admin password.
+  local seed_env="" seed_secrets=""
+  if [[ $name == pr-* ]]; then
+    seed_env=",PREVIEW_SEED=1$hosts,$files"
+    seed_secrets=",PREVIEW_ADMIN_PASSWORD=preview-admin-password:latest,FILES_S3_ACCESS_KEY_ID=$(secret s3-access-key-id),FILES_S3_SECRET_ACCESS_KEY=$(secret s3-secret-access-key)"
+  fi
+
   local hold=${HOLD_DATA:-0} run_now="--execute-now --wait"
   [ "$hold" = 1 ] && run_now="" && echo "HOLD_DATA: migrate job deployed, not run; worker pool at 0"
   # Migrations first: a failure stops the rollout before new code takes traffic. On a PR
-  # preview's first deploy this also creates its database.
+  # preview's first deploy this also creates its database, and every deploy reseeds it.
   # shellcheck disable=SC2086
   g run jobs deploy "$prefix-migrate" --region "$REGION" --image "$REGISTRY/migrate:$tag" \
     --service-account "$(SA migrate)" --set-cloudsql-instances "$SQL" \
-    --set-secrets "MIGRATION_DATABASE_URL=$(secret migration-database-url)" \
-    --set-env-vars "APP_ENV=$ENV,APP_DB_ROLE=echo_app$db_env" \
+    --set-secrets "MIGRATION_DATABASE_URL=$(secret migration-database-url)$seed_secrets" \
+    --set-env-vars "APP_ENV=$ENV,APP_DB_ROLE=echo_app$db_env$seed_env" \
     --task-timeout 600 --max-retries 0 $job_labels $run_now
 
   local fail=0 pids=()
@@ -356,5 +364,5 @@ case "${1:-}" in
   teardown) teardown "$2" ;;
   make-room) make_room "$2" ;;
   list) pr_previews ;;
-  *) sed -n '2,15p' "$0"; exit 2 ;;
+  *) sed -n '2,10p' "$0"; exit 2 ;;
 esac

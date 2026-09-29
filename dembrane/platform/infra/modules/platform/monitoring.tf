@@ -84,7 +84,7 @@ resource "google_logging_metric" "worker_exits" {
 # Answers 200 only while the newest executor heartbeat (written every 10 s once the queue
 # runs) is under 90 s old; see apps/api/src/routes/system.ts.
 resource "google_monitoring_uptime_check_config" "worker_ready" {
-  count            = var.monitor_worker_ready ? 1 : 0
+  count            = var.standing_deployment && var.monitor_worker_ready ? 1 : 0
   display_name     = "${local.name}: worker heartbeat fresh"
   timeout          = "10s"
   period           = "300s"
@@ -143,16 +143,20 @@ resource "google_monitoring_alert_policy" "worker_down" {
       }
     }
   }
-  conditions {
-    display_name = "no heartbeat job for 5 minutes"
-    condition_absent {
-      filter   = "metric.type=\"logging.googleapis.com/user/${google_logging_metric.worker_heartbeat.name}\" AND resource.type=\"cloud_run_worker_pool\" AND resource.label.worker_pool_name=\"${local.name}-worker\""
-      duration = "300s"
-      aggregations {
-        alignment_period     = "60s"
-        per_series_aligner   = "ALIGN_SUM"
-        cross_series_reducer = "REDUCE_SUM"
-        group_by_fields      = ["resource.label.worker_pool_name"]
+  # PR previews come and go, so an absent heartbeat is only an alarm where a worker always runs.
+  dynamic "conditions" {
+    for_each = var.standing_deployment ? [1] : []
+    content {
+      display_name = "no heartbeat job for 5 minutes"
+      condition_absent {
+        filter   = "metric.type=\"logging.googleapis.com/user/${google_logging_metric.worker_heartbeat.name}\" AND resource.type=\"cloud_run_worker_pool\" AND resource.label.worker_pool_name=\"${local.name}-worker\""
+        duration = "300s"
+        aggregations {
+          alignment_period     = "60s"
+          per_series_aligner   = "ALIGN_SUM"
+          cross_series_reducer = "REDUCE_SUM"
+          group_by_fields      = ["resource.label.worker_pool_name"]
+        }
       }
     }
   }
@@ -212,7 +216,7 @@ resource "google_monitoring_alert_policy" "queue_backlog" {
 }
 
 resource "google_monitoring_uptime_check_config" "api_ready" {
-  count        = var.monitor_api_ready ? 1 : 0
+  count        = var.standing_deployment && var.monitor_api_ready ? 1 : 0
   display_name = "${local.name}: API ready"
   timeout      = "10s"
   period       = "300s"
@@ -235,7 +239,7 @@ resource "google_monitoring_uptime_check_config" "api_ready" {
 }
 
 resource "google_monitoring_alert_policy" "api_unready" {
-  count        = var.monitor_api_ready ? 1 : 0
+  count        = var.standing_deployment && var.monitor_api_ready ? 1 : 0
   display_name = "${local.name}: API not ready"
   combiner     = "OR"
   conditions {

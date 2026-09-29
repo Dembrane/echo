@@ -1,6 +1,7 @@
 import type { Environment } from "../src";
 
-// The branch deployment on Cloud Run URLs. Hosts move to echo-next's domains at cutover.
+// PR previews. Each deploy sets its own hosts (scripts/deploy-env.sh); these are the defaults
+// a process without them falls back to.
 export default {
   http: {
     publicUrl: "https://echo-preview-api-218237812097.europe-west4.run.app",

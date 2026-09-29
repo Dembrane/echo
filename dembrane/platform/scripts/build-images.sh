@@ -19,7 +19,7 @@ build() {
 }
 build api . &
 build worker . &
-build migrate . &
+build migrate . --build-context demos=../demos &
 build media . &
 build web .. &
 fail=0

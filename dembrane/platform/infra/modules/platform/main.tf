@@ -115,9 +115,16 @@ resource "google_sql_database_instance" "db" {
   depends_on = [google_project_service.apis]
 }
 
+# The standing deployment's database. Preview has none: each PR preview's migrate job
+# creates its own echo_pr_<n> (packages/db/src/database-name.ts).
 resource "google_sql_database" "echo" {
+  count    = var.standing_deployment ? 1 : 0
   name     = "echo"
   instance = google_sql_database_instance.db.name
+}
+moved {
+  from = google_sql_database.echo
+  to   = google_sql_database.echo[0]
 }
 
 # Owner runs migrations (DDL). The app login gets data rights only, granted by the

@@ -64,13 +64,13 @@ sizes an environment.
 
 | | preview | next | prod |
 |---|---|---|---|
-| Deploys | branch preview from feat/bun-migration; PR previews from the `preview` label | main, by hand until cutover | main or a tag, by hand after approval |
+| Deploys | PR previews from the `preview` label | main, by hand until cutover | main or a tag, by hand after approval |
 | API | 0 to 1, concurrency 1000 | 2 to 2 | 2 to 10 |
 | Dashboard, portal | 0 to 1 each | 2 to 2 each | 2 to 4 each |
 | Media (ffmpeg, one job per instance) | 0 to 1 | 0 to 4 | 1 to 20 |
 | Worker pool | 1 | 2 | 4 |
 | Cloud SQL | db-custom-1-3840, 100 connections, shared by all previews | db-custom-1-3840, 100 | db-custom-2-8192, 400, regional HA |
-| Database | `echo` (branch), `echo_pr_<n>` (PRs) | `echo` | `echo` |
+| Database | `echo_pr_<n>` per PR | `echo` | `echo` |
 
 PR previews come only from pull request events. Adding the `preview` label to a PR creates
 `echo-pr-<n>-*` and database `echo_pr_<n>` on the preview instance, and each push to a
@@ -81,8 +81,13 @@ bucket. Jobs deploying PR previews run in the GitHub environment `pr-preview`, t
 non-branch identity the preview deploy trust accepts; add required reviewers there to limit
 who can deploy a PR.
 
-The branch preview (`echo-preview-*`) is not a PR preview: it deploys on every push to
-feat/bun-migration until cutover, serves its run.app URLs and takes no PR slot.
+Every PR preview deploy seeds its database after the migrations, in the migrate job
+(`apps/migrate/src/preview-seed.ts`): the staff Administrator `sameer+admin@dembrane.com`,
+whose password is the `preview-admin-password` secret (Terraform creates it empty; the value
+is added with `gcloud secrets versions add`), the Millbrook sample workspace
+(`packages/samples`: 25 synthetic conversations, a report and a chat) and the accounts demo,
+whose two logins get the same password. Email is on: `echo-preview-sendgrid-api-key` holds
+echo-next's SendGrid key.
 
 PR preview hostnames, where n is the PR number:
 - `dashboard-<n>.preview.dembrane.com` and `portal-<n>.preview.dembrane.com`, which forward

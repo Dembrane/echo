@@ -3,7 +3,7 @@ import { connect } from "./connection";
 /**
  * PR previews share the preview Cloud SQL instance and its two logins; each preview gets
  * its own database named by the PR. Only names of this shape can be created or dropped,
- * so a mistyped variable can never drop the branch preview's `echo` database.
+ * so a mistyped variable can never drop another database on the instance.
  */
 export const PREVIEW_DATABASE = /^echo_pr_[0-9]+$/;
 
@@ -21,10 +21,16 @@ function assertPreview(name: string): void {
   }
 }
 
-/** Creates the preview database if it is missing, connecting through the URL's own database. */
+/**
+ * Creating and dropping a database runs from `postgres`, the maintenance database every
+ * Postgres and Cloud SQL instance has, so no other preview's database needs to exist.
+ */
+const maintenance = (url: string) => withDatabase(url, "postgres");
+
+/** Creates the preview database if it is missing. */
 export async function ensurePreviewDatabase(url: string, name: string): Promise<boolean> {
   assertPreview(name);
-  const sql = connect(url, { max: 1, onnotice: () => {} });
+  const sql = connect(maintenance(url), { max: 1, onnotice: () => {} });
   try {
     const [row] = await sql`select 1 from pg_database where datname = ${name}`;
     if (row) return false;
@@ -38,7 +44,7 @@ export async function ensurePreviewDatabase(url: string, name: string): Promise<
 /** Drops a preview database and every connection still open on it. */
 export async function dropPreviewDatabase(url: string, name: string): Promise<void> {
   assertPreview(name);
-  const sql = connect(url, { max: 1, onnotice: () => {} });
+  const sql = connect(maintenance(url), { max: 1, onnotice: () => {} });
   try {
     await sql.unsafe(`drop database if exists "${name}" with (force)`);
   } finally {

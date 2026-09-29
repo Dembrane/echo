@@ -7,11 +7,11 @@ name: platform
 # Each environment is its own GCP project, reached through its own keyless GitHub trust, and
 # pushes images to its own registry: a preview identity has no role in next or prod.
 #
-# Previews (dembrane-web-previews): the branch preview (echo-preview-*) follows
-# feat/bun-migration on push until cutover; it is not a PR preview. A PR gets its own preview
-# (echo-pr-<n>-*, database echo_pr_<n>, dashboard-<n> and portal-<n>.preview.dembrane.com)
-# only from pull request events: adding the "preview" label deploys it, and each push to a
-# labelled PR redeploys it. At most three PR previews exist; a fourth tears down the oldest.
+# Previews (dembrane-web-previews) are PR previews only. A PR gets its own preview
+# (echo-pr-<n>-*, database echo_pr_<n>, dashboard-<n>, portal-<n> and api-<n>.preview.dembrane.com)
+# from pull request events: adding the "preview" label deploys it, and each push to a
+# labelled PR redeploys it. Every deploy seeds the preview admin, the Millbrook sample and the
+# accounts demo. At most three PR previews exist; a fourth tears down the oldest.
 # Removing the label, closing or merging the PR removes its preview.
 #
 # next (dembrane-web-next) and prod (dembrane-web-prod) deploy only when run by hand until
@@ -19,9 +19,6 @@ name: platform
 on:
   pull_request:
     types: [opened, synchronize, reopened, labeled, unlabeled, closed]
-    paths: ["dembrane/platform/**", "dembrane/frontend/**", ".github/workflows/platform.yml"]
-  push:
-    branches: [feat/bun-migration]
     paths: ["dembrane/platform/**", "dembrane/frontend/**", ".github/workflows/platform.yml"]
   workflow_dispatch:
     inputs:
@@ -48,12 +45,10 @@ env:
   REGION: europe-west4
   REGISTRY: europe-west4-docker.pkg.dev/dembrane-web-previews/echo-preview
   TAG: ${{ github.sha }}
-  # Push images only for the branch that deploys; PRs build them to prove they build.
-  PUSH: ${{ github.event_name == 'push' && github.ref == 'refs/heads/feat/bun-migration' }}
 
 jobs:
-  # Decides what this run does: checks only, a branch preview deploy, a PR preview deploy,
-  # a PR preview teardown, or a next or prod deploy.
+  # Decides what this run does: checks only, a PR preview deploy, a PR preview teardown, or a
+  # next or prod deploy.
   plan:
     runs-on: ubuntu-latest
     timeout-minutes: 2
@@ -212,6 +207,8 @@ jobs:
       - name: Portal size
         run: node scripts/check-portal-bundle.mjs
 
+  # Builds the five images to prove they build and start; a deploy job pushes them from the
+  # layer cache this writes.
   images:
     needs: plan
     if: needs.plan.outputs.teardown != 'true'
@@ -219,24 +216,15 @@ jobs:
     timeout-minutes: 12
     permissions:
       contents: read
-      id-token: write
     env:
       TAG: ${{ needs.plan.outputs.sha }}
     steps:
       - uses: actions/checkout@v5
         with: { ref: "${{ needs.plan.outputs.sha }}" }
-      - if: env.PUSH == 'true'
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: projects/218237812097/locations/global/workloadIdentityPools/echo-preview-github/providers/github
-          service_account: echo-preview-deployer@dembrane-web-previews.iam.gserviceaccount.com
-      - if: env.PUSH == 'true'
-        run: gcloud auth configure-docker europe-west4-docker.pkg.dev --quiet
       - uses: docker/setup-buildx-action@v3
-      - name: Build (and on the deploy branch, push) the five images
-        run: scripts/build-images.sh "$([ "$PUSH" = true ] && echo --push || echo --load)" --cache-to
+      - name: Build the five images
+        run: scripts/build-images.sh --load --cache-to
       - name: The API, worker, migrate and media containers start and answer
-        if: env.PUSH != 'true'
         run: |
           # Each binary checks at boot that its image carries the files it reads and exits
           # non-zero naming any that are missing. The worker and migrate job need a database
@@ -259,32 +247,6 @@ jobs:
           for i in $(seq 1 25); do curl -sf localhost:8081/health && break; sleep 0.2; done
           curl -sf -X POST localhost:8081/probe-url -H 'content-type: application/json' -d '{"url":"http://127.0.0.1:9/x.mp3"}' -o /dev/null -w '%{http_code}' | grep -q 422 \
             || { docker logs media; exit 1; }
-
-  deploy-preview:
-    # Migrations run as a job first; a failure stops the rollout before new code takes traffic.
-    if: github.event_name == 'push' && github.ref == 'refs/heads/feat/bun-migration'
-    needs: [plan, check, frontend, images]
-    runs-on: ubuntu-latest
-    timeout-minutes: 12
-    environment: preview
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          sparse-checkout: |
-            dembrane/platform/scripts
-            dembrane/platform/infra
-      - uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: projects/218237812097/locations/global/workloadIdentityPools/echo-preview-github/providers/github
-          service_account: echo-preview-deployer@dembrane-web-previews.iam.gserviceaccount.com
-      # The runner ships gcloud; installing it again cost half a minute.
-      - uses: google-github-actions/setup-gcloud@v2
-        with: { skip_install: true }
-      - name: Migrate, deploy media, API, worker, dashboard and portal, and verify
-        run: scripts/deploy-env.sh deploy preview "$TAG"
 
   # A PR preview: its own services and database, built from the PR's head. Serialized
   # across PRs so two new previews cannot both take the last slot.
@@ -421,11 +383,11 @@ jobs:
           HOLD_DATA: ${{ inputs.hold_data && '1' || '0' }}
         run: scripts/deploy-env.sh deploy prod "$TAG"
 
-  # A failed deploy (branch preview, PR preview, next, prod) or a failed build or check on
-  # the way to one posts to #alerts-ci. Checks on PRs without a preview stay in the PR.
+  # A failed deploy (PR preview, next, prod) or a failed build or check on the way to one
+  # posts to #alerts-ci. Checks on PRs without a preview stay in the PR.
   notify-failure:
     if: failure() && (github.event_name != 'pull_request' || needs.plan.outputs.deploy_pr == 'true' || needs.plan.outputs.teardown == 'true')
-    needs: [plan, check, frontend, images, deploy-preview, deploy-pr, teardown-pr, deploy-next, deploy-prod]
+    needs: [plan, check, frontend, images, deploy-pr, teardown-pr, deploy-next, deploy-prod]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     defaults:
@@ -435,7 +397,7 @@ jobs:
       - name: Post to #alerts-ci
         env:
           SLACK_TOKEN: ${{ secrets.SLACK_ALERTS_BOT_TOKEN }}
-          WHAT: "${{ needs.plan.outputs.deploy_env || (needs.plan.outputs.pr && format('PR #{0} preview', needs.plan.outputs.pr)) || 'branch preview' }}"
+          WHAT: "${{ needs.plan.outputs.deploy_env || (needs.plan.outputs.pr && format('PR #{0} preview', needs.plan.outputs.pr)) || 'platform run' }}"
           RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           SHA: ${{ needs.plan.outputs.sha || github.sha }}
         run: |

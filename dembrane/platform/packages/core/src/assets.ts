@@ -9,7 +9,8 @@ import { join, resolve } from "node:path";
  * files beside them, so a path built from `import.meta.dir` finds nothing there. In a binary
  * every asset resolves under one root instead (ASSETS_ROOT, /app/assets in the images),
  * which the Dockerfiles fill with the same `<package>/...` layout. `docs` is the one
- * optional entry: the repository's docs/ from source, absent in the images.
+ * optional entry: the repository's docs/ from source, absent in the images. `demos` is
+ * dembrane/demos from source; the migrate image carries the files the preview seed reads.
  *
  * This is the only module that may locate a file relative to its own source; the guard in
  * packages/core/test/assets.test.ts fails any other package that does.
@@ -22,6 +23,8 @@ const COMPILED = HERE.startsWith("/$bunfs") || HERE.includes("~BUN");
 const PACKAGES = resolve(HERE, "..", "..");
 /** packages/core/src -> the repository's docs/ (dembrane/platform/packages/core/src). */
 const REPO_DOCS = resolve(HERE, "..", "..", "..", "..", "..", "docs");
+/** packages/core/src -> dembrane/demos, the synthetic demo fixtures. */
+const REPO_DEMOS = resolve(HERE, "..", "..", "..", "..", "demos");
 
 let root: string | null = null;
 
@@ -50,7 +53,9 @@ export function assetPath(pkg: string, ...parts: string[]): string {
       throw new Error(`asset ${[pkg, ...parts].join("/")} read before configureAssets()`);
     return join(root, pkg, ...parts);
   }
-  return pkg === "docs" ? join(REPO_DOCS, ...parts) : join(PACKAGES, pkg, ...parts);
+  if (pkg === "docs") return join(REPO_DOCS, ...parts);
+  if (pkg === "demos") return join(REPO_DEMOS, ...parts);
+  return join(PACKAGES, pkg, ...parts);
 }
 
 /**

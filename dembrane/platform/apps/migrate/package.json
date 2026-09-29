@@ -1,6 +1,6 @@
 {
   "name": "@dembrane/migrate",
-  "description": "The job that runs before every rollout: schema migrations, the queue schema, database grants.",
+  "description": "The job that runs before every rollout: schema migrations, the queue schema, database grants, and on PR previews the sample data.",
   "private": true,
   "type": "module",
   "scripts": {
@@ -15,6 +15,7 @@
     "@dembrane/observability": "workspace:*",
     "@dembrane/projects": "workspace:*",
     "@dembrane/queue": "workspace:*",
+    "@dembrane/samples": "workspace:*",
     "@dembrane/webhooks": "workspace:*"
   }
 }

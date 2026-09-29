@@ -35,6 +35,35 @@ module "platform" {
   alert_email            = lookup(local.settings, "alert_email", null)
   slack_channel          = "C0C4HBZNSNT" # #alerts-ci
   pr_preview_environment = local.settings.pr_preview_environment
+  # Only PR previews run here; each creates its own database.
+  standing_deployment = false
+  # Sign-up and sign-in codes work on every PR preview. The key is echo-next's, added by hand.
+  pending_secrets = ["SENDGRID_API_KEY"]
+}
+
+# The PR preview seed (apps/migrate/src/preview-seed.ts) signs in sameer+admin@dembrane.com
+# and the accounts demo's two logins with this password. Created empty; the value is added
+# with `gcloud secrets versions add preview-admin-password --data-file=-`.
+resource "google_secret_manager_secret" "preview_admin_password" {
+  secret_id = "preview-admin-password"
+  replication {
+    user_managed {
+      replicas { location = "europe-west4" }
+    }
+  }
+}
+
+# The seed runs in each PR preview's migrate job: it reads the password, and the accounts
+# demo writes its PDFs and logo to the uploads bucket with the bucket's HMAC key.
+resource "google_secret_manager_secret_iam_member" "migrate_seed" {
+  for_each = {
+    admin_password = google_secret_manager_secret.preview_admin_password.id
+    s3_key_id      = "projects/${local.project}/secrets/${module.platform.secrets["S3_ACCESS_KEY_ID"]}"
+    s3_secret      = "projects/${local.project}/secrets/${module.platform.secrets["S3_SECRET_ACCESS_KEY"]}"
+  }
+  secret_id = each.value
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${module.platform.migrate_service_account}"
 }
 
 # A new project already has a _Default sink; the module repoints it at the EU bucket.

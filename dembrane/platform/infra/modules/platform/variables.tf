@@ -36,7 +36,7 @@ variable "db_flags" {
 
 variable "db_environments" {
   type        = number
-  description = "Deployments sharing the instance (preview: the branch preview plus the PR preview slots). Read by the connection budget check."
+  description = "Deployments sharing the instance (preview: the PR preview slots). Read by the connection budget check."
   default     = 1
 }
 
@@ -111,6 +111,12 @@ variable "pending_secrets" {
     each one that has a version, found by its env-var label.
   EOT
   default     = []
+}
+
+variable "standing_deployment" {
+  type        = bool
+  description = "Whether echo-<env>-* runs all the time. Off on preview, where only PR previews run: no default echo database, no /ready probes and no alert on a missing echo-preview-worker heartbeat."
+  default     = true
 }
 
 variable "monitor_api_ready" {

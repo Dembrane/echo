@@ -151,7 +151,8 @@ export interface SeedSummary {
   readonly staff_email: string;
 }
 
-async function administratorRole(db: Db): Promise<string> {
+/** The staff role (Administrator), created with a fixed id on a database that has none. */
+export async function administratorRole(db: Db): Promise<string> {
   const [row] = await db
     .select({ id: schema.directus_roles.id })
     .from(schema.directus_roles)

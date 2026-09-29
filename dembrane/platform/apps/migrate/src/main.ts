@@ -13,13 +13,17 @@ import {
   withDatabase,
 } from "@dembrane/db";
 import { installQueueSchema } from "@dembrane/queue";
+import { PREVIEW_SEED_ASSETS, seedPreview } from "./preview-seed";
 
 /**
  * The Cloud Run job that runs before every rollout, with the owner login: schema
  * migrations, then the DBOS queue schema, then data rights for the runtime login. A failure
  * stops the deploy before any new revision takes traffic.
  */
-bootAssets("echo-migrate", loadSections(["assets"]).values.assets.root, MIGRATE_ASSETS);
+bootAssets("echo-migrate", loadSections(["assets"]).values.assets.root, [
+  ...MIGRATE_ASSETS,
+  ...PREVIEW_SEED_ASSETS,
+]);
 
 const ownerUrl = process.env.MIGRATION_DATABASE_URL;
 const role = process.env.APP_DB_ROLE;
@@ -67,6 +71,13 @@ await legalDb.close();
 if (role) {
   await grantRuntimeRole(url, role, ["public", "dbos"]);
   log("runtime role granted", { role });
+}
+// PR previews only (PREVIEW_SEED=1 from scripts/deploy-env.sh): the admin login and the
+// sample data. seedPreview refuses anything but a PR preview's own database.
+if (process.env.PREVIEW_SEED === "1") {
+  const seedStarted = performance.now();
+  const seeded = await seedPreview(url, process.env);
+  log("preview seeded", { ...seeded, ms: Math.round(performance.now() - seedStarted) });
 }
 log("migration job complete", { ms: Math.round(performance.now() - started) });
 // A one-shot job ends here. DBOS's scheduler can keep timers alive after shutdown, and a
