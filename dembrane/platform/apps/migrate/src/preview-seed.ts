@@ -1,7 +1,8 @@
 import { administratorRole, ensureUser, seedAccountsDemoFromEnv } from "@dembrane/accounts";
 import { assetPath } from "@dembrane/core";
-import { createDb, PREVIEW_DATABASE } from "@dembrane/db";
+import { createDb, PREVIEW_DATABASE, schema } from "@dembrane/db";
 import { seedMillbrook } from "@dembrane/samples";
+import { and, eq, isNull } from "drizzle-orm";
 
 /**
  * What every PR preview holds after its migrations: a staff Administrator who signs in with
@@ -49,6 +50,16 @@ export async function seedPreview(url: string, env: Env, now = new Date()) {
         directusRoleId: role,
       }),
     );
+    // Past the sign-up questionnaire, which the dashboard otherwise opens on every login.
+    await db
+      .update(schema.app_user)
+      .set({ onboarding_answer_json: { version: "17-jun-26", data: [], skipped: true } })
+      .where(
+        and(
+          eq(schema.app_user.id, admin.appUserId),
+          isNull(schema.app_user.onboarding_answer_json),
+        ),
+      );
     const sample = await seedMillbrook(db, admin, now);
     const demo = await seedAccountsDemoFromEnv(db, {
       password,
