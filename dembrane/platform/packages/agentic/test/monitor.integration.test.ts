@@ -83,7 +83,12 @@ run("assistant live status", () => {
 
   test("a recent ping is live before any chunk arrives", async () => {
     const now = new Date();
-    await presence().registerActive(p1, c2, ago(now, 3));
+    await presence().recordPing({
+      conversationId: c2,
+      now: ago(now, 3),
+      liveness: { telemetry: { state: "recording", mode: "audio", battery: 0.8 } },
+      activeProjectId: p1,
+    });
     await presence().markConversationSeen(
       c2,
       { state: "recording", mode: "audio", battery: 0.8 },
@@ -112,8 +117,12 @@ run("assistant live status", () => {
 
   test("a ping past the heartbeat grace is offline, not live", async () => {
     const now = new Date();
-    await presence().registerActive(p1, c2, ago(now, 30));
-    await presence().markConversationSeen(c2, { state: "recording" }, ago(now, 30));
+    await presence().recordPing({
+      conversationId: c2,
+      now: ago(now, 30),
+      liveness: { telemetry: { state: "recording" } },
+      activeProjectId: p1,
+    });
 
     const out = await monitor(d, alice, p1, 45);
     expect(row(out, c2)).toMatchObject({
