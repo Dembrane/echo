@@ -2,7 +2,7 @@ import type { Db } from "@dembrane/db";
 import type { Logger } from "@dembrane/observability";
 import type postgres from "postgres";
 import { isUuid } from "../storage";
-import { NEGATIVE_MARKER, type Presence } from "./presence";
+import { NEGATIVE_MARKER, type PingOutcome, type PingWrite, type Presence } from "./presence";
 
 /**
  * The concurrent portal recording meter (participant.py _meter). Initiate registers a
@@ -30,6 +30,9 @@ export type OverageObserver = (
 ) => Promise<void>;
 
 export type MeterAction = "open" | "present" | "refresh" | "close";
+
+/** A ping's session write plus the context the observer is handed afterwards. */
+export type PingSession = NonNullable<PingWrite["session"]> & { readonly ctx: BillingContext };
 
 // Only portal audio conversations are metered; text and host uploads never are.
 const PORTAL_AUDIO = "PORTAL_AUDIO";
@@ -136,6 +139,54 @@ export class RecordingMeter {
       }
       const count = await this.presence.recordPresence(ctx.accountId, conversationId, now);
       await this.observe?.(ctx, count, conversationId, projectId);
+    } catch (err) {
+      this.logger.warn(
+        { err: (err as Error).message, projectId, conversationId },
+        "recording meter failed open",
+      );
+    }
+  }
+
+  /**
+   * The meter's part of a participant ping's single statement (Presence.recordPing), or
+   * null when this ping meters nothing. Only the billing context is read here, from the
+   * per-process cache; failing open like meter().
+   */
+  async pingSession(
+    projectId: string,
+    action: Exclude<MeterAction, "open">,
+  ): Promise<PingSession | null> {
+    try {
+      const ctx = await this.context(projectId);
+      return ctx ? { ctx, accountId: ctx.accountId, action, count: Boolean(this.observe) } : null;
+    } catch (err) {
+      this.logger.warn({ err: (err as Error).message, projectId }, "recording meter failed open");
+      return null;
+    }
+  }
+
+  /**
+   * Finishes a ping's metering once its statement ran: an unregistered conversation takes
+   * meter()'s slow path (verify, register, then count), a foreign one is skipped, and a
+   * counted session goes to the overage observer.
+   */
+  async settlePing(
+    plan: PingSession,
+    projectId: string,
+    conversationId: string,
+    now: Date,
+    outcome: Pick<PingOutcome, "account" | "count">,
+  ): Promise<void> {
+    if (plan.action === "close") return;
+    if (outcome.account === null) return this.meter(projectId, conversationId, plan.action, now);
+    if (outcome.account !== plan.accountId) {
+      if (outcome.account !== NEGATIVE_MARKER)
+        this.logger.debug({ conversationId }, "meter skipped: other account");
+      return;
+    }
+    if (plan.action !== "present" || outcome.count === null) return;
+    try {
+      await this.observe?.(plan.ctx, outcome.count, conversationId, projectId);
     } catch (err) {
       this.logger.warn(
         { err: (err as Error).message, projectId, conversationId },

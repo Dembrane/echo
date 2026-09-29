@@ -97,6 +97,34 @@ const obj = (v: unknown): Telemetry | null => {
   return o && typeof o === "object" && !Array.isArray(o) ? (o as Telemetry) : null;
 };
 
+/** What one participant ping writes; see Presence.recordPing. */
+export interface PingWrite {
+  readonly conversationId: string;
+  readonly now: Date;
+  /** The liveness row; absent with the monitor off. */
+  readonly liveness?: { readonly telemetry: Telemetry | null } | null;
+  /** Index the conversation as active under this project (the monitor's ping-only rows). */
+  readonly activeProjectId?: string | null;
+  /** The recording meter's part: the session row of this billing account. */
+  readonly session?: {
+    readonly accountId: string;
+    readonly action: "present" | "refresh" | "close";
+    /** Also return the account's live count after this ping (for the overage observer). */
+    readonly count: boolean;
+  } | null;
+  /** A pg_notify to send on commit (realtime's notification()). */
+  readonly notify?: { readonly pgChannel: string; readonly payload: string } | null;
+}
+
+export interface PingOutcome {
+  /** The recording start this ping stamped, when it was the first recording ping. */
+  readonly first: string | null;
+  /** The account the conversation is registered under ("-" when foreign); null when unregistered. */
+  readonly account: string | null;
+  /** The account's live recordings after this ping, when asked for and the session was written. */
+  readonly count: number | null;
+}
+
 export class Presence {
   private readonly sql: postgres.Sql;
   private writes = 0;
@@ -130,10 +158,16 @@ export class Presence {
     await this.prune(seenAt);
   }
 
-  /** Expired rows are invisible already; deleting them every few hundred writes keeps the table small. */
+  /**
+   * Expired rows are invisible already; deleting them every few hundred writes keeps the
+   * table small. Rows a ping holds are skipped: a ping locks several rows in one statement,
+   * and a prune waiting on them in another order could deadlock with it.
+   */
   private async prune(now: Date): Promise<void> {
     if (++this.writes % 200 !== 0) return;
-    await this.sql`delete from platform_presence where expires_at <= ${iso(now)}`;
+    await this.sql`
+      delete from platform_presence where ctid in (
+        select ctid from platform_presence where expires_at <= ${iso(now)} for update skip locked)`;
   }
 
   /** Newest members of an index scoped to one project, since `since`. */
@@ -159,40 +193,155 @@ export class Presence {
     telemetry: Telemetry | null,
     now: Date,
   ): Promise<string | null> {
-    const payload: Telemetry = { seen: pyIsoformat(now) };
-    if (telemetry)
-      for (const f of CONVERSATION_TELEMETRY)
-        if (telemetry[f] !== undefined && telemetry[f] !== null) payload[f] = telemetry[f];
-    const ttl = STICKY_STATES.has(String(payload.state))
-      ? STICKY_STATE_TTL_SECONDS
-      : LIVENESS_TTL_SECONDS;
-    return this.sql.begin(async (tx) => {
-      // Serialise concurrent pings of one conversation, as Redis's single thread did.
-      await tx`select pg_advisory_xact_lock(hashtext(${`liveness:${conversationId}`}))`;
-      const [row] = await tx<{ data: Telemetry | null }[]>`
-        select data from platform_presence
-        where kind = 'liveness' and key = ${conversationId} and expires_at > ${iso(now)}`;
-      const existing = obj(row?.data);
-      const incoming = payload.client_ts;
-      if (Number.isInteger(incoming) && existing) {
-        const prev = existing.client_ts;
-        if (Number.isInteger(prev) && (incoming as number) < (prev as number)) return null;
-      }
-      let first: string | null = null;
-      if (existing?.recording_started_at)
-        payload.recording_started_at = existing.recording_started_at;
-      else if (payload.state === "recording") {
-        payload.recording_started_at = payload.seen;
-        first = payload.seen as string;
-      }
-      await tx`
+    return (await this.recordPing({ conversationId, now, liveness: { telemetry } })).first;
+  }
+
+  // ── the participant ping, in one statement ──
+
+  /**
+   * Everything a participant ping writes, as one statement and one round trip: the
+   * liveness row (markConversationSeen's rules, with the row lock of the upsert
+   * serialising concurrent pings of one conversation), the monitor's active index, the
+   * recording meter's session row, and the monitor nudge, sent on commit. Each part is
+   * optional. The meter part only acts when the conversation's account mapping exists and
+   * matches; otherwise `account` comes back null (no mapping) or foreign, and the meter
+   * takes its slow path.
+   */
+  async recordPing(ping: PingWrite): Promise<PingOutcome> {
+    const { conversationId, now } = ping;
+    const nowIso = iso(now);
+    let payload: Telemetry | null = null;
+    let liveUntil: string | null = null;
+    let clientTs: string | null = null;
+    if (ping.liveness) {
+      payload = { seen: pyIsoformat(now) };
+      const t = ping.liveness.telemetry;
+      if (t)
+        for (const f of CONVERSATION_TELEMETRY)
+          if (t[f] !== undefined && t[f] !== null) payload[f] = t[f];
+      liveUntil = addSeconds(
+        now,
+        STICKY_STATES.has(String(payload.state)) ? STICKY_STATE_TTL_SECONDS : LIVENESS_TTL_SECONDS,
+      );
+      if (Number.isInteger(payload.client_ts)) clientTs = String(payload.client_ts);
+    }
+    const seen = (payload?.seen as string | undefined) ?? null;
+    const recording = payload?.state === "recording";
+    const project = ping.activeProjectId || null;
+    const activeKey = project && conversationId ? `${project}:${conversationId}` : null;
+    const session = ping.session?.accountId && conversationId ? ping.session : null;
+    const action = session?.action ?? null;
+    const account = session?.accountId ?? null;
+    const notify = ping.notify ?? null;
+    const [row] = await this.sql<
+      {
+        started: string | null;
+        stored: boolean;
+        prev_started: boolean;
+        known: boolean;
+        account: string | null;
+        count: number | null;
+      }[]
+    >`
+      with conv as (
+        select case when jsonb_typeof(data) = 'string' then data #>> '{}' end as account
+        from platform_presence
+        where ${action}::text in ('present', 'refresh')
+          and kind = 'rec_conv' and key = ${conversationId} and expires_at > ${nowIso}
+      ),
+      sess as (
         insert into platform_presence (kind, key, scope, data, seen_at, expires_at)
-        values ('liveness', ${conversationId}, '', ${JSON.stringify(payload)}::jsonb, ${iso(now)},
-                ${addSeconds(now, ttl)})
+        select 'rec_session', ${conversationId}::text, ${account}::text, null::jsonb, ${nowIso}::timestamptz,
+          ${addSeconds(now, SESSION_TTL_SECONDS)}::timestamptz
+        where ${action}::text = 'present' and exists (select 1 from conv where account = ${account}::text)
         on conflict (kind, key) do update set
-          data = excluded.data, seen_at = excluded.seen_at, expires_at = excluded.expires_at`;
-      return first;
-    }) as Promise<string | null>;
+          scope = excluded.scope, data = excluded.data,
+          seen_at = excluded.seen_at, expires_at = excluded.expires_at
+        returning 1
+      ),
+      refreshed as (
+        update platform_presence set seen_at = ${nowIso}, expires_at = ${addSeconds(now, SESSION_TTL_SECONDS)}
+        where ${action}::text = 'refresh' and exists (select 1 from conv where account = ${account}::text)
+          and kind = 'rec_session' and key = ${conversationId} and scope = ${account}::text
+          and expires_at > ${nowIso}
+        returning 1
+      ),
+      closed as (
+        delete from platform_presence
+        where ${action}::text = 'close'
+          and kind = 'rec_session' and key = ${conversationId} and scope = ${account}::text
+        returning 1
+      ),
+      prev as (
+        select data from platform_presence
+        where ${payload !== null} and kind = 'liveness' and key = ${conversationId}
+          and expires_at > ${nowIso}
+      ),
+      live as (
+        insert into platform_presence (kind, key, scope, data, seen_at, expires_at)
+        select 'liveness', ${conversationId}::text, '',
+          ${payload === null ? null : JSON.stringify(payload)}::jsonb
+            || case when ${recording} then jsonb_build_object('recording_started_at', ${seen}::text)
+               else '{}'::jsonb end,
+          ${nowIso}::timestamptz, ${liveUntil}::timestamptz
+        where ${payload !== null}
+        on conflict (kind, key) do update set
+          data = case
+            when platform_presence.expires_at > ${nowIso}
+              and jsonb_typeof(platform_presence.data -> 'recording_started_at') = 'string'
+              and platform_presence.data ->> 'recording_started_at' <> ''
+            then ${payload === null ? null : JSON.stringify(payload)}::jsonb
+              || jsonb_build_object('recording_started_at', platform_presence.data -> 'recording_started_at')
+            else excluded.data end,
+          seen_at = excluded.seen_at, expires_at = excluded.expires_at
+        where not coalesce(
+          platform_presence.expires_at > ${nowIso}
+          and ${clientTs}::numeric is not null
+          and case when jsonb_typeof(platform_presence.data -> 'client_ts') = 'number' then
+            (platform_presence.data ->> 'client_ts')::numeric
+              = trunc((platform_presence.data ->> 'client_ts')::numeric)
+            and ${clientTs}::numeric < (platform_presence.data ->> 'client_ts')::numeric
+          else false end,
+          false)
+        returning data ->> 'recording_started_at' as started
+      ),
+      active as (
+        insert into platform_presence (kind, key, scope, data, seen_at, expires_at)
+        select 'active', ${activeKey}::text, ${project}::text, null::jsonb, ${nowIso}::timestamptz,
+          ${addSeconds(now, ACTIVE_TTL_SECONDS)}::timestamptz
+        where ${activeKey}::text is not null
+        on conflict (kind, key) do update set
+          scope = excluded.scope, data = excluded.data,
+          seen_at = excluded.seen_at, expires_at = excluded.expires_at
+        returning 1
+      )
+      select
+        (select started from live) as started,
+        exists (select 1 from live) as stored,
+        exists (
+          select 1 from prev
+          where jsonb_typeof(data -> 'recording_started_at') = 'string'
+            and data ->> 'recording_started_at' <> ''
+        ) as prev_started,
+        exists (select 1 from conv) as known,
+        (select account from conv) as account,
+        case when ${Boolean(session?.count)} and exists (select 1 from sess) then (
+          select count(*)::int + 1 from platform_presence
+          where kind = 'rec_session' and scope = ${account}::text and key <> ${conversationId}
+            and seen_at >= ${addSeconds(now, -ACTIVITY_WINDOW_SECONDS)} and expires_at > ${nowIso}
+        ) end as count,
+        (select count(*) from sess) + (select count(*) from refreshed) + (select count(*) from closed)
+          + (select count(*) from active) as _writes,
+        case when ${notify?.pgChannel ?? null}::text is not null
+          then pg_notify(${notify?.pgChannel ?? null}::text, ${notify?.payload ?? null}::text) end as _nudge`;
+    await this.prune(now);
+    const first =
+      row?.stored && recording && !row.prev_started && row.started === seen ? seen : null;
+    return {
+      first,
+      account: row?.known ? (row.account ?? null) : null,
+      count: row?.count ?? null,
+    };
   }
 
   /** get_telemetry_many: {conversation_id: telemetry with a `seen` Date} for live pings. */
@@ -211,18 +360,6 @@ export class Presence {
   }
 
   // ── monitor active index (monitor_stream) ──
-
-  async registerActive(projectId: string, conversationId: string, now: Date): Promise<void> {
-    if (!projectId || !conversationId) return;
-    await this.put(
-      "active",
-      `${projectId}:${conversationId}`,
-      projectId,
-      null,
-      now,
-      ACTIVE_TTL_SECONDS,
-    );
-  }
 
   activeConversationIds(projectId: string, since: Date, now: Date) {
     return this.members("active", projectId, since, now);
@@ -310,8 +447,12 @@ export class Presence {
   /** The account a conversation was registered under; null on a miss, "-" when checked and foreign. */
   async accountForConversation(conversationId: string, now: Date): Promise<string | null> {
     if (!conversationId) return null;
-    const row = await this.get("rec_conv", conversationId, now);
-    return typeof row?.data === "string" ? row.data : null;
+    // The client hands a jsonb string back already decoded, so read it as text here.
+    const [row] = await this.sql<{ account: string | null }[]>`
+      select case when jsonb_typeof(data) = 'string' then data #>> '{}' end as account
+      from platform_presence
+      where kind = 'rec_conv' and key = ${conversationId} and expires_at > ${iso(now)}`;
+    return row?.account ?? null;
   }
 
   /** record_presence: add or refresh, then the live count. */

@@ -8,7 +8,7 @@ export {
   type StreamBounds,
   silentStream,
 } from "./bounded";
-export { encode, Hub, type LiveEvent, publish } from "./hub";
+export { encode, Hub, type LiveEvent, notification, publish } from "./hub";
 export { sharedHub } from "./shared";
 export {
   formatSse,
