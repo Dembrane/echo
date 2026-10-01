@@ -8,6 +8,7 @@ import {
 	confirmConversationChunkUpload,
 	getParticipantConversationById,
 	getParticipantConversationChunks,
+	getParticipantConversationReplies,
 	getParticipantProjectById,
 	initiateConversation,
 	submitNotificationParticipant,
@@ -376,19 +377,14 @@ export const combineUserChunks = (
 };
 
 export const useConversationRepliesQuery = (
+	projectId: string | undefined,
 	conversationId: string | undefined,
 ) => {
 	return useQuery({
-		enabled: !!conversationId,
+		enabled: !!projectId && !!conversationId,
 		queryFn: () =>
-			directus.request(
-				readItems("conversation_reply", {
-					fields: ["id", "content_text", "date_created", "type"],
-					filter: { conversation_id: { _eq: conversationId } },
-					sort: ["date_created"],
-				}),
-			),
-		queryKey: ["participant", "conversation_replies", conversationId],
+			getParticipantConversationReplies(projectId as string, conversationId as string),
+		queryKey: ["participant", "conversation_replies", projectId, conversationId],
 		// refetchInterval: 15000,
 	});
 };

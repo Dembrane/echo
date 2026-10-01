@@ -50,7 +50,7 @@ export const ParticipantBody = ({
 
 	const projectQuery = useParticipantProjectById(projectId);
 	const chunksQuery = useConversationChunksQuery(projectId, conversationId);
-	const repliesQuery = useConversationRepliesQuery(conversationId);
+	const repliesQuery = useConversationRepliesQuery(projectId, conversationId);
 	const isOnline = useOnlineStatus();
 
 	const combinedMessages = useMemo(() => {
