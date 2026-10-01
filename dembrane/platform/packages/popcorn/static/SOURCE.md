@@ -99,6 +99,11 @@ Patches carried on top of upstream, all guarded by `window.POPCORN_EMBED`:
 - `flow.html` is not upstream: the account of what the tick does, served at
   `view/flow/` while `SERVE_API_DOCS` is on; the footer links to it when the
   host bundle says so (`session.host.flow`).
+- A prospect's demo (`session.demo.continue_url`, set when staff publish a
+  demo with sign-in) leads on to the prospect's own organisation: one line in
+  the footer on every slide, and the same line under the last opening
+  screen's button (`renderDemoNext`, `demo.next`). Only the public page shows
+  it; the host's deck and Present shell embeds do not.
 
 Two things upstream's 8c23eba merge changed on purpose:
 
