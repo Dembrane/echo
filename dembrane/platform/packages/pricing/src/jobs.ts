@@ -50,7 +50,7 @@ export function environmentName(dashboardUrl: string): string {
     host = "";
   }
   if (host === "dashboard.dembrane.com") return "production";
-  if (host === "dashboard.echo-next.dembrane.com") return "echo-next";
+  if (host === "dashboard.staging.dembrane.com") return "echo-next";
   return host || "development";
 }
 

@@ -87,7 +87,7 @@ test("payload shape: kind, always is_internal, absent fields omitted", () => {
     summary: "Volume: under 50",
   });
   expect(environmentName("https://dashboard.dembrane.com")).toBe("production");
-  expect(environmentName("https://dashboard.echo-next.dembrane.com/")).toBe("echo-next");
+  expect(environmentName("https://dashboard.staging.dembrane.com/")).toBe("echo-next");
   expect(environmentName("http://localhost:5173")).toBe("localhost");
 });
 

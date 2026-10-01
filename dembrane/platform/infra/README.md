@@ -25,8 +25,9 @@ Manager, IAM, STS, Storage, Vertex AI, Logging, Monitoring), a registry `echo-<e
 SQL instance `echo-<env>`, the uploads bucket with its HMAC key, secrets replicated in
 europe-west4 only, the runtime and deployer service accounts, the GitHub trust, the EU log
 bucket with the `_Default` sink pointed at it, log metrics, alerts and the readiness check.
-prod also has the load balancer (`api`, `dashboard`, `portal` and the old `directus` host)
-and, in `prod/cutover.tf`, what the cutover needs: the archive bucket and Storage Transfer.
+next and prod also have the load balancer (`api`, `dashboard` and `portal`; prod adds the old
+`directus` host). prod has, in `prod/cutover.tf`, what the cutover needs: the archive bucket
+and Storage Transfer.
 
 Alerts go to email (`alert_email`) and to Slack #alerts-ci. Monitoring publishes each
 incident to a Pub/Sub topic; a push subscription hands it to `alert-relay/`, a Cloud Run

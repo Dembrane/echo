@@ -52,6 +52,13 @@ module "platform" {
   pending_secrets             = local.pending_secrets
   monitor_api_ready           = false # until the first deploy
   monitor_worker_ready        = false # until the first deploy
+  domains = {
+    api       = "api.staging.dembrane.com"
+    dashboard = "dashboard.staging.dembrane.com"
+    portal    = "portal.staging.dembrane.com"
+  }
+  wildcard_domain = "staging.dembrane.com"
+  monitor_domains = false # until DNS points the names here and the first deploy is up
 }
 
 # A new project already has a _Default sink; the module repoints it at the EU bucket.
@@ -70,5 +77,7 @@ output "platform" {
     uploads_bucket             = module.platform.uploads_bucket
     secrets                    = module.platform.secrets
     log_bucket                 = module.platform.log_bucket
+    lb_ip                      = module.platform.lb_ip
+    dns_authorizations         = module.platform.dns_authorizations
   }
 }

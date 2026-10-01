@@ -14,7 +14,7 @@ const HOST = "https://eu.i.posthog.com";
 // echo-next capture; every other host opts out so stray environments never pollute them.
 const TOKENS: Record<string, string> = {
   "dashboard.dembrane.com": "phc_o9ZqNqaop7cwLvbbEU2gwvaY5CczpavbNfCxrnu2Ca4a",
-  "dashboard.echo-next.dembrane.com": "phc_qMo8i67hwneqDG3x8NW4iTyUiqPMsR9pZ3H5QaJQ4zkM",
+  "dashboard.staging.dembrane.com": "phc_qMo8i67hwneqDG3x8NW4iTyUiqPMsR9pZ3H5QaJQ4zkM",
 };
 
 /** Server-side capture into the project the dashboard host belongs to, as the Python API did. */
