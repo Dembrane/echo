@@ -184,15 +184,13 @@ deploy() {
   done
   for p in "${pids[@]}"; do wait "$p" || fail=1; done
   [ "$fail" = 0 ] || exit 1
-  # Media's invokers; a rollout that left media alone left its policy alone too.
+  # Media's invokers; a rollout that left media alone left its policy alone too. One at a
+  # time: each binding rewrites the whole policy, and two at once abort each other.
   if [ -e "$state/rolled-$prefix-media" ]; then
-    pids=()
     for sa in worker api; do
       g run services add-iam-policy-binding "$prefix-media" --region "$REGION" \
-        --member "serviceAccount:$(SA $sa)" --role roles/run.invoker --quiet >/dev/null & pids+=($!)
+        --member "serviceAccount:$(SA $sa)" --role roles/run.invoker --quiet >/dev/null
     done
-    for p in "${pids[@]}"; do wait "$p" || fail=1; done
-    [ "$fail" = 0 ] || exit 1
   fi
 
   if [[ $name == pr-* ]]; then route_add "$n"; fi

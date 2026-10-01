@@ -20,6 +20,12 @@ variable "legacy_directus_host" {
   default     = null
 }
 
+variable "wildcard_domain" {
+  type        = string
+  description = "Parent domain all the hostnames sit directly under. Set: one wildcard certificate, authorised by a single CNAME. Null: one authorization per hostname."
+  default     = null
+}
+
 variable "monitor_domains" {
   type        = bool
   description = "Uptime checks on the public hostnames. Off until DNS points them at this load balancer, or they probe the old stack."
@@ -31,6 +37,9 @@ locals {
   lb_roles  = var.domains == null ? {} : { api = var.domains.api, dashboard = var.domains.dashboard, portal = var.domains.portal }
   lb_hosts  = var.domains == null ? [] : compact(concat(values(local.lb_roles), [var.legacy_directus_host]))
   lb_prefix = "${local.name}-lb"
+  # What the certificate names, and the domains whose DNS authorises it.
+  cert_names        = var.wildcard_domain == null ? local.lb_hosts : ["*.${var.wildcard_domain}"]
+  cert_auth_domains = var.wildcard_domain == null ? local.lb_hosts : [var.wildcard_domain]
 }
 
 resource "google_compute_global_address" "lb" {
@@ -113,10 +122,11 @@ resource "google_compute_url_map" "lb" {
   }
 }
 
-# Certificates: one DNS authorization per hostname. Each needs its CNAME
-# (output dns_authorizations) in DNS once; the certificate then issues and renews on its own.
+# Certificates: one DNS authorization per hostname, or one for the parent domain when
+# wildcard_domain is set. Each needs its CNAME (output dns_authorizations) in DNS once; the
+# certificate then issues and renews on its own.
 resource "google_certificate_manager_dns_authorization" "lb" {
-  for_each   = toset(local.lb_hosts)
+  for_each   = toset(local.cert_auth_domains)
   name       = replace(each.value, ".", "-")
   domain     = each.value
   location   = "global"
@@ -127,8 +137,8 @@ resource "google_certificate_manager_certificate" "lb" {
   count = local.lb
   name  = local.lb_prefix
   managed {
-    domains            = local.lb_hosts
-    dns_authorizations = [for h in local.lb_hosts : google_certificate_manager_dns_authorization.lb[h].id]
+    domains            = local.cert_names
+    dns_authorizations = [for d in local.cert_auth_domains : google_certificate_manager_dns_authorization.lb[d].id]
   }
 }
 
@@ -139,8 +149,8 @@ resource "google_certificate_manager_certificate_map" "lb" {
 }
 
 resource "google_certificate_manager_certificate_map_entry" "lb" {
-  for_each     = toset(local.lb_hosts)
-  name         = replace(each.value, ".", "-")
+  for_each     = toset(local.cert_names)
+  name         = replace(replace(each.value, "*", "wildcard"), ".", "-")
   map          = google_certificate_manager_certificate_map.lb[0].name
   certificates = [google_certificate_manager_certificate.lb[0].id]
   hostname     = each.value

@@ -2,14 +2,17 @@ import type { Environment } from "../src";
 
 export default {
   http: {
-    publicUrl: "https://api.echo-next.dembrane.com",
-    dashboardUrl: "https://dashboard.echo-next.dembrane.com",
-    portalUrl: "https://portal.echo-next.dembrane.com",
+    publicUrl: "https://api.staging.dembrane.com",
+    dashboardUrl: "https://dashboard.staging.dembrane.com",
+    portalUrl: "https://portal.staging.dembrane.com",
   },
   database: { poolMax: 5, queuePoolMax: 3 },
   observability: { gcpProject: "dembrane-web-next", traceSampleRatio: 0 },
   llm: { vertexProject: "dembrane-web-next" },
-  auth: { cookieDomain: "echo-next.dembrane.com" },
+  auth: { cookieDomain: "staging.dembrane.com" },
+  // The dashboard and portal forward /api here, server to server, so the browser stays on
+  // one origin and the deploy's check works before the certificate is active.
+  web: { apiOrigin: "https://echo-next-api-488580804029.europe-west4.run.app" },
   // echo-next serves the popcorn flow page today (the Python stack gates it on
   // SERVE_API_DOCS=1 there, 0 on prod); keeping it on keeps that page for the team.
   popcorn: { showFlow: true },

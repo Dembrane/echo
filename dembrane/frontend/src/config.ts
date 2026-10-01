@@ -43,7 +43,7 @@ export const PREVIEW_PR: { number: number; url: string } | null =
 		: null;
 
 const ENV_HOSTNAMES: Record<"production" | "next" | "testing", string[]> = {
-	next: ["dashboard.echo-next.dembrane.com", "portal.echo-next.dembrane.com"],
+	next: ["dashboard.staging.dembrane.com", "portal.staging.dembrane.com"],
 	production: ["dashboard.dembrane.com", "portal.dembrane.com"],
 	testing: [
 		"dashboard.echo-testing.dembrane.com",
@@ -81,11 +81,11 @@ export const byEnv = <T>(
 	fallback: T,
 ): T => overrides[APP_ENVIRONMENT] ?? fallback;
 
-/** `https://<subdomain>.echo-next.dembrane.com` etc. for the current env. */
+/** `https://<subdomain>.staging.dembrane.com` etc. for the current env. */
 const dembraneHost = (subdomain: string): string =>
 	byEnv(
 		{
-			next: `https://${subdomain}.echo-next.dembrane.com`,
+			next: `https://${subdomain}.staging.dembrane.com`,
 			testing: `https://${subdomain}.echo-testing.dembrane.com`,
 		},
 		`https://${subdomain}.dembrane.com`,
