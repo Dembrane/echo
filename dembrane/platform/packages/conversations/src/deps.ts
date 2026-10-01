@@ -49,4 +49,9 @@ export interface ConversationsDeps {
   readonly tokens: ParticipantTokens;
   readonly settings: ConversationSettings;
   readonly now: () => Date;
+  /**
+   * Called once a conversation has started in a project: customer accounts mark "Record a
+   * test conversation" done. It must never throw; the conversation has committed.
+   */
+  readonly onConversationCreated?: (projectId: string) => Promise<void>;
 }

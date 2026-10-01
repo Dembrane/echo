@@ -272,13 +272,49 @@ run("demos made in echo", () => {
       view.offer_document_id as string,
     );
     expect(offer?.status).toBe("draft");
-    expect((await store.tasks(w.db, view.org_id as string)).map((t) => t.kind)).toEqual([
-      "billing_details",
+    // Billing details wait for the offer to be signed; the prospect's onboarding tasks
+    // are open, lead to the demo project and never remind.
+    const tasks = await store.tasks(w.db, view.org_id as string);
+    expect(tasks.map((t) => `${t.code}:${t.status}`)).toEqual([
+      "billing_details:locked",
+      "explore_demo:open",
+      "record_first_conversation:open",
+      "invite_colleague:open",
+      "book_call:open",
+    ]);
+    expect(tasks.find((t) => t.code === "explore_demo")?.params).toEqual({
+      project_id: view.links.projects[0]?.project_id,
+      workspace_id: (row?.seed as { workspace_id?: string } | null)?.workspace_id,
+    });
+    expect(tasks.filter((t) => t.kind === "generic").map((t) => t.nextReminderAt)).toEqual([
+      null,
+      null,
+      null,
+      null,
     ]);
     // A second run of a finished demo changes nothing.
     const before = extracted.length;
     await buildDemo(deps, status.id, 1);
     expect(extracted.length).toBe(before);
+  });
+
+  test("a prospect without an offer carries the onboarding tasks and no billing task", async () => {
+    const status = K.DemoStatus.parse(
+      (await start({ offer: null, contact_email: "lot@voorbeeldstad.example" })).data,
+    );
+    await buildDemo(deps, status.id, 1);
+    const view = K.DemoStatus.parse(
+      (await call(w, "GET", `/api/v2/admin/accounts/demos/${status.id}`, "staff")).data,
+    );
+    // The demo's own invented conversations are not the prospect's first recording.
+    expect(
+      (await store.tasks(w.db, view.org_id as string)).map((t) => `${t.code}:${t.status}`),
+    ).toEqual([
+      "explore_demo:open",
+      "record_first_conversation:open",
+      "invite_colleague:open",
+      "book_call:open",
+    ]);
   });
 
   test("publishing with sign-in: live link, the contact released and invited, Continue in dembrane", async () => {

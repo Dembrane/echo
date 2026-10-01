@@ -19,6 +19,11 @@ export interface ProjectRoutesDeps {
   readonly access: Access;
   readonly queue: JobSink;
   readonly now?: () => Date;
+  /**
+   * Called when a signed-in person loads a project in the dashboard, after the access
+   * check: customer accounts mark "Explore your demo" done. It must never throw.
+   */
+  readonly onProjectOpened?: (projectId: string, appUserId: string | null) => Promise<void>;
 }
 
 const { model, nested, optional, required, nullable, str, int, bool, literal, list, dict, any } = p;
@@ -219,13 +224,13 @@ export function projectRoutes(deps: ProjectRoutesDeps) {
         fields: optional(nullable(str()), null),
       },
     });
-    return c.json(
-      await projects.projectBff(d, who, c.req.param("project_id"), {
-        includeTags: query.include_tags,
-        includeLegal: query.include_legal,
-        fields: query.fields,
-      }),
-    );
+    const out = await projects.projectBff(d, who, c.req.param("project_id"), {
+      includeTags: query.include_tags,
+      includeLegal: query.include_legal,
+      fields: query.fields,
+    });
+    await deps.onProjectOpened?.(c.req.param("project_id"), who.appUserId);
+    return c.json(out);
   });
 
   app.post("/api/v2/projects/:project_id/move", async (c) => {

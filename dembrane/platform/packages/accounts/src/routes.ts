@@ -28,6 +28,7 @@ import { createAccount } from "./prospect";
 import { signDocument } from "./signing";
 import {
   accountCard,
+  addOnboarding,
   closeTicket,
   documentFields,
   enableAccount,
@@ -303,6 +304,10 @@ export function accountsRoutes(d: AccountsDeps) {
       await staffCreateTask(d, who, p(c, "orgId"), await body(c, K.CreateTaskRequest)),
       201,
     );
+  });
+  app.post(R.addOnboarding.path, async (c) => {
+    const who = await staff(c, "accounts.onboarding.add");
+    return c.json(await addOnboarding(d, who, p(c, "orgId")));
   });
   app.post(R.reviewTask.path, async (c) => {
     const who = await staff(c, "accounts.task.review");

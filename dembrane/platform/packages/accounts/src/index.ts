@@ -30,6 +30,11 @@ export {
 } from "./legal/parse";
 export { legalForPush, refreshLegalTexts, seedLegalTexts } from "./legal/store";
 export { type OfferContent, offerText } from "./offer";
+export {
+  ONBOARDING_CODES,
+  type OnboardingSignals,
+  onboardingSignals,
+} from "./onboarding";
 export { offerPdf, signedPdf, textPdf } from "./pdf";
 export { codeSignInGate, continueUrl, createAccount, ensureUser } from "./prospect";
 export { accountsRoutes } from "./routes";

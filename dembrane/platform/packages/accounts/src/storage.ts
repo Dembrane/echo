@@ -24,6 +24,12 @@ const {
   project,
 } = schema;
 
+/** Statuses in which a task still waits on the customer. */
+const OPEN = ["open", "changes_requested"] as const;
+/** A project whose popcorn session is a synthetic demo: its conversations are invented. */
+const NOT_SYNTHETIC = sql`not exists (select 1 from agent_loop l where l.project_id = p.id
+  and l.popcorn_state->'demo'->>'synthetic' = 'true')`;
+
 export type OrgRow = typeof org.$inferSelect;
 export type BillingRow = typeof billing_account.$inferSelect;
 export type DocumentRow = typeof doc.$inferSelect;
@@ -491,7 +497,8 @@ export const store = {
   /**
    * One query, on the org_membership user and account_task org and status indexes: every
    * organisation with account content where the person holds one of `roles`, with task
-   * counts (withdrawn tasks left out, locked ones in) and the oldest task waiting on them.
+   * counts (withdrawn tasks left out, locked ones in, and how many wait on them now) and
+   * the oldest task waiting on them.
    */
   async tasksSummary(c: Conn, appUserId: string, roles: readonly string[]) {
     return (
@@ -503,6 +510,7 @@ export const store = {
           account_stage: org.account_stage,
           tasks_done: sql<number>`count(${task.id}) filter (where ${task.status} = 'done')::int`,
           tasks_total: sql<number>`count(${task.id}) filter (where ${task.status} <> 'withdrawn')::int`,
+          tasks_waiting: sql<number>`count(${task.id}) filter (where ${task.status} in ('open', 'changes_requested'))::int`,
           // The oldest task waiting on the person: its title, or its code and params.
           next_task: sql<{
             title: string | null;
@@ -530,6 +538,121 @@ export const store = {
         )
         .orderBy(asc(org.name))
     );
+  },
+
+  // ── onboarding ────────────────────────────────────────────────────────
+
+  /**
+   * Marks the organisation's open tasks with `code` done, in one statement, so a trigger
+   * that fires twice (or two at once) settles a task once. Returns the ids it settled.
+   */
+  async settleOpenByCode(c: Conn, orgId: string, code: string, now: Date) {
+    return c
+      .update(task)
+      .set({ status: "done", nextReminderAt: null, updatedAt: now })
+      .where(and(eq(task.orgId, orgId), eq(task.code, code), inArray(task.status, [...OPEN])))
+      .returning({ id: task.id, orgId: task.orgId });
+  },
+
+  /**
+   * "Explore your demo" for the demo project `projectId`, settled only when `appUserId` is
+   * a member of that organisation: staff reviewing the draft are not, so their visit does
+   * not count. Runs on every project load, so it is one statement on a small table.
+   */
+  async settleDemoOpened(c: Conn, projectId: string, appUserId: string, now: Date) {
+    return c
+      .update(task)
+      .set({ status: "done", nextReminderAt: null, updatedAt: now })
+      .where(
+        and(
+          eq(task.code, "explore_demo"),
+          inArray(task.status, [...OPEN]),
+          sql`${task.params}->>'project_id' = ${projectId}`,
+          sql`exists (select 1 from org_membership m where m.org_id = ${task.orgId}
+            and m.user_id = ${appUserId} and m.deleted_at is null)`,
+        ),
+      )
+      .returning({ id: task.id, orgId: task.orgId });
+  },
+
+  /**
+   * "Record a test conversation" in the organisation that owns `projectId`, unless the
+   * project is a synthetic demo (its popcorn session says so): those conversations are ours.
+   */
+  async settleFirstConversation(c: Conn, projectId: string, now: Date) {
+    return c
+      .update(task)
+      .set({ status: "done", nextReminderAt: null, updatedAt: now })
+      .where(
+        and(
+          eq(task.code, "record_first_conversation"),
+          inArray(task.status, [...OPEN]),
+          sql`${task.orgId} = (select w.org_id from project p join workspace w on w.id = p.workspace_id
+            where p.id = ${projectId} and ${NOT_SYNTHETIC})`,
+        ),
+      )
+      .returning({ id: task.id, orgId: task.orgId });
+  },
+
+  /** Withdraws the organisation's unfinished tasks with one of `codes`; returns their codes. */
+  async withdrawUnfinished(c: Conn, orgId: string, codes: readonly string[], now: Date) {
+    return c
+      .update(task)
+      .set({ status: "withdrawn", nextReminderAt: null, updatedAt: now })
+      .where(
+        and(
+          eq(task.orgId, orgId),
+          inArray(task.code, [...codes]),
+          sql`${task.status} not in ('done', 'withdrawn')`,
+        ),
+      )
+      .returning({ id: task.id, code: task.code });
+  },
+
+  /** The onboarding codes whose step the organisation already took before the tasks existed. */
+  async onboardingAlreadyDone(c: Conn, orgId: string): Promise<string[]> {
+    const [row] = await c.execute<{ conversation: boolean; invite: boolean; booking: boolean }>(
+      sql`select
+        exists (select 1 from conversation k join project p on p.id = k.project_id
+          join workspace w on w.id = p.workspace_id
+          where w.org_id = ${orgId} and k.deleted_at is null and ${NOT_SYNTHETIC}) as conversation,
+        exists (select 1 from org_invite i where i.org_id = ${orgId} and i.accepted_at is not null)
+          or exists (select 1 from workspace_invite i join workspace w on w.id = i.workspace_id
+            where w.org_id = ${orgId} and i.accepted_at is not null) as invite,
+        exists (select 1 from account_event e where e.org_id = ${orgId}
+          and e.type = 'booking.recorded') as booking`,
+    );
+    return [
+      ...(row?.conversation ? ["record_first_conversation"] : []),
+      ...(row?.invite ? ["invite_colleague"] : []),
+      ...(row?.booking ? ["book_call"] : []),
+    ];
+  },
+
+  /** The organisation's oldest live workspace: where a first project of its own goes. */
+  async firstWorkspace(c: Conn, orgId: string): Promise<string | null> {
+    const [row] = await c
+      .select({ id: workspace.id })
+      .from(workspace)
+      .where(and(eq(workspace.org_id, orgId), isNull(workspace.deleted_at)))
+      .orderBy(asc(workspace.created_at), asc(workspace.id))
+      .limit(1);
+    return row?.id ?? null;
+  },
+
+  /** The project of the organisation's synthetic demo, from the demo echo built for it. */
+  async demoProject(
+    c: Conn,
+    orgId: string,
+  ): Promise<{ projectId: string; workspaceId: string } | null> {
+    const [row] = await c.execute<{ project_id: string | null; workspace_id: string | null }>(
+      sql`select seed->'projects'->0->>'project_id' as project_id, seed->>'workspace_id' as workspace_id
+        from account_demo where org_id = ${orgId} and seed is not null
+        order by created_at desc limit 1`,
+    );
+    return row?.project_id && row.workspace_id
+      ? { projectId: row.project_id, workspaceId: row.workspace_id }
+      : null;
   },
 
   // ── staff list ────────────────────────────────────────────────────────

@@ -26,7 +26,11 @@ export interface NewTask {
   readonly locked?: boolean;
   readonly unlockOnDocumentId?: string | null;
   readonly reminderIntervalDays?: number | null;
+  /** False for a nudge that is no obligation: it never sends a reminder email. */
+  readonly remind?: boolean;
   readonly createdBy?: string | null;
+  /** Orders tasks made in one go; the page and the summary list by creation time. */
+  readonly createdAt?: Date;
 }
 
 /** The first reminder of a task that opens now. */
@@ -35,9 +39,10 @@ export function firstReminder(d: AccountsDeps, now: Date, interval: number | nul
 }
 
 export async function createTask(d: AccountsDeps, tx: Conn, t: NewTask): Promise<TaskRow> {
-  const now = d.now();
+  const now = t.createdAt ?? d.now();
   const id = t.id ?? newId();
   const locked = t.locked === true;
+  const remind = t.remind !== false;
   await store.insertTask(tx, {
     id,
     orgId: t.orgId,
@@ -51,7 +56,7 @@ export async function createTask(d: AccountsDeps, tx: Conn, t: NewTask): Promise
     dueOn: t.dueOn ?? null,
     status: locked ? "locked" : "open",
     openedAt: locked ? null : now,
-    nextReminderAt: locked ? null : firstReminder(d, now, t.reminderIntervalDays),
+    nextReminderAt: locked || !remind ? null : firstReminder(d, now, t.reminderIntervalDays),
     reminderIntervalDays: t.reminderIntervalDays ?? null,
     createdBy: t.createdBy ?? null,
     createdAt: now,

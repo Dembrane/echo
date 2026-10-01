@@ -23,6 +23,7 @@ const cases: [string, z.ZodType, unknown][] = [
   ["createAccountResponse", C.CreateAccountResponse, F.createAccountResponse],
   ["offerFieldsResponse", C.DocumentFields, F.offerFieldsResponse],
   ["tasksSummary", C.TasksSummary, F.tasksSummary],
+  ["onboardingResponse", C.OnboardingResponse, F.onboardingResponse],
   ["demoCreateRequest", C.DemoCreateRequest, F.demoCreateRequest],
   ["demoRunning", C.DemoStatus, F.demoRunning],
   ["demoFailed", C.DemoStatus, F.demoFailed],

@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 import type { AccountsDeps } from "../deps";
 import { emit } from "../events";
 import type { Language, OfferItem, OfferTemplate } from "../offer";
+import { ensureOnboardingTasks } from "../onboarding";
 import { createAccount } from "../prospect";
 import { pushOffer } from "../staff";
 import { store } from "../storage";
@@ -248,7 +249,10 @@ export async function buildDemo(
   if (row.status === "running") await save(d, demoId, { status: "draft" });
 }
 
-/** The seed step: organisation, held contact, workspace, synthetic projects, offer draft. */
+/**
+ * The seed step: organisation, held contact, workspace, synthetic projects, offer draft,
+ * and the prospect's onboarding tasks.
+ */
 async function seed(d: DemoBuildDeps, row: Row, input: DemoInput) {
   const staffApp = await store.appUserByDirectusId(d.db, row.createdBy);
   const staff: Signed = {
@@ -370,14 +374,22 @@ async function seed(d: DemoBuildDeps, row: Row, input: DemoInput) {
   }
   const contact = await store.identityByEmail(d.db, input.contact_email);
   if (!contact) throw new ValidationError("demo.contact_not_created");
-  await d.db.transaction((tx) =>
-    emit(d, tx, {
+  await d.db.transaction(async (tx) => {
+    // The prospect's way from the demo into the product. Only a demo in their own
+    // workspace can be opened by them; one in staff's workspace has no "Explore" step.
+    await ensureOnboardingTasks(d, tx, account.org_id, {
+      demo: d.demo.workspaceId
+        ? null
+        : { projectId: projects[0]?.project_id as string, workspaceId },
+      createdBy: row.createdBy,
+    });
+    await emit(d, tx, {
       orgId: account.org_id,
       actor: { kind: "staff", userId: row.createdBy },
       type: "demo.seeded",
       detail: { slug, demo_id: row.id, links: seeded.result, published: false },
-    }),
-  );
+    });
+  });
   const out: SeedOutput = {
     workspace_id: workspaceId,
     projects,

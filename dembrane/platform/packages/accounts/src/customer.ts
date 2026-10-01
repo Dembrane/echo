@@ -15,6 +15,7 @@ import { billingPayload, emit, orgPayload, taskPayload, ticketPayload } from "./
 import { accountPageUrl } from "./jobs";
 import type { PricedLine } from "./money";
 import type { OfferContent } from "./offer";
+import { completeOnboarding, isOnboardingCode } from "./onboarding";
 import { type DocumentRow, store } from "./storage";
 import { isTaskCode } from "./task-text";
 import { settleTask } from "./tasks";
@@ -432,6 +433,9 @@ export async function submitTask(
   if (!task) throw new NotFoundError("task.not_found");
   if (task.kind === "sign") throw new ConflictError("task.done_by_signing");
   if (task.kind === "billing_details") throw new ConflictError("task.done_by_billing_details");
+  // An onboarding step is done by taking it (opening the demo, a first conversation), never
+  // by a reply that staff would then have to review.
+  if (isOnboardingCode(task.code)) throw new ConflictError("task.not_waiting");
   if (!["open", "changes_requested"].includes(task.status))
     throw new ConflictError(task.status === "locked" ? "task.not_open" : "task.not_waiting");
   if (task.kind === "upload" && !input.file) throw new ValidationError("task.file_required");
@@ -579,6 +583,8 @@ export async function recordBooking(
       detail: { start: booking.start, status: booking.status },
     });
   });
+  // After the booking commits, and never failing it: the call matters, not the checkbox.
+  await completeOnboarding(d, org.id, "book_call");
   return { recorded: true };
 }
 
