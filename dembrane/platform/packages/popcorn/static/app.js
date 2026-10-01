@@ -1156,12 +1156,14 @@
   // fills stay). Both load, so the screen's theme switch is only a style change.
   const illustrationHtml = (name) => ["", "-dark"].map((twin) =>
     `<img class="illustration${twin}" src="illustrations/${name}${twin}.webp" alt="" width="480" height="480" loading="eager">`).join("");
-  function dataScreenHtml(data) {
+  // The action sits right under the three steps: below the small print it falls under the
+  // fold on a laptop screen and the deck looks like it has no way forward.
+  function dataScreenHtml(data, actionHtml = "") {
     const steps = (data.steps || []).map((step) => `<li>${ILLUSTRATION_NAMES.has(step.image)
       ? illustrationHtml(step.image) : ""}<p>${esc(step.text)}</p></li>`).join("");
     const links = (data.links || []).filter((l) => /^https?:\/\//.test(l.url || ""))
       .map((l) => `<a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">${esc(l.label)}</a>`).join(" · ");
-    return `<h1 id="intro-title">${esc(data.title)}</h1><ol class="data-steps">${steps}</ol><div class="data-notes">${(data.notes || []).map((n) => `<p>${esc(n)}</p>`).join("")}${links ? `<p>${links}</p>` : ""}</div>`;
+    return `<h1 id="intro-title">${esc(data.title)}</h1><ol class="data-steps">${steps}</ol>${actionHtml}<div class="data-notes">${(data.notes || []).map((n) => `<p>${esc(n)}</p>`).join("")}${links ? `<p>${links}</p>` : ""}</div>`;
   }
 
   // `how` is what the address does: "push" (a step forward), "replace" (a
@@ -1228,7 +1230,7 @@
       ? screen.body.map((p) => `<p${editMark(fields.body)}>${esc(p)}</p>`).join("")
       : emptyMark(fields.body, "intro.addText") ? `<p${emptyMark(fields.body, "intro.addText")}></p>` : "";
     dialog.innerHTML = screen.data
-      ? `<div class="intro-content intro-data">${backHtml}<p class="intro-eyebrow">${eyebrow}</p>${dataScreenHtml(screen.data)}${continueHtml}</div>`
+      ? `<div class="intro-content intro-data">${backHtml}<p class="intro-eyebrow">${eyebrow}</p>${dataScreenHtml(screen.data, continueHtml)}</div>`
       : `<div class="intro-content">${backHtml}<p class="intro-eyebrow">${eyebrow}</p>${screen.title ? `<h1 id="intro-title"${editMark(screen.fields?.title)}>${esc(screen.title)}</h1>` : ""}${subtitleHtml}${bodyHtml}${screen.source ? `<p class="intro-source">${esc(tr("intro.publicOnly"))}</p>` : ""}${continueHtml}</div>`;
     const back = dialog.querySelector(".intro-back");
     if (back) back.onclick = () => history.back();
