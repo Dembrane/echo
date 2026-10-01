@@ -9,9 +9,9 @@
 		"editor.formatOnSave": true,
 		"editor.useTabStops": true
 	},
-	"biome.configurationPath": "frontend/biome.json",
+	"biome.configurationPath": "dembrane/frontend/biome.json",
 	"biome.enabled": true,
-	"biome.lsp.bin": "frontend/node_modules/.bin/biome",
+	"biome.lsp.bin": "dembrane/frontend/node_modules/.bin/biome",
 	"debug.internalConsoleOptions": "neverOpen",
 	"editor.codeActionsOnSave": {
 		"source.action.organizeImports.biome": "always",

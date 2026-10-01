@@ -113,7 +113,7 @@ Translate the wording inside each branch, preserving the variable, braces, `plur
 
 ## 4. Keep the text clear and natural
 
-Follow the [writing and language guidelines](dembrane/brand/STYLE_GUIDE.md):
+Follow the [writing and language guidelines](brand/STYLE_GUIDE.md):
 
 - Translate the meaning naturally, with short sentences and familiar words.
 - Keep button labels short and terminology consistent across screens.
