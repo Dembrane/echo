@@ -49,7 +49,7 @@ const RESEARCH = {
 const conversation = (role: string, theme: string) => ({
   role,
   theme,
-  lines: Array.from({ length: 6 }, (_, i) => ({
+  lines: Array.from({ length: 20 }, (_, i) => ({
     speaker: i % 2 ? role : "Gespreksleider",
     text: i % 2 ? `Als ${role} merk ik iets anders op, punt ${i}.` : `Wat vind je van ${theme}?`,
   })),
@@ -67,6 +67,10 @@ const AUTHORED = {
     conversation("ondernemer", "parkeren"),
     conversation("jongerenwerker", "ruimte"),
     conversation("vrijwilliger", "groen"),
+    conversation("winkelier", "leegstand"),
+    conversation("scholier", "ontmoeten"),
+    conversation("oudere bewoner", "toegankelijkheid"),
+    conversation("starter", "betaalbaarheid"),
   ],
 };
 
@@ -77,6 +81,7 @@ run("demos made in echo", () => {
   const extracted: string[] = [];
   const fetched: string[] = [];
   let failAuthor = 0;
+  let extractStatus = "ok";
 
   const get: HttpGet = async (url) => {
     fetched.push(url);
@@ -100,9 +105,11 @@ run("demos made in echo", () => {
       ...w.deps,
       completer,
       get,
-      extract: async (loopId) => {
+      extract: async (loopId, runId) => {
+        // The popcorn run's request id lands in a uuid column.
+        expect(runId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
         extracted.push(loopId);
-        return "ok";
+        return extractStatus;
       },
       demo: w.deps.settings.demo as DemoBuildDeps["demo"],
     };
@@ -198,7 +205,7 @@ run("demos made in echo", () => {
     expect(view.research).not.toContain("Een verzonnen feit zonder bron");
     expect(view.research).not.toContain("budget");
     expect(view.research).toContain("Invented themes (fiction");
-    expect(view.conversations).toBe(4);
+    expect(view.conversations).toBe(8);
     // Seed: the organisation as a prospect, the contact its admin but held back from signing in.
     expect(view.slug).toBe(demoSlug("Gemeente Voorbeeldstad", status.id));
     const org = await store.org(w.db, view.org_id as string);
@@ -209,7 +216,7 @@ run("demos made in echo", () => {
       .select()
       .from(schema.conversation)
       .where(eq(schema.conversation.project_id, project?.project_id as string));
-    expect(conversations).toHaveLength(4);
+    expect(conversations).toHaveLength(8);
     expect(conversations.every((c) => String(c.participant_name).endsWith("(synthetisch)"))).toBe(
       true,
     );
@@ -363,6 +370,23 @@ run("demos made in echo", () => {
     expect(
       (await call(w, "POST", `/api/v2/admin/accounts/demos/${status.id}/retry`, "staff")).status,
     ).toBe(409);
+  });
+
+  test("a popcorn read that errors fails the demo instead of leaving an empty draft", async () => {
+    const status = K.DemoStatus.parse(
+      (await start({ contact_email: "leeg@voorbeeldstad.example" })).data,
+    );
+    extractStatus = "error";
+    try {
+      await expect(buildDemo(deps, status.id, 1)).rejects.toThrow(/status error/);
+    } finally {
+      extractStatus = "ok";
+    }
+    const failed = K.DemoStatus.parse(
+      (await call(w, "GET", `/api/v2/admin/accounts/demos/${status.id}`, "staff")).data,
+    );
+    expect(failed.status).toBe("failed");
+    expect(failed.steps.find((s) => s.name === "extract")?.status).toBe("failed");
   });
 
   test("the list, and unknown demos", async () => {
