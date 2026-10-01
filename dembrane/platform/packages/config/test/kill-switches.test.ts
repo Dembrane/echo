@@ -32,7 +32,13 @@ const switches = [
     prod: true,
     staging: true,
   },
-  { path: "analysis.enablePresent", env: "ENABLE_PRESENT", default: true, prod: true, staging: true },
+  {
+    path: "analysis.enablePresent",
+    env: "ENABLE_PRESENT",
+    default: true,
+    prod: true,
+    staging: true,
+  },
   { path: "canvas.enabled", env: "ENABLE_CANVAS", default: true, prod: true, staging: true },
   {
     path: "billing.forceReconcileFailure",
@@ -48,7 +54,13 @@ const switches = [
     prod: "on",
     staging: "off",
   },
-  { path: "popcorn.showFlow", env: "POPCORN_SHOW_FLOW", default: false, prod: false, staging: true },
+  {
+    path: "popcorn.showFlow",
+    env: "POPCORN_SHOW_FLOW",
+    default: false,
+    prod: false,
+    staging: true,
+  },
 ] as const;
 
 const secrets = Object.fromEntries(
