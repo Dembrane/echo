@@ -1,6 +1,5 @@
 # Local dev without docker: Postgres runs natively (e.g. Postgres.app on :5432).
-# One-time setup: see platform/.env.local, `bun install`, `bun run db:migrate`,
-# and `pnpm install` in frontend. Run `mprocs` from dembrane/.
+# Setup and usage: "Run it locally" in platform/README.md. Run `mprocs` from dembrane/.
 procs:
   api:
     cwd: "<CONFIG_DIR>/platform"
