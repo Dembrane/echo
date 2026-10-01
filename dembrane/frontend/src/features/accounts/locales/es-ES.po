@@ -27,7 +27,7 @@ msgstr "{0, plural, one {# campo} other {# campos}}"
 #~ msgstr ""
 
 #. placeholder {0}: row.tasks_waiting
-#: src/features/accounts/help/TasksPrompt.tsx:59
+#: src/features/accounts/help/TasksPrompt.tsx:61
 msgid "{0, plural, one {You have # thing to do in {name}} other {You have # things to do in {name}}}"
 msgstr "{0, plural, one {Tienes # cosa por hacer en {name}} other {Tienes # cosas por hacer en {name}}}"
 
@@ -528,7 +528,7 @@ msgstr "Ir a la página de la cuenta"
 msgid "Go to the next one"
 msgstr "Ir al siguiente"
 
-#: src/features/accounts/help/TasksPrompt.tsx:78
+#: src/features/accounts/help/TasksPrompt.tsx:80
 msgid "Go to your tasks"
 msgstr "Ir a tus tareas"
 
@@ -603,7 +603,7 @@ msgstr "Etiqueta"
 msgid "Language"
 msgstr "Idioma"
 
-#: src/features/accounts/help/TasksPrompt.tsx:73
+#: src/features/accounts/help/TasksPrompt.tsx:75
 msgid "Later"
 msgstr "Más tarde"
 
@@ -697,7 +697,7 @@ msgstr "Luego colocas los campos y lo envías."
 msgid "Next: {0}"
 msgstr "Siguiente: {0}"
 
-#: src/features/accounts/help/TasksPrompt.tsx:68
+#: src/features/accounts/help/TasksPrompt.tsx:70
 msgid "Next: {next}"
 msgstr "Siguiente: {next}"
 
@@ -1110,8 +1110,8 @@ msgid "Search organisations"
 msgstr "Buscar organizaciones"
 
 #: src/features/accounts/format.ts:139
-msgid "See popcorn, tensions and the map on conversations we made up for your organisation."
-msgstr "Mira popcorn, las tensiones y el mapa con conversaciones que inventamos para tu organización."
+msgid "See popcorn, tensions and the map on sample conversations written for your organisation."
+msgstr "Mira popcorn, las tensiones y el mapa con conversaciones de ejemplo escritas para tu organización."
 
 #: src/features/accounts/staff/DemoRoute.tsx:59
 msgid "Seeding"

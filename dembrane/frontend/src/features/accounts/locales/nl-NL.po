@@ -27,7 +27,7 @@ msgstr "{0, plural, one {# veld} other {# velden}}"
 #~ msgstr "{0, plural, one {# stap klaar} other {# stappen klaar}}"
 
 #. placeholder {0}: row.tasks_waiting
-#: src/features/accounts/help/TasksPrompt.tsx:59
+#: src/features/accounts/help/TasksPrompt.tsx:61
 msgid "{0, plural, one {You have # thing to do in {name}} other {You have # things to do in {name}}}"
 msgstr "{0, plural, one {Er staat # taak voor je klaar bij {name}} other {Er staan # taken voor je klaar bij {name}}}"
 
@@ -528,7 +528,7 @@ msgstr "Naar de accountpagina"
 msgid "Go to the next one"
 msgstr "Naar het volgende"
 
-#: src/features/accounts/help/TasksPrompt.tsx:78
+#: src/features/accounts/help/TasksPrompt.tsx:80
 msgid "Go to your tasks"
 msgstr "Naar je taken"
 
@@ -603,7 +603,7 @@ msgstr "Label"
 msgid "Language"
 msgstr "Taal"
 
-#: src/features/accounts/help/TasksPrompt.tsx:73
+#: src/features/accounts/help/TasksPrompt.tsx:75
 msgid "Later"
 msgstr "Later"
 
@@ -697,7 +697,7 @@ msgstr "Daarna plaats je de velden en verstuur je het."
 msgid "Next: {0}"
 msgstr "Volgende: {0}"
 
-#: src/features/accounts/help/TasksPrompt.tsx:68
+#: src/features/accounts/help/TasksPrompt.tsx:70
 msgid "Next: {next}"
 msgstr "Volgende: {next}"
 
@@ -1110,8 +1110,8 @@ msgid "Search organisations"
 msgstr "Organisaties zoeken"
 
 #: src/features/accounts/format.ts:139
-msgid "See popcorn, tensions and the map on conversations we made up for your organisation."
-msgstr "Zie popcorn, spanningen en de kaart bij gesprekken die we voor jullie organisatie hebben verzonnen."
+msgid "See popcorn, tensions and the map on sample conversations written for your organisation."
+msgstr "Bekijk popcorn, spanningen en de kaart bij voorbeeldgesprekken die voor jullie organisatie zijn geschreven."
 
 #: src/features/accounts/staff/DemoRoute.tsx:59
 msgid "Seeding"

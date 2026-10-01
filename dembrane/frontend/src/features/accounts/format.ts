@@ -136,7 +136,7 @@ export const codedTaskText = (
 			};
 		case "explore_demo":
 			return {
-				body: t`See popcorn, tensions and the map on conversations we made up for your organisation.`,
+				body: t`See popcorn, tensions and the map on sample conversations written for your organisation.`,
 				title: t`Explore your demo`,
 			};
 		case "record_first_conversation":

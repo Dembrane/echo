@@ -27,7 +27,7 @@ msgstr "{0, plural, one {# champ} other {# champs}}"
 #~ msgstr ""
 
 #. placeholder {0}: row.tasks_waiting
-#: src/features/accounts/help/TasksPrompt.tsx:59
+#: src/features/accounts/help/TasksPrompt.tsx:61
 msgid "{0, plural, one {You have # thing to do in {name}} other {You have # things to do in {name}}}"
 msgstr "{0, plural, one {Vous avez # chose à faire chez {name}} other {Vous avez # choses à faire chez {name}}}"
 
@@ -528,7 +528,7 @@ msgstr "Aller à la page du compte"
 msgid "Go to the next one"
 msgstr "Passer au suivant"
 
-#: src/features/accounts/help/TasksPrompt.tsx:78
+#: src/features/accounts/help/TasksPrompt.tsx:80
 msgid "Go to your tasks"
 msgstr "Voir vos tâches"
 
@@ -603,7 +603,7 @@ msgstr "Libellé"
 msgid "Language"
 msgstr "Langue"
 
-#: src/features/accounts/help/TasksPrompt.tsx:73
+#: src/features/accounts/help/TasksPrompt.tsx:75
 msgid "Later"
 msgstr "Plus tard"
 
@@ -697,7 +697,7 @@ msgstr "Placez ensuite les champs, puis envoyez-le."
 msgid "Next: {0}"
 msgstr "Suivant : {0}"
 
-#: src/features/accounts/help/TasksPrompt.tsx:68
+#: src/features/accounts/help/TasksPrompt.tsx:70
 msgid "Next: {next}"
 msgstr "Suivant : {next}"
 
@@ -1110,8 +1110,8 @@ msgid "Search organisations"
 msgstr "Rechercher des organisations"
 
 #: src/features/accounts/format.ts:139
-msgid "See popcorn, tensions and the map on conversations we made up for your organisation."
-msgstr "Découvrez popcorn, les tensions et la carte sur des conversations que nous avons inventées pour votre organisation."
+msgid "See popcorn, tensions and the map on sample conversations written for your organisation."
+msgstr "Découvrez popcorn, les tensions et la carte sur des conversations d'exemple écrites pour votre organisation."
 
 #: src/features/accounts/staff/DemoRoute.tsx:59
 msgid "Seeding"
