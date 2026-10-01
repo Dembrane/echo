@@ -81,6 +81,9 @@ dependencies = [
     "segno>=1.6.6",
     "mcp==2.1.1",
     "psycopg[binary]>=3.2",
+    "anyio>=4.13.0",
+    "cryptography>=48.0.1",
+    "tornado>=6.5.7",
 ]
 
 [tool.setuptools]
