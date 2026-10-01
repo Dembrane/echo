@@ -815,6 +815,26 @@ export const uploadConversationText = async (payload: {
 	);
 };
 
+export type UploadFailureStage =
+	| "initiate"
+	| "presigned_url"
+	| "s3_put"
+	| "confirm";
+
+export const uploadFailureStage = (
+	message: string,
+): "presigned_url" | "s3_put" | "confirm" => {
+	if (message.includes("upload URL")) return "presigned_url";
+	if (message.includes("S3")) return "s3_put";
+	return "confirm";
+};
+
+export type ConversationUploadFailure = {
+	error: Error;
+	name: string;
+	stage: UploadFailureStage;
+};
+
 export const initiateAndUploadConversationChunk = async (payload: {
 	projectId: string;
 	pin: string;
@@ -825,13 +845,13 @@ export const initiateAndUploadConversationChunk = async (payload: {
 	email?: string;
 	onProgress?: (fileName: string, progress: number) => void;
 	source?: string;
-}): Promise<(TConversationChunk | { error: Error; name: string })[]> => {
+}): Promise<(TConversationChunk | ConversationUploadFailure)[]> => {
 	// Show a single toast for the overall upload process
 	toast(`Starting upload of ${payload.chunks.length} file(s)`);
 
 	// Limit concurrent uploads
 	const MAX_CONCURRENT = 3;
-	const results: (TConversationChunk | { error: Error; name: string })[] = [];
+	const results: (TConversationChunk | ConversationUploadFailure)[] = [];
 	const fileQueue = [...Array(payload.chunks.length).keys()];
 	const inProgress = new Set<number>();
 
@@ -853,6 +873,7 @@ export const initiateAndUploadConversationChunk = async (payload: {
 		}
 
 		const source = payload.source || "PORTAL_AUDIO";
+		let step: "initiate" | "upload" | "confirm" = "initiate";
 
 		try {
 			const conversation = await initiateConversation({
@@ -865,6 +886,7 @@ export const initiateAndUploadConversationChunk = async (payload: {
 			});
 
 			conversationIdByFileIndex.set(i, conversation.id);
+			step = "upload";
 
 			// Upload using new presigned URL method
 			const uploadResult = await uploadConversationChunkWithPresignedUrl({
@@ -877,6 +899,7 @@ export const initiateAndUploadConversationChunk = async (payload: {
 				timestamp: payload.timestamps[i] ?? new Date(),
 			});
 
+			step = "confirm";
 			// Confirm the upload to complete the process
 			const result = await confirmConversationChunkUpload({
 				...uploadResult,
@@ -889,11 +912,16 @@ export const initiateAndUploadConversationChunk = async (payload: {
 			return result;
 		} catch (error) {
 			console.error(`Upload failed for ${fileName}:`, error);
+			const uploadError =
+				error instanceof Error ? error : new Error("Unknown error");
+			// Record the failure instead of rethrowing: nothing awaits this
+			// promise, so a rethrow surfaces as an unhandled rejection.
 			results[i] = {
-				error: error instanceof Error ? error : new Error("Unknown error"),
+				error: uploadError,
 				name: fileName,
+				stage:
+					step === "upload" ? uploadFailureStage(uploadError.message) : step,
 			};
-			throw error;
 		}
 	};
 

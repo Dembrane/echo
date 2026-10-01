@@ -13,16 +13,9 @@ import {
 	submitNotificationParticipant,
 	uploadConversationChunk,
 	uploadConversationText,
+	uploadFailureStage,
 } from "@/lib/api";
 import { directus } from "@/lib/directus";
-
-const uploadFailureStage = (
-	message: string,
-): "presigned_url" | "s3_put" | "confirm" => {
-	if (message.includes("upload URL")) return "presigned_url";
-	if (message.includes("S3")) return "s3_put";
-	return "confirm";
-};
 
 export const useCreateProjectReportMetricOncePerDayMutation = () => {
 	return useMutation({
