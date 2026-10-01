@@ -15,7 +15,7 @@ description: Ship a release of the dembrane platform (dembrane/platform, the Bun
 - prod: `70-deploy-prod` from a release tag `vX.Y.Z` on main, by hand with the tag (and on pushing the tag once `PROD_DEPLOY_ON_TAG` is `true`), after the `prod` environment's approval. It creates the GitHub Release (an annotated tag's first line becomes its headline), posts to #team-engineering, comments "Released in vX.Y.Z" on each PR and sends `release.published` to sam.
 - `90-notify-failure` posts any failed job and step to #alerts-ci. Successes never reach Slack.
 
-`scripts/release.sh` with `DRY_RUN=1` prints any of these messages without sending them.
+`.github/scripts/release.sh` with `DRY_RUN=1` prints any of these messages without sending them.
 
 ## The order
 
@@ -46,7 +46,7 @@ Commit any diff. English gaps block; other languages fall back to English.
 
 ## 4. Local checks
 
-From `dembrane/platform`, against the parity Postgres (`parity/README.md`):
+From `dembrane/platform`, against the parity Postgres (`legacy/parity/README.md`):
 
 ```sh
 rm -rf .cache && TEST_DATABASE_ADMIN_URL=postgres://dembrane:dembrane@127.0.0.1:5440/postgres bun run check

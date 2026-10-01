@@ -87,9 +87,10 @@ The codebase includes the React dashboard and participant portal, and a Bun API,
 
 ### Layout
 
-- `dembrane/platform`: the Bun API, worker, media service, migrations and web server (`apps/`), their packages (`packages/`), infrastructure (`infra/`) and the parity harness against the previous stack (`parity/`).
+- `dembrane/platform`: the Bun API, worker, media service, migrations and web server (`apps/`) and their packages (`packages/`). `legacy/` holds what only exists because of the previous stack.
+- `dembrane/infra`: Terraform for the preview, staging and prod environments.
+- `.github/scripts`: the scripts CI builds, deploys and announces with.
 - `dembrane/frontend`: the dashboard and participant portal (React, Vite).
-- `dembrane/demos`: the example synthetic demos the accounts seed reads.
 - `brand`: logos and style assets.
 - `dembrane-go`: the iOS app.
 - `skills`: the brand guidelines agents follow when writing for dembrane.

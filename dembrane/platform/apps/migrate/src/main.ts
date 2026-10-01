@@ -75,7 +75,7 @@ if (role) {
   await grantRuntimeRole(url, role, ["public", "dbos"]);
   log("runtime role granted", { role });
 }
-// PR previews only (PREVIEW_SEED=1 from scripts/deploy-env.sh): the admin login and the
+// PR previews only (PREVIEW_SEED=1 from .github/scripts/deploy-env.sh): the admin login and the
 // sample data. seedPreview refuses anything but a PR preview's own database.
 if (process.env.PREVIEW_SEED === "1") {
   const seedStarted = performance.now();

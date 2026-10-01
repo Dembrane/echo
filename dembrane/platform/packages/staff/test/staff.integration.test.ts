@@ -22,7 +22,7 @@ const url = admin ? `${admin.slice(0, admin.lastIndexOf("/"))}/${dbName}` : "";
 const WS = "c0000000-0000-4000-8000-000000000001"; // org A, Default (staff is a member)
 const WS2 = "c0000000-0000-4000-8000-000000000002"; // org A, Research (staff is not)
 const ACC = "ba000000-0000-4000-8000-000000000001";
-// The seeded Directus Administrator ("admin" in parity/fixtures.ts).
+// The seeded Directus Administrator ("admin" in legacy/parity/fixtures.ts).
 const STAFF: Signed = {
   appUserId: "a0000000-0000-4000-8000-000000000001",
   directusUserId: "d0000000-0000-4000-8000-000000000001",

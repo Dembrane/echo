@@ -22,7 +22,7 @@ interface Tfvars {
 for (const env of ["preview", "staging", "prod"] as const) {
   test(`${env} fits its connection budget`, async () => {
     const tf: Tfvars = await Bun.file(
-      new URL(`../../../infra/${env}.tfvars.json`, import.meta.url),
+      new URL(`../../../../infra/${env}.tfvars.json`, import.meta.url),
     ).json();
     const { values } = loadConfig({ APP_ENV: env, ...secrets });
     const api = tf.services.api;

@@ -4,7 +4,5 @@
 **/.env*
 packages/db/introspected
 packages/db/.roundtrip*
-parity/.parity-out
+legacy/parity/.parity-out
 **/*.local.ts
-infra/**/.terraform
-infra/**/*.plan

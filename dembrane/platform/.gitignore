@@ -12,7 +12,6 @@ introspected
 .terraform/
 *.tfstate*
 *.local.ts
-infra/**/*.plan
 .cache/
 loadtest/results/
 loadtest/.fixtures/

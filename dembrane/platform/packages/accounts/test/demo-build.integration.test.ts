@@ -417,9 +417,9 @@ run("demos made in echo", () => {
     expect(audit.some((a) => a.action === "accounts.demo.publish")).toBe(true);
   });
 
-  test("the compiled sales portal words match dembrane/demos/sales-portal.json", async () => {
+  test("the compiled sales portal words match demos/sales-portal.json", async () => {
     const file = await Bun.file(
-      new URL("../../../../demos/sales-portal.json", import.meta.url),
+      new URL("../../../demos/sales-portal.json", import.meta.url),
     ).json();
     expect(SALES_PORTAL).toEqual(file);
   });

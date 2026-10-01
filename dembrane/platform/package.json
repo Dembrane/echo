@@ -5,8 +5,8 @@
   "workspaces": [
     "apps/*",
     "packages/*",
-    "parity",
-    "ops"
+    "legacy/parity",
+    "legacy/ops"
   ],
   "scripts": {
     "dev": "bun --env-file=.env.local --filter @dembrane/api dev",

@@ -7,7 +7,7 @@ import { freshState } from "./state";
 import { ANALYSIS_VIEWS, fingerprint } from "./tick/run";
 
 /**
- * The seed inputs of an authored demo fixture (dembrane/demos/<slug>/fixture.json), made the
+ * The seed inputs of an authored demo fixture (demos/<slug>/fixture.json), made the
  * way server/scripts/popcorn_demo.py prepare() makes them, so a TypeScript caller (the
  * accounts demo seed) seeds the same deck without Python. The parity demo script still
  * goes through Python, which keeps this port honest against the original.

@@ -1,6 +1,5 @@
 # syntax=docker/dockerfile:1.7
-# Build context: dembrane/platform, plus the named context `demos` (dembrane/demos), whose
-# example files the PR preview seed reads (scripts/build-images.sh passes it).
+# Build context: dembrane/platform. demos/ holds the example files the PR preview seed reads.
 FROM oven/bun:1.4 AS build
 WORKDIR /src
 # The whole workspace, then the lockfile install: a hand-kept list of package manifests
@@ -15,7 +14,7 @@ COPY --from=build /out/migrate /app/migrate
 # assets.ts) and checks it at boot, so a job without it fails before touching the database.
 COPY --from=build /src/packages/db/migrations /app/assets/db/migrations
 # The accounts demo in the PR preview seed: the example fixture and the sales portal words.
-COPY --from=demos example-en /app/assets/demos/example-en
-COPY --from=demos sales-portal.json /app/assets/demos/sales-portal.json
+COPY demos/example-en /app/assets/demos/example-en
+COPY demos/sales-portal.json /app/assets/demos/sales-portal.json
 USER nonroot
 ENTRYPOINT ["/app/migrate"]

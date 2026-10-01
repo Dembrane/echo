@@ -8,7 +8,7 @@ import type { StepEvent } from "../src/agent/types";
 
 /**
  * Live replay through Vertex's EU residency endpoint (aiplatform.eu.rep.googleapis.com).
- * Runs only with credentials: `set -a; . parity/.env.parity; set +a; bun test
+ * Runs only with credentials: `set -a; . legacy/parity/.env.parity; set +a; bun test
  * packages/agentic/test/agent.gemini.test.ts`. It proves the history a durable turn
  * replays is accepted: tool calls with their thought signatures after a JSON round trip
  * (the checkpoint), tool-call turns with no text, and earlier turns as text.

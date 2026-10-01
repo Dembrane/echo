@@ -2,10 +2,9 @@
 **/node_modules
 **/dist
 **/.env*
-demos
 frontend/e2e
-platform/parity/.parity-out
+platform/legacy/parity/.parity-out
 platform/packages/db/introspected
-platform/infra
+infra
 **/*.local.ts
 **/*.tsbuildinfo

@@ -4,8 +4,8 @@ import { eq } from "drizzle-orm";
 import { createAuth, syncIdentitiesFromDirectus } from "../src";
 
 // Runs against a copy of the parity template, whose users were created and hashed by
-// Directus: `parity/reset.sh auth_test`, then TEST_PARITY_DATABASE_URL and the passwords
-// from parity/.env.parity.
+// Directus: `legacy/parity/reset.sh auth_test`, then TEST_PARITY_DATABASE_URL and the passwords
+// from legacy/parity/.env.parity.
 const url = process.env.TEST_PARITY_DATABASE_URL;
 const password = process.env.TEST_PARITY_USER_PASSWORD;
 const run = url && password ? describe : describe.skip;

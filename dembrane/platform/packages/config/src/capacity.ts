@@ -4,7 +4,7 @@
  *   environments × (API max instances × per-API + worker instances × per-worker + migrate)
  *     + reserved + headroom ≤ max_connections
  *
- * The instance counts and max_connections come from infra/<env>.tfvars.json, the pool sizes
+ * The instance counts and max_connections come from dembrane/infra/<env>.tfvars.json, the pool sizes
  * from the environment file; test/capacity.test.ts checks every environment, so raising
  * max instances or a pool without room on the server fails CI instead of the database.
  * Transaction-mode poolers (PgBouncer, Cloud SQL managed pooling) are not an option: DBOS
