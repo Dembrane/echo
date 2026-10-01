@@ -317,7 +317,10 @@ async function seed(d: DemoBuildDeps, row: Row, input: DemoInput) {
       out: { [language]: { state, settings } },
       salesPortal: SALES_PORTAL,
       workspaceId,
-      ownerId: row.createdBy,
+      // The popcorn read acts as the project's owner and must reach the project. In the
+      // prospect's own workspace that is the contact (its admin), never the staff member who
+      // is not in that organisation; a shared demo workspace stays with staff.
+      ownerId: d.demo.workspaceId ? row.createdBy : account.contact.user_id,
       portalBaseUrl: d.demo.portalUrl,
       apiBaseUrl: d.demo.apiUrl,
       dryRun: false,

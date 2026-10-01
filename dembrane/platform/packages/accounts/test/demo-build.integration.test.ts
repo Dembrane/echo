@@ -226,6 +226,12 @@ run("demos made in echo", () => {
       .where(eq(schema.project.id, project?.project_id as string));
     expect(proj?.name).toStartWith("[SYNTHETIC]");
     expect(proj?.is_conversation_allowed).toBe(false);
+    // The contact owns it, so the popcorn read (acting as the owner) can reach the project.
+    const [contact] = await w.db
+      .select()
+      .from(schema.directus_users)
+      .where(eq(schema.directus_users.email, "anna@voorbeeldstad.example"));
+    expect(proj?.directus_user_id).toBe(contact?.id);
     // The copy: a notice that did not say it is synthetic got the standard words.
     const [loop] = await w.db
       .select()
