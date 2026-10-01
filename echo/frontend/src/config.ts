@@ -157,9 +157,6 @@ export const ASK_DOCS_URL =
 export const TRANSCRIPT_TROUBLESHOOTING_DOCS_URL =
 	"https://docs.dembrane.com/users/host/troubleshooting-transcripts-and-summaries.html" as const;
 
-export const COMMUNITY_SLACK_URL =
-	"https://join.slack.com/t/dembranecommunity/shared_invite/zt-3qzvryh8l-M6w3u5BvuM8LssOhMbJGgQ";
-
 // Documentation, locale-aware. Points at docs.dembrane.com, the one published
 // corpus since #907 cut it over to docs/ on GitHub Pages. The Notion Info Hub
 // these used to point at is the old home; the deep links above (ASK_DOCS_URL,
