@@ -9,10 +9,8 @@ dist
 introspected
 # dembrane/.gitignore ignores *.sql for Directus dumps; migrations and checks here are source.
 !*.sql
-.terraform/
 *.tfstate*
 *.local.ts
-infra/**/*.plan
 .cache/
 loadtest/results/
 loadtest/.fixtures/

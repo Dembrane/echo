@@ -26,7 +26,7 @@
       "linter": { "rules": { "style": { "noNonNullAssertion": "off" } } }
     },
     {
-      "includes": ["parity/**"],
+      "includes": ["legacy/parity/**"],
       "linter": {
         "rules": {
           "suspicious": { "noConsole": "off", "noExplicitAny": "off" },
@@ -35,7 +35,7 @@
       }
     },
     {
-      "includes": ["ops/**"],
+      "includes": ["legacy/ops/**"],
       "linter": { "rules": { "suspicious": { "noConsole": "off" } } }
     }
   ]

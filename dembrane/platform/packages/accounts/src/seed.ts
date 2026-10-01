@@ -68,7 +68,7 @@ export interface SeedOptions {
   readonly portalUrl: string;
   readonly apiUrl: string;
   readonly company: Company;
-  /** dembrane/demos, for the example fixture and the sales portal words. */
+  /** The platform's demos/, for the example fixture and the sales portal words. */
   readonly demosDir: string;
   /** The demo's language (DEMO_LANGUAGE): the offer, tasks, question and corpus follow it. */
   readonly language?: "en" | "nl";

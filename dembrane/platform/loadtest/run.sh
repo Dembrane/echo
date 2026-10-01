@@ -25,7 +25,7 @@ export PATH="$HOME/.local/bin:$HOME/.bun/bin:$PATH"
 here="$(cd "$(dirname "$0")" && pwd)"; root="$here/.."
 stack=$1 scenario=$2 budget=$3 vus=${4:-50}
 duration=${5:-$([ "$scenario" = recording ] && echo 5m || echo 60s)}
-set -a; . "$root/parity/.env.parity"; set +a
+set -a; . "$root/legacy/parity/.env.parity"; set +a
 port=8300; stamp=$(date +%Y%m%dT%H%M%S)
 tag="$stack-$scenario-$budget$([ "$scenario" = recording ] && echo "-$vus$([ "${STREAM:-1}" = 0 ] && echo -nostream)$([ -n "${CHUNK_CONCURRENCY:-}" ] && echo "-cc$CHUNK_CONCURRENCY")$([ "${MEDIA:-}" = external ] && echo -media)$([ -n "${WORKER_POOL_MAX:-}" ] && echo "-pool$WORKER_POOL_MAX")")"
 out="$here/results/$stamp-$tag.json"
@@ -68,7 +68,7 @@ fi
 exec 9>/tmp/echo-parity.lock; flock 9
 systemctl --user reset-failed "echo-load-$stack.scope" "echo-load-$stack-worker.scope" 2>/dev/null || true
 # Both stacks start from the same rows; the Python API ignores the platform's extra tables.
-TEMPLATE=parity_template_platform "$root/parity/reset.sh" dembrane >/dev/null
+TEMPLATE=parity_template_platform "$root/legacy/parity/reset.sh" dembrane >/dev/null
 docker update --cpus 2 --memory 2g --memory-swap 2g parity-db-1 >/dev/null
 
 if [ "$scenario" = recording ]; then
@@ -98,7 +98,7 @@ if [ "$stack" = old ]; then
   docker restart parity-directus-1 >/dev/null
   for i in $(seq 1 60); do [ "$(docker inspect -f '{{.State.Health.Status}}' parity-directus-1)" = healthy ] && break; sleep 2; done
   docker update --cpus $dx_cpu --memory $dx_mem --memory-swap $dx_mem parity-directus-1 >/dev/null
-  source "$root/parity/old-echo.sh"
+  source "$root/legacy/parity/old-echo.sh"
   server="$OLD_ECHO_DIR/echo/server"
   systemd-run --user --scope --unit "echo-load-old" -p CPUQuota=$api_cpu -p MemoryMax=$api_mem \
     env "${old_env[@]}" \

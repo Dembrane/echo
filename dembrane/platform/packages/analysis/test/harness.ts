@@ -11,7 +11,7 @@ import { AnalysisStore } from "../src/store";
 
 /**
  * Integration tests run against a private copy of the parity seed
- * (parity/prepare-platform-template.sh builds parity_template_platform): real tables, real
+ * (legacy/parity/prepare-platform-template.sh builds parity_template_platform): real tables, real
  * guard triggers, the seed's projects and transcripts. Skipped without a database.
  */
 

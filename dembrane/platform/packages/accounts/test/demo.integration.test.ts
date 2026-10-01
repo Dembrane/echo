@@ -23,7 +23,7 @@ import { admin, dropDatabase, FakeWeb, freshDatabase, silent, type World, world 
 
 // The prospect block of the demo seed route, and the accounts demo seed.
 const run = admin ? describe : describe.skip;
-const demos = new URL("../../../../demos", import.meta.url).pathname;
+const demos = new URL("../../../demos", import.meta.url).pathname;
 const company = {
   name: "dembrane B.V.",
   address: "Sint Janssingel 88, ‘s-Hertogenbosch, NL",

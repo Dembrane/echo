@@ -26,14 +26,14 @@ import { principalLookup } from "../../src/principals";
  * The whole API, as main.ts wires it, on a copy of the parity template: real Better Auth
  * (bearer sessions minted per fixture user), the real access resolver and every route.
  * The security suite fires each known hole's exploit at it. Runs when
- * TEST_PARITY_ADMIN_URL points at the parity Postgres (parity/README.md).
+ * TEST_PARITY_ADMIN_URL points at the parity Postgres (legacy/parity/README.md).
  */
 export const adminUrl = process.env.TEST_PARITY_ADMIN_URL;
 
 const id = (prefix: string, n: number) =>
   `${prefix}000000-0000-4000-8000-${n.toString().padStart(12, "0")}`;
 
-/** Mirrors parity/fixtures.ts. */
+/** Mirrors legacy/parity/fixtures.ts. */
 export const U = {
   admin: { directus: id("d0", 1), app: id("a0", 1), email: "parity-admin@example.com" },
   alice: { directus: id("d0", 2), app: id("a0", 2), email: "alice.parity@example.com" },

@@ -20,7 +20,7 @@ try {
   const summary = await seedAccountsDemoFromEnv(database.db, {
     password,
     language,
-    demosDir: new URL("../../../../demos", import.meta.url).pathname,
+    demosDir: new URL("../../../demos", import.meta.url).pathname,
     env: process.env,
   });
   process.stdout.write(`${JSON.stringify(summary, null, 2)}\n`);

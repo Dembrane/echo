@@ -135,9 +135,17 @@
         "zod": "^4.1.0",
       },
     },
-    "ops": {
+    "legacy/ops": {
       "name": "@dembrane/ops",
       "dependencies": {
+        "postgres": "^3.4.9",
+      },
+    },
+    "legacy/parity": {
+      "name": "@dembrane/parity",
+      "dependencies": {
+        "@better-auth/utils": "0.4.2",
+        "better-auth": "^1.7.6",
         "postgres": "^3.4.9",
       },
     },
@@ -777,14 +785,6 @@
         "zod": "^4.1.0",
       },
     },
-    "parity": {
-      "name": "@dembrane/parity",
-      "dependencies": {
-        "@better-auth/utils": "0.4.2",
-        "better-auth": "^1.7.6",
-        "postgres": "^3.4.9",
-      },
-    },
   },
   "packages": {
     "@ai-sdk/anthropic": ["@ai-sdk/anthropic@4.0.65", "", { "dependencies": { "@ai-sdk/provider": "4.0.18", "@ai-sdk/provider-utils": "5.0.49" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-3fmxxn5xWGOPU1wGrUCI30YFW5r6h2WrY+sz3rokkVlBHrDr889hPYP1yNoSmOVvtAwCFWlm79P2lRngIPOObg=="],
@@ -901,9 +901,9 @@
 
     "@dembrane/observability": ["@dembrane/observability@workspace:packages/observability"],
 
-    "@dembrane/ops": ["@dembrane/ops@workspace:ops"],
+    "@dembrane/ops": ["@dembrane/ops@workspace:legacy/ops"],
 
-    "@dembrane/parity": ["@dembrane/parity@workspace:parity"],
+    "@dembrane/parity": ["@dembrane/parity@workspace:legacy/parity"],
 
     "@dembrane/popcorn": ["@dembrane/popcorn@workspace:packages/popcorn"],
 

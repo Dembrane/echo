@@ -3,7 +3,7 @@ import { loadConfig, schema } from "../src";
 import { walk } from "../src/define";
 
 // Every deployed environment keeps customer data and telemetry in the EU. The infrastructure
-// side (regions, log bucket, secret replicas) is in infra/; these are the choices the
+// side (regions, log bucket, secret replicas) is in dembrane/infra/; these are the choices the
 // application makes itself.
 const secrets = Object.fromEntries(
   [...walk(schema)]

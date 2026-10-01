@@ -8,8 +8,8 @@ name: platform
 # branch, or the previous commit of a push) and skips the server checks when only
 # dembrane/frontend changed, and the frontend checks the other way round. Each image is tagged
 # with a hash of its inputs, and an image whose inputs are already in the registry is tagged
-# for the new commit instead of built again (scripts/build-images.sh). A PR preview rolls out
-# only the services whose image or settings changed (scripts/deploy-env.sh).
+# for the new commit instead of built again (.github/scripts/build-images.sh). A PR preview rolls out
+# only the services whose image or settings changed (.github/scripts/deploy-env.sh).
 #
 # Each environment is its own GCP project, reached through its own keyless GitHub trust, and
 # pushes images to its own registry: a preview identity has no role in staging or prod.
@@ -41,12 +41,22 @@ name: platform
 on:
   pull_request:
     types: [opened, synchronize, reopened, labeled, unlabeled, closed]
-    paths: ["dembrane/platform/**", "dembrane/frontend/**", ".github/workflows/platform.yml"]
+    paths:
+      - "dembrane/platform/**"
+      - "dembrane/frontend/**"
+      - "dembrane/infra/**"
+      - ".github/workflows/platform.yml"
+      - ".github/scripts/**"
   push:
     branches: [main]
     # Tag pushes ignore the path filter.
     tags: ["v[0-9]+.[0-9]+.[0-9]+"]
-    paths: ["dembrane/platform/**", "dembrane/frontend/**", ".github/workflows/platform.yml"]
+    paths:
+      - "dembrane/platform/**"
+      - "dembrane/frontend/**"
+      - "dembrane/infra/**"
+      - ".github/workflows/platform.yml"
+      - ".github/scripts/**"
   workflow_dispatch:
     inputs:
       target:
@@ -169,7 +179,7 @@ jobs:
           persist-credentials: false
           fetch-depth: 2
           filter: blob:none
-          sparse-checkout: dembrane/platform/scripts
+          sparse-checkout: .github/scripts
       # Which sides this run checks and which images it builds. Runs by hand, tags and anything
       # the diff cannot be computed for check and build everything.
       - name: Find what changed
@@ -193,15 +203,15 @@ jobs:
             exit 0
           fi
           files=$(git diff --no-renames --name-only "$base" HEAD)
-          if grep -qx .github/workflows/platform.yml <<<"$files"; then
-            echo "The workflow changed: checking and building everything"
+          if grep -qE '^\.github/(workflows/platform\.yml$|scripts/)' <<<"$files"; then
+            echo "The workflow or its scripts changed: checking and building everything"
             all >> "$GITHUB_OUTPUT"
             exit 0
           fi
           server=false frontend=false
-          grep -qE '^dembrane/(platform|demos)/' <<<"$files" && server=true
+          grep -qE '^dembrane/(platform|infra)/' <<<"$files" && server=true
           grep -q '^dembrane/frontend/' <<<"$files" && frontend=true
-          images=$(dembrane/platform/scripts/build-images.sh changed "$base" HEAD)
+          images=$(.github/scripts/build-images.sh changed "$base" HEAD)
           echo "server=$server frontend=$frontend images=[$images] (against ${base:0:7})"
           { echo "server=$server"; echo "frontend=$frontend"; echo "images=$images"; } >> "$GITHUB_OUTPUT"
 
@@ -479,8 +489,8 @@ jobs:
         run: |
           built=$RUNNER_TEMP/built
           # shellcheck disable=SC2086
-          if [ -n "$PUSH" ]; then BUILT_FILE=$built scripts/build-images.sh --push
-          else BUILT_FILE=$built scripts/build-images.sh --load $IMAGES; fi
+          if [ -n "$PUSH" ]; then BUILT_FILE=$built $GITHUB_WORKSPACE/.github/scripts/build-images.sh --push
+          else BUILT_FILE=$built $GITHUB_WORKSPACE/.github/scripts/build-images.sh --load $IMAGES; fi
           echo "built=$(tr '\n' ' ' < "$built")" >> "$GITHUB_OUTPUT"
       - name: Smoke test containers
         if: steps.build.outputs.built != ''
@@ -580,16 +590,16 @@ jobs:
         id: room
         run: |
           set -o pipefail
-          removed=$(scripts/deploy-env.sh make-room "$PR" | tee /dev/stderr | awk '/^removed PR preview / { print $4 }')
+          removed=$($GITHUB_WORKSPACE/.github/scripts/deploy-env.sh make-room "$PR" | tee /dev/stderr | awk '/^removed PR preview / { print $4 }')
           for n in $removed; do
-            scripts/ci-notify.sh preview removed "$n" "to make room for #$PR" || true
+            $GITHUB_WORKSPACE/.github/scripts/ci-notify.sh preview removed "$n" "to make room for #$PR" || true
           done
       - name: Deploy and verify
         id: deploy
         # pipefail: a deploy that fails must fail the step, not be hidden by tail.
         run: |
           set -o pipefail
-          out=$(scripts/deploy-env.sh deploy "pr-$PR" "$TAG" | tail -n 1)
+          out=$($GITHUB_WORKSPACE/.github/scripts/deploy-env.sh deploy "pr-$PR" "$TAG" | tail -n 1)
           echo "$out"
           echo "Preview for #$PR: ${out// /  }" >> "$GITHUB_STEP_SUMMARY"
       - name: Comment on PR
@@ -606,8 +616,8 @@ jobs:
         run: |
           failed=$(awk -F= '$2 == "failure" { print $1; exit }' <<<"$OUTCOMES")
           [ "$failed" = gate ] && failed="$CHECKS_FAILED (nothing was deployed)"
-          if [ -n "$failed" ]; then scripts/ci-notify.sh preview failed "$PR" "$failed"
-          else scripts/ci-notify.sh preview deployed "$PR"; fi
+          if [ -n "$failed" ]; then $GITHUB_WORKSPACE/.github/scripts/ci-notify.sh preview failed "$PR" "$failed"
+          else $GITHUB_WORKSPACE/.github/scripts/ci-notify.sh preview deployed "$PR"; fi
 
   teardown-pr:
     name: 51-teardown-pr-preview
@@ -631,8 +641,8 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: |
-            dembrane/platform/scripts
-            dembrane/platform/infra
+            .github/scripts
+            dembrane/infra
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2.1.13
         with:
@@ -641,13 +651,16 @@ jobs:
       - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@e427ad8a34f8676edf47cf7d7925499adf3eb74f # v2.2.1
         with: { skip_install: true }
+      # Only the scripts and infra are checked out here, so there is no dembrane/platform.
       - name: Tear down preview
-        run: scripts/deploy-env.sh teardown "$PR"
+        working-directory: .
+        run: $GITHUB_WORKSPACE/.github/scripts/deploy-env.sh teardown "$PR"
       - name: Update PR comment
+        working-directory: .
         env:
           GH_TOKEN: ${{ github.token }}
           WHY: ${{ github.event.action == 'closed' && 'the PR was closed' || 'the preview label was removed' }}
-        run: scripts/ci-notify.sh preview removed "$PR" "$WHY"
+        run: $GITHUB_WORKSPACE/.github/scripts/ci-notify.sh preview removed "$PR" "$WHY"
 
   # staging and prod each deploy from their own project's registry with their own identity. staging
   # rolls out what 40-build-images pushed; prod builds and pushes here, after the approval.
@@ -687,14 +700,14 @@ jobs:
       - name: Deploy and verify
         env:
           HOLD_DATA: ${{ inputs.hold_data && '1' || '0' }}
-        run: scripts/deploy-env.sh deploy staging "$TAG"
+        run: $GITHUB_WORKSPACE/.github/scripts/deploy-env.sh deploy staging "$TAG"
       # The deploy stands even when a message fails to send.
       - name: Announce deploy
         continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
           SLACK_TOKEN: ${{ secrets.SLACK_ALERTS_BOT_TOKEN }}
-        run: scripts/release.sh announce-staging "$TAG"
+        run: $GITHUB_WORKSPACE/.github/scripts/release.sh announce-staging "$TAG"
 
   deploy-prod:
     name: 70-deploy-prod
@@ -735,11 +748,11 @@ jobs:
         with: { cleanup: false }
       # Tags an image already in the prod registry with the same inputs; builds the rest.
       - name: Push images
-        run: scripts/build-images.sh --push
+        run: $GITHUB_WORKSPACE/.github/scripts/build-images.sh --push
       - name: Deploy and verify
         env:
           HOLD_DATA: ${{ inputs.hold_data && '1' || '0' }}
-        run: scripts/deploy-env.sh deploy prod "$TAG"
+        run: $GITHUB_WORKSPACE/.github/scripts/deploy-env.sh deploy prod "$TAG"
       # The GitHub Release, #team-engineering, a comment on each PR, and release.published to
       # sam (skipped with a notice while its secrets are empty). The deploy stands even when
       # one of these fails.
@@ -750,7 +763,7 @@ jobs:
           SLACK_TOKEN: ${{ secrets.SLACK_ALERTS_BOT_TOKEN }}
           SAM_RELEASE_WEBHOOK_URL: ${{ secrets.SAM_RELEASE_WEBHOOK_URL }}
           SAM_RELEASE_WEBHOOK_SECRET: ${{ secrets.SAM_RELEASE_WEBHOOK_SECRET }}
-        run: scripts/release.sh publish-release "$RELEASE_TAG"
+        run: $GITHUB_WORKSPACE/.github/scripts/release.sh publish-release "$RELEASE_TAG"
 
   # Any failed job posts to #alerts-ci, naming the job and the step, except checks on a PR
   # without a preview (they stay in the PR).
@@ -770,12 +783,13 @@ jobs:
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           persist-credentials: false
-          sparse-checkout: dembrane/platform/scripts
+          sparse-checkout: .github/scripts
       - name: Post to #alerts-ci
+        working-directory: .
         env:
           GH_TOKEN: ${{ github.token }}
           SLACK_TOKEN: ${{ secrets.SLACK_ALERTS_BOT_TOKEN }}
           WHAT: "${{ (needs.plan.outputs.deploy_env && format('{0} deploy', needs.plan.outputs.deploy_env)) || (needs.plan.outputs.pr && format('PR #{0} preview', needs.plan.outputs.pr)) || 'platform checks' }}"
           SHA: ${{ needs.plan.outputs.sha || github.sha }}
           NEEDS: ${{ toJSON(needs) }}
-        run: scripts/ci-notify.sh failure
+        run: $GITHUB_WORKSPACE/.github/scripts/ci-notify.sh failure

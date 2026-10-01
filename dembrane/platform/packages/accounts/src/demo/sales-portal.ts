@@ -1,4 +1,4 @@
-// A copy of dembrane/demos/sales-portal.json, the words of dembrane's sales portal the demo QR
+// A copy of demos/sales-portal.json, the words of dembrane's sales portal the demo QR
 // opens, compiled in so the worker binary needs no repository files. A test keeps the two
 // the same; edit the JSON file and copy it here.
 export const SALES_PORTAL: Readonly<Record<string, Record<string, string>>> = {

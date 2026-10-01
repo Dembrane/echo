@@ -13,7 +13,7 @@ const PLATFORM = resolve(import.meta.dir, "..", "..", "..");
 const ALLOWED: Record<string, string> = {
   "packages/core/src/assets.ts": "the helper itself",
   "packages/config/src/cli.ts": "dev CLI run from the source tree, not in any image",
-  "packages/accounts/src/seed-cli.ts": "dev CLI reading dembrane/demos, not in any image",
+  "packages/accounts/src/seed-cli.ts": "dev CLI reading demos/, not in any image",
   "packages/i18n/src/cli.ts":
     "catalog translator run from the source tree and CI, not in any image",
 };

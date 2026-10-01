@@ -2,7 +2,7 @@ import type { Environment } from "../src";
 
 export default {
   http: {
-    // The staging load balancer's address (infra/staging, output lb_ip).
+    // The staging load balancer's address (dembrane/infra/staging, output lb_ip).
     trustedProxies: ["136.81.232.104"],
     publicUrl: "https://api.staging.dembrane.com",
     dashboardUrl: "https://dashboard.staging.dembrane.com",

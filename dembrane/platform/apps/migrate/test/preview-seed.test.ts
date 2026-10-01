@@ -4,7 +4,7 @@ import { ORG_NAME } from "@dembrane/accounts";
 import { MILLBROOK } from "@dembrane/samples";
 import { PREVIEW_ADMIN_EMAIL, PREVIEW_SEED_ASSETS, previewSeedRefusal } from "../src/preview-seed";
 
-const demos = new URL("../../../../demos", import.meta.url).pathname;
+const demos = new URL("../../../demos", import.meta.url).pathname;
 const preview = {
   APP_ENV: "preview",
   DATABASE_NAME: "echo_pr_42",

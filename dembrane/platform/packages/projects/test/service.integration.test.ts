@@ -9,7 +9,7 @@ import { createReport } from "../src/reports";
 import { projectsStorage } from "../src/storage";
 
 /**
- * Runs against a copy of the parity seed (parity/prepare-platform-template.sh builds it):
+ * Runs against a copy of the parity seed (legacy/parity/prepare-platform-template.sh builds it):
  * the paths parity cannot compare byte for byte (the transcript zip) and the report job's
  * producer, which the Python ran in a worker the parity stack does not start.
  */

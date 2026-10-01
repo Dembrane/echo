@@ -16,7 +16,7 @@ import { and, eq, isNull } from "drizzle-orm";
 
 export const PREVIEW_ADMIN_EMAIL = "sameer+admin@dembrane.com";
 
-/** The dembrane/demos files the accounts demo reads, carried by the migrate image. */
+/** The demos/ files the accounts demo reads, carried by the migrate image. */
 export const PREVIEW_SEED_ASSETS = [
   "demos/example-en/fixture.json",
   "demos/example-en/research.md",

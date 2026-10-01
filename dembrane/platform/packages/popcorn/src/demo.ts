@@ -47,7 +47,7 @@ export interface DemoInput {
   readonly corpus: readonly DemoCorpusEntry[];
   /** out/state-<lang>.json and out/settings-<lang>.json per language. */
   readonly out: Readonly<Record<string, { state: Json; settings: Json }>>;
-  /** dembrane/demos/sales-portal.json: the words of the portal the QR opens, per language. */
+  /** demos/sales-portal.json: the words of the portal the QR opens, per language. */
   readonly salesPortal: Readonly<Record<string, Json>>;
   readonly workspaceId: string;
   readonly ownerId: string;
