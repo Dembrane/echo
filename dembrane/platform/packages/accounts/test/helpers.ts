@@ -168,6 +168,7 @@ export async function world(name: string, routes: (d: AccountsDeps) => Hono<Env>
         apiUrl: "https://api.example.test",
         ownUrls: ["https://api.example.test"],
         workspaceId: null,
+        feedbackUrl: "https://portal.example.test/en-US/feedback-project/start",
       },
     },
   };

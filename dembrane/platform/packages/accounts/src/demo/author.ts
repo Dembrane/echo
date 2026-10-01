@@ -33,7 +33,7 @@ const Research = z.object({
 export type Research = z.output<typeof Research>;
 
 const Conversation = z.object({
-  role: z.string().min(1).max(60),
+  role: z.string().min(1).max(100),
   theme: z.string().min(1).max(80),
   lines: z
     .array(z.object({ speaker: z.string().min(1).max(40), text: z.string().min(1).max(700) }))
@@ -102,7 +102,7 @@ const AUTHOR_SYSTEM = `You write the fictional corpus of a synthetic dembrane de
 Rules:
 - Every conversation is invented. Use generic role labels (for example "resident", "entrepreneur", "youth worker"), never names of real people, and never attribute words to the organisation, its staff or officials.
 - Show contrasting perspectives, concrete everyday experiences and tensions that stay unresolved. No statistics, counts of real people, consensus, endorsements, findings or decisions.
-- Each conversation is a table discussion as it would be recorded: a facilitator and three to five participants with different role labels talk with each other, interrupt, disagree, tell concrete stories and build on what others said, in natural spoken sentences. The role field names the table (for example "table of residents and shop owners").
+- Each conversation is a table discussion as it would be recorded: a facilitator and three to five participants with different role labels talk with each other, interrupt, disagree, tell concrete stories and build on what others said, in natural spoken sentences. The role field is a short label for who sits at the table, at most five words (for example "residents and shop owners").
 - The disclosure plainly says the stories and perspectives are invented and are not outcomes of a real session. The invitation values listening to the organisation's real people before starting. The notice is a short synthetic label shown on every screen.
 - Do not claim that only public data was used.
 - Write everything in {LANGUAGE}. Answer with JSON only.`;

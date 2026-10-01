@@ -226,6 +226,12 @@ run("demos made in echo", () => {
       .where(eq(schema.project.id, project?.project_id as string));
     expect(proj?.name).toStartWith("[SYNTHETIC]");
     expect(proj?.is_conversation_allowed).toBe(false);
+    // The contact owns it, so the popcorn read (acting as the owner) can reach the project.
+    const [contact] = await w.db
+      .select()
+      .from(schema.directus_users)
+      .where(eq(schema.directus_users.email, "anna@voorbeeldstad.example"));
+    expect(proj?.directus_user_id).toBe(contact?.id);
     // The copy: a notice that did not say it is synthetic got the standard words.
     const [loop] = await w.db
       .select()
@@ -237,6 +243,15 @@ run("demos made in echo", () => {
       }
     ).demo;
     expect(demo.notice?.text).toContain("Synthetische demo");
+    // The QR leads to dembrane's feedback portal; no shared sales portal project is seeded.
+    expect(String(demo.portal_url)).toStartWith(
+      "https://portal.example.test/en-US/feedback-project/start?utm_source=popcorn_demo",
+    );
+    const portals = await w.db
+      .select()
+      .from(schema.project)
+      .where(eq(schema.project.is_conversation_allowed, true));
+    expect(portals).toHaveLength(0);
     expect(demo.disclosure?.text).toContain("synthetische");
     expect((demo as Record<string, unknown>).continue_url).toBeUndefined();
     // Extract: the normal popcorn read ran for the session.
