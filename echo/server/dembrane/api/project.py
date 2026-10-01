@@ -809,25 +809,45 @@ async def update_report(
     """Update a report's fields."""
     from dembrane.directus import directus
 
-    # Single access resolution covers both the existence/access check and
-    # the report:publish gate. Status transitions to `published` /
-    # `scheduled` (the publishing surface) are gated on `report:publish`,
-    # which is in the member/admin presets but not in the guest preset
-    # (matrix §4: guests can generate reports but never publish them).
-    # Other status changes (draft, archived) and content edits flow
-    # through unblocked for any project-accessor.
+    # Single access resolution covers the existence/access check and both
+    # policy gates. Any edit needs `project:update`. Publishing, scheduling
+    # and moving a schedule (the publishing surface) also need
+    # `report:publish`, which is in the member/admin presets but not in the
+    # guest preset (matrix §4: guests can generate reports but never publish
+    # them). Other status changes (draft, archived, cancelled) stay with
+    # `project:update`.
     #
-    # Staff (auth.is_admin) bypasses both — they can publish on behalf
-    # of any project. The `_verify_project_access` legacy helper short-
-    # circuits on auth.is_admin, so we mirror that here.
+    # Staff (auth.is_admin) sit outside the app-layer model — they can
+    # publish on behalf of any project. The `_verify_project_access` legacy
+    # helper short-circuits on auth.is_admin, so we mirror that here.
     if auth.is_admin:
         await _verify_project_access(auth, project_id)
     else:
         from dembrane.api.v2.bff._access import resolve_project_access
 
         access = await resolve_project_access(project_id, auth)
-        if body.status in ("published", "scheduled"):
+        access.require("project:update")
+        if body.status in ("published", "scheduled") or body.scheduled_at is not None:
             access.require("report:publish")
+
+    # A report belongs to its project: it is only reachable through it.
+    reports = await run_in_thread_pool(
+        directus.get_items,
+        "project_report",
+        {
+            "query": {
+                "filter": {
+                    "id": {"_eq": report_id},
+                    "project_id": {"_eq": project_id},
+                    "deleted_at": {"_null": True},
+                },
+                "fields": ["id"],
+                "limit": 1,
+            }
+        },
+    )
+    if not reports:
+        raise HTTPException(status_code=404, detail="Report not found")
 
     payload: dict = {}
     if body.status is not None:
