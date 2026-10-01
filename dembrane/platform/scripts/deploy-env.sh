@@ -229,7 +229,10 @@ rollout() {
   [[ ${n:-} ]] && labels="preview-pr=$n"
   [ -n "$key" ] && labels+="${labels:+,}deploy-key=$key"
   local flags=(--region "$REGION" --quiet)
-  [ -n "$labels" ] && flags+=(--update-labels "$labels")
+  # `gcloud run jobs deploy` takes its labels whole; services and worker pools merge them.
+  local label_flag=--update-labels
+  [ "$kind" = job ] && label_flag=--labels
+  [ -n "$labels" ] && flags+=("$label_flag" "$labels")
   case $kind in
     job) g run jobs deploy "$unit" "${flags[@]}" "$@" ;;
     service) g run deploy "$unit" "${flags[@]}" "$@" ;;

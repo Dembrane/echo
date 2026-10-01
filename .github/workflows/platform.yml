@@ -578,13 +578,16 @@ jobs:
       - name: Make room (at most 3 previews)
         id: room
         run: |
+          set -o pipefail
           removed=$(scripts/deploy-env.sh make-room "$PR" | tee /dev/stderr | awk '/^removed PR preview / { print $4 }')
           for n in $removed; do
             scripts/ci-notify.sh preview removed "$n" "to make room for #$PR" || true
           done
       - name: Deploy and verify
         id: deploy
+        # pipefail: a deploy that fails must fail the step, not be hidden by tail.
         run: |
+          set -o pipefail
           out=$(scripts/deploy-env.sh deploy "pr-$PR" "$TAG" | tail -n 1)
           echo "$out"
           echo "Preview for #$PR: ${out// /  }" >> "$GITHUB_STEP_SUMMARY"
