@@ -8,7 +8,7 @@ resource "google_storage_bucket" "uploads" {
   versioning { enabled = var.env == "prod" }
   soft_delete_policy { retention_duration_seconds = 604800 }
   # PR previews share this bucket, each under pr-<n>/, and teardown deletes its prefix. This
-  # catches whatever a failed teardown leaves behind. next and prod keep everything.
+  # catches whatever a failed teardown leaves behind. staging and prod keep everything.
   dynamic "lifecycle_rule" {
     for_each = var.env == "preview" ? [30] : []
     content {

@@ -11,7 +11,7 @@ import { and, eq, isNull } from "drizzle-orm";
  * the fictional customer Example Town Council (sample), whose two logins get the same
  * password. Every organisation, person and conversation in it is invented. It
  * runs only on a PR preview's own database (APP_ENV preview, DATABASE_NAME echo_pr_<n>), so
- * a mistaken switch on next or prod refuses before touching anything.
+ * a mistaken switch on staging or prod refuses before touching anything.
  */
 
 export const PREVIEW_ADMIN_EMAIL = "sameer+admin@dembrane.com";

@@ -139,7 +139,7 @@ test("only a PR preview names its pull request in the runtime config", () => {
   const web = { previewPr: 1234, previewRepo: "Dembrane/echo" };
   expect(previewRuntime("preview", web)).toEqual({ previewPr: 1234, previewRepo: "Dembrane/echo" });
   expect(previewRuntime("preview", { previewRepo: "Dembrane/echo" })).toEqual({});
-  // next and prod never carry one, even if the variable leaked into their deploy.
-  expect(previewRuntime("next", web)).toEqual({});
+  // staging and prod never carry one, even if the variable leaked into their deploy.
+  expect(previewRuntime("staging", web)).toEqual({});
   expect(previewRuntime("prod", web)).toEqual({});
 });

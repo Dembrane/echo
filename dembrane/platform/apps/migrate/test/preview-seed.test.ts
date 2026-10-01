@@ -14,7 +14,7 @@ const preview = {
 describe("the PR preview seed", () => {
   test("runs only on a PR preview's own database, with a real password", () => {
     expect(previewSeedRefusal(preview)).toBeNull();
-    expect(previewSeedRefusal({ ...preview, APP_ENV: "next" })).toMatch(/not preview/);
+    expect(previewSeedRefusal({ ...preview, APP_ENV: "staging" })).toMatch(/not preview/);
     expect(previewSeedRefusal({ ...preview, DATABASE_NAME: "echo" })).toMatch(/echo_pr_/);
     expect(previewSeedRefusal({ ...preview, PREVIEW_ADMIN_PASSWORD: "short" })).toMatch(/12/);
   });

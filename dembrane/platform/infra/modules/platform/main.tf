@@ -39,7 +39,7 @@ resource "terraform_data" "scaling_rules" {
       error_message = "preview keeps no warm instances."
     }
     precondition {
-      condition     = var.env != "next" || alltrue([for k in ["api", "dashboard", "portal", "worker"] : var.services[k].min == 2 && var.services[k].max == 2])
+      condition     = var.env != "staging" || alltrue([for k in ["api", "dashboard", "portal", "worker"] : var.services[k].min == 2 && var.services[k].max == 2])
       error_message = "next runs exactly two instances of the API, dashboard, portal and worker."
     }
     precondition {
@@ -267,7 +267,7 @@ resource "google_iam_workload_identity_pool_provider" "github" {
   }
   # Only this repository, and only the environment's refs: on preview the branch plus jobs
   # in the PR preview GitHub environment (fork PRs get no OIDC token, so only branches in
-  # this repository reach it); on next main; on prod protected main or a tag, and only from
+  # this repository reach it); on staging main; on prod protected main or a tag, and only from
   # jobs in the prod GitHub environment, whose required reviewers approve each deploy.
   attribute_condition = local.oidc_condition
   oidc { issuer_uri = "https://token.actions.githubusercontent.com" }
@@ -328,7 +328,7 @@ resource "google_service_account_iam_member" "deployer_acts_as_web" {
 }
 
 # Signs invite links. Must equal Directus's SECRET wherever Directus-era invite links are
-# still in inboxes (next, prod) until cutover, so there it is added by hand; the preview has
+# still in inboxes (staging, prod) until cutover, so there it is added by hand; the preview has
 # none, so it is random.
 resource "random_password" "invite_hash_secret" {
   count   = var.generate_invite_hash_secret ? 1 : 0

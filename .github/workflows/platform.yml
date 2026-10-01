@@ -12,7 +12,7 @@ name: platform
 # only the services whose image or settings changed (scripts/deploy-env.sh).
 #
 # Each environment is its own GCP project, reached through its own keyless GitHub trust, and
-# pushes images to its own registry: a preview identity has no role in next or prod.
+# pushes images to its own registry: a preview identity has no role in staging or prod.
 #
 # PR previews (dembrane-web-previews): adding the "preview" label deploys one (echo-pr-<n>-*,
 # database echo_pr_<n>, dashboard-<n>, portal-<n> and api-<n>.preview.dembrane.com), each push
@@ -20,8 +20,8 @@ name: platform
 # deploy seeds the preview admin, the fictional sample project and the accounts demo. At most three
 # exist; a fourth tears down the oldest. One comment on the PR carries the links.
 #
-# next (dembrane-web-next) deploys main: by hand, and on every push to main once the
-# repository variable NEXT_DEPLOY_ON_MAIN is "true". Each deploy lists the PRs it carried in
+# staging (dembrane-web-staging) deploys main: by hand, and on every push to main once the
+# repository variable STAGING_DEPLOY_ON_MAIN is "true". Each deploy lists the PRs it carried in
 # #team-engineering and on each PR.
 #
 # prod (dembrane-web-prod) deploys a release tag vX.Y.Z on main, after the prod environment's
@@ -51,8 +51,8 @@ on:
       target:
         description: What to deploy (PR previews come only from the "preview" label on a PR)
         type: choice
-        options: [next, prod]
-        default: next
+        options: [staging, prod]
+        default: staging
       tag:
         description: "prod: the release tag to deploy (vX.Y.Z, on main)"
         type: string
@@ -67,7 +67,7 @@ permissions:
 
 concurrency:
   group: platform-${{ github.event.pull_request.number || inputs.target || github.ref }}
-  # A newer push replaces a running check or preview; a next or prod rollout runs to the end.
+  # A newer push replaces a running check or preview; a staging or prod rollout runs to the end.
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 defaults:
@@ -82,7 +82,7 @@ env:
   REF: ${{ inputs.tag || github.sha }}
 
 jobs:
-  # Decides what this run does: checks only, a PR preview deploy or teardown, or a next or
+  # Decides what this run does: checks only, a PR preview deploy or teardown, or a staging or
   # prod deploy.
   plan:
     name: 00-plan
@@ -113,7 +113,7 @@ jobs:
           TAG_INPUT: ${{ inputs.tag }}
           HAS_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'preview') }}
           EVENT_LABEL: ${{ github.event.label.name }}
-          NEXT_ON_MAIN: ${{ vars.NEXT_DEPLOY_ON_MAIN }}
+          STAGING_ON_MAIN: ${{ vars.STAGING_DEPLOY_ON_MAIN }}
           PROD_ON_TAG: ${{ vars.PROD_DEPLOY_ON_TAG }}
         run: |
           sha=$GITHUB_SHA pr='' deploy_pr=false deploy_env='' release_tag='' teardown=false
@@ -123,7 +123,7 @@ jobs:
               [ "$GITHUB_REF" = refs/heads/main ] || { echo "::error::$TARGET deploys run from main, not $GITHUB_REF"; exit 1; }
               deploy_env=$TARGET
               if [ "$TARGET" = prod ]; then release_tag=$TAG_INPUT
-              elif [ -n "$TAG_INPUT" ]; then echo "::error::A tag is for prod; next deploys main"; exit 1; fi
+              elif [ -n "$TAG_INPUT" ]; then echo "::error::A tag is for prod; staging deploys main"; exit 1; fi
               ;;
             push)
               case "$GITHUB_REF" in
@@ -131,8 +131,8 @@ jobs:
                   if [ "$PROD_ON_TAG" = true ]; then deploy_env=prod release_tag=$GITHUB_REF_NAME
                   else echo "::notice::Tag pushes deploy prod once the variable PROD_DEPLOY_ON_TAG is true; checks only"; fi ;;
                 refs/heads/main)
-                  if [ "$NEXT_ON_MAIN" = true ]; then deploy_env=next
-                  else echo "::notice::Pushes to main deploy next once the variable NEXT_DEPLOY_ON_MAIN is true; checks only"; fi ;;
+                  if [ "$STAGING_ON_MAIN" = true ]; then deploy_env=staging
+                  else echo "::notice::Pushes to main deploy staging once the variable STAGING_DEPLOY_ON_MAIN is true; checks only"; fi ;;
               esac
               ;;
             pull_request)
@@ -424,7 +424,7 @@ jobs:
           key: vitest-${{ runner.os }}-${{ hashFiles('dembrane/frontend/pnpm-lock.yaml', 'dembrane/frontend/vite.config.ts') }}-${{ github.sha }}
 
   # Builds the images whose inputs changed and proves they start. A run that deploys a PR
-  # preview or next also pushes them, to that environment's registry, and tags every image
+  # preview or staging also pushes them, to that environment's registry, and tags every image
   # it did not need to build for this commit, so the deploy job only rolls out. prod pushes in
   # its own job, after the prod environment's approval.
   images:
@@ -432,7 +432,7 @@ jobs:
     needs: plan
     if: >-
       needs.plan.outputs.teardown != 'true'
-      && (needs.plan.outputs.images != '' || needs.plan.outputs.deploy_pr == 'true' || needs.plan.outputs.deploy_env == 'next')
+      && (needs.plan.outputs.images != '' || needs.plan.outputs.deploy_pr == 'true' || needs.plan.outputs.deploy_env == 'staging')
     runs-on: ubuntu-latest
     timeout-minutes: 12
     # The preview trust accepts a PR's jobs only in this environment. It has no reviewers; it
@@ -443,8 +443,8 @@ jobs:
       id-token: write
     env:
       TAG: ${{ needs.plan.outputs.sha }}
-      PUSH: ${{ needs.plan.outputs.deploy_pr == 'true' && 'preview' || needs.plan.outputs.deploy_env == 'next' && 'next' || '' }}
-      REGISTRY: ${{ needs.plan.outputs.deploy_env == 'next' && 'europe-west4-docker.pkg.dev/dembrane-web-next/echo-next' || 'europe-west4-docker.pkg.dev/dembrane-web-previews/echo-preview' }}
+      PUSH: ${{ needs.plan.outputs.deploy_pr == 'true' && 'preview' || needs.plan.outputs.deploy_env == 'staging' && 'staging' || '' }}
+      REGISTRY: ${{ needs.plan.outputs.deploy_env == 'staging' && 'europe-west4-docker.pkg.dev/dembrane-web-staging/echo-staging' || 'europe-west4-docker.pkg.dev/dembrane-web-previews/echo-preview' }}
       IMAGES: ${{ needs.plan.outputs.images }}
     steps:
       - name: Check out code
@@ -460,12 +460,12 @@ jobs:
         with:
           workload_identity_provider: projects/218237812097/locations/global/workloadIdentityPools/echo-preview-github/providers/github
           service_account: echo-preview-deployer@dembrane-web-previews.iam.gserviceaccount.com
-      - name: Authenticate to Google Cloud (next)
-        if: env.PUSH == 'next'
+      - name: Authenticate to Google Cloud (staging)
+        if: env.PUSH == 'staging'
         uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2.1.13
         with:
-          workload_identity_provider: projects/488580804029/locations/global/workloadIdentityPools/echo-next-github/providers/github
-          service_account: echo-next-deployer@dembrane-web-next.iam.gserviceaccount.com
+          workload_identity_provider: projects/1089877593337/locations/global/workloadIdentityPools/echo-staging-github/providers/github
+          service_account: echo-staging-deployer@dembrane-web-staging.iam.gserviceaccount.com
       - name: Set up gcloud
         if: env.PUSH != ''
         uses: google-github-actions/setup-gcloud@e427ad8a34f8676edf47cf7d7925499adf3eb74f # v2.2.1
@@ -645,20 +645,20 @@ jobs:
           WHY: ${{ github.event.action == 'closed' && 'the PR was closed' || 'the preview label was removed' }}
         run: scripts/ci-notify.sh preview removed "$PR" "$WHY"
 
-  # next and prod each deploy from their own project's registry with their own identity. next
+  # staging and prod each deploy from their own project's registry with their own identity. staging
   # rolls out what 40-build-images pushed; prod builds and pushes here, after the approval.
   # A check the plan skipped counts as passed, as on a PR preview.
-  deploy-next:
-    name: 60-deploy-next
-    if: ${{ !cancelled() && !failure() && needs.plan.outputs.deploy_env == 'next' }}
+  deploy-staging:
+    name: 60-deploy-staging
+    if: ${{ !cancelled() && !failure() && needs.plan.outputs.deploy_env == 'staging' }}
     needs: [plan, check-server, check-frontend, test-frontend, images]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     # Records each deploy as a GitHub Deployment: the last successful one is where the next
     # deploy's list of PRs starts.
-    environment: next
+    environment: staging
     concurrency:
-      group: deploy-next
+      group: deploy-staging
       cancel-in-progress: false
     permissions:
       contents: read
@@ -667,7 +667,7 @@ jobs:
       pull-requests: write
     env:
       TAG: ${{ needs.plan.outputs.sha }}
-      REGISTRY: europe-west4-docker.pkg.dev/dembrane-web-next/echo-next
+      REGISTRY: europe-west4-docker.pkg.dev/dembrane-web-staging/echo-staging
     steps:
       - name: Check out code
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
@@ -675,22 +675,22 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2.1.13
         with:
-          workload_identity_provider: projects/488580804029/locations/global/workloadIdentityPools/echo-next-github/providers/github
-          service_account: echo-next-deployer@dembrane-web-next.iam.gserviceaccount.com
+          workload_identity_provider: projects/1089877593337/locations/global/workloadIdentityPools/echo-staging-github/providers/github
+          service_account: echo-staging-deployer@dembrane-web-staging.iam.gserviceaccount.com
       - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@e427ad8a34f8676edf47cf7d7925499adf3eb74f # v2.2.1
         with: { skip_install: true }
       - name: Deploy and verify
         env:
           HOLD_DATA: ${{ inputs.hold_data && '1' || '0' }}
-        run: scripts/deploy-env.sh deploy next "$TAG"
+        run: scripts/deploy-env.sh deploy staging "$TAG"
       # The deploy stands even when a message fails to send.
       - name: Announce deploy
         continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
           SLACK_TOKEN: ${{ secrets.SLACK_ALERTS_BOT_TOKEN }}
-        run: scripts/release.sh announce-next "$TAG"
+        run: scripts/release.sh announce-staging "$TAG"
 
   deploy-prod:
     name: 70-deploy-prod
@@ -755,7 +755,7 @@ jobs:
     if: >-
       failure()
       && (github.event_name != 'pull_request' || needs.plan.outputs.deploy_pr == 'true' || needs.plan.outputs.teardown == 'true')
-    needs: [plan, check-server, check-frontend, test-frontend, images, deploy-pr, teardown-pr, deploy-next, deploy-prod]
+    needs: [plan, check-server, check-frontend, test-frontend, images, deploy-pr, teardown-pr, deploy-staging, deploy-prod]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     permissions:

@@ -14,7 +14,7 @@ const secrets = Object.fromEntries(
     ]),
 );
 
-for (const env of ["preview", "next", "prod"] as const) {
+for (const env of ["preview", "staging", "prod"] as const) {
   test(`${env} keeps data in the EU`, () => {
     const { values } = loadConfig({ APP_ENV: env, ...secrets });
     // Vertex's EU multi-region endpoint for generation, a European region for embeddings.

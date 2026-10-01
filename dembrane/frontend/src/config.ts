@@ -7,11 +7,11 @@
 //
 // To add or move a deployment, edit ENV_HOSTNAMES. Loopback hosts and dev
 // builds resolve to "local". Anything else unmatched (Vercel preview URLs,
-// LAN IPs, ...) falls back to "next": production must be an explicit match so
+// LAN IPs, ...) falls back to "staging": production must be an explicit match so
 // stray hosts can never capture into prod analytics or mutate prod data.
 // ---------------------------------------------------------------------------
 
-export type AppEnvironment = "production" | "next" | "testing" | "local";
+export type AppEnvironment = "production" | "staging" | "testing" | "local";
 
 // Deployments on the platform's web server (dembrane/platform/apps/web) inject these
 // through /runtime-config.js before any module loads, so one build runs in every
@@ -42,8 +42,8 @@ export const PREVIEW_PR: { number: number; url: string } | null =
 			}
 		: null;
 
-const ENV_HOSTNAMES: Record<"production" | "next" | "testing", string[]> = {
-	next: ["dashboard.staging.dembrane.com", "portal.staging.dembrane.com"],
+const ENV_HOSTNAMES: Record<"production" | "staging" | "testing", string[]> = {
+	staging: ["dashboard.staging.dembrane.com", "portal.staging.dembrane.com"],
 	production: ["dashboard.dembrane.com", "portal.dembrane.com"],
 	testing: [
 		"dashboard.echo-testing.dembrane.com",
@@ -65,7 +65,7 @@ export const APP_ENVIRONMENT: AppEnvironment = (() => {
 	if (LOCAL_HOSTNAMES.includes(hostname) || import.meta.env.DEV) {
 		return "local";
 	}
-	return "next";
+	return "staging";
 })();
 
 export const IS_PRODUCTION = APP_ENVIRONMENT === "production";
@@ -85,7 +85,7 @@ export const byEnv = <T>(
 const dembraneHost = (subdomain: string): string =>
 	byEnv(
 		{
-			next: `https://${subdomain}.staging.dembrane.com`,
+			staging: `https://${subdomain}.staging.dembrane.com`,
 			testing: `https://${subdomain}.echo-testing.dembrane.com`,
 		},
 		`https://${subdomain}.dembrane.com`,
@@ -123,7 +123,7 @@ export const API_BASE_URL =
 // ---------------------------------------------------------------------------
 // PostHog (analytics)
 //
-// Tokens are project ingest keys, safe to ship publicly. production and next
+// Tokens are project ingest keys, safe to ship publicly. production and staging
 // report into their own EU projects; testing and local opt out entirely.
 //
 // POSTHOG_HOST is a first-party managed reverse proxy (CNAME r.dembrane.com ->
@@ -214,7 +214,7 @@ export const AGENTIC_CHAT_IS_DEFAULT = false;
 // always ships the (lazy) agentation chunk and JSX source metadata — other
 // environments just never render or download it. Widen to more envs by adding
 // keys here (e.g. local/testing) when ready to roll out further.
-export const ENABLE_AGENTATION = byEnv({ next: true }, false);
+export const ENABLE_AGENTATION = byEnv({ staging: true }, false);
 // Host live-monitor (page, sidebar item, project-home block) and the portal
 // beacons that feed it. Kill switch: flip to false / byEnv to disable a env.
 export const ENABLE_MONITOR = true;
