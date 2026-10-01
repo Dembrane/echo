@@ -618,16 +618,17 @@
   {
     "collection": "directus_users",
     "action": "update",
-    "permissions": null,
+    "permissions": {
+      "id": {
+        "_eq": "$CURRENT_USER"
+      }
+    },
     "validation": null,
     "presets": null,
     "fields": [
       "first_name",
       "last_name",
-      "email",
-      "projects",
       "password",
-      "disable_create_project",
       "avatar",
       "location",
       "title",
@@ -635,19 +636,13 @@
       "tags",
       "language",
       "text_direction",
-      "tfa_secret",
       "email_notifications",
       "appearance",
       "theme_light",
       "theme_light_overrides",
       "theme_dark",
       "theme_dark_overrides",
-      "status",
-      "role",
-      "token",
-      "id",
       "last_page",
-      "last_access",
       "whitelabel_logo"
     ],
     "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
@@ -712,44 +707,6 @@
     ],
     "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
     "_syncId": "d5ebcf80-726f-4198-96c9-aa0299a0bc67"
-  },
-  {
-    "collection": "project_report_notification_participants",
-    "action": "create",
-    "permissions": null,
-    "validation": null,
-    "presets": null,
-    "fields": [
-      "date_submitted",
-      "id",
-      "date_updated",
-      "email",
-      "project_id",
-      "email_opt_out_token",
-      "email_opt_in",
-      "conversation_id"
-    ],
-    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
-    "_syncId": "a0b6258b-12f9-49a8-b2b2-c510b5b529c6"
-  },
-  {
-    "collection": "project_report_notification_participants",
-    "action": "read",
-    "permissions": null,
-    "validation": null,
-    "presets": null,
-    "fields": [
-      "id",
-      "date_submitted",
-      "email",
-      "project_id",
-      "email_opt_in",
-      "email_opt_out_token",
-      "date_updated",
-      "conversation_id"
-    ],
-    "policy": "37a60e48-dd00-4867-af07-1fb22ac89078",
-    "_syncId": "fe47515c-7460-42e0-b88a-9786faa182ef"
   },
   {
     "collection": "project_report_notification_participants",
