@@ -125,7 +125,15 @@ async def delete_project(
     in the database. Read queries filter deleted_at IS NULL so the project
     disappears from all views. S3 audio files are kept for the grace period.
     """
-    await _verify_project_access(auth, project_id)
+    # Staff sit outside the app-layer model (may have no app_user row);
+    # everyone else needs project:delete, as on the v2 route.
+    if auth.is_admin:
+        await _verify_project_access(auth, project_id)
+    else:
+        from dembrane.api.v2.bff._access import resolve_project_access
+
+        access = await resolve_project_access(project_id, auth)
+        access.require("project:delete")
 
     from dembrane.directus import directus
 
