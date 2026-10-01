@@ -22,14 +22,15 @@ name: platform
 #
 # staging (dembrane-web-staging) deploys main: by hand, and on every push to main once the
 # repository variable STAGING_DEPLOY_ON_MAIN is "true". Each deploy lists the PRs it carried in
-# #team-engineering and on each PR.
+# #alerts-ci, with a link to the dashboard, and on each PR.
 #
 # prod (dembrane-web-prod) deploys a release tag vX.Y.Z on main, after the prod environment's
 # approval: by hand with the tag, and on pushing the tag once PROD_DEPLOY_ON_TAG is "true".
 # A deploy publishes the GitHub Release, tells #team-engineering and each PR, and sends
 # release.published to sam, which drafts the in-app release notes for review.
 #
-# Only failures reach Slack (#alerts-ci). Checks on PRs without a preview stay in the PR.
+# #alerts-ci carries staging deploys and every failure. Checks on PRs without a preview stay
+# in the PR.
 #
 # Caches: pull request runs only restore them. Pushes to main (and runs by hand) check trusted
 # code and save them, so code from a PR never writes a cache that another run reads. Images

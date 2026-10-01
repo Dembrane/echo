@@ -20,7 +20,9 @@ REPO=${GITHUB_REPOSITORY:-Dembrane/echo}
 SERVER=${GITHUB_SERVER_URL:-https://github.com}
 RUN_URL=${GITHUB_RUN_ID:+$SERVER/$REPO/actions/runs/$GITHUB_RUN_ID}
 DRY_RUN=${DRY_RUN:-0}
-TEAM_CHANNEL=${TEAM_CHANNEL:-C0884QPQF6W} # #team-engineering
+TEAM_CHANNEL=${TEAM_CHANNEL:-C0884QPQF6W} # #team-engineering: releases to prod
+STAGING_CHANNEL=${STAGING_CHANNEL:-C0C4HBZNSNT} # #alerts-ci: every staging deploy
+STAGING_DASHBOARD_URL=${STAGING_DASHBOARD_URL:-https://dashboard.staging.dembrane.com}
 SLACK_LINES=${SLACK_LINES:-40}
 failed=0
 
@@ -159,8 +161,9 @@ announce_staging() {
   text="*dembrane-staging* now runs <$SERVER/$REPO/commit/$sha|$b>"
   if [ "$(jq length <<<"$list")" = 0 ]; then text+=", no new pull requests"
   else text+=" · $(jq length <<<"$list") pull requests since <$SERVER/$REPO/compare/$prev...$sha|${prev:0:7}>"$'\n'"$(slack_lines <<<"$list")"; fi
-  [ -z "$RUN_URL" ] || text+=$'\n'"<$RUN_URL|deploy run>"
-  slack_post "$TEAM_CHANNEL" "$text"
+  text+=$'\n'"<$STAGING_DASHBOARD_URL|open the dashboard>"
+  [ -z "$RUN_URL" ] || text+=" · <$RUN_URL|deploy run>"
+  slack_post "$STAGING_CHANNEL" "$text"
   # Without an earlier staging deployment the list reaches back to the last release, and those
   # PRs were never told they were on staging: comments start from the second deploy.
   if [ "$kind" = deployment ]; then
