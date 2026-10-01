@@ -64,7 +64,7 @@ Options:
   --token <token>            Session token (or set DEMBRANE_TOKEN); omit to sign in
   --api-url <url>            Override the API base URL (ends in /api)
   --directus-url <url>       Override the Directus URL used to sign in
-  --out-dir <dir>            Where to write the joined files (default: ./conversation-audio)
+  --out-dir <dir>            Parent of the per-project folders (default: ./conversation-audio)
   --format <ext>             Output format: mp3, wav, m4a, ogg... (default: mp3)
   --keep-chunks              Keep the downloaded chunks next to the output
   --help                     Show this help
@@ -485,7 +485,9 @@ projectId ??= await chooseProject();
 const conversations = await listConversations(projectId);
 if (!conversations.length) die(`No conversations in project ${projectId} (or no access to it)`);
 const chosen = await chooseConversations(conversations);
-const outDir = opts["out-dir"] as string;
+// One folder per project, so same-named conversations from different projects don't mix.
+const project = await getJson<{ name: string | null }>(`/v2/projects/${projectId}`);
+const outDir = join(opts["out-dir"] as string, `${safeName(project.name ?? "")}-${projectId.slice(0, 8)}`);
 await mkdir(outDir, { recursive: true });
 console.log(`\nDownloading ${chosen.length} conversation(s) into ${outDir}`);
 for (const c of chosen) await download(c, outDir);
