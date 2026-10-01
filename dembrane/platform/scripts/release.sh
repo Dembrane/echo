@@ -20,7 +20,10 @@ REPO=${GITHUB_REPOSITORY:-Dembrane/echo}
 SERVER=${GITHUB_SERVER_URL:-https://github.com}
 RUN_URL=${GITHUB_RUN_ID:+$SERVER/$REPO/actions/runs/$GITHUB_RUN_ID}
 DRY_RUN=${DRY_RUN:-0}
-TEAM_CHANNEL=${TEAM_CHANNEL:-C0884QPQF6W} # #team-engineering
+TEAM_CHANNEL=${TEAM_CHANNEL:-C0884QPQF6W} # #team-engineering: releases to prod
+STAGING_CHANNEL=${STAGING_CHANNEL:-C0C4HBZNSNT} # #alerts-ci: every staging deploy
+STAGING_DASHBOARD_URL=${STAGING_DASHBOARD_URL:-https://dashboard.staging.dembrane.com}
+PROD_DASHBOARD_URL=${PROD_DASHBOARD_URL:-https://dashboard.dembrane.com}
 SLACK_LINES=${SLACK_LINES:-40}
 failed=0
 
@@ -156,15 +159,16 @@ announce_staging() {
   echo "::group::staging summary ($kind $prev..$b)"
   staging_summary "$prev" "$sha" "$list" | summary
   echo "::endgroup::"
-  text="*dembrane-staging* now runs <$SERVER/$REPO/commit/$sha|$b>"
-  if [ "$(jq length <<<"$list")" = 0 ]; then text+=", no new pull requests"
-  else text+=" · $(jq length <<<"$list") pull requests since <$SERVER/$REPO/compare/$prev...$sha|${prev:0:7}>"$'\n'"$(slack_lines <<<"$list")"; fi
-  [ -z "$RUN_URL" ] || text+=$'\n'"<$RUN_URL|deploy run>"
-  slack_post "$TEAM_CHANNEL" "$text"
+  # What changed and where to look at it: the pull requests by title, and the dashboard.
+  # Commit ids stay in the job summary.
+  text="*Staging updated* · <$STAGING_DASHBOARD_URL|open staging>"
+  if [ "$(jq length <<<"$list")" = 0 ]; then text+=$'\n'"No new pull requests."
+  else text+=$'\n'"$(slack_lines <<<"$list")"; fi
+  slack_post "$STAGING_CHANNEL" "$text"
   # Without an earlier staging deployment the list reaches back to the last release, and those
   # PRs were never told they were on staging: comments start from the second deploy.
   if [ "$kind" = deployment ]; then
-    comment_prs "$list" "Now on dembrane-staging, deployed $(now) in \`$b\`."
+    comment_prs "$list" "Now on [staging]($STAGING_DASHBOARD_URL), deployed $(now)."
   else
     echo "::notice::First recorded staging deployment: the list starts at release $prev and no PR comments were posted"
   fi
@@ -207,7 +211,7 @@ publish_release() {
       warn "creating the $tag release failed"
   fi
   n=$(jq length <<<"$list")
-  text="*$title* is live on prod · $n pull request$([ "$n" = 1 ] || echo s) since $prev · <$url|release notes>"
+  text="*$title* is live on prod · $n pull request$([ "$n" = 1 ] || echo s) since $prev · <$url|release notes> · <$PROD_DASHBOARD_URL|open the dashboard>"
   [ "$n" = 0 ] || text+=$'\n'"$(slack_lines <<<"$list")"
   slack_post "$TEAM_CHANNEL" "$text"
   comment_prs "$list" "Released in [$tag]($url)."
