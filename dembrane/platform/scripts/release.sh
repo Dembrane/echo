@@ -23,6 +23,7 @@ DRY_RUN=${DRY_RUN:-0}
 TEAM_CHANNEL=${TEAM_CHANNEL:-C0884QPQF6W} # #team-engineering: releases to prod
 STAGING_CHANNEL=${STAGING_CHANNEL:-C0C4HBZNSNT} # #alerts-ci: every staging deploy
 STAGING_DASHBOARD_URL=${STAGING_DASHBOARD_URL:-https://dashboard.staging.dembrane.com}
+PROD_DASHBOARD_URL=${PROD_DASHBOARD_URL:-https://dashboard.dembrane.com}
 SLACK_LINES=${SLACK_LINES:-40}
 failed=0
 
@@ -210,7 +211,7 @@ publish_release() {
       warn "creating the $tag release failed"
   fi
   n=$(jq length <<<"$list")
-  text="*$title* is live on prod · $n pull request$([ "$n" = 1 ] || echo s) since $prev · <$url|release notes>"
+  text="*$title* is live on prod · $n pull request$([ "$n" = 1 ] || echo s) since $prev · <$url|release notes> · <$PROD_DASHBOARD_URL|open the dashboard>"
   [ "$n" = 0 ] || text+=$'\n'"$(slack_lines <<<"$list")"
   slack_post "$TEAM_CHANNEL" "$text"
   comment_prs "$list" "Released in [$tag]($url)."
