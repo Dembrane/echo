@@ -41,22 +41,6 @@ export async function createChunk(
   if (!conv) throw new NotFoundError("conversation.not_found");
   const now = d.now();
 
-  // A conversation finished and merged (auto-finished after a pause) gets more audio:
-  // reset it so finishing again merges and summarises every segment.
-  if (conv.is_finished && conv.merged_audio_path) {
-    await d.db
-      .update(conversation)
-      .set({
-        is_finished: false,
-        is_all_chunks_transcribed: false,
-        merged_audio_path: null,
-        duration: null,
-        summary: null,
-        updated_at: now.toISOString(),
-      })
-      .where(eq(conversation.id, conv.id));
-  }
-
   const project = await store.project(conv.project_id);
   // project_service raised ProjectNotFoundException here, which no route caught.
   if (!project) throw new Error(`project ${conv.project_id} of conversation ${conv.id} not found`);
@@ -68,6 +52,31 @@ export async function createChunk(
   if (!hasFile && !hasTranscript) throw new ChunkError("conversation.chunk_empty");
 
   return transaction(d.db, async (tx) => {
+    // A finished conversation that was finalized or merged gets more audio (the idle sweep
+    // finished it during a pause, or before the first chunk): reset it so finishing again
+    // merges, measures and summarises every segment. Read under the row lock that
+    // claimFinalize and handOver take, so a claim either sees this chunk as pending or is
+    // seen here and undone.
+    const [locked] = await tx.sql<
+      {
+        is_finished: boolean | null;
+        is_all_chunks_transcribed: boolean | null;
+        merged_audio_path: string | null;
+      }[]
+    >`select is_finished, is_all_chunks_transcribed, merged_audio_path from conversation
+      where id = ${conv.id} for no key update`;
+    if (locked?.is_finished && (locked.is_all_chunks_transcribed || locked.merged_audio_path))
+      await tx.db
+        .update(conversation)
+        .set({
+          is_finished: false,
+          is_all_chunks_transcribed: false,
+          merged_audio_path: null,
+          duration: null,
+          summary: null,
+          updated_at: now.toISOString(),
+        })
+        .where(eq(conversation.id, conv.id));
     const [row] = await tx.db
       .insert(conversation_chunk)
       .values({

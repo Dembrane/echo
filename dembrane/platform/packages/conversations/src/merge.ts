@@ -80,7 +80,12 @@ export async function mergeConversationAudio(
   const path = d.audioUrls.fileUrl(key);
   await d.db
     .update(conversation)
-    .set({ merged_audio_path: path, duration: merged.duration, updated_at: d.now().toISOString() })
+    .set({
+      merged_audio_path: path,
+      // -1: the merged file could not be probed; the finalize run's measure step fills it.
+      ...(merged.duration > 0 && { duration: merged.duration }),
+      updated_at: d.now().toISOString(),
+    })
     .where(eq(conversation.id, conversationId));
   return { path, duration: merged.duration };
 }

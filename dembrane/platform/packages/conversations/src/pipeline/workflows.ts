@@ -4,6 +4,7 @@ import {
   claimFinish,
   handOver,
   loadChunk,
+  measureDuration,
   mergeAudio,
   type PipelineDeps,
   prepareChunk,
@@ -94,7 +95,7 @@ export function pipelineWorkflows(d: PipelineDeps, retry: RetryPolicy = RETRIES)
       await step("hand-over", () => handOver(d, p.conversationId), retry.db);
     },
 
-    /** conversations.finalize: claim (and the transcribed webhook), merge, summarise, count. */
+    /** conversations.finalize: claim (and the transcribed webhook), merge, summarise, count, measure. */
     async finalize(p: { conversationId: string }, runId: string): Promise<void> {
       const projectId = await step("claim", () => claimFinalize(d, p.conversationId), retry.db);
       if (!projectId) return;
@@ -108,8 +109,17 @@ export function pipelineWorkflows(d: PipelineDeps, retry: RetryPolicy = RETRIES)
           "merge gave up",
         );
       }
-      await summarizeWithWebhook(d, p.conversationId, retry);
+      await summarizeWithWebhook(d, p.conversationId, retry, true);
       await step("token-count", () => warmTokenCount(d, p.conversationId), retry.db);
+      // Last, so runs recorded before this step existed resume on the same step order.
+      try {
+        await step("measure", () => measureDuration(d, p.conversationId), retry.media);
+      } catch (err) {
+        d.logger.warn(
+          { conversationId: p.conversationId, err: (err as Error).message },
+          "measure gave up",
+        );
+      }
     },
 
     /** conversations.summarize: the catch-up for a summary that failed or was locked. */
@@ -119,10 +129,15 @@ export function pipelineWorkflows(d: PipelineDeps, retry: RetryPolicy = RETRIES)
   };
 }
 
-async function summarizeWithWebhook(d: PipelineDeps, conversationId: string, retry: RetryPolicy) {
+async function summarizeWithWebhook(
+  d: PipelineDeps,
+  conversationId: string,
+  retry: RetryPolicy,
+  fresh = false,
+) {
   let wrote = false;
   try {
-    wrote = await step("summarize", () => summarize(d, conversationId), retry.llm);
+    wrote = await step("summarize", () => summarize(d, conversationId, { fresh }), retry.llm);
   } catch (err) {
     // The summary catch-up picks it up again in five minutes.
     d.logger.warn({ conversationId, err: (err as Error).message }, "summary gave up");

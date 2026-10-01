@@ -1,4 +1,4 @@
-import { AudioError, fileFormatOf, MAX_CHUNK_BYTES } from "@dembrane/audio";
+import { AudioError, durationOf, fileFormatOf, MAX_CHUNK_BYTES } from "@dembrane/audio";
 import { PaymentRequiredError } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
@@ -15,6 +15,7 @@ import { enqueueConversationEvent, type WebhookEvent, webhooksStorage } from "@d
 import { and, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import type { AudioUrls } from "../audio-urls";
 import type { ConversationsDeps, JobSink } from "../deps";
+import { LIVENESS_TTL_SECONDS } from "../live/presence";
 import { mergeConversationAudio, NoContent, NoMergeableChunks } from "../merge";
 import { type ChunkRow, conversationStore, type Tx, transaction } from "../storage";
 import { computeIsOverCap } from "../tiers";
@@ -597,7 +598,7 @@ async function webhook(
 }
 
 /**
- * task_merge_conversation_chunks: the merged mp3 and the conversation's duration. No
+ * task_merge_conversation_chunks: the merged mp3 and the exact duration. No
  * chunks, no audio or only unreadable audio end the step quietly (a retry reads the same
  * bytes); a transient failure throws for the step to retry. The output name derives
  * from the run, so a retry overwrites its own file.
@@ -616,16 +617,86 @@ export async function mergeAudio(d: PipelineDeps, conversationId: string, run: s
   }
 }
 
+// Chunk probes in flight at once while measuring a conversation.
+const MEASURE_CONCURRENCY = 8;
+
+/**
+ * The duration when the merge left none (it never ran, gave up or could not probe its
+ * file): every audio chunk probed and summed, skipping chunks whose bytes are bad as the
+ * merge does. A transient failure throws for the step to retry. Returns the seconds
+ * written, or null when the conversation already has a duration or no chunk is readable.
+ */
+export async function measureDuration(
+  d: PipelineDeps,
+  conversationId: string,
+): Promise<number | null> {
+  const conv = await conversationStore(d.db).conversation(conversationId);
+  if (!conv || conv.duration !== null) return null;
+  const chunks = await d.db
+    .select({ id: conversation_chunk.id, path: conversation_chunk.path })
+    .from(conversation_chunk)
+    .where(eq(conversation_chunk.conversation_id, conversationId));
+  const paths = chunks
+    .map((c) => c.path)
+    .filter((p): p is string => Boolean(p?.startsWith("http")));
+  if (!paths.length) return null;
+
+  let total = 0;
+  let readable = 0;
+  const probeOne = async (p: string) => {
+    const key = d.audioUrls.keyOf(p);
+    try {
+      const probe = await d.media.probe({
+        url: d.audio.presignDownload(key, { expiresInSeconds: URL_EXPIRES_S }),
+        format: fileFormatOf(p),
+        name: key,
+      });
+      const seconds = durationOf(probe);
+      if (seconds === null || !Number.isFinite(seconds) || seconds <= 0) return;
+      total += seconds;
+      readable++;
+    } catch (err) {
+      if (err instanceof AudioError && err.terminal) {
+        d.logger.warn({ conversationId, key, err: err.message }, "chunk unreadable, not measured");
+        return;
+      }
+      throw err;
+    }
+  };
+  for (let i = 0; i < paths.length; i += MEASURE_CONCURRENCY)
+    await Promise.all(paths.slice(i, i + MEASURE_CONCURRENCY).map(probeOne));
+  if (!readable) {
+    d.logger.warn(
+      { conversationId, signal: "conversation.unmetered_duration" },
+      "no audio chunk could be measured",
+    );
+    return null;
+  }
+  // Only fills a gap: a merge that lands meanwhile wrote the exact value.
+  await d.db
+    .update(conversation)
+    .set({ duration: total, updated_at: d.now().toISOString() })
+    .where(and(eq(conversation.id, conversationId), isNull(conversation.duration)));
+  return total;
+}
+
 /**
  * task_summarize_conversation: skips a finished conversation that has a summary and a
  * tier-locked one (it stays in the catch-up set and summarises after an upgrade). The
  * no-transcript placeholder is not a summary: the catch-up retries it once text exists.
+ * A finalize passes `fresh`: it claimed a new set of chunks, so a summary already there
+ * is an earlier run's, written after the conversation reopened.
  * Returns whether a summary was written, so the webhook step knows to fire.
  */
-export async function summarize(d: PipelineDeps, conversationId: string): Promise<boolean> {
+export async function summarize(
+  d: PipelineDeps,
+  conversationId: string,
+  opts: { fresh?: boolean } = {},
+): Promise<boolean> {
   const conv = await conversationStore(d.db).conversation(conversationId);
   if (!conv) return false;
-  if (conv.is_finished && conv.summary && conv.summary !== NO_TRANSCRIPT_SUMMARY) return false;
+  if (!opts.fresh && conv.is_finished && conv.summary && conv.summary !== NO_TRANSCRIPT_SUMMARY)
+    return false;
   try {
     await withStatus(d, { conversationId }, "task_summarize_conversation", "", () =>
       summarizeAndStore(d, conversationId),
@@ -664,12 +735,21 @@ export async function warmTokenCount(d: PipelineDeps, conversationId: string): P
 
 // ── sweeps ───────────────────────────────────────────────────────────
 
+// Participants often open the portal well before recording (prod, 90 days: p95 18 min,
+// p99 85 min). A conversation with no chunks stays open while the portal pings, and
+// otherwise this long after it was opened (also the fallback with the monitor off).
+const EMPTY_GRACE_MS = 30 * 60_000;
+
 /**
  * collect_unfinished_conversations: unfinished, not deleted, in a live project, created
- * over five minutes ago and without a chunk in the last five minutes. Oldest first.
+ * over five minutes ago and without a chunk in the last five minutes. One with no chunks
+ * at all also needs EMPTY_GRACE_MS and no portal ping within the liveness TTL, so it is
+ * not finalized empty while the participant is still getting ready. Oldest first.
  */
 export async function idleConversations(db: Db, now: Date, limit = 100): Promise<string[]> {
   const cutoff = new Date(now.getTime() - 5 * 60_000).toISOString();
+  const emptyCutoff = new Date(now.getTime() - EMPTY_GRACE_MS).toISOString();
+  const pingCutoff = new Date(now.getTime() - LIVENESS_TTL_SECONDS * 1000).toISOString();
   const rows = await db.execute<{ id: string }>(sql`
     select c.id from conversation c
     join project p on p.id = c.project_id and p.deleted_at is null
@@ -677,6 +757,10 @@ export async function idleConversations(db: Db, now: Date, limit = 100): Promise
       and not exists (
         select 1 from conversation_chunk ch
         where ch.conversation_id = c.id and ch.timestamp >= ${cutoff})
+      and (exists (select 1 from conversation_chunk ch where ch.conversation_id = c.id)
+        or (c.created_at <= ${emptyCutoff} and not exists (
+          select 1 from platform_presence pp
+          where pp.kind = 'liveness' and pp.key = c.id::text and pp.seen_at >= ${pingCutoff})))
     order by c.created_at, c.id
     limit ${limit}`);
   return [...rows].map((r) => r.id);
