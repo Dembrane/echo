@@ -243,6 +243,15 @@ run("demos made in echo", () => {
       }
     ).demo;
     expect(demo.notice?.text).toContain("Synthetische demo");
+    // The QR leads to dembrane's feedback portal; no shared sales portal project is seeded.
+    expect(String(demo.portal_url)).toStartWith(
+      "https://portal.example.test/en-US/feedback-project/start?utm_source=popcorn_demo",
+    );
+    const portals = await w.db
+      .select()
+      .from(schema.project)
+      .where(eq(schema.project.is_conversation_allowed, true));
+    expect(portals).toHaveLength(0);
     expect(demo.disclosure?.text).toContain("synthetische");
     expect((demo as Record<string, unknown>).continue_url).toBeUndefined();
     // Extract: the normal popcorn read ran for the session.

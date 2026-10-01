@@ -439,6 +439,16 @@ export const schema = defineSchema({
       description:
         "Staff's workspace for demos made in echo, so staff can review them in the dashboard. Unset puts each demo in a workspace of the prospect's organisation.",
     }),
+    demoFeedbackUrl: key(
+      "ACCOUNTS_DEMO_FEEDBACK_URL",
+      z
+        .url()
+        .default("https://portal.dembrane.com/en-US/a2b7fbeb-af8d-41c8-b70b-9ff1f3c6d51a/start"),
+      {
+        description:
+          "Where the QR on a demo made in echo leads: the participant portal of dembrane's own Product Feedback project on production, so feedback on a demo reaches dembrane and never another prospect's organisation.",
+      },
+    ),
     eventsUrl: key("ACCOUNTS_EVENTS_URL", z.url().optional(), {
       description:
         "Where account events (document signed, billing details updated, ...) are posted for sam. Unset keeps them on the timeline only.",

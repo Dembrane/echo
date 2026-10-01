@@ -59,6 +59,13 @@ export interface DemoInput {
    * dashboard sign-in). Absent, the deck is exactly what the seed made before.
    */
   readonly continueUrl?: string;
+  /**
+   * Where the QR leads instead of the seeded sales portal (dembrane's own feedback portal).
+   * Given, no sales portal project is created or moved: those have one fixed id per language,
+   * so seeding them into a prospect's workspace would carry every earlier prospect's
+   * feedback along.
+   */
+  readonly feedbackUrl?: string;
 }
 
 /** The seed's identity(): the namespace the local helper shares, so sales portals converge. */
@@ -82,6 +89,14 @@ function portalStart(base: string, projectId: string, language: string, slug: st
   const code = PARTICIPANT_CODES[language] as string;
   const query = `utm_source=popcorn_demo&utm_campaign=${quotePlus(slug)}`;
   return `${base.replace(/\/+$/, "")}/${code}/${projectId}/start?${query}`;
+}
+
+/** The feedback portal with the same campaign tag the sales portal links carry. */
+function withCampaign(url: string, slug: string): string {
+  const u = new URL(url);
+  u.searchParams.set("utm_source", "popcorn_demo");
+  u.searchParams.set("utm_campaign", slug);
+  return u.toString();
 }
 
 const hostOf = (url: string) => {
@@ -218,7 +233,7 @@ function check(input: DemoInput, languages: readonly string[]) {
       throw new ValidationError("popcorn.demo_fixture_invalid", {
         message: `out/state-${language}.json and out/settings-${language}.json are needed`,
       });
-    if (!isRecord(input.salesPortal[language]))
+    if (!input.feedbackUrl && !isRecord(input.salesPortal[language]))
       throw new ValidationError("popcorn.demo_fixture_invalid", {
         message: `sales-portal.json has no '${language}' words`,
       });
@@ -255,6 +270,10 @@ export async function seedDemo(db: Db, input: DemoInput, now: Date): Promise<Dem
 
       const portals: Record<string, string> = {};
       for (const language of languages) {
+        if (input.feedbackUrl) {
+          portals[language] = withCampaign(input.feedbackUrl, slug);
+          continue;
+        }
         const pid = demoIdentity("sales-portal", language);
         await put("project", pid, {
           ...(input.salesPortal[language] as Json),

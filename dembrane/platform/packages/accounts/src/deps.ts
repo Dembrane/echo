@@ -35,6 +35,8 @@ export interface AccountsSettings {
     readonly apiUrl: string;
     readonly ownUrls: readonly string[];
     readonly workspaceId: string | null;
+    /** Where a demo's QR leads (the build reads it; the API does not). */
+    readonly feedbackUrl?: string;
   };
 }
 

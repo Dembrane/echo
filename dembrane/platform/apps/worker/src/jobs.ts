@@ -271,6 +271,7 @@ export function registrations(deps: {
             apiUrl: config.http.publicUrl,
             ownUrls: [config.http.publicUrl, deps.dashboardUrl, deps.popcorn.portalUrl],
             workspaceId: config.accounts.demoWorkspaceId ?? null,
+            feedbackUrl: config.accounts.demoFeedbackUrl,
           },
         };
       },

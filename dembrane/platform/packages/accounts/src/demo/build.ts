@@ -73,6 +73,8 @@ export interface DemoSettings {
   readonly ownUrls: readonly string[];
   /** Staff's workspace for demo projects, so staff can review them; null puts them in the prospect's organisation. */
   readonly workspaceId: string | null;
+  /** Where the QR leads: dembrane's Product Feedback portal on production. */
+  readonly feedbackUrl: string;
 }
 
 export interface DemoBuildDeps extends AccountsDeps {
@@ -316,6 +318,7 @@ async function seed(d: DemoBuildDeps, row: Row, input: DemoInput) {
       corpus,
       out: { [language]: { state, settings } },
       salesPortal: SALES_PORTAL,
+      feedbackUrl: d.demo.feedbackUrl,
       workspaceId,
       // The popcorn read acts as the project's owner and must reach the project. In the
       // prospect's own workspace that is the contact (its admin), never the staff member who
