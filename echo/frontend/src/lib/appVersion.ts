@@ -16,6 +16,25 @@ const targetKey = (target: string) => `dembrane:version-reload:${target}`;
 
 export type ReloadReason = "new_version_detected" | "chunk_load_failed";
 
+// The messages Vite's `vite:preloadError` carries for a stale-deploy chunk miss,
+// across browsers. `recoverFromChunkFailure` already reloads the tab for these,
+// but the listener rethrows on purpose, so autocapture files each one as an
+// exception. Drop that noise in `before_send`; `app_version_reloaded` stays the
+// health metric.
+const CHUNK_LOAD_ERROR_PATTERNS = [
+	"unable to preload css",
+	"failed to fetch dynamically imported module",
+	"error loading dynamically imported module",
+	"importing a module script failed",
+];
+
+/** True when an exception message is a handled stale-deploy chunk miss. */
+export const isChunkLoadErrorMessage = (message: unknown): boolean => {
+	if (typeof message !== "string") return false;
+	const lower = message.toLowerCase();
+	return CHUNK_LOAD_ERROR_PATTERNS.some((pattern) => lower.includes(pattern));
+};
+
 /** Dev emits no manifest, so there is nothing to compare against. */
 const isEnabled = (): boolean => !import.meta.env.DEV && BUILD_ID !== "unknown";
 
