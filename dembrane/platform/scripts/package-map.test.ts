@@ -42,10 +42,10 @@ test("an allowed namespace import needs a reason and must still be used", () => 
   ]);
 });
 
-test("the workspace keeps the rule and the README matches it", async () => {
+test("the workspace keeps the rule and PACKAGES.md matches it", async () => {
   const root = new URL("..", import.meta.url).pathname;
   const pkgs = await readWorkspace(root);
   expect(problems(pkgs)).toEqual([]);
-  const readme = await Bun.file(`${root}/README.md`).text();
+  const readme = await Bun.file(`${root}/PACKAGES.md`).text();
   expect(splice(readme, render(pkgs))).toBe(readme);
 });
