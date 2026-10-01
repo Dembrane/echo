@@ -1,4 +1,4 @@
-import { assertPublicTarget } from "@dembrane/webhooks";
+import { fetchChecked } from "@dembrane/webhooks";
 import { decodeEntities } from "../legal/parse";
 
 /**
@@ -43,12 +43,14 @@ export function httpGet(allowPrivate: boolean): HttpGet {
     let url = start;
     for (let hop = 0; hop < 4; hop++) {
       if (!/^https?:\/\//i.test(url)) throw new Error(`not a web address: ${url}`);
-      await assertPublicTarget(url, allowPrivate);
-      const res = await fetch(url, {
-        redirect: "manual",
-        signal: AbortSignal.timeout(opts.timeoutMs),
-        headers: { "user-agent": "dembrane-demo-research/1.0 (+https://dembrane.com)" },
-      });
+      const res = await fetchChecked(
+        url,
+        {
+          signal: AbortSignal.timeout(opts.timeoutMs),
+          headers: { "user-agent": "dembrane-demo-research/1.0 (+https://dembrane.com)" },
+        },
+        { allowPrivate },
+      );
       const next = res.headers.get("location");
       if (res.status >= 300 && res.status < 400 && next) {
         url = new URL(next, url).toString();

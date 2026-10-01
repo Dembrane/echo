@@ -1,8 +1,15 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { createHmac } from "node:crypto";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { createServer } from "node:https";
+import type { AddressInfo } from "node:net";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { Writable } from "node:stream";
+import type { TLSSocket } from "node:tls";
 import { createLogger } from "@dembrane/observability";
 import {
+  fetchChecked,
   httpDeliver,
   isPrivateAddress,
   pythonJson,
@@ -110,14 +117,18 @@ describe("private targets", () => {
 
 describe("delivery", () => {
   let server: ReturnType<typeof Bun.serve>;
-  const seen: { headers: Headers; body: string }[] = [];
+  const seen: { url: string; headers: Headers; body: string }[] = [];
   let status = 200;
   beforeAll(() => {
     server = Bun.serve({
       port: 0,
+      hostname: "127.0.0.1",
       async fetch(req) {
-        seen.push({ headers: req.headers, body: await req.text() });
-        return new Response("ok", { status });
+        seen.push({ url: req.url, headers: req.headers, body: await req.text() });
+        return new Response("ok", {
+          status,
+          headers: status === 302 ? { location: "http://127.0.0.1:9/elsewhere" } : {},
+        });
       },
     });
   });
@@ -142,6 +153,72 @@ describe("delivery", () => {
     expect(recomputed).toBe(PYTHON_SIGNATURE);
   });
 
+  test("a hostname is resolved once and the request goes to that address under its own name", async () => {
+    const asked: string[] = [];
+    const deliver = httpDeliver({
+      allowPrivate: true,
+      resolve: async (host) => {
+        asked.push(host);
+        return ["127.0.0.1"];
+      },
+    });
+    status = 200;
+    const res = await deliver(
+      { id: "w", name: "n", url: `http://hooks.example:${server.port}/in?a=1`, secret: "k3y" },
+      payload,
+    );
+    expect(res).toEqual({ status: 200, text: "ok" });
+    expect(asked).toEqual(["hooks.example"]);
+    const got = seen.at(-1);
+    expect(got?.url).toBe(`http://hooks.example:${server.port}/in?a=1`);
+    expect(got?.headers.get("host")).toBe(`hooks.example:${server.port}`);
+    expect(got?.body).toBe(PYTHON_BODY);
+    expect(got?.headers.get("x-webhook-signature")).toBe(PYTHON_SIGNATURE);
+  });
+
+  test("an address that does not answer gives way to the next one, and the request arrives once", async () => {
+    const deliver = httpDeliver({ allowPrivate: true, resolve: async () => ["::1", "127.0.0.1"] });
+    const before = seen.length;
+    const res = await deliver(
+      { id: "w", name: "n", url: `http://hooks.example:${server.port}/in`, secret: null },
+      payload,
+    );
+    expect(res.status).toBe(200);
+    expect(seen.length).toBe(before + 1);
+  });
+
+  test("a hostname with one internal address among its answers is refused and nothing is sent", async () => {
+    let asked = 0;
+    const deliver = httpDeliver({
+      allowPrivate: false,
+      resolve: async () => {
+        asked++;
+        return ["8.8.8.8", "127.0.0.1"];
+      },
+    });
+    const before = seen.length;
+    await expect(
+      deliver(
+        { id: "w", name: "n", url: `http://hooks.example:${server.port}/in`, secret: null },
+        payload,
+      ),
+    ).rejects.toThrow("private or internal address");
+    expect(asked).toBe(1);
+    expect(seen.length).toBe(before);
+  });
+
+  test("a redirect is handed back, not followed", async () => {
+    status = 302;
+    const res = await fetchChecked(
+      `http://hooks.example:${server.port}/in`,
+      {},
+      { allowPrivate: true, resolve: async () => ["127.0.0.1"] },
+    );
+    status = 200;
+    expect(res.status).toBe(302);
+    expect(res.headers.get("location")).toBe("http://127.0.0.1:9/elsewhere");
+  });
+
   test("dispatch: 2xx done, 4xx dropped, 5xx retried, unpublished skipped", async () => {
     const hook = {
       id: "w",
@@ -164,6 +241,57 @@ describe("delivery", () => {
     hook.status = "draft";
     await runDispatch(deps, { webhookId: "w", payload: { event: "x" } });
     expect(seen.length).toBe(before);
+  });
+});
+
+// The certificate is made on the spot, so the test runs where openssl is installed.
+describe.skipIf(!Bun.which("openssl"))("delivery over TLS", () => {
+  let dir = "";
+  const names: unknown[] = [];
+  let server: ReturnType<typeof createServer>;
+  let port = 0;
+  let ca = "";
+  beforeAll(async () => {
+    dir = mkdtempSync(join(tmpdir(), "webhooks-tls-"));
+    const run = (...args: string[]) => {
+      const done = Bun.spawnSync(["openssl", ...args], { cwd: dir });
+      if (done.exitCode !== 0) throw new Error(done.stderr.toString());
+    };
+    const ec = ["-newkey", "ec", "-pkeyopt", "ec_paramgen_curve:prime256v1", "-nodes"];
+    run("req", "-x509", ...ec, "-keyout", "ca.key", "-out", "ca.pem", "-subj", "/CN=test ca");
+    run("req", ...ec, "-keyout", "leaf.key", "-out", "leaf.csr", "-subj", "/CN=hooks.example");
+    writeFileSync(join(dir, "ext.cnf"), "subjectAltName=DNS:hooks.example\n");
+    run(
+      ...["x509", "-req", "-in", "leaf.csr", "-CA", "ca.pem", "-CAkey", "ca.key"],
+      ...["-CAcreateserial", "-out", "leaf.pem", "-extfile", "ext.cnf"],
+    );
+    ca = readFileSync(join(dir, "ca.pem"), "utf8");
+    server = createServer(
+      { key: readFileSync(join(dir, "leaf.key")), cert: readFileSync(join(dir, "leaf.pem")) },
+      (req, res) => {
+        names.push((req.socket as TLSSocket).servername);
+        res.end(req.headers.host);
+      },
+    );
+    await new Promise<void>((ready) => server.listen(0, "127.0.0.1", ready));
+    port = (server.address() as AddressInfo).port;
+  });
+  afterAll(() => {
+    server.close();
+    rmSync(dir, { recursive: true, force: true });
+  });
+  const opts = { allowPrivate: true, resolve: async () => ["127.0.0.1"] };
+
+  test("the hostname is the TLS server name and the name the certificate is checked for", async () => {
+    const res = await fetchChecked(`https://hooks.example:${port}/in`, { tls: { ca } }, opts);
+    expect(await res.text()).toBe(`hooks.example:${port}`);
+    expect(names.at(-1)).toBe("hooks.example");
+  });
+
+  test("a certificate for another name fails the request", async () => {
+    await expect(
+      fetchChecked(`https://other.example:${port}/in`, { tls: { ca } }, opts),
+    ).rejects.toThrow("ERR_TLS_CERT_ALTNAME_INVALID");
   });
 });
 

@@ -47,6 +47,29 @@ describe("reading a website", () => {
     await expect(fetchSite("https://site.example/", down, () => new Date())).rejects.toThrow(/503/);
   });
 
+  test("a redirect is followed hop by hop to the page, within the byte limit", async () => {
+    const server = Bun.serve({
+      port: 0,
+      hostname: "127.0.0.1",
+      fetch: (req) =>
+        new URL(req.url).pathname === "/"
+          ? new Response(null, { status: 301, headers: { location: "/home" } })
+          : new Response("<p>welkom</p>", { headers: { "content-type": "text/html" } }),
+    });
+    try {
+      const base = `http://127.0.0.1:${server.port}`;
+      const page = await httpGet(true)(`${base}/`, { maxBytes: 8, timeoutMs: 2000 });
+      expect(page).toEqual({
+        status: 200,
+        url: `${base}/home`,
+        contentType: "text/html",
+        body: "<p>welko",
+      });
+    } finally {
+      server.stop(true);
+    }
+  });
+
   test("private and internal addresses are refused, and only web addresses are fetched", async () => {
     const get = httpGet(false);
     await expect(get("http://127.0.0.1:9/", { maxBytes: 10, timeoutMs: 500 })).rejects.toThrow(

@@ -2,8 +2,10 @@ export {
   assertPublicTarget,
   type Deliver,
   type Delivery,
+  fetchChecked,
   httpDeliver,
   isPrivateAddress,
+  type Resolve,
 } from "./deliver";
 export { dispatchWebhook, runDispatch, webhookJobs } from "./jobs";
 export {
