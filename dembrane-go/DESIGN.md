@@ -41,7 +41,7 @@ Voice: warm, direct, a trusted colleague. Never "Successfully", "Please be advis
 
 ## 2. Brand application
 
-Source of truth: `dembrane/brand/STYLE_GUIDE.md` + `dembrane/brand/colors.json`.
+Source of truth: `brand/STYLE_GUIDE.md` + `brand/colors.json`.
 
 | Token | Value | Use |
 |---|---|---|
@@ -55,7 +55,7 @@ Source of truth: `dembrane/brand/STYLE_GUIDE.md` + `dembrane/brand/colors.json`.
 - **Type:** DM Sans with stylistic alternates `ss01–ss06`. Ship the font in-app (don't rely on a system fallback). Sizes per guide (Display 48–64, Headline 32–40, Title 24–28, Body 20, Caption 12–15). **Never bold** — emphasize with Royal Blue or *italics*. Left-align.
 - **Icons:** Phosphor (regular weight). Pair with labels where clarity matters.
 - **Liquid Glass:** use the system glass materials for the tab bar, recording accessory, and toolbars. Tint the active record state Royal Blue; the live waveform uses the accent palette over glass.
-- **App icon:** the dembrane logomark (concentric-arc "d") on Parchment. `dembrane/brand/logos/logomark-*`.
+- **App icon:** the dembrane logomark (concentric-arc "d") on Parchment. `brand/logos/logomark-*`.
 - **Imagery:** no stock, no language-model-generated images. Real, candid, warm.
 - **Localization:** EN + Dutch (informal je/jij) + Italian (A2, tu). Glossary in the style guide.
 

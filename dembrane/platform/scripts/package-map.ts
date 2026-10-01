@@ -2,7 +2,7 @@
 /**
  * The package map: which layer each workspace package sits in, who imports whom, and the
  * rule that a dependency points down only (apps, then namespaces, then capabilities).
- *   bun run packages check   the layer rule holds and README.md's generated section is current
+ *   bun run packages check   the layer rule holds and PACKAGES.md is current
  *   bun run packages write   rewrites that section from package.json files and imports
  * Each package declares its layer and one-line description in its package.json:
  *   "description": "...", "dembrane": { "layer": "namespace", "allow": { "<ns>": "why" } }
@@ -226,7 +226,7 @@ export function render(pkgs: readonly Pkg[]): string {
 export function splice(readme: string, section: string): string {
   const a = readme.indexOf(START_TAG);
   const b = readme.indexOf(END);
-  if (a < 0 || b < 0) throw new Error("README.md has no package-map markers");
+  if (a < 0 || b < 0) throw new Error("PACKAGES.md has no package-map markers");
   return readme.slice(0, a) + section + readme.slice(b + END.length);
 }
 
@@ -234,7 +234,7 @@ if (import.meta.main) {
   const root = new URL("..", import.meta.url).pathname;
   const cmd = process.argv[2] ?? "check";
   const pkgs = await readWorkspace(root);
-  const readmePath = `${root}/README.md`;
+  const readmePath = `${root}/PACKAGES.md`;
   const readme = await Bun.file(readmePath).text();
   const next = splice(readme, render(pkgs));
   const found = problems(pkgs);
@@ -243,7 +243,7 @@ if (import.meta.main) {
   } else if (cmd !== "check") {
     throw new Error("usage: package-map.ts check | write");
   } else if (next !== readme) {
-    found.push("README.md's package map is stale; run `bun run packages write`");
+    found.push("PACKAGES.md is stale; run `bun run packages write`");
   }
   for (const f of found) process.stderr.write(`${f}\n`);
   process.exit(found.length ? 1 : 0);
