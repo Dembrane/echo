@@ -1,0 +1,526 @@
+// biome-ignore-all lint: doesnt need interference
+
+interface CustomDirectusTypes {
+	announcement: Announcement[];
+	announcement_activity: AnnouncementActivity[];
+	announcement_translations: AnnouncementTranslation[];
+	conversation: Conversation[];
+	conversation_artifact: ConversationArtifact[];
+	conversation_chunk: ConversationChunk[];
+	conversation_link: ConversationLink[];
+	conversation_project_tag: ConversationProjectTag[];
+	conversation_reply: ConversationReply[];
+	directus_sync_id_map: DirectusSyncIdMap[];
+	languages: Language[];
+	processing_status: ProcessingStatus[];
+	project: Project[];
+	project_agentic_run: ProjectAgenticRun[];
+	project_agentic_run_event: ProjectAgenticRunEvent[];
+	project_chat: ProjectChat[];
+	project_chat_conversation: ProjectChatConversation[];
+	project_chat_message: ProjectChatMessage[];
+	project_chat_message_conversation: ProjectChatMessageConversation[];
+	project_chat_message_conversation_1: ProjectChatMessageConversation1[];
+	project_chat_message_metadata: ProjectChatMessageMetadata[];
+	project_report: ProjectReport[];
+	project_report_metric: ProjectReportMetric[];
+	project_report_notification_participants: ProjectReportNotificationParticipant[];
+	project_tag: ProjectTag[];
+	prompt_template: PromptTemplate[];
+	prompt_template_preference: PromptTemplatePreference[];
+	prompt_template_rating: PromptTemplateRating[];
+	verification_topic: VerificationTopic[];
+	verification_topic_translations: VerificationTopicTranslation[];
+	directus_users: CustomDirectusUser;
+}
+
+interface Announcement {
+	created_at: string | null;
+	expires_at: string | null;
+	id: string;
+	level: "info" | "urgent" | null;
+	sort: number | null;
+	updated_at: string | null;
+	user_created: string | DirectusUser<Schema> | null;
+	user_updated: string | DirectusUser<Schema> | null;
+	activity: string[] | AnnouncementActivity[];
+	translations: string[] | AnnouncementTranslation[];
+}
+
+interface AnnouncementActivity {
+	announcement_activity: string | Announcement | null;
+	created_at: string | null;
+	id: string;
+	read: boolean | null;
+	sort: number | null;
+	updated_at: string | null;
+	user_created: string | DirectusUser<Schema> | null;
+	user_id: string | null;
+	user_updated: string | DirectusUser<Schema> | null;
+}
+
+interface AnnouncementTranslation {
+	announcement_id: string | Announcement | null;
+	id: number;
+	languages_code: string | Language | null;
+	message: string | null;
+	title: string | null;
+}
+
+interface Conversation {
+	created_at: string | null;
+	duration: number | null;
+	id: string;
+	is_all_chunks_transcribed: boolean | null;
+	is_audio_processing_finished: boolean | null;
+	is_finished: boolean | null;
+	is_anonymized: boolean | null;
+	locked: boolean | null;
+	merged_audio_path: string | null;
+	merged_transcript: string | null;
+	participant_email: string | null;
+	participant_name: string | null;
+	participant_user_agent: string | null;
+	project_id: string | Project;
+	recording_started_at?: string | null;
+	source:
+		| "DASHBOARD_UPLOAD"
+		| "CLONE"
+		| "PORTAL_AUDIO"
+		| "PORTAL_TEXT"
+		| "SPLIT"
+		| null;
+	summary: string | null;
+	title: string | null;
+	updated_at: string | null;
+	chunks: string[] | ConversationChunk[];
+	linked_conversations: string[] | ConversationLink[];
+	linking_conversations: string[] | ConversationLink[];
+	processing_status: string[] | ProcessingStatus[];
+	project_chat_messages: string[] | ProjectChatMessageConversation[];
+	project_chats: string[] | ProjectChatConversation[];
+	replies: string[] | ConversationReply[];
+	tags: string[] | ConversationProjectTag[];
+	conversation_artifacts: string[] | ConversationArtifact[];
+	has_transcript?: boolean;
+	last_chunk_at?: string | null;
+	has_only_text_chunks?: boolean;
+	// Derived by the conversations BFF: at least one chunk failed to
+	// transcribe (error set, no transcript). Surfaced as a list-row badge.
+	has_transcription_error?: boolean;
+	// Derived by the conversations BFF. lock_reason explains why `locked`;
+	// summary_locked marks a server-scrubbed summary (1-hour recording cap gate).
+	lock_reason?: "hours_cap" | null;
+	summary_locked?: boolean;
+}
+
+interface ConversationArtifact {
+	id: string;
+	user_created: string | DirectusUser<Schema> | null;
+	date_created: string | null;
+	user_updated: string | DirectusUser<Schema> | null;
+	last_updated_at: string | null;
+	content: string | null;
+	approved_at: string | null;
+	read_aloud_stream_url: string | null;
+	key: string | null;
+	topic_label: string | null;
+	conversation_id: string | Conversation | null;
+}
+
+interface ConversationChunk {
+	conversation_id: string | Conversation;
+	created_at: string | null;
+	cross_talk_instances: number | null;
+	desired_language: string | null;
+	detected_language: string | null;
+	detected_language_confidence: number | null;
+	diarization: unknown | null;
+	error: string | null;
+	hallucination_reason: string | null;
+	hallucination_score: number | null;
+	id: string;
+	noise_ratio: number | null;
+	path: string | null;
+	raw_transcript: string | null;
+	runpod_job_status_link: string | null;
+	runpod_request_count: number | null;
+	silence_ratio: number | null;
+	source: "DASHBOARD_UPLOAD" | "PORTAL_AUDIO" | "PORTAL_TEXT" | "SPLIT" | null;
+	timestamp: string;
+	transcript: string | null;
+	transcript_locked: boolean | null;
+	translation_error: string | null;
+	updated_at: string | null;
+	processing_status: string[] | ProcessingStatus[];
+}
+
+interface ConversationLink {
+	date_created: string | null;
+	date_updated: string | null;
+	id: number;
+	link_type: string | null;
+	source_conversation_id: string | Conversation | null;
+	target_conversation_id: string | Conversation | null;
+}
+
+interface ConversationProjectTag {
+	conversation_id: string | Conversation | null;
+	id: number;
+	project_tag_id: string | ProjectTag | null;
+}
+
+interface ConversationReply {
+	content_text: string | null;
+	conversation_id: string | null;
+	date_created: string | null;
+	id: string;
+	reply: string | Conversation | null;
+	sort: number | null;
+	type: string | null;
+}
+
+interface DirectusSyncIdMap {
+	id: number;
+	table: string;
+	sync_id: string;
+	local_id: string;
+	created_at: string | null;
+}
+
+interface Language {
+	code: string;
+	direction: "ltr" | "rtl" | null;
+	name: string | null;
+}
+
+interface ProcessingStatus {
+	conversation_chunk_id: string | ConversationChunk | null;
+	conversation_id: string | Conversation | null;
+	duration_ms: number | null;
+	event: string | null;
+	id: number;
+	message: string | null;
+	parent: number | ProcessingStatus | null;
+	project_id: string | Project | null;
+	timestamp: string | null;
+}
+
+interface Project {
+	anonymize_transcripts: boolean | null;
+	context: string | null;
+	conversation_ask_for_participant_name_label: string | null;
+	conversation_title_prompt: string | null;
+	created_at: string | null;
+	default_conversation_ask_for_participant_name: boolean | null;
+	default_conversation_ask_for_participant_email: boolean | null;
+	default_conversation_description: string | null;
+	default_conversation_finish_text: string | null;
+	default_conversation_title: string | null;
+	default_conversation_transcript_prompt: string | null;
+	default_conversation_tutorial_slug: "None" | "basic" | "advanced" | null;
+	directus_user_id: string | DirectusUser<Schema> | null;
+	enable_ai_title_and_tags: boolean | null;
+	get_reply_mode: "summarize" | "brainstorm" | "custom" | null;
+	get_reply_prompt: string | null;
+	host_guide: Record<string, unknown> | null;
+	id: string;
+	image_generation_model: "MODEST" | "EXTRAVAGANT" | "PLACEHOLDER" | null;
+	is_conversation_allowed: boolean;
+	is_enhanced_audio_processing_enabled: boolean | null;
+	is_get_reply_enabled: boolean | null;
+	is_project_notification_subscription_allowed: boolean | null;
+	language:
+		| "cs"
+		| "de"
+		| "en"
+		| "es"
+		| "fr"
+		| "it"
+		| "multi"
+		| "nl"
+		| "uk"
+		| null;
+	name: string | null;
+	updated_at: string | null;
+	// Workspace-level privacy toggle — one of two legal values,
+	// matches server/dembrane/api/v2/workspace_projects.py.
+	visibility: "workspace" | "private" | null;
+	is_verify_enabled: boolean | null;
+	// Per-project opt-in for the living canvas beta. Null or false = off;
+	// canvas APIs 404 unless this AND the global ENABLE_CANVAS flag are on.
+	is_canvas_enabled: boolean | null;
+	// The dembrane event invitation at the foot of the portal's thank you
+	// page. Null reads as on. The free tier cannot switch it off: the
+	// participant API forces it on there whatever this says.
+	is_dembrane_event_cta_enabled: boolean | null;
+	is_verify_on_finish_enabled: boolean | null;
+	selected_verification_key_list: string | null;
+	conversations: string[] | Conversation[];
+	tags: string[] | ProjectTag[];
+	project_chats: string[] | ProjectChat[];
+	project_reports: string[] | ProjectReport[];
+	processing_status: string[] | ProcessingStatus[];
+	custom_verification_topics: string[] | VerificationTopic[];
+	conversations_count?: number | null;
+	pin_order: number | null;
+	// Added by matrix v1.1 (workspaces migration) — step 6 on the
+	// Directus schema. Nullable for legacy rows that haven't been
+	// attached to a workspace yet.
+	workspace_id: string | null;
+}
+
+interface ParticipantProject extends Project {
+	whitelabel_logo_url: string | null;
+	legal_basis: "client-managed" | "consent" | "dembrane-events" | null;
+	privacy_policy_url: string | null;
+	// consent-card name; null renders "The organiser"
+	organiser_name: string | null;
+}
+
+interface ProjectAgenticRun {
+	agent_thread_id: string | null;
+	completed_at: string | null;
+	created_at: string | null;
+	directus_user_id: string | null;
+	id: string;
+	last_event_seq: number | null;
+	latest_error: string | null;
+	latest_error_code: string | null;
+	latest_output: string | null;
+	project_chat_id: string | ProjectChat | null;
+	project_id: string | Project | null;
+	started_at: string | null;
+	status: "queued" | "running" | "completed" | "failed" | "timeout" | null;
+	updated_at: string | null;
+	events: number[] | ProjectAgenticRunEvent[];
+}
+
+interface ProjectAgenticRunEvent {
+	event_type: string | null;
+	id: number;
+	payload: unknown | null;
+	project_agentic_run_id: string | ProjectAgenticRun | null;
+	seq: number | null;
+	timestamp: string | null;
+}
+
+interface ProjectChat {
+	auto_select: boolean | null;
+	chat_mode: "overview" | "deep_dive" | "agentic" | null;
+	date_created: string | null;
+	date_updated: string | null;
+	id: string;
+	name: string | null;
+	project_id: string | Project | null;
+	user_created: string | DirectusUser<Schema> | null;
+	user_updated: string | DirectusUser<Schema> | null;
+	project_chat_messages: string[] | ProjectChatMessage[];
+	used_conversations: string[] | ProjectChatConversation[];
+}
+
+interface ProjectChatConversation {
+	conversation_id: string | Conversation | null;
+	id: number;
+	project_chat_id: string | ProjectChat | null;
+}
+
+interface ProjectChatMessage {
+	date_created: string | null;
+	date_updated: string | null;
+	id: string;
+	message_from: "User" | "assistant" | "dembrane" | null;
+	project_chat_id: string | ProjectChat | null;
+	template_key: string | null;
+	text: string | null;
+	tokens_count: number | null;
+	added_conversations: string[] | ProjectChatMessageConversation1[];
+	chat_message_metadata: string[] | ProjectChatMessageMetadata[];
+	used_conversations: string[] | ProjectChatMessageConversation[];
+}
+
+interface ProjectChatMessageConversation {
+	conversation_id: string | Conversation | null;
+	id: number;
+	project_chat_message_id: string | ProjectChatMessage | null;
+}
+
+interface ProjectChatMessageConversation1 {
+	conversation_id: string | Conversation | null;
+	id: number;
+	project_chat_message_id: string | ProjectChatMessage | null;
+}
+
+interface ProjectChatMessageMetadata {
+	conversation: string | Conversation | null;
+	date_created: string | null;
+	id: string;
+	message_metadata: string | ProjectChatMessage | null;
+	ratio: number | null;
+	reference_text: string | null;
+	type: "reference" | "citation" | null;
+}
+
+interface ProjectReport {
+	content: string | null;
+	date_created: string | null;
+	date_updated: string | null;
+	error_code: string | null;
+	error_message: string | null;
+	id: number;
+	language: string | null;
+	project_id: string | Project | null;
+	scheduled_at: string | null;
+	show_portal_link: boolean | null;
+	status:
+		| "draft"
+		| "error"
+		| "archived"
+		| "published"
+		| "cancelled"
+		| "scheduled";
+	user_instructions: string | null;
+}
+
+interface ProjectReportMetric {
+	date_created: string | null;
+	date_updated: string | null;
+	id: number;
+	ip: string | null;
+	project_report_id: number | ProjectReport | null;
+	type: "view" | null;
+}
+
+interface ProjectReportNotificationParticipant {
+	conversation_id: string | Conversation | null;
+	date_submitted: string | null;
+	date_updated: string | null;
+	email: string | null;
+	email_opt_in: boolean | null;
+	email_opt_out_token: string | null;
+	id: string;
+	project_id: string | null;
+	sort: number | null;
+}
+
+interface ProjectTag {
+	created_at: string | null;
+	id: string;
+	project_id: string | Project;
+	sort: number | null;
+	text: string | null;
+	updated_at: string | null;
+	conversations: string[] | ConversationProjectTag[];
+}
+
+interface VerificationTopic {
+	key: string;
+	sort: number | null;
+	user_created: string | DirectusUser<Schema> | null;
+	date_created: string | null;
+	user_updated: string | DirectusUser<Schema> | null;
+	date_updated: string | null;
+	project_id: string | Project | null;
+	prompt: string | null;
+	icon: string | null;
+	translations: string[] | VerificationTopicTranslation[];
+}
+
+interface VerificationTopicTranslation {
+	id: number;
+	verification_topic_key: string | VerificationTopic | null;
+	languages_code: string | Language | null;
+	label: string | null;
+}
+
+interface PromptTemplate {
+	id: string;
+	user_created: string | DirectusUser<Schema> | null;
+	date_created: string | null;
+	date_updated: string | null;
+	title: string;
+	content: string;
+	icon: string | null;
+	sort: number | null;
+	is_public: boolean;
+	description: string | null;
+	tags: string[] | null;
+	language: string | null;
+	is_anonymous: boolean;
+	author_display_name: string | null;
+	use_count: number;
+	star_count: number;
+	copied_from: string | PromptTemplate | null;
+}
+
+interface PromptTemplatePreference {
+	id: string;
+	user_created: string | DirectusUser<Schema> | null;
+	date_created: string | null;
+	template_type: "static" | "user";
+	static_template_id: string | null;
+	prompt_template_id: string | PromptTemplate | null;
+	sort: number;
+}
+
+interface PromptTemplateRating {
+	id: string;
+	user_created: string | DirectusUser<Schema> | null;
+	date_created: string | null;
+	prompt_template_id: string | PromptTemplate | null;
+	rating: number;
+	chat_message_id: string | null;
+}
+
+interface CustomDirectusUser {
+	disable_create_project: boolean | null;
+	whitelabel_logo: string | null;
+	legal_basis: "client-managed" | "consent" | "dembrane-events" | null;
+	privacy_policy_url: string | null;
+	hide_ai_suggestions: boolean | null;
+	projects: string[] | Project[];
+}
+
+// GeoJSON Types
+
+interface GeoJSONPoint {
+	type: "Point";
+	coordinates: [number, number];
+}
+
+interface GeoJSONLineString {
+	type: "LineString";
+	coordinates: Array<[number, number]>;
+}
+
+interface GeoJSONPolygon {
+	type: "Polygon";
+	coordinates: Array<Array<[number, number]>>;
+}
+
+interface GeoJSONMultiPoint {
+	type: "MultiPoint";
+	coordinates: Array<[number, number]>;
+}
+
+interface GeoJSONMultiLineString {
+	type: "MultiLineString";
+	coordinates: Array<Array<[number, number]>>;
+}
+
+interface GeoJSONMultiPolygon {
+	type: "MultiPolygon";
+	coordinates: Array<Array<Array<[number, number]>>>;
+}
+
+interface GeoJSONGeometryCollection {
+	type: "GeometryCollection";
+	geometries: Array<
+		| GeoJSONPoint
+		| GeoJSONLineString
+		| GeoJSONPolygon
+		| GeoJSONMultiPoint
+		| GeoJSONMultiLineString
+		| GeoJSONMultiPolygon
+	>;
+}

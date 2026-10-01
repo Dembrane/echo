@@ -1,0 +1,21 @@
+{
+  "name": "@dembrane/media",
+  "description": "The ffmpeg service: probes, converts, splits and merges audio, one job per instance.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/main.ts",
+    "start": "bun src/main.ts",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@dembrane/audio": "workspace:*",
+    "@dembrane/config": "workspace:*",
+    "@dembrane/observability": "workspace:*",
+    "hono": "^4.9.0",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "@dembrane/storage": "workspace:*"
+  }
+}

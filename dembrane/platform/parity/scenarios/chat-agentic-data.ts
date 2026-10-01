@@ -1,0 +1,679 @@
+import {
+  FOCUS_LINKS,
+  GOAL,
+  INSIGHTS,
+  MEMORIES,
+  MORE_CHATS,
+  P3_OVER_CAP,
+  RECENT_CHUNK,
+  agenticExtra as x,
+} from "../chat-agentic-setup";
+import { chats, conversations, projects } from "../fixtures";
+import { P2_OPEN } from "../projects-setup";
+import { type Side, scenarios } from "../runner/scenario";
+
+const { p1, p2, p3, legacy } = projects;
+const A = "/api/agentic";
+const proj = (p: string, rest: string) => `${A}/projects/${p}/${rest}`;
+const MISSING = "f0000000-0000-4000-8000-000000000999";
+
+const post = (side: Side, path: string, body: unknown) =>
+  side.fetch(path, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+// Participant pings, so the monitor's presence store holds the same state on both sides.
+const ping = (side: Side, cid: string, body: unknown) =>
+  post(side, `/api/participant/conversations/${cid}/ping`, body);
+const visit = (side: Side, pid: string, vid: string, body: unknown) =>
+  post(side, `/api/participant/projects/${pid}/visitors/${vid}/ping`, body);
+
+const H14 =
+  "H-14: staff reach a tenant's data only through a support session, never a blanket bypass";
+
+export default scenarios([
+  // ── settings ──────────────────────────────────────────────────────
+  { name: "agentic settings: owner", as: "alice", method: "GET", path: proj(p1, "settings") },
+  {
+    name: "agentic settings: staff",
+    as: "admin",
+    method: "GET",
+    path: proj(p3, "settings"),
+    differs: H14,
+  },
+  { name: "agentic settings: other tenant", as: "bob", method: "GET", path: proj(p1, "settings") },
+  {
+    name: "agentic settings: missing",
+    as: "alice",
+    method: "GET",
+    path: proj(MISSING, "settings"),
+  },
+  {
+    name: "agentic settings: observer refused",
+    as: "rita",
+    method: "GET",
+    path: proj(p2, "settings"),
+    setup: [P2_OPEN],
+  },
+  {
+    name: "agentic settings: not onboarded",
+    as: "dave",
+    method: "GET",
+    path: proj(legacy, "settings"),
+  },
+  {
+    name: "agentic settings: anonymous",
+    as: "anonymous",
+    method: "GET",
+    path: proj(p1, "settings"),
+  },
+
+  // ── tags ──────────────────────────────────────────────────────────
+  {
+    name: "agentic tags: add and remove",
+    as: "alice",
+    method: "POST",
+    path: proj(p1, "tags"),
+    body: { add: ["Housing", "ENERGY", " housing ", ""], remove: ["Mobility", "nope"] },
+  },
+  {
+    name: "agentic tags: external on open p2",
+    as: "bob",
+    method: "POST",
+    path: proj(p2, "tags"),
+    body: { add: ["field"] },
+    setup: [P2_OPEN],
+  },
+  { name: "agentic tags: no body", as: "alice", method: "POST", path: proj(p1, "tags") },
+  {
+    name: "agentic tags: add not a list",
+    as: "alice",
+    method: "POST",
+    path: proj(p1, "tags"),
+    body: { add: "x" },
+  },
+  {
+    name: "agentic tags: observer refused",
+    as: "rita",
+    method: "POST",
+    path: proj(p2, "tags"),
+    body: { add: ["x"] },
+    setup: [P2_OPEN],
+  },
+
+  // ── conversations ─────────────────────────────────────────────────
+  { name: "agentic convs: list", as: "alice", method: "GET", path: proj(p1, "conversations") },
+  {
+    name: "agentic convs: page",
+    as: "alice",
+    method: "GET",
+    path: proj(p1, "conversations"),
+    query: { limit: "1", offset: "1" },
+  },
+  {
+    name: "agentic convs: one",
+    as: "alice",
+    method: "GET",
+    path: proj(p1, "conversations"),
+    query: { conversation_id: conversations.c1 },
+  },
+  {
+    name: "agentic convs: search",
+    as: "alice",
+    method: "GET",
+    path: proj(p1, "conversations"),
+    query: { transcript_query: "Charging buses grid" },
+  },
+  {
+    name: "agentic convs: search no usable word",
+    as: "alice",
+    method: "GET",
+    path: proj(p1, "conversations"),
+    query: { transcript_query: "the a of" },
+  },
+  {
+    name: "agentic convs: search one conversation",
+    as: "alice",
+    method: "GET",
+    path: proj(p1, "conversations"),
+    query: { transcript_query: "cycle lanes", conversation_id: conversations.c2 },
+  },
+  {
+    name: "agentic convs: locked on free tier",
+    as: "bob",
+    method: "GET",
+    path: proj(p3, "conversations"),
+    setup: P3_OVER_CAP,
+  },
+  {
+    name: "agentic convs: locked search",
+    as: "bob",
+    method: "GET",
+    path: proj(p3, "conversations"),
+    query: { transcript_query: "kickoff" },
+    setup: P3_OVER_CAP,
+  },
+  {
+    name: "agentic convs: staff sees locked",
+    as: "admin",
+    method: "GET",
+    path: proj(p3, "conversations"),
+    setup: P3_OVER_CAP,
+    differs: H14,
+  },
+  {
+    name: "agentic convs: limit zero",
+    as: "alice",
+    method: "GET",
+    path: proj(p1, "conversations"),
+    query: { limit: "0", offset: "-1" },
+  },
+  {
+    name: "agentic convs: missing project",
+    as: "alice",
+    method: "GET",
+    path: proj(MISSING, "conversations"),
+  },
+  {
+    name: "agentic convs: other tenant",
+    as: "bob",
+    method: "GET",
+    path: proj(p1, "conversations"),
+  },
+
+  // ── focused conversations ─────────────────────────────────────────
+  {
+    name: "agentic focused: list",
+    as: "alice",
+    method: "GET",
+    path: proj(p1, "focused-conversations"),
+    query: { project_chat_id: chats.p1 },
+    setup: FOCUS_LINKS,
+  },
+  {
+    name: "agentic focused: page past the end",
+    as: "alice",
+    method: "GET",
+    path: proj(p1, "focused-conversations"),
+    query: { project_chat_id: chats.p1, offset: "5", limit: "2" },
+  },
+  {
+    name: "agentic focused: chat required",
+    as: "alice",
+    method: "GET",
+    path: proj(p1, "focused-conversations"),
+  },
+  {
+    name: "agentic focused: unknown chat",
+    as: "alice",
+    method: "GET",
+    path: proj(p1, "focused-conversations"),
+    query: { project_chat_id: MISSING },
+  },
+  {
+    name: "agentic focused: chat of another project",
+    as: "alice",
+    method: "GET",
+    path: proj(p1, "focused-conversations"),
+    query: { project_chat_id: x.chatP3 },
+    setup: MORE_CHATS,
+  },
+
+  // ── monitor ───────────────────────────────────────────────────────
+  { name: "agentic monitor: idle", as: "alice", method: "GET", path: proj(p1, "monitor") },
+  {
+    name: "agentic monitor: live with an error",
+    as: "alice",
+    method: "GET",
+    path: proj(p1, "monitor"),
+    query: { window_seconds: "60" },
+    setup: [RECENT_CHUNK],
+  },
+  {
+    name: "agentic monitor: window too small",
+    as: "alice",
+    method: "GET",
+    path: proj(p1, "monitor"),
+    query: { window_seconds: "2" },
+  },
+  { name: "agentic monitor: other tenant", as: "bob", method: "GET", path: proj(p1, "monitor") },
+  {
+    name: "agentic monitor: live from a ping before new audio",
+    as: "alice",
+    method: "GET",
+    path: proj(p1, "monitor"),
+    prepare: async (side) => {
+      const res = await ping(side, conversations.c2, {
+        project_id: p1,
+        state: "recording",
+        mode: "voice",
+        battery: { level: 0.8, charging: false },
+      });
+      return { _ping: res.status };
+    },
+  },
+  {
+    name: "agentic monitor: pre-conversation funnel",
+    as: "alice",
+    method: "GET",
+    path: proj(p1, "monitor"),
+    prepare: async (side) => {
+      const codes: number[] = [];
+      for (const [vid, body] of [
+        ["v-1", { stage: "scanned", device: "phone" }],
+        ["v-2", { stage: "terms", name: "  Ada  ", tags: ["energy"] }],
+        ["v-3", { stage: "profile" }],
+      ] as const)
+        codes.push((await visit(side, p1, vid, body)).status);
+      const res = await ping(side, conversations.c2, {
+        project_id: p1,
+        state: "recording",
+        visitor_id: "v-3",
+      });
+      return { _codes: [...codes, res.status].join(",") };
+    },
+  },
+
+  // ── chats ─────────────────────────────────────────────────────────
+  {
+    name: "agentic chats: project",
+    as: "alice",
+    method: "GET",
+    path: proj(p1, "chats"),
+    setup: MORE_CHATS,
+  },
+  {
+    name: "agentic chats: staff sees private",
+    as: "admin",
+    method: "GET",
+    path: proj(p1, "chats"),
+    setup: MORE_CHATS,
+    differs:
+      "H-14, M-10: staff as a workspace member see their own and shared chats, not others' private ones",
+  },
+  {
+    name: "agentic chats: workspace wide",
+    as: "erin",
+    method: "GET",
+    path: proj(p2, "chats"),
+    query: { workspace_wide: "true", limit: "5" },
+    setup: MORE_CHATS,
+  },
+  {
+    name: "agentic chats: limit too big",
+    as: "alice",
+    method: "GET",
+    path: proj(p1, "chats"),
+    query: { limit: "201", workspace_wide: "maybe" },
+  },
+
+  // ── chat messages ─────────────────────────────────────────────────
+  {
+    name: "agentic chat messages: read",
+    as: "alice",
+    method: "GET",
+    path: `${A}/chats/${chats.p1}/messages`,
+  },
+  {
+    name: "agentic chat messages: limit one",
+    as: "alice",
+    method: "GET",
+    path: `${A}/chats/${chats.p1}/messages`,
+    query: { limit: "1" },
+  },
+  {
+    name: "agentic chat messages: colleague's private chat",
+    as: "alice",
+    method: "GET",
+    path: `${A}/chats/${x.chatErinPrivate}/messages`,
+    setup: MORE_CHATS,
+  },
+  {
+    name: "agentic chat messages: own private chat",
+    as: "erin",
+    method: "GET",
+    path: `${A}/chats/${x.chatErinPrivate}/messages`,
+    setup: MORE_CHATS,
+  },
+  {
+    name: "agentic chat messages: deleted chat",
+    as: "alice",
+    method: "GET",
+    path: `${A}/chats/${x.chatDeleted}/messages`,
+    setup: MORE_CHATS,
+  },
+  {
+    name: "agentic chat messages: other tenant",
+    as: "bob",
+    method: "GET",
+    path: `${A}/chats/${chats.p1}/messages`,
+  },
+
+  // ── support requests ──────────────────────────────────────────────
+  {
+    name: "agentic support: filed",
+    as: "alice",
+    method: "POST",
+    path: proj(p1, "support-request"),
+    body: { message: "The export button does nothing", page_context: "report page" },
+    differs: "L-3: the ticket carries the caller's app user from the session, not a body field",
+  },
+  {
+    name: "agentic support: with this project's chat",
+    as: "alice",
+    method: "POST",
+    path: proj(p1, "support-request"),
+    body: { message: "Help", chat_id: chats.p1, message_id: "m-9" },
+    differs: "L-3: the ticket carries the caller's app user from the session, not a body field",
+  },
+  {
+    name: "agentic support: app user from the session",
+    as: "alice",
+    method: "POST",
+    path: proj(p1, "support-request"),
+    body: { message: "Help", app_user_id: "a0000000-0000-4000-8000-000000000003" },
+    differs: "L-3: app_user_id is the caller's, never the body's",
+  },
+  {
+    name: "agentic support: chat of another project",
+    as: "alice",
+    method: "POST",
+    path: proj(p1, "support-request"),
+    body: { message: "Help", chat_id: x.chatP3 },
+    setup: MORE_CHATS,
+    differs: "L-3: a ticket's chat must be a chat of its project",
+  },
+  {
+    name: "agentic support: empty message",
+    as: "alice",
+    method: "POST",
+    path: proj(p1, "support-request"),
+    body: { message: "" },
+  },
+  {
+    name: "agentic support: other tenant",
+    as: "bob",
+    method: "POST",
+    path: proj(p1, "support-request"),
+    body: { message: "x" },
+  },
+
+  // ── insights ──────────────────────────────────────────────────────
+  {
+    name: "agentic insight: noted",
+    as: "alice",
+    method: "POST",
+    path: proj(p1, "insight"),
+    body: {
+      kind: "wish",
+      content: "  Wants maps  ",
+      suggested_capability: "  ",
+      message_id: "m-2",
+    },
+  },
+  {
+    name: "agentic insight: chat of another project",
+    as: "alice",
+    method: "POST",
+    path: proj(p1, "insight"),
+    body: { kind: "wish", content: "x", chat_id: x.chatP3 },
+    setup: MORE_CHATS,
+    differs: "L-3: an insight's chat must be a chat of its project",
+  },
+  {
+    name: "agentic insight: blank content",
+    as: "alice",
+    method: "POST",
+    path: proj(p1, "insight"),
+    body: { kind: "wish", content: "   " },
+  },
+  {
+    name: "agentic insight: bad kind",
+    as: "alice",
+    method: "POST",
+    path: proj(p1, "insight"),
+    body: { kind: "rant", content: "x" },
+  },
+  {
+    name: "agentic insight: edit",
+    as: "alice",
+    method: "PATCH",
+    path: `${A}/insights/${x.insightP1}`,
+    body: { content: " Wants a map ", kind: "capability_gap", suggested_capability: " " },
+    setup: [INSIGHTS],
+  },
+  {
+    name: "agentic insight: edit nothing",
+    as: "alice",
+    method: "PATCH",
+    path: `${A}/insights/${x.insightP1}`,
+    body: {},
+    setup: [INSIGHTS],
+  },
+  {
+    name: "agentic insight: edit blank",
+    as: "alice",
+    method: "PATCH",
+    path: `${A}/insights/${x.insightP1}`,
+    body: { content: "  " },
+    setup: [INSIGHTS],
+  },
+  {
+    name: "agentic insight: edit other tenant's",
+    as: "alice",
+    method: "PATCH",
+    path: `${A}/insights/${x.insightP3}`,
+    body: { content: "x" },
+    setup: [INSIGHTS],
+  },
+  {
+    name: "agentic insight: edit missing",
+    as: "alice",
+    method: "PATCH",
+    path: `${A}/insights/${MISSING}`,
+    body: { content: "x" },
+  },
+  {
+    name: "agentic insight: retract",
+    as: "alice",
+    method: "POST",
+    path: `${A}/insights/${x.insightP1}/retract`,
+    body: { reason: " wrong chat " },
+    setup: [INSIGHTS],
+  },
+  {
+    name: "agentic insight: retract blank",
+    as: "alice",
+    method: "POST",
+    path: `${A}/insights/${x.insightP1}/retract`,
+    body: { reason: "   " },
+    setup: [INSIGHTS],
+  },
+  {
+    name: "agentic insight: dismiss",
+    as: "alice",
+    method: "POST",
+    path: `${A}/insights/${x.insightP1}/dismiss`,
+    setup: [INSIGHTS],
+  },
+  {
+    name: "agentic insight: dismiss other tenant's",
+    as: "bob",
+    method: "POST",
+    path: `${A}/insights/${x.insightP1}/dismiss`,
+    setup: [INSIGHTS],
+  },
+  {
+    name: "agentic insight: dismissed list",
+    as: "alice",
+    method: "GET",
+    path: proj(p1, "dismissed-insights"),
+    setup: [INSIGHTS],
+  },
+  {
+    name: "agentic insight: sent list",
+    as: "alice",
+    method: "GET",
+    path: proj(p1, "insights"),
+    setup: [INSIGHTS],
+  },
+  {
+    name: "agentic insight: sent list for a chat",
+    as: "alice",
+    method: "GET",
+    path: proj(p1, "insights"),
+    query: { chat_id: chats.p1 },
+    setup: [INSIGHTS],
+  },
+
+  // ── reports ───────────────────────────────────────────────────────
+  { name: "agentic reports: list", as: "alice", method: "GET", path: proj(p1, "reports") },
+  { name: "agentic reports: one", as: "alice", method: "GET", path: proj(p1, "reports/1") },
+  {
+    name: "agentic reports: not a number",
+    as: "alice",
+    method: "GET",
+    path: proj(p1, "reports/x"),
+  },
+  { name: "agentic reports: missing", as: "alice", method: "GET", path: proj(p1, "reports/999") },
+  { name: "agentic reports: wrong project", as: "bob", method: "GET", path: proj(p3, "reports/1") },
+
+  // ── memory ────────────────────────────────────────────────────────
+  {
+    name: "agentic memory: read",
+    as: "alice",
+    method: "GET",
+    path: proj(p1, "memory"),
+    setup: [MEMORIES],
+  },
+  {
+    name: "agentic memory: write project",
+    as: "alice",
+    method: "POST",
+    path: proj(p1, "memory"),
+    body: { scope: " Project ", content: " Interviews are short " },
+  },
+  {
+    name: "agentic memory: write user",
+    as: "alice",
+    method: "POST",
+    path: proj(p1, "memory"),
+    body: { scope: "user", content: "Prefers bullet points", memory_key: "style" },
+  },
+  {
+    name: "agentic memory: write workspace",
+    as: "alice",
+    method: "POST",
+    path: proj(p1, "memory"),
+    body: { scope: "workspace", content: "Quarterly reviews" },
+  },
+  {
+    name: "agentic memory: upsert by key",
+    as: "alice",
+    method: "POST",
+    path: proj(p1, "memory"),
+    body: { scope: "project", content: "Biweekly check-ins", memory_key: "cadence" },
+    setup: [MEMORIES],
+  },
+  {
+    name: "agentic memory: bad scope",
+    as: "alice",
+    method: "POST",
+    path: proj(p1, "memory"),
+    body: { scope: "org", content: "x" },
+  },
+  {
+    name: "agentic memory: blank content",
+    as: "alice",
+    method: "POST",
+    path: proj(p1, "memory"),
+    body: { scope: "user", content: "  " },
+  },
+  {
+    name: "agentic memory: amend own user memory",
+    as: "alice",
+    method: "PATCH",
+    path: `${A}/memories/${x.memUserAlice}`,
+    body: { content: " Very short answers " },
+    setup: [MEMORIES],
+  },
+  {
+    name: "agentic memory: amend someone's user memory",
+    as: "alice",
+    method: "PATCH",
+    path: `${A}/memories/${x.memUserBob}`,
+    body: { content: "x" },
+    setup: [MEMORIES],
+  },
+  {
+    name: "agentic memory: amend project memory",
+    as: "erin",
+    method: "PATCH",
+    path: `${A}/memories/${x.memProjectP1}`,
+    body: { content: "Interviews run alone" },
+    setup: [MEMORIES],
+  },
+  {
+    name: "agentic memory: observer amends workspace memory",
+    as: "rita",
+    method: "PATCH",
+    path: `${A}/memories/${x.memWorkspaceResearch}`,
+    body: { content: "x" },
+    setup: [MEMORIES],
+    differs: "M-13: rewriting workspace memory needs chat:use in the workspace",
+  },
+  {
+    name: "agentic memory: member forgets workspace memory",
+    as: "alice",
+    method: "DELETE",
+    path: `${A}/memories/${x.memWorkspaceResearch}`,
+    setup: [MEMORIES],
+    differs: "M-13: forgetting workspace memory needs settings:manage in the workspace",
+  },
+  {
+    name: "agentic memory: owner forgets workspace memory",
+    as: "erin",
+    method: "DELETE",
+    path: `${A}/memories/${x.memWorkspaceResearch}`,
+    setup: [MEMORIES],
+  },
+  {
+    name: "agentic memory: forget own user memory",
+    as: "alice",
+    method: "DELETE",
+    path: `${A}/memories/${x.memUserAlice}`,
+    setup: [MEMORIES],
+  },
+  {
+    name: "agentic memory: forget unowned row",
+    as: "alice",
+    method: "DELETE",
+    path: `${A}/memories/${x.memBroken}`,
+    setup: [MEMORIES],
+  },
+  {
+    name: "agentic memory: forget missing",
+    as: "alice",
+    method: "DELETE",
+    path: `${A}/memories/${MISSING}`,
+  },
+
+  // ── goal and methodologies ────────────────────────────────────────
+  { name: "agentic goal: none", as: "alice", method: "GET", path: proj(p1, "goal") },
+  { name: "agentic goal: set", as: "alice", method: "GET", path: proj(p1, "goal"), setup: [GOAL] },
+  { name: "agentic goal: other tenant", as: "bob", method: "GET", path: proj(p1, "goal") },
+  {
+    name: "agentic methodologies: list",
+    as: "alice",
+    method: "GET",
+    path: proj(p1, "methodologies"),
+  },
+  {
+    name: "agentic methodologies: legacy project",
+    as: "admin",
+    method: "GET",
+    path: proj(legacy, "methodologies"),
+    differs: H14,
+  },
+]);

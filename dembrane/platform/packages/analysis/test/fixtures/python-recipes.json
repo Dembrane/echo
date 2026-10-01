@@ -1,0 +1,1228 @@
+[
+  {
+    "id": "arguments",
+    "version": "arguments-v1",
+    "hashVersion": "c14n-v1",
+    "inputTypes": [],
+    "outputTypes": ["argument"],
+    "steps": [
+      {
+        "key": "load",
+        "version": "1",
+        "kind": "deterministic",
+        "description": "Read the transcripts and check them against the pinned text hashes",
+        "promptRef": null,
+        "promptVersion": null,
+        "checkVersion": null
+      },
+      {
+        "key": "extract",
+        "version": "1",
+        "kind": "model",
+        "description": "Extract arguments and claims from one conversation, window by window",
+        "promptRef": "dembrane/map/prompts/map-arguments-v2.md",
+        "promptVersion": "map-arguments-v2",
+        "checkVersion": null
+      },
+      {
+        "key": "ground",
+        "version": "1",
+        "kind": "check",
+        "description": "Keep items with a known kind and valence and a quote found verbatim in their transcript",
+        "promptRef": null,
+        "promptVersion": null,
+        "checkVersion": "ground-quote-v1"
+      },
+      {
+        "key": "merge",
+        "version": "1",
+        "kind": "deterministic",
+        "description": "One candidate per source item across overlapping windows",
+        "promptRef": null,
+        "promptVersion": null,
+        "checkVersion": null
+      },
+      {
+        "key": "embed",
+        "version": "1",
+        "kind": "deterministic",
+        "description": "Embed each statement's projection, reusing stored vectors",
+        "promptRef": null,
+        "promptVersion": null,
+        "checkVersion": null
+      }
+    ],
+    "validationRules": [
+      "every argument has a statement, a kind and a valence",
+      "every argument has at least one quote found verbatim in its conversation",
+      "every statement's vector is durable before publication"
+    ],
+    "identityPolicy": {
+      "kind": "lineage-key",
+      "description": "An argument keeps its identity while its conversation and extracted item (kind and normalised statement) stay the same; a reworded statement is a new object."
+    },
+    "embeddingProjections": {
+      "argument": "statement-v1"
+    },
+    "name": "Arguments",
+    "purpose": "Extract complete, source-grounded arguments and claims from every conversation in the project, keeping distinct arguments separate.",
+    "parametersSchema": null,
+    "outputSchemas": {
+      "argument": {
+        "id": "argument",
+        "schemaVersion": 1,
+        "description": "A complete, source-grounded argument or claim from a transcript.",
+        "payloadSchema": {
+          "$defs": {
+            "Evidence": {
+              "additionalProperties": false,
+              "description": "Quotes from one conversation, as the Map manifest records them.",
+              "properties": {
+                "conversationId": {
+                  "minLength": 1,
+                  "title": "Conversationid",
+                  "type": "string"
+                },
+                "label": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Label"
+                },
+                "createdAt": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Createdat"
+                },
+                "quotes": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Quotes",
+                  "type": "array"
+                }
+              },
+              "required": ["conversationId"],
+              "title": "Evidence",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "properties": {
+            "statement": {
+              "minLength": 1,
+              "title": "Statement",
+              "type": "string"
+            },
+            "epistemicKind": {
+              "enum": ["argument", "claim"],
+              "title": "Epistemickind",
+              "type": "string"
+            },
+            "valence": {
+              "anyOf": [
+                {
+                  "enum": ["positive", "negative", "neutral"],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Valence"
+            },
+            "evidence": {
+              "items": {
+                "$ref": "#/$defs/Evidence"
+              },
+              "title": "Evidence",
+              "type": "array"
+            }
+          },
+          "required": ["statement", "epistemicKind"],
+          "title": "ArgumentPayload",
+          "type": "object"
+        },
+        "mapCapable": true,
+        "embeddingProjectionVersion": "statement-v1",
+        "factCheckable": true
+      }
+    },
+    "scopeKeyPattern": "^project$",
+    "maxRunning": null,
+    "modelConcurrency": 6
+  },
+  {
+    "id": "deduplicated_arguments",
+    "version": "dedup-v2",
+    "hashVersion": "c14n-v1",
+    "inputTypes": ["argument"],
+    "outputTypes": ["deduplicated_argument"],
+    "steps": [
+      {
+        "key": "discover",
+        "version": "1",
+        "kind": "deterministic",
+        "description": "Propose candidate groups by complete linkage on statement embeddings, within one kind and valence",
+        "promptRef": null,
+        "promptVersion": null,
+        "checkVersion": null
+      },
+      {
+        "key": "verify",
+        "version": "1",
+        "kind": "model",
+        "description": "Verify one candidate group: sub-groups, each proposed statement checked against every member",
+        "promptRef": "dembrane/analysis/prompts/dedup-verify-v2.md",
+        "promptVersion": "dedup-verify-v2",
+        "checkVersion": null
+      },
+      {
+        "key": "assemble",
+        "version": "1",
+        "kind": "check",
+        "description": "Merge only fully verified sub-groups and account for every input revision exactly once",
+        "promptRef": null,
+        "promptVersion": null,
+        "checkVersion": "dedup-accounting-v1"
+      },
+      {
+        "key": "embed",
+        "version": "1",
+        "kind": "deterministic",
+        "description": "Embed each output statement, reusing stored vectors",
+        "promptRef": null,
+        "promptVersion": null,
+        "checkVersion": null
+      }
+    ],
+    "validationRules": [
+      "embedding similarity proposes candidates, never equivalence",
+      "a merge needs an equivalent sub-group of one kind and valence, checked against every member",
+      "every input revision is in exactly one output, with a derived_from relation to it",
+      "unverified candidate groups stay apart and are listed in the coverage check"
+    ],
+    "identityPolicy": {
+      "kind": "lineage-key",
+      "description": "An output keeps its identity while it stands for the same set of source argument objects."
+    },
+    "embeddingProjections": {
+      "deduplicated_argument": "statement-v1"
+    },
+    "name": "Deduplicated arguments",
+    "purpose": "Consolidate arguments that say the same thing into one argument each, verified against every member and derived from each; distinct and minority arguments pass through.",
+    "parametersSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "similarity_threshold": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 1,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Similarity Threshold"
+        },
+        "max_group_size": {
+          "default": 8,
+          "maximum": 64,
+          "minimum": 2,
+          "title": "Max Group Size",
+          "type": "integer"
+        },
+        "max_candidate_groups": {
+          "default": 250,
+          "maximum": 5000,
+          "minimum": 0,
+          "title": "Max Candidate Groups",
+          "type": "integer"
+        }
+      },
+      "title": "DeduplicationParameters",
+      "type": "object"
+    },
+    "outputSchemas": {
+      "deduplicated_argument": {
+        "id": "deduplicated_argument",
+        "schemaVersion": 1,
+        "description": "An argument consolidating equivalent source arguments, derived from each.",
+        "payloadSchema": {
+          "$defs": {
+            "Consolidation": {
+              "additionalProperties": false,
+              "description": "How a deduplicated argument came to be: its members are `derived_from`\nrelations; this records the strategy, coverage and verification.",
+              "properties": {
+                "strategy": {
+                  "minLength": 1,
+                  "title": "Strategy",
+                  "type": "string"
+                },
+                "memberCount": {
+                  "minimum": 1,
+                  "title": "Membercount",
+                  "type": "integer"
+                },
+                "verification": {
+                  "enum": ["verified", "singleton", "uncertain"],
+                  "title": "Verification",
+                  "type": "string"
+                },
+                "rationale": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Rationale"
+                },
+                "coverage": {
+                  "additionalProperties": true,
+                  "title": "Coverage",
+                  "type": "object"
+                }
+              },
+              "required": ["strategy", "memberCount", "verification"],
+              "title": "Consolidation",
+              "type": "object"
+            },
+            "Evidence": {
+              "additionalProperties": false,
+              "description": "Quotes from one conversation, as the Map manifest records them.",
+              "properties": {
+                "conversationId": {
+                  "minLength": 1,
+                  "title": "Conversationid",
+                  "type": "string"
+                },
+                "label": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Label"
+                },
+                "createdAt": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Createdat"
+                },
+                "quotes": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Quotes",
+                  "type": "array"
+                }
+              },
+              "required": ["conversationId"],
+              "title": "Evidence",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "properties": {
+            "statement": {
+              "minLength": 1,
+              "title": "Statement",
+              "type": "string"
+            },
+            "epistemicKind": {
+              "enum": ["argument", "claim"],
+              "title": "Epistemickind",
+              "type": "string"
+            },
+            "valence": {
+              "anyOf": [
+                {
+                  "enum": ["positive", "negative", "neutral"],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Valence"
+            },
+            "evidence": {
+              "items": {
+                "$ref": "#/$defs/Evidence"
+              },
+              "title": "Evidence",
+              "type": "array"
+            },
+            "consolidation": {
+              "$ref": "#/$defs/Consolidation"
+            }
+          },
+          "required": ["statement", "epistemicKind", "consolidation"],
+          "title": "DeduplicatedArgumentPayload",
+          "type": "object"
+        },
+        "mapCapable": true,
+        "embeddingProjectionVersion": "statement-v1",
+        "factCheckable": true
+      }
+    },
+    "scopeKeyPattern": "^project$",
+    "maxRunning": null,
+    "modelConcurrency": 4
+  },
+  {
+    "id": "integration.fixture_delivery",
+    "version": "integration-fixture-v1",
+    "hashVersion": "c14n-v1",
+    "inputTypes": ["argument", "deduplicated_argument", "tension"],
+    "outputTypes": ["integration.delivery_payload"],
+    "steps": [
+      {
+        "key": "collect",
+        "version": "1",
+        "kind": "deterministic",
+        "description": "Project each selected revision into one delivery item",
+        "promptRef": null,
+        "promptVersion": null,
+        "checkVersion": null
+      },
+      {
+        "key": "render",
+        "version": "1",
+        "kind": "deterministic",
+        "description": "Assemble the request body and its content-derived idempotency key",
+        "promptRef": null,
+        "promptVersion": null,
+        "checkVersion": null
+      },
+      {
+        "key": "validate",
+        "version": "1",
+        "kind": "check",
+        "description": "The body matches the destination's declared shape and every item names a pinned revision",
+        "promptRef": null,
+        "promptVersion": null,
+        "checkVersion": "delivery-body-v1"
+      }
+    ],
+    "validationRules": [
+      "every item names a revision this run pinned",
+      "a selection above the destination's limit fails the check rather than being cut to fit",
+      "the payload is built and stored; delivering it is a separate action with its own authorization"
+    ],
+    "identityPolicy": {
+      "kind": "lineage-key",
+      "description": "One payload object per destination scope: each run appends a revision, so a destination's history is its revisions."
+    },
+    "embeddingProjections": {},
+    "name": "Delivery payload (integration fixture)",
+    "purpose": "Turn selected arguments, deduplicated arguments and tensions into a schema-validated request body for an external destination. It builds the payload and sends nothing.",
+    "parametersSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "max_items": {
+          "default": 100,
+          "maximum": 1000,
+          "minimum": 1,
+          "title": "Max Items",
+          "type": "integer"
+        }
+      },
+      "title": "DeliveryParameters",
+      "type": "object"
+    },
+    "outputSchemas": {
+      "integration.delivery_payload": {
+        "id": "integration.delivery_payload",
+        "schemaVersion": 1,
+        "description": "A request body for an external destination, built from selected object revisions. It has no Map projection and no embedding, and generating it sends nothing.",
+        "payloadSchema": {
+          "$defs": {
+            "DeliveryBody": {
+              "additionalProperties": false,
+              "description": "Shaped like the request body of an external API, not sent by this recipe.",
+              "properties": {
+                "destination": {
+                  "minLength": 1,
+                  "title": "Destination",
+                  "type": "string"
+                },
+                "schemaVersion": {
+                  "minimum": 1,
+                  "title": "Schemaversion",
+                  "type": "integer"
+                },
+                "idempotencyKey": {
+                  "minLength": 1,
+                  "title": "Idempotencykey",
+                  "type": "string"
+                },
+                "projectId": {
+                  "minLength": 1,
+                  "title": "Projectid",
+                  "type": "string"
+                },
+                "counts": {
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "title": "Counts",
+                  "type": "object"
+                },
+                "items": {
+                  "items": {
+                    "$ref": "#/$defs/DeliveryItem"
+                  },
+                  "title": "Items",
+                  "type": "array"
+                }
+              },
+              "required": ["destination", "schemaVersion", "idempotencyKey", "projectId"],
+              "title": "DeliveryBody",
+              "type": "object"
+            },
+            "DeliveryItem": {
+              "additionalProperties": false,
+              "properties": {
+                "externalId": {
+                  "minLength": 1,
+                  "title": "Externalid",
+                  "type": "string"
+                },
+                "type": {
+                  "enum": ["argument", "deduplicated_argument", "tension"],
+                  "title": "Type",
+                  "type": "string"
+                },
+                "title": {
+                  "minLength": 1,
+                  "title": "Title",
+                  "type": "string"
+                },
+                "body": {
+                  "minLength": 1,
+                  "title": "Body",
+                  "type": "string"
+                },
+                "question": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Question"
+                },
+                "sources": {
+                  "items": {
+                    "$ref": "#/$defs/DeliverySource"
+                  },
+                  "title": "Sources",
+                  "type": "array"
+                },
+                "revision": {
+                  "$ref": "#/$defs/DeliveryRevision"
+                }
+              },
+              "required": ["externalId", "type", "title", "body", "revision"],
+              "title": "DeliveryItem",
+              "type": "object"
+            },
+            "DeliveryRevision": {
+              "additionalProperties": false,
+              "description": "What the receiver needs to cite the exact content it was sent.",
+              "properties": {
+                "objectId": {
+                  "minLength": 1,
+                  "title": "Objectid",
+                  "type": "string"
+                },
+                "revisionId": {
+                  "minLength": 1,
+                  "title": "Revisionid",
+                  "type": "string"
+                },
+                "recipeId": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Recipeid"
+                },
+                "recipeVersion": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Recipeversion"
+                }
+              },
+              "required": ["objectId", "revisionId"],
+              "title": "DeliveryRevision",
+              "type": "object"
+            },
+            "DeliverySource": {
+              "additionalProperties": false,
+              "properties": {
+                "conversationId": {
+                  "minLength": 1,
+                  "title": "Conversationid",
+                  "type": "string"
+                },
+                "quote": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Quote"
+                }
+              },
+              "required": ["conversationId"],
+              "title": "DeliverySource",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "properties": {
+            "endpoint": {
+              "minLength": 1,
+              "title": "Endpoint",
+              "type": "string"
+            },
+            "method": {
+              "const": "POST",
+              "title": "Method",
+              "type": "string"
+            },
+            "contentType": {
+              "const": "application/json",
+              "title": "Contenttype",
+              "type": "string"
+            },
+            "body": {
+              "$ref": "#/$defs/DeliveryBody"
+            }
+          },
+          "required": ["endpoint", "method", "contentType", "body"],
+          "title": "DeliveryPayload",
+          "type": "object"
+        },
+        "mapCapable": false,
+        "embeddingProjectionVersion": null,
+        "factCheckable": false
+      }
+    },
+    "scopeKeyPattern": "^delivery:[a-z0-9][a-z0-9-]{0,39}$",
+    "maxRunning": null,
+    "modelConcurrency": 4
+  },
+  {
+    "id": "popcorn",
+    "version": "popcorn-v1",
+    "hashVersion": "c14n-v1",
+    "inputTypes": [],
+    "outputTypes": ["popcorn"],
+    "steps": [
+      {
+        "key": "collect",
+        "version": "1",
+        "kind": "deterministic",
+        "description": "The conversation's phrases as the session held them when the run was requested",
+        "promptRef": null,
+        "promptVersion": null,
+        "checkVersion": null
+      },
+      {
+        "key": "ground",
+        "version": "1",
+        "kind": "check",
+        "description": "Each phrase's quote is still in its transcript word for word, and the phrase is verbatim or it is not",
+        "promptRef": null,
+        "promptVersion": null,
+        "checkVersion": "popcorn-quote-verbatim-v1"
+      },
+      {
+        "key": "embed",
+        "version": "1",
+        "kind": "deterministic",
+        "description": "Embed each phrase's projection, reusing stored vectors",
+        "promptRef": null,
+        "promptVersion": null,
+        "checkVersion": null
+      }
+    ],
+    "validationRules": [
+      "one output per conversation: republishing one never touches another's objects",
+      "a quote reaches an object only while its transcript still holds it word for word",
+      "a rewritten phrase is a new object, never a silent rewrite of the one the room read",
+      "every phrase's vector is durable before publication"
+    ],
+    "identityPolicy": {
+      "kind": "lineage-key",
+      "description": "A phrase keeps its identity while its conversation and its wording stay the same; a phrase the second pass rewrote is a new object."
+    },
+    "embeddingProjections": {
+      "popcorn": "phrase-v1"
+    },
+    "name": "Popcorn",
+    "purpose": "Publish one conversation's short phrases, as the room read them, with the quote each was rooted in and what the second pass made of it.",
+    "parametersSchema": null,
+    "outputSchemas": {
+      "popcorn": {
+        "id": "popcorn",
+        "schemaVersion": 1,
+        "description": "A short phrase from a conversation, as the Popcorn wall shows it.",
+        "payloadSchema": {
+          "$defs": {
+            "Evidence": {
+              "additionalProperties": false,
+              "description": "Quotes from one conversation, as the Map manifest records them.",
+              "properties": {
+                "conversationId": {
+                  "minLength": 1,
+                  "title": "Conversationid",
+                  "type": "string"
+                },
+                "label": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Label"
+                },
+                "createdAt": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Createdat"
+                },
+                "quotes": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Quotes",
+                  "type": "array"
+                }
+              },
+              "required": ["conversationId"],
+              "title": "Evidence",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "properties": {
+            "phrase": {
+              "maxLength": 90,
+              "minLength": 1,
+              "title": "Phrase",
+              "type": "string"
+            },
+            "question": {
+              "default": false,
+              "title": "Question",
+              "type": "boolean"
+            },
+            "language": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Language"
+            },
+            "evidence": {
+              "items": {
+                "$ref": "#/$defs/Evidence"
+              },
+              "title": "Evidence",
+              "type": "array"
+            }
+          },
+          "required": ["phrase"],
+          "title": "PopcornPayload",
+          "type": "object"
+        },
+        "mapCapable": true,
+        "embeddingProjectionVersion": "phrase-v1",
+        "factCheckable": false
+      }
+    },
+    "scopeKeyPattern": "^conversation:[0-9a-f-]{36}$",
+    "maxRunning": null,
+    "modelConcurrency": 4
+  },
+  {
+    "id": "stakeholders",
+    "version": "stakeholders-v1",
+    "hashVersion": "c14n-v1",
+    "inputTypes": [],
+    "outputTypes": ["stakeholder"],
+    "steps": [
+      {
+        "key": "corpus",
+        "version": "1",
+        "kind": "deterministic",
+        "description": "Every transcript inside one shared character budget, with what each conversation kept",
+        "promptRef": null,
+        "promptVersion": null,
+        "checkVersion": null
+      },
+      {
+        "key": "stakeholders",
+        "version": "1",
+        "kind": "model",
+        "description": "The groups with something at stake and the relations between them, over the whole session",
+        "promptRef": "dembrane/popcorn/prompts/stakeholders-v0.9.md",
+        "promptVersion": "stakeholders-v0.9",
+        "checkVersion": null
+      },
+      {
+        "key": "gates",
+        "version": "1",
+        "kind": "check",
+        "description": "One group per name and one connected map, with the flags left after the retry",
+        "promptRef": null,
+        "promptVersion": null,
+        "checkVersion": "stakeholder-gates-v1"
+      },
+      {
+        "key": "embed",
+        "version": "1",
+        "kind": "deterministic",
+        "description": "Embed each group's projection, reusing stored vectors",
+        "promptRef": null,
+        "promptVersion": null,
+        "checkVersion": null
+      }
+    ],
+    "validationRules": [
+      "one group per name, and every group connected to the map",
+      "every quote is verbatim in the conversation it is credited to; an aspect without one is dropped",
+      "absence from the corpus is never evidence of a position: the rung says how a group is evidenced",
+      "relations connect groups this run published, and no relation to an argument or a tension is invented",
+      "gate flags left after the retry are recorded with the output, not hidden"
+    ],
+    "identityPolicy": {
+      "kind": "lineage-key",
+      "description": "A group keeps its identity while the room's name for it stays the same; the slide's `s1` is a position in a list and never an identity."
+    },
+    "embeddingProjections": {
+      "stakeholder": "name-role-stake-v1"
+    },
+    "name": "Stakeholders",
+    "purpose": "Map the groups with something at stake in a session and how they stand to one another, each group carrying how well the transcripts evidence it.",
+    "parametersSchema": null,
+    "outputSchemas": {
+      "stakeholder": {
+        "id": "stakeholder",
+        "schemaVersion": 1,
+        "description": "A group with a stake, with how it is evidenced: voiced, named or inferred.",
+        "payloadSchema": {
+          "$defs": {
+            "QuoteRef": {
+              "additionalProperties": false,
+              "properties": {
+                "text": {
+                  "minLength": 1,
+                  "title": "Text",
+                  "type": "string"
+                },
+                "conversationId": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Conversationid"
+                },
+                "location": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": true,
+                      "type": "object"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Location"
+                }
+              },
+              "required": ["text"],
+              "title": "QuoteRef",
+              "type": "object"
+            },
+            "StakeholderWeight": {
+              "additionalProperties": false,
+              "properties": {
+                "stake": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "title": "Stake",
+                  "type": "number"
+                },
+                "mentions": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "title": "Mentions",
+                  "type": "number"
+                }
+              },
+              "required": ["stake", "mentions"],
+              "title": "StakeholderWeight",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "minLength": 1,
+              "title": "Name",
+              "type": "string"
+            },
+            "role": {
+              "minLength": 1,
+              "title": "Role",
+              "type": "string"
+            },
+            "stake": {
+              "minLength": 1,
+              "title": "Stake",
+              "type": "string"
+            },
+            "rung": {
+              "enum": ["voiced", "named", "inferred"],
+              "title": "Rung",
+              "type": "string"
+            },
+            "invokedBy": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Invokedby"
+            },
+            "weight": {
+              "$ref": "#/$defs/StakeholderWeight"
+            },
+            "quotes": {
+              "items": {
+                "$ref": "#/$defs/QuoteRef"
+              },
+              "title": "Quotes",
+              "type": "array"
+            }
+          },
+          "required": ["name", "role", "stake", "rung", "weight"],
+          "title": "StakeholderPayload",
+          "type": "object"
+        },
+        "mapCapable": true,
+        "embeddingProjectionVersion": "name-role-stake-v1",
+        "factCheckable": false
+      }
+    },
+    "scopeKeyPattern": "^project$",
+    "maxRunning": null,
+    "modelConcurrency": 2
+  },
+  {
+    "id": "tensions",
+    "version": "tensions-from-arguments-v2",
+    "hashVersion": "c14n-v1",
+    "inputTypes": ["argument", "deduplicated_argument"],
+    "outputTypes": ["tension"],
+    "steps": [
+      {
+        "key": "positions",
+        "version": "2",
+        "kind": "check",
+        "description": "Every argument becomes a position when its evidence is grounded in its source as Map grounds it",
+        "promptRef": null,
+        "promptVersion": null,
+        "checkVersion": "evidence-grounded-v2"
+      },
+      {
+        "key": "framing",
+        "version": "1",
+        "kind": "model",
+        "description": "What the rooms were handed, when full transcripts are at hand",
+        "promptRef": "dembrane/popcorn/prompts/tensions-handed.md",
+        "promptVersion": "tensions-handed-v1",
+        "checkVersion": null
+      },
+      {
+        "key": "collisions",
+        "version": "2",
+        "kind": "model",
+        "description": "Which arguments collide with a batch of focal arguments, on which question and how zero-sum",
+        "promptRef": "dembrane/analysis/prompts/tensions-collisions-v1.md",
+        "promptVersion": "tensions-collisions-v1",
+        "checkVersion": null
+      },
+      {
+        "key": "verify",
+        "version": "2",
+        "kind": "model",
+        "description": "Verify one candidate pair: one question, opposite answers, both held; name the poles or the reason",
+        "promptRef": "dembrane/analysis/prompts/tensions-verify-v1.md",
+        "promptVersion": "tensions-verify-v1",
+        "checkVersion": null
+      },
+      {
+        "key": "dedupe",
+        "version": "1",
+        "kind": "model",
+        "description": "The same tension, a facet of a kept one, or a new one",
+        "promptRef": "dembrane/popcorn/tensions.py#DEDUPE_SYSTEM",
+        "promptVersion": "sha256:c6298e4b92141bc1",
+        "checkVersion": null
+      },
+      {
+        "key": "support",
+        "version": "1",
+        "kind": "model",
+        "description": "Which proposed arguments support pole A, pole B or neither of one tension",
+        "promptRef": "dembrane/analysis/prompts/tensions-support-v1.md",
+        "promptVersion": "tensions-support-v1",
+        "checkVersion": null
+      },
+      {
+        "key": "write",
+        "version": "2",
+        "kind": "model",
+        "description": "The knot and the question, with the screen and completeness gates and one retry",
+        "promptRef": "dembrane/analysis/prompts/tensions-write-v1.md",
+        "promptVersion": "tensions-write-v1",
+        "checkVersion": null
+      },
+      {
+        "key": "review",
+        "version": "2",
+        "kind": "check",
+        "description": "Confirmed pinned arguments on both poles, coverage and rejections, and the gates' flags left",
+        "promptRef": null,
+        "promptVersion": null,
+        "checkVersion": "tensions-review-v2"
+      },
+      {
+        "key": "embed",
+        "version": "1",
+        "kind": "deterministic",
+        "description": "Embed each tension's projection in the arguments' configuration",
+        "promptRef": null,
+        "promptVersion": null,
+        "checkVersion": null
+      }
+    ],
+    "validationRules": [
+      "reads one argument set, raw or deduplicated, never both",
+      "a tension's poles answer one question in opposite directions; a rejected pair keeps its reason",
+      "every pole is held by one to three pinned arguments confirmed by the support check, whose evidence is grounded in its source",
+      "an argument is confirmed separately for every tension and never holds both poles of one",
+      "a verifier never supplies a side or a quote",
+      "a knot or question left broken after the retry puts the run up for review",
+      "too little evidence is a valid result that suggests refreshing the arguments"
+    ],
+    "identityPolicy": {
+      "kind": "lineage-key",
+      "description": "A tension keeps its identity while the same argument objects hold each of its poles."
+    },
+    "embeddingProjections": {
+      "tension": "poles-knot-v1"
+    },
+    "name": "Tensions",
+    "purpose": "Find the tensions between saved arguments: two poles answering one question in opposite directions, the knot between them and the question to resolve, each pole linked to the exact arguments confirmed to hold it.",
+    "parametersSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "input_set": {
+          "enum": ["arguments", "deduplicated_arguments"],
+          "title": "Input Set",
+          "type": "string"
+        }
+      },
+      "required": ["input_set"],
+      "title": "TensionsParameters",
+      "type": "object"
+    },
+    "outputSchemas": {
+      "tension": {
+        "id": "tension",
+        "schemaVersion": 1,
+        "description": "Two evidenced poles, the knot between them and the question to resolve.",
+        "payloadSchema": {
+          "$defs": {
+            "TensionQuote": {
+              "additionalProperties": false,
+              "properties": {
+                "text": {
+                  "minLength": 1,
+                  "title": "Text",
+                  "type": "string"
+                },
+                "conversationId": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Conversationid"
+                },
+                "location": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": true,
+                      "type": "object"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Location"
+                },
+                "pole": {
+                  "anyOf": [
+                    {
+                      "enum": ["A", "B"],
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Pole"
+                }
+              },
+              "required": ["text"],
+              "title": "TensionQuote",
+              "type": "object"
+            }
+          },
+          "additionalProperties": false,
+          "description": "The deck's contract: `knot` is the narrative the Map inspector shows.",
+          "properties": {
+            "poleA": {
+              "minLength": 1,
+              "title": "Polea",
+              "type": "string"
+            },
+            "poleB": {
+              "minLength": 1,
+              "title": "Poleb",
+              "type": "string"
+            },
+            "knot": {
+              "minLength": 1,
+              "title": "Knot",
+              "type": "string"
+            },
+            "toResolve": {
+              "minLength": 1,
+              "title": "Toresolve",
+              "type": "string"
+            },
+            "quotes": {
+              "items": {
+                "$ref": "#/$defs/TensionQuote"
+              },
+              "title": "Quotes",
+              "type": "array"
+            }
+          },
+          "required": ["poleA", "poleB", "knot", "toResolve"],
+          "title": "TensionPayload",
+          "type": "object"
+        },
+        "mapCapable": true,
+        "embeddingProjectionVersion": "poles-knot-v1",
+        "factCheckable": false
+      }
+    },
+    "scopeKeyPattern": "^project$",
+    "maxRunning": null,
+    "modelConcurrency": 8
+  }
+]

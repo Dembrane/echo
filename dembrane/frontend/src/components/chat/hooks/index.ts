@@ -1,0 +1,351 @@
+import { t } from "@lingui/core/macro";
+import {
+	keepPreviousData,
+	useMutation,
+	useQuery,
+	useQueryClient,
+	useSuspenseInfiniteQuery,
+	useSuspenseQuery,
+} from "@tanstack/react-query";
+import posthog from "posthog-js";
+import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
+import {
+	type ChatMode,
+	deleteChatById,
+	getChatHistory,
+	getChatSuggestions,
+	getProjectChatContext,
+	initializeChatMode,
+	lockConversations,
+} from "@/lib/api";
+import { bff } from "@/lib/bff";
+import type { ListQuery } from "@/lib/listQuery";
+
+export const useChatHistory = (chatId: string) => {
+	return useQuery({
+		enabled: chatId !== "",
+		queryFn: () => getChatHistory(chatId),
+		queryKey: ["chats", "history", chatId],
+	});
+};
+
+export const useAddChatMessageMutation = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (payload: Partial<ProjectChatMessage>) =>
+			bff.post("/chat-messages", payload),
+		onSuccess: (_, vars) => {
+			queryClient.invalidateQueries({
+				queryKey: ["chats", "context", vars.project_chat_id],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ["chats", "history", vars.project_chat_id],
+			});
+		},
+	});
+};
+
+export const useLockConversationsMutation = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (payload: { chatId: string }) =>
+			lockConversations(payload.chatId),
+		onSuccess: (_, vars) => {
+			queryClient.invalidateQueries({
+				queryKey: ["chats", "context", vars.chatId],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ["chats", "history", vars.chatId],
+			});
+		},
+	});
+};
+
+export const useDeleteChatMutation = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (payload: {
+			chatId: string;
+			projectId: string;
+			/** Throwaway drafts: no toast, no analytics event. */
+			silent?: boolean;
+		}) => deleteChatById(payload.chatId),
+		onError: (error: Error, vars) => {
+			if (vars.silent) return;
+			void notifyError(error);
+		},
+		onSuccess: (_, vars) => {
+			queryClient.invalidateQueries({
+				queryKey: ["projects", vars.projectId, "chats"],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ["chats", vars.chatId],
+			});
+			if (vars.silent) return;
+			posthog.capture("chat_deleted", {
+				chat_id: vars.chatId,
+				project_id: vars.projectId,
+			});
+			toast.success(t`Chat deleted`);
+		},
+	});
+};
+
+export const useUpdateChatMutation = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (payload: {
+			chatId: string;
+			// for invalidating the chat query
+			projectId: string;
+			payload: Partial<ProjectChat>;
+		}) => {
+			// project_id is a side-channel for cache invalidation; the
+			// BFF PATCH accepts only name/chat_mode, not project_id.
+			const body: Record<string, unknown> = {};
+			if (typeof payload.payload?.name === "string") {
+				body.name = payload.payload.name;
+			}
+			if (typeof payload.payload?.chat_mode === "string") {
+				body.chat_mode = payload.payload.chat_mode;
+			}
+			return bff.patch(`/chats/${payload.chatId}`, body);
+		},
+		onSuccess: (_, vars) => {
+			queryClient.invalidateQueries({
+				queryKey: ["projects", vars.projectId, "chats"],
+			});
+
+			queryClient.invalidateQueries({
+				queryKey: ["chats", vars.chatId],
+			});
+			toast.success("Chat updated successfully");
+		},
+	});
+};
+
+export const useProjectChatContext = (chatId: string) => {
+	return useQuery({
+		enabled: chatId !== "",
+		queryFn: () => getProjectChatContext(chatId),
+		queryKey: ["chats", "context", chatId],
+	});
+};
+
+export const useInitializeChatModeMutation = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (payload: {
+			chatId: string;
+			mode: ChatMode;
+			projectId: string;
+		}) => initializeChatMode(payload.chatId, payload.mode, payload.projectId),
+		onError: (error) => {
+			console.error("Failed to initialize chat mode:", error);
+			void notifyError(error);
+		},
+		onSuccess: (_data, vars) => {
+			queryClient.invalidateQueries({
+				queryKey: ["chats", "context", vars.chatId],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ["chats", vars.chatId],
+			});
+			// Don't show toast here - let the component handle messaging
+		},
+	});
+};
+
+export const useChat = (chatId: string) => {
+	return useQuery({
+		enabled: !!chatId && chatId !== "new",
+		queryFn: () => bff.get<ProjectChat>(`/chats/${chatId}`),
+		queryKey: ["chats", chatId],
+	});
+};
+
+export const useProjectChats = (
+	projectId: string,
+	query?: Partial<ListQuery<ProjectChat>>,
+) => {
+	return useSuspenseQuery({
+		queryFn: async () => {
+			void query; // advanced query filter not forwarded to BFF
+			const { chats } = await bff.get<{ chats: ProjectChat[]; total: number }>(
+				"/chats",
+				{ limit: 200, project_id: projectId },
+			);
+			return chats;
+		},
+		queryKey: ["projects", projectId, "chats", query],
+	});
+};
+
+export const useInfiniteProjectChats = (
+	projectId: string,
+	query?: Partial<ListQuery<ProjectChat>>,
+	options?: {
+		initialLimit?: number;
+		hasMessages?: boolean;
+	},
+) => {
+	const { initialLimit = 15, hasMessages = false } = options ?? {};
+
+	return useSuspenseInfiniteQuery({
+		getNextPageParam: (lastPage: { nextOffset?: number }) =>
+			lastPage?.nextOffset,
+		initialPageParam: 0,
+		queryFn: async ({ pageParam = 0 }) => {
+			void query;
+			const { chats } = await bff.get<{ chats: ProjectChat[]; total: number }>(
+				"/chats",
+				{
+					limit: initialLimit,
+					offset: pageParam * initialLimit,
+					project_id: projectId,
+					...(hasMessages ? { has_messages: true } : {}),
+				},
+			);
+
+			return {
+				chats,
+				nextOffset: chats.length === initialLimit ? pageParam + 1 : undefined,
+			};
+		},
+		queryKey: [
+			"projects",
+			projectId,
+			"chats",
+			"infinite",
+			{ hasMessages, query },
+		],
+		refetchInterval: 30000,
+	});
+};
+
+const projectChatsCountQueryOptions = (
+	projectId: string,
+	query: Partial<ListQuery<ProjectChat>> | undefined,
+	hasMessages: boolean,
+) => ({
+	queryFn: async () => {
+		void query;
+		const { total } = await bff.get<{ chats: ProjectChat[]; total: number }>(
+			"/chats",
+			{
+				limit: 1,
+				project_id: projectId,
+				...(hasMessages ? { has_messages: true } : {}),
+			},
+		);
+		return total;
+	},
+	queryKey: [
+		"projects",
+		projectId,
+		"chats",
+		"count",
+		{ hasMessages, query },
+	] as const,
+});
+
+export const useProjectChatsCount = (
+	projectId: string,
+	query?: Partial<ListQuery<ProjectChat>>,
+	options?: { hasMessages?: boolean },
+) => {
+	const { hasMessages = false } = options ?? {};
+	return useSuspenseQuery(
+		projectChatsCountQueryOptions(projectId, query, hasMessages),
+	);
+};
+
+// Non-suspense variant. Shares cache key with useProjectChatsCount.
+export const useProjectChatsCountQuery = (
+	projectId: string,
+	options?: { hasMessages?: boolean },
+) => {
+	const { hasMessages = false } = options ?? {};
+	return useQuery({
+		enabled: projectId !== "",
+		...projectChatsCountQueryOptions(projectId, undefined, hasMessages),
+	});
+};
+
+/**
+ * Hook to fetch contextual suggestions for a chat.
+ *
+ * Lifecycle:
+ * - Initial fetch: When chat route mounts AND chat_mode is set
+ * - Refetch triggers:
+ *   - After assistant response completes (via refetch())
+ *   - When conversation selection changes (deep_dive mode)
+ * - Stale time: 30 seconds to avoid rapid re-fetches
+ * - Error handling: Silent fallback to empty suggestions
+ */
+export const useChatSuggestions = (
+	chatId: string,
+	options?: {
+		enabled?: boolean;
+		language?: string;
+	},
+) => {
+	const { enabled = true, language = "en" } = options ?? {};
+
+	return useQuery({
+		enabled: enabled && chatId !== "",
+		queryFn: () => getChatSuggestions(chatId, language),
+		queryKey: ["chats", chatId, "suggestions", language],
+		refetchOnWindowFocus: false,
+		retry: 1, // Retry once on failure, then give up gracefully
+		staleTime: 30_000, // 30 seconds - avoid rapid re-fetches
+	});
+};
+
+const CHAT_SEARCH_LIMIT = 50;
+
+/** Server-backed title search. Deliberately not the infinite/suspense hook:
+ * suspending on every keystroke would flash the list back to a skeleton. */
+export const useProjectChatSearch = (projectId: string, q: string) => {
+	const search = q.trim();
+	return useQuery({
+		enabled: search.length > 0,
+		placeholderData: keepPreviousData,
+		queryFn: () =>
+			bff.get<{ chats: ProjectChat[]; total: number }>("/chats", {
+				has_messages: true,
+				limit: CHAT_SEARCH_LIMIT,
+				project_id: projectId,
+				q: search,
+			}),
+		queryKey: ["projects", projectId, "chats", "search", search],
+	});
+};
+
+/**
+ * Prefetch suggestions for a chat and wait for them (with timeout).
+ * Returns early if suggestions arrive, or after maxWaitMs.
+ * Used when navigating to a chat to ensure suggestions are ready.
+ */
+export const usePrefetchSuggestions = () => {
+	const queryClient = useQueryClient();
+
+	return async (chatId: string, language = "en", maxWaitMs = 8000) => {
+		const queryKey = ["chats", chatId, "suggestions", language];
+
+		// Start the prefetch
+		const prefetchPromise = queryClient.prefetchQuery({
+			queryFn: () => getChatSuggestions(chatId, language),
+			queryKey,
+			staleTime: 30_000,
+		});
+
+		// Race between prefetch completing and timeout
+		const timeoutPromise = new Promise<void>((resolve) => {
+			setTimeout(resolve, maxWaitMs);
+		});
+
+		await Promise.race([prefetchPromise, timeoutPromise]);
+	};
+};

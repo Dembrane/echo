@@ -1,0 +1,63 @@
+import type { Codes } from "./types";
+
+/** The signed-in person's own account: profile, password, two-factor, onboarding. */
+export const account = {
+  "account.user_not_found": {
+    action: "contact_support",
+    detail: "User not found",
+    description:
+      "The signed-in identity has no profile row; a broken sign-up only support can mend.",
+  },
+  "account.identity_missing": {
+    action: "contact_support",
+    detail: "Directus user not found",
+    audience: "developer",
+    description: "Onboarding found no identity row for the session's user id.",
+  },
+  "account.email_missing": {
+    action: "contact_support",
+    detail: "User has no email",
+    description: "The signed-in user has no verified email address to match invites against.",
+  },
+  "account.image_type": {
+    action: "fix_input",
+    detail: "Upload a PNG, JPEG, WebP or GIF image",
+    description: "An avatar or logo upload is not one of the image types browsers render inertly.",
+  },
+  "account.image_too_large": {
+    action: "fix_input",
+    detail: "Images can be at most {max_mb} MB",
+    description: "An avatar or logo upload is over the size limit.",
+  },
+  "account.password_weak": {
+    action: "fix_input",
+    detail: "{problems}",
+    description:
+      "The new password fails the password policy; problems lists each rule it breaks, joined by '; '.",
+  },
+  "account.password_incorrect": {
+    action: "fix_input",
+    detail: "Current password is incorrect",
+    description: "A password change was sent the wrong current password.",
+  },
+  "account.credentials_invalid": {
+    action: "fix_input",
+    detail: "Invalid user credentials.",
+    description: "Setting up two-factor was sent the wrong password (401, as Directus answered).",
+  },
+  "account.tfa_already_enabled": {
+    action: "none",
+    detail: "Invalid payload. TFA Secret is already set for this user.",
+    description: "Two-factor setup was started while two-factor is already on.",
+  },
+  "account.tfa_not_enabled": {
+    action: "none",
+    detail: 'Invalid payload. User "{user_id}" doesn\'t have TFA enabled.',
+    description: "Two-factor was asked to switch off while it is not on.",
+  },
+  "account.otp_invalid": {
+    action: "fix_input",
+    detail: 'Invalid payload. "otp" is invalid.',
+    description: "The one-time code from the authenticator app did not match.",
+  },
+} as const satisfies Codes<"account">;

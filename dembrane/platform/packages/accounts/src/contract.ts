@@ -1,0 +1,1098 @@
+import { z } from "zod";
+
+/**
+ * The accounts API contract: every request and response body of the customer routes
+ * (/api/v2/orgs/:orgId/account) and the staff and sam routes (/api/v2/admin/accounts),
+ * and the route table naming each route's permission and shapes. routes.ts parses with
+ * these schemas and the UI is built against them and against fixtures.ts, so a change
+ * here is a change to both and lands in one commit with the fixtures.
+ *
+ * Conventions: snake_case keys, ISO 8601 timestamps (`...Z`), ISO dates (`YYYY-MM-DD`),
+ * money in integer cents with an ISO 4217 currency, VAT rates in basis points (2100 = 21%).
+ * Errors are `{ detail: string }`, or `{ detail: Issue[] }` with status 422 for validation.
+ */
+
+// ── shared pieces ───────────────────────────────────────────────────────
+
+const text = (max: number) => z.string().trim().min(1).max(max);
+/** Optional text: absent, null and "" all mean "not given" and parse to null. */
+const optText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .nullish()
+    .transform((v) => (v ? v : null));
+const nullish = <T extends z.ZodType>(s: T) => s.nullish().transform((v) => v ?? null);
+export const IsoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD");
+export const IsoTime = z.iso.datetime({ offset: true });
+const Cents = z.number().int().refine(Number.isSafeInteger, "Too large");
+const Currency = z.string().regex(/^[A-Z]{3}$/, "Use an ISO 4217 code like EUR");
+const Uuid = z.uuid();
+
+export const AccountStage = z.enum(["prospect", "customer", "churned"]);
+export const Language = z.enum(["en", "nl"]);
+export const OfferTemplate = z.enum(["subscription", "event"]);
+export const DocumentKind = z.enum(["offer", "dpa", "invoice", "other"]);
+export const DocumentStatus = z.enum(["draft", "sent", "viewed", "signed", "declined", "void"]);
+export const InvoiceStatus = z.enum(["open", "paid", "overdue", "void"]);
+export const TaskKind = z.enum(["sign", "billing_details", "upload", "generic"]);
+export const TaskStatus = z.enum([
+  "locked",
+  "open",
+  "submitted",
+  "done",
+  "changes_requested",
+  "withdrawn",
+]);
+export const TicketStatus = z.enum([
+  "open",
+  "waiting_on_customer",
+  "waiting_on_dembrane",
+  "closed",
+]);
+export const LegalKind = z.enum(["terms", "sla", "dpa"]);
+export const FieldKind = z.enum([
+  "signature",
+  "initials",
+  "name",
+  "role",
+  "date",
+  "text",
+  "checkbox",
+]);
+export const SignatureMethod = z.enum(["drawn", "typed", "uploaded"]);
+
+export const Issue = z.object({
+  type: z.string(),
+  loc: z.array(z.union([z.string(), z.number()])),
+  msg: z.string(),
+});
+export const ErrorBody = z.object({ detail: z.union([z.string(), z.array(Issue)]) });
+
+// ── the pieces responses are made of ────────────────────────────────────
+
+export const BankTransfer = z.object({
+  iban: z.string(),
+  bic: z.string(),
+  account_name: z.string(),
+  /** What to put in the transfer's description. */
+  reference: z.string().nullable(),
+});
+
+export const InvoiceInfo = z.object({
+  number: z.string().nullable(),
+  exact_id: z.string().nullable(),
+  issued_on: IsoDate.nullable(),
+  due_on: IsoDate.nullable(),
+  status: InvoiceStatus.nullable(),
+  paid_at: IsoTime.nullable(),
+  /** Always present: most customers pay by bank transfer. */
+  bank_transfer: BankTransfer,
+  /** Mollie checkout, only when one exists. */
+  payment_url: z.string().nullable(),
+});
+
+export const Signer = z.object({
+  email: z.string(),
+  name: z.string().nullable(),
+  role: z.string().nullable(),
+});
+
+export const DocumentSummary = z.object({
+  id: Uuid,
+  kind: DocumentKind,
+  title: z.string(),
+  reference: z.string().nullable(),
+  language: Language,
+  version: z.number().int(),
+  status: DocumentStatus,
+  requires_signature: z.boolean(),
+  currency: Currency.nullable(),
+  subtotal_cents: z.number().int().nullable(),
+  vat_cents: z.number().int().nullable(),
+  total_cents: z.number().int().nullable(),
+  valid_until: IsoDate.nullable(),
+  sent_at: IsoTime.nullable(),
+  viewed_at: IsoTime.nullable(),
+  signed_at: IsoTime.nullable(),
+  declined_at: IsoTime.nullable(),
+  voided_at: IsoTime.nullable(),
+  /** Someone named to sign instead of the organisation's admins. */
+  signer: Signer.nullable(),
+  /** The document as a PDF, unsigned: what the viewer renders and the fields overlay. */
+  file_url: z.string().nullable(),
+  /** The signed PDF (values and signature stamped on, audit page appended), once signed. */
+  signed_pdf_url: z.string().nullable(),
+  /** Invoices only. */
+  invoice: InvoiceInfo.optional(),
+});
+
+export const Company = z.object({
+  name: z.string(),
+  address: z.string(),
+  vat: z.string(),
+  kvk: z.string(),
+  iban: z.string(),
+  bic: z.string(),
+});
+
+export const PinnedText = z.object({
+  version: z.string(),
+  effective_on: IsoDate.nullable(),
+  url: z.string(),
+});
+
+export const OfferItem = z.object({
+  description: text(500),
+  /** Bulleted lines under the description, as on the offer templates. */
+  bullets: z.array(text(300)).max(20).default([]),
+  quantity: z.number().int().min(1),
+  unit_price_cents: Cents,
+  vat_rate_bps: z.number().int(),
+});
+
+export const PricedLine = OfferItem.extend({
+  net_cents: z.number().int(),
+  vat_cents: z.number().int(),
+  total_cents: z.number().int(),
+});
+
+/** The structured offer both the page and the PDF lay out. */
+export const OfferContent = z.object({
+  template: OfferTemplate,
+  language: Language,
+  offer_name: z.string(),
+  date: IsoDate,
+  reference: z.string(),
+  person_name: z.string().nullable(),
+  attention: z.string().nullable(),
+  currency: Currency,
+  valid_days: z.number().int(),
+  company: Company,
+  legal: z.object({ terms: PinnedText, sla: PinnedText, dpa: PinnedText }),
+  items: z.array(OfferItem),
+});
+
+export const LegalPin = z.object({
+  kind: LegalKind,
+  version: z.string(),
+  effective_on: IsoDate.nullable(),
+  url: z.string(),
+  sha256: z.string(),
+});
+
+const Fraction = z.number().min(0).max(1);
+
+/**
+ * A field placed on a page. Position and size are fractions of the page, measured from its
+ * top-left corner, so they hold at any zoom. `key` names what a text field asks for
+ * (`organisation`, `address`, `vat_number`, `po_number`), so the signature record can
+ * read it; name, role and date fields need none.
+ */
+export const DocumentFieldInput = z.object({
+  /** 1-based page number. */
+  page: z.number().int().min(1),
+  x: Fraction,
+  y: Fraction,
+  width: Fraction,
+  height: Fraction,
+  kind: FieldKind,
+  label: text(120),
+  required: z.boolean().default(true),
+  /** Who fills it; one signer per document today, so always "signer". */
+  signer_role: z.literal("signer").default("signer"),
+  key: optText(64),
+});
+export const DocumentField = DocumentFieldInput.extend({
+  id: Uuid,
+  /** Order of the "Next" walk: top to bottom, page by page. */
+  sort: z.number().int(),
+});
+
+export const Signature = z.object({
+  id: Uuid,
+  name: z.string(),
+  role: z.string(),
+  email: z.string(),
+  organisation: z.string(),
+  address: z.string().nullable(),
+  vat_number: z.string().nullable(),
+  dpa_authorised: z.boolean(),
+  signed_at: IsoTime,
+  /** SHA-256 of the unsigned PDF that was signed. */
+  sha256: z.string(),
+  method: SignatureMethod,
+  /** SHA-256 of the signature image. */
+  image_sha256: z.string(),
+  /** The field values as submitted, by field id. */
+  values: z.record(z.string(), z.union([z.string(), z.boolean()])),
+});
+
+export const DocumentDetail = DocumentSummary.extend({
+  /** The text of the document, for screen readers and search; the PDF is what is signed. */
+  body: z.string().nullable(),
+  content: OfferContent.nullable(),
+  lines: z.array(PricedLine).nullable(),
+  /** SHA-256 of the unsigned PDF at `file_url`; the sign request sends it back. */
+  sha256: z.string().nullable(),
+  page_count: z.number().int().nullable(),
+  /** Where the signer fills in and signs, in walk order. */
+  fields: z.array(DocumentField),
+  legal: z.array(LegalPin),
+  /** One line on the signing screen saying why signing matters. */
+  signing_note: z.string().nullable(),
+  /**
+   * The sentence the signer confirms, with {name}, {role} and {organisation} filled from
+   * the name and role fields and the `organisation` text field. Send the filled sentence
+   * back as `confirmation_text`; the server builds the same one and checks it.
+   */
+  confirmation: z
+    .object({ dpa_authorised: z.string(), dpa_not_authorised: z.string().nullable() })
+    .nullable(),
+  signature: Signature.nullable(),
+  /** How the caller reaches it: as a member, as the named signer, or as staff. */
+  access: z.enum(["member", "signer", "staff"]),
+});
+
+/**
+ * Tasks echo creates itself carry a code and its params, never text: the UI words them in
+ * the viewer's language. `sign_offer` and `sign_dpa` have `document_title`; `billing_details`
+ * has none. Tasks staff or sam write have no code and carry their own title and body.
+ */
+export const TaskCode = z.enum(["sign_offer", "billing_details", "sign_dpa"]);
+
+export const Task = z.object({
+  id: Uuid,
+  /** Set for tasks echo creates; title and body are null then. */
+  code: TaskCode.nullable(),
+  params: z.record(z.string(), z.string()).nullable(),
+  title: z.string().nullable(),
+  body: z.string().nullable(),
+  kind: TaskKind,
+  status: TaskStatus,
+  /** Greyed out until the document it waits for is signed. */
+  locked: z.boolean(),
+  /**
+   * The document whose signature opens this task, and its title ("Opens after you sign
+   * <title>"). A locked billing details task waits for the first signed offer: both are
+   * null until an offer exists, then they name the newest offer waiting for a signature.
+   */
+  locked_until_document_id: Uuid.nullable(),
+  locked_until_title: z.string().nullable(),
+  document_id: Uuid.nullable(),
+  due_on: IsoDate.nullable(),
+  opened_at: IsoTime.nullable(),
+  response_text: z.string().nullable(),
+  response_file_name: z.string().nullable(),
+  submitted_at: IsoTime.nullable(),
+  review_note: z.string().nullable(),
+  reviewed_at: IsoTime.nullable(),
+  next_reminder_at: IsoTime.nullable(),
+  reminder_interval_days: z.number().int().nullable(),
+  reminders_sent: z.number().int(),
+});
+
+export const TicketMessage = z.object({
+  id: Uuid,
+  body: z.string(),
+  from: z.enum(["customer", "dembrane"]),
+  created_at: IsoTime,
+});
+
+export const Ticket = z.object({
+  id: Uuid,
+  subject: z.string(),
+  status: TicketStatus,
+  created_at: IsoTime,
+  updated_at: IsoTime,
+  closed_at: IsoTime.nullable(),
+  messages: z.array(TicketMessage),
+});
+
+export const BillingDetails = z.object({
+  legal_name: z.string().nullable(),
+  vat_id: z.string().nullable(),
+  kvk_number: z.string().nullable(),
+  kbo_number: z.string().nullable(),
+  billing_email: z.string().nullable(),
+  po_number: z.string().nullable(),
+  peppol_id: z.string().nullable(),
+  address_line1: z.string().nullable(),
+  address_line2: z.string().nullable(),
+  postal_code: z.string().nullable(),
+  city: z.string().nullable(),
+  country: z.string().nullable(),
+});
+
+export const OrganisationRef = z.object({
+  id: Uuid,
+  name: z.string(),
+  account_stage: AccountStage.nullable(),
+});
+
+export const TimelineEvent = z.object({
+  id: Uuid,
+  type: z.string(),
+  actor: z.enum(["customer", "staff", "system"]),
+  actor_user_id: Uuid.nullable(),
+  subject_type: z.string().nullable(),
+  subject_id: z.string().nullable(),
+  detail: z.unknown().nullable(),
+  created_at: IsoTime,
+});
+
+// ── customer requests and responses ─────────────────────────────────────
+
+/** GET /api/v2/orgs/:orgId/account: the whole page in one read. */
+export const AccountPage = z.object({
+  organisation: OrganisationRef,
+  /** Next steps first: open, sent back, locked, waiting on us, done. */
+  tasks: z.array(Task),
+  documents: z.array(DocumentSummary),
+  billing: BillingDetails,
+  tickets: z.array(Ticket),
+  /** The needs form the account came from, to prefill "Book a call". */
+  needs_form_reference: z.string().nullable(),
+});
+
+export const ViewResponse = z.object({ status: DocumentStatus });
+
+/** A PNG, base64 without the data: prefix, at most 512 KB decoded. */
+export const SignatureImage = z.object({
+  png_base64: z.string().min(100).max(700_000),
+  method: SignatureMethod,
+});
+
+export const SignRequest = z.object({
+  /** The sha256 of the unsigned PDF as the page received it (DocumentDetail.sha256). */
+  sha256: z.string().regex(/^[0-9a-f]{64}$/, "sha256 must be 64 lowercase hex characters"),
+  /** Every field's value by field id: text for text, name, role and date; true/false for checkboxes. */
+  values: z.record(z.string(), z.union([z.string().max(1000), z.boolean()])),
+  signature: SignatureImage,
+  /** Initials fields get this image, or the signature image when absent. */
+  initials: SignatureImage.nullish().transform((v) => v ?? null),
+  /** Offers: may the signer also agree to data processing? No creates a separate DPA task. */
+  dpa_authorised: z.boolean(),
+  confirmation_text: text(4000),
+});
+export const SignResponse = z.object({
+  signature_id: Uuid,
+  signed_at: IsoTime,
+  confirmation_text: z.string(),
+});
+
+export const DeclineRequest = z.object({ reason: optText(2000) });
+export const DeclineResponse = z.object({ status: z.literal("declined") });
+
+export const NameSignerRequest = z.object({
+  name: text(200),
+  email: z.email().max(255),
+  role: optText(200),
+});
+export const NameSignerResponse = z.object({ signer: Signer });
+
+/**
+ * Saving the billing details completes the billing details task at once (status `done`, no
+ * review by us); we hear about it through the event and the Slack post.
+ */
+export const BillingUpdateRequest = z.object({
+  legal_name: text(255),
+  billing_email: z.email().max(255),
+  address_line1: text(255),
+  address_line2: optText(255),
+  postal_code: text(32),
+  city: text(255),
+  country: text(64),
+  /** At least one of vat_id, kvk_number, kbo_number. */
+  vat_id: optText(64),
+  kvk_number: optText(32),
+  kbo_number: optText(32),
+  po_number: optText(128),
+  peppol_id: optText(128),
+});
+
+/** JSON form; the multipart form sends `response_text` and `file` (max 20 MB). */
+export const TaskSubmitRequest = z.object({ response_text: optText(8000) });
+
+export const TicketOpenRequest = z.object({ subject: text(255), body: text(8000) });
+export const TicketReplyRequest = z.object({ body: text(8000) });
+
+export const BookingRequest = z.object({ uid: text(255), start: optText(64), status: optText(64) });
+export const BookingResponse = z.object({ recorded: z.literal(true) });
+
+export const SigningRequests = z.array(
+  z.object({
+    organisation: z.object({ id: Uuid, name: z.string() }),
+    document: DocumentSummary,
+  }),
+);
+
+// ── staff and sam ───────────────────────────────────────────────────────
+
+export const AccountListQuery = z.object({
+  /** A stage, or `none` for organisations that are not managed as accounts yet. */
+  stage: nullish(z.enum(["prospect", "customer", "churned", "none"])),
+  /** Part of the organisation's name or of a member's email address. */
+  q: optText(200),
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+
+export const AccountListItem = z.object({
+  id: Uuid,
+  name: z.string(),
+  stage: AccountStage.nullable(),
+  created_at: IsoTime.nullable(),
+  /** Waiting on the customer. */
+  open_tasks: z.number().int(),
+  /** Submitted, waiting on us. */
+  waiting_on_us: z.number().int(),
+  unsigned_documents: z.number().int(),
+  overdue_invoices: z.number().int(),
+  open_tickets: z.number().int(),
+});
+export const AccountList = z.object({
+  accounts: z.array(AccountListItem),
+  limit: z.number().int(),
+  offset: z.number().int(),
+});
+
+export const CreateAccountRequest = z.object({
+  organisation_name: text(255),
+  /** Becomes the organisation's admin; signs in with a one-time code. */
+  contact_email: z.email().max(255),
+  contact_name: optText(255),
+  pricing_configuration_reference: optText(255),
+  stage: z.enum(["prospect", "customer"]).default("prospect"),
+  language: Language.default("nl"),
+});
+export const CreateAccountResponse = z.object({
+  org_id: Uuid,
+  created: z.boolean(),
+  contact: z.object({ user_id: Uuid, created: z.boolean() }),
+  pricing_configuration_id: Uuid.nullable(),
+  /** The sign-in link that lands on the account page. */
+  continue_url: z.string(),
+});
+
+export const AccountCard = z.object({
+  organisation: OrganisationRef.extend({ created_at: IsoTime.nullable() }),
+  account_manager: z
+    .object({ id: Uuid, email: z.string().nullable(), name: z.string().nullable() })
+    .nullable(),
+  billing: BillingDetails,
+  needs_form: z
+    .object({
+      id: Uuid,
+      reference: z.string().nullable(),
+      status: z.string().nullable(),
+      email: z.string().nullable(),
+      answers: z.unknown().nullable(),
+      config: z.unknown().nullable(),
+      booking_status: z.string().nullable(),
+      booking_uid: z.string().nullable(),
+    })
+    .nullable(),
+  /** The synthetic demo's links, as the seed printed them. */
+  demo: z.unknown().nullable(),
+  members: z.array(
+    z.object({
+      app_user_id: Uuid,
+      email: z.string().nullable(),
+      name: z.string().nullable(),
+      role: z.string(),
+      since: IsoTime.nullable(),
+    }),
+  ),
+  pending_invites: z.array(z.object({ email: z.string(), role: z.string(), expires_at: IsoTime })),
+  usage: z.object({ workspaces: z.number().int(), projects: z.number().int() }),
+  documents: z.array(DocumentSummary),
+  tasks: z.array(Task),
+  tickets: z.array(Ticket),
+  timeline: z.array(TimelineEvent),
+});
+
+/** The `prospect` block of POST /api/v2/admin/popcorn/demos. */
+export const ProspectBlock = z.object({
+  organisation_name: text(255),
+  /** Required: every demo names the person it is for; they become the admin. */
+  contact_email: z.email().max(255),
+  contact_name: optText(255),
+  pricing_configuration_reference: optText(255),
+  language: Language.default("nl"),
+});
+
+/**
+ * Makes any existing organisation an account (a free-tier signup, a customer who never had
+ * a demo): sets its stage, and makes sure it has a billing account and the billing task.
+ */
+export const EnableAccountRequest = z.object({
+  stage: AccountStage.default("customer"),
+  language: Language.default("nl"),
+});
+
+export const UpdateAccountRequest = z.object({
+  account_stage: AccountStage.optional(),
+  /** An @dembrane.com app user, or null to clear. */
+  account_manager_id: Uuid.nullable().optional(),
+});
+
+export const PushOfferRequest = z.object({
+  template: OfferTemplate,
+  language: Language,
+  /** The customer's name in the title, "<offer_name> x dembrane". */
+  offer_name: text(200),
+  /** Who the greeting names. */
+  person_name: optText(200),
+  /** "T.a.v." on event offers. */
+  attention: optText(200),
+  /** The offer id on the letterhead; generated when absent. */
+  reference: optText(64),
+  title: optText(255),
+  currency: Currency.default("EUR"),
+  /** The offer date; today when absent. Valid for 14 days from it. */
+  date: nullish(IsoDate),
+  items: z.array(OfferItem).min(1).max(50),
+  /** The Attio deal id, echoed in every event about this offer. */
+  external_ref: optText(255),
+  /** An unsigned offer this one replaces; it is voided. */
+  supersedes_id: nullish(Uuid),
+  /**
+   * Send now (default), or keep a draft that staff send later with POST .../send. A draft
+   * re-pins the newest legal texts when it is sent.
+   */
+  send: z.boolean().default(true),
+});
+/** `task` is null for a draft: "Review and sign the offer" is created when it is sent. */
+export const PushOfferResponse = z.object({ document: DocumentDetail, task: Task.nullable() });
+
+export const PushDocumentRequest = z.object({
+  kind: z.enum(["dpa", "other"]),
+  title: optText(255),
+  language: Language.default("en"),
+  /** Markdown. A DPA without a body gets the newest published DPA text. */
+  body: nullish(z.string().max(200_000)),
+  pdf_base64: nullish(z.string().max(14_000_000)),
+  requires_signature: z.boolean().default(false),
+  reference: optText(64),
+  external_ref: optText(255),
+  supersedes_id: nullish(Uuid),
+  /** A task pointing at it, created when it is sent (a signing task when it needs a signature). */
+  task: nullish(z.object({ title: text(255), body: optText(4000) })),
+  /**
+   * Fields for an uploaded PDF that needs a signature. Without them the document stays a
+   * draft until staff place fields (PUT .../fields) and send it. Text documents rendered by
+   * echo get a signing block with its fields automatically.
+   */
+  fields: nullish(z.array(DocumentFieldInput).max(100)),
+  /** Send now (default) or keep as a draft. */
+  send: z.boolean().default(true),
+});
+export const PushDocumentResponse = z.object({ document: DocumentDetail, task: Task.nullable() });
+
+export const VoidRequest = z.object({ reason: optText(2000) });
+
+export const DocumentFields = z.object({
+  document_id: Uuid,
+  status: DocumentStatus,
+  page_count: z.number().int().nullable(),
+  fields: z.array(DocumentField),
+});
+/** Replaces all fields of a draft document; a sent document's fields are fixed. */
+export const SetFieldsRequest = z.object({ fields: z.array(DocumentFieldInput).max(100) });
+/** Sends a draft; `task` also creates its task (a signing task when it needs a signature). */
+export const SendDocumentRequest = z.object({
+  task: nullish(z.object({ title: text(255), body: optText(4000) })),
+});
+
+/** The Exact invoice id in the path of PUT .../invoices/:exactId. */
+export const ExactId = text(128);
+
+export const InvoiceUpsertRequest = z.object({
+  number: text(64),
+  issued_on: IsoDate,
+  due_on: IsoDate,
+  subtotal_cents: Cents,
+  vat_cents: Cents,
+  total_cents: Cents,
+  currency: Currency.default("EUR"),
+  status: InvoiceStatus,
+  paid_at: nullish(IsoTime),
+  payment_url: nullish(z.url().max(2000)),
+  payment_reference: optText(128),
+  /** The offer it invoices, if any. */
+  offer_id: nullish(Uuid),
+  pdf_base64: nullish(z.string().max(14_000_000)),
+});
+
+export const CreateTaskRequest = z.object({
+  title: text(255),
+  body: optText(4000),
+  kind: TaskKind.default("generic"),
+  document_id: nullish(Uuid),
+  due_on: nullish(IsoDate),
+  /** Locked (greyed out) until this document is signed. */
+  locked_until_document_id: nullish(Uuid),
+  /** Days between reminders; the configured default (7) when absent. */
+  reminder_interval_days: nullish(z.number().int().min(1).max(365)),
+});
+
+export const ReviewTaskRequest = z.object({
+  decision: z.enum(["approve", "send_back", "withdraw"]),
+  /** Required when sending back: what to change. */
+  note: optText(4000),
+});
+
+export const StaffTicketOpenRequest = TicketOpenRequest;
+export const StaffReplyRequest = z.object({
+  body: text(8000),
+  close: z.boolean().default(false),
+});
+
+// ── the signed-in person's tasks across organisations ───────────────────
+
+/**
+ * GET /api/v2/account/tasks-summary: for the "Tasks 1/2" entry, the org picker, and whether
+ * an organisation shows "Account" in the sidebar. It lists only organisations with account
+ * content (a stage set, or any task or document) where the caller is an owner, admin or
+ * billing member; a self-serve organisation with nothing in it is absent.
+ */
+export const TasksSummary = z.array(
+  z.object({
+    org_id: Uuid,
+    name: z.string(),
+    logo_url: z.string().nullable(),
+    account_stage: AccountStage.nullable(),
+    tasks_done: z.number().int(),
+    /** Every task but the withdrawn ones; locked tasks count. */
+    tasks_total: z.number().int(),
+    /** The oldest task waiting on the customer: its title, or its code and params. */
+    next_task_title: z.string().nullable(),
+    next_task_code: TaskCode.nullable(),
+    next_task_params: z.record(z.string(), z.string()).nullable(),
+  }),
+);
+
+// ── synthetic demos made in echo ────────────────────────────────────────
+
+export const DemoStepName = z.enum(["fetch", "research", "author", "seed", "extract", "review"]);
+export const DemoStepStatus = z.enum(["pending", "running", "done", "failed"]);
+export const DemoStatusName = z.enum(["queued", "running", "draft", "failed", "published"]);
+
+export const DemoCreateRequest = z.object({
+  organisation_name: text(255),
+  /** The public website the research reads (a few pages, as evidence only). */
+  website_url: z.url().max(2000),
+  /** What the demo should show: the sales brief in a few sentences. */
+  brief: text(4000),
+  language: Language,
+  /** An event or customer situation to set the demo in, if there is one. */
+  example: optText(2000),
+  contact_name: text(255),
+  /** Becomes the organisation's admin. */
+  contact_email: z.email().max(255),
+  /** Invite the contact to sign in with an email code when the demo is published. */
+  sign_in: z.boolean().default(false),
+  /** Prepare an offer draft on the organisation; staff send it later. */
+  offer: nullish(
+    z.object({
+      template: OfferTemplate,
+      language: Language,
+      person_name: optText(200),
+      attention: optText(200),
+      items: z.array(OfferItem).min(1).max(50),
+      external_ref: optText(255),
+    }),
+  ),
+});
+
+export const DemoStep = z.object({
+  name: DemoStepName,
+  status: DemoStepStatus,
+  started_at: IsoTime.nullable(),
+  finished_at: IsoTime.nullable(),
+  error: z.string().nullable(),
+});
+
+export const DemoStatus = z.object({
+  id: Uuid,
+  status: DemoStatusName,
+  organisation_name: z.string(),
+  website_url: z.string(),
+  language: Language,
+  contact_email: z.string(),
+  sign_in: z.boolean(),
+  /** Set by the seed step, when the organisation and its contact are created. */
+  org_id: Uuid.nullable(),
+  slug: z.string().nullable(),
+  steps: z.array(DemoStep),
+  links: z.object({
+    /** The public presentation, live only after publishing. */
+    public: z.array(z.object({ language: Language, url: z.string(), live: z.boolean() })),
+    /** The demo projects in the dashboard, for review before publishing. */
+    projects: z.array(z.object({ language: Language, project_id: Uuid, url: z.string() })),
+    /** The organisation's card in the staff console. */
+    account: z.string().nullable(),
+    /** Where the contact lands after signing in. */
+    continue_url: z.string().nullable(),
+  }),
+  /** The research report (sources, facts, unknowns, invented themes), once written. */
+  research: z.string().nullable(),
+  /** How many fictional conversations were authored. */
+  conversations: z.number().int().nullable(),
+  offer_document_id: Uuid.nullable(),
+  invited_at: IsoTime.nullable(),
+  published_at: IsoTime.nullable(),
+  created_at: IsoTime,
+  updated_at: IsoTime,
+});
+
+export const DemoList = z.object({ demos: z.array(DemoStatus) });
+
+/** Publishing makes the public link live; `sign_in` overrides the choice made at the start. */
+export const DemoPublishRequest = z.object({ sign_in: z.boolean().nullish() });
+
+// ── events out (POSTed to ACCOUNTS_EVENTS_URL, signed like project webhooks) ──
+
+export const EventName = z.enum([
+  "account.document.signed",
+  "account.document.declined",
+  "account.billing_details.updated",
+  "account.task.submitted",
+  "account.ticket.opened",
+]);
+
+// ── the route table ─────────────────────────────────────────────────────
+
+export type Permission =
+  | "account:read"
+  | "account:sign"
+  | "account:billing"
+  | "account:tasks"
+  | "account:support"
+  | "signed-in"
+  | "staff:accounts"
+  | "staff:workspaces";
+
+export interface RouteSpec {
+  readonly method: "GET" | "POST" | "PUT" | "PATCH";
+  readonly path: string;
+  /**
+   * Org account policy (org owners, admins, billing), `staff:accounts` (staff and sam's
+   * staff key, audited), or `signed-in`. `+signer` routes also admit the person named to
+   * sign that one document.
+   */
+  readonly permission: Permission;
+  readonly signer?: true;
+  readonly query?: z.ZodType;
+  readonly request?: z.ZodType;
+  /** Absent: the response is a PDF. */
+  readonly response?: z.ZodType;
+  readonly status?: number;
+}
+
+const C = "/api/v2/orgs/:orgId/account";
+const S = "/api/v2/admin/accounts";
+
+export const ROUTES = {
+  accountPage: { method: "GET", path: C, permission: "account:read", response: AccountPage },
+  readDocument: {
+    method: "GET",
+    path: `${C}/documents/:docId`,
+    permission: "account:read",
+    signer: true,
+    response: DocumentDetail,
+  },
+  viewDocument: {
+    method: "POST",
+    path: `${C}/documents/:docId/view`,
+    permission: "account:read",
+    signer: true,
+    response: ViewResponse,
+  },
+  signDocument: {
+    method: "POST",
+    path: `${C}/documents/:docId/sign`,
+    permission: "account:sign",
+    signer: true,
+    request: SignRequest,
+    response: SignResponse,
+  },
+  declineDocument: {
+    method: "POST",
+    path: `${C}/documents/:docId/decline`,
+    permission: "account:sign",
+    signer: true,
+    request: DeclineRequest,
+    response: DeclineResponse,
+  },
+  nameSigner: {
+    method: "POST",
+    path: `${C}/documents/:docId/signer`,
+    permission: "account:sign",
+    request: NameSignerRequest,
+    response: NameSignerResponse,
+  },
+  /** The unsigned PDF (file_url): what the viewer renders under the fields. */
+  documentFile: {
+    method: "GET",
+    path: `${C}/documents/:docId/file`,
+    permission: "account:read",
+    signer: true,
+  },
+  /** The signed PDF (signed_pdf_url). */
+  signedPdf: {
+    method: "GET",
+    path: `${C}/documents/:docId/signed.pdf`,
+    permission: "account:read",
+    signer: true,
+  },
+  readBilling: {
+    method: "GET",
+    path: `${C}/billing`,
+    permission: "account:billing",
+    response: BillingDetails,
+  },
+  updateBilling: {
+    method: "PUT",
+    path: `${C}/billing`,
+    permission: "account:billing",
+    request: BillingUpdateRequest,
+    response: BillingDetails,
+  },
+  submitTask: {
+    method: "POST",
+    path: `${C}/tasks/:taskId/submit`,
+    permission: "account:tasks",
+    request: TaskSubmitRequest,
+    response: Task,
+  },
+  openTicket: {
+    method: "POST",
+    path: `${C}/tickets`,
+    permission: "account:support",
+    request: TicketOpenRequest,
+    response: Ticket,
+    status: 201,
+  },
+  replyTicket: {
+    method: "POST",
+    path: `${C}/tickets/:ticketId/messages`,
+    permission: "account:support",
+    request: TicketReplyRequest,
+    response: Ticket,
+  },
+  recordBooking: {
+    method: "POST",
+    path: `${C}/booking`,
+    permission: "account:support",
+    request: BookingRequest,
+    response: BookingResponse,
+  },
+  signingRequests: {
+    method: "GET",
+    path: "/api/v2/account/signing-requests",
+    permission: "signed-in",
+    response: SigningRequests,
+  },
+
+  listAccounts: {
+    method: "GET",
+    path: S,
+    permission: "staff:accounts",
+    query: AccountListQuery,
+    response: AccountList,
+  },
+  createAccount: {
+    method: "POST",
+    path: S,
+    permission: "staff:accounts",
+    request: CreateAccountRequest,
+    response: CreateAccountResponse,
+    status: 201,
+  },
+  accountCard: {
+    method: "GET",
+    path: `${S}/:orgId`,
+    permission: "staff:accounts",
+    response: AccountCard,
+  },
+  updateAccount: {
+    method: "PATCH",
+    path: `${S}/:orgId`,
+    permission: "staff:accounts",
+    request: UpdateAccountRequest,
+    response: AccountCard,
+  },
+  pushOffer: {
+    method: "POST",
+    path: `${S}/:orgId/offers`,
+    permission: "staff:accounts",
+    request: PushOfferRequest,
+    response: PushOfferResponse,
+    status: 201,
+  },
+  pushDocument: {
+    method: "POST",
+    path: `${S}/:orgId/documents`,
+    permission: "staff:accounts",
+    request: PushDocumentRequest,
+    response: PushDocumentResponse,
+    status: 201,
+  },
+  staffReadDocument: {
+    method: "GET",
+    path: `${S}/:orgId/documents/:docId`,
+    permission: "staff:accounts",
+    response: DocumentDetail,
+  },
+  staffDocumentFile: {
+    method: "GET",
+    path: `${S}/:orgId/documents/:docId/file`,
+    permission: "staff:accounts",
+  },
+  staffSignedPdf: {
+    method: "GET",
+    path: `${S}/:orgId/documents/:docId/signed.pdf`,
+    permission: "staff:accounts",
+  },
+  staffDocumentFields: {
+    method: "GET",
+    path: `${S}/:orgId/documents/:docId/fields`,
+    permission: "staff:accounts",
+    response: DocumentFields,
+  },
+  setDocumentFields: {
+    method: "PUT",
+    path: `${S}/:orgId/documents/:docId/fields`,
+    permission: "staff:accounts",
+    request: SetFieldsRequest,
+    response: DocumentFields,
+  },
+  sendDocument: {
+    method: "POST",
+    path: `${S}/:orgId/documents/:docId/send`,
+    permission: "staff:accounts",
+    request: SendDocumentRequest,
+    response: DocumentDetail,
+  },
+  voidDocument: {
+    method: "POST",
+    path: `${S}/:orgId/documents/:docId/void`,
+    permission: "staff:accounts",
+    request: VoidRequest,
+    response: DocumentDetail,
+  },
+  upsertInvoice: {
+    method: "PUT",
+    path: `${S}/:orgId/invoices/:exactId`,
+    permission: "staff:accounts",
+    request: InvoiceUpsertRequest,
+    response: DocumentDetail,
+  },
+  createTask: {
+    method: "POST",
+    path: `${S}/:orgId/tasks`,
+    permission: "staff:accounts",
+    request: CreateTaskRequest,
+    response: Task,
+    status: 201,
+  },
+  reviewTask: {
+    method: "POST",
+    path: `${S}/:orgId/tasks/:taskId/review`,
+    permission: "staff:accounts",
+    request: ReviewTaskRequest,
+    response: Task,
+  },
+  staffOpenTicket: {
+    method: "POST",
+    path: `${S}/:orgId/tickets`,
+    permission: "staff:accounts",
+    request: StaffTicketOpenRequest,
+    response: Ticket,
+    status: 201,
+  },
+  staffReplyTicket: {
+    method: "POST",
+    path: `${S}/:orgId/tickets/:ticketId/messages`,
+    permission: "staff:accounts",
+    request: StaffReplyRequest,
+    response: Ticket,
+  },
+  closeTicket: {
+    method: "POST",
+    path: `${S}/:orgId/tickets/:ticketId/close`,
+    permission: "staff:accounts",
+    response: Ticket,
+  },
+  tasksSummary: {
+    method: "GET",
+    path: "/api/v2/account/tasks-summary",
+    permission: "signed-in",
+    response: TasksSummary,
+  },
+  listDemos: {
+    method: "GET",
+    path: `${S}/demos`,
+    permission: "staff:accounts",
+    response: DemoList,
+  },
+  createDemo: {
+    method: "POST",
+    path: `${S}/demos`,
+    permission: "staff:accounts",
+    request: DemoCreateRequest,
+    response: DemoStatus,
+    status: 201,
+  },
+  demoStatus: {
+    method: "GET",
+    path: `${S}/demos/:demoId`,
+    permission: "staff:accounts",
+    response: DemoStatus,
+  },
+  publishDemo: {
+    method: "POST",
+    path: `${S}/demos/:demoId/publish`,
+    permission: "staff:accounts",
+    request: DemoPublishRequest,
+    response: DemoStatus,
+  },
+  retryDemo: {
+    method: "POST",
+    path: `${S}/demos/:demoId/retry`,
+    permission: "staff:accounts",
+    response: DemoStatus,
+  },
+  enableAccount: {
+    method: "POST",
+    path: `${S}/:orgId/enable`,
+    permission: "staff:accounts",
+    request: EnableAccountRequest,
+    response: AccountCard,
+  },
+  /** The demo seed route's optional block; creates the prospect's organisation. */
+  demoSeed: {
+    method: "POST",
+    path: "/api/v2/admin/popcorn/demos",
+    permission: "staff:workspaces",
+    request: z.looseObject({ prospect: ProspectBlock.nullish() }),
+  },
+} as const satisfies Record<string, RouteSpec>;
+
+export type RouteName = keyof typeof ROUTES;
+
+export type AccountPageT = z.output<typeof AccountPage>;
+export type DocumentDetailT = z.output<typeof DocumentDetail>;
+export type DocumentSummaryT = z.output<typeof DocumentSummary>;
+export type TaskT = z.output<typeof Task>;
+export type TicketT = z.output<typeof Ticket>;
+export type AccountCardT = z.output<typeof AccountCard>;
+export type AccountListT = z.output<typeof AccountList>;
+export type OfferContentT = z.output<typeof OfferContent>;
+export type DocumentFieldT = z.output<typeof DocumentField>;
+export type SignRequestT = z.output<typeof SignRequest>;
+export type DemoStatusT = z.output<typeof DemoStatus>;
+export type TasksSummaryT = z.output<typeof TasksSummary>;

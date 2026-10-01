@@ -1,0 +1,164 @@
+// biome-ignore-all lint: this file does not need linting
+type TResource = {
+	id: string;
+	created_at: Date;
+	updated_at: Date;
+	project_id: string;
+	is_processed: boolean;
+	type: string;
+	original_filename: string;
+	title: string;
+	description?: string;
+	context?: string;
+	processing_error?: string;
+};
+
+type TProjectTag = {
+	id: string;
+	created_at: Date;
+	updated_at: Date;
+	text: string;
+};
+
+type TConversation = {
+	id: string;
+	created_at: Date;
+	updated_at: Date;
+	project_id: string;
+	title?: string;
+	description?: string;
+	context?: string;
+	participant_email?: string;
+	participant_name: string;
+	tags: TProjectTag[];
+	chunks?: TConversationChunk[];
+};
+
+type TConversationChunk = {
+	id: string;
+	created_at: Date;
+	updated_at: Date;
+	conversation_id: string;
+
+	transcript?: string;
+	timestamp: Date;
+	error?: string | null;
+};
+
+type TProject = {
+	id: string;
+	created_at: Date;
+	updated_at: Date;
+	language: string;
+	pin: string;
+	name?: string;
+	context?: string;
+	is_conversation_allowed?: boolean;
+	default_conversation_title?: string;
+	default_conversation_description?: string;
+	default_conversation_context?: string;
+	default_conversation_finish_text?: string;
+	tags: TProjectTag[];
+};
+
+type TSession = {
+	id: number;
+	created_at: Date;
+	updated_at: Date;
+};
+
+type TTaskState =
+	| "PENDING"
+	| "STARTED"
+	| "PROGRESS"
+	| "SUCCESS"
+	| "FAILURE"
+	| "RETRY"
+	| "REVOKED"
+	| "IGNORED";
+
+type TTaskProgressMeta = {
+	current: number;
+	total: number;
+	percent: number;
+	message?: string;
+};
+
+type TTask =
+	| {
+			id: string;
+			state: TTaskState;
+			meta: any;
+	  }
+	| {
+			id: string;
+			state: "PROGRESS";
+			meta: TTaskProgressMeta;
+	  };
+
+type TProjectChatContext = {
+	conversations: Array<{
+		optimisticId?: string;
+		conversation_id: string;
+		conversation_participant_name?: string;
+		locked: boolean;
+		token_usage: number; // between 0 and 1
+	}>;
+	messages: Array<{
+		role: "user" | "assistant";
+		token_usage: number; // between 0 and 1
+	}>;
+	conversation_id_list: string[];
+	locked_conversation_id_list: string[];
+	chat_mode: "overview" | "deep_dive" | "agentic" | null; // null = not yet selected
+};
+
+type ChatHistoryMessage = {
+	id: string;
+	role: "user" | "assistant" | "system" | "dembrane";
+	content: string;
+	_original: ProjectChatMessage;
+	metadata: ProjectChatMessageMetadata[];
+};
+
+type ChatHistory = Array<ChatHistoryMessage>;
+
+type TSuggestion = {
+	icon: "sparkles" | "search" | "quote" | "lightbulb" | "list";
+	label: string;
+	prompt: string;
+};
+
+type TSuggestionsResponse = {
+	suggestions: TSuggestion[];
+};
+
+type SelectAllConversationResult = {
+	conversation_id: string;
+	participant_name: string;
+	success: boolean;
+	reason?:
+		| "added"
+		| "already_in_context"
+		| "context_limit_reached"
+		| "empty" // No transcript content
+		| "too_long" // Single conversation exceeds context
+		| "locked" // Over the tier's recording cap
+		| "not_found" // Not in this project, or already deleted
+		| "error"; // Processing error occurred
+};
+
+type AddContextResponse = {
+	// Optional fields populated for the batch paths (select_all, conversation_ids)
+	added?: SelectAllConversationResult[];
+	skipped?: SelectAllConversationResult[];
+	total_processed?: number;
+	context_limit_reached?: boolean;
+};
+
+type SelectAllContextResponse = {
+	added: SelectAllConversationResult[];
+	skipped: SelectAllConversationResult[];
+	total_processed: number;
+	context_limit_reached: boolean;
+};

@@ -1,0 +1,73 @@
+import type { Codes } from "./types";
+
+/** The argument map: its snapshots, titles and fact-checks. */
+export const map = {
+  "map.storage_unavailable": {
+    action: "retry",
+    detail: "Map storage is unavailable.",
+    description: "The map or analysis store did not answer; nothing was read or written.",
+  },
+  "map.not_found": {
+    action: "none",
+    detail: "Map not found",
+    description: "The map result does not exist or the caller cannot see it.",
+  },
+  "map.no_map_yet": {
+    action: "none",
+    detail: "This project has no map yet.",
+    description: "The project has no map snapshot to show.",
+  },
+  "map.not_ready": {
+    action: "wait",
+    detail: "This map is not ready.",
+    description: "The map is still being generated; titles and fact-checks wait for it.",
+  },
+  "map.invalid_request": {
+    action: "fix_input",
+    detail: "Invalid map request",
+    audience: "developer",
+    description:
+      "The map was asked for an unknown type or an out-of-range budget; the detail carries the reason.",
+  },
+  "map.selection_not_in_map": {
+    action: "retry",
+    detail: "The selection is not in this map",
+    description:
+      "Selected arguments or objects are not in the map (it was regenerated since); the detail says how many.",
+  },
+  "map.selection_other_snapshot": {
+    action: "retry",
+    detail: "The selection belongs to another snapshot.",
+    description: "The selection was made on an older snapshot of the map.",
+  },
+  "map.selection_too_small": {
+    action: "fix_input",
+    detail: "The selection is too small",
+    description: "A title needs a minimum number of selected nodes; the detail says how many.",
+  },
+  "map.selection_too_large": {
+    action: "fix_input",
+    detail: "The selection is too large",
+    description: "The selection has more nodes than a title can cover; the detail says the limit.",
+  },
+  "map.not_a_claim": {
+    action: "fix_input",
+    detail: "only claims are fact-checked",
+    description: "A fact-check was asked for a node that is not a claim.",
+  },
+  "map.generation_not_started": {
+    action: "retry",
+    detail: "The map generation could not be started.",
+    description: "Queueing the map generation failed; nothing was started.",
+  },
+  "map.title_failed": {
+    action: "retry",
+    detail: "The title could not be generated.",
+    description: "The model call for a selection title failed.",
+  },
+  "map.fact_check_not_started": {
+    action: "retry",
+    detail: "The fact-check could not be started.",
+    description: "Queueing the fact-check failed; nothing was started.",
+  },
+} as const satisfies Codes<"map">;

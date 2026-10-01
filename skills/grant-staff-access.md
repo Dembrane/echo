@@ -1,68 +1,37 @@
-# Skill: Grant Staff Access
+---
+name: grant-staff-access
+description: Give a dembrane team member staff access (the Staff console and every /api/v2/admin route), take it away, or list who has it.
+---
 
-Give a dembrane user access to the staff dashboard (the "Staff" item in the user menu, plus the `/v2/admin/*` backend surface).
+# Grant staff access
 
-## How the gate works
+## What it grants
 
-Verify against the current prod release tag before acting (`git tag --sort=-creatordate | head -1`), but as of v2.0.5:
+Staff are the users whose role is Administrator. That role holds every named staff permission (`dembrane/platform/packages/access/src/staff.ts`): billing, tiers, workspaces, support access, training, feedback, customer accounts, announcements, privacy (export and erase any person) and minting staff API keys. Every use is recorded in `staff_audit_event`. It is broad: confirm with Sameer before granting anyone new.
 
-- The frontend shows the staff surface when `meV2.is_staff` is true (`echo/frontend/src/features/sidebar/shell/UserMenu.tsx`).
-- The backend sets `is_staff` from the Directus JWT `admin_access` claim (`echo/server/dembrane/api/dependency_auth.py`), and `/v2/admin/*` gates on the same claim.
-- Directus sets `admin_access: true` in the JWT when any policy with `admin_access = true` is attached to the user — via their role, or directly via a `directus_access` row.
+No route can make someone staff. It needs the database login of the environment.
 
-Prod has exactly one such policy: **Administrator** (`5d44a9e0-3f7c-4992-bacb-f55a6f9bfd51`).
+## Commands
 
-## ⚠️ What this actually grants
+From `dembrane/platform`, with `DATABASE_URL` for the target environment:
 
-There is no staff-only policy yet — the staff gate IS the admin claim. Granting it gives **full Directus admin**: Data Studio app access and read/write on every collection, not just the dashboard. Storage-backed staff policies are planned but not built (see the comment in `echo/server/dembrane/api/v2/__init__.py`).
-
-Confirm with Sameer before granting anyone new.
-
-## Grant pattern
-
-Attach the Administrator policy directly to the user in `directus_access`, keeping their role (Basic User) unchanged. Do NOT switch the user's role to Administrator.
-
-Connect to prod Postgres via `doctl` + the `postgres:16-alpine` container (no local psql — see `doctl databases list` for the cluster id; prod is `dbr-echo-prod-postgres`).
-
-```bash
-PGURI=$(doctl databases connection <prod-cluster-id> --format URI --no-header)
-podman run --rm docker.io/library/postgres:16-alpine psql "$PGURI" -c "..."
+```sh
+bun run staff:access list
+bun run staff:access grant <email> --by <your-staff-email>
+bun run staff:access revoke <email> --by <your-staff-email>
 ```
 
-```sql
--- 1. Look up the user and the policy (don't trust hardcoded ids across environments)
-SELECT id, email, role, status FROM directus_users WHERE email = '<email>';
-SELECT id, name FROM directus_policies WHERE admin_access = true;
+- Only `@dembrane.com` addresses can be granted, and only an active account.
+- `--by` must already be staff; the change is audited under them (`permission = 'staff:grant'`).
+- Revoke puts the user back on the public signup role and detaches any admin policy attached to them directly (older Directus-era grants). Nobody can revoke themselves.
+- `list` also shows `policy-only` users: a direct admin policy from the Directus era that no longer makes them staff. Revoke them to clean up.
 
--- 2. Grant (idempotent)
-INSERT INTO directus_access (id, role, "user", policy, sort)
-SELECT gen_random_uuid(), NULL, '<user-id>', '<admin-policy-id>', 1
-WHERE NOT EXISTS (
-  SELECT 1 FROM directus_access
-  WHERE "user" = '<user-id>' AND policy = '<admin-policy-id>'
-)
-RETURNING id;
+## After
 
--- 3. Verify: list all per-user grants
-SELECT a.id, u.email, p.name AS policy, p.admin_access
-FROM directus_access a
-JOIN directus_users u ON u.id = a."user"
-JOIN directus_policies p ON p.id = a.policy
-ORDER BY u.email;
+It holds from their next request; no new sign-in needed. Check with their session or key:
+
+```sh
+curl -sf -H "Authorization: Bearer $KEY" https://api.dembrane.com/api/v2/me | jq .is_staff
 ```
 
-## Revoke pattern
-
-```sql
-DELETE FROM directus_access
-WHERE "user" = '<user-id>' AND policy = '<admin-policy-id>' AND role IS NULL;
-```
-
-## After granting
-
-- The claim lands in newly issued tokens: the user must **log out and back in** (or wait ~15 min for a token refresh).
-- If the Staff item still doesn't appear after a re-login, Directus may be serving a stale permissions cache (raw SQL bypasses Directus's cache invalidation) — flush the Directus cache.
-
-## Audit
-
-Per-user grants are visible with the verify query above. Users with the full Administrator *role* (service accounts like `admin@`, `mcp@`, plus any bootstrap/migration users) also pass the gate — check `directus_users.role` joined to `directus_roles` when auditing who has staff access.
+A revoked user's staff API keys stop passing staff checks at once. Delete them too: `DATABASE_URL=... bun run accounts:staff-key revoke <label>`.

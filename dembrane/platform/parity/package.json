@@ -1,0 +1,13 @@
+{
+  "name": "@dembrane/parity",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "postgres": "^3.4.9",
+    "better-auth": "^1.7.6",
+    "@better-auth/utils": "0.4.2"
+  },
+  "scripts": {
+    "run": "bun runner/run.ts"
+  }
+}

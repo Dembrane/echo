@@ -1,57 +1,54 @@
-# Skill: Data Export
+---
+name: data-export
+description: Prepare and deliver a copy of everything dembrane holds about one person. Use for GDPR/AVG access requests ("data opvraag", "artikel 15", "export my data", "copy of my recordings"). The legal deadline is one month from the request; aim for days.
+---
 
-Prepare and deliver a copy of a user's data when they request it. Use for GDPR/AVG data access requests ("data opvraag", "artikel 15", "export my data", "copy of my recordings"). The legal deadline is one month from the request date. Aim to deliver in days: a fast, personal response turns a compliance chore into a service moment.
+# Data export
 
-## 1. Verify and locate the account
-
-- The request must come from the account's registered email address. A matching sender is sufficient identity verification.
-- Find the account in prod. There is no local psql; use podman with a doctl connection URI (cluster ids via `doctl databases list`):
+Needs a staff API key (see "Staff API key" at the end). All commands run from any shell with `curl` and `jq`.
 
 ```sh
-PGURI=$(doctl databases connection <prod-postgres-cluster-id> --format URI --no-header)
-podman run --rm docker.io/library/postgres:16-alpine psql "$PGURI" -c \
-  "SELECT id, email, first_name, last_name, status, last_access FROM directus_users WHERE lower(email) = '<email>';"
+API=https://api.dembrane.com
+H=(-H "Authorization: Bearer $DEMBRANE_STAFF_KEY" -H "content-type: application/json")
+EMAIL=person@example.org
 ```
+
+## 1. Verify
+
+The request must come from the account's registered email address. A matching sender is enough.
 
 ## 2. Understand why they asked
 
-Data requests rarely arrive in a vacuum. Before replying, check the user's usage in the database (projects, conversations, durations) and their PostHog trail (`distinct_id` = their email): caps hit, upgrade prompts viewed, rage clicks, errors. The reply can then address the real problem, not just the request.
+Requests rarely come from nowhere. Look at their PostHog trail (`distinct_id` is their email): caps hit, upgrade prompts, errors. The reply can then address the real problem, not only the request.
 
-## 3. Assemble the package
-
-One folder named `dembrane-data-export-<firstname-lastname>`:
-
-- `README.md`: customer-facing guide (section 4)
-- `user.json`: account record with id, email, name, status, last_access, language, provider. Never include auth or token fields
-- `projects.json`: the `project` rows owned by the user
-- `conversations.json`: the `conversation` rows for those projects, with `merged_transcript` dropped (`to_jsonb(c) - 'merged_transcript'`)
-- `audio/`: one merged recording per conversation as mp3, with friendly filenames
-
-The exact contents of the package is a product decision, not a fixed rule. The current call and its reasoning live in the Notion Decisions database (entry dated 2026-07-13, search "data requests"). Read it before changing what goes in.
-
-Fetching the audio: `conversation.merged_audio_path` points at the private uploads bucket, so anonymous GET returns 403. Use the platform's object storage credentials, which are managed as cluster secrets and available to authorized operators only. Request access through the usual ops channel and never copy credential values or their exact storage locations into files, chats, or this repo:
+## 3. Export
 
 ```sh
-podman run --rm -v "$OUT":/out -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY docker.io/amazon/aws-cli \
-  --endpoint-url https://ams3.digitaloceanspaces.com \
-  s3 cp "s3://<uploads-bucket>/audio-conversations/<file>.mp3" /out/<friendly-name>.mp3
+curl -sf "${H[@]}" -X POST "$API/api/v2/admin/people/export" -d "{\"email\":\"$EMAIL\"}" | tee export.json | jq '{key, bytes, files, counts, expires_at}'
+curl -sf -o export.zip "$(jq -r .download_url export.json)" && unzip -l export.zip
 ```
 
-## 4. Customer-facing README
+One zip, written to the file bucket at `exports/people/<user id>/<export id>.zip`: account, memberships, projects they created, the conversations in those projects and the ones they took part in by email (transcripts as text, audio as 7-day links), chats they started, documents they signed with the signed PDFs, notifications and audit rows, connected assistants, feedback, invites and pricing requests. Secrets (password hashes, session tokens, 2FA secrets) are never included. `README.md` in the zip is the customer-facing guide.
 
-Follow the brand voice: lowercase dembrane, plain language, no legalese, no internal identifiers (cluster names, buckets, database ids, request procedure). One line per file explaining what it is. End with: "Questions? Just reply to the email this came with."
+A 404 means no account uses that address. Tell them so; do not guess another address.
 
-## 5. Deliver
+What goes into the package is a product decision: the Notion Decisions entry of 2026-07-13 ("data requests"). Read it before changing the contents.
 
-- Zip the folder, excluding `.DS_Store`.
-- Share via a private link and keep it live for 30 days:
-  - Google Drive is simplest, but Drive links never expire on their own. Set a reminder to unshare after 30 days.
-  - A Spaces signed URL also works. SigV4 presigning caps at 7 days; for 30 days sign a SigV2 URL (HMAC-SHA1). Delete the object once it expires. Note that a SigV2 URL signs the verb, so test it with a ranged GET, not a HEAD.
-- Before the email goes out, verify the uploaded zip is the final version (name and size), not an earlier draft.
-- Reply personally from a real address. Say what the export contains and how long the link works. If the usage trail (section 2) surfaced friction or buying intent, address it in the same email.
+## 4. Deliver
 
-## 6. Log it
+- `download_url` and the audio links inside work for 7 days. Run the export again for a fresh link; each run is a new file.
+- Draft a personal reply from a real address: what is in the export and how long the link works. If step 2 surfaced friction, address it in the same email.
+- A person sends it. Drafting is not sending.
 
-- Attio: add a note on the person's record covering what was requested, what was delivered, and when, with a link to the decision entry.
-- If handling the request forced a new policy call, record it in the Notion Decisions database and backlink the Attio note.
-- Keep an internal archive of exactly what was sent.
+## 5. Log
+
+- Attio: a note on the person covering what was requested, what was delivered and when, linking the decision entry.
+- The archive of exactly what was sent is the zip at `key`. Every export is also in `staff_audit_event` (`action = 'person.export'`, target the user id).
+
+## Staff API key
+
+A long-lived session of a staff user, minted once by someone with the database login and kept in Secret Manager:
+
+```sh
+cd dembrane/platform && DATABASE_URL=... bun run accounts:staff-key mint <staff-email> <label> [days]
+```

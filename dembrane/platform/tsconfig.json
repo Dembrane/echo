@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "incremental": true,
+    "tsBuildInfoFile": ".cache/tsc.tsbuildinfo"
+  },
+  "include": [
+    "apps/*/src",
+    "apps/*/test",
+    "packages/*/src",
+    "packages/*/test",
+    "packages/*/scripts",
+    "packages/*/environments",
+    "packages/db/*.ts",
+    "parity",
+    "scripts",
+    "ops"
+  ]
+}

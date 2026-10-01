@@ -1,0 +1,546 @@
+import { t } from "@lingui/core/macro";
+import {
+	useInfiniteQuery,
+	useMutation,
+	useQuery,
+	useQueryClient,
+} from "@tanstack/react-query";
+import posthog from "posthog-js";
+import { useEffect } from "react";
+import useSessionStorageState from "use-session-storage-state";
+import { useCurrentUser } from "@/components/auth/hooks";
+import { toast } from "@/components/common/Toaster";
+import { API_BASE_URL } from "@/config";
+import type { ListQuery } from "@/lib/listQuery";
+import { isUnreadByMe } from "../announcementFilters";
+
+/**
+ * The caller's announcements from /v2/me/announcements: newest first, each with its
+ * translations and only the caller's own read marks as `activity`. Unexpired only, unless
+ * `include_expired` (honoured for staff, as Directus's permissions were).
+ */
+type ApiAnnouncement = Omit<Announcement, "activity" | "translations"> & {
+	activity: AnnouncementActivity[];
+	translations: AnnouncementTranslation[];
+};
+
+async function fetchAnnouncements(params: {
+	limit?: number;
+	offset?: number;
+	include_expired?: boolean;
+}): Promise<ApiAnnouncement[]> {
+	const url = new URL(
+		`${API_BASE_URL}/v2/me/announcements`,
+		window.location.origin,
+	);
+	for (const [k, v] of Object.entries(params))
+		if (v !== undefined) url.searchParams.set(k, String(v));
+	const res = await fetch(url, { credentials: "include" });
+	if (!res.ok) throw new Error(`Announcements request failed: ${res.status}`);
+	return res.json();
+}
+
+async function postAnnouncements(path: string) {
+	const res = await fetch(`${API_BASE_URL}/v2/me/announcements${path}`, {
+		credentials: "include",
+		method: "POST",
+	});
+	if (!res.ok) throw new Error(`Announcements update failed: ${res.status}`);
+	return res.json();
+}
+
+export const useLatestAnnouncement = () => {
+	const { data: currentUser } = useCurrentUser();
+
+	return useQuery({
+		// Without a user this 403s on every cold load.
+		enabled: !!currentUser?.id,
+		queryFn: async () => {
+			try {
+				const response = await fetchAnnouncements({ limit: 1 });
+
+				return response.length > 0 ? response[0] : null;
+			} catch (error) {
+				posthog.captureException(error);
+				console.error("Error fetching latest announcement:", error);
+				throw error;
+			}
+		},
+		queryKey: ["announcements", "latest"],
+		retry: 2,
+		staleTime: 1000 * 60 * 5, // 5 minutes
+	});
+};
+
+export const useInfiniteAnnouncements = ({
+	query,
+	options = {
+		initialLimit: 10,
+	},
+	enabled = true,
+}: {
+	query?: Partial<ListQuery<Announcement>>;
+	options?: {
+		initialLimit?: number;
+	};
+	enabled?: boolean;
+}) => {
+	const { data: currentUser } = useCurrentUser();
+	const { initialLimit = 10 } = options;
+
+	return useInfiniteQuery({
+		// Firing before auth resolves caches a wrong result under a stale key.
+		enabled: enabled && !!currentUser?.id,
+		getNextPageParam: (lastPage: {
+			announcements: Announcement[];
+			nextOffset?: number;
+		}) => lastPage.nextOffset,
+		initialPageParam: 0,
+		queryFn: async ({ pageParam = 0 }) => {
+			try {
+				void query; // no caller narrows the list; kept for the query key
+				const response = await fetchAnnouncements({
+					limit: initialLimit,
+					offset: pageParam * initialLimit,
+				});
+
+				return {
+					announcements: response,
+					nextOffset:
+						response.length === initialLimit ? pageParam + 1 : undefined,
+				};
+			} catch (error) {
+				posthog.captureException(error);
+				console.error("Error fetching announcements:", error);
+				throw error;
+			}
+		},
+		queryKey: ["announcements", "infinite", currentUser?.id, query],
+	});
+};
+
+export const useMarkAsReadMutation = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async ({
+			announcementId,
+			activityIds,
+			userId,
+		}: {
+			announcementId: string;
+			/** Existing rows for this user, if any. Passing them avoids duplicates. */
+			activityIds?: string[];
+			userId?: string;
+		}) => {
+			try {
+				// The API updates the caller's existing marks in place, or adds the first.
+				void activityIds;
+				void userId;
+				return await postAnnouncements(`/${announcementId}/read`);
+			} catch (error) {
+				toast.error(t`Failed to mark announcement as read`);
+				posthog.captureException(error);
+				console.error("Error in mutationFn:", error);
+				throw error;
+			}
+		},
+		onError: (
+			err,
+			_newAnnouncementId,
+			context: { previousAnnouncements?: [any, any][] } = {},
+		) => {
+			// If the mutation fails, use the context returned from onMutate to roll back
+			if (context?.previousAnnouncements) {
+				context.previousAnnouncements.forEach(
+					([queryKey, data]: [any, any]) => {
+						queryClient.setQueriesData({ queryKey }, data);
+					},
+				);
+			}
+			console.error("Error marking announcement as read:", err);
+			toast.error(t`Failed to mark announcement as read`);
+		},
+		onMutate: async ({ announcementId }) => {
+			// Cancel any outgoing refetches
+			await queryClient.cancelQueries({ queryKey: ["announcements"] });
+
+			// Snapshot the previous value
+			const previousAnnouncements = queryClient.getQueriesData({
+				queryKey: ["announcements"],
+			});
+
+			// Optimistically update infinite announcements
+			queryClient.setQueriesData(
+				{ queryKey: ["announcements", "infinite"] },
+				(old: any) => {
+					if (!old) return old;
+					return {
+						...old,
+						pages: old.pages.map((page: any) => ({
+							...page,
+							announcements: page.announcements.map((announcement: any) => {
+								if (announcement.id === announcementId) {
+									return {
+										...announcement,
+										activity: [
+											{
+												announcement_activity: announcement.id,
+												id: `temp-${announcement.id}`,
+												read: true,
+												user_id: null,
+											},
+										],
+									};
+								}
+								return announcement;
+							}),
+						})),
+					};
+				},
+			);
+
+			// // Optimistically update latest announcement
+			queryClient.setQueriesData(
+				{ queryKey: ["announcements", "latest"] },
+				(old: any) => {
+					if (!old || old.id !== announcementId) return old;
+					return {
+						...old,
+						activity: [
+							{
+								announcement_activity: old.id,
+								id: `temp-${old.id}`,
+								read: true,
+								user_id: null,
+							},
+						],
+					};
+				},
+			);
+
+			// Count and urgent title are `select`s over these rows, so both follow.
+			queryClient.setQueriesData(
+				{ queryKey: ["announcements", "summary"] },
+				(old: { id: string }[]) =>
+					Array.isArray(old)
+						? old.map((row) =>
+								row.id === announcementId
+									? { ...row, activity: [{ read: true }] }
+									: row,
+							)
+						: old,
+			);
+
+			// Return a context object with the snapshotted value
+			return { previousAnnouncements };
+		},
+		onSettled: () => {
+			// refetch after error or success to ensure cache consistency
+			queryClient.invalidateQueries({ queryKey: ["announcements"] });
+		},
+	});
+};
+
+export const useMarkAsUnreadMutation = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async ({
+			announcementId,
+		}: {
+			announcementId: string;
+			activityIds: string[];
+		}) => {
+			try {
+				return await postAnnouncements(`/${announcementId}/unread`);
+			} catch (error) {
+				toast.error(t`Failed to mark announcement as unread`);
+				posthog.captureException(error);
+				console.error("Error in markAsUnread mutationFn:", error);
+				throw error;
+			}
+		},
+		onError: (
+			err,
+			_variables,
+			context: { previousAnnouncements?: [any, any][] } = {},
+		) => {
+			if (context?.previousAnnouncements) {
+				context.previousAnnouncements.forEach(
+					([queryKey, data]: [any, any]) => {
+						queryClient.setQueriesData({ queryKey }, data);
+					},
+				);
+			}
+			console.error("Error marking announcement as unread:", err);
+			toast.error(t`Failed to mark announcement as unread`);
+		},
+		onMutate: async ({ announcementId }) => {
+			await queryClient.cancelQueries({ queryKey: ["announcements"] });
+
+			const previousAnnouncements = queryClient.getQueriesData({
+				queryKey: ["announcements"],
+			});
+
+			// Optimistically update infinite announcements - set read to false
+			queryClient.setQueriesData(
+				{ queryKey: ["announcements", "infinite"] },
+				(old: any) => {
+					if (!old) return old;
+					return {
+						...old,
+						pages: old.pages.map((page: any) => ({
+							...page,
+							announcements: page.announcements.map((announcement: any) => {
+								if (announcement.id === announcementId) {
+									return {
+										...announcement,
+										activity:
+											announcement.activity?.map((a: any) => ({
+												...a,
+												read: false,
+											})) ?? [],
+									};
+								}
+								return announcement;
+							}),
+						})),
+					};
+				},
+			);
+
+			// Optimistically update latest announcement
+			queryClient.setQueriesData(
+				{ queryKey: ["announcements", "latest"] },
+				(old: any) => {
+					if (!old || old.id !== announcementId) return old;
+					return {
+						...old,
+						activity:
+							old.activity?.map((a: any) => ({ ...a, read: false })) ?? [],
+					};
+				},
+			);
+
+			queryClient.setQueriesData(
+				{ queryKey: ["announcements", "summary"] },
+				(old: { id: string }[]) =>
+					Array.isArray(old)
+						? old.map((row) =>
+								row.id === announcementId
+									? { ...row, activity: [{ read: false }] }
+									: row,
+							)
+						: old,
+			);
+
+			return { previousAnnouncements };
+		},
+		onSettled: () => {
+			queryClient.invalidateQueries({ queryKey: ["announcements"] });
+		},
+	});
+};
+
+export const useMarkAllAsReadMutation = () => {
+	const queryClient = useQueryClient();
+	const { data: currentUser } = useCurrentUser();
+
+	return useMutation({
+		mutationFn: async () => {
+			try {
+				// The API marks only the caller's own rows, admins included.
+				return await postAnnouncements("/read-all");
+			} catch (error) {
+				toast.error(t`Failed to mark all announcements as read`);
+				posthog.captureException(error);
+				console.error("Error in markAllAsRead mutationFn:", error);
+				throw error;
+			}
+		},
+		onError: (err, _variables, context) => {
+			// If the mutation fails, use the context returned from onMutate to roll back
+			if (context?.previousAnnouncements) {
+				context.previousAnnouncements.forEach(([queryKey, data]) => {
+					queryClient.setQueriesData({ queryKey }, data);
+				});
+			}
+			console.error("Error marking all announcements as read:", err);
+			toast.error(t`Failed to mark all announcements as read`);
+		},
+		onMutate: async () => {
+			// Cancel any outgoing refetches
+			await queryClient.cancelQueries({ queryKey: ["announcements"] });
+
+			// Snapshot the previous value
+			const previousAnnouncements = queryClient.getQueriesData({
+				queryKey: ["announcements"],
+			});
+
+			// Optimistically update infinite announcements - mark all as read
+			queryClient.setQueriesData(
+				{ queryKey: ["announcements", "infinite"] },
+				(old: any) => {
+					if (!old) return old;
+					return {
+						...old,
+						pages: old.pages.map((page: any) => ({
+							...page,
+							announcements: page.announcements.map((announcement: any) => ({
+								...announcement,
+								activity: [
+									{
+										announcement_activity: announcement.id,
+										id: `temp-all-${announcement.id}`,
+										read: true,
+										user_id: currentUser?.id || null,
+									},
+								],
+							})),
+						})),
+					};
+				},
+			);
+
+			// Optimistically update latest announcement
+			queryClient.setQueriesData(
+				{ queryKey: ["announcements", "latest"] },
+				(old: any) => {
+					if (!old) return old;
+					return {
+						...old,
+						activity: [
+							{
+								announcement_activity: old.id,
+								id: `temp-all-${old.id}`,
+								read: true,
+								user_id: currentUser?.id || null,
+							},
+						],
+					};
+				},
+			);
+
+			queryClient.setQueriesData(
+				{ queryKey: ["announcements", "summary"] },
+				(old: unknown[]) =>
+					Array.isArray(old)
+						? old.map((row) => ({
+								...(row as object),
+								activity: [{ read: true }],
+							}))
+						: old,
+			);
+
+			// Return a context object with the snapshotted value
+			return { previousAnnouncements };
+		},
+		onSettled: () => {
+			// refetch after error or success to ensure cache consistency
+			queryClient.invalidateQueries({ queryKey: ["announcements"] });
+		},
+	});
+};
+
+type SummaryRow = Announcement & { activity?: { read?: boolean | null }[] };
+
+/**
+ * Backs both the unread count and the urgent title as two `select`s over one
+ * cache entry: a single poll, and the two can never disagree.
+ */
+const useAnnouncementSummary = <T>(select: (rows: SummaryRow[]) => T) => {
+	const { data: currentUser } = useCurrentUser();
+
+	return useQuery({
+		enabled: !!currentUser?.id,
+		queryFn: async () => {
+			try {
+				if (!currentUser?.id) {
+					return [] as SummaryRow[];
+				}
+
+				return (await fetchAnnouncements({})) as SummaryRow[];
+			} catch (error) {
+				posthog.captureException(error);
+				console.error("Error fetching announcement summary:", error);
+				throw error;
+			}
+		},
+		queryKey: ["announcements", "summary", currentUser?.id],
+		refetchInterval: 60_000,
+		retry: 2,
+		select,
+		staleTime: 1000 * 60 * 5, // 5 minutes
+	});
+};
+
+// Module scope keeps these referentially stable across renders.
+const selectUnreadCount = (rows: SummaryRow[]) =>
+	rows.filter((row) => isUnreadByMe(row.activity)).length;
+
+const selectTopUrgentUnread = (rows: SummaryRow[]) =>
+	rows.find((row) => row.level === "urgent" && isUnreadByMe(row.activity)) ??
+	null;
+
+export const useUnreadAnnouncements = () =>
+	useAnnouncementSummary(selectUnreadCount);
+
+export const useTopUrgentUnreadAnnouncement = () =>
+	useAnnouncementSummary(selectTopUrgentUnread);
+
+export const useWhatsNewAnnouncements = ({
+	enabled = true,
+}: {
+	enabled?: boolean;
+} = {}) => {
+	return useQuery({
+		enabled,
+		queryFn: async () => {
+			try {
+				// Directus let admins see expired announcements here and scoped everyone
+				// else to unexpired ones; the API applies the same rule.
+				const response = await fetchAnnouncements({
+					include_expired: true,
+					limit: 50,
+				});
+
+				return response;
+			} catch (error) {
+				posthog.captureException(error);
+				console.error("Error fetching what's new announcements:", error);
+				throw error;
+			}
+		},
+		queryKey: ["announcements", "whats-new"],
+		retry: 2,
+		staleTime: 1000 * 60 * 5,
+	});
+};
+
+export const useAnnouncementDrawer = () => {
+	const [isOpen, setIsOpen] = useSessionStorageState(
+		"announcement-drawer-open",
+		{
+			defaultValue: false,
+		},
+	);
+
+	// Reset drawer state on page reload
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: false positive
+	useEffect(() => {
+		setIsOpen(false);
+	}, []);
+
+	const open = () => setIsOpen(true);
+	const close = () => setIsOpen(false);
+	const toggle = () => setIsOpen(!isOpen);
+
+	return {
+		close,
+		isOpen,
+		open,
+		setIsOpen,
+		toggle,
+	};
+};

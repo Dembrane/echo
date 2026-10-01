@@ -1,0 +1,25 @@
+{
+  "name": "@dembrane/samples",
+  "description": "Sample data every PR preview carries: the Millbrook (sample) workspace in the Acme Civic (sample) org, with generated conversations, a report and a chat.",
+  "private": true,
+  "type": "module",
+  "dembrane": {
+    "layer": "namespace"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test",
+    "generate": "bun scripts/generate-millbrook.ts"
+  },
+  "dependencies": {
+    "@dembrane/db": "workspace:*",
+    "drizzle-orm": "^0.45.3"
+  },
+  "devDependencies": {
+    "@dembrane/config": "workspace:*",
+    "@dembrane/llm": "workspace:*",
+    "postgres": "^3.4.9"
+  }
+}

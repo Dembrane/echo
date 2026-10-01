@@ -1,0 +1,39 @@
+{
+  "name": "@dembrane/verify",
+  "description": "Verification topics and artifacts participants see in the portal.",
+  "private": true,
+  "type": "module",
+  "dembrane": {
+    "layer": "namespace",
+    "allow": {
+      "conversations": "A portal feature: reuses conversations' participant token and dependencies."
+    }
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./defaults": "./src/defaults.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@dembrane/access": "workspace:*",
+    "@dembrane/conversations": "workspace:*",
+    "@dembrane/core": "workspace:*",
+    "@dembrane/db": "workspace:*",
+    "@dembrane/http": "workspace:*",
+    "@dembrane/legacy-shape": "workspace:*",
+    "@dembrane/llm": "workspace:*",
+    "@dembrane/projects": "workspace:*",
+    "@dembrane/prompts": "workspace:*",
+    "ai": "^7.0.118",
+    "drizzle-orm": "^0.45.3",
+    "hono": "^4.9.0"
+  },
+  "devDependencies": {
+    "@dembrane/observability": "workspace:*",
+    "@dembrane/storage": "workspace:*",
+    "postgres": "^3.4.9",
+    "hono": "^4.9.0"
+  }
+}

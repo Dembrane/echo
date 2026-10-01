@@ -1,0 +1,20 @@
+{
+  "name": "@dembrane/access",
+  "description": "Who may do what: roles, policies and tiers resolved for an org, workspace or project.",
+  "private": true,
+  "type": "module",
+  "dembrane": {
+    "layer": "capability"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@dembrane/core": "workspace:*",
+    "@dembrane/db": "workspace:*",
+    "drizzle-orm": "^0.45.3"
+  }
+}

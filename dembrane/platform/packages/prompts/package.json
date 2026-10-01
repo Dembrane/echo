@@ -1,0 +1,22 @@
+{
+  "name": "@dembrane/prompts",
+  "description": "The Jinja prompt templates carried over from Python, rendered the same way.",
+  "private": true,
+  "type": "module",
+  "dembrane": {
+    "layer": "capability"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test",
+    "generate": "bun scripts/generate.ts"
+  },
+  "dependencies": {
+    "nunjucks": "^3.2.4"
+  },
+  "devDependencies": {
+    "@types/nunjucks": "^3.2.6"
+  }
+}

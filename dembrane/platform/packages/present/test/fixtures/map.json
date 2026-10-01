@@ -1,0 +1,487 @@
+{
+  "payload": {
+    "version": 2,
+    "budgets": { "nodeLimit": 150 },
+    "counts": { "nodes": 4 },
+    "scope": { "types": null },
+    "overBudget": false,
+    "embedding": { "model": "m" },
+    "unplaced": ["r2", "r4", "rX"],
+    "snapshot": { "id": "s1", "createdAt": "2026-09-01T10:00:00Z", "manifest": {} },
+    "relations": [{ "x": 1 }],
+    "related": [1],
+    "nodes": [
+      {
+        "objectId": "o1",
+        "revisionId": "r1",
+        "type": "argument",
+        "label": "L1",
+        "embedding": [0.1, 0.2],
+        "attributes": { "a": 1 },
+        "detail": {
+          "evidence": [
+            { "conversationId": "c-b", "quotes": ["b1", "", 5, "b2"], "chunkId": "x" },
+            { "conversationId": "c-a", "quotes": ["a1"] },
+            { "noId": 1 }
+          ],
+          "statement": "s"
+        },
+        "provenance": { "runId": "r" },
+        "factCheck": { "eligible": true }
+      },
+      {
+        "objectId": "o2",
+        "revisionId": "r2",
+        "type": "argument",
+        "label": "L2",
+        "detail": {
+          "quotes": [
+            { "conversationId": "c-c", "text": "c1" },
+            { "conversationId": "c-c", "text": "c2" },
+            { "conversationId": "c-a", "text": "" },
+            { "text": "x" }
+          ]
+        }
+      },
+      {
+        "objectId": "o3",
+        "revisionId": "r3",
+        "type": "argument",
+        "label": "L3",
+        "detail": {
+          "consolidation": {
+            "memberCount": 2,
+            "members": [
+              { "statement": "m1", "evidence": [{ "conversationId": "c-d", "quotes": ["d1"] }] },
+              { "statement": null, "quotes": [{ "conversationId": "c-a", "text": "a2" }] }
+            ]
+          }
+        }
+      },
+      {
+        "objectId": "o4",
+        "revisionId": "r4",
+        "type": "argument",
+        "label": "L4",
+        "detail": {
+          "consolidation": {
+            "memberCount": 3,
+            "members": [
+              { "statement": "only", "evidence": [{ "conversationId": "c-b", "quotes": ["b3"] }] }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "order": ["c-a", "c-z"],
+  "names": { "c-a": "Anna", "c-b": "  ", "c-c": "Cee", "c-z": "Zed" },
+  "sanitized": {
+    "conversationNames": { "0": "Anna", "1": "Zed", "3": "Cee" },
+    "version": 2,
+    "budgets": { "nodeLimit": 150 },
+    "counts": { "nodes": 4 },
+    "scope": { "types": null },
+    "overBudget": false,
+    "embedding": { "model": "m" },
+    "unplaced": ["r2", "r4", "rX"],
+    "snapshot": { "id": "s1", "createdAt": "2026-09-01T10:00:00Z" },
+    "nodes": [
+      {
+        "objectId": "o1",
+        "revisionId": "r1",
+        "type": "argument",
+        "label": "L1",
+        "embedding": [0.1, 0.2],
+        "attributes": { "a": 1 },
+        "detail": {
+          "evidence": [
+            { "conversation": 0, "quotes": ["a1"] },
+            { "conversation": 2, "quotes": ["b1", "b2"] }
+          ]
+        },
+        "conversations": [0, 2],
+        "provenance": {},
+        "factCheck": { "eligible": false }
+      },
+      {
+        "objectId": "o2",
+        "revisionId": "r2",
+        "type": "argument",
+        "label": "L2",
+        "embedding": null,
+        "attributes": null,
+        "detail": { "evidence": [{ "conversation": 3, "quotes": ["c1", "c2"] }] },
+        "conversations": [3],
+        "provenance": {},
+        "factCheck": { "eligible": false }
+      },
+      {
+        "objectId": "o3",
+        "revisionId": "r3",
+        "type": "argument",
+        "label": "L3",
+        "embedding": null,
+        "attributes": null,
+        "detail": {
+          "consolidation": {
+            "memberCount": 2,
+            "members": [
+              { "statement": "m1", "evidence": [{ "conversation": 4, "quotes": ["d1"] }] },
+              { "statement": "", "evidence": [{ "conversation": 0, "quotes": ["a2"] }] }
+            ]
+          }
+        },
+        "conversations": [0, 4],
+        "provenance": {},
+        "factCheck": { "eligible": false }
+      },
+      {
+        "objectId": "o4",
+        "revisionId": "r4",
+        "type": "argument",
+        "label": "L4",
+        "embedding": null,
+        "attributes": null,
+        "detail": { "consolidation": { "memberCount": 3 } },
+        "conversations": [2],
+        "provenance": {},
+        "factCheck": { "eligible": false }
+      }
+    ],
+    "relations": [],
+    "related": []
+  },
+  "sanitized_no_names": {
+    "conversationNames": {},
+    "version": 2,
+    "budgets": { "nodeLimit": 150 },
+    "counts": { "nodes": 4 },
+    "scope": { "types": null },
+    "overBudget": false,
+    "embedding": { "model": "m" },
+    "unplaced": ["r2", "r4", "rX"],
+    "snapshot": { "id": "s1", "createdAt": "2026-09-01T10:00:00Z" },
+    "nodes": [
+      {
+        "objectId": "o1",
+        "revisionId": "r1",
+        "type": "argument",
+        "label": "L1",
+        "embedding": [0.1, 0.2],
+        "attributes": { "a": 1 },
+        "detail": {
+          "evidence": [
+            { "conversation": 0, "quotes": ["a1"] },
+            { "conversation": 2, "quotes": ["b1", "b2"] }
+          ]
+        },
+        "conversations": [0, 2],
+        "provenance": {},
+        "factCheck": { "eligible": false }
+      },
+      {
+        "objectId": "o2",
+        "revisionId": "r2",
+        "type": "argument",
+        "label": "L2",
+        "embedding": null,
+        "attributes": null,
+        "detail": { "evidence": [{ "conversation": 3, "quotes": ["c1", "c2"] }] },
+        "conversations": [3],
+        "provenance": {},
+        "factCheck": { "eligible": false }
+      },
+      {
+        "objectId": "o3",
+        "revisionId": "r3",
+        "type": "argument",
+        "label": "L3",
+        "embedding": null,
+        "attributes": null,
+        "detail": {
+          "consolidation": {
+            "memberCount": 2,
+            "members": [
+              { "statement": "m1", "evidence": [{ "conversation": 4, "quotes": ["d1"] }] },
+              { "statement": "", "evidence": [{ "conversation": 0, "quotes": ["a2"] }] }
+            ]
+          }
+        },
+        "conversations": [0, 4],
+        "provenance": {},
+        "factCheck": { "eligible": false }
+      },
+      {
+        "objectId": "o4",
+        "revisionId": "r4",
+        "type": "argument",
+        "label": "L4",
+        "embedding": null,
+        "attributes": null,
+        "detail": { "consolidation": { "memberCount": 3 } },
+        "conversations": [2],
+        "provenance": {},
+        "factCheck": { "eligible": false }
+      }
+    ],
+    "relations": [],
+    "related": []
+  },
+  "slots": { "r1": [0, 2], "r2": [3], "r3": [0, 4], "r4": [2] },
+  "states": {
+    "r1": { "status": "done", "verdict": "true", "justification": "j", "checkedAt": "t" },
+    "r2": { "status": "done", "verdict": "maybe" },
+    "r3": { "status": "running", "verdict": "false" },
+    "rZ": { "status": "done", "verdict": "false" },
+    "r4": { "status": "done", "verdict": "contested", "justification": null }
+  },
+  "assessments": {
+    "r1": {
+      "status": "done",
+      "verdict": "true",
+      "justification": "j",
+      "checkedAt": "t",
+      "sources": []
+    },
+    "r4": {
+      "status": "done",
+      "verdict": "contested",
+      "justification": "",
+      "checkedAt": null,
+      "sources": []
+    }
+  },
+  "projected": {
+    "conversationNames": { "0": "Anna", "1": "Zed", "3": "Cee" },
+    "version": 2,
+    "budgets": { "nodeLimit": 150 },
+    "counts": { "nodes": 4 },
+    "scope": { "types": null },
+    "overBudget": false,
+    "embedding": { "model": "m" },
+    "unplaced": ["r2", "r4", "rX"],
+    "snapshot": { "id": "s1", "createdAt": "2026-09-01T10:00:00Z" },
+    "nodes": [
+      {
+        "objectId": "o1",
+        "revisionId": "r1",
+        "type": "argument",
+        "label": "L1",
+        "embedding": [0.1, 0.2],
+        "attributes": { "a": 1 },
+        "detail": {
+          "evidence": [
+            { "conversation": 0, "quotes": ["a1"] },
+            { "conversation": 2, "quotes": ["b1", "b2"] }
+          ]
+        },
+        "conversations": [0, 2],
+        "provenance": {},
+        "factCheck": { "eligible": false }
+      },
+      {
+        "objectId": "o2",
+        "revisionId": "r2",
+        "type": "argument",
+        "label": "L2",
+        "embedding": null,
+        "attributes": null,
+        "detail": { "evidence": [{ "conversation": 3, "quotes": ["c1", "c2"] }] },
+        "conversations": [3],
+        "provenance": {},
+        "factCheck": { "eligible": false }
+      },
+      {
+        "objectId": "o3",
+        "revisionId": "r3",
+        "type": "argument",
+        "label": "L3",
+        "embedding": null,
+        "attributes": null,
+        "detail": {
+          "consolidation": {
+            "memberCount": 2,
+            "members": [
+              { "statement": "m1", "evidence": [{ "conversation": 4, "quotes": ["d1"] }] },
+              { "statement": "", "evidence": [{ "conversation": 0, "quotes": ["a2"] }] }
+            ]
+          }
+        },
+        "conversations": [0, 4],
+        "provenance": {},
+        "factCheck": { "eligible": false }
+      },
+      {
+        "objectId": "o4",
+        "revisionId": "r4",
+        "type": "argument",
+        "label": "L4",
+        "embedding": null,
+        "attributes": null,
+        "detail": { "consolidation": { "memberCount": 3 } },
+        "conversations": [2],
+        "provenance": {},
+        "factCheck": { "eligible": false }
+      }
+    ],
+    "relations": [],
+    "related": [],
+    "fact_checks": {
+      "r1": {
+        "status": "done",
+        "verdict": "true",
+        "justification": "j",
+        "checkedAt": "t",
+        "sources": []
+      },
+      "r4": {
+        "status": "done",
+        "verdict": "contested",
+        "justification": "",
+        "checkedAt": null,
+        "sources": []
+      }
+    }
+  },
+  "without": {
+    "conversationNames": { "3": "Cee" },
+    "version": 2,
+    "budgets": { "nodeLimit": 150 },
+    "counts": { "nodes": 4 },
+    "scope": { "types": null },
+    "overBudget": false,
+    "embedding": { "model": "m" },
+    "unplaced": ["r2", "r4"],
+    "snapshot": { "id": "s1", "createdAt": "2026-09-01T10:00:00Z" },
+    "nodes": [
+      {
+        "objectId": "o2",
+        "revisionId": "r2",
+        "type": "argument",
+        "label": "L2",
+        "embedding": null,
+        "attributes": null,
+        "detail": { "evidence": [{ "conversation": 3, "quotes": ["c1", "c2"] }] },
+        "conversations": [3],
+        "provenance": {},
+        "factCheck": { "eligible": false }
+      },
+      {
+        "objectId": "o4",
+        "revisionId": "r4",
+        "type": "argument",
+        "label": "L4",
+        "embedding": null,
+        "attributes": null,
+        "detail": { "consolidation": { "memberCount": 3 } },
+        "conversations": [2],
+        "provenance": {},
+        "factCheck": { "eligible": false }
+      }
+    ],
+    "relations": [],
+    "related": [],
+    "fact_checks": {
+      "r4": {
+        "status": "done",
+        "verdict": "contested",
+        "justification": "",
+        "checkedAt": null,
+        "sources": []
+      }
+    }
+  },
+  "without_none": {
+    "conversationNames": { "0": "Anna", "1": "Zed", "3": "Cee" },
+    "version": 2,
+    "budgets": { "nodeLimit": 150 },
+    "counts": { "nodes": 4 },
+    "scope": { "types": null },
+    "overBudget": false,
+    "embedding": { "model": "m" },
+    "unplaced": ["r2", "r4", "rX"],
+    "snapshot": { "id": "s1", "createdAt": "2026-09-01T10:00:00Z" },
+    "nodes": [
+      {
+        "objectId": "o1",
+        "revisionId": "r1",
+        "type": "argument",
+        "label": "L1",
+        "embedding": [0.1, 0.2],
+        "attributes": { "a": 1 },
+        "detail": {
+          "evidence": [
+            { "conversation": 0, "quotes": ["a1"] },
+            { "conversation": 2, "quotes": ["b1", "b2"] }
+          ]
+        },
+        "conversations": [0, 2],
+        "provenance": {},
+        "factCheck": { "eligible": false }
+      },
+      {
+        "objectId": "o2",
+        "revisionId": "r2",
+        "type": "argument",
+        "label": "L2",
+        "embedding": null,
+        "attributes": null,
+        "detail": { "evidence": [{ "conversation": 3, "quotes": ["c1", "c2"] }] },
+        "conversations": [3],
+        "provenance": {},
+        "factCheck": { "eligible": false }
+      },
+      {
+        "objectId": "o3",
+        "revisionId": "r3",
+        "type": "argument",
+        "label": "L3",
+        "embedding": null,
+        "attributes": null,
+        "detail": {
+          "consolidation": {
+            "memberCount": 2,
+            "members": [
+              { "statement": "m1", "evidence": [{ "conversation": 4, "quotes": ["d1"] }] },
+              { "statement": "", "evidence": [{ "conversation": 0, "quotes": ["a2"] }] }
+            ]
+          }
+        },
+        "conversations": [0, 4],
+        "provenance": {},
+        "factCheck": { "eligible": false }
+      },
+      {
+        "objectId": "o4",
+        "revisionId": "r4",
+        "type": "argument",
+        "label": "L4",
+        "embedding": null,
+        "attributes": null,
+        "detail": { "consolidation": { "memberCount": 3 } },
+        "conversations": [2],
+        "provenance": {},
+        "factCheck": { "eligible": false }
+      }
+    ],
+    "relations": [],
+    "related": [],
+    "fact_checks": {
+      "r1": {
+        "status": "done",
+        "verdict": "true",
+        "justification": "j",
+        "checkedAt": "t",
+        "sources": []
+      },
+      "r4": {
+        "status": "done",
+        "verdict": "contested",
+        "justification": "",
+        "checkedAt": null,
+        "sources": []
+      }
+    }
+  }
+}
