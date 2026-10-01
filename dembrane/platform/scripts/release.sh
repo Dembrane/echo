@@ -159,16 +159,16 @@ announce_staging() {
   echo "::group::staging summary ($kind $prev..$b)"
   staging_summary "$prev" "$sha" "$list" | summary
   echo "::endgroup::"
-  text="*dembrane-staging* now runs <$SERVER/$REPO/commit/$sha|$b>"
-  if [ "$(jq length <<<"$list")" = 0 ]; then text+=", no new pull requests"
-  else text+=" · $(jq length <<<"$list") pull requests since <$SERVER/$REPO/compare/$prev...$sha|${prev:0:7}>"$'\n'"$(slack_lines <<<"$list")"; fi
-  text+=$'\n'"<$STAGING_DASHBOARD_URL|open the dashboard>"
-  [ -z "$RUN_URL" ] || text+=" · <$RUN_URL|deploy run>"
+  # What changed and where to look at it: the pull requests by title, and the dashboard.
+  # Commit ids stay in the job summary.
+  text="*Staging updated* · <$STAGING_DASHBOARD_URL|open staging>"
+  if [ "$(jq length <<<"$list")" = 0 ]; then text+=$'\n'"No new pull requests."
+  else text+=$'\n'"$(slack_lines <<<"$list")"; fi
   slack_post "$STAGING_CHANNEL" "$text"
   # Without an earlier staging deployment the list reaches back to the last release, and those
   # PRs were never told they were on staging: comments start from the second deploy.
   if [ "$kind" = deployment ]; then
-    comment_prs "$list" "Now on dembrane-staging, deployed $(now) in \`$b\`."
+    comment_prs "$list" "Now on [staging]($STAGING_DASHBOARD_URL), deployed $(now)."
   else
     echo "::notice::First recorded staging deployment: the list starts at release $prev and no PR comments were posted"
   fi
