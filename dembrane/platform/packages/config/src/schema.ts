@@ -50,6 +50,15 @@ export const schema = defineSchema({
       description: "Participant portal origin.",
       public: true,
     }),
+    trustedProxies: key("HTTP_TRUSTED_PROXIES", list.default([]), {
+      description:
+        "Addresses or CIDR ranges of our own proxies that append to X-Forwarded-For (the load balancer). Skipped when reading the caller's address.",
+    }),
+    proxySecret: key("HTTP_PROXY_SECRET", z.string().min(32).optional(), {
+      description:
+        "Shared by the web servers and the API: the API takes the caller's address from a web server that sends it. Unset: the API reads X-Forwarded-For only.",
+      secret: true,
+    }),
   },
   database: {
     url: key("DATABASE_URL", z.url(), {

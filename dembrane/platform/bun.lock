@@ -94,6 +94,7 @@
       "name": "@dembrane/web",
       "dependencies": {
         "@dembrane/config": "workspace:*",
+        "@dembrane/http": "workspace:*",
         "@dembrane/observability": "workspace:*",
       },
     },
@@ -124,6 +125,7 @@
         "@dembrane/projects": "workspace:*",
         "@dembrane/prompts": "workspace:*",
         "@dembrane/queue": "workspace:*",
+        "@dembrane/ratelimit": "workspace:*",
         "@dembrane/realtime": "workspace:*",
         "@dembrane/reports": "workspace:*",
         "@dembrane/storage": "workspace:*",
@@ -184,6 +186,7 @@
         "@dembrane/observability": "workspace:*",
         "@dembrane/popcorn": "workspace:*",
         "@dembrane/queue": "workspace:*",
+        "@dembrane/ratelimit": "workspace:*",
         "@dembrane/storage": "workspace:*",
         "@dembrane/webhooks": "workspace:*",
         "drizzle-orm": "^0.45.3",

@@ -1092,17 +1092,21 @@ export async function handle(
 			}
 			case "nameSigner": {
 				const d = doc();
+				const previous = d.signer;
 				d.signer = {
 					email: String(body.email),
 					name: String(body.name),
 					role: (body.role as string | null) ?? null,
 				};
+				const replaced = previous && previous.email !== d.signer.email;
 				event(
 					s,
-					"document.signer_named",
+					replaced ? "document.signer_replaced" : "document.signer_named",
 					"customer",
 					{ id: d.id, type: "document" },
-					{ email: body.email },
+					replaced
+						? { email: body.email, previous_email: previous.email }
+						: { email: body.email },
 				);
 				return { signer: d.signer };
 			}

@@ -8,6 +8,7 @@ import { newId, PlatformError } from "@dembrane/core";
 import { createDb, migrate, schema } from "@dembrane/db";
 import type { Env, Signed } from "@dembrane/http";
 import { createLogger } from "@dembrane/observability";
+import { MemoryRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { FilesystemStorage } from "@dembrane/storage";
 import { Hono } from "hono";
 import postgres from "postgres";
@@ -146,6 +147,7 @@ export async function world(name: string, routes: (d: AccountsDeps) => Hono<Env>
     jobs,
     files,
     logger: silent,
+    limiter: new RateLimiter(new MemoryRateCounter(), () => clock.now),
     now: () => clock.now,
     fetchText: web.fetch,
     settings: {
@@ -267,7 +269,7 @@ export async function call(
       ...(as && { "x-as": as }),
       ...(body !== undefined && { "content-type": "application/json" }),
       "user-agent": "accounts-test",
-      "x-forwarded-for": "203.0.113.7, 10.0.0.1",
+      "x-forwarded-for": "10.0.0.1, 203.0.113.7",
     },
     ...(body !== undefined && { body: JSON.stringify(body) }),
   });

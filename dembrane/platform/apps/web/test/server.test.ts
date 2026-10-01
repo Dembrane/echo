@@ -49,14 +49,17 @@ beforeAll(() => {
         body: req.method === "POST" ? await req.text() : null,
         cookie: req.headers.get("cookie"),
         fwd: req.headers.get("x-forwarded-host"),
+        clientIp: req.headers.get("x-dembrane-client-ip"),
+        proxySecret: req.headers.get("x-dembrane-proxy-secret"),
       });
     },
   });
 });
 afterAll(() => upstream.stop());
 
-const handler = () =>
+const handler = (extra: Partial<Parameters<typeof createHandler>[0]> = {}) =>
   createHandler({
+    ...extra,
     distDir: dist,
     release: "r1",
     runtime: { env: "testing", role: "dashboard", apiBase: "/api" },
@@ -111,7 +114,32 @@ test("/api is forwarded with method, query, body and cookies, on the same origin
     body: "hi",
     cookie: "dembrane.session_token=abc",
     fwd: "dash.example",
+    clientIp: null,
+    proxySecret: null,
   });
+});
+
+test("the API is told the caller's address, resolved here, with the shared secret", async () => {
+  const secret = "p".repeat(40);
+  const res = await handler({ proxySecret: secret, trustedProxies: ["203.0.113.1"] })(
+    new Request("https://dash.example/api/v2/me", {
+      headers: {
+        "x-forwarded-for": "192.0.2.99, 198.51.100.7, 203.0.113.1",
+        "x-dembrane-client-ip": "192.0.2.99",
+        "x-dembrane-proxy-secret": "from-the-caller",
+      },
+    }),
+  );
+  expect(await res.json()).toMatchObject({ clientIp: "198.51.100.7", proxySecret: secret });
+});
+
+test("without a shared secret neither header is forwarded", async () => {
+  const res = await handler()(
+    new Request("https://dash.example/api/v2/me", {
+      headers: { "x-dembrane-client-ip": "192.0.2.99", "x-dembrane-proxy-secret": "x" },
+    }),
+  );
+  expect(await res.json()).toMatchObject({ clientIp: null, proxySecret: null });
 });
 
 test("event streams pass through the proxy", async () => {

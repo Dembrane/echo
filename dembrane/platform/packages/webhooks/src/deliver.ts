@@ -94,24 +94,80 @@ export function isPrivateAddress(ip: string): boolean {
   );
 }
 
-/**
- * Refuses URLs that resolve to internal addresses (spec M-22: a changemaker admin could
- * aim a webhook at internal services). Local development and tests allow them.
- */
-export async function assertPublicTarget(url: string, allowPrivate: boolean): Promise<void> {
-  if (allowPrivate) return;
+/** Every address a hostname has. Tests pass their own. */
+export type Resolve = (host: string) => Promise<string[]>;
+
+const resolveAll: Resolve = async (host) =>
+  (await lookup(host, { all: true }).catch(() => [])).map((a) => a.address);
+
+/** The addresses behind a URL's host, resolved once; any internal one refuses the URL. */
+async function checkedAddresses(
+  url: string,
+  allowPrivate: boolean,
+  resolve: Resolve = resolveAll,
+): Promise<string[]> {
   let host: string;
   try {
     host = new URL(url).hostname.replace(/^\[|\]$/g, "");
   } catch {
     throw new DeliveryError("Invalid webhook URL");
   }
-  const addresses = isIP(host)
-    ? [host]
-    : (await lookup(host, { all: true }).catch(() => [])).map((a) => a.address);
+  const addresses = isIP(host) ? [host] : await resolve(host);
   if (!addresses.length) throw new DeliveryError(`Could not resolve ${host}`);
-  if (addresses.some(isPrivateAddress))
+  if (!allowPrivate && addresses.some(isPrivateAddress))
     throw new DeliveryError("Webhook URL points to a private or internal address");
+  return addresses;
+}
+
+/**
+ * Refuses URLs that resolve to internal addresses (spec M-22: a changemaker admin could
+ * aim a webhook at internal services). Local development and tests allow them.
+ */
+export async function assertPublicTarget(url: string, allowPrivate: boolean): Promise<void> {
+  if (allowPrivate) return;
+  await checkedAddresses(url, false);
+}
+
+/** Bun's codes for a connection that never opened, so nothing was sent on it. */
+const NOT_CONNECTED = new Set(["ConnectionRefused", "FailedToOpenSocket"]);
+
+/**
+ * fetch for a URL someone else chose. The name is resolved once and the request connects
+ * to an address from that answer, so the address that was checked is the address that is
+ * reached. The hostname stays in the Host header and in TLS, for SNI and the certificate
+ * check. Redirects are never followed: a caller that wants the next hop calls again with
+ * its URL, which is then checked the same way.
+ */
+export async function fetchChecked(
+  url: string,
+  init: Omit<BunFetchRequestInit, "redirect">,
+  opts: { allowPrivate: boolean; resolve?: Resolve },
+): Promise<Response> {
+  const addresses = await checkedAddresses(url, opts.allowPrivate, opts.resolve);
+  const target = new URL(url);
+  if (isIP(target.hostname.replace(/^\[|\]$/g, "")))
+    return fetch(url, { ...init, redirect: "manual" });
+  const headers = new Headers(init.headers);
+  headers.set("Host", target.host);
+  let failure: unknown;
+  for (const address of addresses) {
+    const pinned = new URL(url);
+    pinned.hostname = isIP(address) === 6 ? `[${address}]` : address;
+    try {
+      return await fetch(pinned.href, {
+        ...init,
+        headers,
+        redirect: "manual",
+        tls: { ...init.tls, serverName: target.hostname },
+      });
+    } catch (err) {
+      // Only a connection that never opened moves on to the next address: nothing was
+      // sent, so no receiver gets the request twice.
+      if (!NOT_CONNECTED.has((err as { code?: string }).code ?? "")) throw err;
+      failure = err;
+    }
+  }
+  throw failure;
 }
 
 /**
@@ -119,23 +175,25 @@ export async function assertPublicTarget(url: string, allowPrivate: boolean): Pr
  * signature header when a secret is set. Redirects are not followed, so a public URL
  * cannot bounce the request inward.
  */
-export function httpDeliver(opts: { allowPrivate: boolean }): Deliver {
+export function httpDeliver(opts: { allowPrivate: boolean; resolve?: Resolve }): Deliver {
   return async (target, payload) => {
     if (!target.url) throw new DeliveryError(`Webhook ${target.id} has no URL`);
-    await assertPublicTarget(target.url, opts.allowPrivate);
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
       "User-Agent": "Dembrane-Webhook/1.0",
       "X-Webhook-Event": String(payload.event ?? "unknown"),
     };
     if (target.secret) headers["X-Webhook-Signature"] = signature(payload, target.secret);
-    const res = await fetch(target.url, {
-      method: "POST",
-      headers,
-      body: pythonJson(payload),
-      redirect: "manual",
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
+    const res = await fetchChecked(
+      target.url,
+      {
+        method: "POST",
+        headers,
+        body: pythonJson(payload),
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      },
+      opts,
+    );
     return { status: res.status, text: await res.text() };
   };
 }

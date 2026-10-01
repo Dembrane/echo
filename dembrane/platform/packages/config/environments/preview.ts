@@ -4,6 +4,8 @@ import type { Environment } from "../src";
 // a process without them falls back to.
 export default {
   http: {
+    // The preview load balancer's address (infra/preview/lb.tf).
+    trustedProxies: ["136.82.82.95"],
     publicUrl: "https://echo-preview-api-218237812097.europe-west4.run.app",
     dashboardUrl: "https://echo-preview-dashboard-218237812097.europe-west4.run.app",
     portalUrl: "https://echo-preview-portal-218237812097.europe-west4.run.app",

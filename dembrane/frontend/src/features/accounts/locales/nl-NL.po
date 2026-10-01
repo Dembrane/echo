@@ -319,7 +319,7 @@ msgid "Create task"
 msgstr "Taak aanmaken"
 
 #: src/features/accounts/format.ts:107
-#: src/features/accounts/staff/AccountCardRoute.tsx:744
+#: src/features/accounts/staff/AccountCardRoute.tsx:745
 #: src/features/accounts/customer/Questions.tsx:165
 msgid "Customer"
 msgstr "Klant"
@@ -392,11 +392,11 @@ msgstr "Document verstuurd"
 msgid "Document signed"
 msgstr "Document ondertekend"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:706
+#: src/features/accounts/staff/AccountCardRoute.tsx:707
 msgid "Document viewed"
 msgstr "Document bekeken"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:707
+#: src/features/accounts/staff/AccountCardRoute.tsx:708
 msgid "Document withdrawn"
 msgstr "Document ingetrokken"
 
@@ -955,7 +955,7 @@ msgstr "Offerte versturen"
 msgid "Quantity"
 msgstr "Aantal"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:713
+#: src/features/accounts/staff/AccountCardRoute.tsx:714
 msgid "Question opened"
 msgstr "Vraag gesteld"
 
@@ -1131,12 +1131,12 @@ msgid "Sent. The customer has a signing task."
 msgstr "Verstuurd. De klant heeft een ondertekentaak."
 
 #: src/features/accounts/staff/DemoRoute.tsx:301
-#: src/features/accounts/staff/AccountCardRoute.tsx:758
+#: src/features/accounts/staff/AccountCardRoute.tsx:759
 msgid "Show all"
 msgstr "Alles tonen"
 
 #: src/features/accounts/staff/DemoRoute.tsx:302
-#: src/features/accounts/staff/AccountCardRoute.tsx:758
+#: src/features/accounts/staff/AccountCardRoute.tsx:759
 msgid "Show less"
 msgstr "Minder tonen"
 
@@ -1170,6 +1170,10 @@ msgstr "Ondertekend"
 msgid "Signer named"
 msgstr "Ondertekenaar aangewezen"
 
+#: src/features/accounts/staff/AccountCardRoute.tsx:706
+msgid "Signer replaced"
+msgstr "Ondertekenaar vervangen"
+
 #: src/features/accounts/signing/SignRoute.tsx:290
 #~ msgid "Signing failed. Try again."
 #~ msgstr "Ondertekenen mislukt. Probeer het opnieuw."
@@ -1196,7 +1200,7 @@ msgstr "Iemand anders tekent"
 msgid "Someone who may agree to data processing for your organisation signs it."
 msgstr "Iemand die voor je organisatie verwerkingsafspraken mag maken, ondertekent hem."
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:746
+#: src/features/accounts/staff/AccountCardRoute.tsx:747
 msgid "Staff"
 msgstr "Medewerker"
 
@@ -1235,7 +1239,7 @@ msgstr "Ingediend"
 msgid "Subscription"
 msgstr "Abonnement"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:747
+#: src/features/accounts/staff/AccountCardRoute.tsx:748
 msgid "System"
 msgstr "Systeem"
 
@@ -1243,24 +1247,24 @@ msgstr "Systeem"
 msgid "Task"
 msgstr "Taak"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:708
+#: src/features/accounts/staff/AccountCardRoute.tsx:709
 msgid "Task approved"
 msgstr "Taak goedgekeurd"
 
 #: src/features/accounts/staff/TaskModals.tsx:99
-#: src/features/accounts/staff/AccountCardRoute.tsx:709
+#: src/features/accounts/staff/AccountCardRoute.tsx:710
 msgid "Task created"
 msgstr "Taak aangemaakt"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:710
+#: src/features/accounts/staff/AccountCardRoute.tsx:711
 msgid "Task sent back"
 msgstr "Taak teruggestuurd"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:711
+#: src/features/accounts/staff/AccountCardRoute.tsx:712
 msgid "Task submitted"
 msgstr "Taak ingediend"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:712
+#: src/features/accounts/staff/AccountCardRoute.tsx:713
 msgid "Task withdrawn"
 msgstr "Taak ingetrokken"
 
@@ -1365,7 +1369,7 @@ msgstr "Dit document is verstuurd. De velden liggen vast; stuur een nieuwe versi
 msgid "This organisation has no account yet"
 msgstr "Deze organisatie heeft nog geen account"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:727
+#: src/features/accounts/staff/AccountCardRoute.tsx:728
 msgid "Timeline"
 msgstr "Tijdlijn"
 

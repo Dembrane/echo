@@ -209,9 +209,13 @@ export async function declineDocument(
   return { status: "declined" };
 }
 
+/** Each naming sends an invitation, so ten an hour per organisation, like invite resends. */
+const SIGNER_LIMIT = { name: "account_signer", capacity: 10, windowSeconds: 3600 };
+
 /**
  * Names someone else to sign. They get an email with a link; signing in with a code sent
- * to that address reaches this one document and nothing else of the organisation.
+ * to that address reaches this one document and nothing else of the organisation. Naming
+ * a different person than the one already named goes on the timeline as a replacement.
  */
 export async function nameSigner(
   d: AccountsDeps,
@@ -225,7 +229,12 @@ export async function nameSigner(
   if (!doc || doc.status === "draft") throw new NotFoundError("document.not_found");
   if (!doc.requiresSignature || !["sent", "viewed"].includes(doc.status))
     throw new ConflictError("document.not_awaiting_signature");
+  await d.limiter.check(SIGNER_LIMIT, org.id);
   const email = signer.email.trim().toLowerCase();
+  const replaced =
+    doc.signerEmail && doc.signerEmail.toLowerCase() !== email
+      ? { previous_email: doc.signerEmail, previous_name: doc.signerName }
+      : null;
   const now = d.now();
   const me = await store.identity(d.db, who.directusUserId);
   // The signer's own language when they have an account, else the document's.
@@ -259,9 +268,9 @@ export async function nameSigner(
     await emit(d, tx, {
       orgId: org.id,
       actor: { kind: "customer", userId: who.directusUserId },
-      type: "document.signer_named",
+      type: replaced ? "document.signer_replaced" : "document.signer_named",
       subject: { type: "document", id: doc.id },
-      detail: { email, name: signer.name },
+      detail: { email, name: signer.name, ...replaced },
     });
   });
   return { signer: { email, name: signer.name, role: signer.role } };

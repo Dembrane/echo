@@ -1,5 +1,5 @@
 import { UnavailableError, ValidationError } from "@dembrane/core";
-import { type Ctx, type Env, requireUser } from "@dembrane/http";
+import { type Ctx, clientIp, type Env, requireUser } from "@dembrane/http";
 import { Hono } from "hono";
 import { staffCan } from "./access";
 import * as K from "./contract";
@@ -58,9 +58,11 @@ function pdfBytes(b64: string | null): Uint8Array | null {
 }
 
 function requestMeta(c: Ctx) {
-  // Cloud Run puts the client first in X-Forwarded-For.
-  const forwarded = c.req.header("x-forwarded-for")?.split(",")[0]?.trim();
-  return { ip: forwarded || null, userAgent: c.req.header("user-agent")?.slice(0, 500) ?? null };
+  const ip = clientIp(c);
+  return {
+    ip: ip === "unknown" ? null : ip,
+    userAgent: c.req.header("user-agent")?.slice(0, 500) ?? null,
+  };
 }
 
 function pdfResponse(c: Ctx, bytes: Uint8Array, name: string) {

@@ -164,7 +164,7 @@ deploy() {
   # shellcheck disable=SC2086,SC2046
   rollout service "$prefix-api" api --image "$REGISTRY/api:$tag" \
     --service-account "$(SA api)" --add-cloudsql-instances "$SQL" \
-    --set-secrets "DATABASE_URL=$(secret database-url),AUTH_SECRET=$(secret auth-secret),INVITE_HASH_SECRET=$(secret invite-hash-secret),$keys$filled" \
+    --set-secrets "DATABASE_URL=$(secret database-url),AUTH_SECRET=$(secret auth-secret),INVITE_HASH_SECRET=$(secret invite-hash-secret),HTTP_PROXY_SECRET=$(secret proxy-secret),$keys$filled" \
     --set-env-vars "$common,$files,MEDIA_URL=$media" \
     $(scale api) --timeout 3600 --cpu-boost --allow-unauthenticated & pids+=($!)
   local wmin
@@ -180,6 +180,7 @@ deploy() {
     # shellcheck disable=SC2086,SC2046
     rollout service "$prefix-$role" web --image "$REGISTRY/web:$tag" \
       --service-account "$(SA web)" --set-env-vars "$common,WEB_ROLE=$role$web_pr" \
+      --set-secrets "HTTP_PROXY_SECRET=$(secret proxy-secret)" \
       $(scale $role) --allow-unauthenticated $web_ingress & pids+=($!)
   done
   for p in "${pids[@]}"; do wait "$p" || fail=1; done
