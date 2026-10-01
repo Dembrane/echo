@@ -1,4 +1,5 @@
 import { Trans } from "@lingui/react/macro";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 import { BOOKING_REFERENCE_METADATA_KEY } from "@/components/pricing/bookingPrefill";
 import {
@@ -8,6 +9,7 @@ import {
 } from "@/components/pricing/PricingBookingStep";
 import { useV2Me } from "@/hooks/useV2Me";
 import { call } from "../api/client";
+import { accountKeys } from "../api/hooks";
 
 /**
  * The needs form's cal.com step, reused with its own intro line. The booking is recorded on the account so
@@ -21,6 +23,7 @@ export default function BookCall({
 	reference: string;
 }) {
 	const { data: me } = useV2Me();
+	const queryClient = useQueryClient();
 	const prefill = useMemo(() => {
 		const p: Record<string, string> = { notes: `Reference ${reference}` };
 		p[BOOKING_REFERENCE_METADATA_KEY] = reference;
@@ -39,9 +42,14 @@ export default function BookCall({
 					uid: booking.uid,
 				},
 				params: { orgId },
-			}).catch(() => {});
+			})
+				// The booking completes "Book a call with us": show the step done.
+				.then(() =>
+					queryClient.invalidateQueries({ queryKey: accountKeys.all }),
+				)
+				.catch(() => {});
 		},
-		[orgId],
+		[orgId, queryClient],
 	);
 	const noop = useCallback(() => {}, []);
 	const host = bookingHostName();

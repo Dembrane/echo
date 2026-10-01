@@ -25,6 +25,7 @@ describe("the demo fixtures parse against the contract", () => {
 		["signingRequests", fx.signingRequests, contract.SigningRequests],
 		["accountList", fx.accountList, contract.AccountList],
 		["tasksSummary", fx.tasksSummary, contract.TasksSummary],
+		["onboardingResponse", fx.onboardingResponse, contract.OnboardingResponse],
 		["billingTaskDone", fx.billingTaskDone, contract.Task],
 		["demoCreateRequest", fx.demoCreateRequest, contract.DemoCreateRequest],
 		["demoRunning", fx.demoRunning, contract.DemoStatus],

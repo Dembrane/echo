@@ -26,25 +26,50 @@ export function BookCallButton({
 			>
 				<Trans>Book a call</Trans>
 			</Button>
-			<Modal
+			<BookCallModal
 				opened={open}
 				onClose={() => setOpen(false)}
-				title={t`Book a call`}
-				size="lg"
-				fullScreen={false}
-			>
-				{open && (
-					<Suspense
-						fallback={
-							<Stack align="center" py="xl">
-								<Loader size="sm" />
-							</Stack>
-						}
-					>
-						<BookCall orgId={orgId} reference={reference ?? orgName} />
-					</Suspense>
-				)}
-			</Modal>
+				orgId={orgId}
+				reference={reference}
+				orgName={orgName}
+			/>
 		</>
+	);
+}
+
+/** The booking dialog on its own, for the "Book a call with us" step. */
+export function BookCallModal({
+	opened,
+	onClose,
+	orgId,
+	reference,
+	orgName,
+}: {
+	opened: boolean;
+	onClose: () => void;
+	orgId: string;
+	reference: string | null;
+	orgName: string;
+}) {
+	return (
+		<Modal
+			opened={opened}
+			onClose={onClose}
+			title={t`Book a call`}
+			size="lg"
+			fullScreen={false}
+		>
+			{opened && (
+				<Suspense
+					fallback={
+						<Stack align="center" py="xl">
+							<Loader size="sm" />
+						</Stack>
+					}
+				>
+					<BookCall orgId={orgId} reference={reference ?? orgName} />
+				</Suspense>
+			)}
+		</Modal>
 	);
 }

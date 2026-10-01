@@ -4,8 +4,8 @@ import type { TasksSummaryT } from "../contract/contract.gen";
 
 /**
  * GET /api/v2/account/tasks-summary: the organisations where the caller has account content,
- * with their task counts. It feeds the Help menu's "Tasks" entry, the org picker and the
- * sidebar's "Account" entry. It runs
+ * with their task counts. It feeds the Help menu's "Tasks" entry, the org picker, the
+ * popup after sign-in and the sidebar's "Account" entry. It runs
  * on every dashboard load, so it is one small GET cached by the app's query client and it
  * skips the contract's zod parsing (that would pull zod 4 into every load); a malformed
  * answer simply hides the entry. The key sits under ["accounts"], so any account write
@@ -34,9 +34,13 @@ export const useTasksSummary = () =>
 		staleTime: 5 * 60_000,
 	});
 
-/** Orgs that have any task, and the done/total across them. */
+/**
+ * Orgs with a task waiting on the caller now, and the done/total across them. An org whose
+ * tasks are all done, locked or with dembrane drops out, so "Tasks" in the Help menu shows
+ * only while there is something to do.
+ */
 export const summarise = (summary: TasksSummaryT | undefined) => {
-	const orgs = (summary ?? []).filter((o) => o.tasks_total > 0);
+	const orgs = (summary ?? []).filter((o) => o.tasks_waiting > 0);
 	return {
 		done: orgs.reduce((a, o) => a + o.tasks_done, 0),
 		orgs,

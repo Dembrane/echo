@@ -134,6 +134,26 @@ export const codedTaskText = (
 				body: t`Who we invoice: legal name, address, VAT or KvK number, invoice email and, if you use one, a PO number.`,
 				title: t`Billing details`,
 			};
+		case "explore_demo":
+			return {
+				body: t`See popcorn, tensions and the map on conversations we made up for your organisation.`,
+				title: t`Explore your demo`,
+			};
+		case "record_first_conversation":
+			return {
+				body: t`Start a project of your own and record a few minutes, with a colleague or on your own.`,
+				title: t`Record a test conversation`,
+			};
+		case "invite_colleague":
+			return {
+				body: t`Bring in someone who would run a session with you.`,
+				title: t`Invite a colleague`,
+			};
+		case "book_call":
+			return {
+				body: t`We walk through your demo with you and plan a first session.`,
+				title: t`Book a call with us`,
+			};
 	}
 };
 

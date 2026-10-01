@@ -867,6 +867,9 @@ export async function handle(
 						org_id: id,
 						tasks_done: live.filter((t) => t.status === "done").length,
 						tasks_total: live.length,
+						tasks_waiting: live.filter(
+							(t) => t.status === "open" || t.status === "changes_requested",
+						).length,
 					};
 				};
 				const rows = [];

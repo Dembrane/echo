@@ -11,6 +11,7 @@ import type {
   DocumentDetail,
   DocumentFields,
   DocumentSummary,
+  OnboardingResponse,
   PushOfferRequest,
   PushOfferResponse,
   SigningRequests,
@@ -684,11 +685,50 @@ export const tasksSummary: Out<typeof TasksSummary> = [
     account_stage: "customer",
     tasks_done: 0,
     tasks_total: 4,
+    tasks_waiting: 2,
     next_task_title: null,
     next_task_code: "sign_offer",
     next_task_params: { document_title: "Example Town Council (sample) x dembrane" },
   },
 ];
+
+const DEMO_PROJECT = "0199a1bd-0000-7000-8000-0000000000a1";
+const DEMO_WORKSPACE = "0199a1bd-0000-7000-8000-0000000000a2";
+
+/** An onboarding task: done by the step itself, never a reminder. */
+const onboardingTask = (
+  id: string,
+  code: "explore_demo" | "record_first_conversation" | "invite_colleague" | "book_call",
+  params: Record<string, string>,
+  status: "open" | "done" = "open",
+): Out<typeof Task> => ({
+  ...signTask,
+  id,
+  code,
+  params,
+  kind: "generic",
+  status,
+  document_id: null,
+  next_reminder_at: null,
+});
+
+/** POST /api/v2/admin/accounts/:orgId/onboarding: a prospect who already opened the demo. */
+export const onboardingResponse: Out<typeof OnboardingResponse> = {
+  added: ["explore_demo", "record_first_conversation", "invite_colleague", "book_call"],
+  tasks: [
+    onboardingTask(
+      "0199a1bd-0000-7000-8000-0000000000b1",
+      "explore_demo",
+      { project_id: DEMO_PROJECT, workspace_id: DEMO_WORKSPACE },
+      "done",
+    ),
+    onboardingTask("0199a1bd-0000-7000-8000-0000000000b2", "record_first_conversation", {
+      workspace_id: DEMO_WORKSPACE,
+    }),
+    onboardingTask("0199a1bd-0000-7000-8000-0000000000b3", "invite_colleague", {}),
+    onboardingTask("0199a1bd-0000-7000-8000-0000000000b4", "book_call", {}),
+  ],
+};
 
 const DEMO = "0199a1bd-0000-7000-8000-000000000001";
 

@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useLocation, useSearchParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
+import { resetPromptSeen } from "@/features/accounts/help/tasksPrompt";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import {
 	AuthError,
@@ -177,6 +178,8 @@ export const useLoginMutation = () => {
 				try {
 					sessionStorage.removeItem("dembrane_ws_selected");
 				} catch {}
+				// A new sign-in may see the tasks popup again.
+				resetPromptSeen();
 			}
 			emitAuthCacheBoundary();
 			await queryClient.invalidateQueries({ queryKey: ["auth", "session"] });

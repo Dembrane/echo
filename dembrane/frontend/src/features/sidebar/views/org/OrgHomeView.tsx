@@ -141,8 +141,9 @@ export const OrgHomeView = () => {
 							to={`${base}/account`}
 							label={<Trans>Tasks</Trans>}
 							icon={ListChecksIcon}
+							// The count shows while something waits on the caller, as in Help.
 							badge={
-								accountRow && accountRow.tasks_total > 0
+								accountRow && accountRow.tasks_waiting > 0
 									? `${accountRow.tasks_done}/${accountRow.tasks_total}`
 									: undefined
 							}
