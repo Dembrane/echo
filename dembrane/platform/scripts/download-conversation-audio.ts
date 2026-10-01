@@ -24,7 +24,7 @@
  *
  * Needs ffmpeg on PATH.
  */
-import { mkdir, mkdtemp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rename, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createInterface } from "node:readline/promises";
@@ -64,7 +64,7 @@ Options:
   --token <token>            Session token (or set DEMBRANE_TOKEN); omit to sign in
   --api-url <url>            Override the API base URL (ends in /api)
   --directus-url <url>       Override the Directus URL used to sign in
-  --out-dir <dir>            Where to write the joined files (default: .)
+  --out-dir <dir>            Where to write the joined files (default: ./conversation-audio)
   --format <ext>             Output format: mp3, wav, m4a, ogg... (default: mp3)
   --keep-chunks              Keep the downloaded chunks next to the output
   --help                     Show this help
@@ -81,7 +81,7 @@ const { values: opts, positionals } = parseArgs({
     token: { type: "string" },
     "api-url": { type: "string" },
     "directus-url": { type: "string" },
-    "out-dir": { type: "string", default: "." },
+    "out-dir": { type: "string", default: "conversation-audio" },
     format: { type: "string", default: "mp3" },
     "keep-chunks": { type: "boolean", default: false },
     help: { type: "boolean", default: false },
@@ -408,6 +408,25 @@ function safeName(s: string) {
   return s.replace(/[^\p{L}\p{N}._-]+/gu, "_").replace(/^_+|_+$/g, "").slice(0, 60) || "conversation";
 }
 
+/** 222 → "3m42s", 3822 → "1h03m42s". */
+function formatDuration(seconds: number) {
+  const s = Math.round(seconds);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return h ? `${h}h${pad(m)}m${pad(s % 60)}s` : `${m}m${pad(s % 60)}s`;
+}
+
+async function probeSeconds(file: string) {
+  const proc = Bun.spawn(
+    ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", file],
+    { stdout: "pipe", stderr: "pipe" },
+  );
+  const out = await new Response(proc.stdout).text();
+  if ((await proc.exited) !== 0) throw new Error(`ffprobe failed on ${file}`);
+  return Number(out.trim());
+}
+
 async function run(cmd: string[]) {
   const proc = Bun.spawn(cmd, { stdout: "ignore", stderr: "pipe" });
   const stderr = await new Response(proc.stderr).text();
@@ -444,8 +463,12 @@ async function download(c: Conversation, outDir: string) {
     }
     const list = join(work, "list.txt");
     await Bun.write(list, wavs.map((w) => `file '${w.replaceAll("'", "'\\''")}'`).join("\n"));
-    const out = join(outDir, `${base}.${opts.format}`);
-    await run(["ffmpeg", "-hide_banner", "-y", "-f", "concat", "-safe", "0", "-i", list, out]);
+    // Written under a temporary name first: the duration in the final name is read
+    // from the joined file itself.
+    const partial = join(outDir, `${base}.partial.${opts.format}`);
+    await run(["ffmpeg", "-hide_banner", "-y", "-f", "concat", "-safe", "0", "-i", list, partial]);
+    const out = join(outDir, `${base}-${formatDuration(await probeSeconds(partial))}.${opts.format}`);
+    await rename(partial, out);
     if (!opts["keep-chunks"]) await rm(work, { recursive: true, force: true });
     else for (const w of [...wavs, list]) await rm(w, { force: true });
     console.log(`\r  ${base}: ${chunks.length} chunks → ${out}`);
@@ -456,7 +479,7 @@ async function download(c: Conversation, outDir: string) {
 
 // ── main ─────────────────────────────────────────────────────────────
 
-if (!Bun.which("ffmpeg")) die("ffmpeg is not on PATH");
+if (!Bun.which("ffmpeg") || !Bun.which("ffprobe")) die("ffmpeg and ffprobe need to be on PATH");
 
 projectId ??= await chooseProject();
 const conversations = await listConversations(projectId);
