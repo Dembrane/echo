@@ -319,7 +319,7 @@ msgid "Create task"
 msgstr "Créer une tâche"
 
 #: src/features/accounts/format.ts:107
-#: src/features/accounts/staff/AccountCardRoute.tsx:744
+#: src/features/accounts/staff/AccountCardRoute.tsx:745
 #: src/features/accounts/customer/Questions.tsx:165
 msgid "Customer"
 msgstr "Client"
@@ -392,11 +392,11 @@ msgstr "Document envoyé"
 msgid "Document signed"
 msgstr "Document signé"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:706
+#: src/features/accounts/staff/AccountCardRoute.tsx:707
 msgid "Document viewed"
 msgstr "Document consulté"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:707
+#: src/features/accounts/staff/AccountCardRoute.tsx:708
 msgid "Document withdrawn"
 msgstr "Document retiré"
 
@@ -955,7 +955,7 @@ msgstr "Envoyer l'offre"
 msgid "Quantity"
 msgstr "Quantité"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:713
+#: src/features/accounts/staff/AccountCardRoute.tsx:714
 msgid "Question opened"
 msgstr "Question ouverte"
 
@@ -1131,12 +1131,12 @@ msgid "Sent. The customer has a signing task."
 msgstr "Envoyé. Le client a une tâche de signature."
 
 #: src/features/accounts/staff/DemoRoute.tsx:301
-#: src/features/accounts/staff/AccountCardRoute.tsx:758
+#: src/features/accounts/staff/AccountCardRoute.tsx:759
 msgid "Show all"
 msgstr "Tout afficher"
 
 #: src/features/accounts/staff/DemoRoute.tsx:302
-#: src/features/accounts/staff/AccountCardRoute.tsx:758
+#: src/features/accounts/staff/AccountCardRoute.tsx:759
 msgid "Show less"
 msgstr "Afficher moins"
 
@@ -1170,6 +1170,10 @@ msgstr "Signé"
 msgid "Signer named"
 msgstr "Signataire désigné"
 
+#: src/features/accounts/staff/AccountCardRoute.tsx:706
+msgid "Signer replaced"
+msgstr "Signataire remplacé"
+
 #: src/features/accounts/signing/SignRoute.tsx:290
 #~ msgid "Signing failed. Try again."
 #~ msgstr ""
@@ -1196,7 +1200,7 @@ msgstr "Une autre personne signe"
 msgid "Someone who may agree to data processing for your organisation signs it."
 msgstr "Une personne autorisée à accepter le traitement des données pour votre organisation le signe."
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:746
+#: src/features/accounts/staff/AccountCardRoute.tsx:747
 msgid "Staff"
 msgstr "Équipe"
 
@@ -1235,7 +1239,7 @@ msgstr "Envoyé"
 msgid "Subscription"
 msgstr "Abonnement"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:747
+#: src/features/accounts/staff/AccountCardRoute.tsx:748
 msgid "System"
 msgstr "Système"
 
@@ -1243,24 +1247,24 @@ msgstr "Système"
 msgid "Task"
 msgstr "Tâche"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:708
+#: src/features/accounts/staff/AccountCardRoute.tsx:709
 msgid "Task approved"
 msgstr "Tâche approuvée"
 
 #: src/features/accounts/staff/TaskModals.tsx:99
-#: src/features/accounts/staff/AccountCardRoute.tsx:709
+#: src/features/accounts/staff/AccountCardRoute.tsx:710
 msgid "Task created"
 msgstr "Tâche créée"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:710
+#: src/features/accounts/staff/AccountCardRoute.tsx:711
 msgid "Task sent back"
 msgstr "Tâche renvoyée"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:711
+#: src/features/accounts/staff/AccountCardRoute.tsx:712
 msgid "Task submitted"
 msgstr "Tâche soumise"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:712
+#: src/features/accounts/staff/AccountCardRoute.tsx:713
 msgid "Task withdrawn"
 msgstr "Tâche retirée"
 
@@ -1365,7 +1369,7 @@ msgstr "Ce document a été envoyé. Ses champs sont verrouillés ; envoyez une 
 msgid "This organisation has no account yet"
 msgstr "Cette organisation n'a pas encore de compte"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:727
+#: src/features/accounts/staff/AccountCardRoute.tsx:728
 msgid "Timeline"
 msgstr "Chronologie"
 

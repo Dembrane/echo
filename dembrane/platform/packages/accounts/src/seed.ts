@@ -12,6 +12,7 @@ import {
   refuseProduction,
   seedDemo,
 } from "@dembrane/popcorn";
+import { MemoryRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import type { ObjectStorage } from "@dembrane/storage";
 import { and, eq } from "drizzle-orm";
 import type { AccountsDeps, Company } from "./deps";
@@ -187,6 +188,7 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
     jobs,
     files: o.files,
     logger: o.logger,
+    limiter: new RateLimiter(new MemoryRateCounter()),
     now: () => o.now,
     fetchText: o.fetchText,
     settings: {

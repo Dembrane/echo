@@ -500,6 +500,56 @@ run("accounts routes against Postgres", () => {
     expect((await call(w, "GET", `${C()}/documents/${id}/signed.pdf`, "signer")).status).toBe(200);
   });
 
+  test("naming a different signer is recorded as a replacement, and namings are limited per organisation", async () => {
+    const pushed = K.PushOfferResponse.parse(
+      (await call(w, "POST", `${S()}/offers`, "staff", offerBody())).data,
+    );
+    const id = pushed.document.id;
+    const path = `${C()}/documents/${id}/signer`;
+    const first = { name: "First Person", email: "first@example.test", role: null };
+    const second = { name: "Second Person", email: "Second@Example.test", role: "Griffier" };
+    const mine = async () =>
+      (await store.events(w.db, w.orgId)).filter(
+        (e) => e.subjectId === id && e.type.startsWith("document.signer_"),
+      );
+    expect((await call(w, "POST", path, "admin", first)).status).toBe(200);
+    // The same person again is a new invitation, not a replacement.
+    expect((await call(w, "POST", path, "admin", first)).status).toBe(200);
+    expect((await mine()).map((e) => e.type)).toEqual([
+      "document.signer_named",
+      "document.signer_named",
+    ]);
+    const r = await call(w, "POST", path, "billing", second);
+    expect(K.NameSignerResponse.parse(r.data).signer.email).toBe("second@example.test");
+    const replaced = (await mine()).find((e) => e.type === "document.signer_replaced");
+    expect(replaced).toMatchObject({
+      actorKind: "customer",
+      actorUserId: w.people.billing.directusUserId,
+      createdAt: w.clock.now,
+      detail: {
+        email: "second@example.test",
+        name: "Second Person",
+        previous_email: "first@example.test",
+        previous_name: "First Person",
+      },
+    });
+    const card = K.AccountCard.parse((await call(w, "GET", S(), "staff")).data);
+    expect(card.timeline.some((e) => e.type === "document.signer_replaced")).toBe(true);
+
+    // Ten an hour for the organisation, whoever asks.
+    const named = async () =>
+      (await store.events(w.db, w.orgId)).filter((e) => e.type.startsWith("document.signer_"))
+        .length;
+    let status = 200;
+    for (let i = 0; i < 10 && status === 200; i++)
+      status = (await call(w, "POST", path, i % 2 ? "admin" : "billing", first)).status;
+    expect(status).toBe(429);
+    expect(await named()).toBe(10);
+    const signer = (await store.document(w.db, w.orgId, id))?.signerEmail;
+    expect((await call(w, "POST", path, "admin", second)).status).toBe(429);
+    expect((await store.document(w.db, w.orgId, id))?.signerEmail).toBe(signer as string);
+  });
+
   test("declining: refused for members, recorded and sent to sam", async () => {
     const pushed = K.PushOfferResponse.parse(
       (await call(w, "POST", `${S()}/offers`, "staff", offerBody())).data,

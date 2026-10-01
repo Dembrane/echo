@@ -1,6 +1,7 @@
 import type { Access, StaffAudit } from "@dembrane/access";
 import type { Db } from "@dembrane/db";
 import type { Logger } from "@dembrane/observability";
+import type { RateLimiter } from "@dembrane/ratelimit";
 import type { ObjectStorage } from "@dembrane/storage";
 import type { AccountsJobs } from "./sink";
 
@@ -50,6 +51,7 @@ export interface AccountsDeps {
   /** Signed PDFs, uploaded invoices and task files. */
   readonly files: ObjectStorage;
   readonly logger: Logger;
+  readonly limiter: RateLimiter;
   readonly now: () => Date;
   readonly settings: AccountsSettings;
   /** GETs a legal page; a fake in tests. */

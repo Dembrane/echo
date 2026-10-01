@@ -703,6 +703,7 @@ const eventLabel = (type: string): string =>
 		"document.sent": t`Document sent`,
 		"document.signed": t`Document signed`,
 		"document.signer_named": t`Signer named`,
+		"document.signer_replaced": t`Signer replaced`,
 		"document.viewed": t`Document viewed`,
 		"document.voided": t`Document withdrawn`,
 		"task.approve": t`Task approved`,

@@ -246,6 +246,7 @@ export function buildApp(deps: Deps) {
     jobs: queueJobs(deps.queue),
     files: deps.files,
     logger: deps.logger,
+    limiter: deps.limiter,
     now: () => new Date(),
     fetchText: deps.fetchText ?? httpFetchText,
     settings: {

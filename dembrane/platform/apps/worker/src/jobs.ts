@@ -36,6 +36,7 @@ import {
   pricingStorage,
 } from "@dembrane/pricing";
 import { defineJob, type JobDefinition, type Queue } from "@dembrane/queue";
+import { PostgresRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { reportsWorker } from "@dembrane/reports";
 import type { ObjectStorage } from "@dembrane/storage";
 import { type JobSink, tenancyWorker } from "@dembrane/tenancy";
@@ -250,6 +251,7 @@ export function registrations(deps: {
           jobs: queueJobs(queue),
           files: deps.files,
           logger,
+          limiter: new RateLimiter(new PostgresRateCounter(db)),
           now: () => new Date(),
           fetchText: httpFetchText,
           settings: {
