@@ -1,6 +1,6 @@
 # dembrane Go — frontend → app feature parity
 
-Systematic map of the **echo web frontend** functions (audited from `echo/frontend/src/Router.tsx`, `components/`, `lib/api.ts`) against the **dembrane Go** iOS app. Status as of build 25 (committed; builds 24–25 pending the next TestFlight upload window).
+Systematic map of the **echo web frontend** functions (audited from `dembrane/frontend/src/Router.tsx`, `components/`, `lib/api.ts`) against the **dembrane Go** iOS app. Status as of build 25 (committed; builds 24–25 pending the next TestFlight upload window).
 
 Legend: ✅ built · � gated (needs echo backend, Sameer's OK) · 🖥️ desktop-only (out of scope for the mobile capture app) · ⏳ deferred.
 

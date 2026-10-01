@@ -1,0 +1,35 @@
+import type { Codes } from "./types";
+
+/** Host trainings an organisation books, and the licenses completing one grants. */
+export const training = {
+  "training.not_found": {
+    action: "none",
+    detail: "Training not found",
+    description: "The training does not exist or belongs to another organisation.",
+  },
+  "training.not_available": {
+    action: "none",
+    detail: "This training is not available yet",
+    description: "The training type exists but cannot be booked yet.",
+  },
+  "training.unknown_type": {
+    action: "fix_input",
+    detail: "Unknown training type",
+    description: "The training type is not one of the known types.",
+  },
+  "training.no_license": {
+    action: "none",
+    detail: "This training type does not grant a license",
+    description: "A license was asked for a training type that grants none.",
+  },
+  "training.license_not_found": {
+    action: "none",
+    detail: "License not found",
+    description: "The license does not exist or belongs to another organisation.",
+  },
+  "training.completed_at_invalid": {
+    action: "fix_input",
+    detail: "Invalid completed_at",
+    description: "The license's completion date does not parse.",
+  },
+} as const satisfies Codes<"training">;

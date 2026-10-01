@@ -1,0 +1,78 @@
+import type { Codes } from "./types";
+
+export const conversation = {
+  "conversation.not_found": {
+    action: "none",
+    detail: "Conversation not found",
+    description: "The conversation does not exist, was deleted, or the caller cannot see it.",
+  },
+  "conversation.locked": {
+    action: "upgrade",
+    detail: "Conversation is locked",
+    description: "The conversation is over the plan's limit and locked until the plan is upgraded.",
+  },
+  "conversation.not_open": {
+    action: "none",
+    detail: "Conversation not open for participation",
+    description:
+      "The project's portal is closed to new conversations and new recordings (is_conversation_allowed is off).",
+  },
+  "conversation.chunk_empty": {
+    action: "retry",
+    detail: "Chunk must have either an audio file (file_obj or file_url) or a transcript.",
+    audience: "developer",
+    description: "A portal chunk arrived with neither audio nor text.",
+  },
+  "conversation.no_content": {
+    action: "none",
+    detail: "No content found",
+    description: "The conversation has no audio or chunks to download or stream.",
+  },
+  "conversation.no_summary": {
+    action: "none",
+    detail: "Conversation has no summary. Generate a summary first.",
+    description: "A title was asked for before the conversation had a summary to derive it from.",
+  },
+  "conversation.merge_failed": {
+    action: "retry",
+    detail: "Failed to merge audio files: {reason}",
+    description:
+      "Merging the conversation's audio chunks into one file failed (ffmpeg or storage).",
+  },
+  "conversation.delete_failed": {
+    action: "retry",
+    detail: "Failed to delete conversation: {reason}",
+    description: "Deleting the conversation or its files failed part way; sent as a 500.",
+  },
+  "conversation.file_url_unsupported": {
+    action: "none",
+    detail: "File is not valid (URL type not implemented)",
+    audience: "developer",
+    description:
+      "A chunk points at a URL rather than a storage key; streaming those was never built.",
+  },
+  "conversation.ids_required": {
+    action: "fix_input",
+    detail: "At least one of conversation_ids or project_ids must be provided",
+    audience: "developer",
+    description: "The live status request named no conversation and no project.",
+  },
+  "conversation.too_many_ids": {
+    action: "fix_input",
+    detail: "Too many IDs provided ({total}). Maximum allowed is 20.",
+    audience: "developer",
+    description: "The live status request named more than 20 conversations and projects together.",
+  },
+  "conversation.field_relational": {
+    action: "fix_input",
+    detail: "Relational fields are not allowed: {field}",
+    audience: "developer",
+    description: "A BFF conversation read asked for a relational field in `fields`.",
+  },
+  "conversation.field_unknown": {
+    action: "fix_input",
+    detail: "Unknown field: {field}",
+    audience: "developer",
+    description: "A BFF conversation read asked for a field the conversation does not have.",
+  },
+} as const satisfies Codes<"conversation">;

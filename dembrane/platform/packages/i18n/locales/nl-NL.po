@@ -1,0 +1,643 @@
+msgid ""
+msgstr ""
+"Language: nl-NL\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @dembrane/i18n\n"
+
+#. js-lingui-explicit-id
+msgid "email.common.signoff"
+msgstr "Het dembrane-team"
+
+#. js-lingui-explicit-id
+msgid "email.common.fallback"
+msgstr "Of plak dit in je browser:"
+
+#. js-lingui-explicit-id
+msgid "email.common.ignore"
+msgstr "Verwachtte je dit niet? Je kunt deze e-mail negeren. Er gebeurt niets."
+
+#. js-lingui-explicit-id
+msgid "email.common.ignore_text"
+msgstr "Verwachtte je dit niet? Negeer deze e-mail. Er gebeurt niets."
+
+#. js-lingui-explicit-id
+msgid "email.workspace_invite.subject"
+msgstr "{inviter_name} heeft je uitgenodigd om samen te werken op dembrane"
+
+#. js-lingui-explicit-id
+msgid "email.workspace_invite.title"
+msgstr "Je bent uitgenodigd om samen te werken op dembrane"
+
+#. js-lingui-explicit-id
+msgid "email.workspace_invite.preview"
+msgstr "{inviter_name} heeft je uitgenodigd voor {workspace_name} op dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.workspace_invite.heading"
+msgstr "Je bent uitgenodigd om samen te werken."
+
+#. js-lingui-explicit-id
+msgid "email.workspace_invite.body"
+msgstr "{inviter_name} heeft je uitgenodigd voor {workspace_name} op dembrane. De uitnodiging verloopt over 7 dagen."
+
+#. js-lingui-explicit-id
+msgid "email.workspace_invite.cta"
+msgstr "Uitnodiging accepteren"
+
+#. js-lingui-explicit-id
+msgid "email.workspace_invite.text_cta"
+msgstr "Accepteer de uitnodiging:"
+
+#. js-lingui-explicit-id
+msgid "email.data_owner_invite.subject"
+msgstr "Je bent de data-eigenaar voor {workspace_name} op dembrane"
+
+#. js-lingui-explicit-id
+msgid "email.workspace_added.subject"
+msgstr "Je bent toegevoegd aan {workspace_name}"
+
+#. js-lingui-explicit-id
+msgid "email.workspace_added.preview"
+msgstr "{inviter_name} heeft je toegevoegd aan {workspace_name} op dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.workspace_added.heading"
+msgstr "Je bent erbij."
+
+#. js-lingui-explicit-id
+msgid "email.workspace_added.body"
+msgstr "{inviter_name} heeft je toegevoegd aan {workspace_name} op dembrane. Je kunt meteen beginnen met samenwerken."
+
+#. js-lingui-explicit-id
+msgid "email.workspace_added.cta"
+msgstr "Werkruimte openen"
+
+#. js-lingui-explicit-id
+msgid "email.workspace_added.text_cta"
+msgstr "Open de werkruimte:"
+
+#. js-lingui-explicit-id
+msgid "email.org_invite.subject"
+msgstr "{inviter_name} heeft je uitgenodigd voor {org_name} op dembrane"
+
+#. js-lingui-explicit-id
+msgid "email.org_invite.preview"
+msgstr "{inviter_name} heeft je uitgenodigd om lid te worden van {org_name} op dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.org_invite.heading"
+msgstr "Je bent uitgenodigd voor {org_name}."
+
+#. js-lingui-explicit-id
+msgid "email.org_invite.body"
+msgstr "{inviter_name} heeft je uitgenodigd voor {org_name} op dembrane. De uitnodiging verloopt over 7 dagen."
+
+#. js-lingui-explicit-id
+msgid "email.org_invite.body_role"
+msgstr "{inviter_name} heeft je uitgenodigd voor {org_name} op dembrane als {role}. De uitnodiging verloopt over 7 dagen."
+
+#. js-lingui-explicit-id
+msgid "email.org_invite.next"
+msgstr "Zodra je accepteert, kun je de werkruimtes ontdekken die je team gebruikt en toegang aanvragen."
+
+#. js-lingui-explicit-id
+msgid "email.org_invite.cta"
+msgstr "Uitnodiging accepteren"
+
+#. js-lingui-explicit-id
+msgid "email.org_invite.text_cta"
+msgstr "Accepteer de uitnodiging:"
+
+#. js-lingui-explicit-id
+msgid "email.org_added.subject"
+msgstr "Je bent toegevoegd aan {org_name}"
+
+#. js-lingui-explicit-id
+msgid "email.org_added.subject_again"
+msgstr "Je bent opnieuw toegevoegd aan {org_name}"
+
+#. js-lingui-explicit-id
+msgid "email.org_added.preview"
+msgstr "{inviter_name} heeft je toegevoegd aan {org_name} op dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.org_added.heading"
+msgstr "Je bent erbij."
+
+#. js-lingui-explicit-id
+msgid "email.org_added.body"
+msgstr "{inviter_name} heeft je toegevoegd aan {org_name} op dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.org_added.body_role"
+msgstr "{inviter_name} heeft je toegevoegd aan {org_name} op dembrane als {role}."
+
+#. js-lingui-explicit-id
+msgid "email.org_added.next"
+msgstr "Je kunt de werkruimtes ontdekken die je team gebruikt en toegang aanvragen."
+
+#. js-lingui-explicit-id
+msgid "email.org_added.cta"
+msgstr "dembrane openen"
+
+#. js-lingui-explicit-id
+msgid "email.org_added.text_cta"
+msgstr "Open dembrane:"
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.subject"
+msgstr "Je hebt al een dembrane-account"
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.preview"
+msgstr "Je hebt al een dembrane-account. Log in om verder te gaan."
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.heading"
+msgstr "Je hebt al een account."
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.body"
+msgstr "Het lijkt erop dat er al een account bestaat met dit e-mailadres. Je kunt inloggen met je bestaande gegevens."
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.cta"
+msgstr "Inloggen"
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.text_cta"
+msgstr "Log in:"
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.reset"
+msgstr "Als je je wachtwoord bent vergeten, kun je {reset_link}."
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.reset_link"
+msgstr "het hier opnieuw instellen"
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.reset_text"
+msgstr "Als je je wachtwoord bent vergeten, kun je het hier opnieuw instellen:"
+
+#. js-lingui-explicit-id
+msgid "email.registration_existing_account.ignore"
+msgstr "Als je je niet hebt geprobeerd aan te melden, kun je deze e-mail gerust negeren. Er zijn geen wijzigingen aangebracht in je account."
+
+#. js-lingui-explicit-id
+msgid "email.verify_email.subject"
+msgstr "Verifieer je e-mailadres"
+
+#. js-lingui-explicit-id
+msgid "email.verify_email.preview"
+msgstr "Bevestig je e-mailadres om het instellen van je dembrane-account af te ronden."
+
+#. js-lingui-explicit-id
+msgid "email.verify_email.heading"
+msgstr "Verifieer je e-mailadres."
+
+#. js-lingui-explicit-id
+msgid "email.verify_email.body"
+msgstr "Bevestig dat dit je e-mailadres is om het instellen van je dembrane-account af te ronden."
+
+#. js-lingui-explicit-id
+msgid "email.verify_email.text_cta"
+msgstr "Bevestig dat dit je e-mailadres is om het instellen van je dembrane-account af te ronden:"
+
+#. js-lingui-explicit-id
+msgid "email.verify_email.cta"
+msgstr "E-mailadres verifiëren"
+
+#. js-lingui-explicit-id
+msgid "email.verify_email.ignore"
+msgstr "Als je je niet hebt aangemeld, kun je deze e-mail gerust negeren."
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.subject"
+msgstr "Je dembrane-inlogcode"
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.preview"
+msgstr "Je inlogcode is {code}."
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.heading"
+msgstr "Je inlogcode."
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.body"
+msgstr "Voer deze code in om door te gaan: {code}. De code verloopt over 10 minuten."
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.text_body"
+msgstr "Je inlogcode is {code}. Deze verloopt over 10 minuten."
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.ignore"
+msgstr "Als je niet hebt geprobeerd in te loggen, kun je deze e-mail gerust negeren."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.subject"
+msgstr "Onderteken {document_title}"
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.title"
+msgstr "{inviter_name} heeft je gevraagd te ondertekenen voor {org_name}"
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.preview"
+msgstr "{inviter_name} heeft je gevraagd om {document_title} te ondertekenen op dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.heading"
+msgstr "Je bent gevraagd te ondertekenen."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.body"
+msgstr "{inviter_name} heeft je aangewezen als degene die {document_title} ondertekent voor {org_name}. Log in met de code die naar dit e-mailadres is gestuurd om het te lezen en te ondertekenen."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.cta"
+msgstr "Lezen en ondertekenen"
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.text_cta"
+msgstr "Lezen en ondertekenen:"
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.subject"
+msgstr "Nog open: {task_title}"
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.title"
+msgstr "Een stap wacht op {org_name}"
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.preview"
+msgstr "{task_title} staat nog open."
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.heading"
+msgstr "Er staat nog een stap open."
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.body"
+msgstr "{task_title} staat nog open voor {org_name} op dembrane. Het kost een minuut, en het houdt de zaken bij ons in beweging."
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.cta"
+msgstr "Open de stap"
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.text_cta"
+msgstr "Open de stap:"
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.subject"
+msgstr "Je dembrane-account voor {org_name}"
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.preview"
+msgstr "Je dembrane-account voor {org_name} staat klaar."
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.heading"
+msgstr "Je account staat klaar."
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.body"
+msgstr "We hebben {org_name} op dembrane voor je klaargezet. Log in met de code die we naar dit e-mailadres sturen: geen wachtwoord nodig."
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.cta"
+msgstr "Inloggen"
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.text_cta"
+msgstr "Inloggen:"
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.subject"
+msgstr "{workspace_name} is overgezet naar {to_tier}"
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.preview"
+msgstr "{workspace_name} heeft nu {to_tier}. Sommige functies zijn beperkt."
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.heading"
+msgstr "{workspace_name} heeft nu {to_tier}."
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.body"
+msgstr "Per {date} is {workspace_name} overgezet van {from_tier} naar {to_tier}."
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.text_body"
+msgstr "{workspace_name} is op {date} overgezet van {from_tier} naar {to_tier}."
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.frozen"
+msgstr "Deze functies zijn bevroren. Bestaande gegevens blijven behouden, maar kunnen niet opnieuw worden gebruikt tot een upgrade:"
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.frozen_text"
+msgstr "Bevroren. Bestaande gegevens blijven behouden, maar kunnen niet opnieuw worden gebruikt tot een upgrade:"
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.reverted"
+msgstr "Deze functies zijn teruggedraaid:"
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.reverted_text"
+msgstr "Teruggedraaid:"
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.rest"
+msgstr "Al het andere blijft gewoon werken zoals voorheen. Open de werkruimte om je opties te bekijken of een ander abonnement aan te vragen."
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.rest_text"
+msgstr "Al het andere blijft gewoon werken."
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.cta"
+msgstr "Werkruimte openen"
+
+#. js-lingui-explicit-id
+msgid "email.tier_downgraded.text_cta"
+msgstr "Open de werkruimte:"
+
+#. js-lingui-explicit-id
+msgid "email.support_request.subject"
+msgstr "dembrane-medewerker heeft toegang gevraagd tot {workspace_name}"
+
+#. js-lingui-explicit-id
+msgid "email.support_request.preview"
+msgstr "{staff_name} heeft gevraagd om toegang tot {workspace_name} voor ondersteuning."
+
+#. js-lingui-explicit-id
+msgid "email.support_request.heading"
+msgstr "Toegangsverzoek medewerker"
+
+#. js-lingui-explicit-id
+msgid "email.support_request.body"
+msgstr "{staff_name} van dembrane heeft gevraagd om toegang tot {workspace_name} voor ondersteuning."
+
+#. js-lingui-explicit-id
+msgid "email.support_request.note"
+msgstr "Opmerking: {note}."
+
+#. js-lingui-explicit-id
+msgid "email.support_request.end"
+msgstr "Als je dit goedkeurt, stopt de toegang automatisch na 24 uur."
+
+#. js-lingui-explicit-id
+msgid "email.support_request.cta"
+msgstr "Verzoek bekijken"
+
+#. js-lingui-explicit-id
+msgid "email.support_joined.subject"
+msgstr "dembrane-medewerker heeft toegang tot {workspace_name} voor ondersteuning"
+
+#. js-lingui-explicit-id
+msgid "email.support_joined.preview"
+msgstr "{staff_name} heeft toegang gekregen tot {workspace_name} voor ondersteuning."
+
+#. js-lingui-explicit-id
+msgid "email.support_joined.heading"
+msgstr "Medewerker toegevoegd voor ondersteuning"
+
+#. js-lingui-explicit-id
+msgid "email.support_joined.body"
+msgstr "{staff_name} van dembrane heeft toegang gekregen tot {workspace_name} om te helpen met ondersteuning."
+
+#. js-lingui-explicit-id
+msgid "email.support_joined.end"
+msgstr "De toegang stopt automatisch na 24 uur. Je kunt de geschiedenis volgen via de toegangsgeschiedenis in je werkruimte-instellingen."
+
+#. js-lingui-explicit-id
+msgid "email.support_joined.end_text"
+msgstr "De toegang stopt automatisch na 24 uur."
+
+#. js-lingui-explicit-id
+msgid "email.support_joined.cta"
+msgstr "Toegangsgeschiedenis bekijken"
+
+#. js-lingui-explicit-id
+msgid "email.support_ended.subject"
+msgstr "Ondersteuningstoegang tot {workspace_name} uitgeschakeld"
+
+#. js-lingui-explicit-id
+msgid "email.support_ended.preview"
+msgstr "De ondersteuningssessie in {workspace_name} is afgelopen en de toegang voor medewerkers is uitgeschakeld."
+
+#. js-lingui-explicit-id
+msgid "email.support_ended.heading"
+msgstr "Ondersteuningssessie beëindigd"
+
+#. js-lingui-explicit-id
+msgid "email.support_ended.body"
+msgstr "De ondersteuningssessie in {workspace_name} is afgelopen en de toegang voor medewerkers is uitgeschakeld."
+
+#. js-lingui-explicit-id
+msgid "email.support_ended.end"
+msgstr "Zet het weer aan in de werkruimte-instellingen als je meer hulp nodig hebt."
+
+#. js-lingui-explicit-id
+msgid "email.support_ended.cta"
+msgstr "Werkruimte-instellingen openen"
+
+#. js-lingui-explicit-id
+msgid "email.support_reminder.subject"
+msgstr "Ondersteuningstoegang tot {workspace_name} staat nog aan"
+
+#. js-lingui-explicit-id
+msgid "email.support_reminder.preview"
+msgstr "Er hebben de afgelopen 7 dagen geen medewerkers ingelogd op {workspace_name}."
+
+#. js-lingui-explicit-id
+msgid "email.support_reminder.heading"
+msgstr "Ondersteuningstoegang staat nog aan"
+
+#. js-lingui-explicit-id
+msgid "email.support_reminder.body"
+msgstr "Ondersteuningstoegang voor {workspace_name} staat nog aan en er hebben de afgelopen 7 dagen geen medewerkers ingelogd."
+
+#. js-lingui-explicit-id
+msgid "email.support_reminder.end"
+msgstr "Zet het uit in de werkruimte-instellingen als je geen hulp meer nodig hebt. Je kunt het op elk moment weer aanzetten."
+
+#. js-lingui-explicit-id
+msgid "email.support_reminder.end_text"
+msgstr "Zet het uit in de werkruimte-instellingen als je geen hulp meer nodig hebt."
+
+#. js-lingui-explicit-id
+msgid "email.support_reminder.cta"
+msgstr "Werkruimte-instellingen openen"
+
+#. js-lingui-explicit-id
+msgid "email.support_approved.subject"
+msgstr "Toegangsverzoek voor {workspace_name} goedgekeurd"
+
+#. js-lingui-explicit-id
+msgid "email.support_approved.preview"
+msgstr "Je toegangsverzoek voor {workspace_name} is goedgekeurd."
+
+#. js-lingui-explicit-id
+msgid "email.support_approved.heading"
+msgstr "Verzoek goedgekeurd"
+
+#. js-lingui-explicit-id
+msgid "email.support_approved.body"
+msgstr "Je toegangsverzoek voor {workspace_name} is goedgekeurd."
+
+#. js-lingui-explicit-id
+msgid "email.support_denied.subject"
+msgstr "Toegangsverzoek voor {workspace_name} afgewezen"
+
+#. js-lingui-explicit-id
+msgid "email.support_denied.preview"
+msgstr "Je toegangsverzoek voor {workspace_name} is afgewezen."
+
+#. js-lingui-explicit-id
+msgid "email.support_denied.heading"
+msgstr "Verzoek afgewezen"
+
+#. js-lingui-explicit-id
+msgid "email.support_denied.body"
+msgstr "Je toegangsverzoek voor {workspace_name} is afgewezen."
+
+#. js-lingui-explicit-id
+msgid "email.support_approved.end"
+msgstr "Je hebt 24 uur lang beheerderstoegang."
+
+#. js-lingui-explicit-id
+msgid "email.support_approved.cta"
+msgstr "Werkruimte openen"
+
+#. js-lingui-explicit-id
+msgid "email.payment_failed.subject"
+msgstr "Actie vereist: werk je betaalmethode bij"
+
+#. js-lingui-explicit-id
+msgid "email.payment_failed.title"
+msgstr "Werk je betaalmethode bij"
+
+#. js-lingui-explicit-id
+msgid "email.payment_failed.preview"
+msgstr "Een recente betaling is niet gelukt. Werk je betaalmethode bij om je abonnement te behouden."
+
+#. js-lingui-explicit-id
+msgid "email.payment_failed.heading"
+msgstr "We konden je betaalmethode niet afschrijven."
+
+#. js-lingui-explicit-id
+msgid "email.payment_failed.body"
+msgstr "Een recente betaling voor je dembrane-abonnement is niet gelukt. Meestal betekent dit dat een kaart is verlopen of dat de bank de afschrijving heeft geweigerd."
+
+#. js-lingui-explicit-id
+msgid "email.payment_failed.next"
+msgstr "Je abonnement blijft gewoon actief terwijl je dit regelt. Werk je betaalmethode bij om het openstaande bedrag te voldoen en alles soepel te laten verlopen."
+
+#. js-lingui-explicit-id
+msgid "email.payment_failed.cta"
+msgstr "Betaalmethode bijwerken"
+
+#. js-lingui-explicit-id
+msgid "email.payment_failed.text_cta"
+msgstr "Werk je betaalmethode bij:"
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.subject"
+msgstr "{workspace_name} overgezet naar Free"
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.title"
+msgstr "Abonnement voor {workspace_name} verlopen"
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.preview"
+msgstr "{workspace_name} overgezet naar Free. Sommige functies zijn beperkt."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.heading"
+msgstr "{workspace_name} gebruikt nu Free."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.body"
+msgstr "Je {from_tier}-abonnement voor {workspace_name} is verlopen. De werkruimte gebruikt nu het Free-abonnement."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.text_body"
+msgstr "{workspace_name}: je {from_tier}-abonnement is verlopen. De werkruimte gebruikt nu Free."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.rest"
+msgstr "Je bestaande content blijft toegankelijk. Vraag een upgrade aan om weer alle functies te gebruiken."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.cta"
+msgstr "Werkruimte openen"
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.subject"
+msgstr "Abonnement voor {workspace_name} verloopt op {date}"
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.title"
+msgstr "Abonnement voor {workspace_name} verloopt binnenkort"
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.preview"
+msgstr "{workspace_name} gaat op {date} over naar Free."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.heading"
+msgstr "Abonnement voor {workspace_name} verloopt op {date}."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.body"
+msgstr "Je {tier}-abonnement voor {workspace_name} verloopt op {date}. Daarna gaat de werkruimte over naar Free en zijn sommige functies beperkt."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.text_body"
+msgstr "{workspace_name}: je {tier}-abonnement verloopt op {date}. Daarna gaat de werkruimte over naar Free en zijn sommige functies beperkt."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.rest"
+msgstr "Je bestaande content blijft toegankelijk. Vraag een upgrade aan om alle functies te behouden."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.cta"
+msgstr "Upgrade aanvragen"
+
+#. js-lingui-explicit-id
+msgid "task.sign_offer.title"
+msgstr "Offerte bekijken en ondertekenen"
+
+#. js-lingui-explicit-id
+msgid "task.sign_offer.title_document"
+msgstr "Offerte bekijken en ondertekenen: {document_title}"
+
+#. js-lingui-explicit-id
+msgid "task.sign_offer.body"
+msgstr "Lees de offerte en onderteken hem hier. Tekent iemand anders voor jullie organisatie? Wijs diegene aan op de offerte; die krijgt een eigen link."
+
+#. js-lingui-explicit-id
+msgid "task.billing_details.title"
+msgstr "Factuurgegevens"
+
+#. js-lingui-explicit-id
+msgid "task.billing_details.body"
+msgstr "Aan wie we factureren: juridische naam, adres, btw- of KvK-nummer, factuur-e-mail en, als jullie die gebruiken, het PO-nummer. Deze stap opent zodra de offerte is ondertekend."
+
+#. js-lingui-explicit-id
+msgid "task.sign_dpa.title"
+msgstr "Laat de verwerkersovereenkomst ondertekenen"
+
+#. js-lingui-explicit-id
+msgid "task.sign_dpa.body"
+msgstr "Wie de offerte tekende mag geen verwerkingsafspraken maken voor jullie organisatie. Iemand die dat wel mag (artikel 3.6 van de voorwaarden) ondertekent hier de verwerkersovereenkomst; je kunt diegene op het document aanwijzen."

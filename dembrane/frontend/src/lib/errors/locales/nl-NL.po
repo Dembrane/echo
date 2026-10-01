@@ -1,0 +1,1604 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2026-09-28 13:40+0200\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: nl-NL\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/request.ts:5
+msgid "error.request.field_empty"
+msgstr "{field} kan niet leeg zijn. Vul het in of verwijder het."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:58
+msgid "error.document.image_too_large"
+msgstr "{what, select, initials {De afbeelding van je paraaf} other {De afbeelding van je handtekening}} is te groot. Houd deze onder 512 KB."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:53
+msgid "error.document.image_not_png"
+msgstr "{what, select, initials {Je paraaf} other {Je handtekening}} moet een PNG-afbeelding zijn."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:68
+msgid "error.workspace.handoff_pending"
+msgstr "Er staat al een overdracht klaar voor deze werkruimte. Annuleer deze voordat je een nieuwe start."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/popcorn.ts:10
+msgid "error.popcorn.creation_busy"
+msgstr "Er wordt al een presentatie gemaakt voor dit project. Probeer het zo meteen nog eens."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/canvas.ts:27
+msgid "error.canvas.just_previewed"
+msgstr "Er is net al een voorbeeld gemaakt. Wacht even voordat je het opnieuw probeert."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:91
+msgid "error.project.pin_order_invalid"
+msgstr "Een project kan op plek 1, 2 of 3 worden vastgepind."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/report.ts:5
+msgid "error.report.already_generating"
+msgstr "Er wordt al een rapport gemaakt voor dit project. Wacht tot het klaar is en probeer het dan opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/agent_access.ts:24
+msgid "error.agent_access.risk_not_accepted"
+msgstr "Accepteer de melding over gegevensrisico's om je agent te koppelen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:115
+msgid "error.workspace.partner_agreement_required"
+msgstr "Accepteer de partnerovereenkomst om door te gaan."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:100
+msgid "error.project.privacy_policy_required"
+msgstr "Voeg een link naar je privacybeleid toe om toestemming als juridische grondslag te gebruiken."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/task.ts:29
+msgid "error.task.reply_required"
+msgstr "Voeg een reactie of een bestand toe voordat je verzendt."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/agent.ts:17
+msgid "error.agent.insight_reason_required"
+msgstr "Voeg een korte reden toe voordat je dit inzicht negeert."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/field.ts:38
+msgid "error.field.too_few_items"
+msgstr "Voeg er minstens {min_length} toe."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:44
+msgid "error.workspace.external_needs_owner"
+msgstr "Voeg de naam van de klantorganisatie en het e-mailadres van de gegevenseigenaar toe om deze werkruimte als extern te markeren."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:27
+msgid "error.workspace.data_owner_org_required"
+msgstr "Voeg de naam toe van de organisatie die eigenaar is van de gegevens."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:13
+msgid "error.workspace.admin_joins_directly"
+msgstr "Als organisatiebeheerder kun je direct lid worden van deze werkruimte, zonder verzoek."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:133
+msgid "error.project.share_role_cannot_access"
+msgstr "Facturatieleden kunnen geen projecten openen. Geef ze eerst een andere rol."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/invite.ts:49
+msgid "error.invite.role_cannot_access_projects"
+msgstr "Facturatieleden kunnen geen projecten openen. Kies een andere rol om dit project te delen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/canvas.ts:18
+msgid "error.canvas.feature_off"
+msgstr "Canvassen staan niet ingeschakeld voor dit project."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/field.ts:5
+msgid "error.field.invalid"
+msgstr "Controleer dit veld en probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:27
+msgid "error.document.dpa_not_authorised"
+msgstr "Bevestig dat je bevoegd bent om namens je organisatie akkoord te gaan met gegevensverwerking."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/internal.ts:5
+msgid "error.internal.busy"
+msgstr "dembrane is hier nu even druk mee. Probeer het zo meteen nog eens."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/analysis.ts:5
+msgid "error.analysis.feature_disabled"
+msgstr "Het bewerken van resultaten is hier niet beschikbaar."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:95
+msgid "error.project.privacy_policy_invalid_url"
+msgstr "Voer een link naar het privacybeleid in die begint met http:// of https://."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/field.ts:13
+msgid "error.field.invalid_date"
+msgstr "Voer een geldige datum in."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/field.ts:17
+msgid "error.field.invalid_email"
+msgstr "Voer een geldig e-mailadres in."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/webhook.ts:14
+msgid "error.webhook.invalid_url"
+msgstr "Voer een webadres in dat begint met http:// of https://."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/field.ts:30
+msgid "error.field.invalid_url"
+msgstr "Voer een webadres in dat begint met http:// of https://."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:50
+msgid "error.billing.tax_id_required"
+msgstr "Voer minimaal één van je VAT-, KvK- of KBO-nummers in."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:40
+msgid "error.document.field_text_invalid"
+msgstr "Voer tekst in voor {label}."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:119
+msgid "error.project.share_needs_private"
+msgstr "Iedereen in de werkruimte kan dit project al zien. Maak het eerst privé om het met individuele personen te delen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/request.ts:9
+msgid "error.request.field_required"
+msgstr "Vul {field} in."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:36
+msgid "error.document.field_required"
+msgstr "Vul {label} in om door te gaan."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/field.ts:34
+msgid "error.field.required"
+msgstr "Vul dit veld in."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/access.ts:9
+msgid "error.access.not_onboarded"
+msgstr "Voltooi het instellen van je account om door te gaan."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/organisation.ts:28
+msgid "error.organisation.name_required"
+msgstr "Geef je organisatie een naam."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:5
+msgid "error.project.event_invite_paid"
+msgstr "Het verbergen van de dembrane-evenementuitnodiging is inbegrepen bij een betaald abonnement. Upgrade om deze te verbergen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:137
+msgid "error.workspace.visibility_requires_tier"
+msgstr "Voor besloten en privéwerkruimtes is het Innovator-abonnement of hoger nodig. Maak deze nu aan als openbaar, of upgrade eerst."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/conversation.ts:23
+msgid "error.conversation.no_summary"
+msgstr "Maak eerst een samenvatting van dit gesprek en probeer het dan opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/agent_access.ts:14
+msgid "error.agent_access.no_enabled_organisation"
+msgstr "Geen van de gekozen organisaties staat agent-toegang toe. Kies een andere, of vraag je beheerder om agent-toegang aan te zetten."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/invite.ts:24
+msgid "error.invite.observer_internal_workspace"
+msgstr "Waarnemers kunnen alleen deelnemen aan werkruimtes voor een externe klant. Kies een andere rol."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/webhook.ts:5
+msgid "error.webhook.invalid_event"
+msgstr "Een van de gekozen gebeurtenissen is niet beschikbaar. Kies de gebeurtenissen opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/template.ts:18
+msgid "error.template.quick_access_not_found"
+msgstr "Een van deze sjablonen is niet meer beschikbaar. Verwijder deze uit snelle toegang en sla opnieuw op."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:26
+msgid "error.billing.payments_unavailable"
+msgstr "Online betalingen zijn momenteel niet beschikbaar. Neem contact met ons op om je abonnement te wijzigen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:19
+msgid "error.document.decline_signer_only"
+msgstr "Alleen {signer_email} kan dit document weigeren."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:98
+msgid "error.document.signer_only"
+msgstr "Alleen {signer_email} kan dit document ondertekenen. Vraag diegene om te tekenen, of vraag ons om de ondertekenaar te wijzigen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:36
+msgid "error.workspace.delete_admin_only"
+msgstr "Alleen een beheerder of eigenaar van de werkruimte kan deze werkruimte verwijderen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:54
+msgid "error.workspace.handoff_admin_only"
+msgstr "Alleen beheerders van de organisatie die voor deze werkruimte betaalt, kunnen deze overdragen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:59
+msgid "error.workspace.handoff_cancel_initiator_only"
+msgstr "Alleen beheerders van de organisatie die deze overdracht heeft gestart, kunnen deze annuleren."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:49
+msgid "error.workspace.handoff_accept_target_admin_only"
+msgstr "Alleen beheerders van de ontvangende organisatie kunnen deze overdracht accepteren."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:31
+msgid "error.workspace.data_ownership_admin_only"
+msgstr "Alleen een organisatiebeheerder kan wijzigen wie de eigenaar is van de gegevens van deze werkruimte."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/organisation.ts:49
+msgid "error.organisation.owner_only"
+msgstr "Alleen een organisatie-eigenaar kan dit doen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/member.ts:50
+msgid "error.member.owner_changes_owner"
+msgstr "Alleen een eigenaar kan iemand eigenaar maken of de rol van een andere eigenaar wijzigen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/member.ts:55
+msgid "error.member.owner_removes_owner"
+msgstr "Alleen een eigenaar kan een andere eigenaar verwijderen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:17
+msgid "error.map.not_a_claim"
+msgstr "Alleen beweringen kunnen worden gefactcheckt. Kies een bewering en probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:18
+msgid "error.workspace.create_admin_only"
+msgstr "Alleen organisatiebeheerders en -eigenaren kunnen hier werkruimtes aanmaken."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/organisation.ts:5
+msgid "error.organisation.admin_only"
+msgstr "Alleen organisatiebeheerders en -eigenaren kunnen dit doen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/organisation.ts:14
+msgid "error.organisation.billing_role_only"
+msgstr "Alleen organisatiebeheerders, -eigenaren en facturatieleden kunnen dit zien."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:40
+msgid "error.billing.role_required"
+msgstr "Alleen organisatie-eigenaren, -beheerders en facturatieleden kunnen facturatie beheren."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:87
+msgid "error.project.not_owner"
+msgstr "Alleen de eigenaar van dit project kan dit doen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/invite.ts:44
+msgid "error.invite.revoke_forbidden"
+msgstr "Alleen degene die deze uitnodiging heeft verstuurd of een beheerder kan deze intrekken."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/invite.ts:39
+msgid "error.invite.resend_forbidden"
+msgstr "Alleen degene die deze uitnodiging heeft verstuurd of een organisatiebeheerder kan deze opnieuw versturen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:14
+msgid "error.project.legal_basis_admin_only"
+msgstr "Alleen werkruimtebeheerders kunnen de rechtsgrond van dit project wijzigen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:143
+msgid "error.project.visibility_admin_only"
+msgstr "Alleen werkruimtebeheerders kunnen wijzigen wie dit project kan zien."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:115
+msgid "error.project.share_admin_only"
+msgstr "Alleen werkruimtebeheerders kunnen projecten delen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:29
+msgid "error.map.selection_not_in_map"
+msgstr "Een deel van je selectie staat niet meer op de kaart. Vernieuw de kaart en selecteer opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/webhook.ts:10
+msgid "error.webhook.invalid_status"
+msgstr "Kies een status voor deze webhook: gepubliceerd, concept of gearchiveerd."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/report.ts:23
+msgid "error.report.schedule_too_soon"
+msgstr "Kies een tijdstip dat minstens 10 minuten in de toekomst ligt."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/canvas.ts:5
+msgid "error.canvas.expiry_in_past"
+msgstr "Kies een einddatum in de toekomst."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/canvas.ts:9
+msgid "error.canvas.expiry_too_far"
+msgstr "Kies een einddatum binnen de komende 7 dagen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:19
+msgid "error.project.legal_basis_invalid"
+msgstr "Kies een van de opties voor rechtsgrond."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/popcorn.ts:19
+msgid "error.popcorn.invalid_live_hours"
+msgstr "Kies een van de aangeboden tijdsduren: {hours} uur."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/agent_access.ts:5
+msgid "error.agent_access.expiry_unsupported"
+msgstr "Kies een van de aangeboden verloopopties."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/field.ts:9
+msgid "error.field.invalid_choice"
+msgstr "Kies een van de opties."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/memory.ts:9
+msgid "error.memory.invalid_scope"
+msgstr "Kies uit de lijst voor wie deze herinnering is."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:110
+msgid "error.project.private_requires_tier"
+msgstr "Privéprojecten zijn beschikbaar vanaf het Innovator-abonnement. Upgrade om dit project privé te maken."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:32
+msgid "error.project.move_context_mismatch"
+msgstr "Projecten kunnen alleen worden verplaatst tussen werkruimtes met dezelfde facturatie- en data-eigenaar. Kies een andere werkruimte."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/template.ts:23
+msgid "error.template.quick_access_too_many"
+msgstr "Snelle toegang biedt plaats aan maximaal {max} sjablonen. Verwijder er eerst een."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/popcorn.ts:5
+msgid "error.popcorn.branding_tier"
+msgstr "Het dembrane-watermerk verwijderen is onderdeel van het Changemaker-abonnement. Upgrade om dit te gebruiken."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:43
+msgid "error.map.selection_too_small"
+msgstr "Selecteer nog een paar items om een titel te maken."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/chat.ts:19
+msgid "error.chat.conversation_ids_empty"
+msgstr "Selecteer minstens één gesprek om toe te voegen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:46
+msgid "error.project.move_none_selected"
+msgstr "Selecteer minstens één project om te verplaatsen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:138
+msgid "error.project.sharing_tier_required"
+msgstr "Om een privéproject met mensen te delen heb je het {tier}-abonnement of hoger nodig."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/validation.ts:5
+msgid "error.validation.invalid_input"
+msgstr "Sommige velden kloppen niet. Controleer de gemarkeerde velden en probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/canvas.ts:22
+msgid "error.canvas.invalid_value"
+msgstr "Een deel van je invoer kon niet op het canvas worden gebruikt. Controleer het en probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/analysis.ts:13
+msgid "error.analysis.invalid_request"
+msgstr "Een deel van je invoer kon niet worden gebruikt. Controleer het en probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:5
+msgid "error.workspace.access_request_actioned"
+msgstr "Iemand heeft dit verzoek al beantwoord."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/member.ts:9
+msgid "error.member.changed_concurrently"
+msgstr "Iemand heeft dit lidmaatschap tegelijkertijd gewijzigd. Probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/analysis.ts:27
+msgid "error.analysis.revision_conflict"
+msgstr "Iemand heeft dit resultaat gewijzigd terwijl je ernaar keek. Vernieuw de pagina om die versie te zien en pas het daarna opnieuw aan."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/popcorn.ts:40
+msgid "error.popcorn.settings_busy"
+msgstr "Iemand anders slaat deze instellingen nu op. Probeer het zo meteen opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/field.ts:21
+msgid "error.field.invalid_json"
+msgstr "Iets in dit formulier kon niet worden gelezen. Vernieuw de pagina en probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/request.ts:13
+msgid "error.request.invalid"
+msgstr "Er klopte iets niet in dit verzoek. Vernieuw de pagina en probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/request.ts:18
+msgid "error.request.invalid_json"
+msgstr "Er klopte iets niet in dit verzoek. Vernieuw de pagina en probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/internal.ts:14
+msgid "error.internal.unexpected"
+msgstr "Er ging iets mis aan onze kant. Probeer het zo meteen opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/account.ts:22
+msgid "error.account.otp_invalid"
+msgstr "Die code werkte niet. Voer de huidige code uit je authenticator-app in."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/training.ts:5
+msgid "error.training.completed_at_invalid"
+msgstr "Die afrondingsdatum kon niet worden gelezen. Voer deze opnieuw in."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/report.ts:19
+msgid "error.report.schedule_invalid"
+msgstr "Die datum en tijd konden niet worden gelezen. Kies de tijd opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/account.ts:5
+msgid "error.account.credentials_invalid"
+msgstr "Dat wachtwoord klopt niet. Controleer het en probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/member.ts:13
+msgid "error.member.invalid_role"
+msgstr "Die rol is hier niet beschikbaar. Kies er een uit de lijst."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/rate_limit.ts:5
+msgid "error.rate_limit.exceeded"
+msgstr "Dat waren veel verzoeken in korte tijd. Wacht heel even en probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:14
+msgid "error.document.confirmation_mismatch"
+msgstr "De bevestigingstekst komt niet overeen. Typ het precies zoals weergegeven: {expected}"
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:27
+msgid "error.project.methodology_read_only"
+msgstr "De dembrane-methodologie kan niet worden gewijzigd. Maak een kopie om deze te bewerken."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/popcorn.ts:45
+msgid "error.popcorn.synthetic_frame_locked"
+msgstr "Het frame van een demopresentatie is vastgelegd met de demo en kan hier niet worden gewijzigd."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/agent.ts:5
+msgid "error.agent.insight_content_blank"
+msgstr "Het inzicht mag niet leeg zijn. Schrijf iets of verwijder het."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/present.ts:23
+msgid "error.present.map_results_unavailable"
+msgstr "De kaart voor deze presentatie is niet beschikbaar."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/present.ts:19
+msgid "error.present.map_results_not_ready"
+msgstr "De kaart is nog niet klaar. Deze verschijnt hier zodra dat wel zo is."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:25
+msgid "error.map.not_ready"
+msgstr "De kaart wordt nog gemaakt. Wacht heel even en probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:34
+msgid "error.map.selection_other_snapshot"
+msgstr "De kaart is bijgewerkt sinds je deze selectie maakte. Vernieuw de kaart en selecteer opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:63
+msgid "error.document.no_pdf"
+msgstr "De pdf van dit document is niet beschikbaar. Neem contact met ons op, dan sturen we hem opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:17
+msgid "error.billing.invoice_pdf_missing"
+msgstr "De pdf van deze factuur is nog niet klaar. Probeer het over een tijdje opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/upload.ts:13
+msgid "error.upload.failed"
+msgstr "De upload is niet voltooid. Probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/request.ts:23
+msgid "error.request.nothing_to_update"
+msgstr "Er zijn geen wijzigingen om op te slaan."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/agent.ts:21
+msgid "error.agent.insight_update_empty"
+msgstr "Er zijn geen wijzigingen om op te slaan."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/agent.ts:25
+msgid "error.agent.no_active_turn"
+msgstr "Er wordt momenteel geen antwoord gegenereerd om te stoppen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:64
+msgid "error.workspace.handoff_none_pending"
+msgstr "Er staat geen overdracht klaar voor deze werkruimte."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:22
+msgid "error.billing.no_payment_profile"
+msgstr "Er is nog geen betaalmethode om bij te werken. Kies eerst een abonnement."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:9
+msgid "error.billing.already_subscribed"
+msgstr "Dit account heeft al een actief abonnement."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/present.ts:5
+msgid "error.present.activity_not_in_presentation"
+msgstr "Deze activiteit maakt geen deel meer uit van de presentatie. Vernieuw de pagina."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/announcement.ts:5
+msgid "error.announcement.not_found"
+msgstr "Deze aankondiging is niet meer beschikbaar."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/canvas.ts:41
+msgid "error.canvas.loop_not_found"
+msgstr "Dit canvas vernieuwt niet automatisch, dus er valt hier niets te wijzigen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/canvas.ts:36
+msgid "error.canvas.loop_ended"
+msgstr "Dit canvas wordt niet meer vernieuwd. Maak een nieuw canvas om het up-to-date te houden."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/canvas.ts:31
+msgid "error.canvas.just_refreshed"
+msgstr "Dit canvas is net vernieuwd. Wacht even voordat je het opnieuw vernieuwt."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/chat.ts:31
+msgid "error.chat.mode_already_set"
+msgstr "Deze chat heeft al een modus. Start een nieuwe chat om een andere te gebruiken."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/chat.ts:5
+msgid "error.chat.context_full"
+msgstr "Deze chat is vol. Verwijder enkele gesprekken om ruimte te maken voor deze."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/pricing.ts:5
+msgid "error.pricing.configuration_not_owned"
+msgstr "Deze configuratie is van iemand anders. Start een nieuwe."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/agent_access.ts:19
+msgid "error.agent_access.request_expired"
+msgstr "Dit koppelingsverzoek is verlopen. Begin opnieuw vanuit je agent."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/conversation.ts:19
+msgid "error.conversation.no_content"
+msgstr "Dit gesprek heeft nog geen audio."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/chat.ts:15
+msgid "error.chat.conversation_already_added"
+msgstr "Dit gesprek bevindt zich al in de chat."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/conversation.ts:9
+msgid "error.conversation.locked"
+msgstr "Dit gesprek is vergrendeld in je huidige abonnement. Upgrade om het te openen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/chat.ts:23
+msgid "error.chat.conversation_not_in_chat"
+msgstr "Dit gesprek bevindt zich niet meer in de chat."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/conversation.ts:31
+msgid "error.conversation.not_open"
+msgstr "Dit gesprek is op dit moment niet geopend. Vraag de organisator om een nieuwe link."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/chat.ts:27
+msgid "error.chat.conversation_too_long"
+msgstr "Dit gesprek is te lang om aan een chat toe te voegen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:22
+msgid "error.workspace.data_owner_is_member"
+msgstr "Deze data-eigenaar zit al in je organisatie. Kies voor een externe klant iemand daarbuiten, of maak in plaats daarvan een interne werkruimte aan."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:76
+msgid "error.document.not_declinable"
+msgstr "Dit document kan niet meer worden geweigerd."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:103
+msgid "error.document.signing_unavailable"
+msgstr "Dit document kan op dit moment niet worden ondertekend. We zijn op de hoogte en lossen het op."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:9
+msgid "error.document.changed"
+msgstr "Dit document is gewijzigd sinds je het hebt geopend. Vernieuw de pagina en lees het opnieuw voordat je ondertekent."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:48
+msgid "error.document.field_unknown"
+msgstr "Dit document is gewijzigd sinds je het hebt geopend. Vernieuw de pagina en probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:68
+msgid "error.document.no_signature_needed"
+msgstr "Dit document heeft geen handtekening nodig."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:5
+msgid "error.document.already_signed"
+msgstr "Dit document is al ondertekend. Er hoeft niets meer te gebeuren."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:84
+msgid "error.document.not_signed"
+msgstr "Dit document is nog niet ondertekend, dus er is geen ondertekende kopie om te downloaden."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:72
+msgid "error.document.not_awaiting_signature"
+msgstr "Dit document wacht niet meer op een handtekening."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:23
+msgid "error.document.declined"
+msgstr "Dit document is geweigerd en kan niet meer worden ondertekend."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:112
+msgid "error.document.withdrawn"
+msgstr "Dit document is ingetrokken en kan niet meer worden ondertekend."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/popcorn.ts:15
+msgid "error.popcorn.feature_disabled"
+msgstr "Deze functie is niet beschikbaar voor dit project."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/upload.ts:9
+msgid "error.upload.empty"
+msgstr "Dit bestand is leeg. Kies een ander bestand."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/upload.ts:25
+msgid "error.upload.too_large"
+msgstr "Dit bestand is te groot. Bestanden mogen maximaal {max_mb} MB zijn."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/account.ts:14
+msgid "error.account.image_too_large"
+msgstr "Deze afbeelding is te groot. Afbeeldingen mogen maximaal {max_mb} MB zijn."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/invite.ts:5
+msgid "error.invite.already_accepted"
+msgstr "Deze uitnodiging is al geaccepteerd."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/invite.ts:9
+msgid "error.invite.expired"
+msgstr "Deze uitnodiging is verlopen. Vraag degene die je heeft uitgenodigd om een nieuwe te sturen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/invite.ts:14
+msgid "error.invite.not_for_you"
+msgstr "Deze uitnodiging is naar een ander e-mailadres gestuurd. Log in met dat adres om hem te accepteren."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/member.ts:22
+msgid "error.member.last_admin_remove"
+msgstr "Dit is de laatste beheerder. Maak eerst iemand anders beheerder en verwijder deze persoon daarna."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/member.ts:17
+msgid "error.member.last_admin"
+msgstr "Dit is de laatste beheerder. Maak eerst iemand anders beheerder of eigenaar."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/member.ts:27
+msgid "error.member.last_owner"
+msgstr "Dit is de laatste eigenaar. Draag het eigenaarschap eerst over aan iemand anders."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/member.ts:31
+msgid "error.member.last_owner_demote"
+msgstr "Dit is de laatste eigenaar. Maak eerst iemand anders eigenaar."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/request.ts:27
+msgid "error.request.too_large"
+msgstr "Dit is te groot om te verzenden. Probeer iets kleiners."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/analysis.ts:23
+msgid "error.analysis.read_only_type"
+msgstr "Dit type resultaat kan niet worden bewerkt."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/participant.ts:13
+msgid "error.participant.token_invalid"
+msgstr "Deze link hoort niet bij dit gesprek. Open de link die je hebt gekregen opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:97
+msgid "error.workspace.logo_url_too_long"
+msgstr "Deze logolink is te lang. Gebruik een kortere link."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:63
+msgid "error.billing.tier_required"
+msgstr "Hiervoor is het {required}-abonnement nodig. Upgrade om het te gebruiken."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:89
+msgid "error.document.offer_expired"
+msgstr "Deze aanbieding is verlopen op {valid_until}. Neem contact met ons op voor een nieuwe."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:73
+msgid "error.workspace.handoff_same_org"
+msgstr "Deze organisatie betaalt al voor deze werkruimte. Kies een andere."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/organisation.ts:19
+msgid "error.organisation.deleted"
+msgstr "Deze organisatie bestaat niet meer."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/analysis.ts:9
+msgid "error.analysis.field_not_editable"
+msgstr "Dit deel van het resultaat kan hier niet worden bewerkt."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/account.ts:31
+msgid "error.account.password_weak"
+msgstr "Dit wachtwoord is niet sterk genoeg. Kies een langer wachtwoord met een mix van letters, cijfers en symbolen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/invite.ts:29
+msgid "error.invite.outsider_is_admin"
+msgstr "Deze persoon heeft de rol beheerder, eigenaar of facturering binnen je organisatie en kan niet als externe samenwerker meedoen. Wijzig eerst de rol."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/invite.ts:34
+msgid "error.invite.outsider_is_member"
+msgstr "Deze persoon is al lid van je organisatie en kan daarom niet als externe samenwerker meedoen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/organisation.ts:23
+msgid "error.organisation.external_cannot_manage"
+msgstr "Deze persoon is een externe in een van je werkruimtes. Verwijder eerst die rol en maak diegene daarna beheerder of eigenaar."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/member.ts:35
+msgid "error.member.not_found"
+msgstr "Deze persoon is geen lid meer. Vernieuw de pagina om de huidige lijst te zien."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/member.ts:40
+msgid "error.member.not_in_workspace"
+msgstr "Deze persoon is geen lid van deze werkruimte. Vernieuw de pagina om de huidige lijst te zien."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:128
+msgid "error.project.share_not_member"
+msgstr "Deze persoon zit nog niet in de werkruimte. Nodig diegene eerst uit voor de werkruimte."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/member.ts:5
+msgid "error.member.already_removed"
+msgstr "Deze persoon was al verwijderd."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:59
+msgid "error.billing.tier_not_purchasable"
+msgstr "Dit abonnement kan niet online worden aangeschaft. Neem contact met ons op om het af te sluiten."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/present.ts:15
+msgid "error.present.map_not_in_presentation"
+msgstr "Deze presentatie toont geen kaart."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/popcorn.ts:27
+msgid "error.popcorn.loop_not_found"
+msgstr "Deze presentatie is niet actief. Start hem opnieuw om door te gaan."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/popcorn.ts:35
+msgid "error.popcorn.public_not_found"
+msgstr "Deze presentatielink werkt niet meer. Vraag de host om een nieuwe link."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/present.ts:10
+msgid "error.present.draft_conflict"
+msgstr "Deze presentatie is ergens anders gewijzigd. Vernieuw de pagina voor de nieuwste versie en voer je wijziging opnieuw door."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:105
+msgid "error.project.privacy_policy_too_long"
+msgstr "Deze link naar het privacybeleid is te lang. Gebruik een link van maximaal 255 tekens."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:64
+msgid "error.project.no_conversations"
+msgstr "Dit project heeft nog geen gesprekken."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:13
+msgid "error.map.no_map_yet"
+msgstr "Dit project heeft nog geen kaart. Maak er een aan om hem hier te zien."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:68
+msgid "error.project.no_transcripts"
+msgstr "Dit project heeft nog geen transcripten."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:124
+msgid "error.project.share_not_found"
+msgstr "Dit project wordt niet meer met die persoon gedeeld."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:82
+msgid "error.project.not_in_workspace"
+msgstr "Dit project bevindt zich niet in deze werkruimte. Kies een project uit deze werkruimte."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:72
+msgid "error.project.no_workspace"
+msgstr "Dit project maakt geen deel uit van een werkruimte, waardoor deze instelling niet beschikbaar is. Neem contact op met support om het te verplaatsen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/participant.ts:5
+msgid "error.participant.report_not_found"
+msgstr "Dit rapport is niet beschikbaar. Mogelijk is het nog niet gepubliceerd."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/report.ts:14
+msgid "error.report.not_scheduled"
+msgstr "Dit rapport is niet ingepland, dus er valt niets eerder te publiceren."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:10
+msgid "error.project.events_dembrane_only"
+msgstr "Deze instelling is alleen bedoeld voor accounts van dembrane zelf."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/verify.ts:23
+msgid "error.verify.not_enabled"
+msgstr "Deze stap staat uit voor dit project. Vraag de projectbeheerder om hem aan te zetten."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:128
+msgid "error.workspace.support_request_expired"
+msgstr "Dit supportverzoek is verlopen. Vraag dembrane support om een nieuw verzoek te sturen als je nog hulp nodig hebt."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:133
+msgid "error.workspace.support_request_handled"
+msgstr "Dit supportverzoek is al beantwoord."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/task.ts:21
+msgid "error.task.not_open"
+msgstr "Deze taak is nog niet geopend. Rond eerst de stap hiervoor af."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/task.ts:25
+msgid "error.task.not_waiting"
+msgstr "Deze taak wacht op dit moment niet op jou."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/task.ts:13
+msgid "error.task.file_required"
+msgstr "Voor deze taak is een bestand nodig. Voeg er een toe en verzend opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/template.ts:14
+msgid "error.template.quick_access_duplicate"
+msgstr "Deze sjabloon staat al in snelle toegang."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/training.ts:13
+msgid "error.training.no_license"
+msgstr "Bij deze training zit geen licentie inbegrepen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/training.ts:17
+msgid "error.training.not_available"
+msgstr "Deze training kan nog niet worden geboekt."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/upload.ts:33
+msgid "error.upload.unsupported_type"
+msgstr "Dit bestandstype wordt niet ondersteund."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/participant.ts:22
+msgid "error.participant.unsubscribe_link_invalid"
+msgstr "Deze afmeldlink is niet compleet. Open de link uit je e-mail opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/field.ts:26
+msgid "error.field.invalid_type"
+msgstr "Deze waarde is niet van het juiste type. Controleer het en probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/analysis.ts:32
+msgid "error.analysis.revision_not_found"
+msgstr "Deze versie van het resultaat bestaat niet meer. Vernieuw de pagina om de nieuwste te zien."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/popcorn.ts:23
+msgid "error.popcorn.just_refreshed"
+msgstr "Dit is net bijgewerkt. Wacht een paar seconden voordat je het opnieuw probeert."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:110
+msgid "error.workspace.paid_rescope"
+msgstr "Deze werkruimte heeft een betaalde facturatie, dus we kunnen deze niet voor je wisselen tussen intern en extern. Neem contact op met support om de facturatie eerst te verplaatsen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:78
+msgid "error.workspace.handoff_shared_plan"
+msgstr "Deze werkruimte valt onder het gedeelde abonnement van je organisatie en kan daarom niet worden overgedragen. Alleen werkruimtes met hun eigen facturatie kunnen worden verplaatst."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:119
+msgid "error.workspace.private"
+msgstr "Deze werkruimte is privé. Vraag een werkruimtebeheerder om je uit te nodigen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:40
+msgid "error.workspace.deleted"
+msgstr "Deze werkruimte bestaat niet meer."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:88
+msgid "error.workspace.has_projects"
+msgstr "Deze werkruimte bevat nog {count, plural, one {# project} other {# projecten}}. Verwijder of verplaats ze eerst via de Projecten-pagina van je organisatie."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:32
+msgid "error.document.field_must_tick"
+msgstr "Vink {label} aan om door te gaan."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:44
+msgid "error.document.field_tick_invalid"
+msgstr "Vink {label} aan of uit."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:37
+msgid "error.project.move_needs_admin"
+msgstr "Om projecten te verplaatsen, moet je beheerder of eigenaar zijn van de {side} werkruimte."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:108
+msgid "error.document.verified_email_required"
+msgstr "Log in met een geverifieerd e-mailadres om te ondertekenen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/account.ts:36
+msgid "error.account.tfa_already_enabled"
+msgstr "Tweestapsverificatie staat al aan voor jouw account."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/account.ts:40
+msgid "error.account.tfa_not_enabled"
+msgstr "Tweestapsverificatie staat niet aan voor jouw account, dus er valt niets uit te schakelen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/account.ts:18
+msgid "error.account.image_type"
+msgstr "Upload een afbeelding in PNG-, JPEG-, WebP- of GIF-formaat."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:93
+msgid "error.workspace.logo_url_invalid"
+msgstr "Gebruik een link naar het logo die begint met http:// of https://."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/field.ts:54
+msgid "error.field.too_small"
+msgstr "Gebruik een getal van minimaal {min}."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/field.ts:42
+msgid "error.field.too_large"
+msgstr "Gebruik een getal van maximaal {max}."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/field.ts:50
+msgid "error.field.too_short"
+msgstr "Gebruik minimaal {min_length} tekens."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/field.ts:46
+msgid "error.field.too_long"
+msgstr "Gebruik maximaal {max_length} tekens."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/webhook.ts:22
+msgid "error.webhook.target_not_allowed"
+msgstr "We kunnen geen webhooks naar dit adres sturen. Gebruik een openbaar webadres."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/canvas.ts:13
+msgid "error.canvas.extraction_failed"
+msgstr "We konden het canvasvoorbeeld zojuist niet genereren. Probeer het zo meteen nog eens."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/chat.ts:45
+msgid "error.chat.verify_unavailable"
+msgstr "We konden deze chat zojuist niet controleren. Probeer het zo meteen nog eens."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/upload.ts:21
+msgid "error.upload.probe_url_failed"
+msgstr "We konden je verbinding niet controleren. Probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:35
+msgid "error.billing.request_failed"
+msgstr "We konden deze facturatiewijziging niet afronden. Neem contact met ons op, dan lossen we het op."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:51
+msgid "error.map.title_failed"
+msgstr "We konden zojuist geen titel aanmaken. Probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/conversation.ts:5
+msgid "error.conversation.delete_failed"
+msgstr "We konden dit gesprek niet verwijderen. Probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:83
+msgid "error.workspace.handoff_target_not_found"
+msgstr "We konden die organisatie niet vinden. Controleer de naam en probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:50
+msgid "error.project.move_target_not_found"
+msgstr "We konden de gekozen werkruimte niet vinden. Mogelijk is deze verwijderd."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/analysis.ts:41
+msgid "error.analysis.snapshot_not_found"
+msgstr "We konden deze analyseresultaten niet vinden. Vernieuw de pagina om de nieuwste te zien."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/agent_access.ts:9
+msgid "error.agent_access.grant_not_found"
+msgstr "We konden deze agent-verbinding niet vinden. Mogelijk is deze al verwijderd."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/analysis.ts:37
+msgid "error.analysis.run_not_found"
+msgstr "We konden deze analyse-run niet vinden."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:5
+msgid "error.billing.account_not_found"
+msgstr "We konden dit facturatie-account niet vinden."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/canvas.ts:46
+msgid "error.canvas.not_found"
+msgstr "We konden dit canvas niet vinden. Mogelijk is het verwijderd."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/agent.ts:33
+msgid "error.agent.run_not_found"
+msgstr "We konden deze chat-run niet vinden. Vernieuw de pagina en probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/chat.ts:36
+msgid "error.chat.not_found"
+msgstr "We konden deze chat niet vinden. Mogelijk is deze verwijderd."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/conversation.ts:27
+msgid "error.conversation.not_found"
+msgstr "We konden dit gesprek niet vinden. Mogelijk is het verwijderd."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:80
+msgid "error.document.not_found"
+msgstr "We konden dit document niet vinden. Mogelijk is het ingetrokken."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/upload.ts:17
+msgid "error.upload.file_not_found"
+msgstr "We konden dit bestand niet vinden. Mogelijk is het verwijderd."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/agent.ts:13
+msgid "error.agent.insight_not_found"
+msgstr "We konden dit inzicht niet vinden. Mogelijk is het verwijderd."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/invite.ts:19
+msgid "error.invite.not_found"
+msgstr "We konden deze uitnodiging niet vinden. Mogelijk is deze ingetrokken of al gebruikt."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/training.ts:9
+msgid "error.training.license_not_found"
+msgstr "We konden deze licentie niet vinden."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:21
+msgid "error.map.not_found"
+msgstr "We konden deze kaart niet vinden."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/memory.ts:13
+msgid "error.memory.not_found"
+msgstr "We konden deze herinnering niet vinden. Mogelijk is deze verwijderd."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/feedback.ts:5
+msgid "error.feedback.message_not_found"
+msgstr "We konden dit bericht niet vinden. Mogelijk is het verwijderd."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:23
+msgid "error.project.methodology_not_found"
+msgstr "We konden deze methodologie niet vinden. Mogelijk is deze verwijderd."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/notification.ts:5
+msgid "error.notification.not_found"
+msgstr "We konden deze melding niet vinden. Mogelijk is deze verwijderd."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/organisation.ts:41
+msgid "error.organisation.not_found"
+msgstr "We konden deze organisatie niet vinden."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/popcorn.ts:31
+msgid "error.popcorn.not_found"
+msgstr "We konden deze presentatie niet vinden."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:77
+msgid "error.project.not_found"
+msgstr "We konden dit project niet vinden. Mogelijk is het verwijderd of heb je geen toegang."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/question.ts:5
+msgid "error.question.not_found"
+msgstr "We konden deze vraag niet vinden. Mogelijk is deze verwijderd."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/report.ts:10
+msgid "error.report.not_found"
+msgstr "We konden dit rapport niet vinden. Mogelijk is het verwijderd."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:9
+msgid "error.workspace.access_request_not_found"
+msgstr "We konden dit verzoek niet vinden. Mogelijk is het ingetrokken."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/analysis.ts:18
+msgid "error.analysis.object_not_found"
+msgstr "We konden dit resultaat niet vinden. Mogelijk is het verwijderd toen de analyse opnieuw werd uitgevoerd."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/participant.ts:27
+msgid "error.participant.unsubscribe_link_unknown"
+msgstr "We konden deze inschrijving niet vinden. Mogelijk ben je al uitgeschreven."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/tag.ts:5
+msgid "error.tag.not_found"
+msgstr "We konden deze tag niet vinden. Mogelijk is deze verwijderd."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/task.ts:17
+msgid "error.task.not_found"
+msgstr "We konden deze taak niet vinden. Mogelijk is deze ingetrokken."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/template.ts:10
+msgid "error.template.not_found"
+msgstr "We konden deze template niet vinden. Mogelijk is deze verwijderd."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/verify.ts:32
+msgid "error.verify.topic_unknown"
+msgstr "We konden dit onderwerp niet vinden. Ga terug en kies een ander onderwerp."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/verify.ts:28
+msgid "error.verify.topic_not_found"
+msgstr "We konden dit onderwerp niet vinden. Mogelijk is het verwijderd."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/training.ts:21
+msgid "error.training.not_found"
+msgstr "We konden deze training niet vinden."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/popcorn.ts:50
+msgid "error.popcorn.version_not_found"
+msgstr "We konden deze versie van de presentatie niet vinden."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/webhook.ts:18
+msgid "error.webhook.not_found"
+msgstr "We konden deze webhook niet vinden. Mogelijk is deze verwijderd."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:105
+msgid "error.workspace.not_found"
+msgstr "We konden deze werkruimte niet vinden. Mogelijk is deze verwijderd of heb je geen toegang."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/verify.ts:5
+msgid "error.verify.artifact_not_found"
+msgstr "We konden dit niet vinden. Mogelijk is het verwijderd."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/analysis.ts:46
+msgid "error.analysis.storage_unavailable"
+msgstr "We konden de analyse op dit moment niet laden. Probeer het zo opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:47
+msgid "error.map.storage_unavailable"
+msgstr "We konden de kaart op dit moment niet laden. Probeer het zo opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/account.ts:45
+msgid "error.account.user_not_found"
+msgstr "We konden je account niet laden. Neem contact op met support, dan lossen we het op."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:13
+msgid "error.billing.checkout_failed"
+msgstr "We konden de betaalpagina niet openen. Probeer het zo opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/conversation.ts:14
+msgid "error.conversation.merge_failed"
+msgstr "We konden de audio van dit gesprek niet samenvoegen. Probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/internal.ts:9
+msgid "error.internal.unavailable"
+msgstr "We konden een deel van dembrane op dit moment niet bereiken. Probeer het zo opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:93
+msgid "error.document.signature_unreadable"
+msgstr "We konden je handtekening niet lezen. Zet hem opnieuw en probeer het nog een keer."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/pricing.ts:9
+msgid "error.pricing.reference_unavailable"
+msgstr "We konden je antwoorden op dit moment niet opslaan. Probeer het zo opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/feedback.ts:17
+msgid "error.feedback.save_failed"
+msgstr "We konden je melding niet verzenden. Probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/participant.ts:9
+msgid "error.participant.subscribe_failed"
+msgstr "We konden niet elk e-mailadres aanmelden. Probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:9
+msgid "error.map.generation_not_started"
+msgstr "We konden het maken van de kaart niet starten. Probeer het zo opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:5
+msgid "error.map.fact_check_not_started"
+msgstr "We konden de factcheck niet starten. Probeer het zo opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/upload.ts:37
+msgid "error.upload.url_failed"
+msgstr "We konden de upload niet starten. Probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/upload.ts:29
+msgid "error.upload.transcription_failed"
+msgstr "We konden deze audio niet omzetten naar tekst. Probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/chat.ts:10
+msgid "error.chat.context_size_unavailable"
+msgstr "We konden de contextgrootte van deze chat op dit moment niet bepalen. Probeer het zo opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:45
+msgid "error.billing.seat_pricing_unavailable"
+msgstr "We konden de prijs per gebruiker op dit moment niet berekenen. Probeer het zo opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/verify.ts:9
+msgid "error.verify.generation_failed"
+msgstr "We konden dit op dit moment niet schrijven. Probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/training.ts:25
+msgid "error.training.unknown_type"
+msgstr "Dit type training kennen we niet. Vernieuw de pagina en kies er opnieuw een."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/participant.ts:18
+msgid "error.participant.token_required"
+msgstr "We zijn de verbinding met je gesprek kwijtgeraakt. Vernieuw de pagina om verder te gaan."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/feedback.ts:9
+msgid "error.feedback.message_required"
+msgstr "Schrijf een kort bericht over het probleem."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/agent.ts:9
+msgid "error.agent.insight_content_required"
+msgstr "Schrijf iets voor het inzicht."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/memory.ts:5
+msgid "error.memory.content_required"
+msgstr "Schrijf iets om als herinnering te bewaren."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/organisation.ts:32
+msgid "error.organisation.no_access"
+msgstr "Je bent geen lid van deze organisatie."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/organisation.ts:45
+msgid "error.organisation.not_member"
+msgstr "Je bent geen lid van deze organisatie."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:101
+msgid "error.workspace.no_access"
+msgstr "Je bent geen lid van deze werkruimte."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/member.ts:63
+msgid "error.member.sole_admin_leave"
+msgstr "Je bent de enige beheerder. Maak iemand anders beheerder voordat je vertrekt."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/feedback.ts:21
+msgid "error.feedback.too_many_attachments"
+msgstr "Je kunt maximaal {max} screenshots toevoegen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/chat.ts:40
+msgid "error.chat.too_many_conversations"
+msgstr "Je kunt maximaal {max} gesprekken tegelijk toevoegen. Selecteer er minder en probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:55
+msgid "error.project.move_too_many"
+msgstr "Je kunt maximaal {max} projecten tegelijk verplaatsen. Selecteer er minder en probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/template.ts:5
+msgid "error.template.not_allowed"
+msgstr "Je kunt dit sjabloon gebruiken, maar niet bewerken. Vraag het aan een beheerder van de werkruimte als dat nodig is."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/template.ts:27
+msgid "error.template.read_only_collaborator"
+msgstr "Je kunt deze werkruimte bekijken, maar er geen sjablonen aan toevoegen. Vraag een beheerder van de werkruimte om bewerkrechten."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/member.ts:59
+msgid "error.member.role_above_own"
+msgstr "Je kunt iemand geen hogere rol geven dan die van jezelf."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/invite.ts:54
+msgid "error.invite.self"
+msgstr "Je kunt jezelf niet uitnodigen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/member.ts:45
+msgid "error.member.outsider_role_switch"
+msgstr "Je kunt hier niet wisselen tussen externe medewerker en lid. Nodig diegene opnieuw uit met de nieuwe rol."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/task.ts:5
+msgid "error.task.done_by_billing_details"
+msgstr "Je voltooit deze taak door je factuurgegevens op te slaan."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/task.ts:9
+msgid "error.task.done_by_signing"
+msgstr "Je voltooit deze taak door het document te ondertekenen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:42
+msgid "error.project.move_no_workspace_access"
+msgstr "Je hebt geen toegang tot de {side}-werkruimte."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/agent.ts:29
+msgid "error.agent.run_forbidden"
+msgstr "Je hebt geen toegang tot deze chat."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:60
+msgid "error.project.no_access"
+msgstr "Je hebt geen toegang tot dit project."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/access.ts:5
+msgid "error.access.forbidden"
+msgstr "Je hebt geen toestemming om dit te doen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/verify.ts:18
+msgid "error.verify.no_new_feedback"
+msgstr "Je hebt nog niets nieuws toegevoegd. Geef aan wat je zou veranderen en probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:54
+msgid "error.billing.tier_limit"
+msgstr "Je hebt de limiet van het gratis abonnement bereikt. Upgrade om verder te gaan."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/rate_limit.ts:10
+msgid "error.rate_limit.too_many_streams"
+msgstr "Je hebt te veel liveweergaven openstaan. Sluit een paar tabbladen en probeer het zo opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/auth.ts:9
+msgid "error.auth.user_required"
+msgstr "Hier moet je voor ingelogd zijn. Log in en probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:39
+msgid "error.map.selection_too_large"
+msgstr "Je hebt te veel items geselecteerd. Selecteer er minder en probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/workspace.ts:123
+msgid "error.workspace.removed_from"
+msgstr "Je bent verwijderd uit deze werkruimte. Vraag een beheerder van de werkruimte om je opnieuw uit te nodigen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/account.ts:9
+msgid "error.account.email_missing"
+msgstr "Er is nog geen e-mailadres gekoppeld aan je account. Neem contact op met support om er een toe te voegen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/account.ts:27
+msgid "error.account.password_incorrect"
+msgstr "Je huidige wachtwoord klopt niet. Controleer het en probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/upload.ts:5
+msgid "error.upload.confirm_failed"
+msgstr "Je bestand is binnengekomen, maar we konden het niet opslaan. Probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/feedback.ts:13
+msgid "error.feedback.message_too_long"
+msgstr "Je bericht is te lang. Maak het korter en verstuur het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/organisation.ts:36
+msgid "error.organisation.no_billing_account"
+msgstr "Er zijn nog geen factuurgegevens ingesteld voor je organisatie, dus je kunt nog geen werkruimte toevoegen. Neem contact op met support, dan lossen we het op."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/organisation.ts:9
+msgid "error.organisation.billing_canceled"
+msgstr "Het abonnement van je organisatie is opgezegd. Activeer het opnieuw om werkruimtes toe te voegen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:31
+msgid "error.billing.plan_inactive"
+msgstr "Je abonnement is niet actief. Activeer het opnieuw om leden toe te voegen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/verify.ts:13
+msgid "error.verify.no_chunks"
+msgstr "Je opname is nog niet bij ons binnengekomen. Wacht even en probeer het opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/auth.ts:5
+msgid "error.auth.session_expired"
+msgstr "Je sessie is verlopen. Log opnieuw in om verder te gaan."

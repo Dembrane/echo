@@ -1,0 +1,38 @@
+{
+  "name": "@dembrane/reports",
+  "description": "Report generation and the report timeline.",
+  "private": true,
+  "type": "module",
+  "dembrane": {
+    "layer": "namespace",
+    "allow": {
+      "notifications": "Notifies the requester when a report is ready.",
+      "projects": "Handles the report job that projects defines and enqueues.",
+      "webhooks": "A finished report fires the project's webhooks."
+    }
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@dembrane/access": "workspace:*",
+    "@dembrane/core": "workspace:*",
+    "@dembrane/db": "workspace:*",
+    "@dembrane/http": "workspace:*",
+    "@dembrane/legacy-shape": "workspace:*",
+    "@dembrane/llm": "workspace:*",
+    "@dembrane/notifications": "workspace:*",
+    "@dembrane/observability": "workspace:*",
+    "@dembrane/projects": "workspace:*",
+    "@dembrane/queue": "workspace:*",
+    "@dembrane/ratelimit": "workspace:*",
+    "@dembrane/realtime": "workspace:*",
+    "@dembrane/webhooks": "workspace:*",
+    "hono": "^4.9.0",
+    "postgres": "^3.4.9",
+    "zod": "^4.1.0"
+  }
+}

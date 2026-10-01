@@ -1,62 +1,35 @@
-# Skill: Fetch Transcript from Directus
+---
+name: fetch-transcript
+description: Read a conversation's transcript from dembrane, for example the latest retrospective in the "Product meetings" project. Uses the dembrane MCP server or its REST face, acting as the person who connected it.
+---
 
-## When to Use
-When you need to retrieve conversation transcripts from Dembrane's Directus backend.
+# Fetch a transcript
 
-## Steps
+The agent reads as the person who connected it and sees exactly what they see. Staff API keys do not read project data: staff reach a customer project only through a support session.
 
-### 1. Find the Project
+## Through MCP (preferred)
+
+1. `dembrane_whoami`: who you are acting as, and which organisations and workspaces you reach.
+2. `dembrane_find_projects` with part of the name (`query: "Product meetings"`): take `project_id`.
+3. `dembrane_list_conversations` with `project_id`, `search: "retro"`, `sort: "-created_at"`, `limit: 5`: take the conversation `id`. It returns metadata, never transcript text.
+4. `dembrane_read_transcript` with `conversation_id`, `offset: 0`, `limit: 200`. Page with `offset` while `has_more` is true, then join the chunks' `transcript` in the order given.
+
+To find where something was said: `dembrane_search_transcripts` over a project, or `dembrane_grep_conversation` in one conversation. `transcript_locked: true` means the workspace's plan cap, not an error.
+
+## Through REST
+
+The same tools at `/api/v2/agent`, with the connector's access token (`dbr_at_...`, one hour; refresh with `curl -s -X POST $API/api/mcp/token -d grant_type=refresh_token -d refresh_token=$REFRESH -d client_id=$CLIENT_ID`):
+
+```sh
+API=https://api.dembrane.com
+A=(-H "Authorization: Bearer $DEMBRANE_AGENT_TOKEN")
+P=$(curl -sf "${A[@]}" "$API/api/v2/agent/projects/find?query=Product%20meetings" | jq -r '.projects[0].id')
+C=$(curl -sf "${A[@]}" "$API/api/v2/agent/projects/$P/conversations?search=retro&limit=5" | jq -r '.conversations[0].id')
+off=0; : > transcript.txt
+while :; do
+  page=$(curl -sf "${A[@]}" "$API/api/v2/agent/conversations/$C/transcript?offset=$off&limit=200")
+  echo "$page" | jq -r '.chunks[].transcript // empty' >> transcript.txt
+  [ "$(echo "$page" | jq -r .has_more)" = true ] || break
+  off=$((off + 200))
+done
 ```
-mcp__directus__items
-action: read
-collection: project
-query: {
-  "fields": ["id", "name"],
-  "filter": {"name": {"_icontains": "PROJECT_NAME"}}
-}
-```
-
-### 2. Find Conversations
-```
-mcp__directus__items
-action: read
-collection: conversation
-query: {
-  "fields": ["id", "participant_name", "created_at"],
-  "filter": {
-    "_and": [
-      {"project_id": {"_eq": "PROJECT_ID"}},
-      {"participant_name": {"_icontains": "SEARCH_TERM"}}
-    ]
-  },
-  "sort": ["-created_at"],
-  "limit": 5
-}
-```
-
-### 3. Fetch Chunks (The Transcript)
-```
-mcp__directus__items
-action: read
-collection: conversation_chunk
-query: {
-  "fields": ["id", "timestamp", "transcript"],
-  "filter": {"conversation_id": {"_eq": "CONVERSATION_ID"}},
-  "sort": ["timestamp"],
-  "limit": 100
-}
-```
-
-### 4. Concatenate
-Join all `chunk.transcript` values in timestamp order to get the full transcript.
-
-## Example
-To get the latest retrospective:
-- Project: "Product meetings" (ID: 2b912177-abe0-444a-aa40-240d3313b2f1)
-- Search: participant_name contains "retro"
-- Sort: -created_at (most recent first)
-
-## Notes
-- Chunks are sorted ascending by timestamp for correct order
-- Large conversations may have 50-100+ chunks
-- The `transcript` field is plain text (already processed from audio)

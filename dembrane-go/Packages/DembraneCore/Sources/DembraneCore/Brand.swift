@@ -1,7 +1,7 @@
 #if canImport(SwiftUI)
 import SwiftUI
 
-/// dembrane brand palette (see echo/brand/colors.json). Shared by the app,
+/// dembrane brand palette (see dembrane/brand/colors.json). Shared by the app,
 /// widgets, and watch app.
 public enum BrandColor {
     public static let parchment    = Color(brandHex: 0xF6F4F1) // background / canvas

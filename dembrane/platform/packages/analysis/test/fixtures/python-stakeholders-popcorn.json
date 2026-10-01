@@ -1,0 +1,911 @@
+{
+  "stakeholders": {
+    "transcripts": [
+      {
+        "id": "c1000000-0000-4000-8000-000000000001",
+        "label": "Resident 1",
+        "createdAt": "2026-09-27T15:41:55.304Z",
+        "text": "We need more charging points near the flats, the waiting list is months long.\nBuses stop running at eleven, so people drive even when they would rather not.\nHeat pumps are fine but the grid connection took our street a year."
+      },
+      {
+        "id": "c1000000-0000-4000-8000-000000000002",
+        "label": "Resident 2",
+        "createdAt": "2026-09-27T15:41:55.310Z",
+        "text": "Typed answer: the cycle lanes end abruptly at the ring road."
+      }
+    ],
+    "first": {
+      "stakeholders": [
+        {
+          "name": "Residents",
+          "role": "People living in the flats",
+          "stake": "Getting to work without a car",
+          "rung": "voiced",
+          "stakeWeight": 0.9,
+          "mentionsWeight": 1,
+          "quotes": [
+            {
+              "transcript": "c1000000-0000-4000-8000-000000000001",
+              "text": "the waiting list is months long"
+            },
+            {
+              "transcript": "c1000000-0000-4000-8000-000000000002",
+              "text": "the cycle lanes end abruptly at the ring road",
+              "context": "near the end"
+            }
+          ]
+        },
+        {
+          "name": "Bus operator and council",
+          "role": "Runs the late buses",
+          "stake": "Costs of late services",
+          "rung": "named",
+          "invokedBy": "Residents",
+          "stakeWeight": 0.55,
+          "mentionsWeight": 0.333,
+          "quotes": [
+            {
+              "transcript": "c1000000-0000-4000-8000-000000000002",
+              "text": "Buses stop running at eleven"
+            }
+          ]
+        },
+        {
+          "name": "Grid operator",
+          "role": "Connects streets to the grid",
+          "stake": "Pace of grid connections",
+          "rung": "inferred",
+          "stakeWeight": 0,
+          "mentionsWeight": 0.25,
+          "quotes": [
+            {
+              "transcript": "c1000000-0000-4000-8000-000000000001",
+              "text": "words nobody said anywhere"
+            }
+          ]
+        }
+      ],
+      "relations": [
+        {
+          "between": ["Residents", "Bus operator and council"],
+          "label": "wait for later buses",
+          "intensity": 0.8,
+          "sentiment": -0.456,
+          "unowned": false,
+          "detail": "Residents depend on the operator for late buses.",
+          "aspects": [
+            {
+              "kind": "power",
+              "note": "The operator decides the timetable.",
+              "quotes": [
+                {
+                  "transcript": "c1000000-0000-4000-8000-000000000001",
+                  "text": "Buses stop running at eleven"
+                }
+              ]
+            },
+            {
+              "kind": "risk",
+              "note": "An aspect with no real quote.",
+              "quotes": [
+                {
+                  "transcript": "c1000000-0000-4000-8000-000000000001",
+                  "text": "not in any transcript at all"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "between": ["Bus operator and council", "Residents"],
+          "label": "duplicate pair",
+          "intensity": 0.1,
+          "sentiment": 0,
+          "unowned": true,
+          "detail": "The same pair again, dropped.",
+          "aspects": []
+        }
+      ]
+    },
+    "retry": {
+      "stakeholders": [
+        {
+          "name": "Residents",
+          "role": "People living in the flats",
+          "stake": "Getting to work without a car",
+          "rung": "voiced",
+          "stakeWeight": 0.9,
+          "mentionsWeight": 1,
+          "quotes": [
+            {
+              "transcript": "c1000000-0000-4000-8000-000000000001",
+              "text": "the waiting list is months long"
+            }
+          ]
+        },
+        {
+          "name": "Bus operators",
+          "role": "Runs the late buses",
+          "stake": "Costs of late services",
+          "rung": "named",
+          "invokedBy": "Residents",
+          "stakeWeight": 0.55,
+          "mentionsWeight": 0.333,
+          "quotes": [
+            {
+              "transcript": "c1000000-0000-4000-8000-000000000001",
+              "text": "Buses stop running at eleven"
+            }
+          ]
+        },
+        {
+          "name": "Grid operator staff",
+          "role": "Connects streets to the grid",
+          "stake": "Pace of grid connections",
+          "rung": "inferred",
+          "stakeWeight": 1,
+          "mentionsWeight": 0,
+          "quotes": [
+            {
+              "transcript": "c1000000-0000-4000-8000-000000000001",
+              "text": "the grid connection took our street a year"
+            }
+          ]
+        }
+      ],
+      "relations": [
+        {
+          "between": ["Residents", "Bus operators"],
+          "label": "wait for later buses",
+          "intensity": 0.8,
+          "sentiment": -0.456,
+          "unowned": false,
+          "detail": "Residents depend on the operator for late buses.",
+          "aspects": [
+            {
+              "kind": "power",
+              "note": "The operator decides the timetable.",
+              "quotes": [
+                {
+                  "transcript": "c1000000-0000-4000-8000-000000000001",
+                  "text": "Buses stop running at eleven"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "between": ["Residents", "Grid operator staff"],
+          "label": "waited a year for a grid connection",
+          "intensity": 1,
+          "sentiment": -1,
+          "unowned": true,
+          "detail": "The street waited a year for the grid connection.",
+          "aspects": [
+            {
+              "kind": "risk",
+              "note": "Heat pumps wait on the grid connection.",
+              "quotes": [
+                {
+                  "transcript": "c1000000-0000-4000-8000-000000000001",
+                  "text": "Heat pumps are fine but the grid connection took our street a year."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "corpusDoc": {
+      "conversations": [
+        {
+          "conversationId": "c1000000-0000-4000-8000-000000000001",
+          "textHash": "5816e76561bd91811e5c279a095260d5456c262e36a7ef1611298aaedab140e9",
+          "chars": 224,
+          "read": 224
+        },
+        {
+          "conversationId": "c1000000-0000-4000-8000-000000000002",
+          "textHash": "40d525ae3c48cd55251208a1bee821cdf4a80672e5db9144845aa22b442fc654",
+          "chars": 60,
+          "read": 60
+        }
+      ],
+      "chars": 284,
+      "clipped": []
+    },
+    "corpusHash": "95c374b21e25aafc43be40828d8fc0f4a99e4fe0aca7cc40ff190905c43288e2",
+    "systemSha": "a43392b994d8425bad5946e8651125429a172605cf6bef0a108c49e5399f5c63",
+    "userText": "Transcript id: session\n\nTRANSCRIPT START\nTRANSCRIPT id: c1000000-0000-4000-8000-000000000001\nWe need more charging points near the flats, the waiting list is months long.\nBuses stop running at eleven, so people drive even when they would rather not.\nHeat pumps are fine but the grid connection took our street a year.\nEND TRANSCRIPT c1000000-0000-4000-8000-000000000001\n\nTRANSCRIPT id: c1000000-0000-4000-8000-000000000002\nTyped answer: the cycle lanes end abruptly at the ring road.\nEND TRANSCRIPT c1000000-0000-4000-8000-000000000002\nTRANSCRIPT END",
+    "feedbackSha": "2d3b927efcb3ade7418008687b7f46715b90f7140a6a0a8af0b6f752efcdcf83",
+    "flags": [
+      "s2: 'Bus operator and council' joins two groups on one card; one group, one name",
+      "s3: 'Grid operator' has no relation to any other group; add the relation the transcripts support, or drop the group"
+    ],
+    "left": [],
+    "probe": {
+      "stakeholders": [
+        {
+          "id": "s1",
+          "name": "Residents",
+          "role": "People living in the flats",
+          "stake": "Getting to work without a car",
+          "quoteIds": ["q1", "q2"],
+          "evidence": {
+            "rung": "voiced"
+          },
+          "weight": {
+            "stake": 0.9,
+            "mentions": 1.0
+          }
+        },
+        {
+          "id": "s2",
+          "name": "Bus operator and council",
+          "role": "Runs the late buses",
+          "stake": "Costs of late services",
+          "quoteIds": ["q3"],
+          "evidence": {
+            "rung": "named",
+            "invokedBy": "Residents"
+          },
+          "weight": {
+            "stake": 0.55,
+            "mentions": 0.33
+          }
+        },
+        {
+          "id": "s3",
+          "name": "Grid operator",
+          "role": "Connects streets to the grid",
+          "stake": "Pace of grid connections",
+          "quoteIds": [],
+          "evidence": {
+            "rung": "inferred"
+          },
+          "weight": {
+            "stake": 0.0,
+            "mentions": 0.25
+          }
+        }
+      ],
+      "relations": [
+        {
+          "id": "r1",
+          "between": ["s1", "s2"],
+          "label": "wait for later buses",
+          "intensity": 0.8,
+          "sentiment": -0.46,
+          "unowned": false,
+          "detail": "Residents depend on the operator for late buses.",
+          "aspects": [
+            {
+              "kind": "power",
+              "note": "The operator decides the timetable.",
+              "quoteIds": ["q3"]
+            }
+          ]
+        }
+      ]
+    },
+    "slide": {
+      "stakeholders": [
+        {
+          "id": "s1",
+          "name": "Residents",
+          "role": "People living in the flats",
+          "stake": "Getting to work without a car",
+          "quoteIds": ["q1"],
+          "evidence": {
+            "rung": "voiced"
+          },
+          "weight": {
+            "stake": 0.9,
+            "mentions": 1.0
+          }
+        },
+        {
+          "id": "s2",
+          "name": "Bus operators",
+          "role": "Runs the late buses",
+          "stake": "Costs of late services",
+          "quoteIds": ["q2"],
+          "evidence": {
+            "rung": "named",
+            "invokedBy": "Residents"
+          },
+          "weight": {
+            "stake": 0.55,
+            "mentions": 0.33
+          }
+        },
+        {
+          "id": "s3",
+          "name": "Grid operator staff",
+          "role": "Connects streets to the grid",
+          "stake": "Pace of grid connections",
+          "quoteIds": ["q3"],
+          "evidence": {
+            "rung": "inferred"
+          },
+          "weight": {
+            "stake": 1.0,
+            "mentions": 0.0
+          }
+        }
+      ],
+      "relations": [
+        {
+          "id": "r1",
+          "between": ["s1", "s2"],
+          "label": "wait for later buses",
+          "intensity": 0.8,
+          "sentiment": -0.46,
+          "unowned": false,
+          "detail": "Residents depend on the operator for late buses.",
+          "aspects": [
+            {
+              "kind": "power",
+              "note": "The operator decides the timetable.",
+              "quoteIds": ["q2"]
+            }
+          ]
+        },
+        {
+          "id": "r2",
+          "between": ["s1", "s3"],
+          "label": "waited a year for a grid connection",
+          "intensity": 1.0,
+          "sentiment": -1.0,
+          "unowned": true,
+          "detail": "The street waited a year for the grid connection.",
+          "aspects": [
+            {
+              "kind": "risk",
+              "note": "Heat pumps wait on the grid connection.",
+              "quoteIds": ["q4"]
+            }
+          ]
+        }
+      ]
+    },
+    "quotes": [
+      {
+        "id": "q1",
+        "transcript": "c1000000-0000-4000-8000-000000000001",
+        "text": "the waiting list is months long"
+      },
+      {
+        "id": "q2",
+        "transcript": "c1000000-0000-4000-8000-000000000001",
+        "text": "Buses stop running at eleven"
+      },
+      {
+        "id": "q3",
+        "transcript": "c1000000-0000-4000-8000-000000000001",
+        "text": "the grid connection took our street a year"
+      },
+      {
+        "id": "q4",
+        "transcript": "c1000000-0000-4000-8000-000000000001",
+        "text": "Heat pumps are fine but the grid connection took our street a year."
+      }
+    ],
+    "rejected": 0,
+    "reattributed": 0,
+    "payloads": {
+      "s1": {
+        "payload": {
+          "name": "Residents",
+          "role": "People living in the flats",
+          "stake": "Getting to work without a car",
+          "rung": "voiced",
+          "weight": {
+            "stake": 0.9,
+            "mentions": 1.0
+          },
+          "quotes": [
+            {
+              "text": "the waiting list is months long",
+              "conversationId": "c1000000-0000-4000-8000-000000000001",
+              "location": {
+                "offset": 45,
+                "basis": "collapsed-casefold-v1"
+              }
+            }
+          ]
+        },
+        "hash": "c7ce8f58c167631fa36e92d42b2a96a0957b2ed766d7018b9da64042514f97ee",
+        "lineage": "name:50286229439eccf54660bd7d555a4f7c6223d14d",
+        "sourceRefs": [
+          {
+            "conversationId": "c1000000-0000-4000-8000-000000000001",
+            "sourceFingerprint": "5816e76561bd91811e5c279a095260d5456c262e36a7ef1611298aaedab140e9",
+            "quote": "the waiting list is months long",
+            "location": {
+              "offset": 45,
+              "basis": "collapsed-casefold-v1"
+            }
+          }
+        ]
+      },
+      "s2": {
+        "payload": {
+          "name": "Bus operators",
+          "role": "Runs the late buses",
+          "stake": "Costs of late services",
+          "rung": "named",
+          "invokedBy": "Residents",
+          "weight": {
+            "stake": 0.55,
+            "mentions": 0.33
+          },
+          "quotes": [
+            {
+              "text": "Buses stop running at eleven",
+              "conversationId": "c1000000-0000-4000-8000-000000000001",
+              "location": {
+                "offset": 78,
+                "basis": "collapsed-casefold-v1"
+              }
+            }
+          ]
+        },
+        "hash": "7fbab75253448cec71f5f91638e20563a8fbf27c556d35a13ab9e53f967aef7b",
+        "lineage": "name:6e96f7c572e63cbd8c12df581587ead020e8d06e",
+        "sourceRefs": [
+          {
+            "conversationId": "c1000000-0000-4000-8000-000000000001",
+            "sourceFingerprint": "5816e76561bd91811e5c279a095260d5456c262e36a7ef1611298aaedab140e9",
+            "quote": "Buses stop running at eleven",
+            "location": {
+              "offset": 78,
+              "basis": "collapsed-casefold-v1"
+            }
+          }
+        ]
+      },
+      "s3": {
+        "payload": {
+          "name": "Grid operator staff",
+          "role": "Connects streets to the grid",
+          "stake": "Pace of grid connections",
+          "rung": "inferred",
+          "weight": {
+            "stake": 1.0,
+            "mentions": 0.0
+          },
+          "quotes": [
+            {
+              "text": "the grid connection took our street a year",
+              "conversationId": "c1000000-0000-4000-8000-000000000001",
+              "location": {
+                "offset": 181,
+                "basis": "collapsed-casefold-v1"
+              }
+            }
+          ]
+        },
+        "hash": "374ffba9bc6e5590c22fea902d7b9da32f649196aa445c6f11d0a969d4263f9b",
+        "lineage": "name:9c53e33ec36c18c985bb465c3a732099d28da910",
+        "sourceRefs": [
+          {
+            "conversationId": "c1000000-0000-4000-8000-000000000001",
+            "sourceFingerprint": "5816e76561bd91811e5c279a095260d5456c262e36a7ef1611298aaedab140e9",
+            "quote": "the grid connection took our street a year",
+            "location": {
+              "offset": 181,
+              "basis": "collapsed-casefold-v1"
+            }
+          }
+        ]
+      }
+    },
+    "relations": [
+      {
+        "between": ["s1", "s2"],
+        "attributes": {
+          "label": "wait for later buses",
+          "intensity": 0.8,
+          "sentiment": -0.46,
+          "unowned": false,
+          "detail": "Residents depend on the operator for late buses.",
+          "aspects": [
+            {
+              "kind": "power",
+              "note": "The operator decides the timetable.",
+              "quotes": [
+                {
+                  "text": "Buses stop running at eleven",
+                  "conversationId": "c1000000-0000-4000-8000-000000000001",
+                  "location": {
+                    "offset": 78,
+                    "basis": "collapsed-casefold-v1"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "hash": "4a22eddbedf9ff1445f9859bd449117f946dd2cf9543bf57beb67829e523f3cf",
+        "sourceRefs": [
+          {
+            "conversationId": "c1000000-0000-4000-8000-000000000001",
+            "sourceFingerprint": "5816e76561bd91811e5c279a095260d5456c262e36a7ef1611298aaedab140e9",
+            "quote": "Buses stop running at eleven",
+            "location": {
+              "offset": 78,
+              "basis": "collapsed-casefold-v1"
+            }
+          }
+        ]
+      },
+      {
+        "between": ["s1", "s3"],
+        "attributes": {
+          "label": "waited a year for a grid connection",
+          "intensity": 1.0,
+          "sentiment": -1.0,
+          "unowned": true,
+          "detail": "The street waited a year for the grid connection.",
+          "aspects": [
+            {
+              "kind": "risk",
+              "note": "Heat pumps wait on the grid connection.",
+              "quotes": [
+                {
+                  "text": "Heat pumps are fine but the grid connection took our street a year.",
+                  "conversationId": "c1000000-0000-4000-8000-000000000001",
+                  "location": {
+                    "offset": 157,
+                    "basis": "collapsed-casefold-v1"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "hash": "e05e735f63050ae7ce0ed89211539fdd48141825e067b6f3a833fdec36ae128e",
+        "sourceRefs": [
+          {
+            "conversationId": "c1000000-0000-4000-8000-000000000001",
+            "sourceFingerprint": "5816e76561bd91811e5c279a095260d5456c262e36a7ef1611298aaedab140e9",
+            "quote": "Heat pumps are fine but the grid connection took our street a year.",
+            "location": {
+              "offset": 157,
+              "basis": "collapsed-casefold-v1"
+            }
+          }
+        ]
+      }
+    ],
+    "answerHash": "df76a9df578308bc032c2e68a41daef7ebfd7188c42c039a5f1c9803ea27719f",
+    "allocate": {
+      "a": 10,
+      "c": 50,
+      "b": 320,
+      "d": 320
+    },
+    "flagCases": [
+      {
+        "in": {
+          "stakeholders": [
+            {
+              "id": "s1",
+              "name": "Staff, Volunteers"
+            }
+          ],
+          "relations": []
+        },
+        "out": ["s1: 'Staff, Volunteers' joins two groups on one card; one group, one name"]
+      },
+      {
+        "in": {
+          "stakeholders": [
+            {
+              "id": "s1",
+              "name": "Residents, aged 65+"
+            }
+          ],
+          "relations": []
+        },
+        "out": []
+      },
+      {
+        "in": {
+          "stakeholders": [
+            {
+              "id": "s1",
+              "name": "Users of the recording"
+            }
+          ],
+          "relations": []
+        },
+        "out": []
+      },
+      {
+        "in": {
+          "stakeholders": [
+            {
+              "id": "s1",
+              "name": "The AI"
+            }
+          ],
+          "relations": []
+        },
+        "out": ["s1: 'The AI' names a thing, not people; name the people who make or run it"]
+      },
+      {
+        "in": {
+          "stakeholders": [
+            {
+              "id": "s1",
+              "name": "Market pressures"
+            }
+          ],
+          "relations": []
+        },
+        "out": [
+          "s1: 'Market pressures' names a thing, not people; name the people who make or run it"
+        ]
+      },
+      {
+        "in": {
+          "stakeholders": [
+            {
+              "id": "s1",
+              "name": "Women in Technology"
+            }
+          ],
+          "relations": []
+        },
+        "out": []
+      },
+      {
+        "in": {
+          "stakeholders": [
+            {
+              "id": "s1",
+              "name": "Parents & carers"
+            }
+          ],
+          "relations": []
+        },
+        "out": ["s1: 'Parents & carers' joins two groups on one card; one group, one name"]
+      },
+      {
+        "in": {
+          "stakeholders": [
+            {
+              "id": "s1",
+              "name": "It's a 'quote'"
+            }
+          ],
+          "relations": []
+        },
+        "out": []
+      }
+    ],
+    "islandCase": {
+      "in": {
+        "stakeholders": [
+          {
+            "id": "s1",
+            "name": "A"
+          },
+          {
+            "id": "s2",
+            "name": "B"
+          },
+          {
+            "id": "s3",
+            "name": "C"
+          },
+          {
+            "id": "s4",
+            "name": "D"
+          }
+        ],
+        "relations": [
+          {
+            "between": ["s1", "s2"]
+          },
+          {
+            "between": ["s3", "s4"]
+          }
+        ]
+      },
+      "out": [
+        "island: s3 'C', s4 'D' connect only to each other; add the relation that joins them to the rest, or drop them"
+      ]
+    }
+  },
+  "popcorn": {
+    "text": "We need more charging points near the flats, the waiting list is months long.\nBuses stop running at eleven, so people drive even when they would rather not.\nHeat pumps are fine but the grid connection took our street a year.",
+    "items": [
+      {
+        "id": "p-1",
+        "phrase": "  more charging   points ",
+        "question": false,
+        "kind": "need",
+        "qualifiers": ["near flats"],
+        "quoteId": "q1"
+      },
+      {
+        "id": "p-2",
+        "phrase": "Why do buses stop at eleven",
+        "question": true,
+        "kind": "question",
+        "quoteId": "q9"
+      },
+      {
+        "id": "p-3",
+        "phrase": "More Charging Points",
+        "question": false
+      },
+      {
+        "id": "p-4",
+        "phrase": "",
+        "question": false
+      },
+      {
+        "id": "p-5",
+        "phrase": "the grid connection took our street a year",
+        "kind": null,
+        "qualifiers": [],
+        "quoteId": "q2"
+      }
+    ],
+    "quotes": {
+      "q1": {
+        "id": "q1",
+        "text": "We need more charging points near the flats"
+      },
+      "q2": {
+        "id": "q2",
+        "text": "a sentence no longer in the transcript"
+      },
+      "q9": {
+        "id": "q9",
+        "text": ""
+      }
+    },
+    "records": [
+      {
+        "phraseId": "p-1",
+        "phrase": "more charging points",
+        "question": false,
+        "kind": "need",
+        "qualifiers": ["near flats"],
+        "quoteId": "q1",
+        "quote": "We need more charging points near the flats"
+      },
+      {
+        "phraseId": "p-2",
+        "phrase": "Why do buses stop at eleven",
+        "question": true,
+        "kind": "question",
+        "qualifiers": [],
+        "quoteId": "q9",
+        "quote": null
+      },
+      {
+        "phraseId": "p-5",
+        "phrase": "the grid connection took our street a year",
+        "question": false,
+        "kind": null,
+        "qualifiers": [],
+        "quoteId": "q2",
+        "quote": "a sentence no longer in the transcript"
+      }
+    ],
+    "grounded": [
+      {
+        "phraseId": "p-1",
+        "phrase": "more charging points",
+        "question": false,
+        "kind": "need",
+        "qualifiers": ["near flats"],
+        "quoteId": "q1",
+        "quote": "We need more charging points near the flats",
+        "verbatim": true
+      },
+      {
+        "phraseId": "p-2",
+        "phrase": "Why do buses stop at eleven",
+        "question": true,
+        "kind": "question",
+        "qualifiers": [],
+        "quoteId": null,
+        "quote": null,
+        "verbatim": false
+      },
+      {
+        "phraseId": "p-5",
+        "phrase": "the grid connection took our street a year",
+        "question": false,
+        "kind": null,
+        "qualifiers": [],
+        "quoteId": null,
+        "quote": null,
+        "verbatim": true
+      }
+    ],
+    "payloads": [
+      {
+        "lineage": "c1000000-0000-4000-8000-000000000001:909e2eb3410876d848db",
+        "payload": {
+          "phrase": "more charging points",
+          "question": false,
+          "evidence": [
+            {
+              "conversationId": "c1000000-0000-4000-8000-000000000001",
+              "label": "Resident 1",
+              "createdAt": "2026-09-27T15:41:55.304Z",
+              "quotes": ["We need more charging points near the flats"]
+            }
+          ]
+        },
+        "hash": "36de4c7b1837375e9bdf08a86b9a5574e68a706975975bf216b5580a688fd2cc",
+        "extra": {
+          "kind": "need",
+          "qualifiers": ["near flats"],
+          "verbatim": true,
+          "quoteId": "q1",
+          "phraseId": "p-1"
+        },
+        "location": {
+          "offset": 0,
+          "basis": "collapsed-casefold-v1"
+        }
+      },
+      {
+        "lineage": "c1000000-0000-4000-8000-000000000001:fe97e0528caa301a902a",
+        "payload": {
+          "phrase": "Why do buses stop at eleven",
+          "question": true,
+          "evidence": [
+            {
+              "conversationId": "c1000000-0000-4000-8000-000000000001",
+              "label": "Resident 1",
+              "createdAt": "2026-09-27T15:41:55.304Z",
+              "quotes": []
+            }
+          ]
+        },
+        "hash": "94227e8119be31d60c4a5327e53b93d361fb0ce68f2e2d744de334d1b7754ee2",
+        "extra": {
+          "kind": "question",
+          "qualifiers": [],
+          "verbatim": false,
+          "phraseId": "p-2"
+        },
+        "location": null
+      },
+      {
+        "lineage": "c1000000-0000-4000-8000-000000000001:f987d09f5fe4f95b6925",
+        "payload": {
+          "phrase": "the grid connection took our street a year",
+          "question": false,
+          "evidence": [
+            {
+              "conversationId": "c1000000-0000-4000-8000-000000000001",
+              "label": "Resident 1",
+              "createdAt": "2026-09-27T15:41:55.304Z",
+              "quotes": []
+            }
+          ]
+        },
+        "hash": "2c68e38db5b060437b69030593186016a3514b59d24d0b31aea555a9901e2677",
+        "extra": {
+          "qualifiers": [],
+          "verbatim": true,
+          "phraseId": "p-5"
+        },
+        "location": null
+      }
+    ],
+    "phrasesHash": "54b980c19116d3eeca8f3995b4730c82826f4231be200e3283cb46ec1034d757",
+    "voiceSha": "926c127d334d5d103d4c"
+  }
+}

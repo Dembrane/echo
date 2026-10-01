@@ -1,2 +1,0 @@
-"""Dynamic canvas server helpers."""
-

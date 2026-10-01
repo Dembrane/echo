@@ -1,0 +1,364 @@
+import { t } from "@lingui/core/macro";
+import { Trans } from "@lingui/react/macro";
+import { Alert, Divider, LoadingOverlay, Stack } from "@mantine/core";
+import { useMemo, useState } from "react";
+import { useParams } from "react-router";
+import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
+import { ProjectGoalSection } from "@/components/goal/ProjectGoalSection";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { ProjectMemorySection } from "@/components/memory/ProjectMemorySection";
+import { ProjectMethodologySection } from "@/components/methodology/ProjectMethodologySection";
+import {
+	useProjectById,
+	useVerificationTopicsQuery,
+} from "@/components/project/hooks";
+import ProjectBasicEdit from "@/components/project/ProjectBasicEdit";
+import { ProjectDangerZone } from "@/components/project/ProjectDangerZone";
+import { ProjectExperimentalSection } from "@/components/project/ProjectExperimentalSection";
+import { ProjectExportSection } from "@/components/project/ProjectExportSection";
+import { ProjectMoveWorkspace } from "@/components/project/ProjectMoveWorkspace";
+import { ProjectPortalEditor } from "@/components/project/ProjectPortalEditor";
+import { ProjectUploadSection } from "@/components/project/ProjectUploadSection";
+import {
+	ProjectAccess,
+	ProjectUsage,
+} from "@/components/project/ProjectUsageAndSharing";
+import { WebhookSection } from "@/components/project/webhooks/WebhookSettingsCard";
+import { FeatureGate } from "@/components/workspace/FeatureGate";
+import { ENABLE_CANVAS, ENABLE_WEBHOOKS } from "@/config";
+import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { getProjectTranscriptsLink } from "@/lib/api";
+import type { Tier } from "@/lib/tiers";
+
+export const ProjectConversationsRoute = () => {
+	const { projectId, workspaceId } = useParams();
+	const navigate = useI18nNavigate();
+	// Off by default so the page keeps browsing normally (full row actions,
+	// click-through to the conversation). Turning it on swaps in the same
+	// checkbox picker used inside a chat, plus "Ask about these" to start a
+	// new chat pre-focused on the pick, before any chat exists.
+	const [pickerMode, setPickerMode] = useState(false);
+	const [selectedConversationIds, setSelectedConversationIds] = useState<
+		string[]
+	>([]);
+
+	if (!projectId) return null;
+
+	return (
+		<PageContainer width="xl">
+			<Stack gap="md">
+				<ProjectConversationsPanel
+					projectId={projectId}
+					workspaceId={workspaceId}
+					showUpload
+					selectionMode={pickerMode}
+					selection={selectedConversationIds}
+					onSelectionChange={setSelectedConversationIds}
+					onToggleSelectionMode={() => {
+						if (pickerMode) setSelectedConversationIds([]);
+						setPickerMode((current) => !current);
+					}}
+					onAskAboutSelection={() => {
+						navigate(`/w/${workspaceId}/projects/${projectId}/chats/new`, {
+							state: { selectedConversationIds },
+						});
+					}}
+				/>
+			</Stack>
+		</PageContainer>
+	);
+};
+
+export const ProjectSettingsRoute = () => {
+	const { projectId } = useParams();
+	const query = useMemo(
+		() => ({
+			fields: [
+				"id",
+				"name",
+				"context",
+				"visibility",
+				"workspace_id",
+				"methodology_version_id",
+				"updated_at",
+				"language",
+				"is_conversation_allowed",
+				"is_canvas_enabled",
+				"default_conversation_ask_for_participant_name",
+			],
+		}),
+		[],
+	);
+	const projectQuery = useProjectById({
+		projectId: projectId ?? "",
+		query,
+	});
+	return (
+		<Stack
+			gap="3rem"
+			className="relative"
+			px={{ base: "1rem", md: "2rem" }}
+			py={{ base: "2rem", md: "4rem" }}
+		>
+			{projectQuery.isLoading && <LoadingOverlay visible />}
+			{projectQuery.isError && (
+				<Alert variant="outline" color="red">
+					<Trans>Error loading project</Trans>
+				</Alert>
+			)}
+
+			{projectQuery.data && <ProjectBasicEdit project={projectQuery.data} />}
+
+			{/* Usage and sharing moved to its own tab (2026-04-24) —
+			    /projects/:id/access — so Project Settings stays focused on
+			    editing the project itself. The ProjectAccessRoute below
+			    owns the Usage & sharing surface. */}
+
+			{projectQuery.data && (
+				<>
+					{projectId && (
+						<>
+							<Divider />
+							<ProjectGoalSection projectId={projectId} />
+						</>
+					)}
+
+					<Divider />
+					<ProjectMethodologySection project={projectQuery.data} />
+
+					<Divider />
+					{projectId && <ProjectMemorySection projectId={projectId} />}
+
+					{ENABLE_CANVAS && (
+						<>
+							<Divider />
+							<ProjectExperimentalSection project={projectQuery.data} />
+						</>
+					)}
+
+					<Divider />
+					<ProjectMoveWorkspace project={projectQuery.data} />
+
+					<Divider />
+					<ProjectDangerZone project={projectQuery.data} />
+				</>
+			)}
+		</Stack>
+	);
+};
+
+export const ProjectUploadRoute = () => {
+	const { projectId } = useParams();
+
+	if (!projectId) return null;
+
+	return (
+		<PageContainer>
+			<ProjectUploadSection projectId={projectId} />
+		</PageContainer>
+	);
+};
+
+export const ProjectIntegrationsRoute = () => {
+	const { projectId } = useParams();
+	const { workspace, workspaceId } = useWorkspace();
+
+	if (!projectId) return null;
+
+	// Webhooks are a workspace admin surface (workspace:webhooks policy):
+	// members never see the section, and below the changemaker tier the
+	// FeatureGate placeholder renders instead of the live section, so no
+	// webhook request is ever sent for callers the backend would 403.
+	const isWorkspaceAdmin =
+		workspace?.role === "admin" || workspace?.role === "owner";
+
+	return (
+		<PageContainer>
+			<Stack gap="3rem">
+				{!ENABLE_WEBHOOKS && (
+					<Alert variant="outline">
+						<Trans>Webhooks are not enabled for this environment.</Trans>
+					</Alert>
+				)}
+				{ENABLE_WEBHOOKS && !isWorkspaceAdmin && (
+					<Alert variant="outline">
+						<Trans>Only workspace admins can manage project automation.</Trans>
+					</Alert>
+				)}
+				{ENABLE_WEBHOOKS && isWorkspaceAdmin && workspace && workspaceId && (
+					<FeatureGate
+						currentTier={workspace.tier as Tier}
+						requiredTier="changemaker"
+						featureName={t`Webhooks`}
+						canRequestUpgrade={isWorkspaceAdmin}
+						workspaceId={workspaceId}
+						wallKey="webhooks"
+					>
+						<WebhookSection projectId={projectId} />
+					</FeatureGate>
+				)}
+			</Stack>
+		</PageContainer>
+	);
+};
+
+export const ProjectExportRoute = () => {
+	const { projectId } = useParams();
+	const projectQuery = useProjectById({
+		projectId: projectId ?? "",
+		query: { fields: ["id", "name"] },
+	});
+
+	return (
+		<PageContainer>
+			<Stack gap="3rem" className="relative">
+				{projectQuery.isLoading && <LoadingOverlay visible />}
+				{projectQuery.isError && (
+					<Alert variant="outline" color="red">
+						<Trans>Error loading project</Trans>
+					</Alert>
+				)}
+				{projectQuery.data && projectId && (
+					<ProjectExportSection
+						exportLink={getProjectTranscriptsLink(projectId)}
+						projectName={projectQuery.data.name}
+					/>
+				)}
+			</Stack>
+		</PageContainer>
+	);
+};
+
+export const ProjectPortalSettingsRoute = () => {
+	const { projectId } = useParams();
+	const query = useMemo(
+		() => ({
+			deep: {
+				tags: {
+					_sort: "sort",
+				},
+			},
+			fields: [
+				"id",
+				"updated_at",
+				"language",
+				"default_conversation_ask_for_participant_name",
+				"default_conversation_ask_for_participant_email",
+				"default_conversation_description",
+				"default_conversation_finish_text",
+				"default_conversation_title",
+				"default_conversation_transcript_prompt",
+				"default_conversation_tutorial_slug",
+				"get_reply_mode",
+				"get_reply_prompt",
+				"is_get_reply_enabled",
+				"is_verify_enabled",
+				"is_verify_on_finish_enabled",
+				"selected_verification_key_list",
+				"is_project_notification_subscription_allowed",
+				"anonymize_transcripts",
+				"enable_ai_title_and_tags",
+				"conversation_title_prompt",
+				"is_dembrane_event_cta_enabled",
+				{
+					tags: ["id", "created_at", "text", "sort"],
+				},
+			],
+		}),
+		[],
+	);
+	const projectQuery = useProjectById({
+		projectId: projectId ?? "",
+		query,
+	});
+	const verificationTopicsQuery = useVerificationTopicsQuery(projectId);
+
+	const isLoading = projectQuery.isLoading || verificationTopicsQuery.isLoading;
+	const isError = projectQuery.isError || verificationTopicsQuery.isError;
+
+	// Memoize the project data to ensure stable reference
+	// biome-ignore lint/correctness/useExhaustiveDependencies: needs to be fixed
+	const project = useMemo(
+		() => projectQuery.data,
+		[projectQuery.data?.id, projectQuery.data?.updated_at],
+	);
+
+	return (
+		<Stack
+			className="relative"
+			gap="3rem"
+			px={{ base: "1rem", md: "2rem" }}
+			py={{ base: "2rem", md: "4rem" }}
+		>
+			{isLoading && <LoadingOverlay visible />}
+			{isError && (
+				<Alert variant="outline" color="red">
+					<Trans>Error loading project</Trans>
+				</Alert>
+			)}
+
+			{project && verificationTopicsQuery.data && !isLoading && (
+				<ProjectPortalEditor
+					project={project}
+					verificationTopics={verificationTopicsQuery.data}
+					isVerificationTopicsLoading={verificationTopicsQuery.isLoading}
+				/>
+			)}
+		</Stack>
+	);
+};
+
+export const ProjectAccessRoute = () => {
+	const { projectId } = useParams();
+	const query = useMemo(
+		() => ({
+			fields: ["id", "name", "visibility"],
+		}),
+		[],
+	);
+	const projectQuery = useProjectById({
+		projectId: projectId ?? "",
+		query,
+	});
+
+	return (
+		<Stack
+			gap="3rem"
+			className="relative"
+			px={{ base: "1rem", md: "2rem" }}
+			py={{ base: "2rem", md: "4rem" }}
+		>
+			{projectQuery.isLoading && <LoadingOverlay visible />}
+			{projectQuery.isError && (
+				<Alert variant="outline" color="red">
+					<Trans>Error loading project</Trans>
+				</Alert>
+			)}
+			{projectQuery.data && projectId && (
+				<ProjectAccess
+					projectId={projectId}
+					visibility={
+						(projectQuery.data.visibility as "workspace" | "private") ??
+						"workspace"
+					}
+				/>
+			)}
+		</Stack>
+	);
+};
+
+export const ProjectUsageRoute = () => {
+	const { projectId } = useParams();
+
+	return (
+		<Stack
+			gap="3rem"
+			className="relative"
+			px={{ base: "1rem", md: "2rem" }}
+			py={{ base: "2rem", md: "4rem" }}
+		>
+			{projectId && <ProjectUsage projectId={projectId} />}
+		</Stack>
+	);
+};

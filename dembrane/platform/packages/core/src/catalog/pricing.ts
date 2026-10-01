@@ -1,0 +1,51 @@
+import type { Codes } from "./types";
+
+/** The pricing configurator (needs form) that dembrane.com and the app post to. */
+export const pricing = {
+  "pricing.configuration_not_owned": {
+    action: "none",
+    detail: "This configuration belongs to another user",
+    description: "The configurator session was saved by another signed-in user.",
+  },
+  "pricing.body_not_object": {
+    action: "fix_input",
+    detail: "Body must be a JSON object",
+    audience: "developer",
+    description: "The JSON body is not an object.",
+  },
+  "pricing.payload_missing": {
+    action: "fix_input",
+    detail: "Multipart body needs a `payload` part holding the JSON",
+    audience: "developer",
+    description: "A multipart request has no payload part.",
+  },
+  "pricing.payload_invalid_json": {
+    action: "fix_input",
+    detail: "`payload` is not valid JSON",
+    audience: "developer",
+    description: "The multipart payload part does not parse as JSON.",
+  },
+  "pricing.payload_not_object": {
+    action: "fix_input",
+    detail: "`payload` must be a JSON object",
+    audience: "developer",
+    description: "The multipart payload part is not a JSON object.",
+  },
+  "pricing.site_not_configured": {
+    action: "contact_support",
+    detail: "Site writes are not configured",
+    audience: "developer",
+    description: "No site token is set, so the website route is closed.",
+  },
+  "pricing.site_token_invalid": {
+    action: "none",
+    detail: "Invalid site token",
+    audience: "developer",
+    description: "The website sent a wrong x-site-token.",
+  },
+  "pricing.reference_unavailable": {
+    action: "retry",
+    detail: "Could not allocate a reference",
+    description: "No free reference was found after retries; nothing was saved.",
+  },
+} as const satisfies Codes<"pricing">;

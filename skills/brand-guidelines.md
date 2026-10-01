@@ -2,8 +2,6 @@
 
 Reference for any agent producing dembrane-facing output: copy, emails, docs, UI text, slides, HTML artifacts. These rules come from six months of corrections by the team. The ones marked "learned the hard way" are mistakes an agent will make by default; read those twice.
 
-For docs pages specifically, `docs/_authoring/STYLE.md` is the authority. This file is the broader brand layer that sits underneath it.
-
 ## The name
 
 - The company and product are *dembrane*, always lowercase. Even at the start of a sentence, even in titles. Apple-style: the word is written one way, everywhere.

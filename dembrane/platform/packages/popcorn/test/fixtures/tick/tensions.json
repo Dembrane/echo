@@ -1,0 +1,685 @@
+{
+  "transcripts": {
+    "t1": "We need more charging points near the flats.\nParking is already too scarce for residents.\nI would rather walk if the paths were safe.",
+    "t2": "Buses stop running at eleven at night.\nThe council should cut car lanes for buses.\nCars are how the nurses get home.",
+    "t3": "Night buses would help the late shift.\nMore chargers will just bring more cars."
+  },
+  "result": {
+    "tensions": {
+      "tensions": [
+        {
+          "id": "x1",
+          "poleA": "Pole t1 wants Parking is already too sc",
+          "poleB": "Pole t2 wants The council should cut ca",
+          "knot": "The pull is real here.",
+          "toResolve": "What comes first for the street?",
+          "quoteIds": ["q6", "q7"]
+        },
+        {
+          "id": "x2",
+          "poleA": "Pole t1 wants Parking is already too sc",
+          "poleB": "Pole t2 wants Cars are how the nurses g",
+          "knot": "The pull is real here.",
+          "toResolve": "What comes first for the street?",
+          "quoteIds": ["q6", "q8"]
+        },
+        {
+          "id": "x3",
+          "poleA": "Pole t1 wants Parking is already too sc",
+          "poleB": "Pole t2 wants Buses stop running at ele",
+          "knot": "The pull is real here.",
+          "toResolve": "What comes first for the street?",
+          "quoteIds": ["q6", "q9"]
+        }
+      ]
+    },
+    "gate_flags": [
+      "x1 poleA: 8 words, at most 7: 'Pole t1 wants Parking is already too sc'",
+      "x1 poleB: 8 words, at most 7: 'Pole t2 wants The council should cut ca'",
+      "x2 poleA: 8 words, at most 7: 'Pole t1 wants Parking is already too sc'",
+      "x2 poleB: 9 words, at most 7: 'Pole t2 wants Cars are how the nurses g'",
+      "x3 poleA: 8 words, at most 7: 'Pole t1 wants Parking is already too sc'",
+      "x3 poleB: 8 words, at most 7: 'Pole t2 wants Buses stop running at ele'"
+    ],
+    "counts": {
+      "handed": 1,
+      "handed_verified": 1,
+      "positions": 8,
+      "candidates": 13,
+      "found_pairs": 13,
+      "found_positions": 8,
+      "cross_table": 8,
+      "verified": 7,
+      "unsupported": 4,
+      "kept": 3
+    }
+  },
+  "quotes": [
+    {
+      "id": "q5",
+      "transcript": "t1",
+      "text": "Parking is already too scarce for residents"
+    },
+    {
+      "id": "q6",
+      "transcript": "t1",
+      "text": "Parking is already too scarce for residents."
+    },
+    {
+      "id": "q7",
+      "transcript": "t2",
+      "text": "The council should cut car lanes for buses."
+    },
+    {
+      "id": "q8",
+      "transcript": "t2",
+      "text": "Cars are how the nurses get home."
+    },
+    {
+      "id": "q9",
+      "transcript": "t2",
+      "text": "Buses stop running at eleven at night."
+    }
+  ],
+  "calls": [
+    {
+      "system": "# What the rooms were handed\n\nVersion: `tensions-handed-v1`\n\nYou read every transcript from one session and list the trade-offs, themes,\nsummaries or questions the rooms were given from outside the conversation and\nread aloud: a card, a document, a generated summary, a facilitator's framing.\nThis is the first of two calls. The second names the tensions; it must not\nreopen anything you list here, so be complete and be literal.\n\nFor each thing the rooms were handed:\n\n- `text`: what it said, as close to verbatim as the transcripts allow (the\n  rooms read it aloud, so it is in the transcripts in their voice).\n- `quote`: one verbatim passage where a room reads it or names it.\n- `transcript`: the transcript id of that passage.\n- `response`: one sentence on what the rooms did with it, in the room's words\n  where possible.\n- `status`, one of: `accepted` (a room worked inside the framing without\n  arguing with it), `argued` (a room disputed a part of it), `called_false`\n  (a room said the trade-off itself is false or a false binary), `reversed`\n  (a room said its situation is the opposite), `dissolved` (a room found a\n  distinction or a middle that removed the opposition), `ignored` (read\n  aloud and not taken up).\n\nInclude the theme titles even when they are only named (\"theme two\",\n\"structured records versus living relationships\"): a title is a framing, and\nthe second call must know it. Do not list things a participant said on their\nown initiative, however framing-like; only what came from outside the\nconversation. If nothing was handed to the rooms, return an empty list.\n\nReturn only the structured output requested by the caller.\n",
+      "user": "TRANSCRIPT id: t1\nWe need more charging points near the flats.\nParking is already too scarce for residents.\nI would rather walk if the paths were safe.\nEND TRANSCRIPT t1\n\nTRANSCRIPT id: t2\nBuses stop running at eleven at night.\nThe council should cut car lanes for buses.\nCars are how the nurses get home.\nEND TRANSCRIPT t2\n\nTRANSCRIPT id: t3\nNight buses would help the late shift.\nMore chargers will just bring more cars.\nEND TRANSCRIPT t3",
+      "thinking": true,
+      "answer": {
+        "handed": [
+          {
+            "text": "The council plan",
+            "quote": "The council should cut car lanes for buses",
+            "transcript": "t9",
+            "response": "argued",
+            "status": "argued"
+          },
+          "junk"
+        ]
+      }
+    },
+    {
+      "system": "# Positions\n\nVersion: `positions-v1`\n\nYou read one transcript of a breakout conversation and list every position\nheld in it. This is the first call of the tensions pipeline; later calls look\nfor collisions between positions across tables, so be exhaustive here and\nliteral: a position that is missing cannot collide with anything.\n\nA position is one of:\n\n- a `want`: something somebody wants to happen, have, keep, or avoid (\"record\n  every group and show what was common\"; \"I don't want to be on a permanent\n  record\");\n- a `constraint`: a fact of somebody's situation that limits what can happen,\n  stated as a fact (\"we haven't made time for it\"; \"the leaders are\n  accountable for it, so they take the decision\");\n- a `value`: a principle somebody holds about how things should be (\"diversity\n  in the room trumps ability\"; \"less telling, more listening\").\n\nFor each position:\n\n- `position`: one line, in the words the person used, standing on its own.\n- `holder`: who holds it, as the room would say it, never a name: \"a\n  practitioner\", \"the first paid member of staff\", \"a facilitator who runs\n  public events\", \"a participant who could only type\". If the same person\n  holds several positions, use the same holder phrase for each.\n- `kind`: want, constraint, or value.\n- `hedged`: true when it was offered tentatively (\"maybe\", \"I'm wondering\",\n  \"this is just an idea\"), false when asserted.\n- `quote`: one verbatim passage, copied exactly, that shows the position being\n  held. A quote that is not word for word in the transcript will be\n  discarded.\n\nInclude positions the room argued with as well as positions it accepted, and\npositions stated once as well as ones returned to. Do not include anything\nread aloud from a document (a summary, a theme card, a question) as a\nposition of the room; include what people said in response to it. Do not\ninclude introductions, logistics, or the host's framing.\n\nReturn only the structured output requested by the caller.\n",
+      "user": "TRANSCRIPT id: t1\nWe need more charging points near the flats.\nParking is already too scarce for residents.\nI would rather walk if the paths were safe.\nEND TRANSCRIPT",
+      "thinking": true,
+      "answer": {
+        "positions": [
+          {
+            "position": "t1 wants We need more charging poi",
+            "holder": "resident",
+            "kind": "want",
+            "hedged": false,
+            "quote": "We need more charging points near the flats."
+          },
+          {
+            "position": "t1 wants Parking is already too sc",
+            "holder": "resident",
+            "kind": "want",
+            "hedged": false,
+            "quote": "Parking is already too scarce for residents."
+          },
+          {
+            "position": "t1 wants I would rather walk if th",
+            "holder": "resident",
+            "kind": "want",
+            "hedged": true,
+            "quote": "I would rather walk if the paths were safe."
+          },
+          "x",
+          {
+            "position": ""
+          }
+        ]
+      }
+    },
+    {
+      "system": "# Positions\n\nVersion: `positions-v1`\n\nYou read one transcript of a breakout conversation and list every position\nheld in it. This is the first call of the tensions pipeline; later calls look\nfor collisions between positions across tables, so be exhaustive here and\nliteral: a position that is missing cannot collide with anything.\n\nA position is one of:\n\n- a `want`: something somebody wants to happen, have, keep, or avoid (\"record\n  every group and show what was common\"; \"I don't want to be on a permanent\n  record\");\n- a `constraint`: a fact of somebody's situation that limits what can happen,\n  stated as a fact (\"we haven't made time for it\"; \"the leaders are\n  accountable for it, so they take the decision\");\n- a `value`: a principle somebody holds about how things should be (\"diversity\n  in the room trumps ability\"; \"less telling, more listening\").\n\nFor each position:\n\n- `position`: one line, in the words the person used, standing on its own.\n- `holder`: who holds it, as the room would say it, never a name: \"a\n  practitioner\", \"the first paid member of staff\", \"a facilitator who runs\n  public events\", \"a participant who could only type\". If the same person\n  holds several positions, use the same holder phrase for each.\n- `kind`: want, constraint, or value.\n- `hedged`: true when it was offered tentatively (\"maybe\", \"I'm wondering\",\n  \"this is just an idea\"), false when asserted.\n- `quote`: one verbatim passage, copied exactly, that shows the position being\n  held. A quote that is not word for word in the transcript will be\n  discarded.\n\nInclude positions the room argued with as well as positions it accepted, and\npositions stated once as well as ones returned to. Do not include anything\nread aloud from a document (a summary, a theme card, a question) as a\nposition of the room; include what people said in response to it. Do not\ninclude introductions, logistics, or the host's framing.\n\nReturn only the structured output requested by the caller.\n",
+      "user": "TRANSCRIPT id: t2\nBuses stop running at eleven at night.\nThe council should cut car lanes for buses.\nCars are how the nurses get home.\nEND TRANSCRIPT",
+      "thinking": true,
+      "answer": {
+        "positions": [
+          {
+            "position": "t2 wants Buses stop running at ele",
+            "holder": "resident",
+            "kind": "want",
+            "hedged": false,
+            "quote": "Buses stop running at eleven at night."
+          },
+          {
+            "position": "t2 wants The council should cut ca",
+            "holder": "resident",
+            "kind": "want",
+            "hedged": false,
+            "quote": "The council should cut car lanes for buses."
+          },
+          {
+            "position": "t2 wants Cars are how the nurses g",
+            "holder": "resident",
+            "kind": "want",
+            "hedged": true,
+            "quote": "Cars are how the nurses get home."
+          },
+          "x",
+          {
+            "position": ""
+          }
+        ]
+      }
+    },
+    {
+      "system": "# Positions\n\nVersion: `positions-v1`\n\nYou read one transcript of a breakout conversation and list every position\nheld in it. This is the first call of the tensions pipeline; later calls look\nfor collisions between positions across tables, so be exhaustive here and\nliteral: a position that is missing cannot collide with anything.\n\nA position is one of:\n\n- a `want`: something somebody wants to happen, have, keep, or avoid (\"record\n  every group and show what was common\"; \"I don't want to be on a permanent\n  record\");\n- a `constraint`: a fact of somebody's situation that limits what can happen,\n  stated as a fact (\"we haven't made time for it\"; \"the leaders are\n  accountable for it, so they take the decision\");\n- a `value`: a principle somebody holds about how things should be (\"diversity\n  in the room trumps ability\"; \"less telling, more listening\").\n\nFor each position:\n\n- `position`: one line, in the words the person used, standing on its own.\n- `holder`: who holds it, as the room would say it, never a name: \"a\n  practitioner\", \"the first paid member of staff\", \"a facilitator who runs\n  public events\", \"a participant who could only type\". If the same person\n  holds several positions, use the same holder phrase for each.\n- `kind`: want, constraint, or value.\n- `hedged`: true when it was offered tentatively (\"maybe\", \"I'm wondering\",\n  \"this is just an idea\"), false when asserted.\n- `quote`: one verbatim passage, copied exactly, that shows the position being\n  held. A quote that is not word for word in the transcript will be\n  discarded.\n\nInclude positions the room argued with as well as positions it accepted, and\npositions stated once as well as ones returned to. Do not include anything\nread aloud from a document (a summary, a theme card, a question) as a\nposition of the room; include what people said in response to it. Do not\ninclude introductions, logistics, or the host's framing.\n\nReturn only the structured output requested by the caller.\n",
+      "user": "TRANSCRIPT id: t3\nNight buses would help the late shift.\nMore chargers will just bring more cars.\nEND TRANSCRIPT",
+      "thinking": true,
+      "answer": {
+        "positions": [
+          {
+            "position": "t3 wants Night buses would help th",
+            "holder": "resident",
+            "kind": "want",
+            "hedged": false,
+            "quote": "Night buses would help the late shift."
+          },
+          {
+            "position": "t3 wants More chargers will just b",
+            "holder": "resident",
+            "kind": "want",
+            "hedged": false,
+            "quote": "not verbatim"
+          },
+          "x",
+          {
+            "position": ""
+          }
+        ]
+      }
+    },
+    {
+      "system": "# Collisions\n\nVersion: `collisions-v1.1`\n\nYou are given a numbered list of positions held across the tables of one\nsession, and one focal position from that list. Say which of the other\npositions collide with the focal one: pairs where satisfying one costs the\nother something real, so that both cannot simply be had at once.\n\nA collision is zero-sum to a degree. Score it:\n\n- `zero_sum` 0.9 to 1.0: the two cannot both be satisfied; one wins, the\n  other pays (\"record everything so nothing is lost\" against \"I don't want to\n  be on a permanent record\").\n- 0.5 to 0.8: both can partly be had, but each costs the other (\"time for\n  the stories\" against \"getting stuff done\").\n- 0.2 to 0.4: a mild pull, or one that a middle course removes.\n- below 0.2: not a collision; leave it out.\n\nA constraint collides with every want it limits: \"we haven't made time for\nit\" collides with \"share the stories once a month\", and \"the leaders are\naccountable, so they take the decision\" collides with \"everybody has a say\".\nNobody has to argue for a constraint for it to collide.\n\nNot a collision: two positions on the same side said differently; a\nposition and its own consequence; a want and a constraint that never touch;\ntwo positions that merely share a topic. A position from another table\ncollides just as well as one from the same table, and collisions across\ntables are the ones this session most needs to see, so read the whole list\nfor them.\n\nReturn the ids of the colliding positions, each with a `why` of one line\nsaying what one pays if the other wins, and its `zero_sum` score. An empty\nlist is correct for a position nothing collides with.\n\nReturn only the structured output requested by the caller.\n",
+      "user": "ALL POSITIONS:\nP1 [T1 · resident · want] t1 wants We need more charging poi\nP2 [T1 · resident · want] t1 wants Parking is already too sc\nP3 [T1 · resident · want · hedged] t1 wants I would rather walk if th\nP4 [T2 · resident · want] t2 wants Buses stop running at ele\nP5 [T2 · resident · want] t2 wants The council should cut ca\nP6 [T2 · resident · want · hedged] t2 wants Cars are how the nurses g\nP7 [T3 · resident · want] t3 wants Night buses would help th\nP8 [T3 · resident · want] t3 wants More chargers will just b\n\nFOCAL POSITION: P1",
+      "thinking": true,
+      "answer": {
+        "collides": [
+          {
+            "id": "P2",
+            "why": "clash 1",
+            "zero_sum": 0.4
+          },
+          {
+            "id": "P5",
+            "why": "other 1",
+            "zero_sum": 0.1
+          },
+          {
+            "id": "P2",
+            "why": "dup",
+            "zero_sum": 0.21
+          }
+        ]
+      }
+    },
+    {
+      "system": "# Collisions\n\nVersion: `collisions-v1.1`\n\nYou are given a numbered list of positions held across the tables of one\nsession, and one focal position from that list. Say which of the other\npositions collide with the focal one: pairs where satisfying one costs the\nother something real, so that both cannot simply be had at once.\n\nA collision is zero-sum to a degree. Score it:\n\n- `zero_sum` 0.9 to 1.0: the two cannot both be satisfied; one wins, the\n  other pays (\"record everything so nothing is lost\" against \"I don't want to\n  be on a permanent record\").\n- 0.5 to 0.8: both can partly be had, but each costs the other (\"time for\n  the stories\" against \"getting stuff done\").\n- 0.2 to 0.4: a mild pull, or one that a middle course removes.\n- below 0.2: not a collision; leave it out.\n\nA constraint collides with every want it limits: \"we haven't made time for\nit\" collides with \"share the stories once a month\", and \"the leaders are\naccountable, so they take the decision\" collides with \"everybody has a say\".\nNobody has to argue for a constraint for it to collide.\n\nNot a collision: two positions on the same side said differently; a\nposition and its own consequence; a want and a constraint that never touch;\ntwo positions that merely share a topic. A position from another table\ncollides just as well as one from the same table, and collisions across\ntables are the ones this session most needs to see, so read the whole list\nfor them.\n\nReturn the ids of the colliding positions, each with a `why` of one line\nsaying what one pays if the other wins, and its `zero_sum` score. An empty\nlist is correct for a position nothing collides with.\n\nReturn only the structured output requested by the caller.\n",
+      "user": "ALL POSITIONS:\nP1 [T1 · resident · want] t1 wants We need more charging poi\nP2 [T1 · resident · want] t1 wants Parking is already too sc\nP3 [T1 · resident · want · hedged] t1 wants I would rather walk if th\nP4 [T2 · resident · want] t2 wants Buses stop running at ele\nP5 [T2 · resident · want] t2 wants The council should cut ca\nP6 [T2 · resident · want · hedged] t2 wants Cars are how the nurses g\nP7 [T3 · resident · want] t3 wants Night buses would help th\nP8 [T3 · resident · want] t3 wants More chargers will just b\n\nFOCAL POSITION: P2",
+      "thinking": true,
+      "answer": {
+        "collides": [
+          {
+            "id": "P3",
+            "why": "clash 2",
+            "zero_sum": 0.5
+          },
+          {
+            "id": "P6",
+            "why": "other 2",
+            "zero_sum": "0.9"
+          },
+          {
+            "id": "P2",
+            "why": "dup",
+            "zero_sum": 0.21
+          }
+        ]
+      }
+    },
+    {
+      "system": "# Collisions\n\nVersion: `collisions-v1.1`\n\nYou are given a numbered list of positions held across the tables of one\nsession, and one focal position from that list. Say which of the other\npositions collide with the focal one: pairs where satisfying one costs the\nother something real, so that both cannot simply be had at once.\n\nA collision is zero-sum to a degree. Score it:\n\n- `zero_sum` 0.9 to 1.0: the two cannot both be satisfied; one wins, the\n  other pays (\"record everything so nothing is lost\" against \"I don't want to\n  be on a permanent record\").\n- 0.5 to 0.8: both can partly be had, but each costs the other (\"time for\n  the stories\" against \"getting stuff done\").\n- 0.2 to 0.4: a mild pull, or one that a middle course removes.\n- below 0.2: not a collision; leave it out.\n\nA constraint collides with every want it limits: \"we haven't made time for\nit\" collides with \"share the stories once a month\", and \"the leaders are\naccountable, so they take the decision\" collides with \"everybody has a say\".\nNobody has to argue for a constraint for it to collide.\n\nNot a collision: two positions on the same side said differently; a\nposition and its own consequence; a want and a constraint that never touch;\ntwo positions that merely share a topic. A position from another table\ncollides just as well as one from the same table, and collisions across\ntables are the ones this session most needs to see, so read the whole list\nfor them.\n\nReturn the ids of the colliding positions, each with a `why` of one line\nsaying what one pays if the other wins, and its `zero_sum` score. An empty\nlist is correct for a position nothing collides with.\n\nReturn only the structured output requested by the caller.\n",
+      "user": "ALL POSITIONS:\nP1 [T1 · resident · want] t1 wants We need more charging poi\nP2 [T1 · resident · want] t1 wants Parking is already too sc\nP3 [T1 · resident · want · hedged] t1 wants I would rather walk if th\nP4 [T2 · resident · want] t2 wants Buses stop running at ele\nP5 [T2 · resident · want] t2 wants The council should cut ca\nP6 [T2 · resident · want · hedged] t2 wants Cars are how the nurses g\nP7 [T3 · resident · want] t3 wants Night buses would help th\nP8 [T3 · resident · want] t3 wants More chargers will just b\n\nFOCAL POSITION: P3",
+      "thinking": true,
+      "answer": {
+        "collides": [
+          {
+            "id": "P4",
+            "why": "clash 3",
+            "zero_sum": 0.6
+          },
+          {
+            "id": "P7",
+            "why": "other 3",
+            "zero_sum": 0.1
+          },
+          {
+            "id": "P2",
+            "why": "dup",
+            "zero_sum": 0.21
+          }
+        ]
+      }
+    },
+    {
+      "system": "# Collisions\n\nVersion: `collisions-v1.1`\n\nYou are given a numbered list of positions held across the tables of one\nsession, and one focal position from that list. Say which of the other\npositions collide with the focal one: pairs where satisfying one costs the\nother something real, so that both cannot simply be had at once.\n\nA collision is zero-sum to a degree. Score it:\n\n- `zero_sum` 0.9 to 1.0: the two cannot both be satisfied; one wins, the\n  other pays (\"record everything so nothing is lost\" against \"I don't want to\n  be on a permanent record\").\n- 0.5 to 0.8: both can partly be had, but each costs the other (\"time for\n  the stories\" against \"getting stuff done\").\n- 0.2 to 0.4: a mild pull, or one that a middle course removes.\n- below 0.2: not a collision; leave it out.\n\nA constraint collides with every want it limits: \"we haven't made time for\nit\" collides with \"share the stories once a month\", and \"the leaders are\naccountable, so they take the decision\" collides with \"everybody has a say\".\nNobody has to argue for a constraint for it to collide.\n\nNot a collision: two positions on the same side said differently; a\nposition and its own consequence; a want and a constraint that never touch;\ntwo positions that merely share a topic. A position from another table\ncollides just as well as one from the same table, and collisions across\ntables are the ones this session most needs to see, so read the whole list\nfor them.\n\nReturn the ids of the colliding positions, each with a `why` of one line\nsaying what one pays if the other wins, and its `zero_sum` score. An empty\nlist is correct for a position nothing collides with.\n\nReturn only the structured output requested by the caller.\n",
+      "user": "ALL POSITIONS:\nP1 [T1 · resident · want] t1 wants We need more charging poi\nP2 [T1 · resident · want] t1 wants Parking is already too sc\nP3 [T1 · resident · want · hedged] t1 wants I would rather walk if th\nP4 [T2 · resident · want] t2 wants Buses stop running at ele\nP5 [T2 · resident · want] t2 wants The council should cut ca\nP6 [T2 · resident · want · hedged] t2 wants Cars are how the nurses g\nP7 [T3 · resident · want] t3 wants Night buses would help th\nP8 [T3 · resident · want] t3 wants More chargers will just b\n\nFOCAL POSITION: P4",
+      "thinking": true,
+      "answer": {
+        "collides": [
+          {
+            "id": "P5",
+            "why": "clash 4",
+            "zero_sum": 0.7
+          },
+          {
+            "id": "P8",
+            "why": "other 4",
+            "zero_sum": 0.1
+          },
+          {
+            "id": "P2",
+            "why": "dup",
+            "zero_sum": 0.21
+          }
+        ]
+      }
+    },
+    {
+      "system": "# Collisions\n\nVersion: `collisions-v1.1`\n\nYou are given a numbered list of positions held across the tables of one\nsession, and one focal position from that list. Say which of the other\npositions collide with the focal one: pairs where satisfying one costs the\nother something real, so that both cannot simply be had at once.\n\nA collision is zero-sum to a degree. Score it:\n\n- `zero_sum` 0.9 to 1.0: the two cannot both be satisfied; one wins, the\n  other pays (\"record everything so nothing is lost\" against \"I don't want to\n  be on a permanent record\").\n- 0.5 to 0.8: both can partly be had, but each costs the other (\"time for\n  the stories\" against \"getting stuff done\").\n- 0.2 to 0.4: a mild pull, or one that a middle course removes.\n- below 0.2: not a collision; leave it out.\n\nA constraint collides with every want it limits: \"we haven't made time for\nit\" collides with \"share the stories once a month\", and \"the leaders are\naccountable, so they take the decision\" collides with \"everybody has a say\".\nNobody has to argue for a constraint for it to collide.\n\nNot a collision: two positions on the same side said differently; a\nposition and its own consequence; a want and a constraint that never touch;\ntwo positions that merely share a topic. A position from another table\ncollides just as well as one from the same table, and collisions across\ntables are the ones this session most needs to see, so read the whole list\nfor them.\n\nReturn the ids of the colliding positions, each with a `why` of one line\nsaying what one pays if the other wins, and its `zero_sum` score. An empty\nlist is correct for a position nothing collides with.\n\nReturn only the structured output requested by the caller.\n",
+      "user": "ALL POSITIONS:\nP1 [T1 · resident · want] t1 wants We need more charging poi\nP2 [T1 · resident · want] t1 wants Parking is already too sc\nP3 [T1 · resident · want · hedged] t1 wants I would rather walk if th\nP4 [T2 · resident · want] t2 wants Buses stop running at ele\nP5 [T2 · resident · want] t2 wants The council should cut ca\nP6 [T2 · resident · want · hedged] t2 wants Cars are how the nurses g\nP7 [T3 · resident · want] t3 wants Night buses would help th\nP8 [T3 · resident · want] t3 wants More chargers will just b\n\nFOCAL POSITION: P5",
+      "thinking": true,
+      "answer": {
+        "collides": [
+          {
+            "id": "P6",
+            "why": "clash 5",
+            "zero_sum": 0.3
+          },
+          {
+            "id": "P1",
+            "why": "other 5",
+            "zero_sum": 0.1
+          },
+          {
+            "id": "P2",
+            "why": "dup",
+            "zero_sum": 0.95
+          }
+        ]
+      }
+    },
+    {
+      "system": "# Collisions\n\nVersion: `collisions-v1.1`\n\nYou are given a numbered list of positions held across the tables of one\nsession, and one focal position from that list. Say which of the other\npositions collide with the focal one: pairs where satisfying one costs the\nother something real, so that both cannot simply be had at once.\n\nA collision is zero-sum to a degree. Score it:\n\n- `zero_sum` 0.9 to 1.0: the two cannot both be satisfied; one wins, the\n  other pays (\"record everything so nothing is lost\" against \"I don't want to\n  be on a permanent record\").\n- 0.5 to 0.8: both can partly be had, but each costs the other (\"time for\n  the stories\" against \"getting stuff done\").\n- 0.2 to 0.4: a mild pull, or one that a middle course removes.\n- below 0.2: not a collision; leave it out.\n\nA constraint collides with every want it limits: \"we haven't made time for\nit\" collides with \"share the stories once a month\", and \"the leaders are\naccountable, so they take the decision\" collides with \"everybody has a say\".\nNobody has to argue for a constraint for it to collide.\n\nNot a collision: two positions on the same side said differently; a\nposition and its own consequence; a want and a constraint that never touch;\ntwo positions that merely share a topic. A position from another table\ncollides just as well as one from the same table, and collisions across\ntables are the ones this session most needs to see, so read the whole list\nfor them.\n\nReturn the ids of the colliding positions, each with a `why` of one line\nsaying what one pays if the other wins, and its `zero_sum` score. An empty\nlist is correct for a position nothing collides with.\n\nReturn only the structured output requested by the caller.\n",
+      "user": "ALL POSITIONS:\nP1 [T1 · resident · want] t1 wants We need more charging poi\nP2 [T1 · resident · want] t1 wants Parking is already too sc\nP3 [T1 · resident · want · hedged] t1 wants I would rather walk if th\nP4 [T2 · resident · want] t2 wants Buses stop running at ele\nP5 [T2 · resident · want] t2 wants The council should cut ca\nP6 [T2 · resident · want · hedged] t2 wants Cars are how the nurses g\nP7 [T3 · resident · want] t3 wants Night buses would help th\nP8 [T3 · resident · want] t3 wants More chargers will just b\n\nFOCAL POSITION: P6",
+      "thinking": true,
+      "answer": {
+        "collides": [
+          {
+            "id": "P7",
+            "why": "clash 6",
+            "zero_sum": 0.4
+          },
+          {
+            "id": "P2",
+            "why": "other 6",
+            "zero_sum": 0.1
+          },
+          {
+            "id": "P2",
+            "why": "dup",
+            "zero_sum": 0.21
+          }
+        ]
+      }
+    },
+    {
+      "system": "# Collisions\n\nVersion: `collisions-v1.1`\n\nYou are given a numbered list of positions held across the tables of one\nsession, and one focal position from that list. Say which of the other\npositions collide with the focal one: pairs where satisfying one costs the\nother something real, so that both cannot simply be had at once.\n\nA collision is zero-sum to a degree. Score it:\n\n- `zero_sum` 0.9 to 1.0: the two cannot both be satisfied; one wins, the\n  other pays (\"record everything so nothing is lost\" against \"I don't want to\n  be on a permanent record\").\n- 0.5 to 0.8: both can partly be had, but each costs the other (\"time for\n  the stories\" against \"getting stuff done\").\n- 0.2 to 0.4: a mild pull, or one that a middle course removes.\n- below 0.2: not a collision; leave it out.\n\nA constraint collides with every want it limits: \"we haven't made time for\nit\" collides with \"share the stories once a month\", and \"the leaders are\naccountable, so they take the decision\" collides with \"everybody has a say\".\nNobody has to argue for a constraint for it to collide.\n\nNot a collision: two positions on the same side said differently; a\nposition and its own consequence; a want and a constraint that never touch;\ntwo positions that merely share a topic. A position from another table\ncollides just as well as one from the same table, and collisions across\ntables are the ones this session most needs to see, so read the whole list\nfor them.\n\nReturn the ids of the colliding positions, each with a `why` of one line\nsaying what one pays if the other wins, and its `zero_sum` score. An empty\nlist is correct for a position nothing collides with.\n\nReturn only the structured output requested by the caller.\n",
+      "user": "ALL POSITIONS:\nP1 [T1 · resident · want] t1 wants We need more charging poi\nP2 [T1 · resident · want] t1 wants Parking is already too sc\nP3 [T1 · resident · want · hedged] t1 wants I would rather walk if th\nP4 [T2 · resident · want] t2 wants Buses stop running at ele\nP5 [T2 · resident · want] t2 wants The council should cut ca\nP6 [T2 · resident · want · hedged] t2 wants Cars are how the nurses g\nP7 [T3 · resident · want] t3 wants Night buses would help th\nP8 [T3 · resident · want] t3 wants More chargers will just b\n\nFOCAL POSITION: P7",
+      "thinking": true,
+      "answer": {
+        "collides": [
+          {
+            "id": "P8",
+            "why": "clash 7",
+            "zero_sum": 0.5
+          },
+          {
+            "id": "P3",
+            "why": "other 7",
+            "zero_sum": 0.1
+          },
+          {
+            "id": "P2",
+            "why": "dup",
+            "zero_sum": 0.21
+          }
+        ]
+      }
+    },
+    {
+      "system": "# Collisions\n\nVersion: `collisions-v1.1`\n\nYou are given a numbered list of positions held across the tables of one\nsession, and one focal position from that list. Say which of the other\npositions collide with the focal one: pairs where satisfying one costs the\nother something real, so that both cannot simply be had at once.\n\nA collision is zero-sum to a degree. Score it:\n\n- `zero_sum` 0.9 to 1.0: the two cannot both be satisfied; one wins, the\n  other pays (\"record everything so nothing is lost\" against \"I don't want to\n  be on a permanent record\").\n- 0.5 to 0.8: both can partly be had, but each costs the other (\"time for\n  the stories\" against \"getting stuff done\").\n- 0.2 to 0.4: a mild pull, or one that a middle course removes.\n- below 0.2: not a collision; leave it out.\n\nA constraint collides with every want it limits: \"we haven't made time for\nit\" collides with \"share the stories once a month\", and \"the leaders are\naccountable, so they take the decision\" collides with \"everybody has a say\".\nNobody has to argue for a constraint for it to collide.\n\nNot a collision: two positions on the same side said differently; a\nposition and its own consequence; a want and a constraint that never touch;\ntwo positions that merely share a topic. A position from another table\ncollides just as well as one from the same table, and collisions across\ntables are the ones this session most needs to see, so read the whole list\nfor them.\n\nReturn the ids of the colliding positions, each with a `why` of one line\nsaying what one pays if the other wins, and its `zero_sum` score. An empty\nlist is correct for a position nothing collides with.\n\nReturn only the structured output requested by the caller.\n",
+      "user": "ALL POSITIONS:\nP1 [T1 · resident · want] t1 wants We need more charging poi\nP2 [T1 · resident · want] t1 wants Parking is already too sc\nP3 [T1 · resident · want · hedged] t1 wants I would rather walk if th\nP4 [T2 · resident · want] t2 wants Buses stop running at ele\nP5 [T2 · resident · want] t2 wants The council should cut ca\nP6 [T2 · resident · want · hedged] t2 wants Cars are how the nurses g\nP7 [T3 · resident · want] t3 wants Night buses would help th\nP8 [T3 · resident · want] t3 wants More chargers will just b\n\nFOCAL POSITION: P8",
+      "thinking": true,
+      "answer": {
+        "collides": [
+          {
+            "id": "P1",
+            "why": "clash 8",
+            "zero_sum": 0.6
+          },
+          {
+            "id": "P4",
+            "why": "other 8",
+            "zero_sum": 0.1
+          },
+          {
+            "id": "P2",
+            "why": "dup",
+            "zero_sum": 0.21
+          }
+        ]
+      }
+    },
+    {
+      "system": "# Tension verify\n\nVersion: `tension-verify-v1.1`\n\nTwo positions from one session were flagged as colliding. You are given the\ntranscripts they came from, the list of trade-offs the rooms were handed from\noutside the conversation, and the pair. Decide whether this is a tension the\nsession actually contains, and if so state its two poles in the room's words.\n\nA tension is valid when all of these hold:\n\n- **Both poles were held.** Somebody argued each side, or stated one side as\n  a constraint of their situation; nobody has to argue for a constraint. One\n  hedging clause that the speaker walked back is not a pole.\n- **Zero-sum enough.** Satisfying one costs the other something real. If a\n  middle course the room itself found removes the cost, the tension is not\n  between the two positions but about the middle, and it is valid only if\n  somebody argued against that middle too.\n- **Not a handed trade-off reopened.** The handed list is there to stop the\n  card's own framing coming back as a tension. It does not close the subject.\n  A pair is \"reopened\" only when its poles are the card's wording or its\n  framing and neither pole is something a person said in their own words. If\n  both positions were held by people in the rooms, with their own quotes, the\n  tension is valid even when it shares a subject with a theme card: it is the\n  rooms' version of it, which is what the slide is for. Where a room argued\n  with the card, prefer the poles they argued.\n- **Not settled.** Settled means the holders themselves reached a position\n  together. A middle proposed in one room does not settle what another room\n  holds, and one speaker's hedge does not settle their own position; note the\n  middle in `why` so the knot can carry it. A remark the speaker dismissed in\n  the same breath (\"not particularly exciting to discuss\") is not a held pole.\n\nReturn:\n\n- `valid`: true or false.\n- `why`: one sentence, for the reviewer, saying which test decided it.\n- `poleA`, `poleB`: three to seven words each, in the words the holders\n  used, each statable in a way its own holders would accept. Empty when not\n  valid.\n- `quotesA`, `quotesB`: up to two verbatim passages each, copied exactly from\n  the transcripts, showing each pole being held. A quote that is not word for\n  word in a transcript will be discarded.\n\nReturn only the structured output requested by the caller.\n",
+      "user": "TRANSCRIPT id: t1\nWe need more charging points near the flats.\nParking is already too scarce for residents.\nI would rather walk if the paths were safe.\nEND TRANSCRIPT t1\n\nTRANSCRIPT id: t2\nBuses stop running at eleven at night.\nThe council should cut car lanes for buses.\nCars are how the nurses get home.\nEND TRANSCRIPT t2\n\nWHAT THE ROOMS WERE HANDED:\n- [argued] The council plan\n  what the rooms did: argued\n\nTHE PAIR:\nA (resident, want): t1 wants Parking is already too sc\n   said: \"Parking is already too scarce for residents.\"\nB (resident, want): t2 wants The council should cut ca\n   said: \"The council should cut car lanes for buses.\"\nFlagged because: dup",
+      "thinking": true,
+      "answer": {
+        "valid": true,
+        "why": "because",
+        "poleA": "Pole t1 wants Parking is already too sc",
+        "poleB": "Pole t2 wants The council should cut ca",
+        "quotesA": ["Parking is already too scarce for residents."],
+        "quotesB": ["The council should cut car lanes for buses."]
+      }
+    },
+    {
+      "system": "# Tension verify\n\nVersion: `tension-verify-v1.1`\n\nTwo positions from one session were flagged as colliding. You are given the\ntranscripts they came from, the list of trade-offs the rooms were handed from\noutside the conversation, and the pair. Decide whether this is a tension the\nsession actually contains, and if so state its two poles in the room's words.\n\nA tension is valid when all of these hold:\n\n- **Both poles were held.** Somebody argued each side, or stated one side as\n  a constraint of their situation; nobody has to argue for a constraint. One\n  hedging clause that the speaker walked back is not a pole.\n- **Zero-sum enough.** Satisfying one costs the other something real. If a\n  middle course the room itself found removes the cost, the tension is not\n  between the two positions but about the middle, and it is valid only if\n  somebody argued against that middle too.\n- **Not a handed trade-off reopened.** The handed list is there to stop the\n  card's own framing coming back as a tension. It does not close the subject.\n  A pair is \"reopened\" only when its poles are the card's wording or its\n  framing and neither pole is something a person said in their own words. If\n  both positions were held by people in the rooms, with their own quotes, the\n  tension is valid even when it shares a subject with a theme card: it is the\n  rooms' version of it, which is what the slide is for. Where a room argued\n  with the card, prefer the poles they argued.\n- **Not settled.** Settled means the holders themselves reached a position\n  together. A middle proposed in one room does not settle what another room\n  holds, and one speaker's hedge does not settle their own position; note the\n  middle in `why` so the knot can carry it. A remark the speaker dismissed in\n  the same breath (\"not particularly exciting to discuss\") is not a held pole.\n\nReturn:\n\n- `valid`: true or false.\n- `why`: one sentence, for the reviewer, saying which test decided it.\n- `poleA`, `poleB`: three to seven words each, in the words the holders\n  used, each statable in a way its own holders would accept. Empty when not\n  valid.\n- `quotesA`, `quotesB`: up to two verbatim passages each, copied exactly from\n  the transcripts, showing each pole being held. A quote that is not word for\n  word in a transcript will be discarded.\n\nReturn only the structured output requested by the caller.\n",
+      "user": "TRANSCRIPT id: t1\nWe need more charging points near the flats.\nParking is already too scarce for residents.\nI would rather walk if the paths were safe.\nEND TRANSCRIPT t1\n\nTRANSCRIPT id: t2\nBuses stop running at eleven at night.\nThe council should cut car lanes for buses.\nCars are how the nurses get home.\nEND TRANSCRIPT t2\n\nWHAT THE ROOMS WERE HANDED:\n- [argued] The council plan\n  what the rooms did: argued\n\nTHE PAIR:\nA (resident, want): t1 wants Parking is already too sc\n   said: \"Parking is already too scarce for residents.\"\nB (resident, want): t2 wants Cars are how the nurses g\n   said: \"Cars are how the nurses get home.\"\nFlagged because: other 2",
+      "thinking": true,
+      "answer": {
+        "valid": true,
+        "why": "because",
+        "poleA": "Pole t1 wants Parking is already too sc",
+        "poleB": "Pole t2 wants Cars are how the nurses g",
+        "quotesA": ["Parking is already too scarce for residents."],
+        "quotesB": ["Cars are how the nurses get home."]
+      }
+    },
+    {
+      "system": "# Tension verify\n\nVersion: `tension-verify-v1.1`\n\nTwo positions from one session were flagged as colliding. You are given the\ntranscripts they came from, the list of trade-offs the rooms were handed from\noutside the conversation, and the pair. Decide whether this is a tension the\nsession actually contains, and if so state its two poles in the room's words.\n\nA tension is valid when all of these hold:\n\n- **Both poles were held.** Somebody argued each side, or stated one side as\n  a constraint of their situation; nobody has to argue for a constraint. One\n  hedging clause that the speaker walked back is not a pole.\n- **Zero-sum enough.** Satisfying one costs the other something real. If a\n  middle course the room itself found removes the cost, the tension is not\n  between the two positions but about the middle, and it is valid only if\n  somebody argued against that middle too.\n- **Not a handed trade-off reopened.** The handed list is there to stop the\n  card's own framing coming back as a tension. It does not close the subject.\n  A pair is \"reopened\" only when its poles are the card's wording or its\n  framing and neither pole is something a person said in their own words. If\n  both positions were held by people in the rooms, with their own quotes, the\n  tension is valid even when it shares a subject with a theme card: it is the\n  rooms' version of it, which is what the slide is for. Where a room argued\n  with the card, prefer the poles they argued.\n- **Not settled.** Settled means the holders themselves reached a position\n  together. A middle proposed in one room does not settle what another room\n  holds, and one speaker's hedge does not settle their own position; note the\n  middle in `why` so the knot can carry it. A remark the speaker dismissed in\n  the same breath (\"not particularly exciting to discuss\") is not a held pole.\n\nReturn:\n\n- `valid`: true or false.\n- `why`: one sentence, for the reviewer, saying which test decided it.\n- `poleA`, `poleB`: three to seven words each, in the words the holders\n  used, each statable in a way its own holders would accept. Empty when not\n  valid.\n- `quotesA`, `quotesB`: up to two verbatim passages each, copied exactly from\n  the transcripts, showing each pole being held. A quote that is not word for\n  word in a transcript will be discarded.\n\nReturn only the structured output requested by the caller.\n",
+      "user": "TRANSCRIPT id: t1\nWe need more charging points near the flats.\nParking is already too scarce for residents.\nI would rather walk if the paths were safe.\nEND TRANSCRIPT t1\n\nTRANSCRIPT id: t3\nNight buses would help the late shift.\nMore chargers will just bring more cars.\nEND TRANSCRIPT t3\n\nWHAT THE ROOMS WERE HANDED:\n- [argued] The council plan\n  what the rooms did: argued\n\nTHE PAIR:\nA (resident, want): t1 wants We need more charging poi\n   said: \"We need more charging points near the flats.\"\nB (resident, want): t3 wants More chargers will just b\n   said: \"not verbatim\"\nFlagged because: clash 8",
+      "thinking": true,
+      "answer": {
+        "valid": true,
+        "why": "because",
+        "poleA": "Pole t1 wants We need more charging poi",
+        "poleB": "Pole t3 wants More chargers will just b",
+        "quotesA": ["We need more charging points near the flats."],
+        "quotesB": ["not verbatim"]
+      }
+    },
+    {
+      "system": "# Tension verify\n\nVersion: `tension-verify-v1.1`\n\nTwo positions from one session were flagged as colliding. You are given the\ntranscripts they came from, the list of trade-offs the rooms were handed from\noutside the conversation, and the pair. Decide whether this is a tension the\nsession actually contains, and if so state its two poles in the room's words.\n\nA tension is valid when all of these hold:\n\n- **Both poles were held.** Somebody argued each side, or stated one side as\n  a constraint of their situation; nobody has to argue for a constraint. One\n  hedging clause that the speaker walked back is not a pole.\n- **Zero-sum enough.** Satisfying one costs the other something real. If a\n  middle course the room itself found removes the cost, the tension is not\n  between the two positions but about the middle, and it is valid only if\n  somebody argued against that middle too.\n- **Not a handed trade-off reopened.** The handed list is there to stop the\n  card's own framing coming back as a tension. It does not close the subject.\n  A pair is \"reopened\" only when its poles are the card's wording or its\n  framing and neither pole is something a person said in their own words. If\n  both positions were held by people in the rooms, with their own quotes, the\n  tension is valid even when it shares a subject with a theme card: it is the\n  rooms' version of it, which is what the slide is for. Where a room argued\n  with the card, prefer the poles they argued.\n- **Not settled.** Settled means the holders themselves reached a position\n  together. A middle proposed in one room does not settle what another room\n  holds, and one speaker's hedge does not settle their own position; note the\n  middle in `why` so the knot can carry it. A remark the speaker dismissed in\n  the same breath (\"not particularly exciting to discuss\") is not a held pole.\n\nReturn:\n\n- `valid`: true or false.\n- `why`: one sentence, for the reviewer, saying which test decided it.\n- `poleA`, `poleB`: three to seven words each, in the words the holders\n  used, each statable in a way its own holders would accept. Empty when not\n  valid.\n- `quotesA`, `quotesB`: up to two verbatim passages each, copied exactly from\n  the transcripts, showing each pole being held. A quote that is not word for\n  word in a transcript will be discarded.\n\nReturn only the structured output requested by the caller.\n",
+      "user": "TRANSCRIPT id: t1\nWe need more charging points near the flats.\nParking is already too scarce for residents.\nI would rather walk if the paths were safe.\nEND TRANSCRIPT t1\n\nTRANSCRIPT id: t2\nBuses stop running at eleven at night.\nThe council should cut car lanes for buses.\nCars are how the nurses get home.\nEND TRANSCRIPT t2\n\nWHAT THE ROOMS WERE HANDED:\n- [argued] The council plan\n  what the rooms did: argued\n\nTHE PAIR:\nA (resident, want): t1 wants I would rather walk if th\n   said: \"I would rather walk if the paths were safe.\"\nB (resident, want): t2 wants Buses stop running at ele\n   said: \"Buses stop running at eleven at night.\"\nFlagged because: clash 3",
+      "thinking": true,
+      "answer": {
+        "valid": false,
+        "why": "because",
+        "poleA": "Pole t1 wants I would rather walk if th",
+        "poleB": "Pole t2 wants Buses stop running at ele",
+        "quotesA": ["I would rather walk if the paths were safe."],
+        "quotesB": ["Buses stop running at eleven at night."]
+      }
+    },
+    {
+      "system": "# Tension verify\n\nVersion: `tension-verify-v1.1`\n\nTwo positions from one session were flagged as colliding. You are given the\ntranscripts they came from, the list of trade-offs the rooms were handed from\noutside the conversation, and the pair. Decide whether this is a tension the\nsession actually contains, and if so state its two poles in the room's words.\n\nA tension is valid when all of these hold:\n\n- **Both poles were held.** Somebody argued each side, or stated one side as\n  a constraint of their situation; nobody has to argue for a constraint. One\n  hedging clause that the speaker walked back is not a pole.\n- **Zero-sum enough.** Satisfying one costs the other something real. If a\n  middle course the room itself found removes the cost, the tension is not\n  between the two positions but about the middle, and it is valid only if\n  somebody argued against that middle too.\n- **Not a handed trade-off reopened.** The handed list is there to stop the\n  card's own framing coming back as a tension. It does not close the subject.\n  A pair is \"reopened\" only when its poles are the card's wording or its\n  framing and neither pole is something a person said in their own words. If\n  both positions were held by people in the rooms, with their own quotes, the\n  tension is valid even when it shares a subject with a theme card: it is the\n  rooms' version of it, which is what the slide is for. Where a room argued\n  with the card, prefer the poles they argued.\n- **Not settled.** Settled means the holders themselves reached a position\n  together. A middle proposed in one room does not settle what another room\n  holds, and one speaker's hedge does not settle their own position; note the\n  middle in `why` so the knot can carry it. A remark the speaker dismissed in\n  the same breath (\"not particularly exciting to discuss\") is not a held pole.\n\nReturn:\n\n- `valid`: true or false.\n- `why`: one sentence, for the reviewer, saying which test decided it.\n- `poleA`, `poleB`: three to seven words each, in the words the holders\n  used, each statable in a way its own holders would accept. Empty when not\n  valid.\n- `quotesA`, `quotesB`: up to two verbatim passages each, copied exactly from\n  the transcripts, showing each pole being held. A quote that is not word for\n  word in a transcript will be discarded.\n\nReturn only the structured output requested by the caller.\n",
+      "user": "TRANSCRIPT id: t2\nBuses stop running at eleven at night.\nThe council should cut car lanes for buses.\nCars are how the nurses get home.\nEND TRANSCRIPT t2\n\nTRANSCRIPT id: t3\nNight buses would help the late shift.\nMore chargers will just bring more cars.\nEND TRANSCRIPT t3\n\nWHAT THE ROOMS WERE HANDED:\n- [argued] The council plan\n  what the rooms did: argued\n\nTHE PAIR:\nA (resident, want): t2 wants Cars are how the nurses g\n   said: \"Cars are how the nurses get home.\"\nB (resident, want): t3 wants Night buses would help th\n   said: \"Night buses would help the late shift.\"\nFlagged because: clash 6",
+      "thinking": true,
+      "answer": {
+        "valid": true,
+        "why": "because",
+        "poleA": "Pole t2 wants Cars are how the nurses g",
+        "poleB": "Pole t3 wants Night buses would help th",
+        "quotesA": ["Cars are how the nurses get home."],
+        "quotesB": []
+      }
+    },
+    {
+      "system": "# Tension verify\n\nVersion: `tension-verify-v1.1`\n\nTwo positions from one session were flagged as colliding. You are given the\ntranscripts they came from, the list of trade-offs the rooms were handed from\noutside the conversation, and the pair. Decide whether this is a tension the\nsession actually contains, and if so state its two poles in the room's words.\n\nA tension is valid when all of these hold:\n\n- **Both poles were held.** Somebody argued each side, or stated one side as\n  a constraint of their situation; nobody has to argue for a constraint. One\n  hedging clause that the speaker walked back is not a pole.\n- **Zero-sum enough.** Satisfying one costs the other something real. If a\n  middle course the room itself found removes the cost, the tension is not\n  between the two positions but about the middle, and it is valid only if\n  somebody argued against that middle too.\n- **Not a handed trade-off reopened.** The handed list is there to stop the\n  card's own framing coming back as a tension. It does not close the subject.\n  A pair is \"reopened\" only when its poles are the card's wording or its\n  framing and neither pole is something a person said in their own words. If\n  both positions were held by people in the rooms, with their own quotes, the\n  tension is valid even when it shares a subject with a theme card: it is the\n  rooms' version of it, which is what the slide is for. Where a room argued\n  with the card, prefer the poles they argued.\n- **Not settled.** Settled means the holders themselves reached a position\n  together. A middle proposed in one room does not settle what another room\n  holds, and one speaker's hedge does not settle their own position; note the\n  middle in `why` so the knot can carry it. A remark the speaker dismissed in\n  the same breath (\"not particularly exciting to discuss\") is not a held pole.\n\nReturn:\n\n- `valid`: true or false.\n- `why`: one sentence, for the reviewer, saying which test decided it.\n- `poleA`, `poleB`: three to seven words each, in the words the holders\n  used, each statable in a way its own holders would accept. Empty when not\n  valid.\n- `quotesA`, `quotesB`: up to two verbatim passages each, copied exactly from\n  the transcripts, showing each pole being held. A quote that is not word for\n  word in a transcript will be discarded.\n\nReturn only the structured output requested by the caller.\n",
+      "user": "TRANSCRIPT id: t1\nWe need more charging points near the flats.\nParking is already too scarce for residents.\nI would rather walk if the paths were safe.\nEND TRANSCRIPT t1\n\nTRANSCRIPT id: t2\nBuses stop running at eleven at night.\nThe council should cut car lanes for buses.\nCars are how the nurses get home.\nEND TRANSCRIPT t2\n\nWHAT THE ROOMS WERE HANDED:\n- [argued] The council plan\n  what the rooms did: argued\n\nTHE PAIR:\nA (resident, want): t1 wants Parking is already too sc\n   said: \"Parking is already too scarce for residents.\"\nB (resident, want): t2 wants Buses stop running at ele\n   said: \"Buses stop running at eleven at night.\"\nFlagged because: dup",
+      "thinking": true,
+      "answer": {
+        "valid": true,
+        "why": "because",
+        "poleA": "Pole t1 wants Parking is already too sc",
+        "poleB": "Pole t2 wants Buses stop running at ele",
+        "quotesA": ["Parking is already too scarce for residents."],
+        "quotesB": ["Buses stop running at eleven at night."]
+      }
+    },
+    {
+      "system": "# Tension verify\n\nVersion: `tension-verify-v1.1`\n\nTwo positions from one session were flagged as colliding. You are given the\ntranscripts they came from, the list of trade-offs the rooms were handed from\noutside the conversation, and the pair. Decide whether this is a tension the\nsession actually contains, and if so state its two poles in the room's words.\n\nA tension is valid when all of these hold:\n\n- **Both poles were held.** Somebody argued each side, or stated one side as\n  a constraint of their situation; nobody has to argue for a constraint. One\n  hedging clause that the speaker walked back is not a pole.\n- **Zero-sum enough.** Satisfying one costs the other something real. If a\n  middle course the room itself found removes the cost, the tension is not\n  between the two positions but about the middle, and it is valid only if\n  somebody argued against that middle too.\n- **Not a handed trade-off reopened.** The handed list is there to stop the\n  card's own framing coming back as a tension. It does not close the subject.\n  A pair is \"reopened\" only when its poles are the card's wording or its\n  framing and neither pole is something a person said in their own words. If\n  both positions were held by people in the rooms, with their own quotes, the\n  tension is valid even when it shares a subject with a theme card: it is the\n  rooms' version of it, which is what the slide is for. Where a room argued\n  with the card, prefer the poles they argued.\n- **Not settled.** Settled means the holders themselves reached a position\n  together. A middle proposed in one room does not settle what another room\n  holds, and one speaker's hedge does not settle their own position; note the\n  middle in `why` so the knot can carry it. A remark the speaker dismissed in\n  the same breath (\"not particularly exciting to discuss\") is not a held pole.\n\nReturn:\n\n- `valid`: true or false.\n- `why`: one sentence, for the reviewer, saying which test decided it.\n- `poleA`, `poleB`: three to seven words each, in the words the holders\n  used, each statable in a way its own holders would accept. Empty when not\n  valid.\n- `quotesA`, `quotesB`: up to two verbatim passages each, copied exactly from\n  the transcripts, showing each pole being held. A quote that is not word for\n  word in a transcript will be discarded.\n\nReturn only the structured output requested by the caller.\n",
+      "user": "TRANSCRIPT id: t1\nWe need more charging points near the flats.\nParking is already too scarce for residents.\nI would rather walk if the paths were safe.\nEND TRANSCRIPT t1\n\nTRANSCRIPT id: t3\nNight buses would help the late shift.\nMore chargers will just bring more cars.\nEND TRANSCRIPT t3\n\nWHAT THE ROOMS WERE HANDED:\n- [argued] The council plan\n  what the rooms did: argued\n\nTHE PAIR:\nA (resident, want): t1 wants Parking is already too sc\n   said: \"Parking is already too scarce for residents.\"\nB (resident, want): t3 wants Night buses would help th\n   said: \"Night buses would help the late shift.\"\nFlagged because: dup",
+      "thinking": true,
+      "answer": {
+        "valid": true,
+        "why": "because",
+        "poleA": "Pole t1 wants Parking is already too sc",
+        "poleB": "Pole t3 wants Night buses would help th",
+        "quotesA": ["Parking is already too scarce for residents."],
+        "quotesB": ["Night buses would help the late shift."]
+      }
+    },
+    {
+      "system": "# Tension verify\n\nVersion: `tension-verify-v1.1`\n\nTwo positions from one session were flagged as colliding. You are given the\ntranscripts they came from, the list of trade-offs the rooms were handed from\noutside the conversation, and the pair. Decide whether this is a tension the\nsession actually contains, and if so state its two poles in the room's words.\n\nA tension is valid when all of these hold:\n\n- **Both poles were held.** Somebody argued each side, or stated one side as\n  a constraint of their situation; nobody has to argue for a constraint. One\n  hedging clause that the speaker walked back is not a pole.\n- **Zero-sum enough.** Satisfying one costs the other something real. If a\n  middle course the room itself found removes the cost, the tension is not\n  between the two positions but about the middle, and it is valid only if\n  somebody argued against that middle too.\n- **Not a handed trade-off reopened.** The handed list is there to stop the\n  card's own framing coming back as a tension. It does not close the subject.\n  A pair is \"reopened\" only when its poles are the card's wording or its\n  framing and neither pole is something a person said in their own words. If\n  both positions were held by people in the rooms, with their own quotes, the\n  tension is valid even when it shares a subject with a theme card: it is the\n  rooms' version of it, which is what the slide is for. Where a room argued\n  with the card, prefer the poles they argued.\n- **Not settled.** Settled means the holders themselves reached a position\n  together. A middle proposed in one room does not settle what another room\n  holds, and one speaker's hedge does not settle their own position; note the\n  middle in `why` so the knot can carry it. A remark the speaker dismissed in\n  the same breath (\"not particularly exciting to discuss\") is not a held pole.\n\nReturn:\n\n- `valid`: true or false.\n- `why`: one sentence, for the reviewer, saying which test decided it.\n- `poleA`, `poleB`: three to seven words each, in the words the holders\n  used, each statable in a way its own holders would accept. Empty when not\n  valid.\n- `quotesA`, `quotesB`: up to two verbatim passages each, copied exactly from\n  the transcripts, showing each pole being held. A quote that is not word for\n  word in a transcript will be discarded.\n\nReturn only the structured output requested by the caller.\n",
+      "user": "TRANSCRIPT id: t1\nWe need more charging points near the flats.\nParking is already too scarce for residents.\nI would rather walk if the paths were safe.\nEND TRANSCRIPT t1\n\nTRANSCRIPT id: t3\nNight buses would help the late shift.\nMore chargers will just bring more cars.\nEND TRANSCRIPT t3\n\nWHAT THE ROOMS WERE HANDED:\n- [argued] The council plan\n  what the rooms did: argued\n\nTHE PAIR:\nA (resident, want): t1 wants Parking is already too sc\n   said: \"Parking is already too scarce for residents.\"\nB (resident, want): t3 wants More chargers will just b\n   said: \"not verbatim\"\nFlagged because: dup",
+      "thinking": true,
+      "answer": {
+        "valid": true,
+        "why": "because",
+        "poleA": "Pole t1 wants Parking is already too sc",
+        "poleB": "Pole t3 wants More chargers will just b",
+        "quotesA": ["Parking is already too scarce for residents."],
+        "quotesB": ["not verbatim"]
+      }
+    },
+    {
+      "system": "# Tension verify\n\nVersion: `tension-verify-v1.1`\n\nTwo positions from one session were flagged as colliding. You are given the\ntranscripts they came from, the list of trade-offs the rooms were handed from\noutside the conversation, and the pair. Decide whether this is a tension the\nsession actually contains, and if so state its two poles in the room's words.\n\nA tension is valid when all of these hold:\n\n- **Both poles were held.** Somebody argued each side, or stated one side as\n  a constraint of their situation; nobody has to argue for a constraint. One\n  hedging clause that the speaker walked back is not a pole.\n- **Zero-sum enough.** Satisfying one costs the other something real. If a\n  middle course the room itself found removes the cost, the tension is not\n  between the two positions but about the middle, and it is valid only if\n  somebody argued against that middle too.\n- **Not a handed trade-off reopened.** The handed list is there to stop the\n  card's own framing coming back as a tension. It does not close the subject.\n  A pair is \"reopened\" only when its poles are the card's wording or its\n  framing and neither pole is something a person said in their own words. If\n  both positions were held by people in the rooms, with their own quotes, the\n  tension is valid even when it shares a subject with a theme card: it is the\n  rooms' version of it, which is what the slide is for. Where a room argued\n  with the card, prefer the poles they argued.\n- **Not settled.** Settled means the holders themselves reached a position\n  together. A middle proposed in one room does not settle what another room\n  holds, and one speaker's hedge does not settle their own position; note the\n  middle in `why` so the knot can carry it. A remark the speaker dismissed in\n  the same breath (\"not particularly exciting to discuss\") is not a held pole.\n\nReturn:\n\n- `valid`: true or false.\n- `why`: one sentence, for the reviewer, saying which test decided it.\n- `poleA`, `poleB`: three to seven words each, in the words the holders\n  used, each statable in a way its own holders would accept. Empty when not\n  valid.\n- `quotesA`, `quotesB`: up to two verbatim passages each, copied exactly from\n  the transcripts, showing each pole being held. A quote that is not word for\n  word in a transcript will be discarded.\n\nReturn only the structured output requested by the caller.\n",
+      "user": "TRANSCRIPT id: t2\nBuses stop running at eleven at night.\nThe council should cut car lanes for buses.\nCars are how the nurses get home.\nEND TRANSCRIPT t2\n\nWHAT THE ROOMS WERE HANDED:\n- [argued] The council plan\n  what the rooms did: argued\n\nTHE PAIR:\nA (resident, want): t2 wants Buses stop running at ele\n   said: \"Buses stop running at eleven at night.\"\nB (resident, want): t2 wants The council should cut ca\n   said: \"The council should cut car lanes for buses.\"\nFlagged because: clash 4",
+      "thinking": true,
+      "answer": {
+        "valid": true,
+        "why": "because",
+        "poleA": "Pole t2 wants Buses stop running at ele",
+        "poleB": "",
+        "quotesA": ["Buses stop running at eleven at night."],
+        "quotesB": ["The council should cut car lanes for buses."]
+      }
+    },
+    {
+      "system": "# Tension verify\n\nVersion: `tension-verify-v1.1`\n\nTwo positions from one session were flagged as colliding. You are given the\ntranscripts they came from, the list of trade-offs the rooms were handed from\noutside the conversation, and the pair. Decide whether this is a tension the\nsession actually contains, and if so state its two poles in the room's words.\n\nA tension is valid when all of these hold:\n\n- **Both poles were held.** Somebody argued each side, or stated one side as\n  a constraint of their situation; nobody has to argue for a constraint. One\n  hedging clause that the speaker walked back is not a pole.\n- **Zero-sum enough.** Satisfying one costs the other something real. If a\n  middle course the room itself found removes the cost, the tension is not\n  between the two positions but about the middle, and it is valid only if\n  somebody argued against that middle too.\n- **Not a handed trade-off reopened.** The handed list is there to stop the\n  card's own framing coming back as a tension. It does not close the subject.\n  A pair is \"reopened\" only when its poles are the card's wording or its\n  framing and neither pole is something a person said in their own words. If\n  both positions were held by people in the rooms, with their own quotes, the\n  tension is valid even when it shares a subject with a theme card: it is the\n  rooms' version of it, which is what the slide is for. Where a room argued\n  with the card, prefer the poles they argued.\n- **Not settled.** Settled means the holders themselves reached a position\n  together. A middle proposed in one room does not settle what another room\n  holds, and one speaker's hedge does not settle their own position; note the\n  middle in `why` so the knot can carry it. A remark the speaker dismissed in\n  the same breath (\"not particularly exciting to discuss\") is not a held pole.\n\nReturn:\n\n- `valid`: true or false.\n- `why`: one sentence, for the reviewer, saying which test decided it.\n- `poleA`, `poleB`: three to seven words each, in the words the holders\n  used, each statable in a way its own holders would accept. Empty when not\n  valid.\n- `quotesA`, `quotesB`: up to two verbatim passages each, copied exactly from\n  the transcripts, showing each pole being held. A quote that is not word for\n  word in a transcript will be discarded.\n\nReturn only the structured output requested by the caller.\n",
+      "user": "TRANSCRIPT id: t1\nWe need more charging points near the flats.\nParking is already too scarce for residents.\nI would rather walk if the paths were safe.\nEND TRANSCRIPT t1\n\nWHAT THE ROOMS WERE HANDED:\n- [argued] The council plan\n  what the rooms did: argued\n\nTHE PAIR:\nA (resident, want): t1 wants Parking is already too sc\n   said: \"Parking is already too scarce for residents.\"\nB (resident, want): t1 wants I would rather walk if th\n   said: \"I would rather walk if the paths were safe.\"\nFlagged because: clash 2",
+      "thinking": true,
+      "answer": {
+        "valid": true,
+        "why": "because",
+        "poleA": "Pole t1 wants Parking is already too sc",
+        "poleB": "Pole t1 wants I would rather walk if th",
+        "quotesA": ["Parking is already too scarce for residents."],
+        "quotesB": ["I would rather walk if the paths were safe."]
+      }
+    },
+    {
+      "system": "# Tension verify\n\nVersion: `tension-verify-v1.1`\n\nTwo positions from one session were flagged as colliding. You are given the\ntranscripts they came from, the list of trade-offs the rooms were handed from\noutside the conversation, and the pair. Decide whether this is a tension the\nsession actually contains, and if so state its two poles in the room's words.\n\nA tension is valid when all of these hold:\n\n- **Both poles were held.** Somebody argued each side, or stated one side as\n  a constraint of their situation; nobody has to argue for a constraint. One\n  hedging clause that the speaker walked back is not a pole.\n- **Zero-sum enough.** Satisfying one costs the other something real. If a\n  middle course the room itself found removes the cost, the tension is not\n  between the two positions but about the middle, and it is valid only if\n  somebody argued against that middle too.\n- **Not a handed trade-off reopened.** The handed list is there to stop the\n  card's own framing coming back as a tension. It does not close the subject.\n  A pair is \"reopened\" only when its poles are the card's wording or its\n  framing and neither pole is something a person said in their own words. If\n  both positions were held by people in the rooms, with their own quotes, the\n  tension is valid even when it shares a subject with a theme card: it is the\n  rooms' version of it, which is what the slide is for. Where a room argued\n  with the card, prefer the poles they argued.\n- **Not settled.** Settled means the holders themselves reached a position\n  together. A middle proposed in one room does not settle what another room\n  holds, and one speaker's hedge does not settle their own position; note the\n  middle in `why` so the knot can carry it. A remark the speaker dismissed in\n  the same breath (\"not particularly exciting to discuss\") is not a held pole.\n\nReturn:\n\n- `valid`: true or false.\n- `why`: one sentence, for the reviewer, saying which test decided it.\n- `poleA`, `poleB`: three to seven words each, in the words the holders\n  used, each statable in a way its own holders would accept. Empty when not\n  valid.\n- `quotesA`, `quotesB`: up to two verbatim passages each, copied exactly from\n  the transcripts, showing each pole being held. A quote that is not word for\n  word in a transcript will be discarded.\n\nReturn only the structured output requested by the caller.\n",
+      "user": "TRANSCRIPT id: t3\nNight buses would help the late shift.\nMore chargers will just bring more cars.\nEND TRANSCRIPT t3\n\nWHAT THE ROOMS WERE HANDED:\n- [argued] The council plan\n  what the rooms did: argued\n\nTHE PAIR:\nA (resident, want): t3 wants Night buses would help th\n   said: \"Night buses would help the late shift.\"\nB (resident, want): t3 wants More chargers will just b\n   said: \"not verbatim\"\nFlagged because: clash 7",
+      "thinking": true,
+      "answer": {
+        "valid": true,
+        "why": "because",
+        "poleA": "Pole t3 wants Night buses would help th",
+        "poleB": "Pole t3 wants More chargers will just b",
+        "quotesA": ["Night buses would help the late shift."],
+        "quotesB": ["not verbatim"]
+      }
+    },
+    {
+      "system": "# Tension verify\n\nVersion: `tension-verify-v1.1`\n\nTwo positions from one session were flagged as colliding. You are given the\ntranscripts they came from, the list of trade-offs the rooms were handed from\noutside the conversation, and the pair. Decide whether this is a tension the\nsession actually contains, and if so state its two poles in the room's words.\n\nA tension is valid when all of these hold:\n\n- **Both poles were held.** Somebody argued each side, or stated one side as\n  a constraint of their situation; nobody has to argue for a constraint. One\n  hedging clause that the speaker walked back is not a pole.\n- **Zero-sum enough.** Satisfying one costs the other something real. If a\n  middle course the room itself found removes the cost, the tension is not\n  between the two positions but about the middle, and it is valid only if\n  somebody argued against that middle too.\n- **Not a handed trade-off reopened.** The handed list is there to stop the\n  card's own framing coming back as a tension. It does not close the subject.\n  A pair is \"reopened\" only when its poles are the card's wording or its\n  framing and neither pole is something a person said in their own words. If\n  both positions were held by people in the rooms, with their own quotes, the\n  tension is valid even when it shares a subject with a theme card: it is the\n  rooms' version of it, which is what the slide is for. Where a room argued\n  with the card, prefer the poles they argued.\n- **Not settled.** Settled means the holders themselves reached a position\n  together. A middle proposed in one room does not settle what another room\n  holds, and one speaker's hedge does not settle their own position; note the\n  middle in `why` so the knot can carry it. A remark the speaker dismissed in\n  the same breath (\"not particularly exciting to discuss\") is not a held pole.\n\nReturn:\n\n- `valid`: true or false.\n- `why`: one sentence, for the reviewer, saying which test decided it.\n- `poleA`, `poleB`: three to seven words each, in the words the holders\n  used, each statable in a way its own holders would accept. Empty when not\n  valid.\n- `quotesA`, `quotesB`: up to two verbatim passages each, copied exactly from\n  the transcripts, showing each pole being held. A quote that is not word for\n  word in a transcript will be discarded.\n\nReturn only the structured output requested by the caller.\n",
+      "user": "TRANSCRIPT id: t1\nWe need more charging points near the flats.\nParking is already too scarce for residents.\nI would rather walk if the paths were safe.\nEND TRANSCRIPT t1\n\nWHAT THE ROOMS WERE HANDED:\n- [argued] The council plan\n  what the rooms did: argued\n\nTHE PAIR:\nA (resident, want): t1 wants We need more charging poi\n   said: \"We need more charging points near the flats.\"\nB (resident, want): t1 wants Parking is already too sc\n   said: \"Parking is already too scarce for residents.\"\nFlagged because: clash 1",
+      "thinking": true,
+      "answer": {
+        "valid": true,
+        "why": "because",
+        "poleA": "Pole t1 wants We need more charging poi",
+        "poleB": "Pole t1 wants Parking is already too sc",
+        "quotesA": ["We need more charging points near the flats."],
+        "quotesB": ["Parking is already too scarce for residents."]
+      }
+    },
+    {
+      "system": "# Tension verify\n\nVersion: `tension-verify-v1.1`\n\nTwo positions from one session were flagged as colliding. You are given the\ntranscripts they came from, the list of trade-offs the rooms were handed from\noutside the conversation, and the pair. Decide whether this is a tension the\nsession actually contains, and if so state its two poles in the room's words.\n\nA tension is valid when all of these hold:\n\n- **Both poles were held.** Somebody argued each side, or stated one side as\n  a constraint of their situation; nobody has to argue for a constraint. One\n  hedging clause that the speaker walked back is not a pole.\n- **Zero-sum enough.** Satisfying one costs the other something real. If a\n  middle course the room itself found removes the cost, the tension is not\n  between the two positions but about the middle, and it is valid only if\n  somebody argued against that middle too.\n- **Not a handed trade-off reopened.** The handed list is there to stop the\n  card's own framing coming back as a tension. It does not close the subject.\n  A pair is \"reopened\" only when its poles are the card's wording or its\n  framing and neither pole is something a person said in their own words. If\n  both positions were held by people in the rooms, with their own quotes, the\n  tension is valid even when it shares a subject with a theme card: it is the\n  rooms' version of it, which is what the slide is for. Where a room argued\n  with the card, prefer the poles they argued.\n- **Not settled.** Settled means the holders themselves reached a position\n  together. A middle proposed in one room does not settle what another room\n  holds, and one speaker's hedge does not settle their own position; note the\n  middle in `why` so the knot can carry it. A remark the speaker dismissed in\n  the same breath (\"not particularly exciting to discuss\") is not a held pole.\n\nReturn:\n\n- `valid`: true or false.\n- `why`: one sentence, for the reviewer, saying which test decided it.\n- `poleA`, `poleB`: three to seven words each, in the words the holders\n  used, each statable in a way its own holders would accept. Empty when not\n  valid.\n- `quotesA`, `quotesB`: up to two verbatim passages each, copied exactly from\n  the transcripts, showing each pole being held. A quote that is not word for\n  word in a transcript will be discarded.\n\nReturn only the structured output requested by the caller.\n",
+      "user": "TRANSCRIPT id: t2\nBuses stop running at eleven at night.\nThe council should cut car lanes for buses.\nCars are how the nurses get home.\nEND TRANSCRIPT t2\n\nWHAT THE ROOMS WERE HANDED:\n- [argued] The council plan\n  what the rooms did: argued\n\nTHE PAIR:\nA (resident, want): t2 wants The council should cut ca\n   said: \"The council should cut car lanes for buses.\"\nB (resident, want): t2 wants Cars are how the nurses g\n   said: \"Cars are how the nurses get home.\"\nFlagged because: clash 5",
+      "thinking": true,
+      "answer": {
+        "valid": true,
+        "why": "because",
+        "poleA": "Pole t2 wants The council should cut ca",
+        "poleB": "Pole t2 wants Cars are how the nurses g",
+        "quotesA": ["The council should cut car lanes for buses."],
+        "quotesB": ["Cars are how the nurses get home."]
+      }
+    },
+    {
+      "system": "You are given the tensions already kept from a session and one more verified\ntension. Say whether the new one belongs to one already kept. It belongs when\nit is the same pull between the same two things, however worded and whoever\nheld it; and also when it is a facet of a kept tension: it shares one pole\nwith it and its other pole is a middle course between the kept poles, a\nreason behind one of them, or a consequence of one of them (the kept tension's\nknot will carry the facet). Return `same_as` with the id of the kept tension\nit belongs to, or an empty string when it pulls between two things no kept\ntension pulls between, and a `why` of one line. `swapped` is true when the new\ntension's A side belongs with the kept tension's B side (and its B with the\nkept A), false when the sides line up, and false when `same_as` is empty.\nTwo tensions on the same subject that pull between different things are not\nthe same; two tensions that share a pole and pull on the same thing from two\nangles are.",
+      "user": "KEPT:\nx1: Pole t1 wants Parking is already too sc / Pole t2 wants The council should cut ca\n\nNEW: Pole t1 wants Parking is already too sc / Pole t2 wants Cars are how the nurses g\n  (from: other 2)",
+      "thinking": false,
+      "answer": {
+        "same_as": "",
+        "swapped": false,
+        "why": "new"
+      }
+    },
+    {
+      "system": "You are given the tensions already kept from a session and one more verified\ntension. Say whether the new one belongs to one already kept. It belongs when\nit is the same pull between the same two things, however worded and whoever\nheld it; and also when it is a facet of a kept tension: it shares one pole\nwith it and its other pole is a middle course between the kept poles, a\nreason behind one of them, or a consequence of one of them (the kept tension's\nknot will carry the facet). Return `same_as` with the id of the kept tension\nit belongs to, or an empty string when it pulls between two things no kept\ntension pulls between, and a `why` of one line. `swapped` is true when the new\ntension's A side belongs with the kept tension's B side (and its B with the\nkept A), false when the sides line up, and false when `same_as` is empty.\nTwo tensions on the same subject that pull between different things are not\nthe same; two tensions that share a pole and pull on the same thing from two\nangles are.",
+      "user": "KEPT:\nx1: Pole t1 wants Parking is already too sc / Pole t2 wants The council should cut ca\nx2: Pole t1 wants Parking is already too sc / Pole t2 wants Cars are how the nurses g\n\nNEW: Pole t1 wants Parking is already too sc / Pole t2 wants Buses stop running at ele\n  (from: dup)",
+      "thinking": false,
+      "answer": {
+        "same_as": "",
+        "swapped": false,
+        "why": "new"
+      }
+    },
+    {
+      "system": "You are given the tensions already kept from a session and one more verified\ntension. Say whether the new one belongs to one already kept. It belongs when\nit is the same pull between the same two things, however worded and whoever\nheld it; and also when it is a facet of a kept tension: it shares one pole\nwith it and its other pole is a middle course between the kept poles, a\nreason behind one of them, or a consequence of one of them (the kept tension's\nknot will carry the facet). Return `same_as` with the id of the kept tension\nit belongs to, or an empty string when it pulls between two things no kept\ntension pulls between, and a `why` of one line. `swapped` is true when the new\ntension's A side belongs with the kept tension's B side (and its B with the\nkept A), false when the sides line up, and false when `same_as` is empty.\nTwo tensions on the same subject that pull between different things are not\nthe same; two tensions that share a pole and pull on the same thing from two\nangles are.",
+      "user": "KEPT:\nx1: Pole t1 wants Parking is already too sc / Pole t2 wants The council should cut ca\nx2: Pole t1 wants Parking is already too sc / Pole t2 wants Cars are how the nurses g\nx3: Pole t1 wants Parking is already too sc / Pole t2 wants Buses stop running at ele\n\nNEW: Pole t1 wants Parking is already too sc / Pole t3 wants Night buses would help th\n  (from: dup)",
+      "thinking": false,
+      "answer": {
+        "same_as": "",
+        "swapped": false,
+        "why": "new"
+      }
+    },
+    {
+      "system": "You are given the tensions already kept from a session and one more verified\ntension. Say whether the new one belongs to one already kept. It belongs when\nit is the same pull between the same two things, however worded and whoever\nheld it; and also when it is a facet of a kept tension: it shares one pole\nwith it and its other pole is a middle course between the kept poles, a\nreason behind one of them, or a consequence of one of them (the kept tension's\nknot will carry the facet). Return `same_as` with the id of the kept tension\nit belongs to, or an empty string when it pulls between two things no kept\ntension pulls between, and a `why` of one line. `swapped` is true when the new\ntension's A side belongs with the kept tension's B side (and its B with the\nkept A), false when the sides line up, and false when `same_as` is empty.\nTwo tensions on the same subject that pull between different things are not\nthe same; two tensions that share a pole and pull on the same thing from two\nangles are.",
+      "user": "KEPT:\nx1: Pole t1 wants Parking is already too sc / Pole t2 wants The council should cut ca\nx2: Pole t1 wants Parking is already too sc / Pole t2 wants Cars are how the nurses g\nx3: Pole t1 wants Parking is already too sc / Pole t2 wants Buses stop running at ele\n\nNEW: Pole t1 wants Parking is already too sc / Pole t1 wants I would rather walk if th\n  (from: clash 2)",
+      "thinking": false,
+      "answer": {
+        "same_as": "",
+        "swapped": false,
+        "why": "new"
+      }
+    },
+    {
+      "system": "You are given the tensions already kept from a session and one more verified\ntension. Say whether the new one belongs to one already kept. It belongs when\nit is the same pull between the same two things, however worded and whoever\nheld it; and also when it is a facet of a kept tension: it shares one pole\nwith it and its other pole is a middle course between the kept poles, a\nreason behind one of them, or a consequence of one of them (the kept tension's\nknot will carry the facet). Return `same_as` with the id of the kept tension\nit belongs to, or an empty string when it pulls between two things no kept\ntension pulls between, and a `why` of one line. `swapped` is true when the new\ntension's A side belongs with the kept tension's B side (and its B with the\nkept A), false when the sides line up, and false when `same_as` is empty.\nTwo tensions on the same subject that pull between different things are not\nthe same; two tensions that share a pole and pull on the same thing from two\nangles are.",
+      "user": "KEPT:\nx1: Pole t1 wants Parking is already too sc / Pole t2 wants The council should cut ca\nx2: Pole t1 wants Parking is already too sc / Pole t2 wants Cars are how the nurses g\nx3: Pole t1 wants Parking is already too sc / Pole t2 wants Buses stop running at ele\n\nNEW: Pole t1 wants We need more charging poi / Pole t1 wants Parking is already too sc\n  (from: clash 1)",
+      "thinking": false,
+      "answer": {
+        "same_as": "",
+        "swapped": false,
+        "why": "new"
+      }
+    },
+    {
+      "system": "You are given the tensions already kept from a session and one more verified\ntension. Say whether the new one belongs to one already kept. It belongs when\nit is the same pull between the same two things, however worded and whoever\nheld it; and also when it is a facet of a kept tension: it shares one pole\nwith it and its other pole is a middle course between the kept poles, a\nreason behind one of them, or a consequence of one of them (the kept tension's\nknot will carry the facet). Return `same_as` with the id of the kept tension\nit belongs to, or an empty string when it pulls between two things no kept\ntension pulls between, and a `why` of one line. `swapped` is true when the new\ntension's A side belongs with the kept tension's B side (and its B with the\nkept A), false when the sides line up, and false when `same_as` is empty.\nTwo tensions on the same subject that pull between different things are not\nthe same; two tensions that share a pole and pull on the same thing from two\nangles are.",
+      "user": "KEPT:\nx1: Pole t1 wants Parking is already too sc / Pole t2 wants The council should cut ca\nx2: Pole t1 wants Parking is already too sc / Pole t2 wants Cars are how the nurses g\nx3: Pole t1 wants Parking is already too sc / Pole t2 wants Buses stop running at ele\n\nNEW: Pole t2 wants The council should cut ca / Pole t2 wants Cars are how the nurses g\n  (from: clash 5)",
+      "thinking": false,
+      "answer": {
+        "same_as": "",
+        "swapped": false,
+        "why": "new"
+      }
+    },
+    {
+      "system": "# Tension write\n\nVersion: `tension-write-v1.2`\n\nOne verified tension from a session, with its two poles and the quotes that\nshow each being held, is to be written for a screen at the front of a room.\nWrite its knot and its question. Return the poles as given, except that a\npole longer than seven words is cut to seven, in the holders' own words and\nwithout changing which side it is: the screen reads them in one glance.\n\n## Facets\n\nThe input may list facets of the same pull found in other rooms: a middle\ncourse somebody proposed, a reason behind a pole, a consequence of one. A\nmiddle the room reached for belongs in the knot as what it costs (\"record\nonly the synthesis and the breakouts stay uncaptured\"), not as a resolution,\nand never as a third pole. A tension written as all-or-nothing when a room\nfound a middle has been reopened, and the room will say so.\n\n## The knot\n\nOne sentence, eighteen words at most, that says what each side pays if the\nother wins, in the room's terms: \"Record it and people stop thinking out\nloud; don't, and the good bits are gone by Friday.\" Do not resolve it, do not\nrecommend, do not soften it into an agreement that was not reached.\n\nA paragraph is not a knot, and a line built from abstract nouns nobody said\n(capture, nuance, accountability, engagement, alignment) has failed before it\nwas read. Write the substance, never the meeting: strip the fact that a\nconversation happened and the sentence must still say something true about\nthe world. Nothing beginning with people discussing, recognising,\nacknowledging, expressing or feeling.\n\n## The question\n\nOne sentence, twenty-two words at most, naming the question the group has to\nanswer for this to move, as the open question it is. Test it: could it be\nanswered in a way that costs one pole something real? If every answer leaves\nboth poles intact (\"how can we do X without losing Y\"), or it is a\nrecommendation with a question mark (\"should we do Z\"), it has resolved the\ntension on the page instead of in the room. The question has to leave the\nroom a real choice, including the choice to give something up.\n\nBoth lines are checked mechanically after the run and sent back if they break\nthe limits.\n\nReturn only the structured output requested by the caller.\n",
+      "user": "POLE A: Pole t1 wants Parking is already too sc\nPOLE B: Pole t2 wants The council should cut ca\nHOLDING A: \"Parking is already too scarce for residents.\"\nHOLDING B: \"The council should cut car lanes for buses.\"\nWHAT COLLIDES: dup",
+      "thinking": true,
+      "answer": {
+        "poleA": "Pole t1 wants Parking is already too sc",
+        "poleB": "",
+        "knot": "The pull is real here.",
+        "toResolve": "What comes first for the street?"
+      }
+    },
+    {
+      "system": "# Tension write\n\nVersion: `tension-write-v1.2`\n\nOne verified tension from a session, with its two poles and the quotes that\nshow each being held, is to be written for a screen at the front of a room.\nWrite its knot and its question. Return the poles as given, except that a\npole longer than seven words is cut to seven, in the holders' own words and\nwithout changing which side it is: the screen reads them in one glance.\n\n## Facets\n\nThe input may list facets of the same pull found in other rooms: a middle\ncourse somebody proposed, a reason behind a pole, a consequence of one. A\nmiddle the room reached for belongs in the knot as what it costs (\"record\nonly the synthesis and the breakouts stay uncaptured\"), not as a resolution,\nand never as a third pole. A tension written as all-or-nothing when a room\nfound a middle has been reopened, and the room will say so.\n\n## The knot\n\nOne sentence, eighteen words at most, that says what each side pays if the\nother wins, in the room's terms: \"Record it and people stop thinking out\nloud; don't, and the good bits are gone by Friday.\" Do not resolve it, do not\nrecommend, do not soften it into an agreement that was not reached.\n\nA paragraph is not a knot, and a line built from abstract nouns nobody said\n(capture, nuance, accountability, engagement, alignment) has failed before it\nwas read. Write the substance, never the meeting: strip the fact that a\nconversation happened and the sentence must still say something true about\nthe world. Nothing beginning with people discussing, recognising,\nacknowledging, expressing or feeling.\n\n## The question\n\nOne sentence, twenty-two words at most, naming the question the group has to\nanswer for this to move, as the open question it is. Test it: could it be\nanswered in a way that costs one pole something real? If every answer leaves\nboth poles intact (\"how can we do X without losing Y\"), or it is a\nrecommendation with a question mark (\"should we do Z\"), it has resolved the\ntension on the page instead of in the room. The question has to leave the\nroom a real choice, including the choice to give something up.\n\nBoth lines are checked mechanically after the run and sent back if they break\nthe limits.\n\nReturn only the structured output requested by the caller.\n",
+      "user": "POLE A: Pole t1 wants Parking is already too sc\nPOLE B: Pole t2 wants Cars are how the nurses g\nHOLDING A: \"Parking is already too scarce for residents.\"\nHOLDING B: \"Cars are how the nurses get home.\"\nWHAT COLLIDES: other 2",
+      "thinking": true,
+      "answer": {
+        "poleA": "Pole t1 wants Parking is already too sc",
+        "poleB": "",
+        "knot": "The pull is real here.",
+        "toResolve": "What comes first for the street?"
+      }
+    },
+    {
+      "system": "# Tension write\n\nVersion: `tension-write-v1.2`\n\nOne verified tension from a session, with its two poles and the quotes that\nshow each being held, is to be written for a screen at the front of a room.\nWrite its knot and its question. Return the poles as given, except that a\npole longer than seven words is cut to seven, in the holders' own words and\nwithout changing which side it is: the screen reads them in one glance.\n\n## Facets\n\nThe input may list facets of the same pull found in other rooms: a middle\ncourse somebody proposed, a reason behind a pole, a consequence of one. A\nmiddle the room reached for belongs in the knot as what it costs (\"record\nonly the synthesis and the breakouts stay uncaptured\"), not as a resolution,\nand never as a third pole. A tension written as all-or-nothing when a room\nfound a middle has been reopened, and the room will say so.\n\n## The knot\n\nOne sentence, eighteen words at most, that says what each side pays if the\nother wins, in the room's terms: \"Record it and people stop thinking out\nloud; don't, and the good bits are gone by Friday.\" Do not resolve it, do not\nrecommend, do not soften it into an agreement that was not reached.\n\nA paragraph is not a knot, and a line built from abstract nouns nobody said\n(capture, nuance, accountability, engagement, alignment) has failed before it\nwas read. Write the substance, never the meeting: strip the fact that a\nconversation happened and the sentence must still say something true about\nthe world. Nothing beginning with people discussing, recognising,\nacknowledging, expressing or feeling.\n\n## The question\n\nOne sentence, twenty-two words at most, naming the question the group has to\nanswer for this to move, as the open question it is. Test it: could it be\nanswered in a way that costs one pole something real? If every answer leaves\nboth poles intact (\"how can we do X without losing Y\"), or it is a\nrecommendation with a question mark (\"should we do Z\"), it has resolved the\ntension on the page instead of in the room. The question has to leave the\nroom a real choice, including the choice to give something up.\n\nBoth lines are checked mechanically after the run and sent back if they break\nthe limits.\n\nReturn only the structured output requested by the caller.\n",
+      "user": "POLE A: Pole t1 wants Parking is already too sc\nPOLE B: Pole t2 wants Buses stop running at ele\nHOLDING A: \"Parking is already too scarce for residents.\"\nHOLDING B: \"Buses stop running at eleven at night.\"\nWHAT COLLIDES: dup",
+      "thinking": true,
+      "answer": {
+        "poleA": "Pole t1 wants Parking is already too sc",
+        "poleB": "",
+        "knot": "The pull is real here.",
+        "toResolve": "What comes first for the street?"
+      }
+    },
+    {
+      "system": "# Tension write\n\nVersion: `tension-write-v1.2`\n\nOne verified tension from a session, with its two poles and the quotes that\nshow each being held, is to be written for a screen at the front of a room.\nWrite its knot and its question. Return the poles as given, except that a\npole longer than seven words is cut to seven, in the holders' own words and\nwithout changing which side it is: the screen reads them in one glance.\n\n## Facets\n\nThe input may list facets of the same pull found in other rooms: a middle\ncourse somebody proposed, a reason behind a pole, a consequence of one. A\nmiddle the room reached for belongs in the knot as what it costs (\"record\nonly the synthesis and the breakouts stay uncaptured\"), not as a resolution,\nand never as a third pole. A tension written as all-or-nothing when a room\nfound a middle has been reopened, and the room will say so.\n\n## The knot\n\nOne sentence, eighteen words at most, that says what each side pays if the\nother wins, in the room's terms: \"Record it and people stop thinking out\nloud; don't, and the good bits are gone by Friday.\" Do not resolve it, do not\nrecommend, do not soften it into an agreement that was not reached.\n\nA paragraph is not a knot, and a line built from abstract nouns nobody said\n(capture, nuance, accountability, engagement, alignment) has failed before it\nwas read. Write the substance, never the meeting: strip the fact that a\nconversation happened and the sentence must still say something true about\nthe world. Nothing beginning with people discussing, recognising,\nacknowledging, expressing or feeling.\n\n## The question\n\nOne sentence, twenty-two words at most, naming the question the group has to\nanswer for this to move, as the open question it is. Test it: could it be\nanswered in a way that costs one pole something real? If every answer leaves\nboth poles intact (\"how can we do X without losing Y\"), or it is a\nrecommendation with a question mark (\"should we do Z\"), it has resolved the\ntension on the page instead of in the room. The question has to leave the\nroom a real choice, including the choice to give something up.\n\nBoth lines are checked mechanically after the run and sent back if they break\nthe limits.\n\nReturn only the structured output requested by the caller.\n\n\n## Your previous answer failed these checks\n\n- x1 poleA: 8 words, at most 7: 'Pole t1 wants Parking is already too sc'\n- x1 poleB: 8 words, at most 7: 'Pole t2 wants The council should cut ca'\n\nFix every one of them.",
+      "user": "POLE A: Pole t1 wants Parking is already too sc\nPOLE B: Pole t2 wants The council should cut ca\nHOLDING A: \"Parking is already too scarce for residents.\"\nHOLDING B: \"The council should cut car lanes for buses.\"\nWHAT COLLIDES: dup",
+      "thinking": true,
+      "answer": {
+        "poleA": "Pole t1 wants Parking is already too sc",
+        "poleB": "",
+        "knot": "The pull is real here.",
+        "toResolve": "What comes first for the street?"
+      }
+    },
+    {
+      "system": "# Tension write\n\nVersion: `tension-write-v1.2`\n\nOne verified tension from a session, with its two poles and the quotes that\nshow each being held, is to be written for a screen at the front of a room.\nWrite its knot and its question. Return the poles as given, except that a\npole longer than seven words is cut to seven, in the holders' own words and\nwithout changing which side it is: the screen reads them in one glance.\n\n## Facets\n\nThe input may list facets of the same pull found in other rooms: a middle\ncourse somebody proposed, a reason behind a pole, a consequence of one. A\nmiddle the room reached for belongs in the knot as what it costs (\"record\nonly the synthesis and the breakouts stay uncaptured\"), not as a resolution,\nand never as a third pole. A tension written as all-or-nothing when a room\nfound a middle has been reopened, and the room will say so.\n\n## The knot\n\nOne sentence, eighteen words at most, that says what each side pays if the\nother wins, in the room's terms: \"Record it and people stop thinking out\nloud; don't, and the good bits are gone by Friday.\" Do not resolve it, do not\nrecommend, do not soften it into an agreement that was not reached.\n\nA paragraph is not a knot, and a line built from abstract nouns nobody said\n(capture, nuance, accountability, engagement, alignment) has failed before it\nwas read. Write the substance, never the meeting: strip the fact that a\nconversation happened and the sentence must still say something true about\nthe world. Nothing beginning with people discussing, recognising,\nacknowledging, expressing or feeling.\n\n## The question\n\nOne sentence, twenty-two words at most, naming the question the group has to\nanswer for this to move, as the open question it is. Test it: could it be\nanswered in a way that costs one pole something real? If every answer leaves\nboth poles intact (\"how can we do X without losing Y\"), or it is a\nrecommendation with a question mark (\"should we do Z\"), it has resolved the\ntension on the page instead of in the room. The question has to leave the\nroom a real choice, including the choice to give something up.\n\nBoth lines are checked mechanically after the run and sent back if they break\nthe limits.\n\nReturn only the structured output requested by the caller.\n\n\n## Your previous answer failed these checks\n\n- x2 poleA: 8 words, at most 7: 'Pole t1 wants Parking is already too sc'\n- x2 poleB: 9 words, at most 7: 'Pole t2 wants Cars are how the nurses g'\n\nFix every one of them.",
+      "user": "POLE A: Pole t1 wants Parking is already too sc\nPOLE B: Pole t2 wants Cars are how the nurses g\nHOLDING A: \"Parking is already too scarce for residents.\"\nHOLDING B: \"Cars are how the nurses get home.\"\nWHAT COLLIDES: other 2",
+      "thinking": true,
+      "answer": {
+        "poleA": "Pole t1 wants Parking is already too sc",
+        "poleB": "",
+        "knot": "The pull is real here.",
+        "toResolve": "What comes first for the street?"
+      }
+    },
+    {
+      "system": "# Tension write\n\nVersion: `tension-write-v1.2`\n\nOne verified tension from a session, with its two poles and the quotes that\nshow each being held, is to be written for a screen at the front of a room.\nWrite its knot and its question. Return the poles as given, except that a\npole longer than seven words is cut to seven, in the holders' own words and\nwithout changing which side it is: the screen reads them in one glance.\n\n## Facets\n\nThe input may list facets of the same pull found in other rooms: a middle\ncourse somebody proposed, a reason behind a pole, a consequence of one. A\nmiddle the room reached for belongs in the knot as what it costs (\"record\nonly the synthesis and the breakouts stay uncaptured\"), not as a resolution,\nand never as a third pole. A tension written as all-or-nothing when a room\nfound a middle has been reopened, and the room will say so.\n\n## The knot\n\nOne sentence, eighteen words at most, that says what each side pays if the\nother wins, in the room's terms: \"Record it and people stop thinking out\nloud; don't, and the good bits are gone by Friday.\" Do not resolve it, do not\nrecommend, do not soften it into an agreement that was not reached.\n\nA paragraph is not a knot, and a line built from abstract nouns nobody said\n(capture, nuance, accountability, engagement, alignment) has failed before it\nwas read. Write the substance, never the meeting: strip the fact that a\nconversation happened and the sentence must still say something true about\nthe world. Nothing beginning with people discussing, recognising,\nacknowledging, expressing or feeling.\n\n## The question\n\nOne sentence, twenty-two words at most, naming the question the group has to\nanswer for this to move, as the open question it is. Test it: could it be\nanswered in a way that costs one pole something real? If every answer leaves\nboth poles intact (\"how can we do X without losing Y\"), or it is a\nrecommendation with a question mark (\"should we do Z\"), it has resolved the\ntension on the page instead of in the room. The question has to leave the\nroom a real choice, including the choice to give something up.\n\nBoth lines are checked mechanically after the run and sent back if they break\nthe limits.\n\nReturn only the structured output requested by the caller.\n\n\n## Your previous answer failed these checks\n\n- x3 poleA: 8 words, at most 7: 'Pole t1 wants Parking is already too sc'\n- x3 poleB: 8 words, at most 7: 'Pole t2 wants Buses stop running at ele'\n\nFix every one of them.",
+      "user": "POLE A: Pole t1 wants Parking is already too sc\nPOLE B: Pole t2 wants Buses stop running at ele\nHOLDING A: \"Parking is already too scarce for residents.\"\nHOLDING B: \"Buses stop running at eleven at night.\"\nWHAT COLLIDES: dup",
+      "thinking": true,
+      "answer": {
+        "poleA": "Pole t1 wants Parking is already too sc",
+        "poleB": "",
+        "knot": "The pull is real here.",
+        "toResolve": "What comes first for the street?"
+      }
+    }
+  ]
+}

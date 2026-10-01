@@ -1,0 +1,209 @@
+[
+  {
+    "template": "system_report.en.jinja",
+    "vars": {
+      "conversations": [
+        {
+          "name": "Resident 1",
+          "tags": "Energy, Mobility",
+          "transcript": "Charging points are scarce.\nLate buses.",
+          "created_at": "2026-09-01T09:20:00",
+          "updated_at": null
+        },
+        {
+          "name": null,
+          "tags": "",
+          "transcript": "<b>Typed</b> & \"quoted\"",
+          "created_at": null,
+          "updated_at": null
+        }
+      ],
+      "user_instructions": ""
+    },
+    "output": "<transcripts>\n\n   \n\t\t\t<transcript>\n\t\t\t\t<name>Resident 1</name>\n\t\t\t\t<tags>Energy, Mobility</tags>\n\t\t\t\t<content>\n\t\t\t\tCharging points are scarce.\nLate buses.\n\t\t\t\t</content>\n\t\t\t</transcript>\n   \n\t\t\t<transcript>\n\t\t\t\t<name>None</name>\n\t\t\t\t<tags></tags>\n\t\t\t\t<content>\n\t\t\t\t<b>Typed</b> & \"quoted\"\n\t\t\t\t</content>\n\t\t\t</transcript>\n   \n\n</transcripts>\n\n\nYou are tasked with creating a dynamic, interview-style Q&A article based on a set of conversation transcripts given above. This article should critically analyze the content while maintaining a clear link to the source material. The end result should be a professional, readable document suitable for immediate online sharing.\n\nFirst, carefully read and analyze the transcripts and their context.\n\nBegin by critically analyzing the transcripts. Consider the following:\n1. Key themes and ideas presented\n2. Unique perspectives or insights\n3. Potential controversies or conflicting viewpoints\n4. Relevance to the main topic\n\nStructure your Q&A article as follows:\n1. Introduction: Briefly explain the context and importance of the topic.\n2. Main body: Create a suitable number (between 2 and 15) of question-and-answer pairs that cover the most significant aspects of the transcripts.\n3. Conclusion: Summarize the key takeaways and their implications.\n\nWhen crafting your questions and answers:\n* Ensure each question is clear, concise, and thought-provoking.\n* Provide comprehensive answers that draw directly from the transcripts.\n* Maintain a critical perspective, addressing any contradictions or uncertainties in the source material.\n* Use direct quotes sparingly, and when you do, attribute them properly.\n\nTo maintain the integrity of the source material:\n* Accurately represent the views and information presented in the transcripts.\n* Do not introduce any information or opinions not found in the original content.\n* If there are gaps in the information, acknowledge them rather than speculating.\n* Refer to proper nouns when relevant. Ignore names shared during transcripts unless it’s obvious the person is a public figure.\n\nFormat your final output using markdown headings as follows:\n* Title: Create a compelling title as an H1 heading (#).\n* Introduction: 2-3 sentences setting the context.\n* Q&A pairs: Present each question as an H3 heading (###), followed by a comprehensive answer as a paragraph, separated by two new line breaks.\n* Conclusion: 2-3 sentences summarizing the key points and their significance.\n\nIMPORTANT: Write your entire article in English, regardless of the language used in the transcripts. If the transcripts are in another language, translate the content into English.\n\nRemember to maintain a professional, journalistic tone throughout the article. The language should be clear, concise, and easily understandable to a general audience. Avoid casual language, jargon, or overly technical terms unless they are essential and explained.\n\nWhen referring to the platform by name, always write \"dembrane\" in lowercase, even at the start of a sentence. Never capitalize it as \"Dembrane\".\n\nDon't insert any <br> tags in the output. Use new lines instead.\n\nPresent your final article within <article> tags with markdown formatted text."
+  },
+  {
+    "template": "system_report.en.jinja",
+    "vars": {
+      "conversations": [
+        {
+          "name": "Resident 1",
+          "tags": "Energy, Mobility",
+          "transcript": "Charging points are scarce.\nLate buses.",
+          "created_at": "2026-09-01T09:20:00",
+          "updated_at": null
+        },
+        {
+          "name": null,
+          "tags": "",
+          "transcript": "<b>Typed</b> & \"quoted\"",
+          "created_at": null,
+          "updated_at": null
+        }
+      ],
+      "user_instructions": "Focus on <user_instructions>buses</user_instructions> please"
+    },
+    "output": "<transcripts>\n\n   \n\t\t\t<transcript>\n\t\t\t\t<name>Resident 1</name>\n\t\t\t\t<tags>Energy, Mobility</tags>\n\t\t\t\t<content>\n\t\t\t\tCharging points are scarce.\nLate buses.\n\t\t\t\t</content>\n\t\t\t</transcript>\n   \n\t\t\t<transcript>\n\t\t\t\t<name>None</name>\n\t\t\t\t<tags></tags>\n\t\t\t\t<content>\n\t\t\t\t<b>Typed</b> & \"quoted\"\n\t\t\t\t</content>\n\t\t\t</transcript>\n   \n\n</transcripts>\n\n\n<user_instructions>\nThe report creator has provided the following guidance. Pay special attention to these instructions when analyzing the transcripts and structuring your article:\n\nFocus on buses please\n</user_instructions>\n\n\nYou are tasked with creating a dynamic, interview-style Q&A article based on a set of conversation transcripts given above. This article should critically analyze the content while maintaining a clear link to the source material. The end result should be a professional, readable document suitable for immediate online sharing.\n\nFirst, carefully read and analyze the transcripts and their context.\n\nBegin by critically analyzing the transcripts. Consider the following:\n1. Key themes and ideas presented\n2. Unique perspectives or insights\n3. Potential controversies or conflicting viewpoints\n4. Relevance to the main topic\n\nStructure your Q&A article as follows:\n1. Introduction: Briefly explain the context and importance of the topic.\n2. Main body: Create a suitable number (between 2 and 15) of question-and-answer pairs that cover the most significant aspects of the transcripts.\n3. Conclusion: Summarize the key takeaways and their implications.\n\nWhen crafting your questions and answers:\n* Ensure each question is clear, concise, and thought-provoking.\n* Provide comprehensive answers that draw directly from the transcripts.\n* Maintain a critical perspective, addressing any contradictions or uncertainties in the source material.\n* Use direct quotes sparingly, and when you do, attribute them properly.\n\nTo maintain the integrity of the source material:\n* Accurately represent the views and information presented in the transcripts.\n* Do not introduce any information or opinions not found in the original content.\n* If there are gaps in the information, acknowledge them rather than speculating.\n* Refer to proper nouns when relevant. Ignore names shared during transcripts unless it’s obvious the person is a public figure.\n\nFormat your final output using markdown headings as follows:\n* Title: Create a compelling title as an H1 heading (#).\n* Introduction: 2-3 sentences setting the context.\n* Q&A pairs: Present each question as an H3 heading (###), followed by a comprehensive answer as a paragraph, separated by two new line breaks.\n* Conclusion: 2-3 sentences summarizing the key points and their significance.\n\nIMPORTANT: Write your entire article in English, regardless of the language used in the transcripts. If the transcripts are in another language, translate the content into English.\n\nRemember to maintain a professional, journalistic tone throughout the article. The language should be clear, concise, and easily understandable to a general audience. Avoid casual language, jargon, or overly technical terms unless they are essential and explained.\n\nWhen referring to the platform by name, always write \"dembrane\" in lowercase, even at the start of a sentence. Never capitalize it as \"Dembrane\".\n\nDon't insert any <br> tags in the output. Use new lines instead.\n\nPresent your final article within <article> tags with markdown formatted text."
+  },
+  {
+    "template": "system_report.nl.jinja",
+    "vars": {
+      "conversations": [
+        {
+          "name": "Resident 1",
+          "tags": "Energy, Mobility",
+          "transcript": "Charging points are scarce.\nLate buses.",
+          "created_at": "2026-09-01T09:20:00",
+          "updated_at": null
+        },
+        {
+          "name": null,
+          "tags": "",
+          "transcript": "<b>Typed</b> & \"quoted\"",
+          "created_at": null,
+          "updated_at": null
+        }
+      ],
+      "user_instructions": ""
+    },
+    "output": "<transcripts>\n\n   \n\t\t\t<transcript>\n\t\t\t\t<name>Resident 1</name>\n\t\t\t\t<tags>Energy, Mobility</tags>\n\t\t\t\t<content>\n\t\t\t\tCharging points are scarce.\nLate buses.\n\t\t\t\t</content>\n\t\t\t</transcript>\n   \n\t\t\t<transcript>\n\t\t\t\t<name>None</name>\n\t\t\t\t<tags></tags>\n\t\t\t\t<content>\n\t\t\t\t<b>Typed</b> & \"quoted\"\n\t\t\t\t</content>\n\t\t\t</transcript>\n   \n\n</transcripts>\n\n\nUw taak is het creëren van een dynamisch interview-stijl artikel in vraag-en-antwoord formaat, gebaseerd op de hierboven gegeven gespreksprotocollen. Dit artikel moet de inhoud kritisch analyseren terwijl er een duidelijke link met het bronmateriaal behouden blijft. Het eindresultaat moet een professioneel, leesbaar document zijn dat geschikt is voor directe online publicatie.\n\nBegin met het zorgvuldig lezen en analyseren van de protocollen en hun context.\n\nStart met een kritische analyse van de protocollen. Houd rekening met het volgende:\n1. Belangrijke thema's en ideeën\n2. Unieke perspectieven of inzichten\n3. Mogelijke controverses of tegenstrijdige standpunten\n4. Relevantie voor het hoofdonderwerp\n\nStructureer uw Q&A artikel als volgt:\n1. Inleiding: Leg kort de context en het belang van het onderwerp uit.\n2. Hoofdtekst: Creëer een passend aantal (tussen 2 en 15) vraag-en-antwoord paren die de belangrijkste aspecten van de protocollen behandelen.\n3. Conclusie: Vat de belangrijkste bevindingen en hun implicaties samen.\n\nBij het opstellen van uw vragen en antwoorden:\n* Zorg ervoor dat elke vraag helder, beknopt en prikkelend is.\n* Geef uitgebreide antwoorden die direct gebaseerd zijn op de protocollen.\n* Behoud een kritisch perspectief en behandel eventuele tegenstrijdigheden of onzekerheden in het bronmateriaal.\n* Gebruik directe citaten spaarzaam en schrijf ze correct toe wanneer u ze gebruikt.\n\nOm de integriteit van het bronmateriaal te waarborgen:\n* Geef de standpunten en informatie uit de protocollen nauwkeurig weer.\n* Introduceer geen informatie of meningen die niet in de originele inhoud voorkomen.\n* Als er hiaten in de informatie zijn, erken deze dan in plaats van te speculeren.\n* Verwijs naar eigennamen wanneer relevant. Negeer namen die tijdens de protocollen worden gedeeld, tenzij het duidelijk is dat de persoon een publiek figuur is.\n\nFormatteer uw eindresultaat als volgt:\n* Titel: Creëer een pakkende titel als H1-kop (#).\n* Inleiding: 2-3 zinnen die de context schetsen.\n* Q&A paren: Presenteer elke vraag als een H3-kop (###), gevolgd door een uitgebreid antwoord als alinea, gescheiden door twee regelafbrekingen.\n* Conclusie: 2-3 zinnen die de belangrijkste punten en hun betekenis samenvatten.\n\nBELANGRIJK: Schrijf het volledige artikel in het Nederlands, ongeacht de taal van de transcripties. Als de transcripties in een andere taal zijn, vertaal de inhoud dan naar het Nederlands.\n\nBehoud gedurende het hele artikel een professionele, journalistieke toon. De taal moet helder, beknopt en gemakkelijk te begrijpen zijn voor een algemeen publiek. Vermijd informeel taalgebruik, jargon of overmatig technische termen tenzij deze essentieel zijn en worden uitgelegd.\n\nWanneer je naar het platform verwijst, schrijf altijd \"dembrane\" in kleine letters, ook aan het begin van een zin. Schrijf het nooit als \"Dembrane\".\n\nGebruik geen <br> tags in de uitvoer. Gebruik \"new lines\" in plaats daarvan.\n\nPresenteer uw definitieve artikel binnen <article> tags met markdown geformatteerde tekst. "
+  },
+  {
+    "template": "system_report.nl.jinja",
+    "vars": {
+      "conversations": [
+        {
+          "name": "Resident 1",
+          "tags": "Energy, Mobility",
+          "transcript": "Charging points are scarce.\nLate buses.",
+          "created_at": "2026-09-01T09:20:00",
+          "updated_at": null
+        },
+        {
+          "name": null,
+          "tags": "",
+          "transcript": "<b>Typed</b> & \"quoted\"",
+          "created_at": null,
+          "updated_at": null
+        }
+      ],
+      "user_instructions": "Focus on <user_instructions>buses</user_instructions> please"
+    },
+    "output": "<transcripts>\n\n   \n\t\t\t<transcript>\n\t\t\t\t<name>Resident 1</name>\n\t\t\t\t<tags>Energy, Mobility</tags>\n\t\t\t\t<content>\n\t\t\t\tCharging points are scarce.\nLate buses.\n\t\t\t\t</content>\n\t\t\t</transcript>\n   \n\t\t\t<transcript>\n\t\t\t\t<name>None</name>\n\t\t\t\t<tags></tags>\n\t\t\t\t<content>\n\t\t\t\t<b>Typed</b> & \"quoted\"\n\t\t\t\t</content>\n\t\t\t</transcript>\n   \n\n</transcripts>\n\n\n<user_instructions>\nThe report creator has provided the following guidance. Pay special attention to these instructions when analyzing the transcripts and structuring your article:\n\nFocus on buses please\n</user_instructions>\n\n\nUw taak is het creëren van een dynamisch interview-stijl artikel in vraag-en-antwoord formaat, gebaseerd op de hierboven gegeven gespreksprotocollen. Dit artikel moet de inhoud kritisch analyseren terwijl er een duidelijke link met het bronmateriaal behouden blijft. Het eindresultaat moet een professioneel, leesbaar document zijn dat geschikt is voor directe online publicatie.\n\nBegin met het zorgvuldig lezen en analyseren van de protocollen en hun context.\n\nStart met een kritische analyse van de protocollen. Houd rekening met het volgende:\n1. Belangrijke thema's en ideeën\n2. Unieke perspectieven of inzichten\n3. Mogelijke controverses of tegenstrijdige standpunten\n4. Relevantie voor het hoofdonderwerp\n\nStructureer uw Q&A artikel als volgt:\n1. Inleiding: Leg kort de context en het belang van het onderwerp uit.\n2. Hoofdtekst: Creëer een passend aantal (tussen 2 en 15) vraag-en-antwoord paren die de belangrijkste aspecten van de protocollen behandelen.\n3. Conclusie: Vat de belangrijkste bevindingen en hun implicaties samen.\n\nBij het opstellen van uw vragen en antwoorden:\n* Zorg ervoor dat elke vraag helder, beknopt en prikkelend is.\n* Geef uitgebreide antwoorden die direct gebaseerd zijn op de protocollen.\n* Behoud een kritisch perspectief en behandel eventuele tegenstrijdigheden of onzekerheden in het bronmateriaal.\n* Gebruik directe citaten spaarzaam en schrijf ze correct toe wanneer u ze gebruikt.\n\nOm de integriteit van het bronmateriaal te waarborgen:\n* Geef de standpunten en informatie uit de protocollen nauwkeurig weer.\n* Introduceer geen informatie of meningen die niet in de originele inhoud voorkomen.\n* Als er hiaten in de informatie zijn, erken deze dan in plaats van te speculeren.\n* Verwijs naar eigennamen wanneer relevant. Negeer namen die tijdens de protocollen worden gedeeld, tenzij het duidelijk is dat de persoon een publiek figuur is.\n\nFormatteer uw eindresultaat als volgt:\n* Titel: Creëer een pakkende titel als H1-kop (#).\n* Inleiding: 2-3 zinnen die de context schetsen.\n* Q&A paren: Presenteer elke vraag als een H3-kop (###), gevolgd door een uitgebreid antwoord als alinea, gescheiden door twee regelafbrekingen.\n* Conclusie: 2-3 zinnen die de belangrijkste punten en hun betekenis samenvatten.\n\nBELANGRIJK: Schrijf het volledige artikel in het Nederlands, ongeacht de taal van de transcripties. Als de transcripties in een andere taal zijn, vertaal de inhoud dan naar het Nederlands.\n\nBehoud gedurende het hele artikel een professionele, journalistieke toon. De taal moet helder, beknopt en gemakkelijk te begrijpen zijn voor een algemeen publiek. Vermijd informeel taalgebruik, jargon of overmatig technische termen tenzij deze essentieel zijn en worden uitgelegd.\n\nWanneer je naar het platform verwijst, schrijf altijd \"dembrane\" in kleine letters, ook aan het begin van een zin. Schrijf het nooit als \"Dembrane\".\n\nGebruik geen <br> tags in de uitvoer. Gebruik \"new lines\" in plaats daarvan.\n\nPresenteer uw definitieve artikel binnen <article> tags met markdown geformatteerde tekst. "
+  },
+  {
+    "template": "system_report.uk.jinja",
+    "vars": {
+      "conversations": [
+        {
+          "name": "Resident 1",
+          "tags": "Energy, Mobility",
+          "transcript": "Charging points are scarce.\nLate buses.",
+          "created_at": "2026-09-01T09:20:00",
+          "updated_at": null
+        },
+        {
+          "name": null,
+          "tags": "",
+          "transcript": "<b>Typed</b> & \"quoted\"",
+          "created_at": null,
+          "updated_at": null
+        }
+      ],
+      "user_instructions": ""
+    },
+    "output": "<transcripts>\n\n   \n\t\t\t<transcript>\n\t\t\t\t<name>Resident 1</name>\n\t\t\t\t<tags>Energy, Mobility</tags>\n\t\t\t\t<content>\n\t\t\t\tCharging points are scarce.\nLate buses.\n\t\t\t\t</content>\n\t\t\t</transcript>\n   \n\t\t\t<transcript>\n\t\t\t\t<name>None</name>\n\t\t\t\t<tags></tags>\n\t\t\t\t<content>\n\t\t\t\t<b>Typed</b> & \"quoted\"\n\t\t\t\t</content>\n\t\t\t</transcript>\n   \n\n</transcripts>\n\n\nВам доручено створити динамічну статтю у стилі інтерв'ю з питаннями та відповідями на основі набору транскрипцій розмов, наведених вище. Ця стаття повинна критично аналізувати зміст, зберігаючи чіткий зв'язок із вихідним матеріалом. Кінцевий результат має бути професійним, читабельним документом, придатним для негайного поширення в інтернеті.\n\nСпочатку уважно прочитайте та проаналізуйте транскрипції та їх контекст.\n\nПочніть із критичного аналізу транскрипцій. Зверніть увагу на наступне:\n1. Ключові теми та ідеї\n2. Унікальні перспективи чи висновки\n3. Можливі суперечності або протилежні точки зору\n4. Відповідність основній темі\n\nСтруктуруйте вашу статтю з питаннями та відповідями наступним чином:\n1. Вступ: Коротко поясніть контекст та важливість теми.\n2. Основна частина: Створіть відповідну кількість (від 2 до 15) пар «запитання-відповідь», що охоплюють найважливіші аспекти транскрипцій.\n3. Висновок: Підсумуйте ключові моменти та їх значення.\n\nПри формулюванні запитань і відповідей:\n* Переконайтеся, що кожне запитання є чітким, стислим і стимулюючим до роздумів.\n* Надавайте вичерпні відповіді, що безпосередньо спираються на транскрипції.\n* Дотримуйтесь критичної перспективи, звертаючи увагу на будь-які суперечності чи невизначеності у вихідному матеріалі.\n* Використовуйте прямі цитати обережно, і коли використовуєте, правильно їх атрибутуйте.\n\nДля збереження цілісності вихідного матеріалу:\n* Точно відображайте погляди та інформацію, представлені в транскрипціях.\n* Не вводьте інформацію чи думки, відсутні в оригінальному змісті.\n* Якщо є прогалини в інформації, визнайте їх, а не спекулюйте.\n* Посилайтесь на власні назви, коли це доречно. Ігноруйте імена, згадані під час транскрипцій, якщо не очевидно, що особа є публічною фігурою.\n\nВідформатуйте ваш фінальний результат наступним чином:\n* Заголовок: Створіть привабливий заголовок як заголовок H1 (#).\n* Вступ: 2-3 речення, що задають контекст.\n* Пари «запитання-відповідь»: Представте кожне запитання як заголовок H3 (###), за яким йде вичерпна відповідь як абзац, розділені двома переносами рядка.\n* Висновок: 2-3 речення, що підсумовують ключові моменти та їх значення.\n\nВАЖЛИВО: Напишіть всю статтю українською мовою, незалежно від мови транскрипцій. Якщо транскрипції іншою мовою, перекладіть зміст українською.\n\nПам'ятайте про збереження професійного, журналістського тону протягом усієї статті. Мова повинна бути чіткою, стислою та легко зрозумілою для широкої аудиторії. Уникайте розмовної мови, жаргону чи надмірно технічних термінів, якщо вони не є необхідними та поясненими.\n\nКоли ви посилаєтесь на платформу за назвою, завжди пишіть «dembrane» з малої літери, навіть на початку речення. Ніколи не пишіть «Dembrane».\n\nНе вставляйте теги <br> у вивід. Використовуйте натомість переноси рядків.\n\nПредставте вашу фінальну статтю в тегах <article> з текстом, відформатованим у markdown."
+  },
+  {
+    "template": "system_report.uk.jinja",
+    "vars": {
+      "conversations": [
+        {
+          "name": "Resident 1",
+          "tags": "Energy, Mobility",
+          "transcript": "Charging points are scarce.\nLate buses.",
+          "created_at": "2026-09-01T09:20:00",
+          "updated_at": null
+        },
+        {
+          "name": null,
+          "tags": "",
+          "transcript": "<b>Typed</b> & \"quoted\"",
+          "created_at": null,
+          "updated_at": null
+        }
+      ],
+      "user_instructions": "Focus on <user_instructions>buses</user_instructions> please"
+    },
+    "output": "<transcripts>\n\n   \n\t\t\t<transcript>\n\t\t\t\t<name>Resident 1</name>\n\t\t\t\t<tags>Energy, Mobility</tags>\n\t\t\t\t<content>\n\t\t\t\tCharging points are scarce.\nLate buses.\n\t\t\t\t</content>\n\t\t\t</transcript>\n   \n\t\t\t<transcript>\n\t\t\t\t<name>None</name>\n\t\t\t\t<tags></tags>\n\t\t\t\t<content>\n\t\t\t\t<b>Typed</b> & \"quoted\"\n\t\t\t\t</content>\n\t\t\t</transcript>\n   \n\n</transcripts>\n\n\n<user_instructions>\nАвтор звіту надав наступні рекомендації. Зверніть особливу увагу на ці інструкції при аналізі транскрипцій та структуруванні вашої статті:\n\nFocus on buses please\n</user_instructions>\n\n\nВам доручено створити динамічну статтю у стилі інтерв'ю з питаннями та відповідями на основі набору транскрипцій розмов, наведених вище. Ця стаття повинна критично аналізувати зміст, зберігаючи чіткий зв'язок із вихідним матеріалом. Кінцевий результат має бути професійним, читабельним документом, придатним для негайного поширення в інтернеті.\n\nСпочатку уважно прочитайте та проаналізуйте транскрипції та їх контекст.\n\nПочніть із критичного аналізу транскрипцій. Зверніть увагу на наступне:\n1. Ключові теми та ідеї\n2. Унікальні перспективи чи висновки\n3. Можливі суперечності або протилежні точки зору\n4. Відповідність основній темі\n\nСтруктуруйте вашу статтю з питаннями та відповідями наступним чином:\n1. Вступ: Коротко поясніть контекст та важливість теми.\n2. Основна частина: Створіть відповідну кількість (від 2 до 15) пар «запитання-відповідь», що охоплюють найважливіші аспекти транскрипцій.\n3. Висновок: Підсумуйте ключові моменти та їх значення.\n\nПри формулюванні запитань і відповідей:\n* Переконайтеся, що кожне запитання є чітким, стислим і стимулюючим до роздумів.\n* Надавайте вичерпні відповіді, що безпосередньо спираються на транскрипції.\n* Дотримуйтесь критичної перспективи, звертаючи увагу на будь-які суперечності чи невизначеності у вихідному матеріалі.\n* Використовуйте прямі цитати обережно, і коли використовуєте, правильно їх атрибутуйте.\n\nДля збереження цілісності вихідного матеріалу:\n* Точно відображайте погляди та інформацію, представлені в транскрипціях.\n* Не вводьте інформацію чи думки, відсутні в оригінальному змісті.\n* Якщо є прогалини в інформації, визнайте їх, а не спекулюйте.\n* Посилайтесь на власні назви, коли це доречно. Ігноруйте імена, згадані під час транскрипцій, якщо не очевидно, що особа є публічною фігурою.\n\nВідформатуйте ваш фінальний результат наступним чином:\n* Заголовок: Створіть привабливий заголовок як заголовок H1 (#).\n* Вступ: 2-3 речення, що задають контекст.\n* Пари «запитання-відповідь»: Представте кожне запитання як заголовок H3 (###), за яким йде вичерпна відповідь як абзац, розділені двома переносами рядка.\n* Висновок: 2-3 речення, що підсумовують ключові моменти та їх значення.\n\nВАЖЛИВО: Напишіть всю статтю українською мовою, незалежно від мови транскрипцій. Якщо транскрипції іншою мовою, перекладіть зміст українською.\n\nПам'ятайте про збереження професійного, журналістського тону протягом усієї статті. Мова повинна бути чіткою, стислою та легко зрозумілою для широкої аудиторії. Уникайте розмовної мови, жаргону чи надмірно технічних термінів, якщо вони не є необхідними та поясненими.\n\nКоли ви посилаєтесь на платформу за назвою, завжди пишіть «dembrane» з малої літери, навіть на початку речення. Ніколи не пишіть «Dembrane».\n\nНе вставляйте теги <br> у вивід. Використовуйте натомість переноси рядків.\n\nПредставте вашу фінальну статтю в тегах <article> з текстом, відформатованим у markdown."
+  },
+  {
+    "template": "system_report.en.jinja",
+    "vars": {
+      "conversations": [],
+      "user_instructions": ""
+    },
+    "output": "<transcripts>\n\nNo conversation transcripts found.\n\n</transcripts>\n\n\nYou are tasked with creating a dynamic, interview-style Q&A article based on a set of conversation transcripts given above. This article should critically analyze the content while maintaining a clear link to the source material. The end result should be a professional, readable document suitable for immediate online sharing.\n\nFirst, carefully read and analyze the transcripts and their context.\n\nBegin by critically analyzing the transcripts. Consider the following:\n1. Key themes and ideas presented\n2. Unique perspectives or insights\n3. Potential controversies or conflicting viewpoints\n4. Relevance to the main topic\n\nStructure your Q&A article as follows:\n1. Introduction: Briefly explain the context and importance of the topic.\n2. Main body: Create a suitable number (between 2 and 15) of question-and-answer pairs that cover the most significant aspects of the transcripts.\n3. Conclusion: Summarize the key takeaways and their implications.\n\nWhen crafting your questions and answers:\n* Ensure each question is clear, concise, and thought-provoking.\n* Provide comprehensive answers that draw directly from the transcripts.\n* Maintain a critical perspective, addressing any contradictions or uncertainties in the source material.\n* Use direct quotes sparingly, and when you do, attribute them properly.\n\nTo maintain the integrity of the source material:\n* Accurately represent the views and information presented in the transcripts.\n* Do not introduce any information or opinions not found in the original content.\n* If there are gaps in the information, acknowledge them rather than speculating.\n* Refer to proper nouns when relevant. Ignore names shared during transcripts unless it’s obvious the person is a public figure.\n\nFormat your final output using markdown headings as follows:\n* Title: Create a compelling title as an H1 heading (#).\n* Introduction: 2-3 sentences setting the context.\n* Q&A pairs: Present each question as an H3 heading (###), followed by a comprehensive answer as a paragraph, separated by two new line breaks.\n* Conclusion: 2-3 sentences summarizing the key points and their significance.\n\nIMPORTANT: Write your entire article in English, regardless of the language used in the transcripts. If the transcripts are in another language, translate the content into English.\n\nRemember to maintain a professional, journalistic tone throughout the article. The language should be clear, concise, and easily understandable to a general audience. Avoid casual language, jargon, or overly technical terms unless they are essential and explained.\n\nWhen referring to the platform by name, always write \"dembrane\" in lowercase, even at the start of a sentence. Never capitalize it as \"Dembrane\".\n\nDon't insert any <br> tags in the output. Use new lines instead.\n\nPresent your final article within <article> tags with markdown formatted text."
+  },
+  {
+    "template": "generate_conversation_summary.en.jinja",
+    "vars": {
+      "quote_text_joined": "a\nb",
+      "project_context": "project context: name: P",
+      "verified_artifacts": [
+        {
+          "id": "x1",
+          "key": "gems",
+          "content": "It's \"good\""
+        }
+      ],
+      "conversation_title": "Buses"
+    },
+    "output": "You are given a series of quotes from a conversation transcript in chronological order.\n\n\n<conversation_title>\nThe user/participants have explicitly set the title of this conversation to:\nBuses\n</conversation_title>\n\n\n<quotes>\na\nb\n</quotes>\n\n\n<project_context>\nThe host has provided the following context and key terms for this conversation:\nproject context: name: P\n</project_context>\n\n\n\n<verified_artifacts>\nDuring this conversation, participants collaboratively created and verified the following concrete outcomes:\n\n\n---\n{'id': 'x1', 'key': 'gems', 'content': 'It\\'s \"good\"'}\n---\n\n</verified_artifacts>\n\n\nCreate a summary that captures the essence and meaning of what happened, optimized for glanceability.\n\n## Core Principles\n\n1. **Essence over exhaustiveness**: Capture the \"so what?\" - the meaningful outcome, decision, or insight - not a blow-by-blow account\n\n2. **Radical conciseness**: Most conversations should summarize to 2-4 sentences. Complex discussions might warrant 1-2 short paragraphs. The summary should always be dramatically shorter than the original.\n\n3. **Meaningful compression**: Ask \"what would someone need to know if they missed this?\" not \"what was discussed?\"\n\n4. **Natural language**: Write in flowing prose, not bullet points or structured sections. Avoid headers, lists, and formatting unless the content is genuinely complex and multi-faceted.\n\n5. **Context integration**: \n   - Weave in project context naturally when it adds meaning\n   - Note verified artifacts as concrete outcomes without process detail\n   - Don't force irrelevant context\n\n6. **Fast reading score**: Before writing, internally assess how glanceable this summary will be on a scale of 1-10:\n   - 10 = Instant comprehension (simple, single clear point)\n   - 7-9 = Very quick scan (2-3 clear takeaways)\n   - 4-6 = Needs focused reading (multiple points or moderate complexity)\n   - 1-3 = Requires careful reading (dense, complex, or nuanced)\n   \n   Aim for 7+ whenever possible. If your draft scores below 7, simplify further.\n\n## What to Capture\n\nFocus on what matters most. Include these elements when they're central to the conversation:\n\n- Decisions made and their rationale\n- Problems identified and solutions agreed upon  \n- Key insights or realizations\n- Concrete next steps or outcomes\n- Core dynamics when they shaped the outcome: arguments or reasoning that influenced decisions, tensions between competing priorities, conflicts that needed resolution, or agreements reached on contentious points\n- Meaningful disagreements or trade-offs discussed\n\n## What to Skip\n\n- Detailed play-by-play of the discussion\n- Implementation specifics unless they're the main point\n- Process mechanics (who said what, how decisions were reached)\n- Obvious context or background\n- Minor disagreements that didn't impact outcomes\n\n## Style Guidelines\n\n- Use commas, parentheses, or \"but\" instead of em dashes\n- Write in direct, conversational prose\n- Prefer shorter sentences over complex punctuation\n- Use \"but\" or \"however\" to show contrast\n- Use parentheses for asides or clarifications\n- Never use bold, italics, or other text formatting\n\n## Format\n\n- 2-4 sentences for simple conversations\n- 1-2 concise paragraphs for moderate complexity\n- Natural prose without bullets, headers, lists, or formatting\n- Only use structure if genuinely necessary for a multi-faceted discussion\n\nWrite as if explaining to a colleague what happened in 30 seconds."
+  },
+  {
+    "template": "generate_conversation_summary.de.jinja",
+    "vars": {
+      "quote_text_joined": "t",
+      "project_context": null,
+      "verified_artifacts": [],
+      "conversation_title": null
+    },
+    "output": "Ihnen wird eine Reihe von Zitaten aus einem Gesprächstranskript in chronologischer Reihenfolge vorgelegt.\n\n\n\n<quotes>\nt\n</quotes>\n\n\n\n\n\nErstellen Sie eine Zusammenfassung, die die Essenz und Bedeutung des Geschehenen erfasst, optimiert für schnelle Erfassbarkeit.\n\n## Kernprinzipien\n\n1. **Essenz über Vollständigkeit**: Erfassen Sie das \"Na und?\" - das bedeutungsvolle Ergebnis, die Entscheidung oder Erkenntnis - nicht einen detaillierten Bericht\n\n2. **Radikale Kürze**: Die meisten Gespräche sollten in 2-4 Sätzen zusammengefasst werden. Komplexe Diskussionen können 1-2 kurze Absätze rechtfertigen. Die Zusammenfassung sollte immer dramatisch kürzer sein als das Original.\n\n3. **Bedeutungsvolle Kompression**: Fragen Sie \"Was müsste jemand wissen, der dies verpasst hat?\" nicht \"Was wurde besprochen?\"\n\n4. **Natürliche Sprache**: Schreiben Sie in fließender Prosa, nicht in Aufzählungspunkten oder strukturierten Abschnitten. Vermeiden Sie Überschriften, Listen und Formatierung, es sei denn, der Inhalt ist wirklich komplex und vielschichtig.\n\n5. **Kontextintegration**: \n   - Weben Sie Projektkontext natürlich ein, wenn er Bedeutung hinzufügt\n   - Erwähnen Sie verifizierte Artefakte als konkrete Ergebnisse ohne Prozessdetails\n   - Erzwingen Sie keinen irrelevanten Kontext\n\n6. **Schnelle Lese-Bewertung**: Bewerten Sie vor dem Schreiben intern, wie schnell diese Zusammenfassung zu erfassen ist, auf einer Skala von 1-10:\n   - 10 = Sofortiges Verständnis (einfach, ein klarer Punkt)\n   - 7-9 = Sehr schneller Überblick (2-3 klare Erkenntnisse)\n   - 4-6 = Erfordert fokussiertes Lesen (mehrere Punkte oder mittlere Komplexität)\n   - 1-3 = Erfordert sorgfältiges Lesen (dicht, komplex oder nuanciert)\n   \n   Streben Sie 7+ an, wann immer möglich. Wenn Ihr Entwurf unter 7 liegt, vereinfachen Sie weiter.\n\n## Was Erfasst Werden Soll\n\nKonzentrieren Sie sich auf das Wichtigste. Schließen Sie diese Elemente ein, wenn sie zentral für das Gespräch sind:\n\n- Getroffene Entscheidungen und ihre Begründung\n- Identifizierte Probleme und vereinbarte Lösungen\n- Wichtige Erkenntnisse oder Realisierungen\n- Konkrete nächste Schritte oder Ergebnisse\n- Kerndynamiken, wenn sie das Ergebnis geprägt haben: Argumente oder Überlegungen, die Entscheidungen beeinflussten, Spannungen zwischen konkurrierenden Prioritäten, Konflikte, die gelöst werden mussten, oder erzielte Einigungen bei strittigen Punkten\n- Bedeutungsvolle Meinungsverschiedenheiten oder besprochene Kompromisse\n\n## Was Übersprungen Werden Soll\n\n- Detaillierter Bericht der Diskussion\n- Implementierungsdetails, es sei denn, sie sind der Hauptpunkt\n- Prozessmechanik (wer was sagte, wie Entscheidungen getroffen wurden)\n- Offensichtlicher Kontext oder Hintergrund\n- Kleinere Meinungsverschiedenheiten, die keine Auswirkungen auf die Ergebnisse hatten\n\n## Stilrichtlinien\n\n- Verwenden Sie Kommas, Klammern oder \"aber\" anstelle von Gedankenstrichen\n- Schreiben Sie in direkter, gesprächiger Prosa\n- Bevorzugen Sie kürzere Sätze gegenüber komplexer Zeichensetzung\n- Verwenden Sie \"aber\" oder \"jedoch\", um Kontraste zu zeigen\n- Verwenden Sie Klammern für Einschübe oder Klarstellungen\n- Verwenden Sie niemals Fettdruck, Kursivschrift oder andere Textformatierung\n\n## Format\n\n- 2-4 Sätze für einfache Gespräche\n- 1-2 prägnante Absätze für mittlere Komplexität\n- Natürliche Prosa ohne Aufzählungspunkte, Überschriften, Listen oder Formatierung\n- Verwenden Sie nur Struktur, wenn sie für eine vielschichtige Diskussion wirklich notwendig ist\n\nSchreiben Sie, als würden Sie einem Kollegen in 30 Sekunden erklären, was passiert ist."
+  },
+  {
+    "template": "generate_conversation_title.en.jinja",
+    "vars": {
+      "summary": "S",
+      "language_name": "Dutch",
+      "existing_titles": ["One", "Two"],
+      "custom_prompt": "Short"
+    },
+    "output": "You are generating a short title for a conversation that just finished.\n\nThe title should describe the TOPIC or SUBJECT of the conversation — not the participant's name.\nEach conversation has a separate \"participant name\" field (what the person called themselves). The title you generate is different — it captures what the conversation was about.\n\n<summary>\nS\n</summary>\n\n\n<existing_conversation_titles_in_project>\nThese are titles of other conversations in this project - try to match the style:\n\n- One\n\n- Two\n\n</existing_conversation_titles_in_project>\n\n\n\n<custom_instructions>\nShort\n</custom_instructions>\n\n\nGenerate a 1-3 word title that captures the essence of this conversation.\n- The title should be in Dutch language\n- Match the style of existing titles if provided\n- Be specific, not generic (avoid \"Discussion\" or \"Meeting\")\n- Do NOT use person names as the title\n- Output exactly ONE title on a single line, nothing else\n- Never output a list of options, alternatives, or numbered suggestions, even if the custom instructions ask for several: pick the single best title yourself"
+  },
+  {
+    "template": "generate_conversation_title.en.jinja",
+    "vars": {
+      "summary": "S",
+      "language_name": "English",
+      "existing_titles": [],
+      "custom_prompt": null
+    },
+    "output": "You are generating a short title for a conversation that just finished.\n\nThe title should describe the TOPIC or SUBJECT of the conversation — not the participant's name.\nEach conversation has a separate \"participant name\" field (what the person called themselves). The title you generate is different — it captures what the conversation was about.\n\n<summary>\nS\n</summary>\n\n\n\n\n\nGenerate a 1-3 word title that captures the essence of this conversation.\n- The title should be in English language\n- Match the style of existing titles if provided\n- Be specific, not generic (avoid \"Discussion\" or \"Meeting\")\n- Do NOT use person names as the title\n- Output exactly ONE title on a single line, nothing else\n- Never output a list of options, alternatives, or numbered suggestions, even if the custom instructions ask for several: pick the single best title yourself"
+  },
+  {
+    "template": "generate_conversation_tag_ids.en.jinja",
+    "vars": {
+      "summary": "S",
+      "language_name": "English",
+      "project_tags": [
+        {
+          "id": "t1",
+          "text": "Energy"
+        }
+      ],
+      "max_tags": 3
+    },
+    "output": "You assign draft project tags to a conversation summary.\n\nUse only the existing project tags listed below. Do not invent new tags.\nChoose up to 3 tags that are clearly supported by the summary.\nIf none are clearly supported, return an empty list.\n\nReturn JSON only, in this exact shape:\n{\"tag_ids\":[\"project_tag_id\"]}\n\nConversation summary language: English\n\nExisting project tags:\n\n- id: t1\n  text: Energy\n\n\nConversation summary:\nS"
+  }
+]
