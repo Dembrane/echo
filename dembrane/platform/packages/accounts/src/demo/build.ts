@@ -229,8 +229,14 @@ export async function buildDemo(
     const out = r.seed as SeedOutput;
     const statuses: string[] = [];
     for (const p of out.projects) {
-      const status = await d.extract(p.loop_id, `${demoWorkflowId(demoId, attempt)}:${p.language}`);
+      // The popcorn run's request id is a uuid column: derive a stable one per attempt and
+      // language, so a retry is its own run and the same attempt never reads twice.
+      const runId = demoIdentity(demoId, `${demoWorkflowId(demoId, attempt)}:${p.language}`);
+      const status = await d.extract(p.loop_id, runId);
       if (status === "disabled") throw new Error("Popcorn is switched off for the demo project");
+      // A draft with an empty presentation looks finished and is not: fail the step so staff
+      // see it and retry instead of sending it.
+      if (status !== "ok") throw new Error(`The popcorn read ended with status ${status}`);
       statuses.push(status);
     }
     return { seed: { ...out, extraction: statuses } as never };

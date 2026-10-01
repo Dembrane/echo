@@ -37,8 +37,8 @@ const Conversation = z.object({
   theme: z.string().min(1).max(80),
   lines: z
     .array(z.object({ speaker: z.string().min(1).max(40), text: z.string().min(1).max(700) }))
-    .min(6)
-    .max(30),
+    .min(16)
+    .max(60),
 });
 
 const Authored = z.object({
@@ -48,7 +48,7 @@ const Authored = z.object({
   invitation_title: z.string().min(1).max(120),
   invitation_text: z.string().min(1).max(800),
   notice: z.string().min(1).max(160),
-  conversations: z.array(Conversation).min(4).max(8),
+  conversations: z.array(Conversation).min(8).max(12),
 });
 export type Authored = z.output<typeof Authored>;
 
@@ -102,7 +102,7 @@ const AUTHOR_SYSTEM = `You write the fictional corpus of a synthetic dembrane de
 Rules:
 - Every conversation is invented. Use generic role labels (for example "resident", "entrepreneur", "youth worker"), never names of real people, and never attribute words to the organisation, its staff or officials.
 - Show contrasting perspectives, concrete everyday experiences and tensions that stay unresolved. No statistics, counts of real people, consensus, endorsements, findings or decisions.
-- Each conversation is a short spoken exchange: a facilitator asks, one participant answers, with natural spoken sentences.
+- Each conversation is a table discussion as it would be recorded: a facilitator and three to five participants with different role labels talk with each other, interrupt, disagree, tell concrete stories and build on what others said, in natural spoken sentences. The role field names the table (for example "table of residents and shop owners").
 - The disclosure plainly says the stories and perspectives are invented and are not outcomes of a real session. The invitation values listening to the organisation's real people before starting. The notice is a short synthetic label shown on every screen.
 - Do not claim that only public data was used.
 - Write everything in {LANGUAGE}. Answer with JSON only.`;
@@ -140,10 +140,11 @@ export async function author(
     user: [
       `Organisation: ${brief.organisation_name}\nSector: ${facts.sector}\nScenario of the demo: ${facts.scenario}\nWhat the demo should show: ${brief.brief}`,
       `Invented themes to draw on (fiction):\n${facts.invented_themes.map((t) => `- ${t.title}: ${t.description}`).join("\n")}`,
-      "Write between 4 and 8 conversations of 6 to 30 lines each, plus the title, subtitle and the disclosure copy.",
+      "Write between 8 and 10 conversations of 20 to 40 lines each, plus the title, subtitle and the disclosure copy.",
     ],
     temperature: 0.8,
-    maxTokens: 16000,
+    // Ten table discussions of up to forty lines need room; a cut-off answer fails to parse.
+    maxTokens: 48000,
     jsonSchema: AUTHOR_SCHEMA,
   });
   return withDisclosure(Authored.parse(JSON.parse(out.text)), brief.language);
