@@ -184,18 +184,65 @@ class DeleteConversationTagsRequest(BaseModel):
 @ProjectRouter.post("/{project_id}/conversations/{conversation_id}/tags/delete")
 async def delete_conversation_tags(
     project_id: str,
-    conversation_id: str,  # noqa: ARG001 — required by FastAPI route binding
+    conversation_id: str,
     body: DeleteConversationTagsRequest,
     auth: DependencyDirectusSession,
 ) -> dict:
     """Delete conversation-tag junction records (hard delete)."""
-    await _verify_project_access(auth, project_id)
+    # Staff sit outside the app-layer model (may have no app_user row);
+    # everyone else needs project:update, as on the v2 tag routes.
+    if auth.is_admin:
+        await _verify_project_access(auth, project_id)
+    else:
+        from dembrane.api.v2.bff._access import resolve_project_access
+
+        access = await resolve_project_access(project_id, auth)
+        access.require("project:update")
 
     from dembrane.directus import directus
 
-    for tag_id in body.tag_ids:
-        await run_in_thread_pool(directus.delete_item, "conversation_project_tag", str(tag_id))
-    return {"status": "success", "deleted": len(body.tag_ids)}
+    # The conversation is addressed through its project.
+    conversations = await run_in_thread_pool(
+        directus.get_items,
+        "conversation",
+        {
+            "query": {
+                "filter": {
+                    "id": {"_eq": conversation_id},
+                    "project_id": {"_eq": project_id},
+                },
+                "fields": ["id"],
+                "limit": 1,
+            }
+        },
+    )
+    if not conversations:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    # A junction row belongs to one conversation: only this conversation's
+    # rows are removed, and the count reports what was removed.
+    rows: list = []
+    if body.tag_ids:
+        rows = (
+            await run_in_thread_pool(
+                directus.get_items,
+                "conversation_project_tag",
+                {
+                    "query": {
+                        "filter": {
+                            "id": {"_in": body.tag_ids},
+                            "conversation_id": {"_eq": conversation_id},
+                        },
+                        "fields": ["id"],
+                        "limit": -1,
+                    }
+                },
+            )
+            or []
+        )
+    for row in rows:
+        await run_in_thread_pool(directus.delete_item, "conversation_project_tag", str(row["id"]))
+    return {"status": "success", "deleted": len(rows)}
 
 
 def _parse_iso_datetime(value: Any) -> datetime:
