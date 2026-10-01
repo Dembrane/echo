@@ -12,7 +12,7 @@ export interface WebOptions {
 
 /**
  * A PR preview names its pull request, so the frontend can show which PR it is and link to
- * it. Every other environment adds nothing, so next and prod render exactly as before.
+ * it. Every other environment adds nothing, so staging and prod render exactly as before.
  */
 export function previewRuntime(
   env: string,

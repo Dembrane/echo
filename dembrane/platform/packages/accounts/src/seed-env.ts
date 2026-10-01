@@ -33,7 +33,7 @@ export async function seedAccountsDemoFromEnv(
         prefix: e.FILES_S3_PREFIX,
       })
     : new FilesystemStorage(e.FILES_LOCAL_ROOT ?? ".data/files", apiUrl);
-  // A demo on preview or next writes its PDFs and logo to the bucket the API serves from.
+  // A demo on preview or staging writes its PDFs and logo to the bucket the API serves from.
   requireBucket(env, files, "The demo's PDFs and logo", "FILES_S3_BUCKET");
   return seedAccountsDemo({
     db,

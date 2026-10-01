@@ -3,7 +3,7 @@
 # .github/workflows/platform.yml; runnable by hand with gcloud signed in.
 #
 #   deploy-env.sh deploy pr-<n> <tag>      a PR preview (echo-pr-<n>-*, database echo_pr_<n>)
-#   deploy-env.sh deploy next <tag>        echo-next (echo-next-*)
+#   deploy-env.sh deploy staging <tag>     staging (echo-staging-*)
 #   deploy-env.sh deploy prod <tag>        production (echo-prod-*)
 #   deploy-env.sh make-room <n>            tears down the oldest PR previews until <n> fits,
 #                                          printing "removed PR preview <m>" for each
@@ -29,14 +29,14 @@ here="$(cd "$(dirname "$0")" && pwd)"
 
 target=${2:-}
 case "$target" in
-  next | prod) ENV=$target ;;
+  staging | prod) ENV=$target ;;
   # A PR preview, or a PR number for make-room and teardown. There is no branch preview.
   pr-* | [0-9]*) ENV=preview ;;
   *) if [ "${1:-}" = list ]; then ENV=preview; else sed -n '2,11p' "$0"; exit 2; fi ;;
 esac
 case "$ENV" in
   preview) project=dembrane-web-previews number=218237812097 ;;
-  next) project=dembrane-web-next number=488580804029 ;;
+  staging) project=dembrane-web-staging number=1089877593337 ;;
   prod) project=dembrane-web-prod number=740075346439 ;;
 esac
 PROJECT=${PROJECT:-$project}
@@ -91,7 +91,7 @@ deploy() {
   local api web_dash web_portal media public_api
   api=$(url "$prefix-api") web_dash=$(url "$prefix-dashboard") web_portal=$(url "$prefix-portal")
   media=$(url "$prefix-media") public_api=$api
-  # next and prod serve their domains from environments/<env>.ts. A PR preview serves its own hostnames behind the load balancer. api-<n> exists because the
+  # staging and prod serve their domains from environments/<env>.ts. A PR preview serves its own hostnames behind the load balancer. api-<n> exists because the
   # MCP OAuth issuer and its /.well-known documents live at the API origin's root, which the
   # web servers do not forward. The web servers still forward /api to the API's run.app URL:
   # server to server, and working before DNS points at the load balancer.
@@ -130,7 +130,7 @@ deploy() {
 
   # A PR preview leaves alone every unit whose image digest and settings match what it already
   # runs: a frontend-only push rolls out the dashboard and portal and nothing else, and skips
-  # the migrate job. next and prod roll out everything, so each revision names its release.
+  # the migrate job. staging and prod roll out everything, so each revision names its release.
   # SKIP_UNCHANGED=0 forces a full rollout (a rotated secret is only read by a new revision).
   local skip=0
   [[ $name == pr-* ]] && skip=${SKIP_UNCHANGED:-1}

@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
-# Tells people what a deploy to next or prod carried. Called by .github/workflows/platform.yml
+# Tells people what a deploy to staging or prod carried. Called by .github/workflows/platform.yml
 # after a successful deploy; runnable by hand with gh signed in.
 #
 #   release.sh prs <from> <to>                      merged PRs with a commit in from..to (JSON)
-#   release.sh next-summary <from> <to>             the next deploy summary (Markdown)
+#   release.sh staging-summary <from> <to>             the staging deploy summary (Markdown)
 #   release.sh release-notes <tag> [<prev> [<to>]]  the release title, then its notes
-#   release.sh announce-next <sha>                  after a next deploy: job summary, Slack, PR comments
+#   release.sh announce-staging <sha>                  after a staging deploy: job summary, Slack, PR comments
 #   release.sh publish-release <tag>                after a prod deploy: Release, Slack, PR comments, sam
 #
 # DRY_RUN=1 reads GitHub as usual and prints each post, comment, release and event instead of
 # sending it. Nothing here is customer-facing: the in-app release notes are drafted by sam from
 # the release.published event and land through a reviewed PR.
 #
-# The commit next runs is recorded by GitHub Deployments (the deploy job's `environment: next`):
-# the last deployment whose latest status is success is where the next summary starts.
+# The commit staging runs is recorded by GitHub Deployments (the deploy job's `environment: staging`):
+# the last deployment whose latest status is success is where the staging summary starts.
 set -euo pipefail
 
 REPO=${GITHUB_REPOSITORY:-Dembrane/echo}
@@ -49,11 +49,11 @@ slack_lines() {
     (if length > $max then "and \(length - $max) more in the compare view" else empty end)'
 }
 
-next_summary() {
+staging_summary() {
   local from=$1 to=$2 list=${3:-} a b n
   [ -n "$list" ] || list=$(prs "$from" "$to")
   a=$(short "$from") b=$(short "$to") n=$(jq length <<<"$list")
-  echo "### dembrane-next runs [\`$b\`]($SERVER/$REPO/commit/$to)"
+  echo "### dembrane-staging runs [\`$b\`]($SERVER/$REPO/commit/$to)"
   echo
   if [ "$n" = 0 ]; then
     echo "No merged pull requests since \`$a\`."
@@ -146,27 +146,27 @@ previous_deploy() {
   echo "$(gh api "repos/$REPO/releases/latest" --jq .tag_name) release"
 }
 
-announce_next() {
+announce_staging() {
   local sha=$1 prev kind list b text
-  # NEXT_FROM=<sha> starts the list there instead, as if next had last been deployed from it.
-  if [ -n "${NEXT_FROM:-}" ]; then prev=$NEXT_FROM kind=deployment
-  else read -r prev kind < <(previous_deploy next); fi
+  # STAGING_FROM=<sha> starts the list there instead, as if staging had last been deployed from it.
+  if [ -n "${STAGING_FROM:-}" ]; then prev=$STAGING_FROM kind=deployment
+  else read -r prev kind < <(previous_deploy staging); fi
   list=$(prs "$prev" "$sha")
   b=$(short "$sha")
-  echo "::group::next summary ($kind $prev..$b)"
-  next_summary "$prev" "$sha" "$list" | summary
+  echo "::group::staging summary ($kind $prev..$b)"
+  staging_summary "$prev" "$sha" "$list" | summary
   echo "::endgroup::"
-  text="*dembrane-next* now runs <$SERVER/$REPO/commit/$sha|$b>"
+  text="*dembrane-staging* now runs <$SERVER/$REPO/commit/$sha|$b>"
   if [ "$(jq length <<<"$list")" = 0 ]; then text+=", no new pull requests"
   else text+=" · $(jq length <<<"$list") pull requests since <$SERVER/$REPO/compare/$prev...$sha|${prev:0:7}>"$'\n'"$(slack_lines <<<"$list")"; fi
   [ -z "$RUN_URL" ] || text+=$'\n'"<$RUN_URL|deploy run>"
   slack_post "$TEAM_CHANNEL" "$text"
-  # Without an earlier next deployment the list reaches back to the last release, and those
-  # PRs were never told they were on next: comments start from the second deploy.
+  # Without an earlier staging deployment the list reaches back to the last release, and those
+  # PRs were never told they were on staging: comments start from the second deploy.
   if [ "$kind" = deployment ]; then
-    comment_prs "$list" "Now on dembrane-next, deployed $(now) in \`$b\`."
+    comment_prs "$list" "Now on dembrane-staging, deployed $(now) in \`$b\`."
   else
-    echo "::notice::First recorded next deployment: the list starts at release $prev and no PR comments were posted"
+    echo "::notice::First recorded staging deployment: the list starts at release $prev and no PR comments were posted"
   fi
 }
 
@@ -221,9 +221,9 @@ publish_release() {
 
 case "${1:-}" in
   prs) prs "$2" "$3" ;;
-  next-summary) next_summary "$2" "$3" ;;
+  staging-summary) staging_summary "$2" "$3" ;;
   release-notes) release_notes "$2" "${3:-}" "${4:-}" ;;
-  announce-next) announce_next "$2" ;;
+  announce-staging) announce_staging "$2" ;;
   publish-release) publish_release "$2" ;;
   *) sed -n '2,9p' "$0"; exit 2 ;;
 esac

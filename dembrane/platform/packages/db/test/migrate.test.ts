@@ -68,7 +68,7 @@ run("migrate", () => {
     const url = `${base}/mig_guard`;
     // The cutover path: everything but the contract is applied while the old stack runs.
     await migrate(url, { holdContract: true, appEnv: "prod" });
-    for (const appEnv of ["prod", "next", undefined]) {
+    for (const appEnv of ["prod", "staging", undefined]) {
       const err = await migrate(url, { appEnv }).catch((e: unknown) => e);
       expect(err).toBeInstanceOf(ContractArchiveMissing);
       expect((err as Error).message).toContain("packages/db/scripts/archive-tables.sh");

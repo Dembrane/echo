@@ -1,7 +1,7 @@
 import local from "../environments/local";
-import next from "../environments/next";
 import preview from "../environments/preview";
 import prod from "../environments/prod";
+import staging from "../environments/staging";
 import test from "../environments/test";
 import type { EnvironmentValues, Values } from "./define";
 import { type Loaded, load } from "./load";
@@ -23,7 +23,13 @@ export type Config = Values<Schema>;
 export type Environment = EnvironmentValues<Schema>;
 export type EnvironmentName = Config["app"]["env"];
 
-export const environments: Record<EnvironmentName, unknown> = { local, test, preview, next, prod };
+export const environments: Record<EnvironmentName, unknown> = {
+  local,
+  test,
+  preview,
+  staging,
+  prod,
+};
 
 /** Loads configuration for the environment named by APP_ENV. Call once at boot, in the composition root. */
 export function loadConfig(

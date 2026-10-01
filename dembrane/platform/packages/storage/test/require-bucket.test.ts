@@ -14,7 +14,7 @@ test("the filesystem store is refused outside local and test; a bucket is fine a
   });
   for (const env of ["local", "test"])
     expect(() => requireBucket(env, disk, "Files", "FILES_S3_BUCKET")).not.toThrow();
-  for (const env of ["preview", "next", "prod"])
+  for (const env of ["preview", "staging", "prod"])
     expect(() => requireBucket(env, disk, "Files", "FILES_S3_BUCKET")).toThrow(/FILES_S3_BUCKET/);
   expect(() => requireBucket("prod", bucket, "Files", "FILES_S3_BUCKET")).not.toThrow();
 });

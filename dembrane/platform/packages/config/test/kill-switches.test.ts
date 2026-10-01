@@ -10,45 +10,57 @@ import { load } from "../src/load";
  * feature off at cutover. Changing a row here is a behaviour change for customers.
  */
 const switches = [
-  { path: "webhooks.enabled", env: "ENABLE_WEBHOOKS", default: true, prod: true, next: true },
+  { path: "webhooks.enabled", env: "ENABLE_WEBHOOKS", default: true, prod: true, staging: true },
   {
     path: "webhooks.allowPrivateTargets",
     env: "WEBHOOKS_ALLOW_PRIVATE_TARGETS",
     default: false,
     prod: false,
-    next: false,
+    staging: false,
   },
   {
     path: "conversations.participantTokenRequired",
     env: "PARTICIPANT_TOKEN_REQUIRED",
     default: false,
     prod: false,
-    next: false,
+    staging: false,
   },
   {
     path: "conversations.monitorEnabled",
     env: "ENABLE_MONITOR",
     default: true,
     prod: true,
-    next: true,
+    staging: true,
   },
-  { path: "analysis.enablePresent", env: "ENABLE_PRESENT", default: true, prod: true, next: true },
-  { path: "canvas.enabled", env: "ENABLE_CANVAS", default: true, prod: true, next: true },
+  {
+    path: "analysis.enablePresent",
+    env: "ENABLE_PRESENT",
+    default: true,
+    prod: true,
+    staging: true,
+  },
+  { path: "canvas.enabled", env: "ENABLE_CANVAS", default: true, prod: true, staging: true },
   {
     path: "billing.forceReconcileFailure",
     env: "MOLLIE_FORCE_RECONCILE_FAILURE",
     default: false,
     prod: false,
-    next: false,
+    staging: false,
   },
   {
     path: "billing.customerJobs",
     env: "BILLING_CUSTOMER_JOBS",
     default: "off",
     prod: "on",
-    next: "off",
+    staging: "off",
   },
-  { path: "popcorn.showFlow", env: "POPCORN_SHOW_FLOW", default: false, prod: false, next: true },
+  {
+    path: "popcorn.showFlow",
+    env: "POPCORN_SHOW_FLOW",
+    default: false,
+    prod: false,
+    staging: true,
+  },
 ] as const;
 
 const secrets = Object.fromEntries(
@@ -85,8 +97,8 @@ for (const s of switches) {
     expect(valueAt(values, s.path)).toBe(s.default);
   });
 
-  test(`${s.env} resolves to ${s.prod} on prod and ${s.next} on echo-next`, () => {
+  test(`${s.env} resolves to ${s.prod} on prod and ${s.staging} on staging`, () => {
     expect(valueAt(loadConfig({ ...secrets, APP_ENV: "prod" }).values, s.path)).toBe(s.prod);
-    expect(valueAt(loadConfig({ ...secrets, APP_ENV: "next" }).values, s.path)).toBe(s.next);
+    expect(valueAt(loadConfig({ ...secrets, APP_ENV: "staging" }).values, s.path)).toBe(s.staging);
   });
 }

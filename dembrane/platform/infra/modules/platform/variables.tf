@@ -13,8 +13,8 @@ variable "env" {
   type        = string
   description = "Environment name; matches an APP_ENV file in packages/config/environments."
   validation {
-    condition     = contains(["preview", "next", "prod"], var.env)
-    error_message = "env must be preview, next or prod."
+    condition     = contains(["preview", "staging", "prod"], var.env)
+    error_message = "env must be preview, staging or prod."
   }
 }
 
@@ -99,7 +99,7 @@ variable "deploy_environment" {
 
 variable "generate_invite_hash_secret" {
   type        = bool
-  description = "Generate INVITE_HASH_SECRET. Off where it must equal Directus's SECRET (next, prod): the secret is created empty and its value added by hand."
+  description = "Generate INVITE_HASH_SECRET. Off where it must equal Directus's SECRET (staging, prod): the secret is created empty and its value added by hand."
   default     = true
 }
 

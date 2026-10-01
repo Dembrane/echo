@@ -12,11 +12,11 @@ const logger = createLogger({
   ...(config.observability.gcpProject && { gcpProject: config.observability.gcpProject }),
 });
 
-// The frontend names environments production/next/testing/local; preview reads as
+// The frontend names environments production/staging/testing/local; preview reads as
 // testing so it never reports into another environment's analytics.
 const FRONTEND_ENV = {
   prod: "production",
-  next: "next",
+  staging: "staging",
   preview: "testing",
   test: "testing",
   local: "local",

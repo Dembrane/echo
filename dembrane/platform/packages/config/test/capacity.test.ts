@@ -19,7 +19,7 @@ interface Tfvars {
   readonly services: Record<string, { readonly min: number; readonly max: number }>;
 }
 
-for (const env of ["preview", "next", "prod"] as const) {
+for (const env of ["preview", "staging", "prod"] as const) {
   test(`${env} fits its connection budget`, async () => {
     const tf: Tfvars = await Bun.file(
       new URL(`../../../infra/${env}.tfvars.json`, import.meta.url),

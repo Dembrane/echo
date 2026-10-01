@@ -5,12 +5,12 @@
 #   2. APIs switched off: Cloud Trace and Telemetry (spans would leave the EU), and the
 #      defaults a new project comes with that the platform never calls.
 # Safe to rerun.
-#   infra/bootstrap.sh <preview|next|prod>
+#   infra/bootstrap.sh <preview|staging|prod>
 set -euo pipefail
 
 case "${1:-}" in
   preview) project=dembrane-web-previews ;;
-  next) project=dembrane-web-next ;;
+  staging) project=dembrane-web-staging ;;
   prod) project=dembrane-web-prod ;;
   *) sed -n '2,8p' "$0"; exit 2 ;;
 esac

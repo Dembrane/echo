@@ -4,12 +4,12 @@
 # after a change to the relay fails until this has run. Also puts the Slack bot token in the
 # environment's secret when it has no value yet, reading it from SLACK_BOT_TOKEN in
 # ~/.config/sam/env without echoing it.
-#   infra/alert-relay.sh <preview|next|prod>
+#   infra/alert-relay.sh <preview|staging|prod>
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 case "${1:-}" in
   preview) project=dembrane-web-previews ;;
-  next) project=dembrane-web-next ;;
+  staging) project=dembrane-web-staging ;;
   prod) project=dembrane-web-prod ;;
   *) sed -n '2,8p' "$0"; exit 2 ;;
 esac

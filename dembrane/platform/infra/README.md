@@ -2,12 +2,12 @@
 
 Each environment is its own GCP project, directly under the dembrane.com organization, with
 its own Terraform root, state and identities. No identity of one environment holds a role
-in another's project, so a preview (which any PR branch can deploy) cannot reach next or prod.
+in another's project, so a preview (which any PR branch can deploy) cannot reach staging or prod.
 
 | Environment | Project | Number | Root | State |
 |---|---|---|---|---|
 | preview | `dembrane-web-previews` | 218237812097 | `preview/` | `gs://dembrane-web-previews-tf-state` |
-| next | `dembrane-web-next` | 488580804029 | `next/` | `gs://dembrane-web-next-tf-state` |
+| staging | `dembrane-web-staging` | 1089877593337 | `staging/` | `gs://dembrane-web-staging-tf-state` |
 | prod | `dembrane-web-prod` | 740075346439 | `prod/` | `gs://dembrane-web-prod-tf-state` |
 
 The roots are thin: each calls `modules/platform` with its `<env>.tfvars.json`. Once per
@@ -25,7 +25,7 @@ Manager, IAM, STS, Storage, Vertex AI, Logging, Monitoring), a registry `echo-<e
 SQL instance `echo-<env>`, the uploads bucket with its HMAC key, secrets replicated in
 europe-west4 only, the runtime and deployer service accounts, the GitHub trust, the EU log
 bucket with the `_Default` sink pointed at it, log metrics, alerts and the readiness check.
-next and prod also have the load balancer (`api`, `dashboard` and `portal`; prod adds the old
+staging and prod also have the load balancer (`api`, `dashboard` and `portal`; prod adds the old
 `directus` host). prod has, in `prod/cutover.tf`, what the cutover needs: the archive bucket
 and Storage Transfer.
 
@@ -51,7 +51,7 @@ tag that prod then pulls.
 
 GitHub trust (the workload identity provider's condition), all in `Dembrane/echo`:
 - preview: `refs/heads/feat/bun-migration`, or jobs in the `pr-preview` environment;
-- next: `refs/heads/main`;
+- staging: `refs/heads/main`;
 - prod: protected `refs/heads/main` or a tag, and only jobs in the `prod` environment,
   whose required reviewers approve each deploy.
 
@@ -63,9 +63,9 @@ sizes an environment.
 
 ## Environments
 
-| | preview | next | prod |
+| | preview | staging | prod |
 |---|---|---|---|
-| Deploys | PR previews from the `preview` label | main, by hand (every push once `NEXT_DEPLOY_ON_MAIN` is true) | a release tag on main, after approval |
+| Deploys | PR previews from the `preview` label | main, by hand (every push once `STAGING_DEPLOY_ON_MAIN` is true) | a release tag on main, after approval |
 | API | 0 to 1, concurrency 1000 | 2 to 2 | 2 to 10 |
 | Dashboard, portal | 0 to 1 each | 2 to 2 each | 2 to 4 each |
 | Media (ffmpeg, one job per instance) | 0 to 1 | 0 to 4 | 1 to 20 |
@@ -75,7 +75,7 @@ sizes an environment.
 
 PR previews come only from pull request events. Adding the `preview` label to a PR creates
 `echo-pr-<n>-*` and database `echo_pr_<n>` on the preview instance, and each push to a
-labelled PR redeploys it. There is no manual path: the workflow's manual run deploys next or
+labelled PR redeploys it. There is no manual path: the workflow's manual run deploys staging or
 prod only. At most three exist; a fourth tears down the oldest. Removing the label, closing
 or merging the PR tears its own down. Previews share the preview identities, secrets and
 bucket. Jobs deploying PR previews run in the GitHub environment `pr-preview`, the only
@@ -142,7 +142,7 @@ headroom   = 10% of max_connections, at least 5
 | | pools (app, queue) | per API | per worker | needed | max_connections |
 |---|---|---|---|---|---|
 | preview (4 deployments) | 3, 2 | 7 | 9 | 4 × (7 + 9 + 3) + 3 + 10 = 89 | 100 |
-| next | 5, 3 | 9 | 12 | 2×9 + 2×12 + 3 + 3 + 10 = 58 | 100 |
+| staging | 5, 3 | 9 | 12 | 2×9 + 2×12 + 3 + 3 + 10 = 58 | 100 |
 | prod | 10, 10 | 14 | 24 | 10×14 + 4×24 + 3 + 3 + 40 = 282 | 400 |
 
 ## Monthly cost, europe-west4 list prices
@@ -150,7 +150,7 @@ headroom   = 10% of max_connections, at least 5
 - preview: about $60 for Cloud SQL, $50 per always-on worker pool (branch plus up to three
   PRs), a few dollars for services that scale to zero: $110 with the branch alone, $260 with
   three PR previews up.
-- next: $100 API (2 always-on), $40 dashboard and portal (4 warm, idle priced), $100 worker
+- staging: $100 API (2 always-on), $40 dashboard and portal (4 warm, idle priced), $100 worker
   pool (2), $60 Cloud SQL: about $300.
 - prod: $160 API (2 to 3 instances on average), $60 dashboard and portal, $210 worker pool
   (4), $55 media, $245 Cloud SQL (2 vCPU, 8 GB, HA): about $730, before storage, egress and
@@ -180,10 +180,10 @@ projects is an organization setting
 and needs an organization admin; an organization policy on `gcp.resourceLocations`
 (`in:eu-locations`) would enforce all of the above for new resources.
 
-## First deploy of next and prod
+## First deploy of staging and prod
 
 Terraform has made everything around the services; the services themselves come from the
-first `platform` workflow run with target next or prod. Before it:
+first `platform` workflow run with target staging or prod. Before it:
 
 - Add a value to each empty secret with `gcloud secrets versions add echo-<env>-<name>
   --data-file=-`. `invite-hash-secret` must hold Directus's SECRET while Directus-era invite
@@ -191,12 +191,13 @@ first `platform` workflow run with target next or prod. Before it:
   `mollie-api-key`, `echo-support-webhook-token`, `site-api-token`,
   `accounts-slack-webhook-url`, `accounts-events-secret`, `agent-client-secret-key`) switch
   their feature on; the deploy wires each one that has a value and leaves the rest off.
-- Create the `prod` GitHub environment with required reviewers and a deployment rule for
-  main and tags. A job naming an environment that does not exist creates it unprotected.
+- Create the `staging` GitHub environment with a deployment rule for main, and the `prod`
+  one with required reviewers and a deployment rule for main and tags. A job naming an environment that does not exist creates it unprotected.
 - prod: add the four `_acme-challenge` CNAMEs from `terraform output platform`
   (`dns_authorizations`) in Cloudflare, so the certificates are ACTIVE before the switch.
-  next has no load balancer yet: give it `domains` the same way before its DNS moves.
-- Run the workflow with target next or prod. `hold_data` (on by default) deploys the migrate
+  staging: add its one `_acme-challenge` CNAME and the `*.staging` A record (`lb_ip`) the
+  same way; its certificate is a wildcard, authorised once.
+- Run the workflow with target staging or prod. `hold_data` (on by default) deploys the migrate
   job without running it and keeps the worker pool at 0, for a database that a restore fills
   first; run with it off once the data is in.
 - After the first deploy set `monitor_api_ready` and `monitor_worker_ready` to true in the

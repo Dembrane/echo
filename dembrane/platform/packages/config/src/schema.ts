@@ -22,7 +22,7 @@ const list = z.union([
  */
 export const schema = defineSchema({
   app: {
-    env: key("APP_ENV", z.enum(["local", "test", "preview", "next", "prod"]), {
+    env: key("APP_ENV", z.enum(["local", "test", "preview", "staging", "prod"]), {
       description: "Which environment file applies. Set by the deployment, never by hand in code.",
       public: true,
     }),

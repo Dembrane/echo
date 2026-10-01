@@ -1,4 +1,4 @@
-# The next environment, alone in GCP project dembrane-web-next. Its state lives in a bucket
+# The staging environment, alone in GCP project dembrane-web-staging. Its state lives in a bucket
 # in the same project (made by ../bootstrap.sh), and nothing here holds a role anywhere else.
 terraform {
   required_version = ">= 1.9"
@@ -7,13 +7,13 @@ terraform {
     random = { source = "hashicorp/random", version = "~> 3.6" }
   }
   backend "gcs" {
-    bucket = "dembrane-web-next-tf-state"
+    bucket = "dembrane-web-staging-tf-state"
   }
 }
 
 locals {
-  project  = "dembrane-web-next"
-  settings = jsondecode(file("${path.module}/../next.tfvars.json"))
+  project  = "dembrane-web-staging"
+  settings = jsondecode(file("${path.module}/../staging.tfvars.json"))
   # Values copied from the old environment, filled by hand before the first deploy (see
   # infra/README.md). INVITE_HASH_SECRET is created empty too: it must equal Directus's SECRET.
   pending_secrets = [
@@ -64,7 +64,7 @@ module "platform" {
 # A new project already has a _Default sink; the module repoints it at the EU bucket.
 import {
   to = module.platform.google_logging_project_sink.default
-  id = "projects/dembrane-web-next/sinks/_Default"
+  id = "projects/dembrane-web-staging/sinks/_Default"
 }
 
 output "platform" {
