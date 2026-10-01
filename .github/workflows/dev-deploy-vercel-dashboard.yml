@@ -5,7 +5,9 @@ env:
 on:
   push:
     branches:
-      - main
+      # main carries v3, which echo-next does not run: echo-next follows this branch, so a
+      # fix for prod is tried there before its release tag.
+      - hotfix-v2
 
 concurrency:
   group: dev-deploy-vercel-dashboard-${{ github.ref }}
