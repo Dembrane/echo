@@ -67,6 +67,38 @@ test("health answers with the release, at /health and through the /api proxy", a
   }
 });
 
+test("sign-in is handed the address the API resolved, not one the caller named", async () => {
+  const seen: (string | null)[] = [];
+  const auth = {
+    handler: async (req: Request) => {
+      seen.push(req.headers.get("x-client-ip"));
+      return new Response("auth");
+    },
+    api: { getSession: async () => null },
+  } as unknown as Deps["auth"];
+  const config = {
+    ...loaded.values,
+    http: { ...loaded.values.http, trustedProxies: ["203.0.113.1"], proxySecret: "p".repeat(40) },
+  };
+  const app = buildApp(deps({ auth, config }));
+  await app.request("/api/auth/sign-in/email", {
+    method: "POST",
+    headers: {
+      "x-client-ip": "192.0.2.99",
+      "x-forwarded-for": "192.0.2.99, 198.51.100.7, 203.0.113.1",
+    },
+  });
+  await app.request("/api/auth/sign-in/email", {
+    method: "POST",
+    headers: {
+      "x-forwarded-for": "192.0.2.99, 34.1.2.3",
+      "x-dembrane-client-ip": "198.51.100.8",
+      "x-dembrane-proxy-secret": "p".repeat(40),
+    },
+  });
+  expect(seen).toEqual(["198.51.100.7", "198.51.100.8"]);
+});
+
 test("ready fails when the database does not answer", async () => {
   const res = await buildApp(deps({ pingDb: () => Promise.reject(new Error("down")) })).request(
     "/ready",

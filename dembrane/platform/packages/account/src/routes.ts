@@ -1,5 +1,5 @@
 import type { Config } from "@dembrane/config";
-import { type Env, requireUser, v } from "@dembrane/http";
+import { clientIp, type Env, requireUser, v } from "@dembrane/http";
 import { audiences } from "@dembrane/notifications";
 import { Hono } from "hono";
 import { assetRoutes } from "./assets";
@@ -133,12 +133,6 @@ export function accountRoutes(api: AccountApiDeps) {
     .route("/", settingsRoutes(deps))
     .route("/", auditRoutes(deps))
     .route("/", assetRoutes(deps));
-}
-
-/** First X-Forwarded-For hop, as the old API took it (spec hole L-20: trusts the header). */
-function clientIp(c: { req: { header(name: string): string | undefined } }): string {
-  const fwd = c.req.header("x-forwarded-for");
-  return fwd ? (fwd.split(",")[0]?.trim() ?? "unknown") : "unknown";
 }
 
 const registerBody = {

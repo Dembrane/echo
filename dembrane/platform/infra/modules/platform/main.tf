@@ -315,7 +315,7 @@ resource "google_secret_manager_secret_iam_member" "api_auth_secret" {
   member    = google_service_account.api.member
 }
 
-# The web servers serve static files and forward /api; they need no secrets or data access.
+# The web servers serve static files and forward /api; they read the proxy secret and no data.
 resource "google_service_account" "web" {
   account_id   = "${local.name}-web"
   display_name = "echo ${var.env} dashboard and portal"
@@ -325,6 +325,32 @@ resource "google_service_account_iam_member" "deployer_acts_as_web" {
   service_account_id = google_service_account.web.name
   role               = "roles/iam.serviceAccountUser"
   member             = google_service_account.deployer.member
+}
+
+# Shared by the web servers and the API: the web servers forward /api from an address the
+# API cannot list, so they pass on the caller's address and this proves it is them.
+resource "random_password" "proxy_secret" {
+  length  = 64
+  special = false
+}
+resource "google_secret_manager_secret" "proxy_secret" {
+  secret_id = "${local.name}-proxy-secret"
+  replication {
+    user_managed {
+      replicas { location = var.region }
+    }
+  }
+  depends_on = [google_project_service.apis]
+}
+resource "google_secret_manager_secret_version" "proxy_secret" {
+  secret      = google_secret_manager_secret.proxy_secret.id
+  secret_data = random_password.proxy_secret.result
+}
+resource "google_secret_manager_secret_iam_member" "proxy_secret" {
+  for_each  = { api = google_service_account.api.member, web = google_service_account.web.member }
+  secret_id = google_secret_manager_secret.proxy_secret.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = each.value
 }
 
 # Signs invite links. Must equal Directus's SECRET wherever Directus-era invite links are

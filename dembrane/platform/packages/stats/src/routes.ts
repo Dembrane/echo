@@ -1,8 +1,7 @@
 import type { Db } from "@dembrane/db";
-import type { Env } from "@dembrane/http";
+import { clientIp, type Env } from "@dembrane/http";
 import type { Limit, RateLimiter } from "@dembrane/ratelimit";
 import { Hono } from "hono";
-import { getConnInfo } from "hono/bun";
 import { computeStats, StatsCache } from "./service";
 import { statsStorage } from "./storage";
 
@@ -13,20 +12,6 @@ const PUBLIC_CORS = {
   "Access-Control-Allow-Headers": "*",
   "Access-Control-Max-Age": "86400",
 };
-
-/**
- * First address in X-Forwarded-For, else the peer, as the old limiter keyed it. Trusting
- * the header is spec 7 L-20; the fix belongs with the load balancer's trusted hop.
- */
-function clientIp(c: Parameters<typeof getConnInfo>[0]): string {
-  const header = c.req.header("x-forwarded-for");
-  if (header) return header.split(",")[0]?.trim() ?? "";
-  try {
-    return getConnInfo(c).remote.address ?? "unknown";
-  } catch {
-    return "unknown";
-  }
-}
 
 /**
  * GET /api/stats/: public aggregate numbers, 10 requests per address per minute, cached an

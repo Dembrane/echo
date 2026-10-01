@@ -2,7 +2,7 @@ import type { Access, AccessStore } from "@dembrane/access";
 import type { Capture } from "@dembrane/analytics";
 import { UnauthenticatedError } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
-import { type Ctx, type Env, v } from "@dembrane/http";
+import { type Ctx, clientIp, type Env, v } from "@dembrane/http";
 import type { Logger } from "@dembrane/observability";
 import type { RateLimiter } from "@dembrane/ratelimit";
 import { Hono } from "hono";
@@ -99,8 +99,7 @@ export function agentAccessRoutes(api: AgentAccessRoutesDeps) {
     reply(await token(d, await formOf(c), c.req.header("authorization") ?? null)),
   );
   app.post(`${MCP_PATH}/register`, async (c) => {
-    const ip = (c.req.header("x-forwarded-for") ?? "").split(",")[0]?.trim() ?? "";
-    await api.limiter.check(REGISTER_LIMIT, ip);
+    await api.limiter.check(REGISTER_LIMIT, clientIp(c));
     return reply(await register(d, await c.req.text()));
   });
   app.post(`${MCP_PATH}/revoke`, async (c) =>

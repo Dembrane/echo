@@ -26,6 +26,7 @@ output "secrets" {
     { for k, s in google_secret_manager_secret.pending : k => s.secret_id },
     {
       AUTH_SECRET        = google_secret_manager_secret.auth_secret.secret_id
+      HTTP_PROXY_SECRET  = google_secret_manager_secret.proxy_secret.secret_id
       INVITE_HASH_SECRET = google_secret_manager_secret.invite_hash_secret.secret_id
     },
   )

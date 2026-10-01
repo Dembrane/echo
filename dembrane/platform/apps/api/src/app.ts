@@ -5,6 +5,7 @@ import { agentAccessRoutes } from "@dembrane/agent-access";
 import { agenticRoutes } from "@dembrane/agentic";
 import { analysisRoutes, analysisRuntime, clientOf } from "@dembrane/analysis";
 import { posthogCapture } from "@dembrane/analytics";
+import { AUTH_CLIENT_IP_HEADER } from "@dembrane/auth";
 import { billingRoutes, mollieWebhookRoutes } from "@dembrane/billing";
 import { canvasRoutes } from "@dembrane/canvas";
 import { chatRoutes } from "@dembrane/chats";
@@ -44,6 +45,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
 import type { Deps, Env } from "./deps";
+import { clientAddress } from "./middleware/client-ip";
 import { correlation } from "./middleware/correlation";
 import { notFound, onError } from "./middleware/errors";
 import { session } from "./middleware/session";
@@ -53,6 +55,7 @@ import { systemRoutes } from "./routes/system";
 export function buildApp(deps: Deps) {
   const app = new Hono<Env>();
   app.use(correlation(deps));
+  app.use(clientAddress(deps));
   app.use(secureHeaders());
   app.use(
     "/api/*",
@@ -63,7 +66,13 @@ export function buildApp(deps: Deps) {
       exposeHeaders: ["x-request-id", PARTICIPANT_TOKEN_HEADER],
     }),
   );
-  app.on(["GET", "POST"], "/api/auth/*", (c) => deps.auth.handler(c.req.raw));
+  // Sign-in keys its rate limits on the address the API resolved, never on a header the
+  // caller sent.
+  app.on(["GET", "POST"], "/api/auth/*", (c) => {
+    const headers = new Headers(c.req.raw.headers);
+    headers.set(AUTH_CLIENT_IP_HEADER, c.get("clientIp"));
+    return deps.auth.handler(new Request(c.req.raw, { headers }));
+  });
   app.use("/api/*", session(deps));
   app.route("/", systemRoutes(deps));
   app.route("/", accountRoutes(deps));

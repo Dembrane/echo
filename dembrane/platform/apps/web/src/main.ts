@@ -26,6 +26,8 @@ const handle = createHandler({
   distDir: config.web.distDir,
   release: config.app.release,
   apiOrigin: config.web.apiOrigin,
+  trustedProxies: config.http.trustedProxies,
+  proxySecret: config.http.proxySecret,
   runtime: {
     env: FRONTEND_ENV[config.app.env],
     role: config.web.role,
@@ -47,7 +49,11 @@ const handle = createHandler({
   }),
 });
 
-const server = Bun.serve({ port: config.http.port, fetch: handle, idleTimeout: 255 });
+const server = Bun.serve({
+  port: config.http.port,
+  fetch: (req, srv) => handle(req, srv.requestIP(req)?.address),
+  idleTimeout: 255,
+});
 logger.info({ port: server.port, role: config.web.role }, "web started");
 process.on("SIGTERM", async () => {
   await server.stop();

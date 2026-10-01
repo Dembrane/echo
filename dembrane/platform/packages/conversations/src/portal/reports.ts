@@ -1,5 +1,5 @@
 import { BadRequestError, NotFoundError, newId, StatusError } from "@dembrane/core";
-import type { Env } from "@dembrane/http";
+import { clientIp, type Env } from "@dembrane/http";
 import { p } from "@dembrane/legacy-shape";
 import { Hono } from "hono";
 import type { ConversationsDeps } from "../deps";
@@ -10,12 +10,6 @@ const { model, required, optional, str, int, bool, list, literal } = p;
 
 // M-19: subscribing was unlimited; one portal enrols a handful of addresses at most.
 const SUBSCRIBE_LIMIT = { name: "participant_report_subscribe", capacity: 20, windowSeconds: 600 };
-
-/** First X-Forwarded-For hop, as the old API took it (spec hole L-20: trusts the header). */
-function clientIp(c: { req: { header(name: string): string | undefined } }): string {
-  const fwd = c.req.header("x-forwarded-for");
-  return fwd ? (fwd.split(",")[0]?.trim() ?? "unknown") : "unknown";
-}
 
 const reportId = (id: bigint | number) => Number(id);
 

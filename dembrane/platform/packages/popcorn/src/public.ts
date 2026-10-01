@@ -1,10 +1,9 @@
 import { NotFoundError, RateLimitedError } from "@dembrane/core";
-import type { Env } from "@dembrane/http";
+import { clientIp, type Env } from "@dembrane/http";
 import { p } from "@dembrane/legacy-shape";
 import type { Limit } from "@dembrane/ratelimit";
 import type { Hub } from "@dembrane/realtime";
 import { type Context, Hono } from "hono";
-import { getConnInfo } from "hono/bun";
 import {
   requirePopcornEnabled,
   requirePresentEnabled,
@@ -58,17 +57,6 @@ const MAX_EVENT_STREAMS_PER_VIEWER = 100;
 // following one token share the answer for a moment.
 const PUBLISHED_CHECK_MS = 10_000;
 const publishedChecks = new Map<string, { at: number; published: boolean }>();
-
-/** First X-Forwarded-For hop, else the peer, as the old limiter keyed it (spec 7 L-20). */
-function clientIp(c: Context): string {
-  const header = c.req.header("x-forwarded-for");
-  if (header) return header.split(",")[0]?.trim() ?? "";
-  try {
-    return getConnInfo(c).remote.address ?? "unknown";
-  } catch {
-    return "unknown";
-  }
-}
 
 /** The embed config of the host's preview and of an embedded public deck. */
 export function deckEmbed(adminBaseUrl: string, presentationId: string, preview = false) {

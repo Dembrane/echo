@@ -267,7 +267,7 @@ export async function call(
       ...(as && { "x-as": as }),
       ...(body !== undefined && { "content-type": "application/json" }),
       "user-agent": "accounts-test",
-      "x-forwarded-for": "203.0.113.7, 10.0.0.1",
+      "x-forwarded-for": "10.0.0.1, 203.0.113.7",
     },
     ...(body !== undefined && { body: JSON.stringify(body) }),
   });

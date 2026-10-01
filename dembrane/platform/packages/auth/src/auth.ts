@@ -37,6 +37,12 @@ export interface AuthOptions {
 }
 
 /**
+ * The API puts the caller's address, as it resolved it, in this header before handing a
+ * request to sign-in. Whatever the caller sent under the same name is overwritten.
+ */
+export const AUTH_CLIENT_IP_HEADER = "x-client-ip";
+
+/**
  * Identity: who someone is, never what they may do (that is the access package).
  * Passwords keep the argon2id hashes Directus wrote, so nobody resets at cutover.
  */
@@ -102,6 +108,7 @@ export function createAuth(opts: AuthOptions) {
         crossSubDomainCookies: { enabled: true, domain: opts.cookieDomain },
       }),
       database: { generateId: () => Bun.randomUUIDv7() },
+      ipAddress: { ipAddressHeaders: [AUTH_CLIENT_IP_HEADER] },
     },
     plugins: [
       emailOTP({

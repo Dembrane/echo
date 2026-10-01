@@ -1,6 +1,6 @@
 import { BadRequestError } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
-import { type Ctx, type Env, projectFor, requireUser } from "@dembrane/http";
+import { type Ctx, clientIp, type Env, projectFor, requireUser } from "@dembrane/http";
 import { p } from "@dembrane/legacy-shape";
 import { MemoryRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { boundedEventResponse, notification, publish } from "@dembrane/realtime";
@@ -110,12 +110,6 @@ export async function publishMonitorDirty(db: Db, projectId: string): Promise<vo
   await publish(sql, monitorChannel(projectId), { type: "dirty" });
 }
 
-/** First X-Forwarded-For hop, as the old API took it (spec hole L-20: trusts the header). */
-function clientIp(c: Ctx): string {
-  const fwd = c.req.header("x-forwarded-for");
-  return fwd ? (fwd.split(",")[0]?.trim() ?? "unknown") : "unknown";
-}
-
 /** FastAPI's `body: Optional[Model] = None`: no body or JSON null is None, anything else is validated. */
 // biome-ignore lint/suspicious/noExplicitAny: any model shape
 async function optionalBody<T>(c: Ctx, m: p.Model<any>): Promise<T | null> {
@@ -168,8 +162,7 @@ export function liveRoutes(d: ConversationsDeps) {
   const live = () => liveServices(d);
   // Per process, not in Postgres: a counter row per client address was a second write on
   // every ping. Each API instance allows the full capacity, so across N instances an
-  // address gets up to N times it; the address comes from X-Forwarded-For (L-20), so a
-  // determined flood rotates it anyway, and the limit's job is to cap a runaway client.
+  // address gets up to N times it. The limit's job is to cap a runaway client.
   const pingLimiter = new RateLimiter(new MemoryRateCounter(), d.now);
 
   app.post("/api/participant/conversations/:conversation_id/ping", async (c) => {
