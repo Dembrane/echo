@@ -19,7 +19,7 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconCheck, IconCopy, IconLock } from "@tabler/icons-react";
+import { CheckIcon, CopyIcon, LockIcon } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { QRCode } from "@/components/common/QRCode";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
@@ -268,7 +268,7 @@ export const TwoFactorSettingsCard = ({
 					<Group justify="space-between" align="flex-start">
 						<Stack gap={2}>
 							<Group gap="sm" align="center">
-								<IconLock size={20} />
+								<LockIcon size={20} />
 								<Text size="lg">
 									<Trans>Two-factor authentication</Trans>
 								</Text>
@@ -400,7 +400,7 @@ const CopySecretButton = ({ secret }: { secret: string }) => {
 						onClick={copy}
 						aria-label={copied ? t`Secret copied` : t`Copy secret`}
 					>
-						{copied ? <IconCheck size={18} /> : <IconCopy size={18} />}
+						{copied ? <CheckIcon size={18} /> : <CopyIcon size={18} />}
 					</ActionIcon>
 				</Tooltip>
 			)}

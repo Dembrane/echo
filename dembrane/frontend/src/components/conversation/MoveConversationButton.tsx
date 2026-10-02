@@ -13,7 +13,10 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
-import { IconArrowsExchange, IconSearch } from "@tabler/icons-react";
+import {
+	ArrowsLeftRightIcon,
+	MagnifyingGlassIcon,
+} from "@phosphor-icons/react";
 import posthog from "posthog-js";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -132,7 +135,7 @@ export const MoveConversationButton = ({
 				onClick={open}
 				variant="outline"
 				color="primary"
-				rightSection={<IconArrowsExchange size={16} />}
+				rightSection={<ArrowsLeftRightIcon size={16} />}
 				{...testId("conversation-move-button")}
 			>
 				<Trans>Move to Another Project</Trans>
@@ -150,7 +153,7 @@ export const MoveConversationButton = ({
 							<TextInput
 								label={<FormLabel label={t`Search`} isDirty={false} />}
 								placeholder={t`Search projects...`}
-								leftSection={<IconSearch size={16} />}
+								leftSection={<MagnifyingGlassIcon size={16} />}
 								value={search}
 								onChange={(e) => setSearch(e.currentTarget.value)}
 								{...testId("conversation-move-search-input")}

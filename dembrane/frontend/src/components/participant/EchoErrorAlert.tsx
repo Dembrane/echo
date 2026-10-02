@@ -1,11 +1,11 @@
 import { Trans } from "@lingui/react/macro";
 import { Alert, Text } from "@mantine/core";
-import { IconAlertCircle } from "@tabler/icons-react";
+import { WarningCircleIcon } from "@phosphor-icons/react";
 
 export const EchoErrorAlert = ({ error }: { error: Error }) => {
 	return (
 		<Alert
-			icon={<IconAlertCircle size="1rem" />}
+			icon={<WarningCircleIcon size="1rem" />}
 			color="red"
 			variant="outline"
 			radius="md"

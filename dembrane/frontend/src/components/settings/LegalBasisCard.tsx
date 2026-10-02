@@ -12,7 +12,7 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
-import { IconAlertTriangle, IconScale } from "@tabler/icons-react";
+import { ScalesIcon, WarningIcon } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 
 export type LegalBasisValue = "client-managed" | "consent" | "dembrane-events";
@@ -115,7 +115,7 @@ export const LegalBasisCard = ({
 		<Card withBorder p="lg" radius="md">
 			<Stack gap="md">
 				<Group gap="sm">
-					<IconScale size={24} stroke={1.5} />
+					<ScalesIcon size={24} />
 					<Title order={4}>
 						<Trans>Legal Basis</Trans>
 					</Title>
@@ -129,11 +129,7 @@ export const LegalBasisCard = ({
 					</Trans>
 				</Text>
 
-				<Alert
-					variant="light"
-					color="yellow"
-					icon={<IconAlertTriangle size={16} />}
-				>
+				<Alert variant="light" color="yellow" icon={<WarningIcon size={16} />}>
 					<Text size="sm">
 						{storedStateInvalid ? (
 							<Trans>

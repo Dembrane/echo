@@ -15,12 +15,12 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
-	IconDotsVertical,
-	IconMessageCircle,
-	IconPencil,
-	IconSparkles,
-	IconTrash,
-} from "@tabler/icons-react";
+	ChatCircleIcon,
+	DotsThreeVerticalIcon,
+	PencilSimpleIcon,
+	SparkleIcon,
+	TrashIcon,
+} from "@phosphor-icons/react";
 import { formatRelative } from "date-fns";
 import { Suspense, useEffect } from "react";
 import { useInView } from "react-intersection-observer";
@@ -72,19 +72,11 @@ export const ChatModeIndicator = ({
 			<Box className="flex items-center justify-center">
 				{isOverview || isAgentic ? (
 					<ActionIcon radius={100} size={circleSize} color={colors.primary}>
-						<IconSparkles
-							size={glyphSize}
-							color="var(--app-text)"
-							stroke={2}
-						/>
+						<SparkleIcon size={glyphSize} color="var(--app-text)" />
 					</ActionIcon>
 				) : (
 					<ActionIcon radius={100} size={circleSize} color={colors.primary}>
-						<IconMessageCircle
-							size={glyphSize}
-							color="var(--app-text)"
-							stroke={2}
-						/>
+						<ChatCircleIcon size={glyphSize} color="var(--app-text)" />
 					</ActionIcon>
 				)}
 			</Box>
@@ -121,14 +113,14 @@ export const ChatAccordionItemMenu = ({
 						className="flex items-center justify-center"
 						{...testId("chat-item-menu-button")}
 					>
-						<IconDotsVertical />
+						<DotsThreeVerticalIcon />
 					</ActionIcon>
 				</Menu.Target>
 
 				<Menu.Dropdown>
 					<Stack gap="xs">
 						<Menu.Item
-							leftSection={<IconPencil />}
+							leftSection={<PencilSimpleIcon />}
 							disabled={deleteChatMutation.isPending}
 							onClick={openRename}
 							{...testId("chat-item-menu-rename")}
@@ -136,7 +128,7 @@ export const ChatAccordionItemMenu = ({
 							<Trans id="project.sidebar.chat.rename">Rename</Trans>
 						</Menu.Item>
 						<Menu.Item
-							leftSection={<IconTrash />}
+							leftSection={<TrashIcon />}
 							disabled={deleteChatMutation.isPending}
 							onClick={openDeleteConfirm}
 							{...testId("chat-item-menu-delete")}

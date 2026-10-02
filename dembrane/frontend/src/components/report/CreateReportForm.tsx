@@ -17,10 +17,10 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
 import {
-	IconArrowLeft,
-	IconClock,
-	IconExternalLink,
-} from "@tabler/icons-react";
+	ArrowLeftIcon,
+	ArrowSquareOutIcon,
+	ClockIcon,
+} from "@phosphor-icons/react";
 import { AxiosError } from "axios";
 import { MessageCircleIcon } from "lucide-react";
 import { useState } from "react";
@@ -281,7 +281,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 							onClick={() => setShowSchedule(false)}
 						>
 							<Group gap={4}>
-								<IconArrowLeft size={12} />
+								<ArrowLeftIcon size={12} />
 								<Trans>Edit options</Trans>
 							</Group>
 						</Anchor>
@@ -360,7 +360,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 						<Button
 							variant="outline"
 							onClick={() => setShowSchedule(true)}
-							leftSection={<IconClock size={16} />}
+							leftSection={<ClockIcon size={16} />}
 							style={{ flex: 3 }}
 							disabled={showReportUpgrade}
 						>
@@ -380,7 +380,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 									td="underline"
 								>
 									<Trans>Share your ideas with our team</Trans>{" "}
-									<IconExternalLink
+									<ArrowSquareOutIcon
 										size={11}
 										style={{ display: "inline", verticalAlign: "middle" }}
 									/>

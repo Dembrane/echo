@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Group, Stack, Text, Textarea, UnstyledButton } from "@mantine/core";
-import { IconCheck, IconPencil } from "@tabler/icons-react";
+import { CheckIcon, PencilSimpleIcon } from "@phosphor-icons/react";
 import { useCallback, useEffect, useState } from "react";
 import focusOptionsData from "@/data/reportFocusOptions.json";
 
@@ -145,7 +145,7 @@ export const ReportFocusSelector = ({
 						>
 							<Group gap={6} wrap="nowrap">
 								{isActive && (
-									<IconCheck size={12} color="var(--mantine-color-primary-6)" />
+									<CheckIcon size={12} color="var(--mantine-color-primary-6)" />
 								)}
 								<Text
 									size="xs"
@@ -173,7 +173,7 @@ export const ReportFocusSelector = ({
 					}}
 				>
 					<Group gap={5} wrap="nowrap">
-						<IconPencil
+						<PencilSimpleIcon
 							size={12}
 							color={
 								showCustom

@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Alert, Button, CopyButton, Stack, Text } from "@mantine/core";
-import { IconCheck, IconCopy } from "@tabler/icons-react";
+import { CheckIcon, CopyIcon } from "@phosphor-icons/react";
 import posthog from "posthog-js";
 import { useEffect, useMemo, useRef } from "react";
 import { detectInAppBrowser } from "@/lib/inAppBrowser";
@@ -57,7 +57,7 @@ export const InAppBrowserNotice = ({ projectId }: { projectId?: string }) => {
 						{({ copied, copy }) => (
 							<Button
 								variant="outline"
-								leftSection={copied ? <IconCheck /> : <IconCopy />}
+								leftSection={copied ? <CheckIcon /> : <CopyIcon />}
 								onClick={copy}
 								className="self-start"
 								{...testId("portal-in-app-browser-copy-button")}

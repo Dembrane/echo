@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { Alert, List, Text } from "@mantine/core";
-import { IconAlertTriangle } from "@tabler/icons-react";
+import { WarningIcon } from "@phosphor-icons/react";
 
 interface AgentRiskNoticeProps {
 	freeTierMonthlyCalls?: number;
@@ -17,7 +17,7 @@ export const AgentRiskNotice = ({
 	<Alert
 		color="orange"
 		variant="light"
-		icon={<IconAlertTriangle size={18} />}
+		icon={<WarningIcon size={18} />}
 		title={<Trans>Before you connect an agent</Trans>}
 		data-testid="agent-risk-notice"
 	>

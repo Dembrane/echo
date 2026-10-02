@@ -11,7 +11,7 @@ import {
 	Title,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
-import { IconArrowLeft } from "@tabler/icons-react";
+import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { useParams } from "react-router";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { AccountSettingsCard } from "@/components/settings/AccountSettingsCard";
@@ -54,7 +54,7 @@ export const UserSettingsRoute = () => {
 							size={32}
 							className="opacity-40 hover:opacity-100 transition-opacity"
 						>
-							<IconArrowLeft size={18} />
+							<ArrowLeftIcon size={18} />
 						</ActionIcon>
 					</div>
 					<Title order={2}>

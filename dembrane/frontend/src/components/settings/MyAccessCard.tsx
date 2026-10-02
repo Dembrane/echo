@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
 import { Badge, Button, Card, Group, Loader, Stack, Text } from "@mantine/core";
-import { IconExternalLink } from "@tabler/icons-react";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { API_BASE_URL } from "@/config";
@@ -161,7 +161,7 @@ export const MyAccessCard = () => {
 											<Button
 												size="compact-xs"
 												variant="subtle"
-												rightSection={<IconExternalLink size={12} />}
+												rightSection={<ArrowSquareOutIcon size={12} />}
 												onClick={() => navigate(`/o/${organisation.id}`)}
 											>
 												<Trans>Open organisation</Trans>

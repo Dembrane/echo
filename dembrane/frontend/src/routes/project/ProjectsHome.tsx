@@ -20,9 +20,13 @@ import {
 	useDisclosure,
 	useDocumentTitle,
 } from "@mantine/hooks";
-import { TrayArrowUp } from "@phosphor-icons/react";
+import {
+	TrayArrowUp,
+	GearIcon,
+	MagnifyingGlassIcon,
+	XIcon,
+} from "@phosphor-icons/react";
 import { usePostHog } from "@posthog/react";
-import { IconSearch, IconSettings, IconX } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useInView } from "react-intersection-observer";
@@ -240,7 +244,7 @@ export const ProjectsHomeRoute = () => {
 									variant="subtle"
 									size="xs"
 									color="gray"
-									leftSection={<IconSettings size={14} />}
+									leftSection={<GearIcon size={14} />}
 									onClick={() => navigate(`/w/${workspace.id}/settings`)}
 								>
 									<Trans>Settings</Trans>
@@ -353,7 +357,9 @@ export const ProjectsHomeRoute = () => {
 							</Group>
 
 							<TextInput
-								leftSection={<IconSearch {...testId("project-search-icon")} />}
+								leftSection={
+									<MagnifyingGlassIcon {...testId("project-search-icon")} />
+								}
 								rightSection={
 									!!search && (
 										<ActionIcon
@@ -363,7 +369,7 @@ export const ProjectsHomeRoute = () => {
 											aria-label={t`Clear search`}
 											{...testId("project-search-clear-button")}
 										>
-											<IconX />
+											<XIcon />
 										</ActionIcon>
 									)
 								}

@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Badge, Button, Group, Stack, Text } from "@mantine/core";
-import { IconCheck } from "@tabler/icons-react";
+import { CheckIcon } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 import { useParams } from "react-router";
 import { SuggestionCardFrame } from "@/components/common/SuggestionCardFrame";
@@ -69,7 +69,7 @@ export const GoalSuggestionCard = ({
 				testId="agentic-goal-suggestion-applied"
 			>
 				<Group gap="xs" wrap="nowrap">
-					<IconCheck
+					<CheckIcon
 						size={16}
 						className="shrink-0"
 						style={{ color: "var(--mantine-color-primary-7)" }}

@@ -15,7 +15,7 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconRefresh } from "@tabler/icons-react";
+import { ArrowClockwiseIcon } from "@phosphor-icons/react";
 import posthog from "posthog-js";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
@@ -57,7 +57,7 @@ export const RetranscribeConversationModalActionIcon = ({
 					disabled={disabled}
 					{...testId("transcript-retranscribe-button")}
 				>
-					<IconRefresh size={20} />
+					<ArrowClockwiseIcon size={20} />
 				</ActionIcon>
 			</Tooltip>
 
@@ -223,7 +223,7 @@ export const RetranscribeConversationModal = ({
 					)}
 					<Button
 						onClick={handleRetranscribe}
-						rightSection={<IconRefresh size="1rem" />}
+						rightSection={<ArrowClockwiseIcon size="1rem" />}
 						disabled={!newConversationName.trim()}
 						{...testId("transcript-retranscribe-confirm-button")}
 					>

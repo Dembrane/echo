@@ -14,7 +14,7 @@ import {
 	Title,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
-import { IconArrowLeft } from "@tabler/icons-react";
+import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import { useCurrentUser } from "@/components/auth/hooks";
@@ -435,7 +435,7 @@ export const OnboardingRoute = () => {
 						<Button
 							variant="subtle"
 							size="sm"
-							leftSection={<IconArrowLeft size={16} />}
+							leftSection={<ArrowLeftIcon size={16} />}
 							onClick={goBack}
 							px={4}
 							style={{ alignSelf: "flex-start" }}

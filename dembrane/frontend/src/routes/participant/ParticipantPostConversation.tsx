@@ -16,12 +16,12 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
-	IconCheck,
-	IconLoader2,
-	IconMail,
-	IconQrcode,
-	IconRepeat,
-} from "@tabler/icons-react";
+	CheckIcon,
+	CircleNotchIcon,
+	EnvelopeSimpleIcon,
+	QrCodeIcon,
+	RepeatIcon,
+} from "@phosphor-icons/react";
 import { type KeyboardEvent, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
@@ -150,7 +150,7 @@ export const ParticipantPostConversation = () => {
 						<Button
 							size="md"
 							variant="outline"
-							leftSection={<IconQrcode size={18} />}
+							leftSection={<QrCodeIcon size={18} />}
 							onClick={openShare}
 							{...testId("portal-finish-show-qr-button")}
 						>
@@ -161,7 +161,7 @@ export const ParticipantPostConversation = () => {
 								component="a"
 								size="md"
 								variant="outline"
-								leftSection={<IconRepeat size={18} />}
+								leftSection={<RepeatIcon size={18} />}
 								{...testId("portal-finish-record-another-button")}
 							>
 								<Trans>Record another conversation</Trans>
@@ -189,7 +189,7 @@ export const ParticipantPostConversation = () => {
 											placeholder={t`email@work.com`}
 											value={email}
 											size="md"
-											leftSection={<IconMail size={20} />}
+											leftSection={<EnvelopeSimpleIcon size={20} />}
 											onChange={handleInputChange}
 											onKeyDown={handleKeyDown}
 											error={error}
@@ -258,7 +258,7 @@ export const ParticipantPostConversation = () => {
 												{...testId("portal-finish-email-submit-button")}
 											>
 												{isPending ? (
-													<IconLoader2 className="animate-spin" />
+													<CircleNotchIcon className="animate-spin" />
 												) : (
 													<Trans> Submit</Trans>
 												)}
@@ -274,7 +274,7 @@ export const ParticipantPostConversation = () => {
 										className="flex items-center gap-4 md:gap-2"
 									>
 										<span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-green-500 text-white">
-											<IconCheck size={16} strokeWidth={3} />
+											<CheckIcon size={16} />
 										</span>
 										<Trans>Thank you!</Trans>
 									</Text>

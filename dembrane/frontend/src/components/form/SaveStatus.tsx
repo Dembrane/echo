@@ -1,11 +1,11 @@
 import { Trans } from "@lingui/react/macro";
 import { Group, Text } from "@mantine/core";
 import {
-	IconCheck,
-	IconChecks,
-	IconExclamationCircle,
-	IconX,
-} from "@tabler/icons-react";
+	CheckIcon,
+	ChecksIcon,
+	WarningCircleIcon,
+	XIcon,
+} from "@phosphor-icons/react";
 import { formatDistance } from "date-fns";
 import type { FieldErrors } from "react-hook-form";
 import { LoadingSpinner } from "../common/LoadingSpinner";
@@ -27,7 +27,7 @@ export const SaveStatus = ({
 }: SaveStatusProps) => {
 	if (isError) {
 		return (
-			<StatusIcon icon={IconX}>
+			<StatusIcon icon={XIcon}>
 				<Trans>Save Error!</Trans>
 			</StatusIcon>
 		);
@@ -35,7 +35,7 @@ export const SaveStatus = ({
 
 	if (Object.keys(formErrors).length > 0) {
 		return (
-			<StatusIcon icon={IconExclamationCircle}>
+			<StatusIcon icon={WarningCircleIcon}>
 				<Trans>Please check your inputs for errors.</Trans>
 			</StatusIcon>
 		);
@@ -51,14 +51,14 @@ export const SaveStatus = ({
 
 	if (!savedAt || isPendingSave) {
 		return (
-			<StatusIcon icon={IconCheck}>
+			<StatusIcon icon={CheckIcon}>
 				<Trans>Your inputs will be saved automatically.</Trans>
 			</StatusIcon>
 		);
 	}
 
 	return (
-		<StatusIcon icon={IconChecks}>
+		<StatusIcon icon={ChecksIcon}>
 			<Trans>
 				Last saved{" "}
 				{formatDistance(new Date(savedAt), new Date(), { addSuffix: true })}

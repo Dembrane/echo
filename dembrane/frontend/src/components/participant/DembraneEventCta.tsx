@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { Box, Button } from "@mantine/core";
-import { IconArrowRight } from "@tabler/icons-react";
+import { ArrowRightIcon } from "@phosphor-icons/react";
 import posthog from "posthog-js";
 import PaulineUnderstandArt from "@/assets/pauline-understand.webp";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -50,7 +50,7 @@ export const DembraneEventCta = ({ projectId }: { projectId: string }) => {
 					variant="outline"
 					size="lg"
 					fullWidth
-					rightSection={<IconArrowRight size={18} />}
+					rightSection={<ArrowRightIcon size={18} />}
 					onClick={() =>
 						posthog.capture("portal_event_cta_clicked", {
 							project_id: projectId,

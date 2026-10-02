@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { Badge, Box, Stack, Text } from "@mantine/core";
-import { IconLock } from "@tabler/icons-react";
+import { LockIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { FeatureGatePopover } from "@/components/workspace/FeatureGatePopover";
@@ -69,7 +69,7 @@ export function UploadLockedCard({
 							<Badge
 								color="blue"
 								variant="light"
-								leftSection={<IconLock size={12} />}
+								leftSection={<LockIcon size={12} />}
 							>
 								<Trans>Upload limit reached</Trans>
 							</Badge>

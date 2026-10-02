@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Box, Button, Stack, Text, Textarea } from "@mantine/core";
-import { IconPlayerStopFilled } from "@tabler/icons-react";
+import { StopIcon } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChatComposerShell } from "@/components/chat/ChatComposer";
 import { useVoiceRecorder } from "@/components/voice/useVoiceRecorder";
@@ -243,7 +243,7 @@ export const PricingTextInput = ({
 							className="tap-target"
 							onClick={recorder.stop}
 							radius="md"
-							rightSection={<IconPlayerStopFilled size={18} />}
+							rightSection={<StopIcon weight="fill" size={18} />}
 							size="md"
 							type="button"
 							{...testId(`${testIdPrefix}-voice-stop`)}

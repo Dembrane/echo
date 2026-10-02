@@ -2,7 +2,7 @@ import { useChat } from "@ai-sdk/react";
 import { Trans } from "@lingui/react/macro";
 import { Box, Group, Paper, Text } from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
-import { IconRosetteDiscountCheck } from "@tabler/icons-react";
+import { SealCheckIcon } from "@phosphor-icons/react";
 import { useEffect, useRef } from "react";
 import {
 	Link,
@@ -172,10 +172,7 @@ export const ParticipantConversationAudioContent = () => {
 										Verification required
 									</Trans>
 								</Text>
-								<IconRosetteDiscountCheck
-									size={22}
-									color="var(--mantine-color-dimmed)"
-								/>
+								<SealCheckIcon size={22} color="var(--mantine-color-dimmed)" />
 							</Group>
 						</Paper>
 					</Box>

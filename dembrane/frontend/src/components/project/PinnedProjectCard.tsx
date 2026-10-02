@@ -12,7 +12,7 @@ import {
 	Text,
 	Tooltip,
 } from "@mantine/core";
-import { IconExternalLink, IconPinFilled } from "@tabler/icons-react";
+import { ArrowSquareOutIcon, PushPinIcon } from "@phosphor-icons/react";
 import { formatRelative } from "date-fns";
 import { useParams } from "react-router";
 import { Icons } from "@/icons";
@@ -39,7 +39,12 @@ function AccessBubbles({ project }: { project: Project }) {
 	if (!preview) return null;
 	if (preview.length === 0) {
 		return (
-			<Avatar size="sm" radius="xl" color="gray" aria-label={t`No one shared yet`}>
+			<Avatar
+				size="sm"
+				radius="xl"
+				color="gray"
+				aria-label={t`No one shared yet`}
+			>
 				?
 			</Avatar>
 		);
@@ -172,13 +177,14 @@ export const PinnedProjectCard = ({
 												onUnpin(project.id);
 											}}
 										>
-											<IconPinFilled size={16} />
+											<PushPinIcon weight="fill" size={16} />
 										</ActionIcon>
 									</Tooltip>
 								) : (
 									// Read-only pin indicator for viewers without write
 									// permission (guest workspaces).
-									<IconPinFilled
+									<PushPinIcon
+										weight="fill"
 										size={14}
 										color="var(--mantine-color-gray-5)"
 									/>

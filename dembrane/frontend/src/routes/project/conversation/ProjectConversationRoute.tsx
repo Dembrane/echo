@@ -15,12 +15,12 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useClipboard, useDisclosure } from "@mantine/hooks";
-import { DetectiveIcon } from "@phosphor-icons/react";
 import {
-	IconLock,
-	IconRefresh,
-	IconRosetteDiscountCheck,
-} from "@tabler/icons-react";
+	DetectiveIcon,
+	ArrowClockwiseIcon,
+	LockIcon,
+	SealCheckIcon,
+} from "@phosphor-icons/react";
 import {
 	useMutation,
 	useMutationState,
@@ -189,7 +189,7 @@ export const ProjectConversationRoute = () => {
 								size={22}
 								aria-label={t`Verified artifacts`}
 							>
-								<IconRosetteDiscountCheck size={20} />
+								<SealCheckIcon size={20} />
 							</ThemeIcon>
 						</Tooltip>
 					)}
@@ -213,7 +213,7 @@ export const ProjectConversationRoute = () => {
 								size="sm"
 								color="primary"
 								variant="light"
-								leftSection={<IconLock size={12} />}
+								leftSection={<LockIcon size={12} />}
 							>
 								<Trans>Locked</Trans>
 							</Badge>
@@ -291,7 +291,7 @@ export const ProjectConversationRoute = () => {
 														"conversation-overview-regenerate-summary-button",
 													)}
 												>
-													<IconRefresh size={23} color="gray" />
+													<ArrowClockwiseIcon size={23} color="gray" />
 												</ActionIcon>
 											</Tooltip>
 										)}

@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Badge, Box, Button, Stack, Text } from "@mantine/core";
-import { IconLock } from "@tabler/icons-react";
+import { LockIcon } from "@phosphor-icons/react";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import type { FreeTierLimit } from "@/lib/freeTier";
@@ -82,7 +82,11 @@ export function ChatTurnLimitCard({ onUpgrade }: { onUpgrade: () => void }) {
 			p="md"
 		>
 			<Stack gap="xs" align="flex-start">
-				<Badge color="primary" variant="light" leftSection={<IconLock size={12} />}>
+				<Badge
+					color="primary"
+					variant="light"
+					leftSection={<LockIcon size={12} />}
+				>
 					<Trans>Upgrade to continue</Trans>
 				</Badge>
 				<Text size="sm">

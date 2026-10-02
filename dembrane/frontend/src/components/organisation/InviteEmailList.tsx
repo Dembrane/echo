@@ -8,7 +8,7 @@ import {
 	Stack,
 	TextInput,
 } from "@mantine/core";
-import { IconPlus, IconX } from "@tabler/icons-react";
+import { PlusIcon, XIcon } from "@phosphor-icons/react";
 
 interface InviteEmailListProps {
 	/** Controlled list of email strings. Always has at least one entry. */
@@ -58,14 +58,14 @@ export const InviteEmailList = ({
 							aria-label={t`Remove`}
 							onClick={() => removeEmailField(index)}
 						>
-							<IconX size={14} />
+							<XIcon size={14} />
 						</ActionIcon>
 					)}
 				</Group>
 			))}
 			<Box>
 				<Button
-					leftSection={<IconPlus size={14} />}
+					leftSection={<PlusIcon size={14} />}
 					size="sm"
 					variant="subtle"
 					onClick={addEmailField}

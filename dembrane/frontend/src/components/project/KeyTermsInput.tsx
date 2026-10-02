@@ -8,7 +8,7 @@ import {
 	Text,
 	TextInput,
 } from "@mantine/core";
-import { IconX } from "@tabler/icons-react";
+import { XIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { useFocusOnHash } from "@/hooks/useFocusOnHash";
 import { testId } from "@/lib/testUtils";
@@ -122,7 +122,7 @@ export const KeyTermsInput = ({
 									c="gray.8"
 									aria-label={t`Remove ${term}`}
 								>
-									<IconX size={14} />
+									<XIcon size={14} />
 								</ActionIcon>
 							}
 						>

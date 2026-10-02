@@ -10,7 +10,7 @@ import {
 	Title,
 	Tooltip,
 } from "@mantine/core";
-import { IconAlertCircle } from "@tabler/icons-react";
+import { WarningCircleIcon } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef } from "react";
 import { useInView } from "react-intersection-observer";
 import useSessionStorageState from "use-session-storage-state";
@@ -159,7 +159,7 @@ export const ConversationTranscriptSection = ({
 				<Stack className="relative">
 					{allChunks.length === 0 ? (
 						<Alert
-							icon={<IconAlertCircle size={16} />}
+							icon={<WarningCircleIcon size={16} />}
 							title={t`No Transcript Available`}
 							color="gray"
 							{...testId("transcript-empty-alert")}

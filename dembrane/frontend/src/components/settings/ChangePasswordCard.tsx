@@ -8,7 +8,7 @@ import {
 	Stack,
 	Title,
 } from "@mantine/core";
-import { IconKey } from "@tabler/icons-react";
+import { KeyIcon } from "@phosphor-icons/react";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { PasswordRequirements } from "@/components/auth/PasswordRequirements";
@@ -60,7 +60,7 @@ export const ChangePasswordCard = () => {
 		<Card withBorder p="lg" radius="md">
 			<Stack gap="md">
 				<Group gap="sm">
-					<IconKey size={24} stroke={1.5} />
+					<KeyIcon size={24} />
 					<Title order={3}>
 						<Trans>Change password</Trans>
 					</Title>

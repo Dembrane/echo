@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Badge, Box, Button, Group, Stack, Text } from "@mantine/core";
-import { IconCheck } from "@tabler/icons-react";
+import { CheckIcon } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 import { useParams } from "react-router";
 import { CanvasFrame } from "@/components/canvas/CanvasFrame";
@@ -216,7 +216,7 @@ export const CanvasSuggestionCard = ({
 		return (
 			<SuggestionCardFrame compact testId="agentic-canvas-suggestion-applied">
 				<Group gap="xs" wrap="nowrap">
-					<IconCheck
+					<CheckIcon
 						size={16}
 						className="shrink-0"
 						style={{ color: "var(--mantine-color-primary-7)" }}

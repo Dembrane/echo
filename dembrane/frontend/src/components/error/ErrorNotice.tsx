@@ -1,6 +1,6 @@
 import { useLingui } from "@lingui/react";
 import { Alert, Anchor, Button, Group, Text } from "@mantine/core";
-import { IconAlertCircle } from "@tabler/icons-react";
+import { WarningCircleIcon } from "@phosphor-icons/react";
 import { actionTarget } from "./actions";
 import { useErrorPresentation } from "./useErrorPresentation";
 
@@ -27,7 +27,7 @@ export const ErrorNotice = ({
 		<Alert
 			color="red"
 			variant="light"
-			icon={<IconAlertCircle size="1rem" />}
+			icon={<WarningCircleIcon size="1rem" />}
 			title={title}
 			className={className}
 			data-error-code={presented.code ?? "none"}

@@ -7,7 +7,7 @@ import {
 	Text,
 	Title,
 } from "@mantine/core";
-import { IconTextSize } from "@tabler/icons-react";
+import { TextAaIcon } from "@phosphor-icons/react";
 import {
 	type FontSizeScale,
 	useAppPreferences,
@@ -63,7 +63,7 @@ export const FontSizeSettingsCard = () => {
 		<Card withBorder p="lg" radius="md">
 			<Stack gap="md">
 				<Group gap="sm">
-					<IconTextSize size={24} stroke={1.5} />
+					<TextAaIcon size={24} />
 					<Title order={3}>
 						<Trans>Font Size</Trans>
 					</Title>

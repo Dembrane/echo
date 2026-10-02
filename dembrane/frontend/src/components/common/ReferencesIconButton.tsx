@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { ActionIcon, Tooltip } from "@mantine/core";
-import { IconInfoCircle } from "@tabler/icons-react";
+import { InfoIcon } from "@phosphor-icons/react";
 
 export const ReferencesIconButton = ({
 	showCitations,
@@ -23,7 +23,7 @@ export const ReferencesIconButton = ({
 				size="md"
 				radius="xl"
 			>
-				<IconInfoCircle size={18} />
+				<InfoIcon size={18} />
 			</ActionIcon>
 		</Tooltip>
 	);

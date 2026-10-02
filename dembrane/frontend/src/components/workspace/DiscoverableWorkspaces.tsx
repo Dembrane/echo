@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
-import { IconChevronDown, IconLock } from "@tabler/icons-react";
+import { CaretDownIcon, LockIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
@@ -244,7 +244,7 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 						padding: "2px 0",
 					}}
 				>
-					<IconChevronDown
+					<CaretDownIcon
 						size={14}
 						style={{
 							color: "var(--mantine-color-gray-6)",
@@ -295,7 +295,7 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 												onChange={() => toggle(ws.id)}
 												aria-label={ws.name}
 											/>
-											<IconLock
+											<LockIcon
 												size={14}
 												style={{ color: "var(--mantine-color-gray-6)" }}
 											/>
@@ -357,7 +357,7 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 								<Group justify="space-between" wrap="nowrap">
 									<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
 										{ws.visibility === "private" && (
-											<IconLock
+											<LockIcon
 												size={14}
 												style={{ color: "var(--mantine-color-gray-6)" }}
 											/>

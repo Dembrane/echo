@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { ActionIcon, type ActionIconProps, Tooltip } from "@mantine/core";
-import { IconCheck, IconCopy } from "@tabler/icons-react";
+import { CheckIcon, CopyIcon } from "@phosphor-icons/react";
 
 export const CopyIconButton = ({
 	onCopy,
@@ -22,7 +22,7 @@ export const CopyIconButton = ({
 				onClick={onCopy}
 				{...props}
 			>
-				{copied ? <IconCheck size={size} /> : <IconCopy size={size} />}
+				{copied ? <CheckIcon size={size} /> : <CopyIcon size={size} />}
 			</ActionIcon>
 		</Tooltip>
 	);

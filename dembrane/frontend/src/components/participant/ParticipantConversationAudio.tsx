@@ -11,14 +11,14 @@ import {
 	Text,
 } from "@mantine/core";
 import { useDisclosure, useLocalStorage, useWindowEvent } from "@mantine/hooks";
-import { ArticleNyTimesIcon } from "@phosphor-icons/react";
 import {
-	IconAlertTriangle,
-	IconCheck,
-	IconMicrophone,
-	IconPlayerPause,
-	IconPlayerStopFilled,
-} from "@tabler/icons-react";
+	ArticleNyTimesIcon,
+	CheckIcon,
+	MicrophoneIcon,
+	PauseIcon,
+	StopIcon,
+	WarningIcon,
+} from "@phosphor-icons/react";
 import clsx from "clsx";
 import Cookies from "js-cookie";
 import posthog from "posthog-js";
@@ -795,13 +795,13 @@ export const ParticipantConversationAudio = () => {
 			>
 				<Stack gap="md">
 					<Group gap="xs">
-						<IconAlertTriangle size={24} color="#FF9AA2" />
+						<WarningIcon size={24} color="#FF9AA2" />
 						<Text size="lg">
 							<Trans id="participant.modal.s3check.title">
 								Connection issue
 							</Trans>
 						</Text>
-						<IconAlertTriangle size={24} color="#FF9AA2" />
+						<WarningIcon size={24} color="#FF9AA2" />
 					</Group>
 					<Text>
 						<Trans id="participant.modal.s3check.message">
@@ -903,13 +903,13 @@ export const ParticipantConversationAudio = () => {
 			>
 				<Stack gap="md">
 					<Group gap="xs">
-						<IconAlertTriangle size={24} color="#FF9AA2" />
+						<WarningIcon size={24} color="#FF9AA2" />
 						<Text size="lg">
 							<Trans id="participant.modal.interruption.title">
 								Recording interrupted
 							</Trans>
 						</Text>
-						<IconAlertTriangle size={24} color="#FF9AA2" />
+						<WarningIcon size={24} color="#FF9AA2" />
 					</Group>
 					<Text>
 						<Trans id="participant.modal.interruption.issue.message">
@@ -999,7 +999,7 @@ export const ParticipantConversationAudio = () => {
 									{opened ||
 									interruptionModalOpened ||
 									stoppedRecordingTime !== null ? (
-										<IconPlayerPause />
+										<PauseIcon />
 									) : (
 										<div className="h-4 w-4 animate-pulse rounded-full bg-red-500" />
 									)}
@@ -1040,7 +1040,7 @@ export const ParticipantConversationAudio = () => {
 									<Button
 										size="lg"
 										radius="md"
-										rightSection={<IconMicrophone />}
+										rightSection={<MicrophoneIcon />}
 										onClick={handleStartRecording}
 										loading={
 											isStarting ||
@@ -1070,7 +1070,7 @@ export const ParticipantConversationAudio = () => {
 											size="lg"
 											onClick={open}
 											variant="outline"
-											rightSection={<IconCheck className="hidden sm:block" />}
+											rightSection={<CheckIcon className="hidden sm:block" />}
 											className="w-auto"
 											loading={isFinishing}
 											disabled={isFinishing}
@@ -1129,7 +1129,8 @@ export const ParticipantConversationAudio = () => {
 									{...testId("portal-audio-stop-button")}
 								>
 									<Trans id="participant.button.stop">Stop</Trans>
-									<IconPlayerStopFilled
+									<StopIcon
+										weight="fill"
 										size={18}
 										className="ml-0 hidden md:ml-1 md:block"
 									/>

@@ -12,7 +12,7 @@ import {
 	Text,
 	Title,
 } from "@mantine/core";
-import { IconInfoCircle } from "@tabler/icons-react";
+import { InfoIcon } from "@phosphor-icons/react";
 import { I18nLink } from "@/components/common/i18nLink";
 import { SectionHeading } from "./AgentAccessSection";
 import { AgentGrantsCard } from "./AgentGrantsCard";
@@ -156,7 +156,7 @@ export const OrgAgentAccessPanel = ({
 				</Stack>
 				<Alert
 					variant="light"
-					icon={<IconInfoCircle />}
+					icon={<InfoIcon />}
 					data-testid="agent-org-scope-callout"
 				>
 					<Trans>

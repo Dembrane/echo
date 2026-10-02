@@ -14,7 +14,7 @@ import {
 	TextInput,
 	Tooltip,
 } from "@mantine/core";
-import { IconLock, IconSearch, IconX } from "@tabler/icons-react";
+import { LockIcon, MagnifyingGlassIcon, XIcon } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 
 const SEARCH_THRESHOLD = 7; // show search input only when scanning is slow
@@ -87,7 +87,7 @@ export function WorkspaceSelectList({
 					value={search}
 					onChange={(e) => setSearch(e.currentTarget.value)}
 					placeholder={t`Search workspaces`}
-					leftSection={<IconSearch size={14} />}
+					leftSection={<MagnifyingGlassIcon size={14} />}
 					rightSection={
 						search ? (
 							<ActionIcon
@@ -97,7 +97,7 @@ export function WorkspaceSelectList({
 								onClick={() => setSearch("")}
 								aria-label={t`Clear search`}
 							>
-								<IconX size={12} />
+								<XIcon size={12} />
 							</ActionIcon>
 						) : null
 					}
@@ -170,7 +170,7 @@ export function WorkspaceSelectList({
 													{ws.name}
 												</Text>
 												{ws.is_private && (
-													<IconLock
+													<LockIcon
 														size={12}
 														style={{ color: "var(--mantine-color-gray-6)" }}
 													/>

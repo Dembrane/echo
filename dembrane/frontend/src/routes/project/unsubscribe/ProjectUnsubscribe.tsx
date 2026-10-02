@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { Button, Loader, Stack, Text, Title } from "@mantine/core";
-import { IconCheck } from "@tabler/icons-react";
+import { CheckIcon } from "@phosphor-icons/react";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { useSearchParams } from "react-router";
@@ -60,7 +60,7 @@ export const ProjectUnsubscribe = () => {
 					{success && (
 						<Text c="green" size="md" className="flex items-center gap-2">
 							<span className="flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white">
-								<IconCheck size={16} strokeWidth={3} />
+								<CheckIcon size={16} />
 							</span>
 							<Trans>You have successfully unsubscribed.</Trans>
 						</Text>

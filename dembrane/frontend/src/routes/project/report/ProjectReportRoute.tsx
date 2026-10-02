@@ -21,19 +21,19 @@ import {
 	UnstyledButton,
 } from "@mantine/core";
 import { useDisclosure, useFullscreen } from "@mantine/hooks";
-import { GearSixIcon } from "@phosphor-icons/react";
 import {
-	IconClock,
-	IconCopy,
-	IconDotsVertical,
-	IconLink,
-	IconMaximize,
-	IconMinimize,
-	IconPlayerPlay,
-	IconPrinter,
-	IconShare2,
-	IconTrash,
-} from "@tabler/icons-react";
+	GearSixIcon,
+	ClockIcon,
+	CopyIcon,
+	CornersInIcon,
+	CornersOutIcon,
+	DotsThreeVerticalIcon,
+	ExportIcon,
+	LinkIcon,
+	PlayIcon,
+	PrinterIcon,
+	TrashIcon,
+} from "@phosphor-icons/react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import posthog from "posthog-js";
@@ -554,7 +554,7 @@ function ScheduledReportView({
 					width: 56,
 				}}
 			>
-				<IconClock size={28} color="#E8A317" />
+				<ClockIcon size={28} color="#E8A317" />
 			</Box>
 			<Title order={3}>
 				<Trans>Report scheduled</Trans>
@@ -607,7 +607,7 @@ function ScheduledReportView({
 				<>
 					<Button
 						variant="outline"
-						leftSection={<IconPlayerPlay size={16} />}
+						leftSection={<PlayIcon size={16} />}
 						onClick={handleGenerateNow}
 						loading={isCancelling || isCreating}
 					>
@@ -1144,7 +1144,7 @@ export const ProjectReportRoute = () => {
 														variant={copiedLink ? "filled" : "default"}
 														color={copiedLink ? "primary" : undefined}
 														size="compact-sm"
-														leftSection={<IconLink size={14} />}
+														leftSection={<LinkIcon size={14} />}
 														onClick={() => {
 															if (data.status === "published") {
 																posthog.capture("report_link_copied", {
@@ -1173,13 +1173,13 @@ export const ProjectReportRoute = () => {
 															color="gray"
 															{...testId("report-actions-menu")}
 														>
-															<IconDotsVertical size={18} />
+															<DotsThreeVerticalIcon size={18} />
 														</ActionIcon>
 													</Tooltip>
 												</Menu.Target>
 												<Menu.Dropdown>
 													<Menu.Item
-														leftSection={<IconCopy size={16} />}
+														leftSection={<CopyIcon size={16} />}
 														onClick={() => {
 															if (activeReport?.content) {
 																copyContent(activeReport.content);
@@ -1194,7 +1194,7 @@ export const ProjectReportRoute = () => {
 														)}
 													</Menu.Item>
 													<Menu.Item
-														leftSection={<IconShare2 size={16} />}
+														leftSection={<ExportIcon size={16} />}
 														onClick={() => {
 															const url = getSharingLink(projectId ?? "");
 															if (data.status === "published") {
@@ -1215,7 +1215,7 @@ export const ProjectReportRoute = () => {
 														<Trans>Share report</Trans>
 													</Menu.Item>
 													<Menu.Item
-														leftSection={<IconPrinter size={16} />}
+														leftSection={<PrinterIcon size={16} />}
 														onClick={() => {
 															if (data.status === "published") {
 																posthog.capture("report_exported", {
@@ -1235,7 +1235,7 @@ export const ProjectReportRoute = () => {
 													</Menu.Item>
 													<Menu.Divider />
 													<Menu.Item
-														leftSection={<IconTrash size={16} />}
+														leftSection={<TrashIcon size={16} />}
 														color="red"
 														onClick={openDeleteModal}
 														{...testId("report-delete-button")}
@@ -1339,9 +1339,9 @@ export const ProjectReportRoute = () => {
 													{...testId("report-fullscreen-button")}
 												>
 													{fullscreen ? (
-														<IconMinimize size={18} />
+														<CornersInIcon size={18} />
 													) : (
-														<IconMaximize size={18} />
+														<CornersOutIcon size={18} />
 													)}
 												</ActionIcon>
 											</Tooltip>

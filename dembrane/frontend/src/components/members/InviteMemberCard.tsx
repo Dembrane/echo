@@ -7,7 +7,7 @@ import {
 	Tooltip,
 	UnstyledButton,
 } from "@mantine/core";
-import { IconUserPlus } from "@tabler/icons-react";
+import { UserPlusIcon } from "@phosphor-icons/react";
 import type { MouseEventHandler, ReactNode } from "react";
 
 interface Props {
@@ -66,7 +66,7 @@ export function InviteMemberCard({
 							width: 40,
 						}}
 					>
-						{icon ?? <IconUserPlus size={18} />}
+						{icon ?? <UserPlusIcon size={18} />}
 					</Group>
 					<Stack gap={0}>
 						<Text size="sm">{label}</Text>

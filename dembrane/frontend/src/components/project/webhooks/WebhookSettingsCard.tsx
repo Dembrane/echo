@@ -24,16 +24,16 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
-	IconArrowLeft,
-	IconCopy,
-	IconEdit,
-	IconExternalLink,
-	IconHelpCircle,
-	IconPlayerPlay,
-	IconPlus,
-	IconTrash,
-	IconWebhook,
-} from "@tabler/icons-react";
+	ArrowLeftIcon,
+	ArrowSquareOutIcon,
+	CopyIcon,
+	PencilSimpleIcon,
+	PlayIcon,
+	PlusIcon,
+	QuestionIcon,
+	TrashIcon,
+	WebhooksLogoIcon,
+} from "@phosphor-icons/react";
 import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import type { Webhook, WebhookCreatePayload, WebhookEvent } from "@/lib/api";
@@ -254,7 +254,7 @@ const WebhookFormModal = ({
 			onClose={onClose}
 			title={
 				<Group gap="xs">
-					<IconWebhook size={20} />
+					<WebhooksLogoIcon size={20} />
 					<Text>{getModalTitle()}</Text>
 				</Group>
 			}
@@ -280,7 +280,7 @@ const WebhookFormModal = ({
 							>
 								<Group>
 									<ThemeIcon size={48} radius="md" variant="light" color="gray">
-										<IconCopy size={24} />
+										<CopyIcon size={24} />
 									</ThemeIcon>
 									<Stack gap={2} style={{ flex: 1 }}>
 										<Text>
@@ -303,7 +303,7 @@ const WebhookFormModal = ({
 							>
 								<Group>
 									<ThemeIcon size={48} radius="md" variant="light" color="gray">
-										<IconPlus size={24} />
+										<PlusIcon size={24} />
 									</ThemeIcon>
 									<Stack gap={2} style={{ flex: 1 }}>
 										<Text>
@@ -326,7 +326,7 @@ const WebhookFormModal = ({
 					<div>
 						<Button
 							variant="subtle"
-							leftSection={<IconArrowLeft size={16} />}
+							leftSection={<ArrowLeftIcon size={16} />}
 							onClick={() => setStep("choose")}
 							size="compact-sm"
 							px={0}
@@ -363,7 +363,7 @@ const WebhookFormModal = ({
 							<div>
 								<Button
 									variant="subtle"
-									leftSection={<IconArrowLeft size={16} />}
+									leftSection={<ArrowLeftIcon size={16} />}
 									onClick={() => setStep("choose")}
 									size="compact-sm"
 									px={0}
@@ -638,12 +638,12 @@ const WebhookRow = ({ webhook, projectId, onEdit }: WebhookRowProps) => {
 								onClick={handleTest}
 								loading={testMutation.isPending}
 							>
-								<IconPlayerPlay size={16} />
+								<PlayIcon size={16} />
 							</ActionIcon>
 						</Tooltip>
 						<Tooltip label={t`Edit`}>
 							<ActionIcon variant="subtle" onClick={() => onEdit(webhook)}>
-								<IconEdit size={16} />
+								<PencilSimpleIcon size={16} />
 							</ActionIcon>
 						</Tooltip>
 						<Tooltip label={t`Delete`}>
@@ -652,7 +652,7 @@ const WebhookRow = ({ webhook, projectId, onEdit }: WebhookRowProps) => {
 								color="red"
 								onClick={() => setDeleteConfirmOpen(true)}
 							>
-								<IconTrash size={16} />
+								<TrashIcon size={16} />
 							</ActionIcon>
 						</Tooltip>
 					</Group>
@@ -732,7 +732,7 @@ const WebhookHelpAccordion = ({ onViewPayload }: WebhookHelpAccordionProps) => (
 		<Accordion.Item value="what-are-webhooks">
 			<Accordion.Control>
 				<Group gap={6}>
-					<IconHelpCircle size={18} style={{ opacity: 0.7 }} />
+					<QuestionIcon size={18} style={{ opacity: 0.7 }} />
 					<Text size="sm">
 						<Trans>What are webhooks? (2 min read)</Trans>
 					</Text>
@@ -832,7 +832,7 @@ const WebhookHelpAccordion = ({ onViewPayload }: WebhookHelpAccordionProps) => (
 					</Stack>
 					<Anchor component="button" size="sm" onClick={onViewPayload}>
 						<Group gap={4}>
-							<IconCopy size={14} />
+							<CopyIcon size={14} />
 							<Trans>View example payload</Trans>
 						</Group>
 					</Anchor>
@@ -886,7 +886,7 @@ const WebhookHelpAccordion = ({ onViewPayload }: WebhookHelpAccordionProps) => (
 					>
 						<Group gap={4}>
 							<Trans>Learn more about webhooks</Trans>
-							<IconExternalLink size={14} />
+							<ArrowSquareOutIcon size={14} />
 						</Group>
 					</Anchor>
 				</Stack>
@@ -948,7 +948,7 @@ export const WebhookSection = ({ projectId }: WebhookSectionProps) => {
 			headerRight={
 				hasWebhooks ? (
 					<Button
-						leftSection={<IconPlus size={16} />}
+						leftSection={<PlusIcon size={16} />}
 						variant="outline"
 						onClick={handleAddWebhook}
 					>
@@ -1018,7 +1018,7 @@ export const WebhookSection = ({ projectId }: WebhookSectionProps) => {
 					>
 						<Stack align="center" gap="md">
 							<ThemeIcon size={60} radius="xl" variant="light" color="gray">
-								<IconWebhook size={32} stroke={1.5} />
+								<WebhooksLogoIcon size={32} />
 							</ThemeIcon>
 							<Stack gap={4} align="center">
 								<Text>
@@ -1032,7 +1032,7 @@ export const WebhookSection = ({ projectId }: WebhookSectionProps) => {
 								</Text>
 							</Stack>
 							<Button
-								rightSection={<IconPlus size={16} />}
+								rightSection={<PlusIcon size={16} />}
 								variant="filled"
 								onClick={handleAddWebhook}
 							>
@@ -1069,7 +1069,7 @@ export const WebhookSection = ({ projectId }: WebhookSectionProps) => {
 							>
 								<Group gap={4}>
 									<Trans>Book a call</Trans>
-									<IconExternalLink size={14} />
+									<ArrowSquareOutIcon size={14} />
 								</Group>
 							</Anchor>
 						</Group>
@@ -1096,7 +1096,7 @@ export const WebhookSection = ({ projectId }: WebhookSectionProps) => {
 							{EXAMPLE_WEBHOOK_PAYLOAD}
 						</Code>
 						<Button
-							leftSection={<IconCopy size={16} />}
+							leftSection={<CopyIcon size={16} />}
 							onClick={handleCopyPayload}
 							color={copied ? "green" : "blue"}
 						>

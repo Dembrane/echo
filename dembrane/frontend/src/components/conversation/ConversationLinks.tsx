@@ -12,7 +12,7 @@ import {
 	Text,
 	Tooltip,
 } from "@mantine/core";
-import { IconX } from "@tabler/icons-react";
+import { XIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
@@ -100,7 +100,7 @@ const ConversationsModal = ({
 				<Button
 					variant="light"
 					onClick={onClose}
-					leftSection={<IconX size={16} />}
+					leftSection={<XIcon size={16} />}
 				>
 					<Trans>Close</Trans>
 				</Button>

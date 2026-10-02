@@ -13,7 +13,7 @@ import {
 	Text,
 } from "@mantine/core";
 import { usePostHog } from "@posthog/react";
-import { IconAlertTriangle, IconTrash, IconX } from "@tabler/icons-react";
+import { TrashIcon, WarningIcon, XIcon } from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
@@ -382,7 +382,7 @@ export function ProjectSharingModal({
 										.catch((err: Error) => void notifyError(err));
 								}}
 							>
-								<IconTrash size={14} />
+								<TrashIcon size={14} />
 							</ActionIcon>
 						</Group>
 					))}
@@ -413,7 +413,7 @@ export function ProjectSharingModal({
 								loading={revokeInvite.isPending}
 								onClick={() => void handleRevokeInvite(inv.id)}
 							>
-								<IconX size={14} />
+								<XIcon size={14} />
 							</ActionIcon>
 						</Group>
 					))}
@@ -434,7 +434,7 @@ export function ProjectSharingModal({
 						color="yellow"
 						variant="light"
 						p="xs"
-						icon={<IconAlertTriangle size={16} />}
+						icon={<WarningIcon size={16} />}
 						data-testid="project-share-invite-prompt"
 					>
 						<Text size="sm" style={{ overflowWrap: "anywhere" }}>

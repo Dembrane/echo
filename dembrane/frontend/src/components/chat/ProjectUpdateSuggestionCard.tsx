@@ -10,7 +10,7 @@ import {
 	Text,
 	Textarea,
 } from "@mantine/core";
-import { IconCheck, IconChevronDown, IconChevronUp } from "@tabler/icons-react";
+import { CaretDownIcon, CaretUpIcon, CheckIcon } from "@phosphor-icons/react";
 import { useId, useMemo, useState } from "react";
 import { SuggestionCardFrame } from "@/components/common/SuggestionCardFrame";
 import { toast } from "@/components/common/Toaster";
@@ -504,7 +504,7 @@ export const ProjectUpdateSuggestionCard = ({
 			<SuggestionCardFrame compact testId="agentic-project-update-suggestion">
 				<Stack gap="xs">
 					<Group gap="xs" wrap="nowrap">
-						<IconCheck
+						<CheckIcon
 							size={16}
 							className="shrink-0"
 							style={{ color: "var(--mantine-color-primary-7)" }}
@@ -740,9 +740,9 @@ export const ProjectUpdateSuggestionCard = ({
 							aria-controls={panelId}
 							leftSection={
 								expanded ? (
-									<IconChevronUp size={14} aria-hidden />
+									<CaretUpIcon size={14} aria-hidden />
 								) : (
-									<IconChevronDown size={14} aria-hidden />
+									<CaretDownIcon size={14} aria-hidden />
 								)
 							}
 							onClick={() => setExpanded((prev) => !prev)}

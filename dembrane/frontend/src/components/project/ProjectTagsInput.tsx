@@ -30,7 +30,7 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconX } from "@tabler/icons-react";
+import { XIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
@@ -105,7 +105,7 @@ export const ProjectTagPill = ({
 						c="gray.8"
 						onPointerDown={(e) => e.stopPropagation()}
 					>
-						<IconX size={14} />
+						<XIcon size={14} />
 					</ActionIcon>
 				}
 				{...attributes}

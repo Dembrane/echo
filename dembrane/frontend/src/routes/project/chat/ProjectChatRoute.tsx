@@ -1,7 +1,13 @@
 import { useChat } from "@ai-sdk/react";
 import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
-import { ChatCircleText as ChatCircleTextIcon } from "@phosphor-icons/react";
+import {
+	ChatCircleText as ChatCircleTextIcon,
+	ArrowClockwiseIcon,
+	PaperPlaneRightIcon,
+	SquareIcon,
+	WarningCircleIcon,
+} from "@phosphor-icons/react";
 import {
 	Alert,
 	Badge,
@@ -18,12 +24,6 @@ import {
 } from "@mantine/core";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
-import {
-	IconAlertCircle,
-	IconRefresh,
-	IconSend,
-	IconSquare,
-} from "@tabler/icons-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router";
 import { AgenticChatPanel } from "@/components/chat/AgenticChatPanel";
@@ -612,7 +612,7 @@ export const ProjectChatRoute = () => {
 		return (
 			<Box className="flex min-h-full items-center justify-center px-2 pr-4">
 				<Alert
-					icon={<IconAlertCircle size="1rem" />}
+					icon={<WarningCircleIcon size="1rem" />}
 					color="primary"
 					variant="light"
 					maw={420}
@@ -784,7 +784,7 @@ export const ProjectChatRoute = () => {
 									onClick={() => stop()}
 									variant="outline"
 									size="sm"
-									rightSection={<IconSquare size={14} />}
+									rightSection={<SquareIcon size={14} />}
 									{...testId("chat-stop-button")}
 								>
 									<Trans>Stop</Trans>
@@ -823,7 +823,7 @@ export const ProjectChatRoute = () => {
 
 					{error && (
 						<Alert
-							icon={<IconAlertCircle size="1rem" />}
+							icon={<WarningCircleIcon size="1rem" />}
 							title="Error"
 							color="red"
 							variant="outline"
@@ -835,7 +835,7 @@ export const ProjectChatRoute = () => {
 							<Button
 								color="red"
 								onClick={() => reload()}
-								leftSection={<IconRefresh size="1rem" />}
+								leftSection={<ArrowClockwiseIcon size="1rem" />}
 								mt="md"
 								{...testId("chat-retry-button")}
 							>
@@ -879,7 +879,7 @@ export const ProjectChatRoute = () => {
 					<Divider />
 					{needsConversations && (
 						<Alert
-							icon={<IconAlertCircle size="1rem" />}
+							icon={<WarningCircleIcon size="1rem" />}
 							p="xs"
 							styles={{
 								wrapper: { alignItems: "center" },
@@ -974,7 +974,7 @@ export const ProjectChatRoute = () => {
 									type="submit"
 									size="md"
 									radius="md"
-									rightSection={<IconSend size={18} />}
+									rightSection={<PaperPlaneRightIcon size={18} />}
 									disabled={
 										normalizedInput.trim() === "" ||
 										isLoading ||

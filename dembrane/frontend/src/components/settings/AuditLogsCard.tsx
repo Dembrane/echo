@@ -18,18 +18,18 @@ import {
 	Text,
 } from "@mantine/core";
 import {
-	IconArrowDown,
-	IconArrowsSort,
-	IconArrowUp,
-	IconChevronDown,
-	IconChevronUp,
-	IconDatabaseSearch,
-	IconDownload,
-	IconFileTypeCsv,
-	IconFileTypeJs,
-	IconLogs,
-	IconRefresh,
-} from "@tabler/icons-react";
+	ArrowClockwiseIcon,
+	ArrowDownIcon,
+	ArrowUpIcon,
+	ArrowsDownUpIcon,
+	CaretDownIcon,
+	CaretUpIcon,
+	DatabaseIcon,
+	DownloadSimpleIcon,
+	FileCsvIcon,
+	FileJsIcon,
+	ListBulletsIcon,
+} from "@phosphor-icons/react";
 import {
 	type ColumnDef,
 	flexRender,
@@ -230,12 +230,12 @@ export const AuditLogsCard = () => {
 										variant="light"
 										size="xs"
 										onClick={() => toggleRowExpansion(row.original.id)}
-										leftSection={<IconDatabaseSearch size={14} />}
+										leftSection={<DatabaseIcon size={14} />}
 										rightSection={
 											expanded ? (
-												<IconChevronUp size={14} />
+												<CaretUpIcon size={14} />
 											) : (
-												<IconChevronDown size={14} />
+												<CaretDownIcon size={14} />
 											)
 										}
 										aria-label={
@@ -394,7 +394,7 @@ export const AuditLogsCard = () => {
 				<Group justify="space-between" align="flex-start">
 					<Stack gap={4}>
 						<Group gap="sm" align="center">
-							<IconLogs size={20} />
+							<ListBulletsIcon size={20} />
 							<Text size="lg">
 								<Trans>Audit logs</Trans>
 							</Text>
@@ -416,14 +416,14 @@ export const AuditLogsCard = () => {
 							{isFetching && !isLoading ? (
 								<Loader size="xs" />
 							) : (
-								<IconRefresh size={16} />
+								<ArrowClockwiseIcon size={16} />
 							)}
 						</ActionIcon>
 
 						<Menu withinPortal position="bottom-end">
 							<Menu.Target>
 								<Button
-									rightSection={<IconDownload size={16} />}
+									rightSection={<DownloadSimpleIcon size={16} />}
 									loading={exportMutation.isPending}
 								>
 									<Trans>Export</Trans>
@@ -434,13 +434,13 @@ export const AuditLogsCard = () => {
 									<Trans>Download as</Trans>
 								</Menu.Label>
 								<Menu.Item
-									leftSection={<IconFileTypeCsv size={16} />}
+									leftSection={<FileCsvIcon size={16} />}
 									onClick={() => handleExport("csv")}
 								>
 									CSV
 								</Menu.Item>
 								<Menu.Item
-									leftSection={<IconFileTypeJs size={16} />}
+									leftSection={<FileJsIcon size={16} />}
 									onClick={() => handleExport("json")}
 								>
 									JSON
@@ -508,11 +508,11 @@ export const AuditLogsCard = () => {
 										const sortState = header.column.getIsSorted();
 										const sortIcon =
 											sortState === "desc" ? (
-												<IconArrowDown size={14} />
+												<ArrowDownIcon size={14} />
 											) : sortState === "asc" ? (
-												<IconArrowUp size={14} />
+												<ArrowUpIcon size={14} />
 											) : canSort ? (
-												<IconArrowsSort size={14} className="text-gray-400" />
+												<ArrowsDownUpIcon size={14} className="text-gray-400" />
 											) : null;
 
 										return (

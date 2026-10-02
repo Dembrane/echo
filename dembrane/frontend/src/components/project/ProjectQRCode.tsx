@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Button, CopyButton, rem, Skeleton, Stack, Text } from "@mantine/core";
-import { IconCheck, IconCopy, IconDownload } from "@tabler/icons-react";
+import { CheckIcon, CopyIcon, DownloadSimpleIcon } from "@phosphor-icons/react";
 import { useMemo, useRef } from "react";
 import { PARTICIPANT_BASE_URL } from "@/config";
 import { testId } from "@/lib/testUtils";
@@ -141,9 +141,9 @@ export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {
 							onClick={copy}
 							rightSection={
 								copied ? (
-									<IconCheck style={{ width: rem(16) }} />
+									<CheckIcon style={{ width: rem(16) }} />
 								) : (
-									<IconCopy style={{ width: rem(16) }} />
+									<CopyIcon style={{ width: rem(16) }} />
 								)
 							}
 							{...testId("project-copy-link-button")}
@@ -156,7 +156,7 @@ export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {
 					size="sm"
 					variant="outline"
 					onClick={handleDownloadQR}
-					rightSection={<IconDownload style={{ width: rem(16) }} />}
+					rightSection={<DownloadSimpleIcon style={{ width: rem(16) }} />}
 					{...testId("project-download-qr-button")}
 				>
 					<Trans>Download QR code</Trans>

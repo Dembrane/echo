@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { Box, Button, Group, Loader, Stack, Text } from "@mantine/core";
-import { IconArrowRight } from "@tabler/icons-react";
+import { ArrowRightIcon } from "@phosphor-icons/react";
 import { testId } from "@/lib/testUtils";
 
 type VerifyInstructionsProps = {
@@ -102,7 +102,7 @@ export const VerifyInstructions = ({
 					isLoading ? (
 						<Loader size="sm" color="dark" className="ml-1" />
 					) : (
-						<IconArrowRight size={20} className="ml-1" />
+						<ArrowRightIcon size={20} className="ml-1" />
 					)
 				}
 				{...testId("portal-verify-instructions-next-button")}

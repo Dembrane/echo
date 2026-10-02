@@ -35,16 +35,16 @@ import {
 import { DatePickerInput } from "@mantine/dates";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import {
-	IconArrowsSort,
-	IconChevronDown,
-	IconChevronRight,
-	IconDots,
-	IconDownload,
-	IconExternalLink,
-	IconSearch,
-	IconSortAscending,
-	IconSortDescending,
-} from "@tabler/icons-react";
+	ArrowSquareOutIcon,
+	ArrowsDownUpIcon,
+	CaretDownIcon,
+	CaretRightIcon,
+	DotsThreeIcon,
+	DownloadSimpleIcon,
+	MagnifyingGlassIcon,
+	SortAscendingIcon,
+	SortDescendingIcon,
+} from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	type ColumnDef,
@@ -297,11 +297,11 @@ function SortableHeader({
 				{label}
 			</Text>
 			{sorted === "asc" ? (
-				<IconSortAscending size={12} color="var(--mantine-color-dark-6)" />
+				<SortAscendingIcon size={12} color="var(--mantine-color-dark-6)" />
 			) : sorted === "desc" ? (
-				<IconSortDescending size={12} color="var(--mantine-color-dark-6)" />
+				<SortDescendingIcon size={12} color="var(--mantine-color-dark-6)" />
 			) : (
-				<IconArrowsSort
+				<ArrowsDownUpIcon
 					size={12}
 					color="var(--mantine-color-gray-4)"
 					aria-hidden
@@ -1309,9 +1309,9 @@ function TierBreakdownPanel({ rows }: { rows: BillingRow[] }) {
 				<Group justify="space-between" wrap="nowrap">
 					<Group gap="xs">
 						{opened ? (
-							<IconChevronDown size={14} />
+							<CaretDownIcon size={14} />
 						) : (
-							<IconChevronRight size={14} />
+							<CaretRightIcon size={14} />
 						)}
 						<Text size="sm">
 							<Trans>Breakdown by tier</Trans>
@@ -1613,9 +1613,9 @@ function AccountBillingTable({
 											aria-label={t`Expand workspaces`}
 										>
 											{isOpen ? (
-												<IconChevronDown size={14} />
+												<CaretDownIcon size={14} />
 											) : (
-												<IconChevronRight size={14} />
+												<CaretRightIcon size={14} />
 											)}
 										</ActionIcon>
 									</Table.Td>
@@ -1669,7 +1669,7 @@ function AccountBillingTable({
 											onClick={() => onOpenAccount(account)}
 											aria-label={t`Open account actions`}
 										>
-											<IconDots size={14} />
+											<DotsThreeIcon size={14} />
 										</ActionIcon>
 									</Table.Td>
 								</Table.Tr>
@@ -1758,7 +1758,7 @@ function AccountBillingTable({
 																		onClick={() => onOpenWorkspace(ws)}
 																		aria-label={t`Open workspace actions`}
 																	>
-																		<IconDots size={14} />
+																		<DotsThreeIcon size={14} />
 																	</ActionIcon>
 																</Table.Td>
 															</Table.Tr>
@@ -2018,7 +2018,7 @@ function UsageAndBillingPanel() {
 
 			<Group gap="sm" wrap="wrap" align="center">
 				<TextInput
-					leftSection={<IconSearch size={14} />}
+					leftSection={<MagnifyingGlassIcon size={14} />}
 					placeholder={t`Search account, workspace, organisation, email, tier`}
 					value={globalFilter}
 					onChange={(e) => setGlobalFilter(e.currentTarget.value)}
@@ -2064,7 +2064,7 @@ function UsageAndBillingPanel() {
 					size="xs"
 					variant="outline"
 					color="gray"
-					leftSection={<IconDownload size={14} />}
+					leftSection={<DownloadSimpleIcon size={14} />}
 					onClick={handleExport}
 				>
 					<Trans>Export CSV</Trans>
@@ -2369,7 +2369,7 @@ function PartnersPanel() {
 						/>
 					</Text>
 					<TextInput
-						leftSection={<IconSearch size={14} />}
+						leftSection={<MagnifyingGlassIcon size={14} />}
 						placeholder={t`Search partner, client, workspace`}
 						value={globalFilter}
 						onChange={(e) => setGlobalFilter(e.currentTarget.value)}
@@ -2708,7 +2708,7 @@ function PaymentsPanel() {
 						>
 							<Group gap={4} wrap="nowrap">
 								<Trans>Open</Trans>
-								<IconExternalLink size={12} />
+								<ArrowSquareOutIcon size={12} />
 							</Group>
 						</Anchor>
 					) : null,
@@ -2776,7 +2776,7 @@ function PaymentsPanel() {
 					rel="noopener noreferrer"
 					size="xs"
 					variant="outline"
-					rightSection={<IconExternalLink size={14} />}
+					rightSection={<ArrowSquareOutIcon size={14} />}
 				>
 					<Trans>Open Mollie dashboard</Trans>
 				</Button>
@@ -2855,7 +2855,7 @@ function PaymentsPanel() {
 					</Button.Group>
 				</Group>
 				<TextInput
-					leftSection={<IconSearch size={14} />}
+					leftSection={<MagnifyingGlassIcon size={14} />}
 					placeholder={t`Search account, status, description`}
 					value={globalFilter}
 					onChange={(e) => setGlobalFilter(e.currentTarget.value)}

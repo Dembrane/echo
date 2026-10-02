@@ -2,7 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Badge, Box, Button, Divider, Group, Stack, Text } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
-import { IconCheck } from "@tabler/icons-react";
+import { CheckIcon } from "@phosphor-icons/react";
 import posthog from "posthog-js";
 // Reuse the billing plan-card styling so Training and Change-plan read as one
 // system (bordered card, divider, check-mark specs, price pinned to the footer).
@@ -52,11 +52,15 @@ export const TrainingCatalog = ({
 					<div
 						key={p.type}
 						className={isWide ? cardClasses.wideWrap : cardClasses.wrap}
-						style={p.coming_soon ? { opacity: 0.6, cursor: "default" } : undefined}
+						style={
+							p.coming_soon ? { opacity: 0.6, cursor: "default" } : undefined
+						}
 					>
 						<Stack
 							gap={0}
-							className={isWide ? cardClasses.wideInner : cardClasses.mobileInner}
+							className={
+								isWide ? cardClasses.wideInner : cardClasses.mobileInner
+							}
 						>
 							<Group gap={8} wrap="nowrap" justify="space-between">
 								<Text size="lg" className={cardClasses.tierName}>
@@ -79,9 +83,8 @@ export const TrainingCatalog = ({
 										wrap="nowrap"
 										className={cardClasses.specRow}
 									>
-										<IconCheck
+										<CheckIcon
 											size={13}
-											stroke={1.5}
 											color="var(--mantine-color-primary-6)"
 										/>
 										<Text size="xs">{spec}</Text>

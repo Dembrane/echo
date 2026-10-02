@@ -11,7 +11,7 @@ import {
 	Text,
 	Textarea,
 } from "@mantine/core";
-import { IconChevronDown, IconChevronRight } from "@tabler/icons-react";
+import { CaretDownIcon, CaretRightIcon } from "@phosphor-icons/react";
 import { formatDistanceToNow } from "date-fns";
 import { useEffect, useState } from "react";
 import { toast } from "@/components/common/Toaster";
@@ -183,9 +183,9 @@ export const ProjectGoalSection = ({
 								className="self-start"
 								leftSection={
 									historyOpen ? (
-										<IconChevronDown size={14} />
+										<CaretDownIcon size={14} />
 									) : (
-										<IconChevronRight size={14} />
+										<CaretRightIcon size={14} />
 									)
 								}
 								onClick={() => setHistoryOpen((value) => !value)}

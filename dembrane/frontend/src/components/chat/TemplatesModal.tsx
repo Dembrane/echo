@@ -44,8 +44,8 @@ import {
 	PlusIcon,
 	TrashIcon,
 	XIcon,
+	PushPinIcon,
 } from "@phosphor-icons/react";
-import { IconPin, IconPinFilled } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import {
@@ -660,7 +660,7 @@ export const TemplatesModal = ({
 											removeFromQuickAccess(tmpl.key);
 										}}
 									>
-										<IconPinFilled size={12} />
+										<PushPinIcon weight="fill" size={12} />
 									</ActionIcon>
 								</Tooltip>
 							) : (
@@ -681,7 +681,7 @@ export const TemplatesModal = ({
 											addToQuickAccess(tmpl.key, tmpl.title);
 										}}
 									>
-										<IconPin size={12} />
+										<PushPinIcon size={12} />
 									</ActionIcon>
 								</Tooltip>
 							))}
@@ -820,7 +820,8 @@ export const TemplatesModal = ({
 							{!debouncedSearch && quickAccessTemplates.length === 0 && (
 								<Paper p="sm" withBorder style={{ borderStyle: "dashed" }}>
 									<Group gap="xs" justify="center">
-										<IconPinFilled
+										<PushPinIcon
+											weight="fill"
 											size={14}
 											color="var(--mantine-color-gray-4)"
 										/>

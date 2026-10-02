@@ -8,7 +8,7 @@ import {
 	Text,
 	ThemeIcon,
 } from "@mantine/core";
-import { IconTag } from "@tabler/icons-react";
+import { TagIcon } from "@phosphor-icons/react";
 
 type AddTagFilterModalProps = {
 	opened: boolean;
@@ -56,7 +56,7 @@ export const AddTagFilterModal = ({
 
 					<Group gap="xs" align="center">
 						<ThemeIcon variant="subtle" color="primary" size={18}>
-							<IconTag size={18} />
+							<TagIcon size={18} />
 						</ThemeIcon>
 						<Pill
 							size="md"

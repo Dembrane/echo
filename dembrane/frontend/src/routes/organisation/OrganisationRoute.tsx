@@ -26,15 +26,15 @@ import {
 } from "@mantine/core";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
-import { UsersThree } from "@phosphor-icons/react";
 import {
-	IconChevronDown,
-	IconChevronRight,
-	IconInfoCircle,
-	IconLock,
-	IconPlus,
-	IconSparkles,
-} from "@tabler/icons-react";
+	UsersThree,
+	CaretDownIcon,
+	CaretRightIcon,
+	InfoIcon,
+	LockIcon,
+	PlusIcon,
+	SparkleIcon,
+} from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router";
@@ -235,7 +235,7 @@ function RoleBadgeMenu({
 					variant="light"
 					color={roleColor(currentRole)}
 					style={{ cursor: "pointer" }}
-					rightSection={<IconChevronDown size={10} />}
+					rightSection={<CaretDownIcon size={10} />}
 				>
 					{displayRole(currentRole)}
 				</Badge>
@@ -1218,7 +1218,7 @@ function WorkspaceVisibilityIcon({
 		return (
 			<Tooltip label={t`Private workspace`}>
 				<span style={{ display: "inline-flex", flexShrink: 0 }}>
-					<IconLock size={size} color="var(--mantine-color-gray-6)" />
+					<LockIcon size={size} color="var(--mantine-color-gray-6)" />
 				</span>
 			</Tooltip>
 		);
@@ -1393,7 +1393,7 @@ function OrganisationOverviewPanel({
 										style={{ cursor: "pointer" }}
 										onClick={handlePeopleClick}
 									>
-										<IconPlus size={16} />
+										<PlusIcon size={16} />
 									</Avatar>
 								</Tooltip>
 							)}
@@ -1419,7 +1419,7 @@ function OrganisationOverviewPanel({
 							<Button
 								variant="subtle"
 								size="xs"
-								leftSection={<IconPlus size={14} />}
+								leftSection={<PlusIcon size={14} />}
 								onClick={onRequestWorkspace}
 								opacity={atWorkspaceLimit ? 0.8 : 1}
 							>
@@ -1429,7 +1429,7 @@ function OrganisationOverviewPanel({
 								<Tooltip
 									label={t`Free plan allows 1 workspace per organisation`}
 								>
-									<IconInfoCircle
+									<InfoIcon
 										size={14}
 										style={{
 											color: "var(--mantine-color-primary-6)",
@@ -1626,7 +1626,7 @@ function OrganisationWorkspaceCard({
 							size="xs"
 							color="green"
 							variant="light"
-							leftSection={<IconSparkles size={10} />}
+							leftSection={<SparkleIcon size={10} />}
 						>
 							<Trans>New</Trans>
 						</Badge>
@@ -1871,9 +1871,9 @@ function OrganisationPersonCard({
 								aria-label={open ? t`Hide detail` : t`Show detail`}
 							>
 								{open ? (
-									<IconChevronDown size={14} />
+									<CaretDownIcon size={14} />
 								) : (
-									<IconChevronRight size={14} />
+									<CaretRightIcon size={14} />
 								)}
 							</ActionIcon>
 						)}
@@ -1969,7 +1969,7 @@ function OrganisationPersonCard({
 											<Button
 												size="compact-xs"
 												variant="subtle"
-												leftSection={<IconPlus size={12} />}
+												leftSection={<PlusIcon size={12} />}
 												onClick={() =>
 													modals.openConfirmModal({
 														children: (
@@ -2006,7 +2006,7 @@ function OrganisationPersonCard({
 											<Button
 												size="compact-xs"
 												variant="subtle"
-												leftSection={<IconPlus size={12} />}
+												leftSection={<PlusIcon size={12} />}
 												onClick={() =>
 													modals.openConfirmModal({
 														children: (
@@ -2039,8 +2039,8 @@ function OrganisationPersonCard({
 													<Button
 														size="compact-xs"
 														variant="subtle"
-														leftSection={<IconPlus size={12} />}
-														rightSection={<IconChevronDown size={10} />}
+														leftSection={<PlusIcon size={12} />}
+														rightSection={<CaretDownIcon size={10} />}
 													>
 														<Trans>Add</Trans>
 													</Button>

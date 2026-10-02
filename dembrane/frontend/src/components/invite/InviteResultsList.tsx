@@ -10,7 +10,7 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { usePostHog } from "@posthog/react";
-import { IconLink } from "@tabler/icons-react";
+import { LinkIcon } from "@phosphor-icons/react";
 import { toast } from "@/components/common/Toaster";
 
 export type InviteResultState =
@@ -120,7 +120,7 @@ export function InviteResultsList({ rows, "data-testid": dataTestId }: Props) {
 										style={{ flexShrink: 0 }}
 										data-testid={`invite-result-copy-link-${idx}`}
 									>
-										<IconLink size={14} />
+										<LinkIcon size={14} />
 									</ActionIcon>
 								</Tooltip>
 							)}

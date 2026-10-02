@@ -10,7 +10,7 @@ import {
 	TextInput,
 	useCombobox,
 } from "@mantine/core";
-import { IconX } from "@tabler/icons-react";
+import { XIcon } from "@phosphor-icons/react";
 import { type ChangeEvent, type KeyboardEvent, useMemo, useState } from "react";
 
 export interface EmailChip {
@@ -397,7 +397,7 @@ function EmailChipPill({
 				onClick={onRemove}
 				aria-label={t`Remove ${chip.value}`}
 			>
-				<IconX size={12} />
+				<XIcon size={12} />
 			</ActionIcon>
 		</Group>
 	);

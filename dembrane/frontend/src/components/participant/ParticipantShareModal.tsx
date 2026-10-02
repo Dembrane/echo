@@ -1,14 +1,14 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Button, CopyButton, Group, Modal, Stack, Text } from "@mantine/core";
-import { XIcon } from "@phosphor-icons/react";
 import {
-	IconBrandWhatsapp,
-	IconCheck,
-	IconCopy,
-	IconMail,
-	IconShare2,
-} from "@tabler/icons-react";
+	XIcon,
+	CheckIcon,
+	CopyIcon,
+	EnvelopeSimpleIcon,
+	ExportIcon,
+	WhatsappLogoIcon,
+} from "@phosphor-icons/react";
 import posthog from "posthog-js";
 import { useMemo } from "react";
 import { useSearchParams } from "react-router";
@@ -100,7 +100,7 @@ export const ParticipantShareModal = ({
 									<Button
 										size="lg"
 										variant="outline"
-										leftSection={copied ? <IconCheck /> : <IconCopy />}
+										leftSection={copied ? <CheckIcon /> : <CopyIcon />}
 										onClick={() => {
 											copy();
 											trackShare("copy");
@@ -118,7 +118,7 @@ export const ParticipantShareModal = ({
 								href={`https://wa.me/?text=${encodedShareText}`}
 								target="_blank"
 								rel="noopener noreferrer"
-								leftSection={<IconBrandWhatsapp />}
+								leftSection={<WhatsappLogoIcon />}
 								onClick={() => trackShare("whatsapp")}
 								{...testId("portal-share-whatsapp-button")}
 							>
@@ -129,7 +129,7 @@ export const ParticipantShareModal = ({
 								variant="outline"
 								component="a"
 								href={`mailto:?subject=${encodeURIComponent(t`Join this portal session`)}&body=${encodedShareText}`}
-								leftSection={<IconMail />}
+								leftSection={<EnvelopeSimpleIcon />}
 								onClick={() => trackShare("email")}
 								{...testId("portal-share-email-button")}
 							>
@@ -139,7 +139,7 @@ export const ParticipantShareModal = ({
 								<Button
 									size="lg"
 									variant="outline"
-									leftSection={<IconShare2 />}
+									leftSection={<ExportIcon />}
 									onClick={handleNativeShare}
 									{...testId("portal-share-native-button")}
 								>

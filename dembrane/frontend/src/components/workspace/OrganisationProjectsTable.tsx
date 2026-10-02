@@ -13,7 +13,11 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import { IconDots, IconSearch, IconTrash } from "@tabler/icons-react";
+import {
+	DotsThreeIcon,
+	MagnifyingGlassIcon,
+	TrashIcon,
+} from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "@/components/common/Toaster";
@@ -173,7 +177,7 @@ export const OrganisationProjectsTable = ({ orgId }: { orgId: string }) => {
 					</Text>
 					<Group gap="xs">
 						<TextInput
-							leftSection={<IconSearch size={14} />}
+							leftSection={<MagnifyingGlassIcon size={14} />}
 							placeholder={t`Search project or workspace`}
 							size="xs"
 							value={search}
@@ -277,13 +281,13 @@ export const OrganisationProjectsTable = ({ orgId }: { orgId: string }) => {
 													}
 													aria-label={t`Project actions`}
 												>
-													<IconDots size={14} />
+													<DotsThreeIcon size={14} />
 												</ActionIcon>
 											</Menu.Target>
 											<Menu.Dropdown>
 												<Menu.Item
 													color="red"
-													leftSection={<IconTrash size={14} />}
+													leftSection={<TrashIcon size={14} />}
 													onClick={() => handleDelete(p)}
 												>
 													<Trans>Delete…</Trans>

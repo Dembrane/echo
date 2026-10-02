@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { Button, Stack, Text } from "@mantine/core";
-import { IconArrowLeft, IconReload } from "@tabler/icons-react";
+import { ArrowLeftIcon, ArrowsClockwiseIcon } from "@phosphor-icons/react";
 
 interface VerifyArtefactErrorProps {
 	onReload: () => void;
@@ -34,7 +34,7 @@ export const VerifyArtefactError = ({
 					onClick={onReload}
 					loading={isReloading}
 					disabled={isReloading}
-					leftSection={!isReloading && <IconReload />}
+					leftSection={!isReloading && <ArrowsClockwiseIcon />}
 				>
 					<Trans id="participant.concrete.artefact.action.button.reload">
 						Reload Page
@@ -44,7 +44,7 @@ export const VerifyArtefactError = ({
 					variant="filled"
 					size="md"
 					radius="md"
-					leftSection={<IconArrowLeft size={16} />}
+					leftSection={<ArrowLeftIcon size={16} />}
 					onClick={onGoBack}
 					disabled={isReloading}
 				>

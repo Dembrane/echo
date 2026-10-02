@@ -15,7 +15,7 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useClipboard } from "@mantine/hooks";
-import { IconCheck, IconCopy } from "@tabler/icons-react";
+import { CheckIcon, CopyIcon } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -55,7 +55,7 @@ const EmailItem = ({ email }: { email: string }) => {
 					color={clipboard.copied ? "green" : "gray"}
 					onClick={() => clipboard.copy(email)}
 				>
-					{clipboard.copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
+					{clipboard.copied ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
 				</ActionIcon>
 			</Tooltip>
 		</Group>

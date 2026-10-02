@@ -24,18 +24,18 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
-import { DetectiveIcon } from "@phosphor-icons/react";
 import {
-	IconDownload,
-	IconEdit,
-	IconExternalLink,
-	IconInfoCircle,
-	IconRosetteDiscountCheck,
-	IconSearch,
-	IconSelectAll,
-	IconUpload,
-	IconX,
-} from "@tabler/icons-react";
+	DetectiveIcon,
+	ArrowSquareOutIcon,
+	DownloadSimpleIcon,
+	InfoIcon,
+	MagnifyingGlassIcon,
+	PencilSimpleIcon,
+	SealCheckIcon,
+	SelectionAllIcon,
+	UploadSimpleIcon,
+	XIcon,
+} from "@phosphor-icons/react";
 import { useIsMutating } from "@tanstack/react-query";
 import { formatDistanceToNowStrict } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
@@ -307,7 +307,7 @@ export const ConversationRow = ({
 							</Text>
 							{conversation.title && conversation.participant_name && (
 								<Tooltip label={t`Title generated from the conversation`}>
-									<IconInfoCircle
+									<InfoIcon
 										size={14}
 										style={{ color: "#8a8f98", flexShrink: 0 }}
 									/>
@@ -321,7 +321,7 @@ export const ConversationRow = ({
 										size={18}
 										aria-label={t`Verified artifacts`}
 									>
-										<IconRosetteDiscountCheck size={16} />
+										<SealCheckIcon size={16} />
 									</ThemeIcon>
 								</Tooltip>
 							)}
@@ -387,7 +387,7 @@ export const ConversationRow = ({
 										);
 									}}
 								>
-									<IconDownload size={16} />
+									<DownloadSimpleIcon size={16} />
 								</ActionIcon>
 							</Tooltip>
 						)}
@@ -403,7 +403,7 @@ export const ConversationRow = ({
 										onEdit(conversation);
 									}}
 								>
-									<IconEdit size={16} />
+									<PencilSimpleIcon size={16} />
 								</ActionIcon>
 							</Tooltip>
 						)}
@@ -422,7 +422,7 @@ export const ConversationRow = ({
 									}
 								}}
 							>
-								<IconExternalLink size={16} />
+								<ArrowSquareOutIcon size={16} />
 							</ActionIcon>
 						</Tooltip>
 					</Group>
@@ -777,7 +777,7 @@ export const ProjectConversationsPanel = ({
 									<Button
 										variant="outline"
 										disabled
-										leftSection={<IconUpload size={16} />}
+										leftSection={<UploadSimpleIcon size={16} />}
 									>
 										<Trans>Upload</Trans>
 									</Button>
@@ -801,7 +801,7 @@ export const ProjectConversationsPanel = ({
 						<TextInput
 							label={t`Search`}
 							placeholder={t`Title or participant`}
-							leftSection={<IconSearch size={16} />}
+							leftSection={<MagnifyingGlassIcon size={16} />}
 							rightSection={
 								search ? (
 									<ActionIcon
@@ -809,7 +809,7 @@ export const ProjectConversationsPanel = ({
 										aria-label={t`Clear search`}
 										onClick={() => setSearch("")}
 									>
-										<IconX size={16} />
+										<XIcon size={16} />
 									</ActionIcon>
 								) : undefined
 							}
@@ -855,7 +855,7 @@ export const ProjectConversationsPanel = ({
 								onClick={resetFilters}
 								mb={4}
 							>
-								<IconX size={16} />
+								<XIcon size={16} />
 							</ActionIcon>
 						</Tooltip>
 					</Group>
@@ -867,7 +867,7 @@ export const ProjectConversationsPanel = ({
 					allConversations.length > 0 && (
 						<Button
 							variant="outline"
-							leftSection={<IconSelectAll size={16} />}
+							leftSection={<SelectionAllIcon size={16} />}
 							onClick={() => {
 								setSelectAllResult(null);
 								setSelectAllModalOpened(true);

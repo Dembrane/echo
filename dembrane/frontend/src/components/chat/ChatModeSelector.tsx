@@ -11,11 +11,11 @@ import {
 	UnstyledButton,
 } from "@mantine/core";
 import {
-	IconLock,
-	IconMessageCircle,
-	IconQuote,
-	IconSparkles,
-} from "@tabler/icons-react";
+	ChatCircleIcon,
+	LockIcon,
+	QuotesIcon,
+	SparkleIcon,
+} from "@phosphor-icons/react";
 import posthog from "posthog-js";
 import { useState } from "react";
 import { ENABLE_AGENTIC_CHAT } from "@/config";
@@ -70,7 +70,7 @@ type ModeCardProps = {
 	title: string;
 	subtitle: string;
 	examples: string[];
-	icon: typeof IconSparkles;
+	icon: typeof SparkleIcon;
 	isBeta?: boolean;
 	atLimit?: boolean;
 	selectedMode: ChatMode | null;
@@ -141,7 +141,7 @@ const ModeCard = ({
 								{isThisLoading ? (
 									<Loader size={24} color="var(--app-text)" />
 								) : (
-									<Icon size={24} stroke={2} color="var(--app-text)" />
+									<Icon size={24} color="var(--app-text)" />
 								)}
 							</Box>
 							<Stack gap={4}>
@@ -159,7 +159,7 @@ const ModeCard = ({
 											size="sm"
 											color="primary"
 											variant="light"
-											leftSection={<IconLock size={10} />}
+											leftSection={<LockIcon size={10} />}
 										>
 											<Trans>Chat limit reached</Trans>
 										</Badge>
@@ -177,7 +177,7 @@ const ModeCard = ({
 						</Text>
 						{examples.map((example) => (
 							<Group key={example} gap="sm" wrap="nowrap" align="flex-start">
-								<IconQuote
+								<QuotesIcon
 									size={14}
 									color="var(--app-text)"
 									style={{ flexShrink: 0, marginTop: 2 }}
@@ -274,7 +274,7 @@ export const ChatModeSelector = ({
 							title={t`Agentic`}
 							subtitle={t`Delegate multi-step analysis with live tool execution`}
 							examples={getAgenticExamples()}
-							icon={IconSparkles}
+							icon={SparkleIcon}
 							isBeta
 							atLimit={atChatLimit}
 							selectedMode={selectedMode}
@@ -288,7 +288,7 @@ export const ChatModeSelector = ({
 						title={t`Specific Details`}
 						subtitle={t`Select conversations and find exact quotes`}
 						examples={getDeepDiveExamples()}
-						icon={IconMessageCircle}
+						icon={ChatCircleIcon}
 						atLimit={atChatLimit}
 						selectedMode={selectedMode}
 						isLoading={isLoading}

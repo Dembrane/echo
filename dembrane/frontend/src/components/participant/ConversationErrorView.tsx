@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { Button, Group, Text } from "@mantine/core";
-import { IconPlus, IconReload } from "@tabler/icons-react";
+import { ArrowsClockwiseIcon, PlusIcon } from "@phosphor-icons/react";
 
 type ConversationErrorViewProps = {
 	conversationDeletedDuringRecording: boolean;
@@ -44,13 +44,13 @@ export const ConversationErrorView = ({
 						variant="light"
 						size="md"
 						onClick={() => window.location.reload()}
-						leftSection={<IconReload />}
+						leftSection={<ArrowsClockwiseIcon />}
 					>
 						<Trans id="participant.button.reload">Reload Page</Trans>
 					</Button>
 					{newConversationLink && (
 						<Button
-							leftSection={<IconPlus size={16} />}
+							leftSection={<PlusIcon size={16} />}
 							variant="filled"
 							size="md"
 							component="a"

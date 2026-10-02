@@ -1,5 +1,5 @@
 import { ActionIcon, Box, Group, Paper, Text } from "@mantine/core";
-import { IconRosetteDiscountCheck } from "@tabler/icons-react";
+import { SealCheckIcon } from "@phosphor-icons/react";
 import { format } from "date-fns";
 import type { VerificationArtifact } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
@@ -57,7 +57,7 @@ export const VerifiedArtefactItem = ({
 						aria-label="concrete artefact"
 						size={22}
 					>
-						<IconRosetteDiscountCheck />
+						<SealCheckIcon />
 					</ActionIcon>
 				</Group>
 			</Paper>

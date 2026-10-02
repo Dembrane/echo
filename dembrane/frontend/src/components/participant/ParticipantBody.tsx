@@ -4,7 +4,7 @@ import { Trans } from "@lingui/react/macro";
 import { Button, Modal, Stack, Title } from "@mantine/core";
 
 import { useDisclosure } from "@mantine/hooks";
-import { IconExclamationCircle, IconWifiOff } from "@tabler/icons-react";
+import { WarningCircleIcon, WifiSlashIcon } from "@phosphor-icons/react";
 import { type PropsWithChildren, useEffect, useMemo, useRef } from "react";
 import { Toaster } from "@/components/common/Toaster";
 import {
@@ -130,7 +130,7 @@ export const ParticipantBody = ({
 
 			{!isOnline && (
 				<TipBanner
-					icon={IconWifiOff}
+					icon={WifiSlashIcon}
 					message={t`You seem to be offline, please check your internet connection`}
 					tipLabel={t`Tip`}
 					color="yellow"
@@ -139,7 +139,7 @@ export const ParticipantBody = ({
 
 			{!connectionHealthy && (
 				<TipBanner
-					icon={IconExclamationCircle}
+					icon={WarningCircleIcon}
 					message={t`Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists`}
 					color="yellow"
 				/>

@@ -20,12 +20,12 @@ import { Trans } from "@lingui/react/macro";
 import { ActionIcon, Box, Button, Group, Text } from "@mantine/core";
 import { useDebouncedValue, useWindowEvent } from "@mantine/hooks";
 import {
-	IconArrowsMaximize,
-	IconGripVertical,
-	IconPlus,
-	IconPrinter,
-	IconTrash,
-} from "@tabler/icons-react";
+	ArrowsOutIcon,
+	DotsSixVerticalIcon,
+	PlusIcon,
+	PrinterIcon,
+	TrashIcon,
+} from "@phosphor-icons/react";
 import {
 	type ReactNode,
 	useCallback,
@@ -597,7 +597,7 @@ const StepRow = ({
 						transition: "opacity 0.15s",
 					}}
 				>
-					<IconGripVertical size={16} color={colors.graphite} />
+					<DotsSixVerticalIcon size={16} color={colors.graphite} />
 				</div>
 				<span
 					style={{
@@ -655,7 +655,7 @@ const StepRow = ({
 							transition: "opacity 0.15s",
 						}}
 					>
-						<IconTrash size={16} />
+						<TrashIcon size={16} />
 					</ActionIcon>
 				)}
 			</div>
@@ -769,7 +769,7 @@ const TipRow = ({
 						transition: "opacity 0.15s",
 					}}
 				>
-					<IconGripVertical size={14} color={colors.graphite} />
+					<DotsSixVerticalIcon size={14} color={colors.graphite} />
 				</div>
 				<span
 					style={{
@@ -828,7 +828,7 @@ const TipRow = ({
 							transition: "opacity 0.15s",
 						}}
 					>
-						<IconTrash size={16} />
+						<TrashIcon size={16} />
 					</ActionIcon>
 				)}
 			</div>
@@ -855,7 +855,7 @@ const AddButton = ({
 				variant="subtle"
 				size="xs"
 				color="gray"
-				leftSection={<IconPlus size={14} />}
+				leftSection={<PlusIcon size={14} />}
 				onClick={onClick}
 				style={{ opacity: hovered ? 1 : 0, transition: "opacity 0.15s" }}
 			>
@@ -1525,7 +1525,7 @@ export const HostGuidePage = () => {
 					</Button>
 					<Button
 						size="xs"
-						leftSection={<IconPrinter size={14} />}
+						leftSection={<PrinterIcon size={14} />}
 						onClick={() => window.print()}
 					>
 						<Trans>Print / Save PDF</Trans>
@@ -1533,7 +1533,7 @@ export const HostGuidePage = () => {
 					<Button
 						size="xs"
 						variant="outline"
-						leftSection={<IconArrowsMaximize size={14} />}
+						leftSection={<ArrowsOutIcon size={14} />}
 						onClick={() => setIsFullscreen(true)}
 					>
 						<Trans>Go Fullscreen</Trans>

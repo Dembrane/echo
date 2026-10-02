@@ -22,11 +22,11 @@ import {
 	useDocumentTitle,
 } from "@mantine/hooks";
 import {
-	IconAlertCircle,
-	IconSearch,
-	IconSend,
-	IconX,
-} from "@tabler/icons-react";
+	MagnifyingGlassIcon,
+	PaperPlaneRightIcon,
+	WarningCircleIcon,
+	XIcon,
+} from "@phosphor-icons/react";
 import { formatRelative } from "date-fns";
 import posthog from "posthog-js";
 import { Suspense, useEffect, useRef, useState } from "react";
@@ -163,7 +163,7 @@ const ProjectChatsSection = ({
 					onChange={(event) => setSearch(event.currentTarget.value)}
 					placeholder={t`Search chats`}
 					aria-label={t`Search chats`}
-					leftSection={<IconSearch size={14} />}
+					leftSection={<MagnifyingGlassIcon size={14} />}
 					rightSection={
 						rawSearch ? (
 							<ActionIcon
@@ -172,7 +172,7 @@ const ProjectChatsSection = ({
 								aria-label={t`Clear search`}
 								onClick={() => setSearch("")}
 							>
-								<IconX size={14} />
+								<XIcon size={14} />
 							</ActionIcon>
 						) : null
 					}
@@ -537,7 +537,7 @@ export const NewChatRoute = () => {
 		return (
 			<Box className="flex min-h-full items-center justify-center px-2 pr-4">
 				<Alert
-					icon={<IconAlertCircle size="1rem" />}
+					icon={<WarningCircleIcon size="1rem" />}
 					color="primary"
 					variant="light"
 					maw={420}
@@ -640,7 +640,11 @@ export const NewChatRoute = () => {
 									size="md"
 									radius="md"
 									rightSection={
-										isPending ? <Loader size={18} /> : <IconSend size={18} />
+										isPending ? (
+											<Loader size={18} />
+										) : (
+											<PaperPlaneRightIcon size={18} />
+										)
 									}
 									disabled={isPending || draft.trim().length === 0}
 									onClick={startChat}

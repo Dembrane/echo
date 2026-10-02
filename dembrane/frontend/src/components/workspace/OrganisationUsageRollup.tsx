@@ -19,16 +19,16 @@ import {
 	UnstyledButton,
 } from "@mantine/core";
 import {
-	IconAdjustments,
-	IconAlertTriangle,
-	IconArrowsSort,
-	IconChevronDown,
-	IconChevronRight,
-	IconLock,
-	IconSearch,
-	IconSortAscending,
-	IconSortDescending,
-} from "@tabler/icons-react";
+	ArrowsDownUpIcon,
+	CaretDownIcon,
+	CaretRightIcon,
+	LockIcon,
+	MagnifyingGlassIcon,
+	SlidersHorizontalIcon,
+	SortAscendingIcon,
+	SortDescendingIcon,
+	WarningIcon,
+} from "@phosphor-icons/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	type ColumnDef,
@@ -201,11 +201,11 @@ function SortableHeader({
 				{label}
 			</Text>
 			{sorted === "asc" ? (
-				<IconSortAscending size={12} color="var(--mantine-color-dark-6)" />
+				<SortAscendingIcon size={12} color="var(--mantine-color-dark-6)" />
 			) : sorted === "desc" ? (
-				<IconSortDescending size={12} color="var(--mantine-color-dark-6)" />
+				<SortDescendingIcon size={12} color="var(--mantine-color-dark-6)" />
 			) : (
-				<IconArrowsSort
+				<ArrowsDownUpIcon
 					size={12}
 					color="var(--mantine-color-gray-4)"
 					aria-hidden
@@ -295,9 +295,9 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 						aria-label={expanded[row.id] ? t`Hide projects` : t`Show projects`}
 					>
 						{expanded[row.id] ? (
-							<IconChevronDown size={12} />
+							<CaretDownIcon size={12} />
 						) : (
-							<IconChevronRight size={12} />
+							<CaretRightIcon size={12} />
 						)}
 					</ActionIcon>
 				),
@@ -318,17 +318,14 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 										: t`All seats taken`
 								}
 							>
-								<IconAlertTriangle
-									size={14}
-									color="var(--mantine-color-red-6)"
-								/>
+								<WarningIcon size={14} color="var(--mantine-color-red-6)" />
 							</Tooltip>
 						)}
 						{!(row.original.at_cap || row.original.seat_cap_hit) &&
 							(row.original.approaching_cap ||
 								row.original.approaching_seat_cap) && (
 								<Tooltip label={t`Approaching a limit this month`}>
-									<IconAlertTriangle
+									<WarningIcon
 										size={14}
 										color="var(--mantine-color-yellow-7)"
 									/>
@@ -336,7 +333,7 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 							)}
 						{row.original.is_private && (
 							<Tooltip label={t`Private workspace`}>
-								<IconLock size={12} color="var(--mantine-color-gray-6)" />
+								<LockIcon size={12} color="var(--mantine-color-gray-6)" />
 							</Tooltip>
 						)}
 						<UnstyledButton
@@ -531,7 +528,7 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 
 				<Group gap="sm" wrap="wrap" align="center">
 					<TextInput
-						leftSection={<IconSearch size={14} />}
+						leftSection={<MagnifyingGlassIcon size={14} />}
 						placeholder={t`Search workspaces`}
 						value={globalFilter}
 						onChange={(e) => setGlobalFilter(e.currentTarget.value)}
@@ -578,7 +575,7 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 							<Button
 								size="xs"
 								variant="default"
-								leftSection={<IconAdjustments size={14} />}
+								leftSection={<SlidersHorizontalIcon size={14} />}
 							>
 								<Trans>Columns</Trans>
 							</Button>
@@ -1013,7 +1010,7 @@ function NeedsAttentionPanel({
 		>
 			<Stack gap={6}>
 				<Group gap="xs" wrap="nowrap">
-					<IconAlertTriangle size={14} color="var(--mantine-color-yellow-7)" />
+					<WarningIcon size={14} color="var(--mantine-color-yellow-7)" />
 					<Text size="xs" tt="uppercase" lts={0.5}>
 						<Trans>Needs attention</Trans>
 					</Text>

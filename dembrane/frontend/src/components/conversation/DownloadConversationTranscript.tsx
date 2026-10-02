@@ -9,7 +9,7 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconDownload } from "@tabler/icons-react";
+import { DownloadSimpleIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { testId } from "@/lib/testUtils";
 import { useGetConversationTranscriptStringMutation } from "./hooks";
@@ -31,7 +31,7 @@ export const DownloadConversationTranscriptModalActionIcon = ({
 					color="gray"
 					{...testId("transcript-download-button")}
 				>
-					<IconDownload size={20} />
+					<DownloadSimpleIcon size={20} />
 				</ActionIcon>
 			</Tooltip>
 			<DownloadConversationTranscriptModal
@@ -100,7 +100,7 @@ export const DownloadConversationTranscriptModal = (props: {
 						await handleDownloadTranscript();
 						onClose();
 					}}
-					rightSection={<IconDownload />}
+					rightSection={<DownloadSimpleIcon />}
 					{...testId("transcript-download-confirm-button")}
 				>
 					<Trans>Download</Trans>

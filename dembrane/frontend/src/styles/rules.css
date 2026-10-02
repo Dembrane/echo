@@ -21,7 +21,9 @@
 
 :root {
 	--app-stroke: 1px;
-	--app-rule-color: #2d2d2c;
+	/* The faint grey the app uses for lines; states recolour it (blue when
+	 * active, red on error). */
+	--app-rule-color: #e6e3df;
 	--app-float: 0 12px 40px rgba(45, 45, 44, 0.12);
 }
 
@@ -104,13 +106,6 @@
 /* Do: an action menu is a set of buttons: the full box. */
 :root .mantine-Menu-dropdown {
 	border-width: var(--app-stroke);
-}
-
-/* Secondary buttons draw the rule in their own colour (action blue, or the
- * danger red when color="red"). */
-:root .mantine-Button-root[data-variant="outline"],
-:root .mantine-Button-root[data-variant="default"] {
-	--app-rule-color: currentColor;
 }
 
 /* Fields keep their states on the rule, at the same stroke: blue on focus
@@ -637,4 +632,11 @@
 }
 :root .mantine-Stepper-separator[data-active] {
 	background: #2957df;
+}
+
+/* Icons sized 1em (Phosphor's default) are treated as 16px. */
+:root
+	svg[viewBox="0 0 256 256"][width="1em"]
+	:is(path, circle, rect, line, polyline) {
+	stroke-width: 4;
 }

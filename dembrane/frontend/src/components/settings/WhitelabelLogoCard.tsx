@@ -11,7 +11,7 @@ import {
 	Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconPhoto, IconTrash, IconUpload } from "@tabler/icons-react";
+import { ImageIcon, TrashIcon, UploadSimpleIcon } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { useCurrentUser } from "@/components/auth/hooks";
@@ -111,7 +111,7 @@ export const WhitelabelLogoCard = () => {
 			<Card withBorder p="lg" radius="md">
 				<Stack gap="md">
 					<Group gap="sm">
-						<IconPhoto size={24} stroke={1.5} />
+						<ImageIcon size={24} />
 						<Title order={3}>
 							<Trans>Custom Logo</Trans>
 						</Title>
@@ -142,7 +142,7 @@ export const WhitelabelLogoCard = () => {
 									variant="subtle"
 									color="red"
 									size="compact-sm"
-									leftSection={<IconTrash size={14} />}
+									leftSection={<TrashIcon size={14} />}
 									loading={removeMutation.isPending}
 									onClick={openRemoveConfirm}
 								>
@@ -164,7 +164,7 @@ export const WhitelabelLogoCard = () => {
 						{(props) => (
 							<Button
 								variant="light"
-								leftSection={<IconUpload size={16} />}
+								leftSection={<UploadSimpleIcon size={16} />}
 								loading={uploadMutation.isPending}
 								{...props}
 							>

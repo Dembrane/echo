@@ -15,12 +15,12 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { BookmarkSimple } from "@phosphor-icons/react";
 import {
-	IconArrowUpRight,
-	IconFileText,
-	IconMessages,
-} from "@tabler/icons-react";
+	BookmarkSimple,
+	ArrowUpRightIcon,
+	ChatsIcon,
+	FileTextIcon,
+} from "@phosphor-icons/react";
 import { formatDate } from "date-fns";
 import type React from "react";
 import { Children, useMemo } from "react";
@@ -147,7 +147,7 @@ const DocsChoiceCard = ({
 			<Group gap="sm" align="center">
 				{icon}
 				<Title order={4}>{title}</Title>
-				<IconArrowUpRight size={18} stroke={1.9} />
+				<ArrowUpRightIcon size={18} />
 			</Group>
 			<Text size="sm">{description}</Text>
 		</Stack>
@@ -194,7 +194,7 @@ const AgenticCitation = ({
 					<span>
 						<Trans>Open conversation</Trans>
 					</span>
-					<IconArrowUpRight size={12} stroke={1.9} className="self-center" />
+					<ArrowUpRightIcon size={12} className="self-center" />
 				</a>
 			</Stack>
 		</Popover.Dropdown>
@@ -232,7 +232,7 @@ const AgenticDocsLink = ({
 				}}
 			>
 				<span>{getLinkLabel(children)}</span>
-				<IconArrowUpRight size={12} stroke={1.9} className="self-center" />
+				<ArrowUpRightIcon size={12} className="self-center" />
 			</a>
 			<Modal
 				opened={opened}
@@ -244,13 +244,13 @@ const AgenticDocsLink = ({
 				<SimpleGrid cols={{ base: 1, xs: 2 }} spacing="md">
 					<DocsChoiceCard
 						href={href}
-						icon={<IconFileText size={28} stroke={1.7} />}
+						icon={<FileTextIcon size={28} />}
 						title={<Trans>Open documentation</Trans>}
 						description={<Trans>The page this answer refers to.</Trans>}
 					/>
 					<DocsChoiceCard
 						href={chatDocsHref}
-						icon={<IconMessages size={28} stroke={1.7} />}
+						icon={<ChatsIcon size={28} />}
 						title={<Trans>Open chat documentation</Trans>}
 						description={<Trans>How Ask works and what it can do.</Trans>}
 					/>
@@ -349,11 +349,7 @@ export const ChatHistoryMessage = ({
 								{...props}
 							>
 								<span>{getLinkLabel(children)}</span>
-								<IconArrowUpRight
-									size={12}
-									stroke={1.9}
-									className="self-center"
-								/>
+								<ArrowUpRightIcon size={12} className="self-center" />
 							</a>
 						</Tooltip>
 					);

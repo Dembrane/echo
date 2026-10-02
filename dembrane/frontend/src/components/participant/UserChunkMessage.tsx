@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { ActionIcon, Menu, Paper, Text } from "@mantine/core";
-import { IconDotsVertical, IconTrash } from "@tabler/icons-react";
+import { DotsThreeVerticalIcon, TrashIcon } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router";
 import { Markdown } from "@/components/common/Markdown";
@@ -86,7 +86,7 @@ const UserChunkMessage = ({
 				<Menu shadow="md" width={200}>
 					<Menu.Target>
 						<ActionIcon variant="transparent" c="gray" className="h-full">
-							<IconDotsVertical />
+							<DotsThreeVerticalIcon />
 						</ActionIcon>
 					</Menu.Target>
 
@@ -94,7 +94,7 @@ const UserChunkMessage = ({
 						<Menu.Item
 							onClick={handleDelete}
 							disabled={deleteChunkMutation.isPending}
-							leftSection={<IconTrash />}
+							leftSection={<TrashIcon />}
 						>
 							Delete
 						</Menu.Item>

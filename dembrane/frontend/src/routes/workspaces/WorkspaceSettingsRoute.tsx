@@ -27,7 +27,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
-import { IconTrash, IconUpload } from "@tabler/icons-react";
+import { TrashIcon, UploadSimpleIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router";
@@ -1122,7 +1122,7 @@ export const WorkspaceSettingsRoute = () => {
 																	}}
 																	aria-label={t`Leave workspace`}
 																>
-																	<IconTrash size={14} />
+																	<TrashIcon size={14} />
 																</ActionIcon>
 															</Tooltip>
 														) : (
@@ -1163,7 +1163,7 @@ export const WorkspaceSettingsRoute = () => {
 																		}}
 																		aria-label={t`Remove member`}
 																	>
-																		<IconTrash size={14} />
+																		<TrashIcon size={14} />
 																	</ActionIcon>
 																</Tooltip>
 															)
@@ -1647,7 +1647,7 @@ function PrivacyAndDefaultsSection({
 												variant="subtle"
 												color="red"
 												size="compact-sm"
-												leftSection={<IconTrash size={14} />}
+												leftSection={<TrashIcon size={14} />}
 												loading={removeLogoMutation.isPending}
 												disabled={!canEdit}
 												onClick={openRemoveLogoConfirm}
@@ -1671,7 +1671,7 @@ function PrivacyAndDefaultsSection({
 												<Button
 													variant="light"
 													size="compact-sm"
-													leftSection={<IconUpload size={14} />}
+													leftSection={<UploadSimpleIcon size={14} />}
 													loading={uploadLogoMutation.isPending}
 													style={{ alignSelf: "flex-start" }}
 													disabled={!canEdit}
@@ -1715,7 +1715,7 @@ function PrivacyAndDefaultsSection({
 												variant="subtle"
 												color="red"
 												size="compact-sm"
-												leftSection={<IconTrash size={14} />}
+												leftSection={<TrashIcon size={14} />}
 												loading={removeLogoMutation.isPending}
 												disabled={!canEdit}
 												onClick={openRemoveLogoConfirm}
@@ -1755,7 +1755,7 @@ function PrivacyAndDefaultsSection({
 										<Button
 											variant="light"
 											size="compact-sm"
-											leftSection={<IconUpload size={14} />}
+											leftSection={<UploadSimpleIcon size={14} />}
 											style={{ alignSelf: "flex-start" }}
 											disabled={!canEdit}
 											onClick={onClick}

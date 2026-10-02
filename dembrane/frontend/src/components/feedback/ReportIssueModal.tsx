@@ -12,8 +12,7 @@ import {
 	Text,
 	Textarea,
 } from "@mantine/core";
-import { Paperclip } from "@phosphor-icons/react";
-import { IconPlayerStopFilled } from "@tabler/icons-react";
+import { Paperclip, StopIcon } from "@phosphor-icons/react";
 import posthog from "posthog-js";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CharsRemainingIndicator } from "@/components/common/CharsRemainingIndicator";
@@ -235,7 +234,7 @@ export const ReportIssueModal = ({
 							<Button
 								aria-label={t`Stop recording and turn it into text`}
 								onClick={voice.stop}
-								rightSection={<IconPlayerStopFilled size={18} />}
+								rightSection={<StopIcon weight="fill" size={18} />}
 								size="compact-sm"
 								type="button"
 								data-testid="report-issue-voice-stop"

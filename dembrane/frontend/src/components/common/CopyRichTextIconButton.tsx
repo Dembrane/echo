@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { ActionIcon, Loader, Tooltip } from "@mantine/core";
-import { IconCheck, IconCopy } from "@tabler/icons-react";
+import { CheckIcon, CopyIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import useCopyToRichText from "@/hooks/useCopyToRichText";
@@ -48,9 +48,9 @@ export const CopyRichTextIconButton = ({
 				{isLoading ? (
 					<Loader size={iconSize} />
 				) : copied ? (
-					<IconCheck size={iconSize} />
+					<CheckIcon size={iconSize} />
 				) : (
-					<IconCopy size={iconSize} />
+					<CopyIcon size={iconSize} />
 				)}
 			</ActionIcon>
 		</Tooltip>

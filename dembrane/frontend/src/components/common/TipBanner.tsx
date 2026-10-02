@@ -1,5 +1,5 @@
 import { Badge } from "@mantine/core";
-import type { Icon } from "@tabler/icons-react";
+import { type Icon } from "@phosphor-icons/react";
 import clsx from "clsx";
 
 interface TipBannerProps {

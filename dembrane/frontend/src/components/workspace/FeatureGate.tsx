@@ -1,7 +1,7 @@
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import { Badge, Box, Stack, Text } from "@mantine/core";
-import { IconLock } from "@tabler/icons-react";
+import { LockIcon } from "@phosphor-icons/react";
 import { type ReactNode, useEffect, useRef } from "react";
 import {
 	PricingConfigurator,
@@ -150,7 +150,7 @@ export function FeatureGate({
 							<Badge
 								color="blue"
 								variant="light"
-								leftSection={<IconLock size={12} />}
+								leftSection={<LockIcon size={12} />}
 							>
 								<Trans>Available on a paid plan</Trans>
 							</Badge>

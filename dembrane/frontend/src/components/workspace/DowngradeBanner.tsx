@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { ActionIcon, Anchor, Group, Paper, Text } from "@mantine/core";
-import { IconX } from "@tabler/icons-react";
+import { XIcon } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -106,7 +106,7 @@ export const DowngradeBanner = () => {
 					onClick={handleDismiss}
 					aria-label="Dismiss"
 				>
-					<IconX size={14} />
+					<XIcon size={14} />
 				</ActionIcon>
 			</Group>
 		</Paper>

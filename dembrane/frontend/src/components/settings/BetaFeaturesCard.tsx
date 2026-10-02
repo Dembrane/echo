@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { Card, Checkbox, Group, Stack, Text, Title } from "@mantine/core";
-import { IconFlask } from "@tabler/icons-react";
+import { FlaskIcon } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useV2Me } from "@/hooks/useV2Me";
@@ -51,13 +51,16 @@ export const BetaFeaturesCard = () => {
 		<Card withBorder p="lg" radius="md">
 			<Stack gap="md">
 				<Group gap="sm">
-					<IconFlask size={24} stroke={1.5} />
+					<FlaskIcon size={24} />
 					<Title order={3}>
 						<Trans>Beta features</Trans>
 					</Title>
 				</Group>
 				<Text size="sm">
-					<Trans>Opt-in to experimental features and help shape dembrane. These features might change or be removed at any time.</Trans>
+					<Trans>
+						Opt-in to experimental features and help shape dembrane. These
+						features might change or be removed at any time.
+					</Trans>
 				</Text>
 
 				{BETA_FLAGS.map((flag) => (

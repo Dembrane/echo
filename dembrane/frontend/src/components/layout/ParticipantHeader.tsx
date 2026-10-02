@@ -2,8 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { ActionIcon, Box, Button, Group } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { GearSixIcon } from "@phosphor-icons/react";
-import { IconArrowLeft, IconQrcode } from "@tabler/icons-react";
+import { GearSixIcon, ArrowLeftIcon, QrCodeIcon } from "@phosphor-icons/react";
 import { useLocation, useParams, useSearchParams } from "react-router";
 import useSessionStorageState from "use-session-storage-state";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -83,7 +82,7 @@ export const ParticipantHeader = () => {
 								size="md"
 								variant="subtle"
 								px={0}
-								leftSection={<IconArrowLeft size={16} />}
+								leftSection={<ArrowLeftIcon size={16} />}
 								onClick={handleBack}
 								{...testId("portal-header-back-button")}
 							>
@@ -115,7 +114,7 @@ export const ParticipantHeader = () => {
 								aria-label={t`Share portal`}
 								{...testId("portal-header-share-button")}
 							>
-								<IconQrcode size={30} color="gray" />
+								<QrCodeIcon size={30} color="gray" />
 							</ActionIcon>
 							<ActionIcon
 								size="xl"

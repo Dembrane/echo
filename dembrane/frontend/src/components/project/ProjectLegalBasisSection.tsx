@@ -13,10 +13,10 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
-	IconAlertTriangle,
-	IconExternalLink,
-	IconScale,
-} from "@tabler/icons-react";
+	ArrowSquareOutIcon,
+	ScalesIcon,
+	WarningIcon,
+} from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useParams } from "react-router";
@@ -164,7 +164,7 @@ export const ProjectLegalBasisSection = ({
 		<Box>
 			<Stack gap="sm">
 				<Group gap="sm">
-					<IconScale size={18} stroke={1.5} />
+					<ScalesIcon size={18} />
 					<Text size="sm">
 						<Trans>Legal basis</Trans>
 					</Text>
@@ -202,7 +202,7 @@ export const ProjectLegalBasisSection = ({
 										<Alert
 											variant="light"
 											color="yellow"
-											icon={<IconAlertTriangle size={16} />}
+											icon={<WarningIcon size={16} />}
 										>
 											<Text size="sm">
 												<Trans>
@@ -271,7 +271,7 @@ export const ProjectLegalBasisSection = ({
 										>
 											<Group gap={4} wrap="nowrap">
 												<Trans>Workspace settings</Trans>
-												<IconExternalLink size={14} />
+												<ArrowSquareOutIcon size={14} />
 											</Group>
 										</Anchor>
 									</Group>

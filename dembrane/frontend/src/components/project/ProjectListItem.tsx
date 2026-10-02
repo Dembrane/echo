@@ -14,8 +14,7 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { DotsThreeIcon } from "@phosphor-icons/react";
-import { IconLock, IconPin, IconPinFilled } from "@tabler/icons-react";
+import { DotsThreeIcon, LockIcon, PushPinIcon } from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatRelative } from "date-fns";
 import { type PropsWithChildren, useState } from "react";
@@ -217,7 +216,7 @@ export const ProjectListItem = ({
 							{(project as unknown as { visibility?: string }).visibility ===
 								"private" && (
 								<Tooltip label={t`Private project`} withArrow>
-									<IconLock
+									<LockIcon
 										size={14}
 										style={{
 											color: "var(--mantine-color-gray-6)",
@@ -323,9 +322,9 @@ export const ProjectListItem = ({
 									}}
 								>
 									{isPinned ? (
-										<IconPinFilled size={18} />
+										<PushPinIcon weight="fill" size={18} />
 									) : (
-										<IconPin size={18} />
+										<PushPinIcon size={18} />
 									)}
 								</ActionIcon>
 							</Tooltip>

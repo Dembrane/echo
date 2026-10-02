@@ -9,7 +9,11 @@ import {
 	Stack,
 	Text,
 } from "@mantine/core";
-import { IconPencil, IconPlayerPause, IconVolume } from "@tabler/icons-react";
+import {
+	PauseIcon,
+	PencilSimpleIcon,
+	SpeakerHighIcon,
+} from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { memo, useEffect, useRef, useState } from "react";
@@ -343,9 +347,9 @@ export const VerifyArtefact = () => {
 									{...testId("portal-verify-artefact-read-aloud-button")}
 								>
 									{isPlaying ? (
-										<IconPlayerPause size={20} />
+										<PauseIcon size={20} />
 									) : (
-										<IconVolume size={20} />
+										<SpeakerHighIcon size={20} />
 									)}
 								</ActionIcon>
 							)}
@@ -432,7 +436,7 @@ export const VerifyArtefact = () => {
 								}
 								{...testId("portal-verify-artefact-edit-button")}
 							>
-								<IconPencil size={20} />
+								<PencilSimpleIcon size={20} />
 							</Button>
 						</Button.Group>
 

@@ -11,12 +11,12 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
-	IconCheck,
-	IconMicrophone,
-	IconPlus,
-	IconReload,
-	IconUpload,
-} from "@tabler/icons-react";
+	ArrowsClockwiseIcon,
+	CheckIcon,
+	MicrophoneIcon,
+	PlusIcon,
+	UploadSimpleIcon,
+} from "@phosphor-icons/react";
 import clsx from "clsx";
 import posthog from "posthog-js";
 import { useState } from "react";
@@ -134,7 +134,7 @@ export const ParticipantConversationText = () => {
 							variant="light"
 							size="md"
 							onClick={() => window.location.reload()}
-							leftSection={<IconReload />}
+							leftSection={<ArrowsClockwiseIcon />}
 						>
 							<Trans id="participant.button.reload.page.text.mode">
 								Reload Page
@@ -142,7 +142,7 @@ export const ParticipantConversationText = () => {
 						</Button>
 						{newConversationLink && (
 							<Button
-								leftSection={<IconPlus size={16} />}
+								leftSection={<PlusIcon size={16} />}
 								variant="filled"
 								size="md"
 								component="a"
@@ -248,7 +248,7 @@ export const ParticipantConversationText = () => {
 					<Button
 						size="lg"
 						radius="md"
-						rightSection={<IconUpload />}
+						rightSection={<UploadSimpleIcon />}
 						onClick={onChunk}
 						loading={uploadChunkMutation.isPending}
 						className="flex-grow"
@@ -264,7 +264,7 @@ export const ParticipantConversationText = () => {
 							px="lg"
 							{...testId("portal-text-switch-to-audio-button")}
 						>
-							<IconMicrophone />
+							<MicrophoneIcon />
 						</Button>
 					</I18nLink>
 					{text.trim() === "" && chunks.data && chunks.data.length > 0 && (
@@ -272,7 +272,7 @@ export const ParticipantConversationText = () => {
 							size="lg"
 							onClick={openFinishModal}
 							variant="outline"
-							rightSection={<IconCheck />}
+							rightSection={<CheckIcon />}
 							{...testId("portal-text-finish-button")}
 						>
 							<Trans id="participant.button.finish.text.mode">Finish</Trans>

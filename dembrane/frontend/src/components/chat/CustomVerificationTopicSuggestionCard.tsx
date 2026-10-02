@@ -9,7 +9,7 @@ import {
 	Textarea,
 	TextInput,
 } from "@mantine/core";
-import { IconCheck } from "@tabler/icons-react";
+import { CheckIcon } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 import { SuggestionCardFrame } from "@/components/common/SuggestionCardFrame";
 import { toast } from "@/components/common/Toaster";
@@ -88,7 +88,7 @@ export const CustomVerificationTopicSuggestionCard = ({
 				testId="agentic-verification-topic-suggestion"
 			>
 				<Group gap="xs" wrap="nowrap">
-					<IconCheck
+					<CheckIcon
 						size={16}
 						className="shrink-0"
 						style={{ color: "var(--mantine-color-primary-7)" }}

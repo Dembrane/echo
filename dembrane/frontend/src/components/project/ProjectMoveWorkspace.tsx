@@ -2,7 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Button, Select, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconArrowRight } from "@tabler/icons-react";
+import { ArrowRightIcon } from "@phosphor-icons/react";
 import posthog from "posthog-js";
 import { useMemo, useState } from "react";
 import { useParams } from "react-router";
@@ -118,7 +118,7 @@ export const ProjectMoveWorkspace = ({ project }: { project: Project }) => {
 					<Button
 						onClick={openConfirm}
 						disabled={!targetWorkspaceId}
-						rightSection={<IconArrowRight />}
+						rightSection={<ArrowRightIcon />}
 						{...testId("project-move-workspace-button")}
 					>
 						<Trans>Move project</Trans>

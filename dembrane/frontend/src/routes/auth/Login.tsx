@@ -102,6 +102,8 @@ export const LoginRoute = () => {
 	// Set when the password was right but the email is not verified yet.
 	const [unverifiedEmail, setUnverifiedEmail] = useState("");
 	const [otpRequired, setOtpRequired] = useState(false);
+	// "Forgot your password?" appears once a password has been wrong.
+	const [passwordFailed, setPasswordFailed] = useState(false);
 	const [otpValue, setOtpValue] = useState("");
 	// Sign-in with an emailed one-time code: how contacts created by staff or sam sign in.
 	const [codeMode, setCodeMode] = useState(false);
@@ -300,6 +302,7 @@ export const LoginRoute = () => {
 			) {
 				setError(describeAuthError(error));
 				if (code === "EMAIL_NOT_VERIFIED") setUnverifiedEmail(data.email);
+				if (code === "INVALID_EMAIL_OR_PASSWORD") setPasswordFailed(true);
 			} else {
 				setError(t`Something went wrong`);
 			}
@@ -538,18 +541,6 @@ export const LoginRoute = () => {
 										/>
 									</>
 								)}
-								{!otpRequired && (
-									<div className="w-full text-right">
-										<I18nLink to="/request-password-reset">
-											<Anchor
-												variant="outline"
-												{...testId("auth-login-forgot-password-link")}
-											>
-												<Trans>Forgot your password?</Trans>
-											</Anchor>
-										</I18nLink>
-									</div>
-								)}
 								<div>
 									<Button
 										variant="filled"
@@ -569,21 +560,33 @@ export const LoginRoute = () => {
 							</Stack>
 						</form>
 					)}
+					{/* Tertiary ways in, centred under Login. Forgot your password?
+					    appears only after a wrong password. */}
 					{!codeMode && !otpRequired && (
-						<Anchor
-							component="button"
-							size="sm"
-							ta="left"
-							onClick={() => {
-								setCodeEmail(getValues("email") || lockedEmail || "");
-								setCodeMode(true);
-								setCodeSent(false);
-								setError("");
-							}}
-							{...testId("auth-login-code-mode")}
-						>
-							<Trans>Email me a sign-in code instead</Trans>
-						</Anchor>
+						<Stack gap={4} align="center">
+							<Button
+								variant="subtle"
+								onClick={() => {
+									setCodeEmail(getValues("email") || lockedEmail || "");
+									setCodeMode(true);
+									setCodeSent(false);
+									setError("");
+								}}
+								{...testId("auth-login-code-mode")}
+							>
+								<Trans>Email me a sign-in code instead</Trans>
+							</Button>
+							{passwordFailed && (
+								<Button
+									variant="subtle"
+									component={I18nLink}
+									to="/request-password-reset"
+									{...testId("auth-login-forgot-password-link")}
+								>
+									<Trans>Forgot your password?</Trans>
+								</Button>
+							)}
+						</Stack>
 					)}
 
 					<Divider variant="dashed" label={t`or`} labelPosition="center" />

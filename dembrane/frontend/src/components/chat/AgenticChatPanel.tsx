@@ -21,13 +21,13 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
-	IconAlertCircle,
-	IconChevronDown,
-	IconChevronRight,
-	IconPlayerStopFilled,
-	IconSend,
-	IconSparkles,
-} from "@tabler/icons-react";
+	CaretDownIcon,
+	CaretRightIcon,
+	PaperPlaneRightIcon,
+	SparkleIcon,
+	StopIcon,
+	WarningCircleIcon,
+} from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDate } from "date-fns";
 import {
@@ -669,9 +669,9 @@ const ToolActivityGroup = ({
 							)}
 							{!isSingle &&
 								(expanded ? (
-									<IconChevronDown size={12} aria-hidden="true" />
+									<CaretDownIcon size={12} aria-hidden="true" />
 								) : (
-									<IconChevronRight size={12} aria-hidden="true" />
+									<CaretRightIcon size={12} aria-hidden="true" />
 								))}
 						</Group>
 					</Group>
@@ -1826,7 +1826,7 @@ export const AgenticChatPanel = ({
 					{error && (
 						<Alert
 							color="red"
-							icon={<IconAlertCircle size={16} />}
+							icon={<WarningCircleIcon size={16} />}
 							title={<Trans>Error</Trans>}
 						>
 							{error}
@@ -1873,7 +1873,7 @@ export const AgenticChatPanel = ({
 								className="grow px-6 py-12 text-center"
 								{...testId("agentic-empty-state")}
 							>
-								<IconSparkles
+								<SparkleIcon
 									size={26}
 									className="text-[var(--mantine-color-primary-6)]"
 								/>
@@ -2241,7 +2241,7 @@ export const AgenticChatPanel = ({
 										onClick={voice.stop}
 										radius="md"
 										ref={voiceStopButtonRef}
-										rightSection={<IconPlayerStopFilled size={18} />}
+										rightSection={<StopIcon weight="fill" size={18} />}
 										size="md"
 										type="button"
 										{...testId("chat-voice-stop-button")}
@@ -2278,7 +2278,7 @@ export const AgenticChatPanel = ({
 												isSubmitting ? (
 													<Loader size={18} />
 												) : (
-													<IconSend size={18} />
+													<PaperPlaneRightIcon size={18} />
 												)
 											}
 											disabled={

@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Box, Button, Group, Stack, Text, Title } from "@mantine/core";
-import { IconArrowRight } from "@tabler/icons-react";
+import { ArrowRightIcon } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { Logo } from "@/components/common/Logo";
@@ -280,7 +280,7 @@ export const VerifySelection = () => {
 				radius="3xl"
 				onClick={handleNext}
 				className="w-full"
-				rightSection={<IconArrowRight size={20} className="ml-1" />}
+				rightSection={<ArrowRightIcon size={20} className="ml-1" />}
 				disabled={!selectedOption}
 				{...testId("portal-verify-selection-next-button")}
 			>

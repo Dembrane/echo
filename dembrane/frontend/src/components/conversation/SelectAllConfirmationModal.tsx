@@ -16,13 +16,13 @@ import {
 	Text,
 } from "@mantine/core";
 import {
-	IconAlertTriangle,
-	IconCheck,
-	IconFileOff,
-	IconRosetteDiscountCheck,
-	IconScale,
-	IconX,
-} from "@tabler/icons-react";
+	CheckIcon,
+	FileXIcon,
+	ScalesIcon,
+	SealCheckIcon,
+	WarningIcon,
+	XIcon,
+} from "@phosphor-icons/react";
 import { testId } from "@/lib/testUtils";
 
 type SelectAllConfirmationModalProps = {
@@ -100,7 +100,7 @@ const FilterDisplay = ({
 						color="blue"
 						variant="light"
 						size="md"
-						rightSection={<IconRosetteDiscountCheck size={14} />}
+						rightSection={<SealCheckIcon size={14} />}
 						style={{ width: "fit-content" }}
 					>
 						<Trans id="select.all.modal.verified">Verified</Trans>
@@ -131,17 +131,17 @@ const getReasonLabel = (reason: SelectAllConversationResult["reason"]) => {
 const getReasonIcon = (reason: SelectAllConversationResult["reason"]) => {
 	switch (reason) {
 		case "already_in_context":
-			return <IconCheck size={14} />;
+			return <CheckIcon size={14} />;
 		case "context_limit_reached":
-			return <IconScale size={14} />;
+			return <ScalesIcon size={14} />;
 		case "empty":
-			return <IconFileOff size={14} />;
+			return <FileXIcon size={14} />;
 		case "too_long":
-			return <IconAlertTriangle size={14} />;
+			return <WarningIcon size={14} />;
 		case "error":
-			return <IconX size={14} />;
+			return <XIcon size={14} />;
 		default:
-			return <IconAlertTriangle size={14} />;
+			return <WarningIcon size={14} />;
 	}
 };
 
@@ -357,7 +357,7 @@ export const SelectAllConfirmationModal = ({
 									animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
 								}}
 							>
-								<IconCheck
+								<CheckIcon
 									size={28}
 									className="opacity-20"
 									style={{ color: "var(--mantine-primary-color-6)" }}
@@ -433,7 +433,7 @@ export const SelectAllConfirmationModal = ({
 												size="sm"
 												variant="light"
 												color="blue"
-												rightSection={<IconRosetteDiscountCheck size={12} />}
+												rightSection={<SealCheckIcon size={12} />}
 											>
 												<Trans id="select.all.modal.loading.verified">
 													Verified
@@ -482,7 +482,7 @@ export const SelectAllConfirmationModal = ({
 								{...testId("select-all-context-limit-warning")}
 							>
 								<Group gap="xs">
-									<IconScale size={18} className="text-orange-600" />
+									<ScalesIcon size={18} className="text-orange-600" />
 									<Text size="sm" c="orange.7">
 										<Trans id="select.all.modal.context.limit.reached">
 											Selection too large. Some conversations weren't added.
@@ -502,7 +502,7 @@ export const SelectAllConfirmationModal = ({
 								{result.added.length > 0 && (
 									<Tabs.Tab
 										value="added"
-										rightSection={<IconCheck size={16} />}
+										rightSection={<CheckIcon size={16} />}
 										leftSection={
 											<Badge
 												size="md"
@@ -522,7 +522,7 @@ export const SelectAllConfirmationModal = ({
 								{skippedDueToOther.length > 0 && (
 									<Tabs.Tab
 										value="other"
-										rightSection={<IconAlertTriangle size={16} />}
+										rightSection={<WarningIcon size={16} />}
 										leftSection={
 											<Badge
 												size="md"
@@ -542,7 +542,7 @@ export const SelectAllConfirmationModal = ({
 								{skippedDueToLimit.length > 0 && (
 									<Tabs.Tab
 										value="limit"
-										rightSection={<IconScale size={16} />}
+										rightSection={<ScalesIcon size={16} />}
 										leftSection={
 											<Badge
 												size="md"
@@ -573,7 +573,7 @@ export const SelectAllConfirmationModal = ({
 													wrap="nowrap"
 													className="rounded-md border border-primary-100 bg-primary-50 px-3 py-2"
 												>
-													<IconCheck
+													<CheckIcon
 														size={16}
 														className="flex-shrink-0 text-primary-600"
 													/>

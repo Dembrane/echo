@@ -11,12 +11,12 @@ import {
 	UnstyledButton,
 } from "@mantine/core";
 import {
-	IconBell,
-	IconChevronDown,
-	IconCircle,
-	IconCircleCheckFilled,
-	IconCircleX,
-} from "@tabler/icons-react";
+	BellIcon,
+	CaretDownIcon,
+	CheckCircleIcon,
+	CircleIcon,
+	XCircleIcon,
+} from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { testId } from "@/lib/testUtils";
 import type { AgenticPlan, PlanStepStatus } from "./agenticPlan";
@@ -28,7 +28,8 @@ const StepIcon = ({ status }: { status: PlanStepStatus }) => {
 	if (status === "done") {
 		return (
 			<span className={`${box} animate-[plan-tick_220ms_ease-out]`}>
-				<IconCircleCheckFilled
+				<CheckCircleIcon
+					weight="fill"
 					size={18}
 					style={{ color: "var(--mantine-color-teal-6)" }}
 					aria-label={t`Done`}
@@ -46,7 +47,7 @@ const StepIcon = ({ status }: { status: PlanStepStatus }) => {
 	if (status === "stopped") {
 		return (
 			<span className={box}>
-				<IconCircleX
+				<XCircleIcon
 					size={18}
 					style={{ color: "var(--mantine-color-gray-5)" }}
 					aria-label={t`Stopped`}
@@ -56,7 +57,7 @@ const StepIcon = ({ status }: { status: PlanStepStatus }) => {
 	}
 	return (
 		<span className={box}>
-			<IconCircle
+			<CircleIcon
 				size={18}
 				style={{ color: "var(--mantine-color-gray-4)" }}
 				aria-label={t`Not started`}
@@ -99,7 +100,7 @@ export const AgenticPlanCard = ({ plan }: { plan: AgenticPlan }) => {
 									{doneCount} of {plan.steps.length} done
 								</Trans>
 							</Text>
-							<IconChevronDown
+							<CaretDownIcon
 								size={14}
 								className="transition-transform duration-200"
 								style={{ transform: open ? "rotate(180deg)" : undefined }}
@@ -140,7 +141,7 @@ export const AgenticPlanCard = ({ plan }: { plan: AgenticPlan }) => {
 							wrap="nowrap"
 							{...testId("agentic-plan-close-hint")}
 						>
-							<IconBell
+							<BellIcon
 								size={14}
 								className="shrink-0"
 								style={{ color: "var(--mantine-color-gray-6)" }}

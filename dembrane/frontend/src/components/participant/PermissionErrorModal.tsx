@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Button, Divider, Modal, Stack } from "@mantine/core";
-import { IconQuestionMark, IconReload } from "@tabler/icons-react";
+import { ArrowsClockwiseIcon, QuestionMarkIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { checkPermissionError } from "@/lib/utils";
@@ -53,7 +53,7 @@ export const PermissionErrorModal = ({
 						href="https://dembrane.notion.site/Troubleshooting-Microphone-Permissions-All-Languages-bd340257647742cd9cd960f94c4223bb?pvs=74"
 						target="_blank"
 						size={troubleShootingGuideOpened ? "lg" : "xl"}
-						leftSection={<IconQuestionMark />}
+						leftSection={<QuestionMarkIcon />}
 						variant={!troubleShootingGuideOpened ? "filled" : "light"}
 						onClick={() => setTroubleShootingGuideOpened(true)}
 					>
@@ -64,7 +64,7 @@ export const PermissionErrorModal = ({
 					<Divider />
 					<Button
 						size={!troubleShootingGuideOpened ? "lg" : "xl"}
-						leftSection={<IconReload />}
+						leftSection={<ArrowsClockwiseIcon />}
 						variant={troubleShootingGuideOpened ? "filled" : "light"}
 						onClick={handleCheckMicrophoneAccess}
 					>

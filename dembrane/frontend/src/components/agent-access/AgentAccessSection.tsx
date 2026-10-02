@@ -14,7 +14,7 @@ import {
 	Title,
 	Tooltip,
 } from "@mantine/core";
-import { IconCheck, IconCopy } from "@tabler/icons-react";
+import { CheckIcon, CopyIcon } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type React from "react";
 import { notifyError } from "@/components/error/notifyError";
@@ -42,7 +42,7 @@ const McpUrlField = ({ url }: { url: string }) => (
 								onClick={copy}
 								aria-label={copied ? t`URL copied` : t`Copy URL`}
 							>
-								{copied ? <IconCheck size={18} /> : <IconCopy size={18} />}
+								{copied ? <CheckIcon size={18} /> : <CopyIcon size={18} />}
 							</ActionIcon>
 						</Tooltip>
 					)}

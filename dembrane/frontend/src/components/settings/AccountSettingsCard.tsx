@@ -11,7 +11,7 @@ import {
 	Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconTrash, IconUpload, IconUser } from "@tabler/icons-react";
+import { TrashIcon, UploadSimpleIcon, UserIcon } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { useCurrentUser } from "@/components/auth/hooks";
@@ -127,7 +127,7 @@ export const AccountSettingsCard = () => {
 			<Card withBorder p="lg" radius="md">
 				<Stack gap="md">
 					<Group gap="sm">
-						<IconUser size={24} stroke={1.5} />
+						<UserIcon size={24} />
 						<Title order={3}>
 							<Trans>Account</Trans>
 						</Title>
@@ -147,7 +147,7 @@ export const AccountSettingsCard = () => {
 										<Button
 											variant="light"
 											size="compact-sm"
-											leftSection={<IconUpload size={14} />}
+											leftSection={<UploadSimpleIcon size={14} />}
 											loading={uploadAvatarMutation.isPending}
 											{...props}
 										>
@@ -160,7 +160,7 @@ export const AccountSettingsCard = () => {
 										variant="subtle"
 										color="red"
 										size="compact-sm"
-										leftSection={<IconTrash size={14} />}
+										leftSection={<TrashIcon size={14} />}
 										loading={removeAvatarMutation.isPending}
 										onClick={openRemoveConfirm}
 									>

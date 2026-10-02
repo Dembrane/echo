@@ -1,5 +1,5 @@
 import { Box } from "@mantine/core";
-import { IconSparkles } from "@tabler/icons-react";
+import { SparkleIcon } from "@phosphor-icons/react";
 import { MODE_COLORS } from "./ChatModeSelector";
 
 /** Agentic Chat's one splash of brand green: a Spring Green disc with a dark
@@ -16,10 +16,6 @@ export const AgenticMark = ({ size = 20 }: { size?: number }) => (
 			width: size,
 		}}
 	>
-		<IconSparkles
-			size={Math.round(size * 0.6)}
-			stroke={2}
-			color="var(--app-text)"
-		/>
+		<SparkleIcon size={Math.round(size * 0.6)} color="var(--app-text)" />
 	</Box>
 );

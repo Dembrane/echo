@@ -21,16 +21,16 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { DetectiveIcon } from "@phosphor-icons/react";
 import {
-	IconEye,
-	IconEyeOff,
-	IconInfoCircle,
-	IconPencil,
-	IconRefresh,
-	IconRosetteDiscountCheck,
-	IconTrash,
-} from "@tabler/icons-react";
+	DetectiveIcon,
+	ArrowClockwiseIcon,
+	EyeIcon,
+	EyeSlashIcon,
+	InfoIcon,
+	PencilSimpleIcon,
+	SealCheckIcon,
+	TrashIcon,
+} from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Resizable } from "re-resizable";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -561,7 +561,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 							variant="subtle"
 							onClick={() => setShowPreview(!showPreview)}
 							rightSection={
-								showPreview ? <IconEyeOff size={16} /> : <IconEye size={16} />
+								showPreview ? <EyeSlashIcon size={16} /> : <EyeIcon size={16} />
 							}
 							{...testId("portal-editor-preview-toggle")}
 						>
@@ -947,7 +947,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 														Verify
 													</Trans>
 												</Title>
-												<IconRosetteDiscountCheck
+												<SealCheckIcon
 													size={20}
 													color="var(--mantine-color-primary-filled)"
 												/>
@@ -1113,7 +1113,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 																						`custom-topic-edit-${topic.key}`,
 																					)}
 																				>
-																					<IconPencil size={16} />
+																					<PencilSimpleIcon size={16} />
 																				</ActionIcon>
 																				<Tooltip
 																					label={t`Select at least one other topic before deleting this one`}
@@ -1152,7 +1152,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 																							`custom-topic-delete-${topic.key}`,
 																						)}
 																					>
-																						<IconTrash size={16} />
+																						<TrashIcon size={16} />
 																					</ActionIcon>
 																				</Tooltip>
 																			</Group>
@@ -1559,7 +1559,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 											<Title order={4}>
 												<Trans>Auto-generate Titles</Trans>
 											</Title>
-											<IconInfoCircle size={20} className="text-gray-400" />
+											<InfoIcon size={20} className="text-gray-400" />
 											<Badge color="mauve" c="graphite" size="sm">
 												<Trans>Beta</Trans>
 											</Badge>
@@ -1693,7 +1693,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 													variant="subtle"
 													size="compact-sm"
 													onClick={refreshPreview}
-													rightSection={<IconRefresh size={16} />}
+													rightSection={<ArrowClockwiseIcon size={16} />}
 												>
 													<Trans>Refresh</Trans>
 												</Button>

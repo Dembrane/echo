@@ -16,7 +16,7 @@ import {
 	Title,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
-import { IconInfoCircle } from "@tabler/icons-react";
+import { InfoIcon } from "@phosphor-icons/react";
 import posthog from "posthog-js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
@@ -267,7 +267,7 @@ export const AgentConsentRoute = () => {
 								<Alert
 									color="orange"
 									variant="light"
-									icon={<IconInfoCircle size={18} />}
+									icon={<InfoIcon size={18} />}
 								>
 									<Trans>
 										You are not a member of any organisation, so there is

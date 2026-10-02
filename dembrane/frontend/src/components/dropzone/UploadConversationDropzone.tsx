@@ -17,17 +17,17 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
 import {
-	IconAlertCircle,
-	IconArrowRight,
-	IconCheck,
-	IconCircleCheck,
-	IconEdit,
-	IconFileUpload,
-	IconPlus,
-	IconTrash,
-	IconUpload,
-	IconX,
-} from "@tabler/icons-react";
+	ArrowRightIcon,
+	CheckCircleIcon,
+	CheckIcon,
+	FileArrowUpIcon,
+	PencilSimpleIcon,
+	PlusIcon,
+	TrashIcon,
+	UploadSimpleIcon,
+	WarningCircleIcon,
+	XIcon,
+} from "@phosphor-icons/react";
 import {
 	type PropsWithChildren,
 	useCallback,
@@ -532,7 +532,7 @@ export const UploadConversationDropzone = (
 			{/* Upload button */}
 			<Tooltip label={t`Upload conversations`}>
 				<Button
-					rightSection={<IconPlus size={16} />}
+					rightSection={<PlusIcon size={16} />}
 					onClick={open}
 					variant="outline"
 					{...testId("conversation-upload-button")}
@@ -591,7 +591,7 @@ export const UploadConversationDropzone = (
 								{...testId("conversation-upload-dropzone")}
 							>
 								<Stack align="center" gap="sm">
-									<IconUpload size={32} stroke={1.5} />
+									<UploadSimpleIcon size={32} />
 									<Text size="sm">{t`Drag audio files here or click to select files`}</Text>
 									<Text size="xs" c="dimmed">
 										{t`Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS`}
@@ -623,7 +623,7 @@ export const UploadConversationDropzone = (
 														{...testId(`conversation-upload-file-${index}`)}
 													>
 														<Group style={{ flex: 1 }}>
-															<IconFileUpload size={18} />
+															<FileArrowUpIcon size={18} />
 															{fileEditor.editingIndex === index ? (
 																<TextInput
 																	ref={fileEditor.inputRef}
@@ -643,7 +643,7 @@ export const UploadConversationDropzone = (
 																				`conversation-upload-file-save-${index}`,
 																			)}
 																		>
-																			<IconCheck size={16} />
+																			<CheckIcon size={16} />
 																		</ActionIcon>
 																	}
 																	{...testId(
@@ -688,7 +688,7 @@ export const UploadConversationDropzone = (
 																			`conversation-upload-file-edit-${index}`,
 																		)}
 																	>
-																		<IconEdit size={16} />
+																		<PencilSimpleIcon size={16} />
 																	</ActionIcon>
 																</Tooltip>
 															)}
@@ -702,7 +702,7 @@ export const UploadConversationDropzone = (
 																		`conversation-upload-file-remove-${index}`,
 																	)}
 																>
-																	<IconTrash size={16} />
+																	<TrashIcon size={16} />
 																</ActionIcon>
 															</Tooltip>
 														</Group>
@@ -713,7 +713,7 @@ export const UploadConversationDropzone = (
 									</Box>
 									<Box mt="xs">
 										<Alert
-											icon={<IconAlertCircle size={16} />}
+											icon={<WarningCircleIcon size={16} />}
 											color="blue.1"
 											variant="light"
 										>
@@ -725,7 +725,7 @@ export const UploadConversationDropzone = (
 
 							{globalError && (
 								<Alert
-									icon={<IconAlertCircle size={16} />}
+									icon={<WarningCircleIcon size={16} />}
 									title={t`Error`}
 									color="red.2"
 									variant="light"
@@ -747,7 +747,7 @@ export const UploadConversationDropzone = (
 								{selectedFiles.length > 0 && (
 									<Button
 										onClick={handleUpload}
-										rightSection={<IconArrowRight size={16} />}
+										rightSection={<ArrowRightIcon size={16} />}
 										disabled={fileEditor.editingIndex !== null}
 										{...testId("conversation-upload-files-button")}
 									>
@@ -772,11 +772,11 @@ export const UploadConversationDropzone = (
 											<Group justify="space-between">
 												<Group>
 													{fileStatus.status === "complete" ? (
-														<IconCircleCheck size={20} color="green" />
+														<CheckCircleIcon size={20} color="green" />
 													) : fileStatus.status === "error" ? (
-														<IconX size={20} color="red" />
+														<XIcon size={20} color="red" />
 													) : (
-														<IconUpload size={20} />
+														<UploadSimpleIcon size={20} />
 													)}
 													<div>
 														<Tooltip
@@ -832,7 +832,7 @@ export const UploadConversationDropzone = (
 							{/* Error message */}
 							{globalError && (
 								<Alert
-									icon={<IconAlertCircle size={16} />}
+									icon={<WarningCircleIcon size={16} />}
 									title={t`Error`}
 									color="red.2"
 									variant="light"
@@ -846,7 +846,7 @@ export const UploadConversationDropzone = (
 							{/* Success message */}
 							{uploader.isSuccess && (
 								<Alert
-									icon={<IconCircleCheck size={16} />}
+									icon={<CheckCircleIcon size={16} />}
 									title={t`Success`}
 									color="green"
 									variant="light"

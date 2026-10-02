@@ -16,11 +16,11 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
-	IconArrowLeft,
-	IconClock,
-	IconInfoCircle,
-	IconPencil,
-} from "@tabler/icons-react";
+	ArrowLeftIcon,
+	ClockIcon,
+	InfoIcon,
+	PencilSimpleIcon,
+} from "@phosphor-icons/react";
 import { AxiosError } from "axios";
 import posthog from "posthog-js";
 import { useState } from "react";
@@ -172,7 +172,7 @@ export const UpdateReportModalButton = ({
 							variant="filled"
 							color="primary"
 							onClick={handleOpen}
-							leftSection={<IconPencil size={16} />}
+							leftSection={<PencilSimpleIcon size={16} />}
 							opacity={effectivelyAtLimit ? 0.7 : 1}
 							{...testId("report-update-button")}
 						>
@@ -182,7 +182,7 @@ export const UpdateReportModalButton = ({
 				</Tooltip>
 				{effectivelyAtLimit && (
 					<Tooltip label={t`Free plan allows 1 report per workspace`}>
-						<IconInfoCircle
+						<InfoIcon
 							size={16}
 							style={{
 								color: "var(--mantine-color-primary-6)",
@@ -292,7 +292,7 @@ export const UpdateReportModalButton = ({
 								onClick={() => setShowSchedule(false)}
 							>
 								<Group gap={4}>
-									<IconArrowLeft size={12} />
+									<ArrowLeftIcon size={12} />
 									<Trans>Edit options</Trans>
 								</Group>
 							</Anchor>
@@ -362,7 +362,7 @@ export const UpdateReportModalButton = ({
 							<Button
 								variant="outline"
 								onClick={() => setShowSchedule(true)}
-								leftSection={<IconClock size={16} />}
+								leftSection={<ClockIcon size={16} />}
 								style={{ flex: 3 }}
 							>
 								<Trans>Schedule</Trans>

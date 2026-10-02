@@ -1,7 +1,7 @@
 import { Trans } from "@lingui/react/macro";
 import { Box, Group, Progress, Stack, Text, Title } from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
-import { IconArrowDownToArc, IconMessage } from "@tabler/icons-react";
+import { ArrowLineDownIcon, ChatTextIcon } from "@phosphor-icons/react";
 import { useParams } from "react-router";
 import { useParticipantProjectById } from "@/components/participant/hooks";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -68,7 +68,7 @@ export const RefineSelection = () => {
 						className="h-full px-2 py-6 justify-center"
 					>
 						<Group gap="sm" align="center">
-							<IconMessage size={32} />
+							<ChatTextIcon size={32} />
 							<Title order={3}>
 								<Trans id="participant.echo.verify">Verify</Trans>
 							</Title>
@@ -120,7 +120,7 @@ export const RefineSelection = () => {
 						className="h-full px-6 py-6 justify-center"
 					>
 						<Group gap="sm" align="center">
-							<IconArrowDownToArc size={32} />
+							<ArrowLineDownIcon size={32} />
 							<Title order={3}>
 								<Trans id="participant.echo.explore">Explore</Trans>
 							</Title>

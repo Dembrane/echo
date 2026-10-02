@@ -14,7 +14,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
-import { IconLink, IconRefresh, IconX } from "@tabler/icons-react";
+import { ArrowClockwiseIcon, LinkIcon, XIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { toast } from "@/components/common/Toaster";
@@ -169,7 +169,7 @@ export function PendingInvitesSection({ orgId, scope, workspaceId }: Props) {
 												aria-label={t`Copy invite link`}
 												data-testid={`pending-invite-copy-link-${inv.id}`}
 											>
-												<IconLink size={14} />
+												<LinkIcon size={14} />
 											</ActionIcon>
 										</Tooltip>
 									)}
@@ -182,7 +182,7 @@ export function PendingInvitesSection({ orgId, scope, workspaceId }: Props) {
 											aria-label={t`Resend invite`}
 											data-testid={`pending-invite-resend-${inv.id}`}
 										>
-											<IconRefresh size={14} />
+											<ArrowClockwiseIcon size={14} />
 										</ActionIcon>
 									</Tooltip>
 									<Tooltip label={t`Revoke invite`}>
@@ -195,7 +195,7 @@ export function PendingInvitesSection({ orgId, scope, workspaceId }: Props) {
 											aria-label={t`Revoke invite`}
 											data-testid={`pending-invite-revoke-${inv.id}`}
 										>
-											<IconX size={14} />
+											<XIcon size={14} />
 										</ActionIcon>
 									</Tooltip>
 								</Group>

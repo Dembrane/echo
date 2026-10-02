@@ -10,7 +10,7 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconCopy, IconTrash } from "@tabler/icons-react";
+import { CopyIcon, TrashIcon } from "@phosphor-icons/react";
 import posthog from "posthog-js";
 import { useState } from "react";
 import { useParams } from "react-router";
@@ -93,7 +93,7 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 					<Button
 						onClick={openCloneModal}
 						variant="outline"
-						rightSection={<IconCopy />}
+						rightSection={<CopyIcon />}
 						loading={cloneProjectByIdMutation.isPending}
 						{...testId("project-actions-clone-button")}
 					>
@@ -106,7 +106,7 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 						onClick={openDeleteModal}
 						color="red"
 						variant="outline"
-						rightSection={<IconTrash />}
+						rightSection={<TrashIcon />}
 						{...testId("project-actions-delete-button")}
 					>
 						<Trans>Delete Project</Trans>

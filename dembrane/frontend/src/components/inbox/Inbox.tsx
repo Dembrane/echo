@@ -18,7 +18,7 @@ import {
 	UnstyledButton,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconBell, IconCheck } from "@tabler/icons-react";
+import { BellIcon, CheckIcon } from "@phosphor-icons/react";
 import { formatRelative } from "date-fns";
 import type React from "react";
 import { useEffect, useMemo, useState } from "react";
@@ -164,7 +164,7 @@ export const Inbox = () => {
 					onClick={open}
 					aria-label={t`Inbox`}
 				>
-					<IconBell size={22} />
+					<BellIcon size={22} />
 				</ActionIcon>
 			</Indicator>
 
@@ -182,7 +182,7 @@ export const Inbox = () => {
 						<Button
 							variant="subtle"
 							size="compact-xs"
-							leftSection={<IconCheck size={12} />}
+							leftSection={<CheckIcon size={12} />}
 							onClick={handleMarkAllReadForActiveTab}
 							loading={markAllPending}
 						>
@@ -235,7 +235,7 @@ export const Inbox = () => {
 							) : notifications.length === 0 ? (
 								<Center py="xl">
 									<Stack align="center" gap={4}>
-										<IconBell size={28} color="var(--mantine-color-gray-5)" />
+										<BellIcon size={28} color="var(--mantine-color-gray-5)" />
 										<Text size="sm" c="dimmed" ta="center">
 											<Trans>You're all caught up.</Trans>
 										</Text>
@@ -407,7 +407,7 @@ function NotificationRowItem({
 							top: 0,
 						}}
 					>
-						<IconCheck size={12} />
+						<CheckIcon size={12} />
 					</ActionIcon>
 				)}
 				{row.actor_user_id ? (
@@ -429,7 +429,7 @@ function NotificationRowItem({
 							width: 28,
 						}}
 					>
-						<IconBell
+						<BellIcon
 							size={14}
 							color={
 								isDestructive

@@ -9,7 +9,7 @@ import {
 	ThemeIcon,
 	Title,
 } from "@mantine/core";
-import { IconRosetteDiscountCheck } from "@tabler/icons-react";
+import { SealCheckIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { CopyRichTextIconButton } from "@/components/common/CopyRichTextIconButton";
@@ -97,7 +97,7 @@ export const VerifiedArtefactsSection = ({
 					aria-label={t`outcomes`}
 					size={22}
 				>
-					<IconRosetteDiscountCheck />
+					<SealCheckIcon />
 				</ThemeIcon>
 			</Group>
 

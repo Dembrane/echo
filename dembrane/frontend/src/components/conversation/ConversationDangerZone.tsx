@@ -2,7 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Button, Group, Stack, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconDownload, IconTrash } from "@tabler/icons-react";
+import { DownloadSimpleIcon, TrashIcon } from "@phosphor-icons/react";
 import posthog from "posthog-js";
 import { useParams } from "react-router";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
@@ -60,7 +60,7 @@ export const ConversationDangerZone = ({
 						>
 							<Button
 								variant="outline"
-								rightSection={<IconDownload size={16} />}
+								rightSection={<DownloadSimpleIcon size={16} />}
 								component="a"
 								target="_blank"
 								href={
@@ -87,7 +87,7 @@ export const ConversationDangerZone = ({
 								onClick={openConfirm}
 								color="red"
 								variant="outline"
-								rightSection={<IconTrash size={16} />}
+								rightSection={<TrashIcon size={16} />}
 								{...testId("conversation-delete-button")}
 							>
 								<Trans>Delete Conversation</Trans>

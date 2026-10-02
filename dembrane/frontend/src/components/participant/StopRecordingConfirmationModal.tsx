@@ -8,7 +8,7 @@ import {
 	Stack,
 	Text,
 } from "@mantine/core";
-import { IconRosetteDiscountCheck } from "@tabler/icons-react";
+import { SealCheckIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { testId } from "@/lib/testUtils";
 
@@ -112,7 +112,7 @@ export const StopRecordingConfirmationModal = ({
 								}}
 								miw={100}
 								size="md"
-								rightSection={<IconRosetteDiscountCheck size={18} />}
+								rightSection={<SealCheckIcon size={18} />}
 								{...testId("portal-audio-verify-button")}
 							>
 								<Trans id="participant.button.verify_prompt.verify">
@@ -152,9 +152,7 @@ export const StopRecordingConfirmationModal = ({
 								miw={100}
 								size="md"
 								rightSection={
-									showVerifyOnFinish ? (
-										<IconRosetteDiscountCheck size={18} />
-									) : undefined
+									showVerifyOnFinish ? <SealCheckIcon size={18} /> : undefined
 								}
 								{...testId("portal-audio-stop-finish-button")}
 							>

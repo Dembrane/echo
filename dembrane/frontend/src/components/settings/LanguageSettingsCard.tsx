@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { Card, Group, Stack, Text, Title } from "@mantine/core";
-import { IconLanguage } from "@tabler/icons-react";
+import { TranslateIcon } from "@phosphor-icons/react";
 import { LanguagePicker } from "@/components/language/LanguagePicker";
 
 export const LanguageSettingsCard = () => {
@@ -8,7 +8,7 @@ export const LanguageSettingsCard = () => {
 		<Card withBorder p="lg" radius="md">
 			<Stack gap="md">
 				<Group gap="sm">
-					<IconLanguage size={24} stroke={1.5} />
+					<TranslateIcon size={24} />
 					<Title order={3}>
 						<Trans>Language</Trans>
 					</Title>

@@ -14,7 +14,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
-import { IconCheck, IconX } from "@tabler/icons-react";
+import { CheckIcon, XIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
@@ -177,7 +177,7 @@ export const AccessRequestsList = ({
 											onClick={() => approveMutation.mutate(r.id)}
 											aria-label={t`Approve`}
 										>
-											<IconCheck size={14} />
+											<CheckIcon size={14} />
 										</ActionIcon>
 									</Tooltip>
 									<Tooltip label={t`Decline`}>
@@ -195,7 +195,7 @@ export const AccessRequestsList = ({
 											}}
 											aria-label={t`Decline`}
 										>
-											<IconX size={14} />
+											<XIcon size={14} />
 										</ActionIcon>
 									</Tooltip>
 								</Group>

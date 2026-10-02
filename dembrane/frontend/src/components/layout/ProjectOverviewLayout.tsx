@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Group, LoadingOverlay, Stack, Tooltip } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
-import { IconLock } from "@tabler/icons-react";
+import { LockIcon } from "@phosphor-icons/react";
 import { useParams } from "react-router";
 import { useProjectById } from "@/components/project/hooks";
 import { testId } from "@/lib/testUtils";
@@ -40,7 +40,7 @@ export const ProjectOverviewLayout = () => {
 			{project && isPrivate && (
 				<Group gap={8} align="center" wrap="nowrap" px="xs">
 					<Tooltip label={t`Private · only invited people can see this`}>
-						<IconLock size={16} color="var(--mantine-color-gray-6)" />
+						<LockIcon size={16} color="var(--mantine-color-gray-6)" />
 					</Tooltip>
 				</Group>
 			)}
