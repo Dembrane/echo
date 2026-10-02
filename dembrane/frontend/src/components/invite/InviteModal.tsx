@@ -1,6 +1,6 @@
 import { i18n } from "@lingui/core";
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import {
 	Alert,
 	Button,
@@ -725,9 +725,13 @@ export function InviteModal({
 										</Text>
 										<Text size="xs" ta="right">
 											<Trans>
-												{line.addedSeats} seat(s) · {fmtEur(line.proratedNow)}{" "}
-												now · +{fmtEur(line.recurringDelta)}/{cadence} at
-												renewal
+												<Plural
+													value={line.addedSeats}
+													one="# seat"
+													other="# seats"
+												/>{" "}
+												· {fmtEur(line.proratedNow)} now · +
+												{fmtEur(line.recurringDelta)}/{cadence} at renewal
 											</Trans>
 										</Text>
 									</Group>

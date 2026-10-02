@@ -46,7 +46,9 @@ import { VerifiedArtefactsSection } from "@/components/conversation/VerifiedArte
 import { useProjectById } from "@/components/project/hooks";
 import { TRANSCRIPT_TROUBLESHOOTING_DOCS_URL } from "@/config";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { generateConversationSummary } from "@/lib/api";
+import { isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 
 const getTagText = (tag: ConversationProjectTag) => {
@@ -62,6 +64,9 @@ const hasVerifiedArtifacts = (conversation: Conversation) =>
 export const ProjectConversationRoute = () => {
 	const { conversationId, projectId } = useParams();
 	const queryClient = useQueryClient();
+	const { workspace } = useWorkspace();
+	// /summarize needs project:update, which observers lack.
+	const canGenerateSummary = !!workspace && !isReadOnlyRole(workspace.role);
 
 	const conversationQuery = useConversationById({
 		conversationId: conversationId ?? "",
@@ -276,7 +281,7 @@ export const ProjectConversationRoute = () => {
 												{...testId("conversation-overview-copy-summary-button")}
 											/>
 										)}
-										{conversation?.summary && (
+										{conversation?.summary && canGenerateSummary && (
 											<Tooltip label={t`Regenerate Summary`}>
 												<ActionIcon
 													variant="transparent"
@@ -310,35 +315,37 @@ export const ProjectConversationRoute = () => {
 										/>
 									</div>
 
-									{!conversationQuery.isFetching && !conversation?.summary && (
-										<div>
-											<Tooltip
-												color="gray.7"
-												position="bottom-start"
-												label={
-													!hasTranscript
-														? t`Summary will be available once the conversation is transcribed`
-														: undefined
-												}
-												disabled={hasTranscript}
-											>
-												<Button
-													variant="outline"
-													className="-mt-[2rem]"
-													loading={isMutationPending}
-													disabled={!hasTranscript}
-													onClick={() => {
-														useHandleGenerateSummaryManually.mutate(false);
-													}}
-													{...testId(
-														"conversation-overview-generate-summary-button",
-													)}
+									{canGenerateSummary &&
+										!conversationQuery.isFetching &&
+										!conversation?.summary && (
+											<div>
+												<Tooltip
+													color="gray.7"
+													position="bottom-start"
+													label={
+														!hasTranscript
+															? t`Summary will be available once the conversation is transcribed`
+															: undefined
+													}
+													disabled={hasTranscript}
 												>
-													{t`Generate Summary`}
-												</Button>
-											</Tooltip>
-										</div>
-									)}
+													<Button
+														variant="outline"
+														className="-mt-[2rem]"
+														loading={isMutationPending}
+														disabled={!hasTranscript}
+														onClick={() => {
+															useHandleGenerateSummaryManually.mutate(false);
+														}}
+														{...testId(
+															"conversation-overview-generate-summary-button",
+														)}
+													>
+														{t`Generate Summary`}
+													</Button>
+												</Tooltip>
+											</div>
+										)}
 								</>
 							)}
 

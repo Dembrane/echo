@@ -19,6 +19,7 @@ import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSearchParams } from "react-router";
 import { useLoginMutation } from "@/components/auth/hooks";
+import { ResendVerificationEmail } from "@/components/auth/ResendVerificationEmail";
 import { isAuthPath } from "@/components/auth/utils/authPaths";
 import {
 	authErrorCode,
@@ -91,6 +92,8 @@ export const LoginRoute = () => {
 	const { runTransition } = useTransitionCurtain();
 
 	const [error, setError] = useState("");
+	// Set when the password was right but the email is not verified yet.
+	const [unverifiedEmail, setUnverifiedEmail] = useState("");
 	const [otpRequired, setOtpRequired] = useState(false);
 	const [otpValue, setOtpValue] = useState("");
 	// Sign-in with an emailed one-time code: how contacts created by staff or sam sign in.
@@ -197,6 +200,7 @@ export const LoginRoute = () => {
 
 		try {
 			setError("");
+			setUnverifiedEmail("");
 
 			if (otpRequired && (!trimmedOtp || trimmedOtp.length < 6)) {
 				setError(t`Enter the 6-digit code from your authenticator app.`);
@@ -236,7 +240,16 @@ export const LoginRoute = () => {
 			setValue("otp", "");
 			setOtpValue("");
 
-			setError(describeAuthError(error));
+			// A failure with no known code reads as the Directus login did.
+			if (
+				code === "EMAIL_NOT_VERIFIED" ||
+				code === "INVALID_EMAIL_OR_PASSWORD"
+			) {
+				setError(describeAuthError(error));
+				if (code === "EMAIL_NOT_VERIFIED") setUnverifiedEmail(data.email);
+			} else {
+				setError(t`Something went wrong`);
+			}
 		}
 	};
 
@@ -387,6 +400,9 @@ export const LoginRoute = () => {
 							<Stack gap="sm" ref={formParent}>
 								<input type="hidden" {...register("otp")} />
 								{error && !otpRequired && <Alert color="red">{error}</Alert>}
+								{unverifiedEmail && !otpRequired && (
+									<ResendVerificationEmail email={unverifiedEmail} />
+								)}
 
 								{otpRequired ? (
 									<Stack gap="xs">

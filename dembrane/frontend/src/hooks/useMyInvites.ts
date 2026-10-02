@@ -98,7 +98,8 @@ export type InviteByHashState = {
 		| "expired"
 		| "workspace_deleted"
 		| "org_deleted"
-		| "not_found";
+		| "not_found"
+		| "not_onboarded";
 	type?: "workspace" | "org";
 	workspace_id?: string;
 	workspace_name?: string;
@@ -162,6 +163,13 @@ export const useInviteByHash = (
 				{ credentials: "include" },
 			);
 			if (!res.ok) {
+				// Not onboarded yet: onboarding accepts pending invites for this email.
+				if (res.status === 403) {
+					const data = await res.json().catch(() => ({}));
+					if (data?.code === "access.not_onboarded") {
+						return { status: "not_onboarded" };
+					}
+				}
 				// Failures degrade to not_found so the UI never gets stuck.
 				return { status: "not_found" };
 			}

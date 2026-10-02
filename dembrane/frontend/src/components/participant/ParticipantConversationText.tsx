@@ -18,9 +18,11 @@ import {
 	IconUpload,
 } from "@tabler/icons-react";
 import clsx from "clsx";
+import posthog from "posthog-js";
 import { useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
+import { toast } from "@/components/common/Toaster";
 import {
 	useConversationChunksQuery,
 	useConversationQuery,
@@ -31,6 +33,7 @@ import { ParticipantBody } from "@/components/participant/ParticipantBody";
 import { useProjectSharingLink } from "@/components/project/ProjectQRCode";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { finishConversation } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 
 export const ParticipantConversationText = () => {
@@ -54,6 +57,7 @@ export const ParticipantConversationText = () => {
 		finishModalOpened,
 		{ open: openFinishModal, close: closeFinishModal },
 	] = useDisclosure(false);
+	const [isStopping, setIsStopping] = useState(false);
 
 	const [scrollTargetRef] = useElementOnScreen({
 		root: null,
@@ -88,8 +92,21 @@ export const ParticipantConversationText = () => {
 	const currentSearch = searchParams.toString();
 	const finishUrl = `/${projectId}/conversation/${conversationId}/finish${currentSearch ? `?${currentSearch}` : ""}`;
 
-	const handleConfirmFinishButton = () => {
-		navigate(finishUrl);
+	const handleConfirmFinishButton = async () => {
+		setIsStopping(true);
+		try {
+			await finishConversation(conversationId ?? "");
+			posthog.capture("conversation_finished", {
+				conversation_id: conversationId,
+				project_id: projectId,
+			});
+			closeFinishModal();
+			navigate(finishUrl);
+		} catch (error) {
+			console.error("Error finishing conversation:", error);
+			toast.error(t`Failed to finish conversation. Please try again.`);
+			setIsStopping(false);
+		}
 	};
 
 	if (conversationQuery.isLoading || projectQuery.isLoading) {
@@ -171,6 +188,7 @@ export const ParticipantConversationText = () => {
 						<Button
 							variant="subtle"
 							onClick={closeFinishModal}
+							disabled={isStopping}
 							miw={100}
 							size="md"
 							{...testId("portal-text-finish-cancel-button")}
@@ -179,6 +197,7 @@ export const ParticipantConversationText = () => {
 						</Button>
 						<Button
 							onClick={handleConfirmFinishButton}
+							loading={isStopping}
 							miw={100}
 							radius="md"
 							size="md"

@@ -35,6 +35,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useCreateWorkspaceProject } from "@/hooks/useWorkspaceProjects";
 import { ApiRequestError } from "@/lib/errors/read";
+import { isOutsiderRole } from "@/lib/roles";
 
 type Access = "workspace" | "private";
 
@@ -182,6 +183,30 @@ export const CreateProjectRoute = () => {
 			<Center style={{ height: "60vh" }}>
 				<Loader size="sm" color="gray" />
 			</Center>
+		);
+	}
+
+	// Outsiders lack project:create; a deep link lands here instead of a 403 on Create.
+	if (isOutsiderRole(workspace.role)) {
+		return (
+			<Container size="sm" py="xl" px="lg">
+				<Stack
+					align="center"
+					mt="20vh"
+					gap="md"
+					data-testid="create-project-not-allowed"
+				>
+					<Title order={4} fw={400} ta="center">
+						<Trans>You can't create projects in this workspace.</Trans>
+					</Title>
+					<Text size="sm" c="dimmed" ta="center" maw={420}>
+						<Trans>Ask a workspace admin to create the project for you.</Trans>
+					</Text>
+					<Button variant="subtle" size="xs" onClick={backToProjects}>
+						<Trans>Back to projects</Trans>
+					</Button>
+				</Stack>
+			</Container>
 		);
 	}
 

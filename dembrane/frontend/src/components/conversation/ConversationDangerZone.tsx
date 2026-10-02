@@ -8,7 +8,9 @@ import { useParams } from "react-router";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { MoveConversationButton } from "@/components/conversation/MoveConversationButton";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { getConversationContentLink } from "@/lib/api";
+import { isOutsiderRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 import { useDeleteConversationByIdMutation } from "./hooks";
 
@@ -27,6 +29,9 @@ export const ConversationDangerZone = ({
 	const deleteConversationByIdMutation = useDeleteConversationByIdMutation();
 	const navigate = useI18nNavigate();
 	const { projectId, workspaceId } = useParams();
+	const { workspace } = useWorkspace();
+	// conversation:delete is held by members and admins, not outsiders.
+	const canDelete = !!workspace && !isOutsiderRole(workspace.role);
 	const [confirmOpened, { open: openConfirm, close: closeConfirm }] =
 		useDisclosure(false);
 
@@ -77,15 +82,17 @@ export const ConversationDangerZone = ({
 							</Button>
 						</Tooltip>
 
-						<Button
-							onClick={openConfirm}
-							color="red"
-							variant="outline"
-							rightSection={<IconTrash size={16} />}
-							{...testId("conversation-delete-button")}
-						>
-							<Trans>Delete Conversation</Trans>
-						</Button>
+						{canDelete && (
+							<Button
+								onClick={openConfirm}
+								color="red"
+								variant="outline"
+								rightSection={<IconTrash size={16} />}
+								{...testId("conversation-delete-button")}
+							>
+								<Trans>Delete Conversation</Trans>
+							</Button>
+						)}
 					</Stack>
 				</div>
 			</Stack>
@@ -100,8 +107,11 @@ export const ConversationDangerZone = ({
 				confirmColor="red"
 				onConfirm={() => {
 					posthog.capture("conversation_deleted");
-					deleteConversationByIdMutation.mutate(conversation.id);
-					navigate(`/w/${workspaceId}/projects/${projectId}/conversations`);
+					// Leave only once deleted; a refusal keeps the user here (the hook toasts).
+					deleteConversationByIdMutation.mutate(conversation.id, {
+						onSuccess: () =>
+							navigate(`/w/${workspaceId}/projects/${projectId}/conversations`),
+					});
 					closeConfirm();
 					onAfterDelete?.();
 				}}

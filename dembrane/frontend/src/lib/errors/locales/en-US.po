@@ -129,6 +129,11 @@ msgid "error.document.dpa_not_authorised"
 msgstr "Confirm that you are authorised to agree to data processing for your organisation."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/conversation.ts:19
+msgid "error.conversation.move_context_mismatch"
+msgstr "Conversations can only move to workspaces with the same billing and data owner. Pick a project in another workspace."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/internal.ts:5
 msgid "error.internal.busy"
 msgstr "dembrane is busy with this right now. Try again in a second."
@@ -214,7 +219,7 @@ msgid "error.workspace.visibility_requires_tier"
 msgstr "Invite-only and private workspaces need the Innovator plan or higher. Create it as open for now, or upgrade first."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:23
+#: src/lib/errors/messages/conversation.ts:28
 msgid "error.conversation.no_summary"
 msgstr "Make a summary of this conversation first, then try again."
 
@@ -659,7 +664,7 @@ msgid "error.agent_access.request_expired"
 msgstr "This connection request has expired. Start again from your agent."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:19
+#: src/lib/errors/messages/conversation.ts:24
 msgid "error.conversation.no_content"
 msgstr "This conversation has no audio yet."
 
@@ -679,7 +684,7 @@ msgid "error.chat.conversation_not_in_chat"
 msgstr "This conversation is no longer in the chat."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:31
+#: src/lib/errors/messages/conversation.ts:36
 msgid "error.conversation.not_open"
 msgstr "This conversation is not open right now. Ask the organiser for a new link."
 
@@ -1194,7 +1199,7 @@ msgid "error.chat.not_found"
 msgstr "We could not find this chat. It may have been deleted."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:27
+#: src/lib/errors/messages/conversation.ts:32
 msgid "error.conversation.not_found"
 msgstr "We could not find this conversation. It may have been deleted."
 

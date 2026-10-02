@@ -79,8 +79,9 @@ export async function publicInviteStatus(
 /**
  * Information-neutral registration: the answer is the same whether or not the email is
  * known. A new address gets an identity in Better Auth (which the auth package mirrors
- * into directus_users for foreign keys) and a verification email; a known one gets a
- * "you already have an account" email with sign-in and reset links.
+ * into directus_users for foreign keys) and a verification email; a known unverified one
+ * gets a fresh verification email; a verified one gets a "you already have an account"
+ * email with sign-in and reset links.
  */
 export async function register(
   ctx: InviteCtx,
@@ -99,15 +100,27 @@ export async function register(
   if (!EMAIL_RE.test(email)) return;
   const account = accountStorage(deps.db);
 
-  let known: boolean;
+  let known: "none" | "verified" | "unverified";
   try {
-    known = await account.identityExists(email);
+    known = await account.identityOf(email);
   } catch (err) {
     deps.logger?.error({ err }, "user lookup failed during registration");
     return;
   }
 
-  if (known) {
+  // Signed up but never verified: a fresh verification link, always to our own page.
+  if (known === "unverified") {
+    try {
+      await deps.auth.api.sendVerificationEmail({
+        body: { email, callbackURL: `${deps.settings.dashboardUrl}/verify-email` },
+      });
+    } catch (err) {
+      deps.logger?.warn({ err }, "verification email could not be resent");
+    }
+    return;
+  }
+
+  if (known === "verified") {
     const qs = urlencode({ email });
     // They have an account: the email speaks the language their dashboard is set to.
     const language = await localeOfEmail(deps.db, email).catch(() => null);

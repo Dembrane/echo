@@ -2,6 +2,7 @@ import { Trans } from "@lingui/react/macro";
 import { Anchor, Stack, Text, Title } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import { useSearchParams } from "react-router";
+import { ResendVerificationEmail } from "@/components/auth/ResendVerificationEmail";
 import { I18nLink } from "@/components/common/i18nLink";
 import { testId } from "@/lib/testUtils";
 
@@ -38,6 +39,7 @@ export const CheckYourEmailRoute = () => {
 							dembrane.com.
 						</Trans>
 					</Text>
+					{email && <ResendVerificationEmail email={email} />}
 					<Text size="xs" c="dimmed">
 						<Trans>
 							Used the wrong address?{" "}

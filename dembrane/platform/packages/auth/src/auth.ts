@@ -30,6 +30,11 @@ export interface AuthOptions {
    */
   readonly sendVerification?: (email: string, url: string, token: string) => Promise<void>;
   /**
+   * Delivers the password-reset link. `url` is Better Auth's own reset URL, which checks
+   * the token and redirects to the dashboard page the request named with `?token=`.
+   */
+  readonly sendResetPassword?: (email: string, url: string, token: string) => Promise<void>;
+  /**
    * Directus role every new signup gets while Directus tables still back foreign keys.
    * Null reads Directus's public registration role, so each environment keeps its own.
    */
@@ -74,6 +79,45 @@ export function createAuth(opts: AuthOptions) {
       password: {
         hash: (password) => Bun.password.hash(password, { algorithm: "argon2id" }),
         verify: ({ hash, password }) => Bun.password.verify(password, hash),
+      },
+      sendResetPassword: async ({ user, url, token }) => {
+        await opts.sendResetPassword?.(user.email, url, token);
+      },
+      revokeSessionsOnPasswordReset: true,
+      // The link came to the inbox, so it verifies the email as a code sign-in does, and
+      // Directus keeps the same hash, as changePassword does.
+      onPasswordReset: async ({ user }) => {
+        const [acc] = await opts.db
+          .select({ hash: schema.auth_account.password })
+          .from(schema.auth_account)
+          .where(
+            and(
+              eq(schema.auth_account.userId, user.id),
+              eq(schema.auth_account.providerId, "credential"),
+            ),
+          )
+          .limit(1);
+        await opts.db.transaction(async (tx) => {
+          if (acc?.hash)
+            await tx
+              .update(schema.directus_users)
+              .set({ password: acc.hash })
+              .where(eq(schema.directus_users.id, user.id));
+          if (user.emailVerified) return;
+          await tx
+            .update(schema.auth_user)
+            .set({ emailVerified: true, updatedAt: new Date() })
+            .where(eq(schema.auth_user.id, user.id));
+          await tx
+            .update(schema.directus_users)
+            .set({ status: "active" })
+            .where(
+              and(
+                eq(schema.directus_users.id, user.id),
+                eq(schema.directus_users.status, "unverified"),
+              ),
+            );
+        });
       },
     },
     emailVerification: {

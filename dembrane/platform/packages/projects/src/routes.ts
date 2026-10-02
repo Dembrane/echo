@@ -291,9 +291,11 @@ export function projectRoutes(deps: ProjectRoutesDeps) {
         limit: optional(int({ ge: 1, le: 1000 }), 1000),
         offset: optional(int({ ge: 0 }), 0),
         search: optional(nullable(str()), null),
+        workspace_id: optional(nullable(str()), null),
       },
     });
-    return c.json(await projects.listMyProjects(d, who, query));
+    const { workspace_id: workspaceId, ...rest } = query;
+    return c.json(await projects.listMyProjects(d, who, { ...rest, workspaceId }));
   });
 
   app.patch("/api/v2/bff/projects/:project_id", async (c) => {

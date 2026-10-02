@@ -53,6 +53,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
 import { getConversationContentLink } from "@/lib/api";
 import type { ListQuery } from "@/lib/listQuery";
+import { isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 import { SELLABLE_TIER, type Tier } from "@/lib/tiers";
 import { ConversationStatusIndicators } from "./ConversationAccordion";
@@ -227,6 +228,8 @@ type ConversationRowProps = {
 	href?: string;
 	isActive?: boolean;
 	isSelected?: boolean;
+	/** False for read-only roles: the edit modal's saves would be refused. */
+	canManage?: boolean;
 	onEdit: (conversation: Conversation) => void;
 	onOpen: (conversation: Conversation) => void;
 	/** Called instead of navigating when a locked (gated) row is clicked. */
@@ -237,11 +240,12 @@ type ConversationRowProps = {
 	onToggleChecked?: (conversationId: string) => void;
 };
 
-const ConversationRow = ({
+export const ConversationRow = ({
 	conversation,
 	href,
 	isActive,
 	isSelected,
+	canManage = true,
 	onEdit,
 	onOpen,
 	onLockedClick,
@@ -387,7 +391,7 @@ const ConversationRow = ({
 								</ActionIcon>
 							</Tooltip>
 						)}
-						{!selectionMode && (
+						{!selectionMode && canManage && (
 							<Tooltip label={t`Manage`}>
 								<ActionIcon
 									variant="subtle"
@@ -553,7 +557,10 @@ export const ProjectConversationsPanel = ({
 		(projectQuery.data as { workspace_id?: string | null } | undefined)
 			?.workspace_id ??
 		null;
-	const { usageGates } = useWorkspaceUsage(resolvedWorkspaceId);
+	// Only the upload controls read the gates; skip the fetch without them.
+	const { usageGates } = useWorkspaceUsage(resolvedWorkspaceId, {
+		enabled: showUpload,
+	});
 	const selectAllMutation = useSelectAllContextMutation();
 
 	const allProjectTags = useMemo(
@@ -966,6 +973,7 @@ export const ProjectConversationsPanel = ({
 									: `/w/${resolvedWorkspaceId}/projects/${projectId}/conversations/${conversation.id}`
 							}
 							isSelected={selectedConversationIds.has(conversation.id)}
+							canManage={!!workspace && !isReadOnlyRole(workspace.role)}
 							onEdit={openEdit}
 							onOpen={openConversation}
 							onLockedClick={upgradeHandlers.open}

@@ -1,8 +1,9 @@
 import type { ProjectAccess } from "@dembrane/access";
-import { BadRequestError } from "@dembrane/core";
+import { BadRequestError, ForbiddenError } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { projectFor } from "@dembrane/http";
 import { directusRow, pythonIso } from "@dembrane/legacy-shape";
+import { projectsStorage, sameMoveContext } from "@dembrane/projects";
 import { conversationForBff } from "../access";
 import type { ConversationsDeps } from "../deps";
 import type { Row } from "../storage";
@@ -266,8 +267,9 @@ function appendMove(
 }
 
 /**
- * Moves a conversation to another project the caller can edit. Tags, chats and
- * artifacts stay attached as they were, as the Python move left them.
+ * Moves a conversation to another project the caller can edit, in any workspace of the
+ * same billing and data-ownership context. Tags, chats and artifacts stay attached as
+ * they were, as the Python move left them.
  */
 export async function moveConversation(
   d: Deps,
@@ -276,7 +278,12 @@ export async function moveConversation(
   targetProjectId: string,
 ): Promise<Row> {
   const src = await conversationForBff(d, who, conversationId, "project:update");
-  await projectFor(d.access, who, targetProjectId, "project:update");
+  if (targetProjectId === src.conversation.project_id)
+    throw new BadRequestError("conversation.move_same_project");
+  const dst = await projectFor(d.access, who, targetProjectId, "project:update");
+  const from = src.project.project.workspaceId;
+  if (!(await sameMoveContext(projectsStorage(d.db), from, dst.project.workspaceId)))
+    throw new ForbiddenError("conversation.move_context_mismatch");
   const store = bffStore(d.db);
   const byLabel = await store.appUserLabel(who.directusUserId);
   await store.updateConversation(

@@ -16,6 +16,8 @@ import { useState } from "react";
 import { useParams } from "react-router";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { isAdminRole, isOutsiderRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 import { ExponentialProgress } from "../common/ExponentialProgress";
 import {
@@ -29,6 +31,10 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 	const cloneProjectByIdMutation = useCloneProjectByIdMutation();
 	const navigate = useI18nNavigate();
 	const { workspaceId } = useParams();
+	const { workspace } = useWorkspace();
+	// Clone needs project:create (no outsiders), delete needs project:delete (admins only).
+	const canClone = !!workspace && !isOutsiderRole(workspace.role);
+	const canDelete = !!workspace && isAdminRole(workspace.role);
 
 	const [isCloneModalOpen, { open: openCloneModal, close: closeCloneModal }] =
 		useDisclosure(false);
@@ -67,9 +73,13 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 
 	const handleDelete = () => {
 		posthog.capture("project_deleted");
-		deleteProjectByIdMutation.mutate(project.id);
-		navigate(workspaceId ? `/w/${workspaceId}/home` : "/o");
+		// Leave only once deleted; a refusal keeps the user here (the hook toasts).
+		deleteProjectByIdMutation.mutate(project.id, {
+			onSuccess: () => navigate(workspaceId ? `/w/${workspaceId}/home` : "/o"),
+		});
 	};
+
+	if (!canClone && !canDelete) return null;
 
 	return (
 		<ProjectSettingsSection
@@ -79,25 +89,29 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 			{...testId("project-actions-section")}
 		>
 			<Stack maw="300px">
-				<Button
-					onClick={openCloneModal}
-					variant="outline"
-					rightSection={<IconCopy />}
-					loading={cloneProjectByIdMutation.isPending}
-					{...testId("project-actions-clone-button")}
-				>
-					<Trans>Clone Project</Trans>
-				</Button>
+				{canClone && (
+					<Button
+						onClick={openCloneModal}
+						variant="outline"
+						rightSection={<IconCopy />}
+						loading={cloneProjectByIdMutation.isPending}
+						{...testId("project-actions-clone-button")}
+					>
+						<Trans>Clone Project</Trans>
+					</Button>
+				)}
 
-				<Button
-					onClick={openDeleteModal}
-					color="red"
-					variant="outline"
-					rightSection={<IconTrash />}
-					{...testId("project-actions-delete-button")}
-				>
-					<Trans>Delete Project</Trans>
-				</Button>
+				{canDelete && (
+					<Button
+						onClick={openDeleteModal}
+						color="red"
+						variant="outline"
+						rightSection={<IconTrash />}
+						{...testId("project-actions-delete-button")}
+					>
+						<Trans>Delete Project</Trans>
+					</Button>
+				)}
 			</Stack>
 			<Modal
 				opened={isCloneModalOpen}

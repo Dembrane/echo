@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Alert,
@@ -125,7 +125,11 @@ export function WorkspaceSelectList({
 
 						const capLabel =
 							ws.seat_cap == null ? (
-								<Trans>{ws.seats_used_including_pending} seats</Trans>
+								<Plural
+									value={ws.seats_used_including_pending}
+									one="# seat"
+									other="# seats"
+								/>
 							) : (
 								<>
 									{ws.seats_used_including_pending}/{ws.seat_cap}{" "}

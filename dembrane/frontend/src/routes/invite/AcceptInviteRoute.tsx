@@ -13,7 +13,7 @@ import {
 	Title,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 import {
 	useAuthenticated,
@@ -70,6 +70,12 @@ export const AcceptInviteRoute = () => {
 		usePublicInviteStatus(invitedEmail, hash, { enabled: canProbePublic });
 
 	useDocumentTitle(t`Join ${subjectFromUrl} | dembrane`);
+
+	// Onboarding's Continue accepts every pending invite for this email.
+	const needsOnboarding = inviteState?.status === "not_onboarded";
+	useEffect(() => {
+		if (needsOnboarding) navigate("/onboarding", { replace: true });
+	}, [needsOnboarding, navigate]);
 
 	// Preserve invite URL through login/register. Pass the invited email
 	// as a separate query param so /register pre-fills the form.
@@ -365,7 +371,7 @@ export const AcceptInviteRoute = () => {
 						{/* Auth + email match — inspect drives the rest. */}
 						{hash && isAuthenticated && !emailMismatch && (
 							<>
-								{inspectLoading && (
+								{(inspectLoading || needsOnboarding) && (
 									<Stack align="center" py="md">
 										<Loader size="sm" color="gray" />
 									</Stack>

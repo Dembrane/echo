@@ -75,6 +75,7 @@
     "error.conversation.delete_failed": "Tento rozhovor se nepodařilo smazat. Zkuste to znovu.",
     "error.conversation.locked": "Ve vašem současném tarifu je tento rozhovor uzamčený. Chcete-li ho otevřít, přejděte na vyšší tarif.",
     "error.conversation.merge_failed": "Zvuk z tohoto rozhovoru se nepodařilo spojit. Zkuste to znovu.",
+    "error.conversation.move_context_mismatch": "Rozhovory lze přesouvat pouze do pracovních prostorů se stejným vlastníkem fakturace a dat. Vyberte projekt v jiném pracovním prostoru.",
     "error.conversation.no_content": "Tento rozhovor zatím nemá žádný zvukový záznam.",
     "error.conversation.no_summary": "Nejprve vytvořte shrnutí tohoto rozhovoru a pak to zkuste znovu.",
     "error.conversation.not_found": "Tento rozhovor se nepodařilo najít. Možná byl smazán.",
@@ -285,8 +286,10 @@
     "error.verify.topic_unknown": "Toto téma se nám nepodařilo najít. Vraťte se a vyberte jiné.",
     "error.webhook.invalid_event": "Jedna z vybraných událostí není dostupná. Vyberte události znovu.",
     "error.webhook.invalid_status": "Vyberte pro tento webhook stav: publikováno, koncept nebo archivováno.",
+    "error.webhook.invalid_target": "Vyberte, kam tento webhook směřuje: na webovou adresu, nebo do schránky sama se známým kódem.",
     "error.webhook.invalid_url": "Zadejte webovou adresu začínající na http:// nebo https://.",
     "error.webhook.not_found": "Tento webhook se nám nepodařilo najít. Možná byl smazán.",
+    "error.webhook.sam_inbox_unavailable": "Schránka sama zde není nastavena a webhook směřující k samovi nelze otestovat.",
     "error.webhook.target_not_allowed": "Na tuto adresu nemůžeme odesílat webhooky. Použijte veřejnou webovou adresu.",
     "error.workspace.access_request_actioned": "Na tuto žádost už někdo odpověděl.",
     "error.workspace.access_request_not_found": "Tuto žádost se nám nepodařilo najít. Možná byla stažena.",
@@ -317,9 +320,7 @@
     "error.workspace.removed_from": "Byli jste odebráni z tohoto pracovního prostoru. Požádejte správce pracovního prostoru o opětovné pozvání.",
     "error.workspace.support_request_expired": "Platnost této žádosti o podporu vypršela. Pokud stále potřebujete pomoc, požádejte podporu dembrane o novou.",
     "error.workspace.support_request_handled": "Tato žádost o podporu již byla vyřízena.",
-    "error.workspace.visibility_requires_tier": "Pracovní prostory na pozvánku a soukromé prostory vyžadují tarif Innovator nebo vyšší. Vytvořte ho zatím jako otevřený, nebo nejprve přejděte na vyšší tarif.",
-    "error.webhook.invalid_target": "Vyberte, kam tento webhook směřuje: na webovou adresu, nebo do schránky sama se známým kódem.",
-    "error.webhook.sam_inbox_unavailable": "Schránka sama zde není nastavena a webhook směřující k samovi nelze otestovat."
+    "error.workspace.visibility_requires_tier": "Pracovní prostory na pozvánku a soukromé prostory vyžadují tarif Innovator nebo vyšší. Vytvořte ho zatím jako otevřený, nebo nejprve přejděte na vyšší tarif."
   },
   "de-DE": {
     "error.access.forbidden": "Sie haben keine Berechtigung für diese Aktion.",
@@ -397,6 +398,7 @@
     "error.conversation.delete_failed": "Dieses Gespräch konnte nicht gelöscht werden. Versuchen Sie es erneut.",
     "error.conversation.locked": "Dieses Gespräch ist in Ihrem aktuellen Tarif gesperrt. Führen Sie ein Upgrade durch, um es zu öffnen.",
     "error.conversation.merge_failed": "Wir konnten die Audiodaten dieses Gesprächs nicht zusammenführen. Versuchen Sie es noch einmal.",
+    "error.conversation.move_context_mismatch": "Gespräche können nur in Arbeitsbereiche mit demselben Rechnungs- und Dateneigentümer verschoben werden. Wählen Sie ein Projekt in einem anderen Arbeitsbereich.",
     "error.conversation.no_content": "Dieses Gespräch hat noch keine Audioaufnahme.",
     "error.conversation.no_summary": "Erstellen Sie zuerst eine Zusammenfassung dieses Gesprächs und versuchen Sie es dann erneut.",
     "error.conversation.not_found": "Dieses Gespräch konnte nicht gefunden werden. Es wurde möglicherweise gelöscht.",
@@ -607,8 +609,10 @@
     "error.verify.topic_unknown": "Wir konnten dieses Thema nicht finden. Gehen Sie zurück und wählen Sie ein anderes aus.",
     "error.webhook.invalid_event": "Eines der ausgewählten Ereignisse ist nicht verfügbar. Wählen Sie die Ereignisse erneut aus.",
     "error.webhook.invalid_status": "Wählen Sie einen Status für diesen Webhook: veröffentlicht, Entwurf oder archiviert.",
+    "error.webhook.invalid_target": "Wählen Sie, wohin dieser Webhook geht: eine Webadresse oder sams Posteingang mit einem bekannten Code.",
     "error.webhook.invalid_url": "Geben Sie eine Webadresse ein, die mit http:// oder https:// beginnt.",
     "error.webhook.not_found": "Wir konnten diesen Webhook nicht finden. Er wurde möglicherweise gelöscht.",
+    "error.webhook.sam_inbox_unavailable": "sams Posteingang ist hier nicht eingerichtet, und ein Webhook an sam kann nicht getestet werden.",
     "error.webhook.target_not_allowed": "Wir können keine Webhooks an diese Adresse senden. Verwenden Sie eine öffentliche Webadresse.",
     "error.workspace.access_request_actioned": "Jemand hat diese Anfrage bereits beantwortet.",
     "error.workspace.access_request_not_found": "Wir konnten diese Anfrage nicht finden. Sie wurde möglicherweise zurückgezogen.",
@@ -639,9 +643,7 @@
     "error.workspace.removed_from": "Sie wurden aus diesem Arbeitsbereich entfernt. Bitten Sie einen Arbeitsbereich-Administrator, Sie erneut einzuladen.",
     "error.workspace.support_request_expired": "Diese Supportanfrage ist abgelaufen. Bitten Sie den dembrane-Support um eine neue Anfrage, falls Sie weiterhin Hilfe benötigen.",
     "error.workspace.support_request_handled": "Diese Supportanfrage wurde bereits beantwortet.",
-    "error.workspace.visibility_requires_tier": "Arbeitsbereiche mit Beitritt nur auf Einladung sowie private Arbeitsbereiche erfordern den Tarif Innovator oder höher. Erstellen Sie ihn vorerst als offen oder führen Sie zuerst ein Upgrade durch.",
-    "error.webhook.invalid_target": "Wählen Sie, wohin dieser Webhook geht: eine Webadresse oder sams Posteingang mit einem bekannten Code.",
-    "error.webhook.sam_inbox_unavailable": "sams Posteingang ist hier nicht eingerichtet, und ein Webhook an sam kann nicht getestet werden."
+    "error.workspace.visibility_requires_tier": "Arbeitsbereiche mit Beitritt nur auf Einladung sowie private Arbeitsbereiche erfordern den Tarif Innovator oder höher. Erstellen Sie ihn vorerst als offen oder führen Sie zuerst ein Upgrade durch."
   },
   "es-ES": {
     "error.access.forbidden": "No tienes permiso para hacer esto.",
@@ -719,6 +721,7 @@
     "error.conversation.delete_failed": "No pudimos eliminar esta conversación. Inténtalo de nuevo.",
     "error.conversation.locked": "Esta conversación está bloqueada en tu plan actual. Mejora tu plan para abrirla.",
     "error.conversation.merge_failed": "No pudimos unir el audio de esta conversación. Inténtalo de nuevo.",
+    "error.conversation.move_context_mismatch": "Las conversaciones solo pueden moverse a espacios de trabajo con el mismo titular de datos y facturación. Elige un proyecto de otro espacio de trabajo.",
     "error.conversation.no_content": "Esta conversación aún no tiene audio.",
     "error.conversation.no_summary": "Crea primero un resumen de esta conversación y luego inténtalo de nuevo.",
     "error.conversation.not_found": "No pudimos encontrar esta conversación. Puede que haya sido eliminada.",
@@ -929,8 +932,10 @@
     "error.verify.topic_unknown": "No pudimos encontrar este tema. Vuelve atrás y elige otro.",
     "error.webhook.invalid_event": "Uno de los eventos elegidos no está disponible. Vuelve a seleccionar los eventos.",
     "error.webhook.invalid_status": "Elige un estado para este webhook: publicado, borrador o archivado.",
+    "error.webhook.invalid_target": "Elige adónde va este webhook: una dirección web o la bandeja de entrada de sam con un código conocido.",
     "error.webhook.invalid_url": "Introduce una dirección web que empiece por http:// o https://.",
     "error.webhook.not_found": "No pudimos encontrar este webhook. Puede que se haya eliminado.",
+    "error.webhook.sam_inbox_unavailable": "La bandeja de entrada de sam no está configurada aquí, y un webhook que va a sam no se puede probar.",
     "error.webhook.target_not_allowed": "No podemos enviar webhooks a esta dirección. Usa una dirección web pública.",
     "error.workspace.access_request_actioned": "Alguien ya ha respondido a esta solicitud.",
     "error.workspace.access_request_not_found": "No pudimos encontrar esta solicitud. Puede que se haya retirado.",
@@ -961,9 +966,7 @@
     "error.workspace.removed_from": "Te han eliminado de este espacio de trabajo. Pide a un administrador del espacio de trabajo que te vuelva a invitar.",
     "error.workspace.support_request_expired": "Esta solicitud de soporte ha caducado. Pide al equipo de soporte de dembrane que te envíe una nueva si aún necesitas ayuda.",
     "error.workspace.support_request_handled": "Esta solicitud de soporte ya fue respondida.",
-    "error.workspace.visibility_requires_tier": "Los espacios de trabajo privados o solo por invitación requieren el plan Innovator o superior. Créalo como abierto por ahora o mejora tu plan primero.",
-    "error.webhook.invalid_target": "Elige adónde va este webhook: una dirección web o la bandeja de entrada de sam con un código conocido.",
-    "error.webhook.sam_inbox_unavailable": "La bandeja de entrada de sam no está configurada aquí, y un webhook que va a sam no se puede probar."
+    "error.workspace.visibility_requires_tier": "Los espacios de trabajo privados o solo por invitación requieren el plan Innovator o superior. Créalo como abierto por ahora o mejora tu plan primero."
   },
   "fr-FR": {
     "error.access.forbidden": "Vous n'avez pas la permission de faire cela.",
@@ -1041,6 +1044,7 @@
     "error.conversation.delete_failed": "Impossible de supprimer cette conversation. Réessayez.",
     "error.conversation.locked": "Cette conversation est verrouillée avec votre forfait actuel. Passez à une offre supérieure pour l'ouvrir.",
     "error.conversation.merge_failed": "Impossible d'assembler l'audio de cette conversation. Réessayez.",
+    "error.conversation.move_context_mismatch": "Les conversations ne peuvent être déplacées que vers des espaces de travail ayant le même responsable des données et de la facturation. Choisissez un projet dans un autre espace de travail.",
     "error.conversation.no_content": "Cette conversation ne contient pas encore d'audio.",
     "error.conversation.no_summary": "Créez d'abord un résumé de cette conversation, puis réessayez.",
     "error.conversation.not_found": "Conversation introuvable. Elle a peut-être été supprimée.",
@@ -1251,8 +1255,10 @@
     "error.verify.topic_unknown": "Impossible de trouver ce sujet. Revenez en arrière et choisissez-en un autre.",
     "error.webhook.invalid_event": "L'un des événements choisis n'est pas disponible. Sélectionnez à nouveau les événements.",
     "error.webhook.invalid_status": "Choisissez un statut pour ce webhook : publié, brouillon ou archivé.",
+    "error.webhook.invalid_target": "Choisissez où va ce webhook : une adresse web, ou la boîte de réception de sam avec un code connu.",
     "error.webhook.invalid_url": "Saisissez une adresse web commençant par http:// ou https://.",
     "error.webhook.not_found": "Impossible de trouver ce webhook. Il a peut-être été supprimé.",
+    "error.webhook.sam_inbox_unavailable": "La boîte de réception de sam n'est pas configurée ici, et un webhook vers sam ne peut pas être testé.",
     "error.webhook.target_not_allowed": "Impossible d'envoyer des webhooks à cette adresse. Utilisez une adresse web publique.",
     "error.workspace.access_request_actioned": "Quelqu'un a déjà répondu à cette demande.",
     "error.workspace.access_request_not_found": "Impossible de trouver cette demande. Elle a peut-être été retirée.",
@@ -1283,9 +1289,7 @@
     "error.workspace.removed_from": "Vous avez été retiré de cet espace de travail. Demandez à un administrateur de l'espace de travail de vous réinviter.",
     "error.workspace.support_request_expired": "Cette demande d'assistance a expiré. Demandez à l'assistance dembrane d'en envoyer une nouvelle si vous avez toujours besoin d'aide.",
     "error.workspace.support_request_handled": "Cette demande d'assistance a déjà été traitée.",
-    "error.workspace.visibility_requires_tier": "Les espaces de travail privés et sur invitation nécessitent le forfait Innovator ou supérieur. Créez-le en accès libre pour l'instant, ou passez au forfait supérieur.",
-    "error.webhook.invalid_target": "Choisissez où va ce webhook : une adresse web, ou la boîte de réception de sam avec un code connu.",
-    "error.webhook.sam_inbox_unavailable": "La boîte de réception de sam n'est pas configurée ici, et un webhook vers sam ne peut pas être testé."
+    "error.workspace.visibility_requires_tier": "Les espaces de travail privés et sur invitation nécessitent le forfait Innovator ou supérieur. Créez-le en accès libre pour l'instant, ou passez au forfait supérieur."
   },
   "it-IT": {
     "error.access.forbidden": "Non hai i permessi per farlo.",
@@ -1363,6 +1367,7 @@
     "error.conversation.delete_failed": "Non siamo riusciti a eliminare questa conversazione. Riprova.",
     "error.conversation.locked": "Questa conversazione è bloccata con il tuo piano attuale. Fai l'upgrade per aprirla.",
     "error.conversation.merge_failed": "Non siamo riusciti a unire l'audio di questa conversazione. Riprova.",
+    "error.conversation.move_context_mismatch": "Le conversazioni possono essere spostate solo in spazi di lavoro con lo stesso intestatario di fatturazione e dati. Scegli un progetto in un altro spazio di lavoro.",
     "error.conversation.no_content": "Questa conversazione non ha ancora audio.",
     "error.conversation.no_summary": "Crea prima un riassunto di questa conversazione, poi riprova.",
     "error.conversation.not_found": "Non siamo riusciti a trovare questa conversazione. Potrebbe essere stata eliminata.",
@@ -1573,8 +1578,10 @@
     "error.verify.topic_unknown": "Non siamo riusciti a trovare questo argomento. Torna indietro e scegline un altro.",
     "error.webhook.invalid_event": "Uno degli eventi selezionati non è disponibile. Seleziona nuovamente gli eventi.",
     "error.webhook.invalid_status": "Scegli uno stato per questo webhook: pubblicato, bozza o archiviato.",
+    "error.webhook.invalid_target": "Scegli dove va questo webhook: un indirizzo web o la casella di sam con un codice noto.",
     "error.webhook.invalid_url": "Inserisci un indirizzo web che inizi con http:// o https://.",
     "error.webhook.not_found": "Non siamo riusciti a trovare questo webhook. Potrebbe essere stato eliminato.",
+    "error.webhook.sam_inbox_unavailable": "La casella di sam non è configurata qui, e un webhook diretto a sam non può essere testato.",
     "error.webhook.target_not_allowed": "Non possiamo inviare webhook a questo indirizzo. Usa un indirizzo web pubblico.",
     "error.workspace.access_request_actioned": "Qualcuno ha già risposto a questa richiesta.",
     "error.workspace.access_request_not_found": "Non siamo riusciti a trovare questa richiesta. Potrebbe essere stata ritirata.",
@@ -1605,9 +1612,7 @@
     "error.workspace.removed_from": "Non fai più parte di questo spazio di lavoro. Chiedi a un amministratore dello spazio di lavoro di invitarti di nuovo.",
     "error.workspace.support_request_expired": "Questa richiesta di assistenza è scaduta. Chiedi all'assistenza di dembrane di inviarne una nuova se hai ancora bisogno di aiuto.",
     "error.workspace.support_request_handled": "A questa richiesta di assistenza è già stata data risposta.",
-    "error.workspace.visibility_requires_tier": "Gli spazi di lavoro privati o su invito richiedono il piano Innovator o superiore. Per ora crealo come aperto, oppure effettua prima l'upgrade.",
-    "error.webhook.invalid_target": "Scegli dove va questo webhook: un indirizzo web o la casella di sam con un codice noto.",
-    "error.webhook.sam_inbox_unavailable": "La casella di sam non è configurata qui, e un webhook diretto a sam non può essere testato."
+    "error.workspace.visibility_requires_tier": "Gli spazi di lavoro privati o su invito richiedono il piano Innovator o superiore. Per ora crealo come aperto, oppure effettua prima l'upgrade."
   },
   "nl-NL": {
     "error.access.forbidden": "Je hebt geen toestemming om dit te doen.",
@@ -1685,6 +1690,7 @@
     "error.conversation.delete_failed": "We konden dit gesprek niet verwijderen. Probeer het opnieuw.",
     "error.conversation.locked": "Dit gesprek is vergrendeld in je huidige abonnement. Upgrade om het te openen.",
     "error.conversation.merge_failed": "We konden de audio van dit gesprek niet samenvoegen. Probeer het opnieuw.",
+    "error.conversation.move_context_mismatch": "Gesprekken kunnen alleen worden verplaatst naar werkruimtes met dezelfde eigenaar voor facturering en gegevens. Kies een project in een andere werkruimte.",
     "error.conversation.no_content": "Dit gesprek heeft nog geen audio.",
     "error.conversation.no_summary": "Maak eerst een samenvatting van dit gesprek en probeer het dan opnieuw.",
     "error.conversation.not_found": "We konden dit gesprek niet vinden. Mogelijk is het verwijderd.",
@@ -1895,8 +1901,10 @@
     "error.verify.topic_unknown": "We konden dit onderwerp niet vinden. Ga terug en kies een ander onderwerp.",
     "error.webhook.invalid_event": "Een van de gekozen gebeurtenissen is niet beschikbaar. Kies de gebeurtenissen opnieuw.",
     "error.webhook.invalid_status": "Kies een status voor deze webhook: gepubliceerd, concept of gearchiveerd.",
+    "error.webhook.invalid_target": "Kies waar deze webhook heen gaat: een webadres, of de inbox van sam met een bekende code.",
     "error.webhook.invalid_url": "Voer een webadres in dat begint met http:// of https://.",
     "error.webhook.not_found": "We konden deze webhook niet vinden. Mogelijk is deze verwijderd.",
+    "error.webhook.sam_inbox_unavailable": "De inbox van sam is hier niet ingesteld, en een webhook naar sam kan niet worden getest.",
     "error.webhook.target_not_allowed": "We kunnen geen webhooks naar dit adres sturen. Gebruik een openbaar webadres.",
     "error.workspace.access_request_actioned": "Iemand heeft dit verzoek al beantwoord.",
     "error.workspace.access_request_not_found": "We konden dit verzoek niet vinden. Mogelijk is het ingetrokken.",
@@ -1927,9 +1935,7 @@
     "error.workspace.removed_from": "Je bent verwijderd uit deze werkruimte. Vraag een beheerder van de werkruimte om je opnieuw uit te nodigen.",
     "error.workspace.support_request_expired": "Dit supportverzoek is verlopen. Vraag dembrane support om een nieuw verzoek te sturen als je nog hulp nodig hebt.",
     "error.workspace.support_request_handled": "Dit supportverzoek is al beantwoord.",
-    "error.workspace.visibility_requires_tier": "Voor besloten en privéwerkruimtes is het Innovator-abonnement of hoger nodig. Maak deze nu aan als openbaar, of upgrade eerst.",
-    "error.webhook.invalid_target": "Kies waar deze webhook heen gaat: een webadres, of de inbox van sam met een bekende code.",
-    "error.webhook.sam_inbox_unavailable": "De inbox van sam is hier niet ingesteld, en een webhook naar sam kan niet worden getest."
+    "error.workspace.visibility_requires_tier": "Voor besloten en privéwerkruimtes is het Innovator-abonnement of hoger nodig. Maak deze nu aan als openbaar, of upgrade eerst."
   },
   "uk-UA": {
     "error.access.forbidden": "У вас немає дозволу на цю дію.",
@@ -2007,6 +2013,7 @@
     "error.conversation.delete_failed": "Не вдалося видалити цю розмову. Спробуйте ще раз.",
     "error.conversation.locked": "Ця розмова заблокована на вашому поточному тарифі. Оновіть тариф, щоб відкрити її.",
     "error.conversation.merge_failed": "Не вдалося об'єднати аудіо цієї розмови. Спробуйте ще раз.",
+    "error.conversation.move_context_mismatch": "Розмови можна переміщувати лише до робочих просторів з тим самим власником даних і платником. Виберіть проєкт в іншому робочому просторі.",
     "error.conversation.no_content": "У цій розмові ще немає аудіо.",
     "error.conversation.no_summary": "Спочатку створіть підсумок цієї розмови, а потім спробуйте знову.",
     "error.conversation.not_found": "Не вдалося знайти цю розмову. Можливо, її було видалено.",
@@ -2217,8 +2224,10 @@
     "error.verify.topic_unknown": "Не вдалося знайти цю тему. Поверніться назад і виберіть іншу.",
     "error.webhook.invalid_event": "Одна з вибраних подій недоступна. Виберіть події ще раз.",
     "error.webhook.invalid_status": "Виберіть статус для цього вебхука: опублікований, чернетка або в архіві.",
+    "error.webhook.invalid_target": "Оберіть, куди надсилається цей вебхук: на вебадресу або до скриньки sam із відомим кодом.",
     "error.webhook.invalid_url": "Введіть веб-адресу, що починається з http:// або https://.",
     "error.webhook.not_found": "Не вдалося знайти цей вебхук. Можливо, його було видалено.",
+    "error.webhook.sam_inbox_unavailable": "Скриньку sam тут не налаштовано, а вебхук, що надсилається до sam, не можна перевірити.",
     "error.webhook.target_not_allowed": "Ми не можемо надсилати вебхуки на цю адресу. Використовуйте загальнодоступну вебадресу.",
     "error.workspace.access_request_actioned": "Хтось уже відповів на цей запит.",
     "error.workspace.access_request_not_found": "Не вдалося знайти цей запит. Можливо, його було скасовано.",
@@ -2249,8 +2258,6 @@
     "error.workspace.removed_from": "Вас видалили з цього робочого простору. Попросіть адміністратора робочого простору запросити вас знову.",
     "error.workspace.support_request_expired": "Термін дії цього запиту на підтримку минув. Попросіть підтримку dembrane надіслати новий, якщо вам усе ще потрібна допомога.",
     "error.workspace.support_request_handled": "На цей запит до підтримки вже надали відповідь.",
-    "error.workspace.visibility_requires_tier": "Робочі простори з доступом за запрошенням і приватні простори потребують тарифу Innovator або вище. Створіть його поки відкритим або спочатку оновіть тариф.",
-    "error.webhook.invalid_target": "Оберіть, куди надсилається цей вебхук: на вебадресу або до скриньки sam із відомим кодом.",
-    "error.webhook.sam_inbox_unavailable": "Скриньку sam тут не налаштовано, а вебхук, що надсилається до sam, не можна перевірити."
+    "error.workspace.visibility_requires_tier": "Робочі простори з доступом за запрошенням і приватні простори потребують тарифу Innovator або вище. Створіть його поки відкритим або спочатку оновіть тариф."
   }
 }

@@ -104,6 +104,14 @@ export async function resetPassword(token: string, newPassword: string): Promise
 	await post("/reset-password", { newPassword, token });
 }
 
+/** Emails a fresh verification link; answers the same whether or not the address is known. */
+export async function resendVerificationEmail(email: string): Promise<void> {
+	await post("/send-verification-email", {
+		callbackURL: `${ADMIN_BASE_URL}/verify-email`,
+		email,
+	});
+}
+
 export async function verifyEmail(token: string): Promise<void> {
 	const res = await fetch(`${AUTH}/verify-email?token=${encodeURIComponent(token)}`, {
 		credentials: "include",
