@@ -2302,7 +2302,7 @@ msgstr "Journaux d'audit exportés en CSV"
 msgid "Audit logs exported to JSON"
 msgstr "Journaux d'audit exportés en JSON"
 
-#: src/routes/auth/Login.tsx:410
+#: src/routes/auth/Login.tsx:513
 #: src/components/settings/TwoFactorSettingsCard.tsx:224
 #: src/components/settings/TwoFactorSettingsCard.tsx:352
 msgid "Authenticator code"
@@ -2653,6 +2653,7 @@ msgstr "Pouvez-vous nous en dire plus ?"
 #: src/routes/organisation/OrganisationRoute.tsx:1989
 #: src/routes/organisation/OrganisationRoute.tsx:2030
 #: src/routes/organisation/OrganisationRoute.tsx:2073
+#: src/routes/auth/Login.tsx:398
 #: src/routes/admin/AdminSettingsRoute.tsx:870
 #: src/routes/admin/AdminSettingsRoute.tsx:1184
 #: src/components/workspace/OrganisationProjectsTable.tsx:158
@@ -4010,7 +4011,7 @@ msgid "Create account"
 msgstr "Créer un compte"
 
 #: src/routes/auth/Register.tsx:128
-#: src/routes/auth/Login.tsx:536
+#: src/routes/auth/Login.tsx:639
 msgid "Create an account"
 msgstr "Créer un compte"
 
@@ -4963,9 +4964,9 @@ msgstr "Modifié par {editedBy}, {editedOn}"
 msgid "Editing a conversation no longer triggers the affected save error."
 msgstr "La modification d'une conversation ne déclenche plus l'erreur de sauvegarde concernée."
 
-#: src/routes/auth/Login.tsx:332
-#: src/routes/auth/Login.tsx:451
-#: src/routes/auth/Login.tsx:455
+#: src/routes/auth/Login.tsx:435
+#: src/routes/auth/Login.tsx:554
+#: src/routes/auth/Login.tsx:558
 #: src/components/settings/AccountSettingsCard.tsx:186
 #: src/components/participant/ParticipantShareModal.tsx:136
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:365
@@ -4982,11 +4983,11 @@ msgstr "Envoyer un e-mail à {name}"
 msgid "Email address"
 msgstr "Adresse e-mail"
 
-#: src/routes/auth/Login.tsx:348
+#: src/routes/auth/Login.tsx:451
 msgid "Email me a code"
 msgstr "M'envoyer un code par e-mail"
 
-#: src/routes/auth/Login.tsx:523
+#: src/routes/auth/Login.tsx:626
 msgid "Email me a sign-in code instead"
 msgstr "M'envoyer plutôt un code de connexion par e-mail"
 
@@ -5151,7 +5152,7 @@ msgstr "Entrez le nom du fichier (sans extension)"
 msgid "Enter new password"
 msgstr "Saisir le nouveau mot de passe"
 
-#: src/routes/auth/Login.tsx:206
+#: src/routes/auth/Login.tsx:257
 msgid "Enter the 6-digit code from your authenticator app."
 msgstr "Entrez le code à 6 chiffres de votre application d'authentification."
 
@@ -5899,7 +5900,7 @@ msgstr "Prévisions"
 msgid "Forgetting a saved memory"
 msgstr "Oubli d'un souvenir enregistré"
 
-#: src/routes/auth/Login.tsx:487
+#: src/routes/auth/Login.tsx:590
 msgid "Forgot your password?"
 msgstr "Mot de passe oublié ?"
 
@@ -6716,7 +6717,7 @@ msgstr "Titre de l’introduction"
 msgid "Invalid code. Please request a new one."
 msgstr "Code invalide. Veuillez en demander un nouveau."
 
-#: src/routes/auth/Login.tsx:286
+#: src/routes/auth/Login.tsx:337
 msgid "Invalid credentials."
 msgstr "Identifiants invalides."
 
@@ -6865,6 +6866,10 @@ msgstr "Émettre la facture"
 msgid "Issue payment link"
 msgstr "Générer un lien de paiement"
 
+#: src/routes/auth/Login.tsx:376
+msgid "It has been logged in on another device since {elsewhereSince}. For security, an account can be logged in on one device at a time."
+msgstr "Il est connecté sur un autre appareil depuis le {elsewhereSince}. Par sécurité, un compte ne peut être connecté que sur un seul appareil à la fois."
+
 #. placeholder {0}: settings.org_name
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:708
 msgid "It has its own plan and seats, not {0}'s pooled plan. Changes here only affect this workspace."
@@ -6873,6 +6878,10 @@ msgstr "Il possède son propre forfait et ses places, et non le forfait partagé
 #: src/routes/settings/AgentConsentRoute.tsx:242
 msgid "It is asking to"
 msgstr "Cette application demande l'autorisation de"
+
+#: src/routes/auth/Login.tsx:382
+msgid "It is logged in on another device. For security, an account can be logged in on one device at a time."
+msgstr "Il est connecté sur un autre appareil. Par sécurité, un compte ne peut être connecté que sur un seul appareil à la fois."
 
 #. js-lingui-explicit-id
 #: src/components/participant/ConversationErrorView.tsx:30
@@ -7597,6 +7606,10 @@ msgstr "Verrouillé pour correspondre à l'invitation. Pour utiliser une autre a
 msgid "Log in"
 msgstr "Se connecter"
 
+#: src/routes/auth/Login.tsx:405
+msgid "Log in anyway"
+msgstr "Se connecter quand même"
+
 #: src/routes/invite/AcceptInviteRoute.tsx:277
 msgid "Log in to {resolvedWorkspaceName} to continue."
 msgstr "Connectez-vous à {resolvedWorkspaceName} pour continuer."
@@ -7605,15 +7618,19 @@ msgstr "Connectez-vous à {resolvedWorkspaceName} pour continuer."
 msgid "Log out and use the invited email"
 msgstr "Se déconnecter et utiliser l'e-mail invité"
 
+#: src/routes/auth/Login.tsx:389
+msgid "Logging in here logs the other device out."
+msgstr "Se connecter ici déconnecte l'autre appareil."
+
 #: src/components/chat/agenticToolActivity.ts:171
 msgid "Logging this with the dembrane team"
 msgstr "Signalement en cours à l'équipe dembrane"
 
-#: src/routes/auth/Login.tsx:503
+#: src/routes/auth/Login.tsx:606
 msgid "Login"
 msgstr "Connexion"
 
-#: src/routes/auth/Login.tsx:69
+#: src/routes/auth/Login.tsx:77
 msgid "Login | dembrane"
 msgstr "Connexion | dembrane"
 
@@ -9351,7 +9368,7 @@ msgstr "Ouvrir l'espace de travail"
 msgid "Open workspace actions"
 msgstr "Ouvrir les actions de l'espace de travail"
 
-#: src/routes/auth/Login.tsx:442
+#: src/routes/auth/Login.tsx:545
 msgid "Open your authenticator app and enter the current six-digit code."
 msgstr "Ouvrez votre application d'authentification et entrez le code actuel à six chiffres."
 
@@ -9403,7 +9420,7 @@ msgid "Options"
 msgstr "Options"
 
 #: src/routes/auth/Register.tsx:297
-#: src/routes/auth/Login.tsx:527
+#: src/routes/auth/Login.tsx:630
 msgid "or"
 msgstr "ou"
 
@@ -9708,8 +9725,8 @@ msgid "Partner workspace, billed separately from the organisation."
 msgstr "Espace de travail partenaire, facturé séparément de l'organisation."
 
 #: src/routes/auth/Register.tsx:224
-#: src/routes/auth/Login.tsx:465
-#: src/routes/auth/Login.tsx:469
+#: src/routes/auth/Login.tsx:568
+#: src/routes/auth/Login.tsx:572
 msgid "Password"
 msgstr "Mot de passe"
 
@@ -10005,7 +10022,7 @@ msgstr "Veuillez activer la participation pour activer le partage"
 msgid "Please enter a valid email."
 msgstr "Veuillez entrer une adresse e-mail valide."
 
-#: src/routes/auth/Login.tsx:322
+#: src/routes/auth/Login.tsx:425
 msgid "Please log in to continue."
 msgstr "Veuillez vous connecter pour continuer."
 
@@ -12273,7 +12290,7 @@ msgstr "Envoyer"
 msgid "Send {0} invites"
 msgstr "Envoyer {0} invitations"
 
-#: src/routes/auth/Login.tsx:382
+#: src/routes/auth/Login.tsx:485
 msgid "Send a new code"
 msgstr "Envoyer un nouveau code"
 
@@ -12730,7 +12747,7 @@ msgstr "Affiché en haut de l'écran. Modifiable à tout moment."
 msgid "Shown in the organisation header and in email subject lines."
 msgstr "Affiché dans l'en-tête de l'organisation et dans l'objet des e-mails."
 
-#: src/routes/auth/Login.tsx:374
+#: src/routes/auth/Login.tsx:477
 msgid "Sign in"
 msgstr "Se connecter"
 
@@ -12836,7 +12853,8 @@ msgstr "Quelque chose bloque votre connexion. Votre audio ne sera pas sauvegard�
 #: src/routes/project/report/ProjectReportRoute.tsx:852
 #: src/routes/project/report/ProjectReportRoute.tsx:933
 #: src/routes/project/report/ProjectReportRoute.tsx:1404
-#: src/routes/auth/Login.tsx:251
+#: src/routes/auth/Login.tsx:230
+#: src/routes/auth/Login.tsx:302
 #: src/components/project/ProjectAccessGuard.tsx:112
 #: src/components/error/ErrorPage.tsx:55
 #: src/components/error/ErrorBoundary.tsx:44
@@ -13558,7 +13576,7 @@ msgstr "Merci ! Cela nous aide beaucoup."
 msgid "That code did not work. Try again with a new code."
 msgstr "Ce code n'a pas fonctionné. Réessayez avec un nouveau code."
 
-#: src/routes/auth/Login.tsx:229
+#: src/routes/auth/Login.tsx:280
 msgid "That code didn't work. Try again with a fresh code from your authenticator app."
 msgstr "Ce code n'a pas fonctionné. Réessayez avec un nouveau code de votre application d'authentification."
 
@@ -14037,6 +14055,10 @@ msgstr "Ce compte a un abonnement Mollie actif. Résiliez-le d'abord."
 #: src/routes/admin/AdminSettingsRoute.tsx:638
 msgid "This account has an active subscription. Ask the customer to cancel it from their billing page before you change the tier."
 msgstr "Ce compte a un abonnement actif. Demandez au client de le résilier depuis sa page de facturation avant de changer de forfait."
+
+#: src/routes/auth/Login.tsx:370
+msgid "This account is logged in somewhere else"
+msgstr "Ce compte est connecté ailleurs"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:3245
 msgid "This area is for dembrane staff. If you think you should have access, email support@dembrane.com."
@@ -15360,7 +15382,7 @@ msgstr "Utilisez l'italien pour le chat, les rapports, la transcription et les f
 msgid "Use latest results"
 msgstr "Utiliser les derniers résultats"
 
-#: src/routes/auth/Login.tsx:395
+#: src/routes/auth/Login.tsx:498
 msgid "Use my password instead"
 msgstr "Utiliser plutôt mon mot de passe"
 
@@ -15515,7 +15537,7 @@ msgstr "Vérifier"
 msgid "participant.echo.verify"
 msgstr "Vérifier"
 
-#: src/routes/auth/Login.tsx:501
+#: src/routes/auth/Login.tsx:604
 msgid "Verify code"
 msgstr "Vérifier le code"
 
@@ -15752,7 +15774,7 @@ msgstr "Nous avons envoyé un nouveau lien de vérification."
 msgid "We sent a new verification link. You can send another in {wait} seconds."
 msgstr "Nous avons envoyé un nouveau lien de vérification. Vous pourrez en envoyer un autre dans {wait} secondes."
 
-#: src/routes/auth/Login.tsx:354
+#: src/routes/auth/Login.tsx:457
 msgid "We sent a six-digit code to {codeEmail}."
 msgstr "Nous avons envoyé un code à six chiffres à {codeEmail}."
 
@@ -15837,7 +15859,7 @@ msgstr "Les webhooks sont inclus avec un forfait payant."
 msgid "Welcome"
 msgstr "Bienvenue"
 
-#: src/routes/auth/Login.tsx:121
+#: src/routes/auth/Login.tsx:137
 msgid "Welcome back"
 msgstr "Bon retour"
 
@@ -15846,7 +15868,7 @@ msgid "Welcome back, {displayName}"
 msgstr "Ravi de vous revoir, {displayName}"
 
 #: src/routes/onboarding/OnboardingRoute.tsx:588
-#: src/routes/auth/Login.tsx:121
+#: src/routes/auth/Login.tsx:137
 msgid "Welcome to dembrane"
 msgstr "Bienvenue sur dembrane"
 
@@ -15867,7 +15889,7 @@ msgstr "Bienvenue en mode Vue d’ensemble ! J’ai chargé les résumés de tou
 msgid "Welcome, {displayName}"
 msgstr "Bienvenue, {displayName}"
 
-#: src/routes/auth/Login.tsx:310
+#: src/routes/auth/Login.tsx:413
 msgid "Welcome!"
 msgstr "Bienvenue !"
 
@@ -16494,7 +16516,7 @@ msgstr "Vous n'avez encore vérifié aucun résultat. Souhaitez-vous vérifier a
 msgid "You left the workspace"
 msgstr "Vous avez quitté l'espace de travail"
 
-#: src/routes/auth/Login.tsx:291
+#: src/routes/auth/Login.tsx:342
 msgid "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 msgstr "Vous devez vous connecter avec le même fournisseur que vous avez utilisé pour vous inscrire. Si vous rencontrez des problèmes, veuillez contacter le support."
 
@@ -16687,7 +16709,7 @@ msgstr "Votre adresse e-mail est déjà vérifiée"
 msgid "Your email is not verified yet. Check your inbox for the verification link."
 msgstr "Votre adresse e-mail n'est pas encore vérifiée. Consultez votre boîte de réception pour trouver le lien de vérification."
 
-#: src/routes/auth/Login.tsx:315
+#: src/routes/auth/Login.tsx:418
 msgid "Your email is verified. Log in to continue."
 msgstr "Votre adresse e-mail est vérifiée. Connectez-vous pour continuer."
 

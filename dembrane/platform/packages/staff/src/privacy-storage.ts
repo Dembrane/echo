@@ -137,6 +137,8 @@ export function privacyStorage(db: Db) {
           expires_at: auth_session.expiresAt,
           ip_address: auth_session.ipAddress,
           user_agent: auth_session.userAgent,
+          device_id: auth_session.deviceId,
+          last_seen_at: auth_session.lastSeenAt,
         })
         .from(auth_session)
         .where(eq(auth_session.userId, p.id))

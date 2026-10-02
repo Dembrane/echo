@@ -6,6 +6,8 @@ import {
 	Anchor,
 	Button,
 	Divider,
+	Group,
+	Modal,
 	PasswordInput,
 	PinInput,
 	Stack,
@@ -15,6 +17,7 @@ import {
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSearchParams } from "react-router";
@@ -34,7 +37,12 @@ import { I18nLink } from "@/components/common/i18nLink";
 import { useTransitionCurtain } from "@/components/layout/TransitionCurtainProvider";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { sendSignInCode } from "@/lib/auth";
+import {
+	otherSessions,
+	replaceOtherSessions,
+	sendSignInCode,
+	signOut,
+} from "@/lib/auth";
 import { testId } from "@/lib/testUtils";
 
 // const LoginWithProvider = ({
@@ -106,6 +114,14 @@ export const LoginRoute = () => {
 	const pinInputRef = useRef<HTMLDivElement | null>(null);
 	const loginMutation = useLoginMutation();
 	const posthog = usePostHog();
+	const queryClient = useQueryClient();
+	// Set when the sign-in was right but the account is signed in on another browser: the
+	// person chooses here whether to replace that session.
+	const [elsewhere, setElsewhere] = useState<{
+		email: string;
+		since: string | null;
+	} | null>(null);
+	const [replacing, setReplacing] = useState(false);
 
 	// Where a signed-in person goes: onboarding if unfinished, else ?next when it is safe,
 	// else the home list. Shared by the password and the emailed-code sign-in.
@@ -189,6 +205,41 @@ export const LoginRoute = () => {
 		navigate("/o");
 	};
 
+	// Every sign-in passes here. One browser per account: when another is signed in, ask
+	// before going on.
+	const afterCredentials = async (email: string) => {
+		const state = await otherSessions();
+		if (state.held) {
+			setElsewhere({ email, since: state.since });
+			return;
+		}
+		await afterSignIn(email);
+	};
+
+	const logInAnyway = async () => {
+		if (!elsewhere || replacing) return;
+		setReplacing(true);
+		try {
+			await replaceOtherSessions();
+			await queryClient.invalidateQueries({ queryKey: ["auth", "session"] });
+			const { email } = elsewhere;
+			setElsewhere(null);
+			await afterSignIn(email);
+		} catch {
+			setElsewhere(null);
+			setError(t`Something went wrong`);
+		} finally {
+			setReplacing(false);
+		}
+	};
+
+	const stayLoggedOut = async () => {
+		setElsewhere(null);
+		setOtpRequired(false);
+		setCode("");
+		await signOut().catch(() => {});
+	};
+
 	const submitLogin = async (data: {
 		email: string;
 		password: string;
@@ -213,7 +264,7 @@ export const LoginRoute = () => {
 				password: data.password,
 			});
 
-			await afterSignIn(data.email);
+			await afterCredentials(data.email);
 		} catch (error) {
 			const code = authErrorCode(error);
 
@@ -274,7 +325,7 @@ export const LoginRoute = () => {
 		setError("");
 		try {
 			await loginMutation.mutateAsync({ code: value, email: codeEmail.trim() });
-			await afterSignIn(codeEmail.trim());
+			await afterCredentials(codeEmail.trim());
 		} catch (e) {
 			setError(describeAuthError(e));
 			setCode("");
@@ -302,8 +353,60 @@ export const LoginRoute = () => {
 		}
 	}, [otpRequired]);
 
+	const elsewhereSince = elsewhere?.since
+		? new Date(elsewhere.since).toLocaleString(undefined, {
+				dateStyle: "medium",
+				timeStyle: "short",
+			})
+		: null;
+
 	return (
 		<div className="h-full w-full">
+			<Modal
+				opened={elsewhere !== null}
+				onClose={stayLoggedOut}
+				closeOnClickOutside={false}
+				centered
+				title={<Trans>This account is logged in somewhere else</Trans>}
+				{...testId("auth-login-elsewhere-modal")}
+			>
+				<Stack gap="md">
+					<Text>
+						{elsewhereSince ? (
+							<Trans>
+								It has been logged in on another device since {elsewhereSince}.
+								For security, an account can be logged in on one device at a
+								time.
+							</Trans>
+						) : (
+							<Trans>
+								It is logged in on another device. For security, an account can
+								be logged in on one device at a time.
+							</Trans>
+						)}
+					</Text>
+					<Text>
+						<Trans>Logging in here logs the other device out.</Trans>
+					</Text>
+					<Group justify="flex-end">
+						<Button
+							variant="default"
+							onClick={stayLoggedOut}
+							disabled={replacing}
+							{...testId("auth-login-elsewhere-cancel")}
+						>
+							<Trans>Cancel</Trans>
+						</Button>
+						<Button
+							onClick={logInAnyway}
+							loading={replacing}
+							{...testId("auth-login-elsewhere-confirm")}
+						>
+							<Trans>Log in anyway</Trans>
+						</Button>
+					</Group>
+				</Stack>
+			</Modal>
 			<Stack className="h-full">
 				<Stack className="flex-grow" gap="md">
 					<Title order={1}>

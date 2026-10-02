@@ -1767,7 +1767,12 @@
     "€20 / seat / month": "€20 / místo / měsíc",
     "€75 / seat / month": "€75 / místo / měsíc",
     "€{0} each, beyond the included {1}": "€{0} za každého nad rámec zahrnutých {1}",
-    "€{0} per extra participant": "€{0} za dalšího účastníka"
+    "€{0} per extra participant": "€{0} za dalšího účastníka",
+    "It has been logged in on another device since {elsewhereSince}. For security, an account can be logged in on one device at a time.": "Od {elsewhereSince} je přihlášen na jiném zařízení. Z bezpečnostních důvodů může být účet přihlášen vždy jen na jednom zařízení.",
+    "It is logged in on another device. For security, an account can be logged in on one device at a time.": "Je přihlášen na jiném zařízení. Z bezpečnostních důvodů může být účet přihlášen vždy jen na jednom zařízení.",
+    "Log in anyway": "Přesto se přihlásit",
+    "Logging in here logs the other device out.": "Přihlášením zde odhlásíte druhé zařízení.",
+    "This account is logged in somewhere else": "Tento účet je přihlášen jinde"
   },
   "de-DE": {
     " · failed": "· fehlgeschlagen",
@@ -4087,7 +4092,12 @@
     "€20 / seat / month": "20 € / Sitz / Monat",
     "€75 / seat / month": "75 € / Sitz / Monat",
     "€{0} each, beyond the included {1}": "je {0} €, über die enthaltenen {1} hinaus",
-    "€{0} per extra participant": "{0} € pro weiterem Teilnehmer"
+    "€{0} per extra participant": "{0} € pro weiterem Teilnehmer",
+    "It has been logged in on another device since {elsewhereSince}. For security, an account can be logged in on one device at a time.": "Es ist seit {elsewhereSince} auf einem anderen Gerät angemeldet. Aus Sicherheitsgründen kann ein Konto nur auf einem Gerät gleichzeitig angemeldet sein.",
+    "It is logged in on another device. For security, an account can be logged in on one device at a time.": "Es ist auf einem anderen Gerät angemeldet. Aus Sicherheitsgründen kann ein Konto nur auf einem Gerät gleichzeitig angemeldet sein.",
+    "Log in anyway": "Trotzdem anmelden",
+    "Logging in here logs the other device out.": "Wenn du dich hier anmeldest, wird das andere Gerät abgemeldet.",
+    "This account is logged in somewhere else": "Dieses Konto ist woanders angemeldet"
   },
   "es-ES": {
     " · failed": "· con error",
@@ -6407,7 +6417,12 @@
     "€20 / seat / month": "20 € / asiento / mes",
     "€75 / seat / month": "75 € / asiento / mes",
     "€{0} each, beyond the included {1}": "€{0} por persona, además de los {1} incluidos",
-    "€{0} per extra participant": "€{0} por participante adicional"
+    "€{0} per extra participant": "€{0} por participante adicional",
+    "It has been logged in on another device since {elsewhereSince}. For security, an account can be logged in on one device at a time.": "Tiene una sesión iniciada en otro dispositivo desde el {elsewhereSince}. Por seguridad, una cuenta solo puede tener la sesión iniciada en un dispositivo a la vez.",
+    "It is logged in on another device. For security, an account can be logged in on one device at a time.": "Tiene una sesión iniciada en otro dispositivo. Por seguridad, una cuenta solo puede tener la sesión iniciada en un dispositivo a la vez.",
+    "Log in anyway": "Iniciar sesión de todos modos",
+    "Logging in here logs the other device out.": "Al iniciar sesión aquí se cierra la sesión en el otro dispositivo.",
+    "This account is logged in somewhere else": "Esta cuenta tiene una sesión iniciada en otro lugar"
   },
   "fr-FR": {
     " · failed": "· échec",
@@ -8664,7 +8679,12 @@
     "€20 / seat / month": "20 € / siège / mois",
     "€75 / seat / month": "75 € / siège / mois",
     "€{0} each, beyond the included {1}": "{0} € chacun, au-delà des {1} inclus",
-    "€{0} per extra participant": "{0} € par participant supplémentaire"
+    "€{0} per extra participant": "{0} € par participant supplémentaire",
+    "It has been logged in on another device since {elsewhereSince}. For security, an account can be logged in on one device at a time.": "Il est connecté sur un autre appareil depuis le {elsewhereSince}. Par sécurité, un compte ne peut être connecté que sur un seul appareil à la fois.",
+    "It is logged in on another device. For security, an account can be logged in on one device at a time.": "Il est connecté sur un autre appareil. Par sécurité, un compte ne peut être connecté que sur un seul appareil à la fois.",
+    "Log in anyway": "Se connecter quand même",
+    "Logging in here logs the other device out.": "Se connecter ici déconnecte l'autre appareil.",
+    "This account is logged in somewhere else": "Ce compte est connecté ailleurs"
   },
   "it-IT": {
     " · failed": "· non riuscito",
@@ -10984,7 +11004,12 @@
     "€20 / seat / month": "20 € / posto / mese",
     "€75 / seat / month": "75 € / posto / mese",
     "€{0} each, beyond the included {1}": "€{0} ciascuno, oltre ai {1} inclusi",
-    "€{0} per extra participant": "€{0} per ogni partecipante extra"
+    "€{0} per extra participant": "€{0} per ogni partecipante extra",
+    "It has been logged in on another device since {elsewhereSince}. For security, an account can be logged in on one device at a time.": "È connesso su un altro dispositivo dal {elsewhereSince}. Per sicurezza, un account può essere connesso su un solo dispositivo alla volta.",
+    "It is logged in on another device. For security, an account can be logged in on one device at a time.": "È connesso su un altro dispositivo. Per sicurezza, un account può essere connesso su un solo dispositivo alla volta.",
+    "Log in anyway": "Accedi comunque",
+    "Logging in here logs the other device out.": "Accedendo qui, l'altro dispositivo viene disconnesso.",
+    "This account is logged in somewhere else": "Questo account è connesso altrove"
   },
   "nl-NL": {
     " · failed": "· mislukt",
@@ -11457,7 +11482,12 @@
     "{days} days": "{days} dagen",
     "{name}: {rowDone} of {rowTotal}": "{name}: {rowDone} van {rowTotal}",
     "{seats, plural, one {# seat} other {# seats}}": "{seats, plural, one {# plek} other {# plekken}}",
-    "{translated} of {total} translated, {failed} could not be translated": "{translated} van {total} vertaald, {failed} kon niet worden vertaald"
+    "{translated} of {total} translated, {failed} could not be translated": "{translated} van {total} vertaald, {failed} kon niet worden vertaald",
+    "It has been logged in on another device since {elsewhereSince}. For security, an account can be logged in on one device at a time.": "Het is sinds {elsewhereSince} ingelogd op een ander apparaat. Uit veiligheidsoverwegingen kan een account op één apparaat tegelijk ingelogd zijn.",
+    "It is logged in on another device. For security, an account can be logged in on one device at a time.": "Het is ingelogd op een ander apparaat. Uit veiligheidsoverwegingen kan een account op één apparaat tegelijk ingelogd zijn.",
+    "Log in anyway": "Toch inloggen",
+    "Logging in here logs the other device out.": "Als je hier inlogt, wordt het andere apparaat uitgelogd.",
+    "This account is logged in somewhere else": "Dit account is ergens anders ingelogd"
   },
   "uk-UA": {
     " · failed": "· не вдалося",
@@ -13795,6 +13825,11 @@
     "€20 / seat / month": "€20 / місце / місяць",
     "€75 / seat / month": "€75 / місце / місяць",
     "€{0} each, beyond the included {1}": "€{0} за кожного понад {1} включених",
-    "€{0} per extra participant": "€{0} за додаткового учасника"
+    "€{0} per extra participant": "€{0} за додаткового учасника",
+    "It has been logged in on another device since {elsewhereSince}. For security, an account can be logged in on one device at a time.": "У нього виконано вхід на іншому пристрої з {elsewhereSince}. З міркувань безпеки в обліковий запис можна ввійти лише на одному пристрої одночасно.",
+    "It is logged in on another device. For security, an account can be logged in on one device at a time.": "У нього виконано вхід на іншому пристрої. З міркувань безпеки в обліковий запис можна ввійти лише на одному пристрої одночасно.",
+    "Log in anyway": "Усе одно ввійти",
+    "Logging in here logs the other device out.": "Якщо ввійти тут, на іншому пристрої буде виконано вихід.",
+    "This account is logged in somewhere else": "У цей обліковий запис уже ввійшли в іншому місці"
   }
 }

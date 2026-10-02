@@ -2,6 +2,7 @@ import { Access, DrizzleAccessStore, DrizzleStaffAudit } from "@dembrane/access"
 import { render, sendEmail, subjectOf } from "@dembrane/account";
 import { accountsApiJobs, codeSignInGate } from "@dembrane/accounts";
 import { analysisJobs } from "@dembrane/analysis";
+import { posthogCapture } from "@dembrane/analytics";
 import { HttpMedia, LocalMedia, metadataIdToken } from "@dembrane/audio";
 import { createAuth, identityAccount } from "@dembrane/auth";
 import { billingApiJobs, createBilling, HttpMollie, UnconfiguredMollie } from "@dembrane/billing";
@@ -34,6 +35,7 @@ import { httpDeliver, webhookJobs } from "@dembrane/webhooks";
 import { buildApp } from "./app";
 import { API_ASSETS } from "./assets";
 import { principalLookup } from "./principals";
+import { overlapReporter } from "./sign-in-overlap";
 
 // Before anything else, and before the configuration that needs secrets: an image that
 // lacks a file the API reads exits here instead of serving 500s.
@@ -124,7 +126,14 @@ const auth = createAuth({
     });
   },
   defaultDirectusRoleId: null,
+  onOverlap: (overlap) => void reportOverlap(overlap),
 });
+
+const reportOverlap = overlapReporter(
+  database.db,
+  posthogCapture(config.http.dashboardUrl, logger),
+  logger,
+);
 
 // The API only enqueues: a DBOS client, no executor. Boot does not wait on it, so a
 // database that is briefly unreachable does not keep the API from serving; enqueues wait.
