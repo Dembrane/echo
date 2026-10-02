@@ -79,6 +79,32 @@ export function supportPayload(
   return p;
 }
 
+/**
+ * The inbox code of each place a support request is filed from. Named one by one: a new
+ * source gets its own code and sam its own handler, never a guessed one.
+ */
+export const SUPPORT_INBOX_CODES: Readonly<Record<string, string>> = {
+  // The dashboard's Report an issue form (reports.ts).
+  dashboard: "echo_support_manual_escalated_v1",
+  // The in-app chat assistant's reachOutToDembraneSupport (agentic).
+  assistant: "echo_support_chat_escalated_v1",
+  // An outside agent's report_issue tool over MCP (agent-access); its request_tool goes
+  // to sam from agent-access as echo_support_mcp_tool_requested_v1, not through this outbox.
+  agent_mcp: "echo_support_mcp_issue_reported_v1",
+};
+
+/**
+ * The inbox message for one support payload: the same fields the team webhook gets, the
+ * row id as the message id. Null for a source with no code, which leaves the row
+ * unstamped and logged instead of sending sam something it has no handler for.
+ */
+export function supportInboxMessage(
+  payload: Record<string, unknown>,
+): { code: string; json: Record<string, unknown>; id: string } | null {
+  const code = SUPPORT_INBOX_CODES[String(payload.source ?? "")];
+  return code ? { code, json: payload, id: String(payload.id) } : null;
+}
+
 export function supportOutbox(db: Db) {
   return {
     /** Oldest first, so a backlog drains in the order hosts asked. */
@@ -121,7 +147,11 @@ export type SupportOutbox = ReturnType<typeof supportOutbox>;
 
 export interface SupportForwardDeps {
   readonly outbox: Pick<SupportOutbox, "unforwarded" | "markForwarded">;
-  /** Null when SUPPORT_WEBHOOK_URL or ECHO_SUPPORT_WEBHOOK_TOKEN is unset: forwarding is off. */
+  /**
+   * sam's inbox (supportInboxMessage) when SAM_INBOX_* is set, else the team webhook; null
+   * when neither is configured: forwarding is off. The inbox forwarder answers 202 once the
+   * message is queued with its envelope, so a row is stamped when sam's delivery job owns it.
+   */
   readonly forwarder: SupportForwarder | null;
   /** production, echo-next, or the dashboard host: what sam labels the request with. */
   readonly environment: string;

@@ -77,6 +77,7 @@ export {
   notificationId,
   observeOverage,
   openingMessage,
+  overageInboxMessage,
 } from "./overage";
 export { type BillingRouteDeps, billingRoutes, mollieWebhookRoutes } from "./routes";
 export {

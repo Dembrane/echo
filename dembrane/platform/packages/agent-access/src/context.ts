@@ -9,6 +9,8 @@ import {
 import type { Db } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import type { Logger } from "@dembrane/observability";
+import type { SamQueue } from "@dembrane/webhooks";
+import type postgres from "postgres";
 import { FREE_TIER_MONTHLY_CALLS, SCOPE_WRITE } from "./constants";
 import type { AgentStorage, Row } from "./storage";
 
@@ -25,6 +27,17 @@ export interface AgentDeps {
   readonly dashboardUrl: string;
   /** Build stamp reported by whoami and the tool catalogue (the Python BUILD_VERSION). */
   readonly buildVersion: string;
+  /**
+   * sam's inbox, when SAM_INBOX_* is set: tool requests are queued for it in the same
+   * transaction as their insight row. Absent, they stay in the insights table only.
+   */
+  readonly samInbox?: SamInboxDeps | null;
+}
+
+/** Queues inbox messages in a postgres.js transaction; `environment` labels them for sam. */
+export interface SamInboxDeps {
+  readonly sink: SamQueue<postgres.TransactionSql>;
+  readonly environment: string;
 }
 
 /** Month key of the free-tier counter, in UTC like the Python strftime("%Y%m"). */

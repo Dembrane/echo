@@ -119,6 +119,11 @@ msgid "error.field.invalid"
 msgstr "Zkontrolujte toto pole a zkuste to znovu."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/webhook.ts:10
+msgid "error.webhook.invalid_target"
+msgstr "Vyberte, kam tento webhook směřuje: na webovou adresu, nebo do schránky sama se známým kódem."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:27
 msgid "error.document.dpa_not_authorised"
 msgstr "Potvrďte, že jste oprávněni schválit zpracování osobních údajů za svou organizaci."
@@ -154,7 +159,7 @@ msgid "error.field.invalid_email"
 msgstr "Zadejte platnou e-mailovou adresu."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:14
+#: src/lib/errors/messages/webhook.ts:19
 msgid "error.webhook.invalid_url"
 msgstr "Zadejte webovou adresu začínající na http:// nebo https://."
 
@@ -354,7 +359,7 @@ msgid "error.map.selection_not_in_map"
 msgstr "Část vašeho výběru už na mapě není. Načtěte mapu znovu a proveďte výběr."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:10
+#: src/lib/errors/messages/webhook.ts:15
 msgid "error.webhook.invalid_status"
 msgstr "Vyberte pro tento webhook stav: publikováno, koncept nebo archivováno."
 
@@ -417,6 +422,11 @@ msgstr "Rychlý přístup pojme maximálně {max} šablon. Nejprve jednu odebert
 #: src/lib/errors/messages/popcorn.ts:5
 msgid "error.popcorn.branding_tier"
 msgstr "Odstranění značky dembrane je součástí tarifu Changemaker. Pro využití této možnosti přejděte na vyšší tarif."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/webhook.ts:27
+msgid "error.webhook.sam_inbox_unavailable"
+msgstr "Schránka sama zde není nastavena a webhook směřující k samovi nelze otestovat."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:43
@@ -1109,7 +1119,7 @@ msgid "error.field.too_long"
 msgstr "Použijte maximálně {max_length} znaků."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:22
+#: src/lib/errors/messages/webhook.ts:32
 msgid "error.webhook.target_not_allowed"
 msgstr "Na tuto adresu nemůžeme odesílat webhooky. Použijte veřejnou webovou adresu."
 
@@ -1319,7 +1329,7 @@ msgid "error.popcorn.version_not_found"
 msgstr "Tuto verzi prezentace se nám nepodařilo najít."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:18
+#: src/lib/errors/messages/webhook.ts:23
 msgid "error.webhook.not_found"
 msgstr "Tento webhook se nám nepodařilo najít. Možná byl smazán."
 

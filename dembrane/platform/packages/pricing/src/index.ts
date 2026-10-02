@@ -1,4 +1,5 @@
 export {
+  bookingInboxMessage,
   bookingPayload,
   environmentName,
   FORWARD_CRON,

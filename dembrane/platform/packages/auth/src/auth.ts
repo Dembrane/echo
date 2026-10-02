@@ -58,16 +58,18 @@ export function createAuth(opts: AuthOptions) {
     baseURL: opts.baseURL,
     basePath: "/api/auth",
     trustedOrigins: [...opts.trustedOrigins],
-    database: drizzleAdapter(opts.db, {
-      provider: "pg",
-      schema: {
-        user: schema.auth_user,
-        session: schema.auth_session,
-        account: schema.auth_account,
-        verification: schema.auth_verification,
-        twoFactor: schema.auth_two_factor,
-      },
-    }),
+    database: uuidVerificationIds(
+      drizzleAdapter(opts.db, {
+        provider: "pg",
+        schema: {
+          user: schema.auth_user,
+          session: schema.auth_session,
+          account: schema.auth_account,
+          verification: schema.auth_verification,
+          twoFactor: schema.auth_two_factor,
+        },
+      }),
+    ),
     emailAndPassword: {
       enabled: true,
       // Unverified signups cannot sign in, as with Directus's verified public registration.
@@ -213,6 +215,73 @@ export function createAuth(opts: AuthOptions) {
       },
     },
   });
+}
+
+type AdapterInstance = ReturnType<typeof drizzleAdapter>;
+type Adapter = ReturnType<AdapterInstance>;
+type Where = { field: string; value: unknown };
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Better Auth takes a lock by inserting a verification row whose id is a base64url SHA-256
+ * of the lock name, bypassing generateId (reserveVerificationValue, run when a code sign-in
+ * promotes an unverified user). auth_verification.id is a uuid column, so without this every
+ * code sign-in of an unverified user, such as a contact the accounts package created, fails
+ * with a 500. Such an id becomes a UUID derived from it, so the insert succeeds and a second
+ * insert under the same lock name still collides on the primary key, which is what makes it
+ * a lock. Ids that are already UUIDs (everything generateId makes) pass through unchanged.
+ */
+function uuidVerificationIds(inner: AdapterInstance): AdapterInstance {
+  return (options) => wrapAdapter(inner(options));
+}
+
+function wrapAdapter(adapter: Adapter): Adapter {
+  const wrapped = { ...adapter } as Record<string, unknown>;
+  for (const [name, fn] of Object.entries(adapter)) {
+    if (typeof fn !== "function") continue;
+    wrapped[name] =
+      name === "transaction"
+        ? (cb: (trx: Adapter) => Promise<unknown>) =>
+            adapter.transaction((trx) => cb(wrapAdapter(trx as Adapter)))
+        : (arg: unknown, ...rest: unknown[]) =>
+            (fn as (...a: unknown[]) => unknown).call(adapter, verificationArg(arg), ...rest);
+  }
+  return wrapped as Adapter;
+}
+
+function verificationArg(arg: unknown): unknown {
+  if (!arg || typeof arg !== "object") return arg;
+  const a = arg as { model?: unknown; data?: Record<string, unknown>; where?: Where[] };
+  if (a.model !== "verification") return arg;
+  return {
+    ...a,
+    ...(a.data && typeof a.data.id === "string" && { data: { ...a.data, id: asUuid(a.data.id) } }),
+    ...(a.where && {
+      where: a.where.map((w) =>
+        w.field !== "id"
+          ? w
+          : {
+              ...w,
+              value: Array.isArray(w.value)
+                ? w.value.map((v) => (typeof v === "string" ? asUuid(v) : v))
+                : typeof w.value === "string"
+                  ? asUuid(w.value)
+                  : w.value,
+            },
+      ),
+    }),
+  };
+}
+
+/** A UUID (version 8, RFC 9562) derived from any other id, the same input giving the same UUID. */
+function asUuid(id: string): string {
+  if (UUID.test(id)) return id;
+  const b = new Bun.CryptoHasher("sha256").update(id).digest();
+  b[6] = ((b[6] as number) & 0x0f) | 0x80;
+  b[8] = ((b[8] as number) & 0x3f) | 0x80;
+  const h = b.subarray(0, 16).toString("hex");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 
 /** Directus's role for public signups (Basic User on prod). */

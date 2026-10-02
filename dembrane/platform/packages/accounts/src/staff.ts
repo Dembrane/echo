@@ -24,6 +24,7 @@ import {
   validUntil,
 } from "./offer";
 import { offerPdf, type PlacedField, pageCountOf, textPdf } from "./pdf";
+import { releaseHeldContacts } from "./prospect";
 import { type DocumentRow, type LegalRow, store } from "./storage";
 import { createTask, ensureBillingTask, settleTask, type TaskKind } from "./tasks";
 import {
@@ -170,6 +171,8 @@ export async function enableAccount(
         updated_at: nowIso,
       });
     await ensureBillingTask(d, tx, org.id, who.directusUserId);
+    // Enabling is staff saying the customer may use their account now.
+    await releaseHeldContacts(tx, org.id);
     await emit(d, tx, {
       orgId: org.id,
       actor: actorOf(who),
@@ -395,6 +398,8 @@ async function sendOfferIn(
   const now = d.now();
   const doc = (await store.document(tx, orgId, docId)) as DocumentRow;
   await store.updateDocument(tx, docId, { status: "sent", sentAt: now, updatedAt: now });
+  // The customer must sign it, so a contact held by an unpublished demo can now sign in.
+  await releaseHeldContacts(tx, orgId);
   const task = await createTask(d, tx, {
     ...(taskId && { id: taskId }),
     orgId,
@@ -586,6 +591,8 @@ async function markSent(
   const now = d.now();
   const doc = (await store.document(tx, orgId, docId)) as DocumentRow;
   await store.updateDocument(tx, docId, { status: "sent", sentAt: now, updatedAt: now });
+  // A document to sign needs the customer to act, so a held contact can now sign in.
+  if (doc.requiresSignature) await releaseHeldContacts(tx, orgId);
   let taskId: string | null = null;
   if (task)
     taskId = (

@@ -119,6 +119,11 @@ msgid "error.field.invalid"
 msgstr "Controlla questo campo e riprova."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/webhook.ts:10
+msgid "error.webhook.invalid_target"
+msgstr "Scegli dove va questo webhook: un indirizzo web o la casella di sam con un codice noto."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:27
 msgid "error.document.dpa_not_authorised"
 msgstr "Conferma di essere autorizzato ad accettare il trattamento dei dati per la tua organizzazione."
@@ -154,7 +159,7 @@ msgid "error.field.invalid_email"
 msgstr "Inserisci un indirizzo email valido."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:14
+#: src/lib/errors/messages/webhook.ts:19
 msgid "error.webhook.invalid_url"
 msgstr "Inserisci un indirizzo web che inizi con http:// o https://."
 
@@ -354,7 +359,7 @@ msgid "error.map.selection_not_in_map"
 msgstr "Parte della selezione non è più presente sulla mappa. Ricarica la mappa e seleziona di nuovo."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:10
+#: src/lib/errors/messages/webhook.ts:15
 msgid "error.webhook.invalid_status"
 msgstr "Scegli uno stato per questo webhook: pubblicato, bozza o archiviato."
 
@@ -417,6 +422,11 @@ msgstr "L'accesso rapido supporta fino a {max} modelli. Rimuovine prima uno."
 #: src/lib/errors/messages/popcorn.ts:5
 msgid "error.popcorn.branding_tier"
 msgstr "La rimozione del marchio dembrane è inclusa nel piano Changemaker. Effettua l'upgrade per utilizzarla."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/webhook.ts:27
+msgid "error.webhook.sam_inbox_unavailable"
+msgstr "La casella di sam non è configurata qui, e un webhook diretto a sam non può essere testato."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:43
@@ -1109,7 +1119,7 @@ msgid "error.field.too_long"
 msgstr "Usa al massimo {max_length} caratteri."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:22
+#: src/lib/errors/messages/webhook.ts:32
 msgid "error.webhook.target_not_allowed"
 msgstr "Non possiamo inviare webhook a questo indirizzo. Usa un indirizzo web pubblico."
 
@@ -1319,7 +1329,7 @@ msgid "error.popcorn.version_not_found"
 msgstr "Non siamo riusciti a trovare questa versione della presentazione."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:18
+#: src/lib/errors/messages/webhook.ts:23
 msgid "error.webhook.not_found"
 msgstr "Non siamo riusciti a trovare questo webhook. Potrebbe essere stato eliminato."
 

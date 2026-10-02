@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { Writable } from "node:stream";
 import { createLogger } from "@dembrane/observability";
 import {
+  bookingInboxMessage,
   bookingPayload,
   environmentName,
   type Forwarder,
@@ -102,4 +103,27 @@ test("httpForwarder posts JSON with the shared token header", async () => {
   expect(calls[0]?.url).toBe("https://sam.example/hook");
   expect(calls[0]?.init.headers).toMatchObject({ "x-echo-support-token": "tok" });
   expect(calls[0]?.init.body).toBe('{"id":"1"}');
+});
+
+test("an app booking goes to sam's inbox as echo_pricing_booking_confirmed_v1 under its booking uid", () => {
+  const payload = bookingPayload(row("1"), "production");
+  expect(bookingInboxMessage(payload)).toEqual({
+    code: "echo_pricing_booking_confirmed_v1",
+    json: payload,
+    id: "bk-1",
+  });
+  expect(bookingInboxMessage({ ...payload, kind: "something_else" })).toBeNull();
+  expect(bookingInboxMessage({ ...payload, booking_uid: "" })).toBeNull();
+});
+
+test("a booking configured on the website's needs form is website_pricing_booking_confirmed_v1, same payload", () => {
+  const payload = bookingPayload(row("2", { mount: "site" }), "production");
+  const app = bookingPayload(row("2"), "production");
+  expect(bookingInboxMessage(payload)).toEqual({
+    code: "website_pricing_booking_confirmed_v1",
+    json: payload,
+    id: "bk-2",
+  });
+  // Only the origin differs between the two payloads.
+  expect({ ...payload, mount: "app" } as Record<string, unknown>).toEqual(app);
 });

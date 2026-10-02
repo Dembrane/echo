@@ -3,6 +3,7 @@ import { conversationForBff, enrich } from "@dembrane/conversations";
 import { BadRequestError, ForbiddenError, NotFoundError } from "@dembrane/core";
 import { projectFor } from "@dembrane/http";
 import { directusRow } from "@dembrane/legacy-shape";
+import { enqueueSamMessage } from "@dembrane/webhooks";
 import { type AgentContext, type AgentDeps, orgAgentAccessEnabled } from "./context";
 import { type DocsCorpus, NO_DOCS } from "./knowledge";
 import type { Row } from "./storage";
@@ -492,7 +493,14 @@ export async function reportIssue(
   return { id, status: "new", kind: "issue" };
 }
 
-/** A missing tool, filed as a capability gap in the table the assistant's insights use. */
+/** sam's code for a tool request; report_issue rows reach sam through the support outbox. */
+export const TOOL_REQUEST_INBOX_CODE = "echo_support_mcp_tool_requested_v1";
+
+/**
+ * A missing tool, filed as a capability gap in the table the assistant's insights use.
+ * With sam's inbox configured it is also queued for sam in the same transaction, under the
+ * insight's id; that table has no outbox, so without the inbox nothing leaves echo.
+ */
 export async function requestTool(
   d: ToolDeps,
   ctx: AgentContext,
@@ -505,6 +513,8 @@ export async function requestTool(
   let content = `[${ctx.clientName} via MCP] ${clip(description)}`;
   if (example) content += `\nExample: ${clip(example, 1000)}`;
   const suggested = Array.from(name.trim()).slice(0, 120).join("").trim();
+  const now = d.now();
+  const inbox = d.samInbox;
   const id = await d.store.fileInsight({
     source: SOURCE_AGENT_MCP,
     kind: "capability_gap",
@@ -512,7 +522,32 @@ export async function requestTool(
     suggestedCapability: suggested || null,
     workspaceId: null,
     projectId: null,
-    now: d.now(),
+    now,
+    ...(inbox && {
+      inTransaction: (tx, insightId) =>
+        enqueueSamMessage(
+          inbox.sink,
+          {
+            code: TOOL_REQUEST_INBOX_CODE,
+            id: insightId,
+            json: {
+              id: insightId,
+              environment: inbox.environment,
+              message: content.trim(),
+              source: SOURCE_AGENT_MCP,
+              kind: "tool_request",
+              ...(suggested && { tool_name: suggested }),
+              client_name: ctx.clientName,
+              client_id: ctx.clientId,
+              grant_id: ctx.grantId,
+              app_user_id: ctx.appUserId,
+              directus_user_id: ctx.directusUserId,
+              created_at: now.toISOString(),
+            },
+          },
+          { tx },
+        ),
+    }),
   });
   return { id, status: "new", kind: "tool_request" };
 }

@@ -1,0 +1,26 @@
+[
+  {
+    "from": "api.staging.dembrane.com",
+    "timestamp": "1790000000",
+    "id": "5e000000-0000-4000-8000-000000000001",
+    "secret": "ssssssssssssssssssssssssssssssssssssssssssssssss",
+    "body": "{\"code\":\"echo_support_manual_escalated_v1\",\"json\":{\"id\":\"5e000000-0000-4000-8000-000000000001\",\"environment\":\"echo-next\",\"message\":\"the report is empty\",\"source\":\"dashboard\"}}",
+    "expected": "sha256=564d3ba8e5677aaafb6e447d37403ad3ada5c78e7076d2a2b3e00a002cbf7210"
+  },
+  {
+    "from": "api.dembrane.com",
+    "timestamp": "1790000123",
+    "id": "0f8e7d6c-5b4a-4c3d-8e2f-1a0b9c8d7e6f",
+    "secret": "k3y-with-ünïcödé-is-still-bytes-0123456789",
+    "body": "{\"code\":\"echo_account_ticket_opened_v1\",\"json\":{\"id\":\"t-1\",\"subject\":\"Kwartaalfacturen? Café ’s-Hertogenbosch\",\"message\":\"日本語のテキスト 🎉\\nzweite Zeile\",\"org\":{\"name\":\"Gemeente Testdorp\"}}}",
+    "expected": "sha256=3b1b80ad3f6b264ec1e4a0a67d84d3dbd3b0974d3019d910f4069c07a2e39617"
+  },
+  {
+    "from": "api.staging.dembrane.com",
+    "timestamp": "0",
+    "id": "ep-1:closed:20261002T101500",
+    "secret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "body": "{\"code\":\"echo_billing_overage_v1\",\"json\":{}}",
+    "expected": "sha256=0858b9338bd4dc352a749efb4acb26f89f5e830b77f847c3b858e1f2a3a02899"
+  }
+]

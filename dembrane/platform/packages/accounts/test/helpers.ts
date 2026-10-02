@@ -163,6 +163,7 @@ export async function world(name: string, routes: (d: AccountsDeps) => Hono<Env>
       },
       eventsEnabled: true,
       slackEnabled: true,
+      samInbox: false,
       reminderIntervalDays: 7,
       inviteSecret: "x".repeat(32),
       demo: {

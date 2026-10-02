@@ -577,6 +577,11 @@ export async function recordBooking(
       type: "booking.recorded",
       subject: { type: "booking", id: booking.uid },
       detail: { start: booking.start, status: booking.status },
+      webhook: {
+        event: "account.call.booked",
+        org: orgPayload(org),
+        booking: { uid: booking.uid, start: booking.start, status: booking.status },
+      },
     });
   });
   return { recorded: true };
