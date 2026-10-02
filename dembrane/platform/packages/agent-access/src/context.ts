@@ -9,7 +9,7 @@ import {
 import type { Db } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import type { Logger } from "@dembrane/observability";
-import type { SamMessageSink } from "@dembrane/webhooks";
+import type { SamQueue } from "@dembrane/webhooks";
 import type postgres from "postgres";
 import { FREE_TIER_MONTHLY_CALLS, SCOPE_WRITE } from "./constants";
 import type { AgentStorage, Row } from "./storage";
@@ -36,7 +36,7 @@ export interface AgentDeps {
 
 /** Queues inbox messages in a postgres.js transaction; `environment` labels them for sam. */
 export interface SamInboxDeps {
-  readonly sink: SamMessageSink<{ tx: postgres.TransactionSql }>;
+  readonly sink: SamQueue<postgres.TransactionSql>;
   readonly environment: string;
 }
 

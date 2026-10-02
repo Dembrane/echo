@@ -4,11 +4,14 @@ import { Access, MemoryAccessStore, MemoryStaffAudit } from "@dembrane/access";
 import type { Signed } from "@dembrane/http";
 import { createLogger } from "@dembrane/observability";
 import {
+  deliverSamMessage,
+  MemorySamQueue,
   runDispatch,
   SAM_INBOX_WEBHOOK_CODES,
   type SamEnvelope,
   SamInboxRetry,
   type WebhooksStorage,
+  webhookMessageId,
 } from "../src";
 import { setWebhookTarget, testWebhook, type WebhookDeps } from "../src/service";
 import type { WebhookRow } from "../src/storage";
@@ -176,14 +179,18 @@ describe("aiming a webhook at sam's inbox", () => {
 });
 
 describe("dispatching a webhook aimed at sam's inbox", () => {
-  const payload = { event: "conversation.transcribed", conversation: { id: "c1" } };
+  const payload = (timestamp: string) => ({
+    event: "conversation.transcribed",
+    timestamp,
+    conversation: { id: "c1", transcript: "hello" },
+  });
   const inboxHook = row({ url: "sam-inbox:echo_sales_call_transcript_v1" });
 
-  const setup = (hook: WebhookRow, status = 200) => {
-    const posted: SamEnvelope[] = [];
+  const setup = (hook: WebhookRow) => {
     const delivered: unknown[] = [];
+    const inbox = new MemorySamQueue();
     return {
-      posted,
+      inbox,
       delivered,
       deps: {
         store: { get: async () => hook } as unknown as WebhooksStorage,
@@ -192,46 +199,52 @@ describe("dispatching a webhook aimed at sam's inbox", () => {
           return { status: 200, text: "" };
         },
         logger: quiet,
-        inbox: async (e: SamEnvelope) => {
-          posted.push(e);
-          return { status, text: "" };
-        },
+        inbox,
       },
     };
   };
 
-  test("sends the same payload under the code, with the run's id as the message id", async () => {
+  test("queues the same payload under the code, with conversation and event as the message id", async () => {
     const s = setup(inboxHook);
-    await runDispatch(s.deps, { webhookId: HOOK, payload }, { id: "run-1" });
-    await runDispatch(s.deps, { webhookId: HOOK, payload }, { id: "run-1" });
+    await runDispatch(s.deps, { webhookId: HOOK, payload: payload("2026-10-02T09:00:00") });
     expect(s.delivered).toHaveLength(0);
-    expect(s.posted).toHaveLength(2);
-    expect(s.posted[0]).toEqual({
-      code: "echo_sales_call_transcript_v1",
-      id: "run-1",
-      body: JSON.stringify({ code: "echo_sales_call_transcript_v1", json: payload }),
-    });
-    // A retry of the same run is the same message.
-    expect(s.posted[1]).toEqual(s.posted[0] as SamEnvelope);
+    expect(s.inbox.of<SamEnvelope>(deliverSamMessage.name)).toEqual([
+      {
+        code: "echo_sales_call_transcript_v1",
+        id: "c1:conversation.transcribed",
+        body: JSON.stringify({
+          code: "echo_sales_call_transcript_v1",
+          json: payload("2026-10-02T09:00:00"),
+        }),
+      },
+    ]);
+  });
+
+  test("the same event queued again, with a new timestamp, keeps the first body", async () => {
+    const s = setup(inboxHook);
+    await runDispatch(s.deps, { webhookId: HOOK, payload: payload("2026-10-02T09:00:00") });
+    await runDispatch(s.deps, { webhookId: HOOK, payload: payload("2026-10-02T10:00:00") });
+    const sent = s.inbox.of<SamEnvelope>(deliverSamMessage.name);
+    expect(sent).toHaveLength(1);
+    expect(JSON.parse(sent[0]?.body ?? "").json.timestamp).toBe("2026-10-02T09:00:00");
+    expect(webhookMessageId({ event: "report.generated", report: { id: 7 } })).toBe(
+      "7:report.generated",
+    );
   });
 
   test("a customer webhook still goes to its URL and never to the inbox", async () => {
     const s = setup(row());
-    await runDispatch(s.deps, { webhookId: HOOK, payload }, { id: "run-2" });
-    expect(s.posted).toHaveLength(0);
-    expect(s.delivered).toEqual([payload]);
+    const p = payload("t");
+    await runDispatch(s.deps, { webhookId: HOOK, payload: p });
+    expect(s.inbox.jobs).toHaveLength(0);
+    expect(s.delivered).toEqual([p]);
   });
 
-  test("busy retries, a refusal does not, an unconfigured inbox fails the run", async () => {
-    await expect(
-      runDispatch(setup(inboxHook, 503).deps, { webhookId: HOOK, payload }, { id: "r" }),
-    ).rejects.toBeInstanceOf(SamInboxRetry);
-    await runDispatch(setup(inboxHook, 409).deps, { webhookId: HOOK, payload }, { id: "r" });
+  test("an unconfigured inbox fails the run instead of dropping the event", async () => {
     await expect(
       runDispatch(
         { ...setup(inboxHook).deps, inbox: null },
-        { webhookId: HOOK, payload },
-        { id: "r" },
+        { webhookId: HOOK, payload: payload("t") },
       ),
     ).rejects.toBeInstanceOf(SamInboxRetry);
   });

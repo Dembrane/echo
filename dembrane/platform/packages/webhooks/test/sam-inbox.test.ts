@@ -4,10 +4,15 @@ import { createLogger } from "@dembrane/observability";
 import {
   deliverSamMessage,
   enqueueSamMessage,
+  MemorySamQueue,
   postSamEnvelope,
+  type Quarantined,
+  quarantineSamMessage,
   runDeliverSamMessage,
+  runQuarantineSamMessage,
   SAM_INBOX_MAX_BODY,
   type SamEnvelope,
+  SamInboxQuarantined,
   SamInboxRetry,
   samEnvelope,
   samInboxForwarder,
@@ -82,7 +87,7 @@ test("2xx is done; 408, 429 and 5xx retry; every other answer is permanent", () 
 
 describe("the sender against a receiver", () => {
   const seen: { headers: Headers; raw: Uint8Array }[] = [];
-  let answer = 200;
+  const answer = 200;
   let server: ReturnType<typeof Bun.serve>;
   let url = "";
   const target = () => ({ url, secret: "z".repeat(40), from: "api.staging.dembrane.com" });
@@ -180,20 +185,6 @@ describe("the sender against a receiver", () => {
       }),
     ).rejects.toThrow("private");
   });
-
-  test("the outbox forwarder sends a named payload and answers 422 for one it cannot name", async () => {
-    seen.length = 0;
-    answer = 200;
-    const fwd = samInboxForwarder(target(), { allowPrivate: true }, (p) =>
-      p.kind === "known" ? { code: "known_v1", json: p, id: String(p.id) } : null,
-    );
-    expect((await fwd.post({ kind: "known", id: "k1" })).status).toBe(200);
-    expect((await fwd.post({ kind: "other", id: "k2" })).status).toBe(422);
-    expect(
-      (await fwd.post({ kind: "known", id: "k3", big: "x".repeat(SAM_INBOX_MAX_BODY) })).status,
-    ).toBe(422);
-    expect(seen.map((r) => r.headers.get("x-webhook-id"))).toEqual(["k1"]);
-  });
 });
 
 describe("the delivery job", () => {
@@ -204,64 +195,78 @@ describe("the delivery job", () => {
   });
   const posting = (status: number | Error) => {
     const sent: SamEnvelope[] = [];
+    const quarantined: Quarantined[] = [];
     return {
       sent,
+      quarantined,
       post: async (e: SamEnvelope) => {
         sent.push(e);
         if (status instanceof Error) throw status;
         return { status, text: "nope" };
+      },
+      quarantine: async (q: Quarantined) => {
+        quarantined.push(q);
       },
     };
   };
 
   test("a 2xx completes", async () => {
     const p = posting(200);
-    await runDeliverSamMessage({ post: p.post, logger }, envelope);
+    await runDeliverSamMessage({ ...p, logger }, envelope);
     expect(p.sent).toEqual([envelope]);
+    expect(p.quarantined).toEqual([]);
   });
 
   test("busy, down or unreachable throws so the queue retries", async () => {
     for (const s of [408, 429, 500, 503]) {
-      await expect(
-        runDeliverSamMessage({ post: posting(s).post, logger }, envelope),
-      ).rejects.toBeInstanceOf(SamInboxRetry);
+      const p = posting(s);
+      await expect(runDeliverSamMessage({ ...p, logger }, envelope)).rejects.toBeInstanceOf(
+        SamInboxRetry,
+      );
+      expect(p.quarantined).toEqual([]);
     }
     await expect(
-      runDeliverSamMessage({ post: posting(new Error("ECONNRESET")).post, logger }, envelope),
+      runDeliverSamMessage({ ...posting(new Error("ECONNRESET")), logger }, envelope),
     ).rejects.toThrow("ECONNRESET");
   });
 
-  test("a refusal is logged and not retried", async () => {
+  test("a refusal is quarantined with its envelope and the answer, not retried", async () => {
     lines.length = 0;
-    for (const s of [400, 401, 403, 409, 413, 422])
-      await runDeliverSamMessage({ post: posting(s).post, logger }, envelope);
-    const refused = lines.filter((l) => l.signal === "sam_inbox.refused");
-    expect(refused).toHaveLength(6);
-    expect(refused[0]).toMatchObject({
-      code: "echo_account_document_signed_v1",
-      id: "ev",
-      status: 400,
+    for (const status of [400, 401, 403, 409, 413, 422]) {
+      const p = posting(status);
+      await runDeliverSamMessage({ ...p, logger }, envelope);
+      expect(p.quarantined).toEqual([
+        { ...envelope, status, reason: `sam answered ${status}: nope` },
+      ]);
+    }
+    expect(lines.filter((l) => l.signal === "sam_inbox.refused")).toHaveLength(6);
+  });
+
+  test("a quarantine run fails on purpose, so it stays failed and visible", async () => {
+    const q = quarantineSamMessage.schema.parse({
+      ...envelope,
+      reason: "sam answered 409",
+      status: 409,
     });
+    await expect(runQuarantineSamMessage({ logger }, q)).rejects.toBeInstanceOf(
+      SamInboxQuarantined,
+    );
+    expect(quarantineSamMessage.retryLimit).toBe(0);
   });
 
   test("an unconfigured inbox fails the run instead of dropping it", async () => {
-    await expect(runDeliverSamMessage({ post: null, logger }, envelope)).rejects.toBeInstanceOf(
-      SamInboxRetry,
-    );
+    await expect(
+      runDeliverSamMessage({ ...posting(200), post: null, logger }, envelope),
+    ).rejects.toBeInstanceOf(SamInboxRetry);
   });
 
-  test("enqueueing stores the serialised envelope with the producer's options", async () => {
-    const queued: { name: string; payload: unknown; opts: unknown }[] = [];
-    await enqueueSamMessage(
-      {
-        enqueue: async (def, payload, opts) => {
-          queued.push({ name: def.name, payload, opts });
-        },
-      },
-      { code: "echo_support_mcp_tool_requested_v1", json: { a: 1 }, id: "i1" },
-      { tx: "the-tx" },
-    );
-    expect(queued).toEqual([
+  test("enqueueing stores the serialised envelope once per (code, id), in the producer's transaction", async () => {
+    const q = new MemorySamQueue();
+    const m = { code: "echo_support_mcp_tool_requested_v1", json: { a: 1 }, id: "i1" };
+    await enqueueSamMessage(q, m, { tx: "the-tx" });
+    // The same event again with a changed body keeps the first bytes.
+    await enqueueSamMessage(q, { ...m, json: { a: 2 } });
+    expect(q.jobs).toEqual([
       {
         name: deliverSamMessage.name,
         payload: {
@@ -269,9 +274,58 @@ describe("the delivery job", () => {
           id: "i1",
           body: '{"code":"echo_support_mcp_tool_requested_v1","json":{"a":1}}',
         },
-        opts: { tx: "the-tx" },
+        tx: "the-tx",
+        workflowId: "sam-inbox:echo_support_mcp_tool_requested_v1:i1",
       },
     ]);
-    expect(deliverSamMessage.schema.parse(queued[0]?.payload)).toEqual(queued[0]?.payload as never);
+  });
+
+  test("a message sam would refuse for its size is quarantined, not queued for delivery", async () => {
+    const q = new MemorySamQueue();
+    await enqueueSamMessage(q, {
+      code: "echo_billing_overage_v1",
+      json: { big: "x".repeat(SAM_INBOX_MAX_BODY) },
+      id: "ep:opened",
+    });
+    expect(q.of(deliverSamMessage.name)).toEqual([]);
+    expect(q.of(quarantineSamMessage.name)).toEqual([
+      expect.objectContaining({ code: "echo_billing_overage_v1", id: "ep:opened", status: null }),
+    ]);
+  });
+});
+
+describe("the outbox forwarder", () => {
+  const toMessage = (p: Record<string, unknown>) =>
+    p.kind === "known" ? { code: "known_v1", json: p, id: String(p.id) } : null;
+
+  test("queues a named payload and answers 202, so the outbox stamps the row", async () => {
+    const q = new MemorySamQueue();
+    const fwd = samInboxForwarder(q, toMessage);
+    expect((await fwd.post({ kind: "known", id: "k1" })).status).toBe(202);
+    expect(q.of<SamEnvelope>(deliverSamMessage.name).map((e) => e.id)).toEqual(["k1"]);
+  });
+
+  test("a payload it cannot name is quarantined and still answered 202, so it leaves the batch", async () => {
+    const q = new MemorySamQueue();
+    const fwd = samInboxForwarder(q, toMessage);
+    expect((await fwd.post({ kind: "other", id: "k2" })).status).toBe(202);
+    expect(q.of(deliverSamMessage.name)).toEqual([]);
+    expect(q.of(quarantineSamMessage.name)).toEqual([
+      expect.objectContaining({
+        code: null,
+        id: "k2",
+        reason: "no sam inbox code for this payload",
+      }),
+    ]);
+  });
+
+  test("a rebuilt payload under the same id resends the first envelope", async () => {
+    const q = new MemorySamQueue();
+    const fwd = samInboxForwarder(q, toMessage);
+    await fwd.post({ kind: "known", id: "ep", peak: 5 });
+    await fwd.post({ kind: "known", id: "ep", peak: 7 });
+    const sent = q.of<SamEnvelope>(deliverSamMessage.name);
+    expect(sent).toHaveLength(1);
+    expect(JSON.parse(sent[0]?.body ?? "").json.peak).toBe(5);
   });
 });

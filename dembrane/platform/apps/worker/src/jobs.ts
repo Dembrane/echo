@@ -119,15 +119,16 @@ export function registrations(deps: {
     config.support.forwardWebhookUrl && config.support.forwardWebhookToken
       ? httpForwarder(config.support.forwardWebhookUrl, config.support.forwardWebhookToken)
       : null;
-  // With sam's inbox configured, every message for sam goes there instead: the outboxes
-  // through a forwarder that names each payload's code, account events as queued jobs.
+  // With sam's inbox configured, every message for sam goes there instead, as a queued
+  // delivery whose envelope is stored once: the outboxes through a forwarder that names
+  // each payload's code, account events and webhooks from their own producers.
   const inboxTarget =
     config.samInbox.url && config.samInbox.secret && config.samInbox.from
       ? { url: config.samInbox.url, secret: config.samInbox.secret, from: config.samInbox.from }
       : null;
   const inboxOpts = { allowPrivate: config.webhooks.allowPrivateTargets };
   const toSam = (toMessage: (payload: Record<string, unknown>) => SamMessage | null) =>
-    inboxTarget ? samInboxForwarder(inboxTarget, inboxOpts, toMessage) : teamWebhook;
+    inboxTarget ? samInboxForwarder(deps.accountsJobs, toMessage) : teamWebhook;
   const analysisDeps = {
     db,
     logger,
@@ -188,9 +189,9 @@ export function registrations(deps: {
         const store = webhooksStorage(db);
         const deliver = httpDeliver({ allowPrivate: config.webhooks.allowPrivateTargets });
         // Deliveries wait on other people's servers, so many run at once.
-        const inbox = inboxTarget ? httpSamInbox(inboxTarget, inboxOpts) : null;
-        await queue.work(dispatchWebhook, { concurrency: 20 }, (p, job) =>
-          runDispatch({ store, deliver, logger, inbox }, p, job),
+        const inbox = inboxTarget ? queue : null;
+        await queue.work(dispatchWebhook, { concurrency: 20 }, (p) =>
+          runDispatch({ store, deliver, logger, inbox }, p),
         );
       },
     },
@@ -262,6 +263,7 @@ export function registrations(deps: {
       dashboardUrl: deps.dashboardUrl,
       eventsUrl: config.accounts.eventsUrl ?? null,
       eventsSecret: config.accounts.eventsSecret ?? null,
+      samInbox: Boolean(inboxTarget),
       slackWebhookUrl: config.accounts.slackWebhookUrl ?? null,
       reminderIntervalDays: config.accounts.reminderIntervalDays,
       fetchText: httpFetchText,

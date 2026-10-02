@@ -149,7 +149,8 @@ export interface SupportForwardDeps {
   readonly outbox: Pick<SupportOutbox, "unforwarded" | "markForwarded">;
   /**
    * sam's inbox (supportInboxMessage) when SAM_INBOX_* is set, else the team webhook; null
-   * when neither is configured: forwarding is off.
+   * when neither is configured: forwarding is off. The inbox forwarder answers 202 once the
+   * message is queued with its envelope, so a row is stamped when sam's delivery job owns it.
    */
   readonly forwarder: SupportForwarder | null;
   /** production, echo-next, or the dashboard host: what sam labels the request with. */

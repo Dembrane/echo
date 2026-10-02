@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { Writable } from "node:stream";
+import { overageInboxMessage } from "@dembrane/billing";
 import { runForwardSupport, type SupportRow, supportInboxMessage } from "@dembrane/feedback";
 import { createLogger } from "@dembrane/observability";
 import {
@@ -8,7 +9,16 @@ import {
   type PricingRow,
   runForwardBookings,
 } from "@dembrane/pricing";
-import { samInboxForwarder, samInboxSignature } from "@dembrane/webhooks";
+import {
+  deliverSamMessage,
+  httpSamInbox,
+  MemorySamQueue,
+  quarantineSamMessage,
+  runDeliverSamMessage,
+  type SamEnvelope,
+  samInboxForwarder,
+  samInboxSignature,
+} from "@dembrane/webhooks";
 
 const logger = createLogger(
   { service: "t", release: "r", env: "test", level: "error" },
@@ -37,8 +47,6 @@ describe("outboxes to sam", () => {
   });
   afterAll(() => server.stop(true));
 
-  const inbox = (toMessage: Parameters<typeof samInboxForwarder>[2]) =>
-    samInboxForwarder({ url: `${base}/inbox`, secret, from }, { allowPrivate: true }, toMessage);
   const team = () => httpForwarder(`${base}/team`, "team-token");
 
   const supportRow = (id: string, source: string): SupportRow => ({
@@ -55,99 +63,166 @@ describe("outboxes to sam", () => {
     org_id: null,
   });
 
-  const runSupport = async (forwarder: ReturnType<typeof team>) => {
+  const supportOutbox = (rows: SupportRow[]) => {
     const stamped: string[] = [];
-    const rows = [supportRow("s1", "dashboard"), supportRow("s2", "assistant")];
-    await runForwardSupport({
+    return {
+      stamped,
       outbox: {
-        unforwarded: async () => rows.filter((r) => !stamped.includes(r.id)),
+        // Oldest first, 50 at a time, as the real outbox reads.
+        unforwarded: async (limit: number) =>
+          rows.filter((r) => !stamped.includes(r.id)).slice(0, limit),
         markForwarded: async (id: string) => {
           stamped.push(id);
         },
       },
-      forwarder,
+    };
+  };
+
+  test("support requests with the inbox on: queued by source code, delivered signed", async () => {
+    const q = new MemorySamQueue();
+    const o = supportOutbox([supportRow("s1", "dashboard"), supportRow("s2", "assistant")]);
+    await runForwardSupport({
+      outbox: o.outbox,
+      forwarder: samInboxForwarder(q, supportInboxMessage),
       environment: "echo-next",
       dashboardUrl: "",
       logger,
     });
-    return stamped;
-  };
-
-  test("support requests with the inbox on: signed, coded by source, row id as message id", async () => {
-    seen.length = 0;
-    expect(await runSupport(inbox(supportInboxMessage))).toEqual(["s1", "s2"]);
-    expect(seen.map((r) => r.path)).toEqual(["/inbox", "/inbox"]);
-    expect(seen.map((r) => JSON.parse(r.raw).code)).toEqual([
-      "echo_support_manual_escalated_v1",
-      "echo_support_chat_escalated_v1",
+    expect(o.stamped).toEqual(["s1", "s2"]);
+    const queued = q.of<SamEnvelope>(deliverSamMessage.name);
+    expect(queued.map((e) => [e.code, e.id])).toEqual([
+      ["echo_support_manual_escalated_v1", "s1"],
+      ["echo_support_chat_escalated_v1", "s2"],
     ]);
-    for (const r of seen) {
-      const id = r.headers.get("x-webhook-id") as string;
-      expect(JSON.parse(r.raw).json.id).toBe(id);
+
+    // The worker then sends each stored envelope.
+    seen.length = 0;
+    const post = httpSamInbox({ url: `${base}/inbox`, secret, from }, { allowPrivate: true });
+    for (const e of queued)
+      await runDeliverSamMessage({ post, logger, quarantine: async () => {} }, e);
+    expect(seen.map((r) => r.path)).toEqual(["/inbox", "/inbox"]);
+    for (const [i, r] of seen.entries()) {
+      expect(r.raw).toBe(queued[i]?.body as string);
       expect(r.headers.get("x-echo-support-token")).toBeNull();
       expect(r.headers.get("x-webhook-signature")).toBe(
         samInboxSignature({
           secret,
           from,
           timestamp: r.headers.get("x-webhook-timestamp") as string,
-          id,
+          id: r.headers.get("x-webhook-id") as string,
           body: r.raw,
         }),
       );
     }
   });
 
+  test("fifty unsendable rows at the head of the outbox no longer hold back newer ones", async () => {
+    const q = new MemorySamQueue();
+    const rows = [
+      ...Array.from({ length: 55 }, (_, i) => supportRow(`old-${i}`, "legacy_source")),
+      supportRow("new", "dashboard"),
+    ];
+    const o = supportOutbox(rows);
+    const d = {
+      outbox: o.outbox,
+      forwarder: samInboxForwarder(q, supportInboxMessage),
+      environment: "echo-next",
+      dashboardUrl: "",
+      logger,
+    };
+    await runForwardSupport(d);
+    await runForwardSupport(d);
+    expect(o.stamped).toHaveLength(56);
+    expect(q.of(quarantineSamMessage.name)).toHaveLength(55);
+    expect(q.of<SamEnvelope>(deliverSamMessage.name).map((e) => e.id)).toEqual(["new"]);
+  });
+
   test("support requests with the inbox off: the team webhook, unchanged", async () => {
     seen.length = 0;
-    expect(await runSupport(team())).toEqual(["s1", "s2"]);
+    const o = supportOutbox([supportRow("s1", "dashboard"), supportRow("s2", "assistant")]);
+    await runForwardSupport({
+      outbox: o.outbox,
+      forwarder: team(),
+      environment: "echo-next",
+      dashboardUrl: "",
+      logger,
+    });
+    expect(o.stamped).toEqual(["s1", "s2"]);
     expect(seen.map((r) => r.path)).toEqual(["/team", "/team"]);
     expect(seen[0]?.headers.get("x-echo-support-token")).toBe("team-token");
     expect(seen[0]?.headers.get("x-webhook-signature")).toBeNull();
     expect(JSON.parse(seen[0]?.raw ?? "")).toMatchObject({ id: "s1", source: "dashboard" });
   });
 
-  const booking = {
-    id: "p1",
-    reference: "DEM-1",
-    booking_uid: "bk-1",
-    booking_status: "accepted",
-    booking_notified_at: null,
-    is_internal: false,
-    email: "a@x.com",
-    locale: null,
-    workspace_id: null,
-    org_id: null,
-    mount: "app",
-    project_id: null,
-    config: null,
-    answers_raw: null,
-  } as unknown as PricingRow;
+  test("an overage notice rebuilt with a changed peak resends the first envelope", async () => {
+    const q = new MemorySamQueue();
+    const fwd = samInboxForwarder(q, overageInboxMessage);
+    const notice = (peak: number) => ({
+      id: "ep-1:opened",
+      environment: "production",
+      message: `Account X has ${peak} recordings, cap 3.`,
+    });
+    // A delivery whose 2xx was lost leaves the row unstamped; the next run rebuilds it.
+    await fwd.post(notice(5));
+    await fwd.post(notice(7));
+    const sent = q.of<SamEnvelope>(deliverSamMessage.name);
+    expect(sent).toHaveLength(1);
+    expect(sent[0]?.code).toBe("echo_billing_overage_v1");
+    expect(JSON.parse(sent[0]?.body ?? "").json.message).toContain("has 5 recordings");
+  });
 
-  test("pricing bookings go to the inbox under their booking uid, or to the team webhook", async () => {
-    for (const [forwarder, path] of [
-      [inbox(bookingInboxMessage), "/inbox"],
-      [team(), "/team"],
-    ] as const) {
-      seen.length = 0;
-      const stamped: string[] = [];
-      await runForwardBookings({
-        store: {
-          unforwardedBookings: async () => (stamped.length ? [] : [booking]),
-          update: async (id: string) => {
-            stamped.push(id);
-            return null as never;
-          },
+  const booking = (mount: "app" | "site") =>
+    ({
+      id: `p-${mount}`,
+      reference: "DEM-1",
+      booking_uid: `bk-${mount}`,
+      booking_status: "accepted",
+      booking_notified_at: null,
+      is_internal: false,
+      email: "a@x.com",
+      locale: null,
+      workspace_id: null,
+      org_id: null,
+      mount,
+      project_id: null,
+      config: null,
+      answers_raw: null,
+    }) as unknown as PricingRow;
+
+  const runBookings = async (forwarder: ReturnType<typeof team>, rows: PricingRow[]) => {
+    const stamped: string[] = [];
+    await runForwardBookings({
+      store: {
+        unforwardedBookings: async () => rows.filter((r) => !stamped.includes(r.id)),
+        update: async (id: string) => {
+          stamped.push(id);
+          return null as never;
         },
-        forwarder,
-        environment: "echo-next",
-        logger,
-      });
-      expect(stamped).toEqual(["p1"]);
-      expect(seen.map((r) => r.path)).toEqual([path]);
-      if (path === "/inbox") {
-        expect(seen[0]?.headers.get("x-webhook-id")).toBe("bk-1");
-        expect(JSON.parse(seen[0]?.raw ?? "").code).toBe("echo_pricing_booking_confirmed_v1");
-      }
-    }
+      },
+      forwarder,
+      environment: "echo-next",
+      logger,
+    });
+    return stamped;
+  };
+
+  test("pricing bookings go to the inbox by origin under their booking uid", async () => {
+    const q = new MemorySamQueue();
+    const rows = [booking("app"), booking("site")];
+    expect(await runBookings(samInboxForwarder(q, bookingInboxMessage), rows)).toEqual([
+      "p-app",
+      "p-site",
+    ]);
+    expect(q.of<SamEnvelope>(deliverSamMessage.name).map((e) => [e.code, e.id])).toEqual([
+      ["echo_pricing_booking_confirmed_v1", "bk-app"],
+      ["website_pricing_booking_confirmed_v1", "bk-site"],
+    ]);
+  });
+
+  test("pricing bookings with the inbox off: the team webhook, unchanged", async () => {
+    seen.length = 0;
+    expect(await runBookings(team(), [booking("app")])).toEqual(["p-app"]);
+    expect(seen.map((r) => r.path)).toEqual(["/team"]);
+    expect(seen[0]?.headers.get("x-echo-support-token")).toBe("team-token");
   });
 });

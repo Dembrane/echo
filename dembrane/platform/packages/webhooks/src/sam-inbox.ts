@@ -133,40 +133,6 @@ export function sendSamMessage(
   return postSamEnvelope(target, samEnvelope(message), opts);
 }
 
-/** The shape the scheduled outboxes (support, pricing bookings, overage notices) post through. */
-export interface OutboxForwarder {
-  post(payload: Record<string, unknown>): Promise<Delivery>;
-}
-
-/**
- * Puts sam's inbox behind an outbox's forwarder, so the outbox keeps its own rule of
- * stamping a row only on a 2xx and the next scheduled run retrying the rest. `toMessage`
- * names the code and id of each payload; a payload it cannot name, or one sam would refuse
- * for its size or code, is answered 422 without a request, as sam would answer it, so the
- * row stays unstamped and logged and the batch goes on.
- */
-export function samInboxForwarder(
-  target: SamInboxTarget,
-  opts: SamInboxOptions,
-  toMessage: (payload: Record<string, unknown>) => SamMessage | null,
-): OutboxForwarder {
-  return {
-    async post(payload) {
-      const message = toMessage(payload);
-      if (!message) return { status: 422, text: "no sam inbox code for this payload" };
-      let envelope: SamEnvelope;
-      try {
-        envelope = samEnvelope(message);
-      } catch (err) {
-        // A message sam would refuse (too large, malformed code) must not stop the batch.
-        if (err instanceof SamInboxError) return { status: 422, text: err.message };
-        throw err;
-      }
-      return postSamEnvelope(target, envelope, opts);
-    },
-  };
-}
-
 /**
  * A project webhook aimed at sam's inbox stores `sam-inbox:<code>` as its URL. The
  * customer routes accept only http and https URLs, so only the staff route can write one,

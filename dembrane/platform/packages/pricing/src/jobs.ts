@@ -115,7 +115,8 @@ export interface ForwardDeps {
   readonly store: Pick<PricingStore, "unforwardedBookings" | "update">;
   /**
    * sam's inbox (bookingInboxMessage) when SAM_INBOX_* is set, else the team webhook; null
-   * when neither is configured: forwarding is off.
+   * when neither is configured: forwarding is off. The inbox forwarder answers 202 once the
+   * message is queued with its envelope, so a row is stamped when sam's delivery job owns it.
    */
   readonly forwarder: Forwarder | null;
   readonly environment: string;

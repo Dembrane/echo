@@ -7,7 +7,7 @@ export {
   isPrivateAddress,
   type Resolve,
 } from "./deliver";
-export { dispatchWebhook, runDispatch, webhookJobs } from "./jobs";
+export { dispatchWebhook, runDispatch, webhookJobs, webhookMessageId } from "./jobs";
 export {
   conversationPayload,
   reportPayload,
@@ -16,7 +16,6 @@ export {
 } from "./payloads";
 export { type WebhookRoutesDeps, webhookRoutes } from "./routes";
 export {
-  type OutboxForwarder,
   postSamEnvelope,
   SAM_INBOX_MAX_BODY,
   type SamEnvelope,
@@ -26,7 +25,6 @@ export {
   type SamMessage,
   type SamOutcome,
   samEnvelope,
-  samInboxForwarder,
   samInboxSignature,
   samOutcome,
   sendSamMessage,
@@ -35,11 +33,19 @@ export {
   deliverSamMessage,
   enqueueSamMessage,
   httpSamInbox,
+  MemorySamQueue,
+  type OutboxForwarder,
   type PostSamEnvelope,
+  type Quarantined,
+  quarantineSamMessage,
   runDeliverSamMessage,
+  runQuarantineSamMessage,
+  SamInboxQuarantined,
   SamInboxRetry,
-  type SamMessageSink,
+  type SamQueue,
+  samInboxForwarder,
   samInboxRegistration,
+  samRunId,
 } from "./sam-inbox-jobs";
 export {
   enqueueConversationEvent,

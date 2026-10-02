@@ -36,7 +36,11 @@ test("with the inbox on, a tool request is queued for sam in the insight's trans
     environment: "echo-next",
     sink: {
       enqueue: async (def, payload, opts) => {
-        queued.push({ name: def.name, payload, opts });
+        queued.push({
+          name: def.name,
+          payload: payload as { code: string; id: string; body: string },
+          opts,
+        });
       },
     },
   });
@@ -47,7 +51,10 @@ test("with the inbox on, a tool request is queued for sam in the insight's trans
   expect(queued).toHaveLength(1);
   const [q] = queued;
   expect(q?.name).toBe("webhooks.sam-inbox");
-  expect(q?.opts).toEqual({ tx: "the-tx" });
+  expect(q?.opts).toEqual({
+    tx: "the-tx",
+    workflowId: "sam-inbox:echo_support_mcp_tool_requested_v1:insight-1",
+  });
   expect(q?.payload.code).toBe(TOOL_REQUEST_INBOX_CODE);
   expect(TOOL_REQUEST_INBOX_CODE).toBe("echo_support_mcp_tool_requested_v1");
   expect(q?.payload.id).toBe("insight-1");
