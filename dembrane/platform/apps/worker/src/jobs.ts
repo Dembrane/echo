@@ -9,12 +9,12 @@ import {
 } from "@dembrane/accounts";
 import { agenticWorker } from "@dembrane/agentic";
 import { analysisWorker } from "@dembrane/analysis";
-import { type Billing, billingRegistration } from "@dembrane/billing";
+import { type Billing, billingRegistration, overageInboxMessage } from "@dembrane/billing";
 import { canvasWorker } from "@dembrane/canvas";
 import type { Config } from "@dembrane/config";
 import { conversationWorker, liveRecordings, type PipelineDeps } from "@dembrane/conversations";
 import type { Db } from "@dembrane/db";
-import { supportForwardRegistration, supportOutbox } from "@dembrane/feedback";
+import { supportForwardRegistration, supportInboxMessage, supportOutbox } from "@dembrane/feedback";
 import type { Completer, Embedder, Models } from "@dembrane/llm";
 import type { Mailer } from "@dembrane/mail";
 import { mapWorker } from "@dembrane/map";
@@ -30,6 +30,7 @@ import {
 } from "@dembrane/popcorn";
 import { presentAdoption } from "@dembrane/present";
 import {
+  bookingInboxMessage,
   environmentName,
   httpForwarder,
   pricingRegistration,
@@ -40,7 +41,16 @@ import { PostgresRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { reportsWorker } from "@dembrane/reports";
 import type { ObjectStorage } from "@dembrane/storage";
 import { type JobSink, tenancyWorker } from "@dembrane/tenancy";
-import { dispatchWebhook, httpDeliver, runDispatch, webhooksStorage } from "@dembrane/webhooks";
+import {
+  dispatchWebhook,
+  httpDeliver,
+  httpSamInbox,
+  runDispatch,
+  type SamMessage,
+  samInboxForwarder,
+  samInboxRegistration,
+  webhooksStorage,
+} from "@dembrane/webhooks";
 import { z } from "zod";
 
 /**
@@ -76,6 +86,7 @@ export function registrations(deps: {
     | "http"
     | "database"
     | "accounts"
+    | "samInbox"
   >;
   /** Sends the email jobs enqueue. */
   mailer: Mailer;
@@ -108,6 +119,15 @@ export function registrations(deps: {
     config.support.forwardWebhookUrl && config.support.forwardWebhookToken
       ? httpForwarder(config.support.forwardWebhookUrl, config.support.forwardWebhookToken)
       : null;
+  // With sam's inbox configured, every message for sam goes there instead: the outboxes
+  // through a forwarder that names each payload's code, account events as queued jobs.
+  const inboxTarget =
+    config.samInbox.url && config.samInbox.secret && config.samInbox.from
+      ? { url: config.samInbox.url, secret: config.samInbox.secret, from: config.samInbox.from }
+      : null;
+  const inboxOpts = { allowPrivate: config.webhooks.allowPrivateTargets };
+  const toSam = (toMessage: (payload: Record<string, unknown>) => SamMessage | null) =>
+    inboxTarget ? samInboxForwarder(inboxTarget, inboxOpts, toMessage) : teamWebhook;
   const analysisDeps = {
     db,
     logger,
@@ -168,11 +188,16 @@ export function registrations(deps: {
         const store = webhooksStorage(db);
         const deliver = httpDeliver({ allowPrivate: config.webhooks.allowPrivateTargets });
         // Deliveries wait on other people's servers, so many run at once.
-        await queue.work(dispatchWebhook, { concurrency: 20 }, (p) =>
-          runDispatch({ store, deliver, logger }, p),
+        const inbox = inboxTarget ? httpSamInbox(inboxTarget, inboxOpts) : null;
+        await queue.work(dispatchWebhook, { concurrency: 20 }, (p, job) =>
+          runDispatch({ store, deliver, logger, inbox }, p, job),
         );
       },
     },
+    samInboxRegistration({
+      post: inboxTarget ? httpSamInbox(inboxTarget, inboxOpts) : null,
+      logger,
+    }),
     {
       jobs: [sendEmail],
       async register(queue) {
@@ -190,21 +215,21 @@ export function registrations(deps: {
         db,
         // Live portal recordings from the presence store the portal's pings write.
         live: liveRecordings({ db, logger }),
-        forwarder: teamWebhook,
+        forwarder: toSam(overageInboxMessage),
         environment: environmentName(deps.dashboardUrl),
       },
     }),
     popcornWorker(popcornDeps),
     supportForwardRegistration({
       outbox: supportOutbox(db),
-      forwarder: teamWebhook,
+      forwarder: toSam(supportInboxMessage),
       environment: environmentName(deps.dashboardUrl),
       dashboardUrl: deps.dashboardUrl,
       logger,
     }),
     pricingRegistration({
       store: pricingStorage(db),
-      forwarder: teamWebhook,
+      forwarder: toSam(bookingInboxMessage),
       environment: environmentName(deps.dashboardUrl),
       logger,
     }),
@@ -259,6 +284,7 @@ export function registrations(deps: {
             company,
             eventsEnabled: Boolean(config.accounts.eventsUrl),
             slackEnabled: Boolean(config.accounts.slackWebhookUrl),
+            samInbox: Boolean(inboxTarget),
             reminderIntervalDays: config.accounts.reminderIntervalDays,
             // Demo builds send no invite links; publishing (in the API) does.
             inviteSecret: "",

@@ -26,7 +26,7 @@ export interface LiveRecordings {
 /** Counts nothing as live: for tests and callers without a presence store. */
 export const noLiveRecordings: LiveRecordings = { countActive: async () => 0 };
 
-/** The team's webhook (the one support requests use); answers the receiver's status. */
+/** sam's inbox, or the team's webhook (the one support requests use); answers the receiver's status. */
 export interface Forwarder {
   post(payload: Record<string, unknown>): Promise<{ status: number; text: string }>;
 }
@@ -180,6 +180,19 @@ export function notificationId(e: Episode, suffix: "opened" | "closed"): string 
   if (!ended) return `${e.id}:closed`;
   const stamp = ended.toISOString().slice(0, 19).replaceAll("-", "").replaceAll(":", "");
   return `${e.id}:closed:${stamp}`;
+}
+
+/**
+ * The inbox message for one overage notice: the same fields the team webhook gets, its
+ * composite notification id as the message id, so a retry repeats the id and a corrected
+ * closing is a new one.
+ */
+export function overageInboxMessage(
+  payload: Record<string, unknown>,
+): { code: string; json: Record<string, unknown>; id: string } | null {
+  return payload.id
+    ? { code: "echo_billing_overage_v1", json: payload, id: String(payload.id) }
+    : null;
 }
 
 /** Posts the pending opening and closing messages and stamps each on delivery. Returns how many filed. */

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { loadConfig, schema } from "../src";
+import { loadConfig, schema, together } from "../src";
 import { walk } from "../src/define";
 
 // Every deployed environment keeps customer data and telemetry in the EU. The infrastructure
@@ -7,7 +7,7 @@ import { walk } from "../src/define";
 // application makes itself.
 const secrets = Object.fromEntries(
   [...walk(schema)]
-    .filter(([, k]) => k.meta.secret)
+    .filter(([path, k]) => k.meta.secret && !together.flat().includes(path))
     .map(([, k]) => [
       k.meta.env,
       k.meta.env.endsWith("_URL") ? "postgres://u@h/d" : "s".repeat(48),

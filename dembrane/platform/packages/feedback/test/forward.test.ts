@@ -1,7 +1,14 @@
 import { expect, test } from "bun:test";
 import { Writable } from "node:stream";
 import { createLogger } from "@dembrane/observability";
-import { runForwardSupport, type SupportForwarder, type SupportRow, supportPayload } from "../src";
+import {
+  runForwardSupport,
+  SUPPORT_INBOX_CODES,
+  type SupportForwarder,
+  type SupportRow,
+  supportInboxMessage,
+  supportPayload,
+} from "../src";
 
 const logger = createLogger(
   { service: "t", release: "r", env: "test", level: "error" },
@@ -111,4 +118,54 @@ test("payload: id, environment and message always; empty fields omitted; origin 
     org_id: "o1",
     origin_link: "https://dashboard.echo-next.dembrane.com/en-US/w/w1/projects/p1",
   });
+});
+
+test("each support source has its own inbox code, the row id as message id, today's payload as json", () => {
+  expect(SUPPORT_INBOX_CODES).toEqual({
+    dashboard: "echo_support_manual_escalated_v1",
+    assistant: "echo_support_chat_escalated_v1",
+    agent_mcp: "echo_support_mcp_issue_reported_v1",
+  });
+  for (const [source, code] of Object.entries(SUPPORT_INBOX_CODES)) {
+    const payload = supportPayload(row("r1", { source }), "production", "https://x");
+    expect(supportInboxMessage(payload)).toEqual({ code, json: payload, id: "r1" });
+  }
+});
+
+test("a source with no inbox code is never sent to sam and stays unstamped", async () => {
+  const sentCodes: string[] = [];
+  const stamped: string[] = [];
+  // The inbox forwarder's contract: a payload it cannot name is answered 422 unsent.
+  const forwarder: SupportForwarder = {
+    async post(p) {
+      const m = supportInboxMessage(p);
+      if (!m) return { status: 422, text: "no sam inbox code for this payload" };
+      sentCodes.push(m.code);
+      return { status: 200, text: "" };
+    },
+  };
+  const rows = [
+    row("1", { source: "dashboard" }),
+    row("2", { source: "agentic_chat" }),
+    row("3", { source: null }),
+    row("4", { source: "agent_mcp" }),
+  ];
+  const delivered = await runForwardSupport({
+    outbox: {
+      unforwarded: async () => rows.filter((r) => !stamped.includes(r.id)),
+      markForwarded: async (id: string) => {
+        stamped.push(id);
+      },
+    },
+    forwarder,
+    environment: "echo-next",
+    dashboardUrl: "",
+    logger,
+  });
+  expect(delivered).toBe(2);
+  expect(sentCodes).toEqual([
+    "echo_support_manual_escalated_v1",
+    "echo_support_mcp_issue_reported_v1",
+  ]);
+  expect(stamped).toEqual(["1", "4"]);
 });

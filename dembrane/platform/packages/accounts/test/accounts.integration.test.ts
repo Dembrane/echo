@@ -856,6 +856,44 @@ run("accounts routes against Postgres", () => {
         (e) => e.type === "booking.recorded" && e.subjectId === "cal-1",
       ),
     ).toBe(true);
+    // ACCOUNTS_EVENTS_URL never carried bookings; without sam's inbox none leaves echo.
+    expect(
+      w.jobs
+        .of("accounts.deliver-event")
+        .filter(
+          (j) => j.payload && (j.payload as { event?: string }).event === "account.call.booked",
+        ),
+    ).toHaveLength(0);
+    expect(
+      w.jobs.of("webhooks.sam-inbox").filter((j) => j.code === "echo_account_call_booked_v1"),
+    ).toHaveLength(0);
+  });
+
+  test("with sam's inbox on, a booked call goes there as echo_account_call_booked_v1", async () => {
+    const settings = w.deps.settings as { samInbox: boolean };
+    settings.samInbox = true;
+    try {
+      const r = await call(w, "POST", `${C()}/booking`, "admin", {
+        uid: "cal-2",
+        start: "2026-10-03T10:00:00Z",
+        status: "accepted",
+      });
+      expect(r.status).toBe(200);
+      const [m] = w.jobs
+        .of("webhooks.sam-inbox")
+        .filter((j) => j.code === "echo_account_call_booked_v1");
+      expect(m).toBeDefined();
+      const event = (await store.events(w.db, w.orgId)).find((e) => e.subjectId === "cal-2");
+      expect(m?.id).toBe(event?.id);
+      expect(JSON.parse(String(m?.body)).json).toMatchObject({
+        id: event?.id,
+        event: "account.call.booked",
+        org: { id: w.orgId, name: "Gemeente Testdorp" },
+        booking: { uid: "cal-2", start: "2026-10-03T10:00:00Z", status: "accepted" },
+      });
+    } finally {
+      settings.samInbox = false;
+    }
   });
 
   // ── invoices ────────────────────────────────────────────────────────

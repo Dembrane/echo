@@ -30,7 +30,7 @@ import {
   queueDispatch,
 } from "@dembrane/popcorn";
 import { analysisMapStore, presentRoutes, publicAudienceMap } from "@dembrane/present";
-import { pricingRoutes } from "@dembrane/pricing";
+import { environmentName, pricingRoutes } from "@dembrane/pricing";
 import { projectRoutes } from "@dembrane/projects";
 import { sharedHub } from "@dembrane/realtime";
 import { reportRoutes } from "@dembrane/reports";
@@ -84,6 +84,7 @@ export function buildApp(deps: Deps) {
       deliver: deps.deliverWebhook,
       allowPrivateTargets: deps.config.webhooks.allowPrivateTargets,
       dashboardUrl: deps.config.http.dashboardUrl,
+      samInbox: Boolean(deps.config.samInbox.url),
     }),
   );
   app.route("/", notificationRoutes(deps));
@@ -262,6 +263,8 @@ export function buildApp(deps: Deps) {
       },
       eventsEnabled: Boolean(deps.config.accounts.eventsUrl),
       slackEnabled: Boolean(deps.config.accounts.slackWebhookUrl),
+      // The config check sets SAM_INBOX_* together, so the URL stands for all three.
+      samInbox: Boolean(deps.config.samInbox.url),
       reminderIntervalDays: deps.config.accounts.reminderIntervalDays,
       inviteSecret: deps.config.account.inviteHashSecret,
       demo: {
@@ -301,6 +304,9 @@ export function buildApp(deps: Deps) {
       buildVersion: deps.config.app.release,
       clientSecretKey:
         deps.config.agentAccess.clientSecretKey ?? deps.config.account.inviteHashSecret,
+      samInbox: deps.config.samInbox.url
+        ? { sink: deps.queue, environment: environmentName(deps.config.http.dashboardUrl) }
+        : null,
     }),
   );
   app.onError(onError);

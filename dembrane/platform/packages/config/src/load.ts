@@ -27,11 +27,14 @@ export interface Loaded<T extends Section> {
  * Resolves every key from, in rising precedence: the schema default, the environment
  * file, the process environment. Collects every problem before failing so one boot
  * shows the whole list, and refuses secrets that arrive from a checked-in file.
+ * `together` lists groups of key paths that are all set or all unset; a group whose
+ * keys are not all in `schema` (a process that loads only some sections) is not checked.
  */
 export function load<T extends Section>(
   schema: T,
   environmentFile: unknown,
   processEnv: Record<string, string | undefined>,
+  together: readonly (readonly string[])[] = [],
 ): Loaded<T> {
   const problems: string[] = [];
   const resolved: Resolved[] = [];
@@ -68,6 +71,17 @@ export function load<T extends Section>(
       public: k.meta.visibility === "public",
       value: parsed.data,
     });
+  }
+
+  const byPath = new Map(resolved.map((r) => [r.path, r]));
+  const declared = new Map([...walk(schema)].map(([path, k]) => [path, k.meta.env]));
+  for (const group of together) {
+    if (!group.every((p) => declared.has(p) && byPath.has(p))) continue;
+    const unset = group.filter((p) => byPath.get(p)?.value === undefined);
+    if (unset.length && unset.length < group.length)
+      problems.push(
+        `${group.map((p) => declared.get(p)).join(", ")} are set together or not at all; missing ${unset.map((p) => declared.get(p)).join(", ")}`,
+      );
   }
 
   if (problems.length) throw new ConfigError(problems);

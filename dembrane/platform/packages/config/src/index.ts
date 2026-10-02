@@ -5,7 +5,7 @@ import staging from "../environments/staging";
 import test from "../environments/test";
 import type { EnvironmentValues, Values } from "./define";
 import { type Loaded, load } from "./load";
-import { type Schema, schema } from "./schema";
+import { type Schema, schema, together } from "./schema";
 
 export {
   connectionBudget,
@@ -17,7 +17,7 @@ export {
   type Scale,
 } from "./capacity";
 export { ConfigError, describe, publicValues } from "./load";
-export { schema } from "./schema";
+export { schema, together } from "./schema";
 
 export type Config = Values<Schema>;
 export type Environment = EnvironmentValues<Schema>;
@@ -37,7 +37,7 @@ export function loadConfig(
 ): Loaded<Schema> {
   const name = processEnv.APP_ENV as EnvironmentName | undefined;
   const file = name && name in environments ? environments[name] : undefined;
-  return load(schema, file, processEnv);
+  return load(schema, file, processEnv, together);
 }
 
 /**
@@ -51,5 +51,5 @@ export function loadSections<K extends keyof Schema>(
   const name = processEnv.APP_ENV as EnvironmentName | undefined;
   const file = name && name in environments ? environments[name] : undefined;
   const picked = Object.fromEntries(sections.map((s) => [s, schema[s]])) as Pick<Schema, K>;
-  return load(picked, file, processEnv);
+  return load(picked, file, processEnv, together);
 }

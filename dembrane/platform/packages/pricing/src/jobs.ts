@@ -91,9 +91,32 @@ export function bookingPayload(row: PricingRow, environment: string): Record<str
   return p;
 }
 
+/**
+ * The inbox message for one booking payload: the same fields the team webhook gets, the
+ * booking uid as the message id, so a rebooked slot is a new message and a retry is not.
+ * The code says where the configuration came from: the website's needs form (written
+ * through the site token, mount "site") or the app; the payload is the same for both.
+ */
+export function bookingInboxMessage(
+  payload: Record<string, unknown>,
+): { code: string; json: Record<string, unknown>; id: string } | null {
+  if (payload.kind !== "pricing_booking" || !payload.booking_uid) return null;
+  return {
+    code:
+      payload.mount === "site"
+        ? "website_pricing_booking_confirmed_v1"
+        : "echo_pricing_booking_confirmed_v1",
+    json: payload,
+    id: String(payload.booking_uid),
+  };
+}
+
 export interface ForwardDeps {
   readonly store: Pick<PricingStore, "unforwardedBookings" | "update">;
-  /** Null when SUPPORT_WEBHOOK_URL or ECHO_SUPPORT_WEBHOOK_TOKEN is unset: forwarding is off. */
+  /**
+   * sam's inbox (bookingInboxMessage) when SAM_INBOX_* is set, else the team webhook; null
+   * when neither is configured: forwarding is off.
+   */
   readonly forwarder: Forwarder | null;
   readonly environment: string;
   readonly logger: Logger;
