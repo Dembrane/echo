@@ -88,13 +88,22 @@ const { values: opts, positionals } = parseArgs({
   },
 });
 
+// What it prints is the output, so it goes straight to stdout and stderr.
+const print = (s = "") => process.stdout.write(`${s}\n`);
+const printErr = (s: string) => process.stderr.write(`${s}\n`);
+
 if (opts.help || positionals.length > 1) {
-  console.log(USAGE);
+  print(USAGE);
   process.exit(opts.help ? 0 : 1);
 }
 
 type Workspace = { id: string; name: string; org_name?: string; role?: string };
-type Project = { id: string; name: string | null; conversations_count?: number; audio_hours?: number };
+type Project = {
+  id: string;
+  name: string | null;
+  conversations_count?: number;
+  audio_hours?: number;
+};
 type Conversation = {
   id: string;
   participant_name: string | null;
@@ -104,7 +113,7 @@ type Conversation = {
 type Chunk = { id: string; path: string | null; timestamp: string | null };
 
 function die(message: string): never {
-  console.error(message);
+  printErr(message);
   process.exit(1);
 }
 
@@ -135,7 +144,9 @@ if (arg?.startsWith("http")) {
 }
 
 targetName ??= "next";
-const target = TARGETS[targetName] ?? die(`Unknown --target ${targetName}; use ${Object.keys(TARGETS).join(", ")}`);
+const target =
+  TARGETS[targetName] ??
+  die(`Unknown --target ${targetName}; use ${Object.keys(TARGETS).join(", ")}`);
 const apiUrl = stripSlash(opts["api-url"] ?? target.api);
 const directusUrl = stripSlash(opts["directus-url"] ?? target.directus ?? "");
 
@@ -151,7 +162,7 @@ async function ask(question: string): Promise<string> {
     piped ??= createInterface({ input: process.stdin })[Symbol.asyncIterator]();
     const next = await piped.next();
     if (next.done) die("\nInput ended");
-    console.log();
+    print();
     return next.value.trim();
   }
   const rl = createInterface({ input: process.stdin, output: process.stdout });
@@ -210,6 +221,11 @@ function normalizeToken(raw: string) {
   return t.includes("%") ? decodeURIComponent(t) : t;
 }
 
+type DirectusLogin = {
+  data?: { access_token?: string };
+  errors?: { extensions?: { code?: string } }[];
+};
+
 async function signIn(): Promise<string> {
   const email = await ask("Email:");
   if (!email) die("No email given");
@@ -224,13 +240,13 @@ async function signIn(): Promise<string> {
         body: JSON.stringify(body),
       });
     let res = await login({ email, password });
-    let json = (await res.json().catch(() => ({}))) as any;
+    let json = (await res.json().catch(() => ({}))) as DirectusLogin;
     if (!res.ok && json?.errors?.[0]?.extensions?.code === "INVALID_OTP") {
       res = await login({ email, password, otp: await ask("2FA code:") });
-      json = await res.json().catch(() => ({}));
+      json = (await res.json().catch(() => ({}))) as DirectusLogin;
     }
     if (!res.ok) die(`Sign-in failed (${res.status}): ${JSON.stringify(json)}`);
-    return json.data.access_token as string;
+    return json.data?.access_token ?? die("Signed in, but the response carried no access token");
   }
 
   const res = await fetch(`${apiUrl}/auth/sign-in/email`, {
@@ -238,7 +254,7 @@ async function signIn(): Promise<string> {
     headers: { "content-type": "application/json", origin: target.origin },
     body: JSON.stringify({ email, password }),
   });
-  const json = (await res.json().catch(() => ({}))) as any;
+  const json = (await res.json().catch(() => ({}))) as { twoFactorRedirect?: boolean };
   if (!res.ok) die(`Sign-in failed (${res.status}): ${JSON.stringify(json)}`);
   if (json?.twoFactorRedirect) {
     // The second step is tied to the two-factor cookie the first one set.
@@ -266,7 +282,9 @@ const token = rawToken ? normalizeToken(rawToken) : await signIn();
 const authHeaders = { authorization: `Bearer ${token}` };
 
 async function getJson<T>(path: string, params: Record<string, string | number> = {}): Promise<T> {
-  const query = new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)]));
+  const query = new URLSearchParams(
+    Object.entries(params).map(([k, v]): [string, string] => [k, String(v)]),
+  );
   const url = `${apiUrl}${path}${query.size ? `?${query}` : ""}`;
   const res = await fetch(url, { headers: authHeaders });
   if (!res.ok) {
@@ -325,7 +343,10 @@ function listChunks(conversationId: string) {
 function parseSelection(input: string, count: number): number[] {
   if (input.toLowerCase() === "all") return [...Array(count).keys()];
   const picked = new Set<number>();
-  for (const part of input.split(",").map((s) => s.trim()).filter(Boolean)) {
+  for (const part of input
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)) {
     const m = part.match(/^(\d+)(?:-(\d+))?$/);
     if (!m) throw new Error(`Not a number or range: ${part}`);
     for (let i = Number(m[1]); i <= Number(m[2] ?? m[1]); i++) {
@@ -337,18 +358,22 @@ function parseSelection(input: string, count: number): number[] {
 }
 
 async function choose<T>(title: string, items: T[], label: (t: T) => string, many: boolean) {
-  console.log(`\n${title}`);
-  items.forEach((t, i) => console.log(`${String(i + 1).padStart(4)}. ${label(t)}`));
+  print(`\n${title}`);
+  for (const [i, t] of items.entries()) print(`${String(i + 1).padStart(4)}. ${label(t)}`);
   const hint = many ? "e.g. 3, 1,4-6, all" : "a number";
   for (;;) {
     try {
       const picked = parseSelection(await ask(`\nWhich? (${hint})`), items.length);
       if (picked.length === 1 || (many && picked.length)) return picked.map((i) => items[i] as T);
-      console.error(many ? "Pick at least one" : "Pick exactly one");
+      printErr(many ? "Pick at least one" : "Pick exactly one");
     } catch (err) {
-      console.error((err as Error).message);
+      printErr((err as Error).message);
     }
   }
+}
+
+async function chooseOne<T>(title: string, items: T[], label: (t: T) => string) {
+  return (await choose(title, items, label, false))[0] as T;
 }
 
 const col = (s: string, w: number) => s.padEnd(w).slice(0, w);
@@ -357,23 +382,26 @@ async function chooseProject(): Promise<string> {
   if (!workspaceId) {
     const workspaces = await listWorkspaces();
     if (!workspaces.length) die("You have no workspaces on this target");
-    const [ws] =
+    const ws =
       workspaces.length === 1
-        ? workspaces
-        : await choose("Workspaces:", workspaces, (w) => `${col(w.name, 40)}  ${col(w.org_name ?? "", 28)}  ${w.id}`, false);
-    if (workspaces.length === 1) console.log(`Workspace: ${ws!.name}`);
-    workspaceId = ws!.id;
+        ? (workspaces[0] as Workspace)
+        : await chooseOne(
+            "Workspaces:",
+            workspaces,
+            (w) => `${col(w.name, 40)}  ${col(w.org_name ?? "", 28)}  ${w.id}`,
+          );
+    if (workspaces.length === 1) print(`Workspace: ${ws.name}`);
+    workspaceId = ws.id;
   }
   const projects = await listProjects(workspaceId);
   if (!projects.length) die(`No projects in workspace ${workspaceId} (or no access to them)`);
-  const [project] = await choose(
+  const project = await chooseOne(
     "Projects:",
     projects,
     (p) =>
       `${col(p.name?.trim() || "(unnamed)", 40)}  ${String(p.conversations_count ?? "?").padStart(4)} convs  ${String(p.audio_hours ?? "?").padStart(6)} h  ${p.id}`,
-    false,
   );
-  return project!.id;
+  return project.id;
 }
 
 async function chooseConversations(conversations: Conversation[]): Promise<Conversation[]> {
@@ -384,11 +412,16 @@ async function chooseConversations(conversations: Conversation[]): Promise<Conve
       (id) => byId.get(id) ?? die(`Conversation ${id} is not in project ${projectId}`),
     );
   }
-  return choose("Conversations:", conversations, (c) => {
-    const date = c.created_at ? c.created_at.slice(0, 16).replace("T", " ") : "?";
-    const mins = c.duration ? `${(c.duration / 60).toFixed(1)} min` : "";
-    return `${col(c.participant_name?.trim() || "(unnamed)", 36)}  ${date}  ${mins.padStart(9)}  ${c.id}`;
-  }, true);
+  return choose(
+    "Conversations:",
+    conversations,
+    (c) => {
+      const date = c.created_at ? c.created_at.slice(0, 16).replace("T", " ") : "?";
+      const mins = c.duration ? `${(c.duration / 60).toFixed(1)} min` : "";
+      return `${col(c.participant_name?.trim() || "(unnamed)", 36)}  ${date}  ${mins.padStart(9)}  ${c.id}`;
+    },
+    true,
+  );
 }
 
 // ── download + join ──────────────────────────────────────────────────
@@ -405,7 +438,12 @@ function extOf(url: string) {
 }
 
 function safeName(s: string) {
-  return s.replace(/[^\p{L}\p{N}._-]+/gu, "_").replace(/^_+|_+$/g, "").slice(0, 60) || "conversation";
+  return (
+    s
+      .replace(/[^\p{L}\p{N}._-]+/gu, "_")
+      .replace(/^_+|_+$/g, "")
+      .slice(0, 60) || "conversation"
+  );
 }
 
 /** 222 → "3m42s", 3822 → "1h03m42s". */
@@ -436,7 +474,7 @@ async function run(cmd: string[]) {
 async function download(c: Conversation, outDir: string) {
   const chunks = (await listChunks(c.id)).filter((ch) => ch.path);
   if (!chunks.length) {
-    console.warn(`  ${c.id}: no chunks with audio (a locked conversation hides them), skipped`);
+    printErr(`  ${c.id}: no chunks with audio (a locked conversation hides them), skipped`);
     return;
   }
   const base = `${safeName(c.participant_name ?? "")}-${c.id.slice(0, 8)}`;
@@ -458,7 +496,20 @@ async function download(c: Conversation, outDir: string) {
       const raw = join(work, `${n}-${ch.id}.${extOf(url)}`);
       await Bun.write(raw, res);
       const wav = join(work, `${n}.wav`);
-      await run(["ffmpeg", "-hide_banner", "-y", "-i", raw, "-ac", "1", "-ar", "48000", "-c:a", "pcm_s16le", wav]);
+      await run([
+        "ffmpeg",
+        "-hide_banner",
+        "-y",
+        "-i",
+        raw,
+        "-ac",
+        "1",
+        "-ar",
+        "48000",
+        "-c:a",
+        "pcm_s16le",
+        wav,
+      ]);
       wavs.push(wav);
     }
     const list = join(work, "list.txt");
@@ -467,13 +518,16 @@ async function download(c: Conversation, outDir: string) {
     // from the joined file itself.
     const partial = join(outDir, `${base}.partial.${opts.format}`);
     await run(["ffmpeg", "-hide_banner", "-y", "-f", "concat", "-safe", "0", "-i", list, partial]);
-    const out = join(outDir, `${base}-${formatDuration(await probeSeconds(partial))}.${opts.format}`);
+    const out = join(
+      outDir,
+      `${base}-${formatDuration(await probeSeconds(partial))}.${opts.format}`,
+    );
     await rename(partial, out);
     if (!opts["keep-chunks"]) await rm(work, { recursive: true, force: true });
     else for (const w of [...wavs, list]) await rm(w, { force: true });
-    console.log(`\r  ${base}: ${chunks.length} chunks → ${out}`);
+    print(`\r  ${base}: ${chunks.length} chunks → ${out}`);
   } catch (err) {
-    console.error(`\n  ${base}: failed, partial files in ${work}\n  ${(err as Error).message}`);
+    printErr(`\n  ${base}: failed, partial files in ${work}\n  ${(err as Error).message}`);
   }
 }
 
@@ -487,7 +541,10 @@ if (!conversations.length) die(`No conversations in project ${projectId} (or no 
 const chosen = await chooseConversations(conversations);
 // One folder per project, so same-named conversations from different projects don't mix.
 const project = await getJson<{ name: string | null }>(`/v2/projects/${projectId}`);
-const outDir = join(opts["out-dir"] as string, `${safeName(project.name ?? "")}-${projectId.slice(0, 8)}`);
+const outDir = join(
+  opts["out-dir"] as string,
+  `${safeName(project.name ?? "")}-${projectId.slice(0, 8)}`,
+);
 await mkdir(outDir, { recursive: true });
-console.log(`\nDownloading ${chosen.length} conversation(s) into ${outDir}`);
+print(`\nDownloading ${chosen.length} conversation(s) into ${outDir}`);
 for (const c of chosen) await download(c, outDir);
