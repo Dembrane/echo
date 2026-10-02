@@ -25,10 +25,43 @@ export const auth_session = pgTable(
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     ipAddress: text("ip_address"),
     userAgent: text("user_agent"),
+    // The browser the dashboard signed in from: a random id it keeps in local storage.
+    deviceId: text("device_id"),
+    // True while the person has not yet chosen to replace their sessions on other browsers.
+    // A held session signs nobody in.
+    held: boolean("held").notNull().default(false),
+    // When the session last made a request, to the nearest few minutes.
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("auth_session_user_id_index").on(t.userId)],
+);
+
+// One row each time someone signed in while the account was signed in on another browser:
+// what we count per org to see how often an account is used in two places.
+export const auth_sign_in_overlap = pgTable(
+  "auth_sign_in_overlap",
+  {
+    id: uuid("id").primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => auth_user.id, { onDelete: "cascade" }),
+    // The held session. Not a foreign key: the row outlives the session.
+    sessionId: uuid("session_id").notNull(),
+    deviceId: text("device_id"),
+    otherSessions: integer("other_sessions").notNull(),
+    otherDevices: integer("other_devices").notNull(),
+    // When any of the other sessions last made a request.
+    otherLastSeenAt: timestamp("other_last_seen_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    // Set when the person chose to sign in anyway; null when they turned back.
+    replacedAt: timestamp("replaced_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("auth_sign_in_overlap_user_id_index").on(t.userId),
+    index("auth_sign_in_overlap_session_id_index").on(t.sessionId),
+  ],
 );
 
 export const auth_account = pgTable(

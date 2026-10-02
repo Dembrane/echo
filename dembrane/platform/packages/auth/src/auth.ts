@@ -5,6 +5,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError } from "better-auth/api";
 import { bearer, emailOTP, twoFactor } from "better-auth/plugins";
 import { and, eq } from "drizzle-orm";
+import { holdFor, type OnOverlap, oneBrowser, recordHeld } from "./overlap";
 
 export interface AuthOptions {
   readonly db: Db;
@@ -39,6 +40,11 @@ export interface AuthOptions {
    * Null reads Directus's public registration role, so each environment keeps its own.
    */
   readonly defaultDirectusRoleId: string | null;
+  /**
+   * Told each time someone signs in while the account is signed in on another browser, and
+   * again when they go ahead and replace those sessions. For analytics; never awaited.
+   */
+  readonly onOverlap?: OnOverlap;
 }
 
 /**
@@ -146,6 +152,13 @@ export function createAuth(opts: AuthOptions) {
     session: {
       expiresIn: 7 * 24 * 3600,
       updateAge: 24 * 3600,
+      // Set by the server only (overlap.ts): the browser, whether the session is still
+      // waiting for the person to replace their other sessions, and when it was last used.
+      additionalFields: {
+        deviceId: { type: "string", required: false, input: false },
+        held: { type: "boolean", required: false, defaultValue: false, input: false },
+        lastSeenAt: { type: "date", required: false, input: false },
+      },
     },
     advanced: {
       cookiePrefix: "dembrane",
@@ -172,6 +185,7 @@ export function createAuth(opts: AuthOptions) {
       }),
       twoFactor({ issuer: "dembrane" }),
       bearer(),
+      oneBrowser({ db: opts.db, onOverlap: opts.onOverlap }),
     ],
     databaseHooks: {
       user: {
@@ -202,7 +216,9 @@ export function createAuth(opts: AuthOptions) {
           // A suspended or archived user (account deletion requested, staff action) gets no
           // session. Unverified is left to Better Auth, which refuses password sign-in until
           // the email is verified and verifies it on a code sign-in.
-          before: async (session) => {
+          // A sign-in from the dashboard while the account is signed in on another browser
+          // is created held: it signs nobody in until the person replaces the other sessions.
+          before: async (session, ctx) => {
             const [row] = await opts.db
               .select({ status: schema.directus_users.status })
               .from(schema.directus_users)
@@ -210,6 +226,20 @@ export function createAuth(opts: AuthOptions) {
               .limit(1);
             if (row?.status === "suspended" || row?.status === "archived")
               throw new APIError("FORBIDDEN", { message: "This account is not active" });
+            const hold = await holdFor(
+              opts.db,
+              session.userId,
+              ctx?.headers ?? ctx?.request?.headers,
+            );
+            return { data: { ...session, ...hold, lastSeenAt: new Date() } };
+          },
+          after: async (session) => {
+            if (session.held !== true || typeof session.deviceId !== "string") return;
+            await recordHeld(
+              opts.db,
+              { id: session.id, userId: session.userId, deviceId: session.deviceId },
+              opts.onOverlap,
+            );
           },
         },
       },

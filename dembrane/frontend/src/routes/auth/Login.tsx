@@ -15,11 +15,13 @@ import {
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSearchParams } from "react-router";
 import { useLoginMutation } from "@/components/auth/hooks";
 import { ResendVerificationEmail } from "@/components/auth/ResendVerificationEmail";
+import { SignedInElsewhere } from "@/components/auth/SignedInElsewhere";
 import { isAuthPath } from "@/components/auth/utils/authPaths";
 import {
 	authErrorCode,
@@ -34,7 +36,12 @@ import { I18nLink } from "@/components/common/i18nLink";
 import { useTransitionCurtain } from "@/components/layout/TransitionCurtainProvider";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { sendSignInCode } from "@/lib/auth";
+import {
+	otherSessions,
+	replaceOtherSessions,
+	sendSignInCode,
+	signOut,
+} from "@/lib/auth";
 import { testId } from "@/lib/testUtils";
 
 // const LoginWithProvider = ({
@@ -106,20 +113,31 @@ export const LoginRoute = () => {
 	const pinInputRef = useRef<HTMLDivElement | null>(null);
 	const loginMutation = useLoginMutation();
 	const posthog = usePostHog();
+	const queryClient = useQueryClient();
+	// Set when the sign-in was right but the account is signed in on another browser: the
+	// person chooses here whether to replace that session.
+	const [elsewhere, setElsewhere] = useState<{
+		email: string;
+		since: string | null;
+	} | null>(null);
+	const [replacing, setReplacing] = useState(false);
 
 	// Where a signed-in person goes: onboarding if unfinished, else ?next when it is safe,
 	// else the home list. Shared by the password and the emailed-code sign-in.
-	const afterSignIn = async (email: string) => {
+	const afterSignIn = async (email: string, curtain = true) => {
 		posthog?.identify(email);
 		posthog?.capture("user_logged_in", { email: email });
 
 		const isNewUser = searchParams.get("new") === "true";
 		const next = searchParams.get("next");
 
-		// Start transition immediately — user sees smooth curtain right away
-		const transitionPromise = runTransition({
-			message: isNewUser ? t`Welcome to dembrane` : t`Welcome back`,
-		});
+		// Start transition immediately — user sees smooth curtain right away. Someone who
+		// came through the logged-in-elsewhere page has already seen it.
+		const transitionPromise = curtain
+			? runTransition({
+					message: isNewUser ? t`Welcome to dembrane` : t`Welcome back`,
+				})
+			: Promise.resolve();
 
 		// Check onboarding in parallel with the transition. Small delay
 		// ensures the session cookie from login is available. Routing is
@@ -189,6 +207,41 @@ export const LoginRoute = () => {
 		navigate("/o");
 	};
 
+	// Every sign-in passes here. One browser per account: when another is signed in, ask
+	// before going on.
+	const afterCredentials = async (email: string) => {
+		const state = await otherSessions();
+		if (state.held) {
+			// The same curtain as any sign-in; it opens onto the choice instead of the app.
+			await runTransition({ message: t`Welcome back` });
+			setElsewhere({ email, since: state.since });
+			return;
+		}
+		await afterSignIn(email);
+	};
+
+	const logInAnyway = async () => {
+		if (!elsewhere || replacing) return;
+		setReplacing(true);
+		try {
+			await replaceOtherSessions();
+			await queryClient.invalidateQueries({ queryKey: ["auth", "session"] });
+			await afterSignIn(elsewhere.email, false);
+		} catch {
+			setElsewhere(null);
+			setError(t`Something went wrong`);
+		} finally {
+			setReplacing(false);
+		}
+	};
+
+	const stayLoggedOut = async () => {
+		setElsewhere(null);
+		setOtpRequired(false);
+		setCode("");
+		await signOut().catch(() => {});
+	};
+
 	const submitLogin = async (data: {
 		email: string;
 		password: string;
@@ -213,7 +266,7 @@ export const LoginRoute = () => {
 				password: data.password,
 			});
 
-			await afterSignIn(data.email);
+			await afterCredentials(data.email);
 		} catch (error) {
 			const code = authErrorCode(error);
 
@@ -274,7 +327,7 @@ export const LoginRoute = () => {
 		setError("");
 		try {
 			await loginMutation.mutateAsync({ code: value, email: codeEmail.trim() });
-			await afterSignIn(codeEmail.trim());
+			await afterCredentials(codeEmail.trim());
 		} catch (e) {
 			setError(describeAuthError(e));
 			setCode("");
@@ -304,6 +357,14 @@ export const LoginRoute = () => {
 
 	return (
 		<div className="h-full w-full">
+			{elsewhere && (
+				<SignedInElsewhere
+					since={elsewhere.since}
+					loading={replacing}
+					onConfirm={logInAnyway}
+					onCancel={stayLoggedOut}
+				/>
+			)}
 			<Stack className="h-full">
 				<Stack className="flex-grow" gap="md">
 					<Title order={1}>
