@@ -467,6 +467,33 @@ export const schema = defineSchema({
       secret: true,
     }),
   },
+  samInbox: {
+    url: key("SAM_INBOX_URL", z.url().optional(), {
+      description:
+        "sam's inbox: where support requests and account events are posted, signed, instead of SUPPORT_WEBHOOK_URL and ACCOUNTS_EVENTS_URL. Set with SAM_INBOX_SECRET and SAM_INBOX_FROM or not at all; unset keeps the old routes.",
+    }),
+    secret: key("SAM_INBOX_SECRET", z.string().min(32).optional(), {
+      description:
+        "Shared with sam for this sender only; signs every inbox message (X-Webhook-Signature, HMAC-SHA256).",
+      secret: true,
+    }),
+    from: key(
+      "SAM_INBOX_FROM",
+      z
+        .string()
+        .regex(/^[a-z0-9.-]+$/, "a lowercase host name")
+        .optional(),
+      {
+        description:
+          "Who this deployment is to sam (X-Webhook-From), e.g. api.staging.dembrane.com; sam picks the secret and the allowed codes by it.",
+      },
+    ),
+  },
 });
+
+/** Keys that mean nothing alone: a partial set fails at boot instead of sending unsigned. */
+export const together: readonly (readonly string[])[] = [
+  ["samInbox.url", "samInbox.secret", "samInbox.from"],
+];
 
 export type Schema = typeof schema;

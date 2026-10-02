@@ -5,10 +5,11 @@ import type { Locale } from "@dembrane/i18n";
 import type { Mailer } from "@dembrane/mail";
 import type { Logger } from "@dembrane/observability";
 import { defineJob, type JobDefinition, type Queue, step } from "@dembrane/queue";
-import type { Deliver } from "@dembrane/webhooks";
+import { type Deliver, enqueueSamMessage, type SamQueue } from "@dembrane/webhooks";
 import { z } from "zod";
 import { buildDemo, type DemoBuildDeps } from "./demo/build";
 import { demoBuild } from "./demo/job";
+import { ACCOUNT_EVENT_CODES, type InboxEvent } from "./events";
 import { refreshLegalTexts } from "./legal/store";
 import type { AccountsJobs } from "./sink";
 import { store } from "./storage";
@@ -157,11 +158,32 @@ export async function runTaskReminder(
   return "sent";
 }
 
+/**
+ * Sends one queued account event. With sam's inbox configured it is moved onto the inbox
+ * under its timeline id, so events queued before the switch still reach sam. With neither
+ * the inbox nor ACCOUNTS_EVENTS_URL set the run fails instead of succeeding unsent: such a
+ * job was queued while a receiver was set, and removing it must not drop the event.
+ */
 export async function runDeliverEvent(
-  d: { deliver: Deliver; url: string | null; secret: string | null; logger: Logger },
+  d: {
+    deliver: Deliver;
+    url: string | null;
+    secret: string | null;
+    logger: Logger;
+    inbox?: SamQueue | null;
+  },
   p: { payload: Record<string, unknown> },
 ): Promise<void> {
-  if (!d.url) return;
+  if (d.inbox) {
+    const code = ACCOUNT_EVENT_CODES[p.payload.event as InboxEvent];
+    if (!code) throw new Error(`no sam inbox code for account event ${String(p.payload.event)}`);
+    await enqueueSamMessage(d.inbox, { code, json: p.payload, id: String(p.payload.id) });
+    return;
+  }
+  if (!d.url)
+    throw new Error(
+      "account event queued but neither SAM_INBOX_URL nor ACCOUNTS_EVENTS_URL is set; restore one to deliver it",
+    );
   const res = await d.deliver(
     { id: "accounts", name: "sam", url: d.url, secret: d.secret },
     p.payload,
@@ -189,11 +211,21 @@ export const httpPostJson: PostJson = async (url, body) => {
   return res.status;
 };
 
+/**
+ * Posts one queued Slack line. Unset with sam's inbox on, the line is dropped: sam posts
+ * account notices from the inbox. Unset without it, the run fails rather than losing it.
+ */
 export async function runNotifySlack(
-  d: { post: PostJson; url: string | null },
+  d: { post: PostJson; url: string | null; samInbox?: boolean; logger?: Logger },
   p: { text: string },
 ): Promise<void> {
-  if (!d.url) return;
+  if (!d.url) {
+    if (d.samInbox) {
+      d.logger?.info({ signal: "accounts.slack_left_to_sam" }, "queued Slack line left to sam");
+      return;
+    }
+    throw new Error("Slack line queued but ACCOUNTS_SLACK_WEBHOOK_URL is unset; restore it");
+  }
   const status = await d.post(d.url, { text: p.text });
   if (status < 200 || status >= 300) throw new Error(`Slack webhook answered ${status}`);
 }
@@ -207,6 +239,8 @@ export interface AccountsWorkerDeps {
   readonly dashboardUrl: string;
   readonly eventsUrl: string | null;
   readonly eventsSecret: string | null;
+  /** SAM_INBOX_* is set: queued account events drain through the inbox. */
+  readonly samInbox?: boolean;
   readonly slackWebhookUrl: string | null;
   readonly reminderIntervalDays: number;
   readonly fetchText: (url: string) => Promise<string>;
@@ -239,12 +273,21 @@ export function accountsWorker(deps: AccountsWorkerDeps) {
             url: deps.eventsUrl,
             secret: deps.eventsSecret,
             logger: deps.logger,
+            inbox: deps.samInbox ? queue : null,
           },
           p,
         ),
       );
       await queue.work(notifySlack, { concurrency: 2 }, (p) =>
-        runNotifySlack({ post: deps.post ?? httpPostJson, url: deps.slackWebhookUrl }, p),
+        runNotifySlack(
+          {
+            post: deps.post ?? httpPostJson,
+            url: deps.slackWebhookUrl,
+            samInbox: Boolean(deps.samInbox),
+            logger: deps.logger,
+          },
+          p,
+        ),
       );
       await queue.work(remindersTick, { concurrency: 1 }, async () => {
         await runRemindersTick({

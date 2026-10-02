@@ -119,6 +119,11 @@ msgid "error.field.invalid"
 msgstr "Check this field and try again."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/webhook.ts:10
+msgid "error.webhook.invalid_target"
+msgstr "Choose where this webhook goes: a web address, or sam's inbox with a known code."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:27
 msgid "error.document.dpa_not_authorised"
 msgstr "Confirm that you are authorised to agree to data processing for your organisation."
@@ -149,7 +154,7 @@ msgid "error.field.invalid_email"
 msgstr "Enter a valid email address."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:14
+#: src/lib/errors/messages/webhook.ts:19
 msgid "error.webhook.invalid_url"
 msgstr "Enter a web address that starts with http:// or https://."
 
@@ -349,7 +354,7 @@ msgid "error.map.selection_not_in_map"
 msgstr "Part of your selection is no longer on the map. Reload the map and select again."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:10
+#: src/lib/errors/messages/webhook.ts:15
 msgid "error.webhook.invalid_status"
 msgstr "Pick a status for this webhook: published, draft or archived."
 
@@ -412,6 +417,11 @@ msgstr "Quick access holds up to {max} templates. Remove one first."
 #: src/lib/errors/messages/popcorn.ts:5
 msgid "error.popcorn.branding_tier"
 msgstr "Removing the dembrane mark is part of the Changemaker plan. Upgrade to use it."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/webhook.ts:27
+msgid "error.webhook.sam_inbox_unavailable"
+msgstr "sam's inbox is not set up here, and a webhook that goes to sam cannot be tested."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:43
@@ -1104,7 +1114,7 @@ msgid "error.field.too_long"
 msgstr "Use at most {max_length} characters."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:22
+#: src/lib/errors/messages/webhook.ts:32
 msgid "error.webhook.target_not_allowed"
 msgstr "We cannot send webhooks to this address. Use a public web address."
 
@@ -1314,7 +1324,7 @@ msgid "error.popcorn.version_not_found"
 msgstr "We could not find this version of the presentation."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:18
+#: src/lib/errors/messages/webhook.ts:23
 msgid "error.webhook.not_found"
 msgstr "We could not find this webhook. It may have been deleted."
 

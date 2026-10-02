@@ -27,6 +27,8 @@ export const STAFF_POLICIES = [
   "staff:announcements",
   /** Export everything tied to one person, and erase it (data subject requests). */
   "staff:privacy",
+  /** Point a project webhook at sam's inbox (dembrane's own sales calls), or back at its URL. */
+  "staff:webhooks",
   /** Grant or revoke staff. Only the database CLI uses it; no route can grant staff. */
   "staff:grant",
 ] as const;

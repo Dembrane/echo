@@ -1,4 +1,4 @@
-import type { Access } from "@dembrane/access";
+import type { Access, StaffAudit } from "@dembrane/access";
 import type { Db } from "@dembrane/db";
 import { type Env, requireUser } from "@dembrane/http";
 import { p } from "@dembrane/legacy-shape";
@@ -15,6 +15,9 @@ export interface WebhookRoutesDeps {
   readonly deliver: Deliver;
   readonly allowPrivateTargets: boolean;
   readonly dashboardUrl: string;
+  readonly staffAudit: StaffAudit;
+  /** SAM_INBOX_* is set: staff may aim a webhook at sam's inbox. */
+  readonly samInbox: boolean;
   readonly now?: () => Date;
 }
 
@@ -31,6 +34,8 @@ export function webhookRoutes(deps: WebhookRoutesDeps) {
     enabled: true,
     allowPrivateTargets: deps.allowPrivateTargets,
     dashboardUrl: deps.dashboardUrl,
+    staffAudit: deps.staffAudit,
+    samInbox: deps.samInbox,
   };
   const base = "/api/projects/:project_id/webhooks";
   const app = new Hono<Env>();
@@ -90,6 +95,28 @@ export function webhookRoutes(deps: WebhookRoutesDeps) {
     const who = requireUser(c);
     return c.json(
       await svc.testWebhook(d, who, c.req.param("project_id"), c.req.param("webhook_id")),
+    );
+  });
+
+  // Staff only: where a webhook delivers. The customer routes above never read or set it.
+  app.put("/api/v2/admin/projects/:project_id/webhooks/:webhook_id/target", async (c) => {
+    const who = requireUser(c);
+    const { body } = await p.validate(c.req, {
+      body: model({
+        target: required(str()),
+        code: optional(nullable(str()), null),
+        url: optional(nullable(str()), null),
+      }),
+    });
+    return c.json(
+      await svc.setWebhookTarget(
+        d,
+        who,
+        c.req.param("project_id"),
+        c.req.param("webhook_id"),
+        body.data,
+        c.get("requestId"),
+      ),
     );
   });
 

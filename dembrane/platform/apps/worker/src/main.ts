@@ -38,6 +38,7 @@ const loaded = loadSections([
   "reports",
   "agentic",
   "accounts",
+  "samInbox",
   "files",
 ]);
 const config = loaded.values;

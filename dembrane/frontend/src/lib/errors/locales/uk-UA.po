@@ -119,6 +119,11 @@ msgid "error.field.invalid"
 msgstr "Перевірте це поле та спробуйте знову."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/webhook.ts:10
+msgid "error.webhook.invalid_target"
+msgstr "Оберіть, куди надсилається цей вебхук: на вебадресу або до скриньки sam із відомим кодом."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:27
 msgid "error.document.dpa_not_authorised"
 msgstr "Підтвердьте, що ви маєте право погоджувати обробку даних для вашої організації."
@@ -149,7 +154,7 @@ msgid "error.field.invalid_email"
 msgstr "Введіть дійсну адресу електронної пошти."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:14
+#: src/lib/errors/messages/webhook.ts:19
 msgid "error.webhook.invalid_url"
 msgstr "Введіть веб-адресу, що починається з http:// або https://."
 
@@ -349,7 +354,7 @@ msgid "error.map.selection_not_in_map"
 msgstr "Частина вибраного більше не відображається на мапі. Оновіть мапу та виберіть знову."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:10
+#: src/lib/errors/messages/webhook.ts:15
 msgid "error.webhook.invalid_status"
 msgstr "Виберіть статус для цього вебхука: опублікований, чернетка або в архіві."
 
@@ -412,6 +417,11 @@ msgstr "Швидкий доступ може містити щонайбільш
 #: src/lib/errors/messages/popcorn.ts:5
 msgid "error.popcorn.branding_tier"
 msgstr "Видалення логотипа dembrane доступне в тарифі Changemaker. Оновіть тариф, щоб скористатися цією можливістю."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/webhook.ts:27
+msgid "error.webhook.sam_inbox_unavailable"
+msgstr "Скриньку sam тут не налаштовано, а вебхук, що надсилається до sam, не можна перевірити."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:43
@@ -1104,7 +1114,7 @@ msgid "error.field.too_long"
 msgstr "Використовуйте щонайбільше {max_length} символів."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:22
+#: src/lib/errors/messages/webhook.ts:32
 msgid "error.webhook.target_not_allowed"
 msgstr "Ми не можемо надсилати вебхуки на цю адресу. Використовуйте загальнодоступну вебадресу."
 
@@ -1314,7 +1324,7 @@ msgid "error.popcorn.version_not_found"
 msgstr "Не вдалося знайти цю версію презентації."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:18
+#: src/lib/errors/messages/webhook.ts:23
 msgid "error.webhook.not_found"
 msgstr "Не вдалося знайти цей вебхук. Можливо, його було видалено."
 

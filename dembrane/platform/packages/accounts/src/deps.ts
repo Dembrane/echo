@@ -27,6 +27,11 @@ export interface AccountsSettings {
   readonly eventsEnabled: boolean;
   /** Signatures, billing details and questions reach Slack (ACCOUNTS_SLACK_WEBHOOK_URL set). */
   readonly slackEnabled: boolean;
+  /**
+   * Account events go to sam's inbox (SAM_INBOX_URL set) instead of ACCOUNTS_EVENTS_URL,
+   * and sam posts their Slack line, so echo does not.
+   */
+  readonly samInbox: boolean;
   readonly reminderIntervalDays: number;
   /** Signs invite links like every other invite (account.inviteHashSecret). */
   readonly inviteSecret: string;
