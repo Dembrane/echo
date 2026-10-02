@@ -7,6 +7,8 @@ import { buildDemo, type DemoBuildDeps, demoSlug } from "../src/demo/build";
 import type { HttpGet } from "../src/demo/fetch";
 import { SALES_PORTAL } from "../src/demo/sales-portal";
 import { createDemo } from "../src/demo/service";
+import { accountManagerPayload } from "../src/events";
+import { ensureUser } from "../src/prospect";
 import { accountsRoutes } from "../src/routes";
 import { store } from "../src/storage";
 import { admin, call, dropDatabase, type World, world } from "./helpers";
@@ -279,6 +281,37 @@ run("demos made in echo", () => {
     const before = extracted.length;
     await buildDemo(deps, status.id, 1);
     expect(extracted.length).toBe(before);
+  });
+
+  test("the @dembrane.com staff member who started a demo becomes the prospect's account manager", async () => {
+    const sales = await w.db.transaction((tx) =>
+      ensureUser(tx, {
+        email: "sales@dembrane.com",
+        name: "Sales Person",
+        passwordHash: null,
+        nowIso: w.clock.now.toISOString(),
+      }),
+    );
+    const status = K.DemoStatus.parse((await start()).data);
+    await w.db
+      .update(schema.account_demo)
+      .set({ createdBy: sales.userId })
+      .where(eq(schema.account_demo.id, status.id));
+    await buildDemo(deps, status.id, 1);
+    const orgId = (await load(status.id))?.orgId as string;
+    expect((await store.billing(w.db, orgId))?.account_manager_id).toBe(sales.appUserId);
+    expect(await accountManagerPayload(w.db, orgId)).toEqual({
+      email: "sales@dembrane.com",
+      name: "Sales Person",
+    });
+  });
+
+  test("a demo started by someone outside @dembrane.com leaves the manager unset", async () => {
+    // The world's staff member is staff@example.test.
+    const status = K.DemoStatus.parse((await start()).data);
+    await buildDemo(deps, status.id, 1);
+    const orgId = (await load(status.id))?.orgId as string;
+    expect((await store.billing(w.db, orgId))?.account_manager_id).toBeNull();
   });
 
   test("publishing with sign-in: live link, the contact released and invited, Continue in dembrane", async () => {

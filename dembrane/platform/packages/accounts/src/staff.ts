@@ -10,7 +10,7 @@ import type { Signed } from "@dembrane/http";
 import { and, eq, gt, isNull } from "drizzle-orm";
 import { staffOrg } from "./access";
 import { documentDetail, fileBytes, signedBytes, ticketOf } from "./customer";
-import { type AccountsDeps, type Conn, isUuid } from "./deps";
+import { type AccountsDeps, type Conn, isStaffEmail, isUuid } from "./deps";
 import { fieldProblems, sha256Hex, storePdf, storeRendered, writeFields } from "./documents";
 import { emit } from "./events";
 import { legalForPush } from "./legal/store";
@@ -203,7 +203,7 @@ export async function updateAccount(
           ? await store.appUser(tx, patch.account_manager_id)
           : null;
         if (!user) throw new BadRequestError("billing.account_manager_not_found");
-        if (!(user.email ?? "").toLowerCase().endsWith("@dembrane.com"))
+        if (!isStaffEmail(user.email))
           throw new BadRequestError("billing.account_manager_not_staff");
       }
       const account = await store.billing(tx, org.id);
