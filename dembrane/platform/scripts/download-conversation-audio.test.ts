@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
-import { mkdtempSync, readdirSync } from "node:fs";
+import { mkdtempSync, readdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -15,6 +15,8 @@ const WORKSPACE = { id: "ws-1", name: "Team", org_name: "Org" };
 const PROJECTS = [
   { id: "p1111111-aaaa", name: "Town hall", conversations_count: 2, audio_hours: 0 },
   { id: "p2222222-bbbb", name: "Other", conversations_count: 0, audio_hours: 0 },
+  // Reached by id only, so the pickers above stay as they are.
+  { id: "p3333333-cccc", name: "Damaged", conversations_count: 2, audio_hours: 0 },
 ];
 const CONVERSATIONS = [
   {
@@ -31,6 +33,21 @@ const CONVERSATIONS = [
     duration: 9,
   },
 ];
+// A recording stopped mid-upload can leave an empty last chunk; a corrupt one won't decode.
+const DAMAGED = [
+  {
+    id: "c4444444-dddd",
+    participant_name: "Partly",
+    created_at: "2026-09-04T10:00:00Z",
+    duration: null,
+  },
+  {
+    id: "c5555555-eeee",
+    participant_name: "Empty",
+    created_at: "2026-09-05T10:00:00Z",
+    duration: null,
+  },
+];
 const CHUNKS: Record<string, Chunk[]> = {
   // The webm and the mp3 decode to different rates and channel counts, and the chunk
   // without a path has no audio to fetch.
@@ -43,6 +60,14 @@ const CHUNKS: Record<string, Chunk[]> = {
     { id: "k4", path: "c.mp3", timestamp: "2026-09-02T10:00:00Z", file: "one-second.mp3" },
   ],
   "c3333333-cccc": [{ id: "k5", path: null, timestamp: "2026-09-03T10:00:00Z" }],
+  "c4444444-dddd": [
+    { id: "k6", path: "d.mp3", timestamp: "2026-09-04T10:00:00Z", file: "one-second.mp3" },
+    { id: "k7", path: "e.mp4", timestamp: "2026-09-04T10:00:01Z", file: "garbage.mp4" },
+    { id: "k8", path: "f.mp4", timestamp: "2026-09-04T10:00:02Z", file: "empty.mp4" },
+  ],
+  "c5555555-eeee": [
+    { id: "k9", path: "g.mp4", timestamp: "2026-09-05T10:00:00Z", file: "empty.mp4" },
+  ],
 };
 
 let api: ReturnType<typeof Bun.serve>;
@@ -80,7 +105,10 @@ function fakeApi(req: Request): Response | Promise<Response> {
   const project = path.match(/^\/api\/v2\/projects\/([^/]+)$/);
   if (project) return Response.json(PROJECTS.find((p) => p.id === project[1]));
   if (path === "/api/v2/bff/conversations") {
-    const forProject = url.searchParams.get("project_id") === PROJECTS[0]!.id ? CONVERSATIONS : [];
+    const forProject =
+      { [PROJECTS[0]!.id]: CONVERSATIONS, [PROJECTS[2]!.id]: DAMAGED }[
+        url.searchParams.get("project_id") ?? ""
+      ] ?? [];
     return Response.json(forProject.slice(offset));
   }
   const chunks = path.match(/^\/api\/v2\/bff\/conversations\/([^/]+)\/chunks$/);
@@ -143,8 +171,7 @@ async function probeSeconds(file: string) {
 let runs = 0;
 
 /** Runs the script with `input` piped to stdin; each run writes into its own out dir. */
-async function run(args: string[], input = "") {
-  const outDir = join(root, `out-${++runs}`);
+async function run(args: string[], input = "", outDir = join(root, `out-${++runs}`)) {
   const env = { ...process.env };
   delete env.DEMBRANE_TOKEN;
   const proc = Bun.spawn(
@@ -193,6 +220,8 @@ function files(outDir: string) {
         "44100",
         join(root, "one-second.mp3"),
       );
+      writeFileSync(join(root, "empty.mp4"), "");
+      writeFileSync(join(root, "garbage.mp4"), "not audio at all");
     });
     afterAll(() => api.stop(true));
     beforeEach(() => {
@@ -266,6 +295,57 @@ function files(outDir: string) {
       ]);
       expect(code).toBe(0);
       expect(stderr).toContain("c3333333-cccc: no chunks with audio");
+      expect(files(outDir)).toEqual([
+        "Town_hall-p1111111",
+        "Town_hall-p1111111/Ana_María-c1111111-0m03s.mp3",
+        "Town_hall-p1111111/conversation-c2222222-0m01s.mp3",
+      ]);
+    }, 30_000);
+
+    test("an empty or undecodable chunk is left out of the join", async () => {
+      const { code, stdout, outDir } = await run([
+        PROJECTS[2]!.id,
+        "--all",
+        "--token",
+        "good-token",
+      ]);
+      expect(code).toBe(0);
+      expect(stdout).toContain("1/3 chunks → ");
+      expect(stdout).toContain("(skipped chunk 2 (won't decode), 3 (empty))");
+      expect(files(outDir)).toEqual([
+        "Damaged-p3333333",
+        "Damaged-p3333333/Partly-c4444444-0m01s.mp3",
+      ]);
+    }, 30_000);
+
+    test("a conversation with no usable chunk fails without stopping the others", async () => {
+      const { code, stderr } = await run([PROJECTS[2]!.id, "--all", "--token", "good-token"]);
+      expect(code).toBe(0);
+      expect(stderr).toContain("Empty-c5555555: failed");
+      expect(stderr).toContain("none of the 1 chunks has audio: 1 (empty)");
+    }, 30_000);
+
+    test("a rerun into the same folder only fetches what is missing", async () => {
+      const outDir = join(root, "rerun");
+      const first = await run(
+        [PROJECTS[0]!.id, "--conversation", "c2222222-bbbb", "--token", "good-token"],
+        "",
+        outDir,
+      );
+      expect(first.code).toBe(0);
+      requests = [];
+      const args = [
+        PROJECTS[0]!.id,
+        "--conversation",
+        "c2222222-bbbb",
+        "--conversation",
+        "c1111111-aaaa",
+      ];
+      const second = await run([...args, "--token", "good-token"], "", outDir);
+      expect(second.code).toBe(0);
+      expect(second.stdout).toContain("conversation-c2222222: already there → ");
+      const fetched = requests.filter((r) => r.path.endsWith("/chunks")).map((r) => r.path);
+      expect(fetched).toEqual(["/api/v2/bff/conversations/c1111111-aaaa/chunks"]);
       expect(files(outDir)).toEqual([
         "Town_hall-p1111111",
         "Town_hall-p1111111/Ana_María-c1111111-0m03s.mp3",

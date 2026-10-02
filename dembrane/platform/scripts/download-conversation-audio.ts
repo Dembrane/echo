@@ -8,6 +8,8 @@
  * project's conversations, asking at each step. --workspace or --project skips ahead, and
  * a dashboard URL (…/w/<workspace>/projects/<project>/…) skips ahead and picks the target.
  * Each conversation you pick becomes one file, its chunks in timestamp order.
+ * A chunk that is empty or won't decode is left out and named in the output. Rerunning
+ * into the same --out-dir skips conversations whose file is already there.
  *
  * Targets:
  *   --target prod   dashboard.dembrane.com           (the Python API on main)
@@ -24,7 +26,7 @@
  *
  * Needs ffmpeg on PATH.
  */
-import { mkdir, mkdtemp, rename, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, rename, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createInterface } from "node:readline/promises";
@@ -471,13 +473,25 @@ async function run(cmd: string[]) {
   if ((await proc.exited) !== 0) throw new Error(`${cmd[0]} failed:\n${stderr.slice(-2000)}`);
 }
 
+/** A file an earlier run finished for this conversation: `<base>-<duration>.<format>`. */
+async function existingOutput(outDir: string, base: string) {
+  const escaped = base.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const done = new RegExp(`^${escaped}-(\\d+h)?\\d+m\\d{2}s\\.${opts.format}$`);
+  return (await readdir(outDir)).find((f) => done.test(f));
+}
+
 async function download(c: Conversation, outDir: string) {
+  const base = `${safeName(c.participant_name ?? "")}-${c.id.slice(0, 8)}`;
+  const existing = await existingOutput(outDir, base);
+  if (existing) {
+    print(`  ${base}: already there → ${join(outDir, existing)}`);
+    return;
+  }
   const chunks = (await listChunks(c.id)).filter((ch) => ch.path);
   if (!chunks.length) {
     printErr(`  ${c.id}: no chunks with audio (a locked conversation hides them), skipped`);
     return;
   }
-  const base = `${safeName(c.participant_name ?? "")}-${c.id.slice(0, 8)}`;
   const work = opts["keep-chunks"]
     ? join(outDir, `${base}-chunks`)
     : await mkdtemp(join(tmpdir(), "echo-audio-"));
@@ -486,7 +500,10 @@ async function download(c: Conversation, outDir: string) {
   try {
     // Chunks come in whatever format the recorder or upload produced (webm, mp3, wav…),
     // so each is decoded to the same PCM wav before they are joined.
+    // A chunk that is empty or won't decode is left out, as the server's own merge does:
+    // a recording stopped mid-upload can leave a 0-byte last chunk.
     const wavs: string[] = [];
+    const skipped: string[] = [];
     for (const [i, ch] of chunks.entries()) {
       const n = String(i + 1).padStart(4, "0");
       process.stdout.write(`\r  ${base}: chunk ${i + 1}/${chunks.length}`);
@@ -495,8 +512,12 @@ async function download(c: Conversation, outDir: string) {
       if (!res.ok) throw new Error(`chunk ${ch.id}: GET audio → ${res.status}`);
       const raw = join(work, `${n}-${ch.id}.${extOf(url)}`);
       await Bun.write(raw, res);
+      if (Bun.file(raw).size === 0) {
+        skipped.push(`${i + 1} (empty)`);
+        continue;
+      }
       const wav = join(work, `${n}.wav`);
-      await run([
+      const decoded = await run([
         "ffmpeg",
         "-hide_banner",
         "-y",
@@ -509,9 +530,18 @@ async function download(c: Conversation, outDir: string) {
         "-c:a",
         "pcm_s16le",
         wav,
-      ]);
+      ]).then(
+        () => true,
+        () => false,
+      );
+      if (!decoded) {
+        skipped.push(`${i + 1} (won't decode)`);
+        continue;
+      }
       wavs.push(wav);
     }
+    if (!wavs.length)
+      throw new Error(`none of the ${chunks.length} chunks has audio: ${skipped.join(", ")}`);
     const list = join(work, "list.txt");
     await Bun.write(list, wavs.map((w) => `file '${w.replaceAll("'", "'\\''")}'`).join("\n"));
     // Written under a temporary name first: the duration in the final name is read
@@ -525,7 +555,8 @@ async function download(c: Conversation, outDir: string) {
     await rename(partial, out);
     if (!opts["keep-chunks"]) await rm(work, { recursive: true, force: true });
     else for (const w of [...wavs, list]) await rm(w, { force: true });
-    print(`\r  ${base}: ${chunks.length} chunks → ${out}`);
+    const note = skipped.length ? ` (skipped chunk ${skipped.join(", ")})` : "";
+    print(`\r  ${base}: ${wavs.length}/${chunks.length} chunks → ${out}${note}`);
   } catch (err) {
     printErr(`\n  ${base}: failed, partial files in ${work}\n  ${(err as Error).message}`);
   }
