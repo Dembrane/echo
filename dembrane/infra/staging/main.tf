@@ -27,6 +27,10 @@ locals {
     "SUPPORT_WEBHOOK_URL",
     "ACCOUNTS_SLACK_WEBHOOK_URL",
     "ACCOUNTS_EVENTS_SECRET",
+    # sam's inbox: support requests, bookings, overage and account events go here, signed.
+    "SAM_INBOX_URL",
+    "SAM_INBOX_SECRET",
+    "SAM_INBOX_FROM",
   ]
 }
 
