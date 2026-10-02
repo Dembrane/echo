@@ -2,14 +2,10 @@
 
 import { i18n } from "@lingui/core";
 import { t } from "@lingui/core/macro";
-import axios, {
-	type AxiosError,
-	type AxiosRequestConfig,
-	type CreateAxiosDefaults,
-} from "axios";
+import axios, { type AxiosError, type CreateAxiosDefaults } from "axios";
 import { toast } from "@/components/common/Toaster";
 import { VOICE_TRANSCRIBE_TIMEOUT_MS } from "@/components/voice/voiceInput";
-import { API_BASE_URL, USE_PARTICIPANT_ROUTER } from "@/config";
+import { API_BASE_URL } from "@/config";
 import { bff } from "./bff";
 import { loadErrorMessages } from "./errors/present";
 
@@ -31,10 +27,6 @@ apiNoAuth.interceptors.response.use(
 );
 
 export const api = axios.create(apiCommonConfig);
-
-interface CustomAxiosRequestConfig extends AxiosRequestConfig {
-	_retry?: boolean;
-}
 
 export const getParticipantProjectById = async (projectId: string) => {
 	return apiNoAuth.get<unknown, ParticipantProject>(
@@ -84,30 +76,10 @@ export const deleteParticipantConversationChunk = async (
 	);
 };
 
+// No 401/403 retry: cookie sessions have nothing to refresh, and a resend replays writes.
 api.interceptors.response.use(
 	(response) => response.data,
-	async (error: AxiosError) => {
-		const { config, response } = error;
-		// Retry the request if the response status is 401 or 403
-		if (
-			response &&
-			[401, 403].includes(response.status) &&
-			config &&
-			!(config as CustomAxiosRequestConfig)._retry
-		) {
-			(config as CustomAxiosRequestConfig)._retry = true;
-			try {
-				if (!USE_PARTICIPANT_ROUTER) {
-					// go to /login
-					// window.location.assign("/login");
-				}
-				return api(config);
-			} catch (e) {
-				console.error("init session error", e);
-				// Handle the error when refreshing the session fails
-				throw e;
-			}
-		}
+	(error: AxiosError) => {
 		void loadErrorMessages(i18n);
 		throw error;
 	},
@@ -681,7 +653,9 @@ export const initiateAndUploadConversationChunk = async (payload: {
 		try {
 			const conversation = await initiateConversation({
 				email: payload.email,
-				name: `${payload.namePrefix} - ${fileName}`,
+				name: payload.namePrefix
+					? `${payload.namePrefix} - ${fileName}`
+					: fileName,
 				pin: payload.pin,
 				projectId: payload.projectId,
 				source: source,

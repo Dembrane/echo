@@ -77,4 +77,18 @@ export const conversation = {
     audience: "developer",
     description: "A BFF conversation read asked for a field the conversation does not have.",
   },
+  "conversation.move_same_project": {
+    action: "fix_input",
+    detail: "The conversation is already in this project",
+    audience: "developer",
+    description:
+      "A move named the conversation's own project as the target; the move dialog never offers it.",
+  },
+  "conversation.move_context_mismatch": {
+    action: "none",
+    detail:
+      "Conversations can only move between workspaces in the same billing and data-ownership context.",
+    description:
+      "A conversation move to a workspace with different billing or data ownership, or out of every workspace into a legacy project.",
+  },
 } as const satisfies Codes<"conversation">;

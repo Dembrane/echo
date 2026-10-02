@@ -134,9 +134,8 @@ export const VerifyEmailRoute = () => {
 						</Text>
 					)}
 
-					{/* Failure → most people are actually already verified;
-					    Log in is the realistic action. No resend CTA: Directus
-					    doesn't expose one and the old button silently failed. */}
+					{/* Failure → most people are actually already verified; Log in
+					    is the realistic action, and login offers a resend if not. */}
 					{showError && (
 						<Stack gap="xl">
 							<Alert color="yellow" variant="light">

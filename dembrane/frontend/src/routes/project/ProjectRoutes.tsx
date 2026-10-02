@@ -29,11 +29,20 @@ import { ENABLE_CANVAS, ENABLE_WEBHOOKS } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { getProjectTranscriptsLink } from "@/lib/api";
+import { canUseChat, isReadOnlyRole } from "@/lib/roles";
 import type { Tier } from "@/lib/tiers";
+
+// Observers lack project:update, so editing and upload controls are hidden or
+// read-only rather than shown and answered with a 403.
+const useCanEditProject = () => {
+	const { workspace } = useWorkspace();
+	return !!workspace && !isReadOnlyRole(workspace.role);
+};
 
 export const ProjectConversationsRoute = () => {
 	const { projectId, workspaceId } = useParams();
 	const navigate = useI18nNavigate();
+	const canEdit = useCanEditProject();
 	// Off by default so the page keeps browsing normally (full row actions,
 	// click-through to the conversation). Turning it on swaps in the same
 	// checkbox picker used inside a chat, plus "Ask about these" to start a
@@ -51,7 +60,7 @@ export const ProjectConversationsRoute = () => {
 				<ProjectConversationsPanel
 					projectId={projectId}
 					workspaceId={workspaceId}
-					showUpload
+					showUpload={canEdit}
 					selectionMode={pickerMode}
 					selection={selectedConversationIds}
 					onSelectionChange={setSelectedConversationIds}
@@ -94,6 +103,10 @@ export const ProjectSettingsRoute = () => {
 		projectId: projectId ?? "",
 		query,
 	});
+	const { workspace } = useWorkspace();
+	const canEdit = useCanEditProject();
+	// Project memory is listed with chat:use.
+	const canSeeMemory = !!workspace && canUseChat(workspace.role);
 	return (
 		<Stack
 			gap="3rem"
@@ -108,7 +121,9 @@ export const ProjectSettingsRoute = () => {
 				</Alert>
 			)}
 
-			{projectQuery.data && <ProjectBasicEdit project={projectQuery.data} />}
+			{projectQuery.data && (
+				<ProjectBasicEdit project={projectQuery.data} readOnly={!canEdit} />
+			)}
 
 			{/* Usage and sharing moved to its own tab (2026-04-24) —
 			    /projects/:id/access — so Project Settings stays focused on
@@ -120,20 +135,30 @@ export const ProjectSettingsRoute = () => {
 					{projectId && (
 						<>
 							<Divider />
-							<ProjectGoalSection projectId={projectId} />
+							<ProjectGoalSection projectId={projectId} readOnly={!canEdit} />
 						</>
 					)}
 
 					<Divider />
-					<ProjectMethodologySection project={projectQuery.data} />
+					<ProjectMethodologySection
+						project={projectQuery.data}
+						readOnly={!canEdit}
+					/>
 
-					<Divider />
-					{projectId && <ProjectMemorySection projectId={projectId} />}
+					{projectId && canSeeMemory && (
+						<>
+							<Divider />
+							<ProjectMemorySection projectId={projectId} />
+						</>
+					)}
 
 					{ENABLE_CANVAS && (
 						<>
 							<Divider />
-							<ProjectExperimentalSection project={projectQuery.data} />
+							<ProjectExperimentalSection
+								project={projectQuery.data}
+								readOnly={!canEdit}
+							/>
 						</>
 					)}
 

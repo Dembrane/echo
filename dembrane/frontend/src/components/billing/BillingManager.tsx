@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import {
 	Alert,
 	Anchor,
@@ -342,7 +342,7 @@ function ManagedBillingPanel({
 
 				<SectionRow label={t`Seats`}>
 					<Text size="sm">
-						<Trans>{seats} seats</Trans>
+						<Plural value={seats} one="# seat" other="# seats" />
 					</Text>
 				</SectionRow>
 
@@ -1254,13 +1254,18 @@ export function BillingManager({
 
 				<SectionRow label={t`Seats`}>
 					<Text size="sm">
-						<Trans>{overview.seats} seats</Trans>
+						<Plural value={overview.seats} one="# seat" other="# seats" />
 					</Text>
 					{overview.available_seats > 0 && (
 						<Text size="xs" c="var(--mantine-color-primary-6)">
 							<Trans>
-								{overview.available_seats} seat(s) paid for this period and
-								unused. Invite someone to fill them at no charge until renewal.
+								<Plural
+									value={overview.available_seats}
+									one="# seat"
+									other="# seats"
+								/>{" "}
+								paid for this period and unused. Invite someone to fill them at
+								no charge until renewal.
 							</Trans>
 						</Text>
 					)}

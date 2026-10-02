@@ -130,20 +130,23 @@ export function accountStorage(db: Db) {
         .where(eq(app_user.id, id));
     },
 
-    /** Whether an email already has an identity, in Directus or in Better Auth. */
-    async identityExists(email: string) {
+    /**
+     * Whether an email already has an identity, in Directus or in Better Auth, and whether
+     * Better Auth still waits for it to be verified.
+     */
+    async identityOf(email: string): Promise<"none" | "verified" | "unverified"> {
+      const [a] = await db
+        .select({ verified: schema.auth_user.emailVerified })
+        .from(schema.auth_user)
+        .where(eq(schema.auth_user.email, email))
+        .limit(1);
+      if (a) return a.verified ? "verified" : "unverified";
       const [d] = await db
         .select({ id: directus_users.id })
         .from(directus_users)
         .where(eq(directus_users.email, email))
         .limit(1);
-      if (d) return true;
-      const [a] = await db
-        .select({ id: schema.auth_user.id })
-        .from(schema.auth_user)
-        .where(eq(schema.auth_user.email, email))
-        .limit(1);
-      return Boolean(a);
+      return d ? "verified" : "none";
     },
 
     /**

@@ -124,6 +124,11 @@ msgid "error.document.dpa_not_authorised"
 msgstr "Conferma di essere autorizzato ad accettare il trattamento dei dati per la tua organizzazione."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/conversation.ts:19
+msgid "error.conversation.move_context_mismatch"
+msgstr "Le conversazioni possono essere spostate solo in spazi di lavoro con lo stesso intestatario di fatturazione e dati. Scegli un progetto in un altro spazio di lavoro."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/internal.ts:5
 msgid "error.internal.busy"
 msgstr "dembrane è occupata con questa operazione in questo momento. Riprova tra un secondo."
@@ -209,7 +214,7 @@ msgid "error.workspace.visibility_requires_tier"
 msgstr "Gli spazi di lavoro privati o su invito richiedono il piano Innovator o superiore. Per ora crealo come aperto, oppure effettua prima l'upgrade."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:23
+#: src/lib/errors/messages/conversation.ts:28
 msgid "error.conversation.no_summary"
 msgstr "Crea prima un riassunto di questa conversazione, poi riprova."
 
@@ -649,7 +654,7 @@ msgid "error.agent_access.request_expired"
 msgstr "Questa richiesta di connessione è scaduta. Ricomincia dal tuo agente."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:19
+#: src/lib/errors/messages/conversation.ts:24
 msgid "error.conversation.no_content"
 msgstr "Questa conversazione non ha ancora audio."
 
@@ -669,7 +674,7 @@ msgid "error.chat.conversation_not_in_chat"
 msgstr "Questa conversazione non è più nella chat."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:31
+#: src/lib/errors/messages/conversation.ts:36
 msgid "error.conversation.not_open"
 msgstr "Questa conversazione non è aperta al momento. Chiedi un nuovo link all'organizzatore."
 
@@ -1184,7 +1189,7 @@ msgid "error.chat.not_found"
 msgstr "Non siamo riusciti a trovare questa chat. Potrebbe essere stata eliminata."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:27
+#: src/lib/errors/messages/conversation.ts:32
 msgid "error.conversation.not_found"
 msgstr "Non siamo riusciti a trovare questa conversazione. Potrebbe essere stata eliminata."
 

@@ -110,6 +110,19 @@ const auth = createAuth({
       tags: ["verify_email"],
     });
   },
+  // Same shape: the dashboard page the request named (origin-checked), with the token.
+  sendResetPassword: async (email, url, token) => {
+    const page = new URL(url).searchParams.get("callbackURL");
+    const link = page ? `${page}${page.includes("?") ? "&" : "?"}token=${token}` : url;
+    const language = await localeOfEmail(database.db, email).catch(() => null);
+    const mail = { template: "reset_password", data: { reset_url: link } } as const;
+    await mailer.send({
+      to: email,
+      subject: subjectOf(mail, language) as string,
+      ...render(mail, language),
+      tags: ["reset_password"],
+    });
+  },
   defaultDirectusRoleId: null,
 });
 
