@@ -9,9 +9,15 @@
  * and the line below come out identical wherever the box lands. Inset shadows
  * do not snap: a rule on a fractional edge gets smeared lighter.
  *
- * The rule itself: a line above and below, no sides, square. One motif for
- * every bounded thing: tags, alerts, cards, fields, selects, menus, secondary
- * buttons and toasts. --app-rule-color lets states recolour it. */
+ * The border grammar: each border shape means one thing.
+ *   Top and bottom   something to read: cards, alerts, menus, dialogs,
+ *                    toasts, tables, tooltips
+ *   Sides            something you set: fields, selects, filters
+ *   Both (full box)  something you do: secondary buttons, suggestions
+ *   None             context: tags, statuses
+ *   Filled pill      the one primary action (button.module.css)
+ * Everything is square except the pill. --app-rule-color lets states
+ * recolour a rule (blue when active, red on error). */
 
 :root {
 	--app-stroke: 1px;
@@ -19,13 +25,10 @@
 	--app-float: 0 12px 40px rgba(45, 45, 44, 0.12);
 }
 
-:root .mantine-Badge-root,
+/* Read: a rule above and below. */
 :root .mantine-Alert-root,
 :root .mantine-Paper-root[data-with-border],
-:root .mantine-Card-root[data-with-border],
-:root .mantine-Input-input,
-:root .mantine-Button-root[data-variant="outline"],
-:root .mantine-Button-root[data-variant="default"] {
+:root .mantine-Card-root[data-with-border] {
 	border-color: var(--app-rule-color);
 	border-radius: 0;
 	border-style: solid;
@@ -33,17 +36,74 @@
 	box-shadow: none;
 }
 
-/* Floating layers keep their float shadow under the rule. */
-:root .mantine-Combobox-dropdown,
-:root .mantine-Modal-content,
-:root .mantine-Select-dropdown,
-:root .mantine-Menu-dropdown,
-:root .mantine-Popover-dropdown {
+/* Set: rules at the sides. Fields are white so they read as a place to type. */
+:root .mantine-Input-input {
+	background-color: #ffffff;
 	border-color: var(--app-rule-color);
 	border-radius: 0;
 	border-style: solid;
-	border-width: var(--app-stroke) 0;
+	border-width: 0 var(--app-stroke);
+	box-shadow: none;
+}
+
+/* Do: the full box. */
+:root .mantine-Button-root[data-variant="outline"],
+:root .mantine-Button-root[data-variant="default"] {
+	border-color: var(--app-rule-color);
+	border-radius: 0;
+	border-style: solid;
+	border-width: var(--app-stroke);
+	box-shadow: none;
+}
+
+/* Context: no border; a tag is its tint. */
+:root .mantine-Badge-root {
+	border-radius: 0;
+	border-width: 0;
+	box-shadow: none;
+}
+
+/* Floating layers follow what they hold, and keep their float shadow. */
+:root
+	:is(
+		.mantine-Popover-dropdown,
+		.mantine-Combobox-dropdown,
+		.mantine-Menu-dropdown,
+		.mantine-Modal-content,
+		.mantine-Drawer-content,
+		.mantine-HoverCard-dropdown
+	) {
+	border-color: var(--app-rule-color);
+	border-radius: 0;
+	border-style: solid;
 	box-shadow: var(--app-float);
+}
+/* Read: dialogs, drawers, popovers, hover cards. */
+:root
+	:is(
+		.mantine-Popover-dropdown,
+		.mantine-Modal-content,
+		.mantine-Drawer-content,
+		.mantine-HoverCard-dropdown
+	) {
+	border-width: var(--app-stroke) 0;
+}
+/* Set: the option list of a select, multiselect, autocomplete or combobox,
+ * and a date picker's calendar, is part of the control: sides. */
+:root .mantine-Combobox-dropdown,
+:root .mantine-Select-dropdown,
+:root .mantine-MultiSelect-dropdown,
+:root .mantine-Autocomplete-dropdown,
+:root .mantine-TagsInput-dropdown,
+:root .mantine-Popover-dropdown[data-dates-dropdown] {
+	/* Only open while the control is active, so its sides are blue too. */
+	--app-rule-color: #2957df;
+	border-color: var(--app-rule-color);
+	border-width: 0 var(--app-stroke);
+}
+/* Do: an action menu is a set of buttons: the full box. */
+:root .mantine-Menu-dropdown {
+	border-width: var(--app-stroke);
 }
 
 /* Secondary buttons draw the rule in their own colour (action blue, or the
@@ -307,38 +367,15 @@
 	margin: var(--app-stroke);
 }
 
-/* Stepper: square markers drawn with the stroke; done is filled, current is blue. */
-:root .mantine-Stepper-stepIcon {
-	background: #f6f4f1;
-	border: var(--app-stroke) solid var(--app-rule-color);
-	border-radius: 0;
-	color: #2d2d2c;
-	font-weight: 320;
-}
-:root .mantine-Stepper-stepIcon[data-progress] {
-	border-color: #2957df;
-	color: #2957df;
-}
-:root .mantine-Stepper-stepIcon[data-completed] {
-	background: #2957df;
-	border-color: #2957df;
-	color: #ffffff;
-}
-:root .mantine-Stepper-separator {
-	background: var(--app-rule-color);
-	height: var(--app-stroke);
-}
-:root .mantine-Stepper-separator[data-active] {
-	background: #2957df;
-}
+/* Stepper labels; the markers are context (see the grammar section below). */
 :root .mantine-Stepper-stepLabel {
 	font-size: 16px;
 	font-weight: 320;
 }
-/* No step descriptions: the step names carry it, the detail lives in the
- * step's own content. In the app, drop the description prop. */
 :root .mantine-Stepper-stepDescription {
-	display: none;
+	color: #5f646f;
+	font-size: 14px;
+	font-weight: 240;
 }
 
 /* Choices: a square checkbox and a round radio, both drawn with the stroke. */
@@ -381,9 +418,9 @@
 	min-height: 0;
 }
 
-/* Chits. A tag you cannot click keeps the rule above and below (the Badge
- * rule above). A chit you can click gets the full box: a Badge rendered as a
- * button or link, and Mantine's Chip (filters). */
+/* Chits. A tag (context) has no border. A suggestion you press does
+ * something: the full box. A filter sets something: sides, and filters sit
+ * joined in one row with single dividers, the selected one drawn on top. */
 :root :is(button, a).mantine-Badge-root {
 	background: transparent;
 	border: var(--app-stroke) solid var(--app-rule-color);
@@ -394,8 +431,10 @@
 }
 :root .mantine-Chip-label {
 	background: transparent;
-	border: var(--app-stroke) solid var(--app-rule-color);
+	border-color: var(--app-rule-color);
 	border-radius: 0;
+	border-style: solid;
+	border-width: 0 var(--app-stroke);
 	color: #2d2d2c;
 	font-size: 14px;
 	font-weight: 320;
@@ -405,8 +444,18 @@
 }
 :root .mantine-Chip-label[data-checked] {
 	background: #e9f1ff;
-	border-color: var(--app-rule-color);
+	border-color: #2957df;
 	color: #2d2d2c;
+}
+:root .mantine-Group-root:has(> .mantine-Chip-root) {
+	gap: 0;
+}
+:root .mantine-Chip-root + .mantine-Chip-root {
+	margin-left: calc(-1 * var(--app-stroke));
+}
+:root .mantine-Chip-root:has(.mantine-Chip-label[data-checked]) {
+	position: relative;
+	z-index: 1;
 }
 :root .mantine-Chip-iconWrapper {
 	color: #2957df;
@@ -510,4 +559,82 @@
 	svg[viewBox="0 0 256 256"][width="18"]
 	:is(path, circle, rect, line, polyline) {
 	stroke-width: 2.22;
+}
+
+/* ---------- the grammar, control by control ---------- */
+
+/* Set: segmented controls sit like joined filters, between side rules with
+ * single dividers; the active segment is the blue tint with blue sides. */
+:root .mantine-SegmentedControl-root {
+	background: transparent;
+	border-color: var(--app-rule-color);
+	border-radius: 0;
+	border-style: solid;
+	border-width: 0 var(--app-stroke);
+	padding: 0;
+}
+:root .mantine-SegmentedControl-indicator {
+	background: #e9f1ff;
+	border-color: #2957df;
+	border-radius: 0;
+	border-style: solid;
+	border-width: 0 var(--app-stroke);
+	box-shadow: none;
+}
+:root .mantine-SegmentedControl-control:not(:first-of-type) {
+	border-left: var(--app-stroke) solid var(--app-rule-color);
+}
+:root .mantine-SegmentedControl-label {
+	border-radius: 0;
+	color: #2d2d2c;
+}
+
+/* Set: a switch is a square track between side rules; on, it fills blue. */
+:root .mantine-Switch-track {
+	background: #e6e3df;
+	border-color: var(--app-rule-color);
+	border-radius: 0;
+	border-style: solid;
+	border-width: 0 var(--app-stroke);
+}
+:root .mantine-Switch-thumb {
+	border: 0;
+	border-radius: 0;
+}
+:root .mantine-Switch-input:checked + .mantine-Switch-track {
+	background: #2957df;
+	border-color: #2957df;
+}
+
+/* Set: a file drop area is a place to put something: sides. */
+:root .mantine-Dropzone-root {
+	border-color: var(--app-rule-color);
+	border-radius: 0;
+	border-style: dashed;
+	border-width: 0 var(--app-stroke);
+}
+
+/* Context: step markers are not buttons, so no border. Next is the quiet
+ * fill, current the blue tint, done filled blue. */
+:root .mantine-Stepper-stepIcon {
+	background: #e6e3df;
+	border: 0;
+	border-radius: 0;
+	color: #2d2d2c;
+	font-weight: 320;
+}
+:root .mantine-Stepper-stepIcon[data-progress] {
+	background: #e9f1ff;
+	color: #2957df;
+}
+:root .mantine-Stepper-stepIcon[data-completed] {
+	background: #2957df;
+	color: #ffffff;
+}
+:root .mantine-Stepper-separator {
+	background: var(--app-rule-color);
+	height: var(--app-stroke);
+}
+:root .mantine-Stepper-separator[data-active] {
+	background: #2957df;
 }

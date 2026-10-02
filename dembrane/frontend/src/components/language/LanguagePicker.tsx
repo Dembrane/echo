@@ -54,18 +54,18 @@ const data: Array<{
 		label: "Español",
 		language: "es-ES",
 	},
-		{
-			flag: "🇺🇦",
-			iso639_1: "uk",
-			label: "Ukrainian",
-			language: "uk-UA",
-		},
-		{
-			flag: "🇨🇿",
-			iso639_1: "cs",
-			label: "Czech",
-			language: "cs-CZ",
-		},
+	{
+		flag: "🇺🇦",
+		iso639_1: "uk",
+		label: "Ukrainian",
+		language: "uk-UA",
+	},
+	{
+		flag: "🇨🇿",
+		iso639_1: "cs",
+		label: "Czech",
+		language: "cs-CZ",
+	},
 ];
 
 export const languageOptions = data.map((d) => ({
@@ -130,9 +130,6 @@ export const LanguagePicker = () => {
 					maxDropdownHeight={360}
 					classNames={{ option: classes.option }}
 					styles={{
-						dropdown: {
-							border: "1px solid var(--mantine-color-dark-9)",
-						},
 						option: {
 							paddingBlock: 4,
 						},

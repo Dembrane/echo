@@ -192,7 +192,7 @@ export const theme = createTheme({
 				comboboxProps: { shadow: "md" },
 				rightSection: <CaretDownIcon size={16} />,
 			},
-			styles: { input: { backgroundColor: roles.bg, cursor: "pointer" } },
+			styles: { input: { cursor: "pointer" } },
 		},
 		SimpleGrid: { defaultProps: { spacing: "sm" } },
 		// Muted text differs by weight, not size: c="dimmed" gets the 240 cut.
