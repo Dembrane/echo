@@ -29,4 +29,16 @@ export const webhook = {
     detail: "Status must be one of: published, draft, archived",
     description: "A webhook status outside published, draft and archived.",
   },
+  "webhook.invalid_target": {
+    action: "fix_input",
+    detail: "Target must be url with a URL, or sam_inbox with one of: {codes}",
+    description:
+      "Staff set a webhook target other than url with a URL or sam_inbox with an allowed code.",
+  },
+  "webhook.sam_inbox_unavailable": {
+    action: "none",
+    detail: "sam's inbox is not configured here, or a webhook aimed at it cannot be tested",
+    description:
+      "The deployment has no SAM_INBOX_* settings, or the test button was pressed on a webhook that delivers to sam's inbox, where a sample would post to a real channel.",
+  },
 } as const satisfies Codes<"webhook">;

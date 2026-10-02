@@ -317,7 +317,9 @@
     "error.workspace.removed_from": "Byli jste odebráni z tohoto pracovního prostoru. Požádejte správce pracovního prostoru o opětovné pozvání.",
     "error.workspace.support_request_expired": "Platnost této žádosti o podporu vypršela. Pokud stále potřebujete pomoc, požádejte podporu dembrane o novou.",
     "error.workspace.support_request_handled": "Tato žádost o podporu již byla vyřízena.",
-    "error.workspace.visibility_requires_tier": "Pracovní prostory na pozvánku a soukromé prostory vyžadují tarif Innovator nebo vyšší. Vytvořte ho zatím jako otevřený, nebo nejprve přejděte na vyšší tarif."
+    "error.workspace.visibility_requires_tier": "Pracovní prostory na pozvánku a soukromé prostory vyžadují tarif Innovator nebo vyšší. Vytvořte ho zatím jako otevřený, nebo nejprve přejděte na vyšší tarif.",
+    "error.webhook.invalid_target": "Vyberte, kam tento webhook směřuje: na webovou adresu, nebo do schránky sama se známým kódem.",
+    "error.webhook.sam_inbox_unavailable": "Schránka sama zde není nastavena a webhook směřující k samovi nelze otestovat."
   },
   "de-DE": {
     "error.access.forbidden": "Sie haben keine Berechtigung für diese Aktion.",
@@ -637,7 +639,9 @@
     "error.workspace.removed_from": "Sie wurden aus diesem Arbeitsbereich entfernt. Bitten Sie einen Arbeitsbereich-Administrator, Sie erneut einzuladen.",
     "error.workspace.support_request_expired": "Diese Supportanfrage ist abgelaufen. Bitten Sie den dembrane-Support um eine neue Anfrage, falls Sie weiterhin Hilfe benötigen.",
     "error.workspace.support_request_handled": "Diese Supportanfrage wurde bereits beantwortet.",
-    "error.workspace.visibility_requires_tier": "Arbeitsbereiche mit Beitritt nur auf Einladung sowie private Arbeitsbereiche erfordern den Tarif Innovator oder höher. Erstellen Sie ihn vorerst als offen oder führen Sie zuerst ein Upgrade durch."
+    "error.workspace.visibility_requires_tier": "Arbeitsbereiche mit Beitritt nur auf Einladung sowie private Arbeitsbereiche erfordern den Tarif Innovator oder höher. Erstellen Sie ihn vorerst als offen oder führen Sie zuerst ein Upgrade durch.",
+    "error.webhook.invalid_target": "Wählen Sie, wohin dieser Webhook geht: eine Webadresse oder sams Posteingang mit einem bekannten Code.",
+    "error.webhook.sam_inbox_unavailable": "sams Posteingang ist hier nicht eingerichtet, und ein Webhook an sam kann nicht getestet werden."
   },
   "es-ES": {
     "error.access.forbidden": "No tienes permiso para hacer esto.",
@@ -957,7 +961,9 @@
     "error.workspace.removed_from": "Te han eliminado de este espacio de trabajo. Pide a un administrador del espacio de trabajo que te vuelva a invitar.",
     "error.workspace.support_request_expired": "Esta solicitud de soporte ha caducado. Pide al equipo de soporte de dembrane que te envíe una nueva si aún necesitas ayuda.",
     "error.workspace.support_request_handled": "Esta solicitud de soporte ya fue respondida.",
-    "error.workspace.visibility_requires_tier": "Los espacios de trabajo privados o solo por invitación requieren el plan Innovator o superior. Créalo como abierto por ahora o mejora tu plan primero."
+    "error.workspace.visibility_requires_tier": "Los espacios de trabajo privados o solo por invitación requieren el plan Innovator o superior. Créalo como abierto por ahora o mejora tu plan primero.",
+    "error.webhook.invalid_target": "Elige adónde va este webhook: una dirección web o la bandeja de entrada de sam con un código conocido.",
+    "error.webhook.sam_inbox_unavailable": "La bandeja de entrada de sam no está configurada aquí, y un webhook que va a sam no se puede probar."
   },
   "fr-FR": {
     "error.access.forbidden": "Vous n'avez pas la permission de faire cela.",
@@ -1277,7 +1283,9 @@
     "error.workspace.removed_from": "Vous avez été retiré de cet espace de travail. Demandez à un administrateur de l'espace de travail de vous réinviter.",
     "error.workspace.support_request_expired": "Cette demande d'assistance a expiré. Demandez à l'assistance dembrane d'en envoyer une nouvelle si vous avez toujours besoin d'aide.",
     "error.workspace.support_request_handled": "Cette demande d'assistance a déjà été traitée.",
-    "error.workspace.visibility_requires_tier": "Les espaces de travail privés et sur invitation nécessitent le forfait Innovator ou supérieur. Créez-le en accès libre pour l'instant, ou passez au forfait supérieur."
+    "error.workspace.visibility_requires_tier": "Les espaces de travail privés et sur invitation nécessitent le forfait Innovator ou supérieur. Créez-le en accès libre pour l'instant, ou passez au forfait supérieur.",
+    "error.webhook.invalid_target": "Choisissez où va ce webhook : une adresse web, ou la boîte de réception de sam avec un code connu.",
+    "error.webhook.sam_inbox_unavailable": "La boîte de réception de sam n'est pas configurée ici, et un webhook vers sam ne peut pas être testé."
   },
   "it-IT": {
     "error.access.forbidden": "Non hai i permessi per farlo.",
@@ -1597,7 +1605,9 @@
     "error.workspace.removed_from": "Non fai più parte di questo spazio di lavoro. Chiedi a un amministratore dello spazio di lavoro di invitarti di nuovo.",
     "error.workspace.support_request_expired": "Questa richiesta di assistenza è scaduta. Chiedi all'assistenza di dembrane di inviarne una nuova se hai ancora bisogno di aiuto.",
     "error.workspace.support_request_handled": "A questa richiesta di assistenza è già stata data risposta.",
-    "error.workspace.visibility_requires_tier": "Gli spazi di lavoro privati o su invito richiedono il piano Innovator o superiore. Per ora crealo come aperto, oppure effettua prima l'upgrade."
+    "error.workspace.visibility_requires_tier": "Gli spazi di lavoro privati o su invito richiedono il piano Innovator o superiore. Per ora crealo come aperto, oppure effettua prima l'upgrade.",
+    "error.webhook.invalid_target": "Scegli dove va questo webhook: un indirizzo web o la casella di sam con un codice noto.",
+    "error.webhook.sam_inbox_unavailable": "La casella di sam non è configurata qui, e un webhook diretto a sam non può essere testato."
   },
   "nl-NL": {
     "error.access.forbidden": "Je hebt geen toestemming om dit te doen.",
@@ -1917,7 +1927,9 @@
     "error.workspace.removed_from": "Je bent verwijderd uit deze werkruimte. Vraag een beheerder van de werkruimte om je opnieuw uit te nodigen.",
     "error.workspace.support_request_expired": "Dit supportverzoek is verlopen. Vraag dembrane support om een nieuw verzoek te sturen als je nog hulp nodig hebt.",
     "error.workspace.support_request_handled": "Dit supportverzoek is al beantwoord.",
-    "error.workspace.visibility_requires_tier": "Voor besloten en privéwerkruimtes is het Innovator-abonnement of hoger nodig. Maak deze nu aan als openbaar, of upgrade eerst."
+    "error.workspace.visibility_requires_tier": "Voor besloten en privéwerkruimtes is het Innovator-abonnement of hoger nodig. Maak deze nu aan als openbaar, of upgrade eerst.",
+    "error.webhook.invalid_target": "Kies waar deze webhook heen gaat: een webadres, of de inbox van sam met een bekende code.",
+    "error.webhook.sam_inbox_unavailable": "De inbox van sam is hier niet ingesteld, en een webhook naar sam kan niet worden getest."
   },
   "uk-UA": {
     "error.access.forbidden": "У вас немає дозволу на цю дію.",
@@ -2237,6 +2249,8 @@
     "error.workspace.removed_from": "Вас видалили з цього робочого простору. Попросіть адміністратора робочого простору запросити вас знову.",
     "error.workspace.support_request_expired": "Термін дії цього запиту на підтримку минув. Попросіть підтримку dembrane надіслати новий, якщо вам усе ще потрібна допомога.",
     "error.workspace.support_request_handled": "На цей запит до підтримки вже надали відповідь.",
-    "error.workspace.visibility_requires_tier": "Робочі простори з доступом за запрошенням і приватні простори потребують тарифу Innovator або вище. Створіть його поки відкритим або спочатку оновіть тариф."
+    "error.workspace.visibility_requires_tier": "Робочі простори з доступом за запрошенням і приватні простори потребують тарифу Innovator або вище. Створіть його поки відкритим або спочатку оновіть тариф.",
+    "error.webhook.invalid_target": "Оберіть, куди надсилається цей вебхук: на вебадресу або до скриньки sam із відомим кодом.",
+    "error.webhook.sam_inbox_unavailable": "Скриньку sam тут не налаштовано, а вебхук, що надсилається до sam, не можна перевірити."
   }
 }
