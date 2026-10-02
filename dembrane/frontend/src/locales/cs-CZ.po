@@ -2301,7 +2301,7 @@ msgstr "Audit logs exported to CSV"
 msgid "Audit logs exported to JSON"
 msgstr "Audit logs exported to JSON"
 
-#: src/routes/auth/Login.tsx:407
+#: src/routes/auth/Login.tsx:410
 #: src/components/settings/TwoFactorSettingsCard.tsx:224
 #: src/components/settings/TwoFactorSettingsCard.tsx:352
 msgid "Authenticator code"
@@ -4009,7 +4009,7 @@ msgid "Create account"
 msgstr "Create account"
 
 #: src/routes/auth/Register.tsx:128
-#: src/routes/auth/Login.tsx:533
+#: src/routes/auth/Login.tsx:536
 msgid "Create an account"
 msgstr "Create an account"
 
@@ -4962,9 +4962,9 @@ msgstr "Upravil/a {editedBy}, {editedOn}"
 msgid "Editing a conversation no longer triggers the affected save error."
 msgstr "Při úpravě rozhovoru se již nezobrazuje chyba ukládání."
 
-#: src/routes/auth/Login.tsx:329
-#: src/routes/auth/Login.tsx:448
-#: src/routes/auth/Login.tsx:452
+#: src/routes/auth/Login.tsx:332
+#: src/routes/auth/Login.tsx:451
+#: src/routes/auth/Login.tsx:455
 #: src/components/settings/AccountSettingsCard.tsx:186
 #: src/components/participant/ParticipantShareModal.tsx:136
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:365
@@ -4981,11 +4981,11 @@ msgstr "Napsat e-mail: {name}"
 msgid "Email address"
 msgstr "Email address"
 
-#: src/routes/auth/Login.tsx:345
+#: src/routes/auth/Login.tsx:348
 msgid "Email me a code"
 msgstr "Poslat kód e-mailem"
 
-#: src/routes/auth/Login.tsx:520
+#: src/routes/auth/Login.tsx:523
 msgid "Email me a sign-in code instead"
 msgstr "Poslat přihlašovací kód raději e-mailem"
 
@@ -5898,7 +5898,7 @@ msgstr "Předpověď"
 msgid "Forgetting a saved memory"
 msgstr "Odstraňuje se uložená vzpomínka"
 
-#: src/routes/auth/Login.tsx:484
+#: src/routes/auth/Login.tsx:487
 msgid "Forgot your password?"
 msgstr "Forgot your password?"
 
@@ -6715,7 +6715,7 @@ msgstr "Nadpis úvodu"
 msgid "Invalid code. Please request a new one."
 msgstr "Invalid code. Please request a new one."
 
-#: src/routes/auth/Login.tsx:283
+#: src/routes/auth/Login.tsx:286
 msgid "Invalid credentials."
 msgstr "Invalid credentials."
 
@@ -7608,7 +7608,7 @@ msgstr "Log out and use the invited email"
 msgid "Logging this with the dembrane team"
 msgstr "Zaznamenává se pro tým dembrane"
 
-#: src/routes/auth/Login.tsx:500
+#: src/routes/auth/Login.tsx:503
 msgid "Login"
 msgstr "Login"
 
@@ -9350,7 +9350,7 @@ msgstr "Otevřít pracovní prostor"
 msgid "Open workspace actions"
 msgstr "Otevřít akce pracovního prostoru"
 
-#: src/routes/auth/Login.tsx:439
+#: src/routes/auth/Login.tsx:442
 msgid "Open your authenticator app and enter the current six-digit code."
 msgstr "Open your authenticator app and enter the current six-digit code."
 
@@ -9402,7 +9402,7 @@ msgid "Options"
 msgstr "Options"
 
 #: src/routes/auth/Register.tsx:297
-#: src/routes/auth/Login.tsx:524
+#: src/routes/auth/Login.tsx:527
 msgid "or"
 msgstr "or"
 
@@ -9707,8 +9707,8 @@ msgid "Partner workspace, billed separately from the organisation."
 msgstr "Partnerský pracovní prostor, účtovaný odděleně od organizace."
 
 #: src/routes/auth/Register.tsx:224
-#: src/routes/auth/Login.tsx:462
-#: src/routes/auth/Login.tsx:466
+#: src/routes/auth/Login.tsx:465
+#: src/routes/auth/Login.tsx:469
 msgid "Password"
 msgstr "Password"
 
@@ -10004,7 +10004,7 @@ msgstr "Please enable participation to enable sharing"
 msgid "Please enter a valid email."
 msgstr "Please enter a valid email."
 
-#: src/routes/auth/Login.tsx:319
+#: src/routes/auth/Login.tsx:322
 msgid "Please log in to continue."
 msgstr "Please log in to continue."
 
@@ -12272,7 +12272,7 @@ msgstr "Send"
 msgid "Send {0} invites"
 msgstr "Send {0} invites"
 
-#: src/routes/auth/Login.tsx:379
+#: src/routes/auth/Login.tsx:382
 msgid "Send a new code"
 msgstr "Odeslat nový kód"
 
@@ -12729,7 +12729,7 @@ msgstr "Zobrazuje se v horní části obrazovky. Kdykoli to můžete změnit."
 msgid "Shown in the organisation header and in email subject lines."
 msgstr "Shown in the organisation header and in email subject lines."
 
-#: src/routes/auth/Login.tsx:371
+#: src/routes/auth/Login.tsx:374
 msgid "Sign in"
 msgstr "Přihlásit se"
 
@@ -12835,7 +12835,7 @@ msgstr "Something is blocking your connection. Your audio will not be saved unle
 #: src/routes/project/report/ProjectReportRoute.tsx:852
 #: src/routes/project/report/ProjectReportRoute.tsx:933
 #: src/routes/project/report/ProjectReportRoute.tsx:1404
-#: src/routes/auth/Login.tsx:248
+#: src/routes/auth/Login.tsx:251
 #: src/components/project/ProjectAccessGuard.tsx:112
 #: src/components/error/ErrorPage.tsx:55
 #: src/components/error/ErrorBoundary.tsx:44
@@ -15361,7 +15361,7 @@ msgstr "Používejte italštinu pro chat, zprávy, přepis a karty pro onboardin
 msgid "Use latest results"
 msgstr "Použít nejnovější výsledky"
 
-#: src/routes/auth/Login.tsx:392
+#: src/routes/auth/Login.tsx:395
 msgid "Use my password instead"
 msgstr "Místo toho použít heslo"
 
@@ -15516,7 +15516,7 @@ msgstr "Verify"
 msgid "participant.echo.verify"
 msgstr "Verify"
 
-#: src/routes/auth/Login.tsx:498
+#: src/routes/auth/Login.tsx:501
 msgid "Verify code"
 msgstr "Verify code"
 
@@ -15752,7 +15752,7 @@ msgstr "Poslali jsme nový ověřovací odkaz."
 msgid "We sent a new verification link. You can send another in {wait} seconds."
 msgstr "Poslali jsme nový ověřovací odkaz. Další můžete odeslat za {wait} s."
 
-#: src/routes/auth/Login.tsx:351
+#: src/routes/auth/Login.tsx:354
 msgid "We sent a six-digit code to {codeEmail}."
 msgstr "Poslali jsme šestimístný kód na {codeEmail}."
 
@@ -15867,7 +15867,7 @@ msgstr "Welcome to Overview Mode! I have summaries of all your conversations loa
 msgid "Welcome, {displayName}"
 msgstr "Welcome, {displayName}"
 
-#: src/routes/auth/Login.tsx:307
+#: src/routes/auth/Login.tsx:310
 msgid "Welcome!"
 msgstr "Welcome!"
 
@@ -16494,7 +16494,7 @@ msgstr "You haven't verified any outcomes yet. Would you like to verify before f
 msgid "You left the workspace"
 msgstr "You left the workspace"
 
-#: src/routes/auth/Login.tsx:288
+#: src/routes/auth/Login.tsx:291
 msgid "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 msgstr "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 
@@ -16687,7 +16687,7 @@ msgstr "Your email is already verified"
 msgid "Your email is not verified yet. Check your inbox for the verification link."
 msgstr "Váš e-mail ještě není ověřený. Zkontrolujte schránku a klikněte na ověřovací odkaz."
 
-#: src/routes/auth/Login.tsx:312
+#: src/routes/auth/Login.tsx:315
 msgid "Your email is verified. Log in to continue."
 msgstr "Your email is verified. Log in to continue."
 
