@@ -142,7 +142,6 @@ const TemplatePill = ({
 					)}
 					<Text
 						size="xs"
-						fw={500}
 						c={colors ? MODE_COLORS.graphite : undefined}
 						truncate
 						style={{ minWidth: 0 }}
@@ -287,7 +286,7 @@ export const ChatTemplatesMenu = ({
 			>
 				{/* Contextual suggestions */}
 				{visibleSuggestions.length > 0 && (
-					<Text size="xs" c="gray.5" fw={500} style={{ whiteSpace: "nowrap" }}>
+					<Text size="xs" c="gray.5" style={{ whiteSpace: "nowrap" }}>
 						<Trans>Suggested:</Trans>
 					</Text>
 				)}

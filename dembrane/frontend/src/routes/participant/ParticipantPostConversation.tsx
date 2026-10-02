@@ -176,7 +176,7 @@ export const ParticipantPostConversation = () => {
 							{!isSubmitted ? (
 								<>
 									<Stack gap="xs">
-										<Text size="lg" fw={700}>
+										<Text size="lg">
 											<Trans>Do you want to stay in the loop?</Trans>
 										</Text>
 										<Text size="sm" c="gray.6">
@@ -217,7 +217,7 @@ export const ParticipantPostConversation = () => {
 												withBorder
 												{...testId("portal-finish-email-list")}
 											>
-												<Text size="sm" fw={500} className="mb-2">
+												<Text size="sm" className="mb-2">
 													<Trans>Added emails</Trans> ({emails.length}):
 												</Text>
 												<Group>

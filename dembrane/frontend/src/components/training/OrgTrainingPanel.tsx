@@ -64,7 +64,7 @@ export const OrgTrainingPanel = ({ orgId }: OrgTrainingPanelProps) => {
 	return (
 		<Stack gap="lg">
 			<div>
-				<Text size="sm" fw={500}>
+				<Text size="sm">
 					<Trans>Training</Trans>
 				</Text>
 				<Text size="xs">

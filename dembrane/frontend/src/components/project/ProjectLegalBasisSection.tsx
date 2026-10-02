@@ -165,7 +165,7 @@ export const ProjectLegalBasisSection = ({
 			<Stack gap="sm">
 				<Group gap="sm">
 					<IconScale size={18} stroke={1.5} />
-					<Text fw={600} size="sm">
+					<Text size="sm">
 						<Trans>Legal basis</Trans>
 					</Text>
 				</Group>
@@ -186,7 +186,7 @@ export const ProjectLegalBasisSection = ({
 							<>
 								<Paper withBorder px="md" py="sm">
 									<Group justify="space-between" wrap="nowrap">
-										<Text size="sm" fw={600}>
+										<Text size="sm">
 											{LEGAL_BASIS_LABELS[data._legal.effective.legal_basis]()}
 										</Text>
 										<Badge size="sm" variant="light">
@@ -264,7 +264,6 @@ export const ProjectLegalBasisSection = ({
 										)}
 										<Anchor
 											size="sm"
-											fw={600}
 											onClick={() =>
 												navigate(`/w/${workspaceId}/settings/general`)
 											}

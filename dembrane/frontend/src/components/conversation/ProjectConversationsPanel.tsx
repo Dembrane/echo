@@ -302,7 +302,7 @@ export const ConversationRow = ({
 				<Group justify="space-between" align="flex-start" wrap="nowrap">
 					<Stack gap={2} style={{ minWidth: 0 }}>
 						<Group gap="xs" wrap="nowrap">
-							<Text size="sm" fw={500} truncate style={{ color: "#2d2d2c" }}>
+							<Text size="sm" truncate style={{ color: "#2d2d2c" }}>
 								{primary}
 							</Text>
 							{conversation.title && conversation.participant_name && (
@@ -744,7 +744,7 @@ export const ProjectConversationsPanel = ({
 				<Group justify="space-between" align="flex-start" gap="md">
 					<Stack gap={4}>
 						<Group gap="sm" align="baseline">
-							<Title order={selectionMode ? 3 : 2} fw={500}>
+							<Title order={selectionMode ? 3 : 2}>
 								<Trans>Conversations</Trans>
 							</Title>
 							{conversationsCountQuery.isLoading ? (
@@ -894,7 +894,7 @@ export const ProjectConversationsPanel = ({
 				<Group gap="sm" align="center" justify="space-between">
 					{isLocalSelectionMode && onAskAboutSelection ? (
 						<Group gap="sm" align="center">
-							<Text size="sm" fw={500}>
+							<Text size="sm">
 								<Trans>{conversationCount} selected</Trans>
 							</Text>
 							<Button

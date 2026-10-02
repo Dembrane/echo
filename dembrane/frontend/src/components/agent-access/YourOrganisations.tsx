@@ -30,7 +30,7 @@ export const OrgAccessRow = ({
 	return (
 		<Table.Tr data-testid={`agent-org-${org.id}`}>
 			<Table.Td>
-				<Text size="sm" fw={500} truncate>
+				<Text size="sm" truncate>
 					{org.name}
 				</Text>
 			</Table.Td>

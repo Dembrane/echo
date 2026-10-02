@@ -105,7 +105,7 @@ export const CustomVerificationTopicSuggestionCard = ({
 		<SuggestionCardFrame testId="agentic-verification-topic-suggestion">
 			<Stack gap="sm">
 				<Group justify="space-between" wrap="nowrap">
-					<Text size="sm" fw={600}>
+					<Text size="sm">
 						<Trans>Suggested verification prompt</Trans>
 					</Text>
 					{dismissed && (

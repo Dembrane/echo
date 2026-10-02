@@ -104,7 +104,7 @@ export const CanvasFrame = ({
 				{...testId("canvas-frame-empty")}
 			>
 				<Stack gap="xs" align="center" py="xl">
-					<Text size="lg" fw={500}>
+					<Text size="lg">
 						<Trans>Preparing this canvas</Trans>
 					</Text>
 					<Text size="sm" ta="center">
@@ -128,7 +128,7 @@ export const CanvasFrame = ({
 				{...testId("canvas-frame-error")}
 			>
 				<Stack gap="xs" align="center" py="xl">
-					<Text size="lg" fw={500}>
+					<Text size="lg">
 						<Trans>This canvas could not update.</Trans>
 					</Text>
 					<Text size="sm" ta="center">

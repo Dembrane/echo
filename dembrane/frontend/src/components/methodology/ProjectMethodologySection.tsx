@@ -120,11 +120,7 @@ export const ProjectMethodologySection = ({
 					<Paper withBorder className="rounded-md px-4 py-3">
 						<Stack gap="xs">
 							<Group gap="xs" wrap="wrap">
-								<Text
-									size="sm"
-									fw={600}
-									{...testId("project-methodology-current")}
-								>
+								<Text size="sm" {...testId("project-methodology-current")}>
 									{selected ? optionLabel(selected) : t`dembrane - the default`}
 								</Text>
 								{selected?.is_seeded ? (

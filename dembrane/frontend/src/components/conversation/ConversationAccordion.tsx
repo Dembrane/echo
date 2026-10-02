@@ -337,6 +337,7 @@ export const MoveConversationButton = ({
 								{t`Cancel`}
 							</Button>
 							<Button
+								variant="filled"
 								type="submit"
 								loading={moveConversationMutation.isPending}
 								disabled={
@@ -636,7 +637,7 @@ const ConversationAccordionItem = ({
 							conversation.live && (
 								<Box className="flex items-baseline gap-1 pr-[4px]">
 									<div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
-									<Text size="xs" fs="italic" fw={500}>
+									<Text size="xs" fs="italic">
 										<Trans id="conversation.ongoing">Ongoing</Trans>
 									</Text>
 								</Box>
@@ -1196,7 +1197,6 @@ export const ConversationAccordion = ({
 										<Button
 											variant="subtle"
 											size="xs"
-											fw={500}
 											leftSection={<IconArrowsUpDown size={16} />}
 											rightSection={
 												sortMenuOpened ? (
@@ -1256,7 +1256,6 @@ export const ConversationAccordion = ({
 										<Button
 											variant="subtle"
 											size="xs"
-											fw={500}
 											leftSection={<IconTags size={16} />}
 											rightSection={
 												tagsMenuOpened ? (
@@ -1392,7 +1391,6 @@ export const ConversationAccordion = ({
 								<Button
 									variant={showOnlyVerified ? "light" : "subtle"}
 									size="xs"
-									fw={500}
 									rightSection={<IconRosetteDiscountCheck size={16} />}
 									onClick={() => setShowOnlyVerified((prev) => !prev)}
 									style={{ flexShrink: 0 }}

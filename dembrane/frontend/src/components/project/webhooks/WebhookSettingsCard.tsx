@@ -148,14 +148,14 @@ const WebhookFormModal = ({
 		if (!source) return;
 
 		reset({
-			name: source.name || "",
-			url: source.url || "",
-			secret: "", // Never copy secrets
 			events: source.events || [
 				"conversation.started",
 				"conversation.transcribed",
 				"conversation.summarized",
 			],
+			name: source.name || "",
+			secret: "", // Never copy secrets
+			url: source.url || "",
 		});
 		setStep("form");
 	};
@@ -255,7 +255,7 @@ const WebhookFormModal = ({
 			title={
 				<Group gap="xs">
 					<IconWebhook size={20} />
-					<Text fw={600}>{getModalTitle()}</Text>
+					<Text>{getModalTitle()}</Text>
 				</Group>
 			}
 			size="md"
@@ -283,7 +283,7 @@ const WebhookFormModal = ({
 										<IconCopy size={24} />
 									</ThemeIcon>
 									<Stack gap={2} style={{ flex: 1 }}>
-										<Text fw={500}>
+										<Text>
 											<Trans>Clone from another project</Trans>
 										</Text>
 										<Text size="sm" c="dimmed">
@@ -306,7 +306,7 @@ const WebhookFormModal = ({
 										<IconPlus size={24} />
 									</ThemeIcon>
 									<Stack gap={2} style={{ flex: 1 }}>
-										<Text fw={500}>
+										<Text>
 											<Trans>Start fresh</Trans>
 										</Text>
 										<Text size="sm" c="dimmed">
@@ -373,148 +373,24 @@ const WebhookFormModal = ({
 							</div>
 						)}
 						<Controller
-						name="name"
-						control={control}
-						rules={{ required: t`Name is required` }}
-						render={({ field, fieldState }) => (
-							<Stack gap={4}>
-								<Text size="sm" fw={500}>
-									<Trans>Name</Trans>
-								</Text>
-								<Text size="xs" c="dimmed">
-									<Trans>A friendly name to identify this webhook</Trans>
-								</Text>
-								<input
-									type="text"
-									placeholder={t`e.g., Slack Notifications, Make Workflow`}
-									className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-									style={{ backgroundColor: "var(--app-background)" }}
-									{...field}
-								/>
-								{fieldState.error && (
-									<Text size="xs" c="red">
-										{fieldState.error.message}
-									</Text>
-								)}
-							</Stack>
-						)}
-					/>
-
-					<Controller
-						name="url"
-						control={control}
-						rules={{
-							pattern: {
-								message: t`URL must start with http:// or https://`,
-								value: /^https?:\/\/.+/,
-							},
-							required: t`URL is required`,
-						}}
-						render={({ field, fieldState }) => (
-							<Stack gap={4}>
-								<Text size="sm" fw={500}>
-									<Trans>Webhook URL</Trans>
-								</Text>
-								<Text size="xs" c="dimmed">
-									<Trans>
-										The endpoint where we'll send the data. Get this from your
-										receiving service (e.g., Zapier, Make, or your own server).
-									</Trans>
-								</Text>
-								<input
-									type="text"
-									placeholder="https://hooks.zapier.com/..."
-									className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-									style={{ backgroundColor: "var(--app-background)" }}
-									{...field}
-								/>
-								{fieldState.error && (
-									<Text size="xs" c="red">
-										{fieldState.error.message}
-									</Text>
-								)}
-							</Stack>
-						)}
-					/>
-
-					<Controller
-						name="secret"
-						control={control}
-						render={({ field }) => (
-							<Stack gap={4}>
-								<Group gap={4}>
-									<Text size="sm" fw={500}>
-										<Trans>Secret</Trans>
-									</Text>
-									<Badge size="xs" variant="light" color="gray">
-										<Trans>Optional</Trans>
-									</Badge>
-								</Group>
-								<Text size="xs" c="dimmed">
-									<Trans>
-										For advanced users: A secret key to verify webhook
-										authenticity. Only needed if your receiving service requires
-										signature verification.
-									</Trans>
-								</Text>
-								<PasswordInput
-									placeholder={
-										isEditing
-											? t`Leave empty to keep existing`
-											: t`Enter a secret key`
-									}
-									{...field}
-								/>
-							</Stack>
-						)}
-					/>
-
-					<Stack gap="xs">
-						<Text size="sm" fw={500}>
-							<Trans>Events to Listen For</Trans>
-						</Text>
-						<Text size="xs" c="dimmed">
-							<Trans>Choose when you want to receive notifications</Trans>
-						</Text>
-						<Controller
-							name="events"
+							name="name"
 							control={control}
-							rules={{
-								validate: (value) =>
-									value.length > 0 || t`Select at least one event`,
-							}}
+							rules={{ required: t`Name is required` }}
 							render={({ field, fieldState }) => (
-								<Stack gap="sm">
-									{WEBHOOK_EVENTS.map((event) => (
-										<Paper key={event.value} p="sm" withBorder radius="md">
-											<Checkbox
-												label={
-													<Stack gap={2}>
-														<Text size="sm" fw={500}>
-															{event.label}
-														</Text>
-														<Text size="xs" c="dimmed">
-															{event.description}
-														</Text>
-													</Stack>
-												}
-												checked={field.value.includes(event.value)}
-												onChange={(e) => {
-													if (e.currentTarget.checked) {
-														field.onChange([...field.value, event.value]);
-													} else {
-														field.onChange(
-															field.value.filter((v) => v !== event.value),
-														);
-													}
-												}}
-												styles={{
-													body: { alignItems: "flex-start" },
-													input: { marginTop: 2 },
-												}}
-											/>
-										</Paper>
-									))}
+								<Stack gap={4}>
+									<Text size="sm">
+										<Trans>Name</Trans>
+									</Text>
+									<Text size="xs" c="dimmed">
+										<Trans>A friendly name to identify this webhook</Trans>
+									</Text>
+									<input
+										type="text"
+										placeholder={t`e.g., Slack Notifications, Make Workflow`}
+										className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+										style={{ backgroundColor: "var(--app-background)" }}
+										{...field}
+									/>
 									{fieldState.error && (
 										<Text size="xs" c="red">
 											{fieldState.error.message}
@@ -523,22 +399,145 @@ const WebhookFormModal = ({
 								</Stack>
 							)}
 						/>
-					</Stack>
 
-					<Group justify="flex-end" mt="md">
-						<Button variant="subtle" onClick={onClose} disabled={isPending}>
-							<Trans>Cancel</Trans>
-						</Button>
-						<Button type="submit" loading={isPending}>
-							{isEditing ? (
-								<Trans>Save Changes</Trans>
-							) : (
-								<Trans>Create Webhook</Trans>
+						<Controller
+							name="url"
+							control={control}
+							rules={{
+								pattern: {
+									message: t`URL must start with http:// or https://`,
+									value: /^https?:\/\/.+/,
+								},
+								required: t`URL is required`,
+							}}
+							render={({ field, fieldState }) => (
+								<Stack gap={4}>
+									<Text size="sm">
+										<Trans>Webhook URL</Trans>
+									</Text>
+									<Text size="xs" c="dimmed">
+										<Trans>
+											The endpoint where we'll send the data. Get this from your
+											receiving service (e.g., Zapier, Make, or your own
+											server).
+										</Trans>
+									</Text>
+									<input
+										type="text"
+										placeholder="https://hooks.zapier.com/..."
+										className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+										style={{ backgroundColor: "var(--app-background)" }}
+										{...field}
+									/>
+									{fieldState.error && (
+										<Text size="xs" c="red">
+											{fieldState.error.message}
+										</Text>
+									)}
+								</Stack>
 							)}
-						</Button>
-					</Group>
-				</Stack>
-			</form>
+						/>
+
+						<Controller
+							name="secret"
+							control={control}
+							render={({ field }) => (
+								<Stack gap={4}>
+									<Group gap={4}>
+										<Text size="sm">
+											<Trans>Secret</Trans>
+										</Text>
+										<Badge size="xs" variant="light" color="gray">
+											<Trans>Optional</Trans>
+										</Badge>
+									</Group>
+									<Text size="xs" c="dimmed">
+										<Trans>
+											For advanced users: A secret key to verify webhook
+											authenticity. Only needed if your receiving service
+											requires signature verification.
+										</Trans>
+									</Text>
+									<PasswordInput
+										placeholder={
+											isEditing
+												? t`Leave empty to keep existing`
+												: t`Enter a secret key`
+										}
+										{...field}
+									/>
+								</Stack>
+							)}
+						/>
+
+						<Stack gap="xs">
+							<Text size="sm">
+								<Trans>Events to Listen For</Trans>
+							</Text>
+							<Text size="xs" c="dimmed">
+								<Trans>Choose when you want to receive notifications</Trans>
+							</Text>
+							<Controller
+								name="events"
+								control={control}
+								rules={{
+									validate: (value) =>
+										value.length > 0 || t`Select at least one event`,
+								}}
+								render={({ field, fieldState }) => (
+									<Stack gap="sm">
+										{WEBHOOK_EVENTS.map((event) => (
+											<Paper key={event.value} p="sm" withBorder radius="md">
+												<Checkbox
+													label={
+														<Stack gap={2}>
+															<Text size="sm">{event.label}</Text>
+															<Text size="xs" c="dimmed">
+																{event.description}
+															</Text>
+														</Stack>
+													}
+													checked={field.value.includes(event.value)}
+													onChange={(e) => {
+														if (e.currentTarget.checked) {
+															field.onChange([...field.value, event.value]);
+														} else {
+															field.onChange(
+																field.value.filter((v) => v !== event.value),
+															);
+														}
+													}}
+													styles={{
+														body: { alignItems: "flex-start" },
+														input: { marginTop: 2 },
+													}}
+												/>
+											</Paper>
+										))}
+										{fieldState.error && (
+											<Text size="xs" c="red">
+												{fieldState.error.message}
+											</Text>
+										)}
+									</Stack>
+								)}
+							/>
+						</Stack>
+
+						<Group justify="flex-end" mt="md">
+							<Button variant="subtle" onClick={onClose} disabled={isPending}>
+								<Trans>Cancel</Trans>
+							</Button>
+							<Button variant="filled" type="submit" loading={isPending}>
+								{isEditing ? (
+									<Trans>Save Changes</Trans>
+								) : (
+									<Trans>Create Webhook</Trans>
+								)}
+							</Button>
+						</Group>
+					</Stack>
+				</form>
 			)}
 		</Modal>
 	);
@@ -611,9 +610,7 @@ const WebhookRow = ({ webhook, projectId, onEdit }: WebhookRowProps) => {
 			<Table.Tr>
 				<Table.Td>
 					<Stack gap={4}>
-						<Text size="sm" fw={500}>
-							{webhook.name || "Unnamed Webhook"}
-						</Text>
+						<Text size="sm">{webhook.name || "Unnamed Webhook"}</Text>
 						<Text size="xs" c="dimmed" lineClamp={1}>
 							{webhook.url}
 						</Text>
@@ -736,7 +733,7 @@ const WebhookHelpAccordion = ({ onViewPayload }: WebhookHelpAccordionProps) => (
 			<Accordion.Control>
 				<Group gap={6}>
 					<IconHelpCircle size={18} style={{ opacity: 0.7 }} />
-					<Text size="sm" fw={500}>
+					<Text size="sm">
 						<Trans>What are webhooks? (2 min read)</Trans>
 					</Text>
 				</Group>
@@ -751,7 +748,7 @@ const WebhookHelpAccordion = ({ onViewPayload }: WebhookHelpAccordionProps) => (
 						</Trans>
 					</Text>
 
-					<Text size="sm" fw={500}>
+					<Text size="sm">
 						<Trans>How it works:</Trans>
 					</Text>
 					<Stack gap="xs" pl="md">
@@ -762,8 +759,8 @@ const WebhookHelpAccordion = ({ onViewPayload }: WebhookHelpAccordionProps) => (
 						</Text>
 						<Text size="sm">
 							<Trans>
-								2. When a conversation or report event happens, we automatically send the
-								data to your URL
+								2. When a conversation or report event happens, we automatically
+								send the data to your URL
 							</Trans>
 						</Text>
 						<Text size="sm">
@@ -774,7 +771,7 @@ const WebhookHelpAccordion = ({ onViewPayload }: WebhookHelpAccordionProps) => (
 						</Text>
 					</Stack>
 
-					<Text size="sm" fw={500}>
+					<Text size="sm">
 						<Trans>When are webhooks triggered?</Trans>
 					</Text>
 					<Stack gap="xs" pl="md">
@@ -800,13 +797,11 @@ const WebhookHelpAccordion = ({ onViewPayload }: WebhookHelpAccordionProps) => (
 						</Text>
 						<Text size="sm">
 							<strong>report.generated</strong> —{" "}
-							<Trans>
-								When a report has been generated for the project
-							</Trans>
+							<Trans>When a report has been generated for the project</Trans>
 						</Text>
 					</Stack>
 
-					<Text size="sm" fw={500}>
+					<Text size="sm">
 						<Trans>What data is sent?</Trans>
 					</Text>
 					<Stack gap="xs" pl="md">
@@ -829,7 +824,10 @@ const WebhookHelpAccordion = ({ onViewPayload }: WebhookHelpAccordionProps) => (
 							• <Trans>Project name and ID</Trans>
 						</Text>
 						<Text size="sm">
-							• <Trans>Dashboard URL (direct link to conversation overview)</Trans>
+							•{" "}
+							<Trans>
+								Dashboard URL (direct link to conversation overview)
+							</Trans>
 						</Text>
 					</Stack>
 					<Anchor component="button" size="sm" onClick={onViewPayload}>
@@ -839,7 +837,7 @@ const WebhookHelpAccordion = ({ onViewPayload }: WebhookHelpAccordionProps) => (
 						</Group>
 					</Anchor>
 
-					<Text size="sm" fw={500}>
+					<Text size="sm">
 						<Trans>Common use cases:</Trans>
 					</Text>
 					<Stack gap="xs" pl="md">
@@ -870,7 +868,7 @@ const WebhookHelpAccordion = ({ onViewPayload }: WebhookHelpAccordionProps) => (
 						</Text>
 					</Stack>
 
-					<Text size="sm" fw={500}>
+					<Text size="sm">
 						<Trans>Do I need this?</Trans>
 					</Text>
 					<Text size="sm">
@@ -1023,7 +1021,7 @@ export const WebhookSection = ({ projectId }: WebhookSectionProps) => {
 								<IconWebhook size={32} stroke={1.5} />
 							</ThemeIcon>
 							<Stack gap={4} align="center">
-								<Text fw={500}>
+								<Text>
 									<Trans>No webhooks configured</Trans>
 								</Text>
 								<Text size="sm" c="dimmed" ta="center" maw={400}>
@@ -1053,7 +1051,7 @@ export const WebhookSection = ({ projectId }: WebhookSectionProps) => {
 
 				<Paper p="sm" withBorder radius="md" bg="blue.0">
 					<Stack gap="xs">
-						<Text size="sm" fw={500}>
+						<Text size="sm">
 							<Trans>Using webhooks? We'd love to hear from you</Trans>
 						</Text>
 						<Text size="sm">

@@ -56,32 +56,35 @@ export const OrganisationExternalView = ({ organisationId }: Props) => {
 					) : null}
 					<Stack gap={4}>
 						<Group gap="sm" align="center">
-							<Title order={2} fw={500}>
-								{orgName}
-							</Title>
+							<Title order={2}>{orgName}</Title>
 							<Badge variant="light" color="gray">
 								<Trans>External</Trans>
 							</Badge>
 						</Group>
 						<Text size="sm" c="dimmed">
 							<Trans>
-								You're an external collaborator in this organisation. Open
-								one of the workspaces shared with you below.
+								You're an external collaborator in this organisation. Open one
+								of the workspaces shared with you below.
 							</Trans>
 						</Text>
 					</Stack>
 				</Group>
 
 				<Stack gap="sm">
-					<Text size="xs" c="dimmed" tt="uppercase" style={{ letterSpacing: "0.04em" }}>
+					<Text
+						size="xs"
+						c="dimmed"
+						tt="uppercase"
+						style={{ letterSpacing: "0.04em" }}
+					>
 						<Trans>Workspaces shared with you</Trans>
 					</Text>
 					{orgWorkspaces.length === 0 ? (
 						<Paper p="md" withBorder>
 							<Text size="sm" c="dimmed">
 								<Trans>
-									No workspaces from this organisation are shared with you
-									right now.
+									No workspaces from this organisation are shared with you right
+									now.
 								</Trans>
 							</Text>
 						</Paper>
@@ -96,7 +99,7 @@ export const OrganisationExternalView = ({ organisationId }: Props) => {
 							>
 								<Group justify="space-between" align="center" wrap="nowrap">
 									<Stack gap={2}>
-										<Text fw={500}>{ws.name}</Text>
+										<Text>{ws.name}</Text>
 										<Group gap="xs">
 											<Text size="xs" c="dimmed">
 												{displayRole(ws.role)}
@@ -105,8 +108,7 @@ export const OrganisationExternalView = ({ organisationId }: Props) => {
 												·
 											</Text>
 											<Text size="xs" c="dimmed">
-												{ws.project_count}{" "}
-												<Trans>projects</Trans>
+												{ws.project_count} <Trans>projects</Trans>
 											</Text>
 										</Group>
 									</Stack>
@@ -128,8 +130,8 @@ export const OrganisationExternalView = ({ organisationId }: Props) => {
 
 				<Text size="xs" c="dimmed">
 					<Trans>
-						Need more access? Ask the person who invited you to add you to
-						the organisation or another workspace.
+						Need more access? Ask the person who invited you to add you to the
+						organisation or another workspace.
 					</Trans>
 				</Text>
 			</Stack>

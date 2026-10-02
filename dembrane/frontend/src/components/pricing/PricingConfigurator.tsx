@@ -726,7 +726,7 @@ export const PricingConfigurator = ({
 					{phase.step === OPENING_STEP && variant === "transcription_cap" && (
 						<>
 							<Stack gap="xs">
-								<Text fw={500}>
+								<Text>
 									<Trans>Your free transcription hour is used up.</Trans>
 								</Text>
 								<Text size="sm">
@@ -857,6 +857,7 @@ export const PricingConfigurator = ({
 									</Button>
 								)}
 								<Button
+									variant="filled"
 									loading={isSending}
 									size="md"
 									type="submit"
@@ -1055,9 +1056,7 @@ const QuestionBody = ({
 				    a label of its own, which is what the booking summary reads. */}
 				{question.follow && (
 					<Stack gap="xs">
-						<Text fw={500} id={`${headingId}-follow`}>
-							{question.follow.label}
-						</Text>
+						<Text id={`${headingId}-follow`}>{question.follow.label}</Text>
 						<FreeTextAnswer
 							answers={answers}
 							ariaLabelledBy={`${headingId}-follow`}

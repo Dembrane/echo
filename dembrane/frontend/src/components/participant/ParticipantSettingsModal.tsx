@@ -19,7 +19,7 @@ export function ParticipantSettingsModal({
 			opened={opened}
 			onClose={onClose}
 			title={
-				<Text size="xl" fw={500}>
+				<Text size="xl">
 					<Trans id="participant.settings.modal.title">Settings</Trans>
 				</Text>
 			}

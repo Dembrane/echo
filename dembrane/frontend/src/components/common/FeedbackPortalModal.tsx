@@ -129,7 +129,6 @@ export const FeedbackPortalModal = ({
 							href={feedbackUrl}
 							target="_blank"
 							rel="noopener noreferrer"
-							fw={600}
 							c="inherit"
 							underline="hover"
 						>

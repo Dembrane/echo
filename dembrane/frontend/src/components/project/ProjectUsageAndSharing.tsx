@@ -211,7 +211,7 @@ export function ProjectAccess({ projectId, visibility }: Props) {
 	return (
 		<Stack gap="lg">
 			<Stack gap={4}>
-				<Title order={4} fw={500}>
+				<Title order={4}>
 					<Trans>Access</Trans>
 				</Title>
 				<Text size="sm" c="dimmed">
@@ -227,7 +227,7 @@ export function ProjectAccess({ projectId, visibility }: Props) {
 
 			<Stack gap="md">
 				<Group justify="space-between" align="center">
-					<Title order={5} fw={400}>
+					<Title order={5}>
 						<Trans>Members</Trans>
 					</Title>
 					<Text size="xs" c="dimmed">
@@ -308,10 +308,10 @@ export function ProjectAccess({ projectId, visibility }: Props) {
 										</Avatar>
 										<Box style={{ minWidth: 0 }}>
 											<Group gap={6} wrap="nowrap">
-												<Text size="sm" fw={500} lineClamp={1}>
+												<Text size="sm" lineClamp={1}>
 													{row.display_name || row.email}
 													{row.user_id === myAppUserId && (
-														<Text component="span" c="dimmed" fw={400}>
+														<Text component="span" c="dimmed">
 															{" "}
 															<Trans>(You)</Trans>
 														</Text>
@@ -416,7 +416,7 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 	return (
 		<Stack gap="lg">
 			<Stack gap={4}>
-				<Title order={4} fw={500}>
+				<Title order={4}>
 					<Trans>Usage</Trans>
 				</Title>
 				<Text size="sm" c="dimmed">
@@ -427,7 +427,7 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 			<Paper withBorder p="md" radius="sm">
 				<Stack gap="sm">
 					<Group justify="space-between" align="center">
-						<Text size="sm" fw={500}>
+						<Text size="sm">
 							<Trans>Usage this cycle</Trans>
 						</Text>
 						{usage?.tier && (
@@ -447,7 +447,7 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 								<Text size="xs" c="dimmed">
 									<Trans>Audio</Trans>
 								</Text>
-								<Text size="lg" fw={500}>
+								<Text size="lg">
 									{formatDurationFromHours(projectUsage.audio_hours)}
 								</Text>
 							</Stack>
@@ -455,9 +455,7 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 								<Text size="xs" c="dimmed">
 									<Trans>Conversations</Trans>
 								</Text>
-								<Text size="lg" fw={500}>
-									{projectUsage.conversation_count}
-								</Text>
+								<Text size="lg">{projectUsage.conversation_count}</Text>
 							</Stack>
 						</Group>
 					)}
@@ -500,7 +498,7 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 											key={row.id}
 											label={
 												<Stack gap={0}>
-													<Text size="xs" fw={500}>
+													<Text size="xs">
 														{row.title || t`Untitled conversation`}
 													</Text>
 													<Text size="xs">
@@ -527,7 +525,7 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 												gap={4}
 												style={{ maxHeight: 240, overflow: "hidden" }}
 											>
-												<Text size="xs" fw={500}>
+												<Text size="xs">
 													<Trans>
 														Deleted ·{" "}
 														{formatDurationFromHours(convUsage.deleted_hours)}

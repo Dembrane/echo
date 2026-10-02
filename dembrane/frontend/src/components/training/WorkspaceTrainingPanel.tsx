@@ -33,7 +33,7 @@ export const WorkspaceTrainingPanel = ({
 	return (
 		<Stack gap="md">
 			<div>
-				<Text size="sm" fw={500}>
+				<Text size="sm">
 					<Trans>Training</Trans>
 				</Text>
 				<Text size="xs">

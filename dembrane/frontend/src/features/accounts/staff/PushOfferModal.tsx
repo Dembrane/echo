@@ -91,7 +91,7 @@ export function PushOfferModal({
 			<Stack gap="md">
 				<SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
 					<Stack gap={4}>
-						<Text size="sm" fw={500}>
+						<Text size="sm">
 							<Trans>Template</Trans>
 						</Text>
 						<SegmentedControl
@@ -104,7 +104,7 @@ export function PushOfferModal({
 						/>
 					</Stack>
 					<Stack gap={4}>
-						<Text size="sm" fw={500}>
+						<Text size="sm">
 							<Trans>Language</Trans>
 						</Text>
 						<SegmentedControl

@@ -204,7 +204,12 @@ export const CreateOrganisationModal = ({
 								<Button variant="subtle" onClick={handleClose} disabled={busy}>
 									<Trans>Cancel</Trans>
 								</Button>
-								<Button type="submit" loading={busy} disabled={!orgName.trim()}>
+								<Button
+									variant="filled"
+									type="submit"
+									loading={busy}
+									disabled={!orgName.trim()}
+								>
 									<Trans>Continue</Trans>
 								</Button>
 							</Group>

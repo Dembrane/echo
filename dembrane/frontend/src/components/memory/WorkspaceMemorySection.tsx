@@ -12,7 +12,7 @@ export const WorkspaceMemorySection = ({
 
 	return (
 		<Stack gap={8}>
-			<Title order={5} fw={400}>
+			<Title order={5}>
 				<Trans>Assistant memory</Trans>
 			</Title>
 			<Text size="sm">

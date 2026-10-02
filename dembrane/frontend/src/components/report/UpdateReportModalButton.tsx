@@ -162,7 +162,12 @@ export const UpdateReportModalButton = ({
 								: t`Generate a new report`
 					}
 				>
-					<Indicator disabled={!needsUpdate} color="salmon" size={10} offset={4}>
+					<Indicator
+						disabled={!needsUpdate}
+						color="salmon"
+						size={10}
+						offset={4}
+					>
 						<Button
 							variant="filled"
 							color="primary"
@@ -179,7 +184,10 @@ export const UpdateReportModalButton = ({
 					<Tooltip label={t`Free plan allows 1 report per workspace`}>
 						<IconInfoCircle
 							size={16}
-							style={{ color: "var(--mantine-color-primary-6)", cursor: "help" }}
+							style={{
+								color: "var(--mantine-color-primary-6)",
+								cursor: "help",
+							}}
 						/>
 					</Tooltip>
 				)}
@@ -190,7 +198,7 @@ export const UpdateReportModalButton = ({
 				onClose={close}
 				title={
 					<Group gap="xs" align="center">
-						<Text fw={500} size="lg">
+						<Text size="lg">
 							{showSchedule ? (
 								<Trans>Schedule Report</Trans>
 							) : (
@@ -206,7 +214,11 @@ export const UpdateReportModalButton = ({
 				}
 			>
 				{is402ReportError ? (
-					<Alert title={t`Report limit reached`} color="primary" variant="light">
+					<Alert
+						title={t`Report limit reached`}
+						color="primary"
+						variant="light"
+					>
 						<Stack gap="sm" align="flex-start">
 							<Text size="sm">
 								<Trans>

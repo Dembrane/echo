@@ -467,7 +467,7 @@ export const LoginRoute = () => {
 
 								{otpRequired ? (
 									<Stack gap="xs">
-										<Text fw={500} size="sm">
+										<Text size="sm">
 											<Trans>Authenticator code</Trans>
 										</Text>
 										<PinInput
@@ -552,6 +552,7 @@ export const LoginRoute = () => {
 								)}
 								<div>
 									<Button
+										variant="filled"
 										size="lg"
 										type="submit"
 										fullWidth

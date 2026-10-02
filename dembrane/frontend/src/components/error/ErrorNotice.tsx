@@ -45,7 +45,7 @@ export const ErrorNotice = ({
 					</Button>
 				)}
 				{target?.href && (
-					<Anchor size="sm" href={target.href} fw={500}>
+					<Anchor size="sm" href={target.href}>
 						{target.label}
 					</Anchor>
 				)}

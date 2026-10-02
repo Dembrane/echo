@@ -63,7 +63,11 @@ export const GoalSuggestionCard = ({
 
 	if (applied) {
 		return (
-			<SuggestionCardFrame compact tight testId="agentic-goal-suggestion-applied">
+			<SuggestionCardFrame
+				compact
+				tight
+				testId="agentic-goal-suggestion-applied"
+			>
 				<Group gap="xs" wrap="nowrap">
 					<IconCheck
 						size={16}
@@ -96,7 +100,7 @@ export const GoalSuggestionCard = ({
 		<SuggestionCardFrame testId="agentic-goal-suggestion">
 			<Stack gap="sm">
 				<Group justify="space-between" wrap="nowrap">
-					<Text size="sm" fw={600}>
+					<Text size="sm">
 						<Trans>Suggested project goal</Trans>
 					</Text>
 					{dismissed ? (

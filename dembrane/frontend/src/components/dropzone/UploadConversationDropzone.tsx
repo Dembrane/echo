@@ -547,7 +547,7 @@ export const UploadConversationDropzone = (
 				opened={opened}
 				onClose={close}
 				title={
-					<Text fw={600} size="lg">
+					<Text size="lg">
 						{uploadStarted
 							? uploader.isSuccess
 								? t`Upload Complete`
@@ -592,10 +592,7 @@ export const UploadConversationDropzone = (
 							>
 								<Stack align="center" gap="sm">
 									<IconUpload size={32} stroke={1.5} />
-									<Text
-										size="sm"
-										fw={500}
-									>{t`Drag audio files here or click to select files`}</Text>
+									<Text size="sm">{t`Drag audio files here or click to select files`}</Text>
 									<Text size="xs" c="dimmed">
 										{t`Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS`}
 									</Text>
@@ -609,9 +606,7 @@ export const UploadConversationDropzone = (
 								<>
 									<Box mt="md">
 										<Group justify="space-between" mb="xs">
-											<Text
-												fw={500}
-											>{t`Selected Files (${selectedFiles.length}/${MAX_FILES})`}</Text>
+											<Text>{t`Selected Files (${selectedFiles.length}/${MAX_FILES})`}</Text>
 											{selectedFiles.length > 0 && (
 												<Text
 													size="sm"
@@ -790,7 +785,7 @@ export const UploadConversationDropzone = (
 															multiline
 															maw={300}
 														>
-															<Text size="sm" fw={500} lineClamp={1}>
+															<Text size="sm" lineClamp={1}>
 																{truncateFileName(fileStatus.file.name)}
 															</Text>
 														</Tooltip>
@@ -801,7 +796,6 @@ export const UploadConversationDropzone = (
 												</Group>
 												<Text
 													size="sm"
-													fw={500}
 													c={
 														fileStatus.status === "complete"
 															? "green"

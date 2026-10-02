@@ -32,31 +32,26 @@ const ConversationList = ({
 }: ConversationListProps) => {
 	const { workspaceId } = useParams();
 	return (
-	<Stack gap={4}>
-		{conversations.map((conversation, index) => (
-			<I18nLink
-				key={conversation.id}
-				to={`/w/${workspaceId}/projects/${projectId}/conversations/${conversation.id}`}
-				onClick={onItemClick}
-			>
-				<Box className="cursor-pointer rounded-lg px-3.5 py-2.5 hover:bg-primary-100">
-					<Group gap="sm" wrap="nowrap">
-						<Text
-							size="xs"
-							c="dimmed"
-							fw={500}
-							className="min-w-8 tabular-nums"
-						>
-							{index + 1}.
-						</Text>
-						<Text size="sm" fw={500} className="flex-1 break-words">
-							{conversation.participant_name}
-						</Text>
-					</Group>
-				</Box>
-			</I18nLink>
-		))}
-	</Stack>
+		<Stack gap={4}>
+			{conversations.map((conversation, index) => (
+				<I18nLink
+					key={conversation.id}
+					to={`/w/${workspaceId}/projects/${projectId}/conversations/${conversation.id}`}
+					onClick={onItemClick}
+				>
+					<Box className="cursor-pointer rounded-lg px-3.5 py-2.5 hover:bg-primary-100">
+						<Group gap="sm" wrap="nowrap">
+							<Text size="xs" c="dimmed" className="min-w-8 tabular-nums">
+								{index + 1}.
+							</Text>
+							<Text size="sm" className="flex-1 break-words">
+								{conversation.participant_name}
+							</Text>
+						</Group>
+					</Box>
+				</I18nLink>
+			))}
+		</Stack>
 	);
 };
 
@@ -80,7 +75,7 @@ const ConversationsModal = ({
 		onClose={onClose}
 		title={
 			<Group gap="sm" align="center">
-				<Text fw={600} size="lg" style={{ color: "var(--app-text)" }}>
+				<Text size="lg" style={{ color: "var(--app-text)" }}>
 					<Trans>All Conversations</Trans>
 				</Text>
 				<Badge size="lg" variant="light">

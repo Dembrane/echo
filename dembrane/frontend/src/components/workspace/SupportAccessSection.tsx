@@ -190,7 +190,7 @@ export function SupportAccessSection({
 			{pending.length > 0 && (
 				<Paper withBorder radius="sm" p="sm">
 					<Stack gap="xs">
-						<Text size="sm" fw={500}>
+						<Text size="sm">
 							<Trans>Pending access requests</Trans>
 						</Text>
 						{pending.map((req) => (
@@ -236,7 +236,7 @@ export function SupportAccessSection({
 
 			{events.length > 0 && (
 				<Stack gap="xs">
-					<Text size="sm" fw={500}>
+					<Text size="sm">
 						<Trans>Access history</Trans>
 					</Text>
 					{events.map((e) => (

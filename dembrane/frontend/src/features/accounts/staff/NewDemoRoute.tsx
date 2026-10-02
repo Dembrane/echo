@@ -124,7 +124,7 @@ function NewDemo() {
 							<Trans>Accounts</Trans>
 						</Group>
 					</Anchor>
-					<Title order={3} fw={400}>
+					<Title order={3}>
 						<Trans>New demo</Trans>
 					</Title>
 					<Text size="sm" c="dimmed">
@@ -169,7 +169,7 @@ function NewDemo() {
 					}}
 				/>
 				<Stack gap={4}>
-					<Text size="sm" fw={500}>
+					<Text size="sm">
 						<Trans>Demo language</Trans>
 					</Text>
 					<SegmentedControl
@@ -212,7 +212,7 @@ function NewDemo() {
 						<Stack gap="sm">
 							<Group gap="lg">
 								<Stack gap={4}>
-									<Text size="sm" fw={500}>
+									<Text size="sm">
 										<Trans>Template</Trans>
 									</Text>
 									<SegmentedControl
@@ -225,7 +225,7 @@ function NewDemo() {
 									/>
 								</Stack>
 								<Stack gap={4}>
-									<Text size="sm" fw={500}>
+									<Text size="sm">
 										<Trans>Offer language</Trans>
 									</Text>
 									<SegmentedControl

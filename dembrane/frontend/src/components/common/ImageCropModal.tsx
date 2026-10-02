@@ -92,11 +92,7 @@ export const ImageCropModal = ({
 		<Modal
 			opened={opened}
 			onClose={onClose}
-			title={
-				<Text fw={600} size="lg">
-					{title ?? t`Crop Image`}
-				</Text>
-			}
+			title={<Text size="lg">{title ?? t`Crop Image`}</Text>}
 			size="md"
 			onExitTransitionEnd={handleReset}
 		>
@@ -129,7 +125,7 @@ export const ImageCropModal = ({
 				</div>
 
 				<Stack gap={4}>
-					<Text size="sm" fw={500}>
+					<Text size="sm">
 						<Trans>Zoom</Trans>
 					</Text>
 					<Slider

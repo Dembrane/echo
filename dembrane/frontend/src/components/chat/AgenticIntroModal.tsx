@@ -39,7 +39,7 @@ export const AgenticIntroModal = ({
 			>
 				<List.Item>
 					<Stack gap={2}>
-						<Text size="sm" fw={500}>
+						<Text size="sm">
 							<Trans>Multi-step analysis.</Trans>
 						</Text>
 						<Text size="xs">
@@ -51,7 +51,7 @@ export const AgenticIntroModal = ({
 				</List.Item>
 				<List.Item>
 					<Stack gap={2}>
-						<Text size="sm" fw={500}>
+						<Text size="sm">
 							<Trans>Help setting up your project.</Trans>
 						</Text>
 						<Text size="xs">
@@ -61,7 +61,7 @@ export const AgenticIntroModal = ({
 				</List.Item>
 				<List.Item>
 					<Stack gap={2}>
-						<Text size="sm" fw={500}>
+						<Text size="sm">
 							<Trans>Ask about the app.</Trans>
 						</Text>
 						<Text size="xs">

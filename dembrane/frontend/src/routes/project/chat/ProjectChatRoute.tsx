@@ -970,6 +970,7 @@ export const ProjectChatRoute = () => {
 							}
 							footerRight={
 								<Button
+									variant="filled"
 									type="submit"
 									size="md"
 									radius="md"

@@ -60,7 +60,7 @@ export function MarkdownWYSIWYG({
 					),
 				}),
 			]}
-			contentEditableClassName="prose min-h-[200px] space-grotesk"
+			contentEditableClassName="prose min-h-[200px]"
 			className="rounded border border-gray-200"
 			{...rest}
 			markdown={safeMarkdown}

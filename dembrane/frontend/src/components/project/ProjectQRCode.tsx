@@ -4,7 +4,6 @@ import { Button, CopyButton, rem, Skeleton, Stack, Text } from "@mantine/core";
 import { IconCheck, IconCopy, IconDownload } from "@tabler/icons-react";
 import { useMemo, useRef } from "react";
 import { PARTICIPANT_BASE_URL } from "@/config";
-import { useAppPreferences } from "@/hooks/useAppPreferences";
 import { testId } from "@/lib/testUtils";
 import { QRCode } from "../common/QRCode";
 
@@ -29,8 +28,6 @@ export const useProjectSharingLink = (
 	project?: Project,
 	source?: ShareLinkSource,
 ) => {
-	const { preferences } = useAppPreferences();
-
 	// biome-ignore lint/correctness/useExhaustiveDependencies: not an issue
 	return useMemo(() => {
 		if (!project) {
@@ -75,14 +72,11 @@ export const useProjectSharingLink = (
 				| "cs-CZ"
 		];
 
-		// Include theme in URL so participant portal uses the same theme
 		const baseLink = `${PARTICIPANT_BASE_URL}/${languageCode}/${project.id}/start`;
-		const params = new URLSearchParams({ theme: preferences.fontFamily });
-		if (source) {
-			params.set("utm_source", source);
-		}
+		if (!source) return baseLink;
+		const params = new URLSearchParams({ utm_source: source });
 		return `${baseLink}?${params.toString()}`;
-	}, [project?.language, project?.id, preferences.fontFamily, source]);
+	}, [project?.language, project?.id, source]);
 };
 
 export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {

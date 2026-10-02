@@ -167,7 +167,7 @@ export const ParticipantConversationAudioContent = () => {
 							}}
 						>
 							<Group gap="sm" wrap="nowrap">
-								<Text size="lg" fw={500} c="dimmed">
+								<Text size="lg" c="dimmed">
 									<Trans id="participant.banner.verification_required">
 										Verification required
 									</Trans>

@@ -78,9 +78,7 @@ export const TagsUpdateSuggestionCard = ({
 		);
 		const removals = suggestion.remove
 			.map((text) => liveByText.get(normalizeText(text)))
-			.filter(
-				(tag): tag is ProjectTag & { text: string } => tag !== undefined,
-			);
+			.filter((tag): tag is ProjectTag & { text: string } => tag !== undefined);
 		const maxSort = Math.max(0, ...liveTags.map((tag) => tag.sort ?? 0));
 
 		setIsApplying(true);
@@ -143,7 +141,7 @@ export const TagsUpdateSuggestionCard = ({
 					>
 						{suggestion.add.length > 0 && (
 							<Stack gap={4}>
-								<Text size="xs" fw={600}>
+								<Text size="xs">
 									<Trans>Added</Trans>
 								</Text>
 								<Group gap={6}>{additionBadges}</Group>
@@ -151,7 +149,7 @@ export const TagsUpdateSuggestionCard = ({
 						)}
 						{suggestion.remove.length > 0 && (
 							<Stack gap={4}>
-								<Text size="xs" fw={600}>
+								<Text size="xs">
 									<Trans>Removed</Trans>
 								</Text>
 								<Group gap={6}>{removalBadges}</Group>
@@ -167,7 +165,7 @@ export const TagsUpdateSuggestionCard = ({
 		<SuggestionCardFrame testId="agentic-tags-update-suggestion">
 			<Stack gap="sm">
 				<Group justify="space-between" wrap="nowrap">
-					<Text size="sm" fw={600}>
+					<Text size="sm">
 						<Trans>Suggested tag changes for your project</Trans>
 					</Text>
 					{dismissed && (
@@ -189,7 +187,7 @@ export const TagsUpdateSuggestionCard = ({
 				<Stack gap="sm">
 					{suggestion.add.length > 0 && (
 						<Stack gap={4}>
-							<Text size="xs" fw={500}>
+							<Text size="xs">
 								<Trans>Add</Trans>
 							</Text>
 							<Group gap={6}>{additionBadges}</Group>
@@ -197,7 +195,7 @@ export const TagsUpdateSuggestionCard = ({
 					)}
 					{suggestion.remove.length > 0 && (
 						<Stack gap={4}>
-							<Text size="xs" fw={500}>
+							<Text size="xs">
 								<Trans>Remove</Trans>
 							</Text>
 							<Group gap={6}>{removalBadges}</Group>

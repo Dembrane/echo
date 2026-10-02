@@ -63,10 +63,8 @@ const FilterDisplay = ({
 		<Stack gap="sm" mt="sm" pl="md">
 			{searchText && (
 				<Group gap="xs" align="center">
-					<Text size="sm" fw={700}>
-						•
-					</Text>
-					<Text size="sm" fw={600}>
+					<Text size="sm">•</Text>
+					<Text size="sm">
 						<Trans id="select.all.modal.search.text">Search text:</Trans>
 					</Text>
 					<Text size="sm" className="border px-3 rounded-sm">
@@ -76,10 +74,8 @@ const FilterDisplay = ({
 			)}
 			{filterNames.length > 0 && (
 				<Group gap="xs" align="center">
-					<Text size="sm" fw={700}>
-						•
-					</Text>
-					<Text size="sm" fw={600}>
+					<Text size="sm">•</Text>
+					<Text size="sm">
 						<Trans id="select.all.modal.tags">
 							<Plural value={filterNames.length} one="Tag:" other="Tags:" />
 						</Trans>
@@ -99,9 +95,7 @@ const FilterDisplay = ({
 			)}
 			{hasVerifiedOutcomesFilter && (
 				<Group gap="xs" align="center">
-					<Text size="sm" fw={700}>
-						•
-					</Text>
+					<Text size="sm">•</Text>
 					<Badge
 						color="blue"
 						variant="light"
@@ -207,7 +201,7 @@ export const SelectAllConfirmationModal = ({
 			onClose={onClose}
 			onExitTransitionEnd={onExitTransitionEnd}
 			title={
-				<Text fw={600} size="lg" style={{ color: "var(--app-text)" }}>
+				<Text size="lg" style={{ color: "var(--app-text)" }}>
 					{result ? (
 						<Trans id="select.all.modal.title.results">
 							Select All Results
@@ -248,7 +242,7 @@ export const SelectAllConfirmationModal = ({
 									<Text size="sm">
 										<Trans id="select.all.modal.already.added">
 											You have already added{" "}
-											<Text component="span" fw={600}>
+											<Text component="span">
 												<Plural
 													value={existingContextCount}
 													one="# conversation"
@@ -267,7 +261,7 @@ export const SelectAllConfirmationModal = ({
 											(hasFilters ? (
 												<Trans id="select.all.modal.add.with.filters">
 													Adding{" "}
-													<Text component="span" fw={700}>
+													<Text component="span">
 														<Plural
 															value={totalCount}
 															one="# conversation"
@@ -279,7 +273,7 @@ export const SelectAllConfirmationModal = ({
 											) : (
 												<Trans id="select.all.modal.add.without.filters">
 													Adding{" "}
-													<Text component="span" fw={700}>
+													<Text component="span">
 														<Plural
 															value={totalCount}
 															one="# conversation"
@@ -294,7 +288,7 @@ export const SelectAllConfirmationModal = ({
 											(hasFilters ? (
 												<Trans id="select.all.modal.add.with.filters.more">
 													Adding{" "}
-													<Text component="span" fw={700}>
+													<Text component="span">
 														<Plural
 															value={totalCount}
 															one="# more conversation"
@@ -306,7 +300,7 @@ export const SelectAllConfirmationModal = ({
 											) : (
 												<Trans id="select.all.modal.add.without.filters.more">
 													Adding{" "}
-													<Text component="span" fw={700}>
+													<Text component="span">
 														<Plural
 															value={totalCount}
 															one="# more conversation"
@@ -373,7 +367,7 @@ export const SelectAllConfirmationModal = ({
 
 						{/* Main message */}
 						<Stack gap="sm" align="center">
-							<Text size="lg" fw={600} style={{ color: "var(--app-text)" }}>
+							<Text size="lg" style={{ color: "var(--app-text)" }}>
 								<Trans id="select.all.modal.loading.title">
 									Adding Conversations
 								</Trans>
@@ -387,7 +381,7 @@ export const SelectAllConfirmationModal = ({
 							>
 								<Trans id="select.all.modal.loading.description">
 									Processing{" "}
-									<Text component="span" fw={600} c="primary">
+									<Text component="span" c="primary">
 										<Plural
 											value={totalCount}
 											one="# conversation"
@@ -489,7 +483,7 @@ export const SelectAllConfirmationModal = ({
 							>
 								<Group gap="xs">
 									<IconScale size={18} className="text-orange-600" />
-									<Text size="sm" fw={500} c="orange.7">
+									<Text size="sm" c="orange.7">
 										<Trans id="select.all.modal.context.limit.reached">
 											Selection too large. Some conversations weren't added.
 										</Trans>

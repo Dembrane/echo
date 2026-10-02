@@ -33,7 +33,7 @@ export const PilotBlockModal = () => {
 			overlayProps={{ blur: 2, opacity: 0.5 }}
 		>
 			<Stack gap={16}>
-				<Title order={4} fw={400}>
+				<Title order={4}>
 					<Trans>Pilot limit reached</Trans>
 				</Title>
 				<Text size="sm" c="dimmed">

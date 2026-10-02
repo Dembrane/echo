@@ -136,7 +136,7 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 			<Stack gap={16}>
 				<Group justify="space-between" align="flex-start" wrap="nowrap">
 					<Stack gap={2} style={{ minWidth: 0 }}>
-						<Title order={5} fw={400}>
+						<Title order={5}>
 							<Trans>Usage · {formatCycleMonth(data.cycle_start)}</Trans>
 						</Title>
 						{data.tier_tagline && (

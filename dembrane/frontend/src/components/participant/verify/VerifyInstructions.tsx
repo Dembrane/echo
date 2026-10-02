@@ -82,9 +82,7 @@ export const VerifyInstructions = ({
 								!isLoading ? "bg-gray-400 text-white" : "bg-blue-500 text-white"
 							}`}
 						>
-							<Text size="lg" fw={600}>
-								{index + 1}
-							</Text>
+							<Text size="lg">{index + 1}</Text>
 						</Box>
 						<Text size="md" className="flex-1">
 							{instruction.render(objectLabel)}

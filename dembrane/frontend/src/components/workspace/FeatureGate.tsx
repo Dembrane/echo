@@ -154,7 +154,7 @@ export function FeatureGate({
 							>
 								<Trans>Available on a paid plan</Trans>
 							</Badge>
-							<Text size="sm" ta="center" fw={500}>
+							<Text size="sm" ta="center">
 								{featureName}
 							</Text>
 						</Stack>

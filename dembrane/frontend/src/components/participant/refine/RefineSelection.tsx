@@ -69,7 +69,7 @@ export const RefineSelection = () => {
 					>
 						<Group gap="sm" align="center">
 							<IconMessage size={32} />
-							<Title order={3} fw={600}>
+							<Title order={3}>
 								<Trans id="participant.echo.verify">Verify</Trans>
 							</Title>
 						</Group>
@@ -121,7 +121,7 @@ export const RefineSelection = () => {
 					>
 						<Group gap="sm" align="center">
 							<IconArrowDownToArc size={32} />
-							<Title order={3} fw={600}>
+							<Title order={3}>
 								<Trans id="participant.echo.explore">Explore</Trans>
 							</Title>
 						</Group>

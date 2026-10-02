@@ -104,7 +104,7 @@ export const PortalSettingsOverview = ({
 		<Card withBorder p="md" radius="sm" w="100%" maw={640}>
 			<Stack gap="md">
 				<Group justify="space-between" align="center" wrap="nowrap">
-					<Text size="sm" fw={500}>
+					<Text size="sm">
 						<Trans>Portal Overview</Trans>
 					</Text>
 					<Button

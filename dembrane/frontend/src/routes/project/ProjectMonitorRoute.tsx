@@ -79,7 +79,7 @@ export const ProjectMonitorRoute = () => {
 				<Group justify="space-between" align="flex-start" wrap="nowrap">
 					<Stack gap={4}>
 						<Group gap="xs" align="center">
-							<Title order={2} fw={500}>
+							<Title order={2}>
 								<Trans>Monitor</Trans>
 							</Title>
 							<Badge size="sm" color="mauve" c="graphite">

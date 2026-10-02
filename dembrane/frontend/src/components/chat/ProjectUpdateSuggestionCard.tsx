@@ -579,7 +579,7 @@ export const ProjectUpdateSuggestionCard = ({
 	return (
 		<SuggestionCardFrame testId="agentic-project-update-suggestion">
 			<Stack gap="sm">
-				<Text size="sm" fw={600}>
+				<Text size="sm">
 					<Trans>
 						The assistant suggests updating {headlineFields}. Waiting on you.
 					</Trans>
@@ -623,9 +623,7 @@ export const ProjectUpdateSuggestionCard = ({
 													}));
 												}}
 												label={
-													<Text size="sm" fw={600}>
-														{fieldLabel(change.field)}
-													</Text>
+													<Text size="sm">{fieldLabel(change.field)}</Text>
 												}
 												{...testId(`suggestion-field-checkbox-${change.field}`)}
 											/>

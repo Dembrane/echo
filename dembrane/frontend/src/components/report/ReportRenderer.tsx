@@ -22,7 +22,7 @@ const ContributeToReportCTA = ({
 			{...testId("report-contribute-cta")}
 		>
 			<Stack className="text-center" align="center" gap="md">
-				<Text size="lg" fw={600}>
+				<Text size="lg">
 					<Trans>Share your voice by scanning the QR code</Trans>
 				</Text>
 

@@ -255,7 +255,7 @@ function SectionRow({
 	return (
 		<Group justify="space-between" align="flex-start" wrap="nowrap" gap="md">
 			<Stack gap={2} style={{ minWidth: 0 }}>
-				<Text size="xs" fw={500} tt="uppercase">
+				<Text size="xs" tt="uppercase">
 					{label}
 				</Text>
 				{children}
@@ -281,7 +281,7 @@ export function OrgManagedBillingNotice({
 	return (
 		<Paper withBorder p="md" radius="sm">
 			<Stack gap={8}>
-				<Text size="sm" fw={500}>
+				<Text size="sm">
 					<Trans>Billing is managed by your organisation</Trans>
 				</Text>
 				<Text size="xs">
@@ -323,9 +323,7 @@ function ManagedBillingPanel({
 			<Stack gap={16}>
 				<SectionRow label={t`Current plan`}>
 					<Group gap={8}>
-						<Text size="sm" fw={500}>
-							{tierLabel(tier)}
-						</Text>
+						<Text size="sm">{tierLabel(tier)}</Text>
 						<Badge size="xs" variant="light" color="green">
 							<Trans>Managed by dembrane</Trans>
 						</Badge>
@@ -424,7 +422,7 @@ function BillingDetailsForm({
 
 	return (
 		<Stack gap={12}>
-			<Text size="xs" fw={500} tt="uppercase">
+			<Text size="xs" tt="uppercase">
 				<Trans>Billing details</Trans>
 			</Text>
 			<Text size="xs">
@@ -642,9 +640,7 @@ function NothingToBillPanel({ tier }: { tier: string }) {
 			<Stack gap={12}>
 				<SectionRow label={t`Current plan`}>
 					<Group gap={8}>
-						<Text size="sm" fw={500}>
-							{tierLabel(tier)}
-						</Text>
+						<Text size="sm">{tierLabel(tier)}</Text>
 						{comped && (
 							<Badge size="xs" variant="light" color="green">
 								<Trans>Arranged with dembrane</Trans>
@@ -739,7 +735,7 @@ function InvoiceList({
 	const hasPdf = invoices.some((inv) => inv.sales_invoice_id);
 	return (
 		<Stack gap={6}>
-			<Text size="xs" fw={500} tt="uppercase">
+			<Text size="xs" tt="uppercase">
 				<Trans>Invoices</Trans>
 			</Text>
 			{invoices.length === 0 ? (
@@ -1222,9 +1218,7 @@ export function BillingManager({
 				)}
 				<SectionRow label={t`Current plan`}>
 					<Group gap={8}>
-						<Text size="sm" fw={500}>
-							{tierLabel(tier)}
-						</Text>
+						<Text size="sm">{tierLabel(tier)}</Text>
 						<Badge
 							size="xs"
 							variant="light"
@@ -1513,7 +1507,7 @@ export function OrgBillingTab({ orgId }: { orgId: string }) {
 			{separate.length > 0 && (
 				<Stack gap="sm">
 					<div>
-						<Text size="sm" fw={500}>
+						<Text size="sm">
 							<Trans>Workspaces billed separately</Trans>
 						</Text>
 						<Text size="xs" c="dimmed">
@@ -1527,7 +1521,7 @@ export function OrgBillingTab({ orgId }: { orgId: string }) {
 						<Paper key={w.workspace_id} withBorder p="md" radius="sm">
 							<Group justify="space-between" wrap="nowrap">
 								<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
-									<Text size="sm" fw={500} truncate>
+									<Text size="sm" truncate>
 										{w.name}
 									</Text>
 									<Badge size="xs" variant="light" color="gray" tt="capitalize">

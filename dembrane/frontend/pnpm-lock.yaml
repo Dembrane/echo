@@ -24,9 +24,6 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.2
         version: 3.2.2(react@19.0.0)
-      '@fontsource-variable/space-grotesk':
-        specifier: ^5.2.8
-        version: 5.2.8
       '@fontsource/dancing-script':
         specifier: ^5.3.0
         version: 5.3.0
@@ -1360,9 +1357,6 @@ packages:
 
   '@floating-ui/utils@0.2.9':
     resolution: {integrity: sha512-MDWhGtE+eHw5JW7lq4qhc5yRLS11ERl1c7Z6Xd0a58DozHES6EnNNwUWbMiG4J9Cgj053Bhk8zvlhFYKVhULwg==}
-
-  '@fontsource-variable/space-grotesk@5.2.8':
-    resolution: {integrity: sha512-ei9jNXzZVgBGEBVfHZqPe6F9ZxpPUG8kJYrtlLsivlWJZLCfrfSxcayjnMYAmslEGvvfjth7qybl7PNNqE8ZHw==}
 
   '@fontsource/dancing-script@5.3.0':
     resolution: {integrity: sha512-/FFbz4ZCNN+eG2a6phkZB41iKmyCC6rq2blA/kG9OFeI3/tpzLNazND1bBdEnogLhpfg7o4NfauTbEEYSpSUGg==}
@@ -6612,8 +6606,6 @@ snapshots:
   '@floating-ui/utils@0.2.10': {}
 
   '@floating-ui/utils@0.2.9': {}
-
-  '@fontsource-variable/space-grotesk@5.2.8': {}
 
   '@fontsource/dancing-script@5.3.0': {}
 

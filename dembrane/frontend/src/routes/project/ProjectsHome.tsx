@@ -232,7 +232,7 @@ export const ProjectsHomeRoute = () => {
 				{workspace && (
 					<Stack gap={4}>
 						<Group justify="space-between" align="flex-start" wrap="nowrap">
-							<Title order={2} fw={500} lineClamp={1}>
+							<Title order={2} lineClamp={1}>
 								{workspace.name}
 							</Title>
 							{canManageWorkspace && (
@@ -276,7 +276,7 @@ export const ProjectsHomeRoute = () => {
 				    has been shared with you yet." */}
 				{totallyEmpty ? (
 					<Stack gap={12} py={48}>
-						<Title order={3} fw={400}>
+						<Title order={3}>
 							{isOutsider ? (
 								<Trans>Nothing here for you yet.</Trans>
 							) : (
@@ -314,7 +314,7 @@ export const ProjectsHomeRoute = () => {
 						{/* Pinned section — cards at the top, hidden when empty. */}
 						{showPinnedSection && (
 							<Stack gap="sm">
-								<Title order={5} fw={400} c="dimmed">
+								<Title order={5} c="dimmed">
 									<Trans>Pinned</Trans>
 								</Title>
 								<SimpleGrid cols={{ base: 1, md: 3, sm: 2 }} spacing="md">
@@ -337,7 +337,7 @@ export const ProjectsHomeRoute = () => {
 						    (audit §1), Create button on the header row. */}
 						<Stack gap="sm">
 							<Group justify="space-between" align="center">
-								<Title order={5} fw={400}>
+								<Title order={5}>
 									<Trans>All projects</Trans>
 								</Title>
 								{canCreateProject && (

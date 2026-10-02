@@ -132,7 +132,7 @@ export function PresentResultsPanel({
 			gap="sm"
 			{...testId("present-results-panel")}
 		>
-			<Text fw={500}>
+			<Text>
 				<Trans>Review results</Trans>
 			</Text>
 			<Text size="sm">

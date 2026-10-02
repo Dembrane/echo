@@ -279,7 +279,7 @@ export function ProjectSharingModal({
 	};
 
 	const title = (
-		<Text size="lg" fw={500}>
+		<Text size="lg">
 			<Trans>Who can see this project?</Trans>
 		</Text>
 	);

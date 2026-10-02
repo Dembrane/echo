@@ -71,7 +71,7 @@ export const SignedInElsewhere = ({
 				>
 					<Stack gap={24}>
 						<Stack gap={6}>
-							<Title order={3} fw={400}>
+							<Title order={3}>
 								<Trans>This account is logged in somewhere else</Trans>
 							</Title>
 							<Text size="sm" lh={1.6}>

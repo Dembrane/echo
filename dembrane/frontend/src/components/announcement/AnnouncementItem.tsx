@@ -8,12 +8,7 @@ import {
 	ThemeIcon,
 	useMantineTheme,
 } from "@mantine/core";
-import {
-	CaretDown,
-	CaretUp,
-	Info,
-	WarningCircle,
-} from "@phosphor-icons/react";
+import { CaretDown, CaretUp, Info, WarningCircle } from "@phosphor-icons/react";
 import { forwardRef, useEffect, useRef, useState } from "react";
 import { Markdown } from "@/components/common/Markdown";
 import { testId } from "@/lib/testUtils";
@@ -80,7 +75,11 @@ export const AnnouncementItem = forwardRef<
 					<Stack gap="xs" style={{ flex: 1 }}>
 						<Group justify="space-between" align="center">
 							<div style={{ flex: 1 }}>
-								<Text size="sm" fw={isRead ? 400 : 500} c={isRead ? "dimmed" : undefined}>
+								<Text
+									size="sm"
+									fw={isRead ? 320 : 600}
+									c={isRead ? "dimmed" : undefined}
+								>
 									{announcement.title}
 								</Text>
 							</div>
@@ -143,7 +142,9 @@ export const AnnouncementItem = forwardRef<
 									color="gray"
 									className="hover:underline"
 									ml="auto"
-									onClick={() => onMarkAsUnread(announcement.id, announcement.activityIds)}
+									onClick={() =>
+										onMarkAsUnread(announcement.id, announcement.activityIds)
+									}
 									{...testId("announcement-mark-as-unread-button")}
 								>
 									<Trans>Mark as unread</Trans>

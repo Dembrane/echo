@@ -19,7 +19,6 @@ import { AssistantMemoryCard } from "@/components/settings/AssistantMemoryCard";
 import { AuditLogsCard } from "@/components/settings/AuditLogsCard";
 import { BetaFeaturesCard } from "@/components/settings/BetaFeaturesCard";
 import { ChangePasswordCard } from "@/components/settings/ChangePasswordCard";
-import { FontSettingsCard } from "@/components/settings/FontSettingsCard";
 import { FontSizeSettingsCard } from "@/components/settings/FontSizeSettingsCard";
 import { LanguageSettingsCard } from "@/components/settings/LanguageSettingsCard";
 import { MyAccessCard } from "@/components/settings/MyAccessCard";
@@ -109,7 +108,6 @@ export const UserSettingsRoute = () => {
 									<Trans>Appearance</Trans>
 								</Title>
 
-								<FontSettingsCard />
 								<FontSizeSettingsCard />
 								<LanguageSettingsCard />
 								<BetaFeaturesCard />

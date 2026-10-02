@@ -259,9 +259,7 @@ function Editor() {
 							</Group>
 						</Anchor>
 						<Group gap="xs">
-							<Text fw={500} truncate>
-								{doc.data.title}
-							</Text>
+							<Text truncate>{doc.data.title}</Text>
 							<Badge
 								size="sm"
 								variant="light"
@@ -332,7 +330,7 @@ function Editor() {
 							<Stack gap="sm">
 								<Stack gap={6}>
 									<Group justify="space-between">
-										<Text size="sm" fw={500}>
+										<Text size="sm">
 											<Trans>Add a field</Trans>
 										</Text>
 										<Select

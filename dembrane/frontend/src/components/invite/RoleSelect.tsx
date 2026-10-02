@@ -74,7 +74,7 @@ export function RoleSelect({
 
 	return (
 		<Stack gap={6}>
-			<Text size="sm" fw={500}>
+			<Text size="sm">
 				<Trans>Role</Trans>
 			</Text>
 			<Radio.Group
@@ -90,9 +90,7 @@ export function RoleSelect({
 							disabled={disabled}
 							label={
 								<Stack gap={0}>
-									<Text size="sm" fw={500}>
-										{opt.label}
-									</Text>
+									<Text size="sm">{opt.label}</Text>
 									<Text size="xs" c="dimmed">
 										{opt.description}
 									</Text>

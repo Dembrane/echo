@@ -16,7 +16,7 @@ export const CheckYourEmailRoute = () => {
 	return (
 		<div className="h-full w-full">
 			<Stack gap="md">
-				<Title order={2} fw={400} {...testId("auth-check-email-title")}>
+				<Title order={2} {...testId("auth-check-email-title")}>
 					<Trans>Check your email</Trans>
 				</Title>
 				<Text c="dimmed" {...testId("auth-check-email-text")}>

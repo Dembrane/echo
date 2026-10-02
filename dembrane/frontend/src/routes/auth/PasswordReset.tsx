@@ -72,6 +72,7 @@ export const PasswordResetRoute = () => {
 								required
 							/>
 							<Button
+								variant="filled"
 								size="lg"
 								type="submit"
 								loading={resetPasswordMutation.isPending}

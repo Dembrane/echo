@@ -26,6 +26,8 @@ import { MessageCircleIcon } from "lucide-react";
 import { useState } from "react";
 import { useParams } from "react-router";
 import { useProjectConversationCounts } from "@/components/report/hooks";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
+import { FeatureGatePopover } from "@/components/workspace/FeatureGatePopover";
 import { getProductFeedbackUrl } from "@/config";
 import focusOptionsData from "@/data/reportFocusOptions.json";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -34,8 +36,6 @@ import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
 import { isFreeTierLimitError } from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
 import type { Tier } from "@/lib/tiers";
-import { UpgradeModal } from "@/components/workspace/FeatureGate";
-import { FeatureGatePopover } from "@/components/workspace/FeatureGatePopover";
 import { CloseableAlert } from "../common/ClosableAlert";
 import { languageOptionsByIso639_1 } from "../language/LanguagePicker";
 import { ConversationStatusTable } from "./ConversationStatusTable";
@@ -207,7 +207,6 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 							component="a"
 							c="blue.7"
 							href="#"
-							fw={500}
 							onClick={(e) => {
 								e.preventDefault();
 								setDetailModalOpened(true);
@@ -241,7 +240,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 			) : showSchedule ? (
 				<Stack>
 					<Group gap="xs" align="center">
-						<Text fw={500} size="lg">
+						<Text size="lg">
 							<Trans>Schedule Report</Trans>
 						</Text>
 						<Badge color="mauve" c="graphite" size="sm">

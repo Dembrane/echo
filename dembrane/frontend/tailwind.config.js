@@ -36,6 +36,25 @@ export default {
 					{ lineHeight: "var(--app-heading-h1-line-height)" },
 				],
 			},
+			// Square everywhere; only the primary action is a pill (rounded-full
+			// stays for pills, dots and avatars).
+			borderRadius: {
+				"2xl": "0",
+				"3xl": "0",
+				DEFAULT: "0",
+				lg: "0",
+				md: "0",
+				sm: "0",
+				xl: "0",
+			},
+			// One weight: medium and semibold flatten to 320; bold is emphasis (600).
+			fontWeight: {
+				bold: "600",
+				light: "240",
+				medium: "320",
+				normal: "320",
+				semibold: "320",
+			},
 			height: {
 				"base-layout-height": "var(--base-layout-height, calc(100% - 60px))",
 				"project-layout-height": "var(--project-layout-height, calc(100vh - 60px))",

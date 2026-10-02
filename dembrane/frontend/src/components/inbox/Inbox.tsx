@@ -23,25 +23,25 @@ import { formatRelative } from "date-fns";
 import type React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useInView } from "react-intersection-observer";
+import { AnnouncementItem } from "@/components/announcement/AnnouncementItem";
 import {
-	useInfiniteAnnouncements,
-	useMarkAllAsReadMutation as useAnnouncementsMarkAllAsReadMutation,
 	useMarkAsReadMutation as useAnnouncementMarkAsReadMutation,
 	useMarkAsUnreadMutation as useAnnouncementMarkAsUnreadMutation,
+	useMarkAllAsReadMutation as useAnnouncementsMarkAllAsReadMutation,
+	useInfiniteAnnouncements,
 	useUnreadAnnouncements,
 } from "@/components/announcement/hooks";
 import { useProcessedAnnouncements } from "@/components/announcement/hooks/useProcessedAnnouncements";
-import { AnnouncementItem } from "@/components/announcement/AnnouncementItem";
+import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useLanguage } from "@/hooks/useLanguage";
 import {
+	type NotificationRow,
 	resolveNotificationHref,
 	useMarkAllNotificationsRead,
 	useMarkNotificationRead,
 	useNotifications,
 	useUnreadNotificationCount,
-	type NotificationRow,
 } from "@/hooks/useNotifications";
-import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { useLanguage } from "@/hooks/useLanguage";
 import { avatarUrl } from "@/lib/avatar";
 
 /**
@@ -176,7 +176,7 @@ export const Inbox = () => {
 				size="md"
 				title={
 					<Group gap="sm" justify="space-between" w="100%">
-						<Text fw={500} size="lg">
+						<Text size="lg">
 							<Trans>Inbox</Trans>
 						</Text>
 						<Button
@@ -279,8 +279,8 @@ export const Inbox = () => {
 											}
 											onMarkAsUnread={(id, activityIds) =>
 												markAnnouncementUnread.mutate({
-													announcementId: id,
 													activityIds,
+													announcementId: id,
 												})
 											}
 											index={index}
@@ -295,8 +295,8 @@ export const Inbox = () => {
 											}
 											onMarkAsUnread={(id, activityIds) =>
 												markAnnouncementUnread.mutate({
-													announcementId: id,
 													activityIds,
+													announcementId: id,
 												})
 											}
 											index={index}
@@ -373,11 +373,11 @@ function NotificationRowItem({
 		<UnstyledButton
 			onClick={onClick}
 			style={{
-				display: "block",
-				padding: "12px 4px",
+				background: row.read ? "transparent" : unreadBg,
 				borderBottom: "1px solid var(--mantine-color-gray-2)",
 				cursor: "pointer",
-				background: row.read ? "transparent" : unreadBg,
+				display: "block",
+				padding: "12px 4px",
 			}}
 		>
 			<Group
@@ -403,34 +403,30 @@ function NotificationRowItem({
 						}}
 						style={{
 							position: "absolute",
-							top: 0,
 							right: 0,
+							top: 0,
 						}}
 					>
 						<IconCheck size={12} />
 					</ActionIcon>
 				)}
 				{row.actor_user_id ? (
-					<Avatar
-						src={avatarUrl(row.actor_avatar, 48)}
-						size="sm"
-						radius="xl"
-					>
+					<Avatar src={avatarUrl(row.actor_avatar, 48)} size="sm" radius="xl">
 						{(row.actor_name || "?").slice(0, 2).toUpperCase()}
 					</Avatar>
 				) : (
 					<Box
 						style={{
-							width: 28,
-							height: 28,
-							borderRadius: "50%",
+							alignItems: "center",
 							background: isDestructive
 								? "var(--mantine-color-red-1)"
 								: "var(--mantine-color-blue-1)",
+							borderRadius: "50%",
 							display: "flex",
-							alignItems: "center",
-							justifyContent: "center",
 							flexShrink: 0,
+							height: 28,
+							justifyContent: "center",
+							width: 28,
 						}}
 					>
 						<IconBell
@@ -446,19 +442,19 @@ function NotificationRowItem({
 
 				<Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
 					<Group gap="xs" align="center" wrap="nowrap">
-						<Text size="sm" fw={row.read ? 400 : 500} lineClamp={1}>
+						<Text size="sm" fw={row.read ? 320 : 600} lineClamp={1}>
 							{renderInlineMarkdown(row.title)}
 						</Text>
 						{!row.read && (
 							<Box
 								style={{
-									width: 6,
-									height: 6,
-									borderRadius: "50%",
 									background: isDestructive
 										? "var(--mantine-color-red-6)"
 										: "var(--mantine-color-blue-6)",
+									borderRadius: "50%",
 									flexShrink: 0,
+									height: 6,
+									width: 6,
 								}}
 								aria-label={t`Unread`}
 							/>

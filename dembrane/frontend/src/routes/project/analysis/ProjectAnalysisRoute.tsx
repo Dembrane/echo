@@ -211,7 +211,7 @@ function ParameterSummary({ recipe }: { recipe: AnalysisRecipe }) {
 					schema.maximum === undefined ? null : String(schema.maximum);
 				return (
 					<Paper key={name} withBorder p="sm">
-						<Text fw={600}>{name}</Text>
+						<Text>{name}</Text>
 						<Text size="sm">
 							{String(schema.description ?? schema.title ?? schema.type ?? "")}
 						</Text>
@@ -510,7 +510,7 @@ function RecipeCard({
 								</Title>
 								{recipe.steps.map((step) => (
 									<Paper withBorder p="sm" key={step.key}>
-										<Text fw={600}>{step.description}</Text>
+										<Text>{step.description}</Text>
 										<Text size="xs">
 											{step.kind} ·{" "}
 											{step.promptRef ?? step.checkVersion ?? step.key}
@@ -786,7 +786,7 @@ function RunsView({ projectId }: { projectId: string }) {
 				>
 					<Group justify="space-between">
 						<Stack gap={2}>
-							<Text fw={600}>{run.recipeId}</Text>
+							<Text>{run.recipeId}</Text>
 							<Text size="sm">{dateLabel(run.createdAt)}</Text>
 						</Stack>
 						<Badge color={statusColor(run.status)} variant="outline">

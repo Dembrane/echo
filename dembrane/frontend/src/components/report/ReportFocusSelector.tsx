@@ -111,9 +111,9 @@ export const ReportFocusSelector = ({
 
 	return (
 		<Stack gap="sm">
-			<Text size="sm" fw={500}>
+			<Text size="sm">
 				<Trans>Guide the report</Trans>{" "}
-				<Text span size="sm" c="dimmed" fw={400}>
+				<Text span size="sm" c="dimmed">
 					<Trans>(optional)</Trans>
 				</Text>
 			</Text>
@@ -131,16 +131,16 @@ export const ReportFocusSelector = ({
 							px="xs"
 							py={4}
 							style={{
-								borderRadius: 20,
-								border: isActive
-									? "1.5px solid var(--mantine-color-primary-5)"
-									: "1.5px solid var(--mantine-color-gray-3)",
 								backgroundColor: isActive
 									? "var(--mantine-color-primary-0)"
 									: undefined,
-								transition: "all 0.15s ease",
-								opacity: atLimit && !isActive ? 0.5 : 1,
+								border: isActive
+									? "1.5px solid var(--mantine-color-primary-5)"
+									: "1.5px solid var(--mantine-color-gray-3)",
+								borderRadius: 20,
 								cursor: atLimit && !isActive ? "not-allowed" : "pointer",
+								opacity: atLimit && !isActive ? 0.5 : 1,
+								transition: "all 0.15s ease",
 							}}
 						>
 							<Group gap={6} wrap="nowrap">
@@ -150,7 +150,7 @@ export const ReportFocusSelector = ({
 								<Text
 									size="xs"
 									c={isActive ? "primary.8" : undefined}
-									fw={isActive ? 500 : 400}
+									fw={isActive ? 600 : 320}
 								>
 									{getLabel(option.labels, language)}
 								</Text>
@@ -165,10 +165,10 @@ export const ReportFocusSelector = ({
 					px="sm"
 					py={6}
 					style={{
-						borderRadius: 20,
 						border: showCustom
 							? "1.5px dashed var(--mantine-color-primary-5)"
 							: "1.5px dashed var(--mantine-color-gray-5)",
+						borderRadius: 20,
 						transition: "all 0.15s ease",
 					}}
 				>
@@ -184,7 +184,7 @@ export const ReportFocusSelector = ({
 						<Text
 							size="xs"
 							c={showCustom ? "primary.7" : "gray.7"}
-							fw={showCustom ? 500 : 400}
+							fw={showCustom ? 600 : 320}
 						>
 							<Trans>Or write your own</Trans>
 						</Text>

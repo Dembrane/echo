@@ -68,9 +68,7 @@ export const ConversationFocusChips = ({
 			className="mb-2 border-0 border-b border-solid pb-2 italic"
 			style={{ borderColor: "var(--mantine-color-primary-light)" }}
 		>
-			<Text size="xs" fw={500}>
-				{label}
-			</Text>
+			<Text size="xs">{label}</Text>
 			{overflowNotice ? (
 				<Text size="xs">{overflowNotice}</Text>
 			) : conversations ? (

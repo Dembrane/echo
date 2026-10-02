@@ -69,9 +69,7 @@ export function InviteMemberCard({
 						{icon ?? <IconUserPlus size={18} />}
 					</Group>
 					<Stack gap={0}>
-						<Text size="sm" fw={500}>
-							{label}
-						</Text>
+						<Text size="sm">{label}</Text>
 						{helperText && (
 							<Text size="xs" c="dimmed">
 								{helperText}

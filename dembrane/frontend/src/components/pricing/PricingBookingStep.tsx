@@ -330,7 +330,7 @@ export const PricingBookingStep = ({
 						write to us at info@dembrane.com.
 					</Trans>
 				</Text>
-				<Text fw={500} {...testId("pricing-configurator-booking-reference")}>
+				<Text {...testId("pricing-configurator-booking-reference")}>
 					<Trans>Reference {reference}</Trans>
 				</Text>
 				<Box>

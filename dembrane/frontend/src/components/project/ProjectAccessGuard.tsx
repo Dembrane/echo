@@ -105,7 +105,7 @@ export const ProjectAccessGuard = ({ children }: { children: ReactNode }) => {
 				px="lg"
 				data-error-code={presented?.code ?? "none"}
 			>
-				<Title order={3} fw={400} ta="center">
+				<Title order={3} ta="center">
 					{is404 ? (
 						<Trans>This isn't available to you</Trans>
 					) : (

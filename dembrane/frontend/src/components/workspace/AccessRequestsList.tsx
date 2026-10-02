@@ -140,7 +140,7 @@ export const AccessRequestsList = ({
 		<Box mt="xl">
 			<Divider />
 			<Stack gap={12} my="lg">
-				<Title order={5} fw={400}>
+				<Title order={5}>
 					<Trans>Access requests</Trans>
 				</Title>
 				<Stack gap={0}>

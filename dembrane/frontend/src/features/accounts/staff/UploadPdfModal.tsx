@@ -127,7 +127,7 @@ export function UploadPdfModal({
 				/>
 				<Group grow>
 					<Stack gap={4}>
-						<Text size="sm" fw={500}>
+						<Text size="sm">
 							<Trans>Kind</Trans>
 						</Text>
 						<SegmentedControl
@@ -141,7 +141,7 @@ export function UploadPdfModal({
 						/>
 					</Stack>
 					<Stack gap={4}>
-						<Text size="sm" fw={500}>
+						<Text size="sm">
 							<Trans>Language</Trans>
 						</Text>
 						<SegmentedControl

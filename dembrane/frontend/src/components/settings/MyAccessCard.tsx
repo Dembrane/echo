@@ -143,7 +143,7 @@ export const MyAccessCard = () => {
 								    workspace rows are indented + rule'd. */}
 									<Group gap="xs" justify="space-between" align="center">
 										<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
-											<Text fw={500} size="sm" lineClamp={1}>
+											<Text size="sm" lineClamp={1}>
 												{organisation?.name ?? t`(direct workspace access)`}
 											</Text>
 											{organisation && (

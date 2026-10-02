@@ -118,7 +118,7 @@ export const VerifiedArtefactsSection = ({
 							<Accordion.Control>
 								<Group gap="sm" wrap="nowrap">
 									<Stack gap={2}>
-										<Text fw={500}>
+										<Text>
 											{topicLabelMap.get(artefact.key) ??
 												artefact.topic_label ??
 												artefact.key ??
@@ -133,12 +133,12 @@ export const VerifiedArtefactsSection = ({
 													{formattedDate}
 												</Text>
 											)}
-										{/* biome-ignore lint/a11y/noStaticElementInteractions: wrapper only stops propagation so the accordion doesn't toggle when interacting with the nested copy button */}
-										<span
-											onClick={(e) => e.stopPropagation()}
-											onKeyDown={(e) => e.stopPropagation()}
-											role="presentation"
-										>
+											{/* biome-ignore lint/a11y/noStaticElementInteractions: wrapper only stops propagation so the accordion doesn't toggle when interacting with the nested copy button */}
+											<span
+												onClick={(e) => e.stopPropagation()}
+												onKeyDown={(e) => e.stopPropagation()}
+												role="presentation"
+											>
 												<CopyRichTextIconButton
 													markdown={artefact.content ?? ""}
 													size="sm"

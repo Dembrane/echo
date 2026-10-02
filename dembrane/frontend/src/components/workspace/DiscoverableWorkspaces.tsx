@@ -252,7 +252,7 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 							transition: "transform 0.15s ease",
 						}}
 					/>
-					<Text size="xs" fw={500} c="dimmed" tt="uppercase" lts={0.5}>
+					<Text size="xs" c="dimmed" tt="uppercase" lts={0.5}>
 						{headerLabel}
 					</Text>
 					<Text size="xs" c="dimmed">

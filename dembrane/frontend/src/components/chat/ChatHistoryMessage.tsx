@@ -146,9 +146,7 @@ const DocsChoiceCard = ({
 		<Stack gap="sm" align="center" className="justify-center py-2 text-center">
 			<Group gap="sm" align="center">
 				{icon}
-				<Title order={4} fw={600}>
-					{title}
-				</Title>
+				<Title order={4}>{title}</Title>
 				<IconArrowUpRight size={18} stroke={1.9} />
 			</Group>
 			<Text size="sm">{description}</Text>
@@ -180,7 +178,7 @@ const AgenticCitation = ({
 		</Popover.Target>
 		<Popover.Dropdown data-testid="agentic-citation-popover">
 			<Stack gap={6}>
-				<Text size="sm" fw={600}>
+				<Text size="sm">
 					{citation.name ? (
 						<Trans>{citation.name}'s conversation</Trans>
 					) : (
@@ -519,7 +517,7 @@ export const ChatHistoryMessage = ({
 			// biome-ignore lint/a11y/useValidAriaRole: role is a component prop for styling, not an ARIA attribute
 			<ChatMessage key={message.id} role="dembrane" section={section}>
 				<Group gap="xs" align="baseline">
-					<Text size="xs" c="dimmed" fw={500}>
+					<Text size="xs" c="dimmed">
 						<Trans>Context added:</Trans>
 					</Text>
 					<ConversationLinks

@@ -245,7 +245,7 @@ const FocusedOnLine = ({
 
 	return (
 		<Group gap="xs" align="baseline" justify="flex-end" className="mb-2 italic">
-			<Text size="xs" c="dimmed" fw={500}>
+			<Text size="xs" c="dimmed">
 				<Trans>Focusing on:</Trans>
 			</Text>
 			<ConversationLinks
@@ -1877,7 +1877,7 @@ export const AgenticChatPanel = ({
 									size={26}
 									className="text-[var(--mantine-color-primary-6)]"
 								/>
-								<Title order={3} fw={500} className="max-w-md">
+								<Title order={3} className="max-w-md">
 									<Trans>Where would you like to start?</Trans>
 								</Title>
 								<Text size="sm" maw={420}>
@@ -2270,6 +2270,7 @@ export const AgenticChatPanel = ({
 											}
 										/>
 										<Button
+											variant="filled"
 											type="submit"
 											size="md"
 											radius="md"
@@ -2330,7 +2331,6 @@ export const AgenticChatPanel = ({
 							<Text
 								size="xs"
 								c={input.length > MAX_AGENTIC_MESSAGE_LENGTH ? "red" : "orange"}
-								fw={500}
 								className="mt-1"
 							>
 								{input.length > MAX_AGENTIC_MESSAGE_LENGTH ? (

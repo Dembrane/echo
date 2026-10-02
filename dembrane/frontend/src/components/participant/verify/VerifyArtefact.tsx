@@ -318,7 +318,7 @@ export const VerifyArtefact = () => {
 								<Logo hideTitle hideEnvBadge alwaysDembrane h="48px" />
 							</div>
 							<Stack gap="sm" align="center">
-								<Text size="xl" fw={600}>
+								<Text size="xl">
 									<Trans id="participant.regenerating.outcome">
 										Regenerating the outcome
 									</Trans>

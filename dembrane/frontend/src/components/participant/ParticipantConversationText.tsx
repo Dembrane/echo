@@ -118,7 +118,7 @@ export const ParticipantConversationText = () => {
 		return (
 			<div className="container mx-auto flex h-full max-w-2xl flex-col items-center justify-center">
 				<div className="p-8 text-center">
-					<Text size="xl" fw={500} c="red" mb="md">
+					<Text size="xl" c="red" mb="md">
 						<Trans id="participant.conversation.error.text.mode">
 							Something went wrong
 						</Trans>
@@ -167,7 +167,7 @@ export const ParticipantConversationText = () => {
 				onClose={closeFinishModal}
 				centered
 				title={
-					<Text fw={500}>
+					<Text>
 						<Trans id="participant.modal.finish.title.text.mode">
 							Finish Conversation
 						</Trans>

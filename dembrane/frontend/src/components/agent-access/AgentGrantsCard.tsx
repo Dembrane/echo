@@ -64,7 +64,7 @@ export const AgentGrantsCard = ({
 	const body = (
 		<Stack gap="md">
 			{!bare && (
-				<Text size="sm" fw={500}>
+				<Text size="sm">
 					<Trans>Connected agents</Trans>
 				</Text>
 			)}
@@ -116,9 +116,7 @@ export const AgentGrantsCard = ({
 										data-testid={`agent-grant-${grant.id}`}
 									>
 										<Table.Td>
-											<Text size="sm" fw={500}>
-												{grant.client_name}
-											</Text>
+											<Text size="sm">{grant.client_name}</Text>
 										</Table.Td>
 										{showUser && (
 											<Table.Td>

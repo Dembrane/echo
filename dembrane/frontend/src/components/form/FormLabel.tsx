@@ -11,9 +11,7 @@ interface FormLabelProps {
 export const FormLabel = ({ label, isDirty, error }: FormLabelProps) => {
 	return (
 		<Group gap="xs" align="center">
-			<Text size="sm" fw={500}>
-				{label}
-			</Text>
+			<Text size="sm">{label}</Text>
 			{isDirty && (
 				<Tooltip label={<Trans>Unsaved changes</Trans>}>
 					<div

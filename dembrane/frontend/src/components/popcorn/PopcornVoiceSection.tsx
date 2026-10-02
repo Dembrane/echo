@@ -47,7 +47,7 @@ export function VoiceFields({
 	const isDefault = !voice.note && !otherOpen;
 	return (
 		<Stack gap="sm">
-			<Text fw={500}>
+			<Text>
 				<Trans>How should the phrases sound?</Trans>
 			</Text>
 			<Checkbox

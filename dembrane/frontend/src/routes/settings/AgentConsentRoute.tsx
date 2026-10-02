@@ -238,7 +238,7 @@ export const AgentConsentRoute = () => {
 						</Stack>
 
 						<Stack gap={4}>
-							<Text size="sm" fw={500}>
+							<Text size="sm">
 								<Trans>It is asking to</Trans>
 							</Text>
 							<List size="sm" spacing={2}>
@@ -260,7 +260,7 @@ export const AgentConsentRoute = () => {
 						</Stack>
 
 						<Stack gap="xs">
-							<Text size="sm" fw={500}>
+							<Text size="sm">
 								<Trans>In which organisations</Trans>
 							</Text>
 							{data.organisations.length === 0 ? (

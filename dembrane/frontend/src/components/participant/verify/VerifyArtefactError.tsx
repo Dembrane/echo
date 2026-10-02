@@ -15,7 +15,7 @@ export const VerifyArtefactError = ({
 }: VerifyArtefactErrorProps) => {
 	return (
 		<Stack align="center" justify="center" gap="lg" className="h-full px-4">
-			<Text size="xl" fw={500} c="red" mb="md">
+			<Text size="xl" c="red" mb="md">
 				<Trans id="participant.outcome.error.title">
 					Unable to Load Outcome
 				</Trans>

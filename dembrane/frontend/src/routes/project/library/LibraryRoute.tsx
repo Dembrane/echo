@@ -65,7 +65,7 @@ function CanvasListRow({
 				>
 					<Stack gap="xs" className="min-w-0">
 						<Group gap="xs" wrap="nowrap">
-							<Text size="lg" fw={500} truncate>
+							<Text size="lg" truncate>
 								{canvas.name}
 							</Text>
 							{canvas.isDevFixture ? (
@@ -120,7 +120,7 @@ function PopcornRow({ base, projectId }: { base: string; projectId: string }) {
 						<PopcornIcon size={22} aria-hidden />
 						<Stack gap={2} className="min-w-0">
 							<Group gap="xs" wrap="nowrap">
-								<Text size="lg" fw={500} truncate>
+								<Text size="lg" truncate>
 									{popcorn?.name ?? t`Popcorn`}
 								</Text>
 								<Badge size="xs" variant="light" color="primary">
@@ -199,7 +199,7 @@ export const LibraryRoute = () => {
 					<CanvasListSkeleton />
 				) : canvasesQuery.isError ? (
 					<Paper withBorder className="rounded-md px-4 py-6">
-						<Text fw={600}>
+						<Text>
 							<Trans>Could not load the library.</Trans>
 						</Text>
 						<ErrorNotice
@@ -220,7 +220,7 @@ export const LibraryRoute = () => {
 						{...testId("library-empty-state")}
 					>
 						<Stack gap="sm" align="center">
-							<Text size="lg" fw={500}>
+							<Text size="lg">
 								<Trans>No canvases yet</Trans>
 							</Text>
 							<Text size="sm" ta="center" maw={520}>

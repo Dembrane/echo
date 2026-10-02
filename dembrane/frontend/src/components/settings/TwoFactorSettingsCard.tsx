@@ -211,16 +211,14 @@ export const TwoFactorSettingsCard = ({
 							<QRCode value={generatedSecret.otpauth_url} />
 						</div>
 						<Group align="center" gap="xs">
-							<Text fw={600} size="lg">
-								{generatedSecret.secret}
-							</Text>
+							<Text size="lg">{generatedSecret.secret}</Text>
 							<CopySecretButton secret={generatedSecret.secret} />
 						</Group>
 					</Stack>
 				</Paper>
 
 				<Stack gap="xs">
-					<Text fw={500} size="sm">
+					<Text size="sm">
 						<Trans>Authenticator code</Trans>
 					</Text>
 					<PinInput
@@ -271,7 +269,7 @@ export const TwoFactorSettingsCard = ({
 						<Stack gap={2}>
 							<Group gap="sm" align="center">
 								<IconLock size={20} />
-								<Text size="lg" fw={600}>
+								<Text size="lg">
 									<Trans>Two-factor authentication</Trans>
 								</Text>
 							</Group>
@@ -305,7 +303,7 @@ export const TwoFactorSettingsCard = ({
 
 							<Stack gap="md">
 								<Group gap="xs" align="center">
-									<Text fw={500}>
+									<Text>
 										<Trans>Recommended apps</Trans>
 									</Text>
 								</Group>
@@ -348,7 +346,7 @@ export const TwoFactorSettingsCard = ({
 					</Text>
 
 					<Stack gap="xs">
-						<Text fw={500} size="sm">
+						<Text size="sm">
 							<Trans>Authenticator code</Trans>
 						</Text>
 						<PinInput

@@ -14,7 +14,7 @@ export const ConversationErrorView = ({
 	return (
 		<div className="container mx-auto flex h-full max-w-2xl flex-col items-center justify-center">
 			<div className="p-8 text-center">
-				<Text size="xl" fw={500} c="red" mb="md">
+				<Text size="xl" c="red" mb="md">
 					{conversationDeletedDuringRecording ? (
 						<Trans id="participant.conversation.ended">
 							Conversation Ended

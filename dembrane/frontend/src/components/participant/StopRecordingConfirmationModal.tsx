@@ -68,7 +68,7 @@ export const StopRecordingConfirmationModal = ({
 			closeOnEscape={!isStopping}
 			centered
 			title={
-				<Text fw={500}>
+				<Text>
 					{showVerifyPrompt ? (
 						<Trans id="participant.modal.verify_prompt.title">
 							Verification reminder

@@ -260,7 +260,7 @@ const MonitorTile = ({
 								maw={280}
 								withArrow
 							>
-								<Text span size="xs" fw={600}>
+								<Text span size="xs">
 									{t`Away`}
 								</Text>
 							</Tooltip>
@@ -278,7 +278,7 @@ const MonitorTile = ({
 					</Group>
 				</Group>
 
-				<Text size="sm" fw={600} truncate title={label}>
+				<Text size="sm" truncate title={label}>
 					{label}
 				</Text>
 
@@ -526,7 +526,7 @@ const MonitorGroupSection = ({
 						}}
 					/>
 				</ActionIcon>
-				<Text size="xs" fw={600} tt="uppercase">
+				<Text size="xs" tt="uppercase">
 					{group.label}
 				</Text>
 				<Text size="xs">{group.items.length}</Text>
@@ -655,7 +655,7 @@ export const LiveMonitorSection = ({
 			<Card withBorder p="lg" radius="sm">
 				<Stack gap="xs" align="center">
 					<WarningCircleIcon size={24} />
-					<Text size="sm" fw={500}>
+					<Text size="sm">
 						<Trans>Couldn't load live activity</Trans>
 					</Text>
 					<Text size="xs" ta="center" maw={420}>
@@ -672,7 +672,7 @@ export const LiveMonitorSection = ({
 			<Card withBorder p="lg" radius="sm">
 				<Stack gap="xs" align="center">
 					<ChartBarIcon size={24} />
-					<Text size="sm" fw={500}>
+					<Text size="sm">
 						<Trans>No recent activity</Trans>
 					</Text>
 					<Text size="xs" ta="center" maw={420}>

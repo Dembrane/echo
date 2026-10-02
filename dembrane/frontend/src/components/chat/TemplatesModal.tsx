@@ -413,7 +413,7 @@ export const TemplatesModal = ({
 		opened,
 		size: "lg" as const,
 		title: (
-			<Text fw={500} size="lg">
+			<Text size="lg">
 				<Trans>Templates</Trans>
 			</Text>
 		),
@@ -484,8 +484,8 @@ export const TemplatesModal = ({
 											</Text>
 											<Text size="xs" c="dimmed" lineClamp={2}>
 												<Trans>
-													Visible to everyone in this workspace. Leave off to keep
-													it personal.
+													Visible to everyone in this workspace. Leave off to
+													keep it personal.
 												</Trans>
 											</Text>
 										</Stack>
@@ -580,7 +580,7 @@ export const TemplatesModal = ({
 					)}
 					<Stack gap={1} className="min-w-0 flex-1">
 						<Group gap={6}>
-							<Text size="sm" fw={500} truncate>
+							<Text size="sm" truncate>
 								{tmpl.title}
 							</Text>
 							{tmpl.source !== "user" && <SourceBadge source={tmpl.source} />}
@@ -713,7 +713,7 @@ export const TemplatesModal = ({
 							<Stack gap={2}>
 								<Switch
 									label={
-										<Text size="xs" fw={500}>
+										<Text size="xs">
 											<Trans>Contextual suggestions</Trans>
 										</Text>
 									}
@@ -790,7 +790,6 @@ export const TemplatesModal = ({
 							{!debouncedSearch && (
 								<Text
 									size="xs"
-									fw={600}
 									tt="uppercase"
 									c="dimmed"
 									style={{ letterSpacing: 0.5 }}
@@ -837,7 +836,6 @@ export const TemplatesModal = ({
 								<Group justify="space-between" mt={12}>
 									<Text
 										size="xs"
-										fw={600}
 										tt="uppercase"
 										c="dimmed"
 										style={{ letterSpacing: 0.5 }}

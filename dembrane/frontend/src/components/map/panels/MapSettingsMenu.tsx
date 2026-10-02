@@ -191,7 +191,7 @@ export const MapSettingsMenu = ({
 			</Popover.Target>
 			<Popover.Dropdown>
 				<Stack gap="sm">
-					<Text size="sm" fw={600}>
+					<Text size="sm">
 						<Trans>Panel settings</Trans>
 					</Text>
 

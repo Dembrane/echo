@@ -90,7 +90,7 @@ export const AgenticPlanCard = ({ plan }: { plan: AgenticPlan }) => {
 					{...testId("agentic-plan-toggle")}
 				>
 					<Group justify="space-between" wrap="nowrap" gap="xs">
-						<Text fw={600}>
+						<Text>
 							<Trans>Plan</Trans>
 						</Text>
 						<Group gap={6} wrap="nowrap">
@@ -122,7 +122,7 @@ export const AgenticPlanCard = ({ plan }: { plan: AgenticPlan }) => {
 									</Box>
 									<Stack gap={0} className="min-w-0">
 										<Text
-											fw={step.status === "in_progress" ? 600 : 400}
+											fw={step.status === "in_progress" ? 600 : 320}
 											className="transition-colors duration-200"
 										>
 											{step.title}

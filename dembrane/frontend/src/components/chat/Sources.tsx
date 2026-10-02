@@ -24,7 +24,7 @@ export const Sources = ({
 		<Box className="prose prose-sm flex flex-col rounded-t-xl rounded-br-xl border p-4">
 			<Group gap="sm" align="center">
 				<Box w={15} h={15} bg="green.5" style={{ borderRadius: "50%" }} />
-				<Text size="sm" fw={500} my={2}>
+				<Text size="sm" my={2}>
 					<Trans>
 						The following conversations were automatically added to the context
 					</Trans>

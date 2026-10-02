@@ -315,6 +315,7 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 					</Group>
 				) : (
 					<Button
+						variant="filled"
 						type="submit"
 						size="lg"
 						loading={initiateConversationMutation.isPending}

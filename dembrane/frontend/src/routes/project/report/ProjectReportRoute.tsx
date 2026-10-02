@@ -20,10 +20,6 @@ import {
 	Tooltip,
 	UnstyledButton,
 } from "@mantine/core";
-import {
-	isDateFarEnough,
-	ScheduleDateTimePicker,
-} from "@/components/report/ScheduleDateTimePicker";
 import { useDisclosure, useFullscreen } from "@mantine/hooks";
 import { GearSixIcon } from "@phosphor-icons/react";
 import {
@@ -40,6 +36,7 @@ import {
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import posthog from "posthog-js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
@@ -62,13 +59,16 @@ import {
 } from "@/components/report/hooks";
 import { ReportRenderer } from "@/components/report/ReportRenderer";
 import { ReportTimeline } from "@/components/report/ReportTimeline";
+import {
+	isDateFarEnough,
+	ScheduleDateTimePicker,
+} from "@/components/report/ScheduleDateTimePicker";
 import { UpdateReportModalButton } from "@/components/report/UpdateReportModalButton";
-import posthog from "posthog-js";
 import { PARTICIPANT_BASE_URL } from "@/config";
+import focusOptionsData from "@/data/reportFocusOptions.json";
 import useCopyToRichText from "@/hooks/useCopyToRichText";
 import { useLanguage } from "@/hooks/useLanguage";
 import { testId } from "@/lib/testUtils";
-import focusOptionsData from "@/data/reportFocusOptions.json";
 
 dayjs.extend(relativeTime);
 
@@ -358,7 +358,7 @@ function VersionItem({
 				{/* Title row */}
 				<Text
 					size="xs"
-					fw={isActive ? 600 : 500}
+					fw={isActive ? 600 : 320}
 					lineClamp={1}
 					fs={isGenerating ? "italic" : undefined}
 				>
@@ -371,7 +371,6 @@ function VersionItem({
 					{!hideBadge && (
 						<Text
 							size="10px"
-							fw={500}
 							c={
 								report.status === "published"
 									? "green.8"
@@ -405,7 +404,7 @@ function VersionItem({
 							<Text size="10px" c="dimmed">
 								·
 							</Text>
-							<Text size="10px" c="dimmed" fw={600} style={{ flexShrink: 0 }}>
+							<Text size="10px" c="dimmed" style={{ flexShrink: 0 }}>
 								{langTag}
 							</Text>
 						</>
@@ -973,7 +972,6 @@ export const ProjectReportRoute = () => {
 								<Group justify="space-between" px={4}>
 									<Text
 										size="xs"
-										fw={600}
 										tt="uppercase"
 										c="dimmed"
 										style={{ letterSpacing: 0.5 }}
@@ -1058,7 +1056,7 @@ export const ProjectReportRoute = () => {
 										<Group gap="md" wrap="wrap">
 											<Switch
 												label={
-													<Text size="sm" fw={600}>
+													<Text size="sm">
 														{data.status === "published"
 															? t`Published`
 															: t`Publish`}

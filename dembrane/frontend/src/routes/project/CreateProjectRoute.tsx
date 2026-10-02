@@ -168,7 +168,8 @@ export const CreateProjectRoute = () => {
 						<Trans>Your draft won't be saved.</Trans>
 					</Text>
 				),
-				confirmProps: { color: "red" },
+				cancelProps: { color: "gray", variant: "subtle" },
+				confirmProps: { color: "red", variant: "filled" },
 				labels: { cancel: t`Keep editing`, confirm: t`Discard` },
 				onConfirm: backToProjects,
 				title: t`Discard this project?`,
@@ -196,7 +197,7 @@ export const CreateProjectRoute = () => {
 					gap="md"
 					data-testid="create-project-not-allowed"
 				>
-					<Title order={4} fw={400} ta="center">
+					<Title order={4} ta="center">
 						<Trans>You can't create projects in this workspace.</Trans>
 					</Title>
 					<Text size="sm" c="dimmed" ta="center" maw={420}>
@@ -217,7 +218,7 @@ export const CreateProjectRoute = () => {
 		<Container size="sm" py="xl" px="lg">
 			<Stack gap={28}>
 				<Stack gap={6}>
-					<Title order={3} fw={400}>
+					<Title order={3}>
 						<Trans>New project</Trans>
 					</Title>
 					<Text size="sm" c="dimmed">
@@ -348,9 +349,7 @@ export const CreateProjectRoute = () => {
 										<Text size="xs" c="dimmed" w={100}>
 											<Trans>Name</Trans>
 										</Text>
-										<Text size="sm" fw={500}>
-											{name.trim() || t`(missing)`}
-										</Text>
+										<Text size="sm">{name.trim() || t`(missing)`}</Text>
 									</Group>
 									<Group gap={12} align="flex-start" wrap="nowrap">
 										<Text size="xs" c="dimmed" w={100}>

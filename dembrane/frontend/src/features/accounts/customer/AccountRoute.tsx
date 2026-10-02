@@ -80,9 +80,7 @@ const AccountPage = () => {
 	return (
 		<Container size="md" px={{ base: "md", sm: "lg" }} py="xl">
 			<Stack gap={36}>
-				<Title order={3} fw={400}>
-					{data.organisation.name}
-				</Title>
+				<Title order={3}>{data.organisation.name}</Title>
 
 				<NextSteps
 					orgId={organisationId}

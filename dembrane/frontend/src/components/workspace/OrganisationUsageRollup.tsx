@@ -193,7 +193,7 @@ function SortableHeader({
 		<Group gap={4} wrap="nowrap">
 			<Text
 				size="xs"
-				fw={sorted ? 600 : 500}
+				fw={sorted ? 600 : 320}
 				c={sorted ? "dark" : "dimmed"}
 				tt="uppercase"
 				lts={0.3}
@@ -507,7 +507,7 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 		<Paper p="md" withBorder radius="sm">
 			<Stack gap={12}>
 				<Group justify="space-between" wrap="nowrap" gap="xs">
-					<Text size="xs" fw={500} tt="uppercase" c="dimmed" lts={0.5}>
+					<Text size="xs" tt="uppercase" c="dimmed" lts={0.5}>
 						<Trans>Organisation usage</Trans>
 					</Text>
 					<PeriodSelect value={monthOffset} onChange={setMonthOffset} />
@@ -660,7 +660,6 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 														<Box px={12} py={8}>
 															<Text
 																size="xs"
-																fw={500}
 																c="dimmed"
 																tt="uppercase"
 																lts={0.3}
@@ -712,7 +711,7 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 											if (isFirstData) {
 												return (
 													<Table.Td key={col.id}>
-														<Text size="xs" fw={700} tt="uppercase" lts={0.3}>
+														<Text size="xs" tt="uppercase" lts={0.3}>
 															<Trans>Total</Trans>
 														</Text>
 													</Table.Td>
@@ -720,15 +719,11 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 											}
 											const footerById: Record<string, React.ReactNode> = {
 												audio_hours: (
-													<Text size="xs" fw={600}>
+													<Text size="xs">
 														{formatDurationFromHours(totalsHours)}
 													</Text>
 												),
-												seat_count: (
-													<Text size="xs" fw={600}>
-														{totalsSeats}
-													</Text>
-												),
+												seat_count: <Text size="xs">{totalsSeats}</Text>,
 											};
 											return (
 												<Table.Td key={col.id}>
@@ -1019,7 +1014,7 @@ function NeedsAttentionPanel({
 			<Stack gap={6}>
 				<Group gap="xs" wrap="nowrap">
 					<IconAlertTriangle size={14} color="var(--mantine-color-yellow-7)" />
-					<Text size="xs" fw={500} tt="uppercase" lts={0.5}>
+					<Text size="xs" tt="uppercase" lts={0.5}>
 						<Trans>Needs attention</Trans>
 					</Text>
 				</Group>

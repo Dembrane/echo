@@ -796,7 +796,7 @@ export const ParticipantConversationAudio = () => {
 				<Stack gap="md">
 					<Group gap="xs">
 						<IconAlertTriangle size={24} color="#FF9AA2" />
-						<Text fw={600} size="lg">
+						<Text size="lg">
 							<Trans id="participant.modal.s3check.title">
 								Connection issue
 							</Trans>
@@ -857,11 +857,7 @@ export const ParticipantConversationAudio = () => {
 				size="sm"
 				radius="md"
 				padding="xl"
-				title={
-					<Text fw={600} size="lg">
-						{getRefineModalTitle()}
-					</Text>
-				}
+				title={<Text size="lg">{getRefineModalTitle()}</Text>}
 				{...testId("portal-audio-echo-info-modal")}
 			>
 				<Stack gap="lg">
@@ -908,7 +904,7 @@ export const ParticipantConversationAudio = () => {
 				<Stack gap="md">
 					<Group gap="xs">
 						<IconAlertTriangle size={24} color="#FF9AA2" />
-						<Text fw={600} size="lg">
+						<Text size="lg">
 							<Trans id="participant.modal.interruption.title">
 								Recording interrupted
 							</Trans>

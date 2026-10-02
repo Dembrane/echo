@@ -124,7 +124,7 @@ export const RegisterRoute = () => {
 		<div className="h-full w-full">
 			<Stack gap="lg">
 				<Stack gap={4}>
-					<Title order={2} fw={400}>
+					<Title order={2}>
 						<Trans>Create an account</Trans>
 					</Title>
 					<Text size="sm" c="dimmed">
@@ -242,6 +242,7 @@ export const RegisterRoute = () => {
 										<Trans>Back</Trans>
 									</Button>
 									<Button
+										variant="filled"
 										fullWidth
 										size="md"
 										type="submit"
@@ -257,13 +258,13 @@ export const RegisterRoute = () => {
 
 						{step === 2 && (
 							<Stack gap="md" {...testId("auth-register-verify-step")}>
-								<Title order={3} fw={400}>
+								<Title order={3}>
 									<Trans>Check your email</Trans>
 								</Title>
 								<Text c="dimmed">
 									<Trans>
 										We've sent a verification link to{" "}
-										<Text span fw={500} c="dark">
+										<Text span c="dark">
 											{submittedEmail ?? emailWatch}
 										</Text>
 										. Open the email and click the link to continue.
@@ -314,7 +315,7 @@ export const RegisterRoute = () => {
 						</I18nLink>
 
 						<Box {...testId("auth-register-join-org-help")}>
-							<Text size="sm" fw={500}>
+							<Text size="sm">
 								<Trans>Trying to join an existing organization?</Trans>
 							</Text>
 							<Anchor

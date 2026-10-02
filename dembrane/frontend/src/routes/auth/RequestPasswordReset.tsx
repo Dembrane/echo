@@ -56,6 +56,7 @@ export const RequestPasswordResetRoute = () => {
 									type="email"
 								/>
 								<Button
+									variant="filled"
 									size="lg"
 									type="submit"
 									loading={requestPasswordResetMutation.isPending}

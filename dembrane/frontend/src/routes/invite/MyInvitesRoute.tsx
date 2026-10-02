@@ -76,7 +76,8 @@ export const MyInvitesRoute = () => {
 					</Trans>
 				</Text>
 			),
-			confirmProps: { color: "red" },
+			cancelProps: { color: "gray", variant: "subtle" },
+			confirmProps: { color: "red", variant: "filled" },
 			labels: { cancel: t`Keep it`, confirm: t`Decline` },
 			onConfirm: async () => {
 				try {
@@ -118,7 +119,7 @@ export const MyInvitesRoute = () => {
 		return (
 			<Container size="sm" py="xl" px="lg">
 				<Stack gap={24} mt="10vh" align="center">
-					<Title order={4} fw={400} c="dimmed">
+					<Title order={4} c="dimmed">
 						<Trans>No pending invites</Trans>
 					</Title>
 					<Button variant="outline" size="sm" onClick={() => navigate("/o")}>
@@ -133,7 +134,7 @@ export const MyInvitesRoute = () => {
 		<Container size="sm" py="xl" px="lg" pb={80}>
 			<Stack gap={24}>
 				<Stack gap={4}>
-					<Title order={3} fw={400}>
+					<Title order={3}>
 						<Trans>Pending invites</Trans>
 					</Title>
 					<Text size="sm" c="dimmed">
@@ -164,9 +165,7 @@ export const MyInvitesRoute = () => {
 										wrap="nowrap"
 									>
 										<Box flex={1}>
-											<Text fw={500} size="md">
-												{subjectName}
-											</Text>
+											<Text size="md">{subjectName}</Text>
 											{!isOrgInvite && (
 												<Text size="xs" c="dimmed" mt={2}>
 													{inv.org_name}
@@ -193,7 +192,7 @@ export const MyInvitesRoute = () => {
 									{inviteError && (
 										<Alert color="yellow" variant="light">
 											<Stack gap={4}>
-												<Text size="sm" fw={500}>
+												<Text size="sm">
 													<Trans>Couldn't join right now</Trans>
 												</Text>
 												<Text size="xs">{inviteError}</Text>

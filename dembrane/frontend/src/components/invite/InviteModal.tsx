@@ -564,7 +564,7 @@ export function InviteModal({
 			centered
 			size="lg"
 			title={
-				<Title order={4} fw={500}>
+				<Title order={4}>
 					<Trans>Invite people to {orgName}</Trans>
 				</Title>
 			}
@@ -701,7 +701,7 @@ export function InviteModal({
 					<Alert variant="light" p="sm" data-testid="invite-proration-confirm">
 						<Stack gap={8}>
 							{confirm.length > 1 && (
-								<Text size="sm" fw={500}>
+								<Text size="sm">
 									<Trans>
 										This invite spans {confirm.length} billing contexts, each
 										invoiced on its own:
@@ -750,10 +750,10 @@ export function InviteModal({
 								<>
 									<Divider my={2} />
 									<Group justify="space-between" wrap="nowrap">
-										<Text size="xs" fw={500}>
+										<Text size="xs">
 											<Trans>Total due now</Trans>
 										</Text>
-										<Text size="xs" fw={500}>
+										<Text size="xs">
 											{fmtEur(
 												confirm.reduce((sum, l) => sum + l.proratedNow, 0),
 											)}

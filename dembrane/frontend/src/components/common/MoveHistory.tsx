@@ -32,9 +32,7 @@ export function MoveHistory({
 
 	return (
 		<Stack gap={4}>
-			<Text size="xs" fw={600}>
-				{title}
-			</Text>
+			<Text size="xs">{title}</Text>
 			{ordered.map((e, i) => {
 				const when = e.at
 					? formatDistanceToNowStrict(new Date(e.at), { addSuffix: true })

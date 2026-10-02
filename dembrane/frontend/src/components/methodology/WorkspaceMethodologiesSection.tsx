@@ -10,8 +10,8 @@ import {
 	Skeleton,
 	Stack,
 	Text,
-	TextInput,
 	Textarea,
+	TextInput,
 	Title,
 } from "@mantine/core";
 import { useEffect, useMemo, useState } from "react";
@@ -34,10 +34,10 @@ type MethodologyForm = {
 };
 
 const emptyForm: MethodologyForm = {
-	name: "",
+	content: "",
 	description: "",
 	framing: "",
-	content: "",
+	name: "",
 	note: "",
 };
 
@@ -86,10 +86,10 @@ export const WorkspaceMethodologiesSection = ({
 	useEffect(() => {
 		if (!editing) return;
 		setForm({
-			name: detailQuery.data?.name ?? editing.name,
+			content: contentToText(latestContent),
 			description: detailQuery.data?.description ?? editing.description,
 			framing: detailQuery.data?.framing ?? editing.framing,
-			content: contentToText(latestContent),
+			name: detailQuery.data?.name ?? editing.name,
 			note: "",
 		});
 	}, [detailQuery.data, editing, latestContent]);
@@ -119,9 +119,9 @@ export const WorkspaceMethodologiesSection = ({
 		if (!validateMetadata()) return;
 		try {
 			await createMutation.mutateAsync({
-				name: form.name.trim(),
 				description: form.description.trim(),
 				framing: form.framing.trim(),
+				name: form.name.trim(),
 			});
 			reset();
 		} catch {
@@ -133,11 +133,11 @@ export const WorkspaceMethodologiesSection = ({
 		if (!editing || !validateMetadata()) return;
 		try {
 			await editMutation.mutateAsync({
-				id: editing.id,
-				name: form.name.trim(),
+				content: textToContent(form.content),
 				description: form.description.trim(),
 				framing: form.framing.trim(),
-				content: textToContent(form.content),
+				id: editing.id,
+				name: form.name.trim(),
 				note: form.note.trim() || undefined,
 			});
 			reset();
@@ -156,7 +156,7 @@ export const WorkspaceMethodologiesSection = ({
 			<Stack gap="md">
 				<Group justify="space-between" align="flex-start">
 					<Stack gap={4}>
-						<Title order={5} fw={400}>
+						<Title order={5}>
 							<Trans>Methodologies</Trans>
 						</Title>
 						<Text size="sm">
@@ -204,7 +204,7 @@ export const WorkspaceMethodologiesSection = ({
 							>
 								<Stack gap={4} style={{ minWidth: 0 }}>
 									<Group gap="xs" wrap="wrap">
-										<Text size="sm" fw={600}>
+										<Text size="sm">
 											{safeText(methodology.name) || t`Untitled methodology`}
 										</Text>
 										{methodology.is_seeded ? (

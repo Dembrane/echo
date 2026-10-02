@@ -65,7 +65,7 @@ const Timeline = ({ steps }: { steps: MonitorTimelineStep[] }) => {
 		<>
 			<Divider />
 			<Stack gap={4}>
-				<Text size="sm" fw={500}>
+				<Text size="sm">
 					<Trans>Timeline</Trans>
 				</Text>
 				{steps.map((step) => (

@@ -68,9 +68,9 @@ export const TrainingRowActions = ({
 		if (!scheduleDate) return;
 		updateMutation.mutate(
 			{
-				trainingId: training.id,
-				status: "scheduled",
 				scheduledAt: scheduleDate.toISOString(),
+				status: "scheduled",
+				trainingId: training.id,
 			},
 			{ onSuccess: () => scheduleHandlers.close() },
 		);
@@ -80,9 +80,9 @@ export const TrainingRowActions = ({
 		if (selectedIds.length === 0) return;
 		completeMutation.mutate(
 			{
-				trainingId: training.id,
 				appUserIds: selectedIds,
 				completedAt: completedDate ? completedDate.toISOString() : undefined,
+				trainingId: training.id,
 			},
 			{
 				onSuccess: () => {
@@ -96,7 +96,7 @@ export const TrainingRowActions = ({
 
 	const handleCancel = () => {
 		updateMutation.mutate(
-			{ trainingId: training.id, status: "cancelled" },
+			{ status: "cancelled", trainingId: training.id },
 			{ onSuccess: () => cancelHandlers.close() },
 		);
 	};
@@ -110,8 +110,8 @@ export const TrainingRowActions = ({
 
 	const handleReopen = () => {
 		updateMutation.mutate({
-			trainingId: training.id,
 			status: training.scheduled_at ? "scheduled" : "requested",
+			trainingId: training.id,
 		});
 	};
 
@@ -223,7 +223,7 @@ export const TrainingRowActions = ({
 						<Loader size="sm" />
 					) : members.length > 0 ? (
 						<Stack gap="sm">
-							<Text size="sm" fw={500}>
+							<Text size="sm">
 								<Trans>
 									{roster.data?.trained_count ?? activeLicenses.length} of{" "}
 									{roster.data?.total_count ?? members.length} trained
@@ -232,7 +232,7 @@ export const TrainingRowActions = ({
 
 							{activeLicenses.length > 0 && (
 								<Stack gap="xs">
-									<Text size="xs" fw={500}>
+									<Text size="xs">
 										<Trans>Licenses granted</Trans>
 									</Text>
 									{activeLicenses.map((lic) => (

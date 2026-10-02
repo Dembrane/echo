@@ -113,7 +113,7 @@ function Editor({
 	return (
 		<Stack className={classes.settings} gap="lg">
 			<Group justify="space-between">
-				<Text fw={500}>
+				<Text>
 					<Trans>Presentation editor</Trans>
 				</Text>
 			</Group>
@@ -368,7 +368,7 @@ function Preview({
 		<div className={classes.preview}>
 			<Group px="md" py="sm" gap="xs">
 				<MonitorIcon size={18} />
-				<Text size="sm" fw={500}>
+				<Text size="sm">
 					<Trans>Audience preview</Trans>
 				</Text>
 			</Group>

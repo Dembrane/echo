@@ -107,7 +107,7 @@ export const MapSettingsPanel = ({
 			}}
 		>
 			<div className="mb-4 flex items-center justify-between">
-				<Text component="h3" size="md" fw={600}>
+				<Text component="h3" size="md">
 					{title}
 				</Text>
 				<Button size="compact-sm" variant="subtle" radius={0} onClick={onReset}>

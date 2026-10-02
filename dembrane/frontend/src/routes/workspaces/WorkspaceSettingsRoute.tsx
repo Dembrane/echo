@@ -621,9 +621,7 @@ export const WorkspaceSettingsRoute = () => {
 						    place. Keeping click-to-edit in the title was cute
 						    but hid the permission: members saw the affordance
 						    and got nothing on click. */}
-							<Title order={3} fw={400}>
-								{settings.name}
-							</Title>
+							<Title order={3}>{settings.name}</Title>
 							{/* Header stays minimal — tier pill only, tagline lives on
 						    the Billing tab where it's next to the price. Organisation name
 						    is already in the nav breadcrumb; duplicating it here
@@ -784,7 +782,7 @@ export const WorkspaceSettingsRoute = () => {
 							<Tabs.Panel value="members" pt="md">
 								<Stack gap={16}>
 									<Group justify="space-between">
-										<Title order={5} fw={400}>
+										<Title order={5}>
 											<Trans>Members</Trans>
 										</Title>
 										<Text size="xs" c="dimmed">
@@ -861,7 +859,7 @@ export const WorkspaceSettingsRoute = () => {
 										)}
 										{settings.members.length === 0 && (
 											<Stack align="center" gap={6} py={32}>
-												<Text size="sm" fw={500}>
+												<Text size="sm">
 													<Trans>No one here yet.</Trans>
 												</Text>
 												<Text size="xs" c="dimmed" ta="center" maw={360}>
@@ -891,12 +889,12 @@ export const WorkspaceSettingsRoute = () => {
 														</Avatar>
 														<Box style={{ minWidth: 0 }}>
 															<Group gap={6}>
-																<Text size="sm" lineClamp={1} fw={500}>
+																<Text size="sm" lineClamp={1}>
 																	{member.display_name ||
 																		member.email ||
 																		t`Unknown member`}
 																	{member.user_id === myAppUserId && (
-																		<Text component="span" c="dimmed" fw={400}>
+																		<Text component="span" c="dimmed">
 																			{" "}
 																			<Trans>(You)</Trans>
 																		</Text>
@@ -1049,7 +1047,14 @@ export const WorkspaceSettingsRoute = () => {
 																					</Text>
 																				</Stack>
 																			),
-																			confirmProps: { color: "red" },
+																			cancelProps: {
+																				color: "gray",
+																				variant: "subtle",
+																			},
+																			confirmProps: {
+																				color: "red",
+																				variant: "filled",
+																			},
 																			labels: {
 																				cancel: t`Cancel`,
 																				confirm: t`Change anyway`,
@@ -1098,7 +1103,14 @@ export const WorkspaceSettingsRoute = () => {
 																					</Trans>
 																				</Text>
 																			),
-																			confirmProps: { color: "red" },
+																			cancelProps: {
+																				color: "gray",
+																				variant: "subtle",
+																			},
+																			confirmProps: {
+																				color: "red",
+																				variant: "filled",
+																			},
 																			labels: {
 																				cancel: t`Cancel`,
 																				confirm: t`Leave workspace`,
@@ -1132,7 +1144,14 @@ export const WorkspaceSettingsRoute = () => {
 																						</Trans>
 																					</Text>
 																				),
-																				confirmProps: { color: "red" },
+																				cancelProps: {
+																					color: "gray",
+																					variant: "subtle",
+																				},
+																				confirmProps: {
+																					color: "red",
+																					variant: "filled",
+																				},
 																				labels: {
 																					cancel: t`Cancel`,
 																					confirm: t`Remove`,
@@ -1194,7 +1213,7 @@ export const WorkspaceSettingsRoute = () => {
 									>
 										<Stack gap={12}>
 											<Stack gap={4}>
-												<Title order={5} fw={400} c="red.9">
+												<Title order={5} c="red.9">
 													<Trans>Delete this workspace</Trans>
 												</Title>
 												<Text size="sm" c="dimmed">
@@ -1280,7 +1299,7 @@ export const WorkspaceSettingsRoute = () => {
 				    access block + leave affordance, nothing else. */}
 					{iAmOutsider && (
 						<Stack gap={12}>
-							<Title order={5} fw={400}>
+							<Title order={5}>
 								<Trans>Your access</Trans>
 							</Title>
 							<Group justify="space-between" align="center">
@@ -1306,7 +1325,8 @@ export const WorkspaceSettingsRoute = () => {
 															</Trans>
 														</Text>
 													),
-													confirmProps: { color: "red" },
+													cancelProps: { color: "gray", variant: "subtle" },
+													confirmProps: { color: "red", variant: "filled" },
 													labels: {
 														cancel: t`Cancel`,
 														confirm: t`Leave workspace`,
@@ -1604,7 +1624,7 @@ function PrivacyAndDefaultsSection({
 						if (canWhitelabel) {
 							return (
 								<Stack gap={6}>
-									<Text size="sm" fw={500}>
+									<Text size="sm">
 										<Trans>Logo</Trans>
 									</Text>
 									<Text size="xs" c="dimmed">
@@ -1674,7 +1694,7 @@ function PrivacyAndDefaultsSection({
 						// opens the popover.
 						return (
 							<Stack gap={6}>
-								<Text size="sm" fw={500}>
+								<Text size="sm">
 									<Trans>Logo</Trans>
 								</Text>
 								<Text size="xs" c="dimmed">

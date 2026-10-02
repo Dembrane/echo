@@ -160,7 +160,7 @@ export const AcceptInviteRoute = () => {
 							<Badge size="sm" variant="light" color="primary" w="fit-content">
 								<Trans>Invitation</Trans>
 							</Badge>
-							<Title order={3} fw={400}>
+							<Title order={3}>
 								<Trans>
 									{inviterName} invited you to join {resolvedWorkspaceName}
 								</Trans>
@@ -172,7 +172,7 @@ export const AcceptInviteRoute = () => {
 						{!hash && (
 							<Alert color="red" variant="light">
 								<Stack gap={4}>
-									<Text size="sm" fw={500}>
+									<Text size="sm">
 										<Trans>This invite link isn't valid</Trans>
 									</Text>
 									<Text size="xs">
@@ -199,7 +199,7 @@ export const AcceptInviteRoute = () => {
 									publicInviteState?.status === "not_found" && (
 										<Alert color="red" variant="light">
 											<Stack gap={4}>
-												<Text size="sm" fw={500}>
+												<Text size="sm">
 													<Trans>This invite is no longer valid</Trans>
 												</Text>
 												<Text size="xs">
@@ -216,7 +216,7 @@ export const AcceptInviteRoute = () => {
 									publicInviteState?.status === "expired" && (
 										<Alert color="yellow" variant="light">
 											<Stack gap={4}>
-												<Text size="sm" fw={500}>
+												<Text size="sm">
 													<Trans>This invite has expired</Trans>
 												</Text>
 												<Text size="xs">
@@ -233,7 +233,7 @@ export const AcceptInviteRoute = () => {
 									publicInviteState?.status === "workspace_deleted" && (
 										<Alert color="red" variant="light">
 											<Stack gap={4}>
-												<Text size="sm" fw={500}>
+												<Text size="sm">
 													<Trans>This workspace no longer exists</Trans>
 												</Text>
 												<Text size="xs">
@@ -250,7 +250,7 @@ export const AcceptInviteRoute = () => {
 									publicInviteState?.status === "org_deleted" && (
 										<Alert color="red" variant="light">
 											<Stack gap={4}>
-												<Text size="sm" fw={500}>
+												<Text size="sm">
 													<Trans>This organisation no longer exists</Trans>
 												</Text>
 												<Text size="xs">
@@ -270,7 +270,7 @@ export const AcceptInviteRoute = () => {
 										<Stack gap={8}>
 											<Alert color="primary" variant="light">
 												<Stack gap={4}>
-													<Text size="sm" fw={500}>
+													<Text size="sm">
 														<Trans>This invite has already been used</Trans>
 													</Text>
 													<Text size="xs">
@@ -337,7 +337,7 @@ export const AcceptInviteRoute = () => {
 							<Stack gap={8}>
 								<Alert color="yellow" variant="light">
 									<Stack gap={4}>
-										<Text size="sm" fw={500}>
+										<Text size="sm">
 											<Trans>This invite isn't for this account</Trans>
 										</Text>
 										<Text size="xs">
@@ -380,7 +380,7 @@ export const AcceptInviteRoute = () => {
 								{!inspectLoading && inviteState?.status === "not_found" && (
 									<Alert color="red" variant="light">
 										<Stack gap={4}>
-											<Text size="sm" fw={500}>
+											<Text size="sm">
 												<Trans>
 													This invite link isn't valid for this account
 												</Trans>
@@ -399,7 +399,7 @@ export const AcceptInviteRoute = () => {
 								{!inspectLoading && inviteState?.status === "expired" && (
 									<Alert color="yellow" variant="light">
 										<Stack gap={4}>
-											<Text size="sm" fw={500}>
+											<Text size="sm">
 												<Trans>This invite has expired</Trans>
 											</Text>
 											<Text size="xs">
@@ -416,7 +416,7 @@ export const AcceptInviteRoute = () => {
 									inviteState?.status === "workspace_deleted" && (
 										<Alert color="red" variant="light">
 											<Stack gap={4}>
-												<Text size="sm" fw={500}>
+												<Text size="sm">
 													<Trans>This workspace no longer exists</Trans>
 												</Text>
 												<Text size="xs">
@@ -432,7 +432,7 @@ export const AcceptInviteRoute = () => {
 								{!inspectLoading && inviteState?.status === "org_deleted" && (
 									<Alert color="red" variant="light">
 										<Stack gap={4}>
-											<Text size="sm" fw={500}>
+											<Text size="sm">
 												<Trans>This organisation no longer exists</Trans>
 											</Text>
 											<Text size="xs">
@@ -451,7 +451,7 @@ export const AcceptInviteRoute = () => {
 									<Stack gap={8}>
 										<Alert color="primary" variant="light">
 											<Stack gap={4}>
-												<Text size="sm" fw={500}>
+												<Text size="sm">
 													<Trans>This invite has already been used</Trans>
 												</Text>
 												{inviteState.is_member ? (
@@ -582,7 +582,7 @@ export const AcceptInviteRoute = () => {
 													variant="light"
 												>
 													<Stack gap={4}>
-														<Text size="sm" fw={500}>
+														<Text size="sm">
 															<Trans>Couldn't join right now</Trans>
 														</Text>
 														<Text size="xs">{errorMsg}</Text>

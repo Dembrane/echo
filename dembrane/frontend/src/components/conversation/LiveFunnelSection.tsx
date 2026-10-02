@@ -60,7 +60,7 @@ const StageTimeline = ({ stages }: { stages: Record<string, string> }) => {
 	if (steps.length === 0) return null;
 	return (
 		<Stack gap={4}>
-			<Text size="xs" fw={600} tt="uppercase">
+			<Text size="xs" tt="uppercase">
 				<Trans>Timeline</Trans>
 			</Text>
 			{steps.map((step) => (
@@ -76,9 +76,7 @@ const StageTimeline = ({ stages }: { stages: Record<string, string> }) => {
 const VisitorDrilldown = ({ visitor }: { visitor: FunnelVisitor }) => (
 	<Stack gap="sm">
 		<Group gap="xs">
-			<Text size="sm" fw={500}>
-				{visitor.name?.trim() || t`Anonymous visitor`}
-			</Text>
+			<Text size="sm">{visitor.name?.trim() || t`Anonymous visitor`}</Text>
 			{visitor.scan_count > 1 && (
 				<MonitorBadge size="xs" color="gray" variant="light">
 					<Trans>Scanned {visitor.scan_count} times</Trans>
@@ -137,7 +135,7 @@ const StageLabel = ({
 		className="justify-center"
 		style={{ flexBasis: 0, flexGrow: weight }}
 	>
-		<Text size="xs" fw={600} tt="uppercase">
+		<Text size="xs" tt="uppercase">
 			{label}
 		</Text>
 		<MonitorBadge size="xs" variant="light" color="gray">

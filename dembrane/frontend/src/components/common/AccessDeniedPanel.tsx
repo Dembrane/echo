@@ -14,7 +14,7 @@ export function AccessDeniedPanel({
 	return (
 		<Container size="sm" py="xl" data-testid={testId}>
 			<Stack align="center" mt="20vh" gap="md">
-				<Title order={4} fw={400} ta="center">
+				<Title order={4} ta="center">
 					<Trans>You don't have access to this workspace.</Trans>
 				</Title>
 				<Text size="sm" c="dimmed" ta="center" maw={420}>

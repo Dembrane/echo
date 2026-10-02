@@ -199,7 +199,7 @@ function CanvasLoopSettings({
 	return (
 		<Stack gap="sm" w={300} p="xs">
 			<Stack gap={2}>
-				<Text size="sm" fw={600}>
+				<Text size="sm">
 					<Trans>Keep this canvas fresh</Trans>
 				</Text>
 				{cadenceText ? <Text size="xs">{cadenceText}</Text> : null}
@@ -289,7 +289,7 @@ function VersionStrip({
 			<Stack gap="xs">
 				<Group gap="xs" align="center" justify="space-between">
 					<Group gap="xs" align="center">
-						<Text size="sm" fw={600}>
+						<Text size="sm">
 							<Trans>Versions</Trans>
 						</Text>
 						{selected ? (
@@ -503,9 +503,7 @@ export const CanvasRoute = () => {
 			<Stack gap="md" maw={1440}>
 				<Group justify="space-between" align="flex-start" gap="lg">
 					<Stack gap="xs" className="min-w-0">
-						<Title order={2} fw={500}>
-							{canvas?.name ?? t`Canvas`}
-						</Title>
+						<Title order={2}>{canvas?.name ?? t`Canvas`}</Title>
 						<Group gap="xs" wrap="wrap" {...testId("canvas-freshness-cluster")}>
 							{canvas?.loop ? (
 								<Badge size="sm" variant="outline" tt="none">

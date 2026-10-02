@@ -154,7 +154,8 @@ export const OrganisationProjectsTable = ({ orgId }: { orgId: string }) => {
 					)}
 				</Stack>
 			),
-			confirmProps: { color: "red" },
+			cancelProps: { color: "gray", variant: "subtle" },
+			confirmProps: { color: "red", variant: "filled" },
 			labels: { cancel: t`Cancel`, confirm: t`Delete` },
 			onConfirm: () => deleteMutation.mutate(p.id),
 			title: t`Delete ${p.name}?`,
@@ -167,7 +168,7 @@ export const OrganisationProjectsTable = ({ orgId }: { orgId: string }) => {
 		<Paper p="md" withBorder radius="sm">
 			<Stack gap={12}>
 				<Group justify="space-between" wrap="wrap">
-					<Text size="xs" fw={500} tt="uppercase" c="dimmed" lts={0.5}>
+					<Text size="xs" tt="uppercase" c="dimmed" lts={0.5}>
 						<Trans>Projects across organisation · {projects.length}</Trans>
 					</Text>
 					<Group gap="xs">

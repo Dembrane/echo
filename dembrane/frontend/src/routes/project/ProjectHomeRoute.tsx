@@ -38,8 +38,8 @@ import {
 } from "@/components/project/hooks";
 import { KEY_TERMS_HASH } from "@/components/project/KeyTermsInput";
 import { PortalSettingsOverview } from "@/components/project/PortalSettingsOverview";
-import { ProjectHostGuideLink } from "@/components/project/ProjectHostGuideLink";
 import { PROJECT_CONTEXT_HASH } from "@/components/project/ProjectContextInput";
+import { ProjectHostGuideLink } from "@/components/project/ProjectHostGuideLink";
 import { useLatestProjectReport } from "@/components/report/hooks";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { ENABLE_MONITOR } from "@/config";
@@ -138,7 +138,7 @@ export const ProjectHomeRoute = () => {
 				<Stack gap={4}>
 					{project?.name ? (
 						<Group gap="xs" align="center" wrap="nowrap">
-							<Title order={2} fw={500} lineClamp={1}>
+							<Title order={2} lineClamp={1}>
 								{project.name}
 							</Title>
 							{canEditProject && (
@@ -287,7 +287,7 @@ export const ProjectHomeRoute = () => {
 										>
 											<Stack gap="xs">
 												<Stack gap={2} style={{ minWidth: 0 }}>
-													<Text size="sm" fw={500} truncate>
+													<Text size="sm" truncate>
 														{conversationTitle(conversation)}
 													</Text>
 													<Group gap="xs" align="center" wrap="nowrap">
@@ -371,9 +371,7 @@ export const ProjectHomeRoute = () => {
 							>
 								<Stack gap={2}>
 									<Group gap="xs" align="center">
-										<Text size="sm" fw={500}>
-											{reportTitle}
-										</Text>
+										<Text size="sm">{reportTitle}</Text>
 										<Badge size="xs" variant="light">
 											{report.status}
 										</Badge>

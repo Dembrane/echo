@@ -330,7 +330,8 @@ export const CreateWorkspaceRoute = () => {
 						<Trans>Your draft won't be saved.</Trans>
 					</Text>
 				),
-				confirmProps: { color: "red" },
+				cancelProps: { color: "gray", variant: "subtle" },
+				confirmProps: { color: "red", variant: "filled" },
 				labels: { cancel: t`Keep editing`, confirm: t`Discard` },
 				onConfirm: () => navigate(backDestination),
 				title: t`Discard this workspace?`,
@@ -352,7 +353,7 @@ export const CreateWorkspaceRoute = () => {
 		return (
 			<Container size="xs" py="xl" px="lg">
 				<Stack gap="md">
-					<Title order={3} fw={400}>
+					<Title order={3}>
 						<Trans>You can't create a workspace yet</Trans>
 					</Title>
 					<Text size="sm" c="dimmed">
@@ -417,7 +418,7 @@ export const CreateWorkspaceRoute = () => {
 		<Container size="xl" py="xl" px="lg">
 			<Stack gap={28}>
 				<Stack gap={6}>
-					<Title order={3} fw={400}>
+					<Title order={3}>
 						<Trans>Create workspace</Trans>
 					</Title>
 					{targetOrganisation && (
@@ -625,9 +626,7 @@ export const CreateWorkspaceRoute = () => {
 												<Stack gap={6}>
 													<Group gap={8} wrap="nowrap">
 														<Icon size={18} />
-														<Text size="sm" fw={500}>
-															{opt.title}
-														</Text>
+														<Text size="sm">{opt.title}</Text>
 													</Group>
 													<Text size="xs" c="dimmed">
 														{opt.description}
@@ -706,9 +705,7 @@ export const CreateWorkspaceRoute = () => {
 										<Text size="xs" c="dimmed" w={90}>
 											<Trans>Name</Trans>
 										</Text>
-										<Text size="sm" fw={500}>
-											{name.trim() || t`(missing)`}
-										</Text>
+										<Text size="sm">{name.trim() || t`(missing)`}</Text>
 									</Group>
 									<Group gap={12} align="baseline">
 										<Text size="xs" c="dimmed" w={90}>

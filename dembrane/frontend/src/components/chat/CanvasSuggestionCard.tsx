@@ -85,23 +85,23 @@ function changeRows(
 		current?.name ?? suggestion.target_canvas_name ?? "",
 	);
 	if (currentName && currentName !== suggestion.name) {
-		rows.push({ label: t`Name`, before: currentName, after: suggestion.name });
+		rows.push({ after: suggestion.name, before: currentName, label: t`Name` });
 	}
 	const currentBrief = String(current?.config?.brief ?? "");
 	if (currentBrief && currentBrief.trim() !== suggestion.brief.trim()) {
 		rows.push({
-			label: t`Brief`,
-			before: currentBrief.trim(),
 			after: suggestion.brief.trim(),
+			before: currentBrief.trim(),
+			label: t`Brief`,
 		});
 	}
 	const currentCadence = current?.config?.cadence_minutes ?? null;
 	const nextCadence = suggestion.cadence_minutes ?? null;
 	if (currentCadence !== null && currentCadence !== nextCadence) {
 		rows.push({
-			label: t`Refresh`,
-			before: t`${currentCadence} min`,
 			after: nextCadence ? t`${nextCadence} min` : t`Default`,
+			before: t`${currentCadence} min`,
+			label: t`Refresh`,
 		});
 	}
 	return rows;
@@ -241,9 +241,7 @@ export const CanvasSuggestionCard = ({
 			<Stack gap="sm">
 				<Group justify="space-between" wrap="nowrap">
 					<Stack gap={2}>
-						<Text size="sm" fw={600}>
-							{suggestion.name}
-						</Text>
+						<Text size="sm">{suggestion.name}</Text>
 						<Text size="xs">{canvasCadenceLabel(suggestion)}</Text>
 					</Stack>
 					{isUpdateChoice ? (
@@ -263,7 +261,7 @@ export const CanvasSuggestionCard = ({
 				</Text>
 				{isUpdateChoice ? (
 					<Stack gap={4}>
-						<Text size="xs" fw={600}>
+						<Text size="xs">
 							<Trans>Proposed changes</Trans>
 						</Text>
 						{rows.length ? (

@@ -51,7 +51,7 @@ export const RequestTrainingModal = ({
 			onClose={handleClose}
 			title={
 				product ? (
-					<Text fw={500}>
+					<Text>
 						<Trans>Request {product.name} training</Trans>
 					</Text>
 				) : (

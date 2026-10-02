@@ -151,7 +151,7 @@ const ProjectChatsSection = ({
 		<Stack gap="lg" className="pt-4 transition-opacity">
 			<Group gap="sm" align="center" justify="space-between" wrap="wrap">
 				<Group gap="sm" align="center">
-					<Title order={2} fw={500} style={{ color: "var(--app-text)" }}>
+					<Title order={2} style={{ color: "var(--app-text)" }}>
 						<Trans>Chats</Trans>
 					</Title>
 					<Badge variant="light">{shownCount}</Badge>
@@ -574,7 +574,7 @@ export const NewChatRoute = () => {
 			<Stack gap="xl">
 				{ENABLE_AGENTIC_CHAT ? (
 					<Stack gap="lg" className="pb-4 pt-10">
-						<Title order={2} fw={500}>
+						<Title order={2}>
 							<Trans>Where would you like to start?</Trans>
 						</Title>
 						<ChatTemplatesMenuConnected

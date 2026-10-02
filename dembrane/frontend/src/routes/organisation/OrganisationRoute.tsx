@@ -688,7 +688,7 @@ export const OrganisationRoute = () => {
 		return (
 			<Center style={{ height: "60vh" }}>
 				<Stack align="center">
-					<Title order={3} fw={400}>
+					<Title order={3}>
 						<Trans>Organisation not found</Trans>
 					</Title>
 					<Button variant="outline" onClick={() => navigate("/o")}>
@@ -718,9 +718,7 @@ export const OrganisationRoute = () => {
 							/>
 						)}
 						<Stack gap={2} style={{ minWidth: 0 }}>
-							<Title order={3} fw={400}>
-								{organisation.name}
-							</Title>
+							<Title order={3}>{organisation.name}</Title>
 							<Text size="sm" c="dimmed">
 								{organisation.workspace_count}{" "}
 								{organisation.workspace_count === 1
@@ -807,7 +805,7 @@ export const OrganisationRoute = () => {
 						<Tabs.Panel value="billing" pt="md">
 							<Stack gap="md">
 								<div>
-									<Text size="sm" fw={500}>
+									<Text size="sm">
 										<Trans>Billing</Trans>
 									</Text>
 									<Text size="xs">
@@ -882,7 +880,7 @@ export const OrganisationRoute = () => {
 				    instead so the state isn't "app looks broken." */}
 							{!membersError && members.length === 0 && (
 								<Stack align="center" gap={6} py={48}>
-									<Title order={4} fw={400}>
+									<Title order={4}>
 										<Trans>No one on the organisation yet.</Trans>
 									</Title>
 									<Text size="sm" c="dimmed" ta="center" maw={400}>
@@ -925,7 +923,7 @@ export const OrganisationRoute = () => {
 									)}
 									{!membersLoading && members.length === 0 && (
 										<Stack align="center" gap={6} py={48}>
-											<Title order={4} fw={400}>
+											<Title order={4}>
 												<Trans>No one on the organisation yet.</Trans>
 											</Title>
 											<Text size="sm" c="dimmed" ta="center" maw={400}>
@@ -1134,7 +1132,7 @@ function OverviewPanel({
 			    without offering a fake affordance. Admin only. */}
 			{canEdit && (
 				<Stack gap={4} mt="xl">
-					<Text size="xs" fw={500} tt="uppercase" c="red.9" lts={0.5}>
+					<Text size="xs" tt="uppercase" c="red.9" lts={0.5}>
 						<Trans>Danger</Trans>
 					</Text>
 					<Text size="sm" c="dimmed">
@@ -1336,7 +1334,7 @@ function OrganisationOverviewPanel({
 
 			<Stack gap="sm">
 				<Group gap="xs" align="baseline">
-					<Title order={4} fw={500}>
+					<Title order={4}>
 						<Trans>People</Trans>
 					</Title>
 					{!membersLoading && (
@@ -1407,7 +1405,7 @@ function OrganisationOverviewPanel({
 			<Stack gap="sm">
 				<Group justify="space-between" align="center">
 					<Group gap="xs" align="baseline">
-						<Title order={4} fw={500}>
+						<Title order={4}>
 							<Trans>Workspaces</Trans>
 						</Title>
 						{!workspacesLoading && (
@@ -1560,12 +1558,7 @@ function OrganisationWorkspaceCard({
 							style={{ flexShrink: 0, maxWidth: 80 }}
 						/>
 					)}
-					<Text
-						fw={500}
-						size="md"
-						lineClamp={1}
-						style={{ flex: 1, minWidth: 0 }}
-					>
+					<Text size="md" lineClamp={1} style={{ flex: 1, minWidth: 0 }}>
 						{workspace.name}
 					</Text>
 					<WorkspaceVisibilityIcon
@@ -1818,7 +1811,8 @@ function OrganisationPersonCard({
 					</Text>
 				</Stack>
 			),
-			confirmProps: { color: "red" },
+			cancelProps: { color: "gray", variant: "subtle" },
+			confirmProps: { color: "red", variant: "filled" },
 			labels: { cancel: t`Cancel`, confirm: t`Remove` },
 			onConfirm: onRemove,
 			title: t`Remove from organisation?`,
@@ -1834,7 +1828,7 @@ function OrganisationPersonCard({
 							{memberInitials(member.display_name, member.email)}
 						</Avatar>
 						<Stack gap={0} style={{ minWidth: 0 }}>
-							<Text size="sm" fw={500} truncate>
+							<Text size="sm" truncate>
 								{member.display_name || member.email || t`Unknown member`}
 							</Text>
 							{member.email && member.email !== member.display_name && (
@@ -1888,7 +1882,7 @@ function OrganisationPersonCard({
 
 				{open && (
 					<Stack gap={12} pl={56}>
-						<Text size="xs" fw={500} tt="uppercase" c="dimmed" lts={0.5}>
+						<Text size="xs" tt="uppercase" c="dimmed" lts={0.5}>
 							<Trans>Per-workspace access</Trans>
 						</Text>
 						{/* Capped width + per-row hover band so the workspace name (left)

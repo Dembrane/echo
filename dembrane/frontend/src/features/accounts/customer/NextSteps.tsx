@@ -162,9 +162,7 @@ function Step({
 			color={current ? "blue" : "gray"}
 			variant={current ? "filled" : "light"}
 		>
-			<Text size="xs" fw={600}>
-				{n}
-			</Text>
+			<Text size="xs">{n}</Text>
 		</ThemeIcon>
 	);
 
@@ -207,7 +205,7 @@ function Step({
 						<Group justify="space-between" wrap="wrap" gap="xs" align="center">
 							<Stack gap={2} style={{ flex: "1 1 220px", minWidth: 0 }}>
 								<Text
-									fw={current ? 500 : 400}
+									fw={current ? 600 : 320}
 									size="sm"
 									c={locked || done ? "dimmed" : undefined}
 									pt={current ? 0 : 3}

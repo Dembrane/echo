@@ -192,11 +192,7 @@ export const AuditLogsCard = () => {
 			},
 			{
 				accessorKey: "collection",
-				cell: ({ row }) => (
-					<Text fw={500} size="sm">
-						{row.original.collection}
-					</Text>
-				),
+				cell: ({ row }) => <Text size="sm">{row.original.collection}</Text>,
 				header: () => t`Collection`,
 			},
 			{
@@ -399,7 +395,7 @@ export const AuditLogsCard = () => {
 					<Stack gap={4}>
 						<Group gap="sm" align="center">
 							<IconLogs size={20} />
-							<Text size="lg" fw={600}>
+							<Text size="lg">
 								<Trans>Audit logs</Trans>
 							</Text>
 						</Group>

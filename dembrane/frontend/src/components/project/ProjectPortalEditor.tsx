@@ -817,7 +817,6 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 																}
 																c="var(--app-text)"
 																size="lg"
-																fw={500}
 																style={{
 																	border:
 																		field.value === "summarize"
@@ -849,7 +848,6 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 																}
 																c="var(--app-text)"
 																size="lg"
-																fw={500}
 																style={{
 																	border:
 																		field.value === "brainstorm"
@@ -881,7 +879,6 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 																}
 																c="var(--app-text)"
 																size="lg"
-																fw={500}
 																style={{
 																	border:
 																		field.value === "custom"
@@ -1047,7 +1044,6 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 																			}
 																			c="var(--app-text)"
 																			size="lg"
-																			fw={500}
 																			style={{
 																				border: field.value.includes(topic.key)
 																					? "1px solid var(--mantine-color-primary-5)"
@@ -1173,7 +1169,6 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 																	variant="default"
 																	c="var(--app-text)"
 																	size="lg"
-																	fw={500}
 																	style={{
 																		border:
 																			"1px dashed var(--mantine-color-gray-5)",

@@ -40,7 +40,7 @@ function Picker() {
 		<Container size="md" px={{ base: "md", sm: "lg" }} py="xl">
 			<Stack gap="lg">
 				<Stack gap={2}>
-					<Title order={3} fw={400}>
+					<Title order={3}>
 						<Trans>Tasks</Trans>
 					</Title>
 					<Text size="sm" c="dimmed">
@@ -68,9 +68,7 @@ function Picker() {
 											{org.name.slice(0, 1)}
 										</Avatar>
 										<Stack gap={0} style={{ minWidth: 0 }}>
-											<Text fw={500} truncate>
-												{org.name}
-											</Text>
+											<Text truncate>{org.name}</Text>
 											<Text size="xs" c="dimmed">
 												<Trans>
 													{org.tasks_done} of {org.tasks_total} done

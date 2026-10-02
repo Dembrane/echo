@@ -126,7 +126,7 @@ export const WhitelabelLogoCard = () => {
 
 					{logoUrl ? (
 						<Stack gap="sm">
-							<Text size="sm" fw={500}>
+							<Text size="sm">
 								<Trans>Current logo</Trans>
 							</Text>
 							<Image

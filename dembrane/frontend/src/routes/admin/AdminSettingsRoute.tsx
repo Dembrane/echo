@@ -289,7 +289,7 @@ function SortableHeader({
 		>
 			<Text
 				size="xs"
-				fw={sorted ? 600 : 500}
+				fw={sorted ? 600 : 320}
 				c={sorted ? "dark" : "dimmed"}
 				tt="uppercase"
 				lts={0.3}
@@ -425,7 +425,7 @@ function DiscountEditor({
 	return (
 		<Paper withBorder radius="sm" p="sm">
 			<Stack gap="xs">
-				<Text size="sm" fw={500}>
+				<Text size="sm">
 					<Trans>Discount</Trans>
 				</Text>
 				<SimpleGrid cols={2}>
@@ -530,7 +530,7 @@ function OrgPartnerToggle({
 		<Paper withBorder radius="sm" p="sm">
 			<Group justify="space-between" wrap="nowrap" align="center">
 				<Stack gap={0} style={{ minWidth: 0 }}>
-					<Text size="sm" fw={500}>
+					<Text size="sm">
 						<Trans>Partner organisation</Trans>
 					</Text>
 					<Text size="xs" c="dimmed">
@@ -623,7 +623,7 @@ function ChangeTierControl({ row }: { row: BillingRow }) {
 	return (
 		<Paper withBorder radius="sm" p="sm">
 			<Stack gap="xs">
-				<Text size="sm" fw={500}>
+				<Text size="sm">
 					<Trans>Change tier</Trans>
 				</Text>
 				<Text size="xs" c="dimmed">
@@ -783,7 +783,7 @@ function BillingModeControl({
 		<Paper withBorder radius="sm" p="sm">
 			<Stack gap="xs">
 				<Group gap="xs" align="center">
-					<Text size="sm" fw={500}>
+					<Text size="sm">
 						<Trans>Billing mode</Trans>
 					</Text>
 					<Badge
@@ -1080,7 +1080,7 @@ function JoinSupportControl({ row }: { row: BillingRow }) {
 	return (
 		<Paper withBorder radius="sm" p="sm">
 			<Stack gap="xs">
-				<Text size="sm" fw={500}>
+				<Text size="sm">
 					<Trans>Join for support</Trans>
 				</Text>
 				{active ? (
@@ -1219,7 +1219,7 @@ function WorkspaceActionsModal({
 			onClose={onClose}
 			title={
 				<Group gap="xs">
-					<Text fw={500}>{row.workspace_name}</Text>
+					<Text>{row.workspace_name}</Text>
 					<Badge
 						size="xs"
 						color={tierColors[row.tier] ?? "gray"}
@@ -1256,7 +1256,7 @@ function WorkspaceActionsModal({
 				) : (
 					<Paper withBorder radius="sm" p="sm">
 						<Stack gap={0}>
-							<Text size="sm" fw={500}>
+							<Text size="sm">
 								<Trans>Change tier</Trans>
 							</Text>
 							<Text size="xs" c="dimmed">
@@ -1313,7 +1313,7 @@ function TierBreakdownPanel({ rows }: { rows: BillingRow[] }) {
 						) : (
 							<IconChevronRight size={14} />
 						)}
-						<Text size="sm" fw={500}>
+						<Text size="sm">
 							<Trans>Breakdown by tier</Trans>
 						</Text>
 					</Group>
@@ -1340,9 +1340,7 @@ function TierBreakdownPanel({ rows }: { rows: BillingRow[] }) {
 									>
 										{b.tier}
 									</Badge>
-									<Text size="lg" fw={500}>
-										{b.count}
-									</Text>
+									<Text size="lg">{b.count}</Text>
 									<Text size="xs" c="dimmed">
 										<Trans>{b.active} active</Trans>
 									</Text>
@@ -1450,7 +1448,7 @@ function AccountActionsModal({
 			onClose={onClose}
 			title={
 				<Group gap="xs">
-					<Text fw={500}>{accountIdentifyingName(account)}</Text>
+					<Text>{accountIdentifyingName(account)}</Text>
 					<Badge
 						size="xs"
 						color={tierColors[account.tier] ?? "gray"}
@@ -1515,7 +1513,7 @@ function AccountActionsModal({
 					<Paper key={ws.workspace_id} withBorder radius="sm" p="sm">
 						<Group justify="space-between" wrap="nowrap" align="center">
 							<Stack gap={0} style={{ minWidth: 0 }}>
-								<Text size="sm" fw={500} truncate>
+								<Text size="sm" truncate>
 									{ws.workspace_name}
 								</Text>
 								<Text size="xs" c="dimmed">
@@ -1624,7 +1622,7 @@ function AccountBillingTable({
 									<Table.Td>
 										<Stack gap={2} style={{ minWidth: 0 }}>
 											<Group gap={6} wrap="nowrap">
-												<Text size="xs" fw={500} truncate maw={220}>
+												<Text size="xs" truncate maw={220}>
 													{accountIdentifyingName(account)}
 												</Text>
 												<AccountBadges account={account} />
@@ -1658,7 +1656,7 @@ function AccountBillingTable({
 												€0
 											</Text>
 										) : (
-											<Text size="xs" fw={500}>
+											<Text size="xs">
 												{formatEur(account.total_forecast_eur)}
 											</Text>
 										)}
@@ -1679,35 +1677,29 @@ function AccountBillingTable({
 									<Table.Td colSpan={7} p={0} style={{ border: 0 }}>
 										<Collapse in={isOpen}>
 											<Box px="md" py="xs">
-												<Text
-													size="xs"
-													fw={600}
-													tt="uppercase"
-													lts={0.5}
-													mb={6}
-												>
+												<Text size="xs" tt="uppercase" lts={0.5} mb={6}>
 													<Trans>Workspaces</Trans>
 												</Text>
 												<Table verticalSpacing={4} withRowBorders={false}>
 													<Table.Thead>
 														<Table.Tr>
 															<Table.Th>
-																<Text size="xs" fw={500}>
+																<Text size="xs">
 																	<Trans>Workspace</Trans>
 																</Text>
 															</Table.Th>
 															<Table.Th>
-																<Text size="xs" fw={500}>
+																<Text size="xs">
 																	<Trans>Status</Trans>
 																</Text>
 															</Table.Th>
 															<Table.Th style={{ textAlign: "right" }}>
-																<Text size="xs" fw={500}>
+																<Text size="xs">
 																	<Trans>Hours</Trans>
 																</Text>
 															</Table.Th>
 															<Table.Th style={{ textAlign: "right" }}>
-																<Text size="xs" fw={500}>
+																<Text size="xs">
 																	<Trans>Seats</Trans>
 																</Text>
 															</Table.Th>
@@ -1785,15 +1777,13 @@ function AccountBillingTable({
 					<Table.Tr>
 						<Table.Td />
 						<Table.Td>
-							<Text size="xs" fw={500}>
+							<Text size="xs">
 								<Trans>Paying revenue</Trans>
 							</Text>
 						</Table.Td>
 						<Table.Td colSpan={3} />
 						<Table.Td style={{ textAlign: "right" }}>
-							<Text size="xs" fw={500}>
-								{formatEur(payingTotal)}
-							</Text>
+							<Text size="xs">{formatEur(payingTotal)}</Text>
 						</Table.Td>
 						<Table.Td />
 					</Table.Tr>
@@ -2012,9 +2002,7 @@ function UsageAndBillingPanel() {
 			<Group gap="md" wrap="wrap" align="center">
 				<Text size="sm">
 					<Trans>Paying revenue this month</Trans>{" "}
-					<Text span fw={600}>
-						{formatEur(payingTotal)}
-					</Text>
+					<Text span>{formatEur(payingTotal)}</Text>
 				</Text>
 				{compedCount > 0 && (
 					<Tooltip
@@ -2191,13 +2179,7 @@ function SimpleDataTable<T extends object>({
 											</UnstyledButton>
 										) : (
 											<Box px={12} py={8}>
-												<Text
-													size="xs"
-													fw={500}
-													c="dimmed"
-													tt="uppercase"
-													lts={0.3}
-												>
+												<Text size="xs" c="dimmed" tt="uppercase" lts={0.3}>
 													{flexRender(
 														h.column.columnDef.header,
 														h.getContext(),
@@ -2265,7 +2247,6 @@ function PartnersPanel() {
 							component={I18nLink}
 							to={`/w/${row.original.workspace_id}/settings/billing`}
 							size="xs"
-							fw={500}
 						>
 							{row.original.workspace_name ??
 								row.original.workspace_id.slice(0, 8)}
@@ -2427,7 +2408,6 @@ function ExternalLedOrgsSection() {
 						component={I18nLink}
 						to={`/o/${row.original.org_id}/overview`}
 						size="xs"
-						fw={500}
 					>
 						{row.original.org_name || row.original.org_id.slice(0, 8)}
 					</Anchor>
@@ -2472,7 +2452,7 @@ function ExternalLedOrgsSection() {
 	const rows = data ?? [];
 	return (
 		<Stack gap="sm">
-			<Text size="sm" fw={600}>
+			<Text size="sm">
 				<Trans>Client orgs from partners</Trans>
 			</Text>
 			<Text size="xs" c="dimmed">
@@ -2628,7 +2608,6 @@ function PaymentsPanel() {
 							component={I18nLink}
 							to={`/o/${row.original.org_id}`}
 							size="xs"
-							fw={500}
 						>
 							{row.original.account_label ??
 								row.original.org_name ??
@@ -2664,7 +2643,7 @@ function PaymentsPanel() {
 			{
 				accessorKey: "amount",
 				cell: ({ row }) => (
-					<Text size="xs" fw={500}>
+					<Text size="xs">
 						{formatPaymentAmount(row.original.amount, row.original.currency)}
 					</Text>
 				),
@@ -2821,9 +2800,7 @@ function PaymentsPanel() {
 						<Text size="xs" c="dimmed">
 							<Trans>Paid</Trans>
 						</Text>
-						<Text size="lg" fw={500}>
-							{formatEur(data.paid_eur)}
-						</Text>
+						<Text size="lg">{formatEur(data.paid_eur)}</Text>
 					</Stack>
 				</Paper>
 				<Paper withBorder radius="sm" p="sm">
@@ -2831,11 +2808,7 @@ function PaymentsPanel() {
 						<Text size="xs" c="dimmed">
 							<Trans>Failed</Trans>
 						</Text>
-						<Text
-							size="lg"
-							fw={500}
-							c={data.failed_count > 0 ? "red" : undefined}
-						>
+						<Text size="lg" c={data.failed_count > 0 ? "red" : undefined}>
 							{data.failed_count}
 						</Text>
 					</Stack>
@@ -2845,9 +2818,7 @@ function PaymentsPanel() {
 						<Text size="xs" c="dimmed">
 							<Trans>Pending</Trans>
 						</Text>
-						<Text size="lg" fw={500}>
-							{data.open_count}
-						</Text>
+						<Text size="lg">{data.open_count}</Text>
 					</Stack>
 				</Paper>
 				<Paper withBorder radius="sm" p="sm">
@@ -2855,9 +2826,7 @@ function PaymentsPanel() {
 						<Text size="xs" c="dimmed">
 							<Trans>Accounts billed</Trans>
 						</Text>
-						<Text size="lg" fw={500}>
-							{data.accounts_with_customer}
-						</Text>
+						<Text size="lg">{data.accounts_with_customer}</Text>
 					</Stack>
 				</Paper>
 			</SimpleGrid>
@@ -2905,9 +2874,7 @@ function PaymentsPanel() {
 				monthGroups.map((group) => (
 					<Stack key={group.key} gap="xs">
 						<Group justify="space-between" align="baseline">
-							<Text size="sm" fw={500}>
-								{group.label}
-							</Text>
+							<Text size="sm">{group.label}</Text>
 							<Text size="xs" c="dimmed">
 								<Plural
 									value={group.rows.length}
@@ -3073,7 +3040,7 @@ function ManagedBillingPanel() {
 		<Stack gap="md">
 			<Paper withBorder radius="sm" p="lg">
 				<Stack gap="md">
-					<Text size="sm" fw={500}>
+					<Text size="sm">
 						<Trans>Managed billing</Trans>
 					</Text>
 					<Text size="xs">
@@ -3098,9 +3065,7 @@ function ManagedBillingPanel() {
 						<>
 							<Divider />
 							<Group gap="xs" align="center">
-								<Text size="sm" fw={500}>
-									{accountIdentifyingName(selected)}
-								</Text>
+								<Text size="sm">{accountIdentifyingName(selected)}</Text>
 								<AccountBadges account={selected} />
 							</Group>
 
@@ -3146,7 +3111,7 @@ function ManagedBillingPanel() {
 			{selected && (
 				<Paper withBorder radius="sm" p="lg">
 					<Stack gap="md">
-						<Text size="sm" fw={500}>
+						<Text size="sm">
 							<Trans>Invoicing</Trans>
 						</Text>
 						<Text size="xs">
@@ -3238,7 +3203,7 @@ export const AdminSettingsRoute = () => {
 		return (
 			<Container size="sm" py="xl">
 				<Stack align="center" gap="sm" mt="15vh">
-					<Title order={3} fw={400}>
+					<Title order={3}>
 						<Trans>Staff only</Trans>
 					</Title>
 					<Text c="dimmed" size="sm" ta="center">
@@ -3260,7 +3225,7 @@ export const AdminSettingsRoute = () => {
 				<Group justify="space-between" align="flex-end">
 					<Stack gap={2}>
 						<Group gap="xs" align="center">
-							<Title order={3} fw={400}>
+							<Title order={3}>
 								<Trans>Admin</Trans>
 							</Title>
 							<Badge size="xs" color="violet" variant="light">

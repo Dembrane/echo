@@ -166,7 +166,7 @@ export function WorkspaceSelectList({
 										/>
 										<Box style={{ minWidth: 0 }}>
 											<Group gap={6} wrap="nowrap">
-												<Text size="sm" fw={500} lineClamp={1}>
+												<Text size="sm" lineClamp={1}>
 													{ws.name}
 												</Text>
 												{ws.is_private && (

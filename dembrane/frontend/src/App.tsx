@@ -1,9 +1,9 @@
-import "@fontsource-variable/space-grotesk";
 import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
 import "@mantine/dropzone/styles.css";
 
 import { MantineProvider } from "@mantine/core";
+import { IconContext } from "@phosphor-icons/react";
 import "@mantine/core/styles.css";
 import { DatesProvider } from "@mantine/dates";
 import { ModalsProvider } from "@mantine/modals";
@@ -44,7 +44,7 @@ function WorkspaceProvider({ children }: PropsWithChildren) {
 }
 
 import { mainRouter, participantRouter } from "./Router";
-import { theme } from "./theme";
+import { cssVariablesResolver, theme } from "./theme";
 
 // Pilot hard-block (matrix §8): intercept 402 + copy-locked body from
 // host-side mutations and fan out a level-3 modal. Detection is
@@ -151,10 +151,15 @@ export const App = () => {
 	if (audienceEntry) {
 		return (
 			<QueryClientProvider client={queryClient}>
-				<MantineProvider theme={theme}>
-					<I18nProvider>
-						<RouterProvider router={router} />
-					</I18nProvider>
+				<MantineProvider
+					theme={theme}
+					cssVariablesResolver={cssVariablesResolver}
+				>
+					<IconContext.Provider value={{ weight: "light" }}>
+						<I18nProvider>
+							<RouterProvider router={router} />
+						</I18nProvider>
+					</IconContext.Provider>
 				</MantineProvider>
 			</QueryClientProvider>
 		);
@@ -163,30 +168,36 @@ export const App = () => {
 	return (
 		<QueryClientProvider client={queryClient}>
 			{/* <ReactQueryDevtools initialIsOpen={false} /> */}
-			<MantineProvider theme={theme}>
-				<DatesProvider settings={{ consistentWeeks: true }}>
-					<AppPreferencesProvider>
-						<WhitelabelLogoProvider>
-							<WorkspaceProvider>
-								{/* I18nProvider must wrap ModalsProvider: Mantine's
+			<MantineProvider
+				theme={theme}
+				cssVariablesResolver={cssVariablesResolver}
+			>
+				{/* Phosphor's light cut, topped up to the one 1px stroke in rules.css */}
+				<IconContext.Provider value={{ weight: "light" }}>
+					<DatesProvider settings={{ consistentWeeks: true }}>
+						<AppPreferencesProvider>
+							<WhitelabelLogoProvider>
+								<WorkspaceProvider>
+									{/* I18nProvider must wrap ModalsProvider: Mantine's
 								    modal portal re-enters the tree outside any
 								    non-context-aware ancestor, so <Trans> inside
 								    modals.openConfirmModal children needs Lingui
 								    context available from this level down. */}
-								<I18nProvider>
-									<ModalsProvider>
-										<RouterProvider router={router} />
-										{ENABLE_AGENTATION && (
-											<Suspense fallback={null}>
-												<Agentation />
-											</Suspense>
-										)}
-									</ModalsProvider>
-								</I18nProvider>
-							</WorkspaceProvider>
-						</WhitelabelLogoProvider>
-					</AppPreferencesProvider>
-				</DatesProvider>
+									<I18nProvider>
+										<ModalsProvider>
+											<RouterProvider router={router} />
+											{ENABLE_AGENTATION && (
+												<Suspense fallback={null}>
+													<Agentation />
+												</Suspense>
+											)}
+										</ModalsProvider>
+									</I18nProvider>
+								</WorkspaceProvider>
+							</WhitelabelLogoProvider>
+						</AppPreferencesProvider>
+					</DatesProvider>
+				</IconContext.Provider>
 			</MantineProvider>
 		</QueryClientProvider>
 	);

@@ -77,6 +77,7 @@ export const InputModal = ({
 							{cancelLabel ?? <Trans>Cancel</Trans>}
 						</Button>
 						<Button
+							variant="filled"
 							type="submit"
 							loading={loading}
 							disabled={!value.trim()}

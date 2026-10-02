@@ -9,7 +9,7 @@ export const VerifyArtefactLoading = () => {
 				<Logo hideTitle hideEnvBadge alwaysDembrane h="48px" />
 			</div>
 			<Stack gap="sm" align="center">
-				<Text size="xl" fw={600}>
+				<Text size="xl">
 					<Trans id="participant.concrete.loading.artefact">
 						Loading artefact
 					</Trans>

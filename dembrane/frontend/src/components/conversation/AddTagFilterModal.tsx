@@ -36,7 +36,7 @@ export const AddTagFilterModal = ({
 			onClose={onClose}
 			onExitTransitionEnd={onExitTransitionEnd}
 			title={
-				<Text fw={600} size="lg">
+				<Text size="lg">
 					<Trans id="add.tag.filter.modal.title">Add Tag to Filters</Trans>
 				</Text>
 			}

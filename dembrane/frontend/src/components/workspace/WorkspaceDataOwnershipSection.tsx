@@ -111,7 +111,7 @@ export const WorkspaceDataOwnershipSection = ({
 	return (
 		<Stack gap={16} data-testid="workspace-data-ownership-section">
 			<Stack gap={4}>
-				<Text size="sm" fw={500}>
+				<Text size="sm">
 					<Trans>Data ownership</Trans>
 				</Text>
 				<Text size="xs">

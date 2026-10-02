@@ -231,6 +231,7 @@ export const MoveConversationButton = ({
 								{t`Cancel`}
 							</Button>
 							<Button
+								variant="filled"
 								type="submit"
 								loading={moveConversationMutation.isPending}
 								disabled={

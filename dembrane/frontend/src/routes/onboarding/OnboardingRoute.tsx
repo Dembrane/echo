@@ -333,7 +333,7 @@ export const OnboardingRoute = () => {
 					<Stack gap={24}>
 						<FlowStepper steps={flowSteps} active={activeStep} />
 						<Stack gap={6}>
-							<Title order={3} fw={500}>
+							<Title order={3}>
 								<Trans>Invite your team</Trans>
 							</Title>
 							<Text size="sm" c="dimmed" lh={1.6}>
@@ -449,7 +449,7 @@ export const OnboardingRoute = () => {
 						    (e.g. existing users nudged through the questionnaire)
 						    aren't surprised. */}
 						<Stack gap={4}>
-							<Title order={3} fw={500}>
+							<Title order={3}>
 								<Trans>Almost ready</Trans>
 							</Title>
 							<Text size="sm" lh={1.5}>
@@ -459,7 +459,7 @@ export const OnboardingRoute = () => {
 
 						{currentQ === "risk" && (
 							<Stack key="risk" gap={12}>
-								<Text size="md" fw={500} lh={1.4}>
+								<Text size="md" lh={1.4}>
 									{t`Do you plan to use dembrane in health, education, recruitment, critical infrastructure management, law enforcement or justice contexts?`}
 								</Text>
 								<Radio.Group
@@ -481,7 +481,7 @@ export const OnboardingRoute = () => {
 
 						{currentQ === "training" && (
 							<Stack key="training" gap={12}>
-								<Text size="md" fw={500} lh={1.4}>
+								<Text size="md" lh={1.4}>
 									{t`Have you completed a training?`}
 								</Text>
 								<Radio.Group value={q3} onChange={setQ3}>
@@ -495,7 +495,7 @@ export const OnboardingRoute = () => {
 
 						{currentQ === "usage" && (
 							<Stack key="usage" gap={12}>
-								<Text size="md" fw={500} lh={1.4}>
+								<Text size="md" lh={1.4}>
 									{t`What do you plan to use dembrane for?`}
 								</Text>
 								<Checkbox.Group value={q1} onChange={setQ1}>
@@ -581,7 +581,7 @@ export const OnboardingRoute = () => {
 					<Stack gap={24}>
 						<FlowStepper steps={flowSteps} active={activeStep} />
 						<Stack gap={6}>
-							<Title order={3} fw={400}>
+							<Title order={3}>
 								{hasInvites ? (
 									displayName ? (
 										<Trans>Welcome, {displayName}</Trans>
@@ -688,6 +688,7 @@ export const OnboardingRoute = () => {
 									/>
 
 									<Button
+										variant="filled"
 										fullWidth
 										loading={onboardingMutation.isPending}
 										size="lg"
