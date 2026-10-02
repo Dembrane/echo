@@ -1,6 +1,8 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { createAuth } from "@dembrane/auth";
-import { codeSignInGate } from "../src/prospect";
+import { schema } from "@dembrane/db";
+import { eq } from "drizzle-orm";
+import { codeSignInGate, createAccount } from "../src/prospect";
 import { accountsRoutes } from "../src/routes";
 import { mintStaffKey, revokeStaffKeys } from "../src/staff-key";
 import { admin, call, dropDatabase, type World, world } from "./helpers";
@@ -14,6 +16,7 @@ run("accounts sign-in", () => {
   setDefaultTimeout(60_000);
   let w: World;
   const sent: { email: string; purpose: string }[] = [];
+  const codes = new Map<string, string>();
   let auth: ReturnType<typeof createAuth>;
 
   beforeAll(async () => {
@@ -26,8 +29,9 @@ run("accounts sign-in", () => {
       secureCookies: false,
       defaultDirectusRoleId: null,
       codeSignInAllowed: codeSignInGate(w.deps),
-      sendCode: async (email, _code, purpose) => {
+      sendCode: async (email, code, purpose) => {
         sent.push({ email, purpose });
+        codes.set(email, code);
       },
     });
   });
@@ -61,6 +65,47 @@ run("accounts sign-in", () => {
       body: { email: "member@example.test", type: "email-verification" },
     });
     expect(sent.at(-1)).toEqual({ email: "member@example.test", purpose: "email-verification" });
+  });
+
+  test("a contact the accounts package created, still unverified, signs in with a code", async () => {
+    const email = "contact@proefstad.example";
+    const account = await createAccount(w.deps, null, {
+      organisation_name: "Gemeente Proefstad (sample)",
+      contact_email: email,
+      contact_name: "Proef Contact",
+      pricing_configuration_reference: null,
+      stage: "prospect",
+      language: "nl",
+    });
+    const before = await w.db
+      .select({ verified: schema.auth_user.emailVerified })
+      .from(schema.auth_user)
+      .where(eq(schema.auth_user.id, account.contact.user_id));
+    expect(before[0]?.verified).toBe(false);
+    // Through Better Auth's HTTP handler, as the dashboard calls it.
+    const post = (path: string, body: unknown) =>
+      auth.handler(
+        new Request(`http://localhost:8080/api/auth${path}`, {
+          method: "POST",
+          headers: { "content-type": "application/json", origin: "http://localhost:5173" },
+          body: JSON.stringify(body),
+        }),
+      );
+    const asked = await post("/email-otp/send-verification-otp", { email, type: "sign-in" });
+    expect(asked.status).toBe(200);
+    const code = codes.get(email);
+    expect(code).toBeTruthy();
+    const signedIn = await post("/sign-in/email-otp", { email, otp: code });
+    expect(signedIn.status).toBe(200);
+    expect(((await signedIn.json()) as { user: { id: string } }).user.id).toBe(
+      account.contact.user_id,
+    );
+    expect(signedIn.headers.get("set-cookie")).toContain("dembrane");
+    const after = await w.db
+      .select({ verified: schema.auth_user.emailVerified })
+      .from(schema.auth_user)
+      .where(eq(schema.auth_user.id, account.contact.user_id));
+    expect(after[0]?.verified).toBe(true);
   });
 
   test("a staff key is a bearer session of a staff user; others cannot hold one; revoking ends it", async () => {

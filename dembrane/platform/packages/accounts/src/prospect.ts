@@ -1,7 +1,7 @@
 import { NotFoundError, newId, ValidationError } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import type { AccountsDeps, Conn } from "./deps";
 import { emit } from "./events";
 import type { Language } from "./offer";
@@ -281,4 +281,26 @@ export async function releaseSignIn(c: Conn, userId: string): Promise<boolean> {
     .where(and(eq(schema.directus_users.id, userId), eq(schema.directus_users.status, "draft")))
     .returning({ id: schema.directus_users.id });
   return out.length > 0;
+}
+
+/**
+ * Releases every contact of the organisation still held by `holdSignIn` (a demo published
+ * without sign-in). Called when staff send something the customer must act on, or enable
+ * the account, so the contact can then ask for a sign-in code. Sends nothing: the document
+ * or the staff who enabled the account is what tells them. Returns how many were released.
+ */
+export async function releaseHeldContacts(c: Conn, orgId: string): Promise<number> {
+  const members = c
+    .select({ id: schema.app_user.directus_user_id })
+    .from(schema.org_membership)
+    .innerJoin(schema.app_user, eq(schema.app_user.id, schema.org_membership.user_id))
+    .where(and(eq(schema.org_membership.org_id, orgId), isNull(schema.org_membership.deleted_at)));
+  const out = await c
+    .update(schema.directus_users)
+    .set({ status: "active" })
+    .where(
+      and(eq(schema.directus_users.status, "draft"), inArray(schema.directus_users.id, members)),
+    )
+    .returning({ id: schema.directus_users.id });
+  return out.length;
 }
