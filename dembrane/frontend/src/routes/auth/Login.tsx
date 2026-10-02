@@ -6,8 +6,6 @@ import {
 	Anchor,
 	Button,
 	Divider,
-	Group,
-	Modal,
 	PasswordInput,
 	PinInput,
 	Stack,
@@ -23,6 +21,7 @@ import { useForm } from "react-hook-form";
 import { useSearchParams } from "react-router";
 import { useLoginMutation } from "@/components/auth/hooks";
 import { ResendVerificationEmail } from "@/components/auth/ResendVerificationEmail";
+import { SignedInElsewhere } from "@/components/auth/SignedInElsewhere";
 import { isAuthPath } from "@/components/auth/utils/authPaths";
 import {
 	authErrorCode,
@@ -125,17 +124,20 @@ export const LoginRoute = () => {
 
 	// Where a signed-in person goes: onboarding if unfinished, else ?next when it is safe,
 	// else the home list. Shared by the password and the emailed-code sign-in.
-	const afterSignIn = async (email: string) => {
+	const afterSignIn = async (email: string, curtain = true) => {
 		posthog?.identify(email);
 		posthog?.capture("user_logged_in", { email: email });
 
 		const isNewUser = searchParams.get("new") === "true";
 		const next = searchParams.get("next");
 
-		// Start transition immediately — user sees smooth curtain right away
-		const transitionPromise = runTransition({
-			message: isNewUser ? t`Welcome to dembrane` : t`Welcome back`,
-		});
+		// Start transition immediately — user sees smooth curtain right away. Someone who
+		// came through the logged-in-elsewhere page has already seen it.
+		const transitionPromise = curtain
+			? runTransition({
+					message: isNewUser ? t`Welcome to dembrane` : t`Welcome back`,
+				})
+			: Promise.resolve();
 
 		// Check onboarding in parallel with the transition. Small delay
 		// ensures the session cookie from login is available. Routing is
@@ -210,6 +212,8 @@ export const LoginRoute = () => {
 	const afterCredentials = async (email: string) => {
 		const state = await otherSessions();
 		if (state.held) {
+			// The same curtain as any sign-in; it opens onto the choice instead of the app.
+			await runTransition({ message: t`Welcome back` });
 			setElsewhere({ email, since: state.since });
 			return;
 		}
@@ -222,9 +226,7 @@ export const LoginRoute = () => {
 		try {
 			await replaceOtherSessions();
 			await queryClient.invalidateQueries({ queryKey: ["auth", "session"] });
-			const { email } = elsewhere;
-			setElsewhere(null);
-			await afterSignIn(email);
+			await afterSignIn(elsewhere.email, false);
 		} catch {
 			setElsewhere(null);
 			setError(t`Something went wrong`);
@@ -353,60 +355,16 @@ export const LoginRoute = () => {
 		}
 	}, [otpRequired]);
 
-	const elsewhereSince = elsewhere?.since
-		? new Date(elsewhere.since).toLocaleString(undefined, {
-				dateStyle: "medium",
-				timeStyle: "short",
-			})
-		: null;
-
 	return (
 		<div className="h-full w-full">
-			<Modal
-				opened={elsewhere !== null}
-				onClose={stayLoggedOut}
-				closeOnClickOutside={false}
-				centered
-				title={<Trans>This account is logged in somewhere else</Trans>}
-				{...testId("auth-login-elsewhere-modal")}
-			>
-				<Stack gap="md">
-					<Text>
-						{elsewhereSince ? (
-							<Trans>
-								It has been logged in on another device since {elsewhereSince}.
-								For security, an account can be logged in on one device at a
-								time.
-							</Trans>
-						) : (
-							<Trans>
-								It is logged in on another device. For security, an account can
-								be logged in on one device at a time.
-							</Trans>
-						)}
-					</Text>
-					<Text>
-						<Trans>Logging in here logs the other device out.</Trans>
-					</Text>
-					<Group justify="flex-end">
-						<Button
-							variant="default"
-							onClick={stayLoggedOut}
-							disabled={replacing}
-							{...testId("auth-login-elsewhere-cancel")}
-						>
-							<Trans>Cancel</Trans>
-						</Button>
-						<Button
-							onClick={logInAnyway}
-							loading={replacing}
-							{...testId("auth-login-elsewhere-confirm")}
-						>
-							<Trans>Log in anyway</Trans>
-						</Button>
-					</Group>
-				</Stack>
-			</Modal>
+			{elsewhere && (
+				<SignedInElsewhere
+					since={elsewhere.since}
+					loading={replacing}
+					onConfirm={logInAnyway}
+					onCancel={stayLoggedOut}
+				/>
+			)}
 			<Stack className="h-full">
 				<Stack className="flex-grow" gap="md">
 					<Title order={1}>
