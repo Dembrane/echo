@@ -106,6 +106,7 @@ run("account events and sam's inbox", () => {
           timestamp: NOW.toISOString(),
           event,
           org: { id: orgId, name: "Gemeente Testdorp" },
+          account_manager: null,
         },
       });
     }
@@ -120,6 +121,7 @@ run("account events and sam's inbox", () => {
       timestamp: NOW.toISOString(),
       event: "account.ticket.opened",
       org: { id: orgId, name: "Gemeente Testdorp" },
+      account_manager: null,
     });
     expect(jobs.of(notifySlack.name)).toEqual([{ text: "a line about account.ticket.opened" }]);
 
@@ -170,5 +172,85 @@ run("account events and sam's inbox", () => {
       }),
     );
     expect(await queued(marker)).toHaveLength(1);
+  });
+
+  describe("the account manager", () => {
+    const managed = newId();
+    const billingId = newId();
+    const people = { anne: newId(), bram: newId() };
+
+    beforeAll(async () => {
+      await database.db.insert(schema.org).values({ id: managed, name: "Gemeente Beheerd" });
+      await database.db.insert(schema.app_user).values([
+        { id: people.anne, email: "anne@dembrane.com", display_name: "Anne Jansen" },
+        { id: people.bram, email: "bram@dembrane.com", display_name: null },
+      ]);
+      await database.db
+        .insert(schema.billing_account)
+        .values({ id: billingId, org_id: managed, account_manager_id: people.anne });
+    });
+
+    const setManager = (id: string | null) =>
+      database.db
+        .update(schema.billing_account)
+        .set({ account_manager_id: id })
+        .where(eq(schema.billing_account.id, billingId));
+
+    const fireManaged = (d: AccountsDeps, event: InboxEvent, marker?: string) =>
+      d.db.transaction((tx) =>
+        emit(d, tx, {
+          orgId: managed,
+          actor: { kind: "customer", userId: null },
+          type: event.replace(/^account\./, ""),
+          webhook: { event, ...(marker && { marker }) },
+        }),
+      );
+
+    const lastJson = (jobs: MemoryJobs) => {
+      const sent = jobs.of(deliverSamMessage.name);
+      return (
+        JSON.parse((sent.at(-1) as { body: string }).body) as { json: Record<string, unknown> }
+      ).json;
+    };
+
+    test("every account message names the manager by email and name", async () => {
+      await setManager(people.anne);
+      const jobs = new MemoryJobs();
+      for (const event of [...ACCOUNT_EVENTS, ...INBOX_ONLY_EVENTS]) {
+        await fireManaged(deps(jobs, true), event);
+        expect(lastJson(jobs).account_manager).toEqual({
+          email: "anne@dembrane.com",
+          name: "Anne Jansen",
+        });
+      }
+      // ACCOUNTS_EVENTS_URL, without the inbox, gets the same field.
+      const legacy = new MemoryJobs();
+      await fireManaged(deps(legacy, false), "account.ticket.opened");
+      expect(legacy.of(deliverEvent.name)[0]?.payload).toMatchObject({
+        account_manager: { email: "anne@dembrane.com", name: "Anne Jansen" },
+      });
+    });
+
+    test("a manager without a display name has a null name; no manager is null", async () => {
+      const jobs = new MemoryJobs();
+      await setManager(people.bram);
+      await fireManaged(deps(jobs, true), "account.document.signed");
+      expect(lastJson(jobs).account_manager).toEqual({ email: "bram@dembrane.com", name: null });
+      await setManager(null);
+      await fireManaged(deps(jobs, true), "account.document.signed");
+      expect(lastJson(jobs).account_manager).toBeNull();
+    });
+
+    test("a queued message keeps the manager it was written with", async () => {
+      await setManager(people.anne);
+      const marker = `snapshot-${newId()}`;
+      await fireManaged(deps(queueJobs(queue), true), "account.task.submitted", marker);
+      await setManager(people.bram);
+      const [row] = await sql<{ inputs: string }[]>`
+        select i.inputs from dbos.workflow_status s join dbos.workflow_input i using (workflow_uuid)
+        where s.name = ${deliverSamMessage.name} and i.inputs like ${`%${marker}%`}`;
+      expect(row?.inputs).toContain("anne@dembrane.com");
+      expect(row?.inputs).not.toContain("bram@dembrane.com");
+    });
   });
 });

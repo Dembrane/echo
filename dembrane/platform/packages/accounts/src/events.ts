@@ -75,7 +75,15 @@ export async function emit(d: AccountsDeps, tx: Conn, e: Emit): Promise<void> {
   });
   const toInbox = Boolean(e.webhook && d.settings.samInbox);
   if (e.webhook) {
-    const payload = { id, timestamp: d.now().toISOString(), ...e.webhook };
+    // The manager is read here, in the cause's transaction, and frozen into the stored
+    // payload: a message already queued keeps the manager it was written with, so a retry
+    // or a late drain never re-addresses it to someone who took the account over since.
+    const payload = {
+      id,
+      timestamp: d.now().toISOString(),
+      ...e.webhook,
+      account_manager: await accountManagerPayload(tx, e.orgId),
+    };
     // The timeline event's id is the message id: sam deduplicates a redelivery on it.
     if (toInbox)
       await enqueueSamMessage(
@@ -90,7 +98,30 @@ export async function emit(d: AccountsDeps, tx: Conn, e: Emit): Promise<void> {
     await d.jobs.enqueue(notifySlack, { text: e.slack }, { tx });
 }
 
-// ── payloads: stable, documented in the README, read by sam's invoice_request ──
+// ── payloads: stable, read by sam's invoice_request and its account handling ──
+//
+// Every account message carries, beside its event fields:
+//   id               the timeline event's id, sam's deduplication key
+//   timestamp        ISO time the cause committed
+//   event            the dotted event name
+//   account_manager  { email: string, name: string | null } or null: who at dembrane owns
+//                    this customer when the event happened, so sam can tag them and give
+//                    them the follow-up. Null when the organisation has no manager set.
+// The builders below are the shape of each event's own fields; a breaking change to any
+// of it is a new _v2 code, never an edit here.
+
+/** The organisation's account manager as sam reads it; null when none is set. */
+export async function accountManagerPayload(
+  c: Conn,
+  orgId: string,
+): Promise<{ email: string; name: string | null } | null> {
+  const billing = await store.billing(c, orgId);
+  if (!billing?.account_manager_id) return null;
+  const user = await store.appUser(c, billing.account_manager_id);
+  // A manager without an email cannot be tagged; it reads as unset rather than as a blank.
+  if (!user?.email) return null;
+  return { email: user.email, name: user.display_name || null };
+}
 
 export function orgPayload(o: OrgRow) {
   return { id: o.id, name: o.name, account_stage: o.account_stage };
