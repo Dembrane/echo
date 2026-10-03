@@ -2475,7 +2475,7 @@ msgstr "Voordat je een agent koppelt"
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:138
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:149
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:161
-#: src/features/sidebar/blocks/HelpBlock.tsx:113
+#: src/features/sidebar/blocks/HelpBlock.tsx:112
 #: src/components/report/UpdateReportModalButton.tsx:202
 #: src/components/report/CreateReportForm.tsx:248
 #: src/components/project/ProjectPortalEditor.tsx:1488
@@ -3414,7 +3414,7 @@ msgstr "Bevestig je wachtwoord om een nieuw geheim voor je authenticator-app te 
 msgid "Connect"
 msgstr "Koppelen"
 
-#: src/features/sidebar/blocks/HelpBlock.tsx:111
+#: src/features/sidebar/blocks/HelpBlock.tsx:110
 #: src/components/agent-access/AgentAccessSection.tsx:147
 msgid "Connect your agent"
 msgstr "Koppel je agent"
@@ -3462,15 +3462,15 @@ msgstr "Verwerking op basis van toestemming is actief zonder link naar het priva
 msgid "Consolidated arguments"
 msgstr "Samengevoegde argumenten"
 
-#: src/features/sidebar/views/HelpView.tsx:27
-#: src/features/sidebar/blocks/HelpBlock.tsx:155
-msgid "Contact support"
-msgstr "Contact met support"
-
 #. js-lingui-explicit-id
 #: src/components/error/actions.ts:23
 msgid "error.action.contact_support"
 msgstr "Neem contact op met support"
+
+#: src/features/sidebar/views/HelpView.tsx:27
+#: src/features/sidebar/blocks/HelpBlock.tsx:143
+#~ msgid "Contact support"
+#~ msgstr "Contact met support"
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:374
 msgid "Contact the admin if this was unexpected."
@@ -4641,8 +4641,8 @@ msgstr "Ben je van plan dembrane te gebruiken in de zorg, het onderwijs, werving
 msgid "Do you want to stay in the loop?"
 msgstr "Wil je op de hoogte blijven?"
 
-#: src/features/sidebar/views/HelpView.tsx:35
-#: src/features/sidebar/blocks/HelpBlock.tsx:132
+#: src/features/sidebar/views/HelpView.tsx:26
+#: src/features/sidebar/blocks/HelpBlock.tsx:131
 #: src/components/chat/ChatHistoryMessage.tsx:244
 msgid "Documentation"
 msgstr "Documentatie"
@@ -5655,8 +5655,8 @@ msgstr "Afstoting verre paren: {0}"
 msgid "participant.modal.echo.info.title"
 msgstr "Functie binnenkort beschikbaar"
 
-#: src/features/sidebar/views/HelpView.tsx:65
-#: src/features/sidebar/blocks/HelpBlock.tsx:99
+#: src/features/sidebar/views/HelpView.tsx:56
+#: src/features/sidebar/blocks/HelpBlock.tsx:98
 msgid "Feedback"
 msgstr "Feedback"
 
@@ -6249,10 +6249,10 @@ msgstr "Heb je een training afgerond?"
 msgid "have your recordings transcribed"
 msgstr "je opnames te laten transcriberen"
 
-#: src/features/sidebar/views/HelpView.tsx:25
-#: src/features/sidebar/blocks/HelpBlock.tsx:221
-#: src/features/sidebar/blocks/HelpBlock.tsx:236
-#: src/features/sidebar/blocks/HelpBlock.tsx:253
+#: src/features/sidebar/views/HelpView.tsx:24
+#: src/features/sidebar/blocks/HelpBlock.tsx:207
+#: src/features/sidebar/blocks/HelpBlock.tsx:222
+#: src/features/sidebar/blocks/HelpBlock.tsx:239
 msgid "Help"
 msgstr "Help"
 
@@ -9977,8 +9977,8 @@ msgstr "Plan"
 msgid "Plan ends"
 msgstr "Plan eindigt"
 
-#: src/features/sidebar/views/HelpView.tsx:52
-#: src/features/sidebar/blocks/HelpBlock.tsx:146
+#: src/features/sidebar/views/HelpView.tsx:43
+#: src/features/sidebar/blocks/HelpBlock.tsx:145
 msgid "Planned"
 msgstr "Gepland"
 
@@ -11175,8 +11175,8 @@ msgstr "Rapport"
 msgid "Report already generating"
 msgstr "Rapport wordt al gegenereerd"
 
-#: src/features/sidebar/views/HelpView.tsx:58
-#: src/features/sidebar/blocks/HelpBlock.tsx:87
+#: src/features/sidebar/views/HelpView.tsx:49
+#: src/features/sidebar/blocks/HelpBlock.tsx:86
 #: src/components/feedback/ReportIssueModal.tsx:180
 msgid "Report an issue"
 msgstr "Probleem melden"
@@ -12779,7 +12779,7 @@ msgstr "Overslaan"
 msgid "select.all.modal.context.limit.reached.description"
 msgstr "Overgeslagen omdat de selectie te groot was."
 
-#: src/features/sidebar/views/HelpView.tsx:41
+#: src/features/sidebar/views/HelpView.tsx:32
 msgid "Slack community"
 msgstr "Slack-community"
 
@@ -13399,8 +13399,8 @@ msgstr "Systeem"
 msgid "System default"
 msgstr "Systeemstandaard"
 
-#: src/features/sidebar/views/HelpView.tsx:49
-#: src/features/sidebar/blocks/HelpBlock.tsx:143
+#: src/features/sidebar/views/HelpView.tsx:40
+#: src/features/sidebar/blocks/HelpBlock.tsx:142
 msgid "System status"
 msgstr "Systeemstatus"
 
@@ -15981,7 +15981,7 @@ msgstr "Wat deze spanning zou oplossen"
 msgid "What would you like to explore?"
 msgstr "Wat wil je verkennen?"
 
-#: src/features/sidebar/blocks/HelpBlock.tsx:122
+#: src/features/sidebar/blocks/HelpBlock.tsx:121
 #: src/components/release/ReleaseVideoModal.tsx:317
 msgid "What's new"
 msgstr "Wat is er nieuw"

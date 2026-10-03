@@ -1,6 +1,6 @@
 import { newId } from "@dembrane/core";
 import type { AccountsDeps, Conn } from "./deps";
-import { store, type TaskRow } from "./storage";
+import { type BillingRow, store, type TaskRow } from "./storage";
 import type { TaskCode } from "./task-text";
 
 const DAY_MS = 86_400_000;
@@ -93,8 +93,28 @@ export async function settleTask(
 }
 
 /**
+ * Whether the organisation's stored billing details hold everything the billing form asks
+ * for, so Exact can invoice without asking again.
+ */
+export function billingComplete(b: BillingRow | null): boolean {
+  if (!b) return false;
+  const filled = (v: string | null) => v !== null && v.trim() !== "";
+  return (
+    filled(b.billing_legal_name) &&
+    filled(b.billing_email) &&
+    filled(b.billing_address_line1) &&
+    filled(b.billing_postal_code) &&
+    filled(b.billing_city) &&
+    filled(b.billing_country) &&
+    (filled(b.billing_vat_id) || filled(b.kvk_number) || filled(b.kbo_number))
+  );
+}
+
+/**
  * The billing details task exists from the start, locked until an offer is signed. Only
- * one is kept per organisation while it is not done or withdrawn.
+ * one is kept per organisation while it is not done or withdrawn. An organisation that
+ * already completed it and whose stored details are complete gets none: a repeat offer
+ * does not ask for the same details again. They change through the billing page.
  */
 export async function ensureBillingTask(
   d: AccountsDeps,
@@ -102,10 +122,13 @@ export async function ensureBillingTask(
   orgId: string,
   createdBy: string | null,
 ): Promise<void> {
-  const live = (await store.tasks(tx, orgId)).some(
-    (t) => t.kind === "billing_details" && !["done", "withdrawn"].includes(t.status),
-  );
-  if (live) return;
+  const billingTasks = (await store.tasks(tx, orgId)).filter((t) => t.kind === "billing_details");
+  if (billingTasks.some((t) => !["done", "withdrawn"].includes(t.status))) return;
+  if (
+    billingTasks.some((t) => t.status === "done") &&
+    billingComplete(await store.billing(tx, orgId))
+  )
+    return;
   await createTask(d, tx, {
     orgId,
     code: "billing_details",
