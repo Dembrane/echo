@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
-# Rolls out, lists and tears down deployments on Cloud Run. Called by
+# Rolls out, lists and tears down PR previews and staging on Cloud Run. Called by
 # .github/workflows/platform.yml; runnable by hand with gcloud signed in.
 #
 #   deploy-env.sh deploy pr-<n> <tag>      a PR preview (echo-pr-<n>-*, database echo_pr_<n>)
 #   deploy-env.sh deploy staging <tag>     staging (echo-staging-*)
-#   deploy-env.sh deploy prod <tag>        production (echo-prod-*)
 #   deploy-env.sh make-room <n>            tears down the oldest PR previews until <n> fits,
 #                                          printing "removed PR preview <m>" for each
 #   deploy-env.sh teardown <n>             removes PR <n>'s services and drops its database
 #   deploy-env.sh list                     PR previews, oldest first
+#
+# Production is not deployed from here: it runs on DigitalOcean Kubernetes through
+# Dembrane/echo-gitops (helm/dembrane-web), bumped by platform.yml's 70-deploy-prod.
 #
 # Each environment lives in its own GCP project (dembrane/infra/<env>). Scaling comes from
 # dembrane/infra/<env>.tfvars.json, the file the connection budget check reads. PR previews reuse
@@ -22,22 +24,20 @@
 # the org Acme Civic (sample), and the accounts demo for Example Town Council (sample).
 #
 # HOLD_DATA=1 deploys everything but leaves the data alone: the migrate job is deployed and
-# not run, and the worker pool gets 0 instances. For prod before the cutover (CUTOVER.md),
-# whose database stays empty until the restore; W4 runs the job and W6 scales the workers.
+# not run, and the worker pool gets 0 instances.
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 
 target=${2:-}
 case "$target" in
-  staging | prod) ENV=$target ;;
+  staging) ENV=$target ;;
   # A PR preview, or a PR number for make-room and teardown. There is no branch preview.
   pr-* | [0-9]*) ENV=preview ;;
-  *) if [ "${1:-}" = list ]; then ENV=preview; else sed -n '2,11p' "$0"; exit 2; fi ;;
+  *) if [ "${1:-}" = list ]; then ENV=preview; else sed -n '2,10p' "$0"; exit 2; fi ;;
 esac
 case "$ENV" in
   preview) project=dembrane-web-previews number=218237812097 ;;
   staging) project=dembrane-web-staging number=1089877593337 ;;
-  prod) project=dembrane-web-prod number=740075346439 ;;
 esac
 PROJECT=${PROJECT:-$project}
 PROJECT_NUMBER=${PROJECT_NUMBER:-$number}
@@ -91,7 +91,7 @@ deploy() {
   local api web_dash web_portal media public_api
   api=$(url "$prefix-api") web_dash=$(url "$prefix-dashboard") web_portal=$(url "$prefix-portal")
   media=$(url "$prefix-media") public_api=$api
-  # staging and prod serve their domains from environments/<env>.ts. A PR preview serves its own hostnames behind the load balancer. api-<n> exists because the
+  # staging serves its domains from environments/staging.ts. A PR preview serves its own hostnames behind the load balancer. api-<n> exists because the
   # MCP OAuth issuer and its /.well-known documents live at the API origin's root, which the
   # web servers do not forward. The web servers still forward /api to the API's run.app URL:
   # server to server, and working before DNS points at the load balancer.
@@ -130,7 +130,7 @@ deploy() {
 
   # A PR preview leaves alone every unit whose image digest and settings match what it already
   # runs: a frontend-only push rolls out the dashboard and portal and nothing else, and skips
-  # the migrate job. staging and prod roll out everything, so each revision names its release.
+  # the migrate job. staging rolls out everything, so each revision names its release.
   # SKIP_UNCHANGED=0 forces a full rollout (a rotated secret is only read by a new revision).
   local skip=0
   [[ $name == pr-* ]] && skip=${SKIP_UNCHANGED:-1}
@@ -444,5 +444,5 @@ case "${1:-}" in
   teardown) teardown "$2" ;;
   make-room) make_room "$2" ;;
   list) pr_previews ;;
-  *) sed -n '2,11p' "$0"; exit 2 ;;
+  *) sed -n '2,10p' "$0"; exit 2 ;;
 esac
