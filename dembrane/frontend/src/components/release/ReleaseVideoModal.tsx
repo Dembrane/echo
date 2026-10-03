@@ -46,6 +46,11 @@ interface ReleaseVideoModalProps {
 	/** Set by the sidebar's "What's new", which ignores the seen gate. */
 	requested?: boolean;
 	onRequestedClose?: () => void;
+	/**
+	 * Another popup goes first (the tasks popup after sign-in): the automatic showing
+	 * waits until it is done, so two modals never stack. A request still opens.
+	 */
+	held?: boolean;
 }
 
 /** The id the widget echoes back in every message; one player, one constant. */
@@ -54,6 +59,7 @@ const PLAYER_BRIDGE_ID = "release-video-modal";
 export const ReleaseVideoModal = ({
 	requested = false,
 	onRequestedClose,
+	held = false,
 }: ReleaseVideoModalProps) => {
 	const { isAuthenticated } = useAuthenticated();
 	const { isActive: curtainIsActive } = useTransitionCurtain();
@@ -100,7 +106,8 @@ export const ReleaseVideoModal = ({
 		release !== undefined &&
 		!curtainIsActive &&
 		(requested ||
-			(isAuthenticated &&
+			(!held &&
+				isAuthenticated &&
 				!isReleaseNotesPage &&
 				isSuccess &&
 				!!userId &&

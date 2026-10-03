@@ -26,7 +26,8 @@ async function loadCatalog(
 	loaded.add(locale);
 }
 
-export const AccountsI18n = ({ children }: PropsWithChildren) => {
+/** Loads the accounts catalog for the current locale; true once its strings are in. */
+export function useAccountsCatalog(): boolean {
 	const { i18n } = useLingui();
 	const locale = i18n.locale;
 	const [ready, setReady] = useState(loaded.has(locale));
@@ -44,6 +45,11 @@ export const AccountsI18n = ({ children }: PropsWithChildren) => {
 			live = false;
 		};
 	}, [i18n, locale]);
+	return ready;
+}
+
+export const AccountsI18n = ({ children }: PropsWithChildren) => {
+	const ready = useAccountsCatalog();
 	if (!ready) {
 		return (
 			<Box pos="relative" h={240}>

@@ -3,7 +3,6 @@ import { useDisclosure } from "@mantine/hooks";
 import {
 	Bug,
 	ChatCircle,
-	EnvelopeSimple,
 	Note,
 	PlugsConnected,
 	Pulse,
@@ -16,6 +15,7 @@ import {
 	lazy,
 	type ReactNode,
 	Suspense,
+	useCallback,
 	useRef,
 	useState,
 } from "react";
@@ -32,6 +32,8 @@ import { RAIL_ITEM_CLASS, RailTip, useInRail } from "../shell/rail";
 
 // Its own chunk: it fetches the account tasks summary, which the portal never needs.
 const HelpTasksItem = lazy(() => import("./HelpTasksItem"));
+// The popup after sign-in for someone with tasks waiting; in its own chunk for the same reason.
+const TasksPrompt = lazy(() => import("@/features/accounts/help/TasksPrompt"));
 
 export const HelpBlock = () => {
 	const { language } = useParams();
@@ -48,12 +50,21 @@ export const HelpBlock = () => {
 	// The Tasks entry joins the list only when the caller has account tasks, so the
 	// rail's bubble layout never holds an empty row.
 	const [hasTasks, setHasTasks] = useState(false);
+	// What's new shows itself only once the tasks popup has decided not to show, or closed.
+	const [promptSettled, setPromptSettled] = useState(false);
+	const settlePrompt = useCallback(() => setPromptSettled(true), []);
 
 	const releaseModal = (
-		<ReleaseVideoModal
-			requested={releaseRequested}
-			onRequestedClose={release.close}
-		/>
+		<>
+			<ReleaseVideoModal
+				requested={releaseRequested}
+				onRequestedClose={release.close}
+				held={!promptSettled}
+			/>
+			<Suspense fallback={null}>
+				<TasksPrompt onSettled={settlePrompt} />
+			</Suspense>
+		</>
 	);
 
 	const items: { key: string; node: ReactNode }[] = [
@@ -134,19 +145,6 @@ export const HelpBlock = () => {
 					onClick={() => undefined}
 					badge={<Trans>Planned</Trans>}
 					disabled
-				/>
-			),
-		},
-		{
-			key: "support",
-			node: (
-				<NavButton
-					label={<Trans>Contact support</Trans>}
-					icon={EnvelopeSimple}
-					external
-					onClick={() => {
-						window.location.href = "mailto:support@dembrane.com";
-					}}
 				/>
 			),
 		},

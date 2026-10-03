@@ -141,3 +141,9 @@ variable "browser_origins" {
   type        = list(string)
   description = "Origins allowed to upload to and read from the bucket directly."
 }
+
+variable "operators" {
+  description = "Service accounts that maintain this environment's data from outside the project (sam's runtime): they connect to Cloud SQL and read the app's database URL, nothing else."
+  type        = list(string)
+  default     = []
+}

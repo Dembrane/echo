@@ -134,6 +134,26 @@ export const codedTaskText = (
 				body: t`Who we invoice: legal name, address, VAT or KvK number, invoice email and, if you use one, a PO number.`,
 				title: t`Billing details`,
 			};
+		case "explore_demo":
+			return {
+				body: t`See popcorn, tensions and the map on sample conversations written for your organisation.`,
+				title: t`Check out the demo we made for you`,
+			};
+		case "watch_tutorial":
+			return {
+				body: t`See how dembrane works, from setting up a project to reading what people said.`,
+				title: t`Watch the tutorial`,
+			};
+		case "create_project":
+			return {
+				body: t`Set up a project of your own for your first real session.`,
+				title: t`Create a project`,
+			};
+		case "book_call":
+			return {
+				body: t`We walk through your demo with you and plan a first session.`,
+				title: t`Book a call with us`,
+			};
 	}
 };
 

@@ -23,6 +23,12 @@ import {
   offerTotals,
   validUntil,
 } from "./offer";
+import {
+  ensureOnboardingTasks,
+  isOnboardingCode,
+  type OnboardingCode,
+  withdrawOnboarding,
+} from "./onboarding";
 import { offerPdf, type PlacedField, pageCountOf, textPdf } from "./pdf";
 import { releaseHeldContacts } from "./prospect";
 import { type DocumentRow, type LegalRow, store } from "./storage";
@@ -147,8 +153,8 @@ export async function accountCard(d: AccountsDeps, orgId: string) {
 
 /**
  * The account side for any organisation (a free-tier signup, a customer who never had a
- * demo): its stage, its own billing account, and the billing details task, so offers and
- * tasks can be pushed to it like to any prospect.
+ * demo): its stage, its own billing account, and for a customer the billing details task,
+ * so offers and tasks can be pushed to it like to any prospect.
  */
 export async function enableAccount(
   d: AccountsDeps,
@@ -170,7 +176,8 @@ export async function enableAccount(
         created_at: nowIso,
         updated_at: nowIso,
       });
-    await ensureBillingTask(d, tx, org.id, who.directusUserId);
+    // A prospect gets the billing details task with its first offer, not before.
+    if (input.stage !== "prospect") await ensureBillingTask(d, tx, org.id, who.directusUserId);
     // Enabling is staff saying the customer may use their account now.
     await releaseHeldContacts(tx, org.id);
     await emit(d, tx, {
@@ -385,7 +392,8 @@ export async function pushOffer(
 
 /**
  * Sends an offer that is still a draft: its PDF and fields freeze, "Review and sign the
- * offer" opens, and the timeline notes the legal versions it carries.
+ * offer" opens, the onboarding steps not yet taken are withdrawn, and the timeline notes
+ * the legal versions it carries.
  */
 async function sendOfferIn(
   d: AccountsDeps,
@@ -411,6 +419,7 @@ async function sendOfferIn(
     createdBy: who.directusUserId,
   });
   await ensureBillingTask(d, tx, orgId, who.directusUserId);
+  await withdrawOnboarding(d, tx, orgId, actorOf(who));
   const content = doc.content as OfferContent | null;
   await emit(d, tx, {
     orgId,
@@ -869,6 +878,38 @@ export async function staffCreateTask(
     (await store.task(d.db, org.id, id)) as NonNullable<Awaited<ReturnType<typeof store.task>>>,
     await store.documents(d.db, org.id),
   );
+}
+
+/**
+ * Adds the onboarding tasks to an organisation: for someone who signed up on their own,
+ * sam calls this once the team agrees, so a self-serve signup gets them only by decision.
+ * Twice adds nothing new. Returns what it added and the organisation's onboarding tasks.
+ */
+export async function addOnboarding(d: AccountsDeps, who: Signed, orgId: string) {
+  const org = await staffOrg(d, orgId);
+  const demo = await store.demoProject(d.db, org.id);
+  let added: OnboardingCode[] = [];
+  await d.db.transaction(async (tx) => {
+    added = await ensureOnboardingTasks(d, tx, org.id, {
+      demo,
+      createdBy: who.directusUserId,
+    });
+    if (added.length)
+      await emit(d, tx, {
+        orgId: org.id,
+        actor: actorOf(who),
+        type: "onboarding.added",
+        detail: { codes: added },
+      });
+  });
+  const [tasks, docs] = await Promise.all([
+    store.tasks(d.db, org.id),
+    store.documents(d.db, org.id),
+  ]);
+  return {
+    added,
+    tasks: tasks.filter((t) => isOnboardingCode(t.code)).map((t) => taskView(t, docs)),
+  };
 }
 
 /** Approve (done), send back (open again, reminding), or withdraw (no longer asked). */

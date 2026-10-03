@@ -7,12 +7,10 @@ import { newId } from "@dembrane/core";
 import { createDb, schema } from "@dembrane/db";
 import {
   buildBundle,
-  continueSnippet,
   demoFromFixture,
   dict,
   type Json,
   popcornDemoRoutes,
-  renderPopcornPage,
 } from "@dembrane/popcorn";
 import { FilesystemStorage } from "@dembrane/storage";
 import { and, count, eq, ne } from "drizzle-orm";
@@ -172,7 +170,7 @@ run("the demo route's prospect block", () => {
     const [loop] = await w.db.select().from(schema.agent_loop);
     const state = dict(loop?.popcorn_state);
     expect(dict(state.demo).continue_url).toBe(out.prospect.continue_url);
-    // The public page's session carries the link the page shows as "Continue in dembrane".
+    // The public page's session carries the link the deck shows as its way on to sign-in.
     const files = buildBundle({
       state,
       settings: dict(dict(base.out).nl).settings as Json,
@@ -183,16 +181,6 @@ run("the demo route's prospect block", () => {
     expect(dict(dict(dict(files.files)["session.json"]).demo).continue_url).toBe(
       out.prospect.continue_url,
     );
-    // The public page gains the link only for such a demo; any other page is unchanged.
-    const plain = renderPopcornPage({ mode: "public" });
-    const withLink = renderPopcornPage(
-      { mode: "public" },
-      continueSnippet(out.prospect.continue_url, "nl"),
-    );
-    expect(plain).not.toContain("popcorn-continue");
-    expect(withLink).toContain(`href="${out.prospect.continue_url}"`);
-    expect(withLink).toContain("Verder in dembrane");
-    expect(withLink.replace(continueSnippet(out.prospect.continue_url, "nl"), "")).toBe(plain);
     const events = await w.db
       .select()
       .from(schema.account_event)

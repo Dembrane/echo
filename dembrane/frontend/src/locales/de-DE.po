@@ -1232,6 +1232,7 @@ msgstr "Zugriffsanfragen"
 #: src/routes/admin/AdminSettingsRoute.tsx:1557
 #: src/routes/admin/AdminSettingsRoute.tsx:2571
 #: src/routes/admin/AdminSettingsRoute.tsx:2990
+#: src/features/sidebar/views/org/OrgHomeView.tsx:143
 #: src/features/sidebar/shell/UserMenu.tsx:81
 #: src/features/sidebar/hooks/useSearchHits.ts:146
 #: src/components/settings/AccountSettingsCard.tsx:130
@@ -2658,7 +2659,7 @@ msgstr "Bevor Sie einen Agenten verbinden"
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:138
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:149
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:161
-#: src/features/sidebar/blocks/HelpBlock.tsx:102
+#: src/features/sidebar/blocks/HelpBlock.tsx:113
 #: src/components/report/UpdateReportModalButton.tsx:210
 #: src/components/report/CreateReportForm.tsx:237
 #: src/components/project/ProjectPortalEditor.tsx:1376
@@ -3442,7 +3443,7 @@ msgstr "Schließen"
 msgid "select.all.modal.close"
 msgstr "Schließen"
 
-#: src/components/release/ReleaseVideoModal.tsx:313
+#: src/components/release/ReleaseVideoModal.tsx:320
 msgid "Close and go to dembrane"
 msgstr "Schließen und zu dembrane"
 
@@ -3638,7 +3639,7 @@ msgstr "Bestätigen Sie Ihr Passwort, um ein neues Geheimnis für Ihre Authentif
 msgid "Connect"
 msgstr "Verbinden"
 
-#: src/features/sidebar/blocks/HelpBlock.tsx:100
+#: src/features/sidebar/blocks/HelpBlock.tsx:111
 #: src/components/agent-access/AgentAccessSection.tsx:149
 msgid "Connect your agent"
 msgstr "Agenten verbinden"
@@ -3686,15 +3687,15 @@ msgstr "Die Verarbeitung auf Basis von Einwilligung ist aktiv, aber es fehlt ein
 msgid "Consolidated arguments"
 msgstr "Konsolidierte Argumente"
 
-#: src/features/sidebar/views/HelpView.tsx:27
-#: src/features/sidebar/blocks/HelpBlock.tsx:144
-msgid "Contact support"
-msgstr "Support kontaktieren"
-
 #. js-lingui-explicit-id
 #: src/components/error/actions.ts:23
 msgid "error.action.contact_support"
 msgstr "Support kontaktieren"
+
+#: src/features/sidebar/views/HelpView.tsx:27
+#: src/features/sidebar/blocks/HelpBlock.tsx:144
+#~ msgid "Contact support"
+#~ msgstr "Support kontaktieren"
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:370
 msgid "Contact the admin if this was unexpected."
@@ -5010,8 +5011,8 @@ msgstr "Planen Sie, dembrane im Gesundheitswesen, in der Bildung, Personalbescha
 msgid "Do you want to stay in the loop?"
 msgstr "Möchten Sie auf dem Laufenden bleiben?"
 
-#: src/features/sidebar/views/HelpView.tsx:35
-#: src/features/sidebar/blocks/HelpBlock.tsx:121
+#: src/features/sidebar/views/HelpView.tsx:26
+#: src/features/sidebar/blocks/HelpBlock.tsx:132
 #: src/components/chat/ChatHistoryMessage.tsx:237
 msgid "Documentation"
 msgstr "Dokumentation"
@@ -5809,7 +5810,7 @@ msgstr "Um 24 Std. verlängern"
 #: src/routes/organisation/OrganisationExternalView.tsx:62
 #: src/lib/roles.ts:15
 #: src/features/sidebar/views/user/UserHomeView.tsx:116
-#: src/features/sidebar/views/org/OrgHomeView.tsx:174
+#: src/features/sidebar/views/org/OrgHomeView.tsx:169
 #: src/components/project/ProjectUsageAndSharing.tsx:339
 #: src/components/invite/RoleSelect.tsx:60
 msgid "External"
@@ -6093,8 +6094,8 @@ msgstr "Abstoßung entfernter Paare: {0}"
 msgid "participant.modal.echo.info.title"
 msgstr "Funktion bald verfügbar"
 
-#: src/features/sidebar/views/HelpView.tsx:65
-#: src/features/sidebar/blocks/HelpBlock.tsx:88
+#: src/features/sidebar/views/HelpView.tsx:56
+#: src/features/sidebar/blocks/HelpBlock.tsx:99
 msgid "Feedback"
 msgstr "Feedback"
 
@@ -6648,7 +6649,7 @@ msgstr "Zur Übersicht"
 msgid "Go to portal editor"
 msgstr "Zum Portal-Editor"
 
-#: src/components/release/ReleaseVideoModal.tsx:358
+#: src/components/release/ReleaseVideoModal.tsx:365
 msgid "Go to previous release notes"
 msgstr "Zu früheren Versionshinweisen"
 
@@ -6680,7 +6681,7 @@ msgstr "Gute Erkenntnis"
 msgid "Good response"
 msgstr "Gute Antwort"
 
-#: src/components/release/ReleaseVideoModal.tsx:349
+#: src/components/release/ReleaseVideoModal.tsx:356
 msgid "Got it"
 msgstr "Verstanden"
 
@@ -6723,10 +6724,10 @@ msgstr "Haben Sie an einer Schulung teilgenommen?"
 msgid "have your recordings transcribed"
 msgstr "Ihre Aufnahmen transkribieren lassen"
 
-#: src/features/sidebar/views/HelpView.tsx:25
-#: src/features/sidebar/blocks/HelpBlock.tsx:210
-#: src/features/sidebar/blocks/HelpBlock.tsx:225
-#: src/features/sidebar/blocks/HelpBlock.tsx:242
+#: src/features/sidebar/views/HelpView.tsx:24
+#: src/features/sidebar/blocks/HelpBlock.tsx:208
+#: src/features/sidebar/blocks/HelpBlock.tsx:223
+#: src/features/sidebar/blocks/HelpBlock.tsx:240
 msgid "Help"
 msgstr "Hilfe"
 
@@ -8440,7 +8441,7 @@ msgstr "Mitglieder"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:807
 #: src/routes/organisation/OrganisationRoute.tsx:862
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:78
-#: src/features/sidebar/views/org/OrgHomeView.tsx:131
+#: src/features/sidebar/views/org/OrgHomeView.tsx:132
 #: src/components/workspace/UsageCard.tsx:210
 #: src/components/project/ProjectUsageAndSharing.tsx:232
 #: src/components/project/ProjectUsageAndSharing.tsx:262
@@ -10180,7 +10181,7 @@ msgstr "Für dieses Projekt überschreiben"
 
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:62
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:80
-#: src/features/sidebar/views/org/OrgHomeView.tsx:125
+#: src/features/sidebar/views/org/OrgHomeView.tsx:126
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:48
 msgid "Overview"
 msgstr "Übersicht"
@@ -10598,8 +10599,8 @@ msgstr "Plan"
 msgid "Plan ends"
 msgstr "Tarif endet"
 
-#: src/features/sidebar/views/HelpView.tsx:52
-#: src/features/sidebar/blocks/HelpBlock.tsx:135
+#: src/features/sidebar/views/HelpView.tsx:43
+#: src/features/sidebar/blocks/HelpBlock.tsx:146
 msgid "Planned"
 msgstr "Geplant"
 
@@ -11644,7 +11645,7 @@ msgstr "Versionshinweise"
 msgid "Release notes | dembrane"
 msgstr "Versionshinweise | dembrane"
 
-#: src/components/release/ReleaseVideoModal.tsx:336
+#: src/components/release/ReleaseVideoModal.tsx:343
 msgid "Release video"
 msgstr "Release-Video"
 
@@ -11860,8 +11861,8 @@ msgstr "Bericht"
 msgid "Report already generating"
 msgstr "Bericht wird bereits erstellt"
 
-#: src/features/sidebar/views/HelpView.tsx:58
-#: src/features/sidebar/blocks/HelpBlock.tsx:76
+#: src/features/sidebar/views/HelpView.tsx:49
+#: src/features/sidebar/blocks/HelpBlock.tsx:87
 #: src/components/feedback/ReportIssueModal.tsx:180
 msgid "Report an issue"
 msgstr "Problem melden"
@@ -13223,7 +13224,7 @@ msgstr "Wird eingerichtet"
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:83
 #: src/features/sidebar/views/user/UserSettingsView.tsx:15
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:31
-#: src/features/sidebar/views/org/OrgHomeView.tsx:156
+#: src/features/sidebar/views/org/OrgHomeView.tsx:151
 #: src/components/layout/ParticipantHeader.tsx:125
 #: src/components/layout/ParticipantHeader.tsx:126
 msgid "Settings"
@@ -13584,7 +13585,7 @@ msgstr "Überspringen"
 msgid "select.all.modal.context.limit.reached.description"
 msgstr "Übersprungen, da die Auswahl zu groß war."
 
-#: src/features/sidebar/views/HelpView.tsx:41
+#: src/features/sidebar/views/HelpView.tsx:32
 msgid "Slack community"
 msgstr "Slack-Community"
 
@@ -14224,8 +14225,8 @@ msgstr "System"
 msgid "System default"
 msgstr "Systemstandard"
 
-#: src/features/sidebar/views/HelpView.tsx:49
-#: src/features/sidebar/blocks/HelpBlock.tsx:132
+#: src/features/sidebar/views/HelpView.tsx:40
+#: src/features/sidebar/blocks/HelpBlock.tsx:143
 msgid "System status"
 msgstr "Systemstatus"
 
@@ -14281,7 +14282,6 @@ msgstr "Nimm dir Zeit, ein konkretes Ergebnis zu erstellen, das deinen Beitrag f
 msgid "Tapping Record twice no longer creates duplicate conversations."
 msgstr "Zweimaliges Tippen auf „Aufnehmen“ erstellt keine doppelten Gespräche mehr."
 
-#: src/features/sidebar/views/org/OrgHomeView.tsx:142
 #: src/features/sidebar/blocks/HelpTasksItem.tsx:33
 msgid "Tasks"
 msgstr "Aufgaben"
@@ -15547,7 +15547,7 @@ msgid "Trained until {until}"
 msgstr "Geschult bis {until}"
 
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:46
-#: src/features/sidebar/views/org/OrgHomeView.tsx:136
+#: src/features/sidebar/views/org/OrgHomeView.tsx:137
 #: src/components/training/WorkspaceTrainingPanel.tsx:43
 #: src/components/training/TrainingRoster.tsx:47
 #: src/components/training/OrgTrainingPanel.tsx:74
@@ -16927,8 +16927,8 @@ msgstr "Was diese Spannung auflösen würde"
 msgid "What would you like to explore?"
 msgstr "Was willst du dir anschauen?"
 
-#: src/features/sidebar/blocks/HelpBlock.tsx:111
-#: src/components/release/ReleaseVideoModal.tsx:310
+#: src/features/sidebar/blocks/HelpBlock.tsx:122
+#: src/components/release/ReleaseVideoModal.tsx:317
 msgid "What's new"
 msgstr "Neuigkeiten"
 
@@ -17224,7 +17224,7 @@ msgstr "Arbeitsbereiche"
 
 #: src/routes/organisation/OrganisationRoute.tsx:1412
 #: src/routes/admin/AdminSettingsRoute.tsx:1659
-#: src/features/sidebar/views/org/OrgHomeView.tsx:166
+#: src/features/sidebar/views/org/OrgHomeView.tsx:161
 msgid "Workspaces"
 msgstr "Arbeitsbereiche"
 

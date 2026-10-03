@@ -16,6 +16,11 @@ export interface TenancyDeps {
   /** Where uploaded logos go. Without it, logo uploads answer 503. */
   readonly logos?: LogoStore;
   readonly now?: () => Date;
+  /**
+   * Called once a project is created in a workspace: customer accounts mark "Create a
+   * project" done. It must never throw; the project exists.
+   */
+  readonly onProjectCreated?: (projectId: string) => Promise<void>;
 }
 
 export function clock(deps: Pick<TenancyDeps, "now">): Date {

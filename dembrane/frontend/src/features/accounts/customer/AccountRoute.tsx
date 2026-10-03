@@ -10,13 +10,13 @@ import {
 	Title,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useParams } from "react-router";
 import { AccountsApiError } from "../api/client";
 import { useAccountPage } from "../api/hooks";
 import { AccountsI18n } from "../i18n";
 import { BillingForm } from "./BillingForm";
-import { BookCallButton } from "./BookCallButton";
+import { BookCallButton, BookCallModal } from "./BookCallButton";
 import { DocumentsTable } from "./DocumentsTable";
 import { NextSteps } from "./NextSteps";
 import { Questions } from "./Questions";
@@ -36,6 +36,7 @@ const AccountPage = () => {
 	const { organisationId } = useParams<{ organisationId: string }>();
 	const { data, isLoading, error } = useAccountPage(organisationId);
 	const billingRef = useRef<HTMLDivElement>(null);
+	const [booking, setBooking] = useState(false);
 	useDocumentTitle(
 		data ? `${data.organisation.name} | dembrane` : t`Tasks | dembrane`,
 	);
@@ -75,7 +76,17 @@ const AccountPage = () => {
 	const billingTask = data.tasks.find(
 		(task) => task.kind === "billing_details",
 	);
-	const billingLocked = billingTask?.locked === true;
+	const prospect = data.organisation.account_stage === "prospect";
+	// A prospect is asked for billing details with their first offer, not before; until
+	// then the form and an empty documents list would only be noise on their first visit.
+	const billingHidden = billingTask ? billingTask.locked : prospect;
+	const documentsHidden = prospect && data.documents.length === 0;
+	// While "Book a call with us" is a step, the step is where a call is booked.
+	const bookingStep = data.tasks.some(
+		(task) =>
+			task.code === "book_call" &&
+			(task.status === "open" || task.status === "changes_requested"),
+	);
 
 	return (
 		<Container size="md" px={{ base: "md", sm: "lg" }} py="xl">
@@ -91,11 +102,14 @@ const AccountPage = () => {
 							block: "start",
 						})
 					}
+					onBookCall={() => setBooking(true)}
 				/>
 
-				<DocumentsTable orgId={organisationId} documents={data.documents} />
+				{!documentsHidden && (
+					<DocumentsTable orgId={organisationId} documents={data.documents} />
+				)}
 
-				{!billingLocked && (
+				{!billingHidden && (
 					<div ref={billingRef}>
 						<BillingForm orgId={organisationId} billing={data.billing} />
 					</div>
@@ -105,14 +119,23 @@ const AccountPage = () => {
 					orgId={organisationId}
 					tickets={data.tickets}
 					extraAction={
-						<BookCallButton
-							orgId={organisationId}
-							reference={data.needs_form_reference}
-							orgName={data.organisation.name}
-						/>
+						bookingStep ? undefined : (
+							<BookCallButton
+								orgId={organisationId}
+								reference={data.needs_form_reference}
+								orgName={data.organisation.name}
+							/>
+						)
 					}
 				/>
 			</Stack>
+			<BookCallModal
+				opened={booking}
+				onClose={() => setBooking(false)}
+				orgId={organisationId}
+				reference={data.needs_form_reference}
+				orgName={data.organisation.name}
+			/>
 		</Container>
 	);
 };

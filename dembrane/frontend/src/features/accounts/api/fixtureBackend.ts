@@ -867,6 +867,9 @@ export async function handle(
 						org_id: id,
 						tasks_done: live.filter((t) => t.status === "done").length,
 						tasks_total: live.length,
+						tasks_waiting: live.filter(
+							(t) => t.status === "open" || t.status === "changes_requested",
+						).length,
 					};
 				};
 				const rows = [];
@@ -1190,6 +1193,11 @@ export async function handle(
 			}
 			case "recordBooking":
 				event(s, "booking.recorded", "customer", {}, body);
+				return { recorded: true };
+			case "tutorialOpened":
+				for (const t of s.tasks)
+					if (t.code === "watch_tutorial" && t.status === "open")
+						t.status = "done";
 				return { recorded: true };
 			case "signingRequests":
 				return s.docs

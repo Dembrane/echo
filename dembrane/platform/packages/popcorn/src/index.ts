@@ -89,7 +89,7 @@ export {
 export { POPCORN_TICK_ASSETS } from "./tick/model";
 export { runPopcornTick } from "./tick/run";
 export { missingTexts, popcornTexts, translatableTexts } from "./translate";
-export { continueSnippet, POPCORN_PAGE_ASSETS, renderPopcornPage } from "./view";
+export { POPCORN_PAGE_ASSETS, renderPopcornPage } from "./view";
 export {
   type Adoption,
   type PopcornWorkerDeps,

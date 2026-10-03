@@ -131,7 +131,10 @@ export async function createAccount(
         .set({ deleted_at: null, role: "admin", updated_at: nowIso })
         .where(eq(schema.org_membership.id, membership.id));
 
-    await ensureBillingTask(d, tx, orgId, actor?.directusUserId ?? null);
+    // A customer is invoiced, so billing details wait from the start. A prospect is not
+    // until an offer exists; pushing one adds the task then.
+    if ((existing?.account_stage ?? input.stage) !== "prospect")
+      await ensureBillingTask(d, tx, orgId, actor?.directusUserId ?? null);
     if (!existing)
       await emit(d, tx, {
         orgId,

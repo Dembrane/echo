@@ -41,6 +41,7 @@ provider "google" {
 
 module "platform" {
   source                      = "../modules/platform"
+  operators                   = ["sam-runtime@dembrane-sameer-cli.iam.gserviceaccount.com"]
   project                     = local.project
   env                         = local.settings.env
   deploy_ref                  = local.settings.deploy_ref

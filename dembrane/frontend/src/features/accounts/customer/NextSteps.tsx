@@ -15,10 +15,12 @@ import {
 } from "@mantine/core";
 import { CheckIcon, LockSimpleIcon } from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
+import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
+import { getDocumentationUrl } from "@/config";
 import { call, submitTaskWithFile } from "../api/client";
 import { accountKeys } from "../api/hooks";
 import type { TaskT } from "../contract/contract.gen";
@@ -26,6 +28,14 @@ import { taskText } from "../format";
 import { Section } from "../ui";
 
 const ACTIVE: TaskT["status"][] = ["open", "changes_requested"];
+
+/** Steps done by taking them, never by a reply: their button leads to the step. */
+const ONBOARDING: NonNullable<TaskT["code"]>[] = [
+	"explore_demo",
+	"watch_tutorial",
+	"create_project",
+	"book_call",
+];
 
 /** Stepper order: what is done, what is with us, what is to do, what is still locked. */
 const RANK: Record<TaskT["status"], number> = {
@@ -46,10 +56,12 @@ export function NextSteps({
 	orgId,
 	tasks,
 	onBilling,
+	onBookCall,
 }: {
 	orgId: string;
 	tasks: TaskT[];
 	onBilling: () => void;
+	onBookCall: () => void;
 }) {
 	const [responding, setResponding] = useState<TaskT | null>(null);
 	const steps = tasks
@@ -77,6 +89,7 @@ export function NextSteps({
 							current={task.id === currentId}
 							orgId={orgId}
 							onBilling={onBilling}
+							onBookCall={onBookCall}
 							onRespond={() => setResponding(task)}
 						/>
 					))}
@@ -98,6 +111,7 @@ function Step({
 	current,
 	orgId,
 	onBilling,
+	onBookCall,
 	onRespond,
 }: {
 	n: number;
@@ -106,6 +120,7 @@ function Step({
 	current: boolean;
 	orgId: string;
 	onBilling: () => void;
+	onBookCall: () => void;
 	onRespond: () => void;
 }) {
 	const { title, body } = taskText(task);
@@ -127,6 +142,16 @@ function Step({
 				>
 					<Trans>Review and sign</Trans>
 				</Button>
+			);
+		}
+		if (task.code && ONBOARDING.includes(task.code)) {
+			return (
+				<OnboardingAction
+					task={task}
+					orgId={orgId}
+					variant={variant}
+					onBookCall={onBookCall}
+				/>
 			);
 		}
 		if (task.kind === "billing_details") {
@@ -244,6 +269,84 @@ function Step({
 			</Group>
 		</Box>
 	);
+}
+
+/**
+ * Where an onboarding step is taken: the demo project, the tutorial, a new project in
+ * their workspace, the booking dialog. Without the place (no workspace yet), the step
+ * shows its words and no button.
+ */
+function OnboardingAction({
+	task,
+	orgId,
+	variant,
+	onBookCall,
+}: {
+	task: TaskT;
+	orgId: string;
+	variant: "filled" | "light";
+	onBookCall: () => void;
+}) {
+	const { language } = useParams<{ language?: string }>();
+	const queryClient = useQueryClient();
+	const workspace = task.params?.workspace_id;
+	const link = (to: string, label: ReactNode) => (
+		<Button
+			variant={variant}
+			component={I18nLink}
+			to={to}
+			data-testid={`action-${task.code}`}
+		>
+			{label}
+		</Button>
+	);
+	switch (task.code) {
+		case "explore_demo":
+			return workspace && task.params?.project_id
+				? link(
+						`/w/${workspace}/projects/${task.params.project_id}/overview`,
+						<Trans>Open the demo</Trans>,
+					)
+				: null;
+		case "watch_tutorial":
+			// No one can tell a video was watched, so opening the tutorial from here is the
+			// step. The documentation stands in until the tutorial video exists.
+			return (
+				<Button
+					variant={variant}
+					component="a"
+					href={getDocumentationUrl(language)}
+					target="_blank"
+					rel="noopener noreferrer"
+					onClick={() => {
+						void call("tutorialOpened", { params: { orgId } })
+							.then(() =>
+								queryClient.invalidateQueries({ queryKey: accountKeys.all }),
+							)
+							.catch(() => {});
+					}}
+					data-testid="action-watch_tutorial"
+				>
+					<Trans>Open the tutorial</Trans>
+				</Button>
+			);
+		case "create_project":
+			return workspace
+				? link(`/w/${workspace}/projects/new`, <Trans>New project</Trans>)
+				: null;
+		case "book_call":
+			return (
+				<Button
+					variant={variant}
+					onClick={onBookCall}
+					data-testid="action-book_call"
+				>
+					<Trans>Book a call</Trans>
+				</Button>
+			);
+		default:
+			return null;
+	}
 }
 
 function TaskResponseModal({
