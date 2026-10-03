@@ -102,7 +102,6 @@ export const UserMenu = () => {
 						    signal it. */}
 							<DotsThree
 								size={18}
-								weight="bold"
 								className="shrink-0"
 								style={{ color: "rgba(45, 45, 44, 0.55)" }}
 								aria-hidden="true"

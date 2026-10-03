@@ -156,7 +156,7 @@ export const ResponseFeedbackControls = ({
 					>
 						<ThumbsUp
 							size={14}
-							weight={shownRating === "up" ? "fill" : "regular"}
+							weight={shownRating === "up" ? "fill" : "light"}
 						/>
 					</ActionIcon>
 				</Tooltip>
@@ -172,7 +172,7 @@ export const ResponseFeedbackControls = ({
 					>
 						<ThumbsDown
 							size={14}
-							weight={shownRating === "down" ? "fill" : "regular"}
+							weight={shownRating === "down" ? "fill" : "light"}
 						/>
 					</ActionIcon>
 				</Tooltip>

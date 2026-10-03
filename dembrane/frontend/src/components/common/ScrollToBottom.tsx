@@ -26,7 +26,7 @@ export const ScrollToBottomButton = ({
 				style={{ backgroundColor: "var(--app-background)" }}
 				onClick={onClick}
 			>
-				<ArrowDown size="70%" weight="bold" />
+				<ArrowDown size="70%" />
 			</ActionIcon>
 		</Tooltip>
 	);

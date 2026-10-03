@@ -354,7 +354,7 @@ export const ProjectListItem = ({
 										}}
 										{...testId(`project-list-item-menu-${project.id}`)}
 									>
-										<DotsThreeIcon size={20} weight="bold" />
+										<DotsThreeIcon size={20} />
 									</ActionIcon>
 								</Popover.Target>
 								<Popover.Dropdown

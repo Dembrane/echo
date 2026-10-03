@@ -254,7 +254,7 @@ const ForYouPanel = ({
 	if (rows.length === 0 && pendingActions.length === 0) {
 		return (
 			<EmptyState
-				icon={<Bell size={22} weight="duotone" />}
+				icon={<Bell size={22} />}
 				message={<Trans>You're all caught up.</Trans>}
 			/>
 		);

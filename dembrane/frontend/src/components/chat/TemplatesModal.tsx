@@ -574,7 +574,7 @@ export const TemplatesModal = ({
 								className="flex cursor-grab items-center text-gray-400 hover:text-gray-600 active:cursor-grabbing"
 								onClick={(e) => e.stopPropagation()}
 							>
-								<DotsSixVerticalIcon size={14} weight="bold" />
+								<DotsSixVerticalIcon size={14} />
 							</div>
 						</Tooltip>
 					)}

@@ -135,7 +135,7 @@ export const TrainingRowActions = ({
 			<Menu position="bottom-end" withinPortal>
 				<Menu.Target>
 					<ActionIcon variant="subtle" aria-label={t`Manage training`}>
-						<DotsThreeVertical size={18} weight="bold" />
+						<DotsThreeVertical size={18} />
 					</ActionIcon>
 				</Menu.Target>
 				<Menu.Dropdown>
