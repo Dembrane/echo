@@ -370,6 +370,23 @@ describe("Spotlight fact-check controls", () => {
 		).toBeNull();
 	});
 
+	it("leads with the statement and its chits, outside the scroll", () => {
+		const node = withMetadata(argumentNode, { factCheckEligible: false });
+		renderSpotlight(node);
+		const statement = screen.getByTestId("spotlight-statement");
+		expect(statement.textContent).toBe(node.label);
+		expect(statement.closest(".overflow-y-auto")).toBeNull();
+		expect(screen.queryByTestId("result-stage")).toBeNull();
+		// The fact-check explanation scrolls under them
+		expect(
+			screen
+				.getByText(
+					"Arguments express stances or preferences and aren't fact-checked.",
+				)
+				.closest(".overflow-y-auto"),
+		).not.toBeNull();
+	});
+
 	it("says factual status does not apply to a tension", () => {
 		renderSpotlight(nodesById.get("rev-tension-0") as MapGraphNode);
 		expect(
