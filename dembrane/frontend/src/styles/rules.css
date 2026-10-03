@@ -25,7 +25,6 @@
  * them too). */
 :root {
 	--app-surface: #ffffff;
-	--app-on-fill: #ffffff;
 	--app-muted: #5f646f;
 	--app-quiet: #e6e3df;
 	--app-pressed: #dcdad7;
@@ -35,6 +34,16 @@
 	--app-danger-on-tint: #a8323c;
 	--app-success: #0e6e47;
 	--app-warning: #7a5200;
+	/* Fills, split from the text roles so dark can draw a fill brighter or
+	 * darker than its text; in light each fill is its role. --app-on-fill is
+	 * text and marks on any fill; the fill hover is graphite (the primary pill). */
+	--app-action-fill: #2957df;
+	--app-danger-fill: #c0434e;
+	--app-success-fill: #0e6e47;
+	--app-warning-fill: #7a5200;
+	--app-on-fill: #ffffff;
+	--app-fill-hover: #2d2d2c;
+	--app-on-fill-hover: #ffffff;
 	/* A disabled button answers a hover in pollen and a press in cotton candy
 	 * (button.module.css). */
 	--app-disabled-hover: #ffd166;
@@ -520,8 +529,8 @@
  * outline, on is a fill, across every choice control. */
 :root .mantine-Checkbox-input:checked,
 :root .mantine-Radio-radio:checked {
-	background-color: var(--app-action);
-	border-color: var(--app-action);
+	background-color: var(--app-action-fill);
+	border-color: var(--app-action-fill);
 }
 :root .mantine-Radio-radio:checked + .mantine-Radio-icon,
 :root .mantine-Checkbox-input:checked + .mantine-Checkbox-icon {
@@ -781,8 +790,8 @@
 	opacity: 0.5;
 }
 :root .mantine-Switch-input:checked + .mantine-Switch-track {
-	background: var(--app-action);
-	border-color: var(--app-action);
+	background: var(--app-action-fill);
+	border-color: var(--app-action-fill);
 }
 
 /* Set: a file drop area is a place to put something: sides. */
