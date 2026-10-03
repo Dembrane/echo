@@ -1162,10 +1162,12 @@ for (const f of files) {
 	else if (f.endsWith(".css")) scanCss(f);
 }
 
-// rules.css takes every colour from the tokens on its :root, so a theme (dark)
-// redefines the tokens and nothing else. A hex anywhere else in it is a finding.
-if (!scanOnly) {
-	const rel = "src/styles/rules.css";
+// The grammar's stylesheets take every colour from the tokens on rules.css's
+// :root, so a theme (dark) redefines the tokens and nothing else. A hex anywhere
+// else in them is a finding.
+for (const rel of scanOnly
+	? []
+	: ["src/styles/rules.css", "src/styles/button.module.css"]) {
 	const css = readFileSync(path.join(root, rel), "utf8").replace(
 		/\/\*[\s\S]*?\*\//g,
 		(c) => c.replace(/[^\n]/g, " "),
@@ -1181,7 +1183,7 @@ if (!scanOnly) {
 				"color.rules-token",
 				rel,
 				before.split("\n").length,
-				`${m[0]} in rules.css: use a token from its :root`,
+				`${m[0]}: use a token from the :root in rules.css`,
 			);
 	}
 }

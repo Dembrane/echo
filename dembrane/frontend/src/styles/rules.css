@@ -35,6 +35,10 @@
 	--app-danger-on-tint: #a8323c;
 	--app-success: #0e6e47;
 	--app-warning: #7a5200;
+	/* A disabled button answers a hover in pollen and a press in cotton candy
+	 * (button.module.css). */
+	--app-disabled-hover: #ffd166;
+	--app-disabled-pressed: #ff9aa2;
 }
 
 :root {
