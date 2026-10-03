@@ -2,6 +2,7 @@
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
 	cleanup,
 	fireEvent,
@@ -9,7 +10,7 @@ import {
 	screen,
 	waitFor,
 } from "@testing-library/react";
-import { MemoryRouter } from "react-router";
+import { MemoryRouter, Route, Routes } from "react-router";
 import {
 	afterEach,
 	beforeAll,
@@ -64,9 +65,20 @@ vi.mock("@/components/release/ReleaseVideoModal", () => ({
 vi.mock("@/features/sidebar/hooks/useHelpModals", () => ({
 	useHelpModals: () => ({ openFeedback: vi.fn(), openReportIssue: vi.fn() }),
 }));
+// The organisation menu's own reads, stood in for: no workspaces, no profile yet.
+vi.mock("@/hooks/useWorkspace", () => ({
+	useWorkspace: () => ({ workspaces: [] }),
+}));
+vi.mock("@/hooks/useV2Me", () => ({ useV2Me: () => ({ data: undefined }) }));
+vi.mock("@/features/sidebar/hooks/useSidebarView", () => ({
+	useSidebarView: () => ({ params: {} }),
+}));
 
 const { HelpBlock } = await import("@/features/sidebar/blocks/HelpBlock");
 const { RailProvider } = await import("@/features/sidebar/shell/rail");
+const { OrgHomeView } = await import(
+	"@/features/sidebar/views/org/OrgHomeView"
+);
 
 const row = (over: Partial<TasksSummaryT[number]>): TasksSummaryT[number] => ({
 	account_stage: "prospect",
@@ -94,6 +106,38 @@ const renderSidebar = (url = "/en-US/o") =>
 			</MantineProvider>
 		</I18nProvider>,
 	);
+
+/** The organisation menu and the Help block side by side, on that organisation's overview. */
+const renderOrgSidebar = (orgId: string) =>
+	render(
+		<I18nProvider i18n={i18n}>
+			<MantineProvider env="test">
+				<QueryClientProvider
+					client={
+						new QueryClient({ defaultOptions: { queries: { retry: false } } })
+					}
+				>
+					<MemoryRouter initialEntries={[`/en-US/o/${orgId}/overview`]}>
+						<RailProvider inRail={false}>
+							<Routes>
+								<Route
+									path="/:language/o/:orgId/*"
+									element={
+										<>
+											<OrgHomeView />
+											<HelpBlock />
+										</>
+									}
+								/>
+							</Routes>
+						</RailProvider>
+					</MemoryRouter>
+				</QueryClientProvider>
+			</MantineProvider>
+		</I18nProvider>,
+	);
+
+const accountLink = () => screen.queryByRole("link", { name: /^Account$/ });
 
 const held = () => screen.getByTestId("whats-new").getAttribute("data-held");
 
@@ -156,6 +200,57 @@ describe("the Tasks entry", () => {
 		renderSidebar();
 		await waitFor(() => expect(held()).toBe("false"));
 		expect(screen.queryByTestId("help-tasks")).toBeNull();
+	});
+});
+
+describe("the organisation menu's Account entry and Tasks under Help", () => {
+	const ORG = row({}).org_id;
+
+	beforeEach(() => {
+		sessionStorage.setItem(TASKS_PROMPT_SEEN_KEY, "1");
+		// The organisation's workspace list, which the menu fetches on its own.
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async () => new Response("[]", { status: 200 })),
+		);
+	});
+
+	it("something pending: Account without a count, and Tasks n/m under Help", async () => {
+		store.set({
+			data: [row({ tasks_done: 1, tasks_waiting: 3 })],
+			status: "success",
+		});
+		renderOrgSidebar(ORG);
+		expect(await screen.findByTestId("help-tasks")).toBeTruthy();
+		expect(screen.getByText("1/4")).toBeTruthy();
+		const account = accountLink();
+		expect(account?.getAttribute("href")).toBe(`/en-US/o/${ORG}/account`);
+		expect(account?.textContent).toBe("Account");
+		// One Tasks entry, under Help: the organisation menu has none.
+		expect(screen.getAllByText("Tasks")).toHaveLength(1);
+	});
+
+	it("nothing pending: only Account, so the documents and invoices stay one click away", async () => {
+		store.set({
+			data: [row({ tasks_done: 4, tasks_waiting: 0 })],
+			status: "success",
+		});
+		renderOrgSidebar(ORG);
+		await waitFor(() => expect(held()).toBe("false"));
+		expect(accountLink()).toBeTruthy();
+		expect(screen.queryByTestId("help-tasks")).toBeNull();
+		expect(screen.queryByText("Tasks")).toBeNull();
+		expect(screen.queryByText("4/4")).toBeNull();
+	});
+
+	it("a self-serve signup with no account content sees neither", async () => {
+		store.set({ data: [], status: "success" });
+		renderOrgSidebar(ORG);
+		await waitFor(() => expect(held()).toBe("false"));
+		expect(screen.getByText("Members")).toBeTruthy();
+		expect(accountLink()).toBeNull();
+		expect(screen.queryByTestId("help-tasks")).toBeNull();
+		expect(screen.queryByText("Tasks")).toBeNull();
 	});
 });
 

@@ -1165,6 +1165,7 @@ msgstr "Toegangsverzoeken"
 #: src/routes/admin/AdminSettingsRoute.tsx:1579
 #: src/routes/admin/AdminSettingsRoute.tsx:2645
 #: src/routes/admin/AdminSettingsRoute.tsx:3088
+#: src/features/sidebar/views/org/OrgHomeView.tsx:143
 #: src/features/sidebar/shell/UserMenu.tsx:80
 #: src/features/sidebar/hooks/useSearchHits.ts:146
 #: src/components/settings/AccountSettingsCard.tsx:132
@@ -5392,7 +5393,7 @@ msgstr "24 uur verlengen"
 #: src/routes/organisation/OrganisationExternalView.tsx:63
 #: src/lib/roles.ts:15
 #: src/features/sidebar/views/user/UserHomeView.tsx:115
-#: src/features/sidebar/views/org/OrgHomeView.tsx:149
+#: src/features/sidebar/views/org/OrgHomeView.tsx:169
 #: src/components/project/ProjectUsageAndSharing.tsx:322
 #: src/components/invite/RoleSelect.tsx:60
 msgid "External"
@@ -7894,7 +7895,7 @@ msgstr "leden"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:809
 #: src/routes/organisation/OrganisationRoute.tsx:863
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:78
-#: src/features/sidebar/views/org/OrgHomeView.tsx:119
+#: src/features/sidebar/views/org/OrgHomeView.tsx:132
 #: src/components/workspace/UsageCard.tsx:205
 #: src/components/project/ProjectUsageAndSharing.tsx:231
 #: src/components/project/ProjectUsageAndSharing.tsx:261
@@ -9441,7 +9442,7 @@ msgstr "Alleen organisatie"
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:471
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:715
 #: src/routes/onboarding/OnboardingRoute.tsx:127
-#: src/features/sidebar/views/org/OrgHomeView.tsx:77
+#: src/features/sidebar/views/org/OrgHomeView.tsx:82
 #: src/features/sidebar/hooks/useSearchHits.ts:134
 #: src/components/training/StaffTrainingPanel.tsx:139
 #: src/components/organisation/CreateOrganisationModal.tsx:175
@@ -9582,7 +9583,7 @@ msgstr "Overschrijven voor dit project"
 
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:62
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:80
-#: src/features/sidebar/views/org/OrgHomeView.tsx:113
+#: src/features/sidebar/views/org/OrgHomeView.tsx:126
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:47
 msgid "Overview"
 msgstr "Overzicht"
@@ -12428,7 +12429,7 @@ msgstr "Instellen"
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:83
 #: src/features/sidebar/views/user/UserSettingsView.tsx:15
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:31
-#: src/features/sidebar/views/org/OrgHomeView.tsx:131
+#: src/features/sidebar/views/org/OrgHomeView.tsx:151
 #: src/components/layout/ParticipantHeader.tsx:124
 #: src/components/layout/ParticipantHeader.tsx:125
 msgid "Settings"
@@ -14676,7 +14677,7 @@ msgid "Trained until {until}"
 msgstr "Getraind tot {until}"
 
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:46
-#: src/features/sidebar/views/org/OrgHomeView.tsx:124
+#: src/features/sidebar/views/org/OrgHomeView.tsx:137
 #: src/components/training/WorkspaceTrainingPanel.tsx:37
 #: src/components/training/TrainingRoster.tsx:47
 #: src/components/training/OrgTrainingPanel.tsx:68
@@ -16261,7 +16262,7 @@ msgstr "werkruimtes"
 
 #: src/routes/organisation/OrganisationRoute.tsx:1411
 #: src/routes/admin/AdminSettingsRoute.tsx:1689
-#: src/features/sidebar/views/org/OrgHomeView.tsx:141
+#: src/features/sidebar/views/org/OrgHomeView.tsx:161
 msgid "Workspaces"
 msgstr "Werkruimtes"
 

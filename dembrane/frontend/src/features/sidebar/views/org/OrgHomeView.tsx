@@ -5,12 +5,17 @@ import {
 	Folders,
 	GearIcon,
 	GraduationCapIcon,
+	ReceiptIcon,
 	UsersIcon,
 } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useParams } from "react-router";
 import { API_BASE_URL } from "@/config";
+import {
+	hasAccount,
+	useTasksSummary,
+} from "@/features/accounts/help/tasksSummary";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { isOutsiderRole } from "@/lib/roles";
@@ -97,6 +102,14 @@ export const OrgHomeView = () => {
 	// managers that is the full org list, for everyone else their direct rows.
 	const showWorkspaces = displayList.length > 0;
 
+	// "Account" shows for orgs in the tasks summary: the backend lists an org there when it
+	// has account content (a stage, a task or a document) and the caller is an owner, admin
+	// or billing member. It carries no count and stays when nothing is pending, so the
+	// documents, billing details and invoices are always one click away; the count lives
+	// on Tasks under Help, which shows only while something waits.
+	const { data: tasksSummary } = useTasksSummary();
+	const seesAccount = orgId ? hasAccount(tasksSummary, orgId) : false;
+
 	if (!orgId) return null;
 	const base = `/o/${orgId}`;
 
@@ -124,6 +137,13 @@ export const OrgHomeView = () => {
 						label={<Trans>Training</Trans>}
 						icon={GraduationCapIcon}
 					/>
+					{seesAccount && (
+						<NavItem
+							to={`${base}/account`}
+							label={<Trans>Account</Trans>}
+							icon={ReceiptIcon}
+						/>
+					)}
 					{/* Settings is the last clickable item under the org title,
 						    directly below Overview and above the Workspaces section. */}
 					<NavItem

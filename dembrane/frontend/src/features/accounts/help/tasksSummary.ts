@@ -4,10 +4,11 @@ import type { TasksSummaryT } from "../contract/contract.gen";
 
 /**
  * GET /api/v2/account/tasks-summary: the organisations where the caller has account content,
- * with their task counts. It feeds the Help menu's "Tasks" entry, the org picker and the
- * popup after sign-in. It runs on every dashboard load, so it is one small GET cached by the app's query client and it
- * skips the contract's zod parsing (that would pull zod 4 into every load); a malformed
- * answer simply hides the entry. The key sits under ["accounts"], so any account write
+ * with their task counts. It feeds the Help menu's "Tasks" entry, the org picker, the
+ * popup after sign-in and the organisation menu's "Account" entry. It runs on every
+ * dashboard load, so it is one small GET cached by the app's query client and it skips
+ * the contract's zod parsing (that would pull zod 4 into every load); a malformed answer
+ * simply hides the entry. The key sits under ["accounts"], so any account write
  * refreshes the count.
  */
 export const tasksSummaryKey = ["accounts", "tasks-summary"] as const;
@@ -46,3 +47,10 @@ export const summarise = (summary: TasksSummaryT | undefined) => {
 		total: orgs.reduce((a, o) => a + o.tasks_total, 0),
 	};
 };
+
+/**
+ * Whether an org shows "Account" in its sidebar: it has account content for the caller,
+ * whether or not anything is pending.
+ */
+export const hasAccount = (summary: TasksSummaryT | undefined, orgId: string) =>
+	(summary ?? []).some((o) => o.org_id === orgId);
