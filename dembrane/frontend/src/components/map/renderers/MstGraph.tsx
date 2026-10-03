@@ -290,8 +290,6 @@ export const MstGraph = ({
 	onNodeClickRef.current = onNodeClick;
 	const onNodeHoverRef = useRef(onNodeHover);
 	onNodeHoverRef.current = onNodeHover;
-	const highlightModeRef = useRef(highlightMode);
-	highlightModeRef.current = highlightMode;
 
 	const [cursorPosition, setCursorPosition] = useState<{
 		x: number;
@@ -455,56 +453,81 @@ export const MstGraph = ({
 	);
 	useReportEdgeCounts(edgeSelection.counts, onEdgeCounts);
 
-	// Radius mode: highlight nodes near the cursor
+	// Nodes near the cursor: radius mode lights them all, downstream mode
+	// treats the nearest as hovered, so a branch lights without aiming at a dot.
 	useEffect(() => {
 		if (!svgRef.current) return;
 
 		const svg = svgRef.current;
 		const HIGHLIGHT_RADIUS = 50;
 
+		// Every node within the radius of a cursor at (x, y) on the SVG, by its
+		// distance: 0 at the cursor, 1 at the edge of the radius.
+		const nodesNear = (x: number, y: number): Map<string, number> => {
+			const distances = new Map<string, number>();
+			const simulation = simulationRef.current;
+			if (!simulation) return distances;
+			const transform = d3.zoomTransform(svg);
+
+			for (const node of simulation.nodes()) {
+				if (node.x !== undefined && node.y !== undefined) {
+					// Node position in screen coordinates
+					const screenX = node.x * transform.k + transform.x;
+					const screenY = node.y * transform.k + transform.y;
+					// A larger node reaches the cursor sooner by its extra radius
+					const extraRadius =
+						Math.max(0, radiusOfRef.current(node.id) - nodeRadiusRef.current) *
+						transform.k;
+					const distance = Math.max(
+						0,
+						Math.hypot(screenX - x, screenY - y) - extraRadius,
+					);
+
+					if (distance <= HIGHLIGHT_RADIUS) {
+						distances.set(node.id, distance / HIGHLIGHT_RADIUS);
+					}
+				}
+			}
+			return distances;
+		};
+
+		const cursorOf = (event: MouseEvent) => {
+			const rect = svg.getBoundingClientRect();
+			return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+		};
+
+		if (highlightMode === "downstream") {
+			const handleMouseMove = (event: MouseEvent) => {
+				const { x, y } = cursorOf(event);
+				let nearest: string | null = null;
+				let nearestDistance = Number.POSITIVE_INFINITY;
+				for (const [id, distance] of nodesNear(x, y)) {
+					if (distance < nearestDistance) {
+						nearest = id;
+						nearestDistance = distance;
+					}
+				}
+				setHoveredNodeId(nearest);
+			};
+			const handleMouseLeave = () => setHoveredNodeId(null);
+
+			svg.addEventListener("mousemove", handleMouseMove);
+			svg.addEventListener("mouseleave", handleMouseLeave);
+			return () => {
+				svg.removeEventListener("mousemove", handleMouseMove);
+				svg.removeEventListener("mouseleave", handleMouseLeave);
+			};
+		}
+
 		if (highlightMode === "radius") {
 			// Immediate visual feedback, debounced timer/calculations
 			const handleMouseMove = (event: MouseEvent) => {
-				const rect = svg.getBoundingClientRect();
-				const x = event.clientX - rect.left;
-				const y = event.clientY - rect.top;
+				const { x, y } = cursorOf(event);
 
 				setCursorPosition({ x, y });
 
-				const simulation = simulationRef.current;
-				if (!simulation) {
-					setLocalHighlightedNodeIds(new Set());
-					setLocalHighlightedNodesDistance(new Map());
-					return;
-				}
-
-				const highlighted = new Set<string>();
-				const distances = new Map<string, number>();
-				const transform = d3.zoomTransform(svg);
-
-				for (const node of simulation.nodes()) {
-					if (node.x !== undefined && node.y !== undefined) {
-						// Node position in screen coordinates
-						const screenX = node.x * transform.k + transform.x;
-						const screenY = node.y * transform.k + transform.y;
-						// A larger node reaches the cursor sooner by its extra radius
-						const extraRadius =
-							Math.max(
-								0,
-								radiusOfRef.current(node.id) - nodeRadiusRef.current,
-							) * transform.k;
-						const distance = Math.max(
-							0,
-							Math.hypot(screenX - x, screenY - y) - extraRadius,
-						);
-
-						if (distance <= HIGHLIGHT_RADIUS) {
-							highlighted.add(node.id);
-							// 0 = at cursor, 1 = at edge of radius
-							distances.set(node.id, distance / HIGHLIGHT_RADIUS);
-						}
-					}
-				}
+				const distances = nodesNear(x, y);
+				const highlighted = new Set(distances.keys());
 
 				setLocalHighlightedNodeIds(highlighted);
 				setLocalHighlightedNodesDistance(distances);
@@ -1013,15 +1036,9 @@ export const MstGraph = ({
 						.on("mouseenter", (_event: MouseEvent, d) => {
 							const graphNode = nodeByIdRef.current.get(d.id);
 							if (graphNode) onNodeHoverRef.current?.(graphNode);
-							if (highlightModeRef.current === "downstream") {
-								setHoveredNodeId(d.id);
-							}
 						})
 						.on("mouseleave", () => {
 							onNodeHoverRef.current?.(null);
-							if (highlightModeRef.current === "downstream") {
-								setHoveredNodeId(null);
-							}
 						});
 					return circles;
 				},
