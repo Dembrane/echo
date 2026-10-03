@@ -15,6 +15,7 @@ import {
 } from "@mantine/core";
 import { LockIcon, MagnifyingGlassIcon, XIcon } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
+import { tierName } from "@/components/workspace/TierBadge";
 
 const SEARCH_THRESHOLD = 7; // show search input only when scanning is slow
 
@@ -175,9 +176,7 @@ export function WorkspaceSelectList({
 													disabled={!ws.bills_separately}
 												>
 													<Badge size="xs" variant="light" color="gray">
-														<span style={{ textTransform: "capitalize" }}>
-															{ws.tier}
-														</span>
+														{tierName(ws.tier)}
 														{ws.bills_separately && (
 															<>
 																{" "}

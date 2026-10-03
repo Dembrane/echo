@@ -17,7 +17,7 @@
 }
 
 .root:focus-visible {
-	outline: calc(2 * 1.36px) solid #2957df;
+	outline: calc(2 * 1.36px) solid var(--app-action);
 	outline-offset: 2px;
 }
 
@@ -25,9 +25,9 @@
  * pollen border on hover, cotton candy on press. */
 .root:disabled:not([data-loading="true"]),
 .root[data-disabled]:not([data-loading="true"]) {
-	background-color: #e6e3df;
+	background-color: var(--app-quiet);
 	border: 1px solid transparent;
-	color: #2d2d2c;
+	color: var(--app-text);
 	cursor: not-allowed;
 	opacity: 1;
 	pointer-events: all;
@@ -35,10 +35,10 @@
 
 .root:disabled:not([data-loading="true"]):hover,
 .root[data-disabled]:not([data-loading="true"]):hover {
-	border-color: #ffd166;
+	border-color: var(--app-disabled-hover);
 }
 
 .root:disabled:not([data-loading="true"]):active,
 .root[data-disabled]:not([data-loading="true"]):active {
-	border-color: #ff9aa2;
+	border-color: var(--app-disabled-pressed);
 }

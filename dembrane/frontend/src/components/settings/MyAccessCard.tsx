@@ -12,6 +12,7 @@ import {
 } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
+import { tierName } from "@/components/workspace/TierBadge";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -216,11 +217,9 @@ export const MyAccessCard = () => {
 															other="# projects"
 														/>
 														{" · "}
-														<span style={{ textTransform: "capitalize" }}>
-															{ws.bills_separately
-																? t`${ws.tier} (partner)`
-																: ws.tier}
-														</span>
+														{ws.bills_separately
+															? t`${tierName(ws.tier)} (partner)`
+															: tierName(ws.tier)}
 													</Text>
 												</Group>
 											</UnstyledButton>
