@@ -1,10 +1,7 @@
-import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 import { assetPath } from "@dembrane/core";
+import { sql as raw } from "drizzle-orm";
 import { readMigrationFiles } from "drizzle-orm/migrator";
 import { drizzle } from "drizzle-orm/postgres-js";
-import { migrate as drizzleMigrate } from "drizzle-orm/postgres-js/migrator";
 import type postgres from "postgres";
 import { connect } from "./connection";
 
@@ -18,8 +15,9 @@ const LOCK_KEY = 72_1405_2026;
 /**
  * Contract migrations (tag contains "_contract_") drop what the old stack still reads.
  * They run at cutover. A database the old stack also serves (the parity template) is built
- * with them held back; it is rebuilt from scratch, never migrated forward, because drizzle
- * applies only migrations newer than the last applied one and would skip a held contract.
+ * with them held back while later migrations still apply. A migration is pending when its
+ * journal entry is not recorded, not when it is newer than the latest recorded one, so a run
+ * without the hold applies a held contract even after newer migrations went in.
  */
 export interface MigrateOptions {
   readonly holdContract?: boolean;
@@ -85,36 +83,84 @@ export interface MigrateResult {
  */
 export async function migrate(url: string, opts: MigrateOptions): Promise<MigrateResult> {
   const sql = connect(url, { max: 1, onnotice: () => {} });
-  const folder = opts.holdContract ? withoutContract() : null;
   try {
     await sql`select pg_advisory_lock(${LOCK_KEY})`;
     const adoptedBaseline = await adoptBaseline(sql);
+    const recorded = await recordedMigrations(sql);
+    const pending = (await chain()).filter(
+      (m) => !recorded.has(m.folderMillis) && !(opts.holdContract && isContract(m.tag)),
+    );
     if (!opts.holdContract && !ARCHIVE_EXEMPT_ENVS.includes(opts.appEnv ?? "")) {
-      const unarchived = await unarchivedContracts(sql);
+      const unarchived = await unarchivedContracts(sql, pending);
       if (unarchived.length) throw new ContractArchiveMissing(unarchived, opts.appEnv);
     }
-    const before = await countApplied(sql);
-    await drizzleMigrate(drizzle(sql), { migrationsFolder: folder ?? migrations() });
-    const applied = (await countApplied(sql)) - before;
-    return { adoptedBaseline, applied };
+    await apply(sql, pending);
+    return { adoptedBaseline, applied: pending.length };
   } finally {
     await sql`select pg_advisory_unlock(${LOCK_KEY})`.catch(() => {});
     await sql.end();
-    if (folder) rmSync(folder, { recursive: true, force: true });
   }
 }
 
-/** A copy of the migrations folder whose journal leaves out the contract migrations. */
-function withoutContract(): string {
-  const dir = mkdtempSync(join(tmpdir(), "echo-migrations-"));
-  cpSync(migrations(), dir, { recursive: true });
-  const path = join(dir, "meta", "_journal.json");
-  const journal = JSON.parse(readFileSync(path, "utf8")) as {
-    entries: { tag: string }[];
-  };
-  journal.entries = journal.entries.filter((e) => !e.tag.includes("_contract_"));
-  writeFileSync(path, JSON.stringify(journal, null, 2));
-  return dir;
+const isContract = (tag: string) => tag.includes("_contract_");
+
+interface Migration {
+  readonly tag: string;
+  /** The journal entry's `when`; drizzle records it as created_at and it names the migration. */
+  readonly folderMillis: number;
+  readonly hash: string;
+  readonly sql: readonly string[];
+}
+
+/** Every migration in journal order, read and split the way drizzle's migrator reads them. */
+async function chain(): Promise<Migration[]> {
+  const files = readMigrationFiles({ migrationsFolder: migrations() });
+  const journal = (await Bun.file(
+    assetPath("db", "migrations", "meta", "_journal.json"),
+  ).json()) as { entries: { tag: string }[] };
+  const all = journal.entries.map((e, i) => {
+    const m = files[i];
+    if (!m) throw new Error(`migration ${e.tag} is in the journal but not on disk`);
+    return { tag: e.tag, folderMillis: m.folderMillis, hash: m.hash, sql: m.sql };
+  });
+  // A migration is known by its journal timestamp, so two sharing one would hide each other.
+  if (new Set(all.map((m) => m.folderMillis)).size !== all.length)
+    throw new Error("two journal entries share a `when`; every migration needs its own");
+  return all;
+}
+
+/**
+ * The journal timestamps recorded in drizzle's history. Recorded by timestamp, not hash: a
+ * hash changes when an applied file is reformatted, and treating that as pending would run
+ * the migration a second time.
+ */
+async function recordedMigrations(sql: postgres.Sql): Promise<Set<number>> {
+  // Two statements on purpose: Postgres resolves every table in a query while planning.
+  if (
+    !(await one<boolean>(sql`select to_regclass('drizzle.__drizzle_migrations') is not null as v`))
+  )
+    return new Set();
+  const rows = await sql`select created_at from drizzle.__drizzle_migrations`;
+  return new Set(rows.map((r) => Number(r.created_at)));
+}
+
+/**
+ * Runs the pending migrations in journal order in one transaction and records each as
+ * drizzle's migrator does (same table, hash and created_at), so drizzle-kit and older
+ * builds read the same history.
+ */
+async function apply(sql: postgres.Sql, pending: readonly Migration[]): Promise<void> {
+  await sql`create schema if not exists drizzle`;
+  await sql`create table if not exists drizzle.__drizzle_migrations (id serial primary key, hash text not null, created_at bigint)`;
+  if (!pending.length) return;
+  await drizzle(sql).transaction(async (tx) => {
+    for (const m of pending) {
+      for (const statement of m.sql) await tx.execute(raw.raw(statement));
+      await tx.execute(
+        raw`insert into drizzle.__drizzle_migrations (hash, created_at) values (${m.hash}, ${m.folderMillis})`,
+      );
+    }
+  });
 }
 
 async function adoptBaseline(sql: postgres.Sql): Promise<boolean> {
@@ -124,43 +170,22 @@ async function adoptBaseline(sql: postgres.Sql): Promise<boolean> {
   await sql`create table if not exists drizzle.__drizzle_migrations (id serial primary key, hash text not null, created_at bigint)`;
   if ((await one<number>(sql`select count(*)::int as v from drizzle.__drizzle_migrations`)) > 0)
     return false;
-  const files = readMigrationFiles({ migrationsFolder: migrations() });
-  const journal = (await Bun.file(
-    assetPath("db", "migrations", "meta", "_journal.json"),
-  ).json()) as {
-    entries: { tag: string }[];
-  };
-  for (const [i, entry] of journal.entries.entries()) {
-    if (!BASELINE_TAGS.includes(entry.tag)) continue;
-    const m = files[i];
-    if (!m) throw new Error(`migration ${entry.tag} is in the journal but not on disk`);
+  for (const m of await chain()) {
+    if (!BASELINE_TAGS.includes(m.tag)) continue;
     await sql`insert into drizzle.__drizzle_migrations (hash, created_at) values (${m.hash}, ${m.folderMillis})`;
   }
   return true;
 }
 
 /**
- * Contract migrations this run would apply that have no archive row. Pending is decided the
- * way drizzle's migrator decides it: every migration newer than the latest applied one.
+ * Contract migrations this run would apply that have no archive row: the same pending list
+ * the run applies, so a contract released after newer migrations is checked too.
  */
-async function unarchivedContracts(sql: postgres.Sql): Promise<string[]> {
-  const files = readMigrationFiles({ migrationsFolder: migrations() });
-  const journal = (await Bun.file(
-    assetPath("db", "migrations", "meta", "_journal.json"),
-  ).json()) as { entries: { tag: string }[] };
-  const hasHistory = await one<boolean>(
-    sql`select to_regclass('drizzle.__drizzle_migrations') is not null as v`,
-  );
-  const [last] = hasHistory
-    ? await sql`select created_at from drizzle.__drizzle_migrations order by created_at desc limit 1`
-    : [];
-  const pending = journal.entries
-    .filter(
-      (e, i) =>
-        e.tag.includes("_contract_") &&
-        (!last || Number(last.created_at) < (files[i]?.folderMillis ?? 0)),
-    )
-    .map((e) => e.tag);
+async function unarchivedContracts(
+  sql: postgres.Sql,
+  pendingMigrations: readonly Migration[],
+): Promise<string[]> {
+  const pending = pendingMigrations.filter((m) => isContract(m.tag)).map((m) => m.tag);
   if (!pending.length) return [];
   const hasLedger = await one<boolean>(
     sql`select to_regclass('drizzle.contract_archive') is not null as v`,
@@ -190,16 +215,6 @@ export async function recordContractArchive(
   } finally {
     await sql.end();
   }
-}
-
-async function countApplied(sql: postgres.Sql): Promise<number> {
-  // Two statements on purpose: Postgres resolves every table in a query while planning,
-  // even inside a CASE branch that never runs.
-  if (
-    !(await one<boolean>(sql`select to_regclass('drizzle.__drizzle_migrations') is not null as v`))
-  )
-    return 0;
-  return one<number>(sql`select count(*)::int as v from drizzle.__drizzle_migrations`);
 }
 
 /** First column of the single row a scalar query returns. */
