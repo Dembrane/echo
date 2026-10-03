@@ -5,7 +5,6 @@ import {
 	Box,
 	Button,
 	Group,
-	LoadingOverlay,
 	Modal,
 	Paper,
 	Progress,
@@ -524,8 +523,14 @@ export const UploadConversationDropzone = (
 		});
 	}, [selectedFiles, props.projectId, uploader, posthog]);
 
+	// The button holds its place while the project loads; it opens nothing
+	// until the project is there.
 	if (projectQuery.isLoading) {
-		return <LoadingOverlay visible />;
+		return (
+			<Button leftSection={<UploadSimpleIcon size={20} />} disabled>
+				{t`Upload`}
+			</Button>
+		);
 	}
 
 	return (

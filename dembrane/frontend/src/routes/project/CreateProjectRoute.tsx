@@ -6,7 +6,6 @@ import {
 	Group,
 	Paper,
 	Radio,
-	Skeleton,
 	Stack,
 	Stepper,
 	Switch,
@@ -18,6 +17,7 @@ import { useDocumentTitle } from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
 import { useUpdateProjectByIdMutation } from "@/components/project/hooks";
@@ -178,14 +178,7 @@ export const CreateProjectRoute = () => {
 	};
 
 	if (!workspace) {
-		return (
-			<Container size="sm" py="xl" px="lg">
-				<Stack gap="xl">
-					<Skeleton h={40} w={240} />
-					<Skeleton h={160} />
-				</Stack>
-			</Container>
-		);
+		return <BeautifulLoading />;
 	}
 
 	// Outsiders lack project:create; a deep link lands here instead of a 403 on Create.

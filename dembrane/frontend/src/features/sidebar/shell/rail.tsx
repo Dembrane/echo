@@ -104,6 +104,9 @@ export const RailTip = ({
 			position="right"
 			offset={8}
 			withArrow
+			// The name reads over the page beside the rail, so it sits above
+			// anything the page lays over itself while it loads.
+			zIndex={1000}
 		>
 			{/* biome-ignore lint/a11y/noStaticElementInteractions: a pass-through wrapper; the link or button inside is the interactive element */}
 			<span

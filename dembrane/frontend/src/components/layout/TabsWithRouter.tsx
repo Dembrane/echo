@@ -1,12 +1,7 @@
-import { Box, Loader, Stack } from "@mantine/core";
+import { Stack } from "@mantine/core";
 import { Suspense } from "react";
 import { Outlet } from "react-router";
-
-const TabLoadingFallback = () => (
-	<Box p="md">
-		<Loader size="sm" />
-	</Box>
-);
+import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 
 // Tab strip retired — section navigation lives in the main AppSidebar.
 // Now a thin Outlet wrapper; props kept for callsite compat but ignored.
@@ -19,7 +14,7 @@ export const TabsWithRouter = (
 ) => {
 	return (
 		<Stack className="relative">
-			<Suspense fallback={<TabLoadingFallback />}>
+			<Suspense fallback={<BeautifulLoading />}>
 				<Outlet />
 			</Suspense>
 		</Stack>

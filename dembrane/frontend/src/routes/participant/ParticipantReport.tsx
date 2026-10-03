@@ -1,8 +1,9 @@
 import { Trans } from "@lingui/react/macro";
-import { LoadingOverlay, Stack, Text } from "@mantine/core";
+import { Stack, Text } from "@mantine/core";
 import posthog from "posthog-js";
 import { useCallback, useEffect } from "react";
 import { useParams, useSearchParams } from "react-router";
+import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { Logo } from "@/components/common/Logo";
 import {
 	usePublicLatestProjectReport,
@@ -71,7 +72,7 @@ export const ParticipantReport = () => {
 	}, [report, print, recordView, projectId]);
 
 	if (isLoading) {
-		return <LoadingOverlay visible />;
+		return <BeautifulLoading quiet className="min-h-dvh" />;
 	}
 
 	if (!report || report.status !== "published") {

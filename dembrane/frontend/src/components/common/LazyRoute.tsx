@@ -1,17 +1,13 @@
-import { Box, Loader } from "@mantine/core";
 import React, { Suspense } from "react";
 import { ErrorBoundary } from "../error/ErrorBoundary";
+import { BeautifulLoading } from "./BeautifulLoading";
 
 interface LazyRouteProps {
 	children: React.ReactNode;
 	fallback?: React.ComponentType;
 }
 
-const DefaultFallback = () => (
-	<Box p="md">
-		<Loader size="sm" />
-	</Box>
-);
+const DefaultFallback = () => <BeautifulLoading />;
 
 export const LazyRoute: React.FC<LazyRouteProps> = ({
 	children,

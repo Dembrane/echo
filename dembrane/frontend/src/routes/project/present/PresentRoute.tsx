@@ -36,6 +36,7 @@ import {
 	useState,
 } from "react";
 import { useParams, useSearchParams } from "react-router";
+import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { SaveStatus } from "@/components/form/SaveStatus";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -854,16 +855,7 @@ export function PresentRoute() {
 			"noopener",
 		);
 	};
-	if (query.isLoading)
-		return (
-			<PageContainer width="full" density="tight">
-				<Stack gap="md" role="status" aria-label={t`Loading presentation`}>
-					<Skeleton height={32} width={200} />
-					<Skeleton height={36} width={240} />
-					<Skeleton height={360} />
-				</Stack>
-			</PageContainer>
-		);
+	if (query.isLoading) return <BeautifulLoading />;
 	return (
 		<PageContainer width="full" density="tight">
 			<Stack gap="lg">

@@ -36,6 +36,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router";
 import { OrgAgentAccessPanel } from "@/components/agent-access/OrgAgentAccessPanel";
 import { OrgBillingTab } from "@/components/billing/BillingManager";
+import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { toast } from "@/components/common/Toaster";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
@@ -643,15 +644,7 @@ export const OrganisationRoute = () => {
 	}, [members, search, roleFilter, myAppUserId]);
 
 	if (organisationLoading) {
-		return (
-			<Container size="xl" py="xl" px="lg">
-				<Stack gap="lg">
-					<Skeleton h={32} w={240} />
-					<Skeleton h={16} w={160} />
-					<Skeleton h={240} />
-				</Stack>
-			</Container>
-		);
+		return <BeautifulLoading />;
 	}
 
 	// Distinct from the "not found" branch below — a 5xx is not a 404.

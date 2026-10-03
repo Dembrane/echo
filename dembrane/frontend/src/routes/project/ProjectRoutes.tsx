@@ -1,8 +1,9 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Alert, Divider, Skeleton, Stack } from "@mantine/core";
+import { Alert, Divider, Stack } from "@mantine/core";
 import { useMemo, useState } from "react";
 import { useParams } from "react-router";
+import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
 import { ProjectGoalSection } from "@/components/goal/ProjectGoalSection";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
@@ -32,14 +33,6 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { getProjectTranscriptsLink } from "@/lib/api";
 import { canUseChat, isReadOnlyRole } from "@/lib/roles";
 import type { Tier } from "@/lib/tiers";
-
-// Placeholder blocks for a settings page whose project is still loading.
-const SettingsSkeleton = () => (
-	<Stack gap="md">
-		<Skeleton height={32} width={240} />
-		<Skeleton height={160} />
-	</Stack>
-);
 
 // Observers lack project:update, so editing and upload controls are hidden or
 // read-only rather than shown and answered with a 403.
@@ -119,7 +112,7 @@ export const ProjectSettingsRoute = () => {
 	return (
 		<PageContainer>
 			<Stack gap="xl">
-				{projectQuery.isLoading && <SettingsSkeleton />}
+				{projectQuery.isLoading && <BeautifulLoading />}
 				{projectQuery.isError && (
 					<ErrorNotice
 						error={projectQuery.error}
@@ -245,7 +238,7 @@ export const ProjectExportRoute = () => {
 	return (
 		<PageContainer>
 			<Stack gap="xl">
-				{projectQuery.isLoading && <SettingsSkeleton />}
+				{projectQuery.isLoading && <BeautifulLoading />}
 				{projectQuery.isError && (
 					<ErrorNotice
 						error={projectQuery.error}
@@ -320,7 +313,7 @@ export const ProjectPortalSettingsRoute = () => {
 	return (
 		<PageContainer width="full">
 			<Stack gap="xl">
-				{isLoading && <SettingsSkeleton />}
+				{isLoading && <BeautifulLoading />}
 				{isError && (
 					<ErrorNotice
 						error={projectQuery.error ?? verificationTopicsQuery.error}
@@ -356,7 +349,7 @@ export const ProjectAccessRoute = () => {
 	return (
 		<PageContainer>
 			<Stack gap="xl">
-				{projectQuery.isLoading && <SettingsSkeleton />}
+				{projectQuery.isLoading && <BeautifulLoading />}
 				{projectQuery.isError && (
 					<ErrorNotice
 						error={projectQuery.error}

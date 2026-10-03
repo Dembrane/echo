@@ -4,8 +4,6 @@ import {
 	Box,
 	Button,
 	CloseButton,
-	Container,
-	Loader,
 	Stack,
 	Text,
 	TextInput,
@@ -16,6 +14,7 @@ import { House, MagnifyingGlassIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useRef, useState } from "react";
 import { Navigate } from "react-router";
+import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { API_BASE_URL } from "@/config";
 import {
@@ -120,13 +119,7 @@ function deriveOrgList(
 	});
 }
 
-const CenteredLoader = () => (
-	<Container size="sm" py="xl">
-		<Stack align="center" gap={16} mt={FRAME_TOP_MARGIN}>
-			<Loader size="sm" color="gray" />
-		</Stack>
-	</Container>
-);
+const CenteredLoader = () => <BeautifulLoading />;
 
 // Entry decision: single-org users go straight to their org overview, everyone
 // else to the home list. Lives at the root (not inside /o) so the shortcut

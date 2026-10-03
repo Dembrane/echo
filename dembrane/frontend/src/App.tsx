@@ -15,6 +15,7 @@ import {
 } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect } from "react";
 import { RouterProvider } from "react-router/dom";
+import { LoadingStage } from "./components/common/BeautifulLoading";
 import { notifyError } from "./components/error/notifyError";
 import { I18nProvider } from "./components/layout/I18nProvider";
 import { ENABLE_AGENTATION, USE_PARTICIPANT_ROUTER } from "./config";
@@ -160,6 +161,7 @@ export const App = () => {
 							<RouterProvider router={router} />
 						</I18nProvider>
 					</IconContext.Provider>
+					<LoadingStage />
 				</MantineProvider>
 			</QueryClientProvider>
 		);
@@ -193,6 +195,7 @@ export const App = () => {
 											)}
 										</ModalsProvider>
 									</I18nProvider>
+									<LoadingStage />
 								</WorkspaceProvider>
 							</WhitelabelLogoProvider>
 						</AppPreferencesProvider>

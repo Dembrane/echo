@@ -4,7 +4,6 @@ import {
 	Box,
 	Button,
 	Group,
-	LoadingOverlay,
 	Modal,
 	Stack,
 	Text,
@@ -20,6 +19,7 @@ import clsx from "clsx";
 import posthog from "posthog-js";
 import { useState } from "react";
 import { useParams, useSearchParams } from "react-router";
+import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
 import {
@@ -110,7 +110,7 @@ export const ParticipantConversationText = () => {
 	};
 
 	if (conversationQuery.isLoading || projectQuery.isLoading) {
-		return <LoadingOverlay visible />;
+		return <BeautifulLoading quiet className="min-h-dvh" />;
 	}
 
 	// Check if conversation is not present or failed to load

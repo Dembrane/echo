@@ -1,9 +1,10 @@
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
-import { Button, Center, Skeleton, Stack, Text, Title } from "@mantine/core";
+import { Button, Center, Stack, Text, Title } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useParams } from "react-router";
+import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { actionTarget } from "@/components/error/actions";
 import { useErrorPresentation } from "@/components/error/useErrorPresentation";
 import { API_BASE_URL } from "@/config";
@@ -75,12 +76,7 @@ export const ProjectAccessGuard = ({ children }: { children: ReactNode }) => {
 	if (!projectId) return <>{children}</>;
 
 	if (isLoading) {
-		return (
-			<Stack gap="md" p="xl">
-				<Skeleton height={32} width={240} />
-				<Skeleton height={160} />
-			</Stack>
-		);
+		return <BeautifulLoading />;
 	}
 
 	if (data && data.ok) {
