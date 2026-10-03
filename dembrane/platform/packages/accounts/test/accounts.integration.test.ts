@@ -644,6 +644,35 @@ run("accounts routes against Postgres", () => {
     expect(review.status).toBe(409);
   });
 
+  test("a repeat offer after complete billing details asks for none: no new task, signing leaves them done", async () => {
+    const billingTasks = async () =>
+      (await store.tasks(w.db, w.orgId)).filter((t) => t.kind === "billing_details");
+    expect((await billingTasks()).map((t) => t.status)).toEqual(["done"]);
+    const pushed = K.PushOfferResponse.parse(
+      (await call(w, "POST", `${S()}/offers`, "staff", offerBody({ language: "en" }))).data,
+    );
+    expect((await billingTasks()).map((t) => t.status)).toEqual(["done"]);
+    const { body } = await signPayload(pushed.document.id, "admin");
+    expect(
+      (await call(w, "POST", `${C()}/documents/${pushed.document.id}/sign`, "admin", body)).status,
+    ).toBe(200);
+    expect((await billingTasks()).map((t) => t.status)).toEqual(["done"]);
+  });
+
+  test("incomplete billing details still get exactly one locked task across offers", async () => {
+    const account = await store.billing(w.db, w.orgId);
+    await store.updateBilling(w.db, account?.id as string, { billing_city: null });
+    for (let i = 0; i < 2; i++)
+      K.PushOfferResponse.parse(
+        (await call(w, "POST", `${S()}/offers`, "staff", offerBody({ language: "en" }))).data,
+      );
+    const open = (await store.tasks(w.db, w.orgId)).filter(
+      (t) => t.kind === "billing_details" && t.status !== "done",
+    );
+    expect(open.map((t) => t.status)).toEqual(["locked"]);
+    await store.updateBilling(w.db, account?.id as string, { billing_city: "Testdorp" });
+  });
+
   // ── tasks ───────────────────────────────────────────────────────────
   test("tasks: staff create, customers submit text or files, staff approve, send back or withdraw", async () => {
     expect((await call(w, "POST", `${S()}/tasks`, "admin", { title: "x" })).status).toBe(403);
