@@ -17,7 +17,9 @@ import { routerPaths } from "./routes";
 // every state it lists, at 1280 and 390 wide. Run it with `pnpm test:grammar`
 // (e2e/grammar.config.ts); it skips itself in the default e2e run and when the
 // GRAMMAR_E2E_* login is not set. GRAMMAR_E2E_ONLY=<substring> runs only the
-// flows whose path contains it.
+// flows whose path contains it; GRAMMAR_E2E_OWN_WORKSPACE_ID is a workspace of
+// the login's own where the empty project lives (empty variants skip without it);
+// GRAMMAR_E2E_REPORT_ONLY=1 writes the report without failing any page.
 
 const env = (name: string) => process.env[`GRAMMAR_E2E_${name}`] ?? "";
 const LOGINS = {
@@ -32,6 +34,7 @@ const configured = Boolean(
 );
 const AXE_TAGS = ["wcag2a", "wcag2aa", "wcag21aa"];
 const UUID = "[0-9a-f-]{36}";
+const EMPTY_PROJECT = "Grammar check (empty)";
 
 // ---------- fixtures: the ids a flow's params name ----------
 
@@ -46,6 +49,8 @@ const FIXTURES: Record<
 		env?: string;
 		from?: string;
 		link?: RegExp;
+		/** Only a link whose text contains this. */
+		text?: string;
 		make?: { post: string; body?: Record<string, string> };
 	}
 > = {
@@ -71,7 +76,19 @@ const FIXTURES: Record<
 		from: "/o/$org/account",
 		link: new RegExp(`/documents/(${UUID})`),
 	},
+	// A project with nothing in it, for the empty states, in the check's own
+	// workspace so the demo the other sessions share stays as it is.
+	$emptyProject: {
+		from: "/w/$ownWorkspace/home",
+		link: new RegExp(`/projects/(${UUID})`),
+		make: {
+			body: { language: "en", name: EMPTY_PROJECT },
+			post: "/api/v2/workspaces/$ownWorkspace/projects",
+		},
+		text: EMPTY_PROJECT,
+	},
 	$org: { env: "ORG_ID", from: "/o", link: new RegExp(`/o/(${UUID})`) },
+	$ownWorkspace: { env: "OWN_WORKSPACE_ID" },
 	$presentation: {
 		make: { post: "/api/v2/bff/present/projects/$project/default" },
 	},
@@ -107,14 +124,14 @@ async function fixture(page: Page, name: string): Promise<string | null> {
 		if (from) {
 			await page.goto(`/en-US${from}`);
 			await settle(page);
-			const src = def.link.source;
 			id = await page.evaluate(
-				(src) =>
+				({ src, text }) =>
 					[...document.querySelectorAll("a[href]")]
+						.filter((a) => !text || a.textContent?.includes(text))
 						.map((a) => a.getAttribute("href") ?? "")
 						.map((h) => new RegExp(src).exec(h)?.[1])
 						.find(Boolean) ?? null,
-				src,
+				{ src: def.link.source, text: def.text },
 			);
 		}
 	}
@@ -190,25 +207,31 @@ function visits(): Visit[] {
 	const out: Visit[] = [];
 	for (const [key, flow] of Object.entries(flows)) {
 		if (only && !key.includes(only)) continue;
-		let paths = [key];
-		for (const [param, value] of Object.entries(flow.params ?? {})) {
-			const token = param === "*" ? "*" : `:${param}`;
-			paths = paths.flatMap((p) =>
-				(Array.isArray(value) ? value : [value]).map((v) =>
-					p.replace(token, v),
-				),
-			);
+		for (const variant of [
+			{ name: "", params: {} },
+			...(flow.variants ?? []),
+		]) {
+			let paths = [key];
+			const params = { ...flow.params, ...variant.params };
+			for (const [param, value] of Object.entries(params)) {
+				const token = param === "*" ? "*" : `:${param}`;
+				paths = paths.flatMap((p) =>
+					(Array.isArray(value) ? value : [value]).map((v) =>
+						p.replace(token, v),
+					),
+				);
+			}
+			for (const role of flow.roles ?? ["owner"])
+				for (const path of paths)
+					out.push({
+						flow,
+						key,
+						name: `${path}${role === "owner" ? "" : ` as ${role}`}${variant.name ? ` (${variant.name})` : ""}`,
+						path: path.replace(/\/$/, "") || "/",
+						portal: portal.has(key),
+						role,
+					});
 		}
-		for (const role of flow.roles ?? ["owner"])
-			for (const path of paths)
-				out.push({
-					flow,
-					key,
-					name: `${path}${role === "owner" ? "" : ` as ${role}`}`,
-					path: path.replace(/\/$/, "") || "/",
-					portal: portal.has(key),
-					role,
-				});
 	}
 	return out;
 }
@@ -240,8 +263,9 @@ async function logIn(browser: Browser, role: Visit["role"], baseURL?: string) {
 
 // Let the page finish loading: network quiet, loaders and skeletons gone.
 async function settle(page: Page) {
+	// Pages that poll never go quiet; the loaders below are the real signal.
 	await page
-		.waitForLoadState("networkidle", { timeout: 15_000 })
+		.waitForLoadState("networkidle", { timeout: 4_000 })
 		.catch(() => {});
 	await page
 		.waitForFunction(
@@ -303,8 +327,14 @@ async function check(page: Page, phone: boolean, portal: boolean) {
 	// Rule 03 (soft, a taste call): hover lifts a pressable card to white.
 	if (!phone) {
 		const card = page.locator(".app-do:not([data-selected]):visible").first();
-		if (await card.count()) {
-			await card.hover();
+		// A dialog over the page takes the pointer; then there is nothing to hover.
+		if (
+			(await card.count()) &&
+			(await card
+				.hover({ timeout: 2_000 })
+				.then(() => true)
+				.catch(() => false))
+		) {
 			await page.waitForTimeout(250);
 			const bg = await card.evaluate(
 				(el) => getComputedStyle(el).backgroundColor,
@@ -368,6 +398,7 @@ test.describe("design grammar", () => {
 
 	for (const visit of visits()) {
 		test(visit.name, async ({ browser }, info) => {
+			test.setTimeout(60_000 + 30_000 * (visit.flow.states?.length ?? 0));
 			const phone = info.project.name.endsWith("phone");
 			const viewport = info.project.use.viewport ?? {
 				height: 800,
@@ -466,6 +497,9 @@ test.describe("design grammar", () => {
 					c.hard.map((f) => `  ${state}  ${f.rule}  ${f.target}  ${f.detail}`),
 				)
 				.join("\n");
+			// A survey run records everything and fails nothing, so Playwright
+			// keeps one worker instead of starting a new one per failing page.
+			if (env("REPORT_ONLY")) return;
 			expect(
 				checks.flatMap(([, c]) => c.hard),
 				`${visit.name} at ${viewport.width}px:\n${listing}`,

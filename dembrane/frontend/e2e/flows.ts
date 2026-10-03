@@ -8,6 +8,9 @@
 //
 //   params     ":name" -> a fixture ("$project") or a literal. A list visits
 //              the page once per value (tabs behind a splat or :tab).
+//   variants   more visits with some params swapped: "empty" is every project
+//              page again on a project with nothing in it, in the check's own
+//              workspace, for the empty states.
 //   states     what to open on the page before checking it again: a name and
 //              the data-testids to click in order. The page as it loads is
 //              always checked first, so states only lists what is behind a
@@ -28,12 +31,15 @@ export type Fixture =
 	| "$presentation"
 	| "$canvas"
 	| "$recipe"
-	| "$demo";
+	| "$demo"
+	| "$ownWorkspace"
+	| "$emptyProject";
 export type State = { name: string; clicks: string[] };
 export type Flow = {
 	skip?: string;
 	auth?: false;
 	params?: Record<string, Fixture | string | string[]>;
+	variants?: { name: string; params: Record<string, Fixture | string> }[];
 	states?: State[];
 	roles?: ("owner" | "staff")[];
 	viewports?: ("desktop" | "phone")[];
@@ -48,6 +54,12 @@ const project = {
 	projectId: "$project",
 	workspaceId: "$workspace",
 } as const;
+const EMPTY = [
+	{
+		name: "empty",
+		params: { projectId: "$emptyProject", workspaceId: "$ownWorkspace" },
+	},
+] as const satisfies Flow["variants"];
 
 export const flows: Record<string, Flow> = {
 	"/": REDIRECT,
@@ -150,8 +162,14 @@ export const flows: Record<string, Flow> = {
 	"/w/:workspaceId/projects": REDIRECT,
 
 	"/w/:workspaceId/projects/:projectId": REDIRECT,
-	"/w/:workspaceId/projects/:projectId/access": { params: project },
-	"/w/:workspaceId/projects/:projectId/analysis": { params: project },
+	"/w/:workspaceId/projects/:projectId/access": {
+		params: project,
+		variants: [...EMPTY],
+	},
+	"/w/:workspaceId/projects/:projectId/analysis": {
+		params: project,
+		variants: [...EMPTY],
+	},
 	"/w/:workspaceId/projects/:projectId/analysis/:tab": {
 		params: { ...project, tab: ["results", "recipes", "runs"] },
 	},
@@ -174,10 +192,12 @@ export const flows: Record<string, Flow> = {
 			{ clicks: ["chat-templates-more-button"], name: "templates" },
 			{ clicks: ["ask-home-try-agentic"], name: "agentic intro" },
 		],
+		variants: [...EMPTY],
 	},
 	"/w/:workspaceId/projects/:projectId/conversations": {
 		params: project,
 		states: [{ clicks: ["conversation-upload-button"], name: "upload" }],
+		variants: [...EMPTY],
 	},
 	"/w/:workspaceId/projects/:projectId/conversations/:conversationId": {
 		params: { ...project, conversationId: "$conversation" },
@@ -198,31 +218,55 @@ export const flows: Record<string, Flow> = {
 	"/w/:workspaceId/projects/:projectId/debug": {
 		skip: "a developer page, outside the grammar",
 	},
-	"/w/:workspaceId/projects/:projectId/export": { params: project },
+	"/w/:workspaceId/projects/:projectId/export": {
+		params: project,
+		variants: [...EMPTY],
+	},
 	"/w/:workspaceId/projects/:projectId/home": {
 		params: project,
 		states: [{ clicks: ["project-home-rename-button"], name: "rename" }],
+		variants: [...EMPTY],
 	},
-	"/w/:workspaceId/projects/:projectId/host-guide": { params: project },
-	"/w/:workspaceId/projects/:projectId/integrations": { params: project },
-	"/w/:workspaceId/projects/:projectId/library": { params: project },
+	"/w/:workspaceId/projects/:projectId/host-guide": {
+		params: project,
+		variants: [...EMPTY],
+	},
+	"/w/:workspaceId/projects/:projectId/integrations": {
+		params: project,
+		variants: [...EMPTY],
+	},
+	"/w/:workspaceId/projects/:projectId/library": {
+		params: project,
+		variants: [...EMPTY],
+	},
 	"/w/:workspaceId/projects/:projectId/library/popcorn": REDIRECT,
-	"/w/:workspaceId/projects/:projectId/map": { params: project },
-	"/w/:workspaceId/projects/:projectId/monitor": { params: project },
+	"/w/:workspaceId/projects/:projectId/map": {
+		params: project,
+		variants: [...EMPTY],
+	},
+	"/w/:workspaceId/projects/:projectId/monitor": {
+		params: project,
+		variants: [...EMPTY],
+	},
 	"/w/:workspaceId/projects/:projectId/overview": {
 		params: project,
 		states: [
 			{ clicks: ["project-actions-clone-button"], name: "clone" },
 			{ clicks: ["project-actions-delete-button"], name: "delete" },
 		],
+		variants: [...EMPTY],
 	},
 	// Its switches save as they change, on demo data the other sessions share,
 	// so only the preview, which changes nothing, is opened.
 	"/w/:workspaceId/projects/:projectId/portal-editor": {
 		params: project,
 		states: [{ clicks: ["portal-editor-preview-toggle"], name: "preview" }],
+		variants: [...EMPTY],
 	},
-	"/w/:workspaceId/projects/:projectId/present": { params: project },
+	"/w/:workspaceId/projects/:projectId/present": {
+		params: project,
+		variants: [...EMPTY],
+	},
 	"/w/:workspaceId/projects/:projectId/present/:presentationId/edit": {
 		params: { ...project, presentationId: "$presentation" },
 	},
@@ -232,10 +276,17 @@ export const flows: Record<string, Flow> = {
 			{ clicks: ["report-actions-menu"], name: "actions" },
 			{ clicks: ["report-update-button"], name: "update" },
 		],
+		variants: [...EMPTY],
 	},
 	"/w/:workspaceId/projects/:projectId/sharing": REDIRECT,
-	"/w/:workspaceId/projects/:projectId/upload": { params: project },
-	"/w/:workspaceId/projects/:projectId/usage": { params: project },
+	"/w/:workspaceId/projects/:projectId/upload": {
+		params: project,
+		variants: [...EMPTY],
+	},
+	"/w/:workspaceId/projects/:projectId/usage": {
+		params: project,
+		variants: [...EMPTY],
+	},
 	"/w/:workspaceId/projects/new": { params: { workspaceId: "$workspace" } },
 	"/w/:workspaceId/settings/*": {
 		params: {
