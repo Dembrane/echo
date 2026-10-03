@@ -16,10 +16,14 @@ import { routerPaths } from "./routes";
 // rules in grammar-checks.ts, on every page in the flow map (e2e/flows.ts) and
 // every state it lists, at 1280 and 390 wide. Run it with `pnpm test:grammar`
 // (e2e/grammar.config.ts); it skips itself in the default e2e run and when the
-// GRAMMAR_E2E_* login is not set. GRAMMAR_E2E_ONLY=<a,b> runs only the
-// flows whose path contains one of them; GRAMMAR_E2E_OWN_WORKSPACE_ID is a workspace of
-// the login's own where the empty project lives (empty variants skip without it);
-// GRAMMAR_E2E_REPORT_ONLY=1 writes the report without failing any page.
+// login below is not set. Settings, all GRAMMAR_E2E_*:
+//   EMAIL, PASSWORD, WORKSPACE_ID, PROJECT_ID   the owner and the demo (required)
+//   ORG_ID           the demo's organisation (organisation and signing pages)
+//   OWN_WORKSPACE_ID a workspace of the login's own for the empty project
+//   STAFF_EMAIL, STAFF_PASSWORD   a dembrane admin, for /admin
+//   ONLY=a,b         only the flows whose path contains one of these
+//   REPORT_ONLY=1    write the report without failing any page
+// Pages whose setting is missing are skipped, and the report says why.
 
 const env = (name: string) => process.env[`GRAMMAR_E2E_${name}`] ?? "";
 const LOGINS = {
