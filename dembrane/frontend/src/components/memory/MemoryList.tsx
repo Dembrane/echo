@@ -1,12 +1,18 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Button, Group, Loader, Stack, Text } from "@mantine/core";
+import { Button, Group, Skeleton, Stack, Text } from "@mantine/core";
 import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { toast } from "@/components/common/Toaster";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { notifyError } from "@/components/error/notifyError";
+import { ruleBetween } from "@/components/workspace/ruleBetween";
 import { type AgentMemory, useDeleteMemoryMutation } from "./hooks";
+
+// The list only knows that the read failed, not why. Module-level so
+// ErrorNotice sees the same object on every render.
+const MEMORIES_UNAVAILABLE = new Error("Memories unavailable");
 
 type MemoryListProps = {
 	memories: AgentMemory[] | undefined;
@@ -31,9 +37,11 @@ export const MemoryList = ({
 
 	if (isLoading) {
 		return (
-			<Group justify="center" py="md">
-				<Loader size="sm" />
-			</Group>
+			<Stack gap="sm">
+				<Skeleton height={16} width="80%" />
+				<Skeleton height={16} width="64%" />
+				<Skeleton height={16} width="72%" />
+			</Stack>
 		);
 	}
 
@@ -41,15 +49,16 @@ export const MemoryList = ({
 	// empty state as reassurance about what the assistant keeps.
 	if (isError) {
 		return (
-			<Text size="sm">
-				<Trans>Couldn't load memories. Refresh to try again.</Trans>
-			</Text>
+			<ErrorNotice
+				error={MEMORIES_UNAVAILABLE}
+				title={t`Couldn't load memories. Refresh to try again.`}
+			/>
 		);
 	}
 
 	if (!memories || memories.length === 0) {
 		return (
-			<Text size="sm">
+			<Text size="sm" c="dimmed">
 				{emptyText ??
 					t`Nothing saved yet. The assistant adds notes here as people chat.`}
 			</Text>
@@ -67,16 +76,16 @@ export const MemoryList = ({
 
 	return (
 		<Stack gap={0}>
-			{memories.map((memory) => (
+			{memories.map((memory, i) => (
 				<Group
 					key={memory.id}
 					wrap="nowrap"
 					align="flex-start"
 					justify="space-between"
 					py="sm"
-					className="border-b border-gray-200 last:border-b-0"
+					style={ruleBetween(i, memories.length)}
 				>
-					<Stack gap={2} className="min-w-0">
+					<Stack gap={0} className="min-w-0">
 						<Text className="whitespace-pre-wrap break-words">
 							{memory.content}
 						</Text>

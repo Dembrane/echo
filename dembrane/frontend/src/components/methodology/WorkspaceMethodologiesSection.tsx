@@ -16,6 +16,7 @@ import {
 } from "@mantine/core";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "@/components/common/Toaster";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { testId } from "@/lib/testUtils";
 import {
 	type MethodologyListItem,
@@ -155,11 +156,11 @@ export const WorkspaceMethodologiesSection = ({
 		<Paper withBorder radius="sm" p="md" {...testId("workspace-methodologies")}>
 			<Stack gap="md">
 				<Group justify="space-between" align="flex-start">
-					<Stack gap={4}>
+					<Stack gap="xs">
 						<Title order={5}>
 							<Trans>Methodologies</Trans>
 						</Title>
-						<Text size="sm">
+						<Text size="sm" c="dimmed">
 							<Trans>Named ways of working your team can reuse.</Trans>
 						</Text>
 					</Stack>
@@ -171,7 +172,7 @@ export const WorkspaceMethodologiesSection = ({
 						}}
 						{...testId("methodology-new-button")}
 					>
-						<Trans>New methodology</Trans>
+						<Trans>Create methodology</Trans>
 					</Button>
 				</Group>
 
@@ -182,11 +183,13 @@ export const WorkspaceMethodologiesSection = ({
 						<Skeleton height={16} width="28%" />
 					</Stack>
 				) : methodologiesQuery.isError ? (
-					<Text size="sm">
-						<Trans>Could not load methodologies.</Trans>
-					</Text>
+					<ErrorNotice
+						error={methodologiesQuery.error}
+						title={t`Could not load methodologies.`}
+						onRetry={() => void methodologiesQuery.refetch()}
+					/>
 				) : methodologies.length === 0 ? (
-					<Text size="sm">
+					<Text size="sm" c="dimmed">
 						<Trans>No methodologies yet.</Trans>
 					</Text>
 				) : (
@@ -198,17 +201,16 @@ export const WorkspaceMethodologiesSection = ({
 								align="flex-start"
 								wrap="nowrap"
 								p="sm"
-								className="border-t"
-								style={{ borderColor: "var(--mantine-color-primary-light)" }}
+								style={{ borderTop: "1px solid var(--app-rule-color)" }}
 								{...testId(`methodology-row-${methodology.id}`)}
 							>
-								<Stack gap={4} style={{ minWidth: 0 }}>
+								<Stack gap="xs" style={{ minWidth: 0 }}>
 									<Group gap="xs" wrap="wrap">
 										<Text size="sm">
 											{safeText(methodology.name) || t`Untitled methodology`}
 										</Text>
 										{methodology.is_seeded ? (
-											<Badge size="xs" variant="outline">
+											<Badge size="xs">
 												<Trans>dembrane</Trans>
 											</Badge>
 										) : null}
@@ -227,7 +229,6 @@ export const WorkspaceMethodologiesSection = ({
 								) : (
 									<Button
 										size="xs"
-										variant="outline"
 										onClick={() => setEditing(methodology)}
 										{...testId(`methodology-edit-${methodology.id}`)}
 									>
@@ -244,7 +245,7 @@ export const WorkspaceMethodologiesSection = ({
 				<Modal
 					opened
 					onClose={reset}
-					title={t`New methodology`}
+					title={t`Create methodology`}
 					trapFocus={false}
 					{...testId("methodology-new-modal")}
 				>
@@ -275,20 +276,22 @@ export const WorkspaceMethodologiesSection = ({
 							}
 							{...testId("methodology-new-framing")}
 						/>
-						<Group justify="flex-end" gap="xs" pt="xs">
+						<Group justify="flex-start" gap="sm" pt="xs">
 							<Button
-								variant="subtle"
-								onClick={reset}
-								{...testId("methodology-new-cancel")}
-							>
-								<Trans>Cancel</Trans>
-							</Button>
-							<Button
+								variant="filled"
 								loading={createMutation.isPending}
 								onClick={() => void createMethodology()}
 								{...testId("methodology-new-save")}
 							>
 								<Trans>Create</Trans>
+							</Button>
+							<Button
+								variant="subtle"
+								color="gray"
+								onClick={reset}
+								{...testId("methodology-new-cancel")}
+							>
+								<Trans>Cancel</Trans>
 							</Button>
 						</Group>
 					</Stack>
@@ -357,20 +360,22 @@ export const WorkspaceMethodologiesSection = ({
 							}
 							{...testId("methodology-edit-note")}
 						/>
-						<Group justify="flex-end" gap="xs" pt="xs">
+						<Group justify="flex-start" gap="sm" pt="xs">
 							<Button
-								variant="subtle"
-								onClick={reset}
-								{...testId("methodology-edit-cancel")}
-							>
-								<Trans>Cancel</Trans>
-							</Button>
-							<Button
+								variant="filled"
 								loading={editMutation.isPending}
 								onClick={() => void saveMethodology()}
 								{...testId("methodology-edit-save")}
 							>
 								<Trans>Save</Trans>
+							</Button>
+							<Button
+								variant="subtle"
+								color="gray"
+								onClick={reset}
+								{...testId("methodology-edit-cancel")}
+							>
+								<Trans>Cancel</Trans>
 							</Button>
 						</Group>
 					</Stack>

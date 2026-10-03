@@ -24,7 +24,6 @@ export const ArtefactModal = ({
 			onClose={onClose}
 			onExitTransitionEnd={onExited}
 			size="xl"
-			radius="md"
 			yOffset="10vh"
 			padding="xl"
 			{...testId("portal-verified-artefact-modal")}

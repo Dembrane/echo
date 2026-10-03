@@ -1,7 +1,8 @@
 import { Trans } from "@lingui/react/macro";
 import { Badge } from "@mantine/core";
 import type { ReactNode } from "react";
-import { resolveTierBadge, TIER_BADGE_COLOR, type Tier } from "@/lib/tiers";
+import { resolveTierBadge } from "@/lib/tiers";
+import { tierColor } from "./TierBadge";
 
 type TierStatusBadgeProps = {
 	tier: string;
@@ -41,11 +42,7 @@ export const TierStatusBadge = ({
 
 	if (kind === "popular") {
 		return (
-			<Badge
-				variant="light"
-				color={TIER_BADGE_COLOR[tier as Tier] ?? "primary"}
-				size="xs"
-			>
+			<Badge variant="light" color={tierColor(tier)} size="xs">
 				{popularLabel ?? <Trans>Popular</Trans>}
 			</Badge>
 		);

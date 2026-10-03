@@ -6,7 +6,7 @@ export const CopyIconButton = ({
 	onCopy,
 	copied,
 	copyTooltip = t`Copy`,
-	size = 16,
+	size = 20,
 	...props
 }: {
 	copyTooltip?: string;

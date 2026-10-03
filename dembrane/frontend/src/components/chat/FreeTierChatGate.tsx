@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Badge, Box, Button, Stack, Text } from "@mantine/core";
+import { Alert, Button, Stack, Text } from "@mantine/core";
 import { LockIcon } from "@phosphor-icons/react";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -73,22 +73,12 @@ export function VoiceCapUpgradeModal({
  */
 export function ChatTurnLimitCard({ onUpgrade }: { onUpgrade: () => void }) {
 	return (
-		<Box
-			style={{
-				background:
-					"repeating-linear-gradient(45deg, color-mix(in srgb, var(--mantine-color-primary-6) 4%, transparent) 0 8px, color-mix(in srgb, var(--mantine-color-primary-6) 8%, transparent) 8px 16px)",
-				borderRadius: 8,
-			}}
-			p="md"
+		<Alert
+			color="gray"
+			icon={<LockIcon size={20} />}
+			title={<Trans>Upgrade to continue</Trans>}
 		>
-			<Stack gap="xs" align="flex-start">
-				<Badge
-					color="primary"
-					variant="light"
-					leftSection={<LockIcon size={12} />}
-				>
-					<Trans>Upgrade to continue</Trans>
-				</Badge>
+			<Stack gap="sm" align="flex-start">
 				<Text size="sm">
 					<Trans>
 						You've reached the free plan limit for this chat. Upgrade to keep
@@ -99,6 +89,6 @@ export function ChatTurnLimitCard({ onUpgrade }: { onUpgrade: () => void }) {
 					{t`See upgrade options`}
 				</Button>
 			</Stack>
-		</Box>
+		</Alert>
 	);
 }

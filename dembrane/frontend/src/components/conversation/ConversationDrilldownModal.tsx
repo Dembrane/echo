@@ -1,6 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
+	Alert,
 	Button,
 	Divider,
 	Group,
@@ -64,7 +65,7 @@ const Timeline = ({ steps }: { steps: MonitorTimelineStep[] }) => {
 	return (
 		<>
 			<Divider />
-			<Stack gap={4}>
+			<Stack gap="xs">
 				<Text size="sm">
 					<Trans>Timeline</Trans>
 				</Text>
@@ -207,21 +208,22 @@ const ConversationDrilldown = ({
 			)}
 
 			{conversation.has_error && (
-				<Text size="xs" c="red.7">
+				<Alert color="red">
 					<Trans>
 						Some of the recent audio couldn't be transcribed. The recording is
 						saved.
 					</Trans>
-				</Text>
+				</Alert>
 			)}
 
 			<Timeline steps={conversation.timeline} />
 
-			<Group justify="space-between" align="center">
+			<Group align="center">
 				{base && (
-					<I18nLink
+					<Button
+						component={I18nLink}
 						to={`${base}/conversations/${conversation.id}`}
-						className="no-underline"
+						size="xs"
 						onClick={() =>
 							posthog.capture("monitor_conversation_opened", {
 								conversation_id: conversation.id,
@@ -233,16 +235,14 @@ const ConversationDrilldown = ({
 							})
 						}
 					>
-						<Button variant="subtle" size="xs">
-							<Trans>Open conversation</Trans>
-						</Button>
-					</I18nLink>
+						<Trans>Open conversation</Trans>
+					</Button>
 				)}
 				<Button
 					variant="subtle"
 					color="red"
 					size="xs"
-					leftSection={<TrashIcon size={15} />}
+					leftSection={<TrashIcon size={20} />}
 					onClick={confirm.open}
 				>
 					<Trans>Delete</Trans>

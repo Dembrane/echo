@@ -1,8 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Paper, Stack, Text } from "@mantine/core";
+import { Alert, Stack, Text } from "@mantine/core";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { baseColors } from "@/colors";
 import { PARTICIPANT_BASE_URL } from "@/config";
 import { useWhitelabelLogo } from "@/hooks/useWhitelabelLogo";
 import { testId } from "@/lib/testUtils";
@@ -94,48 +93,30 @@ export const CanvasFrame = ({
 		});
 	}, [generation, brandLogoDataUrl, projectId]);
 
+	const rule = "var(--app-stroke) solid var(--app-rule-color)";
+
 	if (!generation) {
 		return (
-			<Paper
-				withBorder
-				className="rounded-md"
-				p="xl"
-				style={{ backgroundColor: baseColors.parchment }}
-				{...testId("canvas-frame-empty")}
-			>
-				<Stack gap="xs" align="center" py="xl">
-					<Text size="lg">
-						<Trans>Preparing this canvas</Trans>
-					</Text>
-					<Text size="sm" ta="center">
-						<Trans>A first version will appear here when it is ready.</Trans>
-					</Text>
-				</Stack>
-			</Paper>
+			<Text size="sm" c="dimmed" {...testId("canvas-frame-empty")}>
+				<Trans>
+					Preparing this canvas. A first version will appear here when it is
+					ready.
+				</Trans>
+			</Text>
 		);
 	}
 
 	if (generation.status === "error") {
 		return (
-			<Paper
-				withBorder
-				className="rounded-md"
-				p="xl"
-				style={{
-					backgroundColor: baseColors.parchment,
-					borderColor: "var(--mantine-color-red-3)",
-				}}
+			<Alert
+				color="red"
+				title={t`This canvas could not update.`}
 				{...testId("canvas-frame-error")}
 			>
-				<Stack gap="xs" align="center" py="xl">
-					<Text size="lg">
-						<Trans>This canvas could not update.</Trans>
-					</Text>
-					<Text size="sm" ta="center">
-						<Trans>The previous versions are still available below.</Trans>
-					</Text>
-				</Stack>
-			</Paper>
+				<Text size="sm">
+					<Trans>The previous versions are still available below.</Trans>
+				</Text>
+			</Alert>
 		);
 	}
 
@@ -146,14 +127,13 @@ export const CanvasFrame = ({
 				aria-label={t`Canvas preview`}
 				sandbox="allow-scripts"
 				srcDoc={srcDoc ?? ""}
-				className={
-					fullscreen
-						? "block w-full border-0"
-						: "block w-full rounded-md border"
-				}
+				className="block w-full"
 				style={{
-					backgroundColor: baseColors.parchment,
-					borderColor: "var(--mantine-color-primary-light)",
+					// Read: a rule above and below, none in fullscreen.
+					borderBottom: fullscreen ? "0" : rule,
+					borderLeft: "0",
+					borderRight: "0",
+					borderTop: fullscreen ? "0" : rule,
 					height: fullscreen ? "100%" : height,
 					minHeight: fullscreen ? "100dvh" : undefined,
 					width: fullscreen ? "100dvw" : undefined,

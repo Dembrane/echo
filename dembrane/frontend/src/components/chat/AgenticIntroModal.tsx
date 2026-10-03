@@ -38,7 +38,7 @@ export const AgenticIntroModal = ({
 				styles={{ itemWrapper: { alignItems: "baseline" } }}
 			>
 				<List.Item>
-					<Stack gap={2}>
+					<Stack gap="xs">
 						<Text size="sm">
 							<Trans>Multi-step analysis.</Trans>
 						</Text>
@@ -50,7 +50,7 @@ export const AgenticIntroModal = ({
 					</Stack>
 				</List.Item>
 				<List.Item>
-					<Stack gap={2}>
+					<Stack gap="xs">
 						<Text size="sm">
 							<Trans>Help setting up your project.</Trans>
 						</Text>
@@ -60,7 +60,7 @@ export const AgenticIntroModal = ({
 					</Stack>
 				</List.Item>
 				<List.Item>
-					<Stack gap={2}>
+					<Stack gap="xs">
 						<Text size="sm">
 							<Trans>Ask about the app.</Trans>
 						</Text>
@@ -72,16 +72,17 @@ export const AgenticIntroModal = ({
 					</Stack>
 				</List.Item>
 			</List>
-			<Group justify="flex-end" gap="sm">
-				<Button variant="subtle" onClick={onClose}>
-					<Trans>Not now</Trans>
-				</Button>
+			<Group justify="flex-start" gap="sm">
 				<Button
+					variant="filled"
 					onClick={onConfirm}
 					aria-label={t`Start a new chat`}
 					{...testId("agentic-intro-modal-confirm")}
 				>
 					<Trans>Start a new chat</Trans>
+				</Button>
+				<Button variant="subtle" color="gray" onClick={onClose}>
+					<Trans>Not now</Trans>
 				</Button>
 			</Group>
 		</Stack>

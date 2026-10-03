@@ -2,12 +2,11 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	Button,
-	Center,
 	Container,
 	Group,
-	Loader,
 	Paper,
 	Radio,
+	Skeleton,
 	Stack,
 	Stepper,
 	Switch,
@@ -16,7 +15,6 @@ import {
 	Title,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
-import { modals } from "@mantine/modals";
 import { usePostHog } from "@posthog/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -35,6 +33,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useCreateWorkspaceProject } from "@/hooks/useWorkspaceProjects";
 import { ApiRequestError } from "@/lib/errors/read";
+import { openConfirm } from "@/lib/openConfirm";
 import { isOutsiderRole } from "@/lib/roles";
 
 type Access = "workspace" | "private";
@@ -93,7 +92,7 @@ export const CreateProjectRoute = () => {
 		AGENTIC_CHAT_IS_DEFAULT,
 	);
 
-	useDocumentTitle(t`New project | dembrane`);
+	useDocumentTitle(t`Create project | dembrane`);
 
 	const tier = workspace?.tier ?? "pilot";
 	const privateTiers = new Set(["innovator", "changemaker", "guardian"]);
@@ -162,14 +161,13 @@ export const CreateProjectRoute = () => {
 
 	const handleCancel = () => {
 		if (name.trim() || context.trim() || keyTerms) {
-			modals.openConfirmModal({
+			openConfirm({
 				children: (
 					<Text size="sm">
 						<Trans>Your draft won't be saved.</Trans>
 					</Text>
 				),
-				cancelProps: { color: "gray", variant: "subtle" },
-				confirmProps: { color: "red", variant: "filled" },
+				danger: true,
 				labels: { cancel: t`Keep editing`, confirm: t`Discard` },
 				onConfirm: backToProjects,
 				title: t`Discard this project?`,
@@ -181,9 +179,12 @@ export const CreateProjectRoute = () => {
 
 	if (!workspace) {
 		return (
-			<Center style={{ height: "60vh" }}>
-				<Loader size="sm" color="gray" />
-			</Center>
+			<Container size="sm" py="xl" px="lg">
+				<Stack gap="xl">
+					<Skeleton h={40} w={240} />
+					<Skeleton h={160} />
+				</Stack>
+			</Container>
 		);
 	}
 
@@ -216,10 +217,10 @@ export const CreateProjectRoute = () => {
 
 	return (
 		<Container size="sm" py="xl" px="lg">
-			<Stack gap={28}>
-				<Stack gap={6}>
-					<Title order={3}>
-						<Trans>New project</Trans>
+			<Stack gap="xl">
+				<Stack gap="xs">
+					<Title order={2}>
+						<Trans>Create project</Trans>
 					</Title>
 					<Text size="sm" c="dimmed">
 						<Trans>
@@ -234,10 +235,9 @@ export const CreateProjectRoute = () => {
 						if (i <= step) setStep(i);
 					}}
 					size="sm"
-					iconSize={28}
 				>
 					<Stepper.Step label={t`Name`}>
-						<Stack gap={16} mt="md">
+						<Stack gap="md" mt="md">
 							<TextInput
 								autoFocus
 								label={t`Project name`}
@@ -272,7 +272,7 @@ export const CreateProjectRoute = () => {
 					</Stepper.Step>
 
 					<Stepper.Step label={t`Key terms`}>
-						<Stack gap={16} mt="md">
+						<Stack gap="md" mt="md">
 							<KeyTermsInput
 								autoFocus
 								value={keyTerms}
@@ -286,18 +286,18 @@ export const CreateProjectRoute = () => {
 					</Stepper.Step>
 
 					<Stepper.Step label={t`Access`}>
-						<Stack gap={14} mt="md">
+						<Stack gap="md" mt="md">
 							<Radio.Group
 								label={t`Who can see this project?`}
 								description={t`You can change this later in project settings.`}
 								value={access}
 								onChange={(v) => setAccess(v as Access)}
 							>
-								<Stack gap={10} mt={8}>
+								<Stack gap="sm" mt="sm">
 									<Radio
 										value="workspace"
 										label={
-											<Stack gap={2}>
+											<Stack gap="xs">
 												<Text size="sm">
 													<Trans>Open to the workspace</Trans>
 												</Text>
@@ -314,7 +314,7 @@ export const CreateProjectRoute = () => {
 										value="private"
 										disabled={!privateAvailable}
 										label={
-											<Stack gap={2}>
+											<Stack gap="xs">
 												<Text
 													size="sm"
 													c={privateAvailable ? undefined : "dimmed"}
@@ -342,16 +342,16 @@ export const CreateProjectRoute = () => {
 					</Stepper.Step>
 
 					<Stepper.Step label={t`Review`}>
-						<Stack gap={14} mt="md">
-							<Paper withBorder p="md" radius="sm">
-								<Stack gap={10}>
-									<Group gap={12} align="baseline">
+						<Stack gap="md" mt="md">
+							<Paper withBorder p="md">
+								<Stack gap="sm">
+									<Group gap="md" align="baseline">
 										<Text size="xs" c="dimmed" w={100}>
 											<Trans>Name</Trans>
 										</Text>
 										<Text size="sm">{name.trim() || t`(missing)`}</Text>
 									</Group>
-									<Group gap={12} align="flex-start" wrap="nowrap">
+									<Group gap="md" align="flex-start" wrap="nowrap">
 										<Text size="xs" c="dimmed" w={100}>
 											<Trans>Project context</Trans>
 										</Text>
@@ -363,7 +363,7 @@ export const CreateProjectRoute = () => {
 											{context.trim() || t`(none)`}
 										</Text>
 									</Group>
-									<Group gap={12} align="flex-start" wrap="nowrap">
+									<Group gap="md" align="flex-start" wrap="nowrap">
 										<Text size="xs" c="dimmed" w={100}>
 											<Trans>Key terms</Trans>
 										</Text>
@@ -375,13 +375,13 @@ export const CreateProjectRoute = () => {
 											{keyTerms || t`(none)`}
 										</Text>
 									</Group>
-									<Group gap={12} align="baseline">
+									<Group gap="md" align="baseline">
 										<Text size="xs" c="dimmed" w={100}>
 											<Trans>Workspace</Trans>
 										</Text>
 										<Text size="sm">{workspace.name}</Text>
 									</Group>
-									<Group gap={12} align="baseline">
+									<Group gap="md" align="baseline">
 										<Text size="xs" c="dimmed" w={100}>
 											<Trans>Access</Trans>
 										</Text>
@@ -394,7 +394,7 @@ export const CreateProjectRoute = () => {
 										</Text>
 									</Group>
 									{ENABLE_AGENTIC_CHAT ? (
-										<Group gap={12} align="baseline">
+										<Group gap="md" align="baseline">
 											<Text size="xs" c="dimmed" w={100}>
 												<Trans>Setup</Trans>
 											</Text>
@@ -407,7 +407,7 @@ export const CreateProjectRoute = () => {
 											</Text>
 										</Group>
 									) : null}
-									<Group gap={12} align="baseline">
+									<Group gap="md" align="baseline">
 										<Text size="xs" c="dimmed" w={100}>
 											<Trans>Tier</Trans>
 										</Text>
@@ -421,24 +421,19 @@ export const CreateProjectRoute = () => {
 					</Stepper.Step>
 				</Stepper>
 
-				<Group justify="space-between" mt="sm">
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={step === 0 ? handleCancel : () => setStep(step - 1)}
-					>
-						{step === 0 ? <Trans>Cancel</Trans> : <Trans>Back</Trans>}
-					</Button>
+				<Group gap="sm" mt="sm">
 					{step < 3 ? (
 						<Button
+							variant="filled"
 							size="sm"
 							disabled={step === 0 && !canAdvanceFromName}
 							onClick={() => setStep(step + 1)}
 						>
-							<Trans>Next</Trans>
+							<Trans>Continue</Trans>
 						</Button>
 					) : (
 						<Button
+							variant="filled"
 							size="sm"
 							loading={submit.isPending}
 							disabled={!canCreate}
@@ -447,6 +442,14 @@ export const CreateProjectRoute = () => {
 							<Trans>Create project</Trans>
 						</Button>
 					)}
+					<Button
+						variant="subtle"
+						color="gray"
+						size="sm"
+						onClick={step === 0 ? handleCancel : () => setStep(step - 1)}
+					>
+						{step === 0 ? <Trans>Cancel</Trans> : <Trans>Back</Trans>}
+					</Button>
 				</Group>
 			</Stack>
 		</Container>

@@ -135,7 +135,7 @@ export const ProjectHomeRoute = () => {
 	return (
 		<PageContainer width="xl">
 			<Stack gap="xl">
-				<Stack gap={4}>
+				<Stack gap="xs">
 					{project?.name ? (
 						<Group gap="xs" align="center" wrap="nowrap">
 							<Title order={2} lineClamp={1}>
@@ -146,12 +146,11 @@ export const ProjectHomeRoute = () => {
 									<ActionIcon
 										variant="subtle"
 										color="gray"
-										size="md"
 										aria-label={t`Rename project`}
 										onClick={renameHandlers.open}
 										{...testId("project-home-rename-button")}
 									>
-										<PencilSimpleIcon size={18} />
+										<PencilSimpleIcon size={20} />
 									</ActionIcon>
 								</Tooltip>
 							)}
@@ -170,14 +169,14 @@ export const ProjectHomeRoute = () => {
 				<PortalSettingsOverview project={project} base={base} />
 
 				<Stack gap="sm">
-					<Text size="xs" c="dimmed" tt="uppercase">
+					<Title order={5}>
 						<Trans>Jump to</Trans>
-					</Text>
+					</Title>
 					<Group gap="sm" wrap="wrap">
 						{canChat && (
 							<Button
 								size="sm"
-								leftSection={<ChatCircleDotsIcon size={16} />}
+								leftSection={<ChatCircleDotsIcon size={20} />}
 								onClick={() => navigate(`${base}/chats/new`)}
 							>
 								<Trans>Start a chat</Trans>
@@ -186,8 +185,7 @@ export const ProjectHomeRoute = () => {
 						{canEditProject && (
 							<Button
 								size="sm"
-								leftSection={<UploadSimpleIcon size={16} />}
-								variant="outline"
+								leftSection={<UploadSimpleIcon size={20} />}
 								onClick={() => navigate(`${base}/upload`)}
 							>
 								<Trans>Upload audio</Trans>
@@ -195,8 +193,7 @@ export const ProjectHomeRoute = () => {
 						)}
 						<Button
 							size="sm"
-							leftSection={<PaintBrushIcon size={16} />}
-							variant="outline"
+							leftSection={<PaintBrushIcon size={20} />}
 							onClick={() => navigate(`${base}/portal-editor`)}
 						>
 							<Trans>Portal editor</Trans>
@@ -204,8 +201,7 @@ export const ProjectHomeRoute = () => {
 						<ProjectHostGuideLink projectId={projectId} variant="outline" />
 						<Button
 							size="sm"
-							leftSection={<FileTextIcon size={16} />}
-							variant="outline"
+							leftSection={<FileTextIcon size={20} />}
 							onClick={() => navigate(`${base}/report`)}
 						>
 							<Trans>Report</Trans>
@@ -214,8 +210,7 @@ export const ProjectHomeRoute = () => {
 							<>
 								<Button
 									size="sm"
-									leftSection={<TextAaIcon size={16} />}
-									variant="outline"
+									leftSection={<TextAaIcon size={20} />}
 									onClick={() =>
 										navigate(`${base}/portal-editor#${KEY_TERMS_HASH}`)
 									}
@@ -225,8 +220,7 @@ export const ProjectHomeRoute = () => {
 								</Button>
 								<Button
 									size="sm"
-									leftSection={<TargetIcon size={16} />}
-									variant="outline"
+									leftSection={<TargetIcon size={20} />}
 									onClick={() =>
 										navigate(`${base}/overview#${PROJECT_CONTEXT_HASH}`)
 									}
@@ -244,9 +238,9 @@ export const ProjectHomeRoute = () => {
 					recentConversations.length > 0) && (
 					<Stack gap="sm">
 						<Group justify="space-between" align="center" gap="sm">
-							<Text size="xs" c="dimmed" tt="uppercase">
+							<Title order={5}>
 								<Trans>Live & recent</Trans>
-							</Text>
+							</Title>
 							<Button
 								variant="subtle"
 								size="xs"
@@ -262,8 +256,8 @@ export const ProjectHomeRoute = () => {
 
 						{recentConversationsQuery.isLoading ? (
 							<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-								<Skeleton height={128} radius="sm" />
-								<Skeleton height={128} radius="sm" />
+								<Skeleton height={128} />
+								<Skeleton height={128} />
 							</SimpleGrid>
 						) : (
 							<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
@@ -275,80 +269,84 @@ export const ProjectHomeRoute = () => {
 									const isLocked = !!conversation.locked;
 									const startedAt = getConversationStartTime(conversation);
 
-									const card = (
-										<Card
-											withBorder
-											p="md"
-											radius="sm"
-											className={`h-full transition-colors ${isLocked ? "cursor-pointer" : ""} hover:!border-primary-400`}
-											onClick={
-												isLocked ? () => upgradeHandlers.open() : undefined
-											}
-										>
-											<Stack gap="xs">
-												<Stack gap={2} style={{ minWidth: 0 }}>
-													<Text size="sm" truncate>
-														{conversationTitle(conversation)}
+									const content = (
+										<Stack gap="xs">
+											<Stack gap="xs" style={{ minWidth: 0 }}>
+												<Text size="sm" truncate>
+													{conversationTitle(conversation)}
+												</Text>
+												<Group gap="xs" align="center" wrap="nowrap">
+													<Text size="xs" c="dimmed">
+														{startedAt
+															? new Date(startedAt).toLocaleDateString()
+															: ""}
 													</Text>
-													<Group gap="xs" align="center" wrap="nowrap">
-														<Text size="xs" c="dimmed">
-															{startedAt
-																? new Date(startedAt).toLocaleDateString()
-																: ""}
-														</Text>
-														{conversation.live && (
-															<Badge size="xs" color="red" variant="light">
-																<Trans>Ongoing</Trans>
-															</Badge>
-														)}
-													</Group>
-												</Stack>
-
-												{isLocked ? (
-													<LockedTranscriptOverlay compact variant="summary" />
-												) : (
-													<Text size="sm" c="dimmed" style={lineClampStyle}>
-														{conversation.summary?.trim() || (
-															<Trans>No summary yet</Trans>
-														)}
-													</Text>
-												)}
-
-												{tags.length > 0 && (
-													<Group gap={6} wrap="wrap">
-														{tags.slice(0, 4).map((tag) => {
-															const label = tagText(tag);
-															if (!label) return null;
-															return (
-																<Badge
-																	key={tag.id}
-																	size="xs"
-																	variant="light"
-																	color="gray"
-																	radius="sm"
-																>
-																	{label}
-																</Badge>
-															);
-														})}
-													</Group>
-												)}
+													{conversation.live && (
+														<Badge size="xs" color="red" variant="light">
+															<Trans>Ongoing</Trans>
+														</Badge>
+													)}
+												</Group>
 											</Stack>
-										</Card>
+
+											{isLocked ? (
+												<LockedTranscriptOverlay compact variant="summary" />
+											) : (
+												<Text size="sm" c="dimmed" style={lineClampStyle}>
+													{conversation.summary?.trim() || (
+														<Trans>No summary yet</Trans>
+													)}
+												</Text>
+											)}
+
+											{tags.length > 0 && (
+												<Group gap="xs" wrap="wrap">
+													{tags.slice(0, 4).map((tag) => {
+														const label = tagText(tag);
+														if (!label) return null;
+														return (
+															<Badge
+																key={tag.id}
+																size="xs"
+																variant="light"
+																color="gray"
+															>
+																{label}
+															</Badge>
+														);
+													})}
+												</Group>
+											)}
+										</Stack>
 									);
 
+									// A pressable card is the full box (rules.css): a locked one
+									// opens the upgrade modal, the rest are links.
 									if (isLocked) {
-										return <div key={conversation.id}>{card}</div>;
+										return (
+											<Card
+												key={conversation.id}
+												component="button"
+												type="button"
+												p="md"
+												className="h-full w-full"
+												onClick={() => upgradeHandlers.open()}
+											>
+												{content}
+											</Card>
+										);
 									}
 
 									return (
-										<I18nLink
+										<Card
 											key={conversation.id}
+											component={I18nLink}
 											to={`${base}/conversations/${conversation.id}`}
-											className="no-underline block h-full"
+											p="md"
+											className="block h-full"
 										>
-											{card}
-										</I18nLink>
+											{content}
+										</Card>
 									);
 								})}
 							</SimpleGrid>
@@ -358,32 +356,24 @@ export const ProjectHomeRoute = () => {
 
 				{report && reportTitle && (
 					<Stack gap="sm">
-						<Text size="xs" c="dimmed" tt="uppercase">
+						<Title order={5}>
 							<Trans>Latest report</Trans>
-						</Text>
-						<I18nLink to={`${base}/report`} className="no-underline block">
-							<Card
-								component="a"
-								withBorder
-								p="md"
-								radius="sm"
-								className="hover:!border-primary-400 transition-colors"
-							>
-								<Stack gap={2}>
-									<Group gap="xs" align="center">
-										<Text size="sm">{reportTitle}</Text>
-										<Badge size="xs" variant="light">
-											{report.status}
-										</Badge>
-									</Group>
-									{report.date_created && (
-										<Text size="xs" c="dimmed">
-											{new Date(report.date_created).toLocaleString()}
-										</Text>
-									)}
-								</Stack>
-							</Card>
-						</I18nLink>
+						</Title>
+						<Card component={I18nLink} to={`${base}/report`} p="md">
+							<Stack gap="xs">
+								<Group gap="xs" align="center">
+									<Text size="sm">{reportTitle}</Text>
+									<Badge size="xs" variant="light">
+										{report.status}
+									</Badge>
+								</Group>
+								{report.date_created && (
+									<Text size="xs" c="dimmed">
+										{new Date(report.date_created).toLocaleString()}
+									</Text>
+								)}
+							</Stack>
+						</Card>
 					</Stack>
 				)}
 			</Stack>

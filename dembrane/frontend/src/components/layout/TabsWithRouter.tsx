@@ -1,15 +1,10 @@
-import { Box, LoadingOverlay, Stack } from "@mantine/core";
+import { Box, Loader, Stack } from "@mantine/core";
 import { Suspense } from "react";
 import { Outlet } from "react-router";
 
 const TabLoadingFallback = () => (
-	<Box pos="relative" h="100%">
-		<LoadingOverlay
-			visible={true}
-			zIndex={1000}
-			overlayProps={{ backgroundOpacity: 0.1, blur: 2, radius: "sm" }}
-			loaderProps={{ size: "md", type: "dots" }}
-		/>
+	<Box p="md">
+		<Loader size="sm" />
 	</Box>
 );
 

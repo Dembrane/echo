@@ -1,6 +1,6 @@
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { ActionIcon, Anchor, Group, Paper, Text } from "@mantine/core";
-import { XIcon } from "@phosphor-icons/react";
+import { Alert, Anchor, Text } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -76,39 +76,26 @@ export const DowngradeBanner = () => {
 	};
 
 	return (
-		<Paper
-			radius={0}
-			p="sm"
-			style={{
-				background: "#ffd16633",
-				borderBottom: "1px solid #d6b152",
-			}}
+		<Alert
+			color="yellow"
+			withCloseButton
+			onClose={handleDismiss}
+			closeButtonLabel={t`Dismiss`}
 		>
-			<Group justify="space-between" wrap="nowrap" gap="sm">
-				<Text size="sm">
-					<Trans>
-						This workspace was downgraded to {tier} on {sinceDate}. Some
-						features are limited.
-					</Trans>{" "}
-					<Anchor
-						component="button"
-						type="button"
-						size="sm"
-						onClick={() => navigate(`/w/${workspaceId}/settings/billing`)}
-					>
-						<Trans>Learn more</Trans>
-					</Anchor>
-				</Text>
-				<ActionIcon
-					variant="subtle"
+			<Text size="sm">
+				<Trans>
+					This workspace was downgraded to {tier} on {sinceDate}. Some features
+					are limited.
+				</Trans>{" "}
+				<Anchor
+					component="button"
+					type="button"
 					size="sm"
-					color="dark"
-					onClick={handleDismiss}
-					aria-label="Dismiss"
+					onClick={() => navigate(`/w/${workspaceId}/settings/billing`)}
 				>
-					<XIcon size={14} />
-				</ActionIcon>
-			</Group>
-		</Paper>
+					<Trans>Learn more</Trans>
+				</Anchor>
+			</Text>
+		</Alert>
 	);
 };

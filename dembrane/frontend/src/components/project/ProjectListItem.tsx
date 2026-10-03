@@ -4,23 +4,26 @@ import {
 	ActionIcon,
 	Avatar,
 	Box,
-	Button,
 	Checkbox,
 	Group,
+	Menu,
 	Paper,
-	Popover,
 	Stack,
 	Text,
 	Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { DotsThreeIcon, LockIcon, PushPinIcon } from "@phosphor-icons/react";
+import {
+	CalendarBlankIcon,
+	DotsThreeIcon,
+	LockIcon,
+	PushPinIcon,
+} from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatRelative } from "date-fns";
-import { type PropsWithChildren, useState } from "react";
+import type { PropsWithChildren } from "react";
 import { useParams } from "react-router";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { Icons } from "@/icons";
 import { avatarUrl } from "@/lib/avatar";
 import { testId } from "@/lib/testUtils";
 import { formatDurationFromHours } from "@/lib/time";
@@ -149,261 +152,229 @@ export const ProjectListItem = ({
 	const queryClient = useQueryClient();
 	const updateProject = useUpdateProjectByIdMutation();
 	const [renameOpened, renameHandlers] = useDisclosure(false);
-	const [menuOpened, setMenuOpened] = useState(false);
 	const languageLabel = project.language
 		? (LANGUAGE_LABELS[project.language] ?? project.language.toUpperCase())
 		: null;
 	const ownerName = (project as any).owner_name as string | undefined;
 	const ownerEmail = (project as any).owner_email as string | undefined;
 
-	const body = (
-		<Paper
-			component={selectable ? "div" : "a"}
-			p="sm"
-			className={
-				selectable
-					? `group relative cursor-pointer ${selected ? "!border-primary-400" : "hover:!border-primary-400"}`
-					: "group relative hover:!border-primary-400"
-			}
-			withBorder
-			{...(selectable
-				? {
-						"aria-checked": selected,
-						"aria-label": t`Select project`,
-						onClick: onToggleSelect,
-						role: "checkbox",
-					}
-				: {})}
-			{...testId(`project-list-item-${project.id}`)}
-		>
-			<Group justify="space-between" wrap="nowrap">
-				<Group wrap="nowrap" gap="sm" style={{ flex: 1, minWidth: 0 }}>
-					{/* Checkbox sits inside the card's left padding so its inset
+	const content = (
+		<Group justify="space-between" wrap="nowrap">
+			<Group wrap="nowrap" gap="sm" style={{ flex: 1, minWidth: 0 }}>
+				{/* Checkbox sits inside the card's left padding so its inset
 					    mirrors the pin on the right. Read-only: the whole card is
 					    the click target in select mode. */}
-					{selectable && (
-						<Checkbox
-							checked={!!selected}
-							readOnly
-							tabIndex={-1}
-							aria-hidden
-							data-testid={`project-select-${project.id}`}
-						/>
-					)}
-					<Stack gap="0" style={{ flex: 1, minWidth: 0 }}>
-						{/* A long name stays on one line: wrapping pushed the icon off
+				{selectable && (
+					<Checkbox
+						checked={!!selected}
+						readOnly
+						tabIndex={-1}
+						aria-hidden
+						data-testid={`project-select-${project.id}`}
+					/>
+				)}
+				<Stack gap="0" style={{ flex: 1, minWidth: 0 }}>
+					{/* A long name stays on one line: wrapping pushed the icon off
 						    the baseline and squeezed the language badge to "E…". */}
-						<Group
-							align="center"
-							gap="xs"
-							wrap="nowrap"
+					<Group align="center" gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
+						<Box style={{ display: "flex", flex: "none" }}>
+							<CalendarBlankIcon size={16} />
+						</Box>
+						<Text
+							size="lg"
+							truncate
+							title={project.name ?? undefined}
 							style={{ minWidth: 0 }}
+							{...testId(`project-list-item-name-${project.id}`)}
 						>
-							<Box style={{ display: "flex", flex: "none" }}>
-								<Icons.Calendar />
-							</Box>
-							<Text
-								className="font-semibold"
-								size="lg"
-								truncate
-								title={project.name ?? undefined}
-								style={{ minWidth: 0 }}
-								{...testId(`project-list-item-name-${project.id}`)}
-							>
-								{project.name}
-							</Text>
-							{/* Muted lock marks private projects on the list. */}
-							{(project as unknown as { visibility?: string }).visibility ===
-								"private" && (
-								<Tooltip label={t`Private project`} withArrow>
-									<LockIcon
-										size={14}
-										style={{
-											color: "var(--mantine-color-gray-6)",
-											flex: "none",
-										}}
-										aria-label={t`Private project`}
-									/>
-								</Tooltip>
-							)}
-						</Group>
-						<Text size="sm" c="dimmed">
-							{((project as unknown as { audio_hours?: number }).audio_hours ??
-								0) > 0 && (
-								<>
-									{formatDurationFromHours(
-										(project as unknown as { audio_hours?: number })
-											.audio_hours ?? 0,
-									)}
-									{" • "}
-								</>
-							)}
-							<Trans>
-								{project.conversations_count ??
-									project?.conversations?.length ??
-									0}{" "}
-								Conversations
-							</Trans>
-							{/* The language sits here, not beside the name, so a long
-							    name has the whole title line to itself. */}
-							{languageLabel && ` • ${languageLabel}`}
-							{" • "}
-							<Trans>
-								Edited{" "}
-								{formatRelative(
-									new Date(project.updated_at ?? new Date()),
-									new Date(),
+							{project.name}
+						</Text>
+						{/* Muted lock marks private projects on the list. */}
+						{(project as unknown as { visibility?: string }).visibility ===
+							"private" && (
+							<Tooltip label={t`Private project`} withArrow>
+								<LockIcon
+									size={16}
+									style={{
+										color: "var(--mantine-color-dimmed)",
+										flex: "none",
+									}}
+									aria-label={t`Private project`}
+								/>
+							</Tooltip>
+						)}
+					</Group>
+					<Text size="sm" c="dimmed">
+						{((project as unknown as { audio_hours?: number }).audio_hours ??
+							0) > 0 && (
+							<>
+								{formatDurationFromHours(
+									(project as unknown as { audio_hours?: number })
+										.audio_hours ?? 0,
 								)}
-							</Trans>
-							{(ownerName || ownerEmail) && (
-								<>
-									{" • "}
-									{/* Show name by default; email only on hover via tooltip.
+								{" · "}
+							</>
+						)}
+						<Trans>
+							{project.conversations_count ??
+								project?.conversations?.length ??
+								0}{" "}
+							conversations
+						</Trans>
+						{/* The language sits here, not beside the name, so a long
+							    name has the whole title line to itself. */}
+						{languageLabel && ` · ${languageLabel}`}
+						{" · "}
+						<Trans>
+							Edited{" "}
+							{formatRelative(
+								new Date(project.updated_at ?? new Date()),
+								new Date(),
+							)}
+						</Trans>
+						{(ownerName || ownerEmail) && (
+							<>
+								{" · "}
+								{/* Show name by default; email only on hover via tooltip.
 									    Matches the "don't display emails by default in lists"
 									    rule from CLAUDE.md + brand style guide. Falls back to
 									    email when the owner has no display_name (rare). */}
-									<Tooltip label={ownerEmail} disabled={!ownerEmail}>
-										<Text
-											size="sm"
-											c="dimmed"
-											component="span"
-											className="cursor-pointer hover:underline"
-											onClick={(e: React.MouseEvent) => {
-												e.preventDefault();
-												e.stopPropagation();
-												onSearchOwner?.(ownerEmail ?? ownerName ?? "");
-											}}
-										>
-											{ownerName || t`Unknown`}
-										</Text>
-									</Tooltip>
-								</>
-							)}
-						</Text>
-					</Stack>
-				</Group>
-
-				{/* Access bubbles — dedicated slot directly left of the pin.
-					    Fixed min-width keeps them aligned down the column so rows
-					    scan cleanly. See design-subagent decision 2026-04-21. */}
-				<Group gap="md" wrap="nowrap" align="center">
-					<Box
-						style={{
-							display: "flex",
-							justifyContent: "flex-end",
-							minWidth: 96,
-						}}
-					>
-						<AccessBubbles project={project} />
-					</Box>
-					{/* Pin and menu read as one cluster: the space between them
-					    stays smaller than the space from the menu to the card edge. */}
-					<Group gap={0} mr={4} wrap="nowrap" align="center">
-						{onTogglePin && (
-							<Tooltip
-								label={
-									isPinned
-										? t`Unpin project`
-										: canPin
-											? t`Pin project`
-											: t`Unpin a project first (max 3)`
-								}
-							>
-								<ActionIcon
-									variant="subtle"
-									size={30}
-									color={isPinned ? "primary" : "gray"}
-									onClick={(e) => {
-										e.preventDefault();
-										e.stopPropagation();
-										if (isPinned || canPin) {
-											onTogglePin(project.id);
-										}
-									}}
-								>
-									{isPinned ? (
-										<PushPinIcon weight="fill" size={18} />
-									) : (
-										<PushPinIcon size={18} />
-									)}
-								</ActionIcon>
-							</Tooltip>
-						)}
-						{canEdit && !selectable && (
-							<Popover
-								opened={menuOpened}
-								onChange={setMenuOpened}
-								position="bottom-end"
-								shadow="md"
-								trapFocus
-								withinPortal
-							>
-								<Popover.Target>
-									<ActionIcon
-										variant="subtle"
-										size={30}
-										color="gray"
-										aria-label={t`Project options`}
-										aria-haspopup="menu"
-										aria-expanded={menuOpened}
-										// The row is a link; the menu must not follow it.
-										onClick={(e) => {
+								<Tooltip label={ownerEmail} disabled={!ownerEmail}>
+									<Text
+										size="sm"
+										c="dimmed"
+										component="span"
+										className="cursor-pointer hover:underline"
+										onClick={(e: React.MouseEvent) => {
 											e.preventDefault();
 											e.stopPropagation();
-											setMenuOpened((opened) => !opened);
+											onSearchOwner?.(ownerEmail ?? ownerName ?? "");
 										}}
-										{...testId(`project-list-item-menu-${project.id}`)}
 									>
-										<DotsThreeIcon size={20} />
-									</ActionIcon>
-								</Popover.Target>
-								<Popover.Dropdown
-									p="xs"
-									style={{ border: "1px solid var(--mantine-color-gray-4)" }}
+										{ownerName || t`Unknown`}
+									</Text>
+								</Tooltip>
+							</>
+						)}
+					</Text>
+				</Stack>
+			</Group>
+
+			{/* Access bubbles — dedicated slot directly left of the pin.
+					    Fixed min-width keeps them aligned down the column so rows
+					    scan cleanly. See design-subagent decision 2026-04-21. */}
+			<Group gap="md" wrap="nowrap" align="center">
+				<Box
+					style={{
+						display: "flex",
+						justifyContent: "flex-end",
+						minWidth: 96,
+					}}
+				>
+					<AccessBubbles project={project} />
+				</Box>
+				{/* Pin and menu read as one cluster: the space between them
+					    stays smaller than the space from the menu to the card edge. */}
+				<Group gap={0} mr={4} wrap="nowrap" align="center">
+					{onTogglePin && (
+						<Tooltip
+							label={
+								isPinned
+									? t`Unpin project`
+									: canPin
+										? t`Pin project`
+										: t`Unpin a project first (max 3)`
+							}
+						>
+							<ActionIcon
+								variant="subtle"
+								color={isPinned ? "primary" : "gray"}
+								onClick={(e) => {
+									e.preventDefault();
+									e.stopPropagation();
+									if (isPinned || canPin) {
+										onTogglePin(project.id);
+									}
+								}}
+							>
+								<PushPinIcon size={20} />
+							</ActionIcon>
+						</Tooltip>
+					)}
+					{canEdit && !selectable && (
+						<Menu position="bottom-end" withinPortal>
+							<Menu.Target>
+								<ActionIcon
+									variant="subtle"
+									color="gray"
+									aria-label={t`Project options`}
+									// The row is a link; the menu must not follow it.
 									onClick={(e) => {
 										e.preventDefault();
 										e.stopPropagation();
 									}}
+									{...testId(`project-list-item-menu-${project.id}`)}
 								>
-									<Stack gap="xs" role="menu">
-										<Button
-											role="menuitem"
-											variant="subtle"
-											color="gray"
-											c="var(--app-text)"
-											justify="flex-start"
-											fullWidth
-											onClick={() => {
-												setMenuOpened(false);
-												renameHandlers.open();
-											}}
-											{...testId(`project-list-item-rename-${project.id}`)}
-										>
-											<Trans>Rename project</Trans>
-										</Button>
-										<Button
-											role="menuitem"
-											variant="subtle"
-											color="gray"
-											c="var(--app-text)"
-											justify="flex-start"
-											fullWidth
-											onClick={() =>
-												navigate(
-													`/w/${workspaceId}/projects/${project.id}/portal-editor`,
-												)
-											}
-											{...testId(`project-list-item-portal-${project.id}`)}
-										>
-											<Trans>Configure portal</Trans>
-										</Button>
-									</Stack>
-								</Popover.Dropdown>
-							</Popover>
-						)}
-					</Group>
+									<DotsThreeIcon size={20} />
+								</ActionIcon>
+							</Menu.Target>
+							<Menu.Dropdown
+								// The dropdown is portalled but React events still bubble
+								// to the row link; keep them from navigating.
+								onClick={(e) => {
+									e.preventDefault();
+									e.stopPropagation();
+								}}
+							>
+								<Menu.Item
+									onClick={() => renameHandlers.open()}
+									{...testId(`project-list-item-rename-${project.id}`)}
+								>
+									<Trans>Rename project</Trans>
+								</Menu.Item>
+								<Menu.Item
+									onClick={() =>
+										navigate(
+											`/w/${workspaceId}/projects/${project.id}/portal-editor`,
+										)
+									}
+									{...testId(`project-list-item-portal-${project.id}`)}
+								>
+									<Trans>Configure portal</Trans>
+								</Menu.Item>
+							</Menu.Dropdown>
+						</Menu>
+					)}
 				</Group>
 			</Group>
+		</Group>
+	);
+
+	// A link-rendered Paper gets the full box from rules.css; in select mode
+	// the row is a checkbox and takes the same box via app-do.
+	const body = selectable ? (
+		<Paper
+			component="div"
+			p="sm"
+			className="app-do group relative"
+			data-selected={selected || undefined}
+			aria-checked={selected}
+			aria-label={t`Select project`}
+			onClick={onToggleSelect}
+			role="checkbox"
+			{...testId(`project-list-item-${project.id}`)}
+		>
+			{content}
+		</Paper>
+	) : (
+		<Paper
+			component={I18nLink}
+			to={link}
+			p="sm"
+			className="group relative"
+			{...testId(`project-list-item-${project.id}`)}
+		>
+			{content}
 		</Paper>
 	);
 
@@ -411,7 +382,7 @@ export const ProjectListItem = ({
 	if (selectable) return body;
 	return (
 		<>
-			<I18nLink to={link}>{body}</I18nLink>
+			{body}
 			{/* Outside the link, so typing and clicking in it never navigate. */}
 			{canEdit && (
 				<InputModal

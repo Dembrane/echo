@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { GearIcon } from "@phosphor-icons/react";
+import { GearSixIcon } from "@phosphor-icons/react";
 import {
 	memo,
 	useCallback,
@@ -1175,16 +1175,16 @@ export const MstGraph = ({
 			/>
 
 			<MapChromeButton
-				label={t`Force Graph Settings`}
+				label={t`Force graph settings`}
 				onClick={() => setShowSettings(!showSettings)}
 				className="right-4"
 			>
-				<GearIcon size={24} />
+				<GearSixIcon size={20} />
 			</MapChromeButton>
 
 			{showSettings && (
 				<MapSettingsPanel
-					title={<Trans>Force Parameters</Trans>}
+					title={<Trans>Force parameters</Trans>}
 					onReset={resetToDefaults}
 				>
 					<RangeSetting

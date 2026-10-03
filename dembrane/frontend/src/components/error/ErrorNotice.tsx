@@ -26,21 +26,15 @@ export const ErrorNotice = ({
 	return (
 		<Alert
 			color="red"
-			variant="light"
-			icon={<WarningCircleIcon size="1rem" />}
+			icon={<WarningCircleIcon size={20} />}
 			title={title}
 			className={className}
 			data-error-code={presented.code ?? "none"}
 		>
-			<Group gap="sm" justify="space-between" wrap="wrap">
+			<Group gap="sm" wrap="wrap">
 				<Text size="sm">{presented.message}</Text>
 				{target?.onClick && (
-					<Button
-						size="xs"
-						variant="light"
-						color="red"
-						onClick={target.onClick}
-					>
+					<Button size="xs" onClick={target.onClick}>
 						{target.label}
 					</Button>
 				)}

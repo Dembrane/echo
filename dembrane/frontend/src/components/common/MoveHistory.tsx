@@ -31,7 +31,7 @@ export function MoveHistory({
 	const ordered = [...entries].reverse();
 
 	return (
-		<Stack gap={4}>
+		<Stack gap="xs">
 			<Text size="xs">{title}</Text>
 			{ordered.map((e, i) => {
 				const when = e.at

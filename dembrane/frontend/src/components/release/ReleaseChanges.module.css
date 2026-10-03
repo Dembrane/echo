@@ -1,12 +1,11 @@
 .groups {
 	display: flex;
 	flex-direction: column;
-	gap: 1.25rem;
+	gap: 1.5rem;
 }
 
 .category {
 	font-size: var(--app-font-size-sm);
-	font-weight: 400;
 	line-height: 1.4;
 	margin: 0 0 0.5rem;
 }
@@ -25,11 +24,11 @@
 }
 
 .item + .item {
-	margin-block-start: 0.375rem;
+	margin-block-start: 0.5rem;
 }
 
 .groups[data-compact="true"] {
-	gap: 0.875rem;
+	gap: 1rem;
 }
 
 .groups[data-compact="true"] .item {

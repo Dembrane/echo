@@ -76,8 +76,8 @@ export const ParticipantShareModal = ({
 			closeButtonProps={{
 				// Matches the settings icon it replaces, so the header does not
 				// shrink the moment the share view opens.
-				icon: <XIcon size={30} color="gray" />,
-				size: "xl",
+				icon: <XIcon size={20} />,
+				size: 36,
 			}}
 			{...testId("portal-share-modal")}
 		>
@@ -99,7 +99,6 @@ export const ParticipantShareModal = ({
 								{({ copied, copy }) => (
 									<Button
 										size="lg"
-										variant="outline"
 										leftSection={
 											copied ? <CheckIcon size={20} /> : <CopyIcon size={20} />
 										}
@@ -115,7 +114,6 @@ export const ParticipantShareModal = ({
 							</CopyButton>
 							<Button
 								size="lg"
-								variant="outline"
 								component="a"
 								href={`https://wa.me/?text=${encodedShareText}`}
 								target="_blank"
@@ -128,7 +126,6 @@ export const ParticipantShareModal = ({
 							</Button>
 							<Button
 								size="lg"
-								variant="outline"
 								component="a"
 								href={`mailto:?subject=${encodeURIComponent(t`Join this portal session`)}&body=${encodedShareText}`}
 								leftSection={<EnvelopeSimpleIcon size={20} />}
@@ -140,7 +137,6 @@ export const ParticipantShareModal = ({
 							{typeof navigator !== "undefined" && "share" in navigator && (
 								<Button
 									size="lg"
-									variant="outline"
 									leftSection={<ExportIcon size={20} />}
 									onClick={handleNativeShare}
 									{...testId("portal-share-native-button")}

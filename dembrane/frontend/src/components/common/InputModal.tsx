@@ -67,15 +67,7 @@ export const InputModal = ({
 						autoFocus
 						data-testid={dataTestId ? `${dataTestId}-input` : undefined}
 					/>
-					<Group justify="flex-end" gap="sm">
-						<Button
-							variant="subtle"
-							onClick={onClose}
-							type="button"
-							data-testid={dataTestId ? `${dataTestId}-cancel` : undefined}
-						>
-							{cancelLabel ?? <Trans>Cancel</Trans>}
-						</Button>
+					<Group justify="flex-start" gap="sm">
 						<Button
 							variant="filled"
 							type="submit"
@@ -84,6 +76,15 @@ export const InputModal = ({
 							data-testid={dataTestId ? `${dataTestId}-confirm` : undefined}
 						>
 							{confirmLabel ?? <Trans>Save</Trans>}
+						</Button>
+						<Button
+							variant="subtle"
+							color="gray"
+							onClick={onClose}
+							type="button"
+							data-testid={dataTestId ? `${dataTestId}-cancel` : undefined}
+						>
+							{cancelLabel ?? <Trans>Cancel</Trans>}
 						</Button>
 					</Group>
 				</Stack>

@@ -13,19 +13,19 @@ export function AccessDeniedPanel({
 
 	return (
 		<Container size="sm" py="xl" data-testid={testId}>
-			<Stack align="center" mt="20vh" gap="md">
-				<Title order={4} ta="center">
-					<Trans>You don't have access to this workspace.</Trans>
+			<Stack mt="20vh" gap="md" maw={440} mx="auto">
+				<Title order={2}>
+					<Trans>You don't have access to this workspace</Trans>
 				</Title>
-				<Text size="sm" c="dimmed" ta="center" maw={420}>
+				<Text c="dimmed">
 					<Trans>
 						Ask a workspace admin for an invite, or pick a different workspace
 						from your list.
 					</Trans>
 				</Text>
 				<Button
-					variant="subtle"
-					size="xs"
+					variant="filled"
+					className="self-start"
 					onClick={() => navigate("/o")}
 					data-testid={`${testId}-back-button`}
 				>

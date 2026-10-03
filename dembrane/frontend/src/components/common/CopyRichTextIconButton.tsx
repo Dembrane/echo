@@ -7,8 +7,8 @@ import useCopyToRichText from "@/hooks/useCopyToRichText";
 
 export const CopyRichTextIconButton = ({
 	markdown,
-	size = "xs",
-	iconSize = 14,
+	size,
+	iconSize = 20,
 }: {
 	markdown: string;
 	size?: "xs" | "sm" | "md" | "lg";
@@ -34,12 +34,10 @@ export const CopyRichTextIconButton = ({
 	return (
 		<Tooltip
 			transitionProps={{ duration: 200 }}
-			label={isLoading ? t`Copying...` : copied ? t`Copied` : t`Copy`}
-			px={5}
+			label={isLoading ? t`Copying…` : copied ? t`Copied` : t`Copy`}
 		>
 			<ActionIcon
 				size={size}
-				radius="xl"
 				color={copied ? "teal" : "gray"}
 				variant="subtle"
 				onClick={handleCopy}

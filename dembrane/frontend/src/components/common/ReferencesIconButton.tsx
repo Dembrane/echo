@@ -10,20 +10,14 @@ export const ReferencesIconButton = ({
 	setShowCitations: (value: boolean) => void;
 }) => {
 	return (
-		<Tooltip
-			transitionProps={{ duration: 200 }}
-			label={t`Show references`}
-			px={5}
-		>
+		<Tooltip transitionProps={{ duration: 200 }} label={t`Show references`}>
 			<ActionIcon
 				variant={showCitations ? "light" : "subtle"}
-				color={showCitations ? "teal" : "gray"}
+				color={showCitations ? "primary" : "gray"}
 				onClick={() => setShowCitations(!showCitations)}
 				aria-label={t`Show references`}
-				size="md"
-				radius="xl"
 			>
-				<InfoIcon size={18} />
+				<InfoIcon size={20} />
 			</ActionIcon>
 		</Tooltip>
 	);

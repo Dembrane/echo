@@ -19,7 +19,8 @@ import buttonClasses from "./styles/button.module.css";
 
 // The Mantine colour names the app passes, mapped onto the roles.
 const statusFor = (color?: string) => {
-	switch (color) {
+	// "red.2" or "blue.1" mean the family; the role decides the shade.
+	switch (color?.split(".")[0]) {
 		case "red":
 		case "salmon":
 			return {
@@ -58,7 +59,7 @@ const statusFor = (color?: string) => {
 };
 
 const tintFor = (color?: string) => {
-	switch (color) {
+	switch (color?.split(".")[0]) {
 		case "mauve":
 			return tagTints.mauve;
 		case "cyan":
@@ -119,7 +120,7 @@ export const cssVariablesResolver: CSSVariablesResolver = () => ({
 	dark: {},
 	light: {
 		"--mantine-color-body": roles.bg,
-		"--mantine-color-default-border": roles.text,
+		"--mantine-color-default-border": "#e6e3df",
 		"--mantine-color-dimmed": roles.muted,
 		"--mantine-color-error": roles.danger,
 		"--mantine-color-placeholder": roles.muted,

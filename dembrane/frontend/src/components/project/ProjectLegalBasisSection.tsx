@@ -10,13 +10,10 @@ import {
 	Paper,
 	Stack,
 	Text,
+	Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import {
-	ArrowSquareOutIcon,
-	ScalesIcon,
-	WarningIcon,
-} from "@phosphor-icons/react";
+import { ArrowSquareOutIcon, WarningIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useParams } from "react-router";
@@ -163,12 +160,9 @@ export const ProjectLegalBasisSection = ({
 	return (
 		<Box>
 			<Stack gap="sm">
-				<Group gap="sm">
-					<ScalesIcon size={18} />
-					<Text size="sm">
-						<Trans>Legal basis</Trans>
-					</Text>
-				</Group>
+				<Title order={5}>
+					<Trans>Legal basis</Trans>
+				</Title>
 				<Text size="sm">
 					<Trans>
 						Determines under which GDPR legal basis personal data is processed
@@ -242,10 +236,9 @@ export const ProjectLegalBasisSection = ({
 
 								{/* admin-only: the settings link is a dead end for others */}
 								{canEditOverride && (
-									<Group justify="space-between" wrap="nowrap">
+									<Group gap="md" wrap="nowrap">
 										{!cardVisible ? (
 											<Button
-												variant="outline"
 												size="sm"
 												onClick={() => setOverrideFormOpen(true)}
 											>
@@ -259,9 +252,7 @@ export const ProjectLegalBasisSection = ({
 											>
 												<Trans>Cancel override</Trans>
 											</Anchor>
-										) : (
-											<span />
-										)}
+										) : null}
 										<Anchor
 											size="sm"
 											onClick={() =>
@@ -269,9 +260,9 @@ export const ProjectLegalBasisSection = ({
 											}
 											style={{ cursor: "pointer" }}
 										>
-											<Group gap={4} wrap="nowrap">
+											<Group gap="xs" wrap="nowrap">
 												<Trans>Workspace settings</Trans>
-												<ArrowSquareOutIcon size={14} />
+												<ArrowSquareOutIcon size={16} />
 											</Group>
 										</Anchor>
 									</Group>

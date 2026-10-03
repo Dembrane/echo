@@ -6,7 +6,6 @@ import {
 	Divider,
 	Group,
 	Modal,
-	rem,
 	Stack,
 	Text,
 } from "@mantine/core";
@@ -55,16 +54,6 @@ export const FeedbackPortalModal = ({
 			return baseFeedbackUrl;
 		}
 	}, [baseFeedbackUrl, me]);
-
-	const actionButtonStyles = {
-		root: {
-			minHeight: rem(40),
-			paddingBottom: rem(10),
-			paddingLeft: rem(20),
-			paddingRight: rem(20),
-			paddingTop: rem(10),
-		},
-	} as const;
 
 	return (
 		<Modal
@@ -124,7 +113,7 @@ export const FeedbackPortalModal = ({
 						href={feedbackUrl}
 						className="h-auto w-full min-w-[80px] max-w-[128px]"
 					/>
-					<Stack gap={4}>
+					<Stack gap="xs">
 						<Anchor
 							href={feedbackUrl}
 							target="_blank"
@@ -153,25 +142,20 @@ export const FeedbackPortalModal = ({
 
 				<Divider />
 
-				<Group justify="space-between" gap="sm" align="center">
-					<Anchor
-						href={COMMUNITY_SLACK_URL}
-						target="_blank"
-						rel="noopener noreferrer"
-						size="sm"
-					>
-						<Group gap={6} wrap="nowrap">
-							<UsersThree size={16} />
-							<Trans>Join our Slack community</Trans>
-						</Group>
-					</Anchor>
-					<Button
-						variant="subtle"
-						size="md"
-						onClick={onClose}
-						styles={actionButtonStyles}
-					>
-						<Trans>Cancel</Trans>
+				<Anchor
+					href={COMMUNITY_SLACK_URL}
+					target="_blank"
+					rel="noopener noreferrer"
+					size="sm"
+				>
+					<Group gap="xs" wrap="nowrap">
+						<UsersThree size={16} />
+						<Trans>Join our Slack community</Trans>
+					</Group>
+				</Anchor>
+				<Group justify="flex-start" gap="sm">
+					<Button variant="subtle" color="gray" onClick={onClose}>
+						<Trans>Close</Trans>
 					</Button>
 				</Group>
 			</Stack>

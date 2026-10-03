@@ -1,14 +1,5 @@
 import { Trans } from "@lingui/react/macro";
-import {
-	Button,
-	Group,
-	Modal,
-	Pill,
-	Stack,
-	Text,
-	ThemeIcon,
-} from "@mantine/core";
-import { TagIcon } from "@phosphor-icons/react";
+import { Badge, Button, Group, Modal, Stack, Text } from "@mantine/core";
 
 type AddTagFilterModalProps = {
 	opened: boolean;
@@ -37,14 +28,11 @@ export const AddTagFilterModal = ({
 			onExitTransitionEnd={onExitTransitionEnd}
 			title={
 				<Text size="lg">
-					<Trans id="add.tag.filter.modal.title">Add Tag to Filters</Trans>
+					<Trans id="add.tag.filter.modal.title">Add tag to filters</Trans>
 				</Text>
 			}
 			size="md"
 			centered
-			classNames={{
-				header: "border-b",
-			}}
 		>
 			<Stack gap="lg">
 				<Stack gap="xl" py="lg">
@@ -55,17 +43,9 @@ export const AddTagFilterModal = ({
 					</Text>
 
 					<Group gap="xs" align="center">
-						<ThemeIcon variant="subtle" color="primary" size={18}>
-							<TagIcon size={18} />
-						</ThemeIcon>
-						<Pill
-							size="md"
-							classNames={{
-								root: "!bg-[var(--mantine-primary-color-light)] !font-medium",
-							}}
-						>
+						<Badge size="md" color="gray">
 							{tagName}
-						</Pill>
+						</Badge>
 					</Group>
 
 					<Text size="sm" c="dimmed">
@@ -76,12 +56,12 @@ export const AddTagFilterModal = ({
 					</Text>
 				</Stack>
 
-				<Group justify="flex-end" gap="sm">
-					<Button variant="subtle" onClick={onClose}>
-						<Trans id="add.tag.filter.modal.cancel">Cancel</Trans>
+				<Group justify="flex-start" gap="sm">
+					<Button variant="filled" onClick={handleConfirm}>
+						<Trans id="add.tag.filter.modal.add">Add to filters</Trans>
 					</Button>
-					<Button onClick={handleConfirm}>
-						<Trans id="add.tag.filter.modal.add">Add to Filters</Trans>
+					<Button variant="subtle" color="gray" onClick={onClose}>
+						<Trans id="add.tag.filter.modal.cancel">Cancel</Trans>
 					</Button>
 				</Group>
 			</Stack>

@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	Badge,
@@ -35,7 +36,7 @@ export const OrganisationExternalView = ({ organisationId }: Props) => {
 
 	const orgWorkspaces = workspaces.filter((w) => w.org_id === organisationId);
 	const first = orgWorkspaces[0];
-	const orgName = first?.org_name ?? "Organisation";
+	const orgName = first?.org_name ?? t`Organisation`;
 	const orgLogo = first?.org_logo_url
 		? resolveLogoUrl(first.org_logo_url)
 		: null;
@@ -54,7 +55,7 @@ export const OrganisationExternalView = ({ organisationId }: Props) => {
 							fit="contain"
 						/>
 					) : null}
-					<Stack gap={4}>
+					<Stack gap="xs">
 						<Group gap="sm" align="center">
 							<Title order={2}>{orgName}</Title>
 							<Badge variant="light" color="gray">
@@ -71,34 +72,27 @@ export const OrganisationExternalView = ({ organisationId }: Props) => {
 				</Group>
 
 				<Stack gap="sm">
-					<Text
-						size="xs"
-						c="dimmed"
-						tt="uppercase"
-						style={{ letterSpacing: "0.04em" }}
-					>
+					<Title order={5}>
 						<Trans>Workspaces shared with you</Trans>
-					</Text>
+					</Title>
 					{orgWorkspaces.length === 0 ? (
-						<Paper p="md" withBorder>
-							<Text size="sm" c="dimmed">
-								<Trans>
-									No workspaces from this organisation are shared with you right
-									now.
-								</Trans>
-							</Text>
-						</Paper>
+						<Text size="sm" c="dimmed">
+							<Trans>
+								No workspaces from this organisation are shared with you right
+								now.
+							</Trans>
+						</Text>
 					) : (
 						orgWorkspaces.map((ws) => (
 							<Paper
 								key={ws.id}
 								p="md"
-								withBorder
-								className="cursor-pointer"
+								withBorder={false}
+								className="app-do"
 								onClick={() => openWorkspace(ws.id)}
 							>
 								<Group justify="space-between" align="center" wrap="nowrap">
-									<Stack gap={2}>
+									<Stack gap="xs">
 										<Text>{ws.name}</Text>
 										<Group gap="xs">
 											<Text size="xs" c="dimmed">
@@ -113,7 +107,6 @@ export const OrganisationExternalView = ({ organisationId }: Props) => {
 										</Group>
 									</Stack>
 									<Button
-										variant="light"
 										size="xs"
 										onClick={(e) => {
 											e.stopPropagation();

@@ -2,9 +2,9 @@ import { t } from "@lingui/core/macro";
 import { Group, type GroupProps, Loader } from "@mantine/core";
 import aiconlLogo from "@/assets/aiconl-logo.png";
 import aiconlLogoHQ from "@/assets/aiconl-logo-hq.png";
-
 import dembraneLogoFull from "@/assets/dembrane-logo-new.svg";
 import dembraneLogomark from "@/assets/logomark-no-bg.svg";
+import { roles } from "@/colors";
 import { I18nLink } from "@/components/common/i18nLink";
 import { APP_ENVIRONMENT, PREVIEW_PR } from "@/config";
 import { useWhitelabelLogo } from "@/hooks/useWhitelabelLogo";
@@ -24,8 +24,8 @@ type LogoProps = {
 } & GroupProps;
 
 const BADGE_CLASS =
-	"absolute -bottom-1 -right-[15px] -translate-x-1/2 pl-1 text-xs font-medium leading-none whitespace-nowrap";
-const BADGE_STYLE = { color: "var(--mantine-color-primary-6)" };
+	"absolute -bottom-1 -right-[15px] -translate-x-1/2 pl-1 text-xs leading-none whitespace-nowrap";
+const BADGE_STYLE = { color: roles.action };
 
 /** The text under the logo: the PR on a PR preview, else the environment. */
 const EnvBadge = () => {

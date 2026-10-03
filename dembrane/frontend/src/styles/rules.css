@@ -82,6 +82,57 @@
 	box-shadow: none;
 }
 
+/* Do, for anything built by hand that you press: a clickable card or tile,
+ * a template pick, an overflow chit. Use the class, or render the Paper or
+ * Card as a button or link and it follows. Selected is the blue box on the
+ * action tint, as a checked filter is. The :is(*, [data-with-border]) lifts
+ * the class to the read rule's weight, so a bordered Paper takes the box. */
+:root .app-do:is(*, [data-with-border]),
+:root
+	:is(.mantine-Paper-root, .mantine-Card-root):is(button, a, [role="button"]) {
+	background: transparent;
+	border: var(--app-stroke) solid var(--app-rule-color);
+	border-radius: 0;
+	box-shadow: none;
+	color: #2d2d2c;
+	cursor: pointer;
+	text-align: left;
+}
+:root .app-do:is(*, [data-with-border]):hover,
+:root
+	:is(.mantine-Paper-root, .mantine-Card-root):is(
+		button,
+		a,
+		[role="button"]
+	):hover {
+	background: #e6e3df;
+}
+:root .app-do:is(*, [data-with-border]):active,
+:root
+	:is(.mantine-Paper-root, .mantine-Card-root):is(
+		button,
+		a,
+		[role="button"]
+	):active {
+	background: #dcdad7;
+}
+:root .app-do[data-selected]:is(*, [data-with-border]) {
+	background: #e9f1ff;
+	border-color: #2957df;
+	position: relative;
+	z-index: 1;
+}
+:root .app-do:focus-visible {
+	outline: 2px solid #2957df;
+	outline-offset: 2px;
+}
+
+/* Avatars are the one round thing besides the primary pill. */
+:root .mantine-Avatar-root {
+	--avatar-radius: 9999px;
+	border-radius: 9999px;
+}
+
 /* Context: no border; a tag is its tint. */
 :root .mantine-Badge-root {
 	border-radius: 0;
@@ -498,6 +549,19 @@
 }
 :root .mantine-Chip-root + .mantine-Chip-root {
 	margin-left: calc(-1 * var(--app-stroke));
+}
+:root .app-joined {
+	gap: 0;
+}
+/* Fields joined in one filter row share their side rules: each one after the
+ * first steps back over its neighbour's line, and the focused one is drawn
+ * on top so its blue sides show whole. */
+:root .app-joined > * + * {
+	margin-left: calc(-1 * var(--app-stroke));
+}
+:root .app-joined > :focus-within {
+	position: relative;
+	z-index: 1;
 }
 :root .mantine-Chip-root:has(.mantine-Chip-label[data-checked]) {
 	position: relative;

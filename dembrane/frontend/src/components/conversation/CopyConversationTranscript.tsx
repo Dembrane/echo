@@ -46,7 +46,7 @@ export const CopyConversationTranscriptActionIcon = (props: {
 			}
 		>
 			<ActionIcon
-				variant="transparent"
+				variant="subtle"
 				color={copied ? "blue" : "gray"}
 				onClick={(e) => {
 					// Stop the click bubbling to an enclosing card anchor (the

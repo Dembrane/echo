@@ -77,7 +77,7 @@ export const ProjectMonitorRoute = () => {
 			<Stack gap="xl">
 				{projectId && <MonitorSessionAnalytics projectId={projectId} />}
 				<Group justify="space-between" align="flex-start" wrap="nowrap">
-					<Stack gap={4}>
+					<Stack gap="xs">
 						<Group gap="xs" align="center">
 							<Title order={2}>
 								<Trans>Monitor</Trans>
@@ -86,7 +86,7 @@ export const ProjectMonitorRoute = () => {
 								<Trans>Beta</Trans>
 							</Badge>
 						</Group>
-						<Text size="sm" maw={560}>
+						<Text size="sm" c="dimmed" maw={560}>
 							<Trans>
 								Watch live recordings, transcription progress, and errors across
 								this project as they happen.

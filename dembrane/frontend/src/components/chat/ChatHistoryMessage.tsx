@@ -82,14 +82,9 @@ const AGENTIC_LINK_CLASSES =
 
 // The same flash the transcript page gives a deep-linked chunk
 // (ConversationChunkAudioTranscript), so a footnote hop reads as the one
-// highlight language the product has. Class names must match ones already in
-// source, or the Tailwind build will not carry them.
-const FOOTNOTE_HIGHLIGHT_CLASSES = [
-	"!bg-cyan-50",
-	"ring-2",
-	"ring-cyan-300",
-	"rounded-sm",
-];
+// highlight language the product has: the action tint, no ring. Class names
+// must match ones already in source, or the Tailwind build will not carry them.
+const FOOTNOTE_HIGHLIGHT_CLASSES = ["!bg-primary-100"];
 const FOOTNOTE_HIGHLIGHT_MS = 5000;
 
 const flashFootnoteTarget = (target: HTMLElement) => {
@@ -141,13 +136,13 @@ const DocsChoiceCard = ({
 		href={href}
 		target="_blank"
 		rel="noreferrer"
-		className="block cursor-pointer rounded-xl border-2 border-gray-300 bg-white p-6 no-underline transition-all hover:border-[var(--mantine-color-primary-4)] hover:bg-[var(--mantine-color-primary-0)]"
+		className="app-do block p-6 no-underline"
 	>
-		<Stack gap="sm" align="center" className="justify-center py-2 text-center">
+		<Stack gap="sm" py="sm">
 			<Group gap="sm" align="center">
 				{icon}
 				<Title order={4}>{title}</Title>
-				<ArrowUpRightIcon size={18} />
+				<ArrowUpRightIcon size={16} />
 			</Group>
 			<Text size="sm">{description}</Text>
 		</Stack>
@@ -177,7 +172,7 @@ const AgenticCitation = ({
 			</button>
 		</Popover.Target>
 		<Popover.Dropdown data-testid="agentic-citation-popover">
-			<Stack gap={6}>
+			<Stack gap="xs">
 				<Text size="sm">
 					{citation.name ? (
 						<Trans>{citation.name}'s conversation</Trans>
@@ -194,7 +189,7 @@ const AgenticCitation = ({
 					<span>
 						<Trans>Open conversation</Trans>
 					</span>
-					<ArrowUpRightIcon size={12} className="self-center" />
+					<ArrowUpRightIcon size={16} className="self-center" />
 				</a>
 			</Stack>
 		</Popover.Dropdown>
@@ -232,7 +227,7 @@ const AgenticDocsLink = ({
 				}}
 			>
 				<span>{getLinkLabel(children)}</span>
-				<ArrowUpRightIcon size={12} className="self-center" />
+				<ArrowUpRightIcon size={16} className="self-center" />
 			</a>
 			<Modal
 				opened={opened}
@@ -244,13 +239,13 @@ const AgenticDocsLink = ({
 				<SimpleGrid cols={{ base: 1, xs: 2 }} spacing="md">
 					<DocsChoiceCard
 						href={href}
-						icon={<FileTextIcon size={28} />}
+						icon={<FileTextIcon size={20} />}
 						title={<Trans>Open documentation</Trans>}
 						description={<Trans>The page this answer refers to.</Trans>}
 					/>
 					<DocsChoiceCard
 						href={chatDocsHref}
-						icon={<ChatsIcon size={28} />}
+						icon={<ChatsIcon size={20} />}
 						title={<Trans>Open chat documentation</Trans>}
 						description={<Trans>How Ask works and what it can do.</Trans>}
 					/>
@@ -349,7 +344,7 @@ export const ChatHistoryMessage = ({
 								{...props}
 							>
 								<span>{getLinkLabel(children)}</span>
-								<ArrowUpRightIcon size={12} className="self-center" />
+								<ArrowUpRightIcon size={16} className="self-center" />
 							</a>
 						</Tooltip>
 					);
@@ -416,12 +411,11 @@ export const ChatHistoryMessage = ({
 									{message.role === "user" && onSaveAsTemplate && (
 										<Tooltip label={t`Save as template`}>
 											<ActionIcon
-												size="xs"
 												variant="subtle"
 												color="gray"
 												onClick={() => onSaveAsTemplate(message.content)}
 											>
-												<BookmarkSimple size={14} />
+												<BookmarkSimple size={20} />
 											</ActionIcon>
 										</Tooltip>
 									)}
@@ -460,7 +454,8 @@ export const ChatHistoryMessage = ({
 						{portalStartLink ? (
 							<Box
 								mt="sm"
-								className="w-fit rounded-md bg-white p-2"
+								className="w-fit p-2"
+								style={{ backgroundColor: "var(--mantine-color-white)" }}
 								data-testid="assistant-portal-link-qr"
 							>
 								<QRCode

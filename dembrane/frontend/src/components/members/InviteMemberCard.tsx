@@ -1,7 +1,6 @@
 import {
 	Box,
 	Group,
-	Paper,
 	Stack,
 	Text,
 	Tooltip,
@@ -22,7 +21,7 @@ interface Props {
 	tooltip?: ReactNode;
 }
 
-// Dotted-border card rendered as the first row in a Members list; opens the unified InviteModal or ProjectSharingModal.
+// Full-box pressable card rendered as the first row in a Members list; opens the unified InviteModal or ProjectSharingModal.
 export function InviteMemberCard({
 	label,
 	helperText,
@@ -36,48 +35,21 @@ export function InviteMemberCard({
 			onClick={onClick}
 			disabled={disabled}
 			w="100%"
-			style={{
-				borderRadius: "var(--mantine-radius-md)",
-				cursor: disabled ? "not-allowed" : "pointer",
-				opacity: disabled ? 0.5 : 1,
-			}}
+			p="md"
+			className="app-do"
+			style={disabled ? { cursor: "not-allowed", opacity: 0.5 } : undefined}
 		>
-			<Paper
-				radius="md"
-				p="md"
-				style={{
-					background: "transparent",
-					borderColor: "var(--mantine-color-gray-4)",
-					borderStyle: "dashed",
-					borderWidth: 1,
-				}}
-			>
-				<Group gap="sm" wrap="nowrap">
-					<Group
-						justify="center"
-						align="center"
-						style={{
-							borderColor: "var(--mantine-color-gray-4)",
-							borderRadius: "50%",
-							borderStyle: "dashed",
-							borderWidth: 1,
-							color: "var(--mantine-color-gray-6)",
-							height: 40,
-							width: 40,
-						}}
-					>
-						{icon ?? <UserPlusIcon size={18} />}
-					</Group>
-					<Stack gap={0}>
-						<Text size="sm">{label}</Text>
-						{helperText && (
-							<Text size="xs" c="dimmed">
-								{helperText}
-							</Text>
-						)}
-					</Stack>
-				</Group>
-			</Paper>
+			<Group gap="sm" wrap="nowrap">
+				{icon ?? <UserPlusIcon size={20} />}
+				<Stack gap={0}>
+					<Text size="sm">{label}</Text>
+					{helperText && (
+						<Text size="xs" c="dimmed">
+							{helperText}
+						</Text>
+					)}
+				</Stack>
+			</Group>
 		</UnstyledButton>
 	);
 

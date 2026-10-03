@@ -1,14 +1,16 @@
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import {
 	Accordion,
+	Alert,
+	Box,
 	Button,
 	Checkbox,
 	Group,
-	Loader,
 	Modal,
 	Popover,
 	Select,
+	Skeleton,
 	Stack,
 	Switch,
 	Tabs,
@@ -34,7 +36,7 @@ import {
 	useState,
 } from "react";
 import { useParams, useSearchParams } from "react-router";
-import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { SaveStatus } from "@/components/form/SaveStatus";
 import { PageContainer } from "@/components/layout/PageContainer";
 import {
@@ -112,11 +114,9 @@ function Editor({
 	]);
 	return (
 		<Stack className={classes.settings} gap="lg">
-			<Group justify="space-between">
-				<Text>
-					<Trans>Presentation editor</Trans>
-				</Text>
-			</Group>
+			<Title order={4}>
+				<Trans>Presentation editor</Trans>
+			</Title>
 			<PresentationTitle projectId={projectId} presentation={presentation} />
 			<Tabs
 				value={editorSection(params)}
@@ -155,7 +155,7 @@ function Editor({
 				</Tabs.Panel>
 				<Tabs.Panel value="activities" pt="md">
 					<Stack>
-						<Text size="sm">
+						<Text size="sm" c="dimmed">
 							<Trans>Choose the tabs your audience can explore.</Trans>
 						</Text>
 						{PRESENTATION_BLOCKS.map((block) => {
@@ -367,7 +367,7 @@ function Preview({
 	return (
 		<div className={classes.preview}>
 			<Group px="md" py="sm" gap="xs">
-				<MonitorIcon size={18} />
+				<MonitorIcon size={16} />
 				<Text size="sm">
 					<Trans>Audience preview</Trans>
 				</Text>
@@ -525,18 +525,32 @@ function Session({
 	return (
 		<PresentationEventTick.Provider value={eventTick}>
 			<Stack gap="md">
-				<Group justify="space-between" align="center">
+				<Stack gap="md">
 					<Stack gap={4}>
 						<Title order={2}>
 							<Trans>Present</Trans>
 						</Title>
-						<Text size="sm">{presentation.name}</Text>
+						<Text size="sm" c="dimmed">
+							{presentation.name}
+						</Text>
 					</Stack>
-					<Group
-						gap="xs"
-						className={classes.hostActions}
-						aria-label={t`Presentation controls`}
-					>
+					<Group gap="xs" aria-label={t`Presentation controls`}>
+						<Button
+							variant="filled"
+							onClick={open}
+							loading={opening}
+							leftSection={<ArrowSquareOutIcon size={20} />}
+						>
+							<Trans>Present</Trans>
+						</Button>
+						{canEdit && (
+							<Button
+								leftSection={<ShareNetworkIcon size={20} />}
+								onClick={share.open}
+							>
+								<Trans>Share</Trans>
+							</Button>
+						)}
 						{canEdit &&
 							(blocks.includes("popcorn") ||
 								presentation.loop?.mode === "live") &&
@@ -604,24 +618,8 @@ function Session({
 									</Popover.Dropdown>
 								</Popover>
 							))}
-						{canEdit && (
-							<Button
-								variant="outline"
-								leftSection={<ShareNetworkIcon size={18} />}
-								onClick={share.open}
-							>
-								<Trans>Share</Trans>
-							</Button>
-						)}
-						<Button
-							onClick={open}
-							loading={opening}
-							leftSection={<ArrowSquareOutIcon size={18} />}
-						>
-							<Trans>Present</Trans>
-						</Button>
 					</Group>
-				</Group>
+				</Stack>
 				{presentation.loop?.mode === "live" && (
 					<Text size="sm" role="status">
 						<Trans>
@@ -630,7 +628,7 @@ function Session({
 					</Text>
 				)}
 				{canEdit && (
-					<Group justify="flex-end">
+					<Group justify="flex-start">
 						<Button
 							onClick={() => void publishChanges()}
 							loading={publishing}
@@ -683,12 +681,15 @@ function Session({
 									</Trans>
 								</Text>
 								{publishError && (
-									<Text role="alert">
-										<Trans>Changes could not be published. Try again.</Trans>
-									</Text>
+									<Alert color="red">
+										<Text size="sm">
+											<Trans>Changes could not be published. Try again.</Trans>
+										</Text>
+									</Alert>
 								)}
-								<Group justify="flex-end">
+								<Group justify="flex-start">
 									<Button
+										variant="filled"
 										loading={publishing}
 										disabled={
 											!draft.query.data.has_changes ||
@@ -703,20 +704,27 @@ function Session({
 							</Stack>
 						</SettingsSaveContext.Provider>
 					) : draft.query.isError ? (
-						<Text role="alert">
-							<Trans>The draft could not be loaded.</Trans>
-						</Text>
+						<ErrorNotice
+							error={draft.query.error}
+							onRetry={() => void draft.query.refetch()}
+							title={t`The draft could not be loaded`}
+						/>
 					) : (
-						<Loader aria-label={t`Loading presentation`} />
+						<Stack gap="md" role="status" aria-label={t`Loading presentation`}>
+							<Skeleton height={36} />
+							<Skeleton height={120} />
+						</Stack>
 					)}
 				</Modal>
 				{drafting ? (
 					draft.query.isError ? (
-						<FetchErrorPanel
-							message={<Trans>The draft could not be loaded.</Trans>}
-							onRetry={() => void draft.query.refetch()}
-							testId="present-draft-error-panel"
-						/>
+						<Box {...testId("present-draft-error-panel")}>
+							<ErrorNotice
+								error={draft.query.error}
+								onRetry={() => void draft.query.refetch()}
+								title={t`The draft could not be loaded`}
+							/>
+						</Box>
 					) : draft.query.data ? (
 						<SettingsSaveContext.Provider value={settingsEditor}>
 							<SaveStatus
@@ -764,30 +772,36 @@ function Session({
 							</fieldset>
 						</SettingsSaveContext.Provider>
 					) : (
-						<Text>
-							<Trans>Loading draft…</Trans>
-						</Text>
+						<Stack gap="md" role="status" aria-label={t`Loading draft`}>
+							<Skeleton height={16} width={240} />
+							<Skeleton height={360} />
+						</Stack>
 					)
 				) : (
 					<Preview presentation={presentation} />
 				)}
 				{publishError && (
-					<Text role="alert" size="sm">
-						<Trans>
-							Changes could not be published or saved. Review your draft and try
-							again.
-						</Trans>
-					</Text>
+					<Alert color="red">
+						<Text size="sm">
+							<Trans>
+								Changes could not be published or saved. Review your draft and
+								try again.
+							</Trans>
+						</Text>
+					</Alert>
 				)}
-				<Group justify="space-between" gap="sm">
-					<Text size="sm">
-						{presentation.counts.phrases} <Trans>phrases</Trans>
+				<Group justify="flex-start" gap="sm">
+					<Text size="sm" c="dimmed">
+						<Plural
+							value={presentation.counts.phrases}
+							one="# phrase"
+							other="# phrases"
+						/>
 					</Text>
 					<Group gap="xs">
 						{canEdit && updates.data?.available && (
 							<Button
 								size="compact-sm"
-								variant="outline"
 								loading={adopt.isPending}
 								onClick={() => adopt.mutate()}
 							>
@@ -807,11 +821,11 @@ function Session({
 						</Button>
 					</Group>
 				</Group>
-				{adopt.isError && (
-					<Text role="alert" size="sm">
-						<Trans>Could not load the latest results. Try again.</Trans>
-					</Text>
-				)}
+				<ErrorNotice
+					error={adopt.error}
+					onRetry={() => adopt.mutate()}
+					title={t`Could not load the latest results`}
+				/>
 			</Stack>
 		</PresentationEventTick.Provider>
 	);
@@ -840,21 +854,31 @@ export function PresentRoute() {
 			"noopener",
 		);
 	};
-	if (query.isLoading) return <Loader aria-label={t`Loading presentation`} />;
+	if (query.isLoading)
+		return (
+			<PageContainer width="full" density="tight">
+				<Stack gap="md" role="status" aria-label={t`Loading presentation`}>
+					<Skeleton height={32} width={200} />
+					<Skeleton height={36} width={240} />
+					<Skeleton height={360} />
+				</Stack>
+			</PageContainer>
+		);
 	return (
 		<PageContainer width="full" density="tight">
 			<Stack gap="lg">
-				{ensure.isError && (
-					<Text role="alert">
-						<Trans>The presentation could not be opened. Try again.</Trans>
-					</Text>
-				)}
+				<ErrorNotice
+					error={ensure.error}
+					title={t`The presentation could not be opened`}
+				/>
 				{query.isError ? (
-					<FetchErrorPanel
-						message={<Trans>The presentation could not be loaded.</Trans>}
-						onRetry={() => void query.refetch()}
-						testId="present-error-panel"
-					/>
+					<Box {...testId("present-error-panel")}>
+						<ErrorNotice
+							error={query.error}
+							onRetry={() => void query.refetch()}
+							title={t`The presentation could not be loaded`}
+						/>
+					</Box>
 				) : query.data?.presentation ? (
 					<Session
 						key={query.data.presentation.id}
@@ -870,15 +894,24 @@ export function PresentRoute() {
 							<Trans>Present</Trans>
 						</Title>
 						{query.data?.can_edit === false ? (
-							<Text>
+							<Text size="sm" c="dimmed">
 								<Trans>The host hasn’t prepared a presentation yet.</Trans>
 							</Text>
 						) : ensure.isError ? (
-							<Button variant="outline" onClick={() => ensure.mutate(false)}>
-								<Trans>Try again</Trans>
-							</Button>
+							<Group justify="flex-start">
+								<Button onClick={() => ensure.mutate(false)}>
+									<Trans>Try again</Trans>
+								</Button>
+							</Group>
 						) : (
-							<Loader aria-label={t`Loading presentation`} />
+							<Stack
+								gap="md"
+								role="status"
+								aria-label={t`Loading presentation`}
+							>
+								<Skeleton height={36} width={240} />
+								<Skeleton height={360} />
+							</Stack>
 						)}
 					</Stack>
 				)}

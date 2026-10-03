@@ -1,5 +1,5 @@
 import { Trans } from "@lingui/react/macro";
-import { Button, Group, Text } from "@mantine/core";
+import { Button, Group, Stack, Text, Title } from "@mantine/core";
 import { ArrowsClockwiseIcon, PlusIcon } from "@phosphor-icons/react";
 
 type ConversationErrorViewProps = {
@@ -11,21 +11,32 @@ export const ConversationErrorView = ({
 	conversationDeletedDuringRecording,
 	newConversationLink,
 }: ConversationErrorViewProps) => {
+	const reloadButton = (
+		<Button
+			variant={newConversationLink ? undefined : "filled"}
+			size="md"
+			onClick={() => window.location.reload()}
+			leftSection={<ArrowsClockwiseIcon size={20} />}
+		>
+			<Trans id="participant.button.reload">Reload page</Trans>
+		</Button>
+	);
+
 	return (
-		<div className="container mx-auto flex h-full max-w-2xl flex-col items-center justify-center">
-			<div className="p-8 text-center">
-				<Text size="xl" c="red" mb="md">
+		<div className="container mx-auto flex h-full max-w-2xl flex-col justify-center">
+			<Stack gap="md" p="xl">
+				<Title order={2}>
 					{conversationDeletedDuringRecording ? (
 						<Trans id="participant.conversation.ended">
-							Conversation Ended
+							Conversation ended
 						</Trans>
 					) : (
 						<Trans id="participant.conversation.error">
 							Something went wrong
 						</Trans>
 					)}
-				</Text>
-				<Text size="md" c="dimmed" mb="lg">
+				</Title>
+				<Text c="dimmed">
 					{conversationDeletedDuringRecording ? (
 						<Trans id="participant.conversation.error.deleted">
 							It looks like the conversation was deleted while you were
@@ -39,30 +50,23 @@ export const ConversationErrorView = ({
 						</Trans>
 					)}
 				</Text>
-				<Group justify="center" gap="md">
-					<Button
-						variant="light"
-						size="md"
-						onClick={() => window.location.reload()}
-						leftSection={<ArrowsClockwiseIcon size={20} />}
-					>
-						<Trans id="participant.button.reload">Reload Page</Trans>
-					</Button>
+				<Group gap="sm">
 					{newConversationLink && (
 						<Button
-							leftSection={<PlusIcon size={16} />}
+							leftSection={<PlusIcon size={20} />}
 							variant="filled"
 							size="md"
 							component="a"
 							href={newConversationLink}
 						>
 							<Trans id="participant.button.start.new.conversation">
-								Start New Conversation
+								Start new conversation
 							</Trans>
 						</Button>
 					)}
+					{reloadButton}
 				</Group>
-			</div>
+			</Stack>
 		</div>
 	);
 };

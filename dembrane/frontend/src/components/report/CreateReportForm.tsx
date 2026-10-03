@@ -4,7 +4,6 @@ import {
 	Alert,
 	Anchor,
 	Badge,
-	Box,
 	Button,
 	Divider,
 	Group,
@@ -12,6 +11,7 @@ import {
 	NativeSelect,
 	Stack,
 	Text,
+	Title,
 	Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -22,7 +22,6 @@ import {
 	ClockIcon,
 } from "@phosphor-icons/react";
 import { AxiosError } from "axios";
-import { MessageCircleIcon } from "lucide-react";
 import { useState } from "react";
 import { useParams } from "react-router";
 import { useProjectConversationCounts } from "@/components/report/hooks";
@@ -137,7 +136,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 					is409Error ? t`Report already generating` : t`Error creating report`
 				}
 				color={is409Error ? "yellow" : "red"}
-				mt={12}
+				mt="sm"
 			>
 				{is409Error ? (
 					<Trans>
@@ -183,7 +182,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 				</Alert>
 			)}
 			<CloseableAlert
-				title={t`Generate a Report`}
+				title={t`Generate a report`}
 				storageKey="create-report-info-dismissed"
 			>
 				{hasConversations ? (
@@ -201,27 +200,22 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 
 			{hasConversations && (
 				<>
-					<Text size="sm" c="gray.6">
-						<Text
-							span
-							component="a"
-							c="blue.7"
-							href="#"
-							onClick={(e) => {
-								e.preventDefault();
-								setDetailModalOpened(true);
-							}}
-							className="cursor-pointer underline-offset-4 hover:underline"
+					<Text size="sm" c="dimmed">
+						<Anchor
+							component="button"
+							type="button"
+							size="sm"
+							onClick={() => setDetailModalOpened(true)}
 						>
-							{conversationTotal} <Trans>conversations</Trans>{" "}
-						</Text>
+							{conversationTotal} <Trans>conversations</Trans>
+						</Anchor>{" "}
 						<Trans>will be included in your report</Trans>
 					</Text>
 
 					<Modal
 						opened={detailModalOpened}
 						onClose={() => setDetailModalOpened(false)}
-						title={<Trans>Conversation Status Details</Trans>}
+						title={<Trans>Conversation status details</Trans>}
 						size="lg"
 						centered
 						{...testId("report-conversation-status-modal")}
@@ -240,16 +234,16 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 			) : showSchedule ? (
 				<Stack>
 					<Group gap="xs" align="center">
-						<Text size="lg">
-							<Trans>Schedule Report</Trans>
-						</Text>
+						<Title order={4}>
+							<Trans>Schedule report</Trans>
+						</Title>
 						<Badge color="mauve" c="graphite" size="sm">
 							<Trans>Beta</Trans>
 						</Badge>
 					</Group>
 
 					{/* Summary of selected options */}
-					<Stack gap={4}>
+					<Stack gap="xs">
 						<Text size="xs" c="dimmed">
 							<Trans>Language</Trans>: {getLanguageLabel(language)}
 							{getSelectedFocusLabels(userInstructions, language).length >
@@ -280,8 +274,8 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 							component="button"
 							onClick={() => setShowSchedule(false)}
 						>
-							<Group gap={4}>
-								<ArrowLeftIcon size={12} />
+							<Group gap="xs">
+								<ArrowLeftIcon size={16} />
 								<Trans>Edit options</Trans>
 							</Group>
 						</Anchor>
@@ -309,13 +303,14 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 								showReportUpgrade
 							}
 							fullWidth
-							color="primary"
+							variant="filled"
 							{...testId("report-create-button")}
 						>
-							<Trans>Schedule Report</Trans>
+							<Trans>Schedule report</Trans>
 						</Button>
 						<Button
 							variant="subtle"
+							color="gray"
 							fullWidth
 							onClick={() => setShowSchedule(false)}
 						>
@@ -341,7 +336,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 						/>
 					</Stack>
 
-					<Group gap="xs" mt={24} wrap="wrap">
+					<Group gap="xs" mt="lg" wrap="wrap">
 						<Tooltip
 							label={t`Add conversations to your project first`}
 							disabled={!!hasConversations}
@@ -350,7 +345,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 								onClick={() => handleCreate(false)}
 								loading={isPending}
 								disabled={isPending || !hasConversations || showReportUpgrade}
-								color="primary"
+								variant="filled"
 								style={{ flex: 7 }}
 								{...testId("report-create-button")}
 							>
@@ -358,9 +353,8 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 							</Button>
 						</Tooltip>
 						<Button
-							variant="outline"
 							onClick={() => setShowSchedule(true)}
-							leftSection={<ClockIcon size={16} />}
+							leftSection={<ClockIcon size={20} />}
 							style={{ flex: 3 }}
 							disabled={showReportUpgrade}
 						>
@@ -371,7 +365,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 					{SHOW_STRUCTURE_CTA && (
 						<>
 							<Divider mt="md" />
-							<Text size="xs" c="gray.6" mt="sm">
+							<Text size="xs" c="dimmed" mt="sm">
 								<Trans>Report templates are on our roadmap.</Trans>{" "}
 								<Anchor
 									href={getProductFeedbackUrl(appLocale)}
@@ -381,7 +375,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 								>
 									<Trans>Share your ideas with our team</Trans>{" "}
 									<ArrowSquareOutIcon
-										size={11}
+										size={16}
 										style={{ display: "inline", verticalAlign: "middle" }}
 									/>
 								</Anchor>

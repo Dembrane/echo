@@ -121,7 +121,7 @@ export const NavigationSuggestionCard = ({
 				</Text>
 				<Button
 					size="xs"
-					rightSection={<ArrowRightIcon size={14} />}
+					rightSection={<ArrowRightIcon size={20} />}
 					onClick={() => navigate(path)}
 					{...testId("navigation-suggestion-button")}
 				>

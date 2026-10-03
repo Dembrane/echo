@@ -74,8 +74,8 @@ export const VerifiedArtefactsSection = ({
 	if (isLoading) {
 		return (
 			<Stack gap="sm">
-				<Skeleton height={60} width="50%" radius="md" />
-				<Skeleton height={60} width="50%" radius="md" />
+				<Skeleton height={60} width="50%" />
+				<Skeleton height={60} width="50%" />
 			</Stack>
 		);
 	}
@@ -86,14 +86,14 @@ export const VerifiedArtefactsSection = ({
 	}
 
 	return (
-		<Stack gap="1.5rem">
+		<Stack gap="lg">
 			<Group>
-				<Title order={2}>
+				<Title order={4}>
 					<Trans>Outcomes</Trans>
 				</Title>
 				<ThemeIcon
 					variant="subtle"
-					color="primary"
+					color="gray"
 					aria-label={t`outcomes`}
 					size={22}
 				>
@@ -101,11 +101,7 @@ export const VerifiedArtefactsSection = ({
 				</ThemeIcon>
 			</Group>
 
-			<Accordion
-				variant="unstyled"
-				radius="md"
-				{...testId("conversation-artefacts-accordion")}
-			>
+			<Accordion {...testId("conversation-artefacts-accordion")}>
 				{artefacts.map((artefact) => {
 					const formattedDate = formatArtefactTime(artefact.approved_at);
 

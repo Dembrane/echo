@@ -1,10 +1,9 @@
 import { Trans } from "@lingui/react/macro";
-import { Card, Checkbox, Group, Stack, Text, Title } from "@mantine/core";
-import { FlaskIcon } from "@phosphor-icons/react";
+import { Card, Checkbox, Stack, Text, Title } from "@mantine/core";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { useV2Me } from "@/hooks/useV2Me";
 import { API_BASE_URL } from "@/config";
+import { useV2Me } from "@/hooks/useV2Me";
 import { toast } from "../common/Toaster";
 
 interface BetaFlag {
@@ -48,14 +47,11 @@ export const BetaFeaturesCard = () => {
 	if (BETA_FLAGS.length === 0) return null;
 
 	return (
-		<Card withBorder p="lg" radius="md">
+		<Card withBorder p="lg">
 			<Stack gap="md">
-				<Group gap="sm">
-					<FlaskIcon size={24} />
-					<Title order={3}>
-						<Trans>Beta features</Trans>
-					</Title>
-				</Group>
+				<Title order={4}>
+					<Trans>Beta features</Trans>
+				</Title>
 				<Text size="sm">
 					<Trans>
 						Opt-in to experimental features and help shape dembrane. These

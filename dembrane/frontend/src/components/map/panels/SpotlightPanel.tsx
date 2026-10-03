@@ -27,10 +27,13 @@ import {
 	CHIP_CLASS,
 	formatTimestamp,
 	OPINION_CHIP_CLASS,
+	OPINION_CHIP_STYLE,
 	PanelHeader,
+	pressableChipStyle,
 	VERDICT_CHIP_CLASS,
 	valenceBlurb,
 	valenceChipClass,
+	valenceChipStyle,
 	valenceLabel,
 	verdictLabel,
 } from "./shared";
@@ -56,8 +59,6 @@ type SpotlightPanelProps = {
 	locale?: string;
 	inspection?: NodeInspection | null;
 };
-
-const ACTIVE_RING = "ring-2 ring-offset-1 ring-gray-400";
 
 /**
  * Ink on a marker colour: the deck's `--on-marker`, which is graphite and
@@ -97,15 +98,11 @@ const ConversationChits = ({
 			key={key}
 			onClick={onToggle}
 			aria-pressed={active}
+			data-selected={active || undefined}
 			title={title}
 			data-testid={`conversation-chit-${key}`}
-			className={cn(
-				CHIP_CLASS,
-				ON_MARKER_CLASS,
-				"transition-opacity hover:opacity-80",
-				active && ACTIVE_RING,
-			)}
-			style={style}
+			className={cn(CHIP_CLASS, ON_MARKER_CLASS)}
+			style={{ ...style, ...pressableChipStyle(active) }}
 		>
 			{label}
 		</UnstyledButton>
@@ -160,9 +157,17 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 	const conversationActive = colorBy === "conversation";
 
 	const factCheckTag = verdict
-		? { className: VERDICT_CHIP_CLASS[verdict], label: verdictLabel(verdict) }
+		? {
+				className: VERDICT_CHIP_CLASS[verdict],
+				label: verdictLabel(verdict),
+				style: undefined,
+			}
 		: argumentType
-			? { className: OPINION_CHIP_CLASS, label: t`Opinion` }
+			? {
+					className: OPINION_CHIP_CLASS,
+					label: t`Opinion`,
+					style: OPINION_CHIP_STYLE,
+				}
 			: undefined;
 
 	const timestamp = formatTimestamp(node?.metadata.createdAt, locale);
@@ -187,7 +192,7 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 							inspection={inspection}
 						/>
 
-						<div className="flex flex-wrap gap-1.5">
+						<div className="flex flex-wrap gap-2">
 							<ConversationChits
 								slots={node.metadata.conversationSlots ?? []}
 								names={conversationNames}
@@ -202,17 +207,17 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 										onColorByChange(valenceActive ? "none" : "valence")
 									}
 									aria-pressed={valenceActive}
+									data-selected={valenceActive || undefined}
 									title={
 										valenceActive
 											? t`Stop coloring graph by valence`
 											: t`Color graph by valence`
 									}
-									className={cn(
-										CHIP_CLASS,
-										"transition-opacity hover:opacity-80",
-										valenceChipClass(valence),
-										valenceActive && ACTIVE_RING,
-									)}
+									className={cn(CHIP_CLASS, valenceChipClass(valence))}
+									style={{
+										...valenceChipStyle(valence),
+										...pressableChipStyle(valenceActive),
+									}}
 								>
 									{valenceLabel(valence)}
 								</UnstyledButton>
@@ -223,17 +228,17 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 										onColorByChange(verdictActive ? "none" : "factCheck")
 									}
 									aria-pressed={verdictActive}
+									data-selected={verdictActive || undefined}
 									title={
 										verdictActive
 											? t`Stop coloring graph by factual status`
 											: t`Color graph by factual status`
 									}
-									className={cn(
-										CHIP_CLASS,
-										"transition-opacity hover:opacity-80",
-										factCheckTag.className,
-										verdictActive && ACTIVE_RING,
-									)}
+									className={cn(CHIP_CLASS, factCheckTag.className)}
+									style={{
+										...factCheckTag.style,
+										...pressableChipStyle(verdictActive),
+									}}
 								>
 									{factCheckTag.label}
 								</UnstyledButton>
@@ -264,11 +269,10 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 								{eligible && status === "idle" && canFactCheck && (
 									<Button
 										size="compact-sm"
-										radius="xl"
 										fullWidth
 										onClick={() => onFactCheck(node.id)}
 									>
-										<Trans>Fact check this claim</Trans>
+										<Trans>Fact-check this claim</Trans>
 									</Button>
 								)}
 
@@ -288,7 +292,7 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 											<Button
 												size="compact-xs"
 												variant="subtle"
-												radius={0}
+												color="gray"
 												onClick={() => onCancelFactCheck(node.id)}
 											>
 												<Trans>Cancel</Trans>
@@ -321,7 +325,6 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 											<Button
 												size="compact-xs"
 												variant="subtle"
-												radius={0}
 												onClick={() => onFactCheck(node.id, { force: true })}
 											>
 												<Trans>Re-check</Trans>
@@ -341,11 +344,9 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 										{canFactCheck && (
 											<Button
 												size="compact-xs"
-												variant="outline"
-												radius={0}
 												onClick={() => onFactCheck(node.id)}
 											>
-												<Trans>Retry</Trans>
+												<Trans>Try again</Trans>
 											</Button>
 										)}
 									</div>
@@ -353,9 +354,7 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 							</div>
 						)}
 
-						{timestamp ? (
-							<p className="text-xs uppercase tracking-widest">{timestamp}</p>
-						) : null}
+						{timestamp ? <p className="text-xs">{timestamp}</p> : null}
 					</div>
 				) : (
 					<CaptionText>

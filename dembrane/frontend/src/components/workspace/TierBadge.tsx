@@ -3,6 +3,23 @@ import type { MantineSize } from "@mantine/core";
 import { Badge, Group, Stack, Text, Tooltip } from "@mantine/core";
 import { capacityShortFor, taglineFor } from "@/lib/tiers";
 
+// One colour per tier, shared by every tier badge. A tier is context, not a
+// status or an action, so each reads as a neutral tag.
+export const TIER_COLOR: Record<string, string> = {
+	changemaker: "gray",
+	free: "gray",
+	guardian: "gray",
+	innovator: "gray",
+	pilot: "gray",
+	pioneer: "gray",
+};
+
+export const tierColor = (tier: string): string => TIER_COLOR[tier] ?? "gray";
+
+/** The tier's display name: "innovator" reads "Innovator". */
+export const tierName = (tier: string): string =>
+	tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : "";
+
 interface TierBadgeProps {
 	tier: string;
 	size?: MantineSize;
@@ -36,13 +53,8 @@ export const TierBadge = ({
 	const capacity = capacityShortFor(tier);
 
 	const badge = (
-		<Badge
-			size={size}
-			variant="light"
-			color="blue"
-			style={{ textTransform: "capitalize" }}
-		>
-			{billsSeparately ? `${tier} (partner)` : tier}
+		<Badge size={size} variant="light" color={tierColor(tier)}>
+			{billsSeparately ? t`${tierName(tier)} (partner)` : tierName(tier)}
 		</Badge>
 	);
 
@@ -51,7 +63,7 @@ export const TierBadge = ({
 	// clarifies that this workspace bills on its own, not the org's plan.
 	const tooltipLabel =
 		tagline || capacity || billsSeparately ? (
-			<Stack gap={2}>
+			<Stack gap="xs">
 				{tagline && <Text size="xs">{tagline}</Text>}
 				{capacity && (
 					<Text size="xs" c="dimmed">
@@ -69,7 +81,7 @@ export const TierBadge = ({
 	if (showTagline && tagline) {
 		return (
 			<Tooltip label={tooltipLabel} disabled={!tooltipLabel}>
-				<Group gap={6} wrap="nowrap">
+				<Group gap="xs" wrap="nowrap">
 					{badge}
 					<Text size="xs" c="dimmed">
 						· {tagline}

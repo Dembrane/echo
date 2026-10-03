@@ -1,3 +1,5 @@
+import { Trans } from "@lingui/react/macro";
+import { Button, Stack, Text } from "@mantine/core";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { ViewTransition } from "./animations/ViewTransition";
 import { HelpBlock } from "./blocks/HelpBlock";
@@ -59,7 +61,7 @@ export const AppSidebar = () => {
 						<SidebarHeader />
 						<div
 							className="flex shrink-0 flex-col gap-0.5 border-b p-1.5"
-							style={{ borderColor: "rgba(45, 45, 44, 0.06)" }}
+							style={{ borderColor: "var(--app-rule-color)" }}
 						>
 							<SearchBlock />
 							<InboxBlock />
@@ -77,7 +79,7 @@ export const AppSidebar = () => {
 				</ViewTransition>
 				<div
 					className="flex shrink-0 flex-col gap-0.5 border-t p-1.5"
-					style={{ borderColor: "rgba(45, 45, 44, 0.06)" }}
+					style={{ borderColor: "var(--app-rule-color)" }}
 				>
 					<HelpBlock />
 				</div>
@@ -87,17 +89,17 @@ export const AppSidebar = () => {
 };
 
 const ViewError = () => (
-	<div
-		className="flex flex-col items-start gap-1 p-3 text-xs"
-		style={{ color: "rgba(45, 45, 44, 0.55)" }}
-	>
-		<div>This view couldn't load.</div>
-		<button
-			type="button"
-			className="underline"
+	<Stack align="flex-start" gap="xs" p="sm">
+		<Text size="sm" c="dimmed" className="app-muted">
+			<Trans>This view couldn't load.</Trans>
+		</Text>
+		<Button
+			variant="subtle"
+			color="gray"
+			size="xs"
 			onClick={() => window.location.reload()}
 		>
-			Reload
-		</button>
-	</div>
+			<Trans>Reload page</Trans>
+		</Button>
+	</Stack>
 );

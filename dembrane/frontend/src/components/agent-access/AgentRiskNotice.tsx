@@ -17,7 +17,7 @@ export const AgentRiskNotice = ({
 	<Alert
 		color="orange"
 		variant="light"
-		icon={<WarningIcon size={18} />}
+		icon={<WarningIcon size={16} />}
 		title={<Trans>Before you connect an agent</Trans>}
 		data-testid="agent-risk-notice"
 	>

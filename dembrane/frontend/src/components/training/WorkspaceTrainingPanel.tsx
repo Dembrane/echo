@@ -1,5 +1,5 @@
 import { Trans } from "@lingui/react/macro";
-import { Alert, Loader, Stack, Text } from "@mantine/core";
+import { Skeleton, Stack, Text, Title } from "@mantine/core";
 import { useOrgTrainingRoster } from "./hooks";
 import { TrainingRoster } from "./TrainingRoster";
 
@@ -20,11 +20,17 @@ export const WorkspaceTrainingPanel = ({
 	const { data: roster, isLoading } = useOrgTrainingRoster(orgId);
 
 	if (isLoading) {
-		return <Loader size="sm" />;
+		return (
+			<Stack gap="sm">
+				<Skeleton height={24} width="40%" />
+				<Skeleton height={16} width="70%" />
+				<Skeleton height={120} />
+			</Stack>
+		);
 	}
 	if (!roster) {
 		return (
-			<Text size="sm">
+			<Text size="sm" c="dimmed">
 				<Trans>Training verification isn't available here.</Trans>
 			</Text>
 		);
@@ -33,21 +39,21 @@ export const WorkspaceTrainingPanel = ({
 	return (
 		<Stack gap="md">
 			<div>
-				<Text size="sm">
+				<Title order={4}>
 					<Trans>Training</Trans>
-				</Text>
-				<Text size="xs">
+				</Title>
+				<Text size="sm" c="dimmed">
 					<Trans>
 						Who on your team holds a current training license. Book a training
 						from your organisation's Training view.
 					</Trans>
 				</Text>
 			</div>
-			<Alert color="primary" variant="light">
+			<Text size="sm">
 				<Trans>
 					{roster.trained_count} of {roster.total_count} members are trained.
 				</Trans>
-			</Alert>
+			</Text>
 			<TrainingRoster members={roster.members} showEmails={roster.can_manage} />
 		</Stack>
 	);

@@ -128,7 +128,6 @@ export const LanguagePicker = () => {
 					withCheckIcon={false}
 					comboboxProps={{ offset: 2 }}
 					maxDropdownHeight={360}
-					classNames={{ option: classes.option }}
 					styles={{
 						option: {
 							paddingBlock: 4,
@@ -138,7 +137,9 @@ export const LanguagePicker = () => {
 						<Group gap="xs" wrap="nowrap">
 							<span>{option.label}</span>
 							{PARTIAL_LANGUAGES.has(option.value) && (
-								<span className={classes.partial}>(Partial)</span>
+								<span className={classes.partial}>
+									<Trans>(Partial)</Trans>
+								</span>
 							)}
 						</Group>
 					)}

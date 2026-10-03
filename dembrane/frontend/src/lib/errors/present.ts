@@ -59,7 +59,7 @@ const FALLBACK: Record<ErrorAction | "network" | "unknown", MessageDescriptor> =
 		}),
 		sign_in: msg({
 			id: "error.fallback.sign_in",
-			message: "Your session has ended. Sign in again to continue.",
+			message: "Your session has ended. Log in again to continue.",
 		}),
 		unknown: msg({
 			id: "error.fallback.unknown",

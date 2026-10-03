@@ -15,6 +15,7 @@ import { CaretDownIcon, CaretRightIcon } from "@phosphor-icons/react";
 import { formatDistanceToNow } from "date-fns";
 import { useEffect, useState } from "react";
 import { toast } from "@/components/common/Toaster";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { ProjectSettingsSection } from "@/components/project/ProjectSettingsSection";
 import {
 	type ProjectGoalRevision,
@@ -90,7 +91,7 @@ export const ProjectGoalSection = ({
 			}
 			headerRight={
 				goalQuery.data?.isDevFixture ? (
-					<Badge variant="outline">
+					<Badge>
 						<Trans>Fixture</Trans>
 					</Badge>
 				) : null
@@ -102,13 +103,15 @@ export const ProjectGoalSection = ({
 					<Skeleton height={14} width="34%" />
 				</Stack>
 			) : goalQuery.isError ? (
-				<Text size="sm">
-					<Trans>Could not load this project's goal.</Trans>
-				</Text>
+				<ErrorNotice
+					error={goalQuery.error}
+					title={t`Could not load this project's goal.`}
+					onRetry={() => void goalQuery.refetch()}
+				/>
 			) : (
 				<Stack gap="md">
 					{current ? (
-						<Paper withBorder className="rounded-md px-4 py-4">
+						<Paper withBorder p="md">
 							<Stack gap="sm">
 								<Text size="lg" style={{ whiteSpace: "pre-wrap" }}>
 									{current.content}
@@ -119,7 +122,7 @@ export const ProjectGoalSection = ({
 							</Stack>
 						</Paper>
 					) : (
-						<Text size="sm">
+						<Text size="sm" c="dimmed">
 							{readOnly ? (
 								<Trans>No goal yet.</Trans>
 							) : (
@@ -141,9 +144,18 @@ export const ProjectGoalSection = ({
 								minRows={3}
 								maxRows={8}
 							/>
-							<Group justify="flex-end" gap="xs">
+							<Group justify="flex-start" gap="sm">
+								<Button
+									variant="filled"
+									size="sm"
+									loading={saveGoalMutation.isPending}
+									onClick={() => void handleSave()}
+								>
+									<Trans>Save</Trans>
+								</Button>
 								<Button
 									variant="subtle"
+									color="gray"
 									size="sm"
 									onClick={() => {
 										setContent(current?.content ?? "");
@@ -152,18 +164,10 @@ export const ProjectGoalSection = ({
 								>
 									<Trans>Cancel</Trans>
 								</Button>
-								<Button
-									size="sm"
-									loading={saveGoalMutation.isPending}
-									onClick={() => void handleSave()}
-								>
-									<Trans>Save</Trans>
-								</Button>
 							</Group>
 						</Stack>
 					) : readOnly ? null : (
 						<Button
-							variant="outline"
 							size="sm"
 							className="self-start"
 							onClick={() => {
@@ -183,9 +187,9 @@ export const ProjectGoalSection = ({
 								className="self-start"
 								leftSection={
 									historyOpen ? (
-										<CaretDownIcon size={14} />
+										<CaretDownIcon size={20} />
 									) : (
-										<CaretRightIcon size={14} />
+										<CaretRightIcon size={20} />
 									)
 								}
 								onClick={() => setHistoryOpen((value) => !value)}
@@ -193,13 +197,9 @@ export const ProjectGoalSection = ({
 								<Trans>Revision history</Trans>
 							</Button>
 							<Collapse in={historyOpen}>
-								<Stack
-									gap="sm"
-									className="border-l-2 pl-3"
-									style={{ borderColor: "var(--mantine-color-primary-light)" }}
-								>
+								<Stack gap="sm">
 									{revisions.map((revision) => (
-										<Stack key={revision.id} gap={2}>
+										<Stack key={revision.id} gap={0}>
 											<Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
 												{revision.content}
 											</Text>

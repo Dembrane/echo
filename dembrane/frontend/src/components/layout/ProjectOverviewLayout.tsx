@@ -38,9 +38,9 @@ export const ProjectOverviewLayout = () => {
 		>
 			<LoadingOverlay visible={projectQuery.isLoading} />
 			{project && isPrivate && (
-				<Group gap={8} align="center" wrap="nowrap" px="xs">
+				<Group gap="sm" align="center" wrap="nowrap" px="xs">
 					<Tooltip label={t`Private · only invited people can see this`}>
-						<LockIcon size={16} color="var(--mantine-color-gray-6)" />
+						<LockIcon size={16} color="var(--mantine-color-dimmed)" />
 					</Tooltip>
 				</Group>
 			)}

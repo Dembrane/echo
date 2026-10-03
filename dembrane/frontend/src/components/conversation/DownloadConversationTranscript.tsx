@@ -26,7 +26,6 @@ export const DownloadConversationTranscriptModalActionIcon = ({
 			<Tooltip label={t`Download transcript`}>
 				<ActionIcon
 					onClick={open}
-					size="md"
 					variant="subtle"
 					color="gray"
 					{...testId("transcript-download-button")}
@@ -82,25 +81,26 @@ export const DownloadConversationTranscriptModal = (props: {
 		<Modal
 			opened={opened}
 			onClose={onClose}
-			title={t`Download Transcript Options`}
+			title={t`Download transcript options`}
 			{...testId("transcript-download-modal")}
 		>
 			<Stack>
 				<TextInput
 					disabled={getConversationTranscriptStringMutation.isPending}
-					label={t`Custom Filename`}
+					label={t`Custom filename`}
 					value={filenameDownload}
 					onChange={(e) => setFilenameDownload(e.currentTarget.value)}
 					{...testId("transcript-download-filename-input")}
 				/>
 				<Button
+					variant="filled"
 					loading={getConversationTranscriptStringMutation.isPending}
 					disabled={getConversationTranscriptStringMutation.isPending}
 					onClick={async () => {
 						await handleDownloadTranscript();
 						onClose();
 					}}
-					rightSection={<DownloadSimpleIcon size={20} />}
+					leftSection={<DownloadSimpleIcon size={20} />}
 					{...testId("transcript-download-confirm-button")}
 				>
 					<Trans>Download</Trans>

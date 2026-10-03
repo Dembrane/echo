@@ -111,7 +111,7 @@ export const VerifyEmailRoute = () => {
 									</Text>
 								</Stack>
 							</Alert>
-							<Button size="md" onClick={() => navigate("/o")}>
+							<Button variant="filled" size="md" onClick={() => navigate("/o")}>
 								<Trans>Go to dashboard</Trans>
 							</Button>
 						</Stack>
@@ -152,10 +152,15 @@ export const VerifyEmailRoute = () => {
 								</Stack>
 							</Alert>
 							<Stack gap="lg">
-								<Button size="md" onClick={() => navigate("/login")} fullWidth>
+								<Button
+									variant="filled"
+									size="md"
+									onClick={() => navigate("/login")}
+									fullWidth
+								>
 									<Trans>Log in</Trans>
 								</Button>
-								<Text size="xs" c="dimmed" ta="center">
+								<Text size="xs" c="dimmed">
 									<Trans>
 										Trouble logging in? Contact support@dembrane.com.
 									</Trans>

@@ -124,8 +124,8 @@ const openAccessStep = async () => {
 	fireEvent.change(await screen.findByLabelText("Workspace name"), {
 		target: { value: "Client Alpha" },
 	});
-	fireEvent.click(screen.getByText("Next"));
-	fireEvent.click(screen.getByText("Next"));
+	fireEvent.click(screen.getByText("Continue"));
+	fireEvent.click(screen.getByText("Continue"));
 	await screen.findByTestId("create-workspace-access-everyone");
 };
 

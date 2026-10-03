@@ -20,6 +20,7 @@ import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { toast } from "@/components/common/Toaster";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { notifyError } from "@/components/error/notifyError";
+import { ruleBetween } from "@/components/workspace/ruleBetween";
 import { displayRole } from "@/lib/roles";
 import {
 	type PendingInvite,
@@ -123,86 +124,87 @@ export function PendingInvitesSection({ orgId, scope, workspaceId }: Props) {
 	return (
 		<Box mt="xl" data-testid="pending-invites-section">
 			<Divider />
-			<Stack gap={12} my="lg">
+			<Stack gap="sm" my="lg">
 				<Title order={5}>
 					<Trans>Pending invites</Trans>
 				</Title>
-				<Stack gap="xs">
-					{invites.map((inv) => (
-						<Paper key={inv.id} p="md" withBorder radius="md">
-							<Group justify="space-between" wrap="nowrap">
-								<Box style={{ minWidth: 0 }}>
-									<Text size="sm" truncate>
-										{inv.email}
-									</Text>
-									<Text size="xs" c="dimmed">
-										<span>{displayRole(inv.role)}</span>
-										{inv.invited_by_name && (
-											<>
-												{" · "}
-												<Trans>invited by {inv.invited_by_name}</Trans>
-											</>
-										)}
-									</Text>
-								</Box>
-								<Group gap={8} wrap="nowrap">
-									{inv.type === "org" ? (
-										<Badge size="xs" variant="light" color="primary">
-											<Trans>Org only</Trans>
-										</Badge>
-									) : (
-										inv.workspace_name && (
-											<Badge size="xs" variant="light" color="gray">
-												{inv.workspace_name}
-											</Badge>
-										)
+				<Paper withBorder>
+					{invites.map((inv, i) => (
+						<Group
+							key={inv.id}
+							justify="space-between"
+							wrap="nowrap"
+							p="md"
+							style={ruleBetween(i, invites.length)}
+						>
+							<Box style={{ minWidth: 0 }}>
+								<Text size="sm" truncate>
+									{inv.email}
+								</Text>
+								<Text size="xs" c="dimmed">
+									<span>{displayRole(inv.role)}</span>
+									{inv.invited_by_name && (
+										<>
+											{" · "}
+											<Trans>invited by {inv.invited_by_name}</Trans>
+										</>
 									)}
-									<Badge size="xs" variant="light" color="yellow">
-										<Trans>Pending</Trans>
+								</Text>
+							</Box>
+							<Group gap="sm" wrap="nowrap">
+								{inv.type === "org" ? (
+									<Badge size="xs" variant="light" color="gray">
+										<Trans>Org only</Trans>
 									</Badge>
-									{inv.invite_url && (
-										<Tooltip label={t`Copy invite link`}>
-											<ActionIcon
-												size="sm"
-												variant="subtle"
-												onClick={() => handleCopyLink(inv)}
-												aria-label={t`Copy invite link`}
-												data-testid={`pending-invite-copy-link-${inv.id}`}
-											>
-												<LinkIcon size={14} />
-											</ActionIcon>
-										</Tooltip>
-									)}
-									<Tooltip label={t`Resend invite email`}>
+								) : (
+									inv.workspace_name && (
+										<Badge size="xs" variant="light" color="gray">
+											{inv.workspace_name}
+										</Badge>
+									)
+								)}
+								<Badge size="xs" variant="light" color="yellow">
+									<Trans>Pending</Trans>
+								</Badge>
+								{inv.invite_url && (
+									<Tooltip label={t`Copy invite link`}>
 										<ActionIcon
-											size="sm"
 											variant="subtle"
-											loading={resend.isPending && resend.variables === inv.id}
-											onClick={() => handleResend(inv)}
-											aria-label={t`Resend invite`}
-											data-testid={`pending-invite-resend-${inv.id}`}
+											onClick={() => handleCopyLink(inv)}
+											aria-label={t`Copy invite link`}
+											data-testid={`pending-invite-copy-link-${inv.id}`}
 										>
-											<ArrowClockwiseIcon size={14} />
+											<LinkIcon size={20} />
 										</ActionIcon>
 									</Tooltip>
-									<Tooltip label={t`Revoke invite`}>
-										<ActionIcon
-											size="sm"
-											variant="subtle"
-											color="gray"
-											loading={revoke.isPending && revoke.variables === inv.id}
-											onClick={() => handleRevoke(inv)}
-											aria-label={t`Revoke invite`}
-											data-testid={`pending-invite-revoke-${inv.id}`}
-										>
-											<XIcon size={14} />
-										</ActionIcon>
-									</Tooltip>
-								</Group>
+								)}
+								<Tooltip label={t`Resend invite email`}>
+									<ActionIcon
+										variant="subtle"
+										loading={resend.isPending && resend.variables === inv.id}
+										onClick={() => handleResend(inv)}
+										aria-label={t`Resend invite`}
+										data-testid={`pending-invite-resend-${inv.id}`}
+									>
+										<ArrowClockwiseIcon size={20} />
+									</ActionIcon>
+								</Tooltip>
+								<Tooltip label={t`Revoke invite`}>
+									<ActionIcon
+										variant="subtle"
+										color="gray"
+										loading={revoke.isPending && revoke.variables === inv.id}
+										onClick={() => handleRevoke(inv)}
+										aria-label={t`Revoke invite`}
+										data-testid={`pending-invite-revoke-${inv.id}`}
+									>
+										<XIcon size={20} />
+									</ActionIcon>
+								</Tooltip>
 							</Group>
-						</Paper>
+						</Group>
 					))}
-				</Stack>
+				</Paper>
 			</Stack>
 			<ConfirmModal
 				opened={confirmOpened}

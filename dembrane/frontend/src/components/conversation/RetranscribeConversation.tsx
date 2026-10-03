@@ -51,7 +51,6 @@ export const RetranscribeConversationModalActionIcon = ({
 			>
 				<ActionIcon
 					onClick={open}
-					size="md"
 					variant="subtle"
 					color="gray"
 					disabled={disabled}
@@ -151,7 +150,7 @@ export const RetranscribeConversationModal = ({
 			onClose={onClose}
 			title={
 				<Group gap="xs">
-					<Text>{t`Retranscribe Conversation`}</Text>
+					<Text>{t`Retranscribe conversation`}</Text>
 					<Badge color="mauve" c="graphite" size="sm">
 						<Trans>Beta</Trans>
 					</Badge>
@@ -192,7 +191,7 @@ export const RetranscribeConversationModal = ({
 						</Stack>
 					</Alert>
 					<TextInput
-						label={t`New Conversation Name`}
+						label={t`New conversation name`}
 						placeholder={t`Enter a name for the new conversation`}
 						value={newConversationName}
 						onChange={(e) => setNewConversationName(e.currentTarget.value)}
@@ -222,8 +221,9 @@ export const RetranscribeConversationModal = ({
 						/>
 					)}
 					<Button
+						variant="filled"
 						onClick={handleRetranscribe}
-						rightSection={<ArrowClockwiseIcon size="1rem" />}
+						leftSection={<ArrowClockwiseIcon size={20} />}
 						disabled={!newConversationName.trim()}
 						{...testId("transcript-retranscribe-confirm-button")}
 					>

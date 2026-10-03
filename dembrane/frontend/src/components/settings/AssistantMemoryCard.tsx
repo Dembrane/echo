@@ -1,7 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Card, Group, Stack, Text, Title } from "@mantine/core";
-import { SparkleIcon } from "@phosphor-icons/react";
+import { Card, Stack, Text, Title } from "@mantine/core";
 import { useUserMemories } from "@/components/memory/hooks";
 import { MemoryList } from "@/components/memory/MemoryList";
 
@@ -9,14 +8,11 @@ export const AssistantMemoryCard = () => {
 	const memoriesQuery = useUserMemories();
 
 	return (
-		<Card withBorder p="lg" radius="md">
+		<Card withBorder p="lg">
 			<Stack gap="md">
-				<Group gap="sm">
-					<SparkleIcon size={24} />
-					<Title order={3}>
-						<Trans>Memory</Trans>
-					</Title>
-				</Group>
+				<Title order={4}>
+					<Trans>Memory</Trans>
+				</Title>
 
 				<Text size="sm">
 					<Trans>

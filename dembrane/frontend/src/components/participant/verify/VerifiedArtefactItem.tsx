@@ -1,4 +1,4 @@
-import { ActionIcon, Box, Group, Paper, Text } from "@mantine/core";
+import { Box, Group, Paper, Text } from "@mantine/core";
 import { SealCheckIcon } from "@phosphor-icons/react";
 import { format } from "date-fns";
 import type { VerificationArtifact } from "@/lib/api";
@@ -7,7 +7,7 @@ import { testId } from "@/lib/testUtils";
 type VerifiedArtefactItemProps = {
 	artefact: VerificationArtifact;
 	label: string;
-	icon?: string;
+
 	onViewArtefact: (artefactId: string) => void;
 	dataTestId?: string;
 };
@@ -25,7 +25,6 @@ const formatArtefactTime = (timestamp: string | null | undefined): string => {
 export const VerifiedArtefactItem = ({
 	artefact,
 	label,
-	icon,
 	onViewArtefact,
 	dataTestId,
 }: VerifiedArtefactItemProps) => {
@@ -35,30 +34,26 @@ export const VerifiedArtefactItem = ({
 	return (
 		<Box className="flex items-baseline justify-end">
 			<Paper
-				className="my-2 cursor-pointer rounded-t-xl rounded-bl-xl p-4 hover:bg-gray-50 transition-colors"
+				component="button"
+				type="button"
+				className="my-2 p-4"
 				onClick={() => onViewArtefact(artefact.id)}
 				{...(dataTestId ? testId(dataTestId) : {})}
 			>
 				<Group gap="sm" wrap="nowrap">
 					<Group align="baseline">
-						<Text className="prose text-sm">
-							{icon ? <span className="mr-1">{icon}</span> : null}
-							{label}
-						</Text>
+						<Text size="sm">{label}</Text>
 						{formattedDate && (
 							<Text size="xs" c="dimmed">
 								{formattedDate}
 							</Text>
 						)}
 					</Group>
-					<ActionIcon
-						variant="subtle"
-						color="primary"
-						aria-label="concrete artefact"
-						size={22}
-					>
-						<SealCheckIcon size={16} />
-					</ActionIcon>
+					<SealCheckIcon
+						size={16}
+						color="var(--mantine-color-primary-7)"
+						aria-hidden
+					/>
 				</Group>
 			</Paper>
 		</Box>

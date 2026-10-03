@@ -8,7 +8,6 @@ import {
 	Stack,
 	Title,
 } from "@mantine/core";
-import { KeyIcon } from "@phosphor-icons/react";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { PasswordRequirements } from "@/components/auth/PasswordRequirements";
@@ -57,14 +56,11 @@ export const ChangePasswordCard = () => {
 		passwordsMatch;
 
 	return (
-		<Card withBorder p="lg" radius="md">
+		<Card withBorder p="lg">
 			<Stack gap="md">
-				<Group gap="sm">
-					<KeyIcon size={24} />
-					<Title order={3}>
-						<Trans>Change password</Trans>
-					</Title>
-				</Group>
+				<Title order={4}>
+					<Trans>Change password</Trans>
+				</Title>
 
 				<PasswordInput
 					label={t`Current password`}
@@ -96,6 +92,7 @@ export const ChangePasswordCard = () => {
 
 				<Group>
 					<Button
+						variant="filled"
 						onClick={() => mutation.mutate()}
 						loading={mutation.isPending}
 						disabled={!canSubmit}

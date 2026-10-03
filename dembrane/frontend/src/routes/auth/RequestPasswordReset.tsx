@@ -9,7 +9,7 @@ import { I18nLink } from "@/components/common/i18nLink";
 import { testId } from "@/lib/testUtils";
 
 export const RequestPasswordResetRoute = () => {
-	useDocumentTitle(t`Request Password Reset | dembrane`);
+	useDocumentTitle(t`Request password reset | dembrane`);
 	// The "you already have an account" email links here with ?email=.
 	const [searchParams] = useSearchParams();
 	const { register, handleSubmit } = useForm<{ email: string }>({
@@ -26,8 +26,8 @@ export const RequestPasswordResetRoute = () => {
 		<div className="h-full w-full">
 			<Stack className="h-full">
 				<Stack className="flex-grow">
-					<Title order={1}>
-						<Trans>Request Password Reset</Trans>
+					<Title order={2}>
+						<Trans>Request password reset</Trans>
 					</Title>
 
 					{requestPasswordResetMutation.isSuccess ? (
@@ -40,29 +40,29 @@ export const RequestPasswordResetRoute = () => {
 								</Trans>
 							</Alert>
 							<Anchor component={I18nLink} to="/login" size="sm">
-								<Trans>Back to login</Trans>
+								<Trans>Back to log in</Trans>
 							</Anchor>
 						</Stack>
 					) : (
 						<form onSubmit={onSubmit}>
 							<Stack>
 								<TextInput
-									size="lg"
-									label="Email"
+									size="md"
+									label={t`Email`}
 									{...register("email")}
 									{...testId("auth-password-reset-email-input")}
-									placeholder="Email"
+									placeholder={t`Email`}
 									required
 									type="email"
 								/>
 								<Button
 									variant="filled"
-									size="lg"
+									size="md"
 									type="submit"
 									loading={requestPasswordResetMutation.isPending}
 									{...testId("auth-password-reset-submit-button")}
 								>
-									<Trans>Submit</Trans>
+									<Trans>Send reset link</Trans>
 								</Button>
 							</Stack>
 						</form>

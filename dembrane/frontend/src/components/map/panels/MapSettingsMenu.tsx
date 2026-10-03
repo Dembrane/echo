@@ -108,7 +108,7 @@ const BudgetControls = ({
 		settings.nodeLimit !== null || settings.edgeLimit !== null;
 	return (
 		<Stack gap="xs">
-			<Text size="xs" className="uppercase tracking-widest">
+			<Text size="xs">
 				<Trans>Map budget</Trans>
 			</Text>
 			<NumberInput
@@ -146,7 +146,6 @@ const BudgetControls = ({
 				<Button
 					size="compact-xs"
 					variant="subtle"
-					radius={0}
 					onClick={() => onChange({ edgeLimit: null, nodeLimit: null })}
 				>
 					<Trans>Use the default budget</Trans>
@@ -181,8 +180,6 @@ export const MapSettingsMenu = ({
 			<Popover.Target>
 				<ActionIcon
 					variant="subtle"
-					size="lg"
-					radius={0}
 					aria-label={t`Panel settings`}
 					title={t`Panel settings`}
 				>
@@ -227,7 +224,7 @@ export const MapSettingsMenu = ({
 						value={colorBy}
 						onChange={(value) => onColorByChange(value as ColorBy)}
 						label={
-							<Text size="xs" className="uppercase tracking-widest">
+							<Text size="xs">
 								<Trans>Color nodes by</Trans>
 							</Text>
 						}
@@ -257,15 +254,14 @@ export const MapSettingsMenu = ({
 							/>
 							<Button
 								size="sm"
-								radius={0}
 								fullWidth
 								disabled={pendingClaimCount === 0}
 								onClick={onFactCheckAll}
 							>
 								{pendingClaimCount > 0 ? (
-									<Trans>Fact check all ({pendingClaimCount})</Trans>
+									<Trans>Fact-check all ({pendingClaimCount})</Trans>
 								) : (
-									<Trans>Fact check all</Trans>
+									<Trans>Fact-check all</Trans>
 								)}
 							</Button>
 						</>

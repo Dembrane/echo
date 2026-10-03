@@ -21,21 +21,24 @@ export const Sources = ({
 	if (references.length === 0) return null;
 
 	return (
-		<Box className="prose prose-sm flex flex-col rounded-t-xl rounded-br-xl border p-4">
+		<Box
+			className="prose prose-sm flex flex-col border-x-0 border-y border-solid py-4"
+			style={{ borderColor: "var(--app-rule-color)" }}
+		>
 			<Group gap="sm" align="center">
-				<Box w={15} h={15} bg="green.5" style={{ borderRadius: "50%" }} />
-				<Text size="sm" my={2}>
+				<Text size="sm">
 					<Trans>
 						The following conversations were automatically added to the context
 					</Trans>
 				</Text>
 			</Group>
-			<Group gap="xs" mt={10}>
+			<Group gap="xs" mt="sm">
 				{references.map((ref, index) => {
 					const conversationId = ref?.conversation?.id || ref?.conversation;
 					if (!workspaceId || !projectId || !conversationId) return null;
 					return (
-						<I18nLink
+						<Badge
+							component={I18nLink}
 							// biome-ignore lint/suspicious/noArrayIndexKey: needs to be fixed
 							key={index}
 							to={conversationReferencePath({
@@ -44,14 +47,13 @@ export const Sources = ({
 								projectId,
 								workspaceId,
 							})}
+							color="gray"
 						>
-							<Badge className="cursor-pointer normal-case" variant="default">
-								{ref?.conversation_title ||
-									ref?.conversation?.participant_name || (
-										<Trans>Source {index + 1}</Trans>
-									)}
-							</Badge>
-						</I18nLink>
+							{ref?.conversation_title ||
+								ref?.conversation?.participant_name || (
+									<Trans>Source {index + 1}</Trans>
+								)}
+						</Badge>
 					);
 				})}
 			</Group>

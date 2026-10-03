@@ -5,17 +5,15 @@ import {
 	Avatar,
 	Badge,
 	Box,
-	Button,
 	Group,
 	Paper,
 	Stack,
 	Text,
 	Tooltip,
 } from "@mantine/core";
-import { ArrowSquareOutIcon, PushPinIcon } from "@phosphor-icons/react";
+import { CalendarBlankIcon, PushPinIcon } from "@phosphor-icons/react";
 import { formatRelative } from "date-fns";
 import { useParams } from "react-router";
-import { Icons } from "@/icons";
 import { avatarUrl } from "@/lib/avatar";
 import { testId } from "@/lib/testUtils";
 import { formatDurationFromHours } from "@/lib/time";
@@ -127,113 +125,103 @@ export const PinnedProjectCard = ({
 	const ownerEmail = (project as any).owner_email as string | undefined;
 
 	return (
-		<I18nLink
+		// A link-rendered Paper gets the full box (something you do) from
+		// rules.css, so the card is the link itself rather than sitting in one.
+		<Paper
+			component={I18nLink}
 			to={link}
-			className="no-underline block h-full"
-			style={{ color: "inherit" }}
+			p="md"
+			className="block h-full"
+			{...testId(`pinned-project-card-${project.id}`)}
 		>
-			<Paper
-				component="a"
-				p="md"
-				className="h-full hover:!border-primary-400 transition-colors"
-				withBorder
-				{...testId(`pinned-project-card-${project.id}`)}
-			>
-				<Stack className="h-full" justify="space-between" gap="sm">
-					<Stack gap="xs">
-						<Group justify="space-between" wrap="nowrap" align="flex-start">
-							<Group
-								align="center"
-								gap="xs"
-								wrap="nowrap"
-								style={{ minWidth: 0, overflow: "hidden" }}
+			<Stack className="h-full" justify="space-between" gap="sm">
+				<Stack gap="xs">
+					<Group justify="space-between" wrap="nowrap" align="flex-start">
+						<Group
+							align="center"
+							gap="xs"
+							wrap="nowrap"
+							style={{ minWidth: 0, overflow: "hidden" }}
+						>
+							<CalendarBlankIcon size={16} style={{ flexShrink: 0 }} />
+							<Text
+								size="lg"
+								truncate
+								{...testId(`pinned-project-card-name-${project.id}`)}
 							>
-								<Icons.Calendar style={{ flexShrink: 0 }} />
-								<Text
-									className="font-semibold"
-									size="lg"
-									truncate
-									{...testId(`pinned-project-card-name-${project.id}`)}
-								>
-									{project.name}
-								</Text>
-							</Group>
-							<Group gap={4} wrap="nowrap" style={{ flexShrink: 0 }}>
-								{languageLabel && (
-									<Badge size="xs" variant="light" color="gray">
-										{languageLabel}
-									</Badge>
-								)}
-								{onUnpin ? (
-									<Tooltip label={t`Unpin project`}>
-										<ActionIcon
-											variant="subtle"
-											color="primary"
-											size="sm"
-											loading={isUnpinning}
-											onClick={(e) => {
-												e.preventDefault();
-												e.stopPropagation();
-												onUnpin(project.id);
-											}}
-										>
-											<PushPinIcon weight="fill" size={16} />
-										</ActionIcon>
-									</Tooltip>
-								) : (
-									// Read-only pin indicator for viewers without write
-									// permission (guest workspaces).
-									<PushPinIcon
-										weight="fill"
-										size={14}
-										color="var(--mantine-color-gray-5)"
-									/>
-								)}
-							</Group>
+								{project.name}
+							</Text>
 						</Group>
-
-						<Text size="xs" c="dimmed">
-							{audioHours > 0 && (
-								<>
-									{formatDurationFromHours(audioHours)}
-									{" • "}
-								</>
+						<Group gap="xs" wrap="nowrap" style={{ flexShrink: 0 }}>
+							{languageLabel && (
+								<Badge size="xs" variant="light" color="gray">
+									{languageLabel}
+								</Badge>
 							)}
-							<Trans>
-								{conversationCount} Conversations • Edited{" "}
-								{formatRelative(
-									new Date(project.updated_at ?? new Date()),
-									new Date(),
-								)}
-							</Trans>
-							{(ownerName || ownerEmail) && (
-								<>
-									{" • "}
-									<Tooltip label={ownerEmail} disabled={!ownerEmail}>
-										<Text
-											size="xs"
-											c="dimmed"
-											component="span"
-											className="cursor-pointer hover:underline"
-											onClick={(e) => {
-												e.preventDefault();
-												e.stopPropagation();
-												onSearchOwner?.(ownerEmail ?? ownerName ?? "");
-											}}
-										>
-											{ownerName ?? ownerEmail}
-										</Text>
-									</Tooltip>
-								</>
+							{onUnpin ? (
+								<Tooltip label={t`Unpin project`}>
+									<ActionIcon
+										variant="subtle"
+										color="primary"
+										loading={isUnpinning}
+										onClick={(e) => {
+											e.preventDefault();
+											e.stopPropagation();
+											onUnpin(project.id);
+										}}
+									>
+										<PushPinIcon size={20} />
+									</ActionIcon>
+								</Tooltip>
+							) : (
+								// Read-only pin indicator for viewers without write
+								// permission (guest workspaces).
+								<PushPinIcon size={16} color="var(--mantine-color-dimmed)" />
 							)}
-						</Text>
-					</Stack>
+						</Group>
+					</Group>
 
-					<Box style={{ display: "flex", justifyContent: "flex-end" }}>
-						<AccessBubbles project={project} />
-					</Box>
+					<Text size="xs" c="dimmed">
+						{audioHours > 0 && (
+							<>
+								{formatDurationFromHours(audioHours)}
+								{" · "}
+							</>
+						)}
+						<Trans>
+							{conversationCount} conversations · Edited{" "}
+							{formatRelative(
+								new Date(project.updated_at ?? new Date()),
+								new Date(),
+							)}
+						</Trans>
+						{(ownerName || ownerEmail) && (
+							<>
+								{" · "}
+								<Tooltip label={ownerEmail} disabled={!ownerEmail}>
+									<Text
+										size="xs"
+										c="dimmed"
+										component="span"
+										className="cursor-pointer hover:underline"
+										onClick={(e) => {
+											e.preventDefault();
+											e.stopPropagation();
+											onSearchOwner?.(ownerEmail ?? ownerName ?? "");
+										}}
+									>
+										{ownerName ?? ownerEmail}
+									</Text>
+								</Tooltip>
+							</>
+						)}
+					</Text>
 				</Stack>
-			</Paper>
-		</I18nLink>
+
+				<Box style={{ display: "flex", justifyContent: "flex-end" }}>
+					<AccessBubbles project={project} />
+				</Box>
+			</Stack>
+		</Paper>
 	);
 };

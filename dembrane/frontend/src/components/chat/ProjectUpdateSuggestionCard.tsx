@@ -111,7 +111,7 @@ const isEmptyValue = (value: unknown) =>
 const COARSE_TAP_TARGET = "[@media(pointer:coarse)]:min-h-11";
 
 const VALUE_BOX =
-	"max-h-64 overflow-y-auto rounded-md border border-slate-200 px-2 py-1.5";
+	"max-h-64 overflow-y-auto border-x-0 border-y border-solid border-[color:var(--app-rule-color)] px-2 py-1.5";
 
 /**
  * The three ways a fragment can read inside a value box, and the only place
@@ -287,7 +287,7 @@ const ChangeDetail = ({
 	const unchanged = asDisplayString(change.current) === asDisplayString(value);
 
 	return (
-		<Stack gap={6}>
+		<Stack gap="xs">
 			{unchanged ? (
 				<Text size="sm" c="dimmed">
 					<Trans>This field already holds the proposed value.</Trans>
@@ -310,7 +310,7 @@ const ChangeDetail = ({
 				</Text>
 			) : null}
 
-			<Stack gap={2}>
+			<Stack gap="xs">
 				<Text size="xs" c="dimmed">
 					<Trans>Current</Trans>
 				</Text>
@@ -323,7 +323,7 @@ const ChangeDetail = ({
 				</Box>
 			</Stack>
 
-			<Stack gap={2}>
+			<Stack gap="xs">
 				<Text size="xs" c="dimmed">
 					<Trans>Proposed</Trans>
 				</Text>
@@ -363,6 +363,7 @@ const ChangeDetail = ({
 				<Group gap="xs">
 					<Button
 						variant="subtle"
+						color="gray"
 						size="xs"
 						className={COARSE_TAP_TARGET}
 						onClick={onToggleFullText}
@@ -507,7 +508,7 @@ export const ProjectUpdateSuggestionCard = ({
 						<CheckIcon
 							size={16}
 							className="shrink-0"
-							style={{ color: "var(--mantine-color-primary-7)" }}
+							style={{ color: "var(--mantine-color-green-7)" }}
 						/>
 						<Text size="sm">
 							<Trans>These changes are applied to your project.</Trans>
@@ -517,15 +518,11 @@ export const ProjectUpdateSuggestionCard = ({
 						    the host nothing when they come back to the chat later.
 						    Label-over-value rows in plain text: the green
 						    key-value soup was unreadable. */}
-					<Stack
-						gap="sm"
-						className="ml-6 border-l-2 pl-3"
-						style={{ borderColor: "var(--mantine-color-primary-light)" }}
-					>
+					<Stack gap="sm">
 						{suggestion.changes.map((change) => {
 							const value = effectiveValue(change);
 							return (
-								<Stack key={change.field} gap={2}>
+								<Stack key={change.field} gap="xs">
 									{/* Same label treatment as "Current" and "Proposed" below:
 									    small and dimmed, so the value it names is the thing
 									    being read. */}
@@ -559,12 +556,13 @@ export const ProjectUpdateSuggestionCard = ({
 	if (dismissed) {
 		return (
 			<SuggestionCardFrame compact testId="agentic-project-update-suggestion">
-				<Group justify="space-between" gap="xs" wrap="wrap">
+				<Group gap="xs" wrap="wrap">
 					<Text size="sm">
 						<Trans>Dismissed. Nothing was changed.</Trans>
 					</Text>
 					<Button
 						variant="subtle"
+						color="gray"
 						size="xs"
 						className={COARSE_TAP_TARGET}
 						onClick={() => setDismissed(false)}
@@ -630,6 +628,7 @@ export const ProjectUpdateSuggestionCard = ({
 											{isEditable ? (
 												<Button
 													variant="subtle"
+													color="gray"
 													size="xs"
 													className={`shrink-0 ${COARSE_TAP_TARGET}`}
 													onClick={() =>
@@ -706,9 +705,20 @@ export const ProjectUpdateSuggestionCard = ({
 							onChange={(event) => setNote(event.currentTarget.value)}
 							{...testId("suggestion-note-input")}
 						/>
-						<Group justify="flex-end" gap="xs">
+						<Group justify="flex-start" gap="xs">
+							<Button
+								variant="filled"
+								size="xs"
+								className={COARSE_TAP_TARGET}
+								disabled={note.trim().length === 0}
+								onClick={() => void handleSendNote()}
+								{...testId("suggestion-note-send-button")}
+							>
+								<Trans>Send note</Trans>
+							</Button>
 							<Button
 								variant="subtle"
+								color="gray"
 								size="xs"
 								className={COARSE_TAP_TARGET}
 								onClick={() => {
@@ -719,30 +729,22 @@ export const ProjectUpdateSuggestionCard = ({
 							>
 								<Trans>Cancel</Trans>
 							</Button>
-							<Button
-								size="xs"
-								className={COARSE_TAP_TARGET}
-								disabled={note.trim().length === 0}
-								onClick={() => void handleSendNote()}
-								{...testId("suggestion-note-send-button")}
-							>
-								<Trans>Send note</Trans>
-							</Button>
 						</Group>
 					</Stack>
 				) : (
-					<Group justify="space-between" gap="xs" wrap="wrap">
+					<Stack gap="xs" align="flex-start">
 						<Button
 							variant="subtle"
+							color="gray"
 							size="xs"
 							className={COARSE_TAP_TARGET}
 							aria-expanded={expanded}
 							aria-controls={panelId}
 							leftSection={
 								expanded ? (
-									<CaretUpIcon size={14} aria-hidden />
+									<CaretUpIcon size={20} aria-hidden />
 								) : (
-									<CaretDownIcon size={14} aria-hidden />
+									<CaretDownIcon size={20} aria-hidden />
 								)
 							}
 							onClick={() => setExpanded((prev) => !prev)}
@@ -759,9 +761,19 @@ export const ProjectUpdateSuggestionCard = ({
 							)}
 						</Button>
 						<Group gap="xs" wrap="wrap">
+							<Button
+								variant="filled"
+								size="xs"
+								className={COARSE_TAP_TARGET}
+								loading={updateProjectMutation.isPending}
+								disabled={selectedChanges.length === 0}
+								onClick={() => void handleApply()}
+								{...testId("suggestion-apply-button")}
+							>
+								<Trans>Accept</Trans>
+							</Button>
 							{onSendNote ? (
 								<Button
-									variant="subtle"
 									size="xs"
 									className={COARSE_TAP_TARGET}
 									onClick={() => setNoteOpen(true)}
@@ -772,6 +784,7 @@ export const ProjectUpdateSuggestionCard = ({
 							) : null}
 							<Button
 								variant="subtle"
+								color="gray"
 								size="xs"
 								className={COARSE_TAP_TARGET}
 								onClick={() => setDismissed(true)}
@@ -779,18 +792,8 @@ export const ProjectUpdateSuggestionCard = ({
 							>
 								<Trans>Dismiss</Trans>
 							</Button>
-							<Button
-								size="xs"
-								className={COARSE_TAP_TARGET}
-								loading={updateProjectMutation.isPending}
-								disabled={selectedChanges.length === 0}
-								onClick={() => void handleApply()}
-								{...testId("suggestion-apply-button")}
-							>
-								<Trans>Accept</Trans>
-							</Button>
 						</Group>
-					</Group>
+					</Stack>
 				)}
 			</Stack>
 		</SuggestionCardFrame>

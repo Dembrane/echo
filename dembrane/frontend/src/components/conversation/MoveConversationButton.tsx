@@ -9,7 +9,9 @@ import {
 	Modal,
 	Radio,
 	ScrollArea,
+	Skeleton,
 	Stack,
+	Text,
 	TextInput,
 } from "@mantine/core";
 import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
@@ -133,22 +135,20 @@ export const MoveConversationButton = ({
 		<>
 			<Button
 				onClick={open}
-				variant="outline"
-				color="primary"
-				rightSection={<ArrowsLeftRightIcon size={16} />}
+				leftSection={<ArrowsLeftRightIcon size={20} />}
 				{...testId("conversation-move-button")}
 			>
-				<Trans>Move to Another Project</Trans>
+				<Trans>Move to another project</Trans>
 			</Button>
 
 			<Modal
 				opened={opened}
 				onClose={close}
-				title={t`Move Conversation`}
+				title={t`Move conversation`}
 				{...testId("conversation-move-modal")}
 			>
 				<form onSubmit={handleMove}>
-					<Stack gap="3rem">
+					<Stack gap="xl">
 						<Stack gap="md">
 							<TextInput
 								label={<FormLabel label={t`Search`} isDirty={false} />}
@@ -167,17 +167,19 @@ export const MoveConversationButton = ({
 										| { projects: Project[]; nextOffset?: number }[]
 										| undefined
 								)?.flatMap((page) => page.projects).length === 0 && (
-									<Center style={{ height: 200 }}>
+									<Text size="sm" c="dimmed">
 										<Trans>
 											No projects found {search && `with "${search}"`}
 										</Trans>
-									</Center>
+									</Text>
 								)}
 
 								{projectsQuery.isLoading ? (
-									<Center style={{ height: 200 }}>
-										<Loader />
-									</Center>
+									<Stack gap="sm">
+										<Skeleton height={24} />
+										<Skeleton height={24} />
+										<Skeleton height={24} />
+									</Stack>
 								) : (
 									<Controller
 										name="targetProjectId"
@@ -223,16 +225,7 @@ export const MoveConversationButton = ({
 							</ScrollArea>
 						</Stack>
 
-						<Group justify="flex-end">
-							<Button
-								variant="subtle"
-								onClick={close}
-								disabled={moveConversationMutation.isPending}
-								type="button"
-								{...testId("conversation-move-cancel-button")}
-							>
-								{t`Cancel`}
-							</Button>
+						<Group justify="flex-start">
 							<Button
 								variant="filled"
 								type="submit"
@@ -244,6 +237,16 @@ export const MoveConversationButton = ({
 								{...testId("conversation-move-submit-button")}
 							>
 								{t`Move`}
+							</Button>
+							<Button
+								variant="subtle"
+								color="gray"
+								onClick={close}
+								disabled={moveConversationMutation.isPending}
+								type="button"
+								{...testId("conversation-move-cancel-button")}
+							>
+								{t`Cancel`}
 							</Button>
 						</Group>
 

@@ -174,18 +174,18 @@ export const ProjectConversationRoute = () => {
 	] = useDisclosure(false);
 
 	return (
-		<Stack gap="2rem" className="relative px-8 py-4">
+		<Stack gap="xl" className="relative px-8 py-4">
 			<LoadingOverlay visible={conversationQuery.isLoading} />
 
 			{/* Header: name, title, when it was recorded, tags. Duration lives on the list page only. */}
 			<Stack gap="xs" {...testId("conversation-detail-header")}>
 				<Group gap="sm" align="center" wrap="wrap">
-					<Title order={1}>{primary}</Title>
+					<Title order={2}>{primary}</Title>
 					{verified && (
 						<Tooltip label={t`Has verified artifacts`}>
 							<ThemeIcon
 								variant="subtle"
-								color="primary"
+								color="gray"
 								size={22}
 								aria-label={t`Verified artifacts`}
 							>
@@ -197,7 +197,7 @@ export const ProjectConversationRoute = () => {
 						<Tooltip label={t`Anonymized conversation`}>
 							<ThemeIcon
 								variant="subtle"
-								color="primary"
+								color="gray"
 								size={22}
 								aria-label={t`Anonymized conversation`}
 							>
@@ -211,9 +211,8 @@ export const ProjectConversationRoute = () => {
 						>
 							<Badge
 								size="sm"
-								color="primary"
-								variant="light"
-								leftSection={<LockIcon size={12} />}
+								color="gray"
+								leftSection={<LockIcon size={16} />}
 							>
 								<Trans>Locked</Trans>
 							</Badge>
@@ -231,19 +230,12 @@ export const ProjectConversationRoute = () => {
 					</Text>
 				)}
 				{tags.length > 0 && (
-					<Group gap={6} wrap="wrap">
+					<Group gap="xs" wrap="wrap">
 						{tags.map((tag) => {
 							const tagText = getTagText(tag);
 							if (!tagText) return null;
 							return (
-								<Badge
-									key={tag.id}
-									size="xs"
-									variant="light"
-									color="gray"
-									radius="sm"
-									classNames={{ label: "!text-graphite" }}
-								>
+								<Badge key={tag.id} size="xs" color="gray">
 									{tagText}
 								</Badge>
 							);
@@ -258,40 +250,41 @@ export const ProjectConversationRoute = () => {
 			  transcript used to sit in a sticky right-hand column; product
 			  feedback (2026-06-18) asked for it stacked below the summary.
 			*/}
-			<Stack gap="3rem">
-				<Stack gap="3rem" className="min-w-0">
+			<Stack gap="xl">
+				<Stack gap="xl" className="min-w-0">
 					{(conversation?.summary ||
 						(conversationChunksQuery.data &&
 							conversationChunksQuery.data.length > 0)) && (
-						<Stack gap="1.5rem">
+						<Stack gap="lg">
 							<Group>
-								<Title order={2}>
+								<Title order={4}>
 									<Trans>Summary</Trans>
 								</Title>
 								{!isLocked && (
 									<Group gap="sm">
 										{conversation?.summary && (
 											<CopyIconButton
-												size={23}
+												size={20}
 												onCopy={() => {
 													clipboard.copy(conversation?.summary ?? "");
 												}}
 												copied={clipboard.copied}
-												copyTooltip={t`Copy Summary`}
+												copyTooltip={t`Copy summary`}
 												{...testId("conversation-overview-copy-summary-button")}
 											/>
 										)}
 										{conversation?.summary && canGenerateSummary && (
-											<Tooltip label={t`Regenerate Summary`}>
+											<Tooltip label={t`Regenerate summary`}>
 												<ActionIcon
-													variant="transparent"
+													variant="subtle"
+													color="gray"
 													loading={isMutationPending}
 													onClick={openRegenerateConfirm}
 													{...testId(
 														"conversation-overview-regenerate-summary-button",
 													)}
 												>
-													<ArrowClockwiseIcon size={23} color="gray" />
+													<ArrowClockwiseIcon size={20} />
 												</ActionIcon>
 											</Tooltip>
 										)}
@@ -320,7 +313,6 @@ export const ProjectConversationRoute = () => {
 										!conversation?.summary && (
 											<div>
 												<Tooltip
-													color="gray.7"
 													position="bottom-start"
 													label={
 														!hasTranscript
@@ -330,8 +322,7 @@ export const ProjectConversationRoute = () => {
 													disabled={hasTranscript}
 												>
 													<Button
-														variant="outline"
-														className="-mt-[2rem]"
+														variant="filled"
 														loading={isMutationPending}
 														disabled={!hasTranscript}
 														onClick={() => {
@@ -341,7 +332,7 @@ export const ProjectConversationRoute = () => {
 															"conversation-overview-generate-summary-button",
 														)}
 													>
-														{t`Generate Summary`}
+														{t`Generate summary`}
 													</Button>
 												</Tooltip>
 											</div>
@@ -377,7 +368,7 @@ export const ProjectConversationRoute = () => {
 					)}
 				</div>
 
-				<Stack gap="3rem" className="min-w-0">
+				<Stack gap="xl" className="min-w-0">
 					{conversation && (
 						<>
 							<ConversationLink
@@ -389,7 +380,7 @@ export const ProjectConversationRoute = () => {
 								<Divider />
 							) : null}
 
-							<Stack gap="1.5rem">
+							<Stack gap="lg">
 								<ConversationDangerZone
 									conversation={conversation}
 									disableDownloadAudio={isAnonymized}

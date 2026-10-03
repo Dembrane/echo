@@ -9,6 +9,7 @@ import {
 	Stack,
 	Text,
 } from "@mantine/core";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { ProjectSettingsSection } from "@/components/project/ProjectSettingsSection";
 import { testId } from "@/lib/testUtils";
 import {
@@ -84,7 +85,7 @@ export const ProjectMethodologySection = ({
 				methodologiesQuery.data?.some(
 					(methodology) => methodology.isDevFixture,
 				) ? (
-					<Badge variant="outline">
+					<Badge>
 						<Trans>Fixture</Trans>
 					</Badge>
 				) : null
@@ -101,9 +102,11 @@ export const ProjectMethodologySection = ({
 					<Skeleton height={16} width="74%" />
 				</Stack>
 			) : methodologiesQuery.isError ? (
-				<Text size="sm">
-					<Trans>Could not load methodologies.</Trans>
-				</Text>
+				<ErrorNotice
+					error={methodologiesQuery.error}
+					title={t`Could not load methodologies.`}
+					onRetry={() => void methodologiesQuery.refetch()}
+				/>
 			) : (
 				<Stack gap="sm">
 					<Select
@@ -117,14 +120,14 @@ export const ProjectMethodologySection = ({
 						placeholder={t`Choose a methodology`}
 						{...testId("project-methodology-select")}
 					/>
-					<Paper withBorder className="rounded-md px-4 py-3">
+					<Paper withBorder p="md">
 						<Stack gap="xs">
 							<Group gap="xs" wrap="wrap">
 								<Text size="sm" {...testId("project-methodology-current")}>
 									{selected ? optionLabel(selected) : t`dembrane - the default`}
 								</Text>
 								{selected?.is_seeded ? (
-									<Badge size="xs" variant="outline">
+									<Badge size="xs">
 										<Trans>dembrane</Trans>
 									</Badge>
 								) : null}

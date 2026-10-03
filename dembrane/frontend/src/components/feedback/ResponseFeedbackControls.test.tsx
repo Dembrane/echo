@@ -108,20 +108,20 @@ describe("ResponseFeedbackControls", () => {
 			"response-feedback-send",
 		)) as HTMLButtonElement;
 		expect(sendButton.disabled).toBe(true);
-		const reason = await screen.findByTestId(
+		const reason = (await screen.findByTestId(
 			"response-feedback-reason-incorrect",
-		);
-		expect(reason.getAttribute("data-variant")).toBe("outline");
-		expect(reason.style.borderRadius).toBe("var(--mantine-radius-full)");
+		)) as HTMLInputElement;
+		expect(reason.checked).toBe(false);
 		fireEvent.click(reason);
-		expect(reason.getAttribute("aria-pressed")).toBe("true");
-		expect(reason.getAttribute("data-variant")).toBe("filled");
+		expect(reason.checked).toBe(true);
 		expect(sendButton.disabled).toBe(false);
 		// Single select: picking another reason replaces the first.
-		const other = screen.getByTestId("response-feedback-reason-wrong_sources");
+		const other = screen.getByTestId(
+			"response-feedback-reason-wrong_sources",
+		) as HTMLInputElement;
 		fireEvent.click(other);
-		expect(other.getAttribute("aria-pressed")).toBe("true");
-		expect(reason.getAttribute("aria-pressed")).toBe("false");
+		expect(other.checked).toBe(true);
+		expect(reason.checked).toBe(false);
 		fireEvent.click(reason);
 		fireEvent.change(await screen.findByTestId("response-feedback-comment"), {
 			target: { value: "The dates are off" },

@@ -1,6 +1,5 @@
 import { Trans } from "@lingui/react/macro";
 import { Group, Text, Tooltip } from "@mantine/core";
-import { cn } from "@/lib/utils";
 
 interface FormLabelProps {
 	label: React.ReactNode;
@@ -15,10 +14,12 @@ export const FormLabel = ({ label, isDirty, error }: FormLabelProps) => {
 			{isDirty && (
 				<Tooltip label={<Trans>Unsaved changes</Trans>}>
 					<div
-						className={cn(
-							"h-1.5 w-1.5 rounded-full",
-							error ? "bg-red-500" : "bg-blue-500",
-						)}
+						className="h-1.5 w-1.5 rounded-full"
+						style={{
+							background: error
+								? "var(--mantine-color-red-7)"
+								: "var(--mantine-color-primary-7)",
+						}}
 						role="presentation"
 					/>
 				</Tooltip>

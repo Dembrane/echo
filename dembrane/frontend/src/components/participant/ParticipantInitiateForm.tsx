@@ -267,7 +267,7 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 						size="md"
 						label={
 							project.conversation_ask_for_participant_name_label ??
-							t`Session Name`
+							t`Session name`
 						}
 						placeholder="Group 1, John Doe, etc."
 						{...register("name")}
@@ -306,11 +306,7 @@ export const ParticipantInitiateForm = ({ project }: { project: Project }) => {
 					// Nothing was asked, so the conversation is already starting. The
 					// button would only ever be pressed by the effect above; a spinner
 					// is the honest version of that.
-					<Group
-						justify="center"
-						py="md"
-						{...testId("portal-initiate-starting")}
-					>
+					<Group py="md" {...testId("portal-initiate-starting")}>
 						<Loader size="sm" />
 					</Group>
 				) : (

@@ -12,7 +12,7 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
-import { ScalesIcon, WarningIcon } from "@phosphor-icons/react";
+import { WarningIcon } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 
 export type LegalBasisValue = "client-managed" | "consent" | "dembrane-events";
@@ -112,14 +112,11 @@ export const LegalBasisCard = ({
 		storedLegalBasis === "consent" && !storedPrivacyPolicyUrl;
 
 	return (
-		<Card withBorder p="lg" radius="md">
+		<Card withBorder p="lg">
 			<Stack gap="md">
-				<Group gap="sm">
-					<ScalesIcon size={24} />
-					<Title order={4}>
-						<Trans>Legal Basis</Trans>
-					</Title>
-				</Group>
+				<Title order={4}>
+					<Trans>Legal basis</Trans>
+				</Title>
 
 				<Text size="sm">
 					<Trans>
@@ -199,7 +196,7 @@ export const LegalBasisCard = ({
 
 				{consentSelected && (
 					<TextInput
-						label={t`Privacy Policy URL`}
+						label={t`Privacy policy URL`}
 						withAsterisk
 						disabled={!canEdit}
 						description={t`Link to the privacy policy shown to participants`}
@@ -213,6 +210,7 @@ export const LegalBasisCard = ({
 
 				<Group>
 					<Button
+						variant="filled"
 						onClick={() => {
 							if (!legalBasis) return;
 							onSave({
@@ -230,6 +228,7 @@ export const LegalBasisCard = ({
 					{onClear && storedLegalBasis !== null && (
 						<Button
 							variant="subtle"
+							color="gray"
 							disabled={!canEdit || isSaving}
 							onClick={onClear}
 						>

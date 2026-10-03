@@ -1,4 +1,5 @@
 import { t } from "@lingui/core/macro";
+import { Trans } from "@lingui/react/macro";
 import { ActionIcon, Menu, Paper, Text } from "@mantine/core";
 import { DotsThreeVerticalIcon, TrashIcon } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -96,12 +97,12 @@ const UserChunkMessage = ({
 							disabled={deleteChunkMutation.isPending}
 							leftSection={<TrashIcon size={16} />}
 						>
-							Delete
+							<Trans>Delete</Trans>
 						</Menu.Item>
 					</Menu.Dropdown>
 				</Menu>
 			</div>
-			<Paper className="my-2 rounded-t-xl rounded-bl-xl border-0 bg-gray-100 p-4">
+			<Paper withBorder={false} bg="var(--app-rule-color)" className="my-2 p-4">
 				<Text className="prose text-sm">
 					{chunk.transcript == null ? (
 						<Markdown content={t`*Transcription in progress.*`} />

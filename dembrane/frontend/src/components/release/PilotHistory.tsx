@@ -6,8 +6,10 @@ import styles from "./PilotHistory.module.css";
 export const PilotHistory = () => (
 	<section className={styles.history} aria-labelledby="pilot-history-title">
 		<Stack gap="sm">
-			<Text size="sm">2024</Text>
-			<Title order={2} size="lg" id="pilot-history-title">
+			<Text size="sm" c="dimmed">
+				2024
+			</Text>
+			<Title order={4} id="pilot-history-title">
 				<Trans>Before this release history</Trans>
 			</Title>
 			<Text size="sm">

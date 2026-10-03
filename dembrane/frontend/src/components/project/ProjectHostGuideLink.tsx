@@ -29,7 +29,7 @@ export const ProjectHostGuideLink = ({
 			to={`/w/${workspaceId}/projects/${projectId}/host-guide`}
 			variant={variant}
 			size="sm"
-			leftSection={<BookOpenIcon size={16} />}
+			leftSection={<BookOpenIcon size={20} />}
 		>
 			<Trans>Host guide</Trans>
 		</Button>

@@ -5,7 +5,7 @@ import type { MapBudgets } from "../budgets";
 /** No arguments were found, even if other recipe outputs exist. */
 export const EmptyArgumentsState = () => (
 	<Stack gap="sm" className="max-w-2xl" id="map-empty-state">
-		<Text>
+		<Text size="sm" c="dimmed">
 			<Trans>No arguments were found in this project's conversations.</Trans>
 		</Text>
 	</Stack>
@@ -45,7 +45,11 @@ export const OverBudgetState = ({
 			</Stack>
 
 			<Group gap="sm">
-				<Button disabled={!admit} onClick={() => admit && onRaise(admit)}>
+				<Button
+					variant="filled"
+					disabled={!admit}
+					onClick={() => admit && onRaise(admit)}
+				>
 					<Trans>Open map</Trans>
 				</Button>
 			</Group>

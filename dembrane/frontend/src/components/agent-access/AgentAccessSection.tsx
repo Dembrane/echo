@@ -6,8 +6,8 @@ import {
 	Button,
 	CopyButton,
 	Group,
-	Loader,
 	Modal,
+	Skeleton,
 	Stack,
 	Text,
 	TextInput,
@@ -42,7 +42,7 @@ const McpUrlField = ({ url }: { url: string }) => (
 								onClick={copy}
 								aria-label={copied ? t`URL copied` : t`Copy URL`}
 							>
-								{copied ? <CheckIcon size={18} /> : <CopyIcon size={18} />}
+								{copied ? <CheckIcon size={20} /> : <CopyIcon size={20} />}
 							</ActionIcon>
 						</Tooltip>
 					)}
@@ -108,21 +108,23 @@ export const AgentNoticeModal = () => {
 						connection at any time.
 					</Trans>
 				</Text>
-				<Group justify="flex-end">
+				<Group>
 					<Button
-						variant="subtle"
-						onClick={goBack}
-						disabled={accept.isPending}
-						data-testid="agent-notice-back"
-					>
-						<Trans>Go back</Trans>
-					</Button>
-					<Button
+						variant="filled"
 						onClick={() => accept.mutate()}
 						loading={accept.isPending}
 						data-testid="agent-notice-accept"
 					>
 						<Trans>I understand</Trans>
+					</Button>
+					<Button
+						variant="subtle"
+						color="gray"
+						onClick={goBack}
+						disabled={accept.isPending}
+						data-testid="agent-notice-back"
+					>
+						<Trans>Go back</Trans>
 					</Button>
 				</Group>
 			</Stack>
@@ -143,10 +145,10 @@ export const AgentAccessSection = () => {
 			<Stack gap="sm">
 				<Stack gap={4}>
 					<Group gap="sm" align="center">
-						<Title order={3}>
+						<Title order={2}>
 							<Trans>Connect your agent</Trans>
 						</Title>
-						<Badge variant="light" size="sm">
+						<Badge variant="light" size="sm" color="mauve">
 							<Trans>Beta</Trans>
 						</Badge>
 					</Group>
@@ -172,9 +174,7 @@ export const AgentAccessSection = () => {
 					<Trans>Connect</Trans>
 				</SectionHeading>
 				{serversLoading ? (
-					<Group justify="center" py="md">
-						<Loader size="sm" color="gray" />
-					</Group>
+					<Skeleton height={40} />
 				) : (
 					(servers?.servers ?? []).map((server) => (
 						<McpUrlField key={server.id} url={server.mcp_url} />

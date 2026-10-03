@@ -242,8 +242,8 @@ export const PricingTextInput = ({
 							aria-label={t`Stop recording and turn it into text`}
 							className="tap-target"
 							onClick={recorder.stop}
-							radius="md"
-							rightSection={<StopIcon weight="fill" size={18} />}
+							color="red"
+							leftSection={<StopIcon size={20} />}
 							size="md"
 							type="button"
 							{...testId(`${testIdPrefix}-voice-stop`)}

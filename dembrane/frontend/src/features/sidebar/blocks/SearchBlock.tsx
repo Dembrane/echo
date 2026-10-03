@@ -1,10 +1,17 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { CloseButton, Modal, TextInput, UnstyledButton } from "@mantine/core";
+import {
+	CloseButton,
+	Modal,
+	Text,
+	TextInput,
+	UnstyledButton,
+} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
+import { roles } from "@/colors";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { cn } from "@/lib/utils";
 import { type SearchHit, useSearchHits } from "../hooks/useSearchHits";
@@ -86,35 +93,37 @@ export const SearchBlock = () => {
 					label={
 						<>
 							<Trans>Search</Trans>{" "}
-							<span className="opacity-70">{shortcut}</span>
+							<span style={{ color: "var(--mantine-color-dimmed)" }}>
+								{shortcut}
+							</span>
 						</>
 					}
 				>
 					<UnstyledButton
 						onClick={open}
-						className={cn(RAIL_ITEM_CLASS, "hover:bg-black/[0.04]")}
-						style={{ color: "#2d2d2c" }}
-						aria-label="Search"
+						className={cn(RAIL_ITEM_CLASS, "hover:bg-[#e6e3df]")}
+						style={{ color: roles.text }}
+						aria-label={t`Search`}
 					>
-						<MagnifyingGlassIcon size={18} aria-hidden="true" />
+						<MagnifyingGlassIcon size={20} aria-hidden="true" />
 					</UnstyledButton>
 				</RailTip>
 			) : (
 				<UnstyledButton
 					onClick={open}
-					className="flex h-[30px] items-center gap-2 rounded-md px-2 text-sm transition-colors hover:bg-black/[0.04]"
-					style={{ color: "#2d2d2c", width: "100%" }}
-					aria-label="Search"
+					className="flex h-[30px] items-center gap-2 px-2 text-sm transition-colors hover:bg-[#e6e3df]"
+					style={{ color: roles.text, width: "100%" }}
+					aria-label={t`Search`}
 				>
 					<MagnifyingGlassIcon size={16} />
 					<span>
 						<Trans>Search</Trans>
 					</span>
 					<span
-						className="ml-auto rounded px-1.5 py-0.5 text-xs"
+						className="app-muted ml-auto px-1 py-0.5 text-xs"
 						style={{
-							backgroundColor: "rgba(45, 45, 44, 0.06)",
-							color: "rgba(45, 45, 44, 0.55)",
+							backgroundColor: roles.quiet,
+							color: "var(--mantine-color-dimmed)",
 						}}
 					>
 						{shortcut}
@@ -135,7 +144,7 @@ export const SearchBlock = () => {
 				<div className="flex flex-col">
 					<div
 						className="border-b p-2"
-						style={{ borderColor: "rgba(45, 45, 44, 0.08)" }}
+						style={{ borderColor: "var(--app-rule-color)" }}
 					>
 						<TextInput
 							ref={searchInputRef}
@@ -148,7 +157,7 @@ export const SearchBlock = () => {
 							}}
 							onKeyDown={onKeyDown}
 							leftSection={<MagnifyingGlassIcon size={16} />}
-							placeholder="Search projects, conversations, transcripts…"
+							placeholder={t`Search projects, conversations, transcripts…`}
 							variant="unstyled"
 							size="sm"
 							rightSectionPointerEvents="auto"
@@ -169,16 +178,13 @@ export const SearchBlock = () => {
 						aria-label={t`Search results`}
 					>
 						{hits.length === 0 ? (
-							<div
-								className="px-3 py-6 text-center text-xs"
-								style={{ color: "rgba(45, 45, 44, 0.55)" }}
-							>
+							<Text size="sm" c="dimmed" className="app-muted" px="sm" py="md">
 								{isFetching ? (
 									<Trans>Searching…</Trans>
 								) : (
 									<Trans>No matches</Trans>
 								)}
-							</div>
+							</Text>
 						) : (
 							hits.map((hit, i) => {
 								const Icon = hit.icon;
@@ -192,7 +198,7 @@ export const SearchBlock = () => {
 										onClick={() => onSelect(hit)}
 										className={`${classes.row} ${
 											active ? classes.rowActive : ""
-										} flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm`}
+										} flex w-full items-center gap-2 px-2 py-2 text-left text-sm`}
 									>
 										<Icon size={16} />
 										<span className="flex-1 truncate">{hit.label}</span>

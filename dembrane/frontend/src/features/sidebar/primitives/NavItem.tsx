@@ -2,6 +2,7 @@ import { CaretRight, type Icon } from "@phosphor-icons/react";
 import { motion } from "motion/react";
 import type { ReactNode } from "react";
 import { NavLink, useMatch, useParams, useResolvedPath } from "react-router";
+import { brandColors, roles } from "@/colors";
 import { SUPPORTED_LANGUAGES } from "@/config";
 import { useLanguage } from "@/hooks/useLanguage";
 import { cn } from "@/lib/utils";
@@ -28,28 +29,26 @@ interface NavItemProps {
 
 export const BADGE_TONES = {
 	muted: {
-		backgroundColor: "rgba(45, 45, 44, 0.06)",
-		color: "rgba(45, 45, 44, 0.55)",
+		backgroundColor: roles.quiet,
+		color: roles.muted,
 	},
 	notification: {
-		backgroundColor: "rgba(65, 105, 225, 0.18)",
-		color: "#4169e1",
+		backgroundColor: roles.actionTint,
+		color: roles.action,
 	},
-	// Pending action (e.g. high-risk training nudge). No yellow exists in the
-	// palette, so we use the closest warm tone — Peach (#FFD166, from
-	// colors.ts) at a soft tint. Badge text stays graphite (--app-text), not
-	// colored, per the founder decision.
+	// Pending action (e.g. high-risk training nudge): the warning tint, with
+	// graphite text.
 	pending: {
-		backgroundColor: "rgba(255, 209, 102, 0.35)",
-		color: "#2d2d2c",
+		backgroundColor: roles.warningTint,
+		color: roles.text,
 	},
 } as const;
 
 // Rail dots for badges that ask for attention. Counts and labels ("Beta")
 // move into the tooltip instead.
 const RAIL_DOT_COLORS = {
-	notification: "#4169e1",
-	pending: "#FFD166",
+	notification: roles.action,
+	pending: brandColors.yellow[3],
 } as const;
 
 function useLocalePath(to: string): string {
@@ -118,11 +117,14 @@ export const NavItem = ({
 			return (
 				<RailTip label={name}>
 					<div
-						className={cn(RAIL_ITEM_CLASS, "cursor-not-allowed opacity-60")}
-						style={{ color: "rgba(45, 45, 44, 0.55)" }}
+						className={cn(
+							RAIL_ITEM_CLASS,
+							"app-muted cursor-not-allowed opacity-60",
+						)}
+						style={{ color: "var(--mantine-color-dimmed)" }}
 						aria-disabled="true"
 					>
-						<Icon size={18} aria-hidden="true" />
+						<Icon size={20} aria-hidden="true" />
 						<span className="sr-only">{name}</span>
 					</div>
 				</RailTip>
@@ -134,24 +136,28 @@ export const NavItem = ({
 				<NavLink
 					to={localePath}
 					end={end}
-					className={cn(RAIL_ITEM_CLASS, !active && "hover:bg-black/[0.04]")}
+					className={cn(
+						RAIL_ITEM_CLASS,
+						!active && "hover:bg-[#e6e3df]",
+						!active && muted && "app-muted",
+					)}
 					style={{
 						color: active
-							? (accent ?? "#4169e1")
+							? (accent ?? roles.action)
 							: muted
-								? "rgba(45, 45, 44, 0.55)"
-								: (accent ?? "#2d2d2c"),
+								? "var(--mantine-color-dimmed)"
+								: (accent ?? roles.text),
 					}}
 				>
 					{active && (
 						<motion.span
 							layoutId="sidebar-active-pill"
 							transition={TIMINGS.activePill}
-							className="absolute inset-0 rounded-md"
-							style={{ backgroundColor: "rgba(65, 105, 225, 0.08)" }}
+							className="absolute inset-0"
+							style={{ backgroundColor: roles.actionTint }}
 						/>
 					)}
-					<Icon size={18} className="relative" aria-hidden="true" />
+					<Icon size={20} className="relative" aria-hidden="true" />
 					<span className="sr-only">{name}</span>
 					{dot}
 				</NavLink>
@@ -162,8 +168,8 @@ export const NavItem = ({
 	if (disabled) {
 		return (
 			<div
-				className="relative flex h-[30px] cursor-not-allowed items-center gap-2 rounded-md px-2 text-sm leading-tight opacity-60"
-				style={{ color: "rgba(45, 45, 44, 0.55)" }}
+				className="app-muted relative flex h-[30px] cursor-not-allowed items-center gap-2 px-2 text-sm leading-tight opacity-60"
+				style={{ color: "var(--mantine-color-dimmed)" }}
 				aria-disabled="true"
 			>
 				<span className="relative flex flex-1 items-center gap-2 truncate">
@@ -172,7 +178,7 @@ export const NavItem = ({
 				</span>
 				{badge != null && (
 					<span
-						className="relative shrink-0 rounded px-1.5 py-0.5 text-xs leading-none"
+						className="relative shrink-0 px-1 py-0.5 text-xs leading-none"
 						style={BADGE_TONES[badgeTone]}
 					>
 						{badge}
@@ -186,21 +192,25 @@ export const NavItem = ({
 		<NavLink
 			to={localePath}
 			end={end}
-			className={`relative flex h-[30px] items-center gap-2 rounded-md text-sm leading-tight transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#4169e1] ${inset ? "pr-2 pl-8" : "px-2"}`}
+			className={cn(
+				"relative flex h-[30px] items-center gap-2 text-sm leading-tight transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#2957df]",
+				inset ? "pr-2 pl-8" : "px-2",
+				!active && muted && "app-muted",
+			)}
 			style={{
 				color: active
-					? (accent ?? "#4169e1")
+					? (accent ?? roles.action)
 					: muted
-						? "rgba(45, 45, 44, 0.55)"
-						: (accent ?? "#2d2d2c"),
+						? "var(--mantine-color-dimmed)"
+						: (accent ?? roles.text),
 			}}
 		>
 			{active && (
 				<motion.span
 					layoutId="sidebar-active-pill"
 					transition={TIMINGS.activePill}
-					className="absolute inset-0 rounded-md"
-					style={{ backgroundColor: "rgba(65, 105, 225, 0.08)" }}
+					className="absolute inset-0"
+					style={{ backgroundColor: roles.actionTint }}
 				/>
 			)}
 			<span className="relative flex flex-1 items-center gap-2 truncate">
@@ -210,7 +220,7 @@ export const NavItem = ({
 			{/* != null, not truthiness: badge={0} would render a bare "0" */}
 			{badge != null && (
 				<span
-					className="relative shrink-0 rounded px-1.5 py-0.5 text-xs leading-none"
+					className="relative shrink-0 px-1 py-0.5 text-xs leading-none"
 					style={BADGE_TONES[badgeTone]}
 				>
 					{badge}
@@ -218,8 +228,9 @@ export const NavItem = ({
 			)}
 			{pushes && (
 				<CaretRight
-					size={13}
-					className="relative shrink-0 opacity-45"
+					size={16}
+					className="relative shrink-0"
+					style={{ color: "var(--mantine-color-dimmed)" }}
 					aria-hidden="true"
 				/>
 			)}

@@ -6,7 +6,7 @@ import { Button, Modal, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { WarningCircleIcon, WifiSlashIcon } from "@phosphor-icons/react";
 import { type PropsWithChildren, useEffect, useMemo, useRef } from "react";
-import { Toaster } from "@/components/common/Toaster";
+
 import {
 	combineUserChunks,
 	useConversationChunksQuery,
@@ -15,7 +15,7 @@ import {
 } from "@/components/participant/hooks";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { testId } from "@/lib/testUtils";
-import { ConnectionHealthStatus } from "../common/ConnectionHealthStatus";
+
 import { TipBanner } from "../common/TipBanner";
 import SpikeMessage from "./SpikeMessage";
 import SystemMessage from "./SystemMessage";
@@ -108,24 +108,10 @@ export const ParticipantBody = ({
 
 	return (
 		<Stack ref={ref} className="max-h-full">
-			<Toaster position="top-center" richColors />
-
 			{!isRecording && (
-				<h2
-					className="mt-3 text-left text-3xl transition-opacity duration-500 ease-in-out"
-					{...testId("portal-welcome-heading")}
-				>
+				<Title order={2} mt="sm" {...testId("portal-welcome-heading")}>
 					<Trans>Welcome</Trans>
-				</h2>
-			)}
-
-			{isRecording && (
-				<div className="flex justify-center transition-opacity duration-500 ease-in-out">
-					<ConnectionHealthStatus
-						isOnline={isOnline}
-						connectionHealthy={connectionHealthy}
-					/>
-				</div>
+				</Title>
 			)}
 
 			{!isOnline && (
@@ -146,9 +132,9 @@ export const ParticipantBody = ({
 			)}
 
 			{projectQuery.data && (
-				<Stack ref={chatRef} pt="xs" pb={9}>
+				<Stack ref={chatRef} pt="xs" pb="xl">
 					{projectQuery.data.default_conversation_title && (
-						<Title order={3} {...testId("portal-conversation-title")}>
+						<Title order={4} {...testId("portal-conversation-title")}>
 							{projectQuery.data.default_conversation_title}
 						</Title>
 					)}
@@ -236,7 +222,6 @@ This transcript will be anonymized and your host will not be able to listen to y
 								onClose={close}
 								size="lg"
 								padding="xl"
-								radius="md"
 								title={t`Your responses`}
 								{...testId("portal-view-responses-modal")}
 							>

@@ -152,7 +152,7 @@ export const UpdateReportModalButton = ({
 
 	return (
 		<>
-			<Group gap={4}>
+			<Group gap="xs">
 				<Tooltip
 					label={
 						needsUpdate
@@ -172,11 +172,11 @@ export const UpdateReportModalButton = ({
 							variant="filled"
 							color="primary"
 							onClick={handleOpen}
-							leftSection={<PencilSimpleIcon size={16} />}
+							leftSection={<PencilSimpleIcon size={20} />}
 							opacity={effectivelyAtLimit ? 0.7 : 1}
 							{...testId("report-update-button")}
 						>
-							<Trans>New Report</Trans>
+							<Trans>Create report</Trans>
 						</Button>
 					</Indicator>
 				</Tooltip>
@@ -185,7 +185,7 @@ export const UpdateReportModalButton = ({
 						<InfoIcon
 							size={16}
 							style={{
-								color: "var(--mantine-color-primary-6)",
+								color: "var(--mantine-color-dimmed)",
 								cursor: "help",
 							}}
 						/>
@@ -200,9 +200,9 @@ export const UpdateReportModalButton = ({
 					<Group gap="xs" align="center">
 						<Text size="lg">
 							{showSchedule ? (
-								<Trans>Schedule Report</Trans>
+								<Trans>Schedule report</Trans>
 							) : (
-								<Trans>New Report</Trans>
+								<Trans>Create report</Trans>
 							)}
 						</Text>
 						{showSchedule && (
@@ -260,7 +260,7 @@ export const UpdateReportModalButton = ({
 				) : showSchedule ? (
 					<Stack>
 						{/* Summary of selected options */}
-						<Stack gap={4}>
+						<Stack gap="xs">
 							<Text size="xs" c="dimmed">
 								<Trans>Language</Trans>: {getLanguageLabel(language)}
 								{getSelectedFocusLabels(userInstructions, language).length >
@@ -291,8 +291,8 @@ export const UpdateReportModalButton = ({
 								component="button"
 								onClick={() => setShowSchedule(false)}
 							>
-								<Group gap={4}>
-									<ArrowLeftIcon size={12} />
+								<Group gap="xs">
+									<ArrowLeftIcon size={16} />
 									<Trans>Edit options</Trans>
 								</Group>
 							</Anchor>
@@ -316,12 +316,13 @@ export const UpdateReportModalButton = ({
 								loading={isPending}
 								disabled={isPending || !isDateFarEnough(scheduledDate)}
 								fullWidth
-								color="primary"
+								variant="filled"
 							>
-								<Trans>Schedule Report</Trans>
+								<Trans>Schedule report</Trans>
 							</Button>
 							<Button
 								variant="subtle"
+								color="gray"
 								fullWidth
 								onClick={() => setShowSchedule(false)}
 							>
@@ -348,21 +349,20 @@ export const UpdateReportModalButton = ({
 						</Stack>
 
 						{/* Larger gap separates inputs from commitment */}
-						<Group gap="xs" mt={24} wrap="wrap">
+						<Group gap="xs" mt="lg" wrap="wrap">
 							<Button
 								onClick={() => handleSubmit(false)}
 								loading={isPending}
 								disabled={isPending}
-								color="primary"
+								variant="filled"
 								style={{ flex: 7 }}
 								{...testId("report-generate-button")}
 							>
 								<Trans>Generate now</Trans>
 							</Button>
 							<Button
-								variant="outline"
 								onClick={() => setShowSchedule(true)}
-								leftSection={<ClockIcon size={16} />}
+								leftSection={<ClockIcon size={20} />}
 								style={{ flex: 3 }}
 							>
 								<Trans>Schedule</Trans>
@@ -373,7 +373,7 @@ export const UpdateReportModalButton = ({
 						{SHOW_STRUCTURE_CTA && (
 							<>
 								<Divider mt="md" />
-								<Text size="xs" c="gray.6" mt="sm">
+								<Text size="xs" c="dimmed" mt="sm">
 									<Trans>Report templates are on our roadmap.</Trans>{" "}
 									<Anchor
 										component="button"

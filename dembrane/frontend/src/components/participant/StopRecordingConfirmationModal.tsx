@@ -68,18 +68,15 @@ export const StopRecordingConfirmationModal = ({
 			closeOnEscape={!isStopping}
 			centered
 			title={
-				<Text>
-					{showVerifyPrompt ? (
-						<Trans id="participant.modal.verify_prompt.title">
-							Verification reminder
-						</Trans>
-					) : (
-						<Trans id="participant.modal.pause.title">Recording Paused</Trans>
-					)}
-				</Text>
+				showVerifyPrompt ? (
+					<Trans id="participant.modal.verify_prompt.title">
+						Verification reminder
+					</Trans>
+				) : (
+					<Trans id="participant.modal.pause.title">Recording paused</Trans>
+				)
 			}
 			size="sm"
-			radius="md"
 			padding="xl"
 			{...testId("portal-audio-stop-modal")}
 		>
@@ -92,9 +89,25 @@ export const StopRecordingConfirmationModal = ({
 								before finishing?
 							</Trans>
 						</Text>
-						<Group grow gap="md" py="sm">
+						<Group gap="sm" py="sm">
 							<Button
-								variant="outline"
+								variant="filled"
+								onClick={() => {
+									setShowVerifyPrompt(false);
+									handleVerify?.();
+								}}
+								miw={100}
+								size="md"
+								leftSection={<SealCheckIcon size={20} />}
+								{...testId("portal-audio-verify-button")}
+							>
+								<Trans id="participant.button.verify_prompt.verify">
+									Verify
+								</Trans>
+							</Button>
+							<Button
+								variant="subtle"
+								color="gray"
 								onClick={() => {
 									setShowVerifyPrompt(false);
 									handleSkipVerification?.();
@@ -104,20 +117,6 @@ export const StopRecordingConfirmationModal = ({
 								{...testId("portal-audio-verify-skip-button")}
 							>
 								<Trans id="participant.button.verify_prompt.skip">Skip</Trans>
-							</Button>
-							<Button
-								onClick={() => {
-									setShowVerifyPrompt(false);
-									handleVerify?.();
-								}}
-								miw={100}
-								size="md"
-								rightSection={<SealCheckIcon size={18} />}
-								{...testId("portal-audio-verify-button")}
-							>
-								<Trans id="participant.button.verify_prompt.verify">
-									Verify
-								</Trans>
 							</Button>
 						</Group>
 					</>
@@ -134,8 +133,9 @@ export const StopRecordingConfirmationModal = ({
 							</Group>
 						)}
 
-						<Group grow gap="md" py="sm">
+						<Group gap="sm" py="sm">
 							<Button
+								variant="filled"
 								onClick={handleClose}
 								disabled={isStopping}
 								miw={100}
@@ -145,14 +145,13 @@ export const StopRecordingConfirmationModal = ({
 								<Trans id="participant.button.stop.resume">Resume</Trans>
 							</Button>
 							<Button
-								variant="outline"
 								onClick={handleFinishClick}
 								loading={isStopping}
 								disabled={isFinishDisabled}
 								miw={100}
 								size="md"
-								rightSection={
-									showVerifyOnFinish ? <SealCheckIcon size={18} /> : undefined
+								leftSection={
+									showVerifyOnFinish ? <SealCheckIcon size={20} /> : undefined
 								}
 								{...testId("portal-audio-stop-finish-button")}
 							>

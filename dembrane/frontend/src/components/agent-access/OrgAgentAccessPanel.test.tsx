@@ -102,7 +102,7 @@ it("shows the three sections under the title", () => {
 	wrap();
 
 	expect(
-		screen.getByRole("heading", { level: 3, name: "MCP access" }),
+		screen.getByRole("heading", { level: 4, name: "MCP access" }),
 	).toBeTruthy();
 	for (const name of ["This organisation", "Connected agents", "Activity"]) {
 		expect(screen.getByRole("heading", { level: 5, name })).toBeTruthy();

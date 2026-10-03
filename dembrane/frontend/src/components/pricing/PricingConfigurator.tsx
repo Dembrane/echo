@@ -1,6 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
+	Alert,
 	Anchor,
 	Box,
 	Button,
@@ -14,6 +15,7 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
+import { WarningCircleIcon } from "@phosphor-icons/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { wallActionLine } from "@/components/workspace/gateWalls";
@@ -807,29 +809,48 @@ export const PricingConfigurator = ({
 							)}
 
 							{sendFailed && (
-								<Text
-									c="red"
-									size="sm"
+								<Alert
+									color="red"
+									variant="light"
+									icon={<WarningCircleIcon size={16} />}
 									{...testId("pricing-configurator-send-failed")}
 								>
-									<Trans>
-										That didn't send. Your answers are still here, so try again.
-									</Trans>
-								</Text>
+									<Text size="sm">
+										<Trans>
+											That didn't send. Your answers are still here, so try
+											again.
+										</Trans>
+									</Text>
+								</Alert>
 							)}
 
 							{/* `size="md"` on every button in the modal, one step up from
 							    Mantine's default, matching the onboarding questionnaire. */}
 							{/* Not now stands for both the opening and the first question:
 							    there is nothing behind the first question worth a Back.
-							    Back, Skip and Next start together, one step later. */}
-							<Group justify="flex-end">
+							    Back, Skip and Continue start together, one step later.
+							    Continue leads; the quiet ways out follow it. */}
+							<Group justify="flex-start" gap="sm">
+								<Button
+									variant="filled"
+									loading={isSending}
+									size="md"
+									type="submit"
+									{...testId("pricing-configurator-next")}
+								>
+									{phase.step === STEP_COUNT ? (
+										<Trans>Pick a time</Trans>
+									) : (
+										<Trans>Continue</Trans>
+									)}
+								</Button>
 								{phase.step <= OPENING_STEP + 1 ? (
 									<Button
 										onClick={handleClose}
 										size="md"
 										type="button"
 										variant="subtle"
+										color="gray"
 										{...testId("pricing-configurator-not-now")}
 									>
 										<Trans>Not now</Trans>
@@ -840,6 +861,7 @@ export const PricingConfigurator = ({
 										size="md"
 										type="button"
 										variant="subtle"
+										color="gray"
 										{...testId("pricing-configurator-back")}
 									>
 										<Trans>Back</Trans>
@@ -851,28 +873,12 @@ export const PricingConfigurator = ({
 										size="md"
 										type="button"
 										variant="subtle"
+										color="gray"
 										{...testId("pricing-configurator-skip")}
 									>
 										<Trans>Skip</Trans>
 									</Button>
 								)}
-								<Button
-									variant="filled"
-									loading={isSending}
-									size="md"
-									type="submit"
-									{...testId("pricing-configurator-next")}
-								>
-									{phase.step === OPENING_STEP ? (
-										<Trans>Continue</Trans>
-									) : phase.step === OPENING_STEP + 1 ? (
-										<Trans>Let's go!</Trans>
-									) : phase.step === STEP_COUNT ? (
-										<Trans>Next: pick a time</Trans>
-									) : (
-										<Trans>Next</Trans>
-									)}
-								</Button>
 							</Group>
 						</Stack>
 					</form>
@@ -921,11 +927,12 @@ export const PricingConfigurator = ({
 					<Text size="xs">
 						<Trans>Reference {reference}</Trans>
 					</Text>
-					<Group justify="flex-end">
+					<Group justify="flex-start">
 						<Button
 							onClick={handleClose}
 							size="md"
 							variant="subtle"
+							color="gray"
 							{...testId("pricing-configurator-back-to-dembrane")}
 						>
 							<Trans>Back to dembrane</Trans>
@@ -1241,7 +1248,6 @@ const FreeTextAnswer = ({
 							}}
 							size="compact-md"
 							type="button"
-							variant="outline"
 							{...testId(`pricing-${question.key}-example-${example.key}`)}
 						>
 							{example.label}

@@ -32,10 +32,10 @@ export const VoiceInputButton = ({
 			size="compact-sm"
 			type="button"
 			variant="subtle"
+			leftSection={<MicrophoneIcon size={20} />}
 			{...(id ? testId(id) : {})}
 		>
-			<MicrophoneIcon size={18} />
-			<span className="ms-1.5 hidden md:inline">
+			<span className="hidden md:inline">
 				<Trans>Voice</Trans>
 			</span>
 		</Button>

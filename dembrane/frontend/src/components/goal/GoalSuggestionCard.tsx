@@ -104,7 +104,7 @@ export const GoalSuggestionCard = ({
 						<Trans>Suggested project goal</Trans>
 					</Text>
 					{dismissed ? (
-						<Badge size="xs" variant="outline">
+						<Badge size="xs">
 							<Trans>Dismissed</Trans>
 						</Badge>
 					) : null}
@@ -116,26 +116,10 @@ export const GoalSuggestionCard = ({
 					</Text>
 				) : null}
 
-				<Group justify="flex-end" gap="xs">
+				<Group justify="flex-start" gap="sm">
 					{!dismissed ? (
 						<Button
-							variant="subtle"
-							size="xs"
-							onClick={() => setDismissed(true)}
-						>
-							<Trans>Dismiss</Trans>
-						</Button>
-					) : (
-						<Button
-							variant="subtle"
-							size="xs"
-							onClick={() => setDismissed(false)}
-						>
-							<Trans>Review again</Trans>
-						</Button>
-					)}
-					{!dismissed ? (
-						<Button
+							variant="filled"
 							size="xs"
 							loading={saveGoalMutation.isPending}
 							onClick={() => void handleApply()}
@@ -144,6 +128,25 @@ export const GoalSuggestionCard = ({
 							<Trans>Apply</Trans>
 						</Button>
 					) : null}
+					{!dismissed ? (
+						<Button
+							variant="subtle"
+							color="gray"
+							size="xs"
+							onClick={() => setDismissed(true)}
+						>
+							<Trans>Dismiss</Trans>
+						</Button>
+					) : (
+						<Button
+							variant="subtle"
+							color="gray"
+							size="xs"
+							onClick={() => setDismissed(false)}
+						>
+							<Trans>Review again</Trans>
+						</Button>
+					)}
 				</Group>
 			</Stack>
 		</SuggestionCardFrame>

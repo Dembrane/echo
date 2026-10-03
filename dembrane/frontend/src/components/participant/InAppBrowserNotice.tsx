@@ -56,7 +56,6 @@ export const InAppBrowserNotice = ({ projectId }: { projectId?: string }) => {
 					<CopyButton value={window.location.href} timeout={2000}>
 						{({ copied, copy }) => (
 							<Button
-								variant="outline"
 								leftSection={
 									copied ? <CheckIcon size={20} /> : <CopyIcon size={20} />
 								}

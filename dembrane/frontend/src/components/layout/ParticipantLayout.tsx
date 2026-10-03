@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Outlet, useLocation, useParams } from "react-router";
 import { useWhitelabelLogo } from "@/hooks/useWhitelabelLogo";
 import { logoUrl } from "@/lib/avatar";
+import { Toaster } from "../common/Toaster";
 import { useParticipantProjectById } from "../participant/hooks";
 import { I18nProvider } from "./I18nProvider";
 import { ParticipantHeader } from "./ParticipantHeader";
@@ -24,6 +25,7 @@ export const ParticipantLayout = () => {
 	if (isReportPage) {
 		return (
 			<I18nProvider>
+				<Toaster />
 				<main className="relative min-h-dvh">
 					<Outlet />
 				</main>
@@ -33,6 +35,7 @@ export const ParticipantLayout = () => {
 
 	return (
 		<I18nProvider>
+			<Toaster />
 			<main className="relative !h-dvh overflow-y-auto">
 				<div className="flex h-full flex-col">
 					<ParticipantHeader />

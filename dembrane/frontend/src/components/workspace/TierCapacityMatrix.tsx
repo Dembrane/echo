@@ -16,6 +16,7 @@ import {
 	type TierCapacity,
 	taglineFor,
 } from "@/lib/tiers";
+import { tierName } from "./TierBadge";
 import { TierStatusBadge } from "./TierStatusBadge";
 
 interface Props {
@@ -144,15 +145,15 @@ export const TierCapacityMatrix = ({
 		<Stack gap={0}>
 			<Box
 				style={{
-					border: "1px solid var(--mantine-color-gray-3)",
-					borderRadius: "var(--mantine-radius-default)",
+					borderBottom: "1px solid var(--app-rule-color)",
+					borderTop: "1px solid var(--app-rule-color)",
 					overflowX: "auto",
 				}}
 			>
 				<Table
 					withRowBorders
-					verticalSpacing={10}
-					horizontalSpacing={16}
+					verticalSpacing="sm"
+					horizontalSpacing="md"
 					styles={{
 						table: { width: "100%" },
 					}}
@@ -180,14 +181,13 @@ export const TierCapacityMatrix = ({
 										}}
 										onClick={() => handleClick(cap.tier)}
 									>
-										<Stack gap={4}>
-											<Group gap={8} wrap="nowrap">
+										<Stack gap="xs">
+											<Group gap="sm" wrap="nowrap">
 												<Text
 													size="sm"
 													c={isHighlight ? HIGHLIGHT_COLOR : undefined}
-													style={{ textTransform: "capitalize" }}
 												>
-													{cap.tier}
+													{tierName(cap.tier)}
 												</Text>
 												<TierStatusBadge tier={cap.tier} />
 											</Group>

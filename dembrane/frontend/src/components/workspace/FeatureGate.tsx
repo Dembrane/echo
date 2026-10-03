@@ -29,7 +29,7 @@ import { useGateViewed, usePricingGateEmitter } from "./pricingGateEvents";
  * free plan block. See `gateWalls.ts`.
  *
  * Exports:
- *   - <FeatureGate />  — the hatched placeholder for a whole feature surface.
+ *   - <FeatureGate />  — the placeholder for a whole feature surface.
  *     The card is the blocked control, so the card carries the popover.
  *   - <UpgradeModal /> — the one modal, usable standalone. Every wall that is
  *     met by doing something (a cap reached mid action) opens this directly.
@@ -76,7 +76,7 @@ function meetsTier(current: Tier, required: Tier): boolean {
 }
 
 /**
- * Wraps a feature card with a hatched placeholder when the tier does not meet
+ * Wraps a feature card with a placeholder when the tier does not meet
  * the minimum. If the tier is already met, renders children as-is.
  */
 export function FeatureGate({
@@ -123,16 +123,11 @@ export function FeatureGate({
 				{({ onClick }) => (
 					<Box
 						pos="relative"
+						className="app-do"
 						onClick={touched(onClick)}
 						style={{
 							alignItems: "center",
-							// Soft hatched background — subtle, not alarming.
-							background:
-								"repeating-linear-gradient(45deg, rgba(65,105,225,0.04) 0 8px, rgba(65,105,225,0.08) 8px 16px)",
-							borderRadius: 8,
-							cursor: "pointer",
 							display: "flex",
-							justifyContent: "center",
 							minHeight: 160,
 						}}
 						role="button"
@@ -146,17 +141,15 @@ export function FeatureGate({
 						}}
 						{...testId("feature-gate-card")}
 					>
-						<Stack gap={6} align="center" style={{ maxWidth: 280 }} p="md">
+						<Stack gap="xs" align="flex-start" style={{ maxWidth: 280 }} p="md">
 							<Badge
 								color="blue"
 								variant="light"
-								leftSection={<LockIcon size={12} />}
+								leftSection={<LockIcon size={16} />}
 							>
 								<Trans>Available on a paid plan</Trans>
 							</Badge>
-							<Text size="sm" ta="center">
-								{featureName}
-							</Text>
+							<Text size="sm">{featureName}</Text>
 						</Stack>
 					</Box>
 				)}

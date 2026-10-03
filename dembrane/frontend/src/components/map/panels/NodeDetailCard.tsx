@@ -78,9 +78,9 @@ const QuoteGroups = ({
 		{evidence.map((group) => {
 			const href = conversationHref?.(group.conversationId) ?? null;
 			return (
-				<div key={group.conversationId} className="space-y-1.5">
+				<div key={group.conversationId} className="space-y-2">
 					{headings && (
-						<span className="flex items-center gap-1.5">
+						<span className="flex items-center gap-2">
 							{/* The dot the legend and the nodes use for this conversation,
 						    so a quote is read in the colour it was spoken in. */}
 							{group.slot !== null && (
@@ -92,18 +92,11 @@ const QuoteGroups = ({
 								/>
 							)}
 							{href ? (
-								<Anchor
-									component={I18nLink}
-									to={href}
-									size="xs"
-									className="font-semibold uppercase tracking-wider"
-								>
+								<Anchor component={I18nLink} to={href} size="xs">
 									{group.label}
 								</Anchor>
 							) : (
-								<CaptionText className="font-semibold uppercase tracking-wider">
-									{group.label}
-								</CaptionText>
+								<CaptionText>{group.label}</CaptionText>
 							)}
 						</span>
 					)}
@@ -183,7 +176,7 @@ const Section = ({
 	children: ReactNode;
 }) => (
 	<div className="space-y-1">
-		<p className="text-xs uppercase tracking-wider">{title}</p>
+		<p className="text-xs">{title}</p>
 		{children}
 	</div>
 );
@@ -449,7 +442,7 @@ export const NodeDetailCard = memo(function NodeDetailCard({
 	return (
 		<div className="space-y-3">
 			{type && (
-				<p className="flex items-center gap-2 text-xs uppercase tracking-wider">
+				<p className="flex items-center gap-2 text-xs">
 					<TypeDot
 						type={
 							type === "argument" || type === "deduplicated_argument"
@@ -491,7 +484,7 @@ export const NodeDetailCard = memo(function NodeDetailCard({
 			)}
 
 			{detail?.type === "popcorn" && quoteCount > 0 && (
-				<p className="text-xs uppercase tracking-wider">
+				<p className="text-xs">
 					<Trans>Source evidence</Trans>
 				</p>
 			)}
@@ -507,10 +500,10 @@ export const NodeDetailCard = memo(function NodeDetailCard({
 					<UnstyledButton
 						onClick={() => setQuotesOpen((open) => !open)}
 						aria-expanded={quotesOpen}
-						className="flex items-center gap-1 text-xs uppercase tracking-wider transition-opacity hover:opacity-80"
+						className="flex items-center gap-1 text-xs transition-opacity hover:opacity-80"
 					>
 						<CaretRightIcon
-							size={12}
+							size={16}
 							className={cn("transition-transform", quotesOpen && "rotate-90")}
 						/>
 						<Trans>Quotes ({quoteCount})</Trans>

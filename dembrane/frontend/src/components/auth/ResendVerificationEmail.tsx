@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Button, Stack, Text } from "@mantine/core";
+import { Alert, Button, Stack, Text } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { testId } from "@/lib/testUtils";
 import { useResendVerificationMutation } from "./hooks";
@@ -43,9 +43,7 @@ export const ResendVerificationEmail = ({ email }: { email: string }) => {
 				</Text>
 			)}
 			{resend.isError && (
-				<Text size="xs" c="red">
-					{describeAuthError(resend.error)}
-				</Text>
+				<Alert color="red">{describeAuthError(resend.error)}</Alert>
 			)}
 		</Stack>
 	);

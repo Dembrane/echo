@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Group, SegmentedControl, Text, TextInput } from "@mantine/core";
-import { MagnifyingGlassIcon } from "@phosphor-icons/react";
+import { Alert, Group, SegmentedControl, Text, TextInput } from "@mantine/core";
+import { MagnifyingGlassIcon, WarningCircleIcon } from "@phosphor-icons/react";
 
 interface FilterSpec {
 	value: string;
@@ -37,7 +37,7 @@ export function MembersToolbar({
 		<Group justify="space-between" align="center" wrap="wrap">
 			<Group gap="sm" wrap="nowrap" style={{ flex: 1, minWidth: 280 }}>
 				<TextInput
-					leftSection={<MagnifyingGlassIcon size={14} />}
+					leftSection={<MagnifyingGlassIcon size={16} />}
 					placeholder={searchPlaceholder ?? t`Search name or email`}
 					size="sm"
 					value={search}
@@ -54,9 +54,14 @@ export function MembersToolbar({
 				)}
 			</Group>
 			{error ? (
-				<Text size="xs" c="red">
-					{error}
-				</Text>
+				<Alert
+					color="red"
+					variant="light"
+					py="xs"
+					icon={<WarningCircleIcon size={16} />}
+				>
+					<Text size="xs">{error}</Text>
+				</Alert>
 			) : count ? (
 				<Text size="xs" c="dimmed">
 					<Trans>

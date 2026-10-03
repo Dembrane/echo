@@ -5,10 +5,8 @@ import { WarningCircleIcon } from "@phosphor-icons/react";
 export const EchoErrorAlert = ({ error }: { error: Error }) => {
 	return (
 		<Alert
-			icon={<WarningCircleIcon size="1rem" />}
+			icon={<WarningCircleIcon size={20} />}
 			color="red"
-			variant="outline"
-			radius="md"
 			className="my-5 md:my-7"
 		>
 			<Text size="sm">
@@ -20,8 +18,8 @@ export const EchoErrorAlert = ({ error }: { error: Error }) => {
 				) : (
 					<Trans id="participant.explore.generic.error.message">
 						Something went wrong. Please try again by pressing the{" "}
-						<span className="font-bold">Explore</span> button, or contact
-						support if the issue continues.
+						<strong>Explore</strong> button, or contact support if the issue
+						continues.
 					</Trans>
 				)}
 			</Text>

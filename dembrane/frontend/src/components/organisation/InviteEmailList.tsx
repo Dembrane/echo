@@ -38,10 +38,10 @@ export const InviteEmailList = ({
 		onChange(emails.filter((_, i) => i !== index));
 
 	return (
-		<Stack gap={10}>
+		<Stack gap="sm">
 			{emails.map((email, index) => (
 				// biome-ignore lint/suspicious/noArrayIndexKey: row identity tracks position; emails are user-editable so value-based keys cause remount-on-keystroke (focus loss)
-				<Group key={`invite-${index}`} gap={8} wrap="nowrap">
+				<Group key={`invite-${index}`} gap="sm" wrap="nowrap">
 					<TextInput
 						flex={1}
 						placeholder={t`name@example.com`}
@@ -53,21 +53,19 @@ export const InviteEmailList = ({
 					{emails.length > 1 && (
 						<ActionIcon
 							color="gray"
-							size="sm"
 							variant="subtle"
 							aria-label={t`Remove`}
 							onClick={() => removeEmailField(index)}
 						>
-							<XIcon size={14} />
+							<XIcon size={20} />
 						</ActionIcon>
 					)}
 				</Group>
 			))}
 			<Box>
 				<Button
-					leftSection={<PlusIcon size={14} />}
+					leftSection={<PlusIcon size={20} />}
 					size="sm"
-					variant="subtle"
 					onClick={addEmailField}
 				>
 					<Trans>Add another</Trans>

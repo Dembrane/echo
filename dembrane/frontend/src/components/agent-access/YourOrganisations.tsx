@@ -1,13 +1,5 @@
 import { Trans } from "@lingui/react/macro";
-import {
-	Anchor,
-	Badge,
-	Button,
-	Group,
-	Loader,
-	Table,
-	Text,
-} from "@mantine/core";
+import { Anchor, Badge, Button, Skeleton, Table, Text } from "@mantine/core";
 import type React from "react";
 import { I18nLink } from "@/components/common/i18nLink";
 import {
@@ -96,7 +88,6 @@ const OrgRow = ({ org }: { org: OrgAgentAccess }) => {
 				) : org.can_manage ? (
 					<Button
 						size="xs"
-						variant="light"
 						loading={
 							setOrgAccess.isPending && setOrgAccess.variables?.orgId === org.id
 						}
@@ -122,11 +113,7 @@ export const YourOrganisations = () => {
 	const { data: orgs, isLoading } = useAgentOrganisationsQuery();
 
 	if (isLoading) {
-		return (
-			<Group justify="center" py="md">
-				<Loader size="sm" color="gray" />
-			</Group>
-		);
+		return <Skeleton height={40} maw={560} />;
 	}
 
 	if (!orgs || orgs.length === 0) {

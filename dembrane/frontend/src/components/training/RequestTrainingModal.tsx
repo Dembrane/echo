@@ -92,12 +92,16 @@ export const RequestTrainingModal = ({
 						<Trans>Estimated total: €{estimated}</Trans>
 					</Text>
 
-					<Group justify="flex-end">
-						<Button variant="subtle" onClick={handleClose}>
-							<Trans>Cancel</Trans>
-						</Button>
-						<Button loading={submitting} onClick={() => onSubmit(extra, notes)}>
+					<Group justify="flex-start" gap="sm">
+						<Button
+							variant="filled"
+							loading={submitting}
+							onClick={() => onSubmit(extra, notes)}
+						>
 							<Trans>Send request</Trans>
+						</Button>
+						<Button variant="subtle" color="gray" onClick={handleClose}>
+							<Trans>Cancel</Trans>
 						</Button>
 					</Group>
 				</Stack>

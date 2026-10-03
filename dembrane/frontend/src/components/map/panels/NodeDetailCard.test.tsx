@@ -354,7 +354,7 @@ describe("Spotlight fact-check controls", () => {
 			}),
 		);
 		expect(
-			screen.getByRole("button", { name: "Fact check this claim" }),
+			screen.getByRole("button", { name: "Fact-check this claim" }),
 		).toBeTruthy();
 	});
 
@@ -366,7 +366,7 @@ describe("Spotlight fact-check controls", () => {
 			}),
 		);
 		expect(
-			screen.queryByRole("button", { name: "Fact check this claim" }),
+			screen.queryByRole("button", { name: "Fact-check this claim" }),
 		).toBeNull();
 	});
 
@@ -376,7 +376,7 @@ describe("Spotlight fact-check controls", () => {
 			screen.getByText("Factual status does not apply to this object."),
 		).toBeTruthy();
 		expect(
-			screen.queryByRole("button", { name: "Fact check this claim" }),
+			screen.queryByRole("button", { name: "Fact-check this claim" }),
 		).toBeNull();
 	});
 });
@@ -439,11 +439,11 @@ describe("Spotlight conversation chits", () => {
 		expect(onColorByChange).toHaveBeenCalledWith("conversation");
 	});
 
-	it("shows the selected ring while the map is coloured by conversation", () => {
+	it("shows the selected state while the map is coloured by conversation", () => {
 		renderSpotlight(withSlots([0]), { colorBy: "conversation" });
 		const chit = screen.getByTestId("conversation-chit-slot-0");
 		expect(chit.getAttribute("aria-pressed")).toBe("true");
-		expect(chit.className).toContain("ring-2");
+		expect(chit.hasAttribute("data-selected")).toBe(true);
 	});
 
 	it("gives a merge of three conversations a chit each, in slot order", () => {

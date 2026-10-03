@@ -1,7 +1,6 @@
 import { Trans } from "@lingui/react/macro";
-import { Box, Group, Progress, Stack, Text, Title } from "@mantine/core";
+import { Progress, Stack, Text, Title, UnstyledButton } from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
-import { ArrowLineDownIcon, ChatTextIcon } from "@phosphor-icons/react";
 import { useParams } from "react-router";
 import { useParticipantProjectById } from "@/components/participant/hooks";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -49,31 +48,21 @@ export const RefineSelection = () => {
 		<Stack gap="md" className="h-full">
 			{/* Verify option */}
 			{showVerify && (
-				<Box
+				<UnstyledButton
 					onClick={handleVerifyClick}
-					className={`${flexClass} cursor-pointer rounded-xl border-2 p-6 transition-all ${
-						cooldown.verify.isActive
-							? "border-gray-200 bg-gray-50"
-							: "border-gray-300 bg-white hover:border-blue-400 hover:bg-blue-50"
-					}`}
+					className={`${flexClass} app-do block w-full p-6`}
+					aria-disabled={cooldown.verify.isActive || undefined}
 					style={{
 						cursor: cooldown.verify.isActive ? "not-allowed" : "pointer",
 						opacity: cooldown.verify.isActive ? 0.6 : 1,
 					}}
 					{...testId("portal-echo-verify-card")}
 				>
-					<Stack
-						gap="lg"
-						align="center"
-						className="h-full px-2 py-6 justify-center"
-					>
-						<Group gap="sm" align="center">
-							<ChatTextIcon size={32} />
-							<Title order={3}>
-								<Trans id="participant.echo.verify">Verify</Trans>
-							</Title>
-						</Group>
-						<Text c="dimmed" ta="center">
+					<Stack gap="md" className="h-full py-6 justify-center">
+						<Title order={4}>
+							<Trans id="participant.echo.verify">Verify</Trans>
+						</Title>
+						<Text c="dimmed">
 							<Trans id="participant.refine.make.concrete.description">
 								Take some time to create an outcome that makes your contribution
 								concrete.
@@ -82,7 +71,7 @@ export const RefineSelection = () => {
 
 						{cooldown.verify.isActive && (
 							<Stack gap="xs" w="100%">
-								<Text size="sm" c="dimmed" fs="italic" ta="center">
+								<Text size="sm" c="dimmed">
 									<Trans id="participant.refine.cooling.down">
 										Cooling down. Available in {cooldown.verify.formattedTime}
 									</Trans>
@@ -90,42 +79,31 @@ export const RefineSelection = () => {
 								<Progress
 									value={cooldown.verify.progress}
 									size="md"
-									radius="xl"
 									animated={cooldown.verify.isActive}
 								/>
 							</Stack>
 						)}
 					</Stack>
-				</Box>
+				</UnstyledButton>
 			)}
 
 			{/* Explore option */}
 			{showEcho && (
-				<Box
+				<UnstyledButton
 					onClick={handleEchoClick}
-					className={`${flexClass} cursor-pointer rounded-xl border-2 p-6 transition-all ${
-						cooldown.echo.isActive
-							? "border-gray-200 bg-gray-50"
-							: "border-gray-300 bg-white hover:border-blue-400 hover:bg-blue-50"
-					}`}
+					className={`${flexClass} app-do block w-full p-6`}
+					aria-disabled={cooldown.echo.isActive || undefined}
 					style={{
 						cursor: cooldown.echo.isActive ? "not-allowed" : "pointer",
 						opacity: cooldown.echo.isActive ? 0.6 : 1,
 					}}
 					{...testId("portal-echo-explore-card")}
 				>
-					<Stack
-						gap="lg"
-						align="center"
-						className="h-full px-6 py-6 justify-center"
-					>
-						<Group gap="sm" align="center">
-							<ArrowLineDownIcon size={32} />
-							<Title order={3}>
-								<Trans id="participant.echo.explore">Explore</Trans>
-							</Title>
-						</Group>
-						<Text c="dimmed" ta="center">
+					<Stack gap="md" className="h-full py-6 justify-center">
+						<Title order={4}>
+							<Trans id="participant.echo.explore">Explore</Trans>
+						</Title>
+						<Text c="dimmed">
 							<Trans id="participant.refine.go.deeper.description">
 								Get an immediate reply from dembrane to help you deepen the
 								conversation.
@@ -134,7 +112,7 @@ export const RefineSelection = () => {
 
 						{cooldown.echo.isActive && (
 							<Stack gap="xs" w="100%">
-								<Text size="sm" c="dimmed" fs="italic" ta="center">
+								<Text size="sm" c="dimmed">
 									<Trans id="participant.refine.cooling.down">
 										Cooling down. Available in {cooldown.echo.formattedTime}
 									</Trans>
@@ -142,13 +120,12 @@ export const RefineSelection = () => {
 								<Progress
 									value={cooldown.echo.progress}
 									size="md"
-									radius="xl"
 									animated={cooldown.echo.isActive}
 								/>
 							</Stack>
 						)}
 					</Stack>
-				</Box>
+				</UnstyledButton>
 			)}
 		</Stack>
 	);

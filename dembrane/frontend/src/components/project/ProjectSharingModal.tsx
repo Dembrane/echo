@@ -300,22 +300,23 @@ export function ProjectSharingModal({
 								</Trans>
 							)}
 						</Text>
-						<Text size="xs" c="dimmed" mt={4}>
+						<Text size="xs" c="dimmed" mt="xs">
 							<Trans>
 								Make it private to share with specific people only. Private
 								projects require the innovator plan or above.
 							</Trans>
 						</Text>
 					</Alert>
-					<Group justify="flex-end">
-						<Button variant="subtle" onClick={onClose}>
-							<Trans>Cancel</Trans>
-						</Button>
+					<Group gap="sm">
 						<Button
+							variant="filled"
 							loading={setVisibility.isPending}
 							onClick={handleMakePrivate}
 						>
 							<Trans>Make private</Trans>
+						</Button>
+						<Button variant="subtle" color="gray" onClick={onClose}>
+							<Trans>Cancel</Trans>
 						</Button>
 					</Group>
 				</Stack>
@@ -375,14 +376,14 @@ export function ProjectSharingModal({
 							<ActionIcon
 								variant="subtle"
 								color="gray"
-								size="sm"
+								aria-label={t`Remove access`}
 								onClick={() => {
 									revoke
 										.mutateAsync(share.user_id)
 										.catch((err: Error) => void notifyError(err));
 								}}
 							>
-								<TrashIcon size={14} />
+								<TrashIcon size={20} />
 							</ActionIcon>
 						</Group>
 					))}
@@ -408,12 +409,11 @@ export function ProjectSharingModal({
 							<ActionIcon
 								variant="subtle"
 								color="gray"
-								size="sm"
 								aria-label={t`Revoke invite`}
 								loading={revokeInvite.isPending}
 								onClick={() => void handleRevokeInvite(inv.id)}
 							>
-								<XIcon size={14} />
+								<XIcon size={20} />
 							</ActionIcon>
 						</Group>
 					))}
@@ -474,54 +474,54 @@ export function ProjectSharingModal({
 					/>
 				)}
 
-				<Group justify="space-between" mt="md">
+				<Group gap="sm" mt="md">
+					{inviteStep ? (
+						<Button
+							variant="filled"
+							size="sm"
+							loading={inviteAndShare.isPending}
+							disabled={!canInvite}
+							onClick={handleSendInvites}
+							data-testid="project-share-invite-confirm"
+						>
+							{pendingInvites.length > 1 ? (
+								<Trans>Send {pendingInvites.length} invites</Trans>
+							) : (
+								<Trans>Send invite</Trans>
+							)}
+						</Button>
+					) : (
+						<Button
+							variant="filled"
+							size="sm"
+							loading={sharing}
+							disabled={validChips.length === 0 || hasInvalidChips}
+							onClick={handleShare}
+							data-testid="project-share-confirm"
+						>
+							{validChips.length > 1 ? (
+								<Trans>Share with {validChips.length} people</Trans>
+							) : (
+								<Trans>Share</Trans>
+							)}
+						</Button>
+					)}
 					<Button
-						variant="outline"
 						size="sm"
 						onClick={handleMakeOpen}
 						loading={setVisibility.isPending}
 					>
 						<Trans>Share with whole workspace</Trans>
 					</Button>
-					<Group gap="xs">
-						<Button
-							variant="subtle"
-							size="sm"
-							onClick={handleClose}
-							data-testid="project-share-cancel"
-						>
-							<Trans>Cancel</Trans>
-						</Button>
-						{inviteStep ? (
-							<Button
-								size="sm"
-								loading={inviteAndShare.isPending}
-								disabled={!canInvite}
-								onClick={handleSendInvites}
-								data-testid="project-share-invite-confirm"
-							>
-								{pendingInvites.length > 1 ? (
-									<Trans>Send {pendingInvites.length} invites</Trans>
-								) : (
-									<Trans>Send invite</Trans>
-								)}
-							</Button>
-						) : (
-							<Button
-								size="sm"
-								loading={sharing}
-								disabled={validChips.length === 0 || hasInvalidChips}
-								onClick={handleShare}
-								data-testid="project-share-confirm"
-							>
-								{validChips.length > 1 ? (
-									<Trans>Share with {validChips.length} people</Trans>
-								) : (
-									<Trans>Share</Trans>
-								)}
-							</Button>
-						)}
-					</Group>
+					<Button
+						variant="subtle"
+						color="gray"
+						size="sm"
+						onClick={handleClose}
+						data-testid="project-share-cancel"
+					>
+						<Trans>Cancel</Trans>
+					</Button>
 				</Group>
 			</Stack>
 		</Modal>

@@ -28,7 +28,7 @@ export const SaveStatus = ({
 	if (isError) {
 		return (
 			<StatusIcon icon={XIcon}>
-				<Trans>Save Error!</Trans>
+				<Trans>Couldn't save</Trans>
 			</StatusIcon>
 		);
 	}

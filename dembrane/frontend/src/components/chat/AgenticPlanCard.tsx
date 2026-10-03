@@ -22,16 +22,15 @@ import { testId } from "@/lib/testUtils";
 import type { AgenticPlan, PlanStepStatus } from "./agenticPlan";
 
 const StepIcon = ({ status }: { status: PlanStepStatus }) => {
-	// Every icon sits in the same 18px box so ticking a step off never moves
+	// Every icon sits in the same 16px box so ticking a step off never moves
 	// the text beside it.
-	const box = "flex h-[18px] w-[18px] shrink-0 items-center justify-center";
+	const box = "flex h-4 w-4 shrink-0 items-center justify-center";
 	if (status === "done") {
 		return (
 			<span className={`${box} animate-[plan-tick_220ms_ease-out]`}>
 				<CheckCircleIcon
-					weight="fill"
-					size={18}
-					style={{ color: "var(--mantine-color-teal-6)" }}
+					size={16}
+					style={{ color: "var(--mantine-color-green-7)" }}
 					aria-label={t`Done`}
 				/>
 			</span>
@@ -40,7 +39,7 @@ const StepIcon = ({ status }: { status: PlanStepStatus }) => {
 	if (status === "in_progress") {
 		return (
 			<span className={box} role="img" aria-label={t`In progress`}>
-				<Loader size={14} color="teal" />
+				<Loader size="xs" color="green" />
 			</span>
 		);
 	}
@@ -48,8 +47,8 @@ const StepIcon = ({ status }: { status: PlanStepStatus }) => {
 		return (
 			<span className={box}>
 				<XCircleIcon
-					size={18}
-					style={{ color: "var(--mantine-color-gray-5)" }}
+					size={16}
+					style={{ color: "var(--mantine-color-dimmed)" }}
 					aria-label={t`Stopped`}
 				/>
 			</span>
@@ -58,8 +57,8 @@ const StepIcon = ({ status }: { status: PlanStepStatus }) => {
 	return (
 		<span className={box}>
 			<CircleIcon
-				size={18}
-				style={{ color: "var(--mantine-color-gray-4)" }}
+				size={16}
+				style={{ color: "var(--mantine-color-dimmed)" }}
 				aria-label={t`Not started`}
 			/>
 		</span>
@@ -79,11 +78,7 @@ export const AgenticPlanCard = ({ plan }: { plan: AgenticPlan }) => {
 
 	return (
 		<Box className="flex justify-start" {...testId("agentic-plan")}>
-			<Paper
-				withBorder
-				radius="md"
-				className="w-full max-w-full px-3 py-2 md:max-w-[80%]"
-			>
+			<Paper withBorder className="w-full max-w-full px-3 py-2 md:max-w-[80%]">
 				<UnstyledButton
 					onClick={() => setOpen((value) => !value)}
 					className="w-full"
@@ -94,14 +89,14 @@ export const AgenticPlanCard = ({ plan }: { plan: AgenticPlan }) => {
 						<Text>
 							<Trans>Plan</Trans>
 						</Text>
-						<Group gap={6} wrap="nowrap">
+						<Group gap="xs" wrap="nowrap">
 							<Text size="xs" {...testId("agentic-plan-progress")}>
 								<Trans>
 									{doneCount} of {plan.steps.length} done
 								</Trans>
 							</Text>
 							<CaretDownIcon
-								size={14}
+								size={16}
 								className="transition-transform duration-200"
 								style={{ transform: open ? "rotate(180deg)" : undefined }}
 							/>
@@ -110,20 +105,20 @@ export const AgenticPlanCard = ({ plan }: { plan: AgenticPlan }) => {
 				</UnstyledButton>
 
 				<Collapse in={open} transitionDuration={200}>
-					<Stack gap={8} mt="xs" component="ol" className="m-0 list-none p-0">
+					<Stack gap="sm" mt="xs" component="ol" className="m-0 list-none p-0">
 						{plan.steps.map((step, index) => (
 							<Box
 								component="li"
 								key={`${index}-${step.title}`}
 								{...testId(`agentic-plan-step-${step.status}`)}
 							>
-								<Group gap={10} wrap="nowrap" align="flex-start">
+								<Group gap="sm" wrap="nowrap" align="flex-start">
 									<Box pt={4}>
 										<StepIcon status={step.status} />
 									</Box>
 									<Stack gap={0} className="min-w-0">
 										<Text
-											fw={step.status === "in_progress" ? 600 : 320}
+											c={step.status === "in_progress" ? undefined : "dimmed"}
 											className="transition-colors duration-200"
 										>
 											{step.title}
@@ -136,15 +131,15 @@ export const AgenticPlanCard = ({ plan }: { plan: AgenticPlan }) => {
 					</Stack>
 					{plan.live && (
 						<Group
-							gap={6}
+							gap="xs"
 							mt="sm"
 							wrap="nowrap"
 							{...testId("agentic-plan-close-hint")}
 						>
 							<BellIcon
-								size={14}
+								size={16}
 								className="shrink-0"
-								style={{ color: "var(--mantine-color-gray-6)" }}
+								style={{ color: "var(--mantine-color-dimmed)" }}
 							/>
 							<Text size="xs">
 								<Trans>

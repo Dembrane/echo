@@ -47,14 +47,14 @@ export function ProjectSharingStrip({
 
 	return (
 		<>
-			<Paper withBorder p="md" radius="md">
+			<Paper withBorder p="md">
 				<Group gap="sm" wrap="nowrap">
 					{isPrivate ? (
 						<>
 							<Badge
-								color="blue"
+								color="gray"
 								variant="light"
-								leftSection={<LockIcon size={12} />}
+								leftSection={<LockIcon size={16} />}
 							>
 								<Trans>Private</Trans>
 							</Badge>
@@ -62,7 +62,7 @@ export function ProjectSharingStrip({
 								<Loader size="xs" />
 							) : shareCount === 0 ? (
 								<Text size="sm" c="dimmed">
-									<Trans>Just you. Share with specific people →</Trans>
+									<Trans>Just you. Share with specific people.</Trans>
 								</Text>
 							) : (
 								<>
@@ -103,7 +103,7 @@ export function ProjectSharingStrip({
 						<>
 							<UsersIcon
 								size={16}
-								style={{ color: "var(--mantine-color-gray-6)" }}
+								style={{ color: "var(--mantine-color-dimmed)" }}
 							/>
 							<Text size="sm">
 								{workspaceName ? (

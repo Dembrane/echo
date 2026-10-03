@@ -1,6 +1,5 @@
 .history {
-	border-block-start: 1px solid
-		color-mix(in srgb, var(--app-text) 16%, transparent);
+	border-block-start: 1px solid var(--app-rule-color);
 	margin-inline-start: 8rem;
 	padding-block: 1.5rem 0.5rem;
 }

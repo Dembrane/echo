@@ -77,7 +77,7 @@ export const ParticipantReport = () => {
 	if (!report || report.status !== "published") {
 		return (
 			<Stack
-				gap="2rem"
+				gap="xl"
 				className="container mx-auto max-w-2xl p-8"
 				{...testId("public-report-not-available")}
 			>
@@ -85,11 +85,11 @@ export const ParticipantReport = () => {
 					<Logo />
 				</a>
 
-				<Text>
-					<Trans>This report is not yet available. </Trans>
+				<Text size="sm" c="dimmed">
+					<Trans>This report is not yet available.</Trans>
 				</Text>
 
-				<Text>
+				<Text size="sm" c="dimmed">
 					<Trans>
 						Please check back later or contact the project owner for more
 						information.

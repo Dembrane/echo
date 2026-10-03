@@ -27,8 +27,8 @@ export function PopcornIntroModal({
 		>
 			<Stack gap="md">
 				<Box
-					className="overflow-hidden rounded-md border"
-					style={{ borderColor: "var(--mantine-color-gray-3)", height: 460 }}
+					className="overflow-hidden border"
+					style={{ borderColor: "var(--app-rule-color)", height: 460 }}
 				>
 					<iframe
 						title={t`Sample popcorn session`}
@@ -37,7 +37,7 @@ export function PopcornIntroModal({
 						{...testId("popcorn-intro-sample-frame")}
 					/>
 				</Box>
-				<Text size="xs">
+				<Text size="xs" c="dimmed">
 					<Trans>
 						A sample session, not your data. Yours will look like this.
 					</Trans>
@@ -49,11 +49,9 @@ export function PopcornIntroModal({
 						early, and you can turn it off again in the project settings.
 					</Trans>
 				</Text>
-				<Group justify="flex-end" gap="xs">
-					<Button variant="subtle" onClick={onClose}>
-						<Trans>Not now</Trans>
-					</Button>
+				<Group gap="sm">
 					<Button
+						variant="filled"
 						loading={updateProject.isPending}
 						onClick={() =>
 							updateProject.mutate({
@@ -64,6 +62,9 @@ export function PopcornIntroModal({
 						{...testId("popcorn-intro-enable")}
 					>
 						<Trans>Turn on popcorn</Trans>
+					</Button>
+					<Button variant="subtle" color="gray" onClick={onClose}>
+						<Trans>Not now</Trans>
 					</Button>
 				</Group>
 			</Stack>

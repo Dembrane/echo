@@ -5,8 +5,7 @@ import {
 	Anchor,
 	Badge,
 	Code,
-	Group,
-	Loader,
+	Skeleton,
 	Stack,
 	Table,
 	Text,
@@ -55,9 +54,10 @@ const ActivityTable = ({
 	const rows = events ?? [];
 	if (isLoading) {
 		return (
-			<Group justify="center" py="md">
-				<Loader size="sm" color="gray" />
-			</Group>
+			<Stack gap="xs">
+				<Skeleton height={16} />
+				<Skeleton height={16} />
+			</Stack>
 		);
 	}
 	if (rows.length === 0) {
@@ -150,7 +150,7 @@ export const OrgAgentAccessPanel = ({
 		<Stack gap="xl">
 			<Stack gap="sm">
 				<Stack gap={4}>
-					<Title order={3}>
+					<Title order={4}>
 						<Trans>MCP access</Trans>
 					</Title>
 				</Stack>
@@ -180,9 +180,7 @@ export const OrgAgentAccessPanel = ({
 					<Trans>This organisation</Trans>
 				</SectionHeading>
 				{orgsLoading ? (
-					<Group justify="center" py="md">
-						<Loader size="sm" color="gray" />
-					</Group>
+					<Skeleton height={40} maw={560} />
 				) : org ? (
 					<>
 						<OrgAccessTable data-testid="agent-this-organisation">

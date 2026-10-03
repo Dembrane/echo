@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 
 import "./ParticipantOnboardingCards.css";
-import { Button, Checkbox, Stack, Text, Title } from "@mantine/core";
+import { Anchor, Button, Checkbox, Stack, Text, Title } from "@mantine/core";
 import { Logo } from "@/components/common/Logo";
 import { PARTICIPANT_BASE_URL } from "@/config";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -142,11 +142,11 @@ const ParticipantOnboardingCards = ({
 				organiserName,
 			),
 			{
-				section: "Get Started",
+				section: "Get started",
 				slides: [
 					{
 						component: InitiateFormComponent,
-						title: "Ready to Begin?",
+						title: "Ready to begin?",
 					},
 				],
 			},
@@ -261,7 +261,13 @@ const ParticipantOnboardingCards = ({
 
 	// If there's no valid card, render a fallback
 	if (!currentCard) {
-		return <div>No card available for the current language and section.</div>;
+		return (
+			<Text size="sm" c="dimmed" p="md">
+				<Trans id="participant.onboarding.no.card">
+					No card available for the current language and section.
+				</Trans>
+			</Text>
+		);
 	}
 
 	const nextSlide = () => {
@@ -300,13 +306,16 @@ const ParticipantOnboardingCards = ({
 	return (
 		<div className="flex h-full flex-col">
 			{/* Header with logo and border */}
-			<div className="w-full border-b border-gray-800 px-4 py-3">
+			<div
+				className="w-full border-b px-4 py-3"
+				style={{ borderColor: "var(--app-rule-color)" }}
+			>
 				<Logo />
 			</div>
 			{notice}
 
 			{/* Content area */}
-			<div className="flex flex-grow flex-col items-center justify-center p-4 text-center">
+			<div className="flex flex-grow flex-col items-center justify-center p-4">
 				{skipOnboarding === "1" ? (
 					<Stack
 						className="w-full max-w-[400px] text-left"
@@ -314,7 +323,7 @@ const ParticipantOnboardingCards = ({
 					>
 						{!nothingToAsk && (
 							<Title order={2}>
-								<Trans id="participant.ready.to.begin">Ready to Begin?</Trans>
+								<Trans id="participant.ready.to.begin">Ready to begin?</Trans>
 							</Title>
 						)}
 						<ParticipantInitiateForm project={project} />
@@ -329,39 +338,19 @@ const ParticipantOnboardingCards = ({
 							)}
 							{...testId(`portal-onboarding-slide-${currentSlideIndex}`)}
 						>
-							{currentCard.icon && (
-								<div
-									className={cn(
-										"transform transition-all duration-300 ease-in-out hover:scale-110",
-									)}
-								>
-									{React.createElement(currentCard.icon, {
-										className: "text-blue-500",
-										size: 64,
-									})}
-								</div>
-							)}
+							{currentCard.icon &&
+								React.createElement(currentCard.icon, { size: 64 })}
 
 							{!(
 								nothingToAsk && currentCard.component === InitiateFormComponent
-							) && (
-								<Text className={cn("text-4xl")} ta="left">
-									{currentCard.title}
-								</Text>
-							)}
+							) && <Title order={2}>{currentCard.title}</Title>}
 
 							{currentCard.content && (
-								<Text className="text-xl" ta="left">
-									{currentCard.content}
-								</Text>
+								<Text size="md">{currentCard.content}</Text>
 							)}
 
 							{currentCard.extraHelp && (
-								<Text
-									className="text-sm"
-									ta="left"
-									style={{ whiteSpace: "pre-line" }}
-								>
+								<Text size="sm" style={{ whiteSpace: "pre-line" }}>
 									{currentCard.extraHelp}
 								</Text>
 							)}
@@ -373,7 +362,7 @@ const ParticipantOnboardingCards = ({
 							)}
 
 							{currentCard.link && (
-								<a
+								<Anchor
 									target={
 										currentCard.link.url.startsWith(PARTICIPANT_BASE_URL) ||
 										currentCard.link.url.startsWith("/")
@@ -381,7 +370,6 @@ const ParticipantOnboardingCards = ({
 											: "_blank"
 									}
 									href={currentCard.link.url}
-									className="text-blue-600 underline"
 									rel={
 										currentCard.link.url.startsWith(PARTICIPANT_BASE_URL) ||
 										currentCard.link.url.startsWith("/")
@@ -391,7 +379,7 @@ const ParticipantOnboardingCards = ({
 									{...testId("portal-onboarding-link-button")}
 								>
 									{currentCard.link.label}
-								</a>
+								</Anchor>
 							)}
 
 							{currentCard.checkbox && (
@@ -402,8 +390,6 @@ const ParticipantOnboardingCards = ({
 									label={currentCard.checkbox.label}
 									classNames={{
 										body: "items-center",
-										label:
-											"text-lg leading-snug pl-4 text-gray-700 text-left pt-0.5",
 										root: "items-start",
 									}}
 									{...testId("portal-onboarding-checkbox")}
@@ -411,21 +397,11 @@ const ParticipantOnboardingCards = ({
 							)}
 						</div>
 
-						<div className="mt-8 flex w-full items-center justify-between gap-4">
-							{currentSlideIndex > 0 && (
-								<Button
-									onClick={prevSlide}
-									variant="outline"
-									size="lg"
-									className={!isLastSlide ? "basis-1/2" : "w-full"}
-									{...testId("portal-onboarding-back-button")}
-								>
-									<Trans id="participant.button.back">Back</Trans>
-								</Button>
-							)}
+						<div className="mt-8 flex w-full items-center justify-start gap-4">
 							{!isLastSlide && (
 								<Button
 									onClick={nextSlide}
+									variant="filled"
 									size="lg"
 									disabled={
 										currentCard.checkbox?.required &&
@@ -437,8 +413,20 @@ const ParticipantOnboardingCards = ({
 									{currentCard.cta ? (
 										currentCard.cta
 									) : (
-										<Trans id="participant.button.next">Next</Trans>
+										<Trans id="participant.button.next">Continue</Trans>
 									)}
+								</Button>
+							)}
+							{currentSlideIndex > 0 && (
+								<Button
+									onClick={prevSlide}
+									variant="subtle"
+									color="gray"
+									size="lg"
+									className={!isLastSlide ? "basis-1/2" : "w-full"}
+									{...testId("portal-onboarding-back-button")}
+								>
+									<Trans id="participant.button.back">Back</Trans>
 								</Button>
 							)}
 						</div>
@@ -450,8 +438,8 @@ const ParticipantOnboardingCards = ({
 										key={slide.title}
 										className={`h-3 w-3 rounded-full transition-all duration-200 ${
 											index === currentSlideIndex
-												? "w-6 bg-blue-500"
-												: "border border-blue-500 bg-transparent"
+												? "w-6 bg-primary-700"
+												: "bg-[var(--app-rule-color)]"
 										}`}
 									/>
 								))}

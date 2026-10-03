@@ -781,28 +781,21 @@ export const ParticipantConversationAudio = () => {
 				withCloseButton={false}
 				centered
 				size="sm"
-				radius="md"
 				padding="xl"
 				closeOnClickOutside={false}
 				closeOnEscape={false}
-				overlayProps={{
-					color: "#FF9AA2",
-				}}
+				title={
+					<Group gap="sm" wrap="nowrap">
+						<WarningIcon size={20} color="var(--mantine-color-error)" />
+						<Trans id="participant.modal.s3check.title">Connection issue</Trans>
+					</Group>
+				}
 				role="alertdialog"
 				aria-live="assertive"
 				aria-atomic="true"
 				{...testId("portal-audio-s3-check-modal")}
 			>
 				<Stack gap="md">
-					<Group gap="xs">
-						<WarningIcon size={24} color="#FF9AA2" />
-						<Text size="lg">
-							<Trans id="participant.modal.s3check.title">
-								Connection issue
-							</Trans>
-						</Text>
-						<WarningIcon size={24} color="#FF9AA2" />
-					</Group>
 					<Text>
 						<Trans id="participant.modal.s3check.message">
 							Something is blocking your connection. Your audio will not be
@@ -821,8 +814,8 @@ export const ParticipantConversationAudio = () => {
 						loading={s3Status === "checking"}
 						disabled={s3Status === "checking"}
 						fullWidth
-						radius="md"
-						size="xl"
+						variant="filled"
+						size="lg"
 						{...testId("portal-audio-s3-check-reconnect-button")}
 					>
 						<Trans id="participant.button.s3check.reconnect">Reconnect</Trans>
@@ -855,9 +848,8 @@ export const ParticipantConversationAudio = () => {
 				onClose={closeRefineInfoModal}
 				centered
 				size="sm"
-				radius="md"
 				padding="xl"
-				title={<Text size="lg">{getRefineModalTitle()}</Text>}
+				title={getRefineModalTitle()}
 				{...testId("portal-audio-echo-info-modal")}
 			>
 				<Stack gap="lg">
@@ -873,7 +865,7 @@ export const ParticipantConversationAudio = () => {
 					<Button
 						onClick={closeRefineInfoModal}
 						fullWidth
-						radius="md"
+						variant="filled"
 						size="md"
 						{...testId("portal-audio-echo-info-close-button")}
 					>
@@ -889,28 +881,23 @@ export const ParticipantConversationAudio = () => {
 				withCloseButton={false}
 				centered
 				size="sm"
-				radius="md"
 				padding="xl"
 				closeOnClickOutside={false}
 				closeOnEscape={false}
-				overlayProps={{
-					color: "#FF9AA2",
-				}}
+				title={
+					<Group gap="sm" wrap="nowrap">
+						<WarningIcon size={20} color="var(--mantine-color-error)" />
+						<Trans id="participant.modal.interruption.title">
+							Recording interrupted
+						</Trans>
+					</Group>
+				}
 				role="alertdialog"
 				aria-live="assertive"
 				aria-atomic="true"
 				{...testId("portal-audio-interruption-modal")}
 			>
 				<Stack gap="md">
-					<Group gap="xs">
-						<WarningIcon size={24} color="#FF9AA2" />
-						<Text size="lg">
-							<Trans id="participant.modal.interruption.title">
-								Recording interrupted
-							</Trans>
-						</Text>
-						<WarningIcon size={24} color="#FF9AA2" />
-					</Group>
 					<Text>
 						<Trans id="participant.modal.interruption.issue.message">
 							Attention! We lost the last 60 seconds or so of your recording due
@@ -935,8 +922,8 @@ export const ParticipantConversationAudio = () => {
 						loading={isReconnecting}
 						disabled={isReconnecting || uploadChunkMutation.isPending}
 						fullWidth
-						radius="md"
-						size="xl"
+						variant="filled"
+						size="lg"
 						{...testId("portal-audio-interruption-reconnect-button")}
 					>
 						<Trans id="participant.button.interruption.reconnect">
@@ -961,7 +948,8 @@ export const ParticipantConversationAudio = () => {
 				<Stack
 					bg="var(--app-background)"
 					gap="lg"
-					className="sticky bottom-0 z-10 w-full min-h-[84px] border-t border-slate-300 p-4"
+					className="sticky bottom-0 z-10 w-full min-h-[84px] border-t p-4"
+					style={{ borderColor: "var(--app-rule-color)" }}
 				>
 					<Group
 						justify="center"
@@ -991,19 +979,19 @@ export const ParticipantConversationAudio = () => {
 							opened ||
 							interruptionModalOpened ||
 							stoppedRecordingTime !== null) && (
-							<div
-								className="border-slate-300"
-								{...testId("portal-audio-recording-timer")}
-							>
+							<div {...testId("portal-audio-recording-timer")}>
 								<Group justify="center" align="center" gap="xs" mih={50}>
 									{opened ||
 									interruptionModalOpened ||
 									stoppedRecordingTime !== null ? (
 										<PauseIcon size={20} />
 									) : (
-										<div className="h-4 w-4 animate-pulse rounded-full bg-red-500" />
+										<div
+											className="h-4 w-4 animate-pulse rounded-full"
+											style={{ background: "var(--mantine-color-red-6)" }}
+										/>
 									)}
-									<Text className="text-2xl">
+									<Text size="lg">
 										{(() => {
 											const displayTime = interruptionModalOpened
 												? interruptionRecordingTimeRef.current
@@ -1039,8 +1027,8 @@ export const ParticipantConversationAudio = () => {
 								<Group className="w-full" wrap="nowrap">
 									<Button
 										size="lg"
-										radius="md"
-										rightSection={<MicrophoneIcon size={20} />}
+										variant="filled"
+										leftSection={<MicrophoneIcon size={20} />}
 										onClick={handleStartRecording}
 										loading={
 											isStarting ||
@@ -1057,11 +1045,11 @@ export const ParticipantConversationAudio = () => {
 									<I18nLink to={textModeUrl}>
 										<Button
 											size="lg"
-											variant="outline"
 											px="lg"
+											aria-label={t`Switch to text`}
 											{...testId("portal-audio-switch-to-text-button")}
 										>
-											<ArticleNyTimesIcon size={24} />
+											<ArticleNyTimesIcon size={20} />
 										</Button>
 									</I18nLink>
 
@@ -1069,8 +1057,7 @@ export const ParticipantConversationAudio = () => {
 										<Button
 											size="lg"
 											onClick={open}
-											variant="outline"
-											rightSection={
+											leftSection={
 												<CheckIcon size={20} className="hidden sm:block" />
 											}
 											className="w-auto"
@@ -1092,13 +1079,12 @@ export const ParticipantConversationAudio = () => {
 										projectQuery.data?.is_get_reply_enabled) && (
 										<Button
 											size="lg"
-											radius={100}
 											onClick={handleRefineClick}
 											disabled={isStopping || isRefineDisabled}
 											className="relative overflow-hidden"
 											variant={
 												recordingTime < REFINE_BUTTON_THRESHOLD_SECONDS
-													? "light"
+													? undefined
 													: "filled"
 											}
 											{...testId("portal-audio-echo-button")}
@@ -1115,9 +1101,7 @@ export const ParticipantConversationAudio = () => {
 										</Button>
 									)}
 								<Button
-									variant="outline"
 									size="lg"
-									radius="md"
 									color="red"
 									onClick={handleStopRecording}
 									disabled={isStopping}
@@ -1128,14 +1112,12 @@ export const ParticipantConversationAudio = () => {
 											? "px-7 md:px-10"
 											: ""
 									}
+									leftSection={
+										<StopIcon size={20} className="hidden md:block" />
+									}
 									{...testId("portal-audio-stop-button")}
 								>
 									<Trans id="participant.button.stop">Stop</Trans>
-									<StopIcon
-										weight="fill"
-										size={18}
-										className="ml-0 hidden md:ml-1 md:block"
-									/>
 								</Button>
 							</Group>
 						)}

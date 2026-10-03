@@ -4,31 +4,30 @@ import {
 	ActionIcon,
 	Badge,
 	Button,
+	Code,
 	Group,
-	Loader,
 	Menu,
 	MultiSelect,
 	Pagination,
 	Paper,
 	ScrollArea,
 	Select,
+	Skeleton,
 	Stack,
 	Switch,
 	Table,
 	Text,
+	Title,
 } from "@mantine/core";
 import {
 	ArrowClockwiseIcon,
 	ArrowDownIcon,
-	ArrowUpIcon,
 	ArrowsDownUpIcon,
-	CaretDownIcon,
-	CaretUpIcon,
+	ArrowUpIcon,
 	DatabaseIcon,
 	DownloadSimpleIcon,
 	FileCsvIcon,
 	FileJsIcon,
-	ListBulletsIcon,
 } from "@phosphor-icons/react";
 import {
 	type ColumnDef,
@@ -183,7 +182,7 @@ export const AuditLogsCard = () => {
 							"gray"
 						}
 						size="sm"
-						className="w-fit uppercase"
+						className="w-fit"
 					>
 						{row.original.action}
 					</Badge>
@@ -205,16 +204,13 @@ export const AuditLogsCard = () => {
 					return (
 						<Stack gap={4}>
 							<Group
-								gap={8}
+								gap="sm"
 								wrap="nowrap"
 								align="center"
 								justify="space-between"
 							>
 								<div className="min-w-0">
-									<Text
-										size="sm"
-										className="font-medium truncate whitespace-nowrap"
-									>
+									<Text size="sm" className="truncate whitespace-nowrap">
 										{row.original.item}
 									</Text>
 									<Text
@@ -227,17 +223,9 @@ export const AuditLogsCard = () => {
 								</div>
 								{hasRevisions ? (
 									<Button
-										variant="light"
 										size="xs"
 										onClick={() => toggleRowExpansion(row.original.id)}
-										leftSection={<DatabaseIcon size={14} />}
-										rightSection={
-											expanded ? (
-												<CaretUpIcon size={14} />
-											) : (
-												<CaretDownIcon size={14} />
-											)
-										}
+										leftSection={<DatabaseIcon size={20} />}
 										aria-label={
 											expanded ? t`Hide revision data` : t`Show revision data`
 										}
@@ -249,7 +237,7 @@ export const AuditLogsCard = () => {
 						</Stack>
 					);
 				},
-				header: () => t`Action On`,
+				header: () => t`Action on`,
 			},
 			{
 				accessorKey: "timestamp",
@@ -268,7 +256,7 @@ export const AuditLogsCard = () => {
 						{getActorLabel(row.original)}
 					</Text>
 				),
-				header: () => t`Action By`,
+				header: () => t`Action by`,
 			},
 			{
 				accessorKey: "ip",
@@ -283,7 +271,7 @@ export const AuditLogsCard = () => {
 						</Text>
 					);
 				},
-				header: () => t`IP Address`,
+				header: () => t`IP address`,
 			},
 		],
 		[isRowExpanded, showIps, toggleRowExpansion],
@@ -385,20 +373,15 @@ export const AuditLogsCard = () => {
 	return (
 		<Paper
 			withBorder
-			radius="md"
 			p="lg"
-			className="shadow-sm dark:bg-dark-6"
 			style={{ backgroundColor: "var(--app-background)" }}
 		>
 			<Stack gap="xl">
 				<Group justify="space-between" align="flex-start">
 					<Stack gap={4}>
-						<Group gap="sm" align="center">
-							<ListBulletsIcon size={20} />
-							<Text size="lg">
-								<Trans>Audit logs</Trans>
-							</Text>
-						</Group>
+						<Title order={4}>
+							<Trans>Audit logs</Trans>
+						</Title>
 						<Text size="sm" c="dimmed" className="max-w-[520px]">
 							<Trans>
 								Review activity for your workspace. Filter by collection or
@@ -411,19 +394,16 @@ export const AuditLogsCard = () => {
 							variant="subtle"
 							aria-label={t`Refresh audit logs`}
 							onClick={() => refetch()}
+							loading={isFetching && !isLoading}
 							disabled={isFetching && !isLoading}
 						>
-							{isFetching && !isLoading ? (
-								<Loader size="xs" />
-							) : (
-								<ArrowClockwiseIcon size={16} />
-							)}
+							<ArrowClockwiseIcon size={20} />
 						</ActionIcon>
 
 						<Menu withinPortal position="bottom-end">
 							<Menu.Target>
 								<Button
-									rightSection={<DownloadSimpleIcon size={16} />}
+									leftSection={<DownloadSimpleIcon size={20} />}
 									loading={exportMutation.isPending}
 								>
 									<Trans>Export</Trans>
@@ -498,9 +478,9 @@ export const AuditLogsCard = () => {
 
 				{isError ? <ErrorNotice error={error} /> : null}
 
-				<ScrollArea className="rounded-md border">
+				<ScrollArea>
 					<Table striped highlightOnHover>
-						<Table.Thead className="bg-gray-50 dark:bg-dark-7">
+						<Table.Thead>
 							{table.getHeaderGroups().map((headerGroup) => (
 								<Table.Tr key={headerGroup.id}>
 									{headerGroup.headers.map((header) => {
@@ -508,11 +488,14 @@ export const AuditLogsCard = () => {
 										const sortState = header.column.getIsSorted();
 										const sortIcon =
 											sortState === "desc" ? (
-												<ArrowDownIcon size={14} />
+												<ArrowDownIcon size={16} />
 											) : sortState === "asc" ? (
-												<ArrowUpIcon size={14} />
+												<ArrowUpIcon size={16} />
 											) : canSort ? (
-												<ArrowsDownUpIcon size={14} className="text-gray-400" />
+												<ArrowsDownUpIcon
+													size={16}
+													color="var(--mantine-color-dimmed)"
+												/>
 											) : null;
 
 										return (
@@ -523,7 +506,9 @@ export const AuditLogsCard = () => {
 														? header.column.getToggleSortingHandler()
 														: undefined
 												}
-												className={`uppercase tracking-wide text-xs font-semibold text-gray-600 dark:text-gray-3 ${canSort ? "cursor-pointer select-none" : ""}`}
+												className={
+													canSort ? "cursor-pointer select-none" : undefined
+												}
 												style={
 													header.column.id === "item"
 														? { width: "1%" }
@@ -531,7 +516,7 @@ export const AuditLogsCard = () => {
 												}
 											>
 												{header.isPlaceholder ? null : (
-													<Group gap={6} wrap="nowrap" align="center">
+													<Group gap="xs" wrap="nowrap" align="center">
 														{flexRender(
 															header.column.columnDef.header,
 															header.getContext(),
@@ -550,12 +535,11 @@ export const AuditLogsCard = () => {
 							{isLoading ? (
 								<Table.Tr>
 									<Table.Td colSpan={columns.length}>
-										<Group justify="center" py="xl">
-											<Loader size="sm" />
-											<Text size="sm" c="dimmed">
-												<Trans>Loading audit logs…</Trans>
-											</Text>
-										</Group>
+										<Stack gap="xs" py="xs">
+											<Skeleton height={16} />
+											<Skeleton height={16} />
+											<Skeleton height={16} />
+										</Stack>
 									</Table.Td>
 								</Table.Tr>
 							) : null}
@@ -586,17 +570,20 @@ export const AuditLogsCard = () => {
 																const revisionNumber = index + 1;
 
 																return (
-																	<div
-																		key={revisionNumber}
-																		className="rounded-md border border-gray-200 bg-gray-50 p-3 font-mono text-xs dark:border-dark-4 dark:bg-dark-7"
-																	>
-																		<Text size="xs" c="dimmed" className="mb-2">
+																	<Stack key={revisionNumber} gap="xs">
+																		<Text size="xs" c="dimmed">
 																			<Trans>Revision #{revisionNumber}</Trans>
 																		</Text>
-																		<pre className="whitespace-pre-wrap break-words text-xs leading-relaxed">
+																		<Code
+																			block
+																			style={{
+																				whiteSpace: "pre-wrap",
+																				wordBreak: "break-word",
+																			}}
+																		>
 																			{JSON.stringify(delta, null, 2)}
-																		</pre>
-																	</div>
+																		</Code>
+																	</Stack>
 																);
 															})}
 														</Stack>
@@ -610,11 +597,9 @@ export const AuditLogsCard = () => {
 							{isEmpty ? (
 								<Table.Tr>
 									<Table.Td colSpan={columns.length}>
-										<Group justify="center" py="xl">
-											<Text size="sm" c="dimmed">
-												<Trans>No audit logs match the current filters.</Trans>
-											</Text>
-										</Group>
+										<Text size="sm" c="dimmed" py="xs">
+											<Trans>No audit logs match the current filters.</Trans>
+										</Text>
 									</Table.Td>
 								</Table.Tr>
 							) : null}

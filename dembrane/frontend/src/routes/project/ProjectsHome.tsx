@@ -234,7 +234,7 @@ export const ProjectsHomeRoute = () => {
 				    Per audit §1: the user is deciding WHICH project to open;
 				    the workspace name is context, not content. */}
 				{workspace && (
-					<Stack gap={4}>
+					<Stack gap="xs">
 						<Group justify="space-between" align="flex-start" wrap="nowrap">
 							<Title order={2} lineClamp={1}>
 								{workspace.name}
@@ -244,7 +244,7 @@ export const ProjectsHomeRoute = () => {
 									variant="subtle"
 									size="xs"
 									color="gray"
-									leftSection={<GearIcon size={14} />}
+									leftSection={<GearIcon size={20} />}
 									onClick={() => navigate(`/w/${workspace.id}/settings`)}
 								>
 									<Trans>Settings</Trans>
@@ -279,7 +279,7 @@ export const ProjectsHomeRoute = () => {
 				    for them isn't "empty, go make something" — it's "nothing
 				    has been shared with you yet." */}
 				{totallyEmpty ? (
-					<Stack gap={12} py={48}>
+					<Stack gap="md" py="xl">
 						<Title order={3}>
 							{isOutsider ? (
 								<Trans>Nothing here for you yet.</Trans>
@@ -306,7 +306,7 @@ export const ProjectsHomeRoute = () => {
 								size="sm"
 								w="fit-content"
 								variant="filled"
-								rightSection={<PlusIcon size={20} />}
+								leftSection={<PlusIcon size={20} />}
 								onClick={handleCreateProject}
 								{...testId("project-home-create-button")}
 							>
@@ -319,7 +319,7 @@ export const ProjectsHomeRoute = () => {
 						{/* Pinned section — cards at the top, hidden when empty. */}
 						{showPinnedSection && (
 							<Stack gap="sm">
-								<Title order={5} c="dimmed">
+								<Title order={5}>
 									<Trans>Pinned</Trans>
 								</Title>
 								<SimpleGrid cols={{ base: 1, md: 3, sm: 2 }} spacing="md">
@@ -349,11 +349,11 @@ export const ProjectsHomeRoute = () => {
 									<Button
 										size="sm"
 										variant="filled"
-										rightSection={<PlusIcon size={20} />}
+										leftSection={<PlusIcon size={20} />}
 										onClick={handleCreateProject}
 										{...testId("project-home-create-button")}
 									>
-										<Trans>Create</Trans>
+										<Trans>Create project</Trans>
 									</Button>
 								)}
 							</Group>
@@ -389,7 +389,7 @@ export const ProjectsHomeRoute = () => {
 							{displayProjects.length === 0 &&
 								debouncedSearchValue !== "" &&
 								status === "success" && (
-									<Text c="dimmed">
+									<Text size="sm" c="dimmed">
 										<Trans>No projects found for search term</Trans>{" "}
 										<i>{debouncedSearchValue}</i>
 									</Text>
@@ -407,7 +407,12 @@ export const ProjectsHomeRoute = () => {
 							{canManageWorkspace &&
 								displayProjects.length > 0 &&
 								(selectMode ? (
-									<Group justify="space-between" align="center" wrap="nowrap">
+									<Group
+										justify="flex-start"
+										align="center"
+										gap="md"
+										wrap="nowrap"
+									>
 										<Checkbox
 											checked={selection.allSelected}
 											indeterminate={selection.someSelected}
@@ -430,9 +435,8 @@ export const ProjectsHomeRoute = () => {
 										<Group gap="xs" wrap="nowrap">
 											{selection.count > 0 && (
 												<Button
-													variant="subtle"
 													size="xs"
-													leftSection={<TrayArrowUp size={16} />}
+													leftSection={<TrayArrowUp size={20} />}
 													onClick={moveHandlers.open}
 													data-testid="projects-bulk-move"
 												>
@@ -451,7 +455,7 @@ export const ProjectsHomeRoute = () => {
 										</Group>
 									</Group>
 								) : (
-									<Group justify="flex-end">
+									<Group justify="flex-start">
 										<Button
 											variant="subtle"
 											size="xs"

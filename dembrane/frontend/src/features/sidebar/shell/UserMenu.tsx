@@ -12,6 +12,7 @@ import {
 	Sparkle,
 } from "@phosphor-icons/react";
 import { useLocation } from "react-router";
+import { roles } from "@/colors";
 import {
 	useAuthenticated,
 	useCurrentUser,
@@ -29,7 +30,7 @@ import { RAIL_ITEM_CLASS, RailTip, useInRail } from "./rail";
 
 // Docs, Slack, and feedback intentionally live in HelpBlock (rendered
 // directly above this row in the sidebar footer), so this menu only
-// carries user-scoped actions: settings, language, staff, logout.
+// carries user-scoped actions: settings, language, staff, log out.
 export const UserMenu = () => {
 	const { isAuthenticated } = useAuthenticated();
 	const { data: user } = useCurrentUser({ enabled: isAuthenticated });
@@ -72,8 +73,8 @@ export const UserMenu = () => {
 					<RailTip label={user.first_name ?? user.email ?? ""}>
 						<Menu.Target>
 							<UnstyledButton
-								className={cn(RAIL_ITEM_CLASS, "hover:bg-black/[0.04]")}
-								style={{ color: "#2d2d2c" }}
+								className={cn(RAIL_ITEM_CLASS, "hover:bg-[#e6e3df]")}
+								style={{ color: roles.text }}
 							>
 								<UserAvatar size={24} />
 								<span className="sr-only">
@@ -85,25 +86,31 @@ export const UserMenu = () => {
 				) : (
 					<Menu.Target>
 						<UnstyledButton
-							className="flex h-[36px] w-full items-center gap-2 rounded-md px-2 transition-colors hover:bg-black/[0.04]"
-							style={{ color: "#2d2d2c" }}
+							className="flex h-[36px] w-full items-center gap-2 px-2 transition-colors hover:bg-[#e6e3df]"
+							style={{ color: roles.text }}
 						>
 							<UserAvatar size={22} />
 							<Box className="min-w-0 flex-1 text-left">
 								<Text size="xs" lh={1.1} truncate>
 									{user.first_name ?? t`there`}
 								</Text>
-								<Text size="xs" c="dimmed" lh={1.1} truncate>
+								<Text
+									size="xs"
+									c="dimmed"
+									className="app-muted"
+									lh={1.1}
+									truncate
+								>
 									{user.email ?? ""}
 								</Text>
 							</Box>
 							{/* Visible affordance that the row opens a menu (settings +
-						    logout). The whole row is the menu target; the dots just
+						    log out). The whole row is the menu target; the dots just
 						    signal it. */}
 							<DotsThree
-								size={18}
+								size={16}
 								className="shrink-0"
-								style={{ color: "rgba(45, 45, 44, 0.55)" }}
+								style={{ color: "var(--mantine-color-dimmed)" }}
 								aria-hidden="true"
 							/>
 						</UnstyledButton>
@@ -113,7 +120,7 @@ export const UserMenu = () => {
 				<Menu.Dropdown className="py-2 [&_.mantine-Menu-item]:my-0.5">
 					{needsOnboarding && (
 						<Menu.Item
-							leftSection={<Sparkle size={14} />}
+							leftSection={<Sparkle size={16} />}
 							onClick={() => navigate("/onboarding")}
 							color="primary"
 						>
@@ -122,7 +129,7 @@ export const UserMenu = () => {
 					)}
 					{hasPendingInvites && (
 						<Menu.Item
-							leftSection={<Envelope size={14} />}
+							leftSection={<Envelope size={16} />}
 							onClick={() => navigate("/invites")}
 							color="primary"
 						>
@@ -130,48 +137,48 @@ export const UserMenu = () => {
 						</Menu.Item>
 					)}
 
-					{(needsOnboarding || hasPendingInvites) && <Menu.Divider my={6} />}
+					{(needsOnboarding || hasPendingInvites) && <Menu.Divider my="xs" />}
 
-					<Box px="sm" py={4}>
+					<Box px="sm" py="xs">
 						<Group justify="space-between" align="center">
-							<Text size="xs" c="dimmed">
+							<Text size="xs" c="dimmed" className="app-muted">
 								<Trans>Language</Trans>
 							</Text>
 							<LanguagePicker />
 						</Group>
 					</Box>
 
-					<Menu.Divider my={6} />
+					<Menu.Divider my="xs" />
 
 					{isStaff && (
 						<Menu.Item
-							leftSection={<ShieldStar size={14} />}
+							leftSection={<ShieldStar size={16} />}
 							onClick={() => navigate("/admin")}
 						>
 							<Trans>Staff</Trans>
 						</Menu.Item>
 					)}
 					<Menu.Item
-						leftSection={<Gear size={14} />}
+						leftSection={<Gear size={16} />}
 						onClick={() => navigate("/settings")}
 					>
 						<Trans>User settings</Trans>
 					</Menu.Item>
 					<Menu.Item
-						leftSection={<Buildings size={14} />}
+						leftSection={<Buildings size={16} />}
 						onClick={createOrgHandlers.open}
 					>
-						<Trans>Create new organisation</Trans>
+						<Trans>Create organisation</Trans>
 					</Menu.Item>
 
-					<Menu.Divider my={6} />
+					<Menu.Divider my="xs" />
 
 					<Menu.Item
-						leftSection={<SignOut size={14} />}
+						leftSection={<SignOut size={16} />}
 						onClick={handleLogout}
 						color="red"
 					>
-						<Trans>Logout</Trans>
+						<Trans>Log out</Trans>
 					</Menu.Item>
 				</Menu.Dropdown>
 			</Menu>

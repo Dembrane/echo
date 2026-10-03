@@ -24,7 +24,6 @@ import {
 	CaretDownIcon,
 	CaretRightIcon,
 	PaperPlaneRightIcon,
-	SparkleIcon,
 	StopIcon,
 	WarningCircleIcon,
 } from "@phosphor-icons/react";
@@ -562,7 +561,7 @@ const ToolActivityRow = ({ item }: { item: ToolActivityItem }) => {
 			wrap="nowrap"
 			{...testId(`agentic-tool-row-${item.id}`)}
 		>
-			<Group gap={8} wrap="nowrap" className="min-w-0 flex-1">
+			<Group gap="sm" wrap="nowrap" className="min-w-0 flex-1">
 				<Box
 					aria-hidden="true"
 					className={`h-1.5 w-1.5 shrink-0 rounded-full ${item.status === "running" ? "animate-pulse" : ""}`}
@@ -629,11 +628,7 @@ const ToolActivityGroup = ({
 				// not a card, so it stays borderless. No w-full either: the row
 				// ends where its text ends, and max-w is only a ceiling.
 				withBorder={false}
-				className="max-w-full rounded-md px-2.5 py-1.5 shadow-none md:max-w-[80%]"
-				style={{
-					backgroundColor:
-						"color-mix(in srgb, var(--app-background) 88%, var(--mantine-color-primary-1))",
-				}}
+				className="max-w-full px-2.5 py-1.5 md:max-w-[80%]"
 				{...testId("agentic-tool-group")}
 			>
 				{/* The whole summary row is the toggle (keyboard included); the
@@ -648,7 +643,7 @@ const ToolActivityGroup = ({
 					onClick={isSingle ? undefined : onToggle}
 				>
 					<Group justify="flex-start" gap="lg" wrap="nowrap">
-						<Group gap={8} wrap="nowrap" className="min-w-0">
+						<Group gap="sm" wrap="nowrap" className="min-w-0">
 							<Box
 								aria-hidden="true"
 								className={`h-1.5 w-1.5 shrink-0 rounded-full ${running ? "animate-pulse" : ""}`}
@@ -658,20 +653,17 @@ const ToolActivityGroup = ({
 								{summary}
 							</Text>
 						</Group>
-						<Group gap={6} wrap="nowrap" className="shrink-0">
+						<Group gap="xs" wrap="nowrap" className="shrink-0">
 							{lastTimestamp && (
-								<Text
-									size="xs"
-									style={{ color: "var(--mantine-color-primary-6)" }}
-								>
+								<Text size="xs" c="dimmed">
 									{formatDate(new Date(lastTimestamp), "h:mm a")}
 								</Text>
 							)}
 							{!isSingle &&
 								(expanded ? (
-									<CaretDownIcon size={12} aria-hidden="true" />
+									<CaretDownIcon size={16} aria-hidden="true" />
 								) : (
-									<CaretRightIcon size={12} aria-hidden="true" />
+									<CaretRightIcon size={16} aria-hidden="true" />
 								))}
 						</Group>
 					</Group>
@@ -680,7 +672,7 @@ const ToolActivityGroup = ({
 					<Collapse in={expanded}>
 						{/* pl-3.5 = dot width (6px) + gap (8px): sub-step dots line up
 						    under the summary text, a clean one-level indent. */}
-						<Stack gap={8} className="mt-2 pl-3.5">
+						<Stack gap="sm" className="mt-2 pl-3.5">
 							{items.map((item) => (
 								<ToolActivityRow key={item.id} item={item} />
 							))}
@@ -714,17 +706,13 @@ const LiveRunIndicator = ({
 	<Box className="flex justify-start" {...testId("agentic-run-indicator")}>
 		<Paper
 			withBorder={false}
-			className="max-w-full rounded-md px-2.5 py-1.5 shadow-none md:max-w-[80%]"
-			style={{
-				backgroundColor:
-					"color-mix(in srgb, var(--app-background) 88%, var(--mantine-color-primary-1))",
-			}}
+			className="max-w-full px-2.5 py-1.5 md:max-w-[80%]"
 		>
 			{/* Cancel sits next to the headline it cancels, not flung to a far
 			    column edge: the row hugs its content, so there is no gap to
 			    space-between across. */}
 			<Group justify="flex-start" gap="md" wrap="nowrap">
-				<Group gap={8} wrap="nowrap" className="min-w-0">
+				<Group gap="sm" wrap="nowrap" className="min-w-0">
 					<Box
 						aria-hidden="true"
 						className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full"
@@ -744,7 +732,6 @@ const LiveRunIndicator = ({
 				<Button
 					type="button"
 					size="compact-xs"
-					radius="xl"
 					variant="subtle"
 					color="gray"
 					className="shrink-0"
@@ -757,7 +744,7 @@ const LiveRunIndicator = ({
 					}}
 					onClick={onStop}
 					disabled={isStopping}
-					leftSection={isStopping ? <Loader size={12} /> : undefined}
+					leftSection={isStopping ? <Loader size="xs" /> : undefined}
 					{...testId("chat-stop-button")}
 				>
 					<Trans>Cancel</Trans>
@@ -1790,7 +1777,7 @@ export const AgenticChatPanel = ({
 						) : (
 							<Tooltip label={t`Rename chat`} openDelay={400}>
 								<Title
-									order={1}
+									order={2}
 									className="cursor-text truncate"
 									onClick={() => {
 										setTitleDraft(chatTitle);
@@ -1826,7 +1813,7 @@ export const AgenticChatPanel = ({
 					{error && (
 						<Alert
 							color="red"
-							icon={<WarningCircleIcon size={16} />}
+							icon={<WarningCircleIcon size={20} />}
 							title={<Trans>Error</Trans>}
 						>
 							{error}
@@ -1836,27 +1823,27 @@ export const AgenticChatPanel = ({
 					{showExistingChatLoading && (
 						<Stack gap="md" {...testId("agentic-chat-loading")}>
 							<Group gap="xs">
-								<Loader size={14} color="primary" />
+								<Loader size="xs" />
 								<Text size="sm">
 									<Trans>Loading this chat...</Trans>
 								</Text>
 							</Group>
 							<Box className="flex justify-start">
-								<Paper className="w-full rounded-t-md rounded-br-md px-4 py-4 shadow-sm md:max-w-[72%]">
+								<Paper className="w-full px-4 py-4 md:max-w-[72%]">
 									<Stack gap="sm">
-										<Skeleton height={12} width="52%" radius="xl" />
-										<Skeleton height={12} width="84%" radius="xl" />
-										<Skeleton height={12} width="68%" radius="xl" />
-										<Skeleton height={10} width="24%" radius="xl" />
+										<Skeleton height={12} width="52%" />
+										<Skeleton height={12} width="84%" />
+										<Skeleton height={12} width="68%" />
+										<Skeleton height={10} width="24%" />
 									</Stack>
 								</Paper>
 							</Box>
 							<Box className="flex justify-end">
-								<Paper className="w-full rounded-t-md rounded-bl-md px-4 py-4 shadow-sm md:max-w-[60%]">
+								<Paper className="w-full px-4 py-4 md:max-w-[60%]">
 									<Stack gap="sm">
-										<Skeleton height={12} width="62%" radius="xl" />
-										<Skeleton height={12} width="90%" radius="xl" />
-										<Skeleton height={10} width="28%" radius="xl" />
+										<Skeleton height={12} width="62%" />
+										<Skeleton height={12} width="90%" />
+										<Skeleton height={10} width="28%" />
 									</Stack>
 								</Paper>
 							</Box>
@@ -1867,16 +1854,11 @@ export const AgenticChatPanel = ({
 						timeline.length === 0 &&
 						!pendingUserMessage && (
 							<Stack
-								align="center"
-								justify="center"
+								align="flex-start"
 								gap="md"
-								className="grow px-6 py-12 text-center"
+								className="grow px-6 py-12"
 								{...testId("agentic-empty-state")}
 							>
-								<SparkleIcon
-									size={26}
-									className="text-[var(--mantine-color-primary-6)]"
-								/>
 								<Title order={3} className="max-w-md">
 									<Trans>Where would you like to start?</Trans>
 								</Title>
@@ -1887,11 +1869,7 @@ export const AgenticChatPanel = ({
 										first, and nothing is saved until it's approved.
 									</Trans>
 								</Text>
-								<Group
-									justify="center"
-									gap="xs"
-									className="max-w-lg flex-wrap pt-1"
-								>
+								<Group gap="xs" className="max-w-lg flex-wrap pt-1">
 									{[
 										{
 											key: "list",
@@ -1911,9 +1889,7 @@ export const AgenticChatPanel = ({
 									].map((starter) => (
 										<Button
 											key={starter.key}
-											variant="outline"
 											size="xs"
-											radius="xl"
 											onClick={() => void handleSubmit(starter.prompt)}
 										>
 											{starter.label}
@@ -2239,9 +2215,8 @@ export const AgenticChatPanel = ({
 										aria-label={t`Stop recording and turn it into text`}
 										className="tap-target"
 										onClick={voice.stop}
-										radius="md"
 										ref={voiceStopButtonRef}
-										rightSection={<StopIcon weight="fill" size={18} />}
+										leftSection={<StopIcon size={20} />}
 										size="md"
 										type="button"
 										{...testId("chat-voice-stop-button")}
@@ -2273,12 +2248,11 @@ export const AgenticChatPanel = ({
 											variant="filled"
 											type="submit"
 											size="md"
-											radius="md"
 											rightSection={
 												isSubmitting ? (
-													<Loader size={18} />
+													<Loader size={20} />
 												) : (
-													<PaperPlaneRightIcon size={18} />
+													<PaperPlaneRightIcon size={20} />
 												)
 											}
 											disabled={

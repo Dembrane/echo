@@ -42,6 +42,14 @@ beforeAll(() => {
 		media,
 		removeEventListener() {},
 	}));
+	// The filter row's Mantine Selects measure themselves; jsdom has none.
+	if (!globalThis.ResizeObserver) {
+		globalThis.ResizeObserver = class {
+			disconnect() {}
+			observe() {}
+			unobserve() {}
+		};
+	}
 });
 
 afterEach(() => {

@@ -105,7 +105,7 @@ export const ConversationTranscriptSection = ({
 				style={{ backgroundColor: "var(--app-background)" }}
 			>
 				<Group>
-					<Title order={2} {...testId("transcript-title")}>
+					<Title order={4} {...testId("transcript-title")}>
 						<Trans>Transcript</Trans>
 					</Title>
 					{isEmptyConversation && !isLocked && (
@@ -159,8 +159,8 @@ export const ConversationTranscriptSection = ({
 				<Stack className="relative">
 					{allChunks.length === 0 ? (
 						<Alert
-							icon={<WarningCircleIcon size={16} />}
-							title={t`No Transcript Available`}
+							icon={<WarningCircleIcon size={20} />}
+							title={t`No transcript available`}
 							color="gray"
 							{...testId("transcript-empty-alert")}
 						>

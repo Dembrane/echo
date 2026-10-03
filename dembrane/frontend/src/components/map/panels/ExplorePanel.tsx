@@ -38,24 +38,24 @@ export const resolveNodes = (
 const NodeListAccordion = ({ nodes }: { nodes: MapGraphNode[] }) => {
 	const [open, setOpen] = useState(false);
 	return (
-		<div className="space-y-1.5">
+		<div className="space-y-2">
 			<UnstyledButton
 				onClick={() => setOpen((value) => !value)}
 				aria-expanded={open}
-				className="flex items-center gap-1 text-xs uppercase tracking-wider transition-opacity hover:opacity-80"
+				className="flex items-center gap-1 text-xs transition-opacity hover:opacity-80"
 				style={{ color: mapVars.accentText }}
 			>
 				<CaretRightIcon
-					size={12}
+					size={16}
 					className={cn("transition-transform", open && "rotate-90")}
 				/>
 				<Trans>Contributing nodes ({nodes.length})</Trans>
 			</UnstyledButton>
 			{open && (
-				<ul className="space-y-0.5 pl-4">
+				<ul className="space-y-1 pl-4">
 					{nodes.map((node) => (
 						<li key={node.id} className="text-xs leading-snug">
-							• {node.label ?? node.id}
+							{node.label ?? node.id}
 						</li>
 					))}
 				</ul>
@@ -88,7 +88,7 @@ export const ExplorePanel = memo(function ExplorePanel({
 						className="mb-3 flex items-center gap-2 p-2"
 						style={{ backgroundColor: mapVars.card }}
 					>
-						<Loader size={16} color="primary" />
+						<Loader size="sm" color="primary" />
 						<span className="text-xs">
 							<Trans>Distilling core idea...</Trans>
 						</span>
@@ -109,13 +109,8 @@ export const ExplorePanel = memo(function ExplorePanel({
 							)}
 						</span>
 						{error.kind === "failed" && (
-							<Button
-								size="compact-xs"
-								variant="subtle"
-								radius={0}
-								onClick={onRetry}
-							>
-								<Trans>Retry</Trans>
+							<Button size="compact-xs" variant="subtle" onClick={onRetry}>
+								<Trans>Try again</Trans>
 							</Button>
 						)}
 					</div>
@@ -129,22 +124,23 @@ export const ExplorePanel = memo(function ExplorePanel({
 								<div
 									key={distillation.id}
 									className="border transition-colors"
+									data-selected={isSelected || undefined}
 									style={{
 										backgroundColor: isSelected
 											? mapVars.accentSurface
-											: mapVars.card,
+											: undefined,
 										borderColor: isSelected
 											? mapVars.accentBorder
-											: "transparent",
+											: mapVars.border,
 									}}
 								>
 									<UnstyledButton
 										onClick={() => onSelectDistillation(distillation.id)}
 										aria-pressed={isSelected}
-										className="block w-full p-3 text-left transition-opacity hover:opacity-80"
+										className="block w-full p-3 text-left"
 									>
 										<span
-											className="block text-sm font-medium leading-tight"
+											className="block text-sm leading-tight"
 											style={{
 												color: isSelected ? mapVars.accentText : undefined,
 											}}

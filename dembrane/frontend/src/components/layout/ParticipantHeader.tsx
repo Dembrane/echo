@@ -66,10 +66,14 @@ export const ParticipantHeader = () => {
 				onClose={closeShare}
 				project={projectQuery.data}
 			/>
-			{/* The shadow runs edge to edge; the contents keep to the same column
+			{/* The rule runs edge to edge; the contents keep to the same column
 			    as the page below, so on a wide screen the logo and the actions
 			    line up with the text rather than the window. */}
-			<Box component="header" className="shadow-sm">
+			<Box
+				component="header"
+				className="border-b"
+				style={{ borderColor: "var(--app-rule-color)" }}
+			>
 				<Group
 					justify="space-between"
 					wrap="nowrap"
@@ -81,8 +85,9 @@ export const ParticipantHeader = () => {
 							<Button
 								size="md"
 								variant="subtle"
+								color="gray"
 								px={0}
-								leftSection={<ArrowLeftIcon size={16} />}
+								leftSection={<ArrowLeftIcon size={20} />}
 								onClick={handleBack}
 								{...testId("portal-header-back-button")}
 							>
@@ -92,6 +97,7 @@ export const ParticipantHeader = () => {
 							<Button
 								size="md"
 								variant="subtle"
+								color="gray"
 								px={0}
 								onClick={handleCancel}
 								{...testId("portal-header-cancel-button")}
@@ -107,24 +113,20 @@ export const ParticipantHeader = () => {
 					{!hideHeaderActions && (
 						<Group gap="lg" wrap="nowrap">
 							<ActionIcon
-								size="xl"
-								variant="transparent"
 								onClick={openShare}
 								title={t`Share portal`}
 								aria-label={t`Share portal`}
 								{...testId("portal-header-share-button")}
 							>
-								<QrCodeIcon size={30} color="gray" />
+								<QrCodeIcon size={20} />
 							</ActionIcon>
 							<ActionIcon
-								size="xl"
-								variant="transparent"
 								onClick={openSettings}
 								title={t`Settings`}
 								aria-label={t`Settings`}
 								{...testId("portal-header-settings-button")}
 							>
-								<GearSixIcon size={30} color="gray" />
+								<GearSixIcon size={20} />
 							</ActionIcon>
 						</Group>
 					)}

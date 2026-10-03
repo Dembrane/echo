@@ -137,10 +137,9 @@ export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {
 					{({ copied, copy }) => (
 						<Button
 							size="sm"
-							variant="outline"
 							onClick={copy}
-							rightSection={
-								copied ? <CheckIcon size={16} /> : <CopyIcon size={16} />
+							leftSection={
+								copied ? <CheckIcon size={20} /> : <CopyIcon size={20} />
 							}
 							{...testId("project-copy-link-button")}
 						>
@@ -150,9 +149,8 @@ export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {
 				</CopyButton>
 				<Button
 					size="sm"
-					variant="outline"
 					onClick={handleDownloadQR}
-					rightSection={<DownloadSimpleIcon size={16} />}
+					leftSection={<DownloadSimpleIcon size={20} />}
 					{...testId("project-download-qr-button")}
 				>
 					<Trans>Download QR code</Trans>

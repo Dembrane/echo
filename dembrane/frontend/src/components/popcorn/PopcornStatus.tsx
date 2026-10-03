@@ -25,12 +25,7 @@ export function PopcornStatus({ popcorn }: { popcorn: PopcornDetail }) {
 	const validating = reading > 0 || (phrases > 0 && validated < phrases);
 
 	return (
-		<Paper
-			withBorder
-			className="rounded-md"
-			p="lg"
-			{...testId("popcorn-status")}
-		>
+		<Paper withBorder p="lg" {...testId("popcorn-status")}>
 			<Stack gap="sm">
 				<Title order={4}>
 					<Trans>Status</Trans>
@@ -59,7 +54,7 @@ export function PopcornStatus({ popcorn }: { popcorn: PopcornDetail }) {
 					/>
 				) : null}
 				{startedLabel ? (
-					<Text size="xs" {...testId("popcorn-last-read")}>
+					<Text size="xs" c="dimmed" {...testId("popcorn-last-read")}>
 						{t`Last read ${startedLabel}`}
 						{loop?.last_run_status === "error" ? t` · failed` : ""}
 					</Text>

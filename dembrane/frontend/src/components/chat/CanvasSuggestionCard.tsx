@@ -219,7 +219,7 @@ export const CanvasSuggestionCard = ({
 					<CheckIcon
 						size={16}
 						className="shrink-0"
-						style={{ color: "var(--mantine-color-primary-7)" }}
+						style={{ color: "var(--mantine-color-green-7)" }}
 					/>
 					<Text size="sm">
 						<Trans>
@@ -240,17 +240,17 @@ export const CanvasSuggestionCard = ({
 		<SuggestionCardFrame testId="agentic-canvas-suggestion">
 			<Stack gap="sm">
 				<Group justify="space-between" wrap="nowrap">
-					<Stack gap={2}>
+					<Stack gap="xs">
 						<Text size="sm">{suggestion.name}</Text>
 						<Text size="xs">{canvasCadenceLabel(suggestion)}</Text>
 					</Stack>
 					{isUpdateChoice ? (
-						<Badge size="xs" variant="light">
+						<Badge size="xs" color="gray">
 							<Trans>Update</Trans>
 						</Badge>
 					) : null}
 					{dismissed ? (
-						<Badge size="xs" variant="outline">
+						<Badge size="xs" color="gray">
 							<Trans>Dismissed</Trans>
 						</Badge>
 					) : null}
@@ -260,7 +260,7 @@ export const CanvasSuggestionCard = ({
 					"{truncatedBrief(suggestion.brief, expanded)}"
 				</Text>
 				{isUpdateChoice ? (
-					<Stack gap={4}>
+					<Stack gap="xs">
 						<Text size="xs">
 							<Trans>Proposed changes</Trans>
 						</Text>
@@ -284,6 +284,7 @@ export const CanvasSuggestionCard = ({
 				{suggestion.brief.trim().length > 220 ? (
 					<Button
 						variant="subtle"
+						color="gray"
 						size="xs"
 						onClick={() => setExpanded((value) => !value)}
 						className="self-start"
@@ -297,7 +298,7 @@ export const CanvasSuggestionCard = ({
 				{previewGeneration ? (
 					<Stack gap="xs" {...testId("canvas-proposal-preview")}>
 						<Group gap="xs">
-							<Badge variant="outline">
+							<Badge color="gray">
 								<Trans>Preview</Trans>
 							</Badge>
 							<Text size="xs">
@@ -305,8 +306,8 @@ export const CanvasSuggestionCard = ({
 							</Text>
 						</Group>
 						<Box
-							className="max-h-[560px] overflow-auto rounded-md border"
-							style={{ borderColor: "var(--mantine-color-primary-light)" }}
+							className="max-h-[560px] overflow-auto border-x-0 border-y border-solid"
+							style={{ borderColor: "var(--app-rule-color)" }}
 						>
 							<CanvasFrame
 								generation={previewGeneration}
@@ -316,36 +317,11 @@ export const CanvasSuggestionCard = ({
 					</Stack>
 				) : null}
 
-				<Group justify="flex-end" gap="xs">
-					{!dismissed ? (
-						<Button
-							variant="subtle"
-							size="xs"
-							onClick={() => setDismissed(true)}
-						>
-							<Trans>Dismiss</Trans>
-						</Button>
-					) : (
-						<Button
-							variant="subtle"
-							size="xs"
-							onClick={() => setDismissed(false)}
-						>
-							<Trans>Review again</Trans>
-						</Button>
-					)}
+				<Group justify="flex-start" gap="xs">
 					{!dismissed ? (
 						<>
 							<Button
-								variant="outline"
-								size="xs"
-								loading={previewMutation.isPending}
-								onClick={() => void handlePreview()}
-								{...testId("canvas-proposal-preview-button")}
-							>
-								<Trans>Try it</Trans>
-							</Button>
-							<Button
+								variant="filled"
 								size="xs"
 								loading={
 									createMutation.isPending ||
@@ -358,8 +334,33 @@ export const CanvasSuggestionCard = ({
 							>
 								<Trans>Apply</Trans>
 							</Button>
+							<Button
+								size="xs"
+								loading={previewMutation.isPending}
+								onClick={() => void handlePreview()}
+								{...testId("canvas-proposal-preview-button")}
+							>
+								<Trans>Try it</Trans>
+							</Button>
+							<Button
+								variant="subtle"
+								color="gray"
+								size="xs"
+								onClick={() => setDismissed(true)}
+							>
+								<Trans>Dismiss</Trans>
+							</Button>
 						</>
-					) : null}
+					) : (
+						<Button
+							variant="subtle"
+							color="gray"
+							size="xs"
+							onClick={() => setDismissed(false)}
+						>
+							<Trans>Review again</Trans>
+						</Button>
+					)}
 				</Group>
 			</Stack>
 		</SuggestionCardFrame>

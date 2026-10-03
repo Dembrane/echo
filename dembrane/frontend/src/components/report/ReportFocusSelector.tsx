@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Group, Stack, Text, Textarea, UnstyledButton } from "@mantine/core";
-import { CheckIcon, PencilSimpleIcon } from "@phosphor-icons/react";
+import { Chip, Group, Stack, Text, Textarea } from "@mantine/core";
+import { PencilSimpleIcon } from "@phosphor-icons/react";
 import { useCallback, useEffect, useState } from "react";
 import focusOptionsData from "@/data/reportFocusOptions.json";
 
@@ -69,18 +69,11 @@ export const ReportFocusSelector = ({
 		[options],
 	);
 
-	const handleTogglePreset = (id: string) => {
-		setSelectedIds((prev) => {
-			const next = new Set(prev);
-			if (next.has(id)) {
-				next.delete(id);
-			} else {
-				if (next.size >= 2) return prev;
-				next.add(id);
-			}
-			onChange(buildValue(next, customText));
-			return next;
-		});
+	const handlePresetsChange = (ids: string[]) => {
+		if (ids.length > 2) return;
+		const next = new Set(ids);
+		setSelectedIds(next);
+		onChange(buildValue(next, customText));
 	};
 
 	const handleCustomTextChange = (text: string) => {
@@ -120,76 +113,31 @@ export const ReportFocusSelector = ({
 			<Text size="xs" c="dimmed">
 				<Trans>Select up to 2 focus areas for your report</Trans>
 			</Text>
-			<Group gap={8} wrap="wrap">
-				{options.map((option) => {
-					const isActive = selectedIds.has(option.id);
-					return (
-						<UnstyledButton
+			<Group wrap="wrap">
+				<Chip.Group
+					multiple
+					value={[...selectedIds]}
+					onChange={handlePresetsChange}
+				>
+					{options.map((option) => (
+						<Chip
 							key={option.id}
-							onClick={() => handleTogglePreset(option.id)}
-							disabled={atLimit && !isActive}
-							px="xs"
-							py={4}
-							style={{
-								backgroundColor: isActive
-									? "var(--mantine-color-primary-0)"
-									: undefined,
-								border: isActive
-									? "1.5px solid var(--mantine-color-primary-5)"
-									: "1.5px solid var(--mantine-color-gray-3)",
-								borderRadius: 20,
-								cursor: atLimit && !isActive ? "not-allowed" : "pointer",
-								opacity: atLimit && !isActive ? 0.5 : 1,
-								transition: "all 0.15s ease",
-							}}
+							value={option.id}
+							disabled={atLimit && !selectedIds.has(option.id)}
 						>
-							<Group gap={6} wrap="nowrap">
-								{isActive && (
-									<CheckIcon size={12} color="var(--mantine-color-primary-6)" />
-								)}
-								<Text
-									size="xs"
-									c={isActive ? "primary.8" : undefined}
-									fw={isActive ? 600 : 320}
-								>
-									{getLabel(option.labels, language)}
-								</Text>
-							</Group>
-						</UnstyledButton>
-					);
-				})}
+							{getLabel(option.labels, language)}
+						</Chip>
+					))}
+				</Chip.Group>
 
 				{/* Write your own */}
-				<UnstyledButton
-					onClick={handleToggleCustom}
-					px="sm"
-					py={6}
-					style={{
-						border: showCustom
-							? "1.5px dashed var(--mantine-color-primary-5)"
-							: "1.5px dashed var(--mantine-color-gray-5)",
-						borderRadius: 20,
-						transition: "all 0.15s ease",
-					}}
+				<Chip
+					checked={showCustom}
+					onChange={handleToggleCustom}
+					icon={<PencilSimpleIcon size={16} />}
 				>
-					<Group gap={5} wrap="nowrap">
-						<PencilSimpleIcon
-							size={12}
-							color={
-								showCustom
-									? "var(--mantine-color-primary-6)"
-									: "var(--mantine-color-gray-6)"
-							}
-						/>
-						<Text
-							size="xs"
-							c={showCustom ? "primary.7" : "gray.7"}
-							fw={showCustom ? 600 : 320}
-						>
-							<Trans>Or write your own</Trans>
-						</Text>
-					</Group>
-				</UnstyledButton>
+					<Trans>Or write your own</Trans>
+				</Chip>
 			</Group>
 
 			{showCustom && (

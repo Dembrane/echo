@@ -1,6 +1,6 @@
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
-import { Anchor, Group, Text } from "@mantine/core";
+import { Anchor, Badge, Group, Text } from "@mantine/core";
 import { ArrowUpRight } from "@phosphor-icons/react";
 import type { Release } from "./releases";
 
@@ -23,9 +23,9 @@ export const ReleaseMetadata = ({
 	const publication = release.publication;
 	if (!publication)
 		return (
-			<Text size="sm" c="primary">
+			<Badge variant="light" color="gray">
 				<Trans>Upcoming</Trans>
-			</Text>
+			</Badge>
 		);
 
 	return (
@@ -49,9 +49,9 @@ export const ReleaseMetadata = ({
 				}).format(new Date(`${publication.date}T00:00:00Z`))}
 			</Text>
 			{latest ? (
-				<Text size="sm" c="primary">
+				<Badge variant="light" color="gray">
 					<Trans>Latest release</Trans>
-				</Text>
+				</Badge>
 			) : null}
 		</Group>
 	);

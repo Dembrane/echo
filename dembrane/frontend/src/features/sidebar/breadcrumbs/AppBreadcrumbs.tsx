@@ -187,7 +187,7 @@ export const AppBreadcrumbs = () => {
 				if (!workspace) return out;
 				pushWorkspaceCrumbs(workspace);
 				if (window.location.pathname.endsWith("/projects/new")) {
-					out.push({ label: "New project" });
+					out.push({ label: t`Create project` });
 				}
 				const section = params.section;
 				if (section === "members") {
@@ -319,7 +319,7 @@ export const AppBreadcrumbs = () => {
 				const displayLabel = truncateMiddle(c.label);
 				return (
 					<span key={`${c.label}-${i}`} className="flex items-center gap-1">
-						{i > 0 && <CaretRightIcon size={10} opacity={0.5} />}
+						{i > 0 && <CaretRightIcon size={16} />}
 						{c.href && !isLast ? (
 							<I18nLink
 								to={c.href}

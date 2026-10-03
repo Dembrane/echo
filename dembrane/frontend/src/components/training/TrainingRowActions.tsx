@@ -5,11 +5,12 @@ import {
 	Button,
 	Checkbox,
 	Group,
-	Loader,
 	Menu,
 	Modal,
+	Skeleton,
 	Stack,
 	Text,
+	Title,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { useDisclosure } from "@mantine/hooks";
@@ -135,7 +136,7 @@ export const TrainingRowActions = ({
 			<Menu position="bottom-end" withinPortal>
 				<Menu.Target>
 					<ActionIcon variant="subtle" aria-label={t`Manage training`}>
-						<DotsThreeVertical size={18} />
+						<DotsThreeVertical size={20} />
 					</ActionIcon>
 				</Menu.Target>
 				<Menu.Dropdown>
@@ -185,16 +186,17 @@ export const TrainingRowActions = ({
 						onChange={setScheduleDate}
 						clearable
 					/>
-					<Group justify="flex-end" gap="sm">
-						<Button variant="subtle" onClick={closeSchedule}>
-							<Trans>Cancel</Trans>
-						</Button>
+					<Group justify="flex-start" gap="sm">
 						<Button
+							variant="filled"
 							onClick={handleSchedule}
 							loading={updateMutation.isPending}
 							disabled={!scheduleDate}
 						>
 							<Trans>Save</Trans>
+						</Button>
+						<Button variant="subtle" color="gray" onClick={closeSchedule}>
+							<Trans>Cancel</Trans>
 						</Button>
 					</Group>
 				</Stack>
@@ -220,7 +222,11 @@ export const TrainingRowActions = ({
 					</Text>
 
 					{roster.isLoading ? (
-						<Loader size="sm" />
+						<Stack gap="xs">
+							<Skeleton height={16} />
+							<Skeleton height={16} />
+							<Skeleton height={16} />
+						</Stack>
 					) : members.length > 0 ? (
 						<Stack gap="sm">
 							<Text size="sm">
@@ -232,9 +238,9 @@ export const TrainingRowActions = ({
 
 							{activeLicenses.length > 0 && (
 								<Stack gap="xs">
-									<Text size="xs">
+									<Title order={5}>
 										<Trans>Licenses granted</Trans>
-									</Text>
+									</Title>
 									{activeLicenses.map((lic) => (
 										<Group key={lic.id} justify="space-between" gap="sm">
 											<Text size="sm">
@@ -293,16 +299,17 @@ export const TrainingRowActions = ({
 						onChange={setCompletedDate}
 					/>
 
-					<Group justify="flex-end" gap="sm">
-						<Button variant="subtle" onClick={closeComplete}>
-							<Trans>Cancel</Trans>
-						</Button>
+					<Group justify="flex-start" gap="sm">
 						<Button
+							variant="filled"
 							onClick={handleComplete}
 							loading={completeMutation.isPending}
 							disabled={selectedIds.length === 0}
 						>
 							<Trans>Grant licenses</Trans>
+						</Button>
+						<Button variant="subtle" color="gray" onClick={closeComplete}>
+							<Trans>Cancel</Trans>
 						</Button>
 					</Group>
 				</Stack>

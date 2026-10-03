@@ -1,5 +1,5 @@
 import { Trans } from "@lingui/react/macro";
-import { Group, Paper, Skeleton, Stack, Text } from "@mantine/core";
+import { Box, Group, Paper, Skeleton, Stack, Text } from "@mantine/core";
 import { testId } from "@/lib/testUtils";
 import { cn } from "@/lib/utils";
 import { Logo } from "../common/Logo";
@@ -8,19 +8,9 @@ import { QRCode } from "../common/QRCode";
 import { useProjectReport, usePublicProjectReport } from "./hooks";
 import { ReportEditor } from "./ReportEditor";
 
-const ContributeToReportCTA = ({
-	href,
-	fullscreen,
-}: {
-	href: string;
-	fullscreen?: boolean;
-}) => {
+const ContributeToReportCTA = ({ href }: { href: string }) => {
 	return (
-		<Paper
-			p="xl"
-			className={fullscreen ? "bg-white" : "bg-gray-100"}
-			{...testId("report-contribute-cta")}
-		>
+		<Paper withBorder p="xl" {...testId("report-contribute-cta")}>
 			<Stack className="text-center" align="center" gap="md">
 				<Text size="lg">
 					<Trans>Share your voice by scanning the QR code</Trans>
@@ -50,7 +40,6 @@ const ReportLayout = ({
 	contributeLink,
 	readingNow,
 	showBorder,
-	fullscreen,
 	className,
 }: {
 	children: React.ReactNode;
@@ -62,7 +51,8 @@ const ReportLayout = ({
 			py={{ base: "2rem", md: "4rem" }}
 			className={cn(
 				{
-					"border-gray-200 md:border print:border-none": showBorder,
+					"border-[var(--app-rule-color)] md:border print:border-none":
+						showBorder,
 				},
 				"mx-auto max-w-2xl transition-all duration-300",
 				className,
@@ -77,7 +67,12 @@ const ReportLayout = ({
 				</Group>
 				{readingNow && readingNow > 0 && (
 					<Group className="print:hidden">
-						<div className="h-[10px] w-[10px] animate-pulse rounded-full bg-green-500" />
+						<Box
+							w={10}
+							h={10}
+							bg="red.7"
+							className="animate-pulse rounded-full"
+						/>
 						<Trans>{readingNow} reading now</Trans>
 					</Group>
 				)}
@@ -85,9 +80,7 @@ const ReportLayout = ({
 
 			{children}
 
-			{!!contributeLink && (
-				<ContributeToReportCTA href={contributeLink} fullscreen={fullscreen} />
-			)}
+			{!!contributeLink && <ContributeToReportCTA href={contributeLink} />}
 		</Stack>
 	);
 };

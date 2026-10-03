@@ -79,7 +79,7 @@ export const ProjectBasicEdit: React.FC<ProjectBasicEditProps> = ({
 
 	return (
 		<ProjectSettingsSection
-			title={<Trans>Edit Project</Trans>}
+			title={<Trans>Edit project</Trans>}
 			headerRight={
 				readOnly ? undefined : (
 					<SaveStatus
@@ -97,7 +97,7 @@ export const ProjectBasicEdit: React.FC<ProjectBasicEditProps> = ({
 					await triggerManualSave(values);
 				})}
 			>
-				<Stack gap="2rem">
+				<Stack gap="xl">
 					<Controller
 						name="name"
 						control={control}

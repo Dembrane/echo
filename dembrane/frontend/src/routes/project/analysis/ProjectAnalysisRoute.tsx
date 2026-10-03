@@ -4,13 +4,14 @@ import {
 	Accordion,
 	Alert,
 	Badge,
+	Box,
 	Button,
 	Card,
 	Group,
-	Loader,
 	NumberInput,
 	Paper,
 	Select,
+	Skeleton,
 	Stack,
 	Switch,
 	Tabs,
@@ -19,6 +20,7 @@ import {
 	Title,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
+import { WarningCircleIcon } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import {
@@ -36,7 +38,7 @@ import {
 	useResultsList,
 	useResultsVisit,
 } from "@/components/analysis/hooks";
-import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
+import { EntityListRow } from "@/components/common/EntityListRow";
 import { I18nLink } from "@/components/common/i18nLink";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -51,6 +53,8 @@ import {
 	ResultsList,
 	useResultActions,
 } from "@/components/results";
+import { openConfirm } from "@/lib/openConfirm";
+import { testId } from "@/lib/testUtils";
 import { useRecipeParameters } from "./useRecipeParameters";
 
 type AnalysisTab = "results" | "recipes" | "runs";
@@ -76,9 +80,47 @@ function dateLabel(value?: string | null) {
 
 function statusColor(status: string) {
 	if (status === "ready") return "green";
-	if (status === "failed" || status === "cancelled") return "red";
-	if (activeStatuses.has(status)) return "primary";
+	if (status === "failed") return "red";
+	if (activeStatuses.has(status) || status === "needs_review") return "yellow";
 	return "gray";
+}
+
+// A function for the same reason as resultTypeLabels. Unknown statuses show
+// as they come.
+function statusLabel(status: string) {
+	const labels: Record<string, string> = {
+		cancelled: t`Stopped`,
+		failed: t`Failed`,
+		needs_review: t`Needs review`,
+		queued: t`Queued`,
+		ready: t`Ready`,
+		running: t`Running`,
+		superseded: t`Superseded`,
+		waiting_for_inputs: t`Waiting for inputs`,
+	};
+	return labels[status] ?? status;
+}
+
+function RunStatusBadge({ status }: { status: string }) {
+	return <Badge color={statusColor(status)}>{statusLabel(status)}</Badge>;
+}
+
+// Rows inside one read block: a single rule between them, none doubled.
+const ruledRow = {
+	borderBottom: "var(--app-stroke) solid var(--app-rule-color)",
+};
+const ruledList = {
+	borderTop: "var(--app-stroke) solid var(--app-rule-color)",
+};
+
+function LoadingBlocks() {
+	return (
+		<Stack gap="md">
+			<Skeleton height={24} width="40%" />
+			<Skeleton height={120} />
+			<Skeleton height={120} />
+		</Stack>
+	);
 }
 
 function ResultsView({
@@ -105,43 +147,43 @@ function ResultsView({
 	const write = (next: URLSearchParams) => setParams(next, { replace: true });
 	return (
 		<Stack gap="lg">
-			<Group justify="end">
-				<Button component={I18nLink} to={mapPath} variant="outline">
-					<Trans>Open Map</Trans>
+			<Group justify="flex-start">
+				<Button component={I18nLink} to={mapPath}>
+					<Trans>Open map</Trans>
 				</Button>
 			</Group>
 			{objects.isError && (
-				<FetchErrorPanel
-					onRetry={() => objects.refetch()}
-					message={<Trans>Results could not be loaded.</Trans>}
-					testId="analysis-results-error"
-				/>
+				// useResultsList folds several queries and exposes no error object
+				// for ErrorNotice, so this is the plain inline alert.
+				<Alert
+					color="red"
+					icon={<WarningCircleIcon size={20} />}
+					title={t`Results could not be loaded.`}
+					{...testId("analysis-results-error")}
+				>
+					<Button size="xs" onClick={() => objects.refetch()}>
+						<Trans>Try again</Trans>
+					</Button>
+				</Alert>
 			)}
 			{!objects.isLoading && !objects.isError && objects.total === 0 && (
-				<Paper withBorder p="xl">
-					<Stack gap="sm">
-						<Title order={3}>
-							<Trans>No prepared results yet</Trans>
-						</Title>
-						<Text>
-							<Trans>
-								Open Recipes to prepare results from this project's eligible
-								conversations.
-							</Trans>
-						</Text>
-						<Button
-							w="fit-content"
-							variant="outline"
-							onClick={() => {
-								const next = new URLSearchParams(params);
-								next.set("tab", "recipes");
-								setParams(next);
-							}}
-						>
-							<Trans>View recipes</Trans>
-						</Button>
-					</Stack>
-				</Paper>
+				<Stack gap="sm" align="flex-start">
+					<Text size="sm" c="dimmed">
+						<Trans>
+							No prepared results yet. Open Recipes to prepare results from this
+							project's eligible conversations.
+						</Trans>
+					</Text>
+					<Button
+						onClick={() => {
+							const next = new URLSearchParams(params);
+							next.set("tab", "recipes");
+							setParams(next);
+						}}
+					>
+						<Trans>View recipes</Trans>
+					</Button>
+				</Stack>
 			)}
 			{!objects.isError && (objects.isLoading || objects.total > 0) && (
 				<ResultsList
@@ -203,36 +245,38 @@ function ParameterSummary({ recipe }: { recipe: AnalysisRecipe }) {
 			</Text>
 		);
 	return (
-		<Stack gap="xs">
+		<Stack gap={0} style={ruledList}>
 			{properties.map(([name, schema]) => {
 				const minimum =
 					schema.minimum === undefined ? null : String(schema.minimum);
 				const maximum =
 					schema.maximum === undefined ? null : String(schema.maximum);
+				const defaultValue =
+					schema.default === undefined ? null : String(schema.default);
 				return (
-					<Paper key={name} withBorder p="sm">
+					<Box key={name} py="sm" style={ruledRow}>
 						<Text>{name}</Text>
-						<Text size="sm">
+						<Text size="sm" c="dimmed">
 							{String(schema.description ?? schema.title ?? schema.type ?? "")}
 						</Text>
 						<Group gap="xs">
-							{schema.default !== undefined && (
-								<Badge variant="outline">
-									<Trans>Default</Trans>: {String(schema.default)}
+							{defaultValue !== null && (
+								<Badge>
+									<Trans>Default: {defaultValue}</Trans>
 								</Badge>
 							)}
 							{minimum !== null && (
-								<Badge variant="outline">
+								<Badge>
 									<Trans>min {minimum}</Trans>
 								</Badge>
 							)}
 							{maximum !== null && (
-								<Badge variant="outline">
+								<Badge>
 									<Trans>max {maximum}</Trans>
 								</Badge>
 							)}
 						</Group>
-					</Paper>
+					</Box>
 				);
 			})}
 		</Stack>
@@ -344,14 +388,13 @@ function PopcornVoiceRecipeSettings({
 				<Title order={4}>
 					<Trans>Voice</Trans>
 				</Title>
-				<Text size="sm">
+				<Text size="sm" c="dimmed">
 					<Trans>
 						Create the presentation settings to choose how Popcorn phrases
 						should sound. This does not prepare any results.
 					</Trans>
 				</Text>
 				<Button
-					variant="outline"
 					w="fit-content"
 					loading={create.isPending}
 					onClick={() => create.mutate({ title: t`Popcorn` })}
@@ -444,25 +487,23 @@ function RecipeCard({
 	return (
 		<Card withBorder padding="lg">
 			<Stack gap="md">
-				<Group justify="space-between" align="start">
-					<Stack gap={2}>
-						<Title order={3}>{recipe.name}</Title>
-						<Text size="sm">{recipe.purpose}</Text>
-					</Stack>
-					{latestRun && (
-						<Badge color={statusColor(latestRun.status)} variant="outline">
-							{latestRun.status}
-						</Badge>
-					)}
-				</Group>
+				<Stack gap="xs">
+					<Group gap="sm" align="center">
+						<Title order={4}>{recipe.name}</Title>
+						{latestRun && <RunStatusBadge status={latestRun.status} />}
+					</Group>
+					<Text size="sm" c="dimmed">
+						{recipe.purpose}
+					</Text>
+				</Stack>
 				<Group gap="xs">
 					{recipe.outputTypes.map((type) => (
-						<Badge key={type} variant="outline">
+						<Badge key={type} color="gray">
 							{labels[type] ?? type}
 						</Badge>
 					))}
 				</Group>
-				<Accordion variant="contained">
+				<Accordion>
 					<Accordion.Item value="inputs">
 						<Accordion.Control>
 							<Trans>Inputs and instructions</Trans>
@@ -505,19 +546,21 @@ function RecipeCard({
 						</Accordion.Control>
 						<Accordion.Panel>
 							<Stack gap="sm">
-								<Title order={4}>
+								<Title order={5}>
 									<Trans>Read-only steps</Trans>
 								</Title>
-								{recipe.steps.map((step) => (
-									<Paper withBorder p="sm" key={step.key}>
-										<Text>{step.description}</Text>
-										<Text size="xs">
-											{step.kind} ·{" "}
-											{step.promptRef ?? step.checkVersion ?? step.key}
-										</Text>
-									</Paper>
-								))}
-								<Title order={4}>
+								<Stack gap={0} style={ruledList}>
+									{recipe.steps.map((step) => (
+										<Box py="sm" style={ruledRow} key={step.key}>
+											<Text>{step.description}</Text>
+											<Text size="xs" c="dimmed">
+												{step.kind} ·{" "}
+												{step.promptRef ?? step.checkVersion ?? step.key}
+											</Text>
+										</Box>
+									))}
+								</Stack>
+								<Title order={5}>
 									<Trans>Checks</Trans>
 								</Title>
 								{recipe.validationRules.length ? (
@@ -553,12 +596,12 @@ function RecipeCard({
 							{isActive ? t`Preparing` : actionLabel}
 						</Button>
 					)}
-					<Button variant="outline" onClick={onShowResults}>
+					<Button onClick={onShowResults}>
 						<Trans>View results</Trans>
 					</Button>
 				</Group>
 				{canRun && (
-					<Accordion variant="contained">
+					<Accordion>
 						<Accordion.Item value="run-again">
 							<Accordion.Control>
 								<Trans>Run again from scratch</Trans>
@@ -572,7 +615,6 @@ function RecipeCard({
 										</Trans>
 									</Text>
 									<Button
-										variant="outline"
 										w="fit-content"
 										onClick={runFresh}
 										loading={request.isPending}
@@ -580,7 +622,7 @@ function RecipeCard({
 											isActive || (isConversationScoped && !conversationId)
 										}
 									>
-										<Trans>Run fresh generation</Trans>
+										<Trans>Regenerate</Trans>
 									</Button>
 								</Stack>
 							</Accordion.Panel>
@@ -618,19 +660,21 @@ function RecipesView({
 		(needsSources && sources.isLoading) ||
 		(needsPopcornVoice && popcorn.isLoading)
 	)
-		return <Loader />;
+		return <LoadingBlocks />;
 	if (recipes.isError || runs.isError || sources.isError || popcorn.isError)
 		return (
-			<FetchErrorPanel
-				onRetry={() => {
-					if (recipes.isError) void recipes.refetch();
-					if (runs.isError) void runs.refetch();
-					if (sources.isError) void sources.refetch();
-					if (popcorn.isError) void popcorn.refetch();
-				}}
-				message={<Trans>Recipes could not be loaded.</Trans>}
-				testId="analysis-recipes-error"
-			/>
+			<div {...testId("analysis-recipes-error")}>
+				<ErrorNotice
+					title={t`Recipes could not be loaded.`}
+					error={recipes.error ?? runs.error ?? sources.error ?? popcorn.error}
+					onRetry={() => {
+						if (recipes.isError) void recipes.refetch();
+						if (runs.isError) void runs.refetch();
+						if (sources.isError) void sources.refetch();
+						if (popcorn.isError) void popcorn.refetch();
+					}}
+				/>
+			</div>
 		);
 	const visible = recipeId
 		? recipes.data?.filter((recipe) => recipe.id === recipeId)
@@ -672,41 +716,49 @@ function RunDetail({
 }) {
 	const detail = useAnalysisRun(runId);
 	const cancel = useCancelAnalysisRun(projectId);
-	if (detail.isLoading) return <Loader />;
+	if (detail.isLoading) return <LoadingBlocks />;
 	if (!detail.data)
-		return (
-			<Alert color="red" variant="outline">
+		return detail.error ? (
+			<ErrorNotice
+				title={t`Run details could not be loaded.`}
+				error={detail.error}
+				onRetry={() => detail.refetch()}
+			/>
+		) : (
+			<Alert color="red">
 				<Trans>Run details could not be loaded.</Trans>
 			</Alert>
 		);
 	const run = detail.data;
+	const inputRevisions = run.inputs.revisions;
+	const outputObjects = run.output?.objects ?? 0;
+	const confirmStop = () =>
+		openConfirm({
+			title: t`Stop run?`,
+			danger: true,
+			labels: { confirm: t`Stop run` },
+			onConfirm: () => cancel.mutate(run.id),
+		});
 	return (
 		<Paper withBorder p="lg">
 			<Stack gap="md">
-				<Group justify="space-between">
-					<Title order={3}>{run.recipeId}</Title>
-					<Button variant="subtle" onClick={onClose}>
-						<Trans>Close details</Trans>
-					</Button>
-				</Group>
-				<Group>
-					<Badge color={statusColor(run.status)} variant="outline">
-						{run.status}
-					</Badge>
-					<Text size="sm">{dateLabel(run.createdAt)}</Text>
-				</Group>
-				{run.error && (
-					<Alert color="red" variant="outline">
-						{run.error}
-					</Alert>
-				)}
+				<Stack gap="xs">
+					<Title order={4}>{run.recipeId}</Title>
+					<Group gap="sm">
+						<RunStatusBadge status={run.status} />
+						<Text size="sm" c="dimmed">
+							{dateLabel(run.createdAt)}
+						</Text>
+					</Group>
+				</Stack>
+				{run.error && <Alert color="red">{run.error}</Alert>}
 				<Text>
-					<Trans>Inputs</Trans>: {run.inputs.revisions}
+					<Trans>Inputs: {inputRevisions}</Trans>
 				</Text>
 				<Text>
-					<Trans>Output objects</Trans>: {run.output?.objects ?? 0}
+					<Trans>Output objects: {outputObjects}</Trans>
 				</Text>
-				<Accordion variant="contained">
+				<Accordion>
 					<Accordion.Item value="steps">
 						<Accordion.Control>
 							<Trans>Steps and logs</Trans>
@@ -728,17 +780,16 @@ function RunDetail({
 						</Accordion.Panel>
 					</Accordion.Item>
 				</Accordion>
-				{canCancel && activeStatuses.has(run.status) && (
-					<Button
-						color="red"
-						variant="outline"
-						w="fit-content"
-						onClick={() => cancel.mutate(run.id)}
-						loading={cancel.isPending}
-					>
-						<Trans>Stop run</Trans>
+				<Group gap="sm" justify="flex-start">
+					{canCancel && activeStatuses.has(run.status) && (
+						<Button onClick={confirmStop} loading={cancel.isPending}>
+							<Trans>Stop run</Trans>
+						</Button>
+					)}
+					<Button variant="subtle" color="gray" onClick={onClose}>
+						<Trans>Close</Trans>
 					</Button>
-				)}
+				</Group>
 			</Stack>
 		</Paper>
 	);
@@ -747,14 +798,16 @@ function RunDetail({
 function RunsView({ projectId }: { projectId: string }) {
 	const runs = useAnalysisRuns(projectId);
 	const [selected, setSelected] = useState<string>();
-	if (runs.isLoading) return <Loader />;
+	if (runs.isLoading) return <LoadingBlocks />;
 	if (runs.isError)
 		return (
-			<FetchErrorPanel
-				onRetry={() => runs.refetch()}
-				message={<Trans>Run history could not be loaded.</Trans>}
-				testId="analysis-runs-error"
-			/>
+			<div {...testId("analysis-runs-error")}>
+				<ErrorNotice
+					title={t`Run history could not be loaded.`}
+					error={runs.error}
+					onRetry={() => runs.refetch()}
+				/>
+			</div>
 		);
 	if (selected)
 		return (
@@ -766,34 +819,27 @@ function RunsView({ projectId }: { projectId: string }) {
 			/>
 		);
 	return (
-		<Stack gap="sm">
+		<Stack gap={0}>
 			{runs.data?.runs.length === 0 && (
-				<Paper withBorder p="xl">
-					<Title order={3}>
-						<Trans>No runs yet</Trans>
-					</Title>
-					<Text>
-						<Trans>Preparation and updates will appear here.</Trans>
-					</Text>
-				</Paper>
+				<Text size="sm" c="dimmed">
+					<Trans>No runs yet. Preparation and updates will appear here.</Trans>
+				</Text>
 			)}
 			{runs.data?.runs.map((run) => (
-				<Card
-					withBorder
+				<EntityListRow
 					key={run.id}
-					onClick={() => setSelected(run.id)}
-					className="cursor-pointer"
+					onActivate={() => setSelected(run.id)}
 				>
-					<Group justify="space-between">
-						<Stack gap={2}>
+					<Stack gap="xs">
+						<Group gap="sm">
 							<Text>{run.recipeId}</Text>
-							<Text size="sm">{dateLabel(run.createdAt)}</Text>
-						</Stack>
-						<Badge color={statusColor(run.status)} variant="outline">
-							{run.status}
-						</Badge>
-					</Group>
-				</Card>
+							<RunStatusBadge status={run.status} />
+						</Group>
+						<Text size="sm" c="dimmed">
+							{dateLabel(run.createdAt)}
+						</Text>
+					</Stack>
+				</EntityListRow>
 			))}
 		</Stack>
 	);
@@ -832,12 +878,12 @@ export function ProjectAnalysisRoute() {
 	return (
 		<PageContainer width="xl">
 			<Stack gap="xl">
-				<Group justify="space-between" align="start">
+				<Stack gap="md" align="flex-start">
 					<Stack gap="xs">
-						<Title order={1}>
+						<Title order={2}>
 							<Trans>Analysis</Trans>
 						</Title>
-						<Text>
+						<Text c="dimmed">
 							<Trans>
 								Read shared findings, inspect their evidence and see how they
 								were produced.
@@ -845,11 +891,11 @@ export function ProjectAnalysisRoute() {
 						</Text>
 					</Stack>
 					{params.get("returnTo") === "present" && (
-						<Button component={I18nLink} to={returnPath} variant="outline">
+						<Button component={I18nLink} to={returnPath}>
 							<Trans>Return to presentation</Trans>
 						</Button>
 					)}
-				</Group>
+				</Stack>
 				<Tabs
 					value={tab}
 					onChange={(value) => {

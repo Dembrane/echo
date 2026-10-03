@@ -4,7 +4,6 @@ import {
 	ActionIcon,
 	Box,
 	Container,
-	Group,
 	ScrollArea,
 	Stack,
 	Text,
@@ -45,16 +44,14 @@ export const UserSettingsRoute = () => {
 		<Container size="xl" px="lg" py="xl">
 			<Stack gap="lg">
 				<div className="flex items-center">
-					<div className="hidden md:flex w-[57px] shrink-0 items-center">
+					<div className="hidden md:flex w-14 shrink-0 items-center">
 						<ActionIcon
 							variant="subtle"
 							color="gray"
 							onClick={() => navigate("..")}
 							aria-label={t`Go back`}
-							size={32}
-							className="opacity-40 hover:opacity-100 transition-opacity"
 						>
-							<ArrowLeftIcon size={18} />
+							<ArrowLeftIcon size={20} />
 						</ActionIcon>
 					</div>
 					<Title order={2}>
@@ -68,7 +65,7 @@ export const UserSettingsRoute = () => {
 					<ScrollArea>
 						{activeSection === "account" && (
 							<Stack gap="lg">
-								<Title order={3}>
+								<Title order={4}>
 									<Trans>Account & security</Trans>
 								</Title>
 
@@ -88,7 +85,7 @@ export const UserSettingsRoute = () => {
 						{activeSection === "access" && (
 							<Stack gap="lg">
 								<Stack gap={4}>
-									<Title order={3}>
+									<Title order={4}>
 										<Trans>My access</Trans>
 									</Title>
 									<Text size="sm" c="dimmed">
@@ -104,7 +101,7 @@ export const UserSettingsRoute = () => {
 
 						{activeSection === "appearance" && (
 							<Stack gap="lg">
-								<Title order={3}>
+								<Title order={4}>
 									<Trans>Appearance</Trans>
 								</Title>
 
@@ -116,7 +113,7 @@ export const UserSettingsRoute = () => {
 
 						{activeSection === "assistant" && (
 							<Stack gap="lg">
-								<Title order={3}>
+								<Title order={4}>
 									<Trans>Assistant</Trans>
 								</Title>
 

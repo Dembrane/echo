@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro";
-import { Skeleton, Text } from "@mantine/core";
+import { Paper, Skeleton, Stack, Text } from "@mantine/core";
 import { addDays, format, subDays } from "date-fns";
 import { useState } from "react";
 import {
@@ -14,18 +14,22 @@ import {
 	XAxis,
 	YAxis,
 } from "recharts";
+import { roles } from "@/colors";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { useProjectReportTimelineData } from "./hooks";
 
-// Pastel color palette
+// Chart colours from the colour roles (src/colors.ts)
 const COLORS = {
-	blue: "#99CCFF", // Pastel blue
-	blueFill: "rgba(153, 204, 255, 0.2)", // Transparent blue for area fill
-	green: "#99CC99", // Pastel green
-	greenFill: "rgba(153, 204, 153, 0.2)", // Transparent green for area fill
-	lavender: "#C8A2C8", // Pastel lavender
-	orange: "#FFB366", // Pastel orange
-	red: "#FF9999", // Pastel red
+	axis: roles.muted,
+	conversations: roles.success,
+	grid: roles.quiet,
+	projectCreated: roles.text,
+	reportCreated: roles.warning,
+	reportUpdated: roles.muted,
+	views: roles.action,
 };
+
+const AREA_FILL_OPACITY = 0.15;
 
 const formatDateForAxis = (timestamp: number): string =>
 	format(new Date(timestamp), "MMM dd");
@@ -65,7 +69,7 @@ const CustomReferenceLabel = ({ value, viewBox }: any) => {
 					y={viewBox.y}
 					dy={-10}
 					fill={viewBox.stroke}
-					fontSize="12px"
+					fontSize="14px"
 					textAnchor="middle"
 				>
 					{value}
@@ -84,18 +88,25 @@ export function ReportTimeline({
 }) {
 	const { data, isLoading, error } = useProjectReportTimelineData(reportId);
 
+	if (error) {
+		return (
+			<ErrorNotice
+				error={error}
+				title={t`There was an error loading your data`}
+			/>
+		);
+	}
+
 	if (isLoading || !data) {
 		return <Skeleton h={100} />;
 	}
 
-	if (error) {
-		return (
-			<Text className="text-red-500">There was an error loading your data</Text>
-		);
-	}
-
 	if (!data?.allReports?.length) {
-		return <Text>No report data available</Text>;
+		return (
+			<Text size="sm" c="dimmed">
+				{t`No report data available`}
+			</Text>
+		);
 	}
 
 	// Convert all dates to timestamps
@@ -196,7 +207,7 @@ export function ReportTimeline({
 			>
 				<CartesianGrid
 					strokeDasharray="3 3"
-					stroke="#E5E7EB"
+					stroke={COLORS.grid}
 					vertical={false}
 				/>
 
@@ -206,9 +217,9 @@ export function ReportTimeline({
 					type="number"
 					domain={["dataMin", "dataMax"]}
 					tickFormatter={formatDateForAxis}
-					stroke="#6B7280"
+					stroke={COLORS.axis}
 					tickLine={true}
-					axisLine={{ stroke: "#E5E7EB" }}
+					axisLine={{ stroke: COLORS.grid }}
 					ticks={ticks}
 				/>
 
@@ -229,17 +240,21 @@ export function ReportTimeline({
 						if (active && payload && payload.length) {
 							const data = payload[0].payload;
 							return (
-								<div className="rounded border border-gray-200 p-2 shadow" style={{ backgroundColor: "var(--app-background)" }}>
-									<p className="space-y-[2px] text-sm">
+								<Paper withBorder p="sm">
+									<Stack gap="xs">
 										{data.conversations != null && (
-											<div>Conversations: {data.conversations}</div>
+											<Text size="sm">
+												{t`Conversations: ${data.conversations}`}
+											</Text>
 										)}
-										{data.views != null && <div>Views: {data.views}</div>}
-									</p>
-									<p className="pt-2 text-sm text-gray-600">
-										{formatDateForAxis(data.datetime)}
-									</p>
-								</div>
+										{data.views != null && (
+											<Text size="sm">{t`Views: ${data.views}`}</Text>
+										)}
+										<Text size="sm" c="dimmed" pt="xs">
+											{formatDateForAxis(data.datetime)}
+										</Text>
+									</Stack>
+								</Paper>
 							);
 						}
 						return null;
@@ -255,53 +270,57 @@ export function ReportTimeline({
 					}}
 					payload={[
 						{
-							color: COLORS.red,
+							color: COLORS.projectCreated,
 							// @ts-expect-error
 							payload: {},
 							type: "plainline",
-							value: "Project Created",
+							value: t`Project created`,
 						},
 						{
-							color: COLORS.orange,
+							color: COLORS.reportCreated,
 							// @ts-expect-error
 							payload: {},
 							type: "plainline",
-							value: "Report Created",
+							value: t`Report created`,
 						},
 						// Only show "Report Updated" if there are multiple reports
 						// @ts-expect-error
 						...(data.allReports.length > 1
 							? [
 									{
-										color: COLORS.lavender,
+										color: COLORS.reportUpdated,
 										payload: {},
 										type: "plainline",
-										value: "Report Updated",
+										value: t`Report updated`,
 									},
 								]
 							: []),
+						{
+							color: COLORS.conversations,
+							// @ts-expect-error
+							type: "line",
+							value: t`Conversations`,
+						},
 						// @ts-expect-error
-						{ color: COLORS.green, type: "line", value: "Conversations" },
-						// @ts-expect-error
-						{ color: COLORS.blue, type: "line", value: "Views" },
+						{ color: COLORS.views, type: "line", value: t`Views` },
 					]}
 				/>
 
 				{/* Updated Reference Lines */}
 				<ReferenceLine
 					x={projectCreatedAt}
-					stroke={COLORS.red}
-					label={<CustomReferenceLabel value={t`Project Created`} />}
+					stroke={COLORS.projectCreated}
+					label={<CustomReferenceLabel value={t`Project created`} />}
 				/>
 
 				{/* Show first report as "Report Created" */}
 				<ReferenceLine
 					key={data.allReports[0]?.id}
 					x={new Date(data.allReports[0]?.createdAt!).getTime()}
-					stroke={COLORS.orange}
+					stroke={COLORS.reportCreated}
 					label={
 						<CustomReferenceLabel
-							value={t`Report Created - ${formatDateForAxis(new Date(data.allReports[0]?.createdAt!).getTime())}`}
+							value={t`Report created · ${formatDateForAxis(new Date(data.allReports[0]?.createdAt!).getTime())}`}
 						/>
 					}
 				/>
@@ -311,10 +330,10 @@ export function ReportTimeline({
 					<ReferenceLine
 						key={r.id}
 						x={new Date(r.createdAt!).getTime()}
-						stroke={COLORS.lavender}
+						stroke={COLORS.reportUpdated}
 						label={
 							<CustomReferenceLabel
-								value={t`Report Updated - ${formatDateForAxis(new Date(r.createdAt!).getTime())}`}
+								value={t`Report updated · ${formatDateForAxis(new Date(r.createdAt!).getTime())}`}
 							/>
 						}
 					/>
@@ -324,10 +343,11 @@ export function ReportTimeline({
 					name="Conversations"
 					type="monotoneY"
 					dataKey="conversations"
-					stroke={COLORS.green}
-					fill={COLORS.greenFill}
+					stroke={COLORS.conversations}
+					fill={COLORS.conversations}
+					fillOpacity={AREA_FILL_OPACITY}
 					strokeWidth={2}
-					dot={{ fill: COLORS.green, r: 1 }}
+					dot={{ fill: COLORS.conversations, r: 1 }}
 					isAnimationActive={false}
 				/>
 
@@ -335,10 +355,11 @@ export function ReportTimeline({
 					name="Views"
 					type="monotoneY"
 					dataKey="views"
-					stroke={COLORS.blue}
-					fill={COLORS.blueFill}
+					stroke={COLORS.views}
+					fill={COLORS.views}
+					fillOpacity={AREA_FILL_OPACITY}
 					strokeWidth={2}
-					dot={{ fill: COLORS.blue, r: 1 }}
+					dot={{ fill: COLORS.views, r: 1 }}
 					isAnimationActive={false}
 				/>
 
@@ -346,10 +367,10 @@ export function ReportTimeline({
 					<Brush
 						dataKey="datetime"
 						height={30}
-						stroke="#8884d8"
+						stroke={COLORS.views}
 						tickFormatter={formatDateForAxis}
 						startIndex={Math.max(0, paddedData.length - 10)}
-						fill="#f5f6f7"
+						fill={roles.bg}
 						strokeWidth={1}
 						travellerWidth={10}
 						className="custom-brush"

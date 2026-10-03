@@ -3,12 +3,13 @@ import { Trans } from "@lingui/react/macro";
 import {
 	Badge,
 	Group,
-	Loader,
 	SegmentedControl,
+	Skeleton,
 	Stack,
 	Table,
 	Text,
 	TextInput,
+	Title,
 	Tooltip,
 } from "@mantine/core";
 import { format } from "date-fns";
@@ -85,16 +86,22 @@ export const StaffTrainingPanel = () => {
 	}, [trainings, orgQuery, statusFilter]);
 
 	if (isLoading) {
-		return <Loader size="sm" />;
+		return (
+			<Stack gap="sm">
+				<Skeleton height={24} width="40%" />
+				<Skeleton height={16} width="70%" />
+				<Skeleton height={120} />
+			</Stack>
+		);
 	}
 
 	return (
 		<Stack gap="md">
 			<div>
-				<Text size="sm">
+				<Title order={4}>
 					<Trans>Trainings</Trans>
-				</Text>
-				<Text size="xs">
+				</Title>
+				<Text size="sm" c="dimmed">
 					<Trans>
 						Requested and scheduled trainings. Mark a training complete to grant
 						each attendee a one-year license.

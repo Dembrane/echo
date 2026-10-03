@@ -1,5 +1,5 @@
 import { Trans } from "@lingui/react/macro";
-import { Anchor, Table, Text } from "@mantine/core";
+import { Anchor, Badge, Table, Text } from "@mantine/core";
 import { Link, useParams } from "react-router";
 import { useProjectConversationCounts } from "@/components/report/hooks";
 
@@ -56,7 +56,7 @@ export const ConversationStatusTable = ({
 						<Trans>Participant</Trans>
 					</Table.Th>
 					<Table.Th>
-						<Trans>Last Updated</Trans>
+						<Trans>Last updated</Trans>
 					</Table.Th>
 					<Table.Th>
 						<Trans>Status</Trans>
@@ -78,13 +78,13 @@ export const ConversationStatusTable = ({
 						</Table.Td>
 						<Table.Td>
 							{conv.is_finished ? (
-								<Text c="green.6">
+								<Badge color="green">
 									<Trans>Finished</Trans>
-								</Text>
+								</Badge>
 							) : (
-								<Text c="yellow.7">
+								<Badge color="yellow">
 									<Trans>Pending</Trans>
-								</Text>
+								</Badge>
 							)}
 						</Table.Td>
 						<Table.Td>

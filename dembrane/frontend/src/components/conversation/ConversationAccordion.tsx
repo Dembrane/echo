@@ -401,19 +401,19 @@ export const ConversationStatusIndicators = ({
 	return (
 		<Group gap="sm">
 			{isUpload && (
-				<Badge size="xs" color="primary" variant="light">
+				<Badge size="xs" color="gray">
 					{t`Upload`}
 				</Badge>
 			)}
 
 			{hasOnlyTextContent && (
-				<Badge size="xs" color="primary" variant="light">
+				<Badge size="xs" color="gray">
 					<Trans>Text</Trans>
 				</Badge>
 			)}
 
 			{conversation.duration && conversation.duration > 0 && showDuration && (
-				<Badge size="xs" color="primary" variant="light">
+				<Badge size="xs" color="gray">
 					{fDuration(conversation.duration)}
 				</Badge>
 			)}
@@ -425,7 +425,7 @@ export const ConversationStatusIndicators = ({
 					maw={280}
 					withArrow
 				>
-					<Badge size="xs" color="red" variant="light">
+					<Badge size="xs" color="red">
 						<Trans>Transcription error</Trans>
 					</Badge>
 				</Tooltip>
@@ -472,18 +472,13 @@ const ConversationProjectTagPill = ({
 	const isClickable = onClick;
 
 	return (
-		<Pill
+		<Badge
 			size="sm"
-			classNames={{
-				root: `!bg-[var(--mantine-primary-color-light)] !font-medium ${
-					isClickable
-						? "cursor-pointer hover:opacity-80 transition-opacity"
-						: ""
-				}`,
-			}}
+			color="gray"
+			component={isClickable ? "button" : "span"}
 			onClick={
 				isClickable
-					? (e) => {
+					? (e: React.MouseEvent) => {
 							e.stopPropagation();
 							e.preventDefault();
 							onClick(tag);
@@ -492,7 +487,7 @@ const ConversationProjectTagPill = ({
 			}
 		>
 			{text}
-		</Pill>
+		</Badge>
 	);
 };
 
@@ -569,7 +564,10 @@ const ConversationAccordionItem = ({
 										: t`Title auto-generated`
 								}
 							>
-								<InfoIcon size={14} className="text-gray-400" />
+								<InfoIcon
+									size={16}
+									style={{ color: "var(--mantine-color-dimmed)" }}
+								/>
 							</Tooltip>
 						)}
 
@@ -577,12 +575,12 @@ const ConversationAccordionItem = ({
 							<Tooltip label={t`Has verified artifacts`}>
 								<ThemeIcon
 									variant="subtle"
-									color="primary"
+									color="gray"
 									aria-label={t`verified artifacts`}
 									size={18}
 									style={{ cursor: "default" }}
 								>
-									<SealCheckIcon size={20} />
+									<SealCheckIcon size={16} />
 								</ThemeIcon>
 							</Tooltip>
 						)}
@@ -591,12 +589,12 @@ const ConversationAccordionItem = ({
 							<Tooltip label={t`Anonymized conversation`}>
 								<ThemeIcon
 									variant="subtle"
-									color="primary"
+									color="gray"
 									aria-label={t`anonymized conversation`}
 									size={18}
 									style={{ cursor: "default" }}
 								>
-									<DetectiveIcon />
+									<DetectiveIcon size={16} />
 								</ThemeIcon>
 							</Tooltip>
 						)}

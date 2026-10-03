@@ -3,6 +3,7 @@ import { Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Button,
+	Chip,
 	Group,
 	Modal,
 	Stack,
@@ -146,7 +147,6 @@ export const ResponseFeedbackControls = ({
 			<Group gap="xs">
 				<Tooltip label={t`Good response`}>
 					<ActionIcon
-						size="xs"
 						variant="subtle"
 						color={shownRating === "up" ? "primary" : "gray"}
 						disabled={disabled || busy}
@@ -154,15 +154,11 @@ export const ResponseFeedbackControls = ({
 						data-testid="response-feedback-up"
 						onClick={() => onThumb("up")}
 					>
-						<ThumbsUp
-							size={14}
-							weight={shownRating === "up" ? "fill" : "light"}
-						/>
+						<ThumbsUp size={20} />
 					</ActionIcon>
 				</Tooltip>
 				<Tooltip label={t`Poor response`}>
 					<ActionIcon
-						size="xs"
 						variant="subtle"
 						color={shownRating === "down" ? "primary" : "gray"}
 						disabled={disabled || busy}
@@ -170,10 +166,7 @@ export const ResponseFeedbackControls = ({
 						data-testid="response-feedback-down"
 						onClick={() => onThumb("down")}
 					>
-						<ThumbsDown
-							size={14}
-							weight={shownRating === "down" ? "fill" : "light"}
-						/>
+						<ThumbsDown size={20} />
 					</ActionIcon>
 				</Tooltip>
 			</Group>
@@ -186,25 +179,18 @@ export const ResponseFeedbackControls = ({
 				data-testid="response-feedback-modal"
 			>
 				<Stack gap="md">
-					<Group gap="xs">
-						{REASON_KEYS.map((key) => {
-							const selected = reason === key;
-							return (
-								<Button
-									key={key}
-									size="xs"
-									radius="xl"
-									variant={selected ? "filled" : "outline"}
-									// button.module.css squares outline corners; keep the pill.
-									style={{ borderRadius: "var(--mantine-radius-full)" }}
-									aria-pressed={selected}
-									data-testid={`response-feedback-reason-${key}`}
-									onClick={() => toggleReason(key)}
-								>
-									{reasonLabel(key)}
-								</Button>
-							);
-						})}
+					{/* One reason at most; picking the chosen one again clears it. */}
+					<Group>
+						{REASON_KEYS.map((key) => (
+							<Chip
+								key={key}
+								checked={reason === key}
+								onChange={() => toggleReason(key)}
+								data-testid={`response-feedback-reason-${key}`}
+							>
+								{reasonLabel(key)}
+							</Chip>
+						))}
 					</Group>
 					<Textarea
 						label={t`Anything else?`}
@@ -223,20 +209,22 @@ export const ResponseFeedbackControls = ({
 							Your feedback and this response go to the dembrane team.
 						</Trans>
 					</Text>
-					<Group justify="space-between">
+					<Group justify="flex-start" gap="sm">
 						<Button
-							variant="subtle"
-							onClick={dismissModal}
-							data-testid="response-feedback-modal-cancel"
-						>
-							<Trans>Skip</Trans>
-						</Button>
-						<Button
+							variant="filled"
 							data-testid="response-feedback-send"
 							disabled={!canSend}
 							onClick={send}
 						>
 							<Trans>Send</Trans>
+						</Button>
+						<Button
+							variant="subtle"
+							color="gray"
+							onClick={dismissModal}
+							data-testid="response-feedback-modal-cancel"
+						>
+							<Trans>Skip</Trans>
 						</Button>
 					</Group>
 				</Stack>

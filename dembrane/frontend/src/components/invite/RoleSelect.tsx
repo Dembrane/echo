@@ -73,7 +73,7 @@ export function RoleSelect({
 	}, [inviterRank, allowExternal, exclude]);
 
 	return (
-		<Stack gap={6}>
+		<Stack gap="xs">
 			<Text size="sm">
 				<Trans>Role</Trans>
 			</Text>
@@ -82,7 +82,7 @@ export function RoleSelect({
 				onChange={(v) => onChange(v as InviteRole)}
 				data-testid={dataTestId}
 			>
-				<Stack gap={6}>
+				<Stack gap="xs">
 					{options.map((opt) => (
 						<Radio
 							key={opt.value}

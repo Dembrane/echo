@@ -30,9 +30,8 @@ export const PilotBlockModal = () => {
 			withCloseButton={false}
 			centered
 			size="md"
-			overlayProps={{ blur: 2, opacity: 0.5 }}
 		>
-			<Stack gap={16}>
+			<Stack gap="md">
 				<Title order={4}>
 					<Trans>Pilot limit reached</Trans>
 				</Title>
@@ -47,9 +46,10 @@ export const PilotBlockModal = () => {
 						Recording keeps working, so your participants are unaffected.
 					</Trans>
 				</Text>
-				<Group gap={12} mt={8} justify="flex-end">
+				<Group gap="sm" justify="flex-start">
 					<Button
 						size="sm"
+						variant="filled"
 						onClick={() => {
 							clear();
 							if (targetId) {

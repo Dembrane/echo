@@ -11,7 +11,7 @@ import {
 	Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { ImageIcon, TrashIcon, UploadSimpleIcon } from "@phosphor-icons/react";
+import { TrashIcon, UploadSimpleIcon } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { useCurrentUser } from "@/components/auth/hooks";
@@ -108,14 +108,11 @@ export const WhitelabelLogoCard = () => {
 
 	return (
 		<>
-			<Card withBorder p="lg" radius="md">
+			<Card withBorder p="lg">
 				<Stack gap="md">
-					<Group gap="sm">
-						<ImageIcon size={24} />
-						<Title order={3}>
-							<Trans>Custom Logo</Trans>
-						</Title>
-					</Group>
+					<Title order={4}>
+						<Trans>Custom logo</Trans>
+					</Title>
 					<Text size="sm" c="dimmed">
 						<Trans>
 							Upload a custom logo to replace the dembrane logo across the
@@ -142,7 +139,7 @@ export const WhitelabelLogoCard = () => {
 									variant="subtle"
 									color="red"
 									size="compact-sm"
-									leftSection={<TrashIcon size={14} />}
+									leftSection={<TrashIcon size={20} />}
 									loading={removeMutation.isPending}
 									onClick={openRemoveConfirm}
 								>
@@ -163,8 +160,7 @@ export const WhitelabelLogoCard = () => {
 					>
 						{(props) => (
 							<Button
-								variant="light"
-								leftSection={<UploadSimpleIcon size={16} />}
+								leftSection={<UploadSimpleIcon size={20} />}
 								loading={uploadMutation.isPending}
 								{...props}
 							>
@@ -200,7 +196,7 @@ export const WhitelabelLogoCard = () => {
 					imageSrc={cropSrc}
 					onCropComplete={handleCropComplete}
 					aspect={3}
-					title={t`Crop Logo`}
+					title={t`Crop logo`}
 					description={
 						<Trans>
 							Crop your logo to a 3:1 horizontal aspect ratio (recommended e.g.

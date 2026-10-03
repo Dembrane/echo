@@ -76,7 +76,8 @@ export const InsightNoteCard = ({
 		const target = content.trim();
 		if (!target) return false;
 		return sentInsights.some(
-			(row) => row.status !== "archived" && (row.content ?? "").trim() === target,
+			(row) =>
+				row.status !== "archived" && (row.content ?? "").trim() === target,
 		);
 	}, [sentInsights, content]);
 
@@ -91,7 +92,7 @@ export const InsightNoteCard = ({
 				<Stack gap="xs">
 					<Group gap="xs" wrap="nowrap" align="center">
 						<LightbulbIcon size={16} aria-hidden="true" />
-						<Badge size="xs" variant="outline" radius="sm">
+						<Badge size="xs" color="gray">
 							{kindLabel(note.kind)}
 						</Badge>
 						<Text size="xs" c="dimmed">
@@ -127,17 +128,9 @@ export const InsightNoteCard = ({
 							{note.suggestedCapability}
 						</Text>
 					) : null}
-					<Group gap="xs" justify="flex-end">
+					<Group gap="xs" justify="flex-start">
 						<Button
-							variant="subtle"
-							color="gray"
-							size="compact-xs"
-							onClick={() => setIgnored(true)}
-							{...testId("agentic-insight-draft-dismiss")}
-						>
-							<Trans>Not this one</Trans>
-						</Button>
-						<Button
+							variant="filled"
 							size="compact-xs"
 							loading={isSending}
 							disabled={!canSend}
@@ -151,6 +144,15 @@ export const InsightNoteCard = ({
 						>
 							<Trans>Send to dembrane</Trans>
 						</Button>
+						<Button
+							variant="subtle"
+							color="gray"
+							size="compact-xs"
+							onClick={() => setIgnored(true)}
+							{...testId("agentic-insight-draft-dismiss")}
+						>
+							<Trans>Dismiss</Trans>
+						</Button>
 					</Group>
 				</Stack>
 			</SuggestionCardFrame>
@@ -161,23 +163,22 @@ export const InsightNoteCard = ({
 		<SuggestionCardFrame compact tight testId="agentic-insight-note">
 			<Stack gap="xs">
 				<Group gap="xs" wrap="nowrap" align="center">
-					<LightbulbIcon size={16} aria-hidden="true" opacity={muted ? 0.5 : 1} />
-					<Badge
-						size="xs"
-						variant="outline"
-						radius="sm"
-						c={muted ? "dimmed" : undefined}
-					>
+					<LightbulbIcon
+						size={16}
+						aria-hidden="true"
+						opacity={muted ? 0.5 : 1}
+					/>
+					<Badge size="xs" color="gray" c={muted ? "dimmed" : undefined}>
 						{kindLabel(note.kind)}
 					</Badge>
 					{edited && !dismissed ? (
-						<Badge size="xs" variant="light" radius="sm">
-							{t`updated`}
+						<Badge size="xs" color="gray">
+							{t`Updated`}
 						</Badge>
 					) : null}
 					{retracted ? (
-						<Badge size="xs" variant="light" color="gray" radius="sm">
-							{t`retracted`}
+						<Badge size="xs" color="gray">
+							{t`Retracted`}
 						</Badge>
 					) : null}
 					{note.insightId ? (
@@ -187,12 +188,12 @@ export const InsightNoteCard = ({
 					) : null}
 					{canDismiss ? (
 						<Button
-							variant="outline"
+							variant="subtle"
 							color="red"
 							size="compact-xs"
 							ml="auto"
 							loading={isDismissing}
-							rightSection={<TrashIcon size={14} />}
+							leftSection={<TrashIcon size={20} />}
 							aria-label={t`Remove`}
 							onClick={onDismiss}
 							{...testId("agentic-insight-note-remove")}

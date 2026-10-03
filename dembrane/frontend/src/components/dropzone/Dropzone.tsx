@@ -30,13 +30,13 @@ export const CommonDropzone = ({
 				<MantineDropzone.Accept>
 					{accept || (
 						<UploadSimpleIcon
-							size={52}
+							size={20}
 							color="var(--mantine-color-primary-7)"
 						/>
 					)}
 				</MantineDropzone.Accept>
 				<MantineDropzone.Reject>
-					{reject || <XIcon size={52} color="var(--mantine-color-red-6)" />}
+					{reject || <XIcon size={20} color="var(--mantine-color-red-7)" />}
 				</MantineDropzone.Reject>
 				<MantineDropzone.Idle>{idle || children}</MantineDropzone.Idle>
 			</Group>

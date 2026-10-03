@@ -9,8 +9,8 @@ export const SectionLabel = ({ children }: SectionLabelProps) => {
 	if (useInRail()) return null;
 	return (
 		<div
-			className="px-2 pb-1 pt-2 text-xs uppercase"
-			style={{ color: "rgba(45, 45, 44, 0.5)" }}
+			className="app-muted px-2 pb-1 pt-2 text-xs"
+			style={{ color: "var(--mantine-color-dimmed)" }}
 		>
 			{children}
 		</div>

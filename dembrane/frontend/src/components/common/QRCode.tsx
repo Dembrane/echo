@@ -1,6 +1,7 @@
 import { ArrowSquareOutIcon } from "@phosphor-icons/react";
 import { type CSSProperties, type Ref, useState } from "react";
 import { QRCode as Q } from "react-qrcode-logo";
+import { roles } from "@/colors";
 
 import { CURRENT_BRAND } from "./Logo";
 
@@ -81,7 +82,7 @@ export const QRCode = ({
 			target="_blank"
 			rel="noopener noreferrer"
 			aria-label={ariaLabel}
-			className={`relative block cursor-pointer overflow-hidden rounded-lg ${inverted ? "bg-[#1B1B1A]" : "bg-white"} transition-all ${className ?? ""}`}
+			className={`relative block cursor-pointer overflow-hidden ${inverted ? "bg-[#1B1B1A]" : "bg-white"} transition-all ${className ?? ""}`}
 			style={style}
 			data-testid={dataTestId}
 			onMouseEnter={() => setHovered(true)}
@@ -89,9 +90,11 @@ export const QRCode = ({
 		>
 			{qrElement}
 			<div
-				className="absolute inset-0 flex items-center justify-center rounded-lg transition-all print:hidden"
+				className="absolute inset-0 flex items-center justify-center transition-all print:hidden"
 				style={{
-					backgroundColor: hovered ? "rgba(65, 105, 225, 0.85)" : "transparent",
+					backgroundColor: hovered
+						? `color-mix(in srgb, ${roles.action} 85%, transparent)`
+						: "transparent",
 					opacity: hovered ? 1 : 0,
 				}}
 			>

@@ -15,7 +15,7 @@ export function ProjectListSkeleton({
 	const ListItems = () =>
 		Array.from({ length: count }).map((_, i) => (
 			// biome-ignore lint/suspicious/noArrayIndexKey: needs to be fixed
-			<Skeleton key={i} height={67} radius="sm" />
+			<Skeleton key={i} height={67} />
 		));
 
 	// for pagination, render bare items (no layout wrapper)
@@ -25,9 +25,7 @@ export function ProjectListSkeleton({
 
 	return (
 		<Stack gap="md">
-			{searchValue === "" && (
-				<Skeleton height={42} radius="sm" className="w-full" />
-			)}
+			{searchValue === "" && <Skeleton height={42} className="w-full" />}
 			<Box className="relative">
 				<Stack gap="sm">
 					<ListItems />

@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
-import { Box, Card, Group, Modal, Stack, Text } from "@mantine/core";
+import { Box, Group, Modal, Stack, Text, Title } from "@mantine/core";
 import { BatteryLowIcon, WifiSlashIcon } from "@phosphor-icons/react";
 import { formatDistanceToNow } from "date-fns";
 import posthog from "posthog-js";
@@ -59,10 +59,10 @@ const StageTimeline = ({ stages }: { stages: Record<string, string> }) => {
 	);
 	if (steps.length === 0) return null;
 	return (
-		<Stack gap={4}>
-			<Text size="xs" tt="uppercase">
+		<Stack gap="xs">
+			<Title order={5}>
 				<Trans>Timeline</Trans>
-			</Text>
+			</Title>
 			{steps.map((step) => (
 				<Group key={step.stage} gap="xs" justify="space-between" wrap="nowrap">
 					<Text size="xs">{step.label}</Text>
@@ -84,7 +84,7 @@ const VisitorDrilldown = ({ visitor }: { visitor: FunnelVisitor }) => (
 			)}
 		</Group>
 		{visitor.tags.length > 0 && (
-			<Group gap={4} wrap="wrap">
+			<Group gap="xs" wrap="wrap">
 				{visitor.tags.map((tag) => (
 					<MonitorBadge
 						key={tag}
@@ -100,17 +100,17 @@ const VisitorDrilldown = ({ visitor }: { visitor: FunnelVisitor }) => (
 		<Group gap="lg">
 			{visitor.device && <Text size="xs">{visitor.device}</Text>}
 			{weakNetwork(visitor.network) && (
-				<Group gap={4}>
-					<WifiSlashIcon size={14} className="text-orange-500" />
-					<Text size="xs" c="orange.7">
+				<Group gap="xs" c="yellow">
+					<WifiSlashIcon size={16} />
+					<Text size="xs" c="yellow">
 						<Trans>Weak network</Trans>
 					</Text>
 				</Group>
 			)}
 			{lowBattery(visitor.battery) && (
-				<Group gap={4}>
-					<BatteryLowIcon size={15} className="text-orange-500" />
-					<Text size="xs" c="orange.7">
+				<Group gap="xs" c="yellow">
+					<BatteryLowIcon size={16} />
+					<Text size="xs" c="yellow">
 						<Trans>Low battery</Trans>
 					</Text>
 				</Group>
@@ -135,9 +135,7 @@ const StageLabel = ({
 		className="justify-center"
 		style={{ flexBasis: 0, flexGrow: weight }}
 	>
-		<Text size="xs" tt="uppercase">
-			{label}
-		</Text>
+		<Text size="xs">{label}</Text>
 		<MonitorBadge size="xs" variant="light" color="gray">
 			{count}
 		</MonitorBadge>
@@ -221,26 +219,19 @@ export const LiveFunnelSection = ({
 	return (
 		<Stack gap="md">
 			<Group justify="space-between" align="center">
-				<Text size="xs" tt="uppercase">
+				<Title order={4}>
 					<Trans>Live participant flow</Trans>
-				</Text>
-				<Text size="xs">
+				</Title>
+				<Text size="sm" c="dimmed">
 					<Plural value={totalActive} one="# active" other="# active" />
 				</Text>
 			</Group>
 
-			{totalActive === 0 ? (
-				<Card withBorder p="lg" radius="sm">
-					<Text size="sm" ta="center">
-						<Trans>
-							When participants scan the QR code, they'll appear here and flow
-							across the stages in real time.
-						</Trans>
-					</Text>
-				</Card>
-			) : (
+			{/* No empty state of its own: on the Monitor page the live section
+			    below carries the one empty sentence for both. */}
+			{totalActive > 0 && (
 				<Box>
-					<Group gap={0} justify="space-between" mb={4}>
+					<Group gap={0} justify="space-between" mb="xs">
 						<StageLabel
 							label={t`Scanned`}
 							count={counts.scanned}

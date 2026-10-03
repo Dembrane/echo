@@ -28,6 +28,7 @@ import {
 import { endOfDay, formatDate, formatDistanceToNow } from "date-fns";
 import type React from "react";
 import { useState } from "react";
+import { roles } from "@/colors";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { Markdown } from "@/components/common/Markdown";
 import {
@@ -56,13 +57,9 @@ const chatModeLabel = (mode: string | null | undefined): string => {
 
 const RatingIcon = ({ rating }: { rating: FeedbackRating }) =>
 	rating === "up" ? (
-		<ThumbsUp size={16} weight="fill" color="var(--mantine-color-primary-6)" />
+		<ThumbsUp size={16} color={roles.action} />
 	) : (
-		<ThumbsDown
-			size={16}
-			weight="fill"
-			color="var(--mantine-color-primary-6)"
-		/>
+		<ThumbsDown size={16} color={roles.action} />
 	);
 
 export const AdminResponseFeedbackPanel = () => {
@@ -153,9 +150,8 @@ export const AdminResponseFeedbackPanel = () => {
 					}}
 				/>
 				<Button
-					variant="subtle"
 					size="sm"
-					leftSection={<ArrowsClockwise size={14} />}
+					leftSection={<ArrowsClockwise size={20} />}
 					onClick={() => query.refetch()}
 				>
 					<Trans>Refresh</Trans>
@@ -212,12 +208,7 @@ export const AdminResponseFeedbackPanel = () => {
 										<Group gap="xs" wrap="nowrap">
 											<RatingIcon rating={row.rating} />
 											{row.reasons.map((key) => (
-												<Badge
-													key={key}
-													size="sm"
-													variant="outline"
-													color="primary"
-												>
+												<Badge key={key} size="sm" color="primary">
 													{reasonLabel(key)}
 												</Badge>
 											))}
@@ -230,13 +221,12 @@ export const AdminResponseFeedbackPanel = () => {
 									</Table.Td>
 									<Table.Td>
 										<Text size="sm">{row.org_name ?? ""}</Text>
-										<Text size="xs">
+										<Text size="xs" c="dimmed" className="app-muted">
 											{[scopeOf(row), hostOf(row)].filter(Boolean).join(" · ")}
 										</Text>
 									</Table.Td>
 									<Table.Td>
 										<Button
-											variant="subtle"
 											size="xs"
 											onClick={(event) => {
 												event.stopPropagation();
@@ -283,7 +273,7 @@ export const AdminResponseFeedbackPanel = () => {
 				<Drawer.Content data-testid="response-feedback-drawer">
 					<Drawer.Header>
 						<Drawer.Title>
-							<Stack gap={4}>
+							<Stack gap="xs">
 								<Title order={4}>
 									<Trans>Response feedback</Trans>
 								</Title>
@@ -291,12 +281,7 @@ export const AdminResponseFeedbackPanel = () => {
 									<Group gap="sm" wrap="nowrap">
 										<RatingIcon rating={selected.rating} />
 										{selected.reasons.map((key) => (
-											<Badge
-												key={key}
-												size="sm"
-												variant="outline"
-												color="primary"
-											>
+											<Badge key={key} size="sm" color="primary">
 												{reasonLabel(key)}
 											</Badge>
 										))}
@@ -320,7 +305,7 @@ export const AdminResponseFeedbackPanel = () => {
 								aria-label={t`Previous`}
 								data-testid="response-feedback-previous"
 							>
-								<CaretLeft size={16} />
+								<CaretLeft size={20} />
 							</ActionIcon>
 							<ActionIcon
 								variant="subtle"
@@ -329,7 +314,7 @@ export const AdminResponseFeedbackPanel = () => {
 								aria-label={t`Next`}
 								data-testid="response-feedback-next"
 							>
-								<CaretRight size={16} />
+								<CaretRight size={20} />
 							</ActionIcon>
 							<Drawer.CloseButton />
 						</Group>
@@ -350,9 +335,10 @@ const hostOf = (row: AdminResponseFeedbackRow) =>
 	row.user_name ?? (row.user_email ? row.user_email.split("@")[1] : "");
 
 const metaCellStyle = (index: number): React.CSSProperties => ({
-	borderBottom: index < 3 ? "1px solid var(--mantine-color-gray-3)" : "none",
+	borderBottom:
+		index < 3 ? "var(--app-stroke) solid var(--app-rule-color)" : "none",
 	borderRight:
-		index % 3 === 2 ? "none" : "1px solid var(--mantine-color-gray-3)",
+		index % 3 === 2 ? "none" : "var(--app-stroke) solid var(--app-rule-color)",
 	padding: "var(--mantine-spacing-sm) var(--mantine-spacing-md)",
 });
 
@@ -372,9 +358,9 @@ const MetaGrid = ({ row }: { row: AdminResponseFeedbackRow }) => {
 					rel="noreferrer"
 					size="xs"
 				>
-					<Group gap={4} wrap="nowrap" component="span">
+					<Group gap="xs" wrap="nowrap" component="span">
 						<Trans>Open replay</Trans>
-						<ArrowSquareOut size={12} />
+						<ArrowSquareOut size={16} />
 					</Group>
 				</Anchor>
 			) : null,
@@ -383,8 +369,8 @@ const MetaGrid = ({ row }: { row: AdminResponseFeedbackRow }) => {
 	return (
 		<Box
 			style={{
-				border: "1px solid var(--mantine-color-gray-3)",
-				borderRadius: "var(--mantine-radius-default)",
+				borderBottom: "var(--app-stroke) solid var(--app-rule-color)",
+				borderTop: "var(--app-stroke) solid var(--app-rule-color)",
 				display: "grid",
 				gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
 			}}
@@ -392,9 +378,7 @@ const MetaGrid = ({ row }: { row: AdminResponseFeedbackRow }) => {
 		>
 			{cells.map((cell, index) => (
 				<Box key={cell.label} style={metaCellStyle(index)}>
-					<Text size="xs" tt="uppercase">
-						{cell.label}
-					</Text>
+					<Title order={5}>{cell.label}</Title>
 					{typeof cell.value === "string" || cell.value == null ? (
 						<Text size="xs" style={{ overflowWrap: "anywhere" }}>
 							{cell.value ?? ""}
@@ -409,14 +393,12 @@ const MetaGrid = ({ row }: { row: AdminResponseFeedbackRow }) => {
 };
 
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
-	<Text size="xs" tt="uppercase">
-		{children}
-	</Text>
+	<Title order={5}>{children}</Title>
 );
 
 const quoteStyle: React.CSSProperties = {
-	border: "1px solid var(--mantine-color-gray-3)",
-	borderRadius: "var(--mantine-radius-default)",
+	borderBottom: "var(--app-stroke) solid var(--app-rule-color)",
+	borderTop: "var(--app-stroke) solid var(--app-rule-color)",
 	padding: "var(--mantine-spacing-sm) var(--mantine-spacing-md)",
 	whiteSpace: "pre-wrap",
 };

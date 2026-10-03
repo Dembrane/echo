@@ -245,8 +245,8 @@ export const WorkspaceSelectorRoute = () => {
 	if (orgList.length > 0) {
 		content = (
 			<Box w="100%" maw={FRAME_MAX_WIDTH} mt={FRAME_TOP_MARGIN}>
-				<House aria-hidden size={32} style={{ marginBottom: 12 }} />
-				<Title order={1}>
+				<House aria-hidden size={32} style={{ marginBottom: 16 }} />
+				<Title order={2}>
 					{firstName ? <Trans>Hi {firstName}</Trans> : <Trans>Hi</Trans>}
 				</Title>
 				<Text size="md" mt={8}>
@@ -266,7 +266,6 @@ export const WorkspaceSelectorRoute = () => {
 						setActiveIndex(value ? 0 : -1);
 					}}
 					onKeyDown={onKeyDown}
-					classNames={{ input: classes.searchInput }}
 					autoFocus
 					rightSectionPointerEvents="auto"
 					rightSection={
@@ -291,7 +290,7 @@ export const WorkspaceSelectorRoute = () => {
 					py={4}
 				>
 					{hits.length === 0 ? (
-						<Text ta="center" py={24} size="sm">
+						<Text py="lg" size="sm" c="dimmed">
 							{isFetching ? (
 								<Trans>Searching…</Trans>
 							) : (
@@ -310,11 +309,8 @@ export const WorkspaceSelectorRoute = () => {
 									role="option"
 									aria-selected={active}
 									onClick={() => onSelect(hit)}
-									className={
-										active
-											? `${classes.resultRow} ${classes.resultRowActive}`
-											: classes.resultRow
-									}
+									className={`app-do ${classes.resultRow}`}
+									data-selected={active || undefined}
 								>
 									<Icon size={20} className={classes.resultIcon} />
 									<span className={classes.resultLabel}>
@@ -335,8 +331,8 @@ export const WorkspaceSelectorRoute = () => {
 	} else if (invites.length > 0) {
 		content = (
 			<Box w="100%" maw={FRAME_MAX_WIDTH} mt={FRAME_TOP_MARGIN}>
-				<Stack align="center" gap={12}>
-					<Text c="dimmed" size="sm" ta="center">
+				<Stack align="flex-start" gap="md">
+					<Text c="dimmed" size="sm">
 						{invites[0].type === "org" ? (
 							<Trans>
 								You have a pending invite to {invites[0].org_name}. Open it to
@@ -345,13 +341,13 @@ export const WorkspaceSelectorRoute = () => {
 						) : (
 							<Trans>
 								You have a pending invite to{" "}
-								{invites[0].workspace_name ?? "a workspace"}. The admin needs to
-								free a seat before you can join.
+								{invites[0].workspace_name ?? t`a workspace`}. The admin needs
+								to free a seat before you can join.
 							</Trans>
 						)}
 					</Text>
 					<Button
-						variant="outline"
+						variant="filled"
 						size="sm"
 						onClick={() => navigate("/invites")}
 					>
@@ -363,14 +359,14 @@ export const WorkspaceSelectorRoute = () => {
 	} else if (recentRemovals.length > 0) {
 		content = (
 			<Box w="100%" maw={FRAME_MAX_WIDTH} mt={FRAME_TOP_MARGIN}>
-				<Stack align="center" gap={8}>
-					<Text c="dimmed" size="sm" ta="center">
+				<Stack gap="sm">
+					<Text c="dimmed" size="sm">
 						<Trans>
 							Your access to {recentRemovals[0].workspace_name} ended on{" "}
 							{new Date(recentRemovals[0].ended_at).toLocaleDateString()}.
 						</Trans>
 					</Text>
-					<Text c="dimmed" size="xs" ta="center">
+					<Text c="dimmed" size="xs">
 						<Trans>Contact the admin if this was unexpected.</Trans>
 					</Text>
 				</Stack>
@@ -379,11 +375,11 @@ export const WorkspaceSelectorRoute = () => {
 	} else {
 		content = (
 			<Box w="100%" maw={FRAME_MAX_WIDTH} mt={FRAME_TOP_MARGIN}>
-				<Stack align="center" gap={8}>
-					<Text c="dimmed" size="sm" ta="center">
+				<Stack gap="sm">
+					<Text c="dimmed" size="sm">
 						<Trans>You're not part of any organisation right now.</Trans>
 					</Text>
-					<Text c="dimmed" size="sm" ta="center">
+					<Text c="dimmed" size="sm">
 						<Trans>
 							If you were expecting access, please ask the person who invited
 							you to send it again.

@@ -200,10 +200,7 @@ export const CreateOrganisationModal = ({
 								onChange={(e) => setOrgName(e.currentTarget.value)}
 								data-testid="create-organisation-name-input"
 							/>
-							<Group justify="flex-end">
-								<Button variant="subtle" onClick={handleClose} disabled={busy}>
-									<Trans>Cancel</Trans>
-								</Button>
+							<Group justify="flex-start">
 								<Button
 									variant="filled"
 									type="submit"
@@ -211,6 +208,14 @@ export const CreateOrganisationModal = ({
 									disabled={!orgName.trim()}
 								>
 									<Trans>Continue</Trans>
+								</Button>
+								<Button
+									variant="subtle"
+									color="gray"
+									onClick={handleClose}
+									disabled={busy}
+								>
+									<Trans>Cancel</Trans>
 								</Button>
 							</Group>
 						</Stack>
@@ -228,16 +233,22 @@ export const CreateOrganisationModal = ({
 							onChange={setEmails}
 							autoFocusFirst
 						/>
-						<Group justify="flex-end">
-							<Button variant="subtle" onClick={finish} disabled={busy}>
-								<Trans>Skip</Trans>
-							</Button>
+						<Group justify="flex-start">
 							<Button
+								variant="filled"
 								loading={busy}
 								disabled={!canInvite}
 								onClick={handleSendInvites}
 							>
 								<Trans>Send invites</Trans>
+							</Button>
+							<Button
+								variant="subtle"
+								color="gray"
+								onClick={finish}
+								disabled={busy}
+							>
+								<Trans>Skip</Trans>
 							</Button>
 						</Group>
 					</Stack>

@@ -8,14 +8,13 @@ import {
 	Button,
 	Container,
 	Group,
-	Loader,
 	Paper,
+	Skeleton,
 	Stack,
 	Text,
 	Title,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
-import { modals } from "@mantine/modals";
 import { useState } from "react";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { toast } from "@/components/common/Toaster";
@@ -27,6 +26,7 @@ import {
 	useMyInvites,
 } from "@/hooks/useMyInvites";
 import { presentError } from "@/lib/errors/present";
+import { openConfirm } from "@/lib/openConfirm";
 import { displayRole } from "@/lib/roles";
 
 export const MyInvitesRoute = () => {
@@ -67,7 +67,7 @@ export const MyInvitesRoute = () => {
 	};
 
 	const handleDecline = (inviteId: string, subjectName: string) => {
-		modals.openConfirmModal({
+		openConfirm({
 			children: (
 				<Text size="sm">
 					<Trans>
@@ -76,9 +76,8 @@ export const MyInvitesRoute = () => {
 					</Trans>
 				</Text>
 			),
-			cancelProps: { color: "gray", variant: "subtle" },
-			confirmProps: { color: "red", variant: "filled" },
-			labels: { cancel: t`Keep it`, confirm: t`Decline` },
+			danger: true,
+			labels: { cancel: t`Cancel`, confirm: t`Decline` },
 			onConfirm: async () => {
 				try {
 					await declineMutation.mutateAsync(inviteId);
@@ -93,9 +92,11 @@ export const MyInvitesRoute = () => {
 
 	if (isLoading) {
 		return (
-			<Container size="sm" py="xl">
-				<Stack align="center" mt="20vh">
-					<Loader size="sm" color="gray" />
+			<Container size="sm" py="xl" px="lg">
+				<Stack gap="lg">
+					<Skeleton height={32} width="40%" />
+					<Skeleton height={120} />
+					<Skeleton height={120} />
 				</Stack>
 			</Container>
 		);
@@ -118,11 +119,11 @@ export const MyInvitesRoute = () => {
 	if (!invites || invites.length === 0) {
 		return (
 			<Container size="sm" py="xl" px="lg">
-				<Stack gap={24} mt="10vh" align="center">
-					<Title order={4} c="dimmed">
+				<Stack gap="sm" align="flex-start">
+					<Text size="sm" c="dimmed">
 						<Trans>No pending invites</Trans>
-					</Title>
-					<Button variant="outline" size="sm" onClick={() => navigate("/o")}>
+					</Text>
+					<Button size="sm" onClick={() => navigate("/o")}>
 						<Trans>Back to workspaces</Trans>
 					</Button>
 				</Stack>
@@ -132,9 +133,9 @@ export const MyInvitesRoute = () => {
 
 	return (
 		<Container size="sm" py="xl" px="lg" pb={80}>
-			<Stack gap={24}>
-				<Stack gap={4}>
-					<Title order={3}>
+			<Stack gap="lg">
+				<Stack gap="xs">
+					<Title order={2}>
 						<Trans>Pending invites</Trans>
 					</Title>
 					<Text size="sm" c="dimmed">
@@ -149,16 +150,22 @@ export const MyInvitesRoute = () => {
 					</Text>
 				</Stack>
 
-				<Stack gap={12}>
-					{invites.map((inv) => {
+				<Stack gap={0}>
+					{invites.map((inv, index) => {
 						const inviteError = errorByInvite[inv.id];
 						const isOrgInvite = inv.type === "org";
 						const subjectName = isOrgInvite
 							? inv.org_name
 							: (inv.workspace_name ?? inv.org_name);
 						return (
-							<Paper key={inv.id} p="lg" radius="md" withBorder>
-								<Stack gap={16}>
+							<Paper
+								key={inv.id}
+								p="lg"
+								withBorder
+								// One rule between rows, not two.
+								style={index > 0 ? { borderTopWidth: 0 } : undefined}
+							>
+								<Stack gap="md">
 									<Group
 										justify="space-between"
 										align="flex-start"
@@ -167,11 +174,11 @@ export const MyInvitesRoute = () => {
 										<Box flex={1}>
 											<Text size="md">{subjectName}</Text>
 											{!isOrgInvite && (
-												<Text size="xs" c="dimmed" mt={2}>
+												<Text size="xs" c="dimmed">
 													{inv.org_name}
 												</Text>
 											)}
-											<Group gap={6} mt={8}>
+											<Group gap="xs" mt="sm">
 												<Badge size="xs" variant="light" color="gray">
 													{displayRole(inv.role)}
 												</Badge>
@@ -191,7 +198,7 @@ export const MyInvitesRoute = () => {
 
 									{inviteError && (
 										<Alert color="yellow" variant="light">
-											<Stack gap={4}>
+											<Stack gap="xs">
 												<Text size="sm">
 													<Trans>Couldn't join right now</Trans>
 												</Text>
@@ -206,15 +213,9 @@ export const MyInvitesRoute = () => {
 										</Alert>
 									)}
 
-									<Group gap={8}>
+									<Group gap="sm">
 										<Button
-											size="sm"
-											variant="outline"
-											onClick={() => handleDecline(inv.id, subjectName)}
-										>
-											<Trans>Decline</Trans>
-										</Button>
-										<Button
+											variant="filled"
 											flex={1}
 											size="sm"
 											loading={acceptMutation.isPending}
@@ -225,6 +226,14 @@ export const MyInvitesRoute = () => {
 											) : (
 												<Trans>Accept and join</Trans>
 											)}
+										</Button>
+										<Button
+											size="sm"
+											variant="subtle"
+											color="gray"
+											onClick={() => handleDecline(inv.id, subjectName)}
+										>
+											<Trans>Decline</Trans>
 										</Button>
 									</Group>
 								</Stack>

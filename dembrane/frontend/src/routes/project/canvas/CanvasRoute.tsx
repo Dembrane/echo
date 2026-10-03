@@ -17,6 +17,7 @@ import {
 	TextInput,
 	Title,
 	Tooltip,
+	UnstyledButton,
 } from "@mantine/core";
 import { useDocumentTitle, useFullscreen } from "@mantine/hooks";
 import {
@@ -27,18 +28,17 @@ import {
 	isSameDay,
 } from "date-fns";
 import {
-	Maximize2,
-	MessageCircle,
-	Minimize2,
-	MoreHorizontal,
-	Pause,
-	Pencil,
-	Play,
-	RefreshCw,
-} from "lucide-react";
+	ArrowsClockwiseIcon,
+	ArrowsInIcon,
+	ArrowsOutIcon,
+	ChatCircleIcon,
+	DotsThreeIcon,
+	PauseIcon,
+	PencilSimpleIcon,
+	PlayIcon,
+} from "@phosphor-icons/react";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router";
-import { baseColors } from "@/colors";
 import { CanvasFrame } from "@/components/canvas/CanvasFrame";
 import { canvasCadenceLabel } from "@/components/canvas/cadenceLabel";
 import {
@@ -51,6 +51,7 @@ import {
 	useInvalidateCanvasQueries,
 	useRefreshCanvasMutation,
 } from "@/components/canvas/hooks";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -202,7 +203,11 @@ function CanvasLoopSettings({
 				<Text size="sm">
 					<Trans>Keep this canvas fresh</Trans>
 				</Text>
-				{cadenceText ? <Text size="xs">{cadenceText}</Text> : null}
+				{cadenceText ? (
+					<Text size="xs" c="dimmed">
+						{cadenceText}
+					</Text>
+				) : null}
 			</Stack>
 			<Select
 				label={t`Stay live for`}
@@ -247,6 +252,7 @@ function CanvasLoopSettings({
 				]}
 			/>
 			<Button
+				variant="filled"
 				onClick={save}
 				loading={mutation.isPending}
 				disabled={!canEdit}
@@ -280,53 +286,63 @@ function VersionStrip({
 		(generation) => generation.id === selectedGenerationId,
 	);
 	return (
-		<Paper
-			withBorder
-			className="rounded-md px-3 py-3"
-			style={{ backgroundColor: baseColors.parchment }}
-			{...testId("canvas-version-strip")}
-		>
+		<Paper withBorder p="sm" {...testId("canvas-version-strip")}>
 			<Stack gap="xs">
-				<Group gap="xs" align="center" justify="space-between">
-					<Group gap="xs" align="center">
-						<Text size="sm">
-							<Trans>Versions</Trans>
-						</Text>
-						{selected ? (
-							<Badge size="sm" variant="outline">
-								<Trans>Viewing {generationLabel(selected)}</Trans>
-							</Badge>
-						) : (
-							<Badge size="sm" variant="outline">
-								<Trans>Live</Trans>
-							</Badge>
-						)}
-					</Group>
+				<Group gap="xs" align="center" justify="flex-start">
+					<Text size="sm">
+						<Trans>Versions</Trans>
+					</Text>
 					{selected ? (
-						<Button size="xs" variant="subtle" onClick={onBackToLive}>
+						<Badge size="sm">
+							<Trans>Viewing {generationLabel(selected)}</Trans>
+						</Badge>
+					) : (
+						<Badge size="sm">
+							<Trans>Live</Trans>
+						</Badge>
+					)}
+					{selected ? (
+						<Button
+							size="xs"
+							variant="subtle"
+							color="gray"
+							onClick={onBackToLive}
+						>
 							<Trans>Back to live</Trans>
 						</Button>
 					) : null}
 				</Group>
 				<Group gap="xs" wrap="wrap">
 					{generations.map((generation) => (
-						<Button
+						<UnstyledButton
 							key={generation.id}
-							size="xs"
-							variant={
-								selectedGenerationId === generation.id ? "outline" : "subtle"
+							className="app-do"
+							data-selected={
+								selectedGenerationId === generation.id || undefined
 							}
+							px="sm"
+							py="xs"
 							onClick={() => onSelect(generation.id)}
 							{...testId(`canvas-version-${generation.id}`)}
 						>
-							{generationLabel(generation)}
-							{generation.status === "no_op" ? ` ${t`No change`}` : ""}
-							{generation.status === "error" ? ` ${t`Error`}` : ""}
-						</Button>
+							<Group gap="xs" wrap="nowrap">
+								<Text size="xs">{generationLabel(generation)}</Text>
+								{generation.status === "no_op" ? (
+									<Badge size="xs" color="gray">
+										<Trans>No change</Trans>
+									</Badge>
+								) : null}
+								{generation.status === "error" ? (
+									<Badge size="xs" color="red">
+										<Trans>Error</Trans>
+									</Badge>
+								) : null}
+							</Group>
+						</UnstyledButton>
 					))}
 				</Group>
 				{canShowMore ? (
-					<Group justify="center">
+					<Group justify="flex-start">
 						<Button
 							variant="subtle"
 							size="xs"
@@ -347,18 +363,18 @@ function CanvasLoadingState() {
 	return (
 		<PageContainer width="full" density="tight">
 			<Stack gap="md" maw={1440}>
-				<Group justify="space-between" align="flex-start" gap="md">
+				<Stack gap="md">
 					<Stack gap="xs">
 						<Skeleton height={32} width={280} />
 						<Skeleton height={16} width={220} />
 					</Stack>
-					<Group gap="xs">
-						<Skeleton height={36} width={96} radius="md" />
-						<Skeleton height={36} width={128} radius="md" />
-						<Skeleton height={36} width={36} radius="md" />
+					<Group gap="xs" justify="flex-start">
+						<Skeleton height={36} width={128} />
+						<Skeleton height={36} width={36} />
+						<Skeleton height={36} width={36} />
 					</Group>
-				</Group>
-				<Skeleton height={520} radius="md" />
+				</Stack>
+				<Skeleton height={520} />
 			</Stack>
 		</PageContainer>
 	);
@@ -498,19 +514,38 @@ export const CanvasRoute = () => {
 		return <CanvasLoadingState />;
 	}
 
+	if (canvasQuery.isError) {
+		return (
+			<PageContainer width="full" density="tight">
+				<Stack gap="md" maw={1440}>
+					<Title order={2}>{t`Canvas`}</Title>
+					<ErrorNotice
+						title={t`Could not load the canvas.`}
+						error={canvasQuery.error}
+						onRetry={() => canvasQuery.refetch()}
+					/>
+				</Stack>
+			</PageContainer>
+		);
+	}
+
 	return (
 		<PageContainer width="full" density="tight">
 			<Stack gap="md" maw={1440}>
-				<Group justify="space-between" align="flex-start" gap="lg">
+				<Stack gap="md">
 					<Stack gap="xs" className="min-w-0">
 						<Title order={2}>{canvas?.name ?? t`Canvas`}</Title>
 						<Group gap="xs" wrap="wrap" {...testId("canvas-freshness-cluster")}>
 							{canvas?.loop ? (
-								<Badge size="sm" variant="outline" tt="none">
+								<Badge size="sm" color="gray">
 									{loopStatusLine(canvas.loop.status, canvas.loop.expires_at)}
 								</Badge>
 							) : null}
-							{freshnessText ? <Text size="sm">{freshnessText}</Text> : null}
+							{freshnessText ? (
+								<Text size="sm" c="dimmed">
+									{freshnessText}
+								</Text>
+							) : null}
 							{canvasId && canvas?.loop ? (
 								<Popover
 									opened={settingsOpened}
@@ -524,14 +559,12 @@ export const CanvasRoute = () => {
 										<Tooltip label={t`Edit freshness settings`} withArrow>
 											<ActionIcon
 												variant="subtle"
-												size="sm"
-												radius="md"
 												aria-label={t`Edit freshness settings`}
 												disabled={canvas?.isDevFixture}
 												onClick={() => setSettingsOpened((opened) => !opened)}
 												{...testId("canvas-freshness-settings-button")}
 											>
-												<Pencil size={14} />
+												<PencilSimpleIcon size={20} />
 											</ActionIcon>
 										</Tooltip>
 									</Popover.Target>
@@ -546,16 +579,17 @@ export const CanvasRoute = () => {
 								</Popover>
 							) : null}
 							{canvas?.isDevFixture ? (
-								<Text size="sm">
+								<Text size="sm" c="dimmed">
 									<Trans>Using fixture data.</Trans>
 								</Text>
 							) : null}
 						</Group>
 					</Stack>
-					<Group gap="xs" justify="flex-end">
+					<Group gap="xs" justify="flex-start">
 						{primaryChatPath ? (
 							<Button
-								leftSection={<MessageCircle size={16} />}
+								variant="filled"
+								leftSection={<ChatCircleIcon size={20} />}
 								onClick={openPrimaryChat}
 								{...testId(
 									openChatPath
@@ -576,13 +610,15 @@ export const CanvasRoute = () => {
 						>
 							<ActionIcon
 								variant="subtle"
-								size="lg"
-								radius="md"
 								aria-label={fullscreen ? t`Exit fullscreen` : t`Full screen`}
 								onClick={toggleFullscreen}
 								{...testId("canvas-fullscreen-button")}
 							>
-								{fullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+								{fullscreen ? (
+									<ArrowsInIcon size={20} />
+								) : (
+									<ArrowsOutIcon size={20} />
+								)}
 							</ActionIcon>
 						</Tooltip>
 						<Menu
@@ -595,18 +631,16 @@ export const CanvasRoute = () => {
 							<Menu.Target>
 								<ActionIcon
 									variant="subtle"
-									size="lg"
-									radius="md"
 									aria-label={t`Canvas settings`}
 									{...testId("canvas-actions-menu-button")}
 								>
-									<MoreHorizontal size={18} />
+									<DotsThreeIcon size={20} />
 								</ActionIcon>
 							</Menu.Target>
 							<Menu.Dropdown>
 								{openChatPath && chatBasePath ? (
 									<Menu.Item
-										leftSection={<MessageCircle size={16} />}
+										leftSection={<ChatCircleIcon size={16} />}
 										onClick={() => {
 											setMenuOpened(false);
 											navigate(
@@ -622,7 +656,11 @@ export const CanvasRoute = () => {
 								{canvas?.loop ? (
 									<Menu.Item
 										leftSection={
-											isLoopActive ? <Pause size={16} /> : <Play size={16} />
+											isLoopActive ? (
+												<PauseIcon size={16} />
+											) : (
+												<PlayIcon size={16} />
+											)
 										}
 										disabled={lifecycleDisabled}
 										onClick={() => {
@@ -641,7 +679,7 @@ export const CanvasRoute = () => {
 									</Menu.Item>
 								) : null}
 								<Menu.Item
-									leftSection={<RefreshCw size={16} />}
+									leftSection={<ArrowsClockwiseIcon size={16} />}
 									disabled={refreshDisabled}
 									onClick={() => {
 										refreshMutation.mutate();
@@ -649,18 +687,21 @@ export const CanvasRoute = () => {
 									}}
 									{...testId("canvas-refresh-button")}
 								>
-									<Trans>Refresh now</Trans>
+									<Trans>Regenerate</Trans>
 								</Menu.Item>
 							</Menu.Dropdown>
 						</Menu>
 					</Group>
-				</Group>
+				</Stack>
 
 				<Box
 					ref={fullscreenRef}
-					className="rounded-md"
 					style={{
-						backgroundColor: baseColors.parchment,
+						// Fullscreen drops the page behind the frame; keep the page
+						// surface so the frame does not sit on the black backdrop.
+						backgroundColor: fullscreen
+							? "var(--mantine-color-body)"
+							: undefined,
 						height: fullscreen ? "100dvh" : undefined,
 						minHeight: fullscreen ? "100dvh" : undefined,
 						overflow: fullscreen ? "hidden" : undefined,

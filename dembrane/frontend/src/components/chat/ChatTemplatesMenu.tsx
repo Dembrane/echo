@@ -2,7 +2,13 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
-import { ActionIcon, Group, Paper, Text, Tooltip } from "@mantine/core";
+import {
+	ActionIcon,
+	Group,
+	Text,
+	Tooltip,
+	UnstyledButton,
+} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
 	GearSix,
@@ -17,7 +23,6 @@ import posthog from "posthog-js";
 import { useEffect, useMemo } from "react";
 import type { ChatMode } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
-import { MODE_COLORS } from "./ChatModeSelector";
 import { TemplatesModal } from "./TemplatesModal";
 import {
 	decodeTemplateKey,
@@ -98,58 +103,34 @@ const TemplatePill = ({
 	icon: IconComponent,
 	isSelected,
 	onClick,
-	chatMode,
 	testIdSuffix,
 }: {
 	label: string;
 	icon?: Icon;
 	isSelected: boolean;
 	onClick: () => void;
-	chatMode?: ChatMode | null;
 	testIdSuffix: string;
 }) => {
-	// Agentic chips stay neutral; the mode's green lives in its mark.
-	const colors =
-		chatMode && chatMode !== "agentic" ? MODE_COLORS[chatMode] : null;
-
 	return (
 		<Tooltip label={label} openDelay={500} disabled={label.length < 25}>
-			<Paper
-				withBorder
-				className={`cursor-pointer rounded-xl px-2 py-1 transition-all hover:scale-[1.02] ${
-					isSelected
-						? "border-gray-400 bg-gray-100"
-						: "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-				}`}
-				style={{
-					alignItems: "center",
-					backgroundColor: isSelected ? undefined : "var(--app-background)",
-					borderColor: colors ? colors.primary : undefined,
-					borderWidth: colors ? 1 : undefined,
-					display: "flex",
-					maxWidth: 160,
-				}}
+			<UnstyledButton
+				className="app-do"
+				data-selected={isSelected || undefined}
+				px={8}
+				py={4}
+				style={{ maxWidth: 200 }}
 				onClick={onClick}
 				{...testId(`chat-template-${testIdSuffix}`)}
 			>
-				<Group gap={4} wrap="nowrap" align="flex-start" style={{ minWidth: 0 }}>
+				<Group gap={4} wrap="nowrap" style={{ minWidth: 0 }}>
 					{IconComponent && (
-						<IconComponent
-							size={12}
-							color="var(--app-text)"
-							style={{ flexShrink: 0, marginTop: 2 }}
-						/>
+						<IconComponent size={16} style={{ flexShrink: 0 }} />
 					)}
-					<Text
-						size="xs"
-						c={colors ? MODE_COLORS.graphite : undefined}
-						truncate
-						style={{ minWidth: 0 }}
-					>
+					<Text size="xs" truncate style={{ minWidth: 0 }}>
 						{label}
 					</Text>
 				</Group>
-			</Paper>
+			</UnstyledButton>
 		</Tooltip>
 	);
 };
@@ -286,7 +267,7 @@ export const ChatTemplatesMenu = ({
 			>
 				{/* Contextual suggestions */}
 				{visibleSuggestions.length > 0 && (
-					<Text size="xs" c="gray.5" style={{ whiteSpace: "nowrap" }}>
+					<Text size="xs" c="dimmed" style={{ whiteSpace: "nowrap" }}>
 						<Trans>Suggested:</Trans>
 					</Text>
 				)}
@@ -295,7 +276,6 @@ export const ChatTemplatesMenu = ({
 						key={suggestion.label}
 						label={suggestion.label}
 						icon={SUGGESTION_ICONS[suggestion.icon] || Sparkle}
-						chatMode={chatMode}
 						isSelected={selectedTemplateKey === suggestion.label}
 						onClick={() =>
 							handleTemplateSelect(
@@ -354,27 +334,27 @@ export const ChatTemplatesMenu = ({
 
 				{/* Overflow pill */}
 				{pinnedOverflow > 0 && (
-					<Paper
-						withBorder
-						className="cursor-pointer rounded-full border-gray-200 px-2 py-0.5 hover:border-gray-300 hover:bg-gray-50"
+					<UnstyledButton
+						className="app-do"
+						px={8}
+						py={4}
 						onClick={open}
 						{...testId("chat-templates-overflow-pill")}
 					>
-						<Text size="xs" c="gray.7">
+						<Text size="xs">
 							+{pinnedOverflow} <Trans>more</Trans>
 						</Text>
-					</Paper>
+					</UnstyledButton>
 				)}
 
 				<Tooltip label={t`Manage templates`}>
 					<ActionIcon
 						variant="subtle"
-						size="sm"
 						color="gray"
 						onClick={open}
 						{...testId("chat-templates-more-button")}
 					>
-						<GearSix size={14} />
+						<GearSix size={20} />
 					</ActionIcon>
 				</Tooltip>
 			</Group>

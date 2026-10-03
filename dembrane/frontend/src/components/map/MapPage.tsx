@@ -1,6 +1,7 @@
 import { plural, t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
 import {
+	Alert,
 	Badge,
 	Button,
 	Group,
@@ -19,6 +20,7 @@ import {
 	useRef,
 	useState,
 } from "react";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { isReadOnlyRole } from "@/lib/roles";
 import {
@@ -104,7 +106,7 @@ const GenerationControls = ({
 	if (isAttemptRunning(attempt) && attempt) {
 		return (
 			<Group gap="xs" wrap="nowrap" aria-live="polite">
-				<Loader size={16} color="primary" />
+				<Loader size="sm" color="primary" />
 				<Text size="sm">{progressLabel(attempt)}</Text>
 			</Group>
 		);
@@ -113,8 +115,7 @@ const GenerationControls = ({
 	const failed = attempt?.status === "failed";
 	return (
 		<Button
-			variant={hasResult ? "outline" : undefined}
-			radius={hasResult ? 0 : undefined}
+			variant={hasResult ? undefined : "filled"}
 			loading={isStarting}
 			disabled={!hasResult && nothingToRead}
 			onClick={onGenerate}
@@ -132,7 +133,7 @@ const GenerationControls = ({
 
 const Notice = ({ children }: { children: ReactNode }) => (
 	<Group gap="xs" wrap="nowrap" align="flex-start">
-		<WarningCircleIcon size={18} className="mt-0.5 shrink-0 text-salmon-800" />
+		<WarningCircleIcon size={16} className="mt-0.5 shrink-0" />
 		<Text size="sm">{children}</Text>
 	</Group>
 );
@@ -443,40 +444,50 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 	} else if (isRefreshing && activeAdmission) {
 		body = (
 			<Group gap="xs" className="px-4 md:px-6" aria-live="polite">
-				<Loader size={16} color="primary" />
+				<Loader size="sm" color="primary" />
 				<Text size="sm">
 					<Trans>Loading the map.</Trans>
 				</Text>
 			</Group>
 		);
 	} else if (isError) {
+		const loadError =
+			graphQuery.error ??
+			(graphQuery.data === null ? legacyMapQuery.error : null);
 		body = (
-			<Text className="px-4 md:px-6">
-				<Trans>The map could not be loaded. Try again in a moment.</Trans>
-			</Text>
+			<div className="max-w-2xl px-4 md:px-6">
+				<ErrorNotice
+					error={loadError}
+					title={t`The map could not be loaded`}
+					onRetry={() => {
+						if (graphQuery.isError) graphQuery.refetch();
+						else legacyMapQuery.refetch();
+					}}
+				/>
+			</div>
 		);
 	} else if (!graph) {
 		body = (
 			<Stack gap="sm" className="max-w-2xl px-4 md:px-6">
 				{isAttemptRunning(attempt) ? (
-					<Text>
+					<Text size="sm" c="dimmed">
 						<Trans>
 							The map is being generated. It appears here when it is ready.
 						</Trans>
 					</Text>
 				) : nothingToRead ? (
-					<Text>
+					<Text size="sm" c="dimmed">
 						<Trans>
 							This project has no conversations with transcripts yet. Generate a
 							map once conversations have been transcribed.
 						</Trans>
 					</Text>
 				) : readOnly ? (
-					<Text>
+					<Text size="sm" c="dimmed">
 						<Trans>No map has been generated for this project yet.</Trans>
 					</Text>
 				) : (
-					<Text>
+					<Text size="sm" c="dimmed">
 						<Trans>
 							Map reads this project's transcripts, finds the arguments people
 							make, and places related arguments close together. Generate a map
@@ -489,7 +500,7 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 	} else if (entry === "empty" && graph.version === 1) {
 		body = (
 			<Stack gap="sm" className="max-w-2xl px-4 md:px-6">
-				<Text>
+				<Text size="sm" c="dimmed">
 					{conversationCount === 0 ? (
 						<Trans>
 							This project has no conversations with transcripts yet. Generate a
@@ -538,19 +549,23 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 
 	return (
 		<div className="flex h-full min-h-0 flex-col" style={MAP_LIGHT_VARS}>
-			<div className="flex flex-wrap items-start justify-between gap-4 px-4 pb-2 pt-4 md:px-6">
-				<Stack gap={2} className="min-w-0">
+			<Stack gap="md" className="px-4 pb-2 pt-4 md:px-6">
+				<Stack gap="xs" className="min-w-0">
 					<Group gap="sm" align="center" wrap="nowrap">
 						<Title order={2}>
 							<Trans>Map</Trans>
 						</Title>
-						<Badge size="sm" variant="light" color="primary">
+						<Badge size="sm" color="mauve" c="graphite">
 							<Trans>Beta</Trans>
 						</Badge>
 					</Group>
-					{countsLine && <Text size="sm">{countsLine}</Text>}
+					{countsLine && (
+						<Text size="sm" c="dimmed">
+							{countsLine}
+						</Text>
+					)}
 				</Stack>
-				<Group gap="sm" wrap="nowrap">
+				<Group gap="sm" justify="flex-start" wrap="nowrap">
 					{!offline && (
 						<GenerationControls
 							hasResult={Boolean(graph)}
@@ -575,27 +590,29 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 						/>
 					)}
 				</Group>
-			</div>
+			</Stack>
 
 			{(failedAttempt ||
 				unplacedCount > 0 ||
 				urlState.scope ||
 				(isRefreshing && !activeAdmission) ||
 				(graph?.stale.length ?? 0) > 0) && (
-				<Stack gap={4} className="px-4 pb-2 md:px-6">
+				<Stack gap="xs" className="px-4 pb-2 md:px-6">
 					{failedAttempt && (
-						<Notice>
-							{graph ? (
-								<Trans>
-									The last generation failed, so this is still the previous map.{" "}
-									{failedAttempt.error ?? ""}
-								</Trans>
-							) : (
-								<Trans>
-									The map could not be generated. {failedAttempt.error ?? ""}
-								</Trans>
-							)}
-						</Notice>
+						<Alert color="red" icon={<WarningCircleIcon size={20} />}>
+							<Text size="sm">
+								{graph ? (
+									<Trans>
+										The last generation failed, so this is still the previous
+										map. {failedAttempt.error ?? ""}
+									</Trans>
+								) : (
+									<Trans>
+										The map could not be generated. {failedAttempt.error ?? ""}
+									</Trans>
+								)}
+							</Text>
+						</Alert>
 					)}
 					{unplacedCount > 0 && (
 						<Notice>
@@ -607,7 +624,6 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 							<Button
 								size="compact-sm"
 								variant="subtle"
-								radius={0}
 								onClick={() => setShowUnplaced((shown) => !shown)}
 							>
 								{showUnplaced ? (
@@ -631,7 +647,6 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 							<Button
 								size="compact-sm"
 								variant="subtle"
-								radius={0}
 								onClick={() => setUrlState({ scope: null })}
 							>
 								<Trans>Show current arguments</Trans>
@@ -640,7 +655,7 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 					)}
 					{isRefreshing && !activeAdmission && (
 						<Group gap="xs" aria-live="polite">
-							<Loader size={14} color="primary" />
+							<Loader size="sm" color="primary" />
 							<Text size="sm">
 								<Trans>
 									Loading the new scope. The current map stays until then.

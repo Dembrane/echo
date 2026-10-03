@@ -1,4 +1,4 @@
-import { Box, LoadingOverlay } from "@mantine/core";
+import { Box, Loader } from "@mantine/core";
 import React, { Suspense } from "react";
 import { ErrorBoundary } from "../error/ErrorBoundary";
 
@@ -8,8 +8,8 @@ interface LazyRouteProps {
 }
 
 const DefaultFallback = () => (
-	<Box pos="relative" h="100%">
-		<LoadingOverlay visible={true} overlayProps={{ blur: 2, radius: "sm" }} />
+	<Box p="md">
+		<Loader size="sm" />
 	</Box>
 );
 

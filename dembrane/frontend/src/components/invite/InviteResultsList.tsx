@@ -9,8 +9,8 @@ import {
 	Text,
 	Tooltip,
 } from "@mantine/core";
-import { usePostHog } from "@posthog/react";
 import { LinkIcon } from "@phosphor-icons/react";
+import { usePostHog } from "@posthog/react";
 import { toast } from "@/components/common/Toaster";
 
 export type InviteResultState =
@@ -76,7 +76,7 @@ export function InviteResultsList({ rows, "data-testid": dataTestId }: Props) {
 	};
 	if (rows.length === 0) return null;
 	return (
-		<Stack gap={6} data-testid={dataTestId}>
+		<Stack gap={0} data-testid={dataTestId}>
 			{rows.map((row, idx) => {
 				const badge = badgeForState(row.state);
 				return (
@@ -84,7 +84,8 @@ export function InviteResultsList({ rows, "data-testid": dataTestId }: Props) {
 						key={`${row.email}-${row.workspaceId ?? "org"}-${idx}`}
 						withBorder
 						p="xs"
-						radius="sm"
+						// One rule between rows, not two.
+						style={idx > 0 ? { borderTopWidth: 0 } : undefined}
 					>
 						<Group wrap="nowrap" gap="xs">
 							<Stack gap={0} style={{ flex: 1, minWidth: 0 }}>
@@ -111,7 +112,6 @@ export function InviteResultsList({ rows, "data-testid": dataTestId }: Props) {
 							{row.inviteUrl && (
 								<Tooltip label={t`Copy invite link`}>
 									<ActionIcon
-										size="sm"
 										variant="subtle"
 										onClick={() =>
 											copy(row.inviteUrl as string, row.workspaceId)
@@ -120,7 +120,7 @@ export function InviteResultsList({ rows, "data-testid": dataTestId }: Props) {
 										style={{ flexShrink: 0 }}
 										data-testid={`invite-result-copy-link-${idx}`}
 									>
-										<LinkIcon size={14} />
+										<LinkIcon size={20} />
 									</ActionIcon>
 								</Tooltip>
 							)}

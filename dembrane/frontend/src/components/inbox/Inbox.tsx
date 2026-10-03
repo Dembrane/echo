@@ -12,6 +12,7 @@ import {
 	Indicator,
 	Loader,
 	ScrollArea,
+	Skeleton,
 	Stack,
 	Tabs,
 	Text,
@@ -164,7 +165,7 @@ export const Inbox = () => {
 					onClick={open}
 					aria-label={t`Inbox`}
 				>
-					<BellIcon size={22} />
+					<BellIcon size={20} />
 				</ActionIcon>
 			</Indicator>
 
@@ -182,7 +183,7 @@ export const Inbox = () => {
 						<Button
 							variant="subtle"
 							size="compact-xs"
-							leftSection={<CheckIcon size={12} />}
+							leftSection={<CheckIcon size={20} />}
 							onClick={handleMarkAllReadForActiveTab}
 							loading={markAllPending}
 						>
@@ -204,7 +205,7 @@ export const Inbox = () => {
 							value="for-you"
 							rightSection={
 								unreadNotifs > 0 ? (
-									<Badge size="xs" variant="filled" color="blue">
+									<Badge size="xs" variant="light" color="gray">
 										{unreadNotifs}
 									</Badge>
 								) : null
@@ -216,7 +217,7 @@ export const Inbox = () => {
 							value="announcements"
 							rightSection={
 								unreadAnnouncements > 0 ? (
-									<Badge size="xs" variant="light" color="blue">
+									<Badge size="xs" variant="light" color="gray">
 										{unreadAnnouncements}
 									</Badge>
 								) : null
@@ -229,18 +230,11 @@ export const Inbox = () => {
 					<Tabs.Panel value="for-you">
 						<ScrollArea style={{ height: "calc(100vh - 180px)" }}>
 							{loadingNotifs ? (
-								<Center py="xl">
-									<Loader size="sm" color="gray" />
-								</Center>
+								<InboxSkeleton />
 							) : notifications.length === 0 ? (
-								<Center py="xl">
-									<Stack align="center" gap={4}>
-										<BellIcon size={28} color="var(--mantine-color-gray-5)" />
-										<Text size="sm" c="dimmed" ta="center">
-											<Trans>You're all caught up.</Trans>
-										</Text>
-									</Stack>
-								</Center>
+								<Text size="sm" c="dimmed" py="md">
+									<Trans>You're all caught up.</Trans>
+								</Text>
 							) : (
 								<Stack gap={0}>
 									{notifications.map((row) => (
@@ -259,15 +253,11 @@ export const Inbox = () => {
 					<Tabs.Panel value="announcements">
 						<ScrollArea style={{ height: "calc(100vh - 180px)" }}>
 							{loadingAnnouncements ? (
-								<Center py="xl">
-									<Loader size="sm" color="gray" />
-								</Center>
+								<InboxSkeleton />
 							) : processedAnnouncements.length === 0 ? (
-								<Center py="xl">
-									<Text size="sm" c="dimmed" ta="center">
-										<Trans>Nothing from dembrane right now.</Trans>
-									</Text>
-								</Center>
+								<Text size="sm" c="dimmed" py="md">
+									<Trans>Nothing from dembrane right now.</Trans>
+								</Text>
 							) : (
 								<Stack gap={0}>
 									{unreadAnnouncementRows.map((a, index) => (
@@ -318,6 +308,23 @@ export const Inbox = () => {
 	);
 };
 
+/** Rows still loading: the shape of three notifications. */
+function InboxSkeleton() {
+	return (
+		<Stack gap="md" py="sm">
+			{[0, 1, 2].map((i) => (
+				<Group key={i} gap="sm" wrap="nowrap" align="flex-start">
+					<Skeleton height={26} circle />
+					<Stack gap="xs" style={{ flex: 1 }}>
+						<Skeleton height={14} width="70%" />
+						<Skeleton height={12} width="40%" />
+					</Stack>
+				</Group>
+			))}
+		</Stack>
+	);
+}
+
 /**
  * Render inline **bold** markers as <strong>. Notifications come from
  * the server with markdown-style emphasis (e.g. "Added to **Workspace
@@ -332,9 +339,7 @@ function renderInlineMarkdown(text: string): React.ReactNode {
 		if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
 			return (
 				// biome-ignore lint/suspicious/noArrayIndexKey: parts array is derived from a static text split and never reorders
-				<strong key={i} style={{ fontWeight: 600 }}>
-					{part.slice(2, -2)}
-				</strong>
+				<strong key={i}>{part.slice(2, -2)}</strong>
 			);
 		}
 		return (
@@ -358,11 +363,6 @@ function NotificationRowItem({
 		: "";
 	const isDestructive = row.severity === "destructive";
 	const isActionRequired = row.severity === "action_required";
-	const unreadBg = isDestructive
-		? "rgba(192,57,43,0.045)"
-		: isActionRequired
-			? "rgba(65,105,225,0.04)"
-			: "rgba(65,105,225,0.03)";
 
 	// Clicking the row fires `onClick` (mark-read + navigate when there's
 	// an action). Notifications without a navigation target (matrix §6
@@ -373,11 +373,10 @@ function NotificationRowItem({
 		<UnstyledButton
 			onClick={onClick}
 			style={{
-				background: row.read ? "transparent" : unreadBg,
-				borderBottom: "1px solid var(--mantine-color-gray-2)",
+				borderBottom: "1px solid var(--app-rule-color)",
 				cursor: "pointer",
 				display: "block",
-				padding: "12px 4px",
+				padding: "var(--mantine-spacing-sm) var(--mantine-spacing-xs)",
 			}}
 		>
 			<Group
@@ -393,7 +392,6 @@ function NotificationRowItem({
 				    has a navigation target the user doesn't want to follow. */}
 				{!row.read && (
 					<ActionIcon
-						size="xs"
 						variant="subtle"
 						color="gray"
 						aria-label={t`Mark as read`}
@@ -407,7 +405,7 @@ function NotificationRowItem({
 							top: 0,
 						}}
 					>
-						<CheckIcon size={12} />
+						<CheckIcon size={20} />
 					</ActionIcon>
 				)}
 				{row.actor_user_id ? (
@@ -415,52 +413,32 @@ function NotificationRowItem({
 						{(row.actor_name || "?").slice(0, 2).toUpperCase()}
 					</Avatar>
 				) : (
-					<Box
-						style={{
-							alignItems: "center",
-							background: isDestructive
-								? "var(--mantine-color-red-1)"
-								: "var(--mantine-color-blue-1)",
-							borderRadius: "50%",
-							display: "flex",
-							flexShrink: 0,
-							height: 28,
-							justifyContent: "center",
-							width: 28,
-						}}
-					>
-						<BellIcon
-							size={14}
-							color={
-								isDestructive
-									? "var(--mantine-color-red-7)"
-									: "var(--mantine-color-blue-7)"
-							}
-						/>
-					</Box>
+					<Avatar size="sm" color={isDestructive ? "red" : "gray"}>
+						<BellIcon size={16} />
+					</Avatar>
 				)}
 
-				<Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
+				<Stack gap={0} style={{ flex: 1, minWidth: 0 }}>
 					<Group gap="xs" align="center" wrap="nowrap">
-						<Text size="sm" fw={row.read ? 320 : 600} lineClamp={1}>
+						<Text size="sm" lineClamp={1}>
 							{renderInlineMarkdown(row.title)}
 						</Text>
 						{!row.read && (
 							<Box
 								style={{
 									background: isDestructive
-										? "var(--mantine-color-red-6)"
-										: "var(--mantine-color-blue-6)",
+										? "var(--mantine-color-red-7)"
+										: "var(--mantine-color-primary-7)",
 									borderRadius: "50%",
 									flexShrink: 0,
-									height: 6,
-									width: 6,
+									height: 8,
+									width: 8,
 								}}
 								aria-label={t`Unread`}
 							/>
 						)}
 						{isActionRequired && (
-							<Badge size="xs" color="blue" variant="filled">
+							<Badge size="xs" color="yellow" variant="light">
 								<Trans>Action needed</Trans>
 							</Badge>
 						)}

@@ -1,13 +1,5 @@
 import { Trans } from "@lingui/react/macro";
-import {
-	Card,
-	Group,
-	SegmentedControl,
-	Stack,
-	Text,
-	Title,
-} from "@mantine/core";
-import { TextAaIcon } from "@phosphor-icons/react";
+import { Card, SegmentedControl, Stack, Text, Title } from "@mantine/core";
 import {
 	type FontSizeScale,
 	useAppPreferences,
@@ -60,14 +52,11 @@ export const FontSizeSettingsCard = () => {
 	const currentPx = currentOption?.px ?? 16;
 
 	return (
-		<Card withBorder p="lg" radius="md">
+		<Card withBorder p="lg">
 			<Stack gap="md">
-				<Group gap="sm">
-					<TextAaIcon size={24} />
-					<Title order={3}>
-						<Trans>Font Size</Trans>
-					</Title>
-				</Group>
+				<Title order={4}>
+					<Trans>Font size</Trans>
+				</Title>
 				<Text size="sm" c="dimmed">
 					<Trans>Adjust the base font size for the interface</Trans>
 				</Text>
@@ -78,7 +67,6 @@ export const FontSizeSettingsCard = () => {
 					data={FONT_SIZE_OPTIONS.map((opt) => ({
 						label: (
 							<Text
-								fw={preferences.fontSizeScale === opt.value ? 600 : 320}
 								style={{
 									fontSize: opt.visualSize,
 								}}

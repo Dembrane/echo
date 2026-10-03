@@ -6,6 +6,7 @@ import {
 	Group,
 	Paper,
 	ScrollArea,
+	Skeleton,
 	Stack,
 	Text,
 } from "@mantine/core";
@@ -24,7 +25,6 @@ import { useCooldown } from "@/hooks/useCooldown";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { errorCode } from "@/lib/errors/read";
 import { testId } from "@/lib/testUtils";
-import { Logo } from "../../common/Logo";
 import { Markdown } from "../../common/Markdown";
 import { MarkdownWYSIWYG } from "../../form/MarkdownWYSIWYG/MarkdownWYSIWYG";
 import { useParticipantProjectById } from "../hooks";
@@ -303,26 +303,15 @@ export const VerifyArtefact = () => {
 			{...testId("portal-verify-artefact-container")}
 		>
 			<ScrollArea className="flex-grow">
-				<Paper
-					withBorder
-					p="xl"
-					radius="lg"
-					className="border-2 border-gray-200"
-					{...testId("portal-verify-artefact-content")}
-				>
+				<Paper p="xl" {...testId("portal-verify-artefact-content")}>
 					{isRevising ? (
 						<Stack
-							gap="xl"
-							align="center"
-							justify="center"
-							className="py-12"
+							gap="md"
+							className="py-4"
 							{...testId("portal-verify-artefact-revising")}
 						>
-							<div className="animate-spin">
-								<Logo hideTitle hideEnvBadge alwaysDembrane h="48px" />
-							</div>
-							<Stack gap="sm" align="center">
-								<Text size="xl">
+							<Stack gap="xs">
+								<Text size="md">
 									<Trans id="participant.regenerating.outcome">
 										Regenerating the outcome
 									</Trans>
@@ -333,6 +322,9 @@ export const VerifyArtefact = () => {
 									</Trans>
 								</Text>
 							</Stack>
+							<Skeleton height={16} />
+							<Skeleton height={16} />
+							<Skeleton height={16} width="70%" />
 						</Stack>
 					) : (
 						<Stack gap="md" className="py-4">
@@ -373,15 +365,26 @@ export const VerifyArtefact = () => {
 
 			<Group
 				gap="md"
-				className="w-full sticky bottom-[10%] p-4 mx-auto rounded-md shadow-sm border-gray-200 border  bg-white/20 backdrop-blur-sm"
+				bg="var(--app-background)"
+				className="w-full sticky bottom-[10%] p-4 mx-auto border-t"
+				style={{ borderColor: "var(--app-rule-color)" }}
 			>
 				{isEditing ? (
 					<>
 						<Button
 							size="lg"
-							radius="md"
-							variant="outline"
-							className="flex-1 shadow-xl"
+							variant="filled"
+							className="flex-1"
+							onClick={handleSaveEdit}
+							{...testId("portal-verify-artefact-save-edit-button")}
+						>
+							<Trans id="participant.concrete.action.button.save">Save</Trans>
+						</Button>
+						<Button
+							size="lg"
+							variant="subtle"
+							color="gray"
+							className="flex-1"
 							onClick={handleCancelEdit}
 							{...testId("portal-verify-artefact-cancel-edit-button")}
 						>
@@ -389,23 +392,32 @@ export const VerifyArtefact = () => {
 								Cancel
 							</Trans>
 						</Button>
-						<Button
-							size="lg"
-							radius="md"
-							className="flex-1 shadow-xl"
-							onClick={handleSaveEdit}
-							{...testId("portal-verify-artefact-save-edit-button")}
-						>
-							<Trans id="participant.concrete.action.button.save">Save</Trans>
-						</Button>
 					</>
 				) : (
 					<>
+						<Button
+							size="lg"
+							variant="filled"
+							className="flex-1"
+							onClick={handleApprove}
+							loading={isApproving}
+							disabled={
+								isApproving ||
+								isRevising ||
+								isLoading ||
+								!generatedArtifactId ||
+								!artefactContent
+							}
+							{...testId("portal-verify-artefact-approve-button")}
+						>
+							<Trans id="participant.concrete.action.button.approve">
+								Approve
+							</Trans>
+						</Button>
+
 						<Button.Group className="flex-1">
 							<Button
 								size="lg"
-								radius="md"
-								variant="outline"
 								className="flex-1"
 								onClick={handleRevise}
 								disabled={
@@ -427,10 +439,9 @@ export const VerifyArtefact = () => {
 							</Button>
 							<Button
 								size="lg"
-								radius="md"
-								variant="outline"
 								onClick={handleEdit}
 								px="lg"
+								aria-label={t`Edit`}
 								disabled={
 									isRevising || isApproving || isLoading || !generatedArtifactId
 								}
@@ -439,26 +450,6 @@ export const VerifyArtefact = () => {
 								<PencilSimpleIcon size={20} />
 							</Button>
 						</Button.Group>
-
-						<Button
-							size="lg"
-							radius="md"
-							className="flex-1"
-							onClick={handleApprove}
-							loading={isApproving}
-							disabled={
-								isApproving ||
-								isRevising ||
-								isLoading ||
-								!generatedArtifactId ||
-								!artefactContent
-							}
-							{...testId("portal-verify-artefact-approve-button")}
-						>
-							<Trans id="participant.concrete.action.button.approve">
-								Approve
-							</Trans>
-						</Button>
 					</>
 				)}
 			</Group>

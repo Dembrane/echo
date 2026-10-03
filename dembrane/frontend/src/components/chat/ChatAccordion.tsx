@@ -46,14 +46,12 @@ export const ChatModeIndicator = ({
 	mode: "overview" | "deep_dive" | "agentic" | null | undefined;
 	size?: "xs" | "compact-sm" | "sm";
 }) => {
-	// circle / glyph px per size token
-	const [circleSize, glyphSize] =
-		size === "xs" ? [20, 12] : size === "compact-sm" ? [26, 16] : [32, 20];
+	// A plain glyph, not a control: 16 inline, 20 where it heads a page.
+	const glyphSize = size === "sm" ? 20 : 16;
 	// Default to deep_dive if mode not set
 	const effectiveMode = mode ?? "deep_dive";
 	const isOverview = effectiveMode === "overview";
 	const isAgentic = effectiveMode === "agentic";
-	const colors = MODE_COLORS[effectiveMode];
 
 	return (
 		<Tooltip
@@ -71,13 +69,9 @@ export const ChatModeIndicator = ({
 		>
 			<Box className="flex items-center justify-center">
 				{isOverview || isAgentic ? (
-					<ActionIcon radius={100} size={circleSize} color={colors.primary}>
-						<SparkleIcon size={glyphSize} color="var(--app-text)" />
-					</ActionIcon>
+					<SparkleIcon size={glyphSize} />
 				) : (
-					<ActionIcon radius={100} size={circleSize} color={colors.primary}>
-						<ChatCircleIcon size={glyphSize} color="var(--app-text)" />
-					</ActionIcon>
+					<ChatCircleIcon size={glyphSize} />
 				)}
 			</Box>
 		</Tooltip>
@@ -107,8 +101,8 @@ export const ChatAccordionItemMenu = ({
 			<Menu shadow="md" position="right" {...testId("chat-item-menu")}>
 				<Menu.Target>
 					<ActionIcon
-						variant="transparent"
-						c="gray"
+						variant="subtle"
+						color="gray"
 						size={size}
 						className="flex items-center justify-center"
 						{...testId("chat-item-menu-button")}

@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { GearIcon, PauseIcon, PlayIcon } from "@phosphor-icons/react";
+import { GearSixIcon, PauseIcon, PlayIcon } from "@phosphor-icons/react";
 import {
 	memo,
 	useCallback,
@@ -1227,24 +1227,24 @@ export const LocalMapGraph = ({
 				onClick={() => setPaused((p) => !p)}
 				className="left-4"
 			>
-				{paused ? <PlayIcon size={24} /> : <PauseIcon size={24} />}
+				{paused ? <PlayIcon size={20} /> : <PauseIcon size={20} />}
 			</MapChromeButton>
 
 			<MapChromeButton
-				label={t`LocalMap Settings`}
+				label={t`Local map settings`}
 				onClick={() => setShowSettings(!showSettings)}
 				className="right-4"
 			>
-				<GearIcon size={24} />
+				<GearSixIcon size={20} />
 			</MapChromeButton>
 
 			{showSettings && (
 				<MapSettingsPanel
-					title={<Trans>LocalMap Forces</Trans>}
+					title={<Trans>Local map forces</Trans>}
 					onReset={resetToDefaults}
 				>
 					<MapSettingsSection first>
-						<Trans>LocalMAP Paper Parameters</Trans>
+						<Trans>LocalMAP paper parameters</Trans>
 					</MapSettingsSection>
 
 					<RangeSetting
@@ -1268,11 +1268,11 @@ export const LocalMapGraph = ({
 					/>
 
 					<MapSettingsSection>
-						<Trans>Force Multipliers</Trans>
+						<Trans>Force multipliers</Trans>
 					</MapSettingsSection>
 
 					<RangeSetting
-						label={<Trans>Neighbor Attraction: {nnStrength.toFixed(2)}</Trans>}
+						label={<Trans>Neighbour attraction: {nnStrength.toFixed(2)}</Trans>}
 						min={0}
 						max={1}
 						step={0.01}
@@ -1281,7 +1281,7 @@ export const LocalMapGraph = ({
 					/>
 
 					<RangeSetting
-						label={<Trans>Far Pair Repulsion: {fpStrength.toFixed(2)}</Trans>}
+						label={<Trans>Far pair repulsion: {fpStrength.toFixed(2)}</Trans>}
 						min={0}
 						max={10}
 						step={0.1}
@@ -1290,11 +1290,11 @@ export const LocalMapGraph = ({
 					/>
 
 					<MapSettingsSection>
-						<Trans>Additional Forces</Trans>
+						<Trans>Additional forces</Trans>
 					</MapSettingsSection>
 
 					<RangeSetting
-						label={<Trans>General Repulsion: {Math.abs(chargeStrength)}</Trans>}
+						label={<Trans>General repulsion: {Math.abs(chargeStrength)}</Trans>}
 						min={-100}
 						max={0}
 						step={1}
@@ -1304,7 +1304,7 @@ export const LocalMapGraph = ({
 
 					<RangeSetting
 						label={
-							<Trans>Collision Radius: {collisionRadius.toFixed(1)}x</Trans>
+							<Trans>Collision radius: {collisionRadius.toFixed(1)}x</Trans>
 						}
 						min={0.5}
 						max={5}
@@ -1316,7 +1316,7 @@ export const LocalMapGraph = ({
 					<RangeSetting
 						label={
 							<Trans>
-								Charge Distance (viewport fraction): {chargeFraction.toFixed(2)}
+								Charge distance (viewport fraction): {chargeFraction.toFixed(2)}
 							</Trans>
 						}
 						description={
