@@ -22,13 +22,9 @@ export function EntityListRow({
 	selected = false,
 	testId,
 }: EntityListRowProps) {
-	const style = {
-		background: selected
-			? "var(--mantine-color-primary-0)"
-			: "var(--app-background)",
-		borderColor:
-			active || selected ? "var(--mantine-color-primary-6)" : undefined,
-	} as const;
+	// A row you press: the full box (rules.css .app-do); active or selected
+	// is the blue box on the action tint.
+	const isSelected = active || selected || undefined;
 	const testProps = testId ? testIdAttribute(testId) : {};
 
 	if (href) {
@@ -39,11 +35,9 @@ export function EntityListRow({
 				style={{ color: "inherit" }}
 			>
 				<Paper
-					withBorder
-					radius="sm"
 					p="md"
-					className="cursor-pointer transition-colors hover:!border-primary-400"
-					style={style}
+					className="app-do"
+					data-selected={isSelected}
 					{...testProps}
 				>
 					{children}
@@ -55,11 +49,9 @@ export function EntityListRow({
 	if (onActivate) {
 		return (
 			<Paper
-				withBorder
-				radius="sm"
 				p="md"
-				className="cursor-pointer transition-colors hover:!border-primary-400"
-				style={style}
+				className="app-do"
+				data-selected={isSelected}
 				role="button"
 				tabIndex={0}
 				aria-label={ariaLabel}
@@ -79,7 +71,7 @@ export function EntityListRow({
 	}
 
 	return (
-		<Paper withBorder radius="sm" p="md" style={style} {...testProps}>
+		<Paper withBorder p="md" {...testProps}>
 			{children}
 		</Paper>
 	);

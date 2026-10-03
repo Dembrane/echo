@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Stack, Text } from "@mantine/core";
+import { Alert, Button, Group, Stack, Text, Title } from "@mantine/core";
 import { useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { useResultsList, useResultsVisit } from "@/components/analysis";
@@ -132,10 +132,10 @@ export function PresentResultsPanel({
 			gap="sm"
 			{...testId("present-results-panel")}
 		>
-			<Text fw={500}>
+			<Title order={4}>
 				<Trans>Review results</Trans>
-			</Text>
-			<Text size="sm">
+			</Title>
+			<Text size="sm" c="dimmed">
 				<Trans>
 					Change the wording, read the evidence, or keep a finding out of this
 					presentation. Shared results stay available in Analysis.
@@ -149,9 +149,16 @@ export function PresentResultsPanel({
 				counts={results.counts}
 				error={
 					results.isError ? (
-						<Text>
-							<Trans>Results could not be loaded.</Trans>
-						</Text>
+						<Alert color="red">
+							<Group gap="sm" wrap="wrap">
+								<Text size="sm">
+									<Trans>Results could not be loaded.</Trans>
+								</Text>
+								<Button size="xs" onClick={results.refetch}>
+									<Trans>Try again</Trans>
+								</Button>
+							</Group>
+						</Alert>
 					) : null
 				}
 				items={results.items}

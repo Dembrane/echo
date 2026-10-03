@@ -308,12 +308,7 @@ export function PopcornOpeningSettings({
 
 	if (embedded) return content;
 	return (
-		<Paper
-			withBorder
-			className="rounded-md"
-			p="lg"
-			{...testId("popcorn-opening")}
-		>
+		<Paper withBorder p="lg" {...testId("popcorn-opening")}>
 			{content}
 		</Paper>
 	);

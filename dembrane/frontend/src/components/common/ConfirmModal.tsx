@@ -35,21 +35,23 @@ export const ConfirmModal = ({
 	>
 		<Stack gap="md">
 			<Text size="sm">{message}</Text>
-			<Group justify="flex-end" gap="sm">
+			<Group gap="sm">
 				<Button
-					variant="subtle"
-					onClick={onClose}
-					data-testid={dataTestId ? `${dataTestId}-cancel` : undefined}
-				>
-					{cancelLabel ?? <Trans>Cancel</Trans>}
-				</Button>
-				<Button
+					variant="filled"
 					color={confirmColor}
 					onClick={onConfirm}
 					loading={loading}
 					data-testid={dataTestId ? `${dataTestId}-confirm` : undefined}
 				>
 					{confirmLabel ?? <Trans>Confirm</Trans>}
+				</Button>
+				<Button
+					variant="subtle"
+					color="gray"
+					onClick={onClose}
+					data-testid={dataTestId ? `${dataTestId}-cancel` : undefined}
+				>
+					{cancelLabel ?? <Trans>Cancel</Trans>}
 				</Button>
 			</Group>
 		</Stack>

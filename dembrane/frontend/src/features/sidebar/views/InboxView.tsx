@@ -1,11 +1,20 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
+import {
+	Badge,
+	Button,
+	Loader,
+	Skeleton,
+	Stack,
+	Tabs,
+	Text,
+} from "@mantine/core";
 import { ArrowCounterClockwise, Bell, Check } from "@phosphor-icons/react";
 import { formatRelative } from "date-fns";
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { useSearchParams } from "react-router";
-import { stateColors } from "@/colors";
+import { roles } from "@/colors";
 import {
 	useMarkAsReadMutation as useAnnouncementMarkAsReadMutation,
 	useMarkAsUnreadMutation as useAnnouncementMarkAsUnreadMutation,
@@ -133,34 +142,42 @@ export const InboxView = () => {
 					<ViewHeader to={backTo ?? "/o"} title={<Trans>Inbox</Trans>} />
 				</div>
 
-				<div className="flex shrink-0 items-center justify-between gap-1 px-3 pb-2">
-					<div className="flex gap-1">
-						<TabButton
-							active={activeTab === "for-you"}
-							onClick={() => setActiveTab("for-you")}
-							badge={unreadNotifs}
-						>
-							<Trans>For you</Trans>
-						</TabButton>
-						<TabButton
-							active={activeTab === "announcements"}
-							onClick={() => setActiveTab("announcements")}
-							badge={unreadAnnouncements}
-						>
-							<Trans>Updates</Trans>
-						</TabButton>
-					</div>
-					<button
-						type="button"
+				<div className="flex shrink-0 flex-col items-start gap-1 px-1.5 pb-2">
+					<Tabs
+						value={activeTab}
+						onChange={(value) => {
+							if (value === "for-you" || value === "announcements") {
+								setActiveTab(value);
+							}
+						}}
+						className="w-full"
+					>
+						<Tabs.List>
+							<Tabs.Tab
+								value="for-you"
+								rightSection={<TabCount count={unreadNotifs} />}
+							>
+								<Trans>For you</Trans>
+							</Tabs.Tab>
+							<Tabs.Tab
+								value="announcements"
+								rightSection={<TabCount count={unreadAnnouncements} />}
+							>
+								<Trans>Updates</Trans>
+							</Tabs.Tab>
+						</Tabs.List>
+					</Tabs>
+					<Button
+						variant="subtle"
+						color="gray"
+						size="xs"
 						onClick={handleMarkAllReadForActiveTab}
 						disabled={markAllDisabled || markAllPending}
-						className="flex items-center gap-1 rounded px-1.5 py-1 text-xs transition-colors enabled:hover:bg-black/[0.04] disabled:opacity-40"
-						style={{ color: "rgba(45, 45, 44, 0.6)" }}
+						leftSection={<Check size={20} />}
 						aria-label={t`Mark all as read`}
 					>
-						<Check size={12} />
 						<Trans>All read</Trans>
-					</button>
+					</Button>
 				</div>
 
 				<div className="flex-1 overflow-y-auto px-1.5 pb-2">
@@ -198,38 +215,12 @@ export const InboxView = () => {
 	);
 };
 
-interface TabButtonProps {
-	active: boolean;
-	onClick: () => void;
-	badge: number;
-	children: ReactNode;
-}
-
-const TabButton = ({ active, onClick, badge, children }: TabButtonProps) => (
-	<button
-		type="button"
-		onClick={onClick}
-		className="flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors"
-		style={{
-			backgroundColor: active ? "rgba(65, 105, 225, 0.08)" : "transparent",
-			color: active ? "#4169e1" : "rgba(45, 45, 44, 0.7)",
-		}}
-	>
-		<span>{children}</span>
-		{badge > 0 && (
-			<span
-				className="rounded px-1 text-xs leading-none"
-				style={{
-					backgroundColor: "rgba(65, 105, 225, 0.18)",
-					color: "#4169e1",
-					paddingBlock: 2,
-				}}
-			>
-				{badge}
-			</span>
-		)}
-	</button>
-);
+const TabCount = ({ count }: { count: number }) =>
+	count > 0 ? (
+		<Badge size="sm" color="primary">
+			{count}
+		</Badge>
+	) : null;
 
 interface ForYouPanelProps {
 	loading: boolean;
@@ -252,12 +243,7 @@ const ForYouPanel = ({
 		return <SkeletonList />;
 	}
 	if (rows.length === 0 && pendingActions.length === 0) {
-		return (
-			<EmptyState
-				icon={<Bell size={22} weight="duotone" />}
-				message={<Trans>You're all caught up.</Trans>}
-			/>
-		);
+		return <EmptyState message={<Trans>You're all caught up.</Trans>} />;
 	}
 	return (
 		<ul className="flex flex-col gap-1">
@@ -284,9 +270,8 @@ const ForYouPanel = ({
 
 /**
  * A non-blocking pending action (e.g. the high-risk training nudge). Warns,
- * never blocks: it's a tappable row that points to the action. The warm
- * "pending" accent (Peach tint) matches the Inbox nav badge tone; text stays
- * graphite.
+ * never blocks: it's a tappable row that points to the action. The warning
+ * tint on its badge matches the Inbox nav badge tone; text stays graphite.
  */
 const PendingActionRow = ({
 	action,
@@ -298,26 +283,15 @@ const PendingActionRow = ({
 	<button
 		type="button"
 		onClick={onClick}
-		className="w-full rounded-md border px-2 py-2 text-left transition-colors hover:bg-black/[0.025]"
-		style={{
-			backgroundColor: "rgba(255, 209, 102, 0.18)",
-			borderColor: "rgba(255, 209, 102, 0.5)",
-			color: "#2d2d2c",
-		}}
+		className="app-do w-full px-2 py-2"
 		data-testid="inbox-pending-action"
 	>
-		<div className="text-xs font-medium leading-snug">{action.title}</div>
+		<div className="text-xs leading-snug">{action.title}</div>
 		<div className="mt-0.5 text-xs leading-snug">{action.message}</div>
 		<div className="mt-1">
-			<span
-				className="inline-block rounded px-1.5 py-0.5 text-xs leading-none"
-				style={{
-					backgroundColor: "rgba(255, 209, 102, 0.45)",
-					color: "#2d2d2c",
-				}}
-			>
+			<Badge size="sm" color="yellow">
 				<Trans>Pending action</Trans>
-			</span>
+			</Badge>
 		</div>
 	</button>
 );
@@ -359,11 +333,8 @@ const AnnouncementsPanel = ({
 				</li>
 			))}
 			{isFetchingNextPage && (
-				<li className="flex justify-center py-2">
-					<div
-						className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
-						style={{ color: "rgba(45, 45, 44, 0.4)" }}
-					/>
+				<li className="px-2 py-2">
+					<Loader size="sm" />
 				</li>
 			)}
 			<li ref={loadMoreRef} aria-hidden="true" />
@@ -372,31 +343,17 @@ const AnnouncementsPanel = ({
 };
 
 const SkeletonList = () => (
-	<div className="flex flex-col gap-2 px-1 py-3">
+	<Stack gap="sm" px="xs" py="sm">
 		{[0, 1, 2].map((i) => (
-			<div
-				key={i}
-				className="h-10 animate-pulse rounded-md"
-				style={{ backgroundColor: "rgba(45, 45, 44, 0.05)" }}
-			/>
+			<Skeleton key={i} h={40} radius={0} />
 		))}
-	</div>
+	</Stack>
 );
 
-const EmptyState = ({
-	icon,
-	message,
-}: {
-	icon?: ReactNode;
-	message: ReactNode;
-}) => (
-	<div
-		className="flex flex-col items-center gap-2 px-4 py-10 text-center text-xs"
-		style={{ color: "rgba(45, 45, 44, 0.55)" }}
-	>
-		{icon}
-		<div>{message}</div>
-	</div>
+const EmptyState = ({ message }: { message: ReactNode }) => (
+	<Text size="sm" c="dimmed" className="app-muted" px="sm" py="md">
+		{message}
+	</Text>
 );
 
 function renderInlineMarkdown(text: string): ReactNode {
@@ -406,9 +363,7 @@ function renderInlineMarkdown(text: string): ReactNode {
 		if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
 			return (
 				// biome-ignore lint/suspicious/noArrayIndexKey: parts array is derived from a static text split and never reorders
-				<strong key={i} style={{ fontWeight: 600 }}>
-					{part.slice(2, -2)}
-				</strong>
+				<strong key={i}>{part.slice(2, -2)}</strong>
 			);
 		}
 		return (
@@ -435,29 +390,15 @@ const NotificationRowItem = ({
 	const isDestructive = row.severity === "destructive";
 	const isActionRequired = row.severity === "action_required";
 
-	const unreadBg = isDestructive
-		? "rgba(192, 57, 43, 0.05)"
-		: isActionRequired
-			? "rgba(65, 105, 225, 0.06)"
-			: "rgba(65, 105, 225, 0.04)";
-	const borderColor = isDestructive
-		? "rgba(192, 57, 43, 0.18)"
-		: isActionRequired
-			? "rgba(65, 105, 225, 0.18)"
-			: "rgba(45, 45, 44, 0.07)";
-	const dotColor = isDestructive ? "#c0392b" : "#4169e1";
+	// Status lives on the dot and the badge; the row itself stays unfilled.
+	const dotColor = isDestructive ? roles.danger : roles.action;
 
 	return (
 		<div className="group relative">
 			<button
 				type="button"
 				onClick={onClick}
-				className="w-full rounded-md border px-2 py-2 text-left transition-colors hover:bg-black/[0.025]"
-				style={{
-					backgroundColor: row.read ? "rgba(255, 255, 255, 0.42)" : unreadBg,
-					borderColor,
-					color: "#2d2d2c",
-				}}
+				className="app-do w-full px-2 py-2"
 			>
 				{!row.read && (
 					<span
@@ -478,40 +419,37 @@ const NotificationRowItem = ({
 							className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
 							style={{
 								backgroundColor: isDestructive
-									? "rgba(192, 57, 43, 0.12)"
-									: "rgba(65, 105, 225, 0.12)",
-								color: isDestructive ? "#c0392b" : "#4169e1",
+									? roles.dangerTint
+									: roles.actionTint,
+								color: isDestructive ? roles.dangerOnTint : roles.action,
 							}}
 							aria-hidden="true"
 						>
 							{row.actor_user_id && row.actor_name ? (
-								<span className="text-xs font-medium">
+								<span className="text-xs">
 									{row.actor_name.slice(0, 2).toUpperCase()}
 								</span>
 							) : (
-								<Bell size={12} weight="fill" />
+								<Bell size={16} />
 							)}
 						</span>
 					)}
 					<div className="min-w-0 flex-1">
-						<div
-							className="line-clamp-2 pr-3 text-xs leading-snug"
-							style={{ fontWeight: row.read ? 400 : 500 }}
-						>
+						<div className="line-clamp-2 pr-3 text-xs leading-snug">
 							{renderInlineMarkdown(row.title)}
 						</div>
 						{row.scope && (
 							<div
-								className="mt-0.5 truncate text-xs"
-								style={{ color: "rgba(45, 45, 44, 0.55)" }}
+								className="app-muted mt-0.5 truncate text-xs"
+								style={{ color: "var(--mantine-color-dimmed)" }}
 							>
 								{row.scope}
 							</div>
 						)}
 						{row.message && (
 							<div
-								className="mt-0.5 line-clamp-2 text-xs leading-snug"
-								style={{ color: "rgba(45, 45, 44, 0.6)" }}
+								className="app-muted mt-0.5 line-clamp-2 text-xs leading-snug"
+								style={{ color: "var(--mantine-color-dimmed)" }}
 							>
 								{renderInlineMarkdown(row.message)}
 							</div>
@@ -520,22 +458,16 @@ const NotificationRowItem = ({
 						<div className="mt-1 flex items-center justify-between gap-2 pr-6">
 							{createdLabel && (
 								<span
-									className="truncate text-xs"
-									style={{ color: "rgba(45, 45, 44, 0.45)" }}
+									className="app-muted truncate text-xs"
+									style={{ color: "var(--mantine-color-dimmed)" }}
 								>
 									{createdLabel}
 								</span>
 							)}
 							{isActionRequired && (
-								<span
-									className="shrink-0 rounded px-1.5 py-0.5 text-xs leading-none"
-									style={{
-										backgroundColor: "rgba(65, 105, 225, 0.12)",
-										color: "#4169e1",
-									}}
-								>
+								<Badge size="sm" color="primary" className="shrink-0">
 									<Trans>Action needed</Trans>
-								</span>
+								</Badge>
 							)}
 						</div>
 					</div>
@@ -549,10 +481,10 @@ const NotificationRowItem = ({
 						e.stopPropagation();
 						onMarkRead();
 					}}
-					className="absolute bottom-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded transition-colors hover:bg-black/[0.06]"
-					style={{ color: "rgba(45, 45, 44, 0.6)" }}
+					className="absolute bottom-1 right-1 flex h-6 w-6 items-center justify-center transition-colors hover:bg-[#e6e3df]"
+					style={{ color: "var(--mantine-color-dimmed)" }}
 				>
-					<Check size={12} />
+					<Check size={16} />
 				</button>
 			)}
 		</div>
@@ -574,15 +506,8 @@ const AnnouncementRowItem = ({
 	const [expanded, setExpanded] = useState(false);
 	const isUrgent = announcement.level === "urgent";
 	const isRead = !!announcement.read;
-	// Dot only. The card's text stays graphite whatever the level.
-	const accent = isUrgent ? stateColors.errorMark : "#4169e1";
-
-	const unreadBg = isUrgent
-		? stateColors.errorSurface
-		: "rgba(65, 105, 225, 0.04)";
-	const borderColor = isUrgent
-		? stateColors.errorBorder
-		: "rgba(65, 105, 225, 0.18)";
+	// Dot only. The card stays unfilled and graphite whatever the level.
+	const accent = isUrgent ? roles.danger : roles.action;
 
 	const toggleRead = () => {
 		if (isRead) {
@@ -594,11 +519,10 @@ const AnnouncementRowItem = ({
 
 	return (
 		<div
-			className="group relative rounded-md border px-2 py-2"
+			className="group relative border px-2 py-2 transition-colors hover:bg-[#e6e3df]"
 			style={{
-				backgroundColor: isRead ? "rgba(255, 255, 255, 0.42)" : unreadBg,
-				borderColor: isRead ? "rgba(45, 45, 44, 0.07)" : borderColor,
-				color: "#2d2d2c",
+				borderColor: "var(--app-rule-color)",
+				color: roles.text,
 			}}
 		>
 			{!isRead && (
@@ -614,16 +538,13 @@ const AnnouncementRowItem = ({
 				className="block w-full text-left"
 				aria-expanded={expanded}
 			>
-				<div
-					className="line-clamp-2 pr-3 text-xs leading-snug"
-					style={{ fontWeight: isRead ? 400 : 500 }}
-				>
+				<div className="line-clamp-2 pr-3 text-xs leading-snug">
 					{announcement.title}
 				</div>
 				{announcement.message && (
 					<div
-						className={`mt-0.5 text-xs leading-snug ${expanded ? "" : "line-clamp-2"}`}
-						style={{ color: "rgba(45, 45, 44, 0.65)" }}
+						className={`app-muted mt-0.5 text-xs leading-snug ${expanded ? "" : "line-clamp-2"}`}
+						style={{ color: "var(--mantine-color-dimmed)" }}
 					>
 						<Markdown content={announcement.message} />
 					</div>
@@ -631,14 +552,14 @@ const AnnouncementRowItem = ({
 				{/* pr-6 clears the read toggle pinned to the bottom-right. */}
 				<div className="mt-1 flex items-center justify-between gap-2 pr-6">
 					<span
-						className="truncate text-xs"
-						style={{ color: "rgba(45, 45, 44, 0.45)" }}
+						className="app-muted truncate text-xs"
+						style={{ color: "var(--mantine-color-dimmed)" }}
 					>
 						{formatDate(announcement.created_at)}
 					</span>
 					<span
-						className="text-xs underline decoration-dotted"
-						style={{ color: "rgba(45, 45, 44, 0.55)" }}
+						className="app-muted text-xs underline decoration-dotted"
+						style={{ color: "var(--mantine-color-dimmed)" }}
 					>
 						{expanded ? <Trans>Show less</Trans> : <Trans>Show more</Trans>}
 					</span>
@@ -651,10 +572,10 @@ const AnnouncementRowItem = ({
 					e.stopPropagation();
 					toggleRead();
 				}}
-				className="absolute bottom-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded transition-colors hover:bg-black/[0.06]"
-				style={{ color: "rgba(45, 45, 44, 0.6)" }}
+				className="absolute bottom-1 right-1 flex h-6 w-6 items-center justify-center transition-colors hover:bg-[#e6e3df]"
+				style={{ color: "var(--mantine-color-dimmed)" }}
 			>
-				{isRead ? <ArrowCounterClockwise size={12} /> : <Check size={12} />}
+				{isRead ? <ArrowCounterClockwise size={16} /> : <Check size={16} />}
 			</button>
 		</div>
 	);

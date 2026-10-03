@@ -5,7 +5,6 @@ import {
 	Box,
 	Button,
 	Group,
-	LoadingOverlay,
 	Modal,
 	Paper,
 	Progress,
@@ -17,17 +16,16 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
 import {
-	IconAlertCircle,
-	IconArrowRight,
-	IconCheck,
-	IconCircleCheck,
-	IconEdit,
-	IconFileUpload,
-	IconPlus,
-	IconTrash,
-	IconUpload,
-	IconX,
-} from "@tabler/icons-react";
+	ArrowRightIcon,
+	CheckCircleIcon,
+	CheckIcon,
+	FileArrowUpIcon,
+	PencilSimpleIcon,
+	TrashIcon,
+	UploadSimpleIcon,
+	WarningCircleIcon,
+	XIcon,
+} from "@phosphor-icons/react";
 import {
 	type PropsWithChildren,
 	useCallback,
@@ -234,6 +232,8 @@ const useFileNameEditor = (
 const MAX_FILES = 10;
 const MIN_FILE_SIZE = 5 * 1024; // 5KB in bytes
 const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB in bytes
+// One rule between upload rows (the read grammar, a single container).
+const RULE = "var(--app-stroke) solid var(--app-rule-color)";
 
 // Valid audio MIME types
 const VALID_AUDIO_TYPES = [
@@ -523,8 +523,14 @@ export const UploadConversationDropzone = (
 		});
 	}, [selectedFiles, props.projectId, uploader, posthog]);
 
+	// The button holds its place while the project loads; it opens nothing
+	// until the project is there.
 	if (projectQuery.isLoading) {
-		return <LoadingOverlay visible />;
+		return (
+			<Button leftSection={<UploadSimpleIcon size={20} />} disabled>
+				{t`Upload`}
+			</Button>
+		);
 	}
 
 	return (
@@ -532,9 +538,8 @@ export const UploadConversationDropzone = (
 			{/* Upload button */}
 			<Tooltip label={t`Upload conversations`}>
 				<Button
-					rightSection={<IconPlus size={16} />}
+					leftSection={<UploadSimpleIcon size={20} />}
 					onClick={open}
-					variant="outline"
 					{...testId("conversation-upload-button")}
 				>
 					{t`Upload`}
@@ -547,13 +552,11 @@ export const UploadConversationDropzone = (
 				opened={opened}
 				onClose={close}
 				title={
-					<Text fw={600} size="lg">
-						{uploadStarted
-							? uploader.isSuccess
-								? t`Upload Complete`
-								: t`Uploading Audio Files...`
-							: t`Select Audio Files to Upload`}
-					</Text>
+					uploadStarted
+						? uploader.isSuccess
+							? t`Upload complete`
+							: t`Uploading audio files`
+						: t`Select audio files`
 				}
 				size="lg"
 				centered
@@ -591,11 +594,8 @@ export const UploadConversationDropzone = (
 								{...testId("conversation-upload-dropzone")}
 							>
 								<Stack align="center" gap="sm">
-									<IconUpload size={32} stroke={1.5} />
-									<Text
-										size="sm"
-										fw={500}
-									>{t`Drag audio files here or click to select files`}</Text>
+									<UploadSimpleIcon size={20} />
+									<Text size="sm">{t`Drag audio files here or click to select files`}</Text>
 									<Text size="xs" c="dimmed">
 										{t`Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS`}
 									</Text>
@@ -609,9 +609,7 @@ export const UploadConversationDropzone = (
 								<>
 									<Box mt="md">
 										<Group justify="space-between" mb="xs">
-											<Text
-												fw={500}
-											>{t`Selected Files (${selectedFiles.length}/${MAX_FILES})`}</Text>
+											<Text>{t`Selected files (${selectedFiles.length}/${MAX_FILES})`}</Text>
 											{selectedFiles.length > 0 && (
 												<Text
 													size="sm"
@@ -628,7 +626,7 @@ export const UploadConversationDropzone = (
 														{...testId(`conversation-upload-file-${index}`)}
 													>
 														<Group style={{ flex: 1 }}>
-															<IconFileUpload size={18} />
+															<FileArrowUpIcon size={16} />
 															{fileEditor.editingIndex === index ? (
 																<TextInput
 																	ref={fileEditor.inputRef}
@@ -648,7 +646,7 @@ export const UploadConversationDropzone = (
 																				`conversation-upload-file-save-${index}`,
 																			)}
 																		>
-																			<IconCheck size={16} />
+																			<CheckIcon size={16} />
 																		</ActionIcon>
 																	}
 																	{...testId(
@@ -693,7 +691,7 @@ export const UploadConversationDropzone = (
 																			`conversation-upload-file-edit-${index}`,
 																		)}
 																	>
-																		<IconEdit size={16} />
+																		<PencilSimpleIcon size={16} />
 																	</ActionIcon>
 																</Tooltip>
 															)}
@@ -707,7 +705,7 @@ export const UploadConversationDropzone = (
 																		`conversation-upload-file-remove-${index}`,
 																	)}
 																>
-																	<IconTrash size={16} />
+																	<TrashIcon size={16} />
 																</ActionIcon>
 															</Tooltip>
 														</Group>
@@ -716,24 +714,14 @@ export const UploadConversationDropzone = (
 											</Stack>
 										</Paper>
 									</Box>
-									<Box mt="xs">
-										<Alert
-											icon={<IconAlertCircle size={16} />}
-											color="blue.1"
-											variant="light"
-										>
-											{t`Click "Upload Files" when you're ready to start the upload process.`}
-										</Alert>
-									</Box>
 								</>
 							)}
 
 							{globalError && (
 								<Alert
-									icon={<IconAlertCircle size={16} />}
+									icon={<WarningCircleIcon size={20} />}
 									title={t`Error`}
-									color="red.2"
-									variant="light"
+									color="red"
 									withCloseButton
 									onClose={() => setGlobalError(null)}
 								>
@@ -741,47 +729,55 @@ export const UploadConversationDropzone = (
 								</Alert>
 							)}
 
-							<Group justify="flex-end" mt="md">
+							<Group justify="flex-start" mt="md">
+								{selectedFiles.length > 0 && (
+									<Button
+										variant="filled"
+										onClick={handleUpload}
+										rightSection={<ArrowRightIcon size={20} />}
+										disabled={fileEditor.editingIndex !== null}
+										{...testId("conversation-upload-files-button")}
+									>
+										{t`Upload files`}
+									</Button>
+								)}
 								<Button
 									variant="subtle"
+									color="gray"
 									onClick={close}
 									{...testId("conversation-upload-cancel-button")}
 								>
 									{t`Cancel`}
 								</Button>
-								{selectedFiles.length > 0 && (
-									<Button
-										onClick={handleUpload}
-										rightSection={<IconArrowRight size={16} />}
-										disabled={fileEditor.editingIndex !== null}
-										{...testId("conversation-upload-files-button")}
-									>
-										{t`Upload Files`}
-									</Button>
-								)}
 							</Group>
 						</>
 					)}
 					{/* Upload progress area - shown after upload has started */}
 					{uploadStarted && (
 						<>
-							<Stack gap="md">
+							<Stack gap={0} style={{ borderTop: RULE }}>
 								{uploadStatus.map((fileStatus) => (
-									<Paper
+									<Box
 										key={fileStatus.file.name}
-										withBorder
-										p="md"
+										py="md"
 										pos="relative"
+										style={{ borderBottom: RULE }}
 									>
 										<Stack gap="xs">
 											<Group justify="space-between">
 												<Group>
 													{fileStatus.status === "complete" ? (
-														<IconCircleCheck size={20} color="green" />
+														<CheckCircleIcon
+															size={20}
+															color="var(--mantine-color-green-7)"
+														/>
 													) : fileStatus.status === "error" ? (
-														<IconX size={20} color="red" />
+														<XIcon
+															size={20}
+															color="var(--mantine-color-red-7)"
+														/>
 													) : (
-														<IconUpload size={20} />
+														<UploadSimpleIcon size={20} />
 													)}
 													<div>
 														<Tooltip
@@ -790,7 +786,7 @@ export const UploadConversationDropzone = (
 															multiline
 															maw={300}
 														>
-															<Text size="sm" fw={500} lineClamp={1}>
+															<Text size="sm" lineClamp={1}>
 																{truncateFileName(fileStatus.file.name)}
 															</Text>
 														</Tooltip>
@@ -801,13 +797,12 @@ export const UploadConversationDropzone = (
 												</Group>
 												<Text
 													size="sm"
-													fw={500}
 													c={
 														fileStatus.status === "complete"
 															? "green"
 															: fileStatus.status === "error"
 																? "red"
-																: "blue"
+																: "dimmed"
 													}
 												>
 													{fileStatus.status === "complete"
@@ -824,24 +819,22 @@ export const UploadConversationDropzone = (
 														? "green"
 														: fileStatus.status === "error"
 															? "red"
-															: "blue"
+															: "primary"
 												}
 												size="md"
-												radius="xl"
 												animated={fileStatus.status === "uploading"}
 											/>
 										</Stack>
-									</Paper>
+									</Box>
 								))}
 							</Stack>
 
 							{/* Error message */}
 							{globalError && (
 								<Alert
-									icon={<IconAlertCircle size={16} />}
+									icon={<WarningCircleIcon size={20} />}
 									title={t`Error`}
-									color="red.2"
-									variant="light"
+									color="red"
 									withCloseButton
 									onClose={() => setGlobalError(null)}
 								>
@@ -852,45 +845,45 @@ export const UploadConversationDropzone = (
 							{/* Success message */}
 							{uploader.isSuccess && (
 								<Alert
-									icon={<IconCircleCheck size={16} />}
+									icon={<CheckCircleIcon size={20} />}
 									title={t`Success`}
 									color="green"
-									variant="light"
 								>
 									{t`All files were uploaded successfully.`}
 								</Alert>
 							)}
 
 							{/* Action buttons */}
-							<Group justify="flex-end" mt="md">
+							<Group justify="flex-start" mt="md">
+								{!uploader.isSuccess && uploader.isError && (
+									<Button
+										variant="filled"
+										onClick={handleUpload}
+										loading={uploader.isPending}
+										{...testId("conversation-upload-retry-button")}
+									>
+										{t`Try again`}
+									</Button>
+								)}
+								{!uploader.isSuccess && !uploader.isPending && (
+									<Button
+										onClick={() => {
+											setUploadStarted(false);
+										}}
+										{...testId("conversation-upload-back-button")}
+									>
+										{t`Back`}
+									</Button>
+								)}
 								<Button
-									variant="outline"
+									variant="subtle"
+									color="gray"
 									onClick={close}
 									disabled={uploader.isPending}
 									{...testId("conversation-upload-close-button")}
 								>
 									{uploader.isSuccess ? t`Close` : t`Cancel`}
 								</Button>
-								{!uploader.isSuccess && !uploader.isPending && (
-									<Button
-										variant="light"
-										onClick={() => {
-											setUploadStarted(false);
-										}}
-										{...testId("conversation-upload-back-button")}
-									>
-										{t`Back to Selection`}
-									</Button>
-								)}
-								{!uploader.isSuccess && uploader.isError && (
-									<Button
-										onClick={handleUpload}
-										loading={uploader.isPending}
-										{...testId("conversation-upload-retry-button")}
-									>
-										{t`Retry Upload`}
-									</Button>
-								)}
 							</Group>
 						</>
 					)}

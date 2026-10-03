@@ -12,10 +12,10 @@ import {
 	Text,
 	Textarea,
 } from "@mantine/core";
-import { Paperclip } from "@phosphor-icons/react";
-import { IconPlayerStopFilled } from "@tabler/icons-react";
+import { Paperclip, StopIcon } from "@phosphor-icons/react";
 import posthog from "posthog-js";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { roles } from "@/colors";
 import { CharsRemainingIndicator } from "@/components/common/CharsRemainingIndicator";
 import { toast } from "@/components/common/Toaster";
 import { useVoiceTranscription } from "@/components/voice/useVoiceTranscription";
@@ -188,16 +188,14 @@ export const ReportIssueModal = ({
 						onDismiss={voice.dismissError}
 					/>
 				)}
-				{/* One input frame: the text scrolls, the footer with mic controls does not. */}
+				{/* One input frame: the text scrolls, the footer with mic controls does
+				    not. A field, so rules at the sides, blue while focused. */}
 				<Box
-					className="border border-[var(--mantine-color-default-border)] focus-within:border-[var(--mantine-primary-color-filled)]"
+					className="border-x border-y-0 border-solid border-[color:var(--app-control-rule)] focus-within:border-[#2957df]"
 					px="sm"
 					pt="xs"
 					pb="xs"
-					style={{
-						backgroundColor: "var(--app-background)",
-						borderRadius: "var(--mantine-radius-default)",
-					}}
+					style={{ backgroundColor: roles.surface }}
 				>
 					<Textarea
 						value={message}
@@ -235,7 +233,8 @@ export const ReportIssueModal = ({
 							<Button
 								aria-label={t`Stop recording and turn it into text`}
 								onClick={voice.stop}
-								rightSection={<IconPlayerStopFilled size={18} />}
+								leftSection={<StopIcon size={20} />}
+								color="red"
 								size="compact-sm"
 								type="button"
 								data-testid="report-issue-voice-stop"
@@ -261,7 +260,7 @@ export const ReportIssueModal = ({
 				{files.length > 0 && (
 					<Group gap="xs">
 						{files.map((file, index) => (
-							<Group key={`${file.name}-${index}`} gap={4}>
+							<Group key={`${file.name}-${index}`} gap="xs">
 								<Image
 									src={previews[index]}
 									w={56}
@@ -281,27 +280,9 @@ export const ReportIssueModal = ({
 						))}
 					</Group>
 				)}
-				<Group justify="space-between">
-					<Group gap="xs">
-						<FileButton
-							onChange={(picked) => addFiles(picked)}
-							resetRef={resetFileInput}
-							accept={ALLOWED_TYPES.join(",")}
-							multiple
-						>
-							{(props) => (
-								<Button
-									{...props}
-									variant="subtle"
-									leftSection={<Paperclip size={16} />}
-								>
-									<Trans>Add images</Trans>
-								</Button>
-							)}
-						</FileButton>
-						<Text size="xs">({t`Up to ${MAX_FILES} images`})</Text>
-					</Group>
+				<Group justify="flex-start" gap="sm">
 					<Button
+						variant="filled"
 						onClick={handleSubmit}
 						loading={mutation.isPending}
 						disabled={message.trim().length === 0 || isVoiceActive}
@@ -309,6 +290,21 @@ export const ReportIssueModal = ({
 					>
 						<Trans>Send report</Trans>
 					</Button>
+					<FileButton
+						onChange={(picked) => addFiles(picked)}
+						resetRef={resetFileInput}
+						accept={ALLOWED_TYPES.join(",")}
+						multiple
+					>
+						{(props) => (
+							<Button {...props} leftSection={<Paperclip size={20} />}>
+								<Trans>Add images</Trans>
+							</Button>
+						)}
+					</FileButton>
+					<Text size="xs" c="dimmed" className="app-muted">
+						({t`Up to ${MAX_FILES} images`})
+					</Text>
 				</Group>
 				<Text size="sm">
 					<Trans>

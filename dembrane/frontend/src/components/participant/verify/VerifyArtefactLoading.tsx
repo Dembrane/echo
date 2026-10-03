@@ -1,15 +1,11 @@
 import { Trans } from "@lingui/react/macro";
-import { Stack, Text } from "@mantine/core";
-import { Logo } from "@/components/common/Logo";
+import { Skeleton, Stack, Text } from "@mantine/core";
 
 export const VerifyArtefactLoading = () => {
 	return (
-		<Stack align="center" justify="center" gap="xl" className="h-full">
-			<div className="animate-spin">
-				<Logo hideTitle hideEnvBadge alwaysDembrane h="48px" />
-			</div>
-			<Stack gap="sm" align="center">
-				<Text size="xl" fw={600}>
+		<Stack gap="md" className="h-full px-4 pt-10">
+			<Stack gap="xs">
+				<Text size="md">
 					<Trans id="participant.concrete.loading.artefact">
 						Loading artefact
 					</Trans>
@@ -20,6 +16,10 @@ export const VerifyArtefactLoading = () => {
 					</Trans>
 				</Text>
 			</Stack>
+			<Skeleton height={16} />
+			<Skeleton height={16} />
+			<Skeleton height={16} />
+			<Skeleton height={16} width="70%" />
 		</Stack>
 	);
 };

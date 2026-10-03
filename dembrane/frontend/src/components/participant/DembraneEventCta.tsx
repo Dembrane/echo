@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { Box, Button } from "@mantine/core";
-import { IconArrowRight } from "@tabler/icons-react";
+import { ArrowRightIcon } from "@phosphor-icons/react";
 import posthog from "posthog-js";
 import PaulineUnderstandArt from "@/assets/pauline-understand.webp";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -37,7 +37,8 @@ export const DembraneEventCta = ({ projectId }: { projectId: string }) => {
 			    of the viewport until the page runs out and it settles in place. */}
 			<Box
 				bg="var(--app-background)"
-				className="sticky bottom-0 z-10 mt-auto flex justify-center border-t border-slate-300 p-4 pt-6"
+				className="sticky bottom-0 z-10 mt-auto flex justify-center border-t p-4 pt-6"
+				style={{ borderColor: "var(--app-rule-color)" }}
 				{...testId("portal-finish-event-cta")}
 			>
 				<Button
@@ -47,10 +48,9 @@ export const DembraneEventCta = ({ projectId }: { projectId: string }) => {
 					target="_blank"
 					// Secondary: the page's job is done and this is an offer, not a
 					// call to action, but it is the one thing left to do here.
-					variant="outline"
 					size="lg"
 					fullWidth
-					rightSection={<IconArrowRight size={18} />}
+					rightSection={<ArrowRightIcon size={20} />}
 					onClick={() =>
 						posthog.capture("portal_event_cta_clicked", {
 							project_id: projectId,

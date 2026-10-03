@@ -79,11 +79,7 @@ export function ScheduleDateTimePicker({
 
 	return (
 		<Stack gap="xs">
-			{label && (
-				<Text size="sm" fw={500}>
-					{label}
-				</Text>
-			)}
+			{label && <Text size="sm">{label}</Text>}
 			<Group gap="sm" grow>
 				<DatePickerInput
 					label={t`Date`}

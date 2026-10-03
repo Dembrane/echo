@@ -1,5 +1,5 @@
 import { Trans } from "@lingui/react/macro";
-import { Modal, Text } from "@mantine/core";
+import { Modal } from "@mantine/core";
 import { testId } from "@/lib/testUtils";
 import MicrophoneTest from "./MicrophoneTest";
 
@@ -18,13 +18,8 @@ export function ParticipantSettingsModal({
 		<Modal
 			opened={opened}
 			onClose={onClose}
-			title={
-				<Text size="xl" fw={500}>
-					<Trans id="participant.settings.modal.title">Settings</Trans>
-				</Text>
-			}
+			title={<Trans id="participant.settings.modal.title">Settings</Trans>}
 			size="sm"
-			radius="md"
 			padding="xl"
 			centered
 			{...testId("portal-settings-modal")}

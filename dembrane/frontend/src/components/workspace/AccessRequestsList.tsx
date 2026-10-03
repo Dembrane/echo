@@ -1,9 +1,9 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
-	ActionIcon,
 	Badge,
 	Box,
+	Button,
 	Divider,
 	Group,
 	Paper,
@@ -14,12 +14,12 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
-import { IconCheck, IconX } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
+import { ruleBetween } from "@/components/workspace/ruleBetween";
 import { API_BASE_URL } from "@/config";
 import { ApiRequestError } from "@/lib/errors/read";
 
@@ -139,70 +139,65 @@ export const AccessRequestsList = ({
 	return (
 		<Box mt="xl">
 			<Divider />
-			<Stack gap={12} my="lg">
-				<Title order={5} fw={400}>
+			<Stack gap="sm" my="lg">
+				<Title order={5}>
 					<Trans>Access requests</Trans>
 				</Title>
-				<Stack gap={0}>
-					{rows.map((r) => (
-						<Paper key={r.id} p="sm" withBorder radius={0}>
-							<Group justify="space-between" wrap="nowrap">
-								<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
-									<Text size="sm" lineClamp={1}>
-										{r.user_display_name ||
-											r.user_email ||
-											t`Organisation member`}
-									</Text>
-									{r.user_email && r.user_display_name && (
-										<Tooltip label={r.user_email}>
-											<Text size="xs" c="dimmed" style={{ cursor: "default" }}>
-												·
-											</Text>
-										</Tooltip>
-									)}
-									<Badge size="xs" variant="light" color="yellow">
-										<Trans>Pending</Trans>
-									</Badge>
-								</Group>
-								<Group gap={4}>
-									<Tooltip label={t`Approve`}>
-										<ActionIcon
-											color="primary"
-											size="sm"
-											variant="subtle"
-											loading={
-												approveMutation.isPending &&
-												approveMutation.variables === r.id
-											}
-											onClick={() => approveMutation.mutate(r.id)}
-											aria-label={t`Approve`}
-										>
-											<IconCheck size={14} />
-										</ActionIcon>
+				<Paper withBorder>
+					{rows.map((r, i) => (
+						<Group
+							key={r.id}
+							className="app-stack-narrow"
+							justify="space-between"
+							wrap="nowrap"
+							p="sm"
+							style={ruleBetween(i, rows.length)}
+						>
+							<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
+								<Text size="sm" lineClamp={1}>
+									{r.user_display_name ||
+										r.user_email ||
+										t`Organisation member`}
+								</Text>
+								{r.user_email && r.user_display_name && (
+									<Tooltip label={r.user_email}>
+										<Text size="xs" c="dimmed" style={{ cursor: "default" }}>
+											·
+										</Text>
 									</Tooltip>
-									<Tooltip label={t`Decline`}>
-										<ActionIcon
-											color="gray"
-											size="sm"
-											variant="subtle"
-											loading={
-												rejectMutation.isPending &&
-												rejectMutation.variables === r.id
-											}
-											onClick={() => {
-												setPendingRejectId(r.id);
-												openConfirm();
-											}}
-											aria-label={t`Decline`}
-										>
-											<IconX size={14} />
-										</ActionIcon>
-									</Tooltip>
-								</Group>
+								)}
+								<Badge size="xs" variant="light" color="yellow">
+									<Trans>Pending</Trans>
+								</Badge>
 							</Group>
-						</Paper>
+							<Group gap="sm" wrap="nowrap">
+								<Button
+									size="xs"
+									loading={
+										approveMutation.isPending &&
+										approveMutation.variables === r.id
+									}
+									onClick={() => approveMutation.mutate(r.id)}
+								>
+									<Trans>Approve</Trans>
+								</Button>
+								<Button
+									size="xs"
+									loading={
+										rejectMutation.isPending &&
+										rejectMutation.variables === r.id
+									}
+									onClick={() => {
+										setPendingRejectId(r.id);
+										openConfirm();
+									}}
+								>
+									<Trans>Decline</Trans>
+								</Button>
+							</Group>
+						</Group>
 					))}
-				</Stack>
+				</Paper>
 			</Stack>
 			<ConfirmModal
 				opened={confirmOpened}

@@ -9,11 +9,9 @@ interface ConversationLinkProps {
 }
 
 const ConversationAnchor = ({ to, name }: { to: string; name: string }) => (
-	<I18nLink to={to}>
-		<Anchor size="sm" c="blue">
-			{name}
-		</Anchor>
-	</I18nLink>
+	<Anchor component={I18nLink} to={to} size="sm">
+		{name}
+	</Anchor>
 );
 
 export const ConversationLink = ({

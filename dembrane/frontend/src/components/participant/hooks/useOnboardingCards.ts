@@ -145,14 +145,14 @@ export const useOnboardingCards = () => {
 						{
 							content:
 								"Answer questions in your own time by speaking or typing.",
-							cta: "Next",
+							cta: "Continue",
 							extraHelp:
 								"Voice input is our primary mode, allowing for more natural and detailed responses. Typing is always available as a backup.",
-							title: "Just Speak Your Mind",
+							title: "Just speak your mind",
 						},
 						{
 							content: "dembrane is more fun in groups!",
-							cta: "Next",
+							cta: "Continue",
 							extraHelp:
 								"dembrane is more fun when you find someone to discuss the questions together and record your conversation. We can't tell who said what, just what ideas were shared.",
 							title: "Solo or in a Group",
@@ -168,7 +168,7 @@ export const useOnboardingCards = () => {
 							cta: "Got it",
 							extraHelp:
 								"Questions vary based on the host's needs. They could be about community issues, work experiences, or research topics. If there are no specific questions, you're free to share any thoughts or concerns.",
-							title: "Question Time",
+							title: "Question time",
 						},
 					],
 				},
@@ -180,7 +180,7 @@ export const useOnboardingCards = () => {
 							cta: "Tell me more",
 							extraHelp:
 								"Avoid sharing details you don't want the host to know. Be mindful and don't record others without their consent.",
-							title: "Privacy Matters",
+							title: "Privacy matters",
 						},
 					],
 				},
@@ -211,7 +211,7 @@ export const useOnboardingCards = () => {
 							cta: "Siguiente",
 							extraHelp:
 								"La entrada de voz es nuestro modo principal, permitiendo respuestas más naturales y detalladas. Escribir siempre está disponible como respaldo.",
-							title: "Solo Di Lo Que Piensas",
+							title: "Solo di lo que piensas",
 						},
 						{
 							content: "¡dembrane es más divertido en grupos!",
@@ -243,7 +243,7 @@ export const useOnboardingCards = () => {
 							cta: "Cuéntame más",
 							extraHelp:
 								"Evita compartir detalles que no quieras que el anfitrión conozca. Sé consciente y no grabes a otros sin su consentimiento.",
-							title: "La Privacidad Importa",
+							title: "La privacidad importa",
 						},
 					],
 				},
@@ -274,7 +274,7 @@ export const useOnboardingCards = () => {
 							cta: "Suivant",
 							extraHelp:
 								"La saisie vocale est notre mode principal, permettant des réponses plus naturelles et détaillées. La saisie au clavier est toujours disponible en secours.",
-							title: "Dites Simplement Ce Que Vous Pensez",
+							title: "Dites simplement ce que vous pensez",
 						},
 						{
 							content: "dembrane est plus amusant en groupe !",
@@ -307,7 +307,7 @@ export const useOnboardingCards = () => {
 							cta: "Dites-m'en plus",
 							extraHelp:
 								"Évitez de partager des détails que vous ne voulez pas que l'hôte connaisse. Soyez attentif et n'enregistrez pas les autres sans leur consentement.",
-							title: "La Confidentialité Compte",
+							title: "La confidentialité compte",
 						},
 					],
 				},
@@ -583,7 +583,7 @@ export const useOnboardingCards = () => {
 					],
 				},
 				{
-					section: "Best Practices",
+					section: "Best practices",
 					slides: [
 						{
 							content:
@@ -635,14 +635,14 @@ export const useOnboardingCards = () => {
 						{
 							content:
 								"Answer questions in your own time by speaking or typing.",
-							cta: "Next",
+							cta: "Continue",
 							extraHelp:
 								"Voice input is our primary mode, allowing for more natural and detailed responses. Typing is always available as a backup.",
-							title: "Just Speak Your Mind",
+							title: "Just speak your mind",
 						},
 						{
 							content: "dembrane is more fun in groups!",
-							cta: "Next",
+							cta: "Continue",
 							extraHelp:
 								"dembrane is more fun when you find someone to discuss the questions together and record your conversation. We can't tell who said what, just what ideas were shared.",
 							title: "Solo or in a Group",
@@ -658,7 +658,7 @@ export const useOnboardingCards = () => {
 							cta: "Got it",
 							extraHelp:
 								"Questions vary based on the host's needs. They could be about community issues, work experiences, or research topics. If there are no specific questions, you're free to share any thoughts or concerns.",
-							title: "Question Time",
+							title: "Question time",
 						},
 					],
 				},
@@ -670,7 +670,7 @@ export const useOnboardingCards = () => {
 							cta: "Tell me more",
 							extraHelp:
 								"Avoid sharing details you don't want the host to know. Be mindful and don't record others without their consent.",
-							title: "Privacy Matters",
+							title: "Privacy matters",
 						},
 						...(getPrivacyCard(
 							"en-US",
@@ -681,7 +681,7 @@ export const useOnboardingCards = () => {
 					],
 				},
 				{
-					section: "Best Practices",
+					section: "Best practices",
 					slides: [
 						{
 							content:
@@ -689,14 +689,14 @@ export const useOnboardingCards = () => {
 							cta: "Noted",
 							extraHelp:
 								"Some background noise is okay, as long as who is speaking is clear.",
-							title: "Reduce Background Noise",
+							title: "Reduce background noise",
 						},
 						{
 							content: "Ensure a stable connection for smooth recording.",
 							cta: "Ready!",
 							extraHelp:
 								"Wi-Fi or good mobile data works best. If your connection drops, don't worry. You can always restart where you left off.",
-							title: "Strong Internet Connection",
+							title: "Strong internet connection",
 						},
 						{
 							content:
@@ -735,7 +735,7 @@ export const useOnboardingCards = () => {
 							cta: "Siguiente",
 							extraHelp:
 								"La entrada de voz es nuestro modo principal, permitiendo respuestas más naturales y detalladas. Escribir siempre está disponible como respaldo.",
-							title: "Solo Di Lo Que Piensas",
+							title: "Solo di lo que piensas",
 						},
 						{
 							content: "¡dembrane es más divertido en grupos!",
@@ -767,7 +767,7 @@ export const useOnboardingCards = () => {
 							cta: "Cuéntame más",
 							extraHelp:
 								"Evita compartir detalles que no quieras que el anfitrión conozca. Sé consciente y no grabes a otros sin su consentimiento.",
-							title: "La Privacidad Importa",
+							title: "La privacidad importa",
 						},
 						...(getPrivacyCard(
 							"es-ES",
@@ -778,7 +778,7 @@ export const useOnboardingCards = () => {
 					],
 				},
 				{
-					section: "Mejores Prácticas",
+					section: "Mejores prácticas",
 					slides: [
 						{
 							content:
@@ -794,7 +794,7 @@ export const useOnboardingCards = () => {
 							cta: "¡Listo!",
 							extraHelp:
 								"Wi-Fi o buenos datos móviles funcionan mejor. Si se cae tu conexión, no te preocupes. Siempre puedes reiniciar donde lo dejaste.",
-							title: "Conexión a Internet Fuerte",
+							title: "Conexión a internet fuerte",
 						},
 						{
 							content:
@@ -833,7 +833,7 @@ export const useOnboardingCards = () => {
 							cta: "Suivant",
 							extraHelp:
 								"La saisie vocale est notre mode principal, permettant des réponses plus naturelles et détaillées. La saisie au clavier est toujours disponible en secours.",
-							title: "Dites Simplement Ce Que Vous Pensez",
+							title: "Dites simplement ce que vous pensez",
 						},
 						{
 							content: "dembrane est plus amusant en groupe !",
@@ -866,7 +866,7 @@ export const useOnboardingCards = () => {
 							cta: "Dites-m'en plus",
 							extraHelp:
 								"Évitez de partager des détails que vous ne voulez pas que l'hôte connaisse. Soyez attentif et n'enregistrez pas les autres sans leur consentement.",
-							title: "La Confidentialité Compte",
+							title: "La confidentialité compte",
 						},
 						...(getPrivacyCard(
 							"fr-FR",
@@ -877,7 +877,7 @@ export const useOnboardingCards = () => {
 					],
 				},
 				{
-					section: "Meilleures Pratiques",
+					section: "Meilleures pratiques",
 					slides: [
 						{
 							content:
@@ -893,7 +893,7 @@ export const useOnboardingCards = () => {
 							cta: "Prêt !",
 							extraHelp:
 								"Le Wi-Fi ou de bonnes données mobiles fonctionnent mieux. Si votre connexion tombe, ne vous inquiétez pas. Vous pouvez toujours reprendre là où vous vous êtes arrêté.",
-							title: "Connexion Internet Forte",
+							title: "Connexion internet forte",
 						},
 						{
 							content:
@@ -1229,7 +1229,7 @@ export const useOnboardingCards = () => {
 					{
 						content:
 							"Die Organisator*innen sind dafür verantwortlich, wie Ihre Daten in dieser Sitzung verwendet werden, dembrane verarbeitet Ihr Gespräch im Auftrag dieser.",
-						cta: "Ich verstehe.",
+						cta: "Ich verstehe",
 						extraHelp:
 							"Aufnahmen werden transkribiert und für Erkenntnisse analysiert. Ihre Daten werden auf gesicherten Servern in Europa gespeichert, nicht zum Trainieren von KI-Modellen verwendet und innerhalb von 30 Tagen nach Projektende gelöscht.\n\nFragen zu Ihrer Privatsphäre? Wenden Sie sich direkt an den Organisator.",
 						title: "Verantwortung, Nutzung und Sicherheit.",
@@ -1341,7 +1341,7 @@ export const useOnboardingCards = () => {
 						content: name
 							? `${name} ist dafür verantwortlich, wie Ihre Daten in dieser Sitzung verwendet werden, dembrane verarbeitet Ihr Gespräch im Auftrag dieser.`
 							: "Die Organisator*innen sind dafür verantwortlich, wie Ihre Daten in dieser Sitzung verwendet werden, dembrane verarbeitet Ihr Gespräch im Auftrag dieser.",
-						cta: "Ich verstehe.",
+						cta: "Ich verstehe",
 						extraHelp:
 							"Aufnahmen werden transkribiert und für Erkenntnisse analysiert. Ihre Daten werden auf gesicherten Servern in Europa gespeichert, nicht zum Trainieren von KI-Modellen verwendet und innerhalb von 30 Tagen nach Projektende gelöscht.\n\nFragen zu Ihrer Privatsphäre? Wenden Sie sich direkt an den Organisator.",
 						...(policyUrl
@@ -1538,7 +1538,7 @@ export const useOnboardingCards = () => {
 					{
 						content:
 							"dembrane zeichnet dieses Gespräch auf und analysiert es auf Grundlage unseres berechtigten Interesses: Diskussionen genau festzuhalten, zuverlässige Erkenntnisse zu liefern und unsere Plattform weiterzuentwickeln.",
-						cta: "Ich verstehe.",
+						cta: "Ich verstehe",
 						extraHelp:
 							"Aufnahmen und Transkripte werden innerhalb von 30 Tagen nach Schließung der Sitzung gelöscht. Daten werden auf gesicherten Servern in Europa gespeichert und nicht zum Trainieren von KI-Modellen verwendet.\n\nFragen oder Einwände? Kontaktieren Sie uns unter info@dembrane.com oder lesen Sie unsere Datenschutzrichtlinie.",
 						link: {

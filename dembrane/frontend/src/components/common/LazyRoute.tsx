@@ -1,17 +1,13 @@
-import { Box, LoadingOverlay } from "@mantine/core";
 import React, { Suspense } from "react";
 import { ErrorBoundary } from "../error/ErrorBoundary";
+import { BeautifulLoading } from "./BeautifulLoading";
 
 interface LazyRouteProps {
 	children: React.ReactNode;
 	fallback?: React.ComponentType;
 }
 
-const DefaultFallback = () => (
-	<Box pos="relative" h="100%">
-		<LoadingOverlay visible={true} overlayProps={{ blur: 2, radius: "sm" }} />
-	</Box>
-);
+const DefaultFallback = () => <BeautifulLoading />;
 
 export const LazyRoute: React.FC<LazyRouteProps> = ({
 	children,

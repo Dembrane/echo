@@ -1,5 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
+import { Group, Select, TextInput } from "@mantine/core";
 import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
 import type { AnalysisObject } from "@/components/analysis/hooks";
 import { type ResultDensity, ResultRow } from "./ResultRow";
@@ -20,6 +21,9 @@ const TYPES_IN_GROUP: Record<ResultGroupKey, string[]> = {
 	stakeholder: ["stakeholder"],
 	tension: ["tension"],
 };
+
+/** The kind filter's "no kind" choice; the list is told `null`. */
+const ALL_KINDS = "any";
 
 /** The order the check density reads in; Present passes its own block order. */
 export const GROUP_ORDER: ResultGroupKey[] = [
@@ -250,50 +254,45 @@ export function ResultsList({
 	return (
 		<div className={[classes.list, className].filter(Boolean).join(" ")}>
 			{density === "check" && filter && (
-				<div className={classes.filters} data-testid="results-filters">
-					<label className={classes.filterLabel}>
-						<Trans>Kind</Trans>
-						<select
-							className={classes.filterControl}
-							value={filter.kind ?? ""}
-							onChange={(event) =>
-								filter.onChange({ kind: event.currentTarget.value || null })
-							}
-						>
-							<option value="">{t`All kinds`}</option>
-							<option value="popcorn">{groupWords("popcorn")}</option>
-							<option value="tension">{groupWords("tension")}</option>
-							<option value="stakeholder">{groupWords("stakeholder")}</option>
-							<option value="argument">{t`Arguments`}</option>
-							<option value="deduplicated_argument">{t`Combined arguments`}</option>
-						</select>
-					</label>
-					<label className={classes.filterLabel}>
-						<Trans>Status</Trans>
-						<select
-							className={classes.filterControl}
-							value={filter.status}
-							onChange={(event) =>
-								filter.onChange({ status: event.currentTarget.value })
-							}
-						>
-							<option value="active">{t`In the analysis`}</option>
-							<option value="withdrawn">{t`Withdrawn`}</option>
-							<option value="all">{t`Both`}</option>
-						</select>
-					</label>
-					<label className={classes.filterLabel}>
-						<Trans>Search</Trans>
-						<input
-							className={classes.filterControl}
-							type="search"
-							value={filter.query}
-							onChange={(event) =>
-								filter.onChange({ query: event.currentTarget.value })
-							}
-						/>
-					</label>
-				</div>
+				<Group align="flex-end" data-testid="results-filters" gap={0}>
+					<Select
+						allowDeselect={false}
+						data={[
+							{ label: t`All kinds`, value: ALL_KINDS },
+							{ label: groupWords("popcorn"), value: "popcorn" },
+							{ label: groupWords("tension"), value: "tension" },
+							{ label: groupWords("stakeholder"), value: "stakeholder" },
+							{ label: t`Arguments`, value: "argument" },
+							{ label: t`Combined arguments`, value: "deduplicated_argument" },
+						]}
+						label={<Trans>Kind</Trans>}
+						onChange={(value) =>
+							filter.onChange({
+								kind: value && value !== ALL_KINDS ? value : null,
+							})
+						}
+						value={filter.kind ?? ALL_KINDS}
+					/>
+					<Select
+						allowDeselect={false}
+						data={[
+							{ label: t`In the analysis`, value: "active" },
+							{ label: t`Withdrawn`, value: "withdrawn" },
+							{ label: t`Both`, value: "all" },
+						]}
+						label={<Trans>Status</Trans>}
+						onChange={(value) => value && filter.onChange({ status: value })}
+						value={filter.status}
+					/>
+					<TextInput
+						label={<Trans>Search</Trans>}
+						onChange={(event) =>
+							filter.onChange({ query: event.currentTarget.value })
+						}
+						type="search"
+						value={filter.query}
+					/>
+				</Group>
 			)}
 
 			{/* One quiet line: the kinds this list holds, each a way into its own

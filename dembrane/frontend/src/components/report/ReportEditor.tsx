@@ -111,7 +111,7 @@ const ReportEditorComponent: React.FC<{
 					<Stack gap="sm">
 						<Group>
 							<FormLabel
-								label={t`Edit Report Content`}
+								label={t`Edit report content`}
 								isDirty={formState.dirtyFields.content}
 								error={formState.errors.content?.message}
 							/>

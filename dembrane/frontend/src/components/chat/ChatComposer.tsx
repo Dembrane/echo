@@ -18,10 +18,10 @@ export const ChatComposerShell = ({
 	footerRight?: React.ReactNode;
 }) => (
 	<Box
-		className="rounded-xl border px-3 pb-2 pt-2 shadow-sm transition-colors"
+		className="border-x border-solid px-3 pb-2 pt-2"
 		style={{
-			backgroundColor: "var(--app-background)",
-			borderColor: "var(--mantine-color-primary-light)",
+			backgroundColor: "var(--mantine-color-white)",
+			borderColor: "var(--app-control-rule)",
 		}}
 	>
 		{chips && <Box {...testId("chat-composer-chips")}>{chips}</Box>}
@@ -66,11 +66,9 @@ export const ConversationFocusChips = ({
 			align="baseline"
 			wrap="wrap"
 			className="mb-2 border-0 border-b border-solid pb-2 italic"
-			style={{ borderColor: "var(--mantine-color-primary-light)" }}
+			style={{ borderColor: "var(--app-rule-color)" }}
 		>
-			<Text size="xs" fw={500}>
-				{label}
-			</Text>
+			<Text size="xs">{label}</Text>
 			{overflowNotice ? (
 				<Text size="xs">{overflowNotice}</Text>
 			) : conversations ? (
@@ -85,6 +83,7 @@ export const ConversationFocusChips = ({
 			{onClearAll && (
 				<Button
 					variant="subtle"
+					color="gray"
 					size="compact-xs"
 					className="not-italic"
 					onClick={onClearAll}
@@ -120,7 +119,7 @@ export const ConversationPickerButton = ({
 		aria-label={ariaLabel}
 		{...(id ? testId(id) : {})}
 	>
-		<ChatCircleTextIcon size={18} />
-		<span className="ms-1.5 hidden md:inline">{label}</span>
+		<ChatCircleTextIcon size={20} />
+		<span className="ms-2 hidden md:inline">{label}</span>
 	</Button>
 );

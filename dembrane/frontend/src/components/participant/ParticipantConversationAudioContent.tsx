@@ -2,7 +2,7 @@ import { useChat } from "@ai-sdk/react";
 import { Trans } from "@lingui/react/macro";
 import { Box, Group, Paper, Text } from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
-import { IconRosetteDiscountCheck } from "@tabler/icons-react";
+import { SealCheckIcon } from "@phosphor-icons/react";
 import { useEffect, useRef } from "react";
 import {
 	Link,
@@ -153,33 +153,24 @@ export const ParticipantConversationAudioContent = () => {
 			/>
 
 			{showVerificationBanner && (
-				<Link to="verify" style={{ textDecoration: "none" }}>
-					<Box className="flex justify-end">
-						<Paper
-							radius="md"
-							p="md"
-							my="md"
-							withBorder
-							style={{
-								borderColor: "var(--mantine-color-gray-4)",
-								borderStyle: "dashed",
-								cursor: "pointer",
-							}}
-						>
-							<Group gap="sm" wrap="nowrap">
-								<Text size="lg" fw={500} c="dimmed">
-									<Trans id="participant.banner.verification_required">
-										Verification required
-									</Trans>
-								</Text>
-								<IconRosetteDiscountCheck
-									size={22}
-									color="var(--mantine-color-dimmed)"
-								/>
-							</Group>
-						</Paper>
-					</Box>
-				</Link>
+				<Box className="flex justify-end">
+					<Paper
+						component={Link}
+						to="verify"
+						p="md"
+						my="md"
+						style={{ textDecoration: "none" }}
+					>
+						<Group gap="sm" wrap="nowrap">
+							<Text size="md">
+								<Trans id="participant.banner.verification_required">
+									Verification required
+								</Trans>
+							</Text>
+							<SealCheckIcon size={16} />
+						</Group>
+					</Paper>
+				</Box>
 			)}
 
 			<ParticipantEchoMessages

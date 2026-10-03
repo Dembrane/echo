@@ -40,8 +40,8 @@ export const CharsRemainingIndicator = ({
 	}
 	const filled = Math.min(100, (value.length / max) * 100);
 	const atLimit = remaining === 0;
-	const ringColor = atLimit ? "salmon" : "peach";
-	const textColor = atLimit ? "salmon" : "dimmed";
+	const ringColor = atLimit ? "red" : "yellow";
+	const textColor = atLimit ? "red" : "dimmed";
 	return (
 		<Group justify={ALIGN_TO_JUSTIFY[align]}>
 			<RingProgress

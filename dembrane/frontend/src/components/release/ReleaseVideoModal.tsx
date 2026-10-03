@@ -351,17 +351,18 @@ export const ReleaseVideoModal = ({
 							<ReleaseChanges changes={release.changes} />
 						) : null}
 
-						<Group justify="space-between" gap="sm">
+						<Group justify="flex-start" gap="sm">
+							<Button variant="filled" onClick={() => close()}>
+								<Trans>Got it</Trans>
+							</Button>
 							<Button
 								component={I18nLink}
 								to="/release-notes"
 								variant="subtle"
+								color="gray"
 								onClick={() => close("release_notes")}
 							>
 								<Trans>Go to previous release notes</Trans>
-							</Button>
-							<Button onClick={() => close()}>
-								<Trans>Got it</Trans>
 							</Button>
 						</Group>
 					</Stack>

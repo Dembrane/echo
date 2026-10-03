@@ -11,11 +11,11 @@ export const WorkspaceMemorySection = ({
 	const memoriesQuery = useWorkspaceMemories(workspaceId);
 
 	return (
-		<Stack gap={8}>
-			<Title order={5} fw={400}>
+		<Stack gap="sm">
+			<Title order={5}>
 				<Trans>Assistant memory</Trans>
 			</Title>
-			<Text size="sm">
+			<Text size="sm" c="dimmed">
 				<Trans>
 					Notes the assistant saved about this workspace from chats. Everyone in
 					the workspace shares them.

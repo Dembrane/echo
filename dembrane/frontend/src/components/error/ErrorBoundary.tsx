@@ -38,9 +38,9 @@ export class ErrorBoundary extends Component<PropsWithChildren<Props>, State> {
 				return this.props.fallback;
 			}
 			return (
-				<Box className="flex h-[calc(100vh-60px)] flex-col items-center justify-center p-4">
-					<Stack align="center" gap="md" maw={420} ta="center">
-						<Title order={1}>
+				<Box className="flex h-[calc(100vh-60px)] flex-col justify-center p-4">
+					<Stack gap="md" w="100%" maw={440} mx="auto">
+						<Title order={2}>
 							<Trans>Something went wrong</Trans>
 						</Title>
 						<Text c="dimmed">
@@ -49,12 +49,11 @@ export class ErrorBoundary extends Component<PropsWithChildren<Props>, State> {
 								it. If it keeps happening, head back home.
 							</Trans>
 						</Text>
-						<Group>
-							<Button onClick={() => window.location.reload()}>
+						<Group gap="sm">
+							<Button variant="filled" onClick={() => window.location.reload()}>
 								<Trans>Reload page</Trans>
 							</Button>
 							<Button
-								variant="outline"
 								onClick={() => {
 									this.setState({ hasError: false });
 									window.location.href = "/";

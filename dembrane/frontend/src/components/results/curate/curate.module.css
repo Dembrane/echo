@@ -7,7 +7,7 @@
 	--parchment: #f6f4f1;
 	--paper: #ffffff;
 	--graphite: #2d2d2c;
-	--blue: #4169e1;
+	--blue: #2957df;
 	--hairline: #e6e3df;
 	--ink-soft: rgba(45, 45, 44, 0.72);
 	--ink-rest: rgba(45, 45, 44, 0.62);
@@ -80,13 +80,11 @@
 .tab[aria-selected="true"] {
 	border-bottom-color: var(--blue);
 	color: var(--blue);
-	font-weight: 500;
 }
 
 .tabCount {
 	color: var(--ink-rest);
 	font-variant-numeric: tabular-nums;
-	font-weight: 400;
 }
 
 .tab[aria-selected="true"] .tabCount {
@@ -96,7 +94,6 @@
 /* A tab whose block is off in this presentation says so in the row. */
 .tabOff {
 	color: var(--ink-soft);
-	font-weight: 400;
 }
 
 /* The row under the tabs, where there is more than one language to read the
@@ -246,7 +243,8 @@
 .table thead th {
 	border-bottom: 1px solid var(--hairline);
 	color: var(--graphite);
-	font-weight: 500;
+	/* A header cell is bold by default; here it is the text's weight. */
+	font-weight: inherit;
 	padding-bottom: 0.5rem;
 }
 
@@ -456,7 +454,6 @@
 }
 
 .feedbackHead {
-	font-weight: 500;
 	margin: 0;
 }
 
@@ -491,21 +488,15 @@
 }
 
 .noteField {
-	background: none;
-	border: 1px solid var(--hairline);
-	border-radius: 2px;
-	color: var(--graphite);
 	flex: 1 1 auto;
-	font: inherit;
 	min-width: 0;
-	padding: 0.35rem 0.5rem;
 }
 
 .send {
 	align-items: center;
 	background: none;
 	border: 1px solid var(--hairline);
-	border-radius: 2px;
+	border-radius: 0;
 	color: var(--graphite);
 	cursor: pointer;
 	display: inline-flex;
@@ -533,7 +524,7 @@
 	align-items: center;
 	background: none;
 	border: 1px solid var(--hairline);
-	border-radius: 2px;
+	border-radius: 0;
 	color: var(--graphite);
 	cursor: pointer;
 	display: inline-flex;
@@ -741,7 +732,7 @@ input.filterControl:hover {
    highlight would be the fifth thing on the page asking to be looked at. */
 .cut {
 	font-family: var(--app-content-bold-font-family, inherit);
-	font-weight: 500;
+	font-weight: 600;
 }
 
 .verdict {
@@ -925,8 +916,10 @@ input.filterControl:hover {
 
 .words {
 	background: var(--paper);
-	border: 1px solid var(--hairline);
-	border-radius: 2px;
+	border-color: var(--app-control-rule, #878785);
+	border-radius: 0;
+	border-style: solid;
+	border-width: 0 1px;
 	color: var(--graphite);
 	display: block;
 	field-sizing: content;
@@ -940,8 +933,7 @@ input.filterControl:hover {
 
 .words:focus-visible {
 	border-color: var(--blue);
-	outline: 2px solid var(--blue);
-	outline-offset: -1px;
+	outline: none;
 }
 
 @keyframes fade {

@@ -10,7 +10,7 @@ import { PasswordRequirements } from "@/components/auth/PasswordRequirements";
 import { validatePassword } from "@/lib/passwordPolicy";
 
 export const PasswordResetRoute = () => {
-	useDocumentTitle(t`Reset Password | dembrane`);
+	useDocumentTitle(t`Reset password | dembrane`);
 	const [search, _] = useSearchParams();
 	const { register, handleSubmit, control } = useForm<{
 		password: string;
@@ -49,35 +49,36 @@ export const PasswordResetRoute = () => {
 		<div className="h-full w-full">
 			<Stack className="h-full">
 				<Stack className="flex-grow">
-					<Title order={1}>
-						<Trans>Reset Password</Trans>
+					<Title order={2}>
+						<Trans>Reset password</Trans>
 					</Title>
 
 					<form onSubmit={onSubmit}>
 						<Stack>
 							{error && <Alert color="red">{error}</Alert>}
 							<PasswordInput
-								label={<Trans>New Password</Trans>}
-								size="lg"
+								label={<Trans>New password</Trans>}
+								size="md"
 								{...register("password")}
-								placeholder={t`New Password`}
+								placeholder={t`New password`}
 								required
 							/>
 							<PasswordRequirements value={password} />
 							<PasswordInput
-								label={<Trans>Confirm New Password</Trans>}
-								size="lg"
+								label={<Trans>Confirm new password</Trans>}
+								size="md"
 								{...register("confirmPassword")}
-								placeholder={t`Confirm New Password`}
+								placeholder={t`Confirm new password`}
 								required
 							/>
 							<Button
-								size="lg"
+								variant="filled"
+								size="md"
 								type="submit"
 								loading={resetPasswordMutation.isPending}
 								disabled={!validatePassword(password).isValid}
 							>
-								<Trans>Reset Password</Trans>
+								<Trans>Reset password</Trans>
 							</Button>
 						</Stack>
 					</form>

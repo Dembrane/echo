@@ -7,16 +7,17 @@ import {
 	Button,
 	Divider,
 	Group,
-	Loader,
 	Modal,
 	Paper,
 	Select,
 	SimpleGrid,
+	Skeleton,
 	Stack,
 	Table,
 	Text,
 	Textarea,
 	TextInput,
+	Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
@@ -32,6 +33,8 @@ import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
 import { usePricingConfigurator } from "@/components/pricing";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
+import { ruleBetween } from "@/components/workspace/ruleBetween";
+import { TierBadge } from "@/components/workspace/TierBadge";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { ApiRequestError } from "@/lib/errors/read";
@@ -254,10 +257,8 @@ function SectionRow({
 }) {
 	return (
 		<Group justify="space-between" align="flex-start" wrap="nowrap" gap="md">
-			<Stack gap={2} style={{ minWidth: 0 }}>
-				<Text size="xs" fw={500} tt="uppercase">
-					{label}
-				</Text>
+			<Stack gap="xs" style={{ minWidth: 0 }}>
+				<Title order={5}>{label}</Title>
 				{children}
 			</Stack>
 			{action}
@@ -280,8 +281,8 @@ export function OrgManagedBillingNotice({
 	const navigate = useI18nNavigate();
 	return (
 		<Paper withBorder p="md" radius="sm">
-			<Stack gap={8}>
-				<Text size="sm" fw={500}>
+			<Stack gap="sm">
+				<Text size="sm">
 					<Trans>Billing is managed by your organisation</Trans>
 				</Text>
 				<Text size="xs">
@@ -320,12 +321,10 @@ function ManagedBillingPanel({
 }) {
 	return (
 		<Paper withBorder p="md" radius="sm">
-			<Stack gap={16}>
+			<Stack gap="md">
 				<SectionRow label={t`Current plan`}>
-					<Group gap={8}>
-						<Text size="sm" fw={500}>
-							{tierLabel(tier)}
-						</Text>
+					<Group gap="sm">
+						<Text size="sm">{tierLabel(tier)}</Text>
 						<Badge size="xs" variant="light" color="green">
 							<Trans>Managed by dembrane</Trans>
 						</Badge>
@@ -423,10 +422,10 @@ function BillingDetailsForm({
 	};
 
 	return (
-		<Stack gap={12}>
-			<Text size="xs" fw={500} tt="uppercase">
+		<Stack gap="sm">
+			<Title order={5}>
 				<Trans>Billing details</Trans>
-			</Text>
+			</Title>
 			<Text size="xs">
 				<Trans>Used on your invoices. Prices exclude VAT.</Trans>
 			</Text>
@@ -498,8 +497,8 @@ function BillingDetailsForm({
 					}
 				/>
 			</SimpleGrid>
-			<Group justify="flex-end">
-				<Button size="xs" loading={saving} onClick={save}>
+			<Group justify="flex-start">
+				<Button size="xs" variant="filled" loading={saving} onClick={save}>
 					<Trans>Save billing details</Trans>
 				</Button>
 			</Group>
@@ -507,13 +506,14 @@ function BillingDetailsForm({
 	);
 }
 
-const CANCEL_REASONS: { value: string; label: string }[] = [
-	{ label: "Too expensive", value: "too_expensive" },
-	{ label: "Missing features I need", value: "missing_features" },
-	{ label: "Not using it enough", value: "not_using" },
-	{ label: "Switching to another tool", value: "switching" },
-	{ label: "Just pausing for now", value: "temporary" },
-	{ label: "Other", value: "other" },
+// A function so the labels translate at render time, not at import.
+const cancelReasons = (): { value: string; label: string }[] => [
+	{ label: t`Too expensive`, value: "too_expensive" },
+	{ label: t`Missing features I need`, value: "missing_features" },
+	{ label: t`Not using it enough`, value: "not_using" },
+	{ label: t`Switching to another tool`, value: "switching" },
+	{ label: t`Just pausing for now`, value: "temporary" },
+	{ label: t`Other`, value: "other" },
 ];
 
 /** Confirm cancellation + a short churn survey (reason + optional note). */
@@ -573,7 +573,7 @@ function CancelSubscriptionModal({
 			centered
 			data-testid="billing-cancel-modal"
 		>
-			<Stack gap={12}>
+			<Stack gap="sm">
 				<Text size="sm">
 					<Trans>
 						Cancelling stops your plan from renewing. You keep{" "}
@@ -584,7 +584,10 @@ function CancelSubscriptionModal({
 				<Select
 					label={t`What's the main reason?`}
 					placeholder={t`Pick one`}
-					data={CANCEL_REASONS.map((r) => ({ label: r.label, value: r.value }))}
+					data={cancelReasons().map((r) => ({
+						label: r.label,
+						value: r.value,
+					}))}
 					value={reason}
 					onChange={setReason}
 					size="sm"
@@ -598,12 +601,22 @@ function CancelSubscriptionModal({
 					minRows={2}
 					size="sm"
 				/>
-				<Group justify="space-between">
-					<Button variant="subtle" onClick={onClose} disabled={submitting}>
-						<Trans>Keep my plan</Trans>
-					</Button>
-					<Button color="red" loading={submitting} onClick={submit}>
+				<Group justify="flex-start" gap="sm">
+					<Button
+						color="red"
+						variant="filled"
+						loading={submitting}
+						onClick={submit}
+					>
 						<Trans>Cancel plan</Trans>
+					</Button>
+					<Button
+						variant="subtle"
+						color="gray"
+						onClick={onClose}
+						disabled={submitting}
+					>
+						<Trans>Keep my plan</Trans>
 					</Button>
 				</Group>
 			</Stack>
@@ -639,12 +652,10 @@ function NothingToBillPanel({ tier }: { tier: string }) {
 	const configurator = usePricingConfigurator();
 	return (
 		<Paper withBorder p="md" radius="sm">
-			<Stack gap={12}>
+			<Stack gap="sm">
 				<SectionRow label={t`Current plan`}>
-					<Group gap={8}>
-						<Text size="sm" fw={500}>
-							{tierLabel(tier)}
-						</Text>
+					<Group gap="sm">
+						<Text size="sm">{tierLabel(tier)}</Text>
 						{comped && (
 							<Badge size="xs" variant="light" color="green">
 								<Trans>Arranged with dembrane</Trans>
@@ -738,17 +749,19 @@ function InvoiceList({
 }) {
 	const hasPdf = invoices.some((inv) => inv.sales_invoice_id);
 	return (
-		<Stack gap={6}>
-			<Text size="xs" fw={500} tt="uppercase">
+		<Stack gap="sm">
+			<Title order={5}>
 				<Trans>Invoices</Trans>
-			</Text>
+			</Title>
 			{invoices.length === 0 ? (
 				loadingInvoices ? (
-					<Group justify="center" py="sm">
-						<Loader size="sm" />
-					</Group>
+					<Stack gap="xs">
+						<Skeleton height={24} />
+						<Skeleton height={24} />
+						<Skeleton height={24} />
+					</Stack>
 				) : (
-					<Text size="xs">
+					<Text size="sm" c="dimmed">
 						<Trans>No payments yet.</Trans>
 					</Text>
 				)
@@ -787,7 +800,7 @@ function InvoiceList({
 										{meta.settled ? `€${inv.amount}` : ""}
 									</Table.Td>
 									<Table.Td ta="right">
-										<Group gap={8} justify="flex-end" wrap="nowrap">
+										<Group gap="sm" justify="flex-end" wrap="nowrap">
 											{inv.pay_url && (
 												<Anchor
 													size="xs"
@@ -1078,25 +1091,25 @@ export function BillingManager({
 
 	if (!accountId) {
 		return (
-			<Paper withBorder p="md" radius="sm">
-				<Text size="sm">
-					<Trans>
-						No billing account yet. Email{" "}
-						<Anchor href="mailto:support@dembrane.com">
-							support@dembrane.com
-						</Anchor>{" "}
-						and we'll set one up.
-					</Trans>
-				</Text>
-			</Paper>
+			<Text size="sm" c="dimmed">
+				<Trans>
+					No billing account yet. Email{" "}
+					<Anchor href="mailto:support@dembrane.com">
+						support@dembrane.com
+					</Anchor>{" "}
+					and we'll set one up.
+				</Trans>
+			</Text>
 		);
 	}
 
 	if (isLoading || !overview) {
 		return (
-			<Group justify="center" py="lg">
-				<Loader size="sm" />
-			</Group>
+			<Stack gap="sm">
+				<Skeleton height={24} width="40%" />
+				<Skeleton height={64} />
+				<Skeleton height={64} />
+			</Stack>
 		);
 	}
 
@@ -1144,14 +1157,14 @@ export function BillingManager({
 	// Full feature access is unchanged; this is only the payment surface.
 	if (isManaged) {
 		return (
-			<Stack gap={16}>
+			<Stack gap="md">
 				<ManagedBillingPanel
 					tier={tier}
 					seats={overview.seats}
 					manager={overview.account_manager}
 				/>
 				<Paper withBorder p="md" radius="sm">
-					<Stack gap={16}>
+					<Stack gap="md">
 						<InvoiceList
 							invoices={invoices}
 							hasMore={hasNextPage}
@@ -1181,7 +1194,7 @@ export function BillingManager({
 
 	return (
 		<Paper withBorder p="md" radius="sm">
-			<Stack gap={16}>
+			<Stack gap="md">
 				{chargeFailed && (
 					<Alert
 						color="red"
@@ -1192,7 +1205,7 @@ export function BillingManager({
 							title: { color: "var(--app-text)" },
 						}}
 					>
-						<Stack gap={10}>
+						<Stack gap="sm">
 							<Text size="sm">
 								<Trans>
 									Your last payment didn't go through. Your plan stays active.
@@ -1200,17 +1213,11 @@ export function BillingManager({
 								</Trans>
 							</Text>
 							<Group gap="sm">
-								<Button
-									size="xs"
-									color="red"
-									loading={retrying}
-									onClick={retryCharge}
-								>
-									<Trans>Retry now</Trans>
+								<Button size="xs" loading={retrying} onClick={retryCharge}>
+									<Trans>Try again</Trans>
 								</Button>
 								<Button
 									size="xs"
-									variant="outline"
 									loading={updatingMethod}
 									onClick={openMethodConfirm}
 								>
@@ -1221,10 +1228,8 @@ export function BillingManager({
 					</Alert>
 				)}
 				<SectionRow label={t`Current plan`}>
-					<Group gap={8}>
-						<Text size="sm" fw={500}>
-							{tierLabel(tier)}
-						</Text>
+					<Group gap="sm">
+						<Text size="sm">{tierLabel(tier)}</Text>
 						<Badge
 							size="xs"
 							variant="light"
@@ -1257,7 +1262,7 @@ export function BillingManager({
 						<Plural value={overview.seats} one="# seat" other="# seats" />
 					</Text>
 					{overview.available_seats > 0 && (
-						<Text size="xs" c="var(--mantine-color-primary-6)">
+						<Text size="xs">
 							<Trans>
 								<Plural
 									value={overview.available_seats}
@@ -1270,7 +1275,7 @@ export function BillingManager({
 						</Text>
 					)}
 					{hasPending && (
-						<Text size="xs" c="var(--mantine-color-primary-6)">
+						<Text size="xs">
 							<Trans>
 								{pendingInvites} invite(s) pending. Counted once accepted.
 							</Trans>
@@ -1355,7 +1360,7 @@ export function BillingManager({
 							</Text>
 						)}
 						{hasPending && withPendingValue != null && (
-							<Text size="xs" c="var(--mantine-color-primary-6)">
+							<Text size="xs">
 								<Trans>
 									{isAnnual ? "Yearly" : "Monthly"} total rises to{" "}
 									{eur(withPendingValue)} when {pendingInvites} pending{" "}
@@ -1364,7 +1369,7 @@ export function BillingManager({
 							</Text>
 						)}
 						{discountPct > 0 && (
-							<Text size="xs" c="primary">
+							<Text size="xs">
 								<Trans>{discountPct}% discount applied</Trans>
 							</Text>
 						)}
@@ -1494,9 +1499,11 @@ export function OrgBillingTab({ orgId }: { orgId: string }) {
 
 	if (isLoading) {
 		return (
-			<Group justify="center" py="lg">
-				<Loader size="sm" />
-			</Group>
+			<Stack gap="sm">
+				<Skeleton height={24} width="40%" />
+				<Skeleton height={64} />
+				<Skeleton height={64} />
+			</Stack>
 		);
 	}
 
@@ -1513,9 +1520,9 @@ export function OrgBillingTab({ orgId }: { orgId: string }) {
 			{separate.length > 0 && (
 				<Stack gap="sm">
 					<div>
-						<Text size="sm" fw={500}>
+						<Title order={5}>
 							<Trans>Workspaces billed separately</Trans>
-						</Text>
+						</Title>
 						<Text size="xs" c="dimmed">
 							<Trans>
 								These workspaces have their own plan, managed from each
@@ -1523,16 +1530,20 @@ export function OrgBillingTab({ orgId }: { orgId: string }) {
 							</Trans>
 						</Text>
 					</div>
-					{separate.map((w) => (
-						<Paper key={w.workspace_id} withBorder p="md" radius="sm">
-							<Group justify="space-between" wrap="nowrap">
+					<Paper withBorder>
+						{separate.map((w, i) => (
+							<Group
+								key={w.workspace_id}
+								justify="space-between"
+								wrap="nowrap"
+								p="md"
+								style={ruleBetween(i, separate.length)}
+							>
 								<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
-									<Text size="sm" fw={500} truncate>
+									<Text size="sm" truncate>
 										{w.name}
 									</Text>
-									<Badge size="xs" variant="light" color="gray" tt="capitalize">
-										{w.tier}
-									</Badge>
+									<TierBadge tier={w.tier} size="xs" />
 								</Group>
 								<Button
 									size="xs"
@@ -1544,8 +1555,8 @@ export function OrgBillingTab({ orgId }: { orgId: string }) {
 									<Trans>Manage</Trans>
 								</Button>
 							</Group>
-						</Paper>
-					))}
+						))}
+					</Paper>
 				</Stack>
 			)}
 		</Stack>

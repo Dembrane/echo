@@ -20,6 +20,7 @@ import {
 	useState,
 } from "react";
 import { useParams } from "react-router";
+import { roles } from "@/colors";
 import { ReleaseVideoModal } from "@/components/release/ReleaseVideoModal";
 import { getDocumentationUrl } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -85,8 +86,8 @@ export const HelpBlock = () => {
 				<NavButton
 					label={<Trans>Report an issue</Trans>}
 					icon={Bug}
-					iconColor="var(--mantine-color-primary-6)"
-					labelColor="var(--mantine-color-primary-6)"
+					iconColor={roles.action}
+					labelColor={roles.action}
 					onClick={openReportIssue}
 				/>
 			),
@@ -97,8 +98,8 @@ export const HelpBlock = () => {
 				<NavButton
 					label={<Trans>Feedback</Trans>}
 					icon={ChatCircle}
-					iconColor="var(--mantine-color-primary-6)"
-					labelColor="var(--mantine-color-primary-6)"
+					iconColor={roles.action}
+					labelColor={roles.action}
 					onClick={openFeedback}
 				/>
 			),
@@ -212,12 +213,12 @@ export const HelpBlock = () => {
 							onClick={() => setBubbled((b) => !b)}
 							className={cn(
 								RAIL_ITEM_CLASS,
-								"hover:bg-black/[0.04]",
-								bubbled && "bg-black/[0.04]",
+								"hover:bg-[#e6e3df]",
+								bubbled && "bg-[#e6e3df]",
 							)}
-							style={{ color: "#2d2d2c" }}
+							style={{ color: roles.text }}
 						>
-							<Question size={18} aria-hidden="true" />
+							<Question size={20} aria-hidden="true" />
 							<span className="sr-only">
 								<Trans>Help</Trans>
 							</span>

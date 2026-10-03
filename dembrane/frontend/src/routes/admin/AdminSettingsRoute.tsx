@@ -7,21 +7,21 @@ import {
 	Badge,
 	Box,
 	Button,
-	Center,
 	Checkbox,
 	Collapse,
 	Container,
 	Divider,
 	Group,
-	Loader,
 	Modal,
 	MultiSelect,
 	NumberInput,
 	Paper,
 	Progress,
 	Radio,
+	SegmentedControl,
 	Select,
 	SimpleGrid,
+	Skeleton,
 	Stack,
 	Table,
 	Tabs,
@@ -35,16 +35,16 @@ import {
 import { DatePickerInput } from "@mantine/dates";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import {
-	IconArrowsSort,
-	IconChevronDown,
-	IconChevronRight,
-	IconDots,
-	IconDownload,
-	IconExternalLink,
-	IconSearch,
-	IconSortAscending,
-	IconSortDescending,
-} from "@tabler/icons-react";
+	ArrowSquareOutIcon,
+	ArrowsDownUpIcon,
+	CaretDownIcon,
+	CaretRightIcon,
+	DotsThreeIcon,
+	DownloadSimpleIcon,
+	MagnifyingGlassIcon,
+	SortAscendingIcon,
+	SortDescendingIcon,
+} from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	type ColumnDef,
@@ -61,6 +61,7 @@ import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
 import { UsageFreshness } from "@/components/common/UsageFreshness";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { notifyError } from "@/components/error/notifyError";
 import { AdminResponseFeedbackPanel } from "@/components/feedback/AdminResponseFeedbackPanel";
 import { StaffTrainingPanel } from "@/components/training";
@@ -250,19 +251,15 @@ function PeriodSelector({
 		{ label: t`3 months ago`, offset: -3 },
 	];
 	return (
-		<Button.Group>
-			{options.map((opt) => (
-				<Button
-					key={opt.offset}
-					size="xs"
-					variant={value === opt.offset ? "filled" : "default"}
-					color={value === opt.offset ? "primary" : "gray"}
-					onClick={() => onChange(opt.offset)}
-				>
-					{opt.label}
-				</Button>
-			))}
-		</Button.Group>
+		<SegmentedControl
+			size="xs"
+			value={String(value)}
+			onChange={(next) => onChange(Number(next))}
+			data={options.map((opt) => ({
+				label: opt.label,
+				value: String(opt.offset),
+			}))}
+		/>
 	);
 }
 
@@ -287,23 +284,17 @@ function SortableHeader({
 			wrap="nowrap"
 			justify={align === "right" ? "flex-end" : "flex-start"}
 		>
-			<Text
-				size="xs"
-				fw={sorted ? 600 : 500}
-				c={sorted ? "dark" : "dimmed"}
-				tt="uppercase"
-				lts={0.3}
-			>
+			<Text size="xs" c="dimmed">
 				{label}
 			</Text>
 			{sorted === "asc" ? (
-				<IconSortAscending size={12} color="var(--mantine-color-dark-6)" />
+				<SortAscendingIcon size={16} />
 			) : sorted === "desc" ? (
-				<IconSortDescending size={12} color="var(--mantine-color-dark-6)" />
+				<SortDescendingIcon size={16} />
 			) : (
-				<IconArrowsSort
-					size={12}
-					color="var(--mantine-color-gray-4)"
+				<ArrowsDownUpIcon
+					size={16}
+					color="var(--mantine-color-dimmed)"
 					aria-hidden
 				/>
 			)}
@@ -346,7 +337,7 @@ function UsageBar({
 					? "yellow"
 					: "primary";
 	return (
-		<Stack gap={2}>
+		<Stack gap="xs">
 			<Text size="xs" c={color === "red" ? "red" : undefined}>
 				{used.toFixed(unit === "h" ? 1 : 0)} / {cap}
 				{unit ? ` ${unit}` : ""}
@@ -423,18 +414,18 @@ function DiscountEditor({
 	});
 
 	return (
-		<Paper withBorder radius="sm" p="sm">
+		<Paper withBorder p="sm">
 			<Stack gap="xs">
-				<Text size="sm" fw={500}>
+				<Text size="sm">
 					<Trans>Discount</Trans>
 				</Text>
 				<SimpleGrid cols={2}>
 					<Select
 						label={t`Type`}
 						data={[
-							{ label: "Scholarship", value: "scholarship" },
+							{ label: t`Scholarship`, value: "scholarship" },
 							{
-								label: "Staff discount",
+								label: t`Staff discount`,
 								value: "staff_discount",
 							},
 						]}
@@ -452,19 +443,14 @@ function DiscountEditor({
 						size="xs"
 					/>
 				</SimpleGrid>
-				{mutation.isError && (
-					<Text size="xs" c="red">
-						{(mutation.error as Error).message}
-					</Text>
-				)}
+				{mutation.isError && <ErrorNotice error={mutation.error} />}
 				{mutation.isSuccess && (
-					<Text size="xs" c="primary">
+					<Text size="xs" c="dimmed">
 						<Trans>Saved</Trans>
 					</Text>
 				)}
 				<Button
 					size="xs"
-					variant="light"
 					disabled={!hasChanges}
 					loading={mutation.isPending}
 					onClick={() => mutation.mutate()}
@@ -527,10 +513,10 @@ function OrgPartnerToggle({
 	});
 
 	return (
-		<Paper withBorder radius="sm" p="sm">
+		<Paper withBorder p="sm">
 			<Group justify="space-between" wrap="nowrap" align="center">
 				<Stack gap={0} style={{ minWidth: 0 }}>
-					<Text size="sm" fw={500}>
+					<Text size="sm">
 						<Trans>Partner organisation</Trans>
 					</Text>
 					<Text size="xs" c="dimmed">
@@ -539,11 +525,7 @@ function OrgPartnerToggle({
 							internal vs external client use on creation.
 						</Trans>
 					</Text>
-					{mutation.isError && (
-						<Text size="xs" c="red">
-							{(mutation.error as Error).message}
-						</Text>
-					)}
+					{mutation.isError && <ErrorNotice error={mutation.error} />}
 				</Stack>
 				<Checkbox
 					checked={isPartner}
@@ -621,9 +603,9 @@ function ChangeTierControl({ row }: { row: BillingRow }) {
 	const hasLiveSubscription = row.payment_mode === "mollie";
 
 	return (
-		<Paper withBorder radius="sm" p="sm">
+		<Paper withBorder p="sm">
 			<Stack gap="xs">
-				<Text size="sm" fw={500}>
+				<Text size="sm">
 					<Trans>Change tier</Trans>
 				</Text>
 				<Text size="xs" c="dimmed">
@@ -652,7 +634,6 @@ function ChangeTierControl({ row }: { row: BillingRow }) {
 					/>
 					<Button
 						size="xs"
-						variant="light"
 						disabled={!tier || tier === row.tier || hasLiveSubscription}
 						loading={mutation.isPending}
 						onClick={openConfirm}
@@ -780,10 +761,10 @@ function BillingModeControl({
 	const modeLabel = isManaged ? t`Managed` : t`Self-serve`;
 
 	return (
-		<Paper withBorder radius="sm" p="sm">
+		<Paper withBorder p="sm">
 			<Stack gap="xs">
 				<Group gap="xs" align="center">
-					<Text size="sm" fw={500}>
+					<Text size="sm">
 						<Trans>Billing mode</Trans>
 					</Text>
 					<Badge
@@ -811,7 +792,6 @@ function BillingModeControl({
 				<Group>
 					<Button
 						size="xs"
-						variant="outline"
 						loading={mutation.isPending}
 						disabled={!!disabledReason}
 						onClick={openConfirm}
@@ -865,16 +845,17 @@ function BillingModeControl({
 								required
 							/>
 						)}
-						<Group justify="flex-end" gap="sm">
-							<Button variant="subtle" onClick={closeConfirm}>
-								<Trans>Cancel</Trans>
-							</Button>
+						<Group justify="flex-start" gap="sm">
 							<Button
+								variant="filled"
 								loading={mutation.isPending}
 								disabled={saasMode === "keep" && !expiryDate}
 								onClick={() => mutation.mutate()}
 							>
 								<Trans>Switch to self-serve</Trans>
+							</Button>
+							<Button variant="subtle" color="gray" onClick={closeConfirm}>
+								<Trans>Cancel</Trans>
 							</Button>
 						</Group>
 					</Stack>
@@ -1078,9 +1059,9 @@ function JoinSupportControl({ row }: { row: BillingRow }) {
 	})(status?.expires_at);
 
 	return (
-		<Paper withBorder radius="sm" p="sm">
+		<Paper withBorder p="sm">
 			<Stack gap="xs">
-				<Text size="sm" fw={500}>
+				<Text size="sm">
 					<Trans>Join for support</Trans>
 				</Text>
 				{active ? (
@@ -1099,28 +1080,7 @@ function JoinSupportControl({ row }: { row: BillingRow }) {
 						</Trans>
 					</Text>
 				)}
-				<Group justify="flex-end" gap="sm">
-					{active && (
-						<>
-							<Anchor
-								component={I18nLink}
-								to={`/w/${row.workspace_id}/home`}
-								size="xs"
-								onClick={() => setWorkspace(row.workspace_id)}
-							>
-								<Trans>Open workspace</Trans>
-							</Anchor>
-							<Button
-								size="xs"
-								variant="subtle"
-								loading={leaveMutation.isPending}
-								disabled={busy}
-								onClick={() => leaveMutation.mutate()}
-							>
-								<Trans>Leave now</Trans>
-							</Button>
-						</>
-					)}
+				<Group justify="flex-start" gap="sm">
 					{supportEnabled && (
 						<Button
 							size="xs"
@@ -1135,6 +1095,26 @@ function JoinSupportControl({ row }: { row: BillingRow }) {
 							)}
 						</Button>
 					)}
+					{active && (
+						<>
+							<Button
+								size="xs"
+								loading={leaveMutation.isPending}
+								disabled={busy}
+								onClick={() => leaveMutation.mutate()}
+							>
+								<Trans>Leave now</Trans>
+							</Button>
+							<Anchor
+								component={I18nLink}
+								to={`/w/${row.workspace_id}/home`}
+								size="xs"
+								onClick={() => setWorkspace(row.workspace_id)}
+							>
+								<Trans>Open workspace</Trans>
+							</Anchor>
+						</>
+					)}
 					{!supportEnabled && !active && pendingRequest && (
 						<>
 							<Text size="xs">
@@ -1143,6 +1123,7 @@ function JoinSupportControl({ row }: { row: BillingRow }) {
 							<Button
 								size="xs"
 								variant="subtle"
+								color="gray"
 								loading={cancelRequestMutation.isPending}
 								disabled={busy}
 								onClick={() => cancelRequestMutation.mutate()}
@@ -1179,15 +1160,16 @@ function JoinSupportControl({ row }: { row: BillingRow }) {
 						minRows={3}
 						data-testid="support-access-request-note"
 					/>
-					<Group justify="flex-end" gap="sm">
-						<Button variant="subtle" onClick={closeRequestModal}>
-							<Trans>Cancel</Trans>
-						</Button>
+					<Group justify="flex-start" gap="sm">
 						<Button
+							variant="filled"
 							loading={requestMutation.isPending}
 							onClick={() => requestMutation.mutate(requestNote)}
 						>
 							<Trans>Send request</Trans>
+						</Button>
+						<Button variant="subtle" color="gray" onClick={closeRequestModal}>
+							<Trans>Cancel</Trans>
 						</Button>
 					</Group>
 				</Stack>
@@ -1219,7 +1201,7 @@ function WorkspaceActionsModal({
 			onClose={onClose}
 			title={
 				<Group gap="xs">
-					<Text fw={500}>{row.workspace_name}</Text>
+					<Text>{row.workspace_name}</Text>
 					<Badge
 						size="xs"
 						color={tierColors[row.tier] ?? "gray"}
@@ -1228,7 +1210,7 @@ function WorkspaceActionsModal({
 					>
 						{row.tier}
 					</Badge>
-					<Badge size="xs" color="gray" variant="outline">
+					<Badge size="xs" color="gray">
 						{accountScopeLabel(row.account_scope)}
 					</Badge>
 				</Group>
@@ -1254,9 +1236,9 @@ function WorkspaceActionsModal({
 						/>
 					</>
 				) : (
-					<Paper withBorder radius="sm" p="sm">
+					<Paper withBorder p="sm">
 						<Stack gap={0}>
-							<Text size="sm" fw={500}>
+							<Text size="sm">
 								<Trans>Change tier</Trans>
 							</Text>
 							<Text size="xs" c="dimmed">
@@ -1304,16 +1286,16 @@ function TierBreakdownPanel({ rows }: { rows: BillingRow[] }) {
 	}, [rows]);
 
 	return (
-		<Paper withBorder radius="sm" p="sm">
+		<Paper withBorder p="sm">
 			<UnstyledButton onClick={toggle} style={{ width: "100%" }}>
 				<Group justify="space-between" wrap="nowrap">
 					<Group gap="xs">
 						{opened ? (
-							<IconChevronDown size={14} />
+							<CaretDownIcon size={16} />
 						) : (
-							<IconChevronRight size={14} />
+							<CaretRightIcon size={16} />
 						)}
-						<Text size="sm" fw={500}>
+						<Text size="sm">
 							<Trans>Breakdown by tier</Trans>
 						</Text>
 					</Group>
@@ -1330,8 +1312,8 @@ function TierBreakdownPanel({ rows }: { rows: BillingRow[] }) {
 				<Box mt="sm">
 					<SimpleGrid cols={{ base: 2, md: 5, sm: 3 }} spacing="sm">
 						{byTier.map((b) => (
-							<Paper key={b.tier} withBorder radius="sm" p="sm">
-								<Stack gap={2}>
+							<Paper key={b.tier} withBorder p="sm">
+								<Stack gap="xs">
 									<Badge
 										size="xs"
 										color={tierColors[b.tier] ?? "gray"}
@@ -1340,9 +1322,7 @@ function TierBreakdownPanel({ rows }: { rows: BillingRow[] }) {
 									>
 										{b.tier}
 									</Badge>
-									<Text size="lg" fw={500}>
-										{b.count}
-									</Text>
+									<Text size="lg">{b.count}</Text>
 									<Text size="xs" c="dimmed">
 										<Trans>{b.active} active</Trans>
 									</Text>
@@ -1450,7 +1430,7 @@ function AccountActionsModal({
 			onClose={onClose}
 			title={
 				<Group gap="xs">
-					<Text fw={500}>{accountIdentifyingName(account)}</Text>
+					<Text>{accountIdentifyingName(account)}</Text>
 					<Badge
 						size="xs"
 						color={tierColors[account.tier] ?? "gray"}
@@ -1459,7 +1439,7 @@ function AccountActionsModal({
 					>
 						{account.tier}
 					</Badge>
-					<Badge size="xs" color="gray" variant="outline">
+					<Badge size="xs" color="gray">
 						{accountRowScopeLabel(account.account_scope)}
 					</Badge>
 					<AccountBadges account={account} />
@@ -1508,14 +1488,14 @@ function AccountActionsModal({
 				/>
 
 				<Divider my={4} />
-				<Text size="xs" c="dimmed">
+				<Title order={5}>
 					<Trans>Workspaces in this account</Trans>
-				</Text>
+				</Title>
 				{account.workspaces.map((ws) => (
-					<Paper key={ws.workspace_id} withBorder radius="sm" p="sm">
+					<Paper key={ws.workspace_id} withBorder p="sm">
 						<Group justify="space-between" wrap="nowrap" align="center">
 							<Stack gap={0} style={{ minWidth: 0 }}>
-								<Text size="sm" fw={500} truncate>
+								<Text size="sm" truncate>
 									{ws.workspace_name}
 								</Text>
 								<Text size="xs" c="dimmed">
@@ -1525,8 +1505,6 @@ function AccountActionsModal({
 							</Stack>
 							<Button
 								size="xs"
-								variant="outline"
-								color="gray"
 								onClick={() => {
 									onClose();
 									onOpenWorkspace(ws);
@@ -1608,23 +1586,22 @@ function AccountBillingTable({
 								>
 									<Table.Td>
 										<ActionIcon
-											size="sm"
 											variant="subtle"
 											color="gray"
 											onClick={() => toggle(account.billing_account_id)}
 											aria-label={t`Expand workspaces`}
 										>
 											{isOpen ? (
-												<IconChevronDown size={14} />
+												<CaretDownIcon size={20} />
 											) : (
-												<IconChevronRight size={14} />
+												<CaretRightIcon size={20} />
 											)}
 										</ActionIcon>
 									</Table.Td>
 									<Table.Td>
-										<Stack gap={2} style={{ minWidth: 0 }}>
-											<Group gap={6} wrap="nowrap">
-												<Text size="xs" fw={500} truncate maw={220}>
+										<Stack gap="xs" style={{ minWidth: 0 }}>
+											<Group gap="xs" wrap="nowrap">
+												<Text size="xs" truncate maw={220}>
 													{accountIdentifyingName(account)}
 												</Text>
 												<AccountBadges account={account} />
@@ -1658,20 +1635,19 @@ function AccountBillingTable({
 												€0
 											</Text>
 										) : (
-											<Text size="xs" fw={500}>
+											<Text size="xs">
 												{formatEur(account.total_forecast_eur)}
 											</Text>
 										)}
 									</Table.Td>
 									<Table.Td>
 										<ActionIcon
-											size="sm"
 											variant="subtle"
 											color="gray"
 											onClick={() => onOpenAccount(account)}
 											aria-label={t`Open account actions`}
 										>
-											<IconDots size={14} />
+											<DotsThreeIcon size={20} />
 										</ActionIcon>
 									</Table.Td>
 								</Table.Tr>
@@ -1679,35 +1655,29 @@ function AccountBillingTable({
 									<Table.Td colSpan={7} p={0} style={{ border: 0 }}>
 										<Collapse in={isOpen}>
 											<Box px="md" py="xs">
-												<Text
-													size="xs"
-													fw={600}
-													tt="uppercase"
-													lts={0.5}
-													mb={6}
-												>
+												<Title order={5} mb="xs">
 													<Trans>Workspaces</Trans>
-												</Text>
+												</Title>
 												<Table verticalSpacing={4} withRowBorders={false}>
 													<Table.Thead>
 														<Table.Tr>
 															<Table.Th>
-																<Text size="xs" fw={500}>
+																<Text size="xs">
 																	<Trans>Workspace</Trans>
 																</Text>
 															</Table.Th>
 															<Table.Th>
-																<Text size="xs" fw={500}>
+																<Text size="xs">
 																	<Trans>Status</Trans>
 																</Text>
 															</Table.Th>
 															<Table.Th style={{ textAlign: "right" }}>
-																<Text size="xs" fw={500}>
+																<Text size="xs">
 																	<Trans>Hours</Trans>
 																</Text>
 															</Table.Th>
 															<Table.Th style={{ textAlign: "right" }}>
-																<Text size="xs" fw={500}>
+																<Text size="xs">
 																	<Trans>Seats</Trans>
 																</Text>
 															</Table.Th>
@@ -1760,13 +1730,12 @@ function AccountBillingTable({
 																</Table.Td>
 																<Table.Td style={{ width: 36 }}>
 																	<ActionIcon
-																		size="sm"
 																		variant="subtle"
 																		color="gray"
 																		onClick={() => onOpenWorkspace(ws)}
 																		aria-label={t`Open workspace actions`}
 																	>
-																		<IconDots size={14} />
+																		<DotsThreeIcon size={20} />
 																	</ActionIcon>
 																</Table.Td>
 															</Table.Tr>
@@ -1785,15 +1754,13 @@ function AccountBillingTable({
 					<Table.Tr>
 						<Table.Td />
 						<Table.Td>
-							<Text size="xs" fw={500}>
+							<Text size="xs">
 								<Trans>Paying revenue</Trans>
 							</Text>
 						</Table.Td>
 						<Table.Td colSpan={3} />
 						<Table.Td style={{ textAlign: "right" }}>
-							<Text size="xs" fw={500}>
-								{formatEur(payingTotal)}
-							</Text>
+							<Text size="xs">{formatEur(payingTotal)}</Text>
 						</Table.Td>
 						<Table.Td />
 					</Table.Tr>
@@ -1806,7 +1773,7 @@ function AccountBillingTable({
 function UsageAndBillingPanel() {
 	const [periodOffset, setPeriodOffset] = useState(0);
 	const [refreshing, setRefreshing] = useState(false);
-	const { data, isLoading, dataUpdatedAt, refetch } = useQuery({
+	const { data, error, isLoading, dataUpdatedAt, refetch } = useQuery({
 		queryFn: () =>
 			fetchJson<BillingRollup>(
 				`/v2/admin/billing-rollup?month_offset=${periodOffset}`,
@@ -1902,16 +1869,18 @@ function UsageAndBillingPanel() {
 
 	if (isLoading) {
 		return (
-			<Center py="xl">
-				<Loader size="sm" color="gray" />
-			</Center>
+			<Stack gap="md">
+				<Skeleton h={40} />
+				<Skeleton h={320} />
+			</Stack>
 		);
 	}
 	if (!data) {
 		return (
-			<Text c="red" size="sm">
-				<Trans>Could not load the rollup. Check auth and backend logs.</Trans>
-			</Text>
+			<ErrorNotice
+				error={error ?? new Error("rollup unavailable")}
+				title={t`Could not load the rollup. Check auth and backend logs.`}
+			/>
 		);
 	}
 
@@ -1995,7 +1964,7 @@ function UsageAndBillingPanel() {
 	return (
 		<Stack gap="md">
 			<Group justify="space-between" align="flex-end" wrap="wrap">
-				<Stack gap={2}>
+				<Stack gap="xs">
 					<Text size="sm" c="dimmed">
 						<Trans>Usage and billing, {cycleLabel}</Trans>
 					</Text>
@@ -2012,9 +1981,7 @@ function UsageAndBillingPanel() {
 			<Group gap="md" wrap="wrap" align="center">
 				<Text size="sm">
 					<Trans>Paying revenue this month</Trans>{" "}
-					<Text span fw={600}>
-						{formatEur(payingTotal)}
-					</Text>
+					<Text span>{formatEur(payingTotal)}</Text>
 				</Text>
 				{compedCount > 0 && (
 					<Tooltip
@@ -2030,7 +1997,7 @@ function UsageAndBillingPanel() {
 
 			<Group gap="sm" wrap="wrap" align="center">
 				<TextInput
-					leftSection={<IconSearch size={14} />}
+					leftSection={<MagnifyingGlassIcon size={16} />}
 					placeholder={t`Search account, workspace, organisation, email, tier`}
 					value={globalFilter}
 					onChange={(e) => setGlobalFilter(e.currentTarget.value)}
@@ -2046,37 +2013,21 @@ function UsageAndBillingPanel() {
 					clearable
 					style={{ minWidth: 180 }}
 				/>
-				<Button.Group>
-					<Button
-						size="xs"
-						variant={statusFilter === "all" ? "filled" : "outline"}
-						color={statusFilter === "all" ? "primary" : "gray"}
-						onClick={() => setStatusFilter("all")}
-					>
-						<Trans>All</Trans>
-					</Button>
-					<Button
-						size="xs"
-						variant={statusFilter === "active" ? "filled" : "outline"}
-						color={statusFilter === "active" ? "primary" : "gray"}
-						onClick={() => setStatusFilter("active")}
-					>
-						<Trans>Active</Trans>
-					</Button>
-					<Button
-						size="xs"
-						variant={statusFilter === "inactive" ? "filled" : "outline"}
-						color="gray"
-						onClick={() => setStatusFilter("inactive")}
-					>
-						<Trans>Inactive</Trans>
-					</Button>
-				</Button.Group>
+				<SegmentedControl
+					size="xs"
+					value={statusFilter}
+					onChange={(next) =>
+						setStatusFilter(next as "all" | "active" | "inactive")
+					}
+					data={[
+						{ label: t`All`, value: "all" },
+						{ label: t`Active`, value: "active" },
+						{ label: t`Inactive`, value: "inactive" },
+					]}
+				/>
 				<Button
 					size="xs"
-					variant="outline"
-					color="gray"
-					leftSection={<IconDownload size={14} />}
+					leftSection={<DownloadSimpleIcon size={20} />}
 					onClick={handleExport}
 				>
 					<Trans>Export CSV</Trans>
@@ -2144,7 +2095,7 @@ function SimpleDataTable<T extends object>({
 	});
 	const rows = table.getRowModel().rows;
 	return (
-		<Paper withBorder radius="sm" style={{ overflowX: "auto" }}>
+		<Paper withBorder style={{ overflowX: "auto" }}>
 			<Table striped highlightOnHover verticalSpacing="xs" fz="xs">
 				<Table.Thead>
 					{table.getHeaderGroups().map((hg) => (
@@ -2167,16 +2118,8 @@ function SimpleDataTable<T extends object>({
 												style={{
 													cursor: "pointer",
 													display: "block",
-													padding: "8px 12px",
-													transition: "background 0.1s ease",
+													padding: "var(--mantine-spacing-sm)",
 													width: "100%",
-												}}
-												onMouseEnter={(e) => {
-													e.currentTarget.style.background =
-														"var(--mantine-color-gray-1)";
-												}}
-												onMouseLeave={(e) => {
-													e.currentTarget.style.background = "transparent";
 												}}
 											>
 												<SortableHeader
@@ -2190,14 +2133,8 @@ function SimpleDataTable<T extends object>({
 												/>
 											</UnstyledButton>
 										) : (
-											<Box px={12} py={8}>
-												<Text
-													size="xs"
-													fw={500}
-													c="dimmed"
-													tt="uppercase"
-													lts={0.3}
-												>
+											<Box p="sm">
+												<Text size="xs" c="dimmed">
 													{flexRender(
 														h.column.columnDef.header,
 														h.getContext(),
@@ -2215,7 +2152,7 @@ function SimpleDataTable<T extends object>({
 					{rows.length === 0 ? (
 						<Table.Tr>
 							<Table.Td colSpan={columns.length}>
-								<Text size="xs" c="dimmed" ta="center" py="md">
+								<Text size="sm" c="dimmed" py="md">
 									{emptyLabel}
 								</Text>
 							</Table.Td>
@@ -2265,7 +2202,6 @@ function PartnersPanel() {
 							component={I18nLink}
 							to={`/w/${row.original.workspace_id}/settings/billing`}
 							size="xs"
-							fw={500}
 						>
 							{row.original.workspace_name ??
 								row.original.workspace_id.slice(0, 8)}
@@ -2369,11 +2305,7 @@ function PartnersPanel() {
 		[],
 	);
 	if (isLoading) {
-		return (
-			<Center py="xl">
-				<Loader size="sm" color="gray" />
-			</Center>
-		);
+		return <Skeleton h={240} />;
 	}
 	const rows = data ?? [];
 	return (
@@ -2388,7 +2320,7 @@ function PartnersPanel() {
 						/>
 					</Text>
 					<TextInput
-						leftSection={<IconSearch size={14} />}
+						leftSection={<MagnifyingGlassIcon size={16} />}
 						placeholder={t`Search partner, client, workspace`}
 						value={globalFilter}
 						onChange={(e) => setGlobalFilter(e.currentTarget.value)}
@@ -2427,7 +2359,6 @@ function ExternalLedOrgsSection() {
 						component={I18nLink}
 						to={`/o/${row.original.org_id}/overview`}
 						size="xs"
-						fw={500}
 					>
 						{row.original.org_name || row.original.org_id.slice(0, 8)}
 					</Anchor>
@@ -2463,18 +2394,14 @@ function ExternalLedOrgsSection() {
 		[],
 	);
 	if (isLoading) {
-		return (
-			<Center py="md">
-				<Loader size="sm" color="gray" />
-			</Center>
-		);
+		return <Skeleton h={160} />;
 	}
 	const rows = data ?? [];
 	return (
 		<Stack gap="sm">
-			<Text size="sm" fw={600}>
+			<Title order={4}>
 				<Trans>Client orgs from partners</Trans>
-			</Text>
+			</Title>
 			<Text size="xs" c="dimmed">
 				<Trans>
 					Organisations created by people who are external collaborators of a
@@ -2604,7 +2531,7 @@ const paymentMatchesStatus = (
 };
 
 function PaymentsPanel() {
-	const { data, isLoading } = useQuery({
+	const { data, error, isLoading } = useQuery({
 		queryFn: () => fetchJson<PaymentsRollup>("/v2/admin/payments"),
 		queryKey: ["v2", "admin", "payments"],
 		staleTime: 60_000,
@@ -2628,7 +2555,6 @@ function PaymentsPanel() {
 							component={I18nLink}
 							to={`/o/${row.original.org_id}`}
 							size="xs"
-							fw={500}
 						>
 							{row.original.account_label ??
 								row.original.org_name ??
@@ -2664,7 +2590,7 @@ function PaymentsPanel() {
 			{
 				accessorKey: "amount",
 				cell: ({ row }) => (
-					<Text size="xs" fw={500}>
+					<Text size="xs">
 						{formatPaymentAmount(row.original.amount, row.original.currency)}
 					</Text>
 				),
@@ -2729,7 +2655,7 @@ function PaymentsPanel() {
 						>
 							<Group gap={4} wrap="nowrap">
 								<Trans>Open</Trans>
-								<IconExternalLink size={12} />
+								<ArrowSquareOutIcon size={16} />
 							</Group>
 						</Anchor>
 					) : null,
@@ -2743,16 +2669,18 @@ function PaymentsPanel() {
 
 	if (isLoading) {
 		return (
-			<Center py="xl">
-				<Loader size="sm" color="gray" />
-			</Center>
+			<Stack gap="md">
+				<Skeleton h={40} />
+				<Skeleton h={320} />
+			</Stack>
 		);
 	}
 	if (!data) {
 		return (
-			<Text c="red" size="sm">
-				<Trans>Could not load payments. Check auth and backend logs.</Trans>
-			</Text>
+			<ErrorNotice
+				error={error ?? new Error("payments unavailable")}
+				title={t`Could not load payments. Check auth and backend logs.`}
+			/>
 		);
 	}
 
@@ -2772,7 +2700,7 @@ function PaymentsPanel() {
 	return (
 		<Stack gap="md">
 			<Group justify="space-between" align="flex-end" wrap="wrap">
-				<Stack gap={2}>
+				<Stack gap="xs">
 					<Group gap="xs" align="center">
 						<Text size="sm" c="dimmed">
 							<Trans>Recent payments across all accounts</Trans>
@@ -2796,15 +2724,14 @@ function PaymentsPanel() {
 					target="_blank"
 					rel="noopener noreferrer"
 					size="xs"
-					variant="outline"
-					rightSection={<IconExternalLink size={14} />}
+					rightSection={<ArrowSquareOutIcon size={20} />}
 				>
 					<Trans>Open Mollie dashboard</Trans>
 				</Button>
 			</Group>
 
 			{!data.mollie_enabled && (
-				<Paper withBorder radius="sm" p="sm">
+				<Paper withBorder p="sm">
 					<Text size="xs" c="dimmed">
 						<Trans>
 							Mollie is not configured in this environment, so no live
@@ -2816,48 +2743,38 @@ function PaymentsPanel() {
 			)}
 
 			<SimpleGrid cols={{ base: 2, sm: 4 }} spacing="sm">
-				<Paper withBorder radius="sm" p="sm">
-					<Stack gap={2}>
+				<Paper withBorder p="sm">
+					<Stack gap="xs">
 						<Text size="xs" c="dimmed">
 							<Trans>Paid</Trans>
 						</Text>
-						<Text size="lg" fw={500}>
-							{formatEur(data.paid_eur)}
-						</Text>
+						<Text size="lg">{formatEur(data.paid_eur)}</Text>
 					</Stack>
 				</Paper>
-				<Paper withBorder radius="sm" p="sm">
-					<Stack gap={2}>
+				<Paper withBorder p="sm">
+					<Stack gap="xs">
 						<Text size="xs" c="dimmed">
 							<Trans>Failed</Trans>
 						</Text>
-						<Text
-							size="lg"
-							fw={500}
-							c={data.failed_count > 0 ? "red" : undefined}
-						>
+						<Text size="lg" c={data.failed_count > 0 ? "red" : undefined}>
 							{data.failed_count}
 						</Text>
 					</Stack>
 				</Paper>
-				<Paper withBorder radius="sm" p="sm">
-					<Stack gap={2}>
+				<Paper withBorder p="sm">
+					<Stack gap="xs">
 						<Text size="xs" c="dimmed">
 							<Trans>Pending</Trans>
 						</Text>
-						<Text size="lg" fw={500}>
-							{data.open_count}
-						</Text>
+						<Text size="lg">{data.open_count}</Text>
 					</Stack>
 				</Paper>
-				<Paper withBorder radius="sm" p="sm">
-					<Stack gap={2}>
+				<Paper withBorder p="sm">
+					<Stack gap="xs">
 						<Text size="xs" c="dimmed">
 							<Trans>Accounts billed</Trans>
 						</Text>
-						<Text size="lg" fw={500}>
-							{data.accounts_with_customer}
-						</Text>
+						<Text size="lg">{data.accounts_with_customer}</Text>
 					</Stack>
 				</Paper>
 			</SimpleGrid>
@@ -2871,22 +2788,15 @@ function PaymentsPanel() {
 							other="# payments"
 						/>
 					</Text>
-					<Button.Group>
-						{statusChips.map((chip) => (
-							<Button
-								key={chip.value}
-								size="xs"
-								variant={statusFilter === chip.value ? "filled" : "default"}
-								color={statusFilter === chip.value ? "primary" : "gray"}
-								onClick={() => setStatusFilter(chip.value)}
-							>
-								{chip.label}
-							</Button>
-						))}
-					</Button.Group>
+					<SegmentedControl
+						size="xs"
+						value={statusFilter}
+						onChange={(next) => setStatusFilter(next as PaymentStatusFilter)}
+						data={statusChips}
+					/>
 				</Group>
 				<TextInput
-					leftSection={<IconSearch size={14} />}
+					leftSection={<MagnifyingGlassIcon size={16} />}
 					placeholder={t`Search account, status, description`}
 					value={globalFilter}
 					onChange={(e) => setGlobalFilter(e.currentTarget.value)}
@@ -2896,18 +2806,14 @@ function PaymentsPanel() {
 			</Group>
 
 			{monthGroups.length === 0 ? (
-				<Paper withBorder radius="sm" p="md">
-					<Text size="xs" c="dimmed" ta="center">
-						<Trans>No payments match the filter.</Trans>
-					</Text>
-				</Paper>
+				<Text size="sm" c="dimmed">
+					<Trans>No payments match the filter.</Trans>
+				</Text>
 			) : (
 				monthGroups.map((group) => (
 					<Stack key={group.key} gap="xs">
 						<Group justify="space-between" align="baseline">
-							<Text size="sm" fw={500}>
-								{group.label}
-							</Text>
+							<Text size="sm">{group.label}</Text>
 							<Text size="xs" c="dimmed">
 								<Plural
 									value={group.rows.length}
@@ -3062,20 +2968,16 @@ function ManagedBillingPanel() {
 		);
 
 	if (isLoading) {
-		return (
-			<Center py="xl">
-				<Loader size="sm" />
-			</Center>
-		);
+		return <Skeleton h={320} />;
 	}
 
 	return (
 		<Stack gap="md">
-			<Paper withBorder radius="sm" p="lg">
+			<Paper withBorder p="lg">
 				<Stack gap="md">
-					<Text size="sm" fw={500}>
+					<Title order={4}>
 						<Trans>Managed billing</Trans>
-					</Text>
+					</Title>
 					<Text size="xs">
 						<Trans>
 							Managed accounts pay by invoice, not by card. Setting an account
@@ -3098,9 +3000,7 @@ function ManagedBillingPanel() {
 						<>
 							<Divider />
 							<Group gap="xs" align="center">
-								<Text size="sm" fw={500}>
-									{accountIdentifyingName(selected)}
-								</Text>
+								<Text size="sm">{accountIdentifyingName(selected)}</Text>
 								<AccountBadges account={selected} />
 							</Group>
 
@@ -3130,7 +3030,6 @@ function ManagedBillingPanel() {
 									w={320}
 								/>
 								<Button
-									variant="outline"
 									loading={busy === "assign-manager"}
 									disabled={!managerId.trim()}
 									onClick={onAssignManager}
@@ -3144,11 +3043,11 @@ function ManagedBillingPanel() {
 			</Paper>
 
 			{selected && (
-				<Paper withBorder radius="sm" p="lg">
+				<Paper withBorder p="lg">
 					<Stack gap="md">
-						<Text size="sm" fw={500}>
+						<Title order={4}>
 							<Trans>Invoicing</Trans>
-						</Text>
+						</Title>
 						<Text size="xs">
 							<Trans>
 								Amounts default to the account's seats times the per-seat price.
@@ -3165,11 +3064,7 @@ function ManagedBillingPanel() {
 								min={0}
 								w={220}
 							/>
-							<Button
-								variant="outline"
-								loading={busy === "issue-link"}
-								onClick={onIssueLink}
-							>
+							<Button loading={busy === "issue-link"} onClick={onIssueLink}>
 								<Trans>Issue payment link</Trans>
 							</Button>
 						</Group>
@@ -3200,17 +3095,12 @@ function ManagedBillingPanel() {
 						/>
 						<Group gap="sm">
 							<Button
-								variant="outline"
 								loading={busy === "issue-invoice"}
 								onClick={onIssueInvoice}
 							>
 								<Trans>Issue invoice</Trans>
 							</Button>
-							<Button
-								variant="subtle"
-								loading={busy === "mark-paid"}
-								onClick={onMarkPaid}
-							>
+							<Button loading={busy === "mark-paid"} onClick={onMarkPaid}>
 								<Trans>Mark invoice paid</Trans>
 							</Button>
 						</Group>
@@ -3238,7 +3128,7 @@ export const AdminSettingsRoute = () => {
 		return (
 			<Container size="sm" py="xl">
 				<Stack align="center" gap="sm" mt="15vh">
-					<Title order={3} fw={400}>
+					<Title order={2}>
 						<Trans>Staff only</Trans>
 					</Title>
 					<Text c="dimmed" size="sm" ta="center">
@@ -3258,12 +3148,12 @@ export const AdminSettingsRoute = () => {
 		<Container size="xl" py="xl" px="lg">
 			<Stack gap="md">
 				<Group justify="space-between" align="flex-end">
-					<Stack gap={2}>
+					<Stack gap="xs">
 						<Group gap="xs" align="center">
-							<Title order={3} fw={400}>
+							<Title order={2}>
 								<Trans>Admin</Trans>
 							</Title>
-							<Badge size="xs" color="violet" variant="light">
+							<Badge size="xs" color="gray" variant="light">
 								<Trans>Staff</Trans>
 							</Badge>
 						</Group>
@@ -3289,7 +3179,7 @@ export const AdminSettingsRoute = () => {
 						<PaymentsPanel />
 					</Tabs.Panel>
 					<Tabs.Panel value="accounts" pt="md">
-						<Suspense fallback={<Loader size="sm" />}>
+						<Suspense fallback={<Skeleton h={240} />}>
 							<AccountsPanel />
 						</Suspense>
 					</Tabs.Panel>

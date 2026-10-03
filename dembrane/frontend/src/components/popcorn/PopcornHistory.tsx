@@ -29,18 +29,13 @@ export function PopcornHistory({ popcorn }: { popcorn: PopcornDetail }) {
 	const versions = versionsQuery.data ?? [];
 	if (versions.length === 0) return null;
 	return (
-		<Paper
-			withBorder
-			className="rounded-md"
-			p="lg"
-			{...testId("popcorn-history")}
-		>
+		<Paper withBorder p="lg" {...testId("popcorn-history")}>
 			<Stack gap="md">
 				<Stack gap={2}>
 					<Title order={4}>
 						<Trans>Earlier runs</Trans>
 					</Title>
-					<Text size="sm">
+					<Text size="sm" c="dimmed">
 						<Trans>Saved in the history. A rerun keeps these.</Trans>
 					</Text>
 				</Stack>
@@ -57,7 +52,7 @@ export function PopcornHistory({ popcorn }: { popcorn: PopcornDetail }) {
 								<Text size="sm" style={{ fontVariantNumeric: "tabular-nums" }}>
 									{versionLabel(version)}
 								</Text>
-								<Text size="xs" truncate>
+								<Text size="xs" c="dimmed" truncate>
 									{firstClause(version.detail)}
 								</Text>
 							</Stack>
@@ -71,7 +66,7 @@ export function PopcornHistory({ popcorn }: { popcorn: PopcornDetail }) {
 							>
 								<Group gap={4} wrap="nowrap">
 									<Trans>Open</Trans>
-									<ArrowSquareOutIcon size={14} />
+									<ArrowSquareOutIcon size={16} />
 								</Group>
 							</Anchor>
 						</Group>

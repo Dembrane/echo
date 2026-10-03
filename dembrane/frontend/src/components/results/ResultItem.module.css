@@ -18,7 +18,7 @@
 	--parchment: #f6f4f1;
 	--paper: #ffffff;
 	--graphite: #2d2d2c;
-	--blue: #4169e1;
+	--blue: #2957df;
 	--hairline: #e6e3df;
 	/* Soft ink carries words and is readable on parchment; faint ink is for
 	   the lines and underlines nobody is asked to read. */
@@ -261,7 +261,6 @@
 .aside {
 	font-family: var(--app-font-family, inherit);
 	font-size: var(--app-font-size-sm, 0.9375rem);
-	font-weight: 400;
 	margin-top: 0.4em;
 }
 
@@ -280,7 +279,6 @@
 
 .verdictWord {
 	color: var(--graphite);
-	font-weight: 450;
 	margin: 0;
 }
 
@@ -289,7 +287,6 @@
 	display: flex;
 	flex-direction: column;
 	font-size: var(--app-font-size-sm, 0.9375rem);
-	font-weight: 400;
 	gap: 1.75rem;
 	line-height: 1.45;
 	min-width: 0;
@@ -306,12 +303,10 @@
 	gap: 0;
 }
 
-/* Sentence case, weight 500, like the list's group headers. The dashboard's
-   face has one weight, so the title borrows the variable cut to have its 500. */
+/* Sentence case, like the list's group headers, in the card's cut. */
 .sectionTitle {
 	color: var(--graphite);
 	font-family: var(--app-content-bold-font-family, inherit);
-	font-weight: 500;
 	margin: 0;
 }
 
@@ -574,12 +569,15 @@
 	margin: 0;
 }
 
-/* Paper on parchment: the one place the host writes. Never under 16 px, so a
-   phone does not zoom the page on focus. */
+/* Paper on parchment: the one place the host writes, drawn as a field is:
+   rules at the sides. Never under 16 px, so a phone does not zoom the page on
+   focus. */
 .reasonField {
 	background: var(--paper);
-	border: 1px solid var(--hairline);
+	border-color: var(--app-control-rule, #878785);
 	border-radius: 0;
+	border-style: solid;
+	border-width: 0 1px;
 	color: var(--graphite);
 	display: block;
 	font: inherit;
@@ -592,14 +590,10 @@
 	width: 100%;
 }
 
-.reasonField:hover {
-	border-color: var(--ink-faint);
-}
-
-/* The ring sits on the hairline rather than outside it: one line, not two. */
+/* Focus turns the side rules blue, as every field's does. */
 .item .reasonField:focus-visible {
 	border-color: var(--blue);
-	outline-offset: -1px;
+	outline: none;
 }
 
 .reasonActions {

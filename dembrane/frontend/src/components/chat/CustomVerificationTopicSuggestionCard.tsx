@@ -9,7 +9,7 @@ import {
 	Textarea,
 	TextInput,
 } from "@mantine/core";
-import { IconCheck } from "@tabler/icons-react";
+import { CheckIcon } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 import { SuggestionCardFrame } from "@/components/common/SuggestionCardFrame";
 import { toast } from "@/components/common/Toaster";
@@ -88,10 +88,10 @@ export const CustomVerificationTopicSuggestionCard = ({
 				testId="agentic-verification-topic-suggestion"
 			>
 				<Group gap="xs" wrap="nowrap">
-					<IconCheck
+					<CheckIcon
 						size={16}
 						className="shrink-0"
-						style={{ color: "var(--mantine-color-primary-7)" }}
+						style={{ color: "var(--mantine-color-green-7)" }}
 					/>
 					<Text size="sm">
 						<Trans>This verification prompt is added to your project.</Trans>
@@ -105,18 +105,18 @@ export const CustomVerificationTopicSuggestionCard = ({
 		<SuggestionCardFrame testId="agentic-verification-topic-suggestion">
 			<Stack gap="sm">
 				<Group justify="space-between" wrap="nowrap">
-					<Text size="sm" fw={600}>
+					<Text size="sm">
 						<Trans>Suggested verification prompt</Trans>
 					</Text>
 					{dismissed && (
-						<Badge size="xs" variant="outline">
+						<Badge size="xs" color="gray">
 							<Trans>Dismissed</Trans>
 						</Badge>
 					)}
 				</Group>
 				{suggestion.reason && <Text size="xs">{suggestion.reason}</Text>}
 				{!dismissed && (
-					<Text size="xs" fs="italic" c="graphite.6">
+					<Text size="xs" c="dimmed">
 						<Trans>
 							Review and edit below. This adds a check that runs against each
 							conversation. Verification must be enabled for it to run. Nothing
@@ -145,33 +145,36 @@ export const CustomVerificationTopicSuggestionCard = ({
 					</Stack>
 				)}
 
-				<Group justify="flex-end" gap="xs">
-					{!dismissed && (
-						<Button
-							variant="subtle"
-							size="xs"
-							onClick={() => setDismissed(true)}
-						>
-							<Trans>Dismiss</Trans>
-						</Button>
-					)}
+				<Group justify="flex-start" gap="xs">
 					{dismissed ? (
 						<Button
 							variant="subtle"
+							color="gray"
 							size="xs"
 							onClick={() => setDismissed(false)}
 						>
 							<Trans>Review again</Trans>
 						</Button>
 					) : (
-						<Button
-							size="xs"
-							loading={createTopicMutation.isPending}
-							onClick={() => void handleApply()}
-							{...testId("verification-topic-apply-button")}
-						>
-							<Trans>Add verification prompt</Trans>
-						</Button>
+						<>
+							<Button
+								variant="filled"
+								size="xs"
+								loading={createTopicMutation.isPending}
+								onClick={() => void handleApply()}
+								{...testId("verification-topic-apply-button")}
+							>
+								<Trans>Add verification prompt</Trans>
+							</Button>
+							<Button
+								variant="subtle"
+								color="gray"
+								size="xs"
+								onClick={() => setDismissed(true)}
+							>
+								<Trans>Dismiss</Trans>
+							</Button>
+						</>
 					)}
 				</Group>
 			</Stack>

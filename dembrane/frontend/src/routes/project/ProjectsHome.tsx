@@ -20,9 +20,14 @@ import {
 	useDisclosure,
 	useDocumentTitle,
 } from "@mantine/hooks";
-import { TrayArrowUp } from "@phosphor-icons/react";
+import {
+	GearIcon,
+	MagnifyingGlassIcon,
+	PlusIcon,
+	TrayArrowUp,
+	XIcon,
+} from "@phosphor-icons/react";
 import { usePostHog } from "@posthog/react";
-import { IconSearch, IconSettings, IconX } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useInView } from "react-intersection-observer";
@@ -41,7 +46,6 @@ import { useBulkSelection } from "@/hooks/useBulkSelection";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceProjects } from "@/hooks/useWorkspaceProjects";
-import { Icons } from "@/icons";
 import { WorkspaceAccessDeniedError } from "@/lib/accessDenied";
 import { isOutsiderRole, isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
@@ -230,9 +234,9 @@ export const ProjectsHomeRoute = () => {
 				    Per audit §1: the user is deciding WHICH project to open;
 				    the workspace name is context, not content. */}
 				{workspace && (
-					<Stack gap={4}>
+					<Stack gap="xs">
 						<Group justify="space-between" align="flex-start" wrap="nowrap">
-							<Title order={2} fw={500} lineClamp={1}>
+							<Title order={2} lineClamp={1}>
 								{workspace.name}
 							</Title>
 							{canManageWorkspace && (
@@ -240,7 +244,7 @@ export const ProjectsHomeRoute = () => {
 									variant="subtle"
 									size="xs"
 									color="gray"
-									leftSection={<IconSettings size={14} />}
+									leftSection={<GearIcon size={20} />}
 									onClick={() => navigate(`/w/${workspace.id}/settings`)}
 								>
 									<Trans>Settings</Trans>
@@ -275,8 +279,8 @@ export const ProjectsHomeRoute = () => {
 				    for them isn't "empty, go make something" — it's "nothing
 				    has been shared with you yet." */}
 				{totallyEmpty ? (
-					<Stack gap={12} py={48}>
-						<Title order={3} fw={400}>
+					<Stack gap="md" py="xl">
+						<Title order={3}>
 							{isOutsider ? (
 								<Trans>Nothing here for you yet.</Trans>
 							) : (
@@ -301,7 +305,8 @@ export const ProjectsHomeRoute = () => {
 							<Button
 								size="sm"
 								w="fit-content"
-								rightSection={<Icons.Plus stroke="white" fill="white" />}
+								variant="filled"
+								leftSection={<PlusIcon size={20} />}
 								onClick={handleCreateProject}
 								{...testId("project-home-create-button")}
 							>
@@ -314,7 +319,7 @@ export const ProjectsHomeRoute = () => {
 						{/* Pinned section — cards at the top, hidden when empty. */}
 						{showPinnedSection && (
 							<Stack gap="sm">
-								<Title order={5} fw={400} c="dimmed">
+								<Title order={5}>
 									<Trans>Pinned</Trans>
 								</Title>
 								<SimpleGrid cols={{ base: 1, md: 3, sm: 2 }} spacing="md">
@@ -337,23 +342,29 @@ export const ProjectsHomeRoute = () => {
 						    (audit §1), Create button on the header row. */}
 						<Stack gap="sm">
 							<Group justify="space-between" align="center">
-								<Title order={5} fw={400}>
+								<Title order={5}>
 									<Trans>All projects</Trans>
 								</Title>
 								{canCreateProject && (
 									<Button
 										size="sm"
-										rightSection={<Icons.Plus stroke="white" fill="white" />}
+										variant="filled"
+										leftSection={<PlusIcon size={20} />}
 										onClick={handleCreateProject}
 										{...testId("project-home-create-button")}
 									>
-										<Trans>Create</Trans>
+										<Trans>Create project</Trans>
 									</Button>
 								)}
 							</Group>
 
 							<TextInput
-								leftSection={<IconSearch {...testId("project-search-icon")} />}
+								leftSection={
+									<MagnifyingGlassIcon
+										size={16}
+										{...testId("project-search-icon")}
+									/>
+								}
 								rightSection={
 									!!search && (
 										<ActionIcon
@@ -363,7 +374,7 @@ export const ProjectsHomeRoute = () => {
 											aria-label={t`Clear search`}
 											{...testId("project-search-clear-button")}
 										>
-											<IconX />
+											<XIcon size={16} />
 										</ActionIcon>
 									)
 								}
@@ -378,7 +389,7 @@ export const ProjectsHomeRoute = () => {
 							{displayProjects.length === 0 &&
 								debouncedSearchValue !== "" &&
 								status === "success" && (
-									<Text c="dimmed">
+									<Text size="sm" c="dimmed">
 										<Trans>No projects found for search term</Trans>{" "}
 										<i>{debouncedSearchValue}</i>
 									</Text>
@@ -396,7 +407,12 @@ export const ProjectsHomeRoute = () => {
 							{canManageWorkspace &&
 								displayProjects.length > 0 &&
 								(selectMode ? (
-									<Group justify="space-between" align="center" wrap="nowrap">
+									<Group
+										justify="flex-start"
+										align="center"
+										gap="md"
+										wrap="nowrap"
+									>
 										<Checkbox
 											checked={selection.allSelected}
 											indeterminate={selection.someSelected}
@@ -419,9 +435,8 @@ export const ProjectsHomeRoute = () => {
 										<Group gap="xs" wrap="nowrap">
 											{selection.count > 0 && (
 												<Button
-													variant="subtle"
 													size="xs"
-													leftSection={<TrayArrowUp size={16} />}
+													leftSection={<TrayArrowUp size={20} />}
 													onClick={moveHandlers.open}
 													data-testid="projects-bulk-move"
 												>
@@ -440,7 +455,7 @@ export const ProjectsHomeRoute = () => {
 										</Group>
 									</Group>
 								) : (
-									<Group justify="flex-end">
+									<Group justify="flex-start">
 										<Button
 											variant="subtle"
 											size="xs"

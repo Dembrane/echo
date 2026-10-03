@@ -1,7 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
-	Alert,
 	Anchor,
 	Button,
 	Card,
@@ -9,14 +8,13 @@ import {
 	Container,
 	Group,
 	List,
-	Loader,
 	Select,
+	Skeleton,
 	Stack,
 	Text,
 	Title,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
-import { IconInfoCircle } from "@tabler/icons-react";
 import posthog from "posthog-js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
@@ -88,7 +86,6 @@ const OrgChoice = ({
 			{!selectable && org.can_manage && (
 				<Button
 					size="xs"
-					variant="outline"
 					loading={enable.isPending}
 					onClick={() => enable.mutate({ enabled: true, orgId: org.id })}
 					data-testid={`consent-org-enable-${org.id}`}
@@ -201,14 +198,16 @@ export const AgentConsentRoute = () => {
 
 	return (
 		<Container size="sm" px="lg" py="xl">
-			<Card withBorder p="xl" radius="md" data-testid="agent-consent-card">
+			<Card withBorder p="xl" data-testid="agent-consent-card">
 				{isLoading ? (
-					<Group justify="center" py="xl">
-						<Loader size="sm" color="gray" />
-					</Group>
+					<Stack gap="md">
+						<Skeleton height={28} width="70%" />
+						<Skeleton height={16} width="40%" />
+						<Skeleton height={80} />
+					</Stack>
 				) : expired || !data ? (
 					<Stack gap="md">
-						<Title order={3}>
+						<Title order={2}>
 							<Trans>This request has expired</Trans>
 						</Title>
 						<Text size="sm">
@@ -220,16 +219,17 @@ export const AgentConsentRoute = () => {
 						<Group>
 							<Button
 								variant="subtle"
+								color="gray"
 								onClick={() => navigate("/connect-agent")}
 							>
-								<Trans>Back to settings</Trans>
+								<Trans>Back to Connect your agent</Trans>
 							</Button>
 						</Group>
 					</Stack>
 				) : (
 					<Stack gap="lg">
 						<Stack gap={4}>
-							<Title order={3} data-testid="agent-consent-title">
+							<Title order={2} data-testid="agent-consent-title">
 								<Trans>{data.client_name} wants MCP access to dembrane</Trans>
 							</Title>
 							<Text size="sm" c="dimmed">
@@ -237,74 +237,72 @@ export const AgentConsentRoute = () => {
 							</Text>
 						</Stack>
 
-						<Stack gap={4}>
-							<Text size="sm" fw={500}>
-								<Trans>It is asking to</Trans>
-							</Text>
-							<List size="sm" spacing={2}>
-								{data.requested_scopes
-									.filter((scope) => scope !== "write")
-									.map((scope) => (
-										<List.Item key={scope}>{scopeLabel(scope)}</List.Item>
-									))}
-							</List>
-							{data.requested_scopes.includes("write") && (
-								<Checkbox
-									mt={4}
-									checked={allowWrite}
-									onChange={(e) => setAllowWrite(e.currentTarget.checked)}
-									label={t`Also allow it to change project settings`}
-									data-testid="agent-consent-write"
-								/>
-							)}
-						</Stack>
-
-						<Stack gap="xs">
-							<Text size="sm" fw={500}>
-								<Trans>In which organisations</Trans>
-							</Text>
-							{data.organisations.length === 0 ? (
-								<Alert
-									color="orange"
-									variant="light"
-									icon={<IconInfoCircle size={18} />}
-								>
-									<Trans>
-										You are not a member of any organisation, so there is
-										nothing to connect yet.
-									</Trans>
-								</Alert>
-							) : (
-								data.organisations.map((org) => (
-									<OrgChoice
-										key={org.id}
-										org={org}
-										checked={selectedOrgIds.includes(org.id)}
-										onChange={(checked) =>
-											setSelectedOrgIds((ids) =>
-												checked
-													? Array.from(new Set([...ids, org.id]))
-													: ids.filter((id) => id !== org.id),
-											)
-										}
+						<Stack gap="md">
+							<Stack gap={4}>
+								<Text size="sm">
+									<Trans>It is asking to</Trans>
+								</Text>
+								<List size="sm" spacing="xs">
+									{data.requested_scopes
+										.filter((scope) => scope !== "write")
+										.map((scope) => (
+											<List.Item key={scope}>{scopeLabel(scope)}</List.Item>
+										))}
+								</List>
+								{data.requested_scopes.includes("write") && (
+									<Checkbox
+										mt={4}
+										checked={allowWrite}
+										onChange={(e) => setAllowWrite(e.currentTarget.checked)}
+										label={t`Also allow it to change project settings`}
+										data-testid="agent-consent-write"
 									/>
-								))
-							)}
-						</Stack>
+								)}
+							</Stack>
 
-						<Select
-							label={t`Access expires after`}
-							value={String(expiresInDays)}
-							onChange={(value) => {
-								if (value) setExpiresInDays(Number(value));
-							}}
-							data={data.expiry_choices_days.map((days) => ({
-								label: t`${days} days`,
-								value: String(days),
-							}))}
-							allowDeselect={false}
-							data-testid="agent-consent-expiry"
-						/>
+							<Stack gap="xs">
+								<Text size="sm">
+									<Trans>In which organisations</Trans>
+								</Text>
+								{data.organisations.length === 0 ? (
+									<Text size="sm" c="dimmed">
+										<Trans>
+											You are not a member of any organisation, so there is
+											nothing to connect yet.
+										</Trans>
+									</Text>
+								) : (
+									data.organisations.map((org) => (
+										<OrgChoice
+											key={org.id}
+											org={org}
+											checked={selectedOrgIds.includes(org.id)}
+											onChange={(checked) =>
+												setSelectedOrgIds((ids) =>
+													checked
+														? Array.from(new Set([...ids, org.id]))
+														: ids.filter((id) => id !== org.id),
+												)
+											}
+										/>
+									))
+								)}
+							</Stack>
+
+							<Select
+								label={t`Access expires after`}
+								value={String(expiresInDays)}
+								onChange={(value) => {
+									if (value) setExpiresInDays(Number(value));
+								}}
+								data={data.expiry_choices_days.map((days) => ({
+									label: t`${days} days`,
+									value: String(days),
+								}))}
+								allowDeselect={false}
+								data-testid="agent-consent-expiry"
+							/>
+						</Stack>
 
 						<AgentRiskNotice clientName={data.client_name} />
 
@@ -315,7 +313,28 @@ export const AgentConsentRoute = () => {
 							data-testid="agent-consent-accept"
 						/>
 
-						<Group justify="space-between" align="center">
+						<Stack gap="sm">
+							<Group gap="sm">
+								<Button
+									variant="filled"
+									onClick={onAllow}
+									loading={approve.isPending}
+									disabled={!allowEnabled || busy}
+									data-testid="agent-consent-allow"
+								>
+									<Trans>Allow</Trans>
+								</Button>
+								<Button
+									variant="subtle"
+									color="gray"
+									onClick={onDeny}
+									loading={deny.isPending}
+									disabled={approve.isPending}
+									data-testid="agent-consent-deny"
+								>
+									<Trans>Deny</Trans>
+								</Button>
+							</Group>
 							<Text size="xs" c="dimmed">
 								<Trans>
 									You can revoke this later under{" "}
@@ -325,26 +344,7 @@ export const AgentConsentRoute = () => {
 									.
 								</Trans>
 							</Text>
-							<Group gap="sm">
-								<Button
-									variant="subtle"
-									onClick={onDeny}
-									loading={deny.isPending}
-									disabled={approve.isPending}
-									data-testid="agent-consent-deny"
-								>
-									<Trans>Deny</Trans>
-								</Button>
-								<Button
-									onClick={onAllow}
-									loading={approve.isPending}
-									disabled={!allowEnabled || busy}
-									data-testid="agent-consent-allow"
-								>
-									<Trans>Allow</Trans>
-								</Button>
-							</Group>
-						</Group>
+						</Stack>
 					</Stack>
 				)}
 			</Card>

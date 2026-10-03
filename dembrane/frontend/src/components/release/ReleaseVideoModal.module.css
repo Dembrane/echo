@@ -4,7 +4,6 @@
 	color: var(--app-text);
 	font-size: var(--app-font-size-lg);
 	font-style: normal;
-	font-weight: 400;
 	line-height: 1.35;
 }
 
@@ -12,7 +11,6 @@
 	color: var(--app-text);
 	font-size: var(--app-font-size-lg);
 	font-style: normal;
-	font-weight: 400;
 	line-height: 1.35;
 	margin: 0;
 }
@@ -21,7 +19,6 @@
 	color: var(--app-text);
 	font-size: var(--app-font-size-md);
 	font-style: normal;
-	font-weight: 400;
 	line-height: 1.55;
 }
 
@@ -68,7 +65,7 @@
 .video {
 	aspect-ratio: 16 / 9;
 	border: 0;
-	border-radius: 8px;
+	border-radius: 0;
 	display: block;
 	height: 100%;
 	overflow: hidden;
@@ -77,7 +74,7 @@
 
 .videoFrame {
 	background-color: color-mix(in srgb, var(--app-text) 6%, transparent);
-	border-radius: 8px;
+	border-radius: 0;
 	overflow: hidden;
 }
 
@@ -86,7 +83,6 @@
 	color: var(--app-text);
 	font-size: var(--app-font-size-md);
 	font-style: normal;
-	font-weight: 400;
 	line-height: 1.55;
 	margin: 0;
 }
@@ -100,7 +96,7 @@
 }
 
 .body :is(h1, h2, h3, h4, h5, h6) {
-	color: var(--mantine-color-primary-6);
+	color: var(--app-text);
 	font-size: var(--app-font-size-lg);
 	line-height: 1.35;
 	margin: 1.25em 0 0.5em;

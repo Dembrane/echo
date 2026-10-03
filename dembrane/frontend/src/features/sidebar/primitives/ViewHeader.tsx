@@ -1,5 +1,6 @@
 import { ArrowLeft } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
+import { roles } from "@/colors";
 import { I18nLink } from "@/components/common/i18nLink";
 import { cn } from "@/lib/utils";
 import { RAIL_ITEM_CLASS, RailTip, useInRail } from "../shell/rail";
@@ -15,8 +16,8 @@ export const ViewHeader = ({ to, title }: ViewHeaderProps) => {
 			<RailTip label={title}>
 				<I18nLink
 					to={to}
-					className={cn(RAIL_ITEM_CLASS, "hover:bg-black/[0.04]")}
-					style={{ color: "#2d2d2c" }}
+					className={cn(RAIL_ITEM_CLASS, "hover:bg-[#e6e3df]")}
+					style={{ color: roles.text }}
 				>
 					<ArrowLeft size={16} aria-hidden="true" />
 					<span className="sr-only">{title}</span>
@@ -28,16 +29,15 @@ export const ViewHeader = ({ to, title }: ViewHeaderProps) => {
 	return (
 		<I18nLink
 			to={to}
-			className="group grid h-[36px] grid-cols-[22px_1fr_22px] items-center rounded-md px-2 text-sm leading-tight transition-colors hover:bg-black/[0.04] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#4169e1]"
-			style={{ color: "#2d2d2c" }}
+			className="group flex h-[36px] items-center gap-2 px-2 text-sm leading-tight transition-colors hover:bg-[#e6e3df] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#2957df]"
+			style={{ color: roles.text }}
 		>
 			<ArrowLeft
-				size={14}
-				className="transition-transform group-hover:-translate-x-0.5"
+				size={16}
+				className="shrink-0 transition-transform group-hover:-translate-x-0.5"
 				aria-hidden="true"
 			/>
-			<span className="truncate text-center uppercase">{title}</span>
-			<span aria-hidden="true" />
+			<span className="truncate">{title}</span>
 		</I18nLink>
 	);
 };

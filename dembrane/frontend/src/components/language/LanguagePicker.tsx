@@ -54,18 +54,18 @@ const data: Array<{
 		label: "Español",
 		language: "es-ES",
 	},
-		{
-			flag: "🇺🇦",
-			iso639_1: "uk",
-			label: "Ukrainian",
-			language: "uk-UA",
-		},
-		{
-			flag: "🇨🇿",
-			iso639_1: "cs",
-			label: "Czech",
-			language: "cs-CZ",
-		},
+	{
+		flag: "🇺🇦",
+		iso639_1: "uk",
+		label: "Ukrainian",
+		language: "uk-UA",
+	},
+	{
+		flag: "🇨🇿",
+		iso639_1: "cs",
+		label: "Czech",
+		language: "cs-CZ",
+	},
 ];
 
 export const languageOptions = data.map((d) => ({
@@ -121,6 +121,7 @@ export const LanguagePicker = () => {
 		<>
 			<Box onMouseDown={(e) => e.stopPropagation()}>
 				<Select
+					aria-label={t`Language`}
 					value={currentLanguage}
 					onChange={handleChange}
 					data={languageOptions}
@@ -128,11 +129,7 @@ export const LanguagePicker = () => {
 					withCheckIcon={false}
 					comboboxProps={{ offset: 2 }}
 					maxDropdownHeight={360}
-					classNames={{ option: classes.option }}
 					styles={{
-						dropdown: {
-							border: "1px solid var(--mantine-color-dark-9)",
-						},
 						option: {
 							paddingBlock: 4,
 						},
@@ -141,7 +138,9 @@ export const LanguagePicker = () => {
 						<Group gap="xs" wrap="nowrap">
 							<span>{option.label}</span>
 							{PARTIAL_LANGUAGES.has(option.value) && (
-								<span className={classes.partial}>(Partial)</span>
+								<span className={classes.partial}>
+									<Trans>(Partial)</Trans>
+								</span>
 							)}
 						</Group>
 					)}

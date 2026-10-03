@@ -1,10 +1,18 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Box, Button, Group, Stack, Text, Title } from "@mantine/core";
-import { IconArrowRight } from "@tabler/icons-react";
+import {
+	Button,
+	Group,
+	Skeleton,
+	Stack,
+	Text,
+	Title,
+	UnstyledButton,
+} from "@mantine/core";
+import { ArrowRightIcon } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
-import { Logo } from "@/components/common/Logo";
+
 import { toast } from "@/components/common/Toaster";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -34,15 +42,6 @@ const localeFromLanguage = (language?: string) => {
 	if (!language) return undefined;
 	const iso = language.includes("-") ? language.split("-")[0] : language;
 	return LANGUAGE_TO_LOCALE[iso as LanguageCode];
-};
-
-export const TOPIC_ICON_MAP: Record<string, string> = {
-	actions: "↗️",
-	agreements: "✅",
-	disagreements: "⚠️",
-	gems: "🔍",
-	moments: "🚀",
-	truths: "👀",
 };
 
 export const VerifySelection = () => {
@@ -81,13 +80,7 @@ export const VerifySelection = () => {
 				translations["en-US"]?.label ??
 				topic.key;
 
-			const icon =
-				TOPIC_ICON_MAP[topic.key] ??
-				(topic.icon && !topic.icon.startsWith(":") ? topic.icon : undefined) ??
-				(topic.is_custom ? undefined : "•");
-
 			return {
-				icon,
 				key: topic.key,
 				label: localizedLabel,
 			};
@@ -207,10 +200,13 @@ export const VerifySelection = () => {
 		(singleTopicKey && !showInstructions && !hasAutoTriedSingle)
 	) {
 		return (
-			<Stack align="center" justify="center" className="h-full">
-				<div className="animate-spin">
-					<Logo hideTitle hideEnvBadge alwaysDembrane h="48px" />
-				</div>
+			<Stack gap="md" className="h-full pt-10">
+				<Skeleton height={32} width="60%" />
+				<Group gap="sm">
+					<Skeleton height={48} width={120} />
+					<Skeleton height={48} width={120} />
+					<Skeleton height={48} width={120} />
+				</Group>
 			</Stack>
 		);
 	}
@@ -237,14 +233,14 @@ export const VerifySelection = () => {
 		>
 			{/* Main content */}
 			<Stack gap="xl" className="flex-grow">
-				<Title order={3} className="font-semibold">
+				<Title order={2}>
 					<Trans id="participant.verify.selection.title">
 						What do you want to verify?
 					</Trans>
 				</Title>
 
 				{/* Options list */}
-				<Group gap="md">
+				<Group gap="sm">
 					{availableOptions.length === 0 && (
 						<Text size="sm" c="dimmed">
 							<Trans>
@@ -253,38 +249,31 @@ export const VerifySelection = () => {
 						</Text>
 					)}
 					{availableOptions.map((option) => (
-						<Box
+						<UnstyledButton
 							key={option.key}
 							onClick={() => setSelectedOption(option.key)}
-							className={`cursor-pointer rounded-3xl border-2 px-4 py-3 transition-all ${
-								selectedOption === option.key
-									? "border-blue-500 bg-blue-50"
-									: "border-gray-300 bg-white hover:border-gray-400"
-							}`}
+							className="app-do px-4 py-3"
+							data-selected={selectedOption === option.key || undefined}
+							aria-pressed={selectedOption === option.key}
 							{...testId(`portal-verify-topic-${option.key}`)}
 						>
-							<Group gap="sm" align="center">
-								{option.icon ? (
-									<span className="text-xl">{option.icon}</span>
-								) : null}
-								<span className="text-base font-medium">{option.label}</span>
-							</Group>
-						</Box>
+							<Text size="sm">{option.label}</Text>
+						</UnstyledButton>
 					))}
 				</Group>
 			</Stack>
 
 			{/* Next button */}
 			<Button
-				size="xl"
-				radius="3xl"
+				size="lg"
+				variant="filled"
 				onClick={handleNext}
 				className="w-full"
-				rightSection={<IconArrowRight size={20} className="ml-1" />}
+				rightSection={<ArrowRightIcon size={20} />}
 				disabled={!selectedOption}
 				{...testId("portal-verify-selection-next-button")}
 			>
-				<Trans id="participant.verify.selection.button.next">Next</Trans>
+				<Trans id="participant.verify.selection.button.next">Continue</Trans>
 			</Button>
 		</Stack>
 	);

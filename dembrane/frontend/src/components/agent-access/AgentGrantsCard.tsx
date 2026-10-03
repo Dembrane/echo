@@ -4,11 +4,11 @@ import {
 	Badge,
 	Button,
 	Card,
-	Group,
-	Loader,
+	Skeleton,
 	Stack,
 	Table,
 	Text,
+	Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useState } from "react";
@@ -64,14 +64,15 @@ export const AgentGrantsCard = ({
 	const body = (
 		<Stack gap="md">
 			{!bare && (
-				<Text size="sm" fw={500}>
+				<Title order={4}>
 					<Trans>Connected agents</Trans>
-				</Text>
+				</Title>
 			)}
 			{isLoading ? (
-				<Group justify="center" py="md">
-					<Loader size="sm" color="gray" />
-				</Group>
+				<Stack gap="xs">
+					<Skeleton height={16} />
+					<Skeleton height={16} />
+				</Stack>
 			) : rows.length === 0 ? (
 				<Text size="sm" c="dimmed">
 					<Trans>No agents connected yet.</Trans>
@@ -116,9 +117,7 @@ export const AgentGrantsCard = ({
 										data-testid={`agent-grant-${grant.id}`}
 									>
 										<Table.Td>
-											<Text size="sm" fw={500}>
-												{grant.client_name}
-											</Text>
+											<Text size="sm">{grant.client_name}</Text>
 										</Table.Td>
 										{showUser && (
 											<Table.Td>
@@ -161,7 +160,6 @@ export const AgentGrantsCard = ({
 											{active && (
 												<Button
 													size="xs"
-													variant="outline"
 													color="red"
 													onClick={() => askRevoke(grant)}
 													data-testid={`agent-grant-revoke-${grant.id}`}
@@ -185,7 +183,7 @@ export const AgentGrantsCard = ({
 			{bare ? (
 				body
 			) : (
-				<Card withBorder p="lg" radius="md">
+				<Card withBorder p="lg">
 					{body}
 				</Card>
 			)}

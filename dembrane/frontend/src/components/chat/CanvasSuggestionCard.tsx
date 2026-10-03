@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Badge, Box, Button, Group, Stack, Text } from "@mantine/core";
-import { IconCheck } from "@tabler/icons-react";
+import { CheckIcon } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 import { useParams } from "react-router";
 import { CanvasFrame } from "@/components/canvas/CanvasFrame";
@@ -85,23 +85,23 @@ function changeRows(
 		current?.name ?? suggestion.target_canvas_name ?? "",
 	);
 	if (currentName && currentName !== suggestion.name) {
-		rows.push({ label: t`Name`, before: currentName, after: suggestion.name });
+		rows.push({ after: suggestion.name, before: currentName, label: t`Name` });
 	}
 	const currentBrief = String(current?.config?.brief ?? "");
 	if (currentBrief && currentBrief.trim() !== suggestion.brief.trim()) {
 		rows.push({
-			label: t`Brief`,
-			before: currentBrief.trim(),
 			after: suggestion.brief.trim(),
+			before: currentBrief.trim(),
+			label: t`Brief`,
 		});
 	}
 	const currentCadence = current?.config?.cadence_minutes ?? null;
 	const nextCadence = suggestion.cadence_minutes ?? null;
 	if (currentCadence !== null && currentCadence !== nextCadence) {
 		rows.push({
-			label: t`Refresh`,
-			before: t`${currentCadence} min`,
 			after: nextCadence ? t`${nextCadence} min` : t`Default`,
+			before: t`${currentCadence} min`,
+			label: t`Refresh`,
 		});
 	}
 	return rows;
@@ -216,10 +216,10 @@ export const CanvasSuggestionCard = ({
 		return (
 			<SuggestionCardFrame compact testId="agentic-canvas-suggestion-applied">
 				<Group gap="xs" wrap="nowrap">
-					<IconCheck
+					<CheckIcon
 						size={16}
 						className="shrink-0"
-						style={{ color: "var(--mantine-color-primary-7)" }}
+						style={{ color: "var(--mantine-color-green-7)" }}
 					/>
 					<Text size="sm">
 						<Trans>
@@ -240,19 +240,17 @@ export const CanvasSuggestionCard = ({
 		<SuggestionCardFrame testId="agentic-canvas-suggestion">
 			<Stack gap="sm">
 				<Group justify="space-between" wrap="nowrap">
-					<Stack gap={2}>
-						<Text size="sm" fw={600}>
-							{suggestion.name}
-						</Text>
+					<Stack gap="xs">
+						<Text size="sm">{suggestion.name}</Text>
 						<Text size="xs">{canvasCadenceLabel(suggestion)}</Text>
 					</Stack>
 					{isUpdateChoice ? (
-						<Badge size="xs" variant="light">
+						<Badge size="xs" color="gray">
 							<Trans>Update</Trans>
 						</Badge>
 					) : null}
 					{dismissed ? (
-						<Badge size="xs" variant="outline">
+						<Badge size="xs" color="gray">
 							<Trans>Dismissed</Trans>
 						</Badge>
 					) : null}
@@ -262,8 +260,8 @@ export const CanvasSuggestionCard = ({
 					"{truncatedBrief(suggestion.brief, expanded)}"
 				</Text>
 				{isUpdateChoice ? (
-					<Stack gap={4}>
-						<Text size="xs" fw={600}>
+					<Stack gap="xs">
+						<Text size="xs">
 							<Trans>Proposed changes</Trans>
 						</Text>
 						{rows.length ? (
@@ -286,6 +284,7 @@ export const CanvasSuggestionCard = ({
 				{suggestion.brief.trim().length > 220 ? (
 					<Button
 						variant="subtle"
+						color="gray"
 						size="xs"
 						onClick={() => setExpanded((value) => !value)}
 						className="self-start"
@@ -299,7 +298,7 @@ export const CanvasSuggestionCard = ({
 				{previewGeneration ? (
 					<Stack gap="xs" {...testId("canvas-proposal-preview")}>
 						<Group gap="xs">
-							<Badge variant="outline">
+							<Badge color="gray">
 								<Trans>Preview</Trans>
 							</Badge>
 							<Text size="xs">
@@ -307,8 +306,8 @@ export const CanvasSuggestionCard = ({
 							</Text>
 						</Group>
 						<Box
-							className="max-h-[560px] overflow-auto rounded-md border"
-							style={{ borderColor: "var(--mantine-color-primary-light)" }}
+							className="max-h-[560px] overflow-auto border-x-0 border-y border-solid"
+							style={{ borderColor: "var(--app-rule-color)" }}
 						>
 							<CanvasFrame
 								generation={previewGeneration}
@@ -318,36 +317,11 @@ export const CanvasSuggestionCard = ({
 					</Stack>
 				) : null}
 
-				<Group justify="flex-end" gap="xs">
-					{!dismissed ? (
-						<Button
-							variant="subtle"
-							size="xs"
-							onClick={() => setDismissed(true)}
-						>
-							<Trans>Dismiss</Trans>
-						</Button>
-					) : (
-						<Button
-							variant="subtle"
-							size="xs"
-							onClick={() => setDismissed(false)}
-						>
-							<Trans>Review again</Trans>
-						</Button>
-					)}
+				<Group justify="flex-start" gap="xs">
 					{!dismissed ? (
 						<>
 							<Button
-								variant="outline"
-								size="xs"
-								loading={previewMutation.isPending}
-								onClick={() => void handlePreview()}
-								{...testId("canvas-proposal-preview-button")}
-							>
-								<Trans>Try it</Trans>
-							</Button>
-							<Button
+								variant="filled"
 								size="xs"
 								loading={
 									createMutation.isPending ||
@@ -360,8 +334,33 @@ export const CanvasSuggestionCard = ({
 							>
 								<Trans>Apply</Trans>
 							</Button>
+							<Button
+								size="xs"
+								loading={previewMutation.isPending}
+								onClick={() => void handlePreview()}
+								{...testId("canvas-proposal-preview-button")}
+							>
+								<Trans>Try it</Trans>
+							</Button>
+							<Button
+								variant="subtle"
+								color="gray"
+								size="xs"
+								onClick={() => setDismissed(true)}
+							>
+								<Trans>Dismiss</Trans>
+							</Button>
 						</>
-					) : null}
+					) : (
+						<Button
+							variant="subtle"
+							color="gray"
+							size="xs"
+							onClick={() => setDismissed(false)}
+						>
+							<Trans>Review again</Trans>
+						</Button>
+					)}
 				</Group>
 			</Stack>
 		</SuggestionCardFrame>

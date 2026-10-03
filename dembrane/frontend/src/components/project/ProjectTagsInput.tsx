@@ -18,7 +18,6 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
-	Alert,
 	Badge,
 	Box,
 	Button,
@@ -30,7 +29,7 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconX } from "@tabler/icons-react";
+import { XIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
@@ -91,7 +90,6 @@ export const ProjectTagPill = ({
 				ref={setNodeRef}
 				style={{
 					...style,
-					fontWeight: 500,
 					textTransform: "none",
 				}}
 				variant="light"
@@ -105,7 +103,7 @@ export const ProjectTagPill = ({
 						c="gray.8"
 						onPointerDown={(e) => e.stopPropagation()}
 					>
-						<IconX size={14} />
+						<XIcon size={16} />
 					</ActionIcon>
 				}
 				{...attributes}
@@ -272,23 +270,20 @@ export const ProjectTagsInput = (props: { project: Project }) => {
 						<Button
 							loading={createTagMutation.isPending}
 							onClick={handleSubmit}
-							variant="outline"
 							disabled={!tagInput.trim() || createTagMutation.isPending}
 							{...testId("portal-editor-add-tag-button")}
 						>
-							{tagInput.includes(",") ? t`Add Tags` : t`Add Tag`}
+							{tagInput.includes(",") ? t`Add tags` : t`Add tag`}
 						</Button>
 					</Group>
 					<Group gap="sm">
 						{(projectQuery.data?.tags?.length ?? 0) === 0 ? (
-							<Alert>
-								<Text size="sm">
-									<Trans>
-										No tags have been added to this project yet. Add a tag using
-										the text input above to get started.
-									</Trans>
-								</Text>
-							</Alert>
+							<Text size="sm" c="dimmed">
+								<Trans>
+									No tags have been added to this project yet. Add a tag using
+									the text input above to get started.
+								</Trans>
+							</Text>
 						) : (
 							<DndContext
 								sensors={sensors}

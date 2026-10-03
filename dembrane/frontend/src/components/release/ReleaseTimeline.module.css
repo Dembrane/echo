@@ -3,7 +3,7 @@
 }
 
 .timeline {
-	--timeline-border: color-mix(in srgb, var(--app-text) 16%, transparent);
+	--timeline-border: var(--app-rule-color);
 }
 
 .monthGroup {
@@ -21,7 +21,6 @@
 	position: sticky;
 	top: 1rem;
 	font-size: var(--app-font-size-lg);
-	font-weight: 400;
 	line-height: 1.35;
 }
 
@@ -33,28 +32,31 @@
 	border-inline-start: 1px solid var(--timeline-border);
 	display: flex;
 	flex-direction: column;
-	gap: 1.25rem;
+	gap: 1.5rem;
 	min-width: 0;
 	padding-inline-start: 1.5rem;
-	padding-block-end: 2.5rem;
+	padding-block-end: 2rem;
 }
 
 .monthGroup:last-child .entries {
 	padding-block-end: 0;
 }
 
+/* Something to read: a rule above and below, square, no fill. */
 .entry {
-	background: var(--app-background);
-	border: 1px solid var(--timeline-border);
-	border-radius: 0.75rem;
+	background: transparent;
+	border-color: var(--app-rule-color);
+	border-radius: 0;
+	border-style: solid;
+	border-width: 1px 0;
 	min-width: 0;
-	padding: 1.5rem;
+	padding: 1.5rem 0;
 	position: relative;
 }
 
 .entry::before {
 	background: var(--app-background);
-	border: 2px solid var(--mantine-color-primary-6);
+	border: 2px solid var(--app-text);
 	border-radius: 50%;
 	content: "";
 	height: 10px;
@@ -66,22 +68,13 @@
 
 .title {
 	font-size: var(--app-font-size-lg);
-	font-weight: 400;
 	line-height: 1.35;
 	margin: 0;
 	overflow-wrap: anywhere;
 }
 
-.entry[data-layout="highlight"] {
-	border-color: color-mix(
-		in srgb,
-		var(--mantine-color-primary-6) 45%,
-		transparent
-	);
-}
-
 .entry[data-layout="highlight"]::before {
-	background: var(--mantine-color-primary-6);
+	background: var(--app-text);
 }
 
 .entry[data-layout="highlight"] .title {
@@ -89,24 +82,12 @@
 	line-height: var(--app-heading-h2-line-height);
 }
 
-.highlightBadge {
-	align-items: center;
-	border: 1px solid
-		color-mix(in srgb, var(--mantine-color-primary-6) 35%, transparent);
-	border-radius: 2rem;
-	color: var(--mantine-color-primary-6);
-	display: inline-flex;
-	font-size: var(--app-font-size-sm);
-	gap: 0.375rem;
-	padding: 0.25rem 0.625rem;
-}
-
 .entry[data-layout="patch"] {
 	background: transparent;
 	border: 0;
 	border-bottom: 1px solid var(--timeline-border);
 	border-radius: 0;
-	padding: 0.75rem 0.25rem 1.25rem;
+	padding: 0.5rem 0 1rem;
 }
 
 .entry[data-layout="patch"]::before {
@@ -146,6 +127,6 @@
 	}
 
 	.entry {
-		padding: 1rem;
+		padding: 1rem 0;
 	}
 }

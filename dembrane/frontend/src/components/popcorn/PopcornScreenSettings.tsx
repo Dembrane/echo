@@ -37,7 +37,6 @@ export function PopcornScreenSettings({
 	return (
 		<Paper
 			withBorder={!embedded}
-			className="rounded-md"
 			p={embedded ? 0 : "lg"}
 			{...testId("popcorn-screen")}
 		>

@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
-import { Button, Stack, Text } from "@mantine/core";
-import { IconArrowLeft, IconReload } from "@tabler/icons-react";
+import { Button, Group, Stack, Text, Title } from "@mantine/core";
+import { ArrowLeftIcon, ArrowsClockwiseIcon } from "@phosphor-icons/react";
 
 interface VerifyArtefactErrorProps {
 	onReload: () => void;
@@ -14,45 +14,42 @@ export const VerifyArtefactError = ({
 	isReloading,
 }: VerifyArtefactErrorProps) => {
 	return (
-		<Stack align="center" justify="center" gap="lg" className="h-full px-4">
-			<Text size="xl" fw={500} c="red" mb="md">
+		<Stack justify="center" gap="md" className="h-full px-4">
+			<Title order={2}>
 				<Trans id="participant.outcome.error.title">
-					Unable to Load Outcome
+					Unable to load outcome
 				</Trans>
-			</Text>
-			<Text size="md" c="dimmed" mb="lg" ta="center">
+			</Title>
+			<Text c="dimmed">
 				<Trans id="participant.outcome.error.description">
 					It looks like we couldn't load this outcome. This might be a temporary
 					issue. You can try reloading or go back to select a different topic.
 				</Trans>
 			</Text>
-			<Stack gap="xl" className="w-full max-w-xs">
-				<Button
-					variant="light"
-					size="md"
-					radius="md"
-					onClick={onReload}
-					loading={isReloading}
-					disabled={isReloading}
-					leftSection={!isReloading && <IconReload />}
-				>
-					<Trans id="participant.concrete.artefact.action.button.reload">
-						Reload Page
-					</Trans>
-				</Button>
+			<Group gap="sm">
 				<Button
 					variant="filled"
 					size="md"
-					radius="md"
-					leftSection={<IconArrowLeft size={16} />}
+					onClick={onReload}
+					loading={isReloading}
+					disabled={isReloading}
+					leftSection={<ArrowsClockwiseIcon size={20} />}
+				>
+					<Trans id="participant.concrete.artefact.action.button.reload">
+						Reload page
+					</Trans>
+				</Button>
+				<Button
+					size="md"
+					leftSection={<ArrowLeftIcon size={20} />}
 					onClick={onGoBack}
 					disabled={isReloading}
 				>
 					<Trans id="participant.concrete.artefact.action.button.go.back">
-						Go back
+						Back
 					</Trans>
 				</Button>
-			</Stack>
+			</Group>
 		</Stack>
 	);
 };

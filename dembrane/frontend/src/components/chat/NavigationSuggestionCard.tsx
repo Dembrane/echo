@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Button, Group, Text } from "@mantine/core";
-import { IconArrowRight } from "@tabler/icons-react";
+import { ArrowRightIcon } from "@phosphor-icons/react";
 import { useParams } from "react-router";
 import { SuggestionCardFrame } from "@/components/common/SuggestionCardFrame";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -121,7 +121,7 @@ export const NavigationSuggestionCard = ({
 				</Text>
 				<Button
 					size="xs"
-					rightSection={<IconArrowRight size={14} />}
+					rightSection={<ArrowRightIcon size={20} />}
 					onClick={() => navigate(path)}
 					{...testId("navigation-suggestion-button")}
 				>

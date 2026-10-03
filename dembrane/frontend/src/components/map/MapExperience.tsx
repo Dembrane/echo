@@ -128,7 +128,7 @@ const MapSectionHeader = ({
 		className="flex items-center justify-between gap-2 border-b pb-1"
 		style={{ borderColor: mapVars.border }}
 	>
-		<h2 className="text-xs font-light uppercase tracking-wider">{title}</h2>
+		<h2 className="text-xs">{title}</h2>
 		{layoutFailed ? (
 			<p className="text-xs" role="alert">
 				<Trans>The layout could not be computed for this scope.</Trans>
@@ -453,10 +453,10 @@ export const MapExperience = ({
 					<section
 						className={cn(
 							SPAN_ALL[availableCols],
-							"relative flex flex-col items-center justify-center p-2",
+							"relative flex flex-col p-2",
 						)}
 					>
-						<p className="text-sm">
+						<p className="text-sm" style={{ color: "var(--map-muted)" }}>
 							<Trans>Enable a visualization from the panel settings menu</Trans>
 						</p>
 					</section>

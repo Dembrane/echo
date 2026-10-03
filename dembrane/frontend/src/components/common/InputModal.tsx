@@ -67,22 +67,24 @@ export const InputModal = ({
 						autoFocus
 						data-testid={dataTestId ? `${dataTestId}-input` : undefined}
 					/>
-					<Group justify="flex-end" gap="sm">
+					<Group justify="flex-start" gap="sm">
 						<Button
-							variant="subtle"
-							onClick={onClose}
-							type="button"
-							data-testid={dataTestId ? `${dataTestId}-cancel` : undefined}
-						>
-							{cancelLabel ?? <Trans>Cancel</Trans>}
-						</Button>
-						<Button
+							variant="filled"
 							type="submit"
 							loading={loading}
 							disabled={!value.trim()}
 							data-testid={dataTestId ? `${dataTestId}-confirm` : undefined}
 						>
 							{confirmLabel ?? <Trans>Save</Trans>}
+						</Button>
+						<Button
+							variant="subtle"
+							color="gray"
+							onClick={onClose}
+							type="button"
+							data-testid={dataTestId ? `${dataTestId}-cancel` : undefined}
+						>
+							{cancelLabel ?? <Trans>Cancel</Trans>}
 						</Button>
 					</Group>
 				</Stack>

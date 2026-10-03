@@ -100,7 +100,7 @@ export function FeatureGatePopover({
 		>
 			<Popover.Target>{children({ onClick: toggle })}</Popover.Target>
 			<Popover.Dropdown {...testId("feature-gate-popover")}>
-				<Stack gap={8} align="flex-start">
+				<Stack gap="sm" align="flex-start">
 					<Text size="sm">{line}</Text>
 					<Anchor
 						component="button"

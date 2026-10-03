@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
-import { Box, Button, Group, Loader, Stack, Text } from "@mantine/core";
-import { IconArrowRight } from "@tabler/icons-react";
+import { Box, Button, Group, Stack, Text } from "@mantine/core";
+import { ArrowRightIcon } from "@phosphor-icons/react";
 import { testId } from "@/lib/testUtils";
 
 type VerifyInstructionsProps = {
@@ -65,11 +65,11 @@ export const VerifyInstructions = ({
 	return (
 		<Stack
 			gap="lg"
-			pt="2xl"
+			pt="xl"
 			className="h-full"
 			{...testId("portal-verify-instructions-container")}
 		>
-			<Stack gap="2xl" className="flex-grow">
+			<Stack gap="lg" className="flex-grow">
 				{INSTRUCTIONS.map((instruction, index) => (
 					<Group
 						key={instruction.key}
@@ -78,11 +78,13 @@ export const VerifyInstructions = ({
 						wrap="nowrap"
 					>
 						<Box
-							className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${
-								!isLoading ? "bg-gray-400 text-white" : "bg-blue-500 text-white"
+							className={`flex h-10 w-10 flex-shrink-0 items-center justify-center ${
+								isLoading
+									? "bg-primary-100 text-primary-700"
+									: "bg-[var(--app-rule-color)]"
 							}`}
 						>
-							<Text size="lg" fw={600}>
+							<Text size="md" c="inherit">
 								{index + 1}
 							</Text>
 						</Box>
@@ -95,25 +97,16 @@ export const VerifyInstructions = ({
 
 			{/* Next button */}
 			<Button
-				size="xl"
-				radius="3xl"
+				size="lg"
+				variant="filled"
 				onClick={onNext}
-				className="w-full disabled:text-gray-600"
+				className="w-full"
+				loading={isLoading}
 				disabled={isLoading || !canProceed}
-				rightSection={
-					isLoading ? (
-						<Loader size="sm" color="dark" className="ml-1" />
-					) : (
-						<IconArrowRight size={20} className="ml-1" />
-					)
-				}
+				rightSection={<ArrowRightIcon size={20} />}
 				{...testId("portal-verify-instructions-next-button")}
 			>
-				{isLoading ? (
-					<Trans id="participant.verify.instructions.loading">Loading</Trans>
-				) : (
-					<Trans id="participant.verify.instructions.button.next">Next</Trans>
-				)}
+				<Trans id="participant.verify.instructions.button.next">Continue</Trans>
 			</Button>
 		</Stack>
 	);

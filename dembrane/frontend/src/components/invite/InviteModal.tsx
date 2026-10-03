@@ -564,7 +564,7 @@ export function InviteModal({
 			centered
 			size="lg"
 			title={
-				<Title order={4} fw={500}>
+				<Title order={4}>
 					<Trans>Invite people to {orgName}</Trans>
 				</Title>
 			}
@@ -597,7 +597,7 @@ export function InviteModal({
 							<Alert color="red" variant="light" p="xs">
 								<Text size="xs">
 									<Trans>
-										Couldn't load workspaces. Close and reopen to retry.
+										Couldn't load workspaces. Close and reopen to try again.
 									</Trans>
 								</Text>
 							</Alert>
@@ -699,9 +699,9 @@ export function InviteModal({
 
 				{confirm && confirm.length > 0 && results.length === 0 && (
 					<Alert variant="light" p="sm" data-testid="invite-proration-confirm">
-						<Stack gap={8}>
+						<Stack gap="sm">
 							{confirm.length > 1 && (
-								<Text size="sm" fw={500}>
+								<Text size="sm">
 									<Trans>
 										This invite spans {confirm.length} billing contexts, each
 										invoiced on its own:
@@ -721,7 +721,7 @@ export function InviteModal({
 									>
 										<Text size="xs">
 											{line.label}
-											{line.billsSeparately ? " (Partner)" : ""}
+											{line.billsSeparately ? ` (${t`Partner`})` : ""}
 										</Text>
 										<Text size="xs" ta="right">
 											<Trans>
@@ -748,12 +748,12 @@ export function InviteModal({
 							)}
 							{confirm.length > 1 ? (
 								<>
-									<Divider my={2} />
+									<Divider my="xs" />
 									<Group justify="space-between" wrap="nowrap">
-										<Text size="xs" fw={500}>
+										<Text size="xs">
 											<Trans>Total due now</Trans>
 										</Text>
-										<Text size="xs" fw={500}>
+										<Text size="xs">
 											{fmtEur(
 												confirm.reduce((sum, l) => sum + l.proratedNow, 0),
 											)}
@@ -769,30 +769,42 @@ export function InviteModal({
 					</Alert>
 				)}
 
-				<Group justify="flex-end" gap="xs">
-					<Button
-						variant="subtle"
-						onClick={onCloseClick}
-						disabled={submit.isPending}
-					>
-						{results.length > 0 ? <Trans>Done</Trans> : <Trans>Cancel</Trans>}
-					</Button>
-					{results.length === 0 && (
+				<Group justify="flex-start" gap="sm">
+					{results.length === 0 ? (
+						<>
+							<Button
+								variant="filled"
+								onClick={() => void handleSend()}
+								loading={submit.isPending || estimating}
+								disabled={!canSubmit}
+								data-testid="invite-modal-send"
+							>
+								{confirm ? (
+									<Trans>Confirm and send</Trans>
+								) : selectedWorkspaces.size > 0 ? (
+									<Trans>Continue</Trans>
+								) : validChips.length > 1 ? (
+									<Trans>Send {validChips.length} invites</Trans>
+								) : (
+									<Trans>Send invite</Trans>
+								)}
+							</Button>
+							<Button
+								variant="subtle"
+								color="gray"
+								onClick={onCloseClick}
+								disabled={submit.isPending}
+							>
+								<Trans>Cancel</Trans>
+							</Button>
+						</>
+					) : (
 						<Button
-							onClick={() => void handleSend()}
-							loading={submit.isPending || estimating}
-							disabled={!canSubmit}
-							data-testid="invite-modal-send"
+							variant="filled"
+							onClick={onCloseClick}
+							disabled={submit.isPending}
 						>
-							{confirm ? (
-								<Trans>Confirm and send</Trans>
-							) : selectedWorkspaces.size > 0 ? (
-								<Trans>Next</Trans>
-							) : validChips.length > 1 ? (
-								<Trans>Send {validChips.length} invites</Trans>
-							) : (
-								<Trans>Send invite</Trans>
-							)}
+							<Trans>Done</Trans>
 						</Button>
 					)}
 				</Group>

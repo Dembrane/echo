@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Alert,
@@ -10,7 +10,6 @@ import {
 	Divider,
 	Group,
 	Menu,
-	Modal,
 	Paper,
 	Skeleton,
 	Stack,
@@ -20,32 +19,29 @@ import {
 	Tooltip,
 	UnstyledButton,
 } from "@mantine/core";
-import {
-	isDateFarEnough,
-	ScheduleDateTimePicker,
-} from "@/components/report/ScheduleDateTimePicker";
 import { useDisclosure, useFullscreen } from "@mantine/hooks";
-import { GearSixIcon } from "@phosphor-icons/react";
 import {
-	IconClock,
-	IconCopy,
-	IconDotsVertical,
-	IconLink,
-	IconMaximize,
-	IconMinimize,
-	IconPlayerPlay,
-	IconPrinter,
-	IconShare2,
-	IconTrash,
-} from "@tabler/icons-react";
+	CopyIcon,
+	CornersInIcon,
+	CornersOutIcon,
+	DotsThreeVerticalIcon,
+	ExportIcon,
+	GearSixIcon,
+	LinkIcon,
+	PlayIcon,
+	PrinterIcon,
+	TrashIcon,
+} from "@phosphor-icons/react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { useCallback, useEffect, useRef, useState } from "react";
+import posthog from "posthog-js";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { Breadcrumbs } from "@/components/common/Breadcrumbs";
 import { CloseableAlert } from "@/components/common/ClosableAlert";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { ExponentialProgress } from "@/components/common/ExponentialProgress";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { CreateReportForm } from "@/components/report/CreateReportForm";
 import {
 	useAllProjectReports,
@@ -62,13 +58,16 @@ import {
 } from "@/components/report/hooks";
 import { ReportRenderer } from "@/components/report/ReportRenderer";
 import { ReportTimeline } from "@/components/report/ReportTimeline";
+import {
+	isDateFarEnough,
+	ScheduleDateTimePicker,
+} from "@/components/report/ScheduleDateTimePicker";
 import { UpdateReportModalButton } from "@/components/report/UpdateReportModalButton";
-import posthog from "posthog-js";
 import { PARTICIPANT_BASE_URL } from "@/config";
+import focusOptionsData from "@/data/reportFocusOptions.json";
 import useCopyToRichText from "@/hooks/useCopyToRichText";
 import { useLanguage } from "@/hooks/useLanguage";
 import { testId } from "@/lib/testUtils";
-import focusOptionsData from "@/data/reportFocusOptions.json";
 
 dayjs.extend(relativeTime);
 
@@ -121,44 +120,21 @@ const LANG_LABELS: Record<string, string> = {
 	nl: "NL",
 };
 
-// ── Color system ──
+// ── Status ──
 
-const STATUS_COLORS: Record<
-	string,
-	{ dot: string; bg: string; label: string }
-> = {
-	archived: { bg: "#F1F3F5", dot: "#868E96", label: "Archived" },
-	draft: { bg: "#E7F5FF", dot: "#339AF0", label: "Generating" },
-	published: { bg: "#E6F5F0", dot: "#0F6E56", label: "Published" },
-	scheduled: { bg: "#FFF8E1", dot: "#E8A317", label: "Scheduled" },
-};
-
-function getStatusColor(status: string) {
-	return STATUS_COLORS[status] ?? STATUS_COLORS.archived;
-}
-
-// ── Status dot with optional glow ──
-
-function StatusDot({ status, size = 10 }: { status: string; size?: number }) {
-	const color = getStatusColor(status);
-	const hasGlow = status === "published" || status === "scheduled";
-	const isGenerating = status === "draft";
-	return (
-		<span
-			style={{
-				animation: isGenerating ? "pulse 1.5s ease-in-out infinite" : undefined,
-				backgroundColor: color.dot,
-				borderRadius: "50%",
-				boxShadow: hasGlow
-					? `0 0 0 3px ${color.bg}, 0 0 6px ${color.dot}40`
-					: undefined,
-				display: "inline-block",
-				flexShrink: 0,
-				height: size,
-				width: size,
-			}}
-		/>
-	);
+/** Status as a Badge: green published, yellow scheduled, primary while it is
+ * generating (in progress), gray otherwise. */
+function getStatusMeta(status: string): { color: string; label: string } {
+	switch (status) {
+		case "published":
+			return { color: "green", label: t`Published` };
+		case "scheduled":
+			return { color: "yellow", label: t`Scheduled` };
+		case "draft":
+			return { color: "primary", label: t`Generating` };
+		default:
+			return { color: "gray", label: t`Archived` };
+	}
 }
 
 // ── Layouts ──
@@ -181,7 +157,7 @@ export const ReportLayout = ({
 					items={[
 						{
 							label: (
-								<Title order={1}>
+								<Title order={2}>
 									<Trans>Report</Trans>
 								</Title>
 							),
@@ -210,9 +186,11 @@ const ProjectReportAnalytics = ({
 	return (
 		<Stack gap="1.5rem" id="report-analytics">
 			<Group>
-				<Title order={4}>Analytics</Title>
-				<ActionIcon onClick={toggle} variant="transparent" color="gray.9">
-					<GearSixIcon size={24} />
+				<Title order={4}>
+					<Trans>Analytics</Trans>
+				</Title>
+				<ActionIcon onClick={toggle}>
+					<GearSixIcon size={20} />
 				</ActionIcon>
 			</Group>
 			<Stack gap="1rem">
@@ -263,7 +241,7 @@ const ReportProgressView = ({
 
 	return (
 		<Stack>
-			<Alert title={t`Generating your report...`} mt={12}>
+			<Alert title={t`Generating your report...`} mt="sm">
 				<Text size="sm">{progressMessage}</Text>
 				<Text size="xs" c="dimmed" mt="xs">
 					<Trans>
@@ -277,10 +255,10 @@ const ReportProgressView = ({
 				isLoading={true}
 				startFrom={startFrom}
 			/>
-			<Group justify="flex-end" mt="md">
+			<Group justify="flex-start" mt="md">
 				<Button
-					variant="outline"
-					color="red"
+					variant="subtle"
+					color="gray"
 					onClick={handleCancel}
 					loading={isCancelling}
 					{...testId("report-cancel-button")}
@@ -305,7 +283,7 @@ function VersionItem({
 	isLatest?: boolean;
 	onClick: () => void;
 }) {
-	const sc = getStatusColor(report.status);
+	const sc = getStatusMeta(report.status);
 	const isScheduled = report.status === "scheduled";
 	const isGenerating = report.status === "draft";
 
@@ -340,76 +318,44 @@ function VersionItem({
 	const hideBadge =
 		report.status === "archived" && !isLatest && !report.user_instructions;
 
+	const metaParts = [
+		...(!isGenerating && timeAgo ? [{ key: "time", text: timeAgo }] : []),
+		...(langTag ? [{ key: "lang", text: langTag }] : []),
+	];
+
 	return (
 		<UnstyledButton
+			className="app-do"
+			data-selected={isActive || undefined}
 			onClick={onClick}
 			px="sm"
-			py={8}
-			style={{
-				backgroundColor: isActive ? "var(--mantine-color-gray-1)" : undefined,
-				borderLeft: isActive
-					? "3px solid var(--mantine-color-primary-6)"
-					: "3px solid transparent",
-				borderRadius: 8,
-			}}
+			py="xs"
 			w="100%"
 		>
-			<Stack gap={2} style={{ minWidth: 0 }}>
+			<Stack gap="xs" style={{ minWidth: 0 }}>
 				{/* Title row */}
-				<Text
-					size="xs"
-					fw={isActive ? 600 : 500}
-					lineClamp={1}
-					fs={isGenerating ? "italic" : undefined}
-				>
+				<Text size="xs" lineClamp={1} fs={isGenerating ? "italic" : undefined}>
 					{title}
 				</Text>
 
 				{/* Meta row: status, time, language */}
-				<Group gap={6} wrap="nowrap">
-					<StatusDot status={report.status} size={7} />
+				<Group gap="xs" wrap="nowrap">
 					{!hideBadge && (
-						<Text
-							size="10px"
-							fw={500}
-							c={
-								report.status === "published"
-									? "green.8"
-									: report.status === "scheduled"
-										? "yellow.7"
-										: report.status === "draft"
-											? "blue.5"
-											: "gray.5"
-							}
-							style={{
-								flexShrink: 0,
-								letterSpacing: 0.5,
-								textTransform: "uppercase",
-							}}
-						>
+						<Badge size="sm" color={sc.color} style={{ flexShrink: 0 }}>
 							{tagLabel}
+						</Badge>
+					)}
+					{metaParts.map((part, i) => (
+						<Text
+							key={part.key}
+							size="xs"
+							c="dimmed"
+							truncate={part.key === "time"}
+							style={{ flexShrink: part.key === "time" ? 1 : 0 }}
+						>
+							{i > 0 || !hideBadge ? `· ${part.text}` : part.text}
 						</Text>
-					)}
-					{!isGenerating && timeAgo && (
-						<>
-							<Text size="10px" c="dimmed">
-								·
-							</Text>
-							<Text size="10px" c="dimmed" truncate style={{ flexShrink: 1 }}>
-								{timeAgo}
-							</Text>
-						</>
-					)}
-					{langTag && (
-						<>
-							<Text size="10px" c="dimmed">
-								·
-							</Text>
-							<Text size="10px" c="dimmed" fw={600} style={{ flexShrink: 0 }}>
-								{langTag}
-							</Text>
-						</>
-					)}
+					))}
 				</Group>
 			</Stack>
 		</UnstyledButton>
@@ -419,52 +365,7 @@ function VersionItem({
 // ── Scrollable sidebar container ──
 
 function ScrollableSidebar({ children }: { children: React.ReactNode }) {
-	const scrollRef = useRef<HTMLDivElement>(null);
-	const [showFade, setShowFade] = useState(false);
-
-	const checkScroll = useCallback(() => {
-		const el = scrollRef.current;
-		if (!el) return;
-		const hasOverflow = el.scrollHeight > el.clientHeight + 4;
-		const isAtBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 4;
-		setShowFade(hasOverflow && !isAtBottom);
-	}, []);
-
-	useEffect(() => {
-		checkScroll();
-		const el = scrollRef.current;
-		if (!el) return;
-		const observer = new ResizeObserver(checkScroll);
-		observer.observe(el);
-		return () => observer.disconnect();
-	}, [checkScroll]);
-
-	return (
-		<Box style={{ position: "relative" }}>
-			<Box
-				ref={scrollRef}
-				style={{ maxHeight: 360, overflowY: "auto" }}
-				onScroll={checkScroll}
-			>
-				{children}
-			</Box>
-			{showFade && (
-				<Box
-					style={{
-						background:
-							"linear-gradient(to top, var(--mantine-color-white), transparent)",
-						borderRadius: "0 0 8px 8px",
-						bottom: 0,
-						height: 24,
-						left: 0,
-						pointerEvents: "none",
-						position: "absolute",
-						right: 0,
-					}}
-				/>
-			)}
-		</Box>
-	);
+	return <Box style={{ maxHeight: 360, overflowY: "auto" }}>{children}</Box>;
 }
 
 // ── Scheduled report state view ──
@@ -543,34 +444,17 @@ function ScheduledReportView({
 		: true;
 
 	return (
-		<Stack align="center" justify="center" py="4rem" gap="md">
-			<Box
-				style={{
-					alignItems: "center",
-					backgroundColor: "#FFF8E1",
-					borderRadius: "50%",
-					display: "flex",
-					height: 56,
-					justifyContent: "center",
-					width: 56,
-				}}
-			>
-				<IconClock size={28} color="#E8A317" />
-			</Box>
-			<Title order={3}>
+		<Stack align="flex-start" py="xl" gap="md">
+			<Title order={4}>
 				<Trans>Report scheduled</Trans>
 			</Title>
-			<Text size="sm" c="dimmed" ta="center" maw={360}>
+			<Text size="sm" c="dimmed" maw={360}>
 				<Trans>
 					A new report will be automatically generated and published at the
 					scheduled time.
 				</Trans>
 			</Text>
-			{scheduledTime && (
-				<Badge size="lg" variant="light" color="yellow" radius="sm">
-					{scheduledTime}
-				</Badge>
-			)}
+			{scheduledTime && <Badge color="yellow">{scheduledTime}</Badge>}
 
 			{showReschedule ? (
 				<Stack gap="xs" w={280}>
@@ -579,25 +463,22 @@ function ScheduledReportView({
 						value={newDate}
 						onChange={setNewDate}
 					/>
-					{rescheduleError && (
-						<Text size="xs" c="red">
-							<Trans>
-								Failed to reschedule. Please choose a time further in the future
-								and try again.
-							</Trans>
-						</Text>
-					)}
+					<ErrorNotice
+						error={rescheduleError}
+						title={t`Failed to reschedule. Please choose a time further in the future and try again.`}
+					/>
 					<Button
+						variant="filled"
 						onClick={handleReschedule}
 						loading={isRescheduling}
 						disabled={!newDate || !isDateFarEnough(newDate) || isRescheduling}
 						fullWidth
-						color="primary"
 					>
 						<Trans>Confirm reschedule</Trans>
 					</Button>
 					<Button
 						variant="subtle"
+						color="gray"
 						fullWidth
 						onClick={() => setShowReschedule(false)}
 					>
@@ -607,42 +488,37 @@ function ScheduledReportView({
 			) : (
 				<>
 					<Button
-						variant="outline"
-						leftSection={<IconPlayerPlay size={16} />}
+						leftSection={<PlayIcon size={20} />}
 						onClick={handleGenerateNow}
 						loading={isCancelling || isCreating}
 					>
 						<Trans>Generate now</Trans>
 					</Button>
-					<Group gap="md">
+					<Group gap="xs" justify="flex-start">
 						<Tooltip
 							label={t`Cannot reschedule within 10 minutes of the scheduled time`}
 							disabled={canReschedule}
 						>
-							<Text
-								size="sm"
-								c={canReschedule ? "dimmed" : "gray.4"}
-								td="underline"
-								style={{ cursor: canReschedule ? "pointer" : "not-allowed" }}
-								onClick={() => {
-									if (canReschedule) setShowReschedule(true);
-								}}
-							>
-								<Trans>Reschedule</Trans>
-							</Text>
+							<Box>
+								<Button
+									variant="subtle"
+									color="gray"
+									size="xs"
+									disabled={!canReschedule}
+									onClick={() => setShowReschedule(true)}
+								>
+									<Trans>Reschedule</Trans>
+								</Button>
+							</Box>
 						</Tooltip>
-						<Text size="sm" c="dimmed">
-							·
-						</Text>
-						<Text
-							size="sm"
-							c="dimmed"
-							td="underline"
-							style={{ cursor: "pointer" }}
+						<Button
+							variant="subtle"
+							color="gray"
+							size="xs"
 							onClick={handleCancelSchedule}
 						>
 							<Trans>Cancel schedule</Trans>
-						</Text>
+						</Button>
 					</Group>
 				</>
 			)}
@@ -968,26 +844,20 @@ export const ProjectReportRoute = () => {
 					{/* ── Left sidebar ── */}
 					<Stack gap="md" style={{ position: "sticky", top: "1rem" }}>
 						{/* Reports panel */}
-						<Paper withBorder p="sm" radius="md">
+						<Paper withBorder p="sm">
 							<Stack gap="xs">
-								<Group justify="space-between" px={4}>
-									<Text
-										size="xs"
-										fw={600}
-										tt="uppercase"
-										c="dimmed"
-										style={{ letterSpacing: 0.5 }}
-									>
+								<Group justify="space-between" px="xs">
+									<Title order={5}>
 										<Trans>Reports</Trans>
-									</Text>
+									</Title>
 									{sidebarReports.length > 0 && (
-										<Badge size="xs" variant="light" color="gray" circle>
+										<Badge size="sm" color="gray">
 											{sidebarReports.length}
 										</Badge>
 									)}
 								</Group>
 								<ScrollableSidebar>
-									<Stack gap={2}>
+									<Stack gap="xs">
 										{sidebarReports.map((r) => (
 											<VersionItem
 												key={r.id}
@@ -1017,7 +887,7 @@ export const ProjectReportRoute = () => {
 									</Stack>
 								</ScrollableSidebar>
 								{sidebarReports.length === 0 && (
-									<Text size="xs" c="dimmed" ta="center" py="xs">
+									<Text size="sm" c="dimmed" py="xs">
 										<Trans>No reports yet</Trans>
 									</Text>
 								)}
@@ -1043,7 +913,6 @@ export const ProjectReportRoute = () => {
 							{/* ── Sticky toolbar ── */}
 							<Paper
 								withBorder
-								radius="md"
 								p="sm"
 								style={{
 									backgroundColor: "var(--mantine-color-body)",
@@ -1054,11 +923,11 @@ export const ProjectReportRoute = () => {
 							>
 								<Stack gap={0}>
 									{/* Row 1: Distribution — report state */}
-									<Group justify="space-between" wrap="wrap" gap="sm" py={4}>
+									<Group justify="space-between" wrap="wrap" gap="sm" py="xs">
 										<Group gap="md" wrap="wrap">
 											<Switch
 												label={
-													<Text size="sm" fw={600}>
+													<Text size="sm">
 														{data.status === "published"
 															? t`Published`
 															: t`Publish`}
@@ -1093,40 +962,28 @@ export const ProjectReportRoute = () => {
 												disabled={isUpdatingReport}
 												{...testId("report-publish-toggle")}
 											/>
-											<Tooltip
-												label={t`Publish this report first to show the portal link`}
-												disabled={data.status === "published"}
-												events={{ focus: true, hover: true, touch: true }}
-											>
-												<Box
-													style={{
-														opacity: data.status !== "published" ? 0.45 : 1,
+											{data.status === "published" && (
+												<Switch
+													label={t`Include portal link`}
+													checked={data.show_portal_link ?? true}
+													size="sm"
+													onChange={(e) => {
+														posthog.capture("report_made_public", {
+															enabled: !!e.target.checked,
+															report_id: data.id,
+														});
+														updateReport({
+															payload: {
+																show_portal_link: !!e.target.checked,
+															},
+															projectId: projectId ?? "",
+															reportId: data.id,
+														});
 													}}
-												>
-													<Switch
-														label={t`Include portal link`}
-														checked={data.show_portal_link ?? true}
-														size="sm"
-														onChange={(e) => {
-															posthog.capture("report_made_public", {
-																enabled: !!e.target.checked,
-																report_id: data.id,
-															});
-															updateReport({
-																payload: {
-																	show_portal_link: !!e.target.checked,
-																},
-																projectId: projectId ?? "",
-																reportId: data.id,
-															});
-														}}
-														disabled={
-															isUpdatingReport || data.status !== "published"
-														}
-														{...testId("report-include-portal-link-checkbox")}
-													/>
-												</Box>
-											</Tooltip>
+													disabled={isUpdatingReport}
+													{...testId("report-include-portal-link-checkbox")}
+												/>
+											)}
 										</Group>
 
 										{/* Copy link + kebab — actions */}
@@ -1136,17 +993,16 @@ export const ProjectReportRoute = () => {
 													data.status !== "published"
 														? t`Publish this report to get a share link`
 														: copiedLink
-															? t`Copied!`
+															? t`Copied`
 															: t`Copy link to clipboard`
 												}
 												events={{ focus: true, hover: true, touch: true }}
 											>
 												<Box>
 													<Button
-														variant={copiedLink ? "filled" : "default"}
-														color={copiedLink ? "primary" : undefined}
+														variant={copiedLink ? "filled" : undefined}
 														size="compact-sm"
-														leftSection={<IconLink size={14} />}
+														leftSection={<LinkIcon size={20} />}
 														onClick={() => {
 															if (data.status === "published") {
 																posthog.capture("report_link_copied", {
@@ -1159,7 +1015,7 @@ export const ProjectReportRoute = () => {
 														{...testId("report-copy-link-button")}
 													>
 														{copiedLink ? (
-															<Trans>Copied!</Trans>
+															<Trans>Copied</Trans>
 														) : (
 															<Trans>Copy link</Trans>
 														)}
@@ -1170,18 +1026,14 @@ export const ProjectReportRoute = () => {
 											<Menu shadow="md" position="bottom-end">
 												<Menu.Target>
 													<Tooltip label={t`More actions`}>
-														<ActionIcon
-															variant="subtle"
-															color="gray"
-															{...testId("report-actions-menu")}
-														>
-															<IconDotsVertical size={18} />
+														<ActionIcon {...testId("report-actions-menu")}>
+															<DotsThreeVerticalIcon size={20} />
 														</ActionIcon>
 													</Tooltip>
 												</Menu.Target>
 												<Menu.Dropdown>
 													<Menu.Item
-														leftSection={<IconCopy size={16} />}
+														leftSection={<CopyIcon size={16} />}
 														onClick={() => {
 															if (activeReport?.content) {
 																copyContent(activeReport.content);
@@ -1190,13 +1042,13 @@ export const ProjectReportRoute = () => {
 														{...testId("report-copy-content-button")}
 													>
 														{copiedContent ? (
-															<Trans>Copied!</Trans>
+															<Trans>Copied</Trans>
 														) : (
 															<Trans>Copy report content</Trans>
 														)}
 													</Menu.Item>
 													<Menu.Item
-														leftSection={<IconShare2 size={16} />}
+														leftSection={<ExportIcon size={16} />}
 														onClick={() => {
 															const url = getSharingLink(projectId ?? "");
 															if (data.status === "published") {
@@ -1217,7 +1069,7 @@ export const ProjectReportRoute = () => {
 														<Trans>Share report</Trans>
 													</Menu.Item>
 													<Menu.Item
-														leftSection={<IconPrinter size={16} />}
+														leftSection={<PrinterIcon size={16} />}
 														onClick={() => {
 															if (data.status === "published") {
 																posthog.capture("report_exported", {
@@ -1237,7 +1089,7 @@ export const ProjectReportRoute = () => {
 													</Menu.Item>
 													<Menu.Divider />
 													<Menu.Item
-														leftSection={<IconTrash size={16} />}
+														leftSection={<TrashIcon size={16} />}
 														color="red"
 														onClick={openDeleteModal}
 														{...testId("report-delete-button")}
@@ -1250,10 +1102,10 @@ export const ProjectReportRoute = () => {
 									</Group>
 
 									{/* Separator between distribution and view controls */}
-									<Divider my={4} />
+									<Divider my="xs" />
 
 									{/* Row 2: View controls + metadata */}
-									<Group justify="space-between" wrap="wrap" gap="sm" py={4}>
+									<Group justify="space-between" wrap="wrap" gap="sm" py="xs">
 										<Group gap="sm" wrap="wrap">
 											{createdDate && (
 												<Text size="xs" c="dimmed">
@@ -1264,11 +1116,11 @@ export const ProjectReportRoute = () => {
 												·
 											</Text>
 											<Text size="xs" c="dimmed">
-												{(views?.total ?? 0) === 1 ? (
-													<Trans>1 view</Trans>
-												) : (
-													<Trans>{views?.total ?? 0} views</Trans>
-												)}
+												<Plural
+													value={views?.total ?? 0}
+													one="# view"
+													other="# views"
+												/>
 											</Text>
 											<Text size="xs" c="dimmed">
 												·
@@ -1294,16 +1146,7 @@ export const ProjectReportRoute = () => {
 														multiline
 														maw={300}
 														position="bottom"
-														color=""
-														styles={{
-															tooltip: {
-																backgroundColor: "var(--mantine-color-white)",
-																border: "1px solid var(--mantine-color-gray-3)",
-																color: "var(--mantine-color-dark-7)",
-																padding: "8px 12px",
-																whiteSpace: "pre-line",
-															},
-														}}
+														styles={{ tooltip: { whiteSpace: "pre-line" } }}
 													>
 														<Text
 															size="xs"
@@ -1336,14 +1179,12 @@ export const ProjectReportRoute = () => {
 											>
 												<ActionIcon
 													onClick={toggleFullscreen}
-													variant="subtle"
-													color="gray"
 													{...testId("report-fullscreen-button")}
 												>
 													{fullscreen ? (
-														<IconMinimize size={18} />
+														<CornersInIcon size={20} />
 													) : (
-														<IconMaximize size={18} />
+														<CornersOutIcon size={20} />
 													)}
 												</ActionIcon>
 											</Tooltip>
@@ -1353,7 +1194,7 @@ export const ProjectReportRoute = () => {
 							</Paper>
 
 							{/* ── Largest gap: separates toolbar from preview ── */}
-							<Box mt={24}>
+							<Box mt="lg">
 								<div
 									ref={fullscreenRef}
 									style={
@@ -1436,37 +1277,32 @@ export const ProjectReportRoute = () => {
 			</ReportLayout>
 
 			{/* Publish confirmation modal */}
-			<Modal
+			<ConfirmModal
 				opened={modalOpened}
 				onClose={close}
-				title={t`Confirm Publishing`}
-				{...testId("report-publish-confirmation-modal")}
-			>
-				<Text size="sm">
-					<Trans>
-						An email notification will be sent to{" "}
-						{participantCount !== undefined ? participantCount : t`loading...`}{" "}
-						participant{participantCount === 1 ? "" : "s"}. Do you want to
-						proceed?
-					</Trans>
-				</Text>
-				<Group mt="md" justify="end">
-					<Button
-						onClick={close}
-						variant="outline"
-						{...testId("report-publish-cancel-button")}
-					>
-						<Trans>Cancel</Trans>
-					</Button>
-					<Button
-						onClick={handleConfirmPublish}
-						color="primary"
-						{...testId("report-publish-proceed-button")}
-					>
-						<Trans>Proceed</Trans>
-					</Button>
-				</Group>
-			</Modal>
+				onConfirm={handleConfirmPublish}
+				title={t`Publish report`}
+				message={
+					participantCount !== undefined ? (
+						<Trans>
+							An email notification will be sent to{" "}
+							<Plural
+								value={participantCount}
+								one="# participant"
+								other="# participants"
+							/>
+							. Do you want to proceed?
+						</Trans>
+					) : (
+						<Trans>
+							An email notification will be sent to participants. Do you want to
+							proceed?
+						</Trans>
+					)
+				}
+				confirmLabel={<Trans>Publish</Trans>}
+				data-testid="report-publish-confirmation-modal"
+			/>
 
 			{/* Delete confirmation modal */}
 			<ConfirmModal
@@ -1481,16 +1317,12 @@ export const ProjectReportRoute = () => {
 				data-testid="report-delete-modal"
 			/>
 
-			{/* Responsive CSS for mobile + pulse animation */}
+			{/* Responsive CSS for mobile */}
 			<style>{`
 				@media (max-width: 768px) {
 					.report-grid {
 						grid-template-columns: 1fr !important;
 					}
-				}
-				@keyframes pulse {
-					0%, 100% { opacity: 1; }
-					50% { opacity: 0.4; }
 				}
 			`}</style>
 		</>

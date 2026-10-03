@@ -41,12 +41,12 @@ export const ProjectExperimentalSection = ({
 					})
 				}
 				label={
-					<Stack gap="0.25rem">
+					<Stack gap="xs">
 						<Group gap="xs" wrap="nowrap">
 							<Text>
 								<Trans>Living canvas and popcorn</Trans>
 							</Text>
-							<Badge size="sm" variant="light" color="primary">
+							<Badge size="sm" variant="light" color="mauve">
 								<Trans>Beta</Trans>
 							</Badge>
 						</Group>

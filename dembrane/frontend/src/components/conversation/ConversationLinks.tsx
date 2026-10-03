@@ -12,7 +12,7 @@ import {
 	Text,
 	Tooltip,
 } from "@mantine/core";
-import { IconX } from "@tabler/icons-react";
+import { XIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
@@ -32,31 +32,25 @@ const ConversationList = ({
 }: ConversationListProps) => {
 	const { workspaceId } = useParams();
 	return (
-	<Stack gap={4}>
-		{conversations.map((conversation, index) => (
-			<I18nLink
-				key={conversation.id}
-				to={`/w/${workspaceId}/projects/${projectId}/conversations/${conversation.id}`}
-				onClick={onItemClick}
-			>
-				<Box className="cursor-pointer rounded-lg px-3.5 py-2.5 hover:bg-primary-100">
+		<Stack gap="xs">
+			{conversations.map((conversation, index) => (
+				<I18nLink
+					key={conversation.id}
+					to={`/w/${workspaceId}/projects/${projectId}/conversations/${conversation.id}`}
+					onClick={onItemClick}
+					className="app-do block px-3 py-2 no-underline"
+				>
 					<Group gap="sm" wrap="nowrap">
-						<Text
-							size="xs"
-							c="dimmed"
-							fw={500}
-							className="min-w-8 tabular-nums"
-						>
+						<Text size="xs" c="dimmed" className="min-w-8 tabular-nums">
 							{index + 1}.
 						</Text>
-						<Text size="sm" fw={500} className="flex-1 break-words">
+						<Text size="sm" className="flex-1 break-words">
 							{conversation.participant_name}
 						</Text>
 					</Group>
-				</Box>
-			</I18nLink>
-		))}
-	</Stack>
+				</I18nLink>
+			))}
+		</Stack>
 	);
 };
 
@@ -80,10 +74,10 @@ const ConversationsModal = ({
 		onClose={onClose}
 		title={
 			<Group gap="sm" align="center">
-				<Text fw={600} size="lg" style={{ color: "var(--app-text)" }}>
-					<Trans>All Conversations</Trans>
+				<Text size="lg">
+					<Trans>All conversations</Trans>
 				</Text>
-				<Badge size="lg" variant="light">
+				<Badge size="lg" color="gray">
 					{totalCount}
 				</Badge>
 			</Group>
@@ -101,11 +95,12 @@ const ConversationsModal = ({
 				/>
 			</ScrollArea.Autosize>
 			<Divider />
-			<Group justify="flex-end">
+			<Group justify="flex-start">
 				<Button
-					variant="light"
+					variant="subtle"
+					color="gray"
 					onClick={onClose}
-					leftSection={<IconX size={16} />}
+					leftSection={<XIcon size={20} />}
 				>
 					<Trans>Close</Trans>
 				</Button>
@@ -146,7 +141,7 @@ export const ConversationLinks = ({
 						to={`/w/${workspaceId}/projects/${projectId}/conversations/${conversation.id}`}
 					>
 						<Box maw={300} className="cursor-pointer hover:underline">
-							<Text size="xs" truncate="end" c="gray.7" pr={3}>
+							<Text size="xs" truncate="end">
 								{conversation.participant_name}
 							</Text>
 						</Box>
@@ -160,11 +155,11 @@ export const ConversationLinks = ({
 						withArrow
 					>
 						<Badge
+							component="button"
+							type="button"
 							size="md"
-							variant="light"
+							color="gray"
 							ml="xs"
-							c="graphite"
-							className="cursor-pointer not-italic"
 							onClick={() => setModalOpened(true)}
 						>
 							<Trans>+{hiddenCount} conversations</Trans>

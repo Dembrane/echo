@@ -3,18 +3,19 @@ import { Trans } from "@lingui/react/macro";
 import {
 	Badge,
 	Group,
-	Loader,
 	SegmentedControl,
+	Skeleton,
 	Stack,
 	Table,
 	Text,
 	TextInput,
+	Title,
 	Tooltip,
 } from "@mantine/core";
 import { format } from "date-fns";
 import { useMemo, useState } from "react";
-import { TrainingRowActions } from "./TrainingRowActions";
 import { type StaffTrainingRow, useStaffTrainings } from "./staffHooks";
+import { TrainingRowActions } from "./TrainingRowActions";
 
 /** Staff training dashboard: lists trainings across orgs with request detail
  *  and provisions them. Reached from the admin sidebar at /admin/training. */
@@ -49,19 +50,19 @@ const statusBadge = (
 		tr.org_member_count > 0 &&
 		tr.license_count < tr.org_member_count
 	) {
-		return { label: t`partially completed`, color: "peach", variant: "light" };
+		return { color: "peach", label: t`partially completed`, variant: "light" };
 	}
 	switch (effective) {
 		case "requested":
-			return { label: effective, color: "primary", variant: "filled" };
+			return { color: "primary", label: effective, variant: "filled" };
 		case "scheduled":
-			return { label: effective, color: "primary", variant: "light" };
+			return { color: "primary", label: effective, variant: "light" };
 		case "completed":
-			return { label: effective, color: "springGreen", variant: "light" };
+			return { color: "springGreen", label: effective, variant: "light" };
 		case "cancelled":
-			return { label: effective, color: "red", variant: "light" };
+			return { color: "red", label: effective, variant: "light" };
 		default:
-			return { label: effective, color: "primary", variant: "outline" };
+			return { color: "primary", label: effective, variant: "outline" };
 	}
 };
 
@@ -85,16 +86,22 @@ export const StaffTrainingPanel = () => {
 	}, [trainings, orgQuery, statusFilter]);
 
 	if (isLoading) {
-		return <Loader size="sm" />;
+		return (
+			<Stack gap="sm">
+				<Skeleton height={24} width="40%" />
+				<Skeleton height={16} width="70%" />
+				<Skeleton height={120} />
+			</Stack>
+		);
 	}
 
 	return (
 		<Stack gap="md">
 			<div>
-				<Text size="sm" fw={500}>
+				<Title order={4}>
 					<Trans>Trainings</Trans>
-				</Text>
-				<Text size="xs">
+				</Title>
+				<Text size="sm" c="dimmed">
 					<Trans>
 						Requested and scheduled trainings. Mark a training complete to grant
 						each attendee a one-year license.
@@ -123,7 +130,7 @@ export const StaffTrainingPanel = () => {
 			</Group>
 
 			{filtered.length === 0 ? (
-				<Text size="sm">
+				<Text size="sm" c="dimmed">
 					{trainings.length === 0 ? (
 						<Trans>No trainings yet.</Trans>
 					) : (

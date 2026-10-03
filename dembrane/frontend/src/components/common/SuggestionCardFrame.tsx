@@ -20,15 +20,10 @@ export const SuggestionCardFrame = ({
 			// max-w is only a ceiling, so a short card ends where its text ends
 			// rather than trailing an empty border across the column.
 			className={
-				tight
-					? "max-w-full rounded-md shadow-none md:max-w-[36rem]"
-					: "max-w-full rounded-md shadow-none md:max-w-[80%]"
+				tight ? "max-w-full md:max-w-[36rem]" : "max-w-full md:max-w-[80%]"
 			}
 			px={tight ? "sm" : "md"}
 			py={compact ? "xs" : "md"}
-			style={{
-				borderColor: "var(--mantine-color-primary-light)",
-			}}
 			{...(testId ? { "data-testid": testId } : {})}
 		>
 			{children}

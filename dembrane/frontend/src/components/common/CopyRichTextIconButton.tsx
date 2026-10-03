@@ -1,14 +1,14 @@
 import { t } from "@lingui/core/macro";
 import { ActionIcon, Loader, Tooltip } from "@mantine/core";
-import { IconCheck, IconCopy } from "@tabler/icons-react";
+import { CheckIcon, CopyIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import useCopyToRichText from "@/hooks/useCopyToRichText";
 
 export const CopyRichTextIconButton = ({
 	markdown,
-	size = "xs",
-	iconSize = 14,
+	size,
+	iconSize = 20,
 }: {
 	markdown: string;
 	size?: "xs" | "sm" | "md" | "lg";
@@ -34,12 +34,10 @@ export const CopyRichTextIconButton = ({
 	return (
 		<Tooltip
 			transitionProps={{ duration: 200 }}
-			label={isLoading ? t`Copying...` : copied ? t`Copied` : t`Copy`}
-			px={5}
+			label={isLoading ? t`Copying…` : copied ? t`Copied` : t`Copy`}
 		>
 			<ActionIcon
 				size={size}
-				radius="xl"
 				color={copied ? "teal" : "gray"}
 				variant="subtle"
 				onClick={handleCopy}
@@ -48,9 +46,9 @@ export const CopyRichTextIconButton = ({
 				{isLoading ? (
 					<Loader size={iconSize} />
 				) : copied ? (
-					<IconCheck size={iconSize} />
+					<CheckIcon size={iconSize} />
 				) : (
-					<IconCopy size={iconSize} />
+					<CopyIcon size={iconSize} />
 				)}
 			</ActionIcon>
 		</Tooltip>

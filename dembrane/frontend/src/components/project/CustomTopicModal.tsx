@@ -133,18 +133,17 @@ export const CustomTopicModal = ({
 			onClose={onClose}
 			title={
 				mode === "create" ? (
-					<Trans>Add Custom Topic</Trans>
+					<Trans>Add custom topic</Trans>
 				) : (
-					<Trans>Edit Custom Topic</Trans>
+					<Trans>Edit custom topic</Trans>
 				)
 			}
 			size="lg"
-			radius="md"
 			padding="xl"
 			{...testId("custom-topic-modal")}
 		>
 			<Stack gap="md">
-				<Stack gap={4}>
+				<Stack gap="xs">
 					<TextInput
 						label={t`Topic label`}
 						placeholder={t`Required`}
@@ -163,30 +162,25 @@ export const CustomTopicModal = ({
 					/>
 				</Stack>
 
-				<Stack gap={4}>
+				<Stack gap="xs">
 					<UnstyledButton onClick={toggleTranslations}>
-						<Text
-							size="sm"
-							style={{
-								alignItems: "center",
-								display: "flex",
-								gap: "0.2rem",
-							}}
-						>
+						<Group gap="xs" wrap="nowrap">
 							{translationsOpen ? (
-								<CaretDownIcon size={14} style={{ display: "inline" }} />
+								<CaretDownIcon size={16} />
 							) : (
-								<CaretRightIcon size={14} style={{ display: "inline" }} />
-							)}{" "}
-							<Trans>Add translations</Trans>
-						</Text>
+								<CaretRightIcon size={16} />
+							)}
+							<Text size="sm">
+								<Trans>Add translations</Trans>
+							</Text>
+						</Group>
 					</UnstyledButton>
 
 					<Collapse in={translationsOpen}>
 						<Stack gap="xs" pt="xs" pl="md">
 							{SUPPORTED_LANGUAGES.filter((l) => l.code !== "en-US").map(
 								(lang) => (
-									<Stack key={lang.code} gap={4}>
+									<Stack key={lang.code} gap="xs">
 										<TextInput
 											label={lang.label}
 											placeholder={t`Optional (falls back to English)`}
@@ -212,7 +206,7 @@ export const CustomTopicModal = ({
 					</Collapse>
 				</Stack>
 
-				<Stack gap={4}>
+				<Stack gap="xs">
 					<Textarea
 						label={t`Prompt`}
 						description={
@@ -247,17 +241,18 @@ export const CustomTopicModal = ({
 					{...testId("custom-topic-icon")}
 				/>
 
-				<Group justify="flex-end" mt="md">
-					<Button variant="subtle" onClick={onClose}>
-						<Trans>Cancel</Trans>
-					</Button>
+				<Group mt="md" gap="sm">
 					<Button
+						variant="filled"
 						onClick={handleSubmit}
 						disabled={!canSubmit}
 						loading={isLoading}
 						{...testId("custom-topic-submit")}
 					>
-						{mode === "create" ? <Trans>Create</Trans> : <Trans>Save</Trans>}
+						{mode === "create" ? <Trans>Add topic</Trans> : <Trans>Save</Trans>}
+					</Button>
+					<Button variant="subtle" color="gray" onClick={onClose}>
+						<Trans>Cancel</Trans>
 					</Button>
 				</Group>
 			</Stack>

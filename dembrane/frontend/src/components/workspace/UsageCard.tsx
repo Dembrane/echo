@@ -1,10 +1,11 @@
+import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
 import {
 	Badge,
-	Button,
 	Group,
 	Paper,
 	Progress,
+	Skeleton,
 	Stack,
 	Text,
 	Title,
@@ -12,8 +13,10 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { UsageFreshness } from "@/components/common/UsageFreshness";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { notifyError } from "@/components/error/notifyError";
 import { PeriodSelect } from "@/components/workspace/PeriodSelect";
+import { tierName } from "@/components/workspace/TierBadge";
 import { API_BASE_URL } from "@/config";
 import {
 	useWorkspaceUsage,
@@ -39,6 +42,10 @@ async function fetchUsageFresh(
 	return res.json();
 }
 
+// Shown when the query has no data and no error of its own. Module-level so
+// ErrorNotice sees the same object on every render.
+const USAGE_UNAVAILABLE = new Error("Workspace usage unavailable");
+
 function formatCycleMonth(iso: string): string {
 	const d = new Date(iso);
 	if (Number.isNaN(d.getTime())) return "";
@@ -63,7 +70,7 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 	const [refreshing, setRefreshing] = useState(false);
 	const [monthOffset, setMonthOffset] = useState(0);
 
-	const { data, isLoading, isError, refetch, dataUpdatedAt } =
+	const { data, isLoading, isError, error, refetch, dataUpdatedAt } =
 		useWorkspaceUsage(workspaceId, { monthOffset });
 
 	const handleRefresh = async () => {
@@ -81,27 +88,25 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 		}
 	};
 
-	if (isLoading) return null;
+	if (isLoading) {
+		return (
+			<Paper p="lg" withBorder>
+				<Stack gap="md">
+					<Skeleton height={20} width="40%" />
+					<Skeleton height={32} />
+					<Skeleton height={32} />
+				</Stack>
+			</Paper>
+		);
+	}
 
 	if (isError || !data) {
 		return (
-			<Paper p="md" radius="md" withBorder>
-				<Stack gap="xs">
-					<Text size="sm" c="red">
-						<Trans>We couldn't load this workspace's usage.</Trans>
-					</Text>
-					<Group>
-						<Button
-							size="xs"
-							variant="default"
-							loading={refreshing}
-							onClick={() => refetch()}
-						>
-							<Trans>Retry</Trans>
-						</Button>
-					</Group>
-				</Stack>
-			</Paper>
+			<ErrorNotice
+				error={error ?? USAGE_UNAVAILABLE}
+				title={t`We couldn't load this workspace's usage.`}
+				onRetry={() => refetch()}
+			/>
 		);
 	}
 
@@ -133,21 +138,21 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 
 	return (
 		<Paper p="lg" withBorder radius="sm">
-			<Stack gap={16}>
+			<Stack gap="md">
 				<Group justify="space-between" align="flex-start" wrap="nowrap">
-					<Stack gap={2} style={{ minWidth: 0 }}>
-						<Title order={5} fw={400}>
+					<Stack gap="xs" style={{ minWidth: 0 }}>
+						<Title order={5}>
 							<Trans>Usage · {formatCycleMonth(data.cycle_start)}</Trans>
 						</Title>
 						{data.tier_tagline && (
 							<Text size="xs" c="dimmed">
-								<span style={{ textTransform: "capitalize" }}>{data.tier}</span>
+								{tierName(data.tier)}
 								{" · "}
 								{data.tier_tagline}
 							</Text>
 						)}
 					</Stack>
-					<Group gap={8} wrap="nowrap">
+					<Group gap="sm" wrap="nowrap">
 						{pilotExhausted && (
 							<Badge size="sm" color="red" variant="light">
 								<Trans>Included hours used up</Trans>
@@ -158,7 +163,7 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 				</Group>
 
 				{/* Audio hours */}
-				<Stack gap={6}>
+				<Stack gap="xs">
 					<Group justify="space-between">
 						<Text size="sm" c="dimmed">
 							<Trans>Audio</Trans>
@@ -181,7 +186,7 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 				{/* Seats — unified pool (members + externals). Breakdown
 				    rows sit beneath the bar; zero-count rows hide so a
 				    workspace with only members reads cleanly. */}
-				<Stack gap={6}>
+				<Stack gap="xs">
 					<Group justify="space-between">
 						<Text size="sm" c="dimmed">
 							<Trans>Seats</Trans>

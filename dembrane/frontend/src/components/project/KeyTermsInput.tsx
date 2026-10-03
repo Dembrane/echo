@@ -8,7 +8,7 @@ import {
 	Text,
 	TextInput,
 } from "@mantine/core";
-import { IconX } from "@tabler/icons-react";
+import { XIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { useFocusOnHash } from "@/hooks/useFocusOnHash";
 import { testId } from "@/lib/testUtils";
@@ -36,12 +36,12 @@ const parseTerms = (value: string) =>
 export const KeyTermsInput = ({
 	value,
 	onChange,
-	isDirty = false,
 	autoFocus = false,
 	inputTestId = "key-terms-input",
 }: {
 	value: string;
 	onChange: (value: string) => void;
+	/** Accepted for callers that track it; the section around the input shows the dirty mark. */
 	isDirty?: boolean;
 	autoFocus?: boolean;
 	inputTestId?: string;
@@ -63,7 +63,7 @@ export const KeyTermsInput = ({
 
 	return (
 		<Stack gap="sm">
-			<Stack gap={6}>
+			<Stack gap="xs">
 				<Text size="sm">
 					<Trans>
 						Key terms tell transcription how to spell the names and words that
@@ -86,7 +86,6 @@ export const KeyTermsInput = ({
 			<TextInput
 				ref={inputRef}
 				autoFocus={autoFocus}
-				className={isDirty ? "border-blue-500" : ""}
 				aria-label={t`Key terms`}
 				description={t`Press Enter to add. Separate several with commas.`}
 				inputWrapperOrder={["label", "input", "description", "error"]}
@@ -111,7 +110,6 @@ export const KeyTermsInput = ({
 							c="var(--app-text)"
 							size="lg"
 							style={{
-								fontWeight: 500,
 								textTransform: "none",
 							}}
 							rightSection={
@@ -122,7 +120,7 @@ export const KeyTermsInput = ({
 									c="gray.8"
 									aria-label={t`Remove ${term}`}
 								>
-									<IconX size={14} />
+									<XIcon size={16} />
 								</ActionIcon>
 							}
 						>

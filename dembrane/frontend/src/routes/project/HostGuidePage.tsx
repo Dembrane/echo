@@ -16,16 +16,26 @@ import {
 	verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { ActionIcon, Box, Button, Group, Text } from "@mantine/core";
+import {
+	ActionIcon,
+	Box,
+	Button,
+	Group,
+	Menu,
+	Skeleton,
+	Switch,
+	Text,
+} from "@mantine/core";
 import { useDebouncedValue, useWindowEvent } from "@mantine/hooks";
 import {
-	IconArrowsMaximize,
-	IconGripVertical,
-	IconPlus,
-	IconPrinter,
-	IconTrash,
-} from "@tabler/icons-react";
+	ArrowsOutIcon,
+	DotsSixVerticalIcon,
+	PlusIcon,
+	PrinterIcon,
+	TrashIcon,
+} from "@phosphor-icons/react";
 import {
 	type ReactNode,
 	useCallback,
@@ -35,6 +45,7 @@ import {
 } from "react";
 import { QRCode as QRCodeLogo } from "react-qrcode-logo";
 import { useParams } from "react-router";
+import { roles } from "@/colors";
 import {
 	useProjectById,
 	useUpdateProjectHostGuideMutation,
@@ -44,33 +55,41 @@ import {
 	type ActiveConversation,
 	useLiveConversations,
 } from "@/hooks/useLiveConversations";
+import { openConfirm } from "@/lib/openConfirm";
 
 // ============================================================================
-// DESIGN SYSTEM - Based on dembrane brand guidelines
+// DESIGN SYSTEM - the app's roles and type ladder, as inline values because
+// this page is a print document
 // ============================================================================
 
 const colors = {
-	graphite: "#2d2d2c",
-	parchment: "#f6f4f1",
-	royalBlue: "#4169e1",
+	action: roles.action,
+	graphite: roles.text,
+	live: roles.danger,
+	muted: roles.muted,
+	parchment: roles.bg,
+	quiet: roles.quiet,
+	surface: roles.surface,
 };
 
-// Typography scale from brand guide
+// Type ladder (perfect fourth from 14px): 14 / 16 / 18.66 / 24.88 / 33.17 / 44.2
 const type = {
-	body: { lineHeight: 1.4, size: "18px" },
-	display: { lineHeight: 1.1, size: "48px" },
-	headline: { lineHeight: 1.2, size: "32px" },
-	title: { lineHeight: 1.3, size: "24px" },
+	body: { lineHeight: 1.4, size: "18.66px" },
+	display: { lineHeight: 1.1, size: "44.2px" },
+	headline: { lineHeight: 1.2, size: "33.17px" },
+	small: { lineHeight: 1.4, size: "14px" },
+	title: { lineHeight: 1.3, size: "24.88px" },
 };
 
-// Uniform spacing (8px base unit per brand guide)
+// Spacing on the 4 / 8 / 16 / 24 / 32 scale; the page margin is two steps of 32
 const space = {
-	afterDisplay: "48px", // gap after project name
+	afterDisplay: "32px", // gap after project name
 	afterHeadline: "24px",
-	beforeTips: "8px", // matches afterDisplay
+	beforeTips: "8px",
+	betweenColumns: "32px",
 	betweenSteps: "24px",
 	betweenTips: "16px",
-	page: "64px", // top padding
+	page: "64px", // page margin on screen
 };
 
 // ============================================================================
@@ -161,10 +180,7 @@ const highlightKeywords = (
 	return parts.map((part) => {
 		if (allKeywords.includes(part)) {
 			return (
-				<span
-					key={part}
-					style={{ color: colors.royalBlue, fontStyle: "italic" }}
-				>
+				<span key={part} style={{ color: colors.action, fontStyle: "italic" }}>
 					{part}
 				</span>
 			);
@@ -187,7 +203,7 @@ const getSelectedWord = (): string | null => {
 
 // ============================================================================
 // DEFAULT TRANSLATIONS
-// Button names styled inline with Royal Blue
+// Button names styled inline in the action blue
 // ============================================================================
 
 const defaultTranslations = {
@@ -269,7 +285,7 @@ const defaultTranslations = {
 				text: "Turn on privacy/focus mode to avoid notifications from showing on your screen",
 			},
 		],
-		title: "How to Record",
+		title: "How to record",
 	},
 	es: {
 		steps: [
@@ -472,7 +488,7 @@ const printStyles = `
   .print-only { display: block !important; }
   .print-page {
     height: auto !important;
-    padding: 48px !important;
+    padding: 32px !important;
     background: #ffffff !important;
   }
   .qr-screen { display: none !important; }
@@ -504,12 +520,12 @@ const renderStepContent = (
 	return (
 		<>
 			{highlightKeywords(step.before, customHighlights)}
-			<span style={{ color: colors.royalBlue, fontStyle: "italic" }}>
+			<span style={{ color: colors.action, fontStyle: "italic" }}>
 				{step.button}
 			</span>
 			{step.after && highlightKeywords(step.after, customHighlights)}
 			{step.button2 && (
-				<span style={{ color: colors.royalBlue, fontStyle: "italic" }}>
+				<span style={{ color: colors.action, fontStyle: "italic" }}>
 					{step.button2}
 				</span>
 			)}
@@ -597,11 +613,11 @@ const StepRow = ({
 						transition: "opacity 0.15s",
 					}}
 				>
-					<IconGripVertical size={16} color={colors.graphite} />
+					<DotsSixVerticalIcon size={16} color={colors.graphite} />
 				</div>
 				<span
 					style={{
-						color: colors.royalBlue,
+						color: colors.action,
 						flexShrink: 0,
 						fontSize: type.title.size,
 						lineHeight: type.title.lineHeight,
@@ -627,16 +643,15 @@ const StepRow = ({
 						}
 					}}
 					style={{
-						backgroundColor: hovered ? "rgba(65,105,225,0.04)" : "transparent",
-						borderRadius: "4px",
+						backgroundColor: hovered ? colors.quiet : "transparent",
 						color: colors.graphite,
 						cursor: isEditing ? "text" : "pointer",
 						flex: 1,
 						fontSize: type.title.size,
 						lineHeight: type.title.lineHeight,
-						margin: "-2px -6px",
+						margin: "-4px -8px",
 						outline: "none",
-						padding: "2px 6px",
+						padding: "4px 8px",
 						transition: "background-color 0.15s",
 					}}
 				>
@@ -650,12 +665,12 @@ const StepRow = ({
 						onClick={onDelete}
 						className="no-print"
 						style={{
-							marginLeft: "12px",
+							marginLeft: "8px",
 							opacity: hovered ? 0.5 : 0,
 							transition: "opacity 0.15s",
 						}}
 					>
-						<IconTrash size={16} />
+						<TrashIcon size={20} />
 					</ActionIcon>
 				)}
 			</div>
@@ -679,11 +694,11 @@ const renderTipContent = (
 	return (
 		<>
 			{highlightKeywords(tip.before, customHighlights)}
-			<span style={{ color: colors.royalBlue, fontStyle: "italic" }}>
+			<span style={{ color: colors.action, fontStyle: "italic" }}>
 				{tip.button}
 			</span>
 			{highlightKeywords(tip.after, customHighlights)}
-			<span style={{ color: colors.royalBlue, fontStyle: "italic" }}>
+			<span style={{ color: colors.action, fontStyle: "italic" }}>
 				{tip.button2}
 			</span>
 			{highlightKeywords(tip.after2, customHighlights)}
@@ -702,7 +717,7 @@ const getTipText = (tip: TipItem | string): string => {
 
 // Get highlights from editable tip
 
-// Tip row that can render button names in Royal Blue
+// Tip row that can render button names in the action blue
 const TipRow = ({
 	id,
 	tip,
@@ -765,15 +780,15 @@ const TipRow = ({
 						left: "-24px",
 						opacity: hovered ? 0.4 : 0,
 						position: "absolute",
-						top: "2px",
+						top: "4px",
 						transition: "opacity 0.15s",
 					}}
 				>
-					<IconGripVertical size={14} color={colors.graphite} />
+					<DotsSixVerticalIcon size={16} color={colors.graphite} />
 				</div>
 				<span
 					style={{
-						color: colors.royalBlue,
+						color: colors.action,
 						flexShrink: 0,
 						fontSize: type.body.size,
 						lineHeight: type.body.lineHeight,
@@ -800,16 +815,15 @@ const TipRow = ({
 						}
 					}}
 					style={{
-						backgroundColor: hovered ? "rgba(65,105,225,0.04)" : "transparent",
-						borderRadius: "4px",
+						backgroundColor: hovered ? colors.quiet : "transparent",
 						color: colors.graphite,
 						cursor: isEditing ? "text" : "pointer",
 						flex: 1,
 						fontSize: type.body.size,
 						lineHeight: type.body.lineHeight,
-						margin: "-2px -6px",
+						margin: "-4px -8px",
 						outline: "none",
-						padding: "2px 6px",
+						padding: "4px 8px",
 						transition: "background-color 0.15s",
 					}}
 				>
@@ -823,12 +837,12 @@ const TipRow = ({
 						onClick={onDelete}
 						className="no-print"
 						style={{
-							marginLeft: "12px",
+							marginLeft: "8px",
 							opacity: hovered ? 0.5 : 0,
 							transition: "opacity 0.15s",
 						}}
 					>
-						<IconTrash size={16} />
+						<TrashIcon size={20} />
 					</ActionIcon>
 				)}
 			</div>
@@ -855,7 +869,7 @@ const AddButton = ({
 				variant="subtle"
 				size="xs"
 				color="gray"
-				leftSection={<IconPlus size={14} />}
+				leftSection={<PlusIcon size={20} />}
 				onClick={onClick}
 				style={{ opacity: hovered ? 1 : 0, transition: "opacity 0.15s" }}
 			>
@@ -877,13 +891,13 @@ const LiveRecordingIndicator = ({
 	const visibleConversations = conversations.slice(0, maxVisible);
 
 	return (
-		<div style={{ marginTop: "12px", paddingLeft: "10px" }}>
+		<div style={{ marginTop: "16px", paddingLeft: "8px" }}>
 			{/* Header with pulsing dot */}
 			<div
 				style={{
 					alignItems: "center",
 					display: "flex",
-					gap: "6px",
+					gap: "8px",
 					marginBottom: "4px",
 				}}
 			>
@@ -899,7 +913,7 @@ const LiveRecordingIndicator = ({
 						<span
 							className="live-pulse"
 							style={{
-								backgroundColor: "#1effa1",
+								backgroundColor: colors.live,
 								borderRadius: "9999px",
 								height: "100%",
 								left: 0,
@@ -912,7 +926,8 @@ const LiveRecordingIndicator = ({
 					)}
 					<span
 						style={{
-							backgroundColor: count > 0 ? "#1effa1" : "#d1d1d1",
+							backgroundColor:
+								count > 0 ? colors.live : "var(--app-control-rule)",
 							borderRadius: "9999px",
 							display: "inline-flex",
 							height: "10px",
@@ -922,12 +937,18 @@ const LiveRecordingIndicator = ({
 					/>
 				</span>
 				<span
+					className={count > 0 ? undefined : "app-muted"}
 					style={{
-						color: count > 0 ? colors.graphite : "rgba(45, 45, 44, 0.5)",
-						fontSize: "13px",
+						color: count > 0 ? colors.graphite : colors.muted,
+						fontSize: type.small.size,
+						lineHeight: type.small.lineHeight,
 					}}
 				>
-					{count === 0 ? "Waiting for conversations..." : `${count} on record`}
+					{count === 0 ? (
+						<Trans>Waiting for conversations...</Trans>
+					) : (
+						<Trans>{count} on record</Trans>
+					)}
 				</span>
 			</div>
 
@@ -949,14 +970,14 @@ const LiveRecordingIndicator = ({
 					{visibleConversations.map((conv) => (
 						<div
 							key={conv.id}
-							className="live-item"
+							className="live-item app-muted"
 							style={{
-								color: "rgba(45, 45, 44, 0.6)",
-								fontSize: "13px",
-								padding: "1px 0",
+								color: colors.muted,
+								fontSize: type.small.size,
+								lineHeight: type.small.lineHeight,
 							}}
 						>
-							{conv.participantName || `Conversation ${conv.id.slice(-6)}`}
+							{conv.participantName || t`Conversation ${conv.id.slice(-6)}`}
 						</div>
 					))}
 				</div>
@@ -1023,7 +1044,7 @@ const BrandQRCode = ({ value }: { value: string }) => (
 				logoImage="/dembrane-logomark-cropped.png"
 				logoWidth={50}
 				logoHeight={50}
-				bgColor="#ffffff"
+				bgColor={colors.surface}
 				fgColor={colors.graphite}
 				eyeColor={colors.graphite}
 				logoPadding={4}
@@ -1412,18 +1433,27 @@ export const HostGuidePage = () => {
 		}
 	};
 
+	const contextMenuWord = contextMenu?.word ?? "";
+
 	if (isLoading || !data) {
 		return (
 			<Box
+				aria-busy
+				aria-label={t`Loading host guide`}
 				style={{
-					alignItems: "center",
 					backgroundColor: colors.parchment,
-					display: "flex",
-					height: "100vh",
-					justifyContent: "center",
+					minHeight: "100vh",
+					padding: space.page,
+					paddingTop: `calc(${space.page} + 48px)`,
 				}}
 			>
-				<Text>Loading...</Text>
+				<Box style={{ margin: "0 auto", maxWidth: "900px" }}>
+					<Skeleton height={48} width="50%" mb={32} />
+					<Skeleton height={40} width="35%" mb={24} />
+					<Skeleton height={32} mb={24} />
+					<Skeleton height={32} mb={24} />
+					<Skeleton height={32} width="70%" />
+				</Box>
 			</Box>
 		);
 	}
@@ -1435,17 +1465,17 @@ export const HostGuidePage = () => {
 				backgroundColor: colors.parchment,
 				display: "flex",
 				flexDirection: "column",
+				height: isFullscreen ? "100vh" : undefined,
+				left: isFullscreen ? 0 : undefined,
 				minHeight: "100vh",
+				overflowY: isFullscreen ? "auto" : undefined,
 				padding: space.page,
 				paddingTop: isFullscreen ? space.page : `calc(${space.page} + 48px)`,
-				transition: "padding-top 0.2s",
 				position: isFullscreen ? "fixed" : "relative",
 				top: isFullscreen ? 0 : undefined,
-				left: isFullscreen ? 0 : undefined,
+				transition: "padding-top 0.2s",
 				width: isFullscreen ? "100vw" : "100%",
-				height: isFullscreen ? "100vh" : undefined,
 				zIndex: isFullscreen ? 1000 : undefined,
-				overflowY: isFullscreen ? "auto" : undefined,
 			}}
 		>
 			{/* Fullscreen exit zone — thin invisible strip at top edge */}
@@ -1478,66 +1508,69 @@ export const HostGuidePage = () => {
 				}}
 			>
 				<Group
-					justify="center"
+					justify="flex-start"
 					gap="md"
 					style={{
-						backgroundColor: "white",
-						boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
-						padding: "10px 16px",
+						backgroundColor: colors.surface,
+						boxShadow: "var(--app-float)",
+						padding: "8px 16px",
 					}}
 				>
-					<Text size="sm" c="dimmed">
-						<Trans>Click to edit</Trans>
-					</Text>
-					<Text size="sm" c="dimmed">
-						•
-					</Text>
-					<Text size="sm" c="dimmed">
-						<Trans>Right-click to highlight</Trans>
-					</Text>
-					<Text size="sm" c="dimmed">
-						•
-					</Text>
-					<Text size="sm" c="dimmed">
-						<Trans>Drag to reorder</Trans>
-					</Text>
-					<button
-						type="button"
-						onClick={() => setShowLiveRecordings(!showLiveRecordings)}
-						style={{
-							backgroundColor: showLiveRecordings
-								? "rgba(30, 255, 161, 0.2)"
-								: "rgba(45, 45, 44, 0.1)",
-							border: "none",
-							borderRadius: "4px",
-							color: showLiveRecordings
-								? colors.graphite
-								: "rgba(45, 45, 44, 0.5)",
-							cursor: "pointer",
-							fontSize: "14px",
-							padding: "4px 12px",
-						}}
-					>
-						Live {showLiveRecordings ? "ON" : "OFF"}
-					</button>
-					<Button variant="subtle" size="xs" onClick={resetData}>
-						<Trans>Reset</Trans>
-					</Button>
 					<Button
+						variant="filled"
 						size="xs"
-						leftSection={<IconPrinter size={14} />}
+						leftSection={<PrinterIcon size={20} />}
 						onClick={() => window.print()}
 					>
 						<Trans>Print / Save PDF</Trans>
 					</Button>
 					<Button
 						size="xs"
-						variant="outline"
-						leftSection={<IconArrowsMaximize size={14} />}
+						leftSection={<ArrowsOutIcon size={20} />}
 						onClick={() => setIsFullscreen(true)}
 					>
-						<Trans>Go Fullscreen</Trans>
+						<Trans>Go fullscreen</Trans>
 					</Button>
+					<Button
+						variant="subtle"
+						color="gray"
+						size="xs"
+						onClick={() =>
+							openConfirm({
+								children: t`Your edits to this guide are lost and it goes back to the default text.`,
+								danger: true,
+								labels: { confirm: t`Reset guide` },
+								onConfirm: resetData,
+								title: t`Reset the guide?`,
+							})
+						}
+					>
+						<Trans>Reset</Trans>
+					</Button>
+					<Switch
+						checked={showLiveRecordings}
+						onChange={(event) =>
+							setShowLiveRecordings(event.currentTarget.checked)
+						}
+						label={<Trans>Live recordings</Trans>}
+					/>
+					<Group gap="xs">
+						<Text size="sm" c="dimmed">
+							<Trans>Click to edit</Trans>
+						</Text>
+						<Text size="sm" c="dimmed">
+							·
+						</Text>
+						<Text size="sm" c="dimmed">
+							<Trans>Right-click to highlight</Trans>
+						</Text>
+						<Text size="sm" c="dimmed">
+							·
+						</Text>
+						<Text size="sm" c="dimmed">
+							<Trans>Drag to reorder</Trans>
+						</Text>
+					</Group>
 				</Group>
 			</Box>
 
@@ -1564,7 +1597,7 @@ export const HostGuidePage = () => {
 				</Text>
 
 				{/* Main row: Left content + Right QR */}
-				<div style={{ display: "flex", gap: "48px" }}>
+				<div style={{ display: "flex", gap: space.betweenColumns }}>
 					{/* Left column */}
 					<div style={{ flex: 1 }}>
 						{/* HOW TO RECORD - aligns with QR code top */}
@@ -1615,7 +1648,7 @@ export const HostGuidePage = () => {
 								))}
 							</SortableContext>
 						</DndContext>
-						<AddButton onClick={addStep} label="Add step" />
+						<AddButton onClick={addStep} label={t`Add step`} />
 
 						{/* TIPS */}
 						<div style={{ marginTop: space.beforeTips }}>
@@ -1652,7 +1685,7 @@ export const HostGuidePage = () => {
 									))}
 								</SortableContext>
 							</DndContext>
-							<AddButton onClick={addTip} label="Add tip" />
+							<AddButton onClick={addTip} label={t`Add tip`} />
 						</div>
 					</div>
 
@@ -1664,8 +1697,7 @@ export const HostGuidePage = () => {
 							<div
 								style={{
 									alignItems: "center",
-									backgroundColor: "#f0eeeb",
-									borderRadius: "8px",
+									backgroundColor: colors.quiet,
 									display: "flex",
 									height: "200px",
 									justifyContent: "center",
@@ -1703,59 +1735,42 @@ export const HostGuidePage = () => {
 				/>
 			</div>
 
-			{/* Context menu for highlight toggle */}
+			{/* Context menu for highlight toggle, anchored at the click point */}
 			{contextMenu && (
-				<div
-					className="no-print"
-					style={{
-						backgroundColor: colors.parchment,
-						border: "1px solid rgba(45, 45, 44, 0.1)",
-						borderRadius: "4px",
-						boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-						left: contextMenu.x,
-						padding: "4px 0",
-						position: "fixed",
-						top: contextMenu.y,
-						zIndex: 1001,
-					}}
+				<Menu
+					key={`${contextMenu.x}-${contextMenu.y}`}
+					opened
+					onClose={() => setContextMenu(null)}
+					position="bottom-start"
+					offset={0}
+					trapFocus={false}
+					returnFocus={false}
+					zIndex={1001}
 				>
-					{contextMenu.word ? (
-						<button
-							type="button"
-							onClick={handleToggleHighlight}
-							style={{
-								backgroundColor: "transparent",
-								border: "none",
-								color: colors.graphite,
-								cursor: "pointer",
-								display: "block",
-								fontSize: "16px",
-								padding: "8px 16px",
-								textAlign: "left",
-								width: "100%",
-							}}
-							onMouseEnter={(e) => {
-								e.currentTarget.style.backgroundColor =
-									"rgba(65, 105, 225, 0.1)";
-							}}
-							onMouseLeave={(e) => {
-								e.currentTarget.style.backgroundColor = "transparent";
-							}}
-						>
-							Toggle highlight "{contextMenu.word}"
-						</button>
-					) : (
+					<Menu.Target>
 						<div
+							className="no-print"
 							style={{
-								color: "rgba(45, 45, 44, 0.5)",
-								fontSize: "14px",
-								padding: "8px 16px",
+								height: 0,
+								left: contextMenu.x,
+								position: "fixed",
+								top: contextMenu.y,
+								width: 0,
 							}}
-						>
-							Select a word first
-						</div>
-					)}
-				</div>
+						/>
+					</Menu.Target>
+					<Menu.Dropdown className="no-print">
+						{contextMenuWord ? (
+							<Menu.Item onClick={handleToggleHighlight}>
+								<Trans>Toggle highlight "{contextMenuWord}"</Trans>
+							</Menu.Item>
+						) : (
+							<Menu.Label>
+								<Trans>Select a word first</Trans>
+							</Menu.Label>
+						)}
+					</Menu.Dropdown>
+				</Menu>
 			)}
 		</Box>
 	);

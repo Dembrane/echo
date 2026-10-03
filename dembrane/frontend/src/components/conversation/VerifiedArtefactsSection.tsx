@@ -9,7 +9,7 @@ import {
 	ThemeIcon,
 	Title,
 } from "@mantine/core";
-import { IconRosetteDiscountCheck } from "@tabler/icons-react";
+import { SealCheckIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { CopyRichTextIconButton } from "@/components/common/CopyRichTextIconButton";
@@ -74,8 +74,8 @@ export const VerifiedArtefactsSection = ({
 	if (isLoading) {
 		return (
 			<Stack gap="sm">
-				<Skeleton height={60} width="50%" radius="md" />
-				<Skeleton height={60} width="50%" radius="md" />
+				<Skeleton height={60} width="50%" />
+				<Skeleton height={60} width="50%" />
 			</Stack>
 		);
 	}
@@ -86,26 +86,22 @@ export const VerifiedArtefactsSection = ({
 	}
 
 	return (
-		<Stack gap="1.5rem">
+		<Stack gap="lg">
 			<Group>
-				<Title order={2}>
+				<Title order={4}>
 					<Trans>Outcomes</Trans>
 				</Title>
 				<ThemeIcon
 					variant="subtle"
-					color="primary"
+					color="gray"
 					aria-label={t`outcomes`}
 					size={22}
 				>
-					<IconRosetteDiscountCheck />
+					<SealCheckIcon size={16} />
 				</ThemeIcon>
 			</Group>
 
-			<Accordion
-				variant="unstyled"
-				radius="md"
-				{...testId("conversation-artefacts-accordion")}
-			>
+			<Accordion {...testId("conversation-artefacts-accordion")}>
 				{artefacts.map((artefact) => {
 					const formattedDate = formatArtefactTime(artefact.approved_at);
 
@@ -118,7 +114,7 @@ export const VerifiedArtefactsSection = ({
 							<Accordion.Control>
 								<Group gap="sm" wrap="nowrap">
 									<Stack gap={2}>
-										<Text fw={500}>
+										<Text>
 											{topicLabelMap.get(artefact.key) ??
 												artefact.topic_label ??
 												artefact.key ??
@@ -133,12 +129,12 @@ export const VerifiedArtefactsSection = ({
 													{formattedDate}
 												</Text>
 											)}
-										{/* biome-ignore lint/a11y/noStaticElementInteractions: wrapper only stops propagation so the accordion doesn't toggle when interacting with the nested copy button */}
-										<span
-											onClick={(e) => e.stopPropagation()}
-											onKeyDown={(e) => e.stopPropagation()}
-											role="presentation"
-										>
+											{/* biome-ignore lint/a11y/noStaticElementInteractions: wrapper only stops propagation so the accordion doesn't toggle when interacting with the nested copy button */}
+											<span
+												onClick={(e) => e.stopPropagation()}
+												onKeyDown={(e) => e.stopPropagation()}
+												role="presentation"
+											>
 												<CopyRichTextIconButton
 													markdown={artefact.content ?? ""}
 													size="sm"

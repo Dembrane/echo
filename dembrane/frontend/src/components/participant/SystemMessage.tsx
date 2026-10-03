@@ -19,10 +19,7 @@ const SystemMessage = ({
 		<div className="flex justify-start">
 			<Paper
 				bg="transparent"
-				className={clsx(
-					"w-full rounded-t-xl rounded-br-xl border border-slate-200 p-4",
-					className,
-				)}
+				className={clsx("w-full p-4", className)}
 				{...(dataTestId ? testId(dataTestId) : {})}
 			>
 				<div className="flex flex-col items-start gap-4 md:flex-row">

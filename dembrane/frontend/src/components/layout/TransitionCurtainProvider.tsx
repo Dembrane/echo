@@ -183,23 +183,20 @@ export const TransitionCurtainProvider = ({ children }: PropsWithChildren) => {
 					>
 						{isDramatic ? (
 							<p
-								className="font-semibold text-3xl sm:text-4xl whitespace-nowrap"
-								style={{ color: "var(--app-text, #1e293b)" }}
+								className="text-3xl whitespace-nowrap"
+								style={{ color: "var(--app-text)" }}
 							>
 								{i18n._("Preparing your dashboard")}
 							</p>
 						) : (
 							<div className="mx-auto max-w-xl space-y-4">
-								<p
-									className="font-semibold text-3xl sm:text-4xl"
-									style={{ color: "var(--app-text, #1e293b)" }}
-								>
+								<p className="text-3xl" style={{ color: "var(--app-text)" }}>
 									{message ?? i18n._("Welcome back")}
 								</p>
 								{resolvedDescription && (
 									<p
-										className="text-base"
-										style={{ color: "var(--app-text, #475569)", opacity: 0.8 }}
+										className="app-muted text-base"
+										style={{ color: "var(--mantine-color-dimmed)" }}
 									>
 										{resolvedDescription}
 									</p>

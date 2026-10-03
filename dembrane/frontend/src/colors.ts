@@ -34,6 +34,32 @@ export const brandColors = {
 		"#2D2D2C",
 		"#2D2D2C",
 	],
+	// Neutral: graphite over parchment. Shade 1 is the quiet grey (hairlines,
+	// hover), 6 is muted text (cool slate, AA on parchment, white and hover).
+	gray: [
+		"#f1efec",
+		"#e6e3df",
+		"#dcdad7",
+		"#c6c4c2",
+		"#aeacaa",
+		"#878785",
+		"#5f646f",
+		"#5d5d5b",
+		"#4b4b4a",
+		"#2d2d2c",
+	],
+	green: [
+		"#effcf6",
+		"#c6f6df",
+		"#9cf5cb",
+		"#1effa1",
+		"#2fae78",
+		"#1b8a5b",
+		"#0e6e47",
+		"#0b5d3c",
+		"#084c31",
+		"#063a25",
+	],
 	// Institution Blue (alias for primary)
 	institutionBlue: [
 		"#f0f5ff",
@@ -112,6 +138,20 @@ export const brandColors = {
 		"#1a48c6",
 		"#1040b2",
 	],
+	// Status ramps. Shades 6 and 7 (text and fills) pass AA on parchment;
+	// shades 1 and 3 are the brand tints (cotton candy, golden pollen, spring green).
+	red: [
+		"#fdf2f3",
+		"#f9dbdb",
+		"#f5c4c7",
+		"#ff9aa2",
+		"#d9646e",
+		"#c04a55",
+		"#c0434e",
+		"#b43a45",
+		"#7a232b",
+		"#5f1b21",
+	],
 	// Salmon (base: #FF9AA2)
 	salmon: [
 		"#fffafc",
@@ -138,6 +178,18 @@ export const brandColors = {
 		"#18cc81",
 		"#15b371",
 	],
+	yellow: [
+		"#fffbef",
+		"#f9e7bc",
+		"#ffe09a",
+		"#ffd166",
+		"#c89a2c",
+		"#9a7210",
+		"#7a5200",
+		"#6b4800",
+		"#5a3c00",
+		"#432d00",
+	],
 } as const;
 
 // Type for Mantine color tuple (10 shades)
@@ -155,8 +207,13 @@ export type MantineColorTuple = readonly [
 ];
 
 // Mantine-compatible colors export
-export const mantineColors: Record<string, MantineColorTuple> =
-	brandColors as Record<string, MantineColorTuple>;
+export const mantineColors: Record<string, MantineColorTuple> = {
+	...(brandColors as Record<string, MantineColorTuple>),
+	// The Mantine names the app passes land on the brand ramps.
+	blue: brandColors.primary,
+	orange: brandColors.yellow,
+	teal: brandColors.green,
+};
 
 /**
  * Helper to convert Mantine array (10 shades) to Tailwind object (50-900 keys)
@@ -183,20 +240,60 @@ function toTailwindPalette(
 export const tailwindColors = {
 	cyan: toTailwindPalette(brandColors.cyan),
 	graphite: toTailwindPalette(brandColors.graphite),
+	// Tailwind's gray and slate utilities land on the brand neutral.
+	gray: toTailwindPalette(brandColors.gray),
+	green: toTailwindPalette(brandColors.green),
 	institutionBlue: toTailwindPalette(brandColors.institutionBlue),
 	limeYellow: toTailwindPalette(brandColors.limeYellow),
 	mauve: toTailwindPalette(brandColors.mauve),
 	parchment: toTailwindPalette(brandColors.parchment),
 	peach: toTailwindPalette(brandColors.peach),
 	primary: toTailwindPalette(brandColors.primary),
+	red: toTailwindPalette(brandColors.red),
 	salmon: toTailwindPalette(brandColors.salmon),
+	slate: toTailwindPalette(brandColors.gray),
 	springGreen: toTailwindPalette(brandColors.springGreen),
+	yellow: toTailwindPalette(brandColors.yellow),
 };
 
 export const stateColors = {
-	errorBorder: "rgba(255, 154, 162, 0.55)",
-	errorMark: "#b36d72",
-	errorSurface: "rgba(255, 154, 162, 0.16)",
+	errorBorder: "#c0434e",
+	errorMark: "#c0434e",
+	errorSurface: "#f9dbdb",
+} as const;
+
+/**
+ * Roles. Contrast on parchment (WCAG 2.2): text 12.56, muted 5.41 (4.64 on
+ * the quiet hover grey), action 5.43, danger 4.60 (on its tint use dangerOnTint,
+ * 5.08), warning 6.30, success 5.73.
+ */
+export const roles = {
+	action: "#2957df",
+	actionTint: "#e9f1ff",
+	bg: "#f6f4f1",
+	danger: "#c0434e",
+	dangerOnTint: "#a8323c",
+	dangerTint: "#f9dbdb",
+	muted: "#5f646f",
+	quiet: "#e6e3df",
+	success: "#0e6e47",
+	successTint: "#c6f6df",
+	surface: "#ffffff",
+	text: "#2d2d2c",
+	warning: "#7a5200",
+	warningTint: "#f9e7bc",
+} as const;
+
+/** Tag tints: accent colours as surfaces, always with graphite text. */
+export const tagTints = {
+	amber: "#f9e7bc",
+	blue: "#e9f1ff",
+	coral: "#f9dbdb",
+	cyan: "#c0f6f4",
+	green: "#c6f6df",
+	lime: "#f5fab3",
+	mauve: "#fadef7",
+	neutral: "#e6e3df",
 } as const;
 
 // Base color values for quick access (e.g., in CSS-in-JS or inline styles)

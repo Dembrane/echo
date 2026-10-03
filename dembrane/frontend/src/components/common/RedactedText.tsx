@@ -59,7 +59,7 @@ export const RedactedBadge = ({ type }: { type: string }) => {
 	const label = formatLabel(type);
 	return (
 		<Tooltip label={t`This information is anonymized`} withArrow>
-			<Text component="span" size="sm" bg="primary.2" px={6} py={1}>
+			<Text component="span" size="sm" bg="primary.2" px="xs" py={1}>
 				{label}
 			</Text>
 		</Tooltip>

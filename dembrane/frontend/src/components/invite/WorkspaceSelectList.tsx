@@ -2,7 +2,6 @@ import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
-	Alert,
 	Badge,
 	Box,
 	Checkbox,
@@ -14,7 +13,7 @@ import {
 	TextInput,
 	Tooltip,
 } from "@mantine/core";
-import { IconLock, IconSearch, IconX } from "@tabler/icons-react";
+import { LockIcon, MagnifyingGlassIcon, XIcon } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 
 const SEARCH_THRESHOLD = 7; // show search input only when scanning is slow
@@ -71,23 +70,23 @@ export function WorkspaceSelectList({
 
 	if (workspaces.length === 0) {
 		return (
-			<Alert color="gray" variant="light">
+			<Text size="sm" c="dimmed">
 				<Trans>
 					You don't have permission to invite to any workspace in this
 					organisation.
 				</Trans>
-			</Alert>
+			</Text>
 		);
 	}
 
 	return (
-		<Stack gap={6} data-testid={dataTestId}>
+		<Stack gap="xs" data-testid={dataTestId}>
 			{showSearch && (
 				<TextInput
 					value={search}
 					onChange={(e) => setSearch(e.currentTarget.value)}
 					placeholder={t`Search workspaces`}
-					leftSection={<IconSearch size={14} />}
+					leftSection={<MagnifyingGlassIcon size={16} />}
 					rightSection={
 						search ? (
 							<ActionIcon
@@ -97,7 +96,7 @@ export function WorkspaceSelectList({
 								onClick={() => setSearch("")}
 								aria-label={t`Clear search`}
 							>
-								<IconX size={12} />
+								<XIcon size={12} />
 							</ActionIcon>
 						) : null
 					}
@@ -107,9 +106,9 @@ export function WorkspaceSelectList({
 				/>
 			)}
 			<ScrollArea.Autosize mah={300} type="auto" offsetScrollbars>
-				<Stack gap={6} pr={4}>
+				<Stack gap="xs" pr={4}>
 					{showSearch && visibleWorkspaces.length === 0 && (
-						<Text size="xs" c="dimmed" ta="center" py="xs">
+						<Text size="xs" c="dimmed" py="xs">
 							<Trans>No workspaces match "{search}".</Trans>
 						</Text>
 					)}
@@ -140,23 +139,17 @@ export function WorkspaceSelectList({
 						const row = (
 							<Paper
 								key={ws.id}
-								withBorder
 								p="sm"
-								radius="sm"
+								className="app-do"
+								data-selected={isSelected || undefined}
 								onClick={() => !interactionDisabled && onToggle(ws.id)}
 								style={{
-									backgroundColor: isSelected
-										? "var(--mantine-primary-color-light)"
-										: undefined,
-									borderColor: isSelected
-										? "var(--mantine-primary-color-filled)"
-										: undefined,
 									cursor: interactionDisabled ? "not-allowed" : "pointer",
 									opacity: blocked ? 0.55 : 1,
 								}}
 							>
 								<Group justify="space-between" wrap="nowrap">
-									<Group gap={12} wrap="nowrap" style={{ minWidth: 0 }}>
+									<Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
 										<Checkbox
 											checked={isSelected}
 											disabled={interactionDisabled}
@@ -165,18 +158,18 @@ export function WorkspaceSelectList({
 											aria-label={t`Select ${ws.name}`}
 										/>
 										<Box style={{ minWidth: 0 }}>
-											<Group gap={6} wrap="nowrap">
-												<Text size="sm" fw={500} lineClamp={1}>
+											<Group gap="xs" wrap="nowrap">
+												<Text size="sm" lineClamp={1}>
 													{ws.name}
 												</Text>
 												{ws.is_private && (
-													<IconLock
-														size={12}
-														style={{ color: "var(--mantine-color-gray-6)" }}
+													<LockIcon
+														size={16}
+														color="var(--mantine-color-dimmed)"
 													/>
 												)}
 											</Group>
-											<Group gap={6} wrap="nowrap" mt={2}>
+											<Group gap="xs" wrap="nowrap" mt={4}>
 												<Tooltip
 													label={t`Partner workspace, billed separately from the organisation.`}
 													disabled={!ws.bills_separately}

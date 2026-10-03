@@ -101,7 +101,7 @@ describe("ExplorePanel", () => {
 			onRetry,
 		});
 		expect(screen.getByText("The title could not be generated.")).toBeTruthy();
-		fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+		fireEvent.click(screen.getByRole("button", { name: "Try again" }));
 		expect(onRetry).toHaveBeenCalledTimes(1);
 		unmount();
 
@@ -109,7 +109,7 @@ describe("ExplorePanel", () => {
 		expect(
 			screen.getByText("This selection is too large to title."),
 		).toBeTruthy();
-		expect(screen.queryByRole("button", { name: "Retry" })).toBeNull();
+		expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
 	});
 
 	it("shows the pending state", () => {

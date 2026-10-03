@@ -51,14 +51,15 @@ export const Legend = memo(function Legend({
 
 	return (
 		<div
-			className="absolute bottom-4 right-4 z-10 space-y-1 rounded-lg border px-3 py-2 text-xs shadow-lg backdrop-blur-sm"
+			className="absolute bottom-4 right-4 z-10 space-y-1 border-y px-3 py-2 text-xs"
 			style={{
 				backgroundColor: mapVars.raised,
 				borderColor: mapVars.border,
+				boxShadow: "var(--app-float)",
 				color: mapVars.text,
 			}}
 		>
-			<p className="mb-1 text-xs uppercase tracking-widest">
+			<p className="mb-1 text-xs">
 				<Trans>Legend</Trans>
 			</p>
 			{rows.map((row) => (

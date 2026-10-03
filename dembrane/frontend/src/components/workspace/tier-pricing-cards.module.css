@@ -1,67 +1,23 @@
+/* Layout for the Training catalog cards. The cards are Papers, so they take
+   the read rule from rules.css; this file only places them. */
 .wrap {
-	cursor: pointer;
-	background: #fff;
-	border: 1px solid var(--mantine-color-gray-3);
-	border-radius: var(--mantine-radius-default);
-	transition:
-		box-shadow 0.15s ease,
-		border-color 0.15s ease,
-		transform 0.15s ease;
-}
-
-/* Content is muted via per-element colors (not opacity) so the coming-soon
-   badge can stay at full contrast — child opacity can't exceed the parent's. */
-.comingSoonCard {
-	border-style: dashed;
-	background: var(--mantine-color-gray-0);
-	cursor: default;
-}
-
-.wrap:not(.selected):not(.comingSoonCard):hover {
-	border-color: var(--mantine-color-primary-4);
-	background: rgba(65, 105, 225, 0.02);
-}
-
-.selected {
-	border-color: var(--mantine-color-primary-6);
-	box-shadow: 0 0 0 1px var(--mantine-color-primary-6);
-}
-
-.comingSoonCard.selected {
-	border-color: var(--mantine-color-gray-4);
-	box-shadow: 0 0 0 1px var(--mantine-color-gray-4);
-}
-
-.highlighted {
-	border-color: rgba(65, 105, 225, 0.22);
-	box-shadow:
-		0 2px 4px rgba(15, 23, 42, 0.05),
-		0 8px 20px rgba(65, 105, 225, 0.14);
-	transform: translateY(-4px);
-}
-
-.highlighted.selected {
-	border-color: var(--mantine-color-primary-6);
-	box-shadow:
-		0 0 0 1px var(--mantine-color-primary-6),
-		0 2px 4px rgba(15, 23, 42, 0.05),
-		0 8px 20px rgba(65, 105, 225, 0.16);
+	display: flex;
+	flex-direction: column;
 }
 
 .wideWrap {
 	composes: wrap;
-	display: flex;
 	flex: 1 1 0;
 	min-width: 0;
 }
 
 .wideInner {
 	flex: 1;
-	padding: 20px 16px 16px;
+	padding: 16px;
 }
 
 .mobileInner {
-	padding: 18px 18px 18px;
+	padding: 16px;
 }
 
 .tierName {
@@ -77,14 +33,10 @@
 	padding-top: 16px;
 }
 
-.priceAmount {
-	letter-spacing: -0.02em;
-}
-
 .group {
 	display: flex;
 	flex-direction: column;
-	gap: 10px;
+	gap: 8px;
 }
 
 .groupWide {
@@ -92,5 +44,5 @@
 	flex-direction: row;
 	flex-wrap: nowrap;
 	align-items: stretch;
-	gap: 14px;
+	gap: 16px;
 }

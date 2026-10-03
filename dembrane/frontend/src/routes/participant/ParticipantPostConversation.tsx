@@ -6,7 +6,6 @@ import {
 	Chip,
 	Divider,
 	Group,
-	LoadingOverlay,
 	Paper,
 	Stack,
 	Text,
@@ -16,12 +15,11 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
-	IconCheck,
-	IconLoader2,
-	IconMail,
-	IconQrcode,
-	IconRepeat,
-} from "@tabler/icons-react";
+	CheckIcon,
+	EnvelopeSimpleIcon,
+	QrCodeIcon,
+	RepeatIcon,
+} from "@phosphor-icons/react";
 import { type KeyboardEvent, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
@@ -145,23 +143,21 @@ export const ParticipantPostConversation = () => {
 					</Trans>
 				</Text>
 				<Box className="relative">
-					<LoadingOverlay visible={project.isLoading} />
 					<Group gap="sm" wrap="wrap">
 						<Button
 							size="md"
-							variant="outline"
-							leftSection={<IconQrcode size={18} />}
+							leftSection={<QrCodeIcon size={20} />}
 							onClick={openShare}
+							disabled={project.isLoading}
 							{...testId("portal-finish-show-qr-button")}
 						>
-							<Trans>Show QR Code</Trans>
+							<Trans>Show QR code</Trans>
 						</Button>
 						<I18nLink to={initiateLink}>
 							<Button
 								component="a"
 								size="md"
-								variant="outline"
-								leftSection={<IconRepeat size={18} />}
+								leftSection={<RepeatIcon size={20} />}
 								{...testId("portal-finish-record-another-button")}
 							>
 								<Trans>Record another conversation</Trans>
@@ -176,10 +172,10 @@ export const ParticipantPostConversation = () => {
 							{!isSubmitted ? (
 								<>
 									<Stack gap="xs">
-										<Text size="lg" fw={700}>
+										<Text size="lg">
 											<Trans>Do you want to stay in the loop?</Trans>
 										</Text>
-										<Text size="sm" c="gray.6">
+										<Text size="sm" c="dimmed">
 											<Trans>Share your details here</Trans>
 										</Text>
 									</Stack>
@@ -189,7 +185,7 @@ export const ParticipantPostConversation = () => {
 											placeholder={t`email@work.com`}
 											value={email}
 											size="md"
-											leftSection={<IconMail size={20} />}
+											leftSection={<EnvelopeSimpleIcon size={20} />}
 											onChange={handleInputChange}
 											onKeyDown={handleKeyDown}
 											error={error}
@@ -197,10 +193,9 @@ export const ParticipantPostConversation = () => {
 											rightSection={
 												<Button
 													size="sm"
-													variant="outline"
 													onClick={() => addEmail(inputRef.current)}
 													disabled={!email.trim() || isPending}
-													className="me-[2px] hover:bg-blue-50"
+													className="me-[2px]"
 													{...testId("portal-finish-email-add-button")}
 												>
 													{t`Add`}
@@ -210,21 +205,15 @@ export const ParticipantPostConversation = () => {
 											{...testId("portal-finish-email-input")}
 										/>
 										{emails.length > 0 && (
-											<Paper
-												shadow="sm"
-												radius="sm"
-												p="md"
-												withBorder
-												{...testId("portal-finish-email-list")}
-											>
-												<Text size="sm" fw={500} className="mb-2">
+											<Paper p="md" {...testId("portal-finish-email-list")}>
+												<Text size="sm" mb="sm">
 													<Trans>Added emails</Trans> ({emails.length}):
 												</Text>
 												<Group>
 													{emails.map((emailItem, index) => (
 														<Tooltip
 															key={`${emailItem}`}
-															label={t`Remove Email`}
+															label={t`Remove email`}
 															transitionProps={{
 																duration: 100,
 																transition: "pop",
@@ -234,7 +223,6 @@ export const ParticipantPostConversation = () => {
 															<Chip
 																disabled={isPending}
 																value={emailItem}
-																variant="outline"
 																onClick={() => removeEmail(emailItem)}
 																styles={{
 																	iconWrapper: { display: "none" },
@@ -251,31 +239,22 @@ export const ParticipantPostConversation = () => {
 										{emails.length > 0 && (
 											<Button
 												size="lg"
+												variant="filled"
 												fullWidth
 												onClick={handleSubscribe}
 												loading={isPending}
-												className="mt-4"
+												mt="md"
 												{...testId("portal-finish-email-submit-button")}
 											>
-												{isPending ? (
-													<IconLoader2 className="animate-spin" />
-												) : (
-													<Trans> Submit</Trans>
-												)}
+												<Trans>Submit</Trans>
 											</Button>
 										)}
 									</Stack>
 								</>
 							) : (
 								<Box p="md" {...testId("portal-finish-email-success")}>
-									<Text
-										c="green"
-										size="md"
-										className="flex items-center gap-4 md:gap-2"
-									>
-										<span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-green-500 text-white">
-											<IconCheck size={16} strokeWidth={3} />
-										</span>
+									<Text c="green" size="md" className="flex items-center gap-2">
+										<CheckIcon size={16} />
 										<Trans>Thank you!</Trans>
 									</Text>
 								</Box>
@@ -283,7 +262,7 @@ export const ParticipantPostConversation = () => {
 							{project.data?.is_project_notification_subscription_allowed && (
 								<Text
 									size="sm"
-									c="gray.6"
+									c="dimmed"
 									className="mt-4"
 									{...testId("portal-finish-email-disclaimer")}
 								>

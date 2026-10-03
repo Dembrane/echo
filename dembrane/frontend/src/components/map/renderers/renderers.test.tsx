@@ -337,10 +337,10 @@ describe("MstMap", () => {
 		);
 
 		fireEvent.click(
-			screen.getByRole("button", { name: "Force Graph Settings" }),
+			screen.getByRole("button", { name: "Force graph settings" }),
 		);
 
-		expect(screen.getByText("Force Parameters")).toBeTruthy();
+		expect(screen.getByText("Force parameters")).toBeTruthy();
 		expect(screen.getAllByRole("slider")).toHaveLength(5);
 		expect(screen.getByRole("button", { name: "Reset" })).toBeTruthy();
 	});
@@ -418,7 +418,7 @@ describe("MstMap", () => {
 		};
 
 		fireEvent.click(
-			screen.getByRole("button", { name: "Force Graph Settings" }),
+			screen.getByRole("button", { name: "Force graph settings" }),
 		);
 
 		vi.mocked(mstLinkDistance).mockClear();
@@ -808,8 +808,8 @@ describe("LocalMap", () => {
 		fireEvent.click(screen.getByRole("button", { name: "Pause physics" }));
 		expect(screen.getByRole("button", { name: "Resume physics" })).toBeTruthy();
 
-		fireEvent.click(screen.getByRole("button", { name: "LocalMap Settings" }));
-		expect(screen.getByText("LocalMap Forces")).toBeTruthy();
+		fireEvent.click(screen.getByRole("button", { name: "Local map settings" }));
+		expect(screen.getByText("Local map forces")).toBeTruthy();
 		expect(screen.getAllByRole("slider")).toHaveLength(7);
 	});
 
@@ -820,7 +820,7 @@ describe("LocalMap", () => {
 		);
 		const circles = Array.from(container.querySelectorAll("circle.node"));
 
-		fireEvent.click(screen.getByRole("button", { name: "LocalMap Settings" }));
+		fireEvent.click(screen.getByRole("button", { name: "Local map settings" }));
 		const [cMedSlider] = screen.getAllByRole("slider");
 		fireEvent.change(cMedSlider, { target: { value: "20" } });
 		act(() => resizeContainers(1440, 900));
@@ -837,7 +837,7 @@ describe("LocalMap", () => {
 			<LocalMap edgeLimit={EDGE_LIMIT} nodes={nodes} />,
 			createMapInteractionStore(),
 		);
-		fireEvent.click(screen.getByRole("button", { name: "LocalMap Settings" }));
+		fireEvent.click(screen.getByRole("button", { name: "Local map settings" }));
 
 		const panel = screen.getByTestId("map-settings-panel");
 		expect(panel.className).toContain("max-w-[calc(100%-2rem)]");
@@ -992,7 +992,7 @@ describe("LocalMap", () => {
 		restart.mockClear();
 
 		// A slider change and a resize must not wake the old simulation
-		fireEvent.click(screen.getByRole("button", { name: "LocalMap Settings" }));
+		fireEvent.click(screen.getByRole("button", { name: "Local map settings" }));
 		const [cMedSlider] = screen.getAllByRole("slider");
 		fireEvent.change(cMedSlider, { target: { value: "20" } });
 		act(() => resizeContainers(1440, 900));

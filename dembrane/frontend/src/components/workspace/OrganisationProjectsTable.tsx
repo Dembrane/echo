@@ -7,13 +7,18 @@ import {
 	Menu,
 	Paper,
 	Select,
+	Skeleton,
 	Stack,
 	Table,
 	Text,
 	TextInput,
+	Title,
 } from "@mantine/core";
-import { modals } from "@mantine/modals";
-import { IconDots, IconSearch, IconTrash } from "@tabler/icons-react";
+import {
+	DotsThreeIcon,
+	MagnifyingGlassIcon,
+	TrashIcon,
+} from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "@/components/common/Toaster";
@@ -21,6 +26,7 @@ import { notifyError } from "@/components/error/notifyError";
 import { API_BASE_URL } from "@/config";
 import { useUrlSearch } from "@/hooks/useUrlSearch";
 import { ApiRequestError } from "@/lib/errors/read";
+import { openConfirm } from "@/lib/openConfirm";
 import { formatDurationFromHours } from "@/lib/time";
 
 interface OrgProject {
@@ -134,9 +140,9 @@ export const OrganisationProjectsTable = ({ orgId }: { orgId: string }) => {
 	});
 
 	const handleDelete = (p: OrgProject) => {
-		modals.openConfirmModal({
+		openConfirm({
 			children: (
-				<Stack gap={8}>
+				<Stack gap="sm">
 					<Text size="sm">
 						<Trans>
 							Delete this project in {p.workspace_name}? All conversations and
@@ -154,25 +160,25 @@ export const OrganisationProjectsTable = ({ orgId }: { orgId: string }) => {
 					)}
 				</Stack>
 			),
-			confirmProps: { color: "red" },
+			danger: true,
 			labels: { cancel: t`Cancel`, confirm: t`Delete` },
 			onConfirm: () => deleteMutation.mutate(p.id),
 			title: t`Delete ${p.name}?`,
 		});
 	};
 
-	if (isLoading) return null;
+	if (isLoading) return <Skeleton h={240} />;
 
 	return (
-		<Paper p="md" withBorder radius="sm">
-			<Stack gap={12}>
+		<Paper p="md" withBorder>
+			<Stack gap="sm">
 				<Group justify="space-between" wrap="wrap">
-					<Text size="xs" fw={500} tt="uppercase" c="dimmed" lts={0.5}>
+					<Title order={5}>
 						<Trans>Projects across organisation · {projects.length}</Trans>
-					</Text>
+					</Title>
 					<Group gap="xs">
 						<TextInput
-							leftSection={<IconSearch size={14} />}
+							leftSection={<MagnifyingGlassIcon size={16} />}
 							placeholder={t`Search project or workspace`}
 							size="xs"
 							value={search}
@@ -231,7 +237,7 @@ export const OrganisationProjectsTable = ({ orgId }: { orgId: string }) => {
 							{filtered.map((p) => (
 								<Table.Tr key={p.id}>
 									<Table.Td>
-										<Group gap={6} wrap="nowrap">
+										<Group gap="xs" wrap="nowrap">
 											<Text size="sm" truncate>
 												{p.name || t`Untitled`}
 											</Text>
@@ -267,7 +273,6 @@ export const OrganisationProjectsTable = ({ orgId }: { orgId: string }) => {
 										<Menu shadow="md" width={160} position="bottom-end">
 											<Menu.Target>
 												<ActionIcon
-													size="sm"
 													variant="subtle"
 													color="gray"
 													loading={
@@ -276,13 +281,13 @@ export const OrganisationProjectsTable = ({ orgId }: { orgId: string }) => {
 													}
 													aria-label={t`Project actions`}
 												>
-													<IconDots size={14} />
+													<DotsThreeIcon size={20} />
 												</ActionIcon>
 											</Menu.Target>
 											<Menu.Dropdown>
 												<Menu.Item
 													color="red"
-													leftSection={<IconTrash size={14} />}
+													leftSection={<TrashIcon size={16} />}
 													onClick={() => handleDelete(p)}
 												>
 													<Trans>Delete…</Trans>

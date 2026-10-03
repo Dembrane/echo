@@ -1,9 +1,10 @@
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
-import { Button, Center, Loader, Stack, Text, Title } from "@mantine/core";
+import { Button, Center, Stack, Text, Title } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useParams } from "react-router";
+import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { actionTarget } from "@/components/error/actions";
 import { useErrorPresentation } from "@/components/error/useErrorPresentation";
 import { API_BASE_URL } from "@/config";
@@ -75,11 +76,7 @@ export const ProjectAccessGuard = ({ children }: { children: ReactNode }) => {
 	if (!projectId) return <>{children}</>;
 
 	if (isLoading) {
-		return (
-			<Center style={{ height: "60vh" }}>
-				<Loader size="sm" color="gray" />
-			</Center>
-		);
+		return <BeautifulLoading />;
 	}
 
 	if (data && data.ok) {
@@ -105,7 +102,7 @@ export const ProjectAccessGuard = ({ children }: { children: ReactNode }) => {
 				px="lg"
 				data-error-code={presented?.code ?? "none"}
 			>
-				<Title order={3} fw={400} ta="center">
+				<Title order={4} ta="center">
 					{is404 ? (
 						<Trans>This isn't available to you</Trans>
 					) : (
@@ -116,15 +113,15 @@ export const ProjectAccessGuard = ({ children }: { children: ReactNode }) => {
 					{presented?.message}
 				</Text>
 				{target?.href ? (
-					<Button component="a" href={target.href} variant="default" size="sm">
+					<Button component="a" href={target.href} size="sm">
 						{target.label}
 					</Button>
 				) : is404 || !target ? (
-					<Button variant="default" size="sm" onClick={() => navigate("/")}>
+					<Button size="sm" onClick={() => navigate("/")}>
 						<Trans>Go home</Trans>
 					</Button>
 				) : (
-					<Button variant="default" size="sm" onClick={target.onClick}>
+					<Button size="sm" onClick={target.onClick}>
 						{target.label}
 					</Button>
 				)}

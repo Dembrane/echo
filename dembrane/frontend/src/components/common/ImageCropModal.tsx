@@ -3,6 +3,7 @@ import { Trans } from "@lingui/react/macro";
 import { Button, Group, Modal, Slider, Stack, Text } from "@mantine/core";
 import { useCallback, useState } from "react";
 import Cropper, { type Area } from "react-easy-crop";
+import { roles } from "@/colors";
 
 type ImageCropModalProps = {
 	opened: boolean;
@@ -92,11 +93,7 @@ export const ImageCropModal = ({
 		<Modal
 			opened={opened}
 			onClose={onClose}
-			title={
-				<Text fw={600} size="lg">
-					{title ?? t`Crop Image`}
-				</Text>
-			}
+			title={title ?? t`Crop image`}
 			size="md"
 			onExitTransitionEnd={handleReset}
 		>
@@ -108,8 +105,7 @@ export const ImageCropModal = ({
 				)}
 				<div
 					style={{
-						background: "#333",
-						borderRadius: 8,
+						background: roles.text,
 						height: 350,
 						overflow: "hidden",
 						position: "relative",
@@ -128,8 +124,8 @@ export const ImageCropModal = ({
 					/>
 				</div>
 
-				<Stack gap={4}>
-					<Text size="sm" fw={500}>
+				<Stack gap="xs">
+					<Text size="sm">
 						<Trans>Zoom</Trans>
 					</Text>
 					<Slider
@@ -142,12 +138,12 @@ export const ImageCropModal = ({
 					/>
 				</Stack>
 
-				<Group justify="flex-end" gap="sm">
-					<Button variant="default" onClick={onClose}>
-						<Trans>Cancel</Trans>
-					</Button>
-					<Button onClick={handleSave}>
+				<Group justify="flex-start" gap="sm">
+					<Button variant="filled" onClick={handleSave}>
 						<Trans>Apply</Trans>
+					</Button>
+					<Button variant="subtle" color="gray" onClick={onClose}>
+						<Trans>Cancel</Trans>
 					</Button>
 				</Group>
 			</Stack>

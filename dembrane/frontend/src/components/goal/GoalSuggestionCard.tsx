@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Badge, Button, Group, Stack, Text } from "@mantine/core";
-import { IconCheck } from "@tabler/icons-react";
+import { CheckIcon } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 import { useParams } from "react-router";
 import { SuggestionCardFrame } from "@/components/common/SuggestionCardFrame";
@@ -63,9 +63,13 @@ export const GoalSuggestionCard = ({
 
 	if (applied) {
 		return (
-			<SuggestionCardFrame compact tight testId="agentic-goal-suggestion-applied">
+			<SuggestionCardFrame
+				compact
+				tight
+				testId="agentic-goal-suggestion-applied"
+			>
 				<Group gap="xs" wrap="nowrap">
-					<IconCheck
+					<CheckIcon
 						size={16}
 						className="shrink-0"
 						style={{ color: "var(--mantine-color-primary-7)" }}
@@ -96,11 +100,11 @@ export const GoalSuggestionCard = ({
 		<SuggestionCardFrame testId="agentic-goal-suggestion">
 			<Stack gap="sm">
 				<Group justify="space-between" wrap="nowrap">
-					<Text size="sm" fw={600}>
+					<Text size="sm">
 						<Trans>Suggested project goal</Trans>
 					</Text>
 					{dismissed ? (
-						<Badge size="xs" variant="outline">
+						<Badge size="xs">
 							<Trans>Dismissed</Trans>
 						</Badge>
 					) : null}
@@ -112,26 +116,10 @@ export const GoalSuggestionCard = ({
 					</Text>
 				) : null}
 
-				<Group justify="flex-end" gap="xs">
+				<Group justify="flex-start" gap="sm">
 					{!dismissed ? (
 						<Button
-							variant="subtle"
-							size="xs"
-							onClick={() => setDismissed(true)}
-						>
-							<Trans>Dismiss</Trans>
-						</Button>
-					) : (
-						<Button
-							variant="subtle"
-							size="xs"
-							onClick={() => setDismissed(false)}
-						>
-							<Trans>Review again</Trans>
-						</Button>
-					)}
-					{!dismissed ? (
-						<Button
+							variant="filled"
 							size="xs"
 							loading={saveGoalMutation.isPending}
 							onClick={() => void handleApply()}
@@ -140,6 +128,25 @@ export const GoalSuggestionCard = ({
 							<Trans>Apply</Trans>
 						</Button>
 					) : null}
+					{!dismissed ? (
+						<Button
+							variant="subtle"
+							color="gray"
+							size="xs"
+							onClick={() => setDismissed(true)}
+						>
+							<Trans>Dismiss</Trans>
+						</Button>
+					) : (
+						<Button
+							variant="subtle"
+							color="gray"
+							size="xs"
+							onClick={() => setDismissed(false)}
+						>
+							<Trans>Review again</Trans>
+						</Button>
+					)}
 				</Group>
 			</Stack>
 		</SuggestionCardFrame>

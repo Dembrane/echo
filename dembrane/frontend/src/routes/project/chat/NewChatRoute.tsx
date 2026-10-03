@@ -22,11 +22,11 @@ import {
 	useDocumentTitle,
 } from "@mantine/hooks";
 import {
-	IconAlertCircle,
-	IconSearch,
-	IconSend,
-	IconX,
-} from "@tabler/icons-react";
+	LockIcon,
+	MagnifyingGlassIcon,
+	PaperPlaneRightIcon,
+	XIcon,
+} from "@phosphor-icons/react";
 import { formatRelative } from "date-fns";
 import posthog from "posthog-js";
 import { Suspense, useEffect, useRef, useState } from "react";
@@ -151,10 +151,10 @@ const ProjectChatsSection = ({
 		<Stack gap="lg" className="pt-4 transition-opacity">
 			<Group gap="sm" align="center" justify="space-between" wrap="wrap">
 				<Group gap="sm" align="center">
-					<Title order={2} fw={500} style={{ color: "var(--app-text)" }}>
+					<Title order={2}>
 						<Trans>Chats</Trans>
 					</Title>
-					<Badge variant="light">{shownCount}</Badge>
+					<Badge color="gray">{shownCount}</Badge>
 				</Group>
 				<TextInput
 					size="sm"
@@ -163,16 +163,15 @@ const ProjectChatsSection = ({
 					onChange={(event) => setSearch(event.currentTarget.value)}
 					placeholder={t`Search chats`}
 					aria-label={t`Search chats`}
-					leftSection={<IconSearch size={14} />}
+					leftSection={<MagnifyingGlassIcon size={16} />}
 					rightSection={
 						rawSearch ? (
 							<ActionIcon
 								variant="subtle"
-								size="sm"
 								aria-label={t`Clear search`}
 								onClick={() => setSearch("")}
 							>
-								<IconX size={14} />
+								<XIcon size={16} />
 							</ActionIcon>
 						) : null
 					}
@@ -181,12 +180,12 @@ const ProjectChatsSection = ({
 			</Group>
 
 			{isSearching && listedChats.length === 0 && !searchQuery.isFetching && (
-				<Text size="sm">
+				<Text size="sm" c="dimmed">
 					<Trans>No chats match your search.</Trans>
 				</Text>
 			)}
 			{!isSearching && listedChats.length === 0 && (
-				<Text size="sm">
+				<Text size="sm" c="dimmed">
 					<Trans>No chats yet.</Trans>
 				</Text>
 			)}
@@ -234,7 +233,7 @@ const ProjectChatsSection = ({
 											)}
 								</Text>
 								{item.name && (
-									<Text size="xs" c="gray.6">
+									<Text size="xs" c="dimmed">
 										{formatRelative(
 											new Date(item.date_created ?? new Date()),
 											new Date(),
@@ -536,12 +535,7 @@ export const NewChatRoute = () => {
 	if (isObserver) {
 		return (
 			<Box className="flex min-h-full items-center justify-center px-2 pr-4">
-				<Alert
-					icon={<IconAlertCircle size="1rem" />}
-					color="primary"
-					variant="light"
-					maw={420}
-				>
+				<Alert color="gray" icon={<LockIcon size={20} />} maw={420}>
 					<Text size="sm">
 						<Trans>
 							Chat isn't available on your access level. Reach out to your
@@ -574,7 +568,7 @@ export const NewChatRoute = () => {
 			<Stack gap="xl">
 				{ENABLE_AGENTIC_CHAT ? (
 					<Stack gap="lg" className="pb-4 pt-10">
-						<Title order={2} fw={500}>
+						<Title order={2}>
 							<Trans>Where would you like to start?</Trans>
 						</Title>
 						<ChatTemplatesMenuConnected
@@ -636,11 +630,15 @@ export const NewChatRoute = () => {
 							}
 							footerRight={
 								<Button
+									variant="filled"
 									type="button"
 									size="md"
-									radius="md"
 									rightSection={
-										isPending ? <Loader size={18} /> : <IconSend size={18} />
+										isPending ? (
+											<Loader size={20} />
+										) : (
+											<PaperPlaneRightIcon size={20} />
+										)
 									}
 									disabled={isPending || draft.trim().length === 0}
 									onClick={startChat}

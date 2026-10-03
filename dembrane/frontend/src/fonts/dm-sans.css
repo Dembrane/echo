@@ -1,46 +1,32 @@
+/* The DM Sans dembrane.com ships: optical sizing (opsz 9–40), weights
+ * 100–1000 and all stylistic sets. The app uses three weights: 320 for text,
+ * 240 for muted text, 600 for emphasis inside a sentence. */
 @font-face {
-	font-family: 'DM Sans Variable';
-	src: url('./DMSans-Light.woff2') format('woff2');
+	font-family: "DM Sans Variable";
+	src: url("./dm-sans-variable.woff2") format("woff2");
 	font-weight: 100 1000;
 	font-style: normal;
 	font-display: swap;
-	/* Enable stylistic sets 1-6 and 8 */
-	font-feature-settings: 
-		'ss01' on,
-		'ss02' on,
-		'ss03' on,
-		'ss04' on,
-		'ss05' on,
-		'ss06' on,
-		'ss08' on;
+}
+
+/* Same file under the name .allow-bold surfaces used when the app font was
+ * Light-only; kept so those surfaces need no change. */
+@font-face {
+	font-family: "DM Sans Content";
+	src: url("./dm-sans-variable.woff2") format("woff2");
+	font-weight: 100 1000;
+	font-style: normal;
+	font-display: swap;
 }
 
 /* Utility class to apply stylistic sets to any DM Sans text */
 .dm-sans-stylistic {
-	font-feature-settings: 
-		'ss01' on,
-		'ss02' on,
-		'ss03' on,
-		'ss04' on,
-		'ss05' on,
-		'ss06' on,
-		'ss08' on;
-}
-
-/* Real variable cut for .allow-bold surfaces. The Light-only face above
-   is what keeps the rest of the app bold-free. */
-@font-face {
-	font-family: 'DM Sans Content';
-	src: url('./DMSans-Variable.woff2') format('woff2');
-	font-weight: 100 1000;
-	font-style: normal;
-	font-display: swap;
-	font-feature-settings: 
-		'ss01' on,
-		'ss02' on,
-		'ss03' on,
-		'ss04' on,
-		'ss05' on,
-		'ss06' on,
-		'ss08' on;
+	font-feature-settings:
+		"ss01" on,
+		"ss02" on,
+		"ss03" on,
+		"ss04" on,
+		"ss05" on,
+		"ss06" on,
+		"ss08" on;
 }

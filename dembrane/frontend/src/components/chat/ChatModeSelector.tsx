@@ -11,11 +11,11 @@ import {
 	UnstyledButton,
 } from "@mantine/core";
 import {
-	IconLock,
-	IconMessageCircle,
-	IconQuote,
-	IconSparkles,
-} from "@tabler/icons-react";
+	ChatCircleIcon,
+	LockIcon,
+	QuotesIcon,
+	SparkleIcon,
+} from "@phosphor-icons/react";
 import posthog from "posthog-js";
 import { useState } from "react";
 import { ENABLE_AGENTIC_CHAT } from "@/config";
@@ -23,32 +23,23 @@ import type { ChatMode } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 import { useInitializeChatModeMutation } from "./hooks";
 
-// Color palette from design spec - shared across chat components
+// Mode colours, shared across chat components. The neon is for the small
+// mark only (an icon or a loader), never a border, shadow, disc or tint.
 export const MODE_COLORS = {
-	// Brand Spring Green. Used as a fill (the mark, the selected card's
-	// disc), never as text; the chat itself stays neutral.
+	// Brand Spring Green.
 	agentic: {
 		badge: "springGreen",
-		border: "#1EFFA1",
-		lighter: "rgba(30, 255, 161, 0.1)",
 		primary: "#1EFFA1",
-		shadow: "rgba(30, 255, 161, 0.12)",
 	},
 	deep_dive: {
 		badge: "cyan",
-		border: "#00FFFF", // cyan border
-		lighter: "rgba(0, 255, 255, 0.1)", // very subtle cyan bg
-		primary: "#00FFFF", // cyan
-		shadow: "rgba(0, 255, 255, 0.1)", // subtle cyan shadow
+		primary: "#00FFFF",
 	},
 	// Use CSS variable for theme-aware text color
 	graphite: "var(--app-text)",
 	overview: {
 		badge: "teal",
-		border: "#1EFFA1", // spring green border
-		lighter: "rgba(30, 255, 161, 0.1)", // very subtle green bg
-		primary: "#1EFFA1", // spring green
-		shadow: "rgba(30, 255, 161, 0.12)", // subtle green shadow
+		primary: "#1EFFA1",
 	},
 };
 
@@ -70,7 +61,7 @@ type ModeCardProps = {
 	title: string;
 	subtitle: string;
 	examples: string[];
-	icon: typeof IconSparkles;
+	icon: typeof SparkleIcon;
 	isBeta?: boolean;
 	atLimit?: boolean;
 	selectedMode: ChatMode | null;
@@ -90,7 +81,6 @@ const ModeCard = ({
 	isLoading,
 	onSelectMode,
 }: ModeCardProps) => {
-	const colors = MODE_COLORS[mode];
 	const isSelected = selectedMode === mode;
 	const isThisLoading = isLoading && isSelected;
 
@@ -98,105 +88,52 @@ const ModeCard = ({
 		<UnstyledButton
 			onClick={() => onSelectMode(mode)}
 			disabled={isLoading}
-			className={`w-full transition-all duration-200 ${isLoading && !isSelected ? "opacity-50" : ""}`}
+			p="lg"
+			data-selected={isSelected || undefined}
+			className={`app-do w-full ${isLoading && !isSelected ? "opacity-50" : ""}`}
 			{...testId(`chat-mode-card-${mode}`)}
 		>
-			<Box
-				className={`
-					relative overflow-hidden rounded border p-6
-					transition-all duration-200 ease-out
-					hover:scale-[1.005]
-				`}
-				style={{
-					backgroundColor: "var(--app-background)",
-					borderColor: isSelected
-						? colors.primary
-						: "var(--mantine-color-gray-3)",
-					boxShadow: isSelected ? `0 4px 16px ${colors.shadow}` : undefined,
-				}}
-				onMouseEnter={(e) => {
-					if (!isSelected) {
-						e.currentTarget.style.borderColor = colors.primary;
-						e.currentTarget.style.boxShadow = `0 4px 16px ${colors.shadow}`;
-					}
-				}}
-				onMouseLeave={(e) => {
-					if (!isSelected) {
-						e.currentTarget.style.borderColor = "var(--mantine-color-gray-3)";
-						e.currentTarget.style.boxShadow = "none";
-					}
-				}}
-			>
-				<Stack gap="lg">
-					{/* Header */}
-					<Group justify="space-between" align="flex-start">
-						<Group gap="md">
-							<Box
-								className="flex items-center justify-center rounded-full"
-								style={{
-									padding: 10,
-								}}
-								bg={colors.primary}
-							>
-								{isThisLoading ? (
-									<Loader size={24} color="var(--app-text)" />
-								) : (
-									<Icon size={24} stroke={2} color="var(--app-text)" />
-								)}
-							</Box>
-							<Stack gap={4}>
-								<Group gap="sm">
-									<Text fw={600} size="lg" style={{ color: "var(--app-text)" }}>
-										{title}
-									</Text>
-									{isBeta && (
-										<Badge size="sm" color="mauve" c="graphite">
-											<Trans>Beta</Trans>
-										</Badge>
-									)}
-									{atLimit && (
-										<Badge
-											size="sm"
-											color="primary"
-											variant="light"
-											leftSection={<IconLock size={10} />}
-										>
-											<Trans>Chat limit reached</Trans>
-										</Badge>
-									)}
-								</Group>
-								<Text size="sm">
-									{subtitle}
-								</Text>
-							</Stack>
+			<Stack gap="lg">
+				{/* Header */}
+				<Group gap="md" align="flex-start" wrap="nowrap">
+					{isThisLoading ? <Loader size="sm" /> : <Icon size={20} />}
+					<Stack gap="xs">
+						<Group gap="sm">
+							<Text size="lg">{title}</Text>
+							{isBeta && (
+								<Badge size="sm" color="mauve" c="graphite">
+									<Trans>Beta</Trans>
+								</Badge>
+							)}
+							{atLimit && (
+								<Badge
+									size="sm"
+									color="gray"
+									leftSection={<LockIcon size={16} />}
+								>
+									<Trans>Chat limit reached</Trans>
+								</Badge>
+							)}
 						</Group>
-					</Group>
-
-					{/* Example questions */}
-					<Stack gap="sm">
-						<Text
-							size="xs"
-							fw={600}
-							tt="uppercase"
-							style={{ letterSpacing: 0.5 }}
-						>
-							<Trans>Try asking</Trans>
-						</Text>
-						{examples.map((example) => (
-							<Group key={example} gap="sm" wrap="nowrap" align="flex-start">
-								<IconQuote
-									size={14}
-									color="var(--app-text)"
-									style={{ flexShrink: 0, marginTop: 2 }}
-								/>
-								<Text size="sm" lh={1.5}>
-									{example}
-								</Text>
-							</Group>
-						))}
+						<Text size="sm">{subtitle}</Text>
 					</Stack>
+				</Group>
+
+				{/* Example questions */}
+				<Stack gap="sm">
+					<Text size="sm" c="dimmed">
+						<Trans>Try asking</Trans>
+					</Text>
+					{examples.map((example) => (
+						<Group key={example} gap="sm" wrap="nowrap" align="flex-start">
+							<QuotesIcon size={16} style={{ flexShrink: 0 }} />
+							<Text size="sm" lh={1.5}>
+								{example}
+							</Text>
+						</Group>
+					))}
 				</Stack>
-			</Box>
+			</Stack>
 		</UnstyledButton>
 	);
 };
@@ -258,13 +195,8 @@ export const ChatModeSelector = ({
 		<Box className="mx-auto w-full py-8" {...testId("chat-mode-selector")}>
 			<Stack gap="xl">
 				{/* Header */}
-				<Stack gap={6}>
-					<Title
-						order={2}
-						style={{ color: "var(--app-text)" }}
-						fw={600}
-						{...testId("chat-mode-selector-title")}
-					>
+				<Stack gap="xs">
+					<Title order={2} {...testId("chat-mode-selector-title")}>
 						<Trans>What would you like to explore?</Trans>
 					</Title>
 					<Text size="md">
@@ -276,32 +208,32 @@ export const ChatModeSelector = ({
 				    have chat_mode="overview" keep working, but nothing creates a
 				    new one. */}
 				<Stack gap="lg">
-				{ENABLE_AGENTIC_CHAT && (
+					{ENABLE_AGENTIC_CHAT && (
+						<ModeCard
+							mode="agentic"
+							title={t`Agentic`}
+							subtitle={t`Delegate multi-step analysis with live tool execution`}
+							examples={getAgenticExamples()}
+							icon={SparkleIcon}
+							isBeta
+							atLimit={atChatLimit}
+							selectedMode={selectedMode}
+							isLoading={isLoading}
+							onSelectMode={handleSelectMode}
+						/>
+					)}
+
 					<ModeCard
-						mode="agentic"
-						title={t`Agentic`}
-						subtitle={t`Delegate multi-step analysis with live tool execution`}
-						examples={getAgenticExamples()}
-						icon={IconSparkles}
-						isBeta
+						mode="deep_dive"
+						title={t`Specific Details`}
+						subtitle={t`Select conversations and find exact quotes`}
+						examples={getDeepDiveExamples()}
+						icon={ChatCircleIcon}
 						atLimit={atChatLimit}
 						selectedMode={selectedMode}
 						isLoading={isLoading}
 						onSelectMode={handleSelectMode}
 					/>
-				)}
-
-				<ModeCard
-					mode="deep_dive"
-					title={t`Specific Details`}
-					subtitle={t`Select conversations and find exact quotes`}
-					examples={getDeepDiveExamples()}
-					icon={IconMessageCircle}
-					atLimit={atChatLimit}
-					selectedMode={selectedMode}
-					isLoading={isLoading}
-					onSelectMode={handleSelectMode}
-				/>
 				</Stack>
 			</Stack>
 		</Box>

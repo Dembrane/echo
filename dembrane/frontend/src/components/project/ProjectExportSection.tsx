@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { Button, Stack } from "@mantine/core";
-import { IconDownload } from "@tabler/icons-react";
+import { DownloadSimpleIcon } from "@phosphor-icons/react";
 import { testId } from "@/lib/testUtils";
 import { ProjectSettingsSection } from "./ProjectSettingsSection";
 
@@ -29,8 +29,7 @@ export const ProjectExportSection = ({
 					maw="300px"
 					href={exportLink}
 					download={`${projectName ?? "Project"}-Transcripts.zip`}
-					rightSection={<IconDownload />}
-					variant="outline"
+					leftSection={<DownloadSimpleIcon size={20} />}
 					{...testId("project-export-transcripts-button")}
 				>
 					<Trans>Download all transcripts</Trans>

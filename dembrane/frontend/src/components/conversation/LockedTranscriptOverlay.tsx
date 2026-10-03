@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
-import { Badge, Box, Stack, Text } from "@mantine/core";
-import { IconLock } from "@tabler/icons-react";
+import { Alert } from "@mantine/core";
+import { LockIcon } from "@phosphor-icons/react";
 
 /**
  * Overlay shown in place of gated content (summary / transcript) on a locked
@@ -30,31 +30,8 @@ export function LockedTranscriptOverlay({
 			: t`Upgrade your workspace to view transcripts for new conversations.`;
 
 	return (
-		<Box
-			style={{
-				alignItems: "center",
-				background:
-					"repeating-linear-gradient(45deg, rgba(65,105,225,0.04) 0 8px, rgba(65,105,225,0.08) 8px 16px)",
-				borderRadius: 8,
-				display: "flex",
-				justifyContent: "center",
-				minHeight: compact ? 48 : 120,
-			}}
-		>
-			<Stack gap={6} align="center" style={{ maxWidth: 320 }} p="md">
-				<Badge
-					color="primary"
-					variant="light"
-					leftSection={<IconLock size={12} />}
-				>
-					{label}
-				</Badge>
-				{!compact && (
-					<Text size="sm" ta="center">
-						{description}
-					</Text>
-				)}
-			</Stack>
-		</Box>
+		<Alert color="gray" icon={<LockIcon size={20} />} title={label}>
+			{compact ? null : description}
+		</Alert>
 	);
 }

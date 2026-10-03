@@ -1,7 +1,11 @@
 import { t } from "@lingui/core/macro";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { OBJECT_TYPE_STYLES } from "../attributes";
+import {
+	MAP_NEUTRAL_GREY,
+	MAP_NOT_ASSESSED_GREY,
+	OBJECT_TYPE_STYLES,
+} from "../attributes";
 import type { MapProvenanceInfo, StakeholderRung } from "../data/adapter";
 import type { DisplayVerdict } from "../graph/nodeStyle";
 import type { MapValence, ObjectType } from "../types";
@@ -35,15 +39,26 @@ export const valenceLabel = (valence: MapValence | undefined): string => {
 
 export const VALENCE_CHIP_CLASS: Record<MapValence, string> = {
 	negative: "bg-salmon text-graphite",
-	neutral: "bg-gray-300 text-graphite",
+	neutral: "text-graphite",
 	positive: "bg-springGreen text-graphite",
 };
 
-export const NOT_ASSESSED_CHIP_CLASS =
-	"border border-gray-300 bg-transparent text-current";
+export const NOT_ASSESSED_CHIP_CLASS = "text-graphite";
 
 export const valenceChipClass = (valence: MapValence | undefined): string =>
 	valence ? VALENCE_CHIP_CLASS[valence] : NOT_ASSESSED_CHIP_CLASS;
+
+/**
+ * The greys come from the valence palette, so a neutral or unassessed chip
+ * has the fill of the nodes it describes.
+ */
+export const valenceChipStyle = (
+	valence: MapValence | undefined,
+): CSSProperties | undefined => {
+	if (valence === "neutral") return { backgroundColor: MAP_NEUTRAL_GREY };
+	if (!valence) return { backgroundColor: MAP_NOT_ASSESSED_GREY };
+	return undefined;
+};
 
 export const valenceBlurb = (valence: MapValence | undefined): string => {
 	switch (valence) {
@@ -143,10 +158,18 @@ export const VERDICT_CHIP_CLASS: Record<DisplayVerdict, string> = {
 	unknown: "bg-graphite text-parchment",
 };
 
-export const OPINION_CHIP_CLASS = "bg-gray-400 text-graphite";
+export const OPINION_CHIP_CLASS = "text-graphite";
 
-export const CHIP_CLASS =
-	"inline-block rounded-none px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wider";
+export const OPINION_CHIP_STYLE: CSSProperties = {
+	backgroundColor: MAP_NEUTRAL_GREY,
+};
+
+export const CHIP_CLASS = "inline-block px-2 py-1 text-xs";
+
+/** A chip you press: a full 1px box in the map's tokens, accent when on. */
+export const pressableChipStyle = (active: boolean): CSSProperties => ({
+	border: `1px solid ${active ? mapVars.accentBorder : mapVars.border}`,
+});
 
 /** DDW's "Aug 5, 1:33 PM", in the page's locale. Empty when unreadable. */
 export const formatTimestamp = (
@@ -173,7 +196,7 @@ export const formatTimestamp = (
 	}
 };
 
-/** Panel header: uppercase title and the panel's colour dot. */
+/** Panel header: the title and the panel's colour dot. */
 export const PanelHeader = ({
 	title,
 	dotClassName,
@@ -185,7 +208,7 @@ export const PanelHeader = ({
 		className="mb-3 flex items-center justify-between border-b pb-1"
 		style={{ borderColor: mapVars.border }}
 	>
-		<h2 className="text-xs font-light uppercase tracking-wider">{title}</h2>
+		<h2 className="text-xs">{title}</h2>
 		<span
 			aria-hidden="true"
 			className={cn("inline-flex h-3 w-3 rounded-full", dotClassName)}

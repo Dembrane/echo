@@ -1,10 +1,12 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Alert, Divider, LoadingOverlay, Stack } from "@mantine/core";
+import { Alert, Divider, Stack } from "@mantine/core";
 import { useMemo, useState } from "react";
 import { useParams } from "react-router";
+import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
 import { ProjectGoalSection } from "@/components/goal/ProjectGoalSection";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ProjectMemorySection } from "@/components/memory/ProjectMemorySection";
 import { ProjectMethodologySection } from "@/components/methodology/ProjectMethodologySection";
@@ -108,68 +110,66 @@ export const ProjectSettingsRoute = () => {
 	// Project memory is listed with chat:use.
 	const canSeeMemory = !!workspace && canUseChat(workspace.role);
 	return (
-		<Stack
-			gap="3rem"
-			className="relative"
-			px={{ base: "1rem", md: "2rem" }}
-			py={{ base: "2rem", md: "4rem" }}
-		>
-			{projectQuery.isLoading && <LoadingOverlay visible />}
-			{projectQuery.isError && (
-				<Alert variant="outline" color="red">
-					<Trans>Error loading project</Trans>
-				</Alert>
-			)}
+		<PageContainer>
+			<Stack gap="xl">
+				{projectQuery.isLoading && <BeautifulLoading />}
+				{projectQuery.isError && (
+					<ErrorNotice
+						error={projectQuery.error}
+						title={t`Error loading project`}
+					/>
+				)}
 
-			{projectQuery.data && (
-				<ProjectBasicEdit project={projectQuery.data} readOnly={!canEdit} />
-			)}
+				{projectQuery.data && (
+					<ProjectBasicEdit project={projectQuery.data} readOnly={!canEdit} />
+				)}
 
-			{/* Usage and sharing moved to its own tab (2026-04-24) —
+				{/* Usage and sharing moved to its own tab (2026-04-24) —
 			    /projects/:id/access — so Project Settings stays focused on
 			    editing the project itself. The ProjectAccessRoute below
 			    owns the Usage & sharing surface. */}
 
-			{projectQuery.data && (
-				<>
-					{projectId && (
-						<>
-							<Divider />
-							<ProjectGoalSection projectId={projectId} readOnly={!canEdit} />
-						</>
-					)}
+				{projectQuery.data && (
+					<>
+						{projectId && (
+							<>
+								<Divider />
+								<ProjectGoalSection projectId={projectId} readOnly={!canEdit} />
+							</>
+						)}
 
-					<Divider />
-					<ProjectMethodologySection
-						project={projectQuery.data}
-						readOnly={!canEdit}
-					/>
+						<Divider />
+						<ProjectMethodologySection
+							project={projectQuery.data}
+							readOnly={!canEdit}
+						/>
 
-					{projectId && canSeeMemory && (
-						<>
-							<Divider />
-							<ProjectMemorySection projectId={projectId} />
-						</>
-					)}
+						{projectId && canSeeMemory && (
+							<>
+								<Divider />
+								<ProjectMemorySection projectId={projectId} />
+							</>
+						)}
 
-					{ENABLE_CANVAS && (
-						<>
-							<Divider />
-							<ProjectExperimentalSection
-								project={projectQuery.data}
-								readOnly={!canEdit}
-							/>
-						</>
-					)}
+						{ENABLE_CANVAS && (
+							<>
+								<Divider />
+								<ProjectExperimentalSection
+									project={projectQuery.data}
+									readOnly={!canEdit}
+								/>
+							</>
+						)}
 
-					<Divider />
-					<ProjectMoveWorkspace project={projectQuery.data} />
+						<Divider />
+						<ProjectMoveWorkspace project={projectQuery.data} />
 
-					<Divider />
-					<ProjectDangerZone project={projectQuery.data} />
-				</>
-			)}
-		</Stack>
+						<Divider />
+						<ProjectDangerZone project={projectQuery.data} />
+					</>
+				)}
+			</Stack>
+		</PageContainer>
 	);
 };
 
@@ -200,7 +200,7 @@ export const ProjectIntegrationsRoute = () => {
 
 	return (
 		<PageContainer>
-			<Stack gap="3rem">
+			<Stack gap="xl">
 				{!ENABLE_WEBHOOKS && (
 					<Alert variant="outline">
 						<Trans>Webhooks are not enabled for this environment.</Trans>
@@ -237,12 +237,13 @@ export const ProjectExportRoute = () => {
 
 	return (
 		<PageContainer>
-			<Stack gap="3rem" className="relative">
-				{projectQuery.isLoading && <LoadingOverlay visible />}
+			<Stack gap="xl">
+				{projectQuery.isLoading && <BeautifulLoading />}
 				{projectQuery.isError && (
-					<Alert variant="outline" color="red">
-						<Trans>Error loading project</Trans>
-					</Alert>
+					<ErrorNotice
+						error={projectQuery.error}
+						title={t`Error loading project`}
+					/>
 				)}
 				{projectQuery.data && projectId && (
 					<ProjectExportSection
@@ -310,27 +311,25 @@ export const ProjectPortalSettingsRoute = () => {
 	);
 
 	return (
-		<Stack
-			className="relative"
-			gap="3rem"
-			px={{ base: "1rem", md: "2rem" }}
-			py={{ base: "2rem", md: "4rem" }}
-		>
-			{isLoading && <LoadingOverlay visible />}
-			{isError && (
-				<Alert variant="outline" color="red">
-					<Trans>Error loading project</Trans>
-				</Alert>
-			)}
+		<PageContainer width="full">
+			<Stack gap="xl">
+				{isLoading && <BeautifulLoading />}
+				{isError && (
+					<ErrorNotice
+						error={projectQuery.error ?? verificationTopicsQuery.error}
+						title={t`Error loading project`}
+					/>
+				)}
 
-			{project && verificationTopicsQuery.data && !isLoading && (
-				<ProjectPortalEditor
-					project={project}
-					verificationTopics={verificationTopicsQuery.data}
-					isVerificationTopicsLoading={verificationTopicsQuery.isLoading}
-				/>
-			)}
-		</Stack>
+				{project && verificationTopicsQuery.data && !isLoading && (
+					<ProjectPortalEditor
+						project={project}
+						verificationTopics={verificationTopicsQuery.data}
+						isVerificationTopicsLoading={verificationTopicsQuery.isLoading}
+					/>
+				)}
+			</Stack>
+		</PageContainer>
 	);
 };
 
@@ -348,28 +347,26 @@ export const ProjectAccessRoute = () => {
 	});
 
 	return (
-		<Stack
-			gap="3rem"
-			className="relative"
-			px={{ base: "1rem", md: "2rem" }}
-			py={{ base: "2rem", md: "4rem" }}
-		>
-			{projectQuery.isLoading && <LoadingOverlay visible />}
-			{projectQuery.isError && (
-				<Alert variant="outline" color="red">
-					<Trans>Error loading project</Trans>
-				</Alert>
-			)}
-			{projectQuery.data && projectId && (
-				<ProjectAccess
-					projectId={projectId}
-					visibility={
-						(projectQuery.data.visibility as "workspace" | "private") ??
-						"workspace"
-					}
-				/>
-			)}
-		</Stack>
+		<PageContainer>
+			<Stack gap="xl">
+				{projectQuery.isLoading && <BeautifulLoading />}
+				{projectQuery.isError && (
+					<ErrorNotice
+						error={projectQuery.error}
+						title={t`Error loading project`}
+					/>
+				)}
+				{projectQuery.data && projectId && (
+					<ProjectAccess
+						projectId={projectId}
+						visibility={
+							(projectQuery.data.visibility as "workspace" | "private") ??
+							"workspace"
+						}
+					/>
+				)}
+			</Stack>
+		</PageContainer>
 	);
 };
 
@@ -377,13 +374,10 @@ export const ProjectUsageRoute = () => {
 	const { projectId } = useParams();
 
 	return (
-		<Stack
-			gap="3rem"
-			className="relative"
-			px={{ base: "1rem", md: "2rem" }}
-			py={{ base: "2rem", md: "4rem" }}
-		>
-			{projectId && <ProjectUsage projectId={projectId} />}
-		</Stack>
+		<PageContainer>
+			<Stack gap="xl">
+				{projectId && <ProjectUsage projectId={projectId} />}
+			</Stack>
+		</PageContainer>
 	);
 };

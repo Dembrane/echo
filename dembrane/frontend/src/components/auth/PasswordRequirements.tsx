@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { Group, Progress, Stack, Text, ThemeIcon } from "@mantine/core";
-import { IconCheck, IconX } from "@tabler/icons-react";
+import { CheckIcon, XIcon } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import { type PasswordStrength, validatePassword } from "@/lib/passwordPolicy";
 
@@ -19,7 +19,7 @@ const Requirement = ({ met, label }: { met: boolean; label: ReactNode }) => (
 			variant={met ? "filled" : "light"}
 			color={met ? "teal" : "gray"}
 		>
-			{met ? <IconCheck size={12} /> : <IconX size={12} />}
+			{met ? <CheckIcon size={12} /> : <XIcon size={12} />}
 		</ThemeIcon>
 		<Text size="xs" c={met ? undefined : "dimmed"}>
 			{label}

@@ -1,14 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import {
-	Button,
-	Group,
-	Menu,
-	Modal,
-	Stack,
-	Text,
-	Tooltip,
-} from "@mantine/core";
+import { Button, Group, Menu, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
 	ArrowCounterClockwiseIcon,
@@ -18,6 +10,7 @@ import {
 	ProjectorScreenIcon,
 } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 import {
 	type LiveHours,
 	type PopcornDetail,
@@ -142,19 +135,18 @@ export function PopcornActions({
 	return (
 		<Group gap="xs" wrap="wrap" {...testId("popcorn-actions")}>
 			<Button
-				size="md"
+				variant="filled"
 				component="a"
 				href={popcornPresenterUrl(popcorn.id)}
 				target="_blank"
 				rel="noopener noreferrer"
-				leftSection={<ProjectorScreenIcon size={18} />}
+				leftSection={<ProjectorScreenIcon size={20} />}
 				{...testId("popcorn-open-presenter")}
 			>
 				<Trans>Open presenter view</Trans>
 			</Button>
 			<Button
-				variant="outline"
-				leftSection={<ArrowsClockwiseIcon size={16} />}
+				leftSection={<ArrowsClockwiseIcon size={20} />}
 				loading={refresh.isPending}
 				onClick={() => refresh.mutate()}
 				{...testId("popcorn-refresh-button")}
@@ -162,12 +154,11 @@ export function PopcornActions({
 				<Trans>Refresh</Trans>
 			</Button>
 			<Button
-				variant="outline"
-				leftSection={<ArrowCounterClockwiseIcon size={16} />}
+				leftSection={<ArrowCounterClockwiseIcon size={20} />}
 				onClick={rerunModal.open}
 				{...testId("popcorn-rerun-button")}
 			>
-				<Trans>Rerun</Trans>
+				<Trans>Regenerate</Trans>
 			</Button>
 			{isLive ? (
 				<LiveChip
@@ -206,37 +197,25 @@ export function PopcornActions({
 					</Menu.Dropdown>
 				</Menu>
 			)}
-			<Modal
+			<ConfirmModal
 				opened={rerunOpened}
 				onClose={rerunModal.close}
-				title={t`Rerun popcorn?`}
+				onConfirm={() =>
+					rerun.mutate(undefined, { onSuccess: rerunModal.close })
+				}
+				title={t`Regenerate popcorn?`}
+				message={
+					<Trans>
+						This replaces every popcorn, tension and stakeholder on the screen
+						and reads all conversations again. Earlier runs are saved in the
+						history.
+					</Trans>
+				}
+				confirmLabel={<Trans>Regenerate</Trans>}
+				confirmColor="red"
+				loading={rerun.isPending}
 				{...testId("popcorn-rerun-modal")}
-			>
-				<Stack gap="md">
-					<Text>
-						<Trans>
-							This replaces every popcorn, tension and stakeholder on the screen
-							and reads all conversations again. Earlier runs are saved in the
-							history.
-						</Trans>
-					</Text>
-					<Group justify="flex-end" gap="xs">
-						<Button variant="subtle" onClick={rerunModal.close}>
-							<Trans>Cancel</Trans>
-						</Button>
-						<Button
-							color="red"
-							loading={rerun.isPending}
-							onClick={() =>
-								rerun.mutate(undefined, { onSuccess: rerunModal.close })
-							}
-							{...testId("popcorn-rerun-confirm")}
-						>
-							<Trans>Rerun</Trans>
-						</Button>
-					</Group>
-				</Stack>
-			</Modal>
+			/>
 		</Group>
 	);
 }

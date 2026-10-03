@@ -60,8 +60,8 @@ export function MarkdownWYSIWYG({
 					),
 				}),
 			]}
-			contentEditableClassName="prose min-h-[200px] space-grotesk"
-			className="rounded border border-gray-200"
+			contentEditableClassName="prose min-h-[200px]"
+			className="border-x border-solid border-[color:var(--app-control-rule)]"
 			{...rest}
 			markdown={safeMarkdown}
 			onChange={handleChange}

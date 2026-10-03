@@ -5,11 +5,12 @@ import {
 	Button,
 	Checkbox,
 	Group,
-	Loader,
 	Menu,
 	Modal,
+	Skeleton,
 	Stack,
 	Text,
+	Title,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { useDisclosure } from "@mantine/hooks";
@@ -68,9 +69,9 @@ export const TrainingRowActions = ({
 		if (!scheduleDate) return;
 		updateMutation.mutate(
 			{
-				trainingId: training.id,
-				status: "scheduled",
 				scheduledAt: scheduleDate.toISOString(),
+				status: "scheduled",
+				trainingId: training.id,
 			},
 			{ onSuccess: () => scheduleHandlers.close() },
 		);
@@ -80,9 +81,9 @@ export const TrainingRowActions = ({
 		if (selectedIds.length === 0) return;
 		completeMutation.mutate(
 			{
-				trainingId: training.id,
 				appUserIds: selectedIds,
 				completedAt: completedDate ? completedDate.toISOString() : undefined,
+				trainingId: training.id,
 			},
 			{
 				onSuccess: () => {
@@ -96,7 +97,7 @@ export const TrainingRowActions = ({
 
 	const handleCancel = () => {
 		updateMutation.mutate(
-			{ trainingId: training.id, status: "cancelled" },
+			{ status: "cancelled", trainingId: training.id },
 			{ onSuccess: () => cancelHandlers.close() },
 		);
 	};
@@ -110,8 +111,8 @@ export const TrainingRowActions = ({
 
 	const handleReopen = () => {
 		updateMutation.mutate({
-			trainingId: training.id,
 			status: training.scheduled_at ? "scheduled" : "requested",
+			trainingId: training.id,
 		});
 	};
 
@@ -135,7 +136,7 @@ export const TrainingRowActions = ({
 			<Menu position="bottom-end" withinPortal>
 				<Menu.Target>
 					<ActionIcon variant="subtle" aria-label={t`Manage training`}>
-						<DotsThreeVertical size={18} weight="bold" />
+						<DotsThreeVertical size={20} />
 					</ActionIcon>
 				</Menu.Target>
 				<Menu.Dropdown>
@@ -185,16 +186,17 @@ export const TrainingRowActions = ({
 						onChange={setScheduleDate}
 						clearable
 					/>
-					<Group justify="flex-end" gap="sm">
-						<Button variant="subtle" onClick={closeSchedule}>
-							<Trans>Cancel</Trans>
-						</Button>
+					<Group justify="flex-start" gap="sm">
 						<Button
+							variant="filled"
 							onClick={handleSchedule}
 							loading={updateMutation.isPending}
 							disabled={!scheduleDate}
 						>
 							<Trans>Save</Trans>
+						</Button>
+						<Button variant="subtle" color="gray" onClick={closeSchedule}>
+							<Trans>Cancel</Trans>
 						</Button>
 					</Group>
 				</Stack>
@@ -220,10 +222,14 @@ export const TrainingRowActions = ({
 					</Text>
 
 					{roster.isLoading ? (
-						<Loader size="sm" />
+						<Stack gap="xs">
+							<Skeleton height={16} />
+							<Skeleton height={16} />
+							<Skeleton height={16} />
+						</Stack>
 					) : members.length > 0 ? (
 						<Stack gap="sm">
-							<Text size="sm" fw={500}>
+							<Text size="sm">
 								<Trans>
 									{roster.data?.trained_count ?? activeLicenses.length} of{" "}
 									{roster.data?.total_count ?? members.length} trained
@@ -232,9 +238,9 @@ export const TrainingRowActions = ({
 
 							{activeLicenses.length > 0 && (
 								<Stack gap="xs">
-									<Text size="xs" fw={500}>
+									<Title order={5}>
 										<Trans>Licenses granted</Trans>
-									</Text>
+									</Title>
 									{activeLicenses.map((lic) => (
 										<Group key={lic.id} justify="space-between" gap="sm">
 											<Text size="sm">
@@ -293,16 +299,17 @@ export const TrainingRowActions = ({
 						onChange={setCompletedDate}
 					/>
 
-					<Group justify="flex-end" gap="sm">
-						<Button variant="subtle" onClick={closeComplete}>
-							<Trans>Cancel</Trans>
-						</Button>
+					<Group justify="flex-start" gap="sm">
 						<Button
+							variant="filled"
 							onClick={handleComplete}
 							loading={completeMutation.isPending}
 							disabled={selectedIds.length === 0}
 						>
 							<Trans>Grant licenses</Trans>
+						</Button>
+						<Button variant="subtle" color="gray" onClick={closeComplete}>
+							<Trans>Cancel</Trans>
 						</Button>
 					</Group>
 				</Stack>

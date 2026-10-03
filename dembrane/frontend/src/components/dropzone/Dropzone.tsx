@@ -1,9 +1,9 @@
-import { Group, rem } from "@mantine/core";
+import { Group } from "@mantine/core";
 import {
 	type FileRejection,
 	Dropzone as MantineDropzone,
 } from "@mantine/dropzone";
-import { IconUpload, IconX } from "@tabler/icons-react";
+import { UploadSimpleIcon, XIcon } from "@phosphor-icons/react";
 import type { PropsWithChildren, ReactNode } from "react";
 
 interface CommonDropzoneProps {
@@ -29,27 +29,14 @@ export const CommonDropzone = ({
 			<Group justify="center" gap="xl" style={{ pointerEvents: "none" }}>
 				<MantineDropzone.Accept>
 					{accept || (
-						<IconUpload
-							style={{
-								color: "var(--mantine-color-blue-6)",
-								height: rem(52),
-								width: rem(52),
-							}}
-							stroke={1.5}
+						<UploadSimpleIcon
+							size={20}
+							color="var(--mantine-color-primary-7)"
 						/>
 					)}
 				</MantineDropzone.Accept>
 				<MantineDropzone.Reject>
-					{reject || (
-						<IconX
-							style={{
-								color: "var(--mantine-color-red-6)",
-								height: rem(52),
-								width: rem(52),
-							}}
-							stroke={1.5}
-						/>
-					)}
+					{reject || <XIcon size={20} color="var(--mantine-color-red-7)" />}
 				</MantineDropzone.Reject>
 				<MantineDropzone.Idle>{idle || children}</MantineDropzone.Idle>
 			</Group>

@@ -135,9 +135,7 @@ function Header({
 							</ThemeIcon>
 						</I18nLink>
 					)}
-					<Text fw={500} truncate>
-						{doc.title}
-					</Text>
+					<Text truncate>{doc.title}</Text>
 				</Group>
 				{children}
 			</Group>
@@ -436,7 +434,7 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 
 					{finishing && (
 						<Stack gap="sm" data-testid="sign-finish">
-							<Text fw={500}>
+							<Text>
 								<Trans>Review and sign</Trans>
 							</Text>
 							{!complete && (
@@ -660,9 +658,7 @@ function FieldPanel({
 	const [redo, setRedo] = useState(false);
 	const label = (
 		<Group gap={6}>
-			<Text fw={500} size="sm">
-				{field.label}
-			</Text>
+			<Text size="sm">{field.label}</Text>
 			{!field.required && (
 				<Text size="xs" c="dimmed">
 					<Trans>Optional</Trans>
@@ -795,7 +791,7 @@ function Signed({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 					<ThemeIcon size={56} radius="xl" color="green" variant="light">
 						<CheckIcon size={28} />
 					</ThemeIcon>
-					<Title order={3} fw={400}>
+					<Title order={3}>
 						<Trans>Signed</Trans>
 					</Title>
 					<Text c="dimmed">

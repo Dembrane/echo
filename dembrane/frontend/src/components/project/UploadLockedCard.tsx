@@ -1,6 +1,7 @@
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Badge, Box, Stack, Text } from "@mantine/core";
-import { IconLock } from "@tabler/icons-react";
+import { LockIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { FeatureGatePopover } from "@/components/workspace/FeatureGatePopover";
@@ -44,19 +45,16 @@ export function UploadLockedCard({
 				{({ onClick }) => (
 					<Box
 						onClick={touched(onClick)}
+						className="app-do"
 						style={{
 							alignItems: "center",
-							background:
-								"repeating-linear-gradient(45deg, rgba(65,105,225,0.04) 0 8px, rgba(65,105,225,0.08) 8px 16px)",
-							borderRadius: 8,
-							cursor: "pointer",
 							display: "flex",
 							justifyContent: "center",
 							minHeight: 160,
 						}}
 						role="button"
 						tabIndex={0}
-						aria-label="Upload limit reached"
+						aria-label={t`Upload limit reached`}
 						onKeyDown={(e) => {
 							if (e.key === "Enter" || e.key === " ") {
 								e.preventDefault();
@@ -65,11 +63,11 @@ export function UploadLockedCard({
 						}}
 						{...testId("upload-locked-card")}
 					>
-						<Stack gap={6} align="center" style={{ maxWidth: 280 }} p="md">
+						<Stack gap="xs" align="center" style={{ maxWidth: 280 }} p="md">
 							<Badge
-								color="blue"
+								color="yellow"
 								variant="light"
-								leftSection={<IconLock size={12} />}
+								leftSection={<LockIcon size={16} />}
 							>
 								<Trans>Upload limit reached</Trans>
 							</Badge>

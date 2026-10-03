@@ -1,5 +1,5 @@
 import { Trans } from "@lingui/react/macro";
-import { Alert, Loader, Stack, Text } from "@mantine/core";
+import { Skeleton, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useMemo, useState } from "react";
 import {
@@ -58,16 +58,22 @@ export const OrgTrainingPanel = ({ orgId }: OrgTrainingPanelProps) => {
 	};
 
 	if (catalogLoading || rosterLoading) {
-		return <Loader size="sm" />;
+		return (
+			<Stack gap="sm">
+				<Skeleton height={24} width="40%" />
+				<Skeleton height={16} width="70%" />
+				<Skeleton height={120} />
+			</Stack>
+		);
 	}
 
 	return (
 		<Stack gap="lg">
 			<div>
-				<Text size="sm" fw={500}>
+				<Title order={4}>
 					<Trans>Training</Trans>
-				</Text>
-				<Text size="xs">
+				</Title>
+				<Text size="sm" c="dimmed">
 					<Trans>
 						Certified training for teams using dembrane in high-risk settings. A
 						separate product, billed per session.
@@ -83,12 +89,12 @@ export const OrgTrainingPanel = ({ orgId }: OrgTrainingPanelProps) => {
 
 			{roster && (
 				<Stack gap="sm">
-					<Alert color="primary" variant="light">
+					<Text size="sm">
 						<Trans>
 							{roster.trained_count} of {roster.total_count} members are
 							trained.
 						</Trans>
-					</Alert>
+					</Text>
 					<TrainingRoster
 						members={roster.members}
 						showEmails={roster.can_manage}

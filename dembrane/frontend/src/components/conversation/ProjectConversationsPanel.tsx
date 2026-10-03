@@ -12,7 +12,6 @@ import {
 	Loader,
 	Modal,
 	MultiSelect,
-	Paper,
 	Select,
 	Skeleton,
 	Stack,
@@ -24,18 +23,18 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
-import { DetectiveIcon } from "@phosphor-icons/react";
 import {
-	IconDownload,
-	IconEdit,
-	IconExternalLink,
-	IconInfoCircle,
-	IconRosetteDiscountCheck,
-	IconSearch,
-	IconSelectAll,
-	IconUpload,
-	IconX,
-} from "@tabler/icons-react";
+	ArrowSquareOutIcon,
+	DetectiveIcon,
+	DownloadSimpleIcon,
+	InfoIcon,
+	MagnifyingGlassIcon,
+	PencilSimpleIcon,
+	SealCheckIcon,
+	SelectionAllIcon,
+	UploadSimpleIcon,
+	XIcon,
+} from "@phosphor-icons/react";
 import { useIsMutating } from "@tanstack/react-query";
 import { formatDistanceToNowStrict } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
@@ -299,17 +298,27 @@ export const ConversationRow = ({
 			)}
 
 			<Stack gap="xs" style={{ flex: 1, minWidth: 0 }}>
-				<Group justify="space-between" align="flex-start" wrap="nowrap">
+				{/* On a phone the row changes as a whole: the actions drop below
+					    the title instead of squeezing it to "Table 5 · …". */}
+				<Group
+					justify="space-between"
+					align="flex-start"
+					wrap="nowrap"
+					className="app-stack-narrow"
+				>
 					<Stack gap={2} style={{ minWidth: 0 }}>
 						<Group gap="xs" wrap="nowrap">
-							<Text size="sm" fw={500} truncate style={{ color: "#2d2d2c" }}>
+							<Text size="sm" truncate>
 								{primary}
 							</Text>
 							{conversation.title && conversation.participant_name && (
 								<Tooltip label={t`Title generated from the conversation`}>
-									<IconInfoCircle
-										size={14}
-										style={{ color: "#8a8f98", flexShrink: 0 }}
+									<InfoIcon
+										size={16}
+										style={{
+											color: "var(--mantine-color-dimmed)",
+											flexShrink: 0,
+										}}
 									/>
 								</Tooltip>
 							)}
@@ -317,11 +326,11 @@ export const ConversationRow = ({
 								<Tooltip label={t`Has verified artifacts`}>
 									<ThemeIcon
 										variant="subtle"
-										color="blue"
+										color="gray"
 										size={18}
 										aria-label={t`Verified artifacts`}
 									>
-										<IconRosetteDiscountCheck size={16} />
+										<SealCheckIcon size={16} />
 									</ThemeIcon>
 								</Tooltip>
 							)}
@@ -329,7 +338,7 @@ export const ConversationRow = ({
 								<Tooltip label={t`Anonymized conversation`}>
 									<ThemeIcon
 										variant="subtle"
-										color="blue"
+										color="gray"
 										size={18}
 										aria-label={t`Anonymized conversation`}
 									>
@@ -369,7 +378,7 @@ export const ConversationRow = ({
 						{!selectionMode && canCopyTranscript && (
 							<CopyConversationTranscriptActionIcon
 								conversationId={conversation.id}
-								size={16}
+								size={20}
 							/>
 						)}
 						{!selectionMode && canDownloadAudio && (
@@ -387,7 +396,7 @@ export const ConversationRow = ({
 										);
 									}}
 								>
-									<IconDownload size={16} />
+									<DownloadSimpleIcon size={20} />
 								</ActionIcon>
 							</Tooltip>
 						)}
@@ -403,14 +412,14 @@ export const ConversationRow = ({
 										onEdit(conversation);
 									}}
 								>
-									<IconEdit size={16} />
+									<PencilSimpleIcon size={20} />
 								</ActionIcon>
 							</Tooltip>
 						)}
 						<Tooltip label={t`Open conversation`}>
 							<ActionIcon
 								variant="subtle"
-								color="blue"
+								color="gray"
 								aria-label={t`Open conversation`}
 								onClick={(e) => {
 									e.preventDefault();
@@ -422,7 +431,7 @@ export const ConversationRow = ({
 									}
 								}}
 							>
-								<IconExternalLink size={16} />
+								<ArrowSquareOutIcon size={20} />
 							</ActionIcon>
 						</Tooltip>
 					</Group>
@@ -433,7 +442,7 @@ export const ConversationRow = ({
 				) : (
 					<Text
 						size="sm"
-						c={summary ? "gray.7" : "dimmed"}
+						c={summary ? undefined : "dimmed"}
 						style={lineClampStyle}
 					>
 						{summary || <Trans>No summary yet</Trans>}
@@ -441,19 +450,12 @@ export const ConversationRow = ({
 				)}
 
 				{tags.length > 0 && (
-					<Group gap={6} wrap="wrap">
+					<Group gap="xs" wrap="wrap">
 						{tags.map((tag) => {
 							const tagText = getTagText(tag);
 							if (!tagText) return null;
 							return (
-								<Badge
-									key={tag.id}
-									size="xs"
-									variant="light"
-									color="gray"
-									radius="sm"
-									classNames={{ label: "!text-graphite" }}
-								>
+								<Badge key={tag.id} size="xs" color="gray">
 									{tagText}
 								</Badge>
 							);
@@ -744,15 +746,13 @@ export const ProjectConversationsPanel = ({
 				<Group justify="space-between" align="flex-start" gap="md">
 					<Stack gap={4}>
 						<Group gap="sm" align="baseline">
-							<Title order={selectionMode ? 3 : 2} fw={500}>
+							<Title order={selectionMode ? 3 : 2}>
 								<Trans>Conversations</Trans>
 							</Title>
 							{conversationsCountQuery.isLoading ? (
 								<Loader size="xs" />
 							) : (
-								<Badge variant="light" color="gray">
-									{conversationsCountQuery.data ?? 0}
-								</Badge>
+								<Badge color="gray">{conversationsCountQuery.data ?? 0}</Badge>
 							)}
 						</Group>
 						<Text size="sm" c="dimmed">
@@ -774,11 +774,7 @@ export const ProjectConversationsPanel = ({
 								<Tooltip
 									label={t`Upload limit reached. Upgrade your workspace.`}
 								>
-									<Button
-										variant="outline"
-										disabled
-										leftSection={<IconUpload size={16} />}
-									>
+									<Button disabled leftSection={<UploadSimpleIcon size={20} />}>
 										<Trans>Upload</Trans>
 									</Button>
 								</Tooltip>
@@ -796,12 +792,17 @@ export const ProjectConversationsPanel = ({
 					/>
 				)}
 
-				<Paper withBorder radius="sm" p="sm">
-					<Group gap="sm" align="flex-end">
+				<Group gap="md" align="flex-end">
+					<Group
+						gap={0}
+						className="app-joined"
+						align="flex-end"
+						style={{ flex: "1 1 520px" }}
+					>
 						<TextInput
 							label={t`Search`}
 							placeholder={t`Title or participant`}
-							leftSection={<IconSearch size={16} />}
+							leftSection={<MagnifyingGlassIcon size={16} />}
 							rightSection={
 								search ? (
 									<ActionIcon
@@ -809,7 +810,7 @@ export const ProjectConversationsPanel = ({
 										aria-label={t`Clear search`}
 										onClick={() => setSearch("")}
 									>
-										<IconX size={16} />
+										<XIcon size={16} />
 									</ActionIcon>
 								) : undefined
 							}
@@ -838,36 +839,35 @@ export const ProjectConversationsPanel = ({
 							clearable
 							style={{ flex: "1 1 220px" }}
 						/>
-						<Switch
-							label={t`Verified`}
-							checked={showOnlyVerified}
-							onChange={(event) =>
-								setShowOnlyVerified(event.currentTarget.checked)
-							}
-							styles={{ root: { paddingBottom: 7 } }}
-						/>
-						<Tooltip label={t`Reset filters`}>
-							<ActionIcon
-								variant="subtle"
-								color="gray"
-								aria-label={t`Reset filters`}
-								disabled={activeFiltersCount === 0 && sortBy === "-created_at"}
-								onClick={resetFilters}
-								mb={4}
-							>
-								<IconX size={16} />
-							</ActionIcon>
-						</Tooltip>
 					</Group>
-				</Paper>
+					<Switch
+						label={t`Verified`}
+						checked={showOnlyVerified}
+						onChange={(event) =>
+							setShowOnlyVerified(event.currentTarget.checked)
+						}
+						pb="sm"
+					/>
+					<Tooltip label={t`Reset filters`}>
+						<ActionIcon
+							variant="subtle"
+							color="gray"
+							aria-label={t`Reset filters`}
+							disabled={activeFiltersCount === 0 && sortBy === "-created_at"}
+							onClick={resetFilters}
+							mb={4}
+						>
+							<XIcon size={20} />
+						</ActionIcon>
+					</Tooltip>
+				</Group>
 
 				{selectionMode &&
 					!!selectionChatId &&
 					chatMode !== "overview" &&
 					allConversations.length > 0 && (
 						<Button
-							variant="outline"
-							leftSection={<IconSelectAll size={16} />}
+							leftSection={<SelectionAllIcon size={20} />}
 							onClick={() => {
 								setSelectAllResult(null);
 								setSelectAllModalOpened(true);
@@ -891,13 +891,14 @@ export const ProjectConversationsPanel = ({
 
 			{(onToggleSelectionMode ||
 				(isLocalSelectionMode && onAskAboutSelection)) && (
-				<Group gap="sm" align="center" justify="space-between">
+				<Group gap="sm" align="center">
 					{isLocalSelectionMode && onAskAboutSelection ? (
 						<Group gap="sm" align="center">
-							<Text size="sm" fw={500}>
+							<Text size="sm">
 								<Trans>{conversationCount} selected</Trans>
 							</Text>
 							<Button
+								variant="filled"
 								size="xs"
 								disabled={selectedConversationIds.size === 0}
 								onClick={onAskAboutSelection}
@@ -908,6 +909,7 @@ export const ProjectConversationsPanel = ({
 							{selectedConversationIds.size > 0 && (
 								<Button
 									variant="subtle"
+									color="gray"
 									size="xs"
 									onClick={() => onSelectionChange?.([])}
 								>
@@ -915,12 +917,9 @@ export const ProjectConversationsPanel = ({
 								</Button>
 							)}
 						</Group>
-					) : (
-						<Box />
-					)}
+					) : null}
 					{onToggleSelectionMode && (
 						<Button
-							variant="outline"
 							size="xs"
 							onClick={onToggleSelectionMode}
 							{...testId("conversations-toggle-selection-mode")}
@@ -938,29 +937,27 @@ export const ProjectConversationsPanel = ({
 			<Stack gap="sm">
 				{conversationsQuery.isLoading && (
 					<>
-						<Skeleton height={98} radius="sm" />
-						<Skeleton height={98} radius="sm" />
-						<Skeleton height={98} radius="sm" />
+						<Skeleton height={98} />
+						<Skeleton height={98} />
+						<Skeleton height={98} />
 					</>
 				)}
 
 				{!conversationsQuery.isLoading && allConversations.length === 0 && (
-					<Paper withBorder radius="sm" p="xl">
-						<Stack gap="xs" align="center">
-							<Text size="sm" c="dimmed" ta="center">
-								{hasActiveFilters ? (
-									<Trans>No conversations match these filters.</Trans>
-								) : (
-									<Trans>No conversations yet.</Trans>
-								)}
-							</Text>
-							{hasActiveFilters && (
-								<Button variant="subtle" size="xs" onClick={resetFilters}>
-									<Trans>Clear filters</Trans>
-								</Button>
+					<Stack gap="sm" align="flex-start">
+						<Text size="sm" c="dimmed">
+							{hasActiveFilters ? (
+								<Trans>No conversations match these filters.</Trans>
+							) : (
+								<Trans>No conversations yet.</Trans>
 							)}
-						</Stack>
-					</Paper>
+						</Text>
+						{hasActiveFilters && (
+							<Button size="xs" onClick={resetFilters}>
+								<Trans>Clear filters</Trans>
+							</Button>
+						)}
+					</Stack>
 				)}
 
 				{allConversations.map((conversation, index) => {

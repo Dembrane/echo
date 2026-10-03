@@ -62,7 +62,6 @@ export function PopcornShare({
 	return (
 		<Paper
 			withBorder={!embedded}
-			className="rounded-md"
 			p={embedded ? 0 : "lg"}
 			{...testId("popcorn-share")}
 		>
@@ -89,9 +88,8 @@ export function PopcornShare({
 							<CopyButton value={publicUrl} timeout={2000}>
 								{({ copied, copy }) => (
 									<Button
-										variant={copied ? "filled" : "outline"}
 										leftSection={
-											copied ? <CheckIcon size={16} /> : <LinkIcon size={16} />
+											copied ? <CheckIcon size={20} /> : <LinkIcon size={20} />
 										}
 										onClick={copy}
 										{...testId("popcorn-copy-link")}
@@ -101,8 +99,7 @@ export function PopcornShare({
 								)}
 							</CopyButton>
 							<Button
-								variant="outline"
-								leftSection={<CodeIcon size={16} />}
+								leftSection={<CodeIcon size={20} />}
 								onClick={() => setShowEmbed((current) => !current)}
 								{...testId("popcorn-share-embed")}
 							>
@@ -116,12 +113,13 @@ export function PopcornShare({
 									readOnly
 									autosize
 									minRows={3}
-									styles={{ input: { fontFamily: "monospace", fontSize: 12 } }}
+									size="xs"
+									styles={{ input: { fontFamily: "monospace" } }}
 									aria-label={t`Embed code`}
 									{...testId("popcorn-embed-code")}
 								/>
-								<Group justify="space-between" align="center">
-									<Text size="xs">
+								<Group justify="flex-start" align="center">
+									<Text size="xs" c="dimmed">
 										<Trans>Paste it into any page. It stays live.</Trans>
 									</Text>
 									<CopyButton value={embed} timeout={2000}>
@@ -131,9 +129,9 @@ export function PopcornShare({
 												onClick={copy}
 												leftSection={
 													copied ? (
-														<CheckIcon size={14} />
+														<CheckIcon size={20} />
 													) : (
-														<CopyIcon size={14} />
+														<CopyIcon size={20} />
 													)
 												}
 												{...testId("popcorn-copy-embed")}
@@ -152,7 +150,7 @@ export function PopcornShare({
 							href={publicUrl}
 							target="_blank"
 							rel="noopener noreferrer"
-							leftSection={<ArrowSquareOutIcon size={14} />}
+							leftSection={<ArrowSquareOutIcon size={20} />}
 							className="self-start"
 							{...testId("popcorn-public-url")}
 						>

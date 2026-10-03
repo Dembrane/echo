@@ -21,6 +21,7 @@ import {
 	ActionIcon,
 	Badge,
 	Button,
+	Chip,
 	Divider,
 	Group,
 	Modal,
@@ -32,6 +33,7 @@ import {
 	Text,
 	Textarea,
 	TextInput,
+	Title,
 	Tooltip,
 } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
@@ -44,8 +46,8 @@ import {
 	PlusIcon,
 	TrashIcon,
 	XIcon,
+	PushPinIcon,
 } from "@phosphor-icons/react";
-import { IconPin, IconPinFilled } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import {
@@ -115,15 +117,14 @@ type UnifiedTemplate = {
 // ── Badge ──
 
 const SourceBadge = ({ source }: { source: "dembrane" }) => (
-	<Badge
-		size="xs"
-		variant="light"
-		color="primary"
-		styles={{ root: { textTransform: "lowercase" } }}
-	>
+	<Badge size="xs" color="gray">
 		{source}
 	</Badge>
 );
+
+// Rows are full boxes (something you press) stacked with no gap; each row
+// after the first tucks under the one above so neighbours share one rule.
+const SHARED_RULE = { marginTop: "calc(-1 * var(--app-stroke))" };
 
 // ── Sortable row for pinned templates ──
 
@@ -412,11 +413,7 @@ export const TemplatesModal = ({
 		onExitTransitionEnd: resetState,
 		opened,
 		size: "lg" as const,
-		title: (
-			<Text fw={500} size="lg">
-				<Trans>Templates</Trans>
-			</Text>
-		),
+		title: t`Templates`,
 		withinPortal: true,
 	};
 
@@ -449,12 +446,14 @@ export const TemplatesModal = ({
 					<div className="flex h-full flex-col">
 						<Button
 							variant="subtle"
+							color="gray"
 							size="compact-sm"
-							leftSection={<ArrowLeftIcon size={16} />}
+							leftSection={<ArrowLeftIcon size={20} />}
 							onClick={handleBack}
-							className="mb-4 self-start"
+							mb="md"
+							className="self-start"
 						>
-							<Trans>Back to templates</Trans>
+							<Trans>Back</Trans>
 						</Button>
 						<Stack gap="md" className="flex-1">
 							<TextInput
@@ -476,40 +475,34 @@ export const TemplatesModal = ({
 								autosize
 							/>
 							{view === "create" && canCreateWorkspaceTemplate && (
-								<Paper withBorder radius="sm" p="xs">
-									<Group justify="space-between" wrap="nowrap" gap="sm">
-										<Stack gap={2} style={{ minWidth: 0 }}>
-											<Text size="sm">
-												<Trans>Share with workspace</Trans>
-											</Text>
-											<Text size="xs" c="dimmed" lineClamp={2}>
-												<Trans>
-													Visible to everyone in this workspace. Leave off to keep
-													it personal.
-												</Trans>
-											</Text>
-										</Stack>
-										<Switch
-											checked={formScope === "workspace"}
-											onChange={(e) =>
-												setFormScope(
-													e.currentTarget.checked ? "workspace" : "user",
-												)
-											}
-											aria-label={t`Share with workspace`}
-										/>
-									</Group>
-								</Paper>
+								<Switch
+									label={t`Share with workspace`}
+									description={t`Visible to everyone in this workspace. Leave off to keep it personal.`}
+									checked={formScope === "workspace"}
+									onChange={(e) =>
+										setFormScope(e.currentTarget.checked ? "workspace" : "user")
+									}
+								/>
 							)}
 							{view === "create" && (
-								<Text size="xs" c="dimmed" fs="italic">
+								<Text size="xs" c="dimmed">
 									<Trans>
 										Tip: You can also create a template from any chat message
 										you send, or duplicate an existing template.
 									</Trans>
 								</Text>
 							)}
-							<Group justify="flex-end" gap="sm">
+							<Group justify="flex-start" gap="sm">
+								<Button
+									variant="filled"
+									onClick={
+										view === "create" ? handleSaveCreate : handleSaveEdit
+									}
+									loading={view === "create" ? isCreating : isUpdating}
+									disabled={!formTitle.trim() || !formContent.trim()}
+								>
+									<Trans>Save template</Trans>
+								</Button>
 								{view === "edit" && editingId && (
 									<Button
 										variant="subtle"
@@ -519,15 +512,6 @@ export const TemplatesModal = ({
 										<Trans>Delete</Trans>
 									</Button>
 								)}
-								<Button
-									onClick={
-										view === "create" ? handleSaveCreate : handleSaveEdit
-									}
-									loading={view === "create" ? isCreating : isUpdating}
-									disabled={!formTitle.trim() || !formContent.trim()}
-								>
-									<Trans>Save template</Trans>
-								</Button>
 							</Group>
 						</Stack>
 					</div>
@@ -558,10 +542,10 @@ export const TemplatesModal = ({
 		) => (
 			<Paper
 				ref={ref}
-				style={style}
+				style={{ ...SHARED_RULE, ...style }}
 				p="xs"
-				withBorder
-				className={`cursor-pointer transition-shadow hover:border-gray-300 hover:bg-gray-50 ${isDragging ? "shadow-md" : ""}`}
+				withBorder={false}
+				className={`app-do ${isDragging ? "shadow-md" : ""}`}
 				onClick={() => handleUseTemplate(tmpl.content, tmpl.key)}
 			>
 				<Group justify="space-between" wrap="nowrap" gap="xs">
@@ -571,80 +555,86 @@ export const TemplatesModal = ({
 							{/* biome-ignore lint/a11y/useKeyWithClickEvents: drag handle managed by dnd-kit */}
 							<div
 								{...dragHandleProps}
-								className="flex cursor-grab items-center text-gray-400 hover:text-gray-600 active:cursor-grabbing"
+								className="flex cursor-grab items-center active:cursor-grabbing"
+								style={{ color: "var(--mantine-color-dimmed)" }}
 								onClick={(e) => e.stopPropagation()}
 							>
-								<DotsSixVerticalIcon size={14} weight="bold" />
+								<DotsSixVerticalIcon size={16} />
 							</div>
 						</Tooltip>
 					)}
-					<Stack gap={1} className="min-w-0 flex-1">
-						<Group gap={6}>
-							<Text size="sm" fw={500} truncate>
+					<Stack gap={0} className="min-w-0 flex-1">
+						<Group gap="xs">
+							<Text size="sm" truncate>
 								{tmpl.title}
 							</Text>
 							{tmpl.source !== "user" && <SourceBadge source={tmpl.source} />}
+							{tmpl.source === "user" && tmpl.scope === "workspace" && (
+								<Badge size="xs" color="gray">
+									{t`Workspace`}
+								</Badge>
+							)}
 						</Group>
 						<Text size="xs" c="dimmed" lineClamp={2}>
 							{tmpl.content}
 						</Text>
 					</Stack>
-					<Group gap={2} wrap="nowrap">
+					<Group gap={0} wrap="nowrap">
 						{tmpl.source === "dembrane" && (
 							<Tooltip label={t`Duplicate`}>
 								<ActionIcon
-									size="xs"
 									variant="subtle"
 									onClick={(e) => {
 										e.stopPropagation();
 										handleDuplicate(tmpl.title, tmpl.content);
 									}}
 								>
-									<CopyIcon size={12} />
+									<CopyIcon size={20} />
 								</ActionIcon>
 							</Tooltip>
 						)}
 						{tmpl.source === "user" && (
 							<>
-								<Tooltip label={t`Edit`}>
-									<ActionIcon
-										size="xs"
-										variant="subtle"
-										onClick={(e) => {
-											e.stopPropagation();
-											const ut = userTemplates.find((u) => u.id === tmpl.id);
-											if (ut) handleStartEdit(ut);
-										}}
-									>
-										<PencilSimpleIcon size={12} />
-									</ActionIcon>
-								</Tooltip>
+								{tmpl.canEdit && (
+									<Tooltip label={t`Edit`}>
+										<ActionIcon
+											variant="subtle"
+											onClick={(e) => {
+												e.stopPropagation();
+												const ut = userTemplates.find((u) => u.id === tmpl.id);
+												if (ut) handleStartEdit(ut);
+											}}
+										>
+											<PencilSimpleIcon size={20} />
+										</ActionIcon>
+									</Tooltip>
+								)}
 								<Tooltip label={t`Duplicate`}>
 									<ActionIcon
-										size="xs"
 										variant="subtle"
 										onClick={(e) => {
 											e.stopPropagation();
 											handleDuplicate(tmpl.title, tmpl.content);
 										}}
 									>
-										<CopyIcon size={12} />
+										<CopyIcon size={20} />
 									</ActionIcon>
 								</Tooltip>
-								<Tooltip label={t`Delete`}>
-									<ActionIcon
-										size="xs"
-										variant="subtle"
-										color="red"
-										loading={isDeleting}
-										onClick={(e) => {
-											e.stopPropagation();
-											setDeletingTemplateId(tmpl.id);
-										}}
-									>
-										<TrashIcon size={12} />
-									</ActionIcon>
-								</Tooltip>
+								{tmpl.canEdit && (
+									<Tooltip label={t`Delete`}>
+										<ActionIcon
+											variant="subtle"
+											color="red"
+											loading={isDeleting}
+											onClick={(e) => {
+												e.stopPropagation();
+												setDeletingTemplateId(tmpl.id);
+											}}
+										>
+											<TrashIcon size={20} />
+										</ActionIcon>
+									</Tooltip>
+								)}
 							</>
 						)}
 						{/* Quick access promote/demote */}
@@ -652,15 +642,14 @@ export const TemplatesModal = ({
 							(showDragHandle ? (
 								<Tooltip label={t`Unpin`}>
 									<ActionIcon
-										size="xs"
 										variant="subtle"
-										color="gray"
+										color="primary"
 										onClick={(e) => {
 											e.stopPropagation();
 											removeFromQuickAccess(tmpl.key);
 										}}
 									>
-										<IconPinFilled size={12} />
+										<PushPinIcon size={20} />
 									</ActionIcon>
 								</Tooltip>
 							) : (
@@ -672,16 +661,14 @@ export const TemplatesModal = ({
 									}
 								>
 									<ActionIcon
-										size="xs"
 										variant="subtle"
-										color="blue"
 										disabled={quickAccessItems.length >= 5}
 										onClick={(e) => {
 											e.stopPropagation();
 											addToQuickAccess(tmpl.key, tmpl.title);
 										}}
 									>
-										<IconPin size={12} />
+										<PushPinIcon size={20} />
 									</ActionIcon>
 								</Tooltip>
 							))}
@@ -707,28 +694,17 @@ export const TemplatesModal = ({
 		<>
 			<Modal {...modalProps}>
 				<div className="flex h-full flex-col">
-					<Stack gap={12}>
+					<Stack gap="md">
 						{/* Contextual suggestions toggle + subtitle */}
 						{onToggleAiSuggestions && (
-							<Stack gap={2}>
-								<Switch
-									label={
-										<Text size="xs" fw={500}>
-											<Trans>Contextual suggestions</Trans>
-										</Text>
-									}
-									size="xs"
-									checked={!hideAiSuggestions}
-									onChange={(e) =>
-										onToggleAiSuggestions(!e.currentTarget.checked)
-									}
-								/>
-								<Text size="xs" c="dimmed" pl={38}>
-									<Trans>
-										Suggest dynamic suggestions based on your conversation.
-									</Trans>
-								</Text>
-							</Stack>
+							<Switch
+								label={t`Contextual suggestions`}
+								description={t`Suggest dynamic suggestions based on your conversation.`}
+								checked={!hideAiSuggestions}
+								onChange={(e) =>
+									onToggleAiSuggestions(!e.currentTarget.checked)
+								}
+							/>
 						)}
 
 						<Group>
@@ -741,9 +717,8 @@ export const TemplatesModal = ({
 								rightSection={
 									searchQuery ? (
 										<ActionIcon
-											size="sm"
 											variant="subtle"
-											aria-label="Clear search"
+											aria-label={t`Clear search`}
 											onClick={() => setSearchQuery("")}
 										>
 											<XIcon size={16} />
@@ -758,7 +733,7 @@ export const TemplatesModal = ({
 							{/* Create template — primary CTA */}
 							<Button
 								variant="filled"
-								rightSection={<PlusIcon size={16} />}
+								leftSection={<PlusIcon size={20} />}
 								onClick={handleStartCreate}
 							>
 								<Trans>Create template</Trans>
@@ -766,7 +741,7 @@ export const TemplatesModal = ({
 						</Group>
 					</Stack>
 
-					<Divider my={12} />
+					<Divider my="md" />
 
 					{/* Template list */}
 					<ScrollArea
@@ -775,11 +750,11 @@ export const TemplatesModal = ({
 						scrollbarSize={10}
 						offsetScrollbars
 					>
-						<Stack gap={8} ref={animateList}>
+						<Stack gap={0} ref={animateList}>
 							{/* Loading skeleton for new template */}
 							{isCreating && (
 								<Paper p="xs" withBorder>
-									<Stack gap={4}>
+									<Stack gap="xs">
 										<Skeleton height={14} width="40%" />
 										<Skeleton height={10} width="80%" />
 									</Stack>
@@ -788,16 +763,9 @@ export const TemplatesModal = ({
 
 							{/* My Templates section header */}
 							{!debouncedSearch && (
-								<Text
-									size="xs"
-									fw={600}
-									tt="uppercase"
-									c="dimmed"
-									style={{ letterSpacing: 0.5 }}
-									mt={4}
-								>
+								<Title order={5} mb="sm">
 									<Trans>Pinned templates</Trans>
-								</Text>
+								</Title>
 							)}
 
 							{/* Quick access templates (sortable, with drag handles) */}
@@ -819,46 +787,26 @@ export const TemplatesModal = ({
 
 							{/* Empty state for My Templates */}
 							{!debouncedSearch && quickAccessTemplates.length === 0 && (
-								<Paper p="sm" withBorder style={{ borderStyle: "dashed" }}>
-									<Group gap="xs" justify="center">
-										<IconPinFilled
-											size={14}
-											color="var(--mantine-color-gray-4)"
-										/>
-										<Text size="xs" c="dimmed">
-											<Trans>Pin templates here for quick access.</Trans>
-										</Text>
-									</Group>
-								</Paper>
+								<Text size="sm" c="dimmed">
+									<Trans>Pin templates here for quick access.</Trans>
+								</Text>
 							)}
 
 							{/* All Templates header + filter */}
 							{otherTemplates.length > 0 && !debouncedSearch && (
-								<Group justify="space-between" mt={12}>
-									<Text
+								<Group justify="space-between" mt="lg" mb="sm">
+									<Title order={5}>
+										<Trans>All templates</Trans>
+									</Title>
+									<Chip
 										size="xs"
-										fw={600}
-										tt="uppercase"
-										c="dimmed"
-										style={{ letterSpacing: 0.5 }}
-									>
-										<Trans>All Templates</Trans>
-									</Text>
-									<Badge
-										size="sm"
-										variant={filterMine ? "filled" : "outline"}
-										color={userTemplates.length > 0 ? "primary" : "gray"}
-										style={{
-											cursor: userTemplates.length > 0 ? "pointer" : "default",
-											opacity: userTemplates.length > 0 ? 1 : 0.5,
-										}}
-										onClick={() => {
-											if (userTemplates.length > 0) setFilterMine(!filterMine);
-										}}
+										checked={filterMine}
+										onChange={setFilterMine}
+										disabled={userTemplates.length === 0}
 									>
 										<Trans>My templates</Trans>
 										{userTemplates.length > 0 && ` (${userTemplates.length})`}
-									</Badge>
+									</Chip>
 								</Group>
 							)}
 
@@ -870,7 +818,7 @@ export const TemplatesModal = ({
 
 							{/* Empty search state */}
 							{debouncedSearch && displayTemplates.length === 0 && (
-								<Text size="sm" c="dimmed" ta="center" py="lg">
+								<Text size="sm" c="dimmed">
 									<Trans>No templates match '{searchQuery}'</Trans>
 								</Text>
 							)}

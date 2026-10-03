@@ -1,7 +1,6 @@
 import { Paper, Stack, Text } from "@mantine/core";
 import type React from "react";
 import { cn } from "@/lib/utils";
-import { MODE_COLORS } from "./ChatModeSelector";
 
 type ChatMode = "overview" | "deep_dive" | "agentic" | null;
 
@@ -12,17 +11,9 @@ type Props = {
 	chatMode?: ChatMode;
 };
 
-// Get border color based on chat mode. Agentic bubbles stay neutral: its
-// green lives in the mode's mark, not on every message.
-const getBorderColor = (chatMode: ChatMode | undefined): string | undefined => {
-	if (chatMode === "deep_dive") return MODE_COLORS.deep_dive.border;
-	if (chatMode === "overview") return MODE_COLORS.overview.border;
-	return undefined;
-};
-
-export const ChatMessage = ({ children, section, role, chatMode }: Props) => {
-	const borderColor = getBorderColor(chatMode);
-
+// Every bubble is neutral, whatever the mode: a mode's colour lives in its
+// mark, not on the messages.
+export const ChatMessage = ({ children, section, role }: Props) => {
 	return (
 		<div
 			className={cn(
@@ -36,15 +27,7 @@ export const ChatMessage = ({ children, section, role, chatMode }: Props) => {
 				</Text>
 			)}
 			{["user", "assistant"].includes(role) && (
-				<Paper
-					className={cn(
-						"max-w-full rounded-t-md border p-4 shadow-sm md:max-w-[80%]",
-						role === "user"
-							? "rounded-bl-md rounded-br-none"
-							: "rounded-bl-none rounded-br-md border-slate-200",
-					)}
-					style={role === "user" && borderColor ? { borderColor } : undefined}
-				>
+				<Paper className="max-w-full p-4 md:max-w-[80%]">
 					<Stack gap="xs">
 						<div>{children}</div>
 						{section && <div>{section}</div>}

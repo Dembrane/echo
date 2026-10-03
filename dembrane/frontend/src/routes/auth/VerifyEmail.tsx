@@ -69,7 +69,7 @@ export const VerifyEmailRoute = () => {
 		<div className="h-full w-full">
 			<Stack className="h-full">
 				<Stack className="flex-grow" gap="md">
-					<Title order={2} fw={400}>
+					<Title order={2}>
 						<Trans>Email verification</Trans>
 					</Title>
 
@@ -100,7 +100,7 @@ export const VerifyEmailRoute = () => {
 						<Stack gap="sm">
 							<Alert color="blue" variant="light">
 								<Stack gap={4}>
-									<Text size="sm" fw={500}>
+									<Text size="sm">
 										<Trans>Your email is already verified</Trans>
 									</Text>
 									<Text size="xs">
@@ -111,7 +111,7 @@ export const VerifyEmailRoute = () => {
 									</Text>
 								</Stack>
 							</Alert>
-							<Button size="md" onClick={() => navigate("/o")}>
+							<Button variant="filled" size="md" onClick={() => navigate("/o")}>
 								<Trans>Go to dashboard</Trans>
 							</Button>
 						</Stack>
@@ -140,7 +140,7 @@ export const VerifyEmailRoute = () => {
 						<Stack gap="xl">
 							<Alert color="yellow" variant="light">
 								<Stack>
-									<Text size="sm" fw={500}>
+									<Text size="sm">
 										<Trans>This link is no longer valid</Trans>
 									</Text>
 									<Text size="xs">
@@ -152,10 +152,15 @@ export const VerifyEmailRoute = () => {
 								</Stack>
 							</Alert>
 							<Stack gap="lg">
-								<Button size="md" onClick={() => navigate("/login")} fullWidth>
+								<Button
+									variant="filled"
+									size="md"
+									onClick={() => navigate("/login")}
+									fullWidth
+								>
 									<Trans>Log in</Trans>
 								</Button>
-								<Text size="xs" c="dimmed" ta="center">
+								<Text size="xs" c="dimmed">
 									<Trans>
 										Trouble logging in? Contact support@dembrane.com.
 									</Trans>

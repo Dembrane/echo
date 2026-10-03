@@ -118,9 +118,7 @@ function Demo() {
 							<Trans>Accounts</Trans>
 						</Group>
 					</Anchor>
-					<Title order={3} fw={400}>
-						{demo.organisation_name}
-					</Title>
+					<Title order={3}>{demo.organisation_name}</Title>
 					<Text size="sm" c="dimmed">
 						{demo.status === "published" ? (
 							<Trans>
@@ -293,7 +291,7 @@ function Draft({
 			</Stack>
 			{demo.research && (
 				<Paper withBorder radius="md" p="sm">
-					<Text size="sm" fw={500} mb={4}>
+					<Text size="sm" mb={4}>
 						<Trans>Research</Trans>
 					</Text>
 					<Spoiler

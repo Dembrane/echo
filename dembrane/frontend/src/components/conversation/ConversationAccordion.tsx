@@ -34,21 +34,21 @@ import {
 	useMediaQuery,
 	useSessionStorage,
 } from "@mantine/hooks";
-import { DetectiveIcon } from "@phosphor-icons/react";
 import {
-	IconArrowsExchange,
-	IconArrowsUpDown,
-	IconChevronDown,
-	IconChevronUp,
-	IconInfoCircle,
-	IconLock,
-	IconPlus,
-	IconRosetteDiscountCheck,
-	IconSearch,
-	IconSelectAll,
-	IconTags,
-	IconX,
-} from "@tabler/icons-react";
+	ArrowsDownUpIcon,
+	ArrowsLeftRightIcon,
+	CaretDownIcon,
+	CaretUpIcon,
+	DetectiveIcon,
+	InfoIcon,
+	LockIcon,
+	MagnifyingGlassIcon,
+	PlusIcon,
+	SealCheckIcon,
+	SelectionAllIcon,
+	TagIcon,
+	XIcon,
+} from "@phosphor-icons/react";
 import { formatRelative, intervalToDuration } from "date-fns";
 import posthog from "posthog-js";
 import {
@@ -260,7 +260,7 @@ export const MoveConversationButton = ({
 				onClick={open}
 				variant="outline"
 				color="primary"
-				rightSection={<IconArrowsExchange size={16} />}
+				rightSection={<ArrowsLeftRightIcon size={16} />}
 			>
 				<Trans>Move to Project</Trans>
 			</Button>
@@ -280,7 +280,7 @@ export const MoveConversationButton = ({
 										/>
 									}
 									placeholder={t`Search projects...`}
-									leftSection={<IconSearch size={16} />}
+									leftSection={<MagnifyingGlassIcon size={16} />}
 									{...field}
 								/>
 							)}
@@ -337,6 +337,7 @@ export const MoveConversationButton = ({
 								{t`Cancel`}
 							</Button>
 							<Button
+								variant="filled"
 								type="submit"
 								loading={moveConversationMutation.isPending}
 								disabled={
@@ -400,19 +401,19 @@ export const ConversationStatusIndicators = ({
 	return (
 		<Group gap="sm">
 			{isUpload && (
-				<Badge size="xs" color="primary" variant="light">
+				<Badge size="xs" color="gray">
 					{t`Upload`}
 				</Badge>
 			)}
 
 			{hasOnlyTextContent && (
-				<Badge size="xs" color="primary" variant="light">
+				<Badge size="xs" color="gray">
 					<Trans>Text</Trans>
 				</Badge>
 			)}
 
 			{conversation.duration && conversation.duration > 0 && showDuration && (
-				<Badge size="xs" color="primary" variant="light">
+				<Badge size="xs" color="gray">
 					{fDuration(conversation.duration)}
 				</Badge>
 			)}
@@ -424,7 +425,7 @@ export const ConversationStatusIndicators = ({
 					maw={280}
 					withArrow
 				>
-					<Badge size="xs" color="red" variant="light">
+					<Badge size="xs" color="red">
 						<Trans>Transcription error</Trans>
 					</Badge>
 				</Tooltip>
@@ -446,7 +447,7 @@ export const ConversationStatusIndicators = ({
           <Badge size="xs" color="red" variant="light">
             <Group gap="xs">
               {t`Error`}
-              <IconInfoCircle size={12} />
+              <InfoIcon size={12} />
             </Group>
           </Badge>
         </Tooltip>
@@ -471,18 +472,13 @@ const ConversationProjectTagPill = ({
 	const isClickable = onClick;
 
 	return (
-		<Pill
+		<Badge
 			size="sm"
-			classNames={{
-				root: `!bg-[var(--mantine-primary-color-light)] !font-medium ${
-					isClickable
-						? "cursor-pointer hover:opacity-80 transition-opacity"
-						: ""
-				}`,
-			}}
+			color="gray"
+			component={isClickable ? "button" : "span"}
 			onClick={
 				isClickable
-					? (e) => {
+					? (e: React.MouseEvent) => {
 							e.stopPropagation();
 							e.preventDefault();
 							onClick(tag);
@@ -491,7 +487,7 @@ const ConversationProjectTagPill = ({
 			}
 		>
 			{text}
-		</Pill>
+		</Badge>
 	);
 };
 
@@ -568,7 +564,10 @@ const ConversationAccordionItem = ({
 										: t`Title auto-generated`
 								}
 							>
-								<IconInfoCircle size={14} className="text-gray-400" />
+								<InfoIcon
+									size={16}
+									style={{ color: "var(--mantine-color-dimmed)" }}
+								/>
 							</Tooltip>
 						)}
 
@@ -576,12 +575,12 @@ const ConversationAccordionItem = ({
 							<Tooltip label={t`Has verified artifacts`}>
 								<ThemeIcon
 									variant="subtle"
-									color="primary"
+									color="gray"
 									aria-label={t`verified artifacts`}
 									size={18}
 									style={{ cursor: "default" }}
 								>
-									<IconRosetteDiscountCheck />
+									<SealCheckIcon size={16} />
 								</ThemeIcon>
 							</Tooltip>
 						)}
@@ -590,12 +589,12 @@ const ConversationAccordionItem = ({
 							<Tooltip label={t`Anonymized conversation`}>
 								<ThemeIcon
 									variant="subtle"
-									color="primary"
+									color="gray"
 									aria-label={t`anonymized conversation`}
 									size={18}
 									style={{ cursor: "default" }}
 								>
-									<DetectiveIcon />
+									<DetectiveIcon size={16} />
 								</ThemeIcon>
 							</Tooltip>
 						)}
@@ -608,7 +607,7 @@ const ConversationAccordionItem = ({
 									size="xs"
 									color="blue"
 									variant="light"
-									leftSection={<IconLock size={10} />}
+									leftSection={<LockIcon size={10} />}
 								>
 									{t`Locked`}
 								</Badge>
@@ -636,7 +635,7 @@ const ConversationAccordionItem = ({
 							conversation.live && (
 								<Box className="flex items-baseline gap-1 pr-[4px]">
 									<div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
-									<Text size="xs" fs="italic" fw={500}>
+									<Text size="xs" fs="italic">
 										<Trans id="conversation.ongoing">Ongoing</Trans>
 									</Text>
 								</Box>
@@ -1110,7 +1109,7 @@ export const ConversationAccordion = ({
 						{usageGates.uploads_locked ? (
 							<Tooltip label={t`Upload limit reached. Upgrade your workspace.`}>
 								<Button
-									rightSection={<IconPlus size={16} />}
+									rightSection={<PlusIcon size={16} />}
 									variant="outline"
 									disabled
 								>
@@ -1131,7 +1130,7 @@ export const ConversationAccordion = ({
 					) && (
 						<Group justify="space-between" align="center" gap="xs">
 							<TextInput
-								leftSection={<IconSearch />}
+								leftSection={<MagnifyingGlassIcon size={16} />}
 								rightSection={
 									!!conversationSearch && (
 										<ActionIcon
@@ -1141,7 +1140,7 @@ export const ConversationAccordion = ({
 											}}
 											{...testId("conversation-search-clear-button")}
 										>
-											<IconX size={16} />
+											<XIcon size={16} />
 										</ActionIcon>
 									)
 								}
@@ -1161,9 +1160,9 @@ export const ConversationAccordion = ({
 										{...testId("conversation-filter-options-toggle")}
 									>
 										{showFilterActions ? (
-											<IconChevronUp size={16} />
+											<CaretUpIcon size={16} />
 										) : (
-											<IconChevronDown size={16} />
+											<CaretDownIcon size={16} />
 										)}
 									</ActionIcon>
 									{appliedFiltersCount > 0 && (
@@ -1196,13 +1195,12 @@ export const ConversationAccordion = ({
 										<Button
 											variant="subtle"
 											size="xs"
-											fw={500}
-											leftSection={<IconArrowsUpDown size={16} />}
+											leftSection={<ArrowsDownUpIcon size={16} />}
 											rightSection={
 												sortMenuOpened ? (
-													<IconChevronUp size={16} />
+													<CaretUpIcon size={16} />
 												) : (
-													<IconChevronDown size={16} />
+													<CaretDownIcon size={16} />
 												)
 											}
 											style={{ flexShrink: 0 }}
@@ -1256,13 +1254,12 @@ export const ConversationAccordion = ({
 										<Button
 											variant="subtle"
 											size="xs"
-											fw={500}
-											leftSection={<IconTags size={16} />}
+											leftSection={<TagIcon size={16} />}
 											rightSection={
 												tagsMenuOpened ? (
-													<IconChevronUp size={16} />
+													<CaretUpIcon size={16} />
 												) : (
-													<IconChevronDown size={16} />
+													<CaretDownIcon size={16} />
 												)
 											}
 											style={{ flexShrink: 0 }}
@@ -1302,7 +1299,7 @@ export const ConversationAccordion = ({
 																"conversation-filter-tags-search-clear-button",
 															)}
 														>
-															<IconX size={16} />
+															<XIcon size={16} />
 														</ActionIcon>
 													)
 												}
@@ -1378,7 +1375,7 @@ export const ConversationAccordion = ({
 															);
 														})}
 														{filteredProjectTags.length === 0 && (
-															<Text size="sm" ta="center" c="dimmed">
+															<Text size="sm" c="dimmed">
 																<Trans>No tags found</Trans>
 															</Text>
 														)}
@@ -1392,8 +1389,7 @@ export const ConversationAccordion = ({
 								<Button
 									variant={showOnlyVerified ? "light" : "subtle"}
 									size="xs"
-									fw={500}
-									rightSection={<IconRosetteDiscountCheck size={16} />}
+									rightSection={<SealCheckIcon size={16} />}
 									onClick={() => setShowOnlyVerified((prev) => !prev)}
 									style={{ flexShrink: 0 }}
 									{...testId("conversation-filter-verified-button")}
@@ -1414,7 +1410,7 @@ export const ConversationAccordion = ({
 										style={{ flexShrink: 0, marginLeft: "auto" }}
 										{...testId("conversation-filter-reset-button")}
 									>
-										<IconX size={16} />
+										<XIcon size={16} />
 									</Button>
 								</Tooltip>
 							</Group>
@@ -1437,7 +1433,7 @@ export const ConversationAccordion = ({
 									variant="outline"
 									size="sm"
 									fullWidth
-									leftSection={<IconSelectAll size={16} />}
+									leftSection={<SelectionAllIcon size={16} />}
 									onClick={handleSelectAllClick}
 									disabled={selectAllMutation.isPending || remainingCount === 0}
 									loading={selectAllMutation.isPending}

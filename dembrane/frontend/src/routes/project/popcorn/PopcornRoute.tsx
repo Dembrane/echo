@@ -13,6 +13,7 @@ import { useDocumentTitle } from "@mantine/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useParams } from "react-router";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { PageContainer } from "@/components/layout/PageContainer";
 import {
 	type PopcornDetail,
@@ -94,11 +95,11 @@ function PopcornSession({
 						<Title order={2} className="truncate">
 							{popcorn.name}
 						</Title>
-						<Badge size="sm" variant="light" color="primary">
+						<Badge size="sm" color="mauve" c="graphite">
 							<Trans>Beta</Trans>
 						</Badge>
 					</Group>
-					<Text size="sm" {...testId("popcorn-status-line")}>
+					<Text size="sm" c="dimmed" {...testId("popcorn-status-line")}>
 						{statusLine(popcorn)}
 					</Text>
 				</Stack>
@@ -126,12 +127,12 @@ function PopcornLoading() {
 					<Skeleton height={16} width={320} />
 				</Stack>
 				<Group gap="xs">
-					<Skeleton height={42} width={200} radius="md" />
-					<Skeleton height={36} width={96} radius="md" />
-					<Skeleton height={36} width={96} radius="md" />
-					<Skeleton height={36} width={96} radius="md" />
+					<Skeleton height={36} width={200} radius="md" />
+					<Skeleton height={36} width={96} />
+					<Skeleton height={36} width={96} />
+					<Skeleton height={36} width={96} />
 				</Group>
-				<Skeleton height={320} radius="md" />
+				<Skeleton height={320} />
 			</Stack>
 		</PageContainer>
 	);
@@ -167,9 +168,11 @@ export const PopcornRoute = () => {
 	if (popcornQuery.isError) {
 		return (
 			<PageContainer width="md">
-				<Text>
-					<Trans>Popcorn could not be loaded. Try again in a moment.</Trans>
-				</Text>
+				<ErrorNotice
+					error={popcornQuery.error}
+					onRetry={() => popcornQuery.refetch()}
+					title={t`Popcorn could not be loaded`}
+				/>
 			</PageContainer>
 		);
 	}

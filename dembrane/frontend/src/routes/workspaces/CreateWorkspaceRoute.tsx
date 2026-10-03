@@ -20,7 +20,6 @@ import {
 	UnstyledButton,
 } from "@mantine/core";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
-import { modals } from "@mantine/modals";
 import { Buildings, Lock, UsersThree } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import posthog from "posthog-js";
@@ -37,6 +36,7 @@ import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { ApiRequestError } from "@/lib/errors/read";
 import { isFreeTierLimitError } from "@/lib/freeTier";
+import { openConfirm } from "@/lib/openConfirm";
 import type { Tier } from "@/lib/tiers";
 
 interface CreatedWorkspace {
@@ -324,13 +324,13 @@ export const CreateWorkspaceRoute = () => {
 
 	const handleCancel = () => {
 		if (name.trim()) {
-			modals.openConfirmModal({
+			openConfirm({
 				children: (
 					<Text size="sm">
 						<Trans>Your draft won't be saved.</Trans>
 					</Text>
 				),
-				confirmProps: { color: "red" },
+				danger: true,
 				labels: { cancel: t`Keep editing`, confirm: t`Discard` },
 				onConfirm: () => navigate(backDestination),
 				title: t`Discard this workspace?`,
@@ -352,7 +352,7 @@ export const CreateWorkspaceRoute = () => {
 		return (
 			<Container size="xs" py="xl" px="lg">
 				<Stack gap="md">
-					<Title order={3} fw={400}>
+					<Title order={2}>
 						<Trans>You can't create a workspace yet</Trans>
 					</Title>
 					<Text size="sm" c="dimmed">
@@ -362,7 +362,11 @@ export const CreateWorkspaceRoute = () => {
 						</Trans>
 					</Text>
 					<Group>
-						<Button variant="outline" onClick={() => navigate(backDestination)}>
+						<Button
+							variant="subtle"
+							color="gray"
+							onClick={() => navigate(backDestination)}
+						>
 							<Trans>Back</Trans>
 						</Button>
 					</Group>
@@ -415,9 +419,9 @@ export const CreateWorkspaceRoute = () => {
 
 	return (
 		<Container size="xl" py="xl" px="lg">
-			<Stack gap={28}>
-				<Stack gap={6}>
-					<Title order={3} fw={400}>
+			<Stack gap="lg">
+				<Stack gap="xs">
+					<Title order={2}>
 						<Trans>Create workspace</Trans>
 					</Title>
 					{targetOrganisation && (
@@ -447,7 +451,7 @@ export const CreateWorkspaceRoute = () => {
 					iconSize={28}
 				>
 					<Stepper.Step label={t`Name`}>
-						<Stack gap={16} mt="md">
+						<Stack gap="md" mt="md">
 							<Text size="sm" c="dimmed">
 								<Trans>Name your workspace.</Trans>
 							</Text>
@@ -486,7 +490,7 @@ export const CreateWorkspaceRoute = () => {
 					</Stepper.Step>
 
 					<Stepper.Step label={t`Ownership`}>
-						<Stack gap={14} mt="md">
+						<Stack gap="md" mt="md">
 							{
 								<>
 									<Text size="sm" c="dimmed">
@@ -505,7 +509,7 @@ export const CreateWorkspaceRoute = () => {
 											setBillFor(v as BillFor);
 										}}
 									>
-										<Stack gap={10} mt={8}>
+										<Stack gap="sm" mt="sm">
 											<Radio
 												value="internal"
 												label={
@@ -543,7 +547,7 @@ export const CreateWorkspaceRoute = () => {
 									</Radio.Group>
 
 									{billFor === "client" && (
-										<Stack gap={10} mt={4}>
+										<Stack gap="sm" mt={4}>
 											<TextInput
 												required
 												label={<Trans>Owning organisation</Trans>}
@@ -586,7 +590,7 @@ export const CreateWorkspaceRoute = () => {
 					</Stepper.Step>
 
 					<Stepper.Step label={t`Access`}>
-						<Stack gap={16} mt="md">
+						<Stack gap="md" mt="md">
 							<Text size="sm" c="dimmed">
 								<Trans>Set who can see and join.</Trans>
 							</Text>
@@ -608,32 +612,20 @@ export const CreateWorkspaceRoute = () => {
 											onClick={onClick}
 											aria-pressed={selected}
 											data-testid={`create-workspace-access-${opt.value}`}
+											className="app-do"
+											data-selected={selected || undefined}
+											p="md"
+											h="100%"
 										>
-											<Paper
-												withBorder
-												p="md"
-												radius="sm"
-												h="100%"
-												className="transition-colors hover:!border-primary-400"
-												style={{
-													background: selected
-														? "rgba(65, 105, 225, 0.06)"
-														: undefined,
-													borderColor: selected ? "#4169e1" : undefined,
-												}}
-											>
-												<Stack gap={6}>
-													<Group gap={8} wrap="nowrap">
-														<Icon size={18} />
-														<Text size="sm" fw={500}>
-															{opt.title}
-														</Text>
-													</Group>
-													<Text size="xs" c="dimmed">
-														{opt.description}
-													</Text>
-												</Stack>
-											</Paper>
+											<Stack gap="xs">
+												<Group gap="sm" wrap="nowrap">
+													<Icon size={16} />
+													<Text size="sm">{opt.title}</Text>
+												</Group>
+												<Text size="xs" c="dimmed">
+													{opt.description}
+												</Text>
+											</Stack>
 										</UnstyledButton>
 									);
 									if (!gated) {
@@ -696,21 +688,19 @@ export const CreateWorkspaceRoute = () => {
 					</Stepper.Step>
 
 					<Stepper.Step label={t`Review`}>
-						<Stack gap={14} mt="md">
+						<Stack gap="md" mt="md">
 							<Text size="sm" c="dimmed">
 								<Trans>Review before creating.</Trans>
 							</Text>
-							<Paper withBorder p="md" radius="sm">
-								<Stack gap={10}>
-									<Group gap={12} align="baseline">
+							<Paper withBorder p="md">
+								<Stack gap="sm">
+									<Group gap="sm" align="baseline">
 										<Text size="xs" c="dimmed" w={90}>
 											<Trans>Name</Trans>
 										</Text>
-										<Text size="sm" fw={500}>
-											{name.trim() || t`(missing)`}
-										</Text>
+										<Text size="sm">{name.trim() || t`(missing)`}</Text>
 									</Group>
-									<Group gap={12} align="baseline">
+									<Group gap="sm" align="baseline">
 										<Text size="xs" c="dimmed" w={90}>
 											<Trans>Organisation</Trans>
 										</Text>
@@ -718,7 +708,7 @@ export const CreateWorkspaceRoute = () => {
 											{targetOrganisation?.name || t`(unknown)`}
 										</Text>
 									</Group>
-									<Group gap={12} align="baseline">
+									<Group gap="sm" align="baseline">
 										<Text size="xs" c="dimmed" w={90}>
 											<Trans>Ownership</Trans>
 										</Text>
@@ -730,14 +720,14 @@ export const CreateWorkspaceRoute = () => {
 											)}
 										</Text>
 									</Group>
-									<Group gap={12} align="baseline">
+									<Group gap="sm" align="baseline">
 										<Text size="xs" c="dimmed" w={90}>
 											<Trans>Access</Trans>
 										</Text>
 										<Text size="sm">{accessLabel}</Text>
 									</Group>
 									{access === "invite" && (
-										<Group gap={12} align="baseline">
+										<Group gap="sm" align="baseline">
 											<Text size="xs" c="dimmed" w={90}>
 												<Trans>People</Trans>
 											</Text>
@@ -758,17 +748,10 @@ export const CreateWorkspaceRoute = () => {
 					</Stepper.Step>
 				</Stepper>
 
-				<Group justify="space-between" mt="sm">
-					<Button
-						variant="outline"
-						size="md"
-						px="xl"
-						onClick={step === 0 ? handleCancel : () => setStep(step - 1)}
-					>
-						{step === 0 ? <Trans>Cancel</Trans> : <Trans>Back</Trans>}
-					</Button>
+				<Group mt="sm">
 					{step < 3 ? (
 						<Button
+							variant="filled"
 							size="md"
 							px="xl"
 							disabled={
@@ -777,10 +760,11 @@ export const CreateWorkspaceRoute = () => {
 							}
 							onClick={() => setStep(step + 1)}
 						>
-							<Trans>Next</Trans>
+							<Trans>Continue</Trans>
 						</Button>
 					) : (
 						<Button
+							variant="filled"
 							size="md"
 							px="xl"
 							// isSuccess keeps the button locked through the async onSuccess
@@ -792,6 +776,14 @@ export const CreateWorkspaceRoute = () => {
 							<Trans>Create workspace</Trans>
 						</Button>
 					)}
+					<Button
+						variant="subtle"
+						color="gray"
+						size="md"
+						onClick={step === 0 ? handleCancel : () => setStep(step - 1)}
+					>
+						{step === 0 ? <Trans>Cancel</Trans> : <Trans>Back</Trans>}
+					</Button>
 				</Group>
 			</Stack>
 			<UpgradeModal
