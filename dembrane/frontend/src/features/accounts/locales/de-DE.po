@@ -53,7 +53,7 @@ msgstr "{0} hat am {1} unterschrieben. Die signierte Kopie befindet sich in Ihre
 msgid "{done} of {total} filled"
 msgstr "{done} von {total} ausgefüllt"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:207
+#: src/features/accounts/staff/NewDemoRoute.tsx:214
 msgid "A draft on their account, for you to send after the demo."
 msgstr "Ein Entwurf auf deren Konto, den Sie nach der Demo senden können."
 
@@ -201,11 +201,11 @@ msgstr "Rechnungsdetails aktualisiert"
 msgid "Book a call"
 msgstr "Gespräch vereinbaren"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:147
+#: src/features/accounts/staff/NewDemoRoute.tsx:150
 msgid "Brief"
 msgstr "Briefing"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:263
+#: src/features/accounts/staff/NewDemoRoute.tsx:275
 msgid "Build the demo"
 msgstr "Demo erstellen"
 
@@ -278,15 +278,15 @@ msgstr "Löschen"
 msgid "Closed"
 msgstr "Geschlossen"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:186
+#: src/features/accounts/staff/NewDemoRoute.tsx:191
 msgid "Contact"
 msgstr "Kontakt"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:189
+#: src/features/accounts/staff/NewDemoRoute.tsx:194
 msgid "Contact email"
 msgstr "Kontakt-E-Mail"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:188
+#: src/features/accounts/staff/NewDemoRoute.tsx:193
 msgid "Contact name"
 msgstr "Kontaktname"
 
@@ -353,7 +353,7 @@ msgstr "Demo"
 msgid "Demo | dembrane"
 msgstr "Demo | dembrane"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:173
+#: src/features/accounts/staff/NewDemoRoute.tsx:176
 msgid "Demo language"
 msgstr "Demo-Sprache"
 
@@ -458,11 +458,11 @@ msgid "Enable it to push offers and tasks. They get an Account page with a billi
 msgstr "Aktivieren, um Angebote und Aufgaben zu senden. Es wird eine Kontoseite mit einem Schritt für Rechnungsdaten bereitgestellt."
 
 #: src/features/accounts/staff/PushOfferModal.tsx:102
-#: src/features/accounts/staff/NewDemoRoute.tsx:223
+#: src/features/accounts/staff/NewDemoRoute.tsx:230
 msgid "Event"
 msgstr "Veranstaltung"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:161
+#: src/features/accounts/staff/NewDemoRoute.tsx:164
 msgid "Event or customer example"
 msgstr "Veranstaltungs- oder Kundenbeispiel"
 
@@ -578,7 +578,7 @@ msgstr "Sprache"
 msgid "Legal name"
 msgstr "Offizieller Name"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:197
+#: src/features/accounts/staff/NewDemoRoute.tsx:202
 msgid "Let them sign in with an email code"
 msgstr "Anmeldung per E-Mail-Code ermöglichen"
 
@@ -732,11 +732,11 @@ msgid "Nothing to do right now."
 msgstr "Aktuell nichts zu tun."
 
 #: src/features/accounts/format.ts:45
-#: src/features/accounts/staff/NewDemoRoute.tsx:202
+#: src/features/accounts/staff/NewDemoRoute.tsx:209
 msgid "Offer"
 msgstr "Angebot"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:229
+#: src/features/accounts/staff/NewDemoRoute.tsx:236
 msgid "Offer language"
 msgstr "Sprache des Angebots"
 
@@ -811,7 +811,7 @@ msgstr "Öffnet sich, sobald Sie {0} signiert haben."
 msgid "Optional"
 msgstr "Optional"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:162
+#: src/features/accounts/staff/NewDemoRoute.tsx:165
 msgid "Optional. A past event or customer to model the demo on."
 msgstr "Optional. Eine frühere Veranstaltung oder ein Kunde als Vorlage für die Demo."
 
@@ -824,7 +824,7 @@ msgstr "Optional. Die Aufgabe bleibt ausgegraut, bis dieses Dokument signiert is
 msgid "Organisation"
 msgstr "Organisation"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:139
+#: src/features/accounts/staff/NewDemoRoute.tsx:140
 msgid "Organisation name"
 msgstr "Name der Organisation"
 
@@ -881,7 +881,7 @@ msgstr "Bestellnummer"
 msgid "Postal code"
 msgstr "Postleitzahl"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:206
+#: src/features/accounts/staff/NewDemoRoute.tsx:213
 msgid "Prepare an offer"
 msgstr "Angebot vorbereiten"
 
@@ -939,7 +939,7 @@ msgstr "Durch das Veröffentlichen wird die Demo live geschaltet. Es wird keine 
 #~ msgid "Publishing sends {0} a sign-in invitation with an email code."
 #~ msgstr ""
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:198
+#: src/features/accounts/staff/NewDemoRoute.tsx:203
 msgid "Publishing sends them the sign-in invitation. Off: no email goes out."
 msgstr "Beim Veröffentlichen wird die Einladung zur Anmeldung gesendet. Aus: Es wird keine E-Mail gesendet."
 
@@ -1235,7 +1235,7 @@ msgid "Submitted"
 msgstr "Eingereicht"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:101
-#: src/features/accounts/staff/NewDemoRoute.tsx:222
+#: src/features/accounts/staff/NewDemoRoute.tsx:229
 msgid "Subscription"
 msgstr "Abonnement"
 
@@ -1279,7 +1279,7 @@ msgid "Tasks | dembrane"
 msgstr "Aufgaben | dembrane"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:95
-#: src/features/accounts/staff/NewDemoRoute.tsx:216
+#: src/features/accounts/staff/NewDemoRoute.tsx:223
 msgid "Template"
 msgstr "Vorlage"
 
@@ -1491,7 +1491,7 @@ msgstr "Wir erstellen eine synthetische Demo aus der Website und Ihrem Briefing.
 msgid "We send them their own link to this document."
 msgstr "Wir senden dieser Person ihren eigenen Link zu diesem Dokument."
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:140
+#: src/features/accounts/staff/NewDemoRoute.tsx:143
 #: src/features/accounts/staff/DemoRoute.tsx:56
 msgid "Website"
 msgstr "Website"
@@ -1500,7 +1500,7 @@ msgstr "Website"
 msgid "What each of your organisations still has to do for dembrane."
 msgstr "Was jede Ihrer Organisationen für dembrane noch erledigen muss."
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:148
+#: src/features/accounts/staff/NewDemoRoute.tsx:151
 msgid "What they want to hear from whom, and why now."
 msgstr "Was sie von wem hören möchten und warum jetzt."
 

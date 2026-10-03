@@ -593,11 +593,11 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 							})}
 						>
 							<Stack gap="xl">
-								<Stack gap="lg">
+								<Stack gap="md">
 									<Title order={4}>
 										<Trans>Basic settings</Trans>
 									</Title>
-									<Stack gap="xl">
+									<Stack gap="md">
 										<Controller
 											name="language"
 											control={control}
@@ -743,7 +743,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 								</Stack>
 
 								<Divider />
-								<Stack gap="lg">
+								<Stack gap="md">
 									<Title order={4}>
 										<Trans>Participant features</Trans>
 									</Title>
@@ -796,105 +796,112 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 												)}
 											/>
 
-											<Controller
-												name="get_reply_mode"
-												control={control}
-												render={({ field }) => (
-													<Stack gap="xs">
-														<FormLabel
-															label={t`Mode`}
-															isDirty={formState.dirtyFields.get_reply_mode}
-															error={formState.errors.get_reply_mode?.message}
-														/>
-														<Text size="sm" c="dimmed">
-															<Trans>
-																Select the type of feedback or engagement you
-																want to encourage.
-															</Trans>
-														</Text>
-														<SegmentedControl
-															value={field.value}
-															onChange={field.onChange}
-															disabled={!watchedReplyEnabled}
-															style={{ alignSelf: "flex-start" }}
-															data={[
-																{
-																	label: (
-																		<span
-																			{...testId(
-																				"portal-editor-reply-mode-default",
-																			)}
-																		>
-																			<Trans>Default</Trans>
-																		</span>
-																	),
-																	value: "summarize",
-																},
-																{
-																	label: (
-																		<span
-																			{...testId(
-																				"portal-editor-reply-mode-brainstorm",
-																			)}
-																		>
-																			<Trans>Brainstorm ideas</Trans>
-																		</span>
-																	),
-																	value: "brainstorm",
-																},
-																{
-																	label: (
-																		<span
-																			{...testId(
-																				"portal-editor-reply-mode-custom",
-																			)}
-																		>
-																			<Trans>Custom</Trans>
-																		</span>
-																	),
-																	value: "custom",
-																},
-															]}
-														/>
-													</Stack>
-												)}
-											/>
-
-											{watchedReplyMode === "custom" && (
-												<Controller
-													name="get_reply_prompt"
-													control={control}
-													render={({ field }) => (
-														<Textarea
-															label={
+											{watchedReplyEnabled && (
+												<>
+													<Controller
+														name="get_reply_mode"
+														control={control}
+														render={({ field }) => (
+															<Stack gap="xs">
 																<FormLabel
-																	label={t`Reply prompt`}
-																	isDirty={
-																		formState.dirtyFields.get_reply_prompt
-																	}
+																	label={t`Mode`}
+																	isDirty={formState.dirtyFields.get_reply_mode}
 																	error={
-																		formState.errors.get_reply_prompt?.message
+																		formState.errors.get_reply_mode?.message
 																	}
 																/>
-															}
-															description={
-																<Box pb="sm">
+																<Text size="sm" c="dimmed">
 																	<Trans>
-																		This prompt guides how the AI responds to
-																		participants. Customize it to shape the type
-																		of feedback or engagement you want to
-																		encourage.
+																		Select the type of feedback or engagement
+																		you want to encourage.
 																	</Trans>
-																</Box>
-															}
-															autosize
-															minRows={5}
-															disabled={!watchedReplyEnabled}
-															{...field}
-															{...testId("portal-editor-reply-prompt-textarea")}
+																</Text>
+																<SegmentedControl
+																	value={field.value}
+																	onChange={field.onChange}
+																	style={{ alignSelf: "flex-start" }}
+																	data={[
+																		{
+																			label: (
+																				<span
+																					{...testId(
+																						"portal-editor-reply-mode-default",
+																					)}
+																				>
+																					<Trans>Default</Trans>
+																				</span>
+																			),
+																			value: "summarize",
+																		},
+																		{
+																			label: (
+																				<span
+																					{...testId(
+																						"portal-editor-reply-mode-brainstorm",
+																					)}
+																				>
+																					<Trans>Brainstorm ideas</Trans>
+																				</span>
+																			),
+																			value: "brainstorm",
+																		},
+																		{
+																			label: (
+																				<span
+																					{...testId(
+																						"portal-editor-reply-mode-custom",
+																					)}
+																				>
+																					<Trans>Custom</Trans>
+																				</span>
+																			),
+																			value: "custom",
+																		},
+																	]}
+																/>
+															</Stack>
+														)}
+													/>
+
+													{watchedReplyMode === "custom" && (
+														<Controller
+															name="get_reply_prompt"
+															control={control}
+															render={({ field }) => (
+																<Textarea
+																	label={
+																		<FormLabel
+																			label={t`Reply prompt`}
+																			isDirty={
+																				formState.dirtyFields.get_reply_prompt
+																			}
+																			error={
+																				formState.errors.get_reply_prompt
+																					?.message
+																			}
+																		/>
+																	}
+																	description={
+																		<Box pb="sm">
+																			<Trans>
+																				This prompt guides how the AI responds
+																				to participants. Customize it to shape
+																				the type of feedback or engagement you
+																				want to encourage.
+																			</Trans>
+																		</Box>
+																	}
+																	autosize
+																	minRows={5}
+																	{...field}
+																	{...testId(
+																		"portal-editor-reply-prompt-textarea",
+																	)}
+																/>
+															)}
 														/>
 													)}
-												/>
+												</>
 											)}
 										</Stack>
 
@@ -948,188 +955,172 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 												)}
 											/>
 
-											<Controller
-												name="verification_topics"
-												control={control}
-												render={({ field }) => (
-													<Stack gap="xs">
-														<FormLabel
-															label={t`Verify topics`}
-															isDirty={
-																!!formState.dirtyFields.verification_topics
-															}
-															error={
-																formState.errors.verification_topics?.message
-															}
-														/>
-														<Text size="sm" c="dimmed">
-															<Trans id="dashboard.dembrane.feature.verify.topic.select">
-																Select which topics participants can use for
-																"Verify".
-															</Trans>
-														</Text>
-														{isVerificationTopicsLoading ? (
-															<Text size="sm" c="dimmed">
-																<Trans>Loading verify topics…</Trans>
-															</Text>
-														) : availableVerifyTopics.length === 0 ? (
-															<Text size="sm" c="dimmed">
-																<Trans>No verify topics available.</Trans>
-															</Text>
-														) : (
-															<Stack gap="sm">
-																<Chip.Group
-																	multiple
-																	value={field.value}
-																	onChange={(next) => {
-																		if (!watchedVerifyEnabled) return;
-																		const updated = normalizeTopicList(next);
-																		if (updated.length === 0) {
-																			toast.error(
-																				t`At least one topic must be selected to enable Verify`,
-																			);
-																			return;
-																		}
-																		field.onChange(updated);
-																	}}
-																>
-																	<Group>
-																		{availableVerifyTopics.map((topic) => (
-																			<Fragment key={topic.key}>
-																				<Chip
-																					value={topic.key}
-																					disabled={!watchedVerifyEnabled}
-																				>
-																					{topic.label}
-																				</Chip>
-																				{topic.is_custom && (
-																					<Group
-																						gap={0}
-																						wrap="nowrap"
-																						style={{
-																							opacity: watchedVerifyEnabled
-																								? 1
-																								: 0.4,
-																							pointerEvents:
-																								watchedVerifyEnabled
-																									? "auto"
-																									: "none",
-																						}}
-																					>
-																						<ActionIcon
-																							variant="transparent"
-																							disabled={!watchedVerifyEnabled}
-																							aria-label={t`Edit topic`}
-																							onClick={(e) => {
-																								e.stopPropagation();
-																								openEditTopicModal(topic.raw);
-																							}}
-																							{...testId(
-																								`custom-topic-edit-${topic.key}`,
-																							)}
-																						>
-																							<PencilSimpleIcon size={20} />
-																						</ActionIcon>
-																						<Tooltip
-																							label={t`Select at least one other topic before deleting this one`}
-																							disabled={
-																								!watchedVerifyEnabled ||
-																								!field.value.includes(
-																									topic.key,
-																								) ||
-																								field.value.length > 1
-																							}
-																							multiline
-																							w={200}
-																						>
-																							<ActionIcon
-																								variant="transparent"
-																								aria-label={t`Delete topic`}
-																								c={
-																									!watchedVerifyEnabled ||
-																									(field.value.includes(
-																										topic.key,
-																									) &&
-																										field.value.length <= 1)
-																										? "dimmed"
-																										: "red"
-																								}
-																								disabled={
-																									!watchedVerifyEnabled ||
-																									(field.value.includes(
-																										topic.key,
-																									) &&
-																										field.value.length <= 1)
-																								}
-																								onClick={(e) => {
-																									e.stopPropagation();
-																									setDeleteConfirmKey(
-																										topic.key,
-																									);
-																								}}
-																								{...testId(
-																									`custom-topic-delete-${topic.key}`,
-																								)}
-																							>
-																								<TrashIcon size={20} />
-																							</ActionIcon>
-																						</Tooltip>
-																					</Group>
+											{watchedVerifyEnabled && (
+												<>
+													<Controller
+														name="verification_topics"
+														control={control}
+														render={({ field }) => (
+															<Stack gap="xs">
+																<FormLabel
+																	label={t`Verify topics`}
+																	isDirty={
+																		!!formState.dirtyFields.verification_topics
+																	}
+																	error={
+																		formState.errors.verification_topics
+																			?.message
+																	}
+																/>
+																<Text size="sm" c="dimmed">
+																	<Trans id="dashboard.dembrane.feature.verify.topic.select">
+																		Select which topics participants can use for
+																		"Verify".
+																	</Trans>
+																</Text>
+																{isVerificationTopicsLoading ? (
+																	<Text size="sm" c="dimmed">
+																		<Trans>Loading verify topics…</Trans>
+																	</Text>
+																) : availableVerifyTopics.length === 0 ? (
+																	<Text size="sm" c="dimmed">
+																		<Trans>No verify topics available.</Trans>
+																	</Text>
+																) : (
+																	<Stack gap="sm">
+																		<Chip.Group
+																			multiple
+																			value={field.value}
+																			onChange={(next) => {
+																				const updated =
+																					normalizeTopicList(next);
+																				if (updated.length === 0) {
+																					toast.error(
+																						t`At least one topic must be selected to enable Verify`,
+																					);
+																					return;
+																				}
+																				field.onChange(updated);
+																			}}
+																		>
+																			<Group>
+																				{availableVerifyTopics.map((topic) => (
+																					<Fragment key={topic.key}>
+																						<Chip value={topic.key}>
+																							{topic.label}
+																						</Chip>
+																						{topic.is_custom && (
+																							<Group gap={0} wrap="nowrap">
+																								<ActionIcon
+																									variant="transparent"
+																									aria-label={t`Edit topic`}
+																									onClick={(e) => {
+																										e.stopPropagation();
+																										openEditTopicModal(
+																											topic.raw,
+																										);
+																									}}
+																									{...testId(
+																										`custom-topic-edit-${topic.key}`,
+																									)}
+																								>
+																									<PencilSimpleIcon size={20} />
+																								</ActionIcon>
+																								<Tooltip
+																									label={t`Select at least one other topic before deleting this one`}
+																									disabled={
+																										!field.value.includes(
+																											topic.key,
+																										) || field.value.length > 1
+																									}
+																									multiline
+																									w={200}
+																								>
+																									<ActionIcon
+																										variant="transparent"
+																										aria-label={t`Delete topic`}
+																										c={
+																											field.value.includes(
+																												topic.key,
+																											) &&
+																											field.value.length <= 1
+																												? "dimmed"
+																												: "red"
+																										}
+																										disabled={
+																											field.value.includes(
+																												topic.key,
+																											) &&
+																											field.value.length <= 1
+																										}
+																										onClick={(e) => {
+																											e.stopPropagation();
+																											setDeleteConfirmKey(
+																												topic.key,
+																											);
+																										}}
+																										{...testId(
+																											`custom-topic-delete-${topic.key}`,
+																										)}
+																									>
+																										<TrashIcon size={20} />
+																									</ActionIcon>
+																								</Tooltip>
+																							</Group>
+																						)}
+																					</Fragment>
+																				))}
+																			</Group>
+																		</Chip.Group>
+																		<Box>
+																			<Button
+																				leftSection={<PlusIcon size={20} />}
+																				onClick={openCreateTopicModal}
+																				{...testId(
+																					"portal-editor-add-custom-topic",
 																				)}
-																			</Fragment>
-																		))}
-																	</Group>
-																</Chip.Group>
-																<Box>
-																	<Button
-																		leftSection={<PlusIcon size={20} />}
-																		disabled={!watchedVerifyEnabled}
-																		onClick={openCreateTopicModal}
-																		{...testId(
-																			"portal-editor-add-custom-topic",
-																		)}
-																	>
-																		<Trans>Add topic</Trans>
-																	</Button>
-																</Box>
+																			>
+																				<Trans>Add topic</Trans>
+																			</Button>
+																		</Box>
+																	</Stack>
+																)}
 															</Stack>
 														)}
-													</Stack>
-												)}
-											/>
-
-											<Controller
-												name="is_verify_on_finish_enabled"
-												control={control}
-												render={({ field }) => (
-													<Switch
-														mt="xl"
-														label={
-															<FormLabel
-																label={t`Remind users to verify before finishing`}
-																isDirty={
-																	formState.dirtyFields
-																		.is_verify_on_finish_enabled
-																}
-																error={
-																	formState.errors.is_verify_on_finish_enabled
-																		?.message
-																}
-															/>
-														}
-														description={t`When finishing the conversation, participants who haven't verified yet will be prompted to verify or skip`}
-														disabled={!watchedVerifyEnabled}
-														checked={field.value}
-														onChange={(e) =>
-															field.onChange(e.currentTarget.checked)
-														}
-														style={{
-															opacity: watchedVerifyEnabled ? 1 : 0.6,
-														}}
-														{...testId("portal-editor-verify-on-finish-switch")}
 													/>
-												)}
-											/>
+
+													<Controller
+														name="is_verify_on_finish_enabled"
+														control={control}
+														render={({ field }) => (
+															<Switch
+																mt="xl"
+																label={
+																	<FormLabel
+																		label={t`Remind users to verify before finishing`}
+																		isDirty={
+																			formState.dirtyFields
+																				.is_verify_on_finish_enabled
+																		}
+																		error={
+																			formState.errors
+																				.is_verify_on_finish_enabled?.message
+																		}
+																	/>
+																}
+																description={t`When finishing the conversation, participants who haven't verified yet will be prompted to verify or skip`}
+																checked={field.value}
+																onChange={(e) =>
+																	field.onChange(e.currentTarget.checked)
+																}
+																{...testId(
+																	"portal-editor-verify-on-finish-switch",
+																)}
+															/>
+														)}
+													/>
+												</>
+											)}
 										</Stack>
 
 										<Stack gap="md">
@@ -1145,53 +1136,53 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 												</Trans>
 											</Text>
 
-											<Controller
-												name="is_project_notification_subscription_allowed"
-												control={control}
-												render={({ field }) => (
-													<Stack>
-														<Switch
-															label={
-																<FormLabel
-																	label={t`Enable report notifications`}
-																	isDirty={
-																		formState.dirtyFields
-																			.is_project_notification_subscription_allowed
-																	}
-																	error={
-																		formState.errors
-																			.is_project_notification_subscription_allowed
-																			?.message
-																	}
-																/>
-															}
-															description={
-																!watchedAskForEmail
-																	? t`Requires "Ask for email?" to be enabled`
-																	: undefined
-															}
-															disabled={!watchedAskForEmail}
-															checked={field.value}
-															onChange={(e) =>
-																field.onChange(e.currentTarget.checked)
-															}
-															{...testId(
-																"portal-editor-report-notifications-switch",
-															)}
-														/>
-													</Stack>
-												)}
-											/>
+											{watchedAskForEmail ? (
+												<Controller
+													name="is_project_notification_subscription_allowed"
+													control={control}
+													render={({ field }) => (
+														<Stack>
+															<Switch
+																label={
+																	<FormLabel
+																		label={t`Enable report notifications`}
+																		isDirty={
+																			formState.dirtyFields
+																				.is_project_notification_subscription_allowed
+																		}
+																		error={
+																			formState.errors
+																				.is_project_notification_subscription_allowed
+																				?.message
+																		}
+																	/>
+																}
+																checked={field.value}
+																onChange={(e) =>
+																	field.onChange(e.currentTarget.checked)
+																}
+																{...testId(
+																	"portal-editor-report-notifications-switch",
+																)}
+															/>
+														</Stack>
+													)}
+												/>
+											) : (
+												<Text size="sm" c="dimmed">
+													{t`Requires "Ask for email?" to be enabled`}
+												</Text>
+											)}
 										</Stack>
 									</Stack>
 								</Stack>
 								<Divider />
 
-								<Stack gap="lg">
+								<Stack gap="md">
 									<Title order={4}>
 										<Trans>Portal content</Trans>
 									</Title>
-									<Stack gap="xl">
+									<Stack gap="md">
 										<Controller
 											name="default_conversation_title"
 											control={control}
@@ -1354,7 +1345,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 
 								<Divider />
 
-								<Stack gap="xl">
+								<Stack gap="md">
 									<Title order={4}>
 										<Trans>Advanced settings</Trans>
 									</Title>

@@ -298,7 +298,14 @@ export const ConversationRow = ({
 			)}
 
 			<Stack gap="xs" style={{ flex: 1, minWidth: 0 }}>
-				<Group justify="space-between" align="flex-start" wrap="nowrap">
+				{/* On a phone the row changes as a whole: the actions drop below
+					    the title instead of squeezing it to "Table 5 · …". */}
+				<Group
+					justify="space-between"
+					align="flex-start"
+					wrap="nowrap"
+					className="app-stack-narrow"
+				>
 					<Stack gap={2} style={{ minWidth: 0 }}>
 						<Group gap="xs" wrap="nowrap">
 							<Text size="sm" truncate>
@@ -412,7 +419,7 @@ export const ConversationRow = ({
 						<Tooltip label={t`Open conversation`}>
 							<ActionIcon
 								variant="subtle"
-								color="blue"
+								color="gray"
 								aria-label={t`Open conversation`}
 								onClick={(e) => {
 									e.preventDefault();

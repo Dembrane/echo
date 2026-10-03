@@ -1820,7 +1820,12 @@ function OrganisationPersonCard({
 			}}
 		>
 			<Stack gap={open ? "sm" : 0}>
-				<Group justify="space-between" wrap="nowrap" gap="md">
+				<Group
+					className="app-stack-narrow"
+					justify="space-between"
+					wrap="nowrap"
+					gap="md"
+				>
 					<Group gap="sm" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
 						<Avatar src={avatarUrl(member.avatar, 64)} size="md" radius="full">
 							{memberInitials(member.display_name, member.email)}
@@ -1892,7 +1897,7 @@ function OrganisationPersonCard({
 									justify="space-between"
 									wrap="nowrap"
 									gap="sm"
-									className="px-2 py-1 hover:bg-[var(--mantine-color-default-hover)]"
+									className="app-stack-narrow px-2 py-1 hover:bg-[var(--mantine-color-default-hover)]"
 								>
 									<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
 										<WorkspaceVisibilityIcon

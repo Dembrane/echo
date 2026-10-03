@@ -35,7 +35,6 @@ import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
 import { isFreeTierLimitError } from "@/lib/freeTier";
 import { testId } from "@/lib/testUtils";
 import type { Tier } from "@/lib/tiers";
-import { CloseableAlert } from "../common/ClosableAlert";
 import { languageOptionsByIso639_1 } from "../language/LanguagePicker";
 import { ConversationStatusTable } from "./ConversationStatusTable";
 import { useCreateProjectReportMutation } from "./hooks";
@@ -181,10 +180,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 					</Stack>
 				</Alert>
 			)}
-			<CloseableAlert
-				title={t`Generate a report`}
-				storageKey="create-report-info-dismissed"
-			>
+			<Text size="sm" c="dimmed">
 				{hasConversations ? (
 					<Trans>
 						It looks like you don't have a report for this project yet. Generate
@@ -196,7 +192,7 @@ export const CreateReportForm = ({ onSuccess }: { onSuccess: () => void }) => {
 						conversations will be included once they are added.
 					</Trans>
 				)}
-			</CloseableAlert>
+			</Text>
 
 			{hasConversations && (
 				<>

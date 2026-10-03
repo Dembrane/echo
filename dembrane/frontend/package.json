@@ -19,6 +19,9 @@
     "test": "vitest",
     "lint:fix": "biome lint --write .",
     "check": "biome check .",
+    "check:grammar": "node scripts/check-grammar.mjs",
+    "check:contrast": "node scripts/check-contrast.mjs",
+    "test:grammar": "playwright test -c e2e/grammar.config.ts",
     "fix": "biome check --write .",
     "preview": "vite preview"
   },
@@ -104,6 +107,7 @@
     "zod4": "npm:zod@4.6.5"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@babel/plugin-transform-react-jsx-source": "^7.27.1",
     "@babel/preset-react": "^7.28.5",
     "@biomejs/biome": "^2.2.4",

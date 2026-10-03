@@ -132,6 +132,7 @@ export function PendingInvitesSection({ orgId, scope, workspaceId }: Props) {
 					{invites.map((inv, i) => (
 						<Group
 							key={inv.id}
+							className="app-stack-narrow"
 							justify="space-between"
 							wrap="nowrap"
 							p="md"

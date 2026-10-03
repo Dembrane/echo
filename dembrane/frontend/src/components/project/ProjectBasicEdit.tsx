@@ -97,7 +97,7 @@ export const ProjectBasicEdit: React.FC<ProjectBasicEditProps> = ({
 					await triggerManualSave(values);
 				})}
 			>
-				<Stack gap="xl">
+				<Stack gap="md">
 					<Controller
 						name="name"
 						control={control}

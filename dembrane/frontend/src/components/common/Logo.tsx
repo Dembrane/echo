@@ -47,11 +47,8 @@ const EnvBadge = () => {
 	// Show an env badge everywhere except production.
 	if (APP_ENVIRONMENT === "production") return null;
 	return (
-		<span
-			className={`pointer-events-none capitalize ${BADGE_CLASS}`}
-			style={BADGE_STYLE}
-		>
-			{APP_ENVIRONMENT}
+		<span className={`pointer-events-none ${BADGE_CLASS}`} style={BADGE_STYLE}>
+			{APP_ENVIRONMENT.charAt(0).toUpperCase() + APP_ENVIRONMENT.slice(1)}
 		</span>
 	);
 };

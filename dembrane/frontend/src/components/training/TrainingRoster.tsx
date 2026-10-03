@@ -29,7 +29,7 @@ export const TrainingRoster = ({
 }: TrainingRosterProps) => {
 	if (members.length === 0) {
 		return (
-			<Text size="sm">
+			<Text size="sm" c="dimmed">
 				<Trans>No members yet.</Trans>
 			</Text>
 		);

@@ -130,7 +130,7 @@ export const StaffTrainingPanel = () => {
 			</Group>
 
 			{filtered.length === 0 ? (
-				<Text size="sm">
+				<Text size="sm" c="dimmed">
 					{trainings.length === 0 ? (
 						<Trans>No trainings yet.</Trans>
 					) : (

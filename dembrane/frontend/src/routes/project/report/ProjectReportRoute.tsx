@@ -962,40 +962,28 @@ export const ProjectReportRoute = () => {
 												disabled={isUpdatingReport}
 												{...testId("report-publish-toggle")}
 											/>
-											<Tooltip
-												label={t`Publish this report first to show the portal link`}
-												disabled={data.status === "published"}
-												events={{ focus: true, hover: true, touch: true }}
-											>
-												<Box
-													style={{
-														opacity: data.status !== "published" ? 0.45 : 1,
+											{data.status === "published" && (
+												<Switch
+													label={t`Include portal link`}
+													checked={data.show_portal_link ?? true}
+													size="sm"
+													onChange={(e) => {
+														posthog.capture("report_made_public", {
+															enabled: !!e.target.checked,
+															report_id: data.id,
+														});
+														updateReport({
+															payload: {
+																show_portal_link: !!e.target.checked,
+															},
+															projectId: projectId ?? "",
+															reportId: data.id,
+														});
 													}}
-												>
-													<Switch
-														label={t`Include portal link`}
-														checked={data.show_portal_link ?? true}
-														size="sm"
-														onChange={(e) => {
-															posthog.capture("report_made_public", {
-																enabled: !!e.target.checked,
-																report_id: data.id,
-															});
-															updateReport({
-																payload: {
-																	show_portal_link: !!e.target.checked,
-																},
-																projectId: projectId ?? "",
-																reportId: data.id,
-															});
-														}}
-														disabled={
-															isUpdatingReport || data.status !== "published"
-														}
-														{...testId("report-include-portal-link-checkbox")}
-													/>
-												</Box>
-											</Tooltip>
+													disabled={isUpdatingReport}
+													{...testId("report-include-portal-link-checkbox")}
+												/>
+											)}
 										</Group>
 
 										{/* Copy link + kebab — actions */}

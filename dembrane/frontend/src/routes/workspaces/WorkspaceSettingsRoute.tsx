@@ -887,7 +887,11 @@ export const WorkspaceSettingsRoute = () => {
 																"var(--app-stroke) solid var(--app-rule-color)",
 														}}
 													>
-														<Group justify="space-between" wrap="nowrap">
+														<Group
+															className="app-stack-narrow"
+															justify="space-between"
+															wrap="nowrap"
+														>
 															<Group
 																gap="sm"
 																wrap="nowrap"

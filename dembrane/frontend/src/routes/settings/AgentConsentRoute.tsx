@@ -1,7 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
-	Alert,
 	Anchor,
 	Button,
 	Card,
@@ -238,70 +237,72 @@ export const AgentConsentRoute = () => {
 							</Text>
 						</Stack>
 
-						<Stack gap={4}>
-							<Text size="sm">
-								<Trans>It is asking to</Trans>
-							</Text>
-							<List size="sm" spacing="xs">
-								{data.requested_scopes
-									.filter((scope) => scope !== "write")
-									.map((scope) => (
-										<List.Item key={scope}>{scopeLabel(scope)}</List.Item>
-									))}
-							</List>
-							{data.requested_scopes.includes("write") && (
-								<Checkbox
-									mt={4}
-									checked={allowWrite}
-									onChange={(e) => setAllowWrite(e.currentTarget.checked)}
-									label={t`Also allow it to change project settings`}
-									data-testid="agent-consent-write"
-								/>
-							)}
-						</Stack>
-
-						<Stack gap="xs">
-							<Text size="sm">
-								<Trans>In which organisations</Trans>
-							</Text>
-							{data.organisations.length === 0 ? (
-								<Alert>
-									<Trans>
-										You are not a member of any organisation, so there is
-										nothing to connect yet.
-									</Trans>
-								</Alert>
-							) : (
-								data.organisations.map((org) => (
-									<OrgChoice
-										key={org.id}
-										org={org}
-										checked={selectedOrgIds.includes(org.id)}
-										onChange={(checked) =>
-											setSelectedOrgIds((ids) =>
-												checked
-													? Array.from(new Set([...ids, org.id]))
-													: ids.filter((id) => id !== org.id),
-											)
-										}
+						<Stack gap="md">
+							<Stack gap={4}>
+								<Text size="sm">
+									<Trans>It is asking to</Trans>
+								</Text>
+								<List size="sm" spacing="xs">
+									{data.requested_scopes
+										.filter((scope) => scope !== "write")
+										.map((scope) => (
+											<List.Item key={scope}>{scopeLabel(scope)}</List.Item>
+										))}
+								</List>
+								{data.requested_scopes.includes("write") && (
+									<Checkbox
+										mt={4}
+										checked={allowWrite}
+										onChange={(e) => setAllowWrite(e.currentTarget.checked)}
+										label={t`Also allow it to change project settings`}
+										data-testid="agent-consent-write"
 									/>
-								))
-							)}
-						</Stack>
+								)}
+							</Stack>
 
-						<Select
-							label={t`Access expires after`}
-							value={String(expiresInDays)}
-							onChange={(value) => {
-								if (value) setExpiresInDays(Number(value));
-							}}
-							data={data.expiry_choices_days.map((days) => ({
-								label: t`${days} days`,
-								value: String(days),
-							}))}
-							allowDeselect={false}
-							data-testid="agent-consent-expiry"
-						/>
+							<Stack gap="xs">
+								<Text size="sm">
+									<Trans>In which organisations</Trans>
+								</Text>
+								{data.organisations.length === 0 ? (
+									<Text size="sm" c="dimmed">
+										<Trans>
+											You are not a member of any organisation, so there is
+											nothing to connect yet.
+										</Trans>
+									</Text>
+								) : (
+									data.organisations.map((org) => (
+										<OrgChoice
+											key={org.id}
+											org={org}
+											checked={selectedOrgIds.includes(org.id)}
+											onChange={(checked) =>
+												setSelectedOrgIds((ids) =>
+													checked
+														? Array.from(new Set([...ids, org.id]))
+														: ids.filter((id) => id !== org.id),
+												)
+											}
+										/>
+									))
+								)}
+							</Stack>
+
+							<Select
+								label={t`Access expires after`}
+								value={String(expiresInDays)}
+								onChange={(value) => {
+									if (value) setExpiresInDays(Number(value));
+								}}
+								data={data.expiry_choices_days.map((days) => ({
+									label: t`${days} days`,
+									value: String(days),
+								}))}
+								allowDeselect={false}
+								data-testid="agent-consent-expiry"
+							/>
+						</Stack>
 
 						<AgentRiskNotice clientName={data.client_name} />
 

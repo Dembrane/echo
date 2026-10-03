@@ -1,0 +1,356 @@
+{
+	"_": "Findings per file per rule from scripts/check-grammar.mjs. Counts only go down: run `pnpm check:grammar --update` after fixing. Raising one is a decision; edit it by hand in the PR and say why.",
+	"files": {
+		"src/components/announcement/AnnouncementItem.tsx": {
+			"action.right-aligned": 1
+		},
+		"src/components/auth/PasswordRequirements.tsx": {
+			"icon.size": 2
+		},
+		"src/components/chat/AgenticChatPanel.tsx": {
+			"type.title-order": 1
+		},
+		"src/components/chat/ChatAccordion.tsx": {
+			"color.palette-class": 1,
+			"color.raw-mantine-shade": 1,
+			"type.title-order": 1,
+			"words.title-case": 1
+		},
+		"src/components/chat/ChatContextProgress.tsx": {
+			"color.raw-mantine-shade": 1,
+			"space.off-scale": 2
+		},
+		"src/components/chat/ChatHistoryMessage.tsx": {
+			"color.raw-mantine-shade": 1,
+			"shape.rounded": 1
+		},
+		"src/components/chat/ChatModeSelector.tsx": {
+			"color.hex-literal": 3,
+			"words.denylist": 1
+		},
+		"src/components/chat/ChatSkeleton.tsx": {
+			"type.title-order": 1
+		},
+		"src/components/chat/ProjectUpdateSuggestionCard.tsx": {
+			"color.palette-class": 5
+		},
+		"src/components/chat/TemplatesModal.tsx": {
+			"shape.shadow": 1
+		},
+		"src/components/chat/templates.ts": {
+			"words.denylist": 1,
+			"words.title-case": 2
+		},
+		"src/components/common/DembraneLoadingSpinner/index.tsx": {
+			"words.denylist": 1
+		},
+		"src/components/common/QRCode.tsx": {
+			"color.hex-literal": 6,
+			"icon.size": 1
+		},
+		"src/components/common/RedactedText.tsx": {
+			"space.off-scale": 1
+		},
+		"src/components/conversation/ConversationAccordion.tsx": {
+			"action.right-aligned": 1,
+			"color.blue-prop": 1,
+			"color.palette-class": 2,
+			"color.raw-mantine-shade": 1,
+			"icon.size": 1,
+			"space.off-scale": 2,
+			"type.title-order": 1,
+			"type.weight-class": 1
+		},
+		"src/components/conversation/FunnelCanvas.tsx": {
+			"color.hex-literal": 7,
+			"shape.rounded": 1,
+			"shape.shadow": 1
+		},
+		"src/components/conversation/LiveMonitorSection.tsx": {
+			"space.off-scale": 1
+		},
+		"src/components/conversation/ProjectConversationsPanel.tsx": {
+			"space.off-scale": 1
+		},
+		"src/components/conversation/VerifiedArtefactsSection.tsx": {
+			"space.off-scale": 1
+		},
+		"src/components/feedback/AdminResponseFeedbackPanel.tsx": {
+			"words.denylist": 1
+		},
+		"src/components/feedback/ReportIssueModal.tsx": {
+			"color.hex-literal": 1
+		},
+		"src/components/form/MarkdownWYSIWYG/styles.css": {
+			"css.font-weight": 4
+		},
+		"src/components/invite/EmailChipsInput.tsx": {
+			"icon.size": 1,
+			"space.off-scale": 1
+		},
+		"src/components/invite/WorkspaceSelectList.tsx": {
+			"icon.size": 1
+		},
+		"src/components/layout/TransitionCurtainProvider.tsx": {
+			"shape.scale": 2
+		},
+		"src/components/map/panels/ArgumentAccordion.tsx": {
+			"icon.size": 1
+		},
+		"src/components/map/renderers/MapChrome.tsx": {
+			"shape.shadow": 1
+		},
+		"src/components/participant/verify/VerifyArtefact.tsx": {
+			"words.denylist": 4
+		},
+		"src/components/popcorn/PopcornActions.tsx": {
+			"color.button-light": 1,
+			"icon.size": 1,
+			"shape.gradient": 1
+		},
+		"src/components/popcorn/PopcornHistory.tsx": {
+			"space.off-scale": 1
+		},
+		"src/components/present/AudienceMapAdapter.tsx": {
+			"color.hex-literal": 21
+		},
+		"src/components/present/AudienceScreen.module.css": {
+			"css.font-weight": 5,
+			"css.tracking": 2
+		},
+		"src/components/present/TranslationStatus.tsx": {
+			"space.off-scale": 1
+		},
+		"src/components/project/KeyTermsInput.tsx": {
+			"color.raw-mantine-shade": 1
+		},
+		"src/components/project/PinnedProjectCard.tsx": {
+			"color.blue-prop": 1
+		},
+		"src/components/project/ProjectListItem.tsx": {
+			"color.blue-prop": 1
+		},
+		"src/components/project/ProjectTagsInput.tsx": {
+			"color.raw-mantine-shade": 1
+		},
+		"src/components/project/ProjectUsageAndSharing.tsx": {
+			"color.raw-mantine-shade": 1
+		},
+		"src/components/release/ReleaseTimeline.tsx": {
+			"words.denylist": 1
+		},
+		"src/components/release/releaseHistory.ts": {
+			"words.denylist": 1
+		},
+		"src/components/results/curate/TensionsTab.tsx": {
+			"icon.size": 1
+		},
+		"src/components/results/ResultItem.module.css": {
+			"css.font-weight": 2,
+			"css.tracking": 4
+		},
+		"src/components/results/ResultItem.tsx": {
+			"icon.no-size": 1,
+			"icon.size": 1
+		},
+		"src/components/results/ResultRow.tsx": {
+			"icon.size": 1
+		},
+		"src/components/workspace/FeatureGate.tsx": {
+			"color.blue-prop": 1
+		},
+		"src/features/accounts/customer/AccountPickerRoute.tsx": {
+			"space.off-scale": 1,
+			"type.title-order": 1
+		},
+		"src/features/accounts/customer/AccountRoute.tsx": {
+			"space.off-scale": 1,
+			"type.title-order": 1
+		},
+		"src/features/accounts/customer/DocumentsTable.tsx": {
+			"color.button-light": 2,
+			"space.off-scale": 5
+		},
+		"src/features/accounts/customer/NextSteps.tsx": {
+			"action.right-aligned": 1,
+			"color.raw-mantine-shade": 1,
+			"icon.size": 2,
+			"space.off-scale": 2,
+			"type.fw-prop": 1
+		},
+		"src/features/accounts/customer/Questions.tsx": {
+			"action.right-aligned": 2,
+			"color.button-light": 1,
+			"space.off-scale": 2
+		},
+		"src/features/accounts/pdf/PdfPages.tsx": {
+			"color.button-light": 1,
+			"shape.rounded": 1
+		},
+		"src/features/accounts/signing/SignatureCapture.tsx": {
+			"action.right-aligned": 2,
+			"color.hex-literal": 3,
+			"shape.rounded": 2,
+			"space.off-scale": 1,
+			"type.px-size": 1
+		},
+		"src/features/accounts/signing/SignRoute.tsx": {
+			"action.right-aligned": 3,
+			"color.button-light": 2,
+			"color.hex-literal": 2,
+			"icon.size": 3,
+			"shape.rounded": 1,
+			"shape.shadow": 1,
+			"space.off-scale": 7,
+			"type.title-order": 1,
+			"words.denylist": 2
+		},
+		"src/features/accounts/staff/AccountCardRoute.tsx": {
+			"action.right-aligned": 1,
+			"icon.size": 2,
+			"space.off-scale": 4,
+			"type.title-order": 1
+		},
+		"src/features/accounts/staff/AccountsPanel.tsx": {
+			"icon.size": 1
+		},
+		"src/features/accounts/staff/DemoRoute.tsx": {
+			"color.blue-prop": 1,
+			"color.button-light": 1,
+			"color.raw-mantine-shade": 1,
+			"icon.size": 4,
+			"space.off-scale": 3,
+			"type.title-order": 1,
+			"words.denylist": 2
+		},
+		"src/features/accounts/staff/FieldEditorRoute.tsx": {
+			"color.button-light": 1,
+			"color.hex-literal": 2,
+			"color.raw-mantine-shade": 2,
+			"icon.size": 1,
+			"shape.rounded": 2,
+			"space.off-scale": 2,
+			"type.below-floor": 1,
+			"type.px-size": 1
+		},
+		"src/features/accounts/staff/LinesEditor.tsx": {
+			"space.off-scale": 1
+		},
+		"src/features/accounts/staff/NewDemoRoute.tsx": {
+			"icon.size": 1,
+			"type.title-order": 1,
+			"words.denylist": 1
+		},
+		"src/features/accounts/staff/PushOfferModal.tsx": {
+			"words.denylist": 1
+		},
+		"src/features/accounts/staff/TaskModals.tsx": {
+			"action.right-aligned": 2
+		},
+		"src/features/accounts/staff/UploadPdfModal.tsx": {
+			"action.right-aligned": 1
+		},
+		"src/features/sidebar/blocks/HelpBlock.tsx": {
+			"color.hex-literal": 2
+		},
+		"src/features/sidebar/blocks/SearchBlock.tsx": {
+			"color.hex-literal": 2
+		},
+		"src/features/sidebar/breadcrumbs/AppBreadcrumbs.tsx": {
+			"color.hex-literal": 1
+		},
+		"src/features/sidebar/primitives/BackButton.tsx": {
+			"color.hex-literal": 3
+		},
+		"src/features/sidebar/primitives/NavButton.tsx": {
+			"color.hex-literal": 3
+		},
+		"src/features/sidebar/primitives/NavItem.tsx": {
+			"color.hex-literal": 2
+		},
+		"src/features/sidebar/primitives/ViewHeader.tsx": {
+			"color.hex-literal": 3
+		},
+		"src/features/sidebar/shell/rail.tsx": {
+			"color.hex-literal": 1
+		},
+		"src/features/sidebar/shell/SidebarHeader.tsx": {
+			"color.hex-literal": 1
+		},
+		"src/features/sidebar/shell/SidebarShell.tsx": {
+			"shape.shadow": 1
+		},
+		"src/features/sidebar/shell/UserMenu.tsx": {
+			"color.hex-literal": 2
+		},
+		"src/features/sidebar/views/InboxView.tsx": {
+			"color.hex-literal": 3
+		},
+		"src/features/sidebar/views/user/UserHomeView.tsx": {
+			"color.hex-literal": 2
+		},
+		"src/hooks/useAppPreferences.tsx": {
+			"color.hex-literal": 3
+		},
+		"src/icons/index.tsx": {
+			"color.hex-literal": 5,
+			"icon.size": 1
+		},
+		"src/lib/tiers.ts": {
+			"words.title-case": 1
+		},
+		"src/routes/auth/VerifyEmail.tsx": {
+			"color.blue-prop": 1
+		},
+		"src/routes/Debug.tsx": {
+			"color.hex-literal": 11,
+			"space.off-scale": 1,
+			"type.title-order": 5
+		},
+		"src/routes/invite/MyInvitesRoute.tsx": {
+			"space.off-scale": 1
+		},
+		"src/routes/onboarding/OnboardingRoute.tsx": {
+			"space.off-scale": 2
+		},
+		"src/routes/organisation/OrganisationRoute.tsx": {
+			"icon.size": 5,
+			"space.off-scale": 1
+		},
+		"src/routes/participant/ParticipantPostConversation.tsx": {
+			"words.denylist": 2
+		},
+		"src/routes/project/canvas/CanvasRoute.tsx": {
+			"space.off-scale": 1
+		},
+		"src/routes/project/chat/NewChatRoute.tsx": {
+			"space.off-scale": 1
+		},
+		"src/routes/project/HostGuidePage.tsx": {
+			"color.hex-literal": 2,
+			"space.off-scale": 1
+		},
+		"src/routes/project/ProjectsHome.tsx": {
+			"type.title-order": 1
+		},
+		"src/routes/project/popcorn/PopcornRoute.tsx": {
+			"space.off-scale": 1
+		},
+		"src/routes/project/present/PresentRoute.tsx": {
+			"icon.size": 3,
+			"icon.weight": 1
+		},
+		"src/routes/workspaces/CreateWorkspaceRoute.tsx": {
+			"space.off-scale": 2
+		},
+		"src/routes/workspaces/WorkspaceSelectorRoute.tsx": {
+			"icon.size": 1
+		},
+		"src/routes/workspaces/WorkspaceSettingsRoute.tsx": {
+			"space.off-scale": 1
+		},
+		"src/styles/button.module.css": {
+			"css.hex": 2
+		}
+	}
+}

@@ -462,7 +462,7 @@ export const LoginRoute = () => {
 						</Stack>
 					) : (
 						<form onSubmit={onSubmit}>
-							<Stack gap="sm" ref={formParent}>
+							<Stack gap="md" ref={formParent}>
 								<input type="hidden" {...register("otp")} />
 								{error && !otpRequired && <Alert color="red">{error}</Alert>}
 								{unverifiedEmail && !otpRequired && (
@@ -538,7 +538,10 @@ export const LoginRoute = () => {
 										/>
 									</>
 								)}
-								<div>
+								{/* The submit belongs to the whole form, not the last field:
+								    24 above it (16 from the stack plus 8), against 4 inside a
+								    field and 16 between fields. */}
+								<div style={{ marginTop: 8 }}>
 									<Button
 										variant="filled"
 										size="md"

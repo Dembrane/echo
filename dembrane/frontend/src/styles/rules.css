@@ -46,6 +46,8 @@
 		.mantine-SegmentedControl-root,
 		.mantine-SegmentedControl-control,
 		.mantine-Switch-track,
+		.mantine-Checkbox-input,
+		.mantine-Radio-radio,
 		.mantine-Dropzone-root
 	) {
 	--app-rule-color: var(--app-control-rule);
@@ -98,6 +100,7 @@
 	cursor: pointer;
 	text-align: left;
 }
+/* Hover lifts the card to white; held down it takes the hover grey. */
 :root .app-do:is(*, [data-with-border]):hover,
 :root
 	:is(.mantine-Paper-root, .mantine-Card-root):is(
@@ -105,7 +108,7 @@
 		a,
 		[role="button"]
 	):hover {
-	background: #e6e3df;
+	background: #ffffff;
 }
 :root .app-do:is(*, [data-with-border]):active,
 :root
@@ -114,7 +117,7 @@
 		a,
 		[role="button"]
 	):active {
-	background: #dcdad7;
+	background: #e6e3df;
 }
 :root .app-do[data-selected]:is(*, [data-with-border]) {
 	background: #e9f1ff;
@@ -323,6 +326,11 @@
 :root .mantine-Menu-item:where(:hover, [data-hovered]) {
 	background: #e6e3df;
 }
+/* A red item (Delete) darkens on hover: #c0434e is 3.95:1 on the hover grey,
+ * the on-tint red passes. */
+:root .mantine-Menu-item[style*="color-red"]:where(:hover, [data-hovered]) {
+	color: #a8323c;
+}
 :root .mantine-Menu-label {
 	color: #5f646f;
 	font-size: 14px;
@@ -466,7 +474,6 @@
 
 /* Stepper labels; the markers are context (see the grammar section below). */
 :root .mantine-Stepper-stepLabel {
-	font-size: 16px;
 	font-weight: 320;
 }
 :root .mantine-Stepper-stepDescription {
@@ -475,17 +482,28 @@
 	font-weight: 240;
 }
 
-/* Choices: a square checkbox and a round radio, both drawn with the stroke. */
+/* Choices: a square checkbox and a round radio, both drawn with the stroke.
+ * Controls are white: an empty choice is a place to set something, the same
+ * white as a field, with the control line. */
 :root .mantine-Checkbox-input {
+	background-color: #ffffff;
 	border: var(--app-stroke) solid var(--app-rule-color);
 	border-radius: 0;
 }
 :root .mantine-Radio-radio {
+	background-color: #ffffff;
 	border: var(--app-stroke) solid var(--app-rule-color);
 }
+/* Checked fills blue with a white mark, as the switch's on does: off is an
+ * outline, on is a fill, across every choice control. */
 :root .mantine-Checkbox-input:checked,
 :root .mantine-Radio-radio:checked {
+	background-color: #2957df;
 	border-color: #2957df;
+}
+:root .mantine-Radio-radio:checked + .mantine-Radio-icon,
+:root .mantine-Checkbox-input:checked + .mantine-Checkbox-icon {
+	color: #ffffff;
 }
 :root .mantine-Checkbox-label,
 :root .mantine-Radio-label {
@@ -551,7 +569,22 @@
 	margin-left: calc(-1 * var(--app-stroke));
 }
 :root .app-joined {
+	flex-wrap: nowrap;
 	gap: 0;
+}
+/* A joined row that doesn't fit changes as a whole: on a phone it stacks,
+ * never breaking part-way into two lines. */
+@media (max-width: 767px) {
+	:root .app-joined {
+		align-items: stretch;
+		flex-direction: column;
+	}
+	:root .app-joined > * + * {
+		margin-left: 0;
+	}
+	:root .app-joined > * {
+		flex-basis: auto !important;
+	}
 }
 /* Fields joined in one filter row share their side rules: each one after the
  * first steps back over its neighbour's line, and the focused one is drawn
@@ -699,17 +732,31 @@
 	color: #2d2d2c;
 }
 
-/* Set: a switch is a square track between side rules; on, it fills blue. */
+/* Set: a switch is a control, so it is white. Off is an outline (white track,
+ * control-grey thumb, 3.6:1); on fills blue with a white thumb, as a checked
+ * box does. */
 :root .mantine-Switch-track {
-	background: #e6e3df;
+	background: #ffffff;
 	border-color: var(--app-rule-color);
 	border-radius: 0;
 	border-style: solid;
 	border-width: 0 var(--app-stroke);
 }
 :root .mantine-Switch-thumb {
+	background: var(--app-control-rule);
 	border: 0;
 	border-radius: 0;
+}
+:root
+	.mantine-Switch-input:checked
+	+ .mantine-Switch-track
+	.mantine-Switch-thumb {
+	background: #ffffff;
+}
+/* Disabled: the off thumb is already the control grey, so a disabled switch
+ * also fades, or disabled-off would read as plain off. */
+:root .mantine-Switch-input:disabled + .mantine-Switch-track {
+	opacity: 0.5;
 }
 :root .mantine-Switch-input:checked + .mantine-Switch-track {
 	background: #2957df;
@@ -724,29 +771,90 @@
 	border-width: 0 var(--app-stroke);
 }
 
-/* Context: step markers are not buttons, so no border. Next is the quiet
- * fill, current the blue tint, done filled blue. */
-:root .mantine-Stepper-stepIcon {
-	background: #e6e3df;
-	border: 0;
-	border-radius: 0;
-	color: #2d2d2c;
-	font-weight: 320;
-}
-:root .mantine-Stepper-stepIcon[data-progress] {
-	background: #e9f1ff;
-	color: #2957df;
-}
-:root .mantine-Stepper-stepIcon[data-completed] {
-	background: #2957df;
-	color: #ffffff;
+/* Context: steps are not buttons, so no box. One line split into a segment
+ * per step: done graphite, current blue (the tab's selected stretch), still to
+ * come faint. The number sits quietly before the step's name. */
+:root .mantine-Stepper-steps {
+	align-items: stretch;
+	flex-wrap: nowrap;
+	gap: 4px;
 }
 :root .mantine-Stepper-separator {
-	background: var(--app-rule-color);
-	height: var(--app-stroke);
+	display: none;
 }
-:root .mantine-Stepper-separator[data-active] {
-	background: #2957df;
+:root .mantine-Stepper-step {
+	align-items: baseline;
+	border-top: var(--app-stroke) solid #e6e3df;
+	flex: 1 1 0;
+	gap: 8px;
+	justify-content: flex-start;
+	min-width: 0;
+	padding-top: 8px;
+}
+:root .mantine-Stepper-step[data-completed] {
+	border-top-color: #2d2d2c;
+}
+:root .mantine-Stepper-step[data-progress] {
+	border-top-color: #2957df;
+}
+:root .mantine-Stepper-stepWrapper {
+	height: auto;
+	width: auto;
+}
+:root .mantine-Stepper-stepIcon {
+	background: transparent;
+	border: 0;
+	border-radius: 0;
+	color: #5f646f;
+	font-size: 14px;
+	font-weight: 240;
+	height: auto;
+	min-height: 0;
+	min-width: 0;
+	width: auto;
+}
+/* A finished step shows a small check in the number's place. Mantine sizes
+ * the check to its box; with the box auto-sized it filled the row. */
+:root .mantine-Stepper-stepCompletedIcon {
+	color: #2d2d2c;
+	display: inline-flex;
+	position: static;
+}
+:root .mantine-Stepper-stepCompletedIcon svg {
+	/* Mantine sizes it inline (60%), hence !important. */
+	height: 14px !important;
+	width: 14px !important;
+}
+:root .mantine-Stepper-stepBody {
+	margin: 0;
+	min-width: 0;
+}
+:root .mantine-Stepper-stepLabel {
+	font-size: 14px;
+}
+:root
+	.mantine-Stepper-step:not([data-progress]):not([data-completed])
+	.mantine-Stepper-stepLabel {
+	color: #5f646f;
+}
+
+/* Narrow widths drop words, never wrap structure: a phone keeps every
+ * segment and names only the current step. */
+@media (max-width: 640px) {
+	:root
+		.mantine-Stepper-step:not([data-progress])
+		:is(.mantine-Stepper-stepWrapper, .mantine-Stepper-stepBody) {
+		visibility: hidden;
+	}
+	:root .mantine-Stepper-step[data-progress] {
+		overflow: visible;
+		position: relative;
+		white-space: nowrap;
+		z-index: 1;
+	}
+	:root .mantine-Stepper-stepDescription {
+		display: none;
+	}
 }
 
 /* Icons sized 1em (Phosphor's default) are treated as 16px. */
@@ -754,4 +862,45 @@
 	svg[viewBox="0 0 256 256"][width="1em"]
 	:is(path, circle, rect, line, polyline) {
 	stroke-width: 4;
+}
+
+/* Labels hug their fields. A label, its description, its field and its error
+ * sit 4 apart, so the space inside a field is always smaller than the 16
+ * between fields. Mantine sets its own margins inline, hence !important. */
+:root .mantine-InputWrapper-root {
+	--input-margin-bottom: 0px !important;
+	--input-margin-top: 0px !important;
+}
+:root .mantine-InputWrapper-label {
+	margin-bottom: 4px;
+}
+:root .mantine-InputWrapper-description {
+	margin: 0 0 4px;
+}
+/* A description placed under the field (inputWrapperOrder) keeps the same 4,
+ * above it instead of below. */
+:root .mantine-Input-wrapper ~ .mantine-InputWrapper-description {
+	margin: 4px 0 0;
+}
+:root .mantine-InputWrapper-error {
+	margin-top: 4px;
+}
+
+/* Disabled keeps the control's own shape at lower contrast; it never gains a
+ * fill (Mantine greys the background of a disabled icon button). */
+:root .mantine-ActionIcon-root:is(:disabled, [data-disabled]) {
+	background: transparent;
+	border-color: transparent;
+	color: var(--app-control-rule);
+	cursor: not-allowed;
+}
+
+/* A row that doesn't fit on a phone stacks as a whole (title above, its
+ * controls below) rather than squeezing its text to an ellipsis. */
+@media (max-width: 639px) {
+	:root .app-stack-narrow {
+		align-items: stretch;
+		flex-direction: column;
+		gap: 8px;
+	}
 }

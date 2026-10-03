@@ -361,102 +361,106 @@ const WebhookFormModal = ({
 								</Button>
 							</div>
 						)}
-						<Controller
-							name="name"
-							control={control}
-							rules={{ required: t`Name is required` }}
-							render={({ field, fieldState }) => (
-								<TextInput
-									label={t`Name`}
-									description={t`A friendly name to identify this webhook`}
-									placeholder={t`e.g., Slack notifications, Make workflow`}
-									error={fieldState.error?.message}
-									{...field}
-								/>
-							)}
-						/>
+						<Stack gap="md">
+							<Controller
+								name="name"
+								control={control}
+								rules={{ required: t`Name is required` }}
+								render={({ field, fieldState }) => (
+									<TextInput
+										label={t`Name`}
+										description={t`A friendly name to identify this webhook`}
+										placeholder={t`e.g., Slack notifications, Make workflow`}
+										error={fieldState.error?.message}
+										{...field}
+									/>
+								)}
+							/>
 
-						<Controller
-							name="url"
-							control={control}
-							rules={{
-								pattern: {
-									message: t`URL must start with http:// or https://`,
-									value: /^https?:\/\/.+/,
-								},
-								required: t`URL is required`,
-							}}
-							render={({ field, fieldState }) => (
-								<TextInput
-									label={t`Webhook URL`}
-									description={t`The endpoint where we'll send the data. Get this from your receiving service (e.g., Zapier, Make, or your own server).`}
-									placeholder="https://hooks.zapier.com/..."
-									error={fieldState.error?.message}
-									{...field}
-								/>
-							)}
-						/>
+							<Controller
+								name="url"
+								control={control}
+								rules={{
+									pattern: {
+										message: t`URL must start with http:// or https://`,
+										value: /^https?:\/\/.+/,
+									},
+									required: t`URL is required`,
+								}}
+								render={({ field, fieldState }) => (
+									<TextInput
+										label={t`Webhook URL`}
+										description={t`The endpoint where we'll send the data. Get this from your receiving service (e.g., Zapier, Make, or your own server).`}
+										placeholder="https://hooks.zapier.com/..."
+										error={fieldState.error?.message}
+										{...field}
+									/>
+								)}
+							/>
 
-						<Controller
-							name="secret"
-							control={control}
-							render={({ field }) => (
-								<PasswordInput
-									label={
-										<>
-											<Trans>Secret</Trans>{" "}
-											<Badge
-												component="span"
-												size="xs"
-												variant="light"
-												color="gray"
-												ml="xs"
-											>
-												<Trans>Optional</Trans>
-											</Badge>
-										</>
-									}
-									description={t`For advanced users: A secret key to verify webhook authenticity. Only needed if your receiving service requires signature verification.`}
-									placeholder={
-										isEditing
-											? t`Leave empty to keep existing`
-											: t`Enter a secret key`
-									}
-									{...field}
-								/>
-							)}
-						/>
+							<Controller
+								name="secret"
+								control={control}
+								render={({ field }) => (
+									<PasswordInput
+										label={
+											<>
+												<Trans>Secret</Trans>{" "}
+												<Badge
+													component="span"
+													size="xs"
+													variant="light"
+													color="gray"
+													ml="xs"
+												>
+													<Trans>Optional</Trans>
+												</Badge>
+											</>
+										}
+										description={t`For advanced users: A secret key to verify webhook authenticity. Only needed if your receiving service requires signature verification.`}
+										placeholder={
+											isEditing
+												? t`Leave empty to keep existing`
+												: t`Enter a secret key`
+										}
+										{...field}
+									/>
+								)}
+							/>
 
-						<Controller
-							name="events"
-							control={control}
-							rules={{
-								validate: (value) =>
-									value.length > 0 || t`Select at least one event`,
-							}}
-							render={({ field, fieldState }) => (
-								<Checkbox.Group
-									label={t`Events to listen for`}
-									description={t`Choose when you want to receive notifications`}
-									error={fieldState.error?.message}
-									value={field.value}
-									onChange={(value) => field.onChange(value as WebhookEvent[])}
-								>
-									<Stack gap="sm" mt="sm">
-										{getWebhookEvents().map((event) => (
-											<Checkbox
-												key={event.value}
-												value={event.value}
-												label={event.label}
-												description={event.description}
-											/>
-										))}
-									</Stack>
-								</Checkbox.Group>
-							)}
-						/>
+							<Controller
+								name="events"
+								control={control}
+								rules={{
+									validate: (value) =>
+										value.length > 0 || t`Select at least one event`,
+								}}
+								render={({ field, fieldState }) => (
+									<Checkbox.Group
+										label={t`Events to listen for`}
+										description={t`Choose when you want to receive notifications`}
+										error={fieldState.error?.message}
+										value={field.value}
+										onChange={(value) =>
+											field.onChange(value as WebhookEvent[])
+										}
+									>
+										<Stack gap="sm" mt="sm">
+											{getWebhookEvents().map((event) => (
+												<Checkbox
+													key={event.value}
+													value={event.value}
+													label={event.label}
+													description={event.description}
+												/>
+											))}
+										</Stack>
+									</Checkbox.Group>
+								)}
+							/>
+						</Stack>
 
-						<Group mt="md">
+						<Group>
 							<Button variant="filled" type="submit" loading={isPending}>
 								{isEditing ? (
 									<Trans>Save changes</Trans>

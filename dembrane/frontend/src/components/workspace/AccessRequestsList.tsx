@@ -147,6 +147,7 @@ export const AccessRequestsList = ({
 					{rows.map((r, i) => (
 						<Group
 							key={r.id}
+							className="app-stack-narrow"
 							justify="space-between"
 							wrap="nowrap"
 							p="sm"

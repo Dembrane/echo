@@ -1,16 +1,15 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
-	Alert,
 	Badge,
 	Group,
 	Skeleton,
 	Stack,
 	Switch,
+	Text,
 	Title,
 	Tooltip,
 } from "@mantine/core";
-import { WarningCircleIcon } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef } from "react";
 import { useInView } from "react-intersection-observer";
 import useSessionStorageState from "use-session-storage-state";
@@ -158,17 +157,12 @@ export const ConversationTranscriptSection = ({
 			) : (
 				<Stack className="relative">
 					{allChunks.length === 0 ? (
-						<Alert
-							icon={<WarningCircleIcon size={20} />}
-							title={t`No transcript available`}
-							color="gray"
-							{...testId("transcript-empty-alert")}
-						>
+						<Text size="sm" c="dimmed" {...testId("transcript-empty-alert")}>
 							<Trans>
 								No transcript exists for this conversation yet. Please check
 								back later.
 							</Trans>
-						</Alert>
+						</Text>
 					) : (
 						allChunks.map((chunk, index, array) => {
 							const isLastChunk = index === array.length - 1;

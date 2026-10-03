@@ -53,7 +53,7 @@ msgstr "{0} podepsáno dne {1}. Podepsaná kopie je ve vašich dokumentech."
 msgid "{done} of {total} filled"
 msgstr "{done} z {total} vyplněno"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:207
+#: src/features/accounts/staff/NewDemoRoute.tsx:214
 msgid "A draft on their account, for you to send after the demo."
 msgstr "Koncept na jejich účtu, který můžete odeslat po ukázce."
 
@@ -201,11 +201,11 @@ msgstr "Fakturační údaje aktualizovány"
 msgid "Book a call"
 msgstr "Rezervovat hovor"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:147
+#: src/features/accounts/staff/NewDemoRoute.tsx:150
 msgid "Brief"
 msgstr "Zadání"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:263
+#: src/features/accounts/staff/NewDemoRoute.tsx:275
 msgid "Build the demo"
 msgstr "Vytvořit ukázku"
 
@@ -278,15 +278,15 @@ msgstr "Vymazat"
 msgid "Closed"
 msgstr "Uzavřeno"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:186
+#: src/features/accounts/staff/NewDemoRoute.tsx:191
 msgid "Contact"
 msgstr "Kontakt"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:189
+#: src/features/accounts/staff/NewDemoRoute.tsx:194
 msgid "Contact email"
 msgstr "Kontaktní e-mail"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:188
+#: src/features/accounts/staff/NewDemoRoute.tsx:193
 msgid "Contact name"
 msgstr "Jméno kontaktu"
 
@@ -353,7 +353,7 @@ msgstr "Demo"
 msgid "Demo | dembrane"
 msgstr "Demo | dembrane"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:173
+#: src/features/accounts/staff/NewDemoRoute.tsx:176
 msgid "Demo language"
 msgstr "Jazyk dema"
 
@@ -458,11 +458,11 @@ msgid "Enable it to push offers and tasks. They get an Account page with a billi
 msgstr "Aktivujte pro odesílání nabídek a úkolů. Získají stránku Účet s krokem pro fakturační údaje."
 
 #: src/features/accounts/staff/PushOfferModal.tsx:102
-#: src/features/accounts/staff/NewDemoRoute.tsx:223
+#: src/features/accounts/staff/NewDemoRoute.tsx:230
 msgid "Event"
 msgstr "Událost"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:161
+#: src/features/accounts/staff/NewDemoRoute.tsx:164
 msgid "Event or customer example"
 msgstr "Příklad události nebo zákazníka"
 
@@ -578,7 +578,7 @@ msgstr "Jazyk"
 msgid "Legal name"
 msgstr "Právní název"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:197
+#: src/features/accounts/staff/NewDemoRoute.tsx:202
 msgid "Let them sign in with an email code"
 msgstr "Nechat je přihlásit se pomocí kódu z e-mailu"
 
@@ -732,11 +732,11 @@ msgid "Nothing to do right now."
 msgstr "V tuto chvíli není co dělat."
 
 #: src/features/accounts/format.ts:45
-#: src/features/accounts/staff/NewDemoRoute.tsx:202
+#: src/features/accounts/staff/NewDemoRoute.tsx:209
 msgid "Offer"
 msgstr "Nabídka"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:229
+#: src/features/accounts/staff/NewDemoRoute.tsx:236
 msgid "Offer language"
 msgstr "Jazyk nabídky"
 
@@ -811,7 +811,7 @@ msgstr "Otevře se po podepsání {0}."
 msgid "Optional"
 msgstr "Nepovinné"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:162
+#: src/features/accounts/staff/NewDemoRoute.tsx:165
 msgid "Optional. A past event or customer to model the demo on."
 msgstr "Nepovinné. Minulá událost nebo zákazník, podle kterého se demo vytvoří."
 
@@ -824,7 +824,7 @@ msgstr "Nepovinné. Úkol zůstane zašedlý, dokud nebude tento dokument podeps
 msgid "Organisation"
 msgstr "Organizace"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:139
+#: src/features/accounts/staff/NewDemoRoute.tsx:140
 msgid "Organisation name"
 msgstr "Název organizace"
 
@@ -881,7 +881,7 @@ msgstr "Číslo objednávky"
 msgid "Postal code"
 msgstr "PSČ"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:206
+#: src/features/accounts/staff/NewDemoRoute.tsx:213
 msgid "Prepare an offer"
 msgstr "Připravit nabídku"
 
@@ -939,7 +939,7 @@ msgstr "Publikováním se demo aktivuje. Žádný e-mail neodejde."
 #~ msgid "Publishing sends {0} a sign-in invitation with an email code."
 #~ msgstr ""
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:198
+#: src/features/accounts/staff/NewDemoRoute.tsx:203
 msgid "Publishing sends them the sign-in invitation. Off: no email goes out."
 msgstr "Publikováním se jim odešle pozvánka k přihlášení. Vypnuto: žádný e-mail neodejde."
 
@@ -1235,7 +1235,7 @@ msgid "Submitted"
 msgstr "Odesláno"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:101
-#: src/features/accounts/staff/NewDemoRoute.tsx:222
+#: src/features/accounts/staff/NewDemoRoute.tsx:229
 msgid "Subscription"
 msgstr "Předplatné"
 
@@ -1279,7 +1279,7 @@ msgid "Tasks | dembrane"
 msgstr "Úkoly | dembrane"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:95
-#: src/features/accounts/staff/NewDemoRoute.tsx:216
+#: src/features/accounts/staff/NewDemoRoute.tsx:223
 msgid "Template"
 msgstr "Šablona"
 
@@ -1491,7 +1491,7 @@ msgstr "Vytvoříme syntetické demo na základě jejich webu a vašeho zadání
 msgid "We send them their own link to this document."
 msgstr "Zašleme jim jejich vlastní odkaz na tento dokument."
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:140
+#: src/features/accounts/staff/NewDemoRoute.tsx:143
 #: src/features/accounts/staff/DemoRoute.tsx:56
 msgid "Website"
 msgstr "Webové stránky"
@@ -1500,7 +1500,7 @@ msgstr "Webové stránky"
 msgid "What each of your organisations still has to do for dembrane."
 msgstr "Co jednotlivé vaše organizace ještě musí pro dembrane udělat."
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:148
+#: src/features/accounts/staff/NewDemoRoute.tsx:151
 msgid "What they want to hear from whom, and why now."
 msgstr "Co chtějí slyšet, od koho a proč právě teď."
 

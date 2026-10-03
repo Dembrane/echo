@@ -221,11 +221,11 @@ msgstr "(немає)"
 msgid "(optional)"
 msgstr "(optional)"
 
-#: src/components/language/LanguagePicker.tsx:141
+#: src/components/language/LanguagePicker.tsx:142
 msgid "(Partial)"
 msgstr "(Частково)"
 
-#: src/components/invite/WorkspaceSelectList.tsx:185
+#: src/components/invite/WorkspaceSelectList.tsx:184
 msgid "(Partner)"
 msgstr "(Партнер)"
 
@@ -233,7 +233,7 @@ msgstr "(Партнер)"
 msgid "(unknown)"
 msgstr "(невідомо)"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:920
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:924
 #: src/components/project/ProjectUsageAndSharing.tsx:333
 msgid "(You)"
 msgstr "(Ви)"
@@ -316,8 +316,8 @@ msgstr "{0, plural, one {# проєкт} few {# проєкти} many {# проє
 
 #. placeholder {0}: ws.seats_used_including_pending
 #. placeholder {0}: overview.seats
-#: src/components/invite/WorkspaceSelectList.tsx:128
-#: src/components/billing/BillingManager.tsx:1264
+#: src/components/invite/WorkspaceSelectList.tsx:127
+#: src/components/billing/BillingManager.tsx:1262
 msgid "{0, plural, one {# seat} other {# seats}}"
 msgstr "{0, plural, one {# місце} few {# місця} many {# місць} other {# місця}}"
 
@@ -329,7 +329,7 @@ msgid "{0, plural, one {# seat} other {# seats}} · {1} now · +{2}/{cadence} at
 msgstr "{0, plural, one {# місце} few {# місця} many {# місць} other {# місця}} · {1} зараз · +{2}/{cadence} під час поновлення"
 
 #. placeholder {0}: overview.available_seats
-#: src/components/billing/BillingManager.tsx:1268
+#: src/components/billing/BillingManager.tsx:1266
 msgid "{0, plural, one {# seat} other {# seats}} paid for this period and unused. Invite someone to fill them at no charge until renewal."
 msgstr "{0, plural, one {# місце оплачене} few {# місця оплачені} many {# місць оплачено} other {# місця оплачено}} на цей період і не використовується. Запросіть когось без додаткової плати до наступного поновлення."
 
@@ -351,7 +351,7 @@ msgid "{0, plural, one {# transcribing} other {# transcribing}}"
 msgstr "{0, plural, one {# транскрибується} few {# транскрибуються} many {# транскрибуються} other {# транскрибуються}}"
 
 #. placeholder {0}: views?.total ?? 0
-#: src/routes/project/report/ProjectReportRoute.tsx:1131
+#: src/routes/project/report/ProjectReportRoute.tsx:1119
 msgid "{0, plural, one {# view} other {# views}}"
 msgstr "{0, plural, one {# перегляд} few {# перегляди} many {# переглядів} other {# перегляду}}"
 
@@ -429,19 +429,19 @@ msgstr "{0} (партнер)"
 
 #. placeholder {0}: eur(overview.per_seat_monthly_eur)
 #. placeholder {1}: overview.seats
-#: src/components/billing/BillingManager.tsx:1352
+#: src/components/billing/BillingManager.tsx:1350
 msgid "{0} / seat / month × {1}, billed yearly. Excludes VAT."
 msgstr "{0} / місце / місяць × {1}, рахунок щорічно. Без VAT."
 
 #. placeholder {0}: eur(overview.per_seat_monthly_eur)
 #. placeholder {1}: overview.seats
-#: src/components/billing/BillingManager.tsx:1357
+#: src/components/billing/BillingManager.tsx:1355
 msgid "{0} / seat × {1}. Excludes VAT."
 msgstr "{0} / місце × {1}. Без VAT."
 
 #. placeholder {0}: eur(overview.per_seat_monthly_eur)
 #. placeholder {1}: overview.seats
-#: src/components/billing/BillingManager.tsx:1347
+#: src/components/billing/BillingManager.tsx:1345
 msgid "{0} / seat × {1}. Not charged after this period."
 msgstr "{0} / місце × {1}. Плата після цього періоду не стягується."
 
@@ -481,7 +481,7 @@ msgstr "{0} викликів цього місяця"
 #. placeholder {0}: counts.conversations
 #. placeholder {0}: project.conversations_count ?? project?.conversations?.length ?? 0
 #: src/routes/project/popcorn/PopcornRoute.tsx:44
-#: src/components/project/ProjectListItem.tsx:218
+#: src/components/project/ProjectListItem.tsx:219
 msgid "{0} conversations"
 msgstr "{0} розмов"
 
@@ -509,7 +509,7 @@ msgid "{0} file(s) failed to upload. Try those again."
 msgstr "Не вдалося завантажити {0} файл(ів). Спробуйте ще раз."
 
 #. placeholder {0}: req.requested_by_name
-#: src/components/workspace/SupportAccessSection.tsx:200
+#: src/components/workspace/SupportAccessSection.tsx:205
 msgid "{0} from dembrane"
 msgstr "{0} з dembrane"
 
@@ -614,7 +614,7 @@ msgstr "Вибрано: {0}"
 #. placeholder {0}: isAnnual ? "Yearly" : "Monthly"
 #. placeholder {1}: eur(withPendingValue)
 #. placeholder {2}: pendingInvites === 1 ? "invite is" : "invites are"
-#: src/components/billing/BillingManager.tsx:1366
+#: src/components/billing/BillingManager.tsx:1364
 msgid "{0} total rises to {1} when {pendingInvites} pending {2} accepted"
 msgstr "{0} підсумок зросте до {1}, коли {pendingInvites} очікуваних {2} прийнято"
 
@@ -628,7 +628,7 @@ msgstr "Підтверджено: {0}"
 #~ msgstr "{0} views"
 
 #. placeholder {0}: data.client_name
-#: src/routes/settings/AgentConsentRoute.tsx:234
+#: src/routes/settings/AgentConsentRoute.tsx:233
 msgid "{0} wants MCP access to dembrane"
 msgstr "{0} запитує доступ MCP до dembrane"
 
@@ -702,7 +702,7 @@ msgstr "Розмов: {conversationCount} · Змінено {0}"
 #~ msgid "{conversationCount} Conversations • Edited {0}"
 #~ msgstr "{conversationCount} Conversations • Edited {0}"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:891
+#: src/components/conversation/ProjectConversationsPanel.tsx:898
 msgid "{conversationCount} selected"
 msgstr "{conversationCount} selected"
 
@@ -736,7 +736,7 @@ msgstr "{currentCadence} хв"
 msgid "{days} days"
 msgstr "Днів: {days}"
 
-#: src/components/billing/BillingManager.tsx:1375
+#: src/components/billing/BillingManager.tsx:1373
 msgid "{discountPct}% discount applied"
 msgstr "Застосовано знижку {discountPct}%"
 
@@ -777,7 +777,7 @@ msgstr "Зверніть увагу на такі адреси ({invalidCount})"
 msgid "{inviterName} invited you to join {resolvedWorkspaceName}"
 msgstr "{inviterName} запрошує вас приєднатися до {resolvedWorkspaceName}"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1253
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1257
 msgid "{liveProjectCount, plural, one {Delete the # project in this workspace before deleting the workspace itself.} other {Delete the # projects in this workspace before deleting the workspace itself.}}"
 msgstr "{liveProjectCount, plural, one {Видаліть # проєкт у цьому робочому просторі перед видаленням самого робочого простору.} few {Видаліть # проєкти у цьому робочому просторі перед видаленням самого робочого простору.} many {Видаліть # проєктів у цьому робочому просторі перед видаленням самого робочого простору.} other {Видаліть # проєктів у цьому робочому просторі перед видаленням самого робочого простору.}}"
 
@@ -801,7 +801,7 @@ msgstr "{names} та ще {extra}"
 msgid "{nextCadence} min"
 msgstr "{nextCadence} хв"
 
-#: src/components/project/ProjectListItem.tsx:106
+#: src/components/project/ProjectListItem.tsx:107
 #: src/components/project/PinnedProjectCard.tsx:82
 msgid "{overflow} more people"
 msgstr "ще {overflow} людей"
@@ -810,7 +810,7 @@ msgstr "ще {overflow} людей"
 msgid "{overLimit, plural, one {# conversation did not fit in this chat. Start another chat to cover the rest.} other {# conversations did not fit in this chat. Start another chat to cover the rest.}}"
 msgstr "{overLimit, plural, one {# розмова не помістилася в цей чат. Почніть інший чат для решти.} few {# розмови не помістилися в цей чат. Почніть інший чат для решти.} many {# розмов не помістилися в цей чат. Почніть інший чат для решти.} other {# розмов не помістилися в цей чат. Почніть інший чат для решти.}}"
 
-#: src/components/billing/BillingManager.tsx:1281
+#: src/components/billing/BillingManager.tsx:1279
 msgid "{pendingInvites} invite(s) pending. Counted once accepted."
 msgstr "Очікують підтвердження {pendingInvites} запрошень. Враховуються після прийняття."
 
@@ -959,7 +959,7 @@ msgstr "1 година"
 #~ msgid "1 view"
 #~ msgstr "1 view"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:695
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:699
 msgid "1. You provide a URL where you want to receive notifications"
 msgstr "1. You provide a URL where you want to receive notifications"
 
@@ -975,7 +975,7 @@ msgstr "2 місяці тому"
 msgid "2 to 5."
 msgstr "Від 2 до 5."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:700
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:704
 msgid "2. When a conversation or report event happens, we automatically send the data to your URL"
 msgstr "2. When a conversation or report event happens, we automatically send the data to your URL"
 
@@ -997,7 +997,7 @@ msgstr "3 дні"
 msgid "3 months ago"
 msgstr "3 місяці тому"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:706
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:710
 msgid "3. Your system receives the data and can act on it (e.g., save to a database, send an email, update a spreadsheet)"
 msgstr "3. Your system receives the data and can act on it (e.g., save to a database, send an email, update a spreadsheet)"
 
@@ -1044,7 +1044,7 @@ msgstr "Ще кілька слів, щоб зрозумів той, хто чи�
 #~ msgid "A first version will appear here when it is ready."
 #~ msgstr "Перша версія з'явиться тут, щойно буде готова."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:371
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:372
 msgid "A friendly name to identify this webhook"
 msgstr "A friendly name to identify this webhook"
 
@@ -1089,7 +1089,7 @@ msgid "A project holds everything for one topic. Share its link with participant
 msgstr "Проєкт містить усе, що стосується однієї теми. Поділіться посиланням з учасниками, зберіть думки, а dembrane перетворить їх на інсайти."
 
 #: src/components/report/UpdateReportModalButton.tsx:249
-#: src/components/report/CreateReportForm.tsx:142
+#: src/components/report/CreateReportForm.tsx:141
 msgid "A report is already being generated for this project. Please wait for it to complete."
 msgstr "A report is already being generated for this project. Please wait for it to complete."
 
@@ -1110,11 +1110,11 @@ msgstr "Екран перед зворотним відліком, де зазн
 msgid "A screen that explains, step by step, what happens to the recordings. Its words follow this project's anonymization and legal basis."
 msgstr "Екран, що покроково пояснює, що відбувається із записами. Текст адаптується до налаштувань анонімізації та правових підстав цього проєкту."
 
-#: src/components/billing/BillingManager.tsx:1293
+#: src/components/billing/BillingManager.tsx:1291
 msgid "A seat is one member. Add or remove members in each workspace's People tab; your next charge follows automatically."
 msgstr "Одне місце: це один учасник команди. Додавайте або вилучайте учасників на вкладці «Люди» в кожному робочому просторі; наступний рахунок оновиться автоматично."
 
-#: src/components/billing/BillingManager.tsx:1288
+#: src/components/billing/BillingManager.tsx:1286
 msgid "A seat is one member. Seats stay available until the plan ends; changes won't be charged."
 msgstr "Одне місце: це один учасник команди. Місця залишаються доступними до завершення дії тарифу; плата за зміни не стягується."
 
@@ -1175,7 +1175,7 @@ msgstr "Прийняти та приєднатися"
 msgid "Accepted terms"
 msgstr "Умови прийнято"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1882
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1886
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:592
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:725
 #: src/routes/project/CreateProjectRoute.tsx:288
@@ -1202,7 +1202,7 @@ msgstr "Термін дії доступу закінчується через"
 msgid "Access granted for 24 hours."
 msgstr "Доступ надано на 24 години."
 
-#: src/components/workspace/SupportAccessSection.tsx:238
+#: src/components/workspace/SupportAccessSection.tsx:243
 msgid "Access history"
 msgstr "Історія доступу"
 
@@ -1299,7 +1299,7 @@ msgstr "Дата дії"
 #~ msgstr "Action On"
 
 #: src/components/project/ProjectDangerZone.tsx:79
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:925
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:929
 msgid "Actions"
 msgstr "Actions"
 
@@ -1308,7 +1308,7 @@ msgstr "Actions"
 #: src/routes/admin/AdminSettingsRoute.tsx:2024
 #: src/components/workspace/OrganisationUsageRollup.tsx:396
 #: src/components/workspace/OrganisationUsageRollup.tsx:538
-#: src/components/billing/BillingManager.tsx:1245
+#: src/components/billing/BillingManager.tsx:1243
 #: src/components/agent-access/format.ts:31
 msgid "Active"
 msgstr "Активні"
@@ -1328,12 +1328,12 @@ msgid "Activity"
 msgstr "Активність"
 
 #: src/routes/participant/ParticipantPostConversation.tsx:202
-#: src/routes/organisation/OrganisationRoute.tsx:2019
-#: src/routes/organisation/OrganisationRoute.tsx:2026
-#: src/routes/organisation/OrganisationRoute.tsx:2039
-#: src/routes/organisation/OrganisationRoute.tsx:2062
+#: src/routes/organisation/OrganisationRoute.tsx:2024
+#: src/routes/organisation/OrganisationRoute.tsx:2031
+#: src/routes/organisation/OrganisationRoute.tsx:2044
+#: src/routes/organisation/OrganisationRoute.tsx:2067
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:185
-#: src/components/billing/BillingManager.tsx:1395
+#: src/components/billing/BillingManager.tsx:1393
 msgid "Add"
 msgstr "Add"
 
@@ -1342,8 +1342,8 @@ msgstr "Add"
 #. placeholder {1}: ws.name
 #. placeholder {2}: displayRole("external")
 #. placeholder {2}: displayRole(roleOpt)
-#: src/routes/organisation/OrganisationRoute.tsx:2009
-#: src/routes/organisation/OrganisationRoute.tsx:2050
+#: src/routes/organisation/OrganisationRoute.tsx:2014
+#: src/routes/organisation/OrganisationRoute.tsx:2055
 msgid "Add {0} to {1} as <0>{2}</0>?"
 msgstr "Додати {0} до {1} як <0>{2}</0>?"
 
@@ -1397,7 +1397,7 @@ msgstr "Додавайте теги розмов з панелі керуван�
 msgid "select.all.modal.title.add"
 msgstr "Додати розмови до контексту"
 
-#: src/components/report/CreateReportForm.tsx:341
+#: src/components/report/CreateReportForm.tsx:337
 msgid "Add conversations to your project first"
 msgstr "Спочатку додайте розмови до свого проекту"
 
@@ -1467,8 +1467,8 @@ msgid "Add tip"
 msgstr "Додати пораду"
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:2022
-#: src/routes/organisation/OrganisationRoute.tsx:2066
+#: src/routes/organisation/OrganisationRoute.tsx:2027
+#: src/routes/organisation/OrganisationRoute.tsx:2071
 msgid "Add to {0}?"
 msgstr "Додати до {0}?"
 
@@ -1490,7 +1490,7 @@ msgstr "Add to this chat"
 msgid "Add to workspaces"
 msgstr "Додати до робочих просторів"
 
-#: src/components/project/ProjectPortalEditor.tsx:1092
+#: src/components/project/ProjectPortalEditor.tsx:1083
 #: src/components/project/CustomTopicModal.tsx:252
 msgid "Add topic"
 msgstr "Додати тему"
@@ -1508,9 +1508,9 @@ msgid "Add verification prompt"
 msgstr "Додати промпт перевірки"
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:249
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:464
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:893
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:960
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:468
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:897
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:964
 msgid "Add webhook"
 msgstr "Додати вебхук"
 
@@ -1569,7 +1569,7 @@ msgstr "Вас додано до {okCount}. Не вдалося додати: {0
 msgid "Added you to 1 workspace"
 msgstr "Вас додано до 1 робочого простору"
 
-#: src/components/invite/WorkspaceSelectList.tsx:235
+#: src/components/invite/WorkspaceSelectList.tsx:234
 msgid "Adding {pendingCount} more will put this workspace over its seat cap. Overage seats are billed at the workspace's tier rate."
 msgstr "Якщо додати ще {pendingCount}, цей робочий простір перевищить ліміт місць. Додаткові місця оплачуються за тарифом робочого простору."
 
@@ -1622,9 +1622,9 @@ msgstr "Квартира, офіс тощо"
 msgid "Adjust the base font size for the interface"
 msgstr "Adjust the base font size for the interface"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:981
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:997
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1046
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:985
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1001
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1050
 #: src/routes/admin/AdminSettingsRoute.tsx:3154
 #: src/lib/roles.ts:9
 #: src/components/invite/RoleSelect.tsx:53
@@ -1635,7 +1635,7 @@ msgstr "Адміністратор"
 msgid "Admin dashboard"
 msgstr "Панель адміністратора"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1944
+#: src/routes/organisation/OrganisationRoute.tsx:1949
 msgid "Admin here via organisation role"
 msgstr "Адміністратор завдяки ролі в організації"
 
@@ -1653,7 +1653,7 @@ msgstr "Адміністратори"
 msgid "Admins can reach every workspace in this organisation. Members and externals only see the workspaces they've been given access to."
 msgstr "Адміністратори мають доступ до кожного робочого простору в цій організації. Учасники та зовнішні користувачі бачать лише ті робочі простори, до яких їм надано доступ."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:877
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:881
 msgid "Advanced"
 msgstr "Advanced"
 
@@ -1669,7 +1669,7 @@ msgstr "Розширений (поради та найкращі практик�
 msgid "Advanced details"
 msgstr "Додаткові деталі"
 
-#: src/components/project/ProjectPortalEditor.tsx:1359
+#: src/components/project/ProjectPortalEditor.tsx:1350
 #: src/components/project/PortalSettingsOverview.tsx:42
 msgid "Advanced settings"
 msgstr "Розширені налаштування"
@@ -1802,7 +1802,7 @@ msgstr "Усі шаблони"
 msgid "All tiers"
 msgstr "Усі тарифи"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:875
+#: src/components/conversation/ProjectConversationsPanel.tsx:882
 msgid "All visible conversations selected"
 msgstr "Вибрано всі видимі розмови"
 
@@ -1810,11 +1810,11 @@ msgstr "Вибрано всі видимі розмови"
 msgid "All workspaces"
 msgstr "Усі робочі простори"
 
-#: src/routes/settings/AgentConsentRoute.tsx:324
+#: src/routes/settings/AgentConsentRoute.tsx:325
 msgid "Allow"
 msgstr "Дозволити"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1978
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1982
 msgid "Allow dembrane staff to access this workspace for support"
 msgstr "Дозволити команді dembrane доступ до цього робочого простору для підтримки"
 
@@ -1909,11 +1909,11 @@ msgstr "Відновлено попереднє формулювання"
 #~ msgid "An email notification will be sent to {0} participant{1}. Do you want to proceed?"
 #~ msgstr "An email notification will be sent to {0} participant{1}. Do you want to proceed?"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1299
+#: src/routes/project/report/ProjectReportRoute.tsx:1287
 msgid "An email notification will be sent to {participantCount, plural, one {# participant} other {# participants}}. Do you want to proceed?"
 msgstr "Сповіщення електронною поштою буде надіслано {participantCount, plural, one {# учаснику} few {# учасникам} many {# учасникам} other {# учасникам}}. Продовжити?"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1309
+#: src/routes/project/report/ProjectReportRoute.tsx:1297
 msgid "An email notification will be sent to participants. Do you want to proceed?"
 msgstr "Учасникам буде надіслано сповіщення електронною поштою. Продовжити?"
 
@@ -1958,7 +1958,7 @@ msgstr "Аналіз | dembrane"
 #~ msgstr "Analysis Language"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:190
-#: src/routes/project/report/ProjectReportRoute.tsx:1146
+#: src/routes/project/report/ProjectReportRoute.tsx:1134
 msgid "Analytics"
 msgstr "Analytics"
 
@@ -2021,7 +2021,7 @@ msgstr "Анонімізовані транскрипти тепер мають 
 msgid "Anonymize transcript"
 msgstr "Anonymize transcript"
 
-#: src/components/project/ProjectPortalEditor.tsx:1382
+#: src/components/project/ProjectPortalEditor.tsx:1373
 #: src/components/project/PortalSettingsOverview.tsx:151
 msgid "Anonymize transcripts"
 msgstr "Анонімізувати транскрипти"
@@ -2037,8 +2037,8 @@ msgstr "anonymized conversation"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:197
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:202
-#: src/components/conversation/ProjectConversationsPanel.tsx:331
-#: src/components/conversation/ProjectConversationsPanel.tsx:336
+#: src/components/conversation/ProjectConversationsPanel.tsx:338
+#: src/components/conversation/ProjectConversationsPanel.tsx:343
 #: src/components/conversation/ConversationAccordion.tsx:589
 msgid "Anonymized conversation"
 msgstr "Anonymized conversation"
@@ -2055,7 +2055,7 @@ msgstr "Анонімний учасник"
 msgid "Anonymous visitor"
 msgstr "Анонімний відвідувач"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1079
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1083
 msgid "Another admin or owner will need to restore you."
 msgstr "Інший адміністратор або власник повинен буде відновити вас."
 
@@ -2063,11 +2063,11 @@ msgstr "Інший адміністратор або власник повине
 msgid "another reason"
 msgstr "інша причина"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:827
+#: src/components/conversation/ProjectConversationsPanel.tsx:834
 msgid "Any tag"
 msgstr "Будь-який тег"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1901
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1905
 msgid "Anyone in your organisation can find this workspace. Admins can join; members can request access."
 msgstr "Будь-хто у вашій організації може знайти цей робочий простір. Адміністратори можуть приєднатися, а учасники: подати запит на доступ."
 
@@ -2135,8 +2135,8 @@ msgstr "Наближення до ліміту цього місяця"
 msgid "Approaching limit: {0} / 32,000 characters"
 msgstr "Наближення до ліміту: {0} / 32 000 символів"
 
-#: src/components/workspace/SupportAccessSection.tsx:214
-#: src/components/workspace/AccessRequestsList.tsx:181
+#: src/components/workspace/SupportAccessSection.tsx:219
+#: src/components/workspace/AccessRequestsList.tsx:182
 msgid "Approve"
 msgstr "Схвалити"
 
@@ -2145,11 +2145,11 @@ msgstr "Схвалити"
 msgid "participant.concrete.action.button.approve"
 msgstr "Approve"
 
-#: src/components/workspace/SupportAccessSection.tsx:281
+#: src/components/workspace/SupportAccessSection.tsx:286
 msgid "Approve for 24 hours"
 msgstr "Схвалити на 24 години"
 
-#: src/components/workspace/SupportAccessSection.tsx:279
+#: src/components/workspace/SupportAccessSection.tsx:284
 msgid "Approve support access"
 msgstr "Схвалити доступ для підтримки"
 
@@ -2163,7 +2163,7 @@ msgid "Archived"
 msgstr "В архіві"
 
 #. placeholder {0}: webhook.name
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:608
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:612
 msgid "Are you sure you want to delete the webhook \"{0}\"? This action cannot be undone."
 msgstr "Are you sure you want to delete the webhook \"{0}\"? This action cannot be undone."
 
@@ -2175,7 +2175,7 @@ msgstr "Are you sure you want to delete this chat? This action cannot be undone.
 msgid "Are you sure you want to delete this conversation? This action cannot be undone."
 msgstr "Are you sure you want to delete this conversation? This action cannot be undone."
 
-#: src/components/project/ProjectPortalEditor.tsx:1649
+#: src/components/project/ProjectPortalEditor.tsx:1640
 msgid "Are you sure you want to delete this custom topic? This cannot be undone."
 msgstr "Are you sure you want to delete this custom topic? This cannot be undone."
 
@@ -2183,7 +2183,7 @@ msgstr "Are you sure you want to delete this custom topic? This cannot be undone
 msgid "Are you sure you want to delete this project? This action cannot be undone."
 msgstr "Are you sure you want to delete this project? This action cannot be undone."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1324
+#: src/routes/project/report/ProjectReportRoute.tsx:1312
 msgid "Are you sure you want to delete this report? This action cannot be undone."
 msgstr "Are you sure you want to delete this report? This action cannot be undone."
 
@@ -2277,7 +2277,7 @@ msgstr "Попросіть адміністратора робочого про�
 msgid "Ask about the app."
 msgstr "Запитайте про додаток."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:900
+#: src/components/conversation/ProjectConversationsPanel.tsx:907
 msgid "Ask about these"
 msgstr "Запитати про це"
 
@@ -2350,7 +2350,7 @@ msgstr "Призначити"
 msgid "Assistant"
 msgstr "Асистент"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1591
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1595
 msgid "Assistant context"
 msgstr "Контекст асистента"
 
@@ -2363,11 +2363,11 @@ msgstr "Пам'ять асистента"
 msgid "At least 8 characters"
 msgstr "Щонайменше 8 символів"
 
-#: src/components/project/ProjectPortalEditor.tsx:989
+#: src/components/project/ProjectPortalEditor.tsx:999
 msgid "At least one topic must be selected to enable Verify"
 msgstr "At least one topic must be selected to enable Verify"
 
-#: src/components/billing/BillingManager.tsx:1310
+#: src/components/billing/BillingManager.tsx:1308
 msgid "At the end of this period"
 msgstr "Наприкінці цього періоду"
 
@@ -2409,7 +2409,7 @@ msgstr "Audio download not available for anonymized conversations"
 msgid "Audio is coming in"
 msgstr "Аудіо надходить"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:139
+#: src/components/conversation/ConversationTranscriptSection.tsx:138
 msgid "Audio playback not available for anonymized conversations"
 msgstr "Audio playback not available for anonymized conversations"
 
@@ -2465,8 +2465,8 @@ msgstr "Authenticator code"
 msgid "Auto fact-check new claims"
 msgstr "Автоматично перевіряти факти в нових твердженнях"
 
-#: src/components/project/ProjectPortalEditor.tsx:1462
-#: src/components/project/ProjectPortalEditor.tsx:1484
+#: src/components/project/ProjectPortalEditor.tsx:1453
+#: src/components/project/ProjectPortalEditor.tsx:1475
 msgid "Auto-generate titles"
 msgstr "Auto-generate titles"
 
@@ -2498,11 +2498,11 @@ msgstr "Автоматичні підсумки, об'єднання розмо�
 msgid "Automatic titles and draft tags"
 msgstr "Автоматичні заголовки та чернетки тегів"
 
-#: src/components/project/ProjectPortalEditor.tsx:1469
+#: src/components/project/ProjectPortalEditor.tsx:1460
 msgid "Automatically generate a short topic-based title for each conversation after summarization. The title describes what was discussed, not who participated. The participant's original name is preserved separately, if they provided one."
 msgstr "Automatically generate a short topic-based title for each conversation after summarization. The title describes what was discussed, not who participated. The participant's original name is preserved separately, if they provided one."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:785
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:789
 msgid "Automatically save transcripts to your CRM or database"
 msgstr "Automatically save transcripts to your CRM or database"
 
@@ -2510,7 +2510,7 @@ msgstr "Automatically save transcripts to your CRM or database"
 msgid "Automatically select relevant conversations for your question."
 msgstr "Автоматично вибирати відповідні розмови для вашого запитання."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:882
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:886
 msgid "Automatically send conversation data to your other tools and services when events occur."
 msgstr "Automatically send conversation data to your other tools and services when events occur."
 
@@ -2566,7 +2566,7 @@ msgstr "Back"
 msgid "participant.concrete.artefact.action.button.go.back"
 msgstr "Назад"
 
-#: src/routes/settings/AgentConsentRoute.tsx:226
+#: src/routes/settings/AgentConsentRoute.tsx:225
 msgid "Back to Connect your agent"
 msgstr "Назад до «Підключіть свого агента»"
 
@@ -2659,9 +2659,9 @@ msgstr "Перш ніж підключити агента"
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:161
 #: src/features/sidebar/blocks/HelpBlock.tsx:102
 #: src/components/report/UpdateReportModalButton.tsx:210
-#: src/components/report/CreateReportForm.tsx:241
-#: src/components/project/ProjectPortalEditor.tsx:1385
-#: src/components/project/ProjectPortalEditor.tsx:1465
+#: src/components/report/CreateReportForm.tsx:237
+#: src/components/project/ProjectPortalEditor.tsx:1376
+#: src/components/project/ProjectPortalEditor.tsx:1456
 #: src/components/project/ProjectExperimentalSection.tsx:50
 #: src/components/map/MapPage.tsx:559
 #: src/components/conversation/RetranscribeConversation.tsx:155
@@ -2677,7 +2677,7 @@ msgid "dashboard.dembrane.concrete.beta"
 msgstr "Beta"
 
 #. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:909
+#: src/components/project/ProjectPortalEditor.tsx:916
 msgid "dashboard.dembrane.verify.beta"
 msgstr "Beta"
 
@@ -2697,11 +2697,11 @@ msgstr "Кращі записи, більше способів відповід�
 msgid "Better uploads, transcripts and discovery"
 msgstr "Кращі завантаження, транскрипти й пошук"
 
-#: src/components/billing/BillingManager.tsx:1255
+#: src/components/billing/BillingManager.tsx:1253
 msgid "Billed annually"
 msgstr "Оплата щороку"
 
-#: src/components/billing/BillingManager.tsx:1253
+#: src/components/billing/BillingManager.tsx:1251
 msgid "Billed monthly"
 msgstr "Оплата щомісяця"
 
@@ -2722,7 +2722,7 @@ msgid "Billed under your organisation's plan, alongside your other workspaces."
 msgstr "Оплачується за тарифом вашої організації разом з іншими робочими просторами."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:805
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1045
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1049
 #: src/routes/organisation/OrganisationRoute.tsx:810
 #: src/routes/organisation/OrganisationRoute.tsx:860
 #: src/lib/roles.ts:13
@@ -2747,7 +2747,7 @@ msgstr "Оплатою керує ваша організація"
 msgid "Billing mode"
 msgstr "Режим оплати"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:991
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:995
 msgid "Book a call"
 msgstr "Book a call"
 
@@ -2763,7 +2763,7 @@ msgstr "Замовте сертифіковане навчання, щоб пр�
 msgid "Both"
 msgstr "Обидва"
 
-#: src/components/project/ProjectPortalEditor.tsx:840
+#: src/components/project/ProjectPortalEditor.tsx:843
 msgid "Brainstorm ideas"
 msgstr "Генерувати ідеї"
 
@@ -2792,7 +2792,7 @@ msgstr "Використовуйте власну LLM"
 msgid "Bug fixes"
 msgstr "Виправлення помилок"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:804
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:808
 msgid "Build custom dashboards with real-time conversation data"
 msgstr "Build custom dashboards with real-time conversation data"
 
@@ -2821,11 +2821,11 @@ msgstr "C_Med: {0}"
 msgid "Can you tell us more?"
 msgstr "Розкажете докладніше?"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1088
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1136
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1170
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1331
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1966
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1092
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1140
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1174
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1335
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1970
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:785
 #: src/routes/project/ProjectsHome.tsx:453
 #: src/routes/project/CreateProjectRoute.tsx:451
@@ -2833,9 +2833,9 @@ msgstr "Розкажете докладніше?"
 #: src/routes/organisation/OrganisationRoute.tsx:1762
 #: src/routes/organisation/OrganisationRoute.tsx:1785
 #: src/routes/organisation/OrganisationRoute.tsx:1808
-#: src/routes/organisation/OrganisationRoute.tsx:1979
-#: src/routes/organisation/OrganisationRoute.tsx:2019
-#: src/routes/organisation/OrganisationRoute.tsx:2061
+#: src/routes/organisation/OrganisationRoute.tsx:1984
+#: src/routes/organisation/OrganisationRoute.tsx:2024
+#: src/routes/organisation/OrganisationRoute.tsx:2066
 #: src/routes/invite/MyInvitesRoute.tsx:80
 #: src/routes/admin/AdminSettingsRoute.tsx:858
 #: src/routes/admin/AdminSettingsRoute.tsx:1172
@@ -2853,8 +2853,8 @@ msgstr "Розкажете докладніше?"
 #: src/components/project/ProjectDangerZone.tsx:157
 #: src/components/project/CustomTopicModal.tsx:255
 #: src/components/project/BulkMoveProjectsModal.tsx:123
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:473
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:627
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:477
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:631
 #: src/components/organisation/CreateOrganisationModal.tsx:218
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:294
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:378
@@ -2863,7 +2863,7 @@ msgstr "Розкажете докладніше?"
 #: src/components/goal/ProjectGoalSection.tsx:165
 #: src/components/dropzone/UploadConversationDropzone.tsx:745
 #: src/components/dropzone/UploadConversationDropzone.tsx:880
-#: src/components/conversation/MoveConversationButton.tsx:249
+#: src/components/conversation/MoveConversationButton.tsx:250
 #: src/components/conversation/ConversationAccordion.tsx:337
 #: src/components/common/InputModal.tsx:87
 #: src/components/common/ImageCropModal.tsx:146
@@ -2904,7 +2904,7 @@ msgstr "Cancel"
 msgid "add.tag.filter.modal.cancel"
 msgstr "Cancel"
 
-#: src/components/billing/BillingManager.tsx:1433
+#: src/components/billing/BillingManager.tsx:1431
 msgid "Cancel anytime. You keep access until the period ends."
 msgstr "Скасовуйте будь-коли. Доступ залишиться до кінця періоду."
 
@@ -2917,7 +2917,7 @@ msgid "Cancel override"
 msgstr "Скасувати перевизначення"
 
 #: src/components/billing/BillingManager.tsx:611
-#: src/components/billing/BillingManager.tsx:1448
+#: src/components/billing/BillingManager.tsx:1446
 msgid "Cancel plan"
 msgstr "Скасувати тариф"
 
@@ -2929,7 +2929,7 @@ msgstr "Скасувати запит"
 msgid "Cancel schedule"
 msgstr "Cancel schedule"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:921
+#: src/components/conversation/ProjectConversationsPanel.tsx:928
 msgid "Cancel selection"
 msgstr "Скасувати вибір"
 
@@ -3000,7 +3000,7 @@ msgstr "Наздоганяння {0}"
 msgid "Certified training for teams using dembrane in high-risk settings. A separate product, billed per session."
 msgstr "Сертифікований тренінг для команд, які використовують dembrane в умовах високих ризиків. Окремий продукт з оплатою за сесію."
 
-#: src/components/billing/BillingManager.tsx:1393
+#: src/components/billing/BillingManager.tsx:1391
 msgid "Change"
 msgstr "Змінити"
 
@@ -3016,15 +3016,15 @@ msgstr "Змінити роль користувача {person} в органі�
 msgid "Change {person}'s role on {wsName} from <0>{0}</0> to <1>{1}</1>?"
 msgstr "Змінити роль користувача {person} у просторі {wsName} з <0>{0}</0> на <1>{1}</1>?"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1089
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1093
 msgid "Change anyway"
 msgstr "Все одно змінити"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1943
+#: src/routes/organisation/OrganisationRoute.tsx:1948
 msgid "Change in workspace settings"
 msgstr "Змінити в налаштуваннях робочого простору"
 
-#: src/components/language/LanguagePicker.tsx:153
+#: src/components/language/LanguagePicker.tsx:154
 msgid "Change language"
 msgstr "Change language"
 
@@ -3036,8 +3036,8 @@ msgstr "Змінити роль в організації?"
 msgid "Change password"
 msgstr "Change password"
 
-#: src/components/billing/BillingManager.tsx:1226
-#: src/components/billing/BillingManager.tsx:1469
+#: src/components/billing/BillingManager.tsx:1224
+#: src/components/billing/BillingManager.tsx:1467
 msgid "Change payment method"
 msgstr "Змінити спосіб оплати"
 
@@ -3065,7 +3065,7 @@ msgstr "Змінити рівень"
 msgid "Change workspace role?"
 msgstr "Змінити роль у робочому просторі?"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1096
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1100
 msgid "Change your own role?"
 msgstr "Змінити власну роль?"
 
@@ -3097,7 +3097,7 @@ msgstr "Не вдалося опублікувати зміни. Спробуй�
 #~ msgid "Changes will be saved automatically"
 #~ msgstr "Changes will be saved automatically"
 
-#: src/components/language/LanguagePicker.tsx:155
+#: src/components/language/LanguagePicker.tsx:156
 msgid "Changing language during an active chat may lead to unexpected results. It's recommended to start a new chat after changing the language. Are you sure you want to continue?"
 msgstr "Changing language during an active chat may lead to unexpected results. It's recommended to start a new chat after changing the language. Are you sure you want to continue?"
 
@@ -3276,7 +3276,7 @@ msgstr "Вибирайте режими відповідей: «Підсумув
 msgid "Choose the tabs your audience can explore."
 msgstr "Виберіть вкладки, доступні для вашої аудиторії."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:440
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:441
 msgid "Choose when you want to receive notifications"
 msgstr "Choose when you want to receive notifications"
 
@@ -3317,7 +3317,7 @@ msgstr "Місто"
 #~ msgstr ""
 
 #: src/components/results/curate/CurateTable.tsx:114
-#: src/components/conversation/ProjectConversationsPanel.tsx:909
+#: src/components/conversation/ProjectConversationsPanel.tsx:916
 msgid "Clear"
 msgstr "Очистити"
 
@@ -3325,7 +3325,7 @@ msgstr "Очистити"
 msgid "Clear all"
 msgstr "Очистити все"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:950
+#: src/components/conversation/ProjectConversationsPanel.tsx:957
 msgid "Clear filters"
 msgstr "Скинути фільтри"
 
@@ -3333,8 +3333,8 @@ msgstr "Скинути фільтри"
 #: src/routes/project/ProjectsHome.tsx:374
 #: src/routes/project/chat/NewChatRoute.tsx:171
 #: src/features/sidebar/blocks/SearchBlock.tsx:168
-#: src/components/invite/WorkspaceSelectList.tsx:98
-#: src/components/conversation/ProjectConversationsPanel.tsx:803
+#: src/components/invite/WorkspaceSelectList.tsx:97
+#: src/components/conversation/ProjectConversationsPanel.tsx:810
 #: src/components/chat/TemplatesModal.tsx:721
 msgid "Clear search"
 msgstr "Очистити пошук"
@@ -3547,7 +3547,7 @@ msgstr "Об’єднано з {0} аргументів"
 msgid "Coming soon"
 msgstr "Незабаром"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:780
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:784
 msgid "Common use cases:"
 msgstr "Common use cases:"
 
@@ -3584,7 +3584,7 @@ msgstr "Завершено"
 msgid "Completed on"
 msgstr "Завершено"
 
-#: src/components/project/ProjectListItem.tsx:343
+#: src/components/project/ProjectListItem.tsx:351
 msgid "Configure portal"
 msgstr "Налаштувати портал"
 
@@ -3727,9 +3727,9 @@ msgstr "Contextual suggestions"
 #: src/routes/auth/Register.tsx:207
 #: src/components/pricing/PricingConfigurator.tsx:844
 #: src/components/organisation/CreateOrganisationModal.tsx:210
-#: src/components/language/LanguagePicker.tsx:156
+#: src/components/language/LanguagePicker.tsx:157
 #: src/components/invite/InviteModal.tsx:785
-#: src/components/billing/BillingManager.tsx:1471
+#: src/components/billing/BillingManager.tsx:1469
 msgid "Continue"
 msgstr "Continue"
 
@@ -3829,7 +3829,7 @@ msgstr "Розмову розпочато"
 #~ msgid "Conversation Status"
 #~ msgstr "Conversation Status"
 
-#: src/components/report/CreateReportForm.tsx:218
+#: src/components/report/CreateReportForm.tsx:214
 msgid "Conversation status details"
 msgstr "Деталі статусу розмови"
 
@@ -3849,7 +3849,7 @@ msgstr "Підсумки розмов більше не зависають у п
 msgid "Conversation summarized"
 msgstr "Розмову підсумовано"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:751
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:755
 msgid "Conversation tags"
 msgstr "Conversation tags"
 
@@ -3862,7 +3862,7 @@ msgid "Conversation transcribed"
 msgstr "Розмову транскрибовано"
 
 #: src/routes/organisation/OrganisationRoute.tsx:1591
-#: src/components/report/CreateReportForm.tsx:210
+#: src/components/report/CreateReportForm.tsx:206
 #: src/components/chat/NavigationSuggestionCard.tsx:57
 msgid "conversations"
 msgstr "conversations"
@@ -3871,7 +3871,7 @@ msgstr "conversations"
 #: src/components/workspace/OrganisationProjectsTable.tsx:225
 #: src/components/report/ReportTimeline.tsx:302
 #: src/components/project/ProjectUsageAndSharing.tsx:477
-#: src/components/conversation/ProjectConversationsPanel.tsx:743
+#: src/components/conversation/ProjectConversationsPanel.tsx:750
 #: src/components/conversation/ConversationAccordion.tsx:1103
 msgid "Conversations"
 msgstr "Conversations"
@@ -3901,12 +3901,12 @@ msgstr "Розмови: {0}"
 msgid "participant.refine.cooling.down"
 msgstr "Cooling down. Available in {0}"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1008
-#: src/routes/project/report/ProjectReportRoute.tsx:1030
-#: src/routes/project/report/ProjectReportRoute.tsx:1057
+#: src/routes/project/report/ProjectReportRoute.tsx:996
+#: src/routes/project/report/ProjectReportRoute.tsx:1018
+#: src/routes/project/report/ProjectReportRoute.tsx:1045
 #: src/components/settings/TwoFactorSettingsCard.tsx:396
 #: src/components/project/ProjectQRCode.tsx:146
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:1022
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:1026
 #: src/components/popcorn/PopcornShare.tsx:139
 #: src/components/participant/ParticipantShareModal.tsx:111
 #: src/components/participant/InAppBrowserNotice.tsx:66
@@ -3947,25 +3947,25 @@ msgstr "Скопіюйте затверджені результати до но
 msgid "Copy code"
 msgstr "Копіювати код"
 
-#: src/components/members/PendingInvitesSection.tsx:170
-#: src/components/members/PendingInvitesSection.tsx:174
+#: src/components/members/PendingInvitesSection.tsx:171
+#: src/components/members/PendingInvitesSection.tsx:175
 #: src/components/invite/InviteResultsList.tsx:113
 #: src/components/invite/InviteResultsList.tsx:119
 msgid "Copy invite link"
 msgstr "Копіювати посилання для запрошення"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1032
+#: src/routes/project/report/ProjectReportRoute.tsx:1020
 #: src/components/project/ProjectQRCode.tsx:146
 #: src/components/participant/ParticipantShareModal.tsx:111
 #: src/components/participant/InAppBrowserNotice.tsx:66
 msgid "Copy link"
 msgstr "Копіювати посилання"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1009
+#: src/routes/project/report/ProjectReportRoute.tsx:997
 msgid "Copy link to clipboard"
 msgstr "Copy link to clipboard"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1059
+#: src/routes/project/report/ProjectReportRoute.tsx:1047
 msgid "Copy report content"
 msgstr "Copy report content"
 
@@ -3982,7 +3982,7 @@ msgstr "Копіювати підсумок"
 #~ msgid "Copy Summary"
 #~ msgstr "Copy Summary"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:1024
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:1028
 #: src/components/conversation/CopyConversationTranscript.tsx:45
 msgid "Copy to clipboard"
 msgstr "Copy to clipboard"
@@ -4304,7 +4304,7 @@ msgid "Create account"
 msgstr "Створити акаунт"
 
 #: src/routes/auth/Register.tsx:129
-#: src/routes/auth/Login.tsx:600
+#: src/routes/auth/Login.tsx:603
 msgid "Create an account"
 msgstr "Створіть акаунт"
 
@@ -4347,7 +4347,7 @@ msgstr "Створити пароль"
 #: src/routes/project/CreateProjectRoute.tsx:223
 #: src/routes/project/CreateProjectRoute.tsx:442
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:68
-#: src/features/sidebar/breadcrumbs/AppBreadcrumbs.tsx:190
+#: src/features/sidebar/breadcrumbs/AppBreadcrumbs.tsx:191
 msgid "Create project"
 msgstr "Створити проєкт"
 
@@ -4428,7 +4428,7 @@ msgstr "Обрізати зображення"
 #~ msgid "Crop Image"
 #~ msgstr "Crop Image"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1780
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1784
 #: src/components/settings/WhitelabelLogoCard.tsx:199
 msgid "Crop logo"
 msgstr "Кадрувати логотип"
@@ -4437,7 +4437,7 @@ msgstr "Кадрувати логотип"
 #~ msgid "Crop Logo"
 #~ msgstr "Crop Logo"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1782
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1786
 #: src/components/settings/WhitelabelLogoCard.tsx:201
 msgid "Crop your logo to a 3:1 horizontal aspect ratio (recommended e.g. 600×200px)."
 msgstr "Кадруйте ваш логотип до співвідношення сторін 3:1 по горизонталі (рекомендовано, наприклад, 600×200 пікс.)."
@@ -4456,16 +4456,16 @@ msgstr "Current password"
 
 #: src/components/billing/BillingManager.tsx:325
 #: src/components/billing/BillingManager.tsx:656
-#: src/components/billing/BillingManager.tsx:1232
+#: src/components/billing/BillingManager.tsx:1230
 msgid "Current plan"
 msgstr "Поточний тариф"
 
-#: src/components/billing/BillingManager.tsx:1337
+#: src/components/billing/BillingManager.tsx:1335
 msgid "Current rate"
 msgstr "Поточний тарифний план"
 
 #: src/routes/project/canvas/CanvasRoute.tsx:221
-#: src/components/project/ProjectPortalEditor.tsx:852
+#: src/components/project/ProjectPortalEditor.tsx:855
 msgid "Custom"
 msgstr "Custom"
 
@@ -4489,15 +4489,15 @@ msgstr "Власний логотип"
 #~ msgid "Custom Logo"
 #~ msgstr "Custom Logo"
 
-#: src/components/project/ProjectPortalEditor.tsx:1509
+#: src/components/project/ProjectPortalEditor.tsx:1500
 msgid "Custom title prompt"
 msgstr "Custom title prompt"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1700
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1704
 msgid "Custom workspace logo shown to participants."
 msgstr "Власний логотип робочого простору, який бачать учасники."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1631
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1635
 msgid "Custom workspace logo shown to participants. Recommended aspect ratio is 3:1 (e.g. 600×200px horizontal format)."
 msgstr "Власний логотип робочого простору, який бачать учасники. Рекомендоване співвідношення сторін: 3:1 (наприклад, горизонтальний формат 600×200 пікселів)."
 
@@ -4538,7 +4538,7 @@ msgstr "Темна тема"
 #~ msgid "Dark suits a dim room and a bright projector. The QR code stays on a light card so phones can read it."
 #~ msgstr ""
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:767
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:771
 msgid "Dashboard URL (direct link to conversation overview)"
 msgstr "Dashboard URL (direct link to conversation overview)"
 
@@ -4581,8 +4581,8 @@ msgstr "Зручні дати, контекст, будь-що інше"
 
 #: src/routes/invite/MyInvitesRoute.tsx:80
 #: src/routes/invite/MyInvitesRoute.tsx:236
-#: src/components/workspace/SupportAccessSection.tsx:226
-#: src/components/workspace/AccessRequestsList.tsx:194
+#: src/components/workspace/SupportAccessSection.tsx:231
+#: src/components/workspace/AccessRequestsList.tsx:195
 msgid "Decline"
 msgstr "Відхилити"
 
@@ -4590,11 +4590,11 @@ msgstr "Відхилити"
 msgid "Decline invite"
 msgstr "Відхилити запрошення"
 
-#: src/components/workspace/AccessRequestsList.tsx:215
+#: src/components/workspace/AccessRequestsList.tsx:216
 msgid "Decline request"
 msgstr "Відхилити запит"
 
-#: src/components/workspace/AccessRequestsList.tsx:208
+#: src/components/workspace/AccessRequestsList.tsx:209
 msgid "Decline request?"
 msgstr "Відхилити запит?"
 
@@ -4602,7 +4602,7 @@ msgstr "Відхилити запит?"
 msgid "Decline the invite to {subjectName}? You can ask them to send it again later."
 msgstr "Відхилити запрошення до {subjectName}? Ви зможете попросити надіслати його знову пізніше."
 
-#: src/components/workspace/AccessRequestsList.tsx:210
+#: src/components/workspace/AccessRequestsList.tsx:211
 msgid "Decline this access request? The requester won't be notified and would need to request access again."
 msgstr "Відхилити цей запит на доступ? Відправник не отримає сповіщення, і йому доведеться надіслати запит знову."
 
@@ -4624,7 +4624,7 @@ msgstr "Deep Dive"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:3061
 #: src/routes/admin/AdminSettingsRoute.tsx:3077
-#: src/components/project/ProjectPortalEditor.tsx:828
+#: src/components/project/ProjectPortalEditor.tsx:831
 #: src/components/chat/CanvasSuggestionCard.tsx:102
 msgid "Default"
 msgstr "Default"
@@ -4653,13 +4653,13 @@ msgstr "За замовчуванням: {defaultValue}"
 msgid "Delegate multi-step analysis with live tool execution"
 msgstr "Delegate multi-step analysis with live tool execution"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1325
+#: src/routes/project/report/ProjectReportRoute.tsx:1313
 #: src/components/workspace/OrganisationProjectsTable.tsx:164
 #: src/components/project/ProjectTagsInput.tsx:120
-#: src/components/project/ProjectPortalEditor.tsx:1650
+#: src/components/project/ProjectPortalEditor.tsx:1641
 #: src/components/project/ProjectDangerZone.tsx:168
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:586
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:620
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:590
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:624
 #: src/components/participant/UserChunkMessage.tsx:100
 #: src/components/conversation/ConversationDrilldownModal.tsx:248
 #: src/components/conversation/ConversationDrilldownModal.tsx:263
@@ -4695,7 +4695,7 @@ msgstr "Delete conversation"
 #~ msgid "Delete Conversation"
 #~ msgstr "Delete Conversation"
 
-#: src/components/project/ProjectPortalEditor.tsx:1648
+#: src/components/project/ProjectPortalEditor.tsx:1639
 msgid "Delete custom topic"
 msgstr "Delete custom topic"
 
@@ -4710,8 +4710,8 @@ msgstr "Delete project"
 #~ msgid "Delete Project"
 #~ msgstr "Delete Project"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1109
-#: src/routes/project/report/ProjectReportRoute.tsx:1323
+#: src/routes/project/report/ProjectReportRoute.tsx:1097
+#: src/routes/project/report/ProjectReportRoute.tsx:1311
 msgid "Delete report"
 msgstr "Delete report"
 
@@ -4728,19 +4728,19 @@ msgstr "Delete template"
 msgid "Delete this project in {0}? All conversations and data are permanently removed."
 msgstr "Видалити цей проєкт у {0}? Усі розмови та дані буде видалено назавжди."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1225
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1229
 msgid "Delete this workspace"
 msgstr "Видалити цей робочий простір"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1228
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1232
 msgid "Delete this workspace. Members lose access immediately and all conversations and data are permanently removed."
 msgstr "Видалити цей робочий простір. Учасники негайно втратять доступ, а всі розмови та дані буде видалено назавжди."
 
-#: src/components/project/ProjectPortalEditor.tsx:1047
+#: src/components/project/ProjectPortalEditor.tsx:1041
 msgid "Delete topic"
 msgstr "Видалити тему"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:602
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:606
 msgid "Delete webhook"
 msgstr "Видалити вебхук"
 
@@ -4748,7 +4748,7 @@ msgstr "Видалити вебхук"
 #~ msgid "Delete Webhook"
 #~ msgstr "Delete Webhook"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1286
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1290
 msgid "Delete workspace"
 msgstr "Видалити робочий простір"
 
@@ -4802,7 +4802,7 @@ msgstr "dembrane може припускатися помилок. Будь ла
 msgid "dembrane default"
 msgstr "dembrane за замовчуванням"
 
-#: src/components/project/ProjectPortalEditor.tsx:1298
+#: src/components/project/ProjectPortalEditor.tsx:1289
 #: src/components/project/PortalSettingsOverview.tsx:154
 msgid "dembrane event invitation"
 msgstr "запрошення на подію dembrane"
@@ -4845,7 +4845,7 @@ msgstr "Команда dembrane надіслала запит на доступ"
 msgid "dembrane/pilot was our earlier project. Thank you to the hosts, participants and contributors who helped shape it."
 msgstr "dembrane/pilot був нашим попереднім проєктом. Дякуємо організаторам, учасникам і всім, хто допомагав його створювати."
 
-#: src/routes/settings/AgentConsentRoute.tsx:334
+#: src/routes/settings/AgentConsentRoute.tsx:335
 msgid "Deny"
 msgstr "Відхилити"
 
@@ -4857,7 +4857,7 @@ msgstr "Опишіть проблему"
 msgid "Describe what the language model should extract or summarize from the conversation..."
 msgstr "Describe what the language model should extract or summarize from the conversation..."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1568
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1572
 #: src/routes/organisation/OrganisationRoute.tsx:1109
 #: src/routes/admin/AdminSettingsRoute.tsx:2644
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:262
@@ -4997,7 +4997,7 @@ msgstr "Несхожі зв'язки: {0}"
 msgid "Distilling core idea..."
 msgstr "Виділення головної ідеї..."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:811
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:815
 msgid "Do I need this?"
 msgstr "Do I need this?"
 
@@ -5064,8 +5064,8 @@ msgstr "Завантажити всі стенограми"
 msgid "Download as"
 msgstr "Download as"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:378
-#: src/components/conversation/ProjectConversationsPanel.tsx:382
+#: src/components/conversation/ProjectConversationsPanel.tsx:385
+#: src/components/conversation/ProjectConversationsPanel.tsx:389
 #: src/components/conversation/ConversationDangerZone.tsx:78
 msgid "Download audio"
 msgstr "Download audio"
@@ -5158,11 +5158,11 @@ msgstr "Електронний рахунок"
 msgid "e.g. \"Focus on sustainability themes\" or \"What do participants think about the new policy?\""
 msgstr "e.g. \"Focus on sustainability themes\" or \"What do participants think about the new policy?\""
 
-#: src/components/project/ProjectPortalEditor.tsx:1527
+#: src/components/project/ProjectPortalEditor.tsx:1518
 msgid "e.g. \"Use short noun phrases like 'Urban Green Spaces' or 'Youth Employment'. Avoid generic titles.\""
 msgstr "e.g. \"Use short noun phrases like 'Urban Green Spaces' or 'Youth Employment'. Avoid generic titles.\""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1543
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1547
 msgid "e.g. Client Alpha"
 msgstr "наприклад, Клієнт Альфа"
 
@@ -5170,7 +5170,7 @@ msgstr "наприклад, Клієнт Альфа"
 msgid "e.g. Client Alpha, Q1 Research"
 msgstr "наприклад, Клієнт Альфа, Дослідження за Q1"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1570
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1574
 msgid "e.g. Client onboarding interviews, Q1 product research"
 msgstr "наприклад, Інтерв'ю онбордингу клієнтів, дослідження продукту за Q1"
 
@@ -5182,7 +5182,7 @@ msgstr "наприклад, Кліматичні обговорення, Дос�
 msgid "e.g. investigating the report issue you emailed about"
 msgstr "наприклад, дослідження проблеми зі звітом, про яку ви писали"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1593
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1597
 msgid "e.g. We are a research agency. Reports go to municipal clients, so keep summaries formal and in Dutch."
 msgstr "наприклад, Ми дослідницька агенція. Звіти надсилаються муніципалітетам, тому підсумки мають бути офіційними та нідерландською мовою."
 
@@ -5190,7 +5190,7 @@ msgstr "наприклад, Ми дослідницька агенція. Зві
 msgid "e.g. Weekly stakeholder digest"
 msgstr "e.g. Weekly stakeholder digest"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:372
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:373
 msgid "e.g., Slack notifications, Make workflow"
 msgstr "наприклад, сповіщення в Slack, сценарій Make"
 
@@ -5229,7 +5229,7 @@ msgstr "ECHO"
 
 #: src/components/results/curate/RowTools.tsx:290
 #: src/components/results/curate/RowTools.tsx:335
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:581
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:585
 #: src/components/participant/verify/VerifyArtefact.tsx:444
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:235
 #: src/components/chat/TemplatesModal.tsx:599
@@ -5270,12 +5270,12 @@ msgstr "Редагувати ціль"
 msgid "Edit methodology"
 msgstr "Редагувати методологію"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1183
+#: src/routes/project/report/ProjectReportRoute.tsx:1171
 msgid "Edit mode"
 msgstr "Edit mode"
 
 #: src/components/report/UpdateReportModalButton.tsx:296
-#: src/components/report/CreateReportForm.tsx:279
+#: src/components/report/CreateReportForm.tsx:275
 msgid "Edit options"
 msgstr "Edit options"
 
@@ -5324,7 +5324,7 @@ msgstr "Edit the report content using the rich text editor below. You can format
 #~ msgid "Edit the wording, check the evidence, or hide a finding from this presentation. Shared results stay available in Analysis."
 #~ msgstr ""
 
-#: src/components/project/ProjectPortalEditor.tsx:1022
+#: src/components/project/ProjectPortalEditor.tsx:1016
 msgid "Edit topic"
 msgstr "Редагувати тему"
 
@@ -5350,7 +5350,7 @@ msgid "edited"
 msgstr "змінено"
 
 #. placeholder {0}: formatRelative( new Date(project.updated_at ?? new Date()), new Date(), )
-#: src/components/project/ProjectListItem.tsx:228
+#: src/components/project/ProjectListItem.tsx:229
 msgid "Edited {0}"
 msgstr "Edited {0}"
 
@@ -5387,7 +5387,7 @@ msgstr "Електронна пошта"
 msgid "Email me a code"
 msgstr "Надіслати код на пошту"
 
-#: src/routes/auth/Login.tsx:575
+#: src/routes/auth/Login.tsx:578
 msgid "Email me a sign-in code instead"
 msgstr "Надіслати код для входу на пошту"
 
@@ -5437,7 +5437,7 @@ msgstr "Emoji shown next to the topic e.g. 💡 🔍 📊"
 msgid "emptied out"
 msgstr "очищено"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:117
+#: src/components/conversation/ConversationTranscriptSection.tsx:116
 msgid "Empty"
 msgstr "Empty"
 
@@ -5445,7 +5445,7 @@ msgstr "Empty"
 msgid "Empty or deleted conversations no longer break chat context."
 msgstr "Порожні або видалені розмови більше не порушують контекст чату."
 
-#: src/routes/settings/AgentConsentRoute.tsx:94
+#: src/routes/settings/AgentConsentRoute.tsx:93
 msgid "Enable"
 msgstr "Увімкнути"
 
@@ -5465,7 +5465,7 @@ msgstr "Enable Explore"
 msgid "Enable participation"
 msgstr "Enable participation"
 
-#: src/components/project/ProjectPortalEditor.tsx:1156
+#: src/components/project/ProjectPortalEditor.tsx:1148
 msgid "Enable report notifications"
 msgstr "Увімкнути сповіщення про звіти"
 
@@ -5478,11 +5478,11 @@ msgid "Enable this feature to allow participants to request AI-powered responses
 msgstr "Enable this feature to allow participants to request AI-powered responses during their conversation. Participants can click \"Explore\" after recording their thoughts to receive contextual feedback, encouraging deeper reflection and engagement. A cooldown period applies between requests."
 
 #. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:916
+#: src/components/project/ProjectPortalEditor.tsx:923
 msgid "dashboard.dembrane.feature.verify.description"
 msgstr "Enable this feature to allow participants to verify and approve \"outcomes\" from their submissions. This helps crystallize key ideas, concerns, or summaries. After the conversation, you can filter for discussions with verified outcomes and review them in the overview."
 
-#: src/components/project/ProjectPortalEditor.tsx:1405
+#: src/components/project/ProjectPortalEditor.tsx:1396
 msgid "Enable transcript anonymization"
 msgstr "Enable transcript anonymization"
 
@@ -5490,12 +5490,12 @@ msgstr "Enable transcript anonymization"
 msgid "Enable two-factor authentication"
 msgstr "Enable two-factor authentication"
 
-#: src/components/project/ProjectPortalEditor.tsx:933
+#: src/components/project/ProjectPortalEditor.tsx:940
 msgid "Enable Verify"
 msgstr "Enable Verify"
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:293
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:922
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:926
 msgid "Enabled"
 msgstr "Enabled"
 
@@ -5504,7 +5504,7 @@ msgstr "Enabled"
 msgid "Ended"
 msgstr "Завершено"
 
-#: src/components/billing/BillingManager.tsx:1251
+#: src/components/billing/BillingManager.tsx:1249
 msgid "Ends on {endDate}, then moves to Free"
 msgstr "Діє до {endDate}, потім переходить на Free"
 
@@ -5532,7 +5532,7 @@ msgstr "Enter a name for your cloned project"
 msgid "Enter a presentation title"
 msgstr "Введіть назву презентації"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:423
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:424
 msgid "Enter a secret key"
 msgstr "Enter a secret key"
 
@@ -5596,7 +5596,7 @@ msgid "Error cloning project"
 msgstr "Error cloning project"
 
 #: src/components/report/UpdateReportModalButton.tsx:244
-#: src/components/report/CreateReportForm.tsx:136
+#: src/components/report/CreateReportForm.tsx:135
 msgid "Error creating report"
 msgstr "Error creating report"
 
@@ -5631,11 +5631,11 @@ msgstr "LLM із хостингом у ЄС включено"
 msgid "Event help from the dembrane team"
 msgstr "Супровід подій від команди dembrane"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:919
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:923
 msgid "Events"
 msgstr "Events"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:439
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:440
 msgid "Events to listen for"
 msgstr "Події для відстеження"
 
@@ -5681,7 +5681,7 @@ msgstr "Знайти може кожен. Адміністратори приє�
 msgid "Everyone in {0} can find and open this project."
 msgstr "Кожен у {0} може знайти та відкрити цей проєкт."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1898
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1902
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:387
 #: src/components/workspace/DiscoverableWorkspaces.tsx:305
 msgid "Everyone in your organisation"
@@ -5712,7 +5712,7 @@ msgstr "Докази"
 msgid "Evidenced connections"
 msgstr "Підтверджені зв'язки"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:1002
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:1006
 msgid "Example webhook payload"
 msgstr "Приклад даних вебхука"
 
@@ -5720,11 +5720,11 @@ msgstr "Приклад даних вебхука"
 #~ msgid "Example Webhook Payload"
 #~ msgstr "Example Webhook Payload"
 
-#: src/components/invite/WorkspaceSelectList.tsx:196
+#: src/components/invite/WorkspaceSelectList.tsx:195
 msgid "Exceeds seat cap. Overage billing applies."
 msgstr "Перевищує ліміт місць. Застосовується додаткова плата."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1190
+#: src/routes/project/report/ProjectReportRoute.tsx:1178
 #: src/routes/project/canvas/CanvasRoute.tsx:608
 #: src/routes/project/canvas/CanvasRoute.tsx:613
 msgid "Exit fullscreen"
@@ -5800,11 +5800,11 @@ msgstr "Експортувати в CSV"
 msgid "Extend 24h"
 msgstr "Продовжити на 24 год"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:930
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1016
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1308
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:934
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1020
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1312
 #: src/routes/organisation/OrganisationRoute.tsx:1362
-#: src/routes/organisation/OrganisationRoute.tsx:1852
+#: src/routes/organisation/OrganisationRoute.tsx:1857
 #: src/routes/organisation/OrganisationExternalView.tsx:62
 #: src/lib/roles.ts:15
 #: src/features/sidebar/views/user/UserHomeView.tsx:116
@@ -5895,7 +5895,7 @@ msgstr "Failed"
 #~ msgid "Failed to add conversation to chat{0}"
 #~ msgstr "Failed to add conversation to chat{0}"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:726
+#: src/components/conversation/ProjectConversationsPanel.tsx:733
 #: src/components/conversation/ConversationAccordion.tsx:980
 #: src/components/conversation/ConversationAccordion.tsx:1000
 msgid "Failed to add conversations to context"
@@ -5963,7 +5963,7 @@ msgstr "Failed to generate the summary. Please try again later."
 msgid "Failed to load audio or the audio is not available"
 msgstr "Не вдалося завантажити аудіо, або аудіо недоступне"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:908
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:912
 msgid "Failed to load webhooks"
 msgstr "Failed to load webhooks"
 
@@ -6234,7 +6234,7 @@ msgid "Fixture"
 msgstr "Зразок"
 
 #: src/components/report/UpdateReportModalButton.tsx:270
-#: src/components/report/CreateReportForm.tsx:253
+#: src/components/report/CreateReportForm.tsx:249
 msgid "Focus"
 msgstr "Focus"
 
@@ -6292,7 +6292,7 @@ msgstr "За"
 msgid "For <0>{0}</0>"
 msgstr "Для <0>{0}</0>"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:419
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:420
 msgid "For advanced users: A secret key to verify webhook authenticity. Only needed if your receiving service requires signature verification."
 msgstr "For advanced users: A secret key to verify webhook authenticity. Only needed if your receiving service requires signature verification."
 
@@ -6355,7 +6355,7 @@ msgstr "Прогноз"
 msgid "Forgetting a saved memory"
 msgstr "Забуваємо збережений спогад"
 
-#: src/routes/auth/Login.tsx:585
+#: src/routes/auth/Login.tsx:588
 msgid "Forgot your password?"
 msgstr "Forgot your password?"
 
@@ -6410,11 +6410,11 @@ msgstr "З транскрипту"
 msgid "Full screen"
 msgstr "На весь екран"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:754
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:758
 msgid "Full transcript (when available)"
 msgstr "Full transcript (when available)"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1190
+#: src/routes/project/report/ProjectReportRoute.tsx:1178
 msgid "Fullscreen"
 msgstr "Fullscreen"
 
@@ -6453,8 +6453,8 @@ msgid "Generate a new report"
 msgstr "Generate a new report"
 
 #: src/components/report/CreateReportForm.tsx:185
-msgid "Generate a report"
-msgstr "Згенерувати звіт"
+#~ msgid "Generate a report"
+#~ msgstr "Згенерувати звіт"
 
 #: src/components/report/CreateReportForm.tsx:186
 #~ msgid "Generate a Report"
@@ -6479,12 +6479,12 @@ msgstr "Згенерувати мапу"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:495
 #: src/components/report/UpdateReportModalButton.tsx:361
-#: src/components/report/CreateReportForm.tsx:352
+#: src/components/report/CreateReportForm.tsx:348
 msgid "Generate now"
 msgstr "Generate now"
 
 #: src/components/report/UpdateReportModalButton.tsx:329
-#: src/components/report/CreateReportForm.tsx:317
+#: src/components/report/CreateReportForm.tsx:313
 msgid "Generate now instead"
 msgstr "Generate now instead"
 
@@ -6567,7 +6567,7 @@ msgid "get started."
 msgstr "почати роботу."
 
 #. placeholder {0}: confirmTarget.requested_by_name
-#: src/components/workspace/SupportAccessSection.tsx:283
+#: src/components/workspace/SupportAccessSection.tsx:288
 msgid "Give {0} from dembrane admin access to this workspace for 24 hours? Access ends automatically."
 msgstr "Надати користувачу {0} з dembrane права адміністратора для цього робочого простору на 24 години? Доступ припиниться автоматично."
 
@@ -6580,7 +6580,7 @@ msgstr "Оцінюйте відповіді чату схвально або н�
 #~ msgstr "Give me a list of 5-10 topics that are being discussed."
 
 #: src/components/popcorn/PopcornVoiceSection.tsx:161
-#: src/components/popcorn/PopcornStart.tsx:97
+#: src/components/popcorn/PopcornStart.tsx:99
 msgid "Give the session a title"
 msgstr "Вкажіть назву сесії"
 
@@ -6691,7 +6691,7 @@ msgstr "Надати ліцензії"
 msgid "Group by"
 msgstr "Групувати за"
 
-#: src/components/project/ProjectPortalEditor.tsx:1521
+#: src/components/project/ProjectPortalEditor.tsx:1512
 msgid "Guide how titles are generated. Titles describe the topic of the conversation, not the participant."
 msgstr "Guide how titles are generated. Titles describe the topic of the conversation, not the participant."
 
@@ -6704,12 +6704,12 @@ msgid "Guide the report"
 msgstr "Guide the report"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:316
-#: src/routes/project/report/ProjectReportRoute.tsx:1173
+#: src/routes/project/report/ProjectReportRoute.tsx:1161
 msgid "Guided"
 msgstr "З керiвництвом"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:185
-#: src/components/conversation/ProjectConversationsPanel.tsx:319
+#: src/components/conversation/ProjectConversationsPanel.tsx:326
 #: src/components/conversation/ConversationAccordion.tsx:575
 msgid "Has verified artifacts"
 msgstr "Has verified artifacts"
@@ -6753,8 +6753,8 @@ msgstr "Hidden"
 msgid "Hidden by the Objects filter"
 msgstr "Приховано фільтром об'єктів"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1920
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1940
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1924
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1944
 msgid "Hidden from organisation members. Organisation admins can still find and join."
 msgstr "Приховано від учасників організації. Адміністратори організації все одно можуть знайти та приєднатися."
 
@@ -6780,7 +6780,7 @@ msgstr "Hide"
 msgid "Hide data"
 msgstr "Hide data"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1868
+#: src/routes/organisation/OrganisationRoute.tsx:1873
 msgid "Hide detail"
 msgstr "Сховати деталі"
 
@@ -6901,7 +6901,7 @@ msgstr "Наведіть курсор на вузли, щоб дослідити
 msgid "How Ask works and what it can do."
 msgstr "Як працює Ask і що він уміє."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:691
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:695
 msgid "How it works:"
 msgstr "How it works:"
 
@@ -6965,7 +6965,7 @@ msgid "I understand"
 msgstr "Зрозуміло"
 
 #. placeholder {0}: data.client_name
-#: src/routes/settings/AgentConsentRoute.tsx:311
+#: src/routes/settings/AgentConsentRoute.tsx:312
 msgid "I understand that {0} and its provider will receive this data"
 msgstr "Я розумію, що {0} та його провайдер отримають ці дані"
 
@@ -7015,11 +7015,11 @@ msgstr "Якщо вам потрібно щось інше, ми підготу�
 msgid "If you were expecting access, please ask the person who invited you to send it again."
 msgstr "Якщо ви очікували на доступ, попросіть людину, яка вас запросила, надіслати запрошення ще раз."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:814
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:818
 msgid "If you're not sure, you probably don't need it yet. Webhooks are an advanced feature typically used by developers or teams with custom integrations. You can always set them up later."
 msgstr "If you're not sure, you probably don't need it yet. Webhooks are an advanced feature typically used by developers or teams with custom integrations. You can always set them up later."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:978
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:982
 msgid "If you're setting up webhook integrations, we'd love to learn about your use case. We're also building observability features including audit logs and delivery tracking."
 msgstr "If you're setting up webhook integrations, we'd love to learn about your use case. We're also building observability features including audit logs and delivery tracking."
 
@@ -7091,7 +7091,7 @@ msgstr "Неактивний"
 msgid "Inbox"
 msgstr "Вхідні"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:976
+#: src/routes/project/report/ProjectReportRoute.tsx:967
 msgid "Include portal link"
 msgstr "Include portal link"
 
@@ -7117,8 +7117,8 @@ msgstr "Неправильно або вигадано"
 msgid "Inferred"
 msgstr "Виведено"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:946
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:960
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:950
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:964
 msgid "inherited from organisation"
 msgstr "успадковано від організації"
 
@@ -7241,7 +7241,7 @@ msgstr "Запрошуйте зовнішніх співавторів і спо
 msgid "Invite members to collaborate on projects and conversations in this workspace."
 msgstr "Запрошуйте учасників для спільної роботи над проєктами та розмовами в цьому робочому просторі."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1917
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1921
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:393
 #: src/components/workspace/DiscoverableWorkspaces.tsx:307
 msgid "Invite only"
@@ -7296,7 +7296,7 @@ msgstr "Робочий простір лише за запрошенням"
 
 #. placeholder {0}: inv.invited_by_name
 #: src/routes/invite/MyInvitesRoute.tsx:192
-#: src/components/members/PendingInvitesSection.tsx:149
+#: src/components/members/PendingInvitesSection.tsx:150
 msgid "invited by {0}"
 msgstr "запросив(-ла) {0}"
 
@@ -7380,7 +7380,7 @@ msgstr "It looks like the conversation was deleted while you were recording. We'
 msgid "participant.outcome.error.description"
 msgstr "It looks like we couldn't load this outcome. This might be a temporary issue. You can try reloading or go back to select a different topic."
 
-#: src/components/report/CreateReportForm.tsx:189
+#: src/components/report/CreateReportForm.tsx:185
 msgid "It looks like you don't have a report for this project yet. Generate one to get an overview of your conversations."
 msgstr "It looks like you don't have a report for this project yet. Generate one to get an overview of your conversations."
 
@@ -7393,7 +7393,7 @@ msgstr "Посилання вже використано або його тер�
 #~ msgstr "It sounds like more than one person is speaking. Taking turns will help us hear everyone clearly."
 
 #. placeholder {0}: data.redirect_host
-#: src/routes/settings/AgentConsentRoute.tsx:237
+#: src/routes/settings/AgentConsentRoute.tsx:236
 msgid "It will send you back to {0}."
 msgstr "Вас буде повернуто до {0}."
 
@@ -7421,23 +7421,23 @@ msgstr "Тарас"
 msgid "john@doe.com"
 msgstr "taras@shevchenko.com"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1979
-#: src/routes/organisation/OrganisationRoute.tsx:1985
+#: src/routes/organisation/OrganisationRoute.tsx:1984
+#: src/routes/organisation/OrganisationRoute.tsx:1990
 msgid "Join"
 msgstr "Приєднатися"
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:1973
+#: src/routes/organisation/OrganisationRoute.tsx:1978
 msgid "Join {0} as <0>admin</0>? It'll show in your sidebar right after."
 msgstr "Приєднатися до {0} як <0>адміністратор</0>? Після цього він з'явиться на вашій бічній панелі."
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:1991
+#: src/routes/organisation/OrganisationRoute.tsx:1996
 msgid "Join {0} as an admin first to add others."
 msgstr "Спочатку приєднайтеся до {0} як адміністратор, щоб додавати інших."
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:1981
+#: src/routes/organisation/OrganisationRoute.tsx:1986
 msgid "Join {0}?"
 msgstr "Приєднатися до {0}?"
 
@@ -7454,7 +7454,7 @@ msgstr "Приєднатися як адміністратор"
 msgid "Join as admin?"
 msgstr "Приєднатися як адміністратор?"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1996
+#: src/routes/organisation/OrganisationRoute.tsx:2001
 msgid "Join first"
 msgstr "Спочатку приєднайтеся"
 
@@ -7581,7 +7581,7 @@ msgid "Keep editing"
 msgstr "Продовжити редагування"
 
 #: src/components/training/TrainingRowActions.tsx:331
-#: src/components/members/PendingInvitesSection.tsx:228
+#: src/components/members/PendingInvitesSection.tsx:229
 msgid "Keep it"
 msgstr "Залишити"
 
@@ -7593,7 +7593,7 @@ msgstr "Зберегти ліцензію"
 msgid "Keep my plan"
 msgstr "Залишити мій тариф"
 
-#: src/components/workspace/AccessRequestsList.tsx:216
+#: src/components/workspace/AccessRequestsList.tsx:217
 msgid "Keep pending"
 msgstr "Залишити в очікуванні"
 
@@ -7651,11 +7651,12 @@ msgstr "Типи знахідок"
 #: src/components/settings/LanguageSettingsCard.tsx:10
 #: src/components/report/UpdateReportModalButton.tsx:265
 #: src/components/report/UpdateReportModalButton.tsx:339
-#: src/components/report/CreateReportForm.tsx:248
-#: src/components/report/CreateReportForm.tsx:326
+#: src/components/report/CreateReportForm.tsx:244
+#: src/components/report/CreateReportForm.tsx:322
 #: src/components/project/ProjectPortalEditor.tsx:608
 #: src/components/project/PortalSettingsOverview.tsx:120
 #: src/components/popcorn/PopcornLanguageSettings.tsx:107
+#: src/components/language/LanguagePicker.tsx:124
 msgid "Language"
 msgstr "Language"
 
@@ -7715,11 +7716,11 @@ msgstr "Останній звіт"
 msgid "Learn more"
 msgstr "Дізнатися більше"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:827
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:831
 msgid "Learn more about webhooks"
 msgstr "Learn more about webhooks"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:422
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:423
 msgid "Leave empty to keep existing"
 msgstr "Leave empty to keep existing"
 
@@ -7731,13 +7732,13 @@ msgstr "Залишити відгук"
 msgid "Leave now"
 msgstr "Вийти зараз"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1118
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1137
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1122
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1141
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1144
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1332
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1145
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1148
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1336
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1340
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1344
 msgid "Leave workspace"
 msgstr "Залишити робочий простір"
 
@@ -7920,7 +7921,7 @@ msgstr "Потік учасників наживо"
 msgid "Live participant funnel: scanned, setting up, on recording page, live, and finished counts"
 msgstr "Воронка учасників наживо: відскановано, налаштування, на сторінці запису, наживо та завершено"
 
-#: src/components/project/ProjectPortalEditor.tsx:1587
+#: src/components/project/ProjectPortalEditor.tsx:1578
 msgid "Live preview"
 msgstr "Попередній перегляд наживо"
 
@@ -8059,11 +8060,11 @@ msgstr "Завантаження цього чату..."
 msgid "Loading transcript..."
 msgstr "Loading transcript..."
 
-#: src/components/project/ProjectPortalEditor.tsx:973
+#: src/components/project/ProjectPortalEditor.tsx:983
 msgid "Loading verify topics…"
 msgstr "Loading verify topics…"
 
-#: src/components/invite/WorkspaceSelectList.tsx:67
+#: src/components/invite/WorkspaceSelectList.tsx:66
 msgid "Loading workspaces…"
 msgstr "Завантаження робочих просторів…"
 
@@ -8118,7 +8119,7 @@ msgstr "Параметри зі статті LocalMAP"
 msgid "Locked"
 msgstr "Заблоковано"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:469
+#: src/components/conversation/ProjectConversationsPanel.tsx:476
 #: src/components/conversation/LiveMonitorSection.tsx:313
 msgid "Locked conversation, upgrade to view"
 msgstr "Розмова заблокована, оновіть тариф для перегляду"
@@ -8130,7 +8131,7 @@ msgstr "Зафіксовано відповідно до запрошення. �
 #: src/routes/invite/AcceptInviteRoute.tsx:285
 #: src/routes/auth/VerifyEmail.tsx:161
 #: src/routes/auth/Login.tsx:439
-#: src/routes/auth/Login.tsx:553
+#: src/routes/auth/Login.tsx:556
 msgid "Log in"
 msgstr "Увійти"
 
@@ -8175,17 +8176,17 @@ msgstr "Передаємо інформацію команді dembrane"
 #~ msgid "Login | dembrane"
 #~ msgstr "Login | dembrane"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1628
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1697
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1632
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1701
 msgid "Logo"
 msgstr "Логотип"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1513
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1517
 #: src/components/settings/WhitelabelLogoCard.tsx:89
 msgid "Logo removed"
 msgstr "Logo removed"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1503
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1507
 #: src/components/settings/WhitelabelLogoCard.tsx:66
 msgid "Logo updated"
 msgstr "Logo updated"
@@ -8232,9 +8233,9 @@ msgstr "Зробити приватним"
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:167
 #: src/components/training/StaffTrainingPanel.tsx:175
 #: src/components/project/ProjectSharingStrip.tsx:98
-#: src/components/conversation/ProjectConversationsPanel.tsx:397
-#: src/components/conversation/ProjectConversationsPanel.tsx:401
-#: src/components/billing/BillingManager.tsx:1557
+#: src/components/conversation/ProjectConversationsPanel.tsx:404
+#: src/components/conversation/ProjectConversationsPanel.tsx:408
+#: src/components/billing/BillingManager.tsx:1555
 #: src/components/agent-access/YourOrganisations.tsx:85
 msgid "Manage"
 msgstr "Керувати"
@@ -8373,7 +8374,7 @@ msgstr "макс. {maximum}"
 msgid "MCP access"
 msgstr "Доступ через MCP"
 
-#: src/routes/settings/AgentConsentRoute.tsx:102
+#: src/routes/settings/AgentConsentRoute.tsx:101
 msgid "MCP access | dembrane"
 msgstr "Доступ через MCP | dembrane"
 
@@ -8416,7 +8417,7 @@ msgstr "Meeting Notes"
 msgid "member"
 msgstr "учасник"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1044
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1048
 #: src/lib/roles.ts:11
 #: src/components/training/TrainingRoster.tsx:44
 #: src/components/training/TrainingRoster.tsx:56
@@ -8518,7 +8519,7 @@ msgstr "Бракує потрібних функцій"
 msgid "mo"
 msgstr "міс."
 
-#: src/components/project/ProjectPortalEditor.tsx:805
+#: src/components/project/ProjectPortalEditor.tsx:807
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:130
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:347
 msgid "Mode"
@@ -8542,7 +8543,7 @@ msgstr "more"
 msgid "More"
 msgstr "Більше"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1040
+#: src/routes/project/report/ProjectReportRoute.tsx:1028
 msgid "More actions"
 msgstr "More actions"
 
@@ -8567,7 +8568,7 @@ msgid "More useful chat context"
 msgstr "Корисніший контекст чату"
 
 #: src/components/project/BulkMoveProjectsModal.tsx:114
-#: src/components/conversation/MoveConversationButton.tsx:239
+#: src/components/conversation/MoveConversationButton.tsx:240
 #: src/components/conversation/ConversationAccordion.tsx:348
 msgid "Move"
 msgstr "Move"
@@ -8600,7 +8601,7 @@ msgid "Move conversations between projects and projects between workspaces in bu
 msgstr "Масове переміщення розмов між проєктами та проєктів між робочими просторами."
 
 #: src/components/project/ProjectMoveWorkspace.tsx:132
-#: src/components/conversation/MoveConversationButton.tsx:258
+#: src/components/conversation/MoveConversationButton.tsx:260
 msgid "Move history"
 msgstr "Історія переміщень"
 
@@ -8665,14 +8666,14 @@ msgstr "Мій доступ"
 msgid "My templates"
 msgstr "My templates"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1541
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1545
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:453
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:699
 #: src/routes/project/CreateProjectRoute.tsx:239
 #: src/routes/project/CreateProjectRoute.tsx:350
 #: src/components/results/curate/StakeholdersTab.tsx:45
 #: src/components/project/ProjectBasicEdit.tsx:109
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:370
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:371
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:254
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:320
 #: src/components/conversation/ConversationEdit.tsx:363
@@ -8687,7 +8688,7 @@ msgstr "Name"
 msgid "Name A-Z"
 msgstr "Name A-Z"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:367
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:368
 msgid "Name is required"
 msgstr "Name is required"
 
@@ -8895,7 +8896,7 @@ msgstr "Next"
 msgid "Next change in <0>{remainingSeconds}s</0>"
 msgstr "Наступна зміна через <0>{remainingSeconds} с</0>"
 
-#: src/components/billing/BillingManager.tsx:1318
+#: src/components/billing/BillingManager.tsx:1316
 msgid "Next invoice"
 msgstr "Наступний рахунок"
 
@@ -8912,7 +8913,7 @@ msgstr "Наступний рахунок"
 msgid "No"
 msgstr "Ні"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2078
+#: src/routes/organisation/OrganisationRoute.tsx:2083
 msgid "No access"
 msgstr "Немає доступу"
 
@@ -8953,7 +8954,7 @@ msgstr "Аргументів ще немає. Вони з'являться пі�
 msgid "No audit logs match the current filters."
 msgstr "No audit logs match the current filters."
 
-#: src/components/billing/BillingManager.tsx:1096
+#: src/components/billing/BillingManager.tsx:1095
 msgid "No billing account yet. Email <0>support@dembrane.com</0> and we'll set one up."
 msgstr "Платіжного акаунту ще немає. Напишіть на <0>support@dembrane.com</0>, і ми його створимо."
 
@@ -9019,7 +9020,7 @@ msgstr "No conversations found."
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:943
+#: src/components/conversation/ProjectConversationsPanel.tsx:950
 msgid "No conversations match these filters."
 msgstr "Жодна розмова не відповідає цим фільтрам."
 
@@ -9028,11 +9029,11 @@ msgstr "Жодна розмова не відповідає цим фільтр�
 msgid "select.all.modal.no.conversations"
 msgstr "No conversations were processed. This may happen if all conversations are already in context or don't match the selected filters."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:945
+#: src/components/conversation/ProjectConversationsPanel.tsx:952
 msgid "No conversations yet."
 msgstr "Розмов ще немає."
 
-#: src/components/report/CreateReportForm.tsx:194
+#: src/components/report/CreateReportForm.tsx:190
 msgid "No conversations yet. You can schedule a report now and conversations will be included once they are added."
 msgstr "Розмов ще немає. Ви можете запланувати звiт зараз, i розмови будуть включенi пiсля їх додавання."
 
@@ -9072,7 +9073,7 @@ msgstr "Немає висновків, що цьому відповідають.
 msgid "No findings yet. They appear after the first analysis."
 msgstr "Поки що немає висновків. Вони з'являться після першого аналізу."
 
-#: src/components/billing/BillingManager.tsx:1314
+#: src/components/billing/BillingManager.tsx:1312
 msgid "No further charges"
 msgstr "Без додаткових списань"
 
@@ -9093,8 +9094,8 @@ msgstr "Запрошення не надіслано. Перевірте спи�
 msgid "No linked arguments."
 msgstr "Немає пов'язаних аргументів."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1660
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1734
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1664
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1738
 msgid "No logo set. dembrane default will be used."
 msgstr "Логотип не встановлено. Використовуватиметься стандартний dembrane."
 
@@ -9160,7 +9161,7 @@ msgstr "Тут ще нікого немає."
 msgid "No one is auto-blocked for non-payment. Watch failed charges here and follow up."
 msgstr "Автоблокування за несплату не застосовується. Відстежуйте невдалі платежі тут і вживайте заходів."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1194
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1198
 #: src/routes/organisation/OrganisationRoute.tsx:977
 #: src/components/project/ProjectUsageAndSharing.tsx:375
 msgid "No one matches that filter."
@@ -9183,7 +9184,7 @@ msgstr "В організації ще нікого немає. Учасники
 msgid "No one on this organisation yet."
 msgstr "У цій організації ще нікого немає."
 
-#: src/components/project/ProjectListItem.tsx:68
+#: src/components/project/ProjectListItem.tsx:69
 #: src/components/project/PinnedProjectCard.tsx:44
 msgid "No one shared yet"
 msgstr "Доступ ще нікому не надано"
@@ -9192,7 +9193,7 @@ msgstr "Доступ ще нікому не надано"
 msgid "No one's on the workspace yet."
 msgstr "У робочому просторі ще нікого немає."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1847
+#: src/routes/organisation/OrganisationRoute.tsx:1852
 msgid "No organisation role. Access via workspace invites."
 msgstr "Немає ролі в організації. Доступ через запрошення до робочого простору."
 
@@ -9234,7 +9235,7 @@ msgid "No project activity this period."
 msgstr "Немає активності в проєкті за цей період."
 
 #. placeholder {0}: search && `with "${search}"`
-#: src/components/conversation/MoveConversationButton.tsx:171
+#: src/components/conversation/MoveConversationButton.tsx:172
 msgid "No projects found {0}"
 msgstr "No projects found {0}"
 
@@ -9294,7 +9295,7 @@ msgstr "No results"
 msgid "No runs yet. Preparation and updates will appear here."
 msgstr "Запусків ще немає. Підготовка та оновлення з'являтимуться тут."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:877
+#: src/components/conversation/ProjectConversationsPanel.tsx:884
 msgid "No selectable conversations"
 msgstr "Немає розмов для вибору"
 
@@ -9311,7 +9312,7 @@ msgid "No stakeholders yet. They appear after the first analysis."
 msgstr "Зацікавлених сторін ще немає. Вони з'являться після першого аналізу."
 
 #: src/routes/project/ProjectHomeRoute.tsx:297
-#: src/components/conversation/ProjectConversationsPanel.tsx:441
+#: src/components/conversation/ProjectConversationsPanel.tsx:448
 msgid "No summary yet"
 msgstr "Підсумку ще немає"
 
@@ -9344,14 +9345,14 @@ msgid "No trainings yet."
 msgstr "Тренінгів ще немає."
 
 #: src/components/conversation/ConversationTranscriptSection.tsx:163
-msgid "No transcript available"
-msgstr "Транскрипт недоступний"
+#~ msgid "No transcript available"
+#~ msgstr "Транскрипт недоступний"
 
 #: src/components/conversation/ConversationTranscriptSection.tsx:163
 #~ msgid "No Transcript Available"
 #~ msgstr "No Transcript Available"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:167
+#: src/components/conversation/ConversationTranscriptSection.tsx:161
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "No transcript exists for this conversation yet. Please check back later."
 
@@ -9371,7 +9372,7 @@ msgstr "No valid audio files were selected. Please select audio files only (MP3,
 msgid "No verification topics are configured for this project."
 msgstr "No verification topics are configured for this project."
 
-#: src/components/project/ProjectPortalEditor.tsx:977
+#: src/components/project/ProjectPortalEditor.tsx:987
 msgid "No verify topics available."
 msgstr "No verify topics available."
 
@@ -9388,7 +9389,7 @@ msgstr "Версії ще немає"
 msgid "No webhooks found"
 msgstr "No webhooks found"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:951
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:955
 msgid "No webhooks yet. Add a webhook to automatically receive conversation data when events happen."
 msgstr "Вебхуків ще немає. Додайте вебхук, щоб автоматично отримувати дані розмов, коли відбуваються події."
 
@@ -9400,7 +9401,7 @@ msgstr "Ще немає доступу до робочого простору"
 msgid "No workspace picked. They'll be added to {orgName} and can request workspace access themselves."
 msgstr "Робочий простір не вибрано. Користувача буде додано до {orgName}, і він зможе самостійно запросити доступ."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1912
+#: src/routes/organisation/OrganisationRoute.tsx:1917
 msgid "No workspace role change. Add this person to the organisation, then re-invite from the workspace."
 msgstr "Роль у робочому просторі не змінено. Додайте цю людину до організації, а потім запросіть знову з робочого простору."
 
@@ -9408,7 +9409,7 @@ msgstr "Роль у робочому просторі не змінено. До�
 msgid "No workspaces from this organisation are shared with you right now."
 msgstr "Зараз з вами не поділилися жодним робочим простором цієї організації."
 
-#: src/components/invite/WorkspaceSelectList.tsx:113
+#: src/components/invite/WorkspaceSelectList.tsx:112
 msgid "No workspaces match \"{search}\"."
 msgstr "Жоден робочий простір не відповідає запиту «{search}»."
 
@@ -9424,7 +9425,7 @@ msgstr "Немає"
 msgid "None in this view."
 msgstr "Немає в цьому вигляді."
 
-#: src/components/billing/BillingManager.tsx:1328
+#: src/components/billing/BillingManager.tsx:1326
 msgid "None scheduled"
 msgstr "Не заплановано"
 
@@ -9456,7 +9457,7 @@ msgstr "Не оцінено"
 #~ msgstr "Not available"
 
 #. placeholder {0}: org.name
-#: src/routes/settings/AgentConsentRoute.tsx:83
+#: src/routes/settings/AgentConsentRoute.tsx:82
 msgid "Not enabled by an admin of {0}"
 msgstr "Не ввімкнено адміністратором {0}"
 
@@ -9499,7 +9500,7 @@ msgstr "Не записано"
 msgid "Not relevant"
 msgstr "Не стосується справи"
 
-#: src/components/billing/BillingManager.tsx:1241
+#: src/components/billing/BillingManager.tsx:1239
 msgid "Not renewing"
 msgstr "Не подовжується"
 
@@ -9508,7 +9509,7 @@ msgid "Not scheduled"
 msgstr "Не заплановано"
 
 #: src/components/project/PortalSettingsOverview.tsx:53
-#: src/components/billing/BillingManager.tsx:1400
+#: src/components/billing/BillingManager.tsx:1398
 msgid "Not set"
 msgstr "Не встановлено"
 
@@ -9592,7 +9593,7 @@ msgstr "Ще нічого не збережено. Асистент додава
 msgid "Nothing saved yet. The assistant adds notes here as you chat."
 msgstr "Ще нічого не збережено. Асистент додаватиме нотатки сюди під час вашої розмови."
 
-#: src/components/project/ProjectPortalEditor.tsx:1143
+#: src/components/project/ProjectPortalEditor.tsx:1134
 msgid "Notify participants when a report is published."
 msgstr "Notify participants when a report is published."
 
@@ -9605,7 +9606,7 @@ msgstr "Notify participants when a report is published."
 #~ msgid "Objects ({visibleCount})"
 #~ msgstr ""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1033
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1037
 #: src/lib/roles.ts:17
 #: src/components/invite/RoleSelect.tsx:65
 msgid "Observer"
@@ -9619,7 +9620,7 @@ msgstr "Спостерігачі (безкоштовно)"
 msgid "Observers are free and read-only, and only for external-client workspaces. They can view the workspace but cannot chat, generate reports, or edit. To let them do more, change their role to External."
 msgstr "Спостерігачі безкоштовні й мають доступ лише для читання тільки в робочих просторах для зовнішніх клієнтів. Вони можуть переглядати робочий простір, але не можуть спілкуватися в чаті, створювати звіти чи редагувати. Щоб надати їм більше можливостей, змініть їхню роль на «Зовнішній»."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1024
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1028
 msgid "Observers are free, read-only guests. To give edit access, remove them and re-invite as a member."
 msgstr "Спостерігачі: це безкоштовні гості з доступом лише для читання. Щоб надати їм права на редагування, вилучіть їх і запросіть повторно як учасника команди."
 
@@ -9739,7 +9740,7 @@ msgid "One-off"
 msgstr "Одноразово"
 
 #: src/routes/project/ProjectHomeRoute.tsx:286
-#: src/components/conversation/ProjectConversationsPanel.tsx:360
+#: src/components/conversation/ProjectConversationsPanel.tsx:367
 msgid "Ongoing"
 msgstr "Ongoing"
 
@@ -9823,8 +9824,8 @@ msgstr "Відкрити всі"
 msgid "Open chat documentation"
 msgstr "Відкрити документацію чату"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:412
-#: src/components/conversation/ProjectConversationsPanel.tsx:416
+#: src/components/conversation/ProjectConversationsPanel.tsx:419
+#: src/components/conversation/ProjectConversationsPanel.tsx:423
 #: src/components/conversation/ConversationDrilldownModal.tsx:238
 #: src/components/chat/ChatHistoryMessage.tsx:190
 msgid "Open conversation"
@@ -9977,7 +9978,7 @@ msgstr "Увімкніть експериментальні функції та 
 
 #: src/routes/auth/Register.tsx:162
 #: src/components/project/CustomTopicModal.tsx:234
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:415
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:416
 #: src/components/feedback/ResponseFeedbackControls.tsx:197
 #: src/components/billing/BillingManager.tsx:444
 #: src/components/billing/BillingManager.tsx:470
@@ -9997,7 +9998,7 @@ msgstr "Optional field on the start page"
 msgid "Optional field on the thank you page"
 msgstr "Optional field on the thank you page"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1569
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1573
 msgid "Optional. What this workspace is for."
 msgstr "Необов'язково. Для чого призначений цей робочий простір."
 
@@ -10007,7 +10008,7 @@ msgid "Options"
 msgstr "Options"
 
 #: src/routes/auth/Register.tsx:292
-#: src/routes/auth/Login.tsx:591
+#: src/routes/auth/Login.tsx:594
 msgid "or"
 msgstr "or"
 
@@ -10023,7 +10024,7 @@ msgstr "Або бажаєте поспiлкуватися напряму?"
 msgid "Or write your own"
 msgstr "Or write your own"
 
-#: src/components/members/PendingInvitesSection.tsx:157
+#: src/components/members/PendingInvitesSection.tsx:158
 msgid "Org only"
 msgstr "Лише орг."
 
@@ -10055,7 +10056,7 @@ msgstr "Обліковий запис організації"
 msgid "Organisation admins can join private workspaces from the members page."
 msgstr "Адміністратори організації можуть приєднуватися до приватних робочих просторів зі сторінки учасників."
 
-#: src/components/workspace/AccessRequestsList.tsx:159
+#: src/components/workspace/AccessRequestsList.tsx:160
 msgid "Organisation member"
 msgstr "Учасник організації"
 
@@ -10164,7 +10165,7 @@ msgstr "Outcomes"
 msgid "Output objects: {outputObjects}"
 msgstr "Вихідні об'єкти: {outputObjects}"
 
-#: src/components/invite/WorkspaceSelectList.tsx:209
+#: src/components/invite/WorkspaceSelectList.tsx:208
 msgid "Overage billing applies"
 msgstr "Застосовується плата за перевищення ліміту"
 
@@ -10192,7 +10193,7 @@ msgstr "Overview - Themes & patterns"
 msgid "Ownership"
 msgstr "Власність"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:974
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:978
 msgid "Ownership is locked. Contact support to transfer."
 msgstr "Власність заблоковано. Зверніться до служби підтримки для передачі."
 
@@ -10205,7 +10206,7 @@ msgstr "Організація-власник"
 #~ msgid "Page {0}"
 #~ msgstr ""
 
-#: src/components/project/ProjectPortalEditor.tsx:1226
+#: src/components/project/ProjectPortalEditor.tsx:1217
 msgid "Page content"
 msgstr "Вміст сторінки"
 
@@ -10217,7 +10218,7 @@ msgstr "Вміст сторінки"
 msgid "Page not found"
 msgstr "Page not found"
 
-#: src/components/project/ProjectPortalEditor.tsx:1202
+#: src/components/project/ProjectPortalEditor.tsx:1193
 msgid "Page title"
 msgstr "Заголовок сторінки"
 
@@ -10277,7 +10278,7 @@ msgstr "Функції для учасників"
 msgid "Participant name"
 msgstr "Ім'я учасника"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:748
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:752
 msgid "Participant name and email"
 msgstr "Participant name and email"
 
@@ -10335,7 +10336,7 @@ msgstr "Організація-партнер"
 msgid "Partner workspace, billed on its own and not part of the organisation's plan."
 msgstr "Партнерський робочий простір, оплачується окремо та не входить до тарифу організації."
 
-#: src/components/invite/WorkspaceSelectList.tsx:175
+#: src/components/invite/WorkspaceSelectList.tsx:174
 msgid "Partner workspace, billed separately from the organisation."
 msgstr "Партнерський робочий простір, оплачується окремо від організації."
 
@@ -10402,7 +10403,7 @@ msgstr "Оплачуваний дохід"
 msgid "Paying revenue this month"
 msgstr "Оплачуваний дохід за цей місяць"
 
-#: src/components/billing/BillingManager.tsx:1243
+#: src/components/billing/BillingManager.tsx:1241
 msgid "Payment failed"
 msgstr "Платіж не вдався"
 
@@ -10414,7 +10415,7 @@ msgstr "Сума посилання на оплату, EUR"
 msgid "Payment link issued."
 msgstr "Посилання на оплату створено."
 
-#: src/components/billing/BillingManager.tsx:1384
+#: src/components/billing/BillingManager.tsx:1382
 msgid "Payment method"
 msgstr "Спосіб оплати"
 
@@ -10432,11 +10433,11 @@ msgstr "очікує"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2696
 #: src/routes/admin/AdminSettingsRoute.tsx:2767
-#: src/components/workspace/AccessRequestsList.tsx:169
+#: src/components/workspace/AccessRequestsList.tsx:170
 #: src/components/report/ConversationStatusTable.tsx:86
 #: src/components/project/ProjectUsageAndSharing.tsx:353
 #: src/components/project/ProjectSharingModal.tsx:404
-#: src/components/members/PendingInvitesSection.tsx:167
+#: src/components/members/PendingInvitesSection.tsx:168
 #: src/components/billing/BillingManager.tsx:228
 msgid "Pending"
 msgstr "Pending"
@@ -10468,7 +10469,7 @@ msgstr "людей"
 msgid "People"
 msgstr "Люди"
 
-#: src/components/project/ProjectListItem.tsx:88
+#: src/components/project/ProjectListItem.tsx:89
 #: src/components/project/PinnedProjectCard.tsx:64
 msgid "People with access"
 msgstr "Люди з доступом"
@@ -10481,7 +10482,7 @@ msgstr "Люди, групи та те, що для них важливо"
 msgid "Per-recipient results:"
 msgstr "Результати для кожного одержувача:"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1883
+#: src/routes/organisation/OrganisationRoute.tsx:1888
 msgid "Per-workspace access"
 msgstr "Доступ до окремих робочих просторів"
 
@@ -10556,7 +10557,7 @@ msgstr "Вичерпано ліміт пілотного доступу"
 msgid "Pin"
 msgstr "Pin"
 
-#: src/components/project/ProjectListItem.tsx:285
+#: src/components/project/ProjectListItem.tsx:293
 msgid "Pin project"
 msgstr "Pin project"
 
@@ -10592,7 +10593,7 @@ msgstr "Pinned templates"
 msgid "Plan"
 msgstr "План"
 
-#: src/components/billing/BillingManager.tsx:1305
+#: src/components/billing/BillingManager.tsx:1303
 msgid "Plan ends"
 msgstr "Тариф діє до"
 
@@ -10729,7 +10730,7 @@ msgstr "Popcorn показує аудиторії її власні слова �
 msgid "Popular"
 msgstr "Популярний"
 
-#: src/components/project/ProjectPortalEditor.tsx:1192
+#: src/components/project/ProjectPortalEditor.tsx:1183
 msgid "Portal content"
 msgstr "Вміст порталу"
 
@@ -10776,7 +10777,7 @@ msgstr "Огляд порталу"
 #~ msgid "Portal Overview"
 #~ msgstr "Огляд порталу"
 
-#: src/components/project/ProjectPortalEditor.tsx:1613
+#: src/components/project/ProjectPortalEditor.tsx:1604
 msgid "Portal preview"
 msgstr "Попередній перегляд порталу"
 
@@ -10912,7 +10913,7 @@ msgstr "Ціна"
 msgid "Print / Save PDF"
 msgstr "Print / Save PDF"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1100
+#: src/routes/project/report/ProjectReportRoute.tsx:1088
 msgid "Print report"
 msgstr "Print report"
 
@@ -10928,7 +10929,7 @@ msgstr "URL політики конфіденційності"
 #~ msgid "Privacy Policy URL"
 #~ msgstr "URL політики конфіденційності"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1937
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1941
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:399
 #: src/routes/project/CreateProjectRoute.tsx:322
 #: src/routes/project/CreateProjectRoute.tsx:392
@@ -10942,8 +10943,8 @@ msgstr "Приватний"
 msgid "Private · only invited people can see this"
 msgstr "Приватно · бачать лише запрошені"
 
-#: src/components/project/ProjectListItem.tsx:195
-#: src/components/project/ProjectListItem.tsx:202
+#: src/components/project/ProjectListItem.tsx:196
+#: src/components/project/ProjectListItem.tsx:203
 msgid "Private project"
 msgstr "Приватний проєкт"
 
@@ -11069,13 +11070,13 @@ msgstr "Проєкт переміщено"
 
 #: src/routes/project/ProjectHomeRoute.tsx:384
 #: src/routes/project/CreateProjectRoute.tsx:243
-#: src/components/project/ProjectListItem.tsx:392
+#: src/components/project/ProjectListItem.tsx:400
 #: src/components/project/ProjectDangerZone.tsx:136
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:68
 msgid "Project name"
 msgstr "Project name"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:763
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:767
 msgid "Project name and ID"
 msgstr "Project name and ID"
 
@@ -11087,7 +11088,7 @@ msgstr "Project name must be at least 4 characters long"
 msgid "Project not found"
 msgstr "Project not found"
 
-#: src/components/project/ProjectListItem.tsx:310
+#: src/components/project/ProjectListItem.tsx:318
 msgid "Project options"
 msgstr "Параметри проєкту"
 
@@ -11107,11 +11108,11 @@ msgstr "налаштування проєкту"
 #~ msgid "Project Settings"
 #~ msgstr "Project Settings"
 
-#: src/components/billing/BillingManager.tsx:1340
+#: src/components/billing/BillingManager.tsx:1338
 msgid "Projected monthly total"
 msgstr "Прогнозована місячна сума"
 
-#: src/components/billing/BillingManager.tsx:1339
+#: src/components/billing/BillingManager.tsx:1337
 msgid "Projected yearly total"
 msgstr "Прогнозована річна сума"
 
@@ -11172,7 +11173,7 @@ msgid "Public page"
 msgstr "Публічна сторінка"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:933
-#: src/routes/project/report/ProjectReportRoute.tsx:1315
+#: src/routes/project/report/ProjectReportRoute.tsx:1303
 msgid "Publish"
 msgstr "Publish"
 
@@ -11181,7 +11182,7 @@ msgstr "Publish"
 msgid "Publish changes"
 msgstr "Опублікувати зміни"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1296
+#: src/routes/project/report/ProjectReportRoute.tsx:1284
 msgid "Publish report"
 msgstr "Опублікувати звіт"
 
@@ -11190,10 +11191,10 @@ msgstr "Опублікувати звіт"
 #~ msgstr ""
 
 #: src/routes/project/report/ProjectReportRoute.tsx:966
-msgid "Publish this report first to show the portal link"
-msgstr "Publish this report first to show the portal link"
+#~ msgid "Publish this report first to show the portal link"
+#~ msgstr "Publish this report first to show the portal link"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1006
+#: src/routes/project/report/ProjectReportRoute.tsx:994
 msgid "Publish this report to get a share link"
 msgstr "Publish this report to get a share link"
 
@@ -11557,7 +11558,7 @@ msgstr "References"
 msgid "Refine shows the correct label and cannot run while another reply is being generated."
 msgstr "Кнопка «Уточнити» відображає правильну мітку й не працює, поки генерується інша відповідь."
 
-#: src/components/project/ProjectPortalEditor.tsx:1594
+#: src/components/project/ProjectPortalEditor.tsx:1585
 #: src/components/popcorn/PopcornActions.tsx:154
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:157
 #: src/components/common/UsageFreshness.tsx:32
@@ -11634,7 +11635,7 @@ msgid "Relationships"
 msgstr "Зв'язки"
 
 #: src/routes/ReleaseNotesRoute.tsx:21
-#: src/features/sidebar/breadcrumbs/AppBreadcrumbs.tsx:143
+#: src/features/sidebar/breadcrumbs/AppBreadcrumbs.tsx:144
 msgid "Release notes"
 msgstr "Примітки до випусків"
 
@@ -11672,7 +11673,7 @@ msgstr "Перезавантажити сторінку"
 msgid "participant.concrete.artefact.action.button.reload"
 msgstr "Перезавантажити сторінку"
 
-#: src/components/project/ProjectPortalEditor.tsx:1109
+#: src/components/project/ProjectPortalEditor.tsx:1100
 msgid "Remind users to verify before finishing"
 msgstr "Remind users to verify before finishing"
 
@@ -11680,10 +11681,10 @@ msgstr "Remind users to verify before finishing"
 msgid "Reminder sent: support access still on"
 msgstr "Нагадування надіслано: доступ підтримки все ще активний"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1171
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1655
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1722
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1802
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1175
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1659
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1726
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1806
 #: src/routes/organisation/OrganisationRoute.tsx:1808
 #: src/components/settings/WhitelabelLogoCard.tsx:146
 #: src/components/settings/WhitelabelLogoCard.tsx:180
@@ -11706,7 +11707,7 @@ msgid "Remove {0}"
 msgstr "Видалити {0}"
 
 #. placeholder {0}: member.display_name
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1160
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1164
 msgid "Remove {0} from this workspace? They'll lose access to all projects inside it."
 msgstr "Вилучити {0} з цього робочого простору? Доступ до всіх проєктів у ньому буде втрачено."
 
@@ -11739,7 +11740,7 @@ msgstr "Remove file"
 msgid "Remove from chat"
 msgstr "Вилучити з чату"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2096
+#: src/routes/organisation/OrganisationRoute.tsx:2101
 msgid "Remove from organisation"
 msgstr "Вилучити з організації"
 
@@ -11751,14 +11752,14 @@ msgstr "Вилучити з організації?"
 msgid "Remove from this chat"
 msgstr "Remove from this chat"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1796
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1800
 #: src/components/settings/WhitelabelLogoCard.tsx:177
 msgid "Remove logo"
 msgstr "Remove logo"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1151
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1175
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1178
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1155
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1179
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1182
 msgid "Remove member"
 msgstr "Вилучити учасника"
 
@@ -11768,7 +11769,7 @@ msgstr "Вилучити учасника"
 msgid "Remove override"
 msgstr "Видалити перевизначення"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1798
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1802
 msgid "Remove the custom logo? The dembrane default will be used instead."
 msgstr "Вилучити власний логотип? Замість нього використовуватиметься стандартний логотип dembrane."
 
@@ -11797,8 +11798,8 @@ msgstr "Rename chat"
 #: src/routes/project/ProjectHomeRoute.tsx:145
 #: src/routes/project/ProjectHomeRoute.tsx:149
 #: src/routes/project/ProjectHomeRoute.tsx:383
-#: src/components/project/ProjectListItem.tsx:333
-#: src/components/project/ProjectListItem.tsx:391
+#: src/components/project/ProjectListItem.tsx:341
+#: src/components/project/ProjectListItem.tsx:399
 msgid "Rename project"
 msgstr "Перейменувати проєкт"
 
@@ -11834,7 +11835,7 @@ msgstr "Поради щодо відповідей"
 msgid "Reply mode"
 msgstr "Режим відповідей"
 
-#: src/components/project/ProjectPortalEditor.tsx:871
+#: src/components/project/ProjectPortalEditor.tsx:874
 msgid "Reply prompt"
 msgstr "Промпт для відповіді"
 
@@ -11854,7 +11855,7 @@ msgid "Report"
 msgstr "Report"
 
 #: src/components/report/UpdateReportModalButton.tsx:243
-#: src/components/report/CreateReportForm.tsx:136
+#: src/components/report/CreateReportForm.tsx:135
 msgid "Report already generating"
 msgstr "Report already generating"
 
@@ -11883,7 +11884,7 @@ msgstr "Звіт згенеровано"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:727
 #: src/routes/project/report/ProjectReportRoute.tsx:808
-#: src/routes/project/report/ProjectReportRoute.tsx:1256
+#: src/routes/project/report/ProjectReportRoute.tsx:1244
 msgid "Report generation cancelled"
 msgstr "Report generation cancelled"
 
@@ -11896,7 +11897,7 @@ msgid "Report generation in progress..."
 msgstr "Report generation in progress..."
 
 #: src/routes/project/report/ProjectReportRoute.tsx:732
-#: src/routes/project/report/ProjectReportRoute.tsx:1261
+#: src/routes/project/report/ProjectReportRoute.tsx:1249
 msgid "Report generation was cancelled. You can start a new report below."
 msgstr "Report generation was cancelled. You can start a new report below."
 
@@ -11909,11 +11910,11 @@ msgid "Report issues from the dashboard with images and voice recordings."
 msgstr "Повідомляйте про проблеми з панелі керування за допомогою зображень та голосових записів."
 
 #: src/components/report/UpdateReportModalButton.tsx:218
-#: src/components/report/CreateReportForm.tsx:159
+#: src/components/report/CreateReportForm.tsx:158
 msgid "Report limit reached"
 msgstr "Досягнуто ліміту звітів"
 
-#: src/components/project/ProjectPortalEditor.tsx:1138
+#: src/components/project/ProjectPortalEditor.tsx:1129
 msgid "Report notifications"
 msgstr "Сповіщення про звіти"
 
@@ -11934,7 +11935,7 @@ msgid "Report subscriptions, Library generation and live indicators receive fixe
 msgstr "Покращено підписки на звіти, генерацію Бібліотеки та індикатори наживо."
 
 #: src/components/report/UpdateReportModalButton.tsx:377
-#: src/components/report/CreateReportForm.tsx:369
+#: src/components/report/CreateReportForm.tsx:365
 msgid "Report templates are on our roadmap."
 msgstr "Report templates are on our roadmap."
 
@@ -12052,7 +12053,7 @@ msgstr "Requesting microphone access to detect available devices..."
 msgid "Required"
 msgstr "Required"
 
-#: src/components/project/ProjectPortalEditor.tsx:1170
+#: src/components/project/ProjectPortalEditor.tsx:1173
 msgid "Requires \"Ask for email?\" to be enabled"
 msgstr "Потрібно ввімкнути «Запитувати електронну пошту?»"
 
@@ -12078,11 +12079,11 @@ msgstr "Reschedule"
 msgid "Reschedule to"
 msgstr "Перепланувати на"
 
-#: src/components/members/PendingInvitesSection.tsx:186
+#: src/components/members/PendingInvitesSection.tsx:187
 msgid "Resend invite"
 msgstr "Надіслати запрошення повторно"
 
-#: src/components/members/PendingInvitesSection.tsx:181
+#: src/components/members/PendingInvitesSection.tsx:182
 msgid "Resend invite email"
 msgstr "Повторно надіслати лист із запрошенням"
 
@@ -12095,8 +12096,8 @@ msgstr "Надіслати лист із підтвердженням ще ра�
 msgid "Reset"
 msgstr "Reset"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:844
-#: src/components/conversation/ProjectConversationsPanel.tsx:848
+#: src/components/conversation/ProjectConversationsPanel.tsx:851
+#: src/components/conversation/ProjectConversationsPanel.tsx:855
 msgid "Reset filters"
 msgstr "Скинути фільтри"
 
@@ -12208,7 +12209,7 @@ msgstr "Resume"
 msgid "Resume physics"
 msgstr "Відновити фізику"
 
-#: src/components/billing/BillingManager.tsx:1444
+#: src/components/billing/BillingManager.tsx:1442
 msgid "Resume plan"
 msgstr "Відновити тариф"
 
@@ -12324,7 +12325,7 @@ msgstr "Переглянути результати"
 #~ msgid "Review visible results"
 #~ msgstr ""
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:757
+#: src/components/conversation/ProjectConversationsPanel.tsx:764
 msgid "Review, edit, and open every conversation in this project."
 msgstr "Переглядайте, редагуйте та відкривайте будь-яку розмову в цьому проєкті."
 
@@ -12360,10 +12361,10 @@ msgid "Revoke"
 msgstr "Відкликати"
 
 #: src/components/project/ProjectSharingModal.tsx:412
-#: src/components/members/PendingInvitesSection.tsx:192
-#: src/components/members/PendingInvitesSection.tsx:198
-#: src/components/members/PendingInvitesSection.tsx:216
-#: src/components/members/PendingInvitesSection.tsx:227
+#: src/components/members/PendingInvitesSection.tsx:193
+#: src/components/members/PendingInvitesSection.tsx:199
+#: src/components/members/PendingInvitesSection.tsx:217
+#: src/components/members/PendingInvitesSection.tsx:228
 msgid "Revoke invite"
 msgstr "Відкликати запрошення"
 
@@ -12373,7 +12374,7 @@ msgid "Revoke license"
 msgstr "Відкликати ліцензію"
 
 #. placeholder {0}: pendingRevoke.email
-#: src/components/members/PendingInvitesSection.tsx:219
+#: src/components/members/PendingInvitesSection.tsx:220
 msgid "Revoke the invite sent to {0}? You can invite them again later."
 msgstr "Скасувати запрошення для {0}? Ви зможете запросити користувача пізніше."
 
@@ -12415,7 +12416,7 @@ msgstr "Приблизно скільки?"
 msgid "Rows per page"
 msgstr "Rows per page"
 
-#: src/components/popcorn/PopcornStart.tsx:110
+#: src/components/popcorn/PopcornStart.tsx:112
 msgid "Run"
 msgstr "Запустити"
 
@@ -12482,7 +12483,7 @@ msgstr "Save"
 msgid "participant.concrete.action.button.save"
 msgstr "Save"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1958
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1962
 msgid "Save access"
 msgstr "Зберегти доступ"
 
@@ -12494,7 +12495,7 @@ msgstr "Save as template"
 msgid "Save billing details"
 msgstr "Зберегти платіжні дані"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:462
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:466
 msgid "Save changes"
 msgstr "Зберегти зміни"
 
@@ -12514,10 +12515,10 @@ msgstr "Зберегти знижку"
 msgid "Save template"
 msgstr "Save template"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1412
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1431
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1463
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1483
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1416
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1435
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1467
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1487
 #: src/routes/organisation/OrganisationRoute.tsx:1076
 #: src/routes/admin/AdminSettingsRoute.tsx:449
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:108
@@ -12589,14 +12590,14 @@ msgstr "Відсканували QR"
 
 #: src/components/training/TrainingRowActions.tsx:152
 #: src/components/report/UpdateReportModalButton.tsx:368
-#: src/components/report/CreateReportForm.tsx:361
+#: src/components/report/CreateReportForm.tsx:357
 msgid "Schedule"
 msgstr "Schedule"
 
 #: src/components/report/UpdateReportModalButton.tsx:203
 #: src/components/report/UpdateReportModalButton.tsx:321
-#: src/components/report/CreateReportForm.tsx:238
-#: src/components/report/CreateReportForm.tsx:309
+#: src/components/report/CreateReportForm.tsx:234
+#: src/components/report/CreateReportForm.tsx:305
 msgid "Schedule report"
 msgstr "Запланувати звіт"
 
@@ -12655,8 +12656,8 @@ msgstr "Scroll to bottom"
 #: src/features/sidebar/blocks/SearchBlock.tsx:116
 #: src/features/sidebar/blocks/SearchBlock.tsx:120
 #: src/components/results/ResultsList.tsx:288
-#: src/components/conversation/ProjectConversationsPanel.tsx:796
-#: src/components/conversation/MoveConversationButton.tsx:154
+#: src/components/conversation/ProjectConversationsPanel.tsx:803
+#: src/components/conversation/MoveConversationButton.tsx:155
 msgid "Search"
 msgstr "Search"
 
@@ -12673,7 +12674,7 @@ msgstr "Пошук за акаунтом, статусом, описом"
 msgid "Search account, workspace, organisation, email, tier"
 msgstr "Пошук за акаунтом, робочим простором, організацією, email, рівнем"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:753
+#: src/components/conversation/ProjectConversationsPanel.tsx:760
 msgid "Search and select the conversations for this chat."
 msgstr "Знайдіть і виберіть розмови для цього чату."
 
@@ -12734,7 +12735,7 @@ msgstr "Пошук проєктів, розмов, транскриптів…"
 msgid "Search projects, organisations, workspaces, settings…"
 msgstr "Пошук проєктів, організацій, робочих просторів, налаштувань…"
 
-#: src/components/conversation/MoveConversationButton.tsx:155
+#: src/components/conversation/MoveConversationButton.tsx:156
 #: src/components/conversation/ConversationAccordion.tsx:282
 msgid "Search projects..."
 msgstr "Search projects..."
@@ -12766,7 +12767,7 @@ msgid "Search webhooks..."
 msgstr "Search webhooks..."
 
 #: src/components/workspace/OrganisationUsageRollup.tsx:515
-#: src/components/invite/WorkspaceSelectList.tsx:89
+#: src/components/invite/WorkspaceSelectList.tsx:88
 msgid "Search workspaces"
 msgstr "Пошук робочих просторів"
 
@@ -12801,7 +12802,7 @@ msgstr "Пошук у стенограмах за запитом \"{0}\""
 msgid "Searching…"
 msgstr "Пошук…"
 
-#: src/components/invite/WorkspaceSelectList.tsx:136
+#: src/components/invite/WorkspaceSelectList.tsx:135
 msgid "seats"
 msgstr "місць"
 
@@ -12811,11 +12812,11 @@ msgstr "місць"
 #: src/components/workspace/TierCapacityMatrix.tsx:109
 #: src/components/workspace/OrganisationUsageRollup.tsx:388
 #: src/components/billing/BillingManager.tsx:342
-#: src/components/billing/BillingManager.tsx:1262
+#: src/components/billing/BillingManager.tsx:1260
 msgid "Seats"
 msgstr "Місця"
 
-#: src/components/invite/WorkspaceSelectList.tsx:205
+#: src/components/invite/WorkspaceSelectList.tsx:204
 #: src/components/invite/InviteResultsList.tsx:51
 msgid "Seats full"
 msgstr "Всі місця зайняті"
@@ -12824,7 +12825,7 @@ msgstr "Всі місця зайняті"
 #~ msgid "Second pole"
 #~ msgstr ""
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:407
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:408
 msgid "Secret"
 msgstr "Secret"
 
@@ -12846,7 +12847,7 @@ msgid "see transcripts"
 msgstr "переглядати стенограми"
 
 #: src/components/report/UpdateReportModalButton.tsx:235
-#: src/components/report/CreateReportForm.tsx:177
+#: src/components/report/CreateReportForm.tsx:176
 #: src/components/chat/FreeTierChatGate.tsx:89
 msgid "See upgrade options"
 msgstr "Варіанти покращення тарифу"
@@ -12869,7 +12870,7 @@ msgid "Select"
 msgstr "Вибрати"
 
 #. placeholder {0}: ws.name
-#: src/components/invite/WorkspaceSelectList.tsx:159
+#: src/components/invite/WorkspaceSelectList.tsx:158
 msgid "Select {0}"
 msgstr "Вибрати {0}"
 
@@ -12925,15 +12926,15 @@ msgstr "«Вибрати все» доступно в Ask та в нових ч�
 msgid "select.all.modal.title.results"
 msgstr "Вибрати всі результати"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:873
+#: src/components/conversation/ProjectConversationsPanel.tsx:880
 msgid "Select all visible ({remainingCount})"
 msgstr "Вибрати всі видимі ({remainingCount})"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:435
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:436
 msgid "Select at least one event"
 msgstr "Select at least one event"
 
-#: src/components/project/ProjectPortalEditor.tsx:1034
+#: src/components/project/ProjectPortalEditor.tsx:1030
 msgid "Select at least one other topic before deleting this one"
 msgstr "Select at least one other topic before deleting this one"
 
@@ -12956,7 +12957,7 @@ msgstr "Вибрати розмову"
 #: src/routes/project/chat/NewChatRoute.tsx:624
 #: src/routes/project/chat/NewChatRoute.tsx:626
 #: src/routes/project/chat/NewChatRoute.tsx:733
-#: src/components/conversation/ProjectConversationsPanel.tsx:923
+#: src/components/conversation/ProjectConversationsPanel.tsx:930
 msgid "Select conversations"
 msgstr "Вибрати розмови"
 
@@ -12976,7 +12977,7 @@ msgstr "Вибрати всі відображені знахідки"
 msgid "Select multiple conversations"
 msgstr "Вибір кількох розмов"
 
-#: src/components/project/ProjectListItem.tsx:362
+#: src/components/project/ProjectListItem.tsx:370
 msgid "Select project"
 msgstr "Вибрати проєкт"
 
@@ -12993,7 +12994,7 @@ msgstr "Select tags"
 msgid "Select the instructions that will be shown to participants when they start a conversation"
 msgstr "Select the instructions that will be shown to participants when they start a conversation"
 
-#: src/components/project/ProjectPortalEditor.tsx:810
+#: src/components/project/ProjectPortalEditor.tsx:814
 msgid "Select the type of feedback or engagement you want to encourage."
 msgstr "Select the type of feedback or engagement you want to encourage."
 
@@ -13010,7 +13011,7 @@ msgid "Select up to 2 focus areas for your report"
 msgstr "Оберiть до 2 напрямкiв для вашого звiту"
 
 #. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:966
+#: src/components/project/ProjectPortalEditor.tsx:976
 msgid "dashboard.dembrane.feature.verify.topic.select"
 msgstr "Select which topics participants can use for \"Verify\"."
 
@@ -13103,7 +13104,7 @@ msgstr "Надіслати запит"
 msgid "Send reset link"
 msgstr "Надіслати посилання для скидання"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:791
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:795
 msgid "Send Slack/Teams notifications when new conversations are completed"
 msgstr "Send Slack/Teams notifications when new conversations are completed"
 
@@ -13140,7 +13141,7 @@ msgstr "Назва сесії"
 #~ msgid "Session Name"
 #~ msgstr "Session Name"
 
-#: src/components/popcorn/PopcornStart.tsx:73
+#: src/components/popcorn/PopcornStart.tsx:74
 msgid "Session title"
 msgstr "Назва сесії"
 
@@ -13276,7 +13277,7 @@ msgstr "Поділитися порталом"
 msgid "Share presentation"
 msgstr "Поділитися презентацією"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1081
+#: src/routes/project/report/ProjectReportRoute.tsx:1069
 msgid "Share report"
 msgstr "Share report"
 
@@ -13306,7 +13307,7 @@ msgid "Share your details here"
 msgstr "Share your details here"
 
 #: src/components/report/UpdateReportModalButton.tsx:385
-#: src/components/report/CreateReportForm.tsx:376
+#: src/components/report/CreateReportForm.tsx:372
 msgid "Share your ideas with our team"
 msgstr "Share your ideas with our team"
 
@@ -13319,13 +13320,13 @@ msgid "Shared with"
 msgstr "Надано доступ для"
 
 #. placeholder {0}: visibleNames.join(", ")
-#: src/components/project/ProjectListItem.tsx:81
+#: src/components/project/ProjectListItem.tsx:82
 #: src/components/project/PinnedProjectCard.tsx:57
 msgid "Shared with {0}"
 msgstr "Надано доступ для {0}"
 
 #. placeholder {0}: visibleNames.join(", ")
-#: src/components/project/ProjectListItem.tsx:80
+#: src/components/project/ProjectListItem.tsx:81
 #: src/components/project/PinnedProjectCard.tsx:56
 msgid "Shared with {0} and {overflow} others"
 msgstr "Надано доступ для {0} та ще {overflow}"
@@ -13391,7 +13392,7 @@ msgstr "Показати всі {0}"
 msgid "Show all {total}"
 msgstr "Показати всі {total}"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:149
+#: src/components/conversation/ConversationTranscriptSection.tsx:148
 msgid "Show audio player"
 msgstr "Show audio player"
 
@@ -13403,7 +13404,7 @@ msgstr "Показати поточні аргументи"
 msgid "Show data"
 msgstr "Show data"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1868
+#: src/routes/organisation/OrganisationRoute.tsx:1873
 msgid "Show detail"
 msgstr "Показати деталі"
 
@@ -13426,7 +13427,7 @@ msgid "Show less"
 msgstr "Show less"
 
 #: src/features/sidebar/views/InboxView.tsx:564
-#: src/components/workspace/SupportAccessSection.tsx:257
+#: src/components/workspace/SupportAccessSection.tsx:262
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:237
 #: src/components/chat/CanvasSuggestionCard.tsx:292
 #: src/components/announcement/AnnouncementItem.tsx:121
@@ -13478,10 +13479,14 @@ msgstr "Показати кроки"
 msgid "Show the full text"
 msgstr "Показати повний текст"
 
-#: src/components/project/ProjectPortalEditor.tsx:1323
-#: src/components/project/ProjectPortalEditor.tsx:1341
+#: src/components/project/ProjectPortalEditor.tsx:1314
+#: src/components/project/ProjectPortalEditor.tsx:1332
 msgid "Show the invitation"
 msgstr "Показувати запрошення"
+
+#: src/features/sidebar/breadcrumbs/AppBreadcrumbs.tsx:326
+msgid "Show the path to this page"
+msgstr "Показати шлях до цієї сторінки"
 
 #: src/components/results/ResultItem.tsx:712
 msgid "Show to the room"
@@ -13536,7 +13541,7 @@ msgstr "Showing your most recent completed report."
 msgid "Shown at the top of the screen."
 msgstr "Відображається вгорі екрана."
 
-#: src/components/popcorn/PopcornStart.tsx:74
+#: src/components/popcorn/PopcornStart.tsx:75
 msgid "Shown at the top of the screen. Change it any time."
 msgstr "Відображається вгорі екрана. Змінюйте будь-коли."
 
@@ -13648,7 +13653,7 @@ msgstr "Something is blocking your connection. Your audio will not be saved unle
 
 #: src/routes/project/report/ProjectReportRoute.tsx:728
 #: src/routes/project/report/ProjectReportRoute.tsx:809
-#: src/routes/project/report/ProjectReportRoute.tsx:1257
+#: src/routes/project/report/ProjectReportRoute.tsx:1245
 #: src/routes/auth/Login.tsx:233
 #: src/routes/auth/Login.tsx:306
 #: src/components/project/ProjectAccessGuard.tsx:113
@@ -13668,7 +13673,7 @@ msgid "Something went wrong generating your latest report."
 msgstr "Something went wrong generating your latest report."
 
 #: src/routes/project/report/ProjectReportRoute.tsx:739
-#: src/routes/project/report/ProjectReportRoute.tsx:1270
+#: src/routes/project/report/ProjectReportRoute.tsx:1258
 msgid "Something went wrong generating your report."
 msgstr "Something went wrong generating your report."
 
@@ -13729,7 +13734,7 @@ msgstr "Щось пішло не так. Спробуйте ще раз і зв�
 msgid "participant.go.deeper.content.policy.violation.error.message"
 msgstr "Sorry, we cannot process this request due to an LLM provider's content policy."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:816
+#: src/components/conversation/ProjectConversationsPanel.tsx:823
 #: src/components/conversation/ConversationAccordion.tsx:1209
 #: src/components/conversation/ConversationAccordion.tsx:1216
 msgid "Sort"
@@ -13852,7 +13857,7 @@ msgstr "Позиція"
 msgid "Standard access. Collaborates in the workspaces they're added to."
 msgstr "Стандартний доступ. Співпраця в робочих просторах, до яких надано доступ."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1592
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1596
 msgid "Standing guidance the assistant gets in every project chat in this workspace. Saves automatically."
 msgstr "Постійні вказівки, які асистент отримує в кожному чаті проєкту в цьому робочому просторі. Зберігається автоматично."
 
@@ -13865,7 +13870,7 @@ msgstr "Почати чат"
 msgid "Start a new chat"
 msgstr "Почати новий чат"
 
-#: src/routes/settings/AgentConsentRoute.tsx:215
+#: src/routes/settings/AgentConsentRoute.tsx:214
 msgid "Start again from your agent. It will open a fresh request here."
 msgstr "Почніть знову зі свого агента. Він створить новий запит тут."
 
@@ -14111,7 +14116,7 @@ msgstr "Summarize this interview into a shareable article"
 msgid "Summary"
 msgstr "Summary"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:757
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:761
 msgid "Summary (when available)"
 msgstr "Summary (when available)"
 
@@ -14201,7 +14206,7 @@ msgstr "Перейти на текст"
 msgid "participant.link.switch.text"
 msgstr "Switch to text input"
 
-#: src/components/project/ProjectPortalEditor.tsx:1324
+#: src/components/project/ProjectPortalEditor.tsx:1315
 msgid "Switching it off comes with a paid plan."
 msgstr "Вимкнення доступне в платному плані."
 
@@ -14233,7 +14238,7 @@ msgstr "Тег видалено"
 
 #: src/components/project/ProjectTagsInput.tsx:256
 #: src/components/participant/ParticipantInitiateForm.tsx:281
-#: src/components/conversation/ProjectConversationsPanel.tsx:826
+#: src/components/conversation/ProjectConversationsPanel.tsx:833
 #: src/components/conversation/ConversationEdit.tsx:424
 #: src/components/conversation/ConversationDrilldownModal.tsx:200
 #: src/components/conversation/ConversationAccordion.tsx:1278
@@ -14352,7 +14357,7 @@ msgstr "Перевірте та виберіть мікрофон перед п�
 msgid "test mode"
 msgstr "тестовий режим"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:572
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:576
 msgid "Test webhook"
 msgstr "Перевірити вебхук"
 
@@ -14372,7 +14377,7 @@ msgstr "Текстові внески та форми для подальшог�
 msgid "Thank you for participating!"
 msgstr "Thank you for participating!"
 
-#: src/components/project/ProjectPortalEditor.tsx:1259
+#: src/components/project/ProjectPortalEditor.tsx:1250
 msgid "Thank you page content"
 msgstr "Вміст сторінки подяки"
 
@@ -14500,7 +14505,7 @@ msgstr "Ліміт зв'язків має бути цілим числом бі�
 msgid "The email or password is not right. Check them and try again."
 msgstr "Неправильна електронна адреса або пароль. Перевірте їх і спробуйте знову."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:392
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:393
 msgid "The endpoint where we'll send the data. Get this from your receiving service (e.g., Zapier, Make, or your own server)."
 msgstr "The endpoint where we'll send the data. Get this from your receiving service (e.g., Zapier, Make, or your own server)."
 
@@ -14725,7 +14730,7 @@ msgid "The random walk will surface nodes here once available."
 msgstr "Вузли з'являтимуться тут під час випадкового перегляду, щойно будуть доступні."
 
 #: src/components/report/UpdateReportModalButton.tsx:308
-#: src/components/report/CreateReportForm.tsx:291
+#: src/components/report/CreateReportForm.tsx:287
 msgid "The report may start up to 5 minutes after the chosen time."
 msgstr "The report may start up to 5 minutes after the chosen time."
 
@@ -14761,7 +14766,7 @@ msgstr "The summary is being generated. Please wait for it to be available."
 msgid "The summary is being regenerated. Please wait for it to be available."
 msgstr "The summary is being regenerated. Please wait for it to be available."
 
-#: src/components/project/ProjectPortalEditor.tsx:1308
+#: src/components/project/ProjectPortalEditor.tsx:1299
 msgid "The thank you page ends on a card inviting participants to run their own event with dembrane."
 msgstr "Сторінка подяки завершується карткою, яка запрошує учасників провести власну подію з dembrane."
 
@@ -14839,7 +14844,7 @@ msgstr "Немає інших робочих просторів, куди мож
 #~ msgstr "There was an error cloning your project. Please try again or contact support."
 
 #: src/components/report/UpdateReportModalButton.tsx:254
-#: src/components/report/CreateReportForm.tsx:147
+#: src/components/report/CreateReportForm.tsx:146
 msgid "There was an error creating your report. Please try again or contact support."
 msgstr "There was an error creating your report. Please try again or contact support."
 
@@ -14872,7 +14877,7 @@ msgstr "Ці зміни тегів застосовано до вашого пр
 msgid "These workspaces are billed separately. Each person you add takes a seat in {billingContextCount} billing contexts, each invoiced on its own."
 msgstr "Оплата за ці робочі простори нараховується окремо. Кожна додана особа займає місце в такій кількості платіжних контекстів: {billingContextCount}, і за кожен виставляється окремий рахунок."
 
-#: src/components/billing/BillingManager.tsx:1529
+#: src/components/billing/BillingManager.tsx:1527
 msgid "These workspaces have their own plan, managed from each workspace. They aren't part of this organisation's plan."
 msgstr "Ці робочі простори мають власний тариф, який налаштовується окремо в кожному з них. Вони не входять до тарифу цієї організації."
 
@@ -15011,7 +15016,7 @@ msgstr "Це посилання на запрошення недійсне дл�
 msgid "This invite spans {0} billing contexts, each invoiced on its own:"
 msgstr "Це запрошення охоплює кілька платіжних контекстів ({0}), кожен оплачується окремо:"
 
-#: src/components/project/ProjectPortalEditor.tsx:1598
+#: src/components/project/ProjectPortalEditor.tsx:1589
 msgid "This is a live preview of the participant's portal. You will need to refresh the page to see the latest changes."
 msgstr "This is a live preview of the participant's portal. You will need to refresh the page to see the latest changes."
 
@@ -15023,7 +15028,7 @@ msgstr "Це мапа кожної організації та робочого 
 msgid "This is a synthetic demo. Its disclosure and frame are set with the demo and always show."
 msgstr "Це синтетичне демо. Його опис і рамка задані в демо й показуються завжди."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:1007
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:1011
 msgid "This is an example of the JSON data sent to your webhook URL when a conversation is summarized."
 msgstr "This is an example of the JSON data sent to your webhook URL when a conversation is summarized."
 
@@ -15110,11 +15115,11 @@ msgstr "Ця організація більше не існує"
 msgid "This page is about {orgName} only. To get your MCP URL, or to manage other organisations, go to <0>Connect your agent</0>."
 msgstr "Ця сторінка стосується лише {orgName}. Щоб отримати MCP URL або керувати іншими організаціями, перейдіть до <0>Підключіть свого агента</0>."
 
-#: src/components/project/ProjectPortalEditor.tsx:1269
+#: src/components/project/ProjectPortalEditor.tsx:1260
 msgid "This page is shown after the participant has completed the conversation."
 msgstr "This page is shown after the participant has completed the conversation."
 
-#: src/components/project/ProjectPortalEditor.tsx:1236
+#: src/components/project/ProjectPortalEditor.tsx:1227
 msgid "This page is shown to participants when they start a conversation after they successfully complete the tutorial."
 msgstr "This page is shown to participants when they start a conversation after they successfully complete the tutorial."
 
@@ -15125,8 +15130,8 @@ msgstr "Ця частина сторінки не завантажилася. З
 #: src/routes/organisation/OrganisationRoute.tsx:1752
 #: src/routes/organisation/OrganisationRoute.tsx:1775
 #: src/routes/organisation/OrganisationRoute.tsx:1792
-#: src/routes/organisation/OrganisationRoute.tsx:2013
-#: src/routes/organisation/OrganisationRoute.tsx:2054
+#: src/routes/organisation/OrganisationRoute.tsx:2018
+#: src/routes/organisation/OrganisationRoute.tsx:2059
 msgid "this person"
 msgstr "ця особа"
 
@@ -15173,7 +15178,7 @@ msgstr "Цей проєкт видно всім у робочому просто
 msgid "This project will follow the inherited setting instead: {0} ({1})."
 msgstr "Цей проєкт наслідуватиме успадковане налаштування: {0} ({1})."
 
-#: src/components/project/ProjectPortalEditor.tsx:882
+#: src/components/project/ProjectPortalEditor.tsx:886
 msgid "This prompt guides how the AI responds to participants. Customize it to shape the type of feedback or engagement you want to encourage."
 msgstr "This prompt guides how the AI responds to participants. Customize it to shape the type of feedback or engagement you want to encourage."
 
@@ -15211,7 +15216,7 @@ msgstr "Цей звіт ще недоступний."
 msgid "This report was opened by {0} people"
 msgstr "This report was opened by {0} people"
 
-#: src/routes/settings/AgentConsentRoute.tsx:212
+#: src/routes/settings/AgentConsentRoute.tsx:211
 msgid "This request has expired"
 msgstr "Термін дії цього запиту минув"
 
@@ -15248,7 +15253,7 @@ msgstr "Це встановлює мову, яку учасники бачать
 msgid "This stakeholder's role"
 msgstr "Роль цієї зацікавленої сторони"
 
-#: src/components/project/ProjectPortalEditor.tsx:1213
+#: src/components/project/ProjectPortalEditor.tsx:1204
 msgid "This title is shown to participants when they start a conversation"
 msgstr "This title is shown to participants when they start a conversation"
 
@@ -15311,7 +15316,7 @@ msgstr "Цей робочий простір оплачується окремо
 msgid "This workspace is billed through {orgName}. Plans and payment are managed once for the whole organisation, and every workspace shares it."
 msgstr "Цей робочий простір оплачується через {orgName}. Тарифи та оплата налаштовуються один раз для всієї організації, і всі робочі простори мають до них спільний доступ."
 
-#: src/components/invite/WorkspaceSelectList.tsx:220
+#: src/components/invite/WorkspaceSelectList.tsx:219
 msgid "This workspace is on a tier that doesn't allow more seats. Upgrade the workspace tier to invite more."
 msgstr "У цьому робочому просторі діє тариф, який не дозволяє додавати місця. Оновіть тариф робочого простору, щоб запросити більше людей."
 
@@ -15382,7 +15387,7 @@ msgstr "Хронологія"
 msgid "Timestamp"
 msgstr "Timestamp"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:760
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:764
 msgid "Timestamps and duration"
 msgstr "Timestamps and duration"
 
@@ -15390,7 +15395,7 @@ msgstr "Timestamps and duration"
 msgid "Tip"
 msgstr "Tip"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:942
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:946
 msgid "Tip: Use the play button (▶) to send a test payload to your webhook and verify it's working correctly."
 msgstr "Tip: Use the play button (▶) to send a test payload to your webhook and verify it's working correctly."
 
@@ -15407,7 +15412,7 @@ msgstr "Title"
 msgid "Title auto-generated"
 msgstr "Title auto-generated"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:308
+#: src/components/conversation/ProjectConversationsPanel.tsx:315
 msgid "Title generated from the conversation"
 msgstr "Назву згенеровано з розмови"
 
@@ -15415,7 +15420,7 @@ msgstr "Назву згенеровано з розмови"
 msgid "Title guidance"
 msgstr "Поради щодо назви"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:797
+#: src/components/conversation/ProjectConversationsPanel.tsx:804
 msgid "Title or participant"
 msgstr "Назва або учасник"
 
@@ -15427,7 +15432,7 @@ msgstr "до"
 msgid "To assign a new tag, please create it first in the portal settings."
 msgstr "Щоб призначити новий тег, спершу створіть його в налаштуваннях порталу."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1007
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1011
 msgid "To promote to a workspace member, add this person to the organisation first, then re-invite from the workspace."
 msgstr "Щоб надати права учасника робочого простору, спершу додайте людину до організації, а потім надішліть повторне запрошення з робочого простору."
 
@@ -15591,7 +15596,7 @@ msgstr "стенограма"
 #: src/features/sidebar/hooks/useSearchHits.ts:237
 #: src/features/sidebar/hooks/useSearchHits.ts:238
 #: src/features/sidebar/hooks/useSearchHits.ts:246
-#: src/components/conversation/ConversationTranscriptSection.tsx:109
+#: src/components/conversation/ConversationTranscriptSection.tsx:108
 #: src/components/chat/ChatHistoryMessage.tsx:75
 msgid "Transcript"
 msgstr "Transcript"
@@ -15705,7 +15710,7 @@ msgstr "Пробний період"
 msgid "Trial and comped accounts, excluded from the paying total."
 msgstr "Пробні та безкоштовні облікові записи, виключені із загальної кількості платних."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:798
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:802
 msgid "Trigger automated workflows in tools like Zapier, Make, or n8n"
 msgstr "Trigger automated workflows in tools like Zapier, Make, or n8n"
 
@@ -15728,7 +15733,7 @@ msgstr "Не вдається увійти? Напишіть на support@dembra
 #: src/components/map/panels/ExplorePanel.tsx:113
 #: src/components/dropzone/UploadConversationDropzone.tsx:860
 #: src/components/common/FetchErrorPanel.tsx:35
-#: src/components/billing/BillingManager.tsx:1219
+#: src/components/billing/BillingManager.tsx:1217
 msgid "Try again"
 msgstr "Спробувати ще раз"
 
@@ -15774,7 +15779,7 @@ msgid "Turn conversations into live slides. Run a live session or an on-demand a
 msgstr "Перетворюй розмови на слайди наживо. Запускай живу сесію або аналіз на запит, презентуй групі та перевіряй джерела висновків."
 
 #. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:1440
+#: src/components/project/ProjectPortalEditor.tsx:1431
 msgid "portal.anonymization.disable.confirm"
 msgstr "Turn off"
 
@@ -15782,7 +15787,7 @@ msgstr "Turn off"
 msgid "Turn off"
 msgstr "Вимкнути"
 
-#: src/components/project/ProjectPortalEditor.tsx:1430
+#: src/components/project/ProjectPortalEditor.tsx:1421
 msgid "Turn off anonymization?"
 msgstr "Turn off anonymization?"
 
@@ -15804,7 +15809,7 @@ msgid "Turn on popcorn"
 msgstr "Увімкнути Popcorn"
 
 #. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:1432
+#: src/components/project/ProjectPortalEditor.tsx:1423
 msgid "portal.anonymization.disable.warning"
 msgstr "Turning off anonymization while recordings are ongoing may have unintended consequences. Active conversations will also be affected mid-recording. Please use this with caution."
 
@@ -15837,7 +15842,7 @@ msgid "Type"
 msgstr "Type"
 
 #. placeholder {0}: settings.name
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1265
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1269
 msgid "Type <0>{0}</0> to confirm."
 msgstr "Введіть <0>{0}</0> для підтвердження."
 
@@ -15900,8 +15905,8 @@ msgstr "Скасувати відкликання"
 
 #: src/components/settings/AuditLogsCard.tsx:265
 #: src/components/project/ProjectSharingModal.tsx:360
-#: src/components/project/ProjectListItem.tsx:96
-#: src/components/project/ProjectListItem.tsx:254
+#: src/components/project/ProjectListItem.tsx:97
+#: src/components/project/ProjectListItem.tsx:255
 #: src/components/project/PinnedProjectCard.tsx:72
 msgid "Unknown"
 msgstr "Unknown"
@@ -15911,8 +15916,8 @@ msgstr "Unknown"
 msgid "Unknown date"
 msgstr "Невідома дата"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:916
-#: src/routes/organisation/OrganisationRoute.tsx:1830
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:920
+#: src/routes/organisation/OrganisationRoute.tsx:1835
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:99
 #: src/components/agent-access/AgentGrantsCard.tsx:127
 msgid "Unknown member"
@@ -15927,7 +15932,7 @@ msgid "Unknown time"
 msgstr "Невідомий час"
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:137
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:551
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:555
 msgid "Unnamed webhook"
 msgstr "Вебхук без назви"
 
@@ -15939,11 +15944,11 @@ msgstr "Unpin"
 msgid "Unpin a project first (max {MAX_PINNED})"
 msgstr "Unpin a project first (max {MAX_PINNED})"
 
-#: src/components/project/ProjectListItem.tsx:286
+#: src/components/project/ProjectListItem.tsx:294
 msgid "Unpin a project first (max 3)"
 msgstr "Unpin a project first (max 3)"
 
-#: src/components/project/ProjectListItem.tsx:283
+#: src/components/project/ProjectListItem.tsx:291
 #: src/components/project/PinnedProjectCard.tsx:162
 msgid "Unpin project"
 msgstr "Unpin project"
@@ -16142,7 +16147,7 @@ msgstr "Оновіть тариф робочого простору, щоб пе
 #: src/components/project/ProjectUploadSection.tsx:34
 #: src/components/project/ProjectUploadSection.tsx:47
 #: src/components/dropzone/UploadConversationDropzone.tsx:540
-#: src/components/conversation/ProjectConversationsPanel.tsx:771
+#: src/components/conversation/ProjectConversationsPanel.tsx:778
 #: src/components/conversation/ConversationAccordion.tsx:405
 #: src/components/conversation/ConversationAccordion.tsx:1116
 msgid "Upload"
@@ -16189,13 +16194,13 @@ msgstr "Завантажити файли"
 msgid "Upload limit reached"
 msgstr "Ліміт завантажень вичерпано"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:768
+#: src/components/conversation/ProjectConversationsPanel.tsx:775
 #: src/components/conversation/ConversationAccordion.tsx:1110
 msgid "Upload limit reached. Upgrade your workspace."
 msgstr "Ліміт завантажень вичерпано. Оновіть тариф робочого простору."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1679
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1762
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1683
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1766
 msgid "Upload logo"
 msgstr "Завантажити логотип"
 
@@ -16229,11 +16234,11 @@ msgstr "Завантаження записів доступне на платн
 msgid "URL copied"
 msgstr "URL-адресу скопійовано"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:387
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:388
 msgid "URL is required"
 msgstr "URL is required"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:384
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:385
 msgid "URL must start with http:// or https://"
 msgstr "URL must start with http:// or https://"
 
@@ -16351,7 +16356,7 @@ msgstr "Using default dembrane logo"
 msgid "Using fixture data."
 msgstr "Використовуються тестові дані."
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:975
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:979
 msgid "Using webhooks? We'd love to hear from you"
 msgstr "Using webhooks? We'd love to hear from you"
 
@@ -16407,7 +16412,7 @@ msgstr "Verified"
 msgid "select.all.modal.loading.verified"
 msgstr "Verified"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:837
+#: src/components/conversation/ProjectConversationsPanel.tsx:844
 msgid "Verified"
 msgstr "Перевірено"
 
@@ -16421,12 +16426,12 @@ msgid "verified artifacts"
 msgstr "verified artifacts"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:190
-#: src/components/conversation/ProjectConversationsPanel.tsx:324
+#: src/components/conversation/ProjectConversationsPanel.tsx:331
 msgid "Verified artifacts"
 msgstr "Перевірені артефакти"
 
 #. js-lingui-explicit-id
-#: src/components/project/ProjectPortalEditor.tsx:904
+#: src/components/project/ProjectPortalEditor.tsx:911
 msgid "dashboard.dembrane.verify.title"
 msgstr "Verify"
 
@@ -16444,7 +16449,7 @@ msgstr "Verify"
 msgid "participant.echo.verify"
 msgstr "Verify"
 
-#: src/routes/auth/Login.tsx:551
+#: src/routes/auth/Login.tsx:554
 msgid "Verify code"
 msgstr "Verify code"
 
@@ -16456,7 +16461,7 @@ msgstr "Підтвердити електронну пошту"
 msgid "Verify outcomes and refine replies"
 msgstr "Перевіряйте результати й уточнюйте відповіді"
 
-#: src/components/project/ProjectPortalEditor.tsx:957
+#: src/components/project/ProjectPortalEditor.tsx:966
 msgid "Verify topics"
 msgstr "Перевірити теми"
 
@@ -16494,7 +16499,7 @@ msgstr "View"
 #~ msgid "View Details"
 #~ msgstr "View Details"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:775
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:779
 msgid "View example payload"
 msgstr "View example payload"
 
@@ -16582,7 +16587,7 @@ msgstr "Голосове введення враховує ліміт запис
 msgid "Voiced in a conversation"
 msgstr "Озвучено в розмові"
 
-#: src/components/report/CreateReportForm.tsx:230
+#: src/components/report/CreateReportForm.tsx:226
 msgid "Waiting for conversations to finish before generating a report."
 msgstr "Waiting for conversations to finish before generating a report."
 
@@ -16636,7 +16641,7 @@ msgstr "Не вдалося зв'язатися з dembrane. Перевірте 
 msgid "We could not reach dembrane. Check your internet connection and try again."
 msgstr "Не вдалося зв'язатися з dembrane. Перевірте інтернет-з'єднання та спробуйте ще раз."
 
-#: src/components/billing/BillingManager.tsx:1203
+#: src/components/billing/BillingManager.tsx:1201
 msgid "We couldn't charge your payment method"
 msgstr "Не вдалося списати кошти з вашого способу оплати"
 
@@ -16765,20 +16770,20 @@ msgstr "Слабке з'єднання"
 msgid "Weak password"
 msgstr "Слабкий пароль"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:916
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:920
 msgid "Webhook"
 msgstr "Webhook"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:391
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:392
 msgid "Webhook URL"
 msgstr "Webhook URL"
 
 #: src/routes/project/ProjectRoutes.tsx:225
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:875
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:879
 msgid "Webhooks"
 msgstr "Webhooks"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:683
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:687
 msgid "Webhooks are automated messages sent from one app to another when something happens. Think of them as a \"notification system\" for your other tools."
 msgstr "Webhooks are automated messages sent from one app to another when something happens. Think of them as a \"notification system\" for your other tools."
 
@@ -16831,7 +16836,7 @@ msgstr "Вітаємо, {displayName}"
 #~ msgid "Welcome!"
 #~ msgstr "Welcome!"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:676
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:680
 msgid "What are webhooks? (2 min read)"
 msgstr "What are webhooks? (2 min read)"
 
@@ -16839,7 +16844,7 @@ msgstr "What are webhooks? (2 min read)"
 msgid "What are you trying to learn?"
 msgstr "Про що ви хочете дізнатися?"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:744
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:748
 msgid "What data is sent?"
 msgstr "What data is sent?"
 
@@ -16940,7 +16945,7 @@ msgstr "WhatsApp"
 msgid "When"
 msgstr "Коли"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:719
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:723
 msgid "When a participant opens the portal, enters their details, and begins a conversation"
 msgstr "When a participant opens the portal, enters their details, and begins a conversation"
 
@@ -16952,7 +16957,7 @@ msgstr "Коли учасник розпочинає нову розмову"
 msgid "When a report has been generated"
 msgstr "Коли звіт згенеровано"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:739
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:743
 msgid "When a report has been generated for the project"
 msgstr "When a report has been generated for the project"
 
@@ -16960,11 +16965,11 @@ msgstr "When a report has been generated for the project"
 msgid "When all audio has been converted to text"
 msgstr "Коли все аудіо перетворено на текст"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:726
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:730
 msgid "When all audio has been converted to text and the full transcript is available"
 msgstr "When all audio has been converted to text and the full transcript is available"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:714
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:718
 msgid "When are webhooks triggered?"
 msgstr "When are webhooks triggered?"
 
@@ -16972,15 +16977,15 @@ msgstr "When are webhooks triggered?"
 msgid "When do you need dembrane?"
 msgstr "Коли вам потрібен dembrane?"
 
-#: src/components/project/ProjectPortalEditor.tsx:1389
+#: src/components/project/ProjectPortalEditor.tsx:1380
 msgid "When enabled, all new transcripts will have personal information (names, emails, phone numbers, addresses) replaced with placeholders. Anonymized conversations also disable audio playback, audio download, and retranscription to protect participant privacy. This cannot be undone for already-processed conversations."
 msgstr "When enabled, all new transcripts will have personal information (names, emails, phone numbers, addresses) replaced with placeholders. Anonymized conversations also disable audio playback, audio download, and retranscription to protect participant privacy. This cannot be undone for already-processed conversations."
 
-#: src/components/project/ProjectPortalEditor.tsx:1120
+#: src/components/project/ProjectPortalEditor.tsx:1111
 msgid "When finishing the conversation, participants who haven't verified yet will be prompted to verify or skip"
 msgstr "When finishing the conversation, participants who haven't verified yet will be prompted to verify or skip"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1983
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1987
 msgid "When on, dembrane support staff can join this workspace to help you. Their access ends automatically after 24 hours."
 msgstr "Якщо ввімкнено, служба підтримки dembrane може приєднатися до цього робочого простору, щоб допомогти вам. Доступ автоматично завершиться через 24 години."
 
@@ -16989,7 +16994,7 @@ msgstr "Якщо ввімкнено, служба підтримки dembrane м
 #~ msgstr "Коли учасники сканують QR-код, вони з'являються тут і проходять етапи в реальному часі."
 
 #: src/components/report/UpdateReportModalButton.tsx:302
-#: src/components/report/CreateReportForm.tsx:285
+#: src/components/report/CreateReportForm.tsx:281
 msgid "When should the report be generated?"
 msgstr "When should the report be generated?"
 
@@ -17001,7 +17006,7 @@ msgstr "Коли хтось сканує QR-код, це одна розмова
 msgid "When the summary is generated"
 msgstr "Коли підсумок згенеровано"
 
-#: src/components/project/webhooks/WebhookSettingsCard.tsx:733
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:737
 msgid "When the summary is ready (includes both transcript and summary)"
 msgstr "When the summary is ready (includes both transcript and summary)"
 
@@ -17050,7 +17055,7 @@ msgstr "Чому не в цій презентації?"
 msgid "Why? One sentence, for the people you work with and anyone who checks later."
 msgstr "Чому? Одне речення, для колег і для тих, хто перевірятиме пізніше."
 
-#: src/components/report/CreateReportForm.tsx:212
+#: src/components/report/CreateReportForm.tsx:208
 msgid "will be included in your report"
 msgstr "will be included in your report"
 
@@ -17181,8 +17186,8 @@ msgstr "Робочий простір видалено"
 msgid "Workspace is full"
 msgstr "У робочому просторі немає місць"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1640
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1707
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1644
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1711
 msgid "Workspace logo"
 msgstr "Логотип робочого простору"
 
@@ -17190,7 +17195,7 @@ msgstr "Логотип робочого простору"
 msgid "Workspace name"
 msgstr "Назва робочого простору"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1542
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1546
 msgid "Workspace name. Saves automatically."
 msgstr "Назва робочого простору. Зберігається автоматично."
 
@@ -17198,7 +17203,7 @@ msgstr "Назва робочого простору. Зберігається �
 msgid "Workspace permissions, member counts and account-specific data loading are corrected."
 msgstr "Виправлено дозволи робочого простору, підрахунок учасників та завантаження даних акаунта."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1446
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1450
 msgid "Workspace renamed"
 msgstr "Робочий простір перейменовано"
 
@@ -17224,7 +17229,7 @@ msgstr "робочі простори"
 msgid "Workspaces"
 msgstr "Робочі простори"
 
-#: src/components/billing/BillingManager.tsx:1526
+#: src/components/billing/BillingManager.tsx:1524
 msgid "Workspaces billed separately"
 msgstr "Робочі простори з окремою оплатою"
 
@@ -17356,7 +17361,7 @@ msgstr "Ви можете запросити їх знову пізніше з �
 msgid "You can revoke a connection at any time."
 msgstr "Ви можете скасувати підключення будь-коли."
 
-#: src/routes/settings/AgentConsentRoute.tsx:338
+#: src/routes/settings/AgentConsentRoute.tsx:339
 msgid "You can revoke this later under <0>Help, Connect your agent</0>."
 msgstr "Ви можете скасувати це пізніше в розділі <0>Довідка, Підключити свого агента</0>."
 
@@ -17364,7 +17369,7 @@ msgstr "Ви можете скасувати це пізніше в розділ
 msgid "You can skip this and add them later."
 msgstr "Ви можете пропустити це й додати їх пізніше."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1275
+#: src/routes/project/report/ProjectReportRoute.tsx:1263
 msgid "You can try again below."
 msgstr "You can try again below."
 
@@ -17413,7 +17418,7 @@ msgstr "У вас немає доступу до цього робочого п�
 msgid "You don't have permission to create workspaces in that organisation. Falling back to your primary organisation instead."
 msgstr "У вас немає дозволу створювати робочі простори в цій організації. Повертаємося до вашої основної організації."
 
-#: src/components/invite/WorkspaceSelectList.tsx:75
+#: src/components/invite/WorkspaceSelectList.tsx:74
 msgid "You don't have permission to invite to any workspace in this organisation."
 msgstr "У вас немає дозволу надсилати запрошення до жодного робочого простору в цій організації."
 
@@ -17507,11 +17512,11 @@ msgstr "Усі ваші проєкти вже чекають на вас."
 msgid "You'll land in a chat where dembrane helps shape the project before you collect conversations."
 msgstr "Ви потрапите в чат, де dembrane допоможе сформувати проєкт, перш ніж ви почнете збирати розмови."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1324
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1328
 msgid "You'll lose access to this workspace."
 msgstr "Ви втратите доступ до цього робочого простору."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1127
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1131
 msgid "You'll lose access to this workspace. Projects you created stay; your role here is removed."
 msgstr "Ви втратите доступ до цього робочого простору. Створені вами проєкти залишаться, але вашу роль тут буде скасовано."
 
@@ -17520,12 +17525,12 @@ msgstr "Ви втратите доступ до цього робочого пр
 msgid "participant.verify.instructions.receive.artefact"
 msgstr "You'll soon get {objectLabel} to verify."
 
-#: src/components/billing/BillingManager.tsx:1470
+#: src/components/billing/BillingManager.tsx:1468
 msgid "You'll verify your new payment method on the next screen. You won't be charged, it just confirms the new card."
 msgstr "Ви підтвердите новий спосіб оплати на наступному екрані. Кошти не списуватимуться, це лише перевірка нової картки."
 
 #. placeholder {0}: displayRole(v)
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1068
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1072
 msgid "You're about to change your own role to <0>{0}</0>. You'll immediately lose access to workspace settings, invites, and member management."
 msgstr "Ви збираєтеся змінити власну роль на <0>{0}</0>. Ви одразу втратите доступ до налаштувань робочого простору, запрошень і керування учасниками."
 
@@ -17570,7 +17575,7 @@ msgstr "Зараз ви не належите до жодної організа
 msgid "You're reusing seats you already paid for this period (someone left), so there's no charge now for those. The renewal reflects them."
 msgstr "Ви повторно використовуєте місця, які вже оплатили на цей період (хтось пішов), тому додаткова плата за них не стягується. Це буде враховано під час поновлення."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:990
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:994
 msgid "You're the only admin. Promote someone else before changing your role."
 msgstr "Ви єдиний адміністратор. Призначте когось іншого перед тим, як змінювати свою роль."
 
@@ -17610,7 +17615,7 @@ msgstr "Ви досягли свого ліміту стенограм"
 msgid "You've used all 10 hours of the pilot. Host-side tools (chat, reports, analysis, exports) are paused."
 msgstr "Ви використали всі 10 годин пілоту. Інструменти ведучого (чат, звіти, аналіз, експорт) призупинено."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1304
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1308
 msgid "Your access"
 msgstr "Ваш доступ"
 
@@ -17684,7 +17689,7 @@ msgid "Your feedback and this response go to the dembrane team."
 msgstr "Ваш відгук і ця відповідь надходять команді dembrane."
 
 #: src/components/report/UpdateReportModalButton.tsx:224
-#: src/components/report/CreateReportForm.tsx:162
+#: src/components/report/CreateReportForm.tsx:161
 msgid "Your free plan includes one report. Upgrade to create more."
 msgstr "Ваш тариф Free містить один звіт. Оновіть тариф, щоб створювати більше."
 
@@ -17705,7 +17710,7 @@ msgstr "Ваше запрошення все ще очікує. Спробуйт
 msgid "Your invite was already accepted, but you're no longer a member of {resolvedWorkspaceName}. Ask the admin to re-invite you."
 msgstr "Ваше запрошення вже було прийнято, але ви більше не є учасником {resolvedWorkspaceName}. Попросіть адміністратора запросити вас знову."
 
-#: src/components/billing/BillingManager.tsx:1212
+#: src/components/billing/BillingManager.tsx:1210
 msgid "Your last payment didn't go through. Your plan stays active. Update your payment method or retry the charge to settle up."
 msgstr "Останній платіж не пройшов. Ваш тариф залишається активним. Оновіть спосіб оплати або повторіть списання, щоб розрахуватися."
 
@@ -17713,7 +17718,7 @@ msgstr "Останній платіж не пройшов. Ваш тариф з�
 msgid "Your latest report generation was cancelled. Showing your most recent completed report."
 msgstr "Your latest report generation was cancelled. Showing your most recent completed report."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1726
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1730
 msgid "Your logo is still active but can't be changed on this tier."
 msgstr "Ваш логотип активний, але на цьому рівні його не можна змінити."
 
@@ -17766,11 +17771,11 @@ msgstr "Ваш спосіб оплати оновлено."
 msgid "Your payment method update is still processing."
 msgstr "Оновлення способу оплати ще обробляється."
 
-#: src/components/billing/BillingManager.tsx:1430
+#: src/components/billing/BillingManager.tsx:1428
 msgid "Your plan ends at the period end."
 msgstr "Дія вашого тарифу завершиться наприкінці періоду."
 
-#: src/components/billing/BillingManager.tsx:1428
+#: src/components/billing/BillingManager.tsx:1426
 msgid "Your plan ends on {endDate}."
 msgstr "Дія вашого тарифу завершиться {endDate}."
 

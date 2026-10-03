@@ -5,6 +5,7 @@ import {
 	Avatar,
 	Box,
 	Checkbox,
+	Flex,
 	Group,
 	Menu,
 	Paper,
@@ -262,8 +263,15 @@ export const ProjectListItem = ({
 
 			{/* Access bubbles — dedicated slot directly left of the pin.
 					    Fixed min-width keeps them aligned down the column so rows
-					    scan cleanly. See design-subagent decision 2026-04-21. */}
-			<Group gap="md" wrap="nowrap" align="center">
+					    scan cleanly. See design-subagent decision 2026-04-21.
+					    On a phone the people, pin and menu stack in a column at the
+					    right edge, so the name keeps the width of the row. */}
+			<Flex
+				direction={{ base: "column-reverse", sm: "row" }}
+				gap={{ base: 4, sm: "md" }}
+				wrap="nowrap"
+				align={{ base: "flex-end", sm: "center" }}
+			>
 				<Box
 					style={{
 						display: "flex",
@@ -346,7 +354,7 @@ export const ProjectListItem = ({
 						</Menu>
 					)}
 				</Group>
-			</Group>
+			</Flex>
 		</Group>
 	);
 

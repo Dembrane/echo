@@ -1,8 +1,10 @@
 import {
 	Badge,
+	Button,
 	type CSSVariablesResolver,
 	createTheme,
 	defaultVariantColorsResolver,
+	Input,
 	Text,
 	type VariantColorsResolver,
 } from "@mantine/core";
@@ -16,6 +18,28 @@ import buttonClasses from "./styles/button.module.css";
 // the molecule details live in styles/rules.css; type sizes live in
 // --app-* variables set by useAppPreferences, so the user's font-size
 // setting and the portal's smaller scale keep working.
+
+// A control's size changes its height, never its text: Mantine reads field
+// and button text off the type ladder (size lg would be 24.88). Text is 16,
+// 14 in compact controls; the height steps 30 / 36 / 40 / 48.
+const CONTROL_HEIGHT: Record<string, string> = {
+	lg: "48px",
+	md: "40px",
+	sm: "36px",
+	xl: "48px",
+	xs: "30px",
+};
+const BADGE_HEIGHT: Record<string, string> = {
+	lg: "28px",
+	md: "24px",
+	sm: "22px",
+	xl: "32px",
+	xs: "22px",
+};
+const controlText = (size?: string) =>
+	size === "xs" || size?.startsWith("compact")
+		? "var(--app-font-size-xs)"
+		: "var(--app-font-size-sm)";
 
 // The Mantine colour names the app passes, mapped onto the roles.
 const statusFor = (color?: string) => {
@@ -72,7 +96,9 @@ const tintFor = (color?: string) => {
 };
 
 // Every variant resolves to a role: status text for anything that reads as
-// text, a tint for anything that reads as a surface.
+// text, a tint for anything that reads as a surface. On a tint (light, and
+// outline or subtle on hover) the text takes the on-tint colour: danger
+// #c0434e is 3.9:1 on its tint, #a8323c passes.
 const variantColorResolver: VariantColorsResolver = (input) => {
 	const { onTint, text, tint } = statusFor(input.color);
 	const isNeutral = text === roles.text;
@@ -100,7 +126,7 @@ const variantColorResolver: VariantColorsResolver = (input) => {
 				border: `1px solid ${isNeutral ? roles.text : text}`,
 				color: text,
 				hover: tint,
-				hoverColor: text,
+				hoverColor: onTint,
 			};
 		case "subtle":
 		case "transparent":
@@ -109,7 +135,7 @@ const variantColorResolver: VariantColorsResolver = (input) => {
 				border: "transparent",
 				color: text,
 				hover: tint,
-				hoverColor: text,
+				hoverColor: onTint,
 			};
 		default:
 			return defaultVariantColorsResolver(input);
@@ -167,24 +193,62 @@ export const theme = createTheme({
 		Badge: Badge.extend({
 			defaultProps: { radius: 0, variant: "light" },
 			styles: { root: { textTransform: "none" } },
+			// No text below the ladder's floor: a tag reads at 14 whatever its
+			// size (Mantine's xs badge is 9px); size sets the height.
 			vars: (_theme, props) => ({
 				root: {
 					"--badge-bd": "none",
 					"--badge-bg": tintFor(props.color),
 					"--badge-color": roles.text,
+					"--badge-fz": "var(--app-font-size-xs)",
+					"--badge-height":
+						BADGE_HEIGHT[typeof props.size === "string" ? props.size : "md"] ??
+						"24px",
+					"--badge-padding-x": "8px",
 				},
 			}),
 		}),
 		// Secondary is the default. Primary (the pill) has to be asked for.
-		Button: {
+		Button: Button.extend({
 			classNames: { root: buttonClasses.root },
 			defaultProps: { color: "primary", variant: "outline" },
-		},
+			vars: (_theme, props) => {
+				const size = typeof props.size === "string" ? props.size : "sm";
+				return {
+					root: {
+						"--button-fz": controlText(size),
+						...(CONTROL_HEIGHT[size] && {
+							"--button-height": CONTROL_HEIGHT[size],
+						}),
+					},
+				};
+			},
+		}),
 		Card: { defaultProps: { radius: 0, withBorder: true } },
 		Chip: { defaultProps: { radius: 0 } },
 		Container: { defaultProps: { py: "lg" } },
+		Input: Input.extend({
+			vars: (_theme, props) => {
+				const size = typeof props.size === "string" ? props.size : "sm";
+				return {
+					wrapper: {
+						"--input-fz": controlText(size),
+						...(CONTROL_HEIGHT[size] && {
+							"--input-height": CONTROL_HEIGHT[size],
+						}),
+					},
+				};
+			},
+		}),
 		InputWrapper: {
 			styles: { error: { color: roles.danger }, label: { marginBottom: 4 } },
+		},
+		// Loading covers the page in its own parchment, not a white flash.
+		LoadingOverlay: {
+			defaultProps: {
+				loaderProps: { size: "sm" },
+				overlayProps: { backgroundOpacity: 0.85, blur: 0, color: roles.bg },
+			},
 		},
 		Menu: { defaultProps: { shadow: "md" } },
 		Paper: { defaultProps: { radius: 0, withBorder: true } },

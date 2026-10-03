@@ -149,106 +149,108 @@ export const MoveConversationButton = ({
 			>
 				<form onSubmit={handleMove}>
 					<Stack gap="xl">
-						<Stack gap="md">
-							<TextInput
-								label={<FormLabel label={t`Search`} isDirty={false} />}
-								placeholder={t`Search projects...`}
-								leftSection={<MagnifyingGlassIcon size={16} />}
-								value={search}
-								onChange={(e) => setSearch(e.currentTarget.value)}
-								{...testId("conversation-move-search-input")}
-							/>
+						<Stack gap="lg">
+							<Stack gap="md">
+								<TextInput
+									label={<FormLabel label={t`Search`} isDirty={false} />}
+									placeholder={t`Search projects...`}
+									leftSection={<MagnifyingGlassIcon size={16} />}
+									value={search}
+									onChange={(e) => setSearch(e.currentTarget.value)}
+									{...testId("conversation-move-search-input")}
+								/>
 
-							<Divider />
+								<Divider />
 
-							<ScrollArea style={{ height: 300 }} scrollbarSize={4}>
-								{(
-									projectsQuery.data?.pages as
-										| { projects: Project[]; nextOffset?: number }[]
-										| undefined
-								)?.flatMap((page) => page.projects).length === 0 && (
-									<Text size="sm" c="dimmed">
-										<Trans>
-											No projects found {search && `with "${search}"`}
-										</Trans>
-									</Text>
-								)}
+								<ScrollArea style={{ height: 300 }} scrollbarSize={4}>
+									{(
+										projectsQuery.data?.pages as
+											| { projects: Project[]; nextOffset?: number }[]
+											| undefined
+									)?.flatMap((page) => page.projects).length === 0 && (
+										<Text size="sm" c="dimmed">
+											<Trans>
+												No projects found {search && `with "${search}"`}
+											</Trans>
+										</Text>
+									)}
 
-								{projectsQuery.isLoading ? (
-									<Stack gap="sm">
-										<Skeleton height={24} />
-										<Skeleton height={24} />
-										<Skeleton height={24} />
-									</Stack>
-								) : (
-									<Controller
-										name="targetProjectId"
-										control={control}
-										render={({ field }) => (
-											<Radio.Group {...field}>
-												<Stack gap="sm">
-													{allProjects.map((project, index) => (
-														<div
-															key={project.id}
-															ref={
-																index === allProjects.length - 1
-																	? loadMoreRef
-																	: undefined
-															}
-														>
-															<Radio
-																value={project.id}
-																label={project.name}
-																description={
-																	project.workspace_id !== workspaceId
-																		? workspaces.find(
-																				(w) => w.id === project.workspace_id,
-																			)?.name
+									{projectsQuery.isLoading ? (
+										<Stack gap="sm">
+											<Skeleton height={24} />
+											<Skeleton height={24} />
+											<Skeleton height={24} />
+										</Stack>
+									) : (
+										<Controller
+											name="targetProjectId"
+											control={control}
+											render={({ field }) => (
+												<Radio.Group {...field}>
+													<Stack gap="sm">
+														{allProjects.map((project, index) => (
+															<div
+																key={project.id}
+																ref={
+																	index === allProjects.length - 1
+																		? loadMoreRef
 																		: undefined
 																}
-																{...testId(
-																	`conversation-move-project-radio-${project.id}`,
-																)}
-															/>
-														</div>
-													))}
-													{projectsQuery.isFetchingNextPage && (
-														<Center>
-															<Loader size="sm" />
-														</Center>
-													)}
-												</Stack>
-											</Radio.Group>
-										)}
-									/>
-								)}
-							</ScrollArea>
-						</Stack>
+															>
+																<Radio
+																	value={project.id}
+																	label={project.name}
+																	description={
+																		project.workspace_id !== workspaceId
+																			? workspaces.find(
+																					(w) => w.id === project.workspace_id,
+																				)?.name
+																			: undefined
+																	}
+																	{...testId(
+																		`conversation-move-project-radio-${project.id}`,
+																	)}
+																/>
+															</div>
+														))}
+														{projectsQuery.isFetchingNextPage && (
+															<Center>
+																<Loader size="sm" />
+															</Center>
+														)}
+													</Stack>
+												</Radio.Group>
+											)}
+										/>
+									)}
+								</ScrollArea>
+							</Stack>
 
-						<Group justify="flex-start">
-							<Button
-								variant="filled"
-								type="submit"
-								loading={moveConversationMutation.isPending}
-								disabled={
-									!dirtyFields.targetProjectId ||
-									moveConversationMutation.isPending
-								}
-								{...testId("conversation-move-submit-button")}
-							>
-								{t`Move`}
-							</Button>
-							<Button
-								variant="subtle"
-								color="gray"
-								onClick={close}
-								disabled={moveConversationMutation.isPending}
-								type="button"
-								{...testId("conversation-move-cancel-button")}
-							>
-								{t`Cancel`}
-							</Button>
-						</Group>
+							<Group justify="flex-start">
+								<Button
+									variant="filled"
+									type="submit"
+									loading={moveConversationMutation.isPending}
+									disabled={
+										!dirtyFields.targetProjectId ||
+										moveConversationMutation.isPending
+									}
+									{...testId("conversation-move-submit-button")}
+								>
+									{t`Move`}
+								</Button>
+								<Button
+									variant="subtle"
+									color="gray"
+									onClick={close}
+									disabled={moveConversationMutation.isPending}
+									type="button"
+									{...testId("conversation-move-cancel-button")}
+								>
+									{t`Cancel`}
+								</Button>
+							</Group>
+						</Stack>
 
 						<MoveHistory
 							entries={

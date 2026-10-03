@@ -761,7 +761,7 @@ function InvoiceList({
 						<Skeleton height={24} />
 					</Stack>
 				) : (
-					<Text size="xs">
+					<Text size="sm" c="dimmed">
 						<Trans>No payments yet.</Trans>
 					</Text>
 				)
@@ -1091,17 +1091,15 @@ export function BillingManager({
 
 	if (!accountId) {
 		return (
-			<Paper withBorder p="md" radius="sm">
-				<Text size="sm">
-					<Trans>
-						No billing account yet. Email{" "}
-						<Anchor href="mailto:support@dembrane.com">
-							support@dembrane.com
-						</Anchor>{" "}
-						and we'll set one up.
-					</Trans>
-				</Text>
-			</Paper>
+			<Text size="sm" c="dimmed">
+				<Trans>
+					No billing account yet. Email{" "}
+					<Anchor href="mailto:support@dembrane.com">
+						support@dembrane.com
+					</Anchor>{" "}
+					and we'll set one up.
+				</Trans>
+			</Text>
 		);
 	}
 

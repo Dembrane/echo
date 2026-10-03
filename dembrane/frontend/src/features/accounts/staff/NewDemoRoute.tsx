@@ -135,115 +135,127 @@ function NewDemo() {
 					</Text>
 				</Stack>
 
-				<SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
-					{input("organisation_name", t`Organisation name`, { required: true })}
-					{input("website_url", t`Website`, {
-						placeholder: "https://",
-						required: true,
-						type: "url",
-					})}
-				</SimpleGrid>
-				<Textarea
-					label={t`Brief`}
-					description={t`What they want to hear from whom, and why now.`}
-					autosize
-					minRows={3}
-					required
-					value={form.brief}
-					onChange={(e) => {
-						const value = e.currentTarget.value;
-						setForm((f) => ({ ...f, brief: value }));
-					}}
-					error={fields.brief}
-					data-testid="demo-brief"
-				/>
-				<Textarea
-					label={t`Event or customer example`}
-					description={t`Optional. A past event or customer to model the demo on.`}
-					autosize
-					minRows={2}
-					value={form.example}
-					onChange={(e) => {
-						const value = e.currentTarget.value;
-						setForm((f) => ({ ...f, example: value }));
-					}}
-				/>
-				<Stack gap={4}>
-					<Text size="sm">
-						<Trans>Demo language</Trans>
-					</Text>
-					<SegmentedControl
-						value={language}
-						onChange={(v) => setLanguage(v as typeof language)}
-						data={[
-							{ label: "Nederlands", value: "nl" },
-							{ label: "English", value: "en" },
-						]}
-						w={260}
+				<Stack gap="md">
+					<SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+						{input("organisation_name", t`Organisation name`, {
+							required: true,
+						})}
+						{input("website_url", t`Website`, {
+							placeholder: "https://",
+							required: true,
+							type: "url",
+						})}
+					</SimpleGrid>
+					<Textarea
+						label={t`Brief`}
+						description={t`What they want to hear from whom, and why now.`}
+						autosize
+						minRows={3}
+						required
+						value={form.brief}
+						onChange={(e) => {
+							const value = e.currentTarget.value;
+							setForm((f) => ({ ...f, brief: value }));
+						}}
+						error={fields.brief}
+						data-testid="demo-brief"
+					/>
+					<Textarea
+						label={t`Event or customer example`}
+						description={t`Optional. A past event or customer to model the demo on.`}
+						autosize
+						minRows={2}
+						value={form.example}
+						onChange={(e) => {
+							const value = e.currentTarget.value;
+							setForm((f) => ({ ...f, example: value }));
+						}}
+					/>
+					<Stack gap={4}>
+						<Text size="sm">
+							<Trans>Demo language</Trans>
+						</Text>
+						<SegmentedControl
+							value={language}
+							onChange={(v) => setLanguage(v as typeof language)}
+							data={[
+								{ label: "Nederlands", value: "nl" },
+								{ label: "English", value: "en" },
+							]}
+							w={260}
+						/>
+					</Stack>
+				</Stack>
+
+				<Stack gap="md">
+					<Divider label={t`Contact`} labelPosition="left" />
+					<SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+						{input("contact_name", t`Contact name`, { required: true })}
+						{input("contact_email", t`Contact email`, {
+							required: true,
+							type: "email",
+						})}
+					</SimpleGrid>
+					<Switch
+						checked={signIn}
+						onChange={(e) => setSignIn(e.currentTarget.checked)}
+						label={t`Let them sign in with an email code`}
+						description={t`Publishing sends them the sign-in invitation. Off: no email goes out.`}
+						data-testid="demo-sign-in"
 					/>
 				</Stack>
 
-				<Divider label={t`Contact`} labelPosition="left" />
-				<SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
-					{input("contact_name", t`Contact name`, { required: true })}
-					{input("contact_email", t`Contact email`, {
-						required: true,
-						type: "email",
-					})}
-				</SimpleGrid>
-				<Switch
-					checked={signIn}
-					onChange={(e) => setSignIn(e.currentTarget.checked)}
-					label={t`Let them sign in with an email code`}
-					description={t`Publishing sends them the sign-in invitation. Off: no email goes out.`}
-					data-testid="demo-sign-in"
-				/>
-
-				<Divider label={t`Offer`} labelPosition="left" />
-				<Checkbox
-					checked={withOffer}
-					onChange={(e) => setWithOffer(e.currentTarget.checked)}
-					label={t`Prepare an offer`}
-					description={t`A draft on their account, for you to send after the demo.`}
-					data-testid="demo-with-offer"
-				/>
-				{withOffer && (
-					<Box>
-						<Stack gap="sm">
-							<Group gap="lg">
-								<Stack gap={4}>
-									<Text size="sm">
-										<Trans>Template</Trans>
-									</Text>
-									<SegmentedControl
-										value={template}
-										onChange={(v) => setTemplate(v as typeof template)}
-										data={[
-											{ label: t`Subscription`, value: "subscription" },
-											{ label: t`Event`, value: "event" },
-										]}
-									/>
-								</Stack>
-								<Stack gap={4}>
-									<Text size="sm">
-										<Trans>Offer language</Trans>
-									</Text>
-									<SegmentedControl
-										value={offerLanguage}
-										onChange={(v) =>
-											setOfferLanguage(v as typeof offerLanguage)
-										}
-										data={[
-											{ label: "Nederlands", value: "nl" },
-											{ label: "English", value: "en" },
-										]}
-									/>
-								</Stack>
-							</Group>
-							<LinesEditor lines={lines} onChange={setLines} errors={fields} />
-						</Stack>
-					</Box>
-				)}
+				<Stack gap="md">
+					<Divider label={t`Offer`} labelPosition="left" />
+					<Checkbox
+						checked={withOffer}
+						onChange={(e) => setWithOffer(e.currentTarget.checked)}
+						label={t`Prepare an offer`}
+						description={t`A draft on their account, for you to send after the demo.`}
+						data-testid="demo-with-offer"
+					/>
+					{withOffer && (
+						<Box>
+							<Stack gap="sm">
+								<Group gap="lg">
+									<Stack gap={4}>
+										<Text size="sm">
+											<Trans>Template</Trans>
+										</Text>
+										<SegmentedControl
+											value={template}
+											onChange={(v) => setTemplate(v as typeof template)}
+											data={[
+												{ label: t`Subscription`, value: "subscription" },
+												{ label: t`Event`, value: "event" },
+											]}
+										/>
+									</Stack>
+									<Stack gap={4}>
+										<Text size="sm">
+											<Trans>Offer language</Trans>
+										</Text>
+										<SegmentedControl
+											value={offerLanguage}
+											onChange={(v) =>
+												setOfferLanguage(v as typeof offerLanguage)
+											}
+											data={[
+												{ label: "Nederlands", value: "nl" },
+												{ label: "English", value: "en" },
+											]}
+										/>
+									</Stack>
+								</Group>
+								<LinesEditor
+									lines={lines}
+									onChange={setLines}
+									errors={fields}
+								/>
+							</Stack>
+						</Box>
+					)}
+				</Stack>
 
 				{error && !Object.keys(fields).length && <ErrorNotice error={error} />}
 				<Group>

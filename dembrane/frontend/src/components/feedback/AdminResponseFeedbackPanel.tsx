@@ -244,7 +244,7 @@ export const AdminResponseFeedbackPanel = () => {
 				</Table>
 			</Table.ScrollContainer>
 			{items.length === 0 && !query.isLoading && (
-				<Text size="sm">
+				<Text size="sm" c="dimmed">
 					<Trans>No feedback yet.</Trans>
 				</Text>
 			)}

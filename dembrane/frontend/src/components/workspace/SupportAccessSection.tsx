@@ -194,7 +194,12 @@ export function SupportAccessSection({
 							<Trans>Pending access requests</Trans>
 						</Title>
 						{pending.map((req) => (
-							<Group key={req.id} justify="space-between" wrap="nowrap">
+							<Group
+								key={req.id}
+								className="app-stack-narrow"
+								justify="space-between"
+								wrap="nowrap"
+							>
 								<Stack gap={0}>
 									<Text size="sm">
 										<Trans>{req.requested_by_name} from dembrane</Trans>

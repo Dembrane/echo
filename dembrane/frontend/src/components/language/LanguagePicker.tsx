@@ -121,6 +121,7 @@ export const LanguagePicker = () => {
 		<>
 			<Box onMouseDown={(e) => e.stopPropagation()}>
 				<Select
+					aria-label={t`Language`}
 					value={currentLanguage}
 					onChange={handleChange}
 					data={languageOptions}

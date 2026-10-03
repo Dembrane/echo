@@ -2,7 +2,6 @@ import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
-	Alert,
 	Badge,
 	Box,
 	Checkbox,
@@ -71,12 +70,12 @@ export function WorkspaceSelectList({
 
 	if (workspaces.length === 0) {
 		return (
-			<Alert color="gray" variant="light">
+			<Text size="sm" c="dimmed">
 				<Trans>
 					You don't have permission to invite to any workspace in this
 					organisation.
 				</Trans>
-			</Alert>
+			</Text>
 		);
 	}
 

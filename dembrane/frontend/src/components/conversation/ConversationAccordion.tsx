@@ -1375,7 +1375,7 @@ export const ConversationAccordion = ({
 															);
 														})}
 														{filteredProjectTags.length === 0 && (
-															<Text size="sm" ta="center" c="dimmed">
+															<Text size="sm" c="dimmed">
 																<Trans>No tags found</Trans>
 															</Text>
 														)}

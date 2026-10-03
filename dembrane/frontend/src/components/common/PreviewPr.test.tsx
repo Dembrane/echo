@@ -83,7 +83,7 @@ it("a PR preview shows and links its PR under the logo and in the footer", async
 
 it("next keeps its env badge and has no PR badge or footer line", async () => {
 	await renderWith({ env: "staging" });
-	expect(screen.getByText("staging")).toBeTruthy();
+	expect(screen.getByText("Staging")).toBeTruthy();
 	expect(screen.queryByTestId("logo-preview-pr")).toBeNull();
 	expect(screen.queryByTestId("footer-preview-pr")).toBeNull();
 });

@@ -290,7 +290,7 @@ export const ConversationEdit = ({
 			</Group>
 
 			<form>
-				<Stack gap="lg">
+				<Stack gap="md">
 					{isError && (
 						<CloseableAlert color="red">
 							<Text size="sm">

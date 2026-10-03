@@ -69,24 +69,26 @@ export function PopcornStart({
 				</Stack>
 				<Paper withBorder p="lg">
 					<Stack gap="lg">
-						<TextInput
-							label={t`Session title`}
-							description={t`Shown at the top of the screen. Change it any time.`}
-							size={FIELD_SIZE}
-							value={title}
-							error={titleError}
-							maxLength={160}
-							onChange={(event) => {
-								setTitle(event.currentTarget.value);
-								setTitleError(null);
-							}}
-							{...testId("popcorn-title-input")}
-						/>
-						<VoiceFields
-							projectId={projectId}
-							voice={voice}
-							onChange={setVoice}
-						/>
+						<Stack gap="md">
+							<TextInput
+								label={t`Session title`}
+								description={t`Shown at the top of the screen. Change it any time.`}
+								size={FIELD_SIZE}
+								value={title}
+								error={titleError}
+								maxLength={160}
+								onChange={(event) => {
+									setTitle(event.currentTarget.value);
+									setTitleError(null);
+								}}
+								{...testId("popcorn-title-input")}
+							/>
+							<VoiceFields
+								projectId={projectId}
+								voice={voice}
+								onChange={setVoice}
+							/>
+						</Stack>
 						<Group justify="flex-start">
 							<Button
 								variant="filled"

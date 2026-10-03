@@ -53,7 +53,7 @@ msgstr "{0} підписав(-ла) {1}. Підписана копія у ваш
 msgid "{done} of {total} filled"
 msgstr "Заповнено {done} з {total}"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:207
+#: src/features/accounts/staff/NewDemoRoute.tsx:214
 msgid "A draft on their account, for you to send after the demo."
 msgstr "Чернетка в їхньому обліковому записі, яку ви зможете надіслати після демо."
 
@@ -201,11 +201,11 @@ msgstr "Платіжні реквізити оновлено"
 msgid "Book a call"
 msgstr "Запланувати дзвінок"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:147
+#: src/features/accounts/staff/NewDemoRoute.tsx:150
 msgid "Brief"
 msgstr "Бриф"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:263
+#: src/features/accounts/staff/NewDemoRoute.tsx:275
 msgid "Build the demo"
 msgstr "Зібрати демо"
 
@@ -278,15 +278,15 @@ msgstr "Очистити"
 msgid "Closed"
 msgstr "Закрито"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:186
+#: src/features/accounts/staff/NewDemoRoute.tsx:191
 msgid "Contact"
 msgstr "Контакт"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:189
+#: src/features/accounts/staff/NewDemoRoute.tsx:194
 msgid "Contact email"
 msgstr "Ел. пошта контакту"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:188
+#: src/features/accounts/staff/NewDemoRoute.tsx:193
 msgid "Contact name"
 msgstr "Ім'я контакту"
 
@@ -353,7 +353,7 @@ msgstr "Демо"
 msgid "Demo | dembrane"
 msgstr "Демо | dembrane"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:173
+#: src/features/accounts/staff/NewDemoRoute.tsx:176
 msgid "Demo language"
 msgstr "Мова демо"
 
@@ -458,11 +458,11 @@ msgid "Enable it to push offers and tasks. They get an Account page with a billi
 msgstr "Увімкніть, щоб надсилати пропозиції та завдання. З'явиться сторінка облікового запису з кроком платіжних даних."
 
 #: src/features/accounts/staff/PushOfferModal.tsx:102
-#: src/features/accounts/staff/NewDemoRoute.tsx:223
+#: src/features/accounts/staff/NewDemoRoute.tsx:230
 msgid "Event"
 msgstr "Подія"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:161
+#: src/features/accounts/staff/NewDemoRoute.tsx:164
 msgid "Event or customer example"
 msgstr "Приклад події або клієнта"
 
@@ -578,7 +578,7 @@ msgstr "Мова"
 msgid "Legal name"
 msgstr "Юридична назва"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:197
+#: src/features/accounts/staff/NewDemoRoute.tsx:202
 msgid "Let them sign in with an email code"
 msgstr "Дозволити вхід за кодом з електронної пошти"
 
@@ -732,11 +732,11 @@ msgid "Nothing to do right now."
 msgstr "Зараз немає завдань."
 
 #: src/features/accounts/format.ts:45
-#: src/features/accounts/staff/NewDemoRoute.tsx:202
+#: src/features/accounts/staff/NewDemoRoute.tsx:209
 msgid "Offer"
 msgstr "Пропозиція"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:229
+#: src/features/accounts/staff/NewDemoRoute.tsx:236
 msgid "Offer language"
 msgstr "Мова пропозиції"
 
@@ -811,7 +811,7 @@ msgstr "Відкриється після того, як ви підпишете
 msgid "Optional"
 msgstr "Необов'язково"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:162
+#: src/features/accounts/staff/NewDemoRoute.tsx:165
 msgid "Optional. A past event or customer to model the demo on."
 msgstr "Необов'язково. Минула подія або клієнт як основа для демо."
 
@@ -824,7 +824,7 @@ msgstr "Необов'язково. Завдання залишається не�
 msgid "Organisation"
 msgstr "Організація"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:139
+#: src/features/accounts/staff/NewDemoRoute.tsx:140
 msgid "Organisation name"
 msgstr "Назва організації"
 
@@ -881,7 +881,7 @@ msgstr "Номер замовлення (PO)"
 msgid "Postal code"
 msgstr "Поштовий індекс"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:206
+#: src/features/accounts/staff/NewDemoRoute.tsx:213
 msgid "Prepare an offer"
 msgstr "Підготувати пропозицію"
 
@@ -939,7 +939,7 @@ msgstr "Публікація відкриває доступ до демо. Ли
 #~ msgid "Publishing sends {0} a sign-in invitation with an email code."
 #~ msgstr ""
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:198
+#: src/features/accounts/staff/NewDemoRoute.tsx:203
 msgid "Publishing sends them the sign-in invitation. Off: no email goes out."
 msgstr "Публікація надсилає запрошення увійти. Якщо вимкнено: лист не надсилається."
 
@@ -1235,7 +1235,7 @@ msgid "Submitted"
 msgstr "Надіслано"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:101
-#: src/features/accounts/staff/NewDemoRoute.tsx:222
+#: src/features/accounts/staff/NewDemoRoute.tsx:229
 msgid "Subscription"
 msgstr "Підписка"
 
@@ -1279,7 +1279,7 @@ msgid "Tasks | dembrane"
 msgstr "Завдання | dembrane"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:95
-#: src/features/accounts/staff/NewDemoRoute.tsx:216
+#: src/features/accounts/staff/NewDemoRoute.tsx:223
 msgid "Template"
 msgstr "Шаблон"
 
@@ -1491,7 +1491,7 @@ msgstr "Ми створимо синтетичне демо на основі ї
 msgid "We send them their own link to this document."
 msgstr "Ми надішлемо їм окреме посилання на цей документ."
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:140
+#: src/features/accounts/staff/NewDemoRoute.tsx:143
 #: src/features/accounts/staff/DemoRoute.tsx:56
 msgid "Website"
 msgstr "Вебсайт"
@@ -1500,7 +1500,7 @@ msgstr "Вебсайт"
 msgid "What each of your organisations still has to do for dembrane."
 msgstr "Що кожна з ваших організацій ще має зробити для dembrane."
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:148
+#: src/features/accounts/staff/NewDemoRoute.tsx:151
 msgid "What they want to hear from whom, and why now."
 msgstr "Що саме вони хочуть почути, від кого і чому саме зараз."
 
