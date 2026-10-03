@@ -1,0 +1,100 @@
+/* Dark mode. The colours themselves are variables set per scheme by the
+ * theme's cssVariablesResolver (theme.tsx, from colors.ts); this file holds
+ * only what a variable can't reach.
+ *
+ * Checked controls fill with brand blue under a parchment mark, as the primary
+ * pill does. rules.css fills them with --app-action, which in dark is the
+ * lighter text blue. Remove once rules.css reads --app-action-fill
+ * (requested from the grammar workstream). */
+:root[data-mantine-color-scheme="dark"]
+	:is(.mantine-Checkbox-input:checked, .mantine-Radio-radio:checked),
+:root[data-mantine-color-scheme="dark"]
+	.mantine-Switch-input:checked
+	+ .mantine-Switch-track {
+	background-color: var(--app-action-fill);
+	border-color: var(--app-action-fill);
+}
+
+/* The scrollbar thumb lightens on hover in light; on black it does the same
+ * the other way up. */
+:root[data-mantine-color-scheme="dark"] {
+	--app-scrollbar-thumb: #4a4947;
+	--app-scrollbar-thumb-hover: #7d7b78;
+}
+
+/* Markdown (Tailwind's .prose) takes its own inverted palette in dark, so the
+ * many places that render prose need no dark: class of their own. */
+:root[data-mantine-color-scheme="dark"] .prose {
+	--tw-prose-body: var(--tw-prose-invert-body);
+	--tw-prose-headings: var(--tw-prose-invert-headings);
+	--tw-prose-lead: var(--tw-prose-invert-lead);
+	--tw-prose-links: var(--tw-prose-invert-links);
+	--tw-prose-bold: var(--tw-prose-invert-bold);
+	--tw-prose-counters: var(--tw-prose-invert-counters);
+	--tw-prose-bullets: var(--tw-prose-invert-bullets);
+	--tw-prose-hr: var(--tw-prose-invert-hr);
+	--tw-prose-quotes: var(--tw-prose-invert-quotes);
+	--tw-prose-quote-borders: var(--tw-prose-invert-quote-borders);
+	--tw-prose-captions: var(--tw-prose-invert-captions);
+	--tw-prose-kbd: var(--tw-prose-invert-kbd);
+	--tw-prose-kbd-shadows: var(--tw-prose-invert-kbd-shadows);
+	--tw-prose-code: var(--tw-prose-invert-code);
+	--tw-prose-pre-code: var(--tw-prose-invert-pre-code);
+	--tw-prose-pre-bg: var(--tw-prose-invert-pre-bg);
+	--tw-prose-th-borders: var(--tw-prose-invert-th-borders);
+	--tw-prose-td-borders: var(--tw-prose-invert-td-borders);
+}
+
+/* A card reads off the page ground, as it does on parchment in light; Mantine
+ * would raise it to its dark-6 surface. (:where keeps rules.css's pressable
+ * cards in charge of their own backgrounds.) */
+:root[data-mantine-color-scheme="dark"] :where(.mantine-Card-root) {
+	background-color: var(--mantine-color-body);
+}
+
+/* The markdown editor (MDXEditor) draws from Radix's light scales; in dark it
+ * takes the roles instead. The toolbar keeps its tint, as primary-2 does in
+ * light. */
+:root[data-mantine-color-scheme="dark"]
+	:is(.mdxeditor, .mdxeditor-popup-container) {
+	--basePageBg: var(--app-background);
+	--baseBase: var(--app-surface);
+	--baseBgSubtle: var(--app-surface);
+	--baseBg: var(--app-action-tint);
+	--baseBgHover: var(--app-quiet);
+	--baseBgActive: var(--app-pressed);
+	--baseLine: var(--app-quiet);
+	--baseBorder: var(--app-control-rule);
+	--baseBorderHover: var(--app-muted);
+	--baseSolid: var(--app-muted);
+	--baseSolidHover: var(--app-text);
+	--baseText: var(--app-text);
+	--baseTextContrast: var(--app-text);
+	--accentBase: var(--app-surface);
+	--accentBgSubtle: var(--app-action-tint);
+	--accentBg: var(--app-action-tint);
+	--accentBgHover: var(--app-action-tint);
+	--accentBgActive: var(--app-action-tint);
+	--accentLine: var(--app-action);
+	--accentBorder: var(--app-action);
+	--accentBorderHover: var(--app-action);
+	--accentSolid: var(--app-action-fill);
+	--accentSolidHover: var(--app-action-fill);
+	--accentText: var(--app-action);
+	--accentTextContrast: var(--app-text);
+	color: var(--app-text);
+}
+
+/* Mantine's dark scheme draws some text in --mantine-color-white. Here that is
+ * the page ground (as in light, where it is parchment), so those parts take
+ * the text role instead. */
+:root[data-mantine-color-scheme="dark"]
+	:is(.mantine-Code-root, .mantine-Kbd-root) {
+	color: var(--app-text);
+}
+:root[data-mantine-color-scheme="dark"] .mantine-Burger-root {
+	--burger-color: var(--app-text);
+}
+:root[data-mantine-color-scheme="dark"] .mantine-Slider-thumb {
+	border-color: var(--app-text);
+}

@@ -152,9 +152,11 @@ export const App = () => {
 	if (audienceEntry) {
 		return (
 			<QueryClientProvider client={queryClient}>
+				{/* The room has its own light/dark switch (useAudienceTheme) for now. */}
 				<MantineProvider
 					theme={theme}
 					cssVariablesResolver={cssVariablesResolver}
+					forceColorScheme="light"
 				>
 					<IconContext.Provider value={{ weight: "light" }}>
 						<I18nProvider>
@@ -170,9 +172,12 @@ export const App = () => {
 	return (
 		<QueryClientProvider client={queryClient}>
 			{/* <ReactQueryDevtools initialIsOpen={false} /> */}
+			{/* Light or dark follows the device unless the user picks one
+			    (Settings > Appearance); index.html applies it before mount. */}
 			<MantineProvider
 				theme={theme}
 				cssVariablesResolver={cssVariablesResolver}
+				defaultColorScheme="auto"
 			>
 				{/* Phosphor's light cut, topped up to the one 1px stroke in rules.css */}
 				<IconContext.Provider value={{ weight: "light" }}>

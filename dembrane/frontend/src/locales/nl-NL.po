@@ -725,7 +725,7 @@ msgstr "{count, plural, one {# argument} other {# argumenten}}"
 msgid "{count} history entries"
 msgstr "{count} items in geschiedenis"
 
-#: src/routes/project/HostGuidePage.tsx:950
+#: src/routes/project/HostGuidePage.tsx:951
 msgid "{count} on record"
 msgstr "{count} opgenomen"
 
@@ -1239,7 +1239,7 @@ msgstr "Toegangsverzoeken"
 msgid "Account"
 msgstr "Account"
 
-#: src/routes/settings/UserSettingsRoute.tsx:69
+#: src/routes/settings/UserSettingsRoute.tsx:70
 #: src/features/sidebar/views/user/UserSettingsView.tsx:18
 #: src/features/sidebar/hooks/useSearchHits.ts:84
 msgid "Account & security"
@@ -1435,7 +1435,7 @@ msgstr "Voeg mensen toe via e-mail. Wie nog niet in de werkruimte zit, krijgt ee
 msgid "Add people from your organisation"
 msgstr "Voeg mensen uit je organisatie toe"
 
-#: src/routes/project/HostGuidePage.tsx:1651
+#: src/routes/project/HostGuidePage.tsx:1654
 msgid "Add step"
 msgstr "Stap toevoegen"
 
@@ -1464,7 +1464,7 @@ msgstr "Trefwoorden toevoegen"
 msgid "Add the people, places, organisations and jargon you expect to hear."
 msgstr "Voeg de mensen, plaatsen, organisaties en vaktermen toe die je verwacht te horen."
 
-#: src/routes/project/HostGuidePage.tsx:1688
+#: src/routes/project/HostGuidePage.tsx:1691
 msgid "Add tip"
 msgstr "Tip toevoegen"
 
@@ -2095,7 +2095,7 @@ msgstr "Is er iets dat we beter hadden kunnen doen?"
 msgid "Anything you want to add"
 msgstr "Wil je nog iets toevoegen"
 
-#: src/routes/settings/UserSettingsRoute.tsx:105
+#: src/routes/settings/UserSettingsRoute.tsx:106
 #: src/features/sidebar/views/user/UserSettingsView.tsx:28
 #: src/features/sidebar/hooks/useSearchHits.ts:86
 msgid "Appearance"
@@ -2344,7 +2344,7 @@ msgstr "Vraag het je beheerder"
 msgid "Assign"
 msgstr "Toewijzen"
 
-#: src/routes/settings/UserSettingsRoute.tsx:117
+#: src/routes/settings/UserSettingsRoute.tsx:119
 #: src/features/sidebar/views/user/UserSettingsView.tsx:33
 msgid "Assistant"
 msgstr "Assistent"
@@ -3367,7 +3367,7 @@ msgstr "Klik op een gesprekstag om die aan je filters toe te voegen."
 msgid "Click a node in the tree or cluster map to spotlight it here."
 msgstr "Klik op een knooppunt in de boom of clusterkaart om het hier uit te lichten."
 
-#: src/routes/project/HostGuidePage.tsx:1559
+#: src/routes/project/HostGuidePage.tsx:1562
 msgid "Click to edit"
 msgstr "Klik om te bewerken"
 
@@ -3781,7 +3781,7 @@ msgstr "Gesprek"
 
 #. placeholder {0}: conv.id.slice(-6)
 #. placeholder {0}: slot + 1
-#: src/routes/project/HostGuidePage.tsx:980
+#: src/routes/project/HostGuidePage.tsx:981
 #: src/components/map/attributes.ts:306
 msgid "Conversation {0}"
 msgstr "Gesprek {0}"
@@ -4525,9 +4525,9 @@ msgstr "Gevaar"
 msgid "Danger zone"
 msgstr "Gevarenzone"
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:103
-#~ msgid "Dark"
-#~ msgstr ""
+#: src/components/settings/ColorSchemeSettingsCard.tsx:33
+msgid "Dark"
+msgstr "Donker"
 
 #: src/components/map/panels/MapSettingsMenu.tsx:288
 msgid "Dark mode"
@@ -5117,7 +5117,7 @@ msgstr "Een notitie opstellen die je naar het dembrane-team kunt sturen"
 msgid "Drag audio files here or click to select files"
 msgstr "Sleep audio bestanden hierheen of klik om bestanden te selecteren"
 
-#: src/routes/project/HostGuidePage.tsx:1571
+#: src/routes/project/HostGuidePage.tsx:1574
 #: src/components/chat/TemplatesModal.tsx:553
 msgid "Drag to reorder"
 msgstr "Sleep om te herordenen"
@@ -5460,7 +5460,7 @@ msgstr "Schakel een visualisatie in via het paneelinstellingenmenu"
 msgid "Enable Explore"
 msgstr "Verkennen inschakelen"
 
-#: src/routes/project/HostGuidePage.tsx:1708
+#: src/routes/project/HostGuidePage.tsx:1711
 msgid "Enable participation"
 msgstr "Deelnemen inschakelen"
 
@@ -6583,12 +6583,12 @@ msgstr "Geef chatantwoorden een duim omhoog of omlaag."
 msgid "Give the session a title"
 msgstr "Geef de sessie een titel"
 
-#: src/routes/settings/UserSettingsRoute.tsx:52
+#: src/routes/settings/UserSettingsRoute.tsx:53
 #: src/components/agent-access/AgentAccessSection.tsx:127
 msgid "Go back"
 msgstr "Ga terug"
 
-#: src/routes/project/HostGuidePage.tsx:1532
+#: src/routes/project/HostGuidePage.tsx:1535
 msgid "Go fullscreen"
 msgstr "Volledig scherm"
 
@@ -7819,9 +7819,9 @@ msgstr "Licenties verleend"
 msgid "Lifetime cap"
 msgstr "Levenslange limiet"
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:102
-#~ msgid "Light"
-#~ msgstr ""
+#: src/components/settings/ColorSchemeSettingsCard.tsx:32
+msgid "Light"
+msgstr "Licht"
 
 #: src/components/map/attributes.ts:377
 #: src/components/map/panels/shared.tsx:143
@@ -7928,7 +7928,7 @@ msgstr "Live voorbeeld"
 #~ msgid "Live Preview"
 #~ msgstr "Live Voorbeeld"
 
-#: src/routes/project/HostGuidePage.tsx:1555
+#: src/routes/project/HostGuidePage.tsx:1558
 msgid "Live recordings"
 msgstr "Live opnames"
 
@@ -8013,7 +8013,7 @@ msgstr "Concept laden"
 #~ msgid "Loading draft…"
 #~ msgstr "Concept laden…"
 
-#: src/routes/project/HostGuidePage.tsx:1442
+#: src/routes/project/HostGuidePage.tsx:1443
 msgid "Loading host guide"
 msgstr "Hostgids laden"
 
@@ -8655,7 +8655,7 @@ msgstr "Meerdere talen"
 msgid "Must be at least 10 minutes in the future"
 msgstr "Moet minstens 10 minuten in de toekomst zijn"
 
-#: src/routes/settings/UserSettingsRoute.tsx:89
+#: src/routes/settings/UserSettingsRoute.tsx:90
 #: src/features/sidebar/views/user/UserSettingsView.tsx:23
 #: src/features/sidebar/hooks/useSearchHits.ts:85
 msgid "My access"
@@ -10646,22 +10646,22 @@ msgstr "Log in om door te gaan."
 msgid ""
 "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
 "**Please keep this screen lit up**\n"
-"(black screen = not recording)"
+"(locked screen = not recording)"
 msgstr ""
 "Neem je reactie op door op de knop \"Record\" hieronder te klikken. Je kunt ook in tekst reageren door op het teksticoon te klikken.\n"
 "**Houd dit scherm verlicht**\n"
-"(zwart scherm = niet aan het opnemen)"
+"(vergrendeld scherm = geen opname)"
 
 #: src/components/participant/ParticipantBody.tsx:155
 msgid ""
 "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
 "**Please keep this screen lit up**\n"
-"(black screen = not recording).\n"
+"(locked screen = not recording).\n"
 "This transcript will be anonymized and your host will not be able to listen to your recording."
 msgstr ""
 "Neem je reactie op door op de knop \"Record\" hieronder te klikken. Je kunt ook in tekst reageren door op het teksticoon te klikken.\n"
 "**Houd dit scherm verlicht**\n"
-"(zwart scherm = niet aan het opnemen).\n"
+"(vergrendeld scherm = geen opname).\n"
 "Je transcriptie wordt geanonimiseerd en je host kan niet naar je opname luisteren."
 
 #: src/components/conversation/RetranscribeConversation.tsx:164
@@ -10801,7 +10801,7 @@ msgstr "Positief"
 msgid "Postal code"
 msgstr "Postcode"
 
-#: src/components/common/Logo.tsx:43
+#: src/components/common/Logo.tsx:50
 msgid "PR #{number}"
 msgstr "PR #{number}"
 
@@ -10908,7 +10908,7 @@ msgstr "Vorige"
 msgid "Price"
 msgstr "Prijs"
 
-#: src/routes/project/HostGuidePage.tsx:1525
+#: src/routes/project/HostGuidePage.tsx:1528
 msgid "Print / Save PDF"
 msgstr "Afdrukken / PDF opslaan"
 
@@ -12090,7 +12090,7 @@ msgstr "Uitnodiging opnieuw versturen"
 msgid "Resend verification email"
 msgstr "Verificatiemail opnieuw versturen"
 
-#: src/routes/project/HostGuidePage.tsx:1548
+#: src/routes/project/HostGuidePage.tsx:1551
 #: src/components/map/renderers/MapChrome.tsx:114
 msgid "Reset"
 msgstr "Resetten"
@@ -12100,7 +12100,7 @@ msgstr "Resetten"
 msgid "Reset filters"
 msgstr "Filters resetten"
 
-#: src/routes/project/HostGuidePage.tsx:1542
+#: src/routes/project/HostGuidePage.tsx:1545
 msgid "Reset guide"
 msgstr "Gids resetten"
 
@@ -12130,7 +12130,7 @@ msgstr "Wachtwoord resetten | dembrane"
 #~ msgid "Reset Password | dembrane"
 #~ msgstr "Wachtwoord resetten | dembrane"
 
-#: src/routes/project/HostGuidePage.tsx:1544
+#: src/routes/project/HostGuidePage.tsx:1547
 msgid "Reset the guide?"
 msgstr "De gids resetten?"
 
@@ -12385,7 +12385,7 @@ msgstr "Deze verbinding intrekken?"
 msgid "Revoked"
 msgstr "Ingetrokken"
 
-#: src/routes/project/HostGuidePage.tsx:1565
+#: src/routes/project/HostGuidePage.tsx:1568
 msgid "Right-click to highlight"
 msgstr "Rechtsklikken om te markeren"
 
@@ -12893,7 +12893,7 @@ msgstr "Selecteer een microfoon"
 msgid "Select a webhook to clone"
 msgstr "Selecteer een webhook om te klonen"
 
-#: src/routes/project/HostGuidePage.tsx:1769
+#: src/routes/project/HostGuidePage.tsx:1772
 msgid "Select a word first"
 msgstr "Selecteer eerst een woord"
 
@@ -13215,7 +13215,7 @@ msgstr "We zetten alles voor je klaar"
 msgid "Setting up"
 msgstr "Instellen"
 
-#: src/routes/settings/UserSettingsRoute.tsx:58
+#: src/routes/settings/UserSettingsRoute.tsx:59
 #: src/routes/project/ProjectsHome.tsx:250
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:28
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:83
@@ -13232,7 +13232,7 @@ msgstr "Instellingen"
 msgid "participant.settings.modal.title"
 msgstr "Instellingen"
 
-#: src/routes/settings/UserSettingsRoute.tsx:35
+#: src/routes/settings/UserSettingsRoute.tsx:36
 msgid "Settings | dembrane"
 msgstr "Instellingen | dembrane"
 
@@ -14213,6 +14213,7 @@ msgstr "Uitzetten kan met een betaald plan."
 msgid "Switching to another tool"
 msgstr "Ik stap over op een andere tool"
 
+#: src/components/settings/ColorSchemeSettingsCard.tsx:31
 #: src/components/settings/AuditLogsCard.tsx:88
 msgid "System"
 msgstr "Systeem"
@@ -14221,6 +14222,10 @@ msgstr "Systeem"
 #: src/components/project/ProjectLegalBasisSection.tsx:63
 msgid "System default"
 msgstr "Systeemstandaard"
+
+#: src/components/settings/ColorSchemeSettingsCard.tsx:25
+msgid "System follows your device's light or dark setting."
+msgstr "Systeem volgt de lichte of donkere instelling van je apparaat."
 
 #: src/features/sidebar/views/HelpView.tsx:40
 #: src/features/sidebar/blocks/HelpBlock.tsx:143
@@ -14820,9 +14825,9 @@ msgstr "Hun vertegenwoordiger die eigenaar is van deze data. Diegene wordt toege
 msgid "Their screen is locked or the tab is hidden. Recording pauses until they come back."
 msgstr "Het scherm is vergrendeld of het tabblad is niet actief. De opname pauzeert tot ze terugkomen."
 
-#: src/components/settings/FontSettingsCard.tsx:70
-#~ msgid "Theme"
-#~ msgstr "Thema"
+#: src/components/settings/ColorSchemeSettingsCard.tsx:22
+msgid "Theme"
+msgstr "Thema"
 
 #: src/features/sidebar/shell/UserMenu.tsx:95
 msgid "there"
@@ -15017,7 +15022,7 @@ msgstr "Deze uitnodiging beslaat {0} factureringscontexten, die elk apart worden
 msgid "This is a live preview of the participant's portal. You will need to refresh the page to see the latest changes."
 msgstr "Dit is een live voorbeeld van het portaal van de deelnemer. U moet de pagina vernieuwen om de meest recente wijzigingen te bekijken."
 
-#: src/routes/settings/UserSettingsRoute.tsx:92
+#: src/routes/settings/UserSettingsRoute.tsx:93
 msgid "This is a map of every organisation and workspace you are a member of."
 msgstr "Dit is een overzicht van elke organisatie en werkruimte waarvan je lid bent."
 
@@ -15446,7 +15451,7 @@ msgstr "Op te lossen:"
 msgid "To talk about what you need, email <0>support@dembrane.com</0>."
 msgstr "Wil je bespreken wat je nodig hebt, mail dan <0>support@dembrane.com</0>."
 
-#: src/routes/project/HostGuidePage.tsx:1765
+#: src/routes/project/HostGuidePage.tsx:1768
 msgid "Toggle highlight \"{contextMenuWord}\""
 msgstr "Markering \"{contextMenuWord}\" aan/uit"
 
@@ -16587,7 +16592,7 @@ msgstr "Genoemd in een gesprek"
 msgid "Waiting for conversations to finish before generating a report."
 msgstr "Wachten tot gesprekken zijn afgerond voordat een rapport wordt gegenereerd."
 
-#: src/routes/project/HostGuidePage.tsx:948
+#: src/routes/project/HostGuidePage.tsx:949
 msgid "Waiting for conversations..."
 msgstr "Wachten op gesprekken..."
 
@@ -17659,7 +17664,7 @@ msgstr "Jouw gegevens"
 msgid "Your draft won't be saved."
 msgstr "Je concept wordt niet opgeslagen."
 
-#: src/routes/project/HostGuidePage.tsx:1540
+#: src/routes/project/HostGuidePage.tsx:1543
 msgid "Your edits to this guide are lost and it goes back to the default text."
 msgstr "Je aanpassingen aan deze gids gaan verloren en de standaardtekst komt terug."
 
