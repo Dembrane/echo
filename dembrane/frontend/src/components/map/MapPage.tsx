@@ -549,48 +549,50 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 
 	return (
 		<div className="flex h-full min-h-0 flex-col" style={MAP_LIGHT_VARS}>
-			<Stack gap="md" className="px-4 pb-2 pt-4 md:px-6">
-				<Stack gap="xs" className="min-w-0">
-					<Group gap="sm" align="center" wrap="nowrap">
-						<Title order={2}>
-							<Trans>Map</Trans>
-						</Title>
-						<Badge size="sm" color="mauve" c="graphite">
-							<Trans>Beta</Trans>
-						</Badge>
-					</Group>
-					{countsLine && (
-						<Text size="sm" c="dimmed">
-							{countsLine}
-						</Text>
-					)}
-				</Stack>
-				<Group gap="sm" justify="flex-start" wrap="nowrap">
-					{!offline && (
-						<GenerationControls
-							hasResult={Boolean(graph)}
-							attempt={attempt}
-							readOnly={readOnly}
-							isStarting={generate.isPending}
-							nothingToRead={nothingToRead}
-							onGenerate={() => generate.mutate()}
-						/>
-					)}
-					{graph && argumentCount > 0 && (
-						<MapSettingsMenu
-							settings={settings}
-							onChange={updateSettings}
-							colorBy={colorBy}
-							onColorByChange={handleColorByChange}
-							budgets={budgetResolution}
-							bounds={bounds}
-							pendingClaimCount={pendingClaims.length}
-							onFactCheckAll={handleFactCheckAll}
-							canFactCheck={!readOnly}
-						/>
-					)}
-				</Group>
-			</Stack>
+			{/* One row, to give the map the height: the title, what it holds and
+			    its controls. A narrow screen drops the counts first. */}
+			<Group
+				gap="sm"
+				align="center"
+				justify="flex-start"
+				wrap="nowrap"
+				className="px-4 pb-2 pt-4 md:px-6"
+			>
+				<Title order={2}>
+					<Trans>Map</Trans>
+				</Title>
+				<Badge size="sm" color="mauve" c="graphite">
+					<Trans>Beta</Trans>
+				</Badge>
+				{countsLine && (
+					<Text size="sm" c="dimmed" className="hidden truncate md:block">
+						{countsLine}
+					</Text>
+				)}
+				{!offline && (
+					<GenerationControls
+						hasResult={Boolean(graph)}
+						attempt={attempt}
+						readOnly={readOnly}
+						isStarting={generate.isPending}
+						nothingToRead={nothingToRead}
+						onGenerate={() => generate.mutate()}
+					/>
+				)}
+				{graph && argumentCount > 0 && (
+					<MapSettingsMenu
+						settings={settings}
+						onChange={updateSettings}
+						colorBy={colorBy}
+						onColorByChange={handleColorByChange}
+						budgets={budgetResolution}
+						bounds={bounds}
+						pendingClaimCount={pendingClaims.length}
+						onFactCheckAll={handleFactCheckAll}
+						canFactCheck={!readOnly}
+					/>
+				)}
+			</Group>
 
 			{(failedAttempt ||
 				unplacedCount > 0 ||
