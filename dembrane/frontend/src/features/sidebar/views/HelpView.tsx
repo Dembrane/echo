@@ -2,7 +2,6 @@ import { Trans } from "@lingui/react/macro";
 import {
 	Bug,
 	ChatCircle,
-	EnvelopeSimple,
 	Note,
 	Pulse,
 	Users,
@@ -23,14 +22,6 @@ export const HelpView = () => {
 	return (
 		<nav className="flex h-full flex-col gap-0.5 p-1.5">
 			<ViewHeader to={backTo ?? "/o"} title={<Trans>Help</Trans>} />
-			<NavButton
-				label={<Trans>Contact support</Trans>}
-				icon={EnvelopeSimple}
-				external
-				onClick={() => {
-					window.location.href = "mailto:support@dembrane.com";
-				}}
-			/>
 			<NavButton
 				label={<Trans>Documentation</Trans>}
 				icon={Note}

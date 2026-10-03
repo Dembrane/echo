@@ -3,7 +3,6 @@ import { useDisclosure } from "@mantine/hooks";
 import {
 	Bug,
 	ChatCircle,
-	EnvelopeSimple,
 	Note,
 	PlugsConnected,
 	Pulse,
@@ -133,19 +132,6 @@ export const HelpBlock = () => {
 					onClick={() => undefined}
 					badge={<Trans>Planned</Trans>}
 					disabled
-				/>
-			),
-		},
-		{
-			key: "support",
-			node: (
-				<NavButton
-					label={<Trans>Contact support</Trans>}
-					icon={EnvelopeSimple}
-					external
-					onClick={() => {
-						window.location.href = "mailto:support@dembrane.com";
-					}}
 				/>
 			),
 		},
