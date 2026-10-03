@@ -1044,8 +1044,11 @@ export const MstGraph = ({
 			: (id: string) => styleOf(id).fill;
 		circleSelection
 			.attr("fill", (d) => fillOf(d.id))
-			.attr("stroke", (d) => outlineFor(d.id).stroke)
+			// A style, not an attribute: the hairline is a CSS colour. It and
+			// the hover outline keep their width at any zoom.
+			.style("stroke", (d) => outlineFor(d.id).stroke)
 			.attr("stroke-width", (d) => outlineFor(d.id).strokeWidth)
+			.attr("vector-effect", "non-scaling-stroke")
 			.attr("r", (d) => radiusOf(d.id) * scaleFor(d.id))
 			.attr("opacity", (d) => (styleOf(d.id).pulse ? 0.9 : 1))
 			.select("title")
