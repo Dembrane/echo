@@ -169,7 +169,7 @@ preview() {
 }
 
 # Says which environment was not updated and what stopped it, with the run's link, when the
-# job that deploys it never got to say so itself. DEPLOY_ENV (staging or prod) or PR names the
+# job that deploys it never got to say so itself. DEPLOY_ENV (staging, echo-next or prod) or PR names the
 # environment; TEARDOWN=true is a preview that was not removed. A PR preview's failure goes to
 # the message its comment remembers.
 failure() {
@@ -178,6 +178,7 @@ failure() {
   case "$env" in
     staging) head="Staging environment not updated" so=", so staging was not updated" ;;
     prod) head="Production environment not updated" so=", so production was not updated" ;;
+    echo-next) head="echo-next environment not updated" so=", so echo-next was not updated" ;;
     *)
       if [[ $pr =~ ^[0-9]+$ ]]; then
         preview_read "$pr" 2>/dev/null || true

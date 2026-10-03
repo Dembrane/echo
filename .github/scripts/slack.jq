@@ -72,7 +72,7 @@ def reply($emoji; $head; $detail; $run):
 # without a line is named as it is: "frontend checks failed at "Check path case"".
 def reasons:
   def job: sub("^[0-9]+-"; "") | {"images": "build-images", "deploy-pr": "deploy", "deploy-pr-preview": "deploy",
-    "deploy-staging": "deploy", "deploy-prod": "deploy", "teardown-pr-preview": "teardown-pr"}[.] // .;
+    "deploy-staging": "deploy", "deploy-echo-next": "deploy", "deploy-prod": "deploy", "teardown-pr-preview": "teardown-pr"}[.] // .;
   def steps: {
     "check-server/Install dependencies": "the server dependencies did not install",
     "check-server/Lint and format": "the server code has lint or format errors",
@@ -94,6 +94,9 @@ def reasons:
     "build-images/Check portal bundle size": "the portal bundle is over its size budget",
     "deploy/Push images": "an image failed to build",
     "deploy/Authenticate to Google Cloud": "the deploy could not sign in to Google Cloud",
+    "deploy/Log in to the DigitalOcean registry": "the deploy could not sign in to the image registry",
+    "deploy/Update the image tag in echo-gitops": "the new image tag could not be written to echo-gitops",
+    "deploy/Wait for the rollout": "the cluster did not serve the new commit within 15 minutes",
     "deploy/Deploy and verify": "the deploy did not pass its checks",
     "deploy/cancelled": "the deploy was cancelled"};
   def jobs: {"plan": "planning the run failed", "check-server": "server checks failed",

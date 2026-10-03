@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Builds the five images as $REGISTRY/<app>:$TAG, in parallel, from dembrane/platform.
+# Builds the five images as $REGISTRY/$IMAGE_PREFIX<app>:$TAG, in parallel, from dembrane/platform.
 #
 #   build-images.sh --load [app...]    build into the local Docker daemon (no registry needed)
-#   build-images.sh --push [app...]    make $REGISTRY/<app>:$TAG exist for every app (default all)
+#   build-images.sh --push [app...]    make $REGISTRY/$IMAGE_PREFIX<app>:$TAG exist for every app (default all)
 #   build-images.sh key <app>          print the app's input key
 #   build-images.sh changed <base> [<head>]  the apps whose inputs differ between two commits
 #
@@ -22,6 +22,10 @@ platform="$repo/dembrane/platform"
 ALL_APPS="api worker migrate media web"
 # Bump when a build argument or the build command changes what an image holds.
 KEY_VERSION=1
+# Empty on GCP, where each environment has its own repository; prod's DigitalOcean registry is
+# shared with the old stack, so its images are named dembrane-web-<app>.
+IMAGE_PREFIX=${IMAGE_PREFIX:-}
+img() { echo "$REGISTRY/$IMAGE_PREFIX$1"; }
 
 # The paths each image is built from, relative to the repository root. Files that never reach
 # an image are left out, so changing them builds nothing: infrastructure, CI scripts and tests.
@@ -76,7 +80,7 @@ build() {
     web) ctx=.. ;;
     *) ctx=. ;;
   esac
-  local tags=(-t "$REGISTRY/$app:$TAG" -t "$REGISTRY/$app:src-$k")
+  local tags=(-t "$(img "$app"):$TAG" -t "$(img "$app"):src-$k")
   local outputs=(--load)
   [ "$out" = --push ] && outputs=(--load --push)
   (cd "$platform" && docker buildx build "${outputs[@]}" --provenance=false \
@@ -93,10 +97,10 @@ run() {
   : >"${BUILT_FILE:=/dev/null}"
   for app in "${apps[@]}"; do
     k=$(key "$app")
-    if [ "$out" = --push ] && exists "$REGISTRY/$app:src-$k"; then
+    if [ "$out" = --push ] && exists "$(img "$app"):src-$k"; then
       echo "$app: reusing src-$k (its inputs did not change)"
       # A manifest copy under the new tag, so the deploy names every image by this commit.
-      docker buildx imagetools create --prefer-index=false -t "$REGISTRY/$app:$TAG" "$REGISTRY/$app:src-$k" &
+      docker buildx imagetools create --prefer-index=false -t "$(img "$app"):$TAG" "$(img "$app"):src-$k" &
     else
       echo "$app: building src-$k"
       echo "$app" >>"$BUILT_FILE"
