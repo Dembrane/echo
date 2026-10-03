@@ -27,6 +27,7 @@ import { FormLabel } from "@/components/form/FormLabel";
 import { useInfiniteProjects } from "@/components/project/hooks";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 import { useMoveConversationMutation } from "./hooks";
 
@@ -54,29 +55,18 @@ export const MoveConversationButton = ({
 		mode: "onChange",
 	});
 
-	const { workspaceId } = useWorkspace();
+	const { workspace, workspaceId, workspaces } = useWorkspace();
+	// Moving needs project:update, which observers lack.
+	const canMove = !!workspace && !isReadOnlyRole(workspace.role);
 
+	// Every reachable workspace: the API refuses only a different billing or data owner.
 	const projectsQuery = useInfiniteProjects({
 		options: {
+			excludeProjectId: projectId,
 			initialLimit: 10,
+			search: debouncedSearchValue,
 		},
-		query: {
-			filter: {
-				id: {
-					_neq: projectId as string,
-				},
-				// Scope to current workspace to prevent cross-workspace moves
-				...(workspaceId && {
-					workspace_id: { _eq: workspaceId },
-				}),
-				...(debouncedSearchValue && {
-					name: {
-						_icontains: debouncedSearchValue,
-					},
-				}),
-			},
-			sort: "-updated_at",
-		},
+		query: {},
 	});
 
 	const moveConversationMutation = useMoveConversationMutation();
@@ -96,8 +86,9 @@ export const MoveConversationButton = ({
 			{
 				onSuccess: () => {
 					close();
+					const target = allProjects.find((p) => p.id === data.targetProjectId);
 					navigate(
-						`/w/${workspaceId}/projects/${data.targetProjectId}/conversations/${conversation.id}`,
+						`/w/${target?.workspace_id ?? workspaceId}/projects/${data.targetProjectId}/conversations/${conversation.id}`,
 					);
 				},
 			},
@@ -132,6 +123,8 @@ export const MoveConversationButton = ({
 				| { projects: Project[]; nextOffset?: number }[]
 				| undefined
 		)?.flatMap((page) => page.projects) ?? [];
+
+	if (!canMove) return null;
 
 	return (
 		<>
@@ -201,6 +194,13 @@ export const MoveConversationButton = ({
 															<Radio
 																value={project.id}
 																label={project.name}
+																description={
+																	project.workspace_id !== workspaceId
+																		? workspaces.find(
+																				(w) => w.id === project.workspace_id,
+																			)?.name
+																		: undefined
+																}
 																{...testId(
 																	`conversation-move-project-radio-${project.id}`,
 																)}

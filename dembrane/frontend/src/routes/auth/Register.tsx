@@ -23,6 +23,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { useSearchParams } from "react-router";
 import { useRegisterMutation } from "@/components/auth/hooks";
 import { PasswordRequirements } from "@/components/auth/PasswordRequirements";
+import { ResendVerificationEmail } from "@/components/auth/ResendVerificationEmail";
 import { I18nLink } from "@/components/common/i18nLink";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { ADMIN_BASE_URL, LEGAL_TERMS_URL } from "@/config";
@@ -275,6 +276,9 @@ export const RegisterRoute = () => {
 											comes from dembrane.com.
 										</Trans>
 									</Text>
+									<ResendVerificationEmail
+										email={submittedEmail ?? emailWatch}
+									/>
 									<Anchor
 										size="xs"
 										onClick={() => setStep(1)}

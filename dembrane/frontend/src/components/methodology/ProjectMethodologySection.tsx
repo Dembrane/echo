@@ -36,10 +36,12 @@ type ProjectMethodologySectionProps = {
 		workspace_id?: RelatedId;
 		methodology_version_id?: RelatedId;
 	};
+	readOnly?: boolean;
 };
 
 export const ProjectMethodologySection = ({
 	project,
+	readOnly = false,
 }: ProjectMethodologySectionProps) => {
 	const workspaceId = relatedId(project.workspace_id);
 	const currentVersionId = relatedId(project.methodology_version_id);
@@ -109,7 +111,9 @@ export const ProjectMethodologySection = ({
 						data={selectData}
 						value={selected?.latest_version?.id ?? currentVersionId ?? null}
 						onChange={(value) => void handleChange(value)}
-						disabled={selectMutation.isPending || selectData.length === 0}
+						disabled={
+							readOnly || selectMutation.isPending || selectData.length === 0
+						}
 						placeholder={t`Choose a methodology`}
 						{...testId("project-methodology-select")}
 					/>

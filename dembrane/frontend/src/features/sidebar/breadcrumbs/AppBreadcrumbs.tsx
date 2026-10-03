@@ -75,7 +75,7 @@ const ORG_SECTION_LABELS: Record<string, string> = {
 	members: "Members",
 	overview: "Overview",
 	people: "Members",
-	"request-workspace": "Request workspace",
+	"request-workspace": "Create workspace",
 	usage: "Usage",
 };
 

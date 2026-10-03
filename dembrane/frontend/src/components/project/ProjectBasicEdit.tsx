@@ -16,10 +16,12 @@ import { ProjectSettingsSection } from "./ProjectSettingsSection";
 
 type ProjectBasicEditProps = {
 	project: Project;
+	readOnly?: boolean;
 };
 
 export const ProjectBasicEdit: React.FC<ProjectBasicEditProps> = ({
 	project,
+	readOnly = false,
 }) => {
 	const FormSchema = z.object({
 		context: z.string().optional(),
@@ -79,13 +81,15 @@ export const ProjectBasicEdit: React.FC<ProjectBasicEditProps> = ({
 		<ProjectSettingsSection
 			title={<Trans>Edit Project</Trans>}
 			headerRight={
-				<SaveStatus
-					savedAt={lastSavedAt}
-					formErrors={formState.errors}
-					isPendingSave={isPendingSave}
-					isSaving={isSaving}
-					isError={isError}
-				/>
+				readOnly ? undefined : (
+					<SaveStatus
+						savedAt={lastSavedAt}
+						formErrors={formState.errors}
+						isPendingSave={isPendingSave}
+						isSaving={isSaving}
+						isError={isError}
+					/>
+				)
 			}
 		>
 			<form
@@ -108,6 +112,7 @@ export const ProjectBasicEdit: React.FC<ProjectBasicEditProps> = ({
 									/>
 								}
 								{...field}
+								readOnly={readOnly}
 								{...testId("project-settings-name-input")}
 							/>
 						)}
@@ -127,6 +132,7 @@ export const ProjectBasicEdit: React.FC<ProjectBasicEditProps> = ({
 									/>
 								}
 								{...field}
+								readOnly={readOnly}
 							/>
 						)}
 					/>

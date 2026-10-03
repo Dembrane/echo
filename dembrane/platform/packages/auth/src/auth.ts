@@ -5,6 +5,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError } from "better-auth/api";
 import { bearer, emailOTP, twoFactor } from "better-auth/plugins";
 import { and, eq } from "drizzle-orm";
+import { holdFor, type OnOverlap, oneBrowser, recordHeld } from "./overlap";
 
 export interface AuthOptions {
   readonly db: Db;
@@ -30,10 +31,20 @@ export interface AuthOptions {
    */
   readonly sendVerification?: (email: string, url: string, token: string) => Promise<void>;
   /**
+   * Delivers the password-reset link. `url` is Better Auth's own reset URL, which checks
+   * the token and redirects to the dashboard page the request named with `?token=`.
+   */
+  readonly sendResetPassword?: (email: string, url: string, token: string) => Promise<void>;
+  /**
    * Directus role every new signup gets while Directus tables still back foreign keys.
    * Null reads Directus's public registration role, so each environment keeps its own.
    */
   readonly defaultDirectusRoleId: string | null;
+  /**
+   * Told each time someone signs in while the account is signed in on another browser, and
+   * again when they go ahead and replace those sessions. For analytics; never awaited.
+   */
+  readonly onOverlap?: OnOverlap;
 }
 
 /**
@@ -53,16 +64,18 @@ export function createAuth(opts: AuthOptions) {
     baseURL: opts.baseURL,
     basePath: "/api/auth",
     trustedOrigins: [...opts.trustedOrigins],
-    database: drizzleAdapter(opts.db, {
-      provider: "pg",
-      schema: {
-        user: schema.auth_user,
-        session: schema.auth_session,
-        account: schema.auth_account,
-        verification: schema.auth_verification,
-        twoFactor: schema.auth_two_factor,
-      },
-    }),
+    database: uuidVerificationIds(
+      drizzleAdapter(opts.db, {
+        provider: "pg",
+        schema: {
+          user: schema.auth_user,
+          session: schema.auth_session,
+          account: schema.auth_account,
+          verification: schema.auth_verification,
+          twoFactor: schema.auth_two_factor,
+        },
+      }),
+    ),
     emailAndPassword: {
       enabled: true,
       // Unverified signups cannot sign in, as with Directus's verified public registration.
@@ -72,6 +85,45 @@ export function createAuth(opts: AuthOptions) {
       password: {
         hash: (password) => Bun.password.hash(password, { algorithm: "argon2id" }),
         verify: ({ hash, password }) => Bun.password.verify(password, hash),
+      },
+      sendResetPassword: async ({ user, url, token }) => {
+        await opts.sendResetPassword?.(user.email, url, token);
+      },
+      revokeSessionsOnPasswordReset: true,
+      // The link came to the inbox, so it verifies the email as a code sign-in does, and
+      // Directus keeps the same hash, as changePassword does.
+      onPasswordReset: async ({ user }) => {
+        const [acc] = await opts.db
+          .select({ hash: schema.auth_account.password })
+          .from(schema.auth_account)
+          .where(
+            and(
+              eq(schema.auth_account.userId, user.id),
+              eq(schema.auth_account.providerId, "credential"),
+            ),
+          )
+          .limit(1);
+        await opts.db.transaction(async (tx) => {
+          if (acc?.hash)
+            await tx
+              .update(schema.directus_users)
+              .set({ password: acc.hash })
+              .where(eq(schema.directus_users.id, user.id));
+          if (user.emailVerified) return;
+          await tx
+            .update(schema.auth_user)
+            .set({ emailVerified: true, updatedAt: new Date() })
+            .where(eq(schema.auth_user.id, user.id));
+          await tx
+            .update(schema.directus_users)
+            .set({ status: "active" })
+            .where(
+              and(
+                eq(schema.directus_users.id, user.id),
+                eq(schema.directus_users.status, "unverified"),
+              ),
+            );
+        });
       },
     },
     emailVerification: {
@@ -100,6 +152,13 @@ export function createAuth(opts: AuthOptions) {
     session: {
       expiresIn: 7 * 24 * 3600,
       updateAge: 24 * 3600,
+      // Set by the server only (overlap.ts): the browser, whether the session is still
+      // waiting for the person to replace their other sessions, and when it was last used.
+      additionalFields: {
+        deviceId: { type: "string", required: false, input: false },
+        held: { type: "boolean", required: false, defaultValue: false, input: false },
+        lastSeenAt: { type: "date", required: false, input: false },
+      },
     },
     advanced: {
       cookiePrefix: "dembrane",
@@ -126,6 +185,7 @@ export function createAuth(opts: AuthOptions) {
       }),
       twoFactor({ issuer: "dembrane" }),
       bearer(),
+      oneBrowser({ db: opts.db, onOverlap: opts.onOverlap }),
     ],
     databaseHooks: {
       user: {
@@ -156,7 +216,9 @@ export function createAuth(opts: AuthOptions) {
           // A suspended or archived user (account deletion requested, staff action) gets no
           // session. Unverified is left to Better Auth, which refuses password sign-in until
           // the email is verified and verifies it on a code sign-in.
-          before: async (session) => {
+          // A sign-in from the dashboard while the account is signed in on another browser
+          // is created held: it signs nobody in until the person replaces the other sessions.
+          before: async (session, ctx) => {
             const [row] = await opts.db
               .select({ status: schema.directus_users.status })
               .from(schema.directus_users)
@@ -164,11 +226,92 @@ export function createAuth(opts: AuthOptions) {
               .limit(1);
             if (row?.status === "suspended" || row?.status === "archived")
               throw new APIError("FORBIDDEN", { message: "This account is not active" });
+            const hold = await holdFor(
+              opts.db,
+              session.userId,
+              ctx?.headers ?? ctx?.request?.headers,
+            );
+            return { data: { ...session, ...hold, lastSeenAt: new Date() } };
+          },
+          after: async (session) => {
+            if (session.held !== true || typeof session.deviceId !== "string") return;
+            await recordHeld(
+              opts.db,
+              { id: session.id, userId: session.userId, deviceId: session.deviceId },
+              opts.onOverlap,
+            );
           },
         },
       },
     },
   });
+}
+
+type AdapterInstance = ReturnType<typeof drizzleAdapter>;
+type Adapter = ReturnType<AdapterInstance>;
+type Where = { field: string; value: unknown };
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Better Auth takes a lock by inserting a verification row whose id is a base64url SHA-256
+ * of the lock name, bypassing generateId (reserveVerificationValue, run when a code sign-in
+ * promotes an unverified user). auth_verification.id is a uuid column, so without this every
+ * code sign-in of an unverified user, such as a contact the accounts package created, fails
+ * with a 500. Such an id becomes a UUID derived from it, so the insert succeeds and a second
+ * insert under the same lock name still collides on the primary key, which is what makes it
+ * a lock. Ids that are already UUIDs (everything generateId makes) pass through unchanged.
+ */
+function uuidVerificationIds(inner: AdapterInstance): AdapterInstance {
+  return (options) => wrapAdapter(inner(options));
+}
+
+function wrapAdapter(adapter: Adapter): Adapter {
+  const wrapped = { ...adapter } as Record<string, unknown>;
+  for (const [name, fn] of Object.entries(adapter)) {
+    if (typeof fn !== "function") continue;
+    wrapped[name] =
+      name === "transaction"
+        ? (cb: (trx: Adapter) => Promise<unknown>) =>
+            adapter.transaction((trx) => cb(wrapAdapter(trx as Adapter)))
+        : (arg: unknown, ...rest: unknown[]) =>
+            (fn as (...a: unknown[]) => unknown).call(adapter, verificationArg(arg), ...rest);
+  }
+  return wrapped as Adapter;
+}
+
+function verificationArg(arg: unknown): unknown {
+  if (!arg || typeof arg !== "object") return arg;
+  const a = arg as { model?: unknown; data?: Record<string, unknown>; where?: Where[] };
+  if (a.model !== "verification") return arg;
+  return {
+    ...a,
+    ...(a.data && typeof a.data.id === "string" && { data: { ...a.data, id: asUuid(a.data.id) } }),
+    ...(a.where && {
+      where: a.where.map((w) =>
+        w.field !== "id"
+          ? w
+          : {
+              ...w,
+              value: Array.isArray(w.value)
+                ? w.value.map((v) => (typeof v === "string" ? asUuid(v) : v))
+                : typeof w.value === "string"
+                  ? asUuid(w.value)
+                  : w.value,
+            },
+      ),
+    }),
+  };
+}
+
+/** A UUID (version 8, RFC 9562) derived from any other id, the same input giving the same UUID. */
+function asUuid(id: string): string {
+  if (UUID.test(id)) return id;
+  const b = new Bun.CryptoHasher("sha256").update(id).digest();
+  b[6] = ((b[6] as number) & 0x0f) | 0x80;
+  b[8] = ((b[8] as number) & 0x3f) | 0x80;
+  const h = b.subarray(0, 16).toString("hex");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 
 /** Directus's role for public signups (Basic User on prod). */

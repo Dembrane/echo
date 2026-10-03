@@ -46,7 +46,7 @@ import { ENABLE_MONITOR } from "@/config";
 import { useConversationMonitor } from "@/hooks/useConversationMonitor";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { isReadOnlyRole } from "@/lib/roles";
+import { canUseChat, isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 import { SELLABLE_TIER, type Tier } from "@/lib/tiers";
 
@@ -81,6 +81,7 @@ export const ProjectHomeRoute = () => {
 	// Observers lack project:update, so the rename and settings affordances
 	// are hidden rather than shown and answered with a 403.
 	const canEditProject = !!workspace && !isReadOnlyRole(workspace.role);
+	const canChat = !!workspace && canUseChat(workspace.role);
 
 	const projectQuery = useProjectById({
 		projectId: projectId ?? "",
@@ -173,21 +174,25 @@ export const ProjectHomeRoute = () => {
 						<Trans>Jump to</Trans>
 					</Text>
 					<Group gap="sm" wrap="wrap">
-						<Button
-							size="sm"
-							leftSection={<ChatCircleDotsIcon size={16} />}
-							onClick={() => navigate(`${base}/chats/new`)}
-						>
-							<Trans>Start a chat</Trans>
-						</Button>
-						<Button
-							size="sm"
-							leftSection={<UploadSimpleIcon size={16} />}
-							variant="outline"
-							onClick={() => navigate(`${base}/upload`)}
-						>
-							<Trans>Upload audio</Trans>
-						</Button>
+						{canChat && (
+							<Button
+								size="sm"
+								leftSection={<ChatCircleDotsIcon size={16} />}
+								onClick={() => navigate(`${base}/chats/new`)}
+							>
+								<Trans>Start a chat</Trans>
+							</Button>
+						)}
+						{canEditProject && (
+							<Button
+								size="sm"
+								leftSection={<UploadSimpleIcon size={16} />}
+								variant="outline"
+								onClick={() => navigate(`${base}/upload`)}
+							>
+								<Trans>Upload audio</Trans>
+							</Button>
+						)}
 						<Button
 							size="sm"
 							leftSection={<PaintBrushIcon size={16} />}

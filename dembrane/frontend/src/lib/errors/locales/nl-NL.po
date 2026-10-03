@@ -119,9 +119,19 @@ msgid "error.field.invalid"
 msgstr "Controleer dit veld en probeer het opnieuw."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/webhook.ts:10
+msgid "error.webhook.invalid_target"
+msgstr "Kies waar deze webhook heen gaat: een webadres, of de inbox van sam met een bekende code."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:27
 msgid "error.document.dpa_not_authorised"
 msgstr "Bevestig dat je bevoegd bent om namens je organisatie akkoord te gaan met gegevensverwerking."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/conversation.ts:19
+msgid "error.conversation.move_context_mismatch"
+msgstr "Gesprekken kunnen alleen worden verplaatst naar werkruimtes met dezelfde eigenaar voor facturering en gegevens. Kies een project in een andere werkruimte."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/internal.ts:5
@@ -149,7 +159,7 @@ msgid "error.field.invalid_email"
 msgstr "Voer een geldig e-mailadres in."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:14
+#: src/lib/errors/messages/webhook.ts:19
 msgid "error.webhook.invalid_url"
 msgstr "Voer een webadres in dat begint met http:// of https://."
 
@@ -209,7 +219,7 @@ msgid "error.workspace.visibility_requires_tier"
 msgstr "Voor besloten en privéwerkruimtes is het Innovator-abonnement of hoger nodig. Maak deze nu aan als openbaar, of upgrade eerst."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:23
+#: src/lib/errors/messages/conversation.ts:28
 msgid "error.conversation.no_summary"
 msgstr "Maak eerst een samenvatting van dit gesprek en probeer het dan opnieuw."
 
@@ -349,7 +359,7 @@ msgid "error.map.selection_not_in_map"
 msgstr "Een deel van je selectie staat niet meer op de kaart. Vernieuw de kaart en selecteer opnieuw."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:10
+#: src/lib/errors/messages/webhook.ts:15
 msgid "error.webhook.invalid_status"
 msgstr "Kies een status voor deze webhook: gepubliceerd, concept of gearchiveerd."
 
@@ -412,6 +422,11 @@ msgstr "Snelle toegang biedt plaats aan maximaal {max} sjablonen. Verwijder er e
 #: src/lib/errors/messages/popcorn.ts:5
 msgid "error.popcorn.branding_tier"
 msgstr "Het dembrane-watermerk verwijderen is onderdeel van het Changemaker-abonnement. Upgrade om dit te gebruiken."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/webhook.ts:27
+msgid "error.webhook.sam_inbox_unavailable"
+msgstr "De inbox van sam is hier niet ingesteld, en een webhook naar sam kan niet worden getest."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:43
@@ -649,7 +664,7 @@ msgid "error.agent_access.request_expired"
 msgstr "Dit koppelingsverzoek is verlopen. Begin opnieuw vanuit je agent."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:19
+#: src/lib/errors/messages/conversation.ts:24
 msgid "error.conversation.no_content"
 msgstr "Dit gesprek heeft nog geen audio."
 
@@ -669,7 +684,7 @@ msgid "error.chat.conversation_not_in_chat"
 msgstr "Dit gesprek bevindt zich niet meer in de chat."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:31
+#: src/lib/errors/messages/conversation.ts:36
 msgid "error.conversation.not_open"
 msgstr "Dit gesprek is op dit moment niet geopend. Vraag de organisator om een nieuwe link."
 
@@ -1104,7 +1119,7 @@ msgid "error.field.too_long"
 msgstr "Gebruik maximaal {max_length} tekens."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:22
+#: src/lib/errors/messages/webhook.ts:32
 msgid "error.webhook.target_not_allowed"
 msgstr "We kunnen geen webhooks naar dit adres sturen. Gebruik een openbaar webadres."
 
@@ -1184,7 +1199,7 @@ msgid "error.chat.not_found"
 msgstr "We konden deze chat niet vinden. Mogelijk is deze verwijderd."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:27
+#: src/lib/errors/messages/conversation.ts:32
 msgid "error.conversation.not_found"
 msgstr "We konden dit gesprek niet vinden. Mogelijk is het verwijderd."
 
@@ -1314,7 +1329,7 @@ msgid "error.popcorn.version_not_found"
 msgstr "We konden deze versie van de presentatie niet vinden."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:18
+#: src/lib/errors/messages/webhook.ts:23
 msgid "error.webhook.not_found"
 msgstr "We konden deze webhook niet vinden. Mogelijk is deze verwijderd."
 

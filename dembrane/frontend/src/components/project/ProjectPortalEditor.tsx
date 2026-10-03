@@ -47,6 +47,7 @@ import type {
 	VerificationTopicMetadata,
 	VerificationTopicsResponse,
 } from "@/lib/api";
+import { isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 import type { Tier } from "@/lib/tiers";
 import { toast } from "../common/Toaster";
@@ -61,8 +62,8 @@ import {
 	useUpdateCustomTopicMutation,
 	useUpdateProjectByIdMutation,
 } from "./hooks";
-import { ProjectHostGuideLink } from "./ProjectHostGuideLink";
 import { KeyTermsInput } from "./KeyTermsInput";
+import { ProjectHostGuideLink } from "./ProjectHostGuideLink";
 import { useProjectSharingLink } from "./ProjectQRCode";
 import { ProjectTagsInput } from "./ProjectTagsInput";
 import {
@@ -292,6 +293,8 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 		workspace?.role === "owner" ||
 		workspace?.role === "admin" ||
 		workspace?.role === "billing";
+	// Observers lack project:update: show the settings read-only instead of 403ing saves.
+	const readOnly = !workspace || isReadOnlyRole(workspace.role);
 	const [upgradeModalOpened, upgradeModalHandlers] = useDisclosure(false);
 	const createCustomTopicMutation = useCreateCustomTopicMutation();
 	const updateCustomTopicMutation = useUpdateCustomTopicMutation();
@@ -511,6 +514,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 	]);
 
 	useEffect(() => {
+		if (readOnly) return;
 		const subscription = watch((values, { type }) => {
 			if (type === "change" && values) {
 				dispatchAutoSaveRef.current(values as ProjectPortalFormValues);
@@ -520,7 +524,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 		return () => {
 			subscription.unsubscribe();
 		};
-	}, [watch]); // Only depend on watch
+	}, [watch, readOnly]);
 
 	// Auto-disable report notifications when ask_for_email is turned off
 	useEffect(() => {
@@ -541,13 +545,15 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 						<Title order={2}>
 							<Trans>Portal Editor</Trans>
 						</Title>
-						<SaveStatus
-							formErrors={formState.errors}
-							savedAt={lastSavedAt}
-							isPendingSave={isPendingSave}
-							isSaving={isSaving}
-							isError={isError}
-						/>
+						{!readOnly && (
+							<SaveStatus
+								formErrors={formState.errors}
+								savedAt={lastSavedAt}
+								isPendingSave={isPendingSave}
+								isSaving={isSaving}
+								isError={isError}
+							/>
+						)}
 					</Group>
 					<Group gap="xs">
 						<ProjectHostGuideLink projectId={project.id} />
@@ -565,7 +571,13 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 				</Group>
 
 				<div className="relative flex h-auto flex-col gap-8 lg:flex-row lg:justify-start">
-					<div className="max-w-[800px] flex-1">
+					{/* Read-only: the fieldset disables native controls, inert blocks the custom ones (badges, tag drag). */}
+					<fieldset
+						disabled={readOnly}
+						inert={readOnly}
+						className="m-0 min-w-0 max-w-[800px] flex-1 border-0 p-0"
+						{...testId("portal-editor-form")}
+					>
 						<form
 							onSubmit={handleSubmit(async (values) => {
 								await triggerManualSave(values);
@@ -1334,6 +1346,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 														<MemoizedMarkdownWYSIWYG
 															markdown={field.value}
 															onChange={field.onChange}
+															readOnly={readOnly}
 														/>
 													</Box>
 												)}
@@ -1369,6 +1382,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 														<MemoizedMarkdownWYSIWYG
 															markdown={field.value}
 															onChange={field.onChange}
+															readOnly={readOnly}
 														/>
 													</Box>
 												)}
@@ -1628,7 +1642,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 								<Divider />
 							</Stack>
 						</form>
-					</div>
+					</fieldset>
 
 					{showPreview && link && (
 						<div className="relative">

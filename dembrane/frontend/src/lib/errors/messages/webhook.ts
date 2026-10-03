@@ -7,6 +7,11 @@ export const webhook = {
 		message:
 			"One of the chosen events is not available. Pick the events again.",
 	}),
+	"webhook.invalid_target": msg({
+		id: "error.webhook.invalid_target",
+		message:
+			"Choose where this webhook goes: a web address, or sam's inbox with a known code.",
+	}),
 	"webhook.invalid_status": msg({
 		id: "error.webhook.invalid_status",
 		message: "Pick a status for this webhook: published, draft or archived.",
@@ -18,6 +23,11 @@ export const webhook = {
 	"webhook.not_found": msg({
 		id: "error.webhook.not_found",
 		message: "We could not find this webhook. It may have been deleted.",
+	}),
+	"webhook.sam_inbox_unavailable": msg({
+		id: "error.webhook.sam_inbox_unavailable",
+		message:
+			"sam's inbox is not set up here, and a webhook that goes to sam cannot be tested.",
 	}),
 	"webhook.target_not_allowed": msg({
 		id: "error.webhook.target_not_allowed",

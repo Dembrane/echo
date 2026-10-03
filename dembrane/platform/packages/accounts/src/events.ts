@@ -1,4 +1,5 @@
 import { newId } from "@dembrane/core";
+import { enqueueSamMessage } from "@dembrane/webhooks";
 import type { AccountsDeps, Conn } from "./deps";
 import { deliverEvent, notifySlack } from "./jobs";
 import type { BillingRow, DocumentRow, OrgRow, SignatureRow, TaskRow, TicketRow } from "./storage";
@@ -7,8 +8,10 @@ import { taskTitle } from "./task-text";
 
 /**
  * What leaves echo when something happens on an account: a timeline row always, the
- * webhook event for sam when ACCOUNTS_EVENTS_URL is set, and a Slack line for the three
- * moments a person should hear about at once. All three are written in the caller's
+ * event for sam, and a Slack line for the three moments a person should hear about at
+ * once. With sam's inbox configured the event goes there and sam posts the Slack line
+ * itself, so echo sends none (one notice, not two); without it the event goes to
+ * ACCOUNTS_EVENTS_URL and echo posts the line. All of it is written in the caller's
  * transaction, so an event exists exactly when its cause committed.
  */
 
@@ -21,6 +24,29 @@ export const ACCOUNT_EVENTS = [
 ] as const;
 export type AccountEvent = (typeof ACCOUNT_EVENTS)[number];
 
+/**
+ * Events only sam's inbox carries. ACCOUNTS_EVENTS_URL never received them, so without the
+ * inbox they stay on the timeline, as before.
+ */
+export const INBOX_ONLY_EVENTS = ["account.call.booked"] as const;
+export type InboxEvent = AccountEvent | (typeof INBOX_ONLY_EVENTS)[number];
+
+const isAccountEvent = (e: InboxEvent): e is AccountEvent =>
+  (ACCOUNT_EVENTS as readonly string[]).includes(e);
+
+/**
+ * The inbox code of each event. Named one by one, never derived from the dotted name, so
+ * renaming an event cannot silently change what sam receives; a new payload shape is _v2.
+ */
+export const ACCOUNT_EVENT_CODES: Record<InboxEvent, string> = {
+  "account.call.booked": "echo_account_call_booked_v1",
+  "account.document.signed": "echo_account_document_signed_v1",
+  "account.document.declined": "echo_account_document_declined_v1",
+  "account.billing_details.updated": "echo_account_billing_details_updated_v1",
+  "account.task.submitted": "echo_account_task_submitted_v1",
+  "account.ticket.opened": "echo_account_ticket_opened_v1",
+};
+
 export type Actor = { kind: "customer" | "staff" | "system"; userId: string | null };
 
 export interface Emit {
@@ -30,7 +56,7 @@ export interface Emit {
   readonly type: string;
   readonly subject?: { type: string; id: string };
   readonly detail?: Record<string, unknown>;
-  readonly webhook?: Record<string, unknown> & { event: AccountEvent };
+  readonly webhook?: Record<string, unknown> & { event: InboxEvent };
   readonly slack?: string;
 }
 
@@ -47,17 +73,55 @@ export async function emit(d: AccountsDeps, tx: Conn, e: Emit): Promise<void> {
     detail: e.detail ?? null,
     createdAt: d.now(),
   });
-  if (e.webhook && d.settings.eventsEnabled)
-    await d.jobs.enqueue(
-      deliverEvent,
-      { payload: { id, timestamp: d.now().toISOString(), ...e.webhook } },
-      { tx },
-    );
-  if (e.slack && d.settings.slackEnabled)
+  const toInbox = Boolean(e.webhook && d.settings.samInbox);
+  if (e.webhook) {
+    // The manager is read here, in the cause's transaction, and frozen into the stored
+    // payload: a message already queued keeps the manager it was written with, so a retry
+    // or a late drain never re-addresses it to someone who took the account over since.
+    const payload = {
+      id,
+      timestamp: d.now().toISOString(),
+      ...e.webhook,
+      account_manager: await accountManagerPayload(tx, e.orgId),
+    };
+    // The timeline event's id is the message id: sam deduplicates a redelivery on it.
+    if (toInbox)
+      await enqueueSamMessage(
+        d.jobs,
+        { code: ACCOUNT_EVENT_CODES[e.webhook.event], json: payload, id },
+        { tx },
+      );
+    else if (d.settings.eventsEnabled && isAccountEvent(e.webhook.event))
+      await d.jobs.enqueue(deliverEvent, { payload }, { tx });
+  }
+  if (e.slack && d.settings.slackEnabled && !toInbox)
     await d.jobs.enqueue(notifySlack, { text: e.slack }, { tx });
 }
 
-// ── payloads: stable, documented in the README, read by sam's invoice_request ──
+// ── payloads: stable, read by sam's invoice_request and its account handling ──
+//
+// Every account message carries, beside its event fields:
+//   id               the timeline event's id, sam's deduplication key
+//   timestamp        ISO time the cause committed
+//   event            the dotted event name
+//   account_manager  { email: string, name: string | null } or null: who at dembrane owns
+//                    this customer when the event happened, so sam can tag them and give
+//                    them the follow-up. Null when the organisation has no manager set.
+// The builders below are the shape of each event's own fields; a breaking change to any
+// of it is a new _v2 code, never an edit here.
+
+/** The organisation's account manager as sam reads it; null when none is set. */
+export async function accountManagerPayload(
+  c: Conn,
+  orgId: string,
+): Promise<{ email: string; name: string | null } | null> {
+  const billing = await store.billing(c, orgId);
+  if (!billing?.account_manager_id) return null;
+  const user = await store.appUser(c, billing.account_manager_id);
+  // A manager without an email cannot be tagged; it reads as unset rather than as a blank.
+  if (!user?.email) return null;
+  return { email: user.email, name: user.display_name || null };
+}
 
 export function orgPayload(o: OrgRow) {
   return { id: o.id, name: o.name, account_stage: o.account_stage };

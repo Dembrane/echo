@@ -545,18 +545,27 @@ export const useInfiniteProjects = ({
 	query: Partial<ListQuery<Project>>;
 	options?: {
 		initialLimit?: number;
+		// What the BFF list understands; `query` itself is not forwarded.
+		search?: string;
+		workspaceId?: string | null;
+		excludeProjectId?: string;
 	};
 }) => {
-	const { initialLimit = 15 } = options;
+	const { initialLimit = 15, search, workspaceId, excludeProjectId } = options;
 
 	return useInfiniteQuery({
 		getNextPageParam: (lastPage: { nextOffset?: number }) =>
 			lastPage.nextOffset,
 		initialPageParam: 0,
 		queryFn: async ({ pageParam = 0 }) => {
-			void query; // advanced filter shapes not forwarded to BFF
+			const params = new URLSearchParams({
+				limit: String(initialLimit),
+				offset: String(pageParam * initialLimit),
+			});
+			if (search) params.set("search", search);
+			if (workspaceId) params.set("workspace_id", workspaceId);
 			const response = await fetch(
-				`${API_BASE_URL}/v2/bff/projects?limit=${initialLimit}&offset=${pageParam * initialLimit}`,
+				`${API_BASE_URL}/v2/bff/projects?${params}`,
 				{ credentials: "include" },
 			);
 			if (!response.ok) {
@@ -565,10 +574,12 @@ export const useInfiniteProjects = ({
 			const data = (await response.json()) as Project[];
 			return {
 				nextOffset: data.length === initialLimit ? pageParam + 1 : undefined,
-				projects: data,
+				projects: excludeProjectId
+					? data.filter((p) => p.id !== excludeProjectId)
+					: data,
 			};
 		},
-		queryKey: ["projects", query],
+		queryKey: ["projects", query, search, workspaceId, excludeProjectId],
 	});
 };
 

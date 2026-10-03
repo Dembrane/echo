@@ -27,6 +27,11 @@ export interface AccountsSettings {
   readonly eventsEnabled: boolean;
   /** Signatures, billing details and questions reach Slack (ACCOUNTS_SLACK_WEBHOOK_URL set). */
   readonly slackEnabled: boolean;
+  /**
+   * Account events go to sam's inbox (SAM_INBOX_URL set) instead of ACCOUNTS_EVENTS_URL,
+   * and sam posts their Slack line, so echo does not.
+   */
+  readonly samInbox: boolean;
   readonly reminderIntervalDays: number;
   /** Signs invite links like every other invite (account.inviteHashSecret). */
   readonly inviteSecret: string;
@@ -60,6 +65,10 @@ export interface AccountsDeps {
 
 export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const isUuid = (v: unknown): v is string => typeof v === "string" && UUID.test(v);
+
+/** Only dembrane's own people can manage an account; the staff routes refuse anyone else. */
+export const isStaffEmail = (email: string | null | undefined): boolean =>
+  (email ?? "").toLowerCase().endsWith("@dembrane.com");
 
 /** A plain fetch with a timeout, for the legal pages. */
 export async function httpFetchText(url: string): Promise<string> {

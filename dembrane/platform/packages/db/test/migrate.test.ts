@@ -29,6 +29,17 @@ run("migrate", () => {
   }, 30_000);
   afterAll(() => sql.end());
 
+  // The schema Directus made, without migration history: what prod is before cutover.
+  const directusSchema = async (name: string) => {
+    const db = postgres(`${base}/${name}`, { max: 1, onnotice: () => {} });
+    for (const tag of ["0000_baseline", "0001_baseline_guards"]) {
+      const file = await Bun.file(new URL(`../migrations/${tag}.sql`, import.meta.url)).text();
+      for (const statement of file.split("--> statement-breakpoint"))
+        if (statement.trim()) await db.unsafe(statement);
+    }
+    await db.end();
+  };
+
   test("builds an empty database from the chain, then does nothing on a second run", async () => {
     const first = await migrate(`${base}/mig_fresh`, { appEnv: "test" });
     expect(first).toEqual({ adoptedBaseline: false, applied: TOTAL });
@@ -39,15 +50,9 @@ run("migrate", () => {
   }, 30_000);
 
   test("adopts a database that already has the schema without re-running the baseline", async () => {
-    const db = postgres(`${base}/mig_adopt`, { max: 1, onnotice: () => {} });
-    // The schema Directus made, without migration history: running the baseline again
-    // would fail on its existing tables, and later migrations need the tables it made.
-    for (const tag of ["0000_baseline", "0001_baseline_guards"]) {
-      const file = await Bun.file(new URL(`../migrations/${tag}.sql`, import.meta.url)).text();
-      for (const statement of file.split("--> statement-breakpoint"))
-        if (statement.trim()) await db.unsafe(statement);
-    }
-    await db.end();
+    // Running the baseline again would fail on its existing tables, and later migrations
+    // need the tables it made.
+    await directusSchema("mig_adopt");
     const r = await migrate(`${base}/mig_adopt`, { appEnv: "test" });
     expect(r.adoptedBaseline).toBe(true);
     // The baseline is recorded, not run; later migrations run normally.
@@ -66,8 +71,11 @@ run("migrate", () => {
 
   test("refuses a contract migration outside local, test and preview until its archive is recorded", async () => {
     const url = `${base}/mig_guard`;
-    // The cutover path: everything but the contract is applied while the old stack runs.
-    await migrate(url, { holdContract: true, appEnv: "prod" });
+    // The cutover path: the database the old stack runs on, with every migration after
+    // the baseline still to come. Not built with holdContract: a held database is never
+    // migrated forward, since a migration newer than the contract would be applied and
+    // the contract then skipped.
+    await directusSchema("mig_guard");
     for (const appEnv of ["prod", "staging", undefined]) {
       const err = await migrate(url, { appEnv }).catch((e: unknown) => e);
       expect(err).toBeInstanceOf(ContractArchiveMissing);
@@ -88,7 +96,7 @@ run("migrate", () => {
       });
     expect(await migrate(url, { appEnv: "prod" })).toEqual({
       adoptedBaseline: false,
-      applied: CONTRACT,
+      applied: TOTAL - BASELINE,
     });
     expect(await kept()).toBe(false);
     await db.end();

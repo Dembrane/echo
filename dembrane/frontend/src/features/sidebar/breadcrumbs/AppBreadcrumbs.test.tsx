@@ -46,3 +46,15 @@ it.each(["/release-notes", "/en-US/release-notes?year=2025"])(
 		expect(screen.getByText("Release notes")).toBeTruthy();
 	},
 );
+
+it("labels /w/new as Create workspace, matching the page heading", () => {
+	render(
+		<I18nProvider i18n={i18n}>
+			<MemoryRouter initialEntries={["/en-US/w/new?organisationId=org-1"]}>
+				<AppBreadcrumbs />
+			</MemoryRouter>
+		</I18nProvider>,
+	);
+	expect(screen.getByText("Create workspace")).toBeTruthy();
+	expect(screen.queryByText("Request workspace")).toBeNull();
+});

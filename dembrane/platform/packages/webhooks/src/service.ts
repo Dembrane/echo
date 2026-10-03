@@ -1,4 +1,4 @@
-import type { Access } from "@dembrane/access";
+import { type Access, requireStaff, type StaffAudit } from "@dembrane/access";
 import { BadRequestError, NotFoundError, newId } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { projectAllows, projectFor } from "@dembrane/http";
@@ -13,6 +13,7 @@ import {
   reportPayload,
   type WebhookEvent,
 } from "./payloads";
+import { INBOX_SCHEME, inboxCodeOf } from "./sam-inbox";
 import type { WebhookRow, WebhooksStorage } from "./storage";
 
 export interface WebhookDeps {
@@ -26,7 +27,17 @@ export interface WebhookDeps {
   /** Local and test only: lets webhooks target loopback and private addresses. */
   readonly allowPrivateTargets: boolean;
   readonly dashboardUrl: string;
+  /** Records staff changing a webhook's target; absent, no target can be changed. */
+  readonly staffAudit?: StaffAudit;
+  /** Whether SAM_INBOX_* is set, so a webhook can be aimed at sam's inbox. */
+  readonly samInbox?: boolean;
 }
+
+/**
+ * The codes a project webhook may deliver to sam's inbox under. Each is a payload sam has
+ * a handler for; the conversation payload of dembrane's own sales calls is the only one.
+ */
+export const SAM_INBOX_WEBHOOK_CODES = ["echo_sales_call_transcript_v1"] as const;
 
 /** Webhook settings need workspace:webhooks: admins and owners on changemaker or above. */
 async function requireWebhooks(d: WebhookDeps, who: Signed, projectId: string) {
@@ -188,6 +199,47 @@ export async function deleteWebhook(
 }
 
 /**
+ * Aims a webhook at sam's inbox under a code, or back at a URL. Staff only and audited:
+ * a project's conversations then reach sam, which only dembrane's own projects should do.
+ * Events, status and secret are left as they are.
+ */
+export async function setWebhookTarget(
+  d: WebhookDeps,
+  who: Signed,
+  projectId: string,
+  webhookId: string,
+  body: { target: string; code: string | null; url: string | null },
+  requestId?: string,
+) {
+  if (!d.staffAudit) throw new Error("setWebhookTarget needs a staff audit");
+  await requireStaff(d.staffAudit, who, {
+    permission: "staff:webhooks",
+    action: "project_webhook.target.update",
+    targetType: "project_webhook",
+    targetId: webhookId,
+    detail: { project_id: projectId, target: body.target, code: body.code, url: body.url },
+    ...(requestId && { requestId }),
+  });
+  const codes: readonly string[] = SAM_INBOX_WEBHOOK_CODES;
+  const toInbox = body.target === "sam_inbox" && codes.includes(body.code ?? "") && !body.url;
+  const toUrl = body.target === "url" && body.code === null && Boolean(body.url);
+  if (!toInbox && !toUrl)
+    throw new BadRequestError("webhook.invalid_target", { params: { codes: codes.join(", ") } });
+  if (toInbox && !d.samInbox) throw new BadRequestError("webhook.sam_inbox_unavailable");
+  if (toUrl) await checkUrl(d, body.url as string);
+  const existing = await d.store.inProject(webhookId, projectId);
+  if (!existing || existing.deleted_at) throw new NotFoundError("webhook.not_found");
+  const updated = await d.store.update(webhookId, {
+    url: toInbox ? `${INBOX_SCHEME}${body.code}` : body.url,
+    user_updated: who.directusUserId,
+    date_updated: d.now().toISOString(),
+  });
+  const row = updated ?? existing;
+  const code = inboxCodeOf(row.url);
+  return { ...view(row), target: code ? "sam_inbox" : "url", inbox_code: code };
+}
+
+/**
  * Sends a sample summarized-conversation payload, event `webhook.test`, and reports what
  * came back. The receiver's body is not echoed (spec M-22: the test turned the server
  * into a proxy that read internal responses).
@@ -201,6 +253,8 @@ export async function testWebhook(
   const project = await requireWebhooks(d, who, projectId);
   const hook = await d.store.inProject(webhookId, projectId);
   if (!hook) throw new NotFoundError("webhook.not_found");
+  // A sample would reach sam as a real message and post to a real channel.
+  if (inboxCodeOf(hook.url)) throw new BadRequestError("webhook.sam_inbox_unavailable");
   const now = d.now();
   const iso = pythonIso(now);
   const payload = conversationPayload(

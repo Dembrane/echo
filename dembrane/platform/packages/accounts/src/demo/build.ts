@@ -3,8 +3,8 @@ import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import type { Completer } from "@dembrane/llm";
 import { defaultSettings, demoIdentity, freshState, type Json, seedDemo } from "@dembrane/popcorn";
-import { eq } from "drizzle-orm";
-import type { AccountsDeps } from "../deps";
+import { and, eq, isNull } from "drizzle-orm";
+import { type AccountsDeps, isStaffEmail } from "../deps";
 import { emit } from "../events";
 import type { Language, OfferItem, OfferTemplate } from "../offer";
 import { ensureOnboardingTasks } from "../onboarding";
@@ -275,6 +275,7 @@ async function seed(d: DemoBuildDeps, row: Row, input: DemoInput) {
     },
     { holdSignIn: true },
   );
+  await defaultManager(d, account.org_id, staffApp);
   const workspaceId = d.demo.workspaceId ?? (await prospectWorkspace(d, account.org_id, slug));
   const authored = row.corpus as Authored;
   const language = input.language;
@@ -398,6 +399,31 @@ async function seed(d: DemoBuildDeps, row: Row, input: DemoInput) {
     continue_url: account.continue_url,
   };
   return { orgId: account.org_id, slug, seed: out, offerDocumentId };
+}
+
+/**
+ * The staff member who started the demo owns the prospect until someone says otherwise, so
+ * sam's messages about it name a person from the first signature on. Only an unset manager
+ * is filled, and only with a @dembrane.com user, the same rule the staff routes enforce.
+ */
+async function defaultManager(
+  d: AccountsDeps,
+  orgId: string,
+  staffApp: { id: string; email: string | null } | null,
+): Promise<void> {
+  if (!staffApp || !isStaffEmail(staffApp.email)) return;
+  const billing = await store.billing(d.db, orgId);
+  if (!billing || billing.account_manager_id) return;
+  // Guarded on null again in the write, so a manager set by staff meanwhile is kept.
+  await d.db
+    .update(schema.billing_account)
+    .set({ account_manager_id: staffApp.id, updated_at: d.now().toISOString() })
+    .where(
+      and(
+        eq(schema.billing_account.id, billing.id),
+        isNull(schema.billing_account.account_manager_id),
+      ),
+    );
 }
 
 /** Without a staff demo workspace, the demo lives in a workspace of the prospect's organisation. */

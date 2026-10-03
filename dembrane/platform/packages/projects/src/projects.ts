@@ -221,11 +221,24 @@ async function authorizeMove(
       throw new ForbiddenError("project.not_owner");
   } else await canMove(d, who, src, "source");
   await canMove(d, who, target.id, "target");
-  const sameContext = src
-    ? await sameBillingContext(d.store, src, target.id)
-    : !isExternalClient(target);
-  if (!sameContext) throw new ForbiddenError("project.move_context_mismatch");
+  if (!(await sameMoveContext(d.store, src, target.id)))
+    throw new ForbiddenError("project.move_context_mismatch");
   return src;
+}
+
+/**
+ * Whether data may move from workspace `src` to `dst` (null: a legacy project with no
+ * workspace): one billing and data-ownership context. Conversation moves share it.
+ */
+export async function sameMoveContext(
+  store: ProjectsStorage,
+  src: string | null,
+  dst: string | null,
+): Promise<boolean> {
+  if (!dst) return !src;
+  if (src) return sameBillingContext(store, src, dst);
+  const ws = await store.workspace(dst);
+  return !!ws && !isExternalClient(ws);
 }
 
 async function canMove(d: ProjectDeps, who: Signed, wsId: string, side: "source" | "target") {
@@ -484,10 +497,12 @@ export async function conversationUsage(d: ProjectDeps, who: Signed, projectId: 
 export async function listMyProjects(
   d: ProjectDeps,
   who: Signed,
-  opts: { limit: number; offset: number; search: string | null },
+  opts: { limit: number; offset: number; search: string | null; workspaceId: string | null },
 ) {
   if (!who.appUserId) throw new ForbiddenError("access.not_onboarded");
-  const wsIds = await d.store.reachableWorkspaceIds(who.appUserId);
+  const wsIds = (await d.store.reachableWorkspaceIds(who.appUserId)).filter(
+    (id) => !opts.workspaceId || id === opts.workspaceId,
+  );
   if (!wsIds.length) return [];
   const rows = await d.store.projectsInWorkspaces(wsIds, {
     search: opts.search?.trim() || null,

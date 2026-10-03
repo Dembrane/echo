@@ -36,3 +36,15 @@ test("English is the default and matches the old subject lines", () => {
   ).toBe("Ann invited you to Org on dembrane");
   expect(subjectOf({ template: "plain", data: { text: "x" } })).toBeNull();
 });
+
+test("the password reset email carries the link and speaks the recipient's language", () => {
+  const reset = {
+    template: "reset_password",
+    data: { reset_url: "https://d/password-reset?token=abc&x=1" },
+  } as const;
+  expect(subjectOf(reset)).toBe("Reset your dembrane password");
+  const { html, text } = render(reset);
+  expect(html).toContain('href="https://d/password-reset?token=abc&amp;x=1"');
+  expect(text).toContain("https://d/password-reset?token=abc&x=1");
+  expect(subjectOf(reset, "nl-NL")).toBe("Stel je dembrane-wachtwoord opnieuw in");
+});

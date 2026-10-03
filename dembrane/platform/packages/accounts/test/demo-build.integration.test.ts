@@ -7,6 +7,8 @@ import { buildDemo, type DemoBuildDeps, demoSlug } from "../src/demo/build";
 import type { HttpGet } from "../src/demo/fetch";
 import { SALES_PORTAL } from "../src/demo/sales-portal";
 import { createDemo } from "../src/demo/service";
+import { accountManagerPayload } from "../src/events";
+import { ensureUser } from "../src/prospect";
 import { accountsRoutes } from "../src/routes";
 import { store } from "../src/storage";
 import { admin, call, dropDatabase, type World, world } from "./helpers";
@@ -317,6 +319,37 @@ run("demos made in echo", () => {
     ]);
   });
 
+  test("the @dembrane.com staff member who started a demo becomes the prospect's account manager", async () => {
+    const sales = await w.db.transaction((tx) =>
+      ensureUser(tx, {
+        email: "sales@dembrane.com",
+        name: "Sales Person",
+        passwordHash: null,
+        nowIso: w.clock.now.toISOString(),
+      }),
+    );
+    const status = K.DemoStatus.parse((await start()).data);
+    await w.db
+      .update(schema.account_demo)
+      .set({ createdBy: sales.userId })
+      .where(eq(schema.account_demo.id, status.id));
+    await buildDemo(deps, status.id, 1);
+    const orgId = (await load(status.id))?.orgId as string;
+    expect((await store.billing(w.db, orgId))?.account_manager_id).toBe(sales.appUserId);
+    expect(await accountManagerPayload(w.db, orgId)).toEqual({
+      email: "sales@dembrane.com",
+      name: "Sales Person",
+    });
+  });
+
+  test("a demo started by someone outside @dembrane.com leaves the manager unset", async () => {
+    // The world's staff member is staff@example.test.
+    const status = K.DemoStatus.parse((await start()).data);
+    await buildDemo(deps, status.id, 1);
+    const orgId = (await load(status.id))?.orgId as string;
+    expect((await store.billing(w.db, orgId))?.account_manager_id).toBeNull();
+  });
+
   test("publishing with sign-in: live link, the contact released and invited, Continue in dembrane", async () => {
     const status = K.DemoStatus.parse(
       (await start({ sign_in: true, contact_email: "piet@voorbeeldstad.example" })).data,
@@ -382,6 +415,52 @@ run("demos made in echo", () => {
         )
       )?.status,
     ).toBe("draft");
+  });
+
+  const publishHeld = async (email: string) => {
+    const status = K.DemoStatus.parse((await start({ contact_email: email })).data);
+    await buildDemo(deps, status.id, 1);
+    const published = K.DemoStatus.parse(
+      (await call(w, "POST", `/api/v2/admin/accounts/demos/${status.id}/publish`, "staff", {}))
+        .data,
+    );
+    return { id: status.id, published };
+  };
+
+  test("a held contact stays held when the demo is published again", async () => {
+    const { id } = await publishHeld("joop@voorbeeldstad.example");
+    await call(w, "POST", `/api/v2/admin/accounts/demos/${id}/publish`, "staff", {});
+    expect(await store.mayReceiveCode(w.db, "joop@voorbeeldstad.example", w.clock.now)).toBe(false);
+  });
+
+  test("sending the demo's offer releases the held contact, without an email", async () => {
+    const { published } = await publishHeld("lotte@voorbeeldstad.example");
+    w.jobs.jobs.length = 0;
+    const sent = await call(
+      w,
+      "POST",
+      `/api/v2/admin/accounts/${published.org_id}/documents/${published.offer_document_id}/send`,
+      "staff",
+      {},
+    );
+    expect(sent.status).toBe(200);
+    expect(await store.mayReceiveCode(w.db, "lotte@voorbeeldstad.example", w.clock.now)).toBe(true);
+    expect(w.jobs.of("account.send-email")).toHaveLength(0);
+  });
+
+  test("enabling the account releases the held contact, without an email", async () => {
+    const { published } = await publishHeld("sanne@voorbeeldstad.example");
+    w.jobs.jobs.length = 0;
+    const enabled = await call(
+      w,
+      "POST",
+      `/api/v2/admin/accounts/${published.org_id}/enable`,
+      "staff",
+      { stage: "prospect" },
+    );
+    expect(enabled.status).toBe(200);
+    expect(await store.mayReceiveCode(w.db, "sanne@voorbeeldstad.example", w.clock.now)).toBe(true);
+    expect(w.jobs.of("account.send-email")).toHaveLength(0);
   });
 
   test("a failed step: the demo says which and why; a retry resumes there without repeating the others", async () => {

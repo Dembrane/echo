@@ -130,6 +130,7 @@ export type EmailTemplate =
       readonly data: { login_url: string; reset_url: string };
     }
   | { readonly template: "verify_email"; readonly data: { verify_url: string } }
+  | { readonly template: "reset_password"; readonly data: { reset_url: string } }
   | { readonly template: "sign_in_code"; readonly data: { code: string } }
   | {
       readonly template: "account_signer_invite";
@@ -164,6 +165,8 @@ export function subjectOf(t: EmailTemplate, locale?: string | null): string | nu
       return tr("email.registration_existing_account.subject");
     case "verify_email":
       return tr("email.verify_email.subject");
+    case "reset_password":
+      return tr("email.reset_password.subject");
     case "sign_in_code":
       return tr("email.sign_in_code.subject");
     case "account_signer_invite":
@@ -278,6 +281,22 @@ export function render(t: EmailTemplate, locale?: string | null): { html: string
           disclaim: P(15, "0 0 28px", tr(`${k}.ignore`)),
         }),
         text: `${tr(`${k}.heading`)}\n\n${tr(`${k}.text_cta`)}\n${d.verify_url}\n\n${tr(`${k}.ignore`)}\n\n${signoff}`,
+      };
+    }
+    case "reset_password": {
+      const d = t.data;
+      const k = "email.reset_password";
+      return {
+        html: layout(tr, {
+          title: tr(`${k}.subject`),
+          preview: tr(`${k}.preview`),
+          heading: tr(`${k}.heading`),
+          body: P(17, "0 0 28px", tr(`${k}.body`)),
+          cta: cta(tr(`${k}.cta`), d.reset_url),
+          fallback: fallback(tr, d.reset_url),
+          disclaim: P(15, "0 0 28px", tr(`${k}.ignore`)),
+        }),
+        text: `${tr(`${k}.heading`)}\n\n${tr(`${k}.text_cta`)}\n${d.reset_url}\n\n${tr(`${k}.ignore`)}\n\n${signoff}`,
       };
     }
     case "sign_in_code": {

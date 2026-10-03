@@ -44,7 +44,13 @@ const relativeSetLine = (revision: ProjectGoalRevision) => {
 	return t`set by ${setByLabel(revision.set_by)} ${relative}`;
 };
 
-export const ProjectGoalSection = ({ projectId }: { projectId: string }) => {
+export const ProjectGoalSection = ({
+	projectId,
+	readOnly = false,
+}: {
+	projectId: string;
+	readOnly?: boolean;
+}) => {
 	const goalQuery = useProjectGoal(projectId);
 	const saveGoalMutation = useSaveProjectGoalMutation(projectId);
 	const [editing, setEditing] = useState(false);
@@ -114,10 +120,14 @@ export const ProjectGoalSection = ({ projectId }: { projectId: string }) => {
 						</Paper>
 					) : (
 						<Text size="sm">
-							<Trans>
-								No goal yet. Set one here, or let the assistant interview you in
-								chat.
-							</Trans>
+							{readOnly ? (
+								<Trans>No goal yet.</Trans>
+							) : (
+								<Trans>
+									No goal yet. Set one here, or let the assistant interview you
+									in chat.
+								</Trans>
+							)}
 						</Text>
 					)}
 
@@ -151,7 +161,7 @@ export const ProjectGoalSection = ({ projectId }: { projectId: string }) => {
 								</Button>
 							</Group>
 						</Stack>
-					) : (
+					) : readOnly ? null : (
 						<Button
 							variant="outline"
 							size="sm"

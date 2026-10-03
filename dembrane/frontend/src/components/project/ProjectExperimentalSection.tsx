@@ -9,8 +9,10 @@ import { ProjectSettingsSection } from "./ProjectSettingsSection";
 // per project: flipping it here never affects other projects.
 export const ProjectExperimentalSection = ({
 	project,
+	readOnly = false,
 }: {
 	project: Project;
+	readOnly?: boolean;
 }) => {
 	const updateProjectMutation = useUpdateProjectByIdMutation();
 
@@ -31,7 +33,7 @@ export const ProjectExperimentalSection = ({
 			<Switch
 				size="md"
 				checked={!!project.is_canvas_enabled}
-				disabled={updateProjectMutation.isPending}
+				disabled={readOnly || updateProjectMutation.isPending}
 				onChange={(event) =>
 					updateProjectMutation.mutate({
 						id: project.id,

@@ -67,7 +67,10 @@ export interface BillingJobDeps {
    */
   readonly customerJobs: boolean;
   readonly dashboardUrl: string;
-  /** Recording overage: episodes, the live count and the team's webhook (null turns notices off). */
+  /**
+   * Recording overage: episodes, the live count and where notices go (sam's inbox through
+   * overageInboxMessage, or the team's webhook; null turns notices off).
+   */
   readonly overage: {
     readonly db: Db;
     readonly live: LiveRecordings;

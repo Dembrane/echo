@@ -10,6 +10,7 @@ import {
 	AuthError,
 	hasSession,
 	requestPasswordReset,
+	resendVerificationEmail,
 	resetPassword,
 	signIn,
 	signInWithCode,
@@ -79,8 +80,8 @@ export const useResetPasswordMutation = () => {
 	});
 };
 
+// The page confirms inline; /check-your-email speaks of a verification link.
 export const useRequestPasswordResetMutation = () => {
-	const navigate = useI18nNavigate();
 	return useMutation({
 		mutationFn: async (email: string) => {
 			await requestPasswordReset(email);
@@ -89,17 +90,23 @@ export const useRequestPasswordResetMutation = () => {
 		onError: (e) => {
 			toast.error(describeAuthError(e));
 		},
-		onSuccess: () => {
-			toast.success("Check your email for reset instructions.");
-			navigate("/check-your-email");
-		},
 	});
 };
+
+export const useResendVerificationMutation = () =>
+	useMutation({
+		meta: { errorToast: false },
+		mutationFn: (email: string) => resendVerificationEmail(email),
+	});
 
 export const useVerifyMutation = (doRedirect = true) => {
 	const navigate = useI18nNavigate();
 
 	return useMutation({
+		// No toast here — the verify page shows the status inline, so a
+		// parallel toast is double-signalling. Errors surface via the
+		// verifyMutation.isError branch on the page.
+		meta: { errorToast: false },
 		mutationFn: async (data: { token: string }) => {
 			// 15s ceiling: a hung API or proxy must not leave the page spinning.
 			const timeout = new Promise<never>((_, reject) =>
@@ -113,9 +120,6 @@ export const useVerifyMutation = (doRedirect = true) => {
 			);
 			return Promise.race([verifyEmail(data.token), timeout]);
 		},
-		// No toast here — the verify page shows the status inline, so a
-		// parallel toast is double-signalling. Errors surface via the
-		// verifyMutation.isError branch on the page.
 		onSuccess: () => {
 			if (doRedirect) {
 				// Redirect with a "?verified=1" hint so /login can show
@@ -132,6 +136,8 @@ export const useVerifyMutation = (doRedirect = true) => {
 
 export const useRegisterMutation = () => {
 	return useMutation({
+		// The page shows the error with ErrorNotice.
+		meta: { errorToast: false },
 		mutationFn: async (body: {
 			email: string;
 			password: string;
@@ -155,6 +161,8 @@ export const useRegisterMutation = () => {
 export const useLoginMutation = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
+		// The login page shows every failure inline.
+		meta: { errorToast: false },
 		mutationFn: async ({
 			email,
 			password,

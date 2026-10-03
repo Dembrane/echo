@@ -470,6 +470,7 @@ export function agentStorage(db: Db) {
       return id;
     },
 
+    /** `inTransaction` runs in the insert's transaction, so what it queues exists only with the row. */
     async fileInsight(r: {
       source: string;
       kind: string;
@@ -478,12 +479,16 @@ export function agentStorage(db: Db) {
       workspaceId: string | null;
       projectId: string | null;
       now: Date;
+      inTransaction?: (tx: postgres.TransactionSql, id: string) => Promise<void>;
     }): Promise<string> {
       const id = newId();
-      await sql`insert into agent_insight (id, source, workspace_id, project_id, chat_id, message_id,
-          kind, content, suggested_capability, status, created_at)
-        values (${id}, ${r.source}, ${r.workspaceId}, ${r.projectId}, null, null, ${r.kind},
-          ${r.content}, ${r.suggestedCapability}, 'new', ${r.now.toISOString()})`;
+      await sql.begin(async (tx) => {
+        await tx`insert into agent_insight (id, source, workspace_id, project_id, chat_id, message_id,
+            kind, content, suggested_capability, status, created_at)
+          values (${id}, ${r.source}, ${r.workspaceId}, ${r.projectId}, null, null, ${r.kind},
+            ${r.content}, ${r.suggestedCapability}, 'new', ${r.now.toISOString()})`;
+        await r.inTransaction?.(tx, id);
+      });
       return id;
     },
   };

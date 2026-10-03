@@ -279,7 +279,7 @@ describe("signing rules", () => {
 });
 
 describe("delivery to sam and Slack", () => {
-  test("events go to the configured URL with the secret; 4xx is final, 5xx retries, unset is off", async () => {
+  test("events go to the configured URL with the secret; 4xx is final, 5xx retries, unset fails the run", async () => {
     const seen: { url: string | null; secret: string | null; event: unknown }[] = [];
     const deliver =
       (status: number) =>
@@ -307,10 +307,13 @@ describe("delivery to sam and Slack", () => {
         p,
       ),
     ).rejects.toThrow(/502/);
-    await runDeliverEvent({ deliver: deliver(500), url: null, secret: null, logger: silent }, p);
+    // Jobs are only queued while a receiver is set; one left over must not vanish.
+    await expect(
+      runDeliverEvent({ deliver: deliver(500), url: null, secret: null, logger: silent }, p),
+    ).rejects.toThrow();
     expect(seen).toHaveLength(3);
   });
-  test("Slack gets the line; a refusal retries; unset is off", async () => {
+  test("Slack gets the line; a refusal retries; unset fails the run", async () => {
     const posted: unknown[] = [];
     await runNotifySlack(
       {
@@ -329,7 +332,9 @@ describe("delivery to sam and Slack", () => {
         { text: "x" },
       ),
     ).rejects.toThrow();
-    await runNotifySlack({ post: async () => 500, url: null }, { text: "x" });
+    await expect(
+      runNotifySlack({ post: async () => 500, url: null }, { text: "x" }),
+    ).rejects.toThrow();
   });
 });
 

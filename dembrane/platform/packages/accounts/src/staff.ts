@@ -10,7 +10,7 @@ import type { Signed } from "@dembrane/http";
 import { and, eq, gt, isNull } from "drizzle-orm";
 import { staffOrg } from "./access";
 import { documentDetail, fileBytes, signedBytes, ticketOf } from "./customer";
-import { type AccountsDeps, type Conn, isUuid } from "./deps";
+import { type AccountsDeps, type Conn, isStaffEmail, isUuid } from "./deps";
 import { fieldProblems, sha256Hex, storePdf, storeRendered, writeFields } from "./documents";
 import { emit } from "./events";
 import { legalForPush } from "./legal/store";
@@ -30,6 +30,7 @@ import {
   withdrawOnboarding,
 } from "./onboarding";
 import { offerPdf, type PlacedField, pageCountOf, textPdf } from "./pdf";
+import { releaseHeldContacts } from "./prospect";
 import { type DocumentRow, type LegalRow, store } from "./storage";
 import { createTask, ensureBillingTask, settleTask, type TaskKind } from "./tasks";
 import {
@@ -177,6 +178,8 @@ export async function enableAccount(
       });
     // A prospect gets the billing details task with its first offer, not before.
     if (input.stage !== "prospect") await ensureBillingTask(d, tx, org.id, who.directusUserId);
+    // Enabling is staff saying the customer may use their account now.
+    await releaseHeldContacts(tx, org.id);
     await emit(d, tx, {
       orgId: org.id,
       actor: actorOf(who),
@@ -207,7 +210,7 @@ export async function updateAccount(
           ? await store.appUser(tx, patch.account_manager_id)
           : null;
         if (!user) throw new BadRequestError("billing.account_manager_not_found");
-        if (!(user.email ?? "").toLowerCase().endsWith("@dembrane.com"))
+        if (!isStaffEmail(user.email))
           throw new BadRequestError("billing.account_manager_not_staff");
       }
       const account = await store.billing(tx, org.id);
@@ -403,6 +406,8 @@ async function sendOfferIn(
   const now = d.now();
   const doc = (await store.document(tx, orgId, docId)) as DocumentRow;
   await store.updateDocument(tx, docId, { status: "sent", sentAt: now, updatedAt: now });
+  // The customer must sign it, so a contact held by an unpublished demo can now sign in.
+  await releaseHeldContacts(tx, orgId);
   const task = await createTask(d, tx, {
     ...(taskId && { id: taskId }),
     orgId,
@@ -595,6 +600,8 @@ async function markSent(
   const now = d.now();
   const doc = (await store.document(tx, orgId, docId)) as DocumentRow;
   await store.updateDocument(tx, docId, { status: "sent", sentAt: now, updatedAt: now });
+  // A document to sign needs the customer to act, so a held contact can now sign in.
+  if (doc.requiresSignature) await releaseHeldContacts(tx, orgId);
   let taskId: string | null = null;
   if (task)
     taskId = (

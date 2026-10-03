@@ -9,7 +9,7 @@
  */
 import { Glob } from "bun";
 import { walk } from "./define";
-import { describe, type EnvironmentName, environments, schema } from "./index";
+import { describe, type EnvironmentName, environments, schema, together } from "./index";
 import { ConfigError, load } from "./load";
 
 const names = Object.keys(environments) as EnvironmentName[];
@@ -17,11 +17,13 @@ const names = Object.keys(environments) as EnvironmentName[];
 function resolveFor(env: EnvironmentName, withPlaceholders = true) {
   const processEnv: Record<string, string> = { APP_ENV: env };
   if (withPlaceholders) {
-    for (const [, k] of walk(schema)) {
-      if (k.meta.secret) processEnv[k.meta.env] = placeholder(k.meta.env);
+    // A secret that belongs to a group stays unset: alone it would fail the group check.
+    const grouped = new Set(together.flat());
+    for (const [path, k] of walk(schema)) {
+      if (k.meta.secret && !grouped.has(path)) processEnv[k.meta.env] = placeholder(k.meta.env);
     }
   }
-  return load(schema, environments[env], processEnv);
+  return load(schema, environments[env], processEnv, together);
 }
 
 function placeholder(envName: string): string {

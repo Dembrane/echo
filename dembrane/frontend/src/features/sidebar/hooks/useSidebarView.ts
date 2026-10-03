@@ -88,7 +88,7 @@ export function resolveSidebarView(
 		};
 	}
 
-	// /w/new (request-workspace) carries its org in ?organisationId=, so surface
+	// /w/new (create workspace) carries its org in ?organisationId=, so surface
 	// it under that org's context. No org param → fall through to user-home.
 	if (segs[0] === "w" && segs[1] === "new") {
 		const orgId = new URLSearchParams(search).get("organisationId");

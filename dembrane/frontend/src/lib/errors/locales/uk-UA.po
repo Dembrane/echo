@@ -119,9 +119,19 @@ msgid "error.field.invalid"
 msgstr "Перевірте це поле та спробуйте знову."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/webhook.ts:10
+msgid "error.webhook.invalid_target"
+msgstr "Оберіть, куди надсилається цей вебхук: на вебадресу або до скриньки sam із відомим кодом."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:27
 msgid "error.document.dpa_not_authorised"
 msgstr "Підтвердьте, що ви маєте право погоджувати обробку даних для вашої організації."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/conversation.ts:19
+msgid "error.conversation.move_context_mismatch"
+msgstr "Розмови можна переміщувати лише до робочих просторів з тим самим власником даних і платником. Виберіть проєкт в іншому робочому просторі."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/internal.ts:5
@@ -149,7 +159,7 @@ msgid "error.field.invalid_email"
 msgstr "Введіть дійсну адресу електронної пошти."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:14
+#: src/lib/errors/messages/webhook.ts:19
 msgid "error.webhook.invalid_url"
 msgstr "Введіть веб-адресу, що починається з http:// або https://."
 
@@ -209,7 +219,7 @@ msgid "error.workspace.visibility_requires_tier"
 msgstr "Робочі простори з доступом за запрошенням і приватні простори потребують тарифу Innovator або вище. Створіть його поки відкритим або спочатку оновіть тариф."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:23
+#: src/lib/errors/messages/conversation.ts:28
 msgid "error.conversation.no_summary"
 msgstr "Спочатку створіть підсумок цієї розмови, а потім спробуйте знову."
 
@@ -349,7 +359,7 @@ msgid "error.map.selection_not_in_map"
 msgstr "Частина вибраного більше не відображається на мапі. Оновіть мапу та виберіть знову."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:10
+#: src/lib/errors/messages/webhook.ts:15
 msgid "error.webhook.invalid_status"
 msgstr "Виберіть статус для цього вебхука: опублікований, чернетка або в архіві."
 
@@ -412,6 +422,11 @@ msgstr "Швидкий доступ може містити щонайбільш
 #: src/lib/errors/messages/popcorn.ts:5
 msgid "error.popcorn.branding_tier"
 msgstr "Видалення логотипа dembrane доступне в тарифі Changemaker. Оновіть тариф, щоб скористатися цією можливістю."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/webhook.ts:27
+msgid "error.webhook.sam_inbox_unavailable"
+msgstr "Скриньку sam тут не налаштовано, а вебхук, що надсилається до sam, не можна перевірити."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:43
@@ -649,7 +664,7 @@ msgid "error.agent_access.request_expired"
 msgstr "Термін дії запиту на підключення минув. Почніть знову зі свого агента."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:19
+#: src/lib/errors/messages/conversation.ts:24
 msgid "error.conversation.no_content"
 msgstr "У цій розмові ще немає аудіо."
 
@@ -669,7 +684,7 @@ msgid "error.chat.conversation_not_in_chat"
 msgstr "Цієї розмови більше немає в чаті."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:31
+#: src/lib/errors/messages/conversation.ts:36
 msgid "error.conversation.not_open"
 msgstr "Ця розмова зараз закрита. Попросіть організатора надіслати нове посилання."
 
@@ -1104,7 +1119,7 @@ msgid "error.field.too_long"
 msgstr "Використовуйте щонайбільше {max_length} символів."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:22
+#: src/lib/errors/messages/webhook.ts:32
 msgid "error.webhook.target_not_allowed"
 msgstr "Ми не можемо надсилати вебхуки на цю адресу. Використовуйте загальнодоступну вебадресу."
 
@@ -1184,7 +1199,7 @@ msgid "error.chat.not_found"
 msgstr "Не вдалося знайти цей чат. Можливо, його було видалено."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:27
+#: src/lib/errors/messages/conversation.ts:32
 msgid "error.conversation.not_found"
 msgstr "Не вдалося знайти цю розмову. Можливо, її було видалено."
 
@@ -1314,7 +1329,7 @@ msgid "error.popcorn.version_not_found"
 msgstr "Не вдалося знайти цю версію презентації."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/webhook.ts:18
+#: src/lib/errors/messages/webhook.ts:23
 msgid "error.webhook.not_found"
 msgstr "Не вдалося знайти цей вебхук. Можливо, його було видалено."
 

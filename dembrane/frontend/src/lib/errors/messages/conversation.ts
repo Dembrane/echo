@@ -16,6 +16,11 @@ export const conversation = {
 		message:
 			"We could not put the audio of this conversation together. Try again.",
 	}),
+	"conversation.move_context_mismatch": msg({
+		id: "error.conversation.move_context_mismatch",
+		message:
+			"Conversations can only move to workspaces with the same billing and data owner. Pick a project in another workspace.",
+	}),
 	"conversation.no_content": msg({
 		id: "error.conversation.no_content",
 		message: "This conversation has no audio yet.",
