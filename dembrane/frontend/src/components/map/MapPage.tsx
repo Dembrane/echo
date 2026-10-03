@@ -36,8 +36,14 @@ import {
 	isMapPayloadV2,
 	type MapGraphData,
 } from "./data/adapter";
+import { conversationColor, conversationSlotLabel } from "./attributes";
 import { fixtureMapData, type MapFixtureId } from "./data/fixture";
-import { filterNodesByType, typesKey, zeroTypeCounts } from "./data/scope";
+import {
+	filterNodesByConversation,
+	filterNodesByType,
+	typesKey,
+	zeroTypeCounts,
+} from "./data/scope";
 import {
 	type FactCheckStates,
 	isAttemptRunning,
@@ -314,15 +320,46 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 		[scopedArgumentTypes],
 	);
 
+	// The conversations on this map, in palette order, and those left out.
+	// A hidden id from another map (an old link) is no filter here.
+	const conversations = useMemo(
+		() =>
+			Array.from(graph?.conversationSlots ?? [])
+				.sort((a, b) => a[1] - b[1])
+				.map(([id, slot]) => ({
+					color: conversationColor(slot),
+					id,
+					name:
+						graph?.conversationNames.get(slot) || conversationSlotLabel(slot),
+				})),
+		[graph],
+	);
+	const hiddenConversations = useMemo(
+		() =>
+			new Set(urlState.hidden.filter((id) => graph?.conversationSlots.has(id))),
+		[graph, urlState.hidden],
+	);
+
 	// Filters narrow the nodes before any geometry; colour never does.
 	const listNodes = useMemo(
-		() => (graph ? filterNodesByType(graph.allNodes, visibleSet) : EMPTY_NODES),
-		[graph, visibleSet],
+		() =>
+			graph
+				? filterNodesByConversation(
+						filterNodesByType(graph.allNodes, visibleSet),
+						hiddenConversations,
+					)
+				: EMPTY_NODES,
+		[graph, visibleSet, hiddenConversations],
 	);
 	const placedNodes = useMemo(
 		() =>
-			graph ? filterNodesByType(graph.placedNodes, visibleSet) : EMPTY_NODES,
-		[graph, visibleSet],
+			graph
+				? filterNodesByConversation(
+						filterNodesByType(graph.placedNodes, visibleSet),
+						hiddenConversations,
+					)
+				: EMPTY_NODES,
+		[graph, visibleSet, hiddenConversations],
 	);
 	const visibleIds = useMemo(
 		() => new Set(listNodes.map((node) => node.id)),
@@ -590,6 +627,11 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 						pendingClaimCount={pendingClaims.length}
 						onFactCheckAll={handleFactCheckAll}
 						canFactCheck={!readOnly}
+						conversations={conversations}
+						hiddenConversations={hiddenConversations}
+						onHiddenConversationsChange={(hidden) =>
+							setUrlState({ hidden: [...hidden] })
+						}
 					/>
 				)}
 			</Group>
@@ -597,6 +639,7 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 			{(failedAttempt ||
 				unplacedCount > 0 ||
 				urlState.scope ||
+				hiddenConversations.size > 0 ||
 				(isRefreshing && !activeAdmission) ||
 				(graph?.stale.length ?? 0) > 0) && (
 				<Stack gap="xs" className="px-4 pb-2 md:px-6">
@@ -652,6 +695,24 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 								onClick={() => setUrlState({ scope: null })}
 							>
 								<Trans>Show current arguments</Trans>
+							</Button>
+						</Group>
+					)}
+					{hiddenConversations.size > 0 && (
+						<Group gap="xs">
+							<Text size="sm">
+								<Plural
+									value={hiddenConversations.size}
+									one="# conversation is hidden from the map."
+									other="# conversations are hidden from the map."
+								/>
+							</Text>
+							<Button
+								size="compact-sm"
+								variant="subtle"
+								onClick={() => setUrlState({ hidden: [] })}
+							>
+								<Trans>Show all conversations</Trans>
 							</Button>
 						</Group>
 					)}

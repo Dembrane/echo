@@ -8,6 +8,7 @@ import {
 	NumberInput,
 	Popover,
 	Radio,
+	ScrollArea,
 	Stack,
 	Text,
 } from "@mantine/core";
@@ -49,7 +50,16 @@ type MapSettingsMenuProps = {
 	 * surface's colours and stays visible while the surface is fullscreen.
 	 */
 	withinPortal?: boolean;
+	/** The map's conversations, in palette order; none where it can't filter. */
+	conversations?: ReadonlyArray<MapConversation>;
+	hiddenConversations?: ReadonlySet<string>;
+	onHiddenConversationsChange?: (hidden: ReadonlySet<string>) => void;
 };
+
+export type MapConversation = { id: string; name: string; color: string };
+
+const NO_CONVERSATIONS: ReadonlyArray<MapConversation> = [];
+const NONE_HIDDEN: ReadonlySet<string> = new Set();
 
 export type MapSettingsControl =
 	| "showExplore"
@@ -168,7 +178,16 @@ export const MapSettingsMenu = ({
 	canFactCheck,
 	hide = NOTHING_HIDDEN,
 	withinPortal = true,
+	conversations = NO_CONVERSATIONS,
+	hiddenConversations = NONE_HIDDEN,
+	onHiddenConversationsChange,
 }: MapSettingsMenuProps) => {
+	const toggleConversation = (id: string, shown: boolean) => {
+		const next = new Set(hiddenConversations);
+		if (shown) next.delete(id);
+		else next.add(id);
+		onHiddenConversationsChange?.(next);
+	};
 	return (
 		<Popover
 			position="bottom-end"
@@ -240,6 +259,44 @@ export const MapSettingsMenu = ({
 							))}
 						</Stack>
 					</Radio.Group>
+
+					{onHiddenConversationsChange && conversations.length > 1 && (
+						<>
+							<Divider />
+							<Stack gap="xs">
+								<Text size="xs">
+									<Trans>Conversations</Trans>
+								</Text>
+								<ScrollArea.Autosize mah={200} type="auto">
+									<Stack gap="xs">
+										{conversations.map((conversation) => (
+											<Checkbox
+												key={conversation.id}
+												size="sm"
+												label={
+													<span className="inline-flex items-center gap-2">
+														<span
+															aria-hidden="true"
+															className="inline-block size-2 shrink-0 rounded-full"
+															style={{ backgroundColor: conversation.color }}
+														/>
+														{conversation.name}
+													</span>
+												}
+												checked={!hiddenConversations.has(conversation.id)}
+												onChange={(event) =>
+													toggleConversation(
+														conversation.id,
+														event.currentTarget.checked,
+													)
+												}
+											/>
+										))}
+									</Stack>
+								</ScrollArea.Autosize>
+							</Stack>
+						</>
+					)}
 
 					{colorBy === "factCheck" && canFactCheck && onFactCheckAll && (
 						<>

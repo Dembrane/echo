@@ -31,6 +31,23 @@ export function filterNodesByType(
 	return kept.length === nodes.length ? nodes : kept;
 }
 
+/**
+ * Nodes with at least one conversation still shown. A node drawn from several
+ * conversations stays while any of them does.
+ */
+export function filterNodesByConversation(
+	nodes: MapGraphNode[],
+	hidden: ReadonlySet<string>,
+): MapGraphNode[] {
+	if (hidden.size === 0) return nodes;
+	const kept = nodes.filter(
+		(node) =>
+			node.metadata.conversationIds.length === 0 ||
+			node.metadata.conversationIds.some((id) => !hidden.has(id)),
+	);
+	return kept.length === nodes.length ? nodes : kept;
+}
+
 export const countForTypes = (
 	counts: Record<ObjectType, number>,
 	types: ReadonlyArray<ObjectType>,
