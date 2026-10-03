@@ -293,7 +293,11 @@ export const schema = defineSchema({
   media: {
     url: key("MEDIA_URL", z.url().optional(), {
       description:
-        "URL of the media service that runs ffmpeg; callers present a Google ID token for it. Unset runs ffmpeg in-process (local development).",
+        "URL of the media service that runs ffmpeg. Unset runs ffmpeg in-process (local development).",
+    }),
+    auth: key("MEDIA_AUTH", z.enum(["google_id_token", "none"]).default("google_id_token"), {
+      description:
+        "How the API and worker authenticate to MEDIA_URL. google_id_token: an identity token from the Cloud Run metadata server. none: no Authorization header, only for a media service reachable solely inside its cluster (Kubernetes). Local and test never send one.",
     }),
     timeoutSeconds: key("MEDIA_TIMEOUT_SECONDS", int.min(10).default(3600), {
       description: "How long one media request may take before the step fails and is retried.",
