@@ -167,8 +167,10 @@ const variantColorResolver: VariantColorsResolver = (input) => {
 // set it so.
 const mantineRoles = (scheme: typeof lightRoles | typeof darkRoles) => ({
 	"--mantine-color-black": scheme.text,
-	// c="dark" means the text colour; Mantine would draw shade 4 in dark.
+	// c="dark" and c="graphite" mean the text colour; Mantine would draw
+	// shade 4 in dark (graphite is #2d2d2c at every shade).
 	"--mantine-color-dark-text": roles.text,
+	"--mantine-color-graphite-text": roles.text,
 	"--mantine-color-body": roles.bg,
 	"--mantine-color-default-border": roles.quiet,
 	"--mantine-color-dimmed": roles.muted,
@@ -184,6 +186,9 @@ export const cssVariablesResolver: CSSVariablesResolver = () => ({
 		...mantineRoles(darkRoles),
 		// A floating layer's shadow; light keeps rules.css's graphite one.
 		"--app-float": "0 12px 40px rgb(0 0 0 / 0.8)",
+		// Mantine's "bright" is white in dark; ours is the page ground.
+		"--mantine-color-bright": roles.text,
+		"--mantine-primary-color-contrast": roles.onFill,
 	},
 	light: { ...lightRoleVars, ...mantineRoles(lightRoles) },
 	variables: {},

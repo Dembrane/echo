@@ -84,3 +84,17 @@
 	--accentTextContrast: var(--app-text);
 	color: var(--app-text);
 }
+
+/* Mantine's dark scheme draws some text in --mantine-color-white. Here that is
+ * the page ground (as in light, where it is parchment), so those parts take
+ * the text role instead. */
+:root[data-mantine-color-scheme="dark"]
+	:is(.mantine-Code-root, .mantine-Kbd-root) {
+	color: var(--app-text);
+}
+:root[data-mantine-color-scheme="dark"] .mantine-Burger-root {
+	--burger-color: var(--app-text);
+}
+:root[data-mantine-color-scheme="dark"] .mantine-Slider-thumb {
+	border-color: var(--app-text);
+}

@@ -10,7 +10,7 @@ export default {
 	theme: {
 		extend: {
 			// A bare `border` draws the faint rule, in either scheme.
-			borderColor: { DEFAULT: "var(--app-rule-color)" },
+			borderColor: { DEFAULT: "var(--app-quiet)" },
 			colors: {
 				...tailwindColors,
 				// Legacy aliases (kept for backward compatibility)
