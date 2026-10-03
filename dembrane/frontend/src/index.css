@@ -2,6 +2,8 @@
 @import "./fonts/dm-sans.css";
 /* The design system: the rule, square shapes, one stroke, one weight */
 @import "./styles/rules.css";
+/* Dark mode: what the per-scheme variables can't reach */
+@import "./styles/tokens-dark.css";
 
 @layer tailwind {
 	/* biome-ignore lint/suspicious/noUnknownAtRules: <explanation> */

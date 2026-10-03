@@ -719,7 +719,7 @@ msgstr "{count, plural, one {# argument} other {# arguments}}"
 msgid "{count} history entries"
 msgstr "{count} history entries"
 
-#: src/routes/project/HostGuidePage.tsx:950
+#: src/routes/project/HostGuidePage.tsx:951
 msgid "{count} on record"
 msgstr "{count} on record"
 
@@ -1233,7 +1233,7 @@ msgstr "Access requests"
 msgid "Account"
 msgstr "Account"
 
-#: src/routes/settings/UserSettingsRoute.tsx:69
+#: src/routes/settings/UserSettingsRoute.tsx:70
 #: src/features/sidebar/views/user/UserSettingsView.tsx:18
 #: src/features/sidebar/hooks/useSearchHits.ts:84
 msgid "Account & security"
@@ -1429,7 +1429,7 @@ msgstr "Add people by email. Anyone not in the workspace yet gets an invite and 
 msgid "Add people from your organisation"
 msgstr "Add people from your organisation"
 
-#: src/routes/project/HostGuidePage.tsx:1651
+#: src/routes/project/HostGuidePage.tsx:1654
 msgid "Add step"
 msgstr "Add step"
 
@@ -1458,7 +1458,7 @@ msgstr "Add tags"
 msgid "Add the people, places, organisations and jargon you expect to hear."
 msgstr "Add the people, places, organisations and jargon you expect to hear."
 
-#: src/routes/project/HostGuidePage.tsx:1688
+#: src/routes/project/HostGuidePage.tsx:1691
 msgid "Add tip"
 msgstr "Add tip"
 
@@ -2092,7 +2092,7 @@ msgstr "Anything we could have done better?"
 msgid "Anything you want to add"
 msgstr "Anything you want to add"
 
-#: src/routes/settings/UserSettingsRoute.tsx:105
+#: src/routes/settings/UserSettingsRoute.tsx:106
 #: src/features/sidebar/views/user/UserSettingsView.tsx:28
 #: src/features/sidebar/hooks/useSearchHits.ts:86
 msgid "Appearance"
@@ -2341,7 +2341,7 @@ msgstr "Ask your admin"
 msgid "Assign"
 msgstr "Assign"
 
-#: src/routes/settings/UserSettingsRoute.tsx:117
+#: src/routes/settings/UserSettingsRoute.tsx:119
 #: src/features/sidebar/views/user/UserSettingsView.tsx:33
 msgid "Assistant"
 msgstr "Assistant"
@@ -3364,7 +3364,7 @@ msgstr "Click a conversation tag to add it to your filters."
 msgid "Click a node in the tree or cluster map to spotlight it here."
 msgstr "Click a node in the tree or cluster map to spotlight it here."
 
-#: src/routes/project/HostGuidePage.tsx:1559
+#: src/routes/project/HostGuidePage.tsx:1562
 msgid "Click to edit"
 msgstr "Click to edit"
 
@@ -3778,7 +3778,7 @@ msgstr "Conversation"
 
 #. placeholder {0}: conv.id.slice(-6)
 #. placeholder {0}: slot + 1
-#: src/routes/project/HostGuidePage.tsx:980
+#: src/routes/project/HostGuidePage.tsx:981
 #: src/components/map/attributes.ts:306
 msgid "Conversation {0}"
 msgstr "Conversation {0}"
@@ -4522,9 +4522,9 @@ msgstr "Danger"
 msgid "Danger zone"
 msgstr "Danger zone"
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:103
-#~ msgid "Dark"
-#~ msgstr "Dark"
+#: src/components/settings/ColorSchemeSettingsCard.tsx:33
+msgid "Dark"
+msgstr "Dark"
 
 #: src/components/map/panels/MapSettingsMenu.tsx:288
 msgid "Dark mode"
@@ -5114,7 +5114,7 @@ msgstr "Drafting a note you can send to the dembrane team"
 msgid "Drag audio files here or click to select files"
 msgstr "Drag audio files here or click to select files"
 
-#: src/routes/project/HostGuidePage.tsx:1571
+#: src/routes/project/HostGuidePage.tsx:1574
 #: src/components/chat/TemplatesModal.tsx:553
 msgid "Drag to reorder"
 msgstr "Drag to reorder"
@@ -5457,7 +5457,7 @@ msgstr "Enable a visualization from the panel settings menu"
 msgid "Enable Explore"
 msgstr "Enable Explore"
 
-#: src/routes/project/HostGuidePage.tsx:1708
+#: src/routes/project/HostGuidePage.tsx:1711
 msgid "Enable participation"
 msgstr "Enable participation"
 
@@ -6580,12 +6580,12 @@ msgstr "Give chat responses a thumbs up or thumbs down."
 msgid "Give the session a title"
 msgstr "Give the session a title"
 
-#: src/routes/settings/UserSettingsRoute.tsx:52
+#: src/routes/settings/UserSettingsRoute.tsx:53
 #: src/components/agent-access/AgentAccessSection.tsx:127
 msgid "Go back"
 msgstr "Go back"
 
-#: src/routes/project/HostGuidePage.tsx:1532
+#: src/routes/project/HostGuidePage.tsx:1535
 msgid "Go fullscreen"
 msgstr "Go fullscreen"
 
@@ -7816,9 +7816,9 @@ msgstr "Licenses granted"
 msgid "Lifetime cap"
 msgstr "Lifetime cap"
 
-#: src/components/popcorn/PopcornScreenSettings.tsx:102
-#~ msgid "Light"
-#~ msgstr "Light"
+#: src/components/settings/ColorSchemeSettingsCard.tsx:32
+msgid "Light"
+msgstr "Light"
 
 #: src/components/map/attributes.ts:377
 #: src/components/map/panels/shared.tsx:143
@@ -7925,7 +7925,7 @@ msgstr "Live preview"
 #~ msgid "Live Preview"
 #~ msgstr "Live Preview"
 
-#: src/routes/project/HostGuidePage.tsx:1555
+#: src/routes/project/HostGuidePage.tsx:1558
 msgid "Live recordings"
 msgstr "Live recordings"
 
@@ -8010,7 +8010,7 @@ msgstr "Loading draft"
 #~ msgid "Loading draft…"
 #~ msgstr "Loading draft…"
 
-#: src/routes/project/HostGuidePage.tsx:1442
+#: src/routes/project/HostGuidePage.tsx:1443
 msgid "Loading host guide"
 msgstr "Loading host guide"
 
@@ -8652,7 +8652,7 @@ msgstr "Multiple languages"
 msgid "Must be at least 10 minutes in the future"
 msgstr "Must be at least 10 minutes in the future"
 
-#: src/routes/settings/UserSettingsRoute.tsx:89
+#: src/routes/settings/UserSettingsRoute.tsx:90
 #: src/features/sidebar/views/user/UserSettingsView.tsx:23
 #: src/features/sidebar/hooks/useSearchHits.ts:85
 msgid "My access"
@@ -10798,7 +10798,7 @@ msgstr "Positive"
 msgid "Postal code"
 msgstr "Postal code"
 
-#: src/components/common/Logo.tsx:43
+#: src/components/common/Logo.tsx:50
 msgid "PR #{number}"
 msgstr "PR #{number}"
 
@@ -10905,7 +10905,7 @@ msgstr "Previous"
 msgid "Price"
 msgstr "Price"
 
-#: src/routes/project/HostGuidePage.tsx:1525
+#: src/routes/project/HostGuidePage.tsx:1528
 msgid "Print / Save PDF"
 msgstr "Print / Save PDF"
 
@@ -12087,7 +12087,7 @@ msgstr "Resend invite email"
 msgid "Resend verification email"
 msgstr "Resend verification email"
 
-#: src/routes/project/HostGuidePage.tsx:1548
+#: src/routes/project/HostGuidePage.tsx:1551
 #: src/components/map/renderers/MapChrome.tsx:114
 msgid "Reset"
 msgstr "Reset"
@@ -12097,7 +12097,7 @@ msgstr "Reset"
 msgid "Reset filters"
 msgstr "Reset filters"
 
-#: src/routes/project/HostGuidePage.tsx:1542
+#: src/routes/project/HostGuidePage.tsx:1545
 msgid "Reset guide"
 msgstr "Reset guide"
 
@@ -12127,7 +12127,7 @@ msgstr "Reset password | dembrane"
 #~ msgid "Reset Password | dembrane"
 #~ msgstr "Reset Password | dembrane"
 
-#: src/routes/project/HostGuidePage.tsx:1544
+#: src/routes/project/HostGuidePage.tsx:1547
 msgid "Reset the guide?"
 msgstr "Reset the guide?"
 
@@ -12382,7 +12382,7 @@ msgstr "Revoke this connection?"
 msgid "Revoked"
 msgstr "Revoked"
 
-#: src/routes/project/HostGuidePage.tsx:1565
+#: src/routes/project/HostGuidePage.tsx:1568
 msgid "Right-click to highlight"
 msgstr "Right-click to highlight"
 
@@ -12890,7 +12890,7 @@ msgstr "Select a microphone"
 msgid "Select a webhook to clone"
 msgstr "Select a webhook to clone"
 
-#: src/routes/project/HostGuidePage.tsx:1769
+#: src/routes/project/HostGuidePage.tsx:1772
 msgid "Select a word first"
 msgstr "Select a word first"
 
@@ -13212,7 +13212,7 @@ msgstr "Setting things up for you"
 msgid "Setting up"
 msgstr "Setting up"
 
-#: src/routes/settings/UserSettingsRoute.tsx:58
+#: src/routes/settings/UserSettingsRoute.tsx:59
 #: src/routes/project/ProjectsHome.tsx:250
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:28
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:83
@@ -13229,7 +13229,7 @@ msgstr "Settings"
 msgid "participant.settings.modal.title"
 msgstr "Settings"
 
-#: src/routes/settings/UserSettingsRoute.tsx:35
+#: src/routes/settings/UserSettingsRoute.tsx:36
 msgid "Settings | dembrane"
 msgstr "Settings | dembrane"
 
@@ -14210,6 +14210,7 @@ msgstr "Switching it off comes with a paid plan."
 msgid "Switching to another tool"
 msgstr "Switching to another tool"
 
+#: src/components/settings/ColorSchemeSettingsCard.tsx:31
 #: src/components/settings/AuditLogsCard.tsx:88
 msgid "System"
 msgstr "System"
@@ -14218,6 +14219,10 @@ msgstr "System"
 #: src/components/project/ProjectLegalBasisSection.tsx:63
 msgid "System default"
 msgstr "System default"
+
+#: src/components/settings/ColorSchemeSettingsCard.tsx:25
+msgid "System follows your device's light or dark setting."
+msgstr "System follows your device's light or dark setting."
 
 #: src/features/sidebar/views/HelpView.tsx:40
 #: src/features/sidebar/blocks/HelpBlock.tsx:143
@@ -14817,9 +14822,9 @@ msgstr "Their representative who owns this data. They are added as a free observ
 msgid "Their screen is locked or the tab is hidden. Recording pauses until they come back."
 msgstr "Their screen is locked or the tab is hidden. Recording pauses until they come back."
 
-#: src/components/settings/FontSettingsCard.tsx:70
-#~ msgid "Theme"
-#~ msgstr "Theme"
+#: src/components/settings/ColorSchemeSettingsCard.tsx:22
+msgid "Theme"
+msgstr "Theme"
 
 #: src/features/sidebar/shell/UserMenu.tsx:95
 msgid "there"
@@ -15014,7 +15019,7 @@ msgstr "This invite spans {0} billing contexts, each invoiced on its own:"
 msgid "This is a live preview of the participant's portal. You will need to refresh the page to see the latest changes."
 msgstr "This is a live preview of the participant's portal. You will need to refresh the page to see the latest changes."
 
-#: src/routes/settings/UserSettingsRoute.tsx:92
+#: src/routes/settings/UserSettingsRoute.tsx:93
 msgid "This is a map of every organisation and workspace you are a member of."
 msgstr "This is a map of every organisation and workspace you are a member of."
 
@@ -15443,7 +15448,7 @@ msgstr "To resolve:"
 msgid "To talk about what you need, email <0>support@dembrane.com</0>."
 msgstr "To talk about what you need, email <0>support@dembrane.com</0>."
 
-#: src/routes/project/HostGuidePage.tsx:1765
+#: src/routes/project/HostGuidePage.tsx:1768
 msgid "Toggle highlight \"{contextMenuWord}\""
 msgstr "Toggle highlight \"{contextMenuWord}\""
 
@@ -16586,7 +16591,7 @@ msgstr "Voiced in a conversation"
 msgid "Waiting for conversations to finish before generating a report."
 msgstr "Waiting for conversations to finish before generating a report."
 
-#: src/routes/project/HostGuidePage.tsx:948
+#: src/routes/project/HostGuidePage.tsx:949
 msgid "Waiting for conversations..."
 msgstr "Waiting for conversations..."
 
@@ -17658,7 +17663,7 @@ msgstr "Your details"
 msgid "Your draft won't be saved."
 msgstr "Your draft won't be saved."
 
-#: src/routes/project/HostGuidePage.tsx:1540
+#: src/routes/project/HostGuidePage.tsx:1543
 msgid "Your edits to this guide are lost and it goes back to the default text."
 msgstr "Your edits to this guide are lost and it goes back to the default text."
 

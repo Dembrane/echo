@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Checks the WCAG 2.x contrast of every colour pair the design system draws, from the
-// tokens alone (no browser). The roles and tag tints come from src/colors.ts; the few
-// fixed hexes rules.css uses are listed below.
+// tokens alone (no browser), once per colour scheme. The roles and tag tints, light and
+// dark, come from src/colors.ts.
 //
 //   node scripts/check-contrast.mjs          table, exit 1 when a required pair fails
 //   node scripts/check-contrast.mjs --json   machine output
@@ -26,14 +26,9 @@ const js = ts.transpileModule(source, {
 		target: ts.ScriptTarget.ES2020,
 	},
 }).outputText;
-const { roles, tagTints } = await import(
+const { darkRoles, darkTagTints, lightRoles, lightTagTints } = await import(
 	`data:text/javascript;base64,${Buffer.from(js).toString("base64")}`
 );
-
-// Fixed hexes from src/styles/rules.css.
-const WHITE = "#ffffff";
-const FIELD_LINE = "#878785"; // --app-control-rule: fields, switches, checkboxes, radios
-const FAINT_RULE = "#e6e3df"; // --app-rule-color: cards, tables, dividers
 
 const TEXT = 4.5;
 const LARGE = 3;
@@ -41,253 +36,300 @@ const LINE = 3;
 
 /** [foreground, background, minimum, where it is drawn, advisory?] */
 const pairs = [];
+let scheme = "light";
 const add = (fgName, fg, bgName, bg, min, where, advisory = false) =>
-	pairs.push({ advisory, bg, bgName, fg, fgName, min, where });
+	pairs.push({ advisory, bg, bgName, fg, fgName, min, scheme, where });
 
-// Text and muted text on the surfaces text sits on.
-const surfaces = [
-	["bg", roles.bg, "the page (parchment)"],
-	["surface", roles.surface, "fields, menus, dialogs, a hovered .app-do card"],
-	[
+for (const [name, roles, tagTints] of [
+	["light", lightRoles, lightTagTints],
+	["dark", darkRoles, darkTagTints],
+]) {
+	scheme = name;
+	// --app-on-fill: text on a fill. --app-control-rule: fields, switches, checkboxes,
+	// radios. --app-rule-color (= quiet): cards, tables, dividers.
+	const WHITE = roles.onFill;
+	const FIELD_LINE = roles.control;
+	const FAINT_RULE = roles.quiet;
+
+	// Text and muted text on the surfaces text sits on.
+	const surfaces = [
+		["bg", roles.bg, "the page (parchment)"],
+		[
+			"surface",
+			roles.surface,
+			"fields, menus, dialogs, a hovered .app-do card",
+		],
+		[
+			"quiet",
+			roles.quiet,
+			"hover rows, menu items, tabs, accordions; the neutral tag",
+		],
+		[
+			"actionTint",
+			roles.actionTint,
+			"a selected .app-do card, a checked chip, the active segment",
+		],
+	];
+	for (const [name, hex, where] of surfaces) {
+		add("text", roles.text, name, hex, TEXT, `body text on ${where}`);
+		add("muted", roles.muted, name, hex, TEXT, `c="dimmed" on ${where}`);
+		add(
+			"action",
+			roles.action,
+			name,
+			hex,
+			TEXT,
+			`links, subtle and outline buttons, active tab on ${where}`,
+		);
+	}
+	add(
+		"danger",
+		roles.danger,
+		"bg",
+		roles.bg,
+		TEXT,
+		"error text, red subtle buttons, the field error on the page",
+	);
+	add(
+		"danger",
+		roles.danger,
+		"surface",
+		roles.surface,
+		TEXT,
+		"error text in dialogs and cards",
+	);
+	// A red menu item darkens to the on-tint red on hover (rules.css,
+	// .mantine-Menu-item[style*="color-red"]).
+	add(
+		"dangerOnTint",
+		roles.dangerOnTint,
 		"quiet",
 		roles.quiet,
-		"hover rows, menu items, tabs, accordions; the neutral tag",
-	],
-	[
-		"actionTint",
-		roles.actionTint,
-		"a selected .app-do card, a checked chip, the active segment",
-	],
-];
-for (const [name, hex, where] of surfaces) {
-	add("text", roles.text, name, hex, TEXT, `body text on ${where}`);
-	add("muted", roles.muted, name, hex, TEXT, `c="dimmed" on ${where}`);
+		TEXT,
+		"a red menu item (Delete) while hovered",
+	);
+	// Subtle and outline variants hover to the tint, and the text takes the on-tint colour
+	// (theme.tsx variantColorResolver: hover tint, hoverColor onTint).
+	add(
+		"dangerOnTint",
+		roles.dangerOnTint,
+		"dangerTint",
+		roles.dangerTint,
+		TEXT,
+		"a red subtle/outline Button while hovered (hover: tint, hoverColor: onTint)",
+	);
+	add(
+		"warning",
+		roles.warning,
+		"warningTint",
+		roles.warningTint,
+		TEXT,
+		"yellow subtle/outline Button hovered; light Alert/Badge text on its tint",
+	);
+	add(
+		"success",
+		roles.success,
+		"successTint",
+		roles.successTint,
+		TEXT,
+		"green subtle/outline Button hovered; light Alert/Badge text on its tint",
+	);
+	add(
+		"warning",
+		roles.warning,
+		"bg",
+		roles.bg,
+		TEXT,
+		"warning text on the page",
+	);
+	add(
+		"success",
+		roles.success,
+		"bg",
+		roles.bg,
+		TEXT,
+		"success text on the page, the success toast icon",
+	);
+	// Light variant: onTint on tint.
+	add(
+		"dangerOnTint",
+		roles.dangerOnTint,
+		"dangerTint",
+		roles.dangerTint,
+		TEXT,
+		"the title and text of a red light Alert",
+	);
 	add(
 		"action",
 		roles.action,
-		name,
-		hex,
+		"actionTint",
+		roles.actionTint,
 		TEXT,
-		`links, subtle and outline buttons, active tab on ${where}`,
+		"a blue light Alert/Badge (onTint = action)",
 	);
-}
-add(
-	"danger",
-	roles.danger,
-	"bg",
-	roles.bg,
-	TEXT,
-	"error text, red subtle buttons, the field error on the page",
-);
-add(
-	"danger",
-	roles.danger,
-	"surface",
-	roles.surface,
-	TEXT,
-	"error text in dialogs and cards",
-);
-// A red menu item darkens to the on-tint red on hover (rules.css,
-// .mantine-Menu-item[style*="color-red"]).
-add(
-	"dangerOnTint",
-	roles.dangerOnTint,
-	"quiet",
-	roles.quiet,
-	TEXT,
-	"a red menu item (Delete) while hovered",
-);
-// Subtle and outline variants hover to the tint, and the text takes the on-tint colour
-// (theme.tsx variantColorResolver: hover tint, hoverColor onTint).
-add(
-	"dangerOnTint",
-	roles.dangerOnTint,
-	"dangerTint",
-	roles.dangerTint,
-	TEXT,
-	"a red subtle/outline Button while hovered (hover: tint, hoverColor: onTint)",
-);
-add(
-	"warning",
-	roles.warning,
-	"warningTint",
-	roles.warningTint,
-	TEXT,
-	"yellow subtle/outline Button hovered; light Alert/Badge text on its tint",
-);
-add(
-	"success",
-	roles.success,
-	"successTint",
-	roles.successTint,
-	TEXT,
-	"green subtle/outline Button hovered; light Alert/Badge text on its tint",
-);
-add("warning", roles.warning, "bg", roles.bg, TEXT, "warning text on the page");
-add(
-	"success",
-	roles.success,
-	"bg",
-	roles.bg,
-	TEXT,
-	"success text on the page, the success toast icon",
-);
-// Light variant: onTint on tint.
-add(
-	"dangerOnTint",
-	roles.dangerOnTint,
-	"dangerTint",
-	roles.dangerTint,
-	TEXT,
-	"the title and text of a red light Alert",
-);
-add(
-	"action",
-	roles.action,
-	"actionTint",
-	roles.actionTint,
-	TEXT,
-	"a blue light Alert/Badge (onTint = action)",
-);
-// Tags: graphite on every tint (theme.tsx Badge vars).
-for (const [name, hex] of Object.entries(tagTints))
-	add(
-		"text",
-		roles.text,
-		`tag.${name}`,
-		hex,
-		TEXT,
-		`a Badge, color → tag tint ${name}`,
-	);
-// Filled: white on the fill (the primary pill, destructive confirm, status fills).
-add("white", WHITE, "action", roles.action, TEXT, "the filled primary Button");
-add(
-	"white",
-	WHITE,
-	"danger",
-	roles.danger,
-	TEXT,
-	'the destructive confirm (color="red" variant="filled")',
-);
-add(
-	"white",
-	WHITE,
-	"text",
-	roles.text,
-	TEXT,
-	"a filled neutral Button, and every filled Button on hover",
-);
-add(
-	"white",
-	WHITE,
-	"success",
-	roles.success,
-	TEXT,
-	"a filled green Button or ThemeIcon",
-);
-add(
-	"white",
-	WHITE,
-	"warning",
-	roles.warning,
-	TEXT,
-	"a filled yellow Button or ThemeIcon",
-);
-// Large text: page titles at 33.17 and dialog titles at 24.88 in muted are rare, but the
-// royal blue (primary-6) is kept for large and decorative use.
-add(
-	"primary.6",
-	"#4169e1",
-	"bg",
-	roles.bg,
-	LARGE,
-	"primary-6 royal blue, large text and decoration only",
-);
-// Lines (non-text, 3:1).
-add(
-	"fieldLine",
-	FIELD_LINE,
-	"surface",
-	roles.surface,
-	LINE,
-	"a field's side rules, a checkbox, radio or switch edge on white",
-);
-add(
-	"fieldLine",
-	FIELD_LINE,
-	"bg",
-	roles.bg,
-	LINE,
-	"a field's side rules and a control's edge on the page",
-);
-add(
-	"focusLine",
-	roles.action,
-	"surface",
-	roles.surface,
-	LINE,
-	"a focused field's rules, a selected card's box on white",
-);
-add(
-	"focusLine",
-	roles.action,
-	"bg",
-	roles.bg,
-	LINE,
-	"a focused field's rules, the selected tab's stretch on the page",
-);
-add(
-	"errorLine",
-	roles.danger,
-	"surface",
-	roles.surface,
-	LINE,
-	"a field in error on white",
-);
-add(
-	"errorLine",
-	roles.danger,
-	"bg",
-	roles.bg,
-	LINE,
-	"a field in error on the page",
-);
-add(
-	"faintRule",
-	FAINT_RULE,
-	"bg",
-	roles.bg,
-	LINE,
-	"card, table and divider rules (decorative: the text carries the structure)",
-	true,
-);
-add(
-	"faintRule",
-	FAINT_RULE,
-	"surface",
-	roles.surface,
-	LINE,
-	"rules inside white surfaces (decorative)",
-	true,
-);
-// Listed in the brief but never drawn: tags always carry graphite text, and muted,
-// action and danger text are not set on the accent tints.
-for (const [name, hex] of Object.entries(tagTints)) {
-	if (name === "blue" || name === "neutral") continue; // same hexes as actionTint / quiet above
-	for (const [fgName, fg] of [
-		["muted", roles.muted],
-		["action", roles.action],
-		["danger", roles.danger],
-	])
+	// Tags: graphite on every tint (theme.tsx Badge vars).
+	for (const [name, hex] of Object.entries(tagTints))
 		add(
-			fgName,
-			fg,
+			"text",
+			roles.text,
 			`tag.${name}`,
 			hex,
 			TEXT,
-			"not drawn: tags carry graphite text",
-			true,
+			`a Badge, color → tag tint ${name}`,
 		);
+	// Filled: white on the fill (the primary pill, destructive confirm, status fills).
+	add(
+		"onFill",
+		WHITE,
+		"actionFill",
+		roles.actionFill,
+		TEXT,
+		"the filled primary Button",
+	);
+	add(
+		"onFill",
+		WHITE,
+		"dangerFill",
+		roles.dangerFill,
+		TEXT,
+		'the destructive confirm (color="red" variant="filled")',
+	);
+	add(
+		"onFillHover",
+		roles.onFillHover,
+		"fillHover",
+		roles.fillHover,
+		TEXT,
+		"a filled neutral Button, and every filled Button on hover",
+	);
+	add(
+		"onFill",
+		WHITE,
+		"successFill",
+		roles.successFill,
+		TEXT,
+		"a filled green Button or ThemeIcon",
+	);
+	add(
+		"onFill",
+		WHITE,
+		"warningFill",
+		roles.warningFill,
+		TEXT,
+		"a filled yellow Button or ThemeIcon",
+	);
+	add(
+		"onFill",
+		WHITE,
+		"actionFill",
+		roles.actionFill,
+		TEXT,
+		"the mark in a checked checkbox or radio, the thumb of a switch that is on",
+	);
+	add(
+		"actionFill",
+		roles.actionFill,
+		"surface",
+		roles.surface,
+		LINE,
+		"a checked checkbox or radio, a switch that is on: its edge on the surface",
+	);
+	// Large text: page titles at 33.17 and dialog titles at 24.88 in muted are rare, but the
+	// royal blue (primary-6) is kept for large and decorative use.
+	add(
+		"primary.6",
+		"#4169e1",
+		"bg",
+		roles.bg,
+		LARGE,
+		"primary-6 royal blue, large text and decoration only",
+	);
+	// Lines (non-text, 3:1).
+	add(
+		"fieldLine",
+		FIELD_LINE,
+		"surface",
+		roles.surface,
+		LINE,
+		"a field's side rules, a checkbox, radio or switch edge on white",
+	);
+	add(
+		"fieldLine",
+		FIELD_LINE,
+		"bg",
+		roles.bg,
+		LINE,
+		"a field's side rules and a control's edge on the page",
+	);
+	add(
+		"focusLine",
+		roles.action,
+		"surface",
+		roles.surface,
+		LINE,
+		"a focused field's rules, a selected card's box on white",
+	);
+	add(
+		"focusLine",
+		roles.action,
+		"bg",
+		roles.bg,
+		LINE,
+		"a focused field's rules, the selected tab's stretch on the page",
+	);
+	add(
+		"errorLine",
+		roles.danger,
+		"surface",
+		roles.surface,
+		LINE,
+		"a field in error on white",
+	);
+	add(
+		"errorLine",
+		roles.danger,
+		"bg",
+		roles.bg,
+		LINE,
+		"a field in error on the page",
+	);
+	add(
+		"faintRule",
+		FAINT_RULE,
+		"bg",
+		roles.bg,
+		LINE,
+		"card, table and divider rules (decorative: the text carries the structure)",
+		true,
+	);
+	add(
+		"faintRule",
+		FAINT_RULE,
+		"surface",
+		roles.surface,
+		LINE,
+		"rules inside white surfaces (decorative)",
+		true,
+	);
+	// Listed in the brief but never drawn: tags always carry graphite text, and muted,
+	// action and danger text are not set on the accent tints.
+	for (const [name, hex] of Object.entries(tagTints)) {
+		if (name === "blue" || name === "neutral") continue; // same hexes as actionTint / quiet above
+		for (const [fgName, fg] of [
+			["muted", roles.muted],
+			["action", roles.action],
+			["danger", roles.danger],
+		])
+			add(
+				fgName,
+				fg,
+				`tag.${name}`,
+				hex,
+				TEXT,
+				"not drawn: tags carry graphite text",
+				true,
+			);
+	}
 }
 
 // WCAG 2.x relative luminance and contrast ratio.
@@ -322,12 +364,12 @@ if (process.argv.includes("--json")) {
 
 const pad = (s, n) => String(s).padEnd(n);
 console.log(
-	`${pad("foreground", 22)}${pad("background", 22)}${pad("ratio", 8)}${pad("needs", 7)}${pad("", 10)}where`,
+	`${pad("", 7)}${pad("foreground", 22)}${pad("background", 22)}${pad("ratio", 8)}${pad("needs", 7)}${pad("", 10)}where`,
 );
 for (const r of rows) {
 	const verdict = r.pass ? "ok" : r.advisory ? "advisory" : "FAIL";
 	console.log(
-		`${pad(`${r.fgName} ${r.fg}`, 22)}${pad(`${r.bgName} ${r.bg}`, 22)}${pad(r.ratio.toFixed(2), 8)}${pad(r.min, 7)}${pad(verdict, 10)}${r.where}`,
+		`${pad(r.scheme, 7)}${pad(`${r.fgName} ${r.fg}`, 22)}${pad(`${r.bgName} ${r.bg}`, 22)}${pad(r.ratio.toFixed(2), 8)}${pad(r.min, 7)}${pad(verdict, 10)}${r.where}`,
 	);
 }
 const required = rows.filter((r) => !r.advisory).length;
@@ -337,7 +379,7 @@ console.log(
 if (failing.length) {
 	for (const r of failing)
 		console.log(
-			`${inCI ? "::error::" : ""}${r.fgName} ${r.fg} on ${r.bgName} ${r.bg} is ${r.ratio}:1, needs ${r.min}:1 (${r.where})`,
+			`${inCI ? "::error::" : ""}${r.scheme}: ${r.fgName} ${r.fg} on ${r.bgName} ${r.bg} is ${r.ratio}:1, needs ${r.min}:1 (${r.where})`,
 		);
 	process.exit(1);
 }

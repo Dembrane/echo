@@ -1,4 +1,5 @@
 import type React from "react";
+import { useComputedColorScheme } from "@mantine/core";
 import { Toaster as Sonner, toast as sonnerToast } from "sonner";
 
 type ToasterProps = React.ComponentProps<typeof Sonner>;
@@ -7,9 +8,10 @@ type ToasterProps = React.ComponentProps<typeof Sonner>;
 // (styles/rules.css, .app-toast). Sonner renders them unstyled so nothing of
 // its default card leaks through.
 const Toaster = ({ ...props }: ToasterProps) => {
+	const scheme = useComputedColorScheme("light");
 	return (
 		<Sonner
-			theme="light"
+			theme={scheme}
 			className="toaster group"
 			closeButton
 			position="top-center"

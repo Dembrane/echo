@@ -121,10 +121,6 @@ const TYPOGRAPHY = {
 const FONT_FAMILY = "'DM Sans Variable', sans-serif";
 const FONT_FEATURE_SETTINGS =
 	"'ss01' on, 'ss02' on, 'ss03' on, 'ss04' on, 'ss05' on, 'ss06' on, 'ss08' on";
-const BACKGROUND = "#F6F4F1";
-const TEXT = "#2D2D2C";
-// Cool slate: AA on parchment (5.41), white (5.93) and the hover grey (4.64).
-const MUTED = "#5f646f";
 
 export const AppPreferencesProvider = ({
 	children,
@@ -152,8 +148,6 @@ export const AppPreferencesProvider = ({
 		set("--app-base-font-size", scaleTypeSize(BASE_FONT_SIZE[scale]));
 		set("--app-font-family", FONT_FAMILY);
 		set("--app-content-bold-font-family", FONT_FAMILY);
-		set("--app-background", BACKGROUND);
-		set("--app-text", TEXT);
 		set("--app-home-icon-size", scaleTypeSize(t.h2Size));
 
 		set("--app-font-size-xs", scaleTypeSize(t.fontSizeXs));
@@ -182,15 +176,7 @@ export const AppPreferencesProvider = ({
 		set("--app-heading-h6-size", scaleTypeSize(t.h6Size));
 		set("--app-heading-h6-line-height", t.h6LineHeight);
 
-		// Body is parchment, surfaces (fields, menus, dialogs) are white; the
-		// theme's cssVariablesResolver sets both. Muted is a solid AA colour.
-		set("--mantine-color-text", TEXT);
-		set("--mantine-color-body", BACKGROUND);
-		set("--mantine-color-dimmed", MUTED);
-
 		document.body.style.fontFamily = FONT_FAMILY;
-		document.body.style.backgroundColor = BACKGROUND;
-		document.body.style.color = TEXT;
 		document.body.style.fontFeatureSettings = FONT_FEATURE_SETTINGS;
 		set("--app-font-feature-settings", FONT_FEATURE_SETTINGS);
 
