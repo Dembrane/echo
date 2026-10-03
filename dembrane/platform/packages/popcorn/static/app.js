@@ -305,6 +305,8 @@
       "evidence.inferred": "Inferred; never mentioned directly.",
       "evidence.named": "Named by others.",
       "evidence.namedBy": "Named by others, spoken for by {name}.",
+      "demo.next": "This is what you can expect after recording a few conversations. For the full analysis experience, {signIn}",
+      "demo.signIn": "sign in →",
     },
     nl: {
       "chrome.slides": "dia's",
@@ -472,6 +474,8 @@
       "evidence.inferred": "Afgeleid; nooit direct genoemd.",
       "evidence.named": "Genoemd door anderen.",
       "evidence.namedBy": "Genoemd door anderen; {name} sprak namens hen.",
+      "demo.next": "Dit kun je verwachten zodra je een paar gesprekken hebt opgenomen. Voor de volledige analyse kun je {signIn}",
+      "demo.signIn": "inloggen →",
     },
   };
   // Audience languages are kept separate so upstream app.js merges stay
@@ -1048,6 +1052,7 @@
     applyIntroduction();
     renderQrPanel();
     renderDisclaimer();
+    renderDemoNext();
     if (relabel) {
       if (introOpen && !introEditing) showIntroStep(introStep, "none");
       if (state.active) {
@@ -1092,6 +1097,35 @@
   // that page (only behind the session), and its tabs stay open.
   const PREVIEW = EMBED?.preview === true;
   const disclosureGated = () => isSynthetic() && !introDone && !PREVIEW;
+  // A prospect's demo leads on to their own organisation: the sign-in link
+  // the demo builder sets on publish. Only the room's public page carries it;
+  // the host's own deck and the Present shell are already signed in, and a
+  // real session never has one.
+  const demoNextUrl = () => {
+    const url = state.session?.demo?.continue_url;
+    return isSynthetic() && EMBED?.mode === "public" && !EMBED.presentationId
+      && typeof url === "string" && /^https?:\/\//.test(url) ? url : null;
+  };
+  const demoNextHtml = (url) => esc(tr("demo.next")).replace("{signIn}",
+    `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(tr("demo.signIn"))}</a>`);
+
+  // The footer is on every slide, so the way on is one glance away without
+  // covering the stage.
+  function renderDemoNext() {
+    const url = demoNextUrl();
+    let el = document.getElementById("demo-next");
+    if (!url) { el?.remove(); return; }
+    if (!el) {
+      el = document.createElement("p");
+      el.id = "demo-next";
+      el.className = "demo-next";
+      document.querySelector(".colophon")?.insertBefore(el, document.querySelector(".made-with"));
+    }
+    const next = demoNextHtml(url);
+    // Rewritten only when it changes, so a poll never steals the link's focus.
+    if (el.dataset.html !== next) { el.innerHTML = next; el.dataset.html = next; }
+  }
+
   const hasOpening = () => !!(state.session?.intro?.enabled || state.session?.disclosure?.text || state.session?.data);
   const paragraphs = (text) => String(text || "").split("\n").map((p) => p.trim()).filter(Boolean);
   function applyIntroduction() {
@@ -1216,7 +1250,11 @@
     const next = tr(last ? "intro.start" : demo ? "intro.why" : "intro.continue");
     // the quiet look of the footer's text button; styles.css has no rule of its own for this
     const backHtml = n > 1 ? `<button class="intro-back reset-data" type="button">${esc(tr("intro.back"))}</button>` : "";
-    const continueHtml = `<button class="intro-continue" type="button">${esc(next)}</button>`;
+    // The opening ends where the prospect decides what to do next, so the way
+    // on into their own organisation sits under the last screen's button.
+    const nextUrl = last ? demoNextUrl() : null;
+    const continueHtml = `<button class="intro-continue" type="button">${esc(next)}</button>`
+      + (nextUrl ? `<p class="intro-demo-next">${demoNextHtml(nextUrl)}</p>` : "");
     // For a host who is editing, an optional field that is still empty keeps
     // its place: an empty element whose placeholder is drawn by the stylesheet
     // (never text of its own, so never saved). The audience gets no element.

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { assetPath } from "@dembrane/core";
+import { LOCALES } from "@dembrane/i18n";
 import { PDFDocument } from "pdf-lib";
 import { walkOrder } from "../src/documents";
 import { runDeliverEvent, runNotifySlack } from "../src/jobs";
@@ -7,9 +8,11 @@ import { legalSha256, parseLegalDump, parseLegalPage } from "../src/legal/parse"
 import { REFERENCE_DPA, REFERENCE_SLA, REFERENCE_TERMS } from "../src/legal/reference";
 import { priceLines, vatOf } from "../src/money";
 import { euro, layoutOffer, type OfferContent, offerText } from "../src/offer";
+import { ONBOARDING_CODES } from "../src/onboarding";
 import { offerPdf, signedPdf, textPdf } from "../src/pdf";
 import { checkValues, pngBytes, signerFacts } from "../src/signing";
 import type { FieldRow } from "../src/storage";
+import { taskBody, taskTitle } from "../src/task-text";
 import { confirmationText } from "../src/views";
 import { fixtureHtml, png, silent } from "./helpers";
 
@@ -332,5 +335,21 @@ describe("delivery to sam and Slack", () => {
     await expect(
       runNotifySlack({ post: async () => 500, url: null }, { text: "x" }),
     ).rejects.toThrow();
+  });
+});
+
+describe("onboarding task words", () => {
+  test("every onboarding code has a title and body in each language the server writes", () => {
+    for (const code of ONBOARDING_CODES)
+      for (const language of LOCALES) {
+        expect(taskTitle({ code, params: {}, title: null }, language)).not.toBe("");
+        expect(taskBody({ code, body: null }, language)).toBeTruthy();
+      }
+    expect(taskTitle({ code: "explore_demo", params: {}, title: null }, "nl-NL")).toBe(
+      "Bekijk de demo die we voor je hebben gemaakt",
+    );
+    expect(taskTitle({ code: "book_call", params: {}, title: null }, "en-US")).toBe(
+      "Book a call with us",
+    );
   });
 });

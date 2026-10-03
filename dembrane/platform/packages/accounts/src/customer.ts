@@ -15,6 +15,7 @@ import { billingPayload, emit, orgPayload, taskPayload, ticketPayload } from "./
 import { accountPageUrl } from "./jobs";
 import type { PricedLine } from "./money";
 import type { OfferContent } from "./offer";
+import { completeOnboarding, isOnboardingCode } from "./onboarding";
 import { type DocumentRow, store } from "./storage";
 import { isTaskCode } from "./task-text";
 import { settleTask } from "./tasks";
@@ -432,6 +433,9 @@ export async function submitTask(
   if (!task) throw new NotFoundError("task.not_found");
   if (task.kind === "sign") throw new ConflictError("task.done_by_signing");
   if (task.kind === "billing_details") throw new ConflictError("task.done_by_billing_details");
+  // An onboarding step is done by taking it (opening the demo, creating a project), never
+  // by a reply that staff would then have to review.
+  if (isOnboardingCode(task.code)) throw new ConflictError("task.not_waiting");
   if (!["open", "changes_requested"].includes(task.status))
     throw new ConflictError(task.status === "locked" ? "task.not_open" : "task.not_waiting");
   if (task.kind === "upload" && !input.file) throw new ValidationError("task.file_required");
@@ -584,7 +588,19 @@ export async function recordBooking(
       },
     });
   });
+  // After the booking commits, and never failing it: the call matters, not the checkbox.
+  await completeOnboarding(d, org.id, "book_call");
   return { recorded: true };
+}
+
+/**
+ * "Watch the tutorial": the tutorial link was clicked from the task. No one can tell a
+ * video was watched, so the click is the step. Twice is the same as once.
+ */
+export async function recordTutorialOpened(d: AccountsDeps, who: Signed, orgId: string) {
+  const org = await customerOrg(d, who, orgId, "account:tasks");
+  await completeOnboarding(d, org.id, "watch_tutorial");
+  return { recorded: true as const };
 }
 
 /** The roles whose holders run an account, straight from the access policies. */

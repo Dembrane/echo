@@ -1,6 +1,12 @@
 import { DrizzleAccessStore } from "@dembrane/access";
 import { accountRoutes } from "@dembrane/account";
-import { accountsRoutes, demoProspectHook, httpFetchText, queueJobs } from "@dembrane/accounts";
+import {
+  accountsRoutes,
+  demoProspectHook,
+  httpFetchText,
+  onboardingSignals,
+  queueJobs,
+} from "@dembrane/accounts";
 import { agentAccessRoutes } from "@dembrane/agent-access";
 import { agenticRoutes } from "@dembrane/agentic";
 import { analysisRoutes, analysisRuntime, clientOf } from "@dembrane/analysis";
@@ -74,9 +80,57 @@ export function buildApp(deps: Deps) {
     return deps.auth.handler(new Request(c.req.raw, { headers }));
   });
   app.use("/api/*", session(deps));
+  const accounts = {
+    db: deps.db,
+    access: deps.access,
+    staffAudit: deps.staffAudit,
+    jobs: queueJobs(deps.queue),
+    files: deps.files,
+    logger: deps.logger,
+    limiter: deps.limiter,
+    now: () => new Date(),
+    fetchText: deps.fetchText ?? httpFetchText,
+    settings: {
+      dashboardUrl: deps.config.http.dashboardUrl,
+      company: {
+        name: "dembrane B.V.",
+        address: deps.config.accounts.companyAddress,
+        vat: deps.config.accounts.companyVat,
+        kvk: deps.config.accounts.companyKvk,
+        iban: deps.config.accounts.bankIban,
+        bic: deps.config.accounts.bankBic,
+        accountName: deps.config.accounts.bankAccountName,
+      },
+      eventsEnabled: Boolean(deps.config.accounts.eventsUrl),
+      slackEnabled: Boolean(deps.config.accounts.slackWebhookUrl),
+      // The config check sets SAM_INBOX_* together, so the URL stands for all three.
+      samInbox: Boolean(deps.config.samInbox.url),
+      reminderIntervalDays: deps.config.accounts.reminderIntervalDays,
+      inviteSecret: deps.config.account.inviteHashSecret,
+      demo: {
+        portalUrl: deps.config.http.portalUrl,
+        apiUrl: deps.config.http.publicUrl,
+        ownUrls: [
+          deps.config.http.publicUrl,
+          deps.config.http.dashboardUrl,
+          deps.config.http.portalUrl,
+        ],
+        workspaceId: deps.config.accounts.demoWorkspaceId ?? null,
+      },
+    },
+  };
+  // Customer accounts hear when a prospect takes an onboarding step elsewhere in the product.
+  const onboarding = onboardingSignals(accounts);
   app.route("/", systemRoutes(deps));
   app.route("/", accountRoutes(deps));
-  app.route("/", projectRoutes(deps));
+  app.route(
+    "/",
+    projectRoutes({
+      ...deps,
+      onProjectOpened: onboarding.projectOpened,
+      onProjectCreated: onboarding.projectCreated,
+    }),
+  );
   app.route(
     "/",
     webhookRoutes({
@@ -143,6 +197,7 @@ export function buildApp(deps: Deps) {
       jobs: queueSink(deps.queue),
       dashboardUrl: deps.config.http.dashboardUrl,
       inviteSecret: deps.config.account.inviteHashSecret,
+      onProjectCreated: onboarding.projectCreated,
     }),
   );
   app.route("/", billingRoutes(deps));
@@ -240,45 +295,6 @@ export function buildApp(deps: Deps) {
   const presentDeps = { ...popcorn, access: deps.access, hub, map };
   app.route("/", presentRoutes(presentDeps));
   app.route("/", publicRoutes({ ...popcorn, hub, audienceMap: publicAudienceMap(presentDeps) }));
-  const accounts = {
-    db: deps.db,
-    access: deps.access,
-    staffAudit: deps.staffAudit,
-    jobs: queueJobs(deps.queue),
-    files: deps.files,
-    logger: deps.logger,
-    limiter: deps.limiter,
-    now: () => new Date(),
-    fetchText: deps.fetchText ?? httpFetchText,
-    settings: {
-      dashboardUrl: deps.config.http.dashboardUrl,
-      company: {
-        name: "dembrane B.V.",
-        address: deps.config.accounts.companyAddress,
-        vat: deps.config.accounts.companyVat,
-        kvk: deps.config.accounts.companyKvk,
-        iban: deps.config.accounts.bankIban,
-        bic: deps.config.accounts.bankBic,
-        accountName: deps.config.accounts.bankAccountName,
-      },
-      eventsEnabled: Boolean(deps.config.accounts.eventsUrl),
-      slackEnabled: Boolean(deps.config.accounts.slackWebhookUrl),
-      // The config check sets SAM_INBOX_* together, so the URL stands for all three.
-      samInbox: Boolean(deps.config.samInbox.url),
-      reminderIntervalDays: deps.config.accounts.reminderIntervalDays,
-      inviteSecret: deps.config.account.inviteHashSecret,
-      demo: {
-        portalUrl: deps.config.http.portalUrl,
-        apiUrl: deps.config.http.publicUrl,
-        ownUrls: [
-          deps.config.http.publicUrl,
-          deps.config.http.dashboardUrl,
-          deps.config.http.portalUrl,
-        ],
-        workspaceId: deps.config.accounts.demoWorkspaceId ?? null,
-      },
-    },
-  };
   app.route("/", accountsRoutes(accounts));
   app.route(
     "/",

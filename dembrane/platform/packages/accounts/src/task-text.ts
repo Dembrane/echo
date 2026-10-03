@@ -7,7 +7,15 @@ import { type Locale, resolveLocale, translator } from "@dembrane/i18n";
  * server catalog (packages/i18n/locales, ids task.<code>.title and task.<code>.body).
  */
 
-export const TASK_CODES = ["sign_offer", "billing_details", "sign_dpa"] as const;
+export const TASK_CODES = [
+  "sign_offer",
+  "billing_details",
+  "sign_dpa",
+  "explore_demo",
+  "watch_tutorial",
+  "create_project",
+  "book_call",
+] as const;
 export type TaskCode = (typeof TASK_CODES)[number];
 export type TaskParams = Readonly<Record<string, string>>;
 

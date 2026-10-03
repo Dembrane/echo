@@ -11,12 +11,12 @@ import {
 } from "./access";
 import { updateStream } from "./events";
 import type { Json } from "./py";
-import { asId, dict, pyStr } from "./py";
+import { asId } from "./py";
 import { binary, illustrationBytes, logoBytes, webpName } from "./routes";
 import { bundleForReport, loadSettingsFor, type PopcornDeps } from "./service";
 import { audienceManifest } from "./settings";
 import type { Row } from "./storage";
-import { continueSnippet, NOT_LIVE_PAGE, renderPopcornPage } from "./view";
+import { NOT_LIVE_PAGE, renderPopcornPage } from "./view";
 
 /**
  * Public, embeddable popcorn pages under /api/v2/popcorn/public/{token}. No auth: the token
@@ -129,17 +129,7 @@ export function publicRoutes(deps: PublicRoutesDeps) {
     }
     const embedded = c.req.query("embedded") === "1";
     const embed = embedded ? deckEmbed(d.adminBaseUrl, String(report.id)) : { mode: "public" };
-    // A prospect's demo leads on to their organisation (set by the demo seed's prospect block).
-    const demo = embedded
-      ? {}
-      : dict(dict((await d.store.loopForReport(String(report.id)))?.popcorn_state).demo);
-    const onward =
-      demo.synthetic === true &&
-      typeof demo.continue_url === "string" &&
-      /^https?:\/\//.test(demo.continue_url)
-        ? continueSnippet(demo.continue_url, pyStr(demo.language))
-        : "";
-    return new Response(renderPopcornPage(embed, onward), {
+    return new Response(renderPopcornPage(embed), {
       status: 200,
       headers: { "content-type": "text/html; charset=utf-8", ...NO_STORE },
     });

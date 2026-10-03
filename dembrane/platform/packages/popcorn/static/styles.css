@@ -269,6 +269,17 @@ body.presenting .tail-sourced:hover { outline: none; }
 .progress-note { display: flex; align-items: center; gap: 0.6em; }
 .reset-data { appearance: none; background: none; border: none; font: inherit; color: var(--ink-faint); cursor: pointer; padding: 0; }
 .reset-data:hover { color: var(--blue); }
+/* A prospect's demo: the way on to their own organisation, between the tally
+   and the mark. A shade darker than the rest of the footer so it is found,
+   never a button that competes with the stage. */
+.demo-next { flex: 1 1 auto; text-align: center; padding: 0 1.5em; font-size: 1.12em; color: var(--graphite); }
+.demo-next a, .intro-demo-next a { font-weight: 500; white-space: nowrap; }
+.demo-next a:hover, .intro-demo-next a:hover { text-decoration: underline; }
+.intro-demo-next { font-size: .85em; color: var(--ink-soft); max-width: 36em; }
+@media (max-width: 720px) {
+  .colophon:has(.demo-next) { flex-wrap: wrap; row-gap: .4em; }
+  .demo-next { order: -1; flex-basis: 100%; padding: 0; text-align: left; }
+}
 
 /* full-window drop target */
 .drop-veil {

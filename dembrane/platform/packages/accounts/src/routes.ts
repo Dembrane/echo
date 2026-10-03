@@ -17,6 +17,7 @@ import {
   readBilling,
   readDocument,
   recordBooking,
+  recordTutorialOpened,
   submitTask,
   type TaskFile,
   tasksSummary,
@@ -28,6 +29,7 @@ import { createAccount } from "./prospect";
 import { signDocument } from "./signing";
 import {
   accountCard,
+  addOnboarding,
   closeTicket,
   documentFields,
   enableAccount,
@@ -171,6 +173,9 @@ export function accountsRoutes(d: AccountsDeps) {
     const who = requireUser(c);
     return c.json(await recordBooking(d, who, p(c, "orgId"), await body(c, K.BookingRequest)));
   });
+  app.post(R.tutorialOpened.path, async (c) =>
+    c.json(await recordTutorialOpened(d, requireUser(c), p(c, "orgId"))),
+  );
   app.get(R.signingRequests.path, async (c) => c.json(await mySigningRequests(d, requireUser(c))));
   app.get(R.tasksSummary.path, async (c) => c.json(await tasksSummary(d, requireUser(c))));
 
@@ -303,6 +308,10 @@ export function accountsRoutes(d: AccountsDeps) {
       await staffCreateTask(d, who, p(c, "orgId"), await body(c, K.CreateTaskRequest)),
       201,
     );
+  });
+  app.post(R.addOnboarding.path, async (c) => {
+    const who = await staff(c, "accounts.onboarding.add");
+    return c.json(await addOnboarding(d, who, p(c, "orgId")));
   });
   app.post(R.reviewTask.path, async (c) => {
     const who = await staff(c, "accounts.task.review");

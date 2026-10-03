@@ -135,8 +135,9 @@ run("accounts routes against Postgres", () => {
         ),
       );
     expect(m?.role).toBe("admin");
-    const tasks = await store.tasks(w.db, created.org_id);
-    expect(tasks.map((t) => [t.kind, t.status])).toEqual([["billing_details", "locked"]]);
+    // A prospect: no billing details task until an offer exists, and no onboarding tasks
+    // unless the demo builder or staff add them.
+    expect(await store.tasks(w.db, created.org_id)).toEqual([]);
     // Every staff call is on the audit trail.
     const audit = await w.db.select().from(schema.staff_audit_event);
     expect(

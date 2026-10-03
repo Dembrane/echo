@@ -5,7 +5,7 @@ import {
 	Folders,
 	GearIcon,
 	GraduationCapIcon,
-	ListChecksIcon,
+	ReceiptIcon,
 	UsersIcon,
 } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
@@ -102,12 +102,13 @@ export const OrgHomeView = () => {
 	// managers that is the full org list, for everyone else their direct rows.
 	const showWorkspaces = displayList.length > 0;
 
-	// "Account" shows only for orgs in the tasks summary: the backend lists an org there
-	// when it has account content and the caller is an owner, admin or billing member.
-	// The same cached request feeds the Help menu's "Tasks" entry.
+	// "Account" shows for orgs in the tasks summary: the backend lists an org there when it
+	// has account content (a stage, a task or a document) and the caller is an owner, admin
+	// or billing member. It carries no count and stays when nothing is pending, so the
+	// documents, billing details and invoices are always one click away; the count lives
+	// on Tasks under Help, which shows only while something waits.
 	const { data: tasksSummary } = useTasksSummary();
 	const seesAccount = orgId ? hasAccount(tasksSummary, orgId) : false;
-	const accountRow = tasksSummary?.find((o) => o.org_id === orgId);
 
 	if (!orgId) return null;
 	const base = `/o/${orgId}`;
@@ -139,14 +140,8 @@ export const OrgHomeView = () => {
 					{seesAccount && (
 						<NavItem
 							to={`${base}/account`}
-							label={<Trans>Tasks</Trans>}
-							icon={ListChecksIcon}
-							badge={
-								accountRow && accountRow.tasks_total > 0
-									? `${accountRow.tasks_done}/${accountRow.tasks_total}`
-									: undefined
-							}
-							badgeTone="muted"
+							label={<Trans>Account</Trans>}
+							icon={ReceiptIcon}
 						/>
 					)}
 					{/* Settings is the last clickable item under the org title,

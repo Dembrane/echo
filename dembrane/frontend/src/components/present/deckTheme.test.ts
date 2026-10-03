@@ -52,6 +52,7 @@ function deck(session: Record<string, unknown> | null) {
 		},
 		// no language change, so the relabel branches stay out of the way
 		pageLang: () => "en",
+		renderDemoNext: () => {},
 		renderDisclaimer: () => {},
 		renderQrPanel: () => {},
 		sessionDate: () => "",
