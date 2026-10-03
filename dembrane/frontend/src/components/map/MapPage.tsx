@@ -602,7 +602,11 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 					<Trans>Beta</Trans>
 				</Badge>
 				{countsLine && (
-					<Text size="sm" c="dimmed" className="hidden truncate md:block">
+					<Text
+						size="sm"
+						c="dimmed"
+						className="hidden min-w-0 truncate md:block"
+					>
 						{countsLine}
 					</Text>
 				)}
