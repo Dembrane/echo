@@ -21,12 +21,14 @@ import { routerPaths } from "./routes";
 //   ORG_ID           the demo's organisation (organisation and signing pages)
 //   OWN_WORKSPACE_ID a workspace of the login's own for the empty project
 //   STAFF_EMAIL, STAFF_PASSWORD   a dembrane admin, for /admin
+//   MEMBER_EMAIL, MEMBER_PASSWORD a plain member of the demo workspace
 //   ONLY=a,b         only the flows whose path contains one of these
 //   REPORT_ONLY=1    write the report without failing any page
 // Pages whose setting is missing are skipped, and the report says why.
 
 const env = (name: string) => process.env[`GRAMMAR_E2E_${name}`] ?? "";
 const LOGINS = {
+	member: { email: env("MEMBER_EMAIL"), password: env("MEMBER_PASSWORD") },
 	owner: { email: env("EMAIL"), password: env("PASSWORD") },
 	staff: { email: env("STAFF_EMAIL"), password: env("STAFF_PASSWORD") },
 };
@@ -112,7 +114,7 @@ const cache: {
 	found: Record<string, string | null>;
 	sessions: Partial<
 		Record<
-			"owner" | "staff",
+			"owner" | "staff" | "member",
 			Awaited<ReturnType<BrowserContext["storageState"]>>
 		>
 	>;
@@ -219,7 +221,7 @@ type Visit = {
 	/** The route with its params as fixture names or literals. */
 	path: string;
 	portal: boolean;
-	role: "owner" | "staff";
+	role: "owner" | "staff" | "member";
 	name: string;
 };
 
@@ -247,7 +249,10 @@ function visits(): Visit[] {
 					),
 				);
 			}
-			for (const role of flow.roles ?? ["owner"])
+			// The empty project is in the owner's own workspace: owner only.
+			for (const role of variant.name
+				? ["owner" as const]
+				: (flow.roles ?? ["owner"]))
 				for (const path of paths)
 					out.push({
 						flow,

@@ -18,7 +18,7 @@
 //   auth       false for pages a signed-out visitor sees. Dashboard pages are
 //              signed in by default, portal pages never are.
 //   roles      who to visit as; "owner" (the default) is the demo workspace's
-//              owner, "staff" a dembrane admin.
+//              owner, "member" a plain member of it, "staff" a dembrane admin.
 //   viewports  "desktop" 1280 and "phone" 390; both by default.
 
 export type Fixture =
@@ -41,7 +41,7 @@ export type Flow = {
 	params?: Record<string, Fixture | string | string[]>;
 	variants?: { name: string; params: Record<string, Fixture | string> }[];
 	states?: State[];
-	roles?: ("owner" | "staff")[];
+	roles?: ("owner" | "staff" | "member")[];
 	viewports?: ("desktop" | "phone")[];
 };
 
@@ -154,6 +154,7 @@ export const flows: Record<string, Flow> = {
 	"/w/:workspaceId": REDIRECT,
 	"/w/:workspaceId/home": {
 		params: { workspaceId: "$workspace" },
+		roles: ["owner", "member"],
 		states: [{ clicks: ["projects-select-button"], name: "select" }],
 	},
 	"/w/:workspaceId/members/*": {
@@ -201,11 +202,13 @@ export const flows: Record<string, Flow> = {
 	},
 	"/w/:workspaceId/projects/:projectId/conversations": {
 		params: project,
+		roles: ["owner", "member"],
 		states: [{ clicks: ["conversation-upload-button"], name: "upload" }],
 		variants: [...EMPTY],
 	},
 	"/w/:workspaceId/projects/:projectId/conversations/:conversationId": {
 		params: { ...project, conversationId: "$conversation" },
+		roles: ["owner", "member"],
 		states: [
 			{ clicks: ["conversation-move-button"], name: "move" },
 			{ clicks: ["conversation-delete-button"], name: "delete" },
@@ -229,6 +232,7 @@ export const flows: Record<string, Flow> = {
 	},
 	"/w/:workspaceId/projects/:projectId/home": {
 		params: project,
+		roles: ["owner", "member"],
 		states: [{ clicks: ["project-home-rename-button"], name: "rename" }],
 		variants: [...EMPTY],
 	},
@@ -255,6 +259,7 @@ export const flows: Record<string, Flow> = {
 	},
 	"/w/:workspaceId/projects/:projectId/overview": {
 		params: project,
+		roles: ["owner", "member"],
 		states: [
 			{ clicks: ["project-actions-clone-button"], name: "clone" },
 			{ clicks: ["project-actions-delete-button"], name: "delete" },
@@ -265,6 +270,7 @@ export const flows: Record<string, Flow> = {
 	// so only the preview, which changes nothing, is opened.
 	"/w/:workspaceId/projects/:projectId/portal-editor": {
 		params: project,
+		roles: ["owner", "member"],
 		states: [{ clicks: ["portal-editor-preview-toggle"], name: "preview" }],
 		variants: [...EMPTY],
 	},
@@ -277,6 +283,7 @@ export const flows: Record<string, Flow> = {
 	},
 	"/w/:workspaceId/projects/:projectId/report": {
 		params: project,
+		roles: ["owner", "member"],
 		states: [
 			{ clicks: ["report-actions-menu"], name: "actions" },
 			{ clicks: ["report-update-button"], name: "update" },
@@ -298,6 +305,7 @@ export const flows: Record<string, Flow> = {
 			"*": ["general", "members", "training", "billing", "danger"],
 			workspaceId: "$workspace",
 		},
+		roles: ["owner", "member"],
 	},
 	"/w/new": {},
 };
