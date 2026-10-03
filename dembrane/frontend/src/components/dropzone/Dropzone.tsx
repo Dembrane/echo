@@ -1,4 +1,4 @@
-import { Group, rem } from "@mantine/core";
+import { Group } from "@mantine/core";
 import {
 	type FileRejection,
 	Dropzone as MantineDropzone,
@@ -30,24 +30,13 @@ export const CommonDropzone = ({
 				<MantineDropzone.Accept>
 					{accept || (
 						<UploadSimpleIcon
-							style={{
-								color: "var(--mantine-color-blue-6)",
-								height: rem(52),
-								width: rem(52),
-							}}
+							size={52}
+							color="var(--mantine-color-primary-7)"
 						/>
 					)}
 				</MantineDropzone.Accept>
 				<MantineDropzone.Reject>
-					{reject || (
-						<XIcon
-							style={{
-								color: "var(--mantine-color-red-6)",
-								height: rem(52),
-								width: rem(52),
-							}}
-						/>
-					)}
+					{reject || <XIcon size={52} color="var(--mantine-color-red-6)" />}
 				</MantineDropzone.Reject>
 				<MantineDropzone.Idle>{idle || children}</MantineDropzone.Idle>
 			</Group>

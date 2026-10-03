@@ -34,7 +34,7 @@ export const VerifyArtefactError = ({
 					onClick={onReload}
 					loading={isReloading}
 					disabled={isReloading}
-					leftSection={!isReloading && <ArrowsClockwiseIcon />}
+					leftSection={!isReloading && <ArrowsClockwiseIcon size={20} />}
 				>
 					<Trans id="participant.concrete.artefact.action.button.reload">
 						Reload Page

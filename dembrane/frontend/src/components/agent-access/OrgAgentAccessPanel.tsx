@@ -156,7 +156,7 @@ export const OrgAgentAccessPanel = ({
 				</Stack>
 				<Alert
 					variant="light"
-					icon={<InfoIcon />}
+					icon={<InfoIcon size={20} />}
 					data-testid="agent-org-scope-callout"
 				>
 					<Trans>

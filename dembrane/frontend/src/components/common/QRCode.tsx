@@ -1,4 +1,3 @@
-import { rem } from "@mantine/core";
 import { ArrowSquareOutIcon } from "@phosphor-icons/react";
 import { type CSSProperties, type Ref, useState } from "react";
 import { QRCode as Q } from "react-qrcode-logo";
@@ -96,10 +95,7 @@ export const QRCode = ({
 					opacity: hovered ? 1 : 0,
 				}}
 			>
-				<ArrowSquareOutIcon
-					style={{ height: rem(32), width: rem(32) }}
-					color="white"
-				/>
+				<ArrowSquareOutIcon size={32} color="white" />
 			</div>
 		</a>
 	);

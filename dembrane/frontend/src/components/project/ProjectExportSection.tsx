@@ -29,7 +29,7 @@ export const ProjectExportSection = ({
 					maw="300px"
 					href={exportLink}
 					download={`${projectName ?? "Project"}-Transcripts.zip`}
-					rightSection={<DownloadSimpleIcon />}
+					rightSection={<DownloadSimpleIcon size={20} />}
 					variant="outline"
 					{...testId("project-export-transcripts-button")}
 				>

@@ -57,7 +57,7 @@ export const VerifiedArtefactItem = ({
 						aria-label="concrete artefact"
 						size={22}
 					>
-						<SealCheckIcon />
+						<SealCheckIcon size={16} />
 					</ActionIcon>
 				</Group>
 			</Paper>

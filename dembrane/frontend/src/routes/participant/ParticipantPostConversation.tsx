@@ -258,7 +258,7 @@ export const ParticipantPostConversation = () => {
 												{...testId("portal-finish-email-submit-button")}
 											>
 												{isPending ? (
-													<CircleNotchIcon className="animate-spin" />
+													<CircleNotchIcon size={20} className="animate-spin" />
 												) : (
 													<Trans> Submit</Trans>
 												)}

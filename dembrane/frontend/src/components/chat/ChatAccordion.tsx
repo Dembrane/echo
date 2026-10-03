@@ -113,14 +113,14 @@ export const ChatAccordionItemMenu = ({
 						className="flex items-center justify-center"
 						{...testId("chat-item-menu-button")}
 					>
-						<DotsThreeVerticalIcon />
+						<DotsThreeVerticalIcon size={20} />
 					</ActionIcon>
 				</Menu.Target>
 
 				<Menu.Dropdown>
 					<Stack gap="xs">
 						<Menu.Item
-							leftSection={<PencilSimpleIcon />}
+							leftSection={<PencilSimpleIcon size={16} />}
 							disabled={deleteChatMutation.isPending}
 							onClick={openRename}
 							{...testId("chat-item-menu-rename")}
@@ -128,7 +128,7 @@ export const ChatAccordionItemMenu = ({
 							<Trans id="project.sidebar.chat.rename">Rename</Trans>
 						</Menu.Item>
 						<Menu.Item
-							leftSection={<TrashIcon />}
+							leftSection={<TrashIcon size={16} />}
 							disabled={deleteChatMutation.isPending}
 							onClick={openDeleteConfirm}
 							{...testId("chat-item-menu-delete")}

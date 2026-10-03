@@ -21,9 +21,10 @@ import {
 	useDocumentTitle,
 } from "@mantine/hooks";
 import {
-	TrayArrowUp,
 	GearIcon,
 	MagnifyingGlassIcon,
+	PlusIcon,
+	TrayArrowUp,
 	XIcon,
 } from "@phosphor-icons/react";
 import { usePostHog } from "@posthog/react";
@@ -45,7 +46,6 @@ import { useBulkSelection } from "@/hooks/useBulkSelection";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceProjects } from "@/hooks/useWorkspaceProjects";
-import { Icons } from "@/icons";
 import { WorkspaceAccessDeniedError } from "@/lib/accessDenied";
 import { isOutsiderRole, isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
@@ -305,7 +305,8 @@ export const ProjectsHomeRoute = () => {
 							<Button
 								size="sm"
 								w="fit-content"
-								rightSection={<Icons.Plus stroke="white" fill="white" />}
+								variant="filled"
+								rightSection={<PlusIcon size={20} />}
 								onClick={handleCreateProject}
 								{...testId("project-home-create-button")}
 							>
@@ -347,7 +348,8 @@ export const ProjectsHomeRoute = () => {
 								{canCreateProject && (
 									<Button
 										size="sm"
-										rightSection={<Icons.Plus stroke="white" fill="white" />}
+										variant="filled"
+										rightSection={<PlusIcon size={20} />}
 										onClick={handleCreateProject}
 										{...testId("project-home-create-button")}
 									>
@@ -358,7 +360,10 @@ export const ProjectsHomeRoute = () => {
 
 							<TextInput
 								leftSection={
-									<MagnifyingGlassIcon {...testId("project-search-icon")} />
+									<MagnifyingGlassIcon
+										size={16}
+										{...testId("project-search-icon")}
+									/>
 								}
 								rightSection={
 									!!search && (
@@ -369,7 +374,7 @@ export const ProjectsHomeRoute = () => {
 											aria-label={t`Clear search`}
 											{...testId("project-search-clear-button")}
 										>
-											<XIcon />
+											<XIcon size={16} />
 										</ActionIcon>
 									)
 								}

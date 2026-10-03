@@ -57,7 +57,9 @@ export const InAppBrowserNotice = ({ projectId }: { projectId?: string }) => {
 						{({ copied, copy }) => (
 							<Button
 								variant="outline"
-								leftSection={copied ? <CheckIcon /> : <CopyIcon />}
+								leftSection={
+									copied ? <CheckIcon size={20} /> : <CopyIcon size={20} />
+								}
 								onClick={copy}
 								className="self-start"
 								{...testId("portal-in-app-browser-copy-button")}

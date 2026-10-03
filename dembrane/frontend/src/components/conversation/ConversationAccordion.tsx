@@ -35,11 +35,11 @@ import {
 	useSessionStorage,
 } from "@mantine/hooks";
 import {
-	DetectiveIcon,
 	ArrowsDownUpIcon,
 	ArrowsLeftRightIcon,
 	CaretDownIcon,
 	CaretUpIcon,
+	DetectiveIcon,
 	InfoIcon,
 	LockIcon,
 	MagnifyingGlassIcon,
@@ -582,7 +582,7 @@ const ConversationAccordionItem = ({
 									size={18}
 									style={{ cursor: "default" }}
 								>
-									<SealCheckIcon />
+									<SealCheckIcon size={20} />
 								</ThemeIcon>
 							</Tooltip>
 						)}
@@ -1132,7 +1132,7 @@ export const ConversationAccordion = ({
 					) && (
 						<Group justify="space-between" align="center" gap="xs">
 							<TextInput
-								leftSection={<MagnifyingGlassIcon />}
+								leftSection={<MagnifyingGlassIcon size={16} />}
 								rightSection={
 									!!conversationSearch && (
 										<ActionIcon

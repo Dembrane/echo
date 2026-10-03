@@ -86,7 +86,7 @@ const UserChunkMessage = ({
 				<Menu shadow="md" width={200}>
 					<Menu.Target>
 						<ActionIcon variant="transparent" c="gray" className="h-full">
-							<DotsThreeVerticalIcon />
+							<DotsThreeVerticalIcon size={20} />
 						</ActionIcon>
 					</Menu.Target>
 
@@ -94,7 +94,7 @@ const UserChunkMessage = ({
 						<Menu.Item
 							onClick={handleDelete}
 							disabled={deleteChunkMutation.isPending}
-							leftSection={<TrashIcon />}
+							leftSection={<TrashIcon size={16} />}
 						>
 							Delete
 						</Menu.Item>

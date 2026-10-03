@@ -93,7 +93,7 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 					<Button
 						onClick={openCloneModal}
 						variant="outline"
-						rightSection={<CopyIcon />}
+						rightSection={<CopyIcon size={20} />}
 						loading={cloneProjectByIdMutation.isPending}
 						{...testId("project-actions-clone-button")}
 					>
@@ -106,7 +106,7 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 						onClick={openDeleteModal}
 						color="red"
 						variant="outline"
-						rightSection={<TrashIcon />}
+						rightSection={<TrashIcon size={20} />}
 						{...testId("project-actions-delete-button")}
 					>
 						<Trans>Delete Project</Trans>

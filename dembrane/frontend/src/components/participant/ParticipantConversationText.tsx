@@ -134,7 +134,7 @@ export const ParticipantConversationText = () => {
 							variant="light"
 							size="md"
 							onClick={() => window.location.reload()}
-							leftSection={<ArrowsClockwiseIcon />}
+							leftSection={<ArrowsClockwiseIcon size={20} />}
 						>
 							<Trans id="participant.button.reload.page.text.mode">
 								Reload Page
@@ -248,7 +248,7 @@ export const ParticipantConversationText = () => {
 					<Button
 						size="lg"
 						radius="md"
-						rightSection={<UploadSimpleIcon />}
+						rightSection={<UploadSimpleIcon size={20} />}
 						onClick={onChunk}
 						loading={uploadChunkMutation.isPending}
 						className="flex-grow"
@@ -264,7 +264,7 @@ export const ParticipantConversationText = () => {
 							px="lg"
 							{...testId("portal-text-switch-to-audio-button")}
 						>
-							<MicrophoneIcon />
+							<MicrophoneIcon size={20} />
 						</Button>
 					</I18nLink>
 					{text.trim() === "" && chunks.data && chunks.data.length > 0 && (
@@ -272,7 +272,7 @@ export const ParticipantConversationText = () => {
 							size="lg"
 							onClick={openFinishModal}
 							variant="outline"
-							rightSection={<CheckIcon />}
+							rightSection={<CheckIcon size={20} />}
 							{...testId("portal-text-finish-button")}
 						>
 							<Trans id="participant.button.finish.text.mode">Finish</Trans>

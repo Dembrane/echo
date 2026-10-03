@@ -100,7 +100,7 @@ export const DownloadConversationTranscriptModal = (props: {
 						await handleDownloadTranscript();
 						onClose();
 					}}
-					rightSection={<DownloadSimpleIcon />}
+					rightSection={<DownloadSimpleIcon size={20} />}
 					{...testId("transcript-download-confirm-button")}
 				>
 					<Trans>Download</Trans>

@@ -292,7 +292,7 @@ msgstr "{0, plural, one {# plaza pagada} other {# plazas pagadas}} este periodo 
 
 #. placeholder {0}: selection.count
 #. placeholder {0}: selectedIds.length
-#: src/routes/project/ProjectsHome.tsx:414
+#: src/routes/project/ProjectsHome.tsx:419
 #: src/components/workspace/DiscoverableWorkspaces.tsx:327
 msgid "{0, plural, one {# selected} other {# selected}}"
 msgstr "{0, plural, one {# seleccionado} other {# seleccionados}}"
@@ -1643,7 +1643,7 @@ msgstr "Todas las archivos se han subido correctamente."
 msgid "All kinds"
 msgstr "Todos los tipos"
 
-#: src/routes/project/ProjectsHome.tsx:345
+#: src/routes/project/ProjectsHome.tsx:346
 msgid "All projects"
 msgstr "Todos los proyectos"
 
@@ -2642,7 +2642,7 @@ msgstr "¿Puedes contarnos más?"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1331
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1960
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:765
-#: src/routes/project/ProjectsHome.tsx:444
+#: src/routes/project/ProjectsHome.tsx:449
 #: src/routes/project/CreateProjectRoute.tsx:430
 #: src/routes/project/report/ProjectReportRoute.tsx:288
 #: src/routes/project/report/ProjectReportRoute.tsx:1457
@@ -3128,7 +3128,7 @@ msgid "Clear filters"
 msgstr "Borrar filtros"
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:274
-#: src/routes/project/ProjectsHome.tsx:369
+#: src/routes/project/ProjectsHome.tsx:374
 #: src/routes/project/chat/NewChatRoute.tsx:172
 #: src/features/sidebar/blocks/SearchBlock.tsx:159
 #: src/components/invite/WorkspaceSelectList.tsx:98
@@ -3638,10 +3638,10 @@ msgid "participant.refine.cooling.down"
 msgstr "Enfriándose. Disponible en {0}"
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:396
-#: src/components/project/ProjectQRCode.tsx:151
+#: src/components/project/ProjectQRCode.tsx:147
 #: src/components/popcorn/PopcornShare.tsx:141
-#: src/components/participant/ParticipantShareModal.tsx:110
-#: src/components/participant/InAppBrowserNotice.tsx:65
+#: src/components/participant/ParticipantShareModal.tsx:112
+#: src/components/participant/InAppBrowserNotice.tsx:67
 #: src/components/conversation/CopyConversationTranscript.tsx:44
 #: src/components/conversation/ConversationEdit.tsx:51
 #: src/components/common/CopyRichTextIconButton.tsx:37
@@ -3687,9 +3687,9 @@ msgid "Copy invite link"
 msgstr "Copiar enlace de invitación"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1162
-#: src/components/project/ProjectQRCode.tsx:151
-#: src/components/participant/ParticipantShareModal.tsx:110
-#: src/components/participant/InAppBrowserNotice.tsx:65
+#: src/components/project/ProjectQRCode.tsx:147
+#: src/components/participant/ParticipantShareModal.tsx:112
+#: src/components/participant/InAppBrowserNotice.tsx:67
 msgid "Copy link"
 msgstr "Copiar enlace"
 
@@ -3990,7 +3990,7 @@ msgstr "No se pudieron cargar los espacios de trabajo. Cierra y vuelve a abrir p
 msgid "Country"
 msgstr "País"
 
-#: src/routes/project/ProjectsHome.tsx:354
+#: src/routes/project/ProjectsHome.tsx:356
 #: src/components/project/CustomTopicModal.tsx:260
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:291
 msgid "Create"
@@ -4041,7 +4041,7 @@ msgstr "Crear organización"
 msgid "Create password"
 msgstr "Crear contraseña"
 
-#: src/routes/project/ProjectsHome.tsx:312
+#: src/routes/project/ProjectsHome.tsx:313
 #: src/routes/project/CreateProjectRoute.tsx:447
 msgid "Create project"
 msgstr "Crear proyecto"
@@ -4718,7 +4718,7 @@ msgstr "Descarga el audio de las conversaciones."
 msgid "Download PDF"
 msgstr "Descargar PDF"
 
-#: src/components/project/ProjectQRCode.tsx:162
+#: src/components/project/ProjectQRCode.tsx:158
 msgid "Download QR code"
 msgstr "Descargar código QR"
 
@@ -4847,7 +4847,7 @@ msgid "Early features you can try on this project before they are ready for ever
 msgstr "Funciones experimentales que puedes probar en este proyecto antes de que estén disponibles para todos."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:1111
+#: src/components/participant/ParticipantConversationAudio.tsx:1113
 msgid "participant.button.echo"
 msgstr "ECHO"
 
@@ -4966,7 +4966,7 @@ msgstr "Editar una conversación ya no provoca el correspondiente error al guard
 #: src/routes/auth/Login.tsx:515
 #: src/routes/auth/Login.tsx:519
 #: src/components/settings/AccountSettingsCard.tsx:186
-#: src/components/participant/ParticipantShareModal.tsx:136
+#: src/components/participant/ParticipantShareModal.tsx:138
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:365
 #: src/components/common/RedactedText.tsx:38
 msgid "Email"
@@ -5758,7 +5758,7 @@ msgid "participant.button.finish.text.mode"
 msgstr "Finalizar"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:1079
+#: src/components/participant/ParticipantConversationAudio.tsx:1081
 msgid "participant.button.finish"
 msgstr "Finalizar"
 
@@ -6984,7 +6984,7 @@ msgstr "Únete a esta organización para descubrir espacios de trabajo y colabor
 
 #: src/components/participant/ParticipantShareModal.tsx:57
 #: src/components/participant/ParticipantShareModal.tsx:67
-#: src/components/participant/ParticipantShareModal.tsx:131
+#: src/components/participant/ParticipantShareModal.tsx:133
 msgid "Join this portal session"
 msgstr "Unirse a esta sesión del portal"
 
@@ -7991,7 +7991,7 @@ msgstr "Monitorizar"
 msgid "more"
 msgstr "más"
 
-#: src/components/participant/ParticipantShareModal.tsx:146
+#: src/components/participant/ParticipantShareModal.tsx:148
 msgid "More"
 msgstr "Más"
 
@@ -8060,7 +8060,7 @@ msgstr "Historial de traslados"
 msgid "Move project"
 msgstr "Mover proyecto"
 
-#: src/routes/project/ProjectsHome.tsx:434
+#: src/routes/project/ProjectsHome.tsx:439
 #: src/components/project/BulkMoveProjectsModal.tsx:76
 msgid "Move projects"
 msgstr "Mover proyectos"
@@ -8673,7 +8673,7 @@ msgstr "Sin actividad en proyectos durante este período."
 msgid "No projects found {0}"
 msgstr "No se encontraron proyectos {0}"
 
-#: src/routes/project/ProjectsHome.tsx:388
+#: src/routes/project/ProjectsHome.tsx:393
 msgid "No projects found for search term"
 msgstr "No se encontraron proyectos para el término de búsqueda"
 
@@ -9954,7 +9954,7 @@ msgstr "Fija hasta tres proyectos en la parte superior de tu lista."
 msgid "Pin your most-used templates directly in chat."
 msgstr "Fija tus plantillas más usadas directamente en el chat."
 
-#: src/routes/project/ProjectsHome.tsx:322
+#: src/routes/project/ProjectsHome.tsx:323
 msgid "Pinned"
 msgstr "Fijados"
 
@@ -11954,7 +11954,7 @@ msgstr "Busca personas o escribe un correo"
 msgid "Search project or workspace"
 msgstr "Buscar proyecto o espacio de trabajo"
 
-#: src/routes/project/ProjectsHome.tsx:376
+#: src/routes/project/ProjectsHome.tsx:381
 msgid "Search projects"
 msgstr "Buscar proyectos"
 
@@ -12095,7 +12095,7 @@ msgstr "Hasta pronto"
 msgid "Sees usage and invoices. No project or content access."
 msgstr "Ve el uso y las facturas. Sin acceso a proyectos ni contenido."
 
-#: src/routes/project/ProjectsHome.tsx:456
+#: src/routes/project/ProjectsHome.tsx:461
 #: src/components/billing/BillingManager.tsx:450
 msgid "Select"
 msgstr "Seleccionar"
@@ -12130,7 +12130,7 @@ msgstr "Selecciona un webhook para clonar"
 msgid "Select a workspace"
 msgstr "Selecciona un espacio de trabajo"
 
-#: src/routes/project/ProjectsHome.tsx:420
+#: src/routes/project/ProjectsHome.tsx:425
 #: src/components/workspace/DiscoverableWorkspaces.tsx:281
 #: src/components/conversation/ConversationAccordion.tsx:1447
 msgid "Select all"
@@ -13168,7 +13168,7 @@ msgid "Stop"
 msgstr "Detener"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:1131
+#: src/components/participant/ParticipantConversationAudio.tsx:1133
 msgid "participant.button.stop"
 msgstr "Detener"
 
@@ -14288,7 +14288,7 @@ msgstr "esta persona"
 #~ msgid "This phrase is a question"
 #~ msgstr ""
 
-#: src/components/participant/ParticipantShareModal.tsx:153
+#: src/components/participant/ParticipantShareModal.tsx:155
 msgid "This portal is not accepting new sessions right now."
 msgstr "Este portal no acepta nuevas sesiones en este momento."
 
@@ -15996,7 +15996,7 @@ msgstr "Novedades"
 msgid "What's the main reason?"
 msgstr "¿Cuál es el motivo principal?"
 
-#: src/components/participant/ParticipantShareModal.tsx:125
+#: src/components/participant/ParticipantShareModal.tsx:127
 msgid "WhatsApp"
 msgstr "WhatsApp"
 

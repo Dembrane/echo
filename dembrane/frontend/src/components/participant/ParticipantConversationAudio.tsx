@@ -999,7 +999,7 @@ export const ParticipantConversationAudio = () => {
 									{opened ||
 									interruptionModalOpened ||
 									stoppedRecordingTime !== null ? (
-										<PauseIcon />
+										<PauseIcon size={20} />
 									) : (
 										<div className="h-4 w-4 animate-pulse rounded-full bg-red-500" />
 									)}
@@ -1040,7 +1040,7 @@ export const ParticipantConversationAudio = () => {
 									<Button
 										size="lg"
 										radius="md"
-										rightSection={<MicrophoneIcon />}
+										rightSection={<MicrophoneIcon size={20} />}
 										onClick={handleStartRecording}
 										loading={
 											isStarting ||
@@ -1070,7 +1070,9 @@ export const ParticipantConversationAudio = () => {
 											size="lg"
 											onClick={open}
 											variant="outline"
-											rightSection={<CheckIcon className="hidden sm:block" />}
+											rightSection={
+												<CheckIcon size={20} className="hidden sm:block" />
+											}
 											className="w-auto"
 											loading={isFinishing}
 											disabled={isFinishing}

@@ -97,7 +97,7 @@ export const VerifiedArtefactsSection = ({
 					aria-label={t`outcomes`}
 					size={22}
 				>
-					<SealCheckIcon />
+					<SealCheckIcon size={16} />
 				</ThemeIcon>
 			</Group>
 

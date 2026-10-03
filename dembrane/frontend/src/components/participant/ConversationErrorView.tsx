@@ -44,7 +44,7 @@ export const ConversationErrorView = ({
 						variant="light"
 						size="md"
 						onClick={() => window.location.reload()}
-						leftSection={<ArrowsClockwiseIcon />}
+						leftSection={<ArrowsClockwiseIcon size={20} />}
 					>
 						<Trans id="participant.button.reload">Reload Page</Trans>
 					</Button>

@@ -118,7 +118,7 @@ export const ProjectMoveWorkspace = ({ project }: { project: Project }) => {
 					<Button
 						onClick={openConfirm}
 						disabled={!targetWorkspaceId}
-						rightSection={<ArrowRightIcon />}
+						rightSection={<ArrowRightIcon size={20} />}
 						{...testId("project-move-workspace-button")}
 					>
 						<Trans>Move project</Trans>
