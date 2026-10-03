@@ -55,6 +55,8 @@ const FIXTURES: Record<
 		link?: RegExp;
 		/** Only a link whose text contains this. */
 		text?: string;
+		/** An API list to take the first item's id from (`{ chats: [...] }`). */
+		get?: string;
 		make?: { post: string; body?: Record<string, string> };
 	}
 > = {
@@ -62,10 +64,13 @@ const FIXTURES: Record<
 		from: "/w/$workspace/projects/$project/library",
 		link: new RegExp(`/canvases/(${UUID})`),
 	},
+	// On the empty project, so the shared demo gains no chats.
 	$chat: {
-		from: "/w/$workspace/projects/$project/home",
-		link: new RegExp(`/chats/(${UUID})`),
-		make: { body: { project_id: "$project" }, post: "/api/v2/bff/chats" },
+		get: "/api/v2/bff/chats?project_id=$emptyProject",
+		make: {
+			body: { project_id: "$emptyProject" },
+			post: "/api/v2/bff/chats",
+		},
 	},
 	$conversation: {
 		from: "/w/$workspace/projects/$project/conversations",
@@ -139,13 +144,30 @@ async function fixture(page: Page, name: string): Promise<string | null> {
 			);
 		}
 	}
+	// fetch needs the app's origin and its session cookie.
+	const atApp = async () => {
+		if (!page.url().startsWith("http")) await page.goto("/en-US/o");
+	};
+	if (!id && def?.get) {
+		const url = await fillWith(page, def.get);
+		await atApp();
+		if (url)
+			id = await page.evaluate(async (url) => {
+				const res = await fetch(url, { credentials: "include" });
+				if (!res.ok) return null;
+				const body = await res.json();
+				const list = Array.isArray(body)
+					? body
+					: (Object.values(body).find(Array.isArray) ?? []);
+				return list[0]?.id ?? null;
+			}, url);
+	}
 	if (!id && def?.make) {
 		const post = await fillWith(page, def.make.post);
 		const body: Record<string, string> = {};
 		for (const [k, v] of Object.entries(def.make.body ?? {}))
 			body[k] = (await fillWith(page, v)) ?? v;
-		// fetch needs the app's origin and its session cookie.
-		if (!page.url().startsWith("http")) await page.goto("/en-US/o");
+		await atApp();
 		if (post)
 			id = await page.evaluate(
 				async ({ post, body }) => {

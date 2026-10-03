@@ -180,7 +180,12 @@ export const flows: Record<string, Flow> = {
 		params: { ...project, canvasId: "$canvas" },
 	},
 	"/w/:workspaceId/projects/:projectId/chats/:chatId": {
-		params: { ...project, chatId: "$chat" },
+		// The check's own chat lives on the empty project (see $chat).
+		params: {
+			chatId: "$chat",
+			projectId: "$emptyProject",
+			workspaceId: "$ownWorkspace",
+		},
 		states: [{ clicks: ["chat-item-menu-button"], name: "menu" }],
 	},
 	"/w/:workspaceId/projects/:projectId/chats/:chatId/debug": {
