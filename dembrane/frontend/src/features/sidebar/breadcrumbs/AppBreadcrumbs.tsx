@@ -306,7 +306,10 @@ export const AppBreadcrumbs = () => {
 			className="flex h-[57px] shrink-0 items-center gap-1 text-xs print:hidden"
 			aria-label="Breadcrumb"
 			style={{
-				color: "rgba(45, 45, 44, 0.55)",
+				// A faint line under the bar, level with the sidebar header's.
+				borderBottom: "1px solid var(--app-rule-color)",
+				// Muted (cool slate) passes AA; the old 55% graphite did not.
+				color: "var(--mantine-color-dimmed)",
 				paddingLeft: "16px",
 				paddingRight: "16px",
 			}}
@@ -321,7 +324,7 @@ export const AppBreadcrumbs = () => {
 							<I18nLink
 								to={c.href}
 								className="truncate hover:underline"
-								style={{ color: "rgba(45, 45, 44, 0.75)" }}
+								style={{ color: "var(--app-text)" }}
 								title={c.label}
 							>
 								{displayLabel}
@@ -330,7 +333,9 @@ export const AppBreadcrumbs = () => {
 							<span
 								className="truncate"
 								style={{
-									color: isLast ? "#2d2d2c" : "rgba(45, 45, 44, 0.55)",
+									color: isLast
+										? "var(--app-text)"
+										: "var(--mantine-color-dimmed)",
 								}}
 								title={c.label}
 							>

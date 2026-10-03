@@ -203,7 +203,8 @@ export const theme = createTheme({
 		}),
 		Textarea: { defaultProps: { resize: "vertical" } },
 		Title: { defaultProps: { c: "var(--app-text)" } },
-		Tooltip: { defaultProps: { arrowSize: 8, withArrow: true } },
+		// The stem (rules.css) is as long as the offset, so it reaches the target.
+		Tooltip: { defaultProps: { arrowSize: 8, offset: 8, withArrow: true } },
 	},
 	defaultRadius: 0,
 	focusRing: "auto",

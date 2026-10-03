@@ -24,7 +24,31 @@
 	/* The faint grey the app uses for lines; states recolour it (blue when
 	 * active, red on error). */
 	--app-rule-color: #e6e3df;
+	/* Fields and what belongs to them (open lists, popovers, menus, tooltips,
+	 * filters, switches) draw a darker grey: 3.28:1, the contrast WCAG asks
+	 * of a control's edge. Everything else (cards, alerts, tables, tabs,
+	 * dialogs, toasts, button boxes) stays faint. */
+	--app-control-rule: #878785;
 	--app-float: 0 12px 40px rgba(45, 45, 44, 0.12);
+}
+
+/* Controls and their floating parts take the darker grey. State rules below
+ * (focus, error, open) recolour it. */
+:root
+	:is(
+		.mantine-Input-input,
+		.mantine-Popover-dropdown,
+		.mantine-Combobox-dropdown,
+		.mantine-Menu-dropdown,
+		.mantine-HoverCard-dropdown,
+		.mantine-Tooltip-tooltip,
+		.mantine-Chip-label,
+		.mantine-SegmentedControl-root,
+		.mantine-SegmentedControl-control,
+		.mantine-Switch-track,
+		.mantine-Dropzone-root
+	) {
+	--app-rule-color: var(--app-control-rule);
 }
 
 /* Read: a rule above and below. */
@@ -354,12 +378,39 @@
 /* Mantine makes the arrow's inner edges transparent and clips it to a
  * triangle, so a full border leaves only the two outer edges: the rule. */
 :root .mantine-Tooltip-arrow {
-	background: #ffffff;
-	border: var(--app-stroke) solid var(--app-rule-color);
-	/* One stroke into the tooltip, whichever side it opens from, so the white
-	 * fill covers the rule at the arrow's base instead of meeting it edge to
-	 * edge (which leaves a hairline across the opening). */
-	margin: var(--app-stroke);
+	/* The arrow is a simple line: a short stem from the tooltip's edge to what
+	 * it points at, as long as the tooltip's offset. Mantine positions a
+	 * rotated square with inline styles, so these override them, keyed on
+	 * the side Mantine puts it on. */
+	background: var(--app-rule-color) !important;
+	border: 0 !important;
+	clip-path: none !important;
+	margin: 0 !important;
+	transform: none !important;
+}
+/* Tooltip above or below: a vertical stem. */
+:root .mantine-Tooltip-arrow:is([style*="bottom: -"], [style*="top: -"]) {
+	height: 8px !important;
+	margin-left: 4px !important;
+	width: var(--app-stroke) !important;
+}
+:root .mantine-Tooltip-arrow[style*="bottom: -"] {
+	bottom: -8px !important;
+}
+:root .mantine-Tooltip-arrow[style*="top: -"] {
+	top: -8px !important;
+}
+/* Tooltip to the side: a horizontal stem at the middle. */
+:root .mantine-Tooltip-arrow:is([style*="left: -"], [style*="right: -"]) {
+	height: var(--app-stroke) !important;
+	top: 50% !important;
+	width: 8px !important;
+}
+:root .mantine-Tooltip-arrow[style*="left: -"] {
+	left: -8px !important;
+}
+:root .mantine-Tooltip-arrow[style*="right: -"] {
+	right: -8px !important;
 }
 
 /* Stepper labels; the markers are context (see the grammar section below). */
