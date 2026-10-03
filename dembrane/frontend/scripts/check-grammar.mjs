@@ -1161,6 +1161,30 @@ for (const f of files) {
 	if (/\.tsx?$/.test(f)) scanSource(f);
 	else if (f.endsWith(".css")) scanCss(f);
 }
+
+// rules.css takes every colour from the tokens on its :root, so a theme (dark)
+// redefines the tokens and nothing else. A hex anywhere else in it is a finding.
+if (!scanOnly) {
+	const rel = "src/styles/rules.css";
+	const css = readFileSync(path.join(root, rel), "utf8").replace(
+		/\/\*[\s\S]*?\*\//g,
+		(c) => c.replace(/[^\n]/g, " "),
+	);
+	for (const m of css.matchAll(/#[0-9a-f]{3,8}\b/gi)) {
+		const before = css.slice(0, m.index);
+		const open = before.lastIndexOf("{");
+		const selector = before
+			.slice(before.lastIndexOf("}", open) + 1, open)
+			.trim();
+		if (selector !== ":root")
+			report(
+				"color.rules-token",
+				rel,
+				before.split("\n").length,
+				`${m[0]} in rules.css: use a token from its :root`,
+			);
+	}
+}
 findings.sort(
 	(a, b) =>
 		a.file.localeCompare(b.file) ||
