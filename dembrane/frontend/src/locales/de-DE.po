@@ -3874,7 +3874,7 @@ msgstr "Gespräche"
 #: src/components/report/ReportTimeline.tsx:302
 #: src/components/project/ProjectUsageAndSharing.tsx:477
 #: src/components/conversation/ProjectConversationsPanel.tsx:750
-#: src/components/conversation/ConversationAccordion.tsx:1103
+#: src/components/conversation/ConversationAccordion.tsx:1100
 msgid "Conversations"
 msgstr "Gespräche"
 
@@ -5898,8 +5898,8 @@ msgstr "Fehlgeschlagen"
 #~ msgstr "Fehler beim Hinzufügen des Gesprächs zum Chat{0}"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:733
-#: src/components/conversation/ConversationAccordion.tsx:980
-#: src/components/conversation/ConversationAccordion.tsx:1000
+#: src/components/conversation/ConversationAccordion.tsx:977
+#: src/components/conversation/ConversationAccordion.tsx:997
 msgid "Failed to add conversations to context"
 msgstr "Fehler beim Hinzufügen von Unterhaltungen zum Kontext"
 
@@ -8201,7 +8201,7 @@ msgstr "Logo aktualisiert"
 msgid "Longest first"
 msgstr "Längste zuerst"
 
-#: src/components/conversation/ConversationAccordion.tsx:672
+#: src/components/conversation/ConversationAccordion.tsx:669
 msgid "Longest First"
 msgstr "Längste zuerst"
 
@@ -8686,7 +8686,7 @@ msgid "Name"
 msgstr "Name"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:111
-#: src/components/conversation/ConversationAccordion.tsx:670
+#: src/components/conversation/ConversationAccordion.tsx:667
 msgid "Name A-Z"
 msgstr "Name A-Z"
 
@@ -8719,7 +8719,7 @@ msgid "Name your workspace."
 msgstr "Geben Sie Ihrem Arbeitsbereich einen Namen."
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:112
-#: src/components/conversation/ConversationAccordion.tsx:671
+#: src/components/conversation/ConversationAccordion.tsx:668
 msgid "Name Z-A"
 msgstr "Name Z-A"
 
@@ -8885,7 +8885,7 @@ msgstr "Neue Stufe"
 msgid "Newest first"
 msgstr "Neueste zuerst"
 
-#: src/components/conversation/ConversationAccordion.tsx:668
+#: src/components/conversation/ConversationAccordion.tsx:665
 msgid "Newest First"
 msgstr "Neueste zuerst"
 
@@ -9018,7 +9018,7 @@ msgstr "Kein Inhalt"
 msgid "No conversations found."
 msgstr "Keine Gespräche gefunden."
 
-#: src/components/conversation/ConversationAccordion.tsx:1465
+#: src/components/conversation/ConversationAccordion.tsx:1462
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "Keine Gespräche gefunden. Starten Sie ein Gespräch über den Teilnahme-Einladungslink aus der <0><1>Projektübersicht.</1></0>"
 
@@ -9318,7 +9318,7 @@ msgstr "Noch keine Stakeholder vorhanden. Sie erscheinen nach der ersten Analyse
 msgid "No summary yet"
 msgstr "Noch keine Zusammenfassung"
 
-#: src/components/conversation/ConversationAccordion.tsx:1379
+#: src/components/conversation/ConversationAccordion.tsx:1376
 msgid "No tags found"
 msgstr "Keine Tags gefunden"
 
@@ -9659,7 +9659,7 @@ msgstr "Offline"
 msgid "Oldest first"
 msgstr "Älteste zuerst"
 
-#: src/components/conversation/ConversationAccordion.tsx:669
+#: src/components/conversation/ConversationAccordion.tsx:666
 msgid "Oldest First"
 msgstr "Älteste zuerst"
 
@@ -9747,7 +9747,7 @@ msgid "Ongoing"
 msgstr "Laufend"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/ConversationAccordion.tsx:639
+#: src/components/conversation/ConversationAccordion.tsx:637
 msgid "conversation.ongoing"
 msgstr "Laufend"
 
@@ -10004,8 +10004,8 @@ msgstr "Optionales Feld auf der Danksagungsseite"
 msgid "Optional. What this workspace is for."
 msgstr "Optional. Wofür dieser Arbeitsbereich gedacht ist."
 
-#: src/components/conversation/ConversationAccordion.tsx:1154
-#: src/components/conversation/ConversationAccordion.tsx:1159
+#: src/components/conversation/ConversationAccordion.tsx:1151
+#: src/components/conversation/ConversationAccordion.tsx:1156
 msgid "Options"
 msgstr "Optionen"
 
@@ -12137,8 +12137,8 @@ msgstr "Passwort zurücksetzen | dembrane"
 msgid "Reset the guide?"
 msgstr "Leitfaden zurücksetzen?"
 
-#: src/components/conversation/ConversationAccordion.tsx:1402
-#: src/components/conversation/ConversationAccordion.tsx:1407
+#: src/components/conversation/ConversationAccordion.tsx:1399
+#: src/components/conversation/ConversationAccordion.tsx:1404
 msgid "Reset to default"
 msgstr "Auf Standard zurücksetzen"
 
@@ -12693,7 +12693,7 @@ msgstr "Nach Organisation suchen"
 msgid "Search chats"
 msgstr "Chats durchsuchen"
 
-#: src/components/conversation/ConversationAccordion.tsx:1147
+#: src/components/conversation/ConversationAccordion.tsx:1144
 msgid "Search conversations"
 msgstr "Gespräche suchen"
 
@@ -12747,7 +12747,7 @@ msgstr "Projekte suchen..."
 msgid "Search results"
 msgstr "Suchergebnisse"
 
-#: src/components/conversation/ConversationAccordion.tsx:1288
+#: src/components/conversation/ConversationAccordion.tsx:1285
 msgid "Search tags"
 msgstr "Tags suchen"
 
@@ -12907,11 +12907,11 @@ msgstr "Arbeitsbereich auswählen"
 
 #: src/routes/project/ProjectsHome.tsx:430
 #: src/components/workspace/DiscoverableWorkspaces.tsx:279
-#: src/components/conversation/ConversationAccordion.tsx:1445
+#: src/components/conversation/ConversationAccordion.tsx:1442
 msgid "Select all"
 msgstr "Alle auswählen"
 
-#: src/components/conversation/ConversationAccordion.tsx:1443
+#: src/components/conversation/ConversationAccordion.tsx:1440
 msgid "Select all ({remainingCount})"
 msgstr "Alle auswählen ({remainingCount})"
 
@@ -13345,7 +13345,7 @@ msgstr "Kurze Phrasen aus den Gesprächen"
 msgid "Shortest first"
 msgstr "Kürzeste zuerst"
 
-#: src/components/conversation/ConversationAccordion.tsx:673
+#: src/components/conversation/ConversationAccordion.tsx:670
 msgid "Shortest First"
 msgstr "Kürzeste zuerst"
 
@@ -13737,8 +13737,8 @@ msgid "participant.go.deeper.content.policy.violation.error.message"
 msgstr "Der Inhalt verstößt gegen unsere Richtlinien. Änder den Text und versuch es nochmal."
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:823
-#: src/components/conversation/ConversationAccordion.tsx:1209
-#: src/components/conversation/ConversationAccordion.tsx:1216
+#: src/components/conversation/ConversationAccordion.tsx:1206
+#: src/components/conversation/ConversationAccordion.tsx:1213
 msgid "Sort"
 msgstr "Sortieren"
 
@@ -14243,8 +14243,8 @@ msgstr "Tag gelöscht"
 #: src/components/conversation/ProjectConversationsPanel.tsx:833
 #: src/components/conversation/ConversationEdit.tsx:424
 #: src/components/conversation/ConversationDrilldownModal.tsx:200
+#: src/components/conversation/ConversationAccordion.tsx:1275
 #: src/components/conversation/ConversationAccordion.tsx:1278
-#: src/components/conversation/ConversationAccordion.tsx:1281
 msgid "Tags"
 msgstr "Tags"
 
@@ -16149,7 +16149,7 @@ msgstr "Stufen Sie Ihren Arbeitsbereich hoch, um Transkripte für neue Gespräch
 #: src/components/dropzone/UploadConversationDropzone.tsx:545
 #: src/components/conversation/ProjectConversationsPanel.tsx:778
 #: src/components/conversation/ConversationAccordion.tsx:405
-#: src/components/conversation/ConversationAccordion.tsx:1116
+#: src/components/conversation/ConversationAccordion.tsx:1113
 msgid "Upload"
 msgstr "Hochladen"
 
@@ -16195,7 +16195,7 @@ msgid "Upload limit reached"
 msgstr "Upload-Limit erreicht"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:775
-#: src/components/conversation/ConversationAccordion.tsx:1110
+#: src/components/conversation/ConversationAccordion.tsx:1107
 msgid "Upload limit reached. Upgrade your workspace."
 msgstr "Upload-Limit erreicht. Stufen Sie Ihren Arbeitsbereich hoch."
 
@@ -16417,7 +16417,7 @@ msgid "Verified"
 msgstr "Verifiziert"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/ConversationAccordion.tsx:1397
+#: src/components/conversation/ConversationAccordion.tsx:1394
 msgid "conversation.filters.verified.text"
 msgstr "Verifiziert"
 
@@ -17441,7 +17441,7 @@ msgstr "Sie haben eine ausstehende Einladung zu {0}. Der Administrator muss eine
 msgid "select.all.modal.already.added"
 msgstr "Sie haben bereits <0>{existingContextCount, plural, one {# Unterhaltung} other {# Unterhaltungen}}</0> zu diesem Chat hinzugefügt."
 
-#: src/components/conversation/ConversationAccordion.tsx:1427
+#: src/components/conversation/ConversationAccordion.tsx:1424
 msgid "You have already added all the conversations related to this"
 msgstr "Sie haben bereits alle damit verbundenen Unterhaltungen hinzugefügt"
 

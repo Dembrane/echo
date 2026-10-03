@@ -459,7 +459,7 @@ test.describe("design grammar", () => {
 					{ clicks: [], name: "page" },
 					...(visit.flow.states ?? []),
 				];
-				states: for (const state of states) {
+				eachState: for (const state of states) {
 					await page.goto(url);
 					await settle(page);
 					for (const id of state.clicks) {
@@ -473,7 +473,7 @@ test.describe("design grammar", () => {
 								.catch(() => false))
 						) {
 							row(state.name, page.url(), empty(), `no ${id} on the page`);
-							continue states;
+							continue eachState;
 						}
 						await trigger.click();
 						await settle(page);

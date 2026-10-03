@@ -53,7 +53,8 @@ export function routerPaths(file = ROUTER_FILE): RouterPath[] {
 		}
 	}
 
-	const unwrap = (e: ts.Expression): ts.Expression => {
+	const unwrap = (expr: ts.Expression): ts.Expression => {
+		let e = expr;
 		while (ts.isParenthesizedExpression(e) || ts.isAsExpression(e))
 			e = e.expression;
 		if (ts.isIdentifier(e) && consts.has(e.text))
