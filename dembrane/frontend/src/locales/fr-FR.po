@@ -2478,7 +2478,7 @@ msgstr "Avant de connecter un agent"
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:138
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:149
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:161
-#: src/features/sidebar/blocks/HelpBlock.tsx:101
+#: src/features/sidebar/blocks/HelpBlock.tsx:100
 #: src/components/report/UpdateReportModalButton.tsx:202
 #: src/components/report/CreateReportForm.tsx:248
 #: src/components/project/ProjectPortalEditor.tsx:1488
@@ -3417,7 +3417,7 @@ msgstr "Confirmez votre mot de passe pour générer un nouveau secret pour votre
 msgid "Connect"
 msgstr "Connecter"
 
-#: src/features/sidebar/blocks/HelpBlock.tsx:99
+#: src/features/sidebar/blocks/HelpBlock.tsx:98
 #: src/components/agent-access/AgentAccessSection.tsx:147
 msgid "Connect your agent"
 msgstr "Connecter votre agent"
@@ -3465,15 +3465,15 @@ msgstr "Le traitement basé sur le consentement est actif sans lien vers la poli
 msgid "Consolidated arguments"
 msgstr "Arguments consolidés"
 
-#: src/features/sidebar/views/HelpView.tsx:27
-#: src/features/sidebar/blocks/HelpBlock.tsx:143
-msgid "Contact support"
-msgstr "Contacter le support"
-
 #. js-lingui-explicit-id
 #: src/components/error/actions.ts:23
 msgid "error.action.contact_support"
 msgstr "Contacter le support"
+
+#: src/features/sidebar/views/HelpView.tsx:27
+#: src/features/sidebar/blocks/HelpBlock.tsx:143
+#~ msgid "Contact support"
+#~ msgstr "Contacter le support"
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:374
 msgid "Contact the admin if this was unexpected."
@@ -4644,8 +4644,8 @@ msgstr "Prévoyez-vous d'utiliser dembrane dans les domaines de la santé, de l'
 msgid "Do you want to stay in the loop?"
 msgstr "Voulez-vous rester dans la boucle ?"
 
-#: src/features/sidebar/views/HelpView.tsx:35
-#: src/features/sidebar/blocks/HelpBlock.tsx:120
+#: src/features/sidebar/views/HelpView.tsx:26
+#: src/features/sidebar/blocks/HelpBlock.tsx:119
 #: src/components/chat/ChatHistoryMessage.tsx:244
 msgid "Documentation"
 msgstr "Documentation"
@@ -5658,8 +5658,8 @@ msgstr "Répulsion des paires éloignées : {0}"
 msgid "participant.modal.echo.info.title"
 msgstr "Fonctionnalité bientôt disponible"
 
-#: src/features/sidebar/views/HelpView.tsx:65
-#: src/features/sidebar/blocks/HelpBlock.tsx:87
+#: src/features/sidebar/views/HelpView.tsx:56
+#: src/features/sidebar/blocks/HelpBlock.tsx:86
 msgid "Feedback"
 msgstr "Commentaires"
 
@@ -6252,10 +6252,10 @@ msgstr "Avez-vous suivi une formation ?"
 msgid "have your recordings transcribed"
 msgstr "faire transcrire vos enregistrements"
 
-#: src/features/sidebar/views/HelpView.tsx:25
-#: src/features/sidebar/blocks/HelpBlock.tsx:209
-#: src/features/sidebar/blocks/HelpBlock.tsx:224
-#: src/features/sidebar/blocks/HelpBlock.tsx:241
+#: src/features/sidebar/views/HelpView.tsx:24
+#: src/features/sidebar/blocks/HelpBlock.tsx:195
+#: src/features/sidebar/blocks/HelpBlock.tsx:210
+#: src/features/sidebar/blocks/HelpBlock.tsx:227
 msgid "Help"
 msgstr "Aide"
 
@@ -9980,8 +9980,8 @@ msgstr "Plan"
 msgid "Plan ends"
 msgstr "Fin du forfait"
 
-#: src/features/sidebar/views/HelpView.tsx:52
-#: src/features/sidebar/blocks/HelpBlock.tsx:134
+#: src/features/sidebar/views/HelpView.tsx:43
+#: src/features/sidebar/blocks/HelpBlock.tsx:133
 msgid "Planned"
 msgstr "Prévu"
 
@@ -11178,8 +11178,8 @@ msgstr "Rapport"
 msgid "Report already generating"
 msgstr "Rapport déjà en cours de génération"
 
-#: src/features/sidebar/views/HelpView.tsx:58
-#: src/features/sidebar/blocks/HelpBlock.tsx:75
+#: src/features/sidebar/views/HelpView.tsx:49
+#: src/features/sidebar/blocks/HelpBlock.tsx:74
 #: src/components/feedback/ReportIssueModal.tsx:180
 msgid "Report an issue"
 msgstr "Signaler un problème"
@@ -12782,7 +12782,7 @@ msgstr "Passer"
 msgid "select.all.modal.context.limit.reached.description"
 msgstr "Ignorées car la sélection était trop grande."
 
-#: src/features/sidebar/views/HelpView.tsx:41
+#: src/features/sidebar/views/HelpView.tsx:32
 msgid "Slack community"
 msgstr "Communauté Slack"
 
@@ -13402,8 +13402,8 @@ msgstr "Système"
 msgid "System default"
 msgstr "Valeur par défaut du système"
 
-#: src/features/sidebar/views/HelpView.tsx:49
-#: src/features/sidebar/blocks/HelpBlock.tsx:131
+#: src/features/sidebar/views/HelpView.tsx:40
+#: src/features/sidebar/blocks/HelpBlock.tsx:130
 msgid "System status"
 msgstr "État du système"
 
@@ -15986,7 +15986,7 @@ msgstr "Ce qui résoudrait cette tension"
 msgid "What would you like to explore?"
 msgstr "Qu’est-ce que tu veux explorer ?"
 
-#: src/features/sidebar/blocks/HelpBlock.tsx:110
+#: src/features/sidebar/blocks/HelpBlock.tsx:109
 #: src/components/release/ReleaseVideoModal.tsx:310
 msgid "What's new"
 msgstr "Nouveautés"
