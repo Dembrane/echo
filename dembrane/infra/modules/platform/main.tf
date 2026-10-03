@@ -403,3 +403,25 @@ resource "google_secret_manager_secret_iam_member" "pending" {
   role      = "roles/secretmanager.secretAccessor"
   member    = each.value[1] == "api" ? google_service_account.api.member : google_service_account.worker.member
 }
+
+# Operators (sam's runtime) maintain staging and preview data, for example tier changes a
+# teammate asks for. They get the Cloud SQL connection roles and the app's database URL only:
+# not the auth, payment or mail secrets, so an operator cannot sign in as a user.
+resource "google_project_iam_member" "operator" {
+  for_each = {
+    for pair in setproduct(var.operators, [
+      "roles/cloudsql.client",
+      "roles/cloudsql.viewer",
+      "roles/serviceusage.serviceUsageConsumer",
+    ]) : "${pair[0]}-${pair[1]}" => pair
+  }
+  project = var.project
+  role    = each.value[1]
+  member  = "serviceAccount:${each.value[0]}"
+}
+resource "google_secret_manager_secret_iam_member" "operator_db" {
+  for_each  = toset(var.operators)
+  secret_id = google_secret_manager_secret.db["DATABASE_URL"].id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${each.value}"
+}
