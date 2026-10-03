@@ -433,7 +433,7 @@ export async function submitTask(
   if (!task) throw new NotFoundError("task.not_found");
   if (task.kind === "sign") throw new ConflictError("task.done_by_signing");
   if (task.kind === "billing_details") throw new ConflictError("task.done_by_billing_details");
-  // An onboarding step is done by taking it (opening the demo, a first conversation), never
+  // An onboarding step is done by taking it (opening the demo, creating a project), never
   // by a reply that staff would then have to review.
   if (isOnboardingCode(task.code)) throw new ConflictError("task.not_waiting");
   if (!["open", "changes_requested"].includes(task.status))
@@ -591,6 +591,16 @@ export async function recordBooking(
   // After the booking commits, and never failing it: the call matters, not the checkbox.
   await completeOnboarding(d, org.id, "book_call");
   return { recorded: true };
+}
+
+/**
+ * "Watch the tutorial": the tutorial link was clicked from the task. No one can tell a
+ * video was watched, so the click is the step. Twice is the same as once.
+ */
+export async function recordTutorialOpened(d: AccountsDeps, who: Signed, orgId: string) {
+  const org = await customerOrg(d, who, orgId, "account:tasks");
+  await completeOnboarding(d, org.id, "watch_tutorial");
+  return { recorded: true as const };
 }
 
 /** The roles whose holders run an account, straight from the access policies. */

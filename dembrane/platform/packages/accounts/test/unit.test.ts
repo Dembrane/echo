@@ -346,7 +346,7 @@ describe("onboarding task words", () => {
         expect(taskBody({ code, body: null }, language)).toBeTruthy();
       }
     expect(taskTitle({ code: "explore_demo", params: {}, title: null }, "nl-NL")).toBe(
-      "Bekijk je demo",
+      "Bekijk de demo die we voor je hebben gemaakt",
     );
     expect(taskTitle({ code: "book_call", params: {}, title: null }, "en-US")).toBe(
       "Book a call with us",

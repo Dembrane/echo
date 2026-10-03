@@ -201,7 +201,7 @@ msgstr "Factuurgegevens opgeslagen"
 msgid "Billing details updated"
 msgstr "Factuurgegevens bijgewerkt"
 
-#: src/features/accounts/customer/NextSteps.tsx:322
+#: src/features/accounts/customer/NextSteps.tsx:346
 #: src/features/accounts/customer/BookCallButton.tsx:27
 #: src/features/accounts/customer/BookCallButton.tsx:58
 msgid "Book a call"
@@ -216,8 +216,8 @@ msgid "Brief"
 msgstr "Briefing"
 
 #: src/features/accounts/format.ts:149
-msgid "Bring in someone who would run a session with you."
-msgstr "Haal iemand erbij die samen met jou een sessie zou leiden."
+#~ msgid "Bring in someone who would run a session with you."
+#~ msgstr "Haal iemand erbij die samen met jou een sessie zou leiden."
 
 #: src/features/accounts/staff/NewDemoRoute.tsx:263
 msgid "Build the demo"
@@ -259,11 +259,15 @@ msgstr "Geannuleerd"
 msgid "Change"
 msgstr "Wijzigen"
 
+#: src/features/accounts/format.ts:140
+msgid "Check out the demo we made for you"
+msgstr "Bekijk de demo die we voor je hebben gemaakt"
+
 #: src/features/accounts/staff/FieldEditorRoute.tsx:63
 msgid "Checkbox"
 msgstr "Vinkje"
 
-#: src/features/accounts/customer/NextSteps.tsx:403
+#: src/features/accounts/customer/NextSteps.tsx:427
 msgid "Choose a file"
 msgstr "Kies een bestand"
 
@@ -327,6 +331,10 @@ msgstr "Corpus"
 #: src/features/accounts/customer/BillingForm.tsx:117
 msgid "Country"
 msgstr "Land"
+
+#: src/features/accounts/format.ts:150
+msgid "Create a project"
+msgstr "Maak een project"
 
 #: src/features/accounts/staff/TaskModals.tsx:110
 msgid "Create task"
@@ -481,8 +489,8 @@ msgid "Event or customer example"
 msgstr "Voorbeeld van een evenement of klant"
 
 #: src/features/accounts/format.ts:140
-msgid "Explore your demo"
-msgstr "Bekijk je demo"
+#~ msgid "Explore your demo"
+#~ msgstr "Bekijk je demo"
 
 #: src/features/accounts/staff/DemoRoute.tsx:55
 msgid "Extraction"
@@ -504,7 +512,7 @@ msgstr "Velden | dembrane"
 msgid "Fields saved"
 msgstr "Velden opgeslagen"
 
-#: src/features/accounts/customer/NextSteps.tsx:162
+#: src/features/accounts/customer/NextSteps.tsx:164
 msgid "Fill in"
 msgstr "Invullen"
 
@@ -557,12 +565,12 @@ msgid "Initials fields use this signature unless you draw initials."
 msgstr "Paraafvelden gebruiken deze handtekening, tenzij je een paraaf tekent."
 
 #: src/features/accounts/customer/NextSteps.tsx:314
-msgid "Invite"
-msgstr "Uitnodigen"
+#~ msgid "Invite"
+#~ msgstr "Uitnodigen"
 
 #: src/features/accounts/format.ts:150
-msgid "Invite a colleague"
-msgstr "Nodig een collega uit"
+#~ msgid "Invite a colleague"
+#~ msgstr "Nodig een collega uit"
 
 #: src/features/accounts/format.ts:44
 msgid "Invoice"
@@ -670,6 +678,10 @@ msgstr "Nieuwe demo | dembrane"
 msgid "New message"
 msgstr "Nieuw bericht"
 
+#: src/features/accounts/customer/NextSteps.tsx:337
+msgid "New project"
+msgstr "Nieuw project"
+
 #: src/features/accounts/staff/TaskModals.tsx:41
 #: src/features/accounts/staff/AccountCardRoute.tsx:354
 msgid "New task"
@@ -684,7 +696,7 @@ msgstr "Volgende"
 msgid "Next reminder {0}"
 msgstr "Volgende herinnering {0}"
 
-#: src/features/accounts/customer/NextSteps.tsx:74
+#: src/features/accounts/customer/NextSteps.tsx:76
 msgid "Next steps"
 msgstr "Volgende stappen"
 
@@ -716,7 +728,7 @@ msgid "No documents yet."
 msgstr "Nog geen documenten."
 
 #: src/features/accounts/staff/UploadPdfModal.tsx:114
-#: src/features/accounts/customer/NextSteps.tsx:408
+#: src/features/accounts/customer/NextSteps.tsx:432
 msgid "No file chosen"
 msgstr "Geen bestand gekozen"
 
@@ -760,11 +772,11 @@ msgstr "pas live als je publiceert"
 msgid "Not sent"
 msgstr "Niet verstuurd"
 
-#: src/features/accounts/customer/NextSteps.tsx:413
+#: src/features/accounts/customer/NextSteps.tsx:437
 msgid "Note"
 msgstr "Toelichting"
 
-#: src/features/accounts/customer/NextSteps.tsx:77
+#: src/features/accounts/customer/NextSteps.tsx:79
 #: src/features/accounts/customer/AccountPickerRoute.tsx:54
 msgid "Nothing to do right now."
 msgstr "Er is nu niets te doen."
@@ -819,7 +831,7 @@ msgstr "Open taken"
 #~ msgid "Open the account"
 #~ msgstr "Open het account"
 
-#: src/features/accounts/customer/NextSteps.tsx:306
+#: src/features/accounts/customer/NextSteps.tsx:310
 msgid "Open the demo"
 msgstr "Open de demo"
 
@@ -839,16 +851,20 @@ msgstr "Open de pdf"
 msgid "Open the signed PDF"
 msgstr "Open de ondertekende pdf"
 
+#: src/features/accounts/customer/NextSteps.tsx:332
+msgid "Open the tutorial"
+msgstr "Open de tutorial"
+
 #: src/features/accounts/staff/TaskModals.tsx:70
 msgid "Opens after signing"
 msgstr "Opent na ondertekening"
 
-#: src/features/accounts/customer/NextSteps.tsx:247
+#: src/features/accounts/customer/NextSteps.tsx:249
 msgid "Opens after signing."
 msgstr "Opent na ondertekening."
 
 #. placeholder {0}: task.locked_until_title
-#: src/features/accounts/customer/NextSteps.tsx:243
+#: src/features/accounts/customer/NextSteps.tsx:245
 msgid "Opens after you sign {0}."
 msgstr "Opent als je {0} hebt ondertekend."
 
@@ -857,7 +873,7 @@ msgstr "Opent als je {0} hebt ondertekend."
 #: src/features/accounts/staff/PushOfferModal.tsx:137
 #: src/features/accounts/signing/SignRoute.tsx:668
 #: src/features/accounts/signing/SignRoute.tsx:885
-#: src/features/accounts/customer/NextSteps.tsx:414
+#: src/features/accounts/customer/NextSteps.tsx:438
 msgid "Optional"
 msgstr "Optioneel"
 
@@ -1028,8 +1044,8 @@ msgid "ready to publish"
 msgstr "klaar om te publiceren"
 
 #: src/features/accounts/format.ts:145
-msgid "Record a test conversation"
-msgstr "Neem een testgesprek op"
+#~ msgid "Record a test conversation"
+#~ msgstr "Neem een testgesprek op"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:630
 #: src/features/accounts/customer/DocumentsTable.tsx:270
@@ -1050,7 +1066,7 @@ msgstr "Regel verwijderen"
 
 #: src/features/accounts/customer/Questions.tsx:173
 #: src/features/accounts/customer/Questions.tsx:198
-#: src/features/accounts/customer/NextSteps.tsx:168
+#: src/features/accounts/customer/NextSteps.tsx:170
 msgid "Reply"
 msgstr "Antwoorden"
 
@@ -1072,7 +1088,7 @@ msgid "Retry"
 msgstr "Opnieuw proberen"
 
 #: src/features/accounts/signing/SignRoute.tsx:440
-#: src/features/accounts/customer/NextSteps.tsx:141
+#: src/features/accounts/customer/NextSteps.tsx:143
 msgid "Review and sign"
 msgstr "Bekijken en ondertekenen"
 
@@ -1109,6 +1125,10 @@ msgstr "Zoek op naam of e-mail van een lid"
 msgid "Search organisations"
 msgstr "Organisaties zoeken"
 
+#: src/features/accounts/format.ts:144
+msgid "See how dembrane works, from setting up a project to reading what people said."
+msgstr "Zie hoe dembrane werkt, van een project opzetten tot teruglezen wat mensen zeiden."
+
 #: src/features/accounts/format.ts:139
 msgid "See popcorn, tensions and the map on sample conversations written for your organisation."
 msgstr "Bekijk popcorn, spanningen en de kaart bij voorbeeldgesprekken die voor jullie organisatie zijn geschreven."
@@ -1123,7 +1143,7 @@ msgstr "Kies een veld om soort, label en verplicht in te stellen. Sleep om te ve
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:195
 #: src/features/accounts/customer/Questions.tsx:257
-#: src/features/accounts/customer/NextSteps.tsx:427
+#: src/features/accounts/customer/NextSteps.tsx:451
 msgid "Send"
 msgstr "Versturen"
 
@@ -1176,7 +1196,7 @@ msgstr "Wordt direct verstuurd, om te lezen."
 msgid "Sent to {name}"
 msgstr "Verstuurd naar {name}"
 
-#: src/features/accounts/customer/NextSteps.tsx:369
+#: src/features/accounts/customer/NextSteps.tsx:393
 msgid "Sent to dembrane"
 msgstr "Verstuurd naar dembrane"
 
@@ -1187,6 +1207,10 @@ msgstr "Verstuurd naar dembrane"
 #: src/features/accounts/staff/FieldEditorRoute.tsx:210
 msgid "Sent. The customer has a signing task."
 msgstr "Verstuurd. De klant heeft een ondertekentaak."
+
+#: src/features/accounts/format.ts:149
+msgid "Set up a project of your own for your first real session."
+msgstr "Zet een eigen project op voor je eerste echte sessie."
 
 #: src/features/accounts/staff/DemoRoute.tsx:301
 #: src/features/accounts/staff/AccountCardRoute.tsx:762
@@ -1279,12 +1303,12 @@ msgid "Start"
 msgstr "Beginnen"
 
 #: src/features/accounts/customer/NextSteps.tsx:311
-msgid "Start a project"
-msgstr "Start een project"
+#~ msgid "Start a project"
+#~ msgstr "Start een project"
 
 #: src/features/accounts/format.ts:144
-msgid "Start a project of your own and record a few minutes, with a colleague or on your own."
-msgstr "Start een eigen project en neem een paar minuten op, met een collega of alleen."
+#~ msgid "Start a project of your own and record a few minutes, with a colleague or on your own."
+#~ msgstr "Start een eigen project en neem een paar minuten op, met een collega of alleen."
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:265
 #: src/features/accounts/staff/AccountCardRoute.tsx:371
@@ -1491,7 +1515,7 @@ msgid "Unsigned"
 msgstr "Niet ondertekend"
 
 #: src/features/accounts/signing/SignatureCapture.tsx:217
-#: src/features/accounts/customer/NextSteps.tsx:168
+#: src/features/accounts/customer/NextSteps.tsx:170
 msgid "Upload"
 msgstr "Uploaden"
 
@@ -1548,8 +1572,12 @@ msgstr "Wacht op dembrane"
 msgid "Waiting on us"
 msgstr "Wacht op ons"
 
+#: src/features/accounts/format.ts:145
+msgid "Watch the tutorial"
+msgstr "Bekijk de tutorial"
+
 #. placeholder {0}: task.review_note
-#: src/features/accounts/customer/NextSteps.tsx:252
+#: src/features/accounts/customer/NextSteps.tsx:254
 msgid "We asked for a change: {0}"
 msgstr "We vroegen om een wijziging: {0}"
 
@@ -1590,7 +1618,7 @@ msgstr "Wat we vragen"
 msgid "Who we invoice: legal name, address, VAT or KvK number, invoice email and, if you use one, a PO number."
 msgstr "Aan wie we factureren: juridische naam, adres, btw- of KvK-nummer, factuur-e-mail en, als jullie die gebruiken, het PO-nummer."
 
-#: src/features/accounts/customer/NextSteps.tsx:262
+#: src/features/accounts/customer/NextSteps.tsx:264
 msgid "With dembrane"
 msgstr "Bij dembrane"
 
@@ -1617,7 +1645,7 @@ msgstr "Ja, dat mag ik"
 msgid "You"
 msgstr "Jij"
 
-#: src/features/accounts/customer/NextSteps.tsx:413
+#: src/features/accounts/customer/NextSteps.tsx:437
 msgid "Your answer"
 msgstr "Je antwoord"
 

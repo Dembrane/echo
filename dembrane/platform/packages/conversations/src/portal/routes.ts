@@ -73,7 +73,6 @@ export function portalRoutes(d: ConversationsDeps) {
       tagIds: b.tag_id_list ?? [],
       source: b.source,
     });
-    await d.onConversationCreated?.(projectId);
     const live = liveServices(d);
     // The funnel dot this conversation grew out of leaves the monitor's lanes at once.
     await live.presence

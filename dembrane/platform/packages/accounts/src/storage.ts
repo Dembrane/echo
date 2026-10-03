@@ -555,9 +555,26 @@ export const store = {
   },
 
   /**
-   * "Explore your demo" for the demo project `projectId`, settled only when `appUserId` is
-   * a member of that organisation: staff reviewing the draft are not, so their visit does
-   * not count. Runs on every project load, so it is one statement on a small table.
+   * Whether the organisation owning `projectId` has an open "Check out the demo" step for
+   * that project. A read on the account_task org and status index, so a project load in an
+   * organisation without one costs no write.
+   */
+  async demoStepOpen(c: Conn, projectId: string): Promise<boolean> {
+    const rows = await c.execute<{ one: number }>(
+      sql`select 1 as one from account_task t
+        where t.org_id = (select w.org_id from project p join workspace w on w.id = p.workspace_id
+          where p.id = ${projectId})
+          and t.status in ('open', 'changes_requested') and t.code = 'explore_demo'
+          and t.params->>'project_id' = ${projectId}
+        limit 1`,
+    );
+    return rows.length > 0;
+  },
+
+  /**
+   * "Check out the demo" for the demo project `projectId`, settled only when `appUserId`
+   * is a member of that organisation: staff reviewing the draft are not, so their visit
+   * does not count.
    */
   async settleDemoOpened(c: Conn, projectId: string, appUserId: string, now: Date) {
     return c
@@ -576,19 +593,19 @@ export const store = {
   },
 
   /**
-   * "Record a test conversation" in the organisation that owns `projectId`, unless the
-   * project is a synthetic demo (its popcorn session says so): those conversations are ours.
+   * "Create a project" in the organisation that owns `projectId`, unless the project is a
+   * synthetic demo (its popcorn session says so): those projects are ours.
    */
-  async settleFirstConversation(c: Conn, projectId: string, now: Date) {
+  async settleProjectCreated(c: Conn, projectId: string, now: Date) {
     return c
       .update(task)
       .set({ status: "done", nextReminderAt: null, updatedAt: now })
       .where(
         and(
-          eq(task.code, "record_first_conversation"),
+          eq(task.code, "create_project"),
           inArray(task.status, [...OPEN]),
           sql`${task.orgId} = (select w.org_id from project p join workspace w on w.id = p.workspace_id
-            where p.id = ${projectId} and ${NOT_SYNTHETIC})`,
+            where p.id = ${projectId} and p.deleted_at is null and ${NOT_SYNTHETIC})`,
         ),
       )
       .returning({ id: task.id, orgId: task.orgId });
@@ -611,22 +628,14 @@ export const store = {
 
   /** The onboarding codes whose step the organisation already took before the tasks existed. */
   async onboardingAlreadyDone(c: Conn, orgId: string): Promise<string[]> {
-    const [row] = await c.execute<{ conversation: boolean; invite: boolean; booking: boolean }>(
+    const [row] = await c.execute<{ project: boolean; booking: boolean }>(
       sql`select
-        exists (select 1 from conversation k join project p on p.id = k.project_id
-          join workspace w on w.id = p.workspace_id
-          where w.org_id = ${orgId} and k.deleted_at is null and ${NOT_SYNTHETIC}) as conversation,
-        exists (select 1 from org_invite i where i.org_id = ${orgId} and i.accepted_at is not null)
-          or exists (select 1 from workspace_invite i join workspace w on w.id = i.workspace_id
-            where w.org_id = ${orgId} and i.accepted_at is not null) as invite,
+        exists (select 1 from project p join workspace w on w.id = p.workspace_id
+          where w.org_id = ${orgId} and p.deleted_at is null and ${NOT_SYNTHETIC}) as project,
         exists (select 1 from account_event e where e.org_id = ${orgId}
           and e.type = 'booking.recorded') as booking`,
     );
-    return [
-      ...(row?.conversation ? ["record_first_conversation"] : []),
-      ...(row?.invite ? ["invite_colleague"] : []),
-      ...(row?.booking ? ["book_call"] : []),
-    ];
+    return [...(row?.project ? ["create_project"] : []), ...(row?.booking ? ["book_call"] : [])];
   },
 
   /** The organisation's oldest live workspace: where a first project of its own goes. */

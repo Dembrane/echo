@@ -122,8 +122,15 @@ export function buildApp(deps: Deps) {
   // Customer accounts hear when a prospect takes an onboarding step elsewhere in the product.
   const onboarding = onboardingSignals(accounts);
   app.route("/", systemRoutes(deps));
-  app.route("/", accountRoutes({ ...deps, onInviteAccepted: onboarding.inviteAccepted }));
-  app.route("/", projectRoutes({ ...deps, onProjectOpened: onboarding.projectOpened }));
+  app.route("/", accountRoutes(deps));
+  app.route(
+    "/",
+    projectRoutes({
+      ...deps,
+      onProjectOpened: onboarding.projectOpened,
+      onProjectCreated: onboarding.projectCreated,
+    }),
+  );
   app.route(
     "/",
     webhookRoutes({
@@ -190,6 +197,7 @@ export function buildApp(deps: Deps) {
       jobs: queueSink(deps.queue),
       dashboardUrl: deps.config.http.dashboardUrl,
       inviteSecret: deps.config.account.inviteHashSecret,
+      onProjectCreated: onboarding.projectCreated,
     }),
   );
   app.route("/", billingRoutes(deps));
@@ -229,7 +237,6 @@ export function buildApp(deps: Deps) {
       dashboardUrl: deps.config.http.dashboardUrl,
     },
     now: () => new Date(),
-    onConversationCreated: onboarding.conversationCreated,
   };
   app.route("/", conversationRoutes(conversations));
   app.route("/", verifyRoutes(conversations));

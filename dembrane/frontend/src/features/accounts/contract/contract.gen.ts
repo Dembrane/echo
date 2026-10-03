@@ -264,10 +264,10 @@ export const DocumentDetail = DocumentSummary.extend({
  *
  * The four onboarding codes are done by the step itself, never by a reply, and send no
  * reminders: `explore_demo` (params `project_id`, `workspace_id`: the demo project) is
- * done when a member opens it, `record_first_conversation` (`workspace_id` where a first
- * project goes, when there is one) when a conversation starts in a project that is not a
- * synthetic demo, `invite_colleague` when an invite to the organisation or one of its
- * workspaces is accepted, and `book_call` when a call is booked. Sending an offer
+ * done when a member opens it, `watch_tutorial` when the tutorial link is clicked from the
+ * task (no one can tell a video was watched), `create_project` (`workspace_id` where a
+ * first project goes, when there is one) when a project that is not a synthetic demo is
+ * created in the organisation, and `book_call` when a call is booked. Sending an offer
  * withdraws the ones not yet done, so the offer's tasks stand alone.
  */
 export const TaskCode = z.enum([
@@ -275,8 +275,8 @@ export const TaskCode = z.enum([
   "billing_details",
   "sign_dpa",
   "explore_demo",
-  "record_first_conversation",
-  "invite_colleague",
+  "watch_tutorial",
+  "create_project",
   "book_call",
 ]);
 
@@ -438,6 +438,8 @@ export const TicketReplyRequest = z.object({ body: text(8000) });
 
 export const BookingRequest = z.object({ uid: text(255), start: optText(64), status: optText(64) });
 export const BookingResponse = z.object({ recorded: z.literal(true) });
+/** POST tutorial-opened: the tutorial link was clicked from "Watch the tutorial". */
+export const TutorialOpenedResponse = z.object({ recorded: z.literal(true) });
 
 export const SigningRequests = z.array(
   z.object({
@@ -918,6 +920,13 @@ export const ROUTES = {
     permission: "account:support",
     request: BookingRequest,
     response: BookingResponse,
+  },
+  /** Marks "Watch the tutorial" done; the dashboard calls it as the tutorial link opens. */
+  tutorialOpened: {
+    method: "POST",
+    path: `${C}/tutorial-opened`,
+    permission: "account:tasks",
+    response: TutorialOpenedResponse,
   },
   signingRequests: {
     method: "GET",

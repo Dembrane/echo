@@ -4,18 +4,18 @@ import { store } from "./storage";
 import { createTask } from "./tasks";
 
 /**
- * Onboarding for a prospect echo made a demo for: four nudges from the demo to the
- * product, each done by the step itself (opening the demo, a first conversation of their
- * own, a colleague who joins, a booked call), never by a reply. They are no obligation,
- * so they never send a reminder email, and an offer sent withdraws the ones not taken. Only the demo builder and staff (through the
- * onboarding route, which sam calls once the team says yes) add them; a self-serve signup
- * gets none.
+ * Onboarding for someone who signed up: four nudges from the demo to the product, each
+ * done by the step itself (opening the demo, clicking the tutorial link, creating a
+ * project, a booked call), never by a reply. They are no obligation, so they never send a
+ * reminder email, and an offer sent withdraws the ones not taken. Only the demo builder
+ * and staff (through the onboarding route, which sam calls once the team says yes) add
+ * them; a self-serve signup gets none.
  */
 
 export const ONBOARDING_CODES = [
   "explore_demo",
-  "record_first_conversation",
-  "invite_colleague",
+  "watch_tutorial",
+  "create_project",
   "book_call",
 ] as const;
 export type OnboardingCode = (typeof ONBOARDING_CODES)[number];
@@ -23,7 +23,7 @@ export type OnboardingCode = (typeof ONBOARDING_CODES)[number];
 export const isOnboardingCode = (v: unknown): v is OnboardingCode =>
   typeof v === "string" && (ONBOARDING_CODES as readonly string[]).includes(v);
 
-/** The demo the prospect explores: where "Explore your demo" leads. */
+/** The demo the prospect explores: where "Check out the demo we made for you" leads. */
 export interface OnboardingDemo {
   readonly projectId: string;
   readonly workspaceId: string;
@@ -31,7 +31,7 @@ export interface OnboardingDemo {
 
 /**
  * Adds the onboarding tasks the organisation does not have yet, in any status, so a rerun
- * or a second call adds nothing and a withdrawn one stays withdrawn. "Explore your demo"
+ * or a second call adds nothing and a withdrawn one stays withdrawn. "Check out the demo"
  * only with a demo to explore. A step the organisation already took is done at once.
  * Returns the codes it added.
  */
@@ -47,8 +47,8 @@ export async function ensureOnboardingTasks(
     explore_demo: opts.demo
       ? { project_id: opts.demo.projectId, workspace_id: opts.demo.workspaceId }
       : {},
-    record_first_conversation: workspaceId ? { workspace_id: workspaceId } : {},
-    invite_colleague: {},
+    watch_tutorial: {},
+    create_project: workspaceId ? { workspace_id: workspaceId } : {},
     book_call: {},
   };
   const now = d.now().getTime();
@@ -111,8 +111,8 @@ async function settled(
 }
 
 /**
- * Runs a completion so that it can never fail the action that triggered it: a sign-in,
- * a recording or a booking matters more than its checkbox, so a failure is logged and
+ * Runs a completion so that it can never fail the action that triggered it: a page load,
+ * a new project or a booking matters more than its checkbox, so a failure is logged and
  * the step stays open.
  */
 async function quietly(
@@ -149,40 +149,41 @@ export function completeOnboarding(
 
 /**
  * What other parts of the product tell accounts, wired by the API: a project opened in
- * the dashboard, a conversation started, an invite accepted. None of them ever throws.
+ * the dashboard, a project created. None of them ever throws.
  */
 export interface OnboardingSignals {
   projectOpened(projectId: string, appUserId: string | null): Promise<void>;
-  conversationCreated(projectId: string): Promise<void>;
-  inviteAccepted(orgId: string): Promise<void>;
+  projectCreated(projectId: string): Promise<void>;
 }
 
 export function onboardingSignals(d: AccountsDeps): OnboardingSignals {
   return {
+    // Runs on every project load, so a read on the organisation's open tasks comes first
+    // and the write happens only for an organisation whose demo step is still open.
     projectOpened: (projectId, appUserId) =>
       appUserId
-        ? quietly(d, "explore_demo", () =>
-            d.db.transaction(async (tx) =>
+        ? quietly(d, "explore_demo", async () => {
+            if (!(await store.demoStepOpen(d.db, projectId))) return;
+            await d.db.transaction(async (tx) =>
               settled(
                 d,
                 tx,
                 await store.settleDemoOpened(tx, projectId, appUserId, d.now()),
                 "explore_demo",
               ),
-            ),
-          )
+            );
+          })
         : Promise.resolve(),
-    conversationCreated: (projectId) =>
-      quietly(d, "record_first_conversation", () =>
+    projectCreated: (projectId) =>
+      quietly(d, "create_project", () =>
         d.db.transaction(async (tx) =>
           settled(
             d,
             tx,
-            await store.settleFirstConversation(tx, projectId, d.now()),
-            "record_first_conversation",
+            await store.settleProjectCreated(tx, projectId, d.now()),
+            "create_project",
           ),
         ),
       ),
-    inviteAccepted: (orgId) => completeOnboarding(d, orgId, "invite_colleague"),
   };
 }

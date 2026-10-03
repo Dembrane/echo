@@ -41,8 +41,6 @@ run("portal uploads and audio routes", () => {
   // The dashboard side (audio routes) acts as the project's owner: the seeded project has
   // no workspace, so its creator reaches it through the legacy path.
   const owner: Signed = { appUserId: newId(), directusUserId: newId(), isStaff: false };
-  // Projects a started conversation was reported for (customer accounts' onboarding).
-  const started: string[] = [];
 
   beforeAll(async () => {
     const url = await freshDatabase("conv_portal_test");
@@ -74,9 +72,6 @@ run("portal uploads and audio routes", () => {
         dashboardUrl: "http://dashboard.test",
       },
       now: () => new Date(),
-      onConversationCreated: async (projectId) => {
-        started.push(projectId);
-      },
     };
     app = new Hono<Env>();
     app.use(async (c, next) => {
@@ -114,7 +109,6 @@ run("portal uploads and audio routes", () => {
     expect(res.status).toBe(200);
     const token = res.headers.get("x-participant-token") as string;
     const { id } = (await res.json()) as { id: string };
-    expect(started).toEqual([PROJECT]);
     const ok = await app.request(`/api/participant/projects/${PROJECT}/conversations/${id}`, {
       headers: { "x-participant-token": token },
     });

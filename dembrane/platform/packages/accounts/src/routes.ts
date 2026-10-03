@@ -17,6 +17,7 @@ import {
   readBilling,
   readDocument,
   recordBooking,
+  recordTutorialOpened,
   submitTask,
   type TaskFile,
   tasksSummary,
@@ -172,6 +173,9 @@ export function accountsRoutes(d: AccountsDeps) {
     const who = requireUser(c);
     return c.json(await recordBooking(d, who, p(c, "orgId"), await body(c, K.BookingRequest)));
   });
+  app.post(R.tutorialOpened.path, async (c) =>
+    c.json(await recordTutorialOpened(d, requireUser(c), p(c, "orgId"))),
+  );
   app.get(R.signingRequests.path, async (c) => c.json(await mySigningRequests(d, requireUser(c))));
   app.get(R.tasksSummary.path, async (c) => c.json(await tasksSummary(d, requireUser(c))));
 

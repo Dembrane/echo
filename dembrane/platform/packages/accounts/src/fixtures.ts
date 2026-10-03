@@ -696,7 +696,7 @@ const DEMO_WORKSPACE = "0199a1bd-0000-7000-8000-0000000000a2";
 /** An onboarding task: done by the step itself, never a reminder. */
 const onboardingTask = (
   id: string,
-  code: "explore_demo" | "record_first_conversation" | "invite_colleague" | "book_call",
+  code: "explore_demo" | "watch_tutorial" | "create_project" | "book_call",
   params: Record<string, string>,
   status: "open" | "done" = "open",
 ): Out<typeof Task> => ({
@@ -712,7 +712,7 @@ const onboardingTask = (
 
 /** POST /api/v2/admin/accounts/:orgId/onboarding: a prospect who already opened the demo. */
 export const onboardingResponse: Out<typeof OnboardingResponse> = {
-  added: ["explore_demo", "record_first_conversation", "invite_colleague", "book_call"],
+  added: ["explore_demo", "watch_tutorial", "create_project", "book_call"],
   tasks: [
     onboardingTask(
       "0199a1bd-0000-7000-8000-0000000000b1",
@@ -720,10 +720,10 @@ export const onboardingResponse: Out<typeof OnboardingResponse> = {
       { project_id: DEMO_PROJECT, workspace_id: DEMO_WORKSPACE },
       "done",
     ),
-    onboardingTask("0199a1bd-0000-7000-8000-0000000000b2", "record_first_conversation", {
+    onboardingTask("0199a1bd-0000-7000-8000-0000000000b2", "watch_tutorial", {}),
+    onboardingTask("0199a1bd-0000-7000-8000-0000000000b3", "create_project", {
       workspace_id: DEMO_WORKSPACE,
     }),
-    onboardingTask("0199a1bd-0000-7000-8000-0000000000b3", "invite_colleague", {}),
     onboardingTask("0199a1bd-0000-7000-8000-0000000000b4", "book_call", {}),
   ],
 };

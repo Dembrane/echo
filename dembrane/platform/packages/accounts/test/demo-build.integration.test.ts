@@ -280,8 +280,8 @@ run("demos made in echo", () => {
     expect(tasks.map((t) => `${t.code}:${t.status}`)).toEqual([
       "billing_details:locked",
       "explore_demo:open",
-      "record_first_conversation:open",
-      "invite_colleague:open",
+      "watch_tutorial:open",
+      "create_project:open",
       "book_call:open",
     ]);
     expect(tasks.find((t) => t.code === "explore_demo")?.params).toEqual({
@@ -308,13 +308,13 @@ run("demos made in echo", () => {
     const view = K.DemoStatus.parse(
       (await call(w, "GET", `/api/v2/admin/accounts/demos/${status.id}`, "staff")).data,
     );
-    // The demo's own invented conversations are not the prospect's first recording.
+    // The demo's own synthetic projects are not the prospect's first project.
     expect(
       (await store.tasks(w.db, view.org_id as string)).map((t) => `${t.code}:${t.status}`),
     ).toEqual([
       "explore_demo:open",
-      "record_first_conversation:open",
-      "invite_colleague:open",
+      "watch_tutorial:open",
+      "create_project:open",
       "book_call:open",
     ]);
   });

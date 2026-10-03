@@ -21,9 +21,15 @@ export interface ProjectRoutesDeps {
   readonly now?: () => Date;
   /**
    * Called when a signed-in person loads a project in the dashboard, after the access
-   * check: customer accounts mark "Explore your demo" done. It must never throw.
+   * check: customer accounts mark "Check out the demo" done. Not awaited, so it never
+   * slows the page; it must never throw.
    */
   readonly onProjectOpened?: (projectId: string, appUserId: string | null) => Promise<void>;
+  /**
+   * Called once a clone has committed: customer accounts mark "Create a project" done. It
+   * must never throw; the project exists.
+   */
+  readonly onProjectCreated?: (projectId: string) => Promise<void>;
 }
 
 const { model, nested, optional, required, nullable, str, int, bool, literal, list, dict, any } = p;
@@ -192,7 +198,9 @@ export function projectRoutes(deps: ProjectRoutesDeps) {
         language: optional(nullable(str()), null),
       }),
     });
-    return c.json(await projects.cloneProject(d, who, c.req.param("project_id"), body.data));
+    const id = await projects.cloneProject(d, who, c.req.param("project_id"), body.data);
+    await deps.onProjectCreated?.(id);
+    return c.json(id);
   });
 
   // ── v2 /api/v2/projects ───────────────────────────────────────────
@@ -229,7 +237,7 @@ export function projectRoutes(deps: ProjectRoutesDeps) {
       includeLegal: query.include_legal,
       fields: query.fields,
     });
-    await deps.onProjectOpened?.(c.req.param("project_id"), who.appUserId);
+    void deps.onProjectOpened?.(c.req.param("project_id"), who.appUserId);
     return c.json(out);
   });
 

@@ -5,17 +5,23 @@ import { schema } from "@dembrane/db";
 import { createLogger } from "@dembrane/observability";
 import { and, eq } from "drizzle-orm";
 import * as K from "../src/contract";
-import { recordBooking } from "../src/customer";
+import { recordBooking, recordTutorialOpened } from "../src/customer";
 import type { AccountsDeps } from "../src/deps";
 import * as F from "../src/fixtures";
-import { isOnboardingCode, type OnboardingSignals, onboardingSignals } from "../src/onboarding";
+import {
+  completeOnboarding,
+  isOnboardingCode,
+  type OnboardingSignals,
+  onboardingSignals,
+} from "../src/onboarding";
 import { accountsRoutes } from "../src/routes";
 import { store } from "../src/storage";
 import { admin, call, dropDatabase, type World, world } from "./helpers";
 
 // The prospect's onboarding tasks: who adds them (the demo builder and staff, never a
-// signup on its own), each step that completes one, that a step completes once, and that
-// a completion that fails never fails the step itself.
+// signup on its own), each step that completes one, that a step completes once, that a
+// project load writes only for an open demo step, and that a completion that fails never
+// fails the step itself.
 const run = admin ? describe : describe.skip;
 const DB = `accounts_onboarding_${process.pid}`;
 
@@ -25,6 +31,8 @@ run("onboarding tasks", () => {
   let signals: OnboardingSignals;
   let workspaceId: string;
   let demoProject: string;
+  /** Another synthetic project in the same workspace: opening it is not opening the demo. */
+  let otherProject: string;
   let ownProject: string;
   const path = (orgId: string) => `/api/v2/admin/accounts/${orgId}/onboarding`;
 
@@ -80,7 +88,7 @@ run("onboarding tasks", () => {
     signals = onboardingSignals(w.deps);
     workspaceId = await workspaceIn(w.orgId);
     demoProject = await projectIn(workspaceId, true);
-    ownProject = await projectIn(workspaceId, false);
+    otherProject = await projectIn(workspaceId, true);
     // The demo echo built for this organisation, as its seed step records it.
     await w.db.insert(schema.account_demo).values({
       id: newId(),
@@ -119,21 +127,18 @@ run("onboarding tasks", () => {
     expect((await call(w, "POST", path(w.orgId), "admin")).status).toBe(403);
     expect((await call(w, "POST", path(newId()), "staff")).status).toBe(404);
     const first = K.OnboardingResponse.parse((await call(w, "POST", path(w.orgId), "staff")).data);
-    expect(first.added).toEqual([
-      "explore_demo",
-      "record_first_conversation",
-      "invite_colleague",
-      "book_call",
-    ]);
+    expect(first.added).toEqual(["explore_demo", "watch_tutorial", "create_project", "book_call"]);
     expect(first.tasks.map((t) => [t.code, t.status, t.kind, t.title])).toEqual([
       ["explore_demo", "open", "generic", null],
-      ["record_first_conversation", "open", "generic", null],
-      ["invite_colleague", "open", "generic", null],
+      ["watch_tutorial", "open", "generic", null],
+      ["create_project", "open", "generic", null],
       ["book_call", "open", "generic", null],
     ]);
     expect(first.tasks.every((t) => t.next_reminder_at === null)).toBe(true);
     expect(first.tasks[0]?.params).toEqual({ project_id: demoProject, workspace_id: workspaceId });
-    expect(first.tasks[1]?.params).toEqual({ workspace_id: workspaceId });
+    expect(first.tasks[1]?.params).toEqual({});
+    // The demo's own synthetic projects are not a project of their own.
+    expect(first.tasks[2]?.params).toEqual({ workspace_id: workspaceId });
     // Twice adds nothing new.
     const second = K.OnboardingResponse.parse((await call(w, "POST", path(w.orgId), "staff")).data);
     expect(second.added).toEqual([]);
@@ -175,34 +180,42 @@ run("onboarding tasks", () => {
 
   test("explore_demo: a member opening the demo project; staff reviewing it does not count", async () => {
     await signals.projectOpened(demoProject, w.people.staff.appUserId);
-    await signals.projectOpened(ownProject, w.people.member.appUserId);
+    await signals.projectOpened(otherProject, w.people.member.appUserId);
     await signals.projectOpened(demoProject, null);
     expect((await statuses(w.orgId)).explore_demo).toBe("open");
+    // A project load reads first and writes only where the demo step is open for it.
+    expect(await store.demoStepOpen(w.db, demoProject)).toBe(true);
+    expect(await store.demoStepOpen(w.db, otherProject)).toBe(false);
+    expect(await store.demoStepOpen(w.db, newId())).toBe(false);
     await signals.projectOpened(demoProject, w.people.member.appUserId);
     await signals.projectOpened(demoProject, w.people.admin.appUserId);
     expect((await statuses(w.orgId)).explore_demo).toBe("done");
+    expect(await store.demoStepOpen(w.db, demoProject)).toBe(false);
     // Done once: one timeline line however often the project is opened.
     expect((await doneEvents(w.orgId)).map((e) => e.detail)).toEqual([{ code: "explore_demo" }]);
   });
 
-  test("record_first_conversation: not on the synthetic demo, then on a project of their own", async () => {
-    await w.db.insert(schema.conversation).values({ id: newId(), project_id: demoProject });
-    await signals.conversationCreated(demoProject);
-    expect((await statuses(w.orgId)).record_first_conversation).toBe("open");
-    await w.db.insert(schema.conversation).values({ id: newId(), project_id: ownProject });
-    await signals.conversationCreated(ownProject);
-    await signals.conversationCreated(ownProject);
-    expect((await statuses(w.orgId)).record_first_conversation).toBe("done");
-    // Another organisation's conversation settles nothing here, and nothing there.
-    expect((await statuses(w.otherOrgId)).record_first_conversation).toBeUndefined();
+  test("watch_tutorial: the tutorial link clicked from the task, by someone who runs the account", async () => {
+    const route = `/api/v2/orgs/${w.orgId}/account/tutorial-opened`;
+    expect((await call(w, "POST", route, "outsider")).status).toBe(404);
+    expect((await statuses(w.orgId)).watch_tutorial).toBe("open");
+    const r = await call(w, "POST", route, "admin");
+    expect([r.status, r.data]).toEqual([200, { recorded: true }]);
+    expect(K.TutorialOpenedResponse.parse(r.data)).toEqual({ recorded: true });
+    // Twice is the same as once.
+    expect((await call(w, "POST", route, "admin")).status).toBe(200);
+    expect((await statuses(w.orgId)).watch_tutorial).toBe("done");
   });
 
-  test("invite_colleague: an accepted invite to the organisation or a workspace", async () => {
-    await signals.inviteAccepted(w.otherOrgId);
-    expect((await statuses(w.orgId)).invite_colleague).toBe("open");
-    await signals.inviteAccepted(w.orgId);
-    await signals.inviteAccepted(w.orgId);
-    expect((await statuses(w.orgId)).invite_colleague).toBe("done");
+  test("create_project: not a synthetic demo project, then a project of their own", async () => {
+    await signals.projectCreated(otherProject);
+    expect((await statuses(w.orgId)).create_project).toBe("open");
+    ownProject = await projectIn(workspaceId, false);
+    await signals.projectCreated(ownProject);
+    await signals.projectCreated(ownProject);
+    expect((await statuses(w.orgId)).create_project).toBe("done");
+    // Another organisation's project settles nothing here, and nothing there.
+    expect((await statuses(w.otherOrgId)).create_project).toBeUndefined();
   });
 
   test("book_call: a booking recorded through the account's booking route", async () => {
@@ -214,8 +227,8 @@ run("onboarding tasks", () => {
     expect(r.status).toBe(200);
     expect(await statuses(w.orgId)).toEqual({
       explore_demo: "done",
-      record_first_conversation: "done",
-      invite_colleague: "done",
+      watch_tutorial: "done",
+      create_project: "done",
       book_call: "done",
     });
     // Everything done: nothing waits, so the Tasks entry and the popup have nothing to show.
@@ -231,22 +244,13 @@ run("onboarding tasks", () => {
       .insert(schema.org)
       .values({ id: orgId, name: "Al Begonnen", account_stage: "prospect" });
     const ws = await workspaceIn(orgId);
-    await w.db
-      .insert(schema.conversation)
-      .values({ id: newId(), project_id: await projectIn(ws, false) });
-    await w.db.insert(schema.org_invite).values({
-      id: newId(),
-      org_id: orgId,
-      email: "collega@example.test",
-      expires_at: "2027-01-01T00:00:00Z",
-      accepted_at: "2026-09-27T09:00:00Z",
-    });
+    await projectIn(ws, false);
     const out = K.OnboardingResponse.parse((await call(w, "POST", path(orgId), "staff")).data);
     // No demo of theirs: nothing to explore.
-    expect(out.added).toEqual(["record_first_conversation", "invite_colleague", "book_call"]);
+    expect(out.added).toEqual(["watch_tutorial", "create_project", "book_call"]);
     expect(await statuses(orgId)).toEqual({
-      record_first_conversation: "done",
-      invite_colleague: "done",
+      watch_tutorial: "open",
+      create_project: "done",
       book_call: "open",
     });
   });
@@ -257,7 +261,7 @@ run("onboarding tasks", () => {
       .insert(schema.org)
       .values({ id: orgId, name: "Offerte BV", account_stage: "prospect" });
     await call(w, "POST", path(orgId), "staff");
-    await signals.inviteAccepted(orgId);
+    await completeOnboarding(w.deps, orgId, "watch_tutorial");
     const sent = await call(w, "POST", `/api/v2/admin/accounts/${orgId}/offers`, "staff", {
       ...F.pushOfferRequest,
       reference: null,
@@ -265,8 +269,8 @@ run("onboarding tasks", () => {
     });
     expect(sent.status).toBe(201);
     expect(await statuses(orgId)).toEqual({
-      record_first_conversation: "withdrawn",
-      invite_colleague: "done",
+      watch_tutorial: "done",
+      create_project: "withdrawn",
       book_call: "withdrawn",
     });
     // What the prospect has left to do: the offer's tasks only.
@@ -277,9 +281,7 @@ run("onboarding tasks", () => {
     const events = (await store.events(w.db, orgId, 200)).filter(
       (e) => e.type === "onboarding.withdrawn",
     );
-    expect(events.map((e) => e.detail)).toEqual([
-      { codes: ["record_first_conversation", "book_call"] },
-    ]);
+    expect(events.map((e) => e.detail)).toEqual([{ codes: ["create_project", "book_call"] }]);
   });
 
   test("a completion that fails is logged and never fails the step that triggered it", async () => {
@@ -335,13 +337,17 @@ run("onboarding tasks", () => {
       );
     expect(booked).toHaveLength(1);
     expect((await statuses(orgId)).book_call).toBe("open");
+    // The tutorial link answers as recorded and the step stays open.
+    expect(await recordTutorialOpened(broken, w.people.billing, orgId)).toEqual({
+      recorded: true,
+    });
+    expect((await statuses(orgId)).watch_tutorial).toBe("open");
     // The signals the rest of the product calls resolve the same way.
     const failing = onboardingSignals(broken);
-    await expect(failing.inviteAccepted(orgId)).resolves.toBeUndefined();
-    await expect(failing.conversationCreated(ownProject)).resolves.toBeUndefined();
+    await expect(failing.projectCreated(ownProject)).resolves.toBeUndefined();
     await expect(
       failing.projectOpened(demoProject, w.people.admin.appUserId),
     ).resolves.toBeUndefined();
-    expect(lines.filter((l) => l.includes("accounts.onboarding_complete_failed")).length).toBe(4);
+    expect(lines.filter((l) => l.includes("accounts.onboarding_complete_failed")).length).toBe(3);
   });
 });

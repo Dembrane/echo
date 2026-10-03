@@ -5,17 +5,12 @@ import {
 	Folders,
 	GearIcon,
 	GraduationCapIcon,
-	ListChecksIcon,
 	UsersIcon,
 } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useParams } from "react-router";
 import { API_BASE_URL } from "@/config";
-import {
-	hasAccount,
-	useTasksSummary,
-} from "@/features/accounts/help/tasksSummary";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { isOutsiderRole } from "@/lib/roles";
@@ -102,13 +97,6 @@ export const OrgHomeView = () => {
 	// managers that is the full org list, for everyone else their direct rows.
 	const showWorkspaces = displayList.length > 0;
 
-	// "Account" shows only for orgs in the tasks summary: the backend lists an org there
-	// when it has account content and the caller is an owner, admin or billing member.
-	// The same cached request feeds the Help menu's "Tasks" entry.
-	const { data: tasksSummary } = useTasksSummary();
-	const seesAccount = orgId ? hasAccount(tasksSummary, orgId) : false;
-	const accountRow = tasksSummary?.find((o) => o.org_id === orgId);
-
 	if (!orgId) return null;
 	const base = `/o/${orgId}`;
 
@@ -136,20 +124,6 @@ export const OrgHomeView = () => {
 						label={<Trans>Training</Trans>}
 						icon={GraduationCapIcon}
 					/>
-					{seesAccount && (
-						<NavItem
-							to={`${base}/account`}
-							label={<Trans>Tasks</Trans>}
-							icon={ListChecksIcon}
-							// The count shows while something waits on the caller, as in Help.
-							badge={
-								accountRow && accountRow.tasks_waiting > 0
-									? `${accountRow.tasks_done}/${accountRow.tasks_total}`
-									: undefined
-							}
-							badgeTone="muted"
-						/>
-					)}
 					{/* Settings is the last clickable item under the org title,
 						    directly below Overview and above the Workspaces section. */}
 					<NavItem

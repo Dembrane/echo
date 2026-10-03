@@ -29,11 +29,6 @@ export interface AccountDeps {
   /** Avatars and whitelabel logos. */
   readonly files: ObjectStorage;
   readonly logger?: Logger;
-  /**
-   * Called once an invite is accepted, with the organisation joined: customer accounts
-   * mark "Invite a colleague" done. It must never throw; the accept has committed.
-   */
-  readonly onInviteAccepted?: (orgId: string) => Promise<void>;
   readonly settings: {
     /** HMAC key of invite links; equals Directus's SECRET until cutover. */
     readonly inviteHashSecret: string;

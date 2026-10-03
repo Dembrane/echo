@@ -178,7 +178,9 @@ describe("the popup after sign-in", () => {
 		expect(
 			await screen.findByText("You have 4 things to do in Gemeente Testdorp"),
 		).toBeTruthy();
-		expect(screen.getByText("Next: Explore your demo")).toBeTruthy();
+		expect(
+			screen.getByText("Next: Check out the demo we made for you"),
+		).toBeTruthy();
 		expect(held()).toBe("true");
 		fireEvent.click(screen.getByRole("button", { name: "Later" }));
 		await waitFor(() => expect(held()).toBe("false"));

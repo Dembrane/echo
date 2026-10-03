@@ -16,9 +16,11 @@ import {
 import { CheckIcon, LockSimpleIcon } from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useEffect, useState } from "react";
+import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
+import { getDocumentationUrl } from "@/config";
 import { call, submitTaskWithFile } from "../api/client";
 import { accountKeys } from "../api/hooks";
 import type { TaskT } from "../contract/contract.gen";
@@ -30,8 +32,8 @@ const ACTIVE: TaskT["status"][] = ["open", "changes_requested"];
 /** Steps done by taking them, never by a reply: their button leads to the step. */
 const ONBOARDING: NonNullable<TaskT["code"]>[] = [
 	"explore_demo",
-	"record_first_conversation",
-	"invite_colleague",
+	"watch_tutorial",
+	"create_project",
 	"book_call",
 ];
 
@@ -272,9 +274,9 @@ function Step({
 }
 
 /**
- * Where an onboarding step is taken: the demo project, a new project in their workspace,
- * the organisation's members, the booking dialog. Without the place (no workspace yet),
- * the step shows its words and no button.
+ * Where an onboarding step is taken: the demo project, the tutorial, a new project in
+ * their workspace, the booking dialog. Without the place (no workspace yet), the step
+ * shows its words and no button.
  */
 function OnboardingAction({
 	task,
@@ -287,6 +289,8 @@ function OnboardingAction({
 	variant: "filled" | "light";
 	onBookCall: () => void;
 }) {
+	const { language } = useParams<{ language?: string }>();
+	const queryClient = useQueryClient();
 	const workspace = task.params?.workspace_id;
 	const link = (to: string, label: ReactNode) => (
 		<Button
@@ -306,12 +310,32 @@ function OnboardingAction({
 						<Trans>Open the demo</Trans>,
 					)
 				: null;
-		case "record_first_conversation":
+		case "watch_tutorial":
+			// No one can tell a video was watched, so opening the tutorial from here is the
+			// step. The documentation stands in until the tutorial video exists.
+			return (
+				<Button
+					variant={variant}
+					component="a"
+					href={getDocumentationUrl(language)}
+					target="_blank"
+					rel="noopener noreferrer"
+					onClick={() => {
+						void call("tutorialOpened", { params: { orgId } })
+							.then(() =>
+								queryClient.invalidateQueries({ queryKey: accountKeys.all }),
+							)
+							.catch(() => {});
+					}}
+					data-testid="action-watch_tutorial"
+				>
+					<Trans>Open the tutorial</Trans>
+				</Button>
+			);
+		case "create_project":
 			return workspace
-				? link(`/w/${workspace}/projects/new`, <Trans>Start a project</Trans>)
+				? link(`/w/${workspace}/projects/new`, <Trans>New project</Trans>)
 				: null;
-		case "invite_colleague":
-			return link(`/o/${orgId}/members`, <Trans>Invite</Trans>);
 		case "book_call":
 			return (
 				<Button

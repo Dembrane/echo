@@ -12,8 +12,8 @@ export const TASK_CODES = [
   "billing_details",
   "sign_dpa",
   "explore_demo",
-  "record_first_conversation",
-  "invite_colleague",
+  "watch_tutorial",
+  "create_project",
   "book_call",
 ] as const;
 export type TaskCode = (typeof TASK_CODES)[number];

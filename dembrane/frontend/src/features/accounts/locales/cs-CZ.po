@@ -201,7 +201,7 @@ msgstr "Fakturační údaje uloženy"
 msgid "Billing details updated"
 msgstr "Fakturační údaje aktualizovány"
 
-#: src/features/accounts/customer/NextSteps.tsx:322
+#: src/features/accounts/customer/NextSteps.tsx:346
 #: src/features/accounts/customer/BookCallButton.tsx:27
 #: src/features/accounts/customer/BookCallButton.tsx:58
 msgid "Book a call"
@@ -216,8 +216,8 @@ msgid "Brief"
 msgstr "Zadání"
 
 #: src/features/accounts/format.ts:149
-msgid "Bring in someone who would run a session with you."
-msgstr "Přizvěte někoho, kdo by s vámi vedl setkání."
+#~ msgid "Bring in someone who would run a session with you."
+#~ msgstr "Přizvěte někoho, kdo by s vámi vedl setkání."
 
 #: src/features/accounts/staff/NewDemoRoute.tsx:263
 msgid "Build the demo"
@@ -259,11 +259,15 @@ msgstr "Zrušeno"
 msgid "Change"
 msgstr "Změnit"
 
+#: src/features/accounts/format.ts:140
+msgid "Check out the demo we made for you"
+msgstr "Prohlédněte si ukázku, kterou jsme pro vás připravili"
+
 #: src/features/accounts/staff/FieldEditorRoute.tsx:63
 msgid "Checkbox"
 msgstr "Zaškrtávací políčko"
 
-#: src/features/accounts/customer/NextSteps.tsx:403
+#: src/features/accounts/customer/NextSteps.tsx:427
 msgid "Choose a file"
 msgstr "Vybrat soubor"
 
@@ -327,6 +331,10 @@ msgstr "Korpus"
 #: src/features/accounts/customer/BillingForm.tsx:117
 msgid "Country"
 msgstr "Země"
+
+#: src/features/accounts/format.ts:150
+msgid "Create a project"
+msgstr "Vytvořte projekt"
 
 #: src/features/accounts/staff/TaskModals.tsx:110
 msgid "Create task"
@@ -481,8 +489,8 @@ msgid "Event or customer example"
 msgstr "Příklad události nebo zákazníka"
 
 #: src/features/accounts/format.ts:140
-msgid "Explore your demo"
-msgstr "Prohlédněte si svou ukázku"
+#~ msgid "Explore your demo"
+#~ msgstr "Prohlédněte si svou ukázku"
 
 #: src/features/accounts/staff/DemoRoute.tsx:55
 msgid "Extraction"
@@ -504,7 +512,7 @@ msgstr "Pole | dembrane"
 msgid "Fields saved"
 msgstr "Pole uložena"
 
-#: src/features/accounts/customer/NextSteps.tsx:162
+#: src/features/accounts/customer/NextSteps.tsx:164
 msgid "Fill in"
 msgstr "Vyplnit"
 
@@ -557,12 +565,12 @@ msgid "Initials fields use this signature unless you draw initials."
 msgstr "Pole pro iniciály použijí tento podpis, pokud nenakreslíte iniciály."
 
 #: src/features/accounts/customer/NextSteps.tsx:314
-msgid "Invite"
-msgstr "Pozvat"
+#~ msgid "Invite"
+#~ msgstr "Pozvat"
 
 #: src/features/accounts/format.ts:150
-msgid "Invite a colleague"
-msgstr "Pozvěte kolegu"
+#~ msgid "Invite a colleague"
+#~ msgstr "Pozvěte kolegu"
 
 #: src/features/accounts/format.ts:44
 msgid "Invoice"
@@ -670,6 +678,10 @@ msgstr "Nové demo | dembrane"
 msgid "New message"
 msgstr "Nová zpráva"
 
+#: src/features/accounts/customer/NextSteps.tsx:337
+msgid "New project"
+msgstr "Nový projekt"
+
 #: src/features/accounts/staff/TaskModals.tsx:41
 #: src/features/accounts/staff/AccountCardRoute.tsx:354
 msgid "New task"
@@ -684,7 +696,7 @@ msgstr "Další"
 msgid "Next reminder {0}"
 msgstr "Další připomenutí: {0}"
 
-#: src/features/accounts/customer/NextSteps.tsx:74
+#: src/features/accounts/customer/NextSteps.tsx:76
 msgid "Next steps"
 msgstr "Další kroky"
 
@@ -716,7 +728,7 @@ msgid "No documents yet."
 msgstr "Zatím žádné dokumenty."
 
 #: src/features/accounts/staff/UploadPdfModal.tsx:114
-#: src/features/accounts/customer/NextSteps.tsx:408
+#: src/features/accounts/customer/NextSteps.tsx:432
 msgid "No file chosen"
 msgstr "Není vybrán žádný soubor"
 
@@ -760,11 +772,11 @@ msgstr "není aktivní, dokud nezveřejníte"
 msgid "Not sent"
 msgstr "Neodesláno"
 
-#: src/features/accounts/customer/NextSteps.tsx:413
+#: src/features/accounts/customer/NextSteps.tsx:437
 msgid "Note"
 msgstr "Poznámka"
 
-#: src/features/accounts/customer/NextSteps.tsx:77
+#: src/features/accounts/customer/NextSteps.tsx:79
 #: src/features/accounts/customer/AccountPickerRoute.tsx:54
 msgid "Nothing to do right now."
 msgstr "V tuto chvíli není co dělat."
@@ -819,7 +831,7 @@ msgstr "Otevřené úkoly"
 #~ msgid "Open the account"
 #~ msgstr ""
 
-#: src/features/accounts/customer/NextSteps.tsx:306
+#: src/features/accounts/customer/NextSteps.tsx:310
 msgid "Open the demo"
 msgstr "Otevřít ukázku"
 
@@ -839,16 +851,20 @@ msgstr "Otevřít PDF"
 msgid "Open the signed PDF"
 msgstr "Otevřít podepsané PDF"
 
+#: src/features/accounts/customer/NextSteps.tsx:332
+msgid "Open the tutorial"
+msgstr "Otevřít návod"
+
 #: src/features/accounts/staff/TaskModals.tsx:70
 msgid "Opens after signing"
 msgstr "Otevře se po podpisu"
 
-#: src/features/accounts/customer/NextSteps.tsx:247
+#: src/features/accounts/customer/NextSteps.tsx:249
 msgid "Opens after signing."
 msgstr "Otevře se po podpisu."
 
 #. placeholder {0}: task.locked_until_title
-#: src/features/accounts/customer/NextSteps.tsx:243
+#: src/features/accounts/customer/NextSteps.tsx:245
 msgid "Opens after you sign {0}."
 msgstr "Otevře se po podepsání {0}."
 
@@ -857,7 +873,7 @@ msgstr "Otevře se po podepsání {0}."
 #: src/features/accounts/staff/PushOfferModal.tsx:137
 #: src/features/accounts/signing/SignRoute.tsx:668
 #: src/features/accounts/signing/SignRoute.tsx:885
-#: src/features/accounts/customer/NextSteps.tsx:414
+#: src/features/accounts/customer/NextSteps.tsx:438
 msgid "Optional"
 msgstr "Nepovinné"
 
@@ -1028,8 +1044,8 @@ msgid "ready to publish"
 msgstr "připraveno ke zveřejnění"
 
 #: src/features/accounts/format.ts:145
-msgid "Record a test conversation"
-msgstr "Nahrajte zkušební rozhovor"
+#~ msgid "Record a test conversation"
+#~ msgstr "Nahrajte zkušební rozhovor"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:630
 #: src/features/accounts/customer/DocumentsTable.tsx:270
@@ -1050,7 +1066,7 @@ msgstr "Odebrat položku"
 
 #: src/features/accounts/customer/Questions.tsx:173
 #: src/features/accounts/customer/Questions.tsx:198
-#: src/features/accounts/customer/NextSteps.tsx:168
+#: src/features/accounts/customer/NextSteps.tsx:170
 msgid "Reply"
 msgstr "Odpovědět"
 
@@ -1072,7 +1088,7 @@ msgid "Retry"
 msgstr "Zkusit znovu"
 
 #: src/features/accounts/signing/SignRoute.tsx:440
-#: src/features/accounts/customer/NextSteps.tsx:141
+#: src/features/accounts/customer/NextSteps.tsx:143
 msgid "Review and sign"
 msgstr "Zkontrolovat a podepsat"
 
@@ -1109,6 +1125,10 @@ msgstr "Hledat podle jména nebo e-mailu člena"
 msgid "Search organisations"
 msgstr "Hledat organizace"
 
+#: src/features/accounts/format.ts:144
+msgid "See how dembrane works, from setting up a project to reading what people said."
+msgstr "Podívejte se, jak dembrane funguje, od založení projektu po čtení toho, co lidé řekli."
+
 #: src/features/accounts/format.ts:139
 msgid "See popcorn, tensions and the map on sample conversations written for your organisation."
 msgstr "Podívejte se na popcorn, napětí a mapu u ukázkových rozhovorů připravených pro vaši organizaci."
@@ -1123,7 +1143,7 @@ msgstr "Vyberte pole a nastavte jeho typ, popisek a zda je povinné. Přetažen�
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:195
 #: src/features/accounts/customer/Questions.tsx:257
-#: src/features/accounts/customer/NextSteps.tsx:427
+#: src/features/accounts/customer/NextSteps.tsx:451
 msgid "Send"
 msgstr "Odeslat"
 
@@ -1176,7 +1196,7 @@ msgstr "Odesláno ihned, k přečtení."
 msgid "Sent to {name}"
 msgstr "Odesláno uživateli {name}"
 
-#: src/features/accounts/customer/NextSteps.tsx:369
+#: src/features/accounts/customer/NextSteps.tsx:393
 msgid "Sent to dembrane"
 msgstr "Odesláno týmu dembrane"
 
@@ -1187,6 +1207,10 @@ msgstr "Odesláno týmu dembrane"
 #: src/features/accounts/staff/FieldEditorRoute.tsx:210
 msgid "Sent. The customer has a signing task."
 msgstr "Odesláno. Zákazník má úkol k podpisu."
+
+#: src/features/accounts/format.ts:149
+msgid "Set up a project of your own for your first real session."
+msgstr "Založte si vlastní projekt pro své první skutečné setkání."
 
 #: src/features/accounts/staff/DemoRoute.tsx:301
 #: src/features/accounts/staff/AccountCardRoute.tsx:762
@@ -1279,12 +1303,12 @@ msgid "Start"
 msgstr "Začít"
 
 #: src/features/accounts/customer/NextSteps.tsx:311
-msgid "Start a project"
-msgstr "Založit projekt"
+#~ msgid "Start a project"
+#~ msgstr "Založit projekt"
 
 #: src/features/accounts/format.ts:144
-msgid "Start a project of your own and record a few minutes, with a colleague or on your own."
-msgstr "Založte si vlastní projekt a nahrajte pár minut, s kolegou nebo sami."
+#~ msgid "Start a project of your own and record a few minutes, with a colleague or on your own."
+#~ msgstr "Založte si vlastní projekt a nahrajte pár minut, s kolegou nebo sami."
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:265
 #: src/features/accounts/staff/AccountCardRoute.tsx:371
@@ -1491,7 +1515,7 @@ msgid "Unsigned"
 msgstr "Nepodepsáno"
 
 #: src/features/accounts/signing/SignatureCapture.tsx:217
-#: src/features/accounts/customer/NextSteps.tsx:168
+#: src/features/accounts/customer/NextSteps.tsx:170
 msgid "Upload"
 msgstr "Nahrát"
 
@@ -1548,8 +1572,12 @@ msgstr "Čeká se na dembrane"
 msgid "Waiting on us"
 msgstr "Čeká se na nás"
 
+#: src/features/accounts/format.ts:145
+msgid "Watch the tutorial"
+msgstr "Podívejte se na návod"
+
 #. placeholder {0}: task.review_note
-#: src/features/accounts/customer/NextSteps.tsx:252
+#: src/features/accounts/customer/NextSteps.tsx:254
 msgid "We asked for a change: {0}"
 msgstr "Požádali jsme o změnu: {0}"
 
@@ -1590,7 +1618,7 @@ msgstr "Náš požadavek"
 msgid "Who we invoice: legal name, address, VAT or KvK number, invoice email and, if you use one, a PO number."
 msgstr "Fakturační údaje: obchodní název, adresa, DIČ (VAT) nebo číslo KvK, fakturační e-mail a případně číslo objednávky (PO)."
 
-#: src/features/accounts/customer/NextSteps.tsx:262
+#: src/features/accounts/customer/NextSteps.tsx:264
 msgid "With dembrane"
 msgstr "S dembrane"
 
@@ -1617,7 +1645,7 @@ msgstr "Ano, mám oprávnění"
 msgid "You"
 msgstr "Vy"
 
-#: src/features/accounts/customer/NextSteps.tsx:413
+#: src/features/accounts/customer/NextSteps.tsx:437
 msgid "Your answer"
 msgstr "Vaše odpověď"
 

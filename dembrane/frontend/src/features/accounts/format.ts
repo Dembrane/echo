@@ -137,17 +137,17 @@ export const codedTaskText = (
 		case "explore_demo":
 			return {
 				body: t`See popcorn, tensions and the map on sample conversations written for your organisation.`,
-				title: t`Explore your demo`,
+				title: t`Check out the demo we made for you`,
 			};
-		case "record_first_conversation":
+		case "watch_tutorial":
 			return {
-				body: t`Start a project of your own and record a few minutes, with a colleague or on your own.`,
-				title: t`Record a test conversation`,
+				body: t`See how dembrane works, from setting up a project to reading what people said.`,
+				title: t`Watch the tutorial`,
 			};
-		case "invite_colleague":
+		case "create_project":
 			return {
-				body: t`Bring in someone who would run a session with you.`,
-				title: t`Invite a colleague`,
+				body: t`Set up a project of your own for your first real session.`,
+				title: t`Create a project`,
 			};
 		case "book_call":
 			return {

@@ -5394,7 +5394,7 @@ msgstr "Proroga di 24 ore"
 #: src/routes/organisation/OrganisationExternalView.tsx:63
 #: src/lib/roles.ts:15
 #: src/features/sidebar/views/user/UserHomeView.tsx:115
-#: src/features/sidebar/views/org/OrgHomeView.tsx:175
+#: src/features/sidebar/views/org/OrgHomeView.tsx:149
 #: src/components/project/ProjectUsageAndSharing.tsx:322
 #: src/components/invite/RoleSelect.tsx:60
 msgid "External"
@@ -7896,7 +7896,7 @@ msgstr "membri"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:809
 #: src/routes/organisation/OrganisationRoute.tsx:863
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:78
-#: src/features/sidebar/views/org/OrgHomeView.tsx:131
+#: src/features/sidebar/views/org/OrgHomeView.tsx:119
 #: src/components/workspace/UsageCard.tsx:205
 #: src/components/project/ProjectUsageAndSharing.tsx:231
 #: src/components/project/ProjectUsageAndSharing.tsx:261
@@ -9443,7 +9443,7 @@ msgstr "Solo org"
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:471
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:715
 #: src/routes/onboarding/OnboardingRoute.tsx:127
-#: src/features/sidebar/views/org/OrgHomeView.tsx:82
+#: src/features/sidebar/views/org/OrgHomeView.tsx:77
 #: src/features/sidebar/hooks/useSearchHits.ts:134
 #: src/components/training/StaffTrainingPanel.tsx:139
 #: src/components/organisation/CreateOrganisationModal.tsx:175
@@ -9584,7 +9584,7 @@ msgstr "Sostituisci per questo progetto"
 
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:62
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:80
-#: src/features/sidebar/views/org/OrgHomeView.tsx:125
+#: src/features/sidebar/views/org/OrgHomeView.tsx:113
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:47
 msgid "Overview"
 msgstr "Overview"
@@ -12430,7 +12430,7 @@ msgstr "Configurazione in corso"
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:83
 #: src/features/sidebar/views/user/UserSettingsView.tsx:15
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:31
-#: src/features/sidebar/views/org/OrgHomeView.tsx:157
+#: src/features/sidebar/views/org/OrgHomeView.tsx:131
 #: src/components/layout/ParticipantHeader.tsx:124
 #: src/components/layout/ParticipantHeader.tsx:125
 msgid "Settings"
@@ -13458,7 +13458,6 @@ msgstr "Take some time to create an outcome that makes your contribution concret
 msgid "Tapping Record twice no longer creates duplicate conversations."
 msgstr "Premere due volte Registra non crea più conversazioni duplicate."
 
-#: src/features/sidebar/views/org/OrgHomeView.tsx:142
 #: src/features/sidebar/blocks/HelpTasksItem.tsx:33
 msgid "Tasks"
 msgstr "Attività"
@@ -14680,7 +14679,7 @@ msgid "Trained until {until}"
 msgstr "Formato fino al {until}"
 
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:46
-#: src/features/sidebar/views/org/OrgHomeView.tsx:136
+#: src/features/sidebar/views/org/OrgHomeView.tsx:124
 #: src/components/training/WorkspaceTrainingPanel.tsx:37
 #: src/components/training/TrainingRoster.tsx:47
 #: src/components/training/OrgTrainingPanel.tsx:68
@@ -16268,7 +16267,7 @@ msgstr "spazi di lavoro"
 
 #: src/routes/organisation/OrganisationRoute.tsx:1411
 #: src/routes/admin/AdminSettingsRoute.tsx:1689
-#: src/features/sidebar/views/org/OrgHomeView.tsx:167
+#: src/features/sidebar/views/org/OrgHomeView.tsx:141
 msgid "Workspaces"
 msgstr "Spazi di lavoro"
 

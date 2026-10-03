@@ -201,7 +201,7 @@ msgstr "Billing details saved"
 msgid "Billing details updated"
 msgstr "Billing details updated"
 
-#: src/features/accounts/customer/NextSteps.tsx:322
+#: src/features/accounts/customer/NextSteps.tsx:346
 #: src/features/accounts/customer/BookCallButton.tsx:27
 #: src/features/accounts/customer/BookCallButton.tsx:58
 msgid "Book a call"
@@ -216,8 +216,8 @@ msgid "Brief"
 msgstr "Brief"
 
 #: src/features/accounts/format.ts:149
-msgid "Bring in someone who would run a session with you."
-msgstr "Bring in someone who would run a session with you."
+#~ msgid "Bring in someone who would run a session with you."
+#~ msgstr "Bring in someone who would run a session with you."
 
 #: src/features/accounts/staff/NewDemoRoute.tsx:263
 msgid "Build the demo"
@@ -259,11 +259,15 @@ msgstr "Cancelled"
 msgid "Change"
 msgstr "Change"
 
+#: src/features/accounts/format.ts:140
+msgid "Check out the demo we made for you"
+msgstr "Check out the demo we made for you"
+
 #: src/features/accounts/staff/FieldEditorRoute.tsx:63
 msgid "Checkbox"
 msgstr "Checkbox"
 
-#: src/features/accounts/customer/NextSteps.tsx:403
+#: src/features/accounts/customer/NextSteps.tsx:427
 msgid "Choose a file"
 msgstr "Choose a file"
 
@@ -327,6 +331,10 @@ msgstr "Corpus"
 #: src/features/accounts/customer/BillingForm.tsx:117
 msgid "Country"
 msgstr "Country"
+
+#: src/features/accounts/format.ts:150
+msgid "Create a project"
+msgstr "Create a project"
 
 #: src/features/accounts/staff/TaskModals.tsx:110
 msgid "Create task"
@@ -481,8 +489,8 @@ msgid "Event or customer example"
 msgstr "Event or customer example"
 
 #: src/features/accounts/format.ts:140
-msgid "Explore your demo"
-msgstr "Explore your demo"
+#~ msgid "Explore your demo"
+#~ msgstr "Explore your demo"
 
 #: src/features/accounts/staff/DemoRoute.tsx:55
 msgid "Extraction"
@@ -504,7 +512,7 @@ msgstr "Fields | dembrane"
 msgid "Fields saved"
 msgstr "Fields saved"
 
-#: src/features/accounts/customer/NextSteps.tsx:162
+#: src/features/accounts/customer/NextSteps.tsx:164
 msgid "Fill in"
 msgstr "Fill in"
 
@@ -557,12 +565,12 @@ msgid "Initials fields use this signature unless you draw initials."
 msgstr "Initials fields use this signature unless you draw initials."
 
 #: src/features/accounts/customer/NextSteps.tsx:314
-msgid "Invite"
-msgstr "Invite"
+#~ msgid "Invite"
+#~ msgstr "Invite"
 
 #: src/features/accounts/format.ts:150
-msgid "Invite a colleague"
-msgstr "Invite a colleague"
+#~ msgid "Invite a colleague"
+#~ msgstr "Invite a colleague"
 
 #: src/features/accounts/format.ts:44
 msgid "Invoice"
@@ -670,6 +678,10 @@ msgstr "New demo | dembrane"
 msgid "New message"
 msgstr "New message"
 
+#: src/features/accounts/customer/NextSteps.tsx:337
+msgid "New project"
+msgstr "New project"
+
 #: src/features/accounts/staff/TaskModals.tsx:41
 #: src/features/accounts/staff/AccountCardRoute.tsx:354
 msgid "New task"
@@ -684,7 +696,7 @@ msgstr "Next"
 msgid "Next reminder {0}"
 msgstr "Next reminder {0}"
 
-#: src/features/accounts/customer/NextSteps.tsx:74
+#: src/features/accounts/customer/NextSteps.tsx:76
 msgid "Next steps"
 msgstr "Next steps"
 
@@ -716,7 +728,7 @@ msgid "No documents yet."
 msgstr "No documents yet."
 
 #: src/features/accounts/staff/UploadPdfModal.tsx:114
-#: src/features/accounts/customer/NextSteps.tsx:408
+#: src/features/accounts/customer/NextSteps.tsx:432
 msgid "No file chosen"
 msgstr "No file chosen"
 
@@ -760,11 +772,11 @@ msgstr "not live until you publish"
 msgid "Not sent"
 msgstr "Not sent"
 
-#: src/features/accounts/customer/NextSteps.tsx:413
+#: src/features/accounts/customer/NextSteps.tsx:437
 msgid "Note"
 msgstr "Note"
 
-#: src/features/accounts/customer/NextSteps.tsx:77
+#: src/features/accounts/customer/NextSteps.tsx:79
 #: src/features/accounts/customer/AccountPickerRoute.tsx:54
 msgid "Nothing to do right now."
 msgstr "Nothing to do right now."
@@ -819,7 +831,7 @@ msgstr "Open tasks"
 #~ msgid "Open the account"
 #~ msgstr "Open the account"
 
-#: src/features/accounts/customer/NextSteps.tsx:306
+#: src/features/accounts/customer/NextSteps.tsx:310
 msgid "Open the demo"
 msgstr "Open the demo"
 
@@ -839,16 +851,20 @@ msgstr "Open the PDF"
 msgid "Open the signed PDF"
 msgstr "Open the signed PDF"
 
+#: src/features/accounts/customer/NextSteps.tsx:332
+msgid "Open the tutorial"
+msgstr "Open the tutorial"
+
 #: src/features/accounts/staff/TaskModals.tsx:70
 msgid "Opens after signing"
 msgstr "Opens after signing"
 
-#: src/features/accounts/customer/NextSteps.tsx:247
+#: src/features/accounts/customer/NextSteps.tsx:249
 msgid "Opens after signing."
 msgstr "Opens after signing."
 
 #. placeholder {0}: task.locked_until_title
-#: src/features/accounts/customer/NextSteps.tsx:243
+#: src/features/accounts/customer/NextSteps.tsx:245
 msgid "Opens after you sign {0}."
 msgstr "Opens after you sign {0}."
 
@@ -857,7 +873,7 @@ msgstr "Opens after you sign {0}."
 #: src/features/accounts/staff/PushOfferModal.tsx:137
 #: src/features/accounts/signing/SignRoute.tsx:668
 #: src/features/accounts/signing/SignRoute.tsx:885
-#: src/features/accounts/customer/NextSteps.tsx:414
+#: src/features/accounts/customer/NextSteps.tsx:438
 msgid "Optional"
 msgstr "Optional"
 
@@ -1028,8 +1044,8 @@ msgid "ready to publish"
 msgstr "ready to publish"
 
 #: src/features/accounts/format.ts:145
-msgid "Record a test conversation"
-msgstr "Record a test conversation"
+#~ msgid "Record a test conversation"
+#~ msgstr "Record a test conversation"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:630
 #: src/features/accounts/customer/DocumentsTable.tsx:270
@@ -1050,7 +1066,7 @@ msgstr "Remove line"
 
 #: src/features/accounts/customer/Questions.tsx:173
 #: src/features/accounts/customer/Questions.tsx:198
-#: src/features/accounts/customer/NextSteps.tsx:168
+#: src/features/accounts/customer/NextSteps.tsx:170
 msgid "Reply"
 msgstr "Reply"
 
@@ -1072,7 +1088,7 @@ msgid "Retry"
 msgstr "Retry"
 
 #: src/features/accounts/signing/SignRoute.tsx:440
-#: src/features/accounts/customer/NextSteps.tsx:141
+#: src/features/accounts/customer/NextSteps.tsx:143
 msgid "Review and sign"
 msgstr "Review and sign"
 
@@ -1109,6 +1125,10 @@ msgstr "Search by name or member email"
 msgid "Search organisations"
 msgstr "Search organisations"
 
+#: src/features/accounts/format.ts:144
+msgid "See how dembrane works, from setting up a project to reading what people said."
+msgstr "See how dembrane works, from setting up a project to reading what people said."
+
 #: src/features/accounts/format.ts:139
 msgid "See popcorn, tensions and the map on sample conversations written for your organisation."
 msgstr "See popcorn, tensions and the map on sample conversations written for your organisation."
@@ -1123,7 +1143,7 @@ msgstr "Select a field to set its kind, label and whether it is required. Drag t
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:195
 #: src/features/accounts/customer/Questions.tsx:257
-#: src/features/accounts/customer/NextSteps.tsx:427
+#: src/features/accounts/customer/NextSteps.tsx:451
 msgid "Send"
 msgstr "Send"
 
@@ -1176,7 +1196,7 @@ msgstr "Sent right away, to read."
 msgid "Sent to {name}"
 msgstr "Sent to {name}"
 
-#: src/features/accounts/customer/NextSteps.tsx:369
+#: src/features/accounts/customer/NextSteps.tsx:393
 msgid "Sent to dembrane"
 msgstr "Sent to dembrane"
 
@@ -1187,6 +1207,10 @@ msgstr "Sent to dembrane"
 #: src/features/accounts/staff/FieldEditorRoute.tsx:210
 msgid "Sent. The customer has a signing task."
 msgstr "Sent. The customer has a signing task."
+
+#: src/features/accounts/format.ts:149
+msgid "Set up a project of your own for your first real session."
+msgstr "Set up a project of your own for your first real session."
 
 #: src/features/accounts/staff/DemoRoute.tsx:301
 #: src/features/accounts/staff/AccountCardRoute.tsx:762
@@ -1279,12 +1303,12 @@ msgid "Start"
 msgstr "Start"
 
 #: src/features/accounts/customer/NextSteps.tsx:311
-msgid "Start a project"
-msgstr "Start a project"
+#~ msgid "Start a project"
+#~ msgstr "Start a project"
 
 #: src/features/accounts/format.ts:144
-msgid "Start a project of your own and record a few minutes, with a colleague or on your own."
-msgstr "Start a project of your own and record a few minutes, with a colleague or on your own."
+#~ msgid "Start a project of your own and record a few minutes, with a colleague or on your own."
+#~ msgstr "Start a project of your own and record a few minutes, with a colleague or on your own."
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:265
 #: src/features/accounts/staff/AccountCardRoute.tsx:371
@@ -1491,7 +1515,7 @@ msgid "Unsigned"
 msgstr "Unsigned"
 
 #: src/features/accounts/signing/SignatureCapture.tsx:217
-#: src/features/accounts/customer/NextSteps.tsx:168
+#: src/features/accounts/customer/NextSteps.tsx:170
 msgid "Upload"
 msgstr "Upload"
 
@@ -1548,8 +1572,12 @@ msgstr "Waiting on dembrane"
 msgid "Waiting on us"
 msgstr "Waiting on us"
 
+#: src/features/accounts/format.ts:145
+msgid "Watch the tutorial"
+msgstr "Watch the tutorial"
+
 #. placeholder {0}: task.review_note
-#: src/features/accounts/customer/NextSteps.tsx:252
+#: src/features/accounts/customer/NextSteps.tsx:254
 msgid "We asked for a change: {0}"
 msgstr "We asked for a change: {0}"
 
@@ -1590,7 +1618,7 @@ msgstr "What we ask"
 msgid "Who we invoice: legal name, address, VAT or KvK number, invoice email and, if you use one, a PO number."
 msgstr "Who we invoice: legal name, address, VAT or KvK number, invoice email and, if you use one, a PO number."
 
-#: src/features/accounts/customer/NextSteps.tsx:262
+#: src/features/accounts/customer/NextSteps.tsx:264
 msgid "With dembrane"
 msgstr "With dembrane"
 
@@ -1617,7 +1645,7 @@ msgstr "Yes, I may"
 msgid "You"
 msgstr "You"
 
-#: src/features/accounts/customer/NextSteps.tsx:413
+#: src/features/accounts/customer/NextSteps.tsx:437
 msgid "Your answer"
 msgstr "Your answer"
 

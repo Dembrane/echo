@@ -75,6 +75,8 @@ export function settingsRoutes(deps: TenancyDeps) {
     .post(`${base}/projects`, async (c) => {
       const ctx = await h.ws(c);
       const { body } = await p.validate(c.req, { body: CreateProject });
-      return c.json(await projects.create(ctx, body.data));
+      const created = await projects.create(ctx, body.data);
+      await deps.onProjectCreated?.(created.id);
+      return c.json(created);
     });
 }

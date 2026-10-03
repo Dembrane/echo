@@ -49,11 +49,6 @@ export function accountRoutes(api: AccountApiDeps) {
   const invites = inviteStorage(deps.db);
   const aud = audiences(deps.db);
   const ctx = (): InviteCtx => ({ deps, store: invites, audiences: aud, now: new Date() });
-  // An accepted invite tells customer accounts who joined which organisation.
-  const joined = async <T extends { org_id?: string | null }>(out: T): Promise<T> => {
-    if (out.org_id) await deps.onInviteAccepted?.(out.org_id);
-    return out;
-  };
 
   return new Hono<Env>()
     .get("/api/v2/me", async (c) => {
@@ -84,11 +79,11 @@ export function accountRoutes(api: AccountApiDeps) {
       const { body } = await v.validate(c, {
         body: { hash: v.str(), claimed_role: v.optional(v.str()) },
       });
-      return c.json(await joined(await acceptByHash(ctx(), who, body)));
+      return c.json(await acceptByHash(ctx(), who, body));
     })
     .post("/api/v2/me/invites/:id/accept", async (c) => {
       const who = requireUser(c);
-      return c.json(await joined(await acceptMyInvite(ctx(), who, c.req.param("id"))));
+      return c.json(await acceptMyInvite(ctx(), who, c.req.param("id")));
     })
     .post("/api/v2/me/invites/:id/decline", async (c) => {
       const who = requireUser(c);
