@@ -3,7 +3,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Writable } from "node:stream";
-import { AudioError, HttpMedia, LocalMedia, type Media } from "@dembrane/audio";
+import { AudioError, HttpMedia, LocalMedia, type Media, mediaAuth } from "@dembrane/audio";
 import { createLogger } from "@dembrane/observability";
 import { FilesystemStorage, localStorageHandler } from "@dembrane/storage";
 import { mediaApp } from "../src/app";
@@ -102,5 +102,65 @@ test("bad input is 422 with its kind; a transient failure is 503", async () => {
     expect(err).toBeInstanceOf(AudioError);
     expect((err as AudioError).kind).toBe("invalid_audio");
     expect((err as AudioError).unplayable).toBe(true);
+  });
+});
+
+// MEDIA_AUTH: Cloud Run callers present a metadata-server token; in-cluster callers send none.
+describe("media auth", () => {
+  let seen: (string | null)[] = [];
+  let service: ReturnType<typeof Bun.serve>;
+  const realFetch = globalThis.fetch;
+  beforeAll(() => {
+    service = Bun.serve({
+      port: 0,
+      fetch: (req) => {
+        seen.push(req.headers.get("authorization"));
+        return Response.json({ format: { duration: "1" } });
+      },
+    });
+    // Stands in for the metadata server, which only exists on Cloud Run.
+    globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+      const url = String(input instanceof Request ? input.url : input);
+      if (url.startsWith("http://metadata.google.internal/")) {
+        const audience = new URL(url).searchParams.get("audience");
+        return new Response(`token-for-${audience}`);
+      }
+      return realFetch(input, init);
+    }) as typeof fetch;
+  });
+  afterAll(() => {
+    globalThis.fetch = realFetch;
+    service.stop(true);
+  });
+
+  const probe = (auth: "google_id_token" | "none") => {
+    const url = `http://127.0.0.1:${service.port}`;
+    return new HttpMedia(url, { timeoutMs: 5_000, ...mediaAuth(auth, url) }).probe({
+      url: "http://x.test/a.webm",
+      format: "webm",
+    });
+  };
+
+  test("google_id_token sends the metadata server's token for the media URL", async () => {
+    seen = [];
+    await probe("google_id_token");
+    expect(seen).toEqual([`Bearer token-for-http://127.0.0.1:${service.port}`]);
+  });
+
+  test("none sends no Authorization header and never asks the metadata server", async () => {
+    seen = [];
+    let metadataCalls = 0;
+    const stub = globalThis.fetch;
+    globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+      if (String(input).includes("metadata.google.internal")) metadataCalls++;
+      return stub(input, init);
+    }) as typeof fetch;
+    try {
+      await probe("none");
+    } finally {
+      globalThis.fetch = stub;
+    }
+    expect(seen).toEqual([null]);
+    expect(metadataCalls).toBe(0);
   });
 });

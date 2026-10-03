@@ -27,8 +27,10 @@ export {
   HttpMedia,
   LocalMedia,
   type Media,
+  type MediaAuth,
   type MediaSource,
   type MediaTarget,
   type MergeResult,
+  mediaAuth,
   metadataIdToken,
 } from "./media";
