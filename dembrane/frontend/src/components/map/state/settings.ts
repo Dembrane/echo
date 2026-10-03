@@ -13,8 +13,11 @@ export const MAP_SETTINGS_STORAGE_KEY = "dembrane-map-settings";
  * conversation by default, and moves a host who never chose another mode onto
  * it. Version 5 shows the legend by default, now that the colours stand for
  * conversations and need saying, and moves a host who never turned it on.
+ * Version 6 hides the legend by default again, to give the map its space,
+ * and moves every host onto it once: a saved true can't tell a choice from
+ * the version 5 default.
  */
-export const MAP_SETTINGS_VERSION = 5;
+export const MAP_SETTINGS_VERSION = 6;
 
 export type MapSettings = {
 	showExplore: boolean;
@@ -41,7 +44,7 @@ export const DEFAULT_MAP_SETTINGS: MapSettings = {
 	nodeLimit: null,
 	showClusters: true,
 	showExplore: true,
-	showLegend: true,
+	showLegend: false,
 	showRelationships: false,
 	showShowcase: false,
 	showSpotlight: true,
@@ -77,10 +80,8 @@ export function migrateMapSettings(
 	const version =
 		typeof stored.version === "number" ? stored.version : MAP_SETTINGS_VERSION;
 	for (const key of BOOLEAN_KEYS) {
-		// Off was the old default, so a host who never touched the legend has
-		// it saved off. They meet it once; a host who turned it off since keeps
-		// it off.
-		if (key === "showLegend" && version < 5) continue;
+		// Every saved legend before version 6 resets to the new default (off).
+		if (key === "showLegend" && version < 6) continue;
 		if (typeof stored[key] === "boolean") settings[key] = stored[key];
 	}
 	if (isColorBy(stored.colorBy)) {

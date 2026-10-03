@@ -58,6 +58,8 @@ type NodeDetailCardProps = {
 	evidence: EvidenceGroup[];
 	conversationHref?: ConversationHref;
 	collapsibleQuotes?: boolean;
+	/** False where the host shows the statement itself, above its own controls. */
+	statement?: boolean;
 	inspection?: NodeInspection | null;
 };
 
@@ -397,6 +399,7 @@ export const NodeDetailCard = memo(function NodeDetailCard({
 	evidence,
 	conversationHref,
 	collapsibleQuotes = false,
+	statement = true,
 	inspection = null,
 }: NodeDetailCardProps) {
 	// Evidence is what an argument is made of, so the panel shows it rather
@@ -441,7 +444,7 @@ export const NodeDetailCard = memo(function NodeDetailCard({
 
 	return (
 		<div className="space-y-3">
-			{type && (
+			{statement && type && (
 				<p className="flex items-center gap-2 text-xs">
 					<TypeDot
 						type={
@@ -457,15 +460,17 @@ export const NodeDetailCard = memo(function NodeDetailCard({
 			    with what there is to count. The quotes themselves stay below it
 			    rather than riding on the stage: there they are attributed, in
 			    their conversation's colour, and no passage is read twice. */}
-			<ResultStage
-				item={{
-					detail: object?.detail,
-					label: node.label ?? node.id,
-					type: type ?? "argument",
-				}}
-				quotes={[]}
-				evidence={{ conversations: evidence.length, quotes: quoteCount }}
-			/>
+			{statement && (
+				<ResultStage
+					item={{
+						detail: object?.detail,
+						label: node.label ?? node.id,
+						type: type ?? "argument",
+					}}
+					quotes={[]}
+					evidence={{ conversations: evidence.length, quotes: quoteCount }}
+				/>
+			)}
 
 			{inspection && detail?.type === "tension" && (
 				<TensionSections

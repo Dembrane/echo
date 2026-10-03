@@ -34,6 +34,14 @@ export const MAP_HIGHLIGHT_DARK = "#7C9BFF";
 export const mapHighlight = (darkMode: boolean): string =>
 	darkMode ? MAP_HIGHLIGHT_DARK : MAP_HIGHLIGHT;
 
+/**
+ * A hairline round every dot, so a pale fill still parts from the ground.
+ * Drawn from the map's own text colour, which every map surface sets (light,
+ * the map's dark, the room's dark), so it needs no token of its own.
+ */
+export const NODE_OUTLINE =
+	"color-mix(in srgb, var(--map-text) 24%, transparent)";
+
 export interface NodeStyle {
 	fill: string;
 	stroke: string;
@@ -78,8 +86,8 @@ export const getNodeStyleFromInputs = (
 		filter: darkMode ? "none" : LIGHT_SHADOW,
 		label: value.label,
 		pulse: value.pulse,
-		stroke: "transparent",
-		strokeWidth: 0,
+		stroke: NODE_OUTLINE,
+		strokeWidth: 1,
 	};
 };
 

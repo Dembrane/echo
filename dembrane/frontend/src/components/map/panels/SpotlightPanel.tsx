@@ -2,6 +2,7 @@ import { plural, t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Anchor, Button, UnstyledButton } from "@mantine/core";
 import { type CSSProperties, memo } from "react";
+import { primaryText, resultFields } from "@/components/results";
 import { cn } from "@/lib/utils";
 import {
 	ATTRIBUTES,
@@ -179,19 +180,20 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 			className="flex h-full min-h-0 flex-col"
 			aria-label={t`Spotlight`}
 		>
-			<div className="min-h-0 flex-1 overflow-y-auto pr-1">
-				<PanelHeader title={<Trans>Spotlight</Trans>} dotClassName="bg-cyan" />
+			<PanelHeader title={<Trans>Spotlight</Trans>} dotClassName="bg-cyan" />
 
-				{node ? (
-					<div className="space-y-2">
-						<NodeDetailCard
-							node={node}
-							evidence={evidence}
-							conversationHref={conversationHref}
-							collapsibleQuotes
-							inspection={inspection}
-						/>
-
+			{node ? (
+				<>
+					{/* The statement and the colour chits stay put; what explains
+					    them, the quotes and the rest scroll under them. */}
+					<div className="space-y-2 pb-2">
+						<p className="leading-snug" data-testid="spotlight-statement">
+							{primaryText(
+								type,
+								resultFields({ detail: inspection?.object?.detail }),
+								node.label ?? node.id,
+							)}
+						</p>
 						<div className="flex flex-wrap gap-2">
 							<ConversationChits
 								slots={node.metadata.conversationSlots ?? []}
@@ -244,7 +246,9 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 								</UnstyledButton>
 							)}
 						</div>
+					</div>
 
+					<div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
 						{valenceActive && valenceApplies && (
 							<p className="text-xs">{valenceBlurb(valence)}</p>
 						)}
@@ -354,16 +358,25 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 							</div>
 						)}
 
+						<NodeDetailCard
+							node={node}
+							evidence={evidence}
+							conversationHref={conversationHref}
+							collapsibleQuotes
+							statement={false}
+							inspection={inspection}
+						/>
+
 						{timestamp ? <p className="text-xs">{timestamp}</p> : null}
 					</div>
-				) : (
-					<CaptionText>
-						<Trans>
-							Click a node in the tree or cluster map to spotlight it here.
-						</Trans>
-					</CaptionText>
-				)}
-			</div>
+				</>
+			) : (
+				<CaptionText>
+					<Trans>
+						Click a node in the tree or cluster map to spotlight it here.
+					</Trans>
+				</CaptionText>
+			)}
 		</section>
 	);
 });

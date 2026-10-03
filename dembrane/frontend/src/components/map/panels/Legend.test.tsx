@@ -19,8 +19,8 @@ const renderLegend = (props: Parameters<typeof Legend>[0]) =>
 	);
 
 describe("the conversation legend", () => {
-	it("is on from the start, now that the colours stand for conversations", () => {
-		expect(DEFAULT_MAP_SETTINGS.showLegend).toBe(true);
+	it("is off from the start, while the map colours by conversation", () => {
+		expect(DEFAULT_MAP_SETTINGS.showLegend).toBe(false);
 		expect(DEFAULT_MAP_SETTINGS.colorBy).toBe("conversation");
 	});
 

@@ -45,9 +45,12 @@ export const Legend = memo(function Legend({
 				)
 			: legendEntries(colorBy);
 	if (rows.length === 0) return null;
-	// The swatches carry the same shadow, and the same theme-resolved fills,
+	// The swatches carry the same shadow, hairline and theme-resolved fills
 	// as the nodes they explain.
-	const { filter } = getNodeStyleFromInputs({}, { colorBy, darkMode });
+	const { filter, stroke, strokeWidth } = getNodeStyleFromInputs(
+		{},
+		{ colorBy, darkMode },
+	);
 
 	return (
 		<div
@@ -70,7 +73,8 @@ export const Legend = memo(function Legend({
 							cy="8"
 							r="5"
 							fill={resolveMapColor(row.color, darkMode)}
-							style={{ filter }}
+							strokeWidth={strokeWidth}
+							style={{ filter, stroke }}
 						/>
 					</svg>
 					<span>{row.label}</span>
