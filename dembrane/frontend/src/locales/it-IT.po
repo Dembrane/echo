@@ -203,7 +203,7 @@ msgstr "\"made with dembrane\" rimane sullo schermo."
 msgid "participant.modal.echo.info.title.concrete"
 msgstr "\"Verify\" available soon"
 
-#: src/components/settings/MyAccessCard.tsx:157
+#: src/components/settings/MyAccessCard.tsx:158
 msgid "(direct workspace access)"
 msgstr "(accesso diretto allo spazio di lavoro)"
 
@@ -225,7 +225,7 @@ msgstr "(optional)"
 msgid "(Partial)"
 msgstr "(Parziale)"
 
-#: src/components/invite/WorkspaceSelectList.tsx:184
+#: src/components/invite/WorkspaceSelectList.tsx:183
 msgid "(Partner)"
 msgstr "(Partner)"
 
@@ -310,13 +310,13 @@ msgstr "{0, plural, one {# frase} other {# frasi}}"
 #. placeholder {0}: data.project_count
 #. placeholder {0}: ws.project_count
 #: src/components/workspace/UsageCard.tsx:257
-#: src/components/settings/MyAccessCard.tsx:213
+#: src/components/settings/MyAccessCard.tsx:214
 msgid "{0, plural, one {# project} other {# projects}}"
 msgstr "{0, plural, one {# progetto} other {# progetti}}"
 
 #. placeholder {0}: ws.seats_used_including_pending
 #. placeholder {0}: overview.seats
-#: src/components/invite/WorkspaceSelectList.tsx:127
+#: src/components/invite/WorkspaceSelectList.tsx:128
 #: src/components/billing/BillingManager.tsx:1262
 msgid "{0, plural, one {# seat} other {# seats}}"
 msgstr "{0, plural, one {# posto} other {# posti}}"
@@ -421,7 +421,7 @@ msgid "{0} (default)"
 msgstr "{0} (predefinito)"
 
 #. placeholder {0}: tierName(tier)
-#. placeholder {0}: ws.tier
+#. placeholder {0}: tierName(ws.tier)
 #: src/components/workspace/TierBadge.tsx:57
 #: src/components/settings/MyAccessCard.tsx:221
 msgid "{0} (partner)"
@@ -872,11 +872,11 @@ msgstr "{tag} (preselezionato)"
 msgid "{totalActive, plural, one {# active} other {# active}}"
 msgstr "{totalActive, plural, one {# attivo} other {# attivi}}"
 
-#: src/components/settings/MyAccessCard.tsx:124
+#: src/components/settings/MyAccessCard.tsx:125
 msgid "{totalOrganisations, plural, one {# organisation} other {# organisations}}"
 msgstr "{totalOrganisations, plural, one {# organizzazione} other {# organizzazioni}}"
 
-#: src/components/settings/MyAccessCard.tsx:130
+#: src/components/settings/MyAccessCard.tsx:131
 msgid "{totalWorkspaces, plural, one {# workspace} other {# workspaces}}"
 msgstr "{totalWorkspaces, plural, one {# spazio di lavoro} other {# spazi di lavoro}}"
 
@@ -1570,7 +1570,7 @@ msgstr "Ti abbiamo aggiunto a {okCount}. Non è stato possibile aggiungerne {0},
 msgid "Added you to 1 workspace"
 msgstr "Ti abbiamo aggiunto a 1 spazio di lavoro"
 
-#: src/components/invite/WorkspaceSelectList.tsx:234
+#: src/components/invite/WorkspaceSelectList.tsx:233
 msgid "Adding {pendingCount} more will put this workspace over its seat cap. Overage seats are billed at the workspace's tier rate."
 msgstr "Aggiungendo altri {pendingCount}, questo spazio di lavoro supererà il limite di postazioni. Le postazioni extra sono fatturate secondo la tariffa del piano dello spazio di lavoro."
 
@@ -2180,7 +2180,7 @@ msgstr "Are you sure you want to delete this conversation? This action cannot be
 msgid "Are you sure you want to delete this custom topic? This cannot be undone."
 msgstr "Are you sure you want to delete this custom topic? This cannot be undone."
 
-#: src/components/project/ProjectDangerZone.tsx:167
+#: src/components/project/ProjectDangerZone.tsx:168
 msgid "Are you sure you want to delete this project? This action cannot be undone."
 msgstr "Are you sure you want to delete this project? This action cannot be undone."
 
@@ -2801,7 +2801,7 @@ msgstr "Build custom dashboards with real-time conversation data"
 msgid "by {by}"
 msgstr "da {by}"
 
-#: src/components/project/ProjectDangerZone.tsx:180
+#: src/components/project/ProjectDangerZone.tsx:181
 msgid "By deleting this project, you will delete all the data associated with it. This action cannot be undone. Are you absolutely sure?"
 msgstr "By deleting this project, you will delete all the data associated with it. This action cannot be undone. Are you absolutely sure?"
 
@@ -2851,7 +2851,7 @@ msgstr "Puoi dirci di più?"
 #: src/components/results/ReasonPrompt.tsx:236
 #: src/components/project/ProjectSharingModal.tsx:319
 #: src/components/project/ProjectSharingModal.tsx:523
-#: src/components/project/ProjectDangerZone.tsx:157
+#: src/components/project/ProjectDangerZone.tsx:158
 #: src/components/project/CustomTopicModal.tsx:255
 #: src/components/project/BulkMoveProjectsModal.tsx:123
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:477
@@ -3334,7 +3334,7 @@ msgstr "Cancella filtri"
 #: src/routes/project/ProjectsHome.tsx:374
 #: src/routes/project/chat/NewChatRoute.tsx:171
 #: src/features/sidebar/blocks/SearchBlock.tsx:168
-#: src/components/invite/WorkspaceSelectList.tsx:97
+#: src/components/invite/WorkspaceSelectList.tsx:98
 #: src/components/conversation/ProjectConversationsPanel.tsx:810
 #: src/components/chat/TemplatesModal.tsx:721
 msgid "Clear search"
@@ -3416,7 +3416,7 @@ msgstr "Clona da progetto"
 
 #: src/components/project/ProjectDangerZone.tsx:92
 #: src/components/project/ProjectDangerZone.tsx:110
-#: src/components/project/ProjectDangerZone.tsx:149
+#: src/components/project/ProjectDangerZone.tsx:150
 msgid "Clone project"
 msgstr "Clone project"
 
@@ -4658,7 +4658,7 @@ msgstr "Delegate multi-step analysis with live tool execution"
 #: src/components/workspace/OrganisationProjectsTable.tsx:164
 #: src/components/project/ProjectTagsInput.tsx:120
 #: src/components/project/ProjectPortalEditor.tsx:1641
-#: src/components/project/ProjectDangerZone.tsx:168
+#: src/components/project/ProjectDangerZone.tsx:169
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:590
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:624
 #: src/components/participant/UserChunkMessage.tsx:100
@@ -4701,9 +4701,9 @@ msgid "Delete custom topic"
 msgstr "Delete custom topic"
 
 #: src/components/project/ProjectDangerZone.tsx:103
-#: src/components/project/ProjectDangerZone.tsx:165
-#: src/components/project/ProjectDangerZone.tsx:178
-#: src/components/project/ProjectDangerZone.tsx:181
+#: src/components/project/ProjectDangerZone.tsx:166
+#: src/components/project/ProjectDangerZone.tsx:179
+#: src/components/project/ProjectDangerZone.tsx:182
 msgid "Delete project"
 msgstr "Delete project"
 
@@ -5721,7 +5721,7 @@ msgstr "Esempio di payload del webhook"
 #~ msgid "Example Webhook Payload"
 #~ msgstr "Example Webhook Payload"
 
-#: src/components/invite/WorkspaceSelectList.tsx:195
+#: src/components/invite/WorkspaceSelectList.tsx:194
 msgid "Exceeds seat cap. Overage billing applies."
 msgstr "Supera il limite di posti. Si applicano costi per l'eccedenza."
 
@@ -8065,7 +8065,7 @@ msgstr "Loading transcript..."
 msgid "Loading verify topics…"
 msgstr "Loading verify topics…"
 
-#: src/components/invite/WorkspaceSelectList.tsx:66
+#: src/components/invite/WorkspaceSelectList.tsx:67
 msgid "Loading workspaces…"
 msgstr "Caricamento degli spazi di lavoro…"
 
@@ -9410,7 +9410,7 @@ msgstr "Nessuna modifica al ruolo nello spazio di lavoro. Aggiungi questa person
 msgid "No workspaces from this organisation are shared with you right now."
 msgstr "Al momento nessuno spazio di lavoro di questa organizzazione è condiviso con te."
 
-#: src/components/invite/WorkspaceSelectList.tsx:112
+#: src/components/invite/WorkspaceSelectList.tsx:113
 msgid "No workspaces match \"{search}\"."
 msgstr "Nessuno spazio di lavoro corrisponde a \"{search}\"."
 
@@ -9877,7 +9877,7 @@ msgstr "Apri il menu"
 msgid "Open Mollie dashboard"
 msgstr "Apri dashboard di Mollie"
 
-#: src/components/settings/MyAccessCard.tsx:176
+#: src/components/settings/MyAccessCard.tsx:177
 msgid "Open organisation"
 msgstr "Apri organizzazione"
 
@@ -10166,7 +10166,7 @@ msgstr "Outcomes"
 msgid "Output objects: {outputObjects}"
 msgstr "Oggetti di output: {outputObjects}"
 
-#: src/components/invite/WorkspaceSelectList.tsx:208
+#: src/components/invite/WorkspaceSelectList.tsx:207
 msgid "Overage billing applies"
 msgstr "Si applicano costi per uso oltre soglia"
 
@@ -10337,7 +10337,7 @@ msgstr "Organizzazione partner"
 msgid "Partner workspace, billed on its own and not part of the organisation's plan."
 msgstr "Spazio di lavoro partner, fatturato a parte e non incluso nel piano dell'organizzazione."
 
-#: src/components/invite/WorkspaceSelectList.tsx:174
+#: src/components/invite/WorkspaceSelectList.tsx:175
 msgid "Partner workspace, billed separately from the organisation."
 msgstr "Spazio di lavoro partner, fatturato separatamente dall'organizzazione."
 
@@ -12768,7 +12768,7 @@ msgid "Search webhooks..."
 msgstr "Search webhooks..."
 
 #: src/components/workspace/OrganisationUsageRollup.tsx:515
-#: src/components/invite/WorkspaceSelectList.tsx:88
+#: src/components/invite/WorkspaceSelectList.tsx:89
 msgid "Search workspaces"
 msgstr "Cerca spazi di lavoro"
 
@@ -12803,7 +12803,7 @@ msgstr "Ricerca di \"{0}\" nelle trascrizioni"
 msgid "Searching…"
 msgstr "Ricerca in corso…"
 
-#: src/components/invite/WorkspaceSelectList.tsx:135
+#: src/components/invite/WorkspaceSelectList.tsx:136
 msgid "seats"
 msgstr "posti"
 
@@ -12817,7 +12817,7 @@ msgstr "posti"
 msgid "Seats"
 msgstr "Posti"
 
-#: src/components/invite/WorkspaceSelectList.tsx:204
+#: src/components/invite/WorkspaceSelectList.tsx:203
 #: src/components/invite/InviteResultsList.tsx:51
 msgid "Seats full"
 msgstr "Posti esauriti"
@@ -12871,7 +12871,7 @@ msgid "Select"
 msgstr "Seleziona"
 
 #. placeholder {0}: ws.name
-#: src/components/invite/WorkspaceSelectList.tsx:158
+#: src/components/invite/WorkspaceSelectList.tsx:159
 msgid "Select {0}"
 msgstr "Seleziona {0}"
 
@@ -15316,7 +15316,7 @@ msgstr "Questo spazio di lavoro è fatturato separatamente"
 msgid "This workspace is billed through {orgName}. Plans and payment are managed once for the whole organisation, and every workspace shares it."
 msgstr "Questo spazio di lavoro viene fatturato tramite {orgName}. I piani e il pagamento sono gestiti a livello di organizzazione e condivisi da ogni spazio di lavoro."
 
-#: src/components/invite/WorkspaceSelectList.tsx:219
+#: src/components/invite/WorkspaceSelectList.tsx:218
 msgid "This workspace is on a tier that doesn't allow more seats. Upgrade the workspace tier to invite more."
 msgstr "Questo spazio di lavoro è su un livello che non consente più posti. Esegui l'upgrade del livello dello spazio di lavoro per invitarne altri."
 
@@ -17419,7 +17419,7 @@ msgstr "Non hai accesso a questo spazio di lavoro"
 msgid "You don't have permission to create workspaces in that organisation. Falling back to your primary organisation instead."
 msgstr "Non hai il permesso di creare spazi di lavoro in questa organizzazione. Verrà usata invece la tua organizzazione principale."
 
-#: src/components/invite/WorkspaceSelectList.tsx:74
+#: src/components/invite/WorkspaceSelectList.tsx:75
 msgid "You don't have permission to invite to any workspace in this organisation."
 msgstr "Non hai il permesso di inviare inviti a nessuno spazio di lavoro in questa organizzazione."
 
@@ -17564,7 +17564,7 @@ msgstr "Stai effettuando l'accesso con l'indirizzo email errato"
 #~ msgid "You're not in any organisation yet. Create a workspace to start a organisation, or ask a member for an invite."
 #~ msgstr "Non fai ancora parte di nessuna organizzazione. Crea uno spazio di lavoro per avviare un'organizzazione, oppure chiedi un invito a un membro."
 
-#: src/components/settings/MyAccessCard.tsx:141
+#: src/components/settings/MyAccessCard.tsx:142
 msgid "You're not in any organisation yet. Create a workspace to start an organisation, or ask a member for an invite."
 msgstr "Non fai ancora parte di nessuna organizzazione. Crea uno spazio di lavoro per avviare un'organizzazione, oppure chiedi un invito a un membro."
 

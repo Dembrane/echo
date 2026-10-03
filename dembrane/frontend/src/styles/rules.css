@@ -166,12 +166,18 @@
 	--avatar-radius: 9999px;
 	border-radius: 9999px;
 }
+/* Initials are set in the one text weight, not Mantine's bold. */
+:root .mantine-Avatar-placeholder {
+	font-weight: 320;
+}
 
 /* Context: no border; a tag is its tint. */
 :root .mantine-Badge-root {
 	border-radius: 0;
 	border-width: 0;
 	box-shadow: none;
+	/* Mantine spaces its badge capitals; a tag is set like any other text. */
+	letter-spacing: 0;
 }
 
 /* Floating layers follow what they hold, and keep their float shadow. */
@@ -413,6 +419,10 @@
 }
 
 /* Accordion: items separated by the rule. */
+/* The caret is a 16 icon (theme.tsx); Mantine's box would draw it at 15. */
+:root .mantine-Accordion-root {
+	--accordion-chevron-size: 16px;
+}
 :root .mantine-Accordion-item {
 	border-bottom: var(--app-stroke) solid var(--app-rule-color);
 	border-radius: 0;

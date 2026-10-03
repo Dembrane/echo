@@ -16,8 +16,8 @@ import { routerPaths } from "./routes";
 // rules in grammar-checks.ts, on every page in the flow map (e2e/flows.ts) and
 // every state it lists, at 1280 and 390 wide. Run it with `pnpm test:grammar`
 // (e2e/grammar.config.ts); it skips itself in the default e2e run and when the
-// GRAMMAR_E2E_* login is not set. GRAMMAR_E2E_ONLY=<substring> runs only the
-// flows whose path contains it; GRAMMAR_E2E_OWN_WORKSPACE_ID is a workspace of
+// GRAMMAR_E2E_* login is not set. GRAMMAR_E2E_ONLY=<a,b> runs only the
+// flows whose path contains one of them; GRAMMAR_E2E_OWN_WORKSPACE_ID is a workspace of
 // the login's own where the empty project lives (empty variants skip without it);
 // GRAMMAR_E2E_REPORT_ONLY=1 writes the report without failing any page.
 
@@ -206,7 +206,7 @@ function visits(): Visit[] {
 	const only = env("ONLY");
 	const out: Visit[] = [];
 	for (const [key, flow] of Object.entries(flows)) {
-		if (only && !key.includes(only)) continue;
+		if (only && !only.split(",").some((o) => key.includes(o))) continue;
 		for (const variant of [
 			{ name: "", params: {} },
 			...(flow.variants ?? []),

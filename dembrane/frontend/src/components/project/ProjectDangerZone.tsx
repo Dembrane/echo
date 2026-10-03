@@ -139,7 +139,8 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 						onChange={(event) => setCloneName(event.currentTarget.value)}
 						{...testId("project-clone-name-input")}
 					/>
-					<Group gap="sm">
+					{/* 24 from the field to the action that submits it (rule 05). */}
+					<Group gap="sm" mt="sm">
 						<Button
 							variant="filled"
 							onClick={handleClone}
