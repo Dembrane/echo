@@ -925,6 +925,24 @@
 	color: var(--app-control-rule);
 	cursor: not-allowed;
 }
+/* A disabled field stays white; Mantine's own fade lowers the contrast. */
+:root .mantine-Input-input:is(:disabled, [data-disabled]) {
+	background-color: var(--app-surface);
+}
+/* A disabled choice fades as the switch does, checked or not, so it never
+ * reads as one you can set. */
+:root :is(.mantine-Checkbox-input, .mantine-Radio-radio):disabled {
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+/* The markdown editor is square like everything else: its own radius tokens
+ * go to zero (the round ones, --radius-full, stay). */
+:root :is(.mdxeditor, .mdxeditor-popup-container) {
+	--radius-base: 0;
+	--radius-medium: 0;
+	--radius-small: 0;
+}
 
 /* A row that doesn't fit on a phone stacks as a whole (title above, its
  * controls below) rather than squeezing its text to an ellipsis. */
