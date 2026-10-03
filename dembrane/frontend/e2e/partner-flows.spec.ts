@@ -6,7 +6,10 @@ import { hasCreds, login } from "./helpers";
 // admin/owner of a PARTNER org (org.is_partner=true) — that flag is staff-set,
 // so seed it before running (see e2e/README.md). Without creds they skip.
 test.describe("partner & observer flows", () => {
-	test.skip(!hasCreds, "Set E2E_EMAIL / E2E_PASSWORD (verified partner-org admin) to run.");
+	test.skip(
+		!hasCreds,
+		"Set E2E_EMAIL / E2E_PASSWORD (verified partner-org admin) to run.",
+	);
 
 	test.beforeEach(async ({ page }) => {
 		await login(page);
@@ -34,19 +37,27 @@ test.describe("partner & observer flows", () => {
 			.locator("input")
 			.fill("owner@client.example");
 		await expect(next).toBeDisabled(); // agreement still unchecked
-		await page.getByTestId("create-workspace-agreement").locator("input").check();
+		await page
+			.getByTestId("create-workspace-agreement")
+			.locator("input")
+			.check();
 		await expect(next).toBeEnabled();
 	});
 
 	// ISSUE-030: the free observer role is offered only for external-client
 	// workspaces. In the invite modal the observer option must be gated.
-	test("observer role gated to external-client workspaces", async ({ page }) => {
+	test("observer role gated to external-client workspaces", async ({
+		page,
+	}) => {
 		await page.goto("/o");
 		// Open the invite modal (entry varies; this asserts the gating contract
 		// once the modal + a workspace selection are present).
 		const inviteTrigger = page.getByRole("button", { name: /invite/i }).first();
 		if ((await inviteTrigger.count()) === 0) {
-			test.skip(true, "No invite entry point on this view; covered by server tests.");
+			test.skip(
+				true,
+				"No invite entry point on this view; covered by server tests.",
+			);
 		}
 		await inviteTrigger.click();
 		// Observer appears as a role option only when an external-client
@@ -56,7 +67,9 @@ test.describe("partner & observer flows", () => {
 
 	// ISSUE-028: a user who owns no org (external-only) always sees a
 	// "Set up your organisation" CTA.
-	test("external-only user sees set-up-your-organisation CTA", async ({ page }) => {
+	test("external-only user sees set-up-your-organisation CTA", async ({
+		page,
+	}) => {
 		await page.goto("/o");
 		const cta = page.getByTestId("sidebar-create-org");
 		// Present only for users who own no org; assert it's wired when shown.

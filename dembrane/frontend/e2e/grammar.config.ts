@@ -44,7 +44,8 @@ export default defineConfig({
 			? { executablePath: process.env.GRAMMAR_E2E_BROWSER_PATH }
 			: {},
 		screenshot: "only-on-failure",
-		trace: "retain-on-failure",
+		// The report is the record; a trace per failing page costs more than it tells.
+		trace: "off",
 	},
 	workers: 1,
 });

@@ -140,7 +140,10 @@ export const flows: Record<string, Flow> = {
 	"/verify-email": TOKEN("email-verification"),
 
 	"/w/:workspaceId": REDIRECT,
-	"/w/:workspaceId/home": { params: { workspaceId: "$workspace" } },
+	"/w/:workspaceId/home": {
+		params: { workspaceId: "$workspace" },
+		states: [{ clicks: ["projects-select-button"], name: "select" }],
+	},
 	"/w/:workspaceId/members/*": {
 		params: { "*": "", workspaceId: "$workspace" },
 	},
@@ -160,14 +163,30 @@ export const flows: Record<string, Flow> = {
 	},
 	"/w/:workspaceId/projects/:projectId/chats/:chatId": {
 		params: { ...project, chatId: "$chat" },
+		states: [{ clicks: ["chat-item-menu-button"], name: "menu" }],
 	},
 	"/w/:workspaceId/projects/:projectId/chats/:chatId/debug": {
 		skip: "a developer page, outside the grammar",
 	},
-	"/w/:workspaceId/projects/:projectId/chats/new": { params: project },
-	"/w/:workspaceId/projects/:projectId/conversations": { params: project },
+	"/w/:workspaceId/projects/:projectId/chats/new": {
+		params: project,
+		states: [
+			{ clicks: ["chat-templates-more-button"], name: "templates" },
+			{ clicks: ["ask-home-try-agentic"], name: "agentic intro" },
+		],
+	},
+	"/w/:workspaceId/projects/:projectId/conversations": {
+		params: project,
+		states: [{ clicks: ["conversation-upload-button"], name: "upload" }],
+	},
 	"/w/:workspaceId/projects/:projectId/conversations/:conversationId": {
 		params: { ...project, conversationId: "$conversation" },
+		states: [
+			{ clicks: ["conversation-move-button"], name: "move" },
+			{ clicks: ["conversation-delete-button"], name: "delete" },
+			{ clicks: ["transcript-download-button"], name: "download" },
+			{ clicks: ["transcript-retranscribe-button"], name: "retranscribe" },
+		],
 	},
 	"/w/:workspaceId/projects/:projectId/conversations/:conversationId/debug": {
 		skip: "a developer page, outside the grammar",
@@ -180,20 +199,40 @@ export const flows: Record<string, Flow> = {
 		skip: "a developer page, outside the grammar",
 	},
 	"/w/:workspaceId/projects/:projectId/export": { params: project },
-	"/w/:workspaceId/projects/:projectId/home": { params: project },
+	"/w/:workspaceId/projects/:projectId/home": {
+		params: project,
+		states: [{ clicks: ["project-home-rename-button"], name: "rename" }],
+	},
 	"/w/:workspaceId/projects/:projectId/host-guide": { params: project },
 	"/w/:workspaceId/projects/:projectId/integrations": { params: project },
 	"/w/:workspaceId/projects/:projectId/library": { params: project },
 	"/w/:workspaceId/projects/:projectId/library/popcorn": REDIRECT,
 	"/w/:workspaceId/projects/:projectId/map": { params: project },
 	"/w/:workspaceId/projects/:projectId/monitor": { params: project },
-	"/w/:workspaceId/projects/:projectId/overview": { params: project },
-	"/w/:workspaceId/projects/:projectId/portal-editor": { params: project },
+	"/w/:workspaceId/projects/:projectId/overview": {
+		params: project,
+		states: [
+			{ clicks: ["project-actions-clone-button"], name: "clone" },
+			{ clicks: ["project-actions-delete-button"], name: "delete" },
+		],
+	},
+	// Its switches save as they change, on demo data the other sessions share,
+	// so only the preview, which changes nothing, is opened.
+	"/w/:workspaceId/projects/:projectId/portal-editor": {
+		params: project,
+		states: [{ clicks: ["portal-editor-preview-toggle"], name: "preview" }],
+	},
 	"/w/:workspaceId/projects/:projectId/present": { params: project },
 	"/w/:workspaceId/projects/:projectId/present/:presentationId/edit": {
 		params: { ...project, presentationId: "$presentation" },
 	},
-	"/w/:workspaceId/projects/:projectId/report": { params: project },
+	"/w/:workspaceId/projects/:projectId/report": {
+		params: project,
+		states: [
+			{ clicks: ["report-actions-menu"], name: "actions" },
+			{ clicks: ["report-update-button"], name: "update" },
+		],
+	},
 	"/w/:workspaceId/projects/:projectId/sharing": REDIRECT,
 	"/w/:workspaceId/projects/:projectId/upload": { params: project },
 	"/w/:workspaceId/projects/:projectId/usage": { params: project },
