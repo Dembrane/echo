@@ -34,6 +34,8 @@ import {
 	isDeckEditEvent,
 	isDeckOpeningEvent,
 	isDeckReadyEvent,
+	OPENING_SCREENS,
+	type OpeningScreen,
 	postDeckMessage,
 } from "./audienceContract";
 import type { PresentationBlock as AudienceBlock } from "./blocks";
@@ -85,6 +87,7 @@ const AUDIENCE_COPY: Record<
 		lightScreen: string;
 		intro: string;
 		dataPolicy: string;
+		takePart: string;
 	}
 > = {
 	cs: {
@@ -101,6 +104,7 @@ const AUDIENCE_COPY: Record<
 		lightScreen: "Světlá obrazovka",
 		pause: "Pozastavit",
 		play: "Přehrát",
+		takePart: "Zapojte se",
 		waiting: "Výsledky se připravují.",
 	},
 	de: {
@@ -117,6 +121,7 @@ const AUDIENCE_COPY: Record<
 		lightScreen: "Heller Bildschirm",
 		pause: "Pause",
 		play: "Abspielen",
+		takePart: "Mitmachen",
 		waiting: "Die Ergebnisse werden vorbereitet.",
 	},
 	en: {
@@ -133,6 +138,7 @@ const AUDIENCE_COPY: Record<
 		lightScreen: "Light screen",
 		pause: "Pause",
 		play: "Play",
+		takePart: "Take part",
 		waiting: "The results are being prepared.",
 	},
 	es: {
@@ -149,6 +155,7 @@ const AUDIENCE_COPY: Record<
 		lightScreen: "Pantalla clara",
 		pause: "Pausar",
 		play: "Reproducir",
+		takePart: "Participa",
 		waiting: "Los resultados se están preparando.",
 	},
 	fr: {
@@ -165,6 +172,7 @@ const AUDIENCE_COPY: Record<
 		lightScreen: "Écran clair",
 		pause: "Pause",
 		play: "Lire",
+		takePart: "Participer",
 		waiting: "Les résultats sont en cours de préparation.",
 	},
 	it: {
@@ -181,6 +189,7 @@ const AUDIENCE_COPY: Record<
 		lightScreen: "Schermo chiaro",
 		pause: "Pausa",
 		play: "Riprendi",
+		takePart: "Partecipa",
 		waiting: "I risultati sono in preparazione.",
 	},
 	nl: {
@@ -197,6 +206,7 @@ const AUDIENCE_COPY: Record<
 		lightScreen: "Licht scherm",
 		pause: "Pauzeren",
 		play: "Afspelen",
+		takePart: "Doe mee",
 		waiting: "De resultaten worden voorbereid.",
 	},
 	uk: {
@@ -213,6 +223,7 @@ const AUDIENCE_COPY: Record<
 		lightScreen: "Світлий екран",
 		pause: "Пауза",
 		play: "Відтворити",
+		takePart: "Долучитися",
 		waiting: "Результати готуються.",
 	},
 };
@@ -256,7 +267,7 @@ export const AudienceScreen = ({
 	const [fullscreenError, setFullscreenError] = useState(false);
 	const [openingOpen, setOpeningOpen] = useState(false);
 	const [openingLocked, setOpeningLocked] = useState(false);
-	const [openingScreen, setOpeningScreen] = useState<"intro" | "data" | null>(
+	const [openingScreen, setOpeningScreen] = useState<OpeningScreen | null>(
 		null,
 	);
 	const [deckChrome, setDeckChrome] = useState<{
@@ -566,6 +577,7 @@ export const AudienceScreen = ({
 		const session = audience?.bundle.files?.["session.json"] as
 			| {
 					data?: unknown;
+					guide?: unknown;
 					disclosure?: {
 						invitation_text?: unknown;
 						invitation_title?: unknown;
@@ -576,6 +588,7 @@ export const AudienceScreen = ({
 			| undefined;
 		return {
 			data: Boolean(session?.data),
+			guide: Boolean(session?.guide),
 			intro: Boolean(
 				session?.intro?.enabled ||
 					session?.disclosure?.text ||
@@ -587,11 +600,8 @@ export const AudienceScreen = ({
 	useEffect(() => {
 		if (!audience || openingPresentationRef.current === audience.id) return;
 		openingPresentationRef.current = audience.id;
-		const firstOpening = openingAvailability.intro
-			? "intro"
-			: openingAvailability.data
-				? "data"
-				: null;
+		const firstOpening =
+			OPENING_SCREENS.find((screen) => openingAvailability[screen]) ?? null;
 		setOpeningScreen(firstOpening);
 		setOpeningOpen(firstOpening !== null);
 	}, [audience, openingAvailability]);
@@ -614,7 +624,7 @@ export const AudienceScreen = ({
 				command === "visibility"
 					? deckVisibilityCommand(audience.id, extra.visible === true)
 					: command === "opening"
-						? deckOpeningCommand(audience.id, extra.screen as "intro" | "data")
+						? deckOpeningCommand(audience.id, extra.screen as OpeningScreen)
 						: command === "theme"
 							? deckThemeCommand(audience.id, extra.theme as AudienceTheme)
 							: deckBlockCommand(
@@ -858,51 +868,38 @@ export const AudienceScreen = ({
 					)}
 				</div>
 				<div className={classes.navigation}>
-					{(openingAvailability.intro || openingAvailability.data) && (
+					{OPENING_SCREENS.some((screen) => openingAvailability[screen]) && (
 						<nav
 							className={classes.openingLinks}
 							aria-label={t`Opening screens`}
 						>
-							{openingAvailability.intro && (
-								<button
-									type="button"
-									className={classes.openingTab}
-									data-active={
-										openingOpen && openingScreen === "intro" ? true : undefined
-									}
-									aria-current={
-										openingOpen && openingScreen === "intro"
-											? "page"
-											: undefined
-									}
-									onClick={() => {
-										setOpeningOpen(true);
-										setOpeningScreen("intro");
-										postDeckCommand("opening", { screen: "intro" });
-									}}
-								>
-									{audienceCopy.intro}
-								</button>
-							)}
-							{openingAvailability.data && (
-								<button
-									type="button"
-									className={classes.openingTab}
-									data-active={
-										openingOpen && openingScreen === "data" ? true : undefined
-									}
-									aria-current={
-										openingOpen && openingScreen === "data" ? "page" : undefined
-									}
-									onClick={() => {
-										setOpeningOpen(true);
-										setOpeningScreen("data");
-										postDeckCommand("opening", { screen: "data" });
-									}}
-								>
-									{audienceCopy.dataPolicy}
-								</button>
-							)}
+							{OPENING_SCREENS.filter(
+								(screen) => openingAvailability[screen],
+							).map((screen) => {
+								const current = openingOpen && openingScreen === screen;
+								return (
+									<button
+										key={screen}
+										type="button"
+										className={classes.openingTab}
+										data-active={current || undefined}
+										aria-current={current ? "page" : undefined}
+										onClick={() => {
+											setOpeningOpen(true);
+											setOpeningScreen(screen);
+											postDeckCommand("opening", { screen });
+										}}
+									>
+										{
+											{
+												data: audienceCopy.dataPolicy,
+												guide: audienceCopy.takePart,
+												intro: audienceCopy.intro,
+											}[screen]
+										}
+									</button>
+								);
+							})}
 						</nav>
 					)}
 					<div className={classes.tabs}>

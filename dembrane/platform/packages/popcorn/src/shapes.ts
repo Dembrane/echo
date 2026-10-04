@@ -162,6 +162,12 @@ export const noticeBody = model({
 
 export const dataBody = model({ enabled: optional(nullable(bool()), null) });
 
+export const guideBody = model({
+  enabled: optional(nullable(bool()), null),
+  title: optional(nullable(str({ max: 160 })), null),
+  steps: optional(nullable(str({ max: 1200 })), null),
+});
+
 export const languageBody = model({
   ui: optional(nullable(literalUnion(["auto"], LANGUAGE_CODES)), null),
   // "" asks for the original language again.
@@ -191,6 +197,7 @@ export const settingsBody = model({
   disclosure: optional(nullable(nested(disclosureBody)), null),
   notice: optional(nullable(nested(noticeBody)), null),
   data: optional(nullable(nested(dataBody)), null),
+  guide: optional(nullable(nested(guideBody)), null),
   language: optional(nullable(nested(languageBody)), null),
 });
 

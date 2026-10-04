@@ -107,8 +107,14 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .data-steps p::before { content: counter(step) ". "; color: var(--blue); }
 .data-notes { border-top: 1px solid var(--hairline); padding-top: 1em; font-size: .85em; max-width: 52em; }
 .data-notes p + p { margin-top: .4em; }
+.guide-grid { display: grid; grid-template-columns: minmax(10em, 18em) minmax(0, 1fr); gap: 2.4em; align-items: start; }
+.guide-qr { margin: 0; display: flex; flex-direction: column; gap: .6em; }
+.guide-qr svg { width: 100%; height: auto; background: #fff; padding: .6em; box-sizing: border-box; }
+.guide-text { display: flex; flex-direction: column; gap: 1.2em; }
+.guide-steps { grid-template-columns: 1fr; gap: .8em; font-size: 1.15em; }
 @media (max-width: 720px) {
   .data-steps { grid-template-columns: 1fr; }
+  .guide-grid { grid-template-columns: 1fr; }
   .data-steps li { flex-direction: row; align-items: center; }
   .data-steps img { width: 6.5em; flex: none; }
 }

@@ -53,6 +53,10 @@ export type PopcornNotice = { enabled: boolean; text: string };
 // project's anonymisation and legal basis.
 export type PopcornData = { enabled: boolean };
 
+// The host guide's screen: its title and steps (one per line), copied from the
+// project's host guide so the screen and the printout say the same.
+export type PopcornGuide = { enabled: boolean; title: string; steps: string };
+
 export type PopcornLanguageCode =
 	| "en"
 	| "nl"
@@ -80,6 +84,7 @@ export type PopcornSettings = {
 	disclosure: PopcornDisclosure;
 	notice: PopcornNotice;
 	data: PopcornData;
+	guide?: PopcornGuide;
 	language?: PopcornLanguage;
 	title: string;
 	client: string;
@@ -148,6 +153,7 @@ export type PopcornSettingsPatch = Partial<
 		| "disclosure"
 		| "notice"
 		| "data"
+		| "guide"
 		| "language"
 		| "presentation"
 	> & {
@@ -158,6 +164,7 @@ export type PopcornSettingsPatch = Partial<
 		disclosure: Partial<PopcornDisclosure>;
 		notice: Partial<PopcornNotice>;
 		data: Partial<PopcornData>;
+		guide: Partial<PopcornGuide>;
 		language: Partial<PopcornLanguage>;
 		tabs: Partial<PopcornTabs>;
 		voice: Partial<PopcornVoice>;

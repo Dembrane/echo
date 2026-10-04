@@ -74,6 +74,7 @@ import {
 	usePresentationDraft,
 } from "@/components/present/hooks/usePresentationDraft";
 import { TranslationStatus } from "@/components/present/TranslationStatus";
+import { HostGuideSettings } from "@/components/sharing/HostGuideSettings";
 import { LiveButton } from "@/components/sharing/LiveButton";
 import { EventPrintoutsItem, ShareButton } from "@/components/sharing/Share";
 import { StatusLine } from "@/components/sharing/StatusLine";
@@ -121,6 +122,7 @@ function Editor({
 	const sections = [
 		{ label: t`Intro`, value: "intro" },
 		{ label: t`Data policy`, value: "data" },
+		{ label: t`Host guide`, value: "guide" },
 		{ label: t`Outcomes`, value: "activities" },
 		{ label: t`Language`, value: "language" },
 		{ label: t`Appearance`, value: "appearance" },
@@ -182,6 +184,12 @@ function Editor({
 						/>
 						<PopcornLabelsSwitch projectId={projectId} popcorn={presentation} />
 					</Stack>
+				</Tabs.Panel>
+				<Tabs.Panel value="guide" pt="md">
+					<HostGuideSettings
+						projectId={projectId}
+						presentation={presentation}
+					/>
 				</Tabs.Panel>
 				<Tabs.Panel value="activities" pt="md">
 					<Stack>
@@ -303,6 +311,7 @@ function Editor({
 const EDITOR_SECTIONS = [
 	"intro",
 	"data",
+	"guide",
 	"activities",
 	"language",
 	"appearance",

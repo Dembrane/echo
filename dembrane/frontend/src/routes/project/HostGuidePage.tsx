@@ -470,6 +470,30 @@ const parseStoredGuide = (
 	return { steps: guide.steps, tips: guide.tips, title: guide.title };
 };
 
+/**
+ * The guide's words as plain text, for Present's host guide screen: what the
+ * host saved for the project's language, else the defaults this page shows.
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export const hostGuideText = (project: {
+	language?: string | null;
+	host_guide?: unknown;
+	default_conversation_ask_for_participant_name?: boolean | null;
+}) => {
+	const language = (project.language?.slice(0, 2) || "en") as LanguageCode;
+	const defaults = defaultTranslations[language] || defaultTranslations.en;
+	const stored = parseStoredGuide(project.host_guide, language);
+	const steps = stored
+		? stored.steps.map((step) => step.content)
+		: (project.default_conversation_ask_for_participant_name ?? true)
+			? defaults.steps
+			: defaults.stepsNoName;
+	return {
+		steps: steps.map((step) => getStepText(step as StepItem | string)),
+		title: stored?.title ?? defaults.title,
+	};
+};
+
 // ============================================================================
 // PRINT STYLES - Uniform margins
 // ============================================================================

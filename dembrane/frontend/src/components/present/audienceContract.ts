@@ -1,5 +1,9 @@
 import { API_BASE_URL } from "@/config";
 
+/** The deck's reading screens before the outcomes, in the order they open. */
+export const OPENING_SCREENS = ["intro", "data", "guide"] as const;
+export type OpeningScreen = (typeof OPENING_SCREENS)[number];
+
 export type DeckBlock = "popcorn" | "stakeholders" | "tensions";
 
 export type DeckCommand =
@@ -26,7 +30,7 @@ export type DeckCommand =
 	| {
 			command: "opening";
 			presentationId: string;
-			screen: "intro" | "data";
+			screen: OpeningScreen;
 			source: "dembrane-present-shell";
 			version: 1;
 	  }
@@ -65,7 +69,7 @@ export type DeckOpeningMessage = {
 	locked?: boolean;
 	open: boolean;
 	presentationId: string;
-	screen?: "intro" | "data";
+	screen?: OpeningScreen;
 	source: "dembrane-present-deck";
 	type: "opening";
 	version: 1;
@@ -162,7 +166,7 @@ export const deckBlockCommand = (
 
 export const deckOpeningCommand = (
 	presentationId: string,
-	screen: "intro" | "data",
+	screen: OpeningScreen,
 ): DeckCommand => ({
 	command: "opening",
 	presentationId,
@@ -237,9 +241,7 @@ export const isDeckOpeningEvent = (
 		message.presentationId === expected.presentationId &&
 		typeof message.open === "boolean" &&
 		(message.locked === undefined || typeof message.locked === "boolean") &&
-		(message.screen === undefined ||
-			message.screen === "intro" ||
-			message.screen === "data")
+		(message.screen === undefined || OPENING_SCREENS.includes(message.screen))
 	);
 };
 

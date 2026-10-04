@@ -1182,6 +1182,8 @@
     }
     // What happens to the data: its words come from the project's settings.
     if (session.data) screens.push({ kind: "data", data: session.data });
+    // The host guide: the code to take part and the steps, the same words as on paper.
+    if (session.guide) screens.push({ kind: "guide", guide: session.guide });
     return screens;
   }
 
@@ -1198,6 +1200,13 @@
     const links = (data.links || []).filter((l) => /^https?:\/\//.test(l.url || ""))
       .map((l) => `<a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">${esc(l.label)}</a>`).join(" · ");
     return `<h1 id="intro-title">${esc(data.title)}</h1><ol class="data-steps">${steps}</ol>${actionHtml}<div class="data-notes">${(data.notes || []).map((n) => `<p>${esc(n)}</p>`).join("")}${links ? `<p>${links}</p>` : ""}</div>`;
+  }
+
+  // The code is the screen's own (the corner QR folds away), big enough for the back row.
+  function guideScreenHtml(guide, actionHtml = "") {
+    const steps = (guide.steps || []).map((step) => `<li><p>${esc(step)}</p></li>`).join("");
+    const qr = guide.qr?.svg ? `<figure class="guide-qr">${guide.qr.svg}<figcaption>${esc(tr("qr.scanVoice"))}</figcaption></figure>` : "";
+    return `<div class="guide-grid">${qr}<div class="guide-text">${guide.title ? `<h1 id="intro-title">${esc(guide.title)}</h1>` : ""}<ol class="data-steps guide-steps">${steps}</ol>${actionHtml}</div></div>`;
   }
 
   // `how` is what the address does: "push" (a step forward), "replace" (a
@@ -1260,14 +1269,16 @@
     // (never text of its own, so never saved). The audience gets no element.
     const fields = screen.fields || {};
     const emptyMark = (field, key) => (editMark(field) ? `${editMark(field)} data-placeholder="${esc(tr(key))}"` : "");
-    const subtitleHtml = screen.data ? "" : screen.subtitle
+    const subtitleHtml = screen.data || screen.guide ? "" : screen.subtitle
       ? `<p class="intro-subtitle"${editMark(fields.subtitle)}>${esc(screen.subtitle)}</p>`
       : fields.subtitle !== fields.body && emptyMark(fields.subtitle, "intro.addSubtitle")
         ? `<p class="intro-subtitle"${emptyMark(fields.subtitle, "intro.addSubtitle")}></p>` : "";
-    const bodyHtml = screen.data ? "" : screen.body.length || screen.subtitle && fields.subtitle === fields.body
+    const bodyHtml = screen.data || screen.guide ? "" : screen.body.length || screen.subtitle && fields.subtitle === fields.body
       ? screen.body.map((p) => `<p${editMark(fields.body)}>${esc(p)}</p>`).join("")
       : emptyMark(fields.body, "intro.addText") ? `<p${emptyMark(fields.body, "intro.addText")}></p>` : "";
-    dialog.innerHTML = screen.data
+    dialog.innerHTML = screen.guide
+      ? `<div class="intro-content intro-data">${backHtml}<p class="intro-eyebrow">${eyebrow}</p>${guideScreenHtml(screen.guide, continueHtml)}</div>`
+      : screen.data
       ? `<div class="intro-content intro-data">${backHtml}<p class="intro-eyebrow">${eyebrow}</p>${dataScreenHtml(screen.data, continueHtml)}</div>`
       : `<div class="intro-content">${backHtml}<p class="intro-eyebrow">${eyebrow}</p>${screen.title ? `<h1 id="intro-title"${editMark(screen.fields?.title)}>${esc(screen.title)}</h1>` : ""}${subtitleHtml}${bodyHtml}${screen.source ? `<p class="intro-source">${esc(tr("intro.publicOnly"))}</p>` : ""}${continueHtml}</div>`;
     const back = dialog.querySelector(".intro-back");
@@ -4960,7 +4971,7 @@
       document.documentElement.dataset.theme = message.theme;
       return;
     }
-    if (message.command === "opening" && ["intro", "data"].includes(message.screen)) {
+    if (message.command === "opening" && ["intro", "data", "guide"].includes(message.screen)) {
       const screens = openingScreens();
       const index = screens.findIndex((screen) => screen.kind === message.screen);
       if (index >= 0) openIntroduction(index + 1, "push");
