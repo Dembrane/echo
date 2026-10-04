@@ -20,7 +20,10 @@ export const BackButton = ({ to, label, center }: BackButtonProps) => {
 			<RailTip label={label}>
 				<I18nLink
 					to={to}
-					className={cn(RAIL_ITEM_CLASS, "text-[var(--app-text)] hover:bg-[var(--app-quiet)]")}
+					className={cn(
+						RAIL_ITEM_CLASS,
+						"text-[var(--app-text)] hover:bg-[var(--app-quiet)]",
+					)}
 				>
 					<ArrowLeft size={16} aria-hidden="true" />
 					<span className="sr-only">{label}</span>

@@ -18005,3 +18005,99 @@ msgstr "Doe mee"
 msgid "Transcribing"
 msgstr "Wordt getranscribeerd"
 
+#. placeholder {0}: summary.live
+#: src/features/processes/watchers.tsx:154
+msgid "{0, plural, one {# conversation recording} other {# conversations recording}}"
+msgstr "{0, plural, one {# gesprek neemt op} other {# gesprekken nemen op}}"
+
+#. placeholder {0}: summary.pending_transcription
+#: src/features/processes/watchers.tsx:160
+msgid "{0, plural, one {# part to transcribe} other {# parts to transcribe}}"
+msgstr "{0, plural, one {# deel te transcriberen} other {# delen te transcriberen}}"
+
+#. placeholder {0}: status.running
+#: src/features/processes/copy.ts:40
+msgid "{0, plural, one {running a plan} other {running # plans}}"
+msgstr "{0, plural, one {voert een plan uit} other {voert # plannen uit}}"
+
+#. placeholder {0}: status.done ?? 0
+#. placeholder {1}: status.total
+#: src/features/sidebar/primitives/NavItem.tsx:273
+#: src/features/processes/copy.ts:44
+msgid "{0} of {1}"
+msgstr "{0} van {1}"
+
+#. placeholder {0}: translation.translated
+#. placeholder {1}: translation.total
+#: src/features/processes/watchers.tsx:115
+msgid "{0} of {1} texts translated"
+msgstr "{0} van {1} teksten vertaald"
+
+#: src/features/processes/watchers.tsx:63
+msgid "{done} of {total} conversations"
+msgstr "{done} van {total} gesprekken"
+
+#: src/features/processes/watchers.tsx:168
+msgid "{newErrors, plural, one {# conversation could not be transcribed.} other {# conversations could not be transcribed.}}"
+msgstr "{newErrors, plural, one {# gesprek kon niet worden getranscribeerd.} other {# gesprekken konden niet worden getranscribeerd.}}"
+
+#: src/features/processes/copy.ts:9
+msgid "Ask could not answer"
+msgstr "Ask kon geen antwoord geven"
+
+#: src/features/processes/copy.ts:13
+msgid "Map failed"
+msgstr "Map mislukt"
+
+#: src/features/processes/copy.ts:13
+msgid "Map ready"
+msgstr "Map klaar"
+
+#: src/features/processes/copy.ts:24
+msgid "Open chat"
+msgstr "Chat openen"
+
+#: src/features/processes/copy.ts:26
+msgid "Open conversations"
+msgstr "Gesprekken openen"
+
+#: src/features/processes/copy.ts:30
+msgid "Open presentation"
+msgstr "Presentatie openen"
+
+#: src/features/processes/copy.ts:32
+msgid "Open report"
+msgstr "Rapport openen"
+
+#: src/features/processes/copy.ts:15
+msgid "Presentation update failed"
+msgstr "Presentatie bijwerken mislukt"
+
+#: src/features/processes/copy.ts:15
+msgid "Presentation updated"
+msgstr "Presentatie bijgewerkt"
+
+#: src/features/processes/copy.ts:17
+msgid "Report failed"
+msgstr "Rapport mislukt"
+
+#: src/features/processes/copy.ts:17
+msgid "Report ready"
+msgstr "Rapport klaar"
+
+#: src/features/processes/copy.ts:11
+msgid "Transcription done"
+msgstr "Transcriptie klaar"
+
+#: src/features/processes/copy.ts:11
+msgid "Transcription failed"
+msgstr "Transcriptie mislukt"
+
+#: src/features/processes/copy.ts:45
+msgid "working"
+msgstr "bezig"
+
+#: src/features/processes/copy.ts:9
+msgid "Your answer is ready"
+msgstr "Je antwoord is klaar"
+

@@ -18009,3 +18009,99 @@ msgstr "Zapojte se"
 msgid "Transcribing"
 msgstr "Probíhá přepis"
 
+#. placeholder {0}: summary.live
+#: src/features/processes/watchers.tsx:154
+msgid "{0, plural, one {# conversation recording} other {# conversations recording}}"
+msgstr "{0, plural, one {# konverzace se nahrává} few {# konverzace se nahrávají} many {# konverzace se nahrává} other {# konverzací se nahrává}}"
+
+#. placeholder {0}: summary.pending_transcription
+#: src/features/processes/watchers.tsx:160
+msgid "{0, plural, one {# part to transcribe} other {# parts to transcribe}}"
+msgstr "{0, plural, one {# část k přepisu} few {# části k přepisu} many {# části k přepisu} other {# částí k přepisu}}"
+
+#. placeholder {0}: status.running
+#: src/features/processes/copy.ts:40
+msgid "{0, plural, one {running a plan} other {running # plans}}"
+msgstr "{0, plural, one {provádí plán} few {provádí # plány} many {provádí # plánu} other {provádí # plánů}}"
+
+#. placeholder {0}: status.done ?? 0
+#. placeholder {1}: status.total
+#: src/features/sidebar/primitives/NavItem.tsx:273
+#: src/features/processes/copy.ts:44
+msgid "{0} of {1}"
+msgstr "{0} z {1}"
+
+#. placeholder {0}: translation.translated
+#. placeholder {1}: translation.total
+#: src/features/processes/watchers.tsx:115
+msgid "{0} of {1} texts translated"
+msgstr "Přeloženo {0} z {1} textů"
+
+#: src/features/processes/watchers.tsx:63
+msgid "{done} of {total} conversations"
+msgstr "{done} z {total} konverzací"
+
+#: src/features/processes/watchers.tsx:168
+msgid "{newErrors, plural, one {# conversation could not be transcribed.} other {# conversations could not be transcribed.}}"
+msgstr "{newErrors, plural, one {# konverzaci se nepodařilo přepsat.} few {# konverzace se nepodařilo přepsat.} many {# konverzace se nepodařilo přepsat.} other {# konverzací se nepodařilo přepsat.}}"
+
+#: src/features/processes/copy.ts:9
+msgid "Ask could not answer"
+msgstr "Ask nedokázal odpovědět"
+
+#: src/features/processes/copy.ts:13
+msgid "Map failed"
+msgstr "Mapa se nezdařila"
+
+#: src/features/processes/copy.ts:13
+msgid "Map ready"
+msgstr "Mapa je hotová"
+
+#: src/features/processes/copy.ts:24
+msgid "Open chat"
+msgstr "Otevřít chat"
+
+#: src/features/processes/copy.ts:26
+msgid "Open conversations"
+msgstr "Otevřít konverzace"
+
+#: src/features/processes/copy.ts:30
+msgid "Open presentation"
+msgstr "Otevřít prezentaci"
+
+#: src/features/processes/copy.ts:32
+msgid "Open report"
+msgstr "Otevřít zprávu"
+
+#: src/features/processes/copy.ts:15
+msgid "Presentation update failed"
+msgstr "Aktualizace prezentace se nezdařila"
+
+#: src/features/processes/copy.ts:15
+msgid "Presentation updated"
+msgstr "Prezentace aktualizována"
+
+#: src/features/processes/copy.ts:17
+msgid "Report failed"
+msgstr "Zpráva se nezdařila"
+
+#: src/features/processes/copy.ts:17
+msgid "Report ready"
+msgstr "Zpráva je hotová"
+
+#: src/features/processes/copy.ts:11
+msgid "Transcription done"
+msgstr "Přepis dokončen"
+
+#: src/features/processes/copy.ts:11
+msgid "Transcription failed"
+msgstr "Přepis se nezdařil"
+
+#: src/features/processes/copy.ts:45
+msgid "working"
+msgstr "probíhá"
+
+#: src/features/processes/copy.ts:9
+msgid "Your answer is ready"
+msgstr "Vaše odpověď je hotová"
+

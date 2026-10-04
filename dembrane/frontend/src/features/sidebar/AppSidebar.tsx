@@ -1,6 +1,11 @@
 import { Trans } from "@lingui/react/macro";
 import { Button, Stack, Text } from "@mantine/core";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
+import {
+	AskWatcher,
+	ProcessNotices,
+	ProjectProcessWatchers,
+} from "@/features/processes/watchers";
 import { ViewTransition } from "./animations/ViewTransition";
 import { HelpBlock } from "./blocks/HelpBlock";
 import { InboxBlock } from "./blocks/InboxBlock";
@@ -26,7 +31,7 @@ import { WorkspaceSettingsView } from "./views/workspace/WorkspaceSettingsView";
 export const AppSidebar = () => {
 	useSidebarWhitelabelLogo();
 	useRecordRecents();
-	const { view } = useSidebarView();
+	const { view, scope, params } = useSidebarView();
 
 	const content = (() => {
 		switch (view) {
@@ -74,6 +79,18 @@ export const AppSidebar = () => {
 					</div>
 				}
 			>
+				{scope === "project" && params?.workspaceId && params.projectId ? (
+					<ErrorBoundary fallback={null}>
+						<ProjectProcessWatchers
+							key={params.projectId}
+							workspaceId={params.workspaceId}
+							projectId={params.projectId}
+							section={params.section}
+						/>
+					</ErrorBoundary>
+				) : null}
+				<AskWatcher />
+				<ProcessNotices />
 				<ViewTransition>
 					<ErrorBoundary fallback={<ViewError />}>{content}</ErrorBoundary>
 				</ViewTransition>

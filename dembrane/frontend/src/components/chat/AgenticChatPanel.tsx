@@ -65,6 +65,7 @@ import { VoiceInputButton } from "@/components/voice/VoiceInputButton";
 import { VoiceInputError } from "@/components/voice/VoiceInputError";
 import { VoiceRecordingBar } from "@/components/voice/VoiceRecordingBar";
 import { mergeTranscriptIntoDraft } from "@/components/voice/voiceInput";
+import { trackProcess } from "@/features/processes/store";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
@@ -1499,6 +1500,23 @@ export const AgenticChatPanel = ({
 			stopStream();
 		}
 	}, [runStatus, stopStream]);
+
+	// The rail's Ask dial follows this run, here and after you leave the chat.
+	// Keyed on the run so a chat switch never hands one chat's run to another.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: the chat is the one the run started in
+	useEffect(() => {
+		if (!runId || !runStatus || !workspaceId) return;
+		trackProcess(
+			`ask:${runId}`,
+			{
+				href: `/w/${workspaceId}/projects/${projectId}/chats/${chatId}`,
+				projectId,
+				tool: "ask",
+			},
+			isInFlightStatus(runStatus) ? {} : null,
+			runStatus === "completed" ? undefined : "",
+		);
+	}, [runId, runStatus]);
 
 	// Stick to the bottom only when the reader is already there (or just sent a
 	// message). Someone scrolled up to read must never be yanked back down by a

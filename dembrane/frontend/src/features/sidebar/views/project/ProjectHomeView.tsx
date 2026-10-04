@@ -23,6 +23,7 @@ import {
 	ENABLE_PRESENT,
 	ENABLE_WEBHOOKS,
 } from "@/config";
+import { useToolStatuses } from "@/features/processes/store";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { isReadOnlyRole } from "@/lib/roles";
 import { BackButton } from "../../primitives/BackButton";
@@ -52,6 +53,7 @@ export const ProjectHomeView = () => {
 		{ hasMessages: true },
 	);
 	const project = projectQuery.data;
+	const processes = useToolStatuses(projectId);
 
 	if (!workspaceId || !projectId) return null;
 	const base = `/w/${workspaceId}/projects/${projectId}`;
@@ -84,6 +86,7 @@ export const ProjectHomeView = () => {
 				<NavItem
 					to={`${base}/chats/new`}
 					label={<Trans>Ask</Trans>}
+					process={{ status: processes.ask, tool: "ask" }}
 					icon={ChatCircleDotsIcon}
 					badge={chatsCountQuery.data || undefined}
 				/>
@@ -91,6 +94,7 @@ export const ProjectHomeView = () => {
 			<NavItem
 				to={`${base}/conversations`}
 				label={<Trans>Conversations</Trans>}
+				process={{ status: processes.conversations, tool: "conversations" }}
 				icon={ChatCircleTextIcon}
 				badge={conversationsCountQuery.data || undefined}
 			/>
@@ -112,6 +116,7 @@ export const ProjectHomeView = () => {
 					<NavItem
 						to={`${base}/present`}
 						label={<Trans>Present</Trans>}
+						process={{ status: processes.present, tool: "present" }}
 						icon={PlayIcon}
 						badge={<Trans>Beta</Trans>}
 					/>
@@ -145,12 +150,14 @@ export const ProjectHomeView = () => {
 				<NavItem
 					to={`${base}/map`}
 					label={<Trans>Map</Trans>}
+					process={{ status: processes.map, tool: "map" }}
 					icon={GraphIcon}
 					badge={<Trans>Beta</Trans>}
 				/>
 				<NavItem
 					to={`${base}/report`}
 					label={<Trans>Report</Trans>}
+					process={{ status: processes.report, tool: "report" }}
 					icon={FileTextIcon}
 				/>
 				{ENABLE_WEBHOOKS && isWorkspaceAdmin && (

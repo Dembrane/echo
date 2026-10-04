@@ -18012,3 +18012,99 @@ msgstr "Participa"
 msgid "Transcribing"
 msgstr "Transcribiendo"
 
+#. placeholder {0}: summary.live
+#: src/features/processes/watchers.tsx:154
+msgid "{0, plural, one {# conversation recording} other {# conversations recording}}"
+msgstr "{0, plural, one {# conversación grabando} other {# conversaciones grabando}}"
+
+#. placeholder {0}: summary.pending_transcription
+#: src/features/processes/watchers.tsx:160
+msgid "{0, plural, one {# part to transcribe} other {# parts to transcribe}}"
+msgstr "{0, plural, one {# parte por transcribir} other {# partes por transcribir}}"
+
+#. placeholder {0}: status.running
+#: src/features/processes/copy.ts:40
+msgid "{0, plural, one {running a plan} other {running # plans}}"
+msgstr "{0, plural, one {ejecutando un plan} other {ejecutando # planes}}"
+
+#. placeholder {0}: status.done ?? 0
+#. placeholder {1}: status.total
+#: src/features/sidebar/primitives/NavItem.tsx:273
+#: src/features/processes/copy.ts:44
+msgid "{0} of {1}"
+msgstr "{0} de {1}"
+
+#. placeholder {0}: translation.translated
+#. placeholder {1}: translation.total
+#: src/features/processes/watchers.tsx:115
+msgid "{0} of {1} texts translated"
+msgstr "{0} de {1} textos traducidos"
+
+#: src/features/processes/watchers.tsx:63
+msgid "{done} of {total} conversations"
+msgstr "{done} de {total} conversaciones"
+
+#: src/features/processes/watchers.tsx:168
+msgid "{newErrors, plural, one {# conversation could not be transcribed.} other {# conversations could not be transcribed.}}"
+msgstr "{newErrors, plural, one {# conversación no se pudo transcribir.} other {# conversaciones no se pudieron transcribir.}}"
+
+#: src/features/processes/copy.ts:9
+msgid "Ask could not answer"
+msgstr "Ask no pudo responder"
+
+#: src/features/processes/copy.ts:13
+msgid "Map failed"
+msgstr "El mapa falló"
+
+#: src/features/processes/copy.ts:13
+msgid "Map ready"
+msgstr "Mapa listo"
+
+#: src/features/processes/copy.ts:24
+msgid "Open chat"
+msgstr "Abrir chat"
+
+#: src/features/processes/copy.ts:26
+msgid "Open conversations"
+msgstr "Abrir conversaciones"
+
+#: src/features/processes/copy.ts:30
+msgid "Open presentation"
+msgstr "Abrir presentación"
+
+#: src/features/processes/copy.ts:32
+msgid "Open report"
+msgstr "Abrir informe"
+
+#: src/features/processes/copy.ts:15
+msgid "Presentation update failed"
+msgstr "No se pudo actualizar la presentación"
+
+#: src/features/processes/copy.ts:15
+msgid "Presentation updated"
+msgstr "Presentación actualizada"
+
+#: src/features/processes/copy.ts:17
+msgid "Report failed"
+msgstr "El informe falló"
+
+#: src/features/processes/copy.ts:17
+msgid "Report ready"
+msgstr "Informe listo"
+
+#: src/features/processes/copy.ts:11
+msgid "Transcription done"
+msgstr "Transcripción terminada"
+
+#: src/features/processes/copy.ts:11
+msgid "Transcription failed"
+msgstr "La transcripción falló"
+
+#: src/features/processes/copy.ts:45
+msgid "working"
+msgstr "en curso"
+
+#: src/features/processes/copy.ts:9
+msgid "Your answer is ready"
+msgstr "Tu respuesta está lista"
+

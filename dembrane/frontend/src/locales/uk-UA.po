@@ -18011,3 +18011,99 @@ msgstr "Взяти участь"
 msgid "Transcribing"
 msgstr "Транскрибується"
 
+#. placeholder {0}: summary.live
+#: src/features/processes/watchers.tsx:154
+msgid "{0, plural, one {# conversation recording} other {# conversations recording}}"
+msgstr "{0, plural, one {# розмова записується} few {# розмови записуються} many {# розмов записується} other {# розмови записуються}}"
+
+#. placeholder {0}: summary.pending_transcription
+#: src/features/processes/watchers.tsx:160
+msgid "{0, plural, one {# part to transcribe} other {# parts to transcribe}}"
+msgstr "{0, plural, one {# частина для транскрибування} few {# частини для транскрибування} many {# частин для транскрибування} other {# частини для транскрибування}}"
+
+#. placeholder {0}: status.running
+#: src/features/processes/copy.ts:40
+msgid "{0, plural, one {running a plan} other {running # plans}}"
+msgstr "{0, plural, one {виконує план} few {виконує # плани} many {виконує # планів} other {виконує # плану}}"
+
+#. placeholder {0}: status.done ?? 0
+#. placeholder {1}: status.total
+#: src/features/sidebar/primitives/NavItem.tsx:273
+#: src/features/processes/copy.ts:44
+msgid "{0} of {1}"
+msgstr "{0} з {1}"
+
+#. placeholder {0}: translation.translated
+#. placeholder {1}: translation.total
+#: src/features/processes/watchers.tsx:115
+msgid "{0} of {1} texts translated"
+msgstr "Перекладено {0} з {1} текстів"
+
+#: src/features/processes/watchers.tsx:63
+msgid "{done} of {total} conversations"
+msgstr "{done} з {total} розмов"
+
+#: src/features/processes/watchers.tsx:168
+msgid "{newErrors, plural, one {# conversation could not be transcribed.} other {# conversations could not be transcribed.}}"
+msgstr "{newErrors, plural, one {# розмову не вдалося транскрибувати.} few {# розмови не вдалося транскрибувати.} many {# розмов не вдалося транскрибувати.} other {# розмови не вдалося транскрибувати.}}"
+
+#: src/features/processes/copy.ts:9
+msgid "Ask could not answer"
+msgstr "Ask не зміг відповісти"
+
+#: src/features/processes/copy.ts:13
+msgid "Map failed"
+msgstr "Не вдалося створити карту"
+
+#: src/features/processes/copy.ts:13
+msgid "Map ready"
+msgstr "Карта готова"
+
+#: src/features/processes/copy.ts:24
+msgid "Open chat"
+msgstr "Відкрити чат"
+
+#: src/features/processes/copy.ts:26
+msgid "Open conversations"
+msgstr "Відкрити розмови"
+
+#: src/features/processes/copy.ts:30
+msgid "Open presentation"
+msgstr "Відкрити презентацію"
+
+#: src/features/processes/copy.ts:32
+msgid "Open report"
+msgstr "Відкрити звіт"
+
+#: src/features/processes/copy.ts:15
+msgid "Presentation update failed"
+msgstr "Не вдалося оновити презентацію"
+
+#: src/features/processes/copy.ts:15
+msgid "Presentation updated"
+msgstr "Презентацію оновлено"
+
+#: src/features/processes/copy.ts:17
+msgid "Report failed"
+msgstr "Не вдалося створити звіт"
+
+#: src/features/processes/copy.ts:17
+msgid "Report ready"
+msgstr "Звіт готовий"
+
+#: src/features/processes/copy.ts:11
+msgid "Transcription done"
+msgstr "Транскрибування завершено"
+
+#: src/features/processes/copy.ts:11
+msgid "Transcription failed"
+msgstr "Не вдалося транскрибувати"
+
+#: src/features/processes/copy.ts:45
+msgid "working"
+msgstr "триває"
+
+#: src/features/processes/copy.ts:9
+msgid "Your answer is ready"
+msgstr "Ваша відповідь готова"
+
