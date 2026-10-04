@@ -2,10 +2,11 @@ import { newId } from "@dembrane/core";
 import type postgres from "postgres";
 
 /**
- * SQL for Map's own tables: map_result (v1 revisions and v2 pointers to snapshots) and
- * map_fact_check (one operational state per claim revision per project). Every write is
- * one statement guarded by its status and attempt, so a cancelled or superseded check
- * that finishes late changes nothing. Embeddings live with the analysis store.
+ * SQL for Map's own tables: map_result (v1 revisions and v2 pointers to snapshots),
+ * map_fact_check (one operational state per claim revision per project) and map_group
+ * (one titled cluster per selection of a snapshot). Every write is one statement guarded
+ * by its status and attempt, so a cancelled or superseded check that finishes late
+ * changes nothing. Embeddings live with the analysis store.
  */
 
 export const ACTIVE_STATUSES = ["queued", "extracting", "embedding"];
@@ -19,6 +20,9 @@ const RESULT_COLUMNS =
   "id::text AS id, project_id::text AS project_id, status, execution_ref, source_fingerprint, recipe_version, embedding_config, progress, manifest, error, requested_by, created_at, updated_at, completed_at";
 const FACT_CHECK_COLUMNS =
   "id::text AS id, project_id::text AS project_id, claim_key, statement, status, attempt, verdict, justification, sources, error, model, prompt_version, requested_by, started_at, completed_at, updated_at";
+
+const GROUP_COLUMNS =
+  "id::text AS id, project_id::text AS project_id, snapshot_id::text AS snapshot_id, selection_key, members, status, attempt, title, error, model, prompt_version, requested_by, created_at, updated_at, completed_at";
 
 const UUID = /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i;
 
@@ -195,6 +199,93 @@ export class MapStore {
       `SELECT ${FACT_CHECK_COLUMNS} FROM map_fact_check WHERE project_id = $1 AND claim_key = $2`,
       [projectId, claimKey],
     );
+  }
+
+  // ── groups ──────────────────────────────────────────────────────────
+
+  /** The project's groups, newest first. */
+  listGroups(projectId: string): Promise<Row[]> {
+    return this.q(
+      `SELECT ${GROUP_COLUMNS} FROM map_group WHERE project_id = $1 ORDER BY created_at DESC, id DESC`,
+      [projectId],
+    );
+  }
+
+  getGroup(id: string): Promise<Row | null> {
+    return this.one(`SELECT ${GROUP_COLUMNS} FROM map_group WHERE id = $1`, [id]);
+  }
+
+  /**
+   * Commits a selection as a group, or answers with the one it already is. True when the
+   * caller should dispatch the run: a new group, a retry after a failure, or a group whose
+   * run went quiet past `staleSeconds`.
+   */
+  async startGroup(o: {
+    projectId: string;
+    snapshotId: string;
+    selectionKey: string;
+    members: readonly unknown[];
+    requestedBy: string | null;
+    staleSeconds: number;
+  }): Promise<[Row, boolean]> {
+    const row = await this.one(
+      `INSERT INTO map_group (id, project_id, snapshot_id, selection_key, members, status, requested_by)
+       VALUES ($1, $2, $3, $4, $5, 'pending', $6)
+       ON CONFLICT (project_id, selection_key) DO UPDATE SET
+           status = 'pending',
+           attempt = map_group.attempt + 1,
+           error = NULL,
+           requested_by = EXCLUDED.requested_by,
+           updated_at = now(), completed_at = NULL
+       WHERE map_group.status = 'failed'
+          OR (map_group.status = 'pending'
+              AND map_group.updated_at < now() - make_interval(secs => $7))
+       RETURNING ${GROUP_COLUMNS}`,
+      [
+        newId(),
+        o.projectId,
+        o.snapshotId,
+        o.selectionKey,
+        JSON.stringify(o.members),
+        o.requestedBy,
+        o.staleSeconds,
+      ],
+    );
+    if (row) return [row, true];
+    const existing = await this.one(
+      `SELECT ${GROUP_COLUMNS} FROM map_group WHERE project_id = $1 AND selection_key = $2`,
+      [o.projectId, o.selectionKey],
+    );
+    if (!existing) throw new MapStoreError("group row vanished after a conflicting insert");
+    return [existing, false];
+  }
+
+  /** Writes a title only for the attempt still running. */
+  async completeGroup(
+    id: string,
+    attempt: number,
+    o: { title: string; model: string; promptVersion: string },
+  ): Promise<boolean> {
+    const rows = await this.q(
+      `UPDATE map_group
+          SET status = 'ready', title = $1, model = $2, prompt_version = $3, error = NULL,
+              completed_at = now(), updated_at = now()
+        WHERE id = $4 AND attempt = $5 AND status = 'pending'
+        RETURNING id`,
+      [o.title, o.model, o.promptVersion, id, attempt],
+    );
+    return rows.length === 1;
+  }
+
+  async failGroup(id: string, attempt: number, error: string): Promise<boolean> {
+    const rows = await this.q(
+      `UPDATE map_group
+          SET status = 'failed', error = $1, completed_at = now(), updated_at = now()
+        WHERE id = $2 AND attempt = $3 AND status = 'pending'
+        RETURNING id`,
+      [error.slice(0, 2000), id, attempt],
+    );
+    return rows.length === 1;
   }
 
   /** The project's name and context, which the title and fact-check prompts carry. */

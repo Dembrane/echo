@@ -52,6 +52,7 @@ import {
   languages,
   map_embedding,
   map_fact_check,
+  map_group,
   map_result,
   methodology,
   methodology_version,
@@ -113,6 +114,7 @@ export const projectRelations = relations(project, ({ one, many }) => ({
   conversations: many(conversation),
   map_embeddings: many(map_embedding),
   map_fact_checks: many(map_fact_check),
+  map_groups: many(map_group),
   model_response_feedbacks: many(model_response_feedback),
   notifications: many(notification),
   map_results: many(map_result),
@@ -1113,6 +1115,13 @@ export const map_embeddingRelations = relations(map_embedding, ({ one }) => ({
 export const map_fact_checkRelations = relations(map_fact_check, ({ one }) => ({
   project: one(project, {
     fields: [map_fact_check.project_id],
+    references: [project.id],
+  }),
+}));
+
+export const map_groupRelations = relations(map_group, ({ one }) => ({
+  project: one(project, {
+    fields: [map_group.project_id],
     references: [project.id],
   }),
 }));

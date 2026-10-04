@@ -10,6 +10,14 @@ export const map = {
 		id: "error.map.generation_not_started",
 		message: "We could not start making the map. Try again in a moment.",
 	}),
+	"map.group_not_started": msg({
+		id: "error.map.group_not_started",
+		message: "We could not keep this cluster. Try again in a moment.",
+	}),
+	"map.groups_need_snapshot": msg({
+		id: "error.map.groups_need_snapshot",
+		message: "Clusters can be kept on a regenerated map. Regenerate the map and try again.",
+	}),
 	"map.no_map_yet": msg({
 		id: "error.map.no_map_yet",
 		message: "This project has no map yet. Create one to see it here.",
