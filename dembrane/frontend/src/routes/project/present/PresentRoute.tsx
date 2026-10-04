@@ -1,7 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
 import {
-	Accordion,
 	Alert,
 	Box,
 	Button,
@@ -113,6 +112,19 @@ function Editor({
 		...(presentation.settings.presentation?.blocks ?? []),
 		ALWAYS_ON_BLOCK,
 	]);
+	const section = editorSection(params);
+	// Five tabs don't fit a phone or the side column, so the row scrolls (the
+	// grammar's rule for tabs). The chosen one, from a link too, is scrolled
+	// into sight; only the row moves, never the page.
+	const tabList = useRef<HTMLDivElement>(null);
+	useEffect(() => {
+		const list = tabList.current;
+		const tab = list?.querySelector<HTMLElement>(`[id$="-tab-${section}"]`);
+		if (!list || !tab) return;
+		const at = tab.getBoundingClientRect();
+		const box = list.getBoundingClientRect();
+		list.scrollLeft += at.left - box.left - (box.width - at.width) / 2;
+	}, [section]);
 	return (
 		<Stack className={classes.settings} gap="lg">
 			<Title order={4}>
@@ -120,7 +132,7 @@ function Editor({
 			</Title>
 			<PresentationTitle projectId={projectId} presentation={presentation} />
 			<Tabs
-				value={editorSection(params)}
+				value={section}
 				onChange={(value) =>
 					setParams((old) => {
 						const next = new URLSearchParams(old);
@@ -129,7 +141,7 @@ function Editor({
 					})
 				}
 			>
-				<Tabs.List>
+				<Tabs.List ref={tabList}>
 					<Tabs.Tab value="intro">
 						<Trans>Intro</Trans>
 					</Tabs.Tab>
@@ -137,7 +149,13 @@ function Editor({
 						<Trans>Data policy</Trans>
 					</Tabs.Tab>
 					<Tabs.Tab value="activities">
-						<Trans>Tabs</Trans>
+						<Trans>Outcomes</Trans>
+					</Tabs.Tab>
+					<Tabs.Tab value="language">
+						<Trans>Language</Trans>
+					</Tabs.Tab>
+					<Tabs.Tab value="appearance">
+						<Trans>Appearance</Trans>
 					</Tabs.Tab>
 				</Tabs.List>
 				<Tabs.Panel value="intro" pt="md">
@@ -201,91 +219,85 @@ function Editor({
 						})}
 					</Stack>
 				</Tabs.Panel>
-			</Tabs>
-			<Accordion variant="default" multiple>
-				<Accordion.Item value="language">
-					<Accordion.Control>
-						<Trans>Language</Trans>
-					</Accordion.Control>
-					<Accordion.Panel>
-						<Stack gap="sm">
-							<Checkbox
-								label={t`Follow project language`}
-								checked={
-									presentation.settings.presentation?.language_policy ===
-									"project"
-								}
-								onChange={(e) =>
-									save.mutate({
-										presentation: {
-											language_policy: e.currentTarget.checked
-												? "project"
-												: "explicit",
-										},
-										...(!e.currentTarget.checked
-											? { language: presentation.effective_language }
-											: {}),
-									})
-								}
-							/>
-							<Text size="sm">
-								<Trans>Audience language:</Trans>{" "}
-								{presentation.effective_language.translate_to ||
-									presentation.effective_language.ui}
-								{presentation.project_language.fallback &&
+				<Tabs.Panel value="language" pt="md">
+					<Stack gap="sm">
+						<Checkbox
+							label={t`Follow project language`}
+							checked={
 								presentation.settings.presentation?.language_policy ===
-									"project"
-									? ` · ${t`English fallback`}`
-									: ""}
-							</Text>
-							{presentation.settings.presentation?.language_policy !==
-							"project" ? (
-								// The embedded settings carry the translation line themselves.
-								<PopcornLanguageSettings
-									embedded
+								"project"
+							}
+							onChange={(e) =>
+								save.mutate({
+									presentation: {
+										language_policy: e.currentTarget.checked
+											? "project"
+											: "explicit",
+									},
+									...(!e.currentTarget.checked
+										? { language: presentation.effective_language }
+										: {}),
+								})
+							}
+						/>
+						<Text size="sm">
+							<Trans>Audience language:</Trans>{" "}
+							{presentation.effective_language.translate_to ||
+								presentation.effective_language.ui}
+							{presentation.project_language.fallback &&
+							presentation.settings.presentation?.language_policy === "project"
+								? ` · ${t`English fallback`}`
+								: ""}
+						</Text>
+						{presentation.settings.presentation?.language_policy !==
+						"project" ? (
+							// The embedded settings carry the translation line themselves.
+							<PopcornLanguageSettings
+								embedded
+								projectId={projectId}
+								popcorn={presentation}
+							/>
+						) : (
+							<>
+								<PopcornAlsoLanguages
 									projectId={projectId}
 									popcorn={presentation}
+									language={presentation.effective_language}
 								/>
-							) : (
-								<>
-									<PopcornAlsoLanguages
-										projectId={projectId}
-										popcorn={presentation}
-										language={presentation.effective_language}
-									/>
-									<TranslationStatus
-										presentationId={presentation.id}
-										status={presentation.translation_status}
-									/>
-								</>
-							)}
-						</Stack>
-					</Accordion.Panel>
-				</Accordion.Item>
-				<Accordion.Item value="screen">
-					<Accordion.Control>
-						<Trans>Screen appearance</Trans>
-					</Accordion.Control>
-					<Accordion.Panel>
-						<PopcornScreenSettings
-							embedded
-							projectId={projectId}
-							popcorn={presentation}
-							showToolToggles={false}
-						/>
-					</Accordion.Panel>
-				</Accordion.Item>
-			</Accordion>
+								<TranslationStatus
+									presentationId={presentation.id}
+									status={presentation.translation_status}
+								/>
+							</>
+						)}
+					</Stack>
+				</Tabs.Panel>
+				<Tabs.Panel value="appearance" pt="md">
+					<PopcornScreenSettings
+						embedded
+						projectId={projectId}
+						popcorn={presentation}
+						showToolToggles={false}
+					/>
+				</Tabs.Panel>
+			</Tabs>
 		</Stack>
 	);
 }
 
-// `?section=results` was a tab of the editor once. It now opens the results
-// panel, and the editor falls back to its own first stop.
-const RESULTS_SECTION = "results";
+// Outcomes keeps its old value, `activities`, so links that name it still
+// land there. Anything else unknown, including `?section=results` (a tab of
+// the editor once, now the results panel), falls back to it.
+const EDITOR_SECTIONS = [
+	"intro",
+	"data",
+	"activities",
+	"language",
+	"appearance",
+];
 function editorSection(params: URLSearchParams) {
-	const section = params.get("section");
-	return !section || section === RESULTS_SECTION ? "activities" : section;
+	const section = params.get("section") ?? "";
+	return EDITOR_SECTIONS.includes(section) ? section : "activities";
 }
 
 // The draft on the room's screen. Typing into its opening saves like any other

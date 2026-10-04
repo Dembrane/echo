@@ -147,8 +147,17 @@ describe("Preparing the room before recordings", () => {
 		});
 		show();
 		expect(await screen.findByText("Presentation editor")).toBeTruthy();
-		expect(screen.getByRole("tab", { name: "Intro" })).toBeTruthy();
-		expect(screen.getByRole("tab", { name: "Data policy" })).toBeTruthy();
+		expect(
+			screen.getAllByRole("tab").map((tab) => tab.textContent),
+		).toEqual(
+			expect.arrayContaining([
+				"Intro",
+				"Data policy",
+				"Outcomes",
+				"Language",
+				"Appearance",
+			]),
+		);
 		expect(bff.post).toHaveBeenCalledExactlyOnceWith(
 			"/present/projects/empty/default",
 		);
@@ -195,8 +204,8 @@ describe("Preparing the room before recordings", () => {
 // The editor is always open now; the old link still lands on the same page.
 const editing = () => show("/projects/empty/present?edit=1");
 
-const openPanel = async (name: string) => {
-	fireEvent.click(await screen.findByRole("button", { name }));
+const openTab = async (name: string) => {
+	fireEvent.click(await screen.findByRole("tab", { name }));
 };
 
 describe("Choosing what the room sees", () => {
@@ -307,7 +316,7 @@ describe("Reviewing the results on the screen", () => {
 describe("Keeping the presentation and its results apart", () => {
 	it("leaves results out of the presentation editor's tabs, and shows both", async () => {
 		editing();
-		expect(await screen.findByRole("tab", { name: "Tabs" })).toBeTruthy();
+		expect(await screen.findByRole("tab", { name: "Outcomes" })).toBeTruthy();
 		expect(screen.queryByRole("tab", { name: "Review results" })).toBeNull();
 		expect(screen.getByTestId("present-results-panel")).toBeTruthy();
 		expect(screen.getByText("Presentation editor")).toBeTruthy();
@@ -337,7 +346,7 @@ describe("Keeping the presentation and its results apart", () => {
 		expect(screen.getByText("Presentation editor")).toBeTruthy();
 		// A link to the tab results used to be falls back to the first stop.
 		expect(
-			screen.getByRole("tab", { name: "Tabs" }).getAttribute("aria-selected"),
+			screen.getByRole("tab", { name: "Outcomes" }).getAttribute("aria-selected"),
 		).toBe("true");
 	});
 
@@ -377,7 +386,7 @@ describe("Telling the host how far the translation got", () => {
 			return { can_edit: true, presentation: translating };
 		});
 		editing();
-		await openPanel("Language");
+		await openTab("Language");
 		expect(
 			await screen.findByText("Translating: 9 of 12 into Nederlands"),
 		).toBeTruthy();
