@@ -112,6 +112,9 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .guide-qr svg { width: 100%; height: auto; background: #fff; padding: .6em; box-sizing: border-box; }
 .guide-text { display: flex; flex-direction: column; gap: 1.2em; }
 .guide-steps { grid-template-columns: 1fr; gap: .8em; font-size: 1.15em; }
+/* Starting popcorn is not what a host does from here: a quiet secondary, not the pill. */
+:root .popcorn-intro .guide-text .intro-continue { align-self: flex-start; background: none; color: var(--blue); border: 1px solid currentColor; border-radius: 0; }
+:root .popcorn-intro .guide-text .intro-continue:hover { background: color-mix(in srgb, currentColor 10%, transparent); color: var(--blue); }
 @media (max-width: 720px) {
   .data-steps { grid-template-columns: 1fr; }
   .guide-grid { grid-template-columns: 1fr; }
