@@ -19,6 +19,19 @@ export const MAP_SETTINGS_STORAGE_KEY = "dembrane-map-settings";
  */
 export const MAP_SETTINGS_VERSION = 6;
 
+/**
+ * The cluster density dial: a multiplier on the layout's repulsion. Above 1
+ * spreads the map into more, smaller clusters; below 1 clumps it.
+ */
+export const CLUSTER_DENSITY_MIN = 0.25;
+export const CLUSTER_DENSITY_MAX = 16;
+
+export const isClusterDensity = (value: unknown): value is number =>
+	typeof value === "number" &&
+	Number.isFinite(value) &&
+	value >= CLUSTER_DENSITY_MIN &&
+	value <= CLUSTER_DENSITY_MAX;
+
 export type MapSettings = {
 	showExplore: boolean;
 	showShowcase: boolean;
@@ -34,10 +47,12 @@ export type MapSettings = {
 	/** Custom visible-edge budget; null follows the deployment default. */
 	edgeLimit: number | null;
 	showRelationships: boolean;
+	clusterDensity: number;
 };
 
 export const DEFAULT_MAP_SETTINGS: MapSettings = {
 	autoFactCheckClaims: false,
+	clusterDensity: 1,
 	colorBy: "conversation",
 	darkMode: false,
 	edgeLimit: null,
@@ -97,6 +112,8 @@ export function migrateMapSettings(
 		settings.nodeLimit = stored.nodeLimit;
 	if (isPositiveInteger(stored.edgeLimit))
 		settings.edgeLimit = stored.edgeLimit;
+	if (isClusterDensity(stored.clusterDensity))
+		settings.clusterDensity = stored.clusterDensity;
 	return settings;
 }
 

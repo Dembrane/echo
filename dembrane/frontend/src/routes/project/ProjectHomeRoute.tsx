@@ -39,6 +39,7 @@ import { PortalSettingsOverview } from "@/components/project/PortalSettingsOverv
 import { PROJECT_CONTEXT_HASH } from "@/components/project/ProjectContextInput";
 import { ProjectQRCode } from "@/components/project/ProjectQRCode";
 import { useLatestProjectReport } from "@/components/report/hooks";
+import { reportStatusLabel } from "@/components/sharing/StatusLine";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { canUseChat, isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
@@ -188,7 +189,7 @@ export const ProjectHomeRoute = () => {
 											<Group gap="xs" align="center">
 												<Text size="sm">{reportTitle}</Text>
 												<Badge size="xs" variant="light">
-													{report.status}
+													{reportStatusLabel(report.status)}
 												</Badge>
 											</Group>
 											{report.date_created && (

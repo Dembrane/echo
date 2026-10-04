@@ -208,7 +208,7 @@ export class HttpMedia implements Media {
     private readonly baseUrl: string,
     private readonly opts: {
       readonly timeoutMs: number;
-      /** An ID token for the media service's URL; absent locally. */
+      /** An ID token for the media service's URL; absent locally and with MEDIA_AUTH=none. */
       readonly idToken?: () => Promise<string>;
     },
   ) {}
@@ -261,6 +261,21 @@ export class HttpMedia implements Media {
       payload.message ?? `media ${op}: ${res.status}`,
     );
   }
+}
+
+/**
+ * How callers prove themselves to the media service (MEDIA_AUTH). google_id_token is Cloud
+ * Run's metadata-server token, so only the caller's service account gets in; none sends no
+ * Authorization header, for a media service reachable only inside its cluster.
+ */
+export type MediaAuth = "google_id_token" | "none";
+
+/** The HttpMedia auth options for a mode; spread into its options. */
+export function mediaAuth(
+  auth: MediaAuth,
+  audience: string,
+): { readonly idToken?: () => Promise<string> } {
+  return auth === "google_id_token" ? { idToken: metadataIdToken(audience) } : {};
 }
 
 /** A Cloud Run identity token from the metadata server, cached until shortly before it expires. */

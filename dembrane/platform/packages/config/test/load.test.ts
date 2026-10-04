@@ -145,3 +145,21 @@ group("sam's inbox", () => {
     expect(() => loadConfig({ ...base, ...inbox, SAM_INBOX_FROM: "api\nother" })).toThrow();
   });
 });
+
+group("media auth", () => {
+  const base = {
+    APP_ENV: "test",
+    DATABASE_URL: "postgres://u@h/d",
+    AUTH_SECRET: "s".repeat(48),
+    INVITE_HASH_SECRET: "i".repeat(32),
+  };
+
+  test("defaults to the Cloud Run identity token, so existing deployments do not change", () => {
+    expect(loadConfig(base).values.media.auth).toBe("google_id_token");
+  });
+
+  test("none is accepted for an in-cluster media service; anything else is refused", () => {
+    expect(loadConfig({ ...base, MEDIA_AUTH: "none" }).values.media.auth).toBe("none");
+    expect(() => loadConfig({ ...base, MEDIA_AUTH: "basic" })).toThrow();
+  });
+});

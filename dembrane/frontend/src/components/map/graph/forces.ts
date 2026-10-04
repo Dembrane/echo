@@ -306,3 +306,40 @@ export function createFurtherPairForce<N extends ForceNode>(
 		addVelocity(target, -fx, -fy);
 	});
 }
+
+/**
+ * The cluster map at a density: its repulsion multiplied by the dial, so more
+ * density makes more, smaller clusters and less clumps them together.
+ */
+export const clusterForceParams = (
+	params: LocalMapForceParams,
+	density: number,
+): LocalMapForceParams =>
+	density === 1
+		? params
+		: { ...params, chargeStrength: params.chargeStrength * density };
+
+/**
+ * The tree's share of the density dial: the same direction, gentler, so the
+ * dial's range of 1/4 to 16 becomes about 2/3 to 2.3. More density spreads
+ * the tree (more repulsion, and longer links by its root); less clumps it.
+ */
+export const treeSpreadFor = (density: number) => density ** 0.3;
+
+export const treeForceParams = (
+	params: MstForceParams,
+	density: number,
+): MstForceParams => {
+	if (density === 1) return params;
+	const spread = treeSpreadFor(density);
+	const reach = Math.sqrt(spread);
+	return {
+		chargeStrength: params.chargeStrength * spread,
+		link: {
+			constant: params.link.constant * reach,
+			linear: params.link.linear * reach,
+			quadratic: params.link.quadratic * reach,
+		},
+		mstRepulsionCoeff: params.mstRepulsionCoeff * spread,
+	};
+};

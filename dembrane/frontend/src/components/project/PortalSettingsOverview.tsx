@@ -55,11 +55,11 @@ const languageLabel = (language: Project["language"]): string => {
 
 const StatusBadge = ({ on }: { on: boolean }) =>
 	on ? (
-		<Badge size="sm" variant="light" color="green">
+		<Badge size="sm" variant="light" color="green" style={{ flexShrink: 0 }}>
 			<Trans>On</Trans>
 		</Badge>
 	) : (
-		<Badge size="sm" variant="light" color="gray">
+		<Badge size="sm" variant="light" color="gray" style={{ flexShrink: 0 }}>
 			<Trans>Off</Trans>
 		</Badge>
 	);

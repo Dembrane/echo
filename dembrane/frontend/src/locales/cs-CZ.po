@@ -1659,7 +1659,7 @@ msgstr "Adding <0>{totalCount, plural, one {# more conversation} other {# more c
 msgid "select.all.modal.loading.title"
 msgstr "Přidávání rozhovorů"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1296
+#: src/components/map/renderers/LocalMapGraph.tsx:1306
 msgid "Additional forces"
 msgstr "Další síly"
 
@@ -2292,7 +2292,7 @@ msgstr "Argument"
 #~ msgid "Argument (not fact-checked)"
 #~ msgstr ""
 
-#: src/components/map/renderers/MstGraph.tsx:1194
+#: src/components/map/renderers/MstGraph.tsx:1204
 msgid "Argument map"
 msgstr "Mapa argumentů"
 
@@ -2537,7 +2537,7 @@ msgstr "Audit logs exported to JSON"
 msgid "Authenticator code"
 msgstr "Authenticator code"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:364
+#: src/components/map/panels/MapSettingsMenu.tsx:412
 msgid "Auto fact-check new claims"
 msgstr "Automaticky ověřovat fakta u nových tvrzení"
 
@@ -2606,7 +2606,7 @@ msgstr "Avatar removed"
 msgid "Avatar updated"
 msgstr "Avatar updated"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1265
+#: src/components/map/renderers/LocalMapGraph.tsx:1275
 msgid "Avg low-dim distance (default: 10)"
 msgstr "Prům. nízko-dim. vzdálenost (výchozí: 10)"
 
@@ -2889,7 +2889,7 @@ msgid "By tag"
 msgstr "Podle štítku"
 
 #. placeholder {0}: cMed.toFixed(1)
-#: src/components/map/renderers/LocalMapGraph.tsx:1254
+#: src/components/map/renderers/LocalMapGraph.tsx:1264
 msgid "C_Med: {0}"
 msgstr "C_Med: {0}"
 
@@ -3182,7 +3182,7 @@ msgstr "Changing language during an active chat may lead to unexpected results. 
 #~ msgstr ""
 
 #. placeholder {0}: chargeFraction.toFixed(2)
-#: src/components/map/renderers/LocalMapGraph.tsx:1321
+#: src/components/map/renderers/LocalMapGraph.tsx:1331
 msgid "Charge distance (viewport fraction): {0}"
 msgstr "Vzdálenost náboje (podíl výřezu): {0}"
 
@@ -3544,7 +3544,19 @@ msgstr "Zavřít a přejít do dembrane"
 msgid "Cloud Act Safe"
 msgstr "Chráněno před Cloud Actem"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:77
+#: src/components/map/panels/MapSettingsMenu.tsx:296
+msgid "Clumped"
+msgstr "Shluknuté"
+
+#: src/components/map/panels/MapSettingsMenu.tsx:280
+msgid "Cluster density"
+msgstr "Hustota shluků"
+
+#: src/components/map/panels/MapSettingsMenu.tsx:283
+msgid "Cluster density: fewer or more clusters"
+msgstr "Hustota shluků: méně nebo více shluků"
+
+#: src/components/map/panels/MapSettingsMenu.tsx:83
 msgid "Clusters"
 msgstr "Shluky"
 
@@ -3566,7 +3578,7 @@ msgid "Collection"
 msgstr "Collection"
 
 #. placeholder {0}: collisionRadius.toFixed(1)
-#: src/components/map/renderers/LocalMapGraph.tsx:1310
+#: src/components/map/renderers/LocalMapGraph.tsx:1320
 msgid "Collision radius: {0}x"
 msgstr "Poloměr kolize: {0}x"
 
@@ -3590,7 +3602,7 @@ msgstr "Obarvit graf podle faktického stavu"
 msgid "Color graph by valence"
 msgstr "Obarvit graf podle valence"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:263
+#: src/components/map/panels/MapSettingsMenu.tsx:311
 msgid "Color nodes by"
 msgstr "Obarvit uzly podle"
 
@@ -3618,8 +3630,8 @@ msgstr "sloučeno z {0}"
 
 #. placeholder {0}: nodeById.get(d.id)?.metadata.consolidation?.memberCount ?? 0
 #. placeholder {0}: consolidation.memberCount
-#: src/components/map/renderers/MstGraph.tsx:1099
-#: src/components/map/renderers/LocalMapGraph.tsx:1057
+#: src/components/map/renderers/MstGraph.tsx:1109
+#: src/components/map/renderers/LocalMapGraph.tsx:1067
 #: src/components/map/panels/NodeDetailCard.tsx:136
 msgid "Combined from {0} arguments"
 msgstr "Sloučeno z {0} argumentů"
@@ -3856,7 +3868,7 @@ msgstr "Pokračovat"
 #~ msgid "Contributing nodes ({0})"
 #~ msgstr "Přispívající uzly ({0})"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1326
+#: src/components/map/renderers/LocalMapGraph.tsx:1336
 msgid "Controls how far charge forces act (higher = more global)"
 msgstr "Určuje, jak daleko působí nábojové síly (vyšší = globálnější)"
 
@@ -3964,7 +3976,7 @@ msgstr "conversations"
 #: src/components/workspace/OrganisationProjectsTable.tsx:225
 #: src/components/report/ReportTimeline.tsx:302
 #: src/components/project/ProjectUsageAndSharing.tsx:471
-#: src/components/map/panels/MapSettingsMenu.tsx:326
+#: src/components/map/panels/MapSettingsMenu.tsx:374
 #: src/components/map/panels/ClusterSummary.tsx:155
 #: src/components/conversation/ProjectConversationsPanel.tsx:623
 #: src/components/conversation/ConversationsMiniList.tsx:141
@@ -4611,7 +4623,7 @@ msgid "Czech conversations, Czech answers"
 msgstr "České rozhovory, české odpovědi"
 
 #. placeholder {0}: dAdj.toFixed(1)
-#: src/components/map/renderers/LocalMapGraph.tsx:1264
+#: src/components/map/renderers/LocalMapGraph.tsx:1274
 msgid "d̄_adj: {0}"
 msgstr "d̄_adj: {0}"
 
@@ -4627,7 +4639,7 @@ msgstr "Danger zone"
 msgid "Dark"
 msgstr "Tmavý"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:403
+#: src/components/map/panels/MapSettingsMenu.tsx:451
 msgid "Dark mode"
 msgstr "Tmavý režim"
 
@@ -4734,11 +4746,11 @@ msgstr "Výchozí – bez tutoriálu (pouze prohlášení o ochraně soukromí)"
 #~ msgid "Default - No tutorial (Only privacy statements)"
 #~ msgstr "Default - No tutorial (Only privacy statements)"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:141
+#: src/components/map/panels/MapSettingsMenu.tsx:163
 msgid "Default {defaultEdges}"
 msgstr "Výchozí {defaultEdges}"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:130
+#: src/components/map/panels/MapSettingsMenu.tsx:152
 msgid "Default {defaultNodes}"
 msgstr "Výchozí {defaultNodes}"
 
@@ -5086,7 +5098,7 @@ msgid "Display name"
 msgstr "Display name"
 
 #. placeholder {0}: linkDistanceQuadratic.toFixed(2)
-#: src/components/map/renderers/MstGraph.tsx:1238
+#: src/components/map/renderers/MstGraph.tsx:1248
 msgid "Dissimilar links: {0}"
 msgstr "Rozdílná propojení: {0}"
 
@@ -5577,7 +5589,7 @@ msgstr "Povolit"
 msgid "Enable 2FA"
 msgstr "Enable 2FA"
 
-#: src/components/map/MapExperience.tsx:596
+#: src/components/map/MapExperience.tsx:598
 msgid "Enable a visualization from the panel settings menu"
 msgstr "Povolte vizualizaci v nabídce nastavení panelu"
 
@@ -5979,11 +5991,11 @@ msgstr "Další účastníci"
 msgid "Fact-check"
 msgstr "Ověření faktů"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:379
+#: src/components/map/panels/MapSettingsMenu.tsx:427
 msgid "Fact-check all"
 msgstr "Ověřit všechna fakta"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:377
+#: src/components/map/panels/MapSettingsMenu.tsx:425
 msgid "Fact-check all ({pendingClaimCount})"
 msgstr "Ověřit všechna fakta ({pendingClaimCount})"
 
@@ -6202,7 +6214,7 @@ msgid "Fair password"
 msgstr "Ucházející heslo"
 
 #. placeholder {0}: fpStrength.toFixed(2)
-#: src/components/map/renderers/LocalMapGraph.tsx:1287
+#: src/components/map/renderers/LocalMapGraph.tsx:1297
 msgid "Far pair repulsion: {0}"
 msgstr "Odpuzování vzdálených párů: {0}"
 
@@ -6454,7 +6466,7 @@ msgstr "pro tým dembrane"
 msgid "For you"
 msgstr "For you"
 
-#: src/components/map/renderers/MstGraph.tsx:1198
+#: src/components/map/renderers/MstGraph.tsx:1208
 msgid "Force graph settings"
 msgstr "Nastavení silového grafu"
 
@@ -6462,7 +6474,7 @@ msgstr "Nastavení silového grafu"
 #~ msgid "Force Graph Settings"
 #~ msgstr "Nastavení silového grafu"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1274
+#: src/components/map/renderers/LocalMapGraph.tsx:1284
 msgid "Force multipliers"
 msgstr "Násobiče sil"
 
@@ -6470,7 +6482,7 @@ msgstr "Násobiče sil"
 #~ msgid "Force Multipliers"
 #~ msgstr "Násobiče sil"
 
-#: src/components/map/renderers/MstGraph.tsx:1207
+#: src/components/map/renderers/MstGraph.tsx:1217
 msgid "Force parameters"
 msgstr "Parametry sil"
 
@@ -6549,7 +6561,7 @@ msgstr "Full transcript (when available)"
 msgid "Fullscreen"
 msgstr "Fullscreen"
 
-#: src/components/present/AudienceScreen.tsx:1306
+#: src/components/present/AudienceScreen.tsx:1305
 msgid "Fullscreen is unavailable in this browser."
 msgstr "V tomto prohlížeči není celá obrazovka k dispozici."
 
@@ -6561,12 +6573,12 @@ msgid "General"
 msgstr "General"
 
 #. placeholder {0}: chargeStrength.toFixed(1)
-#: src/components/map/renderers/MstGraph.tsx:1252
+#: src/components/map/renderers/MstGraph.tsx:1262
 msgid "General repulsion force: {0}"
 msgstr "Celková odpudivá síla: {0}"
 
 #. placeholder {0}: Math.abs(chargeStrength)
-#: src/components/map/renderers/LocalMapGraph.tsx:1300
+#: src/components/map/renderers/LocalMapGraph.tsx:1310
 msgid "General repulsion: {0}"
 msgstr "Celková odpudivost: {0}"
 
@@ -6999,7 +7011,7 @@ msgstr "Hostitel"
 msgid "host guide"
 msgstr "průvodce pro hostitele"
 
-#: src/routes/project/ProjectHomeRoute.tsx:100
+#: src/routes/project/ProjectHomeRoute.tsx:101
 #: src/routes/project/present/PresentRoute.tsx:125
 #: src/components/project/ProjectHostGuideLink.tsx:34
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:59
@@ -7550,7 +7562,7 @@ msgstr "Italština pro hlavní postupy"
 msgid "Its arguments, and the tree between them"
 msgstr "Jeho argumenty a strom mezi nimi"
 
-#: src/components/present/AudienceScreen.tsx:940
+#: src/components/present/AudienceScreen.tsx:939
 msgid "Its link may have been switched off. Ask the host."
 msgstr "Odkaz byl možná vypnut. Zeptejte se hostitele."
 
@@ -7647,7 +7659,7 @@ msgstr "Připojeno jako správce"
 msgid "Joined the conversation"
 msgstr "Připojil(a) se k rozhovoru"
 
-#: src/routes/project/ProjectHomeRoute.tsx:212
+#: src/routes/project/ProjectHomeRoute.tsx:213
 msgid "Jump to"
 msgstr "Jump to"
 
@@ -7856,7 +7868,7 @@ msgstr "Latest"
 msgid "Latest release"
 msgstr "Nejnovější vydání"
 
-#: src/routes/project/ProjectHomeRoute.tsx:184
+#: src/routes/project/ProjectHomeRoute.tsx:185
 msgid "Latest report"
 msgstr "Latest report"
 
@@ -7913,7 +7925,7 @@ msgstr "Právní základ uložen"
 msgid "Legal entity name"
 msgstr "Název právnické osoby"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:78
+#: src/components/map/panels/MapSettingsMenu.tsx:84
 #: src/components/map/panels/Legend.tsx:78
 msgid "Legend"
 msgstr "Legenda"
@@ -8235,19 +8247,19 @@ msgstr "Loading..."
 msgid "Loading…"
 msgstr "Loading…"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1225
+#: src/components/map/renderers/LocalMapGraph.tsx:1235
 msgid "Local argument map"
 msgstr "Místní mapa argumentů"
 
-#: src/components/map/MapExperience.tsx:564
+#: src/components/map/MapExperience.tsx:565
 msgid "Local map"
 msgstr "Místní mapa"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1246
+#: src/components/map/renderers/LocalMapGraph.tsx:1256
 msgid "Local map forces"
 msgstr "Síly lokální mapy"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1237
+#: src/components/map/renderers/LocalMapGraph.tsx:1247
 msgid "Local map settings"
 msgstr "Nastavení lokální mapy"
 
@@ -8255,7 +8267,7 @@ msgstr "Nastavení lokální mapy"
 #~ msgid "LocalMap Forces"
 #~ msgstr "Síly LocalMap"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1250
+#: src/components/map/renderers/LocalMapGraph.tsx:1260
 msgid "LocalMAP paper parameters"
 msgstr "Parametry z článku LocalMAP"
 
@@ -8466,7 +8478,7 @@ msgstr "Mapa | dembrane"
 msgid "Map arguments"
 msgstr "Argumenty z Map"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:125
+#: src/components/map/panels/MapSettingsMenu.tsx:147
 msgid "Map budget"
 msgstr "Rozpočet mapy"
 
@@ -8562,12 +8574,12 @@ msgstr "MCP představuje propojení, které umožňuje asistentům AI (jako Clau
 msgid "MCP URL"
 msgstr "MCP URL"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1255
+#: src/components/map/renderers/LocalMapGraph.tsx:1265
 msgid "Medium distance threshold (default: 10)"
 msgstr "Práh střední vzdálenosti (výchozí: 10)"
 
 #. placeholder {0}: linkDistanceLinear.toFixed(2)
-#: src/components/map/renderers/MstGraph.tsx:1226
+#: src/components/map/renderers/MstGraph.tsx:1236
 msgid "Medium distances: {0}"
 msgstr "Střední vzdálenosti: {0}"
 
@@ -8665,7 +8677,7 @@ msgid "min {minimum}"
 msgstr "min. {minimum}"
 
 #. placeholder {0}: linkDistanceConstant.toFixed(1)
-#: src/components/map/renderers/MstGraph.tsx:1212
+#: src/components/map/renderers/MstGraph.tsx:1222
 msgid "Minimum link length: {0}"
 msgstr "Minimální délka propojení: {0}"
 
@@ -8934,7 +8946,7 @@ msgstr "Negativní"
 #~ msgstr "Přitahování sousedů: {0}"
 
 #. placeholder {0}: nnStrength.toFixed(2)
-#: src/components/map/renderers/LocalMapGraph.tsx:1278
+#: src/components/map/renderers/LocalMapGraph.tsx:1288
 msgid "Neighbour attraction: {0}"
 msgstr "Přitahování sousedů: {0}"
 
@@ -9091,7 +9103,7 @@ msgstr "Žádné účty"
 msgid "No actions found"
 msgstr "No actions found"
 
-#: src/components/present/AudienceScreen.tsx:1108
+#: src/components/present/AudienceScreen.tsx:1107
 msgid "No activities are selected for this presentation."
 msgstr "Pro tuto prezentaci nejsou vybrané žádné aktivity."
 
@@ -9584,7 +9596,7 @@ msgstr "No workspaces from this organisation are shared with you right now."
 msgid "No workspaces match \"{search}\"."
 msgstr "No workspaces match \"{search}\"."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:129
+#: src/components/map/panels/MapSettingsMenu.tsx:151
 msgid "Nodes"
 msgstr "Uzly"
 
@@ -10155,7 +10167,7 @@ msgstr "Open your authenticator app and enter the current six-digit code."
 msgid "Opening and frame"
 msgstr "Úvod a rámec"
 
-#: src/components/present/AudienceScreen.tsx:1015
+#: src/components/present/AudienceScreen.tsx:1014
 msgid "Opening screens"
 msgstr "Úvodní obrazovky"
 
@@ -10424,9 +10436,9 @@ msgstr "Název stránky"
 msgid "Paid"
 msgstr "Zaplaceno"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:218
-#: src/components/map/panels/MapSettingsMenu.tsx:219
-#: src/components/map/panels/MapSettingsMenu.tsx:227
+#: src/components/map/panels/MapSettingsMenu.tsx:240
+#: src/components/map/panels/MapSettingsMenu.tsx:241
+#: src/components/map/panels/MapSettingsMenu.tsx:249
 msgid "Panel settings"
 msgstr "Nastavení panelu"
 
@@ -10557,7 +10569,7 @@ msgstr "Passwords do not match"
 #~ msgid "Paste it into any page. It stays live."
 #~ msgstr "Vložte jej na libovolnou stránku. Zůstane živý."
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1214
+#: src/components/map/renderers/LocalMapGraph.tsx:1224
 msgid "Pause physics"
 msgstr "Pozastavit fyziku"
 
@@ -10802,7 +10814,7 @@ msgstr "Plans"
 msgid "Plans, gathers, and checks its work across many conversations."
 msgstr "Plánuje, shromažďuje a kontroluje svou práci napříč mnoha rozhovory."
 
-#: src/components/present/AudienceScreen.tsx:1211
+#: src/components/present/AudienceScreen.tsx:1210
 msgid "Playback and fullscreen"
 msgstr "Přehrávání a celá obrazovka"
 
@@ -11083,7 +11095,7 @@ msgstr "Preparing your experience"
 msgid "Present"
 msgstr "Prezentovat"
 
-#: src/components/present/AudienceScreen.tsx:1049
+#: src/components/present/AudienceScreen.tsx:1048
 msgid "Presentation activities"
 msgstr "Prezentační aktivity"
 
@@ -11299,7 +11311,7 @@ msgstr "Project Meta Summary"
 msgid "Project moved"
 msgstr "Projekt byl přesunut"
 
-#: src/routes/project/ProjectHomeRoute.tsx:238
+#: src/routes/project/ProjectHomeRoute.tsx:239
 #: src/routes/project/CreateProjectRoute.tsx:236
 #: src/components/project/ProjectListItem.tsx:400
 #: src/components/project/ProjectDangerZone.tsx:136
@@ -11871,7 +11883,7 @@ msgstr "Register | dembrane"
 
 #: src/components/map/panels/NodeDetailCard.tsx:323
 #: src/components/map/panels/NodeDetailCard.tsx:529
-#: src/components/map/panels/MapSettingsMenu.tsx:247
+#: src/components/map/panels/MapSettingsMenu.tsx:269
 msgid "Relationships"
 msgstr "Vztahy"
 
@@ -12036,9 +12048,9 @@ msgstr "Rename"
 msgid "Rename chat"
 msgstr "Rename chat"
 
-#: src/routes/project/ProjectHomeRoute.tsx:137
-#: src/routes/project/ProjectHomeRoute.tsx:141
-#: src/routes/project/ProjectHomeRoute.tsx:237
+#: src/routes/project/ProjectHomeRoute.tsx:138
+#: src/routes/project/ProjectHomeRoute.tsx:142
+#: src/routes/project/ProjectHomeRoute.tsx:238
 #: src/components/project/ProjectListItem.tsx:341
 #: src/components/project/ProjectListItem.tsx:399
 msgid "Rename project"
@@ -12088,7 +12100,7 @@ msgstr "Prompt pro odpověď"
 msgid "report"
 msgstr "zpráva"
 
-#: src/routes/project/ProjectHomeRoute.tsx:105
+#: src/routes/project/ProjectHomeRoute.tsx:106
 #: src/routes/project/report/ProjectReportRoute.tsx:170
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:159
 #: src/components/report/ReportRenderer.tsx:65
@@ -12455,7 +12467,7 @@ msgstr "Výsledky se zobrazují v jazyce, kterým lidé mluvili. Zvolte jazyk pr
 msgid "participant.button.stop.resume"
 msgstr "Resume"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1214
+#: src/components/map/renderers/LocalMapGraph.tsx:1224
 msgid "Resume physics"
 msgstr "Obnovit fyziku"
 
@@ -13413,7 +13425,7 @@ msgstr "nastavil/a {0} {relative}"
 msgid "Set goal"
 msgstr "Nastavit cíl"
 
-#: src/routes/project/ProjectHomeRoute.tsx:110
+#: src/routes/project/ProjectHomeRoute.tsx:111
 msgid "Set key terms"
 msgstr "Nastavit klíčové pojmy"
 
@@ -13421,7 +13433,7 @@ msgstr "Nastavit klíčové pojmy"
 msgid "Set managed"
 msgstr "Nastavit jako spravované"
 
-#: src/routes/project/ProjectHomeRoute.tsx:116
+#: src/routes/project/ProjectHomeRoute.tsx:117
 msgid "Set project context"
 msgstr "Nastavit kontext projektu"
 
@@ -13541,7 +13553,7 @@ msgstr "Sdílet portál"
 #~ msgid "Share report"
 #~ msgstr "Share report"
 
-#: src/routes/project/ProjectHomeRoute.tsx:154
+#: src/routes/project/ProjectHomeRoute.tsx:155
 msgid "Share the project, watch live activity, and jump into the main tools from one place."
 msgstr "Share the project, watch live activity, and jump into the main tools from one place."
 
@@ -13710,7 +13722,7 @@ msgstr "Zobrazit více verzí"
 msgid "Show on the map"
 msgstr "Zobrazit na mapě"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:288
+#: src/components/map/panels/MapSettingsMenu.tsx:336
 msgid "Show only conversations with any of the ticked tags."
 msgstr "Zobrazit jen konverzace s některým ze zaškrtnutých štítků."
 
@@ -13778,7 +13790,7 @@ msgstr "Zobrazte účastníkům vlastní logo – k dispozici na vyžádání."
 
 #: src/components/map/panels/ShowcasePanel.tsx:86
 #: src/components/map/panels/ShowcasePanel.tsx:89
-#: src/components/map/panels/MapSettingsMenu.tsx:74
+#: src/components/map/panels/MapSettingsMenu.tsx:80
 msgid "Showcase"
 msgstr "Ukázka"
 
@@ -14090,9 +14102,13 @@ msgstr "Chat ke konkrétním detailům respektuje ruční výběr rozhovorů."
 
 #: src/components/map/panels/SpotlightPanel.tsx:218
 #: src/components/map/panels/SpotlightPanel.tsx:220
-#: src/components/map/panels/MapSettingsMenu.tsx:75
+#: src/components/map/panels/MapSettingsMenu.tsx:81
 msgid "Spotlight"
 msgstr "Bod zájmu"
+
+#: src/components/map/panels/MapSettingsMenu.tsx:299
+msgid "Spread out"
+msgstr "Rozprostřené"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:3157
 #: src/features/sidebar/shell/UserMenu.tsx:167
@@ -14143,7 +14159,7 @@ msgstr "Standard access. Collaborates in the workspaces they're added to."
 msgid "Standing guidance the assistant gets in every project chat in this workspace. Saves automatically."
 msgstr "Stálé pokyny, které asistent dostává v každém projektovém chatu v tomto pracovním prostoru. Ukládá se automaticky."
 
-#: src/routes/project/ProjectHomeRoute.tsx:90
+#: src/routes/project/ProjectHomeRoute.tsx:91
 msgid "Start a chat"
 msgstr "Start a chat"
 
@@ -14534,7 +14550,7 @@ msgstr "Tag deleted"
 
 #: src/components/project/ProjectTagsInput.tsx:255
 #: src/components/participant/ParticipantInitiateForm.tsx:281
-#: src/components/map/panels/MapSettingsMenu.tsx:285
+#: src/components/map/panels/MapSettingsMenu.tsx:333
 #: src/components/conversation/ProjectConversationsPanel.tsx:706
 #: src/components/conversation/ConversationsMiniList.tsx:179
 #: src/components/conversation/ConversationEdit.tsx:424
@@ -14561,7 +14577,7 @@ msgstr "Štítky byly aktualizovány. Kdykoli je můžete upravit v editoru port
 msgid "Take me to {resolvedWorkspaceName}"
 msgstr "Take me to {resolvedWorkspaceName}"
 
-#: src/routes/project/ProjectHomeRoute.tsx:167
+#: src/routes/project/ProjectHomeRoute.tsx:168
 msgid "Take part"
 msgstr "Zapojte se"
 
@@ -14802,7 +14818,7 @@ msgstr "Koncept se nepodařilo načíst"
 #~ msgid "The draft could not be loaded."
 #~ msgstr "Koncept se nepodařilo načíst."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:92
+#: src/components/map/panels/MapSettingsMenu.tsx:98
 msgid "The edge budget must be a whole number above zero, so {applied} applies."
 msgstr "Rozpočet hran musí být celé číslo větší než nula, proto platí {applied}."
 
@@ -14970,7 +14986,7 @@ msgstr "Jméno tohoto zainteresovaného"
 msgid "The new sidebar brings organisations, workspaces, members and settings together."
 msgstr "Nový postranní panel sdružuje organizace, pracovní prostory, členy i nastavení na jednom místě."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:91
+#: src/components/map/panels/MapSettingsMenu.tsx:97
 msgid "The node budget must be a whole number above zero, so {applied} applies."
 msgstr "Rozpočet uzlů musí být celé číslo větší než nula, proto platí {applied}."
 
@@ -15270,11 +15286,11 @@ msgstr "This conversation is a copy of"
 msgid "This deployment can open maps with up to {maximumCount} arguments."
 msgstr "Toto prostředí může otevřít mapy až s {maximumCount} argumenty."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:96
+#: src/components/map/panels/MapSettingsMenu.tsx:102
 msgid "This deployment shows up to {applied} edges."
 msgstr "Toto nasazení zobrazuje až {applied} hran."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:95
+#: src/components/map/panels/MapSettingsMenu.tsx:101
 msgid "This deployment shows up to {applied} nodes."
 msgstr "Toto nasazení zobrazuje až {applied} uzlů."
 
@@ -15457,11 +15473,11 @@ msgstr "this person"
 msgid "This portal is not accepting new sessions right now."
 msgstr "Tento portál nyní nepřijímá nové relace."
 
-#: src/components/present/AudienceScreen.tsx:935
+#: src/components/present/AudienceScreen.tsx:934
 msgid "This presentation could not be loaded."
 msgstr "Tuto prezentaci se nepodařilo načíst."
 
-#: src/components/present/AudienceScreen.tsx:933
+#: src/components/present/AudienceScreen.tsx:932
 msgid "This presentation is not available."
 msgstr "Tato prezentace není k dispozici."
 
@@ -16021,13 +16037,13 @@ msgstr "Překládá se: {translated} z {total} do jazyka {language}"
 msgid "Translation progress"
 msgstr "Průběh překladu"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:76
+#: src/components/map/panels/MapSettingsMenu.tsx:82
 #: src/components/map/panels/DetailsModal.tsx:137
 msgid "Tree"
 msgstr "Strom"
 
 #. placeholder {0}: mstRepulsionCoeff.toFixed(3)
-#: src/components/map/renderers/MstGraph.tsx:1264
+#: src/components/map/renderers/MstGraph.tsx:1274
 msgid "Tree repulsion factor: {0}"
 msgstr "Faktor odpuzování stromu: {0}"
 
@@ -16091,7 +16107,7 @@ msgstr "Vyzkoušet"
 #~ msgid "Try moving a bit closer to your microphone for better sound quality."
 #~ msgstr "Try moving a bit closer to your microphone for better sound quality."
 
-#: src/components/present/AudienceScreen.tsx:942
+#: src/components/present/AudienceScreen.tsx:941
 msgid "Trying again…"
 msgstr "Zkouší se znovu…"
 
@@ -16496,7 +16512,7 @@ msgstr "Upload"
 msgid "Upload a custom logo to replace the dembrane logo across the portal, dashboard, reports, and host guide. Recommended aspect ratio is 3:1 (e.g. 600×200px horizontal format)."
 msgstr "Nahrajte vlastní logo, které nahradí logo dembrane na portálu, přehledu, ve zprávách a v průvodci pro moderátory. Doporučený poměr stran je 3:1 (např. vodorovný formát 600×200 px)."
 
-#: src/routes/project/ProjectHomeRoute.tsx:95
+#: src/routes/project/ProjectHomeRoute.tsx:96
 msgid "Upload audio"
 msgstr "Nahrát zvuk"
 
@@ -16647,7 +16663,7 @@ msgstr "Používejte připnuté a uložené šablony otázek z Ask, včetně zkr
 msgid "Use Shift + Enter to add a new line"
 msgstr "Use Shift + Enter to add a new line"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:164
+#: src/components/map/panels/MapSettingsMenu.tsx:186
 msgid "Use the default budget"
 msgstr "Použít výchozí rozpočet"
 
@@ -16879,11 +16895,11 @@ msgstr "Zobrazení: {0}"
 msgid "Visible columns"
 msgstr "Visible columns"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:140
+#: src/components/map/panels/MapSettingsMenu.tsx:162
 msgid "Visible edges"
 msgstr "Viditelné hrany"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:98
+#: src/components/map/panels/MapSettingsMenu.tsx:104
 msgid "Visible edges raised to {applied} so the tree over {nodeLimit} nodes fits."
 msgstr "Viditelné hrany byly zvýšeny na {applied}, aby se strom s více než {nodeLimit} uzly vešel."
 

@@ -17,6 +17,7 @@ import {
 	type LocalMapForceParams,
 	type NearestNeighbourForce,
 	type PairForce,
+	clusterForceParams,
 } from "../graph/forces";
 import { calculateInitialPositions } from "../graph/layout";
 import {
@@ -113,6 +114,8 @@ export interface LocalMapGraphProps {
 	onNodeHover?: (node: MapGraphNode | null) => void;
 	timerActive?: boolean;
 	timerProgress?: number;
+	/** The host's cluster density dial: above 1 spreads, below 1 clumps. */
+	density?: number;
 	className?: string;
 	/** Base node radius; each node's size scale multiplies it. */
 	nodeRadius?: number;
@@ -210,6 +213,7 @@ export const LocalMapGraph = ({
 	onNodeHover,
 	timerActive = false,
 	timerProgress = 0,
+	density = 1,
 	className = "",
 	nodeRadius = 6,
 	showNeighbourLinks = false,
@@ -355,16 +359,21 @@ export const LocalMapGraph = ({
 		LOCAL_MAP_FORCE_DEFAULTS.chargeFraction,
 	);
 
+	// The dial scales the forces in play; the panel's sliders keep their own values.
 	const params = useMemo<LocalMapForceParams>(
-		() => ({
-			chargeFraction,
-			chargeStrength,
-			cMed,
-			collisionRadius,
-			dAdj,
-			fpStrength,
-			nnStrength,
-		}),
+		() =>
+			clusterForceParams(
+				{
+					chargeFraction,
+					chargeStrength,
+					cMed,
+					collisionRadius,
+					dAdj,
+					fpStrength,
+					nnStrength,
+				},
+				density,
+			),
 		[
 			cMed,
 			chargeFraction,
@@ -373,6 +382,7 @@ export const LocalMapGraph = ({
 			dAdj,
 			fpStrength,
 			nnStrength,
+			density,
 		],
 	);
 	const paramsRef = useRef(params);
