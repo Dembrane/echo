@@ -282,6 +282,11 @@ msgstr "{0, plural, one {# conversation will be hidden along with it.} other {# 
 msgid "{0, plural, one {# conversation} other {# conversations}}"
 msgstr "{0, plural, one {# conversation} other {# conversations}}"
 
+#. placeholder {0}: list.activeFiltersCount
+#: src/components/conversation/ConversationsMiniList.tsx:211
+msgid "{0, plural, one {# filter} other {# filters}}"
+msgstr "{0, plural, one {# filtr} few {# filtry} many {# filtru} other {# filtrů}}"
+
 #. placeholder {0}: group.liveCount
 #. placeholder {0}: summary.live
 #: src/components/conversation/LiveMonitorSection.tsx:550
@@ -382,6 +387,11 @@ msgstr "{0, plural, one {# odebrané slovo} few {# odebraná slova} other {# ode
 msgid "{0, plural, one {# workspace} other {# workspaces}}"
 msgstr "{0, plural, one {# workspace} other {# workspaces}}"
 
+#. placeholder {0}: selection.length
+#: src/components/conversation/ConversationsMiniList.tsx:230
+msgid "{0, plural, one {Ask about this} other {Ask about these (#)}}"
+msgstr "{0, plural, one {Zeptat se na tento rozhovor} few {Zeptat se na tyto rozhovory (#)} many {Zeptat se na tyto rozhovory (#)} other {Zeptat se na tyto rozhovory (#)}}"
+
 #. placeholder {0}: focusedContextConversations.length
 #: src/components/chat/AgenticChatPanel.tsx:2163
 msgid "{0, plural, one {Focusing on # conversation:} other {Focusing on # conversations:}}"
@@ -417,7 +427,7 @@ msgstr "{0, plural, one {Využívá se # rozhovor:} few {Využívají se # rozho
 #. placeholder {0}: formatDistanceToNowStrict(new Date(startedAt), { addSuffix: true, })
 #. placeholder {0}: citation.reference_text
 #: src/routes/project/chat/ProjectChatRoute.tsx:775
-#: src/components/conversation/ProjectConversationsPanel.tsx:129
+#: src/components/conversation/useConversationList.ts:42
 #: src/components/chat/References.tsx:41
 msgid "{0}"
 msgstr "{0}"
@@ -709,7 +719,7 @@ msgstr "{conversationCount} rozhovorů · Upraveno {0}"
 #~ msgid "{conversationCount} Conversations • Edited {0}"
 #~ msgstr "{conversationCount} Conversations • Edited {0}"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:898
+#: src/components/conversation/ProjectConversationsPanel.tsx:771
 msgid "{conversationCount} selected"
 msgstr "{conversationCount} selected"
 
@@ -1484,8 +1494,8 @@ msgstr "Přidat tip"
 msgid "Add to {0}?"
 msgstr "Add to {0}?"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:188
-#: src/components/conversation/ProjectConversationsPanel.tsx:210
+#: src/components/conversation/ProjectConversationsPanel.tsx:153
+#: src/components/conversation/ProjectConversationsPanel.tsx:175
 msgid "Add to chat"
 msgstr "Add to chat"
 
@@ -1814,7 +1824,7 @@ msgstr "Všechny šablony"
 msgid "All tiers"
 msgstr "All tiers"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:882
+#: src/components/conversation/ProjectConversationsPanel.tsx:755
 msgid "All visible conversations selected"
 msgstr "All visible conversations selected"
 
@@ -1876,7 +1886,7 @@ msgstr "Already invited"
 msgid "Already invited. The project is shared once they join."
 msgstr "Pozvánka již odeslána. Projekt se nasdílí, jakmile se připojí."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:183
+#: src/components/conversation/ProjectConversationsPanel.tsx:148
 msgid "Already used in this chat"
 msgstr "Already used in this chat"
 
@@ -2034,7 +2044,7 @@ msgid "Anonymize transcript"
 msgstr "Anonymize transcript"
 
 #: src/components/project/ProjectPortalEditor.tsx:1369
-#: src/components/project/PortalSettingsOverview.tsx:151
+#: src/components/project/PortalSettingsOverview.tsx:135
 msgid "Anonymize transcripts"
 msgstr "Anonymizovat přepisy"
 
@@ -2049,8 +2059,8 @@ msgstr "anonymized conversation"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:197
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:202
-#: src/components/conversation/ProjectConversationsPanel.tsx:338
-#: src/components/conversation/ProjectConversationsPanel.tsx:343
+#: src/components/conversation/ProjectConversationsPanel.tsx:303
+#: src/components/conversation/ProjectConversationsPanel.tsx:308
 #: src/components/conversation/ConversationAccordion.tsx:589
 msgid "Anonymized conversation"
 msgstr "Anonymized conversation"
@@ -2075,7 +2085,8 @@ msgstr "Another admin or owner will need to restore you."
 msgid "another reason"
 msgstr "jiný důvod"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:834
+#: src/components/conversation/ProjectConversationsPanel.tsx:707
+#: src/components/conversation/ConversationsMiniList.tsx:180
 msgid "Any tag"
 msgstr "Any tag"
 
@@ -2291,7 +2302,7 @@ msgstr "Požádejte správce pracovního prostoru o pozvání tohoto spolupracov
 msgid "Ask about the app."
 msgstr "Zeptejte se na aplikaci."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:907
+#: src/components/conversation/ProjectConversationsPanel.tsx:780
 msgid "Ask about these"
 msgstr "Zeptat se na tyto"
 
@@ -2301,7 +2312,7 @@ msgid "Ask about your conversations..."
 msgstr "Zeptejte se na své rozhovory..."
 
 #: src/components/project/ProjectPortalEditor.tsx:665
-#: src/components/project/PortalSettingsOverview.tsx:132
+#: src/components/project/PortalSettingsOverview.tsx:118
 msgid "Ask for email?"
 msgstr "Požádat o e-mail?"
 
@@ -2311,7 +2322,7 @@ msgstr "Požádat o e-mail?"
 #~ msgstr "Ask for Email?"
 
 #: src/components/project/ProjectPortalEditor.tsx:636
-#: src/components/project/PortalSettingsOverview.tsx:125
+#: src/components/project/PortalSettingsOverview.tsx:113
 msgid "Ask for name?"
 msgstr "Požádat o jméno?"
 
@@ -2943,7 +2954,7 @@ msgstr "Zrušit žádost"
 msgid "Cancel schedule"
 msgstr "Cancel schedule"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:928
+#: src/components/conversation/ProjectConversationsPanel.tsx:801
 msgid "Cancel selection"
 msgstr "Zrušit výběr"
 
@@ -2966,7 +2977,7 @@ msgstr "Zrušeno"
 msgid "Cancelling stops your plan from renewing. You keep {0} until your current billing period ends, then you move to Free."
 msgstr "Zrušením se zastaví automatické obnovení vašeho tarifu. Tarif {0} vám zůstane do konce aktuálního zúčtovacího období, poté přejdete na Free."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:185
+#: src/components/conversation/ProjectConversationsPanel.tsx:150
 #: src/components/conversation/ConversationAccordion.tsx:161
 msgid "Cannot add empty conversation"
 msgstr "Cannot add empty conversation"
@@ -3335,7 +3346,8 @@ msgstr "Město"
 #~ msgstr ""
 
 #: src/components/results/curate/CurateTable.tsx:114
-#: src/components/conversation/ProjectConversationsPanel.tsx:916
+#: src/components/conversation/ProjectConversationsPanel.tsx:789
+#: src/components/conversation/ConversationsMiniList.tsx:241
 msgid "Clear"
 msgstr "Vymazat"
 
@@ -3343,7 +3355,8 @@ msgstr "Vymazat"
 msgid "Clear all"
 msgstr "Vymazat vše"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:957
+#: src/components/conversation/ProjectConversationsPanel.tsx:830
+#: src/components/conversation/ConversationsMiniList.tsx:264
 msgid "Clear filters"
 msgstr "Clear filters"
 
@@ -3352,7 +3365,7 @@ msgstr "Clear filters"
 #: src/routes/project/chat/NewChatRoute.tsx:171
 #: src/features/sidebar/blocks/SearchBlock.tsx:168
 #: src/components/invite/WorkspaceSelectList.tsx:98
-#: src/components/conversation/ProjectConversationsPanel.tsx:810
+#: src/components/conversation/ProjectConversationsPanel.tsx:683
 #: src/components/chat/TemplatesModal.tsx:721
 msgid "Clear search"
 msgstr "Clear search"
@@ -3895,7 +3908,8 @@ msgstr "conversations"
 #: src/components/project/ProjectUsageAndSharing.tsx:477
 #: src/components/map/panels/MapSettingsMenu.tsx:269
 #: src/components/map/panels/ClusterSummary.tsx:156
-#: src/components/conversation/ProjectConversationsPanel.tsx:750
+#: src/components/conversation/ProjectConversationsPanel.tsx:623
+#: src/components/conversation/ConversationsMiniList.tsx:141
 #: src/components/conversation/ConversationAccordion.tsx:1100
 msgid "Conversations"
 msgstr "Conversations"
@@ -4827,7 +4841,7 @@ msgid "dembrane default"
 msgstr "výchozí dembrane"
 
 #: src/components/project/ProjectPortalEditor.tsx:1285
-#: src/components/project/PortalSettingsOverview.tsx:154
+#: src/components/project/PortalSettingsOverview.tsx:138
 msgid "dembrane event invitation"
 msgstr "pozvánka na akci dembrane"
 
@@ -5059,6 +5073,7 @@ msgstr "Neaktualizuje se automaticky. Aktualizováno {updatedAgo}."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:527
 #: src/components/invite/InviteModal.tsx:807
+#: src/components/conversation/ConversationsMiniList.tsx:98
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:642
 #: src/components/chat/AgenticPlanCard.tsx:34
 #: src/components/chat/AgenticChatPanel.tsx:430
@@ -5093,8 +5108,8 @@ msgstr "Download all transcripts"
 msgid "Download as"
 msgstr "Download as"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:385
-#: src/components/conversation/ProjectConversationsPanel.tsx:389
+#: src/components/conversation/ProjectConversationsPanel.tsx:350
+#: src/components/conversation/ProjectConversationsPanel.tsx:354
 #: src/components/conversation/ConversationDangerZone.tsx:78
 msgid "Download audio"
 msgstr "Download audio"
@@ -5786,7 +5801,7 @@ msgid "Expiring soon"
 msgstr "Brzy vyprší"
 
 #: src/components/project/ProjectPortalEditor.tsx:745
-#: src/components/project/PortalSettingsOverview.tsx:142
+#: src/components/project/PortalSettingsOverview.tsx:126
 msgid "Explore"
 msgstr "Explore"
 
@@ -5926,7 +5941,7 @@ msgstr "Failed"
 #~ msgid "Failed to add conversation to chat{0}"
 #~ msgstr "Failed to add conversation to chat{0}"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:733
+#: src/components/conversation/ProjectConversationsPanel.tsx:609
 #: src/components/conversation/ConversationAccordion.tsx:977
 #: src/components/conversation/ConversationAccordion.tsx:997
 msgid "Failed to add conversations to context"
@@ -6177,6 +6192,10 @@ msgstr "File size: Min {0}, Max {1}, up to {MAX_FILES} files"
 #: src/components/conversation/ConversationEdit.tsx:90
 msgid "Filename from uploaded file"
 msgstr "Filename from uploaded file"
+
+#: src/components/conversation/ConversationsMiniList.tsx:153
+msgid "Filter and sort"
+msgstr "Filtrovat a řadit"
 
 #: src/components/settings/AuditLogsCard.tsx:447
 msgid "Filter audit logs by action"
@@ -6744,7 +6763,7 @@ msgid "Guided"
 msgstr "Guided"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:185
-#: src/components/conversation/ProjectConversationsPanel.tsx:326
+#: src/components/conversation/ProjectConversationsPanel.tsx:291
 #: src/components/conversation/ConversationAccordion.tsx:575
 msgid "Has verified artifacts"
 msgstr "Has verified artifacts"
@@ -6905,6 +6924,7 @@ msgstr "Hostitel"
 msgid "host guide"
 msgstr "průvodce pro hostitele"
 
+#: src/routes/project/ProjectHomeRoute.tsx:100
 #: src/components/project/ProjectHostGuideLink.tsx:34
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:59
 msgid "Host guide"
@@ -7543,7 +7563,7 @@ msgstr "Připojeno jako správce"
 msgid "Joined the conversation"
 msgstr "Připojil(a) se k rozhovoru"
 
-#: src/routes/project/ProjectHomeRoute.tsx:173
+#: src/routes/project/ProjectHomeRoute.tsx:212
 msgid "Jump to"
 msgstr "Jump to"
 
@@ -7695,7 +7715,7 @@ msgstr "Typy zjištění"
 #: src/components/report/CreateReportForm.tsx:244
 #: src/components/report/CreateReportForm.tsx:322
 #: src/components/project/ProjectPortalEditor.tsx:599
-#: src/components/project/PortalSettingsOverview.tsx:120
+#: src/components/project/PortalSettingsOverview.tsx:108
 #: src/components/popcorn/PopcornLanguageSettings.tsx:107
 #: src/components/language/LanguagePicker.tsx:124
 msgid "Language"
@@ -7752,7 +7772,7 @@ msgstr "Latest"
 msgid "Latest release"
 msgstr "Nejnovější vydání"
 
-#: src/routes/project/ProjectHomeRoute.tsx:360
+#: src/routes/project/ProjectHomeRoute.tsx:184
 msgid "Latest report"
 msgstr "Latest report"
 
@@ -7916,6 +7936,7 @@ msgstr "Načítání stránek dokumentace"
 #: src/routes/project/canvas/CanvasRoute.tsx:301
 #: src/components/conversation/monitorGrouping.ts:72
 #: src/components/conversation/LiveFunnelSection.tsx:251
+#: src/components/conversation/ConversationsMiniList.tsx:68
 msgid "Live"
 msgstr "Live"
 
@@ -7938,8 +7959,8 @@ msgid "Live · the last read is late"
 msgstr "Živě · poslední čtení má zpoždění"
 
 #: src/routes/project/ProjectHomeRoute.tsx:242
-msgid "Live & recent"
-msgstr "Živě a nedávné"
+#~ msgid "Live & recent"
+#~ msgstr "Živě a nedávné"
 
 #: src/components/chat/ChatModeBanner.tsx:65
 #~ msgid "Live agent execution mode"
@@ -8117,7 +8138,7 @@ msgstr "Loading workspaces…"
 #~ msgid "loading..."
 #~ msgstr "loading..."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:164
+#: src/components/conversation/ProjectConversationsPanel.tsx:129
 #: src/components/conversation/ConversationAccordion.tsx:119
 #: src/components/conversation/hooks/index.ts:338
 msgid "Loading..."
@@ -8164,8 +8185,9 @@ msgstr "Parametry z článku LocalMAP"
 msgid "Locked"
 msgstr "Locked"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:476
+#: src/components/conversation/ProjectConversationsPanel.tsx:441
 #: src/components/conversation/LiveMonitorSection.tsx:323
+#: src/components/conversation/ConversationsMiniList.tsx:404
 msgid "Locked conversation, upgrade to view"
 msgstr "Uzamčený rozhovor, pro zobrazení přejděte na vyšší tarif"
 
@@ -8240,7 +8262,7 @@ msgstr "Logo updated"
 #~ msgid "Logout"
 #~ msgstr "Logout"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:113
+#: src/components/conversation/useConversationList.ts:26
 msgid "Longest first"
 msgstr "Longest first"
 
@@ -8278,8 +8300,8 @@ msgstr "Make private"
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:167
 #: src/components/training/StaffTrainingPanel.tsx:175
 #: src/components/project/ProjectSharingStrip.tsx:98
-#: src/components/conversation/ProjectConversationsPanel.tsx:404
-#: src/components/conversation/ProjectConversationsPanel.tsx:408
+#: src/components/conversation/ProjectConversationsPanel.tsx:369
+#: src/components/conversation/ProjectConversationsPanel.tsx:373
 #: src/components/billing/BillingManager.tsx:1555
 #: src/components/agent-access/YourOrganisations.tsx:85
 msgid "Manage"
@@ -8728,7 +8750,7 @@ msgstr "My templates"
 msgid "Name"
 msgstr "Name"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:111
+#: src/components/conversation/useConversationList.ts:24
 #: src/components/conversation/ConversationAccordion.tsx:667
 msgid "Name A-Z"
 msgstr "Name A-Z"
@@ -8761,7 +8783,7 @@ msgstr "Pojmenujte svou organizaci. Další lidi můžete pozvat hned, nebo kdyk
 msgid "Name your workspace."
 msgstr "Name your workspace."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:112
+#: src/components/conversation/useConversationList.ts:25
 #: src/components/conversation/ConversationAccordion.tsx:668
 msgid "Name Z-A"
 msgstr "Name Z-A"
@@ -8924,7 +8946,7 @@ msgstr "Nový tarif"
 #~ msgid "New workspace"
 #~ msgstr "New workspace"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:109
+#: src/components/conversation/useConversationList.ts:22
 msgid "Newest first"
 msgstr "Newest first"
 
@@ -9069,7 +9091,8 @@ msgstr "No conversations found."
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:950
+#: src/components/conversation/ProjectConversationsPanel.tsx:823
+#: src/components/conversation/ConversationsMiniList.tsx:257
 msgid "No conversations match these filters."
 msgstr "No conversations match these filters."
 
@@ -9078,7 +9101,8 @@ msgstr "No conversations match these filters."
 msgid "select.all.modal.no.conversations"
 msgstr "No conversations were processed. This may happen if all conversations are already in context or don't match the selected filters."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:952
+#: src/components/conversation/ProjectConversationsPanel.tsx:825
+#: src/components/conversation/ConversationsMiniList.tsx:259
 msgid "No conversations yet."
 msgstr "No conversations yet."
 
@@ -9177,8 +9201,8 @@ msgstr "Zatím žádné metodiky."
 msgid "No microphone was available. Check that one is connected and not in use elsewhere."
 msgstr "Nebyl k dispozici žádný mikrofon. Zkontrolujte, zda je připojený a nepoužívá ho jiná aplikace."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:259
-#: src/components/conversation/ProjectConversationsPanel.tsx:261
+#: src/components/conversation/ProjectConversationsPanel.tsx:224
+#: src/components/conversation/ProjectConversationsPanel.tsx:226
 msgid "No name"
 msgstr "No name"
 
@@ -9344,7 +9368,7 @@ msgstr "No results"
 msgid "No runs yet. Preparation and updates will appear here."
 msgstr "Zatím žádné běhy. Zde se zobrazí příprava a aktualizace."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:884
+#: src/components/conversation/ProjectConversationsPanel.tsx:757
 msgid "No selectable conversations"
 msgstr "No selectable conversations"
 
@@ -9360,8 +9384,7 @@ msgstr "Zatím nejsou uloženy žádné zúčastněné strany."
 msgid "No stakeholders yet. They appear after the first analysis."
 msgstr "Zatím žádné zúčastněné strany. Objeví se po první analýze."
 
-#: src/routes/project/ProjectHomeRoute.tsx:297
-#: src/components/conversation/ProjectConversationsPanel.tsx:448
+#: src/components/conversation/ProjectConversationsPanel.tsx:413
 msgid "No summary yet"
 msgstr "No summary yet"
 
@@ -9702,7 +9725,7 @@ msgstr "mimo téma pro tento sál"
 msgid "Offline"
 msgstr "Offline"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:110
+#: src/components/conversation/useConversationList.ts:23
 msgid "Oldest first"
 msgstr "Oldest first"
 
@@ -9788,8 +9811,7 @@ msgstr "Jedno velké písmeno"
 msgid "One-off"
 msgstr "Jednorázově"
 
-#: src/routes/project/ProjectHomeRoute.tsx:286
-#: src/components/conversation/ProjectConversationsPanel.tsx:367
+#: src/components/conversation/ProjectConversationsPanel.tsx:332
 msgid "Ongoing"
 msgstr "Ongoing"
 
@@ -9866,15 +9888,15 @@ msgid "Open account actions"
 msgstr "Otevřít akce účtu"
 
 #: src/routes/project/ProjectHomeRoute.tsx:249
-msgid "Open all"
-msgstr "Open all"
+#~ msgid "Open all"
+#~ msgstr "Open all"
 
 #: src/components/chat/ChatHistoryMessage.tsx:249
 msgid "Open chat documentation"
 msgstr "Otevřít dokumentaci k chatu"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:419
-#: src/components/conversation/ProjectConversationsPanel.tsx:423
+#: src/components/conversation/ProjectConversationsPanel.tsx:384
+#: src/components/conversation/ProjectConversationsPanel.tsx:388
 #: src/components/conversation/ConversationDrilldownModal.tsx:238
 #: src/components/chat/ChatHistoryMessage.tsx:190
 msgid "Open conversation"
@@ -10818,9 +10840,9 @@ msgstr "Popis portálu"
 msgid "portal editor"
 msgstr "editor portálu"
 
-#: src/routes/project/ProjectHomeRoute.tsx:199
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:100
 #: src/components/project/ProjectPortalEditor.tsx:542
+#: src/components/project/PortalSettingsOverview.tsx:161
 #: src/components/layout/ProjectOverviewLayout.tsx:51
 msgid "Portal editor"
 msgstr "Portal editor"
@@ -10842,8 +10864,8 @@ msgid "Portal open for new conversations"
 msgstr "Portál je otevřen pro nové rozhovory"
 
 #: src/components/project/PortalSettingsOverview.tsx:102
-msgid "Portal overview"
-msgstr "Přehled portálu"
+#~ msgid "Portal overview"
+#~ msgstr "Přehled portálu"
 
 #: src/components/project/PortalSettingsOverview.tsx:108
 #~ msgid "Portal Overview"
@@ -10856,6 +10878,10 @@ msgstr "Náhled portálu"
 #: src/components/release/releaseHistory.ts:770
 msgid "Portal previews and supporting images display correctly."
 msgstr "Náhledy portálu a doprovodné obrázky se zobrazují správně."
+
+#: src/components/project/PortalSettingsOverview.tsx:102
+msgid "Portal settings"
+msgstr "Nastavení portálu"
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:53
 msgid "Portal title"
@@ -11144,7 +11170,7 @@ msgstr "Project Meta Summary"
 msgid "Project moved"
 msgstr "Projekt byl přesunut"
 
-#: src/routes/project/ProjectHomeRoute.tsx:384
+#: src/routes/project/ProjectHomeRoute.tsx:238
 #: src/routes/project/CreateProjectRoute.tsx:236
 #: src/components/project/ProjectListItem.tsx:400
 #: src/components/project/ProjectDangerZone.tsx:136
@@ -11811,8 +11837,8 @@ msgstr "Odebrat e-mail"
 msgid "Remove file"
 msgstr "Remove file"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:187
-#: src/components/conversation/ProjectConversationsPanel.tsx:210
+#: src/components/conversation/ProjectConversationsPanel.tsx:152
+#: src/components/conversation/ProjectConversationsPanel.tsx:175
 msgid "Remove from chat"
 msgstr "Remove from chat"
 
@@ -11871,9 +11897,9 @@ msgstr "Rename"
 msgid "Rename chat"
 msgstr "Rename chat"
 
-#: src/routes/project/ProjectHomeRoute.tsx:145
-#: src/routes/project/ProjectHomeRoute.tsx:149
-#: src/routes/project/ProjectHomeRoute.tsx:383
+#: src/routes/project/ProjectHomeRoute.tsx:137
+#: src/routes/project/ProjectHomeRoute.tsx:141
+#: src/routes/project/ProjectHomeRoute.tsx:237
 #: src/components/project/ProjectListItem.tsx:341
 #: src/components/project/ProjectListItem.tsx:399
 msgid "Rename project"
@@ -11923,7 +11949,7 @@ msgstr "Prompt pro odpověď"
 msgid "report"
 msgstr "zpráva"
 
-#: src/routes/project/ProjectHomeRoute.tsx:207
+#: src/routes/project/ProjectHomeRoute.tsx:105
 #: src/routes/project/report/ProjectReportRoute.tsx:161
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:153
 #: src/components/report/ReportRenderer.tsx:65
@@ -12172,8 +12198,9 @@ msgstr "Znovu odeslat ověřovací e-mail"
 msgid "Reset"
 msgstr "Reset"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:851
-#: src/components/conversation/ProjectConversationsPanel.tsx:855
+#: src/components/conversation/ProjectConversationsPanel.tsx:724
+#: src/components/conversation/ProjectConversationsPanel.tsx:728
+#: src/components/conversation/ConversationsMiniList.tsx:202
 msgid "Reset filters"
 msgstr "Reset filters"
 
@@ -12401,7 +12428,7 @@ msgstr "Zkontrolovat výsledky"
 #~ msgid "Review visible results"
 #~ msgstr ""
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:764
+#: src/components/conversation/ProjectConversationsPanel.tsx:637
 msgid "Review, edit, and open every conversation in this project."
 msgstr "Review, edit, and open every conversation in this project."
 
@@ -12732,8 +12759,9 @@ msgstr "Scroll to bottom"
 #: src/features/sidebar/blocks/SearchBlock.tsx:116
 #: src/features/sidebar/blocks/SearchBlock.tsx:120
 #: src/components/results/ResultsList.tsx:288
-#: src/components/conversation/ProjectConversationsPanel.tsx:803
+#: src/components/conversation/ProjectConversationsPanel.tsx:676
 #: src/components/conversation/MoveConversationButton.tsx:155
+#: src/components/conversation/ConversationsMiniList.tsx:162
 msgid "Search"
 msgstr "Search"
 
@@ -12750,7 +12778,7 @@ msgstr "Hledat účet, stav, popis"
 msgid "Search account, workspace, organisation, email, tier"
 msgstr "Hledat účet, pracovní prostor, organizaci, e-mail, úroveň"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:760
+#: src/components/conversation/ProjectConversationsPanel.tsx:633
 msgid "Search and select the conversations for this chat."
 msgstr "Search and select the conversations for this chat."
 
@@ -12950,6 +12978,10 @@ msgstr "Vybrat"
 msgid "Select {0}"
 msgstr "Select {0}"
 
+#: src/components/conversation/ConversationsMiniList.tsx:393
+msgid "Select {title}"
+msgstr "Vybrat {title}"
+
 #: src/routes/project/chat/ProjectChatRoute.tsx:886
 msgid "Select a conversation to continue"
 msgstr "Vyberte rozhovor pro pokračování"
@@ -13002,7 +13034,7 @@ msgstr "Možnost Vybrat vše je k dispozici v chatech Ask a v nových chatech Ko
 msgid "select.all.modal.title.results"
 msgstr "Vybrat všechny výsledky"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:880
+#: src/components/conversation/ProjectConversationsPanel.tsx:753
 msgid "Select all visible ({remainingCount})"
 msgstr "Select all visible ({remainingCount})"
 
@@ -13022,7 +13054,7 @@ msgstr "Vybrat zvukové soubory"
 #~ msgid "Select Audio Files to Upload"
 #~ msgstr "Select Audio Files to Upload"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:277
+#: src/components/conversation/ProjectConversationsPanel.tsx:242
 msgid "Select conversation"
 msgstr "Vybrat rozhovor"
 
@@ -13033,7 +13065,7 @@ msgstr "Vybrat rozhovor"
 #: src/routes/project/chat/NewChatRoute.tsx:624
 #: src/routes/project/chat/NewChatRoute.tsx:626
 #: src/routes/project/chat/NewChatRoute.tsx:733
-#: src/components/conversation/ProjectConversationsPanel.tsx:930
+#: src/components/conversation/ProjectConversationsPanel.tsx:803
 msgid "Select conversations"
 msgstr "Select conversations"
 
@@ -13234,7 +13266,7 @@ msgstr "nastavil/a {0} {relative}"
 msgid "Set goal"
 msgstr "Nastavit cíl"
 
-#: src/routes/project/ProjectHomeRoute.tsx:219
+#: src/routes/project/ProjectHomeRoute.tsx:110
 msgid "Set key terms"
 msgstr "Nastavit klíčové pojmy"
 
@@ -13242,7 +13274,7 @@ msgstr "Nastavit klíčové pojmy"
 msgid "Set managed"
 msgstr "Nastavit jako spravované"
 
-#: src/routes/project/ProjectHomeRoute.tsx:229
+#: src/routes/project/ProjectHomeRoute.tsx:116
 msgid "Set project context"
 msgstr "Nastavit kontext projektu"
 
@@ -13357,7 +13389,7 @@ msgstr "Sdílet prezentaci"
 msgid "Share report"
 msgstr "Share report"
 
-#: src/routes/project/ProjectHomeRoute.tsx:162
+#: src/routes/project/ProjectHomeRoute.tsx:154
 msgid "Share the project, watch live activity, and jump into the main tools from one place."
 msgstr "Share the project, watch live activity, and jump into the main tools from one place."
 
@@ -13415,7 +13447,7 @@ msgstr "Při sdílení soukromého projektu s nečlenem se nyní místo chyby na
 msgid "Short phrases from the conversations"
 msgstr "Krátké úryvky z rozhovorů"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:114
+#: src/components/conversation/useConversationList.ts:27
 msgid "Shortest first"
 msgstr "Shortest first"
 
@@ -13814,7 +13846,8 @@ msgstr "Něco se pokazilo. Zkuste to znovu, a pokud problém přetrvává, konta
 msgid "participant.go.deeper.content.policy.violation.error.message"
 msgstr "Sorry, we cannot process this request due to an LLM provider's content policy."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:823
+#: src/components/conversation/ProjectConversationsPanel.tsx:696
+#: src/components/conversation/ConversationsMiniList.tsx:169
 #: src/components/conversation/ConversationAccordion.tsx:1206
 #: src/components/conversation/ConversationAccordion.tsx:1213
 msgid "Sort"
@@ -13941,7 +13974,7 @@ msgstr "Standard access. Collaborates in the workspaces they're added to."
 msgid "Standing guidance the assistant gets in every project chat in this workspace. Saves automatically."
 msgstr "Stálé pokyny, které asistent dostává v každém projektovém chatu v tomto pracovním prostoru. Ukládá se automaticky."
 
-#: src/routes/project/ProjectHomeRoute.tsx:182
+#: src/routes/project/ProjectHomeRoute.tsx:90
 msgid "Start a chat"
 msgstr "Start a chat"
 
@@ -14323,7 +14356,8 @@ msgstr "Tag deleted"
 
 #: src/components/project/ProjectTagsInput.tsx:255
 #: src/components/participant/ParticipantInitiateForm.tsx:281
-#: src/components/conversation/ProjectConversationsPanel.tsx:833
+#: src/components/conversation/ProjectConversationsPanel.tsx:706
+#: src/components/conversation/ConversationsMiniList.tsx:179
 #: src/components/conversation/ConversationEdit.tsx:424
 #: src/components/conversation/ConversationDrilldownModal.tsx:200
 #: src/components/conversation/ConversationAccordion.tsx:1275
@@ -14347,6 +14381,10 @@ msgstr "Štítky byly aktualizovány. Kdykoli je můžete upravit v editoru port
 #: src/routes/invite/AcceptInviteRoute.tsx:532
 msgid "Take me to {resolvedWorkspaceName}"
 msgstr "Take me to {resolvedWorkspaceName}"
+
+#: src/routes/project/ProjectHomeRoute.tsx:167
+msgid "Take part"
+msgstr "Zapojte se"
 
 #: src/components/participant/ParticipantConversationAudio.tsx:709
 msgid "Take some time to create an outcome that makes your contribution concrete or get an immediate reply from dembrane to help you deepen the conversation."
@@ -15495,7 +15533,7 @@ msgstr "Title"
 msgid "Title auto-generated"
 msgstr "Title auto-generated"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:315
+#: src/components/conversation/ProjectConversationsPanel.tsx:280
 msgid "Title generated from the conversation"
 msgstr "Title generated from the conversation"
 
@@ -15503,7 +15541,8 @@ msgstr "Title generated from the conversation"
 msgid "Title guidance"
 msgstr "Doporučení k názvu"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:804
+#: src/components/conversation/ProjectConversationsPanel.tsx:677
+#: src/components/conversation/ConversationsMiniList.tsx:163
 msgid "Title or participant"
 msgstr "Title or participant"
 
@@ -15668,6 +15707,10 @@ msgstr "Školení"
 msgid "Transcribe a conversation again"
 msgstr "Přepiš rozhovor znovu"
 
+#: src/components/conversation/ConversationsMiniList.tsx:84
+msgid "Transcribing"
+msgstr "Probíhá přepis"
+
 #: src/components/conversation/ConversationChunkAudioTranscript.tsx:86
 msgid "Transcribing..."
 msgstr "Transcribing..."
@@ -15700,6 +15743,7 @@ msgstr "výňatek z přepisu"
 msgid "Transcript retrieval and conversation summaries finish before dependent work continues."
 msgstr "Načítání přepisů a shrnutí rozhovorů se dokončí dříve, než pokračují navazující úkoly."
 
+#: src/components/conversation/ConversationsMiniList.tsx:75
 #: src/components/conversation/ConversationAccordion.tsx:429
 msgid "Transcription error"
 msgstr "Chyba přepisu"
@@ -15995,7 +16039,7 @@ msgid "Unknown"
 msgstr "Unknown"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2510
-#: src/components/conversation/ProjectConversationsPanel.tsx:128
+#: src/components/conversation/useConversationList.ts:41
 msgid "Unknown date"
 msgstr "Unknown date"
 
@@ -16077,11 +16121,11 @@ msgstr "Untitled"
 msgid "Untitled canvas"
 msgstr "Plátno bez názvu"
 
-#: src/routes/project/ProjectHomeRoute.tsx:68
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:102
 #: src/components/project/ProjectUsageAndSharing.tsx:515
 #: src/components/project/ProjectUsageAndSharing.tsx:550
-#: src/components/conversation/ProjectConversationsPanel.tsx:258
+#: src/components/conversation/ProjectConversationsPanel.tsx:223
+#: src/components/conversation/ConversationsMiniList.tsx:331
 #: src/components/chat/References.tsx:63
 msgid "Untitled conversation"
 msgstr "Untitled conversation"
@@ -16193,7 +16237,7 @@ msgstr "Aktualizuje se uložená vzpomínka"
 msgid "Updating project tags"
 msgstr "Aktualizují se štítky projektu"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:181
+#: src/components/conversation/ProjectConversationsPanel.tsx:146
 #: src/components/conversation/ConversationAccordion.tsx:157
 msgid "Upgrade to add this to the chat"
 msgstr "Přejděte na vyšší tarif a přidejte toto do chatu"
@@ -16231,7 +16275,7 @@ msgstr "Upgrade your workspace to view transcripts for new conversations."
 #: src/components/project/ProjectUploadSection.tsx:47
 #: src/components/dropzone/UploadConversationDropzone.tsx:531
 #: src/components/dropzone/UploadConversationDropzone.tsx:545
-#: src/components/conversation/ProjectConversationsPanel.tsx:778
+#: src/components/conversation/ProjectConversationsPanel.tsx:651
 #: src/components/conversation/ConversationAccordion.tsx:405
 #: src/components/conversation/ConversationAccordion.tsx:1113
 msgid "Upload"
@@ -16241,7 +16285,7 @@ msgstr "Upload"
 msgid "Upload a custom logo to replace the dembrane logo across the portal, dashboard, reports, and host guide. Recommended aspect ratio is 3:1 (e.g. 600×200px horizontal format)."
 msgstr "Nahrajte vlastní logo, které nahradí logo dembrane na portálu, přehledu, ve zprávách a v průvodci pro moderátory. Doporučený poměr stran je 3:1 (např. vodorovný formát 600×200 px)."
 
-#: src/routes/project/ProjectHomeRoute.tsx:191
+#: src/routes/project/ProjectHomeRoute.tsx:95
 msgid "Upload audio"
 msgstr "Nahrát zvuk"
 
@@ -16278,7 +16322,7 @@ msgstr "Nahrát soubory"
 msgid "Upload limit reached"
 msgstr "Dosažen limit nahrávání"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:775
+#: src/components/conversation/ProjectConversationsPanel.tsx:648
 #: src/components/conversation/ConversationAccordion.tsx:1107
 msgid "Upload limit reached. Upgrade your workspace."
 msgstr "Upload limit reached. Upgrade your workspace."
@@ -16497,7 +16541,9 @@ msgstr "Verified"
 msgid "select.all.modal.loading.verified"
 msgstr "Verified"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:844
+#: src/components/conversation/ProjectConversationsPanel.tsx:717
+#: src/components/conversation/ConversationsMiniList.tsx:92
+#: src/components/conversation/ConversationsMiniList.tsx:189
 msgid "Verified"
 msgstr "Verified"
 
@@ -16511,7 +16557,7 @@ msgid "verified artifacts"
 msgstr "verified artifacts"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:190
-#: src/components/conversation/ProjectConversationsPanel.tsx:331
+#: src/components/conversation/ProjectConversationsPanel.tsx:296
 msgid "Verified artifacts"
 msgstr "Verified artifacts"
 
@@ -16520,7 +16566,7 @@ msgstr "Verified artifacts"
 msgid "dashboard.dembrane.verify.title"
 msgstr "Verify"
 
-#: src/components/project/PortalSettingsOverview.tsx:145
+#: src/components/project/PortalSettingsOverview.tsx:129
 msgid "Verify"
 msgstr "Verify"
 

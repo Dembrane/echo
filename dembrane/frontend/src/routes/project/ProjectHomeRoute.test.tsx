@@ -16,9 +16,6 @@ vi.mock("@/hooks/useWorkspace", () => ({
 	}),
 }));
 vi.mock("@/hooks/useI18nNavigate", () => ({ useI18nNavigate: () => vi.fn() }));
-vi.mock("@/hooks/useConversationMonitor", () => ({
-	useConversationMonitor: () => ({ conversations: [] }),
-}));
 vi.mock("@/components/project/hooks", () => ({
 	useProjectById: () => ({ data: { id: "p1", name: "Alpha" } }),
 	useUpdateProjectByIdMutation: () => ({ mutateAsync: vi.fn() }),
@@ -26,17 +23,14 @@ vi.mock("@/components/project/hooks", () => ({
 vi.mock("@/components/report/hooks", () => ({
 	useLatestProjectReport: () => ({ data: null }),
 }));
-vi.mock("@/components/conversation/hooks", () => ({
-	useInfiniteConversationsByProjectId: () => ({ data: { pages: [] } }),
-}));
-vi.mock("@/components/conversation/LiveMonitorSection", () => ({
-	LiveMonitorSection: () => null,
+vi.mock("@/components/conversation/ConversationsMiniList", () => ({
+	ConversationsMiniList: () => null,
 }));
 vi.mock("@/components/project/PortalSettingsOverview", () => ({
 	PortalSettingsOverview: () => null,
 }));
-vi.mock("@/components/project/ProjectHostGuideLink", () => ({
-	ProjectHostGuideLink: () => null,
+vi.mock("@/components/project/ProjectQRCode", () => ({
+	ProjectQRCode: () => null,
 }));
 
 i18n.load("en-US", {});
@@ -90,13 +84,13 @@ describe("ProjectHomeRoute jump-to role gating", () => {
 	])("%s: start chat %s, upload %s", (r, canChat, canUpload) => {
 		role.current = r;
 		renderHome();
-		expect(!!screen.queryByRole("button", { name: "Start a chat" })).toBe(
+		expect(!!screen.queryByRole("link", { name: "Start a chat" })).toBe(
 			canChat,
 		);
-		expect(!!screen.queryByRole("button", { name: "Upload audio" })).toBe(
+		expect(!!screen.queryByRole("link", { name: "Upload audio" })).toBe(
 			canUpload,
 		);
 		// Reading stays open to everyone.
-		expect(screen.getByRole("button", { name: "Report" })).toBeTruthy();
+		expect(screen.getByRole("link", { name: "Report" })).toBeTruthy();
 	});
 });
