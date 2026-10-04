@@ -6,8 +6,6 @@ import {
 	Button,
 	Checkbox,
 	Group,
-	Modal,
-	Popover,
 	Select,
 	Skeleton,
 	Stack,
@@ -17,13 +15,8 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
-import { useDisclosure, useElementSize } from "@mantine/hooks";
-import {
-	ArrowSquareOutIcon,
-	BroadcastIcon,
-	MonitorIcon,
-	ShareNetworkIcon,
-} from "@phosphor-icons/react";
+import { useElementSize } from "@mantine/hooks";
+import { ArrowSquareOutIcon, MonitorIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	createContext,
@@ -41,7 +34,6 @@ import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { SaveStatus } from "@/components/form/SaveStatus";
 import { PageContainer } from "@/components/layout/PageContainer";
 import {
-	type LiveHours,
 	usePopcornLiveMutation,
 	usePopcornSettingsMutation,
 	usePopcornStopLiveMutation,
@@ -82,6 +74,9 @@ import {
 	usePresentationDraft,
 } from "@/components/present/hooks/usePresentationDraft";
 import { TranslationStatus } from "@/components/present/TranslationStatus";
+import { LiveButton } from "@/components/sharing/LiveButton";
+import { EventPrintoutsItem, ShareButton } from "@/components/sharing/Share";
+import { StatusLine } from "@/components/sharing/StatusLine";
 import { API_BASE_URL } from "@/config";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -468,7 +463,7 @@ function Session({
 	);
 	const live = usePopcornLiveMutation(projectId, presentation.id);
 	const stop = usePopcornStopLiveMutation(projectId, presentation.id);
-	const [hours, setHours] = useState<LiveHours>(8);
+	const isLive = presentation.loop?.mode === "live";
 	const [eventTick, setEventTick] = useState(0);
 	useServerEvents(
 		`${API_BASE_URL}/v2/bff/popcorn/${encodeURIComponent(presentation.id)}/events`,
@@ -491,8 +486,6 @@ function Session({
 	// results panel are the dashboard, not a mode it can be put into. The
 	// preview shows the draft and Publish is always within reach.
 	const drafting = canEdit;
-	const [sharing, share] = useDisclosure(false);
-	const [liveOptions, liveDisclosure] = useDisclosure(false);
 	const draft = usePresentationDraft(
 		projectId,
 		presentation.id,
@@ -563,6 +556,16 @@ function Session({
 						<Text size="sm" c="dimmed">
 							{presentation.name}
 						</Text>
+						<StatusLine
+							live={isLive}
+							liveUntil={presentation.loop?.expires_at}
+							isPublic={presentation.settings.public}
+							extra={
+								canEdit && draft.query.data?.has_changes
+									? [t`Unpublished changes`]
+									: []
+							}
+						/>
 					</Stack>
 					<Group gap="xs" aria-label={t`Presentation controls`}>
 						<Button
@@ -574,89 +577,63 @@ function Session({
 							<Trans>Present</Trans>
 						</Button>
 						{canEdit && (
-							<Button
-								leftSection={<ShareNetworkIcon size={20} />}
-								onClick={share.open}
-							>
-								<Trans>Share</Trans>
-							</Button>
-						)}
-						{canEdit &&
-							(blocks.includes("popcorn") ||
-								presentation.loop?.mode === "live") &&
-							(presentation.loop?.mode === "live" ? (
-								<Button
-									variant="outline"
-									leftSection={<BroadcastIcon size={18} weight="fill" />}
-									loading={stop.isPending}
-									onClick={() => stop.mutate()}
-								>
-									<Trans>Stop live</Trans>
-								</Button>
-							) : (
-								<Popover
-									opened={liveOptions}
-									onChange={(opened) =>
-										opened ? liveDisclosure.open() : liveDisclosure.close()
-									}
-									position="bottom-end"
-									width={320}
-									withArrow
-								>
-									<Popover.Target>
-										<Button
-											variant="outline"
-											leftSection={<BroadcastIcon size={18} />}
-											onClick={liveDisclosure.toggle}
+							<ShareButton>
+								{draft.query.data ? (
+									<SettingsSaveContext.Provider value={settingsEditor}>
+										<fieldset
+											disabled={publishing}
+											style={{ border: 0, margin: 0, minWidth: 0, padding: 0 }}
 										>
-											<Trans>Go live</Trans>
-										</Button>
-									</Popover.Target>
-									<Popover.Dropdown>
-										<Stack gap="md">
-											<Text size="sm">
-												<Trans>
-													Keep Popcorn up to date as conversations arrive. You
-													can go live before the first recording.
-												</Trans>
-											</Text>
-											<Select
-												label={t`Duration`}
-												value={String(hours)}
-												allowDeselect={false}
-												data={[
-													{ label: t`1 hour`, value: "1" },
-													{ label: t`8 hours`, value: "8" },
-													{ label: t`24 hours`, value: "24" },
-												]}
-												onChange={(value) =>
-													value && setHours(Number(value) as LiveHours)
-												}
-											/>
-											<Button
-												leftSection={<BroadcastIcon size={18} />}
-												loading={live.isPending}
-												onClick={() =>
-													live.mutate(hours, {
-														onSuccess: liveDisclosure.close,
-													})
-												}
-											>
-												<Trans>Go live</Trans>
-											</Button>
-										</Stack>
-									</Popover.Dropdown>
-								</Popover>
-							))}
+											<Stack gap="md">
+												<PopcornShare
+													embedded
+													projectId={projectId}
+													popcorn={draft.query.data.presentation}
+													presentation
+													extras={
+														<EventPrintoutsItem
+															workspaceId={workspaceId ?? ""}
+															projectId={projectId}
+														/>
+													}
+												/>
+												<Text size="sm" c="dimmed">
+													<Trans>
+														The shared screen shows your published presentation.
+														Publish changes to update its content and access.
+													</Trans>
+												</Text>
+											</Stack>
+										</fieldset>
+									</SettingsSaveContext.Provider>
+								) : draft.query.isError ? (
+									<ErrorNotice
+										error={draft.query.error}
+										onRetry={() => void draft.query.refetch()}
+										title={t`The draft could not be loaded`}
+									/>
+								) : (
+									<Stack
+										gap="md"
+										role="status"
+										aria-label={t`Loading presentation`}
+									>
+										<Skeleton height={36} />
+										<Skeleton height={200} />
+									</Stack>
+								)}
+							</ShareButton>
+						)}
+						{canEdit && (blocks.includes("popcorn") || isLive) && (
+							<LiveButton
+								live={isLive}
+								pending={isLive ? stop.isPending : live.isPending}
+								onGoLive={(hours) => live.mutate(hours)}
+								onStop={() => stop.mutate()}
+							/>
+						)}
 					</Group>
 				</Stack>
-				{presentation.loop?.mode === "live" && (
-					<Text size="sm" role="status">
-						<Trans>
-							Live. New conversations will feed Popcorn as they arrive.
-						</Trans>
-					</Text>
-				)}
 				{canEdit && (
 					<Group justify="flex-start">
 						<Button
@@ -673,79 +650,6 @@ function Session({
 						</Button>
 					</Group>
 				)}
-				<Modal
-					opened={sharing}
-					onClose={share.close}
-					title={t`Share presentation`}
-					size="lg"
-				>
-					{draft.query.data ? (
-						<SettingsSaveContext.Provider value={settingsEditor}>
-							<Stack gap="lg">
-								<fieldset
-									disabled={publishing}
-									style={{ border: 0, margin: 0, minWidth: 0, padding: 0 }}
-								>
-									<PopcornShare
-										embedded
-										projectId={projectId}
-										popcorn={draft.query.data.presentation}
-										presentation
-									/>
-								</fieldset>
-								<SaveStatus
-									formErrors={{}}
-									savedAt={
-										draft.query.data.saved_at
-											? new Date(draft.query.data.saved_at)
-											: null
-									}
-									isPendingSave={false}
-									isSaving={draft.save.isPending}
-									isError={draft.save.isError}
-								/>
-								<Text size="sm">
-									<Trans>
-										The shared screen shows your published presentation. Publish
-										changes to update its content and access.
-									</Trans>
-								</Text>
-								{publishError && (
-									<Alert color="red">
-										<Text size="sm">
-											<Trans>Changes could not be published. Try again.</Trans>
-										</Text>
-									</Alert>
-								)}
-								<Group justify="flex-start">
-									<Button
-										variant="filled"
-										loading={publishing}
-										disabled={
-											!draft.query.data.has_changes ||
-											draft.save.isPending ||
-											draft.save.isError
-										}
-										onClick={() => void publishChanges()}
-									>
-										<Trans>Publish changes</Trans>
-									</Button>
-								</Group>
-							</Stack>
-						</SettingsSaveContext.Provider>
-					) : draft.query.isError ? (
-						<ErrorNotice
-							error={draft.query.error}
-							onRetry={() => void draft.query.refetch()}
-							title={t`The draft could not be loaded`}
-						/>
-					) : (
-						<Stack gap="md" role="status" aria-label={t`Loading presentation`}>
-							<Skeleton height={36} />
-							<Skeleton height={120} />
-						</Stack>
-					)}
-				</Modal>
 				{drafting ? (
 					draft.query.isError ? (
 						<Box {...testId("present-draft-error-panel")}>

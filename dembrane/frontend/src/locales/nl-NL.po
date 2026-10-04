@@ -311,7 +311,7 @@ msgid "{0, plural, one {# payment} other {# payments}}"
 msgstr "{0, plural, one {# betaling} other {# betalingen}}"
 
 #. placeholder {0}: presentation.counts.phrases
-#: src/routes/project/present/PresentRoute.tsx:825
+#: src/routes/project/present/PresentRoute.tsx:729
 msgid "{0, plural, one {# phrase} other {# phrases}}"
 msgstr "{0, plural, one {# fragment} other {# fragmenten}}"
 
@@ -962,8 +962,7 @@ msgstr "1 u opname"
 msgid "1 history entry"
 msgstr "1 item in geschiedenis"
 
-#: src/routes/project/present/PresentRoute.tsx:628
-#: src/components/popcorn/PopcornActions.tsx:130
+#: src/components/sharing/LiveButton.tsx:36
 msgid "1 hour"
 msgstr "1 uur"
 
@@ -991,9 +990,8 @@ msgstr "2 tot 5."
 msgid "2. When a conversation or report event happens, we automatically send the data to your URL"
 msgstr "2. Wanneer een gesprek of rapport plaatsvindt, sturen we de data automatisch naar je URL"
 
-#: src/routes/project/present/PresentRoute.tsx:630
 #: src/routes/project/canvas/CanvasRoute.tsx:219
-#: src/components/popcorn/PopcornActions.tsx:132
+#: src/components/sharing/LiveButton.tsx:38
 msgid "24 hours"
 msgstr "24 uur"
 
@@ -1021,9 +1019,8 @@ msgstr "50 tot 250."
 msgid "6 to 15."
 msgstr "6 tot 15."
 
-#: src/routes/project/present/PresentRoute.tsx:629
 #: src/routes/project/canvas/CanvasRoute.tsx:218
-#: src/components/popcorn/PopcornActions.tsx:131
+#: src/components/sharing/LiveButton.tsx:37
 msgid "8 hours"
 msgstr "8 uur"
 
@@ -1446,7 +1443,7 @@ msgstr "Voeg mensen toe via e-mail. Wie nog niet in de werkruimte zit, krijgt ee
 msgid "Add people from your organisation"
 msgstr "Voeg mensen uit je organisatie toe"
 
-#: src/routes/project/HostGuidePage.tsx:1654
+#: src/routes/project/HostGuidePage.tsx:1664
 msgid "Add step"
 msgstr "Stap toevoegen"
 
@@ -1475,7 +1472,7 @@ msgstr "Trefwoorden toevoegen"
 msgid "Add the people, places, organisations and jargon you expect to hear."
 msgstr "Voeg de mensen, plaatsen, organisaties en vaktermen toe die je verwacht te horen."
 
-#: src/routes/project/HostGuidePage.tsx:1691
+#: src/routes/project/HostGuidePage.tsx:1701
 msgid "Add tip"
 msgstr "Tip toevoegen"
 
@@ -1889,7 +1886,7 @@ msgstr "Ook toestaan om projectinstellingen te wijzigen"
 msgid "Always on, it lives on our website"
 msgstr "Altijd aan, het staat op onze website"
 
-#: src/routes/project/present/PresentRoute.tsx:204
+#: src/routes/project/present/PresentRoute.tsx:199
 msgid "Always on. The screen opens here, so the room has something to read while the rest gets ready."
 msgstr "Altijd aan. Het scherm opent hier, zodat de zaal iets te lezen heeft terwijl de rest klaarstaat."
 
@@ -2081,7 +2078,7 @@ msgstr "Elke tag"
 msgid "Anyone in your organisation can find this workspace. Admins can join; members can request access."
 msgstr "Iedereen in je organisatie kan deze werkruimte vinden. Admins kunnen meteen meedoen, leden kunnen toegang aanvragen."
 
-#: src/components/popcorn/PopcornShare.tsx:77
+#: src/components/popcorn/PopcornShare.tsx:50
 msgid "Anyone with the link can watch. No login, and no transcripts."
 msgstr "Iedereen met de link kan meekijken. Zonder in te loggen en zonder transcripts."
 
@@ -2107,7 +2104,7 @@ msgid "Anything you want to add"
 msgstr "Wil je nog iets toevoegen"
 
 #: src/routes/settings/UserSettingsRoute.tsx:106
-#: src/routes/project/present/PresentRoute.tsx:131
+#: src/routes/project/present/PresentRoute.tsx:126
 #: src/features/sidebar/views/user/UserSettingsView.tsx:28
 #: src/features/sidebar/hooks/useSearchHits.ts:86
 msgid "Appearance"
@@ -2170,6 +2167,7 @@ msgid "conversation.verified.approved"
 msgstr "Goedgekeurd"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:136
+#: src/components/sharing/StatusLine.tsx:52
 msgid "Archived"
 msgstr "Gearchiveerd"
 
@@ -2396,11 +2394,11 @@ msgstr "Geverifieerde artefacten toevoegen"
 msgid "participant.modal.interruption.issue.message"
 msgstr "Let op! We hebben de laatste 60 seconden van je opname verloren door een onderbreking. Druk op de knop hieronder om opnieuw verbinding te maken."
 
-#: src/routes/project/present/PresentRoute.tsx:260
+#: src/routes/project/present/PresentRoute.tsx:255
 msgid "Audience language:"
 msgstr "Taal van het publiek:"
 
-#: src/routes/project/present/PresentRoute.tsx:402
+#: src/routes/project/present/PresentRoute.tsx:397
 msgid "Audience preview"
 msgstr "Voorbeeld voor publiek"
 
@@ -3093,17 +3091,17 @@ msgstr "Het Changemaker-abonnement verwijdert dit"
 msgid "Changes applied. You can fine-tune them anytime in project settings."
 msgstr "Wijzigingen toegepast. Je kunt ze altijd bijstellen in de projectinstellingen."
 
-#: src/routes/project/present/PresentRoute.tsx:772
+#: src/routes/project/present/PresentRoute.tsx:676
 msgid "Changes are saved as a draft. Publish when you’re ready to update the room screen."
 msgstr "Wijzigingen zijn opgeslagen als concept. Publiceer wanneer je klaar bent om het zaalscherm bij te werken."
 
-#: src/routes/project/present/PresentRoute.tsx:816
+#: src/routes/project/present/PresentRoute.tsx:720
 msgid "Changes could not be published or saved. Review your draft and try again."
 msgstr "Wijzigingen konden niet worden gepubliceerd of opgeslagen. Controleer je concept en probeer het opnieuw."
 
 #: src/routes/project/present/PresentRoute.tsx:716
-msgid "Changes could not be published. Try again."
-msgstr "Wijzigingen konden niet worden gepubliceerd. Probeer het opnieuw."
+#~ msgid "Changes could not be published. Try again."
+#~ msgstr "Wijzigingen konden niet worden gepubliceerd. Probeer het opnieuw."
 
 #: src/components/form/UnsavedChanges.tsx:20
 #~ msgid "Changes will be saved automatically"
@@ -3284,7 +3282,7 @@ msgstr "Kiezen uit je andere projecten"
 msgid "Choose Summarize, Brainstorm Ideas or Custom reply modes."
 msgstr "Kies de antwoordmodus Samenvatten, Ideeën brainstormen of Aangepast."
 
-#: src/routes/project/present/PresentRoute.tsx:194
+#: src/routes/project/present/PresentRoute.tsx:189
 msgid "Choose the outcomes your audience can explore."
 msgstr "Kies de resultaten die je publiek kan ontdekken."
 
@@ -3388,7 +3386,7 @@ msgstr "Klik op een knooppunt in de boom of clusterkaart om het hier uit te lich
 msgid "Click an argument, or rest the cursor on a cluster until the circle closes, and it is kept here."
 msgstr "Klik op een argument, of laat de cursor op een cluster rusten tot de cirkel rond is, en je vindt het hier terug."
 
-#: src/routes/project/HostGuidePage.tsx:1562
+#: src/routes/project/HostGuidePage.tsx:1572
 msgid "Click to edit"
 msgstr "Klik om te bewerken"
 
@@ -3926,10 +3924,11 @@ msgstr "Even afkoelen. Beschikbaar over {0}"
 #: src/routes/project/report/ProjectReportRoute.tsx:996
 #: src/routes/project/report/ProjectReportRoute.tsx:1018
 #: src/routes/project/report/ProjectReportRoute.tsx:1045
+#: src/components/sharing/Share.tsx:118
+#: src/components/sharing/Share.tsx:154
 #: src/components/settings/TwoFactorSettingsCard.tsx:396
 #: src/components/project/ProjectQRCode.tsx:146
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:1026
-#: src/components/popcorn/PopcornShare.tsx:139
 #: src/components/participant/ParticipantShareModal.tsx:111
 #: src/components/participant/InAppBrowserNotice.tsx:66
 #: src/components/conversation/CopyConversationTranscript.tsx:44
@@ -3966,8 +3965,12 @@ msgid "Copy approved outcomes to the new conversation so they aren't lost when t
 msgstr "Kopieer goedgekeurde uitkomsten naar het nieuwe gesprek zodat ze niet verloren gaan als het origineel wordt verwijderd."
 
 #: src/components/popcorn/PopcornShare.tsx:139
-msgid "Copy code"
-msgstr "Kopieer code"
+#~ msgid "Copy code"
+#~ msgstr "Kopieer code"
+
+#: src/components/sharing/Share.tsx:154
+msgid "Copy embed code"
+msgstr "Insluitcode kopiëren"
 
 #: src/components/members/PendingInvitesSection.tsx:171
 #: src/components/members/PendingInvitesSection.tsx:175
@@ -3977,6 +3980,7 @@ msgid "Copy invite link"
 msgstr "Uitnodigingslink kopiëren"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1020
+#: src/components/sharing/Share.tsx:118
 #: src/components/project/ProjectQRCode.tsx:146
 #: src/components/participant/ParticipantShareModal.tsx:111
 #: src/components/participant/InAppBrowserNotice.tsx:66
@@ -4096,7 +4100,7 @@ msgstr "Betalingen konden niet worden geladen. Controleer de authenticatie en de
 msgid "Could not load the canvas."
 msgstr "Kon het canvas niet laden."
 
-#: src/routes/project/present/PresentRoute.tsx:857
+#: src/routes/project/present/PresentRoute.tsx:761
 msgid "Could not load the latest results"
 msgstr "Kon de nieuwste resultaten niet laden"
 
@@ -4573,7 +4577,7 @@ msgstr "E-mail van de data-eigenaar"
 msgid "Data ownership"
 msgstr "Data-eigendom"
 
-#: src/routes/project/present/PresentRoute.tsx:128
+#: src/routes/project/present/PresentRoute.tsx:123
 msgid "Data policy"
 msgstr "Gegevensbeleid"
 
@@ -4939,7 +4943,7 @@ msgstr "Niet ontvangen? Kijk eerst in je spam of ongewenste mail. Het bericht ko
 msgid "Didn't get it? Check your spam or junk folder. The email comes from dembrane.com."
 msgstr "Niet ontvangen? Kijk in je spam- of ongewenste-mailmap. De e-mail komt van dembrane.com."
 
-#: src/routes/project/present/PresentRoute.tsx:209
+#: src/routes/project/present/PresentRoute.tsx:204
 msgid "Different perspectives and trade-offs"
 msgstr "Verschillende perspectieven en afwegingen"
 
@@ -5109,10 +5113,16 @@ msgstr "Audio downloaden en gesprekken organiseren"
 msgid "Download audio from conversations."
 msgstr "Download audio van gesprekken."
 
+#: src/routes/project/HostGuidePage.tsx:1538
+#: src/components/sharing/Share.tsx:236
+msgid "Download event printouts"
+msgstr "Printversies voor het evenement downloaden"
+
 #: src/components/billing/BillingManager.tsx:835
 msgid "Download PDF"
 msgstr "PDF downloaden"
 
+#: src/components/sharing/Share.tsx:138
 #: src/components/project/ProjectQRCode.tsx:156
 msgid "Download QR code"
 msgstr "QR code downloaden"
@@ -5145,7 +5155,7 @@ msgstr "Een notitie opstellen die je naar het dembrane-team kunt sturen"
 msgid "Drag audio files here or click to select files"
 msgstr "Sleep audio bestanden hierheen of klik om bestanden te selecteren"
 
-#: src/routes/project/HostGuidePage.tsx:1574
+#: src/routes/project/HostGuidePage.tsx:1584
 #: src/components/chat/TemplatesModal.tsx:553
 msgid "Drag to reorder"
 msgstr "Sleep om te herordenen"
@@ -5159,7 +5169,6 @@ msgstr "Gaat terug naar het gratis plan. Ze kunnen op elk moment een betaald pla
 msgid "Duplicate"
 msgstr "Dupliceren"
 
-#: src/routes/project/present/PresentRoute.tsx:624
 #: src/components/workspace/TierCapacityMatrix.tsx:103
 #: src/components/conversation/ConversationEdit.tsx:325
 msgid "Duration"
@@ -5389,7 +5398,7 @@ msgstr "Bewerkt door {editedBy}, {editedOn}"
 msgid "Editing a conversation no longer triggers the affected save error."
 msgstr "Het bewerken van een gesprek veroorzaakt de betreffende opslagfout niet meer."
 
-#: src/routes/project/present/PresentRoute.tsx:156
+#: src/routes/project/present/PresentRoute.tsx:151
 msgid "Editor section"
 msgstr "Onderdeel van de editor"
 
@@ -5440,12 +5449,12 @@ msgid "email@work.com"
 msgstr "email@werk.com"
 
 #: src/components/popcorn/PopcornShare.tsx:118
-msgid "Embed code"
-msgstr "Insluitcode"
+#~ msgid "Embed code"
+#~ msgstr "Insluitcode"
 
 #: src/components/popcorn/PopcornShare.tsx:106
-msgid "Embed in a webpage"
-msgstr "Insluiten op een webpagina"
+#~ msgid "Embed in a webpage"
+#~ msgstr "Insluiten op een webpagina"
 
 #: src/components/map/MapPage.tsx:84
 msgid "Embedding arguments"
@@ -5492,7 +5501,7 @@ msgstr "Schakel een visualisatie in via het paneelinstellingenmenu"
 msgid "Enable Explore"
 msgstr "Verkennen inschakelen"
 
-#: src/routes/project/HostGuidePage.tsx:1711
+#: src/routes/project/HostGuidePage.tsx:1721
 msgid "Enable participation"
 msgstr "Deelnemen inschakelen"
 
@@ -5543,7 +5552,7 @@ msgstr "Eindigt op {endDate}, gaat daarna over naar Free"
 msgid "English"
 msgstr "Engels"
 
-#: src/routes/project/present/PresentRoute.tsx:265
+#: src/routes/project/present/PresentRoute.tsx:260
 msgid "English fallback"
 msgstr "Engelse terugvaloptie"
 
@@ -5559,7 +5568,7 @@ msgstr "Voer een naam in voor het nieuwe gesprek"
 msgid "Enter a name for your cloned project"
 msgstr "Voer een naam in voor je nieuwe project"
 
-#: src/routes/project/present/PresentRoute.tsx:370
+#: src/routes/project/present/PresentRoute.tsx:365
 msgid "Enter a presentation title"
 msgstr "Voer een presentatietitel in"
 
@@ -6285,7 +6294,7 @@ msgstr "Gericht op:"
 msgid "Follow ongoing sessions in the live monitor."
 msgstr "Volg lopende sessies in de live monitor."
 
-#: src/routes/project/present/PresentRoute.tsx:241
+#: src/routes/project/present/PresentRoute.tsx:236
 msgid "Follow project language"
 msgstr "Projecttaal volgen"
 
@@ -6558,6 +6567,7 @@ msgid "Generated from the transcript. You can edit it."
 msgstr "Gegenereerd op basis van het transcript. Je kunt het bewerken."
 
 #: src/routes/project/report/ProjectReportRoute.tsx:134
+#: src/components/sharing/StatusLine.tsx:50
 msgid "Generating"
 msgstr "Wordt gegenereerd"
 
@@ -6622,7 +6632,7 @@ msgstr "Geef de sessie een titel"
 msgid "Go back"
 msgstr "Ga terug"
 
-#: src/routes/project/HostGuidePage.tsx:1535
+#: src/routes/project/HostGuidePage.tsx:1545
 msgid "Go fullscreen"
 msgstr "Volledig scherm"
 
@@ -6634,9 +6644,7 @@ msgstr "Volledig scherm"
 msgid "Go home"
 msgstr "Ga naar home"
 
-#: src/routes/project/present/PresentRoute.tsx:612
-#: src/routes/project/present/PresentRoute.tsx:645
-#: src/components/popcorn/PopcornActions.tsx:181
+#: src/components/sharing/LiveButton.tsx:49
 msgid "Go live"
 msgstr "Ga live"
 
@@ -7020,7 +7028,7 @@ msgstr "IBAN"
 msgid "ID"
 msgstr "ID"
 
-#: src/routes/project/present/PresentRoute.tsx:206
+#: src/routes/project/present/PresentRoute.tsx:201
 msgid "Ideas and how they connect"
 msgstr "Ideeën en hoe ze samenhangen"
 
@@ -7219,7 +7227,7 @@ msgstr "Instructies voor het genereren van het verificatieresultaat"
 msgid "interview"
 msgstr "interview"
 
-#: src/routes/project/present/PresentRoute.tsx:127
+#: src/routes/project/present/PresentRoute.tsx:122
 msgid "Intro"
 msgstr "Intro"
 
@@ -7637,8 +7645,8 @@ msgid "Keep pending"
 msgstr "In behandeling houden"
 
 #: src/routes/project/present/PresentRoute.tsx:618
-msgid "Keep Popcorn up to date as conversations arrive. You can go live before the first recording."
-msgstr "Houd Popcorn up-to-date terwijl gesprekken binnenkomen. Je kunt live gaan vóór de eerste opname."
+#~ msgid "Keep Popcorn up to date as conversations arrive. You can go live before the first recording."
+#~ msgstr "Houd Popcorn up-to-date terwijl gesprekken binnenkomen. Je kunt live gaan vóór de eerste opname."
 
 #: src/components/release/releaseHistory.ts:505
 msgid "Keep recordings awake"
@@ -7685,7 +7693,7 @@ msgstr "Soort wijziging niet vastgelegd"
 msgid "Kinds of finding"
 msgstr "Soorten bevinding"
 
-#: src/routes/project/present/PresentRoute.tsx:130
+#: src/routes/project/present/PresentRoute.tsx:125
 #: src/features/sidebar/shell/UserMenu.tsx:145
 #: src/components/settings/LanguageSettingsCard.tsx:10
 #: src/components/report/UpdateReportModalButton.tsx:265
@@ -7885,7 +7893,6 @@ msgstr "Waarschijnlijk waar"
 msgid "Link"
 msgstr "Link"
 
-#: src/components/popcorn/PopcornShare.tsx:97
 #: src/components/members/PendingInvitesSection.tsx:83
 #: src/components/invite/InviteResultsList.tsx:68
 msgid "Link copied"
@@ -7912,28 +7919,27 @@ msgid "Listing documentation pages"
 msgstr "Documentatiepagina's opzoeken"
 
 #: src/routes/project/canvas/CanvasRoute.tsx:301
+#: src/components/sharing/StatusLine.tsx:87
 #: src/components/conversation/monitorGrouping.ts:72
 #: src/components/conversation/LiveFunnelSection.tsx:251
 msgid "Live"
 msgstr "Live"
 
-#. placeholder {0}: countdown(seconds)
 #: src/components/popcorn/PopcornActions.tsx:80
-msgid "Live · next read in {0}"
-msgstr "Live · volgende keer lezen over {0}"
+#~ msgid "Live · next read in {0}"
+#~ msgstr "Live · volgende keer lezen over {0}"
 
-#. placeholder {0}: counts.conversations
 #: src/components/popcorn/PopcornActions.tsx:78
-msgid "Live · reading {reading} of {0}…"
-msgstr "Live · bezig met lezen van {reading} van {0}…"
+#~ msgid "Live · reading {reading} of {0}…"
+#~ msgstr "Live · bezig met lezen van {reading} van {0}…"
 
 #: src/components/popcorn/PopcornActions.tsx:79
-msgid "Live · reading now…"
-msgstr "Live · nu aan het lezen…"
+#~ msgid "Live · reading now…"
+#~ msgstr "Live · nu aan het lezen…"
 
 #: src/components/popcorn/PopcornActions.tsx:76
-msgid "Live · the last read is late"
-msgstr "Live · de laatste uitlezing laat op zich wachten"
+#~ msgid "Live · the last read is late"
+#~ msgstr "Live · de laatste uitlezing laat op zich wachten"
 
 #: src/routes/project/ProjectHomeRoute.tsx:242
 msgid "Live & recent"
@@ -7972,7 +7978,7 @@ msgstr "Live voorbeeld"
 #~ msgid "Live Preview"
 #~ msgstr "Live Voorbeeld"
 
-#: src/routes/project/HostGuidePage.tsx:1558
+#: src/routes/project/HostGuidePage.tsx:1568
 msgid "Live recordings"
 msgstr "Live opnames"
 
@@ -7996,6 +8002,11 @@ msgstr "Live verbinding verbroken. We werken minder vaak bij tot de verbinding t
 msgid "Live stream interrupted. Falling back to polling."
 msgstr "Live verbinding onderbroken. We halen updates nu periodiek op."
 
+#. placeholder {0}: formatWhen(until, i18n.locale)
+#: src/components/sharing/StatusLine.tsx:87
+msgid "Live until {0}"
+msgstr "Live tot {0}"
+
 #. placeholder {0}: format(expiry, "EEE d MMM, HH:mm")
 #: src/routes/project/popcorn/PopcornRoute.tsx:54
 msgid "live until {0}, reads every {every} min"
@@ -8011,8 +8022,8 @@ msgid "live, reads every {every} min"
 msgstr "live, leest elke {every} min"
 
 #: src/routes/project/present/PresentRoute.tsx:655
-msgid "Live. New conversations will feed Popcorn as they arrive."
-msgstr "Live. Nieuwe gesprekken voeden Popcorn zodra ze binnenkomen."
+#~ msgid "Live. New conversations will feed Popcorn as they arrive."
+#~ msgstr "Live. Nieuwe gesprekken voeden Popcorn zodra ze binnenkomen."
 
 #: src/components/project/ProjectExperimentalSection.tsx:47
 msgid "Living canvas and popcorn"
@@ -8049,7 +8060,7 @@ msgstr "Tekst aan het laden…"
 msgid "Loading collections..."
 msgstr "Collecties worden geladen..."
 
-#: src/routes/project/present/PresentRoute.tsx:805
+#: src/routes/project/present/PresentRoute.tsx:709
 msgid "Loading draft"
 msgstr "Concept laden"
 
@@ -8057,7 +8068,7 @@ msgstr "Concept laden"
 #~ msgid "Loading draft…"
 #~ msgstr "Concept laden…"
 
-#: src/routes/project/HostGuidePage.tsx:1443
+#: src/routes/project/HostGuidePage.tsx:1453
 msgid "Loading host guide"
 msgstr "Hostgids laden"
 
@@ -8077,8 +8088,8 @@ msgstr "Methodologie laden"
 msgid "Loading microphones..."
 msgstr "Microfoons laden..."
 
-#: src/routes/project/present/PresentRoute.tsx:743
-#: src/routes/project/present/PresentRoute.tsx:931
+#: src/routes/project/present/PresentRoute.tsx:619
+#: src/routes/project/present/PresentRoute.tsx:835
 msgid "Loading presentation"
 msgstr "Presentatie laden"
 
@@ -9894,7 +9905,7 @@ msgstr "Open documentatie"
 #~ msgid "Open host guide"
 #~ msgstr "Hostgids openen"
 
-#: src/routes/project/present/PresentRoute.tsx:850
+#: src/routes/project/present/PresentRoute.tsx:754
 #: src/components/results/ResultItem.tsx:846
 #: src/components/results/curate/RowTools.tsx:344
 #: src/components/results/curate/RowTools.tsx:347
@@ -9904,6 +9915,10 @@ msgstr "Openen in Analyse"
 #: src/components/chat/CanvasSuggestionCard.tsx:230
 msgid "Open in library"
 msgstr "Openen in Bibliotheek"
+
+#: src/components/sharing/Share.tsx:131
+msgid "Open link"
+msgstr "Link openen"
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:152
 #: src/components/map/panels/BudgetStates.tsx:53
@@ -9927,7 +9942,7 @@ msgstr "Mollie-dashboard openen"
 msgid "Open organisation"
 msgstr "Organisatie openen"
 
-#: src/components/popcorn/PopcornActions.tsx:146
+#: src/components/popcorn/PopcornActions.tsx:49
 msgid "Open presenter view"
 msgstr "Presentatorweergave openen"
 
@@ -9957,8 +9972,8 @@ msgid "Open the original invitation email and click the link from there, or ask 
 msgstr "Open de oorspronkelijke uitnodigings-e-mail en klik daar op de link, of vraag de uitnodiger om een nieuwe uitnodiging te sturen."
 
 #: src/components/popcorn/PopcornShare.tsx:157
-msgid "Open the public page"
-msgstr "Open de openbare pagina"
+#~ msgid "Open the public page"
+#~ msgstr "Open de openbare pagina"
 
 #: src/components/voice/VoiceInputError.tsx:90
 msgid "Open the troubleshooting guide"
@@ -10200,7 +10215,7 @@ msgstr "Resultaat succesvol bijgewerkt!"
 msgid "outcomes"
 msgstr "resultaten"
 
-#: src/routes/project/present/PresentRoute.tsx:129
+#: src/routes/project/present/PresentRoute.tsx:124
 #: src/components/conversation/VerifiedArtefactsSection.tsx:92
 msgid "Outcomes"
 msgstr "Resultaten"
@@ -10410,8 +10425,8 @@ msgid "Passwords do not match"
 msgstr "Wachtwoorden komen niet overeen"
 
 #: src/components/popcorn/PopcornShare.tsx:123
-msgid "Paste it into any page. It stays live."
-msgstr "Plak het in een willekeurige pagina. Het blijft live."
+#~ msgid "Paste it into any page. It stays live."
+#~ msgstr "Plak het in een willekeurige pagina. Het blijft live."
 
 #: src/components/map/renderers/LocalMapGraph.tsx:1214
 msgid "Pause physics"
@@ -10522,7 +10537,7 @@ msgstr "Personen"
 msgid "People with access"
 msgstr "Personen met toegang"
 
-#: src/routes/project/present/PresentRoute.tsx:208
+#: src/routes/project/present/PresentRoute.tsx:203
 msgid "People, groups and what matters to them"
 msgstr "Mensen, groepen en wat voor hen belangrijk is"
 
@@ -10928,9 +10943,9 @@ msgstr "Dit canvas wordt voorbereid. Zodra de eerste versie klaar is, verschijnt
 msgid "Preparing your experience"
 msgstr "Uw ervaring voorbereiden"
 
-#: src/routes/project/present/PresentRoute.tsx:561
-#: src/routes/project/present/PresentRoute.tsx:574
-#: src/routes/project/present/PresentRoute.tsx:915
+#: src/routes/project/present/PresentRoute.tsx:554
+#: src/routes/project/present/PresentRoute.tsx:577
+#: src/routes/project/present/PresentRoute.tsx:819
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:114
 msgid "Present"
 msgstr "Presenteren"
@@ -10939,15 +10954,15 @@ msgstr "Presenteren"
 msgid "Presentation activities"
 msgstr "Presentatie-activiteiten"
 
-#: src/routes/project/present/PresentRoute.tsx:567
+#: src/routes/project/present/PresentRoute.tsx:570
 msgid "Presentation controls"
 msgstr "Presentatiebediening"
 
-#: src/routes/project/present/PresentRoute.tsx:150
+#: src/routes/project/present/PresentRoute.tsx:145
 msgid "Presentation editor"
 msgstr "Presentatie-editor"
 
-#: src/routes/project/present/PresentRoute.tsx:367
+#: src/routes/project/present/PresentRoute.tsx:362
 msgid "Presentation title"
 msgstr "Titel van presentatie"
 
@@ -10984,8 +10999,8 @@ msgid "Price"
 msgstr "Prijs"
 
 #: src/routes/project/HostGuidePage.tsx:1528
-msgid "Print / Save PDF"
-msgstr "Afdrukken / PDF opslaan"
+#~ msgid "Print / Save PDF"
+#~ msgstr "Afdrukken / PDF opslaan"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1088
 msgid "Print report"
@@ -11009,6 +11024,7 @@ msgstr "URL van het privacybeleid"
 #: src/routes/project/CreateProjectRoute.tsx:385
 #: src/components/workspace/OrganisationProjectsTable.tsx:246
 #: src/components/workspace/DiscoverableWorkspaces.tsx:309
+#: src/components/sharing/StatusLine.tsx:78
 #: src/components/project/ProjectSharingStrip.tsx:59
 msgid "Private"
 msgstr "Privé"
@@ -11242,7 +11258,8 @@ msgstr "Beveilig inloggen met tweestapsverificatie."
 #~ msgid "Provide an overview of the main topics and recurring themes"
 #~ msgstr "Geef een overzicht van de belangrijkste onderwerpen en herhalende thema's"
 
-#: src/components/popcorn/PopcornShare.tsx:76
+#: src/components/sharing/StatusLine.tsx:78
+#: src/components/sharing/Share.tsx:203
 msgid "Public page"
 msgstr "Openbare pagina"
 
@@ -11251,8 +11268,7 @@ msgstr "Openbare pagina"
 msgid "Publish"
 msgstr "Publiceren"
 
-#: src/routes/project/present/PresentRoute.tsx:672
-#: src/routes/project/present/PresentRoute.tsx:731
+#: src/routes/project/present/PresentRoute.tsx:649
 msgid "Publish changes"
 msgstr "Wijzigingen publiceren"
 
@@ -11274,6 +11290,7 @@ msgstr "Publiceer dit rapport om een deellink te krijgen"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:130
 #: src/routes/project/report/ProjectReportRoute.tsx:932
+#: src/components/sharing/StatusLine.tsx:46
 msgid "Published"
 msgstr "Gepubliceerd"
 
@@ -11360,8 +11377,8 @@ msgid "read conversations, transcripts, projects and settings you can see"
 msgstr "gesprekken, transcripts, projecten en instellingen lezen die je kunt zien"
 
 #: src/components/popcorn/PopcornActions.tsx:186
-msgid "Read every 2 minutes for"
-msgstr "Elke 2 minuten uitlezen voor"
+#~ msgid "Read every 2 minutes for"
+#~ msgstr "Elke 2 minuten uitlezen voor"
 
 #: src/routes/auth/Register.tsx:319
 msgid "Read less"
@@ -11456,8 +11473,8 @@ msgid "Reading the documentation"
 msgstr "De documentatie lezen"
 
 #: src/components/popcorn/PopcornActions.tsx:84
-msgid "Reads every 2 minutes. Refresh reads now."
-msgstr "Leest elke 2 minuten uit. Ververs nu handmatig."
+#~ msgid "Reads every 2 minutes. Refresh reads now."
+#~ msgstr "Leest elke 2 minuten uit. Ververs nu handmatig."
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:96
 msgid "Ready"
@@ -11633,7 +11650,7 @@ msgid "Refine shows the correct label and cannot run while another reply is bein
 msgstr "Verfijnen toont het juiste label en kan niet starten terwijl een ander antwoord wordt gegenereerd."
 
 #: src/components/project/ProjectPortalEditor.tsx:1581
-#: src/components/popcorn/PopcornActions.tsx:154
+#: src/components/popcorn/PopcornActions.tsx:57
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:157
 #: src/components/common/UsageFreshness.tsx:32
 #: src/components/chat/CanvasSuggestionCard.tsx:104
@@ -11668,15 +11685,15 @@ msgstr "Vernieuwen…"
 #: src/routes/project/chat/ProjectChatRoute.tsx:752
 #: src/routes/project/canvas/CanvasRoute.tsx:690
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:625
-#: src/components/popcorn/PopcornActions.tsx:161
-#: src/components/popcorn/PopcornActions.tsx:214
+#: src/components/popcorn/PopcornActions.tsx:64
+#: src/components/popcorn/PopcornActions.tsx:86
 #: src/components/map/MapPage.tsx:132
 #: src/components/conversation/ConversationEdit.tsx:401
 #: src/components/conversation/ConversationEdit.tsx:469
 msgid "Regenerate"
 msgstr "Opnieuw genereren"
 
-#: src/components/popcorn/PopcornActions.tsx:206
+#: src/components/popcorn/PopcornActions.tsx:78
 msgid "Regenerate popcorn?"
 msgstr "Popcorn opnieuw genereren?"
 
@@ -12165,7 +12182,7 @@ msgstr "Uitnodiging opnieuw versturen"
 msgid "Resend verification email"
 msgstr "Verificatiemail opnieuw versturen"
 
-#: src/routes/project/HostGuidePage.tsx:1551
+#: src/routes/project/HostGuidePage.tsx:1561
 #: src/components/map/renderers/MapChrome.tsx:114
 msgid "Reset"
 msgstr "Resetten"
@@ -12175,7 +12192,7 @@ msgstr "Resetten"
 msgid "Reset filters"
 msgstr "Filters resetten"
 
-#: src/routes/project/HostGuidePage.tsx:1545
+#: src/routes/project/HostGuidePage.tsx:1555
 msgid "Reset guide"
 msgstr "Gids resetten"
 
@@ -12205,7 +12222,7 @@ msgstr "Wachtwoord resetten | dembrane"
 #~ msgid "Reset Password | dembrane"
 #~ msgstr "Wachtwoord resetten | dembrane"
 
-#: src/routes/project/HostGuidePage.tsx:1547
+#: src/routes/project/HostGuidePage.tsx:1557
 msgid "Reset the guide?"
 msgstr "De gids resetten?"
 
@@ -12460,7 +12477,7 @@ msgstr "Deze verbinding intrekken?"
 msgid "Revoked"
 msgstr "Ingetrokken"
 
-#: src/routes/project/HostGuidePage.tsx:1568
+#: src/routes/project/HostGuidePage.tsx:1578
 msgid "Right-click to highlight"
 msgstr "Rechtsklikken om te markeren"
 
@@ -12693,6 +12710,7 @@ msgstr "Training inplannen"
 #: src/routes/project/report/ProjectReportRoute.tsx:132
 #: src/components/training/StaffTrainingPanel.tsx:126
 #: src/components/training/StaffTrainingPanel.tsx:170
+#: src/components/sharing/StatusLine.tsx:48
 msgid "Scheduled"
 msgstr "Ingepland"
 
@@ -12968,7 +12986,7 @@ msgstr "Selecteer een microfoon"
 msgid "Select a webhook to clone"
 msgstr "Selecteer een webhook om te klonen"
 
-#: src/routes/project/HostGuidePage.tsx:1772
+#: src/routes/project/HostGuidePage.tsx:1782
 msgid "Select a word first"
 msgstr "Selecteer eerst een woord"
 
@@ -13328,9 +13346,10 @@ msgstr "Instellen"
 msgid "Shape how participants verify outcomes"
 msgstr "Bepaal hoe deelnemers uitkomsten verifiëren"
 
-#: src/routes/project/present/PresentRoute.tsx:581
+#: src/components/sharing/Share.tsx:37
+#: src/components/sharing/Share.tsx:39
 #: src/components/project/ProjectSharingModal.tsx:505
-#: src/components/popcorn/PopcornShare.tsx:71
+#: src/components/popcorn/PopcornShare.tsx:68
 msgid "Share"
 msgstr "Delen"
 
@@ -13339,8 +13358,12 @@ msgid "Share invite links as an alternative to email invitations."
 msgstr "Deel uitnodigingslinks als alternatief voor uitnodigingen per e-mail."
 
 #: src/components/popcorn/PopcornShare.tsx:97
-msgid "Share link"
-msgstr "Link delen"
+#~ msgid "Share link"
+#~ msgstr "Link delen"
+
+#: src/components/sharing/Share.tsx:98
+msgid "Share options"
+msgstr "Deelopties"
 
 #: src/components/layout/ParticipantHeader.tsx:117
 #: src/components/layout/ParticipantHeader.tsx:118
@@ -13348,8 +13371,8 @@ msgid "Share portal"
 msgstr "Portal delen"
 
 #: src/routes/project/present/PresentRoute.tsx:679
-msgid "Share presentation"
-msgstr "Presentatie delen"
+#~ msgid "Share presentation"
+#~ msgstr "Presentatie delen"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1069
 msgid "Share report"
@@ -13409,7 +13432,7 @@ msgstr "Gedeeld met {0} en {overflow} anderen"
 msgid "Sharing a private project with a non-member now offers an invitation instead of an error, granting access when they join the workspace."
 msgstr "Als je een privéproject deelt met iemand die nog geen lid is, kun je diegene nu uitnodigen in plaats van een foutmelding te krijgen. De toegang wordt verleend zodra diegene lid wordt van de werkruimte."
 
-#: src/routes/project/present/PresentRoute.tsx:207
+#: src/routes/project/present/PresentRoute.tsx:202
 msgid "Short phrases from the conversations"
 msgstr "Korte zinnen uit de gesprekken"
 
@@ -13999,6 +14022,7 @@ msgid "Status"
 msgstr "Status"
 
 #: src/routes/project/canvas/CanvasRoute.tsx:213
+#: src/components/sharing/LiveButton.tsx:54
 msgid "Stay live for"
 msgstr "Blijft live gedurende"
 
@@ -14063,8 +14087,7 @@ msgstr "Stop met inkleuren van graaf op feitelijke status"
 msgid "Stop coloring graph by valence"
 msgstr "Stop met inkleuren van graaf op valentie"
 
-#: src/routes/project/present/PresentRoute.tsx:594
-#: src/components/popcorn/PopcornActions.tsx:107
+#: src/components/sharing/LiveButton.tsx:32
 msgid "Stop live"
 msgstr "Live stoppen"
 
@@ -14569,8 +14592,8 @@ msgstr "De standaard hostgids herinnert hosts er nu aan om de focusmodus in te s
 msgid "the dembrane team"
 msgstr "het dembrane-team"
 
-#: src/routes/project/present/PresentRoute.tsx:740
-#: src/routes/project/present/PresentRoute.tsx:755
+#: src/routes/project/present/PresentRoute.tsx:613
+#: src/routes/project/present/PresentRoute.tsx:659
 msgid "The draft could not be loaded"
 msgstr "Het concept kon niet worden geladen"
 
@@ -14643,7 +14666,7 @@ msgstr "De geschiedenis kon niet worden geladen."
 msgid "The host guide is what facilitators read before they run a session."
 msgstr "De hostgids is wat begeleiders lezen voordat ze een sessie draaien."
 
-#: src/routes/project/present/PresentRoute.tsx:919
+#: src/routes/project/present/PresentRoute.tsx:823
 msgid "The host hasn’t prepared a presentation yet."
 msgstr "De host heeft nog geen presentatie voorbereid."
 
@@ -14774,7 +14797,7 @@ msgstr "De deelnemersflow heeft duidelijkere microfooncontroles."
 msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
 msgstr "De portalen blijven werken! Je deelnemers kunnen altijd doorgaan en niets wat ze zeggen gaat verloren. Zodra je een betaald abonnement hebt, wordt alles wat al is opgenomen alsnog getranscribeerd."
 
-#: src/routes/project/present/PresentRoute.tsx:900
+#: src/routes/project/present/PresentRoute.tsx:804
 msgid "The presentation could not be loaded"
 msgstr "De presentatie kon niet worden geladen"
 
@@ -14782,7 +14805,7 @@ msgstr "De presentatie kon niet worden geladen"
 #~ msgid "The presentation could not be loaded."
 #~ msgstr "De presentatie kon niet worden geladen."
 
-#: src/routes/project/present/PresentRoute.tsx:893
+#: src/routes/project/present/PresentRoute.tsx:797
 msgid "The presentation could not be opened"
 msgstr "De presentatie kon niet worden geopend"
 
@@ -14827,7 +14850,7 @@ msgstr "De tweede regel van deze bevinding"
 msgid "the selected conversation"
 msgstr "het geselecteerde gesprek"
 
-#: src/routes/project/present/PresentRoute.tsx:708
+#: src/routes/project/present/PresentRoute.tsx:601
 msgid "The shared screen shows your published presentation. Publish changes to update its content and access."
 msgstr "Het gedeelde scherm toont je gepubliceerde presentatie. Publiceer wijzigingen om de inhoud en toegang bij te werken."
 
@@ -15280,7 +15303,7 @@ msgstr "Hiermee verwijder je het gesprek uit het project. Dit kun je niet terugd
 msgid "This removes the one-year license for {0}. They will no longer count as trained and lose access to high-risk settings. Only do this if the license was granted by mistake."
 msgstr "Hiermee verwijder je de licentie van één jaar voor {0}. Ze tellen dan niet meer als getraind en verliezen toegang tot instellingen met hoog risico. Doe dit alleen als de licentie per ongeluk is toegekend."
 
-#: src/components/popcorn/PopcornActions.tsx:208
+#: src/components/popcorn/PopcornActions.tsx:80
 msgid "This replaces every popcorn, tension and stakeholder on the screen and reads all conversations again. Earlier runs are saved in the history."
 msgstr "Dit vervangt elke popcorn, spanning en stakeholder op het scherm en leest alle gesprekken opnieuw. Eerdere runs worden opgeslagen in de geschiedenis."
 
@@ -15530,7 +15553,7 @@ msgstr "Op te lossen:"
 msgid "To talk about what you need, email <0>support@dembrane.com</0>."
 msgstr "Wil je bespreken wat je nodig hebt, mail dan <0>support@dembrane.com</0>."
 
-#: src/routes/project/HostGuidePage.tsx:1768
+#: src/routes/project/HostGuidePage.tsx:1778
 msgid "Toggle highlight \"{contextMenuWord}\""
 msgstr "Markering \"{contextMenuWord}\" aan/uit"
 
@@ -15797,7 +15820,7 @@ msgstr "Trigger automatische workflows in tools like Zapier, Make, or n8n"
 msgid "Trouble logging in? Contact support@dembrane.com."
 msgstr "Problemen met inloggen? Neem contact op via support@dembrane.com."
 
-#: src/routes/project/present/PresentRoute.tsx:924
+#: src/routes/project/present/PresentRoute.tsx:828
 #: src/routes/project/present/PresentResultsPanel.tsx:158
 #: src/routes/project/chat/ProjectChatRoute.tsx:837
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:165
@@ -16032,6 +16055,10 @@ msgstr "Maak eerst een project los (max 3)"
 msgid "Unpin project"
 msgstr "Project losmaken"
 
+#: src/routes/project/present/PresentRoute.tsx:565
+msgid "Unpublished changes"
+msgstr "Niet-gepubliceerde wijzigingen"
+
 #: src/components/inbox/Inbox.tsx:437
 msgid "Unread"
 msgstr "Ongelezen"
@@ -16176,6 +16203,11 @@ msgstr "Werkt elke {cadenceMinutes} minuten bij tot {0}."
 #: src/components/canvas/cadenceLabel.ts:21
 msgid "Updates every {cadenceMinutes} minutes."
 msgstr "Werkt elke {cadenceMinutes} minuten bij."
+
+#. placeholder {0}: formatWhen(once, i18n.locale)
+#: src/components/sharing/StatusLine.tsx:77
+msgid "Updates once at {0}"
+msgstr "Wordt eenmalig bijgewerkt om {0}"
 
 #: src/components/chat/agenticToolActivity.ts:162
 msgid "Updating a note for the dembrane team"
@@ -16370,7 +16402,7 @@ msgstr "Overgenomen standaard gebruiken"
 msgid "Use Italian for chat, reports, transcription and participant onboarding cards."
 msgstr "Gebruik Italiaans voor chat, rapporten, transcriptie en introductiekaarten voor deelnemers."
 
-#: src/routes/project/present/PresentRoute.tsx:838
+#: src/routes/project/present/PresentRoute.tsx:742
 msgid "Use latest results"
 msgstr "Nieuwste resultaten gebruiken"
 
@@ -17744,7 +17776,7 @@ msgstr "Jouw gegevens"
 msgid "Your draft won't be saved."
 msgstr "Je concept wordt niet opgeslagen."
 
-#: src/routes/project/HostGuidePage.tsx:1543
+#: src/routes/project/HostGuidePage.tsx:1553
 msgid "Your edits to this guide are lost and it goes back to the default text."
 msgstr "Je aanpassingen aan deze gids gaan verloren en de standaardtekst komt terug."
 

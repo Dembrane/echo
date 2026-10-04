@@ -310,7 +310,7 @@ msgid "{0, plural, one {# payment} other {# payments}}"
 msgstr "{0, plural, one {# platba} few {# platby} other {# plateb}}"
 
 #. placeholder {0}: presentation.counts.phrases
-#: src/routes/project/present/PresentRoute.tsx:825
+#: src/routes/project/present/PresentRoute.tsx:729
 msgid "{0, plural, one {# phrase} other {# phrases}}"
 msgstr "{0, plural, one {# fráze} few {# fráze} other {# frází}}"
 
@@ -961,8 +961,7 @@ msgstr "1 h záznamu"
 msgid "1 history entry"
 msgstr "1 záznam v historii"
 
-#: src/routes/project/present/PresentRoute.tsx:628
-#: src/components/popcorn/PopcornActions.tsx:130
+#: src/components/sharing/LiveButton.tsx:36
 msgid "1 hour"
 msgstr "1 hodina"
 
@@ -990,9 +989,8 @@ msgstr "2 až 5."
 msgid "2. When a conversation or report event happens, we automatically send the data to your URL"
 msgstr "2. When a conversation or report event happens, we automatically send the data to your URL"
 
-#: src/routes/project/present/PresentRoute.tsx:630
 #: src/routes/project/canvas/CanvasRoute.tsx:219
-#: src/components/popcorn/PopcornActions.tsx:132
+#: src/components/sharing/LiveButton.tsx:38
 msgid "24 hours"
 msgstr "24 hodin"
 
@@ -1020,9 +1018,8 @@ msgstr "50 až 250."
 msgid "6 to 15."
 msgstr "6 to 15."
 
-#: src/routes/project/present/PresentRoute.tsx:629
 #: src/routes/project/canvas/CanvasRoute.tsx:218
-#: src/components/popcorn/PopcornActions.tsx:131
+#: src/components/sharing/LiveButton.tsx:37
 msgid "8 hours"
 msgstr "8 hodin"
 
@@ -1445,7 +1442,7 @@ msgstr "Přidejte lidi pomocí e-mailu. Každý, kdo ještě není v pracovním 
 msgid "Add people from your organisation"
 msgstr "Přidejte lidi ze své organizace"
 
-#: src/routes/project/HostGuidePage.tsx:1654
+#: src/routes/project/HostGuidePage.tsx:1664
 msgid "Add step"
 msgstr "Přidat krok"
 
@@ -1474,7 +1471,7 @@ msgstr "Přidat štítky"
 msgid "Add the people, places, organisations and jargon you expect to hear."
 msgstr "Přidejte lidi, místa, organizace a žargon, které očekáváte, že uslyšíte."
 
-#: src/routes/project/HostGuidePage.tsx:1691
+#: src/routes/project/HostGuidePage.tsx:1701
 msgid "Add tip"
 msgstr "Přidat tip"
 
@@ -1888,7 +1885,7 @@ msgstr "Povolit také úpravy nastavení projektu"
 msgid "Always on, it lives on our website"
 msgstr "Stále aktivní, běží na našem webu"
 
-#: src/routes/project/present/PresentRoute.tsx:204
+#: src/routes/project/present/PresentRoute.tsx:199
 msgid "Always on. The screen opens here, so the room has something to read while the rest gets ready."
 msgstr "Stále aktivní. Obrazovka se otevře zde, aby si účastníci v místnosti měli co číst, než se zbytek připraví."
 
@@ -2083,7 +2080,7 @@ msgstr "Any tag"
 msgid "Anyone in your organisation can find this workspace. Admins can join; members can request access."
 msgstr "Tento pracovní prostor může najít kdokoli z vaší organizace. Správci se mohou připojit rovnou, členové mohou o přístup požádat."
 
-#: src/components/popcorn/PopcornShare.tsx:77
+#: src/components/popcorn/PopcornShare.tsx:50
 msgid "Anyone with the link can watch. No login, and no transcripts."
 msgstr "Sledovat může kdokoli s odkazem. Bez přihlášení a bez přepisů."
 
@@ -2109,7 +2106,7 @@ msgid "Anything you want to add"
 msgstr "Cokoli, co chcete dodat"
 
 #: src/routes/settings/UserSettingsRoute.tsx:106
-#: src/routes/project/present/PresentRoute.tsx:131
+#: src/routes/project/present/PresentRoute.tsx:126
 #: src/features/sidebar/views/user/UserSettingsView.tsx:28
 #: src/features/sidebar/hooks/useSearchHits.ts:86
 msgid "Appearance"
@@ -2172,6 +2169,7 @@ msgid "conversation.verified.approved"
 msgstr "Approved"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:136
+#: src/components/sharing/StatusLine.tsx:52
 msgid "Archived"
 msgstr "Archivováno"
 
@@ -2398,11 +2396,11 @@ msgstr "Připojit ověřené artefakty"
 msgid "participant.modal.interruption.issue.message"
 msgstr "Attention! We lost the last 60 seconds or so of your recording due to some interruption. Please press the button below to reconnect."
 
-#: src/routes/project/present/PresentRoute.tsx:260
+#: src/routes/project/present/PresentRoute.tsx:255
 msgid "Audience language:"
 msgstr "Jazyk publika:"
 
-#: src/routes/project/present/PresentRoute.tsx:402
+#: src/routes/project/present/PresentRoute.tsx:397
 msgid "Audience preview"
 msgstr "Náhled pro publikum"
 
@@ -3095,17 +3093,17 @@ msgstr "Tarif Changemaker to odstraní"
 msgid "Changes applied. You can fine-tune them anytime in project settings."
 msgstr "Změny byly použity. Kdykoli je můžete upravit v nastavení projektu."
 
-#: src/routes/project/present/PresentRoute.tsx:772
+#: src/routes/project/present/PresentRoute.tsx:676
 msgid "Changes are saved as a draft. Publish when you’re ready to update the room screen."
 msgstr "Změny jsou uloženy jako koncept. Až budete připraveni aktualizovat obrazovku v místnosti, publikujte je."
 
-#: src/routes/project/present/PresentRoute.tsx:816
+#: src/routes/project/present/PresentRoute.tsx:720
 msgid "Changes could not be published or saved. Review your draft and try again."
 msgstr "Změny se nepodařilo publikovat ani uložit. Zkontrolujte koncept a zkuste to znovu."
 
 #: src/routes/project/present/PresentRoute.tsx:716
-msgid "Changes could not be published. Try again."
-msgstr "Změny se nepodařilo publikovat. Zkuste to znovu."
+#~ msgid "Changes could not be published. Try again."
+#~ msgstr "Změny se nepodařilo publikovat. Zkuste to znovu."
 
 #: src/components/form/UnsavedChanges.tsx:20
 #~ msgid "Changes will be saved automatically"
@@ -3286,7 +3284,7 @@ msgstr "Choose from your other projects"
 msgid "Choose Summarize, Brainstorm Ideas or Custom reply modes."
 msgstr "Vyberte režimy odpovědí: Shrnutí, Brainstorming nápadů nebo Vlastní."
 
-#: src/routes/project/present/PresentRoute.tsx:194
+#: src/routes/project/present/PresentRoute.tsx:189
 msgid "Choose the outcomes your audience can explore."
 msgstr "Vyberte výsledky, které může vaše publikum prozkoumat."
 
@@ -3390,7 +3388,7 @@ msgstr "Kliknutím na uzel ve stromu nebo mapě shluků ho zde zvýrazníte."
 msgid "Click an argument, or rest the cursor on a cluster until the circle closes, and it is kept here."
 msgstr "Klikněte na argument nebo nechte kurzor na shluku, dokud se kruh neuzavře, a uloží se sem."
 
-#: src/routes/project/HostGuidePage.tsx:1562
+#: src/routes/project/HostGuidePage.tsx:1572
 msgid "Click to edit"
 msgstr "Click to edit"
 
@@ -3928,10 +3926,11 @@ msgstr "Cooling down. Available in {0}"
 #: src/routes/project/report/ProjectReportRoute.tsx:996
 #: src/routes/project/report/ProjectReportRoute.tsx:1018
 #: src/routes/project/report/ProjectReportRoute.tsx:1045
+#: src/components/sharing/Share.tsx:118
+#: src/components/sharing/Share.tsx:154
 #: src/components/settings/TwoFactorSettingsCard.tsx:396
 #: src/components/project/ProjectQRCode.tsx:146
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:1026
-#: src/components/popcorn/PopcornShare.tsx:139
 #: src/components/participant/ParticipantShareModal.tsx:111
 #: src/components/participant/InAppBrowserNotice.tsx:66
 #: src/components/conversation/CopyConversationTranscript.tsx:44
@@ -3968,8 +3967,12 @@ msgid "Copy approved outcomes to the new conversation so they aren't lost when t
 msgstr "Zkopírujte schválené výstupy do nového rozhovoru, aby se po smazání originálu neztratily."
 
 #: src/components/popcorn/PopcornShare.tsx:139
-msgid "Copy code"
-msgstr "Kopírovat kód"
+#~ msgid "Copy code"
+#~ msgstr "Kopírovat kód"
+
+#: src/components/sharing/Share.tsx:154
+msgid "Copy embed code"
+msgstr "Kopírovat kód pro vložení"
 
 #: src/components/members/PendingInvitesSection.tsx:171
 #: src/components/members/PendingInvitesSection.tsx:175
@@ -3979,6 +3982,7 @@ msgid "Copy invite link"
 msgstr "Kopírovat odkaz na pozvánku"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1020
+#: src/components/sharing/Share.tsx:118
 #: src/components/project/ProjectQRCode.tsx:146
 #: src/components/participant/ParticipantShareModal.tsx:111
 #: src/components/participant/InAppBrowserNotice.tsx:66
@@ -4098,7 +4102,7 @@ msgstr "Platby se nepodařilo načíst. Zkontrolujte přihlášení a záznamy b
 msgid "Could not load the canvas."
 msgstr "Plátno se nepodařilo načíst."
 
-#: src/routes/project/present/PresentRoute.tsx:857
+#: src/routes/project/present/PresentRoute.tsx:761
 msgid "Could not load the latest results"
 msgstr "Nejnovější výsledky se nepodařilo načíst"
 
@@ -4575,7 +4579,7 @@ msgstr "E-mail vlastníka dat"
 msgid "Data ownership"
 msgstr "Vlastnictví dat"
 
-#: src/routes/project/present/PresentRoute.tsx:128
+#: src/routes/project/present/PresentRoute.tsx:123
 msgid "Data policy"
 msgstr "Zásady nakládání s daty"
 
@@ -4941,7 +4945,7 @@ msgstr "Didn't get it? Check spam or junk first. The message comes from dembrane
 msgid "Didn't get it? Check your spam or junk folder. The email comes from dembrane.com."
 msgstr "Didn't get it? Check your spam or junk folder. The email comes from dembrane.com."
 
-#: src/routes/project/present/PresentRoute.tsx:209
+#: src/routes/project/present/PresentRoute.tsx:204
 msgid "Different perspectives and trade-offs"
 msgstr "Různé pohledy a kompromisy"
 
@@ -5111,10 +5115,16 @@ msgstr "Stahuj audio a organizuj rozhovory"
 msgid "Download audio from conversations."
 msgstr "Stáhněte si zvuk z rozhovorů."
 
+#: src/routes/project/HostGuidePage.tsx:1538
+#: src/components/sharing/Share.tsx:236
+msgid "Download event printouts"
+msgstr "Stáhnout tiskoviny k akci"
+
 #: src/components/billing/BillingManager.tsx:835
 msgid "Download PDF"
 msgstr "Stáhnout PDF"
 
+#: src/components/sharing/Share.tsx:138
 #: src/components/project/ProjectQRCode.tsx:156
 msgid "Download QR code"
 msgstr "Download QR code"
@@ -5147,7 +5157,7 @@ msgstr "Připravuje se zpráva, kterou můžete poslat týmu dembrane"
 msgid "Drag audio files here or click to select files"
 msgstr "Drag audio files here or click to select files"
 
-#: src/routes/project/HostGuidePage.tsx:1574
+#: src/routes/project/HostGuidePage.tsx:1584
 #: src/components/chat/TemplatesModal.tsx:553
 msgid "Drag to reorder"
 msgstr "Drag to reorder"
@@ -5161,7 +5171,6 @@ msgstr "Přejde na bezplatnou úroveň. K placenému tarifu se mohou přihlásit
 msgid "Duplicate"
 msgstr "Duplicate"
 
-#: src/routes/project/present/PresentRoute.tsx:624
 #: src/components/workspace/TierCapacityMatrix.tsx:103
 #: src/components/conversation/ConversationEdit.tsx:325
 msgid "Duration"
@@ -5391,7 +5400,7 @@ msgstr "Upravil/a {editedBy}, {editedOn}"
 msgid "Editing a conversation no longer triggers the affected save error."
 msgstr "Při úpravě rozhovoru se již nezobrazuje chyba ukládání."
 
-#: src/routes/project/present/PresentRoute.tsx:156
+#: src/routes/project/present/PresentRoute.tsx:151
 msgid "Editor section"
 msgstr "Část editoru"
 
@@ -5442,12 +5451,12 @@ msgid "email@work.com"
 msgstr "email@work.com"
 
 #: src/components/popcorn/PopcornShare.tsx:118
-msgid "Embed code"
-msgstr "Kód pro vložení"
+#~ msgid "Embed code"
+#~ msgstr "Kód pro vložení"
 
 #: src/components/popcorn/PopcornShare.tsx:106
-msgid "Embed in a webpage"
-msgstr "Vložit na webovou stránku"
+#~ msgid "Embed in a webpage"
+#~ msgstr "Vložit na webovou stránku"
 
 #: src/components/map/MapPage.tsx:84
 msgid "Embedding arguments"
@@ -5494,7 +5503,7 @@ msgstr "Povolte vizualizaci v nabídce nastavení panelu"
 msgid "Enable Explore"
 msgstr "Enable Explore"
 
-#: src/routes/project/HostGuidePage.tsx:1711
+#: src/routes/project/HostGuidePage.tsx:1721
 msgid "Enable participation"
 msgstr "Enable participation"
 
@@ -5545,7 +5554,7 @@ msgstr "Končí {endDate}, poté přejde na Free"
 msgid "English"
 msgstr "English"
 
-#: src/routes/project/present/PresentRoute.tsx:265
+#: src/routes/project/present/PresentRoute.tsx:260
 msgid "English fallback"
 msgstr "Záložní angličtina"
 
@@ -5561,7 +5570,7 @@ msgstr "Enter a name for the new conversation"
 msgid "Enter a name for your cloned project"
 msgstr "Enter a name for your cloned project"
 
-#: src/routes/project/present/PresentRoute.tsx:370
+#: src/routes/project/present/PresentRoute.tsx:365
 msgid "Enter a presentation title"
 msgstr "Zadejte název prezentace"
 
@@ -6287,7 +6296,7 @@ msgstr "Zaměřeno na:"
 msgid "Follow ongoing sessions in the live monitor."
 msgstr "Sledujte probíhající relace v živém přehledu."
 
-#: src/routes/project/present/PresentRoute.tsx:241
+#: src/routes/project/present/PresentRoute.tsx:236
 msgid "Follow project language"
 msgstr "Podle jazyka projektu"
 
@@ -6560,6 +6569,7 @@ msgid "Generated from the transcript. You can edit it."
 msgstr "Vygenerováno z přepisu. Můžete ho upravit."
 
 #: src/routes/project/report/ProjectReportRoute.tsx:134
+#: src/components/sharing/StatusLine.tsx:50
 msgid "Generating"
 msgstr "Generuje se"
 
@@ -6624,7 +6634,7 @@ msgstr "Pojmenujte relaci"
 msgid "Go back"
 msgstr "Go back"
 
-#: src/routes/project/HostGuidePage.tsx:1535
+#: src/routes/project/HostGuidePage.tsx:1545
 msgid "Go fullscreen"
 msgstr "Celá obrazovka"
 
@@ -6636,9 +6646,7 @@ msgstr "Celá obrazovka"
 msgid "Go home"
 msgstr "Go home"
 
-#: src/routes/project/present/PresentRoute.tsx:612
-#: src/routes/project/present/PresentRoute.tsx:645
-#: src/components/popcorn/PopcornActions.tsx:181
+#: src/components/sharing/LiveButton.tsx:49
 msgid "Go live"
 msgstr "Spustit živě"
 
@@ -7022,7 +7030,7 @@ msgstr "IBAN"
 msgid "ID"
 msgstr "ID"
 
-#: src/routes/project/present/PresentRoute.tsx:206
+#: src/routes/project/present/PresentRoute.tsx:201
 msgid "Ideas and how they connect"
 msgstr "Myšlenky a jejich souvislosti"
 
@@ -7221,7 +7229,7 @@ msgstr "Instructions for generating the verification outcome"
 msgid "interview"
 msgstr "rozhovor"
 
-#: src/routes/project/present/PresentRoute.tsx:127
+#: src/routes/project/present/PresentRoute.tsx:122
 msgid "Intro"
 msgstr "Úvod"
 
@@ -7639,8 +7647,8 @@ msgid "Keep pending"
 msgstr "Keep pending"
 
 #: src/routes/project/present/PresentRoute.tsx:618
-msgid "Keep Popcorn up to date as conversations arrive. You can go live before the first recording."
-msgstr "Udržujte Popcorn aktuální s přibývajícími rozhovory. Můžete začít ještě před první nahrávkou."
+#~ msgid "Keep Popcorn up to date as conversations arrive. You can go live before the first recording."
+#~ msgstr "Udržujte Popcorn aktuální s přibývajícími rozhovory. Můžete začít ještě před první nahrávkou."
 
 #: src/components/release/releaseHistory.ts:505
 msgid "Keep recordings awake"
@@ -7687,7 +7695,7 @@ msgstr "Druh změny nebyl zaznamenán"
 msgid "Kinds of finding"
 msgstr "Typy zjištění"
 
-#: src/routes/project/present/PresentRoute.tsx:130
+#: src/routes/project/present/PresentRoute.tsx:125
 #: src/features/sidebar/shell/UserMenu.tsx:145
 #: src/components/settings/LanguageSettingsCard.tsx:10
 #: src/components/report/UpdateReportModalButton.tsx:265
@@ -7887,7 +7895,6 @@ msgstr "Pravděpodobně pravdivé"
 msgid "Link"
 msgstr "Link"
 
-#: src/components/popcorn/PopcornShare.tsx:97
 #: src/components/members/PendingInvitesSection.tsx:83
 #: src/components/invite/InviteResultsList.tsx:68
 msgid "Link copied"
@@ -7914,28 +7921,27 @@ msgid "Listing documentation pages"
 msgstr "Načítání stránek dokumentace"
 
 #: src/routes/project/canvas/CanvasRoute.tsx:301
+#: src/components/sharing/StatusLine.tsx:87
 #: src/components/conversation/monitorGrouping.ts:72
 #: src/components/conversation/LiveFunnelSection.tsx:251
 msgid "Live"
 msgstr "Live"
 
-#. placeholder {0}: countdown(seconds)
 #: src/components/popcorn/PopcornActions.tsx:80
-msgid "Live · next read in {0}"
-msgstr "Živě · další načtení za {0}"
+#~ msgid "Live · next read in {0}"
+#~ msgstr "Živě · další načtení za {0}"
 
-#. placeholder {0}: counts.conversations
 #: src/components/popcorn/PopcornActions.tsx:78
-msgid "Live · reading {reading} of {0}…"
-msgstr "Živě · čte se {reading} z {0}…"
+#~ msgid "Live · reading {reading} of {0}…"
+#~ msgstr "Živě · čte se {reading} z {0}…"
 
 #: src/components/popcorn/PopcornActions.tsx:79
-msgid "Live · reading now…"
-msgstr "Živě · právě se čte…"
+#~ msgid "Live · reading now…"
+#~ msgstr "Živě · právě se čte…"
 
 #: src/components/popcorn/PopcornActions.tsx:76
-msgid "Live · the last read is late"
-msgstr "Živě · poslední čtení má zpoždění"
+#~ msgid "Live · the last read is late"
+#~ msgstr "Živě · poslední čtení má zpoždění"
 
 #: src/routes/project/ProjectHomeRoute.tsx:242
 msgid "Live & recent"
@@ -7974,7 +7980,7 @@ msgstr "Živý náhled"
 #~ msgid "Live Preview"
 #~ msgstr "Live Preview"
 
-#: src/routes/project/HostGuidePage.tsx:1558
+#: src/routes/project/HostGuidePage.tsx:1568
 msgid "Live recordings"
 msgstr "Živé nahrávky"
 
@@ -7998,6 +8004,11 @@ msgstr "Živý přenos byl odpojen. Až do opětovného připojení probíhá po
 msgid "Live stream interrupted. Falling back to polling."
 msgstr "Živý přenos byl přerušen. Přechází se na dotazování."
 
+#. placeholder {0}: formatWhen(until, i18n.locale)
+#: src/components/sharing/StatusLine.tsx:87
+msgid "Live until {0}"
+msgstr "Živě do {0}"
+
 #. placeholder {0}: format(expiry, "EEE d MMM, HH:mm")
 #: src/routes/project/popcorn/PopcornRoute.tsx:54
 msgid "live until {0}, reads every {every} min"
@@ -8013,8 +8024,8 @@ msgid "live, reads every {every} min"
 msgstr "živě, čte se každých {every} min"
 
 #: src/routes/project/present/PresentRoute.tsx:655
-msgid "Live. New conversations will feed Popcorn as they arrive."
-msgstr "Živě. Nové rozhovory budou průběžně plnit Popcorn."
+#~ msgid "Live. New conversations will feed Popcorn as they arrive."
+#~ msgstr "Živě. Nové rozhovory budou průběžně plnit Popcorn."
 
 #: src/components/project/ProjectExperimentalSection.tsx:47
 msgid "Living canvas and popcorn"
@@ -8051,7 +8062,7 @@ msgstr "Loading artefact"
 msgid "Loading collections..."
 msgstr "Loading collections..."
 
-#: src/routes/project/present/PresentRoute.tsx:805
+#: src/routes/project/present/PresentRoute.tsx:709
 msgid "Loading draft"
 msgstr "Načítá se koncept"
 
@@ -8059,7 +8070,7 @@ msgstr "Načítá se koncept"
 #~ msgid "Loading draft…"
 #~ msgstr "Načítá se koncept…"
 
-#: src/routes/project/HostGuidePage.tsx:1443
+#: src/routes/project/HostGuidePage.tsx:1453
 msgid "Loading host guide"
 msgstr "Načítá se průvodce pro hostitele"
 
@@ -8079,8 +8090,8 @@ msgstr "Načítání metodologie"
 msgid "Loading microphones..."
 msgstr "Loading microphones..."
 
-#: src/routes/project/present/PresentRoute.tsx:743
-#: src/routes/project/present/PresentRoute.tsx:931
+#: src/routes/project/present/PresentRoute.tsx:619
+#: src/routes/project/present/PresentRoute.tsx:835
 msgid "Loading presentation"
 msgstr "Načítání prezentace"
 
@@ -9896,7 +9907,7 @@ msgstr "Otevřít dokumentaci"
 #~ msgid "Open host guide"
 #~ msgstr "Open host guide"
 
-#: src/routes/project/present/PresentRoute.tsx:850
+#: src/routes/project/present/PresentRoute.tsx:754
 #: src/components/results/ResultItem.tsx:846
 #: src/components/results/curate/RowTools.tsx:344
 #: src/components/results/curate/RowTools.tsx:347
@@ -9906,6 +9917,10 @@ msgstr "Otevřít v analýze"
 #: src/components/chat/CanvasSuggestionCard.tsx:230
 msgid "Open in library"
 msgstr "Otevřít v knihovně"
+
+#: src/components/sharing/Share.tsx:131
+msgid "Open link"
+msgstr "Otevřít odkaz"
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:152
 #: src/components/map/panels/BudgetStates.tsx:53
@@ -9929,7 +9944,7 @@ msgstr "Otevřít panel Mollie"
 msgid "Open organisation"
 msgstr "Open organisation"
 
-#: src/components/popcorn/PopcornActions.tsx:146
+#: src/components/popcorn/PopcornActions.tsx:49
 msgid "Open presenter view"
 msgstr "Otevřít zobrazení pro prezentujícího"
 
@@ -9959,8 +9974,8 @@ msgid "Open the original invitation email and click the link from there, or ask 
 msgstr "Open the original invitation email and click the link from there, or ask the inviter to send a new invite."
 
 #: src/components/popcorn/PopcornShare.tsx:157
-msgid "Open the public page"
-msgstr "Otevřít veřejnou stránku"
+#~ msgid "Open the public page"
+#~ msgstr "Otevřít veřejnou stránku"
 
 #: src/components/voice/VoiceInputError.tsx:90
 msgid "Open the troubleshooting guide"
@@ -10202,7 +10217,7 @@ msgstr "Outcome updated!"
 msgid "outcomes"
 msgstr "outcomes"
 
-#: src/routes/project/present/PresentRoute.tsx:129
+#: src/routes/project/present/PresentRoute.tsx:124
 #: src/components/conversation/VerifiedArtefactsSection.tsx:92
 msgid "Outcomes"
 msgstr "Outcomes"
@@ -10412,8 +10427,8 @@ msgid "Passwords do not match"
 msgstr "Passwords do not match"
 
 #: src/components/popcorn/PopcornShare.tsx:123
-msgid "Paste it into any page. It stays live."
-msgstr "Vložte jej na libovolnou stránku. Zůstane živý."
+#~ msgid "Paste it into any page. It stays live."
+#~ msgstr "Vložte jej na libovolnou stránku. Zůstane živý."
 
 #: src/components/map/renderers/LocalMapGraph.tsx:1214
 msgid "Pause physics"
@@ -10524,7 +10539,7 @@ msgstr "People"
 msgid "People with access"
 msgstr "People with access"
 
-#: src/routes/project/present/PresentRoute.tsx:208
+#: src/routes/project/present/PresentRoute.tsx:203
 msgid "People, groups and what matters to them"
 msgstr "Lidé, skupiny a to, na čem jim záleží"
 
@@ -10930,9 +10945,9 @@ msgstr "Připravuje se toto plátno. Jakmile bude první verze připravena, obje
 msgid "Preparing your experience"
 msgstr "Preparing your experience"
 
-#: src/routes/project/present/PresentRoute.tsx:561
-#: src/routes/project/present/PresentRoute.tsx:574
-#: src/routes/project/present/PresentRoute.tsx:915
+#: src/routes/project/present/PresentRoute.tsx:554
+#: src/routes/project/present/PresentRoute.tsx:577
+#: src/routes/project/present/PresentRoute.tsx:819
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:114
 msgid "Present"
 msgstr "Prezentovat"
@@ -10941,15 +10956,15 @@ msgstr "Prezentovat"
 msgid "Presentation activities"
 msgstr "Prezentační aktivity"
 
-#: src/routes/project/present/PresentRoute.tsx:567
+#: src/routes/project/present/PresentRoute.tsx:570
 msgid "Presentation controls"
 msgstr "Ovládání prezentace"
 
-#: src/routes/project/present/PresentRoute.tsx:150
+#: src/routes/project/present/PresentRoute.tsx:145
 msgid "Presentation editor"
 msgstr "Editor prezentace"
 
-#: src/routes/project/present/PresentRoute.tsx:367
+#: src/routes/project/present/PresentRoute.tsx:362
 msgid "Presentation title"
 msgstr "Název prezentace"
 
@@ -10986,8 +11001,8 @@ msgid "Price"
 msgstr "Price"
 
 #: src/routes/project/HostGuidePage.tsx:1528
-msgid "Print / Save PDF"
-msgstr "Print / Save PDF"
+#~ msgid "Print / Save PDF"
+#~ msgstr "Print / Save PDF"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1088
 msgid "Print report"
@@ -11011,6 +11026,7 @@ msgstr "URL zásad ochrany osobních údajů"
 #: src/routes/project/CreateProjectRoute.tsx:385
 #: src/components/workspace/OrganisationProjectsTable.tsx:246
 #: src/components/workspace/DiscoverableWorkspaces.tsx:309
+#: src/components/sharing/StatusLine.tsx:78
 #: src/components/project/ProjectSharingStrip.tsx:59
 msgid "Private"
 msgstr "Private"
@@ -11244,7 +11260,8 @@ msgstr "Zabezpečte přihlášení pomocí dvoufaktorového ověření."
 #~ msgid "Provide an overview of the main topics and recurring themes"
 #~ msgstr "Provide an overview of the main topics and recurring themes"
 
-#: src/components/popcorn/PopcornShare.tsx:76
+#: src/components/sharing/StatusLine.tsx:78
+#: src/components/sharing/Share.tsx:203
 msgid "Public page"
 msgstr "Veřejná stránka"
 
@@ -11253,8 +11270,7 @@ msgstr "Veřejná stránka"
 msgid "Publish"
 msgstr "Publish"
 
-#: src/routes/project/present/PresentRoute.tsx:672
-#: src/routes/project/present/PresentRoute.tsx:731
+#: src/routes/project/present/PresentRoute.tsx:649
 msgid "Publish changes"
 msgstr "Publikovat změny"
 
@@ -11276,6 +11292,7 @@ msgstr "Publish this report to get a share link"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:130
 #: src/routes/project/report/ProjectReportRoute.tsx:932
+#: src/components/sharing/StatusLine.tsx:46
 msgid "Published"
 msgstr "Published"
 
@@ -11362,8 +11379,8 @@ msgid "read conversations, transcripts, projects and settings you can see"
 msgstr "číst rozhovory, přepisy, projekty a nastavení, která vidíte"
 
 #: src/components/popcorn/PopcornActions.tsx:186
-msgid "Read every 2 minutes for"
-msgstr "Číst každé 2 minuty po dobu"
+#~ msgid "Read every 2 minutes for"
+#~ msgstr "Číst každé 2 minuty po dobu"
 
 #: src/routes/auth/Register.tsx:319
 msgid "Read less"
@@ -11458,8 +11475,8 @@ msgid "Reading the documentation"
 msgstr "Čte se dokumentace"
 
 #: src/components/popcorn/PopcornActions.tsx:84
-msgid "Reads every 2 minutes. Refresh reads now."
-msgstr "Čte každé 2 minuty. Obnovení provede čtení hned."
+#~ msgid "Reads every 2 minutes. Refresh reads now."
+#~ msgstr "Čte každé 2 minuty. Obnovení provede čtení hned."
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:96
 msgid "Ready"
@@ -11635,7 +11652,7 @@ msgid "Refine shows the correct label and cannot run while another reply is bein
 msgstr "Zpřesnění zobrazuje správný popisek a nelze ho spustit, dokud se generuje jiná odpověď."
 
 #: src/components/project/ProjectPortalEditor.tsx:1581
-#: src/components/popcorn/PopcornActions.tsx:154
+#: src/components/popcorn/PopcornActions.tsx:57
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:157
 #: src/components/common/UsageFreshness.tsx:32
 #: src/components/chat/CanvasSuggestionCard.tsx:104
@@ -11670,15 +11687,15 @@ msgstr "Refreshing…"
 #: src/routes/project/chat/ProjectChatRoute.tsx:752
 #: src/routes/project/canvas/CanvasRoute.tsx:690
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:625
-#: src/components/popcorn/PopcornActions.tsx:161
-#: src/components/popcorn/PopcornActions.tsx:214
+#: src/components/popcorn/PopcornActions.tsx:64
+#: src/components/popcorn/PopcornActions.tsx:86
 #: src/components/map/MapPage.tsx:132
 #: src/components/conversation/ConversationEdit.tsx:401
 #: src/components/conversation/ConversationEdit.tsx:469
 msgid "Regenerate"
 msgstr "Regenerate"
 
-#: src/components/popcorn/PopcornActions.tsx:206
+#: src/components/popcorn/PopcornActions.tsx:78
 msgid "Regenerate popcorn?"
 msgstr "Znovu vygenerovat Popcorn?"
 
@@ -12167,7 +12184,7 @@ msgstr "Resend invite email"
 msgid "Resend verification email"
 msgstr "Znovu odeslat ověřovací e-mail"
 
-#: src/routes/project/HostGuidePage.tsx:1551
+#: src/routes/project/HostGuidePage.tsx:1561
 #: src/components/map/renderers/MapChrome.tsx:114
 msgid "Reset"
 msgstr "Reset"
@@ -12177,7 +12194,7 @@ msgstr "Reset"
 msgid "Reset filters"
 msgstr "Reset filters"
 
-#: src/routes/project/HostGuidePage.tsx:1545
+#: src/routes/project/HostGuidePage.tsx:1555
 msgid "Reset guide"
 msgstr "Obnovit průvodce"
 
@@ -12207,7 +12224,7 @@ msgstr "Obnovit heslo | dembrane"
 #~ msgid "Reset Password | dembrane"
 #~ msgstr "Reset Password | dembrane"
 
-#: src/routes/project/HostGuidePage.tsx:1547
+#: src/routes/project/HostGuidePage.tsx:1557
 msgid "Reset the guide?"
 msgstr "Obnovit průvodce?"
 
@@ -12462,7 +12479,7 @@ msgstr "Odebrat toto připojení?"
 msgid "Revoked"
 msgstr "Odebráno"
 
-#: src/routes/project/HostGuidePage.tsx:1568
+#: src/routes/project/HostGuidePage.tsx:1578
 msgid "Right-click to highlight"
 msgstr "Right-click to highlight"
 
@@ -12695,6 +12712,7 @@ msgstr "Naplánovat školení"
 #: src/routes/project/report/ProjectReportRoute.tsx:132
 #: src/components/training/StaffTrainingPanel.tsx:126
 #: src/components/training/StaffTrainingPanel.tsx:170
+#: src/components/sharing/StatusLine.tsx:48
 msgid "Scheduled"
 msgstr "Naplánováno"
 
@@ -12970,7 +12988,7 @@ msgstr "Select a microphone"
 msgid "Select a webhook to clone"
 msgstr "Select a webhook to clone"
 
-#: src/routes/project/HostGuidePage.tsx:1772
+#: src/routes/project/HostGuidePage.tsx:1782
 msgid "Select a word first"
 msgstr "Nejprve vyberte slovo"
 
@@ -13330,9 +13348,10 @@ msgstr "Setup"
 msgid "Shape how participants verify outcomes"
 msgstr "Urči, jak účastníci ověřují výsledky"
 
-#: src/routes/project/present/PresentRoute.tsx:581
+#: src/components/sharing/Share.tsx:37
+#: src/components/sharing/Share.tsx:39
 #: src/components/project/ProjectSharingModal.tsx:505
-#: src/components/popcorn/PopcornShare.tsx:71
+#: src/components/popcorn/PopcornShare.tsx:68
 msgid "Share"
 msgstr "Sdílet"
 
@@ -13341,8 +13360,12 @@ msgid "Share invite links as an alternative to email invitations."
 msgstr "Sdílejte zvací odkazy namísto pozvánek e-mailem."
 
 #: src/components/popcorn/PopcornShare.tsx:97
-msgid "Share link"
-msgstr "Sdílet odkaz"
+#~ msgid "Share link"
+#~ msgstr "Sdílet odkaz"
+
+#: src/components/sharing/Share.tsx:98
+msgid "Share options"
+msgstr "Možnosti sdílení"
 
 #: src/components/layout/ParticipantHeader.tsx:117
 #: src/components/layout/ParticipantHeader.tsx:118
@@ -13350,8 +13373,8 @@ msgid "Share portal"
 msgstr "Sdílet portál"
 
 #: src/routes/project/present/PresentRoute.tsx:679
-msgid "Share presentation"
-msgstr "Sdílet prezentaci"
+#~ msgid "Share presentation"
+#~ msgstr "Sdílet prezentaci"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1069
 msgid "Share report"
@@ -13411,7 +13434,7 @@ msgstr "Shared with {0} and {overflow} others"
 msgid "Sharing a private project with a non-member now offers an invitation instead of an error, granting access when they join the workspace."
 msgstr "Při sdílení soukromého projektu s nečlenem se nyní místo chyby nabídne pozvánka. Přístup získá po připojení k pracovnímu prostoru."
 
-#: src/routes/project/present/PresentRoute.tsx:207
+#: src/routes/project/present/PresentRoute.tsx:202
 msgid "Short phrases from the conversations"
 msgstr "Krátké úryvky z rozhovorů"
 
@@ -14001,6 +14024,7 @@ msgid "Status"
 msgstr "Status"
 
 #: src/routes/project/canvas/CanvasRoute.tsx:213
+#: src/components/sharing/LiveButton.tsx:54
 msgid "Stay live for"
 msgstr "Zůstat živě po dobu"
 
@@ -14065,8 +14089,7 @@ msgstr "Zrušit zbarvení grafu podle faktického stavu"
 msgid "Stop coloring graph by valence"
 msgstr "Zrušit zbarvení grafu podle valence"
 
-#: src/routes/project/present/PresentRoute.tsx:594
-#: src/components/popcorn/PopcornActions.tsx:107
+#: src/components/sharing/LiveButton.tsx:32
 msgid "Stop live"
 msgstr "Zastavit živý přenos"
 
@@ -14571,8 +14594,8 @@ msgstr "Výchozí průvodce pro hostitele nyní připomíná, aby zapnuli režim
 msgid "the dembrane team"
 msgstr "tým dembrane"
 
-#: src/routes/project/present/PresentRoute.tsx:740
-#: src/routes/project/present/PresentRoute.tsx:755
+#: src/routes/project/present/PresentRoute.tsx:613
+#: src/routes/project/present/PresentRoute.tsx:659
 msgid "The draft could not be loaded"
 msgstr "Koncept se nepodařilo načíst"
 
@@ -14645,7 +14668,7 @@ msgstr "Historii se nepodařilo načíst."
 msgid "The host guide is what facilitators read before they run a session."
 msgstr "Průvodce hostitele je to, co si facilitátoři čtou před zahájením setkání."
 
-#: src/routes/project/present/PresentRoute.tsx:919
+#: src/routes/project/present/PresentRoute.tsx:823
 msgid "The host hasn’t prepared a presentation yet."
 msgstr "Hostitel zatím nepřipravil prezentaci."
 
@@ -14776,7 +14799,7 @@ msgstr "Průchod účastníka má přehlednější kontrolu mikrofonu."
 msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
 msgstr "Portály budou fungovat dál! Vaši účastníci nebudou nikdy odpojeni a nic z toho, co řeknou, se neztratí. Jakmile přejdete na placený tarif, přepis zpracuje vše, co už bylo zaznamenáno."
 
-#: src/routes/project/present/PresentRoute.tsx:900
+#: src/routes/project/present/PresentRoute.tsx:804
 msgid "The presentation could not be loaded"
 msgstr "Prezentaci se nepodařilo načíst"
 
@@ -14784,7 +14807,7 @@ msgstr "Prezentaci se nepodařilo načíst"
 #~ msgid "The presentation could not be loaded."
 #~ msgstr "Prezentaci se nepodařilo načíst."
 
-#: src/routes/project/present/PresentRoute.tsx:893
+#: src/routes/project/present/PresentRoute.tsx:797
 msgid "The presentation could not be opened"
 msgstr "Prezentaci se nepodařilo otevřít"
 
@@ -14829,7 +14852,7 @@ msgstr "Druhý řádek tohoto zjištění"
 msgid "the selected conversation"
 msgstr "vybraný rozhovor"
 
-#: src/routes/project/present/PresentRoute.tsx:708
+#: src/routes/project/present/PresentRoute.tsx:601
 msgid "The shared screen shows your published presentation. Publish changes to update its content and access."
 msgstr "Sdílená obrazovka zobrazuje vaši publikovanou prezentaci. Zveřejněním změn aktualizujete její obsah i přístup."
 
@@ -15282,7 +15305,7 @@ msgstr "Tímto se rozhovor z projektu odstraní. Tuto akci nelze vrátit zpět."
 msgid "This removes the one-year license for {0}. They will no longer count as trained and lose access to high-risk settings. Only do this if the license was granted by mistake."
 msgstr "Tímto se odebere roční licence pro uživatele {0}. Již se nebude počítat jako proškolený a ztratí přístup k vysoce rizikovým nastavením. Udělejte to pouze v případě, že byla licence udělena omylem."
 
-#: src/components/popcorn/PopcornActions.tsx:208
+#: src/components/popcorn/PopcornActions.tsx:80
 msgid "This replaces every popcorn, tension and stakeholder on the screen and reads all conversations again. Earlier runs are saved in the history."
 msgstr "Tímto se nahradí každý Popcorn, napětí i zúčastněná strana na obrazovce a znovu se načtou všechny rozhovory. Dřívější běhy jsou uloženy v historii."
 
@@ -15532,7 +15555,7 @@ msgstr "K vyřešení:"
 msgid "To talk about what you need, email <0>support@dembrane.com</0>."
 msgstr "Napište nám na <0>support@dembrane.com</0> a probereme, co potřebujete."
 
-#: src/routes/project/HostGuidePage.tsx:1768
+#: src/routes/project/HostGuidePage.tsx:1778
 msgid "Toggle highlight \"{contextMenuWord}\""
 msgstr "Přepnout zvýraznění „{contextMenuWord}“"
 
@@ -15801,7 +15824,7 @@ msgstr "Trigger automated workflows in tools like Zapier, Make, or n8n"
 msgid "Trouble logging in? Contact support@dembrane.com."
 msgstr "Trouble logging in? Contact support@dembrane.com."
 
-#: src/routes/project/present/PresentRoute.tsx:924
+#: src/routes/project/present/PresentRoute.tsx:828
 #: src/routes/project/present/PresentResultsPanel.tsx:158
 #: src/routes/project/chat/ProjectChatRoute.tsx:837
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:165
@@ -16036,6 +16059,10 @@ msgstr "Unpin a project first (max 3)"
 msgid "Unpin project"
 msgstr "Unpin project"
 
+#: src/routes/project/present/PresentRoute.tsx:565
+msgid "Unpublished changes"
+msgstr "Nepublikované změny"
+
 #: src/components/inbox/Inbox.tsx:437
 msgid "Unread"
 msgstr "Unread"
@@ -16180,6 +16207,11 @@ msgstr "Aktualizuje se každých {cadenceMinutes} minut do {0}."
 #: src/components/canvas/cadenceLabel.ts:21
 msgid "Updates every {cadenceMinutes} minutes."
 msgstr "Aktualizuje se každých {cadenceMinutes} minut."
+
+#. placeholder {0}: formatWhen(once, i18n.locale)
+#: src/components/sharing/StatusLine.tsx:77
+msgid "Updates once at {0}"
+msgstr "Jednorázová aktualizace v {0}"
 
 #: src/components/chat/agenticToolActivity.ts:162
 msgid "Updating a note for the dembrane team"
@@ -16374,7 +16406,7 @@ msgstr "Použít zděděnou hodnotu"
 msgid "Use Italian for chat, reports, transcription and participant onboarding cards."
 msgstr "Používejte italštinu pro chat, zprávy, přepis a karty pro onboarding účastníků."
 
-#: src/routes/project/present/PresentRoute.tsx:838
+#: src/routes/project/present/PresentRoute.tsx:742
 msgid "Use latest results"
 msgstr "Použít nejnovější výsledky"
 
@@ -17748,7 +17780,7 @@ msgstr "Your details"
 msgid "Your draft won't be saved."
 msgstr "Your draft won't be saved."
 
-#: src/routes/project/HostGuidePage.tsx:1543
+#: src/routes/project/HostGuidePage.tsx:1553
 msgid "Your edits to this guide are lost and it goes back to the default text."
 msgstr "Vaše úpravy tohoto průvodce budou ztraceny a vrátí se k výchozímu textu."
 

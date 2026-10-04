@@ -44,7 +44,7 @@ import {
 	useState,
 } from "react";
 import { QRCode as QRCodeLogo } from "react-qrcode-logo";
-import { useParams } from "react-router";
+import { useParams, useSearchParams } from "react-router";
 import { lightRoles as roles } from "@/colors";
 import {
 	useProjectById,
@@ -1201,6 +1201,16 @@ export const HostGuidePage = () => {
 
 	// Initialize data as null, load after project is available
 	const [data, setData] = useState<HostGuideData | null>(null);
+	// Download event printouts opens the guide with ?print: once it has drawn,
+	// the browser's print dialog saves it as a PDF.
+	const [params] = useSearchParams();
+	const printOnOpen = params.has("print");
+	const ready = !!data;
+	useEffect(() => {
+		if (!printOnOpen || !ready) return;
+		const timer = window.setTimeout(() => window.print(), 500);
+		return () => window.clearTimeout(timer);
+	}, [printOnOpen, ready]);
 
 	// Only user edits mark dirty, so viewing alone never writes
 	const dirtyRef = useRef(false);
@@ -1525,7 +1535,7 @@ export const HostGuidePage = () => {
 						leftSection={<PrinterIcon size={20} />}
 						onClick={() => window.print()}
 					>
-						<Trans>Print / Save PDF</Trans>
+						<Trans>Download event printouts</Trans>
 					</Button>
 					<Button
 						size="xs"
