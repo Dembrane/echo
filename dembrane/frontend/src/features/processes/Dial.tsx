@@ -1,20 +1,23 @@
 import { roles } from "@/colors";
+import { cn } from "@/lib/utils";
 
 const STROKE = 1.5;
 // The slow arc of work without a count: a fifth of the ring.
 const SEGMENT = 0.22;
 
-/** A ring round a rail icon whose blue arc is the work done so far. Without
- * a count the arc turns slowly; with reduced motion it stands still as a
- * dashed ring. Centred on its (relative) parent, drawn over nothing. */
+/** A small ring whose blue arc is the work done so far, set where a tool's
+ * tags go. Without a count the arc turns slowly; with reduced motion it
+ * stands still as a dashed ring. */
 export const Dial = ({
 	size,
 	done,
 	total,
+	className,
 }: {
 	size: number;
 	done?: number;
 	total?: number;
+	className?: string;
 }) => {
 	const r = size / 2 - STROKE / 2;
 	const length = 2 * Math.PI * r;
@@ -30,7 +33,7 @@ export const Dial = ({
 			width={size}
 			height={size}
 			viewBox={`0 0 ${size} ${size}`}
-			className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-90"
+			className={cn("pointer-events-none shrink-0 -rotate-90", className)}
 		>
 			<circle {...circle} stroke="var(--app-rule-color)" strokeWidth={STROKE} />
 			<circle

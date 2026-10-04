@@ -134,7 +134,15 @@ export const NavItem = ({
 			: badge != null && badgeTone !== "muted"
 				? RAIL_DOT_COLORS[badgeTone]
 				: null;
-		const dot = dotColor ? (
+		// The rail has no room for tags: the dial takes the corner they use.
+		const dot = running ? (
+			<span
+				className="absolute right-0.5 top-0.5 flex rounded-full p-px"
+				style={{ backgroundColor: "var(--app-background)" }}
+			>
+				<Dial size={14} done={status.done} total={status.total} />
+			</span>
+		) : dotColor ? (
 			<span
 				data-testid={chit ? "rail-process-chit" : "rail-badge-dot"}
 				aria-hidden="true"
@@ -188,9 +196,6 @@ export const NavItem = ({
 						/>
 					)}
 					<Icon size={20} className="relative" aria-hidden="true" />
-					{running ? (
-						<Dial size={32} done={status.done} total={status.total} />
-					) : null}
 					<span className="sr-only">{name}</span>
 					{dot}
 				</NavLink>
@@ -247,17 +252,19 @@ export const NavItem = ({
 				/>
 			)}
 			<span className="relative flex flex-1 items-center gap-2 truncate">
-				{Icon ? (
-					<span className="relative flex shrink-0">
-						<Icon size={16} />
-						{running ? (
-							<Dial size={24} done={status.done} total={status.total} />
-						) : null}
-					</span>
-				) : null}
+				{Icon ? <Icon size={16} /> : null}
 				<span className="truncate">{label}</span>
 			</span>
-			{/* The tool's work stands in for its badge until you open it. */}
+			{/* The tool's work sits with its tags: the dial, then its count in
+			    place of the badge. */}
+			{running ? (
+				<Dial
+					size={16}
+					done={status.done}
+					total={status.total}
+					className="relative"
+				/>
+			) : null}
 			{running && status.total ? (
 				<span
 					className="app-muted relative shrink-0 text-xs leading-none"
@@ -265,7 +272,7 @@ export const NavItem = ({
 				>
 					{t`${status.done ?? 0} of ${status.total}`}
 				</span>
-			) : chit ? (
+			) : !running && chit ? (
 				<span
 					data-testid="nav-process-chit"
 					className="relative shrink-0 px-1 py-0.5 text-xs leading-none"
