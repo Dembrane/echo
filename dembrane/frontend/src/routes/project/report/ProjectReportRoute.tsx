@@ -21,7 +21,6 @@ import {
 } from "@mantine/core";
 import { useDisclosure, useFullscreen } from "@mantine/hooks";
 import {
-	CheckIcon,
 	CopyIcon,
 	CornersInIcon,
 	CornersOutIcon,
@@ -62,7 +61,12 @@ import {
 	ScheduleDateTimePicker,
 } from "@/components/report/ScheduleDateTimePicker";
 import { UpdateReportModalButton } from "@/components/report/UpdateReportModalButton";
-import { QRMenu, ShareButton, ShareControls } from "@/components/sharing/Share";
+import {
+	QRShare,
+	ShareButton,
+	ShareControls,
+	shareAction,
+} from "@/components/sharing/Share";
 import { reportStatusLabel, StatusLine } from "@/components/sharing/StatusLine";
 import { PARTICIPANT_BASE_URL } from "@/config";
 import focusOptionsData from "@/data/reportFocusOptions.json";
@@ -965,8 +969,29 @@ export const ProjectReportRoute = () => {
 												pending={isUpdatingReport}
 												onPublicChange={setPublic}
 												description={t`Anyone with the link can read it. No login, and no transcripts.`}
+												settings={
+													<Switch
+														label={t`Include portal link`}
+														description={t`The report ends with an invitation to add your voice.`}
+														checked={includePortalLink}
+														disabled={isUpdatingReport}
+														onChange={(event) => {
+															const enabled = event.currentTarget.checked;
+															posthog.capture("report_made_public", {
+																enabled,
+																report_id: data.id,
+															});
+															updateReport({
+																payload: { show_portal_link: enabled },
+																projectId: projectId ?? "",
+																reportId: data.id,
+															});
+														}}
+														{...testId("report-include-portal-link-checkbox")}
+													/>
+												}
 												qr={
-													<QRMenu
+													<QRShare
 														links={{ url: sharingLink }}
 														fileName="report"
 														onAction={(action) => {
@@ -976,54 +1001,23 @@ export const ProjectReportRoute = () => {
 																});
 														}}
 														extras={
-															<>
-																<Menu.Item
-																	component="a"
-																	href={`${sharingLink}?print=true`}
-																	target="_blank"
-																	rel="noopener noreferrer"
-																	leftSection={<PrinterIcon size={16} />}
-																	onClick={() =>
-																		posthog.capture("report_exported", {
-																			method: "print",
-																			report_id: data.id,
-																		})
-																	}
-																	{...testId("report-print-button")}
-																>
-																	<Trans>Download as PDF</Trans>
-																</Menu.Item>
-																<Menu.Item
-																	closeMenuOnClick={false}
-																	role="menuitemcheckbox"
-																	aria-checked={includePortalLink}
-																	leftSection={
-																		includePortalLink ? (
-																			<CheckIcon size={16} />
-																		) : (
-																			<Box w={16} />
-																		)
-																	}
-																	onClick={() => {
-																		posthog.capture("report_made_public", {
-																			enabled: !includePortalLink,
-																			report_id: data.id,
-																		});
-																		updateReport({
-																			payload: {
-																				show_portal_link: !includePortalLink,
-																			},
-																			projectId: projectId ?? "",
-																			reportId: data.id,
-																		});
-																	}}
-																	{...testId(
-																		"report-include-portal-link-checkbox",
-																	)}
-																>
-																	<Trans>Include portal link</Trans>
-																</Menu.Item>
-															</>
+															<Button
+																{...shareAction}
+																component="a"
+																href={`${sharingLink}?print=true`}
+																target="_blank"
+																rel="noopener noreferrer"
+																leftSection={<PrinterIcon size={20} />}
+																onClick={() =>
+																	posthog.capture("report_exported", {
+																		method: "print",
+																		report_id: data.id,
+																	})
+																}
+																{...testId("report-print-button")}
+															>
+																<Trans>Download as PDF</Trans>
+															</Button>
 														}
 													/>
 												}

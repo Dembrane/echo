@@ -8,7 +8,7 @@ import {
 	popcornPublicUrl,
 	usePopcornSettingsMutation,
 } from "@/components/popcorn/hooks";
-import { QRMenu, ShareControls } from "@/components/sharing/Share";
+import { QRShare, ShareControls } from "@/components/sharing/Share";
 import { testId } from "@/lib/testUtils";
 
 // Share, as on every outcome: the Public page switch, then the code.
@@ -50,7 +50,7 @@ export function PopcornShare({
 			description={t`Anyone with the link can watch. No login, and no transcripts.`}
 			qr={
 				publicUrl && (
-					<QRMenu
+					<QRShare
 						links={{ url: publicUrl }}
 						embed={embed}
 						fileName={popcorn.name || "presentation"}

@@ -1,0 +1,49 @@
+/* The code and its links answer to the space they are given, not the window:
+   side by side in a wide dialog, stacked in the portal's card or on a phone. */
+.share {
+	container-type: inline-size;
+}
+
+.layout {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--mantine-spacing-lg);
+	align-items: start;
+}
+
+/* Stacked: the code takes about half a phone's screen, the links the rest. */
+.code {
+	width: min(100%, 48dvh);
+	justify-self: center;
+}
+
+.links {
+	display: flex;
+	flex-direction: column;
+	gap: var(--mantine-spacing-xs);
+}
+
+@container (min-width: 560px) {
+	.layout {
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	}
+
+	.code {
+		width: 100%;
+	}
+}
+
+/* A narrow column (the portal's card): a long label wraps inside its button
+   rather than being cut off. */
+@container (max-width: 279px) {
+	.links :global(.mantine-Button-root) {
+		height: auto;
+		min-height: 48px;
+		padding-block: var(--mantine-spacing-xs);
+	}
+
+	.links :global(.mantine-Button-label) {
+		white-space: normal;
+		text-align: left;
+	}
+}

@@ -2,7 +2,7 @@ import { Trans } from "@lingui/react/macro";
 import { Skeleton, Text } from "@mantine/core";
 import { useMemo } from "react";
 import { useParams } from "react-router";
-import { EventPrintoutsItem, QRMenu } from "@/components/sharing/Share";
+import { EventPrintoutsItem, QRShare } from "@/components/sharing/Share";
 import { PARTICIPANT_BASE_URL } from "@/config";
 
 interface ProjectQRCodeProps {
@@ -99,7 +99,7 @@ export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {
 	}
 
 	return (
-		<QRMenu
+		<QRShare
 			links={{
 				download: downloadLink ?? undefined,
 				open: clickLink ?? undefined,
@@ -107,7 +107,6 @@ export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {
 				url: copyLink,
 			}}
 			fileName={project.name || "code"}
-			size="100%"
 			extras={
 				project.id && (
 					<EventPrintoutsItem

@@ -3,13 +3,12 @@ import { Trans } from "@lingui/react/macro";
 import {
 	Button,
 	CopyButton,
-	Menu,
+	Divider,
 	Modal,
 	Stack,
 	Switch,
-	UnstyledButton,
 } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import {
 	ArrowSquareOutIcon,
 	CheckIcon,
@@ -23,10 +22,12 @@ import { type ReactNode, useRef } from "react";
 import { I18nLink } from "@/components/common/i18nLink";
 import { QRCode } from "@/components/common/QRCode";
 import { testId } from "@/lib/testUtils";
+import classes from "./Share.module.css";
 
 /** The one Share button an outcome has; it opens the same dialog everywhere. */
 export function ShareButton({ children }: { children: ReactNode }) {
 	const [opened, { open, close }] = useDisclosure(false);
+	const phone = useMediaQuery("(max-width: 48em)");
 	return (
 		<>
 			<Button
@@ -36,12 +37,26 @@ export function ShareButton({ children }: { children: ReactNode }) {
 			>
 				<Trans>Share</Trans>
 			</Button>
-			<Modal opened={opened} onClose={close} title={t`Share`}>
+			<Modal
+				opened={opened}
+				onClose={close}
+				title={t`Share`}
+				size="xl"
+				centered
+				fullScreen={phone}
+			>
 				{children}
 			</Modal>
 		</>
 	);
 }
+
+/** A way out of Share: a big, full-width button, the same shape everywhere. */
+export const shareAction = {
+	fullWidth: true,
+	justify: "flex-start",
+	size: "lg",
+} as const;
 
 export type QRLinks = {
 	/** What Copy link copies; the default for the rest. */
@@ -55,26 +70,24 @@ export type QRLinks = {
 };
 
 /**
- * The code is the share: one object on screen, big enough to hold up to a
- * camera. Pressing it gives the same four shortcuts everywhere, then, under a
- * line, what this outcome adds.
+ * The code is the share: big enough to hold up to a camera, with every way to
+ * pass it on beside it. The same four everywhere, then, under a line, what
+ * this outcome adds.
  */
-export function QRMenu({
+export function QRShare({
 	links,
 	embed,
 	fileName,
 	extras,
 	onAction,
-	size = 200,
 }: {
 	links: QRLinks;
-	/** Given, the menu offers Copy embed code. */
+	/** Given, Share offers Copy embed code. */
 	embed?: string;
 	fileName: string;
-	/** Menu items for what this outcome adds. */
+	/** Buttons (with `shareAction`) for what this outcome adds. */
 	extras?: ReactNode;
 	onAction?: (action: "copy" | "open" | "download" | "embed") => void;
-	size?: number | string;
 }) {
 	const downloadRef = useRef<HTMLDivElement>(null);
 	const download = () => {
@@ -87,27 +100,20 @@ export function QRMenu({
 		onAction?.("download");
 	};
 	return (
-		<>
-			<Menu position="bottom-start">
-				<Menu.Target>
-					<UnstyledButton
-						className="app-do"
-						p="xs"
-						w={size}
-						maw="100%"
-						aria-label={t`Share options`}
-						{...testId("share-qr")}
-					>
-						<QRCode value={links.scan ?? links.url} />
-					</UnstyledButton>
-				</Menu.Target>
-				<Menu.Dropdown>
+		<div className={classes.share} {...testId("share-qr")}>
+			<div className={classes.layout}>
+				<QRCode
+					className={classes.code}
+					value={links.scan ?? links.url}
+					aria-label={t`QR code`}
+				/>
+				<div className={classes.links}>
 					<CopyButton value={links.url} timeout={2000}>
 						{({ copied, copy }) => (
-							<Menu.Item
-								closeMenuOnClick={false}
+							<Button
+								{...shareAction}
 								leftSection={
-									copied ? <CheckIcon size={16} /> : <LinkIcon size={16} />
+									copied ? <CheckIcon size={20} /> : <LinkIcon size={20} />
 								}
 								onClick={() => {
 									copy();
@@ -116,34 +122,36 @@ export function QRMenu({
 								{...testId("share-copy-link")}
 							>
 								{copied ? t`Copied` : t`Copy link`}
-							</Menu.Item>
+							</Button>
 						)}
 					</CopyButton>
-					<Menu.Item
+					<Button
+						{...shareAction}
 						component="a"
 						href={links.open ?? links.url}
 						target="_blank"
 						rel="noopener noreferrer"
-						leftSection={<ArrowSquareOutIcon size={16} />}
+						leftSection={<ArrowSquareOutIcon size={20} />}
 						onClick={() => onAction?.("open")}
 						{...testId("share-open-link")}
 					>
 						<Trans>Open link</Trans>
-					</Menu.Item>
-					<Menu.Item
-						leftSection={<DownloadSimpleIcon size={16} />}
+					</Button>
+					<Button
+						{...shareAction}
+						leftSection={<DownloadSimpleIcon size={20} />}
 						onClick={download}
 						{...testId("share-download-qr")}
 					>
 						<Trans>Download QR code</Trans>
-					</Menu.Item>
+					</Button>
 					{embed && (
 						<CopyButton value={embed} timeout={2000}>
 							{({ copied, copy }) => (
-								<Menu.Item
-									closeMenuOnClick={false}
+								<Button
+									{...shareAction}
 									leftSection={
-										copied ? <CheckIcon size={16} /> : <CodeIcon size={16} />
+										copied ? <CheckIcon size={20} /> : <CodeIcon size={20} />
 									}
 									onClick={() => {
 										copy();
@@ -152,18 +160,18 @@ export function QRMenu({
 									{...testId("share-copy-embed")}
 								>
 									{copied ? t`Copied` : t`Copy embed code`}
-								</Menu.Item>
+								</Button>
 							)}
 						</CopyButton>
 					)}
 					{extras && (
 						<>
-							<Menu.Divider />
+							<Divider my="xs" />
 							{extras}
 						</>
 					)}
-				</Menu.Dropdown>
-			</Menu>
+				</div>
+			</div>
 			{/* Off screen, black on white whatever the theme: the PNG people print. */}
 			<div
 				ref={downloadRef}
@@ -175,7 +183,7 @@ export function QRMenu({
 					inverted={false}
 				/>
 			</div>
-		</>
+		</div>
 	);
 }
 
@@ -185,6 +193,7 @@ export function ShareControls({
 	onPublicChange,
 	pending,
 	description,
+	settings,
 	qr,
 	children,
 }: {
@@ -192,6 +201,8 @@ export function ShareControls({
 	onPublicChange: (value: boolean) => void;
 	pending?: boolean;
 	description: string;
+	/** Settings that only apply to a public page, under the switch. */
+	settings?: ReactNode;
 	/** The code and its menu; left out while there is no link yet. */
 	qr?: ReactNode;
 	/** A line the outcome needs said, under the code. */
@@ -207,6 +218,7 @@ export function ShareControls({
 				onChange={(event) => onPublicChange(event.currentTarget.checked)}
 				{...testId("share-public-toggle")}
 			/>
+			{isPublic && settings}
 			{isPublic && qr}
 			{children}
 		</Stack>
@@ -226,14 +238,15 @@ export function EventPrintoutsItem({
 	projectId: string;
 }) {
 	return (
-		<Menu.Item
+		<Button
+			{...shareAction}
 			component={I18nLink}
 			to={`/w/${workspaceId}/projects/${projectId}/host-guide?print=1`}
 			target="_blank"
-			leftSection={<PrinterIcon size={16} />}
+			leftSection={<PrinterIcon size={20} />}
 			{...testId("share-event-printouts")}
 		>
 			<Trans>Download event printouts</Trans>
-		</Menu.Item>
+		</Button>
 	);
 }
