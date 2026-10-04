@@ -58,7 +58,7 @@ export const InputModal = ({
 					handleSubmit();
 				}}
 			>
-				<Stack gap="md">
+				<Stack gap="lg">
 					<TextInput
 						label={label}
 						placeholder={placeholder}

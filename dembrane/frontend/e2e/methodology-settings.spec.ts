@@ -7,35 +7,38 @@ const hasScope = Boolean(workspaceId && projectId);
 
 const baseMethodologies = [
 	{
-		id: "dembrane",
-		name: "dembrane",
 		description: "Default",
 		framing: "Figure out what this project is for.",
+		id: "dembrane",
 		is_seeded: true,
 		latest_version: {
+			created_at: "2026-07-08T10:00:00Z",
 			id: "dembrane-v1",
 			note: "Initial history",
-			created_at: "2026-07-08T10:00:00Z",
 		},
+		name: "dembrane",
 		versions_count: 1,
 	},
 	{
-		id: "panel-day",
-		name: "Panel day",
 		description: "Panel setup",
 		framing: "Keep tables aligned around neighbourhood concerns.",
+		id: "panel-day",
 		is_seeded: false,
 		latest_version: {
+			created_at: "2026-07-08T11:00:00Z",
 			id: "panel-day-v2",
 			note: "Tightened framing",
-			created_at: "2026-07-08T11:00:00Z",
 		},
+		name: "Panel day",
 		versions_count: 2,
 	},
 ];
 
 test.describe("methodology settings", () => {
-	test.skip(!hasCreds || !hasScope, "Set E2E_EMAIL, E2E_PASSWORD, E2E_WORKSPACE_ID, and E2E_PROJECT_ID");
+	test.skip(
+		!hasCreds || !hasScope,
+		"Set E2E_EMAIL, E2E_PASSWORD, E2E_WORKSPACE_ID, and E2E_PROJECT_ID",
+	);
 
 	test.beforeEach(async ({ page }) => {
 		const methodologies = structuredClone(baseMethodologies);
@@ -48,11 +51,11 @@ test.describe("methodology settings", () => {
 					...methodologies[1],
 					versions: [
 						{
+							content: { blocks: [{ type: "goal" }] },
+							created_at: "2026-07-08T11:00:00Z",
+							created_by: "du-1",
 							id: "panel-day-v2",
 							note: "Tightened framing",
-							created_by: "du-1",
-							created_at: "2026-07-08T11:00:00Z",
-							content: { blocks: [{ type: "goal" }] },
 						},
 					],
 				},
@@ -62,12 +65,16 @@ test.describe("methodology settings", () => {
 			if (route.request().method() !== "POST") return route.fallback();
 			const body = route.request().postDataJSON();
 			const created = {
-				id: "new-methodology",
-				name: body.name,
 				description: body.description,
 				framing: body.framing,
+				id: "new-methodology",
 				is_seeded: false,
-				latest_version: { id: "new-methodology-v1", note: "Initial history", created_at: "2026-07-08T12:00:00Z" },
+				latest_version: {
+					created_at: "2026-07-08T12:00:00Z",
+					id: "new-methodology-v1",
+					note: "Initial history",
+				},
+				name: body.name,
 				versions_count: 1,
 			};
 			methodologies.push(created);
@@ -78,22 +85,32 @@ test.describe("methodology settings", () => {
 		await login(page);
 	});
 
-	test("project settings renders methodology select and patches the project", async ({ page }) => {
+	test("project settings renders methodology select and patches the project", async ({
+		page,
+	}) => {
 		let patchedVersionId = "";
 		await page.route(`**/v2/bff/projects/${projectId}`, async (route) => {
 			if (route.request().method() !== "PATCH") return route.fallback();
 			patchedVersionId = route.request().postDataJSON().methodology_version_id;
-			await route.fulfill({ json: { id: projectId, methodology_version_id: patchedVersionId } });
+			await route.fulfill({
+				json: { id: projectId, methodology_version_id: patchedVersionId },
+			});
 		});
 
-		await page.goto(`/w/${workspaceId}/projects/${projectId}/settings/overview`);
-		await expect(page.getByTestId("project-methodology-current")).toContainText("dembrane");
+		await page.goto(
+			`/w/${workspaceId}/projects/${projectId}/settings/overview`,
+		);
+		await expect(page.getByTestId("project-methodology-current")).toContainText(
+			"dembrane",
+		);
 		await page.getByTestId("project-methodology-select").click();
 		await page.getByRole("option", { name: "Panel day" }).click();
 		await expect.poll(() => patchedVersionId).toBe("panel-day-v2");
 	});
 
-	test("workspace settings can create and edit methodologies, while dembrane is read-only", async ({ page }) => {
+	test("workspace settings can create and edit methodologies, while dembrane is read-only", async ({
+		page,
+	}) => {
 		let createdName = "";
 		let editedFraming = "";
 		await page.route("**/v2/bff/methodologies", async (route) => {
@@ -101,34 +118,53 @@ test.describe("methodology settings", () => {
 			createdName = route.request().postDataJSON().name;
 			return route.fallback();
 		});
-		await page.route("**/v2/bff/methodologies/panel-day/versions", async (route) => {
-			editedFraming = route.request().postDataJSON().framing;
-			await route.fulfill({
-				json: {
-					...baseMethodologies[1],
-					framing: editedFraming,
-					versions_count: 3,
-				},
-			});
-		});
+		await page.route(
+			"**/v2/bff/methodologies/panel-day/versions",
+			async (route) => {
+				editedFraming = route.request().postDataJSON().framing;
+				await route.fulfill({
+					json: {
+						...baseMethodologies[1],
+						framing: editedFraming,
+						versions_count: 3,
+					},
+				});
+			},
+		);
 
 		await page.goto(`/w/${workspaceId}/settings/general`);
-		await expect(page.getByTestId("workspace-methodologies")).toContainText("dembrane");
-		await expect(page.getByTestId("methodology-row-dembrane")).toContainText("Read-only");
+		await expect(page.getByTestId("workspace-methodologies")).toContainText(
+			"dembrane",
+		);
+		await expect(page.getByTestId("methodology-row-dembrane")).toContainText(
+			"Read-only",
+		);
 		await expect(page.getByTestId("methodology-edit-dembrane")).toHaveCount(0);
 
 		await page.getByTestId("methodology-new-button").click();
 		await page.getByTestId("methodology-new-name").fill("New panel");
-		await page.getByTestId("methodology-new-description").fill("A new panel flow");
-		await page.getByTestId("methodology-new-framing").fill("Ask for concerns by table.");
+		await page
+			.getByTestId("methodology-new-description")
+			.fill("A new panel flow");
+		await page
+			.getByTestId("methodology-new-framing")
+			.fill("Ask for concerns by table.");
 		await page.getByTestId("methodology-new-save").click();
 		await expect.poll(() => createdName).toBe("New panel");
-		await expect(page.getByTestId("methodology-row-new-methodology")).toContainText("1 history entry");
+		await expect(
+			page.getByTestId("methodology-row-new-methodology"),
+		).toContainText("1 history entry");
 
 		await page.getByTestId("methodology-edit-panel-day").click();
-		await page.getByTestId("methodology-edit-framing").fill("Ask for concerns by neighbourhood.");
+		await page
+			.getByTestId("methodology-edit-framing")
+			.fill("Ask for concerns by neighbourhood.");
 		await page.getByTestId("methodology-edit-save").click();
-		await expect.poll(() => editedFraming).toBe("Ask for concerns by neighbourhood.");
-		await expect(page.getByTestId("methodology-row-panel-day")).toContainText("3 history entries");
+		await expect
+			.poll(() => editedFraming)
+			.toBe("Ask for concerns by neighbourhood.");
+		await expect(page.getByTestId("methodology-row-panel-day")).toContainText(
+			"3 history entries",
+		);
 	});
 });

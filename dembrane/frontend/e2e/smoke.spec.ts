@@ -11,7 +11,6 @@ test("app loads and shows an auth surface", async ({ page }) => {
 	// Login/registration copy or the email field should be present somewhere.
 	const hasAuthUi =
 		(await page.locator('input[type="email"], input[name="email"]').count()) >
-			0 ||
-		/log\s?in|sign\s?in|register|email/i.test(body);
+			0 || /log\s?in|sign\s?in|register|email/i.test(body);
 	expect(hasAuthUi).toBeTruthy();
 });

@@ -25,7 +25,6 @@
  * them too). */
 :root {
 	--app-surface: #ffffff;
-	--app-on-fill: #ffffff;
 	--app-muted: #5f646f;
 	--app-quiet: #e6e3df;
 	--app-pressed: #dcdad7;
@@ -35,9 +34,21 @@
 	--app-danger-on-tint: #a8323c;
 	--app-success: #0e6e47;
 	--app-warning: #7a5200;
-	/* A disabled button answers a hover in pollen and a press in cotton candy
+	/* Fills, split from the text roles so dark can draw a fill brighter or
+	 * darker than its text; in light each fill is its role. --app-on-fill is
+	 * text and marks on any fill; the fill hover is graphite (the primary pill). */
+	--app-action-fill: #2957df;
+	--app-danger-fill: #c0434e;
+	--app-success-fill: #0e6e47;
+	--app-warning-fill: #7a5200;
+	--app-on-fill: #ffffff;
+	--app-fill-hover: #2d2d2c;
+	--app-on-fill-hover: #ffffff;
+	/* Disabled is pollen: a control that can't be used draws its lines in it.
+	 * A disabled button answers a hover in it and a press in cotton candy
 	 * (button.module.css). */
-	--app-disabled-hover: #ffd166;
+	--app-disabled: #ffd166;
+	--app-disabled-hover: var(--app-disabled);
 	--app-disabled-pressed: #ff9aa2;
 }
 
@@ -157,12 +168,18 @@
 	--avatar-radius: 9999px;
 	border-radius: 9999px;
 }
+/* Initials are set in the one text weight, not Mantine's bold. */
+:root .mantine-Avatar-placeholder {
+	font-weight: 320;
+}
 
 /* Context: no border; a tag is its tint. */
 :root .mantine-Badge-root {
 	border-radius: 0;
 	border-width: 0;
 	box-shadow: none;
+	/* Mantine spaces its badge capitals; a tag is set like any other text. */
+	letter-spacing: 0;
 }
 
 /* Floating layers follow what they hold, and keep their float shadow. */
@@ -404,6 +421,10 @@
 }
 
 /* Accordion: items separated by the rule. */
+/* The caret is a 16 icon (theme.tsx); Mantine's box would draw it at 15. */
+:root .mantine-Accordion-root {
+	--accordion-chevron-size: 16px;
+}
 :root .mantine-Accordion-item {
 	border-bottom: var(--app-stroke) solid var(--app-rule-color);
 	border-radius: 0;
@@ -520,8 +541,8 @@
  * outline, on is a fill, across every choice control. */
 :root .mantine-Checkbox-input:checked,
 :root .mantine-Radio-radio:checked {
-	background-color: var(--app-action);
-	border-color: var(--app-action);
+	background-color: var(--app-action-fill);
+	border-color: var(--app-action-fill);
 }
 :root .mantine-Radio-radio:checked + .mantine-Radio-icon,
 :root .mantine-Checkbox-input:checked + .mantine-Checkbox-icon {
@@ -775,14 +796,9 @@
 	.mantine-Switch-thumb {
 	background: var(--app-on-fill);
 }
-/* Disabled: the off thumb is already the control grey, so a disabled switch
- * also fades, or disabled-off would read as plain off. */
-:root .mantine-Switch-input:disabled + .mantine-Switch-track {
-	opacity: 0.5;
-}
 :root .mantine-Switch-input:checked + .mantine-Switch-track {
-	background: var(--app-action);
-	border-color: var(--app-action);
+	background: var(--app-action-fill);
+	border-color: var(--app-action-fill);
 }
 
 /* Set: a file drop area is a place to put something: sides. */
@@ -915,6 +931,58 @@
 	border-color: transparent;
 	color: var(--app-control-rule);
 	cursor: not-allowed;
+}
+/* A control's lines say its state: grey available, blue active, red error,
+ * pollen disabled. Disabled keeps the control's shape and its white; only the
+ * lines turn yellow and the text fades. Pressing it anyway flashes the lines
+ * red (data-tamper, set by src/lib/tamper.ts). */
+:root
+	:is(.mantine-Input-input, .mantine-Checkbox-input, .mantine-Radio-radio):is(
+		:disabled,
+		[data-disabled]
+	),
+:root .mantine-Switch-input:disabled + .mantine-Switch-track,
+:root .mantine-Chip-label[data-disabled],
+:root .mantine-SegmentedControl-root[data-disabled],
+:root .mantine-Dropzone-root[data-disabled] {
+	--app-rule-color: var(--app-disabled);
+	cursor: not-allowed;
+}
+:root .mantine-Input-input:is(:disabled, [data-disabled]) {
+	background-color: var(--app-surface);
+	color: var(--app-muted);
+	opacity: 1;
+}
+/* Checked but fixed: the fill drops to the control grey inside the yellow. */
+:root :is(.mantine-Checkbox-input, .mantine-Radio-radio):checked:disabled,
+:root .mantine-Switch-input:checked:disabled + .mantine-Switch-track {
+	background-color: var(--app-control-rule);
+	border-color: var(--app-disabled);
+}
+@keyframes app-tamper {
+	0%,
+	50% {
+		border-color: var(--app-danger);
+	}
+}
+:root
+	[data-tamper]
+	:is(
+		.mantine-Input-input,
+		.mantine-Checkbox-input,
+		.mantine-Radio-radio,
+		.mantine-Switch-track,
+		.mantine-Chip-label
+	) {
+	animation: app-tamper 500ms ease-out;
+}
+
+/* The markdown editor is square like everything else: its own radius tokens
+ * go to zero (the round ones, --radius-full, stay). */
+:root :is(.mdxeditor, .mdxeditor-popup-container) {
+	--radius-base: 0;
+	--radius-medium: 0;
+	--radius-small: 0;
 }
 
 /* A row that doesn't fit on a phone stacks as a whole (title above, its
