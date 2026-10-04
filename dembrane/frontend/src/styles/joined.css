@@ -69,3 +69,65 @@
 	position: relative;
 	z-index: 1;
 }
+
+/* Rows and cards stacked at gap 0 (a list of rows you press, a skeleton of
+ * cards): each one after the first steps back over the line above, so the
+ * rule between two rows is drawn once. A selected row is already drawn on top
+ * (rules.css), so its blue covers the shared line. A row rendered as a link
+ * wraps its card in an <a>, which steps back instead. */
+:root
+	.mantine-Stack-root[style*="--stack-gap: 0rem"]
+	> :is(.app-do, [data-with-border], a:has(> .app-do))
+	+ :is(.app-do, [data-with-border], a:has(> .app-do)) {
+	margin-top: calc(-1 * var(--app-stroke));
+}
+
+/* Fields side by side at gap 0 are a joined row even without .app-joined, and
+ * behave like one: each steps back over its neighbour's side, the focused one
+ * on top, the row never wraps part-way and stacks whole on a phone (a wrapped
+ * field would step back past the row's edge and lose its line). A Select
+ * leaves a hidden input between the fields, hence ~ rather than +. */
+:root
+	.mantine-Group-root[style*="--group-gap: 0rem"]:has(
+		> .mantine-InputWrapper-root ~ .mantine-InputWrapper-root
+	) {
+	flex-wrap: nowrap;
+}
+:root
+	.mantine-Group-root[style*="--group-gap: 0rem"]
+	> .mantine-InputWrapper-root
+	~ .mantine-InputWrapper-root {
+	margin-left: calc(-1 * var(--app-stroke));
+}
+:root
+	.mantine-Group-root[style*="--group-gap: 0rem"]
+	> .mantine-InputWrapper-root:focus-within {
+	position: relative;
+	z-index: 1;
+}
+@media (max-width: 767px) {
+	:root
+		.mantine-Group-root[style*="--group-gap: 0rem"]:has(
+			> .mantine-InputWrapper-root ~ .mantine-InputWrapper-root
+		) {
+		align-items: stretch;
+		flex-direction: column;
+	}
+	:root
+		.mantine-Group-root[style*="--group-gap: 0rem"]
+		> .mantine-InputWrapper-root
+		~ .mantine-InputWrapper-root {
+		margin-left: 0;
+	}
+}
+
+/* A table set straight into a bordered card with no padding: the card's rules
+ * are the table's, so the table drops its own above and below. */
+:root
+	:is(.mantine-Paper-root, .mantine-Card-root)[data-with-border]:not(
+		[style*="padding"]
+	)
+	> .mantine-Table-table {
+	border-bottom-width: 0;
+	border-top-width: 0;
+}
