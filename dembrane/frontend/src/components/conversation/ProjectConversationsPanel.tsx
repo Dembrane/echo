@@ -22,7 +22,7 @@ import {
 	Title,
 	Tooltip,
 } from "@mantine/core";
-import { useDebouncedValue, useDisclosure } from "@mantine/hooks";
+import { useDisclosure } from "@mantine/hooks";
 import {
 	ArrowSquareOutIcon,
 	DetectiveIcon,
@@ -36,22 +36,18 @@ import {
 	XIcon,
 } from "@phosphor-icons/react";
 import { useIsMutating } from "@tanstack/react-query";
-import { formatDistanceToNowStrict } from "date-fns";
-import { useEffect, useMemo, useState } from "react";
-import { useInView } from "react-intersection-observer";
+import { useMemo, useState } from "react";
 import { useProjectChatContext } from "@/components/chat/hooks";
 import { EntityListRow } from "@/components/common/EntityListRow";
 import { toast } from "@/components/common/Toaster";
 import { SelectAllConfirmationModal } from "@/components/conversation/SelectAllConfirmationModal";
 import { UploadConversationDropzone } from "@/components/dropzone/UploadConversationDropzone";
-import { useProjectById } from "@/components/project/hooks";
 import { UploadLockedCard } from "@/components/project/UploadLockedCard";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
 import { getConversationContentLink } from "@/lib/api";
-import type { ListQuery } from "@/lib/listQuery";
 import { isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 import { SELLABLE_TIER, type Tier } from "@/lib/tiers";
@@ -61,25 +57,20 @@ import { ConversationEdit } from "./ConversationEdit";
 import { CopyConversationTranscriptActionIcon } from "./CopyConversationTranscript";
 import {
 	useAddChatContextMutation,
-	useConversationsCountByProjectId,
 	useDeleteChatContextMutation,
-	useInfiniteConversationsByProjectId,
 	useRemainingConversationsCount,
 	useSelectAllContextMutation,
 } from "./hooks";
 import { LockedTranscriptOverlay } from "./LockedTranscriptOverlay";
+import {
+	type ConversationSort,
+	formatStartedAt,
+	getTagText,
+	hasVerifiedArtifacts,
+	SORT_OPTIONS,
+	useConversationList,
+} from "./useConversationList";
 import { getConversationStartTime } from "./utils";
-
-type SortOption = {
-	label: string;
-	value:
-		| "-created_at"
-		| "created_at"
-		| "-participant_name"
-		| "participant_name"
-		| "-duration"
-		| "duration";
-};
 
 type ProjectConversationsPanelProps = {
 	projectId: string;
@@ -104,32 +95,6 @@ const lineClampStyle = {
 	WebkitBoxOrient: "vertical",
 	WebkitLineClamp: 2,
 } as const;
-
-const SORT_OPTIONS: SortOption[] = [
-	{ label: t`Newest first`, value: "-created_at" },
-	{ label: t`Oldest first`, value: "created_at" },
-	{ label: t`Name A-Z`, value: "participant_name" },
-	{ label: t`Name Z-A`, value: "-participant_name" },
-	{ label: t`Longest first`, value: "-duration" },
-	{ label: t`Shortest first`, value: "duration" },
-];
-
-const getTagText = (tag: ConversationProjectTag) => {
-	const projectTag = tag.project_tag_id as ProjectTag | string | null;
-	return typeof projectTag === "object" && projectTag ? projectTag.text : null;
-};
-
-const hasVerifiedArtifacts = (conversation: Conversation) =>
-	conversation.conversation_artifacts?.some(
-		(artifact) => (artifact as ConversationArtifact).approved_at,
-	) ?? false;
-
-const formatStartedAt = (startedAt: string | null) => {
-	if (!startedAt) return t`Unknown date`;
-	return t`${formatDistanceToNowStrict(new Date(startedAt), {
-		addSuffix: true,
-	})}`;
-};
 
 const ConversationSelectionCheckbox = ({
 	conversation,
@@ -521,12 +486,27 @@ export const ProjectConversationsPanel = ({
 	onToggleSelectionMode,
 }: ProjectConversationsPanelProps) => {
 	const navigate = useI18nNavigate();
-	const { ref: loadMoreRef, inView } = useInView();
-	const [search, setSearch] = useState("");
-	const [debouncedSearch] = useDebouncedValue(search, 200);
-	const [sortBy, setSortBy] = useState<SortOption["value"]>("-created_at");
-	const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
-	const [showOnlyVerified, setShowOnlyVerified] = useState(false);
+	const {
+		activeFiltersCount,
+		allConversations,
+		allProjectTags,
+		conversationsCountQuery,
+		conversationsQuery,
+		debouncedSearch,
+		hasActiveFilters,
+		loadMoreRef,
+		projectQuery,
+		resetFilters,
+		search,
+		selectedTagIds,
+		setSearch,
+		setSelectedTagIds,
+		setShowOnlyVerified,
+		setSortBy,
+		showOnlyVerified,
+		sortBy,
+		tagOptions,
+	} = useConversationList(projectId, { pageSize: selectionMode ? 12 : 20 });
 	const [selectAllModalOpened, setSelectAllModalOpened] = useState(false);
 	const [selectAllResult, setSelectAllResult] =
 		useState<SelectAllContextResponse | null>(null);
@@ -537,23 +517,6 @@ export const ProjectConversationsPanel = ({
 	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 	const { workspace } = useWorkspace();
 
-	const projectQuery = useProjectById({
-		projectId,
-		query: {
-			deep: {
-				tags: {
-					_sort: "sort",
-				},
-			},
-			fields: [
-				"id",
-				"workspace_id",
-				{
-					tags: ["id", "text", "sort"],
-				},
-			],
-		},
-	});
 	const resolvedWorkspaceId =
 		workspaceId ??
 		(projectQuery.data as { workspace_id?: string | null } | undefined)
@@ -564,84 +527,6 @@ export const ProjectConversationsPanel = ({
 		enabled: showUpload,
 	});
 	const selectAllMutation = useSelectAllContextMutation();
-
-	const allProjectTags = useMemo(
-		() =>
-			((projectQuery.data as Project | undefined)?.tags as ProjectTag[]) ?? [],
-		[projectQuery.data],
-	);
-	const tagOptions = useMemo(() => {
-		const options: { label: string; value: string }[] = [];
-		for (const tag of allProjectTags) {
-			if (tag.id && tag.text) {
-				options.push({ label: tag.text, value: tag.id });
-			}
-		}
-		return options;
-	}, [allProjectTags]);
-
-	const conversationQuery = useMemo(
-		() =>
-			({
-				filter: {
-					project_id: { _eq: projectId },
-					...(selectedTagIds.length > 0 && {
-						tags: {
-							_some: {
-								project_tag_id: {
-									id: { _in: selectedTagIds },
-								},
-							},
-						},
-					}),
-					...(showOnlyVerified && {
-						conversation_artifacts: {
-							_some: {
-								approved_at: {
-									_nnull: true,
-								},
-							},
-						},
-					}),
-				},
-				search: debouncedSearch,
-				sort: sortBy,
-			}) as Partial<ListQuery<Conversation>>,
-		[projectId, selectedTagIds, showOnlyVerified, debouncedSearch, sortBy],
-	);
-
-	const conversationsQuery = useInfiniteConversationsByProjectId(
-		projectId,
-		false,
-		false,
-		conversationQuery,
-		undefined,
-		{
-			initialLimit: selectionMode ? 12 : 20,
-		},
-	);
-	const conversationsCountQuery = useConversationsCountByProjectId(
-		projectId,
-		conversationQuery,
-	);
-
-	const allConversations =
-		conversationsQuery.data?.pages.flatMap((page) => page.conversations) ?? [];
-
-	useEffect(() => {
-		if (
-			inView &&
-			conversationsQuery.hasNextPage &&
-			!conversationsQuery.isFetchingNextPage
-		) {
-			conversationsQuery.fetchNextPage();
-		}
-	}, [
-		inView,
-		conversationsQuery.hasNextPage,
-		conversationsQuery.isFetchingNextPage,
-		conversationsQuery.fetchNextPage,
-	]);
 
 	const chatContextQuery = useProjectChatContext(selectionChatId ?? "");
 	// chatId-less mode (no chat exists yet): the ticked set lives in the
@@ -667,8 +552,6 @@ export const ProjectConversationsPanel = ({
 	// reuse the same translated string.
 	const conversationCount = selectedConversationIds.size;
 	const chatMode = chatContextQuery.data?.chat_mode;
-	const hasActiveFilters =
-		selectedTagIds.length > 0 || showOnlyVerified || debouncedSearch !== "";
 	const selectedTagNames = useMemo(() => {
 		return selectedTagIds
 			.map((id) => allProjectTags.find((tag) => tag.id === id)?.text)
@@ -710,13 +593,6 @@ export const ProjectConversationsPanel = ({
 		setEditingConversation(null);
 	};
 
-	const resetFilters = () => {
-		setSearch("");
-		setSelectedTagIds([]);
-		setShowOnlyVerified(false);
-		setSortBy("-created_at");
-	};
-
 	const handleSelectAllConfirm = async () => {
 		if (!selectionChatId) return;
 		setSelectAllLoading(true);
@@ -736,9 +612,6 @@ export const ProjectConversationsPanel = ({
 			setSelectAllLoading(false);
 		}
 	};
-
-	const activeFiltersCount =
-		selectedTagIds.length + (showOnlyVerified ? 1 : 0) + (search ? 1 : 0);
 
 	return (
 		<Stack gap="lg">
@@ -823,7 +696,7 @@ export const ProjectConversationsPanel = ({
 							label={t`Sort`}
 							value={sortBy}
 							onChange={(value) =>
-								value && setSortBy(value as SortOption["value"])
+								value && setSortBy(value as ConversationSort)
 							}
 							data={SORT_OPTIONS}
 							allowDeselect={false}

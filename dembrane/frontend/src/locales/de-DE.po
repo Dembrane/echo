@@ -3110,8 +3110,8 @@ msgid "Changes could not be published or saved. Review your draft and try again.
 msgstr "Änderungen konnten weder veröffentlicht noch gespeichert werden. Prüfen Sie Ihren Entwurf und versuchen Sie es erneut."
 
 #: src/routes/project/present/PresentRoute.tsx:716
-#~ msgid "Changes could not be published. Try again."
-#~ msgstr "Änderungen konnten nicht veröffentlicht werden. Versuchen Sie es erneut."
+msgid "Changes could not be published. Try again."
+msgstr "Änderungen konnten nicht veröffentlicht werden. Versuchen Sie es erneut."
 
 #: src/components/form/UnsavedChanges.tsx:20
 #~ msgid "Changes will be saved automatically"
@@ -3972,8 +3972,8 @@ msgid "Copy approved outcomes to the new conversation so they aren't lost when t
 msgstr "Kopieren Sie freigegebene Ergebnisse in das neue Gespräch, damit sie beim Löschen des Originals nicht verloren gehen."
 
 #: src/components/popcorn/PopcornShare.tsx:139
-#~ msgid "Copy code"
-#~ msgstr "Code kopieren"
+msgid "Copy code"
+msgstr "Code kopieren"
 
 #: src/components/sharing/Share.tsx:162
 msgid "Copy embed code"
@@ -3993,8 +3993,8 @@ msgid "Copy link"
 msgstr "Link kopieren"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:997
-#~ msgid "Copy link to clipboard"
-#~ msgstr "Link in die Zwischenablage kopieren"
+msgid "Copy link to clipboard"
+msgstr "Link in die Zwischenablage kopieren"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1047
 msgid "Copy report content"
@@ -5461,12 +5461,12 @@ msgid "email@work.com"
 msgstr "email@work.com"
 
 #: src/components/popcorn/PopcornShare.tsx:118
-#~ msgid "Embed code"
-#~ msgstr "Einbettungscode"
+msgid "Embed code"
+msgstr "Einbettungscode"
 
 #: src/components/popcorn/PopcornShare.tsx:106
-#~ msgid "Embed in a webpage"
-#~ msgstr "In Webseite einbetten"
+msgid "Embed in a webpage"
+msgstr "In Webseite einbetten"
 
 #: src/components/map/MapPage.tsx:84
 msgid "Embedding arguments"
@@ -7657,8 +7657,8 @@ msgid "Keep pending"
 msgstr "Ausstehend lassen"
 
 #: src/routes/project/present/PresentRoute.tsx:618
-#~ msgid "Keep Popcorn up to date as conversations arrive. You can go live before the first recording."
-#~ msgstr "Halten Sie Popcorn auf dem neuesten Stand, sobald Gespräche eingehen. Sie können vor der ersten Aufnahme live gehen."
+msgid "Keep Popcorn up to date as conversations arrive. You can go live before the first recording."
+msgstr "Halten Sie Popcorn auf dem neuesten Stand, sobald Gespräche eingehen. Sie können vor der ersten Aufnahme live gehen."
 
 #: src/components/release/releaseHistory.ts:505
 msgid "Keep recordings awake"
@@ -7938,20 +7938,20 @@ msgid "Live"
 msgstr "Live"
 
 #: src/components/popcorn/PopcornActions.tsx:80
-#~ msgid "Live · next read in {0}"
-#~ msgstr "Live · Nächster Durchlauf in {0}"
+msgid "Live · next read in {0}"
+msgstr "Live · Nächster Durchlauf in {0}"
 
 #: src/components/popcorn/PopcornActions.tsx:78
-#~ msgid "Live · reading {reading} of {0}…"
-#~ msgstr "Live · Durchlauf {reading} von {0}…"
+msgid "Live · reading {reading} of {0}…"
+msgstr "Live · Durchlauf {reading} von {0}…"
 
 #: src/components/popcorn/PopcornActions.tsx:79
-#~ msgid "Live · reading now…"
-#~ msgstr "Live · Durchlauf läuft…"
+msgid "Live · reading now…"
+msgstr "Live · Durchlauf läuft…"
 
 #: src/components/popcorn/PopcornActions.tsx:76
-#~ msgid "Live · the last read is late"
-#~ msgstr "Live · Der letzte Durchlauf ist überfällig"
+msgid "Live · the last read is late"
+msgstr "Live · Der letzte Durchlauf ist überfällig"
 
 #: src/routes/project/ProjectHomeRoute.tsx:242
 msgid "Live & recent"
@@ -8034,8 +8034,8 @@ msgid "live, reads every {every} min"
 msgstr "live, Durchlauf alle {every} Min."
 
 #: src/routes/project/present/PresentRoute.tsx:655
-#~ msgid "Live. New conversations will feed Popcorn as they arrive."
-#~ msgstr "Live. Neue Gespräche fließen direkt in Popcorn ein."
+msgid "Live. New conversations will feed Popcorn as they arrive."
+msgstr "Live. Neue Gespräche fließen direkt in Popcorn ein."
 
 #: src/components/project/ProjectExperimentalSection.tsx:47
 msgid "Living canvas and popcorn"
@@ -9984,8 +9984,8 @@ msgid "Open the original invitation email and click the link from there, or ask 
 msgstr "Öffnen Sie die ursprüngliche Einladungs-E-Mail und klicken Sie dort auf den Link, oder bitten Sie die einladende Person um eine neue Einladung."
 
 #: src/components/popcorn/PopcornShare.tsx:157
-#~ msgid "Open the public page"
-#~ msgstr "Öffentliche Seite öffnen"
+msgid "Open the public page"
+msgstr "Öffentliche Seite öffnen"
 
 #: src/components/voice/VoiceInputError.tsx:90
 msgid "Open the troubleshooting guide"
@@ -10437,8 +10437,8 @@ msgid "Passwords do not match"
 msgstr "Passwörter stimmen nicht überein"
 
 #: src/components/popcorn/PopcornShare.tsx:123
-#~ msgid "Paste it into any page. It stays live."
-#~ msgstr "Auf einer beliebigen Seite einfügen. Bleibt live aktualisiert."
+msgid "Paste it into any page. It stays live."
+msgstr "Auf einer beliebigen Seite einfügen. Bleibt live aktualisiert."
 
 #: src/components/map/renderers/LocalMapGraph.tsx:1214
 msgid "Pause physics"
@@ -11011,12 +11011,12 @@ msgid "Price"
 msgstr "Preis"
 
 #: src/routes/project/HostGuidePage.tsx:1528
-#~ msgid "Print / Save PDF"
-#~ msgstr "PDF drucken / speichern"
+msgid "Print / Save PDF"
+msgstr "PDF drucken / speichern"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1088
-#~ msgid "Print report"
-#~ msgstr "Bericht drucken"
+msgid "Print report"
+msgstr "Bericht drucken"
 
 #: src/components/layout/Footer.tsx:31
 msgid "Privacy"
@@ -11296,8 +11296,8 @@ msgstr "Bericht veröffentlichen"
 #~ msgstr "Veröffentlichen Sie diesen Bericht, um den Portal-Link anzuzeigen"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:994
-#~ msgid "Publish this report to get a share link"
-#~ msgstr "Veröffentlichen Sie diesen Bericht, um einen Freigabelink zu erhalten"
+msgid "Publish this report to get a share link"
+msgstr "Veröffentlichen Sie diesen Bericht, um einen Freigabelink zu erhalten"
 
 #: src/components/sharing/StatusLine.tsx:46
 msgid "Published"
@@ -11387,8 +11387,8 @@ msgid "read conversations, transcripts, projects and settings you can see"
 msgstr "Gespräche, Transkripte, Projekte und Einstellungen lesen, die Sie sehen können"
 
 #: src/components/popcorn/PopcornActions.tsx:186
-#~ msgid "Read every 2 minutes for"
-#~ msgstr "Alle 2 Minuten abrufen für"
+msgid "Read every 2 minutes for"
+msgstr "Alle 2 Minuten abrufen für"
 
 #: src/routes/auth/Register.tsx:319
 msgid "Read less"
@@ -11483,8 +11483,8 @@ msgid "Reading the documentation"
 msgstr "Dokumentation lesen"
 
 #: src/components/popcorn/PopcornActions.tsx:84
-#~ msgid "Reads every 2 minutes. Refresh reads now."
-#~ msgstr "Liest alle 2 Minuten. Jetzt aktualisieren."
+msgid "Reads every 2 minutes. Refresh reads now."
+msgstr "Liest alle 2 Minuten. Jetzt aktualisieren."
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:96
 msgid "Ready"
@@ -13367,8 +13367,8 @@ msgid "Share invite links as an alternative to email invitations."
 msgstr "Teilen Sie Einladungslinks als Alternative zu E-Mail-Einladungen."
 
 #: src/components/popcorn/PopcornShare.tsx:97
-#~ msgid "Share link"
-#~ msgstr "Link teilen"
+msgid "Share link"
+msgstr "Link teilen"
 
 #: src/components/sharing/Share.tsx:98
 #~ msgid "Share options"
@@ -13380,12 +13380,12 @@ msgid "Share portal"
 msgstr "Portal teilen"
 
 #: src/routes/project/present/PresentRoute.tsx:679
-#~ msgid "Share presentation"
-#~ msgstr "Präsentation teilen"
+msgid "Share presentation"
+msgstr "Präsentation teilen"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1069
-#~ msgid "Share report"
-#~ msgstr "Bericht teilen"
+msgid "Share report"
+msgstr "Bericht teilen"
 
 #: src/routes/project/ProjectHomeRoute.tsx:162
 msgid "Share the project, watch live activity, and jump into the main tools from one place."
@@ -17979,3 +17979,34 @@ msgstr "J."
 #: src/components/common/ImageCropModal.tsx:129
 msgid "Zoom"
 msgstr "Zoom"
+
+#. placeholder {0}: list.activeFiltersCount
+#: src/components/conversation/ConversationsMiniList.tsx:211
+msgid "{0, plural, one {# filter} other {# filters}}"
+msgstr "{0, plural, one {# Filter} other {# Filter}}"
+
+#. placeholder {0}: selection.length
+#: src/components/conversation/ConversationsMiniList.tsx:230
+msgid "{0, plural, one {Ask about this} other {Ask about these (#)}}"
+msgstr "{0, plural, one {Dazu fragen} other {Zu diesen fragen (#)}}"
+
+#: src/components/conversation/ConversationsMiniList.tsx:153
+msgid "Filter and sort"
+msgstr "Filtern und sortieren"
+
+#: src/components/project/PortalSettingsOverview.tsx:102
+msgid "Portal settings"
+msgstr "Portaleinstellungen"
+
+#: src/components/conversation/ConversationsMiniList.tsx:393
+msgid "Select {title}"
+msgstr "{title} auswählen"
+
+#: src/routes/project/ProjectHomeRoute.tsx:167
+msgid "Take part"
+msgstr "Mitmachen"
+
+#: src/components/conversation/ConversationsMiniList.tsx:84
+msgid "Transcribing"
+msgstr "Wird transkribiert"
+
