@@ -245,6 +245,8 @@ msgstr "{0, plural, one {# agreement} other {# agreements}}"
 
 #. placeholder {0}: nodes.length
 #: src/components/present/AudienceMapAdapter.tsx:285
+#: src/components/map/panels/HistoryPanel.tsx:49
+#: src/components/map/panels/ClusterSummary.tsx:149
 msgid "{0, plural, one {# argument} other {# arguments}}"
 msgstr "{0, plural, one {# argument} other {# arguments}}"
 
@@ -259,7 +261,7 @@ msgid "{0, plural, one {# conversation could not be added to this chat.} other {
 msgstr "{0, plural, one {# conversation could not be added to this chat.} other {# conversations could not be added to this chat.}}"
 
 #. placeholder {0}: hiddenConversations.size
-#: src/components/map/MapPage.tsx:708
+#: src/components/map/MapPage.tsx:713
 msgid "{0, plural, one {# conversation is hidden from the map.} other {# conversations are hidden from the map.}}"
 msgstr "{0, plural, one {# conversation is hidden from the map.} other {# conversations are hidden from the map.}}"
 
@@ -271,7 +273,7 @@ msgstr "{0, plural, one {# conversation will be hidden along with it.} other {# 
 #. placeholder {0}: p.conversation_count
 #. placeholder {0}: unique.length
 #: src/components/workspace/OrganisationUsageRollup.tsx:815
-#: src/components/map/panels/SpotlightPanel.tsx:114
+#: src/components/map/panels/SpotlightPanel.tsx:119
 msgid "{0, plural, one {# conversation} other {# conversations}}"
 msgstr "{0, plural, one {# conversation} other {# conversations}}"
 
@@ -716,7 +718,7 @@ msgstr "{conversations, plural, one {# conversation} other {# conversations}}"
 msgid "{conversations} conversations with a transcript, about {minutes} minutes of talk. Ready."
 msgstr "{conversations} conversations with a transcript, about {minutes} minutes of talk. Ready."
 
-#: src/components/map/MapExperience.tsx:140
+#: src/components/map/MapExperience.tsx:145
 msgid "{count, plural, one {# argument} other {# arguments}}"
 msgstr "{count, plural, one {# argument} other {# arguments}}"
 
@@ -839,6 +841,10 @@ msgstr "{quotes, plural, one {# quote} other {# quotes}}"
 msgid "{readingNow} reading now"
 msgstr "{readingNow} reading now"
 
+#: src/components/map/panels/ClusterSummary.tsx:108
+msgid "{rest} more"
+msgstr "{rest} more"
+
 #: src/components/billing/BillingManager.tsx:344
 msgid "{seats, plural, one {# seat} other {# seats}}"
 msgstr "{seats, plural, one {# seat} other {# seats}}"
@@ -884,7 +890,7 @@ msgstr "{totalWorkspaces, plural, one {# workspace} other {# workspaces}}"
 msgid "{translated} of {total} translated, {failed} could not be translated"
 msgstr "{translated} of {total} translated, {failed} could not be translated"
 
-#: src/components/map/MapPage.tsx:668
+#: src/components/map/MapPage.tsx:673
 msgid "{unplacedCount, plural, one {# argument could not be placed on the map.} other {# arguments could not be placed on the map.}}"
 msgstr "{unplacedCount, plural, one {# argument could not be placed on the map.} other {# arguments could not be placed on the map.}}"
 
@@ -2219,6 +2225,7 @@ msgstr "Are you sure you want to remove your custom logo? The default dembrane l
 
 #: src/components/map/attributes.ts:127
 #: src/components/map/panels/NodeDetailCard.tsx:442
+#: src/components/map/panels/HistoryPanel.tsx:156
 msgid "Argument"
 msgstr "Argument"
 
@@ -2230,7 +2237,7 @@ msgstr "Argument"
 msgid "Argument map"
 msgstr "Argument map"
 
-#: src/components/map/MapExperience.tsx:388
+#: src/components/map/MapExperience.tsx:462
 msgid "Argument tree (MST)"
 msgstr "Argument tree (MST)"
 
@@ -2242,7 +2249,7 @@ msgstr "Argument tree (MST)"
 msgid "Arguments"
 msgstr "Arguments"
 
-#: src/components/map/panels/SpotlightPanel.tsx:260
+#: src/components/map/panels/SpotlightPanel.tsx:274
 msgid "Arguments express stances or preferences and aren't fact-checked."
 msgstr "Arguments express stances or preferences and aren't fact-checked."
 
@@ -2462,7 +2469,7 @@ msgstr "Audit logs exported to JSON"
 msgid "Authenticator code"
 msgstr "Authenticator code"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:306
+#: src/components/map/panels/MapSettingsMenu.tsx:307
 msgid "Auto fact-check new claims"
 msgstr "Auto fact-check new claims"
 
@@ -2664,7 +2671,7 @@ msgstr "Before you connect an agent"
 #: src/components/project/ProjectPortalEditor.tsx:1376
 #: src/components/project/ProjectPortalEditor.tsx:1456
 #: src/components/project/ProjectExperimentalSection.tsx:50
-#: src/components/map/MapPage.tsx:602
+#: src/components/map/MapPage.tsx:603
 #: src/components/conversation/RetranscribeConversation.tsx:155
 #: src/components/chat/ChatModeSelector.tsx:105
 #: src/components/chat/AgenticIntroModal.tsx:25
@@ -2859,7 +2866,7 @@ msgstr "Can you tell us more?"
 #: src/components/organisation/CreateOrganisationModal.tsx:218
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:294
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:378
-#: src/components/map/panels/SpotlightPanel.tsx:302
+#: src/components/map/panels/SpotlightPanel.tsx:316
 #: src/components/invite/InviteModal.tsx:798
 #: src/components/goal/ProjectGoalSection.tsx:165
 #: src/components/dropzone/UploadConversationDropzone.tsx:750
@@ -3236,7 +3243,7 @@ msgstr "Checking your session."
 
 #: src/components/map/attributes.ts:381
 #: src/components/map/panels/shared.tsx:147
-#: src/components/map/panels/SpotlightPanel.tsx:293
+#: src/components/map/panels/SpotlightPanel.tsx:307
 msgid "Checking…"
 msgstr "Checking…"
 
@@ -3365,9 +3372,13 @@ msgstr "Clearer workspace access for admins"
 msgid "Click a conversation tag to add it to your filters."
 msgstr "Click a conversation tag to add it to your filters."
 
-#: src/components/map/panels/SpotlightPanel.tsx:375
+#: src/components/map/panels/SpotlightPanel.tsx:389
 msgid "Click a node in the tree or cluster map to spotlight it here."
 msgstr "Click a node in the tree or cluster map to spotlight it here."
+
+#: src/components/map/panels/HistoryPanel.tsx:121
+msgid "Click an argument, or rest the cursor on a cluster until the circle closes, and it is kept here."
+msgstr "Click an argument, or rest the cursor on a cluster until the circle closes, and it is kept here."
 
 #: src/routes/project/HostGuidePage.tsx:1559
 msgid "Click to edit"
@@ -3458,7 +3469,7 @@ msgstr "Close and go to dembrane"
 msgid "Cloud Act Safe"
 msgstr "Cloud Act Safe"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:74
+#: src/components/map/panels/MapSettingsMenu.tsx:75
 msgid "Clusters"
 msgstr "Clusters"
 
@@ -3488,7 +3499,7 @@ msgstr "Collision radius: {0}x"
 #~ msgid "Collision Radius: {0}x"
 #~ msgstr "Collision Radius: {0}x"
 
-#: src/components/map/panels/SpotlightPanel.tsx:96
+#: src/components/map/panels/SpotlightPanel.tsx:101
 msgid "Color graph by conversation"
 msgstr "Color graph by conversation"
 
@@ -3496,15 +3507,15 @@ msgstr "Color graph by conversation"
 #~ msgid "Color graph by fact-check"
 #~ msgstr "Color graph by fact-check"
 
-#: src/components/map/panels/SpotlightPanel.tsx:237
+#: src/components/map/panels/SpotlightPanel.tsx:251
 msgid "Color graph by factual status"
 msgstr "Color graph by factual status"
 
-#: src/components/map/panels/SpotlightPanel.tsx:216
+#: src/components/map/panels/SpotlightPanel.tsx:230
 msgid "Color graph by valence"
 msgstr "Color graph by valence"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:247
+#: src/components/map/panels/MapSettingsMenu.tsx:248
 msgid "Color nodes by"
 msgstr "Color nodes by"
 
@@ -3759,10 +3770,9 @@ msgstr "Continue"
 msgid "participant.verify.instructions.button.next"
 msgstr "Continue"
 
-#. placeholder {0}: nodes.length
 #: src/components/map/panels/ExplorePanel.tsx:52
-msgid "Contributing nodes ({0})"
-msgstr "Contributing nodes ({0})"
+#~ msgid "Contributing nodes ({0})"
+#~ msgstr "Contributing nodes ({0})"
 
 #: src/components/map/renderers/LocalMapGraph.tsx:1326
 msgid "Controls how far charge forces act (higher = more global)"
@@ -3872,7 +3882,8 @@ msgstr "conversations"
 #: src/components/workspace/OrganisationProjectsTable.tsx:225
 #: src/components/report/ReportTimeline.tsx:302
 #: src/components/project/ProjectUsageAndSharing.tsx:477
-#: src/components/map/panels/MapSettingsMenu.tsx:268
+#: src/components/map/panels/MapSettingsMenu.tsx:269
+#: src/components/map/panels/ClusterSummary.tsx:156
 #: src/components/conversation/ProjectConversationsPanel.tsx:750
 #: src/components/conversation/ConversationAccordion.tsx:1103
 msgid "Conversations"
@@ -4532,7 +4543,7 @@ msgstr "Danger zone"
 #~ msgid "Dark"
 #~ msgstr "Dark"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:345
+#: src/components/map/panels/MapSettingsMenu.tsx:346
 msgid "Dark mode"
 msgstr "Dark mode"
 
@@ -4639,11 +4650,11 @@ msgstr "Default - no tutorial (only privacy statements)"
 #~ msgid "Default - No tutorial (Only privacy statements)"
 #~ msgstr "Default - No tutorial (Only privacy statements)"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:138
+#: src/components/map/panels/MapSettingsMenu.tsx:139
 msgid "Default {defaultEdges}"
 msgstr "Default {defaultEdges}"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:127
+#: src/components/map/panels/MapSettingsMenu.tsx:128
 msgid "Default {defaultNodes}"
 msgstr "Default {defaultNodes}"
 
@@ -4996,8 +5007,13 @@ msgid "Dissimilar links: {0}"
 msgstr "Dissimilar links: {0}"
 
 #: src/components/map/panels/ExplorePanel.tsx:93
-msgid "Distilling core idea..."
-msgstr "Distilling core idea..."
+#~ msgid "Distilling core idea..."
+#~ msgstr "Distilling core idea..."
+
+#: src/components/map/panels/HistoryPanel.tsx:59
+#: src/components/map/panels/ClusterSummary.tsx:145
+msgid "Distilling core idea…"
+msgstr "Distilling core idea…"
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:815
 msgid "Do I need this?"
@@ -5455,7 +5471,7 @@ msgstr "Enable"
 msgid "Enable 2FA"
 msgstr "Enable 2FA"
 
-#: src/components/map/MapExperience.tsx:460
+#: src/components/map/MapExperience.tsx:534
 msgid "Enable a visualization from the panel settings menu"
 msgstr "Enable a visualization from the panel settings menu"
 
@@ -5756,9 +5772,6 @@ msgstr "Expiring soon"
 
 #: src/components/project/ProjectPortalEditor.tsx:754
 #: src/components/project/PortalSettingsOverview.tsx:142
-#: src/components/map/panels/MapSettingsMenu.tsx:70
-#: src/components/map/panels/ExplorePanel.tsx:81
-#: src/components/map/panels/ExplorePanel.tsx:84
 msgid "Explore"
 msgstr "Explore"
 
@@ -5860,23 +5873,24 @@ msgstr "Extra participants"
 msgid "Fact-check"
 msgstr "Fact-check"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:321
+#: src/components/map/panels/MapSettingsMenu.tsx:322
 msgid "Fact-check all"
 msgstr "Fact-check all"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:319
+#: src/components/map/panels/MapSettingsMenu.tsx:320
 msgid "Fact-check all ({pendingClaimCount})"
 msgstr "Fact-check all ({pendingClaimCount})"
 
-#: src/components/map/panels/SpotlightPanel.tsx:279
+#: src/components/map/panels/SpotlightPanel.tsx:293
 msgid "Fact-check this claim"
 msgstr "Fact-check this claim"
 
 #: src/components/map/attributes.ts:385
+#: src/components/map/panels/ClusterSummary.tsx:166
 msgid "Factual status"
 msgstr "Factual status"
 
-#: src/components/map/panels/SpotlightPanel.tsx:269
+#: src/components/map/panels/SpotlightPanel.tsx:283
 msgid "Factual status does not apply to this object."
 msgstr "Factual status does not apply to this object."
 
@@ -6790,7 +6804,7 @@ msgstr "Hide detail"
 msgid "Hide from this presentation"
 msgstr "Hide from this presentation"
 
-#: src/components/map/MapPage.tsx:679
+#: src/components/map/MapPage.tsx:684
 msgid "Hide missing arguments"
 msgstr "Hide missing arguments"
 
@@ -6837,6 +6851,12 @@ msgstr "Highlight specific Concept"
 #: src/components/results/ResultItem.tsx:803
 msgid "history"
 msgstr "history"
+
+#: src/components/map/panels/MapSettingsMenu.tsx:71
+#: src/components/map/panels/HistoryPanel.tsx:115
+#: src/components/map/panels/HistoryPanel.tsx:117
+msgid "History"
+msgstr "History"
 
 #: src/components/results/curate/CurateOpen.tsx:204
 msgid "History / details"
@@ -6896,8 +6916,8 @@ msgid "Hours from now"
 msgstr "Hours from now"
 
 #: src/components/map/panels/ExplorePanel.tsx:170
-msgid "Hover over nodes to explore clusters. Hold position for 1.5s to distill the core idea."
-msgstr "Hover over nodes to explore clusters. Hold position for 1.5s to distill the core idea."
+#~ msgid "Hover over nodes to explore clusters. Hold position for 1.5s to distill the core idea."
+#~ msgstr "Hover over nodes to explore clusters. Hold position for 1.5s to distill the core idea."
 
 #: src/components/chat/ChatHistoryMessage.tsx:250
 msgid "How Ask works and what it can do."
@@ -7166,7 +7186,7 @@ msgstr "insight {0}"
 #~ msgid "Inspect evidence or hide a finding from this presentation. Shared results stay available in Analysis."
 #~ msgstr "Inspect evidence or hide a finding from this presentation. Shared results stay available in Analysis."
 
-#: src/components/map/MapPage.tsx:681
+#: src/components/map/MapPage.tsx:686
 msgid "Inspect missing arguments"
 msgstr "Inspect missing arguments"
 
@@ -7766,7 +7786,7 @@ msgstr "Legal basis saved"
 msgid "Legal entity name"
 msgstr "Legal entity name"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:75
+#: src/components/map/panels/MapSettingsMenu.tsx:76
 #: src/components/map/panels/Legend.tsx:66
 msgid "Legend"
 msgstr "Legend"
@@ -8049,7 +8069,7 @@ msgstr "Loading presentation"
 msgid "Loading the map."
 msgstr "Loading the map."
 
-#: src/components/map/MapPage.tsx:727
+#: src/components/map/MapPage.tsx:732
 msgid "Loading the new scope. The current map stays until then."
 msgstr "Loading the new scope. The current map stays until then."
 
@@ -8088,7 +8108,7 @@ msgstr "Loading…"
 msgid "Local argument map"
 msgstr "Local argument map"
 
-#: src/components/map/MapExperience.tsx:428
+#: src/components/map/MapExperience.tsx:502
 msgid "Local map"
 msgstr "Local map"
 
@@ -8302,7 +8322,7 @@ msgstr "Many maps were started just now. Try again in a moment."
 
 #: src/routes/project/present/blockLabel.ts:6
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:147
-#: src/components/map/MapPage.tsx:599
+#: src/components/map/MapPage.tsx:600
 msgid "Map"
 msgstr "Map"
 
@@ -8314,7 +8334,7 @@ msgstr "Map | dembrane"
 msgid "Map arguments"
 msgstr "Map arguments"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:122
+#: src/components/map/panels/MapSettingsMenu.tsx:123
 msgid "Map budget"
 msgstr "Map budget"
 
@@ -9415,7 +9435,7 @@ msgstr "No workspaces from this organisation are shared with you right now."
 msgid "No workspaces match \"{search}\"."
 msgstr "No workspaces match \"{search}\"."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:126
+#: src/components/map/panels/MapSettingsMenu.tsx:127
 msgid "Nodes"
 msgstr "Nodes"
 
@@ -9970,7 +9990,7 @@ msgstr "Opening and frame"
 msgid "Opening screens"
 msgstr "Opening screens"
 
-#: src/components/map/panels/SpotlightPanel.tsx:169
+#: src/components/map/panels/SpotlightPanel.tsx:176
 msgid "Opinion"
 msgstr "Opinion"
 
@@ -10234,9 +10254,9 @@ msgstr "Page title"
 msgid "Paid"
 msgstr "Paid"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:202
 #: src/components/map/panels/MapSettingsMenu.tsx:203
-#: src/components/map/panels/MapSettingsMenu.tsx:211
+#: src/components/map/panels/MapSettingsMenu.tsx:204
+#: src/components/map/panels/MapSettingsMenu.tsx:212
 msgid "Panel settings"
 msgstr "Panel settings"
 
@@ -11255,7 +11275,7 @@ msgstr "Rate limited"
 msgid "Rating"
 msgstr "Rating"
 
-#: src/components/map/panels/SpotlightPanel.tsx:334
+#: src/components/map/panels/SpotlightPanel.tsx:348
 msgid "Re-check"
 msgstr "Re-check"
 
@@ -11632,7 +11652,7 @@ msgstr "Register | dembrane"
 
 #: src/components/map/panels/NodeDetailCard.tsx:323
 #: src/components/map/panels/NodeDetailCard.tsx:529
-#: src/components/map/panels/MapSettingsMenu.tsx:231
+#: src/components/map/panels/MapSettingsMenu.tsx:232
 msgid "Relationships"
 msgstr "Relationships"
 
@@ -13394,7 +13414,7 @@ msgstr "Show all {0}"
 msgid "Show all {total}"
 msgstr "Show all {total}"
 
-#: src/components/map/MapPage.tsx:719
+#: src/components/map/MapPage.tsx:724
 msgid "Show all conversations"
 msgstr "Show all conversations"
 
@@ -13402,7 +13422,7 @@ msgstr "Show all conversations"
 msgid "Show audio player"
 msgstr "Show audio player"
 
-#: src/components/map/MapPage.tsx:701
+#: src/components/map/MapPage.tsx:706
 msgid "Show current arguments"
 msgstr "Show current arguments"
 
@@ -13508,7 +13528,7 @@ msgstr "Show your own logo to participants, available on request."
 
 #: src/components/map/panels/ShowcasePanel.tsx:86
 #: src/components/map/panels/ShowcasePanel.tsx:89
-#: src/components/map/panels/MapSettingsMenu.tsx:71
+#: src/components/map/panels/MapSettingsMenu.tsx:72
 msgid "Showcase"
 msgstr "Showcase"
 
@@ -13522,7 +13542,7 @@ msgstr "Showing {0} of {1}"
 msgid "Showing {displayFrom}–{displayTo} of {totalItems} entries"
 msgstr "Showing {displayFrom}–{displayTo} of {totalItems} entries"
 
-#: src/components/map/MapExperience.tsx:108
+#: src/components/map/MapExperience.tsx:113
 msgid "Showing {drawn} of {available} connections"
 msgstr "Showing {drawn} of {available} connections"
 
@@ -13530,7 +13550,7 @@ msgstr "Showing {drawn} of {available} connections"
 msgid "Showing {rangeStart}-{rangeEnd} of {total}"
 msgstr "Showing {rangeStart}-{rangeEnd} of {total}"
 
-#: src/components/map/MapPage.tsx:694
+#: src/components/map/MapPage.tsx:699
 msgid "Showing the arguments of one result."
 msgstr "Showing the arguments of one result."
 
@@ -13597,7 +13617,7 @@ msgstr "Slack community"
 msgid "Smoother recording and quicker questions"
 msgstr "Smoother recording and quicker questions"
 
-#: src/components/map/MapPage.tsx:688
+#: src/components/map/MapPage.tsx:693
 msgid "Some arguments are based on an earlier analysis."
 msgstr "Some arguments are based on an earlier analysis."
 
@@ -13812,9 +13832,9 @@ msgstr "Specific Details - Selected conversations"
 msgid "Specific Details chat respects manual conversation selection."
 msgstr "Specific Details chat respects manual conversation selection."
 
-#: src/components/map/panels/SpotlightPanel.tsx:181
-#: src/components/map/panels/SpotlightPanel.tsx:183
-#: src/components/map/panels/MapSettingsMenu.tsx:72
+#: src/components/map/panels/SpotlightPanel.tsx:188
+#: src/components/map/panels/SpotlightPanel.tsx:190
+#: src/components/map/panels/MapSettingsMenu.tsx:73
 msgid "Spotlight"
 msgstr "Spotlight"
 
@@ -13975,7 +13995,7 @@ msgstr "Stop"
 msgid "participant.button.stop"
 msgstr "Stop"
 
-#: src/components/map/panels/SpotlightPanel.tsx:95
+#: src/components/map/panels/SpotlightPanel.tsx:100
 msgid "Stop coloring graph by conversation"
 msgstr "Stop coloring graph by conversation"
 
@@ -13983,11 +14003,11 @@ msgstr "Stop coloring graph by conversation"
 #~ msgid "Stop coloring graph by fact-check"
 #~ msgstr "Stop coloring graph by fact-check"
 
-#: src/components/map/panels/SpotlightPanel.tsx:236
+#: src/components/map/panels/SpotlightPanel.tsx:250
 msgid "Stop coloring graph by factual status"
 msgstr "Stop coloring graph by factual status"
 
-#: src/components/map/panels/SpotlightPanel.tsx:215
+#: src/components/map/panels/SpotlightPanel.tsx:229
 msgid "Stop coloring graph by valence"
 msgstr "Stop coloring graph by valence"
 
@@ -14502,7 +14522,7 @@ msgstr "The draft could not be loaded"
 #~ msgid "The draft could not be loaded."
 #~ msgstr "The draft could not be loaded."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:89
+#: src/components/map/panels/MapSettingsMenu.tsx:90
 msgid "The edge budget must be a whole number above zero, so {applied} applies."
 msgstr "The edge budget must be a whole number above zero, so {applied} applies."
 
@@ -14579,11 +14599,11 @@ msgid "The invite was sent to {invitedEmail}, but you're signed in as {myEmail}.
 msgstr "The invite was sent to {invitedEmail}, but you're signed in as {myEmail}. Log out and sign up with the right address, or ask the admin to re-invite {myEmail}."
 
 #. placeholder {0}: failedAttempt.error ?? ""
-#: src/components/map/MapPage.tsx:654
+#: src/components/map/MapPage.tsx:659
 msgid "The last generation failed, so this is still the previous map. {0}"
 msgstr "The last generation failed, so this is still the previous map. {0}"
 
-#: src/components/map/MapExperience.tsx:134
+#: src/components/map/MapExperience.tsx:139
 msgid "The layout could not be computed for this scope."
 msgstr "The layout could not be computed for this scope."
 
@@ -14608,7 +14628,7 @@ msgid "The live popcorn deck and the canvases built for this project live here."
 msgstr "The live popcorn deck and the canvases built for this project live here."
 
 #. placeholder {0}: failedAttempt.error ?? ""
-#: src/components/map/MapPage.tsx:659
+#: src/components/map/MapPage.tsx:664
 msgid "The map could not be generated. {0}"
 msgstr "The map could not be generated. {0}"
 
@@ -14666,7 +14686,7 @@ msgstr "The name of this stakeholder"
 msgid "The new sidebar brings organisations, workspaces, members and settings together."
 msgstr "The new sidebar brings organisations, workspaces, members and settings together."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:88
+#: src/components/map/panels/MapSettingsMenu.tsx:89
 msgid "The node budget must be a whole number above zero, so {applied} applies."
 msgstr "The node budget must be a whole number above zero, so {applied} applies."
 
@@ -14774,7 +14794,7 @@ msgstr "The summary is being regenerated. Please wait for it to be available."
 msgid "The thank you page ends on a card inviting participants to run their own event with dembrane."
 msgstr "The thank you page ends on a card inviting participants to run their own event with dembrane."
 
-#: src/components/map/panels/ExplorePanel.tsx:108
+#: src/components/map/panels/HistoryPanel.tsx:69
 msgid "The title could not be generated."
 msgstr "The title could not be generated."
 
@@ -14942,7 +14962,7 @@ msgstr "This canvas could not update."
 msgid "This changes how transcripts are stored from here on. Conversations already recorded keep the form they were saved in."
 msgstr "This changes how transcripts are stored from here on. Conversations already recorded keep the form they were saved in."
 
-#: src/components/map/panels/SpotlightPanel.tsx:285
+#: src/components/map/panels/SpotlightPanel.tsx:299
 msgid "This claim has not been fact-checked."
 msgstr "This claim has not been fact-checked."
 
@@ -14960,11 +14980,11 @@ msgstr "This conversation is a copy of"
 msgid "This deployment can open maps with up to {maximumCount} arguments."
 msgstr "This deployment can open maps with up to {maximumCount} arguments."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:93
+#: src/components/map/panels/MapSettingsMenu.tsx:94
 msgid "This deployment shows up to {applied} edges."
 msgstr "This deployment shows up to {applied} edges."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:92
+#: src/components/map/panels/MapSettingsMenu.tsx:93
 msgid "This deployment shows up to {applied} nodes."
 msgstr "This deployment shows up to {applied} nodes."
 
@@ -15244,7 +15264,7 @@ msgstr "This returns the workspace to your organisation's shared billing and rem
 #~ msgid "This revision is unavailable."
 #~ msgstr "This revision is unavailable."
 
-#: src/components/map/panels/ExplorePanel.tsx:106
+#: src/components/map/panels/HistoryPanel.tsx:75
 msgid "This selection is too large to title."
 msgstr "This selection is too large to title."
 
@@ -15697,7 +15717,7 @@ msgstr "Translating: {translated} of {total} into {language}"
 msgid "Translation progress"
 msgstr "Translation progress"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:73
+#: src/components/map/panels/MapSettingsMenu.tsx:74
 msgid "Tree"
 msgstr "Tree"
 
@@ -15733,8 +15753,8 @@ msgstr "Trouble logging in? Contact support@dembrane.com."
 #: src/components/pricing/PricingTextInput.tsx:330
 #: src/components/present/TranslationStatus.tsx:143
 #: src/components/map/MapPage.tsx:130
-#: src/components/map/panels/SpotlightPanel.tsx:353
-#: src/components/map/panels/ExplorePanel.tsx:113
+#: src/components/map/panels/SpotlightPanel.tsx:367
+#: src/components/map/panels/HistoryPanel.tsx:180
 #: src/components/dropzone/UploadConversationDropzone.tsx:865
 #: src/components/common/FetchErrorPanel.tsx:35
 #: src/components/billing/BillingManager.tsx:1217
@@ -16313,7 +16333,7 @@ msgstr "Use pinned and saved question templates, including the / shortcut, from 
 msgid "Use Shift + Enter to add a new line"
 msgstr "Use Shift + Enter to add a new line"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:161
+#: src/components/map/panels/MapSettingsMenu.tsx:162
 msgid "Use the default budget"
 msgstr "Use the default budget"
 
@@ -16366,6 +16386,7 @@ msgid "Using webhooks? We'd love to hear from you"
 msgstr "Using webhooks? We'd love to hear from you"
 
 #: src/components/map/attributes.ts:350
+#: src/components/map/panels/ClusterSummary.tsx:161
 msgid "Valence"
 msgstr "Valence"
 
@@ -16542,11 +16563,11 @@ msgstr "Views: {0}"
 msgid "Visible columns"
 msgstr "Visible columns"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:137
+#: src/components/map/panels/MapSettingsMenu.tsx:138
 msgid "Visible edges"
 msgstr "Visible edges"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:95
+#: src/components/map/panels/MapSettingsMenu.tsx:96
 msgid "Visible edges raised to {applied} so the tree over {nodeLimit} nodes fits."
 msgstr "Visible edges raised to {applied} so the tree over {nodeLimit} nodes fits."
 

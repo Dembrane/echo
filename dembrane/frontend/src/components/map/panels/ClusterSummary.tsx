@@ -96,8 +96,15 @@ export const ShareBar = ({
 					/>
 				))}
 			</div>
-			<p className="text-xs" style={{ color: "var(--map-muted)" }}>
-				{named.map((share) => `${share.label} ${share.count}`).join(" · ")}
+			{/* One line, so the bars under it stay in view; the full line on hover. */}
+			<p
+				className="truncate text-xs"
+				style={{ color: "var(--map-muted)" }}
+				title={shares
+					.map((share) => `${share.label} (${share.count})`)
+					.join(" · ")}
+			>
+				{named.map((share) => `${share.label} (${share.count})`).join(" · ")}
 				{rest > 0 && ` · ${t`${rest} more`}`}
 			</p>
 		</div>

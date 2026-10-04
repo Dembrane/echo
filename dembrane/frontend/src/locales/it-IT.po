@@ -250,6 +250,8 @@ msgstr "{0, plural, one {# accordo} other {# accordi}}"
 
 #. placeholder {0}: nodes.length
 #: src/components/present/AudienceMapAdapter.tsx:285
+#: src/components/map/panels/HistoryPanel.tsx:49
+#: src/components/map/panels/ClusterSummary.tsx:149
 msgid "{0, plural, one {# argument} other {# arguments}}"
 msgstr "{0, plural, one {# argomentazione} other {# argomentazioni}}"
 
@@ -264,7 +266,7 @@ msgid "{0, plural, one {# conversation could not be added to this chat.} other {
 msgstr "{0, plural, one {Non è stato possibile aggiungere # conversazione a questa chat.} other {Non è stato possibile aggiungere # conversazioni a questa chat.}}"
 
 #. placeholder {0}: hiddenConversations.size
-#: src/components/map/MapPage.tsx:708
+#: src/components/map/MapPage.tsx:713
 msgid "{0, plural, one {# conversation is hidden from the map.} other {# conversations are hidden from the map.}}"
 msgstr "{0, plural, one {# conversazione è nascosta dalla mappa.} other {# conversazioni sono nascoste dalla mappa.}}"
 
@@ -276,7 +278,7 @@ msgstr "{0, plural, one {# conversazione verrà nascosta insieme ad esso.} other
 #. placeholder {0}: p.conversation_count
 #. placeholder {0}: unique.length
 #: src/components/workspace/OrganisationUsageRollup.tsx:815
-#: src/components/map/panels/SpotlightPanel.tsx:114
+#: src/components/map/panels/SpotlightPanel.tsx:119
 msgid "{0, plural, one {# conversation} other {# conversations}}"
 msgstr "{0, plural, one {# conversazione} other {# conversazioni}}"
 
@@ -721,7 +723,7 @@ msgstr "{conversations, plural, one {# conversazione} other {# conversazioni}}"
 msgid "{conversations} conversations with a transcript, about {minutes} minutes of talk. Ready."
 msgstr "{conversations} conversazioni con trascrizione, circa {minutes} minuti di parlato. Pronto."
 
-#: src/components/map/MapExperience.tsx:140
+#: src/components/map/MapExperience.tsx:145
 msgid "{count, plural, one {# argument} other {# arguments}}"
 msgstr "{count, plural, one {# argomento} other {# argomenti}}"
 
@@ -844,6 +846,10 @@ msgstr "{quotes, plural, one {# citazione} other {# citazioni}}"
 msgid "{readingNow} reading now"
 msgstr "{readingNow} reading now"
 
+#: src/components/map/panels/ClusterSummary.tsx:108
+msgid "{rest} more"
+msgstr "altri {rest}"
+
 #: src/components/billing/BillingManager.tsx:344
 msgid "{seats, plural, one {# seat} other {# seats}}"
 msgstr "{seats, plural, one {# posto} other {# posti}}"
@@ -889,7 +895,7 @@ msgstr "{totalWorkspaces, plural, one {# spazio di lavoro} other {# spazi di lav
 msgid "{translated} of {total} translated, {failed} could not be translated"
 msgstr "{translated} di {total} tradotti, {failed} non è stato possibile tradurre"
 
-#: src/components/map/MapPage.tsx:668
+#: src/components/map/MapPage.tsx:673
 msgid "{unplacedCount, plural, one {# argument could not be placed on the map.} other {# arguments could not be placed on the map.}}"
 msgstr "{unplacedCount, plural, one {# argomento non può essere mostrato sulla mappa.} other {# argomenti non possono essere mostrati sulla mappa.}}"
 
@@ -2224,6 +2230,7 @@ msgstr "Are you sure you want to remove your custom logo? The default dembrane l
 
 #: src/components/map/attributes.ts:127
 #: src/components/map/panels/NodeDetailCard.tsx:442
+#: src/components/map/panels/HistoryPanel.tsx:156
 msgid "Argument"
 msgstr "Argomento"
 
@@ -2235,7 +2242,7 @@ msgstr "Argomento"
 msgid "Argument map"
 msgstr "Mappa delle argomentazioni"
 
-#: src/components/map/MapExperience.tsx:388
+#: src/components/map/MapExperience.tsx:462
 msgid "Argument tree (MST)"
 msgstr "Albero delle argomentazioni (MST)"
 
@@ -2247,7 +2254,7 @@ msgstr "Albero delle argomentazioni (MST)"
 msgid "Arguments"
 msgstr "Argomenti"
 
-#: src/components/map/panels/SpotlightPanel.tsx:260
+#: src/components/map/panels/SpotlightPanel.tsx:274
 msgid "Arguments express stances or preferences and aren't fact-checked."
 msgstr "Le argomentazioni esprimono posizioni o preferenze e non sono verificate."
 
@@ -2467,7 +2474,7 @@ msgstr "Audit logs exported to JSON"
 msgid "Authenticator code"
 msgstr "Authenticator code"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:306
+#: src/components/map/panels/MapSettingsMenu.tsx:307
 msgid "Auto fact-check new claims"
 msgstr "Verifica automatica dei fatti per le nuove affermazioni"
 
@@ -2669,7 +2676,7 @@ msgstr "Prima di connettere un agente"
 #: src/components/project/ProjectPortalEditor.tsx:1376
 #: src/components/project/ProjectPortalEditor.tsx:1456
 #: src/components/project/ProjectExperimentalSection.tsx:50
-#: src/components/map/MapPage.tsx:602
+#: src/components/map/MapPage.tsx:603
 #: src/components/conversation/RetranscribeConversation.tsx:155
 #: src/components/chat/ChatModeSelector.tsx:105
 #: src/components/chat/AgenticIntroModal.tsx:25
@@ -2864,7 +2871,7 @@ msgstr "Puoi dirci di più?"
 #: src/components/organisation/CreateOrganisationModal.tsx:218
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:294
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:378
-#: src/components/map/panels/SpotlightPanel.tsx:302
+#: src/components/map/panels/SpotlightPanel.tsx:316
 #: src/components/invite/InviteModal.tsx:798
 #: src/components/goal/ProjectGoalSection.tsx:165
 #: src/components/dropzone/UploadConversationDropzone.tsx:750
@@ -3241,7 +3248,7 @@ msgstr "Controllo della sessione in corso."
 
 #: src/components/map/attributes.ts:381
 #: src/components/map/panels/shared.tsx:147
-#: src/components/map/panels/SpotlightPanel.tsx:293
+#: src/components/map/panels/SpotlightPanel.tsx:307
 msgid "Checking…"
 msgstr "Verifica in corso…"
 
@@ -3370,9 +3377,13 @@ msgstr "Accessi più chiari per gli amministratori"
 msgid "Click a conversation tag to add it to your filters."
 msgstr "Fai clic su un tag di conversazione per aggiungerlo ai filtri."
 
-#: src/components/map/panels/SpotlightPanel.tsx:375
+#: src/components/map/panels/SpotlightPanel.tsx:389
 msgid "Click a node in the tree or cluster map to spotlight it here."
 msgstr "Fai clic su un nodo nell'albero o nella mappa dei cluster per metterlo in evidenza qui."
+
+#: src/components/map/panels/HistoryPanel.tsx:121
+msgid "Click an argument, or rest the cursor on a cluster until the circle closes, and it is kept here."
+msgstr "Fai clic su un argomento, o lascia il cursore su un gruppo finché il cerchio non si chiude, e viene conservato qui."
 
 #: src/routes/project/HostGuidePage.tsx:1559
 msgid "Click to edit"
@@ -3463,7 +3474,7 @@ msgstr "Chiudi e vai a dembrane"
 msgid "Cloud Act Safe"
 msgstr "Conforme al Cloud Act"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:74
+#: src/components/map/panels/MapSettingsMenu.tsx:75
 msgid "Clusters"
 msgstr "Cluster"
 
@@ -3493,7 +3504,7 @@ msgstr "Raggio di collisione: {0}x"
 #~ msgid "Collision Radius: {0}x"
 #~ msgstr "Raggio di collisione: {0}x"
 
-#: src/components/map/panels/SpotlightPanel.tsx:96
+#: src/components/map/panels/SpotlightPanel.tsx:101
 msgid "Color graph by conversation"
 msgstr "Colora il grafico per conversazione"
 
@@ -3501,15 +3512,15 @@ msgstr "Colora il grafico per conversazione"
 #~ msgid "Color graph by fact-check"
 #~ msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:237
+#: src/components/map/panels/SpotlightPanel.tsx:251
 msgid "Color graph by factual status"
 msgstr "Colora il grafico in base allo stato fattuale"
 
-#: src/components/map/panels/SpotlightPanel.tsx:216
+#: src/components/map/panels/SpotlightPanel.tsx:230
 msgid "Color graph by valence"
 msgstr "Colora il grafico in base alla valenza"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:247
+#: src/components/map/panels/MapSettingsMenu.tsx:248
 msgid "Color nodes by"
 msgstr "Colora i nodi per"
 
@@ -3764,10 +3775,9 @@ msgstr "Continua"
 msgid "participant.verify.instructions.button.next"
 msgstr "Continua"
 
-#. placeholder {0}: nodes.length
 #: src/components/map/panels/ExplorePanel.tsx:52
-msgid "Contributing nodes ({0})"
-msgstr "Nodi correlati ({0})"
+#~ msgid "Contributing nodes ({0})"
+#~ msgstr "Nodi correlati ({0})"
 
 #: src/components/map/renderers/LocalMapGraph.tsx:1326
 msgid "Controls how far charge forces act (higher = more global)"
@@ -3877,7 +3887,8 @@ msgstr "conversations"
 #: src/components/workspace/OrganisationProjectsTable.tsx:225
 #: src/components/report/ReportTimeline.tsx:302
 #: src/components/project/ProjectUsageAndSharing.tsx:477
-#: src/components/map/panels/MapSettingsMenu.tsx:268
+#: src/components/map/panels/MapSettingsMenu.tsx:269
+#: src/components/map/panels/ClusterSummary.tsx:156
 #: src/components/conversation/ProjectConversationsPanel.tsx:750
 #: src/components/conversation/ConversationAccordion.tsx:1103
 msgid "Conversations"
@@ -4537,7 +4548,7 @@ msgstr "Zona di pericolo"
 #~ msgid "Dark"
 #~ msgstr ""
 
-#: src/components/map/panels/MapSettingsMenu.tsx:345
+#: src/components/map/panels/MapSettingsMenu.tsx:346
 msgid "Dark mode"
 msgstr "Modalità scura"
 
@@ -4644,11 +4655,11 @@ msgstr "Predefinito - nessun tutorial (solo informative sulla privacy)"
 #~ msgid "Default - No tutorial (Only privacy statements)"
 #~ msgstr "Default - No tutorial (Only privacy statements)"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:138
+#: src/components/map/panels/MapSettingsMenu.tsx:139
 msgid "Default {defaultEdges}"
 msgstr "Predefinito: {defaultEdges}"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:127
+#: src/components/map/panels/MapSettingsMenu.tsx:128
 msgid "Default {defaultNodes}"
 msgstr "Predefinito: {defaultNodes}"
 
@@ -5001,8 +5012,13 @@ msgid "Dissimilar links: {0}"
 msgstr "Collegamenti dissimili: {0}"
 
 #: src/components/map/panels/ExplorePanel.tsx:93
-msgid "Distilling core idea..."
-msgstr "Estrazione dell'idea chiave in corso..."
+#~ msgid "Distilling core idea..."
+#~ msgstr "Estrazione dell'idea chiave in corso..."
+
+#: src/components/map/panels/HistoryPanel.tsx:59
+#: src/components/map/panels/ClusterSummary.tsx:145
+msgid "Distilling core idea…"
+msgstr "Distillazione dell’idea centrale…"
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:815
 msgid "Do I need this?"
@@ -5460,7 +5476,7 @@ msgstr "Abilita"
 msgid "Enable 2FA"
 msgstr "Enable 2FA"
 
-#: src/components/map/MapExperience.tsx:460
+#: src/components/map/MapExperience.tsx:534
 msgid "Enable a visualization from the panel settings menu"
 msgstr "Abilita una visualizzazione dal menu delle impostazioni del pannello"
 
@@ -5761,9 +5777,6 @@ msgstr "In scadenza a breve"
 
 #: src/components/project/ProjectPortalEditor.tsx:754
 #: src/components/project/PortalSettingsOverview.tsx:142
-#: src/components/map/panels/MapSettingsMenu.tsx:70
-#: src/components/map/panels/ExplorePanel.tsx:81
-#: src/components/map/panels/ExplorePanel.tsx:84
 msgid "Explore"
 msgstr "Explore"
 
@@ -5865,23 +5878,24 @@ msgstr "Partecipanti extra"
 msgid "Fact-check"
 msgstr "Verifica dei fatti"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:321
+#: src/components/map/panels/MapSettingsMenu.tsx:322
 msgid "Fact-check all"
 msgstr "Verifica tutti i fatti"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:319
+#: src/components/map/panels/MapSettingsMenu.tsx:320
 msgid "Fact-check all ({pendingClaimCount})"
 msgstr "Verifica tutti i fatti ({pendingClaimCount})"
 
-#: src/components/map/panels/SpotlightPanel.tsx:279
+#: src/components/map/panels/SpotlightPanel.tsx:293
 msgid "Fact-check this claim"
 msgstr "Verifica questa affermazione"
 
 #: src/components/map/attributes.ts:385
+#: src/components/map/panels/ClusterSummary.tsx:166
 msgid "Factual status"
 msgstr "Stato di veridicità"
 
-#: src/components/map/panels/SpotlightPanel.tsx:269
+#: src/components/map/panels/SpotlightPanel.tsx:283
 msgid "Factual status does not apply to this object."
 msgstr "Lo stato di veridicità non si applica a questo elemento."
 
@@ -6795,7 +6809,7 @@ msgstr "Nascondi dettagli"
 msgid "Hide from this presentation"
 msgstr "Nascondi da questa presentazione"
 
-#: src/components/map/MapPage.tsx:679
+#: src/components/map/MapPage.tsx:684
 msgid "Hide missing arguments"
 msgstr "Nascondi gli argomenti mancanti"
 
@@ -6842,6 +6856,12 @@ msgstr "Highlight specific Concept"
 #: src/components/results/ResultItem.tsx:803
 msgid "history"
 msgstr "cronologia"
+
+#: src/components/map/panels/MapSettingsMenu.tsx:71
+#: src/components/map/panels/HistoryPanel.tsx:115
+#: src/components/map/panels/HistoryPanel.tsx:117
+msgid "History"
+msgstr "Cronologia"
 
 #: src/components/results/curate/CurateOpen.tsx:204
 msgid "History / details"
@@ -6901,8 +6921,8 @@ msgid "Hours from now"
 msgstr "Ore da adesso"
 
 #: src/components/map/panels/ExplorePanel.tsx:170
-msgid "Hover over nodes to explore clusters. Hold position for 1.5s to distill the core idea."
-msgstr "Passa sopra i nodi per esplorare i cluster. Tieni premuto per 1,5 s per sintetizzare l'idea principale."
+#~ msgid "Hover over nodes to explore clusters. Hold position for 1.5s to distill the core idea."
+#~ msgstr "Passa sopra i nodi per esplorare i cluster. Tieni premuto per 1,5 s per sintetizzare l'idea principale."
 
 #: src/components/chat/ChatHistoryMessage.tsx:250
 msgid "How Ask works and what it can do."
@@ -7171,7 +7191,7 @@ msgstr "insight {0}"
 #~ msgid "Inspect evidence or hide a finding from this presentation. Shared results stay available in Analysis."
 #~ msgstr ""
 
-#: src/components/map/MapPage.tsx:681
+#: src/components/map/MapPage.tsx:686
 msgid "Inspect missing arguments"
 msgstr "Guarda gli argomenti mancanti"
 
@@ -7771,7 +7791,7 @@ msgstr "Base giuridica salvata"
 msgid "Legal entity name"
 msgstr "Ragione sociale"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:75
+#: src/components/map/panels/MapSettingsMenu.tsx:76
 #: src/components/map/panels/Legend.tsx:66
 msgid "Legend"
 msgstr "Legenda"
@@ -8054,7 +8074,7 @@ msgstr "Caricamento presentazione"
 msgid "Loading the map."
 msgstr "Caricamento della mappa."
 
-#: src/components/map/MapPage.tsx:727
+#: src/components/map/MapPage.tsx:732
 msgid "Loading the new scope. The current map stays until then."
 msgstr "Caricamento del nuovo ambito. La mappa attuale rimane visibile fino ad allora."
 
@@ -8093,7 +8113,7 @@ msgstr "Loading…"
 msgid "Local argument map"
 msgstr "Mappa argomentativa locale"
 
-#: src/components/map/MapExperience.tsx:428
+#: src/components/map/MapExperience.tsx:502
 msgid "Local map"
 msgstr "Mappa locale"
 
@@ -8307,7 +8327,7 @@ msgstr "Sono state avviate molte mappe proprio ora. Riprova tra un attimo."
 
 #: src/routes/project/present/blockLabel.ts:6
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:147
-#: src/components/map/MapPage.tsx:599
+#: src/components/map/MapPage.tsx:600
 msgid "Map"
 msgstr "Mappa"
 
@@ -8319,7 +8339,7 @@ msgstr "Mappa | dembrane"
 msgid "Map arguments"
 msgstr "Argomenti della Map"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:122
+#: src/components/map/panels/MapSettingsMenu.tsx:123
 msgid "Map budget"
 msgstr "Budget mappa"
 
@@ -9420,7 +9440,7 @@ msgstr "Al momento nessuno spazio di lavoro di questa organizzazione è condivis
 msgid "No workspaces match \"{search}\"."
 msgstr "Nessuno spazio di lavoro corrisponde a \"{search}\"."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:126
+#: src/components/map/panels/MapSettingsMenu.tsx:127
 msgid "Nodes"
 msgstr "Nodi"
 
@@ -9975,7 +9995,7 @@ msgstr "Apertura e cornice"
 msgid "Opening screens"
 msgstr "Schermate di apertura"
 
-#: src/components/map/panels/SpotlightPanel.tsx:169
+#: src/components/map/panels/SpotlightPanel.tsx:176
 msgid "Opinion"
 msgstr "Opinione"
 
@@ -10239,9 +10259,9 @@ msgstr "Titolo della pagina"
 msgid "Paid"
 msgstr "A pagamento"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:202
 #: src/components/map/panels/MapSettingsMenu.tsx:203
-#: src/components/map/panels/MapSettingsMenu.tsx:211
+#: src/components/map/panels/MapSettingsMenu.tsx:204
+#: src/components/map/panels/MapSettingsMenu.tsx:212
 msgid "Panel settings"
 msgstr "Impostazioni pannello"
 
@@ -11260,7 +11280,7 @@ msgstr "Limite di richieste raggiunto"
 msgid "Rating"
 msgstr "Valutazione"
 
-#: src/components/map/panels/SpotlightPanel.tsx:334
+#: src/components/map/panels/SpotlightPanel.tsx:348
 msgid "Re-check"
 msgstr "Ricontrolla"
 
@@ -11637,7 +11657,7 @@ msgstr "Register | dembrane"
 
 #: src/components/map/panels/NodeDetailCard.tsx:323
 #: src/components/map/panels/NodeDetailCard.tsx:529
-#: src/components/map/panels/MapSettingsMenu.tsx:231
+#: src/components/map/panels/MapSettingsMenu.tsx:232
 msgid "Relationships"
 msgstr "Relazioni"
 
@@ -13399,7 +13419,7 @@ msgstr "Mostra tutti {0}"
 msgid "Show all {total}"
 msgstr "Mostra tutti {total}"
 
-#: src/components/map/MapPage.tsx:719
+#: src/components/map/MapPage.tsx:724
 msgid "Show all conversations"
 msgstr "Mostra tutte le conversazioni"
 
@@ -13407,7 +13427,7 @@ msgstr "Mostra tutte le conversazioni"
 msgid "Show audio player"
 msgstr "Show audio player"
 
-#: src/components/map/MapPage.tsx:701
+#: src/components/map/MapPage.tsx:706
 msgid "Show current arguments"
 msgstr "Mostra gli argomenti attuali"
 
@@ -13513,7 +13533,7 @@ msgstr "Mostra il tuo logo ai partecipanti, disponibile su richiesta."
 
 #: src/components/map/panels/ShowcasePanel.tsx:86
 #: src/components/map/panels/ShowcasePanel.tsx:89
-#: src/components/map/panels/MapSettingsMenu.tsx:71
+#: src/components/map/panels/MapSettingsMenu.tsx:72
 msgid "Showcase"
 msgstr "Vetrina"
 
@@ -13527,7 +13547,7 @@ msgstr "Mostrati {0} di {1}"
 msgid "Showing {displayFrom}–{displayTo} of {totalItems} entries"
 msgstr "Showing {displayFrom}–{displayTo} of {totalItems} entries"
 
-#: src/components/map/MapExperience.tsx:108
+#: src/components/map/MapExperience.tsx:113
 msgid "Showing {drawn} of {available} connections"
 msgstr "Mostrati {drawn} di {available} collegamenti"
 
@@ -13535,7 +13555,7 @@ msgstr "Mostrati {drawn} di {available} collegamenti"
 msgid "Showing {rangeStart}-{rangeEnd} of {total}"
 msgstr "{rangeStart}-{rangeEnd} di {total}"
 
-#: src/components/map/MapPage.tsx:694
+#: src/components/map/MapPage.tsx:699
 msgid "Showing the arguments of one result."
 msgstr "Sono mostrati gli argomenti di un risultato."
 
@@ -13602,7 +13622,7 @@ msgstr "Slack community"
 msgid "Smoother recording and quicker questions"
 msgstr "Registrazioni più semplici, domande più veloci"
 
-#: src/components/map/MapPage.tsx:688
+#: src/components/map/MapPage.tsx:693
 msgid "Some arguments are based on an earlier analysis."
 msgstr "Alcuni argomenti si basano su un’analisi precedente."
 
@@ -13817,9 +13837,9 @@ msgstr "Specific Details - Selected conversations"
 msgid "Specific Details chat respects manual conversation selection."
 msgstr "La chat Dettagli specifici rispetta la selezione manuale delle conversazioni."
 
-#: src/components/map/panels/SpotlightPanel.tsx:181
-#: src/components/map/panels/SpotlightPanel.tsx:183
-#: src/components/map/panels/MapSettingsMenu.tsx:72
+#: src/components/map/panels/SpotlightPanel.tsx:188
+#: src/components/map/panels/SpotlightPanel.tsx:190
+#: src/components/map/panels/MapSettingsMenu.tsx:73
 msgid "Spotlight"
 msgstr "In primo piano"
 
@@ -13980,7 +14000,7 @@ msgstr "Stop"
 msgid "participant.button.stop"
 msgstr "Stop"
 
-#: src/components/map/panels/SpotlightPanel.tsx:95
+#: src/components/map/panels/SpotlightPanel.tsx:100
 msgid "Stop coloring graph by conversation"
 msgstr "Non colorare più il grafico per conversazione"
 
@@ -13988,11 +14008,11 @@ msgstr "Non colorare più il grafico per conversazione"
 #~ msgid "Stop coloring graph by fact-check"
 #~ msgstr ""
 
-#: src/components/map/panels/SpotlightPanel.tsx:236
+#: src/components/map/panels/SpotlightPanel.tsx:250
 msgid "Stop coloring graph by factual status"
 msgstr "Non colorare più il grafico per stato dei fatti"
 
-#: src/components/map/panels/SpotlightPanel.tsx:215
+#: src/components/map/panels/SpotlightPanel.tsx:229
 msgid "Stop coloring graph by valence"
 msgstr "Non colorare più il grafico per valenza"
 
@@ -14507,7 +14527,7 @@ msgstr "Impossibile caricare la bozza"
 #~ msgid "The draft could not be loaded."
 #~ msgstr "Impossibile caricare la bozza."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:89
+#: src/components/map/panels/MapSettingsMenu.tsx:90
 msgid "The edge budget must be a whole number above zero, so {applied} applies."
 msgstr "Il budget di archi deve essere un numero intero maggiore di zero, quindi viene applicato {applied}."
 
@@ -14584,11 +14604,11 @@ msgid "The invite was sent to {invitedEmail}, but you're signed in as {myEmail}.
 msgstr "L'invito è stato inviato a {invitedEmail}, ma hai effettuato l'accesso come {myEmail}. Esci e registrati con l'indirizzo corretto, oppure chiedi all'amministratore di invitare nuovamente {myEmail}."
 
 #. placeholder {0}: failedAttempt.error ?? ""
-#: src/components/map/MapPage.tsx:654
+#: src/components/map/MapPage.tsx:659
 msgid "The last generation failed, so this is still the previous map. {0}"
 msgstr "L'ultima generazione non è riuscita, quindi questa è ancora la mappa precedente. {0}"
 
-#: src/components/map/MapExperience.tsx:134
+#: src/components/map/MapExperience.tsx:139
 msgid "The layout could not be computed for this scope."
 msgstr "Impossibile calcolare il layout per questo ambito."
 
@@ -14614,7 +14634,7 @@ msgid "The live popcorn deck and the canvases built for this project live here."
 msgstr "La deck live di Popcorn e i canvas creati per questo progetto si trovano qui."
 
 #. placeholder {0}: failedAttempt.error ?? ""
-#: src/components/map/MapPage.tsx:659
+#: src/components/map/MapPage.tsx:664
 msgid "The map could not be generated. {0}"
 msgstr "Impossibile generare la mappa. {0}"
 
@@ -14672,7 +14692,7 @@ msgstr "Il nome di questa parte interessata"
 msgid "The new sidebar brings organisations, workspaces, members and settings together."
 msgstr "La nuova barra laterale riunisce organizzazioni, spazi di lavoro, membri e impostazioni."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:88
+#: src/components/map/panels/MapSettingsMenu.tsx:89
 msgid "The node budget must be a whole number above zero, so {applied} applies."
 msgstr "Il budget dei nodi deve essere un numero intero maggiore di zero, quindi si applica {applied}."
 
@@ -14780,7 +14800,7 @@ msgstr "The summary is being regenerated. Please wait for it to be available."
 msgid "The thank you page ends on a card inviting participants to run their own event with dembrane."
 msgstr "La pagina di ringraziamento termina con una scheda che invita i partecipanti a organizzare il proprio evento con dembrane."
 
-#: src/components/map/panels/ExplorePanel.tsx:108
+#: src/components/map/panels/HistoryPanel.tsx:69
 msgid "The title could not be generated."
 msgstr "Impossibile generare il titolo."
 
@@ -14948,7 +14968,7 @@ msgstr "Impossibile aggiornare questo canvas."
 msgid "This changes how transcripts are stored from here on. Conversations already recorded keep the form they were saved in."
 msgstr "Questo modifica il modo in cui verranno salvate le trascrizioni da ora in poi. Le conversazioni già registrate manterranno il formato in cui sono state salvate."
 
-#: src/components/map/panels/SpotlightPanel.tsx:285
+#: src/components/map/panels/SpotlightPanel.tsx:299
 msgid "This claim has not been fact-checked."
 msgstr "Questa affermazione non è stata verificata."
 
@@ -14966,11 +14986,11 @@ msgstr "This conversation is a copy of"
 msgid "This deployment can open maps with up to {maximumCount} arguments."
 msgstr "Questo ambiente può aprire mappe con un massimo di {maximumCount} argomenti."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:93
+#: src/components/map/panels/MapSettingsMenu.tsx:94
 msgid "This deployment shows up to {applied} edges."
 msgstr "Questa distribuzione mostra fino a {applied} collegamenti."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:92
+#: src/components/map/panels/MapSettingsMenu.tsx:93
 msgid "This deployment shows up to {applied} nodes."
 msgstr "Questa distribuzione mostra fino a {applied} nodi."
 
@@ -15250,7 +15270,7 @@ msgstr "Questo riporta lo spazio di lavoro alla fatturazione condivisa dell'orga
 #~ msgid "This revision is unavailable."
 #~ msgstr ""
 
-#: src/components/map/panels/ExplorePanel.tsx:106
+#: src/components/map/panels/HistoryPanel.tsx:75
 msgid "This selection is too large to title."
 msgstr "Questa selezione è troppo grande per assegnare un titolo."
 
@@ -15703,7 +15723,7 @@ msgstr "Traduzione in corso: {translated} di {total} in {language}"
 msgid "Translation progress"
 msgstr "Avanzamento traduzione"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:73
+#: src/components/map/panels/MapSettingsMenu.tsx:74
 msgid "Tree"
 msgstr "Albero"
 
@@ -15739,8 +15759,8 @@ msgstr "Problemi di accesso? Contatta support@dembrane.com."
 #: src/components/pricing/PricingTextInput.tsx:330
 #: src/components/present/TranslationStatus.tsx:143
 #: src/components/map/MapPage.tsx:130
-#: src/components/map/panels/SpotlightPanel.tsx:353
-#: src/components/map/panels/ExplorePanel.tsx:113
+#: src/components/map/panels/SpotlightPanel.tsx:367
+#: src/components/map/panels/HistoryPanel.tsx:180
 #: src/components/dropzone/UploadConversationDropzone.tsx:865
 #: src/components/common/FetchErrorPanel.tsx:35
 #: src/components/billing/BillingManager.tsx:1217
@@ -16319,7 +16339,7 @@ msgstr "Usa i modelli di domande fissati e salvati da Chiedi, inclusa la scorcia
 msgid "Use Shift + Enter to add a new line"
 msgstr "Use Shift + Enter to add a new line"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:161
+#: src/components/map/panels/MapSettingsMenu.tsx:162
 msgid "Use the default budget"
 msgstr "Usa il budget predefinito"
 
@@ -16372,6 +16392,7 @@ msgid "Using webhooks? We'd love to hear from you"
 msgstr "Using webhooks? We'd love to hear from you"
 
 #: src/components/map/attributes.ts:350
+#: src/components/map/panels/ClusterSummary.tsx:161
 msgid "Valence"
 msgstr "Valenza"
 
@@ -16548,11 +16569,11 @@ msgstr "Visualizzazioni: {0}"
 msgid "Visible columns"
 msgstr "Colonne visibili"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:137
+#: src/components/map/panels/MapSettingsMenu.tsx:138
 msgid "Visible edges"
 msgstr "Collegamenti visibili"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:95
+#: src/components/map/panels/MapSettingsMenu.tsx:96
 msgid "Visible edges raised to {applied} so the tree over {nodeLimit} nodes fits."
 msgstr "Collegamenti visibili aumentati a {applied} per far rientrare l'albero di oltre {nodeLimit} nodi."
 
