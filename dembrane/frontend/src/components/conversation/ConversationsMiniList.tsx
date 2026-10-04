@@ -64,14 +64,14 @@ const ConversationStatus = ({
 		return (
 			<Group gap={4} wrap="nowrap" c="red">
 				<Box w={8} h={8} bg="red" className="rounded-full" />
-				<Text size="sm" c="red">
+				<Text size="xs" c="red">
 					<Trans>Live</Trans>
 				</Text>
 			</Group>
 		);
 	if (conversation.has_transcription_error)
 		return (
-			<Text size="sm" c="red">
+			<Text size="xs" c="red">
 				<Trans>Transcription error</Trans>
 			</Text>
 		);
@@ -80,7 +80,7 @@ const ConversationStatus = ({
 		!conversation.has_only_text_chunks
 	)
 		return (
-			<Text size="sm" c="dimmed">
+			<Text size="xs" c="dimmed">
 				<Trans>Transcribing</Trans>
 			</Text>
 		);
@@ -88,13 +88,13 @@ const ConversationStatus = ({
 		return (
 			<Group gap={4} wrap="nowrap">
 				<SealCheckIcon size={16} />
-				<Text size="sm">
+				<Text size="xs">
 					<Trans>Verified</Trans>
 				</Text>
 			</Group>
 		);
 	return (
-		<Text size="sm" c="dimmed">
+		<Text size="xs" c="dimmed">
 			<Trans>Done</Trans>
 		</Text>
 	);
@@ -351,7 +351,7 @@ const MiniRow = ({
 				gap="md"
 				className="app-stack-narrow"
 			>
-				<Text size="md" lineClamp={2}>
+				<Text size="sm" lineClamp={2}>
 					{title}
 				</Text>
 				<Box style={{ flexShrink: 0 }}>
@@ -359,13 +359,13 @@ const MiniRow = ({
 				</Box>
 			</Group>
 			<Group gap="xs" wrap="wrap">
-				<Text size="sm" c="dimmed">
+				<Text size="xs" c="dimmed">
 					{duration ? `${when} · ${duration}` : when}
 				</Text>
 				{tags.map((tag) => {
 					const text = getTagText(tag);
 					return text ? (
-						<Badge key={tag.id} size="sm" color="gray">
+						<Badge key={tag.id} size="xs" color="gray">
 							{text}
 						</Badge>
 					) : null;
