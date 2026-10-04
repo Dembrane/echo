@@ -586,8 +586,9 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 
 	return (
 		<div className="flex h-full min-h-0 flex-col" style={MAP_LIGHT_VARS}>
-			{/* One row, to give the map the height: the title, what it holds and
-			    its controls. A narrow screen drops the counts first. */}
+			{/* One row, to give the map the height: the title and what it holds
+			    on the left, its controls on the right. A narrow screen drops the
+			    counts first. */}
 			<Group
 				gap="sm"
 				align="center"
@@ -610,34 +611,38 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 						{countsLine}
 					</Text>
 				)}
-				{!offline && (
-					<GenerationControls
-						hasResult={Boolean(graph)}
-						attempt={attempt}
-						readOnly={readOnly}
-						isStarting={generate.isPending}
-						nothingToRead={nothingToRead}
-						onGenerate={() => generate.mutate()}
-					/>
-				)}
-				{graph && argumentCount > 0 && (
-					<MapSettingsMenu
-						settings={settings}
-						onChange={updateSettings}
-						colorBy={colorBy}
-						onColorByChange={handleColorByChange}
-						budgets={budgetResolution}
-						bounds={bounds}
-						pendingClaimCount={pendingClaims.length}
-						onFactCheckAll={handleFactCheckAll}
-						canFactCheck={!readOnly}
-						conversations={conversations}
-						hiddenConversations={hiddenConversations}
-						onHiddenConversationsChange={(hidden) =>
-							setUrlState({ hidden: [...hidden] })
-						}
-					/>
-				)}
+				{/* The controls keep the row's right edge, a choice for this page
+				    over the flush-left canon. */}
+				<Group gap="sm" wrap="nowrap" ml="auto" className="shrink-0">
+					{!offline && (
+						<GenerationControls
+							hasResult={Boolean(graph)}
+							attempt={attempt}
+							readOnly={readOnly}
+							isStarting={generate.isPending}
+							nothingToRead={nothingToRead}
+							onGenerate={() => generate.mutate()}
+						/>
+					)}
+					{graph && argumentCount > 0 && (
+						<MapSettingsMenu
+							settings={settings}
+							onChange={updateSettings}
+							colorBy={colorBy}
+							onColorByChange={handleColorByChange}
+							budgets={budgetResolution}
+							bounds={bounds}
+							pendingClaimCount={pendingClaims.length}
+							onFactCheckAll={handleFactCheckAll}
+							canFactCheck={!readOnly}
+							conversations={conversations}
+							hiddenConversations={hiddenConversations}
+							onHiddenConversationsChange={(hidden) =>
+								setUrlState({ hidden: [...hidden] })
+							}
+						/>
+					)}
+				</Group>
 			</Group>
 
 			{(failedAttempt ||
