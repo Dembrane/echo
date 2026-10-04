@@ -324,7 +324,7 @@ export const AppBreadcrumbs = () => {
 						<Menu.Target>
 							<UnstyledButton
 								aria-label={t`Show the path to this page`}
-								className="flex h-8 w-8 items-center justify-center hover:bg-[#e6e3df]"
+								className="flex h-8 w-8 items-center justify-center hover:bg-[var(--app-quiet)]"
 								style={{ color: "var(--app-text)" }}
 							>
 								<DotsThreeIcon size={20} />

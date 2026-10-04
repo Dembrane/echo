@@ -1,7 +1,8 @@
+import { useComputedColorScheme } from "@mantine/core";
 import { ArrowSquareOutIcon } from "@phosphor-icons/react";
 import { type CSSProperties, type Ref, useState } from "react";
 import { QRCode as Q } from "react-qrcode-logo";
-import { roles } from "@/colors";
+import { darkRoles, roles } from "@/colors";
 
 import { CURRENT_BRAND } from "./Logo";
 
@@ -17,7 +18,10 @@ interface QRCodeProps {
 	ref?: Ref<HTMLDivElement>;
 	className?: string;
 	style?: CSSProperties;
-	/** Light modules on a dark field, for a screen the room has turned down. */
+	/** Light modules on a dark field, for a screen the room has turned down.
+	 * Left out, the code follows the colour scheme (on the page's own black in
+	 * dark); pass false for a code that must stay black on white (a download,
+	 * an authenticator app). */
 	inverted?: boolean;
 	/** Names the link for a screen reader; the code itself is an image. */
 	"aria-label"?: string;
@@ -30,27 +34,34 @@ export const QRCode = ({
 	ref,
 	className,
 	style,
-	inverted = false,
+	inverted,
 	"aria-label": ariaLabel,
 	"data-testid": dataTestId,
 }: QRCodeProps) => {
 	const [hovered, setHovered] = useState(false);
+	const dark = useComputedColorScheme("light") === "dark";
+	const isInverted = inverted ?? dark;
+	const field = isInverted
+		? inverted === undefined
+			? darkRoles.bg
+			: INVERTED_FIELD
+		: "#FFFFFF";
 
 	const qrElement = (
 		<Q
 			value={value}
 			logoImage={
 				CURRENT_BRAND === "dembrane"
-					? inverted
+					? isInverted
 						? "/dembrane-logomark-cropped-dark.png"
 						: "/dembrane-logomark-cropped.png"
 					: "/aiconl-logo-hq.png"
 			}
 			logoWidth={200}
 			logoHeight={200}
-			fgColor={inverted ? INVERTED_INK : "#000000"}
-			bgColor={inverted ? INVERTED_FIELD : "#FFFFFF"}
-			eyeColor={inverted ? INVERTED_INK : "#000000"}
+			fgColor={isInverted ? INVERTED_INK : "#000000"}
+			bgColor={field}
+			eyeColor={isInverted ? INVERTED_INK : "#000000"}
 			logoPadding={16}
 			removeQrCodeBehindLogo
 			logoPaddingStyle="circle"
@@ -82,8 +93,8 @@ export const QRCode = ({
 			target="_blank"
 			rel="noopener noreferrer"
 			aria-label={ariaLabel}
-			className={`relative block cursor-pointer overflow-hidden ${inverted ? "bg-[#1B1B1A]" : "bg-white"} transition-all ${className ?? ""}`}
-			style={style}
+			className={`relative block cursor-pointer overflow-hidden transition-all ${className ?? ""}`}
+			style={{ backgroundColor: field, ...style }}
 			data-testid={dataTestId}
 			onMouseEnter={() => setHovered(true)}
 			onMouseLeave={() => setHovered(false)}

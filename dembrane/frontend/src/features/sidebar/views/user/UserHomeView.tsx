@@ -121,7 +121,7 @@ export const UserHomeView = () => {
 							<button
 								type="button"
 								onClick={createOrgHandlers.open}
-								className="relative flex h-[30px] items-center gap-2 px-2 text-sm leading-tight transition-colors hover:bg-[#e6e3df] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#2957df]"
+								className="relative flex h-[30px] items-center gap-2 px-2 text-sm leading-tight transition-colors hover:bg-[var(--app-quiet)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--app-action)]"
 								style={{ color: roles.action }}
 								data-testid="sidebar-create-org"
 							>

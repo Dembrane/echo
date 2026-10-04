@@ -213,8 +213,8 @@ export const HelpBlock = () => {
 							onClick={() => setBubbled((b) => !b)}
 							className={cn(
 								RAIL_ITEM_CLASS,
-								"hover:bg-[#e6e3df]",
-								bubbled && "bg-[#e6e3df]",
+								"hover:bg-[var(--app-quiet)]",
+								bubbled && "bg-[var(--app-quiet)]",
 							)}
 							style={{ color: roles.text }}
 						>

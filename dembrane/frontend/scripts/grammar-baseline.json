@@ -45,7 +45,7 @@
 			"words.denylist": 1
 		},
 		"src/components/common/QRCode.tsx": {
-			"color.hex-literal": 6,
+			"color.hex-literal": 5,
 			"icon.size": 1
 		},
 		"src/components/common/RedactedText.tsx": {
@@ -77,9 +77,6 @@
 		},
 		"src/components/feedback/AdminResponseFeedbackPanel.tsx": {
 			"words.denylist": 1
-		},
-		"src/components/feedback/ReportIssueModal.tsx": {
-			"color.hex-literal": 1
 		},
 		"src/components/form/MarkdownWYSIWYG/styles.css": {
 			"css.font-weight": 4
@@ -250,44 +247,8 @@
 		"src/features/accounts/staff/UploadPdfModal.tsx": {
 			"action.right-aligned": 1
 		},
-		"src/features/sidebar/blocks/HelpBlock.tsx": {
-			"color.hex-literal": 2
-		},
-		"src/features/sidebar/blocks/SearchBlock.tsx": {
-			"color.hex-literal": 2
-		},
-		"src/features/sidebar/breadcrumbs/AppBreadcrumbs.tsx": {
-			"color.hex-literal": 1
-		},
-		"src/features/sidebar/primitives/BackButton.tsx": {
-			"color.hex-literal": 3
-		},
-		"src/features/sidebar/primitives/NavButton.tsx": {
-			"color.hex-literal": 3
-		},
-		"src/features/sidebar/primitives/NavItem.tsx": {
-			"color.hex-literal": 2
-		},
-		"src/features/sidebar/primitives/ViewHeader.tsx": {
-			"color.hex-literal": 3
-		},
-		"src/features/sidebar/shell/rail.tsx": {
-			"color.hex-literal": 1
-		},
-		"src/features/sidebar/shell/SidebarHeader.tsx": {
-			"color.hex-literal": 1
-		},
 		"src/features/sidebar/shell/SidebarShell.tsx": {
 			"shape.shadow": 1
-		},
-		"src/features/sidebar/shell/UserMenu.tsx": {
-			"color.hex-literal": 2
-		},
-		"src/features/sidebar/views/InboxView.tsx": {
-			"color.hex-literal": 3
-		},
-		"src/features/sidebar/views/user/UserHomeView.tsx": {
-			"color.hex-literal": 2
 		},
 		"src/icons/index.tsx": {
 			"color.hex-literal": 5,

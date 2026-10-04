@@ -8,7 +8,9 @@
       }
     </script>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/src/assets/dembrane-logo.png" />
+    <!-- The logomark; its parchment cut when the system is dark (browser chrome follows the system, not the app) -->
+    <link rel="icon" type="image/png" href="/src/assets/dembrane-logo.png" media="(prefers-color-scheme: light)" />
+    <link rel="icon" type="image/png" href="/src/assets/favicon-dark.png" media="(prefers-color-scheme: dark)" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://tally.so/widgets/embed.js"></script>
     <title>dembrane</title>

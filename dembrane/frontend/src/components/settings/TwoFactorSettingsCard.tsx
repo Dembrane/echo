@@ -210,7 +210,7 @@ export const TwoFactorSettingsCard = ({
 				<Paper withBorder p="md">
 					<Stack gap="sm" align="center">
 						<div className="h-[200px] w-[200px]">
-							<QRCode value={generatedSecret.otpauth_url} />
+							<QRCode value={generatedSecret.otpauth_url} inverted={false} />
 						</div>
 						<Group align="center" gap="xs">
 							<Text size="lg">{generatedSecret.secret}</Text>

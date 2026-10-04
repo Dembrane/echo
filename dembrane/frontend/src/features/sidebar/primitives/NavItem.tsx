@@ -108,7 +108,7 @@ export const NavItem = ({
 				<span
 					data-testid="rail-badge-dot"
 					aria-hidden="true"
-					className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full ring-2 ring-parchment"
+					className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full ring-2 ring-[var(--app-background)]"
 					style={{ backgroundColor: RAIL_DOT_COLORS[badgeTone] }}
 				/>
 			) : null;
@@ -138,7 +138,7 @@ export const NavItem = ({
 					end={end}
 					className={cn(
 						RAIL_ITEM_CLASS,
-						!active && "hover:bg-[#e6e3df]",
+						!active && "hover:bg-[var(--app-quiet)]",
 						!active && muted && "app-muted",
 					)}
 					style={{
@@ -193,7 +193,7 @@ export const NavItem = ({
 			to={localePath}
 			end={end}
 			className={cn(
-				"relative flex h-[30px] items-center gap-2 text-sm leading-tight transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#2957df]",
+				"relative flex h-[30px] items-center gap-2 text-sm leading-tight transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--app-action)]",
 				inset ? "pr-2 pl-8" : "px-2",
 				!active && muted && "app-muted",
 			)}

@@ -73,7 +73,7 @@ export const UserMenu = () => {
 					<RailTip label={user.first_name ?? user.email ?? ""}>
 						<Menu.Target>
 							<UnstyledButton
-								className={cn(RAIL_ITEM_CLASS, "hover:bg-[#e6e3df]")}
+								className={cn(RAIL_ITEM_CLASS, "hover:bg-[var(--app-quiet)]")}
 								style={{ color: roles.text }}
 							>
 								<UserAvatar size={24} />
@@ -86,7 +86,7 @@ export const UserMenu = () => {
 				) : (
 					<Menu.Target>
 						<UnstyledButton
-							className="flex h-[36px] w-full items-center gap-2 px-2 transition-colors hover:bg-[#e6e3df]"
+							className="flex h-[36px] w-full items-center gap-2 px-2 transition-colors hover:bg-[var(--app-quiet)]"
 							style={{ color: roles.text }}
 						>
 							<UserAvatar size={22} />

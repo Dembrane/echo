@@ -16,7 +16,7 @@ export const ViewHeader = ({ to, title }: ViewHeaderProps) => {
 			<RailTip label={title}>
 				<I18nLink
 					to={to}
-					className={cn(RAIL_ITEM_CLASS, "hover:bg-[#e6e3df]")}
+					className={cn(RAIL_ITEM_CLASS, "hover:bg-[var(--app-quiet)]")}
 					style={{ color: roles.text }}
 				>
 					<ArrowLeft size={16} aria-hidden="true" />
@@ -29,7 +29,7 @@ export const ViewHeader = ({ to, title }: ViewHeaderProps) => {
 	return (
 		<I18nLink
 			to={to}
-			className="group flex h-[36px] items-center gap-2 px-2 text-sm leading-tight transition-colors hover:bg-[#e6e3df] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#2957df]"
+			className="group flex h-[36px] items-center gap-2 px-2 text-sm leading-tight transition-colors hover:bg-[var(--app-quiet)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--app-action)]"
 			style={{ color: roles.text }}
 		>
 			<ArrowLeft

@@ -101,7 +101,7 @@ export const SearchBlock = () => {
 				>
 					<UnstyledButton
 						onClick={open}
-						className={cn(RAIL_ITEM_CLASS, "hover:bg-[#e6e3df]")}
+						className={cn(RAIL_ITEM_CLASS, "hover:bg-[var(--app-quiet)]")}
 						style={{ color: roles.text }}
 						aria-label={t`Search`}
 					>
@@ -111,7 +111,7 @@ export const SearchBlock = () => {
 			) : (
 				<UnstyledButton
 					onClick={open}
-					className="flex h-[30px] items-center gap-2 px-2 text-sm transition-colors hover:bg-[#e6e3df]"
+					className="flex h-[30px] items-center gap-2 px-2 text-sm transition-colors hover:bg-[var(--app-quiet)]"
 					style={{ color: roles.text, width: "100%" }}
 					aria-label={t`Search`}
 				>

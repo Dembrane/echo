@@ -481,7 +481,7 @@ const NotificationRowItem = ({
 						e.stopPropagation();
 						onMarkRead();
 					}}
-					className="absolute bottom-1 right-1 flex h-6 w-6 items-center justify-center transition-colors hover:bg-[#e6e3df]"
+					className="absolute bottom-1 right-1 flex h-6 w-6 items-center justify-center transition-colors hover:bg-[var(--app-quiet)]"
 					style={{ color: "var(--mantine-color-dimmed)" }}
 				>
 					<Check size={16} />
@@ -519,7 +519,7 @@ const AnnouncementRowItem = ({
 
 	return (
 		<div
-			className="group relative border px-2 py-2 transition-colors hover:bg-[#e6e3df]"
+			className="group relative border px-2 py-2 transition-colors hover:bg-[var(--app-quiet)]"
 			style={{
 				borderColor: "var(--app-rule-color)",
 				color: roles.text,
@@ -572,7 +572,7 @@ const AnnouncementRowItem = ({
 					e.stopPropagation();
 					toggleRead();
 				}}
-				className="absolute bottom-1 right-1 flex h-6 w-6 items-center justify-center transition-colors hover:bg-[#e6e3df]"
+				className="absolute bottom-1 right-1 flex h-6 w-6 items-center justify-center transition-colors hover:bg-[var(--app-quiet)]"
 				style={{ color: "var(--mantine-color-dimmed)" }}
 			>
 				{isRead ? <ArrowCounterClockwise size={16} /> : <Check size={16} />}

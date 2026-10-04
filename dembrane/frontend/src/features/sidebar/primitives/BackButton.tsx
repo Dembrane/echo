@@ -20,7 +20,7 @@ export const BackButton = ({ to, label, center }: BackButtonProps) => {
 			<RailTip label={label}>
 				<I18nLink
 					to={to}
-					className={cn(RAIL_ITEM_CLASS, "text-graphite hover:bg-[#e6e3df]")}
+					className={cn(RAIL_ITEM_CLASS, "text-[var(--app-text)] hover:bg-[var(--app-quiet)]")}
 				>
 					<ArrowLeft size={16} aria-hidden="true" />
 					<span className="sr-only">{label}</span>
@@ -31,10 +31,10 @@ export const BackButton = ({ to, label, center }: BackButtonProps) => {
 
 	if (center) {
 		return (
-			<div className="sticky top-0 z-10 -mx-1.5 -mt-1.5 bg-parchment px-1.5 pt-1.5">
+			<div className="sticky top-0 z-10 -mx-1.5 -mt-1.5 bg-[var(--app-background)] px-1.5 pt-1.5">
 				<I18nLink
 					to={to}
-					className="group relative flex h-[30px] items-center gap-2 px-2 text-sm leading-tight text-graphite transition-colors hover:bg-[#e6e3df] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+					className="group relative flex h-[30px] items-center gap-2 px-2 text-sm leading-tight text-[var(--app-text)] transition-colors hover:bg-[var(--app-quiet)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
 				>
 					<ArrowLeft
 						size={16}
@@ -50,7 +50,7 @@ export const BackButton = ({ to, label, center }: BackButtonProps) => {
 	return (
 		<I18nLink
 			to={to}
-			className="group flex h-[30px] items-center gap-2 px-2 text-sm leading-tight text-graphite transition-colors hover:bg-[#e6e3df] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+			className="group flex h-[30px] items-center gap-2 px-2 text-sm leading-tight text-[var(--app-text)] transition-colors hover:bg-[var(--app-quiet)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
 		>
 			<ArrowLeft
 				size={16}

@@ -38,7 +38,7 @@ export const SidebarHeader = () => {
 						type="button"
 						onClick={() => setCollapsed(false)}
 						aria-label={t`Open menu`}
-						className={cn(RAIL_ITEM_CLASS, "app-muted hover:bg-[#e6e3df]")}
+						className={cn(RAIL_ITEM_CLASS, "app-muted hover:bg-[var(--app-quiet)]")}
 						style={{ color: "var(--mantine-color-dimmed)" }}
 					>
 						<SidebarSimple size={20} aria-hidden="true" />
