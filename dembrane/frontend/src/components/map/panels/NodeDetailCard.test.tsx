@@ -370,21 +370,37 @@ describe("Spotlight fact-check controls", () => {
 		).toBeNull();
 	});
 
-	it("leads with the statement and its chits, outside the scroll", () => {
+	it("leads with the statement and its chips, with details on demand", () => {
 		const node = withMetadata(argumentNode, { factCheckEligible: false });
-		renderSpotlight(node);
-		const statement = screen.getByTestId("spotlight-statement");
-		expect(statement.textContent).toBe(node.label);
-		expect(statement.closest(".overflow-y-auto")).toBeNull();
+		const onOpenDetails = vi.fn();
+		render(
+			<Providers>
+				<SpotlightPanel
+					node={node}
+					evidence={[]}
+					factCheck={undefined}
+					colorBy="factCheck"
+					onColorByChange={vi.fn()}
+					canFactCheck
+					onFactCheck={vi.fn()}
+					onCancelFactCheck={vi.fn()}
+					onOpenDetails={onOpenDetails}
+					rows={<p>earlier rows</p>}
+				/>
+			</Providers>,
+		);
+		expect(screen.getByTestId("spotlight-statement").textContent).toBe(
+			node.label,
+		);
 		expect(screen.queryByTestId("result-stage")).toBeNull();
-		// The fact-check explanation scrolls under them
 		expect(
-			screen
-				.getByText(
-					"Arguments express stances or preferences and aren't fact-checked.",
-				)
-				.closest(".overflow-y-auto"),
-		).not.toBeNull();
+			screen.getByText(
+				"Arguments express stances or preferences and aren't fact-checked.",
+			),
+		).toBeTruthy();
+		fireEvent.click(screen.getByRole("button", { name: "Connections" }));
+		expect(onOpenDetails).toHaveBeenCalledWith("connections");
+		expect(screen.getByText("earlier rows")).toBeTruthy();
 	});
 
 	it("says factual status does not apply to a tension", () => {

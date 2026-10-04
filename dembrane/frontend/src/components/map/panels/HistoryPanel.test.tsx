@@ -9,7 +9,7 @@ import { createSyntheticMap } from "../fixtures/syntheticMap";
 import type { Distillation } from "../hooks/useSelectionTitle";
 import type { MapGraphNode } from "../types";
 import { attributeShares, conversationShares } from "./ClusterSummary";
-import { type HistoryItem, HistoryPanel } from "./HistoryPanel";
+import { type HistoryItem, HistoryRows } from "./HistoryPanel";
 
 i18n.load("en-US", {});
 i18n.activate("en-US");
@@ -62,7 +62,7 @@ const cluster = (
 	kind: "cluster",
 });
 
-describe("HistoryPanel", () => {
+describe("HistoryRows", () => {
 	it("lists arguments and clusters, and brings one back when chosen", () => {
 		const onSelect = vi.fn();
 		const argument: HistoryItem = {
@@ -73,10 +73,9 @@ describe("HistoryPanel", () => {
 		};
 		render(
 			<Providers>
-				<HistoryPanel
+				<HistoryRows
 					items={[argument, cluster("done", "A shared worry")]}
 					nodesById={nodesById}
-					selectedId={argument.id}
 					onSelect={onSelect}
 					onRetry={vi.fn()}
 				/>
@@ -85,9 +84,6 @@ describe("HistoryPanel", () => {
 		expect(screen.getByText(nodes[3].label as string)).toBeTruthy();
 		expect(screen.getByText("A shared worry")).toBeTruthy();
 		expect(screen.getByText("3 arguments")).toBeTruthy();
-		expect(
-			screen.getByTestId("history-argument").getAttribute("aria-pressed"),
-		).toBe("true");
 
 		fireEvent.click(screen.getByText("A shared worry"));
 		expect(onSelect).toHaveBeenCalledWith(
@@ -100,10 +96,9 @@ describe("HistoryPanel", () => {
 		const onSelect = vi.fn();
 		render(
 			<Providers>
-				<HistoryPanel
+				<HistoryRows
 					items={[cluster("pending"), cluster("failed")]}
 					nodesById={nodesById}
-					selectedId={null}
 					onSelect={onSelect}
 					onRetry={onRetry}
 				/>

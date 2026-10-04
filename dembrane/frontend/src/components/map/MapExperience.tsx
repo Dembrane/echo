@@ -27,15 +27,16 @@ import {
 import type { EdgeCounts } from "./layout/edgeBudget";
 import { EMPTY_EDGES, useMapGeometry } from "./layout/useMapGeometry";
 import { ArgumentAccordion } from "./panels/ArgumentAccordion";
+import { DetailsModal, type DetailsTarget } from "./panels/DetailsModal";
 import {
 	type HistoryItem,
-	HistoryPanel,
+	HistoryRows,
 	resolveNodes,
 } from "./panels/HistoryPanel";
 import { Legend } from "./panels/Legend";
 import type { ConversationHref, NodeInspection } from "./panels/NodeDetailCard";
 import { ShowcasePanel } from "./panels/ShowcasePanel";
-import { SpotlightPanel } from "./panels/SpotlightPanel";
+import { type DetailsFrom, SpotlightPanel } from "./panels/SpotlightPanel";
 import { mapVars } from "./panels/shared";
 import { LocalMap } from "./renderers/LocalMapGraph";
 import { MstMap } from "./renderers/MstGraph";
@@ -271,6 +272,16 @@ export const MapExperience = ({
 	// biome-ignore lint/correctness/useExhaustiveDependencies: reset keyed on the result id only
 	useEffect(() => setClicks([]), [graph.resultId]);
 
+	// When each cluster was last spotlit, so a cluster brought back from the
+	// rows sorts as recent as a fresh click.
+	const [clusterTouched, setClusterTouched] = useState<Record<string, number>>(
+		{},
+	);
+	useEffect(() => {
+		const id = title.selectedDistillationId;
+		if (id) setClusterTouched((current) => ({ ...current, [id]: Date.now() }));
+	}, [title.selectedDistillationId]);
+
 	const historyItems = useMemo<HistoryItem[]>(
 		() =>
 			[
@@ -284,14 +295,17 @@ export const MapExperience = ({
 				),
 				...title.history.map(
 					(distillation): HistoryItem => ({
-						at: Date.parse(distillation.createdAt),
+						at: Math.max(
+							Date.parse(distillation.createdAt),
+							clusterTouched[distillation.id] ?? 0,
+						),
 						distillation,
 						id: distillation.id,
 						kind: "cluster",
 					}),
 				),
 			].sort((a, b) => b.at - a.at),
-		[clicks, title.history],
+		[clicks, clusterTouched, title.history],
 	);
 	const graphNodesById = useMemo(
 		() => new Map(graphNodes.map((node) => [node.id, node] as const)),
@@ -306,9 +320,26 @@ export const MapExperience = ({
 				nodes: resolveNodes(spotlightDistillation.nodeIds, graphNodesById),
 			}
 		: null;
-	const selectedHistoryId =
+	// The spotlit item leads the list expanded; everything else is a row.
+	const spotlitId =
 		title.selectedDistillationId ??
 		(selectedNodeId ? `argument-${selectedNodeId}` : null);
+	const historyRows = useMemo(
+		() => historyItems.filter((item) => item.id !== spotlitId),
+		[historyItems, spotlitId],
+	);
+	const clusterQuoteCount = spotlightCluster
+		? spotlightCluster.nodes.reduce(
+				(total, node) =>
+					total +
+					evidenceFor(node.id).reduce(
+						(sum, group) => sum + group.quotes.length,
+						0,
+					),
+				0,
+			)
+		: 0;
+	const [details, setDetails] = useState<DetailsFrom | null>(null);
 	const selectHistoryItem = useCallback(
 		(item: HistoryItem) => {
 			if (item.kind === "argument") store.setSelectedNodeId(item.nodeId);
@@ -377,9 +408,23 @@ export const MapExperience = ({
 		[evidenceFor, graph, nodesById, provenance, walk.nodeId],
 	);
 
+	const detailsTarget: DetailsTarget | null = spotlightCluster
+		? { kind: "cluster", ...spotlightCluster }
+		: spotlight.node
+			? {
+					inspection: spotlightInspection && {
+						...spotlightInspection,
+						onSelect: (nodeId: string) => {
+							setDetails(null);
+							selectNode(nodeId);
+						},
+					},
+					kind: "argument",
+					node: spotlight.node,
+				}
+			: null;
 	const { showShowcase, showSpotlight, showTree, showClusters } = settings;
-	const showExplore = settings.showExplore && titles;
-	const hasLeftPanel = showExplore || showShowcase || showSpotlight;
+	const hasLeftPanel = showShowcase || showSpotlight;
 	const availableCols = hasLeftPanel ? 9 : 12;
 	const visibleMaps = (showTree ? 1 : 0) + (showClusters ? 1 : 0);
 	const treeSpan =
@@ -420,18 +465,31 @@ export const MapExperience = ({
 									locale={i18n.locale}
 									inspection={spotlightInspection}
 									cluster={spotlightCluster}
-									onSelectNode={selectNode}
+									clusterQuoteCount={clusterQuoteCount}
+									onOpenDetails={setDetails}
+									rows={
+										<HistoryRows
+											items={historyRows}
+											nodesById={nodesById}
+											onSelect={selectHistoryItem}
+											onRetry={title.retry}
+											titles={titles}
+										/>
+									}
 								/>
-							</div>
-						)}
-						{showExplore && (
-							<div className="min-h-0 flex-1 overflow-hidden">
-								<HistoryPanel
-									items={historyItems}
-									nodesById={nodesById}
-									selectedId={selectedHistoryId}
-									onSelect={selectHistoryItem}
-									onRetry={title.retry}
+								<DetailsModal
+									target={detailsTarget}
+									opened={details !== null}
+									onClose={() => setDetails(null)}
+									quotesOpen={details === "quotes"}
+									evidenceFor={evidenceFor}
+									conversationHref={conversationHref}
+									nodesById={graphNodesById}
+									edges={mstEdges}
+									relations={graph.relations}
+									colorBy={colorBy}
+									darkMode={settings.darkMode}
+									onSelect={selectNode}
 								/>
 							</div>
 						)}

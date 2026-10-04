@@ -418,7 +418,10 @@ describe("AudienceMapAdapter", () => {
 
 		render(adapter(true));
 		await screen.findByText("Audience tree renderer");
-		expect(screen.queryByRole("region", { name: "History" })).toBeNull();
+		// No distilling for a public room: only clicked arguments are kept.
+		expect(
+			await screen.findByText("The arguments you click are kept here."),
+		).toBeTruthy();
 		fireEvent.click(screen.getByRole("button", { name: "Panel settings" }));
 		await screen.findByRole("checkbox", { name: "Showcase" });
 		expect(screen.queryByRole("checkbox", { name: "History" })).toBeNull();
@@ -428,7 +431,7 @@ describe("AudienceMapAdapter", () => {
 		expect(fetchMock.mock.calls.map(([url]) => url)).toEqual(["/audience/map"]);
 	});
 
-	it("gives a signed-in viewer the host page's History panel", async () => {
+	it("gives a signed-in viewer the host page's distilling in the Spotlight", async () => {
 		vi.stubGlobal(
 			"fetch",
 			vi.fn(async () => new Response(JSON.stringify({}), { status: 200 })),
@@ -436,7 +439,9 @@ describe("AudienceMapAdapter", () => {
 
 		render(adapter(true, 0, undefined, true));
 		await screen.findByText("Audience tree renderer");
-		expect(screen.getByRole("region", { name: "History" })).toBeTruthy();
+		expect(
+			await screen.findByText(/rest the cursor on a cluster/),
+		).toBeTruthy();
 	});
 
 	it("shows the evidence behind a finding, attributed and linking nowhere", async () => {

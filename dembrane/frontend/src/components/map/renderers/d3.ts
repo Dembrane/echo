@@ -37,6 +37,8 @@ export interface Simulation<N extends SimulationNodeDatum> {
 	alphaTarget(target: number): this;
 	restart(): this;
 	stop(): this;
+	/** Advances the layout by hand, for a small graph laid out at once. */
+	tick(iterations?: number): this;
 	force(name: string): Force<N> | undefined;
 	force(name: string, force: Force<N> | null): this;
 	on(typenames: string, listener: (() => void) | null): this;

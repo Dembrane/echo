@@ -1,7 +1,7 @@
 import { plural, t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Anchor, Button, UnstyledButton } from "@mantine/core";
-import { type CSSProperties, memo } from "react";
+import { type CSSProperties, memo, type ReactNode } from "react";
 import { primaryText, resultFields } from "@/components/results";
 import { cn } from "@/lib/utils";
 import {
@@ -20,15 +20,12 @@ import { deriveDisplayVerdict } from "../graph/nodeStyle";
 import { blendBackground } from "../renderers/gradients";
 import { ClusterSummary } from "./ClusterSummary";
 import type { ColorBy, FactCheckState, MapGraphNode } from "../types";
-import {
-	type ConversationHref,
-	NodeDetailCard,
-	type NodeInspection,
-} from "./NodeDetailCard";
+import type { ConversationHref, NodeInspection } from "./NodeDetailCard";
 import {
 	CaptionText,
 	CHIP_CLASS,
 	formatTimestamp,
+	mapVars,
 	OPINION_CHIP_CLASS,
 	OPINION_CHIP_STYLE,
 	PanelHeader,
@@ -63,8 +60,36 @@ type SpotlightPanelProps = {
 	inspection?: NodeInspection | null;
 	/** A distilled cluster to show instead of the node. */
 	cluster?: { distillation: Distillation; nodes: MapGraphNode[] } | null;
-	onSelectNode?: (nodeId: string) => void;
+	/** Quotes across the cluster's arguments, for its Quotes affordance. */
+	clusterQuoteCount?: number;
+	/** Opens the details of the spotlit item; none hides the affordances. */
+	onOpenDetails?: (from: DetailsFrom) => void;
+	/** What was spotlit before, as rows under the item. */
+	rows?: ReactNode;
 };
+
+export type DetailsFrom = "quotes" | "connections" | "arguments";
+
+/** The item's details on demand, each opening the details modal. */
+const Affordances = ({
+	actions,
+	onOpen,
+}: {
+	actions: ReadonlyArray<{ from: DetailsFrom; label: string }>;
+	onOpen: (from: DetailsFrom) => void;
+}) => (
+	<div className="flex flex-wrap gap-2" data-testid="spotlight-affordances">
+		{actions.map((action) => (
+			<Button
+				key={action.from}
+				size="compact-sm"
+				onClick={() => onOpen(action.from)}
+			>
+				{action.label}
+			</Button>
+		))}
+	</div>
+);
 
 /**
  * Ink on a marker colour: the deck's `--on-marker`, which is graphite and
@@ -144,13 +169,18 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 	canFactCheck,
 	onFactCheck,
 	onCancelFactCheck,
-	conversationHref,
 	conversationNames,
 	locale,
 	inspection = null,
 	cluster = null,
-	onSelectNode,
+	clusterQuoteCount = 0,
+	onOpenDetails,
+	rows,
 }: SpotlightPanelProps) {
+	const quoteCount = evidence.reduce(
+		(total, group) => total + group.quotes.length,
+		0,
+	);
 	const type = node?.metadata.objectType ?? "argument";
 	const eligible = node
 		? isFactCheckEligible(attributeInputsOf(node.metadata))
@@ -194,7 +224,24 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 					distillation={cluster.distillation}
 					nodes={cluster.nodes}
 					conversationNames={conversationNames}
-					onSelectNode={(id) => onSelectNode?.(id)}
+					actions={
+						onOpenDetails && (
+							<Affordances
+								actions={[
+									{
+										from: "arguments",
+										label: t`Arguments (${cluster.nodes.length})`,
+									},
+									{
+										from: "quotes",
+										label: t`Quotes (${clusterQuoteCount})`,
+									},
+									{ from: "connections", label: t`Connections` },
+								]}
+								onOpen={onOpenDetails}
+							/>
+						)
+					}
 				/>
 			) : node ? (
 				<>
@@ -262,7 +309,7 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 						</div>
 					</div>
 
-					<div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
+					<div className="space-y-2">
 						{valenceActive && valenceApplies && (
 							<p className="text-xs">{valenceBlurb(valence)}</p>
 						)}
@@ -372,14 +419,18 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 							</div>
 						)}
 
-						<NodeDetailCard
-							node={node}
-							evidence={evidence}
-							conversationHref={conversationHref}
-							collapsibleQuotes
-							statement={false}
-							inspection={inspection}
-						/>
+						{onOpenDetails && (
+							<Affordances
+								actions={[
+									{
+										from: "quotes",
+										label: t`Quotes (${quoteCount})`,
+									},
+									{ from: "connections", label: t`Connections` },
+								]}
+								onOpen={onOpenDetails}
+							/>
+						)}
 
 						{timestamp ? <p className="text-xs">{timestamp}</p> : null}
 					</div>
@@ -390,6 +441,15 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 						Click a node in the tree or cluster map to spotlight it here.
 					</Trans>
 				</CaptionText>
+			)}
+
+			{rows && (
+				<div
+					className="mt-3 min-h-0 flex-1 overflow-y-auto border-t pr-1 pt-3"
+					style={{ borderColor: mapVars.border }}
+				>
+					{rows}
+				</div>
 			)}
 		</section>
 	);
