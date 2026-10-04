@@ -1596,7 +1596,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 											key={previewKey}
 											src={link}
 											className="h-full w-full flex-1"
-											style={{ background: "var(--mantine-color-white)" }}
+											style={{ background: "var(--app-surface)" }}
 											title={t`Portal preview`}
 											allow="microphone *"
 										/>

@@ -243,7 +243,7 @@ export function EmailChipsInput({
 			p="xs"
 			style={{
 				// Set: rules at the sides, like every field.
-				backgroundColor: "var(--mantine-color-white)",
+				backgroundColor: "var(--app-surface)",
 				borderColor: "var(--app-control-rule)",
 				borderStyle: "solid",
 				borderWidth: "0 var(--app-stroke)",

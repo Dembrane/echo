@@ -18,6 +18,7 @@ import { useMemo, useState } from "react";
 import { UsageFreshness } from "@/components/common/UsageFreshness";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { InviteMemberCard, MembersToolbar } from "@/components/members";
+import { tierName } from "@/components/workspace/TierBadge";
 import { API_BASE_URL } from "@/config";
 import {
 	useProjectPendingInvites,
@@ -353,12 +354,7 @@ export function ProjectAccess({ projectId, visibility }: Props) {
 														<Trans>Pending</Trans>
 													</Badge>
 												)}
-												<Badge
-													size="xs"
-													variant="light"
-													color="gray"
-													style={{ textTransform: "capitalize" }}
-												>
+												<Badge size="xs" variant="light" color="gray">
 													{displayRole(row.role)}
 												</Badge>
 											</Group>
@@ -451,9 +447,7 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 						</Text>
 						{usage?.tier && (
 							<Badge size="sm" variant="light" color="gray">
-								<span style={{ textTransform: "capitalize" }}>
-									{usage.tier}
-								</span>
+								{tierName(usage.tier)}
 							</Badge>
 						)}
 					</Group>
@@ -526,7 +520,7 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 												color="primary"
 												style={{
 													borderRight:
-														"var(--app-stroke) solid var(--mantine-color-white)",
+														"var(--app-stroke) solid var(--app-surface)",
 												}}
 											/>
 										</Tooltip>

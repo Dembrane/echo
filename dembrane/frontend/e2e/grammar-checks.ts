@@ -54,6 +54,9 @@ export function grammarAudit(opts: AuditOptions): AuditResult {
 	];
 	// Icons drawn larger on purpose (illustrations, empty states).
 	const ICON_ALLOW = ["[data-illustration] svg", ".app-illustration svg"];
+	// Pages drawn in another product's own look, not the dashboard's grammar:
+	// the present editor's preview of the audience deck (workstream 5).
+	const OUT_OF_SCOPE = '[data-testid="present-preview-stage"]';
 	// Markdown prose sizes are a follow-up (canon: out of scope).
 	const PROSE = ".prose, .mdxeditor, [data-markdown]";
 	// Avatar initials are a mark sized by the avatar, like an icon, not text
@@ -94,6 +97,7 @@ export function grammarAudit(opts: AuditOptions): AuditResult {
 	const warn = (rule: string, el: Element | null, detail: string) =>
 		add(soft, rule, el, detail);
 	const visible = (el: Element): boolean => {
+		if (el.closest(OUT_OF_SCOPE)) return false;
 		const r = el.getBoundingClientRect();
 		if (r.width === 0 && r.height === 0) return false;
 		const anyEl = el as Element & {

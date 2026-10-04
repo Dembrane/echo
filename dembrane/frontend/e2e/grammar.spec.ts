@@ -335,7 +335,11 @@ type Check = {
 async function check(page: Page, phone: boolean, portal: boolean) {
 	const out: Check = { axe: [], counts: {}, hard: [], soft: [] };
 	// Accessibility: serious and critical fail, the rest are reported.
-	const axe = await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze();
+	const axe = await new AxeBuilder({ page })
+		.withTags(AXE_TAGS)
+		// The audience deck's own look, previewed in the present editor.
+		.exclude('[data-testid="present-preview-stage"]')
+		.analyze();
 	for (const v of axe.violations) {
 		out.axe.push({
 			help: v.help,

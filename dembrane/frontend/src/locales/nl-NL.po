@@ -235,7 +235,7 @@ msgid "(unknown)"
 msgstr "(onbekend)"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:924
-#: src/components/project/ProjectUsageAndSharing.tsx:333
+#: src/components/project/ProjectUsageAndSharing.tsx:334
 msgid "(You)"
 msgstr "(Jij)"
 
@@ -507,7 +507,7 @@ msgstr "{0} gesprekken · {phrases} fragmenten · {validated} gevalideerd"
 #~ msgstr "{0} Gesprekken • Bewerkt {1}"
 
 #. placeholder {0}: convUsage.deleted.length
-#: src/components/project/ProjectUsageAndSharing.tsx:501
+#: src/components/project/ProjectUsageAndSharing.tsx:495
 msgid "{0} deleted"
 msgstr "{0} verwijderd"
 
@@ -672,12 +672,12 @@ msgstr "Gesprek van {0}"
 msgid "{0}% discount"
 msgstr "{0}% korting"
 
-#: src/components/project/ProjectUsageAndSharing.tsx:246
+#: src/components/project/ProjectUsageAndSharing.tsx:247
 msgid "{accessCount, plural, one {# person} other {# people}}"
 msgstr "{accessCount, plural, one {# persoon} other {# personen}}"
 
 #. placeholder {0}: workspace?.name ?? t`this workspace`
-#: src/components/project/ProjectUsageAndSharing.tsx:238
+#: src/components/project/ProjectUsageAndSharing.tsx:239
 msgid "{accessCount, plural, one {# person} other {# people}} in {0}"
 msgstr "{accessCount, plural, one {# persoon} other {# personen}} in {0}"
 
@@ -914,7 +914,7 @@ msgstr "/zetel/mnd · maandelijks gefactureerd"
 
 #. placeholder {0}: convUsage.deleted.length - 8
 #. placeholder {0}: shareCount - 3
-#: src/components/project/ProjectUsageAndSharing.tsx:557
+#: src/components/project/ProjectUsageAndSharing.tsx:551
 #: src/components/project/ProjectSharingStrip.tsx:86
 msgid "+{0} more"
 msgstr "+{0} meer"
@@ -1193,7 +1193,7 @@ msgstr "Voorwaarden geaccepteerd"
 #: src/routes/project/CreateProjectRoute.tsx:281
 #: src/routes/project/CreateProjectRoute.tsx:379
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:31
-#: src/components/project/ProjectUsageAndSharing.tsx:216
+#: src/components/project/ProjectUsageAndSharing.tsx:217
 #: src/components/layout/ProjectOverviewLayout.tsx:53
 msgid "Access"
 msgstr "Toegang"
@@ -1327,7 +1327,7 @@ msgid "Active"
 msgstr "Actief"
 
 #. placeholder {0}: formatDurationFromHours(convUsage.active_hours)
-#: src/components/project/ProjectUsageAndSharing.tsx:584
+#: src/components/project/ProjectUsageAndSharing.tsx:578
 msgid "Active · {0}"
 msgstr "Actief · {0}"
 
@@ -1364,7 +1364,7 @@ msgstr "{0} toevoegen aan {1} als <0>{2}</0>?"
 msgid "Add a conversation directly to chat context."
 msgstr "Voeg een gesprek direct toe aan de chatcontext."
 
-#: src/components/project/ProjectUsageAndSharing.tsx:279
+#: src/components/project/ProjectUsageAndSharing.tsx:280
 msgid "Add a member and pick their access."
 msgstr "Voeg een lid toe en kies de toegang."
 
@@ -1658,7 +1658,7 @@ msgstr "Beheerder, dembrane"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:803
 #: src/routes/organisation/OrganisationRoute.tsx:851
-#: src/components/project/ProjectUsageAndSharing.tsx:261
+#: src/components/project/ProjectUsageAndSharing.tsx:262
 msgid "Admins"
 msgstr "Beheerders"
 
@@ -1736,7 +1736,7 @@ msgstr "Agentische chat"
 #: src/components/workspace/OrganisationUsageRollup.tsx:534
 #: src/components/training/StaffTrainingPanel.tsx:124
 #: src/components/results/curate/ArgumentsTab.tsx:226
-#: src/components/project/ProjectUsageAndSharing.tsx:260
+#: src/components/project/ProjectUsageAndSharing.tsx:261
 msgid "All"
 msgstr "Alles"
 
@@ -2405,7 +2405,7 @@ msgid "Audience preview"
 msgstr "Voorbeeld voor publiek"
 
 #: src/components/workspace/UsageCard.tsx:169
-#: src/components/project/ProjectUsageAndSharing.tsx:469
+#: src/components/project/ProjectUsageAndSharing.tsx:463
 msgid "Audio"
 msgstr "Audio"
 
@@ -2669,7 +2669,7 @@ msgstr "Voordat je een agent koppelt"
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:138
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:149
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:161
-#: src/features/sidebar/blocks/HelpBlock.tsx:113
+#: src/features/sidebar/blocks/HelpBlock.tsx:117
 #: src/components/report/UpdateReportModalButton.tsx:210
 #: src/components/report/CreateReportForm.tsx:237
 #: src/components/project/ProjectPortalEditor.tsx:1372
@@ -2784,7 +2784,7 @@ msgstr "Ideeën brainstormen"
 #~ msgstr "Brainstorm ideeën"
 
 #. placeholder {0}: convUsage.active.length
-#: src/components/project/ProjectUsageAndSharing.tsx:497
+#: src/components/project/ProjectUsageAndSharing.tsx:491
 msgid "Breakdown · {0} active"
 msgstr "Overzicht · {0} actief"
 
@@ -3658,7 +3658,7 @@ msgstr "Bevestig je wachtwoord om een nieuw geheim voor je authenticator-app te 
 msgid "Connect"
 msgstr "Koppelen"
 
-#: src/features/sidebar/blocks/HelpBlock.tsx:111
+#: src/features/sidebar/blocks/HelpBlock.tsx:115
 #: src/components/agent-access/AgentAccessSection.tsx:149
 msgid "Connect your agent"
 msgstr "Koppel je agent"
@@ -3890,7 +3890,7 @@ msgstr "gesprekken"
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:93
 #: src/components/workspace/OrganisationProjectsTable.tsx:225
 #: src/components/report/ReportTimeline.tsx:302
-#: src/components/project/ProjectUsageAndSharing.tsx:477
+#: src/components/project/ProjectUsageAndSharing.tsx:471
 #: src/components/map/panels/MapSettingsMenu.tsx:269
 #: src/components/map/panels/ClusterSummary.tsx:156
 #: src/components/conversation/ProjectConversationsPanel.tsx:750
@@ -4779,8 +4779,8 @@ msgid "Delete…"
 msgstr "Verwijderen…"
 
 #. placeholder {0}: formatDurationFromHours(convUsage.deleted_hours)
-#: src/components/project/ProjectUsageAndSharing.tsx:543
-#: src/components/project/ProjectUsageAndSharing.tsx:599
+#: src/components/project/ProjectUsageAndSharing.tsx:537
+#: src/components/project/ProjectUsageAndSharing.tsx:593
 msgid "Deleted · {0}"
 msgstr "Verwijderd · {0}"
 
@@ -5037,7 +5037,7 @@ msgid "Do you want to stay in the loop?"
 msgstr "Wil je op de hoogte blijven?"
 
 #: src/features/sidebar/views/HelpView.tsx:26
-#: src/features/sidebar/blocks/HelpBlock.tsx:132
+#: src/features/sidebar/blocks/HelpBlock.tsx:136
 #: src/components/chat/ChatHistoryMessage.tsx:237
 msgid "Documentation"
 msgstr "Documentatie"
@@ -5837,7 +5837,7 @@ msgstr "24 uur verlengen"
 #: src/lib/roles.ts:15
 #: src/features/sidebar/views/user/UserHomeView.tsx:116
 #: src/features/sidebar/views/org/OrgHomeView.tsx:169
-#: src/components/project/ProjectUsageAndSharing.tsx:339
+#: src/components/project/ProjectUsageAndSharing.tsx:340
 #: src/components/invite/RoleSelect.tsx:60
 msgid "External"
 msgstr "Extern"
@@ -5854,7 +5854,7 @@ msgstr "Extern van partner"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:809
 #: src/routes/organisation/OrganisationRoute.tsx:857
 #: src/components/workspace/UsageCard.tsx:220
-#: src/components/project/ProjectUsageAndSharing.tsx:264
+#: src/components/project/ProjectUsageAndSharing.tsx:265
 msgid "Externals"
 msgstr "Externen"
 
@@ -6122,7 +6122,7 @@ msgid "participant.modal.echo.info.title"
 msgstr "Functie binnenkort beschikbaar"
 
 #: src/features/sidebar/views/HelpView.tsx:56
-#: src/features/sidebar/blocks/HelpBlock.tsx:99
+#: src/features/sidebar/blocks/HelpBlock.tsx:103
 msgid "Feedback"
 msgstr "Feedback"
 
@@ -6756,9 +6756,9 @@ msgid "have your recordings transcribed"
 msgstr "je opnames te laten transcriberen"
 
 #: src/features/sidebar/views/HelpView.tsx:24
-#: src/features/sidebar/blocks/HelpBlock.tsx:208
-#: src/features/sidebar/blocks/HelpBlock.tsx:223
-#: src/features/sidebar/blocks/HelpBlock.tsx:240
+#: src/features/sidebar/blocks/HelpBlock.tsx:212
+#: src/features/sidebar/blocks/HelpBlock.tsx:227
+#: src/features/sidebar/blocks/HelpBlock.tsx:244
 msgid "Help"
 msgstr "Help"
 
@@ -7590,7 +7590,7 @@ msgstr "Net begonnen"
 msgid "Just talk or type naturally. Your input goes directly to our product team and genuinely helps us make dembrane better. We read everything."
 msgstr "Praat of typ gewoon op een natuurlijke manier. Uw bijdrage gaat rechtstreeks naar ons productteam en helpt ons echt om dembrane te verbeteren. We lezen alles."
 
-#: src/components/project/ProjectUsageAndSharing.tsx:243
+#: src/components/project/ProjectUsageAndSharing.tsx:244
 msgid "Just you — plus workspace admins."
 msgstr "Alleen jij, plus de beheerders van de werkruimte."
 
@@ -8121,7 +8121,7 @@ msgstr "Werkruimtes laden…"
 msgid "Loading..."
 msgstr "Bezig met laden..."
 
-#: src/components/project/ProjectUsageAndSharing.tsx:236
+#: src/components/project/ProjectUsageAndSharing.tsx:237
 msgid "Loading…"
 msgstr "Bezig met laden…"
 
@@ -8484,8 +8484,8 @@ msgstr "leden"
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:78
 #: src/features/sidebar/views/org/OrgHomeView.tsx:132
 #: src/components/workspace/UsageCard.tsx:210
-#: src/components/project/ProjectUsageAndSharing.tsx:232
-#: src/components/project/ProjectUsageAndSharing.tsx:262
+#: src/components/project/ProjectUsageAndSharing.tsx:233
+#: src/components/project/ProjectUsageAndSharing.tsx:263
 msgid "Members"
 msgstr "Leden"
 
@@ -9100,7 +9100,7 @@ msgstr "Geen onderbouwde verbanden."
 msgid "no expiry"
 msgstr "geen vervaldatum"
 
-#: src/components/project/ProjectUsageAndSharing.tsx:294
+#: src/components/project/ProjectUsageAndSharing.tsx:295
 msgid "No explicit shares. Workspace admins still have access."
 msgstr "Geen expliciete delingen. Werkruimtebeheerders hebben nog steeds toegang."
 
@@ -9210,7 +9210,7 @@ msgstr "Niemand wordt automatisch geblokkeerd bij niet-betalen. Houd mislukte be
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1198
 #: src/routes/organisation/OrganisationRoute.tsx:970
-#: src/components/project/ProjectUsageAndSharing.tsx:375
+#: src/components/project/ProjectUsageAndSharing.tsx:371
 msgid "No one matches that filter."
 msgstr "Niemand voldoet aan dat filter."
 
@@ -9236,7 +9236,7 @@ msgstr "Nog niemand in deze organisatie."
 msgid "No one shared yet"
 msgstr "Nog niemand gedeeld"
 
-#: src/components/project/ProjectUsageAndSharing.tsx:292
+#: src/components/project/ProjectUsageAndSharing.tsx:293
 msgid "No one's on the workspace yet."
 msgstr "Nog niemand in de werkruimte."
 
@@ -9407,7 +9407,7 @@ msgstr "Er is nog geen transcript beschikbaar voor dit gesprek. Controleer later
 msgid "No transcripts yet. You can run popcorn now; the screen fills as conversations land."
 msgstr "Nog geen transcripten. Je kunt Popcorn nu starten; het scherm vult zich zodra gesprekken binnenkomen."
 
-#: src/components/project/ProjectUsageAndSharing.tsx:490
+#: src/components/project/ProjectUsageAndSharing.tsx:484
 msgid "No usage yet this cycle."
 msgstr "Nog geen verbruik deze cyclus."
 
@@ -10483,7 +10483,7 @@ msgstr "in behandeling"
 #: src/routes/admin/AdminSettingsRoute.tsx:2767
 #: src/components/workspace/AccessRequestsList.tsx:170
 #: src/components/report/ConversationStatusTable.tsx:86
-#: src/components/project/ProjectUsageAndSharing.tsx:353
+#: src/components/project/ProjectUsageAndSharing.tsx:354
 #: src/components/project/ProjectSharingModal.tsx:404
 #: src/components/members/PendingInvitesSection.tsx:168
 #: src/components/billing/BillingManager.tsx:228
@@ -10646,7 +10646,7 @@ msgid "Plan ends"
 msgstr "Plan eindigt"
 
 #: src/features/sidebar/views/HelpView.tsx:43
-#: src/features/sidebar/blocks/HelpBlock.tsx:146
+#: src/features/sidebar/blocks/HelpBlock.tsx:150
 msgid "Planned"
 msgstr "Gepland"
 
@@ -10739,7 +10739,7 @@ msgstr ""
 msgid "Please wait while we process your retranscription request. You will be redirected to the new conversation when ready."
 msgstr "Wacht aub terwijl we uw hertranscriptieaanvraag verwerken. U wordt automatisch doorgestuurd naar het nieuwe gesprek wanneer klaar."
 
-#: src/components/project/ProjectUsageAndSharing.tsx:248
+#: src/components/project/ProjectUsageAndSharing.tsx:249
 msgid "plus workspace admins"
 msgstr "plus werkruimtebeheerders"
 
@@ -11934,7 +11934,7 @@ msgid "Report already generating"
 msgstr "Rapport wordt al gegenereerd"
 
 #: src/features/sidebar/views/HelpView.tsx:49
-#: src/features/sidebar/blocks/HelpBlock.tsx:87
+#: src/features/sidebar/blocks/HelpBlock.tsx:91
 #: src/components/feedback/ReportIssueModal.tsx:180
 msgid "Report an issue"
 msgstr "Probleem melden"
@@ -13364,7 +13364,7 @@ msgstr "Deel het project, volg live activiteit en spring vanaf één plek naar d
 msgid "Share with {0} people"
 msgstr "Delen met {0} mensen"
 
-#: src/components/project/ProjectUsageAndSharing.tsx:278
+#: src/components/project/ProjectUsageAndSharing.tsx:279
 msgid "Share with someone"
 msgstr "Deel met iemand"
 
@@ -14307,7 +14307,7 @@ msgid "System follows your device's light or dark setting."
 msgstr "Systeem volgt de lichte of donkere instelling van je apparaat."
 
 #: src/features/sidebar/views/HelpView.tsx:40
-#: src/features/sidebar/blocks/HelpBlock.tsx:143
+#: src/features/sidebar/blocks/HelpBlock.tsx:147
 msgid "System status"
 msgstr "Systeemstatus"
 
@@ -15377,7 +15377,7 @@ msgstr "We zijn je tekst aan het vernieuwen. Dit duurt meestal maar een paar sec
 msgid "participant.concrete.loading.artefact.description"
 msgstr "We zijn je tekst aan het ophalen. Even geduld."
 
-#: src/components/project/ProjectUsageAndSharing.tsx:240
+#: src/components/project/ProjectUsageAndSharing.tsx:241
 msgid "this workspace"
 msgstr "deze werkruimte"
 
@@ -16075,8 +16075,8 @@ msgstr "Naamloos canvas"
 
 #: src/routes/project/ProjectHomeRoute.tsx:68
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:102
-#: src/components/project/ProjectUsageAndSharing.tsx:515
-#: src/components/project/ProjectUsageAndSharing.tsx:550
+#: src/components/project/ProjectUsageAndSharing.tsx:509
+#: src/components/project/ProjectUsageAndSharing.tsx:544
 #: src/components/conversation/ProjectConversationsPanel.tsx:258
 #: src/components/chat/References.tsx:63
 msgid "Untitled conversation"
@@ -16324,7 +16324,7 @@ msgstr "URL moet beginnen met http:// of https://"
 
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:36
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:42
-#: src/components/project/ProjectUsageAndSharing.tsx:439
+#: src/components/project/ProjectUsageAndSharing.tsx:435
 #: src/components/layout/ProjectOverviewLayout.tsx:54
 msgid "Usage"
 msgstr "Gebruik"
@@ -16350,7 +16350,7 @@ msgstr "Gebruik en facturering, betalingen, partnergrootboek. Elke Directus-behe
 msgid "Usage is tracked for your organisation. View it in organisation settings."
 msgstr "Gebruik wordt bijgehouden voor je organisatie. Bekijk het in de organisatie-instellingen."
 
-#: src/components/project/ProjectUsageAndSharing.tsx:450
+#: src/components/project/ProjectUsageAndSharing.tsx:446
 msgid "Usage this cycle"
 msgstr "Gebruik deze cyclus"
 
@@ -16982,7 +16982,7 @@ msgstr "Welke thema's kwamen naar voren?"
 msgid "What this project is about and what you want to learn. dembrane uses it to keep chat answers, replies to participants and Popcorn on your question."
 msgstr "Waar dit project over gaat en wat je wilt leren. dembrane gebruikt dit om chatantwoorden, reacties aan deelnemers en Popcorn bij jouw vraag te houden."
 
-#: src/components/project/ProjectUsageAndSharing.tsx:442
+#: src/components/project/ProjectUsageAndSharing.tsx:438
 msgid "What this project is consuming this cycle."
 msgstr "Wat dit project deze cyclus verbruikt."
 
@@ -17008,7 +17008,7 @@ msgstr "Wat deze spanning zou oplossen"
 msgid "What would you like to explore?"
 msgstr "Wat wil je verkennen?"
 
-#: src/features/sidebar/blocks/HelpBlock.tsx:122
+#: src/features/sidebar/blocks/HelpBlock.tsx:126
 #: src/components/release/ReleaseVideoModal.tsx:317
 msgid "What's new"
 msgstr "Wat is er nieuw"
@@ -17108,7 +17108,7 @@ msgstr "Bij welke organisatie hoort deze werkruimte?"
 msgid "Which organisation owns this workspace's data? This sets the data and compliance context."
 msgstr "Welke organisatie is eigenaar van de data van deze werkruimte? Dit bepaalt de data- en compliancecontext."
 
-#: src/components/project/ProjectUsageAndSharing.tsx:219
+#: src/components/project/ProjectUsageAndSharing.tsx:220
 msgid "Who can see and collaborate on this project."
 msgstr "Wie dit project kan zien en eraan kan samenwerken."
 

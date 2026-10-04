@@ -20,7 +20,7 @@ export const ChatComposerShell = ({
 	<Box
 		className="border-x border-solid px-3 pb-2 pt-2"
 		style={{
-			backgroundColor: "var(--mantine-color-white)",
+			backgroundColor: "var(--app-surface)",
 			borderColor: "var(--app-control-rule)",
 		}}
 	>
