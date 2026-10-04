@@ -124,6 +124,11 @@ msgid "error.webhook.invalid_target"
 msgstr "Choose where this webhook goes: a web address, or sam's inbox with a known code."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:17
+msgid "error.map.groups_need_snapshot"
+msgstr "Clusters can be kept on a regenerated map. Regenerate the map and try again."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:27
 msgid "error.document.dpa_not_authorised"
 msgstr "Confirm that you are authorised to agree to data processing for your organisation."
@@ -299,7 +304,7 @@ msgid "error.member.owner_removes_owner"
 msgstr "Only an owner can remove another owner."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:17
+#: src/lib/errors/messages/map.ts:26
 msgid "error.map.not_a_claim"
 msgstr "Only claims can be fact-checked. Pick a claim and try again."
 
@@ -354,7 +359,7 @@ msgid "error.project.share_admin_only"
 msgstr "Only workspace admins can share projects."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:29
+#: src/lib/errors/messages/map.ts:38
 msgid "error.map.selection_not_in_map"
 msgstr "Part of your selection is no longer on the map. Reload the map and select again."
 
@@ -429,7 +434,7 @@ msgid "error.webhook.sam_inbox_unavailable"
 msgstr "sam's inbox is not set up here, and a webhook that goes to sam cannot be tested."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:43
+#: src/lib/errors/messages/map.ts:52
 msgid "error.map.selection_too_small"
 msgstr "Select a few more items to create a title."
 
@@ -564,12 +569,12 @@ msgid "error.present.map_results_not_ready"
 msgstr "The map is not ready yet. It shows here as soon as it is."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:25
+#: src/lib/errors/messages/map.ts:34
 msgid "error.map.not_ready"
 msgstr "The map is still being made. Wait a moment and try again."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:34
+#: src/lib/errors/messages/map.ts:43
 msgid "error.map.selection_other_snapshot"
 msgstr "The map was updated since you made this selection. Reload the map and select again."
 
@@ -924,7 +929,7 @@ msgid "error.project.no_conversations"
 msgstr "This project has no conversations yet."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:13
+#: src/lib/errors/messages/map.ts:22
 msgid "error.map.no_map_yet"
 msgstr "This project has no map yet. Create one to see it here."
 
@@ -1144,7 +1149,7 @@ msgid "error.billing.request_failed"
 msgstr "We could not complete this billing change. Contact us and we will sort it out."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:51
+#: src/lib/errors/messages/map.ts:60
 msgid "error.map.title_failed"
 msgstr "We could not create a title just now. Try again."
 
@@ -1229,7 +1234,7 @@ msgid "error.training.license_not_found"
 msgstr "We could not find this license."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:21
+#: src/lib/errors/messages/map.ts:30
 msgid "error.map.not_found"
 msgstr "We could not find this map."
 
@@ -1344,12 +1349,17 @@ msgid "error.verify.artifact_not_found"
 msgstr "We could not find this. It may have been removed."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:13
+msgid "error.map.group_not_started"
+msgstr "We could not keep this cluster. Try again in a moment."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:46
 msgid "error.analysis.storage_unavailable"
 msgstr "We could not load the analysis just now. Try again in a moment."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:47
+#: src/lib/errors/messages/map.ts:56
 msgid "error.map.storage_unavailable"
 msgstr "We could not load the map just now. Try again in a moment."
 
@@ -1564,7 +1574,7 @@ msgid "error.auth.user_required"
 msgstr "You need to be signed in for this. Sign in and try again."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:39
+#: src/lib/errors/messages/map.ts:48
 msgid "error.map.selection_too_large"
 msgstr "You selected too many items. Select fewer and try again."
 
