@@ -67,3 +67,17 @@
 		top: var(--mantine-spacing-md);
 	}
 }
+
+/* The editor's tabs, collapsed: still laid out across the full width so they
+   can be measured, but unseen and out of reach. */
+.tabs {
+	position: relative;
+}
+
+.unseen {
+	position: absolute;
+	inset-inline: 0;
+	top: 0;
+	visibility: hidden;
+	pointer-events: none;
+}

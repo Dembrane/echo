@@ -1,7 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
 import {
-	Accordion,
 	Alert,
 	Box,
 	Button,
@@ -31,6 +30,7 @@ import {
 	useCallback,
 	useContext,
 	useEffect,
+	useLayoutEffect,
 	useMemo,
 	useRef,
 	useState,
@@ -51,7 +51,10 @@ import {
 	PopcornLanguageSettings,
 } from "@/components/popcorn/PopcornLanguageSettings";
 import { PopcornOpeningSettings } from "@/components/popcorn/PopcornOpeningSettings";
-import { PopcornScreenSettings } from "@/components/popcorn/PopcornScreenSettings";
+import {
+	PopcornLabelsSwitch,
+	PopcornScreenSettings,
+} from "@/components/popcorn/PopcornScreenSettings";
 import { PopcornShare } from "@/components/popcorn/PopcornShare";
 import {
 	SettingsSaveContext,
@@ -113,32 +116,60 @@ function Editor({
 		...(presentation.settings.presentation?.blocks ?? []),
 		ALWAYS_ON_BLOCK,
 	]);
+	const section = editorSection(params);
+	const setSection = (value: string | null) =>
+		setParams((old) => {
+			const next = new URLSearchParams(old);
+			next.set("section", value ?? "activities");
+			return next;
+		});
+	const sections = [
+		{ label: t`Intro`, value: "intro" },
+		{ label: t`Data policy`, value: "data" },
+		{ label: t`Outcomes`, value: "activities" },
+		{ label: t`Language`, value: "language" },
+		{ label: t`Appearance`, value: "appearance" },
+	];
+	// Where the tabs don't fit (a phone, the side column), the row changes as a
+	// whole into one drop-down naming the current section. The row stays laid
+	// out, unseen, so it can tell when there is room for it again.
+	const tabList = useRef<HTMLDivElement>(null);
+	const [collapsed, setCollapsed] = useState(false);
+	useLayoutEffect(() => {
+		const list = tabList.current;
+		if (!list || typeof ResizeObserver === "undefined") return;
+		const measure = () => setCollapsed(list.scrollWidth > list.clientWidth);
+		measure();
+		const observer = new ResizeObserver(measure);
+		observer.observe(list);
+		return () => observer.disconnect();
+	}, []);
 	return (
 		<Stack className={classes.settings} gap="lg">
 			<Title order={4}>
 				<Trans>Presentation editor</Trans>
 			</Title>
 			<PresentationTitle projectId={projectId} presentation={presentation} />
-			<Tabs
-				value={editorSection(params)}
-				onChange={(value) =>
-					setParams((old) => {
-						const next = new URLSearchParams(old);
-						next.set("section", value ?? "activities");
-						return next;
-					})
-				}
-			>
-				<Tabs.List>
-					<Tabs.Tab value="intro">
-						<Trans>Intro</Trans>
-					</Tabs.Tab>
-					<Tabs.Tab value="data">
-						<Trans>Data policy</Trans>
-					</Tabs.Tab>
-					<Tabs.Tab value="activities">
-						<Trans>Tabs</Trans>
-					</Tabs.Tab>
+			<Tabs value={section} onChange={setSection} className={classes.tabs}>
+				{collapsed && (
+					<Select
+						aria-label={t`Editor section`}
+						data={sections}
+						value={section}
+						allowDeselect={false}
+						onChange={setSection}
+					/>
+				)}
+				<Tabs.List
+					ref={tabList}
+					className={collapsed ? classes.unseen : undefined}
+					aria-hidden={collapsed || undefined}
+				>
+					{sections.map(({ label, value }) => (
+						<Tabs.Tab key={value} value={value}>
+							{label}
+						</Tabs.Tab>
+					))}
 				</Tabs.List>
 				<Tabs.Panel value="intro" pt="md">
 					<PopcornOpeningSettings
@@ -148,16 +179,19 @@ function Editor({
 					/>
 				</Tabs.Panel>
 				<Tabs.Panel value="data" pt="md">
-					<PopcornOpeningSettings
-						projectId={projectId}
-						popcorn={presentation}
-						section="data"
-					/>
+					<Stack gap="md">
+						<PopcornOpeningSettings
+							projectId={projectId}
+							popcorn={presentation}
+							section="data"
+						/>
+						<PopcornLabelsSwitch projectId={projectId} popcorn={presentation} />
+					</Stack>
 				</Tabs.Panel>
 				<Tabs.Panel value="activities" pt="md">
 					<Stack>
 						<Text size="sm" c="dimmed">
-							<Trans>Choose the tabs your audience can explore.</Trans>
+							<Trans>Choose the outcomes your audience can explore.</Trans>
 						</Text>
 						{PRESENTATION_BLOCKS.map((block) => {
 							const locked = block === ALWAYS_ON_BLOCK;
@@ -201,91 +235,86 @@ function Editor({
 						})}
 					</Stack>
 				</Tabs.Panel>
-			</Tabs>
-			<Accordion variant="default" multiple>
-				<Accordion.Item value="language">
-					<Accordion.Control>
-						<Trans>Language</Trans>
-					</Accordion.Control>
-					<Accordion.Panel>
-						<Stack gap="sm">
-							<Checkbox
-								label={t`Follow project language`}
-								checked={
-									presentation.settings.presentation?.language_policy ===
-									"project"
-								}
-								onChange={(e) =>
-									save.mutate({
-										presentation: {
-											language_policy: e.currentTarget.checked
-												? "project"
-												: "explicit",
-										},
-										...(!e.currentTarget.checked
-											? { language: presentation.effective_language }
-											: {}),
-									})
-								}
-							/>
-							<Text size="sm">
-								<Trans>Audience language:</Trans>{" "}
-								{presentation.effective_language.translate_to ||
-									presentation.effective_language.ui}
-								{presentation.project_language.fallback &&
+				<Tabs.Panel value="language" pt="md">
+					<Stack gap="sm">
+						<Checkbox
+							label={t`Follow project language`}
+							checked={
 								presentation.settings.presentation?.language_policy ===
-									"project"
-									? ` · ${t`English fallback`}`
-									: ""}
-							</Text>
-							{presentation.settings.presentation?.language_policy !==
-							"project" ? (
-								// The embedded settings carry the translation line themselves.
-								<PopcornLanguageSettings
-									embedded
+								"project"
+							}
+							onChange={(e) =>
+								save.mutate({
+									presentation: {
+										language_policy: e.currentTarget.checked
+											? "project"
+											: "explicit",
+									},
+									...(!e.currentTarget.checked
+										? { language: presentation.effective_language }
+										: {}),
+								})
+							}
+						/>
+						<Text size="sm">
+							<Trans>Audience language:</Trans>{" "}
+							{presentation.effective_language.translate_to ||
+								presentation.effective_language.ui}
+							{presentation.project_language.fallback &&
+							presentation.settings.presentation?.language_policy === "project"
+								? ` · ${t`English fallback`}`
+								: ""}
+						</Text>
+						{presentation.settings.presentation?.language_policy !==
+						"project" ? (
+							// The embedded settings carry the translation line themselves.
+							<PopcornLanguageSettings
+								embedded
+								projectId={projectId}
+								popcorn={presentation}
+							/>
+						) : (
+							<>
+								<PopcornAlsoLanguages
 									projectId={projectId}
 									popcorn={presentation}
+									language={presentation.effective_language}
 								/>
-							) : (
-								<>
-									<PopcornAlsoLanguages
-										projectId={projectId}
-										popcorn={presentation}
-										language={presentation.effective_language}
-									/>
-									<TranslationStatus
-										presentationId={presentation.id}
-										status={presentation.translation_status}
-									/>
-								</>
-							)}
-						</Stack>
-					</Accordion.Panel>
-				</Accordion.Item>
-				<Accordion.Item value="screen">
-					<Accordion.Control>
-						<Trans>Screen appearance</Trans>
-					</Accordion.Control>
-					<Accordion.Panel>
-						<PopcornScreenSettings
-							embedded
-							projectId={projectId}
-							popcorn={presentation}
-							showToolToggles={false}
-						/>
-					</Accordion.Panel>
-				</Accordion.Item>
-			</Accordion>
+								<TranslationStatus
+									presentationId={presentation.id}
+									status={presentation.translation_status}
+								/>
+							</>
+						)}
+					</Stack>
+				</Tabs.Panel>
+				<Tabs.Panel value="appearance" pt="md">
+					<PopcornScreenSettings
+						embedded
+						projectId={projectId}
+						popcorn={presentation}
+						showToolToggles={false}
+						showLabelsToggle={false}
+					/>
+				</Tabs.Panel>
+			</Tabs>
 		</Stack>
 	);
 }
 
-// `?section=results` was a tab of the editor once. It now opens the results
-// panel, and the editor falls back to its own first stop.
-const RESULTS_SECTION = "results";
+// Outcomes keeps its old value, `activities`, so links that name it still
+// land there. Anything else unknown, including `?section=results` (a tab of
+// the editor once, now the results panel), falls back to it.
+const EDITOR_SECTIONS = [
+	"intro",
+	"data",
+	"activities",
+	"language",
+	"appearance",
+];
 function editorSection(params: URLSearchParams) {
-	const section = params.get("section");
-	return !section || section === RESULTS_SECTION ? "activities" : section;
+	const section = params.get("section") ?? "";
+	return EDITOR_SECTIONS.includes(section) ? section : "activities";
 }
 
 // The draft on the room's screen. Typing into its opening saves like any other
