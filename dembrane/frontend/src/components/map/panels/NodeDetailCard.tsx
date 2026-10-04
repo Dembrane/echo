@@ -402,9 +402,9 @@ export const NodeDetailCard = memo(function NodeDetailCard({
 	statement = true,
 	inspection = null,
 }: NodeDetailCardProps) {
-	// Evidence is what an argument is made of, so the panel shows it rather
-	// than only counting it. It still folds away for a long merge.
-	const [quotesOpen, setQuotesOpen] = useState(true);
+	// Where the quotes fold, they start folded: the statement leads, and the
+	// count says what is underneath.
+	const [quotesOpen, setQuotesOpen] = useState(false);
 
 	if (!node) {
 		return (
