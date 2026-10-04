@@ -30,6 +30,7 @@ import {
 	useCallback,
 	useContext,
 	useEffect,
+	useLayoutEffect,
 	useMemo,
 	useRef,
 	useState,
@@ -50,7 +51,10 @@ import {
 	PopcornLanguageSettings,
 } from "@/components/popcorn/PopcornLanguageSettings";
 import { PopcornOpeningSettings } from "@/components/popcorn/PopcornOpeningSettings";
-import { PopcornScreenSettings } from "@/components/popcorn/PopcornScreenSettings";
+import {
+	PopcornLabelsSwitch,
+	PopcornScreenSettings,
+} from "@/components/popcorn/PopcornScreenSettings";
 import { PopcornShare } from "@/components/popcorn/PopcornShare";
 import {
 	SettingsSaveContext,
@@ -113,50 +117,59 @@ function Editor({
 		ALWAYS_ON_BLOCK,
 	]);
 	const section = editorSection(params);
-	// Five tabs don't fit a phone or the side column, so the row scrolls (the
-	// grammar's rule for tabs). The chosen one, from a link too, is scrolled
-	// into sight; only the row moves, never the page.
+	const setSection = (value: string | null) =>
+		setParams((old) => {
+			const next = new URLSearchParams(old);
+			next.set("section", value ?? "activities");
+			return next;
+		});
+	const sections = [
+		{ label: t`Intro`, value: "intro" },
+		{ label: t`Data policy`, value: "data" },
+		{ label: t`Outcomes`, value: "activities" },
+		{ label: t`Language`, value: "language" },
+		{ label: t`Appearance`, value: "appearance" },
+	];
+	// Where the tabs don't fit (a phone, the side column), the row changes as a
+	// whole into one drop-down naming the current section. The row stays laid
+	// out, unseen, so it can tell when there is room for it again.
 	const tabList = useRef<HTMLDivElement>(null);
-	useEffect(() => {
+	const [collapsed, setCollapsed] = useState(false);
+	useLayoutEffect(() => {
 		const list = tabList.current;
-		const tab = list?.querySelector<HTMLElement>(`[id$="-tab-${section}"]`);
-		if (!list || !tab) return;
-		const at = tab.getBoundingClientRect();
-		const box = list.getBoundingClientRect();
-		list.scrollLeft += at.left - box.left - (box.width - at.width) / 2;
-	}, [section]);
+		if (!list || typeof ResizeObserver === "undefined") return;
+		const measure = () => setCollapsed(list.scrollWidth > list.clientWidth);
+		measure();
+		const observer = new ResizeObserver(measure);
+		observer.observe(list);
+		return () => observer.disconnect();
+	}, []);
 	return (
 		<Stack className={classes.settings} gap="lg">
 			<Title order={4}>
 				<Trans>Presentation editor</Trans>
 			</Title>
 			<PresentationTitle projectId={projectId} presentation={presentation} />
-			<Tabs
-				value={section}
-				onChange={(value) =>
-					setParams((old) => {
-						const next = new URLSearchParams(old);
-						next.set("section", value ?? "activities");
-						return next;
-					})
-				}
-			>
-				<Tabs.List ref={tabList}>
-					<Tabs.Tab value="intro">
-						<Trans>Intro</Trans>
-					</Tabs.Tab>
-					<Tabs.Tab value="data">
-						<Trans>Data policy</Trans>
-					</Tabs.Tab>
-					<Tabs.Tab value="activities">
-						<Trans>Outcomes</Trans>
-					</Tabs.Tab>
-					<Tabs.Tab value="language">
-						<Trans>Language</Trans>
-					</Tabs.Tab>
-					<Tabs.Tab value="appearance">
-						<Trans>Appearance</Trans>
-					</Tabs.Tab>
+			<Tabs value={section} onChange={setSection} className={classes.tabs}>
+				{collapsed && (
+					<Select
+						aria-label={t`Editor section`}
+						data={sections}
+						value={section}
+						allowDeselect={false}
+						onChange={setSection}
+					/>
+				)}
+				<Tabs.List
+					ref={tabList}
+					className={collapsed ? classes.unseen : undefined}
+					aria-hidden={collapsed || undefined}
+				>
+					{sections.map(({ label, value }) => (
+						<Tabs.Tab key={value} value={value}>
+							{label}
+						</Tabs.Tab>
+					))}
 				</Tabs.List>
 				<Tabs.Panel value="intro" pt="md">
 					<PopcornOpeningSettings
@@ -166,16 +179,19 @@ function Editor({
 					/>
 				</Tabs.Panel>
 				<Tabs.Panel value="data" pt="md">
-					<PopcornOpeningSettings
-						projectId={projectId}
-						popcorn={presentation}
-						section="data"
-					/>
+					<Stack gap="md">
+						<PopcornOpeningSettings
+							projectId={projectId}
+							popcorn={presentation}
+							section="data"
+						/>
+						<PopcornLabelsSwitch projectId={projectId} popcorn={presentation} />
+					</Stack>
 				</Tabs.Panel>
 				<Tabs.Panel value="activities" pt="md">
 					<Stack>
 						<Text size="sm" c="dimmed">
-							<Trans>Choose the tabs your audience can explore.</Trans>
+							<Trans>Choose the outcomes your audience can explore.</Trans>
 						</Text>
 						{PRESENTATION_BLOCKS.map((block) => {
 							const locked = block === ALWAYS_ON_BLOCK;
@@ -278,6 +294,7 @@ function Editor({
 						projectId={projectId}
 						popcorn={presentation}
 						showToolToggles={false}
+						showLabelsToggle={false}
 					/>
 				</Tabs.Panel>
 			</Tabs>

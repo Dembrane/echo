@@ -54,6 +54,7 @@ vi.mock("@/components/popcorn/PopcornLanguageSettings", () => ({
 	PopcornLanguageSettings: () => null,
 }));
 vi.mock("@/components/popcorn/PopcornScreenSettings", () => ({
+	PopcornLabelsSwitch: () => <div>Names on the legend</div>,
 	PopcornScreenSettings: () => null,
 }));
 vi.mock("@/components/popcorn/PopcornShare", () => ({
@@ -147,9 +148,7 @@ describe("Preparing the room before recordings", () => {
 		});
 		show();
 		expect(await screen.findByText("Presentation editor")).toBeTruthy();
-		expect(
-			screen.getAllByRole("tab").map((tab) => tab.textContent),
-		).toEqual(
+		expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual(
 			expect.arrayContaining([
 				"Intro",
 				"Data policy",
@@ -313,6 +312,39 @@ describe("Reviewing the results on the screen", () => {
 	});
 });
 
+describe("The editor's sections", () => {
+	it("puts Names on the legend under Data policy", async () => {
+		show("/projects/empty/present?section=data");
+		const panel = await screen.findByRole("tabpanel", { name: "Data policy" });
+		expect(panel.textContent).toContain("Names on the legend");
+	});
+
+	it("collapses the tabs into one drop-down where they don't fit", async () => {
+		// jsdom lays nothing out: make the row wider than its box.
+		vi.stubGlobal(
+			"ResizeObserver",
+			class {
+				observe() {}
+				unobserve() {}
+				disconnect() {}
+			},
+		);
+		vi.spyOn(HTMLElement.prototype, "scrollWidth", "get").mockReturnValue(500);
+		vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(300);
+		try {
+			show("/projects/empty/present?section=language");
+			const picker = await screen.findByRole("textbox", {
+				name: "Editor section",
+			});
+			expect((picker as HTMLInputElement).value).toBe("Language");
+			expect(screen.queryByRole("tab", { name: "Outcomes" })).toBeNull();
+		} finally {
+			vi.unstubAllGlobals();
+			vi.restoreAllMocks();
+		}
+	});
+});
+
 describe("Keeping the presentation and its results apart", () => {
 	it("leaves results out of the presentation editor's tabs, and shows both", async () => {
 		editing();
@@ -346,7 +378,9 @@ describe("Keeping the presentation and its results apart", () => {
 		expect(screen.getByText("Presentation editor")).toBeTruthy();
 		// A link to the tab results used to be falls back to the first stop.
 		expect(
-			screen.getByRole("tab", { name: "Outcomes" }).getAttribute("aria-selected"),
+			screen
+				.getByRole("tab", { name: "Outcomes" })
+				.getAttribute("aria-selected"),
 		).toBe("true");
 	});
 
