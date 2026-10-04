@@ -451,7 +451,11 @@ function Editor() {
 									/>
 								</Text>
 								{!readyToSend && (
-									<Text size="xs" c="orange.8" data-testid="send-blocked">
+									<Text
+										size="xs"
+										c="var(--app-warning)"
+										data-testid="send-blocked"
+									>
 										{!hasName && !hasSignature ? (
 											<Trans>
 												To send, add a name field and a signature field.

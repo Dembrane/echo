@@ -27,8 +27,8 @@ interface Props {
 	billingPeriod?: BillingPeriod;
 }
 
-const HIGHLIGHT_BG = "var(--mantine-color-primary-light)";
-const HIGHLIGHT_COLOR = "var(--mantine-color-primary-6)";
+const HIGHLIGHT_BG = "var(--app-action-tint)";
+const HIGHLIGHT_COLOR = "var(--app-action)";
 
 export const TierCapacityMatrix = ({
 	highlightTier,

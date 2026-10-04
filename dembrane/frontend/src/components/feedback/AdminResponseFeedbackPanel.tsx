@@ -188,7 +188,7 @@ export const AdminResponseFeedbackPanel = () => {
 									onClick={() => setSelectedId(row.id)}
 									style={{ cursor: "pointer" }}
 									aria-selected={isSelected}
-									bg={isSelected ? "var(--mantine-color-primary-0)" : undefined}
+									bg={isSelected ? "var(--app-action-tint)" : undefined}
 									data-testid={`response-feedback-row-${row.id}`}
 								>
 									<Table.Td>

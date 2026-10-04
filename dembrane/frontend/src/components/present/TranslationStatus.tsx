@@ -94,7 +94,7 @@ export function TranslationStatus({
 	if (status.state === "done")
 		return withBreakdown(
 			<Group gap="xs" wrap="nowrap" {...testId("present-translation-status")}>
-				<CheckCircleIcon size={16} color="var(--mantine-color-green-7)" />
+				<CheckCircleIcon size={16} color="var(--app-success)" />
 				<Text size="sm">
 					<Trans>
 						All {total} texts translated into {language}
@@ -125,7 +125,7 @@ export function TranslationStatus({
 	return withBreakdown(
 		<Group gap="xs" wrap="nowrap" {...testId("present-translation-status")}>
 			<Tooltip label={status.detail} disabled={!status.detail}>
-				<WarningIcon size={16} color="var(--mantine-color-yellow-7)" />
+				<WarningIcon size={16} color="var(--app-warning)" />
 			</Tooltip>
 			<Text size="sm">
 				<Trans>

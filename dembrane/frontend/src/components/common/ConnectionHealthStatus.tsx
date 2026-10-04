@@ -20,9 +20,9 @@ export const ConnectionHealthStatus = ({
 		<Group gap="sm" align="center">
 			<div
 				className="h-2 w-2 rounded-full"
-				style={{ background: "var(--mantine-color-yellow-6)" }}
+				style={{ background: "var(--app-warning)" }}
 			/>
-			<Text size="sm" c="yellow">
+			<Text size="sm" c="var(--app-warning)">
 				{t`Connection unhealthy`}
 			</Text>
 		</Group>

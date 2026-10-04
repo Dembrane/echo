@@ -57,7 +57,7 @@ export const AnnouncementItem = forwardRef<
 					{announcement.level === "urgent" ? (
 						<WarningCircle
 							size={20}
-							color="var(--mantine-color-yellow-7)"
+							color="var(--app-warning)"
 							style={{ flexShrink: 0 }}
 						/>
 					) : (
@@ -83,7 +83,7 @@ export const AnnouncementItem = forwardRef<
 								{!isRead && (
 									<div
 										style={{
-											backgroundColor: "var(--mantine-color-primary-7)",
+											backgroundColor: "var(--app-action)",
 											borderRadius: "50%",
 											height: 8,
 											width: 8,

@@ -91,7 +91,7 @@ export const CustomVerificationTopicSuggestionCard = ({
 					<CheckIcon
 						size={16}
 						className="shrink-0"
-						style={{ color: "var(--mantine-color-green-7)" }}
+						style={{ color: "var(--app-success)" }}
 					/>
 					<Text size="sm">
 						<Trans>This verification prompt is added to your project.</Trans>

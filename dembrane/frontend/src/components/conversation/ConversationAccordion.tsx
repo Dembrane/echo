@@ -621,7 +621,7 @@ const ConversationAccordionItem = ({
 					/>
 				</Stack>
 				<div className="flex items-center justify-between gap-4">
-					<Text size="xs" c="gray.6" className="pl-[4px]">
+					<Text size="xs" c="dimmed" className="pl-[4px]">
 						{formatRelative(
 							new Date(getConversationStartTime(conversation) ?? new Date()),
 							new Date(),
@@ -1090,7 +1090,7 @@ export const ConversationAccordion = ({
 			<Accordion.Control>
 				<Group justify="space-between">
 					<Title order={3} {...testId("conversations-accordion-title")}>
-						<span className="min-w-[48px] pr-2 font-normal text-gray-500">
+						<span className="min-w-[48px] pr-2 font-normal text-[var(--app-muted)]">
 							{conversationsCountQuery.isLoading ? (
 								<Loader size="xs" />
 							) : (

@@ -48,15 +48,15 @@ export const HelpView = () => {
 			<NavButton
 				label={<Trans>Report an issue</Trans>}
 				icon={Bug}
-				iconColor="var(--mantine-color-primary-6)"
-				labelColor="var(--mantine-color-primary-6)"
+				iconColor="var(--app-action)"
+				labelColor="var(--app-action)"
 				onClick={openReportIssue}
 			/>
 			<NavButton
 				label={<Trans>Feedback</Trans>}
 				icon={ChatCircle}
-				iconColor="var(--mantine-color-primary-6)"
-				labelColor="var(--mantine-color-primary-6)"
+				iconColor="var(--app-action)"
+				labelColor="var(--app-action)"
 				onClick={openFeedback}
 			/>
 		</nav>

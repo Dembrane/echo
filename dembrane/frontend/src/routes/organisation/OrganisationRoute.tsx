@@ -1214,7 +1214,7 @@ function WorkspaceVisibilityIcon({
 		return (
 			<Tooltip label={t`Private workspace`}>
 				<span style={{ display: "inline-flex", flexShrink: 0 }}>
-					<LockIcon size={size} color="var(--mantine-color-gray-6)" />
+					<LockIcon size={size} color="var(--app-muted)" />
 				</span>
 			</Tooltip>
 		);
@@ -1223,7 +1223,7 @@ function WorkspaceVisibilityIcon({
 		return (
 			<Tooltip label={t`Invite-only workspace`}>
 				<span style={{ display: "inline-flex", flexShrink: 0 }}>
-					<UsersThree size={size} color="var(--mantine-color-gray-6)" />
+					<UsersThree size={size} color="var(--app-muted)" />
 				</span>
 			</Tooltip>
 		);

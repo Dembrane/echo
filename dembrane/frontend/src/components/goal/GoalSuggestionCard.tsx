@@ -72,7 +72,7 @@ export const GoalSuggestionCard = ({
 					<CheckIcon
 						size={16}
 						className="shrink-0"
-						style={{ color: "var(--mantine-color-primary-7)" }}
+						style={{ color: "var(--app-action)" }}
 					/>
 					<Text size="sm">
 						<Trans>Saved as this project's goal.</Trans>

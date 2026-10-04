@@ -222,7 +222,7 @@ export function SignatureCapture({
 					<Box
 						style={{
 							background: "white",
-							border: "1px dashed var(--mantine-color-gray-5)",
+							border: "1px dashed var(--app-muted)",
 							borderRadius: 6,
 							touchAction: "none",
 						}}
@@ -268,7 +268,7 @@ export function SignatureCapture({
 						py={4}
 						style={{
 							background: "white",
-							border: "1px dashed var(--mantine-color-gray-5)",
+							border: "1px dashed var(--app-muted)",
 							borderRadius: 6,
 							color: "#1c2a4a",
 							fontFamily: SCRIPT_FONT,

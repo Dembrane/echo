@@ -14,7 +14,7 @@ import { VOICE_WAVEFORM_BARS, waveformHeights } from "./voiceInput";
  */
 export const VoiceWaveform = ({
 	className,
-	color = "var(--mantine-color-primary-6)",
+	color = "var(--app-action)",
 	gain,
 	levels,
 }: {

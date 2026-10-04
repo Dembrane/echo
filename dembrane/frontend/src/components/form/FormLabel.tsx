@@ -16,9 +16,7 @@ export const FormLabel = ({ label, isDirty, error }: FormLabelProps) => {
 					<div
 						className="h-1.5 w-1.5 rounded-full"
 						style={{
-							background: error
-								? "var(--mantine-color-red-7)"
-								: "var(--mantine-color-primary-7)",
+							background: error ? "var(--app-danger)" : "var(--app-action)",
 						}}
 						role="presentation"
 					/>

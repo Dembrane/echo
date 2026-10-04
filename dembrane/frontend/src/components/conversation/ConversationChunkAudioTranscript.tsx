@@ -36,7 +36,7 @@ export const ConversationChunkAudioTranscript = ({
 			paperProps={{
 				className: cn(
 					"scroll-mt-24 transition-colors duration-300",
-					highlighted && "!bg-primary-100",
+					highlighted && "!bg-[var(--app-action-tint)]",
 				),
 			}}
 			title={

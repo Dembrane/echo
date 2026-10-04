@@ -11,8 +11,6 @@
 			"type.title-order": 1
 		},
 		"src/components/chat/ChatAccordion.tsx": {
-			"color.palette-class": 1,
-			"color.raw-mantine-shade": 1,
 			"type.title-order": 1,
 			"words.title-case": 1
 		},
@@ -21,7 +19,6 @@
 			"space.off-scale": 2
 		},
 		"src/components/chat/ChatHistoryMessage.tsx": {
-			"color.raw-mantine-shade": 1,
 			"shape.rounded": 1
 		},
 		"src/components/chat/ChatModeSelector.tsx": {
@@ -30,9 +27,6 @@
 		},
 		"src/components/chat/ChatSkeleton.tsx": {
 			"type.title-order": 1
-		},
-		"src/components/chat/ProjectUpdateSuggestionCard.tsx": {
-			"color.palette-class": 5
 		},
 		"src/components/chat/TemplatesModal.tsx": {
 			"shape.shadow": 1
@@ -54,8 +48,6 @@
 		"src/components/conversation/ConversationAccordion.tsx": {
 			"action.right-aligned": 1,
 			"color.blue-prop": 1,
-			"color.palette-class": 1,
-			"color.raw-mantine-shade": 1,
 			"icon.size": 1,
 			"space.off-scale": 2,
 			"type.title-order": 1,
@@ -118,20 +110,11 @@
 		"src/components/present/TranslationStatus.tsx": {
 			"space.off-scale": 1
 		},
-		"src/components/project/KeyTermsInput.tsx": {
-			"color.raw-mantine-shade": 1
-		},
 		"src/components/project/PinnedProjectCard.tsx": {
 			"color.blue-prop": 1
 		},
 		"src/components/project/ProjectListItem.tsx": {
 			"color.blue-prop": 1
-		},
-		"src/components/project/ProjectTagsInput.tsx": {
-			"color.raw-mantine-shade": 1
-		},
-		"src/components/project/ProjectUsageAndSharing.tsx": {
-			"color.raw-mantine-shade": 1
 		},
 		"src/components/release/ReleaseTimeline.tsx": {
 			"words.denylist": 1
@@ -170,7 +153,6 @@
 		},
 		"src/features/accounts/customer/NextSteps.tsx": {
 			"action.right-aligned": 1,
-			"color.raw-mantine-shade": 1,
 			"icon.size": 2,
 			"space.off-scale": 2,
 			"type.fw-prop": 1
@@ -214,7 +196,6 @@
 		"src/features/accounts/staff/DemoRoute.tsx": {
 			"color.blue-prop": 1,
 			"color.button-light": 1,
-			"color.raw-mantine-shade": 1,
 			"icon.size": 4,
 			"space.off-scale": 3,
 			"type.title-order": 1,
@@ -223,7 +204,7 @@
 		"src/features/accounts/staff/FieldEditorRoute.tsx": {
 			"color.button-light": 1,
 			"color.hex-literal": 2,
-			"color.raw-mantine-shade": 2,
+			"color.raw-mantine-shade": 1,
 			"icon.size": 1,
 			"shape.rounded": 2,
 			"space.off-scale": 2,

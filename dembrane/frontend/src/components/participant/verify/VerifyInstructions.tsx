@@ -80,7 +80,7 @@ export const VerifyInstructions = ({
 						<Box
 							className={`flex h-10 w-10 flex-shrink-0 items-center justify-center ${
 								isLoading
-									? "bg-primary-100 text-primary-700"
+									? "bg-[var(--app-action-tint)] text-[var(--app-action)]"
 									: "bg-[var(--app-rule-color)]"
 							}`}
 						>

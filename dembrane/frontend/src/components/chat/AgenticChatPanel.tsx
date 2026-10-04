@@ -443,12 +443,12 @@ const TOOL_STATUS_META: Record<
 };
 
 const AGENTIC_TOOL_STATUS_VARS = {
-	"--agentic-tool-status-completed-dot": "var(--mantine-color-green-6)",
-	"--agentic-tool-status-completed-text": "var(--mantine-color-green-8)",
-	"--agentic-tool-status-error-dot": "var(--mantine-color-red-6)",
-	"--agentic-tool-status-error-text": "var(--mantine-color-red-8)",
-	"--agentic-tool-status-running-dot": "var(--mantine-color-yellow-6)",
-	"--agentic-tool-status-running-text": "var(--mantine-color-yellow-8)",
+	"--agentic-tool-status-completed-dot": "var(--app-success)",
+	"--agentic-tool-status-completed-text": "var(--app-success)",
+	"--agentic-tool-status-error-dot": "var(--app-danger)",
+	"--agentic-tool-status-error-text": "var(--app-danger)",
+	"--agentic-tool-status-running-dot": "var(--app-warning)",
+	"--agentic-tool-status-running-text": "var(--app-warning)",
 } as CSSProperties;
 
 const toHistoryMessage = (message: RenderMessage): HistoryLikeMessage =>

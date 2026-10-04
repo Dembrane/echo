@@ -247,7 +247,7 @@ msgstr "Gesprek"
 msgid "Call booked"
 msgstr "Gesprek gepland"
 
-#: src/features/accounts/customer/Questions.tsx:244
+#: src/features/accounts/customer/Questions.tsx:248
 msgid "Cancel"
 msgstr "Annuleren"
 
@@ -342,7 +342,7 @@ msgstr "Taak aanmaken"
 
 #: src/features/accounts/format.ts:107
 #: src/features/accounts/staff/AccountCardRoute.tsx:746
-#: src/features/accounts/customer/Questions.tsx:165
+#: src/features/accounts/customer/Questions.tsx:169
 msgid "Customer"
 msgstr "Klant"
 
@@ -644,7 +644,7 @@ msgstr "Vergrendeld"
 msgid "May you also agree to data processing for your organisation?"
 msgstr "Mag je ook verwerkingsafspraken maken voor je organisatie?"
 
-#: src/features/accounts/customer/Questions.tsx:234
+#: src/features/accounts/customer/Questions.tsx:238
 msgid "Message"
 msgstr "Bericht"
 
@@ -1064,13 +1064,13 @@ msgstr "Veld verwijderen"
 msgid "Remove line"
 msgstr "Regel verwijderen"
 
-#: src/features/accounts/customer/Questions.tsx:173
-#: src/features/accounts/customer/Questions.tsx:198
+#: src/features/accounts/customer/Questions.tsx:177
+#: src/features/accounts/customer/Questions.tsx:202
 #: src/features/accounts/customer/NextSteps.tsx:170
 msgid "Reply"
 msgstr "Antwoorden"
 
-#: src/features/accounts/customer/Questions.tsx:188
+#: src/features/accounts/customer/Questions.tsx:192
 msgid "Reply and close"
 msgstr "Antwoorden en sluiten"
 
@@ -1142,7 +1142,7 @@ msgid "Select a field to set its kind, label and whether it is required. Drag to
 msgstr "Kies een veld om soort, label en verplicht in te stellen. Sleep om te verplaatsen, trek aan de hoek om de maat te wijzigen."
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:193
-#: src/features/accounts/customer/Questions.tsx:257
+#: src/features/accounts/customer/Questions.tsx:261
 #: src/features/accounts/customer/NextSteps.tsx:449
 msgid "Send"
 msgstr "Versturen"
@@ -1316,7 +1316,7 @@ msgstr "Beginnen"
 msgid "Status"
 msgstr "Status"
 
-#: src/features/accounts/customer/Questions.tsx:228
+#: src/features/accounts/customer/Questions.tsx:232
 msgid "Subject"
 msgstr "Onderwerp"
 
@@ -1476,15 +1476,15 @@ msgstr "Titel"
 msgid "To pay"
 msgstr "Te betalen"
 
-#: src/features/accounts/staff/FieldEditorRoute.tsx:456
+#: src/features/accounts/staff/FieldEditorRoute.tsx:460
 msgid "To send, add a name field and a signature field."
 msgstr "Voeg een naamveld en een handtekeningveld toe om te versturen."
 
-#: src/features/accounts/staff/FieldEditorRoute.tsx:460
+#: src/features/accounts/staff/FieldEditorRoute.tsx:464
 msgid "To send, add a name field: it names the signer."
 msgstr "Voeg een naamveld toe om te versturen: daarin staat wie tekent."
 
-#: src/features/accounts/staff/FieldEditorRoute.tsx:464
+#: src/features/accounts/staff/FieldEditorRoute.tsx:468
 msgid "To send, add a signature field."
 msgstr "Voeg een handtekeningveld toe om te versturen."
 
@@ -1633,7 +1633,7 @@ msgstr "Intrekken"
 msgid "Withdrawn"
 msgstr "Ingetrokken"
 
-#: src/features/accounts/customer/Questions.tsx:174
+#: src/features/accounts/customer/Questions.tsx:178
 msgid "Write a reply"
 msgstr "Schrijf een antwoord"
 
@@ -1641,7 +1641,7 @@ msgstr "Schrijf een antwoord"
 msgid "Yes, I may"
 msgstr "Ja, dat mag ik"
 
-#: src/features/accounts/customer/Questions.tsx:164
+#: src/features/accounts/customer/Questions.tsx:168
 msgid "You"
 msgstr "Jij"
 
@@ -1661,7 +1661,7 @@ msgstr "Je paraaf"
 msgid "Your name"
 msgstr "Je naam"
 
-#: src/features/accounts/customer/Questions.tsx:234
+#: src/features/accounts/customer/Questions.tsx:238
 msgid "Your question"
 msgstr "Je vraag"
 

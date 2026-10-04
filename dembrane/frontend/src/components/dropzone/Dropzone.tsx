@@ -28,15 +28,10 @@ export const CommonDropzone = ({
 		<MantineDropzone p="sm" {...props}>
 			<Group justify="center" gap="xl" style={{ pointerEvents: "none" }}>
 				<MantineDropzone.Accept>
-					{accept || (
-						<UploadSimpleIcon
-							size={20}
-							color="var(--mantine-color-primary-7)"
-						/>
-					)}
+					{accept || <UploadSimpleIcon size={20} color="var(--app-action)" />}
 				</MantineDropzone.Accept>
 				<MantineDropzone.Reject>
-					{reject || <XIcon size={20} color="var(--mantine-color-red-7)" />}
+					{reject || <XIcon size={20} color="var(--app-danger)" />}
 				</MantineDropzone.Reject>
 				<MantineDropzone.Idle>{idle || children}</MantineDropzone.Idle>
 			</Group>

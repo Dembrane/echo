@@ -86,7 +86,7 @@ const UserChunkMessage = ({
 			<div>
 				<Menu shadow="md" width={200}>
 					<Menu.Target>
-						<ActionIcon variant="transparent" c="gray" className="h-full">
+						<ActionIcon variant="transparent" c="dimmed" className="h-full">
 							<DotsThreeVerticalIcon size={20} />
 						</ActionIcon>
 					</Menu.Target>

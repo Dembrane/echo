@@ -79,7 +79,7 @@ const SignScreen = () => {
 	useDocumentTitle(doc ? `${doc.title} | dembrane` : t`Sign | dembrane`);
 
 	return (
-		<Box mih="100dvh" style={{ background: "var(--mantine-color-gray-1)" }}>
+		<Box mih="100dvh" style={{ background: "var(--app-quiet)" }}>
 			{isLoading && (
 				<Stack align="center" pt="20vh">
 					<Loader />
@@ -490,7 +490,7 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 								</Radio.Group>
 							)}
 							{confirmation && (!asksDpa || dpa) && (
-								<Paper withBorder p="xs" radius="sm" bg="gray.0">
+								<Paper withBorder p="xs" radius="sm" bg="var(--app-quiet)">
 									<Text
 										size="sm"
 										data-testid="sign-confirmation"

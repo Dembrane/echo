@@ -314,17 +314,14 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 										: t`All seats taken`
 								}
 							>
-								<WarningIcon size={16} color="var(--mantine-color-red-6)" />
+								<WarningIcon size={16} color="var(--app-danger)" />
 							</Tooltip>
 						)}
 						{!(row.original.at_cap || row.original.seat_cap_hit) &&
 							(row.original.approaching_cap ||
 								row.original.approaching_seat_cap) && (
 								<Tooltip label={t`Approaching a limit this month`}>
-									<WarningIcon
-										size={16}
-										color="var(--mantine-color-yellow-7)"
-									/>
+									<WarningIcon size={16} color="var(--app-warning)" />
 								</Tooltip>
 							)}
 						{row.original.is_private && (

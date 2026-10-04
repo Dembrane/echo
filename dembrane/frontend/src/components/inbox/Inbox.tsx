@@ -427,8 +427,8 @@ function NotificationRowItem({
 							<Box
 								style={{
 									background: isDestructive
-										? "var(--mantine-color-red-7)"
-										: "var(--mantine-color-primary-7)",
+										? "var(--app-danger)"
+										: "var(--app-action)",
 									borderRadius: "50%",
 									flexShrink: 0,
 									height: 8,

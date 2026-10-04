@@ -566,7 +566,7 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 											value={
 												(convUsage.deleted_hours / convUsage.total_hours) * 100
 											}
-											color="gray.5"
+											color="var(--app-muted)"
 										/>
 									</Tooltip>
 								)}
@@ -590,7 +590,7 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 									<Group gap="xs" wrap="nowrap">
 										<Box
 											style={{
-												background: "var(--mantine-color-gray-5)",
+												background: "var(--app-muted)",
 												height: 8,
 												width: 8,
 											}}

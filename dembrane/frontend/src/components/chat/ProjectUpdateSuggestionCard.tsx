@@ -129,10 +129,10 @@ const VALUE_BOX =
  * the eye lands on, without inventing a colour the card does not already use.
  */
 const REMOVED_MARK =
-	"bg-red-100 text-red-900 line-through decoration-red-500 decoration-2";
+	"bg-[var(--app-danger-tint)] text-[var(--app-danger-on-tint)] line-through decoration-[var(--app-danger)] decoration-2";
 const ADDED_MARK =
-	"bg-green-100 text-green-900 underline decoration-green-600 decoration-2";
-const UNCHANGED_TEXT = "text-slate-500";
+	"bg-[var(--app-success-tint)] text-[var(--app-success)] underline decoration-[var(--app-success)] decoration-2";
+const UNCHANGED_TEXT = "text-[var(--app-muted)]";
 
 const asDisplayString = (value: unknown) => {
 	if (typeof value === "string") return value;
@@ -508,7 +508,7 @@ export const ProjectUpdateSuggestionCard = ({
 						<CheckIcon
 							size={16}
 							className="shrink-0"
-							style={{ color: "var(--mantine-color-green-7)" }}
+							style={{ color: "var(--app-success)" }}
 						/>
 						<Text size="sm">
 							<Trans>These changes are applied to your project.</Trans>

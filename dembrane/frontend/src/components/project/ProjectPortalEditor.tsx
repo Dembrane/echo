@@ -140,7 +140,7 @@ const KeyTermsSection = ({
 			{isDirty && (
 				<div
 					className="h-1.5 w-1.5 rounded-full"
-					style={{ background: "var(--mantine-color-primary-7)" }}
+					style={{ background: "var(--app-action)" }}
 					role="presentation"
 				/>
 			)}

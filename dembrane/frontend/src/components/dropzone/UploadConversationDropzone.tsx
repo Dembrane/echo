@@ -769,13 +769,10 @@ export const UploadConversationDropzone = (
 													{fileStatus.status === "complete" ? (
 														<CheckCircleIcon
 															size={20}
-															color="var(--mantine-color-green-7)"
+															color="var(--app-success)"
 														/>
 													) : fileStatus.status === "error" ? (
-														<XIcon
-															size={20}
-															color="var(--mantine-color-red-7)"
-														/>
+														<XIcon size={20} color="var(--app-danger)" />
 													) : (
 														<UploadSimpleIcon size={20} />
 													)}
