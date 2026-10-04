@@ -31,14 +31,6 @@
 	--tw-prose-th-borders: var(--tw-prose-invert-th-borders);
 	--tw-prose-td-borders: var(--tw-prose-invert-td-borders);
 }
-
-/* A card reads off the page ground, as it does on parchment in light; Mantine
- * would raise it to its dark-6 surface. (:where keeps rules.css's pressable
- * cards in charge of their own backgrounds.) */
-:root[data-mantine-color-scheme="dark"] :where(.mantine-Card-root) {
-	background-color: var(--mantine-color-body);
-}
-
 /* The markdown editor (MDXEditor) draws from Radix's light scales; in dark it
  * takes the roles instead. The toolbar keeps its tint, as primary-2 does in
  * light. */
@@ -73,8 +65,8 @@
 }
 
 /* Mantine's dark scheme draws some text in --mantine-color-white. Here that is
- * the page ground (as in light, where it is parchment), so those parts take
- * the text role instead. */
+ * the surface (white is a surface, in both schemes), so those parts take the
+ * text role instead. */
 :root[data-mantine-color-scheme="dark"]
 	:is(.mantine-Code-root, .mantine-Kbd-root) {
 	color: var(--app-text);

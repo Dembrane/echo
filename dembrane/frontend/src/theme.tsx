@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import {
 	Badge,
 	Button,
@@ -163,8 +164,8 @@ const variantColorResolver: VariantColorsResolver = (input) => {
 
 // Every --app-* colour is set here per scheme, from the hexes in colors.ts;
 // rules.css and the components read the variables. Mantine's white is the
-// page ground in both schemes, as it has been at runtime since index.html
-// set it so.
+// surface (white in light, the raised surface in dark): controls and
+// surfaces are white whatever the page ground is.
 const mantineRoles = (scheme: typeof lightRoles | typeof darkRoles) => ({
 	"--mantine-color-black": scheme.text,
 	// c="dark" and c="graphite" mean the text colour; Mantine would draw
@@ -177,7 +178,7 @@ const mantineRoles = (scheme: typeof lightRoles | typeof darkRoles) => ({
 	"--mantine-color-error": roles.danger,
 	"--mantine-color-placeholder": roles.muted,
 	"--mantine-color-text": roles.text,
-	"--mantine-color-white": scheme.bg,
+	"--mantine-color-white": scheme.surface,
 });
 
 export const cssVariablesResolver: CSSVariablesResolver = () => ({
@@ -287,6 +288,31 @@ export const theme = createTheme({
 			},
 		},
 		Menu: { defaultProps: { shadow: "md" } },
+		// Icon-only controls get a name. Getters, so the label is read when the
+		// control renders, in the language active then (the theme is built once).
+		Modal: {
+			defaultProps: {
+				closeButtonProps: {
+					get "aria-label"() {
+						return t`Close`;
+					},
+				},
+			},
+		},
+		Pagination: {
+			defaultProps: {
+				getControlProps: (
+					control: "first" | "previous" | "last" | "next",
+				) => ({
+					"aria-label": {
+						first: t`First page`,
+						last: t`Last page`,
+						next: t`Next page`,
+						previous: t`Previous page`,
+					}[control],
+				}),
+			},
+		},
 		Paper: { defaultProps: { radius: 0, withBorder: true } },
 		Select: {
 			defaultProps: {
