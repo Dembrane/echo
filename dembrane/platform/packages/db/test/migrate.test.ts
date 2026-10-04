@@ -6,12 +6,16 @@ import { ContractArchiveMissing, migrate, recordContractArchive } from "../src/m
 const journal = (await Bun.file(
   new URL("../migrations/meta/_journal.json", import.meta.url),
 ).json()) as {
-  entries: { tag: string }[];
+  entries: { tag: string; when: number }[];
 };
 const TOTAL = journal.entries.length;
 const BASELINE = 2;
 const CONTRACTS = journal.entries.filter((e) => e.tag.includes("_contract_")).map((e) => e.tag);
 const CONTRACT = CONTRACTS.length;
+// Drizzle records a migration by its journal timestamp.
+const CONTRACT_MILLIS = journal.entries
+  .filter((e) => e.tag.includes("_contract_"))
+  .map((e) => String(e.when));
 
 // Needs a scratch Postgres with pgvector: TEST_DATABASE_ADMIN_URL=postgres://u:p@host:5432/postgres
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
@@ -21,7 +25,15 @@ const run = admin ? describe : describe.skip;
 run("migrate", () => {
   const sql = admin ? postgres(admin, { max: 1, onnotice: () => {} }) : (undefined as never);
   beforeAll(async () => {
-    for (const db of ["mig_fresh", "mig_adopt", "mig_hold", "mig_guard", "mig_preview"]) {
+    for (const db of [
+      "mig_fresh",
+      "mig_adopt",
+      "mig_hold",
+      "mig_guard",
+      "mig_preview",
+      "mig_release",
+      "mig_release_guard",
+    ]) {
       await sql.unsafe(`drop database if exists ${db}`);
       await sql.unsafe(`create database ${db}`);
     }
@@ -72,9 +84,7 @@ run("migrate", () => {
   test("refuses a contract migration outside local, test and preview until its archive is recorded", async () => {
     const url = `${base}/mig_guard`;
     // The cutover path: the database the old stack runs on, with every migration after
-    // the baseline still to come. Not built with holdContract: a held database is never
-    // migrated forward, since a migration newer than the contract would be applied and
-    // the contract then skipped.
+    // the baseline still to come.
     await directusSchema("mig_guard");
     for (const appEnv of ["prod", "staging", undefined]) {
       const err = await migrate(url, { appEnv }).catch((e: unknown) => e);
@@ -100,6 +110,56 @@ run("migrate", () => {
     });
     expect(await kept()).toBe(false);
     await db.end();
+  }, 30_000);
+
+  const kept = async (url: string) => {
+    const db = postgres(url, { max: 1, onnotice: () => {} });
+    const [row] = await db`select to_regclass('public.project_analysis_run') is not null as v`;
+    const runs = await db`select created_at from drizzle.__drizzle_migrations
+      where created_at = any(${CONTRACT_MILLIS}::bigint[])`;
+    await db.end();
+    return { table: row?.v as boolean, contractRuns: runs.length };
+  };
+
+  test("releasing the hold applies a held contract once, even after newer migrations", async () => {
+    // The bug this guards: newer migrations applied while the contract was held, then the
+    // release finding nothing "newer than the latest" to apply, so the contract never ran.
+    const lastContract = journal.entries.findLastIndex((e) => e.tag.includes("_contract_"));
+    expect(lastContract).toBeLessThan(TOTAL - 1);
+    const url = `${base}/mig_release`;
+    expect(await migrate(url, { holdContract: true, appEnv: "test" })).toEqual({
+      adoptedBaseline: false,
+      applied: TOTAL - CONTRACT,
+    });
+    expect(await kept(url)).toEqual({ table: true, contractRuns: 0 });
+    // Holding again leaves it held.
+    expect((await migrate(url, { holdContract: true, appEnv: "test" })).applied).toBe(0);
+
+    expect(await migrate(url, { appEnv: "test" })).toEqual({
+      adoptedBaseline: false,
+      applied: CONTRACT,
+    });
+    expect(await kept(url)).toEqual({ table: false, contractRuns: CONTRACT });
+    // Releasing twice does nothing more.
+    expect((await migrate(url, { appEnv: "test" })).applied).toBe(0);
+    expect(await kept(url)).toEqual({ table: false, contractRuns: CONTRACT });
+  }, 30_000);
+
+  test("releasing the hold outside local, test and preview still needs the archive", async () => {
+    const url = `${base}/mig_release_guard`;
+    await migrate(url, { holdContract: true, appEnv: "prod" });
+    const err = await migrate(url, { appEnv: "prod" }).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(ContractArchiveMissing);
+    expect((err as ContractArchiveMissing).migrations).toEqual(CONTRACTS);
+    expect(await kept(url)).toEqual({ table: true, contractRuns: 0 });
+    for (const migration of CONTRACTS)
+      await recordContractArchive(url, {
+        migration,
+        destination: "gs://dembrane-echo-archive/mig_release_guard/20261003T000000Z",
+        manifest: "table\trows\tbytes\tobject\n",
+      });
+    expect((await migrate(url, { appEnv: "prod" })).applied).toBe(CONTRACT);
+    expect(await kept(url)).toEqual({ table: false, contractRuns: CONTRACT });
   }, 30_000);
 
   test("preview applies contract migrations without an archive", async () => {

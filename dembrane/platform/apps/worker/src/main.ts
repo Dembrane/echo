@@ -1,5 +1,5 @@
 import { queueJobs } from "@dembrane/accounts";
-import { HttpMedia, LocalMedia, metadataIdToken } from "@dembrane/audio";
+import { HttpMedia, LocalMedia, mediaAuth } from "@dembrane/audio";
 import { createBilling, HttpMollie, UnconfiguredMollie } from "@dembrane/billing";
 import { describe, FIXED_CONNECTIONS, loadSections } from "@dembrane/config";
 import { AudioUrls } from "@dembrane/conversations";
@@ -133,7 +133,7 @@ const local = config.app.env === "local" || config.app.env === "test";
 const media = config.media.url
   ? new HttpMedia(config.media.url, {
       timeoutMs: config.media.timeoutSeconds * 1000,
-      ...(!local && { idToken: metadataIdToken(config.media.url) }),
+      ...(!local && mediaAuth(config.media.auth, config.media.url)),
     })
   : new LocalMedia();
 

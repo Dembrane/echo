@@ -3,7 +3,7 @@ import { render, sendEmail, subjectOf } from "@dembrane/account";
 import { accountsApiJobs, codeSignInGate } from "@dembrane/accounts";
 import { analysisJobs } from "@dembrane/analysis";
 import { posthogCapture } from "@dembrane/analytics";
-import { HttpMedia, LocalMedia, metadataIdToken } from "@dembrane/audio";
+import { HttpMedia, LocalMedia, mediaAuth } from "@dembrane/audio";
 import { createAuth, identityAccount } from "@dembrane/auth";
 import { billingApiJobs, createBilling, HttpMollie, UnconfiguredMollie } from "@dembrane/billing";
 import { canvasApiJobs } from "@dembrane/canvas";
@@ -214,12 +214,13 @@ const audio = config.audio.s3Bucket
 
 requireBucket(config.app.env, audio, "Participant audio", "STORAGE_S3_BUCKET");
 
-// The media service in the cloud (identity token for its URL); ffmpeg in-process locally.
+// The media service when MEDIA_URL is set, authenticated per MEDIA_AUTH; ffmpeg in-process locally.
 const media = config.media.url
   ? new HttpMedia(config.media.url, {
       timeoutMs: config.media.timeoutSeconds * 1000,
       ...(config.app.env !== "local" &&
-        config.app.env !== "test" && { idToken: metadataIdToken(config.media.url) }),
+        config.app.env !== "test" &&
+        mediaAuth(config.media.auth, config.media.url)),
     })
   : new LocalMedia();
 
