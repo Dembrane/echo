@@ -269,7 +269,7 @@ msgid "{0, plural, one {# conversation could not be added to this chat.} other {
 msgstr "{0, plural, one {# gesprek kon niet aan deze chat worden toegevoegd.} other {# gesprekken konden niet aan deze chat worden toegevoegd.}}"
 
 #. placeholder {0}: hiddenConversations.size
-#: src/components/map/MapPage.tsx:793
+#: src/components/map/MapPage.tsx:814
 msgid "{0, plural, one {# conversation is hidden from the map.} other {# conversations are hidden from the map.}}"
 msgstr "{0, plural, one {# gesprek is verborgen op de kaart.} other {# gesprekken zijn verborgen op de kaart.}}"
 
@@ -725,11 +725,11 @@ msgstr "{accessCount, plural, one {# persoon} other {# personen}} in {0}"
 msgid "{alreadyPending} people were already invited. The project is shared once they join."
 msgstr "{alreadyPending} mensen waren al uitgenodigd. Het project wordt gedeeld zodra ze meedoen."
 
-#: src/components/map/MapPage.tsx:482
+#: src/components/map/MapPage.tsx:500
 msgid "{argumentCount, plural, one {# argument} other {# arguments}}"
 msgstr "{argumentCount, plural, one {# argument} other {# argumenten}}"
 
-#: src/components/map/MapPage.tsx:481
+#: src/components/map/MapPage.tsx:499
 msgid "{argumentCount, plural, one {# argument} other {# arguments}} from {conversationCount, plural, one {# conversation} other {# conversations}}"
 msgstr "{argumentCount, plural, one {# argument} other {# argumenten}} uit {conversationCount, plural, one {# gesprek} other {# gesprekken}}"
 
@@ -944,7 +944,7 @@ msgstr "{totalWorkspaces, plural, one {# werkruimte} other {# werkruimtes}}"
 msgid "{translated} of {total} translated, {failed} could not be translated"
 msgstr "{translated} van {total} vertaald, {failed} kon niet worden vertaald"
 
-#: src/components/map/MapPage.tsx:732
+#: src/components/map/MapPage.tsx:753
 msgid "{unplacedCount, plural, one {# argument could not be placed on the map.} other {# arguments could not be placed on the map.}}"
 msgstr "{unplacedCount, plural, one {# argument kon niet op de kaart worden geplaatst.} other {# argumenten konden niet op de kaart worden geplaatst.}}"
 
@@ -1660,7 +1660,7 @@ msgstr "<0>{totalCount, plural, one {# extra gesprek} other {# extra gesprekken}
 msgid "select.all.modal.loading.title"
 msgstr "Gesprekken worden toegevoegd"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1314
+#: src/components/map/renderers/LocalMapGraph.tsx:1320
 msgid "Additional forces"
 msgstr "Extra krachten"
 
@@ -1716,8 +1716,6 @@ msgid "Admins can reach every workspace in this organisation. Members and extern
 msgstr "Beheerders hebben toegang tot elke werkruimte in deze organisatie. Leden en externen zien alleen de werkruimtes waartoe ze toegang hebben gekregen."
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:881
-#: src/components/map/panels/MapSettingsMenu.tsx:243
-#: src/components/map/panels/MapSettingsMenu.tsx:249
 msgid "Advanced"
 msgstr "Geavanceerd"
 
@@ -2296,7 +2294,11 @@ msgstr "Argument"
 msgid "Argument map"
 msgstr "Argumentenkaart"
 
-#: src/components/map/MapExperience.tsx:530
+#: src/components/map/panels/MapToolbar.tsx:196
+msgid "Argument tree"
+msgstr "Argumentenboom"
+
+#: src/components/map/MapExperience.tsx:547
 msgid "Argument tree (MST)"
 msgstr "Argumentenboom (MST)"
 
@@ -2537,7 +2539,7 @@ msgstr "Auditlogboeken geëxporteerd naar JSON"
 msgid "Authenticator code"
 msgstr "Authenticator-code"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:405
+#: src/components/map/panels/MapSettingsMenu.tsx:452
 msgid "Auto fact-check new claims"
 msgstr "Nieuwe beweringen automatisch factchecken"
 
@@ -2606,7 +2608,7 @@ msgstr "Avatar verwijderd"
 msgid "Avatar updated"
 msgstr "Avatar bijgewerkt"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1283
+#: src/components/map/renderers/LocalMapGraph.tsx:1289
 msgid "Avg low-dim distance (default: 10)"
 msgstr "Gem. lage-dimensie afstand (standaard: 10)"
 
@@ -2739,7 +2741,7 @@ msgstr "Voordat je een agent koppelt"
 #: src/components/project/ProjectPortalEditor.tsx:1372
 #: src/components/project/ProjectPortalEditor.tsx:1452
 #: src/components/project/ProjectExperimentalSection.tsx:50
-#: src/components/map/MapPage.tsx:651
+#: src/components/map/MapPage.tsx:669
 #: src/components/conversation/RetranscribeConversation.tsx:155
 #: src/components/chat/ChatModeSelector.tsx:105
 #: src/components/chat/AgenticIntroModal.tsx:25
@@ -2889,7 +2891,7 @@ msgid "By tag"
 msgstr "Op trefwoord"
 
 #. placeholder {0}: cMed.toFixed(1)
-#: src/components/map/renderers/LocalMapGraph.tsx:1272
+#: src/components/map/renderers/LocalMapGraph.tsx:1278
 msgid "C_Med: {0}"
 msgstr "C_Med: {0}"
 
@@ -3182,7 +3184,7 @@ msgstr "Wijziging van de taal tijdens een actief gesprek kan onverwachte resulta
 #~ msgstr ""
 
 #. placeholder {0}: chargeFraction.toFixed(2)
-#: src/components/map/renderers/LocalMapGraph.tsx:1339
+#: src/components/map/renderers/LocalMapGraph.tsx:1345
 msgid "Charge distance (viewport fraction): {0}"
 msgstr "Laadafstand (viewport-fractie): {0}"
 
@@ -3328,7 +3330,7 @@ msgstr "Kies een gesprek"
 msgid "Choose a logo file"
 msgstr "Een logo-bestand kiezen"
 
-#: src/components/map/MapExperience.tsx:607
+#: src/components/map/MapExperience.tsx:625
 msgid "Choose a map under Advanced"
 msgstr "Kies een kaart onder Geavanceerd"
 
@@ -3549,18 +3551,22 @@ msgid "Cloud Act Safe"
 msgstr "Cloud Act-veilig"
 
 #: src/components/map/panels/DensityControl.tsx:47
-msgid "Clumped"
-msgstr "Samengeklonterd"
+#~ msgid "Clumped"
+#~ msgstr "Samengeklonterd"
 
-#: src/components/map/panels/DensityControl.tsx:40
+#: src/components/map/panels/MapToolbar.tsx:145
 msgid "Cluster density"
 msgstr "Clusterdichtheid"
 
-#: src/components/map/panels/DensityControl.tsx:51
+#: src/components/map/panels/MapToolbar.tsx:149
 msgid "Cluster density: fewer or more clusters"
 msgstr "Clusterdichtheid: minder of meer clusters"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:263
+#: src/components/map/panels/MapToolbar.tsx:189
+msgid "Cluster map"
+msgstr "Clusterkaart"
+
+#: src/components/map/panels/MapSettingsMenu.tsx:390
 msgid "Clusters"
 msgstr "Clusters"
 
@@ -3582,7 +3588,7 @@ msgid "Collection"
 msgstr "Collectie"
 
 #. placeholder {0}: collisionRadius.toFixed(1)
-#: src/components/map/renderers/LocalMapGraph.tsx:1328
+#: src/components/map/renderers/LocalMapGraph.tsx:1334
 msgid "Collision radius: {0}x"
 msgstr "Botsingsstraal: {0}x"
 
@@ -3606,7 +3612,7 @@ msgstr "Kleur grafiek op basis van feitelijke status"
 msgid "Color graph by valence"
 msgstr "Kleur grafiek op basis van valentie"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:304
+#: src/components/map/panels/MapSettingsMenu.tsx:431
 msgid "Color nodes by"
 msgstr "Kleur knooppunten op basis van"
 
@@ -3635,7 +3641,7 @@ msgstr "samengevoegd uit {0}"
 #. placeholder {0}: nodeById.get(d.id)?.metadata.consolidation?.memberCount ?? 0
 #. placeholder {0}: consolidation.memberCount
 #: src/components/map/renderers/MstGraph.tsx:1115
-#: src/components/map/renderers/LocalMapGraph.tsx:1073
+#: src/components/map/renderers/LocalMapGraph.tsx:1077
 #: src/components/map/panels/NodeDetailCard.tsx:136
 msgid "Combined from {0} arguments"
 msgstr "Samengevoegd uit {0} argumenten"
@@ -3872,7 +3878,7 @@ msgstr "Doorgaan"
 #~ msgid "Contributing nodes ({0})"
 #~ msgstr "Bijdragende knooppunten ({0})"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1344
+#: src/components/map/renderers/LocalMapGraph.tsx:1350
 msgid "Controls how far charge forces act (higher = more global)"
 msgstr "Bepaalt het bereik van ladingskrachten (hoger = globaler)"
 
@@ -3980,7 +3986,7 @@ msgstr "gesprekken"
 #: src/components/workspace/OrganisationProjectsTable.tsx:225
 #: src/components/report/ReportTimeline.tsx:302
 #: src/components/project/ProjectUsageAndSharing.tsx:471
-#: src/components/map/panels/MapSettingsMenu.tsx:367
+#: src/components/map/panels/MapSettingsMenu.tsx:297
 #: src/components/map/panels/ClusterSummary.tsx:155
 #: src/components/conversation/ProjectConversationsPanel.tsx:623
 #: src/components/conversation/ConversationsMiniList.tsx:141
@@ -4627,7 +4633,7 @@ msgid "Czech conversations, Czech answers"
 msgstr "Tsjechische gesprekken, Tsjechische antwoorden"
 
 #. placeholder {0}: dAdj.toFixed(1)
-#: src/components/map/renderers/LocalMapGraph.tsx:1282
+#: src/components/map/renderers/LocalMapGraph.tsx:1288
 msgid "d̄_adj: {0}"
 msgstr "d̄_adj: {0}"
 
@@ -4643,7 +4649,7 @@ msgstr "Gevarenzone"
 msgid "Dark"
 msgstr "Donker"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:458
+#: src/components/map/panels/MapSettingsMenu.tsx:505
 msgid "Dark mode"
 msgstr "Donkere modus"
 
@@ -5556,11 +5562,11 @@ msgstr "email@werk.com"
 #~ msgid "Embed in a webpage"
 #~ msgstr "Insluiten op een webpagina"
 
-#: src/components/map/MapPage.tsx:90
+#: src/components/map/MapPage.tsx:99
 msgid "Embedding arguments"
 msgstr "Argumenten insluiten"
 
-#: src/components/map/MapPage.tsx:89
+#: src/components/map/MapPage.tsx:98
 msgid "Embedding arguments {done} of {total}"
 msgstr "Argumenten insluiten: {done} van {total}"
 
@@ -5995,11 +6001,11 @@ msgstr "Extra deelnemers"
 msgid "Fact-check"
 msgstr "Factcheck"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:420
+#: src/components/map/panels/MapSettingsMenu.tsx:467
 msgid "Fact-check all"
 msgstr "Alles factchecken"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:418
+#: src/components/map/panels/MapSettingsMenu.tsx:465
 msgid "Fact-check all ({pendingClaimCount})"
 msgstr "Alles factchecken ({pendingClaimCount})"
 
@@ -6218,7 +6224,7 @@ msgid "Fair password"
 msgstr "Redelijk wachtwoord"
 
 #. placeholder {0}: fpStrength.toFixed(2)
-#: src/components/map/renderers/LocalMapGraph.tsx:1305
+#: src/components/map/renderers/LocalMapGraph.tsx:1311
 msgid "Far pair repulsion: {0}"
 msgstr "Afstoting verre paren: {0}"
 
@@ -6285,6 +6291,11 @@ msgstr "Bestandsgrootte: Min {0}, Max {1}, maximaal {MAX_FILES} bestanden"
 #: src/components/conversation/ConversationEdit.tsx:90
 msgid "Filename from uploaded file"
 msgstr "Bestandsnaam van het geüploade bestand"
+
+#: src/components/map/panels/MapSettingsMenu.tsx:243
+#: src/components/map/panels/MapSettingsMenu.tsx:249
+msgid "Filter"
+msgstr "Filter"
 
 #: src/components/conversation/ConversationsMiniList.tsx:153
 msgid "Filter and sort"
@@ -6478,7 +6489,7 @@ msgstr "Instellingen voor de force graph"
 #~ msgid "Force Graph Settings"
 #~ msgstr "Instellingen voor Force Graph"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1292
+#: src/components/map/renderers/LocalMapGraph.tsx:1298
 msgid "Force multipliers"
 msgstr "Krachtvermenigvuldigers"
 
@@ -6494,7 +6505,8 @@ msgstr "Krachtparameters"
 #~ msgid "Force Parameters"
 #~ msgstr "Krachtparameters"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:443
+#: src/components/map/panels/MapToolbar.tsx:165
+#: src/components/map/panels/MapSettingsMenu.tsx:490
 msgid "Force settings"
 msgstr "Krachtinstellingen"
 
@@ -6586,7 +6598,7 @@ msgid "General repulsion force: {0}"
 msgstr "Algemene afstotingskracht: {0}"
 
 #. placeholder {0}: Math.abs(chargeStrength)
-#: src/components/map/renderers/LocalMapGraph.tsx:1318
+#: src/components/map/renderers/LocalMapGraph.tsx:1324
 msgid "General repulsion: {0}"
 msgstr "Algemene afstoting: {0}"
 
@@ -6624,7 +6636,7 @@ msgstr "Genereer gesprekstitels automatisch, met een optie om dit uit te schakel
 #~ msgstr "Bibliotheek genereren"
 
 #: src/components/map/attributes.ts:126
-#: src/components/map/MapPage.tsx:140
+#: src/components/map/MapPage.tsx:149
 msgid "Generate map"
 msgstr "Kaart genereren"
 
@@ -6937,7 +6949,7 @@ msgstr "Details verbergen"
 msgid "Hide from this presentation"
 msgstr "Verbergen in deze presentatie"
 
-#: src/components/map/MapPage.tsx:743
+#: src/components/map/MapPage.tsx:764
 msgid "Hide missing arguments"
 msgstr "Ontbrekende argumenten verbergen"
 
@@ -7321,7 +7333,7 @@ msgstr "inzicht {0}"
 #~ msgid "Inspect evidence or hide a finding from this presentation. Shared results stay available in Analysis."
 #~ msgstr ""
 
-#: src/components/map/MapPage.tsx:745
+#: src/components/map/MapPage.tsx:766
 msgid "Inspect missing arguments"
 msgstr "Ontbrekende argumenten bekijken"
 
@@ -8216,11 +8228,11 @@ msgstr "Presentatie laden"
 #~ msgid "Loading projects..."
 #~ msgstr "Projecten laden..."
 
-#: src/components/map/MapPage.tsx:533
+#: src/components/map/MapPage.tsx:551
 msgid "Loading the map."
 msgstr "De kaart wordt geladen."
 
-#: src/components/map/MapPage.tsx:812
+#: src/components/map/MapPage.tsx:833
 msgid "Loading the new scope. The current map stays until then."
 msgstr "Nieuw bereik laden. De huidige kaart blijft tot die tijd staan."
 
@@ -8255,19 +8267,19 @@ msgstr "Bezig met laden..."
 msgid "Loading…"
 msgstr "Bezig met laden…"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1241
+#: src/components/map/renderers/LocalMapGraph.tsx:1245
 msgid "Local argument map"
 msgstr "Lokale argumentenkaart"
 
-#: src/components/map/MapExperience.tsx:573
+#: src/components/map/MapExperience.tsx:590
 msgid "Local map"
 msgstr "Lokale kaart"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1264
+#: src/components/map/renderers/LocalMapGraph.tsx:1270
 msgid "Local map forces"
 msgstr "Krachten lokale kaart"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1254
+#: src/components/map/renderers/LocalMapGraph.tsx:1260
 msgid "Local map settings"
 msgstr "Instellingen lokale kaart"
 
@@ -8275,7 +8287,7 @@ msgstr "Instellingen lokale kaart"
 #~ msgid "LocalMap Forces"
 #~ msgstr "LocalMap Forces"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1268
+#: src/components/map/renderers/LocalMapGraph.tsx:1274
 msgid "LocalMAP paper parameters"
 msgstr "Parameters uit de LocalMAP-paper"
 
@@ -8474,8 +8486,8 @@ msgstr "Er zijn zojuist veel kaarten gestart. Probeer het zo meteen nog eens."
 
 #: src/routes/project/present/blockLabel.ts:6
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:152
-#: src/components/map/MapPage.tsx:648
-#: src/components/map/panels/MapSettingsMenu.tsx:255
+#: src/components/map/MapPage.tsx:666
+#: src/components/map/panels/MapSettingsMenu.tsx:382
 msgid "Map"
 msgstr "Map"
 
@@ -8491,11 +8503,15 @@ msgstr "Map-argumenten"
 msgid "Map budget"
 msgstr "Kaartbudget"
 
+#: src/components/map/panels/MapToolbar.tsx:131
+msgid "Map controls"
+msgstr "Kaartbediening"
+
 #: src/features/processes/copy.ts:13
 msgid "Map failed"
 msgstr "Map mislukt"
 
-#: src/components/map/MapPage.tsx:575
+#: src/components/map/MapPage.tsx:593
 msgid "Map reads this project's transcripts, finds the arguments people make, and places related arguments close together. Generate a map to explore them."
 msgstr "Kaart leest de transcripten van dit project, vindt de argumenten die mensen noemen en plaatst verwante argumenten dicht bij elkaar. Genereer een kaart om ze te verkennen."
 
@@ -8583,7 +8599,7 @@ msgstr "MCP is een koppeling waarmee een AI-assistent zoals Claude, ChatGPT of L
 msgid "MCP URL"
 msgstr "MCP-URL"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1273
+#: src/components/map/renderers/LocalMapGraph.tsx:1279
 msgid "Medium distance threshold (default: 10)"
 msgstr "Drempelwaarde gemiddelde afstand (standaard: 10)"
 
@@ -8955,7 +8971,7 @@ msgstr "Negatief"
 #~ msgstr "Aantrekking buurnodes: {0}"
 
 #. placeholder {0}: nnStrength.toFixed(2)
-#: src/components/map/renderers/LocalMapGraph.tsx:1296
+#: src/components/map/renderers/LocalMapGraph.tsx:1302
 msgid "Neighbour attraction: {0}"
 msgstr "Aantrekking buurnodes: {0}"
 
@@ -9128,7 +9144,7 @@ msgstr "Nog geen agents gekoppeld."
 msgid "No arguments saved yet."
 msgstr "Nog geen argumenten opgeslagen."
 
-#: src/components/map/MapPage.tsx:594
+#: src/components/map/MapPage.tsx:612
 #: src/components/map/panels/BudgetStates.tsx:9
 msgid "No arguments were found in this project's conversations."
 msgstr "Er zijn geen argumenten gevonden in de gesprekken van dit project."
@@ -9288,7 +9304,7 @@ msgstr "Geen gekoppelde argumenten."
 msgid "No logo set. dembrane default will be used."
 msgstr "Geen logo ingesteld. De standaard van dembrane wordt gebruikt."
 
-#: src/components/map/MapPage.tsx:571
+#: src/components/map/MapPage.tsx:589
 msgid "No map has been generated for this project yet."
 msgstr "Er is nog geen kaart gegenereerd voor dit project."
 
@@ -9882,6 +9898,10 @@ msgstr "Heb je het besproken? Klik op \"Herzien\" om {objectLabel} aan te passen
 #: src/components/participant/verify/VerifyInstructions.tsx:26
 msgid "participant.verify.instructions.read.aloud"
 msgstr "Lees {objectLabel} hardop voor en vertel wat je eventueel wilt aanpassen."
+
+#: src/components/map/panels/MapToolbar.tsx:175
+msgid "One at a time"
+msgstr "Eén tegelijk"
 
 #: src/components/pricing/questions.ts:159
 msgid "One big event at the end of the year"
@@ -10578,7 +10598,8 @@ msgstr "Wachtwoorden komen niet overeen"
 #~ msgid "Paste it into any page. It stays live."
 #~ msgstr "Plak het in een willekeurige pagina. Het blijft live."
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1230
+#: src/components/map/renderers/LocalMapGraph.tsx:1234
+#: src/components/map/panels/MapToolbar.tsx:136
 msgid "Pause physics"
 msgstr "Fysica pauzeren"
 
@@ -11614,11 +11635,11 @@ msgstr "Een skill lezen"
 msgid "Reading a transcript"
 msgstr "Een transcript lezen"
 
-#: src/components/map/MapPage.tsx:97
+#: src/components/map/MapPage.tsx:106
 msgid "Reading conversations"
 msgstr "Gesprekken lezen"
 
-#: src/components/map/MapPage.tsx:96
+#: src/components/map/MapPage.tsx:105
 msgid "Reading conversations {done} of {total}"
 msgstr "Gesprekken lezen: {done} van {total}"
 
@@ -11858,7 +11879,7 @@ msgstr "Vernieuwen…"
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:625
 #: src/components/popcorn/PopcornActions.tsx:64
 #: src/components/popcorn/PopcornActions.tsx:86
-#: src/components/map/MapPage.tsx:138
+#: src/components/map/MapPage.tsx:147
 #: src/components/conversation/ConversationEdit.tsx:401
 #: src/components/conversation/ConversationEdit.tsx:469
 msgid "Regenerate"
@@ -11892,7 +11913,7 @@ msgstr "Registreer | dembrane"
 
 #: src/components/map/panels/NodeDetailCard.tsx:323
 #: src/components/map/panels/NodeDetailCard.tsx:529
-#: src/components/map/panels/MapSettingsMenu.tsx:288
+#: src/components/map/panels/MapSettingsMenu.tsx:415
 msgid "Relationships"
 msgstr "Relaties"
 
@@ -12476,7 +12497,8 @@ msgstr "Resultaten staan in de taal die mensen spraken. Kies een taal om elke po
 msgid "participant.button.stop.resume"
 msgstr "Hervatten"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1230
+#: src/components/map/renderers/LocalMapGraph.tsx:1234
+#: src/components/map/panels/MapToolbar.tsx:136
 msgid "Resume physics"
 msgstr "Simulatie hervatten"
 
@@ -13499,6 +13521,8 @@ msgstr "Instellen"
 #: src/features/sidebar/views/user/UserSettingsView.tsx:15
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:31
 #: src/features/sidebar/views/org/OrgHomeView.tsx:151
+#: src/components/map/panels/MapSettingsMenu.tsx:370
+#: src/components/map/panels/MapSettingsMenu.tsx:376
 #: src/components/layout/ParticipantHeader.tsx:125
 #: src/components/layout/ParticipantHeader.tsx:126
 msgid "Settings"
@@ -13673,7 +13697,7 @@ msgstr "Toon alle {0}"
 msgid "Show all {total}"
 msgstr "Toon alle {total}"
 
-#: src/components/map/MapPage.tsx:804
+#: src/components/map/MapPage.tsx:825
 msgid "Show all conversations"
 msgstr "Alle gesprekken tonen"
 
@@ -13681,7 +13705,7 @@ msgstr "Alle gesprekken tonen"
 msgid "Show audio player"
 msgstr "Toon audiospeler"
 
-#: src/components/map/MapPage.tsx:765
+#: src/components/map/MapPage.tsx:786
 msgid "Show current arguments"
 msgstr "Huidige argumenten tonen"
 
@@ -13693,7 +13717,7 @@ msgstr "Gegevens tonen"
 msgid "Show detail"
 msgstr "Toon details"
 
-#: src/components/map/MapPage.tsx:786
+#: src/components/map/MapPage.tsx:807
 msgid "Show every tag"
 msgstr "Alle tags tonen"
 
@@ -13731,7 +13755,7 @@ msgstr "Meer versies tonen"
 msgid "Show on the map"
 msgstr "Laat op de kaart zien"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:329
+#: src/components/map/panels/MapSettingsMenu.tsx:259
 msgid "Show only conversations with any of the ticked tags."
 msgstr "Toon alleen gesprekken met een van de aangevinkte tags."
 
@@ -13822,11 +13846,11 @@ msgid "Showing {rangeStart}-{rangeEnd} of {total}"
 msgstr "{rangeStart}-{rangeEnd} van {total}"
 
 #. placeholder {0}: tagIndex.tags .filter((tag) => chosenTags.has(tag.id)) .map((tag) => tag.name) .join(", ")
-#: src/components/map/MapPage.tsx:772
+#: src/components/map/MapPage.tsx:793
 msgid "Showing conversations tagged {0}."
 msgstr "Gesprekken met tag {0}."
 
-#: src/components/map/MapPage.tsx:758
+#: src/components/map/MapPage.tsx:779
 msgid "Showing the arguments of one result."
 msgstr "De argumenten van één resultaat worden getoond."
 
@@ -13851,7 +13875,8 @@ msgstr "Bovenaan het scherm te zien. Je kunt dit altijd wijzigen."
 msgid "Shown in the organisation header and in email subject lines."
 msgstr "Wordt getoond in de organisatiekop en in onderwerpregels van e-mails."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:265
+#: src/components/map/panels/MapToolbar.tsx:175
+#: src/components/map/panels/MapSettingsMenu.tsx:392
 msgid "Side by side"
 msgstr "Naast elkaar"
 
@@ -13897,7 +13922,7 @@ msgstr "Slack-community"
 msgid "Smoother recording and quicker questions"
 msgstr "Soepeler opnemen en sneller vragen stellen"
 
-#: src/components/map/MapPage.tsx:752
+#: src/components/map/MapPage.tsx:773
 msgid "Some arguments are based on an earlier analysis."
 msgstr "Sommige argumenten zijn gebaseerd op een eerdere analyse."
 
@@ -14120,8 +14145,8 @@ msgid "Spotlight"
 msgstr "Spotlight"
 
 #: src/components/map/panels/DensityControl.tsx:81
-msgid "Spread out"
-msgstr "Uitgespreid"
+#~ msgid "Spread out"
+#~ msgstr "Uitgespreid"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:3157
 #: src/features/sidebar/shell/UserMenu.tsx:167
@@ -14563,7 +14588,7 @@ msgstr "Tag verwijderd"
 
 #: src/components/project/ProjectTagsInput.tsx:255
 #: src/components/participant/ParticipantInitiateForm.tsx:281
-#: src/components/map/panels/MapSettingsMenu.tsx:326
+#: src/components/map/panels/MapSettingsMenu.tsx:256
 #: src/components/conversation/ProjectConversationsPanel.tsx:706
 #: src/components/conversation/ConversationsMiniList.tsx:179
 #: src/components/conversation/ConversationEdit.tsx:424
@@ -14912,7 +14937,7 @@ msgid "The invite was sent to {invitedEmail}, but you're signed in as {myEmail}.
 msgstr "De uitnodiging is verstuurd naar {invitedEmail}, maar je bent ingelogd als {myEmail}. Log uit en meld je aan met het juiste adres, of vraag de beheerder om {myEmail} opnieuw uit te nodigen."
 
 #. placeholder {0}: failedAttempt.error ?? ""
-#: src/components/map/MapPage.tsx:718
+#: src/components/map/MapPage.tsx:739
 msgid "The last generation failed, so this is still the previous map. {0}"
 msgstr "De laatste keer genereren is mislukt, dus dit is nog de vorige kaart. {0}"
 
@@ -14941,11 +14966,11 @@ msgid "The live popcorn deck and the canvases built for this project live here."
 msgstr "Het live Popcorn-deck en de canvassen die voor dit project zijn gemaakt, vind je hier."
 
 #. placeholder {0}: failedAttempt.error ?? ""
-#: src/components/map/MapPage.tsx:723
+#: src/components/map/MapPage.tsx:744
 msgid "The map could not be generated. {0}"
 msgstr "De kaart kon niet worden gegenereerd. {0}"
 
-#: src/components/map/MapPage.tsx:545
+#: src/components/map/MapPage.tsx:563
 msgid "The map could not be loaded"
 msgstr "De kaart kon niet worden geladen"
 
@@ -14961,7 +14986,7 @@ msgstr "De kaart kon niet worden geladen."
 msgid "The map could not be started."
 msgstr "De kaart kon niet worden gestart."
 
-#: src/components/map/MapPage.tsx:558
+#: src/components/map/MapPage.tsx:576
 msgid "The map is being generated. It appears here when it is ready."
 msgstr "De kaart wordt gegenereerd. Hij verschijnt hier zodra hij klaar is."
 
@@ -15498,8 +15523,8 @@ msgstr "Deze presentatie is niet beschikbaar."
 msgid "This project could not be reached."
 msgstr "Dit project was niet bereikbaar."
 
-#: src/components/map/MapPage.tsx:564
-#: src/components/map/MapPage.tsx:589
+#: src/components/map/MapPage.tsx:582
+#: src/components/map/MapPage.tsx:607
 msgid "This project has no conversations with transcripts yet. Generate a map once conversations have been transcribed."
 msgstr "Dit project heeft nog geen gesprekken met transcripten. Genereer een kaart zodra gesprekken zijn getranscribeerd."
 
@@ -16048,7 +16073,7 @@ msgstr "Vertalen: {translated} van {total} naar het {language}"
 msgid "Translation progress"
 msgstr "Voortgang van vertaling"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:264
+#: src/components/map/panels/MapSettingsMenu.tsx:391
 #: src/components/map/panels/DetailsModal.tsx:137
 msgid "Tree"
 msgstr "Boom"
@@ -16084,7 +16109,7 @@ msgstr "Problemen met inloggen? Neem contact op via support@dembrane.com."
 #: src/components/results/resultEditing.tsx:554
 #: src/components/pricing/PricingTextInput.tsx:330
 #: src/components/present/TranslationStatus.tsx:143
-#: src/components/map/MapPage.tsx:136
+#: src/components/map/MapPage.tsx:145
 #: src/components/map/panels/SpotlightPanel.tsx:414
 #: src/components/map/panels/HistoryPanel.tsx:163
 #: src/components/dropzone/UploadConversationDropzone.tsx:862
@@ -16980,7 +17005,7 @@ msgstr "Wachten op het eerste gesprek met een transcript."
 msgid "Waiting for the next node"
 msgstr "Wachten op het volgende knooppunt"
 
-#: src/components/map/MapPage.tsx:99
+#: src/components/map/MapPage.tsx:108
 msgid "Waiting to start"
 msgstr "Wachten om te beginnen"
 

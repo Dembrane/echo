@@ -12,7 +12,7 @@ import {
 	Stack,
 	Text,
 } from "@mantine/core";
-import { CaretDownIcon } from "@phosphor-icons/react";
+import { FunnelSimpleIcon, GearSixIcon } from "@phosphor-icons/react";
 import { attributeFor, COLOR_BY_OPTIONS } from "../attributes";
 import type {
 	BudgetAdjustment,
@@ -188,7 +188,151 @@ const BudgetControls = ({
 	);
 };
 
-/** Panel visibility, colour mode, budgets, fact-check options and dark mode. */
+/**
+ * Which data the map shows: tags and conversations. Its own quiet trigger
+ * beside Settings; nothing where the map has neither to filter by.
+ */
+export const MapFilterMenu = ({
+	conversations = NO_CONVERSATIONS,
+	hiddenConversations = NONE_HIDDEN,
+	onHiddenConversationsChange,
+	tags = NO_CONVERSATIONS,
+	chosenTags = NONE_HIDDEN,
+	onChosenTagsChange,
+	withinPortal = true,
+}: Pick<
+	MapSettingsMenuProps,
+	| "conversations"
+	| "hiddenConversations"
+	| "onHiddenConversationsChange"
+	| "tags"
+	| "chosenTags"
+	| "onChosenTagsChange"
+	| "withinPortal"
+>) => {
+	const toggleTag = (id: string, chosen: boolean) => {
+		const next = new Set(chosenTags);
+		if (chosen) next.add(id);
+		else next.delete(id);
+		onChosenTagsChange?.(next);
+	};
+	const toggleConversation = (id: string, shown: boolean) => {
+		const next = new Set(hiddenConversations);
+		if (shown) next.delete(id);
+		else next.add(id);
+		onHiddenConversationsChange?.(next);
+	};
+	const hasTags = Boolean(onChosenTagsChange) && tags.length > 0;
+	const hasConversations =
+		Boolean(onHiddenConversationsChange) && conversations.length > 1;
+	if (!hasTags && !hasConversations) return null;
+	return (
+		<Popover
+			position="bottom-end"
+			shadow="xl"
+			width={300}
+			radius={0}
+			withinPortal={withinPortal}
+		>
+			<Popover.Target>
+				<Button
+					variant="subtle"
+					color="gray"
+					leftSection={<FunnelSimpleIcon size={20} />}
+				>
+					<Trans>Filter</Trans>
+				</Button>
+			</Popover.Target>
+			<Popover.Dropdown>
+				<Stack gap="sm">
+					<Text size="sm">
+						<Trans>Filter</Trans>
+					</Text>
+					{onChosenTagsChange && tags.length > 0 && (
+						<>
+							<Stack gap="xs">
+								<Stack gap={4}>
+									<Text size="xs">
+										<Trans>Tags</Trans>
+									</Text>
+									<Text size="xs" c="dimmed">
+										<Trans>
+											Show only conversations with any of the ticked tags.
+										</Trans>
+									</Text>
+								</Stack>
+								<ScrollArea.Autosize mah={160} type="auto">
+									<Stack gap="xs">
+										{tags.map((tag) => (
+											<Checkbox
+												key={tag.id}
+												size="sm"
+												label={
+													<span className="inline-flex items-center gap-2">
+														<span
+															aria-hidden="true"
+															className="inline-block size-2 shrink-0 rounded-full"
+															style={{ backgroundColor: tag.color }}
+														/>
+														{tag.name}
+													</span>
+												}
+												checked={chosenTags.has(tag.id)}
+												onChange={(event) =>
+													toggleTag(tag.id, event.currentTarget.checked)
+												}
+											/>
+										))}
+									</Stack>
+								</ScrollArea.Autosize>
+							</Stack>
+						</>
+					)}
+
+					{onHiddenConversationsChange && conversations.length > 1 && (
+						<>
+							{hasTags && <Divider />}
+							<Stack gap="xs">
+								<Text size="xs">
+									<Trans>Conversations</Trans>
+								</Text>
+								<ScrollArea.Autosize mah={200} type="auto">
+									<Stack gap="xs">
+										{conversations.map((conversation) => (
+											<Checkbox
+												key={conversation.id}
+												size="sm"
+												label={
+													<span className="inline-flex items-center gap-2">
+														<span
+															aria-hidden="true"
+															className="inline-block size-2 shrink-0 rounded-full"
+															style={{ backgroundColor: conversation.color }}
+														/>
+														{conversation.name}
+													</span>
+												}
+												checked={!hiddenConversations.has(conversation.id)}
+												onChange={(event) =>
+													toggleConversation(
+														conversation.id,
+														event.currentTarget.checked,
+													)
+												}
+											/>
+										))}
+									</Stack>
+								</ScrollArea.Autosize>
+							</Stack>
+						</>
+					)}
+				</Stack>
+			</Popover.Dropdown>
+		</Popover>
+	);
+};
+
+/** Panel visibility, layout, colour mode, budgets, fact-check, forces and dark mode. */
 export const MapSettingsMenu = ({
 	settings,
 	onChange,
@@ -201,29 +345,12 @@ export const MapSettingsMenu = ({
 	canFactCheck,
 	hide = NOTHING_HIDDEN,
 	withinPortal = true,
-	conversations = NO_CONVERSATIONS,
-	hiddenConversations = NONE_HIDDEN,
-	onHiddenConversationsChange,
 	tags = NO_CONVERSATIONS,
-	chosenTags = NONE_HIDDEN,
-	onChosenTagsChange,
 }: MapSettingsMenuProps) => {
-	const toggleTag = (id: string, chosen: boolean) => {
-		const next = new Set(chosenTags);
-		if (chosen) next.add(id);
-		else next.delete(id);
-		onChosenTagsChange?.(next);
-	};
 	// Colouring by tag is offered only where there are tags to colour by.
 	const colorOptions = MAP_COLOR_BY_OPTIONS.filter(
 		(option) => option !== "tag" || tags.length > 0,
 	);
-	const toggleConversation = (id: string, shown: boolean) => {
-		const next = new Set(hiddenConversations);
-		if (shown) next.delete(id);
-		else next.add(id);
-		onHiddenConversationsChange?.(next);
-	};
 	return (
 		<Popover
 			position="bottom-end"
@@ -233,20 +360,20 @@ export const MapSettingsMenu = ({
 			withinPortal={withinPortal}
 		>
 			<Popover.Target>
-				{/* Quiet and closed by default: the density dial on the map is the
-				    main control, the rest waits here. */}
+				{/* Quiet and closed by default: the toolbar on the map holds the
+				    main controls; how the map looks and behaves waits here. */}
 				<Button
 					variant="subtle"
 					color="gray"
-					rightSection={<CaretDownIcon size={16} />}
+					leftSection={<GearSixIcon size={20} />}
 				>
-					<Trans>Advanced</Trans>
+					<Trans>Settings</Trans>
 				</Button>
 			</Popover.Target>
 			<Popover.Dropdown>
 				<Stack gap="sm">
 					<Text size="sm">
-						<Trans>Advanced</Trans>
+						<Trans>Settings</Trans>
 					</Text>
 
 					{!hide.includes("layout") && (
@@ -316,86 +443,6 @@ export const MapSettingsMenu = ({
 							))}
 						</Stack>
 					</Radio.Group>
-
-					{onChosenTagsChange && tags.length > 0 && (
-						<>
-							<Divider />
-							<Stack gap="xs">
-								<Stack gap={4}>
-									<Text size="xs">
-										<Trans>Tags</Trans>
-									</Text>
-									<Text size="xs" c="dimmed">
-										<Trans>
-											Show only conversations with any of the ticked tags.
-										</Trans>
-									</Text>
-								</Stack>
-								<ScrollArea.Autosize mah={160} type="auto">
-									<Stack gap="xs">
-										{tags.map((tag) => (
-											<Checkbox
-												key={tag.id}
-												size="sm"
-												label={
-													<span className="inline-flex items-center gap-2">
-														<span
-															aria-hidden="true"
-															className="inline-block size-2 shrink-0 rounded-full"
-															style={{ backgroundColor: tag.color }}
-														/>
-														{tag.name}
-													</span>
-												}
-												checked={chosenTags.has(tag.id)}
-												onChange={(event) =>
-													toggleTag(tag.id, event.currentTarget.checked)
-												}
-											/>
-										))}
-									</Stack>
-								</ScrollArea.Autosize>
-							</Stack>
-						</>
-					)}
-
-					{onHiddenConversationsChange && conversations.length > 1 && (
-						<>
-							<Divider />
-							<Stack gap="xs">
-								<Text size="xs">
-									<Trans>Conversations</Trans>
-								</Text>
-								<ScrollArea.Autosize mah={200} type="auto">
-									<Stack gap="xs">
-										{conversations.map((conversation) => (
-											<Checkbox
-												key={conversation.id}
-												size="sm"
-												label={
-													<span className="inline-flex items-center gap-2">
-														<span
-															aria-hidden="true"
-															className="inline-block size-2 shrink-0 rounded-full"
-															style={{ backgroundColor: conversation.color }}
-														/>
-														{conversation.name}
-													</span>
-												}
-												checked={!hiddenConversations.has(conversation.id)}
-												onChange={(event) =>
-													toggleConversation(
-														conversation.id,
-														event.currentTarget.checked,
-													)
-												}
-											/>
-										))}
-									</Stack>
-								</ScrollArea.Autosize>
-							</Stack>
-						</>
-					)}
 
 					{colorBy === "factCheck" && canFactCheck && onFactCheckAll && (
 						<>

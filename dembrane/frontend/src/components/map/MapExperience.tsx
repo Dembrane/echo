@@ -24,7 +24,7 @@ import { localGroupBackend, useMapGroups } from "./hooks/useMapGroups";
 import type { EdgeCounts } from "./layout/edgeBudget";
 import { EMPTY_EDGES, useMapGeometry } from "./layout/useMapGeometry";
 import { ArgumentAccordion } from "./panels/ArgumentAccordion";
-import { DensityControl } from "./panels/DensityControl";
+import { MapToolbar, VIEWS, viewOf } from "./panels/MapToolbar";
 import { DetailsModal, type DetailsTarget } from "./panels/DetailsModal";
 import {
 	type HistoryItem,
@@ -146,8 +146,11 @@ export type MapExperienceProps = {
 	budgets: MapBudgets;
 	colorBy: ColorBy;
 	onColorByChange: (colorBy: ColorBy) => void;
-	/** Moves the cluster density dial on the map; none leaves the dial out. */
-	onDensityChange?: (density: number) => void;
+	/**
+	 * Changes the map settings from the toolbar on the map (density, view,
+	 * force settings); none leaves the toolbar out, as in the room.
+	 */
+	onSettingsChange?: (patch: Partial<MapSettings>) => void;
 	settings: MapSettings;
 	factCheckStates: FactCheckStates;
 	onFactCheck: (nodeId: string, options?: { force?: boolean }) => void;
@@ -181,7 +184,7 @@ export const MapExperience = ({
 	budgets,
 	colorBy,
 	onColorByChange,
-	onDensityChange,
+	onSettingsChange,
 	settings,
 	factCheckStates,
 	onFactCheck,
@@ -250,6 +253,8 @@ export const MapExperience = ({
 	// map's own picks (its first node, the walk) are left out. A click also
 	// lets a distilled cluster go from Spotlight.
 	const [clicks, setClicks] = useState<{ nodeId: string; at: number }[]>([]);
+	// The toolbar's pause, for the cluster map (the tree settles by itself).
+	const [paused, setPaused] = useState(false);
 	const { deselect, selectDistillation } = title;
 	useEffect(() => {
 		let seen = store.getState().selectionRevision;
@@ -439,13 +444,25 @@ export const MapExperience = ({
 	return (
 		<div className="flex h-full min-h-0 flex-col">
 			{/* The maps fill the view; the list of arguments waits under them.
-			    The cluster density dial leads them: the map's one main control. */}
+			    The toolbar leads them, on the map itself. */}
 			<div className="flex h-full shrink-0 flex-col">
-				{onDensityChange && (
-					<div className="shrink-0 px-2 pb-2">
-						<DensityControl
+				{onSettingsChange && (
+					<div className="flex shrink-0 justify-end px-2 pb-1">
+						<MapToolbar
+							view={viewOf(settings)}
+							onViewChange={(view) => onSettingsChange(VIEWS[view])}
+							paused={paused}
+							onTogglePaused={() => setPaused((value) => !value)}
+							settingsOpen={settings.showForceSettings}
+							onToggleSettings={() =>
+								onSettingsChange({
+									showForceSettings: !settings.showForceSettings,
+								})
+							}
 							density={settings.clusterDensity}
-							onChange={onDensityChange}
+							onDensityChange={(clusterDensity) =>
+								onSettingsChange({ clusterDensity })
+							}
 						/>
 					</div>
 				)}
@@ -591,6 +608,7 @@ export const MapExperience = ({
 									timerProgress={title.timerProgress}
 									density={settings.clusterDensity}
 									showForceSettings={settings.showForceSettings}
+									paused={onSettingsChange ? paused : undefined}
 								/>
 							</div>
 						</section>

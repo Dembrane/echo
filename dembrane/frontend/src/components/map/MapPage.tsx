@@ -69,7 +69,16 @@ import {
 import { useMapUrlState } from "./hooks/useMapUrlState";
 import { MAP_LIGHT_VARS, MapExperience, MapSurface } from "./MapExperience";
 import { EmptyArgumentsState, OverBudgetState } from "./panels/BudgetStates";
-import { MapSettingsMenu } from "./panels/MapSettingsMenu";
+import {
+	MapFilterMenu,
+	MapSettingsMenu,
+	type MapSettingsControl,
+} from "./panels/MapSettingsMenu";
+
+const MAP_PAGE_HIDDEN_CONTROLS: ReadonlyArray<MapSettingsControl> = [
+	"layout",
+	"showForceSettings",
+];
 import type { ConversationHref } from "./panels/NodeDetailCard";
 import { ResultList } from "./panels/ResultList";
 import { MapInteractionProvider } from "./state/interactionStore";
@@ -360,6 +369,15 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 		const known = new Set(tagIndex.tags.map((tag) => tag.id));
 		return new Set(urlState.tags.filter((id) => known.has(id)));
 	}, [tagIndex, urlState.tags]);
+	const mapTags = useMemo(
+		() =>
+			tagIndex.tags.map((tag) => ({
+				color: conversationColor(tag.slot),
+				id: tag.id,
+				name: tag.name,
+			})),
+		[tagIndex],
+	);
 	// Hidden by hand, or carrying none of the chosen tags.
 	const leftOut = useMemo(
 		() =>
@@ -505,7 +523,7 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 				budgets={budgets}
 				colorBy={colorBy}
 				onColorByChange={handleColorByChange}
-				onDensityChange={(clusterDensity) => updateSettings({ clusterDensity })}
+				onSettingsChange={updateSettings}
 				settings={settings}
 				factCheckStates={factCheckStates}
 				onFactCheck={factCheck.run}
@@ -674,6 +692,20 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 						/>
 					)}
 					{graph && argumentCount > 0 && (
+						<MapFilterMenu
+							conversations={conversations}
+							hiddenConversations={hiddenConversations}
+							onHiddenConversationsChange={(hidden) =>
+								setUrlState({ hidden: [...hidden] })
+							}
+							tags={mapTags}
+							chosenTags={chosenTags}
+							onChosenTagsChange={(chosen) =>
+								setUrlState({ tags: [...chosen] })
+							}
+						/>
+					)}
+					{graph && argumentCount > 0 && (
 						<MapSettingsMenu
 							settings={settings}
 							onChange={updateSettings}
@@ -684,20 +716,9 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 							pendingClaimCount={pendingClaims.length}
 							onFactCheckAll={handleFactCheckAll}
 							canFactCheck={!readOnly}
-							conversations={conversations}
-							hiddenConversations={hiddenConversations}
-							onHiddenConversationsChange={(hidden) =>
-								setUrlState({ hidden: [...hidden] })
-							}
-							tags={tagIndex.tags.map((tag) => ({
-								color: conversationColor(tag.slot),
-								id: tag.id,
-								name: tag.name,
-							}))}
-							chosenTags={chosenTags}
-							onChosenTagsChange={(chosen) =>
-								setUrlState({ tags: [...chosen] })
-							}
+							tags={mapTags}
+							// The toolbar on the map holds the view and the forces.
+							hide={MAP_PAGE_HIDDEN_CONTROLS}
 						/>
 					)}
 				</Group>

@@ -3,7 +3,13 @@ import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, render, screen } from "@testing-library/react";
+import {
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+	within,
+} from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import {
 	afterAll,
@@ -82,13 +88,27 @@ describe("MapPage in fixture mode", () => {
 		expect(container.querySelectorAll("#localmap circle.node")).toHaveLength(
 			50,
 		);
-		// The density dial is the map's one main control, on the map itself.
+		// The toolbar on the map: pause, the density dial, forces and the view.
+		const toolbar = screen.getByRole("toolbar", { name: "Map controls" });
+		for (const name of [
+			"Pause physics",
+			"Force settings",
+			"Side by side",
+			"Cluster map",
+			"Argument tree",
+		]) {
+			expect(within(toolbar).getByRole("button", { name })).toBeTruthy();
+		}
 		expect(
-			screen.getByRole("slider", {
+			within(toolbar).getByRole("slider", {
 				name: "Cluster density: fewer or more clusters",
 			}),
 		).toBeTruthy();
-		expect(screen.getByRole("button", { name: "Advanced" })).toBeTruthy();
+		fireEvent.click(
+			within(toolbar).getByRole("button", { name: "Side by side" }),
+		);
+		expect(container.querySelector("#argument-tree")).toBeTruthy();
+		expect(screen.getByRole("button", { name: "Settings" })).toBeTruthy();
 		expect(container.querySelector("#spotlight-panel")).toBeTruthy();
 		// What was spotlit before sits under the spotlit item, in the same panel.
 		expect(

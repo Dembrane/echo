@@ -121,6 +121,8 @@ export interface LocalMapGraphProps {
 	 * panel and the map draws no gear of its own.
 	 */
 	showForceSettings?: boolean;
+	/** The host's pause (its toolbar). Given, the map draws no pause of its own. */
+	paused?: boolean;
 	className?: string;
 	/** Base node radius; each node's size scale multiplies it. */
 	nodeRadius?: number;
@@ -220,6 +222,7 @@ export const LocalMapGraph = ({
 	timerProgress = 0,
 	density = 1,
 	showForceSettings,
+	paused: pausedProp,
 	className = "",
 	nodeRadius = 6,
 	showNeighbourLinks = false,
@@ -336,7 +339,8 @@ export const LocalMapGraph = ({
 
 	// Editable force parameters
 	const [showSettings, setShowSettings] = useState(false);
-	const [paused, setPaused] = useState(false);
+	const [ownPaused, setPaused] = useState(false);
+	const paused = pausedProp ?? ownPaused;
 	const pausedRef = useRef(false);
 	useEffect(() => {
 		if (pausedRef.current === paused) return;
@@ -1241,13 +1245,15 @@ export const LocalMapGraph = ({
 				aria-label={t`Local argument map`}
 			/>
 
-			<MapChromeButton
-				label={pauseLabel}
-				onClick={() => setPaused((p) => !p)}
-				className="left-4"
-			>
-				{paused ? <PlayIcon size={20} /> : <PauseIcon size={20} />}
-			</MapChromeButton>
+			{pausedProp === undefined && (
+				<MapChromeButton
+					label={pauseLabel}
+					onClick={() => setPaused((p) => !p)}
+					className="left-4"
+				>
+					{paused ? <PlayIcon size={20} /> : <PauseIcon size={20} />}
+				</MapChromeButton>
+			)}
 
 			{showForceSettings === undefined && (
 				<MapChromeButton

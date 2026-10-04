@@ -5,7 +5,11 @@ import { MantineProvider } from "@mantine/core";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { DEFAULT_MAP_SETTINGS } from "../state/settings";
-import { type MapConversation, MapSettingsMenu } from "./MapSettingsMenu";
+import {
+	MapFilterMenu,
+	type MapConversation,
+	MapSettingsMenu,
+} from "./MapSettingsMenu";
 
 i18n.load("en-US", {});
 i18n.activate("en-US");
@@ -37,6 +41,12 @@ const open = (tags: MapConversation[], onChosenTagsChange = vi.fn()) => {
 	render(
 		<MantineProvider>
 			<I18nProvider i18n={i18n}>
+				<MapFilterMenu
+					withinPortal={false}
+					tags={tags}
+					chosenTags={new Set()}
+					onChosenTagsChange={onChosenTagsChange}
+				/>
 				<MapSettingsMenu
 					settings={DEFAULT_MAP_SETTINGS}
 					onChange={vi.fn()}
@@ -45,39 +55,41 @@ const open = (tags: MapConversation[], onChosenTagsChange = vi.fn()) => {
 					canFactCheck={false}
 					withinPortal={false}
 					tags={tags}
-					chosenTags={new Set()}
-					onChosenTagsChange={onChosenTagsChange}
 				/>
 			</I18nProvider>
 		</MantineProvider>,
 	);
-	fireEvent.click(screen.getByRole("button", { name: "Advanced" }));
 	return onChosenTagsChange;
 };
+const openMenu = (name: "Filter" | "Settings") =>
+	fireEvent.click(screen.getByRole("button", { name }));
 
 describe("the map's tag controls", () => {
-	it("offer the tags and colouring by tag where the map has tags", async () => {
+	it("filter by tag under Filter, and colour by tag under Settings", async () => {
 		const onChosen = open([{ color: "#fff", id: "t-age", name: "Age" }]);
-		expect(await screen.findByRole("radio", { name: "Tag" })).toBeTruthy();
-		fireEvent.click(screen.getByRole("checkbox", { name: "Age" }));
+		openMenu("Filter");
+		fireEvent.click(await screen.findByRole("checkbox", { name: "Age" }));
 		expect(onChosen).toHaveBeenCalledWith(new Set(["t-age"]));
+		openMenu("Settings");
+		expect(await screen.findByRole("radio", { name: "Tag" })).toBeTruthy();
 	});
 
-	it("keep company with the layout choice and the force settings under Advanced", async () => {
+	it("leave the view and the forces to Settings where there is no toolbar", async () => {
 		open([]);
+		openMenu("Settings");
 		expect(
 			await screen.findByRole("radio", { name: "Side by side" }),
 		).toBeTruthy();
 		expect(
 			screen.getByRole("checkbox", { name: "Force settings" }),
 		).toBeTruthy();
-		expect(screen.queryByRole("slider")).toBeNull();
 	});
 
-	it("are absent where it has none", async () => {
+	it("are absent where it has none, and so is Filter", async () => {
 		open([]);
+		expect(screen.queryByRole("button", { name: "Filter" })).toBeNull();
+		openMenu("Settings");
 		await screen.findByRole("radio", { name: "Valence" });
 		expect(screen.queryByRole("radio", { name: "Tag" })).toBeNull();
-		expect(screen.queryByText("Tags")).toBeNull();
 	});
 });

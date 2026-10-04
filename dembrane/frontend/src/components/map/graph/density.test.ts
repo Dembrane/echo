@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { densityToDial, dialToDensity } from "../panels/DensityControl";
+import { densityToDial, dialToDensity } from "../panels/MapToolbar";
 import {
 	clusterForceParams,
 	LOCAL_MAP_FORCE_DEFAULTS,

@@ -268,7 +268,7 @@ msgid "{0, plural, one {# conversation could not be added to this chat.} other {
 msgstr "{0, plural, one {Non è stato possibile aggiungere # conversazione a questa chat.} other {Non è stato possibile aggiungere # conversazioni a questa chat.}}"
 
 #. placeholder {0}: hiddenConversations.size
-#: src/components/map/MapPage.tsx:793
+#: src/components/map/MapPage.tsx:814
 msgid "{0, plural, one {# conversation is hidden from the map.} other {# conversations are hidden from the map.}}"
 msgstr "{0, plural, one {# conversazione è nascosta dalla mappa.} other {# conversazioni sono nascoste dalla mappa.}}"
 
@@ -724,11 +724,11 @@ msgstr "{accessCount, plural, one {# persona} other {# persone}} in {0}"
 msgid "{alreadyPending} people were already invited. The project is shared once they join."
 msgstr "{alreadyPending} persone erano già state invitate. Il progetto viene condiviso quando entrano."
 
-#: src/components/map/MapPage.tsx:482
+#: src/components/map/MapPage.tsx:500
 msgid "{argumentCount, plural, one {# argument} other {# arguments}}"
 msgstr "{argumentCount, plural, one {# argomento} other {# argomenti}}"
 
-#: src/components/map/MapPage.tsx:481
+#: src/components/map/MapPage.tsx:499
 msgid "{argumentCount, plural, one {# argument} other {# arguments}} from {conversationCount, plural, one {# conversation} other {# conversations}}"
 msgstr "{argumentCount, plural, one {# argomento} other {# argomenti}} da {conversationCount, plural, one {# conversazione} other {# conversazioni}}"
 
@@ -943,7 +943,7 @@ msgstr "{totalWorkspaces, plural, one {# spazio di lavoro} other {# spazi di lav
 msgid "{translated} of {total} translated, {failed} could not be translated"
 msgstr "{translated} di {total} tradotti, {failed} non è stato possibile tradurre"
 
-#: src/components/map/MapPage.tsx:732
+#: src/components/map/MapPage.tsx:753
 msgid "{unplacedCount, plural, one {# argument could not be placed on the map.} other {# arguments could not be placed on the map.}}"
 msgstr "{unplacedCount, plural, one {# argomento non può essere mostrato sulla mappa.} other {# argomenti non possono essere mostrati sulla mappa.}}"
 
@@ -1659,7 +1659,7 @@ msgstr "Adding <0>{totalCount, plural, one {# more conversation} other {# more c
 msgid "select.all.modal.loading.title"
 msgstr "Aggiunta delle conversazioni"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1314
+#: src/components/map/renderers/LocalMapGraph.tsx:1320
 msgid "Additional forces"
 msgstr "Forze aggiuntive"
 
@@ -1715,8 +1715,6 @@ msgid "Admins can reach every workspace in this organisation. Members and extern
 msgstr "Gli amministratori possono accedere a ogni spazio di lavoro in questa organizzazione. I membri e gli utenti esterni vedono solo gli spazi di lavoro a cui hanno accesso."
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:881
-#: src/components/map/panels/MapSettingsMenu.tsx:243
-#: src/components/map/panels/MapSettingsMenu.tsx:249
 msgid "Advanced"
 msgstr "Avanzate"
 
@@ -2298,7 +2296,11 @@ msgstr "Argomento"
 msgid "Argument map"
 msgstr "Mappa delle argomentazioni"
 
-#: src/components/map/MapExperience.tsx:530
+#: src/components/map/panels/MapToolbar.tsx:196
+msgid "Argument tree"
+msgstr "Albero degli argomenti"
+
+#: src/components/map/MapExperience.tsx:547
 msgid "Argument tree (MST)"
 msgstr "Albero delle argomentazioni (MST)"
 
@@ -2539,7 +2541,7 @@ msgstr "Audit logs exported to JSON"
 msgid "Authenticator code"
 msgstr "Authenticator code"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:405
+#: src/components/map/panels/MapSettingsMenu.tsx:452
 msgid "Auto fact-check new claims"
 msgstr "Verifica automatica dei fatti per le nuove affermazioni"
 
@@ -2608,7 +2610,7 @@ msgstr "Avatar removed"
 msgid "Avatar updated"
 msgstr "Avatar updated"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1283
+#: src/components/map/renderers/LocalMapGraph.tsx:1289
 msgid "Avg low-dim distance (default: 10)"
 msgstr "Distanza media a bassa dimensione (predefinita: 10)"
 
@@ -2741,7 +2743,7 @@ msgstr "Prima di connettere un agente"
 #: src/components/project/ProjectPortalEditor.tsx:1372
 #: src/components/project/ProjectPortalEditor.tsx:1452
 #: src/components/project/ProjectExperimentalSection.tsx:50
-#: src/components/map/MapPage.tsx:651
+#: src/components/map/MapPage.tsx:669
 #: src/components/conversation/RetranscribeConversation.tsx:155
 #: src/components/chat/ChatModeSelector.tsx:105
 #: src/components/chat/AgenticIntroModal.tsx:25
@@ -2891,7 +2893,7 @@ msgid "By tag"
 msgstr "Per tag"
 
 #. placeholder {0}: cMed.toFixed(1)
-#: src/components/map/renderers/LocalMapGraph.tsx:1272
+#: src/components/map/renderers/LocalMapGraph.tsx:1278
 msgid "C_Med: {0}"
 msgstr "C_Med: {0}"
 
@@ -3184,7 +3186,7 @@ msgstr "Changing language during an active chat may lead to unexpected results. 
 #~ msgstr ""
 
 #. placeholder {0}: chargeFraction.toFixed(2)
-#: src/components/map/renderers/LocalMapGraph.tsx:1339
+#: src/components/map/renderers/LocalMapGraph.tsx:1345
 msgid "Charge distance (viewport fraction): {0}"
 msgstr "Distanza di carica (frazione di viewport): {0}"
 
@@ -3330,7 +3332,7 @@ msgstr "Scegli una conversazione"
 msgid "Choose a logo file"
 msgstr "Choose a logo file"
 
-#: src/components/map/MapExperience.tsx:607
+#: src/components/map/MapExperience.tsx:625
 msgid "Choose a map under Advanced"
 msgstr "Scegli una mappa in Avanzate"
 
@@ -3551,18 +3553,22 @@ msgid "Cloud Act Safe"
 msgstr "Conforme al Cloud Act"
 
 #: src/components/map/panels/DensityControl.tsx:47
-msgid "Clumped"
-msgstr "Raggruppato"
+#~ msgid "Clumped"
+#~ msgstr "Raggruppato"
 
-#: src/components/map/panels/DensityControl.tsx:40
+#: src/components/map/panels/MapToolbar.tsx:145
 msgid "Cluster density"
 msgstr "Densità dei gruppi"
 
-#: src/components/map/panels/DensityControl.tsx:51
+#: src/components/map/panels/MapToolbar.tsx:149
 msgid "Cluster density: fewer or more clusters"
 msgstr "Densità dei gruppi: meno o più gruppi"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:263
+#: src/components/map/panels/MapToolbar.tsx:189
+msgid "Cluster map"
+msgstr "Mappa dei gruppi"
+
+#: src/components/map/panels/MapSettingsMenu.tsx:390
 msgid "Clusters"
 msgstr "Cluster"
 
@@ -3584,7 +3590,7 @@ msgid "Collection"
 msgstr "Collection"
 
 #. placeholder {0}: collisionRadius.toFixed(1)
-#: src/components/map/renderers/LocalMapGraph.tsx:1328
+#: src/components/map/renderers/LocalMapGraph.tsx:1334
 msgid "Collision radius: {0}x"
 msgstr "Raggio di collisione: {0}x"
 
@@ -3608,7 +3614,7 @@ msgstr "Colora il grafico in base allo stato fattuale"
 msgid "Color graph by valence"
 msgstr "Colora il grafico in base alla valenza"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:304
+#: src/components/map/panels/MapSettingsMenu.tsx:431
 msgid "Color nodes by"
 msgstr "Colora i nodi per"
 
@@ -3637,7 +3643,7 @@ msgstr "combinato da {0}"
 #. placeholder {0}: nodeById.get(d.id)?.metadata.consolidation?.memberCount ?? 0
 #. placeholder {0}: consolidation.memberCount
 #: src/components/map/renderers/MstGraph.tsx:1115
-#: src/components/map/renderers/LocalMapGraph.tsx:1073
+#: src/components/map/renderers/LocalMapGraph.tsx:1077
 #: src/components/map/panels/NodeDetailCard.tsx:136
 msgid "Combined from {0} arguments"
 msgstr "Combinato da {0} argomenti"
@@ -3874,7 +3880,7 @@ msgstr "Continua"
 #~ msgid "Contributing nodes ({0})"
 #~ msgstr "Nodi correlati ({0})"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1344
+#: src/components/map/renderers/LocalMapGraph.tsx:1350
 msgid "Controls how far charge forces act (higher = more global)"
 msgstr "Controlla il raggio delle forze di carica (più alto = più globale)"
 
@@ -3982,7 +3988,7 @@ msgstr "conversations"
 #: src/components/workspace/OrganisationProjectsTable.tsx:225
 #: src/components/report/ReportTimeline.tsx:302
 #: src/components/project/ProjectUsageAndSharing.tsx:471
-#: src/components/map/panels/MapSettingsMenu.tsx:367
+#: src/components/map/panels/MapSettingsMenu.tsx:297
 #: src/components/map/panels/ClusterSummary.tsx:155
 #: src/components/conversation/ProjectConversationsPanel.tsx:623
 #: src/components/conversation/ConversationsMiniList.tsx:141
@@ -4629,7 +4635,7 @@ msgid "Czech conversations, Czech answers"
 msgstr "Conversazioni in ceco, risposte in ceco"
 
 #. placeholder {0}: dAdj.toFixed(1)
-#: src/components/map/renderers/LocalMapGraph.tsx:1282
+#: src/components/map/renderers/LocalMapGraph.tsx:1288
 msgid "d̄_adj: {0}"
 msgstr "d̄_adj: {0}"
 
@@ -4645,7 +4651,7 @@ msgstr "Zona di pericolo"
 msgid "Dark"
 msgstr "Scuro"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:458
+#: src/components/map/panels/MapSettingsMenu.tsx:505
 msgid "Dark mode"
 msgstr "Modalità scura"
 
@@ -5558,11 +5564,11 @@ msgstr "email@work.com"
 #~ msgid "Embed in a webpage"
 #~ msgstr "Incorpora in una pagina web"
 
-#: src/components/map/MapPage.tsx:90
+#: src/components/map/MapPage.tsx:99
 msgid "Embedding arguments"
 msgstr "Incorporamento argomenti"
 
-#: src/components/map/MapPage.tsx:89
+#: src/components/map/MapPage.tsx:98
 msgid "Embedding arguments {done} of {total}"
 msgstr "Incorporamento argomenti: {done} di {total}"
 
@@ -5997,11 +6003,11 @@ msgstr "Partecipanti extra"
 msgid "Fact-check"
 msgstr "Verifica dei fatti"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:420
+#: src/components/map/panels/MapSettingsMenu.tsx:467
 msgid "Fact-check all"
 msgstr "Verifica tutti i fatti"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:418
+#: src/components/map/panels/MapSettingsMenu.tsx:465
 msgid "Fact-check all ({pendingClaimCount})"
 msgstr "Verifica tutti i fatti ({pendingClaimCount})"
 
@@ -6220,7 +6226,7 @@ msgid "Fair password"
 msgstr "Password discreta"
 
 #. placeholder {0}: fpStrength.toFixed(2)
-#: src/components/map/renderers/LocalMapGraph.tsx:1305
+#: src/components/map/renderers/LocalMapGraph.tsx:1311
 msgid "Far pair repulsion: {0}"
 msgstr "Repulsione coppie distanti: {0}"
 
@@ -6287,6 +6293,11 @@ msgstr "File size: Min {0}, Max {1}, up to {MAX_FILES} files"
 #: src/components/conversation/ConversationEdit.tsx:90
 msgid "Filename from uploaded file"
 msgstr "Filename from uploaded file"
+
+#: src/components/map/panels/MapSettingsMenu.tsx:243
+#: src/components/map/panels/MapSettingsMenu.tsx:249
+msgid "Filter"
+msgstr "Filtra"
 
 #: src/components/conversation/ConversationsMiniList.tsx:153
 msgid "Filter and sort"
@@ -6480,7 +6491,7 @@ msgstr "Impostazioni grafico a forze"
 #~ msgid "Force Graph Settings"
 #~ msgstr "Impostazioni grafico a forze"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1292
+#: src/components/map/renderers/LocalMapGraph.tsx:1298
 msgid "Force multipliers"
 msgstr "Moltiplicatori di forza"
 
@@ -6496,7 +6507,8 @@ msgstr "Parametri di forza"
 #~ msgid "Force Parameters"
 #~ msgstr "Parametri di forza"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:443
+#: src/components/map/panels/MapToolbar.tsx:165
+#: src/components/map/panels/MapSettingsMenu.tsx:490
 msgid "Force settings"
 msgstr "Impostazioni delle forze"
 
@@ -6588,7 +6600,7 @@ msgid "General repulsion force: {0}"
 msgstr "Forza di repulsione generale: {0}"
 
 #. placeholder {0}: Math.abs(chargeStrength)
-#: src/components/map/renderers/LocalMapGraph.tsx:1318
+#: src/components/map/renderers/LocalMapGraph.tsx:1324
 msgid "General repulsion: {0}"
 msgstr "Repulsione generale: {0}"
 
@@ -6626,7 +6638,7 @@ msgstr "Genera automaticamente i titoli delle conversazioni, con l'opzione di di
 #~ msgstr "Generate library"
 
 #: src/components/map/attributes.ts:126
-#: src/components/map/MapPage.tsx:140
+#: src/components/map/MapPage.tsx:149
 msgid "Generate map"
 msgstr "Genera mappa"
 
@@ -6939,7 +6951,7 @@ msgstr "Nascondi dettagli"
 msgid "Hide from this presentation"
 msgstr "Nascondi da questa presentazione"
 
-#: src/components/map/MapPage.tsx:743
+#: src/components/map/MapPage.tsx:764
 msgid "Hide missing arguments"
 msgstr "Nascondi gli argomenti mancanti"
 
@@ -7323,7 +7335,7 @@ msgstr "insight {0}"
 #~ msgid "Inspect evidence or hide a finding from this presentation. Shared results stay available in Analysis."
 #~ msgstr ""
 
-#: src/components/map/MapPage.tsx:745
+#: src/components/map/MapPage.tsx:766
 msgid "Inspect missing arguments"
 msgstr "Guarda gli argomenti mancanti"
 
@@ -8218,11 +8230,11 @@ msgstr "Caricamento presentazione"
 #~ msgid "Loading projects..."
 #~ msgstr "Caricamento progetti..."
 
-#: src/components/map/MapPage.tsx:533
+#: src/components/map/MapPage.tsx:551
 msgid "Loading the map."
 msgstr "Caricamento della mappa."
 
-#: src/components/map/MapPage.tsx:812
+#: src/components/map/MapPage.tsx:833
 msgid "Loading the new scope. The current map stays until then."
 msgstr "Caricamento del nuovo ambito. La mappa attuale rimane visibile fino ad allora."
 
@@ -8257,19 +8269,19 @@ msgstr "Loading..."
 msgid "Loading…"
 msgstr "Loading…"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1241
+#: src/components/map/renderers/LocalMapGraph.tsx:1245
 msgid "Local argument map"
 msgstr "Mappa argomentativa locale"
 
-#: src/components/map/MapExperience.tsx:573
+#: src/components/map/MapExperience.tsx:590
 msgid "Local map"
 msgstr "Mappa locale"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1264
+#: src/components/map/renderers/LocalMapGraph.tsx:1270
 msgid "Local map forces"
 msgstr "Forze della mappa locale"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1254
+#: src/components/map/renderers/LocalMapGraph.tsx:1260
 msgid "Local map settings"
 msgstr "Impostazioni della mappa locale"
 
@@ -8277,7 +8289,7 @@ msgstr "Impostazioni della mappa locale"
 #~ msgid "LocalMap Forces"
 #~ msgstr "Forze LocalMap"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1268
+#: src/components/map/renderers/LocalMapGraph.tsx:1274
 msgid "LocalMAP paper parameters"
 msgstr "Parametri dell'articolo LocalMAP"
 
@@ -8476,8 +8488,8 @@ msgstr "Sono state avviate molte mappe proprio ora. Riprova tra un attimo."
 
 #: src/routes/project/present/blockLabel.ts:6
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:152
-#: src/components/map/MapPage.tsx:648
-#: src/components/map/panels/MapSettingsMenu.tsx:255
+#: src/components/map/MapPage.tsx:666
+#: src/components/map/panels/MapSettingsMenu.tsx:382
 msgid "Map"
 msgstr "Mappa"
 
@@ -8493,11 +8505,15 @@ msgstr "Argomenti della Map"
 msgid "Map budget"
 msgstr "Budget mappa"
 
+#: src/components/map/panels/MapToolbar.tsx:131
+msgid "Map controls"
+msgstr "Controlli della mappa"
+
 #: src/features/processes/copy.ts:13
 msgid "Map failed"
 msgstr "Mappa non riuscita"
 
-#: src/components/map/MapPage.tsx:575
+#: src/components/map/MapPage.tsx:593
 msgid "Map reads this project's transcripts, finds the arguments people make, and places related arguments close together. Generate a map to explore them."
 msgstr "Mappa legge le trascrizioni di questo progetto, trova le argomentazioni delle persone e posiziona quelle correlate vicine tra loro. Genera una mappa per esplorarle."
 
@@ -8585,7 +8601,7 @@ msgstr "MCP è un ponte che consente a un assistente IA come Claude, ChatGPT o L
 msgid "MCP URL"
 msgstr "URL MCP"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1273
+#: src/components/map/renderers/LocalMapGraph.tsx:1279
 msgid "Medium distance threshold (default: 10)"
 msgstr "Soglia per distanze medie (predefinita: 10)"
 
@@ -8957,7 +8973,7 @@ msgstr "Negativo"
 #~ msgstr "Attrazione vicini: {0}"
 
 #. placeholder {0}: nnStrength.toFixed(2)
-#: src/components/map/renderers/LocalMapGraph.tsx:1296
+#: src/components/map/renderers/LocalMapGraph.tsx:1302
 msgid "Neighbour attraction: {0}"
 msgstr "Attrazione vicini: {0}"
 
@@ -9130,7 +9146,7 @@ msgstr "Nessun agente ancora connesso."
 msgid "No arguments saved yet."
 msgstr "Nessun argomento ancora salvato."
 
-#: src/components/map/MapPage.tsx:594
+#: src/components/map/MapPage.tsx:612
 #: src/components/map/panels/BudgetStates.tsx:9
 msgid "No arguments were found in this project's conversations."
 msgstr "Non sono stati trovati argomenti nelle conversazioni di questo progetto."
@@ -9290,7 +9306,7 @@ msgstr "Nessun argomento collegato."
 msgid "No logo set. dembrane default will be used."
 msgstr "Nessun logo impostato. Verrà usato quello predefinito di dembrane."
 
-#: src/components/map/MapPage.tsx:571
+#: src/components/map/MapPage.tsx:589
 msgid "No map has been generated for this project yet."
 msgstr "Non è ancora stata generata alcuna mappa per questo progetto."
 
@@ -9884,6 +9900,10 @@ msgstr "Once you have discussed, hit \"revise\" to see the {objectLabel} change 
 #: src/components/participant/verify/VerifyInstructions.tsx:26
 msgid "participant.verify.instructions.read.aloud"
 msgstr "Once you receive the {objectLabel}, read it aloud and share out loud what you want to change, if anything."
+
+#: src/components/map/panels/MapToolbar.tsx:175
+msgid "One at a time"
+msgstr "Una alla volta"
 
 #: src/components/pricing/questions.ts:159
 msgid "One big event at the end of the year"
@@ -10580,7 +10600,8 @@ msgstr "Passwords do not match"
 #~ msgid "Paste it into any page. It stays live."
 #~ msgstr "Incollalo in qualsiasi pagina. Rimane aggiornato in tempo reale."
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1230
+#: src/components/map/renderers/LocalMapGraph.tsx:1234
+#: src/components/map/panels/MapToolbar.tsx:136
 msgid "Pause physics"
 msgstr "Metti in pausa la fisica"
 
@@ -11616,11 +11637,11 @@ msgstr "Lettura di una competenza"
 msgid "Reading a transcript"
 msgstr "Lettura di una trascrizione"
 
-#: src/components/map/MapPage.tsx:97
+#: src/components/map/MapPage.tsx:106
 msgid "Reading conversations"
 msgstr "Lettura delle conversazioni"
 
-#: src/components/map/MapPage.tsx:96
+#: src/components/map/MapPage.tsx:105
 msgid "Reading conversations {done} of {total}"
 msgstr "Lettura delle conversazioni: {done} di {total}"
 
@@ -11860,7 +11881,7 @@ msgstr "Aggiornamento in corso…"
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:625
 #: src/components/popcorn/PopcornActions.tsx:64
 #: src/components/popcorn/PopcornActions.tsx:86
-#: src/components/map/MapPage.tsx:138
+#: src/components/map/MapPage.tsx:147
 #: src/components/conversation/ConversationEdit.tsx:401
 #: src/components/conversation/ConversationEdit.tsx:469
 msgid "Regenerate"
@@ -11894,7 +11915,7 @@ msgstr "Register | dembrane"
 
 #: src/components/map/panels/NodeDetailCard.tsx:323
 #: src/components/map/panels/NodeDetailCard.tsx:529
-#: src/components/map/panels/MapSettingsMenu.tsx:288
+#: src/components/map/panels/MapSettingsMenu.tsx:415
 msgid "Relationships"
 msgstr "Relazioni"
 
@@ -12478,7 +12499,8 @@ msgstr "I risultati appaiono nella lingua in cui le persone hanno parlato. Scegl
 msgid "participant.button.stop.resume"
 msgstr "Resume"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1230
+#: src/components/map/renderers/LocalMapGraph.tsx:1234
+#: src/components/map/panels/MapToolbar.tsx:136
 msgid "Resume physics"
 msgstr "Riprendi fisica"
 
@@ -13501,10 +13523,12 @@ msgstr "Configurazione in corso"
 #: src/features/sidebar/views/user/UserSettingsView.tsx:15
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:31
 #: src/features/sidebar/views/org/OrgHomeView.tsx:151
+#: src/components/map/panels/MapSettingsMenu.tsx:370
+#: src/components/map/panels/MapSettingsMenu.tsx:376
 #: src/components/layout/ParticipantHeader.tsx:125
 #: src/components/layout/ParticipantHeader.tsx:126
 msgid "Settings"
-msgstr "Settings"
+msgstr "Impostazioni"
 
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantSettingsModal.tsx:21
@@ -13675,7 +13699,7 @@ msgstr "Mostra tutti {0}"
 msgid "Show all {total}"
 msgstr "Mostra tutti {total}"
 
-#: src/components/map/MapPage.tsx:804
+#: src/components/map/MapPage.tsx:825
 msgid "Show all conversations"
 msgstr "Mostra tutte le conversazioni"
 
@@ -13683,7 +13707,7 @@ msgstr "Mostra tutte le conversazioni"
 msgid "Show audio player"
 msgstr "Show audio player"
 
-#: src/components/map/MapPage.tsx:765
+#: src/components/map/MapPage.tsx:786
 msgid "Show current arguments"
 msgstr "Mostra gli argomenti attuali"
 
@@ -13695,7 +13719,7 @@ msgstr "Show data"
 msgid "Show detail"
 msgstr "Mostra dettagli"
 
-#: src/components/map/MapPage.tsx:786
+#: src/components/map/MapPage.tsx:807
 msgid "Show every tag"
 msgstr "Mostra tutti i tag"
 
@@ -13733,7 +13757,7 @@ msgstr "Mostra altre versioni"
 msgid "Show on the map"
 msgstr "Mostra sulla mappa"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:329
+#: src/components/map/panels/MapSettingsMenu.tsx:259
 msgid "Show only conversations with any of the ticked tags."
 msgstr "Mostra solo le conversazioni con uno dei tag selezionati."
 
@@ -13824,11 +13848,11 @@ msgid "Showing {rangeStart}-{rangeEnd} of {total}"
 msgstr "{rangeStart}-{rangeEnd} di {total}"
 
 #. placeholder {0}: tagIndex.tags .filter((tag) => chosenTags.has(tag.id)) .map((tag) => tag.name) .join(", ")
-#: src/components/map/MapPage.tsx:772
+#: src/components/map/MapPage.tsx:793
 msgid "Showing conversations tagged {0}."
 msgstr "Conversazioni con il tag {0}."
 
-#: src/components/map/MapPage.tsx:758
+#: src/components/map/MapPage.tsx:779
 msgid "Showing the arguments of one result."
 msgstr "Sono mostrati gli argomenti di un risultato."
 
@@ -13853,7 +13877,8 @@ msgstr "Visibile in alto sullo schermo. Puoi modificarlo in qualsiasi momento."
 msgid "Shown in the organisation header and in email subject lines."
 msgstr "Visibile nell'intestazione dell'organizzazione e nell'oggetto delle email."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:265
+#: src/components/map/panels/MapToolbar.tsx:175
+#: src/components/map/panels/MapSettingsMenu.tsx:392
 msgid "Side by side"
 msgstr "Affiancate"
 
@@ -13899,7 +13924,7 @@ msgstr "Slack community"
 msgid "Smoother recording and quicker questions"
 msgstr "Registrazioni più semplici, domande più veloci"
 
-#: src/components/map/MapPage.tsx:752
+#: src/components/map/MapPage.tsx:773
 msgid "Some arguments are based on an earlier analysis."
 msgstr "Alcuni argomenti si basano su un’analisi precedente."
 
@@ -14122,8 +14147,8 @@ msgid "Spotlight"
 msgstr "In primo piano"
 
 #: src/components/map/panels/DensityControl.tsx:81
-msgid "Spread out"
-msgstr "Distribuito"
+#~ msgid "Spread out"
+#~ msgstr "Distribuito"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:3157
 #: src/features/sidebar/shell/UserMenu.tsx:167
@@ -14565,7 +14590,7 @@ msgstr "Tag eliminato"
 
 #: src/components/project/ProjectTagsInput.tsx:255
 #: src/components/participant/ParticipantInitiateForm.tsx:281
-#: src/components/map/panels/MapSettingsMenu.tsx:326
+#: src/components/map/panels/MapSettingsMenu.tsx:256
 #: src/components/conversation/ProjectConversationsPanel.tsx:706
 #: src/components/conversation/ConversationsMiniList.tsx:179
 #: src/components/conversation/ConversationEdit.tsx:424
@@ -14914,7 +14939,7 @@ msgid "The invite was sent to {invitedEmail}, but you're signed in as {myEmail}.
 msgstr "L'invito è stato inviato a {invitedEmail}, ma hai effettuato l'accesso come {myEmail}. Esci e registrati con l'indirizzo corretto, oppure chiedi all'amministratore di invitare nuovamente {myEmail}."
 
 #. placeholder {0}: failedAttempt.error ?? ""
-#: src/components/map/MapPage.tsx:718
+#: src/components/map/MapPage.tsx:739
 msgid "The last generation failed, so this is still the previous map. {0}"
 msgstr "L'ultima generazione non è riuscita, quindi questa è ancora la mappa precedente. {0}"
 
@@ -14944,11 +14969,11 @@ msgid "The live popcorn deck and the canvases built for this project live here."
 msgstr "La deck live di Popcorn e i canvas creati per questo progetto si trovano qui."
 
 #. placeholder {0}: failedAttempt.error ?? ""
-#: src/components/map/MapPage.tsx:723
+#: src/components/map/MapPage.tsx:744
 msgid "The map could not be generated. {0}"
 msgstr "Impossibile generare la mappa. {0}"
 
-#: src/components/map/MapPage.tsx:545
+#: src/components/map/MapPage.tsx:563
 msgid "The map could not be loaded"
 msgstr "Impossibile caricare la mappa"
 
@@ -14964,7 +14989,7 @@ msgstr "Impossibile caricare la mappa."
 msgid "The map could not be started."
 msgstr "Impossibile avviare la mappa."
 
-#: src/components/map/MapPage.tsx:558
+#: src/components/map/MapPage.tsx:576
 msgid "The map is being generated. It appears here when it is ready."
 msgstr "La mappa è in fase di generazione. Apparirà qui appena pronta."
 
@@ -15501,8 +15526,8 @@ msgstr "Questa presentazione non è disponibile."
 msgid "This project could not be reached."
 msgstr "Impossibile raggiungere questo progetto."
 
-#: src/components/map/MapPage.tsx:564
-#: src/components/map/MapPage.tsx:589
+#: src/components/map/MapPage.tsx:582
+#: src/components/map/MapPage.tsx:607
 msgid "This project has no conversations with transcripts yet. Generate a map once conversations have been transcribed."
 msgstr "Questo progetto non ha ancora conversazioni con trascrizioni. Genera una mappa una volta trascritte le conversazioni."
 
@@ -16053,7 +16078,7 @@ msgstr "Traduzione in corso: {translated} di {total} in {language}"
 msgid "Translation progress"
 msgstr "Avanzamento traduzione"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:264
+#: src/components/map/panels/MapSettingsMenu.tsx:391
 #: src/components/map/panels/DetailsModal.tsx:137
 msgid "Tree"
 msgstr "Albero"
@@ -16089,7 +16114,7 @@ msgstr "Problemi di accesso? Contatta support@dembrane.com."
 #: src/components/results/resultEditing.tsx:554
 #: src/components/pricing/PricingTextInput.tsx:330
 #: src/components/present/TranslationStatus.tsx:143
-#: src/components/map/MapPage.tsx:136
+#: src/components/map/MapPage.tsx:145
 #: src/components/map/panels/SpotlightPanel.tsx:414
 #: src/components/map/panels/HistoryPanel.tsx:163
 #: src/components/dropzone/UploadConversationDropzone.tsx:862
@@ -16985,7 +17010,7 @@ msgstr "In attesa della prima conversazione con trascrizione."
 msgid "Waiting for the next node"
 msgstr "In attesa del prossimo nodo"
 
-#: src/components/map/MapPage.tsx:99
+#: src/components/map/MapPage.tsx:108
 msgid "Waiting to start"
 msgstr "In attesa di iniziare"
 
