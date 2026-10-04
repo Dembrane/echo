@@ -505,6 +505,7 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 				budgets={budgets}
 				colorBy={colorBy}
 				onColorByChange={handleColorByChange}
+				onDensityChange={(clusterDensity) => updateSettings({ clusterDensity })}
 				settings={settings}
 				factCheckStates={factCheckStates}
 				onFactCheck={factCheck.run}
@@ -634,29 +635,31 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 		<div className="flex h-full min-h-0 flex-col" style={MAP_LIGHT_VARS}>
 			{/* One row, to give the map the height: the title and what it holds
 			    on the left, its controls on the right. A narrow screen drops the
-			    counts first. */}
+			    counts first, and a phone stacks the controls under the title. */}
 			<Group
 				gap="sm"
 				align="center"
 				justify="flex-start"
 				wrap="nowrap"
-				className="px-4 pb-2 pt-4 md:px-6"
+				className="app-stack-narrow px-4 pb-2 pt-4 md:px-6"
 			>
-				<Title order={2}>
-					<Trans>Map</Trans>
-				</Title>
-				<Badge size="sm" color="mauve" c="graphite">
-					<Trans>Beta</Trans>
-				</Badge>
-				{countsLine && (
-					<Text
-						size="sm"
-						c="dimmed"
-						className="hidden min-w-0 truncate md:block"
-					>
-						{countsLine}
-					</Text>
-				)}
+				<Group gap="sm" align="center" wrap="nowrap" className="min-w-0">
+					<Title order={2}>
+						<Trans>Map</Trans>
+					</Title>
+					<Badge size="sm" color="mauve" c="graphite">
+						<Trans>Beta</Trans>
+					</Badge>
+					{countsLine && (
+						<Text
+							size="sm"
+							c="dimmed"
+							className="hidden min-w-0 truncate md:block"
+						>
+							{countsLine}
+						</Text>
+					)}
+				</Group>
 				{/* The controls keep the row's right edge, a choice for this page
 				    over the flush-left canon. */}
 				<Group gap="sm" wrap="nowrap" ml="auto" className="shrink-0">

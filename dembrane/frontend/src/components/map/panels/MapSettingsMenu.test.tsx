@@ -51,7 +51,7 @@ const open = (tags: MapConversation[], onChosenTagsChange = vi.fn()) => {
 			</I18nProvider>
 		</MantineProvider>,
 	);
-	fireEvent.click(screen.getByRole("button", { name: "Panel settings" }));
+	fireEvent.click(screen.getByRole("button", { name: "Advanced" }));
 	return onChosenTagsChange;
 };
 
@@ -63,13 +63,15 @@ describe("the map's tag controls", () => {
 		expect(onChosen).toHaveBeenCalledWith(new Set(["t-age"]));
 	});
 
-	it("sits beside the cluster density dial", async () => {
+	it("keep company with the layout choice and the force settings under Advanced", async () => {
 		open([]);
 		expect(
-			await screen.findByRole("slider", {
-				name: "Cluster density: fewer or more clusters",
-			}),
+			await screen.findByRole("radio", { name: "Side by side" }),
 		).toBeTruthy();
+		expect(
+			screen.getByRole("checkbox", { name: "Force settings" }),
+		).toBeTruthy();
+		expect(screen.queryByRole("slider")).toBeNull();
 	});
 
 	it("are absent where it has none", async () => {

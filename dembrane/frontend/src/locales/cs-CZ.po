@@ -268,7 +268,7 @@ msgid "{0, plural, one {# conversation could not be added to this chat.} other {
 msgstr "{0, plural, one {# rozhovor se do tohoto chatu nepodařilo přidat.} few {# rozhovory se do tohoto chatu nepodařilo přidat.} other {# rozhovorů se do tohoto chatu nepodařilo přidat.}}"
 
 #. placeholder {0}: hiddenConversations.size
-#: src/components/map/MapPage.tsx:790
+#: src/components/map/MapPage.tsx:793
 msgid "{0, plural, one {# conversation is hidden from the map.} other {# conversations are hidden from the map.}}"
 msgstr "{0, plural, one {# konverzace je na mapě skrytá.} few {# konverzace jsou na mapě skryté.} many {# konverzace je na mapě skryto.} other {# konverzací je na mapě skryto.}}"
 
@@ -763,7 +763,7 @@ msgstr "{conversations, plural, one {# konverzace} few {# konverzace} many {# ko
 msgid "{conversations} conversations with a transcript, about {minutes} minutes of talk. Ready."
 msgstr "{conversations} rozhovorů s přepisem, zhruba {minutes} minut hovoru. Připraveno."
 
-#: src/components/map/MapExperience.tsx:135
+#: src/components/map/MapExperience.tsx:136
 msgid "{count, plural, one {# argument} other {# arguments}}"
 msgstr "{count, plural, one {# argument} few {# argumenty} other {# argumentů}}"
 
@@ -943,7 +943,7 @@ msgstr "{totalWorkspaces, plural, one {# workspace} other {# workspaces}}"
 msgid "{translated} of {total} translated, {failed} could not be translated"
 msgstr "{translated} z {total} přeloženo, {failed} se nepodařilo přeložit"
 
-#: src/components/map/MapPage.tsx:729
+#: src/components/map/MapPage.tsx:732
 msgid "{unplacedCount, plural, one {# argument could not be placed on the map.} other {# arguments could not be placed on the map.}}"
 msgstr "{unplacedCount, plural, one {# argument se nepodařilo umístit na mapu.} few {# argumenty se nepodařilo umístit na mapu.} other {# argumentů se nepodařilo umístit na mapu.}}"
 
@@ -1659,7 +1659,7 @@ msgstr "Adding <0>{totalCount, plural, one {# more conversation} other {# more c
 msgid "select.all.modal.loading.title"
 msgstr "Přidávání rozhovorů"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1306
+#: src/components/map/renderers/LocalMapGraph.tsx:1314
 msgid "Additional forces"
 msgstr "Další síly"
 
@@ -1715,8 +1715,10 @@ msgid "Admins can reach every workspace in this organisation. Members and extern
 msgstr "Admins can reach every workspace in this organisation. Members and externals only see the workspaces they've been given access to."
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:881
+#: src/components/map/panels/MapSettingsMenu.tsx:243
+#: src/components/map/panels/MapSettingsMenu.tsx:249
 msgid "Advanced"
-msgstr "Advanced"
+msgstr "Pokročilé"
 
 #: src/components/project/ProjectPortalEditor.tsx:723
 msgid "Advanced (tips and best practices)"
@@ -2292,11 +2294,11 @@ msgstr "Argument"
 #~ msgid "Argument (not fact-checked)"
 #~ msgstr ""
 
-#: src/components/map/renderers/MstGraph.tsx:1204
+#: src/components/map/renderers/MstGraph.tsx:1210
 msgid "Argument map"
 msgstr "Mapa argumentů"
 
-#: src/components/map/MapExperience.tsx:516
+#: src/components/map/MapExperience.tsx:530
 msgid "Argument tree (MST)"
 msgstr "Strom argumentů (MST)"
 
@@ -2537,7 +2539,7 @@ msgstr "Audit logs exported to JSON"
 msgid "Authenticator code"
 msgstr "Authenticator code"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:412
+#: src/components/map/panels/MapSettingsMenu.tsx:405
 msgid "Auto fact-check new claims"
 msgstr "Automaticky ověřovat fakta u nových tvrzení"
 
@@ -2606,7 +2608,7 @@ msgstr "Avatar removed"
 msgid "Avatar updated"
 msgstr "Avatar updated"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1275
+#: src/components/map/renderers/LocalMapGraph.tsx:1283
 msgid "Avg low-dim distance (default: 10)"
 msgstr "Prům. nízko-dim. vzdálenost (výchozí: 10)"
 
@@ -2739,7 +2741,7 @@ msgstr "Než připojíte agenta"
 #: src/components/project/ProjectPortalEditor.tsx:1372
 #: src/components/project/ProjectPortalEditor.tsx:1452
 #: src/components/project/ProjectExperimentalSection.tsx:50
-#: src/components/map/MapPage.tsx:649
+#: src/components/map/MapPage.tsx:651
 #: src/components/conversation/RetranscribeConversation.tsx:155
 #: src/components/chat/ChatModeSelector.tsx:105
 #: src/components/chat/AgenticIntroModal.tsx:25
@@ -2889,7 +2891,7 @@ msgid "By tag"
 msgstr "Podle štítku"
 
 #. placeholder {0}: cMed.toFixed(1)
-#: src/components/map/renderers/LocalMapGraph.tsx:1264
+#: src/components/map/renderers/LocalMapGraph.tsx:1272
 msgid "C_Med: {0}"
 msgstr "C_Med: {0}"
 
@@ -3182,7 +3184,7 @@ msgstr "Changing language during an active chat may lead to unexpected results. 
 #~ msgstr ""
 
 #. placeholder {0}: chargeFraction.toFixed(2)
-#: src/components/map/renderers/LocalMapGraph.tsx:1331
+#: src/components/map/renderers/LocalMapGraph.tsx:1339
 msgid "Charge distance (viewport fraction): {0}"
 msgstr "Vzdálenost náboje (podíl výřezu): {0}"
 
@@ -3327,6 +3329,10 @@ msgstr "Vyberte rozhovor"
 #: src/components/settings/WhitelabelLogoCard.tsx:167
 msgid "Choose a logo file"
 msgstr "Choose a logo file"
+
+#: src/components/map/MapExperience.tsx:607
+msgid "Choose a map under Advanced"
+msgstr "Vyberte mapu v části Pokročilé"
 
 #: src/components/methodology/ProjectMethodologySection.tsx:120
 msgid "Choose a methodology"
@@ -3544,19 +3550,19 @@ msgstr "Zavřít a přejít do dembrane"
 msgid "Cloud Act Safe"
 msgstr "Chráněno před Cloud Actem"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:296
+#: src/components/map/panels/DensityControl.tsx:47
 msgid "Clumped"
 msgstr "Shluknuté"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:280
+#: src/components/map/panels/DensityControl.tsx:40
 msgid "Cluster density"
 msgstr "Hustota shluků"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:283
+#: src/components/map/panels/DensityControl.tsx:51
 msgid "Cluster density: fewer or more clusters"
 msgstr "Hustota shluků: méně nebo více shluků"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:83
+#: src/components/map/panels/MapSettingsMenu.tsx:263
 msgid "Clusters"
 msgstr "Shluky"
 
@@ -3578,7 +3584,7 @@ msgid "Collection"
 msgstr "Collection"
 
 #. placeholder {0}: collisionRadius.toFixed(1)
-#: src/components/map/renderers/LocalMapGraph.tsx:1320
+#: src/components/map/renderers/LocalMapGraph.tsx:1328
 msgid "Collision radius: {0}x"
 msgstr "Poloměr kolize: {0}x"
 
@@ -3602,7 +3608,7 @@ msgstr "Obarvit graf podle faktického stavu"
 msgid "Color graph by valence"
 msgstr "Obarvit graf podle valence"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:311
+#: src/components/map/panels/MapSettingsMenu.tsx:304
 msgid "Color nodes by"
 msgstr "Obarvit uzly podle"
 
@@ -3630,8 +3636,8 @@ msgstr "sloučeno z {0}"
 
 #. placeholder {0}: nodeById.get(d.id)?.metadata.consolidation?.memberCount ?? 0
 #. placeholder {0}: consolidation.memberCount
-#: src/components/map/renderers/MstGraph.tsx:1109
-#: src/components/map/renderers/LocalMapGraph.tsx:1067
+#: src/components/map/renderers/MstGraph.tsx:1115
+#: src/components/map/renderers/LocalMapGraph.tsx:1073
 #: src/components/map/panels/NodeDetailCard.tsx:136
 msgid "Combined from {0} arguments"
 msgstr "Sloučeno z {0} argumentů"
@@ -3868,7 +3874,7 @@ msgstr "Pokračovat"
 #~ msgid "Contributing nodes ({0})"
 #~ msgstr "Přispívající uzly ({0})"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1336
+#: src/components/map/renderers/LocalMapGraph.tsx:1344
 msgid "Controls how far charge forces act (higher = more global)"
 msgstr "Určuje, jak daleko působí nábojové síly (vyšší = globálnější)"
 
@@ -3976,7 +3982,7 @@ msgstr "conversations"
 #: src/components/workspace/OrganisationProjectsTable.tsx:225
 #: src/components/report/ReportTimeline.tsx:302
 #: src/components/project/ProjectUsageAndSharing.tsx:471
-#: src/components/map/panels/MapSettingsMenu.tsx:374
+#: src/components/map/panels/MapSettingsMenu.tsx:367
 #: src/components/map/panels/ClusterSummary.tsx:155
 #: src/components/conversation/ProjectConversationsPanel.tsx:623
 #: src/components/conversation/ConversationsMiniList.tsx:141
@@ -4623,7 +4629,7 @@ msgid "Czech conversations, Czech answers"
 msgstr "České rozhovory, české odpovědi"
 
 #. placeholder {0}: dAdj.toFixed(1)
-#: src/components/map/renderers/LocalMapGraph.tsx:1274
+#: src/components/map/renderers/LocalMapGraph.tsx:1282
 msgid "d̄_adj: {0}"
 msgstr "d̄_adj: {0}"
 
@@ -4639,7 +4645,7 @@ msgstr "Danger zone"
 msgid "Dark"
 msgstr "Tmavý"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:451
+#: src/components/map/panels/MapSettingsMenu.tsx:458
 msgid "Dark mode"
 msgstr "Tmavý režim"
 
@@ -4746,11 +4752,11 @@ msgstr "Výchozí – bez tutoriálu (pouze prohlášení o ochraně soukromí)"
 #~ msgid "Default - No tutorial (Only privacy statements)"
 #~ msgstr "Default - No tutorial (Only privacy statements)"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:163
+#: src/components/map/panels/MapSettingsMenu.tsx:161
 msgid "Default {defaultEdges}"
 msgstr "Výchozí {defaultEdges}"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:152
+#: src/components/map/panels/MapSettingsMenu.tsx:150
 msgid "Default {defaultNodes}"
 msgstr "Výchozí {defaultNodes}"
 
@@ -5098,7 +5104,7 @@ msgid "Display name"
 msgstr "Display name"
 
 #. placeholder {0}: linkDistanceQuadratic.toFixed(2)
-#: src/components/map/renderers/MstGraph.tsx:1248
+#: src/components/map/renderers/MstGraph.tsx:1256
 msgid "Dissimilar links: {0}"
 msgstr "Rozdílná propojení: {0}"
 
@@ -5590,8 +5596,8 @@ msgid "Enable 2FA"
 msgstr "Enable 2FA"
 
 #: src/components/map/MapExperience.tsx:591
-msgid "Enable a visualization from the panel settings menu"
-msgstr "Povolte vizualizaci v nabídce nastavení panelu"
+#~ msgid "Enable a visualization from the panel settings menu"
+#~ msgstr "Povolte vizualizaci v nabídce nastavení panelu"
 
 #: src/components/project/ProjectPortalEditor.tsx:772
 msgid "Enable Explore"
@@ -5991,11 +5997,11 @@ msgstr "Další účastníci"
 msgid "Fact-check"
 msgstr "Ověření faktů"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:427
+#: src/components/map/panels/MapSettingsMenu.tsx:420
 msgid "Fact-check all"
 msgstr "Ověřit všechna fakta"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:425
+#: src/components/map/panels/MapSettingsMenu.tsx:418
 msgid "Fact-check all ({pendingClaimCount})"
 msgstr "Ověřit všechna fakta ({pendingClaimCount})"
 
@@ -6214,7 +6220,7 @@ msgid "Fair password"
 msgstr "Ucházející heslo"
 
 #. placeholder {0}: fpStrength.toFixed(2)
-#: src/components/map/renderers/LocalMapGraph.tsx:1297
+#: src/components/map/renderers/LocalMapGraph.tsx:1305
 msgid "Far pair repulsion: {0}"
 msgstr "Odpuzování vzdálených párů: {0}"
 
@@ -6466,7 +6472,7 @@ msgstr "pro tým dembrane"
 msgid "For you"
 msgstr "For you"
 
-#: src/components/map/renderers/MstGraph.tsx:1208
+#: src/components/map/renderers/MstGraph.tsx:1215
 msgid "Force graph settings"
 msgstr "Nastavení silového grafu"
 
@@ -6474,7 +6480,7 @@ msgstr "Nastavení silového grafu"
 #~ msgid "Force Graph Settings"
 #~ msgstr "Nastavení silového grafu"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1284
+#: src/components/map/renderers/LocalMapGraph.tsx:1292
 msgid "Force multipliers"
 msgstr "Násobiče sil"
 
@@ -6482,13 +6488,17 @@ msgstr "Násobiče sil"
 #~ msgid "Force Multipliers"
 #~ msgstr "Násobiče sil"
 
-#: src/components/map/renderers/MstGraph.tsx:1217
+#: src/components/map/renderers/MstGraph.tsx:1225
 msgid "Force parameters"
 msgstr "Parametry sil"
 
 #: src/components/map/renderers/MstGraph.tsx:1187
 #~ msgid "Force Parameters"
 #~ msgstr "Parametry sil"
+
+#: src/components/map/panels/MapSettingsMenu.tsx:443
+msgid "Force settings"
+msgstr "Nastavení sil"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1569
 msgid "Forecast"
@@ -6573,12 +6583,12 @@ msgid "General"
 msgstr "General"
 
 #. placeholder {0}: chargeStrength.toFixed(1)
-#: src/components/map/renderers/MstGraph.tsx:1262
+#: src/components/map/renderers/MstGraph.tsx:1270
 msgid "General repulsion force: {0}"
 msgstr "Celková odpudivá síla: {0}"
 
 #. placeholder {0}: Math.abs(chargeStrength)
-#: src/components/map/renderers/LocalMapGraph.tsx:1310
+#: src/components/map/renderers/LocalMapGraph.tsx:1318
 msgid "General repulsion: {0}"
 msgstr "Celková odpudivost: {0}"
 
@@ -6929,7 +6939,7 @@ msgstr "Hide detail"
 msgid "Hide from this presentation"
 msgstr "Skrýt z této prezentace"
 
-#: src/components/map/MapPage.tsx:740
+#: src/components/map/MapPage.tsx:743
 msgid "Hide missing arguments"
 msgstr "Skrýt chybějící argumenty"
 
@@ -7313,7 +7323,7 @@ msgstr "poznatek {0}"
 #~ msgid "Inspect evidence or hide a finding from this presentation. Shared results stay available in Analysis."
 #~ msgstr ""
 
-#: src/components/map/MapPage.tsx:742
+#: src/components/map/MapPage.tsx:745
 msgid "Inspect missing arguments"
 msgstr "Zobrazit chybějící argumenty"
 
@@ -7925,7 +7935,7 @@ msgstr "Právní základ uložen"
 msgid "Legal entity name"
 msgstr "Název právnické osoby"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:84
+#: src/components/map/panels/MapSettingsMenu.tsx:78
 #: src/components/map/panels/Legend.tsx:78
 msgid "Legend"
 msgstr "Legenda"
@@ -8208,11 +8218,11 @@ msgstr "Načítání prezentace"
 #~ msgid "Loading projects..."
 #~ msgstr "Loading projects..."
 
-#: src/components/map/MapPage.tsx:532
+#: src/components/map/MapPage.tsx:533
 msgid "Loading the map."
 msgstr "Mapa se načítá."
 
-#: src/components/map/MapPage.tsx:809
+#: src/components/map/MapPage.tsx:812
 msgid "Loading the new scope. The current map stays until then."
 msgstr "Načítá se nový rozsah. Do té doby zůstane stávající mapa."
 
@@ -8247,19 +8257,19 @@ msgstr "Loading..."
 msgid "Loading…"
 msgstr "Loading…"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1235
+#: src/components/map/renderers/LocalMapGraph.tsx:1241
 msgid "Local argument map"
 msgstr "Místní mapa argumentů"
 
-#: src/components/map/MapExperience.tsx:558
+#: src/components/map/MapExperience.tsx:573
 msgid "Local map"
 msgstr "Místní mapa"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1256
+#: src/components/map/renderers/LocalMapGraph.tsx:1264
 msgid "Local map forces"
 msgstr "Síly lokální mapy"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1247
+#: src/components/map/renderers/LocalMapGraph.tsx:1254
 msgid "Local map settings"
 msgstr "Nastavení lokální mapy"
 
@@ -8267,7 +8277,7 @@ msgstr "Nastavení lokální mapy"
 #~ msgid "LocalMap Forces"
 #~ msgstr "Síly LocalMap"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1260
+#: src/components/map/renderers/LocalMapGraph.tsx:1268
 msgid "LocalMAP paper parameters"
 msgstr "Parametry z článku LocalMAP"
 
@@ -8466,7 +8476,8 @@ msgstr "Právě bylo spuštěno generování mnoha map. Zkuste to za chvíli zno
 
 #: src/routes/project/present/blockLabel.ts:6
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:152
-#: src/components/map/MapPage.tsx:646
+#: src/components/map/MapPage.tsx:648
+#: src/components/map/panels/MapSettingsMenu.tsx:255
 msgid "Map"
 msgstr "Mapa"
 
@@ -8478,7 +8489,7 @@ msgstr "Mapa | dembrane"
 msgid "Map arguments"
 msgstr "Argumenty z Map"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:147
+#: src/components/map/panels/MapSettingsMenu.tsx:145
 msgid "Map budget"
 msgstr "Rozpočet mapy"
 
@@ -8486,7 +8497,7 @@ msgstr "Rozpočet mapy"
 msgid "Map failed"
 msgstr "Mapa se nezdařila"
 
-#: src/components/map/MapPage.tsx:574
+#: src/components/map/MapPage.tsx:575
 msgid "Map reads this project's transcripts, finds the arguments people make, and places related arguments close together. Generate a map to explore them."
 msgstr "Mapa prochází přepisy tohoto projektu, vyhledává argumenty účastníků a umisťuje související argumenty blízko k sobě. Vygenerujte mapu a prozkoumejte je."
 
@@ -8574,12 +8585,12 @@ msgstr "MCP představuje propojení, které umožňuje asistentům AI (jako Clau
 msgid "MCP URL"
 msgstr "MCP URL"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1265
+#: src/components/map/renderers/LocalMapGraph.tsx:1273
 msgid "Medium distance threshold (default: 10)"
 msgstr "Práh střední vzdálenosti (výchozí: 10)"
 
 #. placeholder {0}: linkDistanceLinear.toFixed(2)
-#: src/components/map/renderers/MstGraph.tsx:1236
+#: src/components/map/renderers/MstGraph.tsx:1244
 msgid "Medium distances: {0}"
 msgstr "Střední vzdálenosti: {0}"
 
@@ -8677,7 +8688,7 @@ msgid "min {minimum}"
 msgstr "min. {minimum}"
 
 #. placeholder {0}: linkDistanceConstant.toFixed(1)
-#: src/components/map/renderers/MstGraph.tsx:1222
+#: src/components/map/renderers/MstGraph.tsx:1230
 msgid "Minimum link length: {0}"
 msgstr "Minimální délka propojení: {0}"
 
@@ -8946,7 +8957,7 @@ msgstr "Negativní"
 #~ msgstr "Přitahování sousedů: {0}"
 
 #. placeholder {0}: nnStrength.toFixed(2)
-#: src/components/map/renderers/LocalMapGraph.tsx:1288
+#: src/components/map/renderers/LocalMapGraph.tsx:1296
 msgid "Neighbour attraction: {0}"
 msgstr "Přitahování sousedů: {0}"
 
@@ -9119,7 +9130,7 @@ msgstr "Zatím nejsou připojeni žádní agenti."
 msgid "No arguments saved yet."
 msgstr "Zatím nejsou uloženy žádné argumenty."
 
-#: src/components/map/MapPage.tsx:593
+#: src/components/map/MapPage.tsx:594
 #: src/components/map/panels/BudgetStates.tsx:9
 msgid "No arguments were found in this project's conversations."
 msgstr "V konverzacích tohoto projektu nebyly nalezeny žádné argumenty."
@@ -9279,7 +9290,7 @@ msgstr "Žádné propojené argumenty."
 msgid "No logo set. dembrane default will be used."
 msgstr "No logo set. dembrane default will be used."
 
-#: src/components/map/MapPage.tsx:570
+#: src/components/map/MapPage.tsx:571
 msgid "No map has been generated for this project yet."
 msgstr "Pro tento projekt zatím nebyla vygenerována žádná mapa."
 
@@ -9596,7 +9607,7 @@ msgstr "No workspaces from this organisation are shared with you right now."
 msgid "No workspaces match \"{search}\"."
 msgstr "No workspaces match \"{search}\"."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:151
+#: src/components/map/panels/MapSettingsMenu.tsx:149
 msgid "Nodes"
 msgstr "Uzly"
 
@@ -10439,8 +10450,8 @@ msgstr "Zaplaceno"
 #: src/components/map/panels/MapSettingsMenu.tsx:240
 #: src/components/map/panels/MapSettingsMenu.tsx:241
 #: src/components/map/panels/MapSettingsMenu.tsx:249
-msgid "Panel settings"
-msgstr "Nastavení panelu"
+#~ msgid "Panel settings"
+#~ msgstr "Nastavení panelu"
 
 #: src/components/training/StaffTrainingPanel.tsx:53
 msgid "partially completed"
@@ -10569,7 +10580,7 @@ msgstr "Passwords do not match"
 #~ msgid "Paste it into any page. It stays live."
 #~ msgstr "Vložte jej na libovolnou stránku. Zůstane živý."
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1224
+#: src/components/map/renderers/LocalMapGraph.tsx:1230
 msgid "Pause physics"
 msgstr "Pozastavit fyziku"
 
@@ -11883,7 +11894,7 @@ msgstr "Register | dembrane"
 
 #: src/components/map/panels/NodeDetailCard.tsx:323
 #: src/components/map/panels/NodeDetailCard.tsx:529
-#: src/components/map/panels/MapSettingsMenu.tsx:269
+#: src/components/map/panels/MapSettingsMenu.tsx:288
 msgid "Relationships"
 msgstr "Vztahy"
 
@@ -12467,7 +12478,7 @@ msgstr "Výsledky se zobrazují v jazyce, kterým lidé mluvili. Zvolte jazyk pr
 msgid "participant.button.stop.resume"
 msgstr "Resume"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1224
+#: src/components/map/renderers/LocalMapGraph.tsx:1230
 msgid "Resume physics"
 msgstr "Obnovit fyziku"
 
@@ -13664,7 +13675,7 @@ msgstr "Zobrazit všech {0}"
 msgid "Show all {total}"
 msgstr "Zobrazit všech {total}"
 
-#: src/components/map/MapPage.tsx:801
+#: src/components/map/MapPage.tsx:804
 msgid "Show all conversations"
 msgstr "Zobrazit všechny konverzace"
 
@@ -13672,7 +13683,7 @@ msgstr "Zobrazit všechny konverzace"
 msgid "Show audio player"
 msgstr "Show audio player"
 
-#: src/components/map/MapPage.tsx:762
+#: src/components/map/MapPage.tsx:765
 msgid "Show current arguments"
 msgstr "Zobrazit aktuální argumenty"
 
@@ -13684,7 +13695,7 @@ msgstr "Show data"
 msgid "Show detail"
 msgstr "Show detail"
 
-#: src/components/map/MapPage.tsx:783
+#: src/components/map/MapPage.tsx:786
 msgid "Show every tag"
 msgstr "Zobrazit všechny štítky"
 
@@ -13722,7 +13733,7 @@ msgstr "Zobrazit více verzí"
 msgid "Show on the map"
 msgstr "Zobrazit na mapě"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:336
+#: src/components/map/panels/MapSettingsMenu.tsx:329
 msgid "Show only conversations with any of the ticked tags."
 msgstr "Zobrazit jen konverzace s některým ze zaškrtnutých štítků."
 
@@ -13790,7 +13801,7 @@ msgstr "Zobrazte účastníkům vlastní logo – k dispozici na vyžádání."
 
 #: src/components/map/panels/ShowcasePanel.tsx:86
 #: src/components/map/panels/ShowcasePanel.tsx:89
-#: src/components/map/panels/MapSettingsMenu.tsx:80
+#: src/components/map/panels/MapSettingsMenu.tsx:76
 msgid "Showcase"
 msgstr "Ukázka"
 
@@ -13804,7 +13815,7 @@ msgstr "Showing {0} of {1}"
 msgid "Showing {displayFrom}–{displayTo} of {totalItems} entries"
 msgstr "Showing {displayFrom}–{displayTo} of {totalItems} entries"
 
-#: src/components/map/MapExperience.tsx:103
+#: src/components/map/MapExperience.tsx:104
 msgid "Showing {drawn} of {available} connections"
 msgstr "Zobrazuje se {drawn} z {available} spojení"
 
@@ -13813,11 +13824,11 @@ msgid "Showing {rangeStart}-{rangeEnd} of {total}"
 msgstr "Zobrazuje se {rangeStart}–{rangeEnd} z {total}"
 
 #. placeholder {0}: tagIndex.tags .filter((tag) => chosenTags.has(tag.id)) .map((tag) => tag.name) .join(", ")
-#: src/components/map/MapPage.tsx:769
+#: src/components/map/MapPage.tsx:772
 msgid "Showing conversations tagged {0}."
 msgstr "Konverzace se štítkem {0}."
 
-#: src/components/map/MapPage.tsx:755
+#: src/components/map/MapPage.tsx:758
 msgid "Showing the arguments of one result."
 msgstr "Jsou zobrazeny argumenty jednoho výsledku."
 
@@ -13841,6 +13852,10 @@ msgstr "Zobrazuje se v horní části obrazovky. Kdykoli to můžete změnit."
 #: src/routes/organisation/OrganisationRoute.tsx:1080
 msgid "Shown in the organisation header and in email subject lines."
 msgstr "Shown in the organisation header and in email subject lines."
+
+#: src/components/map/panels/MapSettingsMenu.tsx:265
+msgid "Side by side"
+msgstr "Vedle sebe"
 
 #: src/components/layout/BaseLayout.tsx:25
 msgid "Sidebar couldn't load."
@@ -13884,7 +13899,7 @@ msgstr "Slack community"
 msgid "Smoother recording and quicker questions"
 msgstr "Plynulejší nahrávání a rychlejší otázky"
 
-#: src/components/map/MapPage.tsx:749
+#: src/components/map/MapPage.tsx:752
 msgid "Some arguments are based on an earlier analysis."
 msgstr "Některé argumenty vycházejí z dřívější analýzy."
 
@@ -14102,11 +14117,11 @@ msgstr "Chat ke konkrétním detailům respektuje ruční výběr rozhovorů."
 
 #: src/components/map/panels/SpotlightPanel.tsx:218
 #: src/components/map/panels/SpotlightPanel.tsx:220
-#: src/components/map/panels/MapSettingsMenu.tsx:81
+#: src/components/map/panels/MapSettingsMenu.tsx:77
 msgid "Spotlight"
 msgstr "Bod zájmu"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:299
+#: src/components/map/panels/DensityControl.tsx:81
 msgid "Spread out"
 msgstr "Rozprostřené"
 
@@ -14550,7 +14565,7 @@ msgstr "Tag deleted"
 
 #: src/components/project/ProjectTagsInput.tsx:255
 #: src/components/participant/ParticipantInitiateForm.tsx:281
-#: src/components/map/panels/MapSettingsMenu.tsx:333
+#: src/components/map/panels/MapSettingsMenu.tsx:326
 #: src/components/conversation/ProjectConversationsPanel.tsx:706
 #: src/components/conversation/ConversationsMiniList.tsx:179
 #: src/components/conversation/ConversationEdit.tsx:424
@@ -14818,7 +14833,7 @@ msgstr "Koncept se nepodařilo načíst"
 #~ msgid "The draft could not be loaded."
 #~ msgstr "Koncept se nepodařilo načíst."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:98
+#: src/components/map/panels/MapSettingsMenu.tsx:92
 msgid "The edge budget must be a whole number above zero, so {applied} applies."
 msgstr "Rozpočet hran musí být celé číslo větší než nula, proto platí {applied}."
 
@@ -14899,11 +14914,11 @@ msgid "The invite was sent to {invitedEmail}, but you're signed in as {myEmail}.
 msgstr "The invite was sent to {invitedEmail}, but you're signed in as {myEmail}. Log out and sign up with the right address, or ask the admin to re-invite {myEmail}."
 
 #. placeholder {0}: failedAttempt.error ?? ""
-#: src/components/map/MapPage.tsx:715
+#: src/components/map/MapPage.tsx:718
 msgid "The last generation failed, so this is still the previous map. {0}"
 msgstr "Poslední generování selhalo, takže toto je stále předchozí mapa. {0}"
 
-#: src/components/map/MapExperience.tsx:129
+#: src/components/map/MapExperience.tsx:130
 msgid "The layout could not be computed for this scope."
 msgstr "Rozvržení pro tento rozsah se nepodařilo spočítat."
 
@@ -14928,11 +14943,11 @@ msgid "The live popcorn deck and the canvases built for this project live here."
 msgstr "Zde najdete živou sadu popcornu a plátna vytvořená pro tento projekt."
 
 #. placeholder {0}: failedAttempt.error ?? ""
-#: src/components/map/MapPage.tsx:720
+#: src/components/map/MapPage.tsx:723
 msgid "The map could not be generated. {0}"
 msgstr "Mapu se nepodařilo vygenerovat. {0}"
 
-#: src/components/map/MapPage.tsx:544
+#: src/components/map/MapPage.tsx:545
 msgid "The map could not be loaded"
 msgstr "Mapu se nepodařilo načíst"
 
@@ -14948,7 +14963,7 @@ msgstr "Mapu se nepodařilo načíst."
 msgid "The map could not be started."
 msgstr "Mapu se nepodařilo spustit."
 
-#: src/components/map/MapPage.tsx:557
+#: src/components/map/MapPage.tsx:558
 msgid "The map is being generated. It appears here when it is ready."
 msgstr "Mapa se generuje. Jakmile bude hotová, zobrazí se zde."
 
@@ -14986,7 +15001,7 @@ msgstr "Jméno tohoto zainteresovaného"
 msgid "The new sidebar brings organisations, workspaces, members and settings together."
 msgstr "Nový postranní panel sdružuje organizace, pracovní prostory, členy i nastavení na jednom místě."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:97
+#: src/components/map/panels/MapSettingsMenu.tsx:91
 msgid "The node budget must be a whole number above zero, so {applied} applies."
 msgstr "Rozpočet uzlů musí být celé číslo větší než nula, proto platí {applied}."
 
@@ -15286,11 +15301,11 @@ msgstr "This conversation is a copy of"
 msgid "This deployment can open maps with up to {maximumCount} arguments."
 msgstr "Toto prostředí může otevřít mapy až s {maximumCount} argumenty."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:102
+#: src/components/map/panels/MapSettingsMenu.tsx:96
 msgid "This deployment shows up to {applied} edges."
 msgstr "Toto nasazení zobrazuje až {applied} hran."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:101
+#: src/components/map/panels/MapSettingsMenu.tsx:95
 msgid "This deployment shows up to {applied} nodes."
 msgstr "Toto nasazení zobrazuje až {applied} uzlů."
 
@@ -15485,8 +15500,8 @@ msgstr "Tato prezentace není k dispozici."
 msgid "This project could not be reached."
 msgstr "K tomuto projektu se nepodařilo připojit."
 
-#: src/components/map/MapPage.tsx:563
-#: src/components/map/MapPage.tsx:588
+#: src/components/map/MapPage.tsx:564
+#: src/components/map/MapPage.tsx:589
 msgid "This project has no conversations with transcripts yet. Generate a map once conversations have been transcribed."
 msgstr "Tento projekt zatím nemá žádné rozhovory s přepisy. Mapu můžete vygenerovat, jakmile budou rozhovory přepsány."
 
@@ -16037,13 +16052,13 @@ msgstr "Překládá se: {translated} z {total} do jazyka {language}"
 msgid "Translation progress"
 msgstr "Průběh překladu"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:82
+#: src/components/map/panels/MapSettingsMenu.tsx:264
 #: src/components/map/panels/DetailsModal.tsx:137
 msgid "Tree"
 msgstr "Strom"
 
 #. placeholder {0}: mstRepulsionCoeff.toFixed(3)
-#: src/components/map/renderers/MstGraph.tsx:1274
+#: src/components/map/renderers/MstGraph.tsx:1282
 msgid "Tree repulsion factor: {0}"
 msgstr "Faktor odpuzování stromu: {0}"
 
@@ -16663,7 +16678,7 @@ msgstr "Používejte připnuté a uložené šablony otázek z Ask, včetně zkr
 msgid "Use Shift + Enter to add a new line"
 msgstr "Use Shift + Enter to add a new line"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:186
+#: src/components/map/panels/MapSettingsMenu.tsx:184
 msgid "Use the default budget"
 msgstr "Použít výchozí rozpočet"
 
@@ -16895,11 +16910,11 @@ msgstr "Zobrazení: {0}"
 msgid "Visible columns"
 msgstr "Visible columns"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:162
+#: src/components/map/panels/MapSettingsMenu.tsx:160
 msgid "Visible edges"
 msgstr "Viditelné hrany"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:104
+#: src/components/map/panels/MapSettingsMenu.tsx:98
 msgid "Visible edges raised to {applied} so the tree over {nodeLimit} nodes fits."
 msgstr "Viditelné hrany byly zvýšeny na {applied}, aby se strom s více než {nodeLimit} uzly vešel."
 

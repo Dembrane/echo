@@ -24,6 +24,7 @@ import { localGroupBackend, useMapGroups } from "./hooks/useMapGroups";
 import type { EdgeCounts } from "./layout/edgeBudget";
 import { EMPTY_EDGES, useMapGeometry } from "./layout/useMapGeometry";
 import { ArgumentAccordion } from "./panels/ArgumentAccordion";
+import { DensityControl } from "./panels/DensityControl";
 import { DetailsModal, type DetailsTarget } from "./panels/DetailsModal";
 import {
 	type HistoryItem,
@@ -145,6 +146,8 @@ export type MapExperienceProps = {
 	budgets: MapBudgets;
 	colorBy: ColorBy;
 	onColorByChange: (colorBy: ColorBy) => void;
+	/** Moves the cluster density dial on the map; none leaves the dial out. */
+	onDensityChange?: (density: number) => void;
 	settings: MapSettings;
 	factCheckStates: FactCheckStates;
 	onFactCheck: (nodeId: string, options?: { force?: boolean }) => void;
@@ -178,6 +181,7 @@ export const MapExperience = ({
 	budgets,
 	colorBy,
 	onColorByChange,
+	onDensityChange,
 	settings,
 	factCheckStates,
 	onFactCheck,
@@ -434,164 +438,177 @@ export const MapExperience = ({
 				: "col-span-6";
 	return (
 		<div className="flex h-full min-h-0 flex-col">
-			{/* The maps fill the view; the list of arguments waits under them. */}
-			<div className="grid h-full shrink-0 grid-cols-12 grid-rows-[minmax(0,1fr)] gap-2">
-				{hasLeftPanel && (
-					<section className="col-span-3 flex min-h-0 flex-col gap-2 overflow-hidden p-2">
-						{showSpotlight && (
-							<div className="min-h-0 flex-1 overflow-hidden">
-								<SpotlightPanel
-									node={spotlight.node}
-									evidence={
-										(spotlight.node &&
-											graph.evidenceById.get(spotlight.node.id)) ||
-										EMPTY_EVIDENCE
-									}
-									factCheck={spotlight.factCheck}
-									colorBy={colorBy}
-									onColorByChange={onColorByChange}
-									canFactCheck={canFactCheck}
-									onFactCheck={onFactCheck}
-									onCancelFactCheck={onCancelFactCheck}
-									conversationHref={conversationHref}
-									conversationNames={graph.conversationNames}
-									locale={i18n.locale}
-									inspection={spotlightInspection}
-									cluster={spotlightCluster}
-									clusterQuoteCount={clusterQuoteCount}
-									onOpenDetails={setDetails}
-									rows={
-										<HistoryRows
-											items={historyRows}
-											nodesById={nodesById}
-											onSelect={selectHistoryItem}
-											onRetry={title.retry}
-											titles={titles}
-										/>
-									}
-								/>
-								<DetailsModal
-									target={detailsTarget}
-									opened={details !== null}
-									onClose={() => setDetails(null)}
-									quotesOpen={details === "quotes"}
-									evidenceFor={evidenceFor}
-									conversationHref={conversationHref}
-									nodesById={graphNodesById}
-									edges={mstEdges}
+			{/* The maps fill the view; the list of arguments waits under them.
+			    The cluster density dial leads them: the map's one main control. */}
+			<div className="flex h-full shrink-0 flex-col">
+				{onDensityChange && (
+					<div className="shrink-0 px-2 pb-2">
+						<DensityControl
+							density={settings.clusterDensity}
+							onChange={onDensityChange}
+						/>
+					</div>
+				)}
+				<div className="grid min-h-0 flex-1 grid-cols-12 grid-rows-[minmax(0,1fr)] gap-2">
+					{hasLeftPanel && (
+						<section className="col-span-3 flex min-h-0 flex-col gap-2 overflow-hidden p-2">
+							{showSpotlight && (
+								<div className="min-h-0 flex-1 overflow-hidden">
+									<SpotlightPanel
+										node={spotlight.node}
+										evidence={
+											(spotlight.node &&
+												graph.evidenceById.get(spotlight.node.id)) ||
+											EMPTY_EVIDENCE
+										}
+										factCheck={spotlight.factCheck}
+										colorBy={colorBy}
+										onColorByChange={onColorByChange}
+										canFactCheck={canFactCheck}
+										onFactCheck={onFactCheck}
+										onCancelFactCheck={onCancelFactCheck}
+										conversationHref={conversationHref}
+										conversationNames={graph.conversationNames}
+										locale={i18n.locale}
+										inspection={spotlightInspection}
+										cluster={spotlightCluster}
+										clusterQuoteCount={clusterQuoteCount}
+										onOpenDetails={setDetails}
+										rows={
+											<HistoryRows
+												items={historyRows}
+												nodesById={nodesById}
+												onSelect={selectHistoryItem}
+												onRetry={title.retry}
+												titles={titles}
+											/>
+										}
+									/>
+									<DetailsModal
+										target={detailsTarget}
+										opened={details !== null}
+										onClose={() => setDetails(null)}
+										quotesOpen={details === "quotes"}
+										evidenceFor={evidenceFor}
+										conversationHref={conversationHref}
+										nodesById={graphNodesById}
+										edges={mstEdges}
+										relations={graph.relations}
+										colorBy={colorBy}
+										darkMode={settings.darkMode}
+										onSelect={selectNode}
+									/>
+								</div>
+							)}
+							{showShowcase && (
+								<div className="min-h-0 flex-1 overflow-hidden">
+									<ShowcasePanel
+										node={showcase.node}
+										evidence={
+											(showcase.node &&
+												graph.evidenceById.get(showcase.node.id)) ||
+											EMPTY_EVIDENCE
+										}
+										factCheck={showcase.factCheck}
+										expiresAt={walk.expiresAt}
+										durationMs={walk.durationMs}
+										conversationHref={conversationHref}
+										locale={i18n.locale}
+										inspection={showcaseInspection}
+									/>
+								</div>
+							)}
+						</section>
+					)}
+
+					{showTree && (
+						<section
+							id="argument-tree"
+							className={cn(treeSpan, "relative flex min-h-0 flex-col p-2")}
+						>
+							<MapSectionHeader
+								title={<Trans>Argument tree (MST)</Trans>}
+								count={graphNodes.length}
+								edgeCounts={treeEdgeCounts}
+								layoutFailed={layoutFailed}
+							/>
+							<div className="mt-3 min-h-0 flex-1 overflow-hidden">
+								<MstMap
+									nodes={graphNodes}
+									mstEdges={mstEdges}
 									relations={graph.relations}
+									edgeLimit={budgets.edgeLimit}
+									showRelationships={settings.showRelationships}
+									onEdgeCounts={setTreeEdgeCounts}
 									colorBy={colorBy}
 									darkMode={settings.darkMode}
-									onSelect={selectNode}
+									onActiveNodeChange={walk.onActiveNodeChange}
+									timerActive={title.timerActive}
+									timerProgress={title.timerProgress}
+									density={settings.clusterDensity}
+									showForceSettings={settings.showForceSettings}
+									// The walk serves the Showcase; it must not move the
+									// analyst's selection while only Spotlight is open.
+									autoAdvance={showShowcase}
 								/>
 							</div>
-						)}
-						{showShowcase && (
-							<div className="min-h-0 flex-1 overflow-hidden">
-								<ShowcasePanel
-									node={showcase.node}
-									evidence={
-										(showcase.node &&
-											graph.evidenceById.get(showcase.node.id)) ||
-										EMPTY_EVIDENCE
-									}
-									factCheck={showcase.factCheck}
-									expiresAt={walk.expiresAt}
-									durationMs={walk.durationMs}
-									conversationHref={conversationHref}
-									locale={i18n.locale}
-									inspection={showcaseInspection}
+							{settings.showLegend && (
+								<Legend
+									colorBy={colorBy}
+									darkMode={settings.darkMode}
+									conversations={graph.conversationSlotCount}
+									names={graph.conversationNames}
+									tags={tags}
+								/>
+							)}
+						</section>
+					)}
+
+					{showClusters && (
+						<section
+							id="localmap"
+							className={cn(clustersSpan, "relative flex min-h-0 flex-col p-2")}
+						>
+							<MapSectionHeader
+								title={<Trans>Local map</Trans>}
+								count={graphNodes.length}
+								edgeCounts={localEdgeCounts}
+								layoutFailed={layoutFailed}
+							/>
+							<div className="mt-3 min-h-0 flex-1 overflow-hidden">
+								<LocalMap
+									nodes={graphNodes}
+									neighbours={geometry.neighbours}
+									mstEdges={mstEdges}
+									relations={graph.relations}
+									edgeLimit={budgets.edgeLimit}
+									showRelationships={settings.showRelationships}
+									onEdgeCounts={setLocalEdgeCounts}
+									colorBy={colorBy}
+									darkMode={settings.darkMode}
+									onActiveNodeChange={walk.onActiveNodeChange}
+									timerActive={title.timerActive}
+									timerProgress={title.timerProgress}
+									density={settings.clusterDensity}
+									showForceSettings={settings.showForceSettings}
 								/>
 							</div>
-						)}
-					</section>
-				)}
+						</section>
+					)}
 
-				{showTree && (
-					<section
-						id="argument-tree"
-						className={cn(treeSpan, "relative flex min-h-0 flex-col p-2")}
-					>
-						<MapSectionHeader
-							title={<Trans>Argument tree (MST)</Trans>}
-							count={graphNodes.length}
-							edgeCounts={treeEdgeCounts}
-							layoutFailed={layoutFailed}
-						/>
-						<div className="mt-3 min-h-0 flex-1 overflow-hidden">
-							<MstMap
-								nodes={graphNodes}
-								mstEdges={mstEdges}
-								relations={graph.relations}
-								edgeLimit={budgets.edgeLimit}
-								showRelationships={settings.showRelationships}
-								onEdgeCounts={setTreeEdgeCounts}
-								colorBy={colorBy}
-								darkMode={settings.darkMode}
-								onActiveNodeChange={walk.onActiveNodeChange}
-								timerActive={title.timerActive}
-								timerProgress={title.timerProgress}
-								density={settings.clusterDensity}
-								// The walk serves the Showcase; it must not move the
-								// analyst's selection while only Spotlight is open.
-								autoAdvance={showShowcase}
-							/>
-						</div>
-						{settings.showLegend && (
-							<Legend
-								colorBy={colorBy}
-								darkMode={settings.darkMode}
-								conversations={graph.conversationSlotCount}
-								names={graph.conversationNames}
-								tags={tags}
-							/>
-						)}
-					</section>
-				)}
-
-				{showClusters && (
-					<section
-						id="localmap"
-						className={cn(clustersSpan, "relative flex min-h-0 flex-col p-2")}
-					>
-						<MapSectionHeader
-							title={<Trans>Local map</Trans>}
-							count={graphNodes.length}
-							edgeCounts={localEdgeCounts}
-							layoutFailed={layoutFailed}
-						/>
-						<div className="mt-3 min-h-0 flex-1 overflow-hidden">
-							<LocalMap
-								nodes={graphNodes}
-								neighbours={geometry.neighbours}
-								mstEdges={mstEdges}
-								relations={graph.relations}
-								edgeLimit={budgets.edgeLimit}
-								showRelationships={settings.showRelationships}
-								onEdgeCounts={setLocalEdgeCounts}
-								colorBy={colorBy}
-								darkMode={settings.darkMode}
-								onActiveNodeChange={walk.onActiveNodeChange}
-								timerActive={title.timerActive}
-								timerProgress={title.timerProgress}
-								density={settings.clusterDensity}
-							/>
-						</div>
-					</section>
-				)}
-
-				{!showTree && !showClusters && (
-					<section
-						className={cn(
-							SPAN_ALL[availableCols],
-							"relative flex flex-col p-2",
-						)}
-					>
-						<p className="text-sm" style={{ color: "var(--map-muted)" }}>
-							<Trans>Enable a visualization from the panel settings menu</Trans>
-						</p>
-					</section>
-				)}
+					{!showTree && !showClusters && (
+						<section
+							className={cn(
+								SPAN_ALL[availableCols],
+								"relative flex flex-col p-2",
+							)}
+						>
+							<p className="text-sm" style={{ color: "var(--map-muted)" }}>
+								<Trans>Choose a map under Advanced</Trans>
+							</p>
+						</section>
+					)}
+				</div>
 			</div>
 
 			{/* The list carries the deck's tokens, which turn over on the nearest

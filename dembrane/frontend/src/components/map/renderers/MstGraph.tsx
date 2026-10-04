@@ -124,6 +124,11 @@ export interface MstGraphProps {
 	timerProgress?: number;
 	/** The host's cluster density dial: above 1 spreads, below 1 clumps. */
 	density?: number;
+	/**
+	 * The host's force-settings switch (Advanced). Given, it shows the force
+	 * panel and the map draws no gear of its own.
+	 */
+	showForceSettings?: boolean;
 	className?: string;
 	// Optional style overrides
 	/** Base node radius; each node's size scale multiplies it. */
@@ -227,6 +232,7 @@ export const MstGraph = ({
 	timerActive = false,
 	timerProgress = 0,
 	density = 1,
+	showForceSettings,
 	className = "",
 	nodeRadius = 6,
 	edgeColor = DEFAULT_EDGE_COLOR,
@@ -1204,15 +1210,17 @@ export const MstGraph = ({
 				aria-label={t`Argument map`}
 			/>
 
-			<MapChromeButton
-				label={t`Force graph settings`}
-				onClick={() => setShowSettings(!showSettings)}
-				className="right-4"
-			>
-				<GearSixIcon size={20} />
-			</MapChromeButton>
+			{showForceSettings === undefined && (
+				<MapChromeButton
+					label={t`Force graph settings`}
+					onClick={() => setShowSettings(!showSettings)}
+					className="right-4"
+				>
+					<GearSixIcon size={20} />
+				</MapChromeButton>
+			)}
 
-			{showSettings && (
+			{(showForceSettings ?? showSettings) && (
 				<MapSettingsPanel
 					title={<Trans>Force parameters</Trans>}
 					onReset={resetToDefaults}

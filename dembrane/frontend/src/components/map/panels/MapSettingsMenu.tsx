@@ -1,31 +1,25 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
-	ActionIcon,
 	Button,
 	Checkbox,
 	Divider,
 	NumberInput,
 	Popover,
-	Group,
 	Radio,
 	ScrollArea,
-	Slider,
+	SegmentedControl,
 	Stack,
 	Text,
 } from "@mantine/core";
-import { GearSixIcon } from "@phosphor-icons/react";
+import { CaretDownIcon } from "@phosphor-icons/react";
 import { attributeFor, COLOR_BY_OPTIONS } from "../attributes";
 import type {
 	BudgetAdjustment,
 	BudgetResolution,
 	MapBudgetBounds,
 } from "../budgets";
-import {
-	CLUSTER_DENSITY_MAX,
-	CLUSTER_DENSITY_MIN,
-	type MapSettings,
-} from "../state/settings";
+import type { MapSettings } from "../state/settings";
 import type { ColorBy } from "../types";
 
 const MAP_COLOR_BY_OPTIONS = COLOR_BY_OPTIONS.filter(
@@ -74,13 +68,13 @@ const NONE_HIDDEN: ReadonlySet<string> = new Set();
 export type MapSettingsControl =
 	| "showExplore"
 	| "showRelationships"
-	| "darkMode";
+	| "darkMode"
+	| "layout"
+	| "showForceSettings";
 
 const PANEL_TOGGLES: { key: keyof MapSettings; label: () => string }[] = [
 	{ key: "showShowcase", label: () => t`Showcase` },
 	{ key: "showSpotlight", label: () => t`Spotlight` },
-	{ key: "showTree", label: () => t`Tree` },
-	{ key: "showClusters", label: () => t`Clusters` },
 	{ key: "showLegend", label: () => t`Legend` },
 ];
 
@@ -107,21 +101,25 @@ export const budgetAdjustmentLabel = (
 
 const NOTHING_HIDDEN: ReadonlyArray<MapSettingsControl> = [];
 
-// The dial is logarithmic around the default: its left half runs down to
-// 1/4 of the layout's repulsion, its right half up to 16x.
-const DENSITY_LOW = Math.log(1 / CLUSTER_DENSITY_MIN);
-const DENSITY_HIGH = Math.log(CLUSTER_DENSITY_MAX);
-export const densityToDial = (density: number) => {
-	const log = Math.log(density);
-	return Math.round(
-		50 + (log < 0 ? log / DENSITY_LOW : log / DENSITY_HIGH) * 50,
-	);
+type MapLayout = "clusters" | "tree" | "split";
+
+/** The maps each layout draws. */
+const LAYOUTS: Record<
+	MapLayout,
+	Pick<MapSettings, "showClusters" | "showTree">
+> = {
+	clusters: { showClusters: true, showTree: false },
+	split: { showClusters: true, showTree: true },
+	tree: { showClusters: false, showTree: true },
 };
-export const dialToDensity = (dial: number) => {
-	const t = (dial - 50) / 50;
-	const density = Math.exp(t * (t < 0 ? DENSITY_LOW : DENSITY_HIGH));
-	return Math.min(CLUSTER_DENSITY_MAX, Math.max(CLUSTER_DENSITY_MIN, density));
-};
+
+/** The layout the saved panel switches describe; the cluster map when unclear. */
+const layoutOf = (settings: MapSettings): MapLayout =>
+	settings.showTree && settings.showClusters
+		? "split"
+		: settings.showTree
+			? "tree"
+			: "clusters";
 
 const readBudget = (value: string | number): number | null =>
 	typeof value === "number" && Number.isFinite(value) ? value : null;
@@ -235,19 +233,40 @@ export const MapSettingsMenu = ({
 			withinPortal={withinPortal}
 		>
 			<Popover.Target>
-				<ActionIcon
+				{/* Quiet and closed by default: the density dial on the map is the
+				    main control, the rest waits here. */}
+				<Button
 					variant="subtle"
-					aria-label={t`Panel settings`}
-					title={t`Panel settings`}
+					color="gray"
+					rightSection={<CaretDownIcon size={16} />}
 				>
-					<GearSixIcon size={20} />
-				</ActionIcon>
+					<Trans>Advanced</Trans>
+				</Button>
 			</Popover.Target>
 			<Popover.Dropdown>
 				<Stack gap="sm">
 					<Text size="sm">
-						<Trans>Panel settings</Trans>
+						<Trans>Advanced</Trans>
 					</Text>
+
+					{!hide.includes("layout") && (
+						<Stack gap={4}>
+							<Text size="xs">
+								<Trans>Map</Trans>
+							</Text>
+							<SegmentedControl
+								size="xs"
+								fullWidth
+								value={layoutOf(settings)}
+								onChange={(value) => onChange(LAYOUTS[value as MapLayout])}
+								data={[
+									{ label: t`Clusters`, value: "clusters" },
+									{ label: t`Tree`, value: "tree" },
+									{ label: t`Side by side`, value: "split" },
+								]}
+							/>
+						</Stack>
+					)}
 
 					<Stack gap="xs">
 						{PANEL_TOGGLES.filter(
@@ -273,32 +292,6 @@ export const MapSettingsMenu = ({
 								}
 							/>
 						)}
-					</Stack>
-
-					<Stack gap={4}>
-						<Text size="xs">
-							<Trans>Cluster density</Trans>
-						</Text>
-						<Slider
-							thumbLabel={t`Cluster density: fewer or more clusters`}
-							min={0}
-							max={100}
-							step={1}
-							marks={[{ value: 50 }]}
-							value={densityToDial(settings.clusterDensity)}
-							onChange={(dial) =>
-								onChange({ clusterDensity: dialToDensity(dial) })
-							}
-							label={null}
-						/>
-						<Group justify="space-between">
-							<Text size="xs" c="dimmed">
-								<Trans>Clumped</Trans>
-							</Text>
-							<Text size="xs" c="dimmed">
-								<Trans>Spread out</Trans>
-							</Text>
-						</Group>
 					</Stack>
 
 					<Divider />
@@ -438,6 +431,20 @@ export const MapSettingsMenu = ({
 								onChange={onChange}
 								budgets={budgets}
 								bounds={bounds}
+							/>
+						</>
+					)}
+
+					{!hide.includes("showForceSettings") && (
+						<>
+							<Divider />
+							<Checkbox
+								size="sm"
+								label={t`Force settings`}
+								checked={settings.showForceSettings}
+								onChange={(event) =>
+									onChange({ showForceSettings: event.currentTarget.checked })
+								}
 							/>
 						</>
 					)}

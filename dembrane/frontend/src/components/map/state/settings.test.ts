@@ -2,6 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	DEFAULT_MAP_SETTINGS,
+	MAP_PAGE_DEFAULTS,
 	MAP_SETTINGS_STORAGE_KEY,
 	MAP_SETTINGS_VERSION,
 	migrateMapSettings,
@@ -34,11 +35,12 @@ describe("map settings", () => {
 			nodeLimit: null,
 			showClusters: true,
 			showExplore: true,
+			showForceSettings: false,
 			showLegend: false,
 			showRelationships: false,
 			showShowcase: false,
 			showSpotlight: true,
-			showTree: true,
+			showTree: false,
 		});
 	});
 
@@ -57,7 +59,7 @@ describe("map settings", () => {
 		vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
 			throw new Error("blocked");
 		});
-		expect(readMapSettings()).toEqual(DEFAULT_MAP_SETTINGS);
+		expect(readMapSettings()).toEqual(MAP_PAGE_DEFAULTS);
 	});
 
 	it("keeps working in memory when storage cannot be written", () => {
@@ -70,13 +72,13 @@ describe("map settings", () => {
 
 	it("ignores unreadable or invalid stored values", () => {
 		window.localStorage.setItem(MAP_SETTINGS_STORAGE_KEY, "{not json");
-		expect(readMapSettings()).toEqual(DEFAULT_MAP_SETTINGS);
+		expect(readMapSettings()).toEqual(MAP_PAGE_DEFAULTS);
 
 		store({ colorBy: "rainbow", showLegend: true, showTree: "yes" });
 		const settings = readMapSettings();
 		expect(settings.colorBy).toBe("conversation");
 		expect(settings.showLegend).toBe(true);
-		expect(settings.showTree).toBe(true);
+		expect(settings.showTree).toBe(false);
 	});
 });
 
@@ -90,6 +92,7 @@ describe("settings migration", () => {
 				darkMode: true,
 				showClusters: false,
 				showExplore: false,
+				showForceSettings: false,
 				showLegend: true,
 				showShowcase: true,
 				showSpotlight: false,
@@ -104,6 +107,7 @@ describe("settings migration", () => {
 				nodeLimit: null,
 				showClusters: false,
 				showExplore: false,
+				showForceSettings: false,
 				showLegend: true,
 				showRelationships: false,
 				showShowcase: true,
@@ -145,6 +149,20 @@ describe("settings migration", () => {
 		expect(readMapSettings().showLegend).toBe(false);
 		store({ showLegend: true, version: MAP_SETTINGS_VERSION });
 		expect(readMapSettings().showLegend).toBe(true);
+	});
+
+	it("opens every host on the cluster map once, then keeps their layout", () => {
+		store({ showClusters: true, showTree: true, version: 6 });
+		expect(readMapSettings()).toMatchObject({
+			showClusters: true,
+			showTree: false,
+		});
+		store({
+			showClusters: true,
+			showTree: true,
+			version: MAP_SETTINGS_VERSION,
+		});
+		expect(readMapSettings().showTree).toBe(true);
 	});
 
 	it("keeps a cluster density inside the dial and ignores one outside it", () => {

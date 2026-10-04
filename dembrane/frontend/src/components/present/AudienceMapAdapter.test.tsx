@@ -285,8 +285,8 @@ describe("AudienceMapAdapter", () => {
 		const view = render(adapter(true));
 		await screen.findByText("Audience tree renderer");
 		expect(screen.getByText("Audience local renderer")).toBeTruthy();
-		fireEvent.click(screen.getByRole("button", { name: "Panel settings" }));
-		fireEvent.click(await screen.findByRole("checkbox", { name: "Clusters" }));
+		fireEvent.click(screen.getByRole("button", { name: "Advanced" }));
+		fireEvent.click(await screen.findByRole("radio", { name: "Tree" }));
 		expect(screen.queryByText("Audience local renderer")).toBeNull();
 		expect(screen.getByText("Audience tree renderer")).toBeTruthy();
 
@@ -333,7 +333,7 @@ describe("AudienceMapAdapter", () => {
 	 * can switch the walk on once its timers are the fake ones.
 	 */
 	const showcaseToggle = async () => {
-		fireEvent.click(screen.getByRole("button", { name: "Panel settings" }));
+		fireEvent.click(screen.getByRole("button", { name: "Advanced" }));
 		return await screen.findByRole("checkbox", { name: "Showcase" });
 	};
 
@@ -422,7 +422,7 @@ describe("AudienceMapAdapter", () => {
 		expect(
 			await screen.findByText("The arguments you click are kept here."),
 		).toBeTruthy();
-		fireEvent.click(screen.getByRole("button", { name: "Panel settings" }));
+		fireEvent.click(screen.getByRole("button", { name: "Advanced" }));
 		await screen.findByRole("checkbox", { name: "Showcase" });
 		expect(screen.queryByRole("checkbox", { name: "History" })).toBeNull();
 		// The room's switch and the server's budget are not this menu's.

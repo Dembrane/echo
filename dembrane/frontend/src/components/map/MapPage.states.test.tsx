@@ -27,6 +27,7 @@ import { type MapPayloadV2, mapKeys } from "./hooks";
 import { MapPage } from "./MapPage";
 import {
 	MAP_SETTINGS_STORAGE_KEY,
+	MAP_SETTINGS_VERSION,
 	readMapSettings,
 	resetMapSettingsForTests,
 } from "./state/settings";
@@ -83,7 +84,11 @@ afterEach(() => {
 const withoutMaps = () =>
 	window.localStorage.setItem(
 		MAP_SETTINGS_STORAGE_KEY,
-		JSON.stringify({ showClusters: false, showTree: false, version: 2 }),
+		JSON.stringify({
+			showClusters: false,
+			showTree: false,
+			version: MAP_SETTINGS_VERSION,
+		}),
 	);
 
 const renderPage = ({
@@ -126,7 +131,7 @@ describe("MapPage budget states in fixture mode", () => {
 
 	it("lets a single object be inspected without an edge", () => {
 		const { container } = renderPage({ fixture: "single" });
-		expect(container.querySelector("#argument-tree circle.node")).toBeTruthy();
+		expect(container.querySelector("#localmap circle.node")).toBeTruthy();
 		expect(container.querySelector("line")).toBeNull();
 		expectNoRequests();
 	});
@@ -134,9 +139,9 @@ describe("MapPage budget states in fixture mode", () => {
 	it("opens a small result directly as a map", async () => {
 		const { container } = renderPage({ fixture: "small" });
 		await waitFor(() =>
-			expect(
-				container.querySelectorAll("#argument-tree circle.node"),
-			).toHaveLength(8),
+			expect(container.querySelectorAll("#localmap circle.node")).toHaveLength(
+				8,
+			),
 		);
 		expect(container.querySelector("#result-list")).toBeNull();
 		expect(screen.queryByText("List")).toBeNull();
@@ -155,9 +160,7 @@ describe("MapPage budget states in fixture mode", () => {
 		fireEvent.click(screen.getByRole("button", { name: "Open map" }));
 		expect(readMapSettings()).toMatchObject({ nodeLimit: null });
 		expect(container.querySelector("#map-over-budget")).toBeNull();
-		expect(
-			screen.getByText("Enable a visualization from the panel settings menu"),
-		).toBeTruthy();
+		expect(screen.getByText("Choose a map under Advanced")).toBeTruthy();
 		expectNoRequests();
 		// Four hundred list rows are slow to render in jsdom.
 	}, 30_000);
@@ -183,9 +186,9 @@ describe("MapPage legacy URL compatibility", () => {
 			search: "?types=tension&colorBy=type&view=list",
 		});
 		await waitFor(() =>
-			expect(
-				container.querySelectorAll("#argument-tree circle.node"),
-			).toHaveLength(23),
+			expect(container.querySelectorAll("#localmap circle.node")).toHaveLength(
+				23,
+			),
 		);
 		expect(screen.getByText("24 arguments")).toBeTruthy();
 		expect(screen.queryByRole("button", { name: "Objects" })).toBeNull();
@@ -294,9 +297,9 @@ describe("MapPage against the server", () => {
 		});
 		const { container } = renderPage({});
 		await waitFor(() =>
-			expect(
-				container.querySelectorAll("#argument-tree circle.node"),
-			).toHaveLength(50),
+			expect(container.querySelectorAll("#localmap circle.node")).toHaveLength(
+				50,
+			),
 		);
 	});
 });

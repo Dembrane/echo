@@ -116,6 +116,11 @@ export interface LocalMapGraphProps {
 	timerProgress?: number;
 	/** The host's cluster density dial: above 1 spreads, below 1 clumps. */
 	density?: number;
+	/**
+	 * The host's force-settings switch (Advanced). Given, it shows the force
+	 * panel and the map draws no gear of its own.
+	 */
+	showForceSettings?: boolean;
 	className?: string;
 	/** Base node radius; each node's size scale multiplies it. */
 	nodeRadius?: number;
@@ -214,6 +219,7 @@ export const LocalMapGraph = ({
 	timerActive = false,
 	timerProgress = 0,
 	density = 1,
+	showForceSettings,
 	className = "",
 	nodeRadius = 6,
 	showNeighbourLinks = false,
@@ -1243,15 +1249,17 @@ export const LocalMapGraph = ({
 				{paused ? <PlayIcon size={20} /> : <PauseIcon size={20} />}
 			</MapChromeButton>
 
-			<MapChromeButton
-				label={t`Local map settings`}
-				onClick={() => setShowSettings(!showSettings)}
-				className="right-4"
-			>
-				<GearSixIcon size={20} />
-			</MapChromeButton>
+			{showForceSettings === undefined && (
+				<MapChromeButton
+					label={t`Local map settings`}
+					onClick={() => setShowSettings(!showSettings)}
+					className="right-4"
+				>
+					<GearSixIcon size={20} />
+				</MapChromeButton>
+			)}
 
-			{showSettings && (
+			{(showForceSettings ?? showSettings) && (
 				<MapSettingsPanel
 					title={<Trans>Local map forces</Trans>}
 					onReset={resetToDefaults}

@@ -75,16 +75,20 @@ describe("MapPage in fixture mode", () => {
 			</MantineProvider>,
 		);
 
-		expect(screen.getByText("Argument tree (MST)")).toBeTruthy();
+		// The cluster map alone opens the page; the tree waits under Advanced.
 		expect(screen.getByText("Local map")).toBeTruthy();
-		expect(screen.getAllByText("50 arguments")).toHaveLength(2);
-		expect(container.querySelector("#argument-tree circle.node")).toBeTruthy();
-		expect(
-			container.querySelectorAll("#argument-tree circle.node"),
-		).toHaveLength(50);
+		expect(screen.queryByText("Argument tree (MST)")).toBeNull();
+		expect(container.querySelector("#argument-tree")).toBeNull();
 		expect(container.querySelectorAll("#localmap circle.node")).toHaveLength(
 			50,
 		);
+		// The density dial is the map's one main control, on the map itself.
+		expect(
+			screen.getByRole("slider", {
+				name: "Cluster density: fewer or more clusters",
+			}),
+		).toBeTruthy();
+		expect(screen.getByRole("button", { name: "Advanced" })).toBeTruthy();
 		expect(container.querySelector("#spotlight-panel")).toBeTruthy();
 		// What was spotlit before sits under the spotlit item, in the same panel.
 		expect(
