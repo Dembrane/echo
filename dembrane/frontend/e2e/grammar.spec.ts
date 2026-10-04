@@ -1,4 +1,5 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import {
 	type Browser,
@@ -24,6 +25,7 @@ import { routerPaths } from "./routes";
 //   MEMBER_EMAIL, MEMBER_PASSWORD a plain member of the demo workspace
 //   ONLY=a,b         only the flows whose path contains one of these
 //   REPORT_ONLY=1    write the report without failing any page
+//   SHOTS=dir        keep a screenshot of every page and state in dir/<width>/
 // Pages whose setting is missing are skipped, and the report says why.
 
 const env = (name: string) => process.env[`GRAMMAR_E2E_${name}`] ?? "";
@@ -38,6 +40,8 @@ const configured = Boolean(
 		env("WORKSPACE_ID") &&
 		env("PROJECT_ID"),
 );
+// A folder to keep a full-page screenshot of every page and state in (the daily run's artifact).
+const SHOTS = env("SHOTS");
 const AXE_TAGS = ["wcag2a", "wcag2aa", "wcag21aa"];
 const UUID = "[0-9a-f-]{36}";
 const EMPTY_PROJECT = "Grammar check (empty)";
@@ -272,6 +276,15 @@ function visits(): Visit[] {
 // Logs in once per role. A new browser meets the one-browser rule: when the
 // account is signed in elsewhere, log in here anyway.
 async function logIn(browser: Browser, role: Visit["role"], baseURL?: string) {
+	// One browser per account: a second login as the same person would sign the
+	// first one out (a preview's admin is both owner and staff).
+	const same = (Object.keys(sessions) as Visit["role"][]).find(
+		(r) => sessions[r] && LOGINS[r].email === LOGINS[role].email,
+	);
+	if (same) {
+		sessions[role] = sessions[same];
+		return;
+	}
 	const ctx = await browser.newContext({ baseURL });
 	const page = await ctx.newPage();
 	await page.goto("/en-US/login");
@@ -508,6 +521,15 @@ test.describe("design grammar", () => {
 						}
 						await trigger.click();
 						await settle(page);
+					}
+					if (SHOTS) {
+						const file = join(
+							SHOTS,
+							info.project.name.replace("grammar-", ""),
+							`${visit.name.replace(/[^\w$-]+/g, "_").replace(/^_|_$/g, "") || "root"}--${state.name.replace(/\W+/g, "-")}.png`,
+						);
+						mkdirSync(dirname(file), { recursive: true });
+						await page.screenshot({ fullPage: true, path: file });
 					}
 					const c = await check(page, phone, visit.portal);
 					row(state.name, page.url(), c);
