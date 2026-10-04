@@ -1738,7 +1738,7 @@
     if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || keepsKey(e)) return;
     const to = NAV_KEYS[e.key];
     if (introOpen) {
-      if (to === "next" || to === "previous") { e.preventDefault(); navigate(to); }
+      if (to) { e.preventDefault(); navigate(to); }
       return;
     }
     if (screenFrozen) { if (e.key === "Escape") hideTip(); return; }
