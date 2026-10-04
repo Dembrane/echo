@@ -217,11 +217,11 @@ export const MapExperience = ({
 	);
 
 	// Dwelled clusters are kept as the project's groups. Whoever may change
-	// the project (the same right a fact-check needs) makes them; everyone
-	// signed in sees them.
+	// the project (the same right a fact-check needs) makes them on a map with
+	// a snapshot to keep them in; everyone signed in sees them.
 	const title = useMapGroups({
 		backend: offline ? fixtureGroups : undefined,
-		canCommit: canFactCheck || offline,
+		canCommit: offline || (canFactCheck && !!graph.snapshotId),
 		edges: geometry.status === "ready" ? mstEdges : EMPTY_EDGES,
 		enabled: titles,
 		nodes: placedNodes,
