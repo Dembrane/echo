@@ -418,17 +418,17 @@ describe("AudienceMapAdapter", () => {
 
 		render(adapter(true));
 		await screen.findByText("Audience tree renderer");
-		expect(screen.queryByRole("region", { name: "Explore" })).toBeNull();
+		expect(screen.queryByRole("region", { name: "History" })).toBeNull();
 		fireEvent.click(screen.getByRole("button", { name: "Panel settings" }));
 		await screen.findByRole("checkbox", { name: "Showcase" });
-		expect(screen.queryByRole("checkbox", { name: "Explore" })).toBeNull();
+		expect(screen.queryByRole("checkbox", { name: "History" })).toBeNull();
 		// The room's switch and the server's budget are not this menu's.
 		expect(screen.queryByRole("checkbox", { name: "Dark mode" })).toBeNull();
 		expect(screen.queryByText("Map budget")).toBeNull();
 		expect(fetchMock.mock.calls.map(([url]) => url)).toEqual(["/audience/map"]);
 	});
 
-	it("gives a signed-in viewer the host page's Explore panel", async () => {
+	it("gives a signed-in viewer the host page's History panel", async () => {
 		vi.stubGlobal(
 			"fetch",
 			vi.fn(async () => new Response(JSON.stringify({}), { status: 200 })),
@@ -436,7 +436,7 @@ describe("AudienceMapAdapter", () => {
 
 		render(adapter(true, 0, undefined, true));
 		await screen.findByText("Audience tree renderer");
-		expect(screen.getByRole("region", { name: "Explore" })).toBeTruthy();
+		expect(screen.getByRole("region", { name: "History" })).toBeTruthy();
 	});
 
 	it("shows the evidence behind a finding, attributed and linking nowhere", async () => {

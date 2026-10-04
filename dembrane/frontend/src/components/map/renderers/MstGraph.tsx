@@ -1386,14 +1386,16 @@ export const MstMap = memo(function MstMap({
 		pendingOwn: null,
 	});
 
+	// `auto` marks the map's own picks (the first node, the walk), which the
+	// History leaves out.
 	const selectNode = useCallback(
-		(nodeId: string) => {
+		(nodeId: string, auto = false) => {
 			const node = nodeById.get(nodeId);
 			if (!node) return;
 
 			const expiresAt = Date.now() + walkIntervalMs;
 			walkRef.current.pendingOwn = { expiresAt, id: nodeId };
-			setSharedSelectedNodeId(nodeId);
+			setSharedSelectedNodeId(nodeId, { auto });
 			onActiveNodeChangeRef.current?.(node, expiresAt, walkIntervalMs);
 		},
 		[nodeById, walkIntervalMs, setSharedSelectedNodeId],
@@ -1438,7 +1440,7 @@ export const MstMap = memo(function MstMap({
 			return;
 		}
 
-		selectNode(nodes[Math.floor(Math.random() * nodes.length)].id);
+		selectNode(nodes[Math.floor(Math.random() * nodes.length)].id, true);
 	}, [
 		nodes,
 		nodeById,
@@ -1489,7 +1491,7 @@ export const MstMap = memo(function MstMap({
 
 		const timeoutId = setTimeout(
 			() => {
-				selectNode(pickRandomNeighbor(sharedSelectedNodeId));
+				selectNode(pickRandomNeighbor(sharedSelectedNodeId), true);
 			},
 			Math.max(0, walk.expiresAt - now),
 		);

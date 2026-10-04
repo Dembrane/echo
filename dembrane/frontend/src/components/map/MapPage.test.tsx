@@ -86,7 +86,7 @@ describe("MapPage in fixture mode", () => {
 			50,
 		);
 		expect(container.querySelector("#spotlight-panel")).toBeTruthy();
-		expect(container.querySelector("#explore-panel")).toBeTruthy();
+		expect(container.querySelector("#history-panel")).toBeTruthy();
 		// Showcase is off by default.
 		expect(container.querySelector("#showcase-panel")).toBeNull();
 		// Generation controls are hidden in fixture mode.

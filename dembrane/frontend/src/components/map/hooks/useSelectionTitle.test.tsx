@@ -160,16 +160,55 @@ describe("useSelectionTitle", () => {
 		expect(request).not.toHaveBeenCalled();
 	});
 
-	it("sends nothing for fewer than three nodes", async () => {
+	it("sends nothing, and draws no arc, for fewer than three nodes", async () => {
 		const { request } = deferredRequester();
-		const { store } = setup(request);
+		const { hook, store } = setup(request);
 
 		settle(store, ids(0, 1));
+		expect(hook.result.current.timerActive).toBe(false);
 		await wait(TITLE_DELAY_MS * 2);
 		expect(request).not.toHaveBeenCalled();
 	});
 
-	it("discards a late response for a superseded selection", async () => {
+	it("cancels the arc when the cursor moves before it is full", async () => {
+		const { request } = deferredRequester();
+		const { hook, store } = setup(request);
+
+		settle(store, ids(0, 1, 2));
+		await wait(TITLE_DELAY_MS / 2);
+		settle(store, ids(8, 9));
+		expect(hook.result.current.timerActive).toBe(false);
+		await wait(TITLE_DELAY_MS * 2);
+		expect(request).not.toHaveBeenCalled();
+	});
+
+	it("lists a sent request as pending, and keeps it when the cursor leaves", async () => {
+		const { calls, request } = deferredRequester();
+		const { hook, store } = setup(request);
+		const selection = ids(0, 1, 2);
+
+		settle(store, selection);
+		await wait(TITLE_DELAY_MS);
+		expect(hook.result.current.history).toMatchObject([
+			{ nodeIds: expect.any(Array), status: "pending" },
+		]);
+
+		act(() => {
+			store.setHighlightedNodeIds(new Set(), { source: "mst-hover" });
+		});
+		expect(calls[0].signal.aborted).toBe(false);
+		expect(hook.result.current.isProcessing).toBe(true);
+
+		await act(async () => {
+			calls[0].resolve({ title: "Landed anyway" });
+		});
+		const { history, selectedDistillationId } = hook.result.current;
+		expect(history).toMatchObject([{ status: "done", title: "Landed anyway" }]);
+		expect(selectedDistillationId).toBe(history[0].id);
+		expect(store.getState().highlightedNodeIds).toEqual(new Set(selection));
+	});
+
+	it("gives Spotlight to the newest request; an older one only fills in history", async () => {
 		const { calls, request } = deferredRequester();
 		const { hook, store } = setup(request);
 		const first = ids(0, 1, 2, 3, 4);
@@ -178,60 +217,47 @@ describe("useSelectionTitle", () => {
 		settle(store, first);
 		await wait(TITLE_DELAY_MS);
 		settle(store, second);
-		expect(calls[0].signal.aborted).toBe(true);
 		await wait(TITLE_DELAY_MS);
 		expect(request).toHaveBeenCalledTimes(2);
-
-		// The first answer lands while the second is pending.
-		await act(async () => {
-			calls[0].resolve({ title: "Old title" });
-		});
-		expect(hook.result.current.history).toHaveLength(0);
-		expect(hook.result.current.isProcessing).toBe(true);
-		expect(store.getState().highlightedNodeIds).toEqual(new Set(second));
-		expect(store.getState().highlightSource).toBe("mst-hover");
+		expect(calls[0].signal.aborted).toBe(false);
 
 		await act(async () => {
 			calls[1].resolve({ title: "New title" });
 		});
-		expect(hook.result.current.history.map((entry) => entry.title)).toEqual([
-			"New title",
-		]);
-		expect(hook.result.current.isProcessing).toBe(false);
-	});
+		const newId = hook.result.current.history[0].id;
+		expect(hook.result.current.selectedDistillationId).toBe(newId);
 
-	it("discards a response once the highlight has moved to a preview", async () => {
-		const { calls, request } = deferredRequester();
-		const { hook, store } = setup(request);
-
-		settle(store, ids(0, 1, 2));
-		await wait(TITLE_DELAY_MS);
-		act(() => {
-			store.setHighlightedNodeIds(new Set(ids(5, 6, 7)), {
-				isPreview: true,
-				source: "local-hover",
-			});
-		});
 		await act(async () => {
-			calls[0].resolve({ title: "Too late" });
+			calls[0].resolve({ title: "Old title" });
 		});
-		expect(hook.result.current.history).toHaveLength(0);
-		expect(store.getState().highlightedNodeIds).toEqual(new Set(ids(5, 6, 7)));
+		const { history, selectedDistillationId } = hook.result.current;
+		expect(history.map((entry) => entry.title)).toEqual([
+			"New title",
+			"Old title",
+		]);
+		expect(selectedDistillationId).toBe(newId);
+		expect(store.getState().highlightedNodeIds).toEqual(new Set(second));
 	});
 
-	it("cancels a pending request when the cursor leaves both maps", async () => {
+	it("leaves the map alone when a title lands mid-arc on another set", async () => {
 		const { calls, request } = deferredRequester();
 		const { hook, store } = setup(request);
+		const next = ids(8, 9, 10);
 
 		settle(store, ids(0, 1, 2));
 		await wait(TITLE_DELAY_MS);
-		expect(hook.result.current.isProcessing).toBe(true);
+		settle(store, next);
+		await wait(TITLE_DELAY_MS / 3);
 
-		act(() => {
-			store.setHighlightedNodeIds(new Set(), { source: "mst-hover" });
+		await act(async () => {
+			calls[0].resolve({ title: "While resting" });
 		});
-		expect(calls[0].signal.aborted).toBe(true);
-		expect(hook.result.current.isProcessing).toBe(false);
+		// Shown in Spotlight, but the arc on the new set keeps running.
+		expect(hook.result.current.selectedDistillationId).toBe(
+			hook.result.current.history[0].id,
+		);
+		expect(hook.result.current.timerActive).toBe(true);
+		expect(store.getState().highlightedNodeIds).toEqual(new Set(next));
 	});
 
 	it("reuses the title of an identical set without a request", async () => {
@@ -288,7 +314,7 @@ describe("useSelectionTitle", () => {
 		expect(request).toHaveBeenCalledTimes(1);
 	});
 
-	it("shows a failure with a retry for the same set", async () => {
+	it("marks a failed entry and tries it again", async () => {
 		const { calls, request } = deferredRequester();
 		const { hook, store } = setup(request);
 		const selection = ids(0, 1, 2, 3);
@@ -298,26 +324,22 @@ describe("useSelectionTitle", () => {
 		await act(async () => {
 			calls[0].reject(Object.assign(new Error("bad gateway"), { status: 502 }));
 		});
-		expect(hook.result.current.error).toMatchObject({ kind: "failed" });
+		const entry = hook.result.current.history[0];
+		expect(entry.status).toBe("failed");
 		expect(hook.result.current.isProcessing).toBe(false);
 
-		// Leaving the maps to reach Retry keeps the message.
-		act(() => {
-			store.setHighlightedNodeIds(new Set(), { source: "mst-hover" });
-		});
-		expect(hook.result.current.error).not.toBeNull();
-
-		act(() => hook.result.current.retry());
+		act(() => hook.result.current.retry(entry.id));
 		expect(request).toHaveBeenCalledTimes(2);
 		expect(new Set(request.mock.calls[1][1])).toEqual(new Set(selection));
 		await act(async () => {
 			calls[1].resolve({ title: "Second try" });
 		});
-		expect(hook.result.current.error).toBeNull();
-		expect(hook.result.current.history[0].title).toBe("Second try");
+		expect(hook.result.current.history).toMatchObject([
+			{ id: entry.id, status: "done", title: "Second try" },
+		]);
 	});
 
-	it("reports a selection that is too large", async () => {
+	it("marks a selection that is too large", async () => {
 		const { calls, request } = deferredRequester();
 		const { hook, store } = setup(request);
 
@@ -326,6 +348,25 @@ describe("useSelectionTitle", () => {
 		await act(async () => {
 			calls[0].reject(Object.assign(new Error("too large"), { status: 413 }));
 		});
-		expect(hook.result.current.error).toMatchObject({ kind: "too-large" });
+		expect(hook.result.current.history[0].status).toBe("too-large");
+	});
+
+	it("cancels what is in flight when the result changes", async () => {
+		const { calls, request } = deferredRequester();
+		const store = createMapInteractionStore();
+		const wrapper = ({ children }: { children: ReactNode }) => (
+			<MapInteractionProvider store={store}>{children}</MapInteractionProvider>
+		);
+		const hook = renderHook(
+			({ resultId }: { resultId: string }) =>
+				useSelectionTitle({ edges, nodes, request, resultId }),
+			{ initialProps: { resultId: "result-1" }, wrapper },
+		);
+
+		settle(store, ids(0, 1, 2));
+		await wait(TITLE_DELAY_MS);
+		hook.rerender({ resultId: "result-2" });
+		expect(calls[0].signal.aborted).toBe(true);
+		expect(hook.result.current.history).toEqual([]);
 	});
 });

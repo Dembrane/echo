@@ -4,6 +4,7 @@ import {
 	type CSSProperties,
 	type ReactNode,
 	useCallback,
+	useEffect,
 	useMemo,
 	useState,
 } from "react";
@@ -26,7 +27,11 @@ import {
 import type { EdgeCounts } from "./layout/edgeBudget";
 import { EMPTY_EDGES, useMapGeometry } from "./layout/useMapGeometry";
 import { ArgumentAccordion } from "./panels/ArgumentAccordion";
-import { ExplorePanel } from "./panels/ExplorePanel";
+import {
+	type HistoryItem,
+	HistoryPanel,
+	resolveNodes,
+} from "./panels/HistoryPanel";
 import { Legend } from "./panels/Legend";
 import type { ConversationHref, NodeInspection } from "./panels/NodeDetailCard";
 import { ShowcasePanel } from "./panels/ShowcasePanel";
@@ -240,6 +245,75 @@ export const MapExperience = ({
 		[store],
 	);
 
+	// Arguments clicked this result, newest first, one entry per argument. The
+	// map's own picks (its first node, the walk) are left out. A click also
+	// lets a distilled cluster go from Spotlight.
+	const [clicks, setClicks] = useState<{ nodeId: string; at: number }[]>([]);
+	const { deselect, selectDistillation } = title;
+	useEffect(() => {
+		let seen = store.getState().selectionRevision;
+		return store.subscribe(() => {
+			const state = store.getState();
+			if (state.selectionRevision === seen) return;
+			seen = state.selectionRevision;
+			const nodeId = state.selectedNodeId;
+			if (!nodeId || state.selectionAuto) return;
+			deselect();
+			setClicks((current) => [
+				{ at: Date.now(), nodeId },
+				...current.filter((click) => click.nodeId !== nodeId),
+			]);
+		});
+	}, [store, deselect]);
+	// biome-ignore lint/correctness/useExhaustiveDependencies: reset keyed on the result id only
+	useEffect(() => setClicks([]), [graph.resultId]);
+
+	const historyItems = useMemo<HistoryItem[]>(
+		() =>
+			[
+				...clicks.map(
+					(click): HistoryItem => ({
+						at: click.at,
+						id: `argument-${click.nodeId}`,
+						kind: "argument",
+						nodeId: click.nodeId,
+					}),
+				),
+				...title.history.map(
+					(distillation): HistoryItem => ({
+						at: Date.parse(distillation.createdAt),
+						distillation,
+						id: distillation.id,
+						kind: "cluster",
+					}),
+				),
+			].sort((a, b) => b.at - a.at),
+		[clicks, title.history],
+	);
+	const graphNodesById = useMemo(
+		() => new Map(graphNodes.map((node) => [node.id, node] as const)),
+		[graphNodes],
+	);
+	const spotlightDistillation = title.selectedDistillationId
+		? title.history.find((entry) => entry.id === title.selectedDistillationId)
+		: undefined;
+	const spotlightCluster = spotlightDistillation
+		? {
+				distillation: spotlightDistillation,
+				nodes: resolveNodes(spotlightDistillation.nodeIds, graphNodesById),
+			}
+		: null;
+	const selectedHistoryId =
+		title.selectedDistillationId ??
+		(selectedNodeId ? `argument-${selectedNodeId}` : null);
+	const selectHistoryItem = useCallback(
+		(item: HistoryItem) => {
+			if (item.kind === "argument") store.setSelectedNodeId(item.nodeId);
+			else selectDistillation(item.id);
+		},
+		[store, selectDistillation],
+	);
+
 	const withState = (
 		node: MapGraphNode | undefined,
 	): { node: MapGraphNode | null; factCheck: FactCheckState | undefined } => {
@@ -342,19 +416,19 @@ export const MapExperience = ({
 									conversationNames={graph.conversationNames}
 									locale={i18n.locale}
 									inspection={spotlightInspection}
+									cluster={spotlightCluster}
+									onSelectNode={selectNode}
 								/>
 							</div>
 						)}
 						{showExplore && (
 							<div className="min-h-0 flex-1 overflow-hidden">
-								<ExplorePanel
-									isProcessing={title.isProcessing}
-									error={title.error}
-									onRetry={title.retry}
-									history={title.history}
+								<HistoryPanel
+									items={historyItems}
 									nodesById={nodesById}
-									selectedDistillationId={title.selectedDistillationId}
-									onSelectDistillation={title.selectDistillation}
+									selectedId={selectedHistoryId}
+									onSelect={selectHistoryItem}
+									onRetry={title.retry}
 								/>
 							</div>
 						)}

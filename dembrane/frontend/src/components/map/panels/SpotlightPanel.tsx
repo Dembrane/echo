@@ -15,8 +15,10 @@ import {
 	slotKey,
 } from "../attributes";
 import type { EvidenceGroup } from "../data/adapter";
+import type { Distillation } from "../hooks/useSelectionTitle";
 import { deriveDisplayVerdict } from "../graph/nodeStyle";
 import { blendBackground } from "../renderers/gradients";
+import { ClusterSummary } from "./ClusterSummary";
 import type { ColorBy, FactCheckState, MapGraphNode } from "../types";
 import {
 	type ConversationHref,
@@ -59,6 +61,9 @@ type SpotlightPanelProps = {
 	conversationNames?: ReadonlyMap<number, string>;
 	locale?: string;
 	inspection?: NodeInspection | null;
+	/** A distilled cluster to show instead of the node. */
+	cluster?: { distillation: Distillation; nodes: MapGraphNode[] } | null;
+	onSelectNode?: (nodeId: string) => void;
 };
 
 /**
@@ -143,6 +148,8 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 	conversationNames,
 	locale,
 	inspection = null,
+	cluster = null,
+	onSelectNode,
 }: SpotlightPanelProps) {
 	const type = node?.metadata.objectType ?? "argument";
 	const eligible = node
@@ -182,7 +189,14 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 		>
 			<PanelHeader title={<Trans>Spotlight</Trans>} dotClassName="bg-cyan" />
 
-			{node ? (
+			{cluster ? (
+				<ClusterSummary
+					distillation={cluster.distillation}
+					nodes={cluster.nodes}
+					conversationNames={conversationNames}
+					onSelectNode={(id) => onSelectNode?.(id)}
+				/>
+			) : node ? (
 				<>
 					{/* The statement and the colour chits stay put; what explains
 					    them, the quotes and the rest scroll under them. */}

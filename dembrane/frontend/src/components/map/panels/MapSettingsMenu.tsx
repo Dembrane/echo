@@ -67,7 +67,8 @@ export type MapSettingsControl =
 	| "darkMode";
 
 const PANEL_TOGGLES: { key: keyof MapSettings; label: () => string }[] = [
-	{ key: "showExplore", label: () => t`Explore` },
+	// The key keeps its old name; the panel it shows is the History now.
+	{ key: "showExplore", label: () => t`History` },
 	{ key: "showShowcase", label: () => t`Showcase` },
 	{ key: "showSpotlight", label: () => t`Spotlight` },
 	{ key: "showTree", label: () => t`Tree` },

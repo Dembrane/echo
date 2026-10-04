@@ -12,22 +12,20 @@ import {
 export const TITLE_DELAY_MS = 1500;
 /** Smaller selections are never titled. */
 export const MIN_TITLE_NODES = 3;
-/** The cursor arc grows to half a circle over the title delay. */
-const TIMER_PROGRESS_CAP = 0.5;
+
+export type DistillationStatus = "pending" | "done" | "failed" | "too-large";
 
 export type Distillation = {
 	id: string;
 	/** Result id plus the sorted node ids: one entry per selection. */
 	key: string;
-	title: string;
+	status: DistillationStatus;
+	/** Set once the title has arrived. */
+	title?: string;
 	/** Most central first. */
 	nodeIds: string[];
+	/** When it last joined the top of the history. */
 	createdAt: string;
-};
-
-export type SelectionTitleError = {
-	kind: "failed" | "too-large";
-	nodeIds: string[];
 };
 
 export type TitleRequester = (
@@ -64,18 +62,17 @@ const setsEqual = (a: ReadonlySet<string>, b: ReadonlySet<string>) => {
 export const selectionKey = (resultId: string, nodeIds: Iterable<string>) =>
 	`${resultId}::${Array.from(nodeIds).sort().join(",")}`;
 
-type Pending = { key: string; controller: AbortController };
-
 /**
- * Titles the settled highlight, as DDW's visualizer did: a settled set that
- * holds for 1.5 s and has at least three nodes gets one title request; the
- * title joins the history, is selected, and takes over the highlight.
+ * Titles the settled highlight, as DDW's visualizer did: a settled set of at
+ * least three nodes that holds for 1.5 s while the cursor arc fills sends one
+ * title request. Moving before the arc is full cancels it.
  *
- * Every request is tied to its selection. A response for a selection that is
- * no longer highlighted is discarded, a newer request is never hidden by an
- * older one finishing, and an emptied highlight (the cursor leaving both maps)
- * cancels what is pending. Identical selections reuse their title within the
- * session without a request.
+ * Once sent, a request runs in the background: it joins the history at once
+ * as pending, and moving the cursor or leaving the maps no longer cancels it.
+ * When the newest request lands it is selected (Spotlight shows it) and takes
+ * over the highlight, unless the cursor is mid-arc on another set. An older
+ * one that lands later only fills in its history entry. Identical selections
+ * reuse their title within the session without a request.
  */
 export function useSelectionTitle({
 	resultId,
@@ -87,8 +84,6 @@ export function useSelectionTitle({
 }: UseSelectionTitleOptions) {
 	const store = useMapInteractionStore();
 
-	const [isProcessing, setIsProcessing] = useState(false);
-	const [error, setErrorState] = useState<SelectionTitleError | null>(null);
 	const [history, setHistoryState] = useState<Distillation[]>([]);
 	const [selectedDistillationId, setSelectedState] = useState<string | null>(
 		null,
@@ -108,7 +103,6 @@ export function useSelectionTitle({
 
 	const historyRef = useRef<Distillation[]>([]);
 	const selectedRef = useRef<string | null>(null);
-	const errorRef = useRef<SelectionTitleError | null>(null);
 	const currentTitleRef = useRef<{ key: string; nodeIds: Set<string> } | null>(
 		null,
 	);
@@ -117,7 +111,10 @@ export function useSelectionTitle({
 	const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const timerStartRef = useRef<number | null>(null);
 	const timerSeqRef = useRef(0);
-	const pendingRef = useRef<Pending | null>(null);
+	/** In-flight requests by history entry id. */
+	const jobsRef = useRef(new Map<string, AbortController>());
+	/** The entry of the request sent last: only it may take over Spotlight. */
+	const latestJobRef = useRef<string | null>(null);
 	const cacheRef = useRef(new Map<string, string>());
 	const historySeqRef = useRef(0);
 
@@ -126,15 +123,29 @@ export function useSelectionTitle({
 		setHistoryState(next);
 	}, []);
 
+	/** Puts the entry first, replacing any entry with its id. */
+	const putFirst = useCallback(
+		(entry: Distillation) =>
+			setHistory([
+				entry,
+				...historyRef.current.filter((item) => item.id !== entry.id),
+			]),
+		[setHistory],
+	);
+
+	const updateEntry = useCallback(
+		(id: string, patch: Partial<Distillation>) =>
+			setHistory(
+				historyRef.current.map((item) =>
+					item.id === id ? { ...item, ...patch } : item,
+				),
+			),
+		[setHistory],
+	);
+
 	const setSelected = useCallback((id: string | null) => {
 		selectedRef.current = id;
 		setSelectedState(id);
-	}, []);
-
-	const setError = useCallback((next: SelectionTitleError | null) => {
-		if (errorRef.current === next) return;
-		errorRef.current = next;
-		setErrorState(next);
 	}, []);
 
 	const clearTimer = useCallback(() => {
@@ -149,11 +160,9 @@ export function useSelectionTitle({
 		}
 	}, []);
 
-	const abortPending = useCallback(() => {
-		if (!pendingRef.current) return;
-		pendingRef.current.controller.abort();
-		pendingRef.current = null;
-		setIsProcessing(false);
+	const abortAll = useCallback(() => {
+		for (const controller of jobsRef.current.values()) controller.abort();
+		jobsRef.current.clear();
 	}, []);
 
 	const highlightAsHistory = useCallback(
@@ -169,32 +178,19 @@ export function useSelectionTitle({
 		[store],
 	);
 
-	const isHighlighted = useCallback(
-		(nodeIds: string[]) =>
-			setsEqual(store.getState().highlightedNodeIds, new Set(nodeIds)),
-		[store],
-	);
-
-	const applyTitle = useCallback(
-		(title: string, nodeIds: string[], key: string) => {
-			currentTitleRef.current = { key, nodeIds: new Set(nodeIds) };
-			const existing = historyRef.current.find((entry) => entry.key === key);
-			const entry: Distillation = existing ?? {
-				createdAt: new Date().toISOString(),
-				id: `distillation-${++historySeqRef.current}`,
-				key,
-				nodeIds,
-				title,
+	/** A title arrives: Spotlight shows it; the map follows unless mid-arc. */
+	const arrive = useCallback(
+		(entry: Distillation) => {
+			currentTitleRef.current = {
+				key: entry.key,
+				nodeIds: new Set(entry.nodeIds),
 			};
-			setHistory([
-				entry,
-				...historyRef.current.filter((item) => item.id !== entry.id),
-			]);
 			setSelected(entry.id);
-			setError(null);
-			highlightAsHistory(nodeIds);
+			const busy =
+				timerStartRef.current !== null || store.getState().highlightIsPreview;
+			if (!busy) highlightAsHistory(entry.nodeIds);
 		},
-		[highlightAsHistory, setError, setHistory, setSelected],
+		[highlightAsHistory, setSelected, store],
 	);
 
 	const startRequest = useCallback(
@@ -208,6 +204,42 @@ export function useSelectionTitle({
 			} = latestRef.current;
 			if (!id || !mayAsk) return;
 			const key = selectionKey(id, nodeIds);
+			const existing = historyRef.current.find((item) => item.key === key);
+			if (existing?.status === "pending") return;
+
+			const cached = cacheRef.current.get(key);
+			if (cached !== undefined) {
+				const entry: Distillation = existing
+					? {
+							...existing,
+							createdAt: new Date().toISOString(),
+							status: "done",
+							title: cached,
+						}
+					: {
+							createdAt: new Date().toISOString(),
+							id: `distillation-${++historySeqRef.current}`,
+							key,
+							nodeIds,
+							status: "done",
+							title: cached,
+						};
+				latestJobRef.current = entry.id;
+				putFirst(entry);
+				arrive(entry);
+				return;
+			}
+
+			const entry: Distillation = {
+				createdAt: new Date().toISOString(),
+				id: existing?.id ?? `distillation-${++historySeqRef.current}`,
+				key,
+				nodeIds,
+				status: "pending",
+			};
+			putFirst(entry);
+			latestJobRef.current = entry.id;
+
 			const revisionOf = new Map(
 				graphNodes.map((node) => [node.id, node.metadata.revisionId] as const),
 			);
@@ -216,55 +248,42 @@ export function useSelectionTitle({
 				revisionIds: nodeIds.map((nodeId) => revisionOf.get(nodeId) ?? nodeId),
 				snapshotId: snapshot ?? null,
 			};
+			const controller = new AbortController();
+			jobsRef.current.set(entry.id, controller);
 
-			const cached = cacheRef.current.get(key);
-			if (cached !== undefined) {
-				abortPending();
-				applyTitle(cached, nodeIds, key);
-				return;
-			}
-
-			pendingRef.current?.controller.abort();
-			const pending: Pending = { controller: new AbortController(), key };
-			pendingRef.current = pending;
-			setIsProcessing(true);
-			setError(null);
-
-			const settle = () => {
-				if (pendingRef.current !== pending) return false;
-				pendingRef.current = null;
-				setIsProcessing(false);
-				return true;
-			};
-
-			send(id, nodeIds, pending.controller.signal, context).then(
+			send(id, nodeIds, controller.signal, context).then(
 				(response) => {
+					jobsRef.current.delete(entry.id);
+					if (controller.signal.aborted) return;
 					const title = response?.title?.trim() ?? "";
-					if (title) cacheRef.current.set(key, title);
-					// Superseded by a newer request: that one owns the spinner.
-					if (!settle()) return;
-					if (pending.controller.signal.aborted) return;
-					// The selection moved on: never take over the new highlight.
-					if (!isHighlighted(nodeIds)) return;
 					if (!title) {
-						setError({ kind: "failed", nodeIds });
+						updateEntry(entry.id, { status: "failed" });
 						return;
 					}
-					applyTitle(title, nodeIds, key);
+					cacheRef.current.set(key, title);
+					updateEntry(entry.id, { status: "done", title });
+					if (latestJobRef.current === entry.id) {
+						arrive({ ...entry, status: "done", title });
+					}
 				},
 				(reason: HttpError) => {
-					if (!settle()) return;
-					if (pending.controller.signal.aborted) return;
-					if (!isHighlighted(nodeIds)) return;
-					setError({
-						kind: reason?.status === 413 ? "too-large" : "failed",
-						nodeIds,
+					jobsRef.current.delete(entry.id);
+					if (controller.signal.aborted) return;
+					updateEntry(entry.id, {
+						status: reason?.status === 413 ? "too-large" : "failed",
 					});
 				},
 			);
 		},
-		[abortPending, applyTitle, isHighlighted, setError],
+		[arrive, putFirst, updateEntry],
 	);
+
+	/** The settled ids the map can title, or none when too few. */
+	const eligibleOf = useCallback((ids: ReadonlySet<string>): string[] => {
+		const known = new Set(latestRef.current.nodes.map((node) => node.id));
+		const eligible = Array.from(ids).filter((id) => known.has(id));
+		return eligible.length < MIN_TITLE_NODES ? [] : eligible;
+	}, []);
 
 	const fire = useCallback(
 		(ids: ReadonlySet<string>) => {
@@ -273,15 +292,14 @@ export function useSelectionTitle({
 			setTimerRun(null);
 			setTimerProgress(0);
 
-			const { edges: treeEdges, nodes: graphNodes } = latestRef.current;
-			const known = new Set(graphNodes.map((node) => node.id));
 			// Every settled node goes to the server; it refuses a selection it
 			// cannot title whole rather than trimming it here.
-			const eligible = Array.from(ids).filter((id) => known.has(id));
-			if (eligible.length < MIN_TITLE_NODES) return;
+			const eligible = eligibleOf(ids);
+			if (eligible.length === 0) return;
+			const { edges: treeEdges, nodes: graphNodes } = latestRef.current;
 			startRequest(centralityOrder(eligible, graphNodes, treeEdges));
 		},
-		[startRequest],
+		[eligibleOf, startRequest],
 	);
 
 	const handleChange = useCallback(() => {
@@ -300,7 +318,6 @@ export function useSelectionTitle({
 
 		if (ids.size === 0) {
 			clearTimer();
-			abortPending();
 			if (currentSetRef.current.size !== 0) currentSetRef.current = new Set();
 			return;
 		}
@@ -317,41 +334,34 @@ export function useSelectionTitle({
 		if (!setsChanged && !previewCommitted) return;
 
 		clearTimer();
+		currentSetRef.current = ids;
 
 		// History toggles highlight a titled set; they start nothing.
-		if (state.highlightSource === "history") {
-			currentSetRef.current = ids;
-			return;
-		}
+		if (state.highlightSource === "history") return;
 
 		// Back on the set that already has the current title.
 		const currentTitle = currentTitleRef.current;
-		if (currentTitle && setsEqual(ids, currentTitle.nodeIds)) {
-			currentSetRef.current = ids;
-			return;
-		}
+		if (currentTitle && setsEqual(ids, currentTitle.nodeIds)) return;
 
 		// Already asking for exactly this set.
 		const { resultId: id } = latestRef.current;
-		if (
-			id &&
-			pendingRef.current &&
-			pendingRef.current.key === selectionKey(id, ids)
-		) {
-			currentSetRef.current = ids;
-			return;
+		if (id) {
+			const key = selectionKey(id, ids);
+			const asking = historyRef.current.some(
+				(item) => item.key === key && item.status === "pending",
+			);
+			if (asking) return;
 		}
 
 		currentTitleRef.current = null;
-		setSelected(null);
-		abortPending();
-		setError(null);
-		currentSetRef.current = ids;
+
+		// A full arc is a promise: it is only drawn for a set that can be titled.
+		if (eligibleOf(ids).length === 0) return;
 
 		timerStartRef.current = Date.now();
 		setTimerRun(++timerSeqRef.current);
 		timeoutRef.current = setTimeout(() => fire(ids), TITLE_DELAY_MS);
-	}, [abortPending, clearTimer, fire, setError, setSelected, store]);
+	}, [clearTimer, eligibleOf, fire, store]);
 
 	useEffect(() => {
 		if (!enabled) return;
@@ -362,10 +372,10 @@ export function useSelectionTitle({
 	useEffect(() => {
 		if (enabled) return;
 		clearTimer();
-		abortPending();
-	}, [abortPending, clearTimer, enabled]);
+		abortAll();
+	}, [abortAll, clearTimer, enabled]);
 
-	// Cursor arc progress, capped at half a circle.
+	// Cursor arc progress, a full circle over the title delay.
 	useEffect(() => {
 		if (timerRun === null) return;
 		if (typeof requestAnimationFrame !== "function") return;
@@ -373,12 +383,9 @@ export function useSelectionTitle({
 		const tick = () => {
 			const start = timerStartRef.current;
 			if (start === null) return;
-			const progress = Math.min(
-				(Date.now() - start) / TITLE_DELAY_MS,
-				TIMER_PROGRESS_CAP,
-			);
+			const progress = Math.min((Date.now() - start) / TITLE_DELAY_MS, 1);
 			setTimerProgress(progress);
-			if (progress < TIMER_PROGRESS_CAP) frame = requestAnimationFrame(tick);
+			if (progress < 1) frame = requestAnimationFrame(tick);
 		};
 		frame = requestAnimationFrame(tick);
 		return () => cancelAnimationFrame(frame);
@@ -391,22 +398,20 @@ export function useSelectionTitle({
 			if (timeoutRef.current) clearTimeout(timeoutRef.current);
 			timeoutRef.current = null;
 			timerStartRef.current = null;
-			pendingRef.current?.controller.abort();
-			pendingRef.current = null;
+			abortAll();
+			latestJobRef.current = null;
 			currentTitleRef.current = null;
 			currentSetRef.current = new Set();
 			historyRef.current = [];
 			selectedRef.current = null;
-			errorRef.current = null;
 			setHistoryState([]);
 			setSelectedState(null);
-			setErrorState(null);
-			setIsProcessing(false);
 			setTimerRun(null);
 			setTimerProgress(0);
 		};
 	}, [resultId]);
 
+	/** Shows an entry in Spotlight and on the map; again to let it go. */
 	const selectDistillation = useCallback(
 		(id: string) => {
 			if (selectedRef.current === id) {
@@ -426,23 +431,23 @@ export function useSelectionTitle({
 		[highlightAsHistory, setSelected, store],
 	);
 
-	/** Asks again for the selection whose title failed. */
-	const retry = useCallback(() => {
-		const failed = errorRef.current;
-		if (!failed || failed.kind !== "failed") return;
-		clearTimer();
-		currentTitleRef.current = null;
-		setSelected(null);
-		// Make the failed set the settled highlight again, so its answer is
-		// still current when it lands.
-		highlightAsHistory(failed.nodeIds);
-		startRequest(failed.nodeIds);
-	}, [clearTimer, highlightAsHistory, setSelected, startRequest]);
+	/** Lets the selected entry go without touching the map, as a click on a node does. */
+	const deselect = useCallback(() => setSelected(null), [setSelected]);
+
+	/** Asks again for an entry whose title failed. */
+	const retry = useCallback(
+		(id: string) => {
+			const entry = historyRef.current.find((item) => item.id === id);
+			if (!entry || entry.status !== "failed") return;
+			startRequest(entry.nodeIds);
+		},
+		[startRequest],
+	);
 
 	return {
-		error,
+		deselect,
 		history,
-		isProcessing,
+		isProcessing: history.some((entry) => entry.status === "pending"),
 		retry,
 		selectDistillation,
 		selectedDistillationId,
