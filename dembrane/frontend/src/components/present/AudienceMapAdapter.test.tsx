@@ -484,10 +484,10 @@ describe("AudienceMapAdapter", () => {
 		const root = screen.getByTestId("audience-map-root");
 		expect(root.getAttribute("data-theme")).toBe("dark");
 		expect(root.style.getPropertyValue("--map-text")).toBe("#F6F4F1");
-		expect(root.style.getPropertyValue("--map-surface")).toBe("#1B1B1A");
+		expect(root.style.getPropertyValue("--map-surface")).toBe("#000000");
 		// Mantine's panels in this app follow the two app variables, so the
 		// panels, the detail card and the waiting line come with them.
-		expect(root.style.getPropertyValue("--app-background")).toBe("#262625");
+		expect(root.style.getPropertyValue("--app-background")).toBe("#161615");
 		expect(tree.getAttribute("data-dark")).toBe("true");
 		expect(
 			screen.getByText("Audience local renderer").getAttribute("data-dark"),

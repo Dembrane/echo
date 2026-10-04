@@ -95,7 +95,7 @@ const AuthLayoutInner = (props: PropsWithChildren) => {
 						preload="auto"
 					/>
 					<div
-						className="absolute inset-0 bg-white/45 backdrop-blur-md"
+						className="absolute inset-0 bg-white/45 backdrop-blur-md dark:bg-black/45"
 						aria-hidden="true"
 					/>
 				</aside>

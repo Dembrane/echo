@@ -247,7 +247,7 @@ msgstr "Chiamata"
 msgid "Call booked"
 msgstr "Chiamata prenotata"
 
-#: src/features/accounts/customer/Questions.tsx:244
+#: src/features/accounts/customer/Questions.tsx:248
 msgid "Cancel"
 msgstr "Annulla"
 
@@ -342,7 +342,7 @@ msgstr "Crea attività"
 
 #: src/features/accounts/format.ts:107
 #: src/features/accounts/staff/AccountCardRoute.tsx:746
-#: src/features/accounts/customer/Questions.tsx:165
+#: src/features/accounts/customer/Questions.tsx:169
 msgid "Customer"
 msgstr "Cliente"
 
@@ -644,7 +644,7 @@ msgstr "Bloccato"
 msgid "May you also agree to data processing for your organisation?"
 msgstr "Puoi anche approvare il trattamento dei dati per la tua organizzazione?"
 
-#: src/features/accounts/customer/Questions.tsx:234
+#: src/features/accounts/customer/Questions.tsx:238
 msgid "Message"
 msgstr "Messaggio"
 
@@ -1064,13 +1064,13 @@ msgstr "Rimuovi campo"
 msgid "Remove line"
 msgstr "Rimuovi riga"
 
-#: src/features/accounts/customer/Questions.tsx:173
-#: src/features/accounts/customer/Questions.tsx:198
+#: src/features/accounts/customer/Questions.tsx:177
+#: src/features/accounts/customer/Questions.tsx:202
 #: src/features/accounts/customer/NextSteps.tsx:170
 msgid "Reply"
 msgstr "Rispondi"
 
-#: src/features/accounts/customer/Questions.tsx:188
+#: src/features/accounts/customer/Questions.tsx:192
 msgid "Reply and close"
 msgstr "Rispondi e chiudi"
 
@@ -1142,7 +1142,7 @@ msgid "Select a field to set its kind, label and whether it is required. Drag to
 msgstr "Seleziona un campo per impostarne tipo, etichetta e obbligatorietà. Trascina per spostare, trascina l'angolo per ridimensionare."
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:193
-#: src/features/accounts/customer/Questions.tsx:257
+#: src/features/accounts/customer/Questions.tsx:261
 #: src/features/accounts/customer/NextSteps.tsx:449
 msgid "Send"
 msgstr "Invia"
@@ -1316,7 +1316,7 @@ msgstr "Inizia"
 msgid "Status"
 msgstr "Stato"
 
-#: src/features/accounts/customer/Questions.tsx:228
+#: src/features/accounts/customer/Questions.tsx:232
 msgid "Subject"
 msgstr "Oggetto"
 
@@ -1476,15 +1476,15 @@ msgstr "Titolo"
 msgid "To pay"
 msgstr "Da pagare"
 
-#: src/features/accounts/staff/FieldEditorRoute.tsx:456
+#: src/features/accounts/staff/FieldEditorRoute.tsx:460
 msgid "To send, add a name field and a signature field."
 msgstr "Per inviare, aggiungi un campo nome e un campo firma."
 
-#: src/features/accounts/staff/FieldEditorRoute.tsx:460
+#: src/features/accounts/staff/FieldEditorRoute.tsx:464
 msgid "To send, add a name field: it names the signer."
 msgstr "Per inviare, aggiungi un campo nome: serve a identificare chi firma."
 
-#: src/features/accounts/staff/FieldEditorRoute.tsx:464
+#: src/features/accounts/staff/FieldEditorRoute.tsx:468
 msgid "To send, add a signature field."
 msgstr "Per inviare, aggiungi un campo firma."
 
@@ -1633,7 +1633,7 @@ msgstr "Ritira"
 msgid "Withdrawn"
 msgstr "Ritirato"
 
-#: src/features/accounts/customer/Questions.tsx:174
+#: src/features/accounts/customer/Questions.tsx:178
 msgid "Write a reply"
 msgstr "Scrivi una risposta"
 
@@ -1641,7 +1641,7 @@ msgstr "Scrivi una risposta"
 msgid "Yes, I may"
 msgstr "Sì, posso procedere"
 
-#: src/features/accounts/customer/Questions.tsx:164
+#: src/features/accounts/customer/Questions.tsx:168
 msgid "You"
 msgstr "Tu"
 
@@ -1661,7 +1661,7 @@ msgstr "Le tue iniziali"
 msgid "Your name"
 msgstr "Il tuo nome"
 
-#: src/features/accounts/customer/Questions.tsx:234
+#: src/features/accounts/customer/Questions.tsx:238
 msgid "Your question"
 msgstr "La tua domanda"
 

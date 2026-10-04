@@ -59,6 +59,15 @@ const SETTLE_TICK_MS = 1000;
 // Stable keys for the placeholder tiles shown on first load.
 const SKELETON_TILES = ["k1", "k2", "k3", "k4", "k5", "k6"];
 
+// The timer dot in role colours, so it lifts in dark; grape and mauve keep
+// their shade.
+const DOT_ROLE: Record<string, string> = {
+	gray: "var(--app-muted)",
+	primary: "var(--app-action)",
+	red: "var(--app-danger)",
+	yellow: "var(--app-warning)",
+};
+
 // Stable keys for the meter segments (index drives the fill).
 const METER_SEGMENTS = ["s1", "s2", "s3", "s4", "s5"];
 // Voice RMS sits in this low band (nowhere near 1.0); normalize it to the full
@@ -94,9 +103,7 @@ const AudioLevelMeter = ({ level }: { level: number }) => {
 							key={id}
 							style={{
 								backgroundColor:
-									i < active
-										? "var(--mantine-color-green-6)"
-										: "var(--app-rule-color)",
+									i < active ? "var(--app-success)" : "var(--app-rule-color)",
 								height: 10,
 								width: 3,
 							}}
@@ -186,7 +193,10 @@ const LiveDuration = ({
 			<span
 				aria-hidden
 				className="inline-block h-1.5 w-1.5 rounded-full"
-				style={{ backgroundColor: `var(--mantine-color-${dotColor}-6)` }}
+				style={{
+					backgroundColor:
+						DOT_ROLE[dotColor] ?? `var(--mantine-color-${dotColor}-6)`,
+				}}
 			/>
 			<Text size="xs" style={{ fontVariantNumeric: "tabular-nums" }}>
 				{label}

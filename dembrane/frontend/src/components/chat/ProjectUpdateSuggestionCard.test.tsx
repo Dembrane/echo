@@ -150,7 +150,7 @@ describe("ProjectUpdateSuggestionCard", () => {
 		// The added words are marked, and only on the proposed side.
 		const added = screen.getAllByText("and shopkeepers", { exact: false });
 		const marked = added.filter((node) =>
-			node.className.includes("bg-green-100"),
+			node.className.includes("bg-[var(--app-success-tint)]"),
 		);
 		expect(marked.length).toBe(1);
 		// Both versions are readable in full, not just the new one: the shared
@@ -181,9 +181,9 @@ describe("ProjectUpdateSuggestionCard", () => {
 		fireEvent.click(screen.getByTestId("suggestion-expand-button"));
 		const removed = screen.getByText("Old title");
 		const added = screen.getByText("New title");
-		expect(added.className).toContain("text-green-900");
-		expect(removed.className).toContain("bg-red-100");
-		expect(added.className).toContain("bg-green-100");
+		expect(added.className).toContain("text-[var(--app-success)]");
+		expect(removed.className).toContain("bg-[var(--app-danger-tint)]");
+		expect(added.className).toContain("bg-[var(--app-success-tint)]");
 		// Both sides carry a shape, not just a tint. The green background is
 		// about 97% luminance, so an addition marked by colour alone disappears
 		// in greyscale and for a colour-blind reader; the underline mirrors the
@@ -198,14 +198,14 @@ describe("ProjectUpdateSuggestionCard", () => {
 
 		const added = screen
 			.getAllByText("and shopkeepers", { exact: false })
-			.find((node) => node.className.includes("bg-green-100"));
+			.find((node) => node.className.includes("bg-[var(--app-success-tint)]"));
 		expect(added?.className).toContain("underline");
 		// And the prose the edit sits inside stands back, so the two changed
 		// words are the first thing in the box the eye lands on.
 		const unchanged = screen
 			.getAllByText(/what keeps them away/)
 			.find((node) => node.tagName === "SPAN");
-		expect(unchanged?.className).toContain("text-slate-500");
+		expect(unchanged?.className).toContain("text-[var(--app-muted)]");
 	});
 
 	it("says what a change to the project context reaches, only once expanded", () => {

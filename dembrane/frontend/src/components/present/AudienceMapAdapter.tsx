@@ -62,24 +62,24 @@ type AudienceMapAdapterProps = {
  * dark without switching Mantine's colour scheme, which the light dashboard
  * around an embedded preview is still running in.
  *
- * The values are the audience shell's, not MapPage's: near-black room,
- * `#262625` panels, parchment ink, blue lifted to `#7C9BFF` where it is text
+ * The values are the audience shell's, not MapPage's: black room,
+ * `#161615` panels (the app's AMOLED dark), parchment ink, blue lifted to `#7C9BFF` where it is text
  * or a thin line.
  */
 const DARK_MAP_VARS = {
-	"--app-background": "#262625",
+	"--app-background": "#161615",
 	"--app-text": "#F6F4F1",
-	"--mantine-color-default": "#262625",
-	"--mantine-color-default-border": "#3A3A38",
+	"--mantine-color-default": "#161615",
+	"--mantine-color-default-border": "#262625",
 	"--mantine-color-default-color": "#F6F4F1",
-	"--mantine-color-default-hover": "#3A3A38",
+	"--mantine-color-default-hover": "#262625",
 	"--mantine-color-dimmed": "color-mix(in srgb, #F6F4F1 64%, transparent)",
 	"--mantine-color-text": "#F6F4F1",
-	"--mantine-color-white": "#262625",
+	"--mantine-color-white": "#161615",
 	"--map-accent-border": "color-mix(in srgb, #7C9BFF 60%, transparent)",
 	"--map-accent-surface": "color-mix(in srgb, #7C9BFF 22%, transparent)",
 	"--map-accent-text": "#7C9BFF",
-	"--map-border": "#3A3A38",
+	"--map-border": "#262625",
 	"--map-card": "color-mix(in srgb, #F6F4F1 8%, transparent)",
 	// MapPage's dark mode keeps the light edge grey; over a near-black room it
 	// glares, so the audience draws its edges as thinned parchment.
@@ -87,8 +87,8 @@ const DARK_MAP_VARS = {
 	"--map-error": "#FF9AA2",
 	"--map-muted": "color-mix(in srgb, #F6F4F1 64%, transparent)",
 	"--map-relation": "#F6F4F1",
-	"--map-surface": "#1B1B1A",
-	"--map-surface-raised": "#262625",
+	"--map-surface": "#000000",
+	"--map-surface-raised": "#161615",
 	"--map-text": "#F6F4F1",
 } as CSSProperties;
 

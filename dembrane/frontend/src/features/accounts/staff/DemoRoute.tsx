@@ -218,7 +218,7 @@ function StepRow({
 				)}
 			</Group>
 			{step.status === "failed" && step.error && (
-				<Text size="xs" c="red.8" pl={34}>
+				<Text size="xs" c="var(--app-danger)" pl={34}>
 					{step.error}
 				</Text>
 			)}

@@ -10,8 +10,8 @@ import { USE_PARTICIPANT_ROUTER } from "../config";
 
 // The portal (participant) app shares the dashboard type scale. At
 // participant reading distances it reads a touch large, so the portal renders
-// one notch smaller. This only scales the size-bearing vars (font + heading
-// sizes); line heights and weights are ratios and stay as-is.
+// one notch smaller. Only the root size is scaled: every type size is in rem,
+// so it follows (scaling them too would make the portal 0.81, not 0.9).
 const PORTAL_FONT_SCALE = USE_PARTICIPANT_ROUTER ? 0.9 : 1;
 
 const scaleTypeSize = (value: string): string => {
@@ -121,10 +121,6 @@ const TYPOGRAPHY = {
 const FONT_FAMILY = "'DM Sans Variable', sans-serif";
 const FONT_FEATURE_SETTINGS =
 	"'ss01' on, 'ss02' on, 'ss03' on, 'ss04' on, 'ss05' on, 'ss06' on, 'ss08' on";
-const BACKGROUND = "#F6F4F1";
-const TEXT = "#2D2D2C";
-// Cool slate: AA on parchment (5.41), white (5.93) and the hover grey (4.64).
-const MUTED = "#5f646f";
 
 export const AppPreferencesProvider = ({
 	children,
@@ -152,15 +148,13 @@ export const AppPreferencesProvider = ({
 		set("--app-base-font-size", scaleTypeSize(BASE_FONT_SIZE[scale]));
 		set("--app-font-family", FONT_FAMILY);
 		set("--app-content-bold-font-family", FONT_FAMILY);
-		set("--app-background", BACKGROUND);
-		set("--app-text", TEXT);
-		set("--app-home-icon-size", scaleTypeSize(t.h2Size));
+		set("--app-home-icon-size", t.h2Size);
 
-		set("--app-font-size-xs", scaleTypeSize(t.fontSizeXs));
-		set("--app-font-size-sm", scaleTypeSize(t.fontSizeSm));
-		set("--app-font-size-md", scaleTypeSize(t.fontSizeMd));
-		set("--app-font-size-lg", scaleTypeSize(t.fontSizeLg));
-		set("--app-font-size-xl", scaleTypeSize(t.fontSizeXl));
+		set("--app-font-size-xs", t.fontSizeXs);
+		set("--app-font-size-sm", t.fontSizeSm);
+		set("--app-font-size-md", t.fontSizeMd);
+		set("--app-font-size-lg", t.fontSizeLg);
+		set("--app-font-size-xl", t.fontSizeXl);
 
 		set("--app-line-height-xs", t.lineHeightXs);
 		set("--app-line-height-sm", t.lineHeightSm);
@@ -169,28 +163,20 @@ export const AppPreferencesProvider = ({
 		set("--app-line-height-xl", t.lineHeightXl);
 
 		set("--app-heading-font-weight", t.headingFontWeight);
-		set("--app-heading-h1-size", scaleTypeSize(t.h1Size));
+		set("--app-heading-h1-size", t.h1Size);
 		set("--app-heading-h1-line-height", t.h1LineHeight);
-		set("--app-heading-h2-size", scaleTypeSize(t.h2Size));
+		set("--app-heading-h2-size", t.h2Size);
 		set("--app-heading-h2-line-height", t.h2LineHeight);
-		set("--app-heading-h3-size", scaleTypeSize(t.h3Size));
+		set("--app-heading-h3-size", t.h3Size);
 		set("--app-heading-h3-line-height", t.h3LineHeight);
-		set("--app-heading-h4-size", scaleTypeSize(t.h4Size));
+		set("--app-heading-h4-size", t.h4Size);
 		set("--app-heading-h4-line-height", t.h4LineHeight);
-		set("--app-heading-h5-size", scaleTypeSize(t.h5Size));
+		set("--app-heading-h5-size", t.h5Size);
 		set("--app-heading-h5-line-height", t.h5LineHeight);
-		set("--app-heading-h6-size", scaleTypeSize(t.h6Size));
+		set("--app-heading-h6-size", t.h6Size);
 		set("--app-heading-h6-line-height", t.h6LineHeight);
 
-		// Body is parchment, surfaces (fields, menus, dialogs) are white; the
-		// theme's cssVariablesResolver sets both. Muted is a solid AA colour.
-		set("--mantine-color-text", TEXT);
-		set("--mantine-color-body", BACKGROUND);
-		set("--mantine-color-dimmed", MUTED);
-
 		document.body.style.fontFamily = FONT_FAMILY;
-		document.body.style.backgroundColor = BACKGROUND;
-		document.body.style.color = TEXT;
 		document.body.style.fontFeatureSettings = FONT_FEATURE_SETTINGS;
 		set("--app-font-feature-settings", FONT_FEATURE_SETTINGS);
 

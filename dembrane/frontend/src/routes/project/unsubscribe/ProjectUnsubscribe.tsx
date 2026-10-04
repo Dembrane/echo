@@ -54,7 +54,7 @@ export const ProjectUnsubscribe = () => {
 					{error && <ErrorNotice error={error} />}
 					{success && (
 						<Group gap="xs" wrap="nowrap">
-							<CheckIcon size={16} color="var(--mantine-color-green-7)" />
+							<CheckIcon size={16} color="var(--app-success)" />
 							<Text size="md">
 								<Trans>You have successfully unsubscribed.</Trans>
 							</Text>

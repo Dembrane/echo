@@ -266,7 +266,7 @@ export const ChatAccordionMain = ({ projectId }: { projectId: string }) => {
 			<Accordion.Control {...testId("chat-accordion-control")}>
 				<Group justify="space-between">
 					<Title order={3} {...testId("chat-accordion-title")}>
-						<span className="min-w-[48px] pr-2 font-normal text-gray-500">
+						<span className="min-w-[48px] pr-2 font-normal text-[var(--app-muted)]">
 							{totalChats}
 						</span>
 						<Trans id="project.sidebar.chat.title">Chats</Trans>
@@ -327,7 +327,7 @@ export const ChatAccordionMain = ({ projectId }: { projectId: string }) => {
 										{item.name && (
 											<Text
 												size="xs"
-												c="gray.6"
+												c="dimmed"
 												{...testId(`chat-item-date-${item.id}`)}
 											>
 												{formatRelative(

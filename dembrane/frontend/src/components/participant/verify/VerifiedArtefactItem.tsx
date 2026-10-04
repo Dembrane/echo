@@ -49,11 +49,7 @@ export const VerifiedArtefactItem = ({
 							</Text>
 						)}
 					</Group>
-					<SealCheckIcon
-						size={16}
-						color="var(--mantine-color-primary-7)"
-						aria-hidden
-					/>
+					<SealCheckIcon size={16} color="var(--app-action)" aria-hidden />
 				</Group>
 			</Paper>
 		</Box>

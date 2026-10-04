@@ -85,14 +85,14 @@ it("runs blue while everything is fine and yellow when the connection is not", (
 	act(() => {
 		vi.advanceTimersByTime(500);
 	});
-	expect(barColor()).toContain("primary-6");
+	expect(barColor()).toContain("--app-action");
 	unmount();
 
 	renderWaveform(() => 0.5, { status: "unhealthy" });
 	act(() => {
 		vi.advanceTimersByTime(500);
 	});
-	expect(barColor()).toContain("yellow");
+	expect(barColor()).toContain("--app-warning");
 });
 
 it("turns red and asks for help when no sound arrives at all", () => {
@@ -104,13 +104,13 @@ it("turns red and asks for help when no sound arrives at all", () => {
 		vi.advanceTimersByTime(4000);
 	});
 	expect(onSilence).not.toHaveBeenCalled();
-	expect(barColor()).toContain("primary-6");
+	expect(barColor()).toContain("--app-action");
 
 	act(() => {
 		vi.advanceTimersByTime(5000);
 	});
 	expect(onSilence).toHaveBeenCalledTimes(1);
-	expect(barColor()).toContain("red");
+	expect(barColor()).toContain("--app-danger");
 });
 
 it("asks only once until sound comes back", () => {
@@ -128,7 +128,7 @@ it("asks only once until sound comes back", () => {
 	act(() => {
 		vi.advanceTimersByTime(1000);
 	});
-	expect(barColor()).toContain("primary-6");
+	expect(barColor()).toContain("--app-action");
 
 	level = 0;
 	act(() => {
@@ -144,5 +144,5 @@ it("keeps a red recording problem even while the connection is only unhealthy", 
 		vi.advanceTimersByTime(9000);
 	});
 
-	expect(barColor()).toContain("red");
+	expect(barColor()).toContain("--app-danger");
 });

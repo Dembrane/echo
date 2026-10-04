@@ -191,7 +191,7 @@ export const ReportIssueModal = ({
 				{/* One input frame: the text scrolls, the footer with mic controls does
 				    not. A field, so rules at the sides, blue while focused. */}
 				<Box
-					className="border-x border-y-0 border-solid border-[color:var(--app-control-rule)] focus-within:border-[#2957df]"
+					className="border-x border-y-0 border-solid border-[color:var(--app-control-rule)] focus-within:border-[var(--app-action)]"
 					px="sm"
 					pt="xs"
 					pb="xs"

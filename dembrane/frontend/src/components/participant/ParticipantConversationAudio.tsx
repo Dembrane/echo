@@ -979,7 +979,7 @@ export const ParticipantConversationAudio = () => {
 									) : (
 										<div
 											className="h-4 w-4 animate-pulse rounded-full"
-											style={{ background: "var(--mantine-color-red-6)" }}
+											style={{ background: "var(--app-danger)" }}
 										/>
 									)}
 									<Text size="lg">

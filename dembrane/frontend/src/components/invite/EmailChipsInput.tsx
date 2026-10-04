@@ -355,14 +355,14 @@ function EmailChipPill({
 		chip.state === "valid"
 			? { bg: "var(--app-rule-color)", fg: undefined }
 			: {
-					bg: "var(--mantine-color-red-0)",
-					fg: "var(--mantine-color-red-9)",
+					bg: "var(--app-danger-tint)",
+					fg: "var(--app-danger-on-tint)",
 				};
 	// "Armed" highlight before second-Backspace delete.
 	const tone = highlighted
 		? {
-				bg: "var(--mantine-primary-color-light)",
-				fg: "var(--mantine-primary-color-filled)",
+				bg: "var(--app-action-tint)",
+				fg: "var(--app-action)",
 			}
 		: baseTone;
 	const title =

@@ -4,9 +4,13 @@ import { tailwindColors } from "./src/colors";
 /** @type {import('tailwindcss').Config} */
 export default {
 	content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+	// dark: follows the app's scheme (Mantine's attribute), not the OS alone.
+	darkMode: ["selector", '[data-mantine-color-scheme="dark"]'],
 	plugins: [typography],
 	theme: {
 		extend: {
+			// A bare `border` draws the faint rule, in either scheme.
+			borderColor: { DEFAULT: "var(--app-quiet)" },
 			colors: {
 				...tailwindColors,
 				// Legacy aliases (kept for backward compatibility)

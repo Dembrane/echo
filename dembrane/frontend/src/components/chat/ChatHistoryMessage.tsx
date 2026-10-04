@@ -78,13 +78,13 @@ const getLinkLabel = (children: React.ReactNode) => {
 // One readable link style for everything the agent cites: underlined text
 // with a small external-arrow, never a pill.
 const AGENTIC_LINK_CLASSES =
-	"not-prose inline-flex items-baseline gap-0.5 text-[var(--mantine-color-anchor)] underline underline-offset-2 transition-colors hover:text-[var(--mantine-color-blue-7)]";
+	"not-prose inline-flex items-baseline gap-0.5 text-[var(--app-action)] underline underline-offset-2 transition-colors hover:text-[var(--app-text)]";
 
 // The same flash the transcript page gives a deep-linked chunk
 // (ConversationChunkAudioTranscript), so a footnote hop reads as the one
 // highlight language the product has: the action tint, no ring. Class names
 // must match ones already in source, or the Tailwind build will not carry them.
-const FOOTNOTE_HIGHLIGHT_CLASSES = ["!bg-primary-100"];
+const FOOTNOTE_HIGHLIGHT_CLASSES = ["!bg-[var(--app-action-tint)]"];
 const FOOTNOTE_HIGHLIGHT_MS = 5000;
 
 const flashFootnoteTarget = (target: HTMLElement) => {
@@ -164,7 +164,7 @@ const AgenticCitation = ({
 		<Popover.Target>
 			<button
 				type="button"
-				className="not-prose mx-[1px] inline-flex -translate-y-[0.4em] cursor-pointer items-center rounded-sm border-0 bg-[var(--mantine-color-primary-0)] px-1 align-baseline text-xs leading-tight text-[var(--mantine-color-primary-7)] transition-colors hover:bg-[var(--mantine-color-primary-1)]"
+				className="not-prose mx-[1px] inline-flex -translate-y-[0.4em] cursor-pointer items-center rounded-sm border-0 bg-[var(--app-action-tint)] px-1 align-baseline text-xs leading-tight text-[var(--app-action)] transition-colors hover:bg-[var(--app-quiet)]"
 				aria-label={t`Source ${getLinkLabel(children)}`}
 				data-testid="agentic-citation"
 			>
@@ -354,7 +354,7 @@ export const ChatHistoryMessage = ({
 					<a
 						href={href}
 						className={cn(
-							"text-[var(--mantine-color-anchor)] underline underline-offset-2 transition-colors hover:text-[var(--mantine-color-blue-7)]",
+							"text-[var(--app-action)] underline underline-offset-2 transition-colors hover:text-[var(--app-text)]",
 							className,
 						)}
 						{...props}
@@ -390,7 +390,7 @@ export const ChatHistoryMessage = ({
 						chatMode={chatMode}
 						section={
 							<Group w="100%" gap="lg">
-								<Text className={cn("italic")} size="xs" c="gray.7">
+								<Text className={cn("italic")} size="xs" c="dimmed">
 									{formatDate(
 										// @ts-expect-error message is not typed
 										new Date(message.createdAt ?? new Date()),

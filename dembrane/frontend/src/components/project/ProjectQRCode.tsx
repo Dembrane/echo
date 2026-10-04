@@ -130,7 +130,7 @@ export const ProjectQRCode = ({ project }: ProjectQRCodeProps) => {
 				aria-hidden
 				className="pointer-events-none absolute -left-[9999px] top-0 h-64 w-64 print:hidden"
 			>
-				{downloadLink && <QRCode value={downloadLink} />}
+				{downloadLink && <QRCode value={downloadLink} inverted={false} />}
 			</div>
 			<Stack gap="xs" w="100%">
 				<CopyButton value={copyLink ?? ""} timeout={2000}>

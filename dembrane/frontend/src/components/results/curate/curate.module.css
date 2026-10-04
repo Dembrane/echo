@@ -4,15 +4,15 @@
    Dark follows the nearest `[data-theme="dark"]`, never the operating system. */
 
 .panel {
-	--parchment: #f6f4f1;
-	--paper: #ffffff;
-	--graphite: #2d2d2c;
-	--blue: #2957df;
-	--hairline: #e6e3df;
-	--ink-soft: rgba(45, 45, 44, 0.72);
-	--ink-rest: rgba(45, 45, 44, 0.62);
-	--ink-faint: rgba(45, 45, 44, 0.38);
-	--ink-tag: rgba(45, 45, 44, 0.78);
+	--parchment: var(--app-background);
+	--paper: var(--app-surface);
+	--graphite: var(--app-text);
+	--blue: var(--app-action);
+	--hairline: var(--app-quiet);
+	--ink-soft: color-mix(in srgb, var(--app-text) 72%, transparent);
+	--ink-rest: color-mix(in srgb, var(--app-text) 62%, transparent);
+	--ink-faint: color-mix(in srgb, var(--app-text) 38%, transparent);
+	--ink-tag: color-mix(in srgb, var(--app-text) 78%, transparent);
 	--curve: cubic-bezier(0.25, 0.8, 0.3, 1);
 	--line: calc(1.45 * var(--app-font-size-sm, 0.9375rem));
 
@@ -28,11 +28,11 @@
 }
 
 :global([data-theme="dark"]) .panel {
-	--parchment: #1b1b1a;
-	--paper: #262625;
+	--parchment: #000000;
+	--paper: #161615;
 	--graphite: #f6f4f1;
 	--blue: #7c9bff;
-	--hairline: #3a3a38;
+	--hairline: #262625;
 	--ink-soft: rgba(246, 244, 241, 0.74);
 	--ink-rest: rgba(246, 244, 241, 0.64);
 	--ink-faint: rgba(246, 244, 241, 0.4);

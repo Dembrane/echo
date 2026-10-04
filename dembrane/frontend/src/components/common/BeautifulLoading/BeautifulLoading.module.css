@@ -15,7 +15,7 @@
 .stageHost {
 	--ink: var(--app-text, #2d2d2c);
 	/* The grammar's muted grey, for the quote's source. */
-	--ink-soft: #5f646f;
+	--ink-soft: var(--app-muted, #5f646f);
 	position: fixed;
 	z-index: 10;
 	display: flex;
@@ -71,6 +71,13 @@
 	width: 100%;
 	height: auto;
 	animation: play 7s steps(42) infinite;
+}
+
+/* The sketches are graphite lines on transparency: on a dark ground they
+   turn to light ink. Inverting alone would turn the blue highlights yellow;
+   turning the hue half way round brings them back to blue. */
+:global(:root[data-mantine-color-scheme="dark"]) .sketches img {
+	filter: invert(1) hue-rotate(180deg);
 }
 
 .quote {

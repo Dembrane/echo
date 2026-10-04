@@ -7,7 +7,6 @@ import {
 	Box,
 	Button,
 	Checkbox,
-	Chip,
 	Divider,
 	Group,
 	InputDescription,
@@ -33,15 +32,7 @@ import {
 } from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Resizable } from "re-resizable";
-import {
-	Fragment,
-	memo,
-	useCallback,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-} from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
@@ -140,7 +131,7 @@ const KeyTermsSection = ({
 			{isDirty && (
 				<div
 					className="h-1.5 w-1.5 rounded-full"
-					style={{ background: "var(--mantine-color-primary-7)" }}
+					style={{ background: "var(--app-action)" }}
 					role="presentation"
 				/>
 			)}
@@ -988,8 +979,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 																	</Text>
 																) : (
 																	<Stack gap="sm">
-																		<Chip.Group
-																			multiple
+																		<Checkbox.Group
 																			value={field.value}
 																			onChange={(next) => {
 																				const updated =
@@ -1003,12 +993,18 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 																				field.onChange(updated);
 																			}}
 																		>
-																			<Group>
+																			<Stack gap="sm">
 																				{availableVerifyTopics.map((topic) => (
-																					<Fragment key={topic.key}>
-																						<Chip value={topic.key}>
-																							{topic.label}
-																						</Chip>
+																					<Group
+																						key={topic.key}
+																						justify="space-between"
+																						wrap="nowrap"
+																						gap="sm"
+																					>
+																						<Checkbox
+																							value={topic.key}
+																							label={topic.label}
+																						/>
 																						{topic.is_custom && (
 																							<Group gap={0} wrap="nowrap">
 																								<ActionIcon
@@ -1068,10 +1064,10 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 																								</Tooltip>
 																							</Group>
 																						)}
-																					</Fragment>
+																					</Group>
 																				))}
-																			</Group>
-																		</Chip.Group>
+																			</Stack>
+																		</Checkbox.Group>
 																		<Box>
 																			<Button
 																				leftSection={<PlusIcon size={20} />}

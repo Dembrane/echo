@@ -146,7 +146,11 @@ function TicketItem({
 							<Paper
 								p="xs"
 								radius="md"
-								bg={m.from === ours ? "blue.0" : "gray.1"}
+								bg={
+									m.from === ours
+										? "var(--app-action-tint)"
+										: "var(--app-quiet)"
+								}
 							>
 								<Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
 									{m.body}

@@ -117,7 +117,6 @@ export const KeyTermsInput = ({
 									onClick={() => removeTerm(term)}
 									size="xs"
 									variant="transparent"
-									c="gray.8"
 									aria-label={t`Remove ${term}`}
 								>
 									<XIcon size={16} />

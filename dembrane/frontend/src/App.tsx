@@ -46,6 +46,7 @@ function WorkspaceProvider({ children }: PropsWithChildren) {
 
 import { mainRouter, participantRouter } from "./Router";
 import { cssVariablesResolver, theme } from "./theme";
+import { roomColorSchemeManager } from "./components/present/hooks/useAudienceTheme";
 
 // Pilot hard-block (matrix §8): intercept 402 + copy-locked body from
 // host-side mutations and fan out a level-3 modal. Detection is
@@ -152,9 +153,13 @@ export const App = () => {
 	if (audienceEntry) {
 		return (
 			<QueryClientProvider client={queryClient}>
+				{/* The app's light or dark, but a link's ?theme= wins and System
+				    opens light: a room never follows the laptop's OS. */}
 				<MantineProvider
 					theme={theme}
 					cssVariablesResolver={cssVariablesResolver}
+					colorSchemeManager={roomColorSchemeManager}
+					defaultColorScheme="light"
 				>
 					<IconContext.Provider value={{ weight: "light" }}>
 						<I18nProvider>
@@ -170,9 +175,12 @@ export const App = () => {
 	return (
 		<QueryClientProvider client={queryClient}>
 			{/* <ReactQueryDevtools initialIsOpen={false} /> */}
+			{/* Light or dark follows the device unless the user picks one
+			    (Settings > Appearance); index.html applies it before mount. */}
 			<MantineProvider
 				theme={theme}
 				cssVariablesResolver={cssVariablesResolver}
+				defaultColorScheme="auto"
 			>
 				{/* Phosphor's light cut, topped up to the one 1px stroke in rules.css */}
 				<IconContext.Provider value={{ weight: "light" }}>

@@ -15,15 +15,17 @@
 	--audience-ink-soft: color-mix(in srgb, var(--audience-ink) 62%, transparent);
 }
 
-/* Warm near-black, parchment ink, blue lifted where it is text or a thin
-   line. Filled blue surfaces keep the brand's royal blue. */
+/* Dark is the app's own dark (the room's switch is the app's theme, so the
+   scheme is dark whenever this is): the black ground, the raised surface,
+   parchment ink, blue lifted where it is text or a thin line. Filled blue
+   surfaces keep the brand's royal blue. */
 .shell[data-theme="dark"],
 .state[data-theme="dark"] {
-	--audience-bg: #1b1b1a;
-	--audience-panel: #262625;
-	--audience-ink: #f6f4f1;
-	--audience-accent: #7c9bff;
-	--audience-hairline: #3a3a38;
+	--audience-bg: var(--app-background);
+	--audience-panel: var(--app-surface);
+	--audience-ink: var(--app-text);
+	--audience-accent: var(--app-action);
+	--audience-hairline: var(--app-quiet);
 	--audience-ink-soft: color-mix(in srgb, var(--audience-ink) 64%, transparent);
 	--mantine-color-dimmed: var(--audience-ink-soft);
 }
@@ -296,10 +298,10 @@
 }
 
 .shell[data-theme="dark"] .qrPanel {
-	--audience-bg: #1b1b1a;
-	--audience-ink: #f6f4f1;
-	--audience-accent: #7c9bff;
-	--audience-hairline: #3a3a38;
+	--audience-bg: var(--app-background);
+	--audience-ink: var(--app-text);
+	--audience-accent: var(--app-action);
+	--audience-hairline: var(--app-quiet);
 
 	box-shadow: 0 6px 24px color-mix(in srgb, black 50%, transparent);
 }

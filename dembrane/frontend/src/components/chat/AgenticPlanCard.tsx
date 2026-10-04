@@ -30,7 +30,7 @@ const StepIcon = ({ status }: { status: PlanStepStatus }) => {
 			<span className={`${box} animate-[plan-tick_220ms_ease-out]`}>
 				<CheckCircleIcon
 					size={16}
-					style={{ color: "var(--mantine-color-green-7)" }}
+					style={{ color: "var(--app-success)" }}
 					aria-label={t`Done`}
 				/>
 			</span>

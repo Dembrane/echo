@@ -100,7 +100,6 @@ export const ProjectTagPill = ({
 						onClick={(e) => handleDelete(e)}
 						size="xs"
 						variant="transparent"
-						c="gray.8"
 						onPointerDown={(e) => e.stopPropagation()}
 					>
 						<XIcon size={16} />

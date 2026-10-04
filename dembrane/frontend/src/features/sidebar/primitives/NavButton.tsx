@@ -56,7 +56,7 @@ export const NavButton = ({
 					disabled={disabled}
 					className={cn(
 						RAIL_ITEM_CLASS,
-						"hover:bg-[#e6e3df] disabled:cursor-not-allowed disabled:opacity-50",
+						"hover:bg-[var(--app-quiet)] disabled:cursor-not-allowed disabled:opacity-50",
 					)}
 					style={{ color: destructive ? roles.danger : roles.text }}
 				>
@@ -72,7 +72,7 @@ export const NavButton = ({
 			type="button"
 			onClick={onClick}
 			disabled={disabled}
-			className="group relative flex h-[30px] w-full items-center gap-2 px-2 text-left text-sm leading-tight transition-colors hover:bg-[#e6e3df] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#2957df] disabled:cursor-not-allowed disabled:opacity-50"
+			className="group relative flex h-[30px] w-full items-center gap-2 px-2 text-left text-sm leading-tight transition-colors hover:bg-[var(--app-quiet)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--app-action)] disabled:cursor-not-allowed disabled:opacity-50"
 			style={{ color: destructive ? roles.danger : roles.text }}
 		>
 			<span className="relative flex flex-1 items-center gap-2 truncate">

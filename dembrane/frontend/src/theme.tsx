@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import {
 	Badge,
 	Button,
@@ -9,7 +10,15 @@ import {
 	type VariantColorsResolver,
 } from "@mantine/core";
 import { CaretDownIcon, InfoIcon } from "@phosphor-icons/react";
-import { mantineColors, roles, tagTints } from "./colors";
+import {
+	darkRoles,
+	darkRoleVars,
+	lightRoles,
+	lightRoleVars,
+	mantineColors,
+	roles,
+	tagTints,
+} from "./colors";
 import buttonClasses from "./styles/button.module.css";
 
 // The design system, October 2026: DM Sans at one weight (320), hierarchy
@@ -48,6 +57,7 @@ const statusFor = (color?: string) => {
 		case "red":
 		case "salmon":
 			return {
+				fill: roles.dangerFill,
 				onTint: roles.dangerOnTint,
 				text: roles.danger,
 				tint: roles.dangerTint,
@@ -56,6 +66,7 @@ const statusFor = (color?: string) => {
 		case "orange":
 		case "peach":
 			return {
+				fill: roles.warningFill,
 				onTint: roles.warning,
 				text: roles.warning,
 				tint: roles.warningTint,
@@ -64,6 +75,7 @@ const statusFor = (color?: string) => {
 		case "teal":
 		case "springGreen":
 			return {
+				fill: roles.successFill,
 				onTint: roles.success,
 				text: roles.success,
 				tint: roles.successTint,
@@ -72,9 +84,15 @@ const statusFor = (color?: string) => {
 		case "graphite":
 		case "parchment":
 		case "dark":
-			return { onTint: roles.text, text: roles.text, tint: tagTints.neutral };
+			return {
+				fill: roles.fillHover,
+				onTint: roles.text,
+				text: roles.text,
+				tint: tagTints.neutral,
+			};
 		default:
 			return {
+				fill: roles.actionFill,
 				onTint: roles.action,
 				text: roles.action,
 				tint: roles.actionTint,
@@ -100,16 +118,18 @@ const tintFor = (color?: string) => {
 // outline or subtle on hover) the text takes the on-tint colour: danger
 // #c0434e is 3.9:1 on its tint, #a8323c passes.
 const variantColorResolver: VariantColorsResolver = (input) => {
-	const { onTint, text, tint } = statusFor(input.color);
+	const { fill, onTint, text, tint } = statusFor(input.color);
 	const isNeutral = text === roles.text;
 	switch (input.variant) {
+		// A fill keeps its colour in dark; every fill hovers to graphite, which
+		// in dark inverts to parchment under black text.
 		case "filled":
 			return {
-				background: isNeutral ? roles.text : text,
+				background: fill,
 				border: "transparent",
-				color: roles.surface,
-				hover: roles.text,
-				hoverColor: roles.surface,
+				color: isNeutral ? roles.onFillHover : roles.onFill,
+				hover: roles.fillHover,
+				hoverColor: roles.onFillHover,
 			};
 		case "light":
 			return {
@@ -142,24 +162,41 @@ const variantColorResolver: VariantColorsResolver = (input) => {
 	}
 };
 
+// Every --app-* colour is set here per scheme, from the hexes in colors.ts;
+// rules.css and the components read the variables. Mantine's white is the
+// surface (white in light, the raised surface in dark): controls and
+// surfaces are white whatever the page ground is.
+const mantineRoles = (scheme: typeof lightRoles | typeof darkRoles) => ({
+	"--mantine-color-black": scheme.text,
+	// c="dark" and c="graphite" mean the text colour; Mantine would draw
+	// shade 4 in dark (graphite is #2d2d2c at every shade).
+	"--mantine-color-dark-text": roles.text,
+	"--mantine-color-graphite-text": roles.text,
+	"--mantine-color-body": roles.bg,
+	"--mantine-color-default-border": roles.quiet,
+	"--mantine-color-dimmed": roles.muted,
+	"--mantine-color-error": roles.danger,
+	"--mantine-color-placeholder": roles.muted,
+	"--mantine-color-text": roles.text,
+	"--mantine-color-white": scheme.surface,
+});
+
 export const cssVariablesResolver: CSSVariablesResolver = () => ({
-	dark: {},
-	light: {
-		"--mantine-color-body": roles.bg,
-		"--mantine-color-default-border": "#e6e3df",
-		"--mantine-color-dimmed": roles.muted,
-		"--mantine-color-error": roles.danger,
-		"--mantine-color-placeholder": roles.muted,
-		"--mantine-color-text": roles.text,
+	dark: {
+		...darkRoleVars,
+		...mantineRoles(darkRoles),
+		// A floating layer's shadow; light keeps rules.css's graphite one.
+		"--app-float": "0 12px 40px rgb(0 0 0 / 0.8)",
+		// Mantine's "bright" is white in dark; ours is the page ground.
+		"--mantine-color-bright": roles.text,
+		"--mantine-primary-color-contrast": roles.onFill,
 	},
-	variables: {
-		"--mantine-color-black": roles.text,
-		"--mantine-color-white": roles.surface,
-	},
+	light: { ...lightRoleVars, ...mantineRoles(lightRoles) },
+	variables: {},
 });
 
 export const theme = createTheme({
-	black: roles.text,
+	black: lightRoles.text,
 	breakpoints: {
 		"2xl": "1536px",
 		lg: "1024px",
@@ -225,7 +262,15 @@ export const theme = createTheme({
 			},
 		}),
 		Card: { defaultProps: { radius: 0, withBorder: true } },
-		Chip: { defaultProps: { radius: 0 } },
+		// The check is part of the label: same colour as its text, in every
+		// state (Mantine draws it in its white on a checked chip).
+		Chip: {
+			defaultProps: { radius: 0 },
+			styles: {
+				checkIcon: { color: "inherit" },
+				iconWrapper: { color: "inherit" },
+			},
+		},
 		Container: { defaultProps: { py: "lg" } },
 		Input: Input.extend({
 			vars: (_theme, props) => {
@@ -251,6 +296,31 @@ export const theme = createTheme({
 			},
 		},
 		Menu: { defaultProps: { shadow: "md" } },
+		// Icon-only controls get a name. Getters, so the label is read when the
+		// control renders, in the language active then (the theme is built once).
+		Modal: {
+			defaultProps: {
+				closeButtonProps: {
+					get "aria-label"() {
+						return t`Close`;
+					},
+				},
+			},
+		},
+		Pagination: {
+			defaultProps: {
+				getControlProps: (
+					control: "first" | "previous" | "last" | "next",
+				) => ({
+					"aria-label": {
+						first: t`First page`,
+						last: t`Last page`,
+						next: t`Next page`,
+						previous: t`Previous page`,
+					}[control],
+				}),
+			},
+		},
 		Paper: { defaultProps: { radius: 0, withBorder: true } },
 		Select: {
 			defaultProps: {
@@ -338,14 +408,14 @@ export const theme = createTheme({
 		xs: "0",
 	},
 	shadows: {
-		"2xl": "0 12px 40px rgb(45 45 44 / 0.12)",
+		"2xl": "var(--app-float)",
 		DEFAULT: "none",
 		inner: "none",
-		lg: "0 12px 40px rgb(45 45 44 / 0.12)",
-		md: "0 12px 40px rgb(45 45 44 / 0.12)",
+		lg: "var(--app-float)",
+		md: "var(--app-float)",
 		none: "none",
 		sm: "none",
-		xl: "0 12px 40px rgb(45 45 44 / 0.12)",
+		xl: "var(--app-float)",
 		xs: "none",
 	},
 	// 4 / 8 / 16 / 24 / 32 for the named steps; the numeric Tailwind-style keys
@@ -394,5 +464,5 @@ export const theme = createTheme({
 		xs: "0.25rem",
 	},
 	variantColorResolver,
-	white: roles.surface,
+	white: lightRoles.surface,
 });

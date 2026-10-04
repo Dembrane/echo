@@ -209,7 +209,7 @@ how the shell spares a dark room a light first paint, so the address is fixed
 when the deck is mounted and a later flip travels as a command rather than a
 reload. The sheet's tokens are named for their colour and used for their role,
 so `:root[data-theme="dark"]` redefines them by role rather than renaming them:
-`--parchment` is the ground (`#1B1B1A`, with `--paper` `#262625` a step up),
+`--parchment` is the ground (`#000000`, the app's AMOLED dark, with `--paper` `#161615` a step up),
 `--graphite` is the ink (`#F6F4F1`), and `--hairline`, `--ink-soft`,
 `--ink-faint` and `--brand-grey` follow. `--blue` lifts to `#7C9BFF` wherever
 blue is read as text or drawn as a hairline. `--qr-card` and `--qr-ink` turn

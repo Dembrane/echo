@@ -45,7 +45,7 @@ import {
 } from "react";
 import { QRCode as QRCodeLogo } from "react-qrcode-logo";
 import { useParams } from "react-router";
-import { roles } from "@/colors";
+import { lightRoles as roles } from "@/colors";
 import {
 	useProjectById,
 	useUpdateProjectHostGuideMutation,
@@ -59,7 +59,8 @@ import { openConfirm } from "@/lib/openConfirm";
 
 // ============================================================================
 // DESIGN SYSTEM - the app's roles and type ladder, as inline values because
-// this page is a print document
+// this page is a print document: it stays light in dark mode, and its QR
+// canvases need real colours
 // ============================================================================
 
 const colors = {
@@ -1442,6 +1443,7 @@ export const HostGuidePage = () => {
 				aria-label={t`Loading host guide`}
 				style={{
 					backgroundColor: colors.parchment,
+					color: colors.graphite,
 					minHeight: "100vh",
 					padding: space.page,
 					paddingTop: `calc(${space.page} + 48px)`,
@@ -1463,6 +1465,7 @@ export const HostGuidePage = () => {
 			className="print-page"
 			style={{
 				backgroundColor: colors.parchment,
+				color: colors.graphite,
 				display: "flex",
 				flexDirection: "column",
 				height: isFullscreen ? "100vh" : undefined,
