@@ -5,7 +5,10 @@ import { describe, expect, it, vi } from "vitest";
 // Exercise the vendored receiver itself. Repeated reconnect acknowledgements
 // previously rebuilt Popcorn each second, preventing its language transition.
 const source = readFileSync(
-	new URL("../../../../platform/packages/popcorn/static/app.js", import.meta.url),
+	new URL(
+		"../../../../platform/packages/popcorn/static/app.js",
+		import.meta.url,
+	),
 	"utf8",
 );
 const styles = readFileSync(
@@ -220,5 +223,60 @@ describe("vendored deck demo disclosure", () => {
 
 	it("lets the host's preview leave the disclosure for a tab", () => {
 		expect(deck(true).closeIntroduction).toHaveBeenCalledOnce();
+	});
+});
+
+describe("vendored deck navigation", () => {
+	const stepper = source.slice(
+		source.indexOf("  function stepDeck(to) {"),
+		source.indexOf("  // In the Present shell the order is the shell's"),
+	);
+
+	function deck(opening: { open: boolean; step?: number }, active = "popcorn") {
+		const context = {
+			finishOpening: vi.fn(),
+			hasOpening: () => true,
+			introOpen: opening.open,
+			introScreens: [{}, {}],
+			introStep: opening.step ?? 0,
+			openIntroduction: vi.fn(),
+			openingScreens: () => [{}, {}],
+			showIntroStep: vi.fn(),
+			showSlide: vi.fn(),
+			state: { active },
+			stepDeck: (_to: string) => {},
+			visibleSlides: () =>
+				["popcorn", "tensions", "stakeholders"].map((id) => ({ id })),
+		};
+		runInNewContext(stepper, context);
+		return context;
+	}
+
+	it("steps through the opening and starts popcorn after its last screen", () => {
+		const first = deck({ open: true, step: 1 });
+		first.stepDeck("next");
+		expect(first.showIntroStep).toHaveBeenCalledWith(2, "push");
+		first.stepDeck("previous");
+		expect(first.showIntroStep).toHaveBeenCalledOnce();
+
+		const last = deck({ open: true, step: 2 });
+		last.stepDeck("next");
+		expect(last.finishOpening).toHaveBeenCalledOnce();
+		last.stepDeck("previous");
+		expect(last.showIntroStep).toHaveBeenCalledWith(1, "replace");
+	});
+
+	it("moves through the slides without wrapping, and back into the opening", () => {
+		const end = deck({ open: false }, "stakeholders");
+		end.stepDeck("next");
+		expect(end.showSlide).not.toHaveBeenCalled();
+		end.stepDeck("first");
+		expect(end.showSlide).toHaveBeenCalledWith("popcorn");
+
+		const start = deck({ open: false }, "popcorn");
+		start.stepDeck("previous");
+		expect(start.openIntroduction).toHaveBeenCalledWith(2, "push");
+		start.stepDeck("last");
+		expect(start.showSlide).toHaveBeenCalledWith("stakeholders");
 	});
 });

@@ -65,6 +65,9 @@
         type: "opening",
         open,
         ...(screen ? { screen } : {}),
+        // Where the opening is, so the shell's slide count includes its screens.
+        ...(open ? { step: introStep } : {}),
+        steps: introScreens.length,
         // A synthetic demo's disclosure cannot be skipped from the shell's tabs.
         locked: open && disclosureGated(),
       },
@@ -1254,15 +1257,19 @@
     const screen = screens[n - 1];
     notifyOpeningState(true, screen.kind);
     const last = n === screens.length;
+    // In the Present shell its side zones and keys move through the opening,
+    // so the screen keeps only the last screen's Start, which begins popcorn,
+    // and the shell's footer counts the screens with the slides.
+    const shellNav = !!EMBED?.presentationId;
     const eyebrow = (demo ? esc(tr("intro.demo")) : "popcorn")
-      + (screens.length > 1 ? ` · ${String(n).padStart(2, "0")} / ${String(screens.length).padStart(2, "0")}` : "");
+      + (screens.length > 1 && !shellNav ? ` · ${String(n).padStart(2, "0")} / ${String(screens.length).padStart(2, "0")}` : "");
     const next = tr(last ? "intro.start" : demo ? "intro.why" : "intro.continue");
     // the quiet look of the footer's text button; styles.css has no rule of its own for this
-    const backHtml = n > 1 ? `<button class="intro-back reset-data" type="button">${esc(tr("intro.back"))}</button>` : "";
+    const backHtml = n > 1 && !shellNav ? `<button class="intro-back reset-data" type="button">${esc(tr("intro.back"))}</button>` : "";
     // The opening ends where the prospect decides what to do next, so the way
     // on into their own organisation sits under the last screen's button.
     const nextUrl = last ? demoNextUrl() : null;
-    const continueHtml = `<button class="intro-continue" type="button">${esc(next)}</button>`
+    const continueHtml = (shellNav && !last ? "" : `<button class="intro-continue" type="button">${esc(next)}</button>`)
       + (nextUrl ? `<p class="intro-demo-next">${demoNextHtml(nextUrl)}</p>` : "");
     // For a host who is editing, an optional field that is still empty keeps
     // its place: an empty element whose placeholder is drawn by the stylesheet
@@ -1284,14 +1291,7 @@
     const back = dialog.querySelector(".intro-back");
     if (back) back.onclick = () => history.back();
     const button = dialog.querySelector(".intro-continue");
-    button.onclick = () => {
-      if (!last) { showIntroStep(n + 1, "push"); return; }
-      introDone = true;
-      closeIntroduction();
-      state.pop.countdown = { startedAt: Date.now(), beaconed: false };
-      showSlide("popcorn", null, { replace: true });
-      stage.focus();
-    };
+    if (button) button.onclick = () => stepDeck("next");
     wireIntroEditing(dialog);
     // An editable heading would open with a caret in it: rest on the screen instead.
     const focusTarget = dialog.querySelector("#intro-title:not([data-edit])") || dialog.querySelector(".intro-content");
@@ -1405,6 +1405,15 @@
         }, 250);
       });
     }
+  }
+
+  // Past the opening's last screen: popcorn starts, its countdown with it.
+  function finishOpening() {
+    introDone = true;
+    closeIntroduction();
+    state.pop.countdown = { startedAt: Date.now(), beaconed: false };
+    showSlide("popcorn", null, { replace: true });
+    stage.focus();
   }
 
   function closeIntroduction() {
@@ -1695,9 +1704,43 @@
     renderActive();
   });
 
+  // One way through the deck for keys, swipes and the shell: the opening's
+  // screens, then the slides, never round from the last to the first.
+  function stepDeck(to) {
+    if (introOpen) {
+      if (to === "next") {
+        if (introStep < introScreens.length) showIntroStep(introStep + 1, "push");
+        else finishOpening();
+      } else if (to === "previous" && introStep > 1) showIntroStep(introStep - 1, "replace");
+      return;
+    }
+    const slides = visibleSlides();
+    const i = slides.findIndex((s) => s.id === state.active);
+    if (to === "previous" && i <= 0 && hasOpening()) { openIntroduction(openingScreens().length, "push"); return; }
+    const j = to === "first" ? 0 : to === "last" ? slides.length - 1 : i + (to === "next" ? 1 : -1);
+    if (slides[j] && j !== i) showSlide(slides[j].id);
+  }
+  // In the Present shell the order is the shell's (the map is its own slide),
+  // so the deck only says which way.
+  function navigate(to) {
+    if (!EMBED?.presentationId || parent === window) { stepDeck(to); return; }
+    parent.postMessage(
+      { source: "dembrane-present-deck", version: 1, presentationId: EMBED.presentationId, type: "navigate", to },
+      EMBED.parentOrigin || location.origin,
+    );
+  }
+
+  const NAV_KEYS = { ArrowRight: "next", PageDown: "next", " ": "next", ArrowLeft: "previous", PageUp: "previous", Home: "first", End: "last" };
+  // Typing never moves the deck, and Space still presses a focused button.
+  const keepsKey = (e) => e.target.closest?.("input, textarea, select, [contenteditable], .tl-handle, .tl-grip")
+    || (e.key === " " && e.target.closest?.("button, a, summary, [role=button]"));
   document.addEventListener("keydown", (e) => {
-    if (introOpen) return;
-    if (e.target.matches?.("input, textarea, .tl-handle, .tl-grip")) return;
+    if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || keepsKey(e)) return;
+    const to = NAV_KEYS[e.key];
+    if (introOpen) {
+      if (to === "next" || to === "previous") { e.preventDefault(); navigate(to); }
+      return;
+    }
     if (screenFrozen) { if (e.key === "Escape") hideTip(); return; }
     if (e.key === "Escape") {
       if (isDeckTab(state.active) && state.deck[state.active]) {
@@ -1706,20 +1749,40 @@
         return;
       }
     }
-    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
-    // inside an open deck, arrows move between its slides, not between tabs
-    if (isDeckTab(state.active) && state.deck[state.active]) {
-      const track = document.getElementById("deck-track");
-      if (track) {
-        track.scrollBy({ left: (e.key === "ArrowRight" ? 1 : -1) * track.clientWidth, behavior: "smooth" });
-        return;
-      }
+    if (!to) return;
+    e.preventDefault();
+    // inside an open deck, arrows move between its slides until its last one
+    const track = isDeckTab(state.active) && state.deck[state.active] && document.getElementById("deck-track");
+    const dir = to === "next" ? 1 : to === "previous" ? -1 : 0;
+    if (track && dir && (dir > 0 ? track.scrollLeft + track.clientWidth < track.scrollWidth - 1 : track.scrollLeft > 1)) {
+      track.scrollBy({ left: dir * track.clientWidth, behavior: "smooth" });
+      return;
     }
-    const slides = visibleSlides();
-    const i = slides.findIndex((s) => s.id === state.active);
-    const next = slides[(i + (e.key === "ArrowRight" ? 1 : -1) + slides.length) % slides.length];
-    if (next) showSlide(next.id);
+    navigate(to);
   });
+
+  // A swipe across the screen does what the arrows do, except on something
+  // that scrolls sideways itself (a row of slides, the tabs) or a field.
+  const scrollsSideways = (el) => {
+    for (; el && el !== document.body; el = el.parentElement) {
+      const x = getComputedStyle(el).overflowX;
+      if ((x === "auto" || x === "scroll") && el.scrollWidth > el.clientWidth) return true;
+    }
+    return false;
+  };
+  let swipeFrom = null;
+  document.addEventListener("touchstart", (e) => {
+    const t = e.touches[0];
+    swipeFrom = e.touches.length === 1 && !keepsKey(e) && !scrollsSideways(e.target) ? { x: t.clientX, y: t.clientY } : null;
+  }, { passive: true });
+  document.addEventListener("touchend", (e) => {
+    const t = e.changedTouches[0];
+    const from = swipeFrom;
+    swipeFrom = null;
+    if (!from || !t || (screenFrozen && !introOpen)) return;
+    const dx = t.clientX - from.x, dy = t.clientY - from.y;
+    if (Math.abs(dx) >= 60 && Math.abs(dx) > 2 * Math.abs(dy)) navigate(dx < 0 ? "next" : "previous");
+  }, { passive: true });
 
   function renderActive() {
     // popcorn manages its own geometry: the stage ends exactly at the fold
@@ -4945,6 +5008,13 @@
         introDone = true;
         closeIntroduction();
       }
+      return;
+    }
+    if (message.command === "navigate" && ["next", "previous"].includes(message.to)) {
+      // The shell's side zones and keys. Before the first slide is the
+      // opening's last screen, reached back from the slides.
+      if (introOpen) stepDeck(message.to);
+      else if (message.to === "previous" && hasOpening()) openIntroduction(openingScreens().length, "push");
       return;
     }
     if (message.command === "refresh") {
