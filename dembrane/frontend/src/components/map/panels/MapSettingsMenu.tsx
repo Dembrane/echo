@@ -7,8 +7,10 @@ import {
 	Divider,
 	NumberInput,
 	Popover,
+	Group,
 	Radio,
 	ScrollArea,
+	Slider,
 	Stack,
 	Text,
 } from "@mantine/core";
@@ -19,7 +21,11 @@ import type {
 	BudgetResolution,
 	MapBudgetBounds,
 } from "../budgets";
-import type { MapSettings } from "../state/settings";
+import {
+	CLUSTER_DENSITY_MAX,
+	CLUSTER_DENSITY_MIN,
+	type MapSettings,
+} from "../state/settings";
 import type { ColorBy } from "../types";
 
 const MAP_COLOR_BY_OPTIONS = COLOR_BY_OPTIONS.filter(
@@ -100,6 +106,22 @@ export const budgetAdjustmentLabel = (
 };
 
 const NOTHING_HIDDEN: ReadonlyArray<MapSettingsControl> = [];
+
+// The dial is logarithmic around the default: its left half runs down to
+// 1/4 of the layout's repulsion, its right half up to 16x.
+const DENSITY_LOW = Math.log(1 / CLUSTER_DENSITY_MIN);
+const DENSITY_HIGH = Math.log(CLUSTER_DENSITY_MAX);
+export const densityToDial = (density: number) => {
+	const log = Math.log(density);
+	return Math.round(
+		50 + (log < 0 ? log / DENSITY_LOW : log / DENSITY_HIGH) * 50,
+	);
+};
+export const dialToDensity = (dial: number) => {
+	const t = (dial - 50) / 50;
+	const density = Math.exp(t * (t < 0 ? DENSITY_LOW : DENSITY_HIGH));
+	return Math.min(CLUSTER_DENSITY_MAX, Math.max(CLUSTER_DENSITY_MIN, density));
+};
 
 const readBudget = (value: string | number): number | null =>
 	typeof value === "number" && Number.isFinite(value) ? value : null;
@@ -251,6 +273,32 @@ export const MapSettingsMenu = ({
 								}
 							/>
 						)}
+					</Stack>
+
+					<Stack gap={4}>
+						<Text size="xs">
+							<Trans>Cluster density</Trans>
+						</Text>
+						<Slider
+							thumbLabel={t`Cluster density: fewer or more clusters`}
+							min={0}
+							max={100}
+							step={1}
+							marks={[{ value: 50 }]}
+							value={densityToDial(settings.clusterDensity)}
+							onChange={(dial) =>
+								onChange({ clusterDensity: dialToDensity(dial) })
+							}
+							label={null}
+						/>
+						<Group justify="space-between">
+							<Text size="xs" c="dimmed">
+								<Trans>Clumped</Trans>
+							</Text>
+							<Text size="xs" c="dimmed">
+								<Trans>Spread out</Trans>
+							</Text>
+						</Group>
 					</Stack>
 
 					<Divider />

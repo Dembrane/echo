@@ -538,6 +538,7 @@ export const MapExperience = ({
 								onActiveNodeChange={walk.onActiveNodeChange}
 								timerActive={title.timerActive}
 								timerProgress={title.timerProgress}
+								density={settings.clusterDensity}
 								// The walk serves the Showcase; it must not move the
 								// analyst's selection while only Spotlight is open.
 								autoAdvance={showShowcase}
@@ -580,6 +581,7 @@ export const MapExperience = ({
 								onActiveNodeChange={walk.onActiveNodeChange}
 								timerActive={title.timerActive}
 								timerProgress={title.timerProgress}
+								density={settings.clusterDensity}
 							/>
 						</div>
 					</section>
