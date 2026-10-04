@@ -70,7 +70,7 @@ if (args.includes("--write") || args.includes("--update")) {
 			const n = now[key]?.[rule] ?? 0;
 			const b = baseline[key]?.[rule];
 			const v = args.includes("--write") ? n : Math.min(n, b ?? n);
-			if (v > 0) (next[key] ??= {})[rule] = v;
+			if (v > 0) next[key] = { ...next[key], [rule]: v };
 		}
 	write(BASELINE, next);
 	console.log("Baseline written.");
