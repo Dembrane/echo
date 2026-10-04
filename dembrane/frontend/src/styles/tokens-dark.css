@@ -1,19 +1,6 @@
 /* Dark mode. The colours themselves are variables set per scheme by the
  * theme's cssVariablesResolver (theme.tsx, from colors.ts); this file holds
- * only what a variable can't reach.
- *
- * Checked controls fill with brand blue under a parchment mark, as the primary
- * pill does. rules.css fills them with --app-action, which in dark is the
- * lighter text blue. Remove once rules.css reads --app-action-fill
- * (requested from the grammar workstream). */
-:root[data-mantine-color-scheme="dark"]
-	:is(.mantine-Checkbox-input:checked, .mantine-Radio-radio:checked),
-:root[data-mantine-color-scheme="dark"]
-	.mantine-Switch-input:checked
-	+ .mantine-Switch-track {
-	background-color: var(--app-action-fill);
-	border-color: var(--app-action-fill);
-}
+ * only what a variable can't reach. */
 
 /* The scrollbar thumb lightens on hover in light; on black it does the same
  * the other way up. */
