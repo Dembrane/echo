@@ -74,9 +74,10 @@
 }
 
 /* The sketches are graphite lines on transparency: on a dark ground they
-   turn to light ink. */
+   turn to light ink. Inverting alone would turn the blue highlights yellow;
+   turning the hue half way round brings them back to blue. */
 :global(:root[data-mantine-color-scheme="dark"]) .sketches img {
-	filter: invert(1);
+	filter: invert(1) hue-rotate(180deg);
 }
 
 .quote {
