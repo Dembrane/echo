@@ -124,6 +124,11 @@ msgid "error.webhook.invalid_target"
 msgstr "Kies waar deze webhook heen gaat: een webadres, of de inbox van sam met een bekende code."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:17
+msgid "error.map.groups_need_snapshot"
+msgstr "Clusters bewaar je op een opnieuw gegenereerde kaart. Genereer de kaart opnieuw en probeer het nog eens."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:27
 msgid "error.document.dpa_not_authorised"
 msgstr "Bevestig dat je bevoegd bent om namens je organisatie akkoord te gaan met gegevensverwerking."
@@ -299,7 +304,7 @@ msgid "error.member.owner_removes_owner"
 msgstr "Alleen een eigenaar kan een andere eigenaar verwijderen."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:17
+#: src/lib/errors/messages/map.ts:26
 msgid "error.map.not_a_claim"
 msgstr "Alleen beweringen kunnen worden gefactcheckt. Kies een bewering en probeer het opnieuw."
 
@@ -354,7 +359,7 @@ msgid "error.project.share_admin_only"
 msgstr "Alleen werkruimtebeheerders kunnen projecten delen."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:29
+#: src/lib/errors/messages/map.ts:38
 msgid "error.map.selection_not_in_map"
 msgstr "Een deel van je selectie staat niet meer op de kaart. Vernieuw de kaart en selecteer opnieuw."
 
@@ -429,7 +434,7 @@ msgid "error.webhook.sam_inbox_unavailable"
 msgstr "De inbox van sam is hier niet ingesteld, en een webhook naar sam kan niet worden getest."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:43
+#: src/lib/errors/messages/map.ts:52
 msgid "error.map.selection_too_small"
 msgstr "Selecteer nog een paar items om een titel te maken."
 
@@ -564,12 +569,12 @@ msgid "error.present.map_results_not_ready"
 msgstr "De kaart is nog niet klaar. Deze verschijnt hier zodra dat wel zo is."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:25
+#: src/lib/errors/messages/map.ts:34
 msgid "error.map.not_ready"
 msgstr "De kaart wordt nog gemaakt. Wacht heel even en probeer het opnieuw."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:34
+#: src/lib/errors/messages/map.ts:43
 msgid "error.map.selection_other_snapshot"
 msgstr "De kaart is bijgewerkt sinds je deze selectie maakte. Vernieuw de kaart en selecteer opnieuw."
 
@@ -924,7 +929,7 @@ msgid "error.project.no_conversations"
 msgstr "Dit project heeft nog geen gesprekken."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:13
+#: src/lib/errors/messages/map.ts:22
 msgid "error.map.no_map_yet"
 msgstr "Dit project heeft nog geen kaart. Maak er een aan om hem hier te zien."
 
@@ -1144,7 +1149,7 @@ msgid "error.billing.request_failed"
 msgstr "We konden deze facturatiewijziging niet afronden. Neem contact met ons op, dan lossen we het op."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:51
+#: src/lib/errors/messages/map.ts:60
 msgid "error.map.title_failed"
 msgstr "We konden zojuist geen titel aanmaken. Probeer het opnieuw."
 
@@ -1229,7 +1234,7 @@ msgid "error.training.license_not_found"
 msgstr "We konden deze licentie niet vinden."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:21
+#: src/lib/errors/messages/map.ts:30
 msgid "error.map.not_found"
 msgstr "We konden deze kaart niet vinden."
 
@@ -1344,12 +1349,17 @@ msgid "error.verify.artifact_not_found"
 msgstr "We konden dit niet vinden. Mogelijk is het verwijderd."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:13
+msgid "error.map.group_not_started"
+msgstr "We konden dit cluster niet bewaren. Probeer het zo opnieuw."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:46
 msgid "error.analysis.storage_unavailable"
 msgstr "We konden de analyse op dit moment niet laden. Probeer het zo opnieuw."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:47
+#: src/lib/errors/messages/map.ts:56
 msgid "error.map.storage_unavailable"
 msgstr "We konden de kaart op dit moment niet laden. Probeer het zo opnieuw."
 
@@ -1564,7 +1574,7 @@ msgid "error.auth.user_required"
 msgstr "Hier moet je voor ingelogd zijn. Log in en probeer het opnieuw."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:39
+#: src/lib/errors/messages/map.ts:48
 msgid "error.map.selection_too_large"
 msgstr "Je hebt te veel items geselecteerd. Selecteer er minder en probeer het opnieuw."
 

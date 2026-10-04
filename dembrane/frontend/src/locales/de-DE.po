@@ -764,7 +764,7 @@ msgstr "{conversations, plural, one {# Gespräch} other {# Gespräche}}"
 msgid "{conversations} conversations with a transcript, about {minutes} minutes of talk. Ready."
 msgstr "{conversations} Gespräche mit Transkript, etwa {minutes} Minuten Gesprächszeit. Bereit."
 
-#: src/components/map/MapExperience.tsx:146
+#: src/components/map/MapExperience.tsx:135
 msgid "{count, plural, one {# argument} other {# arguments}}"
 msgstr "{count, plural, one {# Argument} other {# Argumente}}"
 
@@ -2297,7 +2297,7 @@ msgstr "Argument"
 msgid "Argument map"
 msgstr "Argumentationskarte"
 
-#: src/components/map/MapExperience.tsx:523
+#: src/components/map/MapExperience.tsx:516
 msgid "Argument tree (MST)"
 msgstr "Argumentationsbaum (MST)"
 
@@ -5590,7 +5590,7 @@ msgstr "Aktivieren"
 msgid "Enable 2FA"
 msgstr "2FA aktivieren"
 
-#: src/components/map/MapExperience.tsx:598
+#: src/components/map/MapExperience.tsx:591
 msgid "Enable a visualization from the panel settings menu"
 msgstr "Aktivieren Sie eine Visualisierung über das Menü der Bereichseinstellungen"
 
@@ -8252,7 +8252,7 @@ msgstr "Laden…"
 msgid "Local argument map"
 msgstr "Lokale Argumentationskarte"
 
-#: src/components/map/MapExperience.tsx:565
+#: src/components/map/MapExperience.tsx:558
 msgid "Local map"
 msgstr "Lokale Karte"
 
@@ -8461,7 +8461,7 @@ msgstr "Verwaltet Mitglieder, Arbeitsbereiche und Organisationseinstellungen."
 msgid "Many fact-checks were started just now. Try again in a moment."
 msgstr "Gerade wurden viele Faktenprüfungen gestartet. Versuchen Sie es gleich noch einmal."
 
-#: src/components/map/hooks/index.ts:346
+#: src/components/map/hooks/index.ts:344
 msgid "Many maps were started just now. Try again in a moment."
 msgstr "Gerade wurden viele Karten gestartet. Versuchen Sie es gleich noch einmal."
 
@@ -13805,7 +13805,7 @@ msgstr "{0} von {1} werden angezeigt"
 msgid "Showing {displayFrom}–{displayTo} of {totalItems} entries"
 msgstr "{displayFrom}–{displayTo} von {totalItems} Einträgen werden angezeigt"
 
-#: src/components/map/MapExperience.tsx:114
+#: src/components/map/MapExperience.tsx:103
 msgid "Showing {drawn} of {available} connections"
 msgstr "{drawn} von {available} Verbindungen werden angezeigt"
 
@@ -14904,7 +14904,7 @@ msgstr "Die Einladung wurde an {invitedEmail} gesendet, Sie sind jedoch als {myE
 msgid "The last generation failed, so this is still the previous map. {0}"
 msgstr "Die letzte Generierung ist fehlgeschlagen, daher sehen Sie noch die vorherige Karte. {0}"
 
-#: src/components/map/MapExperience.tsx:140
+#: src/components/map/MapExperience.tsx:129
 msgid "The layout could not be computed for this scope."
 msgstr "Das Layout konnte für diesen Bereich nicht berechnet werden."
 
@@ -14946,7 +14946,7 @@ msgstr "Die Karte konnte nicht geladen werden."
 #~ msgid "The map could not be loaded. Try again in a moment."
 #~ msgstr "Die Karte konnte nicht geladen werden. Versuchen Sie es gleich noch einmal."
 
-#: src/components/map/hooks/index.ts:349
+#: src/components/map/hooks/index.ts:347
 msgid "The map could not be started."
 msgstr "Die Karte konnte nicht gestartet werden."
 
@@ -17764,7 +17764,7 @@ msgstr "Sie haben keine Berechtigung hierfür. Bitten Sie Ihren Administrator um
 msgid "You do not have permission to fact-check claims."
 msgstr "Sie haben keine Berechtigung, Aussagen zu überprüfen."
 
-#: src/components/map/hooks/index.ts:342
+#: src/components/map/hooks/index.ts:340
 msgid "You do not have permission to generate a map."
 msgstr "Sie haben keine Berechtigung, eine Map zu erstellen."
 

@@ -124,6 +124,11 @@ msgid "error.webhook.invalid_target"
 msgstr "Scegli dove va questo webhook: un indirizzo web o la casella di sam con un codice noto."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:17
+msgid "error.map.groups_need_snapshot"
+msgstr "I gruppi si salvano su una mappa rigenerata. Rigenera la mappa e riprova."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:27
 msgid "error.document.dpa_not_authorised"
 msgstr "Conferma di essere autorizzato ad accettare il trattamento dei dati per la tua organizzazione."
@@ -299,7 +304,7 @@ msgid "error.member.owner_removes_owner"
 msgstr "Solo un proprietario può rimuovere un altro proprietario."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:17
+#: src/lib/errors/messages/map.ts:26
 msgid "error.map.not_a_claim"
 msgstr "È possibile verificare i fatti solo per le affermazioni. Scegli un'affermazione e riprova."
 
@@ -354,7 +359,7 @@ msgid "error.project.share_admin_only"
 msgstr "Solo gli amministratori dello spazio di lavoro possono condividere i progetti."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:29
+#: src/lib/errors/messages/map.ts:38
 msgid "error.map.selection_not_in_map"
 msgstr "Parte della selezione non è più presente sulla mappa. Ricarica la mappa e seleziona di nuovo."
 
@@ -429,7 +434,7 @@ msgid "error.webhook.sam_inbox_unavailable"
 msgstr "La casella di sam non è configurata qui, e un webhook diretto a sam non può essere testato."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:43
+#: src/lib/errors/messages/map.ts:52
 msgid "error.map.selection_too_small"
 msgstr "Seleziona qualche altro elemento per creare un titolo."
 
@@ -564,12 +569,12 @@ msgid "error.present.map_results_not_ready"
 msgstr "La mappa non è ancora pronta. Apparirà qui non appena sarà disponibile."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:25
+#: src/lib/errors/messages/map.ts:34
 msgid "error.map.not_ready"
 msgstr "La mappa è ancora in fase di creazione. Aspetta un attimo e riprova."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:34
+#: src/lib/errors/messages/map.ts:43
 msgid "error.map.selection_other_snapshot"
 msgstr "La mappa è stata aggiornata dopo la tua selezione. Ricarica la mappa e seleziona di nuovo."
 
@@ -924,7 +929,7 @@ msgid "error.project.no_conversations"
 msgstr "Questo progetto non ha ancora conversazioni."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:13
+#: src/lib/errors/messages/map.ts:22
 msgid "error.map.no_map_yet"
 msgstr "Questo progetto non ha ancora una mappa. Creane una per vederla qui."
 
@@ -1144,7 +1149,7 @@ msgid "error.billing.request_failed"
 msgstr "Non siamo riusciti a completare questa modifica di fatturazione. Contattaci e risolveremo il problema."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:51
+#: src/lib/errors/messages/map.ts:60
 msgid "error.map.title_failed"
 msgstr "Non siamo riusciti a creare un titolo in questo momento. Riprova."
 
@@ -1229,7 +1234,7 @@ msgid "error.training.license_not_found"
 msgstr "Non siamo riusciti a trovare questa licenza."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:21
+#: src/lib/errors/messages/map.ts:30
 msgid "error.map.not_found"
 msgstr "Non siamo riusciti a trovare questa mappa."
 
@@ -1344,12 +1349,17 @@ msgid "error.verify.artifact_not_found"
 msgstr "Non siamo riusciti a trovarlo. Potrebbe essere stato rimosso."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:13
+msgid "error.map.group_not_started"
+msgstr "Non siamo riusciti a salvare questo gruppo. Riprova tra poco."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:46
 msgid "error.analysis.storage_unavailable"
 msgstr "Non siamo riusciti a caricare l'analisi in questo momento. Riprova tra poco."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:47
+#: src/lib/errors/messages/map.ts:56
 msgid "error.map.storage_unavailable"
 msgstr "Non siamo riusciti a caricare la mappa in questo momento. Riprova tra poco."
 
@@ -1564,7 +1574,7 @@ msgid "error.auth.user_required"
 msgstr "Devi aver effettuato l'accesso per farlo. Accedi e riprova."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:39
+#: src/lib/errors/messages/map.ts:48
 msgid "error.map.selection_too_large"
 msgstr "Hai selezionato troppi elementi. Selezionane di meno e riprova."
 

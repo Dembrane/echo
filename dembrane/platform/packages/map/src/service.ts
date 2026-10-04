@@ -483,13 +483,16 @@ export async function selectionTitle(
   return d.cache.once(key, () => d.generate(lines, project[0], project[1]));
 }
 
-export async function snapshotSelectionTitle(
-  d: TitleDeps,
-  target: SnapshotTarget,
+/**
+ * The selection of a snapshot as the title reads it: its revisions in the order given and
+ * one tagged line each. Refuses objects the snapshot does not display, and a selection too
+ * small or too large to title whole.
+ */
+export async function snapshotTitleLines(
+  d: MapDeps,
+  snapshot: Snapshot,
   revisionIds: readonly string[],
-  project: [string, string],
-): Promise<Json> {
-  const snapshot = target.snapshot;
+): Promise<{ ordered: string[]; revisions: ObjectRevision[]; lines: string[]; config: string }> {
   const manifest = snapshot.manifest;
   const ordered = [...new Set(revisionIds)];
   const displayed = new Set(
@@ -498,10 +501,10 @@ export async function snapshotSelectionTitle(
   const unknown = ordered.filter((id) => !displayed.has(id));
   if (unknown.length)
     throw new UnknownArguments(`${unknown.length} selected objects are not in this map`);
-  const revisions = await d.rt.store.getRevisions(snapshot.projectId, ordered);
-  if (revisions.size !== ordered.length)
+  const byId = await d.rt.store.getRevisions(snapshot.projectId, ordered);
+  if (byId.size !== ordered.length)
     throw new UnknownArguments(
-      `${ordered.length - revisions.size} selected objects are no longer available`,
+      `${ordered.length - byId.size} selected objects are no longer available`,
     );
   const selected = new Set(ordered);
   const pinned = new Map<string, string>();
@@ -519,14 +522,86 @@ export async function snapshotSelectionTitle(
   const relations = ((manifest.relations as Json[] | undefined) ?? []).filter(
     (r) => selected.has(String(r.from)) && selected.has(String(r.to)),
   );
-  const lines = typedTitleLines(
-    ordered.map((id) => revisions.get(id) as ObjectRevision),
-    verdicts,
-    relations,
-  );
-  const config = `${TITLE_PROMPT}|${d.modelIdentity}|${sortedStrings(pinned.values()).join(",")}`;
+  const revisions = ordered.map((id) => byId.get(id) as ObjectRevision);
+  const lines = typedTitleLines(revisions, verdicts, relations);
+  return { ordered, revisions, lines, config: sortedStrings(pinned.values()).join(",") };
+}
+
+export async function snapshotSelectionTitle(
+  d: TitleDeps,
+  target: SnapshotTarget,
+  revisionIds: readonly string[],
+  project: [string, string],
+): Promise<Json> {
+  const snapshot = target.snapshot;
+  const { ordered, lines, config: pinned } = await snapshotTitleLines(d, snapshot, revisionIds);
+  const config = `${TITLE_PROMPT}|${d.modelIdentity}|${pinned}`;
   const key = `map:title:v2:${titleSelectionKey(snapshot.id, ordered, config)}`;
   return d.cache.once(key, () => d.generate(lines, project[0], project[1]));
+}
+
+// ── groups ──────────────────────────────────────────────────────────────
+
+/** A group still pending after this long is abandoned; committing it again starts it anew. */
+export const GROUP_STALE_SECONDS = 15 * 60;
+
+export interface GroupJob {
+  readonly groupId: string;
+  readonly attempt: number;
+}
+
+export interface GroupDeps extends MapDeps {
+  readonly dispatchGroup: (job: GroupJob) => Promise<unknown>;
+}
+
+/** A stored group as the page reads it. */
+export function groupDoc(row: Row): Json {
+  return {
+    id: row.id,
+    status: row.status,
+    title: row.title ?? null,
+    error: row.error ?? null,
+    members: row.members ?? [],
+    snapshotId: row.snapshot_id,
+    createdAt: pyIso(row.created_at as string | null),
+  };
+}
+
+/**
+ * Commits a dwelled selection of a snapshot as a group and queues its title run. What
+ * could never be titled is refused before anything is stored. The same selection again
+ * answers with its group; a failed one, or one whose run went quiet, runs again.
+ */
+export async function requestGroup(
+  d: GroupDeps,
+  target: SnapshotTarget,
+  revisionIds: readonly string[],
+  requestedBy: string | null,
+): Promise<Json> {
+  const snapshot = target.snapshot;
+  const { ordered, revisions } = await snapshotTitleLines(d, snapshot, revisionIds);
+  const [row, dispatch] = await d.store.startGroup({
+    projectId: snapshot.projectId,
+    snapshotId: snapshot.id,
+    selectionKey: titleSelectionKey(snapshot.id, ordered, "map-group"),
+    members: revisions.map((r) => ({ revisionId: r.id, objectId: r.objectId, type: r.type })),
+    requestedBy,
+    staleSeconds: GROUP_STALE_SECONDS,
+  });
+  if (dispatch) {
+    try {
+      await d.dispatchGroup({ groupId: String(row.id), attempt: Number(row.attempt) });
+    } catch (err) {
+      await d.store.failGroup(
+        String(row.id),
+        Number(row.attempt),
+        "The group could not be started.",
+      );
+      throw err;
+    }
+    await d.rt.publishMap(snapshot.projectId, { type: "group", group_id: String(row.id) });
+  }
+  return groupDoc(row);
 }
 
 // ── fact-checks ─────────────────────────────────────────────────────────

@@ -2,7 +2,7 @@ import { plural, t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Button, Loader, UnstyledButton } from "@mantine/core";
 import { memo } from "react";
-import type { Distillation } from "../hooks/useSelectionTitle";
+import type { Distillation } from "../hooks/useMapGroups";
 import type { MapGraphNode } from "../types";
 import { conversationShares } from "./ClusterSummary";
 import { CaptionText, mapVars } from "./shared";

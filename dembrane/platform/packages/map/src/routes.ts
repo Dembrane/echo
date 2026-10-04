@@ -43,6 +43,7 @@ import type { RateLimiter } from "@dembrane/ratelimit";
 import { sharedHub, sseResponse } from "@dembrane/realtime";
 import { type Context, Hono } from "hono";
 import { mapFactCheck } from "./factcheck";
+import { mapGroup } from "./groups";
 import { titleSelection } from "./model";
 import * as service from "./service";
 import { MapStore, MapStoreError } from "./store";
@@ -64,6 +65,8 @@ export interface MapRoutesDeps {
 const GENERATE_LIMIT = { name: "map_generate", capacity: 10, windowSeconds: 600 };
 const TITLE_LIMIT = { name: "map_title", capacity: 60, windowSeconds: 60 };
 const FACT_CHECK_LIMIT = { name: "map_fact_check", capacity: 120, windowSeconds: 60 };
+// A group is one title call, like a title, and a host makes them by the dozen.
+const GROUP_LIMIT = { name: "map_group", capacity: 60, windowSeconds: 60 };
 const BASE = "/api/v2/bff/map";
 
 const unavailable = () => new UnavailableError("map.storage_unavailable");
@@ -117,9 +120,9 @@ const pyStr = (ts: unknown) =>
   typeof ts === "string" ? (pyIso(ts) ?? ts).replace("T", " ") : "None";
 
 /**
- * Map: saved maps, the bounded graph, generation, selection titles, fact-checks, and the
- * live stream. Reading needs project and conversation read access; starting a generation
- * or a fact-check needs project:update. Result-scoped routes resolve the result to its
+ * Map: saved maps, the bounded graph, generation, selection titles, groups, fact-checks,
+ * and the live stream. Reading needs project and conversation read access; starting a
+ * generation, a group or a fact-check needs project:update. Result-scoped routes resolve the result to its
  * project first, so a result id of another project is a 404.
  */
 export function mapRoutes(deps: MapRoutesDeps) {
@@ -132,7 +135,7 @@ export function mapRoutes(deps: MapRoutesDeps) {
     config: { embeddingModel: deps.embeddingModel, embeddingLocation: deps.embeddingLocation },
   });
   const store = new MapStore(clientOf(deps.db));
-  const d: service.FactCheckDeps & service.TitleDeps = {
+  const d: service.FactCheckDeps & service.TitleDeps & service.GroupDeps = {
     store,
     rt,
     cache: new service.TitleCache(),
@@ -141,6 +144,8 @@ export function mapRoutes(deps: MapRoutesDeps) {
       titleSelection(deps.completer, { lines, projectName, projectContext }),
     dispatch: (job) =>
       deps.jobs.enqueue(mapFactCheck, job, { singletonKey: `${job.factCheckId}:${job.attempt}` }),
+    dispatchGroup: (job) =>
+      deps.jobs.enqueue(mapGroup, job, { singletonKey: `${job.groupId}:${job.attempt}` }),
   };
   const ceilings = { nodeLimit: deps.nodeLimitCeiling, edgeLimit: deps.edgeLimitCeiling };
   const app = new Hono<Env>();
@@ -335,6 +340,44 @@ export function mapRoutes(deps: MapRoutesDeps) {
         "map title failed",
       );
       throw new StatusError(502, "map.title_failed");
+    }
+  });
+
+  app.get(`${BASE}/results/:result_id/groups`, async (c) => {
+    const who = requireUser(c);
+    const t = await target(who, c.req.param("result_id"));
+    const rows = await guarded(() => store.listGroups(service.targetProject(t)));
+    return c.json({ items: rows.map(service.groupDoc) });
+  });
+
+  app.post(`${BASE}/results/:result_id/groups`, async (c) => {
+    const who = requireUser(c);
+    const { body } = await p.validate(c.req, {
+      body: p.model({
+        snapshot_id: p.required(p.str()),
+        revision_ids: p.required(p.list(p.str(), { min: 1, max: 2000 })),
+      }),
+    });
+    const t = await target(who, c.req.param("result_id"));
+    await projectFor(deps.access, who, service.targetProject(t), "project:update");
+    if (t.kind !== "snapshot") throw new ConflictError("map.groups_need_snapshot");
+    if (body.data.snapshot_id !== t.snapshot.id)
+      throw new ConflictError("map.selection_other_snapshot");
+    await deps.limiter.check(GROUP_LIMIT, who.directusUserId);
+    try {
+      const group = await service.requestGroup(d, t, body.data.revision_ids, who.directusUserId);
+      return c.json({ group }, 202);
+    } catch (err) {
+      if (err instanceof PlatformError) throw err;
+      if (err instanceof service.UnknownArguments)
+        throw new ValidationError("map.selection_not_in_map", { message: err.message });
+      if (err instanceof SelectionTooSmall)
+        throw new ValidationError("map.selection_too_small", { message: err.message });
+      if (err instanceof SelectionTooLarge)
+        throw new StatusError(413, "map.selection_too_large", { message: err.message });
+      if (err instanceof MapStoreError || err instanceof AnalysisStoreError) throw unavailable();
+      deps.logger.error({ err: { name: (err as Error)?.name } }, "map group not started");
+      throw new UnavailableError("map.group_not_started");
     }
   });
 
