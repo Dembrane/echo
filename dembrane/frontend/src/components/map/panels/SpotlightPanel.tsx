@@ -15,11 +15,11 @@ import {
 	slotKey,
 } from "../attributes";
 import type { EvidenceGroup } from "../data/adapter";
-import type { Distillation } from "../hooks/useSelectionTitle";
 import { deriveDisplayVerdict } from "../graph/nodeStyle";
+import type { Distillation } from "../hooks/useMapGroups";
 import { blendBackground } from "../renderers/gradients";
-import { ClusterSummary } from "./ClusterSummary";
 import type { ColorBy, FactCheckState, MapGraphNode } from "../types";
+import { ClusterSummary } from "./ClusterSummary";
 import type { ConversationHref, NodeInspection } from "./NodeDetailCard";
 import {
 	CaptionText,

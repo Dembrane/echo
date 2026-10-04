@@ -11,7 +11,6 @@ import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
 import { type ServerEvent, useServerEvents } from "@/hooks/useServerEvents";
 import { bff } from "@/lib/bff";
-import { ApiRequestError } from "@/lib/errors/read";
 import { budgetRequestParams, type CustomBudgets } from "../budgets";
 import type {
 	FactCheckState,
@@ -213,8 +212,6 @@ export type ProjectMapState = {
 };
 
 export type FactCheckStates = Record<string, FactCheckState>;
-
-export type SelectionTitleResponse = { title: string; cached: boolean };
 
 export type HttpError = Error & { status?: number };
 
@@ -454,52 +451,6 @@ export const useCancelFactCheck = () =>
 				`/map/results/${enc(resultId)}/fact-checks/${enc(nodeId)}`,
 			),
 	});
-
-// ---------------------------------------------------------------------------
-// Selection titles
-// ---------------------------------------------------------------------------
-
-/**
- * Titles one selection. Plain function (not a hook) so each request can be
- * tied to the selection it was made for and aborted when that selection is
- * gone. Throws an HttpError carrying the status on failure.
- */
-export type SelectionTitleContext = {
-	/** The snapshot the selection was made in; null for a legacy result. */
-	snapshotId?: string | null;
-	/** The exact revisions selected, most central first. */
-	revisionIds?: string[];
-};
-
-export async function requestSelectionTitle(
-	resultId: string,
-	nodeIds: string[],
-	signal?: AbortSignal,
-	context?: SelectionTitleContext,
-): Promise<SelectionTitleResponse> {
-	const url = new URL(
-		`${API_BASE_URL}/v2/bff/map/results/${enc(resultId)}/title`,
-		typeof window !== "undefined" ? window.location.origin : "http://localhost",
-	);
-	const res = await fetch(url.toString(), {
-		body: JSON.stringify({
-			node_ids: nodeIds,
-			...(context?.snapshotId ? { snapshot_id: context.snapshotId } : {}),
-			...(context?.revisionIds ? { revision_ids: context.revisionIds } : {}),
-		}),
-		credentials: "include",
-		headers: { "Content-Type": "application/json" },
-		method: "POST",
-		signal,
-	});
-	if (!res.ok) {
-		const data = await res.json().catch(() => ({}));
-		const error = new ApiRequestError(res.status, data) as HttpError;
-		error.status = res.status;
-		throw error;
-	}
-	return (await res.json()) as SelectionTitleResponse;
-}
 
 // ---------------------------------------------------------------------------
 // Groups

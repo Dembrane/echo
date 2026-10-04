@@ -10,7 +10,7 @@ import {
 	isFactCheckEligible,
 	resolveAttribute,
 } from "../attributes";
-import type { Distillation } from "../hooks/useSelectionTitle";
+import type { Distillation } from "../hooks/useMapGroups";
 import type { ColorBy, MapGraphNode } from "../types";
 
 export type Share = {

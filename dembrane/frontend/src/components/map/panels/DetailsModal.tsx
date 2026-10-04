@@ -5,7 +5,7 @@ import { CaretRightIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import type { EvidenceGroup } from "../data/adapter";
-import type { Distillation } from "../hooks/useSelectionTitle";
+import type { Distillation } from "../hooks/useMapGroups";
 import type { ColorBy, Edge, MapGraphNode, MapRelation } from "../types";
 import { LocalGraph } from "./LocalGraph";
 import {

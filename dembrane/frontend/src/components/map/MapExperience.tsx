@@ -20,10 +20,7 @@ import {
 import { relatedObjects } from "./data/relations";
 import { MAP_EDGE_GREY } from "./graph/nodeStyle";
 import type { FactCheckStates } from "./hooks";
-import {
-	type TitleRequester,
-	useSelectionTitle,
-} from "./hooks/useSelectionTitle";
+import { localGroupBackend, useMapGroups } from "./hooks/useMapGroups";
 import type { EdgeCounts } from "./layout/edgeBudget";
 import { EMPTY_EDGES, useMapGeometry } from "./layout/useMapGeometry";
 import { ArgumentAccordion } from "./panels/ArgumentAccordion";
@@ -92,18 +89,10 @@ const SPAN_ALL: Record<number, string> = {
 
 const EMPTY_NODES: MapGraphNode[] = [];
 
-const fixtureTitle: TitleRequester = (_resultId, nodeIds, signal) =>
-	new Promise((resolve, reject) => {
-		const timer = setTimeout(
-			() =>
-				resolve({ title: `Synthetic title for ${nodeIds.length} arguments` }),
-			400,
-		);
-		signal.addEventListener("abort", () => {
-			clearTimeout(timer);
-			reject(new DOMException("Aborted", "AbortError"));
-		});
-	});
+// The synthetic map keeps its groups in memory; the title lands after a beat.
+const fixtureGroups = localGroupBackend(
+	(count) => `Synthetic title for ${count} arguments`,
+);
 
 /** Says when the edge budget leaves connections undrawn. */
 const EdgeCountNote = ({ counts }: { counts: EdgeCounts | null }) => {
@@ -227,11 +216,15 @@ export const MapExperience = ({
 		[graph.allNodes],
 	);
 
-	const title = useSelectionTitle({
+	// Dwelled clusters are kept as the project's groups. Whoever may change
+	// the project (the same right a fact-check needs) makes them; everyone
+	// signed in sees them.
+	const title = useMapGroups({
+		backend: offline ? fixtureGroups : undefined,
+		canCommit: canFactCheck || offline,
 		edges: geometry.status === "ready" ? mstEdges : EMPTY_EDGES,
 		enabled: titles,
 		nodes: placedNodes,
-		request: offline ? fixtureTitle : undefined,
 		resultId: graph.resultId,
 		snapshotId: graph.snapshotId,
 	});

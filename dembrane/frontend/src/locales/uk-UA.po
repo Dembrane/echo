@@ -763,7 +763,7 @@ msgstr "{conversations, plural, one {# розмова} few {# розмови} ma
 msgid "{conversations} conversations with a transcript, about {minutes} minutes of talk. Ready."
 msgstr "Розмов із транскриптом: {conversations}, близько {minutes} хв мовлення. Готово."
 
-#: src/components/map/MapExperience.tsx:146
+#: src/components/map/MapExperience.tsx:135
 msgid "{count, plural, one {# argument} other {# arguments}}"
 msgstr "{count, plural, one {# аргумент} few {# аргументи} many {# аргументів} other {# аргументи}}"
 
@@ -2296,7 +2296,7 @@ msgstr "Аргумент"
 msgid "Argument map"
 msgstr "Карта аргументів"
 
-#: src/components/map/MapExperience.tsx:523
+#: src/components/map/MapExperience.tsx:516
 msgid "Argument tree (MST)"
 msgstr "Дерево аргументів (MST)"
 
@@ -5589,7 +5589,7 @@ msgstr "Увімкнути"
 msgid "Enable 2FA"
 msgstr "Enable 2FA"
 
-#: src/components/map/MapExperience.tsx:598
+#: src/components/map/MapExperience.tsx:591
 msgid "Enable a visualization from the panel settings menu"
 msgstr "Увімкніть візуалізацію в меню налаштувань панелі"
 
@@ -8251,7 +8251,7 @@ msgstr "Loading…"
 msgid "Local argument map"
 msgstr "Локальна мапа аргументів"
 
-#: src/components/map/MapExperience.tsx:565
+#: src/components/map/MapExperience.tsx:558
 msgid "Local map"
 msgstr "Локальна мапа"
 
@@ -8460,7 +8460,7 @@ msgstr "Керує учасниками, робочими просторами �
 msgid "Many fact-checks were started just now. Try again in a moment."
 msgstr "Щойно було запущено багато перевірок фактів. Спробуйте ще раз за мить."
 
-#: src/components/map/hooks/index.ts:347
+#: src/components/map/hooks/index.ts:344
 msgid "Many maps were started just now. Try again in a moment."
 msgstr "Щойно було запущено багато карт. Спробуйте ще раз за мить."
 
@@ -13804,7 +13804,7 @@ msgstr "Показано {0} із {1}"
 msgid "Showing {displayFrom}–{displayTo} of {totalItems} entries"
 msgstr "Showing {displayFrom}–{displayTo} of {totalItems} entries"
 
-#: src/components/map/MapExperience.tsx:114
+#: src/components/map/MapExperience.tsx:103
 msgid "Showing {drawn} of {available} connections"
 msgstr "Показано {drawn} із {available} зв’язків"
 
@@ -14903,7 +14903,7 @@ msgstr "Запрошення надіслано на {invitedEmail}, але ви
 msgid "The last generation failed, so this is still the previous map. {0}"
 msgstr "Останнє генерування не вдалося, тому це все ще попередня мапа. {0}"
 
-#: src/components/map/MapExperience.tsx:140
+#: src/components/map/MapExperience.tsx:129
 msgid "The layout could not be computed for this scope."
 msgstr "Не вдалося розрахувати макет для цього обсягу."
 
@@ -14945,7 +14945,7 @@ msgstr "Не вдалося завантажити мапу."
 #~ msgid "The map could not be loaded. Try again in a moment."
 #~ msgstr "Не вдалося завантажити мапу. Спробуйте ще раз за мить."
 
-#: src/components/map/hooks/index.ts:350
+#: src/components/map/hooks/index.ts:347
 msgid "The map could not be started."
 msgstr "Не вдалося запустити мапу."
 
@@ -17765,7 +17765,7 @@ msgstr "У вас немає дозволу на цю дію. Звернітьс
 msgid "You do not have permission to fact-check claims."
 msgstr "У вас немає дозволу перевіряти факти."
 
-#: src/components/map/hooks/index.ts:343
+#: src/components/map/hooks/index.ts:340
 msgid "You do not have permission to generate a map."
 msgstr "У вас немає дозволу створювати мапу."
 

@@ -6,7 +6,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { createSyntheticMap } from "../fixtures/syntheticMap";
-import type { Distillation } from "../hooks/useSelectionTitle";
+import type { Distillation } from "../hooks/useMapGroups";
 import type { MapGraphNode } from "../types";
 import { attributeShares, conversationShares } from "./ClusterSummary";
 import { type HistoryItem, HistoryRows } from "./HistoryPanel";
