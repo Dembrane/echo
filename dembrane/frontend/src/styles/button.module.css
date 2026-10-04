@@ -21,24 +21,23 @@
 	outline-offset: 2px;
 }
 
-/* Disabled per the style guide: neutral fill, graphite label at full strength,
- * pollen border on hover, cotton candy on press. */
+/* Disabled follows every control (rules.css): the button keeps its own shape
+ * (box, pill, or none for subtle), its line turns pollen, its label goes quiet,
+ * and it fills with nothing. Pressing it anyway flashes the line red
+ * (src/lib/tamper.ts). Loading is not disabled: it keeps its look. */
 .root:disabled:not([data-loading="true"]),
 .root[data-disabled]:not([data-loading="true"]) {
-	background-color: var(--app-quiet);
-	border: 1px solid transparent;
-	color: var(--app-text);
+	background-color: transparent;
+	border: var(--app-stroke) solid var(--app-disabled);
+	color: var(--app-muted);
 	cursor: not-allowed;
+	font-weight: 240;
 	opacity: 1;
 	pointer-events: all;
 }
-
-.root:disabled:not([data-loading="true"]):hover,
-.root[data-disabled]:not([data-loading="true"]):hover {
-	border-color: var(--app-disabled-hover);
-}
-
-.root:disabled:not([data-loading="true"]):active,
-.root[data-disabled]:not([data-loading="true"]):active {
-	border-color: var(--app-disabled-pressed);
+.root:is([data-variant="subtle"], [data-variant="transparent"]):is(
+		:disabled,
+		[data-disabled]
+	):not([data-loading="true"]) {
+	border-color: transparent;
 }

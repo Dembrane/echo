@@ -44,12 +44,9 @@
 	--app-on-fill: #ffffff;
 	--app-fill-hover: #2d2d2c;
 	--app-on-fill-hover: #ffffff;
-	/* Disabled is pollen: a control that can't be used draws its lines in it.
-	 * A disabled button answers a hover in it and a press in cotton candy
-	 * (button.module.css). */
+	/* Disabled is pollen: a control or button that can't be used draws its
+	 * lines in it (and flashes --app-danger when pressed anyway). */
 	--app-disabled: #ffd166;
-	--app-disabled-hover: var(--app-disabled);
-	--app-disabled-pressed: #ff9aa2;
 }
 
 :root {
@@ -435,8 +432,9 @@
 :root .mantine-Accordion-item {
 	transition: background-color 120ms ease;
 }
+/* Hovering an item lifts it to white, as a card you press does (rule 03). */
 :root .mantine-Accordion-item:hover {
-	background: var(--app-quiet);
+	background: var(--app-surface);
 }
 :root .mantine-Accordion-control,
 :root .mantine-Accordion-control:hover {
@@ -953,6 +951,21 @@
 	color: var(--app-muted);
 	opacity: 1;
 }
+/* A disabled control's label goes quiet with it: the muted weight and grey. */
+:root
+	.mantine-InputWrapper-root:has(
+		.mantine-Input-input:is(:disabled, [data-disabled])
+	)
+	.mantine-InputWrapper-label,
+:root
+	:is(.mantine-Checkbox-root, .mantine-Radio-root, .mantine-Switch-root):has(
+		input:disabled
+	)
+	:is(.mantine-Checkbox-label, .mantine-Radio-label, .mantine-Switch-label),
+:root .mantine-Chip-label[data-disabled] {
+	color: var(--app-muted);
+	font-weight: 240;
+}
 /* Checked but fixed: the fill drops to the control grey inside the yellow. */
 :root :is(.mantine-Checkbox-input, .mantine-Radio-radio):checked:disabled,
 :root .mantine-Switch-input:checked:disabled + .mantine-Switch-track {
@@ -973,6 +986,13 @@
 		.mantine-Radio-radio,
 		.mantine-Switch-track,
 		.mantine-Chip-label
+	) {
+	animation: app-tamper 500ms ease-out;
+}
+:root
+	.mantine-Button-root[data-tamper]:not(
+		[data-variant="subtle"],
+		[data-variant="transparent"]
 	) {
 	animation: app-tamper 500ms ease-out;
 }
