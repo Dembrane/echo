@@ -812,7 +812,12 @@ export const ProjectReportRoute = () => {
 					data && (
 						<StatusLine
 							isPublic={data.status === "published"}
-							onceAt={scheduledReports[0]?.scheduled_at}
+							onceAt={
+								scheduledReports
+									.map((r) => r.scheduled_at)
+									.filter(Boolean)
+									.sort()[0]
+							}
 						/>
 					)
 				}
