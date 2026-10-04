@@ -634,3 +634,23 @@ export const useMapEvents = (projectId: string) => {
 		onEvent,
 	);
 };
+
+/**
+ * The tags on a project's conversations, for the map's tag filter and tag
+ * colours. Ids and tags only, without chunks; off where the map runs on a
+ * fixture.
+ * ponytail: the list stops at 1000 conversations and still costs the server
+ * more than the map needs; ECHO-1002 moves tags into the map payload.
+ */
+export const useMapConversationTags = (projectId: string, enabled = true) =>
+	useQuery({
+		enabled: enabled && Boolean(projectId),
+		queryFn: () =>
+			bff.get<Array<{ id: string; tags?: unknown }>>("/conversations", {
+				include_tags: true,
+				limit: 1000,
+				project_id: projectId,
+			}),
+		queryKey: ["map", projectId, "conversation-tags"],
+		staleTime: 60_000,
+	});

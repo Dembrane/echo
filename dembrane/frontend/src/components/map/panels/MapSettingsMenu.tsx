@@ -54,6 +54,10 @@ type MapSettingsMenuProps = {
 	conversations?: ReadonlyArray<MapConversation>;
 	hiddenConversations?: ReadonlySet<string>;
 	onHiddenConversationsChange?: (hidden: ReadonlySet<string>) => void;
+	/** Tags on the map's conversations; none where the map has no tags to offer. */
+	tags?: ReadonlyArray<MapConversation>;
+	chosenTags?: ReadonlySet<string>;
+	onChosenTagsChange?: (chosen: ReadonlySet<string>) => void;
 };
 
 export type MapConversation = { id: string; name: string; color: string };
@@ -182,7 +186,20 @@ export const MapSettingsMenu = ({
 	conversations = NO_CONVERSATIONS,
 	hiddenConversations = NONE_HIDDEN,
 	onHiddenConversationsChange,
+	tags = NO_CONVERSATIONS,
+	chosenTags = NONE_HIDDEN,
+	onChosenTagsChange,
 }: MapSettingsMenuProps) => {
+	const toggleTag = (id: string, chosen: boolean) => {
+		const next = new Set(chosenTags);
+		if (chosen) next.add(id);
+		else next.delete(id);
+		onChosenTagsChange?.(next);
+	};
+	// Colouring by tag is offered only where there are tags to colour by.
+	const colorOptions = MAP_COLOR_BY_OPTIONS.filter(
+		(option) => option !== "tag" || tags.length > 0,
+	);
 	const toggleConversation = (id: string, shown: boolean) => {
 		const next = new Set(hiddenConversations);
 		if (shown) next.delete(id);
@@ -250,7 +267,7 @@ export const MapSettingsMenu = ({
 						}
 					>
 						<Stack gap="xs" mt="xs">
-							{MAP_COLOR_BY_OPTIONS.map((option) => (
+							{colorOptions.map((option) => (
 								<Radio
 									key={option}
 									size="sm"
@@ -260,6 +277,48 @@ export const MapSettingsMenu = ({
 							))}
 						</Stack>
 					</Radio.Group>
+
+					{onChosenTagsChange && tags.length > 0 && (
+						<>
+							<Divider />
+							<Stack gap="xs">
+								<Stack gap={4}>
+									<Text size="xs">
+										<Trans>Tags</Trans>
+									</Text>
+									<Text size="xs" c="dimmed">
+										<Trans>
+											Show only conversations with any of the ticked tags.
+										</Trans>
+									</Text>
+								</Stack>
+								<ScrollArea.Autosize mah={160} type="auto">
+									<Stack gap="xs">
+										{tags.map((tag) => (
+											<Checkbox
+												key={tag.id}
+												size="sm"
+												label={
+													<span className="inline-flex items-center gap-2">
+														<span
+															aria-hidden="true"
+															className="inline-block size-2 shrink-0 rounded-full"
+															style={{ backgroundColor: tag.color }}
+														/>
+														{tag.name}
+													</span>
+												}
+												checked={chosenTags.has(tag.id)}
+												onChange={(event) =>
+													toggleTag(tag.id, event.currentTarget.checked)
+												}
+											/>
+										))}
+									</Stack>
+								</ScrollArea.Autosize>
+							</Stack>
+						</>
+					)}
 
 					{onHiddenConversationsChange && conversations.length > 1 && (
 						<>

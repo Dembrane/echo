@@ -168,6 +168,8 @@ export type MapExperienceProps = {
 	 * Explore panel that lists titles is not drawn.
 	 */
 	titles?: boolean;
+	/** The map's tags, for the tag legend; host map only. */
+	tags?: ReadonlyArray<{ name: string; slot: number }>;
 	/** False where the payload withholds provenance: no source line is shown. */
 	provenance?: boolean;
 };
@@ -195,6 +197,7 @@ export const MapExperience = ({
 	offline,
 	titles = true,
 	provenance = true,
+	tags,
 }: MapExperienceProps) => {
 	const { i18n } = useLingui();
 
@@ -488,6 +491,7 @@ export const MapExperience = ({
 								darkMode={settings.darkMode}
 								conversations={graph.conversationSlotCount}
 								names={graph.conversationNames}
+								tags={tags}
 							/>
 						)}
 					</section>
