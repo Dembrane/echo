@@ -661,6 +661,21 @@ describe("AudienceScreen lifecycle", () => {
 		fromDeck({ to: "previous", type: "navigate" });
 		fromDeck({ to: "previous", type: "navigate" });
 		expect(navigated()).toEqual(["next", "previous"]);
+
+		// End inside an unlocked opening goes to the last activity.
+		fromDeck({
+			open: true,
+			screen: "data",
+			step: 3,
+			steps: 3,
+			type: "opening",
+		});
+		fromDeck({ to: "last", type: "navigate" });
+		expect(
+			screen
+				.getByRole("tab", { name: "Tensions" })
+				.getAttribute("aria-selected"),
+		).toBe("true");
 	});
 
 	it("follows the page's event stream in an embedded preview and opens none of its own", async () => {

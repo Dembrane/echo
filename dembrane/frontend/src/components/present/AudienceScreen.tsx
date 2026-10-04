@@ -817,6 +817,15 @@ export const AudienceScreen = ({
 	// through its opening itself: it knows the screens and the demo's gate.
 	const go = (to: DeckDirection) => {
 		if (!audience) return;
+		if (to === "first") {
+			const screen = OPENING_SCREENS.find((kind) => openingAvailability[kind]);
+			if (screen) {
+				setOpeningOpen(true);
+				setOpeningScreen(screen);
+				postDeckCommand("opening", { screen });
+			} else if (blocks[0]) selectBlock(blocks[0]);
+			return;
+		}
 		if (openingOpen) {
 			if (to === "next" || to === "previous") {
 				postDeckCommand("navigate", { to });
@@ -824,25 +833,15 @@ export const AudienceScreen = ({
 				if (to === "next" && slideIndex >= openingCount && blocks[0]) {
 					selectBlock(blocks[0]);
 				}
-			} else if (to === "last" && !openingLocked && blocks.length) {
+			} else if (!openingLocked && blocks.length) {
 				selectBlock(blocks[blocks.length - 1]);
 			}
 			return;
 		}
 		const index = activeBlock ? blocks.indexOf(activeBlock) : -1;
-		if (to === "first" || (to === "previous" && index <= 0)) {
-			if (!openingCount) {
-				if (to === "first" && blocks[0]) selectBlock(blocks[0]);
-				return;
-			}
-			if (to === "previous") {
-				postDeckCommand("navigate", { to });
-				return;
-			}
-			const screen = openingAvailability.intro ? "intro" : "data";
-			setOpeningOpen(true);
-			setOpeningScreen(screen);
-			postDeckCommand("opening", { screen });
+		if (to === "previous" && index <= 0) {
+			// Before the first activity is the opening's last screen, which the deck opens.
+			if (openingCount) postDeckCommand("navigate", { to });
 			return;
 		}
 		const next =
