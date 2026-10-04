@@ -44,9 +44,11 @@
 	--app-on-fill: #ffffff;
 	--app-fill-hover: #2d2d2c;
 	--app-on-fill-hover: #ffffff;
-	/* A disabled button answers a hover in pollen and a press in cotton candy
+	/* Disabled is pollen: a control that can't be used draws its lines in it.
+	 * A disabled button answers a hover in it and a press in cotton candy
 	 * (button.module.css). */
-	--app-disabled-hover: #ffd166;
+	--app-disabled: #ffd166;
+	--app-disabled-hover: var(--app-disabled);
 	--app-disabled-pressed: #ff9aa2;
 }
 
@@ -794,11 +796,6 @@
 	.mantine-Switch-thumb {
 	background: var(--app-on-fill);
 }
-/* Disabled: the off thumb is already the control grey, so a disabled switch
- * also fades, or disabled-off would read as plain off. */
-:root .mantine-Switch-input:disabled + .mantine-Switch-track {
-	opacity: 0.5;
-}
 :root .mantine-Switch-input:checked + .mantine-Switch-track {
 	background: var(--app-action-fill);
 	border-color: var(--app-action-fill);
@@ -935,15 +932,49 @@
 	color: var(--app-control-rule);
 	cursor: not-allowed;
 }
-/* A disabled field stays white; Mantine's own fade lowers the contrast. */
+/* A control's lines say its state: grey available, blue active, red error,
+ * pollen disabled. Disabled keeps the control's shape and its white; only the
+ * lines turn yellow and the text fades. Pressing it anyway flashes the lines
+ * red (data-tamper, set by src/lib/tamper.ts). */
+:root
+	:is(.mantine-Input-input, .mantine-Checkbox-input, .mantine-Radio-radio):is(
+		:disabled,
+		[data-disabled]
+	),
+:root .mantine-Switch-input:disabled + .mantine-Switch-track,
+:root .mantine-Chip-label[data-disabled],
+:root .mantine-SegmentedControl-root[data-disabled],
+:root .mantine-Dropzone-root[data-disabled] {
+	--app-rule-color: var(--app-disabled);
+	cursor: not-allowed;
+}
 :root .mantine-Input-input:is(:disabled, [data-disabled]) {
 	background-color: var(--app-surface);
+	color: var(--app-muted);
+	opacity: 1;
 }
-/* A disabled choice fades as the switch does, checked or not, so it never
- * reads as one you can set. */
-:root :is(.mantine-Checkbox-input, .mantine-Radio-radio):disabled {
-	cursor: not-allowed;
-	opacity: 0.5;
+/* Checked but fixed: the fill drops to the control grey inside the yellow. */
+:root :is(.mantine-Checkbox-input, .mantine-Radio-radio):checked:disabled,
+:root .mantine-Switch-input:checked:disabled + .mantine-Switch-track {
+	background-color: var(--app-control-rule);
+	border-color: var(--app-disabled);
+}
+@keyframes app-tamper {
+	0%,
+	50% {
+		border-color: var(--app-danger);
+	}
+}
+:root
+	[data-tamper]
+	:is(
+		.mantine-Input-input,
+		.mantine-Checkbox-input,
+		.mantine-Radio-radio,
+		.mantine-Switch-track,
+		.mantine-Chip-label
+	) {
+	animation: app-tamper 500ms ease-out;
 }
 
 /* The markdown editor is square like everything else: its own radius tokens

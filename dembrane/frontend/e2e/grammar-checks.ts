@@ -26,6 +26,7 @@ export function grammarAudit(opts: AuditOptions): AuditResult {
 		FIELD_LINE,
 		"rgb(41, 87, 223)", // #2957df active
 		"rgb(192, 67, 78)", // #c0434e error
+		"rgb(255, 209, 102)", // #ffd166 disabled (pollen)
 		"rgba(0, 0, 0, 0)",
 	]);
 	const WEIGHTS = new Set([240, 320, 600]);
