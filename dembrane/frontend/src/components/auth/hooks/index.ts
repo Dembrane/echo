@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { useLocation, useSearchParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
-import { resetPromptSeen } from "@/features/accounts/help/tasksPrompt";
+import { resetPromptSeen } from "@/features/accounts/help/tasksPromptState";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import {
 	AuthError,

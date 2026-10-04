@@ -19,6 +19,7 @@
     "test": "vitest",
     "lint:fix": "biome lint --write .",
     "check": "biome check .",
+    "check:case": "node scripts/check-path-case.mjs",
     "fix": "biome check --write .",
     "preview": "vite preview"
   },

@@ -348,6 +348,10 @@ jobs:
           path: ${{ steps.pnpm.outputs.store }}
           key: pnpm-${{ runner.os }}-${{ hashFiles('dembrane/frontend/pnpm-lock.yaml') }}
           restore-keys: pnpm-${{ runner.os }}-
+      # A Mac's disk ignores case, Linux's doesn't: fails when a path or an import
+      # would mean a different file (or none) on one of them.
+      - name: Check path case
+        run: node scripts/check-path-case.mjs
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Lint

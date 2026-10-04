@@ -21,7 +21,7 @@ import {
 	vi,
 } from "vitest";
 import type { TasksSummaryT } from "../contract/contract.gen";
-import { TASKS_PROMPT_SEEN_KEY } from "./tasksPrompt";
+import { TASKS_PROMPT_SEEN_KEY } from "./tasksPromptState";
 import { summarise } from "./tasksSummary";
 
 // The sidebar's Tasks entry and the popup after sign-in read one summary, here a small
