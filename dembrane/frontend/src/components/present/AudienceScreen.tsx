@@ -668,22 +668,12 @@ export const AudienceScreen = ({
 		) => {
 			if (!audience) return;
 			const message =
-				command === "visibility"
-					? deckVisibilityCommand(audience.id, extra.visible === true)
-					: command === "opening"
-						? deckOpeningCommand(audience.id, extra.screen as OpeningScreen)
-						: command === "theme"
-							? deckThemeCommand(audience.id, extra.theme as AudienceTheme)
-							: deckBlockCommand(
 				command === "navigate"
 					? deckNavigateCommand(audience.id, extra.to as "next" | "previous")
 					: command === "visibility"
 						? deckVisibilityCommand(audience.id, extra.visible === true)
 						: command === "opening"
-							? deckOpeningCommand(
-									audience.id,
-									extra.screen as "intro" | "data",
-								)
+							? deckOpeningCommand(audience.id, extra.screen as OpeningScreen)
 							: command === "theme"
 								? deckThemeCommand(audience.id, extra.theme as AudienceTheme)
 								: deckBlockCommand(
