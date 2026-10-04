@@ -1,7 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Chip, Group, Stack, Text, Textarea } from "@mantine/core";
-import { PencilSimpleIcon } from "@phosphor-icons/react";
+import { Checkbox, Stack, Text, Textarea } from "@mantine/core";
 import { useCallback, useEffect, useState } from "react";
 import focusOptionsData from "@/data/reportFocusOptions.json";
 
@@ -113,32 +112,24 @@ export const ReportFocusSelector = ({
 			<Text size="xs" c="dimmed">
 				<Trans>Select up to 2 focus areas for your report</Trans>
 			</Text>
-			<Group wrap="wrap">
-				<Chip.Group
-					multiple
-					value={[...selectedIds]}
-					onChange={handlePresetsChange}
-				>
+			{/* A list you pick from: a checkbox per row (a joined chip row wrapped). */}
+			<Checkbox.Group value={[...selectedIds]} onChange={handlePresetsChange}>
+				<Stack gap="sm">
 					{options.map((option) => (
-						<Chip
+						<Checkbox
 							key={option.id}
 							value={option.id}
+							label={getLabel(option.labels, language)}
 							disabled={atLimit && !selectedIds.has(option.id)}
-						>
-							{getLabel(option.labels, language)}
-						</Chip>
+						/>
 					))}
-				</Chip.Group>
-
-				{/* Write your own */}
-				<Chip
-					checked={showCustom}
-					onChange={handleToggleCustom}
-					icon={<PencilSimpleIcon size={16} />}
-				>
-					<Trans>Or write your own</Trans>
-				</Chip>
-			</Group>
+				</Stack>
+			</Checkbox.Group>
+			<Checkbox
+				checked={showCustom}
+				onChange={handleToggleCustom}
+				label={<Trans>Or write your own</Trans>}
+			/>
 
 			{showCustom && (
 				<Textarea
