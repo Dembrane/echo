@@ -9,7 +9,7 @@ const edge = (source: string, target: string): Edge => ({
 });
 const edges = [edge("a", "b"), edge("b", "c"), edge("c", "d")];
 const relations: MapRelation[] = [
-	{ basis: "inferred", id: "r1", source: "a", target: "z", type: "supports" },
+	{ basis: "inferred", id: "r1", source: "b", target: "z", type: "supports" },
 ];
 
 describe("the local graph's neighbourhood", () => {

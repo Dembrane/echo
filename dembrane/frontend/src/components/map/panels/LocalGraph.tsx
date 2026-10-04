@@ -23,17 +23,19 @@ export const neighbourhood = (
 	relations: ReadonlyArray<MapRelation>,
 	expand: boolean,
 ): { ids: string[]; links: GraphLink[] } => {
+	const focus = new Set(focusIds);
 	const ids = new Set(focusIds);
 	if (expand) {
+		// Direct neighbours of the focus only, whatever order the edges come in.
 		for (const edge of edges) {
-			if (ids.has(edge.source) || ids.has(edge.target)) {
+			if (focus.has(edge.source) || focus.has(edge.target)) {
 				ids.add(edge.source);
 				ids.add(edge.target);
 			}
 		}
 		for (const relation of relations) {
-			if (focusIds.includes(relation.source)) ids.add(relation.target);
-			if (focusIds.includes(relation.target)) ids.add(relation.source);
+			if (focus.has(relation.source)) ids.add(relation.target);
+			if (focus.has(relation.target)) ids.add(relation.source);
 		}
 	}
 	const links: GraphLink[] = [
