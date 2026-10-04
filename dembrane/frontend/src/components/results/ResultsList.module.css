@@ -4,19 +4,19 @@
    `[data-theme="dark"]`, never the operating system. */
 
 .list {
-	--parchment: #f6f4f1;
-	--paper: #ffffff;
-	--graphite: #2d2d2c;
-	--blue: #2957df;
-	--hairline: #e6e3df;
+	--parchment: var(--app-background);
+	--paper: var(--app-surface);
+	--graphite: var(--app-text);
+	--blue: var(--app-action);
+	--hairline: var(--app-quiet);
 	/* Three inks, and the two that carry words are readable on the dashboard's
 	   own parchment: soft ink for small print at 4.5:1, resting ink for a
 	   control that says itself in a glyph or a number at 3:1, faint ink for
 	   the lines and underlines that are not asked to be read. */
-	--ink-soft: rgba(45, 45, 44, 0.72);
-	--ink-rest: rgba(45, 45, 44, 0.62);
-	--ink-faint: rgba(45, 45, 44, 0.38);
-	--ink-tag: rgba(45, 45, 44, 0.78);
+	--ink-soft: color-mix(in srgb, var(--app-text) 72%, transparent);
+	--ink-rest: color-mix(in srgb, var(--app-text) 62%, transparent);
+	--ink-faint: color-mix(in srgb, var(--app-text) 38%, transparent);
+	--ink-tag: color-mix(in srgb, var(--app-text) 78%, transparent);
 	--curve: cubic-bezier(0.25, 0.8, 0.3, 1);
 	/* The height of one line of words, which the controls beside them centre on. */
 	--line: calc(1.45 * var(--app-font-size-sm, 0.9375rem));
@@ -33,11 +33,11 @@
 }
 
 :global([data-theme="dark"]) .list {
-	--parchment: #1b1b1a;
-	--paper: #262625;
+	--parchment: #000000;
+	--paper: #161615;
 	--graphite: #f6f4f1;
 	--blue: #7c9bff;
-	--hairline: #3a3a38;
+	--hairline: #262625;
 	--ink-soft: rgba(246, 244, 241, 0.74);
 	--ink-rest: rgba(246, 244, 241, 0.64);
 	--ink-faint: rgba(246, 244, 241, 0.4);

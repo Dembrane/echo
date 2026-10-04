@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import { describe, expect, it } from "vitest";
+import { darkRoles } from "@/colors";
 
 const styles = readFileSync(
 	new URL("../../../../platform/packages/popcorn/static/styles.css", import.meta.url),
@@ -108,8 +109,9 @@ describe("deck dark theme", () => {
 			expect(darkRoot).toMatch(new RegExp(`${token}:\\s*\\S`));
 		}
 		// the ground goes dark and the ink goes parchment: the names stay, the
-		// roles turn over
-		expect(darkRoot).toMatch(/--parchment:\s*#1B1B1A/i);
+		// roles turn over. The ground is the app's own dark, so room and app agree.
+		expect(darkRoot).toMatch(new RegExp(`--parchment:\\s*${darkRoles.bg}`, "i"));
+		expect(darkRoot).toMatch(new RegExp(`--paper:\\s*${darkRoles.surface}`, "i"));
 		expect(darkRoot).toMatch(/--graphite:\s*#F6F4F1/i);
 	});
 
@@ -134,7 +136,7 @@ describe("deck dark theme", () => {
 		// modules are drawn on: dark on light, then light on dark
 		expect(baseRoot).toMatch(/--qr-card:\s*#F6F4F1/i);
 		expect(baseRoot).toMatch(/--qr-ink:\s*#2D2D2C/i);
-		expect(darkRoot).toMatch(/--qr-card:\s*#1B1B1A/i);
+		expect(darkRoot).toMatch(new RegExp(`--qr-card:\\s*${darkRoles.bg}`, "i"));
 		expect(darkRoot).toMatch(/--qr-ink:\s*#F6F4F1/i);
 		// the server draws one stroked path over a transparent field
 		const modules = styles.slice(

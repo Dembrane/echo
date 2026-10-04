@@ -1007,7 +1007,6 @@ export const AudienceScreen = ({
 							href={frameDetails.qrUrl}
 							aria-label={frameDetails.qrLabel || deckChrome?.qrLabel || "QR"}
 							className={classes.qrCode}
-							inverted={dark}
 						/>
 						{(frameDetails.qrLabel || deckChrome?.qrLabel) && (
 							<span className={classes.qrLabel}>

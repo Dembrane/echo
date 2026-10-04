@@ -10,7 +10,6 @@ import { CURRENT_BRAND } from "./Logo";
 // quiet zone carries the colour the modules sit on. Scanners that skip the
 // inverted pass do not, which is why only a dark screen asks for this.
 const INVERTED_INK = "#F6F4F1";
-const INVERTED_FIELD = "#1B1B1A";
 
 interface QRCodeProps {
 	value: string;
@@ -41,11 +40,8 @@ export const QRCode = ({
 	const [hovered, setHovered] = useState(false);
 	const dark = useComputedColorScheme("light") === "dark";
 	const isInverted = inverted ?? dark;
-	const field = isInverted
-		? inverted === undefined
-			? darkRoles.bg
-			: INVERTED_FIELD
-		: "#FFFFFF";
+	// Turned over, the quiet zone is the page's own dark ground.
+	const field = isInverted ? darkRoles.bg : "#FFFFFF";
 
 	const qrElement = (
 		<Q

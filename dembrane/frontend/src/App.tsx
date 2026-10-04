@@ -46,6 +46,7 @@ function WorkspaceProvider({ children }: PropsWithChildren) {
 
 import { mainRouter, participantRouter } from "./Router";
 import { cssVariablesResolver, theme } from "./theme";
+import { roomColorSchemeManager } from "./components/present/hooks/useAudienceTheme";
 
 // Pilot hard-block (matrix §8): intercept 402 + copy-locked body from
 // host-side mutations and fan out a level-3 modal. Detection is
@@ -152,11 +153,13 @@ export const App = () => {
 	if (audienceEntry) {
 		return (
 			<QueryClientProvider client={queryClient}>
-				{/* The room has its own light/dark switch (useAudienceTheme) for now. */}
+				{/* The app's light or dark, but a link's ?theme= wins and System
+				    opens light: a room never follows the laptop's OS. */}
 				<MantineProvider
 					theme={theme}
 					cssVariablesResolver={cssVariablesResolver}
-					forceColorScheme="light"
+					colorSchemeManager={roomColorSchemeManager}
+					defaultColorScheme="light"
 				>
 					<IconContext.Provider value={{ weight: "light" }}>
 						<I18nProvider>

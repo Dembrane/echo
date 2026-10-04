@@ -19,6 +19,7 @@ import {
 	AUDIENCE_RETRY_MIN_MS,
 	AUDIENCE_SAFETY_REFRESH_MS,
 } from "./audienceContract";
+import { roomColorSchemeManager } from "./hooks/useAudienceTheme";
 
 const { useServerEventsMock } = vi.hoisted(() => ({
 	useServerEventsMock: vi.fn(),
@@ -69,7 +70,11 @@ const renderAudience = (props: {
 	render(
 		<QueryClientProvider client={new QueryClient()}>
 			<I18nProvider i18n={i18n}>
-				<MantineProvider>
+				{/* As App.tsx mounts the room: a link's ?theme= wins, System opens light. */}
+				<MantineProvider
+					colorSchemeManager={roomColorSchemeManager}
+					defaultColorScheme="light"
+				>
 					<AudienceScreen {...props} />
 				</MantineProvider>
 			</I18nProvider>

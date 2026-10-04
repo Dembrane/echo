@@ -27,6 +27,11 @@
         try {
           var stored = localStorage.getItem('mantine-color-scheme-value');
           var dark = stored === 'dark' || (stored !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          // The room's screen: a link's ?theme= wins, and it never follows the OS (useAudienceTheme).
+          if (/^\/present\/(screen|public)\//.test(window.location.pathname)) {
+            var asked = new URLSearchParams(window.location.search).get('theme');
+            dark = asked === 'dark' || (asked !== 'light' && stored === 'dark');
+          }
           document.documentElement.setAttribute('data-mantine-color-scheme', dark ? 'dark' : 'light');
           var font = "'DM Sans Variable', sans-serif";
           var style = document.documentElement.style;
