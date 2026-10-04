@@ -44,12 +44,9 @@
 	--app-on-fill: #ffffff;
 	--app-fill-hover: #2d2d2c;
 	--app-on-fill-hover: #ffffff;
-	/* Disabled is pollen: a control that can't be used draws its lines in it.
-	 * A disabled button answers a hover in it and a press in cotton candy
-	 * (button.module.css). */
+	/* Disabled is pollen: a control or button that can't be used draws its
+	 * lines in it (and flashes --app-danger when pressed anyway). */
 	--app-disabled: #ffd166;
-	--app-disabled-hover: var(--app-disabled);
-	--app-disabled-pressed: #ff9aa2;
 }
 
 :root {
@@ -989,6 +986,13 @@
 		.mantine-Radio-radio,
 		.mantine-Switch-track,
 		.mantine-Chip-label
+	) {
+	animation: app-tamper 500ms ease-out;
+}
+:root
+	.mantine-Button-root[data-tamper]:not(
+		[data-variant="subtle"],
+		[data-variant="transparent"]
 	) {
 	animation: app-tamper 500ms ease-out;
 }
