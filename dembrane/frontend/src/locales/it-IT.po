@@ -1243,7 +1243,7 @@ msgstr "Richieste di accesso"
 #: src/routes/admin/AdminSettingsRoute.tsx:2571
 #: src/routes/admin/AdminSettingsRoute.tsx:2990
 #: src/features/sidebar/views/org/OrgHomeView.tsx:143
-#: src/features/sidebar/shell/UserMenu.tsx:81
+#: src/features/sidebar/shell/UserMenu.tsx:82
 #: src/features/sidebar/hooks/useSearchHits.ts:146
 #: src/components/settings/AccountSettingsCard.tsx:130
 msgid "Account"
@@ -3446,7 +3446,7 @@ msgstr "Clone project"
 #~ msgid "Clone Project"
 #~ msgstr "Clone Project"
 
-#: src/theme.tsx:305
+#: src/theme.tsx:306
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:790
 #: src/components/results/ResultRow.tsx:432
 #: src/components/results/ResultRow.tsx:435
@@ -4357,7 +4357,7 @@ msgstr "Crea metodologia"
 #~ msgid "Create new organisation"
 #~ msgstr "Crea nuova organizzazione"
 
-#: src/features/sidebar/shell/UserMenu.tsx:171
+#: src/features/sidebar/shell/UserMenu.tsx:180
 #: src/components/organisation/CreateOrganisationModal.tsx:169
 msgid "Create organisation"
 msgstr "Crea organizzazione"
@@ -4550,7 +4550,7 @@ msgstr "Pericolo"
 msgid "Danger zone"
 msgstr "Zona di pericolo"
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:33
+#: src/components/settings/ColorSchemeSettingsCard.tsx:45
 msgid "Dark"
 msgstr "Scuro"
 
@@ -6254,7 +6254,7 @@ msgstr "In conclusione"
 msgid "First name"
 msgstr "Nome"
 
-#: src/theme.tsx:316
+#: src/theme.tsx:317
 msgid "First page"
 msgstr "Prima pagina"
 
@@ -7688,7 +7688,7 @@ msgid "Kinds of finding"
 msgstr "Tipi di risultati"
 
 #: src/routes/project/present/PresentRoute.tsx:130
-#: src/features/sidebar/shell/UserMenu.tsx:145
+#: src/features/sidebar/shell/UserMenu.tsx:154
 #: src/components/settings/LanguageSettingsCard.tsx:10
 #: src/components/report/UpdateReportModalButton.tsx:265
 #: src/components/report/UpdateReportModalButton.tsx:339
@@ -7714,7 +7714,7 @@ msgstr "Mese scorso"
 msgid "Last name"
 msgstr "Cognome"
 
-#: src/theme.tsx:317
+#: src/theme.tsx:318
 msgid "Last page"
 msgstr "Ultima pagina"
 
@@ -7865,7 +7865,7 @@ msgstr "Licenze concesse"
 msgid "Lifetime cap"
 msgstr "Limite a vita"
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:32
+#: src/components/settings/ColorSchemeSettingsCard.tsx:44
 msgid "Light"
 msgstr "Chiaro"
 
@@ -8197,7 +8197,7 @@ msgstr "Accedi comunque"
 msgid "Log in to {resolvedWorkspaceName} to continue."
 msgstr "Accedi a {resolvedWorkspaceName} per continuare."
 
-#: src/features/sidebar/shell/UserMenu.tsx:181
+#: src/features/sidebar/shell/UserMenu.tsx:190
 msgid "Log out"
 msgstr "Esci"
 
@@ -8945,7 +8945,7 @@ msgstr "Prossimo cambio tra <0>{remainingSeconds} s</0>"
 msgid "Next invoice"
 msgstr "Prossima fattura"
 
-#: src/theme.tsx:318
+#: src/theme.tsx:319
 msgid "Next page"
 msgstr "Pagina successiva"
 
@@ -10973,7 +10973,7 @@ msgstr "Preview: The quick brown fox jumps over the lazy dog."
 msgid "Previous"
 msgstr "Precedente"
 
-#: src/theme.tsx:319
+#: src/theme.tsx:320
 msgid "Previous page"
 msgstr "Pagina precedente"
 
@@ -12932,7 +12932,7 @@ msgstr "Vedi opzioni di upgrade"
 msgid "See when transcription is in progress."
 msgstr "Vedi quando la trascrizione è in corso."
 
-#: src/features/sidebar/shell/UserMenu.tsx:53
+#: src/features/sidebar/shell/UserMenu.tsx:54
 msgid "See you soon"
 msgstr "See you soon"
 
@@ -13263,7 +13263,7 @@ msgstr "Configura un nuovo webhook da zero"
 msgid "Set up with the assistant after creating"
 msgstr "Configura con l'assistente dopo la creazione"
 
-#: src/features/sidebar/shell/UserMenu.tsx:127
+#: src/features/sidebar/shell/UserMenu.tsx:128
 msgid "Set up workspace"
 msgstr "Configura spazio di lavoro"
 
@@ -13893,7 +13893,7 @@ msgid "Spotlight"
 msgstr "In primo piano"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:3157
-#: src/features/sidebar/shell/UserMenu.tsx:158
+#: src/features/sidebar/shell/UserMenu.tsx:167
 msgid "Staff"
 msgstr "Staff"
 
@@ -14294,7 +14294,7 @@ msgstr "Disattivarlo fa parte di un piano a pagamento."
 msgid "Switching to another tool"
 msgstr "Passo a un altro strumento"
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:31
+#: src/components/settings/ColorSchemeSettingsCard.tsx:43
 #: src/components/settings/AuditLogsCard.tsx:88
 msgid "System"
 msgstr "Sistema"
@@ -14304,7 +14304,7 @@ msgstr "Sistema"
 msgid "System default"
 msgstr "Predefinito di sistema"
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:25
+#: src/components/settings/ColorSchemeSettingsCard.tsx:58
 msgid "System follows your device's light or dark setting."
 msgstr "Sistema segue l'impostazione chiara o scura del tuo dispositivo."
 
@@ -14907,11 +14907,13 @@ msgstr "Il loro rappresentante titolare di questi dati. Viene aggiunto come osse
 msgid "Their screen is locked or the tab is hidden. Recording pauses until they come back."
 msgstr "Lo schermo è bloccato o la scheda è nascosta. La registrazione resta in pausa finché non tornano."
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:22
+#: src/features/sidebar/shell/UserMenu.tsx:148
+#: src/components/settings/ColorSchemeSettingsCard.tsx:39
+#: src/components/settings/ColorSchemeSettingsCard.tsx:55
 msgid "Theme"
 msgstr "Tema"
 
-#: src/features/sidebar/shell/UserMenu.tsx:95
+#: src/features/sidebar/shell/UserMenu.tsx:96
 msgid "there"
 msgstr "lì"
 
@@ -16421,7 +16423,7 @@ msgstr "Usato sulle tue fatture. I prezzi non includono la VAT."
 msgid "Used the wrong address? <0>Register again</0>."
 msgstr "Hai usato l'indirizzo sbagliato? <0>Registrati di nuovo</0>."
 
-#: src/features/sidebar/shell/UserMenu.tsx:165
+#: src/features/sidebar/shell/UserMenu.tsx:174
 msgid "User settings"
 msgstr "Impostazioni utente"
 
@@ -17508,7 +17510,7 @@ msgstr "Non hai il permesso di creare spazi di lavoro in questa organizzazione. 
 msgid "You don't have permission to invite to any workspace in this organisation."
 msgstr "Non hai il permesso di inviare inviti a nessuno spazio di lavoro in questa organizzazione."
 
-#: src/features/sidebar/shell/UserMenu.tsx:136
+#: src/features/sidebar/shell/UserMenu.tsx:137
 msgid "You have a pending invite"
 msgstr "Hai un invito in sospeso"
 

@@ -1244,7 +1244,7 @@ msgstr "Zugriffsanfragen"
 #: src/routes/admin/AdminSettingsRoute.tsx:2571
 #: src/routes/admin/AdminSettingsRoute.tsx:2990
 #: src/features/sidebar/views/org/OrgHomeView.tsx:143
-#: src/features/sidebar/shell/UserMenu.tsx:81
+#: src/features/sidebar/shell/UserMenu.tsx:82
 #: src/features/sidebar/hooks/useSearchHits.ts:146
 #: src/components/settings/AccountSettingsCard.tsx:130
 msgid "Account"
@@ -3447,7 +3447,7 @@ msgstr "Projekt klonen"
 #~ msgid "Clone Project"
 #~ msgstr "Projekt klonen"
 
-#: src/theme.tsx:305
+#: src/theme.tsx:306
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:790
 #: src/components/results/ResultRow.tsx:432
 #: src/components/results/ResultRow.tsx:435
@@ -4358,7 +4358,7 @@ msgstr "Methode erstellen"
 #~ msgid "Create new organisation"
 #~ msgstr "Neue Organisation erstellen"
 
-#: src/features/sidebar/shell/UserMenu.tsx:171
+#: src/features/sidebar/shell/UserMenu.tsx:180
 #: src/components/organisation/CreateOrganisationModal.tsx:169
 msgid "Create organisation"
 msgstr "Organisation erstellen"
@@ -4551,7 +4551,7 @@ msgstr "Gefahr"
 msgid "Danger zone"
 msgstr "Gefahrenbereich"
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:33
+#: src/components/settings/ColorSchemeSettingsCard.tsx:45
 msgid "Dark"
 msgstr "Dunkel"
 
@@ -6255,7 +6255,7 @@ msgstr "Wird beendet"
 msgid "First name"
 msgstr "Vorname"
 
-#: src/theme.tsx:316
+#: src/theme.tsx:317
 msgid "First page"
 msgstr "Erste Seite"
 
@@ -7689,7 +7689,7 @@ msgid "Kinds of finding"
 msgstr "Arten von Erkenntnissen"
 
 #: src/routes/project/present/PresentRoute.tsx:130
-#: src/features/sidebar/shell/UserMenu.tsx:145
+#: src/features/sidebar/shell/UserMenu.tsx:154
 #: src/components/settings/LanguageSettingsCard.tsx:10
 #: src/components/report/UpdateReportModalButton.tsx:265
 #: src/components/report/UpdateReportModalButton.tsx:339
@@ -7715,7 +7715,7 @@ msgstr "Letzter Monat"
 msgid "Last name"
 msgstr "Nachname"
 
-#: src/theme.tsx:317
+#: src/theme.tsx:318
 msgid "Last page"
 msgstr "Letzte Seite"
 
@@ -7866,7 +7866,7 @@ msgstr "Lizenzen vergeben"
 msgid "Lifetime cap"
 msgstr "Lifetime-Obergrenze"
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:32
+#: src/components/settings/ColorSchemeSettingsCard.tsx:44
 msgid "Light"
 msgstr "Hell"
 
@@ -8198,7 +8198,7 @@ msgstr "Trotzdem anmelden"
 msgid "Log in to {resolvedWorkspaceName} to continue."
 msgstr "Melden Sie sich bei {resolvedWorkspaceName} an, um fortzufahren."
 
-#: src/features/sidebar/shell/UserMenu.tsx:181
+#: src/features/sidebar/shell/UserMenu.tsx:190
 msgid "Log out"
 msgstr "Abmelden"
 
@@ -8946,7 +8946,7 @@ msgstr "Nächste Änderung in <0>{remainingSeconds}s</0>"
 msgid "Next invoice"
 msgstr "Nächste Rechnung"
 
-#: src/theme.tsx:318
+#: src/theme.tsx:319
 msgid "Next page"
 msgstr "Nächste Seite"
 
@@ -10974,7 +10974,7 @@ msgstr "Vorschau: Der schnelle braune Fuchs springt über den faulen Hund."
 msgid "Previous"
 msgstr "Zurück"
 
-#: src/theme.tsx:319
+#: src/theme.tsx:320
 msgid "Previous page"
 msgstr "Vorherige Seite"
 
@@ -12933,7 +12933,7 @@ msgstr "Upgrade-Optionen ansehen"
 msgid "See when transcription is in progress."
 msgstr "Sehen, wann die Transkription läuft."
 
-#: src/features/sidebar/shell/UserMenu.tsx:53
+#: src/features/sidebar/shell/UserMenu.tsx:54
 msgid "See you soon"
 msgstr "Bis bald"
 
@@ -13264,7 +13264,7 @@ msgstr "Einen neuen Webhook von Grund auf einrichten"
 msgid "Set up with the assistant after creating"
 msgstr "Nach dem Erstellen mit dem Assistenten einrichten"
 
-#: src/features/sidebar/shell/UserMenu.tsx:127
+#: src/features/sidebar/shell/UserMenu.tsx:128
 msgid "Set up workspace"
 msgstr "Arbeitsbereich einrichten"
 
@@ -13894,7 +13894,7 @@ msgid "Spotlight"
 msgstr "Spotlight"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:3157
-#: src/features/sidebar/shell/UserMenu.tsx:158
+#: src/features/sidebar/shell/UserMenu.tsx:167
 msgid "Staff"
 msgstr "Mitarbeiter"
 
@@ -14295,7 +14295,7 @@ msgstr "Das Ausschalten ist Teil eines bezahlten Plans."
 msgid "Switching to another tool"
 msgstr "Ich wechsle zu einem anderen Tool"
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:31
+#: src/components/settings/ColorSchemeSettingsCard.tsx:43
 #: src/components/settings/AuditLogsCard.tsx:88
 msgid "System"
 msgstr "System"
@@ -14305,7 +14305,7 @@ msgstr "System"
 msgid "System default"
 msgstr "Systemstandard"
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:25
+#: src/components/settings/ColorSchemeSettingsCard.tsx:58
 msgid "System follows your device's light or dark setting."
 msgstr "System folgt der hellen oder dunklen Einstellung Ihres Geräts."
 
@@ -14908,11 +14908,13 @@ msgstr "Deren Vertreter, dem diese Daten gehören. Die Person wird als kostenlos
 msgid "Their screen is locked or the tab is hidden. Recording pauses until they come back."
 msgstr "Der Bildschirm ist gesperrt oder der Tab wird nicht angezeigt. Die Aufnahme pausiert, bis die Person zurückkehrt."
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:22
+#: src/features/sidebar/shell/UserMenu.tsx:148
+#: src/components/settings/ColorSchemeSettingsCard.tsx:39
+#: src/components/settings/ColorSchemeSettingsCard.tsx:55
 msgid "Theme"
 msgstr "Design"
 
-#: src/features/sidebar/shell/UserMenu.tsx:95
+#: src/features/sidebar/shell/UserMenu.tsx:96
 msgid "there"
 msgstr "dort"
 
@@ -16420,7 +16422,7 @@ msgstr "Wird auf Ihren Rechnungen verwendet. Preise zzgl. VAT."
 msgid "Used the wrong address? <0>Register again</0>."
 msgstr "Falsche Adresse verwendet? <0>Erneut registrieren</0>."
 
-#: src/features/sidebar/shell/UserMenu.tsx:165
+#: src/features/sidebar/shell/UserMenu.tsx:174
 msgid "User settings"
 msgstr "Benutzereinstellungen"
 
@@ -17507,7 +17509,7 @@ msgstr "Sie haben keine Berechtigung, in dieser Organisation Arbeitsbereiche zu 
 msgid "You don't have permission to invite to any workspace in this organisation."
 msgstr "Sie haben keine Berechtigung, Personen in Arbeitsbereiche dieser Organisation einzuladen."
 
-#: src/features/sidebar/shell/UserMenu.tsx:136
+#: src/features/sidebar/shell/UserMenu.tsx:137
 msgid "You have a pending invite"
 msgstr "Sie haben eine ausstehende Einladung"
 

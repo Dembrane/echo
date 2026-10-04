@@ -1244,7 +1244,7 @@ msgstr "Solicitudes de acceso"
 #: src/routes/admin/AdminSettingsRoute.tsx:2571
 #: src/routes/admin/AdminSettingsRoute.tsx:2990
 #: src/features/sidebar/views/org/OrgHomeView.tsx:143
-#: src/features/sidebar/shell/UserMenu.tsx:81
+#: src/features/sidebar/shell/UserMenu.tsx:82
 #: src/features/sidebar/hooks/useSearchHits.ts:146
 #: src/components/settings/AccountSettingsCard.tsx:130
 msgid "Account"
@@ -3447,7 +3447,7 @@ msgstr "Clonar proyecto"
 #~ msgid "Clone Project"
 #~ msgstr "Clonar proyecto"
 
-#: src/theme.tsx:305
+#: src/theme.tsx:306
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:790
 #: src/components/results/ResultRow.tsx:432
 #: src/components/results/ResultRow.tsx:435
@@ -4358,7 +4358,7 @@ msgstr "Crear metodología"
 #~ msgid "Create new organisation"
 #~ msgstr "Crear nueva organización"
 
-#: src/features/sidebar/shell/UserMenu.tsx:171
+#: src/features/sidebar/shell/UserMenu.tsx:180
 #: src/components/organisation/CreateOrganisationModal.tsx:169
 msgid "Create organisation"
 msgstr "Crear organización"
@@ -4551,7 +4551,7 @@ msgstr "Peligro"
 msgid "Danger zone"
 msgstr "Zona de peligro"
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:33
+#: src/components/settings/ColorSchemeSettingsCard.tsx:45
 msgid "Dark"
 msgstr "Oscuro"
 
@@ -6255,7 +6255,7 @@ msgstr "Terminando"
 msgid "First name"
 msgstr "Nombre"
 
-#: src/theme.tsx:316
+#: src/theme.tsx:317
 msgid "First page"
 msgstr "Primera página"
 
@@ -7689,7 +7689,7 @@ msgid "Kinds of finding"
 msgstr "Tipos de hallazgo"
 
 #: src/routes/project/present/PresentRoute.tsx:130
-#: src/features/sidebar/shell/UserMenu.tsx:145
+#: src/features/sidebar/shell/UserMenu.tsx:154
 #: src/components/settings/LanguageSettingsCard.tsx:10
 #: src/components/report/UpdateReportModalButton.tsx:265
 #: src/components/report/UpdateReportModalButton.tsx:339
@@ -7715,7 +7715,7 @@ msgstr "El mes pasado"
 msgid "Last name"
 msgstr "Apellidos"
 
-#: src/theme.tsx:317
+#: src/theme.tsx:318
 msgid "Last page"
 msgstr "Última página"
 
@@ -7866,7 +7866,7 @@ msgstr "Licencias otorgadas"
 msgid "Lifetime cap"
 msgstr "Límite vitalicio"
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:32
+#: src/components/settings/ColorSchemeSettingsCard.tsx:44
 msgid "Light"
 msgstr "Claro"
 
@@ -8198,7 +8198,7 @@ msgstr "Iniciar sesión de todos modos"
 msgid "Log in to {resolvedWorkspaceName} to continue."
 msgstr "Inicia sesión en {resolvedWorkspaceName} para continuar."
 
-#: src/features/sidebar/shell/UserMenu.tsx:181
+#: src/features/sidebar/shell/UserMenu.tsx:190
 msgid "Log out"
 msgstr "Cerrar sesión"
 
@@ -8946,7 +8946,7 @@ msgstr "Siguiente cambio en <0>{remainingSeconds} s</0>"
 msgid "Next invoice"
 msgstr "Próxima factura"
 
-#: src/theme.tsx:318
+#: src/theme.tsx:319
 msgid "Next page"
 msgstr "Página siguiente"
 
@@ -10974,7 +10974,7 @@ msgstr "Vista previa: El zorro rápido salta sobre el perro perezoso."
 msgid "Previous"
 msgstr "Anterior"
 
-#: src/theme.tsx:319
+#: src/theme.tsx:320
 msgid "Previous page"
 msgstr "Página anterior"
 
@@ -12933,7 +12933,7 @@ msgstr "Ver opciones de mejora"
 msgid "See when transcription is in progress."
 msgstr "Mira cuándo se está transcribiendo."
 
-#: src/features/sidebar/shell/UserMenu.tsx:53
+#: src/features/sidebar/shell/UserMenu.tsx:54
 msgid "See you soon"
 msgstr "Hasta pronto"
 
@@ -13264,7 +13264,7 @@ msgstr "Configurar un nuevo webhook desde cero"
 msgid "Set up with the assistant after creating"
 msgstr "Configurar con el asistente tras crear"
 
-#: src/features/sidebar/shell/UserMenu.tsx:127
+#: src/features/sidebar/shell/UserMenu.tsx:128
 msgid "Set up workspace"
 msgstr "Configurar espacio de trabajo"
 
@@ -13894,7 +13894,7 @@ msgid "Spotlight"
 msgstr "Destacado"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:3157
-#: src/features/sidebar/shell/UserMenu.tsx:158
+#: src/features/sidebar/shell/UserMenu.tsx:167
 msgid "Staff"
 msgstr "Equipo"
 
@@ -14295,7 +14295,7 @@ msgstr "Desactivarla forma parte de un plan de pago."
 msgid "Switching to another tool"
 msgstr "Me cambio a otra herramienta"
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:31
+#: src/components/settings/ColorSchemeSettingsCard.tsx:43
 #: src/components/settings/AuditLogsCard.tsx:88
 msgid "System"
 msgstr "Sistema"
@@ -14305,7 +14305,7 @@ msgstr "Sistema"
 msgid "System default"
 msgstr "Valor predeterminado del sistema"
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:25
+#: src/components/settings/ColorSchemeSettingsCard.tsx:58
 msgid "System follows your device's light or dark setting."
 msgstr "Sistema sigue el ajuste claro u oscuro de tu dispositivo."
 
@@ -14908,11 +14908,13 @@ msgstr "Su representante propietario de estos datos. Se añade como observador g
 msgid "Their screen is locked or the tab is hidden. Recording pauses until they come back."
 msgstr "Su pantalla está bloqueada o la pestaña está oculta. La grabación se pausa hasta que vuelva."
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:22
+#: src/features/sidebar/shell/UserMenu.tsx:148
+#: src/components/settings/ColorSchemeSettingsCard.tsx:39
+#: src/components/settings/ColorSchemeSettingsCard.tsx:55
 msgid "Theme"
 msgstr "Tema"
 
-#: src/features/sidebar/shell/UserMenu.tsx:95
+#: src/features/sidebar/shell/UserMenu.tsx:96
 msgid "there"
 msgstr "allí"
 
@@ -16422,7 +16424,7 @@ msgstr "Se usa en tus facturas. Precios sin VAT."
 msgid "Used the wrong address? <0>Register again</0>."
 msgstr "¿Dirección incorrecta? <0>Regístrate de nuevo</0>."
 
-#: src/features/sidebar/shell/UserMenu.tsx:165
+#: src/features/sidebar/shell/UserMenu.tsx:174
 msgid "User settings"
 msgstr "Ajustes de usuario"
 
@@ -17509,7 +17511,7 @@ msgstr "No tienes permiso para crear espacios de trabajo en esa organización. V
 msgid "You don't have permission to invite to any workspace in this organisation."
 msgstr "No tienes permiso para invitar a ningún espacio de trabajo en esta organización."
 
-#: src/features/sidebar/shell/UserMenu.tsx:136
+#: src/features/sidebar/shell/UserMenu.tsx:137
 msgid "You have a pending invite"
 msgstr "Tienes una invitación pendiente"
 

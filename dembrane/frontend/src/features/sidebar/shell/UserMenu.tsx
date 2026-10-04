@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Box, Group, Menu, Text, UnstyledButton } from "@mantine/core";
+import { Box, Group, Menu, Stack, Text, UnstyledButton } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
 	Buildings,
@@ -23,6 +23,7 @@ import { UserAvatar } from "@/components/common/UserAvatar";
 import { LanguagePicker } from "@/components/language/LanguagePicker";
 import { useTransitionCurtain } from "@/components/layout/TransitionCurtainProvider";
 import { CreateOrganisationModal } from "@/components/organisation/CreateOrganisationModal";
+import { ColorSchemeControl } from "@/components/settings/ColorSchemeSettingsCard";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useV2Me } from "@/hooks/useV2Me";
 import { cn } from "@/lib/utils";
@@ -139,14 +140,22 @@ export const UserMenu = () => {
 
 					{(needsOnboarding || hasPendingInvites) && <Menu.Divider my="xs" />}
 
-					<Box px="sm" py="xs">
+					{/* Theme and language: fields, 16 apart (rule 5). The theme is one
+					    click away here instead of Settings > Appearance. */}
+					<Stack gap="md" px="sm" py="xs">
+						<Stack gap="xs">
+							<Text size="xs" c="dimmed" className="app-muted">
+								<Trans>Theme</Trans>
+							</Text>
+							<ColorSchemeControl size="xs" />
+						</Stack>
 						<Group justify="space-between" align="center">
 							<Text size="xs" c="dimmed" className="app-muted">
 								<Trans>Language</Trans>
 							</Text>
 							<LanguagePicker />
 						</Group>
-					</Box>
+					</Stack>
 
 					<Menu.Divider my="xs" />
 

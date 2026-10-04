@@ -1238,7 +1238,7 @@ msgstr "Access requests"
 #: src/routes/admin/AdminSettingsRoute.tsx:2571
 #: src/routes/admin/AdminSettingsRoute.tsx:2990
 #: src/features/sidebar/views/org/OrgHomeView.tsx:143
-#: src/features/sidebar/shell/UserMenu.tsx:81
+#: src/features/sidebar/shell/UserMenu.tsx:82
 #: src/features/sidebar/hooks/useSearchHits.ts:146
 #: src/components/settings/AccountSettingsCard.tsx:130
 msgid "Account"
@@ -3441,7 +3441,7 @@ msgstr "Clone project"
 #~ msgid "Clone Project"
 #~ msgstr "Clone Project"
 
-#: src/theme.tsx:305
+#: src/theme.tsx:306
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:790
 #: src/components/results/ResultRow.tsx:432
 #: src/components/results/ResultRow.tsx:435
@@ -4352,7 +4352,7 @@ msgstr "Create methodology"
 #~ msgid "Create new organisation"
 #~ msgstr "Create new organisation"
 
-#: src/features/sidebar/shell/UserMenu.tsx:171
+#: src/features/sidebar/shell/UserMenu.tsx:180
 #: src/components/organisation/CreateOrganisationModal.tsx:169
 msgid "Create organisation"
 msgstr "Create organisation"
@@ -4545,7 +4545,7 @@ msgstr "Danger"
 msgid "Danger zone"
 msgstr "Danger zone"
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:33
+#: src/components/settings/ColorSchemeSettingsCard.tsx:45
 msgid "Dark"
 msgstr "Dark"
 
@@ -6249,7 +6249,7 @@ msgstr "Finishing"
 msgid "First name"
 msgstr "First name"
 
-#: src/theme.tsx:316
+#: src/theme.tsx:317
 msgid "First page"
 msgstr "First page"
 
@@ -7683,7 +7683,7 @@ msgid "Kinds of finding"
 msgstr "Kinds of finding"
 
 #: src/routes/project/present/PresentRoute.tsx:130
-#: src/features/sidebar/shell/UserMenu.tsx:145
+#: src/features/sidebar/shell/UserMenu.tsx:154
 #: src/components/settings/LanguageSettingsCard.tsx:10
 #: src/components/report/UpdateReportModalButton.tsx:265
 #: src/components/report/UpdateReportModalButton.tsx:339
@@ -7709,7 +7709,7 @@ msgstr "Last month"
 msgid "Last name"
 msgstr "Last name"
 
-#: src/theme.tsx:317
+#: src/theme.tsx:318
 msgid "Last page"
 msgstr "Last page"
 
@@ -7860,7 +7860,7 @@ msgstr "Licenses granted"
 msgid "Lifetime cap"
 msgstr "Lifetime cap"
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:32
+#: src/components/settings/ColorSchemeSettingsCard.tsx:44
 msgid "Light"
 msgstr "Light"
 
@@ -8192,7 +8192,7 @@ msgstr "Log in anyway"
 msgid "Log in to {resolvedWorkspaceName} to continue."
 msgstr "Log in to {resolvedWorkspaceName} to continue."
 
-#: src/features/sidebar/shell/UserMenu.tsx:181
+#: src/features/sidebar/shell/UserMenu.tsx:190
 msgid "Log out"
 msgstr "Log out"
 
@@ -8940,7 +8940,7 @@ msgstr "Next change in <0>{remainingSeconds}s</0>"
 msgid "Next invoice"
 msgstr "Next invoice"
 
-#: src/theme.tsx:318
+#: src/theme.tsx:319
 msgid "Next page"
 msgstr "Next page"
 
@@ -10968,7 +10968,7 @@ msgstr "Preview: The quick brown fox jumps over the lazy dog."
 msgid "Previous"
 msgstr "Previous"
 
-#: src/theme.tsx:319
+#: src/theme.tsx:320
 msgid "Previous page"
 msgstr "Previous page"
 
@@ -12927,7 +12927,7 @@ msgstr "See upgrade options"
 msgid "See when transcription is in progress."
 msgstr "See when transcription is in progress."
 
-#: src/features/sidebar/shell/UserMenu.tsx:53
+#: src/features/sidebar/shell/UserMenu.tsx:54
 msgid "See you soon"
 msgstr "See you soon"
 
@@ -13258,7 +13258,7 @@ msgstr "Set up a new webhook from scratch"
 msgid "Set up with the assistant after creating"
 msgstr "Set up with the assistant after creating"
 
-#: src/features/sidebar/shell/UserMenu.tsx:127
+#: src/features/sidebar/shell/UserMenu.tsx:128
 msgid "Set up workspace"
 msgstr "Set up workspace"
 
@@ -13888,7 +13888,7 @@ msgid "Spotlight"
 msgstr "Spotlight"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:3157
-#: src/features/sidebar/shell/UserMenu.tsx:158
+#: src/features/sidebar/shell/UserMenu.tsx:167
 msgid "Staff"
 msgstr "Staff"
 
@@ -14289,7 +14289,7 @@ msgstr "Switching it off comes with a paid plan."
 msgid "Switching to another tool"
 msgstr "Switching to another tool"
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:31
+#: src/components/settings/ColorSchemeSettingsCard.tsx:43
 #: src/components/settings/AuditLogsCard.tsx:88
 msgid "System"
 msgstr "System"
@@ -14299,7 +14299,7 @@ msgstr "System"
 msgid "System default"
 msgstr "System default"
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:25
+#: src/components/settings/ColorSchemeSettingsCard.tsx:58
 msgid "System follows your device's light or dark setting."
 msgstr "System follows your device's light or dark setting."
 
@@ -14901,11 +14901,13 @@ msgstr "Their representative who owns this data. They are added as a free observ
 msgid "Their screen is locked or the tab is hidden. Recording pauses until they come back."
 msgstr "Their screen is locked or the tab is hidden. Recording pauses until they come back."
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:22
+#: src/features/sidebar/shell/UserMenu.tsx:148
+#: src/components/settings/ColorSchemeSettingsCard.tsx:39
+#: src/components/settings/ColorSchemeSettingsCard.tsx:55
 msgid "Theme"
 msgstr "Theme"
 
-#: src/features/sidebar/shell/UserMenu.tsx:95
+#: src/features/sidebar/shell/UserMenu.tsx:96
 msgid "there"
 msgstr "there"
 
@@ -16415,7 +16417,7 @@ msgstr "Used on your invoices. Prices exclude VAT."
 msgid "Used the wrong address? <0>Register again</0>."
 msgstr "Used the wrong address? <0>Register again</0>."
 
-#: src/features/sidebar/shell/UserMenu.tsx:165
+#: src/features/sidebar/shell/UserMenu.tsx:174
 msgid "User settings"
 msgstr "User settings"
 
@@ -17501,7 +17503,7 @@ msgstr "You don't have permission to create workspaces in that organisation. Fal
 msgid "You don't have permission to invite to any workspace in this organisation."
 msgstr "You don't have permission to invite to any workspace in this organisation."
 
-#: src/features/sidebar/shell/UserMenu.tsx:136
+#: src/features/sidebar/shell/UserMenu.tsx:137
 msgid "You have a pending invite"
 msgstr "You have a pending invite"
 

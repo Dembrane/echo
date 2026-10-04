@@ -1243,7 +1243,7 @@ msgstr "Access requests"
 #: src/routes/admin/AdminSettingsRoute.tsx:2571
 #: src/routes/admin/AdminSettingsRoute.tsx:2990
 #: src/features/sidebar/views/org/OrgHomeView.tsx:143
-#: src/features/sidebar/shell/UserMenu.tsx:81
+#: src/features/sidebar/shell/UserMenu.tsx:82
 #: src/features/sidebar/hooks/useSearchHits.ts:146
 #: src/components/settings/AccountSettingsCard.tsx:130
 msgid "Account"
@@ -3446,7 +3446,7 @@ msgstr "Clone project"
 #~ msgid "Clone Project"
 #~ msgstr "Clone Project"
 
-#: src/theme.tsx:305
+#: src/theme.tsx:306
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:790
 #: src/components/results/ResultRow.tsx:432
 #: src/components/results/ResultRow.tsx:435
@@ -4357,7 +4357,7 @@ msgstr "Vytvořit metodiku"
 #~ msgid "Create new organisation"
 #~ msgstr "Vytvořit novou organizaci"
 
-#: src/features/sidebar/shell/UserMenu.tsx:171
+#: src/features/sidebar/shell/UserMenu.tsx:180
 #: src/components/organisation/CreateOrganisationModal.tsx:169
 msgid "Create organisation"
 msgstr "Vytvořit organizaci"
@@ -4550,7 +4550,7 @@ msgstr "Danger"
 msgid "Danger zone"
 msgstr "Danger zone"
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:33
+#: src/components/settings/ColorSchemeSettingsCard.tsx:45
 msgid "Dark"
 msgstr "Tmavý"
 
@@ -6254,7 +6254,7 @@ msgstr "Dokončuje se"
 msgid "First name"
 msgstr "First name"
 
-#: src/theme.tsx:316
+#: src/theme.tsx:317
 msgid "First page"
 msgstr "První stránka"
 
@@ -7688,7 +7688,7 @@ msgid "Kinds of finding"
 msgstr "Typy zjištění"
 
 #: src/routes/project/present/PresentRoute.tsx:130
-#: src/features/sidebar/shell/UserMenu.tsx:145
+#: src/features/sidebar/shell/UserMenu.tsx:154
 #: src/components/settings/LanguageSettingsCard.tsx:10
 #: src/components/report/UpdateReportModalButton.tsx:265
 #: src/components/report/UpdateReportModalButton.tsx:339
@@ -7714,7 +7714,7 @@ msgstr "Last month"
 msgid "Last name"
 msgstr "Last name"
 
-#: src/theme.tsx:317
+#: src/theme.tsx:318
 msgid "Last page"
 msgstr "Poslední stránka"
 
@@ -7865,7 +7865,7 @@ msgstr "Licence uděleny"
 msgid "Lifetime cap"
 msgstr "Lifetime cap"
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:32
+#: src/components/settings/ColorSchemeSettingsCard.tsx:44
 msgid "Light"
 msgstr "Světlý"
 
@@ -8197,7 +8197,7 @@ msgstr "Přesto se přihlásit"
 msgid "Log in to {resolvedWorkspaceName} to continue."
 msgstr "Log in to {resolvedWorkspaceName} to continue."
 
-#: src/features/sidebar/shell/UserMenu.tsx:181
+#: src/features/sidebar/shell/UserMenu.tsx:190
 msgid "Log out"
 msgstr "Odhlásit se"
 
@@ -8945,7 +8945,7 @@ msgstr "Další změna za <0>{remainingSeconds} s</0>"
 msgid "Next invoice"
 msgstr "Další faktura"
 
-#: src/theme.tsx:318
+#: src/theme.tsx:319
 msgid "Next page"
 msgstr "Další stránka"
 
@@ -10973,7 +10973,7 @@ msgstr "Preview: The quick brown fox jumps over the lazy dog."
 msgid "Previous"
 msgstr "Předchozí"
 
-#: src/theme.tsx:319
+#: src/theme.tsx:320
 msgid "Previous page"
 msgstr "Předchozí stránka"
 
@@ -12932,7 +12932,7 @@ msgstr "Zobrazit možnosti navýšení tarifu"
 msgid "See when transcription is in progress."
 msgstr "Sledujte, kdy probíhá přepis."
 
-#: src/features/sidebar/shell/UserMenu.tsx:53
+#: src/features/sidebar/shell/UserMenu.tsx:54
 msgid "See you soon"
 msgstr "See you soon"
 
@@ -13263,7 +13263,7 @@ msgstr "Nastavit nový webhook od začátku"
 msgid "Set up with the assistant after creating"
 msgstr "Nastavit po vytvoření s asistentem"
 
-#: src/features/sidebar/shell/UserMenu.tsx:127
+#: src/features/sidebar/shell/UserMenu.tsx:128
 msgid "Set up workspace"
 msgstr "Set up workspace"
 
@@ -13893,7 +13893,7 @@ msgid "Spotlight"
 msgstr "Bod zájmu"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:3157
-#: src/features/sidebar/shell/UserMenu.tsx:158
+#: src/features/sidebar/shell/UserMenu.tsx:167
 msgid "Staff"
 msgstr "Staff"
 
@@ -14294,7 +14294,7 @@ msgstr "Vypnutí je součástí placeného plánu."
 msgid "Switching to another tool"
 msgstr "Přecházím na jiný nástroj"
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:31
+#: src/components/settings/ColorSchemeSettingsCard.tsx:43
 #: src/components/settings/AuditLogsCard.tsx:88
 msgid "System"
 msgstr "Systém"
@@ -14304,7 +14304,7 @@ msgstr "Systém"
 msgid "System default"
 msgstr "Systémová výchozí hodnota"
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:25
+#: src/components/settings/ColorSchemeSettingsCard.tsx:58
 msgid "System follows your device's light or dark setting."
 msgstr "Systém se řídí světlým nebo tmavým nastavením vašeho zařízení."
 
@@ -14906,11 +14906,13 @@ msgstr "Jejich zástupce, který vlastní tato data. Bude přidán jako bezplatn
 msgid "Their screen is locked or the tab is hidden. Recording pauses until they come back."
 msgstr "Jejich obrazovka je zamčená nebo je karta skrytá. Nahrávání je pozastaveno, dokud se nevrátí."
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:22
+#: src/features/sidebar/shell/UserMenu.tsx:148
+#: src/components/settings/ColorSchemeSettingsCard.tsx:39
+#: src/components/settings/ColorSchemeSettingsCard.tsx:55
 msgid "Theme"
 msgstr "Motiv"
 
-#: src/features/sidebar/shell/UserMenu.tsx:95
+#: src/features/sidebar/shell/UserMenu.tsx:96
 msgid "there"
 msgstr "there"
 
@@ -16420,7 +16422,7 @@ msgstr "Uvádí se na fakturách. Ceny jsou bez VAT."
 msgid "Used the wrong address? <0>Register again</0>."
 msgstr "Used the wrong address? <0>Register again</0>."
 
-#: src/features/sidebar/shell/UserMenu.tsx:165
+#: src/features/sidebar/shell/UserMenu.tsx:174
 msgid "User settings"
 msgstr "Uživatelská nastavení"
 
@@ -17506,7 +17508,7 @@ msgstr "You don't have permission to create workspaces in that organisation. Fal
 msgid "You don't have permission to invite to any workspace in this organisation."
 msgstr "You don't have permission to invite to any workspace in this organisation."
 
-#: src/features/sidebar/shell/UserMenu.tsx:136
+#: src/features/sidebar/shell/UserMenu.tsx:137
 msgid "You have a pending invite"
 msgstr "You have a pending invite"
 

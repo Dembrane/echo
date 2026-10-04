@@ -6,6 +6,7 @@ import {
 	createTheme,
 	defaultVariantColorsResolver,
 	Input,
+	SegmentedControl,
 	Text,
 	type VariantColorsResolver,
 } from "@mantine/core";
@@ -329,6 +330,29 @@ export const theme = createTheme({
 			},
 			styles: { input: { cursor: "pointer" } },
 		},
+		// A segmented control is a control: its size is a height on the ladder
+		// (30 / 36 / 40 / 48), its text 14 compact or 16, never padding-driven.
+		SegmentedControl: SegmentedControl.extend({
+			styles: {
+				label: {
+					alignItems: "center",
+					display: "flex",
+					justifyContent: "center",
+					minHeight: "var(--app-sc-height)",
+					paddingBottom: 0,
+					paddingTop: 0,
+				},
+			},
+			vars: (_theme, props) => {
+				const size = typeof props.size === "string" ? props.size : "sm";
+				return {
+					root: {
+						"--app-sc-height": CONTROL_HEIGHT[size] ?? CONTROL_HEIGHT.sm,
+						"--sc-font-size": controlText(size),
+					},
+				};
+			},
+		}),
 		SimpleGrid: { defaultProps: { spacing: "sm" } },
 		// Muted text differs by weight, not size: c="dimmed" gets the 240 cut.
 		Text: Text.extend({

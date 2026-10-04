@@ -1243,7 +1243,7 @@ msgstr "Запити на доступ"
 #: src/routes/admin/AdminSettingsRoute.tsx:2571
 #: src/routes/admin/AdminSettingsRoute.tsx:2990
 #: src/features/sidebar/views/org/OrgHomeView.tsx:143
-#: src/features/sidebar/shell/UserMenu.tsx:81
+#: src/features/sidebar/shell/UserMenu.tsx:82
 #: src/features/sidebar/hooks/useSearchHits.ts:146
 #: src/components/settings/AccountSettingsCard.tsx:130
 msgid "Account"
@@ -3446,7 +3446,7 @@ msgstr "Clone project"
 #~ msgid "Clone Project"
 #~ msgstr "Clone Project"
 
-#: src/theme.tsx:305
+#: src/theme.tsx:306
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:790
 #: src/components/results/ResultRow.tsx:432
 #: src/components/results/ResultRow.tsx:435
@@ -4357,7 +4357,7 @@ msgstr "Створити методологію"
 #~ msgid "Create new organisation"
 #~ msgstr "Створити нову організацію"
 
-#: src/features/sidebar/shell/UserMenu.tsx:171
+#: src/features/sidebar/shell/UserMenu.tsx:180
 #: src/components/organisation/CreateOrganisationModal.tsx:169
 msgid "Create organisation"
 msgstr "Створити організацію"
@@ -4550,7 +4550,7 @@ msgstr "Небезпека"
 msgid "Danger zone"
 msgstr "Небезпечна зона"
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:33
+#: src/components/settings/ColorSchemeSettingsCard.tsx:45
 msgid "Dark"
 msgstr "Темна"
 
@@ -6254,7 +6254,7 @@ msgstr "Завершення"
 msgid "First name"
 msgstr "Ім'я"
 
-#: src/theme.tsx:316
+#: src/theme.tsx:317
 msgid "First page"
 msgstr "Перша сторінка"
 
@@ -7688,7 +7688,7 @@ msgid "Kinds of finding"
 msgstr "Типи знахідок"
 
 #: src/routes/project/present/PresentRoute.tsx:130
-#: src/features/sidebar/shell/UserMenu.tsx:145
+#: src/features/sidebar/shell/UserMenu.tsx:154
 #: src/components/settings/LanguageSettingsCard.tsx:10
 #: src/components/report/UpdateReportModalButton.tsx:265
 #: src/components/report/UpdateReportModalButton.tsx:339
@@ -7714,7 +7714,7 @@ msgstr "Минулого місяця"
 msgid "Last name"
 msgstr "Прізвище"
 
-#: src/theme.tsx:317
+#: src/theme.tsx:318
 msgid "Last page"
 msgstr "Остання сторінка"
 
@@ -7865,7 +7865,7 @@ msgstr "Ліцензії надано"
 msgid "Lifetime cap"
 msgstr "Загальний ліміт"
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:32
+#: src/components/settings/ColorSchemeSettingsCard.tsx:44
 msgid "Light"
 msgstr "Світла"
 
@@ -8197,7 +8197,7 @@ msgstr "Усе одно ввійти"
 msgid "Log in to {resolvedWorkspaceName} to continue."
 msgstr "Увійдіть до {resolvedWorkspaceName}, щоб продовжити."
 
-#: src/features/sidebar/shell/UserMenu.tsx:181
+#: src/features/sidebar/shell/UserMenu.tsx:190
 msgid "Log out"
 msgstr "Вийти"
 
@@ -8945,7 +8945,7 @@ msgstr "Наступна зміна через <0>{remainingSeconds} с</0>"
 msgid "Next invoice"
 msgstr "Наступний рахунок"
 
-#: src/theme.tsx:318
+#: src/theme.tsx:319
 msgid "Next page"
 msgstr "Наступна сторінка"
 
@@ -10973,7 +10973,7 @@ msgstr "Preview: The quick brown fox jumps over the lazy dog."
 msgid "Previous"
 msgstr "Попередній"
 
-#: src/theme.tsx:319
+#: src/theme.tsx:320
 msgid "Previous page"
 msgstr "Попередня сторінка"
 
@@ -12932,7 +12932,7 @@ msgstr "Варіанти покращення тарифу"
 msgid "See when transcription is in progress."
 msgstr "Дивіться, коли триває розпізнавання тексту."
 
-#: src/features/sidebar/shell/UserMenu.tsx:53
+#: src/features/sidebar/shell/UserMenu.tsx:54
 msgid "See you soon"
 msgstr "See you soon"
 
@@ -13263,7 +13263,7 @@ msgstr "Налаштувати новий вебхук з нуля"
 msgid "Set up with the assistant after creating"
 msgstr "Налаштувати з асистентом після створення"
 
-#: src/features/sidebar/shell/UserMenu.tsx:127
+#: src/features/sidebar/shell/UserMenu.tsx:128
 msgid "Set up workspace"
 msgstr "Налаштувати робочий простір"
 
@@ -13893,7 +13893,7 @@ msgid "Spotlight"
 msgstr "Фокус"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:3157
-#: src/features/sidebar/shell/UserMenu.tsx:158
+#: src/features/sidebar/shell/UserMenu.tsx:167
 msgid "Staff"
 msgstr "Персонал"
 
@@ -14294,7 +14294,7 @@ msgstr "Вимкнення доступне в платному плані."
 msgid "Switching to another tool"
 msgstr "Переходжу на інший інструмент"
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:31
+#: src/components/settings/ColorSchemeSettingsCard.tsx:43
 #: src/components/settings/AuditLogsCard.tsx:88
 msgid "System"
 msgstr "Система"
@@ -14304,7 +14304,7 @@ msgstr "Система"
 msgid "System default"
 msgstr "Системне типове значення"
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:25
+#: src/components/settings/ColorSchemeSettingsCard.tsx:58
 msgid "System follows your device's light or dark setting."
 msgstr "«Система» повторює світлий або темний режим вашого пристрою."
 
@@ -14907,11 +14907,13 @@ msgstr "Їхній представник, якому належать ці да
 msgid "Their screen is locked or the tab is hidden. Recording pauses until they come back."
 msgstr "Екран заблоковано або вкладку приховано. Запис призупинено, доки користувач не повернеться."
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:22
+#: src/features/sidebar/shell/UserMenu.tsx:148
+#: src/components/settings/ColorSchemeSettingsCard.tsx:39
+#: src/components/settings/ColorSchemeSettingsCard.tsx:55
 msgid "Theme"
 msgstr "Тема"
 
-#: src/features/sidebar/shell/UserMenu.tsx:95
+#: src/features/sidebar/shell/UserMenu.tsx:96
 msgid "there"
 msgstr "тут"
 
@@ -16421,7 +16423,7 @@ msgstr "Використовується у ваших рахунках. Цін�
 msgid "Used the wrong address? <0>Register again</0>."
 msgstr "Вказали неправильну адресу? <0>Зареєструйтеся знову</0>."
 
-#: src/features/sidebar/shell/UserMenu.tsx:165
+#: src/features/sidebar/shell/UserMenu.tsx:174
 msgid "User settings"
 msgstr "Налаштування користувача"
 
@@ -17508,7 +17510,7 @@ msgstr "У вас немає дозволу створювати робочі п
 msgid "You don't have permission to invite to any workspace in this organisation."
 msgstr "У вас немає дозволу надсилати запрошення до жодного робочого простору в цій організації."
 
-#: src/features/sidebar/shell/UserMenu.tsx:136
+#: src/features/sidebar/shell/UserMenu.tsx:137
 msgid "You have a pending invite"
 msgstr "У вас є очікуване запрошення"
 

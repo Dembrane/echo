@@ -1244,7 +1244,7 @@ msgstr "Toegangsverzoeken"
 #: src/routes/admin/AdminSettingsRoute.tsx:2571
 #: src/routes/admin/AdminSettingsRoute.tsx:2990
 #: src/features/sidebar/views/org/OrgHomeView.tsx:143
-#: src/features/sidebar/shell/UserMenu.tsx:81
+#: src/features/sidebar/shell/UserMenu.tsx:82
 #: src/features/sidebar/hooks/useSearchHits.ts:146
 #: src/components/settings/AccountSettingsCard.tsx:130
 msgid "Account"
@@ -3444,7 +3444,7 @@ msgstr "Project klonen"
 #~ msgid "Clone Project"
 #~ msgstr "Project klonen"
 
-#: src/theme.tsx:305
+#: src/theme.tsx:306
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:790
 #: src/components/results/ResultRow.tsx:432
 #: src/components/results/ResultRow.tsx:435
@@ -4355,7 +4355,7 @@ msgstr "Methodologie aanmaken"
 #~ msgid "Create new organisation"
 #~ msgstr "Nieuwe organisatie aanmaken"
 
-#: src/features/sidebar/shell/UserMenu.tsx:171
+#: src/features/sidebar/shell/UserMenu.tsx:180
 #: src/components/organisation/CreateOrganisationModal.tsx:169
 msgid "Create organisation"
 msgstr "Organisatie aanmaken"
@@ -4548,7 +4548,7 @@ msgstr "Gevaar"
 msgid "Danger zone"
 msgstr "Gevarenzone"
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:33
+#: src/components/settings/ColorSchemeSettingsCard.tsx:45
 msgid "Dark"
 msgstr "Donker"
 
@@ -6252,7 +6252,7 @@ msgstr "Afronden"
 msgid "First name"
 msgstr "Voornaam"
 
-#: src/theme.tsx:316
+#: src/theme.tsx:317
 msgid "First page"
 msgstr "Eerste pagina"
 
@@ -7686,7 +7686,7 @@ msgid "Kinds of finding"
 msgstr "Soorten bevinding"
 
 #: src/routes/project/present/PresentRoute.tsx:130
-#: src/features/sidebar/shell/UserMenu.tsx:145
+#: src/features/sidebar/shell/UserMenu.tsx:154
 #: src/components/settings/LanguageSettingsCard.tsx:10
 #: src/components/report/UpdateReportModalButton.tsx:265
 #: src/components/report/UpdateReportModalButton.tsx:339
@@ -7712,7 +7712,7 @@ msgstr "Vorige maand"
 msgid "Last name"
 msgstr "Achternaam"
 
-#: src/theme.tsx:317
+#: src/theme.tsx:318
 msgid "Last page"
 msgstr "Laatste pagina"
 
@@ -7863,7 +7863,7 @@ msgstr "Licenties verleend"
 msgid "Lifetime cap"
 msgstr "Levenslange limiet"
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:32
+#: src/components/settings/ColorSchemeSettingsCard.tsx:44
 msgid "Light"
 msgstr "Licht"
 
@@ -8195,7 +8195,7 @@ msgstr "Toch inloggen"
 msgid "Log in to {resolvedWorkspaceName} to continue."
 msgstr "Log in bij {resolvedWorkspaceName} om verder te gaan."
 
-#: src/features/sidebar/shell/UserMenu.tsx:181
+#: src/features/sidebar/shell/UserMenu.tsx:190
 msgid "Log out"
 msgstr "Uitloggen"
 
@@ -8943,7 +8943,7 @@ msgstr "Volgende verandering over <0>{remainingSeconds}s</0>"
 msgid "Next invoice"
 msgstr "Volgende factuur"
 
-#: src/theme.tsx:318
+#: src/theme.tsx:319
 msgid "Next page"
 msgstr "Volgende pagina"
 
@@ -10971,7 +10971,7 @@ msgstr "Voorbeeld: De snelle bruine vos springt over de luiende hond."
 msgid "Previous"
 msgstr "Vorige"
 
-#: src/theme.tsx:319
+#: src/theme.tsx:320
 msgid "Previous page"
 msgstr "Vorige pagina"
 
@@ -12930,7 +12930,7 @@ msgstr "Bekijk upgrade-opties"
 msgid "See when transcription is in progress."
 msgstr "Zie wanneer transcriptie bezig is."
 
-#: src/features/sidebar/shell/UserMenu.tsx:53
+#: src/features/sidebar/shell/UserMenu.tsx:54
 msgid "See you soon"
 msgstr "Tot snel"
 
@@ -13261,7 +13261,7 @@ msgstr "Een nieuwe webhook vanaf nul instellen"
 msgid "Set up with the assistant after creating"
 msgstr "Na het aanmaken instellen met de assistent"
 
-#: src/features/sidebar/shell/UserMenu.tsx:127
+#: src/features/sidebar/shell/UserMenu.tsx:128
 msgid "Set up workspace"
 msgstr "Werkruimte instellen"
 
@@ -13891,7 +13891,7 @@ msgid "Spotlight"
 msgstr "Spotlight"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:3157
-#: src/features/sidebar/shell/UserMenu.tsx:158
+#: src/features/sidebar/shell/UserMenu.tsx:167
 msgid "Staff"
 msgstr "Personeel"
 
@@ -14292,7 +14292,7 @@ msgstr "Uitzetten kan met een betaald plan."
 msgid "Switching to another tool"
 msgstr "Ik stap over op een andere tool"
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:31
+#: src/components/settings/ColorSchemeSettingsCard.tsx:43
 #: src/components/settings/AuditLogsCard.tsx:88
 msgid "System"
 msgstr "Systeem"
@@ -14302,7 +14302,7 @@ msgstr "Systeem"
 msgid "System default"
 msgstr "Systeemstandaard"
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:25
+#: src/components/settings/ColorSchemeSettingsCard.tsx:58
 msgid "System follows your device's light or dark setting."
 msgstr "Systeem volgt de lichte of donkere instelling van je apparaat."
 
@@ -14904,11 +14904,13 @@ msgstr "Hun vertegenwoordiger die eigenaar is van deze data. Diegene wordt toege
 msgid "Their screen is locked or the tab is hidden. Recording pauses until they come back."
 msgstr "Het scherm is vergrendeld of het tabblad is niet actief. De opname pauzeert tot ze terugkomen."
 
-#: src/components/settings/ColorSchemeSettingsCard.tsx:22
+#: src/features/sidebar/shell/UserMenu.tsx:148
+#: src/components/settings/ColorSchemeSettingsCard.tsx:39
+#: src/components/settings/ColorSchemeSettingsCard.tsx:55
 msgid "Theme"
 msgstr "Thema"
 
-#: src/features/sidebar/shell/UserMenu.tsx:95
+#: src/features/sidebar/shell/UserMenu.tsx:96
 msgid "there"
 msgstr "daar"
 
@@ -16416,7 +16418,7 @@ msgstr "Gebruikt op je facturen. Prijzen zijn exclusief btw."
 msgid "Used the wrong address? <0>Register again</0>."
 msgstr "Verkeerd adres gebruikt? <0>Registreer opnieuw</0>."
 
-#: src/features/sidebar/shell/UserMenu.tsx:165
+#: src/features/sidebar/shell/UserMenu.tsx:174
 msgid "User settings"
 msgstr "Gebruikersinstellingen"
 
@@ -17502,7 +17504,7 @@ msgstr "Je hebt geen rechten om werkruimtes aan te maken in die organisatie. We 
 msgid "You don't have permission to invite to any workspace in this organisation."
 msgstr "Je hebt geen rechten om uit te nodigen voor een werkruimte in deze organisatie."
 
-#: src/features/sidebar/shell/UserMenu.tsx:136
+#: src/features/sidebar/shell/UserMenu.tsx:137
 msgid "You have a pending invite"
 msgstr "Je hebt een openstaande uitnodiging"
 
