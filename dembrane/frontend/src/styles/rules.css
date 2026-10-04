@@ -24,93 +24,93 @@
  * --app-text and --app-background live in index.css (useAppPreferences sets
  * them too). */
 :root {
-	--app-surface: #ffffff;
-	--app-muted: #5f646f;
-	--app-quiet: #e6e3df;
-	--app-pressed: #dcdad7;
-	--app-action: #2957df;
-	--app-action-tint: #e9f1ff;
-	--app-danger: #c0434e;
-	--app-danger-on-tint: #a8323c;
-	--app-success: #0e6e47;
-	--app-warning: #7a5200;
-	/* Fills, split from the text roles so dark can draw a fill brighter or
+  --app-surface: #ffffff;
+  --app-muted: #5f646f;
+  --app-quiet: #e6e3df;
+  --app-pressed: #dcdad7;
+  --app-action: #2957df;
+  --app-action-tint: #e9f1ff;
+  --app-danger: #c0434e;
+  --app-danger-on-tint: #a8323c;
+  --app-success: #0e6e47;
+  --app-warning: #7a5200;
+  /* Fills, split from the text roles so dark can draw a fill brighter or
 	 * darker than its text; in light each fill is its role. --app-on-fill is
 	 * text and marks on any fill; the fill hover is graphite (the primary pill). */
-	--app-action-fill: #2957df;
-	--app-danger-fill: #c0434e;
-	--app-success-fill: #0e6e47;
-	--app-warning-fill: #7a5200;
-	--app-on-fill: #ffffff;
-	--app-fill-hover: #2d2d2c;
-	--app-on-fill-hover: #ffffff;
-	/* Disabled is pollen: a control or button that can't be used draws its
+  --app-action-fill: #2957df;
+  --app-danger-fill: #c0434e;
+  --app-success-fill: #0e6e47;
+  --app-warning-fill: #7a5200;
+  --app-on-fill: #ffffff;
+  --app-fill-hover: #2d2d2c;
+  --app-on-fill-hover: #ffffff;
+  /* Disabled is pollen: a control or button that can't be used draws its
 	 * lines in it (and flashes --app-danger when pressed anyway). */
-	--app-disabled: #ffd166;
+  --app-disabled: #ffd166;
 }
 
 :root {
-	--app-stroke: 1px;
-	/* The faint grey the app uses for lines; states recolour it (blue when
+  --app-stroke: 1px;
+  /* The faint grey the app uses for lines; states recolour it (blue when
 	 * active, red on error). */
-	--app-rule-color: var(--app-quiet);
-	/* Fields and what belongs to them (open lists, popovers, menus, tooltips,
+  --app-rule-color: var(--app-quiet);
+  /* Fields and what belongs to them (open lists, popovers, menus, tooltips,
 	 * filters, switches) draw a darker grey: 3.28:1, the contrast WCAG asks
 	 * of a control's edge. Everything else (cards, alerts, tables, tabs,
 	 * dialogs, toasts, button boxes) stays faint. */
-	--app-control-rule: #878785;
-	--app-float: 0 12px 40px rgba(45, 45, 44, 0.12);
+  --app-control-rule: #878785;
+  --app-float: 0 12px 40px rgba(45, 45, 44, 0.12);
 }
 
 /* Controls and their floating parts take the darker grey. State rules below
  * (focus, error, open) recolour it. */
 :root
-	:is(
-		.mantine-Input-input,
-		.mantine-Popover-dropdown,
-		.mantine-Combobox-dropdown,
-		.mantine-Menu-dropdown,
-		.mantine-HoverCard-dropdown,
-		.mantine-Tooltip-tooltip,
-		.mantine-Chip-label,
-		.mantine-SegmentedControl-control,
-		.mantine-Switch-track,
-		.mantine-Checkbox-input,
-		.mantine-Radio-radio,
-		.mantine-Dropzone-root
-	) {
-	--app-rule-color: var(--app-control-rule);
+  :is(
+    .mantine-Input-input,
+    .mantine-Popover-dropdown,
+    .mantine-Combobox-dropdown,
+    .mantine-Menu-dropdown,
+    .mantine-HoverCard-dropdown,
+    .mantine-Tooltip-tooltip,
+    .mantine-Chip-label,
+    .mantine-SegmentedControl-control,
+    .mantine-Switch-track,
+    .mantine-Checkbox-input,
+    .mantine-Radio-radio,
+    .mantine-Dropzone-root
+  ) {
+  --app-rule-color: var(--app-control-rule);
 }
 
 /* Read: a rule above and below. */
 :root .mantine-Alert-root,
 :root .mantine-Paper-root[data-with-border],
 :root .mantine-Card-root[data-with-border] {
-	border-color: var(--app-rule-color);
-	border-radius: 0;
-	border-style: solid;
-	border-width: var(--app-stroke) 0;
-	box-shadow: none;
+  border-color: var(--app-rule-color);
+  border-radius: 0;
+  border-style: solid;
+  border-width: var(--app-stroke) 0;
+  box-shadow: none;
 }
 
 /* Set: rules at the sides. Fields are white so they read as a place to type. */
 :root .mantine-Input-input {
-	background-color: var(--app-surface);
-	border-color: var(--app-rule-color);
-	border-radius: 0;
-	border-style: solid;
-	border-width: 0 var(--app-stroke);
-	box-shadow: none;
+  background-color: var(--app-surface);
+  border-color: var(--app-rule-color);
+  border-radius: 0;
+  border-style: solid;
+  border-width: 0 var(--app-stroke);
+  box-shadow: none;
 }
 
 /* Do: the full box. */
 :root .mantine-Button-root[data-variant="outline"],
 :root .mantine-Button-root[data-variant="default"] {
-	border-color: var(--app-rule-color);
-	border-radius: 0;
-	border-style: solid;
-	border-width: var(--app-stroke);
-	box-shadow: none;
+  border-color: var(--app-rule-color);
+  border-radius: 0;
+  border-style: solid;
+  border-width: var(--app-stroke);
+  box-shadow: none;
 }
 
 /* Do, for anything built by hand that you press: a clickable card or tile,
@@ -120,88 +120,88 @@
  * the class to the read rule's weight, so a bordered Paper takes the box. */
 :root .app-do:is(*, [data-with-border]),
 :root
-	:is(.mantine-Paper-root, .mantine-Card-root):is(button, a, [role="button"]) {
-	background: transparent;
-	border: var(--app-stroke) solid var(--app-rule-color);
-	border-radius: 0;
-	box-shadow: none;
-	color: var(--app-text);
-	cursor: pointer;
-	text-align: left;
+  :is(.mantine-Paper-root, .mantine-Card-root):is(button, a, [role="button"]) {
+  background: transparent;
+  border: var(--app-stroke) solid var(--app-rule-color);
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--app-text);
+  cursor: pointer;
+  text-align: left;
 }
 /* Hover lifts the card to white; held down it takes the hover grey. */
 :root .app-do:is(*, [data-with-border]):hover,
 :root
-	:is(.mantine-Paper-root, .mantine-Card-root):is(
-		button,
-		a,
-		[role="button"]
-	):hover {
-	background: var(--app-surface);
+  :is(.mantine-Paper-root, .mantine-Card-root):is(
+    button,
+    a,
+    [role="button"]
+  ):hover {
+  background: var(--app-surface);
 }
 :root .app-do:is(*, [data-with-border]):active,
 :root
-	:is(.mantine-Paper-root, .mantine-Card-root):is(
-		button,
-		a,
-		[role="button"]
-	):active {
-	background: var(--app-quiet);
+  :is(.mantine-Paper-root, .mantine-Card-root):is(
+    button,
+    a,
+    [role="button"]
+  ):active {
+  background: var(--app-quiet);
 }
 :root .app-do[data-selected]:is(*, [data-with-border]) {
-	background: var(--app-action-tint);
-	border-color: var(--app-action);
-	position: relative;
-	z-index: 1;
+  background: var(--app-action-tint);
+  border-color: var(--app-action);
+  position: relative;
+  z-index: 1;
 }
 :root .app-do:focus-visible {
-	outline: 2px solid var(--app-action);
-	outline-offset: 2px;
+  outline: 2px solid var(--app-action);
+  outline-offset: 2px;
 }
 
 /* Avatars are the one round thing besides the primary pill. */
 :root .mantine-Avatar-root {
-	--avatar-radius: 9999px;
-	border-radius: 9999px;
+  --avatar-radius: 9999px;
+  border-radius: 9999px;
 }
 /* Initials are set in the one text weight, not Mantine's bold. */
 :root .mantine-Avatar-placeholder {
-	font-weight: 320;
+  font-weight: 320;
 }
 
 /* Context: no border; a tag is its tint. */
 :root .mantine-Badge-root {
-	border-radius: 0;
-	border-width: 0;
-	box-shadow: none;
-	/* Mantine spaces its badge capitals; a tag is set like any other text. */
-	letter-spacing: 0;
+  border-radius: 0;
+  border-width: 0;
+  box-shadow: none;
+  /* Mantine spaces its badge capitals; a tag is set like any other text. */
+  letter-spacing: 0;
 }
 
 /* Floating layers follow what they hold, and keep their float shadow. */
 :root
-	:is(
-		.mantine-Popover-dropdown,
-		.mantine-Combobox-dropdown,
-		.mantine-Menu-dropdown,
-		.mantine-Modal-content,
-		.mantine-Drawer-content,
-		.mantine-HoverCard-dropdown
-	) {
-	border-color: var(--app-rule-color);
-	border-radius: 0;
-	border-style: solid;
-	box-shadow: var(--app-float);
+  :is(
+    .mantine-Popover-dropdown,
+    .mantine-Combobox-dropdown,
+    .mantine-Menu-dropdown,
+    .mantine-Modal-content,
+    .mantine-Drawer-content,
+    .mantine-HoverCard-dropdown
+  ) {
+  border-color: var(--app-rule-color);
+  border-radius: 0;
+  border-style: solid;
+  box-shadow: var(--app-float);
 }
 /* Read: dialogs, drawers, popovers, hover cards. */
 :root
-	:is(
-		.mantine-Popover-dropdown,
-		.mantine-Modal-content,
-		.mantine-Drawer-content,
-		.mantine-HoverCard-dropdown
-	) {
-	border-width: var(--app-stroke) 0;
+  :is(
+    .mantine-Popover-dropdown,
+    .mantine-Modal-content,
+    .mantine-Drawer-content,
+    .mantine-HoverCard-dropdown
+  ) {
+  border-width: var(--app-stroke) 0;
 }
 /* Set: the option list of a select, multiselect, autocomplete or combobox,
  * and a date picker's calendar, is part of the control: sides. */
@@ -211,47 +211,47 @@
 :root .mantine-Autocomplete-dropdown,
 :root .mantine-TagsInput-dropdown,
 :root .mantine-Popover-dropdown[data-dates-dropdown] {
-	/* Only open while the control is active, so its sides are blue too. */
-	--app-rule-color: var(--app-action);
-	border-color: var(--app-rule-color);
-	border-width: 0 var(--app-stroke);
+  /* Only open while the control is active, so its sides are blue too. */
+  --app-rule-color: var(--app-action);
+  border-color: var(--app-rule-color);
+  border-width: 0 var(--app-stroke);
 }
 /* Do: an action menu is a set of buttons: the full box. */
 :root .mantine-Menu-dropdown {
-	border-width: var(--app-stroke);
+  border-width: var(--app-stroke);
 }
 
 /* Fields keep their states on the rule, at the same stroke: blue on focus
  * (5.43:1 against parchment), red on error. */
 :root .mantine-Input-input[data-error] {
-	--app-rule-color: var(--app-danger);
+  --app-rule-color: var(--app-danger);
 }
 :root .mantine-Input-input:focus,
 :root .mantine-Input-input:focus-within {
-	--app-rule-color: var(--app-action);
-	outline: none;
+  --app-rule-color: var(--app-action);
+  outline: none;
 }
 
 /* Swiss spacing: a heading is set apart by space above, not by weight. */
 :root .mantine-Title-root:not(:first-child, svg + *) {
-	margin-top: 24px;
+  margin-top: 24px;
 }
 
 /* Muted text differs by weight, not size: 240 against the 320 body. Matches
  * c="dimmed", which Mantine writes as an inline colour. */
 :root .app-muted,
 :root .app-toast [data-description] {
-	font-weight: 240;
+  font-weight: 240;
 }
 
 /* Links and dividers carry the same stroke. */
 :root .mantine-Anchor-root {
-	text-decoration-thickness: var(--app-stroke);
-	text-underline-offset: 3px;
+  text-decoration-thickness: var(--app-stroke);
+  text-underline-offset: 3px;
 }
 :root .mantine-Divider-root {
-	border-top-color: var(--app-rule-color);
-	border-top-width: var(--app-stroke);
+  border-top-color: var(--app-rule-color);
+  border-top-width: var(--app-stroke);
 }
 
 /* Icons use Phosphor light (IconContext in the recommended scope), whose
@@ -260,119 +260,119 @@
  * 1 x 256 / size - 12 (aiming at the drawn 1px). */
 :root svg[viewBox="0 0 256 256"] :is(path, circle, rect, line, polyline),
 :root
-	.app-toast
-	svg[viewBox="0 0 256 256"]
-	:is(path, circle, rect, line, polyline) {
-	stroke: currentColor;
-	stroke-linejoin: round;
-	stroke-width: 0;
+  .app-toast
+  svg[viewBox="0 0 256 256"]
+  :is(path, circle, rect, line, polyline) {
+  stroke: currentColor;
+  stroke-linejoin: round;
+  stroke-width: 0;
 }
 :root
-	svg[viewBox="0 0 256 256"][width="16"]
-	:is(path, circle, rect, line, polyline),
+  svg[viewBox="0 0 256 256"][width="16"]
+  :is(path, circle, rect, line, polyline),
 :root
-	.app-toast
-	svg[viewBox="0 0 256 256"][width="16"]
-	:is(path, circle, rect, line, polyline) {
-	stroke-width: 4;
+  .app-toast
+  svg[viewBox="0 0 256 256"][width="16"]
+  :is(path, circle, rect, line, polyline) {
+  stroke-width: 4;
 }
 :root
-	svg[viewBox="0 0 256 256"][width="20"]
-	:is(path, circle, rect, line, polyline),
+  svg[viewBox="0 0 256 256"][width="20"]
+  :is(path, circle, rect, line, polyline),
 :root
-	.app-toast
-	svg[viewBox="0 0 256 256"][width="20"]
-	:is(path, circle, rect, line, polyline) {
-	stroke-width: 0.8;
+  .app-toast
+  svg[viewBox="0 0 256 256"][width="20"]
+  :is(path, circle, rect, line, polyline) {
+  stroke-width: 0.8;
 }
 
 /* Toasts render in Sonner's portal, so they are styled by
  * class (passed per toast with unstyled: true). */
 :root .app-toast {
-	align-items: flex-start;
-	background: var(--app-background);
-	border-bottom: var(--app-stroke) solid var(--app-rule-color);
-	border-top: var(--app-stroke) solid var(--app-rule-color);
-	box-shadow: var(--app-float);
-	box-sizing: border-box;
-	color: var(--app-text);
-	display: flex;
-	font-family: "DM Sans Brand", "DM Sans Variable", sans-serif;
-	font-feature-settings: "ss01", "ss02", "ss03", "ss04", "ss05", "ss06", "ss08";
-	gap: 10px;
-	padding: 12px 16px;
-	width: var(--width, 356px);
+  align-items: flex-start;
+  background: var(--app-background);
+  border-bottom: var(--app-stroke) solid var(--app-rule-color);
+  border-top: var(--app-stroke) solid var(--app-rule-color);
+  box-shadow: var(--app-float);
+  box-sizing: border-box;
+  color: var(--app-text);
+  display: flex;
+  font-family: "DM Sans Brand", "DM Sans Variable", sans-serif;
+  font-feature-settings: "ss01", "ss02", "ss03", "ss04", "ss05", "ss06", "ss08";
+  gap: 10px;
+  padding: 12px 16px;
+  width: var(--width, 356px);
 }
 :root .app-toast [data-icon] {
-	display: flex;
-	flex: none;
-	margin-top: 2px;
+  display: flex;
+  flex: none;
+  margin-top: 2px;
 }
 :root .app-toast [data-title] {
-	font-size: 16px;
-	font-weight: 320;
-	line-height: 1.4;
+  font-size: 16px;
+  font-weight: 320;
+  line-height: 1.4;
 }
 :root .app-toast [data-description] {
-	color: var(--app-muted);
-	font-size: 16px;
-	line-height: 1.45;
+  color: var(--app-muted);
+  font-size: 16px;
+  line-height: 1.45;
 }
 :root .app-toast [data-close-button] {
-	background: transparent;
-	border: 0;
-	color: var(--app-text);
-	left: auto;
-	right: 8px;
-	top: 8px;
-	transform: none;
+  background: transparent;
+  border: 0;
+  color: var(--app-text);
+  left: auto;
+  right: 8px;
+  top: 8px;
+  transform: none;
 }
 :root .app-toast-success [data-icon] {
-	color: var(--app-success);
+  color: var(--app-success);
 }
 :root .app-toast-error [data-icon] {
-	color: var(--app-danger);
+  color: var(--app-danger);
 }
 :root .app-toast-warning [data-icon] {
-	color: var(--app-warning);
+  color: var(--app-warning);
 }
 :root .app-toast-info [data-icon] {
-	color: var(--app-action);
+  color: var(--app-action);
 }
 
 /* ---------- molecules ---------- */
 
 /* Modal: a floating sheet between two rules; the title is a heading step. */
 :root .mantine-Modal-header {
-	background: transparent;
+  background: transparent;
 }
 :root .mantine-Modal-title {
-	font-size: 24.88px;
-	font-weight: 320;
-	line-height: 1.25;
+  font-size: 24.88px;
+  font-weight: 320;
+  line-height: 1.25;
 }
 
 /* Menu: square items, neutral hover, a label in the muted weight. */
 :root .mantine-Menu-item {
-	border-radius: 0;
-	font-size: 16px;
-	font-weight: 320;
+  border-radius: 0;
+  font-size: 16px;
+  font-weight: 320;
 }
 :root .mantine-Menu-item:where(:hover, [data-hovered]) {
-	background: var(--app-quiet);
+  background: var(--app-quiet);
 }
 /* A red item (Delete) darkens on hover: #c0434e is 3.95:1 on the hover grey,
  * the on-tint red passes. */
 :root .mantine-Menu-item[style*="color-red"]:where(:hover, [data-hovered]) {
-	color: var(--app-danger-on-tint);
+  color: var(--app-danger-on-tint);
 }
 :root .mantine-Menu-label {
-	color: var(--app-muted);
-	font-size: 14px;
-	font-weight: 240;
+  color: var(--app-muted);
+  font-size: 14px;
+  font-weight: 240;
 }
 :root .mantine-Menu-divider {
-	border-top: var(--app-stroke) solid var(--app-quiet);
+  border-top: var(--app-stroke) solid var(--app-quiet);
 }
 
 /* Tabs: one line, scrolling sideways when space runs out, with one rule under
@@ -381,304 +381,348 @@
  * the edge. All share one bottom edge, so the blue stretch can never sit a
  * sub-pixel off the graphite rule, as an overlapping border does. */
 :root .mantine-Tabs-list {
-	border-bottom: 0;
-	flex-wrap: nowrap;
-	gap: 0;
-	overflow-x: auto;
-	scrollbar-width: none;
+  border-bottom: 0;
+  flex-wrap: nowrap;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 /* A row that scrolls shows a thin bar to a mouse, which can't swipe it;
  * touch keeps the row clean. */
 @media (hover: hover) and (pointer: fine) {
-	:root .mantine-Tabs-list {
-		scrollbar-width: thin;
-	}
+  :root .mantine-Tabs-list {
+    scrollbar-width: thin;
+  }
 }
 :root .mantine-Tabs-list::before {
-	display: none;
+  display: none;
 }
 :root .mantine-Tabs-list::after {
-	border-bottom: var(--app-stroke) solid var(--app-rule-color);
-	content: "";
-	flex: 1 1 0;
+  border-bottom: var(--app-stroke) solid var(--app-rule-color);
+  content: "";
+  flex: 1 1 0;
 }
 :root .mantine-Tabs-tab {
-	border: 0;
-	border-bottom: var(--app-stroke) solid var(--app-rule-color);
-	border-radius: 0;
-	color: var(--app-muted);
-	font-size: 16px;
-	font-weight: 320;
-	flex: none;
-	margin: 0;
-	padding: 10px 16px;
-	white-space: nowrap;
+  border: 0;
+  border-bottom: var(--app-stroke) solid var(--app-rule-color);
+  border-radius: 0;
+  color: var(--app-muted);
+  font-size: 16px;
+  font-weight: 320;
+  flex: none;
+  margin: 0;
+  padding: 10px 16px;
+  white-space: nowrap;
 }
 :root .mantine-Tabs-tab:hover {
-	background: var(--app-quiet);
+  background: var(--app-quiet);
 }
 :root .mantine-Tabs-tab[data-active] {
-	background: transparent;
-	border-bottom-color: var(--app-action);
-	color: var(--app-text);
+  background: transparent;
+  border-bottom-color: var(--app-action);
+  color: var(--app-text);
 }
 
 /* Accordion: items separated by the rule. */
 /* The caret is a 16 icon (theme.tsx); Mantine's box would draw it at 15. */
 :root .mantine-Accordion-root {
-	--accordion-chevron-size: 16px;
+  --accordion-chevron-size: 16px;
 }
 :root .mantine-Accordion-item {
-	border-bottom: var(--app-stroke) solid var(--app-rule-color);
-	border-radius: 0;
+  border-bottom: var(--app-stroke) solid var(--app-rule-color);
+  border-radius: 0;
 }
 :root .mantine-Accordion-item:first-child {
-	border-top: var(--app-stroke) solid var(--app-rule-color);
+  border-top: var(--app-stroke) solid var(--app-rule-color);
 }
 :root .mantine-Accordion-item {
-	transition: background-color 120ms ease;
+  transition: background-color 120ms ease;
 }
 /* Hovering an item lifts it to white, as a card you press does (rule 03). */
 :root .mantine-Accordion-item:hover {
-	background: var(--app-surface);
+  background: var(--app-surface);
 }
 :root .mantine-Accordion-control,
 :root .mantine-Accordion-control:hover {
-	background: transparent;
-	padding-inline: 12px;
+  background: transparent;
+  padding-inline: 12px;
 }
 :root .mantine-Accordion-content {
-	padding-inline: 12px;
+  padding-inline: 12px;
 }
 
 /* Table: the rule above the header and below the last row; hairlines between rows;
  * the header in the muted weight. */
 :root .mantine-Table-table {
-	--table-border-color: var(--app-quiet);
-	border-bottom: var(--app-stroke) solid var(--app-rule-color);
-	border-top: var(--app-stroke) solid var(--app-rule-color);
+  --table-border-color: var(--app-quiet);
+  border-bottom: var(--app-stroke) solid var(--app-rule-color);
+  border-top: var(--app-stroke) solid var(--app-rule-color);
 }
 :root .mantine-Table-th {
-	border-bottom: var(--app-stroke) solid var(--app-rule-color);
-	color: var(--app-text);
-	font-size: 16px;
-	font-weight: 320;
+  border-bottom: var(--app-stroke) solid var(--app-rule-color);
+  color: var(--app-text);
+  font-size: 16px;
+  font-weight: 320;
 }
 :root .mantine-Table-td,
 :root .mantine-Table-th {
-	font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Tooltip: light, between two rules, floating. The arrow points at what it
  * describes: it carries the bottom rule out into a point. */
 :root .mantine-Tooltip-tooltip {
-	background: var(--app-surface);
-	border-bottom: var(--app-stroke) solid var(--app-rule-color);
-	border-radius: 0;
-	border-top: var(--app-stroke) solid var(--app-rule-color);
-	box-shadow: var(--app-float);
-	color: var(--app-text);
-	font-size: 14px;
-	font-weight: 320;
+  background: var(--app-surface);
+  border-bottom: var(--app-stroke) solid var(--app-rule-color);
+  border-radius: 0;
+  border-top: var(--app-stroke) solid var(--app-rule-color);
+  box-shadow: var(--app-float);
+  color: var(--app-text);
+  font-size: 14px;
+  font-weight: 320;
 }
-/* Mantine makes the arrow's inner edges transparent and clips it to a
- * triangle, so a full border leaves only the two outer edges: the rule. */
-:root .mantine-Tooltip-arrow {
-	/* The arrow is a simple line: a short stem from the tooltip's edge to what
-	 * it points at, as long as the tooltip's offset. Mantine positions a
+/* Anything that points at its target (tooltip, popover, menu, hover card)
+ * does it with a stem, never a wedge. */
+:root
+  :is(
+    .mantine-Tooltip-arrow,
+    .mantine-Popover-arrow,
+    .mantine-Menu-arrow,
+    .mantine-HoverCard-arrow
+  ) {
+  /* The arrow is a simple line: a short stem from the edge toward what it
+	 * points at, as long as the offset (theme.tsx). Mantine positions a
 	 * rotated square with inline styles, so these override them, keyed on
 	 * the side Mantine puts it on. */
-	background: var(--app-rule-color) !important;
-	border: 0 !important;
-	clip-path: none !important;
-	margin: 0 !important;
-	transform: none !important;
+  background: var(--app-rule-color) !important;
+  border: 0 !important;
+  clip-path: none !important;
+  margin: 0 !important;
+  transform: none !important;
 }
-/* Tooltip above or below: a vertical stem. */
-:root .mantine-Tooltip-arrow:is([style*="bottom: -"], [style*="top: -"]) {
-	height: 8px !important;
-	margin-left: 4px !important;
-	width: var(--app-stroke) !important;
+/* Above or below: a vertical stem. */
+:root
+  :is(
+    .mantine-Tooltip-arrow,
+    .mantine-Popover-arrow,
+    .mantine-Menu-arrow,
+    .mantine-HoverCard-arrow
+  ):is([style*="bottom: -"], [style*="top: -"]) {
+  height: 8px !important;
+  /* Mantine places the 8px square from either edge; the margin on both sides
+	 * centres the stem in it whichever edge that is. */
+  margin: 0 calc((8px - var(--app-stroke)) / 2) !important;
+  width: var(--app-stroke) !important;
 }
-:root .mantine-Tooltip-arrow[style*="bottom: -"] {
-	bottom: -8px !important;
+:root
+  :is(
+    .mantine-Tooltip-arrow,
+    .mantine-Popover-arrow,
+    .mantine-Menu-arrow,
+    .mantine-HoverCard-arrow
+  )[style*="bottom: -"] {
+  bottom: -8px !important;
 }
-:root .mantine-Tooltip-arrow[style*="top: -"] {
-	top: -8px !important;
+:root
+  :is(
+    .mantine-Tooltip-arrow,
+    .mantine-Popover-arrow,
+    .mantine-Menu-arrow,
+    .mantine-HoverCard-arrow
+  )[style*="top: -"] {
+  top: -8px !important;
 }
-/* Tooltip to the side: a horizontal stem at the middle. */
-:root .mantine-Tooltip-arrow:is([style*="left: -"], [style*="right: -"]) {
-	height: var(--app-stroke) !important;
-	top: 50% !important;
-	width: 8px !important;
+/* To the side: a horizontal stem, level with the target. */
+:root
+  :is(
+    .mantine-Tooltip-arrow,
+    .mantine-Popover-arrow,
+    .mantine-Menu-arrow,
+    .mantine-HoverCard-arrow
+  ):is([style*="left: -"], [style*="right: -"]) {
+  height: var(--app-stroke) !important;
+  margin: calc((8px - var(--app-stroke)) / 2) 0 !important;
+  width: 8px !important;
 }
-:root .mantine-Tooltip-arrow[style*="left: -"] {
-	left: -8px !important;
+:root
+  :is(
+    .mantine-Tooltip-arrow,
+    .mantine-Popover-arrow,
+    .mantine-Menu-arrow,
+    .mantine-HoverCard-arrow
+  )[style*="left: -"] {
+  left: -8px !important;
 }
-:root .mantine-Tooltip-arrow[style*="right: -"] {
-	right: -8px !important;
+:root
+  :is(
+    .mantine-Tooltip-arrow,
+    .mantine-Popover-arrow,
+    .mantine-Menu-arrow,
+    .mantine-HoverCard-arrow
+  )[style*="right: -"] {
+  right: -8px !important;
 }
 
 /* Stepper labels; the markers are context (see the grammar section below). */
 :root .mantine-Stepper-stepLabel {
-	font-weight: 320;
+  font-weight: 320;
 }
 :root .mantine-Stepper-stepDescription {
-	color: var(--app-muted);
-	font-size: 14px;
-	font-weight: 240;
+  color: var(--app-muted);
+  font-size: 14px;
+  font-weight: 240;
 }
 
 /* Choices: a square checkbox and a round radio, both drawn with the stroke.
  * Controls are white: an empty choice is a place to set something, the same
  * white as a field, with the control line. */
 :root .mantine-Checkbox-input {
-	background-color: var(--app-surface);
-	border: var(--app-stroke) solid var(--app-rule-color);
-	border-radius: 0;
+  background-color: var(--app-surface);
+  border: var(--app-stroke) solid var(--app-rule-color);
+  border-radius: 0;
 }
 :root .mantine-Radio-radio {
-	background-color: var(--app-surface);
-	border: var(--app-stroke) solid var(--app-rule-color);
+  background-color: var(--app-surface);
+  border: var(--app-stroke) solid var(--app-rule-color);
 }
 /* Checked fills blue with a white mark, as the switch's on does: off is an
  * outline, on is a fill, across every choice control. */
 :root .mantine-Checkbox-input:checked,
 :root .mantine-Radio-radio:checked {
-	background-color: var(--app-action-fill);
-	border-color: var(--app-action-fill);
+  background-color: var(--app-action-fill);
+  border-color: var(--app-action-fill);
 }
 :root .mantine-Radio-radio:checked + .mantine-Radio-icon,
 :root .mantine-Checkbox-input:checked + .mantine-Checkbox-icon {
-	color: var(--app-on-fill);
+  color: var(--app-on-fill);
 }
 :root .mantine-Checkbox-label,
 :root .mantine-Radio-label {
-	font-size: 16px;
-	font-weight: 320;
+  font-size: 16px;
+  font-weight: 320;
 }
 
 /* Progress: a square bar, neutral track, action fill. */
 :root .mantine-Progress-root {
-	background: var(--app-quiet);
-	border-radius: 0;
+  background: var(--app-quiet);
+  border-radius: 0;
 }
 :root .mantine-Progress-section {
-	border-radius: 0;
+  border-radius: 0;
 }
 
 /* Single-line fields are 40px tall. Set here, not as an inline style: Mantine's
  * auto-growing textarea refuses an inline min-height. */
 :root input.mantine-Input-input {
-	min-height: 40px;
+  min-height: 40px;
 }
 
 /* Unstyled fields (a textarea inside a composer that draws its own rules)
  * take no rule of their own. */
 :root .mantine-Input-input[data-variant="unstyled"] {
-	border-width: 0;
-	min-height: 0;
+  border-width: 0;
+  min-height: 0;
 }
 
 /* Chits. A tag (context) has no border. A suggestion you press does
  * something: the full box. A filter sets something: sides, and filters sit
  * joined in one row with single dividers, the selected one drawn on top. */
 :root :is(button, a).mantine-Badge-root {
-	background: transparent;
-	border: var(--app-stroke) solid var(--app-rule-color);
-	cursor: pointer;
+  background: transparent;
+  border: var(--app-stroke) solid var(--app-rule-color);
+  cursor: pointer;
 }
 :root :is(button, a).mantine-Badge-root:hover {
-	background: var(--app-quiet);
+  background: var(--app-quiet);
 }
 :root .mantine-Chip-label {
-	background: transparent;
-	border-color: var(--app-rule-color);
-	border-radius: 0;
-	border-style: solid;
-	border-width: 0 var(--app-stroke);
-	color: var(--app-text);
-	font-size: 14px;
-	font-weight: 320;
+  background: transparent;
+  border-color: var(--app-rule-color);
+  border-radius: 0;
+  border-style: solid;
+  border-width: 0 var(--app-stroke);
+  color: var(--app-text);
+  font-size: 14px;
+  font-weight: 320;
 }
 :root .mantine-Chip-label:hover {
-	background: var(--app-quiet);
+  background: var(--app-quiet);
 }
 :root .mantine-Chip-label[data-checked] {
-	background: var(--app-action-tint);
-	border-color: var(--app-action);
-	color: var(--app-text);
+  background: var(--app-action-tint);
+  border-color: var(--app-action);
+  color: var(--app-text);
 }
 :root .mantine-Group-root:has(> .mantine-Chip-root) {
-	gap: 0;
+  gap: 0;
 }
 :root .mantine-Chip-root + .mantine-Chip-root {
-	margin-left: calc(-1 * var(--app-stroke));
+  margin-left: calc(-1 * var(--app-stroke));
 }
 :root .app-joined {
-	flex-wrap: nowrap;
-	gap: 0;
+  flex-wrap: nowrap;
+  gap: 0;
 }
 /* A joined row that doesn't fit changes as a whole: on a phone it stacks,
  * never breaking part-way into two lines. */
 @media (max-width: 767px) {
-	:root .app-joined {
-		align-items: stretch;
-		flex-direction: column;
-	}
-	:root .app-joined > * + * {
-		margin-left: 0;
-	}
-	:root .app-joined > * {
-		flex-basis: auto !important;
-	}
+  :root .app-joined {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  :root .app-joined > * + * {
+    margin-left: 0;
+  }
+  :root .app-joined > * {
+    flex-basis: auto !important;
+  }
 }
 /* Fields joined in one filter row share their side rules: each one after the
  * first steps back over its neighbour's line, and the focused one is drawn
  * on top so its blue sides show whole. */
 :root .app-joined > * + * {
-	margin-left: calc(-1 * var(--app-stroke));
+  margin-left: calc(-1 * var(--app-stroke));
 }
 :root .app-joined > :focus-within {
-	position: relative;
-	z-index: 1;
+  position: relative;
+  z-index: 1;
 }
 :root .mantine-Chip-root:has(.mantine-Chip-label[data-checked]) {
-	position: relative;
-	z-index: 1;
+  position: relative;
+  z-index: 1;
 }
 
 /* Pressed (the :active state): the tab, row or chit you hold down previews
  * the selection: its stretch of the rule turns blue and its text graphite. */
 :root .mantine-Tabs-tab:active {
-	border-bottom-color: var(--app-action);
-	color: var(--app-text);
+  border-bottom-color: var(--app-action);
+  color: var(--app-text);
 }
 :root
-	:is(
-		.mantine-Menu-item,
-		.mantine-Accordion-control,
-		:is(button, a).mantine-Badge-root,
-		.mantine-Chip-label
-	):active {
-	background: var(--app-pressed);
+  :is(
+    .mantine-Menu-item,
+    .mantine-Accordion-control,
+    :is(button, a).mantine-Badge-root,
+    .mantine-Chip-label
+  ):active {
+  background: var(--app-pressed);
 }
 
 /* Menu items: room between the icon and the name. */
 :root .mantine-Menu-itemSection[data-position="left"] {
-	margin-inline-end: 12px;
+  margin-inline-end: 12px;
 }
 
 /* Dialog actions align with the text they answer, at the left. */
 :root
-	.mantine-Modal-body
-	.mantine-Group-root:not(:has(> :not(.mantine-Button-root))) {
-	justify-content: flex-start;
+  .mantine-Modal-body
+  .mantine-Group-root:not(:has(> :not(.mantine-Button-root))) {
+  justify-content: flex-start;
 }
 
 /* Radio: the dot grows from the centre (Mantine's default rises from below). */
 :root .mantine-Radio-icon {
-	--radio-icon-transform: scale(0);
+  --radio-icon-transform: scale(0);
 }
 
 /* ---------- type ---------- */
@@ -705,47 +749,47 @@
 :root .mantine-SegmentedControl-label,
 :root .mantine-Chip-label,
 :root .mantine-Tooltip-tooltip {
-	font-weight: 320;
+  font-weight: 320;
 }
 :root :is(strong, b) {
-	font-weight: 600;
+  font-weight: 600;
 }
 :root .app-muted {
-	font-weight: 240;
+  font-weight: 240;
 }
 
 /* ---------- surfaces ---------- */
 
 /* Things that float or take input are white; the page is parchment. */
 :root
-	:is(
-		.mantine-Input-input,
-		.mantine-Popover-dropdown,
-		.mantine-Menu-dropdown,
-		.mantine-Combobox-dropdown,
-		.mantine-Modal-content,
-		.mantine-Drawer-content,
-		.mantine-HoverCard-dropdown
-	) {
-	background-color: var(--app-surface);
+  :is(
+    .mantine-Input-input,
+    .mantine-Popover-dropdown,
+    .mantine-Menu-dropdown,
+    .mantine-Combobox-dropdown,
+    .mantine-Modal-content,
+    .mantine-Drawer-content,
+    .mantine-HoverCard-dropdown
+  ) {
+  background-color: var(--app-surface);
 }
 
 /* The app still uses icon sizes beyond the system's 16 and 20 until the icon
  * pass; top those up to the same 1px line too (light draws size x 12/256). */
 :root
-	svg[viewBox="0 0 256 256"][width="12"]
-	:is(path, circle, rect, line, polyline) {
-	stroke-width: 9.33;
+  svg[viewBox="0 0 256 256"][width="12"]
+  :is(path, circle, rect, line, polyline) {
+  stroke-width: 9.33;
 }
 :root
-	svg[viewBox="0 0 256 256"][width="14"]
-	:is(path, circle, rect, line, polyline) {
-	stroke-width: 6.29;
+  svg[viewBox="0 0 256 256"][width="14"]
+  :is(path, circle, rect, line, polyline) {
+  stroke-width: 6.29;
 }
 :root
-	svg[viewBox="0 0 256 256"][width="18"]
-	:is(path, circle, rect, line, polyline) {
-	stroke-width: 2.22;
+  svg[viewBox="0 0 256 256"][width="18"]
+  :is(path, circle, rect, line, polyline) {
+  stroke-width: 2.22;
 }
 
 /* ---------- the grammar, control by control ---------- */
@@ -753,253 +797,253 @@
 /* Set: segmented controls; their segment lines and the active segment are in
  * joined.css, which draws one line between neighbours. */
 :root .mantine-SegmentedControl-root {
-	background: transparent;
-	border-radius: 0;
-	padding: 0;
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
 }
 :root .mantine-SegmentedControl-label {
-	border-radius: 0;
-	color: var(--app-text);
+  border-radius: 0;
+  color: var(--app-text);
 }
 
 /* Set: a switch is a control, so it is white. Off is an outline (white track,
  * control-grey thumb, 3.6:1); on fills blue with a white thumb, as a checked
  * box does. */
 :root .mantine-Switch-track {
-	background: var(--app-surface);
-	border-color: var(--app-rule-color);
-	border-radius: 0;
-	border-style: solid;
-	border-width: 0 var(--app-stroke);
+  background: var(--app-surface);
+  border-color: var(--app-rule-color);
+  border-radius: 0;
+  border-style: solid;
+  border-width: 0 var(--app-stroke);
 }
 :root .mantine-Switch-thumb {
-	background: var(--app-control-rule);
-	border: 0;
-	border-radius: 0;
+  background: var(--app-control-rule);
+  border: 0;
+  border-radius: 0;
 }
 :root
-	.mantine-Switch-input:checked
-	+ .mantine-Switch-track
-	.mantine-Switch-thumb {
-	background: var(--app-on-fill);
+  .mantine-Switch-input:checked
+  + .mantine-Switch-track
+  .mantine-Switch-thumb {
+  background: var(--app-on-fill);
 }
 :root .mantine-Switch-input:checked + .mantine-Switch-track {
-	background: var(--app-action-fill);
-	border-color: var(--app-action-fill);
+  background: var(--app-action-fill);
+  border-color: var(--app-action-fill);
 }
 
 /* Set: a file drop area is a place to put something: sides. */
 :root .mantine-Dropzone-root {
-	border-color: var(--app-rule-color);
-	border-radius: 0;
-	border-style: dashed;
-	border-width: 0 var(--app-stroke);
+  border-color: var(--app-rule-color);
+  border-radius: 0;
+  border-style: dashed;
+  border-width: 0 var(--app-stroke);
 }
 
 /* Context: steps are not buttons, so no box. One line split into a segment
  * per step: done graphite, current blue (the tab's selected stretch), still to
  * come faint. The number sits quietly before the step's name. */
 :root .mantine-Stepper-steps {
-	align-items: stretch;
-	flex-wrap: nowrap;
-	gap: 4px;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  gap: 4px;
 }
 :root .mantine-Stepper-separator {
-	display: none;
+  display: none;
 }
 :root .mantine-Stepper-step {
-	align-items: baseline;
-	border-top: var(--app-stroke) solid var(--app-quiet);
-	flex: 1 1 0;
-	gap: 8px;
-	justify-content: flex-start;
-	min-width: 0;
-	padding-top: 8px;
+  align-items: baseline;
+  border-top: var(--app-stroke) solid var(--app-quiet);
+  flex: 1 1 0;
+  gap: 8px;
+  justify-content: flex-start;
+  min-width: 0;
+  padding-top: 8px;
 }
 :root .mantine-Stepper-step[data-completed] {
-	border-top-color: var(--app-text);
+  border-top-color: var(--app-text);
 }
 :root .mantine-Stepper-step[data-progress] {
-	border-top-color: var(--app-action);
+  border-top-color: var(--app-action);
 }
 :root .mantine-Stepper-stepWrapper {
-	height: auto;
-	width: auto;
+  height: auto;
+  width: auto;
 }
 :root .mantine-Stepper-stepIcon {
-	background: transparent;
-	border: 0;
-	border-radius: 0;
-	color: var(--app-muted);
-	font-size: 14px;
-	font-weight: 240;
-	height: auto;
-	min-height: 0;
-	min-width: 0;
-	width: auto;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  color: var(--app-muted);
+  font-size: 14px;
+  font-weight: 240;
+  height: auto;
+  min-height: 0;
+  min-width: 0;
+  width: auto;
 }
 /* A finished step shows a small check in the number's place. Mantine sizes
  * the check to its box; with the box auto-sized it filled the row. */
 :root .mantine-Stepper-stepCompletedIcon {
-	color: var(--app-text);
-	display: inline-flex;
-	position: static;
+  color: var(--app-text);
+  display: inline-flex;
+  position: static;
 }
 :root .mantine-Stepper-stepCompletedIcon svg {
-	/* Mantine sizes it inline (60%), hence !important. */
-	height: 14px !important;
-	width: 14px !important;
+  /* Mantine sizes it inline (60%), hence !important. */
+  height: 14px !important;
+  width: 14px !important;
 }
 :root .mantine-Stepper-stepBody {
-	margin: 0;
-	min-width: 0;
+  margin: 0;
+  min-width: 0;
 }
 :root .mantine-Stepper-stepLabel {
-	font-size: 14px;
+  font-size: 14px;
 }
 :root
-	.mantine-Stepper-step:not([data-progress]):not([data-completed])
-	.mantine-Stepper-stepLabel {
-	color: var(--app-muted);
+  .mantine-Stepper-step:not([data-progress]):not([data-completed])
+  .mantine-Stepper-stepLabel {
+  color: var(--app-muted);
 }
 
 /* Narrow widths drop words, never wrap structure: a phone keeps every
  * segment and names only the current step. */
 @media (max-width: 640px) {
-	:root
-		.mantine-Stepper-step:not([data-progress])
-		:is(.mantine-Stepper-stepWrapper, .mantine-Stepper-stepBody) {
-		visibility: hidden;
-	}
-	:root .mantine-Stepper-step[data-progress] {
-		overflow: visible;
-		position: relative;
-		white-space: nowrap;
-		z-index: 1;
-	}
-	:root .mantine-Stepper-stepDescription {
-		display: none;
-	}
+  :root
+    .mantine-Stepper-step:not([data-progress])
+    :is(.mantine-Stepper-stepWrapper, .mantine-Stepper-stepBody) {
+    visibility: hidden;
+  }
+  :root .mantine-Stepper-step[data-progress] {
+    overflow: visible;
+    position: relative;
+    white-space: nowrap;
+    z-index: 1;
+  }
+  :root .mantine-Stepper-stepDescription {
+    display: none;
+  }
 }
 
 /* Icons sized 1em (Phosphor's default) are treated as 16px. */
 :root
-	svg[viewBox="0 0 256 256"][width="1em"]
-	:is(path, circle, rect, line, polyline) {
-	stroke-width: 4;
+  svg[viewBox="0 0 256 256"][width="1em"]
+  :is(path, circle, rect, line, polyline) {
+  stroke-width: 4;
 }
 
 /* Labels hug their fields. A label, its description, its field and its error
  * sit 4 apart, so the space inside a field is always smaller than the 16
  * between fields. Mantine sets its own margins inline, hence !important. */
 :root .mantine-InputWrapper-root {
-	--input-margin-bottom: 0px !important;
-	--input-margin-top: 0px !important;
+  --input-margin-bottom: 0px !important;
+  --input-margin-top: 0px !important;
 }
 :root .mantine-InputWrapper-label {
-	margin-bottom: 4px;
+  margin-bottom: 4px;
 }
 :root .mantine-InputWrapper-description {
-	margin: 0 0 4px;
+  margin: 0 0 4px;
 }
 /* A description placed under the field (inputWrapperOrder) keeps the same 4,
  * above it instead of below. */
 :root .mantine-Input-wrapper ~ .mantine-InputWrapper-description {
-	margin: 4px 0 0;
+  margin: 4px 0 0;
 }
 :root .mantine-InputWrapper-error {
-	margin-top: 4px;
+  margin-top: 4px;
 }
 
 /* Disabled keeps the control's own shape at lower contrast; it never gains a
  * fill (Mantine greys the background of a disabled icon button). */
 :root .mantine-ActionIcon-root:is(:disabled, [data-disabled]) {
-	background: transparent;
-	border-color: transparent;
-	color: var(--app-control-rule);
-	cursor: not-allowed;
+  background: transparent;
+  border-color: transparent;
+  color: var(--app-control-rule);
+  cursor: not-allowed;
 }
 /* A control's lines say its state: grey available, blue active, red error,
  * pollen disabled. Disabled keeps the control's shape and its white; only the
  * lines turn yellow and the text fades. Pressing it anyway flashes the lines
  * red (data-tamper, set by src/lib/tamper.ts). */
 :root
-	:is(.mantine-Input-input, .mantine-Checkbox-input, .mantine-Radio-radio):is(
-		:disabled,
-		[data-disabled]
-	),
+  :is(.mantine-Input-input, .mantine-Checkbox-input, .mantine-Radio-radio):is(
+    :disabled,
+    [data-disabled]
+  ),
 :root .mantine-Switch-input:disabled + .mantine-Switch-track,
 :root .mantine-Chip-label[data-disabled],
 :root .mantine-SegmentedControl-root[data-disabled],
 :root .mantine-Dropzone-root[data-disabled] {
-	--app-rule-color: var(--app-disabled);
-	cursor: not-allowed;
+  --app-rule-color: var(--app-disabled);
+  cursor: not-allowed;
 }
 :root .mantine-Input-input:is(:disabled, [data-disabled]) {
-	background-color: var(--app-surface);
-	color: var(--app-muted);
-	opacity: 1;
+  background-color: var(--app-surface);
+  color: var(--app-muted);
+  opacity: 1;
 }
 /* A disabled control's label goes quiet with it: the muted weight and grey. */
 :root
-	.mantine-InputWrapper-root:has(
-		.mantine-Input-input:is(:disabled, [data-disabled])
-	)
-	.mantine-InputWrapper-label,
+  .mantine-InputWrapper-root:has(
+    .mantine-Input-input:is(:disabled, [data-disabled])
+  )
+  .mantine-InputWrapper-label,
 :root
-	:is(.mantine-Checkbox-root, .mantine-Radio-root, .mantine-Switch-root):has(
-		input:disabled
-	)
-	:is(.mantine-Checkbox-label, .mantine-Radio-label, .mantine-Switch-label),
+  :is(.mantine-Checkbox-root, .mantine-Radio-root, .mantine-Switch-root):has(
+    input:disabled
+  )
+  :is(.mantine-Checkbox-label, .mantine-Radio-label, .mantine-Switch-label),
 :root .mantine-Chip-label[data-disabled] {
-	color: var(--app-muted);
-	font-weight: 240;
+  color: var(--app-muted);
+  font-weight: 240;
 }
 /* Checked but fixed: the fill drops to the control grey inside the yellow. */
 :root :is(.mantine-Checkbox-input, .mantine-Radio-radio):checked:disabled,
 :root .mantine-Switch-input:checked:disabled + .mantine-Switch-track {
-	background-color: var(--app-control-rule);
-	border-color: var(--app-disabled);
+  background-color: var(--app-control-rule);
+  border-color: var(--app-disabled);
 }
 @keyframes app-tamper {
-	0%,
-	50% {
-		border-color: var(--app-danger);
-	}
+  0%,
+  50% {
+    border-color: var(--app-danger);
+  }
 }
 :root
-	[data-tamper]
-	:is(
-		.mantine-Input-input,
-		.mantine-Checkbox-input,
-		.mantine-Radio-radio,
-		.mantine-Switch-track,
-		.mantine-Chip-label
-	) {
-	animation: app-tamper 500ms ease-out;
+  [data-tamper]
+  :is(
+    .mantine-Input-input,
+    .mantine-Checkbox-input,
+    .mantine-Radio-radio,
+    .mantine-Switch-track,
+    .mantine-Chip-label
+  ) {
+  animation: app-tamper 500ms ease-out;
 }
 :root
-	.mantine-Button-root[data-tamper]:not(
-		[data-variant="subtle"],
-		[data-variant="transparent"]
-	) {
-	animation: app-tamper 500ms ease-out;
+  .mantine-Button-root[data-tamper]:not(
+    [data-variant="subtle"],
+    [data-variant="transparent"]
+  ) {
+  animation: app-tamper 500ms ease-out;
 }
 
 /* The markdown editor is square like everything else: its own radius tokens
  * go to zero (the round ones, --radius-full, stay). */
 :root :is(.mdxeditor, .mdxeditor-popup-container) {
-	--radius-base: 0;
-	--radius-medium: 0;
-	--radius-small: 0;
+  --radius-base: 0;
+  --radius-medium: 0;
+  --radius-small: 0;
 }
 
 /* A row that doesn't fit on a phone stacks as a whole (title above, its
  * controls below) rather than squeezing its text to an ellipsis. */
 @media (max-width: 639px) {
-	:root .app-stack-narrow {
-		align-items: stretch;
-		flex-direction: column;
-		gap: 8px;
-	}
+  :root .app-stack-narrow {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+  }
 }
