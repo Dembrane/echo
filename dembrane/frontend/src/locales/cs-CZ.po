@@ -358,7 +358,7 @@ msgid "{0, plural, one {# transcribing} other {# transcribing}}"
 msgstr "{0, plural, one {# přepisuje se} few {# přepisují se} other {# přepisuje se}}"
 
 #. placeholder {0}: views?.total ?? 0
-#: src/routes/project/report/ProjectReportRoute.tsx:1119
+#: src/routes/project/report/ProjectReportRoute.tsx:1079
 msgid "{0, plural, one {# view} other {# views}}"
 msgstr "{0, plural, one {# zobrazení} few {# zobrazení} other {# zobrazení}}"
 
@@ -1080,7 +1080,7 @@ msgstr "Spolehlivější nahrávání audia"
 msgid "A new assistant and a live monitor"
 msgstr "Nový asistent a živý monitor"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:452
+#: src/routes/project/report/ProjectReportRoute.tsx:459
 msgid "A new report will be automatically generated and published at the scheduled time."
 msgstr "A new report will be automatically generated and published at the scheduled time."
 
@@ -1918,11 +1918,11 @@ msgstr "Obnoveno dřívější znění"
 #~ msgid "An email notification will be sent to {0} participant{1}. Do you want to proceed?"
 #~ msgstr "An email notification will be sent to {0} participant{1}. Do you want to proceed?"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1287
+#: src/routes/project/report/ProjectReportRoute.tsx:1247
 msgid "An email notification will be sent to {participantCount, plural, one {# participant} other {# participants}}. Do you want to proceed?"
 msgstr "E-mailové upozornění bude odesláno {participantCount, plural, one {# účastníkovi} few {# účastníkům} other {# účastníkům}}. Chcete pokračovat?"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1297
+#: src/routes/project/report/ProjectReportRoute.tsx:1257
 msgid "An email notification will be sent to participants. Do you want to proceed?"
 msgstr "Účastníkům bude odesláno e-mailové upozornění. Chcete pokračovat?"
 
@@ -1966,8 +1966,8 @@ msgstr "Analýza | dembrane"
 #~ msgid "Analysis Language"
 #~ msgstr "Analysis Language"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:190
-#: src/routes/project/report/ProjectReportRoute.tsx:1134
+#: src/routes/project/report/ProjectReportRoute.tsx:197
+#: src/routes/project/report/ProjectReportRoute.tsx:1094
 msgid "Analytics"
 msgstr "Analytics"
 
@@ -2080,6 +2080,10 @@ msgstr "Any tag"
 msgid "Anyone in your organisation can find this workspace. Admins can join; members can request access."
 msgstr "Tento pracovní prostor může najít kdokoli z vaší organizace. Správci se mohou připojit rovnou, členové mohou o přístup požádat."
 
+#: src/routes/project/report/ProjectReportRoute.tsx:962
+msgid "Anyone with the link can read it. No login, and no transcripts."
+msgstr "Kdokoli s odkazem si ji může přečíst. Bez přihlášení a bez přepisů."
+
 #: src/components/popcorn/PopcornShare.tsx:50
 msgid "Anyone with the link can watch. No login, and no transcripts."
 msgstr "Sledovat může kdokoli s odkazem. Bez přihlášení a bez přepisů."
@@ -2168,7 +2172,6 @@ msgstr "Schválit přístup pro podporu"
 msgid "conversation.verified.approved"
 msgstr "Approved"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:136
 #: src/components/sharing/StatusLine.tsx:52
 msgid "Archived"
 msgstr "Archivováno"
@@ -2194,7 +2197,7 @@ msgstr "Are you sure you want to delete this custom topic? This cannot be undone
 msgid "Are you sure you want to delete this project? This action cannot be undone."
 msgstr "Are you sure you want to delete this project? This action cannot be undone."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1312
+#: src/routes/project/report/ProjectReportRoute.tsx:1272
 msgid "Are you sure you want to delete this report? This action cannot be undone."
 msgstr "Are you sure you want to delete this report? This action cannot be undone."
 
@@ -2554,7 +2557,7 @@ msgstr "Pryč"
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:370
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:785
 #: src/routes/project/CreateProjectRoute.tsx:444
-#: src/routes/project/report/ProjectReportRoute.tsx:485
+#: src/routes/project/report/ProjectReportRoute.tsx:492
 #: src/routes/organisation/OrganisationRoute.tsx:668
 #: src/routes/organisation/OrganisationRoute.tsx:691
 #: src/routes/onboarding/OnboardingRoute.tsx:443
@@ -2841,7 +2844,7 @@ msgstr "Můžete nám říct víc?"
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:785
 #: src/routes/project/ProjectsHome.tsx:453
 #: src/routes/project/CreateProjectRoute.tsx:444
-#: src/routes/project/report/ProjectReportRoute.tsx:266
+#: src/routes/project/report/ProjectReportRoute.tsx:273
 #: src/routes/organisation/OrganisationRoute.tsx:1755
 #: src/routes/organisation/OrganisationRoute.tsx:1778
 #: src/routes/organisation/OrganisationRoute.tsx:1801
@@ -2937,7 +2940,7 @@ msgstr "Zrušit tarif"
 msgid "Cancel request"
 msgstr "Zrušit žádost"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:520
+#: src/routes/project/report/ProjectReportRoute.tsx:527
 msgid "Cancel schedule"
 msgstr "Cancel schedule"
 
@@ -2969,7 +2972,7 @@ msgstr "Zrušením se zastaví automatické obnovení vašeho tarifu. Tarif {0} 
 msgid "Cannot add empty conversation"
 msgstr "Cannot add empty conversation"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:499
+#: src/routes/project/report/ProjectReportRoute.tsx:506
 msgid "Cannot reschedule within 10 minutes of the scheduled time"
 msgstr "Cannot reschedule within 10 minutes of the scheduled time"
 
@@ -3646,7 +3649,7 @@ msgstr "Confirm password"
 #~ msgid "Confirm Publishing"
 #~ msgstr "Confirm Publishing"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:477
+#: src/routes/project/report/ProjectReportRoute.tsx:484
 msgid "Confirm reschedule"
 msgstr "Confirm reschedule"
 
@@ -3923,13 +3926,10 @@ msgstr "Rozhovory: {0}"
 msgid "participant.refine.cooling.down"
 msgstr "Cooling down. Available in {0}"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:996
-#: src/routes/project/report/ProjectReportRoute.tsx:1018
-#: src/routes/project/report/ProjectReportRoute.tsx:1045
+#: src/routes/project/report/ProjectReportRoute.tsx:1046
 #: src/components/sharing/Share.tsx:118
 #: src/components/sharing/Share.tsx:154
 #: src/components/settings/TwoFactorSettingsCard.tsx:396
-#: src/components/project/ProjectQRCode.tsx:146
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:1026
 #: src/components/participant/ParticipantShareModal.tsx:111
 #: src/components/participant/InAppBrowserNotice.tsx:66
@@ -3981,19 +3981,17 @@ msgstr "Kopírovat kód pro vložení"
 msgid "Copy invite link"
 msgstr "Kopírovat odkaz na pozvánku"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1020
 #: src/components/sharing/Share.tsx:118
-#: src/components/project/ProjectQRCode.tsx:146
 #: src/components/participant/ParticipantShareModal.tsx:111
 #: src/components/participant/InAppBrowserNotice.tsx:66
 msgid "Copy link"
 msgstr "Kopírovat odkaz"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:997
-msgid "Copy link to clipboard"
-msgstr "Copy link to clipboard"
+#~ msgid "Copy link to clipboard"
+#~ msgstr "Copy link to clipboard"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1047
+#: src/routes/project/report/ProjectReportRoute.tsx:1048
 msgid "Copy report content"
 msgstr "Copy report content"
 
@@ -4681,7 +4679,7 @@ msgstr "Výchozí: {defaultValue}"
 msgid "Delegate multi-step analysis with live tool execution"
 msgstr "Delegate multi-step analysis with live tool execution"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1313
+#: src/routes/project/report/ProjectReportRoute.tsx:1273
 #: src/components/workspace/OrganisationProjectsTable.tsx:164
 #: src/components/project/ProjectTagsInput.tsx:119
 #: src/components/project/ProjectPortalEditor.tsx:1637
@@ -4738,8 +4736,8 @@ msgstr "Delete project"
 #~ msgid "Delete Project"
 #~ msgstr "Delete Project"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1097
-#: src/routes/project/report/ProjectReportRoute.tsx:1311
+#: src/routes/project/report/ProjectReportRoute.tsx:1058
+#: src/routes/project/report/ProjectReportRoute.tsx:1271
 msgid "Delete report"
 msgstr "Delete report"
 
@@ -5097,6 +5095,10 @@ msgstr "Download all transcripts"
 msgid "Download as"
 msgstr "Download as"
 
+#: src/routes/project/report/ProjectReportRoute.tsx:989
+msgid "Download as PDF"
+msgstr "Stáhnout jako PDF"
+
 #: src/components/conversation/ProjectConversationsPanel.tsx:385
 #: src/components/conversation/ProjectConversationsPanel.tsx:389
 #: src/components/conversation/ConversationDangerZone.tsx:78
@@ -5125,7 +5127,6 @@ msgid "Download PDF"
 msgstr "Stáhnout PDF"
 
 #: src/components/sharing/Share.tsx:138
-#: src/components/project/ProjectQRCode.tsx:156
 msgid "Download QR code"
 msgstr "Download QR code"
 
@@ -5308,7 +5309,7 @@ msgstr "Upravit cíl"
 msgid "Edit methodology"
 msgstr "Upravit metodologii"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1171
+#: src/routes/project/report/ProjectReportRoute.tsx:1131
 msgid "Edit mode"
 msgstr "Edit mode"
 
@@ -5766,7 +5767,7 @@ msgstr "Ukázkový payload webhooku"
 msgid "Exceeds seat cap. Overage billing applies."
 msgstr "Exceeds seat cap. Overage billing applies."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1178
+#: src/routes/project/report/ProjectReportRoute.tsx:1138
 #: src/routes/project/canvas/CanvasRoute.tsx:608
 #: src/routes/project/canvas/CanvasRoute.tsx:613
 msgid "Exit fullscreen"
@@ -6060,7 +6061,7 @@ msgstr "Failed to remove avatar"
 msgid "Failed to remove logo"
 msgstr "Failed to remove logo"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:468
+#: src/routes/project/report/ProjectReportRoute.tsx:475
 msgid "Failed to reschedule. Please choose a time further in the future and try again."
 msgstr "Failed to reschedule. Please choose a time further in the future and try again."
 
@@ -6458,7 +6459,7 @@ msgstr "Celá obrazovka"
 msgid "Full transcript (when available)"
 msgstr "Full transcript (when available)"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1178
+#: src/routes/project/report/ProjectReportRoute.tsx:1138
 msgid "Fullscreen"
 msgstr "Fullscreen"
 
@@ -6521,7 +6522,7 @@ msgstr "Generovat názvy rozhovorů automaticky s možností tuto funkci vypnout
 msgid "Generate map"
 msgstr "Vygenerovat mapu"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:495
+#: src/routes/project/report/ProjectReportRoute.tsx:502
 #: src/components/report/UpdateReportModalButton.tsx:361
 #: src/components/report/CreateReportForm.tsx:348
 msgid "Generate now"
@@ -6568,12 +6569,11 @@ msgstr "Vygenerované názvy rozhovorů obsahují jeden název místo seznamu n�
 msgid "Generated from the transcript. You can edit it."
 msgstr "Vygenerováno z přepisu. Můžete ho upravit."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:134
 #: src/components/sharing/StatusLine.tsx:50
 msgid "Generating"
 msgstr "Generuje se"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:291
+#: src/routes/project/report/ProjectReportRoute.tsx:298
 msgid "Generating report..."
 msgstr "Generating report..."
 
@@ -6581,7 +6581,7 @@ msgstr "Generating report..."
 msgid "Generating the summary. Please wait..."
 msgstr "Generating the summary. Please wait..."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:244
+#: src/routes/project/report/ProjectReportRoute.tsx:251
 msgid "Generating your report..."
 msgstr "Generating your report..."
 
@@ -6746,8 +6746,8 @@ msgstr "Usnadněte si psaní zpráv vlastními pokyny."
 msgid "Guide the report"
 msgstr "Guide the report"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:316
-#: src/routes/project/report/ProjectReportRoute.tsx:1161
+#: src/routes/project/report/ProjectReportRoute.tsx:323
+#: src/routes/project/report/ProjectReportRoute.tsx:1121
 msgid "Guided"
 msgstr "Guided"
 
@@ -7140,7 +7140,7 @@ msgstr "Inactive"
 msgid "Inbox"
 msgstr "Inbox"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:967
+#: src/routes/project/report/ProjectReportRoute.tsx:1019
 msgid "Include portal link"
 msgstr "Include portal link"
 
@@ -7752,7 +7752,7 @@ msgstr "Naposledy aktualizováno {0}"
 msgid "Last used"
 msgstr "Naposledy použito"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:314
+#: src/routes/project/report/ProjectReportRoute.tsx:321
 msgid "Latest"
 msgstr "Latest"
 
@@ -8599,7 +8599,7 @@ msgstr "more"
 msgid "More"
 msgstr "Další"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1028
+#: src/routes/project/report/ProjectReportRoute.tsx:1029
 msgid "More actions"
 msgstr "More actions"
 
@@ -9339,7 +9339,7 @@ msgstr "Nejsou k dispozici žádná data zprávy"
 msgid "No report found"
 msgstr "No report found"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:891
+#: src/routes/project/report/ProjectReportRoute.tsx:921
 msgid "No reports yet"
 msgstr "No reports yet"
 
@@ -10696,7 +10696,7 @@ msgstr "Please check back later or contact the project owner for more informatio
 msgid "Please check your inputs for errors."
 msgstr "Please check your inputs for errors."
 
-#: src/components/project/ProjectQRCode.tsx:112
+#: src/components/project/ProjectQRCode.tsx:96
 msgid "Please enable participation to enable sharing"
 msgstr "Please enable participation to enable sharing"
 
@@ -11005,8 +11005,8 @@ msgstr "Price"
 #~ msgstr "Print / Save PDF"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1088
-msgid "Print report"
-msgstr "Print report"
+#~ msgid "Print report"
+#~ msgstr "Print report"
 
 #: src/components/layout/Footer.tsx:31
 msgid "Privacy"
@@ -11265,8 +11265,7 @@ msgstr "Zabezpečte přihlášení pomocí dvoufaktorového ověření."
 msgid "Public page"
 msgstr "Veřejná stránka"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:933
-#: src/routes/project/report/ProjectReportRoute.tsx:1303
+#: src/routes/project/report/ProjectReportRoute.tsx:1263
 msgid "Publish"
 msgstr "Publish"
 
@@ -11274,7 +11273,7 @@ msgstr "Publish"
 msgid "Publish changes"
 msgstr "Publikovat změny"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1284
+#: src/routes/project/report/ProjectReportRoute.tsx:1244
 msgid "Publish report"
 msgstr "Publikovat zprávu"
 
@@ -11287,11 +11286,9 @@ msgstr "Publikovat zprávu"
 #~ msgstr "Publish this report first to show the portal link"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:994
-msgid "Publish this report to get a share link"
-msgstr "Publish this report to get a share link"
+#~ msgid "Publish this report to get a share link"
+#~ msgstr "Publish this report to get a share link"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:130
-#: src/routes/project/report/ProjectReportRoute.tsx:932
 #: src/components/sharing/StatusLine.tsx:46
 msgid "Published"
 msgstr "Published"
@@ -11941,7 +11938,7 @@ msgid "report"
 msgstr "zpráva"
 
 #: src/routes/project/ProjectHomeRoute.tsx:207
-#: src/routes/project/report/ProjectReportRoute.tsx:161
+#: src/routes/project/report/ProjectReportRoute.tsx:166
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:153
 #: src/components/report/ReportRenderer.tsx:65
 msgid "Report"
@@ -11975,9 +11972,9 @@ msgstr "Zpráva vytvořena · {0}"
 msgid "Report generated"
 msgstr "Zpráva vygenerována"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:727
-#: src/routes/project/report/ProjectReportRoute.tsx:808
-#: src/routes/project/report/ProjectReportRoute.tsx:1244
+#: src/routes/project/report/ProjectReportRoute.tsx:749
+#: src/routes/project/report/ProjectReportRoute.tsx:838
+#: src/routes/project/report/ProjectReportRoute.tsx:1204
 msgid "Report generation cancelled"
 msgstr "Report generation cancelled"
 
@@ -11985,12 +11982,12 @@ msgstr "Report generation cancelled"
 msgid "Report generation continues in the background with a visible status."
 msgstr "Generování zprávy pokračuje na pozadí s viditelným stavem."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:222
+#: src/routes/project/report/ProjectReportRoute.tsx:229
 msgid "Report generation in progress..."
 msgstr "Report generation in progress..."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:732
-#: src/routes/project/report/ProjectReportRoute.tsx:1249
+#: src/routes/project/report/ProjectReportRoute.tsx:754
+#: src/routes/project/report/ProjectReportRoute.tsx:1209
 msgid "Report generation was cancelled. You can start a new report below."
 msgstr "Report generation was cancelled. You can start a new report below."
 
@@ -12015,7 +12012,7 @@ msgstr "Upozornění na zprávy"
 #~ msgid "Report Notifications"
 #~ msgstr "Report Notifications"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:449
+#: src/routes/project/report/ProjectReportRoute.tsx:456
 msgid "Report scheduled"
 msgstr "Report scheduled"
 
@@ -12045,7 +12042,7 @@ msgstr "Zpráva aktualizována"
 msgid "Report updated · {0}"
 msgstr "Zpráva aktualizována · {0}"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:851
+#: src/routes/project/report/ProjectReportRoute.tsx:881
 msgid "Reports"
 msgstr "Reports"
 
@@ -12163,12 +12160,12 @@ msgstr "Vyžaduje zapnutou možnost „Požádat o e-mail?“"
 #~ msgid "Rerun popcorn?"
 #~ msgstr "Spustit Popcorn znovu?"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:510
+#: src/routes/project/report/ProjectReportRoute.tsx:517
 #: src/components/training/TrainingRowActions.tsx:150
 msgid "Reschedule"
 msgstr "Reschedule"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:462
+#: src/routes/project/report/ProjectReportRoute.tsx:469
 msgid "Reschedule to"
 msgstr "Reschedule to"
 
@@ -12709,7 +12706,6 @@ msgstr "Naplánujte zprávy (beta), aby zahrnovaly všechny rozhovory zaznamenan
 msgid "Schedule training"
 msgstr "Naplánovat školení"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:132
 #: src/components/training/StaffTrainingPanel.tsx:126
 #: src/components/training/StaffTrainingPanel.tsx:170
 #: src/components/sharing/StatusLine.tsx:48
@@ -13377,8 +13373,8 @@ msgstr "Sdílet portál"
 #~ msgstr "Sdílet prezentaci"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1069
-msgid "Share report"
-msgstr "Share report"
+#~ msgid "Share report"
+#~ msgstr "Share report"
 
 #: src/routes/project/ProjectHomeRoute.tsx:162
 msgid "Share the project, watch live activity, and jump into the main tools from one place."
@@ -13636,7 +13632,7 @@ msgstr "Jsou zobrazeny argumenty jednoho výsledku."
 msgid "Showing the first {0} of {shownCount} matches. Narrow the search to see the rest."
 msgstr "Zobrazuje se prvních {0} z {shownCount} shod. Zpřesněte vyhledávání pro zobrazení zbytku."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:827
+#: src/routes/project/report/ProjectReportRoute.tsx:857
 msgid "Showing your most recent completed report."
 msgstr "Showing your most recent completed report."
 
@@ -13754,9 +13750,9 @@ msgstr "Něco ve formuláři je potřeba opravit. Zkontrolujte ho a zkuste to zn
 msgid "participant.modal.s3check.message"
 msgstr "Something is blocking your connection. Your audio will not be saved unless this is resolved."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:728
-#: src/routes/project/report/ProjectReportRoute.tsx:809
-#: src/routes/project/report/ProjectReportRoute.tsx:1245
+#: src/routes/project/report/ProjectReportRoute.tsx:750
+#: src/routes/project/report/ProjectReportRoute.tsx:839
+#: src/routes/project/report/ProjectReportRoute.tsx:1205
 #: src/routes/auth/Login.tsx:233
 #: src/routes/auth/Login.tsx:306
 #: src/components/project/ProjectAccessGuard.tsx:109
@@ -13771,12 +13767,12 @@ msgstr "Something went wrong"
 msgid "participant.conversation.error"
 msgstr "Something went wrong"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:822
+#: src/routes/project/report/ProjectReportRoute.tsx:852
 msgid "Something went wrong generating your latest report."
 msgstr "Something went wrong generating your latest report."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:739
-#: src/routes/project/report/ProjectReportRoute.tsx:1258
+#: src/routes/project/report/ProjectReportRoute.tsx:761
+#: src/routes/project/report/ProjectReportRoute.tsx:1218
 msgid "Something went wrong generating your report."
 msgstr "Something went wrong generating your report."
 
@@ -15318,7 +15314,7 @@ msgstr "Tato zpráva zatím není k dispozici."
 #~ msgstr "This report is not yet available. "
 
 #. placeholder {0}: views?.total ?? 0
-#: src/routes/project/report/ProjectReportRoute.tsx:198
+#: src/routes/project/report/ProjectReportRoute.tsx:205
 msgid "This report was opened by {0} people"
 msgstr "This report was opened by {0} people"
 
@@ -16121,7 +16117,7 @@ msgstr "Untitled conversation"
 msgid "Untitled methodology"
 msgstr "Metodika bez názvu"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:292
+#: src/routes/project/report/ProjectReportRoute.tsx:299
 msgid "Untitled report"
 msgstr "Untitled report"
 
@@ -17460,7 +17456,7 @@ msgstr "You can change this later in workspace settings."
 msgid "You can close this page. We'll notify you when it's done."
 msgstr "Tuto stránku můžete zavřít. Až bude hotovo, dáme vám vědět."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:247
+#: src/routes/project/report/ProjectReportRoute.tsx:254
 msgid "You can navigate away and come back later. Your report will continue generating in the background."
 msgstr "You can navigate away and come back later. Your report will continue generating in the background."
 
@@ -17485,7 +17481,7 @@ msgstr "Později to můžete zrušit v sekci <0>Nápověda, Připojte svého age
 msgid "You can skip this and add them later."
 msgstr "Tento krok můžete přeskočit a přidat je později."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1263
+#: src/routes/project/report/ProjectReportRoute.tsx:1223
 msgid "You can try again below."
 msgstr "You can try again below."
 
@@ -17830,7 +17826,7 @@ msgstr "Your invite was already accepted, but you're no longer a member of {reso
 msgid "Your last payment didn't go through. Your plan stays active. Update your payment method or retry the charge to settle up."
 msgstr "Poslední platba neproběhla. Váš tarif zůstává aktivní. Pro vyrovnání platby upravte platební metodu nebo platbu zopakujte."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:813
+#: src/routes/project/report/ProjectReportRoute.tsx:843
 msgid "Your latest report generation was cancelled. Showing your most recent completed report."
 msgstr "Your latest report generation was cancelled. Showing your most recent completed report."
 

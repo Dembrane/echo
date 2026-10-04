@@ -21,13 +21,12 @@ import {
 } from "@mantine/core";
 import { useDisclosure, useFullscreen } from "@mantine/hooks";
 import {
+	CheckIcon,
 	CopyIcon,
 	CornersInIcon,
 	CornersOutIcon,
 	DotsThreeVerticalIcon,
-	ExportIcon,
 	GearSixIcon,
-	LinkIcon,
 	PlayIcon,
 	PrinterIcon,
 	TrashIcon,
@@ -63,6 +62,8 @@ import {
 	ScheduleDateTimePicker,
 } from "@/components/report/ScheduleDateTimePicker";
 import { UpdateReportModalButton } from "@/components/report/UpdateReportModalButton";
+import { QRMenu, ShareButton, ShareControls } from "@/components/sharing/Share";
+import { reportStatusLabel, StatusLine } from "@/components/sharing/StatusLine";
 import { PARTICIPANT_BASE_URL } from "@/config";
 import focusOptionsData from "@/data/reportFocusOptions.json";
 import useCopyToRichText from "@/hooks/useCopyToRichText";
@@ -127,13 +128,13 @@ const LANG_LABELS: Record<string, string> = {
 function getStatusMeta(status: string): { color: string; label: string } {
 	switch (status) {
 		case "published":
-			return { color: "green", label: t`Published` };
+			return { color: "green", label: reportStatusLabel(status) };
 		case "scheduled":
-			return { color: "yellow", label: t`Scheduled` };
+			return { color: "yellow", label: reportStatusLabel(status) };
 		case "draft":
-			return { color: "primary", label: t`Generating` };
+			return { color: "primary", label: reportStatusLabel(status) };
 		default:
-			return { color: "gray", label: t`Archived` };
+			return { color: "gray", label: reportStatusLabel(status) };
 	}
 }
 
@@ -142,9 +143,12 @@ function getStatusMeta(status: string): { color: string; label: string } {
 export const ReportLayout = ({
 	children,
 	rightSection,
+	status,
 }: {
 	children: React.ReactNode;
 	rightSection?: React.ReactNode;
+	/** The status line, under the title. */
+	status?: React.ReactNode;
 }) => {
 	return (
 		<Stack
@@ -152,18 +156,21 @@ export const ReportLayout = ({
 			px={{ base: "1rem", md: "2rem" }}
 			py={{ base: "2rem", md: "3rem" }}
 		>
-			<Group justify="space-between" wrap="wrap">
-				<Breadcrumbs
-					items={[
-						{
-							label: (
-								<Title order={2}>
-									<Trans>Report</Trans>
-								</Title>
-							),
-						},
-					]}
-				/>
+			<Group justify="space-between" wrap="wrap" align="flex-start">
+				<Stack gap="xs">
+					<Breadcrumbs
+						items={[
+							{
+								label: (
+									<Title order={2}>
+										<Trans>Report</Trans>
+									</Title>
+								),
+							},
+						]}
+					/>
+					{status}
+				</Stack>
 				{rightSection}
 			</Group>
 			{children}
@@ -672,10 +679,25 @@ export const ProjectReportRoute = () => {
 
 	const contributionLink = `${PARTICIPANT_BASE_URL}/${language}/${projectId}/start?utm_source=report`;
 
-	const getSharingLink = (pid: string) =>
-		`${PARTICIPANT_BASE_URL}/${language}/${pid}/report`;
+	const sharingLink = `${PARTICIPANT_BASE_URL}/${language}/${projectId}/report`;
+	const includePortalLink = data?.show_portal_link ?? true;
 
-	const { copy: copyLink, copied: copiedLink } = useCopyToRichText();
+	// The Public page switch is publishing. Participants who asked to hear about
+	// the report are emailed when it is published, so that is confirmed first.
+	const setPublic = (value: boolean) => {
+		if (!data?.id || !projectId) return;
+		if (value && (participantCount ?? 0) > 0) {
+			setPublishStatus(true);
+			open();
+			return;
+		}
+		updateReport({
+			payload: { status: value ? "published" : "archived" },
+			projectId,
+			reportId: data.id,
+		});
+	};
+
 	const { copy: copyContent, copied: copiedContent } = useCopyToRichText();
 
 	const handleSelectReport = (id: number) => {
@@ -786,6 +808,14 @@ export const ProjectReportRoute = () => {
 	return (
 		<>
 			<ReportLayout
+				status={
+					data && (
+						<StatusLine
+							isPublic={data.status === "published"}
+							onceAt={scheduledReports[0]?.scheduled_at}
+						/>
+					)
+				}
 				rightSection={
 					<Group gap="xs">
 						{/* Update/New report */}
@@ -922,183 +952,113 @@ export const ProjectReportRoute = () => {
 								}}
 							>
 								<Stack gap={0}>
-									{/* Row 1: Distribution — report state */}
-									<Group justify="space-between" wrap="wrap" gap="sm" py="xs">
-										<Group gap="md" wrap="wrap">
-											<Switch
-												label={
-													<Text size="sm">
-														{data.status === "published"
-															? t`Published`
-															: t`Publish`}
-													</Text>
-												}
-												checked={data.status === "published"}
-												color="primary"
-												size="sm"
-												onChange={(e) => {
-													const isPublishing = e.target.checked;
-													const participantsToNotify = participantCount ?? 0;
-
-													if (isPublishing) {
-														if (participantsToNotify > 0) {
-															setPublishStatus(true);
-															open();
-														} else {
-															updateReport({
-																payload: { status: "published" },
-																projectId: projectId ?? "",
-																reportId: data.id,
-															});
-														}
-													} else {
-														updateReport({
-															payload: { status: "archived" },
-															projectId: projectId ?? "",
-															reportId: data.id,
-														});
-													}
-												}}
-												disabled={isUpdatingReport}
-												{...testId("report-publish-toggle")}
-											/>
-											{data.status === "published" && (
-												<Switch
-													label={t`Include portal link`}
-													checked={data.show_portal_link ?? true}
-													size="sm"
-													onChange={(e) => {
-														posthog.capture("report_made_public", {
-															enabled: !!e.target.checked,
-															report_id: data.id,
-														});
-														updateReport({
-															payload: {
-																show_portal_link: !!e.target.checked,
-															},
-															projectId: projectId ?? "",
-															reportId: data.id,
-														});
-													}}
-													disabled={isUpdatingReport}
-													{...testId("report-include-portal-link-checkbox")}
-												/>
-											)}
-										</Group>
-
-										{/* Copy link + kebab — actions */}
-										<Group gap="xs" wrap="nowrap">
-											<Tooltip
-												label={
-													data.status !== "published"
-														? t`Publish this report to get a share link`
-														: copiedLink
-															? t`Copied`
-															: t`Copy link to clipboard`
-												}
-												events={{ focus: true, hover: true, touch: true }}
-											>
-												<Box>
-													<Button
-														variant={copiedLink ? "filled" : undefined}
-														size="compact-sm"
-														leftSection={<LinkIcon size={20} />}
-														onClick={() => {
-															if (data.status === "published") {
+									{/* Row 1: Share, and what else a host does with the report */}
+									<Group justify="flex-start" wrap="wrap" gap="xs" py="xs">
+										<ShareButton>
+											<ShareControls
+												isPublic={data.status === "published"}
+												pending={isUpdatingReport}
+												onPublicChange={setPublic}
+												description={t`Anyone with the link can read it. No login, and no transcripts.`}
+												qr={
+													<QRMenu
+														links={{ url: sharingLink }}
+														fileName="report"
+														onAction={(action) => {
+															if (action === "copy")
 																posthog.capture("report_link_copied", {
 																	report_id: data.id,
 																});
-																copyLink(getSharingLink(projectId ?? ""));
-															}
 														}}
-														disabled={data.status !== "published"}
-														{...testId("report-copy-link-button")}
-													>
-														{copiedLink ? (
-															<Trans>Copied</Trans>
-														) : (
-															<Trans>Copy link</Trans>
-														)}
-													</Button>
-												</Box>
-											</Tooltip>
-
-											<Menu shadow="md" position="bottom-end">
-												<Menu.Target>
-													<Tooltip label={t`More actions`}>
-														<ActionIcon {...testId("report-actions-menu")}>
-															<DotsThreeVerticalIcon size={20} />
-														</ActionIcon>
-													</Tooltip>
-												</Menu.Target>
-												<Menu.Dropdown>
-													<Menu.Item
-														leftSection={<CopyIcon size={16} />}
-														onClick={() => {
-															if (activeReport?.content) {
-																copyContent(activeReport.content);
-															}
-														}}
-														{...testId("report-copy-content-button")}
-													>
-														{copiedContent ? (
-															<Trans>Copied</Trans>
-														) : (
-															<Trans>Copy report content</Trans>
-														)}
-													</Menu.Item>
-													<Menu.Item
-														leftSection={<ExportIcon size={16} />}
-														onClick={() => {
-															const url = getSharingLink(projectId ?? "");
-															if (data.status === "published") {
-																posthog.capture("report_exported", {
-																	method: "share",
-																	report_id: data.id,
-																});
-																if (url && navigator.canShare?.({ url })) {
-																	navigator.share({ url });
-																} else {
-																	window.open(url, "_blank");
-																}
-															}
-														}}
-														disabled={data.status !== "published"}
-														{...testId("report-share-button")}
-													>
-														<Trans>Share report</Trans>
-													</Menu.Item>
-													<Menu.Item
-														leftSection={<PrinterIcon size={16} />}
-														onClick={() => {
-															if (data.status === "published") {
-																posthog.capture("report_exported", {
-																	method: "print",
-																	report_id: data.id,
-																});
-																window.open(
-																	`${getSharingLink(projectId ?? "")}?print=true`,
-																	"_blank",
-																);
-															}
-														}}
-														disabled={data.status !== "published"}
-														{...testId("report-print-button")}
-													>
-														<Trans>Print report</Trans>
-													</Menu.Item>
-													<Menu.Divider />
-													<Menu.Item
-														leftSection={<TrashIcon size={16} />}
-														color="red"
-														onClick={openDeleteModal}
-														{...testId("report-delete-button")}
-													>
-														<Trans>Delete report</Trans>
-													</Menu.Item>
-												</Menu.Dropdown>
-											</Menu>
-										</Group>
+														extras={
+															<>
+																<Menu.Item
+																	component="a"
+																	href={`${sharingLink}?print=true`}
+																	target="_blank"
+																	rel="noopener noreferrer"
+																	leftSection={<PrinterIcon size={16} />}
+																	onClick={() =>
+																		posthog.capture("report_exported", {
+																			method: "print",
+																			report_id: data.id,
+																		})
+																	}
+																	{...testId("report-print-button")}
+																>
+																	<Trans>Download as PDF</Trans>
+																</Menu.Item>
+																<Menu.Item
+																	closeMenuOnClick={false}
+																	role="menuitemcheckbox"
+																	aria-checked={includePortalLink}
+																	leftSection={
+																		includePortalLink ? (
+																			<CheckIcon size={16} />
+																		) : (
+																			<Box w={16} />
+																		)
+																	}
+																	onClick={() => {
+																		posthog.capture("report_made_public", {
+																			enabled: !includePortalLink,
+																			report_id: data.id,
+																		});
+																		updateReport({
+																			payload: {
+																				show_portal_link: !includePortalLink,
+																			},
+																			projectId: projectId ?? "",
+																			reportId: data.id,
+																		});
+																	}}
+																	{...testId(
+																		"report-include-portal-link-checkbox",
+																	)}
+																>
+																	<Trans>Include portal link</Trans>
+																</Menu.Item>
+															</>
+														}
+													/>
+												}
+											/>
+										</ShareButton>
+										<Menu shadow="md" position="bottom-start">
+											<Menu.Target>
+												<Tooltip label={t`More actions`}>
+													<ActionIcon {...testId("report-actions-menu")}>
+														<DotsThreeVerticalIcon size={20} />
+													</ActionIcon>
+												</Tooltip>
+											</Menu.Target>
+											<Menu.Dropdown>
+												<Menu.Item
+													leftSection={<CopyIcon size={16} />}
+													onClick={() => {
+														if (activeReport?.content) {
+															copyContent(activeReport.content);
+														}
+													}}
+													{...testId("report-copy-content-button")}
+												>
+													{copiedContent ? (
+														<Trans>Copied</Trans>
+													) : (
+														<Trans>Copy report content</Trans>
+													)}
+												</Menu.Item>
+												<Menu.Divider />
+												<Menu.Item
+													leftSection={<TrashIcon size={16} />}
+													color="red"
+													onClick={openDeleteModal}
+													{...testId("report-delete-button")}
+												>
+													<Trans>Delete report</Trans>
+												</Menu.Item>
+											</Menu.Dropdown>
+										</Menu>
 									</Group>
 
 									{/* Separator between distribution and view controls */}
