@@ -33,7 +33,7 @@ describe("map settings", () => {
 			nodeLimit: null,
 			showClusters: true,
 			showExplore: true,
-			showLegend: true,
+			showLegend: false,
 			showRelationships: false,
 			showShowcase: false,
 			showSpotlight: true,
@@ -137,14 +137,12 @@ describe("settings migration", () => {
 		expect(readMapSettings().colorBy).toBe("conversation");
 	});
 
-	it("shows the legend to a host who never turned it on", () => {
-		// Off was the default before version 5, so a saved false is the old
-		// default rather than a choice. A host who turned it off since keeps
-		// the quiet map.
-		store({ showLegend: false, version: 4 });
-		expect(readMapSettings().showLegend).toBe(true);
-		store({ showLegend: false, version: MAP_SETTINGS_VERSION });
+	it("hides the legend once for every host, then keeps their choice", () => {
+		// On was the default in version 5, so a saved true is no choice.
+		store({ showLegend: true, version: 5 });
 		expect(readMapSettings().showLegend).toBe(false);
+		store({ showLegend: true, version: MAP_SETTINGS_VERSION });
+		expect(readMapSettings().showLegend).toBe(true);
 	});
 
 	it("keeps neutral once a host has chosen it", () => {

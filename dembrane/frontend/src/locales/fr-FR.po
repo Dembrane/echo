@@ -17865,3 +17865,54 @@ msgstr "an"
 #: src/components/common/ImageCropModal.tsx:129
 msgid "Zoom"
 msgstr "Zoom"
+
+#. placeholder {0}: hiddenConversations.size
+#: src/components/map/MapPage.tsx:713
+msgid "{0, plural, one {# conversation is hidden from the map.} other {# conversations are hidden from the map.}}"
+msgstr "{0, plural, one {# conversation est masquée sur la carte.} other {# conversations sont masquées sur la carte.}}"
+
+#: src/components/map/panels/ClusterSummary.tsx:108
+msgid "{rest} more"
+msgstr "{rest} de plus"
+
+#: src/components/map/panels/HistoryPanel.tsx:121
+msgid "Click an argument, or rest the cursor on a cluster until the circle closes, and it is kept here."
+msgstr "Cliquez sur un argument, ou laissez le curseur sur un groupe jusqu’à ce que le cercle se ferme, et il est conservé ici."
+
+#: src/components/map/panels/HistoryPanel.tsx:59
+#: src/components/map/panels/ClusterSummary.tsx:145
+msgid "Distilling core idea…"
+msgstr "Distillation de l’idée centrale…"
+
+#: src/components/map/panels/MapSettingsMenu.tsx:71
+#: src/components/map/panels/HistoryPanel.tsx:115
+#: src/components/map/panels/HistoryPanel.tsx:117
+msgid "History"
+msgstr "Historique"
+
+#: src/components/participant/ParticipantBody.tsx:159
+msgid ""
+"Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
+"**Please keep this screen lit up**\n"
+"(black screen = not recording)"
+msgstr ""
+"Veuillez enregistrer votre réponse en cliquant sur le bouton \"Enregistrer\" ci-dessous. Vous pouvez également répondre par écrit en cliquant sur l'icône de texte.\n"
+"**Veuillez garder cet écran allumé**\n"
+"(écran noir = pas d'enregistrement)"
+
+#: src/components/participant/ParticipantBody.tsx:155
+msgid ""
+"Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
+"**Please keep this screen lit up**\n"
+"(black screen = not recording).\n"
+"This transcript will be anonymized and your host will not be able to listen to your recording."
+msgstr ""
+"Veuillez enregistrer votre réponse en cliquant sur le bouton \"Enregistrer\" ci-dessous. Vous pouvez également répondre par écrit en cliquant sur l'icône de texte.\n"
+"**Veuillez garder cet écran allumé**\n"
+"(écran noir = pas d'enregistrement).\n"
+"Votre transcription sera anonymisée et votre hôte ne pourra pas écouter votre enregistrement."
+
+#: src/components/map/MapPage.tsx:724
+msgid "Show all conversations"
+msgstr "Afficher toutes les conversations"
+

@@ -8,10 +8,13 @@ export type MapUrlState = {
 	/** A result scope, such as one deduplication result. */
 	scope: string | null;
 	colorBy: ColorBy | null;
+	/** Conversations whose arguments the map leaves out, by id. */
+	hidden: string[];
 };
 
 export const MAP_URL_PARAMS = {
 	colorBy: "colorBy",
+	hidden: "hidden",
 	scope: "scope",
 } as const;
 
@@ -23,6 +26,9 @@ export function parseMapSearchParams(params: URLSearchParams): MapUrlState {
 				? "none"
 				: colorBy
 			: null,
+		hidden: (params.get(MAP_URL_PARAMS.hidden) ?? "")
+			.split(",")
+			.filter(Boolean),
 		scope: params.get(MAP_URL_PARAMS.scope) || null,
 	};
 }
@@ -41,6 +47,12 @@ export function applyMapUrlState(
 		}
 	};
 	if ("scope" in patch) set(MAP_URL_PARAMS.scope, patch.scope ?? null);
+	if ("hidden" in patch) {
+		set(
+			MAP_URL_PARAMS.hidden,
+			patch.hidden?.length ? patch.hidden.join(",") : null,
+		);
+	}
 	if ("colorBy" in patch) {
 		set(
 			MAP_URL_PARAMS.colorBy,

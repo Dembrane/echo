@@ -17866,3 +17866,54 @@ msgstr "J."
 #: src/components/common/ImageCropModal.tsx:129
 msgid "Zoom"
 msgstr "Zoom"
+
+#. placeholder {0}: hiddenConversations.size
+#: src/components/map/MapPage.tsx:713
+msgid "{0, plural, one {# conversation is hidden from the map.} other {# conversations are hidden from the map.}}"
+msgstr "{0, plural, one {# Gespräch ist auf der Karte ausgeblendet.} other {# Gespräche sind auf der Karte ausgeblendet.}}"
+
+#: src/components/map/panels/ClusterSummary.tsx:108
+msgid "{rest} more"
+msgstr "{rest} weitere"
+
+#: src/components/map/panels/HistoryPanel.tsx:121
+msgid "Click an argument, or rest the cursor on a cluster until the circle closes, and it is kept here."
+msgstr "Klicke auf ein Argument oder lass den Cursor auf einem Cluster ruhen, bis sich der Kreis schließt, dann wird es hier festgehalten."
+
+#: src/components/map/panels/HistoryPanel.tsx:59
+#: src/components/map/panels/ClusterSummary.tsx:145
+msgid "Distilling core idea…"
+msgstr "Kernidee wird destilliert…"
+
+#: src/components/map/panels/MapSettingsMenu.tsx:71
+#: src/components/map/panels/HistoryPanel.tsx:115
+#: src/components/map/panels/HistoryPanel.tsx:117
+msgid "History"
+msgstr "Verlauf"
+
+#: src/components/participant/ParticipantBody.tsx:159
+msgid ""
+"Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
+"**Please keep this screen lit up**\n"
+"(black screen = not recording)"
+msgstr ""
+"Bitte nehmen Sie Ihre Antwort auf, indem Sie unten auf die Schaltfläche \"Aufnehmen\" klicken. Sie können auch per Text antworten, indem Sie auf das Textsymbol klicken.\n"
+"**Bitte lassen Sie diesen Bildschirm eingeschaltet**\n"
+"(schwarzer Bildschirm = keine Aufnahme)"
+
+#: src/components/participant/ParticipantBody.tsx:155
+msgid ""
+"Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
+"**Please keep this screen lit up**\n"
+"(black screen = not recording).\n"
+"This transcript will be anonymized and your host will not be able to listen to your recording."
+msgstr ""
+"Bitte nehmen Sie Ihre Antwort auf, indem Sie unten auf die Schaltfläche \"Aufnehmen\" klicken. Sie können auch per Text antworten, indem Sie auf das Textsymbol klicken.\n"
+"**Bitte lassen Sie diesen Bildschirm eingeschaltet**\n"
+"(schwarzer Bildschirm = keine Aufnahme).\n"
+"Ihre Transkription wird anonymisiert und Ihr Host kann Ihre Aufnahme nicht anhören."
+
+#: src/components/map/MapPage.tsx:724
+msgid "Show all conversations"
+msgstr "Alle Gespräche anzeigen"
+

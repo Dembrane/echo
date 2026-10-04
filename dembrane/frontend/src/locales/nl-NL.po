@@ -17861,3 +17861,54 @@ msgstr "jr"
 #: src/components/common/ImageCropModal.tsx:129
 msgid "Zoom"
 msgstr "Zoom"
+
+#. placeholder {0}: hiddenConversations.size
+#: src/components/map/MapPage.tsx:713
+msgid "{0, plural, one {# conversation is hidden from the map.} other {# conversations are hidden from the map.}}"
+msgstr "{0, plural, one {# gesprek is verborgen op de kaart.} other {# gesprekken zijn verborgen op de kaart.}}"
+
+#: src/components/map/panels/ClusterSummary.tsx:108
+msgid "{rest} more"
+msgstr "{rest} meer"
+
+#: src/components/map/panels/HistoryPanel.tsx:121
+msgid "Click an argument, or rest the cursor on a cluster until the circle closes, and it is kept here."
+msgstr "Klik op een argument, of laat de cursor op een cluster rusten tot de cirkel rond is, en je vindt het hier terug."
+
+#: src/components/map/panels/HistoryPanel.tsx:59
+#: src/components/map/panels/ClusterSummary.tsx:145
+msgid "Distilling core idea…"
+msgstr "Kernidee wordt gedestilleerd…"
+
+#: src/components/map/panels/MapSettingsMenu.tsx:71
+#: src/components/map/panels/HistoryPanel.tsx:115
+#: src/components/map/panels/HistoryPanel.tsx:117
+msgid "History"
+msgstr "Geschiedenis"
+
+#: src/components/participant/ParticipantBody.tsx:159
+msgid ""
+"Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
+"**Please keep this screen lit up**\n"
+"(black screen = not recording)"
+msgstr ""
+"Neem je reactie op door op de knop \"Record\" hieronder te klikken. Je kunt ook in tekst reageren door op het teksticoon te klikken.\n"
+"**Houd dit scherm verlicht**\n"
+"(zwart scherm = niet aan het opnemen)"
+
+#: src/components/participant/ParticipantBody.tsx:155
+msgid ""
+"Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
+"**Please keep this screen lit up**\n"
+"(black screen = not recording).\n"
+"This transcript will be anonymized and your host will not be able to listen to your recording."
+msgstr ""
+"Neem je reactie op door op de knop \"Record\" hieronder te klikken. Je kunt ook in tekst reageren door op het teksticoon te klikken.\n"
+"**Houd dit scherm verlicht**\n"
+"(zwart scherm = niet aan het opnemen).\n"
+"Je transcriptie wordt geanonimiseerd en je host kan niet naar je opname luisteren."
+
+#: src/components/map/MapPage.tsx:724
+msgid "Show all conversations"
+msgstr "Alle gesprekken tonen"
+

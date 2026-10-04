@@ -144,6 +144,8 @@ export type MapGraphData = {
 	 * otherwise numbers the conversations.
 	 */
 	conversationNames: Map<number, string>;
+	/** Each conversation's palette slot, by conversation id; empty on the room's map. */
+	conversationSlots: ReadonlyMap<string, number>;
 	objectsById: Map<string, MapObjectInfo>;
 	/** Explicit relations with node (revision) ids as endpoints. */
 	relations: MapRelation[];
@@ -720,6 +722,7 @@ export function buildMapGraph(input: MapGraphResponse): MapGraphData {
 		conversationCount: data.conversationCount,
 		conversationNames,
 		conversationSlotCount,
+		conversationSlots: slotOf,
 		counts,
 		evidenceById,
 		objectsById,
