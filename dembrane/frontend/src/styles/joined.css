@@ -1,0 +1,71 @@
+/* Neighbours share an edge (rule 08, ws6-joined).
+ *
+ * Where two bordered controls touch, the line between them is one line, drawn
+ * once. A selected or focused neighbour turns that same line blue (or is drawn
+ * on top of it), never adds a blue line beside the grey one.
+ *
+ * Loaded after rules.css and overrides it with the same :root pattern. */
+
+/* Segmented control. Every line is a segment's own border: a left edge on each
+ * segment, a right edge on the last. The active segment recolours its left
+ * edge and the next segment's left edge (or the last's right edge), so its
+ * blue sits on the shared line. Mantine's sliding indicator measures the
+ * segment minus its border and lands a pixel off, beside the line; the tint
+ * goes on the segment itself instead. Mantine's own divider (::before) would
+ * be a second line next to the border. */
+:root .mantine-SegmentedControl-root {
+	border-width: 0;
+}
+:root .mantine-SegmentedControl-indicator,
+:root .mantine-SegmentedControl-control::before,
+:root .mantine-SegmentedControl-label::before {
+	display: none;
+}
+:root .mantine-SegmentedControl-control {
+	border-color: var(--app-rule-color);
+	border-style: solid;
+	border-width: 0 0 0 var(--app-stroke);
+}
+:root .mantine-SegmentedControl-control:last-of-type {
+	border-right-width: var(--app-stroke);
+}
+:root .mantine-SegmentedControl-control[data-active] {
+	background: #e9f1ff;
+	border-left-color: #2957df;
+}
+:root
+	.mantine-SegmentedControl-control[data-active]
+	+ .mantine-SegmentedControl-control {
+	border-left-color: #2957df;
+}
+:root .mantine-SegmentedControl-control[data-active]:last-of-type {
+	border-right-color: #2957df;
+}
+
+/* Button group: Mantine splits the shared edge into two half-pixel borders,
+ * which a 1x screen rounds up to two lines. Each button keeps its whole box
+ * and steps back over its neighbour's edge; the hovered or focused one is
+ * drawn on top. The [data-orientation] matches Mantine's own weight. */
+:root
+	.mantine-ButtonGroup-group[data-orientation]
+	> .mantine-Button-root:not(:only-child) {
+	border-width: var(--app-stroke);
+}
+:root
+	.mantine-ButtonGroup-group[data-orientation="horizontal"]
+	> .mantine-Button-root
+	+ .mantine-Button-root {
+	margin-inline-start: calc(-1 * var(--app-stroke));
+}
+:root
+	.mantine-ButtonGroup-group[data-orientation="vertical"]
+	> .mantine-Button-root
+	+ .mantine-Button-root {
+	margin-top: calc(-1 * var(--app-stroke));
+}
+:root
+	.mantine-ButtonGroup-group
+	> .mantine-Button-root:is(:hover, :focus-visible) {
+	position: relative;
+	z-index: 1;
+}

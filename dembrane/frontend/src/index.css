@@ -2,6 +2,8 @@
 @import "./fonts/dm-sans.css";
 /* The design system: the rule, square shapes, one stroke, one weight */
 @import "./styles/rules.css";
+/* Neighbours share an edge: joined controls draw one line between them */
+@import "./styles/joined.css";
 
 @layer tailwind {
 	/* biome-ignore lint/suspicious/noUnknownAtRules: <explanation> */
