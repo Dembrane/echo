@@ -21,10 +21,15 @@ const repo = execFileSync("git", ["rev-parse", "--show-toplevel"], {
 })
 	.toString()
 	.trim();
-const tracked = execFileSync("git", ["ls-files", "-z"], { cwd: repo })
-	.toString()
-	.split("\0")
-	.filter(Boolean);
+// Unique: during a merge, an unresolved file is listed once per stage.
+const tracked = [
+	...new Set(
+		execFileSync("git", ["ls-files", "-z"], { cwd: repo })
+			.toString()
+			.split("\0")
+			.filter(Boolean),
+	),
+];
 
 const problems = [];
 
