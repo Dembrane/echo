@@ -2,7 +2,9 @@
 @import "./fonts/dm-sans.css";
 /* The design system: the rule, square shapes, one stroke, one weight */
 @import "./styles/rules.css";
-/* Dark mode: what the per-scheme variables can't reach */
+/* Neighbours share an edge: joined controls draw one line between them */
+@import "./styles/joined.css";
+/* Dark mode: what the per-scheme variables can't reach (last, so it wins) */
 @import "./styles/tokens-dark.css";
 
 @layer tailwind {

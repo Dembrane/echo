@@ -1,0 +1,159 @@
+/* Neighbours share an edge (rule 08, ws6-joined).
+ *
+ * Where two bordered controls touch, the line between them is one line, drawn
+ * once. A selected or focused neighbour turns that same line blue (or is drawn
+ * on top of it), never adds a blue line beside the grey one.
+ *
+ * Loaded after rules.css and overrides it with the same :root pattern. */
+
+/* Segmented control. Every line is a segment's own border: a left edge on each
+ * segment, a right edge on the last. The active segment recolours its left
+ * edge and the next segment's left edge (or the last's right edge), so its
+ * blue sits on the shared line. Mantine's sliding indicator measures the
+ * segment minus its border and lands a pixel off, beside the line; the tint
+ * goes on the segment itself instead. Mantine's own divider (::before) would
+ * be a second line next to the border. */
+:root .mantine-SegmentedControl-root {
+	border-width: 0;
+}
+:root .mantine-SegmentedControl-indicator,
+:root .mantine-SegmentedControl-control::before,
+:root .mantine-SegmentedControl-label::before {
+	display: none;
+}
+:root .mantine-SegmentedControl-control {
+	border-color: var(--app-rule-color);
+	border-style: solid;
+	border-width: 0 0 0 var(--app-stroke);
+	/* The lines switch with the tint, as a chip's do. */
+	transition: none;
+}
+:root .mantine-SegmentedControl-control:last-of-type {
+	border-right-width: var(--app-stroke);
+}
+:root .mantine-SegmentedControl-control[data-active] {
+	background: var(--app-action-tint, #e9f1ff);
+}
+:root
+	.mantine-SegmentedControl-control:is(
+		[data-active],
+		:has(> input:focus-visible)
+	),
+:root
+	.mantine-SegmentedControl-control:is(
+		[data-active],
+		:has(> input:focus-visible)
+	)
+	+ .mantine-SegmentedControl-control {
+	border-left-color: var(--app-action, #2957df);
+}
+:root
+	.mantine-SegmentedControl-control:is(
+		[data-active],
+		:has(> input:focus-visible)
+	):last-of-type {
+	border-right-color: var(--app-action, #2957df);
+}
+/* Keyboard focus closes the segment's blue sides into a box, drawn inside so
+ * nothing moves. Mantine's own ring sat beside the shared lines and was
+ * clipped top and bottom by the root. */
+:root .mantine-SegmentedControl-label {
+	outline: none;
+}
+:root .mantine-SegmentedControl-control:has(> input:focus-visible) {
+	box-shadow:
+		inset 0 var(--app-stroke) var(--app-action, #2957df),
+		inset 0 calc(-1 * var(--app-stroke)) var(--app-action, #2957df);
+}
+
+/* Button group: Mantine splits the shared edge into two half-pixel borders,
+ * which a 1x screen rounds up to two lines. Each button keeps its whole box
+ * and steps back over its neighbour's edge; the hovered or focused one is
+ * drawn on top. The [data-orientation] matches Mantine's own weight. */
+:root
+	.mantine-ButtonGroup-group[data-orientation]
+	> .mantine-Button-root:not(:only-child) {
+	border-width: var(--app-stroke);
+}
+:root
+	.mantine-ButtonGroup-group[data-orientation="horizontal"]
+	> .mantine-Button-root
+	+ .mantine-Button-root {
+	margin-inline-start: calc(-1 * var(--app-stroke));
+}
+:root
+	.mantine-ButtonGroup-group[data-orientation="vertical"]
+	> .mantine-Button-root
+	+ .mantine-Button-root {
+	margin-top: calc(-1 * var(--app-stroke));
+}
+:root
+	.mantine-ButtonGroup-group
+	> .mantine-Button-root:is(:hover, :focus-visible) {
+	position: relative;
+	z-index: 1;
+}
+
+/* Rows and cards stacked at gap 0 (a list of rows you press, a skeleton of
+ * cards): each one after the first steps back over the line above, so the
+ * rule between two rows is drawn once. A selected row is already drawn on top
+ * (rules.css), so its blue covers the shared line. A row rendered as a link
+ * wraps its card in an <a>, which steps back instead. */
+:root
+	.mantine-Stack-root[style*="--stack-gap: 0rem"]
+	> :is(.app-do, [data-with-border], a:has(> .app-do))
+	+ :is(.app-do, [data-with-border], a:has(> .app-do)) {
+	margin-top: calc(-1 * var(--app-stroke));
+}
+
+/* Fields side by side at gap 0 are a joined row even without .app-joined, and
+ * behave like one: each steps back over its neighbour's side, the focused one
+ * on top, the row never wraps part-way and stacks whole on a phone (a wrapped
+ * field would step back past the row's edge and lose its line). A Select
+ * leaves a hidden input between the fields, hence ~ rather than +. */
+:root
+	.mantine-Group-root[style*="--group-gap: 0rem"]:has(
+		> .mantine-InputWrapper-root ~ .mantine-InputWrapper-root
+	) {
+	flex-wrap: nowrap;
+}
+:root
+	.mantine-Group-root[style*="--group-gap: 0rem"]
+	> .mantine-InputWrapper-root
+	~ .mantine-InputWrapper-root {
+	margin-left: calc(-1 * var(--app-stroke));
+}
+:root
+	.mantine-Group-root[style*="--group-gap: 0rem"]
+	> .mantine-InputWrapper-root:focus-within {
+	position: relative;
+	z-index: 1;
+}
+@media (max-width: 767px) {
+	:root
+		.mantine-Group-root[style*="--group-gap: 0rem"]:has(
+			> .mantine-InputWrapper-root ~ .mantine-InputWrapper-root
+		) {
+		align-items: stretch;
+		flex-direction: column;
+	}
+	:root
+		.mantine-Group-root[style*="--group-gap: 0rem"]
+		> .mantine-InputWrapper-root
+		~ .mantine-InputWrapper-root {
+		margin-left: 0;
+	}
+}
+
+/* A table set straight into a bordered card with no padding: the card's rules
+ * are the table's, so the table drops its own above and below. Padding is read
+ * from Mantine's inline style (p, py); a Tailwind p-* class isn't seen, and no
+ * such card holds a table today. */
+:root
+	:is(.mantine-Paper-root, .mantine-Card-root)[data-with-border]:not(
+		[style*="padding"]
+	)
+	> .mantine-Table-table {
+	border-bottom-width: 0;
+	border-top-width: 0;
+}
