@@ -16,7 +16,8 @@ export const map = {
 	}),
 	"map.groups_need_snapshot": msg({
 		id: "error.map.groups_need_snapshot",
-		message: "Clusters can be kept on a regenerated map. Regenerate the map and try again.",
+		message:
+			"Clusters can be kept on a regenerated map. Regenerate the map and try again.",
 	}),
 	"map.no_map_yet": msg({
 		id: "error.map.no_map_yet",

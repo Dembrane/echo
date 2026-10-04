@@ -243,6 +243,7 @@ export const mapKeys = {
 				types: params.types ? [...params.types].sort() : null,
 			},
 		] as const,
+	groups: (resultId: string) => ["map", "result", resultId, "groups"] as const,
 	project: (projectId: string) => ["map", "project", projectId] as const,
 	projectLegacy: (projectId: string) =>
 		["map", "project", projectId, "legacy"] as const,
@@ -501,6 +502,54 @@ export async function requestSelectionTitle(
 }
 
 // ---------------------------------------------------------------------------
+// Groups
+// ---------------------------------------------------------------------------
+
+export type MapGroupMember = {
+	revisionId: string;
+	objectId: string | null;
+	type: string | null;
+};
+
+/** A dwelled cluster the server keeps for the project: titled once its run lands. */
+export type MapGroupDoc = {
+	id: string;
+	status: "pending" | "ready" | "failed";
+	title: string | null;
+	error: string | null;
+	/** Most central first. */
+	members: MapGroupMember[];
+	snapshotId: string | null;
+	createdAt: string | null;
+};
+
+export type MapGroupRequest = {
+	snapshotId: string | null;
+	/** The exact revisions selected, most central first. */
+	revisionIds: string[];
+};
+
+/** The project's groups, newest first. */
+export const listMapGroups = async (resultId: string) =>
+	(
+		await bff.get<{ items: MapGroupDoc[] }>(
+			`/map/results/${enc(resultId)}/groups`,
+		)
+	).items ?? [];
+
+/** Commits a selection as a group; answers with the group, pending until titled. */
+export const createMapGroup = async (
+	resultId: string,
+	request: MapGroupRequest,
+) =>
+	(
+		await bff.post<{ group: MapGroupDoc }>(
+			`/map/results/${enc(resultId)}/groups`,
+			{ revision_ids: request.revisionIds, snapshot_id: request.snapshotId },
+		)
+	).group;
+
+// ---------------------------------------------------------------------------
 // Live events
 // ---------------------------------------------------------------------------
 
@@ -513,6 +562,7 @@ const MAP_EVENT_TYPES = [
 	"needs_review",
 	"cancelled",
 	"fact_check",
+	"group",
 ] as const;
 
 const PROGRESS_FIELDS = [
@@ -616,6 +666,16 @@ export const useMapEvents = (projectId: string) => {
 							queryKey: mapKeys.factChecks(resultId),
 						});
 					}, FACT_CHECK_REFETCH_DELAY_MS);
+					return;
+				case "group":
+					// Someone's group was committed or titled: every page on the
+					// project reads the list again.
+					void queryClient.invalidateQueries({
+						predicate: (query) =>
+							query.queryKey[0] === "map" &&
+							query.queryKey[1] === "result" &&
+							query.queryKey[3] === "groups",
+					});
 					return;
 				default:
 					void queryClient.invalidateQueries({
