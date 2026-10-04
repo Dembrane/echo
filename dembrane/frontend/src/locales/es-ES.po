@@ -571,7 +571,7 @@ msgstr "{0} no añadidas"
 
 #. placeholder {0}: status.done ?? 0
 #. placeholder {1}: status.total
-#: src/features/sidebar/primitives/NavItem.tsx:266
+#: src/features/sidebar/primitives/NavItem.tsx:273
 #: src/features/processes/copy.ts:44
 msgid "{0} of {1}"
 msgstr "{0} de {1}"
@@ -5953,7 +5953,7 @@ msgstr "El estado factual no se aplica a este objeto."
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:93
 #: src/routes/admin/AdminSettingsRoute.tsx:2695
 #: src/routes/admin/AdminSettingsRoute.tsx:2757
-#: src/features/sidebar/primitives/NavItem.tsx:274
+#: src/features/sidebar/primitives/NavItem.tsx:281
 #: src/components/invite/InviteResultsList.tsx:58
 #: src/components/dropzone/UploadConversationDropzone.tsx:808
 #: src/components/billing/BillingManager.tsx:230
@@ -11538,7 +11538,7 @@ msgid "Reads every 2 minutes. Refresh reads now."
 msgstr "Lee cada 2 minutos. Actualiza para leer ahora."
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:96
-#: src/features/sidebar/primitives/NavItem.tsx:274
+#: src/features/sidebar/primitives/NavItem.tsx:281
 msgid "Ready"
 msgstr "Listo"
 
