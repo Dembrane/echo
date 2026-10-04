@@ -5,6 +5,8 @@ import { ActionIcon, Loader, Tabs, Text, Tooltip } from "@mantine/core";
 import {
 	ArrowsInIcon,
 	ArrowsOutIcon,
+	CaretLeftIcon,
+	CaretRightIcon,
 	MoonIcon,
 	PauseIcon,
 	PlayIcon,
@@ -26,12 +28,15 @@ import {
 	AUDIENCE_SAFETY_REFRESH_MS,
 	audienceUrls,
 	type DeckChromeMessage,
+	type DeckDirection,
 	deckBlockCommand,
+	deckNavigateCommand,
 	deckOpeningCommand,
 	deckThemeCommand,
 	deckVisibilityCommand,
 	isDeckChromeEvent,
 	isDeckEditEvent,
+	isDeckNavigateEvent,
 	isDeckOpeningEvent,
 	isDeckReadyEvent,
 	postDeckMessage,
@@ -85,6 +90,10 @@ const AUDIENCE_COPY: Record<
 		lightScreen: string;
 		intro: string;
 		dataPolicy: string;
+		previous: string;
+		next: string;
+		/** "{n}" and "{total}" are filled in. */
+		slideOf: string;
 	}
 > = {
 	cs: {
@@ -101,6 +110,9 @@ const AUDIENCE_COPY: Record<
 		lightScreen: "Světlá obrazovka",
 		pause: "Pozastavit",
 		play: "Přehrát",
+		next: "Další snímek",
+		previous: "Předchozí snímek",
+		slideOf: "Snímek {n} z {total}",
 		waiting: "Výsledky se připravují.",
 	},
 	de: {
@@ -117,6 +129,9 @@ const AUDIENCE_COPY: Record<
 		lightScreen: "Heller Bildschirm",
 		pause: "Pause",
 		play: "Abspielen",
+		next: "Nächste Folie",
+		previous: "Vorherige Folie",
+		slideOf: "Folie {n} von {total}",
 		waiting: "Die Ergebnisse werden vorbereitet.",
 	},
 	en: {
@@ -133,6 +148,9 @@ const AUDIENCE_COPY: Record<
 		lightScreen: "Light screen",
 		pause: "Pause",
 		play: "Play",
+		next: "Next slide",
+		previous: "Previous slide",
+		slideOf: "Slide {n} of {total}",
 		waiting: "The results are being prepared.",
 	},
 	es: {
@@ -149,6 +167,9 @@ const AUDIENCE_COPY: Record<
 		lightScreen: "Pantalla clara",
 		pause: "Pausar",
 		play: "Reproducir",
+		next: "Diapositiva siguiente",
+		previous: "Diapositiva anterior",
+		slideOf: "Diapositiva {n} de {total}",
 		waiting: "Los resultados se están preparando.",
 	},
 	fr: {
@@ -165,6 +186,9 @@ const AUDIENCE_COPY: Record<
 		lightScreen: "Écran clair",
 		pause: "Pause",
 		play: "Lire",
+		next: "Diapositive suivante",
+		previous: "Diapositive précédente",
+		slideOf: "Diapositive {n} sur {total}",
 		waiting: "Les résultats sont en cours de préparation.",
 	},
 	it: {
@@ -181,6 +205,9 @@ const AUDIENCE_COPY: Record<
 		lightScreen: "Schermo chiaro",
 		pause: "Pausa",
 		play: "Riprendi",
+		next: "Diapositiva successiva",
+		previous: "Diapositiva precedente",
+		slideOf: "Diapositiva {n} di {total}",
 		waiting: "I risultati sono in preparazione.",
 	},
 	nl: {
@@ -197,6 +224,9 @@ const AUDIENCE_COPY: Record<
 		lightScreen: "Licht scherm",
 		pause: "Pauzeren",
 		play: "Afspelen",
+		next: "Volgende dia",
+		previous: "Vorige dia",
+		slideOf: "Dia {n} van {total}",
 		waiting: "De resultaten worden voorbereid.",
 	},
 	uk: {
@@ -213,8 +243,21 @@ const AUDIENCE_COPY: Record<
 		lightScreen: "Світлий екран",
 		pause: "Пауза",
 		play: "Відтворити",
+		next: "Наступний слайд",
+		previous: "Попередній слайд",
+		slideOf: "Слайд {n} з {total}",
 		waiting: "Результати готуються.",
 	},
+};
+
+const NAVIGATION_KEYS: Partial<Record<string, DeckDirection>> = {
+	" ": "next",
+	ArrowLeft: "previous",
+	ArrowRight: "next",
+	End: "last",
+	Home: "first",
+	PageDown: "next",
+	PageUp: "previous",
 };
 
 const AudienceBranding = ({ copy }: { copy: string }) => {
@@ -259,6 +302,10 @@ export const AudienceScreen = ({
 	const [openingScreen, setOpeningScreen] = useState<"intro" | "data" | null>(
 		null,
 	);
+	// The deck counts its opening's screens (an invitation can add one), so
+	// the shell's slide numbers include them once it has said.
+	const [openingStep, setOpeningStep] = useState<number | null>(null);
+	const [openingSteps, setOpeningSteps] = useState<number | null>(null);
 	const [deckChrome, setDeckChrome] = useState<{
 		live: boolean;
 		madeWith: string;
@@ -606,21 +653,26 @@ export const AudienceScreen = ({
 
 	const postDeckCommand = useCallback(
 		(
-			command: "block" | "visibility" | "opening" | "theme",
+			command: "block" | "visibility" | "opening" | "theme" | "navigate",
 			extra: Record<string, unknown>,
 		) => {
 			if (!audience) return;
 			const message =
-				command === "visibility"
-					? deckVisibilityCommand(audience.id, extra.visible === true)
-					: command === "opening"
-						? deckOpeningCommand(audience.id, extra.screen as "intro" | "data")
-						: command === "theme"
-							? deckThemeCommand(audience.id, extra.theme as AudienceTheme)
-							: deckBlockCommand(
+				command === "navigate"
+					? deckNavigateCommand(audience.id, extra.to as "next" | "previous")
+					: command === "visibility"
+						? deckVisibilityCommand(audience.id, extra.visible === true)
+						: command === "opening"
+							? deckOpeningCommand(
 									audience.id,
-									extra.block as Exclude<AudienceBlock, "map">,
-								);
+									extra.screen as "intro" | "data",
+								)
+							: command === "theme"
+								? deckThemeCommand(audience.id, extra.theme as AudienceTheme)
+								: deckBlockCommand(
+										audience.id,
+										extra.block as Exclude<AudienceBlock, "map">,
+									);
 			postDeckMessage(
 				iframeRef.current?.contentWindow ?? null,
 				deckOrigin,
@@ -677,6 +729,8 @@ export const AudienceScreen = ({
 			) {
 				setOpeningOpen(event.data.open);
 				setOpeningLocked(event.data.open && event.data.locked === true);
+				setOpeningStep(event.data.open ? (event.data.step ?? null) : null);
+				if (event.data.steps !== undefined) setOpeningSteps(event.data.steps);
 				setOpeningScreen(event.data.open ? (event.data.screen ?? null) : null);
 				return;
 			}
@@ -738,28 +792,117 @@ export const AudienceScreen = ({
 		selectBlock(block);
 	}, [activeBlock, audience, block, selectBlock]);
 
-	const handleKeyDown = useCallback(
-		(event: globalThis.KeyboardEvent) => {
-			if (!audience || !activeBlock || openingLocked) return;
+	// Where the room is: the opening's screens, then the activities, in one
+	// count. Before the deck has said how many screens its opening has, each
+	// available kind counts as one.
+	const blocks = audience?.manifest.blocks ?? [];
+	const openingCount =
+		openingSteps ?? Object.values(openingAvailability).filter(Boolean).length;
+	const slideCount = openingCount + blocks.length;
+	const slideIndex = openingOpen
+		? Math.min(openingStep ?? 1, openingCount)
+		: activeBlock
+			? openingCount + blocks.indexOf(activeBlock) + 1
+			: 0;
+
+	// One way through for the keys, the side zones and the deck's own keys and
+	// swipes, never round from the last slide to the first. The deck steps
+	// through its opening itself: it knows the screens and the demo's gate.
+	const go = (to: DeckDirection) => {
+		if (!audience) return;
+		if (openingOpen) {
+			if (to === "next" || to === "previous") {
+				postDeckCommand("navigate", { to });
+				// Past the last screen the deck starts popcorn: the first activity.
+				if (to === "next" && slideIndex >= openingCount && blocks[0]) {
+					selectBlock(blocks[0]);
+				}
+			} else if (to === "last" && !openingLocked && blocks.length) {
+				selectBlock(blocks[blocks.length - 1]);
+			}
+			return;
+		}
+		const index = activeBlock ? blocks.indexOf(activeBlock) : -1;
+		if (to === "first" || (to === "previous" && index <= 0)) {
+			if (!openingCount) {
+				if (to === "first" && blocks[0]) selectBlock(blocks[0]);
+				return;
+			}
+			if (to === "previous") {
+				postDeckCommand("navigate", { to });
+				return;
+			}
+			const screen = openingAvailability.intro ? "intro" : "data";
+			setOpeningOpen(true);
+			setOpeningScreen(screen);
+			postDeckCommand("opening", { screen });
+			return;
+		}
+		const next =
+			to === "last" ? blocks.length - 1 : to === "next" ? index + 1 : index - 1;
+		if (blocks[next] && next !== index) selectBlock(blocks[next]);
+	};
+	const goRef = useRef(go);
+	goRef.current = go;
+
+	// The deck's own keys and swipes land in its frame; it says which way.
+	useEffect(() => {
+		if (!audience) return;
+		const handleNavigate = (event: MessageEvent) => {
 			if (
-				event.target instanceof Element &&
-				event.target.closest("input, textarea, select, [contenteditable=true]")
+				isDeckNavigateEvent(event, {
+					origin: deckOrigin,
+					presentationId: audience.id,
+					source: iframeRef.current?.contentWindow ?? null,
+				})
+			)
+				goRef.current(event.data.to);
+		};
+		globalThis.addEventListener("message", handleNavigate);
+		return () => globalThis.removeEventListener("message", handleNavigate);
+	}, [audience, deckOrigin]);
+
+	const handleKeyDown = useCallback(
+		(
+			event: Pick<
+				KeyboardEvent,
+				| "altKey"
+				| "ctrlKey"
+				| "defaultPrevented"
+				| "key"
+				| "metaKey"
+				| "preventDefault"
+				| "target"
+			>,
+		) => {
+			if (
+				event.defaultPrevented ||
+				event.metaKey ||
+				event.ctrlKey ||
+				event.altKey
 			)
 				return;
-			if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+			const to = NAVIGATION_KEYS[event.key];
+			if (!to) return;
+			// Typing never moves the deck, the tab row moves itself, and Space
+			// still presses a focused button.
+			if (
+				event.target instanceof Element &&
+				(event.target.closest(
+					"input, textarea, select, [contenteditable=true], [role=tablist]",
+				) ||
+					(event.key === " " &&
+						event.target.closest("button, a, [role=button]")))
+			)
+				return;
 			event.preventDefault();
-			const index = audience.manifest.blocks.indexOf(activeBlock);
-			const direction = event.key === "ArrowRight" ? 1 : -1;
-			const next =
-				audience.manifest.blocks[
-					(index + direction + audience.manifest.blocks.length) %
-						audience.manifest.blocks.length
-				];
-			selectBlock(next);
+			goRef.current(to);
 		},
-		[activeBlock, audience, openingLocked, selectBlock],
+		[],
 	);
 
+	// The room's screen listens to the whole page; a preview only while it has
+	// the focus, so the editor around it keeps its keys.
 	useEffect(() => {
 		if (embedded) return;
 		globalThis.addEventListener("keydown", handleKeyDown);
@@ -826,6 +969,7 @@ export const AudienceScreen = ({
 				classes.shell,
 				className,
 			)}
+			onKeyDown={embedded ? handleKeyDown : undefined}
 			data-opening={openingOpen || undefined}
 			data-framed={frameDetails.notice ? true : undefined}
 			data-theme={darkTheme}
@@ -996,6 +1140,28 @@ export const AudienceScreen = ({
 						</div>
 					)}
 				</Tabs.Panel>
+				{slideIndex > 1 && (
+					<button
+						type="button"
+						className={classes.sideZone}
+						data-side="previous"
+						aria-label={audienceCopy.previous}
+						onClick={() => go("previous")}
+					>
+						<CaretLeftIcon size={20} aria-hidden="true" />
+					</button>
+				)}
+				{slideIndex > 0 && slideIndex < slideCount && (
+					<button
+						type="button"
+						className={classes.sideZone}
+						data-side="next"
+						aria-label={audienceCopy.next}
+						onClick={() => go("next")}
+					>
+						<CaretRightIcon size={20} aria-hidden="true" />
+					</button>
+				)}
 				{frameDetails.qrUrl && !qrMinimized && (
 					<aside
 						className={classes.qrPanel}
@@ -1028,6 +1194,18 @@ export const AudienceScreen = ({
 					)}
 				</div>
 				<div className={classes.footerEnd}>
+					{slideIndex > 0 && slideCount > 1 && (
+						<span className={classes.position}>
+							<span className="sr-only">
+								{audienceCopy.slideOf
+									.replace("{n}", String(slideIndex))
+									.replace("{total}", String(slideCount))}
+							</span>
+							<span aria-hidden="true">
+								{slideIndex} / {slideCount}
+							</span>
+						</span>
+					)}
 					{frameDetails.branding && deckChrome?.madeWith && (
 						<span className={classes.branding}>
 							<AudienceBranding copy={deckChrome.madeWith} />

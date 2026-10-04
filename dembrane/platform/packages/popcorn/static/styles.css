@@ -87,14 +87,17 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .intro-subtitle { font-size: 1.4em; max-width: 32em; }
 .intro-content > p { max-width: 43em; }
 .intro-source { border-top: 1px solid var(--hairline); padding-top: 1em; font-size: .85em; }
-.intro-continue { font: inherit; background: var(--blue-fill); color: var(--on-blue); border: none; border-radius: 9999px; padding: .8em 1.6em; cursor: pointer; transition: background-color .15s ease; }
-.intro-continue:hover { background: var(--graphite); color: var(--on-blue); }
+/* Moving on is never the filled pill: a quiet outline, as any secondary. */
+.intro-continue { font: inherit; background: none; color: var(--blue); border: 1px solid currentColor; border-radius: 0; padding: .6em 1.2em; cursor: pointer; transition: background-color .15s ease; }
+.intro-continue:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
 .popcorn-intro { overflow-y: auto; }
 /* A host who may edit types straight into the opening's words. Outlines and a
    wash only, so the words sit exactly where the room will see them. */
 .popcorn-intro [data-edit] { cursor: text; border-radius: .2em; outline: 1px dashed transparent; outline-offset: .3em; transition: outline-color .15s ease, background-color .15s ease; }
 /* With an editable heading the screen itself takes the resting focus: no ring around the page. */
 .popcorn-intro .intro-content:focus-visible { outline: none; }
+/* A screen's heading takes the resting focus too, also when it was reached by key: no ring round the title. */
+.popcorn-intro #intro-title[tabindex="-1"]:focus-visible { outline: none; }
 /* An empty optional field, shown to an editing host only: the words are drawn here, never in the text. */
 .popcorn-intro [data-edit][data-placeholder]:empty::before { content: attr(data-placeholder); opacity: .45; }
 .popcorn-intro [data-edit]:hover { outline-color: color-mix(in srgb, currentColor 35%, transparent); }
@@ -139,14 +142,14 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .present-shell .qr-panel { display: none; }
 /* Inside the shell the deck is no longer a page of its own: it is the content
    of a frame whose header, footer and map tab all sit at
-   `--audience-pad-x: clamp(12px, 2vw, 36px)`. Repeat that value here so the
+   `--audience-pad-x: clamp(32px, 3vw, 48px)`. Repeat that value here so the
    first word of a slide starts under the first word of the header. The deck's
    iframe is flush to the left edge of the window, so the two agree exactly
    whenever the iframe is as wide as the window; with the QR card open the
-   iframe is narrower and its `2vw` is a little smaller, off by a few pixels
+   iframe is narrower and its `3vw` is a little smaller, off by a few pixels
    in the middle of the clamp. Closing that gap would mean the shell passing
    its own measured inset in. */
-.present-shell { --pad-x: clamp(12px, 2vw, 36px); }
+.present-shell { --pad-x: clamp(32px, 3vw, 48px); }
 
 .session-id { display: flex; flex-direction: column; padding-bottom: 0.8em; min-width: 0; }
 .session-title { font-weight: 500; font-size: 0.85em; letter-spacing: 0.01em; white-space: nowrap; }
@@ -1393,7 +1396,6 @@ details.theme-block[open] .theme-body { animation: rise-in 0.38s cubic-bezier(0.
 
 /* the continue button is filled blue; on dark its hover lifts rather than
    going to ink, which would now be parchment */
-:root[data-theme="dark"] .intro-continue:hover { background: var(--blue); color: var(--on-marker); }
 
 /* the veils, the modal and the drop target all assumed a light page */
 :root[data-theme="dark"] .drop-veil { background: rgba(0, 0, 0, 0.9); }
