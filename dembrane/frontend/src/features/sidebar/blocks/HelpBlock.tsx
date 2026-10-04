@@ -33,11 +33,7 @@ import { RAIL_ITEM_CLASS, RailTip, useInRail } from "../shell/rail";
 // Its own chunk: it fetches the account tasks summary, which the portal never needs.
 const HelpTasksItem = lazy(() => import("./HelpTasksItem"));
 // The popup after sign-in for someone with tasks waiting; in its own chunk for the same reason.
-// The extension is explicit: on a case-insensitive disk (macOS) the bare
-// path resolves to tasksPrompt.ts, a sibling module, before TasksPrompt.tsx.
-const TasksPrompt = lazy(
-	() => import("@/features/accounts/help/TasksPrompt.tsx"),
-);
+const TasksPrompt = lazy(() => import("@/features/accounts/help/TasksPrompt"));
 
 export const HelpBlock = () => {
 	const { language } = useParams();

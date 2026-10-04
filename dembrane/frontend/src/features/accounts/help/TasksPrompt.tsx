@@ -7,7 +7,7 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import type { TasksSummaryT } from "../contract/contract.gen";
 import { nextTaskText } from "../format";
 import { useAccountsCatalog } from "../i18n";
-import { markPromptSeen, promptFor, promptSeen } from "./tasksPrompt";
+import { markPromptSeen, promptFor, promptSeen } from "./tasksPromptState";
 import { useTasksSummary } from "./tasksSummary";
 
 type Row = TasksSummaryT[number];
