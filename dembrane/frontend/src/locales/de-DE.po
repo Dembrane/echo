@@ -204,7 +204,7 @@ msgstr "„made with dembrane“ bleibt auf dem Bildschirm sichtbar."
 msgid "participant.modal.echo.info.title.concrete"
 msgstr "\"Überprüfen\" bald verfügbar"
 
-#: src/components/settings/MyAccessCard.tsx:157
+#: src/components/settings/MyAccessCard.tsx:158
 msgid "(direct workspace access)"
 msgstr "(direkter Arbeitsbereichszugriff)"
 
@@ -226,7 +226,7 @@ msgstr "(optional)"
 msgid "(Partial)"
 msgstr "(Teilweise)"
 
-#: src/components/invite/WorkspaceSelectList.tsx:184
+#: src/components/invite/WorkspaceSelectList.tsx:183
 msgid "(Partner)"
 msgstr "(Partner)"
 
@@ -311,13 +311,13 @@ msgstr "{0, plural, one {# Phrase} other {# Phrasen}}"
 #. placeholder {0}: data.project_count
 #. placeholder {0}: ws.project_count
 #: src/components/workspace/UsageCard.tsx:257
-#: src/components/settings/MyAccessCard.tsx:213
+#: src/components/settings/MyAccessCard.tsx:214
 msgid "{0, plural, one {# project} other {# projects}}"
 msgstr "{0, plural, one {# Projekt} other {# Projekte}}"
 
 #. placeholder {0}: ws.seats_used_including_pending
 #. placeholder {0}: overview.seats
-#: src/components/invite/WorkspaceSelectList.tsx:127
+#: src/components/invite/WorkspaceSelectList.tsx:128
 #: src/components/billing/BillingManager.tsx:1262
 msgid "{0, plural, one {# seat} other {# seats}}"
 msgstr "{0, plural, one {# Sitzplatz} other {# Sitzplätze}}"
@@ -422,7 +422,7 @@ msgid "{0} (default)"
 msgstr "{0} (Standard)"
 
 #. placeholder {0}: tierName(tier)
-#. placeholder {0}: ws.tier
+#. placeholder {0}: tierName(ws.tier)
 #: src/components/workspace/TierBadge.tsx:57
 #: src/components/settings/MyAccessCard.tsx:221
 msgid "{0} (partner)"
@@ -873,11 +873,11 @@ msgstr "{tag} (vorausgewählt)"
 msgid "{totalActive, plural, one {# active} other {# active}}"
 msgstr "{totalActive, plural, one {# aktiv} other {# aktiv}}"
 
-#: src/components/settings/MyAccessCard.tsx:124
+#: src/components/settings/MyAccessCard.tsx:125
 msgid "{totalOrganisations, plural, one {# organisation} other {# organisations}}"
 msgstr "{totalOrganisations, plural, one {# Organisation} other {# Organisationen}}"
 
-#: src/components/settings/MyAccessCard.tsx:130
+#: src/components/settings/MyAccessCard.tsx:131
 msgid "{totalWorkspaces, plural, one {# workspace} other {# workspaces}}"
 msgstr "{totalWorkspaces, plural, one {# Arbeitsbereich} other {# Arbeitsbereiche}}"
 
@@ -1571,7 +1571,7 @@ msgstr "Zu {okCount} hinzugefügt. {0} fehlgeschlagen, bitte erneut versuchen."
 msgid "Added you to 1 workspace"
 msgstr "Sie wurden zu 1 Arbeitsbereich hinzugefügt"
 
-#: src/components/invite/WorkspaceSelectList.tsx:234
+#: src/components/invite/WorkspaceSelectList.tsx:233
 msgid "Adding {pendingCount} more will put this workspace over its seat cap. Overage seats are billed at the workspace's tier rate."
 msgstr "Mit {pendingCount} weiteren wird das Sitzplatzlimit dieses Arbeitsbereichs überschritten. Zusätzliche Plätze werden zum Tarif des Arbeitsbereichs abgerechnet."
 
@@ -2181,7 +2181,7 @@ msgstr "Sind Sie sicher, dass Sie dieses Gespräch löschen möchten? Diese Akti
 msgid "Are you sure you want to delete this custom topic? This cannot be undone."
 msgstr "Sind Sie sicher, dass Sie dieses benutzerdefinierte Thema löschen möchten? Dies kann nicht rückgängig gemacht werden."
 
-#: src/components/project/ProjectDangerZone.tsx:167
+#: src/components/project/ProjectDangerZone.tsx:168
 msgid "Are you sure you want to delete this project? This action cannot be undone."
 msgstr "Sind Sie sicher, dass Sie dieses Projekt löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden."
 
@@ -2802,7 +2802,7 @@ msgstr "Benutzerdefinierte Dashboards mit realtime Gesprächdaten erstellen"
 msgid "by {by}"
 msgstr "von {by}"
 
-#: src/components/project/ProjectDangerZone.tsx:180
+#: src/components/project/ProjectDangerZone.tsx:181
 msgid "By deleting this project, you will delete all the data associated with it. This action cannot be undone. Are you absolutely sure?"
 msgstr "Durch das Löschen dieses Projekts werden alle damit verbundenen Daten gelöscht. Diese Aktion kann nicht rückgängig gemacht werden. Sind Sie absolut sicher?"
 
@@ -2852,7 +2852,7 @@ msgstr "Können Sie uns mehr darüber erzählen?"
 #: src/components/results/ReasonPrompt.tsx:236
 #: src/components/project/ProjectSharingModal.tsx:319
 #: src/components/project/ProjectSharingModal.tsx:523
-#: src/components/project/ProjectDangerZone.tsx:157
+#: src/components/project/ProjectDangerZone.tsx:158
 #: src/components/project/CustomTopicModal.tsx:255
 #: src/components/project/BulkMoveProjectsModal.tsx:123
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:477
@@ -3335,7 +3335,7 @@ msgstr "Filter zurücksetzen"
 #: src/routes/project/ProjectsHome.tsx:374
 #: src/routes/project/chat/NewChatRoute.tsx:171
 #: src/features/sidebar/blocks/SearchBlock.tsx:168
-#: src/components/invite/WorkspaceSelectList.tsx:97
+#: src/components/invite/WorkspaceSelectList.tsx:98
 #: src/components/conversation/ProjectConversationsPanel.tsx:810
 #: src/components/chat/TemplatesModal.tsx:721
 msgid "Clear search"
@@ -3417,7 +3417,7 @@ msgstr "Von Projekt klonen"
 
 #: src/components/project/ProjectDangerZone.tsx:92
 #: src/components/project/ProjectDangerZone.tsx:110
-#: src/components/project/ProjectDangerZone.tsx:149
+#: src/components/project/ProjectDangerZone.tsx:150
 msgid "Clone project"
 msgstr "Projekt klonen"
 
@@ -3874,7 +3874,7 @@ msgstr "Gespräche"
 #: src/components/report/ReportTimeline.tsx:302
 #: src/components/project/ProjectUsageAndSharing.tsx:477
 #: src/components/conversation/ProjectConversationsPanel.tsx:750
-#: src/components/conversation/ConversationAccordion.tsx:1103
+#: src/components/conversation/ConversationAccordion.tsx:1100
 msgid "Conversations"
 msgstr "Gespräche"
 
@@ -4659,7 +4659,7 @@ msgstr "Multistufige Analyse mit live Werkzeugausführung delegieren"
 #: src/components/workspace/OrganisationProjectsTable.tsx:164
 #: src/components/project/ProjectTagsInput.tsx:120
 #: src/components/project/ProjectPortalEditor.tsx:1641
-#: src/components/project/ProjectDangerZone.tsx:168
+#: src/components/project/ProjectDangerZone.tsx:169
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:590
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:624
 #: src/components/participant/UserChunkMessage.tsx:100
@@ -4702,9 +4702,9 @@ msgid "Delete custom topic"
 msgstr "Benutzerdefiniertes Thema löschen"
 
 #: src/components/project/ProjectDangerZone.tsx:103
-#: src/components/project/ProjectDangerZone.tsx:165
-#: src/components/project/ProjectDangerZone.tsx:178
-#: src/components/project/ProjectDangerZone.tsx:181
+#: src/components/project/ProjectDangerZone.tsx:166
+#: src/components/project/ProjectDangerZone.tsx:179
+#: src/components/project/ProjectDangerZone.tsx:182
 msgid "Delete project"
 msgstr "Projekt löschen"
 
@@ -5722,7 +5722,7 @@ msgstr "Beispiel-Webhook-Payload"
 #~ msgid "Example Webhook Payload"
 #~ msgstr "Beispiel-Webhook-Payload"
 
-#: src/components/invite/WorkspaceSelectList.tsx:195
+#: src/components/invite/WorkspaceSelectList.tsx:194
 msgid "Exceeds seat cap. Overage billing applies."
 msgstr "Überschreitet das Sitzplatzlimit. Es fallen Zusatzgebühren an."
 
@@ -5898,8 +5898,8 @@ msgstr "Fehlgeschlagen"
 #~ msgstr "Fehler beim Hinzufügen des Gesprächs zum Chat{0}"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:733
-#: src/components/conversation/ConversationAccordion.tsx:980
-#: src/components/conversation/ConversationAccordion.tsx:1000
+#: src/components/conversation/ConversationAccordion.tsx:977
+#: src/components/conversation/ConversationAccordion.tsx:997
 msgid "Failed to add conversations to context"
 msgstr "Fehler beim Hinzufügen von Unterhaltungen zum Kontext"
 
@@ -8066,7 +8066,7 @@ msgstr "Transkript wird geladen ..."
 msgid "Loading verify topics…"
 msgstr "Verify Themen werden geladen…"
 
-#: src/components/invite/WorkspaceSelectList.tsx:66
+#: src/components/invite/WorkspaceSelectList.tsx:67
 msgid "Loading workspaces…"
 msgstr "Arbeitsbereiche werden geladen…"
 
@@ -8201,7 +8201,7 @@ msgstr "Logo aktualisiert"
 msgid "Longest first"
 msgstr "Längste zuerst"
 
-#: src/components/conversation/ConversationAccordion.tsx:672
+#: src/components/conversation/ConversationAccordion.tsx:669
 msgid "Longest First"
 msgstr "Längste zuerst"
 
@@ -8686,7 +8686,7 @@ msgid "Name"
 msgstr "Name"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:111
-#: src/components/conversation/ConversationAccordion.tsx:670
+#: src/components/conversation/ConversationAccordion.tsx:667
 msgid "Name A-Z"
 msgstr "Name A-Z"
 
@@ -8719,7 +8719,7 @@ msgid "Name your workspace."
 msgstr "Geben Sie Ihrem Arbeitsbereich einen Namen."
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:112
-#: src/components/conversation/ConversationAccordion.tsx:671
+#: src/components/conversation/ConversationAccordion.tsx:668
 msgid "Name Z-A"
 msgstr "Name Z-A"
 
@@ -8885,7 +8885,7 @@ msgstr "Neue Stufe"
 msgid "Newest first"
 msgstr "Neueste zuerst"
 
-#: src/components/conversation/ConversationAccordion.tsx:668
+#: src/components/conversation/ConversationAccordion.tsx:665
 msgid "Newest First"
 msgstr "Neueste zuerst"
 
@@ -9018,7 +9018,7 @@ msgstr "Kein Inhalt"
 msgid "No conversations found."
 msgstr "Keine Gespräche gefunden."
 
-#: src/components/conversation/ConversationAccordion.tsx:1465
+#: src/components/conversation/ConversationAccordion.tsx:1462
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "Keine Gespräche gefunden. Starten Sie ein Gespräch über den Teilnahme-Einladungslink aus der <0><1>Projektübersicht.</1></0>"
 
@@ -9318,7 +9318,7 @@ msgstr "Noch keine Stakeholder vorhanden. Sie erscheinen nach der ersten Analyse
 msgid "No summary yet"
 msgstr "Noch keine Zusammenfassung"
 
-#: src/components/conversation/ConversationAccordion.tsx:1379
+#: src/components/conversation/ConversationAccordion.tsx:1376
 msgid "No tags found"
 msgstr "Keine Tags gefunden"
 
@@ -9411,7 +9411,7 @@ msgstr "Keine Änderung der Arbeitsbereichsrolle. Fügen Sie diese Person zur Or
 msgid "No workspaces from this organisation are shared with you right now."
 msgstr "Derzeit sind keine Arbeitsbereiche dieser Organisation für Sie freigegeben."
 
-#: src/components/invite/WorkspaceSelectList.tsx:112
+#: src/components/invite/WorkspaceSelectList.tsx:113
 msgid "No workspaces match \"{search}\"."
 msgstr "Keine Arbeitsbereiche entsprechen „{search}“."
 
@@ -9659,7 +9659,7 @@ msgstr "Offline"
 msgid "Oldest first"
 msgstr "Älteste zuerst"
 
-#: src/components/conversation/ConversationAccordion.tsx:669
+#: src/components/conversation/ConversationAccordion.tsx:666
 msgid "Oldest First"
 msgstr "Älteste zuerst"
 
@@ -9747,7 +9747,7 @@ msgid "Ongoing"
 msgstr "Laufend"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/ConversationAccordion.tsx:639
+#: src/components/conversation/ConversationAccordion.tsx:637
 msgid "conversation.ongoing"
 msgstr "Laufend"
 
@@ -9878,7 +9878,7 @@ msgstr "Menü öffnen"
 msgid "Open Mollie dashboard"
 msgstr "Mollie-Dashboard öffnen"
 
-#: src/components/settings/MyAccessCard.tsx:176
+#: src/components/settings/MyAccessCard.tsx:177
 msgid "Open organisation"
 msgstr "Organisation öffnen"
 
@@ -10004,8 +10004,8 @@ msgstr "Optionales Feld auf der Danksagungsseite"
 msgid "Optional. What this workspace is for."
 msgstr "Optional. Wofür dieser Arbeitsbereich gedacht ist."
 
-#: src/components/conversation/ConversationAccordion.tsx:1154
-#: src/components/conversation/ConversationAccordion.tsx:1159
+#: src/components/conversation/ConversationAccordion.tsx:1151
+#: src/components/conversation/ConversationAccordion.tsx:1156
 msgid "Options"
 msgstr "Optionen"
 
@@ -10167,7 +10167,7 @@ msgstr "Ergebnisse"
 msgid "Output objects: {outputObjects}"
 msgstr "Ausgabeobjekte: {outputObjects}"
 
-#: src/components/invite/WorkspaceSelectList.tsx:208
+#: src/components/invite/WorkspaceSelectList.tsx:207
 msgid "Overage billing applies"
 msgstr "Zusätzliche Nutzungskosten fallen an"
 
@@ -10338,7 +10338,7 @@ msgstr "Partner-Organisation"
 msgid "Partner workspace, billed on its own and not part of the organisation's plan."
 msgstr "Partner-Arbeitsbereich, wird separat abgerechnet und ist nicht Teil des Tarifs der Organisation."
 
-#: src/components/invite/WorkspaceSelectList.tsx:174
+#: src/components/invite/WorkspaceSelectList.tsx:175
 msgid "Partner workspace, billed separately from the organisation."
 msgstr "Partner-Arbeitsbereich, wird getrennt von der Organisation abgerechnet."
 
@@ -12137,8 +12137,8 @@ msgstr "Passwort zurücksetzen | dembrane"
 msgid "Reset the guide?"
 msgstr "Leitfaden zurücksetzen?"
 
-#: src/components/conversation/ConversationAccordion.tsx:1402
-#: src/components/conversation/ConversationAccordion.tsx:1407
+#: src/components/conversation/ConversationAccordion.tsx:1399
+#: src/components/conversation/ConversationAccordion.tsx:1404
 msgid "Reset to default"
 msgstr "Auf Standard zurücksetzen"
 
@@ -12693,7 +12693,7 @@ msgstr "Nach Organisation suchen"
 msgid "Search chats"
 msgstr "Chats durchsuchen"
 
-#: src/components/conversation/ConversationAccordion.tsx:1147
+#: src/components/conversation/ConversationAccordion.tsx:1144
 msgid "Search conversations"
 msgstr "Gespräche suchen"
 
@@ -12747,7 +12747,7 @@ msgstr "Projekte suchen..."
 msgid "Search results"
 msgstr "Suchergebnisse"
 
-#: src/components/conversation/ConversationAccordion.tsx:1288
+#: src/components/conversation/ConversationAccordion.tsx:1285
 msgid "Search tags"
 msgstr "Tags suchen"
 
@@ -12769,7 +12769,7 @@ msgid "Search webhooks..."
 msgstr "Webhooks suchen..."
 
 #: src/components/workspace/OrganisationUsageRollup.tsx:515
-#: src/components/invite/WorkspaceSelectList.tsx:88
+#: src/components/invite/WorkspaceSelectList.tsx:89
 msgid "Search workspaces"
 msgstr "Arbeitsbereiche durchsuchen"
 
@@ -12804,7 +12804,7 @@ msgstr "Transkripte werden nach „{0}“ durchsucht"
 msgid "Searching…"
 msgstr "Wird gesucht…"
 
-#: src/components/invite/WorkspaceSelectList.tsx:135
+#: src/components/invite/WorkspaceSelectList.tsx:136
 msgid "seats"
 msgstr "Plätze"
 
@@ -12818,7 +12818,7 @@ msgstr "Plätze"
 msgid "Seats"
 msgstr "Plätze"
 
-#: src/components/invite/WorkspaceSelectList.tsx:204
+#: src/components/invite/WorkspaceSelectList.tsx:203
 #: src/components/invite/InviteResultsList.tsx:51
 msgid "Seats full"
 msgstr "Keine Plätze frei"
@@ -12872,7 +12872,7 @@ msgid "Select"
 msgstr "Auswählen"
 
 #. placeholder {0}: ws.name
-#: src/components/invite/WorkspaceSelectList.tsx:158
+#: src/components/invite/WorkspaceSelectList.tsx:159
 msgid "Select {0}"
 msgstr "{0} auswählen"
 
@@ -12907,11 +12907,11 @@ msgstr "Arbeitsbereich auswählen"
 
 #: src/routes/project/ProjectsHome.tsx:430
 #: src/components/workspace/DiscoverableWorkspaces.tsx:279
-#: src/components/conversation/ConversationAccordion.tsx:1445
+#: src/components/conversation/ConversationAccordion.tsx:1442
 msgid "Select all"
 msgstr "Alle auswählen"
 
-#: src/components/conversation/ConversationAccordion.tsx:1443
+#: src/components/conversation/ConversationAccordion.tsx:1440
 msgid "Select all ({remainingCount})"
 msgstr "Alle auswählen ({remainingCount})"
 
@@ -13345,7 +13345,7 @@ msgstr "Kurze Phrasen aus den Gesprächen"
 msgid "Shortest first"
 msgstr "Kürzeste zuerst"
 
-#: src/components/conversation/ConversationAccordion.tsx:673
+#: src/components/conversation/ConversationAccordion.tsx:670
 msgid "Shortest First"
 msgstr "Kürzeste zuerst"
 
@@ -13737,8 +13737,8 @@ msgid "participant.go.deeper.content.policy.violation.error.message"
 msgstr "Der Inhalt verstößt gegen unsere Richtlinien. Änder den Text und versuch es nochmal."
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:823
-#: src/components/conversation/ConversationAccordion.tsx:1209
-#: src/components/conversation/ConversationAccordion.tsx:1216
+#: src/components/conversation/ConversationAccordion.tsx:1206
+#: src/components/conversation/ConversationAccordion.tsx:1213
 msgid "Sort"
 msgstr "Sortieren"
 
@@ -14243,8 +14243,8 @@ msgstr "Tag gelöscht"
 #: src/components/conversation/ProjectConversationsPanel.tsx:833
 #: src/components/conversation/ConversationEdit.tsx:424
 #: src/components/conversation/ConversationDrilldownModal.tsx:200
+#: src/components/conversation/ConversationAccordion.tsx:1275
 #: src/components/conversation/ConversationAccordion.tsx:1278
-#: src/components/conversation/ConversationAccordion.tsx:1281
 msgid "Tags"
 msgstr "Tags"
 
@@ -15317,7 +15317,7 @@ msgstr "Dieser Arbeitsbereich wird separat abgerechnet"
 msgid "This workspace is billed through {orgName}. Plans and payment are managed once for the whole organisation, and every workspace shares it."
 msgstr "Dieser Arbeitsbereich wird über {orgName} abgerechnet. Tarife und Zahlung werden einmalig für die gesamte Organisation verwaltet und von jedem Arbeitsbereich geteilt."
 
-#: src/components/invite/WorkspaceSelectList.tsx:219
+#: src/components/invite/WorkspaceSelectList.tsx:218
 msgid "This workspace is on a tier that doesn't allow more seats. Upgrade the workspace tier to invite more."
 msgstr "Dieser Arbeitsbereich hat einen Tarif, der keine weiteren Plätze erlaubt. Upgraden Sie den Arbeitsbereichstarif, um mehr Personen einzuladen."
 
@@ -16149,7 +16149,7 @@ msgstr "Stufen Sie Ihren Arbeitsbereich hoch, um Transkripte für neue Gespräch
 #: src/components/dropzone/UploadConversationDropzone.tsx:545
 #: src/components/conversation/ProjectConversationsPanel.tsx:778
 #: src/components/conversation/ConversationAccordion.tsx:405
-#: src/components/conversation/ConversationAccordion.tsx:1116
+#: src/components/conversation/ConversationAccordion.tsx:1113
 msgid "Upload"
 msgstr "Hochladen"
 
@@ -16195,7 +16195,7 @@ msgid "Upload limit reached"
 msgstr "Upload-Limit erreicht"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:775
-#: src/components/conversation/ConversationAccordion.tsx:1110
+#: src/components/conversation/ConversationAccordion.tsx:1107
 msgid "Upload limit reached. Upgrade your workspace."
 msgstr "Upload-Limit erreicht. Stufen Sie Ihren Arbeitsbereich hoch."
 
@@ -16417,7 +16417,7 @@ msgid "Verified"
 msgstr "Verifiziert"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/ConversationAccordion.tsx:1397
+#: src/components/conversation/ConversationAccordion.tsx:1394
 msgid "conversation.filters.verified.text"
 msgstr "Verifiziert"
 
@@ -17418,7 +17418,7 @@ msgstr "Sie haben keinen Zugriff auf diesen Arbeitsbereich"
 msgid "You don't have permission to create workspaces in that organisation. Falling back to your primary organisation instead."
 msgstr "Sie haben keine Berechtigung, in dieser Organisation Arbeitsbereiche zu erstellen. Es wird stattdessen Ihre Hauptorganisation verwendet."
 
-#: src/components/invite/WorkspaceSelectList.tsx:74
+#: src/components/invite/WorkspaceSelectList.tsx:75
 msgid "You don't have permission to invite to any workspace in this organisation."
 msgstr "Sie haben keine Berechtigung, Personen in Arbeitsbereiche dieser Organisation einzuladen."
 
@@ -17441,7 +17441,7 @@ msgstr "Sie haben eine ausstehende Einladung zu {0}. Der Administrator muss eine
 msgid "select.all.modal.already.added"
 msgstr "Sie haben bereits <0>{existingContextCount, plural, one {# Unterhaltung} other {# Unterhaltungen}}</0> zu diesem Chat hinzugefügt."
 
-#: src/components/conversation/ConversationAccordion.tsx:1427
+#: src/components/conversation/ConversationAccordion.tsx:1424
 msgid "You have already added all the conversations related to this"
 msgstr "Sie haben bereits alle damit verbundenen Unterhaltungen hinzugefügt"
 
@@ -17563,7 +17563,7 @@ msgstr "Sie melden sich mit der falschen E-Mail-Adresse an"
 #~ msgid "You're not in any organisation yet. Create a workspace to start a organisation, or ask a member for an invite."
 #~ msgstr "Sie gehören noch keiner Organisation an. Erstellen Sie einen Arbeitsbereich, um eine Organisation zu gründen, oder bitten Sie ein Mitglied um eine Einladung."
 
-#: src/components/settings/MyAccessCard.tsx:141
+#: src/components/settings/MyAccessCard.tsx:142
 msgid "You're not in any organisation yet. Create a workspace to start an organisation, or ask a member for an invite."
 msgstr "Sie gehören noch keiner Organisation an. Erstellen Sie einen Arbeitsbereich, um eine Organisation zu gründen, oder bitten Sie ein Mitglied um eine Einladung."
 

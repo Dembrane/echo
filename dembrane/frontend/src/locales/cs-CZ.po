@@ -203,7 +203,7 @@ msgstr "Nápis „made with dembrane“ zůstane na obrazovce."
 msgid "participant.modal.echo.info.title.concrete"
 msgstr "\"Verify\" available soon"
 
-#: src/components/settings/MyAccessCard.tsx:157
+#: src/components/settings/MyAccessCard.tsx:158
 msgid "(direct workspace access)"
 msgstr "(direct workspace access)"
 
@@ -225,7 +225,7 @@ msgstr "(optional)"
 msgid "(Partial)"
 msgstr "(Částečně)"
 
-#: src/components/invite/WorkspaceSelectList.tsx:184
+#: src/components/invite/WorkspaceSelectList.tsx:183
 msgid "(Partner)"
 msgstr "(Partner)"
 
@@ -310,13 +310,13 @@ msgstr "{0, plural, one {# fráze} few {# fráze} other {# frází}}"
 #. placeholder {0}: data.project_count
 #. placeholder {0}: ws.project_count
 #: src/components/workspace/UsageCard.tsx:257
-#: src/components/settings/MyAccessCard.tsx:213
+#: src/components/settings/MyAccessCard.tsx:214
 msgid "{0, plural, one {# project} other {# projects}}"
 msgstr "{0, plural, one {# project} other {# projects}}"
 
 #. placeholder {0}: ws.seats_used_including_pending
 #. placeholder {0}: overview.seats
-#: src/components/invite/WorkspaceSelectList.tsx:127
+#: src/components/invite/WorkspaceSelectList.tsx:128
 #: src/components/billing/BillingManager.tsx:1262
 msgid "{0, plural, one {# seat} other {# seats}}"
 msgstr "{0, plural, one {# místo} few {# místa} other {# míst}}"
@@ -421,7 +421,7 @@ msgid "{0} (default)"
 msgstr "{0} (výchozí)"
 
 #. placeholder {0}: tierName(tier)
-#. placeholder {0}: ws.tier
+#. placeholder {0}: tierName(ws.tier)
 #: src/components/workspace/TierBadge.tsx:57
 #: src/components/settings/MyAccessCard.tsx:221
 msgid "{0} (partner)"
@@ -872,11 +872,11 @@ msgstr "{tag} (předvybráno)"
 msgid "{totalActive, plural, one {# active} other {# active}}"
 msgstr "{totalActive, plural, one {# aktivní} few {# aktivní} other {# aktivních}}"
 
-#: src/components/settings/MyAccessCard.tsx:124
+#: src/components/settings/MyAccessCard.tsx:125
 msgid "{totalOrganisations, plural, one {# organisation} other {# organisations}}"
 msgstr "{totalOrganisations, plural, one {# organisation} other {# organisations}}"
 
-#: src/components/settings/MyAccessCard.tsx:130
+#: src/components/settings/MyAccessCard.tsx:131
 msgid "{totalWorkspaces, plural, one {# workspace} other {# workspaces}}"
 msgstr "{totalWorkspaces, plural, one {# workspace} other {# workspaces}}"
 
@@ -1570,7 +1570,7 @@ msgstr "Byli jste přidáni do {okCount}. Položek, které se nepodařilo přida
 msgid "Added you to 1 workspace"
 msgstr "Byli jste přidáni do 1 pracovního prostoru"
 
-#: src/components/invite/WorkspaceSelectList.tsx:234
+#: src/components/invite/WorkspaceSelectList.tsx:233
 msgid "Adding {pendingCount} more will put this workspace over its seat cap. Overage seats are billed at the workspace's tier rate."
 msgstr "Adding {pendingCount} more will put this workspace over its seat cap. Overage seats are billed at the workspace's tier rate."
 
@@ -2180,7 +2180,7 @@ msgstr "Are you sure you want to delete this conversation? This action cannot be
 msgid "Are you sure you want to delete this custom topic? This cannot be undone."
 msgstr "Are you sure you want to delete this custom topic? This cannot be undone."
 
-#: src/components/project/ProjectDangerZone.tsx:167
+#: src/components/project/ProjectDangerZone.tsx:168
 msgid "Are you sure you want to delete this project? This action cannot be undone."
 msgstr "Are you sure you want to delete this project? This action cannot be undone."
 
@@ -2801,7 +2801,7 @@ msgstr "Build custom dashboards with real-time conversation data"
 msgid "by {by}"
 msgstr "od {by}"
 
-#: src/components/project/ProjectDangerZone.tsx:180
+#: src/components/project/ProjectDangerZone.tsx:181
 msgid "By deleting this project, you will delete all the data associated with it. This action cannot be undone. Are you absolutely sure?"
 msgstr "By deleting this project, you will delete all the data associated with it. This action cannot be undone. Are you absolutely sure?"
 
@@ -2851,7 +2851,7 @@ msgstr "Můžete nám říct víc?"
 #: src/components/results/ReasonPrompt.tsx:236
 #: src/components/project/ProjectSharingModal.tsx:319
 #: src/components/project/ProjectSharingModal.tsx:523
-#: src/components/project/ProjectDangerZone.tsx:157
+#: src/components/project/ProjectDangerZone.tsx:158
 #: src/components/project/CustomTopicModal.tsx:255
 #: src/components/project/BulkMoveProjectsModal.tsx:123
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:477
@@ -3334,7 +3334,7 @@ msgstr "Clear filters"
 #: src/routes/project/ProjectsHome.tsx:374
 #: src/routes/project/chat/NewChatRoute.tsx:171
 #: src/features/sidebar/blocks/SearchBlock.tsx:168
-#: src/components/invite/WorkspaceSelectList.tsx:97
+#: src/components/invite/WorkspaceSelectList.tsx:98
 #: src/components/conversation/ProjectConversationsPanel.tsx:810
 #: src/components/chat/TemplatesModal.tsx:721
 msgid "Clear search"
@@ -3416,7 +3416,7 @@ msgstr "Klonovat z projektu"
 
 #: src/components/project/ProjectDangerZone.tsx:92
 #: src/components/project/ProjectDangerZone.tsx:110
-#: src/components/project/ProjectDangerZone.tsx:149
+#: src/components/project/ProjectDangerZone.tsx:150
 msgid "Clone project"
 msgstr "Clone project"
 
@@ -3873,7 +3873,7 @@ msgstr "conversations"
 #: src/components/report/ReportTimeline.tsx:302
 #: src/components/project/ProjectUsageAndSharing.tsx:477
 #: src/components/conversation/ProjectConversationsPanel.tsx:750
-#: src/components/conversation/ConversationAccordion.tsx:1103
+#: src/components/conversation/ConversationAccordion.tsx:1100
 msgid "Conversations"
 msgstr "Conversations"
 
@@ -4658,7 +4658,7 @@ msgstr "Delegate multi-step analysis with live tool execution"
 #: src/components/workspace/OrganisationProjectsTable.tsx:164
 #: src/components/project/ProjectTagsInput.tsx:120
 #: src/components/project/ProjectPortalEditor.tsx:1641
-#: src/components/project/ProjectDangerZone.tsx:168
+#: src/components/project/ProjectDangerZone.tsx:169
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:590
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:624
 #: src/components/participant/UserChunkMessage.tsx:100
@@ -4701,9 +4701,9 @@ msgid "Delete custom topic"
 msgstr "Delete custom topic"
 
 #: src/components/project/ProjectDangerZone.tsx:103
-#: src/components/project/ProjectDangerZone.tsx:165
-#: src/components/project/ProjectDangerZone.tsx:178
-#: src/components/project/ProjectDangerZone.tsx:181
+#: src/components/project/ProjectDangerZone.tsx:166
+#: src/components/project/ProjectDangerZone.tsx:179
+#: src/components/project/ProjectDangerZone.tsx:182
 msgid "Delete project"
 msgstr "Delete project"
 
@@ -5721,7 +5721,7 @@ msgstr "Ukázkový payload webhooku"
 #~ msgid "Example Webhook Payload"
 #~ msgstr "Example Webhook Payload"
 
-#: src/components/invite/WorkspaceSelectList.tsx:195
+#: src/components/invite/WorkspaceSelectList.tsx:194
 msgid "Exceeds seat cap. Overage billing applies."
 msgstr "Exceeds seat cap. Overage billing applies."
 
@@ -5897,8 +5897,8 @@ msgstr "Failed"
 #~ msgstr "Failed to add conversation to chat{0}"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:733
-#: src/components/conversation/ConversationAccordion.tsx:980
-#: src/components/conversation/ConversationAccordion.tsx:1000
+#: src/components/conversation/ConversationAccordion.tsx:977
+#: src/components/conversation/ConversationAccordion.tsx:997
 msgid "Failed to add conversations to context"
 msgstr "Failed to add conversations to context"
 
@@ -8065,7 +8065,7 @@ msgstr "Loading transcript..."
 msgid "Loading verify topics…"
 msgstr "Loading verify topics…"
 
-#: src/components/invite/WorkspaceSelectList.tsx:66
+#: src/components/invite/WorkspaceSelectList.tsx:67
 msgid "Loading workspaces…"
 msgstr "Loading workspaces…"
 
@@ -8200,7 +8200,7 @@ msgstr "Logo updated"
 msgid "Longest first"
 msgstr "Longest first"
 
-#: src/components/conversation/ConversationAccordion.tsx:672
+#: src/components/conversation/ConversationAccordion.tsx:669
 msgid "Longest First"
 msgstr "Longest First"
 
@@ -8685,7 +8685,7 @@ msgid "Name"
 msgstr "Name"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:111
-#: src/components/conversation/ConversationAccordion.tsx:670
+#: src/components/conversation/ConversationAccordion.tsx:667
 msgid "Name A-Z"
 msgstr "Name A-Z"
 
@@ -8718,7 +8718,7 @@ msgid "Name your workspace."
 msgstr "Name your workspace."
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:112
-#: src/components/conversation/ConversationAccordion.tsx:671
+#: src/components/conversation/ConversationAccordion.tsx:668
 msgid "Name Z-A"
 msgstr "Name Z-A"
 
@@ -8884,7 +8884,7 @@ msgstr "Nový tarif"
 msgid "Newest first"
 msgstr "Newest first"
 
-#: src/components/conversation/ConversationAccordion.tsx:668
+#: src/components/conversation/ConversationAccordion.tsx:665
 msgid "Newest First"
 msgstr "Newest First"
 
@@ -9017,7 +9017,7 @@ msgstr "No content"
 msgid "No conversations found."
 msgstr "No conversations found."
 
-#: src/components/conversation/ConversationAccordion.tsx:1465
+#: src/components/conversation/ConversationAccordion.tsx:1462
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 
@@ -9317,7 +9317,7 @@ msgstr "Zatím žádné zúčastněné strany. Objeví se po první analýze."
 msgid "No summary yet"
 msgstr "No summary yet"
 
-#: src/components/conversation/ConversationAccordion.tsx:1379
+#: src/components/conversation/ConversationAccordion.tsx:1376
 msgid "No tags found"
 msgstr "No tags found"
 
@@ -9410,7 +9410,7 @@ msgstr "No workspace role change. Add this person to the organisation, then re-i
 msgid "No workspaces from this organisation are shared with you right now."
 msgstr "No workspaces from this organisation are shared with you right now."
 
-#: src/components/invite/WorkspaceSelectList.tsx:112
+#: src/components/invite/WorkspaceSelectList.tsx:113
 msgid "No workspaces match \"{search}\"."
 msgstr "No workspaces match \"{search}\"."
 
@@ -9658,7 +9658,7 @@ msgstr "Offline"
 msgid "Oldest first"
 msgstr "Oldest first"
 
-#: src/components/conversation/ConversationAccordion.tsx:669
+#: src/components/conversation/ConversationAccordion.tsx:666
 msgid "Oldest First"
 msgstr "Oldest First"
 
@@ -9746,7 +9746,7 @@ msgid "Ongoing"
 msgstr "Ongoing"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/ConversationAccordion.tsx:639
+#: src/components/conversation/ConversationAccordion.tsx:637
 msgid "conversation.ongoing"
 msgstr "Ongoing"
 
@@ -9877,7 +9877,7 @@ msgstr "Otevřít nabídku"
 msgid "Open Mollie dashboard"
 msgstr "Otevřít panel Mollie"
 
-#: src/components/settings/MyAccessCard.tsx:176
+#: src/components/settings/MyAccessCard.tsx:177
 msgid "Open organisation"
 msgstr "Open organisation"
 
@@ -10003,8 +10003,8 @@ msgstr "Optional field on the thank you page"
 msgid "Optional. What this workspace is for."
 msgstr "Optional. What this workspace is for."
 
-#: src/components/conversation/ConversationAccordion.tsx:1154
-#: src/components/conversation/ConversationAccordion.tsx:1159
+#: src/components/conversation/ConversationAccordion.tsx:1151
+#: src/components/conversation/ConversationAccordion.tsx:1156
 msgid "Options"
 msgstr "Options"
 
@@ -10166,7 +10166,7 @@ msgstr "Outcomes"
 msgid "Output objects: {outputObjects}"
 msgstr "Výstupní objekty: {outputObjects}"
 
-#: src/components/invite/WorkspaceSelectList.tsx:208
+#: src/components/invite/WorkspaceSelectList.tsx:207
 msgid "Overage billing applies"
 msgstr "Overage billing applies"
 
@@ -10337,7 +10337,7 @@ msgstr "Partner organisation"
 msgid "Partner workspace, billed on its own and not part of the organisation's plan."
 msgstr "Partnerský pracovní prostor, účtovaný zvlášť a nezahrnutý v tarifu organizace."
 
-#: src/components/invite/WorkspaceSelectList.tsx:174
+#: src/components/invite/WorkspaceSelectList.tsx:175
 msgid "Partner workspace, billed separately from the organisation."
 msgstr "Partnerský pracovní prostor, účtovaný odděleně od organizace."
 
@@ -12136,8 +12136,8 @@ msgstr "Obnovit heslo | dembrane"
 msgid "Reset the guide?"
 msgstr "Obnovit průvodce?"
 
-#: src/components/conversation/ConversationAccordion.tsx:1402
-#: src/components/conversation/ConversationAccordion.tsx:1407
+#: src/components/conversation/ConversationAccordion.tsx:1399
+#: src/components/conversation/ConversationAccordion.tsx:1404
 msgid "Reset to default"
 msgstr "Reset to default"
 
@@ -12692,7 +12692,7 @@ msgstr "Hledat podle organizace"
 msgid "Search chats"
 msgstr "Hledat chaty"
 
-#: src/components/conversation/ConversationAccordion.tsx:1147
+#: src/components/conversation/ConversationAccordion.tsx:1144
 msgid "Search conversations"
 msgstr "Search conversations"
 
@@ -12746,7 +12746,7 @@ msgstr "Search projects..."
 msgid "Search results"
 msgstr "Search results"
 
-#: src/components/conversation/ConversationAccordion.tsx:1288
+#: src/components/conversation/ConversationAccordion.tsx:1285
 msgid "Search tags"
 msgstr "Search tags"
 
@@ -12768,7 +12768,7 @@ msgid "Search webhooks..."
 msgstr "Search webhooks..."
 
 #: src/components/workspace/OrganisationUsageRollup.tsx:515
-#: src/components/invite/WorkspaceSelectList.tsx:88
+#: src/components/invite/WorkspaceSelectList.tsx:89
 msgid "Search workspaces"
 msgstr "Search workspaces"
 
@@ -12803,7 +12803,7 @@ msgstr "Vyhledávání výrazu „{0}“ v přepisech"
 msgid "Searching…"
 msgstr "Searching…"
 
-#: src/components/invite/WorkspaceSelectList.tsx:135
+#: src/components/invite/WorkspaceSelectList.tsx:136
 msgid "seats"
 msgstr "seats"
 
@@ -12817,7 +12817,7 @@ msgstr "seats"
 msgid "Seats"
 msgstr "Seats"
 
-#: src/components/invite/WorkspaceSelectList.tsx:204
+#: src/components/invite/WorkspaceSelectList.tsx:203
 #: src/components/invite/InviteResultsList.tsx:51
 msgid "Seats full"
 msgstr "Seats full"
@@ -12871,7 +12871,7 @@ msgid "Select"
 msgstr "Vybrat"
 
 #. placeholder {0}: ws.name
-#: src/components/invite/WorkspaceSelectList.tsx:158
+#: src/components/invite/WorkspaceSelectList.tsx:159
 msgid "Select {0}"
 msgstr "Select {0}"
 
@@ -12906,11 +12906,11 @@ msgstr "Vyberte pracovní prostor"
 
 #: src/routes/project/ProjectsHome.tsx:430
 #: src/components/workspace/DiscoverableWorkspaces.tsx:279
-#: src/components/conversation/ConversationAccordion.tsx:1445
+#: src/components/conversation/ConversationAccordion.tsx:1442
 msgid "Select all"
 msgstr "Select all"
 
-#: src/components/conversation/ConversationAccordion.tsx:1443
+#: src/components/conversation/ConversationAccordion.tsx:1440
 msgid "Select all ({remainingCount})"
 msgstr "Select all ({remainingCount})"
 
@@ -13344,7 +13344,7 @@ msgstr "Krátké úryvky z rozhovorů"
 msgid "Shortest first"
 msgstr "Shortest first"
 
-#: src/components/conversation/ConversationAccordion.tsx:673
+#: src/components/conversation/ConversationAccordion.tsx:670
 msgid "Shortest First"
 msgstr "Shortest First"
 
@@ -13736,8 +13736,8 @@ msgid "participant.go.deeper.content.policy.violation.error.message"
 msgstr "Sorry, we cannot process this request due to an LLM provider's content policy."
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:823
-#: src/components/conversation/ConversationAccordion.tsx:1209
-#: src/components/conversation/ConversationAccordion.tsx:1216
+#: src/components/conversation/ConversationAccordion.tsx:1206
+#: src/components/conversation/ConversationAccordion.tsx:1213
 msgid "Sort"
 msgstr "Sort"
 
@@ -14242,8 +14242,8 @@ msgstr "Tag deleted"
 #: src/components/conversation/ProjectConversationsPanel.tsx:833
 #: src/components/conversation/ConversationEdit.tsx:424
 #: src/components/conversation/ConversationDrilldownModal.tsx:200
+#: src/components/conversation/ConversationAccordion.tsx:1275
 #: src/components/conversation/ConversationAccordion.tsx:1278
-#: src/components/conversation/ConversationAccordion.tsx:1281
 msgid "Tags"
 msgstr "Tags"
 
@@ -15315,7 +15315,7 @@ msgstr "Tento pracovní prostor se fakturuje samostatně"
 msgid "This workspace is billed through {orgName}. Plans and payment are managed once for the whole organisation, and every workspace shares it."
 msgstr "Tento pracovní prostor se fakturuje přes {orgName}. Tarify a platby se spravují jednou pro celou organizaci a všechny pracovní prostory je sdílejí."
 
-#: src/components/invite/WorkspaceSelectList.tsx:219
+#: src/components/invite/WorkspaceSelectList.tsx:218
 msgid "This workspace is on a tier that doesn't allow more seats. Upgrade the workspace tier to invite more."
 msgstr "This workspace is on a tier that doesn't allow more seats. Upgrade the workspace tier to invite more."
 
@@ -16149,7 +16149,7 @@ msgstr "Upgrade your workspace to view transcripts for new conversations."
 #: src/components/dropzone/UploadConversationDropzone.tsx:545
 #: src/components/conversation/ProjectConversationsPanel.tsx:778
 #: src/components/conversation/ConversationAccordion.tsx:405
-#: src/components/conversation/ConversationAccordion.tsx:1116
+#: src/components/conversation/ConversationAccordion.tsx:1113
 msgid "Upload"
 msgstr "Upload"
 
@@ -16195,7 +16195,7 @@ msgid "Upload limit reached"
 msgstr "Dosažen limit nahrávání"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:775
-#: src/components/conversation/ConversationAccordion.tsx:1110
+#: src/components/conversation/ConversationAccordion.tsx:1107
 msgid "Upload limit reached. Upgrade your workspace."
 msgstr "Upload limit reached. Upgrade your workspace."
 
@@ -16417,7 +16417,7 @@ msgid "Verified"
 msgstr "Verified"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/ConversationAccordion.tsx:1397
+#: src/components/conversation/ConversationAccordion.tsx:1394
 msgid "conversation.filters.verified.text"
 msgstr "Verified"
 
@@ -17417,7 +17417,7 @@ msgstr "K tomuto pracovnímu prostoru nemáte přístup"
 msgid "You don't have permission to create workspaces in that organisation. Falling back to your primary organisation instead."
 msgstr "You don't have permission to create workspaces in that organisation. Falling back to your primary organisation instead."
 
-#: src/components/invite/WorkspaceSelectList.tsx:74
+#: src/components/invite/WorkspaceSelectList.tsx:75
 msgid "You don't have permission to invite to any workspace in this organisation."
 msgstr "You don't have permission to invite to any workspace in this organisation."
 
@@ -17440,7 +17440,7 @@ msgstr "You have a pending invite to {0}. The admin needs to free a seat before 
 msgid "select.all.modal.already.added"
 msgstr "You have already added <0>{existingContextCount, plural, one {# conversation} other {# conversations}}</0> to this chat."
 
-#: src/components/conversation/ConversationAccordion.tsx:1427
+#: src/components/conversation/ConversationAccordion.tsx:1424
 msgid "You have already added all the conversations related to this"
 msgstr "You have already added all the conversations related to this"
 
@@ -17562,7 +17562,7 @@ msgstr "You're logging in with the wrong email address"
 #~ msgid "You're not in any organisation yet. Create a workspace to start a organisation, or ask a member for an invite."
 #~ msgstr "You're not in any organisation yet. Create a workspace to start a organisation, or ask a member for an invite."
 
-#: src/components/settings/MyAccessCard.tsx:141
+#: src/components/settings/MyAccessCard.tsx:142
 msgid "You're not in any organisation yet. Create a workspace to start an organisation, or ask a member for an invite."
 msgstr "Zatím nejste v žádné organizaci. Vytvořte pracovní prostor a založte tak organizaci, nebo požádejte některého člena o pozvánku."
 

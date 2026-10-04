@@ -26,6 +26,7 @@ export function grammarAudit(opts: AuditOptions): AuditResult {
 		FIELD_LINE,
 		"rgb(41, 87, 223)", // #2957df active
 		"rgb(192, 67, 78)", // #c0434e error
+		"rgb(255, 209, 102)", // #ffd166 disabled (pollen)
 		"rgba(0, 0, 0, 0)",
 	]);
 	const WEIGHTS = new Set([240, 320, 600]);
@@ -55,6 +56,9 @@ export function grammarAudit(opts: AuditOptions): AuditResult {
 	const ICON_ALLOW = ["[data-illustration] svg", ".app-illustration svg"];
 	// Markdown prose sizes are a follow-up (canon: out of scope).
 	const PROSE = ".prose, .mdxeditor, [data-markdown]";
+	// Avatar initials are a mark sized by the avatar, like an icon, not text
+	// on the ladder (Jorim, October 4th 2026). Their weight still counts.
+	const MARKS = ".mantine-Avatar-placeholder";
 	const SEPARATORS =
 		"h1, h2, h3, h4, h5, h6, .mantine-Title-root, .mantine-Divider-root, hr, legend, [role=separator]";
 	const MODALS =
@@ -227,7 +231,7 @@ export function grammarAudit(opts: AuditOptions): AuditResult {
 		const w = Number.parseFloat(cs.fontWeight);
 		if (!WEIGHTS.has(w))
 			fail("type.weight", el, `font-weight ${cs.fontWeight}`);
-		if (!el.closest(PROSE)) {
+		if (!el.closest(PROSE) && !el.closest(MARKS)) {
 			const fs = px(cs.fontSize);
 			if (fs < 14 - 0.1)
 				fail(

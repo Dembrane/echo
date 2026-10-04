@@ -633,12 +633,9 @@ const ConversationAccordionItem = ({
 							conversation.source?.toLowerCase() ?? "",
 						) &&
 							conversation.live && (
-								<Box className="flex items-baseline gap-1 pr-[4px]">
-									<div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
-									<Text size="xs" fs="italic">
-										<Trans id="conversation.ongoing">Ongoing</Trans>
-									</Text>
-								</Box>
+								<Badge size="xs" color="red" variant="light">
+									<Trans id="conversation.ongoing">Ongoing</Trans>
+								</Badge>
 							)
 					}
 				</div>
