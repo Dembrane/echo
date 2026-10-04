@@ -31,7 +31,8 @@
           style.setProperty('--app-text', text);
           style.setProperty('--app-font-family', font);
           style.setProperty('--app-content-bold-font-family', contentBoldFont);
-          style.setProperty('--mantine-color-white', bg);
+          // --mantine-color-white stays the theme's white (theme.tsx): controls and
+          // surfaces are white whatever the page ground is.
           style.setProperty('--mantine-color-black', text);
           style.setProperty('--mantine-color-text', text);
           style.setProperty('--mantine-color-body', bg);
