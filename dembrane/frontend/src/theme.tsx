@@ -262,7 +262,15 @@ export const theme = createTheme({
 			},
 		}),
 		Card: { defaultProps: { radius: 0, withBorder: true } },
-		Chip: { defaultProps: { radius: 0 } },
+		// The check is part of the label: same colour as its text, in every
+		// state (Mantine draws it in its white on a checked chip).
+		Chip: {
+			defaultProps: { radius: 0 },
+			styles: {
+				checkIcon: { color: "inherit" },
+				iconWrapper: { color: "inherit" },
+			},
+		},
 		Container: { defaultProps: { py: "lg" } },
 		Input: Input.extend({
 			vars: (_theme, props) => {
