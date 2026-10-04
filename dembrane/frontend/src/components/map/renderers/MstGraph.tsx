@@ -17,6 +17,7 @@ import {
 	type MstRepulsionForce,
 	mstLinkDistance,
 	mstViewportForces,
+	treeForceParams,
 } from "../graph/forces";
 import { calculateInitialPositions } from "../graph/layout";
 import {
@@ -121,6 +122,8 @@ export interface MstGraphProps {
 	onNodeHover?: (node: MapGraphNode | null) => void;
 	timerActive?: boolean;
 	timerProgress?: number;
+	/** The host's cluster density dial: above 1 spreads, below 1 clumps. */
+	density?: number;
 	className?: string;
 	// Optional style overrides
 	/** Base node radius; each node's size scale multiplies it. */
@@ -223,6 +226,7 @@ export const MstGraph = ({
 	onNodeHover,
 	timerActive = false,
 	timerProgress = 0,
+	density = 1,
 	className = "",
 	nodeRadius = 6,
 	edgeColor = DEFAULT_EDGE_COLOR,
@@ -349,22 +353,28 @@ export const MstGraph = ({
 		MST_FORCE_DEFAULTS.mstRepulsionCoeff,
 	);
 
+	// The dial scales the forces in play; the panel's sliders keep their own values.
 	const params = useMemo<MstForceParams>(
-		() => ({
-			chargeStrength,
-			link: {
-				constant: linkDistanceConstant,
-				linear: linkDistanceLinear,
-				quadratic: linkDistanceQuadratic,
-			},
-			mstRepulsionCoeff,
-		}),
+		() =>
+			treeForceParams(
+				{
+					chargeStrength,
+					link: {
+						constant: linkDistanceConstant,
+						linear: linkDistanceLinear,
+						quadratic: linkDistanceQuadratic,
+					},
+					mstRepulsionCoeff,
+				},
+				density,
+			),
 		[
 			chargeStrength,
 			linkDistanceConstant,
 			linkDistanceLinear,
 			linkDistanceQuadratic,
 			mstRepulsionCoeff,
+			density,
 		],
 	);
 	const paramsRef = useRef(params);

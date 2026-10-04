@@ -1660,7 +1660,7 @@ msgstr "Añadiendo <0>{totalCount, plural, one {# conversación más} other {# c
 msgid "select.all.modal.loading.title"
 msgstr "Añadiendo conversaciones"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1296
+#: src/components/map/renderers/LocalMapGraph.tsx:1306
 msgid "Additional forces"
 msgstr "Fuerzas adicionales"
 
@@ -2293,7 +2293,7 @@ msgstr "Argumento"
 #~ msgid "Argument (not fact-checked)"
 #~ msgstr ""
 
-#: src/components/map/renderers/MstGraph.tsx:1194
+#: src/components/map/renderers/MstGraph.tsx:1204
 msgid "Argument map"
 msgstr "Mapa de argumentos"
 
@@ -2538,7 +2538,7 @@ msgstr "Registros de auditoría exportados a JSON"
 msgid "Authenticator code"
 msgstr "Código de autenticación"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:364
+#: src/components/map/panels/MapSettingsMenu.tsx:412
 msgid "Auto fact-check new claims"
 msgstr "Verificar automáticamente nuevas afirmaciones"
 
@@ -2607,7 +2607,7 @@ msgstr "Avatar eliminado"
 msgid "Avatar updated"
 msgstr "Avatar actualizado"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1265
+#: src/components/map/renderers/LocalMapGraph.tsx:1275
 msgid "Avg low-dim distance (default: 10)"
 msgstr "Distancia media de baja dimensión (por defecto: 10)"
 
@@ -2890,7 +2890,7 @@ msgid "By tag"
 msgstr "Por etiqueta"
 
 #. placeholder {0}: cMed.toFixed(1)
-#: src/components/map/renderers/LocalMapGraph.tsx:1254
+#: src/components/map/renderers/LocalMapGraph.tsx:1264
 msgid "C_Med: {0}"
 msgstr "C_Med: {0}"
 
@@ -3183,7 +3183,7 @@ msgstr "Cambiar el idioma durante una conversación activa puede provocar result
 #~ msgstr ""
 
 #. placeholder {0}: chargeFraction.toFixed(2)
-#: src/components/map/renderers/LocalMapGraph.tsx:1321
+#: src/components/map/renderers/LocalMapGraph.tsx:1331
 msgid "Charge distance (viewport fraction): {0}"
 msgstr "Distancia de carga (fracción de la vista): {0}"
 
@@ -3545,7 +3545,19 @@ msgstr "Cerrar e ir a dembrane"
 msgid "Cloud Act Safe"
 msgstr "Protegido contra el Cloud Act"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:77
+#: src/components/map/panels/MapSettingsMenu.tsx:296
+msgid "Clumped"
+msgstr "Agrupado"
+
+#: src/components/map/panels/MapSettingsMenu.tsx:280
+msgid "Cluster density"
+msgstr "Densidad de grupos"
+
+#: src/components/map/panels/MapSettingsMenu.tsx:283
+msgid "Cluster density: fewer or more clusters"
+msgstr "Densidad de grupos: menos o más grupos"
+
+#: src/components/map/panels/MapSettingsMenu.tsx:83
 msgid "Clusters"
 msgstr "Clústeres"
 
@@ -3567,7 +3579,7 @@ msgid "Collection"
 msgstr "Colección"
 
 #. placeholder {0}: collisionRadius.toFixed(1)
-#: src/components/map/renderers/LocalMapGraph.tsx:1310
+#: src/components/map/renderers/LocalMapGraph.tsx:1320
 msgid "Collision radius: {0}x"
 msgstr "Radio de colisión: {0}x"
 
@@ -3591,7 +3603,7 @@ msgstr "Colorear gráfico por estado factual"
 msgid "Color graph by valence"
 msgstr "Colorear gráfico por valencia"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:263
+#: src/components/map/panels/MapSettingsMenu.tsx:311
 msgid "Color nodes by"
 msgstr "Colorear nodos por"
 
@@ -3619,8 +3631,8 @@ msgstr "combinado de {0}"
 
 #. placeholder {0}: nodeById.get(d.id)?.metadata.consolidation?.memberCount ?? 0
 #. placeholder {0}: consolidation.memberCount
-#: src/components/map/renderers/MstGraph.tsx:1099
-#: src/components/map/renderers/LocalMapGraph.tsx:1057
+#: src/components/map/renderers/MstGraph.tsx:1109
+#: src/components/map/renderers/LocalMapGraph.tsx:1067
 #: src/components/map/panels/NodeDetailCard.tsx:136
 msgid "Combined from {0} arguments"
 msgstr "Combinado a partir de {0} argumentos"
@@ -3857,7 +3869,7 @@ msgstr "Continuar"
 #~ msgid "Contributing nodes ({0})"
 #~ msgstr "Nodos contribuyentes ({0})"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1326
+#: src/components/map/renderers/LocalMapGraph.tsx:1336
 msgid "Controls how far charge forces act (higher = more global)"
 msgstr "Controla el alcance de las fuerzas de carga (mayor = más global)"
 
@@ -3965,7 +3977,7 @@ msgstr "conversaciones"
 #: src/components/workspace/OrganisationProjectsTable.tsx:225
 #: src/components/report/ReportTimeline.tsx:302
 #: src/components/project/ProjectUsageAndSharing.tsx:471
-#: src/components/map/panels/MapSettingsMenu.tsx:326
+#: src/components/map/panels/MapSettingsMenu.tsx:374
 #: src/components/map/panels/ClusterSummary.tsx:155
 #: src/components/conversation/ProjectConversationsPanel.tsx:623
 #: src/components/conversation/ConversationsMiniList.tsx:141
@@ -4612,7 +4624,7 @@ msgid "Czech conversations, Czech answers"
 msgstr "Conversaciones en checo, respuestas en checo"
 
 #. placeholder {0}: dAdj.toFixed(1)
-#: src/components/map/renderers/LocalMapGraph.tsx:1264
+#: src/components/map/renderers/LocalMapGraph.tsx:1274
 msgid "d̄_adj: {0}"
 msgstr "d̄_adj: {0}"
 
@@ -4628,7 +4640,7 @@ msgstr "Zona de peligro"
 msgid "Dark"
 msgstr "Oscuro"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:403
+#: src/components/map/panels/MapSettingsMenu.tsx:451
 msgid "Dark mode"
 msgstr "Modo oscuro"
 
@@ -4735,11 +4747,11 @@ msgstr "Predeterminado - sin tutorial (solo declaraciones de privacidad)"
 #~ msgid "Default - No tutorial (Only privacy statements)"
 #~ msgstr "Predeterminado - Sin tutorial (Solo declaraciones de privacidad)"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:141
+#: src/components/map/panels/MapSettingsMenu.tsx:163
 msgid "Default {defaultEdges}"
 msgstr "Por defecto: {defaultEdges}"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:130
+#: src/components/map/panels/MapSettingsMenu.tsx:152
 msgid "Default {defaultNodes}"
 msgstr "Por defecto: {defaultNodes}"
 
@@ -5087,7 +5099,7 @@ msgid "Display name"
 msgstr "Nombre para mostrar"
 
 #. placeholder {0}: linkDistanceQuadratic.toFixed(2)
-#: src/components/map/renderers/MstGraph.tsx:1238
+#: src/components/map/renderers/MstGraph.tsx:1248
 msgid "Dissimilar links: {0}"
 msgstr "Enlaces disimilares: {0}"
 
@@ -5578,7 +5590,7 @@ msgstr "Activar"
 msgid "Enable 2FA"
 msgstr "Activar 2FA"
 
-#: src/components/map/MapExperience.tsx:596
+#: src/components/map/MapExperience.tsx:598
 msgid "Enable a visualization from the panel settings menu"
 msgstr "Activa una visualización desde el menú de ajustes del panel"
 
@@ -5980,11 +5992,11 @@ msgstr "Participantes adicionales"
 msgid "Fact-check"
 msgstr "Verificar"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:379
+#: src/components/map/panels/MapSettingsMenu.tsx:427
 msgid "Fact-check all"
 msgstr "Verificar todo"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:377
+#: src/components/map/panels/MapSettingsMenu.tsx:425
 msgid "Fact-check all ({pendingClaimCount})"
 msgstr "Verificar todo ({pendingClaimCount})"
 
@@ -6203,7 +6215,7 @@ msgid "Fair password"
 msgstr "Contraseña aceptable"
 
 #. placeholder {0}: fpStrength.toFixed(2)
-#: src/components/map/renderers/LocalMapGraph.tsx:1287
+#: src/components/map/renderers/LocalMapGraph.tsx:1297
 msgid "Far pair repulsion: {0}"
 msgstr "Repulsión de pares lejanos: {0}"
 
@@ -6455,7 +6467,7 @@ msgstr "para el equipo de dembrane"
 msgid "For you"
 msgstr "Para ti"
 
-#: src/components/map/renderers/MstGraph.tsx:1198
+#: src/components/map/renderers/MstGraph.tsx:1208
 msgid "Force graph settings"
 msgstr "Ajustes del gráfico de fuerzas"
 
@@ -6463,7 +6475,7 @@ msgstr "Ajustes del gráfico de fuerzas"
 #~ msgid "Force Graph Settings"
 #~ msgstr "Ajustes del gráfico de fuerzas"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1274
+#: src/components/map/renderers/LocalMapGraph.tsx:1284
 msgid "Force multipliers"
 msgstr "Multiplicadores de fuerza"
 
@@ -6471,7 +6483,7 @@ msgstr "Multiplicadores de fuerza"
 #~ msgid "Force Multipliers"
 #~ msgstr "Multiplicadores de fuerza"
 
-#: src/components/map/renderers/MstGraph.tsx:1207
+#: src/components/map/renderers/MstGraph.tsx:1217
 msgid "Force parameters"
 msgstr "Parámetros de fuerza"
 
@@ -6562,12 +6574,12 @@ msgid "General"
 msgstr "General"
 
 #. placeholder {0}: chargeStrength.toFixed(1)
-#: src/components/map/renderers/MstGraph.tsx:1252
+#: src/components/map/renderers/MstGraph.tsx:1262
 msgid "General repulsion force: {0}"
 msgstr "Fuerza de repulsión general: {0}"
 
 #. placeholder {0}: Math.abs(chargeStrength)
-#: src/components/map/renderers/LocalMapGraph.tsx:1300
+#: src/components/map/renderers/LocalMapGraph.tsx:1310
 msgid "General repulsion: {0}"
 msgstr "Repulsión general: {0}"
 
@@ -7914,7 +7926,7 @@ msgstr "Base legal guardada"
 msgid "Legal entity name"
 msgstr "Razón social"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:78
+#: src/components/map/panels/MapSettingsMenu.tsx:84
 #: src/components/map/panels/Legend.tsx:78
 msgid "Legend"
 msgstr "Leyenda"
@@ -8236,19 +8248,19 @@ msgstr "Cargando..."
 msgid "Loading…"
 msgstr "Cargando…"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1225
+#: src/components/map/renderers/LocalMapGraph.tsx:1235
 msgid "Local argument map"
 msgstr "Mapa local de argumentos"
 
-#: src/components/map/MapExperience.tsx:564
+#: src/components/map/MapExperience.tsx:565
 msgid "Local map"
 msgstr "Mapa local"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1246
+#: src/components/map/renderers/LocalMapGraph.tsx:1256
 msgid "Local map forces"
 msgstr "Fuerzas del mapa local"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1237
+#: src/components/map/renderers/LocalMapGraph.tsx:1247
 msgid "Local map settings"
 msgstr "Ajustes del mapa local"
 
@@ -8256,7 +8268,7 @@ msgstr "Ajustes del mapa local"
 #~ msgid "LocalMap Forces"
 #~ msgstr "Fuerzas de LocalMap"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1250
+#: src/components/map/renderers/LocalMapGraph.tsx:1260
 msgid "LocalMAP paper parameters"
 msgstr "Parámetros del artículo LocalMAP"
 
@@ -8467,7 +8479,7 @@ msgstr "Mapa | dembrane"
 msgid "Map arguments"
 msgstr "Argumentos del Map"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:125
+#: src/components/map/panels/MapSettingsMenu.tsx:147
 msgid "Map budget"
 msgstr "Presupuesto del mapa"
 
@@ -8563,12 +8575,12 @@ msgstr "MCP es un puente que permite a un asistente de IA como Claude, ChatGPT o
 msgid "MCP URL"
 msgstr "URL de MCP"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1255
+#: src/components/map/renderers/LocalMapGraph.tsx:1265
 msgid "Medium distance threshold (default: 10)"
 msgstr "Umbral de distancia media (predeterminado: 10)"
 
 #. placeholder {0}: linkDistanceLinear.toFixed(2)
-#: src/components/map/renderers/MstGraph.tsx:1226
+#: src/components/map/renderers/MstGraph.tsx:1236
 msgid "Medium distances: {0}"
 msgstr "Distancias medias: {0}"
 
@@ -8666,7 +8678,7 @@ msgid "min {minimum}"
 msgstr "mín. {minimum}"
 
 #. placeholder {0}: linkDistanceConstant.toFixed(1)
-#: src/components/map/renderers/MstGraph.tsx:1212
+#: src/components/map/renderers/MstGraph.tsx:1222
 msgid "Minimum link length: {0}"
 msgstr "Longitud mínima de enlace: {0}"
 
@@ -8935,7 +8947,7 @@ msgstr "Negativo"
 #~ msgstr "Atracción de vecinos: {0}"
 
 #. placeholder {0}: nnStrength.toFixed(2)
-#: src/components/map/renderers/LocalMapGraph.tsx:1278
+#: src/components/map/renderers/LocalMapGraph.tsx:1288
 msgid "Neighbour attraction: {0}"
 msgstr "Atracción de vecinos: {0}"
 
@@ -9585,7 +9597,7 @@ msgstr "Actualmente no tienes acceso compartido a ningún espacio de trabajo de 
 msgid "No workspaces match \"{search}\"."
 msgstr "Ningún espacio de trabajo coincide con «{search}»."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:129
+#: src/components/map/panels/MapSettingsMenu.tsx:151
 msgid "Nodes"
 msgstr "Nodos"
 
@@ -10425,9 +10437,9 @@ msgstr "Título de la página"
 msgid "Paid"
 msgstr "Pagado"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:218
-#: src/components/map/panels/MapSettingsMenu.tsx:219
-#: src/components/map/panels/MapSettingsMenu.tsx:227
+#: src/components/map/panels/MapSettingsMenu.tsx:240
+#: src/components/map/panels/MapSettingsMenu.tsx:241
+#: src/components/map/panels/MapSettingsMenu.tsx:249
 msgid "Panel settings"
 msgstr "Ajustes del panel"
 
@@ -10558,7 +10570,7 @@ msgstr "Las contraseñas no coinciden"
 #~ msgid "Paste it into any page. It stays live."
 #~ msgstr "Pégalo en cualquier página. Se actualiza en tiempo real."
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1214
+#: src/components/map/renderers/LocalMapGraph.tsx:1224
 msgid "Pause physics"
 msgstr "Pausar física"
 
@@ -11872,7 +11884,7 @@ msgstr "Registrar | dembrane"
 
 #: src/components/map/panels/NodeDetailCard.tsx:323
 #: src/components/map/panels/NodeDetailCard.tsx:529
-#: src/components/map/panels/MapSettingsMenu.tsx:247
+#: src/components/map/panels/MapSettingsMenu.tsx:269
 msgid "Relationships"
 msgstr "Relaciones"
 
@@ -12456,7 +12468,7 @@ msgstr "Los resultados se muestran en el idioma en que habló la gente. Elige un
 msgid "participant.button.stop.resume"
 msgstr "Reanudar"
 
-#: src/components/map/renderers/LocalMapGraph.tsx:1214
+#: src/components/map/renderers/LocalMapGraph.tsx:1224
 msgid "Resume physics"
 msgstr "Reanudar física"
 
@@ -13711,7 +13723,7 @@ msgstr "Mostrar más versiones"
 msgid "Show on the map"
 msgstr "Ver en el mapa"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:288
+#: src/components/map/panels/MapSettingsMenu.tsx:336
 msgid "Show only conversations with any of the ticked tags."
 msgstr "Mostrar solo las conversaciones con alguna de las etiquetas marcadas."
 
@@ -13779,7 +13791,7 @@ msgstr "Muestra tu propio logo a los participantes, disponible bajo petición."
 
 #: src/components/map/panels/ShowcasePanel.tsx:86
 #: src/components/map/panels/ShowcasePanel.tsx:89
-#: src/components/map/panels/MapSettingsMenu.tsx:74
+#: src/components/map/panels/MapSettingsMenu.tsx:80
 msgid "Showcase"
 msgstr "Escaparate"
 
@@ -14091,9 +14103,13 @@ msgstr "El chat de detalles específicos respeta la selección manual de convers
 
 #: src/components/map/panels/SpotlightPanel.tsx:218
 #: src/components/map/panels/SpotlightPanel.tsx:220
-#: src/components/map/panels/MapSettingsMenu.tsx:75
+#: src/components/map/panels/MapSettingsMenu.tsx:81
 msgid "Spotlight"
 msgstr "Destacado"
+
+#: src/components/map/panels/MapSettingsMenu.tsx:299
+msgid "Spread out"
+msgstr "Disperso"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:3157
 #: src/features/sidebar/shell/UserMenu.tsx:167
@@ -14535,7 +14551,7 @@ msgstr "Etiqueta eliminada"
 
 #: src/components/project/ProjectTagsInput.tsx:255
 #: src/components/participant/ParticipantInitiateForm.tsx:281
-#: src/components/map/panels/MapSettingsMenu.tsx:285
+#: src/components/map/panels/MapSettingsMenu.tsx:333
 #: src/components/conversation/ProjectConversationsPanel.tsx:706
 #: src/components/conversation/ConversationsMiniList.tsx:179
 #: src/components/conversation/ConversationEdit.tsx:424
@@ -14803,7 +14819,7 @@ msgstr "No se pudo cargar el borrador"
 #~ msgid "The draft could not be loaded."
 #~ msgstr "No se pudo cargar el borrador."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:92
+#: src/components/map/panels/MapSettingsMenu.tsx:98
 msgid "The edge budget must be a whole number above zero, so {applied} applies."
 msgstr "El presupuesto de conexiones debe ser un número entero mayor que cero, por lo que se aplica {applied}."
 
@@ -14972,7 +14988,7 @@ msgstr "El nombre de esta parte interesada"
 msgid "The new sidebar brings organisations, workspaces, members and settings together."
 msgstr "La nueva barra lateral reúne organizaciones, espacios de trabajo, miembros y ajustes."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:91
+#: src/components/map/panels/MapSettingsMenu.tsx:97
 msgid "The node budget must be a whole number above zero, so {applied} applies."
 msgstr "El límite de nodos debe ser un número entero mayor que cero, así que se aplica {applied}."
 
@@ -15272,11 +15288,11 @@ msgstr "Esta conversación es una copia de"
 msgid "This deployment can open maps with up to {maximumCount} arguments."
 msgstr "Este entorno puede abrir mapas con hasta {maximumCount} argumentos."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:96
+#: src/components/map/panels/MapSettingsMenu.tsx:102
 msgid "This deployment shows up to {applied} edges."
 msgstr "Este despliegue muestra hasta {applied} conexiones."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:95
+#: src/components/map/panels/MapSettingsMenu.tsx:101
 msgid "This deployment shows up to {applied} nodes."
 msgstr "Este despliegue muestra hasta {applied} nodos."
 
@@ -16023,13 +16039,13 @@ msgstr "Traduciendo: {translated} de {total} al {language}"
 msgid "Translation progress"
 msgstr "Progreso de la traducción"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:76
+#: src/components/map/panels/MapSettingsMenu.tsx:82
 #: src/components/map/panels/DetailsModal.tsx:137
 msgid "Tree"
 msgstr "Árbol"
 
 #. placeholder {0}: mstRepulsionCoeff.toFixed(3)
-#: src/components/map/renderers/MstGraph.tsx:1264
+#: src/components/map/renderers/MstGraph.tsx:1274
 msgid "Tree repulsion factor: {0}"
 msgstr "Factor de repulsión del árbol: {0}"
 
@@ -16649,7 +16665,7 @@ msgstr "Usa plantillas de preguntas fijadas y guardadas, incluido el atajo /, de
 msgid "Use Shift + Enter to add a new line"
 msgstr "Usa Shift + Enter para agregar una nueva línea"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:164
+#: src/components/map/panels/MapSettingsMenu.tsx:186
 msgid "Use the default budget"
 msgstr "Usar el presupuesto predeterminado"
 
@@ -16881,11 +16897,11 @@ msgstr "Vistas: {0}"
 msgid "Visible columns"
 msgstr "Columnas visibles"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:140
+#: src/components/map/panels/MapSettingsMenu.tsx:162
 msgid "Visible edges"
 msgstr "Conexiones visibles"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:98
+#: src/components/map/panels/MapSettingsMenu.tsx:104
 msgid "Visible edges raised to {applied} so the tree over {nodeLimit} nodes fits."
 msgstr "Conexiones visibles aumentadas a {applied} para que quepa el árbol de más de {nodeLimit} nodos."
 

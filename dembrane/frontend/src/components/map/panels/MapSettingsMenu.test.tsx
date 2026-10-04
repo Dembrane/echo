@@ -63,6 +63,15 @@ describe("the map's tag controls", () => {
 		expect(onChosen).toHaveBeenCalledWith(new Set(["t-age"]));
 	});
 
+	it("sits beside the cluster density dial", async () => {
+		open([]);
+		expect(
+			await screen.findByRole("slider", {
+				name: "Cluster density: fewer or more clusters",
+			}),
+		).toBeTruthy();
+	});
+
 	it("are absent where it has none", async () => {
 		open([]);
 		await screen.findByRole("radio", { name: "Valence" });

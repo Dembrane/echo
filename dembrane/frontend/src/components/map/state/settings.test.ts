@@ -27,6 +27,7 @@ describe("map settings", () => {
 	it("starts from DDW's panels, conversation colouring and the deployment budgets", () => {
 		expect(readMapSettings()).toEqual({
 			autoFactCheckClaims: false,
+			clusterDensity: 1,
 			colorBy: "conversation",
 			darkMode: false,
 			edgeLimit: null,
@@ -96,6 +97,7 @@ describe("settings migration", () => {
 			});
 			expect(readMapSettings()).toEqual({
 				autoFactCheckClaims: true,
+				clusterDensity: 1,
 				colorBy,
 				darkMode: true,
 				edgeLimit: null,
@@ -143,6 +145,13 @@ describe("settings migration", () => {
 		expect(readMapSettings().showLegend).toBe(false);
 		store({ showLegend: true, version: MAP_SETTINGS_VERSION });
 		expect(readMapSettings().showLegend).toBe(true);
+	});
+
+	it("keeps a cluster density inside the dial and ignores one outside it", () => {
+		store({ clusterDensity: 4, version: MAP_SETTINGS_VERSION });
+		expect(readMapSettings().clusterDensity).toBe(4);
+		store({ clusterDensity: 99, version: MAP_SETTINGS_VERSION });
+		expect(readMapSettings().clusterDensity).toBe(1);
 	});
 
 	it("keeps neutral once a host has chosen it", () => {
