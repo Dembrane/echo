@@ -21,6 +21,7 @@ export const Legend = memo(function Legend({
 	darkMode,
 	conversations = 0,
 	names,
+	tags = [],
 }: {
 	colorBy: ColorBy;
 	darkMode: boolean;
@@ -32,18 +33,29 @@ export const Legend = memo(function Legend({
 	 * and numbers the rest.
 	 */
 	names?: ReadonlyMap<number, string>;
+	/** The map's tags in slot order; the tag legend is built from them. */
+	tags?: ReadonlyArray<{ name: string; slot: number }>;
 }) {
 	const rows: LegendEntry[] =
-		colorBy === "conversation"
-			? Array.from(
-					{ length: Math.min(conversations, NAMED_CONVERSATIONS) },
-					(_value, slot) => ({
-						color: conversationColor(slot),
-						key: slotKey(slot),
-						label: names?.get(slot) || conversationSlotLabel(slot),
-					}),
-				)
-			: legendEntries(colorBy);
+		colorBy === "tag"
+			? [
+					...tags.map((tag) => ({
+						color: conversationColor(tag.slot),
+						key: slotKey(tag.slot),
+						label: tag.name,
+					})),
+					...legendEntries("tag"),
+				]
+			: colorBy === "conversation"
+				? Array.from(
+						{ length: Math.min(conversations, NAMED_CONVERSATIONS) },
+						(_value, slot) => ({
+							color: conversationColor(slot),
+							key: slotKey(slot),
+							label: names?.get(slot) || conversationSlotLabel(slot),
+						}),
+					)
+				: legendEntries(colorBy);
 	if (rows.length === 0) return null;
 	// The swatches carry the same shadow, hairline and theme-resolved fills
 	// as the nodes they explain.

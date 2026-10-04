@@ -5,7 +5,7 @@ import { memo } from "react";
 import type { Distillation } from "../hooks/useSelectionTitle";
 import type { MapGraphNode } from "../types";
 import { conversationShares } from "./ClusterSummary";
-import { CaptionText, mapVars, PanelHeader } from "./shared";
+import { CaptionText, mapVars } from "./shared";
 
 /** One step back in time: an argument clicked or a cluster distilled. */
 export type HistoryItem =
@@ -91,102 +91,82 @@ const ClusterRow = ({
 };
 
 /**
- * The way back: every argument clicked and every cluster distilled this
- * session, newest first. Choosing one brings it back into Spotlight.
+ * What was spotlit before, newest first, one small row each: an argument
+ * clicked or a cluster distilled. Choosing a row makes it the spotlight
+ * again.
  */
-export const HistoryPanel = memo(function HistoryPanel({
+export const HistoryRows = memo(function HistoryRows({
 	items,
 	nodesById,
-	selectedId,
 	onSelect,
 	onRetry,
+	titles = true,
 }: {
 	items: ReadonlyArray<HistoryItem>;
 	/** Nodes on the current map, by id. */
 	nodesById: ReadonlyMap<string, MapGraphNode>;
-	selectedId: string | null;
 	onSelect: (item: HistoryItem) => void;
 	onRetry: (distillationId: string) => void;
+	/** False where clusters are never distilled (a public room). */
+	titles?: boolean;
 }) {
-	return (
-		<section
-			id="history-panel"
-			className="flex h-full min-h-0 flex-col"
-			aria-label={t`History`}
-		>
-			<PanelHeader title={<Trans>History</Trans>} dotClassName="bg-primary" />
-			<div className="min-h-0 flex-1 overflow-y-auto pr-1">
-				{items.length === 0 ? (
-					<CaptionText>
-						<Trans>
-							Click an argument, or rest the cursor on a cluster until the
-							circle closes, and it is kept here.
-						</Trans>
-					</CaptionText>
+	if (items.length === 0) {
+		return (
+			<CaptionText>
+				{titles ? (
+					<Trans>
+						What you spotlight is kept here: click an argument, or rest the
+						cursor on a cluster until the circle closes.
+					</Trans>
 				) : (
-					<ol className="space-y-2">
-						{items.map((item) => {
-							const selected = item.id === selectedId;
-							const node =
-								item.kind === "argument" ? nodesById.get(item.nodeId) : null;
-							if (item.kind === "argument" && !node) return null;
-							return (
-								<li
-									key={item.id}
-									className="border transition-colors"
-									style={{
-										backgroundColor: selected
-											? mapVars.accentSurface
-											: undefined,
-										borderColor: selected
-											? mapVars.accentBorder
-											: mapVars.border,
-									}}
-								>
-									<UnstyledButton
-										onClick={() => onSelect(item)}
-										aria-pressed={selected}
-										data-selected={selected || undefined}
-										data-testid={`history-${item.kind}`}
-										className="block w-full p-3 text-left"
-									>
-										{item.kind === "argument" ? (
-											<>
-												<span className="block text-xs" style={muted}>
-													<Trans>Argument</Trans>
-												</span>
-												<span className="line-clamp-2 block text-sm leading-tight">
-													{node?.label ?? item.nodeId}
-												</span>
-											</>
-										) : (
-											<ClusterRow
-												distillation={item.distillation}
-												nodes={resolveNodes(
-													item.distillation.nodeIds,
-													nodesById,
-												)}
-											/>
-										)}
-									</UnstyledButton>
-									{item.kind === "cluster" &&
-										item.distillation.status === "failed" && (
-											<div className="px-3 pb-3">
-												<Button
-													size="compact-xs"
-													variant="subtle"
-													onClick={() => onRetry(item.distillation.id)}
-												>
-													<Trans>Try again</Trans>
-												</Button>
-											</div>
-										)}
-								</li>
-							);
-						})}
-					</ol>
+					<Trans>The arguments you click are kept here.</Trans>
 				)}
-			</div>
-		</section>
+			</CaptionText>
+		);
+	}
+	return (
+		<ol className="space-y-2" aria-label={t`Earlier in the spotlight`}>
+			{items.map((item) => {
+				const node =
+					item.kind === "argument" ? nodesById.get(item.nodeId) : null;
+				if (item.kind === "argument" && !node) return null;
+				return (
+					<li
+						key={item.id}
+						className="border"
+						style={{ borderColor: mapVars.border }}
+					>
+						<UnstyledButton
+							onClick={() => onSelect(item)}
+							data-testid={`history-${item.kind}`}
+							className="block w-full p-2 text-left"
+						>
+							{item.kind === "argument" ? (
+								<span className="line-clamp-2 block text-sm leading-tight">
+									{node?.label ?? item.nodeId}
+								</span>
+							) : (
+								<ClusterRow
+									distillation={item.distillation}
+									nodes={resolveNodes(item.distillation.nodeIds, nodesById)}
+								/>
+							)}
+						</UnstyledButton>
+						{item.kind === "cluster" &&
+							item.distillation.status === "failed" && (
+								<div className="px-2 pb-2">
+									<Button
+										size="compact-xs"
+										variant="subtle"
+										onClick={() => onRetry(item.distillation.id)}
+									>
+										<Trans>Try again</Trans>
+									</Button>
+								</div>
+							)}
+					</li>
+				);
+			})}
+		</ol>
 	);
 });

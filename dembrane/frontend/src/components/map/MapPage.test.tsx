@@ -86,7 +86,12 @@ describe("MapPage in fixture mode", () => {
 			50,
 		);
 		expect(container.querySelector("#spotlight-panel")).toBeTruthy();
-		expect(container.querySelector("#history-panel")).toBeTruthy();
+		// What was spotlit before sits under the spotlit item, in the same panel.
+		expect(
+			container.querySelector(
+				'#spotlight-panel [aria-label="Earlier in the spotlight"]',
+			) ?? screen.getByText(/What you spotlight is kept here/),
+		).toBeTruthy();
 		// Showcase is off by default.
 		expect(container.querySelector("#showcase-panel")).toBeNull();
 		// Generation controls are hidden in fixture mode.

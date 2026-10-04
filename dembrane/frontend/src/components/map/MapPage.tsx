@@ -39,6 +39,11 @@ import {
 import { conversationColor, conversationSlotLabel } from "./attributes";
 import { fixtureMapData, type MapFixtureId } from "./data/fixture";
 import {
+	buildTagIndex,
+	conversationsWithoutTags,
+	withTagSlots,
+} from "./data/tags";
+import {
 	filterNodesByConversation,
 	filterNodesByType,
 	typesKey,
@@ -50,6 +55,7 @@ import {
 	type MapAttempt,
 	type MapGraphResponse,
 	useGenerateMap,
+	useMapConversationTags,
 	useMapEvents,
 	useMapGraph,
 	useProjectMap,
@@ -340,26 +346,60 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 		[graph, urlState.hidden],
 	);
 
+	// The tags on this map's conversations; none on a fixture.
+	const conversationsQuery = useMapConversationTags(projectId, !offline);
+	const tagIndex = useMemo(
+		() =>
+			buildTagIndex(
+				conversationsQuery.data,
+				new Set(graph?.conversationSlots.keys() ?? []),
+			),
+		[conversationsQuery.data, graph],
+	);
+	const chosenTags = useMemo(() => {
+		const known = new Set(tagIndex.tags.map((tag) => tag.id));
+		return new Set(urlState.tags.filter((id) => known.has(id)));
+	}, [tagIndex, urlState.tags]);
+	// Hidden by hand, or carrying none of the chosen tags.
+	const leftOut = useMemo(
+		() =>
+			new Set([
+				...hiddenConversations,
+				...conversationsWithoutTags(
+					graph?.conversationSlots.keys() ?? [],
+					chosenTags,
+					tagIndex,
+				),
+			]),
+		[chosenTags, graph, hiddenConversations, tagIndex],
+	);
+
 	// Filters narrow the nodes before any geometry; colour never does.
 	const listNodes = useMemo(
 		() =>
 			graph
-				? filterNodesByConversation(
-						filterNodesByType(graph.allNodes, visibleSet),
-						hiddenConversations,
+				? withTagSlots(
+						filterNodesByConversation(
+							filterNodesByType(graph.allNodes, visibleSet),
+							leftOut,
+						),
+						tagIndex,
 					)
 				: EMPTY_NODES,
-		[graph, visibleSet, hiddenConversations],
+		[graph, visibleSet, leftOut, tagIndex],
 	);
 	const placedNodes = useMemo(
 		() =>
 			graph
-				? filterNodesByConversation(
-						filterNodesByType(graph.placedNodes, visibleSet),
-						hiddenConversations,
+				? withTagSlots(
+						filterNodesByConversation(
+							filterNodesByType(graph.placedNodes, visibleSet),
+							leftOut,
+						),
+						tagIndex,
 					)
 				: EMPTY_NODES,
-		[graph, visibleSet, hiddenConversations],
+		[graph, visibleSet, leftOut, tagIndex],
 	);
 	const visibleIds = useMemo(
 		() => new Set(listNodes.map((node) => node.id)),
@@ -376,7 +416,12 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 			? "overBudget"
 			: budgetState(visibleCount, budgets.nodeLimit);
 
-	const colorBy = urlState.colorBy ?? settings.colorBy;
+	// A tag colouring saved on another project means nothing on one without tags.
+	const chosenColorBy = urlState.colorBy ?? settings.colorBy;
+	const colorBy =
+		chosenColorBy === "tag" && tagIndex.tags.length === 0
+			? "none"
+			: chosenColorBy;
 	const handleColorByChange = useCallback(
 		(next: ColorBy) => {
 			updateSettings({ colorBy: next });
@@ -467,6 +512,7 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 				canFactCheck={!readOnly}
 				conversationHref={conversationHref}
 				offline={offline}
+				tags={tagIndex.tags}
 			/>
 		</MapInteractionProvider>
 	);
@@ -640,6 +686,15 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 							onHiddenConversationsChange={(hidden) =>
 								setUrlState({ hidden: [...hidden] })
 							}
+							tags={tagIndex.tags.map((tag) => ({
+								color: conversationColor(tag.slot),
+								id: tag.id,
+								name: tag.name,
+							}))}
+							chosenTags={chosenTags}
+							onChosenTagsChange={(chosen) =>
+								setUrlState({ tags: [...chosen] })
+							}
 						/>
 					)}
 				</Group>
@@ -649,6 +704,7 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 				unplacedCount > 0 ||
 				urlState.scope ||
 				hiddenConversations.size > 0 ||
+				chosenTags.size > 0 ||
 				(isRefreshing && !activeAdmission) ||
 				(graph?.stale.length ?? 0) > 0) && (
 				<Stack gap="xs" className="px-4 pb-2 md:px-6">
@@ -704,6 +760,27 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 								onClick={() => setUrlState({ scope: null })}
 							>
 								<Trans>Show current arguments</Trans>
+							</Button>
+						</Group>
+					)}
+					{chosenTags.size > 0 && (
+						<Group gap="xs">
+							<Text size="sm">
+								<Trans>
+									Showing conversations tagged{" "}
+									{tagIndex.tags
+										.filter((tag) => chosenTags.has(tag.id))
+										.map((tag) => tag.name)
+										.join(", ")}
+									.
+								</Trans>
+							</Text>
+							<Button
+								size="compact-sm"
+								variant="subtle"
+								onClick={() => setUrlState({ tags: [] })}
+							>
+								<Trans>Show every tag</Trans>
 							</Button>
 						</Group>
 					)}

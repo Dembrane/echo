@@ -184,6 +184,7 @@ export const FACT_CHECKABLE_TYPES: ReadonlySet<ObjectType> = new Set([
 export type AttributeInputs = {
 	/** Palette slots of the conversations behind the node, one per member. */
 	conversationSlots?: ReadonlyArray<number>;
+	tagSlots?: ReadonlyArray<number>;
 	objectType?: ObjectType;
 	epistemicKind?: MapEpistemicKind;
 	/** @deprecated read through `epistemicKind`. */
@@ -202,6 +203,7 @@ export const attributeInputsOf = (
 	factCheckEligible: metadata?.factCheckEligible,
 	kind: metadata?.kind,
 	objectType: metadata?.objectType,
+	tagSlots: metadata?.tagSlots,
 	valence: metadata?.valence,
 });
 
@@ -435,8 +437,41 @@ const CONVERSATION: AttributeDefinition = {
 	valueType: "category",
 };
 
+/** How a tag is named where its name is not to hand: by its place. */
+export const tagSlotLabel = (slot: number): string => t`Tag ${slot + 1}`;
+
+/**
+ * One colour per project tag, in tag order, from the same markers as the
+ * conversations. A node takes the tags of the conversations it came from,
+ * blended where there are several; a node without any is grey.
+ */
+const TAG: AttributeDefinition = {
+	accessor: (inputs) => {
+		const slots = inputs.tagSlots;
+		if (!slots || slots.length === 0) return undefined;
+		return slotKey(Math.min(...slots));
+	},
+	appliesTo: OBJECT_TYPES,
+	blend: (inputs) => conversationColors(inputs.tagSlots),
+	entries: () => [{ key: "untagged", label: t`No tag` }],
+	id: "tag",
+	label: () => t`Tag`,
+	// The tags themselves come from the map; the legend adds "No tag".
+	legendKeys: ["untagged"],
+	missing: "untagged",
+	notApplicable: "untagged",
+	palette: { untagged: MAP_NOT_ASSESSED_GREY },
+	resolve: (key) => {
+		const slot = slotOfKey(key);
+		if (slot === null) return undefined;
+		return { color: conversationColor(slot), label: tagSlotLabel(slot) };
+	},
+	valueType: "category",
+};
+
 export const ATTRIBUTES: Readonly<Record<ColorBy, AttributeDefinition>> = {
 	conversation: CONVERSATION,
+	tag: TAG,
 	factCheck: FACTUAL_STATUS,
 	none: NONE,
 	type: TYPE,
@@ -446,6 +481,7 @@ export const ATTRIBUTES: Readonly<Record<ColorBy, AttributeDefinition>> = {
 /** Colour modes in the order the settings menu offers them. */
 export const COLOR_BY_OPTIONS: ReadonlyArray<ColorBy> = [
 	"conversation",
+	"tag",
 	"none",
 	"type",
 	"valence",

@@ -63,7 +63,7 @@ type NodeDetailCardProps = {
 	inspection?: NodeInspection | null;
 };
 
-const QuoteGroups = ({
+export const QuoteGroups = ({
 	evidence,
 	conversationHref,
 	headings = true,

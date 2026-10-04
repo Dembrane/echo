@@ -1,6 +1,7 @@
 import { plural, t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Loader, UnstyledButton } from "@mantine/core";
+import { Loader } from "@mantine/core";
+import type { ReactNode } from "react";
 import {
 	attributeFor,
 	attributeInputsOf,
@@ -11,7 +12,6 @@ import {
 } from "../attributes";
 import type { Distillation } from "../hooks/useSelectionTitle";
 import type { ColorBy, MapGraphNode } from "../types";
-import { mapVars } from "./shared";
 
 export type Share = {
 	key: string;
@@ -112,78 +112,61 @@ export const ShareBar = ({
 };
 
 /**
- * A distilled cluster: its title, what it is made of in proportions, and its
- * arguments to step into. The title and the bars stay put; the arguments
- * scroll under them.
+ * A distilled cluster as the spotlight: its title and what it is made of in
+ * proportions. Its arguments and their quotes are details on demand.
  */
 export const ClusterSummary = ({
 	distillation,
 	nodes,
 	conversationNames,
-	onSelectNode,
+	actions,
 }: {
 	distillation: Distillation;
 	/** The cluster's nodes still on the map, with their fact-check state. */
 	nodes: ReadonlyArray<MapGraphNode>;
 	conversationNames?: ReadonlyMap<number, string>;
-	onSelectNode: (nodeId: string) => void;
+	/** The affordances that open its details. */
+	actions?: ReactNode;
 }) => {
 	const eligible = nodes.filter((node) =>
 		isFactCheckEligible(attributeInputsOf(node.metadata)),
 	);
 	return (
-		<>
-			<div className="space-y-3 pb-2">
-				<div className="space-y-1">
-					{distillation.title ? (
-						<p className="leading-snug" data-testid="cluster-title">
-							{distillation.title}
-						</p>
-					) : (
-						<p className="flex items-center gap-2 leading-snug">
-							<Loader size="xs" color="primary" />
-							<Trans>Distilling core idea…</Trans>
-						</p>
-					)}
-					<p className="text-xs" style={{ color: "var(--map-muted)" }}>
-						{plural(nodes.length, {
-							one: "# argument",
-							other: "# arguments",
-						})}
+		<div className="space-y-3">
+			<div className="space-y-1">
+				{distillation.title ? (
+					<p className="leading-snug" data-testid="cluster-title">
+						{distillation.title}
 					</p>
-				</div>
-				<ShareBar
-					title={t`Conversations`}
-					shares={conversationShares(nodes, conversationNames)}
-					testId="cluster-conversations"
-				/>
-				<ShareBar
-					title={t`Valence`}
-					shares={attributeShares(nodes, "valence")}
-					testId="cluster-valence"
-				/>
-				<ShareBar
-					title={t`Factual status`}
-					shares={attributeShares(eligible, "factCheck")}
-					testId="cluster-factual"
-				/>
+				) : (
+					<p className="flex items-center gap-2 leading-snug">
+						<Loader size="xs" color="primary" />
+						<Trans>Distilling core idea…</Trans>
+					</p>
+				)}
+				<p className="text-xs" style={{ color: "var(--map-muted)" }}>
+					{plural(nodes.length, {
+						one: "# argument",
+						other: "# arguments",
+					})}
+				</p>
 			</div>
-
-			<ol
-				className="min-h-0 flex-1 space-y-1 overflow-y-auto border-t pr-1 pt-2"
-				style={{ borderColor: mapVars.border }}
-			>
-				{nodes.map((node) => (
-					<li key={node.id}>
-						<UnstyledButton
-							onClick={() => onSelectNode(node.id)}
-							className="block w-full text-left text-sm leading-snug transition-opacity hover:opacity-80"
-						>
-							{node.label ?? node.id}
-						</UnstyledButton>
-					</li>
-				))}
-			</ol>
-		</>
+			<ShareBar
+				title={t`Conversations`}
+				shares={conversationShares(nodes, conversationNames)}
+				testId="cluster-conversations"
+			/>
+			<ShareBar
+				title={t`Valence`}
+				shares={attributeShares(nodes, "valence")}
+				testId="cluster-valence"
+			/>
+			<ShareBar
+				title={t`Factual status`}
+				shares={attributeShares(eligible, "factCheck")}
+				testId="cluster-factual"
+			/>
+			{actions}
+		</div>
 	);
 };

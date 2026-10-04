@@ -18105,3 +18105,69 @@ msgstr "probíhá"
 msgid "Your answer is ready"
 msgstr "Vaše odpověď je hotová"
 
+#. placeholder {0}: cluster.nodes.length
+#: src/components/map/panels/SpotlightPanel.tsx:233
+msgid "Arguments ({0})"
+msgstr "Argumenty ({0})"
+
+#: src/components/map/panels/SpotlightPanel.tsx:239
+#: src/components/map/panels/SpotlightPanel.tsx:429
+#: src/components/map/panels/LocalGraph.tsx:144
+#: src/components/map/panels/DetailsModal.tsx:169
+msgid "Connections"
+msgstr "Souvislosti"
+
+#: src/components/map/panels/HistoryPanel.tsx:128
+msgid "Earlier in the spotlight"
+msgstr "Dříve ve středu pozornosti"
+
+#: src/components/map/panels/DetailsModal.tsx:174
+msgid "Its arguments, and the tree between them"
+msgstr "Jeho argumenty a strom mezi nimi"
+
+#: src/components/map/panels/DetailsModal.tsx:172
+msgid "Its neighbours in the tree, and its relationships"
+msgstr "Jeho sousedé ve stromu a jeho vztahy"
+
+#: src/components/map/attributes.ts:456
+msgid "No tag"
+msgstr "Bez štítku"
+
+#: src/components/map/panels/SpotlightPanel.tsx:237
+msgid "Quotes ({clusterQuoteCount})"
+msgstr "Citace ({clusterQuoteCount})"
+
+#: src/components/map/panels/DetailsModal.tsx:48
+msgid "Quotes ({quotes})"
+msgstr "Citace ({quotes})"
+
+#: src/components/map/MapPage.tsx:783
+msgid "Show every tag"
+msgstr "Zobrazit všechny štítky"
+
+#: src/components/map/panels/MapSettingsMenu.tsx:288
+msgid "Show only conversations with any of the ticked tags."
+msgstr "Zobrazit jen konverzace s některým ze zaškrtnutých štítků."
+
+#. placeholder {0}: tagIndex.tags .filter((tag) => chosenTags.has(tag.id)) .map((tag) => tag.name) .join(", ")
+#: src/components/map/MapPage.tsx:769
+msgid "Showing conversations tagged {0}."
+msgstr "Konverzace se štítkem {0}."
+
+#: src/components/map/attributes.ts:458
+msgid "Tag"
+msgstr "Štítek"
+
+#. placeholder {0}: slot + 1
+#: src/components/map/attributes.ts:441
+msgid "Tag {0}"
+msgstr "Štítek {0}"
+
+#: src/components/map/panels/HistoryPanel.tsx:122
+msgid "The arguments you click are kept here."
+msgstr "Argumenty, na které kliknete, se ukládají sem."
+
+#: src/components/map/panels/HistoryPanel.tsx:117
+msgid "What you spotlight is kept here: click an argument, or rest the cursor on a cluster until the circle closes."
+msgstr "Co dáte do středu pozornosti, se ukládá sem: klikněte na argument nebo nechte kurzor na shluku, dokud se kruh neuzavře."
+
