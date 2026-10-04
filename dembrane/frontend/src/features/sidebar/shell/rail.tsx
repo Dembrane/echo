@@ -49,9 +49,12 @@ export const RAIL_ITEM_CLASS =
 export const RailTip = ({
 	label,
 	children,
+	forceOpen,
 }: {
 	label: ReactNode;
 	children: ReactNode;
+	/** Holds the name out regardless (a phone's "Map ready" pop-out). */
+	forceOpen?: boolean;
 }) => {
 	const [opened, setOpened] = useState(false);
 	const holdTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
@@ -100,7 +103,7 @@ export const RailTip = ({
 	return (
 		<Tooltip
 			label={label}
-			opened={opened}
+			opened={opened || !!forceOpen}
 			position="right"
 			offset={8}
 			withArrow

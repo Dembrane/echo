@@ -1,9 +1,13 @@
+import { t } from "@lingui/core/macro";
 import { CaretRight, type Icon } from "@phosphor-icons/react";
 import { motion } from "motion/react";
 import type { ReactNode } from "react";
 import { NavLink, useMatch, useParams, useResolvedPath } from "react-router";
 import { brandColors, roles } from "@/colors";
 import { SUPPORTED_LANGUAGES } from "@/config";
+import { finishedTitle, runningSummary } from "@/features/processes/copy";
+import { Dial } from "@/features/processes/Dial";
+import type { Tool, ToolStatus } from "@/features/processes/store";
 import { useLanguage } from "@/hooks/useLanguage";
 import { cn } from "@/lib/utils";
 import { TIMINGS } from "../animations/motion";
@@ -25,9 +29,15 @@ interface NavItemProps {
 	disabled?: boolean;
 	/** Indent to align with an icon-bearing row's label, for sub-rows. */
 	inset?: boolean;
+	/** Work this tool is doing: a dial while it runs, a chit once it's done. */
+	process?: { tool: Tool; status?: ToolStatus };
 }
 
 export const BADGE_TONES = {
+	danger: {
+		backgroundColor: roles.dangerTint,
+		color: roles.dangerOnTint,
+	},
 	muted: {
 		backgroundColor: roles.quiet,
 		color: roles.muted,
@@ -83,6 +93,7 @@ export const NavItem = ({
 	accent,
 	disabled,
 	inset,
+	process,
 }: NavItemProps) => {
 	const localePath = useLocalePath(to);
 	const resolved = useResolvedPath(localePath);
@@ -92,26 +103,45 @@ export const NavItem = ({
 	const { overlay } = useSidebarView();
 	const active = forcedActive ?? (match != null && !overlay);
 	const inRail = useInRail();
+	const status = process?.status;
+	const running = !!status?.running;
+	const chit = status?.chit;
 
 	if (inRail) {
 		// The rail is icons only; a row without one (an inset sub-row) stays in
 		// the full sidebar.
 		if (!Icon) return null;
-		const name = (
-			<>
-				{label}
-				{badge != null ? <> {badge}</> : null}
-			</>
-		);
-		const dot =
-			badge != null && badgeTone !== "muted" ? (
-				<span
-					data-testid="rail-badge-dot"
-					aria-hidden="true"
-					className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full ring-2 ring-[var(--app-background)]"
-					style={{ backgroundColor: RAIL_DOT_COLORS[badgeTone] }}
-				/>
-			) : null;
+		const name =
+			process && status && running ? (
+				<>
+					{label}: {runningSummary(process.tool, status)}
+				</>
+			) : process && chit ? (
+				<>
+					{finishedTitle(process.tool, chit.failed)}
+					{chit.message ? `: ${chit.message}` : null}
+				</>
+			) : (
+				<>
+					{label}
+					{badge != null ? <> {badge}</> : null}
+				</>
+			);
+		const dotColor = chit
+			? chit.failed
+				? roles.danger
+				: roles.action
+			: badge != null && badgeTone !== "muted"
+				? RAIL_DOT_COLORS[badgeTone]
+				: null;
+		const dot = dotColor ? (
+			<span
+				data-testid={chit ? "rail-process-chit" : "rail-badge-dot"}
+				aria-hidden="true"
+				className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full ring-2 ring-[var(--app-background)]"
+				style={{ backgroundColor: dotColor }}
+			/>
+		) : null;
 
 		if (disabled) {
 			return (
@@ -132,7 +162,7 @@ export const NavItem = ({
 		}
 
 		return (
-			<RailTip label={name}>
+			<RailTip label={name} forceOpen={status?.popout}>
 				<NavLink
 					to={localePath}
 					end={end}
@@ -158,6 +188,9 @@ export const NavItem = ({
 						/>
 					)}
 					<Icon size={20} className="relative" aria-hidden="true" />
+					{running ? (
+						<Dial size={32} done={status.done} total={status.total} />
+					) : null}
 					<span className="sr-only">{name}</span>
 					{dot}
 				</NavLink>
@@ -214,17 +247,42 @@ export const NavItem = ({
 				/>
 			)}
 			<span className="relative flex flex-1 items-center gap-2 truncate">
-				{Icon ? <Icon size={16} /> : null}
+				{Icon ? (
+					<span className="relative flex shrink-0">
+						<Icon size={16} />
+						{running ? (
+							<Dial size={24} done={status.done} total={status.total} />
+						) : null}
+					</span>
+				) : null}
 				<span className="truncate">{label}</span>
 			</span>
-			{/* != null, not truthiness: badge={0} would render a bare "0" */}
-			{badge != null && (
+			{/* The tool's work stands in for its badge until you open it. */}
+			{running && status.total ? (
 				<span
-					className="relative shrink-0 px-1 py-0.5 text-xs leading-none"
-					style={BADGE_TONES[badgeTone]}
+					className="app-muted relative shrink-0 text-xs leading-none"
+					style={{ color: "var(--mantine-color-dimmed)" }}
 				>
-					{badge}
+					{t`${status.done ?? 0} of ${status.total}`}
 				</span>
+			) : chit ? (
+				<span
+					data-testid="nav-process-chit"
+					className="relative shrink-0 px-1 py-0.5 text-xs leading-none"
+					style={BADGE_TONES[chit.failed ? "danger" : "notification"]}
+				>
+					{chit.failed ? t`Failed` : t`Ready`}
+				</span>
+			) : (
+				/* != null, not truthiness: badge={0} would render a bare "0" */
+				badge != null && (
+					<span
+						className="relative shrink-0 px-1 py-0.5 text-xs leading-none"
+						style={BADGE_TONES[badgeTone]}
+					>
+						{badge}
+					</span>
+				)
 			)}
 			{pushes && (
 				<CaretRight
