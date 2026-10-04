@@ -73,7 +73,6 @@
 		.mantine-HoverCard-dropdown,
 		.mantine-Tooltip-tooltip,
 		.mantine-Chip-label,
-		.mantine-SegmentedControl-root,
 		.mantine-SegmentedControl-control,
 		.mantine-Switch-track,
 		.mantine-Checkbox-input,
@@ -388,6 +387,13 @@
 	overflow-x: auto;
 	scrollbar-width: none;
 }
+/* A row that scrolls shows a thin bar to a mouse, which can't swipe it;
+ * touch keeps the row clean. */
+@media (hover: hover) and (pointer: fine) {
+	:root .mantine-Tabs-list {
+		scrollbar-width: thin;
+	}
+}
 :root .mantine-Tabs-list::before {
 	display: none;
 }
@@ -641,9 +647,6 @@
 	position: relative;
 	z-index: 1;
 }
-:root .mantine-Chip-iconWrapper {
-	color: var(--app-action);
-}
 
 /* Pressed (the :active state): the tab, row or chit you hold down previews
  * the selection: its stretch of the rule turns blue and its text graphite. */
@@ -747,26 +750,12 @@
 
 /* ---------- the grammar, control by control ---------- */
 
-/* Set: segmented controls sit like joined filters, between side rules with
- * single dividers; the active segment is the blue tint with blue sides. */
+/* Set: segmented controls; their segment lines and the active segment are in
+ * joined.css, which draws one line between neighbours. */
 :root .mantine-SegmentedControl-root {
 	background: transparent;
-	border-color: var(--app-rule-color);
 	border-radius: 0;
-	border-style: solid;
-	border-width: 0 var(--app-stroke);
 	padding: 0;
-}
-:root .mantine-SegmentedControl-indicator {
-	background: var(--app-action-tint);
-	border-color: var(--app-action);
-	border-radius: 0;
-	border-style: solid;
-	border-width: 0 var(--app-stroke);
-	box-shadow: none;
-}
-:root .mantine-SegmentedControl-control:not(:first-of-type) {
-	border-left: var(--app-stroke) solid var(--app-rule-color);
 }
 :root .mantine-SegmentedControl-label {
 	border-radius: 0;

@@ -25,7 +25,8 @@ import { routerPaths } from "./routes";
 //   MEMBER_EMAIL, MEMBER_PASSWORD a plain member of the demo workspace
 //   ONLY=a,b         only the flows whose path contains one of these
 //   REPORT_ONLY=1    write the report without failing any page
-//   SHOTS=dir        keep a screenshot of every page and state in dir/<width>/
+//   SHOTS=dir|off    where each page and state's screenshot goes (default
+//                    test-results/grammar/screens/<width>/), or none
 // Pages whose setting is missing are skipped, and the report says why.
 
 const env = (name: string) => process.env[`GRAMMAR_E2E_${name}`] ?? "";
@@ -40,8 +41,12 @@ const configured = Boolean(
 		env("WORKSPACE_ID") &&
 		env("PROJECT_ID"),
 );
-// A folder to keep a full-page screenshot of every page and state in (the daily run's artifact).
-const SHOTS = env("SHOTS");
+// A full-page screenshot of every page and state, per width. Playwright empties
+// test-results/grammar/ at the start of each run, so these are always this run's.
+const SHOTS =
+	env("SHOTS") === "off"
+		? ""
+		: env("SHOTS") || join(dirname(REPORT), "grammar", "screens");
 const AXE_TAGS = ["wcag2a", "wcag2aa", "wcag21aa"];
 const UUID = "[0-9a-f-]{36}";
 const EMPTY_PROJECT = "Grammar check (empty)";
@@ -335,7 +340,11 @@ type Check = {
 async function check(page: Page, phone: boolean, portal: boolean) {
 	const out: Check = { axe: [], counts: {}, hard: [], soft: [] };
 	// Accessibility: serious and critical fail, the rest are reported.
-	const axe = await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze();
+	const axe = await new AxeBuilder({ page })
+		.withTags(AXE_TAGS)
+		// The audience deck's own look, previewed in the present editor.
+		.exclude('[data-testid="present-preview-stage"]')
+		.analyze();
 	for (const v of axe.violations) {
 		out.axe.push({
 			help: v.help,
@@ -519,7 +528,22 @@ test.describe("design grammar", () => {
 							row(state.name, page.url(), empty(), `no ${id} on the page`);
 							continue eachState;
 						}
-						await trigger.click();
+						// Something over it (a dialog that opened by itself, a disabled
+						// trigger) is reported, not waited out.
+						if (
+							!(await trigger
+								.click({ timeout: 5_000 })
+								.then(() => true)
+								.catch(() => false))
+						) {
+							row(
+								state.name,
+								page.url(),
+								empty(),
+								`${id} could not be pressed (covered or disabled)`,
+							);
+							continue eachState;
+						}
 						await settle(page);
 					}
 					if (SHOTS) {

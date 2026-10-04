@@ -50,8 +50,11 @@
 .tabs {
 	border-bottom: 1px solid var(--hairline);
 	display: flex;
-	flex-wrap: wrap;
+	/* One row that scrolls, never a second line (rule 04), as the app's tabs. */
+	flex-wrap: nowrap;
 	gap: 0 clamp(0.9rem, 3cqi, 2rem);
+	overflow-x: auto;
+	scrollbar-width: none;
 	margin-bottom: -0.25rem;
 }
 
@@ -64,6 +67,7 @@
 	color: var(--graphite);
 	cursor: pointer;
 	display: inline-flex;
+	flex-shrink: 0;
 	font: inherit;
 	gap: 0.35em;
 	margin-bottom: -1px;

@@ -455,7 +455,7 @@ export const ChatHistoryMessage = ({
 							<Box
 								mt="sm"
 								className="w-fit p-2"
-								style={{ backgroundColor: "var(--mantine-color-white)" }}
+								style={{ backgroundColor: "var(--app-surface)" }}
 								data-testid="assistant-portal-link-qr"
 							>
 								<QRCode
