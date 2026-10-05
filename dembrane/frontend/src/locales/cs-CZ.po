@@ -327,7 +327,7 @@ msgid "{0, plural, one {# payment} other {# payments}}"
 msgstr "{0, plural, one {# platba} few {# platby} other {# plateb}}"
 
 #. placeholder {0}: presentation.counts.phrases
-#: src/routes/project/present/PresentRoute.tsx:738
+#: src/routes/project/present/PresentRoute.tsx:825
 msgid "{0, plural, one {# phrase} other {# phrases}}"
 msgstr "{0, plural, one {# fráze} few {# fráze} other {# frází}}"
 
@@ -731,6 +731,10 @@ msgstr "{argumentCount, plural, one {# argument} few {# argumenty} other {# argu
 #: src/components/map/MapPage.tsx:499
 msgid "{argumentCount, plural, one {# argument} other {# arguments}} from {conversationCount, plural, one {# conversation} other {# conversations}}"
 msgstr "{argumentCount, plural, one {# argument} few {# argumenty} other {# argumentů}} z {conversationCount, plural, one {# konverzace} few {# konverzací} other {# konverzací}}"
+
+#: src/routes/project/present/PresentRoute.tsx:646
+msgid "{changes, plural, one {# change not shown yet} other {# changes not shown yet}}"
+msgstr "{changes, plural, one {# změna zatím nezobrazena} few {# změny zatím nezobrazeny} other {# změn zatím nezobrazeno}}"
 
 #: src/components/agent-access/AgentRiskNotice.tsx:27
 msgid "{clientName} and the company running it will receive the conversation content you allow."
@@ -1937,7 +1941,7 @@ msgstr "Povolit také úpravy nastavení projektu"
 msgid "Always on, it lives on our website"
 msgstr "Stále aktivní, běží na našem webu"
 
-#: src/routes/project/present/PresentRoute.tsx:207
+#: src/routes/project/present/PresentRoute.tsx:208
 msgid "Always on. The screen opens here, so the room has something to read while the rest gets ready."
 msgstr "Stále aktivní. Obrazovka se otevře zde, aby si účastníci v místnosti měli co číst, než se zbytek připraví."
 
@@ -2163,7 +2167,7 @@ msgid "Anything you want to add"
 msgstr "Cokoli, co chcete dodat"
 
 #: src/routes/settings/UserSettingsRoute.tsx:106
-#: src/routes/project/present/PresentRoute.tsx:128
+#: src/routes/project/present/PresentRoute.tsx:129
 #: src/features/sidebar/views/user/UserSettingsView.tsx:28
 #: src/features/sidebar/hooks/useSearchHits.ts:86
 msgid "Appearance"
@@ -2464,11 +2468,11 @@ msgstr "Připojit ověřené artefakty"
 msgid "participant.modal.interruption.issue.message"
 msgstr "Attention! We lost the last 60 seconds or so of your recording due to some interruption. Please press the button below to reconnect."
 
-#: src/routes/project/present/PresentRoute.tsx:263
+#: src/routes/project/present/PresentRoute.tsx:264
 msgid "Audience language:"
 msgstr "Jazyk publika:"
 
-#: src/routes/project/present/PresentRoute.tsx:406
+#: src/routes/project/present/PresentRoute.tsx:413
 msgid "Audience preview"
 msgstr "Náhled pro publikum"
 
@@ -3162,16 +3166,28 @@ msgid "Changes applied. You can fine-tune them anytime in project settings."
 msgstr "Změny byly použity. Kdykoli je můžete upravit v nastavení projektu."
 
 #: src/routes/project/present/PresentRoute.tsx:685
-msgid "Changes are saved as a draft. Publish when you’re ready to update the room screen."
-msgstr "Změny jsou uloženy jako koncept. Až budete připraveni aktualizovat obrazovku v místnosti, publikujte je."
+#~ msgid "Changes are saved as a draft. Publish when you’re ready to update the room screen."
+#~ msgstr "Změny jsou uloženy jako koncept. Až budete připraveni aktualizovat obrazovku v místnosti, publikujte je."
 
 #: src/routes/project/present/PresentRoute.tsx:729
-msgid "Changes could not be published or saved. Review your draft and try again."
-msgstr "Změny se nepodařilo publikovat ani uložit. Zkontrolujte koncept a zkuste to znovu."
+#~ msgid "Changes could not be published or saved. Review your draft and try again."
+#~ msgstr "Změny se nepodařilo publikovat ani uložit. Zkontrolujte koncept a zkuste to znovu."
 
 #: src/routes/project/present/PresentRoute.tsx:716
 #~ msgid "Changes could not be published. Try again."
 #~ msgstr "Změny se nepodařilo publikovat. Zkuste to znovu."
+
+#: src/routes/project/present/PresentRoute.tsx:820
+msgid "Changes could not be shown on the room screen"
+msgstr "Změny se nepodařilo zobrazit na plátně v sále"
+
+#: src/routes/project/present/PresentRoute.tsx:650
+msgid "Changes not shown yet"
+msgstr "Změny zatím nezobrazeny"
+
+#: src/routes/project/present/PresentRoute.tsx:774
+msgid "Changes show on the room screen as you make them."
+msgstr "Změny se na plátně v sále zobrazují hned, jak je provedete."
 
 #: src/components/form/UnsavedChanges.tsx:20
 #~ msgid "Changes will be saved automatically"
@@ -3356,7 +3372,7 @@ msgstr "Choose from your other projects"
 msgid "Choose Summarize, Brainstorm Ideas or Custom reply modes."
 msgstr "Vyberte režimy odpovědí: Shrnutí, Brainstorming nápadů nebo Vlastní."
 
-#: src/routes/project/present/PresentRoute.tsx:197
+#: src/routes/project/present/PresentRoute.tsx:198
 msgid "Choose the outcomes your audience can explore."
 msgstr "Vyberte výsledky, které může vaše publikum prozkoumat."
 
@@ -4195,7 +4211,7 @@ msgstr "Platby se nepodařilo načíst. Zkontrolujte přihlášení a záznamy b
 msgid "Could not load the canvas."
 msgstr "Plátno se nepodařilo načíst."
 
-#: src/routes/project/present/PresentRoute.tsx:770
+#: src/routes/project/present/PresentRoute.tsx:857
 msgid "Could not load the latest results"
 msgstr "Nejnovější výsledky se nepodařilo načíst"
 
@@ -4672,7 +4688,7 @@ msgstr "E-mail vlastníka dat"
 msgid "Data ownership"
 msgstr "Vlastnictví dat"
 
-#: src/routes/project/present/PresentRoute.tsx:124
+#: src/routes/project/present/PresentRoute.tsx:125
 msgid "Data policy"
 msgstr "Zásady nakládání s daty"
 
@@ -5038,7 +5054,7 @@ msgstr "Didn't get it? Check spam or junk first. The message comes from dembrane
 msgid "Didn't get it? Check your spam or junk folder. The email comes from dembrane.com."
 msgstr "Didn't get it? Check your spam or junk folder. The email comes from dembrane.com."
 
-#: src/routes/project/present/PresentRoute.tsx:212
+#: src/routes/project/present/PresentRoute.tsx:213
 msgid "Different perspectives and trade-offs"
 msgstr "Různé pohledy a kompromisy"
 
@@ -5506,7 +5522,7 @@ msgstr "Upravil/a {editedBy}, {editedOn}"
 msgid "Editing a conversation no longer triggers the affected save error."
 msgstr "Při úpravě rozhovoru se již nezobrazuje chyba ukládání."
 
-#: src/routes/project/present/PresentRoute.tsx:153
+#: src/routes/project/present/PresentRoute.tsx:154
 msgid "Editor section"
 msgstr "Část editoru"
 
@@ -5660,7 +5676,7 @@ msgstr "Končí {endDate}, poté přejde na Free"
 msgid "English"
 msgstr "English"
 
-#: src/routes/project/present/PresentRoute.tsx:268
+#: src/routes/project/present/PresentRoute.tsx:269
 msgid "English fallback"
 msgstr "Záložní angličtina"
 
@@ -5676,7 +5692,7 @@ msgstr "Enter a name for the new conversation"
 msgid "Enter a name for your cloned project"
 msgstr "Enter a name for your cloned project"
 
-#: src/routes/project/present/PresentRoute.tsx:374
+#: src/routes/project/present/PresentRoute.tsx:378
 msgid "Enter a presentation title"
 msgstr "Zadejte název prezentace"
 
@@ -6412,7 +6428,7 @@ msgstr "Zaměřeno na:"
 msgid "Follow ongoing sessions in the live monitor."
 msgstr "Sledujte probíhající relace v živém přehledu."
 
-#: src/routes/project/present/PresentRoute.tsx:244
+#: src/routes/project/present/PresentRoute.tsx:245
 msgid "Follow project language"
 msgstr "Podle jazyka projektu"
 
@@ -6583,7 +6599,7 @@ msgstr "Full transcript (when available)"
 msgid "Fullscreen"
 msgstr "Fullscreen"
 
-#: src/components/present/AudienceScreen.tsx:1305
+#: src/components/present/AudienceScreen.tsx:1306
 msgid "Fullscreen is unavailable in this browser."
 msgstr "V tomto prohlížeči není celá obrazovka k dispozici."
 
@@ -7034,7 +7050,7 @@ msgid "host guide"
 msgstr "průvodce pro hostitele"
 
 #: src/routes/project/ProjectHomeRoute.tsx:101
-#: src/routes/project/present/PresentRoute.tsx:125
+#: src/routes/project/present/PresentRoute.tsx:126
 #: src/components/project/ProjectHostGuideLink.tsx:34
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:59
 msgid "Host guide"
@@ -7152,7 +7168,7 @@ msgstr "IBAN"
 msgid "ID"
 msgstr "ID"
 
-#: src/routes/project/present/PresentRoute.tsx:209
+#: src/routes/project/present/PresentRoute.tsx:210
 msgid "Ideas and how they connect"
 msgstr "Myšlenky a jejich souvislosti"
 
@@ -7351,7 +7367,7 @@ msgstr "Instructions for generating the verification outcome"
 msgid "interview"
 msgstr "rozhovor"
 
-#: src/routes/project/present/PresentRoute.tsx:123
+#: src/routes/project/present/PresentRoute.tsx:124
 msgid "Intro"
 msgstr "Úvod"
 
@@ -7584,7 +7600,7 @@ msgstr "Italština pro hlavní postupy"
 msgid "Its arguments, and the tree between them"
 msgstr "Jeho argumenty a strom mezi nimi"
 
-#: src/components/present/AudienceScreen.tsx:939
+#: src/components/present/AudienceScreen.tsx:940
 msgid "Its link may have been switched off. Ask the host."
 msgstr "Odkaz byl možná vypnut. Zeptejte se hostitele."
 
@@ -7825,7 +7841,7 @@ msgstr "Druh změny nebyl zaznamenán"
 msgid "Kinds of finding"
 msgstr "Typy zjištění"
 
-#: src/routes/project/present/PresentRoute.tsx:127
+#: src/routes/project/present/PresentRoute.tsx:128
 #: src/features/sidebar/shell/UserMenu.tsx:154
 #: src/components/settings/LanguageSettingsCard.tsx:10
 #: src/components/report/UpdateReportModalButton.tsx:265
@@ -8193,7 +8209,7 @@ msgstr "Loading artefact"
 msgid "Loading collections..."
 msgstr "Loading collections..."
 
-#: src/routes/project/present/PresentRoute.tsx:718
+#: src/routes/project/present/PresentRoute.tsx:808
 msgid "Loading draft"
 msgstr "Načítá se koncept"
 
@@ -8221,8 +8237,8 @@ msgstr "Načítání metodologie"
 msgid "Loading microphones..."
 msgstr "Loading microphones..."
 
-#: src/routes/project/present/PresentRoute.tsx:628
-#: src/routes/project/present/PresentRoute.tsx:844
+#: src/routes/project/present/PresentRoute.tsx:719
+#: src/routes/project/present/PresentRoute.tsx:931
 msgid "Loading presentation"
 msgstr "Načítání prezentace"
 
@@ -9130,7 +9146,7 @@ msgstr "Žádné účty"
 msgid "No actions found"
 msgstr "No actions found"
 
-#: src/components/present/AudienceScreen.tsx:1107
+#: src/components/present/AudienceScreen.tsx:1108
 msgid "No activities are selected for this presentation."
 msgstr "Pro tuto prezentaci nejsou vybrané žádné aktivity."
 
@@ -9694,6 +9710,10 @@ msgstr "Not now"
 msgid "Not on managed billing. Set to managed to invoice this account at the {tier} tier, with no automatic Mollie charges."
 msgstr "Není na spravované fakturaci. Nastavte na spravovanou a fakturujte tento účet v tarifu {tier} bez automatických plateb přes Mollie."
 
+#: src/routes/project/present/PresentRoute.tsx:421
+msgid "Not on the room screen yet"
+msgstr "Zatím není na plátně v sále"
+
 #: src/components/map/panels/ResultList.tsx:79
 msgid "Not placed on the map"
 msgstr "Neumístěno na mapě"
@@ -10068,7 +10088,7 @@ msgstr "Otevřít dokumentaci"
 #~ msgid "Open host guide"
 #~ msgstr "Open host guide"
 
-#: src/routes/project/present/PresentRoute.tsx:763
+#: src/routes/project/present/PresentRoute.tsx:850
 #: src/components/results/ResultItem.tsx:846
 #: src/components/results/curate/RowTools.tsx:344
 #: src/components/results/curate/RowTools.tsx:347
@@ -10198,7 +10218,7 @@ msgstr "Open your authenticator app and enter the current six-digit code."
 msgid "Opening and frame"
 msgstr "Úvod a rámec"
 
-#: src/components/present/AudienceScreen.tsx:1014
+#: src/components/present/AudienceScreen.tsx:1015
 msgid "Opening screens"
 msgstr "Úvodní obrazovky"
 
@@ -10387,7 +10407,7 @@ msgstr "Outcome updated!"
 msgid "outcomes"
 msgstr "outcomes"
 
-#: src/routes/project/present/PresentRoute.tsx:126
+#: src/routes/project/present/PresentRoute.tsx:127
 #: src/components/conversation/VerifiedArtefactsSection.tsx:92
 msgid "Outcomes"
 msgstr "Outcomes"
@@ -10710,7 +10730,7 @@ msgstr "People"
 msgid "People with access"
 msgstr "People with access"
 
-#: src/routes/project/present/PresentRoute.tsx:211
+#: src/routes/project/present/PresentRoute.tsx:212
 msgid "People, groups and what matters to them"
 msgstr "Lidé, skupiny a to, na čem jim záleží"
 
@@ -10846,7 +10866,7 @@ msgstr "Plans"
 msgid "Plans, gathers, and checks its work across many conversations."
 msgstr "Plánuje, shromažďuje a kontroluje svou práci napříč mnoha rozhovory."
 
-#: src/components/present/AudienceScreen.tsx:1210
+#: src/components/present/AudienceScreen.tsx:1211
 msgid "Playback and fullscreen"
 msgstr "Přehrávání a celá obrazovka"
 
@@ -11120,26 +11140,26 @@ msgstr "Připravuje se toto plátno. Jakmile bude první verze připravena, obje
 msgid "Preparing your experience"
 msgstr "Preparing your experience"
 
-#: src/routes/project/present/PresentRoute.tsx:563
-#: src/routes/project/present/PresentRoute.tsx:586
-#: src/routes/project/present/PresentRoute.tsx:828
+#: src/routes/project/present/PresentRoute.tsx:631
+#: src/routes/project/present/PresentRoute.tsx:685
+#: src/routes/project/present/PresentRoute.tsx:915
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:118
 msgid "Present"
 msgstr "Prezentovat"
 
-#: src/components/present/AudienceScreen.tsx:1048
+#: src/components/present/AudienceScreen.tsx:1049
 msgid "Presentation activities"
 msgstr "Prezentační aktivity"
 
-#: src/routes/project/present/PresentRoute.tsx:579
+#: src/routes/project/present/PresentRoute.tsx:677
 msgid "Presentation controls"
 msgstr "Ovládání prezentace"
 
-#: src/routes/project/present/PresentRoute.tsx:147
+#: src/routes/project/present/PresentRoute.tsx:148
 msgid "Presentation editor"
 msgstr "Editor prezentace"
 
-#: src/routes/project/present/PresentRoute.tsx:371
+#: src/routes/project/present/PresentRoute.tsx:375
 msgid "Presentation title"
 msgstr "Název prezentace"
 
@@ -11453,8 +11473,8 @@ msgid "Publish"
 msgstr "Publish"
 
 #: src/routes/project/present/PresentRoute.tsx:658
-msgid "Publish changes"
-msgstr "Publikovat změny"
+#~ msgid "Publish changes"
+#~ msgstr "Publikovat změny"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1243
 msgid "Publish report"
@@ -13642,7 +13662,7 @@ msgstr "Shared with {0} and {overflow} others"
 msgid "Sharing a private project with a non-member now offers an invitation instead of an error, granting access when they join the workspace."
 msgstr "Při sdílení soukromého projektu s nečlenem se nyní místo chyby nabídne pozvánka. Přístup získá po připojení k pracovnímu prostoru."
 
-#: src/routes/project/present/PresentRoute.tsx:210
+#: src/routes/project/present/PresentRoute.tsx:211
 msgid "Short phrases from the conversations"
 msgstr "Krátké úryvky z rozhovorů"
 
@@ -13810,6 +13830,10 @@ msgstr "Zobrazit pozvánku"
 #: src/features/sidebar/breadcrumbs/AppBreadcrumbs.tsx:326
 msgid "Show the path to this page"
 msgstr "Zobrazit cestu k této stránce"
+
+#: src/routes/project/present/PresentRoute.tsx:667
+msgid "Show them"
+msgstr "Zobrazit"
 
 #: src/components/results/ResultItem.tsx:712
 msgid "Show to the room"
@@ -14848,8 +14872,8 @@ msgstr "Výchozí průvodce pro hostitele nyní připomíná, aby zapnuli režim
 msgid "the dembrane team"
 msgstr "tým dembrane"
 
-#: src/routes/project/present/PresentRoute.tsx:622
-#: src/routes/project/present/PresentRoute.tsx:668
+#: src/routes/project/present/PresentRoute.tsx:713
+#: src/routes/project/present/PresentRoute.tsx:743
 msgid "The draft could not be loaded"
 msgstr "Koncept se nepodařilo načíst"
 
@@ -14926,7 +14950,7 @@ msgstr "Průvodce hostitele je to, co si facilitátoři čtou před zahájením 
 msgid "The host guide screen shows the code to take part. Turn on participation in the portal editor to use it."
 msgstr "Obrazovka průvodce pro hostitele ukazuje kód pro zapojení. Pro její použití zapněte účast v editoru portálu."
 
-#: src/routes/project/present/PresentRoute.tsx:832
+#: src/routes/project/present/PresentRoute.tsx:919
 msgid "The host hasn’t prepared a presentation yet."
 msgstr "Hostitel zatím nepřipravil prezentaci."
 
@@ -15057,7 +15081,7 @@ msgstr "Průchod účastníka má přehlednější kontrolu mikrofonu."
 msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
 msgstr "Portály budou fungovat dál! Vaši účastníci nebudou nikdy odpojeni a nic z toho, co řeknou, se neztratí. Jakmile přejdete na placený tarif, přepis zpracuje vše, co už bylo zaznamenáno."
 
-#: src/routes/project/present/PresentRoute.tsx:813
+#: src/routes/project/present/PresentRoute.tsx:900
 msgid "The presentation could not be loaded"
 msgstr "Prezentaci se nepodařilo načíst"
 
@@ -15065,7 +15089,7 @@ msgstr "Prezentaci se nepodařilo načíst"
 #~ msgid "The presentation could not be loaded."
 #~ msgstr "Prezentaci se nepodařilo načíst."
 
-#: src/routes/project/present/PresentRoute.tsx:806
+#: src/routes/project/present/PresentRoute.tsx:893
 msgid "The presentation could not be opened"
 msgstr "Prezentaci se nepodařilo otevřít"
 
@@ -15085,6 +15109,10 @@ msgstr "Projekt přechází na licenci Business Source License 1.1."
 msgid "The project context is read by transcription, chat answers and canvas generation, so a change here reaches more than one screen."
 msgstr "Kontext projektu využívá přepis, odpovědi v chatu i generování pláten, takže změna zde ovlivní více než jednu obrazovku."
 
+#: src/routes/project/present/PresentRoute.tsx:770
+msgid "The public page is on, so changes wait until you show them."
+msgstr "Veřejná stránka je zapnutá, takže změny čekají, dokud je nezobrazíte."
+
 #: src/components/popcorn/PopcornScreenSettings.tsx:84
 msgid "The pulls between what people want, verified against the conversations."
 msgstr "Protichůdné zájmy a potřeby lidí, ověřené na základě rozhovorů."
@@ -15102,6 +15130,10 @@ msgstr "Zpráva končí pozvánkou, abyste přidali svůj hlas."
 msgid "The report may start up to 5 minutes after the chosen time."
 msgstr "The report may start up to 5 minutes after the chosen time."
 
+#: src/routes/project/present/PresentRoute.tsx:761
+msgid "The room screen is open, so changes wait until you show them."
+msgstr "Plátno v sále je otevřené, takže změny čekají, dokud je nezobrazíte."
+
 #: src/components/popcorn/PopcornVoiceSection.tsx:61
 msgid "The room's own words, the ideas that moved the conversation."
 msgstr "Vlastní slova místnosti, myšlenky, které posunuly rozhovor."
@@ -15115,8 +15147,8 @@ msgid "the selected conversation"
 msgstr "vybraný rozhovor"
 
 #: src/routes/project/present/PresentRoute.tsx:610
-msgid "The shared screen shows your published presentation. Publish changes to update its content and access."
-msgstr "Sdílená obrazovka zobrazuje vaši publikovanou prezentaci. Zveřejněním změn aktualizujete její obsah i přístup."
+#~ msgid "The shared screen shows your published presentation. Publish changes to update its content and access."
+#~ msgstr "Sdílená obrazovka zobrazuje vaši publikovanou prezentaci. Zveřejněním změn aktualizujete její obsah i přístup."
 
 #: src/components/release/releases.ts:72
 msgid "The sidebar fits mobile screens more reliably, with corrected French navigation labels."
@@ -15513,11 +15545,11 @@ msgstr "this person"
 msgid "This portal is not accepting new sessions right now."
 msgstr "Tento portál nyní nepřijímá nové relace."
 
-#: src/components/present/AudienceScreen.tsx:934
+#: src/components/present/AudienceScreen.tsx:935
 msgid "This presentation could not be loaded."
 msgstr "Tuto prezentaci se nepodařilo načíst."
 
-#: src/components/present/AudienceScreen.tsx:932
+#: src/components/present/AudienceScreen.tsx:933
 msgid "This presentation is not available."
 msgstr "Tato prezentace není k dispozici."
 
@@ -16103,7 +16135,7 @@ msgstr "Trigger automated workflows in tools like Zapier, Make, or n8n"
 msgid "Trouble logging in? Contact support@dembrane.com."
 msgstr "Trouble logging in? Contact support@dembrane.com."
 
-#: src/routes/project/present/PresentRoute.tsx:837
+#: src/routes/project/present/PresentRoute.tsx:924
 #: src/routes/project/present/PresentResultsPanel.tsx:158
 #: src/routes/project/chat/ProjectChatRoute.tsx:837
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:165
@@ -16147,7 +16179,7 @@ msgstr "Vyzkoušet"
 #~ msgid "Try moving a bit closer to your microphone for better sound quality."
 #~ msgstr "Try moving a bit closer to your microphone for better sound quality."
 
-#: src/components/present/AudienceScreen.tsx:941
+#: src/components/present/AudienceScreen.tsx:942
 msgid "Trying again…"
 msgstr "Zkouší se znovu…"
 
@@ -16339,8 +16371,8 @@ msgid "Unpin project"
 msgstr "Unpin project"
 
 #: src/routes/project/present/PresentRoute.tsx:574
-msgid "Unpublished changes"
-msgstr "Nepublikované změny"
+#~ msgid "Unpublished changes"
+#~ msgstr "Nepublikované změny"
 
 #: src/components/inbox/Inbox.tsx:437
 msgid "Unread"
@@ -16685,7 +16717,7 @@ msgstr "Použít zděděnou hodnotu"
 msgid "Use Italian for chat, reports, transcription and participant onboarding cards."
 msgstr "Používejte italštinu pro chat, zprávy, přepis a karty pro onboarding účastníků."
 
-#: src/routes/project/present/PresentRoute.tsx:751
+#: src/routes/project/present/PresentRoute.tsx:838
 msgid "Use latest results"
 msgstr "Použít nejnovější výsledky"
 
@@ -17959,6 +17991,10 @@ msgstr "You're an external collaborator in this organisation. Open one of the wo
 #: src/routes/invite/AcceptInviteRoute.tsx:111
 msgid "You're in"
 msgstr "You're in"
+
+#: src/routes/project/present/PresentRoute.tsx:766
+msgid "You’re live, so changes wait until you show them."
+msgstr "Jste živě, takže změny čekají, dokud je nezobrazíte."
 
 #: src/routes/auth/Register.tsx:335
 msgid "You're logging in with the wrong email address"
