@@ -4,7 +4,10 @@ import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, expect, it, vi } from "vitest";
 import { bff } from "@/lib/bff";
-import { usePresentationDraft } from "./usePresentationDraft";
+import {
+	countChangedFields,
+	usePresentationDraft,
+} from "./usePresentationDraft";
 
 vi.mock("@/lib/bff", () => ({
 	bff: { get: vi.fn(), patch: vi.fn(), post: vi.fn() },
@@ -257,4 +260,76 @@ it("does not erase a queued patch when the save before it fails", async () => {
 		(cachedSettings(client)?.presentation as { blocks: string[] }).blocks,
 	).toEqual(["popcorn", "tensions"]);
 	client.clear();
+});
+
+it("shows each saved field at once while nobody is watching, and holds it back while someone is", async () => {
+	const envelope = (revision: number, title: string, has_changes = true) => ({
+		has_changes,
+		presentation: { id: "p", settings: { title } },
+		revision,
+	});
+	const run = async (showAsSaved: boolean) => {
+		const client = new QueryClient({
+			defaultOptions: { queries: { retry: false } },
+		});
+		vi.mocked(bff.get).mockResolvedValue(envelope(1, "Shown", false));
+		vi.mocked(bff.patch).mockResolvedValue(envelope(2, "Typo fixed"));
+		vi.mocked(bff.post).mockResolvedValue(envelope(3, "Typo fixed", false));
+		const wrapper = ({ children }: { children: ReactNode }) => (
+			<QueryClientProvider client={client}>{children}</QueryClientProvider>
+		);
+		const { result } = renderHook(
+			() => usePresentationDraft("project-1", "p", true, { showAsSaved }),
+			{ wrapper },
+		);
+		await waitFor(() => expect(result.current.query.isSuccess).toBe(true));
+		await act(async () => {
+			await result.current.save.mutateAsync({ title: "Typo fixed" });
+		});
+		return { client, result };
+	};
+
+	const shown = await run(true);
+	await waitFor(() =>
+		expect(bff.post).toHaveBeenCalledWith("/present/p/publish", {
+			expected_revision: 2,
+		}),
+	);
+	await waitFor(() =>
+		expect(shown.result.current.query.data?.has_changes).toBe(false),
+	);
+	expect(shown.result.current.showQueued).toBe(false);
+	shown.client.clear();
+	vi.clearAllMocks();
+
+	const held = await run(false);
+	await new Promise((resolve) => setTimeout(resolve, 400));
+	expect(bff.post).not.toHaveBeenCalled();
+	expect(held.result.current.query.data?.has_changes).toBe(true);
+	held.client.clear();
+});
+
+it("counts the fields the room isn't showing, a block once per field inside it", () => {
+	const shown = {
+		intro: { body: "Hello", title: "Welcome" },
+		presentation: { blocks: ["popcorn"], result_bindings: { a: "1" } },
+		public: false,
+		title: "Workshop",
+	} as never;
+	expect(countChangedFields(shown, shown)).toBe(0);
+	expect(
+		countChangedFields(
+			{
+				_present_draft: { revision: 3 },
+				intro: { body: "Hi", title: "Welcome all" },
+				presentation: { blocks: ["popcorn"], result_bindings: { a: "2" } },
+				public: false,
+				title: "Workshop",
+			} as never,
+			shown,
+		),
+	).toBe(2);
+	expect(
+		countChangedFields({ ...(shown as object), title: "New" } as never, shown),
+	).toBe(1);
 });
