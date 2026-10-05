@@ -327,7 +327,7 @@ msgid "{0, plural, one {# payment} other {# payments}}"
 msgstr "{0, plural, one {# platba} few {# platby} other {# plateb}}"
 
 #. placeholder {0}: presentation.counts.phrases
-#: src/routes/project/present/PresentRoute.tsx:825
+#: src/routes/project/present/PresentRoute.tsx:833
 msgid "{0, plural, one {# phrase} other {# phrases}}"
 msgstr "{0, plural, one {# fráze} few {# fráze} other {# frází}}"
 
@@ -3177,7 +3177,8 @@ msgstr "Změny byly použity. Kdykoli je můžete upravit v nastavení projektu.
 #~ msgid "Changes could not be published. Try again."
 #~ msgstr "Změny se nepodařilo publikovat. Zkuste to znovu."
 
-#: src/routes/project/present/PresentRoute.tsx:820
+#: src/routes/project/present/PresentRoute.tsx:712
+#: src/routes/project/present/PresentRoute.tsx:828
 msgid "Changes could not be shown on the room screen"
 msgstr "Změny se nepodařilo zobrazit na plátně v sále"
 
@@ -3185,7 +3186,7 @@ msgstr "Změny se nepodařilo zobrazit na plátně v sále"
 msgid "Changes not shown yet"
 msgstr "Změny zatím nezobrazeny"
 
-#: src/routes/project/present/PresentRoute.tsx:774
+#: src/routes/project/present/PresentRoute.tsx:782
 msgid "Changes show on the room screen as you make them."
 msgstr "Změny se na plátně v sále zobrazují hned, jak je provedete."
 
@@ -4211,7 +4212,7 @@ msgstr "Platby se nepodařilo načíst. Zkontrolujte přihlášení a záznamy b
 msgid "Could not load the canvas."
 msgstr "Plátno se nepodařilo načíst."
 
-#: src/routes/project/present/PresentRoute.tsx:857
+#: src/routes/project/present/PresentRoute.tsx:865
 msgid "Could not load the latest results"
 msgstr "Nejnovější výsledky se nepodařilo načíst"
 
@@ -8209,7 +8210,7 @@ msgstr "Loading artefact"
 msgid "Loading collections..."
 msgstr "Loading collections..."
 
-#: src/routes/project/present/PresentRoute.tsx:808
+#: src/routes/project/present/PresentRoute.tsx:816
 msgid "Loading draft"
 msgstr "Načítá se koncept"
 
@@ -8237,8 +8238,8 @@ msgstr "Načítání metodologie"
 msgid "Loading microphones..."
 msgstr "Loading microphones..."
 
-#: src/routes/project/present/PresentRoute.tsx:719
-#: src/routes/project/present/PresentRoute.tsx:931
+#: src/routes/project/present/PresentRoute.tsx:727
+#: src/routes/project/present/PresentRoute.tsx:939
 msgid "Loading presentation"
 msgstr "Načítání prezentace"
 
@@ -10088,7 +10089,7 @@ msgstr "Otevřít dokumentaci"
 #~ msgid "Open host guide"
 #~ msgstr "Open host guide"
 
-#: src/routes/project/present/PresentRoute.tsx:850
+#: src/routes/project/present/PresentRoute.tsx:858
 #: src/components/results/ResultItem.tsx:846
 #: src/components/results/curate/RowTools.tsx:344
 #: src/components/results/curate/RowTools.tsx:347
@@ -11142,7 +11143,7 @@ msgstr "Preparing your experience"
 
 #: src/routes/project/present/PresentRoute.tsx:631
 #: src/routes/project/present/PresentRoute.tsx:685
-#: src/routes/project/present/PresentRoute.tsx:915
+#: src/routes/project/present/PresentRoute.tsx:923
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:118
 msgid "Present"
 msgstr "Prezentovat"
@@ -14872,8 +14873,8 @@ msgstr "Výchozí průvodce pro hostitele nyní připomíná, aby zapnuli režim
 msgid "the dembrane team"
 msgstr "tým dembrane"
 
-#: src/routes/project/present/PresentRoute.tsx:713
-#: src/routes/project/present/PresentRoute.tsx:743
+#: src/routes/project/present/PresentRoute.tsx:721
+#: src/routes/project/present/PresentRoute.tsx:751
 msgid "The draft could not be loaded"
 msgstr "Koncept se nepodařilo načíst"
 
@@ -14950,7 +14951,7 @@ msgstr "Průvodce hostitele je to, co si facilitátoři čtou před zahájením 
 msgid "The host guide screen shows the code to take part. Turn on participation in the portal editor to use it."
 msgstr "Obrazovka průvodce pro hostitele ukazuje kód pro zapojení. Pro její použití zapněte účast v editoru portálu."
 
-#: src/routes/project/present/PresentRoute.tsx:919
+#: src/routes/project/present/PresentRoute.tsx:927
 msgid "The host hasn’t prepared a presentation yet."
 msgstr "Hostitel zatím nepřipravil prezentaci."
 
@@ -15081,7 +15082,7 @@ msgstr "Průchod účastníka má přehlednější kontrolu mikrofonu."
 msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
 msgstr "Portály budou fungovat dál! Vaši účastníci nebudou nikdy odpojeni a nic z toho, co řeknou, se neztratí. Jakmile přejdete na placený tarif, přepis zpracuje vše, co už bylo zaznamenáno."
 
-#: src/routes/project/present/PresentRoute.tsx:900
+#: src/routes/project/present/PresentRoute.tsx:908
 msgid "The presentation could not be loaded"
 msgstr "Prezentaci se nepodařilo načíst"
 
@@ -15089,7 +15090,7 @@ msgstr "Prezentaci se nepodařilo načíst"
 #~ msgid "The presentation could not be loaded."
 #~ msgstr "Prezentaci se nepodařilo načíst."
 
-#: src/routes/project/present/PresentRoute.tsx:893
+#: src/routes/project/present/PresentRoute.tsx:901
 msgid "The presentation could not be opened"
 msgstr "Prezentaci se nepodařilo otevřít"
 
@@ -15109,7 +15110,7 @@ msgstr "Projekt přechází na licenci Business Source License 1.1."
 msgid "The project context is read by transcription, chat answers and canvas generation, so a change here reaches more than one screen."
 msgstr "Kontext projektu využívá přepis, odpovědi v chatu i generování pláten, takže změna zde ovlivní více než jednu obrazovku."
 
-#: src/routes/project/present/PresentRoute.tsx:770
+#: src/routes/project/present/PresentRoute.tsx:778
 msgid "The public page is on, so changes wait until you show them."
 msgstr "Veřejná stránka je zapnutá, takže změny čekají, dokud je nezobrazíte."
 
@@ -15130,7 +15131,7 @@ msgstr "Zpráva končí pozvánkou, abyste přidali svůj hlas."
 msgid "The report may start up to 5 minutes after the chosen time."
 msgstr "The report may start up to 5 minutes after the chosen time."
 
-#: src/routes/project/present/PresentRoute.tsx:761
+#: src/routes/project/present/PresentRoute.tsx:769
 msgid "The room screen is open, so changes wait until you show them."
 msgstr "Plátno v sále je otevřené, takže změny čekají, dokud je nezobrazíte."
 
@@ -16135,7 +16136,7 @@ msgstr "Trigger automated workflows in tools like Zapier, Make, or n8n"
 msgid "Trouble logging in? Contact support@dembrane.com."
 msgstr "Trouble logging in? Contact support@dembrane.com."
 
-#: src/routes/project/present/PresentRoute.tsx:924
+#: src/routes/project/present/PresentRoute.tsx:932
 #: src/routes/project/present/PresentResultsPanel.tsx:158
 #: src/routes/project/chat/ProjectChatRoute.tsx:837
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:165
@@ -16717,7 +16718,7 @@ msgstr "Použít zděděnou hodnotu"
 msgid "Use Italian for chat, reports, transcription and participant onboarding cards."
 msgstr "Používejte italštinu pro chat, zprávy, přepis a karty pro onboarding účastníků."
 
-#: src/routes/project/present/PresentRoute.tsx:838
+#: src/routes/project/present/PresentRoute.tsx:846
 msgid "Use latest results"
 msgstr "Použít nejnovější výsledky"
 
@@ -17992,7 +17993,7 @@ msgstr "You're an external collaborator in this organisation. Open one of the wo
 msgid "You're in"
 msgstr "You're in"
 
-#: src/routes/project/present/PresentRoute.tsx:766
+#: src/routes/project/present/PresentRoute.tsx:774
 msgid "You’re live, so changes wait until you show them."
 msgstr "Jste živě, takže změny čekají, dokud je nezobrazíte."
 

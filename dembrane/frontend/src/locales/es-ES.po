@@ -328,7 +328,7 @@ msgid "{0, plural, one {# payment} other {# payments}}"
 msgstr "{0, plural, one {# pago} other {# pagos}}"
 
 #. placeholder {0}: presentation.counts.phrases
-#: src/routes/project/present/PresentRoute.tsx:825
+#: src/routes/project/present/PresentRoute.tsx:833
 msgid "{0, plural, one {# phrase} other {# phrases}}"
 msgstr "{0, plural, one {# frase} other {# frases}}"
 
@@ -3178,7 +3178,8 @@ msgstr "Cambios aplicados. Puedes ajustarlos cuando quieras en los ajustes del p
 #~ msgid "Changes could not be published. Try again."
 #~ msgstr "No se pudieron publicar los cambios. Inténtalo de nuevo."
 
-#: src/routes/project/present/PresentRoute.tsx:820
+#: src/routes/project/present/PresentRoute.tsx:712
+#: src/routes/project/present/PresentRoute.tsx:828
 msgid "Changes could not be shown on the room screen"
 msgstr "No se pudieron mostrar los cambios en la pantalla de la sala"
 
@@ -3186,7 +3187,7 @@ msgstr "No se pudieron mostrar los cambios en la pantalla de la sala"
 msgid "Changes not shown yet"
 msgstr "Cambios aún no mostrados"
 
-#: src/routes/project/present/PresentRoute.tsx:774
+#: src/routes/project/present/PresentRoute.tsx:782
 msgid "Changes show on the room screen as you make them."
 msgstr "Los cambios aparecen en la pantalla de la sala a medida que los haces."
 
@@ -4212,7 +4213,7 @@ msgstr "No se pudieron cargar los pagos. Comprueba la autenticación y los regis
 msgid "Could not load the canvas."
 msgstr "No se pudo cargar el lienzo."
 
-#: src/routes/project/present/PresentRoute.tsx:857
+#: src/routes/project/present/PresentRoute.tsx:865
 msgid "Could not load the latest results"
 msgstr "No se pudieron cargar los últimos resultados"
 
@@ -8210,7 +8211,7 @@ msgstr "Cargando artefacto"
 msgid "Loading collections..."
 msgstr "Cargando colecciones..."
 
-#: src/routes/project/present/PresentRoute.tsx:808
+#: src/routes/project/present/PresentRoute.tsx:816
 msgid "Loading draft"
 msgstr "Cargando borrador"
 
@@ -8238,8 +8239,8 @@ msgstr "Cargando metodología"
 msgid "Loading microphones..."
 msgstr "Cargando micrófonos..."
 
-#: src/routes/project/present/PresentRoute.tsx:719
-#: src/routes/project/present/PresentRoute.tsx:931
+#: src/routes/project/present/PresentRoute.tsx:727
+#: src/routes/project/present/PresentRoute.tsx:939
 msgid "Loading presentation"
 msgstr "Cargando presentación"
 
@@ -10089,7 +10090,7 @@ msgstr "Abrir documentación"
 #~ msgid "Open host guide"
 #~ msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:850
+#: src/routes/project/present/PresentRoute.tsx:858
 #: src/components/results/ResultItem.tsx:846
 #: src/components/results/curate/RowTools.tsx:344
 #: src/components/results/curate/RowTools.tsx:347
@@ -11143,7 +11144,7 @@ msgstr "Preparando tu experiencia"
 
 #: src/routes/project/present/PresentRoute.tsx:631
 #: src/routes/project/present/PresentRoute.tsx:685
-#: src/routes/project/present/PresentRoute.tsx:915
+#: src/routes/project/present/PresentRoute.tsx:923
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:118
 msgid "Present"
 msgstr "Presentar"
@@ -14873,8 +14874,8 @@ msgstr "La guía predeterminada para el anfitrión ahora recuerda activar el mod
 msgid "the dembrane team"
 msgstr "el equipo de dembrane"
 
-#: src/routes/project/present/PresentRoute.tsx:713
-#: src/routes/project/present/PresentRoute.tsx:743
+#: src/routes/project/present/PresentRoute.tsx:721
+#: src/routes/project/present/PresentRoute.tsx:751
 msgid "The draft could not be loaded"
 msgstr "No se pudo cargar el borrador"
 
@@ -14951,7 +14952,7 @@ msgstr "La guía para el anfitrión es lo que leen quienes facilitan antes de di
 msgid "The host guide screen shows the code to take part. Turn on participation in the portal editor to use it."
 msgstr "La pantalla de la guía del anfitrión muestra el código para participar. Activa la participación en el editor del portal para usarla."
 
-#: src/routes/project/present/PresentRoute.tsx:919
+#: src/routes/project/present/PresentRoute.tsx:927
 msgid "The host hasn’t prepared a presentation yet."
 msgstr "El anfitrión aún no ha preparado una presentación."
 
@@ -15083,7 +15084,7 @@ msgstr "El flujo de participantes cuenta con comprobaciones de micrófono más c
 msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
 msgstr "¡Los portales seguirán funcionando! Tus participantes nunca se quedarán fuera y nada de lo que digan se perderá. En cuanto pases a un plan de pago, la transcripción se pondrá al día con todo lo grabado."
 
-#: src/routes/project/present/PresentRoute.tsx:900
+#: src/routes/project/present/PresentRoute.tsx:908
 msgid "The presentation could not be loaded"
 msgstr "No se pudo cargar la presentación"
 
@@ -15091,7 +15092,7 @@ msgstr "No se pudo cargar la presentación"
 #~ msgid "The presentation could not be loaded."
 #~ msgstr "No se pudo cargar la presentación."
 
-#: src/routes/project/present/PresentRoute.tsx:893
+#: src/routes/project/present/PresentRoute.tsx:901
 msgid "The presentation could not be opened"
 msgstr "No se pudo abrir la presentación"
 
@@ -15111,7 +15112,7 @@ msgstr "El proyecto adopta la Business Source License 1.1."
 msgid "The project context is read by transcription, chat answers and canvas generation, so a change here reaches more than one screen."
 msgstr "El contexto del proyecto lo leen la transcripción, las respuestas del chat y la generación del canvas, por lo que un cambio aquí afecta a más de una pantalla."
 
-#: src/routes/project/present/PresentRoute.tsx:770
+#: src/routes/project/present/PresentRoute.tsx:778
 msgid "The public page is on, so changes wait until you show them."
 msgstr "La página pública está activada, así que los cambios esperan hasta que los muestres."
 
@@ -15132,7 +15133,7 @@ msgstr "El informe termina con una invitación a añadir tu voz."
 msgid "The report may start up to 5 minutes after the chosen time."
 msgstr "El informe puede comenzar hasta 5 minutos después de la hora elegida."
 
-#: src/routes/project/present/PresentRoute.tsx:761
+#: src/routes/project/present/PresentRoute.tsx:769
 msgid "The room screen is open, so changes wait until you show them."
 msgstr "La pantalla de la sala está abierta, así que los cambios esperan hasta que los muestres."
 
@@ -16137,7 +16138,7 @@ msgstr "Activar flujos de trabajo automatizados en herramientas como Zapier, Mak
 msgid "Trouble logging in? Contact support@dembrane.com."
 msgstr "¿Problemas para iniciar sesión? Contacta con support@dembrane.com."
 
-#: src/routes/project/present/PresentRoute.tsx:924
+#: src/routes/project/present/PresentRoute.tsx:932
 #: src/routes/project/present/PresentResultsPanel.tsx:158
 #: src/routes/project/chat/ProjectChatRoute.tsx:837
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:165
@@ -16719,7 +16720,7 @@ msgstr "Usar el valor heredado"
 msgid "Use Italian for chat, reports, transcription and participant onboarding cards."
 msgstr "Usa italiano para el chat, los informes, la transcripción y las tarjetas de bienvenida a participantes."
 
-#: src/routes/project/present/PresentRoute.tsx:838
+#: src/routes/project/present/PresentRoute.tsx:846
 msgid "Use latest results"
 msgstr "Usar los últimos resultados"
 
@@ -17995,7 +17996,7 @@ msgstr "Eres colaborador externo en esta organización. Abre uno de los espacios
 msgid "You're in"
 msgstr "Ya estás dentro"
 
-#: src/routes/project/present/PresentRoute.tsx:766
+#: src/routes/project/present/PresentRoute.tsx:774
 msgid "You’re live, so changes wait until you show them."
 msgstr "Estás en directo, así que los cambios esperan hasta que los muestres."
 

@@ -327,7 +327,7 @@ msgid "{0, plural, one {# payment} other {# payments}}"
 msgstr "{0, plural, one {# платіж} few {# платежі} many {# платежів} other {# платежів}}"
 
 #. placeholder {0}: presentation.counts.phrases
-#: src/routes/project/present/PresentRoute.tsx:825
+#: src/routes/project/present/PresentRoute.tsx:833
 msgid "{0, plural, one {# phrase} other {# phrases}}"
 msgstr "{0, plural, one {# фраза} few {# фрази} many {# фраз} other {# фрази}}"
 
@@ -3177,7 +3177,8 @@ msgstr "Зміни застосовано. Ви можете уточнити ї
 #~ msgid "Changes could not be published. Try again."
 #~ msgstr "Не вдалося опублікувати зміни. Спробуйте знову."
 
-#: src/routes/project/present/PresentRoute.tsx:820
+#: src/routes/project/present/PresentRoute.tsx:712
+#: src/routes/project/present/PresentRoute.tsx:828
 msgid "Changes could not be shown on the room screen"
 msgstr "Не вдалося показати зміни на екрані зали"
 
@@ -3185,7 +3186,7 @@ msgstr "Не вдалося показати зміни на екрані зал
 msgid "Changes not shown yet"
 msgstr "Зміни ще не показано"
 
-#: src/routes/project/present/PresentRoute.tsx:774
+#: src/routes/project/present/PresentRoute.tsx:782
 msgid "Changes show on the room screen as you make them."
 msgstr "Зміни з’являються на екрані зали одразу, як ви їх вносите."
 
@@ -4211,7 +4212,7 @@ msgstr "Не вдалося завантажити платежі. Переві�
 msgid "Could not load the canvas."
 msgstr "Не вдалося завантажити полотно."
 
-#: src/routes/project/present/PresentRoute.tsx:857
+#: src/routes/project/present/PresentRoute.tsx:865
 msgid "Could not load the latest results"
 msgstr "Не вдалося завантажити останні результати"
 
@@ -8209,7 +8210,7 @@ msgstr "Loading artefact"
 msgid "Loading collections..."
 msgstr "Loading collections..."
 
-#: src/routes/project/present/PresentRoute.tsx:808
+#: src/routes/project/present/PresentRoute.tsx:816
 msgid "Loading draft"
 msgstr "Завантаження чернетки"
 
@@ -8237,8 +8238,8 @@ msgstr "Завантаження методології"
 msgid "Loading microphones..."
 msgstr "Loading microphones..."
 
-#: src/routes/project/present/PresentRoute.tsx:719
-#: src/routes/project/present/PresentRoute.tsx:931
+#: src/routes/project/present/PresentRoute.tsx:727
+#: src/routes/project/present/PresentRoute.tsx:939
 msgid "Loading presentation"
 msgstr "Завантаження презентації"
 
@@ -10088,7 +10089,7 @@ msgstr "Відкрити документацію"
 #~ msgid "Open host guide"
 #~ msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:850
+#: src/routes/project/present/PresentRoute.tsx:858
 #: src/components/results/ResultItem.tsx:846
 #: src/components/results/curate/RowTools.tsx:344
 #: src/components/results/curate/RowTools.tsx:347
@@ -11142,7 +11143,7 @@ msgstr "Preparing your experience"
 
 #: src/routes/project/present/PresentRoute.tsx:631
 #: src/routes/project/present/PresentRoute.tsx:685
-#: src/routes/project/present/PresentRoute.tsx:915
+#: src/routes/project/present/PresentRoute.tsx:923
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:118
 msgid "Present"
 msgstr "Презентувати"
@@ -14872,8 +14873,8 @@ msgstr "Стандартний посібник ведучого тепер на
 msgid "the dembrane team"
 msgstr "команда dembrane"
 
-#: src/routes/project/present/PresentRoute.tsx:713
-#: src/routes/project/present/PresentRoute.tsx:743
+#: src/routes/project/present/PresentRoute.tsx:721
+#: src/routes/project/present/PresentRoute.tsx:751
 msgid "The draft could not be loaded"
 msgstr "Не вдалося завантажити чернетку"
 
@@ -14950,7 +14951,7 @@ msgstr "Посібник для ведучого: це те, що фасиліт
 msgid "The host guide screen shows the code to take part. Turn on participation in the portal editor to use it."
 msgstr "Екран посібника ведучого показує код для участі. Увімкніть участь у редакторі порталу, щоб ним скористатися."
 
-#: src/routes/project/present/PresentRoute.tsx:919
+#: src/routes/project/present/PresentRoute.tsx:927
 msgid "The host hasn’t prepared a presentation yet."
 msgstr "Ведучий ще не підготував презентацію."
 
@@ -15082,7 +15083,7 @@ msgstr "У сценарії учасника перевірка мікрофон
 msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
 msgstr "Портали працюватимуть і далі! Ваші учасники ніколи не відключаються, і ніщо зі сказаного ними не губиться. Щойно ви перейдете на платний тариф, транскрипція опрацює все вже записане."
 
-#: src/routes/project/present/PresentRoute.tsx:900
+#: src/routes/project/present/PresentRoute.tsx:908
 msgid "The presentation could not be loaded"
 msgstr "Не вдалося завантажити презентацію"
 
@@ -15090,7 +15091,7 @@ msgstr "Не вдалося завантажити презентацію"
 #~ msgid "The presentation could not be loaded."
 #~ msgstr "Не вдалося завантажити презентацію."
 
-#: src/routes/project/present/PresentRoute.tsx:893
+#: src/routes/project/present/PresentRoute.tsx:901
 msgid "The presentation could not be opened"
 msgstr "Не вдалося відкрити презентацію"
 
@@ -15110,7 +15111,7 @@ msgstr "Проєкт переходить на ліцензію Business Source 
 msgid "The project context is read by transcription, chat answers and canvas generation, so a change here reaches more than one screen."
 msgstr "Контекст проєкту використовується транскрипцією, відповідями в чаті та генерацією полотен, тому зміна тут впливає на декілька екранів."
 
-#: src/routes/project/present/PresentRoute.tsx:770
+#: src/routes/project/present/PresentRoute.tsx:778
 msgid "The public page is on, so changes wait until you show them."
 msgstr "Публічна сторінка увімкнена, тож зміни чекають, доки ви їх не покажете."
 
@@ -15131,7 +15132,7 @@ msgstr "Звіт завершується запрошенням додати с
 msgid "The report may start up to 5 minutes after the chosen time."
 msgstr "The report may start up to 5 minutes after the chosen time."
 
-#: src/routes/project/present/PresentRoute.tsx:761
+#: src/routes/project/present/PresentRoute.tsx:769
 msgid "The room screen is open, so changes wait until you show them."
 msgstr "Екран зали відкритий, тож зміни чекають, доки ви їх не покажете."
 
@@ -16136,7 +16137,7 @@ msgstr "Trigger automated workflows in tools like Zapier, Make, or n8n"
 msgid "Trouble logging in? Contact support@dembrane.com."
 msgstr "Не вдається увійти? Напишіть на support@dembrane.com."
 
-#: src/routes/project/present/PresentRoute.tsx:924
+#: src/routes/project/present/PresentRoute.tsx:932
 #: src/routes/project/present/PresentResultsPanel.tsx:158
 #: src/routes/project/chat/ProjectChatRoute.tsx:837
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:165
@@ -16718,7 +16719,7 @@ msgstr "Використати успадковане значення"
 msgid "Use Italian for chat, reports, transcription and participant onboarding cards."
 msgstr "Використовуйте італійську для чату, звітів, транскрипції та карток онбордингу учасників."
 
-#: src/routes/project/present/PresentRoute.tsx:838
+#: src/routes/project/present/PresentRoute.tsx:846
 msgid "Use latest results"
 msgstr "Використати останні результати"
 
@@ -17994,7 +17995,7 @@ msgstr "Ви є зовнішнім учасником у цій організа
 msgid "You're in"
 msgstr "Ви всередині"
 
-#: src/routes/project/present/PresentRoute.tsx:766
+#: src/routes/project/present/PresentRoute.tsx:774
 msgid "You’re live, so changes wait until you show them."
 msgstr "Ви в ефірі, тож зміни чекають, доки ви їх не покажете."
 
