@@ -692,18 +692,26 @@ function Session({
 											disabled={publishing}
 											style={{ border: 0, margin: 0, minWidth: 0, padding: 0 }}
 										>
-											<PopcornShare
-												embedded
-												projectId={projectId}
-												popcorn={draft.query.data.presentation}
-												presentation
-												extras={
-													<EventPrintoutsItem
-														workspaceId={workspaceId ?? ""}
-														projectId={projectId}
-													/>
-												}
-											/>
+											<Stack gap="md">
+												<PopcornShare
+													embedded
+													projectId={projectId}
+													popcorn={draft.query.data.presentation}
+													presentation
+													extras={
+														<EventPrintoutsItem
+															workspaceId={workspaceId ?? ""}
+															projectId={projectId}
+														/>
+													}
+												/>
+												{/* A refused change is read where it was made. */}
+												<ErrorNotice
+													error={draft.publish.error}
+													onRetry={() => void publishChanges()}
+													title={t`Changes could not be shown on the room screen`}
+												/>
+											</Stack>
 										</fieldset>
 									</SettingsSaveContext.Provider>
 								) : draft.query.isError ? (
