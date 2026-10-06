@@ -1,0 +1,46 @@
+/* The Analyse split button: one pill in two parts. The main part does the
+ * default, the chevron opens the menu, and a 1px line divides them. It never
+ * wraps, so it stays one row on a phone. */
+.split {
+	display: inline-flex;
+	flex-wrap: nowrap;
+}
+
+/* The pill's two ends, raised over the square box rules.css gives an outline. */
+:root .split > .main[data-variant] {
+	border-radius: 9999px 0 0 9999px;
+}
+:root .split > .more[data-variant] {
+	border-radius: 0 9999px 9999px 0;
+	padding-inline: 12px;
+}
+
+/* On a fill the divider is the chevron's own left edge. The theme gives a
+ * fill no border at all, so the edge is drawn whole. */
+:root .split > .more[data-variant="filled"] {
+	border-inline-start: var(--app-stroke) solid
+		color-mix(in srgb, var(--app-on-fill) 60%, transparent);
+}
+
+/* Off is an outline: a white control with the control line (booked) or the
+ * danger line (live). The chevron steps back over the main part's right edge,
+ * so the divider is that one line. */
+.booked {
+	--app-rule-color: var(--app-control-rule);
+}
+.live {
+	--app-rule-color: var(--app-danger);
+}
+:root .split > .more[data-variant="outline"] {
+	margin-inline-start: calc(-1 * var(--app-stroke));
+}
+:root .split > [data-variant="outline"]:not(:hover) {
+	background-color: var(--app-surface);
+}
+:root .live > [data-variant="outline"] {
+	color: var(--app-danger-on-tint);
+}
+:root .split > :is(:hover, :focus-visible) {
+	position: relative;
+	z-index: 1;
+}

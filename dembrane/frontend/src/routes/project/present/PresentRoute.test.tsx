@@ -69,6 +69,7 @@ vi.mock("@/components/popcorn/hooks", () => ({
 		mutateAsync: vi.fn(),
 	}),
 	usePopcornStopLiveMutation: () => ({ mutate: vi.fn() }),
+	useRefreshPopcornMutation: () => ({ mutate: vi.fn() }),
 }));
 
 const presentation = {
@@ -162,13 +163,16 @@ describe("Preparing the room before recordings", () => {
 			"/present/projects/empty/default",
 		);
 	});
-	it("keeps Go live and Share beside Present, and opens the screen without a processing request", async () => {
+	it("keeps Analyse and Share beside Present, and opens the screen without a processing request", async () => {
 		const open = vi.spyOn(window, "open").mockReturnValue(null);
 		show();
 		const present = await screen.findByRole("button", {
 			name: "Present",
 		});
-		expect(screen.getByRole("button", { name: "Go live" })).toBeTruthy();
+		expect(screen.getByRole("button", { name: "Analyse" })).toBeTruthy();
+		expect(
+			screen.getByRole("button", { name: "More ways to analyse" }),
+		).toBeTruthy();
 		expect(screen.getByRole("button", { name: "Share" })).toBeTruthy();
 		fireEvent.click(present);
 		expect(open).toHaveBeenCalledWith(

@@ -21,7 +21,7 @@ import { LiveButton } from "@/components/sharing/LiveButton";
 import { testId } from "@/lib/testUtils";
 
 // What a host can do with a session: open the wall, read once, read from
-// nothing, or go live for a while, now or ready by a time.
+// nothing, or analyse live for a while, now or ready by a time.
 export function PopcornActions({
 	projectId,
 	popcorn,
@@ -72,6 +72,7 @@ export function PopcornActions({
 				onGoLive={(hours) => live.mutate({ hours })}
 				onReadyBy={(hours, readyBy) => live.mutate({ hours, readyBy })}
 				onStop={() => stopLive.mutate()}
+				onAnalyseNow={() => refresh.mutate()}
 			/>
 			<ConfirmModal
 				opened={rerunOpened}

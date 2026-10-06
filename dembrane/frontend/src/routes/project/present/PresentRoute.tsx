@@ -38,6 +38,7 @@ import {
 	usePopcornLiveMutation,
 	usePopcornSettingsMutation,
 	usePopcornStopLiveMutation,
+	useRefreshPopcornMutation,
 } from "@/components/popcorn/hooks";
 import {
 	PopcornAlsoLanguages,
@@ -473,6 +474,7 @@ function Session({
 	);
 	const live = usePopcornLiveMutation(projectId, presentation.id);
 	const stop = usePopcornStopLiveMutation(projectId, presentation.id);
+	const refresh = useRefreshPopcornMutation(projectId, presentation.id);
 	const isLive = presentation.loop?.mode === "live";
 	const booking = liveBooking(presentation.loop);
 	const [eventTick, setEventTick] = useState(0);
@@ -644,6 +646,7 @@ function Session({
 								onGoLive={(hours) => live.mutate({ hours })}
 								onReadyBy={(hours, readyBy) => live.mutate({ hours, readyBy })}
 								onStop={() => stop.mutate()}
+								onAnalyseNow={() => refresh.mutate()}
 							/>
 						)}
 					</Group>
