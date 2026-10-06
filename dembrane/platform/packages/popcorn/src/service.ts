@@ -18,6 +18,7 @@ import {
   directusTime,
   isRecord,
   type Json,
+  list,
   orStr,
   pyEqual,
   pyIso,
@@ -683,6 +684,41 @@ export async function publishedBundle(
   }
 }
 
+/**
+ * Before the first phrase lands, the session says what the room is waiting on: how many
+ * conversations are recording, and how many finished ones are still being read. The
+ * deck counts nothing down until it knows; once a phrase is up the field is left out.
+ */
+export async function withWaiting(
+  d: PopcornDeps,
+  bundle: Json,
+  state: Json,
+  projectId: string,
+): Promise<Json> {
+  const files = dict(bundle.files);
+  const session = files["session.json"];
+  if (!isRecord(session)) return bundle;
+  const phrases = Object.entries(files).some(
+    ([name, file]) => name.startsWith("popcorn/") && list(dict(file).items).length > 0,
+  );
+  if (phrases) return bundle;
+  try {
+    const { recording, finished } = await d.store.waitingConversations(projectId);
+    const conversations = dict(state.conversations);
+    const beingRead = finished.filter((cid) => !truthy(dict(conversations[cid]).done)).length;
+    return {
+      ...bundle,
+      files: {
+        ...files,
+        "session.json": { ...session, waiting: { recording, being_read: beingRead } },
+      },
+    };
+  } catch (err) {
+    d.logger.warn({ reason: (err as Error).name }, "popcorn deck: waiting count unavailable");
+    return bundle;
+  }
+}
+
 export async function bundleForReport(
   d: PopcornDeps,
   report: Row,
@@ -734,6 +770,7 @@ export async function bundleForReport(
   bundle = translatedBundle(bundle, state, settings);
   if (projectId) bundle = withoutObjects(bundle, await d.deck.excludedObjectIds(projectId));
   bundle = curatePresentation(bundle, settings);
+  if (projectId) bundle = await withWaiting(d, bundle, state, projectId);
   if (opts.settingsOverride === undefined) cache.set(key, { at, bundle });
   if (cache.size > 512) {
     const oldest = [...cache.entries()]

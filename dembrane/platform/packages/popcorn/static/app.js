@@ -132,7 +132,8 @@
   const POP_CAP = 5;         // phrases on stage at once, all told; a keyed pop past this sends the oldest away
   const POP_HOLD_PINNED = 30000;  // a phrase the facilitator popped from the keys lingers
   const POP_EDGE_PX = 18;    // no phrase comes closer than this to the edge of the stage
-  const COUNTDOWN_MS = 3000; // 3, 2, 1 to the first popcorn; the first phrase is held until the count ends
+  const COUNTDOWN_MS = 3000; // 3, 2, 1 to the first popcorn; it starts once that phrase is there, which it then holds
+  const SLOW_READ_MS = 45000; // a first read still empty after this says it is taking longer
 
   /* The page's own words, in the session's language (session.language). A
      language is one more object with these keys; a missing key falls back to
@@ -310,6 +311,7 @@
       "evidence.namedBy": "Named by others, spoken for by {name}.",
       "demo.next": "This is what you can expect after recording a few conversations. For the full analysis experience, {signIn}",
       "demo.signIn": "sign in →",
+      "wait.checking": "checking for conversations…",
     },
     nl: {
       "chrome.slides": "dia's",
@@ -479,6 +481,7 @@
       "evidence.namedBy": "Genoemd door anderen; {name} sprak namens hen.",
       "demo.next": "Dit kun je verwachten zodra je een paar gesprekken hebt opgenomen. Voor de volledige analyse kun je {signIn}",
       "demo.signIn": "inloggen →",
+      "wait.checking": "gesprekken worden opgezocht…",
     },
   };
   // Audience languages are kept separate so upstream app.js merges stay
@@ -560,7 +563,9 @@
       hidden: new Set(),    // transcript ids and popcorn keys the facilitator has hidden
       kindFilter: null,     // null = every kind; { kind, mode: "only" | "except" } from the legend
       cursor: 0,            // position in the time-ordered sequence
-      countdown: null,      // { startedAt, beaconed } while the first read is in flight and nothing has landed
+      countdown: null,      // { startedAt } while 3, 2, 1 runs to a phrase that is already there
+      awaitingFirst: false, // the stage was empty and waiting on the room's conversations
+      readingSince: 0,      // when the read the empty stage waits on began
       tailStamp: "",        // the popcorn files as last drawn; a change redraws the list and the stage
       bilingualNext: new Map(), // late translations owed their next fair slot
       shownOriginal: new Map(), // item identity -> exact source wording already given a full appearance
@@ -1411,7 +1416,7 @@
   function finishOpening() {
     introDone = true;
     closeIntroduction();
-    state.pop.countdown = { startedAt: Date.now(), beaconed: false };
+    state.pop.countdown = { startedAt: Date.now() };
     showSlide("popcorn", null, { replace: true });
     stage.focus();
   }
@@ -2551,10 +2556,9 @@
   // three horizontal bands, one phrase each — overlap-free by construction
   const SLOTS = [{ y: 18 }, { y: 45 }, { y: 71 }];   // the keys strip docks over the bottom of the fold
 
-  // The empty stage: a message, or the count to the first popcorn. Past the
-  // count with nothing landed: a spinner, and one note of the latency to the
-  // server (the host's view only; the public page sends nothing).
-  function renderWaiting(stageEl, msg) {
+  // The empty stage: a message, or the count to the first popcorn. `busy`
+  // turns the live dot into a spinner, for a stage still finding out.
+  function renderWaiting(stageEl, msg, busy = false) {
     let waiting = stageEl.querySelector(".popcorn-waiting");
     if (!waiting) {
       waiting = document.createElement("p");
@@ -2564,25 +2568,14 @@
     }
     const cd = state.pop.countdown;
     if (cd) {
-      const elapsed = Date.now() - cd.startedAt;
-      if (elapsed < COUNTDOWN_MS) {
-        const n = 3 - Math.floor(elapsed / 1000);
-        const html = `<span class="countdown" aria-live="polite">${n}</span>`;
-        if (waiting.innerHTML !== html) waiting.innerHTML = html;
-        return;
-      }
-      if (!cd.beaconed) {
-        cd.beaconed = true;
-        if (HOST && navigator.sendBeacon) {
-          navigator.sendBeacon("data/latency", new Blob([JSON.stringify({ ms: elapsed })], { type: "application/json" }));
-        }
-      }
-      const html = `<span class="spinner" aria-hidden="true"></span>&nbsp; ${esc(tr("wait.slow"))}`;
+      const n = 3 - Math.floor((Date.now() - cd.startedAt) / 1000);
+      const html = `<span class="countdown" aria-live="polite">${Math.max(1, n)}</span>`;
       if (waiting.innerHTML !== html) waiting.innerHTML = html;
       return;
     }
-    const html = `<span class="live-dot"></span>&nbsp; ${esc(msg)}`;
-    if (!waiting.textContent.includes(msg.slice(0, 8))) waiting.innerHTML = html;
+    const mark = busy ? `<span class="spinner" aria-hidden="true"></span>` : `<span class="live-dot"></span>`;
+    const html = `${mark}&nbsp; ${esc(msg)}`;
+    if (waiting.innerHTML !== html) waiting.innerHTML = html;
   }
 
   function popTick() {
@@ -2598,23 +2591,48 @@
     // microphone is open.
     const transcripts = (state.session?.transcripts || []).length;
     const read = [...state.popcorn.values()].filter((p) => p.done).length;
-    const inFlight = EMBED && transcripts > 0 && read < transcripts;
+    // A live deck learns from the server what the room is waiting on: the
+    // conversations recording and the finished ones still being read. Until
+    // it knows, it checks; a replay or the standalone deck has nothing to check.
+    const waitingOn = state.session?.waiting || null;
+    const checking = EMBED && (!state.session || (LIVE && !waitingOn));
+    const recording = waitingOn?.recording || 0;
+    const beingRead = waitingOn?.being_read || 0;
+    const inFlight = EMBED && ((transcripts > 0 && read < transcripts) || beingRead > 0);
     if (!total) {
-      // The first read of a session: count 3, 2, 1 to the first popcorn.
-      if (inFlight && !state.pop.countdown) state.pop.countdown = { startedAt: Date.now(), beaconed: false };
-      if (!inFlight) state.pop.countdown = null;
+      // 3, 2, 1 waits for a phrase that is really there: here the stage only
+      // notes that a first popcorn is awaited, and when the reading began.
+      state.pop.countdown = null;
+      state.pop.awaitingFirst = EMBED && !checking && (inFlight || recording > 0);
+      if (inFlight) state.pop.readingSince ||= Date.now();
+      else state.pop.readingSince = 0;
+      const slow = inFlight && Date.now() - state.pop.readingSince > SLOW_READ_MS;
       // A finished read that found nothing must say so, or a host takes an
       // empty stage for a broken one. Without a session there is no language
       // to speak, and the drop hint is for the standalone deck.
-      const msg = !state.session ? "drop your session's JSON files anywhere on this page"
-        : EMBED && !transcripts ? tr("wait.first")
-        : EMBED && read >= transcripts ? trn("wait.empty", transcripts)
+      const msg = checking ? tr("wait.checking")
+        : !state.session ? "drop your session's JSON files anywhere on this page"
+        : EMBED && !transcripts && !recording && !beingRead ? tr("wait.first")
+        : slow ? tr("wait.slow")
+        : EMBED && !inFlight && !recording ? trn("wait.empty", transcripts)
         : EMBED ? tr("wait.reading")
         : tr("wait.listening");
-      renderWaiting(stageEl, msg);
+      renderWaiting(stageEl, msg, checking || slow);
       return;
     }
-    // The first phrase waits for the count to end, so 3, 2, 1 is honest.
+    // The first phrase is in: count 3, 2, 1 to it, holding it until the count
+    // ends. A deck opened on a stage that already has phrases does not count.
+    if (state.pop.awaitingFirst) {
+      state.pop.awaitingFirst = false;
+      state.pop.countdown = { startedAt: Date.now() };
+      // One note of the latency to the server when the first phrase came late
+      // (the host's view only; the public page sends nothing).
+      const elapsed = state.pop.readingSince ? Date.now() - state.pop.readingSince : 0;
+      state.pop.readingSince = 0;
+      if (elapsed > COUNTDOWN_MS && HOST && navigator.sendBeacon) {
+        navigator.sendBeacon("data/latency", new Blob([JSON.stringify({ ms: elapsed })], { type: "application/json" }));
+      }
+    }
     if (state.pop.countdown && Date.now() - state.pop.countdown.startedAt < COUNTDOWN_MS) {
       renderWaiting(stageEl, "");
       return;

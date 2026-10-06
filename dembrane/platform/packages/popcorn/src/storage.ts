@@ -247,6 +247,24 @@ export function popcornStore(sql: Sql) {
       return { conversations: [...conversations], chunks: [...chunks] };
     },
 
+    /**
+     * The conversations the room is waiting on: the ones still recording, and the finished
+     * ones with words to read. The conversations sweep finishes an unfinished conversation
+     * (`is_finished = false`) once it has been idle for five minutes, so that alone tells
+     * recording; a row with no value is neither.
+     */
+    async waitingConversations(
+      projectId: string,
+    ): Promise<{ recording: number; finished: string[] }> {
+      const rows = await sql`select c.id, c.is_finished from conversation c
+        where c.project_id = ${projectId} and c.deleted_at is null
+          and (c.is_finished = false or (c.is_finished = true and exists (
+            select 1 from conversation_chunk ch
+            where ch.conversation_id = c.id and btrim(ch.transcript) <> '')))`;
+      const finished = rows.filter((r) => r.is_finished === true).map((r) => String(r.id));
+      return { recording: rows.length - finished.length, finished };
+    },
+
     /** The legal-basis cascade rows the data screen resolves through. */
     async legalCascade(project: Row): Promise<{ workspace: Row | null; owner: Row | null }> {
       let workspace: Row | null = null;
