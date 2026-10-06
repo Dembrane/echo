@@ -13,7 +13,7 @@ description: Ship a release of the dembrane platform (dembrane/platform, the Bun
 - A PR with the `preview` label: `40-build-images` pushes to the preview registry (an image whose inputs are already there is only tagged), then `50-deploy-pr-preview` rolls out only the services whose image or settings changed, to dashboard-<n>, portal-<n> and api-<n>.preview.dembrane.com, and edits one comment on the PR with the links. Removing the label or closing the PR runs `51-teardown-pr-preview`.
 - next: `60-deploy-next` from main, by hand (and on each push to main once `NEXT_DEPLOY_ON_MAIN` is `true`). It posts the PRs it carried to #team-engineering and comments "Now on dembrane-next" on each.
 - prod: `70-deploy-prod` from a release tag `vX.Y.Z` on main, by hand with the tag (and on pushing the tag once `PROD_DEPLOY_ON_TAG` is `true`), after the `prod` environment's approval. It creates the GitHub Release (an annotated tag's first line becomes its headline), posts to #team-engineering, comments "Released in vX.Y.Z" on each PR and sends `release.published` to sam.
-- #alerts-ci says when an environment was created, updated or removed, and when it was not updated and why: one message per PR preview with later events in its thread, and one per staging or prod deploy listing its PRs.
+- #alerts-ci says when an environment was created, updated or removed, and when it was not updated and why: one message per PR preview, edited to its current state with its history in the thread, and one per staging or prod deploy listing its PRs, posted as the deploy begins and edited when it ends.
 
 `.github/scripts/release.sh` and `.github/scripts/ci-notify.sh` with `DRY_RUN=1` print any of these messages without sending them.
 

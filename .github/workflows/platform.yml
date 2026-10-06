@@ -19,7 +19,7 @@ name: platform
 # to a labelled PR redeploys it, and removing the label, closing or merging removes it. Every
 # deploy seeds the preview admin, the fictional sample project and the accounts demo. At most three
 # exist; a fourth tears down the oldest. One comment on the PR carries the links, and one
-# message in #alerts-ci announces the preview, with what happens to it later in its thread.
+# message in #alerts-ci shows the preview's current state, with its history in the thread.
 #
 # staging (dembrane-web-staging) deploys main: by hand, and on every push to main once the
 # repository variable STAGING_DEPLOY_ON_MAIN is "true". Each deploy lists the PRs it carried in
@@ -30,8 +30,9 @@ name: platform
 # A deploy publishes the GitHub Release, tells #team-engineering, #alerts-ci and each PR, and sends
 # release.published to sam, which drafts the in-app release notes for review.
 #
-# #alerts-ci says when an environment was created, updated or removed, and when it was not
-# updated and why. Checks on PRs without a preview stay in the PR.
+# #alerts-ci says when an environment is being created or updated, in a message that is edited
+# when the deploy ends: created, updated, removed, or not updated and why. Checks on PRs
+# without a preview stay in the PR.
 #
 # Caches: pull request runs only restore them. Pushes to main (and runs by hand) check trusted
 # code and save them, so code from a PR never writes a cache that another run reads. Images
@@ -582,6 +583,15 @@ jobs:
           echo "failed=$failed" >> "$GITHUB_OUTPUT"
           echo "::error::Not deploying: $failed did not pass"
           exit 1
+      # Only a first deploy is announced as it begins. The preview comment remembers the
+      # message, so the step that ends this run, or a later run, edits it.
+      - name: Tell #alerts-ci a preview is being created
+        continue-on-error: true
+        env:
+          SLACK_TOKEN: ${{ secrets.SLACK_ALERTS_BOT_TOKEN }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BASE_REF: ${{ github.base_ref }}
+        run: $GITHUB_WORKSPACE/.github/scripts/ci-notify.sh preview starting "$PR"
       - name: Authenticate to Google Cloud
         id: auth
         uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2.1.13
@@ -599,7 +609,7 @@ jobs:
           set -o pipefail
           removed=$($GITHUB_WORKSPACE/.github/scripts/deploy-env.sh make-room "$PR" | tee /dev/stderr | awk '/^removed PR preview / { print $4 }')
           for n in $removed; do
-            $GITHUB_WORKSPACE/.github/scripts/ci-notify.sh preview removed "$n" "to make room for #$PR" || true
+            $GITHUB_WORKSPACE/.github/scripts/ci-notify.sh preview removed "$n" "it made room for #$PR" || true
           done
       - name: Deploy and verify
         id: deploy
@@ -670,7 +680,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           SLACK_TOKEN: ${{ secrets.SLACK_ALERTS_BOT_TOKEN }}
-          WHY: ${{ github.event.action == 'closed' && 'the PR was closed' || 'the preview label was removed' }}
+          WHY: ${{ github.event.action == 'closed' && (github.event.pull_request.merged && 'the PR was merged' || 'the PR was closed') || 'the preview label was removed' }}
         run: $GITHUB_WORKSPACE/.github/scripts/ci-notify.sh preview removed "$PR" "$WHY"
 
   # staging and prod each deploy from their own project's registry with their own identity. staging
@@ -700,7 +710,16 @@ jobs:
       - name: Check out code
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with: { ref: "${{ env.REF }}", persist-credentials: false }
+      # One message in #alerts-ci per deploy: posted here, edited by the step that ends the job.
+      - name: Tell #alerts-ci the deploy is starting
+        id: start
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SLACK_TOKEN: ${{ secrets.SLACK_ALERTS_BOT_TOKEN }}
+        run: $GITHUB_WORKSPACE/.github/scripts/release.sh announce-start staging "$TAG"
       - name: Authenticate to Google Cloud
+        id: auth
         uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2.1.13
         with:
           workload_identity_provider: projects/1089877593337/locations/global/workloadIdentityPools/echo-staging-github/providers/github
@@ -709,6 +728,7 @@ jobs:
         uses: google-github-actions/setup-gcloud@e427ad8a34f8676edf47cf7d7925499adf3eb74f # v2.2.1
         with: { skip_install: true }
       - name: Deploy and verify
+        id: deploy
         env:
           HOLD_DATA: ${{ inputs.hold_data && '1' || '0' }}
         run: $GITHUB_WORKSPACE/.github/scripts/deploy-env.sh deploy staging "$TAG"
@@ -718,7 +738,17 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           SLACK_TOKEN: ${{ secrets.SLACK_ALERTS_BOT_TOKEN }}
+          SLACK_TS: ${{ steps.start.outputs.slack_ts }}
         run: $GITHUB_WORKSPACE/.github/scripts/release.sh announce-staging "$TAG"
+      - name: Tell #alerts-ci the deploy stopped
+        if: ${{ failure() || cancelled() }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SLACK_TOKEN: ${{ secrets.SLACK_ALERTS_BOT_TOKEN }}
+          SLACK_TS: ${{ steps.start.outputs.slack_ts }}
+          STOPPED: ${{ cancelled() && 'cancelled' || steps.auth.outcome == 'failure' && 'Authenticate to Google Cloud' || steps.deploy.outcome == 'failure' && 'Deploy and verify' || '' }}
+        run: $GITHUB_WORKSPACE/.github/scripts/release.sh announce-failed staging "$TAG" "$STOPPED"
 
   deploy-prod:
     name: 70-deploy-prod
@@ -744,7 +774,17 @@ jobs:
       - name: Check out code
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with: { ref: "${{ env.REF }}", persist-credentials: false }
+      # One message in #alerts-ci per deploy: posted here, once the deploy is approved, and
+      # edited by the step that ends the job.
+      - name: Tell #alerts-ci the deploy is starting
+        id: start
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SLACK_TOKEN: ${{ secrets.SLACK_ALERTS_BOT_TOKEN }}
+        run: $GITHUB_WORKSPACE/.github/scripts/release.sh announce-start prod "$RELEASE_TAG"
       - name: Authenticate to Google Cloud
+        id: auth
         uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2.1.13
         with:
           workload_identity_provider: projects/740075346439/locations/global/workloadIdentityPools/echo-prod-github/providers/github
@@ -759,8 +799,10 @@ jobs:
         with: { cleanup: false }
       # Tags an image already in the prod registry with the same inputs; builds the rest.
       - name: Push images
+        id: images
         run: $GITHUB_WORKSPACE/.github/scripts/build-images.sh --push
       - name: Deploy and verify
+        id: deploy
         env:
           HOLD_DATA: ${{ inputs.hold_data && '1' || '0' }}
         run: $GITHUB_WORKSPACE/.github/scripts/deploy-env.sh deploy prod "$TAG"
@@ -774,16 +816,26 @@ jobs:
           SLACK_TOKEN: ${{ secrets.SLACK_ALERTS_BOT_TOKEN }}
           SAM_RELEASE_WEBHOOK_URL: ${{ secrets.SAM_RELEASE_WEBHOOK_URL }}
           SAM_RELEASE_WEBHOOK_SECRET: ${{ secrets.SAM_RELEASE_WEBHOOK_SECRET }}
+          SLACK_TS: ${{ steps.start.outputs.slack_ts }}
         run: $GITHUB_WORKSPACE/.github/scripts/release.sh publish-release "$RELEASE_TAG"
+      - name: Tell #alerts-ci the deploy stopped
+        if: ${{ failure() || cancelled() }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SLACK_TOKEN: ${{ secrets.SLACK_ALERTS_BOT_TOKEN }}
+          SLACK_TS: ${{ steps.start.outputs.slack_ts }}
+          STOPPED: ${{ cancelled() && 'cancelled' || steps.auth.outcome == 'failure' && 'Authenticate to Google Cloud' || steps.images.outcome == 'failure' && 'Push images' || steps.deploy.outcome == 'failure' && 'Deploy and verify' || '' }}
+        run: $GITHUB_WORKSPACE/.github/scripts/release.sh announce-failed prod "$RELEASE_TAG" "$STOPPED"
 
   # A failed run tells #alerts-ci which environment was not updated and what stopped it, except
-  # checks on a PR without a preview (they stay in the PR) and a preview deploy that failed
-  # (50-deploy-pr-preview has said so itself).
+  # checks on a PR without a preview (they stay in the PR) and a deploy job that failed (it
+  # has said so itself, in the message it posted when it began).
   notify-failure:
     name: 90-notify-failure
     if: >-
       failure()
-      && (github.event_name != 'pull_request'
+      && ((github.event_name != 'pull_request' && needs.deploy-staging.result != 'failure' && needs.deploy-prod.result != 'failure')
         || (needs.plan.outputs.deploy_pr == 'true' && needs.deploy-pr.result != 'failure')
         || needs.plan.outputs.teardown == 'true')
     needs: [plan, check-server, check-frontend, test-frontend, images, deploy-pr, teardown-pr, deploy-staging, deploy-prod]
