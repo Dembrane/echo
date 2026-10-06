@@ -1,7 +1,6 @@
-import { t } from "@lingui/core/macro";
+import { plural, t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
 import {
-	Alert,
 	Box,
 	Button,
 	Checkbox,
@@ -70,9 +69,11 @@ import {
 	usePresentation,
 } from "@/components/present/hooks";
 import {
+	countChangedFields,
 	presentationDraftKey,
 	usePresentationDraft,
 } from "@/components/present/hooks/usePresentationDraft";
+import { useRoomScreenOpen } from "@/components/present/hooks/useRoomScreen";
 import { TranslationStatus } from "@/components/present/TranslationStatus";
 import { HostGuideSettings } from "@/components/sharing/HostGuideSettings";
 import { LiveButton } from "@/components/sharing/LiveButton";
@@ -328,17 +329,20 @@ function DraftPreview({
 	presentation,
 	revision,
 	block,
+	notShown,
 }: {
 	projectId: string;
 	presentation: Presentation;
 	revision: number;
 	/** The tab the results panel below is on, so the preview shows the same. */
 	block?: PresentationBlock | null;
+	notShown: boolean;
 }) {
 	const save = usePopcornSettingsMutation(projectId, presentation.id);
 	return (
 		<Preview
 			block={block}
+			notShown={notShown}
 			presentation={presentation}
 			draft
 			revision={revision}
@@ -386,12 +390,15 @@ function Preview({
 	revision = 0,
 	onEditOpening,
 	block,
+	notShown = false,
 }: {
 	presentation: Presentation;
 	draft?: boolean;
 	revision?: number;
 	onEditOpening?: AudienceScreenProps["onEditOpening"];
 	block?: PresentationBlock | null;
+	/** The draft holds changes the room's screen isn't showing yet. */
+	notShown?: boolean;
 }) {
 	const eventTick = useContext(PresentationEventTick);
 	// The room's screen at its own size, shrunk to fit the column. At the
@@ -405,6 +412,16 @@ function Preview({
 				<Text size="sm">
 					<Trans>Audience preview</Trans>
 				</Text>
+				{notShown && (
+					<>
+						<Text size="sm" c="dimmed" aria-hidden>
+							·
+						</Text>
+						<Text size="sm" c="dimmed">
+							<Trans>Not on the room screen yet</Trans>
+						</Text>
+					</>
+				)}
 			</Group>
 			<div className={classes.viewport} ref={ref}>
 				<div
@@ -493,18 +510,31 @@ function Session({
 	);
 	// A host who may edit always has both: the presentation editor and the
 	// results panel are the dashboard, not a mode it can be put into. The
-	// preview shows the draft and Publish is always within reach.
+	// preview shows the draft.
 	const drafting = canEdit;
+	// While someone may be watching, edits wait in the draft until the host
+	// shows them; otherwise each one goes straight to the screen. The first
+	// reason that applies is the one the page gives.
+	const roomOpen = useRoomScreenOpen(presentation.id);
+	const isPublic = !!presentation.settings.public;
+	const watchedBy = roomOpen
+		? "screen"
+		: isLive
+			? "live"
+			: isPublic
+				? "public"
+				: null;
 	const draft = usePresentationDraft(
 		projectId,
 		presentation.id,
 		// A host who may edit also types into the opening on the preview below.
 		canEdit,
+		{ showAsSaved: !watchedBy },
 	);
 	const flushers = useRef(new Set<() => Promise<void>>());
 	const [pendingFields, setPendingFields] = useState(new Set<string>());
 	const [publishing, setPublishing] = useState(false);
-	const [publishError, setPublishError] = useState(false);
+	const [publishError, setPublishError] = useState<unknown>(null);
 	// The tab the results panel is on. The preview follows it, so choosing
 	// "Tensions" to review them puts the room's own tensions slide beside the
 	// list. Nothing here ever reaches the screen in the room.
@@ -514,7 +544,7 @@ function Session({
 	// A field that leaves takes its unsaved words with it, so it writes them on
 	// its way out: closing the editor used to be the moment for that, and the
 	// editor no longer closes. Leaving the page unmounts the fields and this
-	// runs for each of them; Publish still flushes them all first.
+	// runs for each of them; showing the changes still flushes them all first.
 	const registerFlush = useCallback((flush: () => Promise<void>) => {
 		flushers.current.add(flush);
 		return () => {
@@ -542,14 +572,43 @@ function Session({
 		}),
 		[draft.save.mutateAsync, registerFlush, setFieldPending],
 	);
+	// Share is a deliberate choice about who sees the presentation, so what is
+	// set there shows at once, with anything else that was waiting.
+	const shareEditor = useMemo(
+		() => ({
+			registerFlush,
+			save: async (
+				patch: import("@/components/popcorn/hooks").PopcornSettingsPatch,
+			) => (await draft.saveAndShow(patch)).presentation,
+			setFieldPending,
+		}),
+		[draft.saveAndShow, registerFlush, setFieldPending],
+	);
+	const changes = draft.query.data?.has_changes
+		? countChangedFields(
+				draft.query.data.presentation.settings,
+				presentation.settings,
+			)
+		: 0;
+	// Nobody watching: a change is on its way out, not waiting, until the
+	// show after its save has had its turn.
+	const settling =
+		pendingFields.size > 0 ||
+		draft.save.isPending ||
+		draft.publish.isPending ||
+		draft.showQueued;
+	const waiting =
+		canEdit &&
+		!!draft.query.data?.has_changes &&
+		(!!watchedBy || !settling || draft.publish.isError);
 	const publishChanges = async () => {
 		setPublishing(true);
-		setPublishError(false);
+		setPublishError(null);
 		try {
 			for (const flush of flushers.current) await flush();
 			await draft.publish.mutateAsync();
-		} catch {
-			setPublishError(true);
+		} catch (error) {
+			setPublishError(error);
 		} finally {
 			setPublishing(false);
 		}
@@ -557,26 +616,66 @@ function Session({
 	return (
 		<PresentationEventTick.Provider value={eventTick}>
 			<Stack gap="md">
-				<Stack gap="md">
-					<Stack gap={4}>
-						<Title order={2}>
-							<Trans>Present</Trans>
-						</Title>
-						<Text size="sm" c="dimmed">
-							{presentation.name}
-						</Text>
-						<StatusLine
-							live={isLive}
-							liveUntil={presentation.loop?.expires_at}
-							isPublic={presentation.settings.public}
-							extra={
-								canEdit && draft.query.data?.has_changes
-									? [t`Unpublished changes`]
-									: []
-							}
-						/>
+				{/* One row, as on the map: the title and its status on the left,
+				    the controls on the right. A phone stacks them. */}
+				<Group
+					gap="sm"
+					align="center"
+					justify="flex-start"
+					wrap="nowrap"
+					className="app-stack-narrow"
+				>
+					<Stack gap={4} className="min-w-0">
+						<Group gap="sm" align="baseline" wrap="nowrap" className="min-w-0">
+							<Title order={2}>
+								<Trans>Present</Trans>
+							</Title>
+							<Text size="sm" c="dimmed" className="min-w-0 truncate">
+								{presentation.name}
+							</Text>
+						</Group>
+						<Group gap="xs" wrap="wrap">
+							<StatusLine
+								live={isLive}
+								liveUntil={presentation.loop?.expires_at}
+								isPublic={isPublic}
+								extra={
+									waiting
+										? [
+												changes
+													? plural(changes, {
+															one: "# change not shown yet",
+															other: "# changes not shown yet",
+														})
+													: t`Changes not shown yet`,
+											]
+										: []
+								}
+							/>
+							{waiting && (
+								<>
+									<Text size="sm" c="dimmed" aria-hidden>
+										·
+									</Text>
+									<Button
+										variant="subtle"
+										size="compact-sm"
+										onClick={() => void publishChanges()}
+										loading={publishing}
+										disabled={draft.save.isPending}
+									>
+										<Trans>Show them</Trans>
+									</Button>
+								</>
+							)}
+						</Group>
 					</Stack>
-					<Group gap="xs" aria-label={t`Presentation controls`}>
+					<Group
+						gap="xs"
+						ml="auto"
+						className="shrink-0"
+						aria-label={t`Presentation controls`}
+					>
 						<Button
 							variant="filled"
 							onClick={open}
@@ -588,7 +687,7 @@ function Session({
 						{canEdit && (
 							<ShareButton>
 								{draft.query.data ? (
-									<SettingsSaveContext.Provider value={settingsEditor}>
+									<SettingsSaveContext.Provider value={shareEditor}>
 										<fieldset
 											disabled={publishing}
 											style={{ border: 0, margin: 0, minWidth: 0, padding: 0 }}
@@ -606,12 +705,12 @@ function Session({
 														/>
 													}
 												/>
-												<Text size="sm" c="dimmed">
-													<Trans>
-														The shared screen shows your published presentation.
-														Publish changes to update its content and access.
-													</Trans>
-												</Text>
+												{/* A refused change is read where it was made. */}
+												<ErrorNotice
+													error={draft.publish.error}
+													onRetry={() => void publishChanges()}
+													title={t`Changes could not be shown on the room screen`}
+												/>
 											</Stack>
 										</fieldset>
 									</SettingsSaveContext.Provider>
@@ -642,23 +741,7 @@ function Session({
 							/>
 						)}
 					</Group>
-				</Stack>
-				{canEdit && (
-					<Group justify="flex-start">
-						<Button
-							onClick={() => void publishChanges()}
-							loading={publishing}
-							disabled={
-								!draft.query.data ||
-								draft.save.isPending ||
-								draft.save.isError ||
-								(!draft.query.data.has_changes && !pendingFields.size)
-							}
-						>
-							<Trans>Publish changes</Trans>
-						</Button>
-					</Group>
-				)}
+				</Group>
 				{drafting ? (
 					draft.query.isError ? (
 						<Box {...testId("present-draft-error-panel")}>
@@ -682,10 +765,24 @@ function Session({
 								isError={draft.save.isError}
 							/>
 							<Text size="sm">
-								<Trans>
-									Changes are saved as a draft. Publish when you’re ready to
-									update the room screen.
-								</Trans>
+								{watchedBy === "screen" ? (
+									<Trans>
+										The room screen is open, so changes wait until you show
+										them.
+									</Trans>
+								) : watchedBy === "live" ? (
+									<Trans>
+										You’re live, so changes wait until you show them.
+									</Trans>
+								) : watchedBy === "public" ? (
+									<Trans>
+										The public page is on, so changes wait until you show them.
+									</Trans>
+								) : (
+									<Trans>
+										Changes show on the room screen as you make them.
+									</Trans>
+								)}
 							</Text>
 							<fieldset
 								disabled={publishing}
@@ -698,6 +795,7 @@ function Session({
 											projectId={projectId}
 											presentation={draft.query.data.presentation}
 											revision={draft.query.data.revision}
+											notShown={waiting}
 										/>
 										<Editor
 											projectId={projectId}
@@ -723,15 +821,12 @@ function Session({
 				) : (
 					<Preview presentation={presentation} />
 				)}
-				{publishError && (
-					<Alert color="red">
-						<Text size="sm">
-							<Trans>
-								Changes could not be published or saved. Review your draft and
-								try again.
-							</Trans>
-						</Text>
-					</Alert>
+				{canEdit && (
+					<ErrorNotice
+						error={draft.publish.error ?? publishError}
+						onRetry={() => void publishChanges()}
+						title={t`Changes could not be shown on the room screen`}
+					/>
 				)}
 				<Group justify="flex-start" gap="sm">
 					<Text size="sm" c="dimmed">

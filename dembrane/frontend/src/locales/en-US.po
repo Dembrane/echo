@@ -322,7 +322,7 @@ msgid "{0, plural, one {# payment} other {# payments}}"
 msgstr "{0, plural, one {# payment} other {# payments}}"
 
 #. placeholder {0}: presentation.counts.phrases
-#: src/routes/project/present/PresentRoute.tsx:738
+#: src/routes/project/present/PresentRoute.tsx:833
 msgid "{0, plural, one {# phrase} other {# phrases}}"
 msgstr "{0, plural, one {# phrase} other {# phrases}}"
 
@@ -726,6 +726,10 @@ msgstr "{argumentCount, plural, one {# argument} other {# arguments}}"
 #: src/components/map/MapPage.tsx:499
 msgid "{argumentCount, plural, one {# argument} other {# arguments}} from {conversationCount, plural, one {# conversation} other {# conversations}}"
 msgstr "{argumentCount, plural, one {# argument} other {# arguments}} from {conversationCount, plural, one {# conversation} other {# conversations}}"
+
+#: src/routes/project/present/PresentRoute.tsx:646
+msgid "{changes, plural, one {# change not shown yet} other {# changes not shown yet}}"
+msgstr "{changes, plural, one {# change not shown yet} other {# changes not shown yet}}"
 
 #: src/components/agent-access/AgentRiskNotice.tsx:27
 msgid "{clientName} and the company running it will receive the conversation content you allow."
@@ -1932,7 +1936,7 @@ msgstr "Also allow it to change project settings"
 msgid "Always on, it lives on our website"
 msgstr "Always on, it lives on our website"
 
-#: src/routes/project/present/PresentRoute.tsx:207
+#: src/routes/project/present/PresentRoute.tsx:208
 msgid "Always on. The screen opens here, so the room has something to read while the rest gets ready."
 msgstr "Always on. The screen opens here, so the room has something to read while the rest gets ready."
 
@@ -2158,7 +2162,7 @@ msgid "Anything you want to add"
 msgstr "Anything you want to add"
 
 #: src/routes/settings/UserSettingsRoute.tsx:106
-#: src/routes/project/present/PresentRoute.tsx:128
+#: src/routes/project/present/PresentRoute.tsx:129
 #: src/features/sidebar/views/user/UserSettingsView.tsx:28
 #: src/features/sidebar/hooks/useSearchHits.ts:86
 msgid "Appearance"
@@ -2459,11 +2463,11 @@ msgstr "Attach verified artifacts"
 msgid "participant.modal.interruption.issue.message"
 msgstr "Attention! We lost the last 60 seconds or so of your recording due to some interruption. Please press the button below to reconnect."
 
-#: src/routes/project/present/PresentRoute.tsx:263
+#: src/routes/project/present/PresentRoute.tsx:264
 msgid "Audience language:"
 msgstr "Audience language:"
 
-#: src/routes/project/present/PresentRoute.tsx:406
+#: src/routes/project/present/PresentRoute.tsx:413
 msgid "Audience preview"
 msgstr "Audience preview"
 
@@ -3157,16 +3161,29 @@ msgid "Changes applied. You can fine-tune them anytime in project settings."
 msgstr "Changes applied. You can fine-tune them anytime in project settings."
 
 #: src/routes/project/present/PresentRoute.tsx:685
-msgid "Changes are saved as a draft. Publish when you’re ready to update the room screen."
-msgstr "Changes are saved as a draft. Publish when you’re ready to update the room screen."
+#~ msgid "Changes are saved as a draft. Publish when you’re ready to update the room screen."
+#~ msgstr "Changes are saved as a draft. Publish when you’re ready to update the room screen."
 
 #: src/routes/project/present/PresentRoute.tsx:729
-msgid "Changes could not be published or saved. Review your draft and try again."
-msgstr "Changes could not be published or saved. Review your draft and try again."
+#~ msgid "Changes could not be published or saved. Review your draft and try again."
+#~ msgstr "Changes could not be published or saved. Review your draft and try again."
 
 #: src/routes/project/present/PresentRoute.tsx:716
 #~ msgid "Changes could not be published. Try again."
 #~ msgstr "Changes could not be published. Try again."
+
+#: src/routes/project/present/PresentRoute.tsx:712
+#: src/routes/project/present/PresentRoute.tsx:828
+msgid "Changes could not be shown on the room screen"
+msgstr "Changes could not be shown on the room screen"
+
+#: src/routes/project/present/PresentRoute.tsx:650
+msgid "Changes not shown yet"
+msgstr "Changes not shown yet"
+
+#: src/routes/project/present/PresentRoute.tsx:782
+msgid "Changes show on the room screen as you make them."
+msgstr "Changes show on the room screen as you make them."
 
 #: src/components/form/UnsavedChanges.tsx:20
 #~ msgid "Changes will be saved automatically"
@@ -3351,7 +3368,7 @@ msgstr "Choose from your other projects"
 msgid "Choose Summarize, Brainstorm Ideas or Custom reply modes."
 msgstr "Choose Summarize, Brainstorm Ideas or Custom reply modes."
 
-#: src/routes/project/present/PresentRoute.tsx:197
+#: src/routes/project/present/PresentRoute.tsx:198
 msgid "Choose the outcomes your audience can explore."
 msgstr "Choose the outcomes your audience can explore."
 
@@ -4190,7 +4207,7 @@ msgstr "Could not load payments. Check auth and backend logs."
 msgid "Could not load the canvas."
 msgstr "Could not load the canvas."
 
-#: src/routes/project/present/PresentRoute.tsx:770
+#: src/routes/project/present/PresentRoute.tsx:865
 msgid "Could not load the latest results"
 msgstr "Could not load the latest results"
 
@@ -4667,7 +4684,7 @@ msgstr "Data owner email"
 msgid "Data ownership"
 msgstr "Data ownership"
 
-#: src/routes/project/present/PresentRoute.tsx:124
+#: src/routes/project/present/PresentRoute.tsx:125
 msgid "Data policy"
 msgstr "Data policy"
 
@@ -5033,7 +5050,7 @@ msgstr "Didn't get it? Check spam or junk first. The message comes from dembrane
 msgid "Didn't get it? Check your spam or junk folder. The email comes from dembrane.com."
 msgstr "Didn't get it? Check your spam or junk folder. The email comes from dembrane.com."
 
-#: src/routes/project/present/PresentRoute.tsx:212
+#: src/routes/project/present/PresentRoute.tsx:213
 msgid "Different perspectives and trade-offs"
 msgstr "Different perspectives and trade-offs"
 
@@ -5501,7 +5518,7 @@ msgstr "Edited by {editedBy}, {editedOn}"
 msgid "Editing a conversation no longer triggers the affected save error."
 msgstr "Editing a conversation no longer triggers the affected save error."
 
-#: src/routes/project/present/PresentRoute.tsx:153
+#: src/routes/project/present/PresentRoute.tsx:154
 msgid "Editor section"
 msgstr "Editor section"
 
@@ -5655,7 +5672,7 @@ msgstr "Ends on {endDate}, then moves to Free"
 msgid "English"
 msgstr "English"
 
-#: src/routes/project/present/PresentRoute.tsx:268
+#: src/routes/project/present/PresentRoute.tsx:269
 msgid "English fallback"
 msgstr "English fallback"
 
@@ -5671,7 +5688,7 @@ msgstr "Enter a name for the new conversation"
 msgid "Enter a name for your cloned project"
 msgstr "Enter a name for your cloned project"
 
-#: src/routes/project/present/PresentRoute.tsx:374
+#: src/routes/project/present/PresentRoute.tsx:378
 msgid "Enter a presentation title"
 msgstr "Enter a presentation title"
 
@@ -6407,7 +6424,7 @@ msgstr "Focusing on:"
 msgid "Follow ongoing sessions in the live monitor."
 msgstr "Follow ongoing sessions in the live monitor."
 
-#: src/routes/project/present/PresentRoute.tsx:244
+#: src/routes/project/present/PresentRoute.tsx:245
 msgid "Follow project language"
 msgstr "Follow project language"
 
@@ -6578,7 +6595,7 @@ msgstr "Full transcript (when available)"
 msgid "Fullscreen"
 msgstr "Fullscreen"
 
-#: src/components/present/AudienceScreen.tsx:1305
+#: src/components/present/AudienceScreen.tsx:1306
 msgid "Fullscreen is unavailable in this browser."
 msgstr "Fullscreen is unavailable in this browser."
 
@@ -7029,7 +7046,7 @@ msgid "host guide"
 msgstr "host guide"
 
 #: src/routes/project/ProjectHomeRoute.tsx:101
-#: src/routes/project/present/PresentRoute.tsx:125
+#: src/routes/project/present/PresentRoute.tsx:126
 #: src/components/project/ProjectHostGuideLink.tsx:34
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:59
 msgid "Host guide"
@@ -7147,7 +7164,7 @@ msgstr "IBAN"
 msgid "ID"
 msgstr "ID"
 
-#: src/routes/project/present/PresentRoute.tsx:209
+#: src/routes/project/present/PresentRoute.tsx:210
 msgid "Ideas and how they connect"
 msgstr "Ideas and how they connect"
 
@@ -7346,7 +7363,7 @@ msgstr "Instructions for generating the verification outcome"
 msgid "interview"
 msgstr "interview"
 
-#: src/routes/project/present/PresentRoute.tsx:123
+#: src/routes/project/present/PresentRoute.tsx:124
 msgid "Intro"
 msgstr "Intro"
 
@@ -7579,7 +7596,7 @@ msgstr "Italian for your core workflows"
 msgid "Its arguments, and the tree between them"
 msgstr "Its arguments, and the tree between them"
 
-#: src/components/present/AudienceScreen.tsx:939
+#: src/components/present/AudienceScreen.tsx:940
 msgid "Its link may have been switched off. Ask the host."
 msgstr "Its link may have been switched off. Ask the host."
 
@@ -7820,7 +7837,7 @@ msgstr "Kind of change not recorded"
 msgid "Kinds of finding"
 msgstr "Kinds of finding"
 
-#: src/routes/project/present/PresentRoute.tsx:127
+#: src/routes/project/present/PresentRoute.tsx:128
 #: src/features/sidebar/shell/UserMenu.tsx:154
 #: src/components/settings/LanguageSettingsCard.tsx:10
 #: src/components/report/UpdateReportModalButton.tsx:265
@@ -8188,7 +8205,7 @@ msgstr "Loading artefact"
 msgid "Loading collections..."
 msgstr "Loading collections..."
 
-#: src/routes/project/present/PresentRoute.tsx:718
+#: src/routes/project/present/PresentRoute.tsx:816
 msgid "Loading draft"
 msgstr "Loading draft"
 
@@ -8216,8 +8233,8 @@ msgstr "Loading methodology"
 msgid "Loading microphones..."
 msgstr "Loading microphones..."
 
-#: src/routes/project/present/PresentRoute.tsx:628
-#: src/routes/project/present/PresentRoute.tsx:844
+#: src/routes/project/present/PresentRoute.tsx:727
+#: src/routes/project/present/PresentRoute.tsx:939
 msgid "Loading presentation"
 msgstr "Loading presentation"
 
@@ -9125,7 +9142,7 @@ msgstr "No accounts"
 msgid "No actions found"
 msgstr "No actions found"
 
-#: src/components/present/AudienceScreen.tsx:1107
+#: src/components/present/AudienceScreen.tsx:1108
 msgid "No activities are selected for this presentation."
 msgstr "No activities are selected for this presentation."
 
@@ -9689,6 +9706,10 @@ msgstr "Not now"
 msgid "Not on managed billing. Set to managed to invoice this account at the {tier} tier, with no automatic Mollie charges."
 msgstr "Not on managed billing. Set to managed to invoice this account at the {tier} tier, with no automatic Mollie charges."
 
+#: src/routes/project/present/PresentRoute.tsx:421
+msgid "Not on the room screen yet"
+msgstr "Not on the room screen yet"
+
 #: src/components/map/panels/ResultList.tsx:79
 msgid "Not placed on the map"
 msgstr "Not placed on the map"
@@ -10063,7 +10084,7 @@ msgstr "Open documentation"
 #~ msgid "Open host guide"
 #~ msgstr "Open host guide"
 
-#: src/routes/project/present/PresentRoute.tsx:763
+#: src/routes/project/present/PresentRoute.tsx:858
 #: src/components/results/ResultItem.tsx:846
 #: src/components/results/curate/RowTools.tsx:344
 #: src/components/results/curate/RowTools.tsx:347
@@ -10193,7 +10214,7 @@ msgstr "Open your authenticator app and enter the current six-digit code."
 msgid "Opening and frame"
 msgstr "Opening and frame"
 
-#: src/components/present/AudienceScreen.tsx:1014
+#: src/components/present/AudienceScreen.tsx:1015
 msgid "Opening screens"
 msgstr "Opening screens"
 
@@ -10382,7 +10403,7 @@ msgstr "Outcome updated!"
 msgid "outcomes"
 msgstr "outcomes"
 
-#: src/routes/project/present/PresentRoute.tsx:126
+#: src/routes/project/present/PresentRoute.tsx:127
 #: src/components/conversation/VerifiedArtefactsSection.tsx:92
 msgid "Outcomes"
 msgstr "Outcomes"
@@ -10705,7 +10726,7 @@ msgstr "People"
 msgid "People with access"
 msgstr "People with access"
 
-#: src/routes/project/present/PresentRoute.tsx:211
+#: src/routes/project/present/PresentRoute.tsx:212
 msgid "People, groups and what matters to them"
 msgstr "People, groups and what matters to them"
 
@@ -10841,7 +10862,7 @@ msgstr "Plans"
 msgid "Plans, gathers, and checks its work across many conversations."
 msgstr "Plans, gathers, and checks its work across many conversations."
 
-#: src/components/present/AudienceScreen.tsx:1210
+#: src/components/present/AudienceScreen.tsx:1211
 msgid "Playback and fullscreen"
 msgstr "Playback and fullscreen"
 
@@ -11115,26 +11136,26 @@ msgstr "Preparing this canvas. A first version will appear here when it is ready
 msgid "Preparing your experience"
 msgstr "Preparing your experience"
 
-#: src/routes/project/present/PresentRoute.tsx:563
-#: src/routes/project/present/PresentRoute.tsx:586
-#: src/routes/project/present/PresentRoute.tsx:828
+#: src/routes/project/present/PresentRoute.tsx:631
+#: src/routes/project/present/PresentRoute.tsx:685
+#: src/routes/project/present/PresentRoute.tsx:923
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:118
 msgid "Present"
 msgstr "Present"
 
-#: src/components/present/AudienceScreen.tsx:1048
+#: src/components/present/AudienceScreen.tsx:1049
 msgid "Presentation activities"
 msgstr "Presentation activities"
 
-#: src/routes/project/present/PresentRoute.tsx:579
+#: src/routes/project/present/PresentRoute.tsx:677
 msgid "Presentation controls"
 msgstr "Presentation controls"
 
-#: src/routes/project/present/PresentRoute.tsx:147
+#: src/routes/project/present/PresentRoute.tsx:148
 msgid "Presentation editor"
 msgstr "Presentation editor"
 
-#: src/routes/project/present/PresentRoute.tsx:371
+#: src/routes/project/present/PresentRoute.tsx:375
 msgid "Presentation title"
 msgstr "Presentation title"
 
@@ -11448,8 +11469,8 @@ msgid "Publish"
 msgstr "Publish"
 
 #: src/routes/project/present/PresentRoute.tsx:658
-msgid "Publish changes"
-msgstr "Publish changes"
+#~ msgid "Publish changes"
+#~ msgstr "Publish changes"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1243
 msgid "Publish report"
@@ -13637,7 +13658,7 @@ msgstr "Shared with {0} and {overflow} others"
 msgid "Sharing a private project with a non-member now offers an invitation instead of an error, granting access when they join the workspace."
 msgstr "Sharing a private project with a non-member now offers an invitation instead of an error, granting access when they join the workspace."
 
-#: src/routes/project/present/PresentRoute.tsx:210
+#: src/routes/project/present/PresentRoute.tsx:211
 msgid "Short phrases from the conversations"
 msgstr "Short phrases from the conversations"
 
@@ -13805,6 +13826,10 @@ msgstr "Show the invitation"
 #: src/features/sidebar/breadcrumbs/AppBreadcrumbs.tsx:326
 msgid "Show the path to this page"
 msgstr "Show the path to this page"
+
+#: src/routes/project/present/PresentRoute.tsx:667
+msgid "Show them"
+msgstr "Show them"
 
 #: src/components/results/ResultItem.tsx:712
 msgid "Show to the room"
@@ -14843,8 +14868,8 @@ msgstr "The default host guide now reminds hosts to turn on focus mode so notifi
 msgid "the dembrane team"
 msgstr "the dembrane team"
 
-#: src/routes/project/present/PresentRoute.tsx:622
-#: src/routes/project/present/PresentRoute.tsx:668
+#: src/routes/project/present/PresentRoute.tsx:721
+#: src/routes/project/present/PresentRoute.tsx:751
 msgid "The draft could not be loaded"
 msgstr "The draft could not be loaded"
 
@@ -14921,7 +14946,7 @@ msgstr "The host guide is what facilitators read before they run a session."
 msgid "The host guide screen shows the code to take part. Turn on participation in the portal editor to use it."
 msgstr "The host guide screen shows the code to take part. Turn on participation in the portal editor to use it."
 
-#: src/routes/project/present/PresentRoute.tsx:832
+#: src/routes/project/present/PresentRoute.tsx:927
 msgid "The host hasn’t prepared a presentation yet."
 msgstr "The host hasn’t prepared a presentation yet."
 
@@ -15052,7 +15077,7 @@ msgstr "The participant flow has clearer microphone checks."
 msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
 msgstr "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
 
-#: src/routes/project/present/PresentRoute.tsx:813
+#: src/routes/project/present/PresentRoute.tsx:908
 msgid "The presentation could not be loaded"
 msgstr "The presentation could not be loaded"
 
@@ -15060,7 +15085,7 @@ msgstr "The presentation could not be loaded"
 #~ msgid "The presentation could not be loaded."
 #~ msgstr "The presentation could not be loaded."
 
-#: src/routes/project/present/PresentRoute.tsx:806
+#: src/routes/project/present/PresentRoute.tsx:901
 msgid "The presentation could not be opened"
 msgstr "The presentation could not be opened"
 
@@ -15080,6 +15105,10 @@ msgstr "The project adopts the Business Source License 1.1."
 msgid "The project context is read by transcription, chat answers and canvas generation, so a change here reaches more than one screen."
 msgstr "The project context is read by transcription, chat answers and canvas generation, so a change here reaches more than one screen."
 
+#: src/routes/project/present/PresentRoute.tsx:778
+msgid "The public page is on, so changes wait until you show them."
+msgstr "The public page is on, so changes wait until you show them."
+
 #: src/components/popcorn/PopcornScreenSettings.tsx:84
 msgid "The pulls between what people want, verified against the conversations."
 msgstr "The pulls between what people want, verified against the conversations."
@@ -15097,6 +15126,10 @@ msgstr "The report ends with an invitation to add your voice."
 msgid "The report may start up to 5 minutes after the chosen time."
 msgstr "The report may start up to 5 minutes after the chosen time."
 
+#: src/routes/project/present/PresentRoute.tsx:769
+msgid "The room screen is open, so changes wait until you show them."
+msgstr "The room screen is open, so changes wait until you show them."
+
 #: src/components/popcorn/PopcornVoiceSection.tsx:61
 msgid "The room's own words, the ideas that moved the conversation."
 msgstr "The room's own words, the ideas that moved the conversation."
@@ -15110,8 +15143,8 @@ msgid "the selected conversation"
 msgstr "the selected conversation"
 
 #: src/routes/project/present/PresentRoute.tsx:610
-msgid "The shared screen shows your published presentation. Publish changes to update its content and access."
-msgstr "The shared screen shows your published presentation. Publish changes to update its content and access."
+#~ msgid "The shared screen shows your published presentation. Publish changes to update its content and access."
+#~ msgstr "The shared screen shows your published presentation. Publish changes to update its content and access."
 
 #: src/components/release/releases.ts:72
 msgid "The sidebar fits mobile screens more reliably, with corrected French navigation labels."
@@ -15508,11 +15541,11 @@ msgstr "this person"
 msgid "This portal is not accepting new sessions right now."
 msgstr "This portal is not accepting new sessions right now."
 
-#: src/components/present/AudienceScreen.tsx:934
+#: src/components/present/AudienceScreen.tsx:935
 msgid "This presentation could not be loaded."
 msgstr "This presentation could not be loaded."
 
-#: src/components/present/AudienceScreen.tsx:932
+#: src/components/present/AudienceScreen.tsx:933
 msgid "This presentation is not available."
 msgstr "This presentation is not available."
 
@@ -16098,7 +16131,7 @@ msgstr "Trigger automated workflows in tools like Zapier, Make, or n8n"
 msgid "Trouble logging in? Contact support@dembrane.com."
 msgstr "Trouble logging in? Contact support@dembrane.com."
 
-#: src/routes/project/present/PresentRoute.tsx:837
+#: src/routes/project/present/PresentRoute.tsx:932
 #: src/routes/project/present/PresentResultsPanel.tsx:158
 #: src/routes/project/chat/ProjectChatRoute.tsx:837
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:165
@@ -16142,7 +16175,7 @@ msgstr "Try it"
 #~ msgid "Try moving a bit closer to your microphone for better sound quality."
 #~ msgstr "Try moving a bit closer to your microphone for better sound quality."
 
-#: src/components/present/AudienceScreen.tsx:941
+#: src/components/present/AudienceScreen.tsx:942
 msgid "Trying again…"
 msgstr "Trying again…"
 
@@ -16334,8 +16367,8 @@ msgid "Unpin project"
 msgstr "Unpin project"
 
 #: src/routes/project/present/PresentRoute.tsx:574
-msgid "Unpublished changes"
-msgstr "Unpublished changes"
+#~ msgid "Unpublished changes"
+#~ msgstr "Unpublished changes"
 
 #: src/components/inbox/Inbox.tsx:437
 msgid "Unread"
@@ -16680,7 +16713,7 @@ msgstr "Use inherited default"
 msgid "Use Italian for chat, reports, transcription and participant onboarding cards."
 msgstr "Use Italian for chat, reports, transcription and participant onboarding cards."
 
-#: src/routes/project/present/PresentRoute.tsx:751
+#: src/routes/project/present/PresentRoute.tsx:846
 msgid "Use latest results"
 msgstr "Use latest results"
 
@@ -17954,6 +17987,10 @@ msgstr "You're an external collaborator in this organisation. Open one of the wo
 #: src/routes/invite/AcceptInviteRoute.tsx:111
 msgid "You're in"
 msgstr "You're in"
+
+#: src/routes/project/present/PresentRoute.tsx:774
+msgid "You’re live, so changes wait until you show them."
+msgstr "You’re live, so changes wait until you show them."
 
 #: src/routes/auth/Register.tsx:335
 msgid "You're logging in with the wrong email address"

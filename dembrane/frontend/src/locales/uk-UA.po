@@ -327,7 +327,7 @@ msgid "{0, plural, one {# payment} other {# payments}}"
 msgstr "{0, plural, one {# платіж} few {# платежі} many {# платежів} other {# платежів}}"
 
 #. placeholder {0}: presentation.counts.phrases
-#: src/routes/project/present/PresentRoute.tsx:738
+#: src/routes/project/present/PresentRoute.tsx:833
 msgid "{0, plural, one {# phrase} other {# phrases}}"
 msgstr "{0, plural, one {# фраза} few {# фрази} many {# фраз} other {# фрази}}"
 
@@ -731,6 +731,10 @@ msgstr "{argumentCount, plural, one {# аргумент} few {# аргумент
 #: src/components/map/MapPage.tsx:499
 msgid "{argumentCount, plural, one {# argument} other {# arguments}} from {conversationCount, plural, one {# conversation} other {# conversations}}"
 msgstr "{argumentCount, plural, one {# аргумент} few {# аргументи} many {# аргументів} other {# аргументу}} з {conversationCount, plural, one {# розмови} few {# розмов} many {# розмов} other {# розмови}}"
+
+#: src/routes/project/present/PresentRoute.tsx:646
+msgid "{changes, plural, one {# change not shown yet} other {# changes not shown yet}}"
+msgstr "{changes, plural, one {# зміну ще не показано} few {# зміни ще не показано} many {# змін ще не показано} other {# зміни ще не показано}}"
 
 #: src/components/agent-access/AgentRiskNotice.tsx:27
 msgid "{clientName} and the company running it will receive the conversation content you allow."
@@ -1937,7 +1941,7 @@ msgstr "Також дозволити йому змінювати налашту
 msgid "Always on, it lives on our website"
 msgstr "Працює постійно, розміщено на нашому сайті"
 
-#: src/routes/project/present/PresentRoute.tsx:207
+#: src/routes/project/present/PresentRoute.tsx:208
 msgid "Always on. The screen opens here, so the room has something to read while the rest gets ready."
 msgstr "Працює постійно. Екран відкривається тут, щоб учасники могли почитати, доки решта готується."
 
@@ -2163,7 +2167,7 @@ msgid "Anything you want to add"
 msgstr "Усе, що ви бажаєте додати"
 
 #: src/routes/settings/UserSettingsRoute.tsx:106
-#: src/routes/project/present/PresentRoute.tsx:128
+#: src/routes/project/present/PresentRoute.tsx:129
 #: src/features/sidebar/views/user/UserSettingsView.tsx:28
 #: src/features/sidebar/hooks/useSearchHits.ts:86
 msgid "Appearance"
@@ -2464,11 +2468,11 @@ msgstr "Додати перевірені артефакти"
 msgid "participant.modal.interruption.issue.message"
 msgstr "Attention! We lost the last 60 seconds or so of your recording due to some interruption. Please press the button below to reconnect."
 
-#: src/routes/project/present/PresentRoute.tsx:263
+#: src/routes/project/present/PresentRoute.tsx:264
 msgid "Audience language:"
 msgstr "Мова аудиторії:"
 
-#: src/routes/project/present/PresentRoute.tsx:406
+#: src/routes/project/present/PresentRoute.tsx:413
 msgid "Audience preview"
 msgstr "Попередній перегляд для аудиторії"
 
@@ -3162,16 +3166,29 @@ msgid "Changes applied. You can fine-tune them anytime in project settings."
 msgstr "Зміни застосовано. Ви можете уточнити їх будь-коли в налаштуваннях проєкту."
 
 #: src/routes/project/present/PresentRoute.tsx:685
-msgid "Changes are saved as a draft. Publish when you’re ready to update the room screen."
-msgstr "Зміни збережено як чернетку. Опублікуйте, коли будете готові оновити екран зали."
+#~ msgid "Changes are saved as a draft. Publish when you’re ready to update the room screen."
+#~ msgstr "Зміни збережено як чернетку. Опублікуйте, коли будете готові оновити екран зали."
 
 #: src/routes/project/present/PresentRoute.tsx:729
-msgid "Changes could not be published or saved. Review your draft and try again."
-msgstr "Не вдалося опублікувати або зберегти зміни. Перевірте чернетку та спробуйте знову."
+#~ msgid "Changes could not be published or saved. Review your draft and try again."
+#~ msgstr "Не вдалося опублікувати або зберегти зміни. Перевірте чернетку та спробуйте знову."
 
 #: src/routes/project/present/PresentRoute.tsx:716
 #~ msgid "Changes could not be published. Try again."
 #~ msgstr "Не вдалося опублікувати зміни. Спробуйте знову."
+
+#: src/routes/project/present/PresentRoute.tsx:712
+#: src/routes/project/present/PresentRoute.tsx:828
+msgid "Changes could not be shown on the room screen"
+msgstr "Не вдалося показати зміни на екрані зали"
+
+#: src/routes/project/present/PresentRoute.tsx:650
+msgid "Changes not shown yet"
+msgstr "Зміни ще не показано"
+
+#: src/routes/project/present/PresentRoute.tsx:782
+msgid "Changes show on the room screen as you make them."
+msgstr "Зміни з’являються на екрані зали одразу, як ви їх вносите."
 
 #: src/components/form/UnsavedChanges.tsx:20
 #~ msgid "Changes will be saved automatically"
@@ -3356,7 +3373,7 @@ msgstr "Choose from your other projects"
 msgid "Choose Summarize, Brainstorm Ideas or Custom reply modes."
 msgstr "Вибирайте режими відповідей: «Підсумувати», «Генерувати ідеї» чи власний."
 
-#: src/routes/project/present/PresentRoute.tsx:197
+#: src/routes/project/present/PresentRoute.tsx:198
 msgid "Choose the outcomes your audience can explore."
 msgstr "Виберіть результати, доступні для вашої аудиторії."
 
@@ -4195,7 +4212,7 @@ msgstr "Не вдалося завантажити платежі. Переві�
 msgid "Could not load the canvas."
 msgstr "Не вдалося завантажити полотно."
 
-#: src/routes/project/present/PresentRoute.tsx:770
+#: src/routes/project/present/PresentRoute.tsx:865
 msgid "Could not load the latest results"
 msgstr "Не вдалося завантажити останні результати"
 
@@ -4672,7 +4689,7 @@ msgstr "Email власника даних"
 msgid "Data ownership"
 msgstr "Право власності на дані"
 
-#: src/routes/project/present/PresentRoute.tsx:124
+#: src/routes/project/present/PresentRoute.tsx:125
 msgid "Data policy"
 msgstr "Політика щодо даних"
 
@@ -5038,7 +5055,7 @@ msgstr "Не отримали лист? Спершу перевірте спам
 msgid "Didn't get it? Check your spam or junk folder. The email comes from dembrane.com."
 msgstr "Не отримали лист? Перевірте папку зі спамом. Лист надходить від dembrane.com."
 
-#: src/routes/project/present/PresentRoute.tsx:212
+#: src/routes/project/present/PresentRoute.tsx:213
 msgid "Different perspectives and trade-offs"
 msgstr "Різні погляди та компроміси"
 
@@ -5506,7 +5523,7 @@ msgstr "Змінено: {editedBy}, {editedOn}"
 msgid "Editing a conversation no longer triggers the affected save error."
 msgstr "Редагування розмови більше не спричиняє помилку збереження."
 
-#: src/routes/project/present/PresentRoute.tsx:153
+#: src/routes/project/present/PresentRoute.tsx:154
 msgid "Editor section"
 msgstr "Розділ редактора"
 
@@ -5660,7 +5677,7 @@ msgstr "Діє до {endDate}, потім переходить на Free"
 msgid "English"
 msgstr "English"
 
-#: src/routes/project/present/PresentRoute.tsx:268
+#: src/routes/project/present/PresentRoute.tsx:269
 msgid "English fallback"
 msgstr "Резервна англійська версія"
 
@@ -5676,7 +5693,7 @@ msgstr "Enter a name for the new conversation"
 msgid "Enter a name for your cloned project"
 msgstr "Enter a name for your cloned project"
 
-#: src/routes/project/present/PresentRoute.tsx:374
+#: src/routes/project/present/PresentRoute.tsx:378
 msgid "Enter a presentation title"
 msgstr "Введіть назву презентації"
 
@@ -6412,7 +6429,7 @@ msgstr "У фокусі:"
 msgid "Follow ongoing sessions in the live monitor."
 msgstr "Стежте за поточними сесіями у живому моніторі."
 
-#: src/routes/project/present/PresentRoute.tsx:244
+#: src/routes/project/present/PresentRoute.tsx:245
 msgid "Follow project language"
 msgstr "Використовувати мову проєкту"
 
@@ -6583,7 +6600,7 @@ msgstr "Full transcript (when available)"
 msgid "Fullscreen"
 msgstr "Fullscreen"
 
-#: src/components/present/AudienceScreen.tsx:1305
+#: src/components/present/AudienceScreen.tsx:1306
 msgid "Fullscreen is unavailable in this browser."
 msgstr "Повноекранний режим недоступний у цьому браузері."
 
@@ -7034,7 +7051,7 @@ msgid "host guide"
 msgstr "посібник ведучого"
 
 #: src/routes/project/ProjectHomeRoute.tsx:101
-#: src/routes/project/present/PresentRoute.tsx:125
+#: src/routes/project/present/PresentRoute.tsx:126
 #: src/components/project/ProjectHostGuideLink.tsx:34
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:59
 msgid "Host guide"
@@ -7152,7 +7169,7 @@ msgstr "IBAN"
 msgid "ID"
 msgstr "ID"
 
-#: src/routes/project/present/PresentRoute.tsx:209
+#: src/routes/project/present/PresentRoute.tsx:210
 msgid "Ideas and how they connect"
 msgstr "Ідеї та зв'язки між ними"
 
@@ -7351,7 +7368,7 @@ msgstr "Instructions for generating the verification outcome"
 msgid "interview"
 msgstr "інтерв'ю"
 
-#: src/routes/project/present/PresentRoute.tsx:123
+#: src/routes/project/present/PresentRoute.tsx:124
 msgid "Intro"
 msgstr "Вступ"
 
@@ -7584,7 +7601,7 @@ msgstr "Італійська для основних процесів"
 msgid "Its arguments, and the tree between them"
 msgstr "Його аргументи та дерево між ними"
 
-#: src/components/present/AudienceScreen.tsx:939
+#: src/components/present/AudienceScreen.tsx:940
 msgid "Its link may have been switched off. Ask the host."
 msgstr "Посилання могло бути вимкнене. Зверніться до організатора."
 
@@ -7825,7 +7842,7 @@ msgstr "Тип зміни не зафіксовано"
 msgid "Kinds of finding"
 msgstr "Типи знахідок"
 
-#: src/routes/project/present/PresentRoute.tsx:127
+#: src/routes/project/present/PresentRoute.tsx:128
 #: src/features/sidebar/shell/UserMenu.tsx:154
 #: src/components/settings/LanguageSettingsCard.tsx:10
 #: src/components/report/UpdateReportModalButton.tsx:265
@@ -8193,7 +8210,7 @@ msgstr "Loading artefact"
 msgid "Loading collections..."
 msgstr "Loading collections..."
 
-#: src/routes/project/present/PresentRoute.tsx:718
+#: src/routes/project/present/PresentRoute.tsx:816
 msgid "Loading draft"
 msgstr "Завантаження чернетки"
 
@@ -8221,8 +8238,8 @@ msgstr "Завантаження методології"
 msgid "Loading microphones..."
 msgstr "Loading microphones..."
 
-#: src/routes/project/present/PresentRoute.tsx:628
-#: src/routes/project/present/PresentRoute.tsx:844
+#: src/routes/project/present/PresentRoute.tsx:727
+#: src/routes/project/present/PresentRoute.tsx:939
 msgid "Loading presentation"
 msgstr "Завантаження презентації"
 
@@ -9130,7 +9147,7 @@ msgstr "Немає облікових записів"
 msgid "No actions found"
 msgstr "No actions found"
 
-#: src/components/present/AudienceScreen.tsx:1107
+#: src/components/present/AudienceScreen.tsx:1108
 msgid "No activities are selected for this presentation."
 msgstr "Для цієї презентації не вибрано жодних активностей."
 
@@ -9694,6 +9711,10 @@ msgstr "Не зараз"
 msgid "Not on managed billing. Set to managed to invoice this account at the {tier} tier, with no automatic Mollie charges."
 msgstr "Не на керованому виставленні рахунків. Увімкніть його, щоб виставляти рахунки для цього акаунта за тарифом {tier} без автоматичних списань Mollie."
 
+#: src/routes/project/present/PresentRoute.tsx:421
+msgid "Not on the room screen yet"
+msgstr "Ще не на екрані зали"
+
 #: src/components/map/panels/ResultList.tsx:79
 msgid "Not placed on the map"
 msgstr "Не розміщено на мапі"
@@ -10068,7 +10089,7 @@ msgstr "Відкрити документацію"
 #~ msgid "Open host guide"
 #~ msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:763
+#: src/routes/project/present/PresentRoute.tsx:858
 #: src/components/results/ResultItem.tsx:846
 #: src/components/results/curate/RowTools.tsx:344
 #: src/components/results/curate/RowTools.tsx:347
@@ -10198,7 +10219,7 @@ msgstr "Open your authenticator app and enter the current six-digit code."
 msgid "Opening and frame"
 msgstr "Вступ та обрамлення"
 
-#: src/components/present/AudienceScreen.tsx:1014
+#: src/components/present/AudienceScreen.tsx:1015
 msgid "Opening screens"
 msgstr "Вступні екрани"
 
@@ -10387,7 +10408,7 @@ msgstr "Outcome updated!"
 msgid "outcomes"
 msgstr "outcomes"
 
-#: src/routes/project/present/PresentRoute.tsx:126
+#: src/routes/project/present/PresentRoute.tsx:127
 #: src/components/conversation/VerifiedArtefactsSection.tsx:92
 msgid "Outcomes"
 msgstr "Outcomes"
@@ -10710,7 +10731,7 @@ msgstr "Люди"
 msgid "People with access"
 msgstr "Люди з доступом"
 
-#: src/routes/project/present/PresentRoute.tsx:211
+#: src/routes/project/present/PresentRoute.tsx:212
 msgid "People, groups and what matters to them"
 msgstr "Люди, групи та те, що для них важливо"
 
@@ -10846,7 +10867,7 @@ msgstr "Тарифи"
 msgid "Plans, gathers, and checks its work across many conversations."
 msgstr "Планує, збирає та перевіряє свою роботу в багатьох розмовах."
 
-#: src/components/present/AudienceScreen.tsx:1210
+#: src/components/present/AudienceScreen.tsx:1211
 msgid "Playback and fullscreen"
 msgstr "Відтворення та повноекранний режим"
 
@@ -11120,26 +11141,26 @@ msgstr "Готуємо це полотно. Перша версія з'явит�
 msgid "Preparing your experience"
 msgstr "Preparing your experience"
 
-#: src/routes/project/present/PresentRoute.tsx:563
-#: src/routes/project/present/PresentRoute.tsx:586
-#: src/routes/project/present/PresentRoute.tsx:828
+#: src/routes/project/present/PresentRoute.tsx:631
+#: src/routes/project/present/PresentRoute.tsx:685
+#: src/routes/project/present/PresentRoute.tsx:923
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:118
 msgid "Present"
 msgstr "Презентувати"
 
-#: src/components/present/AudienceScreen.tsx:1048
+#: src/components/present/AudienceScreen.tsx:1049
 msgid "Presentation activities"
 msgstr "Активності презентації"
 
-#: src/routes/project/present/PresentRoute.tsx:579
+#: src/routes/project/present/PresentRoute.tsx:677
 msgid "Presentation controls"
 msgstr "Керування презентацією"
 
-#: src/routes/project/present/PresentRoute.tsx:147
+#: src/routes/project/present/PresentRoute.tsx:148
 msgid "Presentation editor"
 msgstr "Редактор презентації"
 
-#: src/routes/project/present/PresentRoute.tsx:371
+#: src/routes/project/present/PresentRoute.tsx:375
 msgid "Presentation title"
 msgstr "Назва презентації"
 
@@ -11453,8 +11474,8 @@ msgid "Publish"
 msgstr "Publish"
 
 #: src/routes/project/present/PresentRoute.tsx:658
-msgid "Publish changes"
-msgstr "Опублікувати зміни"
+#~ msgid "Publish changes"
+#~ msgstr "Опублікувати зміни"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1243
 msgid "Publish report"
@@ -13642,7 +13663,7 @@ msgstr "Надано доступ для {0} та ще {overflow}"
 msgid "Sharing a private project with a non-member now offers an invitation instead of an error, granting access when they join the workspace."
 msgstr "Коли ти ділишся приватним проєктом із людиною, яка ще не є учасником, тепер можна надіслати запрошення замість отримання помилки. Доступ надається після приєднання до робочого простору."
 
-#: src/routes/project/present/PresentRoute.tsx:210
+#: src/routes/project/present/PresentRoute.tsx:211
 msgid "Short phrases from the conversations"
 msgstr "Короткі фрази з розмов"
 
@@ -13810,6 +13831,10 @@ msgstr "Показувати запрошення"
 #: src/features/sidebar/breadcrumbs/AppBreadcrumbs.tsx:326
 msgid "Show the path to this page"
 msgstr "Показати шлях до цієї сторінки"
+
+#: src/routes/project/present/PresentRoute.tsx:667
+msgid "Show them"
+msgstr "Показати"
 
 #: src/components/results/ResultItem.tsx:712
 msgid "Show to the room"
@@ -14848,8 +14873,8 @@ msgstr "Стандартний посібник ведучого тепер на
 msgid "the dembrane team"
 msgstr "команда dembrane"
 
-#: src/routes/project/present/PresentRoute.tsx:622
-#: src/routes/project/present/PresentRoute.tsx:668
+#: src/routes/project/present/PresentRoute.tsx:721
+#: src/routes/project/present/PresentRoute.tsx:751
 msgid "The draft could not be loaded"
 msgstr "Не вдалося завантажити чернетку"
 
@@ -14926,7 +14951,7 @@ msgstr "Посібник для ведучого: це те, що фасиліт
 msgid "The host guide screen shows the code to take part. Turn on participation in the portal editor to use it."
 msgstr "Екран посібника ведучого показує код для участі. Увімкніть участь у редакторі порталу, щоб ним скористатися."
 
-#: src/routes/project/present/PresentRoute.tsx:832
+#: src/routes/project/present/PresentRoute.tsx:927
 msgid "The host hasn’t prepared a presentation yet."
 msgstr "Ведучий ще не підготував презентацію."
 
@@ -15058,7 +15083,7 @@ msgstr "У сценарії учасника перевірка мікрофон
 msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
 msgstr "Портали працюватимуть і далі! Ваші учасники ніколи не відключаються, і ніщо зі сказаного ними не губиться. Щойно ви перейдете на платний тариф, транскрипція опрацює все вже записане."
 
-#: src/routes/project/present/PresentRoute.tsx:813
+#: src/routes/project/present/PresentRoute.tsx:908
 msgid "The presentation could not be loaded"
 msgstr "Не вдалося завантажити презентацію"
 
@@ -15066,7 +15091,7 @@ msgstr "Не вдалося завантажити презентацію"
 #~ msgid "The presentation could not be loaded."
 #~ msgstr "Не вдалося завантажити презентацію."
 
-#: src/routes/project/present/PresentRoute.tsx:806
+#: src/routes/project/present/PresentRoute.tsx:901
 msgid "The presentation could not be opened"
 msgstr "Не вдалося відкрити презентацію"
 
@@ -15086,6 +15111,10 @@ msgstr "Проєкт переходить на ліцензію Business Source 
 msgid "The project context is read by transcription, chat answers and canvas generation, so a change here reaches more than one screen."
 msgstr "Контекст проєкту використовується транскрипцією, відповідями в чаті та генерацією полотен, тому зміна тут впливає на декілька екранів."
 
+#: src/routes/project/present/PresentRoute.tsx:778
+msgid "The public page is on, so changes wait until you show them."
+msgstr "Публічна сторінка увімкнена, тож зміни чекають, доки ви їх не покажете."
+
 #: src/components/popcorn/PopcornScreenSettings.tsx:84
 msgid "The pulls between what people want, verified against the conversations."
 msgstr "Протиріччя між бажаннями людей, перевірені за матеріалами розмов."
@@ -15103,6 +15132,10 @@ msgstr "Звіт завершується запрошенням додати с
 msgid "The report may start up to 5 minutes after the chosen time."
 msgstr "The report may start up to 5 minutes after the chosen time."
 
+#: src/routes/project/present/PresentRoute.tsx:769
+msgid "The room screen is open, so changes wait until you show them."
+msgstr "Екран зали відкритий, тож зміни чекають, доки ви їх не покажете."
+
 #: src/components/popcorn/PopcornVoiceSection.tsx:61
 msgid "The room's own words, the ideas that moved the conversation."
 msgstr "Власні слова зали, ідеї, що рухали розмову."
@@ -15116,8 +15149,8 @@ msgid "the selected conversation"
 msgstr "вибрана розмова"
 
 #: src/routes/project/present/PresentRoute.tsx:610
-msgid "The shared screen shows your published presentation. Publish changes to update its content and access."
-msgstr "На спільному екрані показується ваша опублікована презентація. Опублікуйте зміни, щоб оновити її вміст і доступ."
+#~ msgid "The shared screen shows your published presentation. Publish changes to update its content and access."
+#~ msgstr "На спільному екрані показується ваша опублікована презентація. Опублікуйте зміни, щоб оновити її вміст і доступ."
 
 #: src/components/release/releases.ts:72
 msgid "The sidebar fits mobile screens more reliably, with corrected French navigation labels."
@@ -15514,11 +15547,11 @@ msgstr "ця особа"
 msgid "This portal is not accepting new sessions right now."
 msgstr "Цей портал зараз не приймає нові сесії."
 
-#: src/components/present/AudienceScreen.tsx:934
+#: src/components/present/AudienceScreen.tsx:935
 msgid "This presentation could not be loaded."
 msgstr "Не вдалося завантажити цю презентацію."
 
-#: src/components/present/AudienceScreen.tsx:932
+#: src/components/present/AudienceScreen.tsx:933
 msgid "This presentation is not available."
 msgstr "Ця презентація недоступна."
 
@@ -16104,7 +16137,7 @@ msgstr "Trigger automated workflows in tools like Zapier, Make, or n8n"
 msgid "Trouble logging in? Contact support@dembrane.com."
 msgstr "Не вдається увійти? Напишіть на support@dembrane.com."
 
-#: src/routes/project/present/PresentRoute.tsx:837
+#: src/routes/project/present/PresentRoute.tsx:932
 #: src/routes/project/present/PresentResultsPanel.tsx:158
 #: src/routes/project/chat/ProjectChatRoute.tsx:837
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:165
@@ -16148,7 +16181,7 @@ msgstr "Спробувати"
 #~ msgid "Try moving a bit closer to your microphone for better sound quality."
 #~ msgstr "Try moving a bit closer to your microphone for better sound quality."
 
-#: src/components/present/AudienceScreen.tsx:941
+#: src/components/present/AudienceScreen.tsx:942
 msgid "Trying again…"
 msgstr "Повторна спроба…"
 
@@ -16340,8 +16373,8 @@ msgid "Unpin project"
 msgstr "Unpin project"
 
 #: src/routes/project/present/PresentRoute.tsx:574
-msgid "Unpublished changes"
-msgstr "Неопубліковані зміни"
+#~ msgid "Unpublished changes"
+#~ msgstr "Неопубліковані зміни"
 
 #: src/components/inbox/Inbox.tsx:437
 msgid "Unread"
@@ -16686,7 +16719,7 @@ msgstr "Використати успадковане значення"
 msgid "Use Italian for chat, reports, transcription and participant onboarding cards."
 msgstr "Використовуйте італійську для чату, звітів, транскрипції та карток онбордингу учасників."
 
-#: src/routes/project/present/PresentRoute.tsx:751
+#: src/routes/project/present/PresentRoute.tsx:846
 msgid "Use latest results"
 msgstr "Використати останні результати"
 
@@ -17961,6 +17994,10 @@ msgstr "Ви є зовнішнім учасником у цій організа
 #: src/routes/invite/AcceptInviteRoute.tsx:111
 msgid "You're in"
 msgstr "Ви всередині"
+
+#: src/routes/project/present/PresentRoute.tsx:774
+msgid "You’re live, so changes wait until you show them."
+msgstr "Ви в ефірі, тож зміни чекають, доки ви їх не покажете."
 
 #: src/routes/auth/Register.tsx:335
 msgid "You're logging in with the wrong email address"

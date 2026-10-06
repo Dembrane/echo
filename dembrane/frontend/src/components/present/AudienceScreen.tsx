@@ -46,6 +46,7 @@ import {
 import type { PresentationBlock as AudienceBlock } from "./blocks";
 import { useAudience } from "./hooks/useAudience";
 import { type AudienceTheme, useAudienceTheme } from "./hooks/useAudienceTheme";
+import { useAnnounceRoomScreen } from "./hooks/useRoomScreen";
 
 export type AudienceScreenProps = {
 	presentationId?: string;
@@ -1323,6 +1324,8 @@ export const AudienceScreenRoute = () => {
 		);
 		if (locale && i18n.locale !== locale) void activateLanguage(locale);
 	}, []);
+	// The Present page holds edits back while the room is watching.
+	useAnnounceRoomScreen(presentationId);
 	// The room screen is for showing, not for writing: the opening slides are
 	// reworded in the dashboard's preview on the Present page, never on the
 	// projector. Without `onEditOpening` the deck never gets the editing command.

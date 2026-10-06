@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import posthog from "posthog-js";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import type {
 	PopcornSettings,
 	PopcornSettingsPatch,
@@ -67,6 +67,39 @@ export function mergeDraftSettings(
 	return merged as PopcornSettings;
 }
 
+const isPlainObject = (value: unknown): value is Record<string, unknown> =>
+	!!value && typeof value === "object" && !Array.isArray(value);
+
+/**
+ * How many fields the draft holds that the room isn't showing: a top-level
+ * setting counts once, a block once per field changed inside it. The bindings
+ * to results advance outside the editor and are never a change of the host's.
+ */
+export function countChangedFields(
+	draft: PopcornSettings,
+	shown: PopcornSettings,
+): number {
+	const a = draft as Record<string, unknown>;
+	const b = shown as Record<string, unknown>;
+	const same = (x: unknown, y: unknown) =>
+		JSON.stringify(x ?? null) === JSON.stringify(y ?? null);
+	let count = 0;
+	for (const key of new Set([...Object.keys(a), ...Object.keys(b)])) {
+		if (key.startsWith("_")) continue;
+		const [x, y] = [a[key], b[key]];
+		if (isPlainObject(x) && isPlainObject(y)) {
+			for (const field of new Set([...Object.keys(x), ...Object.keys(y)])) {
+				if (key === "presentation" && field === "result_bindings") continue;
+				if (!same(x[field], y[field])) count += 1;
+			}
+		} else if (!same(x, y)) count += 1;
+	}
+	return count;
+}
+
+// How long after the last saved field a draft nobody is watching goes out.
+const SHOW_AFTER_MS = 300;
+
 const withPatch = (draft: Draft, patch: PopcornSettingsPatch): Draft => ({
 	...draft,
 	has_changes: true,
@@ -80,9 +113,26 @@ export function usePresentationDraft(
 	projectId: string,
 	id: string,
 	enabled: boolean,
+	{
+		showAsSaved = false,
+	}: {
+		/**
+		 * Nobody is watching the room: every saved field goes straight on to the
+		 * screen. Otherwise the draft keeps it until the host shows it.
+		 */
+		showAsSaved?: boolean;
+	} = {},
 ) {
 	const client = useQueryClient();
 	const key = presentationDraftKey(id);
+	const autoShow = useRef(showAsSaved);
+	autoShow.current = showAsSaved;
+	const showTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+	// A saved field on its way to the screen, so the page doesn't call it
+	// waiting for the moment between the save and the show.
+	const [showQueued, setShowQueued] = useState(false);
+	// Saves that show themselves (see saveAndShow) leave the timer alone.
+	const showing = useRef(0);
 	const revision = useRef(0);
 	// Every optimistic patch takes the next number. A failed save may only put
 	// its snapshot back while it is still the last one written, otherwise a
@@ -130,6 +180,7 @@ export function usePresentationDraft(
 		},
 		mutationKey: key,
 		onError: (_error, _patch, context) => {
+			setShowQueued(false);
 			if (!context) return;
 			if (context.seq !== applied.current || !context.previous) {
 				// Another patch landed after this one: its value, not this stale
@@ -146,9 +197,26 @@ export function usePresentationDraft(
 			if (previous) client.setQueryData(key, withPatch(previous, patch));
 			return { previous, seq };
 		},
-		onSuccess: accept,
+		onSuccess: (draft) => {
+			accept(draft);
+			if (autoShow.current && !showing.current && draft.has_changes) showSoon();
+		},
 		scope: { id: `presentation-draft-${id}` },
 	});
+	// Fields save one by one as the host types; the draft goes out once they
+	// settle. A save still in flight schedules this again when it lands.
+	const showSoon = () => {
+		if (showTimer.current) clearTimeout(showTimer.current);
+		setShowQueued(true);
+		showTimer.current = setTimeout(() => {
+			showTimer.current = null;
+			if (client.isMutating({ mutationKey: key })) return;
+			setShowQueued(false);
+			if (!autoShow.current || !client.getQueryData<Draft>(key)?.has_changes)
+				return;
+			publish.mutate();
+		}, SHOW_AFTER_MS);
+	};
 	const publish = useMutation({
 		mutationFn: () =>
 			bff.post<Draft>(`${path}/publish`, {
@@ -170,5 +238,15 @@ export function usePresentationDraft(
 		},
 		scope: { id: `presentation-draft-${id}` },
 	});
-	return { publish, query, save };
+	/** A change that shows at once, whoever is watching, with all that waited. */
+	const saveAndShow = async (patch: PopcornSettingsPatch) => {
+		showing.current += 1;
+		try {
+			await save.mutateAsync(patch);
+		} finally {
+			showing.current -= 1;
+		}
+		return publish.mutateAsync();
+	};
+	return { publish, query, save, saveAndShow, showQueued };
 }

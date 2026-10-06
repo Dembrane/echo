@@ -384,11 +384,50 @@ describe("Keeping the presentation and its results apart", () => {
 		).toBe("true");
 	});
 
-	it("keeps Publish in reach without a mode to be in", async () => {
+	it("shows changes as they are made while nobody is watching", async () => {
 		show();
 		expect(
-			await screen.findByRole("button", { name: "Publish changes" }),
+			await screen.findByText(
+				"Changes show on the room screen as you make them.",
+			),
 		).toBeTruthy();
+		expect(screen.queryByRole("button", { name: "Show them" })).toBeNull();
+	});
+
+	it("holds changes back while the public page is on, until the host shows them", async () => {
+		const watched = {
+			...presentation,
+			settings: { ...presentation.settings, public: true },
+		};
+		const edited = {
+			...watched,
+			settings: { ...watched.settings, title: "Workshop, day two" },
+		};
+		vi.mocked(bff.get).mockImplementation(async (url) => {
+			if (url.endsWith("/draft"))
+				return { has_changes: true, presentation: edited, revision: 4 };
+			if (url.endsWith("/updates")) return { available: false };
+			return { can_edit: true, presentation: watched };
+		});
+		vi.mocked(bff.post).mockResolvedValue({
+			has_changes: false,
+			presentation: edited,
+			revision: 5,
+		});
+		show();
+		expect(
+			await screen.findByText(
+				"The public page is on, so changes wait until you show them.",
+			),
+		).toBeTruthy();
+		expect(screen.getByText("1 change not shown yet")).toBeTruthy();
+		expect(screen.getByText("Not on the room screen yet")).toBeTruthy();
+		fireEvent.click(screen.getByRole("button", { name: "Show them" }));
+		await waitFor(() =>
+			expect(bff.post).toHaveBeenCalledWith("/present/empty-screen/publish", {
+				expected_revision: 4,
+			}),
+		);
 	});
 
 	it("lets the host type into the opening on the preview, into the draft", async () => {
