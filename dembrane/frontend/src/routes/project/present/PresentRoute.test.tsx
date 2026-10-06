@@ -61,9 +61,10 @@ vi.mock("@/components/popcorn/PopcornShare", () => ({
 	PopcornShare: () => <div>Sharing settings</div>,
 }));
 const saveSettings = vi.fn();
+const goLive = vi.fn();
 vi.mock("@/components/popcorn/hooks", () => ({
 	liveBooking: () => null,
-	usePopcornLiveMutation: () => ({ mutate: vi.fn() }),
+	usePopcornLiveMutation: () => ({ mutate: goLive }),
 	usePopcornSettingsMutation: () => ({
 		mutate: saveSettings,
 		mutateAsync: vi.fn(),
@@ -163,15 +164,15 @@ describe("Preparing the room before recordings", () => {
 			"/present/projects/empty/default",
 		);
 	});
-	it("keeps Analyse and Share beside Present, and opens the screen without a processing request", async () => {
+	it("puts Share beside Present, which opens the screen and starts the analysis for 8 hours", async () => {
 		const open = vi.spyOn(window, "open").mockReturnValue(null);
 		show();
 		const present = await screen.findByRole("button", {
 			name: "Present",
 		});
-		expect(screen.getByRole("button", { name: "Analyse" })).toBeTruthy();
+		expect(screen.queryByRole("button", { name: "Analyse" })).toBeNull();
 		expect(
-			screen.getByRole("button", { name: "More ways to analyse" }),
+			screen.getByRole("button", { name: "More ways to present" }),
 		).toBeTruthy();
 		expect(screen.getByRole("button", { name: "Share" })).toBeTruthy();
 		fireEvent.click(present);
@@ -180,7 +181,25 @@ describe("Preparing the room before recordings", () => {
 			"_blank",
 			"noopener",
 		);
-		expect(bff.post).not.toHaveBeenCalled();
+		expect(goLive).toHaveBeenCalledExactlyOnceWith({ hours: 8 });
+	});
+	it("only opens the screen when popcorn is already live", async () => {
+		const open = vi.spyOn(window, "open").mockReturnValue(null);
+		const livePresentation = { ...presentation, loop: { mode: "live" } };
+		vi.mocked(bff.get).mockImplementation(async (url) => {
+			if (url.endsWith("/draft"))
+				return {
+					has_changes: false,
+					presentation: livePresentation,
+					revision: 0,
+				};
+			if (url.endsWith("/updates")) return { available: false };
+			return { can_edit: true, presentation: livePresentation };
+		});
+		show();
+		fireEvent.click(await screen.findByRole("button", { name: "Present" }));
+		expect(open).toHaveBeenCalledOnce();
+		expect(goLive).not.toHaveBeenCalled();
 	});
 	it("scales the room's screen down instead of squeezing it into the column", async () => {
 		show();

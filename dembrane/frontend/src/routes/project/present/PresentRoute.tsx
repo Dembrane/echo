@@ -37,7 +37,6 @@ import {
 	usePopcornLiveMutation,
 	usePopcornSettingsMutation,
 	usePopcornStopLiveMutation,
-	useRefreshPopcornMutation,
 } from "@/components/popcorn/hooks";
 import {
 	PopcornAlsoLanguages,
@@ -78,7 +77,7 @@ import {
 import { useRoomScreenOpen } from "@/components/present/hooks/useRoomScreen";
 import { TranslationStatus } from "@/components/present/TranslationStatus";
 import { HostGuideSettings } from "@/components/sharing/HostGuideSettings";
-import { LiveButton } from "@/components/sharing/LiveButton";
+import { PresentButton } from "@/components/sharing/PresentButton";
 import { EventPrintoutsItem, ShareButton } from "@/components/sharing/Share";
 import { StatusLine } from "@/components/sharing/StatusLine";
 import { API_BASE_URL } from "@/config";
@@ -486,12 +485,8 @@ function Session({
 			});
 		},
 	});
-	const blocks = orderedBlocks(
-		presentation.settings.presentation?.blocks ?? ["popcorn"],
-	);
 	const live = usePopcornLiveMutation(projectId, presentation.id);
 	const stop = usePopcornStopLiveMutation(projectId, presentation.id);
-	const refresh = useRefreshPopcornMutation(projectId, presentation.id);
 	const isLive = presentation.loop?.mode === "live";
 	const booking = liveBooking(presentation.loop);
 	const [eventTick, setEventTick] = useState(0);
@@ -681,14 +676,31 @@ function Session({
 						className="shrink-0"
 						aria-label={t`Presentation controls`}
 					>
-						<Button
-							variant="filled"
-							onClick={open}
-							loading={opening}
-							leftSection={<ArrowSquareOutIcon size={20} />}
-						>
-							<Trans>Present</Trans>
-						</Button>
+						{canEdit ? (
+							<PresentButton
+								live={isLive}
+								booking={booking}
+								opening={opening}
+								pending={live.isPending || stop.isPending}
+								onPresent={(hours) => {
+									// The room screen opens in the click, or it is blocked.
+									open();
+									if (!isLive && !booking) live.mutate({ hours });
+								}}
+								onGoLive={(hours) => live.mutate({ hours })}
+								onReadyBy={(hours, readyBy) => live.mutate({ hours, readyBy })}
+								onStop={() => stop.mutate()}
+							/>
+						) : (
+							<Button
+								variant="filled"
+								onClick={open}
+								loading={opening}
+								leftSection={<ArrowSquareOutIcon size={20} />}
+							>
+								<Trans>Present</Trans>
+							</Button>
+						)}
 						{canEdit && (
 							<ShareButton>
 								{draft.query.data ? (
@@ -736,17 +748,6 @@ function Session({
 									</Stack>
 								)}
 							</ShareButton>
-						)}
-						{canEdit && (blocks.includes("popcorn") || isLive || booking) && (
-							<LiveButton
-								live={isLive}
-								booking={booking}
-								pending={live.isPending || stop.isPending}
-								onGoLive={(hours) => live.mutate({ hours })}
-								onReadyBy={(hours, readyBy) => live.mutate({ hours, readyBy })}
-								onStop={() => stop.mutate()}
-								onAnalyseNow={() => refresh.mutate()}
-							/>
 						)}
 					</Group>
 				</Group>

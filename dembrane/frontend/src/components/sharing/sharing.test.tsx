@@ -5,6 +5,7 @@ import { MantineProvider } from "@mantine/core";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { defaultReadyTime, LiveButton, readyByFrom } from "./LiveButton";
+import { PresentButton } from "./PresentButton";
 import { formatWhen, StatusLine } from "./StatusLine";
 
 i18n.loadAndActivate({ locale: "en", messages: {} });
@@ -283,5 +284,98 @@ describe("LiveButton", () => {
 			);
 			expect(onGoLive).toHaveBeenCalledExactlyOnceWith(24);
 		});
+	});
+});
+
+describe("PresentButton", () => {
+	const button = (props: Partial<Parameters<typeof PresentButton>[0]> = {}) =>
+		show(
+			<PresentButton
+				live={false}
+				pending={false}
+				onPresent={vi.fn()}
+				onGoLive={vi.fn()}
+				onReadyBy={vi.fn()}
+				onStop={vi.fn()}
+				{...props}
+			/>,
+		);
+	const more = () =>
+		fireEvent.click(
+			screen.getByRole("button", { name: "More ways to present" }),
+		);
+	const menuItems = async () =>
+		(await screen.findAllByRole("menuitem")).map((item) => item.textContent);
+
+	it("presents for 8 hours from the main part, or for the hours chosen", async () => {
+		const onPresent = vi.fn();
+		button({ onPresent });
+		const main = screen.getByRole("button", { name: "Present" });
+		expect(main.getAttribute("data-variant")).toBe("filled");
+		fireEvent.click(main);
+		expect(onPresent).toHaveBeenLastCalledWith(8);
+		more();
+		expect(await menuItems()).toEqual(["1 hour", "8 hours", "24 hours"]);
+		expect(screen.getByLabelText("Ready by")).toBeTruthy();
+		fireEvent.click(screen.getByRole("menuitem", { name: "24 hours" }));
+		fireEvent.click(main);
+		expect(onPresent).toHaveBeenLastCalledWith(24);
+	});
+
+	it("books a time from the menu", async () => {
+		vi.useFakeTimers({ toFake: ["Date"] });
+		const morning = new Date();
+		morning.setHours(9, 0, 0, 0);
+		vi.setSystemTime(morning);
+		const onReadyBy = vi.fn();
+		button({ onReadyBy });
+		more();
+		fireEvent.change(await screen.findByLabelText("Ready by"), {
+			target: { value: "14:30" },
+		});
+		fireEvent.click(screen.getByRole("button", { name: "Book" }));
+		expect(onReadyBy).toHaveBeenCalledWith(8, readyByFrom("14:30"));
+		vi.useRealTimers();
+	});
+
+	it("cancels a booked start from the menu", async () => {
+		const onStop = vi.fn();
+		const readyBy = new Date(Date.now() + 2 * 3600_000);
+		button({
+			booking: {
+				readyBy: readyBy.toISOString(),
+				startsAt: new Date(readyBy.getTime() - 15 * 60_000).toISOString(),
+			},
+			onStop,
+		});
+		more();
+		expect(await menuItems()).toEqual([
+			"1 hour",
+			"8 hours",
+			"24 hours",
+			"Cancel",
+		]);
+		fireEvent.click(screen.getByRole("menuitem", { name: "Cancel" }));
+		expect(onStop).toHaveBeenCalled();
+	});
+
+	it("stays live for new hours, or stops live, from the menu while live", async () => {
+		const onGoLive = vi.fn();
+		const onStop = vi.fn();
+		button({ live: true, onGoLive, onStop });
+		expect(screen.getByRole("button", { name: "Present" })).toBeTruthy();
+		more();
+		expect(await menuItems()).toEqual([
+			"1 hour",
+			"8 hours",
+			"24 hours",
+			"Stop live",
+		]);
+		expect(screen.queryByLabelText("Ready by")).toBeNull();
+		fireEvent.click(screen.getByRole("menuitem", { name: "1 hour" }));
+		expect(onGoLive).toHaveBeenCalledExactlyOnceWith(1);
+		more();
+		fireEvent.click(await screen.findByRole("menuitem", { name: "Stop live" }));
+		expect(onStop).toHaveBeenCalled();
 	});
 });

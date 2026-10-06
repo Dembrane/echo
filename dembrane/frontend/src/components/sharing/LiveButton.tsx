@@ -52,6 +52,111 @@ const fieldTime = (iso: string) => {
 };
 
 /**
+ * What the Analyse and Present split buttons share: the hours to stay live
+ * for, the Ready by field with Book, and the open state of the chevron's
+ * menu. Before live the hours are a choice the main part and Book use; while
+ * live each one goes live again for that long from now.
+ */
+export function useLiveChoices({
+	live,
+	booking,
+	onGoLive,
+	onReadyBy,
+}: {
+	live: boolean;
+	booking: LiveBooking | null;
+	onGoLive: (hours: LiveHours) => void;
+	onReadyBy: (hours: LiveHours, readyBy: Date) => void;
+}) {
+	const { i18n } = useLingui();
+	const [opened, setOpened] = useState(false);
+	const [hours, setHours] = useState<LiveHours>(8);
+	const [time, setTime] = useState(() =>
+		booking ? fieldTime(booking.readyBy) : defaultReadyTime(),
+	);
+
+	const durations: { value: LiveHours; label: string }[] = [
+		{ label: t`1 hour`, value: 1 },
+		{ label: t`8 hours`, value: 8 },
+		{ label: t`24 hours`, value: 24 },
+	];
+
+	const readyBy = readyByFrom(time);
+	const startsAt = readyBy
+		? new Date(readyBy.getTime() - READY_LEAD_MINUTES * 60_000)
+		: null;
+	const book = () => {
+		if (!readyBy) return;
+		onReadyBy(hours, readyBy);
+		setOpened(false);
+	};
+	const startTime = startsAt ? formatWhen(startsAt, i18n.locale) : "";
+	// Under 15 minutes away there is no early start left: it goes live at once.
+	const startsNow = !!startsAt && startsAt.getTime() <= Date.now();
+
+	const readyByField = (
+		// The menu's arrow keys stay out of the field.
+		<Box px="sm" py="xs" onKeyDown={(event) => event.stopPropagation()}>
+			<Stack gap={4}>
+				<Group gap="xs" align="flex-end" wrap="nowrap">
+					<TimeInput
+						label={t`Ready by`}
+						value={time}
+						onChange={(event) => setTime(event.currentTarget.value)}
+						onKeyDown={(event) => {
+							if (event.key === "Enter") book();
+						}}
+						{...testId("live-ready-time")}
+					/>
+					<Button
+						disabled={!readyBy}
+						onClick={book}
+						{...testId("live-ready-book")}
+					>
+						<Trans>Book</Trans>
+					</Button>
+				</Group>
+				{startsAt && (
+					<Text size="sm" c="dimmed" {...testId("live-ready-starts")}>
+						{startsNow
+							? t`Starts now`
+							: t`Starts at ${startTime}, 15 minutes early`}
+					</Text>
+				)}
+			</Stack>
+		</Box>
+	);
+
+	const stayLiveFor = (
+		<>
+			<Menu.Label>
+				<Trans>Stay live for</Trans>
+			</Menu.Label>
+			{durations.map((option) => (
+				<Menu.Item
+					key={option.value}
+					closeMenuOnClick={live}
+					rightSection={
+						!live && hours === option.value ? (
+							<CheckIcon size={16} role="img" aria-label={t`Selected`} />
+						) : null
+					}
+					onClick={() => {
+						setHours(option.value);
+						if (live) onGoLive(option.value);
+					}}
+					{...testId(`live-${option.value}h`)}
+				>
+					{option.label}
+				</Menu.Item>
+			))}
+		</>
+	);
+
+	return { hours, opened, readyByField, setOpened, stayLiveFor };
+}
+
+/**
  * The Analyse split button. The main part does the default for the state:
  * Analyse goes live now for the hours chosen, Start now replaces a booked
  * start by going live now, and Stop live ends live. The chevron opens the
@@ -78,33 +183,10 @@ export function LiveButton({
 	/** One read straight away, as Refresh does. */
 	onAnalyseNow: () => void;
 }) {
-	const { i18n } = useLingui();
-	const [opened, setOpened] = useState(false);
-	const [hours, setHours] = useState<LiveHours>(8);
-	const [time, setTime] = useState(() =>
-		booking ? fieldTime(booking.readyBy) : defaultReadyTime(),
-	);
-
-	const durations: { value: LiveHours; label: string }[] = [
-		{ label: t`1 hour`, value: 1 },
-		{ label: t`8 hours`, value: 8 },
-		{ label: t`24 hours`, value: 24 },
-	];
+	const { hours, opened, readyByField, setOpened, stayLiveFor } =
+		useLiveChoices({ booking, live, onGoLive, onReadyBy });
 	const booked = !live && !!booking;
 	const state = live ? classes.live : booked ? classes.booked : "";
-
-	const readyBy = readyByFrom(time);
-	const startsAt = readyBy
-		? new Date(readyBy.getTime() - READY_LEAD_MINUTES * 60_000)
-		: null;
-	const book = () => {
-		if (!readyBy) return;
-		onReadyBy(hours, readyBy);
-		setOpened(false);
-	};
-	const startTime = startsAt ? formatWhen(startsAt, i18n.locale) : "";
-	// Under 15 minutes away there is no early start left: it goes live at once.
-	const startsNow = !!startsAt && startsAt.getTime() <= Date.now();
 
 	const main = live ? (
 		<Button
@@ -141,67 +223,6 @@ export function LiveButton({
 		>
 			<Trans>Analyse</Trans>
 		</Button>
-	);
-
-	const readyByField = (
-		// The menu's arrow keys stay out of the field.
-		<Box px="sm" py="xs" onKeyDown={(event) => event.stopPropagation()}>
-			<Stack gap={4}>
-				<Group gap="xs" align="flex-end" wrap="nowrap">
-					<TimeInput
-						label={t`Ready by`}
-						value={time}
-						onChange={(event) => setTime(event.currentTarget.value)}
-						onKeyDown={(event) => {
-							if (event.key === "Enter") book();
-						}}
-						{...testId("live-ready-time")}
-					/>
-					<Button
-						disabled={!readyBy}
-						onClick={book}
-						{...testId("live-ready-book")}
-					>
-						<Trans>Book</Trans>
-					</Button>
-				</Group>
-				{startsAt && (
-					<Text size="sm" c="dimmed" {...testId("live-ready-starts")}>
-						{startsNow
-							? t`Starts now`
-							: t`Starts at ${startTime}, 15 minutes early`}
-					</Text>
-				)}
-			</Stack>
-		</Box>
-	);
-
-	// Before live the hours are a choice the main part and Book use; while
-	// live each one goes live again for that long from now.
-	const stayLiveFor = (
-		<>
-			<Menu.Label>
-				<Trans>Stay live for</Trans>
-			</Menu.Label>
-			{durations.map((option) => (
-				<Menu.Item
-					key={option.value}
-					closeMenuOnClick={live}
-					rightSection={
-						!live && hours === option.value ? (
-							<CheckIcon size={16} role="img" aria-label={t`Selected`} />
-						) : null
-					}
-					onClick={() => {
-						setHours(option.value);
-						if (live) onGoLive(option.value);
-					}}
-					{...testId(`live-${option.value}h`)}
-				>
-					{option.label}
-				</Menu.Item>
-			))}
-		</>
 	);
 
 	return (
