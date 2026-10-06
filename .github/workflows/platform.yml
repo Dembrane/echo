@@ -747,7 +747,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           SLACK_TOKEN: ${{ secrets.SLACK_ALERTS_BOT_TOKEN }}
           SLACK_TS: ${{ steps.start.outputs.slack_ts }}
-          STOPPED: ${{ cancelled() && 'cancelled' || steps.auth.outcome == 'failure' && 'Authenticate to Google Cloud' || steps.deploy.outcome == 'failure' && 'Deploy and verify' || '' }}
+          STOPPED: ${{ job.status == 'cancelled' && 'cancelled' || steps.auth.outcome == 'failure' && 'Authenticate to Google Cloud' || steps.deploy.outcome == 'failure' && 'Deploy and verify' || '' }}
         run: $GITHUB_WORKSPACE/.github/scripts/release.sh announce-failed staging "$TAG" "$STOPPED"
 
   deploy-prod:
@@ -825,7 +825,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           SLACK_TOKEN: ${{ secrets.SLACK_ALERTS_BOT_TOKEN }}
           SLACK_TS: ${{ steps.start.outputs.slack_ts }}
-          STOPPED: ${{ cancelled() && 'cancelled' || steps.auth.outcome == 'failure' && 'Authenticate to Google Cloud' || steps.images.outcome == 'failure' && 'Push images' || steps.deploy.outcome == 'failure' && 'Deploy and verify' || '' }}
+          STOPPED: ${{ job.status == 'cancelled' && 'cancelled' || steps.auth.outcome == 'failure' && 'Authenticate to Google Cloud' || steps.images.outcome == 'failure' && 'Push images' || steps.deploy.outcome == 'failure' && 'Deploy and verify' || '' }}
         run: $GITHUB_WORKSPACE/.github/scripts/release.sh announce-failed prod "$RELEASE_TAG" "$STOPPED"
 
   # A failed run tells #alerts-ci which environment was not updated and what stopped it, except
