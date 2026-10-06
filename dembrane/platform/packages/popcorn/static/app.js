@@ -3119,7 +3119,11 @@
   // every custom slide is a deck tab too, so the set is a question, not a list
   const isDeckTab = (id) => DECK_TABS.includes(id) || !!SLIDES.find((s) => s.id === id)?.custom;
   const sizeOf = (s) => (s.length <= 60 ? "xl" : s.length <= 120 ? "lg" : "md");
-  const emptyNote = (q) => `<p class="empty-note" style="margin-top:1em">${esc(tr("list.noMatch", { q }))}</p>`;
+  // Only a search can match nothing: an empty list with no search says so in its count line.
+  const emptyNote = (q) => {
+    const words = (q || "").trim();
+    return words ? `<p class="empty-note" style="margin-top:1em">${esc(tr("list.noMatch", { q: words }))}</p>` : "";
+  };
 
   // placeholder and countText are plain text: a custom slide's label is in them
   function searchTools(tab, placeholder, countText, extraClass = "") {
