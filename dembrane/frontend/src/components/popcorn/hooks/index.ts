@@ -2,8 +2,10 @@ import { t } from "@lingui/core/macro";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useContext } from "react";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import { API_BASE_URL } from "@/config";
 import { bff } from "@/lib/bff";
+import { readApiError } from "@/lib/errors/read";
 import { SettingsSaveContext } from "../SettingsSaveContext";
 
 export type PopcornLoop = {
@@ -289,7 +291,12 @@ export const usePopcornSettingsMutation = (
 						`/popcorn/${encodeURIComponent(popcornId)}/settings`,
 						patch,
 					),
-		onError: () => toast.error(t`Could not save changes. Try again.`),
+		// A refusal with a reason (a plan the change needs) says the reason and offers its
+		// action; anything else gets the plain retry line.
+		onError: (error) => {
+			if (readApiError(error).code) void notifyError(error);
+			else toast.error(t`Could not save changes. Try again.`);
+		},
 		onSuccess: (detail) => {
 			if (editor) return;
 			putPopcorn(queryClient, projectId, detail);
