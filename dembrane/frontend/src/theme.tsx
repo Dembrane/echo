@@ -20,6 +20,7 @@ import {
   roles,
   tagTints,
 } from "./colors";
+import { USE_PARTICIPANT_ROUTER } from "./config";
 import buttonClasses from "./styles/button.module.css";
 
 // The design system, October 2026: DM Sans at one weight (320), hierarchy
@@ -50,6 +51,13 @@ const controlText = (size?: string) =>
   size === "xs" || size?.startsWith("compact")
     ? "var(--app-font-size-xs)"
     : "var(--app-font-size-sm)";
+// Phone browsers zoom the page into any field whose text is under 16px. The
+// portal's root is 16 × 0.9, so its field text would land at 14.4: there it
+// is floored at 16.
+const fieldText = (size?: string) =>
+  USE_PARTICIPANT_ROUTER
+    ? `max(16px, ${controlText(size)})`
+    : controlText(size);
 
 // The Mantine colour names the app passes, mapped onto the roles.
 const statusFor = (color?: string) => {
@@ -278,7 +286,7 @@ export const theme = createTheme({
         const size = typeof props.size === "string" ? props.size : "sm";
         return {
           wrapper: {
-            "--input-fz": controlText(size),
+            "--input-fz": fieldText(size),
             ...(CONTROL_HEIGHT[size] && {
               "--input-height": CONTROL_HEIGHT[size],
             }),
