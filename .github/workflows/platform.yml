@@ -5,8 +5,10 @@ name: platform
 # deploy only migrates, rolls out and verifies.
 #
 # A run checks only the side it changed: 00-plan diffs the commit against its base (a PR's base
-# branch, or the previous commit of a push) and skips the server checks when only
-# dembrane/frontend changed, and the frontend checks the other way round. Each image is tagged
+# branch, the previous commit of a push, or the commit a merge group sits on) and skips the
+# server checks when only dembrane/frontend changed, and the frontend checks the other way
+# round. Every pull request and merge group runs, so 99-result reports on each one: a change
+# that touches neither side runs 00-plan and 99-result only. Each image is tagged
 # with a hash of its inputs, and an image whose inputs are already in the registry is tagged
 # for the new commit instead of built again (.github/scripts/build-images.sh). A PR preview rolls out
 # only the services whose image or settings changed (.github/scripts/deploy-env.sh).
@@ -32,7 +34,7 @@ name: platform
 # #alerts-ci carries staging deploys and every failure. Checks on PRs without a preview stay
 # in the PR.
 #
-# Caches: pull request runs only restore them. Pushes to main (and runs by hand) check trusted
+# Caches: PR and merge group runs only restore them. Pushes to main (and runs by hand) check trusted
 # code and save them, so code from a PR never writes a cache that another run reads. Images
 # have no layer cache: 40-build-images builds each changed image once and pushes that build. A PR can
 # only read caches saved on its base branch, so until the cutover, when main starts running
@@ -41,12 +43,7 @@ name: platform
 on:
   pull_request:
     types: [opened, synchronize, reopened, labeled, unlabeled, closed]
-    paths:
-      - "dembrane/platform/**"
-      - "dembrane/frontend/**"
-      - "dembrane/infra/**"
-      - ".github/workflows/platform.yml"
-      - ".github/scripts/**"
+  merge_group:
   push:
     branches: [main]
     # Tag pushes ignore the path filter.
@@ -187,13 +184,13 @@ jobs:
         if: steps.plan.outputs.teardown != 'true'
         env:
           EVENT: ${{ github.event_name }}
-          BEFORE: ${{ github.event.before }}
+          BEFORE: ${{ github.event.merge_group.base_sha || github.event.before }}
         run: |
           all() { echo "server=true"; echo "frontend=true"; echo "images=api worker migrate media web"; }
           base=''
           case "$EVENT/$GITHUB_REF" in
             pull_request/*) base=$(git rev-parse HEAD^1 2>/dev/null) || base='' ;;
-            push/refs/heads/*)
+            push/refs/heads/* | merge_group/*)
               if [[ $BEFORE =~ ^[0-9a-f]{40}$ && $BEFORE != 0000000000000000000000000000000000000000 ]] &&
                 git fetch -q --depth=1 --filter=blob:none origin "$BEFORE" 2>/dev/null; then base=$BEFORE; fi ;;
           esac
@@ -230,7 +227,7 @@ jobs:
           --health-cmd "pg_isready -U echo -d postgres" --health-interval 1s --health-retries 60
     env:
       TEST_DATABASE_ADMIN_URL: postgres://echo:echo@localhost:5432/postgres
-      SAVE_CACHE: ${{ github.event_name != 'pull_request' }}
+      SAVE_CACHE: ${{ github.event_name != 'pull_request' && github.event_name != 'merge_group' }}
     steps:
       - name: Check out code
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
@@ -239,7 +236,7 @@ jobs:
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version-file: dembrane/platform/.bun-version
-          no-cache: ${{ github.event_name == 'pull_request' }}
+          no-cache: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
       - name: Restore Bun cache
         id: bun-cache
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -326,7 +323,7 @@ jobs:
       run:
         working-directory: dembrane/frontend
     env:
-      SAVE_CACHE: ${{ github.event_name != 'pull_request' }}
+      SAVE_CACHE: ${{ github.event_name != 'pull_request' && github.event_name != 'merge_group' }}
     steps:
       - name: Check out code
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
@@ -389,7 +386,7 @@ jobs:
       run:
         working-directory: dembrane/frontend
     env:
-      SAVE_CACHE: ${{ github.event_name != 'pull_request' }}
+      SAVE_CACHE: ${{ github.event_name != 'pull_request' && github.event_name != 'merge_group' }}
     steps:
       - name: Check out code
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
@@ -797,3 +794,21 @@ jobs:
           SHA: ${{ needs.plan.outputs.sha || github.sha }}
           NEEDS: ${{ toJSON(needs) }}
         run: $GITHUB_WORKSPACE/.github/scripts/ci-notify.sh failure
+
+  # The one status a branch rule needs to require. It reports on every pull request and merge
+  # group, and passes when no check or image build failed. A check the plan skipped counts as
+  # passed: its side did not change.
+  result:
+    name: 99-result
+    if: always()
+    needs: [plan, check-server, check-frontend, test-frontend, images]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Check the results
+        working-directory: .
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          failed=$(jq -r '[to_entries[] | select(.value.result != "success" and .value.result != "skipped") | .key] | join(", ")' <<<"$NEEDS")
+          [ -z "$failed" ] || { echo "::error::$failed did not pass"; exit 1; }
