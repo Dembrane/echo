@@ -33,7 +33,7 @@ export const POPCORN_SCHEMA: Json = {
         type: "object",
         additionalProperties: false,
         required: ["phrase"],
-        properties: { phrase: { type: "string", minLength: 1, maxLength: 90 } },
+        properties: { phrase: { type: "string", minLength: 1, maxLength: 140 } },
       },
     },
   },
@@ -41,9 +41,9 @@ export const POPCORN_SCHEMA: Json = {
 
 // Vertex rejects maxItems at these depths; the caps are enforced in shapeStakeholders.
 
-// The prompt asks for twelve words; the gate tolerates thirteen (bloat begins at fourteen).
-const MAX_PHRASE_WORDS = 13;
-const MAX_PHRASE_CHARS = 90;
+// The prompt allows twenty words, enough for a point and its detail; the gate tolerates one more.
+export const MAX_PHRASE_WORDS = 21;
+export const MAX_PHRASE_CHARS = 140;
 
 /** The characters Python's str whitespace covers, which JS's own class does not quite. */
 const PY_WS =
@@ -92,7 +92,7 @@ export function allocateChars(
 
 /**
  * The deterministic first-run gates on one extractor answer: unique phrases, at most
- * thirteen words, no quotation marks or terminal punctuation, and as many as the model
+ * twenty-one words, no quotation marks or terminal punctuation, and as many as the model
  * found. A question mark survives as `question`. The id follows the phrase text, so a
  * later re-read keeps it.
  */
