@@ -330,6 +330,39 @@ run("popcorn tick against Postgres", () => {
     expect(shown.starts_at).toBeNull();
   });
 
+  test("Start now while booked replaces the booking, and going live again restarts the hours", async () => {
+    const now = new Date();
+    await goLive(liveDeps(now, []), await loopRow(), 8, new Date(now.getTime() + 3 * 3_600_000));
+    expect((await pending()).map((t) => t.payload)).toEqual([
+      { loop_id: ids.loop, tick_kind: "start" },
+    ]);
+
+    const dispatched: { tickKind: string }[] = [];
+    await goLive(liveDeps(now, dispatched), await loopRow(), 8);
+    const loop = await loopRow();
+    expect(loop.status).toBe("active");
+    expect(loop.caps).toEqual({ kind: "popcorn" });
+    expect(ms(loop.expires_at)).toBe(now.getTime() + 8 * 3_600_000);
+    expect(dispatched.map((r) => r.tickKind)).toEqual(["manual"]);
+    const kinds = (await pending()).map((t) => (t.payload as Json).tick_kind);
+    expect(kinds).not.toContain("start");
+    const [report] = await raw`select * from project_report where id = ${loop.report_id as number}`;
+    const shown = (await popcornPayload(popcornStore(raw), report as Row)).loop as Json;
+    expect(shown.mode).toBe("live");
+    expect(shown.ready_by).toBeNull();
+    expect(shown.starts_at).toBeNull();
+
+    // Live already: the hours run again from now.
+    const later = new Date(now.getTime() + 30 * 60_000);
+    await goLive(liveDeps(later, []), await loopRow(), 1);
+    const again = await loopRow();
+    expect(again.status).toBe("active");
+    expect(ms(again.expires_at)).toBe(later.getTime() + 3_600_000);
+
+    await stopLive(liveDeps(new Date(), []), again);
+    expect((await pending()).length).toBe(0);
+  });
+
   test("a booked start that was cancelled reads nothing", async () => {
     const got = await runPopcornTick(deps(recorded(fixture.ticks), "w-late"), ids.loop, "start");
     expect(got.status).toBe("no_op");
