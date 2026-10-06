@@ -75,10 +75,11 @@ const ConversationStatus = ({
 				<Trans>Transcription error</Trans>
 			</Text>
 		);
-	if (
-		conversation.is_audio_processing_finished === false &&
-		!conversation.has_only_text_chunks
-	)
+	const isTranscribing =
+		!conversation.has_only_text_chunks &&
+		(conversation.is_finished === false ||
+			conversation.is_all_chunks_transcribed === false);
+	if (isTranscribing)
 		return (
 			<Text size="xs" c="dimmed">
 				<Trans>Transcribing</Trans>

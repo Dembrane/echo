@@ -25,10 +25,37 @@ vi.mock("./useConversationList", async (importOriginal) => ({
 		activeFiltersCount: 0,
 		allConversations: [
 			{ id: "c1", title: "Table 1", live: true, created_at: null },
-			{ id: "c2", title: "Table 2", created_at: null },
-			{ id: "c3", title: "Table 3", created_at: null, has_transcript: false },
+			{
+				id: "c2",
+				title: "Table 2",
+				created_at: null,
+				is_finished: true,
+				is_all_chunks_transcribed: true,
+			},
+			{
+				id: "c3",
+				title: "Table 3",
+				created_at: null,
+				has_transcript: false,
+				is_finished: true,
+				is_all_chunks_transcribed: true,
+			},
+			{
+				id: "c4",
+				title: "Table 4",
+				created_at: null,
+				is_finished: false,
+			},
+			{
+				id: "c5",
+				title: "Table 5",
+				created_at: null,
+				is_finished: true,
+				is_all_chunks_transcribed: true,
+				conversation_artifacts: [{ approved_at: "2026-10-01" }],
+			},
 		],
-		conversationsCountQuery: { data: 3 },
+		conversationsCountQuery: { data: 5 },
 		conversationsQuery: { isLoading: false, isFetchingNextPage: false },
 		hasActiveFilters: false,
 		search: "",
@@ -106,5 +133,13 @@ describe("ConversationsMiniList", () => {
 		renderList();
 		expect(screen.queryByRole("checkbox")).toBeNull();
 		expect(screen.getByRole("link", { name: /Table 1/ })).toBeTruthy();
+	});
+
+	it("renders status correctly for live, transcribing, verified, and finished conversations", () => {
+		renderList();
+		expect(screen.getByText("Live")).toBeTruthy();
+		expect(screen.getByText("Done")).toBeTruthy();
+		expect(screen.getByText("Transcribing")).toBeTruthy();
+		expect(screen.getByText("Verified")).toBeTruthy();
 	});
 });

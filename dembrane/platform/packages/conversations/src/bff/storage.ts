@@ -46,6 +46,7 @@ export const CONVERSATION_DEFAULT_FIELDS = [
   "source",
   "duration",
   "is_finished",
+  "is_all_chunks_transcribed",
   "is_audio_processing_finished",
   "is_anonymized",
   "is_over_cap",
