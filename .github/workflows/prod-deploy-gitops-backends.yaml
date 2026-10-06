@@ -11,6 +11,8 @@ concurrency:
 jobs:
   prod-deploy-gitops-backends:
     runs-on: ubuntu-latest
+    # Holds the deploy credentials; a run waits for its reviewer.
+    environment: legacy-prod
     steps:
       - name: Checkout Repository with Tag
         uses: actions/checkout@v4

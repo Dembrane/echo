@@ -16,6 +16,8 @@ concurrency:
 jobs:
   prod-deploy-vercel-dashboard:
     runs-on: ubuntu-latest
+    # Holds the deploy credentials; a run waits for its reviewer.
+    environment: legacy-prod
     steps:
       - name: Checkout
         uses: actions/checkout@v4
