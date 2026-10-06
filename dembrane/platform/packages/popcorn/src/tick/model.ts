@@ -15,7 +15,7 @@ import { withTimeout } from "./util";
  * temperature 0, a JSON schema, and a timeout per kind of call.
  */
 
-export const POPCORN_PROMPT = "popcorn-v1.8";
+export const POPCORN_PROMPT = "popcorn-v1.9";
 export const VALIDATE_PROMPT = "popcorn-validate";
 const KIND_PROMPT = "popcorn-kind";
 const QUESTION_PROMPT = "popcorn-question";
