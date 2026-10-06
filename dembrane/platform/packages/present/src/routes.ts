@@ -175,6 +175,9 @@ export function presentRoutes(deps: PresentRoutesDeps) {
       orStr(report.user_instructions, "Popcorn"),
     );
     await validateDraft(report, access.tier, candidate);
+    // Publishing asks the same, so a draft never holds a public link it could not show:
+    // that one change would keep every other waiting change off the screen.
+    if (truthy(patch.public)) await sharing(who, report);
     const state = await saveDraft(d, report, patch, body.data.expected_revision);
     return c.json(await envelope(report, project, state));
   });

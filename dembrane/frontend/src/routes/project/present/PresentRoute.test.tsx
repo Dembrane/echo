@@ -452,6 +452,50 @@ describe("Keeping the presentation and its results apart", () => {
 				expected_revision: 4,
 			}),
 		);
+		await waitFor(() =>
+			expect(screen.queryByText("1 change not shown yet")).toBeNull(),
+		);
+		expect(screen.queryByRole("button", { name: "Show them" })).toBeNull();
+	});
+
+	it("says beside Show them why the changes could not be shown, and what holds them back", async () => {
+		const shown = {
+			...presentation,
+			settings: { ...presentation.settings, public: false },
+		};
+		const edited = {
+			...shown,
+			settings: { ...shown.settings, public: true, title: "Day two" },
+		};
+		vi.mocked(bff.get).mockImplementation(async (url) => {
+			if (url.endsWith("/draft"))
+				return { has_changes: true, presentation: edited, revision: 16 };
+			if (url.endsWith("/updates")) return { available: false };
+			return { can_edit: true, presentation: shown };
+		});
+		const { ApiRequestError } = await import("@/lib/errors/read");
+		vi.mocked(bff.post).mockRejectedValue(
+			new ApiRequestError(403, {
+				code: "billing.tier_required",
+				params: { required: "innovator", tier: "free" },
+			}),
+		);
+		show();
+		const button = await screen.findByRole("button", { name: "Show them" });
+		expect(screen.getByText("2 changes not shown yet")).toBeTruthy();
+		fireEvent.click(button);
+		const reason = await screen.findByText(
+			"A public page needs a higher plan. Switch Public page off under Share to show the other changes.",
+		);
+		// Read where the host pressed, above the editor, not under the preview.
+		const editor = screen.getByText("Presentation editor");
+		expect(
+			button.compareDocumentPosition(reason) & Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
+		expect(
+			reason.compareDocumentPosition(editor) & Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
+		expect(screen.getByText("2 changes not shown yet")).toBeTruthy();
 	});
 
 	it("lets the host type into the opening on the preview, into the draft", async () => {

@@ -86,6 +86,7 @@ import { useAutoSave } from "@/hooks/useAutoSave";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useServerEvents } from "@/hooks/useServerEvents";
 import { bff } from "@/lib/bff";
+import { errorCode } from "@/lib/errors/read";
 import { testId } from "@/lib/testUtils";
 import { blockLabel } from "./blockLabel";
 import { PresentResultsPanel } from "./PresentResultsPanel";
@@ -602,6 +603,13 @@ function Session({
 		canEdit &&
 		!!draft.query.data?.has_changes &&
 		(!!watchedBy || !settling || draft.publish.isError);
+	const refused = draft.publish.error ?? publishError;
+	// The one change a plan may refuse is a public link: say so, since it holds
+	// every other waiting change back with it.
+	const publicRefused =
+		errorCode(refused) === "billing.tier_required" &&
+		!!draft.query.data?.presentation.settings.public &&
+		!presentation.settings.public;
 	const publishChanges = async () => {
 		setPublishing(true);
 		setPublishError(null);
@@ -754,6 +762,18 @@ function Session({
 						)}
 					</Group>
 				</Group>
+				{/* Read where Show them was pressed. */}
+				{canEdit && (
+					<ErrorNotice
+						error={refused}
+						onRetry={() => void publishChanges()}
+						title={
+							publicRefused
+								? t`A public page needs a higher plan. Switch Public page off under Share to show the other changes.`
+								: t`Changes could not be shown on the room screen`
+						}
+					/>
+				)}
 				{drafting ? (
 					draft.query.isError ? (
 						<Box {...testId("present-draft-error-panel")}>
@@ -832,13 +852,6 @@ function Session({
 					)
 				) : (
 					<Preview presentation={presentation} />
-				)}
-				{canEdit && (
-					<ErrorNotice
-						error={draft.publish.error ?? publishError}
-						onRetry={() => void publishChanges()}
-						title={t`Changes could not be shown on the room screen`}
-					/>
 				)}
 				<Group justify="flex-start" gap="sm">
 					<Text size="sm" c="dimmed">
