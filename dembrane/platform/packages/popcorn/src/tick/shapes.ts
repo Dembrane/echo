@@ -27,8 +27,8 @@ export const POPCORN_SCHEMA: Json = {
   required: ["items"],
   properties: {
     items: {
+      // No cap: every idea that earns a place gets its popcorn.
       type: "array",
-      maxItems: 8,
       items: {
         type: "object",
         additionalProperties: false,
@@ -92,8 +92,9 @@ export function allocateChars(
 
 /**
  * The deterministic first-run gates on one extractor answer: unique phrases, at most
- * thirteen words, no quotation marks or terminal punctuation. A question mark survives
- * as `question`. The id follows the phrase text, so a later re-read keeps it.
+ * thirteen words, no quotation marks or terminal punctuation, and as many as the model
+ * found. A question mark survives as `question`. The id follows the phrase text, so a
+ * later re-read keeps it.
  */
 export function shapePopcornItems(raw: unknown, transcriptId: string): Json[] {
   const items = isRecord(raw) ? raw.items : null;
@@ -118,7 +119,6 @@ export function shapePopcornItems(raw: unknown, transcriptId: string): Json[] {
     const entry: Json = { id: `p-${transcriptId}-${sha1Hex(key).slice(0, 8)}`, phrase };
     if (question) entry.question = true;
     out.push(entry);
-    if (out.length >= 8) break;
   }
   return out;
 }

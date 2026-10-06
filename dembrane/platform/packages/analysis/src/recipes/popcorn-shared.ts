@@ -11,7 +11,7 @@ import type { ProducerServices } from "./services";
  */
 
 export const STAKEHOLDERS_PROMPT = "stakeholders-v0.9";
-export const POPCORN_PROMPT = "popcorn-v1.7";
+export const POPCORN_PROMPT = "popcorn-v1.8";
 export const VALIDATE_PROMPT = "popcorn-validate";
 export const ANALYSIS_MAX_TOKENS = 65536;
 export const ANALYSIS_TIMEOUT_MS = 300_000;
