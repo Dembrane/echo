@@ -249,10 +249,8 @@ msgid "{0, plural, one {# agreement} other {# agreements}}"
 msgstr "{0, plural, one {# угода} few {# угоди} many {# угод} other {# угод}}"
 
 #. placeholder {0}: nodes.length
-#. placeholder {0}: target.nodes.length
 #: src/components/present/AudienceMapAdapter.tsx:360
 #: src/components/map/panels/HistoryPanel.tsx:49
-#: src/components/map/panels/DetailsModal.tsx:149
 #: src/components/map/panels/ClusterSummary.tsx:148
 msgid "{0, plural, one {# argument} other {# arguments}}"
 msgstr "{0, plural, one {# аргумент} few {# аргументи} many {# аргументів} other {# аргументів}}"
@@ -772,7 +770,7 @@ msgstr "{conversations, plural, one {# розмова} few {# розмови} ma
 msgid "{conversations} conversations with a transcript, about {minutes} minutes of talk. Ready."
 msgstr "Розмов із транскриптом: {conversations}, близько {minutes} хв мовлення. Готово."
 
-#: src/components/map/MapExperience.tsx:138
+#: src/components/map/MapExperience.tsx:142
 msgid "{count, plural, one {# argument} other {# arguments}}"
 msgstr "{count, plural, one {# аргумент} few {# аргументи} many {# аргументів} other {# аргументи}}"
 
@@ -2007,7 +2005,7 @@ msgstr "An error occurred."
 msgid "An event or a workshop."
 msgstr "Подія або воркшоп."
 
-#: src/components/map/panels/NodeDetailCard.tsx:198
+#: src/components/map/panels/NodeDetailCard.tsx:200
 msgid "An object outside this view"
 msgstr "Об'єкт за межами цього перегляду"
 
@@ -2305,7 +2303,7 @@ msgid "Are you sure you want to remove your custom logo? The default dembrane lo
 msgstr "Are you sure you want to remove your custom logo? The default dembrane logo will be used instead."
 
 #: src/components/map/attributes.ts:127
-#: src/components/map/panels/NodeDetailCard.tsx:442
+#: src/components/map/panels/NodeDetailCard.tsx:444
 msgid "Argument"
 msgstr "Аргумент"
 
@@ -2322,7 +2320,7 @@ msgstr "Карта аргументів"
 msgid "Argument tree"
 msgstr "Дерево аргументів"
 
-#: src/components/map/MapExperience.tsx:563
+#: src/components/map/MapExperience.tsx:571
 msgid "Argument tree (MST)"
 msgstr "Дерево аргументів (MST)"
 
@@ -3373,7 +3371,7 @@ msgstr "Виберіть розмову"
 msgid "Choose a logo file"
 msgstr "Choose a logo file"
 
-#: src/components/map/MapExperience.tsx:641
+#: src/components/map/MapExperience.tsx:649
 msgid "Choose a map under Advanced"
 msgstr "Виберіть мапу в розділі «Додатково»"
 
@@ -3565,6 +3563,7 @@ msgstr "Clone project"
 #: src/components/results/ResultRow.tsx:435
 #: src/components/results/ResultItem.tsx:860
 #: src/components/results/ResultItem.tsx:870
+#: src/components/map/panels/DetailsSheet.tsx:432
 #: src/components/dropzone/UploadConversationDropzone.tsx:882
 #: src/components/conversation/ConversationLinks.tsx:105
 #: src/components/common/FeedbackPortalModal.tsx:158
@@ -3688,7 +3687,7 @@ msgstr "об'єднано з {0}"
 #. placeholder {0}: consolidation.memberCount
 #: src/components/map/renderers/MstGraph.tsx:1115
 #: src/components/map/renderers/LocalMapGraph.tsx:1077
-#: src/components/map/panels/NodeDetailCard.tsx:136
+#: src/components/map/panels/NodeDetailCard.tsx:138
 msgid "Combined from {0} arguments"
 msgstr "Об’єднано з {0} аргументів"
 
@@ -3826,8 +3825,7 @@ msgstr "Connection unhealthy"
 
 #: src/components/map/panels/SpotlightPanel.tsx:239
 #: src/components/map/panels/SpotlightPanel.tsx:429
-#: src/components/map/panels/LocalGraph.tsx:144
-#: src/components/map/panels/DetailsModal.tsx:169
+#: src/components/map/panels/DetailsSheet.tsx:451
 msgid "Connections"
 msgstr "Зв’язки"
 
@@ -5163,7 +5161,7 @@ msgstr "Несхожі зв'язки: {0}"
 #~ msgstr "Виділення головної ідеї..."
 
 #: src/components/map/panels/HistoryPanel.tsx:59
-#: src/components/map/panels/DetailsModal.tsx:121
+#: src/components/map/panels/DetailsSheet.tsx:371
 #: src/components/map/panels/ClusterSummary.tsx:144
 msgid "Distilling core idea…"
 msgstr "Виділяємо ключову ідею…"
@@ -5888,7 +5886,7 @@ msgstr "Усі у списку пройшли навчання."
 msgid "participant.alert.microphone.access.success"
 msgstr "Everything looks good – you can continue."
 
-#: src/components/map/panels/NodeDetailCard.tsx:339
+#: src/components/map/panels/NodeDetailCard.tsx:341
 msgid "Evidence"
 msgstr "Докази"
 
@@ -5900,7 +5898,7 @@ msgstr "Докази"
 #~ msgid "Evidence level"
 #~ msgstr ""
 
-#: src/components/map/panels/NodeDetailCard.tsx:345
+#: src/components/map/panels/NodeDetailCard.tsx:347
 msgid "Evidenced connections"
 msgstr "Підтверджені зв'язки"
 
@@ -6610,6 +6608,10 @@ msgstr "French"
 msgid "friction"
 msgstr "тертя"
 
+#: src/components/map/panels/DetailsSheet.tsx:414
+msgid "From {quoteCount, plural, one {# quote} other {# quotes}} in {conversationCount, plural, one {# conversation} other {# conversations}}"
+msgstr "З {quoteCount, plural, one {# цитати} few {# цитат} many {# цитат} other {# цитати}} у {conversationCount, plural, one {# розмові} few {# розмовах} many {# розмовах} other {# розмови}}"
+
 #: src/components/map/panels/shared.tsx:96
 msgid "From the transcript"
 msgstr "З транскрипту"
@@ -6956,7 +6958,7 @@ msgstr "Привіт, {firstName}"
 msgid "Hidden"
 msgstr "Hidden"
 
-#: src/components/map/panels/NodeDetailCard.tsx:230
+#: src/components/map/panels/NodeDetailCard.tsx:232
 msgid "Hidden by the Objects filter"
 msgstr "Приховано фільтром об'єктів"
 
@@ -7625,16 +7627,16 @@ msgid "Italian for your core workflows"
 msgstr "Італійська для основних процесів"
 
 #: src/components/map/panels/DetailsModal.tsx:174
-msgid "Its arguments, and the tree between them"
-msgstr "Його аргументи та дерево між ними"
+#~ msgid "Its arguments, and the tree between them"
+#~ msgstr "Його аргументи та дерево між ними"
 
 #: src/components/present/AudienceScreen.tsx:943
 msgid "Its link may have been switched off. Ask the host."
 msgstr "Посилання могло бути вимкнене. Зверніться до організатора."
 
 #: src/components/map/panels/DetailsModal.tsx:172
-msgid "Its neighbours in the tree, and its relationships"
-msgstr "Його сусіди в дереві та його зв’язки"
+#~ msgid "Its neighbours in the tree, and its relationships"
+#~ msgstr "Його сусіди в дереві та його зв’язки"
 
 #: src/routes/auth/Register.tsx:157
 msgid "John"
@@ -7868,6 +7870,10 @@ msgstr "Тип зміни не зафіксовано"
 #: src/components/results/curate/CurateTabs.tsx:78
 msgid "Kinds of finding"
 msgstr "Типи знахідок"
+
+#: src/components/map/panels/KnowledgeGraph.tsx:298
+msgid "Knowledge graph"
+msgstr "Граф знань"
 
 #: src/routes/project/present/PresentRoute.tsx:131
 #: src/features/sidebar/shell/UserMenu.tsx:154
@@ -8317,7 +8323,7 @@ msgstr "Loading…"
 msgid "Local argument map"
 msgstr "Локальна мапа аргументів"
 
-#: src/components/map/MapExperience.tsx:606
+#: src/components/map/MapExperience.tsx:614
 msgid "Local map"
 msgstr "Локальна мапа"
 
@@ -9308,7 +9314,7 @@ msgstr "Дедуплікованих аргументів ще не збереж
 msgid "No default set (client-managed applies)"
 msgstr "Типове значення не встановлено (діє керування клієнтом)"
 
-#: src/components/map/panels/NodeDetailCard.tsx:349
+#: src/components/map/panels/NodeDetailCard.tsx:351
 msgid "No evidenced connections."
 msgstr "Немає підтверджених зв'язків."
 
@@ -9352,8 +9358,8 @@ msgstr "Цілі ще немає. Задайте її тут або поспіл
 msgid "No invites went out. Check the list below."
 msgstr "Запрошення не надіслано. Перевірте список нижче."
 
-#: src/components/map/panels/NodeDetailCard.tsx:310
-#: src/components/map/panels/NodeDetailCard.tsx:319
+#: src/components/map/panels/NodeDetailCard.tsx:312
+#: src/components/map/panels/NodeDetailCard.tsx:321
 msgid "No linked arguments."
 msgstr "Немає пов'язаних аргументів."
 
@@ -9404,7 +9410,7 @@ msgstr "No new feedback detected yet. Please continue your discussion and try ag
 msgid "No new invites needed. Check the list below."
 msgstr "Нові запрошення не потрібні. Перегляньте список нижче."
 
-#: src/components/map/panels/NodeDetailCard.tsx:412
+#: src/components/map/panels/NodeDetailCard.tsx:415
 msgid "No node selected."
 msgstr "Вузол не вибрано."
 
@@ -9510,9 +9516,17 @@ msgstr "No projects found for search term"
 msgid "No projects match."
 msgstr "Жоден проєкт не відповідає критеріям."
 
+#: src/components/map/panels/DetailsSheet.tsx:194
+msgid "No quotes for this argument."
+msgstr "Для цього аргументу немає цитат."
+
 #: src/components/results/curate/CurateOpen.tsx:259
 msgid "No quotes were kept with this finding."
 msgstr "До цього висновку не збережено цитат."
+
+#: src/components/map/panels/DetailsSheet.tsx:424
+msgid "No quotes yet"
+msgstr "Цитат поки немає"
 
 #: src/components/conversation/LiveMonitorSection.tsx:676
 #~ msgid "No recent activity"
@@ -9735,7 +9749,7 @@ msgstr "не в цій презентації"
 msgid "Not in this presentation."
 msgstr "Не в цій презентації."
 
-#: src/components/map/panels/NodeDetailCard.tsx:232
+#: src/components/map/panels/NodeDetailCard.tsx:234
 msgid "Not in this view"
 msgstr "Не в цьому поданні"
 
@@ -10816,6 +10830,10 @@ msgstr "Phone"
 msgid "Pick a date"
 msgstr "Оберiть дату"
 
+#: src/components/map/panels/KnowledgeGraph.tsx:423
+msgid "Pick a dot to read its words below."
+msgstr "Виберіть точку, щоб прочитати її слова нижче."
+
 #: src/components/pricing/PricingConfigurator.tsx:842
 #: src/components/pricing/PricingBookingStep.tsx:345
 msgid "Pick a time"
@@ -11570,6 +11588,7 @@ msgstr "Запитання про роботу dembrane, а не лише про
 msgid "Queued"
 msgstr "У черзі"
 
+#: src/components/map/panels/DetailsSheet.tsx:471
 #: src/components/map/panels/ArgumentAccordion.tsx:248
 msgid "Quotes"
 msgstr "Цитати"
@@ -11579,13 +11598,13 @@ msgid "Quotes ({clusterQuoteCount})"
 msgstr "Цитати ({clusterQuoteCount})"
 
 #: src/components/map/panels/SpotlightPanel.tsx:427
-#: src/components/map/panels/NodeDetailCard.tsx:514
+#: src/components/map/panels/NodeDetailCard.tsx:516
 msgid "Quotes ({quoteCount})"
 msgstr "Цитати ({quoteCount})"
 
 #: src/components/map/panels/DetailsModal.tsx:48
-msgid "Quotes ({quotes})"
-msgstr "Цитати ({quotes})"
+#~ msgid "Quotes ({quotes})"
+#~ msgstr "Цитати ({quotes})"
 
 #. placeholder {0}: items.length
 #: src/components/chat/AgenticChatPanel.tsx:616
@@ -11786,11 +11805,11 @@ msgid "recently"
 msgstr "нещодавно"
 
 #: src/components/results/ResultItem.tsx:824
-#: src/components/map/panels/NodeDetailCard.tsx:376
+#: src/components/map/panels/NodeDetailCard.tsx:378
 msgid "Recipe: {recipe}"
 msgstr "Рецепт: {recipe}"
 
-#: src/components/map/panels/NodeDetailCard.tsx:378
+#: src/components/map/panels/NodeDetailCard.tsx:380
 msgid "Recipe: not recorded"
 msgstr "Рецепт: не записано"
 
@@ -11994,8 +12013,8 @@ msgstr "Regenerating the summary. Please wait..."
 msgid "Register | dembrane"
 msgstr "Register | dembrane"
 
-#: src/components/map/panels/NodeDetailCard.tsx:323
-#: src/components/map/panels/NodeDetailCard.tsx:529
+#: src/components/map/panels/NodeDetailCard.tsx:325
+#: src/components/map/panels/NodeDetailCard.tsx:531
 #: src/components/map/panels/MapSettingsMenu.tsx:438
 msgid "Relationships"
 msgstr "Зв'язки"
@@ -12726,7 +12745,7 @@ msgstr "Revision #{revisionNumber}"
 msgid "Revision history"
 msgstr "Історія змін"
 
-#: src/components/map/panels/NodeDetailCard.tsx:383
+#: src/components/map/panels/NodeDetailCard.tsx:385
 msgid "Revision history is not available yet."
 msgstr "Історія змін поки недоступна."
 
@@ -13756,7 +13775,7 @@ msgstr "Показати ще {hidden}"
 msgid "Show {overflow} more"
 msgstr "Показати ще {overflow}"
 
-#: src/components/map/panels/NodeDetailCard.tsx:244
+#: src/components/map/panels/NodeDetailCard.tsx:246
 msgid "Show {typePlural}"
 msgstr "Показати {typePlural}"
 
@@ -13774,8 +13793,10 @@ msgid "Show again"
 msgstr "Показати знову"
 
 #. placeholder {0}: shown.length
+#. placeholder {0}: voices.length
 #. placeholder {0}: ordered.length
 #: src/components/results/curate/ArgumentsTab.tsx:368
+#: src/components/map/panels/DetailsSheet.tsx:199
 #: src/components/map/panels/ArgumentAccordion.tsx:299
 msgid "Show all {0}"
 msgstr "Показати всі {0}"
@@ -13929,7 +13950,7 @@ msgstr "Показано {0} із {1}"
 msgid "Showing {displayFrom}–{displayTo} of {totalItems} entries"
 msgstr "Showing {displayFrom}–{displayTo} of {totalItems} entries"
 
-#: src/components/map/MapExperience.tsx:104
+#: src/components/map/MapExperience.tsx:108
 msgid "Showing {drawn} of {available} connections"
 msgstr "Показано {drawn} із {available} зв’язків"
 
@@ -14182,7 +14203,7 @@ msgstr "Source {0}"
 msgid "Source conversation"
 msgstr "Вихідна розмова"
 
-#: src/components/map/panels/NodeDetailCard.tsx:493
+#: src/components/map/panels/NodeDetailCard.tsx:495
 msgid "Source evidence"
 msgstr "Першоджерело"
 
@@ -14190,11 +14211,11 @@ msgstr "Першоджерело"
 msgid "Source not recorded"
 msgstr "Джерело не зафіксовано"
 
-#: src/components/map/panels/NodeDetailCard.tsx:149
+#: src/components/map/panels/NodeDetailCard.tsx:151
 msgid "Source statement unavailable"
 msgstr "Початкове твердження недоступне"
 
-#: src/components/map/panels/NodeDetailCard.tsx:370
+#: src/components/map/panels/NodeDetailCard.tsx:372
 msgid "Source: {origin}"
 msgstr "Джерело: {origin}"
 
@@ -14614,11 +14635,11 @@ msgstr "Доступ для підтримки ввімкнено"
 msgid "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 msgstr "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 
-#: src/components/map/panels/NodeDetailCard.tsx:304
+#: src/components/map/panels/NodeDetailCard.tsx:306
 msgid "Supporting pole A"
 msgstr "Підтримка полюса A"
 
-#: src/components/map/panels/NodeDetailCard.tsx:313
+#: src/components/map/panels/NodeDetailCard.tsx:315
 msgid "Supporting pole B"
 msgstr "Підтримка полюса B"
 
@@ -15055,7 +15076,7 @@ msgstr "Запрошення надіслано на {invitedEmail}, але ви
 msgid "The last generation failed, so this is still the previous map. {0}"
 msgstr "Останнє генерування не вдалося, тому це все ще попередня мапа. {0}"
 
-#: src/components/map/MapExperience.tsx:131
+#: src/components/map/MapExperience.tsx:135
 msgid "The layout could not be computed for this scope."
 msgstr "Не вдалося розрахувати макет для цього обсягу."
 
@@ -15148,7 +15169,7 @@ msgstr "Ліміт вузлів має бути цілим числом біль
 msgid "The organisation this invite was for has been deleted. There's nothing to join."
 msgstr "Організацію, для якої було створено це запрошення, видалено. Приєднуватися ні до чого."
 
-#: src/components/map/panels/NodeDetailCard.tsx:164
+#: src/components/map/panels/NodeDetailCard.tsx:166
 msgid "The original statements are unavailable for this older result."
 msgstr "Початкові твердження недоступні для цього старішого результату."
 
@@ -16199,7 +16220,6 @@ msgid "Translation progress"
 msgstr "Перебіг перекладу"
 
 #: src/components/map/panels/MapSettingsMenu.tsx:414
-#: src/components/map/panels/DetailsModal.tsx:137
 msgid "Tree"
 msgstr "Дерево"
 

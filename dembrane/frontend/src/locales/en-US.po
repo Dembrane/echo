@@ -244,10 +244,8 @@ msgid "{0, plural, one {# agreement} other {# agreements}}"
 msgstr "{0, plural, one {# agreement} other {# agreements}}"
 
 #. placeholder {0}: nodes.length
-#. placeholder {0}: target.nodes.length
 #: src/components/present/AudienceMapAdapter.tsx:360
 #: src/components/map/panels/HistoryPanel.tsx:49
-#: src/components/map/panels/DetailsModal.tsx:149
 #: src/components/map/panels/ClusterSummary.tsx:148
 msgid "{0, plural, one {# argument} other {# arguments}}"
 msgstr "{0, plural, one {# argument} other {# arguments}}"
@@ -767,7 +765,7 @@ msgstr "{conversations, plural, one {# conversation} other {# conversations}}"
 msgid "{conversations} conversations with a transcript, about {minutes} minutes of talk. Ready."
 msgstr "{conversations} conversations with a transcript, about {minutes} minutes of talk. Ready."
 
-#: src/components/map/MapExperience.tsx:138
+#: src/components/map/MapExperience.tsx:142
 msgid "{count, plural, one {# argument} other {# arguments}}"
 msgstr "{count, plural, one {# argument} other {# arguments}}"
 
@@ -2002,7 +2000,7 @@ msgstr "An error occurred."
 msgid "An event or a workshop."
 msgstr "An event or a workshop."
 
-#: src/components/map/panels/NodeDetailCard.tsx:198
+#: src/components/map/panels/NodeDetailCard.tsx:200
 msgid "An object outside this view"
 msgstr "An object outside this view"
 
@@ -2300,7 +2298,7 @@ msgid "Are you sure you want to remove your custom logo? The default dembrane lo
 msgstr "Are you sure you want to remove your custom logo? The default dembrane logo will be used instead."
 
 #: src/components/map/attributes.ts:127
-#: src/components/map/panels/NodeDetailCard.tsx:442
+#: src/components/map/panels/NodeDetailCard.tsx:444
 msgid "Argument"
 msgstr "Argument"
 
@@ -2317,7 +2315,7 @@ msgstr "Argument map"
 msgid "Argument tree"
 msgstr "Argument tree"
 
-#: src/components/map/MapExperience.tsx:563
+#: src/components/map/MapExperience.tsx:571
 msgid "Argument tree (MST)"
 msgstr "Argument tree (MST)"
 
@@ -3368,7 +3366,7 @@ msgstr "Choose a conversation"
 msgid "Choose a logo file"
 msgstr "Choose a logo file"
 
-#: src/components/map/MapExperience.tsx:641
+#: src/components/map/MapExperience.tsx:649
 msgid "Choose a map under Advanced"
 msgstr "Choose a map under Advanced"
 
@@ -3560,6 +3558,7 @@ msgstr "Clone project"
 #: src/components/results/ResultRow.tsx:435
 #: src/components/results/ResultItem.tsx:860
 #: src/components/results/ResultItem.tsx:870
+#: src/components/map/panels/DetailsSheet.tsx:432
 #: src/components/dropzone/UploadConversationDropzone.tsx:882
 #: src/components/conversation/ConversationLinks.tsx:105
 #: src/components/common/FeedbackPortalModal.tsx:158
@@ -3683,7 +3682,7 @@ msgstr "combined from {0}"
 #. placeholder {0}: consolidation.memberCount
 #: src/components/map/renderers/MstGraph.tsx:1115
 #: src/components/map/renderers/LocalMapGraph.tsx:1077
-#: src/components/map/panels/NodeDetailCard.tsx:136
+#: src/components/map/panels/NodeDetailCard.tsx:138
 msgid "Combined from {0} arguments"
 msgstr "Combined from {0} arguments"
 
@@ -3821,8 +3820,7 @@ msgstr "Connection unhealthy"
 
 #: src/components/map/panels/SpotlightPanel.tsx:239
 #: src/components/map/panels/SpotlightPanel.tsx:429
-#: src/components/map/panels/LocalGraph.tsx:144
-#: src/components/map/panels/DetailsModal.tsx:169
+#: src/components/map/panels/DetailsSheet.tsx:451
 msgid "Connections"
 msgstr "Connections"
 
@@ -5158,7 +5156,7 @@ msgstr "Dissimilar links: {0}"
 #~ msgstr "Distilling core idea..."
 
 #: src/components/map/panels/HistoryPanel.tsx:59
-#: src/components/map/panels/DetailsModal.tsx:121
+#: src/components/map/panels/DetailsSheet.tsx:371
 #: src/components/map/panels/ClusterSummary.tsx:144
 msgid "Distilling core idea…"
 msgstr "Distilling core idea…"
@@ -5883,7 +5881,7 @@ msgstr "Everyone on the roster is trained."
 msgid "participant.alert.microphone.access.success"
 msgstr "Everything looks good – you can continue."
 
-#: src/components/map/panels/NodeDetailCard.tsx:339
+#: src/components/map/panels/NodeDetailCard.tsx:341
 msgid "Evidence"
 msgstr "Evidence"
 
@@ -5895,7 +5893,7 @@ msgstr "Evidence"
 #~ msgid "Evidence level"
 #~ msgstr "Evidence level"
 
-#: src/components/map/panels/NodeDetailCard.tsx:345
+#: src/components/map/panels/NodeDetailCard.tsx:347
 msgid "Evidenced connections"
 msgstr "Evidenced connections"
 
@@ -6605,6 +6603,10 @@ msgstr "French"
 msgid "friction"
 msgstr "friction"
 
+#: src/components/map/panels/DetailsSheet.tsx:414
+msgid "From {quoteCount, plural, one {# quote} other {# quotes}} in {conversationCount, plural, one {# conversation} other {# conversations}}"
+msgstr "From {quoteCount, plural, one {# quote} other {# quotes}} in {conversationCount, plural, one {# conversation} other {# conversations}}"
+
 #: src/components/map/panels/shared.tsx:96
 msgid "From the transcript"
 msgstr "From the transcript"
@@ -6951,7 +6953,7 @@ msgstr "Hi {firstName}"
 msgid "Hidden"
 msgstr "Hidden"
 
-#: src/components/map/panels/NodeDetailCard.tsx:230
+#: src/components/map/panels/NodeDetailCard.tsx:232
 msgid "Hidden by the Objects filter"
 msgstr "Hidden by the Objects filter"
 
@@ -7620,16 +7622,16 @@ msgid "Italian for your core workflows"
 msgstr "Italian for your core workflows"
 
 #: src/components/map/panels/DetailsModal.tsx:174
-msgid "Its arguments, and the tree between them"
-msgstr "Its arguments, and the tree between them"
+#~ msgid "Its arguments, and the tree between them"
+#~ msgstr "Its arguments, and the tree between them"
 
 #: src/components/present/AudienceScreen.tsx:943
 msgid "Its link may have been switched off. Ask the host."
 msgstr "Its link may have been switched off. Ask the host."
 
 #: src/components/map/panels/DetailsModal.tsx:172
-msgid "Its neighbours in the tree, and its relationships"
-msgstr "Its neighbours in the tree, and its relationships"
+#~ msgid "Its neighbours in the tree, and its relationships"
+#~ msgstr "Its neighbours in the tree, and its relationships"
 
 #: src/routes/auth/Register.tsx:157
 msgid "John"
@@ -7863,6 +7865,10 @@ msgstr "Kind of change not recorded"
 #: src/components/results/curate/CurateTabs.tsx:78
 msgid "Kinds of finding"
 msgstr "Kinds of finding"
+
+#: src/components/map/panels/KnowledgeGraph.tsx:298
+msgid "Knowledge graph"
+msgstr "Knowledge graph"
 
 #: src/routes/project/present/PresentRoute.tsx:131
 #: src/features/sidebar/shell/UserMenu.tsx:154
@@ -8312,7 +8318,7 @@ msgstr "Loading…"
 msgid "Local argument map"
 msgstr "Local argument map"
 
-#: src/components/map/MapExperience.tsx:606
+#: src/components/map/MapExperience.tsx:614
 msgid "Local map"
 msgstr "Local map"
 
@@ -9303,7 +9309,7 @@ msgstr "No deduplicated arguments saved yet."
 msgid "No default set (client-managed applies)"
 msgstr "No default set (client-managed applies)"
 
-#: src/components/map/panels/NodeDetailCard.tsx:349
+#: src/components/map/panels/NodeDetailCard.tsx:351
 msgid "No evidenced connections."
 msgstr "No evidenced connections."
 
@@ -9347,8 +9353,8 @@ msgstr "No goal yet. Set one here, or let the assistant interview you in chat."
 msgid "No invites went out. Check the list below."
 msgstr "No invites went out. Check the list below."
 
-#: src/components/map/panels/NodeDetailCard.tsx:310
-#: src/components/map/panels/NodeDetailCard.tsx:319
+#: src/components/map/panels/NodeDetailCard.tsx:312
+#: src/components/map/panels/NodeDetailCard.tsx:321
 msgid "No linked arguments."
 msgstr "No linked arguments."
 
@@ -9399,7 +9405,7 @@ msgstr "No new feedback detected yet. Please continue your discussion and try ag
 msgid "No new invites needed. Check the list below."
 msgstr "No new invites needed. Check the list below."
 
-#: src/components/map/panels/NodeDetailCard.tsx:412
+#: src/components/map/panels/NodeDetailCard.tsx:415
 msgid "No node selected."
 msgstr "No node selected."
 
@@ -9505,9 +9511,17 @@ msgstr "No projects found for search term"
 msgid "No projects match."
 msgstr "No projects match."
 
+#: src/components/map/panels/DetailsSheet.tsx:194
+msgid "No quotes for this argument."
+msgstr "No quotes for this argument."
+
 #: src/components/results/curate/CurateOpen.tsx:259
 msgid "No quotes were kept with this finding."
 msgstr "No quotes were kept with this finding."
+
+#: src/components/map/panels/DetailsSheet.tsx:424
+msgid "No quotes yet"
+msgstr "No quotes yet"
 
 #: src/components/conversation/LiveMonitorSection.tsx:676
 #~ msgid "No recent activity"
@@ -9730,7 +9744,7 @@ msgstr "not in this presentation"
 msgid "Not in this presentation."
 msgstr "Not in this presentation."
 
-#: src/components/map/panels/NodeDetailCard.tsx:232
+#: src/components/map/panels/NodeDetailCard.tsx:234
 msgid "Not in this view"
 msgstr "Not in this view"
 
@@ -10811,6 +10825,10 @@ msgstr "Phone"
 msgid "Pick a date"
 msgstr "Pick a date"
 
+#: src/components/map/panels/KnowledgeGraph.tsx:423
+msgid "Pick a dot to read its words below."
+msgstr "Pick a dot to read its words below."
+
 #: src/components/pricing/PricingConfigurator.tsx:842
 #: src/components/pricing/PricingBookingStep.tsx:345
 msgid "Pick a time"
@@ -11565,6 +11583,7 @@ msgstr "Questions about how dembrane works, not only about your data."
 msgid "Queued"
 msgstr "Queued"
 
+#: src/components/map/panels/DetailsSheet.tsx:471
 #: src/components/map/panels/ArgumentAccordion.tsx:248
 msgid "Quotes"
 msgstr "Quotes"
@@ -11574,13 +11593,13 @@ msgid "Quotes ({clusterQuoteCount})"
 msgstr "Quotes ({clusterQuoteCount})"
 
 #: src/components/map/panels/SpotlightPanel.tsx:427
-#: src/components/map/panels/NodeDetailCard.tsx:514
+#: src/components/map/panels/NodeDetailCard.tsx:516
 msgid "Quotes ({quoteCount})"
 msgstr "Quotes ({quoteCount})"
 
 #: src/components/map/panels/DetailsModal.tsx:48
-msgid "Quotes ({quotes})"
-msgstr "Quotes ({quotes})"
+#~ msgid "Quotes ({quotes})"
+#~ msgstr "Quotes ({quotes})"
 
 #. placeholder {0}: items.length
 #: src/components/chat/AgenticChatPanel.tsx:616
@@ -11781,11 +11800,11 @@ msgid "recently"
 msgstr "recently"
 
 #: src/components/results/ResultItem.tsx:824
-#: src/components/map/panels/NodeDetailCard.tsx:376
+#: src/components/map/panels/NodeDetailCard.tsx:378
 msgid "Recipe: {recipe}"
 msgstr "Recipe: {recipe}"
 
-#: src/components/map/panels/NodeDetailCard.tsx:378
+#: src/components/map/panels/NodeDetailCard.tsx:380
 msgid "Recipe: not recorded"
 msgstr "Recipe: not recorded"
 
@@ -11989,8 +12008,8 @@ msgstr "Regenerating the summary. Please wait..."
 msgid "Register | dembrane"
 msgstr "Register | dembrane"
 
-#: src/components/map/panels/NodeDetailCard.tsx:323
-#: src/components/map/panels/NodeDetailCard.tsx:529
+#: src/components/map/panels/NodeDetailCard.tsx:325
+#: src/components/map/panels/NodeDetailCard.tsx:531
 #: src/components/map/panels/MapSettingsMenu.tsx:438
 msgid "Relationships"
 msgstr "Relationships"
@@ -12721,7 +12740,7 @@ msgstr "Revision #{revisionNumber}"
 msgid "Revision history"
 msgstr "Revision history"
 
-#: src/components/map/panels/NodeDetailCard.tsx:383
+#: src/components/map/panels/NodeDetailCard.tsx:385
 msgid "Revision history is not available yet."
 msgstr "Revision history is not available yet."
 
@@ -13751,7 +13770,7 @@ msgstr "Show {hidden} more"
 msgid "Show {overflow} more"
 msgstr "Show {overflow} more"
 
-#: src/components/map/panels/NodeDetailCard.tsx:244
+#: src/components/map/panels/NodeDetailCard.tsx:246
 msgid "Show {typePlural}"
 msgstr "Show {typePlural}"
 
@@ -13769,8 +13788,10 @@ msgid "Show again"
 msgstr "Show again"
 
 #. placeholder {0}: shown.length
+#. placeholder {0}: voices.length
 #. placeholder {0}: ordered.length
 #: src/components/results/curate/ArgumentsTab.tsx:368
+#: src/components/map/panels/DetailsSheet.tsx:199
 #: src/components/map/panels/ArgumentAccordion.tsx:299
 msgid "Show all {0}"
 msgstr "Show all {0}"
@@ -13924,7 +13945,7 @@ msgstr "Showing {0} of {1}"
 msgid "Showing {displayFrom}–{displayTo} of {totalItems} entries"
 msgstr "Showing {displayFrom}–{displayTo} of {totalItems} entries"
 
-#: src/components/map/MapExperience.tsx:104
+#: src/components/map/MapExperience.tsx:108
 msgid "Showing {drawn} of {available} connections"
 msgstr "Showing {drawn} of {available} connections"
 
@@ -14177,7 +14198,7 @@ msgstr "Source {0}"
 msgid "Source conversation"
 msgstr "Source conversation"
 
-#: src/components/map/panels/NodeDetailCard.tsx:493
+#: src/components/map/panels/NodeDetailCard.tsx:495
 msgid "Source evidence"
 msgstr "Source evidence"
 
@@ -14185,11 +14206,11 @@ msgstr "Source evidence"
 msgid "Source not recorded"
 msgstr "Source not recorded"
 
-#: src/components/map/panels/NodeDetailCard.tsx:149
+#: src/components/map/panels/NodeDetailCard.tsx:151
 msgid "Source statement unavailable"
 msgstr "Source statement unavailable"
 
-#: src/components/map/panels/NodeDetailCard.tsx:370
+#: src/components/map/panels/NodeDetailCard.tsx:372
 msgid "Source: {origin}"
 msgstr "Source: {origin}"
 
@@ -14609,11 +14630,11 @@ msgstr "Support access turned on"
 msgid "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 msgstr "Supported formats: MP3, WAV, OGG, WEBM, M4A, MP4, AAC, FLAC, OPUS"
 
-#: src/components/map/panels/NodeDetailCard.tsx:304
+#: src/components/map/panels/NodeDetailCard.tsx:306
 msgid "Supporting pole A"
 msgstr "Supporting pole A"
 
-#: src/components/map/panels/NodeDetailCard.tsx:313
+#: src/components/map/panels/NodeDetailCard.tsx:315
 msgid "Supporting pole B"
 msgstr "Supporting pole B"
 
@@ -15050,7 +15071,7 @@ msgstr "The invite was sent to {invitedEmail}, but you're signed in as {myEmail}
 msgid "The last generation failed, so this is still the previous map. {0}"
 msgstr "The last generation failed, so this is still the previous map. {0}"
 
-#: src/components/map/MapExperience.tsx:131
+#: src/components/map/MapExperience.tsx:135
 msgid "The layout could not be computed for this scope."
 msgstr "The layout could not be computed for this scope."
 
@@ -15142,7 +15163,7 @@ msgstr "The node budget must be a whole number above zero, so {applied} applies.
 msgid "The organisation this invite was for has been deleted. There's nothing to join."
 msgstr "The organisation this invite was for has been deleted. There's nothing to join."
 
-#: src/components/map/panels/NodeDetailCard.tsx:164
+#: src/components/map/panels/NodeDetailCard.tsx:166
 msgid "The original statements are unavailable for this older result."
 msgstr "The original statements are unavailable for this older result."
 
@@ -16193,7 +16214,6 @@ msgid "Translation progress"
 msgstr "Translation progress"
 
 #: src/components/map/panels/MapSettingsMenu.tsx:414
-#: src/components/map/panels/DetailsModal.tsx:137
 msgid "Tree"
 msgstr "Tree"
 

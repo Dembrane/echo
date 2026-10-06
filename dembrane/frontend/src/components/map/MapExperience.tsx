@@ -24,8 +24,12 @@ import { localGroupBackend, useMapGroups } from "./hooks/useMapGroups";
 import type { EdgeCounts } from "./layout/edgeBudget";
 import { EMPTY_EDGES, useMapGeometry } from "./layout/useMapGeometry";
 import { ArgumentAccordion } from "./panels/ArgumentAccordion";
+import {
+	type DetailsRequest,
+	DetailsSheet,
+	type DetailsTarget,
+} from "./panels/DetailsSheet";
 import { MapToolbar, VIEWS, viewOf } from "./panels/MapToolbar";
-import { DetailsModal, type DetailsTarget } from "./panels/DetailsModal";
 import {
 	type HistoryItem,
 	HistoryRows,
@@ -357,7 +361,13 @@ export const MapExperience = ({
 				0,
 			)
 		: 0;
-	const [details, setDetails] = useState<DetailsFrom | null>(null);
+	// The details sheet, and which way in it was opened by.
+	const [details, setDetails] = useState<DetailsRequest | null>(null);
+	const openDetails = useCallback(
+		(from: DetailsFrom) => setDetails({ at: Date.now(), from }),
+		[],
+	);
+	const closeDetails = useCallback(() => setDetails(null), []);
 	const selectHistoryItem = useCallback(
 		(item: HistoryItem) => {
 			if (item.kind === "argument") store.setSelectedNodeId(item.nodeId);
@@ -430,13 +440,7 @@ export const MapExperience = ({
 		? { kind: "cluster", ...spotlightCluster }
 		: spotlight.node
 			? {
-					inspection: spotlightInspection && {
-						...spotlightInspection,
-						onSelect: (nodeId: string) => {
-							setDetails(null);
-							selectNode(nodeId);
-						},
-					},
+					inspection: spotlightInspection,
 					kind: "argument",
 					node: spotlight.node,
 				}
@@ -482,7 +486,25 @@ export const MapExperience = ({
 						/>
 					</div>
 				)}
-				<div className="grid min-h-0 flex-1 grid-cols-12 grid-rows-[minmax(0,1fr)] gap-2">
+				<div className="relative grid min-h-0 flex-1 grid-cols-12 grid-rows-[minmax(0,1fr)] gap-2">
+					{/* A cluster's or an argument's details: a sheet over the
+					    right of the maps, inside the map's own colours. */}
+					{details && detailsTarget && (
+						<DetailsSheet
+							target={detailsTarget}
+							request={details}
+							onClose={closeDetails}
+							evidenceFor={evidenceFor}
+							conversationHref={conversationHref}
+							provenance={provenance}
+							nodesById={graphNodesById}
+							edges={mstEdges}
+							relations={graph.relations}
+							colorBy={colorBy}
+							darkMode={settings.darkMode}
+							onSelect={selectNode}
+						/>
+					)}
 					{hasLeftPanel && (
 						<section className="col-span-3 flex min-h-0 flex-col gap-2 overflow-hidden p-2">
 							{showSpotlight && (
@@ -506,7 +528,7 @@ export const MapExperience = ({
 										inspection={spotlightInspection}
 										cluster={spotlightCluster}
 										clusterQuoteCount={clusterQuoteCount}
-										onOpenDetails={setDetails}
+										onOpenDetails={openDetails}
 										rows={
 											<HistoryRows
 												items={historyRows}
@@ -516,20 +538,6 @@ export const MapExperience = ({
 												canGroup={canGroup && titles}
 											/>
 										}
-									/>
-									<DetailsModal
-										target={detailsTarget}
-										opened={details !== null}
-										onClose={() => setDetails(null)}
-										quotesOpen={details === "quotes"}
-										evidenceFor={evidenceFor}
-										conversationHref={conversationHref}
-										nodesById={graphNodesById}
-										edges={mstEdges}
-										relations={graph.relations}
-										colorBy={colorBy}
-										darkMode={settings.darkMode}
-										onSelect={selectNode}
 									/>
 								</div>
 							)}
