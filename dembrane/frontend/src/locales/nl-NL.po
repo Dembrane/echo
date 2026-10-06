@@ -251,7 +251,7 @@ msgstr "{0, plural, one {# overeenkomst} other {# overeenkomsten}}"
 
 #. placeholder {0}: nodes.length
 #. placeholder {0}: target.nodes.length
-#: src/components/present/AudienceMapAdapter.tsx:320
+#: src/components/present/AudienceMapAdapter.tsx:322
 #: src/components/map/panels/HistoryPanel.tsx:49
 #: src/components/map/panels/DetailsModal.tsx:149
 #: src/components/map/panels/ClusterSummary.tsx:148
@@ -2315,7 +2315,7 @@ msgstr "Argument"
 msgid "Argument map"
 msgstr "Argumentenkaart"
 
-#: src/components/map/panels/MapToolbar.tsx:196
+#: src/components/map/panels/MapToolbar.tsx:208
 msgid "Argument tree"
 msgstr "Argumentenboom"
 
@@ -3594,15 +3594,15 @@ msgstr "Cloud Act-veilig"
 #~ msgid "Clumped"
 #~ msgstr "Samengeklonterd"
 
-#: src/components/map/panels/MapToolbar.tsx:145
+#: src/components/map/panels/MapToolbar.tsx:112
 msgid "Cluster density"
 msgstr "Clusterdichtheid"
 
-#: src/components/map/panels/MapToolbar.tsx:149
+#: src/components/map/panels/MapToolbar.tsx:115
 msgid "Cluster density: fewer or more clusters"
 msgstr "Clusterdichtheid: minder of meer clusters"
 
-#: src/components/map/panels/MapToolbar.tsx:189
+#: src/components/map/panels/MapToolbar.tsx:201
 msgid "Cluster map"
 msgstr "Clusterkaart"
 
@@ -6545,7 +6545,7 @@ msgstr "Krachtparameters"
 #~ msgid "Force Parameters"
 #~ msgstr "Krachtparameters"
 
-#: src/components/map/panels/MapToolbar.tsx:165
+#: src/components/map/panels/MapToolbar.tsx:177
 #: src/components/map/panels/MapSettingsMenu.tsx:490
 msgid "Force settings"
 msgstr "Krachtinstellingen"
@@ -8543,7 +8543,7 @@ msgstr "Map-argumenten"
 msgid "Map budget"
 msgstr "Kaartbudget"
 
-#: src/components/map/panels/MapToolbar.tsx:131
+#: src/components/map/panels/MapToolbar.tsx:162
 msgid "Map controls"
 msgstr "Kaartbediening"
 
@@ -8559,7 +8559,7 @@ msgstr "Kaart leest de transcripten van dit project, vindt de argumenten die men
 msgid "Map ready"
 msgstr "Map klaar"
 
-#: src/components/present/AudienceMapAdapter.tsx:481
+#: src/components/present/AudienceMapAdapter.tsx:491
 msgid "Map results are not ready yet."
 msgstr "Kaartresultaten zijn nog niet klaar."
 
@@ -9356,7 +9356,7 @@ msgstr "Geen logo ingesteld. De standaard van dembrane wordt gebruikt."
 msgid "No map has been generated for this project yet."
 msgstr "Er is nog geen kaart gegenereerd voor dit project."
 
-#: src/components/present/AudienceMapAdapter.tsx:304
+#: src/components/present/AudienceMapAdapter.tsx:306
 msgid "No map results are ready yet."
 msgstr "Er zijn nog geen kaartresultaten klaar."
 
@@ -9951,7 +9951,7 @@ msgstr "Heb je het besproken? Klik op \"Herzien\" om {objectLabel} aan te passen
 msgid "participant.verify.instructions.read.aloud"
 msgstr "Lees {objectLabel} hardop voor en vertel wat je eventueel wilt aanpassen."
 
-#: src/components/map/panels/MapToolbar.tsx:175
+#: src/components/map/panels/MapToolbar.tsx:187
 msgid "One at a time"
 msgstr "Eén tegelijk"
 
@@ -10651,7 +10651,7 @@ msgstr "Wachtwoorden komen niet overeen"
 #~ msgstr "Plak het in een willekeurige pagina. Het blijft live."
 
 #: src/components/map/renderers/LocalMapGraph.tsx:1234
-#: src/components/map/panels/MapToolbar.tsx:136
+#: src/components/map/panels/MapToolbar.tsx:167
 msgid "Pause physics"
 msgstr "Fysica pauzeren"
 
@@ -12571,7 +12571,7 @@ msgid "participant.button.stop.resume"
 msgstr "Hervatten"
 
 #: src/components/map/renderers/LocalMapGraph.tsx:1234
-#: src/components/map/panels/MapToolbar.tsx:136
+#: src/components/map/panels/MapToolbar.tsx:167
 msgid "Resume physics"
 msgstr "Simulatie hervatten"
 
@@ -13956,7 +13956,7 @@ msgstr "Bovenaan het scherm te zien. Je kunt dit altijd wijzigen."
 msgid "Shown in the organisation header and in email subject lines."
 msgstr "Wordt getoond in de organisatiekop en in onderwerpregels van e-mails."
 
-#: src/components/map/panels/MapToolbar.tsx:175
+#: src/components/map/panels/MapToolbar.tsx:187
 #: src/components/map/panels/MapSettingsMenu.tsx:392
 msgid "Side by side"
 msgstr "Naast elkaar"
@@ -15077,7 +15077,7 @@ msgstr "De kaart kon niet worden gegenereerd. {0}"
 msgid "The map could not be loaded"
 msgstr "De kaart kon niet worden geladen"
 
-#: src/components/present/AudienceMapAdapter.tsx:491
+#: src/components/present/AudienceMapAdapter.tsx:501
 msgid "The map could not be loaded."
 msgstr "De kaart kon niet worden geladen."
 

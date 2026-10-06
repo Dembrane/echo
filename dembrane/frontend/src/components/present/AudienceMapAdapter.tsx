@@ -26,6 +26,7 @@ import {
 	type MapSettingsControl,
 	MapSettingsMenu,
 } from "@/components/map/panels/MapSettingsMenu";
+import { DensityDial } from "@/components/map/panels/MapToolbar";
 import {
 	createMapInteractionStore,
 	MapInteractionProvider,
@@ -115,7 +116,8 @@ const readGroups = (payload: MapGraphResponse): MapGroupDoc[] => {
  * screen and the Present preview open as the host's Map page does (clusters
  * first, the same density and colours); any other device opens on the Map
  * page's defaults. The room always opens with Spotlight, where History lives,
- * and, having no toolbar, never with the force panels.
+ * and never with the force panels; of the toolbar it keeps only the density
+ * dial, which changes this screen's drawing and nothing else.
  */
 const roomStartSettings = (): MapSettings => ({
 	...readMapSettings(),
@@ -319,17 +321,25 @@ const AudienceMap = ({
 				<Text size="sm">
 					<Plural value={nodes.length} one="# argument" other="# arguments" />
 				</Text>
-				<MapSettingsMenu
-					settings={roomSettings}
-					onChange={onSettingsChange}
-					colorBy={settings.colorBy}
-					onColorByChange={handleColorByChange}
-					canFactCheck={false}
-					hide={
-						titles ? ROOM_HIDDEN_CONTROLS : ROOM_HIDDEN_CONTROLS_WITHOUT_TITLES
-					}
-					withinPortal={false}
-				/>
+				<Group gap="xs" wrap="nowrap">
+					<DensityDial
+						density={settings.clusterDensity}
+						onChange={(clusterDensity) => onSettingsChange({ clusterDensity })}
+					/>
+					<MapSettingsMenu
+						settings={roomSettings}
+						onChange={onSettingsChange}
+						colorBy={settings.colorBy}
+						onColorByChange={handleColorByChange}
+						canFactCheck={false}
+						hide={
+							titles
+								? ROOM_HIDDEN_CONTROLS
+								: ROOM_HIDDEN_CONTROLS_WITHOUT_TITLES
+						}
+						withinPortal={false}
+					/>
+				</Group>
 			</Group>
 			<MapSurface darkMode={false} inset={false}>
 				<MapInteractionProvider store={store}>

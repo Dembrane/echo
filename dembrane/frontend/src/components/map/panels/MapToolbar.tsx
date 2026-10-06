@@ -98,6 +98,37 @@ const Rule = () => (
 );
 
 /**
+ * The cluster density dial, from clumped to spread out. Its own piece, so the
+ * room's map can offer it without the rest of the toolbar: it changes only the
+ * drawing on this screen and asks the server for nothing.
+ */
+export const DensityDial = ({
+	density,
+	onChange,
+}: {
+	density: number;
+	onChange: (density: number) => void;
+}) => (
+	<div className="flex items-center gap-1.5 px-1" title={t`Cluster density`}>
+		<CirclesThreeIcon size={16} aria-hidden style={{ opacity: 0.6 }} />
+		<Slider
+			thumbLabel={t`Cluster density: fewer or more clusters`}
+			className="w-28"
+			size="xs"
+			min={0}
+			max={100}
+			step={1}
+			value={densityToDial(density)}
+			onChange={(dial) => onChange(dialToDensity(dial))}
+			label={null}
+			color="primary"
+			thumbSize={12}
+		/>
+		<DotsNineIcon size={16} aria-hidden style={{ opacity: 0.6 }} />
+	</div>
+);
+
+/**
  * The map's one row of controls, on the map itself: physics, the cluster
  * density dial and the force settings, then side by side or one at a time,
  * and which map shows when there is one. Ported from the toolbar on
@@ -140,26 +171,7 @@ export const MapToolbar = ({
 				{paused ? <PlayIcon size={16} /> : <PauseIcon size={16} />}
 			</ToolButton>
 
-			<div
-				className="flex items-center gap-1.5 px-1"
-				title={t`Cluster density`}
-			>
-				<CirclesThreeIcon size={16} aria-hidden style={{ opacity: 0.6 }} />
-				<Slider
-					thumbLabel={t`Cluster density: fewer or more clusters`}
-					className="w-28"
-					size="xs"
-					min={0}
-					max={100}
-					step={1}
-					value={densityToDial(density)}
-					onChange={(dial) => onDensityChange(dialToDensity(dial))}
-					label={null}
-					color="primary"
-					thumbSize={12}
-				/>
-				<DotsNineIcon size={16} aria-hidden style={{ opacity: 0.6 }} />
-			</div>
+			<DensityDial density={density} onChange={onDensityChange} />
 
 			<ToolButton
 				label={t`Force settings`}

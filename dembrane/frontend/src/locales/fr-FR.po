@@ -251,7 +251,7 @@ msgstr "{0, plural, one {# accord} other {# accords}}"
 
 #. placeholder {0}: nodes.length
 #. placeholder {0}: target.nodes.length
-#: src/components/present/AudienceMapAdapter.tsx:320
+#: src/components/present/AudienceMapAdapter.tsx:322
 #: src/components/map/panels/HistoryPanel.tsx:49
 #: src/components/map/panels/DetailsModal.tsx:149
 #: src/components/map/panels/ClusterSummary.tsx:148
@@ -2318,7 +2318,7 @@ msgstr "Argument"
 msgid "Argument map"
 msgstr "Carte des arguments"
 
-#: src/components/map/panels/MapToolbar.tsx:196
+#: src/components/map/panels/MapToolbar.tsx:208
 msgid "Argument tree"
 msgstr "Arbre des arguments"
 
@@ -3597,15 +3597,15 @@ msgstr "Conforme au Cloud Act"
 #~ msgid "Clumped"
 #~ msgstr "Regroupé"
 
-#: src/components/map/panels/MapToolbar.tsx:145
+#: src/components/map/panels/MapToolbar.tsx:112
 msgid "Cluster density"
 msgstr "Densité des groupes"
 
-#: src/components/map/panels/MapToolbar.tsx:149
+#: src/components/map/panels/MapToolbar.tsx:115
 msgid "Cluster density: fewer or more clusters"
 msgstr "Densité des groupes : moins ou plus de groupes"
 
-#: src/components/map/panels/MapToolbar.tsx:189
+#: src/components/map/panels/MapToolbar.tsx:201
 msgid "Cluster map"
 msgstr "Carte des groupes"
 
@@ -6548,7 +6548,7 @@ msgstr "Paramètres de force"
 #~ msgid "Force Parameters"
 #~ msgstr "Paramètres de force"
 
-#: src/components/map/panels/MapToolbar.tsx:165
+#: src/components/map/panels/MapToolbar.tsx:177
 #: src/components/map/panels/MapSettingsMenu.tsx:490
 msgid "Force settings"
 msgstr "Réglages des forces"
@@ -8546,7 +8546,7 @@ msgstr "Arguments de la Map"
 msgid "Map budget"
 msgstr "Budget de carte"
 
-#: src/components/map/panels/MapToolbar.tsx:131
+#: src/components/map/panels/MapToolbar.tsx:162
 msgid "Map controls"
 msgstr "Commandes de la carte"
 
@@ -8562,7 +8562,7 @@ msgstr "La Carte analyse les transcriptions de ce projet, identifie les argument
 msgid "Map ready"
 msgstr "Carte prête"
 
-#: src/components/present/AudienceMapAdapter.tsx:481
+#: src/components/present/AudienceMapAdapter.tsx:491
 msgid "Map results are not ready yet."
 msgstr "Les résultats de la carte ne sont pas encore prêts."
 
@@ -9359,7 +9359,7 @@ msgstr "Aucun logo défini. Le logo dembrane par défaut sera utilisé."
 msgid "No map has been generated for this project yet."
 msgstr "Aucune carte n'a encore été générée pour ce projet."
 
-#: src/components/present/AudienceMapAdapter.tsx:304
+#: src/components/present/AudienceMapAdapter.tsx:306
 msgid "No map results are ready yet."
 msgstr "Aucun résultat de carte n'est encore prêt."
 
@@ -9954,7 +9954,7 @@ msgstr "Une fois que vous avez discuté, appuyez sur \"réviser\" pour que {obje
 msgid "participant.verify.instructions.read.aloud"
 msgstr "Une fois que vous recevez {objectLabel}, lisez-le à haute voix et partagez à haute voix ce que vous souhaitez modifier, le cas échéant."
 
-#: src/components/map/panels/MapToolbar.tsx:175
+#: src/components/map/panels/MapToolbar.tsx:187
 msgid "One at a time"
 msgstr "Une à la fois"
 
@@ -10654,7 +10654,7 @@ msgstr "Les mots de passe ne correspondent pas"
 #~ msgstr "Collez-le sur n'importe quelle page. Il reste actif."
 
 #: src/components/map/renderers/LocalMapGraph.tsx:1234
-#: src/components/map/panels/MapToolbar.tsx:136
+#: src/components/map/panels/MapToolbar.tsx:167
 msgid "Pause physics"
 msgstr "Mettre la physique en pause"
 
@@ -12574,7 +12574,7 @@ msgid "participant.button.stop.resume"
 msgstr "Reprendre"
 
 #: src/components/map/renderers/LocalMapGraph.tsx:1234
-#: src/components/map/panels/MapToolbar.tsx:136
+#: src/components/map/panels/MapToolbar.tsx:167
 msgid "Resume physics"
 msgstr "Reprendre la physique"
 
@@ -13959,7 +13959,7 @@ msgstr "Affiché en haut de l'écran. Modifiable à tout moment."
 msgid "Shown in the organisation header and in email subject lines."
 msgstr "Affiché dans l'en-tête de l'organisation et dans l'objet des e-mails."
 
-#: src/components/map/panels/MapToolbar.tsx:175
+#: src/components/map/panels/MapToolbar.tsx:187
 #: src/components/map/panels/MapSettingsMenu.tsx:392
 msgid "Side by side"
 msgstr "Côte à côte"
@@ -15081,7 +15081,7 @@ msgstr "Impossible de générer la carte. {0}"
 msgid "The map could not be loaded"
 msgstr "Impossible de charger la carte"
 
-#: src/components/present/AudienceMapAdapter.tsx:491
+#: src/components/present/AudienceMapAdapter.tsx:501
 msgid "The map could not be loaded."
 msgstr "Impossible de charger la carte."
 

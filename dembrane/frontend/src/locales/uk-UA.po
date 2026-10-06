@@ -250,7 +250,7 @@ msgstr "{0, plural, one {# угода} few {# угоди} many {# угод} othe
 
 #. placeholder {0}: nodes.length
 #. placeholder {0}: target.nodes.length
-#: src/components/present/AudienceMapAdapter.tsx:320
+#: src/components/present/AudienceMapAdapter.tsx:322
 #: src/components/map/panels/HistoryPanel.tsx:49
 #: src/components/map/panels/DetailsModal.tsx:149
 #: src/components/map/panels/ClusterSummary.tsx:148
@@ -2317,7 +2317,7 @@ msgstr "Аргумент"
 msgid "Argument map"
 msgstr "Карта аргументів"
 
-#: src/components/map/panels/MapToolbar.tsx:196
+#: src/components/map/panels/MapToolbar.tsx:208
 msgid "Argument tree"
 msgstr "Дерево аргументів"
 
@@ -3596,15 +3596,15 @@ msgstr "Сумісність із CLOUD Act"
 #~ msgid "Clumped"
 #~ msgstr "Згуртовано"
 
-#: src/components/map/panels/MapToolbar.tsx:145
+#: src/components/map/panels/MapToolbar.tsx:112
 msgid "Cluster density"
 msgstr "Щільність кластерів"
 
-#: src/components/map/panels/MapToolbar.tsx:149
+#: src/components/map/panels/MapToolbar.tsx:115
 msgid "Cluster density: fewer or more clusters"
 msgstr "Щільність кластерів: менше чи більше кластерів"
 
-#: src/components/map/panels/MapToolbar.tsx:189
+#: src/components/map/panels/MapToolbar.tsx:201
 msgid "Cluster map"
 msgstr "Мапа кластерів"
 
@@ -6547,7 +6547,7 @@ msgstr "Параметри сили"
 #~ msgid "Force Parameters"
 #~ msgstr "Параметри сили"
 
-#: src/components/map/panels/MapToolbar.tsx:165
+#: src/components/map/panels/MapToolbar.tsx:177
 #: src/components/map/panels/MapSettingsMenu.tsx:490
 msgid "Force settings"
 msgstr "Налаштування сил"
@@ -8545,7 +8545,7 @@ msgstr "Аргументи з Map"
 msgid "Map budget"
 msgstr "Бюджет карти"
 
-#: src/components/map/panels/MapToolbar.tsx:131
+#: src/components/map/panels/MapToolbar.tsx:162
 msgid "Map controls"
 msgstr "Керування мапою"
 
@@ -8561,7 +8561,7 @@ msgstr "Карта опрацьовує стенограми цього проє
 msgid "Map ready"
 msgstr "Карта готова"
 
-#: src/components/present/AudienceMapAdapter.tsx:481
+#: src/components/present/AudienceMapAdapter.tsx:491
 msgid "Map results are not ready yet."
 msgstr "Результати карти ще не готові."
 
@@ -9358,7 +9358,7 @@ msgstr "Логотип не встановлено. Використовуват
 msgid "No map has been generated for this project yet."
 msgstr "Для цього проєкту мапу ще не створено."
 
-#: src/components/present/AudienceMapAdapter.tsx:304
+#: src/components/present/AudienceMapAdapter.tsx:306
 msgid "No map results are ready yet."
 msgstr "Результати для мапи ще не готові."
 
@@ -9953,7 +9953,7 @@ msgstr "Once you have discussed, hit \"revise\" to see the {objectLabel} change 
 msgid "participant.verify.instructions.read.aloud"
 msgstr "Once you receive the {objectLabel}, read it aloud and share out loud what you want to change, if anything."
 
-#: src/components/map/panels/MapToolbar.tsx:175
+#: src/components/map/panels/MapToolbar.tsx:187
 msgid "One at a time"
 msgstr "По одній"
 
@@ -10653,7 +10653,7 @@ msgstr "Passwords do not match"
 #~ msgstr "Вставте його на будь-яку сторінку. Дані оновлюються в реальному часі."
 
 #: src/components/map/renderers/LocalMapGraph.tsx:1234
-#: src/components/map/panels/MapToolbar.tsx:136
+#: src/components/map/panels/MapToolbar.tsx:167
 msgid "Pause physics"
 msgstr "Призупинити фізику"
 
@@ -12573,7 +12573,7 @@ msgid "participant.button.stop.resume"
 msgstr "Resume"
 
 #: src/components/map/renderers/LocalMapGraph.tsx:1234
-#: src/components/map/panels/MapToolbar.tsx:136
+#: src/components/map/panels/MapToolbar.tsx:167
 msgid "Resume physics"
 msgstr "Відновити фізику"
 
@@ -13958,7 +13958,7 @@ msgstr "Відображається вгорі екрана. Змінюйте �
 msgid "Shown in the organisation header and in email subject lines."
 msgstr "Відображається в заголовку організації та в темах листів."
 
-#: src/components/map/panels/MapToolbar.tsx:175
+#: src/components/map/panels/MapToolbar.tsx:187
 #: src/components/map/panels/MapSettingsMenu.tsx:392
 msgid "Side by side"
 msgstr "Поруч"
@@ -15080,7 +15080,7 @@ msgstr "Не вдалося згенерувати мапу. {0}"
 msgid "The map could not be loaded"
 msgstr "Не вдалося завантажити карту"
 
-#: src/components/present/AudienceMapAdapter.tsx:491
+#: src/components/present/AudienceMapAdapter.tsx:501
 msgid "The map could not be loaded."
 msgstr "Не вдалося завантажити мапу."
 

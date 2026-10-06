@@ -678,9 +678,26 @@ describe("AudienceMapAdapter", () => {
 		expect(
 			await screen.findByText("The arguments you click are kept here."),
 		).toBeTruthy();
-		// No toolbar: the room reads the density and never sets it.
+		// No editing toolbar: only the density dial, for this screen alone.
 		expect(screen.queryByLabelText("Map controls")).toBeNull();
-		expect(screen.queryByRole("slider")).toBeNull();
+		expect(screen.getAllByRole("slider")).toHaveLength(1);
+	});
+
+	it("lets the room change its own density with the dial", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async () => new Response(JSON.stringify({}), { status: 200 })),
+		);
+		render(adapter(true));
+		await screen.findByText("Audience local renderer");
+		const before = screen.getByTestId("local-map").dataset.density;
+		const dial = screen.getByRole("slider");
+		dial.focus();
+		fireEvent.keyDown(dial, { key: "ArrowRight" });
+		fireEvent.keyDown(dial, { key: "End" });
+		await waitFor(() =>
+			expect(screen.getByTestId("local-map").dataset.density).not.toBe(before),
+		);
 	});
 
 	it("relights the Map's own variables when the room is dark", async () => {
