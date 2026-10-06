@@ -128,7 +128,8 @@
   const POP_FLIP_SWAP = 0.36;
   const POP_FADE = 400;
   const POP_GAP = 2400;      // stagger between spawns once the stage is warm
-  const POP_MAX = 3;         // phrases the automatic flow keeps up at once (one per band)
+  const POP_MAX = 3;         // bands the automatic flow fills at once, one phrase per band
+  const POP_LONG_WORDS = 12; // a phrase longer than this keeps its size and takes two bands
   const POP_CAP = 5;         // phrases on stage at once, all told; a keyed pop past this sends the oldest away
   const POP_HOLD_PINNED = 30000;  // a phrase the facilitator popped from the keys lingers
   const POP_EDGE_PX = 18;    // no phrase comes closer than this to the edge of the stage
@@ -2569,6 +2570,8 @@
 
   // three horizontal bands, one phrase each — overlap-free by construction
   const SLOTS = [{ y: 18 }, { y: 45 }, { y: 71 }];   // the keys strip docks over the bottom of the fold
+  // The bands a live phrase holds: none when pinned, two for a long one.
+  const bandsOf = (l) => l.slots || (l.slot == null ? [] : [l.slot]);
 
   // The waiting stage's Analyse now: the server gives the host who may run a
   // read where to post it; the public page never has one.
@@ -2703,7 +2706,8 @@
     stageEl.querySelector(".popcorn-waiting")?.remove();
 
     const staying = state.pop.live.filter((l) => !l.el.classList.contains("pop-out"));
-    if (staying.length >= POP_CAP || staying.filter((l) => !l.pinned).length >= POP_MAX) return;
+    const bandsUp = staying.filter((l) => !l.pinned).reduce((n, l) => n + bandsOf(l).length, 0);
+    if (staying.length >= POP_CAP || bandsUp >= POP_MAX) return;
     const gap = state.pop.live.length ? POP_GAP : 0; // an empty stage never waits
     if (Date.now() - state.pop.lastSpawn < gap) return;
 
@@ -2814,14 +2818,25 @@
     // facilitator asked for by name
     const centerStage = !pinned && (center || !state.pop.live.length);
     let slotIdx = null;
+    let slots = [];
     if (!pinned) {
-      const used = new Set(state.pop.live.map((l) => l.slot));
+      const used = new Set(state.pop.live.flatMap(bandsOf));
+      // A long phrase keeps its size and gets the room of two bands; it waits
+      // for two to be free rather than shrinking beside its neighbours.
+      const long = phraseWords(item.phrase) > POP_LONG_WORDS;
       if (centerStage) {
         slotIdx = 1; // middle band
+        slots = long ? [0, 1] : [1];
+      } else if (long) {
+        const pairs = [[0, 1], [1, 2]].filter((pair) => pair.every((i) => !used.has(i)));
+        if (!pairs.length) return false;
+        slots = pairs[Math.floor(Math.random() * pairs.length)];
+        slotIdx = slots[0];
       } else {
         const free = [0, 1, 2].filter((i) => !used.has(i));
         if (!free.length) return false;
         slotIdx = free[Math.floor(Math.random() * free.length)];
+        slots = [slotIdx];
       }
     }
     const jx = centerStage ? 0 : Math.random() * 24 - 12;
@@ -2889,7 +2904,11 @@
       }
     } else {
       el.style.setProperty("--x", `${50 + jx}%`);
-      el.style.setProperty("--y", `${SLOTS[slotIdx].y + jy}%`);
+      // a phrase with two bands sits between them; the opening phrase stays central
+      const bandY = !centerStage && slots.length === 2
+        ? (SLOTS[slots[0]].y + SLOTS[slots[1]].y) / 2
+        : SLOTS[slotIdx].y;
+      el.style.setProperty("--y", `${bandY + jy}%`);
       while (overflows() && w > 1) el.dataset.weight = --w;
       clamp();
     }
@@ -2916,7 +2935,7 @@
 
     const lead = reduceMotion ? 0 : POP_ENTER_LEAD_MS;
     const rec = {
-      tid, idx, itemId: item.id, slot: slotIdx, el, pinned,
+      tid, idx, itemId: item.id, slot: slotIdx, slots, el, pinned,
       startedAt: Date.now(),
       // The words cannot be read while the kernel is still jiggling: the first
       // read interval starts when it has popped.
