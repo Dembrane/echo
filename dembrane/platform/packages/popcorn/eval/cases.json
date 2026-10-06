@@ -5,7 +5,9 @@
       "id": "typed-four-points",
       "title": "A typed submission with four digested points (stand-in until the real text arrives)",
       "text": "Four things I want the council to hear before the vote.\nFirst, do it street by street, not house by house. When the whole of Quarry Row is done in one go the scaffolding and the trench are shared, and the builders told us that takes about a quarter off the cost of each house.\nSecond, stop sending letters. Half my street puts anything with the council crest straight in the recycling. What got my mother to sign up for the insulation survey was the electrician from number eight knocking on her door and showing her his own meter.\nThird, renters need protection written into the scheme, not a promise. My landlord has ignored the mould in our back bedroom for two winters. If the street scheme is voluntary for landlords, tenants like me will be the last ones still on gas in 2035, and then we pay the rent rise after the refit.\nFourth, keep the pool warm. The Mell Valley pool is the only place the older people on Linden Terrace exercise in winter. If the river heat network cannot promise the water stays at 29 degrees, say so before the vote, not after.",
-      "expect": { "min": 4 },
+      "expect": {
+        "min": 4
+      },
       "points": [
         {
           "id": "whole-street",
@@ -79,7 +81,7 @@
           "id": "whole-street",
           "says": "Whole streets at once knock 20 to 25 percent off",
           "topic": ["street"],
-          "detail": [["twenty", "25", "20", "per ?cent", "%", "scaffold", "trench", "bulk"]]
+          "detail": [["twenty", "25", "20", "quarter", "scaffold", "trench", "bulk"]]
         },
         {
           "id": "rent-rise",
@@ -99,7 +101,7 @@
         {
           "id": "letters",
           "says": "Council letters get binned; a neighbour who explains works",
-          "topic": ["letter", "crest", "recycling", "council"],
+          "topic": ["letter", "crest", "recycling"],
           "detail": [["neighbou?r", "electrician", "knock", "door", "buddy"]]
         },
         {
@@ -142,13 +144,13 @@
         {
           "id": "spares",
           "says": "Twelve thousand of gas spares become scrap",
-          "topic": ["spares", "scrap", "kit", "garage", "stock"],
+          "topic": ["spares?", "scrap", "kit", "garage", "stock"],
           "detail": [["twelve thousand", "12,?000", "scrap"]]
         },
         {
           "id": "paid-training",
           "says": "Pay the day rate while trades retrain, like jury service",
-          "topic": ["train", "course", "classroom", "workshop"],
+          "topic": ["train", "retrain", "course", "classroom", "workshop"],
           "detail": [
             [
               "wage",
@@ -166,7 +168,16 @@
         {
           "id": "wiring",
           "says": "Sixty amp fuses need 1,500 to 2,000 of electrical work first",
-          "topic": ["fuse", "wiring", "wired", "amp", "electric", "consumer unit", "cupboard"],
+          "topic": [
+            "fuse",
+            "wiring",
+            "wired",
+            "amp",
+            "electric",
+            "consumer unit",
+            "cupboard",
+            "not ready"
+          ],
           "detail": [
             ["sixty", "60", "fifteen hundred", "1,?500", "two thousand", "2,?000", "two grand"]
           ]
