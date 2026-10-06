@@ -71,7 +71,7 @@ on:
       hold_data:
         description: "Deploy the migrate job without running it and keep the workers at 0 (before the cutover's data move)"
         type: boolean
-        default: true
+        default: false
 
 permissions:
   contents: read
