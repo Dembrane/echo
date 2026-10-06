@@ -37,7 +37,7 @@ import {
   voiceHostNote,
 } from "../settings";
 import { freshState, normalizeState, referencedQuoteIds } from "../state";
-import { type PopcornStore, type Row, START_TICK } from "../storage";
+import { FINISH_TICK, type PopcornStore, type Row, START_TICK } from "../storage";
 import { norm as normText } from "../text";
 import {
   cacheKey,
@@ -85,9 +85,13 @@ export const STAKEHOLDERS_TIMEOUT_MS = 300_000;
 // what is fingerprinted or quoted.
 export const MAX_CHARS_PER_CONVERSATION = 150_000;
 export const ANALYSIS_VIEWS = ["tensions", "stakeholders"] as const;
-/** Reads a host asked for, as opposed to the live chain's scheduled ticks. */
+/**
+ * Reads outside the live chain, in any mode: the ones a host asked for, and the read a
+ * finished conversation booked. They never change the mode or the live window.
+ */
 export const ON_REQUEST = new Set([
   "manual",
+  FINISH_TICK,
   "rerun",
   "translation",
   "prepare:popcorn",

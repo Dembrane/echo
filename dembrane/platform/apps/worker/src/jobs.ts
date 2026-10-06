@@ -20,6 +20,7 @@ import type { Mailer } from "@dembrane/mail";
 import { mapWorker } from "@dembrane/map";
 import type { Logger } from "@dembrane/observability";
 import {
+  finishReads,
   type PopcornWorkerDeps,
   popcornDeckHook,
   popcornFlags,
@@ -234,7 +235,11 @@ export function registrations(deps: {
       environment: environmentName(deps.dashboardUrl),
       logger,
     }),
-    conversationWorker(deps.conversations),
+    // A finished conversation's transcript books one popcorn read of its project.
+    conversationWorker({
+      ...deps.conversations,
+      onTranscribed: finishReads({ flags: popcornFlags(config), logger }),
+    }),
     canvasWorker({
       db: deps.db,
       logger,

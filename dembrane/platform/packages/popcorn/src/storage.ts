@@ -31,6 +31,8 @@ export const isReportId = (v: string) => /^\d{1,18}$/.test(v);
 export const TASK_POPCORN_TICK = "popcorn_tick";
 /** The tick kind of a booked start ("Ready by"): it turns live on, then reads as a manual tick. */
 export const START_TICK = "start";
+/** The tick kind of a read booked because a conversation's transcript is complete. */
+export const FINISH_TICK = "finish";
 
 export function popcornStore(sql: Sql) {
   return {
@@ -202,23 +204,57 @@ export function popcornStore(sql: Sql) {
     /**
      * cancel_pending_tasks: still-scheduled popcorn ticks whose payload names this loop. A
      * booked start survives unless `withStart`: a read finishing before it must not drop it.
+     * A read booked by a finished conversation survives `keepFinish`: stopping live leaves it.
      */
     async cancelPendingTicks(
       loopId: string,
       now: string,
-      opts: { withStart?: boolean } = {},
+      opts: { withStart?: boolean; keepFinish?: boolean } = {},
     ): Promise<number> {
-      const rows = opts.withStart
-        ? await sql`update scheduled_task set status = 'cancelled', updated_at = ${now}
-            where task_type = ${TASK_POPCORN_TICK} and status = 'scheduled'
-              and payload->>'loop_id' = ${loopId}
-            returning id`
-        : await sql`update scheduled_task set status = 'cancelled', updated_at = ${now}
-            where task_type = ${TASK_POPCORN_TICK} and status = 'scheduled'
-              and payload->>'loop_id' = ${loopId}
-              and coalesce(payload->>'tick_kind', '') <> ${START_TICK}
-            returning id`;
+      const kept = [
+        ...(opts.withStart ? [] : [START_TICK]),
+        ...(opts.keepFinish ? [FINISH_TICK] : []),
+      ];
+      const rows = await sql`update scheduled_task set status = 'cancelled', updated_at = ${now}
+        where task_type = ${TASK_POPCORN_TICK} and status = 'scheduled'
+          and payload->>'loop_id' = ${loopId}
+          and coalesce(payload->>'tick_kind', '') <> all(${sql.array(kept)})
+        returning id`;
       return rows.length;
+    },
+
+    /** A read booked by a finished conversation that has not started yet. */
+    async pendingFinishRead(loopId: string): Promise<Row | null> {
+      const [r] = await sql`select id, payload from scheduled_task
+        where task_type = ${TASK_POPCORN_TICK} and status = 'scheduled'
+          and payload->>'loop_id' = ${loopId} and payload->>'tick_kind' = ${FINISH_TICK}
+        order by scheduled_at limit 1`;
+      return r ?? null;
+    },
+
+    async updateTaskPayload(id: string, payload: Json, now: string): Promise<void> {
+      await sql`update scheduled_task set payload = ${j(payload)}, updated_at = ${now}
+        where id = ${id}`;
+    },
+
+    /**
+     * Finish reads the worker has started, newest first, each with the id of the run it
+     * wrote (null while it reads).
+     */
+    async startedFinishReads(loopId: string, limit: number): Promise<Row[]> {
+      return sql`select t.payload, t.claimed_at, r.id as run_id from scheduled_task t
+        left join agent_loop_run r on r.id::text = t.payload->>'request_id'
+        where t.task_type = ${TASK_POPCORN_TICK} and t.status in ('processing', 'completed')
+          and t.payload->>'loop_id' = ${loopId} and t.payload->>'tick_kind' = ${FINISH_TICK}
+        order by t.claimed_at desc nulls last limit ${limit}`;
+    },
+
+    /** Conversations by id with the name a participant gave, deleted ones left out. */
+    async conversationNames(ids: readonly string[]): Promise<Row[]> {
+      const valid = ids.filter(isUuid);
+      if (!valid.length) return [];
+      return sql`select id, participant_name from conversation
+        where id in ${sql(valid)} and deleted_at is null`;
     },
 
     async versions(reportId: string, limit: number): Promise<Row[]> {

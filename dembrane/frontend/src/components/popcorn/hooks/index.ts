@@ -22,6 +22,10 @@ export type PopcornLoop = {
 	last_run_started_at?: string | null;
 	last_run_status?: "ok" | "no_op" | "error" | string | null;
 	last_run_detail?: string | null;
+	// The conversations whose finish caused the last read; null when a host's
+	// press or the live chain did. reading_after_finish: such a read is under way.
+	last_read_after?: { id: string; name: string | null }[] | null;
+	reading_after_finish?: boolean;
 };
 
 export type PopcornTabs = {
