@@ -134,6 +134,9 @@
   const POP_EDGE_PX = 18;    // no phrase comes closer than this to the edge of the stage
   const COUNTDOWN_MS = 3000; // 3, 2, 1 to the first popcorn; it starts once that phrase is there, which it then holds
   const SLOW_READ_MS = 45000; // a first read still empty after this says it is taking longer
+  // Conversations starting and finishing send the deck no event, so while the
+  // stage waits for its first phrase a live deck reads this often.
+  const WAITING_READ_MS = 10000;
 
   /* The page's own words, in the session's language (session.language). A
      language is one more object with these keys; a missing key falls back to
@@ -312,6 +315,11 @@
       "demo.next": "This is what you can expect after recording a few conversations. For the full analysis experience, {signIn}",
       "demo.signIn": "sign in →",
       "wait.checking": "checking for conversations…",
+      "wait.recording.one": "conversation recording",
+      "wait.recording.other": "conversations recording",
+      "wait.beingRead.one": "{n} finished, being read",
+      "wait.beingRead.other": "{n} finished, being read",
+      "wait.analyseNow": "Analyse now",
     },
     nl: {
       "chrome.slides": "dia's",
@@ -482,6 +490,11 @@
       "demo.next": "Dit kun je verwachten zodra je een paar gesprekken hebt opgenomen. Voor de volledige analyse kun je {signIn}",
       "demo.signIn": "inloggen →",
       "wait.checking": "gesprekken worden opgezocht…",
+      "wait.recording.one": "gesprek wordt opgenomen",
+      "wait.recording.other": "gesprekken worden opgenomen",
+      "wait.beingRead.one": "{n} klaar, wordt gelezen",
+      "wait.beingRead.other": "{n} klaar, worden gelezen",
+      "wait.analyseNow": "Nu analyseren",
     },
   };
   // Audience languages are kept separate so upstream app.js merges stay
@@ -566,6 +579,7 @@
       countdown: null,      // { startedAt } while 3, 2, 1 runs to a phrase that is already there
       awaitingFirst: false, // the stage was empty and waiting on the room's conversations
       readingSince: 0,      // when the read the empty stage waits on began
+      waitingStage: false,  // the stage is showing what the room waits on
       tailStamp: "",        // the popcorn files as last drawn; a change redraws the list and the stage
       bilingualNext: new Map(), // late translations owed their next fair slot
       shownOriginal: new Map(), // item identity -> exact source wording already given a full appearance
@@ -2556,12 +2570,41 @@
   // three horizontal bands, one phrase each — overlap-free by construction
   const SLOTS = [{ y: 18 }, { y: 45 }, { y: 71 }];   // the keys strip docks over the bottom of the fold
 
-  // The empty stage: a message, or the count to the first popcorn. `busy`
-  // turns the live dot into a spinner, for a stage still finding out.
-  function renderWaiting(stageEl, msg, busy = false) {
+  // The waiting stage's Analyse now: the server gives the host who may run a
+  // read where to post it; the public page never has one.
+  const ANALYSE_NOW = EMBED && typeof EMBED.analyseNow === "string" && !EMBED.version ? EMBED.analyseNow : null;
+  let analysing = false;
+  async function analyseNow() {
+    if (!ANALYSE_NOW || analysing) return;
+    analysing = true;
+    popTick();
+    try {
+      // A refused or rate-limited read changes nothing on the stage.
+      await fetch(ANALYSE_NOW, { method: "POST", credentials: "include" });
+    } catch {
+      // The next read of the bundle shows whatever did happen.
+    } finally {
+      analysing = false;
+      popTick();
+    }
+  }
+  if (ANALYSE_NOW && typeof document !== "undefined" && document.addEventListener) {
+    document.addEventListener("click", (ev) => {
+      if (ev.target?.closest?.(".analyse-now")) analyseNow();
+    });
+  }
+  const analyseNowButton = () => ANALYSE_NOW
+    ? `<button type="button" class="analyse-now"${analysing ? " disabled" : ""}>${esc(tr("wait.analyseNow"))}</button>`
+    : "";
+
+  // The empty stage: a message, the count of what the room is waiting on, or
+  // the count to the first popcorn. `busy` turns the live dot into a spinner,
+  // for a stage still finding out; `count` is { recording, sub } for the
+  // conversations recording and the line beneath them.
+  function renderWaiting(stageEl, msg, busy = false, count = null, analyse = false) {
     let waiting = stageEl.querySelector(".popcorn-waiting");
     if (!waiting) {
-      waiting = document.createElement("p");
+      waiting = document.createElement("div");
       waiting.className = "popcorn-waiting";
       stageEl.innerHTML = "";
       stageEl.appendChild(waiting);
@@ -2573,8 +2616,18 @@
       if (waiting.innerHTML !== html) waiting.innerHTML = html;
       return;
     }
-    const mark = busy ? `<span class="spinner" aria-hidden="true"></span>` : `<span class="live-dot"></span>`;
-    const html = `${mark}&nbsp; ${esc(msg)}`;
+    const button = analyse ? analyseNowButton() : "";
+    let html;
+    if (count) {
+      const dot = count.recording ? `<span class="recording-dot" aria-hidden="true"></span>` : "";
+      html = `<p class="waiting-count">${count.recording}</p>`
+        + `<p class="waiting-line">${dot}${esc(trn("wait.recording", count.recording))}</p>`
+        + (count.sub ? `<p class="waiting-sub">${esc(count.sub)}</p>` : "")
+        + button;
+    } else {
+      const mark = busy ? `<span class="spinner" aria-hidden="true"></span>` : `<span class="live-dot"></span>`;
+      html = `<p class="waiting-line">${mark}${esc(msg)}</p>${button}`;
+    }
     if (waiting.innerHTML !== html) waiting.innerHTML = html;
   }
 
@@ -2610,16 +2663,25 @@
       // A finished read that found nothing must say so, or a host takes an
       // empty stage for a broken one. Without a session there is no language
       // to speak, and the drop hint is for the standalone deck.
+      state.pop.waitingStage = true;
       const msg = checking ? tr("wait.checking")
         : !state.session ? "drop your session's JSON files anywhere on this page"
         : EMBED && !transcripts && !recording && !beingRead ? tr("wait.first")
         : slow ? tr("wait.slow")
+        : beingRead ? trn("wait.beingRead", beingRead)
         : EMBED && !inFlight && !recording ? trn("wait.empty", transcripts)
         : EMBED ? tr("wait.reading")
         : tr("wait.listening");
-      renderWaiting(stageEl, msg, checking || slow);
+      // Something is recording: the count, as the room sees it. With nothing
+      // recording the line above says what is being read.
+      const count = !checking && recording > 0
+        ? { recording, sub: slow ? tr("wait.slow") : beingRead ? trn("wait.beingRead", beingRead) : "" }
+        : null;
+      const analyse = !checking && (!!count || transcripts > 0);
+      renderWaiting(stageEl, msg, checking || slow, count, analyse);
       return;
     }
+    state.pop.waitingStage = false;
     // The first phrase is in: count 3, 2, 1 to it, holding it until the count
     // ends. A deck opened on a stage that already has phrases does not count.
     if (state.pop.awaitingFirst) {
@@ -4997,6 +5059,10 @@
     // is open the deck also reads once a minute. A safety net, not a poll.
     setInterval(() => { if (open) scheduleEventRefresh(); }, SAFETY_READ_MS);
   }
+
+  // While the stage waits for its first phrase, a live deck reads the bundle
+  // now and then: the count of conversations recording changes without events.
+  if (LIVE) setInterval(() => { if (state.pop.waitingStage && !document.hidden) scheduleEventRefresh(); }, WAITING_READ_MS);
 
   if (!EMBED) restoreLocal();
   // A hidden audience renderer performs no playback work. This is also the

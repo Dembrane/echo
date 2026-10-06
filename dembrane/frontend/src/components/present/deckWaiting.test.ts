@@ -6,17 +6,20 @@ const source = readFileSync(
 	new URL("../../../../platform/packages/popcorn/static/app.js", import.meta.url),
 	"utf8",
 );
-// The empty stage and the tick that fills it.
+// The empty stage, its Analyse now, and the tick that fills it.
 const waitingSource = source.slice(
-	source.indexOf("  // The empty stage: a message, or the count to the first popcorn."),
+	source.indexOf("  // The waiting stage's Analyse now"),
 	source.indexOf("  // Which phrase next."),
 );
 
 const WORDS: Record<string, string> = {
+	"wait.analyseNow": "Analyse now",
+	"wait.beingRead.other": "{n} finished, being read",
 	"wait.checking": "checking for conversations…",
 	"wait.empty.other": "read {n} conversations, nothing worth a popcorn yet",
 	"wait.first": "waiting for the first conversation",
 	"wait.reading": "reading the conversations…",
+	"wait.recording.other": "conversations recording",
 	"wait.slow": "the first popcorn is taking longer than usual",
 };
 
@@ -66,6 +69,7 @@ function deck(embed: Record<string, unknown> = { mode: "public" }) {
 		session: null as null | Record<string, unknown>,
 	};
 	const beacons: unknown[] = [];
+	const posts: unknown[] = [];
 	const context = {
 		COUNTDOWN_MS: 3000,
 		Date,
@@ -75,6 +79,10 @@ function deck(embed: Record<string, unknown> = { mode: "public" }) {
 		},
 		EMBED: embed,
 		esc: (s: string) => s,
+		fetch: async (...args: unknown[]) => {
+			posts.push(args);
+			return { ok: true };
+		},
 		HOST: embed.mode === "host",
 		introOpen: false,
 		LIVE: true,
@@ -92,12 +100,14 @@ function deck(embed: Record<string, unknown> = { mode: "public" }) {
 			(WORDS[`${key}.other`] ?? key).replace("{n}", String(n)),
 	};
 	runInNewContext(
-		`const Blob = class {};\n${waitingSource}\n;globalThis.popTick = popTick;`,
+		`const Blob = class {};\n${waitingSource}\n;globalThis.popTick = popTick; globalThis.analyseNow = analyseNow;`,
 		context,
 	);
 	const tick = () => (context as unknown as { popTick: () => void }).popTick();
 	const text = () => stage.waiting?.innerHTML ?? "";
-	return { beacons, spawned, state, text, tick };
+	const analyseNow = () =>
+		(context as unknown as { analyseNow: () => Promise<void> }).analyseNow();
+	return { analyseNow, beacons, posts, spawned, state, text, tick };
 }
 
 afterEach(() => vi.useRealTimers());
@@ -131,7 +141,9 @@ describe("the room screen checks before it counts", () => {
 			waiting: { being_read: 2, recording: 0 },
 		};
 		d.tick();
-		expect(d.text()).toContain("reading the conversations…");
+		// Nothing recording: one line, no large zero.
+		expect(d.text()).toContain("2 finished, being read");
+		expect(d.text()).not.toContain("waiting-count");
 		expect(d.text()).not.toContain("countdown");
 		expect(d.state.pop.countdown).toBeNull();
 	});
@@ -181,5 +193,50 @@ describe("the room screen checks before it counts", () => {
 		d.state.popcorn.set("a", { done: true, items: [{ phrase: "hello" }] });
 		d.tick();
 		expect(d.beacons).toHaveLength(1);
+	});
+});
+
+describe("the waiting stage shows the count", () => {
+	const waitingFor = (recording: number, beingRead: number) => ({
+		transcripts: [],
+		waiting: { being_read: beingRead, recording },
+	});
+
+	it("shows the conversations recording, large, and the finished ones being read beneath", () => {
+		const d = deck();
+		d.state.session = waitingFor(3, 1);
+		d.tick();
+		expect(d.text()).toContain('<p class="waiting-count">3</p>');
+		expect(d.text()).toContain("conversations recording");
+		expect(d.text()).toContain("recording-dot");
+		expect(d.text()).toContain('<p class="waiting-sub">1 finished, being read</p>');
+	});
+
+	it("never draws Analyse now on the public page", () => {
+		const d = deck({ mode: "public" });
+		d.state.session = waitingFor(3, 1);
+		d.tick();
+		expect(d.text()).not.toContain("Analyse now");
+	});
+
+	it("gives the host Analyse now, which runs a read straight away", async () => {
+		const d = deck({ analyseNow: "../refresh", mode: "host" });
+		d.state.session = waitingFor(2, 0);
+		d.tick();
+		expect(d.text()).toContain('class="analyse-now"');
+		const read = d.analyseNow();
+		expect(d.text()).toContain("disabled");
+		await read;
+		expect(d.posts).toEqual([
+			["../refresh", { credentials: "include", method: "POST" }],
+		]);
+		expect(d.text()).not.toContain("disabled");
+	});
+
+	it("draws no Analyse now while it is still checking", () => {
+		const d = deck({ analyseNow: "../refresh", mode: "public" });
+		d.state.session = { transcripts: [] };
+		d.tick();
+		expect(d.text()).not.toContain("Analyse now");
 	});
 });

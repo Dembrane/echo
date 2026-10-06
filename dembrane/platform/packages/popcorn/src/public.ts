@@ -58,8 +58,17 @@ const MAX_EVENT_STREAMS_PER_VIEWER = 100;
 const PUBLISHED_CHECK_MS = 10_000;
 const publishedChecks = new Map<string, { at: number; published: boolean }>();
 
-/** The embed config of the host's preview and of an embedded public deck. */
-export function deckEmbed(adminBaseUrl: string, presentationId: string, preview = false) {
+/**
+ * The embed config of the host's preview and of an embedded public deck. `analyseNow` is
+ * where the waiting stage's Analyse now posts, given only to a host who may run a read;
+ * the public page never has it.
+ */
+export function deckEmbed(
+  adminBaseUrl: string,
+  presentationId: string,
+  preview = false,
+  analyseNow?: string,
+) {
   let origin = "";
   try {
     const u = new URL(adminBaseUrl);
@@ -72,6 +81,7 @@ export function deckEmbed(adminBaseUrl: string, presentationId: string, preview 
     presentationId,
     parentOrigin: origin,
     ...(preview && { preview: true }),
+    ...(analyseNow && { analyseNow }),
   };
 }
 

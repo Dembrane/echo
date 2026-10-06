@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { deckEmbed } from "../src/public";
 import type { Json } from "../src/py";
 import { type PopcornDeps, withWaiting } from "../src/service";
 
@@ -45,5 +46,13 @@ describe("the waiting field", () => {
   test("leaves the bundle standing when the count cannot be read", async () => {
     const before = bundle();
     expect(await withWaiting(deps(new Error("down")), before, {}, "p1")).toBe(before);
+  });
+});
+
+describe("Analyse now on the deck", () => {
+  test("is given only to the host's deck that asks for it", () => {
+    const host = deckEmbed("https://dash.example", "7", false, "../../../popcorn/7/refresh");
+    expect(host.analyseNow).toBe("../../../popcorn/7/refresh");
+    expect("analyseNow" in deckEmbed("https://dash.example", "7")).toBe(false);
   });
 });

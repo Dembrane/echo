@@ -321,13 +321,26 @@ export function presentRoutes(deps: PresentRoutesDeps) {
 
   const previewQuery = { preview: p.optional(p.bool(), false) };
 
+  // The waiting stage's Analyse now, for a host who may run a read: the popcorn refresh
+  // route, relative to the deck page `up` folders below the bff root.
+  const analyseNow = async (who: ReturnType<typeof requireUser>, report: Row, up: number) =>
+    (await allows(ad, who, String(report.project_id), "project:update"))
+      ? `${"../".repeat(up)}popcorn/${encodeURIComponent(String(report.id))}/refresh`
+      : undefined;
+
   app.get(`${base}/:presentation_id/deck/`, async (c) => {
     gate();
     const who = requireUser(c);
     const { query } = await p.validate(c.req, { query: previewQuery });
     // Embed the id the lookup returned, never the raw path value.
     const { report } = await popcornReport(ad, who, id(c));
-    return html(renderPopcornPage(deckEmbed(d.adminBaseUrl, String(report.id), query.preview)));
+    const embed = deckEmbed(
+      d.adminBaseUrl,
+      String(report.id),
+      query.preview,
+      await analyseNow(who, report, 3),
+    );
+    return html(renderPopcornPage(embed));
   });
 
   app.get(`${base}/:presentation_id/draft/deck/`, async (c) => {
@@ -335,7 +348,13 @@ export function presentRoutes(deps: PresentRoutesDeps) {
     const who = requireUser(c);
     const { query } = await p.validate(c.req, { query: previewQuery });
     const { report } = await popcornReport(ad, who, id(c), "project:update");
-    return html(renderPopcornPage(deckEmbed(d.adminBaseUrl, String(report.id), query.preview)));
+    const embed = deckEmbed(
+      d.adminBaseUrl,
+      String(report.id),
+      query.preview,
+      await analyseNow(who, report, 4),
+    );
+    return html(renderPopcornPage(embed));
   });
 
   app.get(`${base}/:presentation_id/deck/data/bundle.json`, async (c) => {

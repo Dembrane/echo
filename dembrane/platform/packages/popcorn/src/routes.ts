@@ -8,6 +8,7 @@ import type { Hub } from "@dembrane/realtime";
 import { Hono } from "hono";
 import {
   type AccessDeps,
+  allows,
   popcornProject,
   popcornReport,
   requirePolicy,
@@ -339,10 +340,12 @@ export function popcornRoutes(deps: PopcornRoutesDeps) {
   app.get(`${base}/:popcorn_id/view/`, async (c) => {
     gate();
     const who = requireUser(c);
-    await popcornReport(ad, who, c.req.param("popcorn_id"));
+    const { report } = await popcornReport(ad, who, c.req.param("popcorn_id"));
     // The page picks a saved run from its own query string; a bad link fails early here.
     versionId(c.req.query("version"));
-    return html(renderPopcornPage({ mode: "host" }));
+    // The waiting stage's Analyse now posts to this session's refresh, for a host who may.
+    const canRead = await allows(ad, who, String(report.project_id), "project:update");
+    return html(renderPopcornPage({ mode: "host", ...(canRead && { analyseNow: "../refresh" }) }));
   });
 
   app.get(`${base}/:popcorn_id/view/events`, async (c) => {

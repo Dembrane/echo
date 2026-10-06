@@ -18,7 +18,7 @@ window.POPCORN_AUDIENCE_I18N = {
       "Interessengruppen durchsuchen…","{n} Interessengruppe","{n} Interessengruppen","{shown} von {n} Interessengruppe","{shown} von {n} Interessengruppen","Detail","{shown} von {n} Gruppe","{shown} von {n} Gruppen","Legende","Intensität","angespannt","funktioniert","ohne Verantwortung","sprachen für sich selbst","es wurde für sie gesprochen","die Karte der Interessengruppen","selbst geäußert","genannt","abgeleitet",
       "wen als Nächstes einbeziehen","Geordnet danach, was für sie auf dem Spiel steht und wie gut die Transkripte das tatsächlich belegen. Gruppen, die für sich selbst sprachen, sind nicht aufgeführt.","vertreten durch {name}","eine andere Gruppe","{a} und {b}: {label}","verbunden","Ohne Verantwortung","Angespannt","Reibung","Funktioniert gut","Stabil","Neutral","Macht","Risiko","Chance",
       "{role}. Wichtig ist ihnen {stake|lcfirst}.","{role}, wichtig ist ihnen {stake|lcfirst}.","{role}.","Wichtig ist ihnen {stake|lcfirst}.","Sie sprachen für sich selbst.","Abgeleitet; nie direkt erwähnt.","Von anderen genannt.","Von anderen genannt, vertreten durch {name}.",
-      "So sieht es aus, nachdem du ein paar Gespräche aufgenommen hast. Für die vollständige Analyse kannst du dich {signIn}","anmelden →","Gespräche werden gesucht…"
+      "So sieht es aus, nachdem du ein paar Gespräche aufgenommen hast. Für die vollständige Analyse kannst du dich {signIn}","anmelden →","Gespräche werden gesucht…","Gespräch wird aufgenommen","Gespräche werden aufgenommen","{n} fertig, wird gelesen","{n} fertig, werden gelesen","Jetzt analysieren"
     ],
     fr: [
       "diapositives","session","créé avec {brand}","comment fonctionne popcorn","popcorn","recommandations","tensions","parties prenantes",
@@ -36,7 +36,7 @@ window.POPCORN_AUDIENCE_I18N = {
       "rechercher dans les parties prenantes…","{n} groupe de parties prenantes","{n} groupes de parties prenantes","{shown} groupe sur {n}","{shown} groupes sur {n}","détail","{shown} groupe sur {n}","{shown} groupes sur {n}","légende","intensité","tendu","fonctionne","sans responsable","se sont exprimés eux-mêmes","d’autres ont parlé pour eux","la carte des parties prenantes","exprimé directement","nommé","déduit",
       "qui inviter ensuite","Classé selon ce qui est en jeu pour eux et la solidité des preuves dans les transcriptions. Les groupes qui se sont exprimés eux-mêmes ne figurent pas ici.","représenté par {name}","un autre groupe","{a} et {b} : {label}","liés","Sans responsable","Tendu","Friction","Fonctionne bien","Stable","Neutre","Pouvoir","Risque","Occasion",
       "{role}. Ce qui leur importe : {stake|lcfirst}.","{role}, et ce qui leur importe : {stake|lcfirst}.","{role}.","Ce qui leur importe : {stake|lcfirst}.","Ils se sont exprimés eux-mêmes.","Déduit ; jamais mentionné directement.","Nommé par d’autres.","Nommé par d’autres, représenté par {name}.",
-      "Voici ce que vous obtiendrez après avoir enregistré quelques conversations. Pour l'analyse complète, {signIn}","connectez-vous →","recherche des conversations…"
+      "Voici ce que vous obtiendrez après avoir enregistré quelques conversations. Pour l'analyse complète, {signIn}","connectez-vous →","recherche des conversations…","conversation en cours d’enregistrement","conversations en cours d’enregistrement","{n} terminée, en cours de lecture","{n} terminées, en cours de lecture","Analyser maintenant"
     ],
     es: [
       "diapositivas","sesión","hecho con {brand}","cómo funciona popcorn","popcorn","recomendaciones","tensiones","partes interesadas",
@@ -54,7 +54,7 @@ window.POPCORN_AUDIENCE_I18N = {
       "buscar en las partes interesadas…","{n} grupo interesado","{n} grupos interesados","{shown} de {n} grupo interesado","{shown} de {n} grupos interesados","detalle","{shown} de {n} grupo","{shown} de {n} grupos","leyenda","intensidad","tenso","funciona","sin responsable","hablaron por sí mismos","otros hablaron por ellos","el mapa de partes interesadas","voz propia","nombrado","inferido",
       "a quién incluir después","Ordenados según lo que está en juego para ellos y la calidad de las pruebas en las transcripciones. No se incluyen los grupos que hablaron por sí mismos.","representado por {name}","otro grupo","{a} y {b}: {label}","conectados","Sin responsable","Tenso","Fricción","Funciona bien","Estable","Neutral","Poder","Riesgo","Oportunidad",
       "{role}. Les importa {stake|lcfirst}.","{role}, y les importa {stake|lcfirst}.","{role}.","Les importa {stake|lcfirst}.","Hablaron por sí mismos.","Inferido; nunca se mencionó directamente.","Nombrado por otros.","Nombrado por otros, representado por {name}.",
-      "Esto es lo que verás después de grabar algunas conversaciones. Para el análisis completo, {signIn}","inicia sesión →","buscando conversaciones…"
+      "Esto es lo que verás después de grabar algunas conversaciones. Para el análisis completo, {signIn}","inicia sesión →","buscando conversaciones…","conversación grabándose","conversaciones grabándose","{n} terminada, en lectura","{n} terminadas, en lectura","Analizar ahora"
     ],
     it: [
       "diapositive","sessione","creato con {brand}","come funziona popcorn","popcorn","raccomandazioni","tensioni","portatori di interesse",
@@ -72,7 +72,7 @@ window.POPCORN_AUDIENCE_I18N = {
       "cerca tra i portatori di interesse…","{n} gruppo di interesse","{n} gruppi di interesse","{shown} gruppo su {n}","{shown} gruppi su {n}","dettaglio","{shown} gruppo su {n}","{shown} gruppi su {n}","legenda","intensità","teso","funziona","senza responsabile","hanno parlato in prima persona","altri hanno parlato per loro","la mappa dei portatori di interesse","voce diretta","nominato","dedotto",
       "chi coinvolgere dopo","In ordine secondo ciò che è in gioco per loro e quanto le trascrizioni lo dimostrano. I gruppi che hanno parlato in prima persona non sono elencati.","rappresentato da {name}","un altro gruppo","{a} e {b}: {label}","collegati","Senza responsabile","Teso","Attrito","Funziona bene","Stabile","Neutro","Potere","Rischio","Opportunità",
       "{role}. Per loro conta {stake|lcfirst}.","{role}, e per loro conta {stake|lcfirst}.","{role}.","Per loro conta {stake|lcfirst}.","Hanno parlato in prima persona.","Dedotto; mai citato direttamente.","Nominato da altri.","Nominato da altri, rappresentato da {name}.",
-      "Ecco cosa puoi aspettarti dopo aver registrato qualche conversazione. Per l'analisi completa, {signIn}","accedi →","ricerca delle conversazioni…"
+      "Ecco cosa puoi aspettarti dopo aver registrato qualche conversazione. Per l'analisi completa, {signIn}","accedi →","ricerca delle conversazioni…","conversazione in registrazione","conversazioni in registrazione","{n} conclusa, in lettura","{n} concluse, in lettura","Analizza ora"
     ],
     uk: [
       "слайди","сесія","створено з {brand}","як працює popcorn","popcorn","рекомендації","суперечності","зацікавлені сторони",
@@ -90,7 +90,7 @@ window.POPCORN_AUDIENCE_I18N = {
       "пошук зацікавлених сторін…","{n} група зацікавлених сторін","{n} груп зацікавлених сторін","{shown} з {n} групи","{shown} з {n} груп","деталі","{shown} з {n} групи","{shown} з {n} груп","позначення","інтенсивність","напружено","працює","без відповідального","говорили від свого імені","за них говорили інші","карта зацікавлених сторін","власний голос","названо","виведено",
       "кого залучити наступним","Упорядковано за тим, що для них важливо, і наскільки стенограми це підтверджують. Групи, які говорили від свого імені, не показані.","представлено через {name}","інша група","{a} і {b}: {label}","пов’язані","Без відповідального","Напружено","Тертя","Працює добре","Стабільно","Нейтрально","Влада","Ризик","Можливість",
       "{role}. Для них важливо {stake|lcfirst}.","{role}, і для них важливо {stake|lcfirst}.","{role}.","Для них важливо {stake|lcfirst}.","Вони говорили від свого імені.","Виведено; прямо не згадувалося.","Названо іншими.","Названо іншими, представлено через {name}.",
-      "Ось чого можна очікувати після запису кількох розмов. Щоб отримати повний аналіз, {signIn}","увійдіть →","шукаємо розмови…"
+      "Ось чого можна очікувати після запису кількох розмов. Щоб отримати повний аналіз, {signIn}","увійдіть →","шукаємо розмови…","розмова записується","розмов записується","{n} завершена, читається","{n} завершено, читаються","Аналізувати зараз"
     ],
     cs: [
       "snímky","setkání","vytvořeno pomocí {brand}","jak popcorn funguje","popcorn","doporučení","napětí","zainteresované strany",
@@ -108,11 +108,13 @@ window.POPCORN_AUDIENCE_I18N = {
       "hledat zainteresované skupiny…","{n} zainteresovaná skupina","{n} zainteresovaných skupin","{shown} z {n} skupiny","{shown} z {n} skupin","podrobnosti","{shown} z {n} skupiny","{shown} z {n} skupin","legenda","intenzita","napjaté","funguje","bez vlastníka","mluvili sami za sebe","mluvili za ně druzí","mapa zainteresovaných skupin","vlastní hlas","jmenováno","odvozeno",
       "koho zapojit příště","Seřazeno podle toho, co je pro ně v sázce a jak dobře to přepisy skutečně dokládají. Skupiny, které mluvily samy za sebe, nejsou uvedeny.","zastoupeno osobou {name}","jiná skupina","{a} a {b}: {label}","propojené","Bez vlastníka","Napjaté","Tření","Funguje dobře","Stabilní","Neutrální","Moc","Riziko","Příležitost",
       "{role}. Záleží jim na {stake|lcfirst}.","{role} a záleží jim na {stake|lcfirst}.","{role}.","Záleží jim na {stake|lcfirst}.","Mluvili sami za sebe.","Odvozeno; nikdy nezmíněno přímo.","Jmenováno ostatními.","Jmenováno ostatními, zastoupeno osobou {name}.",
-      "Takto to bude vypadat po nahrání několika rozhovorů. Pro úplnou analýzu se {signIn}","přihlaste →","hledají se rozhovory…"
+      "Takto to bude vypadat po nahrání několika rozhovorů. Pro úplnou analýzu se {signIn}","přihlaste →","hledají se rozhovory…","rozhovor se nahrává","rozhovorů se nahrává","{n} dokončen, čte se","{n} dokončeno, čtou se","Analyzovat nyní"
     ]
   },
   plurals: {
     uk: {
+      "wait.recording.few": "розмови записуються", "wait.recording.many": "розмов записується",
+      "wait.beingRead.few": "{n} завершено, читаються", "wait.beingRead.many": "{n} завершено, читаються",
       "progress.reading.few": "прочитано {pending} з {n} розмов…", "progress.reading.many": "прочитано {pending} з {n} розмов…",
       "progress.allRead.few": "{n} розмови · усе прочитано", "progress.allRead.many": "{n} розмов · усе прочитано",
       "progress.read.few": "{n} розмови · прочитано {done}", "progress.read.many": "{n} розмов · прочитано {done}",
@@ -126,6 +128,8 @@ window.POPCORN_AUDIENCE_I18N = {
       "stake.groups.few": "{shown} з {n} груп", "stake.groups.many": "{shown} з {n} груп"
     },
     cs: {
+      "wait.recording.few": "rozhovory se nahrávají", "wait.recording.many": "rozhovorů se nahrává",
+      "wait.beingRead.few": "{n} dokončeny, čtou se", "wait.beingRead.many": "{n} dokončeno, čte se",
       "progress.reading.few": "čtou se {pending} z {n} rozhovorů…", "progress.reading.many": "čte se {pending} z {n} rozhovorů…",
       "progress.allRead.few": "{n} rozhovory · vše přečteno", "progress.allRead.many": "{n} rozhovorů · vše přečteno",
       "progress.read.few": "{n} rozhovory · {done} přečteny", "progress.read.many": "{n} rozhovorů · {done} přečteno",
