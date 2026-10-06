@@ -436,6 +436,11 @@ describe("AudienceScreen lifecycle", () => {
 		expect(useServerEventsMock.mock.calls.at(-1)?.[1]).toContain(
 			"disconnected",
 		);
+		// A second screen in this browser shares the stream instead of
+		// taking one more of the few connections the browser allows.
+		expect(useServerEventsMock.mock.calls.at(-1)?.[3]).toEqual({
+			shared: true,
+		});
 
 		// The server ends a revoked stream; the hook reports the drop.
 		const onEvent = useServerEventsMock.mock.calls.at(-1)?.[2];
