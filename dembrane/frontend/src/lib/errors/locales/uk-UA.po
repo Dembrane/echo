@@ -374,6 +374,11 @@ msgid "error.report.schedule_too_soon"
 msgstr "Виберіть час щонайменше через 10 хвилин відтепер."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/popcorn.ts:23
+msgid "error.popcorn.invalid_ready_by"
+msgstr "Виберіть час, пізніший за поточний, у межах наступних 7 днів."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:5
 msgid "error.canvas.expiry_in_past"
 msgstr "Виберіть дату завершення в майбутньому."
@@ -484,7 +489,7 @@ msgid "error.analysis.revision_conflict"
 msgstr "Хтось змінив цей результат, поки ви його переглядали. Оновіть сторінку, щоб побачити нову версію, а потім внесіть свої зміни знову."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/popcorn.ts:40
+#: src/lib/errors/messages/popcorn.ts:44
 msgid "error.popcorn.settings_busy"
 msgstr "Хтось інший просто зараз зберігає ці налаштування. Спробуйте ще раз за мить."
 
@@ -549,7 +554,7 @@ msgid "error.project.methodology_read_only"
 msgstr "Методологію dembrane не можна змінювати. Зробіть копію, щоб відредагувати її."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/popcorn.ts:45
+#: src/lib/errors/messages/popcorn.ts:49
 msgid "error.popcorn.synthetic_frame_locked"
 msgstr "Кадр демопрезентації задано разом із демоверсією, його не можна змінити тут."
 
@@ -904,12 +909,12 @@ msgid "error.present.map_not_in_presentation"
 msgstr "У цій презентації немає мапи."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/popcorn.ts:27
+#: src/lib/errors/messages/popcorn.ts:31
 msgid "error.popcorn.loop_not_found"
 msgstr "Ця презентація не запущена. Запустіть її знову, щоб продовжити."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/popcorn.ts:35
+#: src/lib/errors/messages/popcorn.ts:39
 msgid "error.popcorn.public_not_found"
 msgstr "Це посилання на презентацію більше не діє. Попросіть ведучого надіслати нове посилання."
 
@@ -1034,7 +1039,7 @@ msgid "error.analysis.revision_not_found"
 msgstr "Ця версія результату більше не існує. Оновіть сторінку, щоб побачити останню."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/popcorn.ts:23
+#: src/lib/errors/messages/popcorn.ts:27
 msgid "error.popcorn.just_refreshed"
 msgstr "Це щойно оновилося. Зачекайте кілька секунд, перш ніж спробувати знову."
 
@@ -1264,7 +1269,7 @@ msgid "error.organisation.not_found"
 msgstr "Не вдалося знайти цю організацію."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/popcorn.ts:31
+#: src/lib/errors/messages/popcorn.ts:35
 msgid "error.popcorn.not_found"
 msgstr "Не вдалося знайти цю презентацію."
 
@@ -1329,7 +1334,7 @@ msgid "error.training.not_found"
 msgstr "Не вдалося знайти це навчання."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/popcorn.ts:50
+#: src/lib/errors/messages/popcorn.ts:54
 msgid "error.popcorn.version_not_found"
 msgstr "Не вдалося знайти цю версію презентації."
 

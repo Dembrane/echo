@@ -29,6 +29,8 @@ export const isUuid = (v: unknown): v is string => typeof v === "string" && UUID
 export const isReportId = (v: string) => /^\d{1,18}$/.test(v);
 
 export const TASK_POPCORN_TICK = "popcorn_tick";
+/** The tick kind of a booked start ("Ready by"): it turns live on, then reads as a manual tick. */
+export const START_TICK = "start";
 
 export function popcornStore(sql: Sql) {
   return {
@@ -197,12 +199,25 @@ export function popcornStore(sql: Sql) {
           ${v.now}, ${v.now})`;
     },
 
-    /** cancel_pending_tasks: still-scheduled popcorn ticks whose payload names this loop. */
-    async cancelPendingTicks(loopId: string, now: string): Promise<number> {
-      const rows = await sql`update scheduled_task set status = 'cancelled', updated_at = ${now}
-        where task_type = ${TASK_POPCORN_TICK} and status = 'scheduled'
-          and payload->>'loop_id' = ${loopId}
-        returning id`;
+    /**
+     * cancel_pending_tasks: still-scheduled popcorn ticks whose payload names this loop. A
+     * booked start survives unless `withStart`: a read finishing before it must not drop it.
+     */
+    async cancelPendingTicks(
+      loopId: string,
+      now: string,
+      opts: { withStart?: boolean } = {},
+    ): Promise<number> {
+      const rows = opts.withStart
+        ? await sql`update scheduled_task set status = 'cancelled', updated_at = ${now}
+            where task_type = ${TASK_POPCORN_TICK} and status = 'scheduled'
+              and payload->>'loop_id' = ${loopId}
+            returning id`
+        : await sql`update scheduled_task set status = 'cancelled', updated_at = ${now}
+            where task_type = ${TASK_POPCORN_TICK} and status = 'scheduled'
+              and payload->>'loop_id' = ${loopId}
+              and coalesce(payload->>'tick_kind', '') <> ${START_TICK}
+            returning id`;
       return rows.length;
     },
 

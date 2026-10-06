@@ -1,3 +1,4 @@
+import { i18n } from "@lingui/core";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
@@ -16,6 +17,7 @@ import { useParams } from "react-router";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { PageContainer } from "@/components/layout/PageContainer";
 import {
+	liveBooking,
 	type PopcornDetail,
 	useInvalidatePopcorn,
 	useProjectPopcorn,
@@ -31,6 +33,7 @@ import { PopcornStart } from "@/components/popcorn/PopcornStart";
 import { PopcornStatus } from "@/components/popcorn/PopcornStatus";
 import { PopcornVoiceSection } from "@/components/popcorn/PopcornVoiceSection";
 import { useProjectById } from "@/components/project/hooks";
+import { bookingParts } from "@/components/sharing/StatusLine";
 import { API_BASE_URL, ENABLE_CANVAS } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useServerEvents } from "@/hooks/useServerEvents";
@@ -39,7 +42,9 @@ import { testId } from "@/lib/testUtils";
 function statusLine(popcorn: PopcornDetail): string {
 	const loop = popcorn.loop;
 	const counts = popcorn.counts;
-	if (counts.conversations === 0) return t`Waiting for the first conversation`;
+	const booking = bookingParts(liveBooking(loop), i18n.locale);
+	if (counts.conversations === 0)
+		return [t`Waiting for the first conversation`, ...booking].join(" · ");
 	const parts = [
 		t`${counts.conversations} conversations`,
 		t`${counts.phrases} phrases`,
@@ -55,6 +60,7 @@ function statusLine(popcorn: PopcornDetail): string {
 				: t`live, reads every ${every} min`,
 		);
 	}
+	parts.push(...booking);
 	return parts.join(" · ");
 }
 

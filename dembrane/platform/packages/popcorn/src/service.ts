@@ -38,7 +38,7 @@ import {
   translationTargets,
 } from "./settings";
 import { freshState, isSyntheticSession, normalizeState, stateCounts } from "./state";
-import { client, type PopcornStore, popcornStore, type Row, type Sql } from "./storage";
+import { client, type PopcornStore, popcornStore, type Row, type Sql, START_TICK } from "./storage";
 import { pySplit } from "./text";
 import { translatedBundle } from "./translate";
 
@@ -188,11 +188,16 @@ export async function loadSettingsFor(store: PopcornStore, report: Row): Promise
 
 function loopPayload(loop: Row | null, run: Row | null, nextAt: string | null): Json | null {
   if (!loop) return null;
+  const booking = liveBooking(loop);
   return {
     id: String(loop.id),
     status: loop.status ?? null,
     mode: loopMode(loop),
     expires_at: iso(loop.expires_at),
+    // A booked start ("Ready by"): the time the host asked for and the first read, a fixed
+    // lead before it. Null when nothing is booked.
+    ready_by: booking ? iso(booking.readyBy) : null,
+    starts_at: booking ? iso(booking.startsAt) : null,
     cadence_minutes: loop.cadence_minutes ?? null,
     next_read_at: nextAt,
     last_run_started_at: iso(run?.started_at),
@@ -493,31 +498,115 @@ export async function retargetTranslation(
   return true;
 }
 
-/** Live for so many hours: the two-minute chain until the expiry, reading straight away. */
-export async function goLive(d: PopcornDeps, loop: Row, hours: number): Promise<void> {
+/** The first read of a booked start comes this long before the time the host asked for. */
+export const READY_LEAD_MS = 15 * 60_000;
+/** How far ahead a start can be booked. */
+export const READY_MAX_MS = 7 * 24 * 3_600_000;
+export class InvalidHours extends Error {}
+export class InvalidReadyBy extends Error {}
+
+/**
+ * When live starts and ends. Without `readyBy` it starts now; with it, the first read is
+ * READY_LEAD_MS before it (now, when that has passed). The window runs from the start.
+ */
+export function liveWindow(
+  now: Date,
+  hours: number,
+  readyBy: Date | null = null,
+): { startsAt: Date; expiresAt: Date; booked: boolean } {
   if (!(LIVE_HOURS as readonly number[]).includes(hours))
     throw new InvalidHours(`hours must be one of (${LIVE_HOURS.join(", ")})`);
+  if (readyBy) {
+    const ahead = readyBy.getTime() - now.getTime();
+    if (Number.isNaN(ahead) || ahead <= 0 || ahead > READY_MAX_MS)
+      throw new InvalidReadyBy("ready_by must be in the future and at most 7 days out");
+  }
+  const lead = readyBy ? readyBy.getTime() - READY_LEAD_MS : now.getTime();
+  const booked = lead > now.getTime();
+  const startsAt = booked ? new Date(lead) : now;
+  return { startsAt, expiresAt: new Date(startsAt.getTime() + hours * 3_600_000), booked };
+}
+
+/** The start a loop has booked, kept in its caps beside the kind. */
+export function liveBooking(loop: Row | null): { readyBy: string; startsAt: string } | null {
+  const caps = loop?.caps;
+  if (!isRecord(caps) || loop?.status === "active") return null;
+  const readyBy = orStr(caps.ready_by);
+  const startsAt = orStr(caps.starts_at);
+  return readyBy && startsAt ? { readyBy, startsAt } : null;
+}
+
+/** The loop's caps with any booked start removed; the kind stays. */
+export function withoutBooking(caps: unknown): Json {
+  const { ready_by: _r, starts_at: _s, ...rest } = isRecord(caps) ? caps : {};
+  return { kind: LOOP_KIND, ...rest };
+}
+
+/**
+ * Live for so many hours: the two-minute chain until the expiry. Without `readyBy` it reads
+ * straight away; with it, one start is booked READY_LEAD_MS before that time and the loop
+ * stays manual until then. Either replaces a start booked earlier.
+ */
+export async function goLive(
+  d: PopcornDeps,
+  loop: Row,
+  hours: number,
+  readyBy: Date | null = null,
+): Promise<void> {
   const now = d.now();
-  const expires = new Date(now.getTime() + hours * 3_600_000);
+  const span = liveWindow(now, hours, readyBy);
+  const loopId = String(loop.id);
   await client(d.db).begin(async (tx) => {
-    await popcornStore(tx).updateLoop(
-      String(loop.id),
-      { status: "active", expires_at: pyIso(expires), failure_count: 0 },
+    const store = popcornStore(tx);
+    await store.cancelPendingTicks(loopId, pyIso(now), { withStart: true });
+    if (span.booked && readyBy) {
+      await store.updateLoop(
+        loopId,
+        {
+          status: "paused",
+          expires_at: pyIso(span.expiresAt),
+          failure_count: 0,
+          caps: {
+            ...withoutBooking(loop.caps),
+            ready_by: pyIso(readyBy),
+            starts_at: pyIso(span.startsAt),
+          },
+        },
+        pyIso(now),
+      );
+      await store.scheduleTick({
+        id: newId(),
+        payload: { loop_id: loopId, tick_kind: START_TICK },
+        scheduledAt: pyIso(span.startsAt),
+        now: pyIso(now),
+      });
+      return;
+    }
+    await store.updateLoop(
+      loopId,
+      {
+        status: "active",
+        expires_at: pyIso(span.expiresAt),
+        failure_count: 0,
+        caps: withoutBooking(loop.caps),
+      },
       pyIso(now),
     );
-    await dispatchTick(d, tx, String(loop.id), "manual");
+    await dispatchTick(d, tx, loopId, "manual");
   });
 }
 
-export class InvalidHours extends Error {}
-
-/** Back to manual: nothing scheduled, the deck stays, refresh still works. */
+/** Back to manual: nothing scheduled, no start booked, the deck stays, refresh still works. */
 export async function stopLive(d: PopcornDeps, loop: Row): Promise<void> {
   const now = pyIso(d.now());
   await client(d.db).begin(async (tx) => {
     const store = popcornStore(tx);
-    await store.cancelPendingTicks(String(loop.id), now);
-    await store.updateLoop(String(loop.id), { status: "paused", expires_at: now }, now);
+    await store.cancelPendingTicks(String(loop.id), now, { withStart: true });
+    await store.updateLoop(
+      String(loop.id),
+      { status: "paused", expires_at: now, caps: withoutBooking(loop.caps) },
+      now,
+    );
   });
 }
 
