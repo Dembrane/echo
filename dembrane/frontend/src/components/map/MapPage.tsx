@@ -1,6 +1,7 @@
 import { plural, t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
 import {
+	Alert,
 	Badge,
 	Button,
 	Group,
@@ -19,6 +20,7 @@ import {
 	useRef,
 	useState,
 } from "react";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { isReadOnlyRole } from "@/lib/roles";
 import {
@@ -34,14 +36,26 @@ import {
 	isMapPayloadV2,
 	type MapGraphData,
 } from "./data/adapter";
+import { conversationColor, conversationSlotLabel } from "./attributes";
 import { fixtureMapData, type MapFixtureId } from "./data/fixture";
-import { filterNodesByType, typesKey, zeroTypeCounts } from "./data/scope";
+import {
+	buildTagIndex,
+	conversationsWithoutTags,
+	withTagSlots,
+} from "./data/tags";
+import {
+	filterNodesByConversation,
+	filterNodesByType,
+	typesKey,
+	zeroTypeCounts,
+} from "./data/scope";
 import {
 	type FactCheckStates,
 	isAttemptRunning,
 	type MapAttempt,
 	type MapGraphResponse,
 	useGenerateMap,
+	useMapConversationTags,
 	useMapEvents,
 	useMapGraph,
 	useProjectMap,
@@ -55,7 +69,16 @@ import {
 import { useMapUrlState } from "./hooks/useMapUrlState";
 import { MAP_LIGHT_VARS, MapExperience, MapSurface } from "./MapExperience";
 import { EmptyArgumentsState, OverBudgetState } from "./panels/BudgetStates";
-import { MapSettingsMenu } from "./panels/MapSettingsMenu";
+import {
+	MapFilterMenu,
+	MapSettingsMenu,
+	type MapSettingsControl,
+} from "./panels/MapSettingsMenu";
+
+const MAP_PAGE_HIDDEN_CONTROLS: ReadonlyArray<MapSettingsControl> = [
+	"layout",
+	"showForceSettings",
+];
 import type { ConversationHref } from "./panels/NodeDetailCard";
 import { ResultList } from "./panels/ResultList";
 import { MapInteractionProvider } from "./state/interactionStore";
@@ -104,7 +127,7 @@ const GenerationControls = ({
 	if (isAttemptRunning(attempt) && attempt) {
 		return (
 			<Group gap="xs" wrap="nowrap" aria-live="polite">
-				<Loader size={16} color="primary" />
+				<Loader size="sm" color="primary" />
 				<Text size="sm">{progressLabel(attempt)}</Text>
 			</Group>
 		);
@@ -113,8 +136,7 @@ const GenerationControls = ({
 	const failed = attempt?.status === "failed";
 	return (
 		<Button
-			variant={hasResult ? "outline" : undefined}
-			radius={hasResult ? 0 : undefined}
+			variant={hasResult ? undefined : "filled"}
 			loading={isStarting}
 			disabled={!hasResult && nothingToRead}
 			onClick={onGenerate}
@@ -132,7 +154,7 @@ const GenerationControls = ({
 
 const Notice = ({ children }: { children: ReactNode }) => (
 	<Group gap="xs" wrap="nowrap" align="flex-start">
-		<WarningCircleIcon size={18} className="mt-0.5 shrink-0 text-salmon-800" />
+		<WarningCircleIcon size={16} className="mt-0.5 shrink-0" />
 		<Text size="sm">{children}</Text>
 	</Group>
 );
@@ -313,15 +335,89 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 		[scopedArgumentTypes],
 	);
 
+	// The conversations on this map, in palette order, and those left out.
+	// A hidden id from another map (an old link) is no filter here.
+	const conversations = useMemo(
+		() =>
+			Array.from(graph?.conversationSlots ?? [])
+				.sort((a, b) => a[1] - b[1])
+				.map(([id, slot]) => ({
+					color: conversationColor(slot),
+					id,
+					name:
+						graph?.conversationNames.get(slot) || conversationSlotLabel(slot),
+				})),
+		[graph],
+	);
+	const hiddenConversations = useMemo(
+		() =>
+			new Set(urlState.hidden.filter((id) => graph?.conversationSlots.has(id))),
+		[graph, urlState.hidden],
+	);
+
+	// The tags on this map's conversations; none on a fixture.
+	const conversationsQuery = useMapConversationTags(projectId, !offline);
+	const tagIndex = useMemo(
+		() =>
+			buildTagIndex(
+				conversationsQuery.data,
+				new Set(graph?.conversationSlots.keys() ?? []),
+			),
+		[conversationsQuery.data, graph],
+	);
+	const chosenTags = useMemo(() => {
+		const known = new Set(tagIndex.tags.map((tag) => tag.id));
+		return new Set(urlState.tags.filter((id) => known.has(id)));
+	}, [tagIndex, urlState.tags]);
+	const mapTags = useMemo(
+		() =>
+			tagIndex.tags.map((tag) => ({
+				color: conversationColor(tag.slot),
+				id: tag.id,
+				name: tag.name,
+			})),
+		[tagIndex],
+	);
+	// Hidden by hand, or carrying none of the chosen tags.
+	const leftOut = useMemo(
+		() =>
+			new Set([
+				...hiddenConversations,
+				...conversationsWithoutTags(
+					graph?.conversationSlots.keys() ?? [],
+					chosenTags,
+					tagIndex,
+				),
+			]),
+		[chosenTags, graph, hiddenConversations, tagIndex],
+	);
+
 	// Filters narrow the nodes before any geometry; colour never does.
 	const listNodes = useMemo(
-		() => (graph ? filterNodesByType(graph.allNodes, visibleSet) : EMPTY_NODES),
-		[graph, visibleSet],
+		() =>
+			graph
+				? withTagSlots(
+						filterNodesByConversation(
+							filterNodesByType(graph.allNodes, visibleSet),
+							leftOut,
+						),
+						tagIndex,
+					)
+				: EMPTY_NODES,
+		[graph, visibleSet, leftOut, tagIndex],
 	);
 	const placedNodes = useMemo(
 		() =>
-			graph ? filterNodesByType(graph.placedNodes, visibleSet) : EMPTY_NODES,
-		[graph, visibleSet],
+			graph
+				? withTagSlots(
+						filterNodesByConversation(
+							filterNodesByType(graph.placedNodes, visibleSet),
+							leftOut,
+						),
+						tagIndex,
+					)
+				: EMPTY_NODES,
+		[graph, visibleSet, leftOut, tagIndex],
 	);
 	const visibleIds = useMemo(
 		() => new Set(listNodes.map((node) => node.id)),
@@ -338,7 +434,12 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 			? "overBudget"
 			: budgetState(visibleCount, budgets.nodeLimit);
 
-	const colorBy = urlState.colorBy ?? settings.colorBy;
+	// A tag colouring saved on another project means nothing on one without tags.
+	const chosenColorBy = urlState.colorBy ?? settings.colorBy;
+	const colorBy =
+		chosenColorBy === "tag" && tagIndex.tags.length === 0
+			? "none"
+			: chosenColorBy;
 	const handleColorByChange = useCallback(
 		(next: ColorBy) => {
 			updateSettings({ colorBy: next });
@@ -422,6 +523,7 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 				budgets={budgets}
 				colorBy={colorBy}
 				onColorByChange={handleColorByChange}
+				onSettingsChange={updateSettings}
 				settings={settings}
 				factCheckStates={factCheckStates}
 				onFactCheck={factCheck.run}
@@ -429,6 +531,7 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 				canFactCheck={!readOnly}
 				conversationHref={conversationHref}
 				offline={offline}
+				tags={tagIndex.tags}
 			/>
 		</MapInteractionProvider>
 	);
@@ -443,40 +546,50 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 	} else if (isRefreshing && activeAdmission) {
 		body = (
 			<Group gap="xs" className="px-4 md:px-6" aria-live="polite">
-				<Loader size={16} color="primary" />
+				<Loader size="sm" color="primary" />
 				<Text size="sm">
 					<Trans>Loading the map.</Trans>
 				</Text>
 			</Group>
 		);
 	} else if (isError) {
+		const loadError =
+			graphQuery.error ??
+			(graphQuery.data === null ? legacyMapQuery.error : null);
 		body = (
-			<Text className="px-4 md:px-6">
-				<Trans>The map could not be loaded. Try again in a moment.</Trans>
-			</Text>
+			<div className="max-w-2xl px-4 md:px-6">
+				<ErrorNotice
+					error={loadError}
+					title={t`The map could not be loaded`}
+					onRetry={() => {
+						if (graphQuery.isError) graphQuery.refetch();
+						else legacyMapQuery.refetch();
+					}}
+				/>
+			</div>
 		);
 	} else if (!graph) {
 		body = (
 			<Stack gap="sm" className="max-w-2xl px-4 md:px-6">
 				{isAttemptRunning(attempt) ? (
-					<Text>
+					<Text size="sm" c="dimmed">
 						<Trans>
 							The map is being generated. It appears here when it is ready.
 						</Trans>
 					</Text>
 				) : nothingToRead ? (
-					<Text>
+					<Text size="sm" c="dimmed">
 						<Trans>
 							This project has no conversations with transcripts yet. Generate a
 							map once conversations have been transcribed.
 						</Trans>
 					</Text>
 				) : readOnly ? (
-					<Text>
+					<Text size="sm" c="dimmed">
 						<Trans>No map has been generated for this project yet.</Trans>
 					</Text>
 				) : (
-					<Text>
+					<Text size="sm" c="dimmed">
 						<Trans>
 							Map reads this project's transcripts, finds the arguments people
 							make, and places related arguments close together. Generate a map
@@ -489,7 +602,7 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 	} else if (entry === "empty" && graph.version === 1) {
 		body = (
 			<Stack gap="sm" className="max-w-2xl px-4 md:px-6">
-				<Text>
+				<Text size="sm" c="dimmed">
 					{conversationCount === 0 ? (
 						<Trans>
 							This project has no conversations with transcripts yet. Generate a
@@ -538,19 +651,36 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 
 	return (
 		<div className="flex h-full min-h-0 flex-col" style={MAP_LIGHT_VARS}>
-			<div className="flex flex-wrap items-start justify-between gap-4 px-4 pb-2 pt-4 md:px-6">
-				<Stack gap={2} className="min-w-0">
-					<Group gap="sm" align="center" wrap="nowrap">
-						<Title order={2}>
-							<Trans>Map</Trans>
-						</Title>
-						<Badge size="sm" variant="light" color="primary">
-							<Trans>Beta</Trans>
-						</Badge>
-					</Group>
-					{countsLine && <Text size="sm">{countsLine}</Text>}
-				</Stack>
-				<Group gap="sm" wrap="nowrap">
+			{/* One row, to give the map the height: the title and what it holds
+			    on the left, its controls on the right. A narrow screen drops the
+			    counts first, and a phone stacks the controls under the title. */}
+			<Group
+				gap="sm"
+				align="center"
+				justify="flex-start"
+				wrap="nowrap"
+				className="app-stack-narrow px-4 pb-2 pt-4 md:px-6"
+			>
+				<Group gap="sm" align="center" wrap="nowrap" className="min-w-0">
+					<Title order={2}>
+						<Trans>Map</Trans>
+					</Title>
+					<Badge size="sm" color="mauve" c="graphite">
+						<Trans>Beta</Trans>
+					</Badge>
+					{countsLine && (
+						<Text
+							size="sm"
+							c="dimmed"
+							className="hidden min-w-0 truncate md:block"
+						>
+							{countsLine}
+						</Text>
+					)}
+				</Group>
+				{/* The controls keep the row's right edge, a choice for this page
+				    over the flush-left canon. */}
+				<Group gap="sm" wrap="nowrap" ml="auto" className="shrink-0">
 					{!offline && (
 						<GenerationControls
 							hasResult={Boolean(graph)}
@@ -559,6 +689,20 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 							isStarting={generate.isPending}
 							nothingToRead={nothingToRead}
 							onGenerate={() => generate.mutate()}
+						/>
+					)}
+					{graph && argumentCount > 0 && (
+						<MapFilterMenu
+							conversations={conversations}
+							hiddenConversations={hiddenConversations}
+							onHiddenConversationsChange={(hidden) =>
+								setUrlState({ hidden: [...hidden] })
+							}
+							tags={mapTags}
+							chosenTags={chosenTags}
+							onChosenTagsChange={(chosen) =>
+								setUrlState({ tags: [...chosen] })
+							}
 						/>
 					)}
 					{graph && argumentCount > 0 && (
@@ -572,30 +716,37 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 							pendingClaimCount={pendingClaims.length}
 							onFactCheckAll={handleFactCheckAll}
 							canFactCheck={!readOnly}
+							tags={mapTags}
+							// The toolbar on the map holds the view and the forces.
+							hide={MAP_PAGE_HIDDEN_CONTROLS}
 						/>
 					)}
 				</Group>
-			</div>
+			</Group>
 
 			{(failedAttempt ||
 				unplacedCount > 0 ||
 				urlState.scope ||
+				hiddenConversations.size > 0 ||
+				chosenTags.size > 0 ||
 				(isRefreshing && !activeAdmission) ||
 				(graph?.stale.length ?? 0) > 0) && (
-				<Stack gap={4} className="px-4 pb-2 md:px-6">
+				<Stack gap="xs" className="px-4 pb-2 md:px-6">
 					{failedAttempt && (
-						<Notice>
-							{graph ? (
-								<Trans>
-									The last generation failed, so this is still the previous map.{" "}
-									{failedAttempt.error ?? ""}
-								</Trans>
-							) : (
-								<Trans>
-									The map could not be generated. {failedAttempt.error ?? ""}
-								</Trans>
-							)}
-						</Notice>
+						<Alert color="red" icon={<WarningCircleIcon size={20} />}>
+							<Text size="sm">
+								{graph ? (
+									<Trans>
+										The last generation failed, so this is still the previous
+										map. {failedAttempt.error ?? ""}
+									</Trans>
+								) : (
+									<Trans>
+										The map could not be generated. {failedAttempt.error ?? ""}
+									</Trans>
+								)}
+							</Text>
+						</Alert>
 					)}
 					{unplacedCount > 0 && (
 						<Notice>
@@ -607,7 +758,6 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 							<Button
 								size="compact-sm"
 								variant="subtle"
-								radius={0}
 								onClick={() => setShowUnplaced((shown) => !shown)}
 							>
 								{showUnplaced ? (
@@ -631,16 +781,54 @@ export const MapPage = ({ projectId, workspaceId, fixture }: MapPageProps) => {
 							<Button
 								size="compact-sm"
 								variant="subtle"
-								radius={0}
 								onClick={() => setUrlState({ scope: null })}
 							>
 								<Trans>Show current arguments</Trans>
 							</Button>
 						</Group>
 					)}
+					{chosenTags.size > 0 && (
+						<Group gap="xs">
+							<Text size="sm">
+								<Trans>
+									Showing conversations tagged{" "}
+									{tagIndex.tags
+										.filter((tag) => chosenTags.has(tag.id))
+										.map((tag) => tag.name)
+										.join(", ")}
+									.
+								</Trans>
+							</Text>
+							<Button
+								size="compact-sm"
+								variant="subtle"
+								onClick={() => setUrlState({ tags: [] })}
+							>
+								<Trans>Show every tag</Trans>
+							</Button>
+						</Group>
+					)}
+					{hiddenConversations.size > 0 && (
+						<Group gap="xs">
+							<Text size="sm">
+								<Plural
+									value={hiddenConversations.size}
+									one="# conversation is hidden from the map."
+									other="# conversations are hidden from the map."
+								/>
+							</Text>
+							<Button
+								size="compact-sm"
+								variant="subtle"
+								onClick={() => setUrlState({ hidden: [] })}
+							>
+								<Trans>Show all conversations</Trans>
+							</Button>
+						</Group>
+					)}
 					{isRefreshing && !activeAdmission && (
 						<Group gap="xs" aria-live="polite">
-							<Loader size={14} color="primary" />
+							<Loader size="sm" color="primary" />
 							<Text size="sm">
 								<Trans>
 									Loading the new scope. The current map stays until then.

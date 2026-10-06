@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { roles } from "@/colors";
 import { useIsMobile } from "../hooks/useIsMobile";
 import {
 	SIDEBAR_WIDTH_DEFAULT,
@@ -9,7 +10,7 @@ import {
 
 // Invisible 4px-wide drag handle pinned to the right edge of the
 // sidebar. Drag to set width, clamped by useSidebarState. Hover state
-// gives a subtle Royal Blue accent so the affordance is discoverable
+// gives a subtle action-blue accent so the affordance is discoverable
 // without taking visual weight.
 export const ResizeHandle = () => {
 	const { width, setWidth } = useSidebarState();
@@ -83,12 +84,12 @@ export const ResizeHandle = () => {
 			tabIndex={0}
 			className="absolute right-0 top-0 h-full w-1 cursor-col-resize transition-colors"
 			style={{
-				backgroundColor: dragging ? "rgba(65, 105, 225, 0.5)" : "transparent",
+				backgroundColor: dragging ? roles.action : "transparent",
 			}}
 			onMouseEnter={(e) => {
 				if (!dragging) {
 					(e.currentTarget as HTMLDivElement).style.backgroundColor =
-						"rgba(65, 105, 225, 0.2)";
+						roles.actionTint;
 				}
 			}}
 			onMouseLeave={(e) => {

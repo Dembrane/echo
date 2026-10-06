@@ -23,7 +23,7 @@ export const Section = ({
 			gap="xs"
 			wrap="nowrap"
 		>
-			<Text fw={500}>{title}</Text>
+			<Text>{title}</Text>
 			{action}
 		</Group>
 		{children}

@@ -17,18 +17,14 @@ export const ConnectionHealthStatus = ({
 	if (isHealthy) return null;
 
 	return (
-		<Group justify="center">
-			<Group gap="sm" align="center">
-				<div className="h-4 w-4 rounded-full bg-yellow-500 transition-all duration-500 ease-in-out" />
-				<Text
-					size="xl"
-					fw={500}
-					c="yellow"
-					className="transition-colors duration-500 ease-in-out"
-				>
-					{t`Connection unhealthy`}
-				</Text>
-			</Group>
+		<Group gap="sm" align="center">
+			<div
+				className="h-2 w-2 rounded-full"
+				style={{ background: "var(--app-warning)" }}
+			/>
+			<Text size="sm" c="var(--app-warning)">
+				{t`Connection unhealthy`}
+			</Text>
 		</Group>
 	);
 };

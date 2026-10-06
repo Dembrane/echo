@@ -8,6 +8,7 @@ import {
 	Stack,
 	Text,
 	TextInput,
+	Title,
 } from "@mantine/core";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import posthog from "posthog-js";
@@ -109,12 +110,12 @@ export const WorkspaceDataOwnershipSection = ({
 	});
 
 	return (
-		<Stack gap={16} data-testid="workspace-data-ownership-section">
-			<Stack gap={4}>
-				<Text size="sm" fw={500}>
+		<Stack gap="md" data-testid="workspace-data-ownership-section">
+			<Stack gap="xs">
+				<Title order={5}>
 					<Trans>Data ownership</Trans>
-				</Text>
-				<Text size="xs">
+				</Title>
+				<Text size="xs" c="dimmed">
 					<Trans>
 						Is this workspace for your organisation's internal use, or for an
 						external organisation that owns its data?
@@ -123,7 +124,7 @@ export const WorkspaceDataOwnershipSection = ({
 			</Stack>
 
 			<Radio.Group value={usage} onChange={(v) => setUsage(v as UsageContext)}>
-				<Stack gap={8}>
+				<Stack gap="sm">
 					<Radio
 						value="internal"
 						disabled={!canEdit}
@@ -140,7 +141,7 @@ export const WorkspaceDataOwnershipSection = ({
 			</Radio.Group>
 
 			{usage === "external" && (
-				<Stack gap={10}>
+				<Stack gap="sm">
 					<TextInput
 						required
 						label={<Trans>Owning organisation</Trans>}
@@ -192,8 +193,9 @@ export const WorkspaceDataOwnershipSection = ({
 				</Alert>
 			)}
 
-			<Group justify="flex-end">
+			<Group justify="flex-start">
 				<Button
+					variant="filled"
 					onClick={() => mutation.mutate()}
 					loading={mutation.isPending}
 					disabled={!canSubmit}

@@ -25,10 +25,12 @@ export type MapInteractionValues = {
 	 * unchanged, so selecting the selected node again can restart the walk.
 	 */
 	selectionRevision: number;
+	/** True when the last selection was the map's own (a first pick, the walk), not a click. */
+	selectionAuto: boolean;
 };
 
 export type MapInteractionActions = {
-	setSelectedNodeId: (id: string | null) => void;
+	setSelectedNodeId: (id: string | null, options?: { auto?: boolean }) => void;
 	setHighlightedNodeIds: (
 		ids: Set<string>,
 		options?: HighlightUpdateOptions,
@@ -111,9 +113,10 @@ export function createMapInteractionStore(
 				}
 				return { highlightedNodesDistance: distances };
 			}),
-		setSelectedNodeId: (id) =>
+		setSelectedNodeId: (id, options) =>
 			setState((current) => ({
 				selectedNodeId: id,
+				selectionAuto: options?.auto ?? false,
 				selectionRevision: current.selectionRevision + 1,
 			})),
 	};
@@ -125,6 +128,7 @@ export function createMapInteractionStore(
 		highlightSource: "unknown",
 		highlightUpdatedAt: 0,
 		selectedNodeId: null,
+		selectionAuto: false,
 		selectionRevision: 0,
 		...initial,
 		...actions,

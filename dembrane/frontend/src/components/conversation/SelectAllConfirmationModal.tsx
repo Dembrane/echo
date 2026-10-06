@@ -9,21 +9,23 @@ import {
 	Group,
 	Loader,
 	Modal,
-	Pill,
 	ScrollArea,
 	Stack,
 	Tabs,
 	Text,
 } from "@mantine/core";
 import {
-	IconAlertTriangle,
-	IconCheck,
-	IconFileOff,
-	IconRosetteDiscountCheck,
-	IconScale,
-	IconX,
-} from "@tabler/icons-react";
+	CheckIcon,
+	FileXIcon,
+	ScalesIcon,
+	SealCheckIcon,
+	WarningIcon,
+	XIcon,
+} from "@phosphor-icons/react";
 import { testId } from "@/lib/testUtils";
+
+// One rule between result rows (the read grammar, a single container).
+const RULE = "var(--app-stroke) solid var(--app-rule-color)";
 
 type SelectAllConfirmationModalProps = {
 	opened: boolean;
@@ -60,54 +62,35 @@ const FilterDisplay = ({
 	if (!hasAnyFilters) return null;
 
 	return (
-		<Stack gap="sm" mt="sm" pl="md">
+		<Stack gap="sm" mt="sm">
 			{searchText && (
 				<Group gap="xs" align="center">
-					<Text size="sm" fw={700}>
-						•
-					</Text>
-					<Text size="sm" fw={600}>
+					<Text size="sm">
 						<Trans id="select.all.modal.search.text">Search text:</Trans>
 					</Text>
-					<Text size="sm" className="border px-3 rounded-sm">
-						"{searchText}"
-					</Text>
+					<Text size="sm">"{searchText}"</Text>
 				</Group>
 			)}
 			{filterNames.length > 0 && (
 				<Group gap="xs" align="center">
-					<Text size="sm" fw={700}>
-						•
-					</Text>
-					<Text size="sm" fw={600}>
+					<Text size="sm">
 						<Trans id="select.all.modal.tags">
 							<Plural value={filterNames.length} one="Tag:" other="Tags:" />
 						</Trans>
 					</Text>
 					{filterNames.map((tagName) => (
-						<Pill
-							key={tagName}
-							size="sm"
-							classNames={{
-								root: "!bg-[var(--mantine-primary-color-light)] !font-medium",
-							}}
-						>
+						<Badge key={tagName} size="sm" color="gray">
 							{tagName}
-						</Pill>
+						</Badge>
 					))}
 				</Group>
 			)}
 			{hasVerifiedOutcomesFilter && (
 				<Group gap="xs" align="center">
-					<Text size="sm" fw={700}>
-						•
-					</Text>
 					<Badge
-						color="blue"
-						variant="light"
+						color="gray"
 						size="md"
-						rightSection={<IconRosetteDiscountCheck size={14} />}
-						style={{ width: "fit-content" }}
+						rightSection={<SealCheckIcon size={16} />}
 					>
 						<Trans id="select.all.modal.verified">Verified</Trans>
 					</Badge>
@@ -137,26 +120,26 @@ const getReasonLabel = (reason: SelectAllConversationResult["reason"]) => {
 const getReasonIcon = (reason: SelectAllConversationResult["reason"]) => {
 	switch (reason) {
 		case "already_in_context":
-			return <IconCheck size={14} />;
+			return <CheckIcon size={16} />;
 		case "context_limit_reached":
-			return <IconScale size={14} />;
+			return <ScalesIcon size={16} />;
 		case "empty":
-			return <IconFileOff size={14} />;
+			return <FileXIcon size={16} />;
 		case "too_long":
-			return <IconAlertTriangle size={14} />;
+			return <WarningIcon size={16} />;
 		case "error":
-			return <IconX size={14} />;
+			return <XIcon size={16} />;
 		default:
-			return <IconAlertTriangle size={14} />;
+			return <WarningIcon size={16} />;
 	}
 };
 
 const getReasonColor = (reason: SelectAllConversationResult["reason"]) => {
 	switch (reason) {
 		case "already_in_context":
-			return "blue";
+			return "gray";
 		case "context_limit_reached":
-			return "orange";
+			return "yellow";
 		case "empty":
 			return "gray";
 		case "too_long":
@@ -207,23 +190,18 @@ export const SelectAllConfirmationModal = ({
 			onClose={onClose}
 			onExitTransitionEnd={onExitTransitionEnd}
 			title={
-				<Text fw={600} size="lg" style={{ color: "var(--app-text)" }}>
-					{result ? (
-						<Trans id="select.all.modal.title.results">
-							Select All Results
-						</Trans>
-					) : (
-						<Trans id="select.all.modal.title.add">
-							Add Conversations to Context
-						</Trans>
-					)}
-				</Text>
+				result ? (
+					<Trans id="select.all.modal.title.results">Select all results</Trans>
+				) : (
+					<Trans id="select.all.modal.title.add">
+						Add conversations to context
+					</Trans>
+				)
 			}
 			size="lg"
 			centered
 			classNames={{
 				body: "flex flex-col justify-between min-h-[300px]",
-				header: "border-b",
 			}}
 			{...testId("select-all-confirmation-modal")}
 		>
@@ -231,11 +209,11 @@ export const SelectAllConfirmationModal = ({
 				{/* Initial confirmation view */}
 				{!result && !isLoading && (
 					<Stack gap="md" justify="space-between" flex="1">
-						<Box className="py-4">
+						<Box py="md">
 							<Stack gap="lg">
 								{/* Warning about potential skips - show at top if many conversations or there might be empty ones */}
 								{totalCount > 10 && (
-									<Alert variant="light" color="orange">
+									<Alert color="yellow">
 										<Trans id="select.all.modal.skip.disclaimer">
 											Some may be skipped (no transcript or selection too
 											large).
@@ -248,7 +226,7 @@ export const SelectAllConfirmationModal = ({
 									<Text size="sm">
 										<Trans id="select.all.modal.already.added">
 											You have already added{" "}
-											<Text component="span" fw={600}>
+											<Text component="span">
 												<Plural
 													value={existingContextCount}
 													one="# conversation"
@@ -262,12 +240,12 @@ export const SelectAllConfirmationModal = ({
 
 								{/* Main message about adding conversations */}
 								<Box>
-									<Text size="sm" style={{ color: "var(--app-text)" }}>
+									<Text size="sm">
 										{existingContextCount === 0 &&
 											(hasFilters ? (
 												<Trans id="select.all.modal.add.with.filters">
 													Adding{" "}
-													<Text component="span" fw={700}>
+													<Text component="span">
 														<Plural
 															value={totalCount}
 															one="# conversation"
@@ -279,7 +257,7 @@ export const SelectAllConfirmationModal = ({
 											) : (
 												<Trans id="select.all.modal.add.without.filters">
 													Adding{" "}
-													<Text component="span" fw={700}>
+													<Text component="span">
 														<Plural
 															value={totalCount}
 															one="# conversation"
@@ -294,7 +272,7 @@ export const SelectAllConfirmationModal = ({
 											(hasFilters ? (
 												<Trans id="select.all.modal.add.with.filters.more">
 													Adding{" "}
-													<Text component="span" fw={700}>
+													<Text component="span">
 														<Plural
 															value={totalCount}
 															one="# more conversation"
@@ -306,7 +284,7 @@ export const SelectAllConfirmationModal = ({
 											) : (
 												<Trans id="select.all.modal.add.without.filters.more">
 													Adding{" "}
-													<Text component="span" fw={700}>
+													<Text component="span">
 														<Plural
 															value={totalCount}
 															one="# more conversation"
@@ -326,19 +304,21 @@ export const SelectAllConfirmationModal = ({
 								</Box>
 							</Stack>
 						</Box>
-						<Group justify="flex-end" gap="sm">
+						<Group justify="flex-start" gap="sm">
 							<Button
-								variant="subtle"
-								onClick={onClose}
-								{...testId("select-all-cancel-button")}
-							>
-								<Trans id="select.all.modal.cancel">Cancel</Trans>
-							</Button>
-							<Button
+								variant="filled"
 								onClick={onConfirm}
 								{...testId("select-all-proceed-button")}
 							>
 								<Trans id="select.all.modal.proceed">Proceed</Trans>
+							</Button>
+							<Button
+								variant="subtle"
+								color="gray"
+								onClick={onClose}
+								{...testId("select-all-cancel-button")}
+							>
+								<Trans id="select.all.modal.cancel">Cancel</Trans>
 							</Button>
 						</Group>
 					</Stack>
@@ -347,47 +327,25 @@ export const SelectAllConfirmationModal = ({
 				{/* Loading view */}
 				{isLoading && (
 					<Stack
-						gap="xl"
-						align="center"
-						justify="center"
-						className="py-12"
-						style={{ minHeight: 300 }}
+						gap="lg"
+						align="flex-start"
+						py="lg"
 						{...testId("select-all-loading-state")}
 					>
-						{/* Animated loader section */}
-						<Box className="relative">
-							<Loader size={60} type="dots" />
-							<Box
-								className="absolute inset-0 flex items-center justify-center"
-								style={{
-									animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-								}}
-							>
-								<IconCheck
-									size={28}
-									className="opacity-20"
-									style={{ color: "var(--mantine-primary-color-6)" }}
-								/>
-							</Box>
-						</Box>
-
 						{/* Main message */}
-						<Stack gap="sm" align="center">
-							<Text size="lg" fw={600} style={{ color: "var(--app-text)" }}>
-								<Trans id="select.all.modal.loading.title">
-									Adding Conversations
-								</Trans>
-							</Text>
-							<Text
-								size="sm"
-								c="dimmed"
-								ta="center"
-								maw={400}
-								className="leading-relaxed"
-							>
+						<Stack gap="sm">
+							<Group gap="sm">
+								<Loader size="sm" />
+								<Text size="lg">
+									<Trans id="select.all.modal.loading.title">
+										Adding conversations
+									</Trans>
+								</Text>
+							</Group>
+							<Text size="sm" c="dimmed" maw={400}>
 								<Trans id="select.all.modal.loading.description">
 									Processing{" "}
-									<Text component="span" fw={600} c="primary">
+									<Text component="span">
 										<Plural
 											value={totalCount}
 											one="# conversation"
@@ -401,15 +359,8 @@ export const SelectAllConfirmationModal = ({
 
 						{/* Filter indicator if filters are active */}
 						{hasFilters && (
-							<Box
-								className="rounded-lg border px-4 py-3"
-								style={{
-									backgroundColor: "var(--mantine-color-gray-0)",
-									borderColor: "var(--mantine-color-gray-3)",
-									maxWidth: 400,
-								}}
-							>
-								<Text size="xs" c="dimmed" ta="center">
+							<Box>
+								<Text size="xs" c="dimmed">
 									<Trans id="select.all.modal.loading.filters">
 										Active filters
 									</Trans>
@@ -417,16 +368,16 @@ export const SelectAllConfirmationModal = ({
 								{(searchText ||
 									filterNames.length > 0 ||
 									hasVerifiedOutcomesFilter) && (
-									<Group justify="center" gap="xs" mt="xs" wrap="wrap">
+									<Group gap="xs" mt="xs" wrap="wrap">
 										{searchText && (
-											<Badge size="sm" variant="light" color="gray">
+											<Badge size="sm" color="gray">
 												<Trans id="select.all.modal.loading.search">
 													Search
 												</Trans>
 											</Badge>
 										)}
 										{filterNames.length > 0 && (
-											<Badge size="sm" variant="light" color="primary">
+											<Badge size="sm" color="gray">
 												<Plural
 													value={filterNames.length}
 													one="# tag"
@@ -437,9 +388,8 @@ export const SelectAllConfirmationModal = ({
 										{hasVerifiedOutcomesFilter && (
 											<Badge
 												size="sm"
-												variant="light"
-												color="blue"
-												rightSection={<IconRosetteDiscountCheck size={12} />}
+												color="gray"
+												rightSection={<SealCheckIcon size={16} />}
 											>
 												<Trans id="select.all.modal.loading.verified">
 													Verified
@@ -459,9 +409,8 @@ export const SelectAllConfirmationModal = ({
 						{/* Summary badges */}
 						<Group gap="md" mt="md">
 							<Badge
-								color="primary"
+								color="gray"
 								size="lg"
-								variant="light"
 								{...testId("select-all-added-count-badge")}
 							>
 								<Trans id="select.all.modal.added.count">
@@ -470,9 +419,8 @@ export const SelectAllConfirmationModal = ({
 							</Badge>
 							{reallySkipped.length > 0 && (
 								<Badge
-									color="orange"
+									color="yellow"
 									size="lg"
-									variant="light"
 									{...testId("select-all-skipped-count-badge")}
 								>
 									<Trans id="select.all.modal.not.added.count">
@@ -483,19 +431,15 @@ export const SelectAllConfirmationModal = ({
 						</Group>
 
 						{result.contextLimitReached && (
-							<Box
-								className="rounded-md border border-orange-200 bg-orange-50 p-3"
+							<Alert
+								color="yellow"
+								icon={<ScalesIcon size={20} />}
 								{...testId("select-all-context-limit-warning")}
 							>
-								<Group gap="xs">
-									<IconScale size={18} className="text-orange-600" />
-									<Text size="sm" fw={500} c="orange.7">
-										<Trans id="select.all.modal.context.limit.reached">
-											Selection too large. Some conversations weren't added.
-										</Trans>
-									</Text>
-								</Group>
-							</Box>
+								<Trans id="select.all.modal.context.limit.reached">
+									Selection too large. Some conversations weren't added.
+								</Trans>
+							</Alert>
 						)}
 
 						{/* Tabs for conversation lists */}
@@ -508,15 +452,9 @@ export const SelectAllConfirmationModal = ({
 								{result.added.length > 0 && (
 									<Tabs.Tab
 										value="added"
-										rightSection={<IconCheck size={16} />}
+										rightSection={<CheckIcon size={16} />}
 										leftSection={
-											<Badge
-												size="md"
-												miw={30}
-												variant="light"
-												color="primary"
-												circle
-											>
+											<Badge size="sm" color="gray">
 												{result.added.length}
 											</Badge>
 										}
@@ -528,35 +466,23 @@ export const SelectAllConfirmationModal = ({
 								{skippedDueToOther.length > 0 && (
 									<Tabs.Tab
 										value="other"
-										rightSection={<IconAlertTriangle size={16} />}
+										rightSection={<WarningIcon size={16} />}
 										leftSection={
-											<Badge
-												size="md"
-												miw={30}
-												variant="light"
-												color="gray"
-												circle
-											>
+											<Badge size="sm" color="gray">
 												{skippedDueToOther.length}
 											</Badge>
 										}
 										{...testId("select-all-tab-not-added")}
 									>
-										<Trans id="select.all.modal.not.added">Not Added</Trans>
+										<Trans id="select.all.modal.not.added">Not added</Trans>
 									</Tabs.Tab>
 								)}
 								{skippedDueToLimit.length > 0 && (
 									<Tabs.Tab
 										value="limit"
-										rightSection={<IconScale size={16} />}
+										rightSection={<ScalesIcon size={16} />}
 										leftSection={
-											<Badge
-												size="md"
-												miw={30}
-												variant="light"
-												color="orange"
-												circle
-											>
+											<Badge size="sm" color="gray">
 												{skippedDueToLimit.length}
 											</Badge>
 										}
@@ -571,18 +497,16 @@ export const SelectAllConfirmationModal = ({
 							{result.added.length > 0 && (
 								<Tabs.Panel value="added" pt="md">
 									<ScrollArea.Autosize h={400}>
-										<Stack gap="xs">
+										<Stack gap={0} style={{ borderTop: RULE }}>
 											{result.added.map((conv) => (
 												<Group
 													key={conv.conversation_id}
 													gap="md"
 													wrap="nowrap"
-													className="rounded-md border border-primary-100 bg-primary-50 px-3 py-2"
+													py="xs"
+													style={{ borderBottom: RULE }}
 												>
-													<IconCheck
-														size={16}
-														className="flex-shrink-0 text-primary-600"
-													/>
+													<CheckIcon size={16} className="flex-shrink-0" />
 													<Text size="sm" lineClamp={1}>
 														{conv.participant_name}
 													</Text>
@@ -603,14 +527,15 @@ export const SelectAllConfirmationModal = ({
 											</Trans>
 										</Text>
 										<ScrollArea.Autosize h={400}>
-											<Stack gap="xs">
+											<Stack gap={0} style={{ borderTop: RULE }}>
 												{skippedDueToLimit.map((conv) => (
 													<Group
 														key={conv.conversation_id}
 														gap="sm"
 														wrap="nowrap"
 														justify="space-between"
-														className="rounded-md border border-orange-100 bg-orange-50 px-3 py-2"
+														py="xs"
+														style={{ borderBottom: RULE }}
 													>
 														<Text size="sm" lineClamp={1}>
 															{conv.participant_name}
@@ -618,7 +543,6 @@ export const SelectAllConfirmationModal = ({
 														<Badge
 															color={getReasonColor(conv.reason)}
 															size="sm"
-															variant="light"
 															rightSection={getReasonIcon(conv.reason)}
 															className="flex-shrink-0"
 														>
@@ -643,14 +567,15 @@ export const SelectAllConfirmationModal = ({
 											</Trans>
 										</Text>
 										<ScrollArea.Autosize h={400}>
-											<Stack gap="xs">
+											<Stack gap={0} style={{ borderTop: RULE }}>
 												{skippedDueToOther.map((conv) => (
 													<Group
 														key={conv.conversation_id}
 														gap="md"
 														wrap="nowrap"
 														justify="space-between"
-														className="rounded-md border border-gray-100 bg-gray-50 px-3 py-2"
+														py="xs"
+														style={{ borderBottom: RULE }}
 													>
 														<Text size="sm" lineClamp={1}>
 															{conv.participant_name}
@@ -658,7 +583,6 @@ export const SelectAllConfirmationModal = ({
 														<Badge
 															color={getReasonColor(conv.reason)}
 															size="sm"
-															variant="light"
 															rightSection={getReasonIcon(conv.reason)}
 															className="flex-shrink-0"
 														>
@@ -674,9 +598,9 @@ export const SelectAllConfirmationModal = ({
 						</Tabs>
 						{/* Empty state - no conversations processed */}
 						{result?.added?.length === 0 && reallySkipped.length === 0 && (
-							<Alert
-								variant="light"
-								color="blue"
+							<Text
+								size="sm"
+								c="dimmed"
 								mt="md"
 								{...testId("select-all-no-conversations-alert")}
 							>
@@ -685,13 +609,14 @@ export const SelectAllConfirmationModal = ({
 									conversations are already in context or don't match the
 									selected filters.
 								</Trans>
-							</Alert>
+							</Text>
 						)}
 						<Divider />
 
-						<Group justify="flex-end" mt="auto">
+						<Group justify="flex-start" mt="auto">
 							<Button
 								variant="subtle"
+								color="gray"
 								onClick={onClose}
 								{...testId("select-all-close-button")}
 							>

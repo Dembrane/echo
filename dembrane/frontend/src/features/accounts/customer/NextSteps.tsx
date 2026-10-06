@@ -187,9 +187,7 @@ function Step({
 			color={current ? "blue" : "gray"}
 			variant={current ? "filled" : "light"}
 		>
-			<Text size="xs" fw={600}>
-				{n}
-			</Text>
+			<Text size="xs">{n}</Text>
 		</ThemeIcon>
 	);
 
@@ -207,7 +205,7 @@ function Step({
 					{!last && (
 						<Box
 							style={{
-								background: "var(--mantine-color-gray-3)",
+								background: "var(--app-quiet)",
 								flex: 1,
 								minHeight: 12,
 								width: 1.5,
@@ -232,7 +230,7 @@ function Step({
 						<Group justify="space-between" wrap="wrap" gap="xs" align="center">
 							<Stack gap={2} style={{ flex: "1 1 220px", minWidth: 0 }}>
 								<Text
-									fw={current ? 500 : 400}
+									fw={current ? 600 : 320}
 									size="sm"
 									c={locked || done ? "dimmed" : undefined}
 									pt={current ? 0 : 3}
@@ -250,7 +248,7 @@ function Step({
 										)}
 									</Text>
 								) : task.status === "changes_requested" && task.review_note ? (
-									<Text size="sm" c="orange.8">
+									<Text size="sm" c="var(--app-warning)">
 										<Trans>We asked for a change: {task.review_note}</Trans>
 									</Text>
 								) : active && body ? (

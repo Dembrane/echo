@@ -382,22 +382,22 @@ it("offers Not now through the first question and a real Skip after it", async (
 	expect(screen.queryByTestId("pricing-configurator-skip")).toBeNull();
 	next();
 
-	// The first question keeps "Not now" and "Let's go!".
+	// The first question keeps "Not now" and "Continue".
 	await waitFor(() => expect(search()).toBe("?pc_step=2"));
 	expect(screen.getByTestId("pricing-configurator-not-now")).toBeTruthy();
 	expect(screen.queryByTestId("pricing-configurator-skip")).toBeNull();
 	expect(screen.getByTestId("pricing-configurator-next").textContent).toBe(
-		"Let's go!",
+		"Continue",
 	);
 	next();
 
-	// Back, Skip and Next from here on.
+	// Back, Skip and Continue from here on.
 	for (const step of [3, 4, 5]) {
 		await waitFor(() => expect(search()).toBe(`?pc_step=${step}`));
 		expect(screen.getByTestId("pricing-configurator-back")).toBeTruthy();
 		expect(screen.getByTestId("pricing-configurator-skip")).toBeTruthy();
 		expect(screen.getByTestId("pricing-configurator-next").textContent).toBe(
-			"Next",
+			"Continue",
 		);
 		fireEvent.click(screen.getByTestId("pricing-configurator-skip"));
 	}
@@ -406,7 +406,7 @@ it("offers Not now through the first question and a real Skip after it", async (
 	// The last step sends, so there is nothing left to skip past.
 	expect(screen.queryByTestId("pricing-configurator-skip")).toBeNull();
 	expect(screen.getByTestId("pricing-configurator-next").textContent).toBe(
-		"Next: pick a time",
+		"Pick a time",
 	);
 });
 

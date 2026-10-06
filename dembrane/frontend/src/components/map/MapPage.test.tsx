@@ -3,7 +3,13 @@ import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, render, screen } from "@testing-library/react";
+import {
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+	within,
+} from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import {
 	afterAll,
@@ -75,18 +81,41 @@ describe("MapPage in fixture mode", () => {
 			</MantineProvider>,
 		);
 
-		expect(screen.getByText("Argument tree (MST)")).toBeTruthy();
+		// The cluster map alone opens the page; the tree waits under Advanced.
 		expect(screen.getByText("Local map")).toBeTruthy();
-		expect(screen.getAllByText("50 arguments")).toHaveLength(2);
-		expect(container.querySelector("#argument-tree circle.node")).toBeTruthy();
-		expect(
-			container.querySelectorAll("#argument-tree circle.node"),
-		).toHaveLength(50);
+		expect(screen.queryByText("Argument tree (MST)")).toBeNull();
+		expect(container.querySelector("#argument-tree")).toBeNull();
 		expect(container.querySelectorAll("#localmap circle.node")).toHaveLength(
 			50,
 		);
+		// The toolbar on the map: pause, the density dial, forces and the view.
+		const toolbar = screen.getByRole("toolbar", { name: "Map controls" });
+		for (const name of [
+			"Pause physics",
+			"Force settings",
+			"Side by side",
+			"Cluster map",
+			"Argument tree",
+		]) {
+			expect(within(toolbar).getByRole("button", { name })).toBeTruthy();
+		}
+		expect(
+			within(toolbar).getByRole("slider", {
+				name: "Cluster density: fewer or more clusters",
+			}),
+		).toBeTruthy();
+		fireEvent.click(
+			within(toolbar).getByRole("button", { name: "Side by side" }),
+		);
+		expect(container.querySelector("#argument-tree")).toBeTruthy();
+		expect(screen.getByRole("button", { name: "Settings" })).toBeTruthy();
 		expect(container.querySelector("#spotlight-panel")).toBeTruthy();
-		expect(container.querySelector("#explore-panel")).toBeTruthy();
+		// What was spotlit before sits under the spotlit item, in the same panel.
+		expect(
+			container.querySelector(
+				'#spotlight-panel [aria-label="Earlier in the spotlight"]',
+			) ?? screen.getByText(/What you spotlight is kept here/),
+		).toBeTruthy();
 		// Showcase is off by default.
 		expect(container.querySelector("#showcase-panel")).toBeNull();
 		// Generation controls are hidden in fixture mode.

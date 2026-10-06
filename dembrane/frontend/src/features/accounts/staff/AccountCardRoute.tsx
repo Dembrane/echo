@@ -113,9 +113,7 @@ function Card() {
 							<Trans>Accounts</Trans>
 						</Group>
 					</Anchor>
-					<Title order={3} fw={400}>
-						{data.organisation.name}
-					</Title>
+					<Title order={3}>{data.organisation.name}</Title>
 				</Stack>
 				{data.organisation.account_stage === null && (
 					<EnableAccount orgId={orgId} />
@@ -485,7 +483,7 @@ function EnableAccount({ orgId }: { orgId: string }) {
 		<Paper withBorder radius="md" p="md" data-testid="enable-account">
 			<Stack gap="sm">
 				<Stack gap={2}>
-					<Text fw={500}>
+					<Text>
 						<Trans>This organisation has no account yet</Trans>
 					</Text>
 					<Text size="sm" c="dimmed">
@@ -497,7 +495,7 @@ function EnableAccount({ orgId }: { orgId: string }) {
 				</Stack>
 				<Group gap="lg" align="flex-end">
 					<Stack gap={4}>
-						<Text size="sm" fw={500}>
+						<Text size="sm">
 							<Trans>Stage</Trans>
 						</Text>
 						<SegmentedControl
@@ -510,7 +508,7 @@ function EnableAccount({ orgId }: { orgId: string }) {
 						/>
 					</Stack>
 					<Stack gap={4}>
-						<Text size="sm" fw={500}>
+						<Text size="sm">
 							<Trans>Language</Trans>
 						</Text>
 						<SegmentedControl

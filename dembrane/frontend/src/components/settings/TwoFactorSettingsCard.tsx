@@ -16,10 +16,11 @@ import {
 	Stack,
 	Switch,
 	Text,
+	Title,
 	Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconCheck, IconCopy, IconLock } from "@tabler/icons-react";
+import { CheckIcon, CopyIcon } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { QRCode } from "@/components/common/QRCode";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
@@ -178,8 +179,9 @@ export const TwoFactorSettingsCard = ({
 						disabled={generateSecretMutation.isPending}
 					/>
 
-					<Group justify="flex-end">
+					<Group>
 						<Button
+							variant="filled"
 							onClick={handleGenerateSecret}
 							loading={generateSecretMutation.isPending}
 							disabled={!password}
@@ -205,22 +207,20 @@ export const TwoFactorSettingsCard = ({
 					<Trans>Scan the QR code or copy the secret into your app.</Trans>
 				</Text>
 
-				<Paper withBorder p="md" radius="md">
+				<Paper withBorder p="md">
 					<Stack gap="sm" align="center">
 						<div className="h-[200px] w-[200px]">
-							<QRCode value={generatedSecret.otpauth_url} />
+							<QRCode value={generatedSecret.otpauth_url} inverted={false} />
 						</div>
 						<Group align="center" gap="xs">
-							<Text fw={600} size="lg">
-								{generatedSecret.secret}
-							</Text>
+							<Text size="lg">{generatedSecret.secret}</Text>
 							<CopySecretButton secret={generatedSecret.secret} />
 						</Group>
 					</Stack>
 				</Paper>
 
 				<Stack gap="xs">
-					<Text fw={500} size="sm">
+					<Text size="sm">
 						<Trans>Authenticator code</Trans>
 					</Text>
 					<PinInput
@@ -241,22 +241,24 @@ export const TwoFactorSettingsCard = ({
 					</Text>
 				</Stack>
 
-				<Group justify="space-between">
+				<Group>
+					<Button
+						variant="filled"
+						onClick={() => handleEnableTwoFactor()}
+						loading={enableTwoFactorMutation.isPending}
+						disabled={otp.trim().length < 6}
+					>
+						<Trans>Enable 2FA</Trans>
+					</Button>
 					<Button
 						variant="subtle"
+						color="gray"
 						onClick={() => {
 							setSetupStep("password");
 							setGeneratedSecret(null);
 						}}
 					>
 						<Trans>Start over</Trans>
-					</Button>
-					<Button
-						onClick={() => handleEnableTwoFactor()}
-						loading={enableTwoFactorMutation.isPending}
-						disabled={otp.trim().length < 6}
-					>
-						<Trans>Enable 2FA</Trans>
 					</Button>
 				</Group>
 			</Stack>
@@ -265,16 +267,13 @@ export const TwoFactorSettingsCard = ({
 
 	return (
 		<>
-			<Paper withBorder p="lg" radius="lg">
+			<Paper withBorder p="lg">
 				<Stack gap="lg">
 					<Group justify="space-between" align="flex-start">
-						<Stack gap={2}>
-							<Group gap="sm" align="center">
-								<IconLock size={20} />
-								<Text size="lg" fw={600}>
-									<Trans>Two-factor authentication</Trans>
-								</Text>
-							</Group>
+						<Stack gap="xs">
+							<Title order={4}>
+								<Trans>Two-factor authentication</Trans>
+							</Title>
 							<Text size="sm" c="dimmed" maw={520}>
 								<Trans>
 									Keep access secure with a one-time code from your
@@ -284,7 +283,7 @@ export const TwoFactorSettingsCard = ({
 							</Text>
 						</Stack>
 
-						<Stack gap={8} align="flex-end">
+						<Stack gap="sm" align="flex-end">
 							{isLoading ? (
 								<Skeleton height={32} width={80} />
 							) : (
@@ -304,13 +303,11 @@ export const TwoFactorSettingsCard = ({
 							<Divider />
 
 							<Stack gap="md">
-								<Group gap="xs" align="center">
-									<Text fw={500}>
-										<Trans>Recommended apps</Trans>
-									</Text>
-								</Group>
+								<Title order={5}>
+									<Trans>Recommended apps</Trans>
+								</Title>
 
-								<List spacing={6} size="sm">
+								<List spacing="xs" size="sm">
 									{AUTH_APP_LINKS.map((link) => (
 										<List.Item key={link.href}>
 											<Anchor href={link.href} target="_blank" rel="noreferrer">
@@ -348,7 +345,7 @@ export const TwoFactorSettingsCard = ({
 					</Text>
 
 					<Stack gap="xs">
-						<Text fw={500} size="sm">
+						<Text size="sm">
 							<Trans>Authenticator code</Trans>
 						</Text>
 						<PinInput
@@ -368,17 +365,18 @@ export const TwoFactorSettingsCard = ({
 						<ErrorNotice error={disableTwoFactorMutation.error} />
 					)}
 
-					<Group justify="flex-end">
-						<Button variant="subtle" onClick={closeDisableModal}>
-							<Trans>Cancel</Trans>
-						</Button>
+					<Group>
 						<Button
+							variant="filled"
 							color="red"
 							onClick={() => handleDisableTwoFactor()}
 							loading={disableTwoFactorMutation.isPending}
 							disabled={disableOtp.trim().length < 6}
 						>
 							<Trans>Disable 2FA</Trans>
+						</Button>
+						<Button variant="subtle" color="gray" onClick={closeDisableModal}>
+							<Trans>Cancel</Trans>
 						</Button>
 					</Group>
 				</Stack>
@@ -402,7 +400,7 @@ const CopySecretButton = ({ secret }: { secret: string }) => {
 						onClick={copy}
 						aria-label={copied ? t`Secret copied` : t`Copy secret`}
 					>
-						{copied ? <IconCheck size={18} /> : <IconCopy size={18} />}
+						{copied ? <CheckIcon size={20} /> : <CopyIcon size={20} />}
 					</ActionIcon>
 				</Tooltip>
 			)}

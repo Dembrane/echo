@@ -3,7 +3,6 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	Alert,
-	Anchor,
 	Button,
 	Divider,
 	PasswordInput,
@@ -73,7 +72,7 @@ import { testId } from "@/lib/testUtils";
 // };
 
 export const LoginRoute = () => {
-	useDocumentTitle(t`Login | dembrane`);
+	useDocumentTitle(t`Log in | dembrane`);
 	const [searchParams, _setSearchParams] = useSearchParams();
 
 	// When we arrive from /register with ?email=..., pre-seed the email
@@ -102,6 +101,8 @@ export const LoginRoute = () => {
 	// Set when the password was right but the email is not verified yet.
 	const [unverifiedEmail, setUnverifiedEmail] = useState("");
 	const [otpRequired, setOtpRequired] = useState(false);
+	// "Forgot your password?" appears once a password has been wrong.
+	const [passwordFailed, setPasswordFailed] = useState(false);
 	const [otpValue, setOtpValue] = useState("");
 	// Sign-in with an emailed one-time code: how contacts created by staff or sam sign in.
 	const [codeMode, setCodeMode] = useState(false);
@@ -300,6 +301,7 @@ export const LoginRoute = () => {
 			) {
 				setError(describeAuthError(error));
 				if (code === "EMAIL_NOT_VERIFIED") setUnverifiedEmail(data.email);
+				if (code === "INVALID_EMAIL_OR_PASSWORD") setPasswordFailed(true);
 			} else {
 				setError(t`Something went wrong`);
 			}
@@ -367,8 +369,8 @@ export const LoginRoute = () => {
 			)}
 			<Stack className="h-full">
 				<Stack className="flex-grow" gap="md">
-					<Title order={1}>
-						<Trans>Welcome!</Trans>
+					<Title order={2}>
+						<Trans>Welcome</Trans>
 					</Title>
 
 					{searchParams.get("verified") === "1" && (
@@ -391,7 +393,7 @@ export const LoginRoute = () => {
 								<>
 									<TextInput
 										label={<Trans>Email</Trans>}
-										size="lg"
+										size="md"
 										type="email"
 										autoComplete="email"
 										value={codeEmail}
@@ -399,7 +401,8 @@ export const LoginRoute = () => {
 										{...testId("auth-login-code-email-input")}
 									/>
 									<Button
-										size="lg"
+										variant="filled"
+										size="md"
 										fullWidth
 										loading={codeSending}
 										disabled={!codeEmail.includes("@")}
@@ -426,39 +429,40 @@ export const LoginRoute = () => {
 										{...testId("auth-login-code-input")}
 									/>
 									<Button
-										size="lg"
+										variant="filled"
+										size="md"
 										fullWidth
 										loading={loginMutation.isPending}
 										disabled={code.length < 6}
 										onClick={() => submitCode(code)}
 									>
-										<Trans>Sign in</Trans>
+										<Trans>Log in</Trans>
 									</Button>
-									<Anchor
-										component="button"
-										size="sm"
+									<Button
+										variant="subtle"
+										color="gray"
 										onClick={requestCode}
-										ta="left"
+										className="self-start"
 									>
 										<Trans>Send a new code</Trans>
-									</Anchor>
+									</Button>
 								</Stack>
 							)}
-							<Anchor
-								component="button"
-								size="sm"
-								ta="left"
+							<Button
+								variant="subtle"
+								color="gray"
+								className="self-start"
 								onClick={() => {
 									setCodeMode(false);
 									setError("");
 								}}
 							>
 								<Trans>Use my password instead</Trans>
-							</Anchor>
+							</Button>
 						</Stack>
 					) : (
 						<form onSubmit={onSubmit}>
-							<Stack gap="sm" ref={formParent}>
+							<Stack gap="md" ref={formParent}>
 								<input type="hidden" {...register("otp")} />
 								{error && !otpRequired && <Alert color="red">{error}</Alert>}
 								{unverifiedEmail && !otpRequired && (
@@ -467,7 +471,7 @@ export const LoginRoute = () => {
 
 								{otpRequired ? (
 									<Stack gap="xs">
-										<Text fw={500} size="sm">
+										<Text size="sm">
 											<Trans>Authenticator code</Trans>
 										</Text>
 										<PinInput
@@ -494,11 +498,7 @@ export const LoginRoute = () => {
 											inputMode="numeric"
 											name="otp"
 										/>
-										{error && (
-											<Text size="sm" c="red">
-												{error}
-											</Text>
-										)}
+										{error && <Alert color="red">{error}</Alert>}
 										<Text size="sm" c="dimmed">
 											<Trans>
 												Open your authenticator app and enter the current
@@ -510,7 +510,7 @@ export const LoginRoute = () => {
 									<>
 										<TextInput
 											label={<Trans>Email</Trans>}
-											size="lg"
+											size="md"
 											{...register("email")}
 											{...testId("auth-login-email-input")}
 											placeholder={t`Email`}
@@ -524,7 +524,7 @@ export const LoginRoute = () => {
 										/>
 										<PasswordInput
 											label={<Trans>Password</Trans>}
-											size="lg"
+											size="md"
 											{...register("password")}
 											{...testId("auth-login-password-input")}
 											placeholder={t`Password`}
@@ -538,21 +538,13 @@ export const LoginRoute = () => {
 										/>
 									</>
 								)}
-								{!otpRequired && (
-									<div className="w-full text-right">
-										<I18nLink to="/request-password-reset">
-											<Anchor
-												variant="outline"
-												{...testId("auth-login-forgot-password-link")}
-											>
-												<Trans>Forgot your password?</Trans>
-											</Anchor>
-										</I18nLink>
-									</div>
-								)}
-								<div>
+								{/* The submit belongs to the whole form, not the last field:
+								    24 above it (16 from the stack plus 8), against 4 inside a
+								    field and 16 between fields. */}
+								<div style={{ marginTop: 8 }}>
 									<Button
-										size="lg"
+										variant="filled"
+										size="md"
 										type="submit"
 										fullWidth
 										loading={loginMutation.isPending}
@@ -561,42 +553,55 @@ export const LoginRoute = () => {
 										{otpRequired ? (
 											<Trans>Verify code</Trans>
 										) : (
-											<Trans>Login</Trans>
+											<Trans>Log in</Trans>
 										)}
 									</Button>
 								</div>
 							</Stack>
 						</form>
 					)}
+					{/* Tertiary ways in, centred under Log in. "Forgot your password?"
+					    appears only after a wrong password. */}
 					{!codeMode && !otpRequired && (
-						<Anchor
-							component="button"
-							size="sm"
-							ta="left"
-							onClick={() => {
-								setCodeEmail(getValues("email") || lockedEmail || "");
-								setCodeMode(true);
-								setCodeSent(false);
-								setError("");
-							}}
-							{...testId("auth-login-code-mode")}
-						>
-							<Trans>Email me a sign-in code instead</Trans>
-						</Anchor>
+						<Stack gap="xs" align="center">
+							<Button
+								variant="subtle"
+								color="gray"
+								onClick={() => {
+									setCodeEmail(getValues("email") || lockedEmail || "");
+									setCodeMode(true);
+									setCodeSent(false);
+									setError("");
+								}}
+								{...testId("auth-login-code-mode")}
+							>
+								<Trans>Email me a sign-in code instead</Trans>
+							</Button>
+							{passwordFailed && (
+								<Button
+									variant="subtle"
+									color="gray"
+									component={I18nLink}
+									to="/request-password-reset"
+									{...testId("auth-login-forgot-password-link")}
+								>
+									<Trans>Forgot your password?</Trans>
+								</Button>
+							)}
+						</Stack>
 					)}
 
 					<Divider variant="dashed" label={t`or`} labelPosition="center" />
 
-					<I18nLink to="/register">
-						<Button
-							size="lg"
-							variant="outline"
-							fullWidth
-							{...testId("auth-login-register-button")}
-						>
-							<Trans>Create an account</Trans>
-						</Button>
-					</I18nLink>
+					<Button
+						component={I18nLink}
+						to="/register"
+						size="md"
+						fullWidth
+						{...testId("auth-login-register-button")}
+					>
+						<Trans>Create an account</Trans>
+					</Button>
 
 					{/* <Box>
 						{providerQuery.data?.find(

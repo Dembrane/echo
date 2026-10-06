@@ -2,6 +2,8 @@ import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
+	Alert,
+	Anchor,
 	Badge,
 	Box,
 	Button,
@@ -11,24 +13,27 @@ import {
 	MultiSelect,
 	Paper,
 	Progress,
+	SegmentedControl,
+	Skeleton,
 	Stack,
 	Table,
 	Text,
 	TextInput,
+	Title,
 	Tooltip,
 	UnstyledButton,
 } from "@mantine/core";
 import {
-	IconAdjustments,
-	IconAlertTriangle,
-	IconArrowsSort,
-	IconChevronDown,
-	IconChevronRight,
-	IconLock,
-	IconSearch,
-	IconSortAscending,
-	IconSortDescending,
-} from "@tabler/icons-react";
+	ArrowsDownUpIcon,
+	CaretDownIcon,
+	CaretRightIcon,
+	LockIcon,
+	MagnifyingGlassIcon,
+	SlidersHorizontalIcon,
+	SortAscendingIcon,
+	SortDescendingIcon,
+	WarningIcon,
+} from "@phosphor-icons/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	type ColumnDef,
@@ -42,8 +47,10 @@ import {
 } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import { UsageFreshness } from "@/components/common/UsageFreshness";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { notifyError } from "@/components/error/notifyError";
 import { PeriodSelect } from "@/components/workspace/PeriodSelect";
+import { TierBadge } from "@/components/workspace/TierBadge";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { ApiRequestError } from "@/lib/errors/read";
@@ -59,13 +66,9 @@ const TIER_ORDER = [
 const tierRank = (tier: string): number =>
 	TIER_ORDER.indexOf(tier as (typeof TIER_ORDER)[number]);
 
-const tierColors: Record<string, string> = {
-	changemaker: "grape",
-	guardian: "orange",
-	innovator: "violet",
-	pilot: "gray",
-	pioneer: "primary",
-};
+// Shown when the query has no data and no error of its own. Module-level so
+// ErrorNotice sees the same object on every render.
+const USAGE_UNAVAILABLE = new Error("Organisation usage unavailable");
 
 interface OrgUsageWorkspaceRow {
 	id: string;
@@ -172,7 +175,7 @@ function UsageBar({
 					? "yellow"
 					: "green";
 	return (
-		<Stack gap={2}>
+		<Stack gap="xs">
 			<Text size="xs" c={color === "red" ? "red" : undefined}>
 				{used.toFixed(unit === "h" ? 1 : 0)} / {cap}
 				{unit ? ` ${unit}` : ""}
@@ -190,24 +193,18 @@ function SortableHeader({
 	sorted: false | "asc" | "desc";
 }) {
 	return (
-		<Group gap={4} wrap="nowrap">
-			<Text
-				size="xs"
-				fw={sorted ? 600 : 500}
-				c={sorted ? "dark" : "dimmed"}
-				tt="uppercase"
-				lts={0.3}
-			>
+		<Group gap="xs" wrap="nowrap">
+			<Text size="xs" c={sorted ? undefined : "dimmed"}>
 				{label}
 			</Text>
 			{sorted === "asc" ? (
-				<IconSortAscending size={12} color="var(--mantine-color-dark-6)" />
+				<SortAscendingIcon size={16} />
 			) : sorted === "desc" ? (
-				<IconSortDescending size={12} color="var(--mantine-color-dark-6)" />
+				<SortDescendingIcon size={16} />
 			) : (
-				<IconArrowsSort
-					size={12}
-					color="var(--mantine-color-gray-4)"
+				<ArrowsDownUpIcon
+					size={16}
+					color="var(--mantine-color-dimmed)"
 					aria-hidden
 				/>
 			)}
@@ -241,7 +238,7 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 	const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
-	const { data, isLoading, isError, refetch, dataUpdatedAt } = useQuery({
+	const { data, isLoading, isError, error, refetch, dataUpdatedAt } = useQuery({
 		queryFn: () => fetchOrgUsage(orgId, monthOffset),
 		queryKey: ["v2", "org-usage", orgId, monthOffset],
 		// Always refetch when the usage tab mounts. Org admins navigate
@@ -286,7 +283,6 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 			{
 				cell: ({ row }) => (
 					<ActionIcon
-						size="xs"
 						variant="subtle"
 						color="gray"
 						onClick={() =>
@@ -295,9 +291,9 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 						aria-label={expanded[row.id] ? t`Hide projects` : t`Show projects`}
 					>
 						{expanded[row.id] ? (
-							<IconChevronDown size={12} />
+							<CaretDownIcon size={20} />
 						) : (
-							<IconChevronRight size={12} />
+							<CaretRightIcon size={20} />
 						)}
 					</ActionIcon>
 				),
@@ -309,7 +305,7 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 			{
 				accessorKey: "name",
 				cell: ({ row }) => (
-					<Group gap={6} wrap="nowrap">
+					<Group gap="xs" wrap="nowrap">
 						{(row.original.at_cap || row.original.seat_cap_hit) && (
 							<Tooltip
 								label={
@@ -318,25 +314,19 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 										: t`All seats taken`
 								}
 							>
-								<IconAlertTriangle
-									size={14}
-									color="var(--mantine-color-red-6)"
-								/>
+								<WarningIcon size={16} color="var(--app-danger)" />
 							</Tooltip>
 						)}
 						{!(row.original.at_cap || row.original.seat_cap_hit) &&
 							(row.original.approaching_cap ||
 								row.original.approaching_seat_cap) && (
 								<Tooltip label={t`Approaching a limit this month`}>
-									<IconAlertTriangle
-										size={14}
-										color="var(--mantine-color-yellow-7)"
-									/>
+									<WarningIcon size={16} color="var(--app-warning)" />
 								</Tooltip>
 							)}
 						{row.original.is_private && (
 							<Tooltip label={t`Private workspace`}>
-								<IconLock size={12} color="var(--mantine-color-gray-6)" />
+								<LockIcon size={16} color="var(--mantine-color-dimmed)" />
 							</Tooltip>
 						)}
 						<UnstyledButton
@@ -364,16 +354,7 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 			},
 			{
 				accessorFn: (r) => r.tier,
-				cell: ({ row }) => (
-					<Badge
-						size="xs"
-						color={tierColors[row.original.tier] ?? "gray"}
-						variant="light"
-						tt="capitalize"
-					>
-						{row.original.tier}
-					</Badge>
-				),
+				cell: ({ row }) => <TierBadge tier={row.original.tier} size="xs" />,
 				header: t`Tier`,
 				id: "tier",
 				sortingFn: (a, b) =>
@@ -468,27 +449,23 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 	// rollup.
 	const totalsHours = rows.reduce((s, r) => s + r.original.audio_hours, 0);
 	const totalsSeats = rows.reduce((s, r) => s + r.original.seat_count, 0);
-	if (isLoading) return null;
+	if (isLoading) {
+		return (
+			<Stack gap="sm">
+				<Skeleton height={24} width="40%" />
+				<Skeleton height={32} />
+				<Skeleton height={160} />
+			</Stack>
+		);
+	}
 
 	if (isError || !data) {
 		return (
-			<Paper p="md" radius="md" withBorder>
-				<Stack gap="xs">
-					<Text size="sm" c="red">
-						<Trans>We couldn't load this organisation's usage.</Trans>
-					</Text>
-					<Group>
-						<Button
-							size="xs"
-							variant="default"
-							loading={refreshing}
-							onClick={() => refetch()}
-						>
-							<Trans>Retry</Trans>
-						</Button>
-					</Group>
-				</Stack>
-			</Paper>
+			<ErrorNotice
+				error={error ?? USAGE_UNAVAILABLE}
+				title={t`We couldn't load this organisation's usage.`}
+				onRetry={() => refetch()}
+			/>
 		);
 	}
 
@@ -505,11 +482,11 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 
 	return (
 		<Paper p="md" withBorder radius="sm">
-			<Stack gap={12}>
+			<Stack gap="sm">
 				<Group justify="space-between" wrap="nowrap" gap="xs">
-					<Text size="xs" fw={500} tt="uppercase" c="dimmed" lts={0.5}>
+					<Title order={5}>
 						<Trans>Organisation usage</Trans>
-					</Text>
+					</Title>
 					<PeriodSelect value={monthOffset} onChange={setMonthOffset} />
 				</Group>
 
@@ -531,7 +508,7 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 
 				<Group gap="sm" wrap="wrap" align="center">
 					<TextInput
-						leftSection={<IconSearch size={14} />}
+						leftSection={<MagnifyingGlassIcon size={16} />}
 						placeholder={t`Search workspaces`}
 						value={globalFilter}
 						onChange={(e) => setGlobalFilter(e.currentTarget.value)}
@@ -547,38 +524,23 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 						clearable
 						style={{ minWidth: 160 }}
 					/>
-					<Button.Group>
-						<Button
-							size="xs"
-							variant={statusFilter === "all" ? "filled" : "default"}
-							color={statusFilter === "all" ? "primary" : undefined}
-							onClick={() => setStatusFilter("all")}
-						>
-							<Trans>All</Trans>
-						</Button>
-						<Button
-							size="xs"
-							variant={statusFilter === "active" ? "filled" : "default"}
-							color={statusFilter === "active" ? "primary" : undefined}
-							onClick={() => setStatusFilter("active")}
-						>
-							<Trans>Active</Trans>
-						</Button>
-						<Button
-							size="xs"
-							variant={statusFilter === "inactive" ? "filled" : "default"}
-							color={statusFilter === "inactive" ? "primary" : undefined}
-							onClick={() => setStatusFilter("inactive")}
-						>
-							<Trans>Inactive</Trans>
-						</Button>
-					</Button.Group>
+					<SegmentedControl
+						size="xs"
+						value={statusFilter}
+						onChange={(v) =>
+							setStatusFilter(v as "all" | "active" | "inactive")
+						}
+						data={[
+							{ label: t`All`, value: "all" },
+							{ label: t`Active`, value: "active" },
+							{ label: t`Inactive`, value: "inactive" },
+						]}
+					/>
 					<Menu shadow="md" width={220} position="bottom-end">
 						<Menu.Target>
 							<Button
 								size="xs"
-								variant="default"
-								leftSection={<IconAdjustments size={14} />}
+								leftSection={<SlidersHorizontalIcon size={20} />}
 							>
 								<Trans>Columns</Trans>
 							</Button>
@@ -631,20 +593,12 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 														<UnstyledButton
 															onClick={h.column.getToggleSortingHandler()}
 															title={t`Click to sort`}
+															px="sm"
+															py="sm"
 															style={{
 																cursor: "pointer",
 																display: "block",
-																padding: "8px 12px",
-																transition: "background 0.1s ease",
 																width: "100%",
-															}}
-															onMouseEnter={(e) => {
-																e.currentTarget.style.background =
-																	"var(--mantine-color-gray-1)";
-															}}
-															onMouseLeave={(e) => {
-																e.currentTarget.style.background =
-																	"transparent";
 															}}
 														>
 															<SortableHeader
@@ -657,14 +611,8 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 															/>
 														</UnstyledButton>
 													) : (
-														<Box px={12} py={8}>
-															<Text
-																size="xs"
-																fw={500}
-																c="dimmed"
-																tt="uppercase"
-																lts={0.3}
-															>
+														<Box px="sm" py="sm">
+															<Text size="xs" c="dimmed">
 																{flexRender(
 																	h.column.columnDef.header,
 																	h.getContext(),
@@ -693,8 +641,7 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 								<Table.Tfoot>
 									<Table.Tr
 										style={{
-											background: "var(--mantine-color-dark-0, #f1f3f5)",
-											borderTop: "2px solid var(--mantine-color-gray-5)",
+											borderTop: "1px solid var(--app-rule-color)",
 										}}
 									>
 										{leafColumns.map((col, i) => {
@@ -712,7 +659,7 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 											if (isFirstData) {
 												return (
 													<Table.Td key={col.id}>
-														<Text size="xs" fw={700} tt="uppercase" lts={0.3}>
+														<Text size="xs">
 															<Trans>Total</Trans>
 														</Text>
 													</Table.Td>
@@ -720,15 +667,11 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 											}
 											const footerById: Record<string, React.ReactNode> = {
 												audio_hours: (
-													<Text size="xs" fw={600}>
+													<Text size="xs">
 														{formatDurationFromHours(totalsHours)}
 													</Text>
 												),
-												seat_count: (
-													<Text size="xs" fw={600}>
-														{totalsSeats}
-													</Text>
-												),
+												seat_count: <Text size="xs">{totalsSeats}</Text>,
 											};
 											return (
 												<Table.Td key={col.id}>
@@ -744,7 +687,7 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 				)}
 
 				{rows.length === 0 && (
-					<Text size="xs" c="dimmed" ta="center" py="md">
+					<Text size="sm" c="dimmed">
 						<Trans>Nothing matches the filter.</Trans>
 					</Text>
 				)}
@@ -845,15 +788,16 @@ function WorkspaceRow({
 					<Table.Td />
 					<Table.Td colSpan={visibleColumnIds.length - 1}>
 						{isLoading ? (
-							<Text size="xs" c="dimmed" py={4}>
-								<Trans>Loading projects...</Trans>
-							</Text>
+							<Stack gap="xs" py="xs">
+								<Skeleton height={16} />
+								<Skeleton height={16} />
+							</Stack>
 						) : projects.length === 0 ? (
-							<Text size="xs" c="dimmed" py={4}>
+							<Text size="xs" c="dimmed" py="xs">
 								<Trans>No project activity this period.</Trans>
 							</Text>
 						) : (
-							<Stack gap={4} py={4}>
+							<Stack gap="xs" py="xs">
 								{projects.map((p) => (
 									<Group
 										key={p.id}
@@ -862,7 +806,7 @@ function WorkspaceRow({
 										justify="space-between"
 									>
 										<Text size="xs" truncate style={{ flex: 1 }}>
-											{p.name || "Untitled"}
+											{p.name || t`Untitled`}
 										</Text>
 										<Text size="xs" c="dimmed">
 											<Plural
@@ -1010,20 +954,13 @@ function NeedsAttentionPanel({
 	const hidden = items.length - visible.length;
 
 	return (
-		<Paper
-			withBorder
-			p="sm"
-			radius="sm"
-			style={{ borderColor: "var(--mantine-color-yellow-3)" }}
+		<Alert
+			color="yellow"
+			icon={<WarningIcon size={16} />}
+			title={t`Needs attention`}
 		>
-			<Stack gap={6}>
-				<Group gap="xs" wrap="nowrap">
-					<IconAlertTriangle size={14} color="var(--mantine-color-yellow-7)" />
-					<Text size="xs" fw={500} tt="uppercase" lts={0.5}>
-						<Trans>Needs attention</Trans>
-					</Text>
-				</Group>
-				<Stack gap={4}>
+			<Stack gap="xs">
+				<Stack gap="xs">
 					{visible.map((item) => (
 						<Group
 							key={item.key}
@@ -1046,13 +983,11 @@ function NeedsAttentionPanel({
 					))}
 				</Stack>
 				{hidden > 0 && !showAll && (
-					<UnstyledButton onClick={() => setShowAll(true)}>
-						<Text size="xs" c="primary">
-							<Trans>Show {hidden} more</Trans>
-						</Text>
-					</UnstyledButton>
+					<Anchor component="button" size="xs" onClick={() => setShowAll(true)}>
+						<Trans>Show {hidden} more</Trans>
+					</Anchor>
 				)}
 			</Stack>
-		</Paper>
+		</Alert>
 	);
 }

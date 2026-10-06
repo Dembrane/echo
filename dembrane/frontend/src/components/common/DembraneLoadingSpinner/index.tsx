@@ -1,7 +1,9 @@
 import { t } from "@lingui/core/macro";
+import { useComputedColorScheme } from "@mantine/core";
 import type React from "react";
 import { useEffect, useState } from "react";
 import "./DembraneLoading.css";
+import dembraneLogomarkDark from "@/assets/logomark-no-bg-dark.svg";
 import { cn } from "@/lib/utils";
 import { DembraneLogomark } from "../Logo";
 
@@ -18,6 +20,8 @@ const DembraneLoadingSpinner: React.FC<DembraneLoadingSpinnerProps> = ({
 }) => {
 	const [messageIndex, setMessageIndex] = useState(0);
 	const [visible, setVisible] = useState(true);
+	// The graphite mark would vanish on black; dark spins the parchment one.
+	const dark = useComputedColorScheme("light") === "dark";
 
 	const messages = [
 		t`Welcome to dembrane!`,
@@ -62,7 +66,7 @@ const DembraneLoadingSpinner: React.FC<DembraneLoadingSpinnerProps> = ({
 			)}
 		>
 			<img
-				src={DembraneLogomark}
+				src={dark ? dembraneLogomarkDark : DembraneLogomark}
 				alt="Spinning dembrane logo to indicate loading"
 				className={cn("loading-image h-12 w-12 animate-spin", className)}
 			/>

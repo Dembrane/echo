@@ -22,15 +22,17 @@ export const Breadcrumbs = ({ items }: BreadcrumbsProps) => {
 						<I18nLink
 							to={item.link}
 							key={key}
-							className="text-2xl font-semibold text-gray-500 no-underline hover:underline"
+							className="no-underline hover:underline"
 						>
-							{item.label}
+							<Text component="span" size="sm" c="dimmed" className="app-muted">
+								{item.label}
+							</Text>
 						</I18nLink>
 					);
 				}
 
 				return (
-					<Text key={key} className="text-2xl font-semibold pb-1">
+					<Text key={key} size="sm">
 						{item.label}
 					</Text>
 				);

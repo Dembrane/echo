@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { GearIcon, PauseIcon, PlayIcon } from "@phosphor-icons/react";
+import { GearSixIcon, PauseIcon, PlayIcon } from "@phosphor-icons/react";
 import {
 	memo,
 	useCallback,
@@ -17,6 +17,7 @@ import {
 	type LocalMapForceParams,
 	type NearestNeighbourForce,
 	type PairForce,
+	clusterForceParams,
 } from "../graph/forces";
 import { calculateInitialPositions } from "../graph/layout";
 import {
@@ -113,6 +114,15 @@ export interface LocalMapGraphProps {
 	onNodeHover?: (node: MapGraphNode | null) => void;
 	timerActive?: boolean;
 	timerProgress?: number;
+	/** The host's cluster density dial: above 1 spreads, below 1 clumps. */
+	density?: number;
+	/**
+	 * The host's force-settings switch (Advanced). Given, it shows the force
+	 * panel and the map draws no gear of its own.
+	 */
+	showForceSettings?: boolean;
+	/** The host's pause (its toolbar). Given, the map draws no pause of its own. */
+	paused?: boolean;
 	className?: string;
 	/** Base node radius; each node's size scale multiplies it. */
 	nodeRadius?: number;
@@ -210,6 +220,9 @@ export const LocalMapGraph = ({
 	onNodeHover,
 	timerActive = false,
 	timerProgress = 0,
+	density = 1,
+	showForceSettings,
+	paused: pausedProp,
 	className = "",
 	nodeRadius = 6,
 	showNeighbourLinks = false,
@@ -326,7 +339,8 @@ export const LocalMapGraph = ({
 
 	// Editable force parameters
 	const [showSettings, setShowSettings] = useState(false);
-	const [paused, setPaused] = useState(false);
+	const [ownPaused, setPaused] = useState(false);
+	const paused = pausedProp ?? ownPaused;
 	const pausedRef = useRef(false);
 	useEffect(() => {
 		if (pausedRef.current === paused) return;
@@ -355,16 +369,21 @@ export const LocalMapGraph = ({
 		LOCAL_MAP_FORCE_DEFAULTS.chargeFraction,
 	);
 
+	// The dial scales the forces in play; the panel's sliders keep their own values.
 	const params = useMemo<LocalMapForceParams>(
-		() => ({
-			chargeFraction,
-			chargeStrength,
-			cMed,
-			collisionRadius,
-			dAdj,
-			fpStrength,
-			nnStrength,
-		}),
+		() =>
+			clusterForceParams(
+				{
+					chargeFraction,
+					chargeStrength,
+					cMed,
+					collisionRadius,
+					dAdj,
+					fpStrength,
+					nnStrength,
+				},
+				density,
+			),
 		[
 			cMed,
 			chargeFraction,
@@ -373,6 +392,7 @@ export const LocalMapGraph = ({
 			dAdj,
 			fpStrength,
 			nnStrength,
+			density,
 		],
 	);
 	const paramsRef = useRef(params);
@@ -1019,8 +1039,11 @@ export const LocalMapGraph = ({
 			: (id: string) => styleOf(id).fill;
 		circleSelection
 			.attr("fill", (d) => fillOf(d.id))
-			.attr("stroke", (d) => outlineFor(d.id).stroke)
+			// A style, not an attribute: the hairline is a CSS colour. It and
+			// the hover outline keep their width at any zoom.
+			.style("stroke", (d) => outlineFor(d.id).stroke)
 			.attr("stroke-width", (d) => outlineFor(d.id).strokeWidth)
+			.attr("vector-effect", "non-scaling-stroke")
 			.attr("r", (d) => radiusOf(d.id) * scaleFor(d.id))
 			.attr("opacity", (d) => (styleOf(d.id).pulse ? 0.9 : 1))
 			.select("title")
@@ -1222,29 +1245,33 @@ export const LocalMapGraph = ({
 				aria-label={t`Local argument map`}
 			/>
 
-			<MapChromeButton
-				label={pauseLabel}
-				onClick={() => setPaused((p) => !p)}
-				className="left-4"
-			>
-				{paused ? <PlayIcon size={24} /> : <PauseIcon size={24} />}
-			</MapChromeButton>
+			{pausedProp === undefined && (
+				<MapChromeButton
+					label={pauseLabel}
+					onClick={() => setPaused((p) => !p)}
+					className="left-4"
+				>
+					{paused ? <PlayIcon size={20} /> : <PauseIcon size={20} />}
+				</MapChromeButton>
+			)}
 
-			<MapChromeButton
-				label={t`LocalMap Settings`}
-				onClick={() => setShowSettings(!showSettings)}
-				className="right-4"
-			>
-				<GearIcon size={24} />
-			</MapChromeButton>
+			{showForceSettings === undefined && (
+				<MapChromeButton
+					label={t`Local map settings`}
+					onClick={() => setShowSettings(!showSettings)}
+					className="right-4"
+				>
+					<GearSixIcon size={20} />
+				</MapChromeButton>
+			)}
 
-			{showSettings && (
+			{(showForceSettings ?? showSettings) && (
 				<MapSettingsPanel
-					title={<Trans>LocalMap Forces</Trans>}
+					title={<Trans>Local map forces</Trans>}
 					onReset={resetToDefaults}
 				>
 					<MapSettingsSection first>
-						<Trans>LocalMAP Paper Parameters</Trans>
+						<Trans>LocalMAP paper parameters</Trans>
 					</MapSettingsSection>
 
 					<RangeSetting
@@ -1268,11 +1295,11 @@ export const LocalMapGraph = ({
 					/>
 
 					<MapSettingsSection>
-						<Trans>Force Multipliers</Trans>
+						<Trans>Force multipliers</Trans>
 					</MapSettingsSection>
 
 					<RangeSetting
-						label={<Trans>Neighbor Attraction: {nnStrength.toFixed(2)}</Trans>}
+						label={<Trans>Neighbour attraction: {nnStrength.toFixed(2)}</Trans>}
 						min={0}
 						max={1}
 						step={0.01}
@@ -1281,7 +1308,7 @@ export const LocalMapGraph = ({
 					/>
 
 					<RangeSetting
-						label={<Trans>Far Pair Repulsion: {fpStrength.toFixed(2)}</Trans>}
+						label={<Trans>Far pair repulsion: {fpStrength.toFixed(2)}</Trans>}
 						min={0}
 						max={10}
 						step={0.1}
@@ -1290,11 +1317,11 @@ export const LocalMapGraph = ({
 					/>
 
 					<MapSettingsSection>
-						<Trans>Additional Forces</Trans>
+						<Trans>Additional forces</Trans>
 					</MapSettingsSection>
 
 					<RangeSetting
-						label={<Trans>General Repulsion: {Math.abs(chargeStrength)}</Trans>}
+						label={<Trans>General repulsion: {Math.abs(chargeStrength)}</Trans>}
 						min={-100}
 						max={0}
 						step={1}
@@ -1304,7 +1331,7 @@ export const LocalMapGraph = ({
 
 					<RangeSetting
 						label={
-							<Trans>Collision Radius: {collisionRadius.toFixed(1)}x</Trans>
+							<Trans>Collision radius: {collisionRadius.toFixed(1)}x</Trans>
 						}
 						min={0.5}
 						max={5}
@@ -1316,7 +1343,7 @@ export const LocalMapGraph = ({
 					<RangeSetting
 						label={
 							<Trans>
-								Charge Distance (viewport fraction): {chargeFraction.toFixed(2)}
+								Charge distance (viewport fraction): {chargeFraction.toFixed(2)}
 							</Trans>
 						}
 						description={

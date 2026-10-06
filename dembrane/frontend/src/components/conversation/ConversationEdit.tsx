@@ -15,7 +15,7 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useClipboard } from "@mantine/hooks";
-import { IconCheck, IconCopy } from "@tabler/icons-react";
+import { CheckIcon, CopyIcon } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -51,11 +51,10 @@ const EmailItem = ({ email }: { email: string }) => {
 			<Tooltip label={clipboard.copied ? t`Copied` : t`Copy`}>
 				<ActionIcon
 					variant="subtle"
-					size="sm"
 					color={clipboard.copied ? "green" : "gray"}
 					onClick={() => clipboard.copy(email)}
 				>
-					{clipboard.copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
+					{clipboard.copied ? <CheckIcon size={20} /> : <CopyIcon size={20} />}
 				</ActionIcon>
 			</Tooltip>
 		</Group>
@@ -279,7 +278,7 @@ export const ConversationEdit = ({
 		<Stack key={conversation.id}>
 			<Group>
 				<Title order={2}>
-					<Trans>Edit Conversation</Trans>
+					<Trans>Edit conversation</Trans>
 				</Title>
 				<SaveStatus
 					formErrors={formState.errors}
@@ -291,7 +290,7 @@ export const ConversationEdit = ({
 			</Group>
 
 			<form>
-				<Stack gap="1.5rem">
+				<Stack gap="md">
 					{isError && (
 						<CloseableAlert color="red">
 							<Text size="sm">
@@ -334,19 +333,18 @@ export const ConversationEdit = ({
 							<Group gap="xs" mb="xs">
 								<Text size="sm" c="dimmed">
 									{emails.length === 1 ? (
-										<Trans>Participant Email</Trans>
+										<Trans>Participant email</Trans>
 									) : (
-										<Trans>Participant Emails</Trans>
+										<Trans>Participant emails</Trans>
 									)}
 								</Text>
-								<Text
-									size="sm"
-									c="primary"
-									className="cursor-pointer"
+								<Button
+									variant="subtle"
+									size="compact-xs"
 									onClick={() => setShowEmails(!showEmails)}
 								>
 									{showEmails ? <Trans>Hide</Trans> : <Trans>Show</Trans>}
-								</Text>
+								</Button>
 							</Group>
 							{showEmails && (
 								<Stack gap="xs">
@@ -366,7 +364,7 @@ export const ConversationEdit = ({
 									isDirty={formState.dirtyFields.participant_name}
 								/>
 								{sourceLabel && (
-									<Badge size="xs" color="primary" variant="light">
+									<Badge size="xs" color="gray">
 										{sourceLabel}
 									</Badge>
 								)}
@@ -427,12 +425,6 @@ export const ConversationEdit = ({
 											isDirty={!!formState.dirtyFields.tagIdList}
 										/>
 									}
-									classNames={{
-										pill: "!bg-[var(--mantine-primary-color-light)] font-medium",
-									}}
-									styles={{
-										pill: { color: "var(--app-text)" },
-									}}
 									data={projectTagOptions}
 									onChange={(value) => {
 										field.onChange(value);

@@ -7,8 +7,9 @@
 .preview {
 	min-width: 0;
 	overflow: hidden;
-	border: 1px solid var(--mantine-color-default-border);
-	border-radius: var(--mantine-radius-lg);
+	border-color: var(--app-rule-color);
+	border-style: solid;
+	border-width: 1px 0;
 	background: var(--app-background);
 }
 
@@ -35,8 +36,9 @@
 
 .settings {
 	min-width: 0;
-	border: 1px solid var(--mantine-color-default-border);
-	border-radius: var(--mantine-radius-lg);
+	border-color: var(--app-rule-color);
+	border-style: solid;
+	border-width: 1px 0;
 	padding: var(--mantine-spacing-lg);
 }
 
@@ -44,8 +46,9 @@
    wide as the page. */
 .results {
 	min-width: 0;
-	border: 1px solid var(--mantine-color-default-border);
-	border-radius: var(--mantine-radius-lg);
+	border-color: var(--app-rule-color);
+	border-style: solid;
+	border-width: 1px 0;
 	padding: var(--mantine-spacing-lg);
 }
 
@@ -65,20 +68,16 @@
 	}
 }
 
-.hostActions {
-	padding: var(--mantine-spacing-xs);
-	border: 1px solid
-		color-mix(in srgb, var(--mantine-color-primary-6) 25%, transparent);
-	border-radius: var(--mantine-radius-lg);
-	background: linear-gradient(
-		120deg,
-		color-mix(
-			in srgb,
-			var(--mantine-color-primary-6) 8%,
-			var(--app-background)
-		),
-		var(--app-background)
-	);
-	box-shadow: 0 4px 18px
-		color-mix(in srgb, var(--mantine-color-primary-6) 10%, transparent);
+/* The editor's tabs, collapsed: still laid out across the full width so they
+   can be measured, but unseen and out of reach. */
+.tabs {
+	position: relative;
+}
+
+.unseen {
+	position: absolute;
+	inset-inline: 0;
+	top: 0;
+	visibility: hidden;
+	pointer-events: none;
 }

@@ -3,7 +3,8 @@ export type ColorBy =
 	| "type"
 	| "valence"
 	| "factCheck"
-	| "conversation";
+	| "conversation"
+	| "tag";
 
 /** Shared contract with the renderers: every node on the Map is one typed object. */
 export type ObjectType =
@@ -77,6 +78,8 @@ export type MapGraphNode = {
 		 * be weighted. Ascending, and empty where the payload says nothing.
 		 */
 		conversationSlots?: number[];
+		/** Palette slots of the tags on the node's conversations; host map only. */
+		tagSlots?: number[];
 		createdAt: string | null;
 	};
 };

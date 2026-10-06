@@ -20,7 +20,9 @@ describe("parseMapSearchParams", () => {
 			),
 		).toEqual({
 			colorBy: "valence",
+			hidden: [],
 			scope: "run-1",
+			tags: [],
 		});
 	});
 
@@ -29,7 +31,7 @@ describe("parseMapSearchParams", () => {
 			parseMapSearchParams(
 				new URLSearchParams("types=tension&view=list&colorBy=type"),
 			),
-		).toEqual({ colorBy: "none", scope: null });
+		).toEqual({ colorBy: "none", hidden: [], scope: null, tags: [] });
 	});
 
 	it("ignores an unknown colour mode or view", () => {
@@ -49,6 +51,14 @@ describe("applyMapUrlState", () => {
 		expect(next.get("scope")).toBeNull();
 		expect(next.get("types")).toBeNull();
 		expect(next.get("colorBy")).toBe("none");
+	});
+
+	it("writes hidden conversations as one list and drops an empty one", () => {
+		const hidden = applyMapUrlState(new URLSearchParams(""), {
+			hidden: ["c-1", "c-2"],
+		});
+		expect(parseMapSearchParams(hidden).hidden).toEqual(["c-1", "c-2"]);
+		expect(applyMapUrlState(hidden, { hidden: [] }).get("hidden")).toBeNull();
 	});
 
 	it("opens a deduplication result on its output only", () => {
@@ -81,7 +91,9 @@ describe("useMapUrlState", () => {
 		const search = first.result.current.location.search;
 		expect(first.result.current.url[0]).toEqual({
 			colorBy: "factCheck",
+			hidden: [],
 			scope: "dedup-run-7",
+			tags: [],
 		});
 
 		// A reload starts from the URL alone.

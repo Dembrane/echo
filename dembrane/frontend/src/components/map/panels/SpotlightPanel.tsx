@@ -1,7 +1,8 @@
 import { plural, t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Anchor, Button, UnstyledButton } from "@mantine/core";
-import { type CSSProperties, memo } from "react";
+import { type CSSProperties, memo, type ReactNode } from "react";
+import { primaryText, resultFields } from "@/components/results";
 import { cn } from "@/lib/utils";
 import {
 	ATTRIBUTES,
@@ -15,22 +16,24 @@ import {
 } from "../attributes";
 import type { EvidenceGroup } from "../data/adapter";
 import { deriveDisplayVerdict } from "../graph/nodeStyle";
+import type { Distillation } from "../hooks/useMapGroups";
 import { blendBackground } from "../renderers/gradients";
 import type { ColorBy, FactCheckState, MapGraphNode } from "../types";
-import {
-	type ConversationHref,
-	NodeDetailCard,
-	type NodeInspection,
-} from "./NodeDetailCard";
+import { ClusterSummary } from "./ClusterSummary";
+import type { ConversationHref, NodeInspection } from "./NodeDetailCard";
 import {
 	CaptionText,
 	CHIP_CLASS,
 	formatTimestamp,
+	mapVars,
 	OPINION_CHIP_CLASS,
+	OPINION_CHIP_STYLE,
 	PanelHeader,
+	pressableChipStyle,
 	VERDICT_CHIP_CLASS,
 	valenceBlurb,
 	valenceChipClass,
+	valenceChipStyle,
 	valenceLabel,
 	verdictLabel,
 } from "./shared";
@@ -55,9 +58,38 @@ type SpotlightPanelProps = {
 	conversationNames?: ReadonlyMap<number, string>;
 	locale?: string;
 	inspection?: NodeInspection | null;
+	/** A distilled cluster to show instead of the node. */
+	cluster?: { distillation: Distillation; nodes: MapGraphNode[] } | null;
+	/** Quotes across the cluster's arguments, for its Quotes affordance. */
+	clusterQuoteCount?: number;
+	/** Opens the details of the spotlit item; none hides the affordances. */
+	onOpenDetails?: (from: DetailsFrom) => void;
+	/** What was spotlit before, as rows under the item. */
+	rows?: ReactNode;
 };
 
-const ACTIVE_RING = "ring-2 ring-offset-1 ring-gray-400";
+export type DetailsFrom = "quotes" | "connections" | "arguments";
+
+/** The item's details on demand, each opening the details modal. */
+const Affordances = ({
+	actions,
+	onOpen,
+}: {
+	actions: ReadonlyArray<{ from: DetailsFrom; label: string }>;
+	onOpen: (from: DetailsFrom) => void;
+}) => (
+	<div className="flex flex-wrap gap-2" data-testid="spotlight-affordances">
+		{actions.map((action) => (
+			<Button
+				key={action.from}
+				size="compact-sm"
+				onClick={() => onOpen(action.from)}
+			>
+				{action.label}
+			</Button>
+		))}
+	</div>
+);
 
 /**
  * Ink on a marker colour: the deck's `--on-marker`, which is graphite and
@@ -97,15 +129,11 @@ const ConversationChits = ({
 			key={key}
 			onClick={onToggle}
 			aria-pressed={active}
+			data-selected={active || undefined}
 			title={title}
 			data-testid={`conversation-chit-${key}`}
-			className={cn(
-				CHIP_CLASS,
-				ON_MARKER_CLASS,
-				"transition-opacity hover:opacity-80",
-				active && ACTIVE_RING,
-			)}
-			style={style}
+			className={cn(CHIP_CLASS, ON_MARKER_CLASS)}
+			style={{ ...style, ...pressableChipStyle(active) }}
 		>
 			{label}
 		</UnstyledButton>
@@ -141,11 +169,18 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 	canFactCheck,
 	onFactCheck,
 	onCancelFactCheck,
-	conversationHref,
 	conversationNames,
 	locale,
 	inspection = null,
+	cluster = null,
+	clusterQuoteCount = 0,
+	onOpenDetails,
+	rows,
 }: SpotlightPanelProps) {
+	const quoteCount = evidence.reduce(
+		(total, group) => total + group.quotes.length,
+		0,
+	);
 	const type = node?.metadata.objectType ?? "argument";
 	const eligible = node
 		? isFactCheckEligible(attributeInputsOf(node.metadata))
@@ -160,9 +195,17 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 	const conversationActive = colorBy === "conversation";
 
 	const factCheckTag = verdict
-		? { className: VERDICT_CHIP_CLASS[verdict], label: verdictLabel(verdict) }
+		? {
+				className: VERDICT_CHIP_CLASS[verdict],
+				label: verdictLabel(verdict),
+				style: undefined,
+			}
 		: argumentType
-			? { className: OPINION_CHIP_CLASS, label: t`Opinion` }
+			? {
+					className: OPINION_CHIP_CLASS,
+					label: t`Opinion`,
+					style: OPINION_CHIP_STYLE,
+				}
 			: undefined;
 
 	const timestamp = formatTimestamp(node?.metadata.createdAt, locale);
@@ -174,20 +217,45 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 			className="flex h-full min-h-0 flex-col"
 			aria-label={t`Spotlight`}
 		>
-			<div className="min-h-0 flex-1 overflow-y-auto pr-1">
-				<PanelHeader title={<Trans>Spotlight</Trans>} dotClassName="bg-cyan" />
+			<PanelHeader title={<Trans>Spotlight</Trans>} dotClassName="bg-cyan" />
 
-				{node ? (
-					<div className="space-y-2">
-						<NodeDetailCard
-							node={node}
-							evidence={evidence}
-							conversationHref={conversationHref}
-							collapsibleQuotes
-							inspection={inspection}
-						/>
-
-						<div className="flex flex-wrap gap-1.5">
+			{cluster ? (
+				<ClusterSummary
+					distillation={cluster.distillation}
+					nodes={cluster.nodes}
+					conversationNames={conversationNames}
+					actions={
+						onOpenDetails && (
+							<Affordances
+								actions={[
+									{
+										from: "arguments",
+										label: t`Arguments (${cluster.nodes.length})`,
+									},
+									{
+										from: "quotes",
+										label: t`Quotes (${clusterQuoteCount})`,
+									},
+									{ from: "connections", label: t`Connections` },
+								]}
+								onOpen={onOpenDetails}
+							/>
+						)
+					}
+				/>
+			) : node ? (
+				<>
+					{/* The statement and the colour chits stay put; what explains
+					    them, the quotes and the rest scroll under them. */}
+					<div className="space-y-2 pb-2">
+						<p className="leading-snug" data-testid="spotlight-statement">
+							{primaryText(
+								type,
+								resultFields({ detail: inspection?.object?.detail }),
+								node.label ?? node.id,
+							)}
+						</p>
+						<div className="flex flex-wrap gap-2">
 							<ConversationChits
 								slots={node.metadata.conversationSlots ?? []}
 								names={conversationNames}
@@ -202,17 +270,17 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 										onColorByChange(valenceActive ? "none" : "valence")
 									}
 									aria-pressed={valenceActive}
+									data-selected={valenceActive || undefined}
 									title={
 										valenceActive
 											? t`Stop coloring graph by valence`
 											: t`Color graph by valence`
 									}
-									className={cn(
-										CHIP_CLASS,
-										"transition-opacity hover:opacity-80",
-										valenceChipClass(valence),
-										valenceActive && ACTIVE_RING,
-									)}
+									className={cn(CHIP_CLASS, valenceChipClass(valence))}
+									style={{
+										...valenceChipStyle(valence),
+										...pressableChipStyle(valenceActive),
+									}}
 								>
 									{valenceLabel(valence)}
 								</UnstyledButton>
@@ -223,23 +291,25 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 										onColorByChange(verdictActive ? "none" : "factCheck")
 									}
 									aria-pressed={verdictActive}
+									data-selected={verdictActive || undefined}
 									title={
 										verdictActive
 											? t`Stop coloring graph by factual status`
 											: t`Color graph by factual status`
 									}
-									className={cn(
-										CHIP_CLASS,
-										"transition-opacity hover:opacity-80",
-										factCheckTag.className,
-										verdictActive && ACTIVE_RING,
-									)}
+									className={cn(CHIP_CLASS, factCheckTag.className)}
+									style={{
+										...factCheckTag.style,
+										...pressableChipStyle(verdictActive),
+									}}
 								>
 									{factCheckTag.label}
 								</UnstyledButton>
 							)}
 						</div>
+					</div>
 
+					<div className="space-y-2">
 						{valenceActive && valenceApplies && (
 							<p className="text-xs">{valenceBlurb(valence)}</p>
 						)}
@@ -264,11 +334,10 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 								{eligible && status === "idle" && canFactCheck && (
 									<Button
 										size="compact-sm"
-										radius="xl"
 										fullWidth
 										onClick={() => onFactCheck(node.id)}
 									>
-										<Trans>Fact check this claim</Trans>
+										<Trans>Fact-check this claim</Trans>
 									</Button>
 								)}
 
@@ -288,7 +357,7 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 											<Button
 												size="compact-xs"
 												variant="subtle"
-												radius={0}
+												color="gray"
 												onClick={() => onCancelFactCheck(node.id)}
 											>
 												<Trans>Cancel</Trans>
@@ -321,7 +390,6 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 											<Button
 												size="compact-xs"
 												variant="subtle"
-												radius={0}
 												onClick={() => onFactCheck(node.id, { force: true })}
 											>
 												<Trans>Re-check</Trans>
@@ -341,11 +409,9 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 										{canFactCheck && (
 											<Button
 												size="compact-xs"
-												variant="outline"
-												radius={0}
 												onClick={() => onFactCheck(node.id)}
 											>
-												<Trans>Retry</Trans>
+												<Trans>Try again</Trans>
 											</Button>
 										)}
 									</div>
@@ -353,18 +419,38 @@ export const SpotlightPanel = memo(function SpotlightPanel({
 							</div>
 						)}
 
-						{timestamp ? (
-							<p className="text-xs uppercase tracking-widest">{timestamp}</p>
-						) : null}
+						{onOpenDetails && (
+							<Affordances
+								actions={[
+									{
+										from: "quotes",
+										label: t`Quotes (${quoteCount})`,
+									},
+									{ from: "connections", label: t`Connections` },
+								]}
+								onOpen={onOpenDetails}
+							/>
+						)}
+
+						{timestamp ? <p className="text-xs">{timestamp}</p> : null}
 					</div>
-				) : (
-					<CaptionText>
-						<Trans>
-							Click a node in the tree or cluster map to spotlight it here.
-						</Trans>
-					</CaptionText>
-				)}
-			</div>
+				</>
+			) : (
+				<CaptionText>
+					<Trans>
+						Click a node in the tree or cluster map to spotlight it here.
+					</Trans>
+				</CaptionText>
+			)}
+
+			{rows && (
+				<div
+					className="mt-3 min-h-0 flex-1 overflow-y-auto border-t pr-1 pt-3"
+					style={{ borderColor: mapVars.border }}
+				>
+					{rows}
+				</div>
+			)}
 		</section>
 	);
 });

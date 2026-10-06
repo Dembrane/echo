@@ -9,13 +9,11 @@ import {
 	Text,
 	Title,
 } from "@mantine/core";
-import { PopcornIcon } from "@phosphor-icons/react";
 import { format, formatDistanceToNow } from "date-fns";
-import { ChevronRight } from "lucide-react";
 import { useParams } from "react-router";
 import type { CanvasListItem, CanvasLoop } from "@/components/canvas/hooks";
 import { useProjectCanvases } from "@/components/canvas/hooks";
-import { I18nLink } from "@/components/common/i18nLink";
+import { EntityListRow } from "@/components/common/EntityListRow";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useProjectPopcorn } from "@/components/popcorn/hooks";
@@ -48,50 +46,31 @@ function CanvasListRow({
 	canvas: CanvasListItem;
 }) {
 	return (
-		<I18nLink
-			to={`${base}/canvases/${canvas.id}`}
-			className="block no-underline"
-			{...testId(`library-canvas-${canvas.id}`)}
+		<EntityListRow
+			href={`${base}/canvases/${canvas.id}`}
+			testId={`library-canvas-${canvas.id}`}
 		>
-			<Paper
-				withBorder
-				className="rounded-md px-4 py-4 transition hover:-translate-y-0.5 hover:border-primary hover:shadow-sm"
-			>
-				<Group
-					justify="space-between"
-					align="flex-start"
-					gap="md"
-					wrap="nowrap"
-				>
-					<Stack gap="xs" className="min-w-0">
-						<Group gap="xs" wrap="nowrap">
-							<Text size="lg" fw={500} truncate>
-								{canvas.name}
-							</Text>
-							{canvas.isDevFixture ? (
-								<Badge size="xs" variant="outline">
-									<Trans>Fixture</Trans>
-								</Badge>
-							) : null}
-						</Group>
-						<Group gap="xs" wrap="wrap">
-							<Badge size="sm" variant="outline">
-								{loopStatusLine(canvas.loop)}
-							</Badge>
-							<Text size="xs">
-								{lastUpdatedLine(canvas.latest_generation_at)}
-							</Text>
-						</Group>
-					</Stack>
-					<ChevronRight
-						size={18}
-						className="mt-1 shrink-0"
-						style={{ color: "var(--mantine-color-primary-6)" }}
-						aria-hidden
-					/>
+			<Stack gap="xs" className="min-w-0">
+				<Group gap="xs" wrap="nowrap">
+					<Text size="lg" truncate>
+						{canvas.name}
+					</Text>
+					{canvas.isDevFixture ? (
+						<Badge size="xs">
+							<Trans>Fixture</Trans>
+						</Badge>
+					) : null}
 				</Group>
-			</Paper>
-		</I18nLink>
+				<Group gap="xs" wrap="wrap">
+					<Badge size="sm" color="gray">
+						{loopStatusLine(canvas.loop)}
+					</Badge>
+					<Text size="xs" c="dimmed">
+						{lastUpdatedLine(canvas.latest_generation_at)}
+					</Text>
+				</Group>
+			</Stack>
+		</EntityListRow>
 	);
 }
 
@@ -106,43 +85,26 @@ function PopcornRow({ base, projectId }: { base: string; projectId: string }) {
 			? t`Live, ${popcorn.counts.phrases} phrases so far`
 			: t`${popcorn.counts.phrases} phrases`;
 	return (
-		<I18nLink
-			to={`${base}/library/popcorn`}
-			className="block no-underline"
-			{...testId("library-popcorn-row")}
+		<EntityListRow
+			href={`${base}/library/popcorn`}
+			testId="library-popcorn-row"
 		>
-			<Paper
-				withBorder
-				className="rounded-md px-4 py-4 transition hover:-translate-y-0.5 hover:border-primary hover:shadow-sm"
-			>
-				<Group justify="space-between" align="center" gap="md" wrap="nowrap">
-					<Group gap="sm" wrap="nowrap" className="min-w-0">
-						<PopcornIcon size={22} aria-hidden />
-						<Stack gap={2} className="min-w-0">
-							<Group gap="xs" wrap="nowrap">
-								<Text size="lg" fw={500} truncate>
-									{popcorn?.name ?? t`Popcorn`}
-								</Text>
-								<Badge size="xs" variant="light" color="primary">
-									<Trans>Beta</Trans>
-								</Badge>
-							</Group>
-							<Text size="xs">
-								{popcornQuery.isLoading ? t`Loading` : status}
-								{" · "}
-								<Trans>live slides for the room</Trans>
-							</Text>
-						</Stack>
-					</Group>
-					<ChevronRight
-						size={18}
-						className="shrink-0"
-						style={{ color: "var(--mantine-color-primary-6)" }}
-						aria-hidden
-					/>
+			<Stack gap="xs" className="min-w-0">
+				<Group gap="xs" wrap="nowrap">
+					<Text size="lg" truncate>
+						{popcorn?.name ?? t`Popcorn`}
+					</Text>
+					<Badge size="sm" color="mauve" c="graphite">
+						<Trans>Beta</Trans>
+					</Badge>
 				</Group>
-			</Paper>
-		</I18nLink>
+				<Text size="xs" c="dimmed">
+					{popcornQuery.isLoading ? t`Loading` : status}
+					{" · "}
+					<Trans>live slides for the room</Trans>
+				</Text>
+			</Stack>
+		</EntityListRow>
 	);
 }
 
@@ -153,13 +115,13 @@ function CanvasListSkeleton() {
 		{ id: "third", width: "42%" },
 	];
 	return (
-		<Stack gap="xs" {...testId("library-canvas-list-loading")}>
+		<Stack gap={0} {...testId("library-canvas-list-loading")}>
 			{rows.map((row) => (
-				<Paper key={row.id} withBorder className="rounded-md px-4 py-4">
+				<Paper key={row.id} withBorder p="md">
 					<Stack gap="sm">
 						<Skeleton height={24} width={row.width} />
 						<Group gap="xs">
-							<Skeleton height={24} width={150} radius="xl" />
+							<Skeleton height={24} width={150} />
 							<Skeleton height={12} width={120} />
 						</Group>
 					</Stack>
@@ -182,10 +144,10 @@ export const LibraryRoute = () => {
 		<PageContainer width="lg">
 			<Stack gap="lg" {...testId("project-library-route")}>
 				<Stack gap={4}>
-					<Title order={1}>
+					<Title order={2}>
 						<Trans>Library</Trans>
 					</Title>
-					<Text size="sm" maw={640}>
+					<Text size="sm" c="dimmed" maw={640}>
 						<Trans>
 							The live popcorn deck and the canvases built for this project live
 							here.
@@ -198,39 +160,29 @@ export const LibraryRoute = () => {
 				{canvasesQuery.isLoading ? (
 					<CanvasListSkeleton />
 				) : canvasesQuery.isError ? (
-					<Paper withBorder className="rounded-md px-4 py-6">
-						<Text fw={600}>
-							<Trans>Could not load the library.</Trans>
-						</Text>
-						<ErrorNotice
-							error={canvasesQuery.error}
-							onRetry={() => canvasesQuery.refetch()}
-						/>
-					</Paper>
+					<ErrorNotice
+						title={t`Could not load the library.`}
+						error={canvasesQuery.error}
+						onRetry={() => canvasesQuery.refetch()}
+					/>
 				) : canvases.length > 0 ? (
-					<Stack gap="xs" {...testId("library-canvas-list")}>
+					<Stack gap={0} {...testId("library-canvas-list")}>
 						{canvases.map((canvas) => (
 							<CanvasListRow key={canvas.id} base={base} canvas={canvas} />
 						))}
 					</Stack>
 				) : (
-					<Paper
-						withBorder
-						className="rounded-md px-4 py-8"
+					<Text
+						size="sm"
+						c="dimmed"
+						maw={640}
 						{...testId("library-empty-state")}
 					>
-						<Stack gap="sm" align="center">
-							<Text size="lg" fw={500}>
-								<Trans>No canvases yet</Trans>
-							</Text>
-							<Text size="sm" ta="center" maw={520}>
-								<Trans>
-									Ask in chat when you want a live view of the conversations.
-									The first canvas will stay here.
-								</Trans>
-							</Text>
-						</Stack>
-					</Paper>
+						<Trans>
+							No canvases yet. Ask in chat when you want a live view of the
+							conversations. The first canvas will stay here.
+						</Trans>
+					</Text>
 				)}
 			</Stack>
 		</PageContainer>

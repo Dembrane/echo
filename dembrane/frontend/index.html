@@ -8,32 +8,36 @@
       }
     </script>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/src/assets/dembrane-logo.png" />
+    <!-- The logomark; its parchment cut when the system is dark (browser chrome follows the system, not the app) -->
+    <link rel="icon" type="image/png" href="/src/assets/dembrane-logo.png" media="(prefers-color-scheme: light)" />
+    <link rel="icon" type="image/png" href="/src/assets/favicon-dark.png" media="(prefers-color-scheme: dark)" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://tally.so/widgets/embed.js"></script>
     <title>dembrane</title>
-    <!-- Prevent flash of wrong theme by applying preferences before React mounts -->
+    <!-- The loading sketches (BeautifulLoading): in cache before any page can wait on them -->
+    <link rel="preload" href="/loading/mark-anim.png" as="image" type="image/png" />
+    <!-- Prevent a flash of the wrong scheme or font: apply both before React mounts.
+         The scheme is Mantine's own (mantine-color-scheme-value: light | dark | auto). -->
+    <style>
+      :root[data-mantine-color-scheme="dark"] { --app-background: #000000; --app-text: #f6f4f1; }
+      :root { background: var(--app-background, #f6f4f1); }
+    </style>
     <script>
       (function() {
         try {
-          var prefs = JSON.parse(localStorage.getItem('dembrane-app-preferences-v2') || '{}');
-          var urlTheme = new URLSearchParams(window.location.search).get('theme');
-          var fontFamily = (urlTheme === 'dm-sans' || urlTheme === 'space-grotesk') ? urlTheme : prefs.fontFamily;
-          var isDmSans = fontFamily !== 'space-grotesk';
-          var bg = isDmSans ? '#F6F4F1' : '#FFFFFF';
-          var text = isDmSans ? '#2D2D2C' : '#000000';
-          var font = isDmSans ? "'DM Sans Variable', sans-serif" : "'Space Grotesk Variable', sans-serif";
-          var contentBoldFont = isDmSans ? "'DM Sans Content', 'DM Sans Variable', sans-serif" : "'Space Grotesk Variable', sans-serif";
+          var stored = localStorage.getItem('mantine-color-scheme-value');
+          var dark = stored === 'dark' || (stored !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          // The room's screen: a link's ?theme= wins, and it never follows the OS (useAudienceTheme).
+          if (/^\/present\/(screen|public)\//.test(window.location.pathname)) {
+            var asked = new URLSearchParams(window.location.search).get('theme');
+            dark = asked === 'dark' || (asked !== 'light' && stored === 'dark');
+          }
+          document.documentElement.setAttribute('data-mantine-color-scheme', dark ? 'dark' : 'light');
+          var font = "'DM Sans Variable', sans-serif";
           var style = document.documentElement.style;
-          style.setProperty('--app-background', bg);
-          style.setProperty('--app-text', text);
           style.setProperty('--app-font-family', font);
-          style.setProperty('--app-content-bold-font-family', contentBoldFont);
-          style.setProperty('--mantine-color-white', bg);
-          style.setProperty('--mantine-color-black', text);
-          style.setProperty('--mantine-color-text', text);
-          style.setProperty('--mantine-color-body', bg);
-          document.documentElement.setAttribute('data-theme', isDmSans ? 'parchment' : 'clean');
+          style.setProperty('--app-content-bold-font-family', "'DM Sans Content', " + font);
+          document.documentElement.setAttribute('data-theme', 'parchment');
         } catch(e) {}
       })();
     </script>

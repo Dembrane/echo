@@ -15,15 +15,17 @@
 	--audience-ink-soft: color-mix(in srgb, var(--audience-ink) 62%, transparent);
 }
 
-/* Warm near-black, parchment ink, blue lifted where it is text or a thin
-   line. Filled blue surfaces keep the brand's royal blue. */
+/* Dark is the app's own dark (the room's switch is the app's theme, so the
+   scheme is dark whenever this is): the black ground, the raised surface,
+   parchment ink, blue lifted where it is text or a thin line. Filled blue
+   surfaces keep the brand's royal blue. */
 .shell[data-theme="dark"],
 .state[data-theme="dark"] {
-	--audience-bg: #1b1b1a;
-	--audience-panel: #262625;
-	--audience-ink: #f6f4f1;
-	--audience-accent: #7c9bff;
-	--audience-hairline: #3a3a38;
+	--audience-bg: var(--app-background);
+	--audience-panel: var(--app-surface);
+	--audience-ink: var(--app-text);
+	--audience-accent: var(--app-action);
+	--audience-hairline: var(--app-quiet);
 	--audience-ink-soft: color-mix(in srgb, var(--audience-ink) 64%, transparent);
 	--mantine-color-dimmed: var(--audience-ink-soft);
 }
@@ -42,9 +44,10 @@
 /* One edge for the whole screen: the notice, the header, the content and the
    footer all inset by this, so nothing overhangs anything else. Half of what
    the deck's own `--pad-x` is, because the room's chrome is a frame around
-   the content rather than a page of its own. */
+   the content rather than a page of its own. It is never narrower than the
+   side zones, which are this gutter: they never sit on the slide. */
 .shell {
-	--audience-pad-x: clamp(12px, 2vw, 36px);
+	--audience-pad-x: clamp(32px, 3vw, 48px);
 
 	background: var(--audience-bg);
 	color: var(--audience-ink);
@@ -207,6 +210,50 @@
 	overflow: hidden;
 }
 
+/* The way through the deck: a tall strip at each side, the frame's own
+   gutter, with a quiet chevron. A hover lifts it to the surface: white on
+   parchment, the dark surface in a dark room. */
+.sideZone {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	z-index: 15;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--audience-pad-x);
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--audience-ink-soft);
+	cursor: pointer;
+	transition:
+		background-color 0.15s ease,
+		color 0.15s ease;
+}
+
+.sideZone[data-side="previous"] {
+	left: 0;
+}
+
+.sideZone[data-side="next"] {
+	right: 0;
+}
+
+.sideZone:hover {
+	background: var(--app-surface);
+	color: var(--audience-ink);
+}
+
+.sideZone:focus-visible {
+	outline: 2px solid var(--audience-accent);
+	outline-offset: -2px;
+}
+
+.position {
+	font-variant-numeric: tabular-nums;
+}
+
 /* The Kaart tab's own pane. The map's chrome starts exactly where the header
    and the footer start; its two panels keep their small gutter inside that. */
 .mapPane {
@@ -296,10 +343,10 @@
 }
 
 .shell[data-theme="dark"] .qrPanel {
-	--audience-bg: #1b1b1a;
-	--audience-ink: #f6f4f1;
-	--audience-accent: #7c9bff;
-	--audience-hairline: #3a3a38;
+	--audience-bg: var(--app-background);
+	--audience-ink: var(--app-text);
+	--audience-accent: var(--app-action);
+	--audience-hairline: var(--app-quiet);
 
 	box-shadow: 0 6px 24px color-mix(in srgb, black 50%, transparent);
 }

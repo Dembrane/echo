@@ -65,12 +65,12 @@ export const WorkspaceHomeView = () => {
 			{canCreateProject && (
 				<NavItem
 					to={`${base}/projects/new`}
-					label={<Trans>New project</Trans>}
+					label={<Trans>Create project</Trans>}
 					icon={Plus}
 				/>
 			)}
 			{/* Settings is the last clickable item under the workspace title,
-			    directly below New project and above the Pinned projects section. */}
+			    directly below Create project and above the Pinned projects section. */}
 			{!isOutsiderRole(workspace?.role) && (
 				<>
 					<NavItem

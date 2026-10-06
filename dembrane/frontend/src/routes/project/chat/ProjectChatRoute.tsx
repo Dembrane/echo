@@ -1,7 +1,14 @@
 import { useChat } from "@ai-sdk/react";
 import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
-import { ChatCircleText as ChatCircleTextIcon } from "@phosphor-icons/react";
+import {
+	ChatCircleText as ChatCircleTextIcon,
+	ArrowClockwiseIcon,
+	LockIcon,
+	PaperPlaneRightIcon,
+	SquareIcon,
+	WarningCircleIcon,
+} from "@phosphor-icons/react";
 import {
 	Alert,
 	Badge,
@@ -18,12 +25,6 @@ import {
 } from "@mantine/core";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
-import {
-	IconAlertCircle,
-	IconRefresh,
-	IconSend,
-	IconSquare,
-} from "@tabler/icons-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router";
 import { AgenticChatPanel } from "@/components/chat/AgenticChatPanel";
@@ -611,12 +612,7 @@ export const ProjectChatRoute = () => {
 	if (isObserver) {
 		return (
 			<Box className="flex min-h-full items-center justify-center px-2 pr-4">
-				<Alert
-					icon={<IconAlertCircle size="1rem" />}
-					color="primary"
-					variant="light"
-					maw={420}
-				>
+				<Alert color="gray" icon={<LockIcon size={20} />} maw={420}>
 					<Text size="sm">
 						<Trans>
 							Chat isn't available on your access level. Reach out to your
@@ -680,7 +676,7 @@ export const ProjectChatRoute = () => {
 			<Stack className="top-0 w-full pt-6">
 				<Group justify="space-between">
 					<Group gap="sm">
-						<Title order={1} {...testId("chat-title")}>
+						<Title order={2} {...testId("chat-title")}>
 							{chatQuery.data?.name ?? t`Chat`}
 						</Title>
 						{chatMode && <ChatModeIndicator mode={chatMode} size="sm" />}
@@ -752,7 +748,9 @@ export const ProjectChatRoute = () => {
 									message={messages[messages.length - 1]}
 									section={
 										!isLoading && (
-											<Button onClick={handleSubmit}>Regenerate</Button>
+											<Button onClick={handleSubmit}>
+												<Trans>Regenerate</Trans>
+											</Button>
 										)
 									}
 									referenceIds={referenceIds}
@@ -782,9 +780,8 @@ export const ProjectChatRoute = () => {
 								</Text>
 								<Button
 									onClick={() => stop()}
-									variant="outline"
 									size="sm"
-									rightSection={<IconSquare size={14} />}
+									leftSection={<SquareIcon size={20} />}
 									{...testId("chat-stop-button")}
 								>
 									<Trans>Stop</Trans>
@@ -823,23 +820,21 @@ export const ProjectChatRoute = () => {
 
 					{error && (
 						<Alert
-							icon={<IconAlertCircle size="1rem" />}
-							title="Error"
+							icon={<WarningCircleIcon size={20} />}
+							title={t`Error`}
 							color="red"
-							variant="outline"
 							{...testId("chat-error-alert")}
 						>
 							<Text>
 								<Trans>An error occurred.</Trans>
 							</Text>
 							<Button
-								color="red"
 								onClick={() => reload()}
-								leftSection={<IconRefresh size="1rem" />}
+								leftSection={<ArrowClockwiseIcon size={20} />}
 								mt="md"
 								{...testId("chat-retry-button")}
 							>
-								<Trans>Retry</Trans>
+								<Trans>Try again</Trans>
 							</Button>
 						</Alert>
 					)}
@@ -879,7 +874,7 @@ export const ProjectChatRoute = () => {
 					<Divider />
 					{needsConversations && (
 						<Alert
-							icon={<IconAlertCircle size="1rem" />}
+							icon={<WarningCircleIcon size={20} />}
 							p="xs"
 							styles={{
 								wrapper: { alignItems: "center" },
@@ -887,13 +882,13 @@ export const ProjectChatRoute = () => {
 							}}
 							title={
 								<Group gap="xl" wrap="nowrap" align="center">
-									<Text component="span" inherit c="graphite">
+									<Text component="span" inherit>
 										<Trans>Select a conversation to continue</Trans>
 									</Text>
 									<Button
 										variant="subtle"
 										size="compact-sm"
-										leftSection={<ChatCircleTextIcon size={18} />}
+										leftSection={<ChatCircleTextIcon size={20} />}
 										onClick={() => setConversationPickerOpen(true)}
 										{...testId("chat-no-conversations-alert-select-button")}
 									>
@@ -901,8 +896,7 @@ export const ProjectChatRoute = () => {
 									</Button>
 								</Group>
 							}
-							color="orange"
-							variant="light"
+							color="yellow"
 							{...testId("chat-no-conversations-alert")}
 						/>
 					)}
@@ -955,7 +949,7 @@ export const ProjectChatRoute = () => {
 							}
 							footerLeft={
 								chatMode !== "overview" ? (
-									<Group gap={4} wrap="nowrap" align="center">
+									<Group gap="xs" wrap="nowrap" align="center">
 										<ConversationPickerButton
 											ariaLabel={t`Select conversations`}
 											label={<Trans>Select conversations</Trans>}
@@ -963,17 +957,17 @@ export const ProjectChatRoute = () => {
 											testId="chat-select-conversations-button"
 										/>
 										{conversationCount > 0 && (
-											<Badge variant="light">{conversationCount}</Badge>
+											<Badge color="gray">{conversationCount}</Badge>
 										)}
 									</Group>
 								) : undefined
 							}
 							footerRight={
 								<Button
+									variant="filled"
 									type="submit"
 									size="md"
-									radius="md"
-									rightSection={<IconSend size={18} />}
+									rightSection={<PaperPlaneRightIcon size={20} />}
 									disabled={
 										normalizedInput.trim() === "" ||
 										isLoading ||

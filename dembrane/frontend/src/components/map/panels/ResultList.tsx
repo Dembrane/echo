@@ -45,7 +45,7 @@ export const ResultList = memo(function ResultList({
 						className="mb-2 flex items-center justify-between border-b pb-1"
 						style={{ borderColor: mapVars.border }}
 					>
-						<h3 className="flex items-center gap-2 text-xs font-light uppercase tracking-wider">
+						<h3 className="flex items-center gap-2 text-xs">
 							<TypeDot type={group.type} />
 							{OBJECT_TYPE_STYLES[group.type].pluralLabel()}
 						</h3>
@@ -61,11 +61,15 @@ export const ResultList = memo(function ResultList({
 											store.setSelectedNodeId(selected ? null : node.id)
 										}
 										aria-pressed={selected}
-										className="block w-full rounded p-2 text-left transition-opacity hover:opacity-80"
+										data-selected={selected || undefined}
+										className="block w-full p-2 text-left"
 										style={{
 											backgroundColor: selected
 												? mapVars.accentSurface
-												: mapVars.card,
+												: undefined,
+											border: `1px solid ${
+												selected ? mapVars.accentBorder : mapVars.border
+											}`,
 										}}
 									>
 										<span className="text-sm leading-snug">

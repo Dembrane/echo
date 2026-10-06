@@ -1,16 +1,15 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
-	Alert,
 	Badge,
 	Group,
 	Skeleton,
 	Stack,
 	Switch,
+	Text,
 	Title,
 	Tooltip,
 } from "@mantine/core";
-import { IconAlertCircle } from "@tabler/icons-react";
 import { useCallback, useEffect, useRef } from "react";
 import { useInView } from "react-intersection-observer";
 import useSessionStorageState from "use-session-storage-state";
@@ -105,7 +104,7 @@ export const ConversationTranscriptSection = ({
 				style={{ backgroundColor: "var(--app-background)" }}
 			>
 				<Group>
-					<Title order={2} {...testId("transcript-title")}>
+					<Title order={4} {...testId("transcript-title")}>
 						<Trans>Transcript</Trans>
 					</Title>
 					{isEmptyConversation && !isLocked && (
@@ -158,17 +157,12 @@ export const ConversationTranscriptSection = ({
 			) : (
 				<Stack className="relative">
 					{allChunks.length === 0 ? (
-						<Alert
-							icon={<IconAlertCircle size={16} />}
-							title={t`No Transcript Available`}
-							color="gray"
-							{...testId("transcript-empty-alert")}
-						>
+						<Text size="sm" c="dimmed" {...testId("transcript-empty-alert")}>
 							<Trans>
 								No transcript exists for this conversation yet. Please check
 								back later.
 							</Trans>
-						</Alert>
+						</Text>
 					) : (
 						allChunks.map((chunk, index, array) => {
 							const isLastChunk = index === array.length - 1;

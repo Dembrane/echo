@@ -11,7 +11,6 @@ import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
 import { type ServerEvent, useServerEvents } from "@/hooks/useServerEvents";
 import { bff } from "@/lib/bff";
-import { ApiRequestError } from "@/lib/errors/read";
 import { budgetRequestParams, type CustomBudgets } from "../budgets";
 import type {
 	FactCheckState,
@@ -214,8 +213,6 @@ export type ProjectMapState = {
 
 export type FactCheckStates = Record<string, FactCheckState>;
 
-export type SelectionTitleResponse = { title: string; cached: boolean };
-
 export type HttpError = Error & { status?: number };
 
 export const isAttemptRunning = (attempt: MapAttempt | null | undefined) =>
@@ -243,6 +240,7 @@ export const mapKeys = {
 				types: params.types ? [...params.types].sort() : null,
 			},
 		] as const,
+	groups: (resultId: string) => ["map", "result", resultId, "groups"] as const,
 	project: (projectId: string) => ["map", "project", projectId] as const,
 	projectLegacy: (projectId: string) =>
 		["map", "project", projectId, "legacy"] as const,
@@ -455,50 +453,52 @@ export const useCancelFactCheck = () =>
 	});
 
 // ---------------------------------------------------------------------------
-// Selection titles
+// Groups
 // ---------------------------------------------------------------------------
 
-/**
- * Titles one selection. Plain function (not a hook) so each request can be
- * tied to the selection it was made for and aborted when that selection is
- * gone. Throws an HttpError carrying the status on failure.
- */
-export type SelectionTitleContext = {
-	/** The snapshot the selection was made in; null for a legacy result. */
-	snapshotId?: string | null;
-	/** The exact revisions selected, most central first. */
-	revisionIds?: string[];
+export type MapGroupMember = {
+	revisionId: string;
+	objectId: string | null;
+	type: string | null;
 };
 
-export async function requestSelectionTitle(
+/** A dwelled cluster the server keeps for the project: titled once its run lands. */
+export type MapGroupDoc = {
+	id: string;
+	status: "pending" | "ready" | "failed";
+	title: string | null;
+	error: string | null;
+	/** Most central first. */
+	members: MapGroupMember[];
+	snapshotId: string | null;
+	createdAt: string | null;
+};
+
+export type MapGroupRequest = {
+	snapshotId: string | null;
+	/** The exact revisions selected, most central first. */
+	revisionIds: string[];
+};
+
+/** The project's groups, newest first. */
+export const listMapGroups = async (resultId: string) =>
+	(
+		await bff.get<{ items: MapGroupDoc[] }>(
+			`/map/results/${enc(resultId)}/groups`,
+		)
+	).items ?? [];
+
+/** Commits a selection as a group; answers with the group, pending until titled. */
+export const createMapGroup = async (
 	resultId: string,
-	nodeIds: string[],
-	signal?: AbortSignal,
-	context?: SelectionTitleContext,
-): Promise<SelectionTitleResponse> {
-	const url = new URL(
-		`${API_BASE_URL}/v2/bff/map/results/${enc(resultId)}/title`,
-		typeof window !== "undefined" ? window.location.origin : "http://localhost",
-	);
-	const res = await fetch(url.toString(), {
-		body: JSON.stringify({
-			node_ids: nodeIds,
-			...(context?.snapshotId ? { snapshot_id: context.snapshotId } : {}),
-			...(context?.revisionIds ? { revision_ids: context.revisionIds } : {}),
-		}),
-		credentials: "include",
-		headers: { "Content-Type": "application/json" },
-		method: "POST",
-		signal,
-	});
-	if (!res.ok) {
-		const data = await res.json().catch(() => ({}));
-		const error = new ApiRequestError(res.status, data) as HttpError;
-		error.status = res.status;
-		throw error;
-	}
-	return (await res.json()) as SelectionTitleResponse;
-}
+	request: MapGroupRequest,
+) =>
+	(
+		await bff.post<{ group: MapGroupDoc }>(
+			`/map/results/${enc(resultId)}/groups`,
+			{ revision_ids: request.revisionIds, snapshot_id: request.snapshotId },
+		)
+	).group;
 
 // ---------------------------------------------------------------------------
 // Live events
@@ -513,6 +513,7 @@ const MAP_EVENT_TYPES = [
 	"needs_review",
 	"cancelled",
 	"fact_check",
+	"group",
 ] as const;
 
 const PROGRESS_FIELDS = [
@@ -617,6 +618,16 @@ export const useMapEvents = (projectId: string) => {
 						});
 					}, FACT_CHECK_REFETCH_DELAY_MS);
 					return;
+				case "group":
+					// Someone's group was committed or titled: every page on the
+					// project reads the list again.
+					void queryClient.invalidateQueries({
+						predicate: (query) =>
+							query.queryKey[0] === "map" &&
+							query.queryKey[1] === "result" &&
+							query.queryKey[3] === "groups",
+					});
+					return;
 				default:
 					void queryClient.invalidateQueries({
 						queryKey: mapKeys.project(projectId),
@@ -634,3 +645,23 @@ export const useMapEvents = (projectId: string) => {
 		onEvent,
 	);
 };
+
+/**
+ * The tags on a project's conversations, for the map's tag filter and tag
+ * colours. Ids and tags only, without chunks; off where the map runs on a
+ * fixture.
+ * ponytail: the list stops at 1000 conversations and still costs the server
+ * more than the map needs; ECHO-1002 moves tags into the map payload.
+ */
+export const useMapConversationTags = (projectId: string, enabled = true) =>
+	useQuery({
+		enabled: enabled && Boolean(projectId),
+		queryFn: () =>
+			bff.get<Array<{ id: string; tags?: unknown }>>("/conversations", {
+				include_tags: true,
+				limit: 1000,
+				project_id: projectId,
+			}),
+		queryKey: ["map", projectId, "conversation-tags"],
+		staleTime: 60_000,
+	});

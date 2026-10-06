@@ -54,12 +54,12 @@ export function PopcornStart({
 					<Title order={2}>
 						<Trans>Popcorn</Trans>
 					</Title>
-					<Text>
+					<Text c="dimmed">
 						<Trans>
 							Live slides for the room, made from this project's conversations.
 						</Trans>
 					</Text>
-					<Text size="sm" {...testId("popcorn-readiness")}>
+					<Text size="sm" c="dimmed" {...testId("popcorn-readiness")}>
 						{readiness === undefined
 							? t`Looking at the conversations…`
 							: ready
@@ -67,28 +67,31 @@ export function PopcornStart({
 								: t`No transcripts yet. You can run popcorn now; the screen fills as conversations land.`}
 					</Text>
 				</Stack>
-				<Paper withBorder className="rounded-md" p="lg">
+				<Paper withBorder p="lg">
 					<Stack gap="lg">
-						<TextInput
-							label={t`Session title`}
-							description={t`Shown at the top of the screen. Change it any time.`}
-							size={FIELD_SIZE}
-							value={title}
-							error={titleError}
-							maxLength={160}
-							onChange={(event) => {
-								setTitle(event.currentTarget.value);
-								setTitleError(null);
-							}}
-							{...testId("popcorn-title-input")}
-						/>
-						<VoiceFields
-							projectId={projectId}
-							voice={voice}
-							onChange={setVoice}
-						/>
-						<Group justify="flex-end">
+						<Stack gap="md">
+							<TextInput
+								label={t`Session title`}
+								description={t`Shown at the top of the screen. Change it any time.`}
+								size={FIELD_SIZE}
+								value={title}
+								error={titleError}
+								maxLength={160}
+								onChange={(event) => {
+									setTitle(event.currentTarget.value);
+									setTitleError(null);
+								}}
+								{...testId("popcorn-title-input")}
+							/>
+							<VoiceFields
+								projectId={projectId}
+								voice={voice}
+								onChange={setVoice}
+							/>
+						</Stack>
+						<Group justify="flex-start">
 							<Button
+								variant="filled"
 								size={FIELD_SIZE}
 								loading={create.isPending}
 								onClick={() => {

@@ -1,6 +1,6 @@
 import type { Codes } from "./types";
 
-/** The argument map: its snapshots, titles and fact-checks. */
+/** The argument map: its snapshots, titles, groups and fact-checks. */
 export const map = {
   "map.storage_unavailable": {
     action: "retry",
@@ -69,5 +69,15 @@ export const map = {
     action: "retry",
     detail: "The fact-check could not be started.",
     description: "Queueing the fact-check failed; nothing was started.",
+  },
+  "map.groups_need_snapshot": {
+    action: "none",
+    detail: "Groups need a map made by the analysis runs.",
+    description: "A group was committed on a legacy map, which has no snapshot to keep it in.",
+  },
+  "map.group_not_started": {
+    action: "retry",
+    detail: "The group could not be started.",
+    description: "Queueing the group's title run failed; the group is kept as failed.",
   },
 } as const satisfies Codes<"map">;

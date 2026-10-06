@@ -19,14 +19,11 @@ export const ScrollToBottomButton = ({
 		<Tooltip label={t`Scroll to bottom`}>
 			<ActionIcon
 				variant="outline"
-				radius="xl"
-				size={32}
 				aria-label={t`Scroll to bottom`}
-				className="rounded-full shadow-sm"
 				style={{ backgroundColor: "var(--app-background)" }}
 				onClick={onClick}
 			>
-				<ArrowDown size="70%" weight="bold" />
+				<ArrowDown size={20} />
 			</ActionIcon>
 		</Tooltip>
 	);

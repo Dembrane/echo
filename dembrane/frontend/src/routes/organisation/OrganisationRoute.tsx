@@ -2,7 +2,6 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
-	Alert,
 	Anchor,
 	Avatar,
 	Badge,
@@ -11,7 +10,6 @@ import {
 	Container,
 	Group,
 	Image,
-	Loader,
 	Menu,
 	Paper,
 	SimpleGrid,
@@ -25,23 +23,23 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
-import { modals } from "@mantine/modals";
-import { UsersThree } from "@phosphor-icons/react";
 import {
-	IconChevronDown,
-	IconChevronRight,
-	IconInfoCircle,
-	IconLock,
-	IconPlus,
-	IconSparkles,
-} from "@tabler/icons-react";
+	CaretDownIcon,
+	CaretRightIcon,
+	InfoIcon,
+	LockIcon,
+	PlusIcon,
+	UsersThree,
+} from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router";
 import { OrgAgentAccessPanel } from "@/components/agent-access/OrgAgentAccessPanel";
 import { OrgBillingTab } from "@/components/billing/BillingManager";
+import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
 import { toast } from "@/components/common/Toaster";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { notifyError } from "@/components/error/notifyError";
 import { InviteModal } from "@/components/invite/InviteModal";
 import {
@@ -64,6 +62,7 @@ import {
 	logoUrl as resolveLogoUrl,
 } from "@/lib/avatar";
 import { ApiRequestError } from "@/lib/errors/read";
+import { openConfirm } from "@/lib/openConfirm";
 import { displayRole, isOutsiderRole, roleColor } from "@/lib/roles";
 import { SELLABLE_TIER, type Tier } from "@/lib/tiers";
 import { OrganisationExternalView } from "./OrganisationExternalView";
@@ -231,11 +230,12 @@ function RoleBadgeMenu({
 		<Menu shadow="md" width={140} position="bottom-start">
 			<Menu.Target>
 				<Badge
+					component="button"
+					type="button"
 					size={size}
 					variant="light"
 					color={roleColor(currentRole)}
-					style={{ cursor: "pointer" }}
-					rightSection={<IconChevronDown size={10} />}
+					rightSection={<CaretDownIcon size={10} />}
 				>
 					{displayRole(currentRole)}
 				</Badge>
@@ -403,7 +403,7 @@ export const OrganisationRoute = () => {
 	// org-level fetches 403.
 	const { workspaces: userWorkspaces, setWorkspace } = useWorkspace();
 
-	// Free tier: one workspace per org. Gate the "New workspace" action on click
+	// Free tier: one workspace per org. Gate the "Create workspace" action on click
 	// (open the upgrade modal) rather than letting the user fill the create flow.
 	const { data: orgBilling } = useQuery({
 		enabled: Boolean(organisationId),
@@ -644,11 +644,7 @@ export const OrganisationRoute = () => {
 	}, [members, search, roleFilter, myAppUserId]);
 
 	if (organisationLoading) {
-		return (
-			<Center style={{ height: "60vh" }}>
-				<Loader size="sm" color="gray" />
-			</Center>
-		);
+		return <BeautifulLoading />;
 	}
 
 	// Distinct from the "not found" branch below — a 5xx is not a 404.
@@ -688,10 +684,10 @@ export const OrganisationRoute = () => {
 		return (
 			<Center style={{ height: "60vh" }}>
 				<Stack align="center">
-					<Title order={3} fw={400}>
+					<Title order={2}>
 						<Trans>Organisation not found</Trans>
 					</Title>
-					<Button variant="outline" onClick={() => navigate("/o")}>
+					<Button onClick={() => navigate("/o")}>
 						<Trans>Back</Trans>
 					</Button>
 				</Stack>
@@ -717,10 +713,8 @@ export const OrganisationRoute = () => {
 								style={{ flexShrink: 0, maxWidth: 160 }}
 							/>
 						)}
-						<Stack gap={2} style={{ minWidth: 0 }}>
-							<Title order={3} fw={400}>
-								{organisation.name}
-							</Title>
+						<Stack gap="xs" style={{ minWidth: 0 }}>
+							<Title order={2}>{organisation.name}</Title>
 							<Text size="sm" c="dimmed">
 								{organisation.workspace_count}{" "}
 								{organisation.workspace_count === 1
@@ -743,12 +737,10 @@ export const OrganisationRoute = () => {
 				    Usage; workspaces are reachable via the home selector. */}
 				{/* Add-to-workspace and the cap banner both read from this list. */}
 				{workspacesError && (
-					<Alert color="red" variant="light" mb="md">
-						<Trans>
-							We couldn't load this organisation's workspaces. Some controls may
-							be missing. Try refreshing.
-						</Trans>
-					</Alert>
+					<ErrorNotice
+						error={workspacesError}
+						title={t`We couldn't load this organisation's workspaces. Some controls may be missing.`}
+					/>
 				)}
 
 				{/* Tab strip hidden — the main AppSidebar drives section
@@ -807,7 +799,7 @@ export const OrganisationRoute = () => {
 						<Tabs.Panel value="billing" pt="md">
 							<Stack gap="md">
 								<div>
-									<Text size="sm" fw={500}>
+									<Text size="sm">
 										<Trans>Billing</Trans>
 									</Text>
 									<Text size="xs">
@@ -881,18 +873,13 @@ export const OrganisationRoute = () => {
 				    matrix rendered silently when it happened; surface that
 				    instead so the state isn't "app looks broken." */}
 							{!membersError && members.length === 0 && (
-								<Stack align="center" gap={6} py={48}>
-									<Title order={4} fw={400}>
-										<Trans>No one on the organisation yet.</Trans>
-									</Title>
-									<Text size="sm" c="dimmed" ta="center" maw={400}>
-										<Trans>
-											Organisation members appear here once they join a
-											workspace. Invites are sent from each workspace's Members
-											tab.
-										</Trans>
-									</Text>
-								</Stack>
+								<Text size="sm" c="dimmed">
+									<Trans>
+										No one on the organisation yet. Organisation members appear
+										here once they join a workspace. Invites are sent from each
+										workspace's Members tab.
+									</Trans>
+								</Text>
 							)}
 
 							{/* Members list: dotted invite card as the first row (same
@@ -924,55 +911,62 @@ export const OrganisationRoute = () => {
 										</Stack>
 									)}
 									{!membersLoading && members.length === 0 && (
-										<Stack align="center" gap={6} py={48}>
-											<Title order={4} fw={400}>
-												<Trans>No one on the organisation yet.</Trans>
-											</Title>
-											<Text size="sm" c="dimmed" ta="center" maw={400}>
-												<Trans>
-													Organisation members appear here once they join a
-													workspace.
-												</Trans>
-											</Text>
+										<Text size="sm" c="dimmed">
+											<Trans>
+												No one on the organisation yet. Organisation members
+												appear here once they join a workspace.
+											</Trans>
+										</Text>
+									)}
+									{filteredMembers.length > 0 && (
+										<Stack
+											gap={0}
+											style={{
+												borderTop:
+													"var(--app-stroke) solid var(--app-rule-color)",
+											}}
+										>
+											{filteredMembers.map((m) => (
+												<OrganisationPersonCard
+													key={m.user_id}
+													member={m}
+													workspaces={workspaces}
+													isAdmin={isAdmin}
+													isSelf={m.app_user_id === myAppUserId}
+													onOrganisationRoleChange={(next) =>
+														organisationRoleMutation.mutate({
+															role: next,
+															userId: m.user_id,
+														})
+													}
+													onWorkspaceRoleChange={(ws, membershipId, next) =>
+														workspaceRoleMutation.mutate({
+															membershipId,
+															role: next,
+															workspaceId: ws,
+														})
+													}
+													onAddToWorkspace={(ws, role) =>
+														addToWorkspaceMutation.mutate({
+															email: m.email,
+															role,
+															workspaceId: ws,
+														})
+													}
+													onJoinWorkspace={(ws) =>
+														joinWorkspaceMutation.mutate(ws)
+													}
+													onRemove={() =>
+														removeOrganisationMemberMutation.mutate({
+															userId: m.user_id,
+														})
+													}
+												/>
+											))}
 										</Stack>
 									)}
-									{filteredMembers.map((m) => (
-										<OrganisationPersonCard
-											key={m.user_id}
-											member={m}
-											workspaces={workspaces}
-											isAdmin={isAdmin}
-											isSelf={m.app_user_id === myAppUserId}
-											onOrganisationRoleChange={(next) =>
-												organisationRoleMutation.mutate({
-													role: next,
-													userId: m.user_id,
-												})
-											}
-											onWorkspaceRoleChange={(ws, membershipId, next) =>
-												workspaceRoleMutation.mutate({
-													membershipId,
-													role: next,
-													workspaceId: ws,
-												})
-											}
-											onAddToWorkspace={(ws, role) =>
-												addToWorkspaceMutation.mutate({
-													email: m.email,
-													role,
-													workspaceId: ws,
-												})
-											}
-											onJoinWorkspace={(ws) => joinWorkspaceMutation.mutate(ws)}
-											onRemove={() =>
-												removeOrganisationMemberMutation.mutate({
-													userId: m.user_id,
-												})
-											}
-										/>
-									))}
 									{members.length > 0 && filteredMembers.length === 0 && (
-										<Text size="sm" c="dimmed" ta="center" py="md">
+										<Text size="sm" c="dimmed" py="md">
 											<Trans>No one matches that filter.</Trans>
 										</Text>
 									)}
@@ -1134,12 +1128,12 @@ function OverviewPanel({
 			    without offering a fake affordance. Admin only. */}
 			{canEdit && (
 				<Stack gap={4} mt="xl">
-					<Text size="xs" fw={500} tt="uppercase" c="red.9" lts={0.5}>
+					<Title order={5}>
 						<Trans>Danger</Trans>
-					</Text>
+					</Title>
 					<Text size="sm" c="dimmed">
 						<Trans>
-							Deleting a organisation is a support-assisted operation. Email{" "}
+							Deleting an organisation is a support-assisted operation. Email{" "}
 							<Anchor href="mailto:support@dembrane.com">
 								support@dembrane.com
 							</Anchor>{" "}
@@ -1220,7 +1214,7 @@ function WorkspaceVisibilityIcon({
 		return (
 			<Tooltip label={t`Private workspace`}>
 				<span style={{ display: "inline-flex", flexShrink: 0 }}>
-					<IconLock size={size} color="var(--mantine-color-gray-6)" />
+					<LockIcon size={size} color="var(--app-muted)" />
 				</span>
 			</Tooltip>
 		);
@@ -1229,7 +1223,7 @@ function WorkspaceVisibilityIcon({
 		return (
 			<Tooltip label={t`Invite-only workspace`}>
 				<span style={{ display: "inline-flex", flexShrink: 0 }}>
-					<UsersThree size={size} color="var(--mantine-color-gray-6)" />
+					<UsersThree size={size} color="var(--app-muted)" />
 				</span>
 			</Tooltip>
 		);
@@ -1336,7 +1330,7 @@ function OrganisationOverviewPanel({
 
 			<Stack gap="sm">
 				<Group gap="xs" align="baseline">
-					<Title order={4} fw={500}>
+					<Title order={4}>
 						<Trans>People</Trans>
 					</Title>
 					{!membersLoading && (
@@ -1346,7 +1340,7 @@ function OrganisationOverviewPanel({
 					)}
 				</Group>
 				{membersLoading && people.length === 0 ? (
-					<Loader size="sm" color="gray" />
+					<Skeleton h={36} w={240} />
 				) : people.length === 0 ? (
 					<Text size="sm" c="dimmed">
 						<Trans>No one on this organisation yet.</Trans>
@@ -1395,7 +1389,7 @@ function OrganisationOverviewPanel({
 										style={{ cursor: "pointer" }}
 										onClick={handlePeopleClick}
 									>
-										<IconPlus size={16} />
+										<PlusIcon size={16} />
 									</Avatar>
 								</Tooltip>
 							)}
@@ -1407,7 +1401,7 @@ function OrganisationOverviewPanel({
 			<Stack gap="sm">
 				<Group justify="space-between" align="center">
 					<Group gap="xs" align="baseline">
-						<Title order={4} fw={500}>
+						<Title order={4}>
 							<Trans>Workspaces</Trans>
 						</Title>
 						{!workspacesLoading && (
@@ -1419,24 +1413,20 @@ function OrganisationOverviewPanel({
 					{isManager && (
 						<Group gap={4}>
 							<Button
-								variant="subtle"
-								size="xs"
-								leftSection={<IconPlus size={14} />}
+								leftSection={<PlusIcon size={20} />}
 								onClick={onRequestWorkspace}
 								opacity={atWorkspaceLimit ? 0.8 : 1}
 							>
-								<Trans>New workspace</Trans>
+								<Trans>Create workspace</Trans>
 							</Button>
 							{atWorkspaceLimit && (
 								<Tooltip
 									label={t`Free plan allows 1 workspace per organisation`}
 								>
-									<IconInfoCircle
-										size={14}
-										style={{
-											color: "var(--mantine-color-primary-6)",
-											cursor: "help",
-										}}
+									<InfoIcon
+										size={16}
+										color="var(--mantine-color-dimmed)"
+										style={{ cursor: "help" }}
 									/>
 								</Tooltip>
 							)}
@@ -1444,7 +1434,7 @@ function OrganisationOverviewPanel({
 					)}
 				</Group>
 				{workspacesLoading && myCards.length === 0 ? (
-					<Loader size="sm" color="gray" />
+					<Skeleton h={160} />
 				) : myCards.length === 0 ? (
 					<Text size="sm" c="dimmed">
 						<Trans>
@@ -1532,23 +1522,21 @@ function OrganisationWorkspaceCard({
 	return (
 		<Paper
 			p="lg"
-			radius="md"
-			withBorder
+			withBorder={false}
 			role="button"
 			tabIndex={0}
-			className="hover:!border-primary-400 transition-colors"
-			style={{
-				cursor: "pointer",
-			}}
+			className="app-do"
 			onClick={onOpen}
 			onKeyDown={(e) => {
+				// Keys on a nested button (a pinned-project badge) belong to it.
+				if (e.target !== e.currentTarget) return;
 				if (e.key === "Enter" || e.key === " ") {
 					e.preventDefault();
 					onOpen();
 				}
 			}}
 		>
-			<Stack gap={12}>
+			<Stack gap="sm">
 				<Group gap="xs" wrap="nowrap" align="center">
 					{workspace.logo_url && (
 						<Image
@@ -1560,12 +1548,7 @@ function OrganisationWorkspaceCard({
 							style={{ flexShrink: 0, maxWidth: 80 }}
 						/>
 					)}
-					<Text
-						fw={500}
-						size="md"
-						lineClamp={1}
-						style={{ flex: 1, minWidth: 0 }}
-					>
+					<Text size="md" lineClamp={1} style={{ flex: 1, minWidth: 0 }}>
 						{workspace.name}
 					</Text>
 					<WorkspaceVisibilityIcon
@@ -1603,14 +1586,15 @@ function OrganisationWorkspaceCard({
 				</Group>
 
 				{pinned.length > 0 && (
-					<Group gap={6} wrap="wrap">
+					<Group gap="xs" wrap="wrap">
 						{pinned.map((p) => (
 							<Badge
 								key={p.id}
+								component="button"
+								type="button"
 								size="sm"
 								variant="light"
 								color="gray"
-								style={{ cursor: "pointer", textTransform: "none" }}
 								onClick={(e) => {
 									e.stopPropagation();
 									onOpenProject(p.id);
@@ -1628,13 +1612,8 @@ function OrganisationWorkspaceCard({
 				/>
 
 				{workspace.recently_approved && (
-					<Group gap={6}>
-						<Badge
-							size="xs"
-							color="green"
-							variant="light"
-							leftSection={<IconSparkles size={10} />}
-						>
+					<Group gap="xs">
+						<Badge size="xs" color="gray" variant="light">
 							<Trans>New</Trans>
 						</Badge>
 					</Group>
@@ -1764,7 +1743,7 @@ function OrganisationPersonCard({
 
 	const handleOrganisationRoleChange = (next: string) => {
 		const person = member.display_name || member.email || t`this person`;
-		modals.openConfirmModal({
+		openConfirm({
 			children: (
 				<Text size="sm">
 					<Trans>
@@ -1787,7 +1766,7 @@ function OrganisationPersonCard({
 		next: string,
 	) => {
 		const person = member.display_name || member.email || t`this person`;
-		modals.openConfirmModal({
+		openConfirm({
 			children: (
 				<Text size="sm">
 					<Trans>
@@ -1804,9 +1783,9 @@ function OrganisationPersonCard({
 
 	const handleRemove = () => {
 		const person = member.display_name || member.email || t`this person`;
-		modals.openConfirmModal({
+		openConfirm({
 			children: (
-				<Stack gap={8}>
+				<Stack gap="sm">
 					<Text size="sm">
 						<Trans>
 							{person} will lose access to every workspace in this organisation.
@@ -1818,7 +1797,7 @@ function OrganisationPersonCard({
 					</Text>
 				</Stack>
 			),
-			confirmProps: { color: "red" },
+			danger: true,
 			labels: { cancel: t`Cancel`, confirm: t`Remove` },
 			onConfirm: onRemove,
 			title: t`Remove from organisation?`,
@@ -1826,15 +1805,26 @@ function OrganisationPersonCard({
 	};
 
 	return (
-		<Paper withBorder radius="md" p="md">
-			<Stack gap={open ? 12 : 0}>
-				<Group justify="space-between" wrap="nowrap" gap="md">
+		<Paper
+			p="md"
+			withBorder={false}
+			style={{
+				borderBottom: "var(--app-stroke) solid var(--app-rule-color)",
+			}}
+		>
+			<Stack gap={open ? "sm" : 0}>
+				<Group
+					className="app-stack-narrow"
+					justify="space-between"
+					wrap="nowrap"
+					gap="md"
+				>
 					<Group gap="sm" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
 						<Avatar src={avatarUrl(member.avatar, 64)} size="md" radius="full">
 							{memberInitials(member.display_name, member.email)}
 						</Avatar>
 						<Stack gap={0} style={{ minWidth: 0 }}>
-							<Text size="sm" fw={500} truncate>
+							<Text size="sm" truncate>
 								{member.display_name || member.email || t`Unknown member`}
 							</Text>
 							{member.email && member.email !== member.display_name && (
@@ -1872,14 +1862,13 @@ function OrganisationPersonCard({
 							<ActionIcon
 								variant="subtle"
 								color="gray"
-								size="sm"
 								onClick={() => setOpen((v) => !v)}
 								aria-label={open ? t`Hide detail` : t`Show detail`}
 							>
 								{open ? (
-									<IconChevronDown size={14} />
+									<CaretDownIcon size={20} />
 								) : (
-									<IconChevronRight size={14} />
+									<CaretRightIcon size={20} />
 								)}
 							</ActionIcon>
 						)}
@@ -1887,23 +1876,23 @@ function OrganisationPersonCard({
 				</Group>
 
 				{open && (
-					<Stack gap={12} pl={56}>
-						<Text size="xs" fw={500} tt="uppercase" c="dimmed" lts={0.5}>
+					<Stack gap="sm" pl={56}>
+						<Title order={5}>
 							<Trans>Per-workspace access</Trans>
-						</Text>
+						</Title>
 						{/* Capped width + per-row hover band so the workspace name (left)
 						    and its control (right) read as one row instead of drifting
 						    apart across a wide card. */}
-						<Stack gap={2} maw={560}>
+						<Stack gap="xs" maw={560}>
 							{perWorkspace.map(({ ws, role, isDirect, membershipId }) => (
 								<Group
 									key={ws.id}
 									justify="space-between"
 									wrap="nowrap"
 									gap="sm"
-									className="rounded px-2 py-1 hover:bg-[var(--mantine-color-default-hover)]"
+									className="app-stack-narrow px-2 py-1 hover:bg-[var(--mantine-color-default-hover)]"
 								>
-									<Group gap={6} wrap="nowrap" style={{ minWidth: 0 }}>
+									<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
 										<WorkspaceVisibilityIcon
 											visibility={ws.visibility}
 											size={12}
@@ -1974,10 +1963,9 @@ function OrganisationPersonCard({
 											// workspace yet. Always grants admin.
 											<Button
 												size="compact-xs"
-												variant="subtle"
-												leftSection={<IconPlus size={12} />}
+												leftSection={<PlusIcon size={12} />}
 												onClick={() =>
-													modals.openConfirmModal({
+													openConfirm({
 														children: (
 															<Text size="sm">
 																<Trans>
@@ -2011,10 +1999,9 @@ function OrganisationPersonCard({
 											// (ADR-0003), so no role choice here.
 											<Button
 												size="compact-xs"
-												variant="subtle"
-												leftSection={<IconPlus size={12} />}
+												leftSection={<PlusIcon size={12} />}
 												onClick={() =>
-													modals.openConfirmModal({
+													openConfirm({
 														children: (
 															<Text size="sm">
 																<Trans>
@@ -2044,9 +2031,8 @@ function OrganisationPersonCard({
 												<Menu.Target>
 													<Button
 														size="compact-xs"
-														variant="subtle"
-														leftSection={<IconPlus size={12} />}
-														rightSection={<IconChevronDown size={10} />}
+														leftSection={<PlusIcon size={12} />}
+														rightSection={<CaretDownIcon size={10} />}
 													>
 														<Trans>Add</Trans>
 													</Button>
@@ -2056,7 +2042,7 @@ function OrganisationPersonCard({
 														<Menu.Item
 															key={roleOpt}
 															onClick={() =>
-																modals.openConfirmModal({
+																openConfirm({
 																	children: (
 																		<Text size="sm">
 																			<Trans>
@@ -2098,7 +2084,7 @@ function OrganisationPersonCard({
 							))}
 						</Stack>
 						{isAdmin && !isSelf && (
-							<Group justify="flex-end" mt={4}>
+							<Group justify="flex-start" mt={4}>
 								<Button
 									size="compact-xs"
 									variant="subtle"

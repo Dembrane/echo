@@ -15,6 +15,33 @@ function meetsTier(tier: string | null | undefined, minimum: Tier): boolean {
 	return index >= 0 && index >= TIER_ORDER.indexOf(minimum);
 }
 
+// Whether the room's legend names the conversations or numbers them. Off by
+// default: a name typed on the phone may be a person's.
+export function PopcornLabelsSwitch({
+	projectId,
+	popcorn,
+}: {
+	projectId: string;
+	popcorn: PopcornDetail;
+}) {
+	const settings = usePopcornSettingsMutation(projectId, popcorn.id);
+	return (
+		<Switch
+			size={FIELD_SIZE}
+			label={t`Names on the legend`}
+			description={t`Off numbers the conversations. On shows the name typed on the phone, which may be a person's.`}
+			checked={popcorn.settings.public_labels === "names"}
+			disabled={settings.isPending}
+			onChange={(event) =>
+				settings.mutate({
+					public_labels: event.currentTarget.checked ? "names" : "neutral",
+				})
+			}
+			{...testId("popcorn-labels-toggle")}
+		/>
+	);
+}
+
 // What the room sees, switch by switch. Each one lands on the wall at its
 // next poll; nothing here needs a Save.
 export function PopcornScreenSettings({
@@ -22,11 +49,14 @@ export function PopcornScreenSettings({
 	popcorn,
 	embedded = false,
 	showToolToggles = true,
+	showLabelsToggle = true,
 }: {
 	projectId: string;
 	popcorn: PopcornDetail;
 	embedded?: boolean;
 	showToolToggles?: boolean;
+	/** The presentation editor shows it under Data policy instead. */
+	showLabelsToggle?: boolean;
 }) {
 	const { workspace } = useWorkspace();
 	const settings = usePopcornSettingsMutation(projectId, popcorn.id);
@@ -37,7 +67,6 @@ export function PopcornScreenSettings({
 	return (
 		<Paper
 			withBorder={!embedded}
-			className="rounded-md"
 			p={embedded ? 0 : "lg"}
 			{...testId("popcorn-screen")}
 		>
@@ -88,19 +117,9 @@ export function PopcornScreenSettings({
 					}
 					{...testId("popcorn-qr-toggle")}
 				/>
-				<Switch
-					size={FIELD_SIZE}
-					label={t`Names on the legend`}
-					description={t`Off numbers the conversations. On shows the name typed on the phone, which may be a person's.`}
-					checked={popcorn.settings.public_labels === "names"}
-					disabled={busy}
-					onChange={(event) =>
-						settings.mutate({
-							public_labels: event.currentTarget.checked ? "names" : "neutral",
-						})
-					}
-					{...testId("popcorn-labels-toggle")}
-				/>
+				{showLabelsToggle && (
+					<PopcornLabelsSwitch projectId={projectId} popcorn={popcorn} />
+				)}
 				{canRemoveMark ? (
 					<Switch
 						size={FIELD_SIZE}

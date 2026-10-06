@@ -4,23 +4,22 @@ import {
 	Box,
 	Button,
 	Group,
-	LoadingOverlay,
 	Modal,
 	Stack,
 	Text,
+	Textarea,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
-	IconCheck,
-	IconMicrophone,
-	IconPlus,
-	IconReload,
-	IconUpload,
-} from "@tabler/icons-react";
+	CheckIcon,
+	MicrophoneIcon,
+	UploadSimpleIcon,
+} from "@phosphor-icons/react";
 import clsx from "clsx";
 import posthog from "posthog-js";
 import { useState } from "react";
 import { useParams, useSearchParams } from "react-router";
+import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
 import {
@@ -29,6 +28,7 @@ import {
 	useParticipantProjectById,
 	useUploadConversationTextChunk,
 } from "@/components/participant/hooks";
+import { ConversationErrorView } from "@/components/participant/ConversationErrorView";
 import { ParticipantBody } from "@/components/participant/ParticipantBody";
 import { useProjectSharingLink } from "@/components/project/ProjectQRCode";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
@@ -110,52 +110,16 @@ export const ParticipantConversationText = () => {
 	};
 
 	if (conversationQuery.isLoading || projectQuery.isLoading) {
-		return <LoadingOverlay visible />;
+		return <BeautifulLoading quiet className="min-h-dvh" />;
 	}
 
 	// Check if conversation is not present or failed to load
 	if (conversationQuery.isError || !conversationQuery.data) {
 		return (
-			<div className="container mx-auto flex h-full max-w-2xl flex-col items-center justify-center">
-				<div className="p-8 text-center">
-					<Text size="xl" fw={500} c="red" mb="md">
-						<Trans id="participant.conversation.error.text.mode">
-							Something went wrong
-						</Trans>
-					</Text>
-					<Text size="md" c="dimmed" mb="lg">
-						<Trans id="participant.conversation.error.loading.text.mode">
-							The conversation could not be loaded. Please try again or contact
-							support.
-						</Trans>
-					</Text>
-					<Group justify="center" gap="md">
-						<Button
-							variant="light"
-							size="md"
-							onClick={() => window.location.reload()}
-							leftSection={<IconReload />}
-						>
-							<Trans id="participant.button.reload.page.text.mode">
-								Reload Page
-							</Trans>
-						</Button>
-						{newConversationLink && (
-							<Button
-								leftSection={<IconPlus size={16} />}
-								variant="filled"
-								size="md"
-								component="a"
-								href={newConversationLink}
-							>
-								<Trans id="participant.button.start.new.conversation.text.mode">
-									Start New Conversation
-								</Trans>
-							</Button>
-						)}
-					</Group>
-				</div>
-			</div>
+			<ConversationErrorView
+				conversationDeletedDuringRecording={false}
+				newConversationLink={newConversationLink}
+			/>
 		);
 	}
 
@@ -167,14 +131,11 @@ export const ParticipantConversationText = () => {
 				onClose={closeFinishModal}
 				centered
 				title={
-					<Text fw={500}>
-						<Trans id="participant.modal.finish.title.text.mode">
-							Finish Conversation
-						</Trans>
-					</Text>
+					<Trans id="participant.modal.finish.title.text.mode">
+						Finish conversation
+					</Trans>
 				}
 				size="sm"
-				radius="md"
 				padding="xl"
 				{...testId("portal-text-finish-modal")}
 			>
@@ -184,26 +145,31 @@ export const ParticipantConversationText = () => {
 							Are you sure you want to finish the conversation?
 						</Trans>
 					</Text>
-					<Group grow gap="md">
+					<Group gap="sm">
+						<Button
+							variant="filled"
+							onClick={handleConfirmFinishButton}
+							loading={isStopping}
+							miw={100}
+							size="md"
+							{...testId("portal-text-finish-confirm-button")}
+						>
+							<Trans id="participant.button.finish.confirm.text.mode">
+								Finish
+							</Trans>
+						</Button>
 						<Button
 							variant="subtle"
+							color="gray"
 							onClick={closeFinishModal}
 							disabled={isStopping}
 							miw={100}
 							size="md"
 							{...testId("portal-text-finish-cancel-button")}
 						>
-							<Trans id="participant.button.finish.no.text.mode">No</Trans>
-						</Button>
-						<Button
-							onClick={handleConfirmFinishButton}
-							loading={isStopping}
-							miw={100}
-							radius="md"
-							size="md"
-							{...testId("portal-text-finish-confirm-button")}
-						>
-							<Trans id="participant.button.finish.yes.text.mode">Yes</Trans>
+							<Trans id="participant.button.finish.cancel.text.mode">
+								Cancel
+							</Trans>
 						</Button>
 					</Group>
 				</Stack>
@@ -226,7 +192,8 @@ export const ParticipantConversationText = () => {
 
 			<Stack
 				bg="var(--app-background)"
-				className="sticky bottom-0 z-10 w-full border-slate-300 p-4"
+				className="sticky bottom-0 z-10 w-full border-t p-4"
+				style={{ borderColor: "var(--app-rule-color)" }}
 			>
 				<Group
 					justify="center"
@@ -237,18 +204,20 @@ export const ParticipantConversationText = () => {
             isVisible={isVisible}
           /> */}
 				</Group>
-				<textarea
-					className="h-32 w-full rounded-md border border-slate-300 p-4"
+				<Textarea
+					minRows={4}
+					autosize
+					maxRows={10}
 					placeholder={t`Type your response here`}
 					value={text}
-					onChange={(e) => setText(e.target.value)}
+					onChange={(e) => setText(e.currentTarget.value)}
 					{...testId("portal-text-input-textarea")}
 				/>
 				<Group className="w-full">
 					<Button
 						size="lg"
-						radius="md"
-						rightSection={<IconUpload />}
+						variant="filled"
+						leftSection={<UploadSimpleIcon size={20} />}
 						onClick={onChunk}
 						loading={uploadChunkMutation.isPending}
 						className="flex-grow"
@@ -260,19 +229,18 @@ export const ParticipantConversationText = () => {
 					<I18nLink to={audioModeUrl}>
 						<Button
 							size="lg"
-							variant="outline"
 							px="lg"
+							aria-label={t`Switch to audio`}
 							{...testId("portal-text-switch-to-audio-button")}
 						>
-							<IconMicrophone />
+							<MicrophoneIcon size={20} />
 						</Button>
 					</I18nLink>
 					{text.trim() === "" && chunks.data && chunks.data.length > 0 && (
 						<Button
 							size="lg"
 							onClick={openFinishModal}
-							variant="outline"
-							rightSection={<IconCheck />}
+							leftSection={<CheckIcon size={20} />}
 							{...testId("portal-text-finish-button")}
 						>
 							<Trans id="participant.button.finish.text.mode">Finish</Trans>

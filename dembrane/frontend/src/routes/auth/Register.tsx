@@ -8,6 +8,7 @@ import {
 	Checkbox,
 	Collapse,
 	Divider,
+	Group,
 	List,
 	PasswordInput,
 	Stack,
@@ -124,7 +125,7 @@ export const RegisterRoute = () => {
 		<div className="h-full w-full">
 			<Stack gap="lg">
 				<Stack gap={4}>
-					<Title order={2} fw={400}>
+					<Title order={2}>
 						<Trans>Create an account</Trans>
 					</Title>
 					<Text size="sm" c="dimmed">
@@ -176,15 +177,6 @@ export const RegisterRoute = () => {
 											? t`Locked to match the invite. To use a different address, ask the admin to re-invite that email.`
 											: undefined
 									}
-									styles={
-										lockedEmail
-											? {
-													input: {
-														backgroundColor: "var(--mantine-color-gray-1)",
-													},
-												}
-											: undefined
-									}
 								/>
 								<Checkbox
 									size="md"
@@ -207,6 +199,7 @@ export const RegisterRoute = () => {
 									}
 								/>
 								<Button
+									variant="filled"
 									size="md"
 									onClick={handleNext}
 									disabled={!termsAccepted}
@@ -232,16 +225,9 @@ export const RegisterRoute = () => {
 									{...register("confirmPassword", { required: true })}
 									{...testId("auth-register-confirm-password-input")}
 								/>
-								<Box className="flex gap-x-5">
+								<Group gap="md" wrap="nowrap">
 									<Button
-										variant="outline"
-										size="md"
-										onClick={() => setStep(0)}
-										className="shrink-0"
-									>
-										<Trans>Back</Trans>
-									</Button>
-									<Button
+										variant="filled"
 										fullWidth
 										size="md"
 										type="submit"
@@ -251,25 +237,34 @@ export const RegisterRoute = () => {
 									>
 										<Trans>Create account</Trans>
 									</Button>
-								</Box>
+									<Button
+										variant="subtle"
+										color="gray"
+										size="md"
+										onClick={() => setStep(0)}
+										className="shrink-0"
+									>
+										<Trans>Back</Trans>
+									</Button>
+								</Group>
 							</>
 						)}
 
 						{step === 2 && (
 							<Stack gap="md" {...testId("auth-register-verify-step")}>
-								<Title order={3} fw={400}>
+								<Title order={4}>
 									<Trans>Check your email</Trans>
 								</Title>
 								<Text c="dimmed">
 									<Trans>
 										We've sent a verification link to{" "}
-										<Text span fw={500} c="dark">
+										<Text span c="dark">
 											{submittedEmail ?? emailWatch}
 										</Text>
 										. Open the email and click the link to continue.
 									</Trans>
 								</Text>
-								<Stack gap={6}>
+								<Stack gap="xs">
 									<Text size="xs" c="dimmed">
 										<Trans>
 											Didn't get it? Check your spam or junk folder. The email
@@ -296,26 +291,23 @@ export const RegisterRoute = () => {
 					<>
 						<Divider variant="dashed" label={t`or`} labelPosition="center" />
 
-						<I18nLink
+						<Button
+							component={I18nLink}
 							to={
 								submittedEmail
 									? `/login?email=${encodeURIComponent(submittedEmail)}`
 									: "/login"
 							}
+							size="md"
+							fullWidth
+							{...testId("auth-register-switch-to-login-button")}
 						>
-							<Button
-								size="md"
-								variant="outline"
-								fullWidth
-								{...testId("auth-register-switch-to-login-button")}
-							>
-								<Trans>Already have an account? Log in</Trans>
-							</Button>
-						</I18nLink>
+							<Trans>Already have an account? Log in</Trans>
+						</Button>
 
 						<Box {...testId("auth-register-join-org-help")}>
-							<Text size="sm" fw={500}>
-								<Trans>Trying to join an existing organization?</Trans>
+							<Text size="sm">
+								<Trans>Trying to join an existing organisation?</Trans>
 							</Text>
 							<Anchor
 								size="sm"
@@ -326,14 +318,14 @@ export const RegisterRoute = () => {
 								{orgHelpOpen ? (
 									<Trans>Read less</Trans>
 								) : (
-									<Trans>Read more →</Trans>
+									<Trans>Read more</Trans>
 								)}
 							</Anchor>
 							<Collapse in={orgHelpOpen}>
-								<Stack gap={6} mt="xs">
+								<Stack gap="xs" mt="xs">
 									<Text size="sm" c="dimmed">
 										<Trans>
-											If you're trying to join an existing organization, you
+											If you're trying to join an existing organisation, you
 											should not create a new one. Some reasons that you may
 											accidentally end up here are:
 										</Trans>

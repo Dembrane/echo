@@ -73,6 +73,8 @@ export const OPENING_BLOCKS: Readonly<Record<string, Readonly<Record<string, num
   notice: { text: 160 },
   // The data screen has no words of its own: they follow the project.
   data: {},
+  // The host guide's title and steps (one per line), copied from the project's host guide.
+  guide: { title: 160, steps: 1200 },
 };
 /** The two screens a synthetic demo writes for itself. */
 export const FRAME_BLOCKS = ["disclosure", "notice"] as const;

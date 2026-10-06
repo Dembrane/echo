@@ -7,9 +7,8 @@ import { RAIL_ITEM_CLASS, RailTip, useInRail } from "../shell/rail";
 interface BackButtonProps {
 	to: string;
 	label: ReactNode;
-	// Vercel-style context header: the back chevron sits at the left while the
-	// label reads as the centered title of the whole sidebar section. The label
-	// is the current context's name (e.g. the org name), not the destination.
+	// Context header: sticks to the top of the sidebar section and carries the
+	// current context's name (e.g. the org name), not the destination.
 	center?: boolean;
 }
 
@@ -21,7 +20,10 @@ export const BackButton = ({ to, label, center }: BackButtonProps) => {
 			<RailTip label={label}>
 				<I18nLink
 					to={to}
-					className={cn(RAIL_ITEM_CLASS, "text-graphite hover:bg-black/[0.04]")}
+					className={cn(
+						RAIL_ITEM_CLASS,
+						"text-[var(--app-text)] hover:bg-[var(--app-quiet)]",
+					)}
 				>
 					<ArrowLeft size={16} aria-hidden="true" />
 					<span className="sr-only">{label}</span>
@@ -32,19 +34,17 @@ export const BackButton = ({ to, label, center }: BackButtonProps) => {
 
 	if (center) {
 		return (
-			<div className="sticky top-0 z-10 -mx-1.5 -mt-1.5 bg-parchment px-1.5 pt-1.5">
+			<div className="sticky top-0 z-10 -mx-1.5 -mt-1.5 bg-[var(--app-background)] px-1.5 pt-1.5">
 				<I18nLink
 					to={to}
-					className="group relative flex h-[30px] items-center rounded-md px-2 text-sm leading-tight text-graphite transition-colors hover:bg-black/[0.04] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+					className="group relative flex h-[30px] items-center gap-2 px-2 text-sm leading-tight text-[var(--app-text)] transition-colors hover:bg-[var(--app-quiet)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
 				>
 					<ArrowLeft
-						size={14}
-						className="absolute left-2 shrink-0 transition-transform group-hover:-translate-x-0.5"
+						size={16}
+						className="shrink-0 transition-transform group-hover:-translate-x-0.5"
 						aria-hidden="true"
 					/>
-					<span className="flex-1 truncate px-5 text-center font-medium">
-						{label}
-					</span>
+					<span className="flex-1 truncate">{label}</span>
 				</I18nLink>
 			</div>
 		);
@@ -53,14 +53,19 @@ export const BackButton = ({ to, label, center }: BackButtonProps) => {
 	return (
 		<I18nLink
 			to={to}
-			className="group flex h-[30px] items-center gap-1.5 rounded-md px-2 text-sm leading-tight text-graphite transition-colors hover:bg-black/[0.04] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+			className="group flex h-[30px] items-center gap-2 px-2 text-sm leading-tight text-[var(--app-text)] transition-colors hover:bg-[var(--app-quiet)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
 		>
 			<ArrowLeft
-				size={14}
+				size={16}
 				className="shrink-0 transition-transform group-hover:-translate-x-0.5"
 				aria-hidden="true"
 			/>
-			<span className="truncate opacity-70">{label}</span>
+			<span
+				className="app-muted truncate"
+				style={{ color: "var(--mantine-color-dimmed)" }}
+			>
+				{label}
+			</span>
 		</I18nLink>
 	);
 };

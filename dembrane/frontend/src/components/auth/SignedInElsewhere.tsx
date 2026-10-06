@@ -1,7 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { Button, Stack, Text, Title } from "@mantine/core";
 import { useEffect, useState } from "react";
-import { GradientBlurs } from "@/components/layout/GradientBlurs";
 import { testId } from "@/lib/testUtils";
 
 /**
@@ -38,7 +37,7 @@ export const SignedInElsewhere = ({
 	return (
 		<div
 			style={{
-				background: "var(--app-background, #f6f4f1)",
+				background: "var(--app-background)",
 				display: "flex",
 				flexDirection: "column",
 				inset: 0,
@@ -48,7 +47,6 @@ export const SignedInElsewhere = ({
 			}}
 			{...testId("auth-login-elsewhere")}
 		>
-			<GradientBlurs />
 			<div
 				style={{
 					alignItems: "center",
@@ -69,9 +67,9 @@ export const SignedInElsewhere = ({
 						width: "100%",
 					}}
 				>
-					<Stack gap={24}>
-						<Stack gap={6}>
-							<Title order={3} fw={400}>
+					<Stack gap="lg">
+						<Stack gap="xs">
+							<Title order={2}>
 								<Trans>This account is logged in somewhere else</Trans>
 							</Title>
 							<Text size="sm" lh={1.6}>
@@ -89,27 +87,29 @@ export const SignedInElsewhere = ({
 								)}
 							</Text>
 						</Stack>
-						<Stack gap={12}>
+						<Stack gap="sm">
 							<Button
+								variant="filled"
 								fullWidth
-								size="lg"
+								size="md"
 								loading={loading}
 								onClick={onConfirm}
 								{...testId("auth-login-elsewhere-confirm")}
 							>
 								<Trans>Log in anyway</Trans>
 							</Button>
-							<Text size="xs" c="dimmed" ta="center">
+							<Text size="xs" c="dimmed">
 								<Trans>Logging in here logs the other device out.</Trans>
 							</Text>
 							<Button
 								fullWidth
 								variant="subtle"
+								color="gray"
 								disabled={loading}
 								onClick={onCancel}
 								{...testId("auth-login-elsewhere-cancel")}
 							>
-								<Trans>Back to login</Trans>
+								<Trans>Back to log in</Trans>
 							</Button>
 						</Stack>
 					</Stack>

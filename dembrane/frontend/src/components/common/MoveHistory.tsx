@@ -31,10 +31,8 @@ export function MoveHistory({
 	const ordered = [...entries].reverse();
 
 	return (
-		<Stack gap={4}>
-			<Text size="xs" fw={600}>
-				{title}
-			</Text>
+		<Stack gap="xs">
+			<Text size="xs">{title}</Text>
 			{ordered.map((e, i) => {
 				const when = e.at
 					? formatDistanceToNowStrict(new Date(e.at), { addSuffix: true })

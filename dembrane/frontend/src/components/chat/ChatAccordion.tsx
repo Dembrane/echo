@@ -15,12 +15,12 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
-	IconDotsVertical,
-	IconMessageCircle,
-	IconPencil,
-	IconSparkles,
-	IconTrash,
-} from "@tabler/icons-react";
+	ChatCircleIcon,
+	DotsThreeVerticalIcon,
+	PencilSimpleIcon,
+	SparkleIcon,
+	TrashIcon,
+} from "@phosphor-icons/react";
 import { formatRelative } from "date-fns";
 import { Suspense, useEffect } from "react";
 import { useInView } from "react-intersection-observer";
@@ -46,14 +46,12 @@ export const ChatModeIndicator = ({
 	mode: "overview" | "deep_dive" | "agentic" | null | undefined;
 	size?: "xs" | "compact-sm" | "sm";
 }) => {
-	// circle / glyph px per size token
-	const [circleSize, glyphSize] =
-		size === "xs" ? [20, 12] : size === "compact-sm" ? [26, 16] : [32, 20];
+	// A plain glyph, not a control: 16 inline, 20 where it heads a page.
+	const glyphSize = size === "sm" ? 20 : 16;
 	// Default to deep_dive if mode not set
 	const effectiveMode = mode ?? "deep_dive";
 	const isOverview = effectiveMode === "overview";
 	const isAgentic = effectiveMode === "agentic";
-	const colors = MODE_COLORS[effectiveMode];
 
 	return (
 		<Tooltip
@@ -71,21 +69,9 @@ export const ChatModeIndicator = ({
 		>
 			<Box className="flex items-center justify-center">
 				{isOverview || isAgentic ? (
-					<ActionIcon radius={100} size={circleSize} color={colors.primary}>
-						<IconSparkles
-							size={glyphSize}
-							color="var(--app-text)"
-							stroke={2}
-						/>
-					</ActionIcon>
+					<SparkleIcon size={glyphSize} />
 				) : (
-					<ActionIcon radius={100} size={circleSize} color={colors.primary}>
-						<IconMessageCircle
-							size={glyphSize}
-							color="var(--app-text)"
-							stroke={2}
-						/>
-					</ActionIcon>
+					<ChatCircleIcon size={glyphSize} />
 				)}
 			</Box>
 		</Tooltip>
@@ -115,20 +101,20 @@ export const ChatAccordionItemMenu = ({
 			<Menu shadow="md" position="right" {...testId("chat-item-menu")}>
 				<Menu.Target>
 					<ActionIcon
-						variant="transparent"
-						c="gray"
+						variant="subtle"
+						color="gray"
 						size={size}
 						className="flex items-center justify-center"
 						{...testId("chat-item-menu-button")}
 					>
-						<IconDotsVertical />
+						<DotsThreeVerticalIcon size={20} />
 					</ActionIcon>
 				</Menu.Target>
 
 				<Menu.Dropdown>
 					<Stack gap="xs">
 						<Menu.Item
-							leftSection={<IconPencil />}
+							leftSection={<PencilSimpleIcon size={16} />}
 							disabled={deleteChatMutation.isPending}
 							onClick={openRename}
 							{...testId("chat-item-menu-rename")}
@@ -136,7 +122,7 @@ export const ChatAccordionItemMenu = ({
 							<Trans id="project.sidebar.chat.rename">Rename</Trans>
 						</Menu.Item>
 						<Menu.Item
-							leftSection={<IconTrash />}
+							leftSection={<TrashIcon size={16} />}
 							disabled={deleteChatMutation.isPending}
 							onClick={openDeleteConfirm}
 							{...testId("chat-item-menu-delete")}
@@ -280,7 +266,7 @@ export const ChatAccordionMain = ({ projectId }: { projectId: string }) => {
 			<Accordion.Control {...testId("chat-accordion-control")}>
 				<Group justify="space-between">
 					<Title order={3} {...testId("chat-accordion-title")}>
-						<span className="min-w-[48px] pr-2 font-normal text-gray-500">
+						<span className="min-w-[48px] pr-2 font-normal text-[var(--app-muted)]">
 							{totalChats}
 						</span>
 						<Trans id="project.sidebar.chat.title">Chats</Trans>
@@ -341,7 +327,7 @@ export const ChatAccordionMain = ({ projectId }: { projectId: string }) => {
 										{item.name && (
 											<Text
 												size="xs"
-												c="gray.6"
+												c="dimmed"
 												{...testId(`chat-item-date-${item.id}`)}
 											>
 												{formatRelative(

@@ -10,7 +10,7 @@ import {
 	TextInput,
 	useCombobox,
 } from "@mantine/core";
-import { IconX } from "@tabler/icons-react";
+import { XIcon } from "@phosphor-icons/react";
 import { type ChangeEvent, type KeyboardEvent, useMemo, useState } from "react";
 
 export interface EmailChip {
@@ -240,14 +240,17 @@ export function EmailChipsInput({
 
 	const inputBox = (
 		<Box
-			p={6}
+			p="xs"
 			style={{
-				border: "1px solid var(--mantine-color-gray-3)",
-				borderRadius: 6,
-				minHeight: 44,
+				// Set: rules at the sides, like every field.
+				backgroundColor: "var(--app-surface)",
+				borderColor: "var(--app-control-rule)",
+				borderStyle: "solid",
+				borderWidth: "0 var(--app-stroke)",
+				minHeight: 40,
 			}}
 		>
-			<Group gap={6} wrap="wrap">
+			<Group gap="xs" wrap="wrap">
 				{chips.map((chip) => (
 					<EmailChipPill
 						key={chip.id}
@@ -307,7 +310,7 @@ export function EmailChipsInput({
 
 	if (!suggestionsEnabled) {
 		return (
-			<Stack gap={6} data-testid={dataTestId}>
+			<Stack gap="xs" data-testid={dataTestId}>
 				{inputBox}
 				{helper}
 			</Stack>
@@ -315,7 +318,7 @@ export function EmailChipsInput({
 	}
 
 	return (
-		<Stack gap={6} data-testid={dataTestId}>
+		<Stack gap="xs" data-testid={dataTestId}>
 			<Combobox store={combobox} onOptionSubmit={(value) => commitEmail(value)}>
 				<Combobox.DropdownTarget>{inputBox}</Combobox.DropdownTarget>
 				<Combobox.Dropdown hidden={filteredSuggestions.length === 0}>
@@ -347,24 +350,19 @@ function EmailChipPill({
 	disabled?: boolean;
 	onRemove: () => void;
 }) {
+	// A tag is its tint: no border, square.
 	const baseTone =
 		chip.state === "valid"
-			? {
-					bg: "var(--mantine-color-gray-1)",
-					border: "var(--mantine-color-gray-3)",
-					fg: "var(--mantine-color-gray-9)",
-				}
+			? { bg: "var(--app-rule-color)", fg: undefined }
 			: {
-					bg: "var(--mantine-color-red-0)",
-					border: "var(--mantine-color-red-3)",
-					fg: "var(--mantine-color-red-9)",
+					bg: "var(--app-danger-tint)",
+					fg: "var(--app-danger-on-tint)",
 				};
 	// "Armed" highlight before second-Backspace delete.
 	const tone = highlighted
 		? {
-				bg: "var(--mantine-primary-color-light)",
-				border: "var(--mantine-primary-color-filled)",
-				fg: "var(--mantine-primary-color-filled)",
+				bg: "var(--app-action-tint)",
+				fg: "var(--app-action)",
 			}
 		: baseTone;
 	const title =
@@ -377,13 +375,9 @@ function EmailChipPill({
 		<Group
 			gap={4}
 			wrap="nowrap"
-			px={8}
+			px="sm"
 			py={2}
-			style={{
-				backgroundColor: tone.bg,
-				border: `1px solid ${tone.border}`,
-				borderRadius: 999,
-			}}
+			style={{ backgroundColor: tone.bg }}
 			title={title}
 		>
 			<Text size="xs" c={tone.fg}>
@@ -397,7 +391,7 @@ function EmailChipPill({
 				onClick={onRemove}
 				aria-label={t`Remove ${chip.value}`}
 			>
-				<IconX size={12} />
+				<XIcon size={12} />
 			</ActionIcon>
 		</Group>
 	);

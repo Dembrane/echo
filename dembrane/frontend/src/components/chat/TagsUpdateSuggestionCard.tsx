@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Badge, Button, Group, Stack, Text } from "@mantine/core";
-import { IconCheck } from "@tabler/icons-react";
+import { CheckIcon } from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { SuggestionCardFrame } from "@/components/common/SuggestionCardFrame";
@@ -17,8 +17,6 @@ export type TagsUpdateSuggestion = {
 	remove: string[];
 	currentTags: string[];
 };
-
-const tagBadgeStyle = { fontWeight: 500, textTransform: "none" } as const;
 
 const normalizeText = (text: string) => text.trim().toLowerCase();
 
@@ -78,9 +76,7 @@ export const TagsUpdateSuggestionCard = ({
 		);
 		const removals = suggestion.remove
 			.map((text) => liveByText.get(normalizeText(text)))
-			.filter(
-				(tag): tag is ProjectTag & { text: string } => tag !== undefined,
-			);
+			.filter((tag): tag is ProjectTag & { text: string } => tag !== undefined);
 		const maxSort = Math.max(0, ...liveTags.map((tag) => tag.sort ?? 0));
 
 		setIsApplying(true);
@@ -110,12 +106,12 @@ export const TagsUpdateSuggestionCard = ({
 	};
 
 	const additionBadges = suggestion.add.map((text) => (
-		<Badge key={text} color="primary" variant="light" style={tagBadgeStyle}>
+		<Badge key={text} color="gray">
 			{text}
 		</Badge>
 	));
 	const removalBadges = suggestion.remove.map((text) => (
-		<Badge key={text} color="red" variant="light" style={tagBadgeStyle}>
+		<Badge key={text} color="red">
 			<span className="line-through">{text}</span>
 		</Badge>
 	));
@@ -125,10 +121,10 @@ export const TagsUpdateSuggestionCard = ({
 			<SuggestionCardFrame compact testId="agentic-tags-update-suggestion">
 				<Stack gap="xs">
 					<Group gap="xs" wrap="nowrap">
-						<IconCheck
+						<CheckIcon
 							size={16}
 							className="shrink-0"
-							style={{ color: "var(--mantine-color-primary-7)" }}
+							style={{ color: "var(--app-success)" }}
 						/>
 						<Text size="sm">
 							<Trans>These tag changes are applied to your project.</Trans>
@@ -136,25 +132,21 @@ export const TagsUpdateSuggestionCard = ({
 					</Group>
 					{/* Keep the record of what changed; a bare confirmation tells
 					    the host nothing when they come back to the chat later. */}
-					<Stack
-						gap="sm"
-						className="ml-6 border-l-2 pl-3"
-						style={{ borderColor: "var(--mantine-color-primary-light)" }}
-					>
+					<Stack gap="sm">
 						{suggestion.add.length > 0 && (
-							<Stack gap={4}>
-								<Text size="xs" fw={600}>
+							<Stack gap="xs">
+								<Text size="xs">
 									<Trans>Added</Trans>
 								</Text>
-								<Group gap={6}>{additionBadges}</Group>
+								<Group gap="xs">{additionBadges}</Group>
 							</Stack>
 						)}
 						{suggestion.remove.length > 0 && (
-							<Stack gap={4}>
-								<Text size="xs" fw={600}>
+							<Stack gap="xs">
+								<Text size="xs">
 									<Trans>Removed</Trans>
 								</Text>
-								<Group gap={6}>{removalBadges}</Group>
+								<Group gap="xs">{removalBadges}</Group>
 							</Stack>
 						)}
 					</Stack>
@@ -167,18 +159,18 @@ export const TagsUpdateSuggestionCard = ({
 		<SuggestionCardFrame testId="agentic-tags-update-suggestion">
 			<Stack gap="sm">
 				<Group justify="space-between" wrap="nowrap">
-					<Text size="sm" fw={600}>
+					<Text size="sm">
 						<Trans>Suggested tag changes for your project</Trans>
 					</Text>
 					{dismissed && (
-						<Badge size="xs" variant="outline">
+						<Badge size="xs" color="gray">
 							<Trans>Dismissed</Trans>
 						</Badge>
 					)}
 				</Group>
 				{suggestion.summary && <Text size="xs">{suggestion.summary}</Text>}
 				{!dismissed && (
-					<Text size="xs" fs="italic" c="graphite.6">
+					<Text size="xs" c="dimmed">
 						<Trans>
 							Tags are the vocabulary participants can pick from in the portal.
 							Nothing changes until you apply.
@@ -188,34 +180,27 @@ export const TagsUpdateSuggestionCard = ({
 
 				<Stack gap="sm">
 					{suggestion.add.length > 0 && (
-						<Stack gap={4}>
-							<Text size="xs" fw={500}>
+						<Stack gap="xs">
+							<Text size="xs">
 								<Trans>Add</Trans>
 							</Text>
-							<Group gap={6}>{additionBadges}</Group>
+							<Group gap="xs">{additionBadges}</Group>
 						</Stack>
 					)}
 					{suggestion.remove.length > 0 && (
-						<Stack gap={4}>
-							<Text size="xs" fw={500}>
+						<Stack gap="xs">
+							<Text size="xs">
 								<Trans>Remove</Trans>
 							</Text>
-							<Group gap={6}>{removalBadges}</Group>
+							<Group gap="xs">{removalBadges}</Group>
 						</Stack>
 					)}
 				</Stack>
 
 				{!dismissed && (
-					<Group justify="flex-end" gap="sm">
+					<Group justify="flex-start" gap="sm">
 						<Button
-							variant="subtle"
-							size="xs"
-							onClick={() => setDismissed(true)}
-							{...testId("tags-suggestion-dismiss-button")}
-						>
-							<Trans>Not now</Trans>
-						</Button>
-						<Button
+							variant="filled"
 							size="xs"
 							loading={isApplying}
 							disabled={!projectQuery.data}
@@ -223,6 +208,15 @@ export const TagsUpdateSuggestionCard = ({
 							{...testId("tags-suggestion-apply-button")}
 						>
 							<Trans>Apply</Trans>
+						</Button>
+						<Button
+							variant="subtle"
+							color="gray"
+							size="xs"
+							onClick={() => setDismissed(true)}
+							{...testId("tags-suggestion-dismiss-button")}
+						>
+							<Trans>Dismiss</Trans>
 						</Button>
 					</Group>
 				)}

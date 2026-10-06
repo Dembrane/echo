@@ -22,13 +22,7 @@ export const BaseMessage = (
 	}>,
 ) => {
 	return (
-		<Paper
-			pos="relative"
-			bg="gray.1"
-			p="sm"
-			className="!bg-opacity-50"
-			{...props.paperProps}
-		>
+		<Paper pos="relative" p="sm" {...props.paperProps}>
 			<Stack>
 				<Group align="start" wrap="nowrap">
 					{/* <div className="pt-1">

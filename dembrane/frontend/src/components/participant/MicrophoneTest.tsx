@@ -5,6 +5,7 @@ import {
 	Box,
 	Button,
 	Group,
+	Loader,
 	Progress,
 	Select,
 	Stack,
@@ -364,15 +365,19 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({
 						</Alert>
 					)}
 					{isLoadingDevices && (
-						<Alert
-							color="primary"
-							className="w-full text-start"
+						<Group
+							gap="xs"
+							wrap="nowrap"
+							className="w-full"
 							{...testId("portal-settings-mic-loading-alert")}
 						>
-							<Trans id="participant.alert.microphone.access.loading">
-								Requesting microphone access to detect available devices...
-							</Trans>
-						</Alert>
+							<Loader size="sm" />
+							<Text size="sm" c="dimmed">
+								<Trans id="participant.alert.microphone.access.loading">
+									Requesting microphone access to detect available devices...
+								</Trans>
+							</Text>
+						</Group>
 					)}
 
 					{/* Real-time feedback alerts - only show after mic access granted */}
@@ -402,11 +407,10 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({
 
 					{/* Continue button for modal mode */}
 					{isInModal && (
-						<div className="mt-4 flex w-full justify-end">
+						<div className="mt-4 flex w-full">
 							<Button
 								onClick={handleContinue}
-								color="primary"
-								radius="md"
+								variant="filled"
 								disabled={!isMicTestSuccessful}
 								className="basis-1/2"
 								{...testId("portal-settings-mic-continue-button")}
@@ -424,26 +428,26 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({
 							this point and restart your recording.
 						</Trans>
 					</Text>
-					<Group grow gap="md" mt="xl">
+					<Group gap="sm" mt="xl">
 						<Button
-							variant="subtle"
-							onClick={handleCancelMicChange}
-							miw={100}
-							radius="md"
-							{...testId("portal-settings-mic-change-cancel-button")}
-						>
-							<Trans id="participant.mic.settings.modal.second.confirm.cancel">
-								Cancel
-							</Trans>
-						</Button>
-						<Button
+							variant="filled"
 							onClick={handleConfirmMicChange}
 							miw={100}
-							radius="md"
 							{...testId("portal-settings-mic-change-confirm-button")}
 						>
 							<Trans id="participant.mic.settings.modal.second.confirm.button">
 								Confirm
+							</Trans>
+						</Button>
+						<Button
+							variant="subtle"
+							color="gray"
+							onClick={handleCancelMicChange}
+							miw={100}
+							{...testId("portal-settings-mic-change-cancel-button")}
+						>
+							<Trans id="participant.mic.settings.modal.second.confirm.cancel">
+								Cancel
 							</Trans>
 						</Button>
 					</Group>

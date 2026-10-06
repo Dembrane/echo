@@ -5,8 +5,9 @@ import {
 	Badge,
 	Box,
 	Group,
-	Loader,
 	Paper,
+	Progress,
+	Skeleton,
 	Stack,
 	Text,
 	Title,
@@ -17,6 +18,7 @@ import { useMemo, useState } from "react";
 import { UsageFreshness } from "@/components/common/UsageFreshness";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { InviteMemberCard, MembersToolbar } from "@/components/members";
+import { tierName } from "@/components/workspace/TierBadge";
 import { API_BASE_URL } from "@/config";
 import {
 	useProjectPendingInvites,
@@ -210,8 +212,8 @@ export function ProjectAccess({ projectId, visibility }: Props) {
 
 	return (
 		<Stack gap="lg">
-			<Stack gap={4}>
-				<Title order={4} fw={500}>
+			<Stack gap="xs">
+				<Title order={2}>
 					<Trans>Access</Trans>
 				</Title>
 				<Text size="sm" c="dimmed">
@@ -227,7 +229,7 @@ export function ProjectAccess({ projectId, visibility }: Props) {
 
 			<Stack gap="md">
 				<Group justify="space-between" align="center">
-					<Title order={5} fw={400}>
+					<Title order={5}>
 						<Trans>Members</Trans>
 					</Title>
 					<Text size="xs" c="dimmed">
@@ -281,78 +283,91 @@ export function ProjectAccess({ projectId, visibility }: Props) {
 					)}
 
 					{accessLoading ? (
-						<Loader size="xs" />
+						<Stack gap="xs">
+							<Skeleton height={56} />
+							<Skeleton height={56} />
+						</Stack>
 					) : accessRows.length === 0 ? (
-						<Paper withBorder p="md" radius="md">
-							<Text size="sm" c="dimmed">
-								{isWorkspaceVisible ? (
-									<Trans>No one's on the workspace yet.</Trans>
-								) : (
-									<Trans>
-										No explicit shares. Workspace admins still have access.
-									</Trans>
-								)}
-							</Text>
-						</Paper>
+						<Text size="sm" c="dimmed">
+							{isWorkspaceVisible ? (
+								<Trans>No one's on the workspace yet.</Trans>
+							) : (
+								<Trans>
+									No explicit shares. Workspace admins still have access.
+								</Trans>
+							)}
+						</Text>
 					) : (
-						filteredAccessRows.map((row) => (
-							<Paper key={row.key} withBorder p="md" radius="md">
-								<Group justify="space-between" align="center" wrap="nowrap">
-									<Group gap={10} wrap="nowrap" style={{ minWidth: 0 }}>
-										<Avatar
-											size={32}
-											radius="xl"
-											src={avatarUrl(row.avatar, 48)}
-										>
-											{memberInitials(row.display_name, row.email)}
-										</Avatar>
-										<Box style={{ minWidth: 0 }}>
-											<Group gap={6} wrap="nowrap">
-												<Text size="sm" fw={500} lineClamp={1}>
-													{row.display_name || row.email}
-													{row.user_id === myAppUserId && (
-														<Text component="span" c="dimmed" fw={400}>
-															{" "}
-															<Trans>(You)</Trans>
+						filteredAccessRows.length > 0 && (
+							// One read surface, rows split by single rules, so the
+							// rules never double up between members.
+							<Paper withBorder>
+								{filteredAccessRows.map((row, index) => (
+									<Box
+										key={row.key}
+										p="md"
+										style={
+											index > 0
+												? {
+														borderTop:
+															"var(--app-stroke) solid var(--app-rule-color)",
+													}
+												: undefined
+										}
+									>
+										<Group justify="space-between" align="center" wrap="nowrap">
+											<Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
+												<Avatar
+													size={32}
+													radius="xl"
+													src={avatarUrl(row.avatar, 48)}
+												>
+													{memberInitials(row.display_name, row.email)}
+												</Avatar>
+												<Box style={{ minWidth: 0 }}>
+													<Group gap="xs" wrap="nowrap">
+														<Text size="sm" lineClamp={1}>
+															{row.display_name || row.email}
+															{row.user_id === myAppUserId && (
+																<Text component="span" c="dimmed">
+																	{" "}
+																	<Trans>(You)</Trans>
+																</Text>
+															)}
+														</Text>
+														{row.is_external && (
+															<Badge size="xs" variant="light" color="gray">
+																<Trans>External</Trans>
+															</Badge>
+														)}
+													</Group>
+													{row.email && row.email !== row.display_name && (
+														<Text size="xs" c="dimmed" lineClamp={1}>
+															{row.email}
 														</Text>
 													)}
-												</Text>
-												{row.is_external && (
-													<Badge size="xs" variant="light" color="gray">
-														<Trans>External</Trans>
+												</Box>
+											</Group>
+											<Group gap="xs" wrap="nowrap">
+												{row.is_pending && (
+													<Badge size="xs" variant="outline" color="gray">
+														<Trans>Pending</Trans>
 													</Badge>
 												)}
+												<Badge size="xs" variant="light" color="gray">
+													{displayRole(row.role)}
+												</Badge>
 											</Group>
-											{row.email && row.email !== row.display_name && (
-												<Text size="xs" c="dimmed" lineClamp={1}>
-													{row.email}
-												</Text>
-											)}
-										</Box>
-									</Group>
-									<Group gap={6} wrap="nowrap">
-										{row.is_pending && (
-											<Badge size="xs" variant="outline" color="gray">
-												<Trans>Pending</Trans>
-											</Badge>
-										)}
-										<Badge
-											size="xs"
-											variant="light"
-											color="gray"
-											style={{ textTransform: "capitalize" }}
-										>
-											{displayRole(row.role)}
-										</Badge>
-									</Group>
-								</Group>
+										</Group>
+									</Box>
+								))}
 							</Paper>
-						))
+						)
 					)}
 					{!accessLoading &&
 						accessRows.length > 0 &&
 						filteredAccessRows.length === 0 && (
-							<Text size="sm" c="dimmed" ta="center" py="md">
+							<Text size="sm" c="dimmed">
 								<Trans>No one matches that filter.</Trans>
 							</Text>
 						)}
@@ -415,8 +430,8 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 
 	return (
 		<Stack gap="lg">
-			<Stack gap={4}>
-				<Title order={4} fw={500}>
+			<Stack gap="xs">
+				<Title order={2}>
 					<Trans>Usage</Trans>
 				</Title>
 				<Text size="sm" c="dimmed">
@@ -424,40 +439,38 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 				</Text>
 			</Stack>
 
-			<Paper withBorder p="md" radius="sm">
+			<Paper withBorder p="md">
 				<Stack gap="sm">
 					<Group justify="space-between" align="center">
-						<Text size="sm" fw={500}>
+						<Text size="sm">
 							<Trans>Usage this cycle</Trans>
 						</Text>
 						{usage?.tier && (
 							<Badge size="sm" variant="light" color="gray">
-								<span style={{ textTransform: "capitalize" }}>
-									{usage.tier}
-								</span>
+								{tierName(usage.tier)}
 							</Badge>
 						)}
 					</Group>
 
-					{usageLoading && !projectUsage && <Loader size="xs" />}
+					{usageLoading && !projectUsage && (
+						<Skeleton height={48} width={240} />
+					)}
 
 					{!usageLoading && projectUsage && (
 						<Group gap="xl">
-							<Stack gap={2}>
+							<Stack gap="xs">
 								<Text size="xs" c="dimmed">
 									<Trans>Audio</Trans>
 								</Text>
-								<Text size="lg" fw={500}>
+								<Text size="lg">
 									{formatDurationFromHours(projectUsage.audio_hours)}
 								</Text>
 							</Stack>
-							<Stack gap={2}>
+							<Stack gap="xs">
 								<Text size="xs" c="dimmed">
 									<Trans>Conversations</Trans>
 								</Text>
-								<Text size="lg" fw={500}>
-									{projectUsage.conversation_count}
-								</Text>
+								<Text size="lg">{projectUsage.conversation_count}</Text>
 							</Stack>
 						</Group>
 					)}
@@ -473,7 +486,7 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 					)}
 
 					{convUsage && convUsage.total_hours > 0 && (
-						<Stack gap={6} mt={4}>
+						<Stack gap="xs" mt="xs">
 							<Text size="xs" c="dimmed">
 								<Trans>Breakdown · {convUsage.active.length} active</Trans>
 								{convUsage.deleted.length > 0 && (
@@ -483,15 +496,7 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 									</>
 								)}
 							</Text>
-							<Box
-								style={{
-									background: "var(--mantine-color-gray-1)",
-									borderRadius: 4,
-									display: "flex",
-									height: 10,
-									overflow: "hidden",
-								}}
-							>
+							<Progress.Root size={8}>
 								{convUsage.active.map((row) => {
 									const pct = (row.hours / convUsage.total_hours) * 100;
 									if (pct <= 0) return null;
@@ -500,7 +505,7 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 											key={row.id}
 											label={
 												<Stack gap={0}>
-													<Text size="xs" fw={500}>
+													<Text size="xs">
 														{row.title || t`Untitled conversation`}
 													</Text>
 													<Text size="xs">
@@ -510,11 +515,12 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 											}
 											withArrow
 										>
-											<Box
+											<Progress.Section
+												value={pct}
+												color="primary"
 												style={{
-													background: "var(--mantine-color-blue-5)",
-													borderRight: "1px solid white",
-													width: `${pct}%`,
+													borderRight:
+														"var(--app-stroke) solid var(--app-surface)",
 												}}
 											/>
 										</Tooltip>
@@ -524,10 +530,10 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 									<Tooltip
 										label={
 											<Stack
-												gap={4}
+												gap="xs"
 												style={{ maxHeight: 240, overflow: "hidden" }}
 											>
-												<Text size="xs" fw={500}>
+												<Text size="xs">
 													<Trans>
 														Deleted ·{" "}
 														{formatDurationFromHours(convUsage.deleted_hours)}
@@ -550,21 +556,20 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 										withArrow
 										position="top"
 									>
-										<Box
-											style={{
-												background: "var(--mantine-color-gray-5)",
-												width: `${(convUsage.deleted_hours / convUsage.total_hours) * 100}%`,
-											}}
+										<Progress.Section
+											value={
+												(convUsage.deleted_hours / convUsage.total_hours) * 100
+											}
+											color="var(--app-muted)"
 										/>
 									</Tooltip>
 								)}
-							</Box>
-							<Group gap={14} wrap="wrap">
-								<Group gap={6} wrap="nowrap">
+							</Progress.Root>
+							<Group gap="md" wrap="wrap">
+								<Group gap="xs" wrap="nowrap">
 									<Box
 										style={{
-											background: "var(--mantine-color-blue-5)",
-											borderRadius: 2,
+											background: "var(--mantine-color-primary-filled)",
 											height: 8,
 											width: 8,
 										}}
@@ -576,11 +581,10 @@ export function ProjectUsage({ projectId }: { projectId: string }) {
 									</Text>
 								</Group>
 								{convUsage.deleted_hours > 0 && (
-									<Group gap={6} wrap="nowrap">
+									<Group gap="xs" wrap="nowrap">
 										<Box
 											style={{
-												background: "var(--mantine-color-gray-5)",
-												borderRadius: 2,
+												background: "var(--app-muted)",
 												height: 8,
 												width: 8,
 											}}

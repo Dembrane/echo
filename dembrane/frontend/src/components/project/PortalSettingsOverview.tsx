@@ -5,18 +5,16 @@ import {
 	Box,
 	Button,
 	Card,
-	Divider,
-	Flex,
 	Group,
 	Skeleton,
 	Stack,
 	Text,
+	Title,
 } from "@mantine/core";
 import { PaintBrushIcon } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
+import { I18nLink } from "@/components/common/i18nLink";
 import { languageOptionsByIso639_1 } from "@/components/language/LanguagePicker";
-import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { ProjectQRCode } from "./ProjectQRCode";
 
 interface PortalSettingsOverviewProps {
 	/** The project. `undefined` while the project query is loading. */
@@ -31,17 +29,17 @@ const SECTIONS = [
 	{
 		key: "basic",
 		rowKeys: ["language", "name", "email"],
-		title: <Trans>Basic Settings</Trans>,
+		title: <Trans>Basic settings</Trans>,
 	},
 	{
 		key: "participant",
 		rowKeys: ["explore", "verify"],
-		title: <Trans>Participant Features</Trans>,
+		title: <Trans>Participant features</Trans>,
 	},
 	{
 		key: "advanced",
 		rowKeys: ["anonymisation", "event_cta"],
-		title: <Trans>Advanced Settings</Trans>,
+		title: <Trans>Advanced settings</Trans>,
 	},
 ] as const;
 
@@ -57,11 +55,11 @@ const languageLabel = (language: Project["language"]): string => {
 
 const StatusBadge = ({ on }: { on: boolean }) =>
 	on ? (
-		<Badge size="sm" variant="light" color="primary">
+		<Badge size="sm" variant="light" color="green" style={{ flexShrink: 0 }}>
 			<Trans>On</Trans>
 		</Badge>
 	) : (
-		<Badge size="sm" variant="light" color="gray">
+		<Badge size="sm" variant="light" color="gray" style={{ flexShrink: 0 }}>
 			<Trans>Off</Trans>
 		</Badge>
 	);
@@ -87,9 +85,7 @@ const SettingSection = ({
 	children: ReactNode;
 }) => (
 	<Stack gap="xs">
-		<Text size="xs" c="dimmed" tt="uppercase">
-			{title}
-		</Text>
+		<Title order={5}>{title}</Title>
 		<Stack gap="xs">{children}</Stack>
 	</Stack>
 );
@@ -98,96 +94,73 @@ export const PortalSettingsOverview = ({
 	project,
 	base,
 }: PortalSettingsOverviewProps) => {
-	const navigate = useI18nNavigate();
-
+	// A read-only summary; the QR to take part sits beside it on the overview.
 	return (
-		<Card withBorder p="md" radius="sm" w="100%" maw={640}>
+		<Card withBorder p="md" w="100%">
 			<Stack gap="md">
-				<Group justify="space-between" align="center" wrap="nowrap">
-					<Text size="sm" fw={500}>
-						<Trans>Portal Overview</Trans>
-					</Text>
+				<Title order={4}>
+					<Trans>Portal settings</Trans>
+				</Title>
+
+				{project ? (
+					<>
+						<SettingSection title={SECTIONS[0].title}>
+							<SettingRow label={<Trans>Language</Trans>}>
+								<Text size="sm" c="dimmed">
+									{languageLabel(project.language)}
+								</Text>
+							</SettingRow>
+							<SettingRow label={<Trans>Ask for name?</Trans>}>
+								<StatusBadge
+									on={!!project.default_conversation_ask_for_participant_name}
+								/>
+							</SettingRow>
+							<SettingRow label={<Trans>Ask for email?</Trans>}>
+								<StatusBadge
+									on={!!project.default_conversation_ask_for_participant_email}
+								/>
+							</SettingRow>
+						</SettingSection>
+
+						<SettingSection title={SECTIONS[1].title}>
+							<SettingRow label={<Trans>Explore</Trans>}>
+								<StatusBadge on={!!project.is_get_reply_enabled} />
+							</SettingRow>
+							<SettingRow label={<Trans>Verify</Trans>}>
+								<StatusBadge on={!!project.is_verify_enabled} />
+							</SettingRow>
+						</SettingSection>
+
+						<SettingSection title={SECTIONS[2].title}>
+							<SettingRow label={<Trans>Anonymize transcripts</Trans>}>
+								<StatusBadge on={!!project.anonymize_transcripts} />
+							</SettingRow>
+							<SettingRow label={<Trans>dembrane event invitation</Trans>}>
+								<StatusBadge
+									on={project.is_dembrane_event_cta_enabled !== false}
+								/>
+							</SettingRow>
+						</SettingSection>
+					</>
+				) : (
+					SECTIONS.map((section) => (
+						<SettingSection key={section.key} title={section.title}>
+							{section.rowKeys.map((rowKey) => (
+								<Skeleton key={`${section.key}-${rowKey}`} height={20} />
+							))}
+						</SettingSection>
+					))
+				)}
+
+				<Box>
 					<Button
-						variant="subtle"
-						size="xs"
-						leftSection={<PaintBrushIcon size={16} />}
-						onClick={() => navigate(`${base}/portal-editor`)}
+						component={I18nLink}
+						to={`${base}/portal-editor`}
+						leftSection={<PaintBrushIcon size={20} />}
 					>
-						<Trans>Edit</Trans>
+						<Trans>Portal editor</Trans>
 					</Button>
-				</Group>
-
-				<Divider />
-
-				<Flex
-					direction={{ base: "column", md: "row" }}
-					gap="lg"
-					align="flex-start"
-				>
-					<Box w={{ base: "100%", md: 200 }} style={{ flexShrink: 0 }}>
-						<ProjectQRCode project={project} />
-					</Box>
-
-					<Stack gap="md" style={{ flex: 1, minWidth: 0 }} w="100%">
-						{project ? (
-							<>
-								<SettingSection title={SECTIONS[0].title}>
-									<SettingRow label={<Trans>Language</Trans>}>
-										<Text size="sm" c="dimmed">
-											{languageLabel(project.language)}
-										</Text>
-									</SettingRow>
-									<SettingRow label={<Trans>Ask for Name?</Trans>}>
-										<StatusBadge
-											on={
-												!!project.default_conversation_ask_for_participant_name
-											}
-										/>
-									</SettingRow>
-									<SettingRow label={<Trans>Ask for Email?</Trans>}>
-										<StatusBadge
-											on={
-												!!project.default_conversation_ask_for_participant_email
-											}
-										/>
-									</SettingRow>
-								</SettingSection>
-
-								<SettingSection title={SECTIONS[1].title}>
-									<SettingRow label={<Trans>Explore</Trans>}>
-										<StatusBadge on={!!project.is_get_reply_enabled} />
-									</SettingRow>
-									<SettingRow label={<Trans>Verify</Trans>}>
-										<StatusBadge on={!!project.is_verify_enabled} />
-									</SettingRow>
-								</SettingSection>
-
-								<SettingSection title={SECTIONS[2].title}>
-									<SettingRow label={<Trans>Anonymize Transcripts</Trans>}>
-										<StatusBadge on={!!project.anonymize_transcripts} />
-									</SettingRow>
-									<SettingRow label={<Trans>dembrane event invitation</Trans>}>
-										<StatusBadge
-											on={project.is_dembrane_event_cta_enabled !== false}
-										/>
-									</SettingRow>
-								</SettingSection>
-							</>
-						) : (
-							SECTIONS.map((section) => (
-								<SettingSection key={section.key} title={section.title}>
-									{section.rowKeys.map((rowKey) => (
-										<Skeleton
-											key={`${section.key}-${rowKey}`}
-											height={20}
-											radius="sm"
-										/>
-									))}
-								</SettingSection>
-							))
-						)}
-					</Stack>
-				</Flex>
+				</Box>
 			</Stack>
 		</Card>
 	);

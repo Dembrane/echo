@@ -98,7 +98,6 @@ export function PopcornLanguageSettings({
 	return (
 		<Paper
 			withBorder={!embedded}
-			className="rounded-md"
 			p={embedded ? 0 : "lg"}
 			{...testId("popcorn-language")}
 		>

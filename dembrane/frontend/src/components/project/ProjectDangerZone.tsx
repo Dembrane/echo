@@ -1,20 +1,13 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import {
-	Alert,
-	Button,
-	Group,
-	Modal,
-	Stack,
-	Text,
-	TextInput,
-} from "@mantine/core";
+import { Button, Group, Modal, Stack, Text, TextInput } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconCopy, IconTrash } from "@tabler/icons-react";
+import { CopyIcon, TrashIcon } from "@phosphor-icons/react";
 import posthog from "posthog-js";
 import { useState } from "react";
 import { useParams } from "react-router";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { isAdminRole, isOutsiderRole } from "@/lib/roles";
@@ -92,12 +85,11 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 				{canClone && (
 					<Button
 						onClick={openCloneModal}
-						variant="outline"
-						rightSection={<IconCopy />}
+						leftSection={<CopyIcon size={20} />}
 						loading={cloneProjectByIdMutation.isPending}
 						{...testId("project-actions-clone-button")}
 					>
-						<Trans>Clone Project</Trans>
+						<Trans>Clone project</Trans>
 					</Button>
 				)}
 
@@ -105,18 +97,17 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 					<Button
 						onClick={openDeleteModal}
 						color="red"
-						variant="outline"
-						rightSection={<IconTrash />}
+						leftSection={<TrashIcon size={20} />}
 						{...testId("project-actions-delete-button")}
 					>
-						<Trans>Delete Project</Trans>
+						<Trans>Delete project</Trans>
 					</Button>
 				)}
 			</Stack>
 			<Modal
 				opened={isCloneModalOpen}
 				onClose={closeCloneModal}
-				title={<Trans>Clone Project</Trans>}
+				title={<Trans>Clone project</Trans>}
 				{...testId("project-clone-modal")}
 			>
 				<Stack gap="md">
@@ -135,16 +126,10 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 
 					{!cloneProjectByIdMutation.isPending &&
 						cloneProjectByIdMutation.error && (
-							<Alert
+							<ErrorNotice
+								error={cloneProjectByIdMutation.error}
 								title={t`Error cloning project`}
-								color="red"
-								variant="light"
-							>
-								<Trans>
-									There was an error cloning your project. Please try again or
-									contact support.
-								</Trans>
-							</Alert>
+							/>
 						)}
 
 					<TextInput
@@ -154,20 +139,23 @@ export const ProjectDangerZone = ({ project }: { project: Project }) => {
 						onChange={(event) => setCloneName(event.currentTarget.value)}
 						{...testId("project-clone-name-input")}
 					/>
-					<Group justify="flex-end">
+					{/* 24 from the field to the action that submits it (rule 05). */}
+					<Group gap="sm" mt="sm">
 						<Button
-							variant="subtle"
-							onClick={closeCloneModal}
-							{...testId("project-clone-cancel-button")}
-						>
-							<Trans>Cancel</Trans>
-						</Button>
-						<Button
+							variant="filled"
 							onClick={handleClone}
 							loading={cloneProjectByIdMutation.isPending}
 							{...testId("project-clone-confirm-button")}
 						>
 							<Trans>Clone project</Trans>
+						</Button>
+						<Button
+							variant="subtle"
+							color="gray"
+							onClick={closeCloneModal}
+							{...testId("project-clone-cancel-button")}
+						>
+							<Trans>Cancel</Trans>
 						</Button>
 					</Group>
 				</Stack>

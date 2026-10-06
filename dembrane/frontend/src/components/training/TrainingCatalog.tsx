@@ -1,8 +1,17 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Badge, Box, Button, Divider, Group, Stack, Text } from "@mantine/core";
+import {
+	Badge,
+	Box,
+	Button,
+	Divider,
+	Group,
+	Paper,
+	Stack,
+	Text,
+} from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
-import { IconCheck } from "@tabler/icons-react";
+import { CheckIcon } from "@phosphor-icons/react";
 import posthog from "posthog-js";
 // Reuse the billing plan-card styling so Training and Change-plan read as one
 // system (bordered card, divider, check-mark specs, price pinned to the footer).
@@ -49,16 +58,19 @@ export const TrainingCatalog = ({
 				].filter((s): s is string => Boolean(s));
 
 				return (
-					<div
+					<Paper
 						key={p.type}
+						withBorder
 						className={isWide ? cardClasses.wideWrap : cardClasses.wrap}
-						style={p.coming_soon ? { opacity: 0.6, cursor: "default" } : undefined}
+						style={p.coming_soon ? { opacity: 0.6 } : undefined}
 					>
 						<Stack
 							gap={0}
-							className={isWide ? cardClasses.wideInner : cardClasses.mobileInner}
+							className={
+								isWide ? cardClasses.wideInner : cardClasses.mobileInner
+							}
 						>
-							<Group gap={8} wrap="nowrap" justify="space-between">
+							<Group gap="sm" wrap="nowrap" justify="space-between">
 								<Text size="lg" className={cardClasses.tierName}>
 									{p.name}
 								</Text>
@@ -69,37 +81,29 @@ export const TrainingCatalog = ({
 								)}
 							</Group>
 
-							<Divider my={14} color="var(--mantine-color-gray-2)" />
+							<Divider my="md" />
 
 							<Stack gap={0}>
 								{specs.map((spec) => (
 									<Group
 										key={spec}
-										gap={7}
+										gap="xs"
 										wrap="nowrap"
 										className={cardClasses.specRow}
 									>
-										<IconCheck
-											size={13}
-											stroke={1.5}
-											color="var(--mantine-color-primary-6)"
-										/>
+										<CheckIcon size={16} />
 										<Text size="xs">{spec}</Text>
 									</Group>
 								))}
 							</Stack>
 
 							<Box className={cardClasses.priceFooter}>
-								<Group gap={3} align="baseline">
-									<Text
-										size="xl"
-										className={cardClasses.priceAmount}
-										c="var(--app-text)"
-									>
+								<Group gap="xs" align="baseline">
+									<Text size="xl" c="var(--app-text)">
 										{`€${p.price_eur}`}
 									</Text>
 								</Group>
-								<Box mt={12}>
+								<Box mt="sm">
 									{p.coming_soon ? (
 										<Button variant="subtle" disabled fullWidth>
 											<Trans>Coming soon</Trans>
@@ -121,7 +125,7 @@ export const TrainingCatalog = ({
 								</Box>
 							</Box>
 						</Stack>
-					</div>
+					</Paper>
 				);
 			})}
 		</div>

@@ -124,6 +124,11 @@ msgid "error.webhook.invalid_target"
 msgstr "Оберіть, куди надсилається цей вебхук: на вебадресу або до скриньки sam із відомим кодом."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:17
+msgid "error.map.groups_need_snapshot"
+msgstr "Кластери зберігаються на перегенерованій мапі. Перегенеруйте мапу й спробуйте ще раз."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:27
 msgid "error.document.dpa_not_authorised"
 msgstr "Підтвердьте, що ви маєте право погоджувати обробку даних для вашої організації."
@@ -299,7 +304,7 @@ msgid "error.member.owner_removes_owner"
 msgstr "Лише власник може видалити іншого власника."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:17
+#: src/lib/errors/messages/map.ts:26
 msgid "error.map.not_a_claim"
 msgstr "Перевіряти на факти можна лише твердження. Виберіть твердження та спробуйте знову."
 
@@ -354,7 +359,7 @@ msgid "error.project.share_admin_only"
 msgstr "Лише адміністратори робочого простору можуть ділитися проєктами."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:29
+#: src/lib/errors/messages/map.ts:38
 msgid "error.map.selection_not_in_map"
 msgstr "Частина вибраного більше не відображається на мапі. Оновіть мапу та виберіть знову."
 
@@ -429,7 +434,7 @@ msgid "error.webhook.sam_inbox_unavailable"
 msgstr "Скриньку sam тут не налаштовано, а вебхук, що надсилається до sam, не можна перевірити."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:43
+#: src/lib/errors/messages/map.ts:52
 msgid "error.map.selection_too_small"
 msgstr "Виберіть ще кілька елементів, щоб створити назву."
 
@@ -564,12 +569,12 @@ msgid "error.present.map_results_not_ready"
 msgstr "Карта ще не готова. Вона з'явиться тут, щойно буде сформована."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:25
+#: src/lib/errors/messages/map.ts:34
 msgid "error.map.not_ready"
 msgstr "Карта все ще створюється. Зачекайте хвилинку та спробуйте ще раз."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:34
+#: src/lib/errors/messages/map.ts:43
 msgid "error.map.selection_other_snapshot"
 msgstr "Карту було оновлено після вашого вибору. Оновіть карту та зробіть вибір знову."
 
@@ -924,7 +929,7 @@ msgid "error.project.no_conversations"
 msgstr "У цьому проєкті ще немає розмов."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:13
+#: src/lib/errors/messages/map.ts:22
 msgid "error.map.no_map_yet"
 msgstr "У цьому проєкті ще немає мапи. Створіть її, щоб переглянути тут."
 
@@ -1144,7 +1149,7 @@ msgid "error.billing.request_failed"
 msgstr "Не вдалося завершити цю зміну тарифікації. Зв'яжіться з нами, і ми все владнаємо."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:51
+#: src/lib/errors/messages/map.ts:60
 msgid "error.map.title_failed"
 msgstr "Не вдалося створити назву просто зараз. Спробуйте ще раз."
 
@@ -1229,7 +1234,7 @@ msgid "error.training.license_not_found"
 msgstr "Не вдалося знайти цю ліцензію."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:21
+#: src/lib/errors/messages/map.ts:30
 msgid "error.map.not_found"
 msgstr "Не вдалося знайти цю мапу."
 
@@ -1344,12 +1349,17 @@ msgid "error.verify.artifact_not_found"
 msgstr "Не вдалося знайти цей елемент. Можливо, його було видалено."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:13
+msgid "error.map.group_not_started"
+msgstr "Не вдалося зберегти цей кластер. Спробуйте ще раз за мить."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:46
 msgid "error.analysis.storage_unavailable"
 msgstr "Не вдалося завантажити аналіз. Спробуйте ще раз за мить."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:47
+#: src/lib/errors/messages/map.ts:56
 msgid "error.map.storage_unavailable"
 msgstr "Не вдалося завантажити мапу. Спробуйте ще раз за мить."
 
@@ -1564,7 +1574,7 @@ msgid "error.auth.user_required"
 msgstr "Для цього потрібно увійти. Увійдіть і спробуйте знову."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:39
+#: src/lib/errors/messages/map.ts:48
 msgid "error.map.selection_too_large"
 msgstr "Ви вибрали забагато елементів. Виберіть менше та спробуйте знову."
 

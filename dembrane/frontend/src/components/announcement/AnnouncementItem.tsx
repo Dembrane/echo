@@ -1,19 +1,6 @@
 import { Trans } from "@lingui/react/macro";
-import {
-	Box,
-	Button,
-	Group,
-	Stack,
-	Text,
-	ThemeIcon,
-	useMantineTheme,
-} from "@mantine/core";
-import {
-	CaretDown,
-	CaretUp,
-	Info,
-	WarningCircle,
-} from "@phosphor-icons/react";
+import { Box, Button, Group, Stack, Text } from "@mantine/core";
+import { CaretDown, CaretUp, Info, WarningCircle } from "@phosphor-icons/react";
 import { forwardRef, useEffect, useRef, useState } from "react";
 import { Markdown } from "@/components/common/Markdown";
 import { testId } from "@/lib/testUtils";
@@ -41,7 +28,6 @@ export const AnnouncementItem = forwardRef<
 	HTMLDivElement,
 	AnnouncementItemProps
 >(({ announcement, onMarkAsRead, onMarkAsUnread, index }, ref) => {
-	const theme = useMantineTheme();
 	const [showMore, setShowMore] = useState(false);
 	const [showReadMoreButton, setShowReadMoreButton] = useState(false);
 	const messageRef = useRef<HTMLDivElement>(null);
@@ -60,27 +46,31 @@ export const AnnouncementItem = forwardRef<
 	return (
 		<Box
 			ref={ref}
-			className={`group border-b border-gray-100 p-4 transition-all duration-200 ${!isRead ? "hover:bg-blue-50" : ""} ${index === 0 ? "border-t-0" : ""} border-l-4 ${isRead ? "border-l-gray-50/50 bg-gray-50/50" : "border-l-blue-500"}`}
+			className="group"
+			p="md"
+			data-index={index}
+			style={{ borderBottom: "1px solid var(--app-rule-color)" }}
 			{...testId(`announcement-item-${announcement.id}`)}
 		>
 			<Stack gap="xs">
 				<Group gap="sm" align="flex-start">
-					<ThemeIcon
-						size={25}
-						variant="light"
-						color={announcement.level === "urgent" ? "orange" : "blue"}
-						radius="xl"
-					>
-						{announcement.level === "urgent" ? (
-							<WarningCircle size={17} weight="fill" />
-						) : (
-							<Info size={20} weight="fill" />
-						)}
-					</ThemeIcon>
+					{announcement.level === "urgent" ? (
+						<WarningCircle
+							size={20}
+							color="var(--app-warning)"
+							style={{ flexShrink: 0 }}
+						/>
+					) : (
+						<Info
+							size={20}
+							color="var(--mantine-color-dimmed)"
+							style={{ flexShrink: 0 }}
+						/>
+					)}
 					<Stack gap="xs" style={{ flex: 1 }}>
 						<Group justify="space-between" align="center">
 							<div style={{ flex: 1 }}>
-								<Text size="sm" fw={isRead ? 400 : 500} c={isRead ? "dimmed" : undefined}>
+								<Text size="sm" c={isRead ? "dimmed" : undefined}>
 									{announcement.title}
 								</Text>
 							</div>
@@ -93,7 +83,7 @@ export const AnnouncementItem = forwardRef<
 								{!isRead && (
 									<div
 										style={{
-											backgroundColor: theme.colors.blue[6],
+											backgroundColor: "var(--app-action)",
 											borderRadius: "50%",
 											height: 8,
 											width: 8,
@@ -104,56 +94,53 @@ export const AnnouncementItem = forwardRef<
 							</Group>
 						</Group>
 
-						<Text lineClamp={showMore ? undefined : 2} ref={messageRef}>
-							<Markdown
-								content={announcement.message}
-								className="text-sm text-gray-600"
-							/>
+						<Text
+							size="sm"
+							c="dimmed"
+							lineClamp={showMore ? undefined : 2}
+							ref={messageRef}
+						>
+							<Markdown content={announcement.message} className="text-sm" />
 						</Text>
 
 						<Group justify="space-between" align="center">
 							{showReadMoreButton && (
 								<Button
-									variant="transparent"
+									variant="subtle"
 									color="gray"
 									size="xs"
-									className="hover:underline"
-									p={0}
+									rightSection={
+										showMore ? <CaretUp size={16} /> : <CaretDown size={16} />
+									}
 									onClick={() => setShowMore(!showMore)}
 									{...testId("announcement-show-more-button")}
 								>
 									{showMore ? (
-										<Group gap="xs">
-											<Trans>Show less</Trans>
-											<CaretUp size={14} />
-										</Group>
+										<Trans>Show less</Trans>
 									) : (
-										<Group gap="xs">
-											<Trans>Show more</Trans>
-											<CaretDown size={14} />
-										</Group>
+										<Trans>Show more</Trans>
 									)}
 								</Button>
 							)}
 
 							{isRead ? (
 								<Button
-									variant="transparent"
+									variant="subtle"
 									size="xs"
 									color="gray"
-									className="hover:underline"
 									ml="auto"
-									onClick={() => onMarkAsUnread(announcement.id, announcement.activityIds)}
+									onClick={() =>
+										onMarkAsUnread(announcement.id, announcement.activityIds)
+									}
 									{...testId("announcement-mark-as-unread-button")}
 								>
 									<Trans>Mark as unread</Trans>
 								</Button>
 							) : (
 								<Button
-									variant="transparent"
+									variant="subtle"
 									size="xs"
 									color="gray"
-									className="hover:underline"
 									ml="auto"
 									onClick={() => onMarkAsRead(announcement.id)}
 									{...testId("announcement-mark-as-read-button")}

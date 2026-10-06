@@ -1,14 +1,13 @@
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import {
-	Accordion,
+	Alert,
+	Box,
 	Button,
 	Checkbox,
 	Group,
-	Loader,
-	Modal,
-	Popover,
 	Select,
+	Skeleton,
 	Stack,
 	Switch,
 	Tabs,
@@ -16,29 +15,25 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
-import { useDisclosure, useElementSize } from "@mantine/hooks";
-import {
-	ArrowSquareOutIcon,
-	BroadcastIcon,
-	MonitorIcon,
-	ShareNetworkIcon,
-} from "@phosphor-icons/react";
+import { useElementSize } from "@mantine/hooks";
+import { ArrowSquareOutIcon, MonitorIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	createContext,
 	useCallback,
 	useContext,
 	useEffect,
+	useLayoutEffect,
 	useMemo,
 	useRef,
 	useState,
 } from "react";
 import { useParams, useSearchParams } from "react-router";
-import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
+import { BeautifulLoading } from "@/components/common/BeautifulLoading";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { SaveStatus } from "@/components/form/SaveStatus";
 import { PageContainer } from "@/components/layout/PageContainer";
 import {
-	type LiveHours,
 	usePopcornLiveMutation,
 	usePopcornSettingsMutation,
 	usePopcornStopLiveMutation,
@@ -48,7 +43,10 @@ import {
 	PopcornLanguageSettings,
 } from "@/components/popcorn/PopcornLanguageSettings";
 import { PopcornOpeningSettings } from "@/components/popcorn/PopcornOpeningSettings";
-import { PopcornScreenSettings } from "@/components/popcorn/PopcornScreenSettings";
+import {
+	PopcornLabelsSwitch,
+	PopcornScreenSettings,
+} from "@/components/popcorn/PopcornScreenSettings";
 import { PopcornShare } from "@/components/popcorn/PopcornShare";
 import {
 	SettingsSaveContext,
@@ -76,6 +74,10 @@ import {
 	usePresentationDraft,
 } from "@/components/present/hooks/usePresentationDraft";
 import { TranslationStatus } from "@/components/present/TranslationStatus";
+import { HostGuideSettings } from "@/components/sharing/HostGuideSettings";
+import { LiveButton } from "@/components/sharing/LiveButton";
+import { EventPrintoutsItem, ShareButton } from "@/components/sharing/Share";
+import { StatusLine } from "@/components/sharing/StatusLine";
 import { API_BASE_URL } from "@/config";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -110,34 +112,61 @@ function Editor({
 		...(presentation.settings.presentation?.blocks ?? []),
 		ALWAYS_ON_BLOCK,
 	]);
+	const section = editorSection(params);
+	const setSection = (value: string | null) =>
+		setParams((old) => {
+			const next = new URLSearchParams(old);
+			next.set("section", value ?? "activities");
+			return next;
+		});
+	const sections = [
+		{ label: t`Intro`, value: "intro" },
+		{ label: t`Data policy`, value: "data" },
+		{ label: t`Host guide`, value: "guide" },
+		{ label: t`Outcomes`, value: "activities" },
+		{ label: t`Language`, value: "language" },
+		{ label: t`Appearance`, value: "appearance" },
+	];
+	// Where the tabs don't fit (a phone, the side column), the row changes as a
+	// whole into one drop-down naming the current section. The row stays laid
+	// out, unseen, so it can tell when there is room for it again.
+	const tabList = useRef<HTMLDivElement>(null);
+	const [collapsed, setCollapsed] = useState(false);
+	useLayoutEffect(() => {
+		const list = tabList.current;
+		if (!list || typeof ResizeObserver === "undefined") return;
+		const measure = () => setCollapsed(list.scrollWidth > list.clientWidth);
+		measure();
+		const observer = new ResizeObserver(measure);
+		observer.observe(list);
+		return () => observer.disconnect();
+	}, []);
 	return (
 		<Stack className={classes.settings} gap="lg">
-			<Group justify="space-between">
-				<Text fw={500}>
-					<Trans>Presentation editor</Trans>
-				</Text>
-			</Group>
+			<Title order={4}>
+				<Trans>Presentation editor</Trans>
+			</Title>
 			<PresentationTitle projectId={projectId} presentation={presentation} />
-			<Tabs
-				value={editorSection(params)}
-				onChange={(value) =>
-					setParams((old) => {
-						const next = new URLSearchParams(old);
-						next.set("section", value ?? "activities");
-						return next;
-					})
-				}
-			>
-				<Tabs.List>
-					<Tabs.Tab value="intro">
-						<Trans>Intro</Trans>
-					</Tabs.Tab>
-					<Tabs.Tab value="data">
-						<Trans>Data policy</Trans>
-					</Tabs.Tab>
-					<Tabs.Tab value="activities">
-						<Trans>Tabs</Trans>
-					</Tabs.Tab>
+			<Tabs value={section} onChange={setSection} className={classes.tabs}>
+				{collapsed && (
+					<Select
+						aria-label={t`Editor section`}
+						data={sections}
+						value={section}
+						allowDeselect={false}
+						onChange={setSection}
+					/>
+				)}
+				<Tabs.List
+					ref={tabList}
+					className={collapsed ? classes.unseen : undefined}
+					aria-hidden={collapsed || undefined}
+				>
+					{sections.map(({ label, value }) => (
+						<Tabs.Tab key={value} value={value}>
+							{label}
+						</Tabs.Tab>
+					))}
 				</Tabs.List>
 				<Tabs.Panel value="intro" pt="md">
 					<PopcornOpeningSettings
@@ -147,16 +176,25 @@ function Editor({
 					/>
 				</Tabs.Panel>
 				<Tabs.Panel value="data" pt="md">
-					<PopcornOpeningSettings
+					<Stack gap="md">
+						<PopcornOpeningSettings
+							projectId={projectId}
+							popcorn={presentation}
+							section="data"
+						/>
+						<PopcornLabelsSwitch projectId={projectId} popcorn={presentation} />
+					</Stack>
+				</Tabs.Panel>
+				<Tabs.Panel value="guide" pt="md">
+					<HostGuideSettings
 						projectId={projectId}
-						popcorn={presentation}
-						section="data"
+						presentation={presentation}
 					/>
 				</Tabs.Panel>
 				<Tabs.Panel value="activities" pt="md">
 					<Stack>
-						<Text size="sm">
-							<Trans>Choose the tabs your audience can explore.</Trans>
+						<Text size="sm" c="dimmed">
+							<Trans>Choose the outcomes your audience can explore.</Trans>
 						</Text>
 						{PRESENTATION_BLOCKS.map((block) => {
 							const locked = block === ALWAYS_ON_BLOCK;
@@ -200,91 +238,87 @@ function Editor({
 						})}
 					</Stack>
 				</Tabs.Panel>
-			</Tabs>
-			<Accordion variant="default" multiple>
-				<Accordion.Item value="language">
-					<Accordion.Control>
-						<Trans>Language</Trans>
-					</Accordion.Control>
-					<Accordion.Panel>
-						<Stack gap="sm">
-							<Checkbox
-								label={t`Follow project language`}
-								checked={
-									presentation.settings.presentation?.language_policy ===
-									"project"
-								}
-								onChange={(e) =>
-									save.mutate({
-										presentation: {
-											language_policy: e.currentTarget.checked
-												? "project"
-												: "explicit",
-										},
-										...(!e.currentTarget.checked
-											? { language: presentation.effective_language }
-											: {}),
-									})
-								}
-							/>
-							<Text size="sm">
-								<Trans>Audience language:</Trans>{" "}
-								{presentation.effective_language.translate_to ||
-									presentation.effective_language.ui}
-								{presentation.project_language.fallback &&
+				<Tabs.Panel value="language" pt="md">
+					<Stack gap="sm">
+						<Checkbox
+							label={t`Follow project language`}
+							checked={
 								presentation.settings.presentation?.language_policy ===
-									"project"
-									? ` · ${t`English fallback`}`
-									: ""}
-							</Text>
-							{presentation.settings.presentation?.language_policy !==
-							"project" ? (
-								// The embedded settings carry the translation line themselves.
-								<PopcornLanguageSettings
-									embedded
+								"project"
+							}
+							onChange={(e) =>
+								save.mutate({
+									presentation: {
+										language_policy: e.currentTarget.checked
+											? "project"
+											: "explicit",
+									},
+									...(!e.currentTarget.checked
+										? { language: presentation.effective_language }
+										: {}),
+								})
+							}
+						/>
+						<Text size="sm">
+							<Trans>Audience language:</Trans>{" "}
+							{presentation.effective_language.translate_to ||
+								presentation.effective_language.ui}
+							{presentation.project_language.fallback &&
+							presentation.settings.presentation?.language_policy === "project"
+								? ` · ${t`English fallback`}`
+								: ""}
+						</Text>
+						{presentation.settings.presentation?.language_policy !==
+						"project" ? (
+							// The embedded settings carry the translation line themselves.
+							<PopcornLanguageSettings
+								embedded
+								projectId={projectId}
+								popcorn={presentation}
+							/>
+						) : (
+							<>
+								<PopcornAlsoLanguages
 									projectId={projectId}
 									popcorn={presentation}
+									language={presentation.effective_language}
 								/>
-							) : (
-								<>
-									<PopcornAlsoLanguages
-										projectId={projectId}
-										popcorn={presentation}
-										language={presentation.effective_language}
-									/>
-									<TranslationStatus
-										presentationId={presentation.id}
-										status={presentation.translation_status}
-									/>
-								</>
-							)}
-						</Stack>
-					</Accordion.Panel>
-				</Accordion.Item>
-				<Accordion.Item value="screen">
-					<Accordion.Control>
-						<Trans>Screen appearance</Trans>
-					</Accordion.Control>
-					<Accordion.Panel>
-						<PopcornScreenSettings
-							embedded
-							projectId={projectId}
-							popcorn={presentation}
-							showToolToggles={false}
-						/>
-					</Accordion.Panel>
-				</Accordion.Item>
-			</Accordion>
+								<TranslationStatus
+									presentationId={presentation.id}
+									status={presentation.translation_status}
+								/>
+							</>
+						)}
+					</Stack>
+				</Tabs.Panel>
+				<Tabs.Panel value="appearance" pt="md">
+					<PopcornScreenSettings
+						embedded
+						projectId={projectId}
+						popcorn={presentation}
+						showToolToggles={false}
+						showLabelsToggle={false}
+					/>
+				</Tabs.Panel>
+			</Tabs>
 		</Stack>
 	);
 }
 
-// `?section=results` was a tab of the editor once. It now opens the results
-// panel, and the editor falls back to its own first stop.
-const RESULTS_SECTION = "results";
+// Outcomes keeps its old value, `activities`, so links that name it still
+// land there. Anything else unknown, including `?section=results` (a tab of
+// the editor once, now the results panel), falls back to it.
+const EDITOR_SECTIONS = [
+	"intro",
+	"data",
+	"guide",
+	"activities",
+	"language",
+	"appearance",
+];
 function editorSection(params: URLSearchParams) {
-	const section = params.get("section");
-	return !section || section === RESULTS_SECTION ? "activities" : section;
+	const section = params.get("section") ?? "";
+	return EDITOR_SECTIONS.includes(section) ? section : "activities";
 }
 
 // The draft on the room's screen. Typing into its opening saves like any other
@@ -367,8 +401,8 @@ function Preview({
 	return (
 		<div className={classes.preview}>
 			<Group px="md" py="sm" gap="xs">
-				<MonitorIcon size={18} />
-				<Text size="sm" fw={500}>
+				<MonitorIcon size={16} />
+				<Text size="sm">
 					<Trans>Audience preview</Trans>
 				</Text>
 			</Group>
@@ -438,7 +472,7 @@ function Session({
 	);
 	const live = usePopcornLiveMutation(projectId, presentation.id);
 	const stop = usePopcornStopLiveMutation(projectId, presentation.id);
-	const [hours, setHours] = useState<LiveHours>(8);
+	const isLive = presentation.loop?.mode === "live";
 	const [eventTick, setEventTick] = useState(0);
 	useServerEvents(
 		`${API_BASE_URL}/v2/bff/popcorn/${encodeURIComponent(presentation.id)}/events`,
@@ -461,8 +495,6 @@ function Session({
 	// results panel are the dashboard, not a mode it can be put into. The
 	// preview shows the draft and Publish is always within reach.
 	const drafting = canEdit;
-	const [sharing, share] = useDisclosure(false);
-	const [liveOptions, liveDisclosure] = useDisclosure(false);
 	const draft = usePresentationDraft(
 		projectId,
 		presentation.id,
@@ -525,112 +557,94 @@ function Session({
 	return (
 		<PresentationEventTick.Provider value={eventTick}>
 			<Stack gap="md">
-				<Group justify="space-between" align="center">
+				<Stack gap="md">
 					<Stack gap={4}>
 						<Title order={2}>
 							<Trans>Present</Trans>
 						</Title>
-						<Text size="sm">{presentation.name}</Text>
+						<Text size="sm" c="dimmed">
+							{presentation.name}
+						</Text>
+						<StatusLine
+							live={isLive}
+							liveUntil={presentation.loop?.expires_at}
+							isPublic={presentation.settings.public}
+							extra={
+								canEdit && draft.query.data?.has_changes
+									? [t`Unpublished changes`]
+									: []
+							}
+						/>
 					</Stack>
-					<Group
-						gap="xs"
-						className={classes.hostActions}
-						aria-label={t`Presentation controls`}
-					>
-						{canEdit &&
-							(blocks.includes("popcorn") ||
-								presentation.loop?.mode === "live") &&
-							(presentation.loop?.mode === "live" ? (
-								<Button
-									variant="outline"
-									leftSection={<BroadcastIcon size={18} weight="fill" />}
-									loading={stop.isPending}
-									onClick={() => stop.mutate()}
-								>
-									<Trans>Stop live</Trans>
-								</Button>
-							) : (
-								<Popover
-									opened={liveOptions}
-									onChange={(opened) =>
-										opened ? liveDisclosure.open() : liveDisclosure.close()
-									}
-									position="bottom-end"
-									width={320}
-									withArrow
-								>
-									<Popover.Target>
-										<Button
-											variant="outline"
-											leftSection={<BroadcastIcon size={18} />}
-											onClick={liveDisclosure.toggle}
-										>
-											<Trans>Go live</Trans>
-										</Button>
-									</Popover.Target>
-									<Popover.Dropdown>
-										<Stack gap="md">
-											<Text size="sm">
-												<Trans>
-													Keep Popcorn up to date as conversations arrive. You
-													can go live before the first recording.
-												</Trans>
-											</Text>
-											<Select
-												label={t`Duration`}
-												value={String(hours)}
-												allowDeselect={false}
-												data={[
-													{ label: t`1 hour`, value: "1" },
-													{ label: t`8 hours`, value: "8" },
-													{ label: t`24 hours`, value: "24" },
-												]}
-												onChange={(value) =>
-													value && setHours(Number(value) as LiveHours)
-												}
-											/>
-											<Button
-												leftSection={<BroadcastIcon size={18} />}
-												loading={live.isPending}
-												onClick={() =>
-													live.mutate(hours, {
-														onSuccess: liveDisclosure.close,
-													})
-												}
-											>
-												<Trans>Go live</Trans>
-											</Button>
-										</Stack>
-									</Popover.Dropdown>
-								</Popover>
-							))}
-						{canEdit && (
-							<Button
-								variant="outline"
-								leftSection={<ShareNetworkIcon size={18} />}
-								onClick={share.open}
-							>
-								<Trans>Share</Trans>
-							</Button>
-						)}
+					<Group gap="xs" aria-label={t`Presentation controls`}>
 						<Button
+							variant="filled"
 							onClick={open}
 							loading={opening}
-							leftSection={<ArrowSquareOutIcon size={18} />}
+							leftSection={<ArrowSquareOutIcon size={20} />}
 						>
 							<Trans>Present</Trans>
 						</Button>
+						{canEdit && (
+							<ShareButton>
+								{draft.query.data ? (
+									<SettingsSaveContext.Provider value={settingsEditor}>
+										<fieldset
+											disabled={publishing}
+											style={{ border: 0, margin: 0, minWidth: 0, padding: 0 }}
+										>
+											<Stack gap="md">
+												<PopcornShare
+													embedded
+													projectId={projectId}
+													popcorn={draft.query.data.presentation}
+													presentation
+													extras={
+														<EventPrintoutsItem
+															workspaceId={workspaceId ?? ""}
+															projectId={projectId}
+														/>
+													}
+												/>
+												<Text size="sm" c="dimmed">
+													<Trans>
+														The shared screen shows your published presentation.
+														Publish changes to update its content and access.
+													</Trans>
+												</Text>
+											</Stack>
+										</fieldset>
+									</SettingsSaveContext.Provider>
+								) : draft.query.isError ? (
+									<ErrorNotice
+										error={draft.query.error}
+										onRetry={() => void draft.query.refetch()}
+										title={t`The draft could not be loaded`}
+									/>
+								) : (
+									<Stack
+										gap="md"
+										role="status"
+										aria-label={t`Loading presentation`}
+									>
+										<Skeleton height={36} />
+										<Skeleton height={200} />
+									</Stack>
+								)}
+							</ShareButton>
+						)}
+						{canEdit && (blocks.includes("popcorn") || isLive) && (
+							<LiveButton
+								live={isLive}
+								pending={isLive ? stop.isPending : live.isPending}
+								onGoLive={(hours) => live.mutate(hours)}
+								onStop={() => stop.mutate()}
+							/>
+						)}
 					</Group>
-				</Group>
-				{presentation.loop?.mode === "live" && (
-					<Text size="sm" role="status">
-						<Trans>
-							Live. New conversations will feed Popcorn as they arrive.
-						</Trans>
-					</Text>
-				)}
+				</Stack>
 				{canEdit && (
-					<Group justify="flex-end">
+					<Group justify="flex-start">
 						<Button
 							onClick={() => void publishChanges()}
 							loading={publishing}
@@ -645,78 +659,15 @@ function Session({
 						</Button>
 					</Group>
 				)}
-				<Modal
-					opened={sharing}
-					onClose={share.close}
-					title={t`Share presentation`}
-					size="lg"
-				>
-					{draft.query.data ? (
-						<SettingsSaveContext.Provider value={settingsEditor}>
-							<Stack gap="lg">
-								<fieldset
-									disabled={publishing}
-									style={{ border: 0, margin: 0, minWidth: 0, padding: 0 }}
-								>
-									<PopcornShare
-										embedded
-										projectId={projectId}
-										popcorn={draft.query.data.presentation}
-										presentation
-									/>
-								</fieldset>
-								<SaveStatus
-									formErrors={{}}
-									savedAt={
-										draft.query.data.saved_at
-											? new Date(draft.query.data.saved_at)
-											: null
-									}
-									isPendingSave={false}
-									isSaving={draft.save.isPending}
-									isError={draft.save.isError}
-								/>
-								<Text size="sm">
-									<Trans>
-										The shared screen shows your published presentation. Publish
-										changes to update its content and access.
-									</Trans>
-								</Text>
-								{publishError && (
-									<Text role="alert">
-										<Trans>Changes could not be published. Try again.</Trans>
-									</Text>
-								)}
-								<Group justify="flex-end">
-									<Button
-										loading={publishing}
-										disabled={
-											!draft.query.data.has_changes ||
-											draft.save.isPending ||
-											draft.save.isError
-										}
-										onClick={() => void publishChanges()}
-									>
-										<Trans>Publish changes</Trans>
-									</Button>
-								</Group>
-							</Stack>
-						</SettingsSaveContext.Provider>
-					) : draft.query.isError ? (
-						<Text role="alert">
-							<Trans>The draft could not be loaded.</Trans>
-						</Text>
-					) : (
-						<Loader aria-label={t`Loading presentation`} />
-					)}
-				</Modal>
 				{drafting ? (
 					draft.query.isError ? (
-						<FetchErrorPanel
-							message={<Trans>The draft could not be loaded.</Trans>}
-							onRetry={() => void draft.query.refetch()}
-							testId="present-draft-error-panel"
-						/>
+						<Box {...testId("present-draft-error-panel")}>
+							<ErrorNotice
+								error={draft.query.error}
+								onRetry={() => void draft.query.refetch()}
+								title={t`The draft could not be loaded`}
+							/>
+						</Box>
 					) : draft.query.data ? (
 						<SettingsSaveContext.Provider value={settingsEditor}>
 							<SaveStatus
@@ -764,30 +715,36 @@ function Session({
 							</fieldset>
 						</SettingsSaveContext.Provider>
 					) : (
-						<Text>
-							<Trans>Loading draft…</Trans>
-						</Text>
+						<Stack gap="md" role="status" aria-label={t`Loading draft`}>
+							<Skeleton height={16} width={240} />
+							<Skeleton height={360} />
+						</Stack>
 					)
 				) : (
 					<Preview presentation={presentation} />
 				)}
 				{publishError && (
-					<Text role="alert" size="sm">
-						<Trans>
-							Changes could not be published or saved. Review your draft and try
-							again.
-						</Trans>
-					</Text>
+					<Alert color="red">
+						<Text size="sm">
+							<Trans>
+								Changes could not be published or saved. Review your draft and
+								try again.
+							</Trans>
+						</Text>
+					</Alert>
 				)}
-				<Group justify="space-between" gap="sm">
-					<Text size="sm">
-						{presentation.counts.phrases} <Trans>phrases</Trans>
+				<Group justify="flex-start" gap="sm">
+					<Text size="sm" c="dimmed">
+						<Plural
+							value={presentation.counts.phrases}
+							one="# phrase"
+							other="# phrases"
+						/>
 					</Text>
 					<Group gap="xs">
 						{canEdit && updates.data?.available && (
 							<Button
 								size="compact-sm"
-								variant="outline"
 								loading={adopt.isPending}
 								onClick={() => adopt.mutate()}
 							>
@@ -807,11 +764,11 @@ function Session({
 						</Button>
 					</Group>
 				</Group>
-				{adopt.isError && (
-					<Text role="alert" size="sm">
-						<Trans>Could not load the latest results. Try again.</Trans>
-					</Text>
-				)}
+				<ErrorNotice
+					error={adopt.error}
+					onRetry={() => adopt.mutate()}
+					title={t`Could not load the latest results`}
+				/>
 			</Stack>
 		</PresentationEventTick.Provider>
 	);
@@ -840,21 +797,22 @@ export function PresentRoute() {
 			"noopener",
 		);
 	};
-	if (query.isLoading) return <Loader aria-label={t`Loading presentation`} />;
+	if (query.isLoading) return <BeautifulLoading />;
 	return (
 		<PageContainer width="full" density="tight">
 			<Stack gap="lg">
-				{ensure.isError && (
-					<Text role="alert">
-						<Trans>The presentation could not be opened. Try again.</Trans>
-					</Text>
-				)}
+				<ErrorNotice
+					error={ensure.error}
+					title={t`The presentation could not be opened`}
+				/>
 				{query.isError ? (
-					<FetchErrorPanel
-						message={<Trans>The presentation could not be loaded.</Trans>}
-						onRetry={() => void query.refetch()}
-						testId="present-error-panel"
-					/>
+					<Box {...testId("present-error-panel")}>
+						<ErrorNotice
+							error={query.error}
+							onRetry={() => void query.refetch()}
+							title={t`The presentation could not be loaded`}
+						/>
+					</Box>
 				) : query.data?.presentation ? (
 					<Session
 						key={query.data.presentation.id}
@@ -870,15 +828,24 @@ export function PresentRoute() {
 							<Trans>Present</Trans>
 						</Title>
 						{query.data?.can_edit === false ? (
-							<Text>
+							<Text size="sm" c="dimmed">
 								<Trans>The host hasn’t prepared a presentation yet.</Trans>
 							</Text>
 						) : ensure.isError ? (
-							<Button variant="outline" onClick={() => ensure.mutate(false)}>
-								<Trans>Try again</Trans>
-							</Button>
+							<Group justify="flex-start">
+								<Button onClick={() => ensure.mutate(false)}>
+									<Trans>Try again</Trans>
+								</Button>
+							</Group>
 						) : (
-							<Loader aria-label={t`Loading presentation`} />
+							<Stack
+								gap="md"
+								role="status"
+								aria-label={t`Loading presentation`}
+							>
+								<Skeleton height={36} width={240} />
+								<Skeleton height={360} />
+							</Stack>
 						)}
 					</Stack>
 				)}

@@ -124,6 +124,11 @@ msgid "error.webhook.invalid_target"
 msgstr "Wählen Sie, wohin dieser Webhook geht: eine Webadresse oder sams Posteingang mit einem bekannten Code."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:17
+msgid "error.map.groups_need_snapshot"
+msgstr "Cluster lassen sich auf einer neu erstellten Map speichern. Erstellen Sie die Map neu und versuchen Sie es noch einmal."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:27
 msgid "error.document.dpa_not_authorised"
 msgstr "Bestätigen Sie, dass Sie berechtigt sind, der Datenverarbeitung für Ihre Organisation zuzustimmen."
@@ -299,7 +304,7 @@ msgid "error.member.owner_removes_owner"
 msgstr "Nur ein Eigentümer kann einen anderen Eigentümer entfernen."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:17
+#: src/lib/errors/messages/map.ts:26
 msgid "error.map.not_a_claim"
 msgstr "Nur Behauptungen können überprüft werden. Wählen Sie eine Behauptung aus und versuchen Sie es erneut."
 
@@ -354,7 +359,7 @@ msgid "error.project.share_admin_only"
 msgstr "Nur Administratoren des Arbeitsbereichs können Projekte teilen."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:29
+#: src/lib/errors/messages/map.ts:38
 msgid "error.map.selection_not_in_map"
 msgstr "Ein Teil Ihrer Auswahl befindet sich nicht mehr auf der Karte. Laden Sie die Karte neu und wählen Sie erneut aus."
 
@@ -429,7 +434,7 @@ msgid "error.webhook.sam_inbox_unavailable"
 msgstr "sams Posteingang ist hier nicht eingerichtet, und ein Webhook an sam kann nicht getestet werden."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:43
+#: src/lib/errors/messages/map.ts:52
 msgid "error.map.selection_too_small"
 msgstr "Wählen Sie noch ein paar Elemente aus, um einen Titel zu erstellen."
 
@@ -564,12 +569,12 @@ msgid "error.present.map_results_not_ready"
 msgstr "Die Map ist noch nicht fertig. Sie wird hier angezeigt, sobald sie bereit ist."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:25
+#: src/lib/errors/messages/map.ts:34
 msgid "error.map.not_ready"
 msgstr "Die Map wird noch erstellt. Warten Sie einen Moment und versuchen Sie es erneut."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:34
+#: src/lib/errors/messages/map.ts:43
 msgid "error.map.selection_other_snapshot"
 msgstr "Die Map wurde seit Ihrer Auswahl aktualisiert. Laden Sie die Map neu und wählen Sie erneut aus."
 
@@ -924,7 +929,7 @@ msgid "error.project.no_conversations"
 msgstr "Dieses Projekt hat noch keine Gespräche."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:13
+#: src/lib/errors/messages/map.ts:22
 msgid "error.map.no_map_yet"
 msgstr "Dieses Projekt hat noch keine Karte. Erstellen Sie eine, um sie hier zu sehen."
 
@@ -1144,7 +1149,7 @@ msgid "error.billing.request_failed"
 msgstr "Diese Abrechnungsänderung konnte nicht abgeschlossen werden. Kontaktieren Sie uns, damit wir das klären können."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:51
+#: src/lib/errors/messages/map.ts:60
 msgid "error.map.title_failed"
 msgstr "Es konnte gerade kein Titel erstellt werden. Versuchen Sie es erneut."
 
@@ -1229,7 +1234,7 @@ msgid "error.training.license_not_found"
 msgstr "Diese Lizenz konnte nicht gefunden werden."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:21
+#: src/lib/errors/messages/map.ts:30
 msgid "error.map.not_found"
 msgstr "Wir konnten diese Map nicht finden."
 
@@ -1344,12 +1349,17 @@ msgid "error.verify.artifact_not_found"
 msgstr "Wir konnten dies nicht finden. Es wurde möglicherweise entfernt."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:13
+msgid "error.map.group_not_started"
+msgstr "Wir konnten diesen Cluster nicht speichern. Versuchen Sie es gleich noch einmal."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:46
 msgid "error.analysis.storage_unavailable"
 msgstr "Wir konnten die Analyse gerade nicht laden. Versuchen Sie es gleich noch einmal."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:47
+#: src/lib/errors/messages/map.ts:56
 msgid "error.map.storage_unavailable"
 msgstr "Wir konnten die Map gerade nicht laden. Versuchen Sie es gleich noch einmal."
 
@@ -1564,7 +1574,7 @@ msgid "error.auth.user_required"
 msgstr "Dazu müssen Sie angemeldet sein. Melden Sie sich an und versuchen Sie es erneut."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:39
+#: src/lib/errors/messages/map.ts:48
 msgid "error.map.selection_too_large"
 msgstr "Sie haben zu viele Elemente ausgewählt. Wählen Sie weniger aus und versuchen Sie es erneut."
 

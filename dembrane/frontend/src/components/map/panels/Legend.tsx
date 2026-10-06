@@ -21,6 +21,7 @@ export const Legend = memo(function Legend({
 	darkMode,
 	conversations = 0,
 	names,
+	tags = [],
 }: {
 	colorBy: ColorBy;
 	darkMode: boolean;
@@ -32,33 +33,48 @@ export const Legend = memo(function Legend({
 	 * and numbers the rest.
 	 */
 	names?: ReadonlyMap<number, string>;
+	/** The map's tags in slot order; the tag legend is built from them. */
+	tags?: ReadonlyArray<{ name: string; slot: number }>;
 }) {
 	const rows: LegendEntry[] =
-		colorBy === "conversation"
-			? Array.from(
-					{ length: Math.min(conversations, NAMED_CONVERSATIONS) },
-					(_value, slot) => ({
-						color: conversationColor(slot),
-						key: slotKey(slot),
-						label: names?.get(slot) || conversationSlotLabel(slot),
-					}),
-				)
-			: legendEntries(colorBy);
+		colorBy === "tag"
+			? [
+					...tags.map((tag) => ({
+						color: conversationColor(tag.slot),
+						key: slotKey(tag.slot),
+						label: tag.name,
+					})),
+					...legendEntries("tag"),
+				]
+			: colorBy === "conversation"
+				? Array.from(
+						{ length: Math.min(conversations, NAMED_CONVERSATIONS) },
+						(_value, slot) => ({
+							color: conversationColor(slot),
+							key: slotKey(slot),
+							label: names?.get(slot) || conversationSlotLabel(slot),
+						}),
+					)
+				: legendEntries(colorBy);
 	if (rows.length === 0) return null;
-	// The swatches carry the same shadow, and the same theme-resolved fills,
+	// The swatches carry the same shadow, hairline and theme-resolved fills
 	// as the nodes they explain.
-	const { filter } = getNodeStyleFromInputs({}, { colorBy, darkMode });
+	const { filter, stroke, strokeWidth } = getNodeStyleFromInputs(
+		{},
+		{ colorBy, darkMode },
+	);
 
 	return (
 		<div
-			className="absolute bottom-4 right-4 z-10 space-y-1 rounded-lg border px-3 py-2 text-xs shadow-lg backdrop-blur-sm"
+			className="absolute bottom-4 right-4 z-10 space-y-1 border-y px-3 py-2 text-xs"
 			style={{
 				backgroundColor: mapVars.raised,
 				borderColor: mapVars.border,
+				boxShadow: "var(--app-float)",
 				color: mapVars.text,
 			}}
 		>
-			<p className="mb-1 text-xs uppercase tracking-widest">
+			<p className="mb-1 text-xs">
 				<Trans>Legend</Trans>
 			</p>
 			{rows.map((row) => (
@@ -69,7 +85,8 @@ export const Legend = memo(function Legend({
 							cy="8"
 							r="5"
 							fill={resolveMapColor(row.color, darkMode)}
-							style={{ filter }}
+							strokeWidth={strokeWidth}
+							style={{ filter, stroke }}
 						/>
 					</svg>
 					<span>{row.label}</span>

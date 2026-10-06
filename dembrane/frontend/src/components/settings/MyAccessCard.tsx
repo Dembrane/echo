@@ -1,9 +1,18 @@
 import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
-import { Badge, Button, Card, Group, Loader, Stack, Text } from "@mantine/core";
-import { IconExternalLink } from "@tabler/icons-react";
+import {
+	Badge,
+	Button,
+	Card,
+	Group,
+	Skeleton,
+	Stack,
+	Text,
+	UnstyledButton,
+} from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
+import { tierName } from "@/components/workspace/TierBadge";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -95,8 +104,10 @@ export const MyAccessCard = () => {
 	if (isLoading) {
 		return (
 			<Card withBorder p="lg">
-				<Stack align="center" py="xl">
-					<Loader size="sm" color="gray" />
+				<Stack gap="sm">
+					<Skeleton height={16} width="40%" />
+					<Skeleton height={40} />
+					<Skeleton height={40} />
 				</Stack>
 			</Card>
 		);
@@ -106,7 +117,7 @@ export const MyAccessCard = () => {
 	const totalWorkspaces = data?.workspaces.length ?? 0;
 
 	return (
-		<Card withBorder p="lg" radius="md">
+		<Card withBorder p="lg">
 			<Stack gap="lg">
 				<Group justify="space-between" align="flex-start" wrap="nowrap">
 					<Stack gap={4} style={{ minWidth: 0 }}>
@@ -127,9 +138,9 @@ export const MyAccessCard = () => {
 				</Group>
 
 				{byOrganisation.size === 0 ? (
-					<Text size="sm" c="dimmed" ta="center" py="md">
+					<Text size="sm" c="dimmed">
 						<Trans>
-							You're not in any organisation yet. Create a workspace to start a
+							You're not in any organisation yet. Create a workspace to start an
 							organisation, or ask a member for an invite.
 						</Trans>
 					</Text>
@@ -137,13 +148,13 @@ export const MyAccessCard = () => {
 					<Stack gap="md">
 						{Array.from(byOrganisation.values()).map(
 							({ organisation, workspaces }) => (
-								<Stack key={organisation?.id ?? "orphan"} gap={8}>
+								<Stack key={organisation?.id ?? "orphan"} gap="sm">
 									{/* Organisation header sits flush-left so the eye reads
 								    "organisation → workspaces" as a hierarchy. Only the
 								    workspace rows are indented + rule'd. */}
 									<Group gap="xs" justify="space-between" align="center">
 										<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
-											<Text fw={500} size="sm" lineClamp={1}>
+											<Text size="sm" lineClamp={1}>
 												{organisation?.name ?? t`(direct workspace access)`}
 											</Text>
 											{organisation && (
@@ -161,7 +172,6 @@ export const MyAccessCard = () => {
 											<Button
 												size="compact-xs"
 												variant="subtle"
-												rightSection={<IconExternalLink size={12} />}
 												onClick={() => navigate(`/o/${organisation.id}`)}
 											>
 												<Trans>Open organisation</Trans>
@@ -170,49 +180,49 @@ export const MyAccessCard = () => {
 									</Group>
 
 									<Stack
-										gap={4}
-										ml={12}
+										gap="xs"
+										ml="sm"
+										pl="sm"
 										style={{
-											borderLeft: "2px solid var(--mantine-color-gray-3)",
-											paddingLeft: 12,
+											borderLeft:
+												"var(--app-stroke) solid var(--app-rule-color)",
 										}}
 									>
 										{workspaces.map((ws) => (
-											<Group
+											<UnstyledButton
 												key={ws.id}
-												gap="sm"
-												justify="space-between"
-												wrap="nowrap"
-												style={{ cursor: "pointer" }}
+												className="app-do"
+												px="sm"
+												py="xs"
 												onClick={() => openWorkspace(ws.id)}
 											>
-												<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
-													<Text size="sm" lineClamp={1}>
-														{ws.name}
-													</Text>
-													<Badge
-														size="xs"
-														variant="light"
-														color={roleColor(ws.role)}
-														c="graphite"
-													>
-														{displayRole(ws.role)}
-													</Badge>
-												</Group>
-												<Text size="xs" c="dimmed">
-													<Plural
-														value={ws.project_count}
-														one="# project"
-														other="# projects"
-													/>
-													{" · "}
-													<span style={{ textTransform: "capitalize" }}>
+												<Group gap="sm" justify="space-between" wrap="nowrap">
+													<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
+														<Text size="sm" lineClamp={1}>
+															{ws.name}
+														</Text>
+														<Badge
+															size="xs"
+															variant="light"
+															color={roleColor(ws.role)}
+															c="graphite"
+														>
+															{displayRole(ws.role)}
+														</Badge>
+													</Group>
+													<Text size="xs" c="dimmed">
+														<Plural
+															value={ws.project_count}
+															one="# project"
+															other="# projects"
+														/>
+														{" · "}
 														{ws.bills_separately
-															? `${ws.tier} (partner)`
-															: ws.tier}
-													</span>
-												</Text>
-											</Group>
+															? t`${tierName(ws.tier)} (partner)`
+															: tierName(ws.tier)}
+													</Text>
+												</Group>
+											</UnstyledButton>
 										))}
 									</Stack>
 								</Stack>

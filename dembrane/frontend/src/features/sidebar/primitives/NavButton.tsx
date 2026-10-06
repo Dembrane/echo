@@ -4,6 +4,7 @@ import {
 	type Icon,
 } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
+import { roles } from "@/colors";
 import { cn } from "@/lib/utils";
 import { RAIL_ITEM_CLASS, RailTip, useInRail } from "../shell/rail";
 import { BADGE_TONES } from "./NavItem";
@@ -55,11 +56,11 @@ export const NavButton = ({
 					disabled={disabled}
 					className={cn(
 						RAIL_ITEM_CLASS,
-						"hover:bg-black/[0.04] disabled:cursor-not-allowed disabled:opacity-50",
+						"hover:bg-[var(--app-quiet)] disabled:cursor-not-allowed disabled:opacity-50",
 					)}
-					style={{ color: destructive ? "#c0392b" : "#2d2d2c" }}
+					style={{ color: destructive ? roles.danger : roles.text }}
 				>
-					<Icon size={18} color={iconColor} aria-hidden="true" />
+					<Icon size={20} color={iconColor} aria-hidden="true" />
 					<span className="sr-only">{name}</span>
 				</button>
 			</RailTip>
@@ -71,8 +72,8 @@ export const NavButton = ({
 			type="button"
 			onClick={onClick}
 			disabled={disabled}
-			className="group relative flex h-[30px] w-full items-center gap-2 rounded-md px-2 text-left text-sm leading-tight transition-colors hover:bg-black/[0.04] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#4169e1] disabled:cursor-not-allowed disabled:opacity-50"
-			style={{ color: destructive ? "#c0392b" : "#2d2d2c" }}
+			className="group relative flex h-[30px] w-full items-center gap-2 px-2 text-left text-sm leading-tight transition-colors hover:bg-[var(--app-quiet)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--app-action)] disabled:cursor-not-allowed disabled:opacity-50"
+			style={{ color: destructive ? roles.danger : roles.text }}
 		>
 			<span className="relative flex flex-1 items-center gap-2 truncate">
 				{Icon ? <Icon size={16} color={iconColor} /> : null}
@@ -86,7 +87,7 @@ export const NavButton = ({
 			{/* != null, not truthiness: badge={0} would render a bare "0" */}
 			{badge != null && (
 				<span
-					className="relative shrink-0 rounded px-1.5 py-0.5 text-xs leading-none"
+					className="relative shrink-0 px-1 py-0.5 text-xs leading-none"
 					style={BADGE_TONES[badgeTone]}
 				>
 					{badge}
@@ -94,15 +95,17 @@ export const NavButton = ({
 			)}
 			{external && (
 				<ArrowUpRightIcon
-					size={13}
-					className="relative shrink-0 opacity-0 transition-opacity group-hover:opacity-55 group-focus-visible:opacity-55"
+					size={16}
+					className="relative shrink-0 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+					style={{ color: "var(--mantine-color-dimmed)" }}
 					aria-hidden="true"
 				/>
 			)}
 			{pushes && (
 				<CaretRightIcon
-					size={13}
-					className="relative shrink-0 opacity-45"
+					size={16}
+					className="relative shrink-0"
+					style={{ color: "var(--mantine-color-dimmed)" }}
 					aria-hidden="true"
 				/>
 			)}

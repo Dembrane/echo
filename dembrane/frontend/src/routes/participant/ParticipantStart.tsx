@@ -1,5 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Alert } from "@mantine/core";
+import { WarningCircleIcon } from "@phosphor-icons/react";
 import posthog from "posthog-js";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
@@ -70,12 +71,13 @@ export const ParticipantStartRoute = () => {
 
 	if (loadingFinished && projectError) {
 		return (
-			<div
-				className="flex flex-col items-center justify-center"
-				{...testId("portal-loading-error")}
-			>
-				<Alert color="info" {...testId("portal-error-alert")}>
-					{t`An error occurred while loading the Portal. Please contact the support team.`}
+			<div className="p-4" {...testId("portal-loading-error")}>
+				<Alert
+					color="red"
+					icon={<WarningCircleIcon size={20} />}
+					{...testId("portal-error-alert")}
+				>
+					{t`An error occurred while loading the portal. Please contact the support team.`}
 				</Alert>
 			</div>
 		);

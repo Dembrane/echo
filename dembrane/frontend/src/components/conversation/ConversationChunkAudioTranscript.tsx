@@ -1,4 +1,5 @@
 import { t } from "@lingui/core/macro";
+import { Trans } from "@lingui/react/macro";
 import { Divider, Skeleton, Text } from "@mantine/core";
 import { cn } from "@/lib/utils";
 import { BaseMessage } from "../chat/BaseMessage";
@@ -35,27 +36,29 @@ export const ConversationChunkAudioTranscript = ({
 			paperProps={{
 				className: cn(
 					"scroll-mt-24 transition-colors duration-300",
-					highlighted && "!bg-cyan-50 ring-2 ring-cyan-300",
+					highlighted && "!bg-[var(--app-action-tint)]",
 				),
 			}}
 			title={
-				<span className="text-sm text-gray-500">
+				<Text span size="sm" c="dimmed">
 					{new Date(chunk.timestamp).toLocaleTimeString()}
-				</span>
+				</Text>
 			}
 			bottomSection={
 				showAudioPlayer && (
 					<>
 						<Divider />
 						{!chunk.path ? (
-							<Text size="xs" className="px-2" color="gray">
-								Submitted via text input
+							<Text size="xs" px="sm" c="dimmed">
+								<Trans>Submitted via text input</Trans>
 							</Text>
 						) : audioUrlQuery.isLoading ? (
 							<Skeleton height={36} width="100%" />
 						) : audioUrlQuery.isError ? (
-							<Text size="xs" c="gray">
-								Failed to load audio or the audio is not available
+							<Text size="xs" c="dimmed">
+								<Trans>
+									Failed to load audio or the audio is not available
+								</Trans>
 							</Text>
 						) : (
 							// biome-ignore lint/a11y/useMediaCaption: <transcript is provided to the user>
@@ -70,19 +73,23 @@ export const ConversationChunkAudioTranscript = ({
 				)
 			}
 		>
-		{transcriptLocked ? (
-			<LockedTranscriptOverlay compact />
-		) : (
-			<Text>
-				{chunk.error ? (
-					<span className="italic text-gray-500">{t`Unable to process this chunk`}</span>
-				) : !chunk.transcript ? (
-					<span className="italic text-gray-500">{t`Transcribing...`}</span>
-				) : (
-					<RedactedText>{chunk.transcript}</RedactedText>
-				)}
-			</Text>
-		)}
+			{transcriptLocked ? (
+				<LockedTranscriptOverlay compact />
+			) : (
+				<Text>
+					{chunk.error ? (
+						<Text span c="dimmed" className="italic">
+							{t`Unable to process this chunk`}
+						</Text>
+					) : !chunk.transcript ? (
+						<Text span c="dimmed" className="italic">
+							{t`Transcribing...`}
+						</Text>
+					) : (
+						<RedactedText>{chunk.transcript}</RedactedText>
+					)}
+				</Text>
+			)}
 		</BaseMessage>
 	);
 };

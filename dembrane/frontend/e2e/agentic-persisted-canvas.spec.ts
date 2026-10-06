@@ -41,12 +41,16 @@ test("persisted canvas proposal renders as an applied card after remount", async
 	await expect(
 		page.getByTestId("agentic-persisted-canvas-harness"),
 	).toContainText("Persisted canvas history loaded.");
-	await expect(page.getByTestId("agentic-canvas-suggestion-applied")).toBeVisible();
-	await expect(page.getByTestId("agentic-canvas-suggestion-applied")).toContainText(
-		"This canvas update is applied.",
-	);
+	await expect(
+		page.getByTestId("agentic-canvas-suggestion-applied"),
+	).toBeVisible();
+	await expect(
+		page.getByTestId("agentic-canvas-suggestion-applied"),
+	).toContainText("This canvas update is applied.");
 
 	await page.getByTestId("agentic-persisted-canvas-remount").click();
-	await expect(page.getByTestId("agentic-canvas-suggestion-applied")).toBeVisible();
+	await expect(
+		page.getByTestId("agentic-canvas-suggestion-applied"),
+	).toBeVisible();
 	await expect(page.getByText("No canvas suggestion parsed.")).toHaveCount(0);
 });

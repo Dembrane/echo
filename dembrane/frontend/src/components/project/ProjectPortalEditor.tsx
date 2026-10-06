@@ -12,6 +12,7 @@ import {
 	InputDescription,
 	NativeSelect,
 	Paper,
+	SegmentedControl,
 	Stack,
 	Switch,
 	Text,
@@ -21,16 +22,14 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { DetectiveIcon } from "@phosphor-icons/react";
 import {
-	IconEye,
-	IconEyeOff,
-	IconInfoCircle,
-	IconPencil,
-	IconRefresh,
-	IconRosetteDiscountCheck,
-	IconTrash,
-} from "@tabler/icons-react";
+	ArrowClockwiseIcon,
+	EyeIcon,
+	EyeSlashIcon,
+	PencilSimpleIcon,
+	PlusIcon,
+	TrashIcon,
+} from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Resizable } from "re-resizable";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -54,7 +53,6 @@ import { toast } from "../common/Toaster";
 import { FormLabel } from "../form/FormLabel";
 import { MarkdownWYSIWYG } from "../form/MarkdownWYSIWYG/MarkdownWYSIWYG";
 import { SaveStatus } from "../form/SaveStatus";
-import { TOPIC_ICON_MAP } from "../participant/verify/VerifySelection";
 import { CustomTopicModal } from "./CustomTopicModal";
 import {
 	useCreateCustomTopicMutation,
@@ -127,12 +125,13 @@ const KeyTermsSection = ({
 }) => (
 	<Stack gap="md">
 		<Group gap="xs" align="center">
-			<Title order={4}>
+			<Title order={5}>
 				<Trans>Key terms</Trans>
 			</Title>
 			{isDirty && (
 				<div
-					className="h-1.5 w-1.5 rounded-full bg-blue-500"
+					className="h-1.5 w-1.5 rounded-full"
+					style={{ background: "var(--app-action)" }}
 					role="presentation"
 				/>
 			)}
@@ -181,9 +180,6 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 	const availableVerifyTopics = useMemo(
 		() =>
 			(verificationTopics?.available_topics ?? []).map((topic) => ({
-				icon:
-					TOPIC_ICON_MAP[topic.key] ??
-					(topic.icon && !topic.icon.startsWith(":") ? topic.icon : undefined),
 				is_custom: !!topic.is_custom,
 				key: topic.key,
 				label:
@@ -539,11 +535,11 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 
 	return (
 		<Box>
-			<Stack gap="3rem">
+			<Stack gap="xl">
 				<Group justify="space-between">
 					<Group>
 						<Title order={2}>
-							<Trans>Portal Editor</Trans>
+							<Trans>Portal editor</Trans>
 						</Title>
 						{!readOnly && (
 							<SaveStatus
@@ -560,12 +556,16 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 						<Button
 							variant="subtle"
 							onClick={() => setShowPreview(!showPreview)}
-							rightSection={
-								showPreview ? <IconEyeOff size={16} /> : <IconEye size={16} />
+							leftSection={
+								showPreview ? <EyeSlashIcon size={20} /> : <EyeIcon size={20} />
 							}
 							{...testId("portal-editor-preview-toggle")}
 						>
-							<Trans>{showPreview ? "Hide Preview" : "Show Preview"}</Trans>
+							{showPreview ? (
+								<Trans>Hide preview</Trans>
+							) : (
+								<Trans>Show preview</Trans>
+							)}
 						</Button>
 					</Group>
 				</Group>
@@ -583,12 +583,12 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 								await triggerManualSave(values);
 							})}
 						>
-							<Stack gap="3rem">
-								<Stack gap="1.5rem">
-									<Title order={3}>
-										<Trans>Basic Settings</Trans>
+							<Stack gap="xl">
+								<Stack gap="md">
+									<Title order={4}>
+										<Trans>Basic settings</Trans>
 									</Title>
-									<Stack gap="2rem">
+									<Stack gap="md">
 										<Controller
 											name="language"
 											control={control}
@@ -601,7 +601,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 															error={formState.errors.language?.message}
 														/>
 													}
-													description={t`This language will be used for the Participant's Portal.`}
+													description={t`This language will be used for the participant portal.`}
 													data={[
 														{ label: t`English`, value: "en" },
 														{ label: t`Dutch`, value: "nl" },
@@ -609,15 +609,15 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 														{ label: t`Spanish`, value: "es" },
 														{ label: t`French`, value: "fr" },
 														{
-															label: t`Italian (only ECHO features, Transcription and Summaries)`,
+															label: t`Italian (only ECHO features, transcription and summaries)`,
 															value: "it",
 														},
 														{
-															label: t`Ukrainian (only ECHO features, Transcription and Summaries)`,
+															label: t`Ukrainian (only ECHO features, transcription and summaries)`,
 															value: "uk",
 														},
 														{
-															label: t`Czech (only ECHO features, Transcription and Summaries)`,
+															label: t`Czech (only ECHO features, transcription and summaries)`,
 															value: "cs",
 														},
 													]}
@@ -633,7 +633,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 												<Checkbox
 													label={
 														<FormLabel
-															label={t`Ask for Name?`}
+															label={t`Ask for name?`}
 															isDirty={
 																formState.dirtyFields
 																	.default_conversation_ask_for_participant_name
@@ -662,7 +662,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 												<Checkbox
 													label={
 														<FormLabel
-															label={t`Ask for Email?`}
+															label={t`Ask for email?`}
 															isDirty={
 																formState.dirtyFields
 																	.default_conversation_ask_for_participant_email
@@ -712,15 +712,15 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 													}
 													data={[
 														{
-															label: t`Default - No tutorial (Only privacy statements)`,
+															label: t`Default - no tutorial (only privacy statements)`,
 															value: "none",
 														},
 														{
-															label: t`Basic (Essential tutorial slides)`,
+															label: t`Basic (essential tutorial slides)`,
 															value: "basic",
 														},
 														{
-															label: t`Advanced (Tips and best practices)`,
+															label: t`Advanced (tips and best practices)`,
 															value: "advanced",
 														},
 													]}
@@ -734,14 +734,14 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 								</Stack>
 
 								<Divider />
-								<Stack gap="1.5rem">
-									<Title order={3}>
-										<Trans>Participant Features</Trans>
+								<Stack gap="md">
+									<Title order={4}>
+										<Trans>Participant features</Trans>
 									</Title>
-									<Stack gap="2.5rem">
+									<Stack gap="xl">
 										<Stack gap="md">
 											<Group>
-												<Title order={4}>
+												<Title order={5}>
 													<Trans>Explore</Trans>
 												</Title>
 												<Badge color="mauve" c="graphite" size="sm">
@@ -787,173 +787,122 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 												)}
 											/>
 
-											<Controller
-												name="get_reply_mode"
-												control={control}
-												render={({ field }) => (
-													<Stack gap="xs">
-														<FormLabel
-															label={t`Mode`}
-															isDirty={formState.dirtyFields.get_reply_mode}
-															error={formState.errors.get_reply_mode?.message}
-														/>
-														<Text size="sm" c="dimmed">
-															<Trans>
-																Select the type of feedback or engagement you
-																want to encourage.
-															</Trans>
-														</Text>
-														<Group gap="xs">
-															<Badge
-																className={
-																	watchedReplyEnabled
-																		? "cursor-pointer capitalize"
-																		: "capitalize"
-																}
-																variant={
-																	field.value === "summarize"
-																		? "light"
-																		: "default"
-																}
-																c="var(--app-text)"
-																size="lg"
-																fw={500}
-																style={{
-																	border:
-																		field.value === "summarize"
-																			? "1px solid var(--mantine-color-primary-5)"
-																			: "",
-																	cursor: watchedReplyEnabled
-																		? "pointer"
-																		: "not-allowed",
-																	opacity: watchedReplyEnabled ? 1 : 0.6,
-																}}
-																onClick={() =>
-																	watchedReplyEnabled &&
-																	field.onChange("summarize")
-																}
-																{...testId("portal-editor-reply-mode-default")}
-															>
-																<Trans>Default</Trans>
-															</Badge>
-															<Badge
-																className={
-																	watchedReplyEnabled
-																		? "cursor-pointer capitalize"
-																		: "capitalize"
-																}
-																variant={
-																	field.value === "brainstorm"
-																		? "light"
-																		: "default"
-																}
-																c="var(--app-text)"
-																size="lg"
-																fw={500}
-																style={{
-																	border:
-																		field.value === "brainstorm"
-																			? "1px solid var(--mantine-color-primary-5)"
-																			: "",
-																	cursor: watchedReplyEnabled
-																		? "pointer"
-																		: "not-allowed",
-																	opacity: watchedReplyEnabled ? 1 : 0.6,
-																}}
-																onClick={() =>
-																	watchedReplyEnabled &&
-																	field.onChange("brainstorm")
-																}
-																{...testId(
-																	"portal-editor-reply-mode-brainstorm",
-																)}
-															>
-																<Trans>Brainstorm Ideas</Trans>
-															</Badge>
-															<Badge
-																className={
-																	watchedReplyEnabled
-																		? "cursor-pointer capitalize"
-																		: "capitalize"
-																}
-																variant={
-																	field.value === "custom" ? "light" : "default"
-																}
-																c="var(--app-text)"
-																size="lg"
-																fw={500}
-																style={{
-																	border:
-																		field.value === "custom"
-																			? "1px solid var(--mantine-color-primary-5)"
-																			: "",
-																	cursor: watchedReplyEnabled
-																		? "pointer"
-																		: "not-allowed",
-																	opacity: watchedReplyEnabled ? 1 : 0.6,
-																}}
-																onClick={() =>
-																	watchedReplyEnabled &&
-																	field.onChange("custom")
-																}
-																{...testId("portal-editor-reply-mode-custom")}
-															>
-																<Trans>Custom</Trans>
-															</Badge>
-														</Group>
-													</Stack>
-												)}
-											/>
-
-											{watchedReplyMode === "custom" && (
-												<Controller
-													name="get_reply_prompt"
-													control={control}
-													render={({ field }) => (
-														<Textarea
-															label={
+											{watchedReplyEnabled && (
+												<>
+													<Controller
+														name="get_reply_mode"
+														control={control}
+														render={({ field }) => (
+															<Stack gap="xs">
 																<FormLabel
-																	label={t`Reply Prompt`}
-																	isDirty={
-																		formState.dirtyFields.get_reply_prompt
-																	}
+																	label={t`Mode`}
+																	isDirty={formState.dirtyFields.get_reply_mode}
 																	error={
-																		formState.errors.get_reply_prompt?.message
+																		formState.errors.get_reply_mode?.message
 																	}
 																/>
-															}
-															description={
-																<Box className="pb-2">
+																<Text size="sm" c="dimmed">
 																	<Trans>
-																		This prompt guides how the AI responds to
-																		participants. Customize it to shape the type
-																		of feedback or engagement you want to
-																		encourage.
+																		Select the type of feedback or engagement
+																		you want to encourage.
 																	</Trans>
-																</Box>
-															}
-															autosize
-															minRows={5}
-															disabled={!watchedReplyEnabled}
-															{...field}
-															{...testId("portal-editor-reply-prompt-textarea")}
+																</Text>
+																<SegmentedControl
+																	value={field.value}
+																	onChange={field.onChange}
+																	style={{ alignSelf: "flex-start" }}
+																	data={[
+																		{
+																			label: (
+																				<span
+																					{...testId(
+																						"portal-editor-reply-mode-default",
+																					)}
+																				>
+																					<Trans>Default</Trans>
+																				</span>
+																			),
+																			value: "summarize",
+																		},
+																		{
+																			label: (
+																				<span
+																					{...testId(
+																						"portal-editor-reply-mode-brainstorm",
+																					)}
+																				>
+																					<Trans>Brainstorm ideas</Trans>
+																				</span>
+																			),
+																			value: "brainstorm",
+																		},
+																		{
+																			label: (
+																				<span
+																					{...testId(
+																						"portal-editor-reply-mode-custom",
+																					)}
+																				>
+																					<Trans>Custom</Trans>
+																				</span>
+																			),
+																			value: "custom",
+																		},
+																	]}
+																/>
+															</Stack>
+														)}
+													/>
+
+													{watchedReplyMode === "custom" && (
+														<Controller
+															name="get_reply_prompt"
+															control={control}
+															render={({ field }) => (
+																<Textarea
+																	label={
+																		<FormLabel
+																			label={t`Reply prompt`}
+																			isDirty={
+																				formState.dirtyFields.get_reply_prompt
+																			}
+																			error={
+																				formState.errors.get_reply_prompt
+																					?.message
+																			}
+																		/>
+																	}
+																	description={
+																		<Box pb="sm">
+																			<Trans>
+																				This prompt guides how the AI responds
+																				to participants. Customize it to shape
+																				the type of feedback or engagement you
+																				want to encourage.
+																			</Trans>
+																		</Box>
+																	}
+																	autosize
+																	minRows={5}
+																	{...field}
+																	{...testId(
+																		"portal-editor-reply-prompt-textarea",
+																	)}
+																/>
+															)}
 														/>
 													)}
-												/>
+												</>
 											)}
 										</Stack>
 
 										<Stack gap="md">
 											<Group>
-												<Title order={4}>
+												<Title order={5}>
 													<Trans id="dashboard.dembrane.verify.title">
 														Verify
 													</Trans>
 												</Title>
-												<IconRosetteDiscountCheck
-													size={20}
-													color="var(--mantine-color-primary-filled)"
-												/>
 												<Badge color="mauve" c="graphite" size="sm">
 													<Trans id="dashboard.dembrane.verify.beta">
 														Beta
@@ -997,244 +946,183 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 												)}
 											/>
 
-											<Controller
-												name="verification_topics"
-												control={control}
-												render={({ field }) => (
-													<Stack gap="xs">
-														<FormLabel
-															label={t`Verify Topics`}
-															isDirty={
-																!!formState.dirtyFields.verification_topics
-															}
-															error={
-																formState.errors.verification_topics?.message
-															}
-														/>
-														<Text size="sm" c="dimmed">
-															<Trans id="dashboard.dembrane.feature.verify.topic.select">
-																Select which topics participants can use for
-																"Verify".
-															</Trans>
-														</Text>
-														{isVerificationTopicsLoading ? (
-															<Text size="sm" c="dimmed">
-																<Trans>Loading verify topics…</Trans>
-															</Text>
-														) : availableVerifyTopics.length === 0 ? (
-															<Text size="sm" c="dimmed">
-																<Trans>No verify topics available.</Trans>
-															</Text>
-														) : (
-															<Group gap="xs">
-																{availableVerifyTopics.map((topic) => (
-																	<Group
-																		key={topic.key}
-																		gap={4}
-																		wrap="nowrap"
-																		align="center"
-																	>
-																		<Badge
-																			className={
-																				watchedVerifyEnabled
-																					? "cursor-pointer select-none capitalize"
-																					: "select-none capitalize"
-																			}
-																			variant={
-																				field.value.includes(topic.key)
-																					? "light"
-																					: "default"
-																			}
-																			c="var(--app-text)"
-																			size="lg"
-																			fw={500}
-																			style={{
-																				border: field.value.includes(topic.key)
-																					? "1px solid var(--mantine-color-primary-5)"
-																					: "",
-																				cursor: watchedVerifyEnabled
-																					? "pointer"
-																					: "not-allowed",
-																				opacity: watchedVerifyEnabled ? 1 : 0.6,
-																			}}
-																			onClick={() => {
-																				if (!watchedVerifyEnabled) return;
-																				const normalizedCurrent =
-																					normalizeTopicList(field.value ?? []);
-																				const isSelected =
-																					normalizedCurrent.includes(topic.key);
-
-																				if (
-																					isSelected &&
-																					normalizedCurrent.length === 1
-																				) {
+											{watchedVerifyEnabled && (
+												<>
+													<Controller
+														name="verification_topics"
+														control={control}
+														render={({ field }) => (
+															<Stack gap="xs">
+																<FormLabel
+																	label={t`Verify topics`}
+																	isDirty={
+																		!!formState.dirtyFields.verification_topics
+																	}
+																	error={
+																		formState.errors.verification_topics
+																			?.message
+																	}
+																/>
+																<Text size="sm" c="dimmed">
+																	<Trans id="dashboard.dembrane.feature.verify.topic.select">
+																		Select which topics participants can use for
+																		"Verify".
+																	</Trans>
+																</Text>
+																{isVerificationTopicsLoading ? (
+																	<Text size="sm" c="dimmed">
+																		<Trans>Loading verify topics…</Trans>
+																	</Text>
+																) : availableVerifyTopics.length === 0 ? (
+																	<Text size="sm" c="dimmed">
+																		<Trans>No verify topics available.</Trans>
+																	</Text>
+																) : (
+																	<Stack gap="sm">
+																		<Checkbox.Group
+																			value={field.value}
+																			onChange={(next) => {
+																				const updated =
+																					normalizeTopicList(next);
+																				if (updated.length === 0) {
 																					toast.error(
 																						t`At least one topic must be selected to enable Verify`,
 																					);
 																					return;
 																				}
-
-																				const updated = isSelected
-																					? normalizedCurrent.filter(
-																							(item) => item !== topic.key,
-																						)
-																					: normalizeTopicList([
-																							...normalizedCurrent,
-																							topic.key,
-																						]);
 																				field.onChange(updated);
 																			}}
 																		>
-																			<Group gap="xs">
-																				{topic.icon ? (
-																					<span>{topic.icon}</span>
-																				) : null}
-																				<span>{topic.label}</span>
-																			</Group>
-																		</Badge>
-																		{topic.is_custom && (
-																			<Group
-																				gap={2}
-																				wrap="nowrap"
-																				style={{
-																					opacity: watchedVerifyEnabled
-																						? 1
-																						: 0.4,
-																					pointerEvents: watchedVerifyEnabled
-																						? "auto"
-																						: "none",
-																				}}
-																			>
-																				<ActionIcon
-																					size="sm"
-																					variant="transparent"
-																					disabled={!watchedVerifyEnabled}
-																					onClick={(e) => {
-																						e.stopPropagation();
-																						openEditTopicModal(topic.raw);
-																					}}
-																					{...testId(
-																						`custom-topic-edit-${topic.key}`,
-																					)}
-																				>
-																					<IconPencil size={16} />
-																				</ActionIcon>
-																				<Tooltip
-																					label={t`Select at least one other topic before deleting this one`}
-																					disabled={
-																						!watchedVerifyEnabled ||
-																						!field.value.includes(topic.key) ||
-																						field.value.length > 1
-																					}
-																					multiline
-																					w={200}
-																				>
-																					<ActionIcon
-																						size="sm"
-																						variant="transparent"
-																						c={
-																							!watchedVerifyEnabled ||
-																							(field.value.includes(
-																								topic.key,
-																							) &&
-																								field.value.length <= 1)
-																								? "dimmed"
-																								: "red"
-																						}
-																						disabled={
-																							!watchedVerifyEnabled ||
-																							(field.value.includes(
-																								topic.key,
-																							) &&
-																								field.value.length <= 1)
-																						}
-																						onClick={(e) => {
-																							e.stopPropagation();
-																							setDeleteConfirmKey(topic.key);
-																						}}
-																						{...testId(
-																							`custom-topic-delete-${topic.key}`,
-																						)}
+																			<Stack gap="sm">
+																				{availableVerifyTopics.map((topic) => (
+																					<Group
+																						key={topic.key}
+																						justify="space-between"
+																						wrap="nowrap"
+																						gap="sm"
 																					>
-																						<IconTrash size={16} />
-																					</ActionIcon>
-																				</Tooltip>
-																			</Group>
-																		)}
-																	</Group>
-																))}
-																<Badge
-																	ml="xs"
-																	className={
-																		watchedVerifyEnabled
-																			? "cursor-pointer select-none"
-																			: "select-none"
-																	}
-																	variant="default"
-																	c="var(--app-text)"
-																	size="lg"
-																	fw={500}
-																	style={{
-																		border:
-																			"1px dashed var(--mantine-color-gray-5)",
-																		cursor: watchedVerifyEnabled
-																			? "pointer"
-																			: "not-allowed",
-																		opacity: watchedVerifyEnabled ? 1 : 0.6,
-																		textTransform: "capitalize",
-																	}}
-																	onClick={() =>
-																		watchedVerifyEnabled &&
-																		openCreateTopicModal()
-																	}
-																	{...testId("portal-editor-add-custom-topic")}
-																>
-																	+ <Trans>Add Topic</Trans>
-																</Badge>
-															</Group>
+																						<Checkbox
+																							value={topic.key}
+																							label={topic.label}
+																						/>
+																						{topic.is_custom && (
+																							<Group gap={0} wrap="nowrap">
+																								<ActionIcon
+																									variant="transparent"
+																									aria-label={t`Edit topic`}
+																									onClick={(e) => {
+																										e.stopPropagation();
+																										openEditTopicModal(
+																											topic.raw,
+																										);
+																									}}
+																									{...testId(
+																										`custom-topic-edit-${topic.key}`,
+																									)}
+																								>
+																									<PencilSimpleIcon size={20} />
+																								</ActionIcon>
+																								<Tooltip
+																									label={t`Select at least one other topic before deleting this one`}
+																									disabled={
+																										!field.value.includes(
+																											topic.key,
+																										) || field.value.length > 1
+																									}
+																									multiline
+																									w={200}
+																								>
+																									<ActionIcon
+																										variant="transparent"
+																										aria-label={t`Delete topic`}
+																										c={
+																											field.value.includes(
+																												topic.key,
+																											) &&
+																											field.value.length <= 1
+																												? "dimmed"
+																												: "red"
+																										}
+																										disabled={
+																											field.value.includes(
+																												topic.key,
+																											) &&
+																											field.value.length <= 1
+																										}
+																										onClick={(e) => {
+																											e.stopPropagation();
+																											setDeleteConfirmKey(
+																												topic.key,
+																											);
+																										}}
+																										{...testId(
+																											`custom-topic-delete-${topic.key}`,
+																										)}
+																									>
+																										<TrashIcon size={20} />
+																									</ActionIcon>
+																								</Tooltip>
+																							</Group>
+																						)}
+																					</Group>
+																				))}
+																			</Stack>
+																		</Checkbox.Group>
+																		<Box>
+																			<Button
+																				leftSection={<PlusIcon size={20} />}
+																				onClick={openCreateTopicModal}
+																				{...testId(
+																					"portal-editor-add-custom-topic",
+																				)}
+																			>
+																				<Trans>Add topic</Trans>
+																			</Button>
+																		</Box>
+																	</Stack>
+																)}
+															</Stack>
 														)}
-													</Stack>
-												)}
-											/>
-
-											<Controller
-												name="is_verify_on_finish_enabled"
-												control={control}
-												render={({ field }) => (
-													<Switch
-														mt="xl"
-														label={
-															<FormLabel
-																label={t`Remind users to verify before finishing`}
-																isDirty={
-																	formState.dirtyFields
-																		.is_verify_on_finish_enabled
-																}
-																error={
-																	formState.errors.is_verify_on_finish_enabled
-																		?.message
-																}
-															/>
-														}
-														description={t`When finishing the conversation, participants who haven't verified yet will be prompted to verify or skip`}
-														disabled={!watchedVerifyEnabled}
-														checked={field.value}
-														onChange={(e) =>
-															field.onChange(e.currentTarget.checked)
-														}
-														style={{
-															opacity: watchedVerifyEnabled ? 1 : 0.6,
-														}}
-														{...testId("portal-editor-verify-on-finish-switch")}
 													/>
-												)}
-											/>
+
+													<Controller
+														name="is_verify_on_finish_enabled"
+														control={control}
+														render={({ field }) => (
+															<Switch
+																mt="xl"
+																label={
+																	<FormLabel
+																		label={t`Remind users to verify before finishing`}
+																		isDirty={
+																			formState.dirtyFields
+																				.is_verify_on_finish_enabled
+																		}
+																		error={
+																			formState.errors
+																				.is_verify_on_finish_enabled?.message
+																		}
+																	/>
+																}
+																description={t`When finishing the conversation, participants who haven't verified yet will be prompted to verify or skip`}
+																checked={field.value}
+																onChange={(e) =>
+																	field.onChange(e.currentTarget.checked)
+																}
+																{...testId(
+																	"portal-editor-verify-on-finish-switch",
+																)}
+															/>
+														)}
+													/>
+												</>
+											)}
 										</Stack>
 
 										<Stack gap="md">
 											<Group>
-												<Title order={4}>
-													<Trans>Report Notifications</Trans>
+												<Title order={5}>
+													<Trans>Report notifications</Trans>
 												</Title>
 											</Group>
 
@@ -1244,53 +1132,53 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 												</Trans>
 											</Text>
 
-											<Controller
-												name="is_project_notification_subscription_allowed"
-												control={control}
-												render={({ field }) => (
-													<Stack>
-														<Switch
-															label={
-																<FormLabel
-																	label={t`Enable Report Notifications`}
-																	isDirty={
-																		formState.dirtyFields
-																			.is_project_notification_subscription_allowed
-																	}
-																	error={
-																		formState.errors
-																			.is_project_notification_subscription_allowed
-																			?.message
-																	}
-																/>
-															}
-															description={
-																!watchedAskForEmail
-																	? t`Requires "Ask for Email?" to be enabled`
-																	: undefined
-															}
-															disabled={!watchedAskForEmail}
-															checked={field.value}
-															onChange={(e) =>
-																field.onChange(e.currentTarget.checked)
-															}
-															{...testId(
-																"portal-editor-report-notifications-switch",
-															)}
-														/>
-													</Stack>
-												)}
-											/>
+											{watchedAskForEmail ? (
+												<Controller
+													name="is_project_notification_subscription_allowed"
+													control={control}
+													render={({ field }) => (
+														<Stack>
+															<Switch
+																label={
+																	<FormLabel
+																		label={t`Enable report notifications`}
+																		isDirty={
+																			formState.dirtyFields
+																				.is_project_notification_subscription_allowed
+																		}
+																		error={
+																			formState.errors
+																				.is_project_notification_subscription_allowed
+																				?.message
+																		}
+																	/>
+																}
+																checked={field.value}
+																onChange={(e) =>
+																	field.onChange(e.currentTarget.checked)
+																}
+																{...testId(
+																	"portal-editor-report-notifications-switch",
+																)}
+															/>
+														</Stack>
+													)}
+												/>
+											) : (
+												<Text size="sm" c="dimmed">
+													{t`Requires "Ask for email?" to be enabled`}
+												</Text>
+											)}
 										</Stack>
 									</Stack>
 								</Stack>
 								<Divider />
 
-								<Stack gap="1.5rem">
-									<Title order={3}>
-										<Trans>Portal Content</Trans>
+								<Stack gap="md">
+									<Title order={4}>
+										<Trans>Portal content</Trans>
 									</Title>
-									<Stack gap="2rem">
+									<Stack gap="md">
 										<Controller
 											name="default_conversation_title"
 											control={control}
@@ -1298,7 +1186,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 												<TextInput
 													label={
 														<FormLabel
-															label={t`Page Title`}
+															label={t`Page title`}
 															isDirty={
 																formState.dirtyFields.default_conversation_title
 															}
@@ -1322,7 +1210,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 
 										<Stack gap="xs">
 											<FormLabel
-												label={t`Page Content`}
+												label={t`Page content`}
 												isDirty={
 													formState.dirtyFields.default_conversation_description
 												}
@@ -1355,7 +1243,7 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 
 										<Stack gap="xs">
 											<FormLabel
-												label={t`Thank You Page Content`}
+												label={t`Thank you page content`}
 												isDirty={
 													formState.dirtyFields.default_conversation_finish_text
 												}
@@ -1453,9 +1341,9 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 
 								<Divider />
 
-								<Stack gap="2.5rem">
-									<Title order={3}>
-										<Trans>Advanced Settings</Trans>
+								<Stack gap="md">
+									<Title order={4}>
+										<Trans>Advanced settings</Trans>
 									</Title>
 
 									<Stack gap="md">
@@ -1477,13 +1365,9 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 
 									<Stack gap="md">
 										<Group>
-											<Title order={4}>
-												<Trans>Anonymize Transcripts</Trans>
+											<Title order={5}>
+												<Trans>Anonymize transcripts</Trans>
 											</Title>
-											<DetectiveIcon
-												size={20}
-												color="var(--mantine-color-primary-filled)"
-											/>
 											<Badge color="mauve" c="graphite" size="sm">
 												<Trans>Beta</Trans>
 											</Badge>
@@ -1561,10 +1445,9 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 
 									<Stack gap="md">
 										<Group>
-											<Title order={4}>
-												<Trans>Auto-generate Titles</Trans>
+											<Title order={5}>
+												<Trans>Auto-generate titles</Trans>
 											</Title>
-											<IconInfoCircle size={20} className="text-gray-400" />
 											<Badge color="mauve" c="graphite" size="sm">
 												<Trans>Beta</Trans>
 											</Badge>
@@ -1680,25 +1563,20 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 										},
 									}}
 									handleClasses={{
-										bottom: "hover:bg-blue-500/20",
-										left: "hover:bg-blue-500/20",
+										bottom: "hover:bg-[var(--app-rule-color)]",
+										left: "hover:bg-[var(--app-rule-color)]",
 									}}
 								>
-									<Paper
-										shadow="sm"
-										withBorder
-										className="flex h-full flex-col"
-									>
+									<Paper withBorder className="flex h-full flex-col">
 										<Stack gap="xs" px="md" py="md">
 											<Group justify="space-between">
 												<Title order={4}>
-													<Trans>Live Preview</Trans>
+													<Trans>Live preview</Trans>
 												</Title>
 												<Button
-													variant="subtle"
 													size="compact-sm"
 													onClick={refreshPreview}
-													rightSection={<IconRefresh size={16} />}
+													leftSection={<ArrowClockwiseIcon size={20} />}
 												>
 													<Trans>Refresh</Trans>
 												</Button>
@@ -1717,8 +1595,9 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 										<iframe
 											key={previewKey}
 											src={link}
-											className="h-full w-full flex-1 bg-white"
-											title="Portal Preview"
+											className="h-full w-full flex-1"
+											style={{ background: "var(--app-surface)" }}
+											title={t`Portal preview`}
 											allow="microphone *"
 										/>
 									</Paper>

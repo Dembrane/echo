@@ -14,13 +14,12 @@ import {
 	Title,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
-import { IconArrowLeft } from "@tabler/icons-react";
+import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
-import { GradientBlurs } from "@/components/layout/GradientBlurs";
 import { InviteEmailList } from "@/components/organisation/InviteEmailList";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -289,7 +288,7 @@ export const OnboardingRoute = () => {
 			<div
 				style={{
 					alignItems: "center",
-					background: "var(--app-background, #f6f4f1)",
+					background: "var(--app-background)",
 					display: "flex",
 					flexDirection: "column",
 					gap: 16,
@@ -311,7 +310,7 @@ export const OnboardingRoute = () => {
 			<div
 				style={{
 					alignItems: "center",
-					background: "var(--app-background, #f6f4f1)",
+					background: "var(--app-background)",
 					display: "flex",
 					justifyContent: "center",
 					minHeight: "100dvh",
@@ -320,7 +319,6 @@ export const OnboardingRoute = () => {
 					position: "relative",
 				}}
 			>
-				<GradientBlurs />
 				<div
 					style={{
 						opacity: ready ? 1 : 0,
@@ -330,10 +328,10 @@ export const OnboardingRoute = () => {
 						width: "min(400px, 100%)",
 					}}
 				>
-					<Stack gap={24}>
+					<Stack gap="lg">
 						<FlowStepper steps={flowSteps} active={activeStep} />
-						<Stack gap={6}>
-							<Title order={3} fw={500}>
+						<Stack gap="xs">
+							<Title order={2}>
 								<Trans>Invite your team</Trans>
 							</Title>
 							<Text size="sm" c="dimmed" lh={1.6}>
@@ -350,15 +348,9 @@ export const OnboardingRoute = () => {
 							autoFocusFirst
 						/>
 
-						<Group gap={12}>
+						<Group gap="sm">
 							<Button
-								size="md"
-								variant="outline"
-								onClick={() => goToQuestionsOrHome()}
-							>
-								<Trans>Skip</Trans>
-							</Button>
-							<Button
+								variant="filled"
 								flex={1}
 								loading={sendingInvites}
 								disabled={
@@ -368,6 +360,14 @@ export const OnboardingRoute = () => {
 								onClick={handleSendInvites}
 							>
 								<Trans>Send invites</Trans>
+							</Button>
+							<Button
+								size="md"
+								variant="subtle"
+								color="gray"
+								onClick={() => goToQuestionsOrHome()}
+							>
+								<Trans>Skip</Trans>
 							</Button>
 						</Group>
 					</Stack>
@@ -412,7 +412,7 @@ export const OnboardingRoute = () => {
 			<div
 				style={{
 					alignItems: "center",
-					background: "var(--app-background, #f6f4f1)",
+					background: "var(--app-background)",
 					display: "flex",
 					justifyContent: "center",
 					minHeight: "100dvh",
@@ -421,7 +421,6 @@ export const OnboardingRoute = () => {
 					position: "relative",
 				}}
 			>
-				<GradientBlurs />
 				<div
 					style={{
 						opacity: ready ? 1 : 0,
@@ -431,11 +430,12 @@ export const OnboardingRoute = () => {
 						width: "min(440px, 100%)",
 					}}
 				>
-					<Stack gap={28}>
+					<Stack gap="lg">
 						<Button
 							variant="subtle"
+							color="gray"
 							size="sm"
-							leftSection={<IconArrowLeft size={16} />}
+							leftSection={<ArrowLeftIcon size={20} />}
 							onClick={goBack}
 							px={4}
 							style={{ alignSelf: "flex-start" }}
@@ -448,8 +448,8 @@ export const OnboardingRoute = () => {
 						{/* A reassuring title so users who land here unexpectedly
 						    (e.g. existing users nudged through the questionnaire)
 						    aren't surprised. */}
-						<Stack gap={4}>
-							<Title order={3} fw={500}>
+						<Stack gap="xs">
+							<Title order={2}>
 								<Trans>Almost ready</Trans>
 							</Title>
 							<Text size="sm" lh={1.5}>
@@ -458,8 +458,8 @@ export const OnboardingRoute = () => {
 						</Stack>
 
 						{currentQ === "risk" && (
-							<Stack key="risk" gap={12}>
-								<Text size="md" fw={500} lh={1.4}>
+							<Stack key="risk" gap="sm">
+								<Text size="md" lh={1.4}>
 									{t`Do you plan to use dembrane in health, education, recruitment, critical infrastructure management, law enforcement or justice contexts?`}
 								</Text>
 								<Radio.Group
@@ -471,7 +471,7 @@ export const OnboardingRoute = () => {
 										if (v === "no") setQ3(null);
 									}}
 								>
-									<Group gap={16}>
+									<Group gap="md">
 										<Radio size="md" value="yes" label={t`Yes`} />
 										<Radio size="md" value="no" label={t`No`} />
 									</Group>
@@ -480,12 +480,12 @@ export const OnboardingRoute = () => {
 						)}
 
 						{currentQ === "training" && (
-							<Stack key="training" gap={12}>
-								<Text size="md" fw={500} lh={1.4}>
+							<Stack key="training" gap="sm">
+								<Text size="md" lh={1.4}>
 									{t`Have you completed a training?`}
 								</Text>
 								<Radio.Group value={q3} onChange={setQ3}>
-									<Group gap={16}>
+									<Group gap="md">
 										<Radio size="md" value="yes" label={t`Yes`} />
 										<Radio size="md" value="no" label={t`No`} />
 									</Group>
@@ -494,12 +494,12 @@ export const OnboardingRoute = () => {
 						)}
 
 						{currentQ === "usage" && (
-							<Stack key="usage" gap={12}>
-								<Text size="md" fw={500} lh={1.4}>
+							<Stack key="usage" gap="sm">
+								<Text size="md" lh={1.4}>
 									{t`What do you plan to use dembrane for?`}
 								</Text>
 								<Checkbox.Group value={q1} onChange={setQ1}>
-									<Stack gap={10}>
+									<Stack gap="sm">
 										<Checkbox
 											size="md"
 											value="within my organisation"
@@ -515,16 +515,9 @@ export const OnboardingRoute = () => {
 							</Stack>
 						)}
 
-						<Group gap={12}>
+						<Group gap="sm">
 							<Button
-								size="md"
-								variant="subtle"
-								disabled={submittingAnswers}
-								onClick={() => submitAnswers(true)}
-							>
-								<Trans>Skip</Trans>
-							</Button>
-							<Button
+								variant="filled"
 								flex={1}
 								size="md"
 								loading={submittingAnswers}
@@ -532,6 +525,15 @@ export const OnboardingRoute = () => {
 								onClick={goNext}
 							>
 								{isLastQ ? <Trans>Done</Trans> : <Trans>Continue</Trans>}
+							</Button>
+							<Button
+								size="md"
+								variant="subtle"
+								color="gray"
+								disabled={submittingAnswers}
+								onClick={() => submitAnswers(true)}
+							>
+								<Trans>Skip</Trans>
 							</Button>
 						</Group>
 					</Stack>
@@ -544,7 +546,7 @@ export const OnboardingRoute = () => {
 	return (
 		<div
 			style={{
-				background: "var(--app-background, #f6f4f1)",
+				background: "var(--app-background)",
 				display: "flex",
 				flexDirection: "column",
 				minHeight: "100dvh",
@@ -552,8 +554,6 @@ export const OnboardingRoute = () => {
 				position: "relative",
 			}}
 		>
-			<GradientBlurs />
-
 			{/* Compact layout (2026-04-24): illustration removed, form
 			    centered like /login. The previous full-bleed banner pushed
 			    the form to the bottom of the viewport with a large dead
@@ -578,10 +578,10 @@ export const OnboardingRoute = () => {
 						width: "100%",
 					}}
 				>
-					<Stack gap={24}>
+					<Stack gap="lg">
 						<FlowStepper steps={flowSteps} active={activeStep} />
-						<Stack gap={6}>
-							<Title order={3} fw={400}>
+						<Stack gap="xs">
+							<Title order={2}>
 								{hasInvites ? (
 									displayName ? (
 										<Trans>Welcome, {displayName}</Trans>
@@ -636,7 +636,7 @@ export const OnboardingRoute = () => {
 									)
 								) : isLegacyUser ? (
 									<Trans>
-										We've added organisations so you can organize projects and
+										We've added organisations so you can organise projects and
 										share them with colleagues. Everything you had before is
 										still here. We just need a name for your organisation.
 									</Trans>
@@ -657,11 +657,12 @@ export const OnboardingRoute = () => {
 						    call still runs; it just skips the personal-org
 						    branch when has_pending_invites is true. */}
 						{hasInvites ? (
-							<Stack gap={12}>
+							<Stack gap="sm">
 								<Button
+									variant="filled"
 									fullWidth
 									loading={onboardingMutation.isPending}
-									size="lg"
+									size="md"
 									onClick={() => onboardingMutation.mutate()}
 								>
 									<Trans>Continue</Trans>
@@ -674,7 +675,7 @@ export const OnboardingRoute = () => {
 									onboardingMutation.mutate();
 								}}
 							>
-								<Stack gap={16}>
+								<Stack gap="md">
 									<TextInput
 										autoFocus
 										description={t`You can change this anytime in settings.`}
@@ -682,22 +683,23 @@ export const OnboardingRoute = () => {
 										placeholder={
 											defaultOrgName || t`Your organisation or company`
 										}
-										size="sm"
+										size="md"
 										value={orgName}
 										onChange={(e) => setOrgName(e.currentTarget.value)}
 									/>
 
 									<Button
+										variant="filled"
 										fullWidth
 										loading={onboardingMutation.isPending}
-										size="lg"
+										size="md"
 										type="submit"
 									>
 										<Trans>Get started</Trans>
 									</Button>
 
 									{isLegacyUser && (
-										<Text size="xs" c="dimmed" mt={4}>
+										<Text size="xs" c="dimmed" mt="xs">
 											<Trans>
 												You'll find all your projects waiting for you.
 											</Trans>
@@ -715,7 +717,7 @@ export const OnboardingRoute = () => {
 
 function FlowStepper({ steps, active }: { steps: string[]; active: number }) {
 	return (
-		<Stepper active={active} size="sm" iconSize={28} mb={8}>
+		<Stepper active={active} size="sm" iconSize={28} mb="sm">
 			{steps.map((label) => (
 				<Stepper.Step key={label} label={label} />
 			))}

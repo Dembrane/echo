@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { ActionIcon, Loader, Tooltip } from "@mantine/core";
-import { IconCheck, IconCopy } from "@tabler/icons-react";
+import { CheckIcon, CopyIcon } from "@phosphor-icons/react";
 import { toast } from "@/components/common/Toaster";
 import { testId } from "@/lib/testUtils";
 import useCopyToRichText from "@/hooks/useCopyToRichText";
@@ -46,7 +46,7 @@ export const CopyConversationTranscriptActionIcon = (props: {
 			}
 		>
 			<ActionIcon
-				variant="transparent"
+				variant="subtle"
 				color={copied ? "blue" : "gray"}
 				onClick={(e) => {
 					// Stop the click bubbling to an enclosing card anchor (the
@@ -59,9 +59,9 @@ export const CopyConversationTranscriptActionIcon = (props: {
 				{isLoading ? (
 					<Loader size={size} />
 				) : copied ? (
-					<IconCheck size={size} />
+					<CheckIcon size={size} />
 				) : (
-					<IconCopy size={size} />
+					<CopyIcon size={size} />
 				)}
 			</ActionIcon>
 		</Tooltip>

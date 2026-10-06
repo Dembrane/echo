@@ -7,7 +7,7 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import type { TasksSummaryT } from "../contract/contract.gen";
 import { nextTaskText } from "../format";
 import { useAccountsCatalog } from "../i18n";
-import { markPromptSeen, promptFor, promptSeen } from "./tasksPrompt";
+import { markPromptSeen, promptFor, promptSeen } from "./tasksPromptState";
 import { useTasksSummary } from "./tasksSummary";
 
 type Row = TasksSummaryT[number];
@@ -70,14 +70,15 @@ export default function TasksPrompt({ onSettled }: { onSettled: () => void }) {
 						<Trans>Next: {next}</Trans>
 					</Text>
 				)}
-				<Group justify="flex-end" gap="sm">
-					<Button variant="subtle" color="gray" onClick={() => close()}>
-						<Trans>Later</Trans>
-					</Button>
+				<Group gap="sm">
 					<Button
+						variant="filled"
 						onClick={() => close(() => navigate(`/o/${row.org_id}/account`))}
 					>
 						<Trans>Go to your tasks</Trans>
+					</Button>
+					<Button variant="subtle" color="gray" onClick={() => close()}>
+						<Trans>Later</Trans>
 					</Button>
 				</Group>
 			</Stack>

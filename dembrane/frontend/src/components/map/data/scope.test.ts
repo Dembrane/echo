@@ -5,6 +5,7 @@ import {
 	argumentsDominate,
 	countNodesByType,
 	defaultVisibleTypes,
+	filterNodesByConversation,
 	filterNodesByType,
 	resolveVisibleTypes,
 	zeroTypeCounts,
@@ -18,6 +19,31 @@ const counts = (values: Partial<Record<ObjectType, number>>) => ({
 const asType = (node: MapGraphNode, objectType: ObjectType): MapGraphNode => ({
 	...node,
 	metadata: { ...node.metadata, objectType },
+});
+
+describe("filterNodesByConversation", () => {
+	const from = (
+		node: MapGraphNode,
+		conversationIds: string[],
+	): MapGraphNode => ({
+		...node,
+		metadata: { ...node.metadata, conversationIds },
+	});
+	const [a, b, c] = createSyntheticMap({ count: 3 });
+	const nodes = [from(a, ["one"]), from(b, ["one", "two"]), from(c, ["two"])];
+
+	it("keeps the same array when nothing is hidden", () => {
+		expect(filterNodesByConversation(nodes, new Set())).toBe(nodes);
+	});
+
+	it("drops a node only when all its conversations are hidden", () => {
+		expect(
+			filterNodesByConversation(nodes, new Set(["one"])).map((node) => node.id),
+		).toEqual([b.id, c.id]);
+		expect(filterNodesByConversation(nodes, new Set(["one", "two"]))).toEqual(
+			[],
+		);
+	});
 });
 
 describe("filterNodesByType", () => {

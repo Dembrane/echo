@@ -16,8 +16,6 @@ import {
 const AuthHeader = () => (
 	<Paper
 		component="header"
-		radius="0"
-		shadow="xs"
 		withBorder={false}
 		className="z-30 w-full"
 		style={{ backgroundColor: "var(--app-background)" }}
@@ -67,8 +65,11 @@ const AuthLayoutInner = (props: PropsWithChildren) => {
 				<LoadingOverlay visible={auth.loading} zIndex={2000} />
 				<div className="flex w-full flex-1 flex-col lg:w-1/2 lg:min-h-screen lg:overflow-y-auto">
 					<div
-						className="border-b border-slate-200/60"
-						style={{ backgroundColor: "var(--app-background)" }}
+						className="border-b"
+						style={{
+							backgroundColor: "var(--app-background)",
+							borderColor: "var(--app-rule-color)",
+						}}
 					>
 						<AuthHeader />
 					</div>
@@ -94,11 +95,7 @@ const AuthLayoutInner = (props: PropsWithChildren) => {
 						preload="auto"
 					/>
 					<div
-						className="absolute inset-0 bg-white/45 backdrop-blur-md"
-						aria-hidden="true"
-					/>
-					<div
-						className="absolute inset-0 bg-gradient-to-br from-white/60 via-white/30 to-transparent"
+						className="absolute inset-0 bg-white/45 backdrop-blur-md dark:bg-black/45"
 						aria-hidden="true"
 					/>
 				</aside>

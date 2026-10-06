@@ -1,6 +1,13 @@
 import { API_BASE_URL } from "@/config";
 
+/** The deck's reading screens before the outcomes, in the order they open. */
+export const OPENING_SCREENS = ["intro", "data", "guide"] as const;
+export type OpeningScreen = (typeof OPENING_SCREENS)[number];
+
 export type DeckBlock = "popcorn" | "stakeholders" | "tensions";
+
+/** Which way a key, a swipe or a side zone moves the deck. */
+export type DeckDirection = "next" | "previous" | "first" | "last";
 
 export type DeckCommand =
 	| {
@@ -26,7 +33,7 @@ export type DeckCommand =
 	| {
 			command: "opening";
 			presentationId: string;
-			screen: "intro" | "data";
+			screen: OpeningScreen;
 			source: "dembrane-present-shell";
 			version: 1;
 	  }
@@ -42,6 +49,14 @@ export type DeckCommand =
 			field: OpeningEditField;
 			presentationId: string;
 			source: "dembrane-present-shell";
+			version: 1;
+	  }
+	| {
+			/** Steps through the opening, or back into it from the first slide. */
+			command: "navigate";
+			presentationId: string;
+			source: "dembrane-present-shell";
+			to: "next" | "previous";
 			version: 1;
 	  }
 	| {
@@ -65,9 +80,21 @@ export type DeckOpeningMessage = {
 	locked?: boolean;
 	open: boolean;
 	presentationId: string;
-	screen?: "intro" | "data";
+	screen?: OpeningScreen;
 	source: "dembrane-present-deck";
 	type: "opening";
+	version: 1;
+	/** The opening's screen on show (from 1) and how many it has. */
+	step?: number;
+	steps?: number;
+};
+
+/** A key or a swipe inside the deck, for the shell to act on. */
+export type DeckNavigateMessage = {
+	presentationId: string;
+	source: "dembrane-present-deck";
+	to: DeckDirection;
+	type: "navigate";
 	version: 1;
 };
 
@@ -162,7 +189,7 @@ export const deckBlockCommand = (
 
 export const deckOpeningCommand = (
 	presentationId: string,
-	screen: "intro" | "data",
+	screen: OpeningScreen,
 ): DeckCommand => ({
 	command: "opening",
 	presentationId,
@@ -179,6 +206,17 @@ export const deckThemeCommand = (
 	presentationId,
 	source: "dembrane-present-shell",
 	theme,
+	version: 1,
+});
+
+export const deckNavigateCommand = (
+	presentationId: string,
+	to: "next" | "previous",
+): DeckCommand => ({
+	command: "navigate",
+	presentationId,
+	source: "dembrane-present-shell",
+	to,
 	version: 1,
 });
 
@@ -235,11 +273,11 @@ export const isDeckOpeningEvent = (
 		message.version === 1 &&
 		message.type === "opening" &&
 		message.presentationId === expected.presentationId &&
+		(message.step === undefined || Number.isInteger(message.step)) &&
+		(message.steps === undefined || Number.isInteger(message.steps)) &&
 		typeof message.open === "boolean" &&
 		(message.locked === undefined || typeof message.locked === "boolean") &&
-		(message.screen === undefined ||
-			message.screen === "intro" ||
-			message.screen === "data")
+		(message.screen === undefined || OPENING_SCREENS.includes(message.screen))
 	);
 };
 
@@ -293,5 +331,37 @@ export const isDeckChromeEvent = (
 		typeof message.qrFold === "string" &&
 		typeof message.qrLabel === "string" &&
 		typeof message.qrShow === "string"
+	);
+};
+
+const DECK_DIRECTIONS: readonly unknown[] = [
+	"next",
+	"previous",
+	"first",
+	"last",
+];
+
+export const isDeckNavigateEvent = (
+	event: Pick<MessageEvent, "data" | "origin" | "source">,
+	expected: {
+		origin: string;
+		presentationId: string;
+		source: MessageEventSource | null;
+	},
+): event is Pick<
+	MessageEvent<DeckNavigateMessage>,
+	"data" | "origin" | "source"
+> => {
+	if (event.origin !== expected.origin || event.source !== expected.source) {
+		return false;
+	}
+	if (!event.data || typeof event.data !== "object") return false;
+	const message = event.data as Partial<DeckNavigateMessage>;
+	return (
+		message.source === "dembrane-present-deck" &&
+		message.version === 1 &&
+		message.type === "navigate" &&
+		message.presentationId === expected.presentationId &&
+		DECK_DIRECTIONS.includes(message.to)
 	);
 };

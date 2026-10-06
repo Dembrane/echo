@@ -118,6 +118,68 @@ const emitVersionManifest = (buildId: string): PluginOption => ({
 	name: "dembrane-version-manifest",
 });
 
+// Phosphor ships every icon in six weights (a Map of path data per icon); the
+// design system draws only "light", plus "fill" for a few filled icons. Keeping
+// just those two halves the icon cost in the participant portal's first load
+// (scripts/check-portal-bundle.mjs). IconBase also falls back to "light" when a
+// dropped weight is asked for, so an icon can never render empty.
+const PHOSPHOR_KEEP = new Set(["light", "fill"]);
+const keepPhosphorWeights = (code: string): string => {
+	const start = code.indexOf("new Map([");
+	if (start === -1) return code;
+	let i = start + "new Map([".length;
+	const kept: string[] = [];
+	// Walk the top-level [key, value] entries by bracket depth.
+	while (i < code.length) {
+		while (/[\s,]/.test(code[i])) i++;
+		if (code[i] !== "[") break;
+		let depth = 0;
+		let j = i;
+		let inString: string | null = null;
+		for (; j < code.length; j++) {
+			const ch = code[j];
+			if (inString) {
+				if (ch === "\\") j++;
+				else if (ch === inString) inString = null;
+				continue;
+			}
+			if (ch === '"' || ch === "'") inString = ch;
+			else if (ch === "[" || ch === "(" || ch === "{") depth++;
+			else if (ch === "]" || ch === ")" || ch === "}") {
+				depth--;
+				if (depth === 0) break;
+			}
+		}
+		const entry = code.slice(i, j + 1);
+		const key = entry.match(/^\[\s*"([a-z]+)"/)?.[1];
+		if (key && PHOSPHOR_KEEP.has(key)) kept.push(entry);
+		i = j + 1;
+	}
+	const end = code.indexOf("])", i);
+	if (end === -1 || kept.length === 0) return code;
+	return `${code.slice(0, start)}new Map([${kept.join(",")}${code.slice(end)}`;
+};
+const phosphorLightOnly = (): PluginOption => ({
+	name: "dembrane-phosphor-light-only",
+	transform(code, id) {
+		if (/@phosphor-icons\/react\/dist\/defs\/[^/]+\.es\.js$/.test(id)) {
+			return { code: keepPhosphorWeights(code), map: null };
+		}
+		if (/@phosphor-icons\/react\/dist\/lib\/IconBase\.es\.js$/.test(id)) {
+			return {
+				code: code
+					.replace('weight: f = "regular"', 'weight: f = "light"')
+					.replace(
+						"m.get(o != null ? o : f)",
+						'(m.get(o != null ? o : f) ?? m.get("light"))',
+					),
+				map: null,
+			};
+		}
+		return null;
+	},
+});
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
 	const isDev = mode === "development";
@@ -171,12 +233,11 @@ export default defineConfig(({ mode }) => {
 			}),
 			lingui(),
 			emitVersionManifest(buildId),
+			phosphorLightOnly(),
 		],
 		resolve: {
 			alias: {
 				"@": path.resolve(__dirname, "./src"),
-				// reddit fix lol: https://www.reddit.com/r/reactjs/comments/1g3tsiy/trouble_with_vite_tablericons_5600_requests/
-				"@tabler/icons-react": "@tabler/icons-react/dist/esm/icons/index.mjs",
 			},
 		},
 		test: {
@@ -190,11 +251,7 @@ export default defineConfig(({ mode }) => {
 				optimizer: {
 					client: {
 						enabled: true,
-						include: [
-							"@phosphor-icons/react",
-							"@tabler/icons-react",
-							"date-fns",
-						],
+						include: ["@phosphor-icons/react", "date-fns"],
 					},
 				},
 			},

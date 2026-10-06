@@ -5,14 +5,13 @@ import {
 	Anchor,
 	Badge,
 	Code,
-	Group,
-	Loader,
+	Skeleton,
 	Stack,
 	Table,
 	Text,
 	Title,
 } from "@mantine/core";
-import { IconInfoCircle } from "@tabler/icons-react";
+import { InfoIcon } from "@phosphor-icons/react";
 import { I18nLink } from "@/components/common/i18nLink";
 import { SectionHeading } from "./AgentAccessSection";
 import { AgentGrantsCard } from "./AgentGrantsCard";
@@ -55,9 +54,10 @@ const ActivityTable = ({
 	const rows = events ?? [];
 	if (isLoading) {
 		return (
-			<Group justify="center" py="md">
-				<Loader size="sm" color="gray" />
-			</Group>
+			<Stack gap="xs">
+				<Skeleton height={16} />
+				<Skeleton height={16} />
+			</Stack>
 		);
 	}
 	if (rows.length === 0) {
@@ -150,13 +150,13 @@ export const OrgAgentAccessPanel = ({
 		<Stack gap="xl">
 			<Stack gap="sm">
 				<Stack gap={4}>
-					<Title order={3}>
+					<Title order={4}>
 						<Trans>MCP access</Trans>
 					</Title>
 				</Stack>
 				<Alert
 					variant="light"
-					icon={<IconInfoCircle />}
+					icon={<InfoIcon size={20} />}
 					data-testid="agent-org-scope-callout"
 				>
 					<Trans>
@@ -180,9 +180,7 @@ export const OrgAgentAccessPanel = ({
 					<Trans>This organisation</Trans>
 				</SectionHeading>
 				{orgsLoading ? (
-					<Group justify="center" py="md">
-						<Loader size="sm" color="gray" />
-					</Group>
+					<Skeleton height={40} maw={560} />
 				) : org ? (
 					<>
 						<OrgAccessTable data-testid="agent-this-organisation">

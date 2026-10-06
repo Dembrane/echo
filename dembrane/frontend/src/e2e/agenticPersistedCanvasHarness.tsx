@@ -1,4 +1,3 @@
-import "@fontsource-variable/space-grotesk";
 import "@mantine/core/styles.css";
 import "@/index.css";
 
@@ -8,11 +7,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router";
-import { CanvasSuggestionCard } from "@/components/chat/CanvasSuggestionCard";
 import {
 	extractTopLevelToolActivity,
 	parseCanvasSuggestion,
 } from "@/components/chat/agenticToolActivity";
+import { CanvasSuggestionCard } from "@/components/chat/CanvasSuggestionCard";
 import { Toaster } from "@/components/common/Toaster";
 import { I18nProvider } from "@/components/layout/I18nProvider";
 import type { AgenticRunEvent } from "@/lib/api";

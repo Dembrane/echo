@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	Badge,
@@ -35,7 +36,7 @@ export const OrganisationExternalView = ({ organisationId }: Props) => {
 
 	const orgWorkspaces = workspaces.filter((w) => w.org_id === organisationId);
 	const first = orgWorkspaces[0];
-	const orgName = first?.org_name ?? "Organisation";
+	const orgName = first?.org_name ?? t`Organisation`;
 	const orgLogo = first?.org_logo_url
 		? resolveLogoUrl(first.org_logo_url)
 		: null;
@@ -54,49 +55,45 @@ export const OrganisationExternalView = ({ organisationId }: Props) => {
 							fit="contain"
 						/>
 					) : null}
-					<Stack gap={4}>
+					<Stack gap="xs">
 						<Group gap="sm" align="center">
-							<Title order={2} fw={500}>
-								{orgName}
-							</Title>
+							<Title order={2}>{orgName}</Title>
 							<Badge variant="light" color="gray">
 								<Trans>External</Trans>
 							</Badge>
 						</Group>
 						<Text size="sm" c="dimmed">
 							<Trans>
-								You're an external collaborator in this organisation. Open
-								one of the workspaces shared with you below.
+								You're an external collaborator in this organisation. Open one
+								of the workspaces shared with you below.
 							</Trans>
 						</Text>
 					</Stack>
 				</Group>
 
 				<Stack gap="sm">
-					<Text size="xs" c="dimmed" tt="uppercase" style={{ letterSpacing: "0.04em" }}>
+					<Title order={5}>
 						<Trans>Workspaces shared with you</Trans>
-					</Text>
+					</Title>
 					{orgWorkspaces.length === 0 ? (
-						<Paper p="md" withBorder>
-							<Text size="sm" c="dimmed">
-								<Trans>
-									No workspaces from this organisation are shared with you
-									right now.
-								</Trans>
-							</Text>
-						</Paper>
+						<Text size="sm" c="dimmed">
+							<Trans>
+								No workspaces from this organisation are shared with you right
+								now.
+							</Trans>
+						</Text>
 					) : (
 						orgWorkspaces.map((ws) => (
 							<Paper
 								key={ws.id}
 								p="md"
-								withBorder
-								className="cursor-pointer"
+								withBorder={false}
+								className="app-do"
 								onClick={() => openWorkspace(ws.id)}
 							>
 								<Group justify="space-between" align="center" wrap="nowrap">
-									<Stack gap={2}>
-										<Text fw={500}>{ws.name}</Text>
+									<Stack gap="xs">
+										<Text>{ws.name}</Text>
 										<Group gap="xs">
 											<Text size="xs" c="dimmed">
 												{displayRole(ws.role)}
@@ -105,13 +102,11 @@ export const OrganisationExternalView = ({ organisationId }: Props) => {
 												·
 											</Text>
 											<Text size="xs" c="dimmed">
-												{ws.project_count}{" "}
-												<Trans>projects</Trans>
+												{ws.project_count} <Trans>projects</Trans>
 											</Text>
 										</Group>
 									</Stack>
 									<Button
-										variant="light"
 										size="xs"
 										onClick={(e) => {
 											e.stopPropagation();
@@ -128,8 +123,8 @@ export const OrganisationExternalView = ({ organisationId }: Props) => {
 
 				<Text size="xs" c="dimmed">
 					<Trans>
-						Need more access? Ask the person who invited you to add you to
-						the organisation or another workspace.
+						Need more access? Ask the person who invited you to add you to the
+						organisation or another workspace.
 					</Trans>
 				</Text>
 			</Stack>

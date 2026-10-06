@@ -10,6 +10,7 @@ import {
 	Sparkle,
 } from "@phosphor-icons/react";
 import { useMemo } from "react";
+import { roles } from "@/colors";
 import { CreateOrganisationModal } from "@/components/organisation/CreateOrganisationModal";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -120,8 +121,8 @@ export const UserHomeView = () => {
 							<button
 								type="button"
 								onClick={createOrgHandlers.open}
-								className="relative flex h-[30px] items-center gap-2 rounded-md px-2 text-sm leading-tight transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#4169e1]"
-								style={{ color: "#4169e1" }}
+								className="relative flex h-[30px] items-center gap-2 px-2 text-sm leading-tight transition-colors hover:bg-[var(--app-quiet)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--app-action)]"
+								style={{ color: roles.action }}
 								data-testid="sidebar-create-org"
 							>
 								<Plus size={16} />
@@ -145,7 +146,6 @@ export const UserHomeView = () => {
 							to="/admin"
 							label={<Trans>Admin dashboard</Trans>}
 							icon={ShieldStar}
-							accent="#7e22ce"
 							pushes
 						/>
 					)}

@@ -1,8 +1,11 @@
-/* Import the Space Grotesk variable font */
-@import "@fontsource-variable/space-grotesk";
-
 /* Import custom DM Sans font with stylistic sets */
 @import "./fonts/dm-sans.css";
+/* The design system: the rule, square shapes, one stroke, one weight */
+@import "./styles/rules.css";
+/* Neighbours share an edge: joined controls draw one line between them */
+@import "./styles/joined.css";
+/* Dark mode: what the per-scheme variables can't reach (last, so it wins) */
+@import "./styles/tokens-dark.css";
 
 @layer tailwind {
 	/* biome-ignore lint/suspicious/noUnknownAtRules: <explanation> */
@@ -13,57 +16,54 @@
 /* biome-ignore lint/suspicious/noUnknownAtRules: <explanation> */
 @tailwind utilities;
 
-/* Global default colors and fonts */
-/* Space Grotesk (default) → White + Black */
-/* DM Sans → Parchment + Graphite */
+/* Global defaults; useAppPreferences sets the same values at runtime and
+   scales them for the user's font-size setting and the portal. */
 :root {
-	/* Dynamically updated by useAppPreferences based on font selection */
 	--app-base-font-size: 16px;
-	
-	/* Theme colors */
-	--app-background: #F6F4F1;
-	--app-text: #2D2D2C;
+
+	/* Theme colours */
+	--app-background: #f6f4f1;
+	--app-text: #2d2d2c;
 	--app-scrollbar-thumb: #8b8b8b;
 	--app-scrollbar-thumb-hover: #636363;
-	
-	/* Font settings */
-	--app-font-family: 'DM Sans Variable', sans-serif;
-	--app-content-bold-font-family: 'DM Sans Content', var(--app-font-family);
-	--app-font-feature-settings: 'ss01' on, 'ss02' on, 'ss03' on, 'ss04' on, 'ss05' on, 'ss06' on, 'ss08' on;
-	
-	/* Typography - Font sizes (distinct ramp: Body3 12 / Body2 15 / Body1 20) */
-	--app-font-size-xs: 0.75rem;    /* Body3: 12px */
-	--app-font-size-sm: 0.9375rem;  /* Body2: 15px */
-	--app-font-size-md: 1.25rem;    /* Body1: 20px (default body) */
-	--app-font-size-lg: 1.5rem;     /* Heading3: 24px */
-	--app-font-size-xl: 1.75rem;    /* Heading2: 28px */
 
-	/* Typography - Line heights */
-	--app-line-height-xs: 1.4;
-	--app-line-height-sm: 1.45;
+	/* Font: the site's DM Sans with its stylistic sets */
+	--app-font-family: "DM Sans Variable", sans-serif;
+	--app-content-bold-font-family: var(--app-font-family);
+	--app-font-feature-settings:
+		"ss01" on, "ss02" on, "ss03" on, "ss04" on, "ss05" on, "ss06" on, "ss08" on;
+
+	/* Type ladder: dembrane.com's perfect fourth from 14px. Nothing smaller.
+	   xs 14 (meta) / sm 16 (UI) / md 18.66 (reading) / lg 24.88 / xl 33.17 */
+	--app-font-size-xs: 0.875rem;
+	--app-font-size-sm: 1rem;
+	--app-font-size-md: 1.16625rem;
+	--app-font-size-lg: 1.555rem;
+	--app-font-size-xl: 2.0731rem;
+
+	--app-line-height-xs: 1.45;
+	--app-line-height-sm: 1.5;
 	--app-line-height-md: 1.55;
-	--app-line-height-lg: 1.5;
-	--app-line-height-xl: 1.4;
+	--app-line-height-lg: 1.3;
+	--app-line-height-xl: 1.2;
 
-	/* Typography - Heading sizes (Title 36 / H1 32 / H2 28 / H3 24) */
-	--app-heading-font-weight: 400;
-	--app-heading-h1-size: 2.25rem;   /* Title: 36px */
-	--app-heading-h1-line-height: 1.15;
-	--app-heading-h2-size: 2rem;      /* Heading1: 32px */
-	--app-heading-h2-line-height: 1.2;
-	--app-heading-h3-size: 1.75rem;   /* Heading2: 28px */
+	/* Headings: full steps up the ladder at the one weight */
+	--app-heading-font-weight: 320;
+	--app-heading-h1-size: 2.7625rem; /* 44.2 */
+	--app-heading-h1-line-height: 1.1;
+	--app-heading-h2-size: 2.0731rem; /* 33.17 */
+	--app-heading-h2-line-height: 1.15;
+	--app-heading-h3-size: 1.555rem; /* 24.88 */
 	--app-heading-h3-line-height: 1.25;
-	--app-heading-h4-size: 1.5rem;    /* Heading3: 24px */
-	--app-heading-h4-line-height: 1.3;
-	--app-heading-h5-size: 1.25rem;   /* Body1: 20px */
+	--app-heading-h4-size: 1.555rem; /* 24.88 */
+	--app-heading-h4-line-height: 1.25;
+	--app-heading-h5-size: 1.16625rem; /* 18.66 */
 	--app-heading-h5-line-height: 1.4;
-	--app-heading-h6-size: 0.9375rem; /* Body2: 15px */
+	--app-heading-h6-size: 1rem; /* 16 */
 	--app-heading-h6-line-height: 1.45;
-	
-	/* Icon sizes */
-	/* DM Sans (default) uses 50px, Space Grotesk uses 30px */
+
 	--app-home-icon-size: 40px;
-	
+
 	/* Scrollbar */
 	--scrollbar-track: var(--app-background);
 	--scrollbar-thumb: var(--app-scrollbar-thumb);
@@ -99,13 +99,12 @@ body {
 	font-feature-settings: var(--app-font-feature-settings) !important;
 }
 
-/* Bold is opt-in per surface: the app font flattens bold, .allow-bold restores
-   it for strong/b and their descendants (which .prose * would re-flatten).
-   The .prose * rule above is also !important; this wins on specificity. */
+/* Emphasis inside a sentence is 600 everywhere now that the app font has real
+   weights; .allow-bold is kept as a harmless marker on the surfaces that used
+   to opt in. */
 .allow-bold :is(strong, b),
 .allow-bold :is(strong, b) * {
-	font-family: var(--app-content-bold-font-family, var(--app-font-family)) !important;
-	font-weight: 700;
+	font-weight: 600;
 }
 
 /* Visually hidden, kept for screen readers. Our own name on purpose: Tailwind
@@ -157,7 +156,6 @@ body {
 ::-webkit-scrollbar-thumb:hover {
 	background-color: var(--scrollbar-thumb-hover);
 }
-
 
 /* A plan step's check pops in as the agent ticks it off (AgenticPlanCard). */
 @keyframes plan-tick {

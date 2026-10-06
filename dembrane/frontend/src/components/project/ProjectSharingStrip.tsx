@@ -8,7 +8,7 @@ import {
 	Paper,
 	Text,
 } from "@mantine/core";
-import { IconLock, IconUsers } from "@tabler/icons-react";
+import { LockIcon, UsersIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { useProjectShares } from "@/hooks/useProjectSharing";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -47,84 +47,84 @@ export function ProjectSharingStrip({
 
 	return (
 		<>
-			<Paper withBorder p="md" radius="md">
-			<Group gap="sm" wrap="nowrap">
-				{isPrivate ? (
-					<>
-						<Badge
-							color="blue"
-							variant="light"
-							leftSection={<IconLock size={12} />}
-						>
-							<Trans>Private</Trans>
-						</Badge>
-						{isLoading ? (
-							<Loader size="xs" />
-						) : shareCount === 0 ? (
-							<Text size="sm" c="dimmed">
-								<Trans>Just you. Share with specific people →</Trans>
-							</Text>
-						) : (
-							<>
+			<Paper withBorder p="md">
+				<Group gap="sm" wrap="nowrap">
+					{isPrivate ? (
+						<>
+							<Badge
+								color="gray"
+								variant="light"
+								leftSection={<LockIcon size={16} />}
+							>
+								<Trans>Private</Trans>
+							</Badge>
+							{isLoading ? (
+								<Loader size="xs" />
+							) : shareCount === 0 ? (
 								<Text size="sm" c="dimmed">
-									<Trans>Shared with</Trans>
+									<Trans>Just you. Share with specific people.</Trans>
 								</Text>
-								<Avatar.Group spacing="xs">
-									{shares?.slice(0, 3).map((s) => (
-										<Avatar
-											key={s.user_id}
-											size="sm"
-											radius="xl"
-											src={avatarUrl(s.avatar, 48)}
-										>
-											{memberInitials(s.display_name, s.email)}
-										</Avatar>
-									))}
-								</Avatar.Group>
-								{shareCount > 3 && (
-									<Text size="sm" c="dimmed">
-										<Trans>+{shareCount - 3} more</Trans>
-									</Text>
-								)}
-							</>
-						)}
-						{isAdminRole(workspace?.role) && (
-							<Button
-								variant="subtle"
-								size="compact-sm"
-								ml="auto"
-								onClick={() => setModalOpen(true)}
-							>
-								<Trans>Manage</Trans>
-							</Button>
-						)}
-					</>
-				) : (
-					<>
-						<IconUsers
-							size={16}
-							style={{ color: "var(--mantine-color-gray-6)" }}
-						/>
-						<Text size="sm">
-							{workspaceName ? (
-								<Trans>Visible to everyone in {workspaceName}</Trans>
 							) : (
-								<Trans>Visible to everyone in this workspace</Trans>
+								<>
+									<Text size="sm" c="dimmed">
+										<Trans>Shared with</Trans>
+									</Text>
+									<Avatar.Group spacing="xs">
+										{shares?.slice(0, 3).map((s) => (
+											<Avatar
+												key={s.user_id}
+												size="sm"
+												radius="xl"
+												src={avatarUrl(s.avatar, 48)}
+											>
+												{memberInitials(s.display_name, s.email)}
+											</Avatar>
+										))}
+									</Avatar.Group>
+									{shareCount > 3 && (
+										<Text size="sm" c="dimmed">
+											<Trans>+{shareCount - 3} more</Trans>
+										</Text>
+									)}
+								</>
 							)}
-						</Text>
-						{isAdminRole(workspace?.role) && (
-							<Button
-								variant="subtle"
-								size="compact-sm"
-								ml="auto"
-								onClick={() => setModalOpen(true)}
-							>
-								<Trans>Make private</Trans>
-							</Button>
-						)}
-					</>
-				)}
-			</Group>
+							{isAdminRole(workspace?.role) && (
+								<Button
+									variant="subtle"
+									size="compact-sm"
+									ml="auto"
+									onClick={() => setModalOpen(true)}
+								>
+									<Trans>Manage</Trans>
+								</Button>
+							)}
+						</>
+					) : (
+						<>
+							<UsersIcon
+								size={16}
+								style={{ color: "var(--mantine-color-dimmed)" }}
+							/>
+							<Text size="sm">
+								{workspaceName ? (
+									<Trans>Visible to everyone in {workspaceName}</Trans>
+								) : (
+									<Trans>Visible to everyone in this workspace</Trans>
+								)}
+							</Text>
+							{isAdminRole(workspace?.role) && (
+								<Button
+									variant="subtle"
+									size="compact-sm"
+									ml="auto"
+									onClick={() => setModalOpen(true)}
+								>
+									<Trans>Make private</Trans>
+								</Button>
+							)}
+						</>
+					)}
+				</Group>
 			</Paper>
 
 			<ProjectSharingModal

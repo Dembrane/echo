@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
-import { Button, Loader, Stack, Text, Title } from "@mantine/core";
-import { IconCheck } from "@tabler/icons-react";
+import { Button, Group, Skeleton, Stack, Text, Title } from "@mantine/core";
+import { CheckIcon } from "@phosphor-icons/react";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { useSearchParams } from "react-router";
@@ -45,25 +45,20 @@ export const ProjectUnsubscribe = () => {
 	return (
 		<div className="relative flex !h-dvh flex-col overflow-y-auto">
 			<main className="container mx-auto h-full max-w-2xl">
-				<Stack
-					className="mt-[64px] px-4 py-8"
-					px="2rem"
-					py="2rem"
-					align="center"
-				>
+				<Stack mt="xl" px="md" py="xl" align="flex-start">
 					<Title order={2}>
-						<Trans> Unsubscribe from Notifications</Trans>
+						<Trans>Unsubscribe from notifications</Trans>
 					</Title>
 
-					{isLoading && <Loader size="sm" />}
+					{isLoading && <Skeleton height={36} width={160} />}
 					{error && <ErrorNotice error={error} />}
 					{success && (
-						<Text c="green" size="md" className="flex items-center gap-2">
-							<span className="flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white">
-								<IconCheck size={16} strokeWidth={3} />
-							</span>
-							<Trans>You have successfully unsubscribed.</Trans>
-						</Text>
+						<Group gap="xs" wrap="nowrap">
+							<CheckIcon size={16} color="var(--app-success)" />
+							<Text size="md">
+								<Trans>You have successfully unsubscribed.</Trans>
+							</Text>
+						</Group>
 					)}
 
 					{!isLoading &&
@@ -71,6 +66,7 @@ export const ProjectUnsubscribe = () => {
 						!success &&
 						(data?.eligible ? (
 							<Button
+								variant="filled"
 								onClick={handleUnsubscribe}
 								disabled={isPending}
 								loading={isPending}
@@ -78,7 +74,7 @@ export const ProjectUnsubscribe = () => {
 								<Trans>Unsubscribe</Trans>
 							</Button>
 						) : (
-							<Text c="dimmed" size="md" ta="center">
+							<Text c="dimmed" size="md">
 								<Trans>
 									You are already unsubscribed or your link is invalid.
 								</Trans>

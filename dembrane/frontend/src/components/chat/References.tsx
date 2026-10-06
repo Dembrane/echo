@@ -27,7 +27,7 @@ export const References = ({
 				<Trans>References</Trans>
 			</Text>
 
-			<ul className="list-disc space-y-1 pl-5 text-gray-700 [&>li::marker]:text-gray-300">
+			<ul className="list-disc space-y-1 pl-5">
 				{citations.map((citation, index) => {
 					const conversationId =
 						citation?.conversation?.id || citation?.conversation;
@@ -36,11 +36,14 @@ export const References = ({
 					return (
 						// biome-ignore lint/suspicious/noArrayIndexKey: needs to be fixed
 						<li key={index}>
-							<Text size="sm" className="leading-relaxed" my={10}>
+							<Text size="sm" className="leading-relaxed" my="sm">
 								<span className="mr-2">
 									<Trans>{citation.reference_text}</Trans>
 								</span>
-								<I18nLink
+								<Badge
+									component={I18nLink}
+									size="sm"
+									color="gray"
 									to={conversationReferencePath({
 										chunkId,
 										conversationId,
@@ -55,23 +58,11 @@ export const References = ({
 										});
 									}}
 								>
-									<Badge
-										size="sm"
-										variant="light"
-										color="gray"
-										className="cursor-pointer transition-colors hover:bg-gray-200"
-									>
-										<Text
-											size="xs"
-											className="normal-case leading-relaxed text-gray-700"
-										>
-											{citation?.conversation_title ||
-												citation?.conversation?.participant_name || (
-													<Trans>Untitled Conversation</Trans>
-												)}
-										</Text>
-									</Badge>
-								</I18nLink>
+									{citation?.conversation_title ||
+										citation?.conversation?.participant_name || (
+											<Trans>Untitled conversation</Trans>
+										)}
+								</Badge>
 							</Text>
 						</li>
 					);

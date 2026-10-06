@@ -1,6 +1,7 @@
 import { t } from "@lingui/core/macro";
+import { Trans } from "@lingui/react/macro";
 import { ActionIcon, Menu, Paper, Text } from "@mantine/core";
-import { IconDotsVertical, IconTrash } from "@tabler/icons-react";
+import { DotsThreeVerticalIcon, TrashIcon } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router";
 import { Markdown } from "@/components/common/Markdown";
@@ -85,8 +86,8 @@ const UserChunkMessage = ({
 			<div>
 				<Menu shadow="md" width={200}>
 					<Menu.Target>
-						<ActionIcon variant="transparent" c="gray" className="h-full">
-							<IconDotsVertical />
+						<ActionIcon variant="transparent" c="dimmed" className="h-full">
+							<DotsThreeVerticalIcon size={20} />
 						</ActionIcon>
 					</Menu.Target>
 
@@ -94,14 +95,14 @@ const UserChunkMessage = ({
 						<Menu.Item
 							onClick={handleDelete}
 							disabled={deleteChunkMutation.isPending}
-							leftSection={<IconTrash />}
+							leftSection={<TrashIcon size={16} />}
 						>
-							Delete
+							<Trans>Delete</Trans>
 						</Menu.Item>
 					</Menu.Dropdown>
 				</Menu>
 			</div>
-			<Paper className="my-2 rounded-t-xl rounded-bl-xl border-0 bg-gray-100 p-4">
+			<Paper withBorder={false} bg="var(--app-rule-color)" className="my-2 p-4">
 				<Text className="prose text-sm">
 					{chunk.transcript == null ? (
 						<Markdown content={t`*Transcription in progress.*`} />

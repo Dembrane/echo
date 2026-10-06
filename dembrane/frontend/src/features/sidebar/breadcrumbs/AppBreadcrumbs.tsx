@@ -1,5 +1,6 @@
 import { useLingui } from "@lingui/react/macro";
-import { CaretRightIcon } from "@phosphor-icons/react";
+import { Box, Menu, UnstyledButton } from "@mantine/core";
+import { CaretRightIcon, DotsThreeIcon } from "@phosphor-icons/react";
 import { useMemo } from "react";
 import { useLocation, useMatch, useParams } from "react-router";
 import { useCanvas } from "@/components/canvas/hooks";
@@ -187,7 +188,7 @@ export const AppBreadcrumbs = () => {
 				if (!workspace) return out;
 				pushWorkspaceCrumbs(workspace);
 				if (window.location.pathname.endsWith("/projects/new")) {
-					out.push({ label: "New project" });
+					out.push({ label: t`Create project` });
 				}
 				const section = params.section;
 				if (section === "members") {
@@ -306,22 +307,68 @@ export const AppBreadcrumbs = () => {
 			className="flex h-[57px] shrink-0 items-center gap-1 text-xs print:hidden"
 			aria-label="Breadcrumb"
 			style={{
-				color: "rgba(45, 45, 44, 0.55)",
+				// A faint line under the bar, level with the sidebar header's.
+				borderBottom: "1px solid var(--app-rule-color)",
+				// Muted (cool slate) passes AA; the old 55% graphite did not.
+				color: "var(--mantine-color-dimmed)",
 				paddingLeft: "16px",
 				paddingRight: "16px",
 			}}
 		>
+			{/* A phone drops words, never wraps structure: the trail collapses to
+			    the current page, and the way back sits in a menu behind "…". One
+			    trail renders; the middle crumbs hide below sm. */}
+			{crumbs.length > 1 && (
+				<Box hiddenFrom="sm" className="flex shrink-0 items-center gap-1">
+					<Menu position="bottom-start">
+						<Menu.Target>
+							<UnstyledButton
+								aria-label={t`Show the path to this page`}
+								className="flex h-8 w-8 items-center justify-center hover:bg-[var(--app-quiet)]"
+								style={{ color: "var(--app-text)" }}
+							>
+								<DotsThreeIcon size={20} />
+							</UnstyledButton>
+						</Menu.Target>
+						<Menu.Dropdown>
+							{crumbs.slice(0, -1).map((c, i) =>
+								c.href ? (
+									<Menu.Item
+										key={`${c.label}-${i}`}
+										component={I18nLink}
+										to={c.href}
+									>
+										{c.label}
+									</Menu.Item>
+								) : (
+									<Menu.Item key={`${c.label}-${i}`} disabled>
+										{c.label}
+									</Menu.Item>
+								),
+							)}
+						</Menu.Dropdown>
+					</Menu>
+					<CaretRightIcon size={16} />
+				</Box>
+			)}
 			{crumbs.map((c, i) => {
 				const isLast = i === crumbs.length - 1;
 				const displayLabel = truncateMiddle(c.label);
 				return (
-					<span key={`${c.label}-${i}`} className="flex items-center gap-1">
-						{i > 0 && <CaretRightIcon size={10} opacity={0.5} />}
+					<span
+						key={`${c.label}-${i}`}
+						className={`min-w-0 items-center gap-1 ${isLast ? "flex" : "hidden sm:flex"}`}
+					>
+						{i > 0 && (
+							<span className="hidden sm:inline-flex">
+								<CaretRightIcon size={16} />
+							</span>
+						)}
 						{c.href && !isLast ? (
 							<I18nLink
 								to={c.href}
 								className="truncate hover:underline"
-								style={{ color: "rgba(45, 45, 44, 0.75)" }}
+								style={{ color: "var(--app-text)" }}
 								title={c.label}
 							>
 								{displayLabel}
@@ -330,7 +377,9 @@ export const AppBreadcrumbs = () => {
 							<span
 								className="truncate"
 								style={{
-									color: isLast ? "#2d2d2c" : "rgba(45, 45, 44, 0.55)",
+									color: isLast
+										? "var(--app-text)"
+										: "var(--mantine-color-dimmed)",
 								}}
 								title={c.label}
 							>

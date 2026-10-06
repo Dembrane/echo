@@ -26,8 +26,7 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
-import { modals } from "@mantine/modals";
-import { IconTrash, IconUpload } from "@tabler/icons-react";
+import { TrashIcon, UploadSimpleIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router";
@@ -68,6 +67,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { WorkspaceAccessDeniedError } from "@/lib/accessDenied";
 import { assetUrl, logoUrl, memberInitials } from "@/lib/avatar";
 import { ApiRequestError } from "@/lib/errors/read";
+import { openConfirm } from "@/lib/openConfirm";
 import { displayRole, isOutsiderRole } from "@/lib/roles";
 import type { BillingPeriod, Tier } from "@/lib/tiers";
 
@@ -621,9 +621,7 @@ export const WorkspaceSettingsRoute = () => {
 						    place. Keeping click-to-edit in the title was cute
 						    but hid the permission: members saw the affordance
 						    and got nothing on click. */}
-							<Title order={3} fw={400}>
-								{settings.name}
-							</Title>
+							<Title order={2}>{settings.name}</Title>
 							{/* Header stays minimal — tier pill only, tagline lives on
 						    the Billing tab where it's next to the price. Organisation name
 						    is already in the nav breadcrumb; duplicating it here
@@ -651,7 +649,7 @@ export const WorkspaceSettingsRoute = () => {
 									settings.percent_discount != null &&
 									settings.percent_discount > 0 && (
 										<Badge size="xs" variant="light" color="teal">
-											{settings.percent_discount}% discount
+											<Trans>{settings.percent_discount}% discount</Trans>
 										</Badge>
 									)}
 							</Group>
@@ -700,7 +698,7 @@ export const WorkspaceSettingsRoute = () => {
 									{seesFinancials &&
 										!settings.billing_org_managed &&
 										settings.org_id && (
-											<Paper withBorder p="md" radius="sm">
+											<Paper withBorder p="md">
 												<Text size="sm">
 													<Trans>This workspace is billed separately</Trans>
 												</Text>
@@ -784,7 +782,7 @@ export const WorkspaceSettingsRoute = () => {
 							<Tabs.Panel value="members" pt="md">
 								<Stack gap={16}>
 									<Group justify="space-between">
-										<Title order={5} fw={400}>
+										<Title order={5}>
 											<Trans>Members</Trans>
 										</Title>
 										<Text size="xs" c="dimmed">
@@ -860,11 +858,11 @@ export const WorkspaceSettingsRoute = () => {
 											/>
 										)}
 										{settings.members.length === 0 && (
-											<Stack align="center" gap={6} py={32}>
-												<Text size="sm" fw={500}>
+											<Stack gap="xs">
+												<Text size="sm" c="dimmed">
 													<Trans>No one here yet.</Trans>
 												</Text>
-												<Text size="xs" c="dimmed" ta="center" maw={360}>
+												<Text size="sm" c="dimmed">
 													<Trans>
 														Invite members to collaborate on projects and
 														conversations in this workspace.
@@ -872,290 +870,331 @@ export const WorkspaceSettingsRoute = () => {
 												</Text>
 											</Stack>
 										)}
-										{filteredMembers.map((member) => (
-											<Paper key={member.id} p="md" withBorder radius="md">
-												<Group justify="space-between" wrap="nowrap">
-													<Group gap={12} wrap="nowrap" style={{ minWidth: 0 }}>
-														<Avatar
-															size={32}
-															radius="xl"
-															src={
-																member.avatar ? assetUrl(member.avatar) : null
-															}
-															color="primary"
+										{filteredMembers.length > 0 && (
+											<Stack
+												gap={0}
+												style={{
+													borderTop:
+														"var(--app-stroke) solid var(--app-rule-color)",
+												}}
+											>
+												{filteredMembers.map((member) => (
+													<Box
+														key={member.id}
+														py="sm"
+														style={{
+															borderBottom:
+																"var(--app-stroke) solid var(--app-rule-color)",
+														}}
+													>
+														<Group
+															className="app-stack-narrow"
+															justify="space-between"
+															wrap="nowrap"
 														>
-															{memberInitials(
-																member.display_name,
-																member.email,
-															)}
-														</Avatar>
-														<Box style={{ minWidth: 0 }}>
-															<Group gap={6}>
-																<Text size="sm" lineClamp={1} fw={500}>
-																	{member.display_name ||
-																		member.email ||
-																		t`Unknown member`}
-																	{member.user_id === myAppUserId && (
-																		<Text component="span" c="dimmed" fw={400}>
-																			{" "}
-																			<Trans>(You)</Trans>
-																		</Text>
+															<Group
+																gap="sm"
+																wrap="nowrap"
+																style={{ minWidth: 0 }}
+															>
+																<Avatar
+																	size={32}
+																	radius="xl"
+																	src={
+																		member.avatar
+																			? assetUrl(member.avatar)
+																			: null
+																	}
+																	color="primary"
+																>
+																	{memberInitials(
+																		member.display_name,
+																		member.email,
 																	)}
-																</Text>
-																{isExternalMember(member) && (
-																	<Badge size="xs" variant="light" color="gray">
-																		<Trans>External</Trans>
-																	</Badge>
-																)}
-															</Group>
-															{/* Two-line people pattern: name on top, email under it
+																</Avatar>
+																<Box style={{ minWidth: 0 }}>
+																	<Group gap="xs">
+																		<Text size="sm" lineClamp={1}>
+																			{member.display_name ||
+																				member.email ||
+																				t`Unknown member`}
+																			{member.user_id === myAppUserId && (
+																				<Text component="span" c="dimmed">
+																					{" "}
+																					<Trans>(You)</Trans>
+																				</Text>
+																			)}
+																		</Text>
+																		{isExternalMember(member) && (
+																			<Badge
+																				size="xs"
+																				variant="light"
+																				color="gray"
+																			>
+																				<Trans>External</Trans>
+																			</Badge>
+																		)}
+																	</Group>
+																	{/* Two-line people pattern: name on top, email under it
 											    in muted-xs. Email is empty when server redacted it
 											    (non-manager reader); Stack ternary keeps the row
 											    balanced. Source label tucks into the tail. */}
-															{member.email &&
-															member.email !== member.display_name ? (
-																<Text size="xs" c="dimmed" lineClamp={1}>
-																	{member.email}
-																	{member.source === "inherited" && (
-																		<>
-																			{" · "}
-																			<Text component="span" fs="italic">
-																				<Trans>
-																					inherited from organisation
-																				</Trans>
-																			</Text>
-																		</>
+																	{member.email &&
+																	member.email !== member.display_name ? (
+																		<Text size="xs" c="dimmed" lineClamp={1}>
+																			{member.email}
+																			{member.source === "inherited" && (
+																				<>
+																					{" · "}
+																					<Text component="span" fs="italic">
+																						<Trans>
+																							inherited from organisation
+																						</Trans>
+																					</Text>
+																				</>
+																			)}
+																		</Text>
+																	) : (
+																		<Text
+																			size="xs"
+																			c="dimmed"
+																			style={{ textTransform: "capitalize" }}
+																		>
+																			{member.source === "inherited"
+																				? t`inherited from organisation`
+																				: member.source}
+																		</Text>
 																	)}
-																</Text>
-															) : (
-																<Text
-																	size="xs"
-																	c="dimmed"
-																	style={{ textTransform: "capitalize" }}
-																>
-																	{member.source === "inherited"
-																		? t`inherited from organisation`
-																		: member.source}
-																</Text>
-															)}
-														</Box>
-													</Group>
+																</Box>
+															</Group>
 
-													<Group gap={8}>
-														{canManage && member.role === "owner" ? (
-															// An owner row stays locked — the Select would
-															// silently downgrade on any click because "owner"
-															// isn't in its options. Ownership transfer is a
-															// support flow, matrix §5.
-															<Tooltip
-																label={t`Ownership is locked. Contact support to transfer.`}
-															>
-																<Badge
-																	size="sm"
-																	variant="light"
-																	color="primary"
-																>
-																	<Trans>Admin</Trans>
-																</Badge>
-															</Tooltip>
-														) : canManage &&
-															member.user_id === myAppUserId &&
-															member.role === "admin" &&
-															adminLikeCount === 1 ? (
-															// Sole admin: lock so they can't strand the workspace by demoting themselves.
-															<Tooltip
-																label={t`You're the only admin. Promote someone else before changing your role.`}
-															>
-																<Badge
-																	size="sm"
-																	variant="light"
-																	color="primary"
-																>
-																	<Trans>Admin</Trans>
-																</Badge>
-															</Tooltip>
-														) : canManage && isExternalMember(member) ? (
-															// External row: dropdown locked to "External".
-															// Promotion to a member role goes through the
-															// org settings page → remove → re-invite flow
-															// (ADR-0003). The workspace UI never has a
-															// single button that mutates org_membership.
-															<Tooltip
-																label={t`To promote to a workspace member, add this person to the organisation first, then re-invite from the workspace.`}
-																multiline
-																w={280}
-															>
-																<Badge size="sm" variant="light" color="gray">
-																	<Trans>External</Trans>
-																</Badge>
-															</Tooltip>
-														) : canManage && member.role === "observer" ? (
-															// Observer: locked to a badge. The Select below can't
-															// represent "observer" (renders blank) and changing it
-															// would turn a free seat into a paid one.
-															<Tooltip
-																label={t`Observers are free, read-only guests. To give edit access, remove them and re-invite as a member.`}
-																multiline
-																w={280}
-															>
-																<Badge size="sm" variant="light" color="gray">
-																	<Trans>Observer</Trans>
-																</Badge>
-															</Tooltip>
-														) : canManage ? (
-															<Select
-																// Matrix §5 retires "Owner" as a user-facing role
-																// — only Admin / Billing / Member exposed here.
-																// "External" is never an option for a non-external
-																// row (ADR-0003): the dropdown is not a
-																// cross-boundary lever.
-																data={[
-																	{ label: t`Member`, value: "member" },
-																	{ label: t`Billing`, value: "billing" },
-																	{ label: t`Admin`, value: "admin" },
-																]}
-																size="xs"
-																value={member.role}
-																w={100}
-																onChange={(v) => {
-																	if (!v || v === member.role) return;
-																	// Footgun guard: demoting yourself out of
-																	// admin/owner is a one-way street without a
-																	// member's help. Confirm first.
-																	const isSelf = member.user_id === myAppUserId;
-																	const isDemotion =
-																		(member.role === "owner" ||
-																			member.role === "admin") &&
-																		v !== "owner" &&
-																		v !== "admin";
-																	if (isSelf && isDemotion) {
-																		modals.openConfirmModal({
-																			children: (
-																				<Stack gap="xs">
-																					<Text size="sm">
-																						<Trans>
-																							You're about to change your own
-																							role to <em>{displayRole(v)}</em>.
-																							You'll immediately lose access to
-																							workspace settings, invites, and
-																							member management.
-																						</Trans>
-																					</Text>
-																					<Text size="sm" c="dimmed">
-																						<Trans>
-																							Another admin or owner will need
-																							to restore you.
-																						</Trans>
-																					</Text>
-																				</Stack>
-																			),
-																			confirmProps: { color: "red" },
-																			labels: {
-																				cancel: t`Cancel`,
-																				confirm: t`Change anyway`,
-																			},
-																			onConfirm: () =>
-																				changeRoleMutation.mutate({
-																					membershipId: member.id,
-																					role: v,
-																				}),
-																			title: t`Change your own role?`,
-																		});
-																		return;
-																	}
-																	changeRoleMutation.mutate({
-																		membershipId: member.id,
-																		role: v,
-																	});
-																}}
-															/>
-														) : (
-															<Badge size="sm" variant="light" color="gray">
-																{displayRole(member.role)}
-															</Badge>
-														)}
-														{member.user_id === myAppUserId ? (
-															// Self row uses the same trash icon as
-															// other rows — the action is "leave" but
-															// the visual language matches "remove" so
-															// the column reads consistently. Backend
-															// enforces last-admin protection; errors
-															// bubble through the mutation toast.
-															<Tooltip label={t`Leave workspace`}>
-																<ActionIcon
-																	color="red"
-																	size="sm"
-																	variant="subtle"
-																	loading={leaveMutation.isPending}
-																	onClick={() => {
-																		modals.openConfirmModal({
-																			children: (
-																				<Text size="sm">
-																					<Trans>
-																						You'll lose access to this
-																						workspace. Projects you created
-																						stay; your role here is removed.
-																					</Trans>
-																				</Text>
-																			),
-																			confirmProps: { color: "red" },
-																			labels: {
-																				cancel: t`Cancel`,
-																				confirm: t`Leave workspace`,
-																			},
-																			onConfirm: () =>
-																				leaveMutation.mutate(member.id),
-																			title: t`Leave workspace`,
-																		});
-																	}}
-																	aria-label={t`Leave workspace`}
-																>
-																	<IconTrash size={14} />
-																</ActionIcon>
-															</Tooltip>
-														) : (
-															canManage && (
-																<Tooltip label={t`Remove member`}>
-																	<ActionIcon
-																		color="red"
-																		size="sm"
-																		variant="subtle"
-																		loading={removeMutation.isPending}
-																		onClick={() => {
-																			modals.openConfirmModal({
-																				children: (
-																					<Text size="sm">
-																						<Trans>
-																							Remove {member.display_name} from
-																							this workspace? They'll lose
-																							access to all projects inside it.
-																						</Trans>
-																					</Text>
-																				),
-																				confirmProps: { color: "red" },
-																				labels: {
-																					cancel: t`Cancel`,
-																					confirm: t`Remove`,
-																				},
-																				onConfirm: () =>
-																					removeMutation.mutate(member.id),
-																				title: t`Remove member`,
+															<Group gap={8}>
+																{canManage && member.role === "owner" ? (
+																	// An owner row stays locked — the Select would
+																	// silently downgrade on any click because "owner"
+																	// isn't in its options. Ownership transfer is a
+																	// support flow, matrix §5.
+																	<Tooltip
+																		label={t`Ownership is locked. Contact support to transfer.`}
+																	>
+																		<Badge
+																			size="sm"
+																			variant="light"
+																			color="primary"
+																		>
+																			<Trans>Admin</Trans>
+																		</Badge>
+																	</Tooltip>
+																) : canManage &&
+																	member.user_id === myAppUserId &&
+																	member.role === "admin" &&
+																	adminLikeCount === 1 ? (
+																	// Sole admin: lock so they can't strand the workspace by demoting themselves.
+																	<Tooltip
+																		label={t`You're the only admin. Promote someone else before changing your role.`}
+																	>
+																		<Badge
+																			size="sm"
+																			variant="light"
+																			color="primary"
+																		>
+																			<Trans>Admin</Trans>
+																		</Badge>
+																	</Tooltip>
+																) : canManage && isExternalMember(member) ? (
+																	// External row: dropdown locked to "External".
+																	// Promotion to a member role goes through the
+																	// org settings page → remove → re-invite flow
+																	// (ADR-0003). The workspace UI never has a
+																	// single button that mutates org_membership.
+																	<Tooltip
+																		label={t`To promote to a workspace member, add this person to the organisation first, then re-invite from the workspace.`}
+																		multiline
+																		w={280}
+																	>
+																		<Badge
+																			size="sm"
+																			variant="light"
+																			color="gray"
+																		>
+																			<Trans>External</Trans>
+																		</Badge>
+																	</Tooltip>
+																) : canManage && member.role === "observer" ? (
+																	// Observer: locked to a badge. The Select below can't
+																	// represent "observer" (renders blank) and changing it
+																	// would turn a free seat into a paid one.
+																	<Tooltip
+																		label={t`Observers are free, read-only guests. To give edit access, remove them and re-invite as a member.`}
+																		multiline
+																		w={280}
+																	>
+																		<Badge
+																			size="sm"
+																			variant="light"
+																			color="gray"
+																		>
+																			<Trans>Observer</Trans>
+																		</Badge>
+																	</Tooltip>
+																) : canManage ? (
+																	<Select
+																		// Matrix §5 retires "Owner" as a user-facing role
+																		// — only Admin / Billing / Member exposed here.
+																		// "External" is never an option for a non-external
+																		// row (ADR-0003): the dropdown is not a
+																		// cross-boundary lever.
+																		data={[
+																			{ label: t`Member`, value: "member" },
+																			{ label: t`Billing`, value: "billing" },
+																			{ label: t`Admin`, value: "admin" },
+																		]}
+																		size="xs"
+																		value={member.role}
+																		w={100}
+																		onChange={(v) => {
+																			if (!v || v === member.role) return;
+																			// Footgun guard: demoting yourself out of
+																			// admin/owner is a one-way street without a
+																			// member's help. Confirm first.
+																			const isSelf =
+																				member.user_id === myAppUserId;
+																			const isDemotion =
+																				(member.role === "owner" ||
+																					member.role === "admin") &&
+																				v !== "owner" &&
+																				v !== "admin";
+																			if (isSelf && isDemotion) {
+																				openConfirm({
+																					children: (
+																						<Stack gap="xs">
+																							<Text size="sm">
+																								<Trans>
+																									You're about to change your
+																									own role to{" "}
+																									<em>{displayRole(v)}</em>.
+																									You'll immediately lose access
+																									to workspace settings,
+																									invites, and member
+																									management.
+																								</Trans>
+																							</Text>
+																							<Text size="sm" c="dimmed">
+																								<Trans>
+																									Another admin or owner will
+																									need to restore you.
+																								</Trans>
+																							</Text>
+																						</Stack>
+																					),
+																					danger: true,
+																					labels: {
+																						cancel: t`Cancel`,
+																						confirm: t`Change anyway`,
+																					},
+																					onConfirm: () =>
+																						changeRoleMutation.mutate({
+																							membershipId: member.id,
+																							role: v,
+																						}),
+																					title: t`Change your own role?`,
+																				});
+																				return;
+																			}
+																			changeRoleMutation.mutate({
+																				membershipId: member.id,
+																				role: v,
 																			});
 																		}}
-																		aria-label={t`Remove member`}
-																	>
-																		<IconTrash size={14} />
-																	</ActionIcon>
-																</Tooltip>
-															)
-														)}
-													</Group>
-												</Group>
-											</Paper>
-										))}
+																	/>
+																) : (
+																	<Badge size="sm" variant="light" color="gray">
+																		{displayRole(member.role)}
+																	</Badge>
+																)}
+																{member.user_id === myAppUserId ? (
+																	// Self row uses the same trash icon as
+																	// other rows — the action is "leave" but
+																	// the visual language matches "remove" so
+																	// the column reads consistently. Backend
+																	// enforces last-admin protection; errors
+																	// bubble through the mutation toast.
+																	<Tooltip label={t`Leave workspace`}>
+																		<ActionIcon
+																			color="red"
+																			variant="subtle"
+																			loading={leaveMutation.isPending}
+																			onClick={() => {
+																				openConfirm({
+																					children: (
+																						<Text size="sm">
+																							<Trans>
+																								You'll lose access to this
+																								workspace. Projects you created
+																								stay; your role here is removed.
+																							</Trans>
+																						</Text>
+																					),
+																					danger: true,
+																					labels: {
+																						cancel: t`Cancel`,
+																						confirm: t`Leave workspace`,
+																					},
+																					onConfirm: () =>
+																						leaveMutation.mutate(member.id),
+																					title: t`Leave workspace`,
+																				});
+																			}}
+																			aria-label={t`Leave workspace`}
+																		>
+																			<TrashIcon size={20} />
+																		</ActionIcon>
+																	</Tooltip>
+																) : (
+																	canManage && (
+																		<Tooltip label={t`Remove member`}>
+																			<ActionIcon
+																				color="red"
+																				variant="subtle"
+																				loading={removeMutation.isPending}
+																				onClick={() => {
+																					openConfirm({
+																						children: (
+																							<Text size="sm">
+																								<Trans>
+																									Remove {member.display_name}{" "}
+																									from this workspace? They'll
+																									lose access to all projects
+																									inside it.
+																								</Trans>
+																							</Text>
+																						),
+																						danger: true,
+																						labels: {
+																							cancel: t`Cancel`,
+																							confirm: t`Remove`,
+																						},
+																						onConfirm: () =>
+																							removeMutation.mutate(member.id),
+																						title: t`Remove member`,
+																					});
+																				}}
+																				aria-label={t`Remove member`}
+																			>
+																				<TrashIcon size={20} />
+																			</ActionIcon>
+																		</Tooltip>
+																	)
+																)}
+															</Group>
+														</Group>
+													</Box>
+												))}
+											</Stack>
+										)}
 										{settings.members.length > 0 &&
 											filteredMembers.length === 0 && (
-												<Text size="sm" c="dimmed" ta="center" py="md">
+												<Text size="sm" c="dimmed">
 													<Trans>No one matches that filter.</Trans>
 												</Text>
 											)}
@@ -1183,18 +1222,10 @@ export const WorkspaceSettingsRoute = () => {
 
 							{canEditSettings && (
 								<Tabs.Panel value="danger" pt="md">
-									<Paper
-										withBorder
-										p="lg"
-										radius="sm"
-										style={{
-											background: "rgba(234, 88, 88, 0.02)",
-											borderColor: "rgba(234, 88, 88, 0.4)",
-										}}
-									>
-										<Stack gap={12}>
+									<Paper withBorder p="lg">
+										<Stack gap="md">
 											<Stack gap={4}>
-												<Title order={5} fw={400} c="red.9">
+												<Title order={5}>
 													<Trans>Delete this workspace</Trans>
 												</Title>
 												<Text size="sm" c="dimmed">
@@ -1233,18 +1264,10 @@ export const WorkspaceSettingsRoute = () => {
 													);
 												}
 												return (
-													<Stack gap={8}>
+													<Stack gap="sm">
 														<Text size="xs" c="dimmed">
 															<Trans>
-																Type{" "}
-																<Text
-																	span
-																	fs="italic"
-																	style={{ color: "#4169e1" }}
-																>
-																	{settings.name}
-																</Text>{" "}
-																to confirm.
+																Type <b>{settings.name}</b> to confirm.
 															</Trans>
 														</Text>
 														<TextInput
@@ -1255,8 +1278,9 @@ export const WorkspaceSettingsRoute = () => {
 															}
 															size="sm"
 														/>
-														<Group justify="flex-end">
+														<Group>
 															<Button
+																variant="filled"
 																size="sm"
 																color="red"
 																disabled={deleteConfirm !== settings.name}
@@ -1279,8 +1303,8 @@ export const WorkspaceSettingsRoute = () => {
 					{/* External view — minimal, no tabs. They can see their own
 				    access block + leave affordance, nothing else. */}
 					{iAmOutsider && (
-						<Stack gap={12}>
-							<Title order={5} fw={400}>
+						<Stack gap="sm">
+							<Title order={5}>
 								<Trans>Your access</Trans>
 							</Title>
 							<Group justify="space-between" align="center">
@@ -1298,7 +1322,7 @@ export const WorkspaceSettingsRoute = () => {
 											variant="subtle"
 											color="gray"
 											onClick={() => {
-												modals.openConfirmModal({
+												openConfirm({
 													children: (
 														<Text size="sm">
 															<Trans>
@@ -1306,7 +1330,7 @@ export const WorkspaceSettingsRoute = () => {
 															</Trans>
 														</Text>
 													),
-													confirmProps: { color: "red" },
+													danger: true,
 													labels: {
 														cancel: t`Cancel`,
 														confirm: t`Leave workspace`,
@@ -1603,8 +1627,8 @@ function PrivacyAndDefaultsSection({
 
 						if (canWhitelabel) {
 							return (
-								<Stack gap={6}>
-									<Text size="sm" fw={500}>
+								<Stack gap="xs">
+									<Text size="sm">
 										<Trans>Logo</Trans>
 									</Text>
 									<Text size="xs" c="dimmed">
@@ -1627,7 +1651,7 @@ function PrivacyAndDefaultsSection({
 												variant="subtle"
 												color="red"
 												size="compact-sm"
-												leftSection={<IconTrash size={14} />}
+												leftSection={<TrashIcon size={20} />}
 												loading={removeLogoMutation.isPending}
 												disabled={!canEdit}
 												onClick={openRemoveLogoConfirm}
@@ -1649,9 +1673,8 @@ function PrivacyAndDefaultsSection({
 										>
 											{(props) => (
 												<Button
-													variant="light"
 													size="compact-sm"
-													leftSection={<IconUpload size={14} />}
+													leftSection={<UploadSimpleIcon size={20} />}
 													loading={uploadLogoMutation.isPending}
 													style={{ alignSelf: "flex-start" }}
 													disabled={!canEdit}
@@ -1673,8 +1696,8 @@ function PrivacyAndDefaultsSection({
 						// feature and offers the way in. Upload logo does not upload; it
 						// opens the popover.
 						return (
-							<Stack gap={6}>
-								<Text size="sm" fw={500}>
+							<Stack gap="xs">
+								<Text size="sm">
 									<Trans>Logo</Trans>
 								</Text>
 								<Text size="xs" c="dimmed">
@@ -1695,7 +1718,7 @@ function PrivacyAndDefaultsSection({
 												variant="subtle"
 												color="red"
 												size="compact-sm"
-												leftSection={<IconTrash size={14} />}
+												leftSection={<TrashIcon size={20} />}
 												loading={removeLogoMutation.isPending}
 												disabled={!canEdit}
 												onClick={openRemoveLogoConfirm}
@@ -1733,9 +1756,8 @@ function PrivacyAndDefaultsSection({
 										// does not disable it; only the role does, the same rule
 										// the paid branch above uses.
 										<Button
-											variant="light"
 											size="compact-sm"
-											leftSection={<IconUpload size={14} />}
+											leftSection={<UploadSimpleIcon size={20} />}
 											style={{ alignSelf: "flex-start" }}
 											disabled={!canEdit}
 											onClick={onClick}
@@ -1870,7 +1892,7 @@ function PrivacyAndDefaultsSection({
 					setVisibility(v as Visibility);
 				}}
 			>
-				<Stack gap={8} mt={4}>
+				<Stack gap="sm" mt={4}>
 					<Radio
 						value="open_to_organisation"
 						disabled={!canEdit}
@@ -1931,19 +1953,21 @@ function PrivacyAndDefaultsSection({
 				</Stack>
 			</Radio.Group>
 			{canEdit && privacyDirty && (
-				<Group justify="flex-end">
+				<Group>
 					<Button
-						variant="outline"
-						onClick={() => setVisibility(null)}
-						disabled={privacyMutation.isPending}
-					>
-						<Trans>Cancel</Trans>
-					</Button>
-					<Button
+						variant="filled"
 						loading={privacyMutation.isPending}
 						onClick={() => privacyMutation.mutate()}
 					>
 						<Trans>Save access</Trans>
+					</Button>
+					<Button
+						variant="subtle"
+						color="gray"
+						onClick={() => setVisibility(null)}
+						disabled={privacyMutation.isPending}
+					>
+						<Trans>Cancel</Trans>
 					</Button>
 				</Group>
 			)}

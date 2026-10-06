@@ -285,8 +285,8 @@ describe("AudienceMapAdapter", () => {
 		const view = render(adapter(true));
 		await screen.findByText("Audience tree renderer");
 		expect(screen.getByText("Audience local renderer")).toBeTruthy();
-		fireEvent.click(screen.getByRole("button", { name: "Panel settings" }));
-		fireEvent.click(await screen.findByRole("checkbox", { name: "Clusters" }));
+		fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+		fireEvent.click(await screen.findByRole("radio", { name: "Tree" }));
 		expect(screen.queryByText("Audience local renderer")).toBeNull();
 		expect(screen.getByText("Audience tree renderer")).toBeTruthy();
 
@@ -333,7 +333,7 @@ describe("AudienceMapAdapter", () => {
 	 * can switch the walk on once its timers are the fake ones.
 	 */
 	const showcaseToggle = async () => {
-		fireEvent.click(screen.getByRole("button", { name: "Panel settings" }));
+		fireEvent.click(screen.getByRole("button", { name: "Settings" }));
 		return await screen.findByRole("checkbox", { name: "Showcase" });
 	};
 
@@ -418,17 +418,20 @@ describe("AudienceMapAdapter", () => {
 
 		render(adapter(true));
 		await screen.findByText("Audience tree renderer");
-		expect(screen.queryByRole("region", { name: "Explore" })).toBeNull();
-		fireEvent.click(screen.getByRole("button", { name: "Panel settings" }));
+		// No distilling for a public room: only clicked arguments are kept.
+		expect(
+			await screen.findByText("The arguments you click are kept here."),
+		).toBeTruthy();
+		fireEvent.click(screen.getByRole("button", { name: "Settings" }));
 		await screen.findByRole("checkbox", { name: "Showcase" });
-		expect(screen.queryByRole("checkbox", { name: "Explore" })).toBeNull();
+		expect(screen.queryByRole("checkbox", { name: "History" })).toBeNull();
 		// The room's switch and the server's budget are not this menu's.
 		expect(screen.queryByRole("checkbox", { name: "Dark mode" })).toBeNull();
 		expect(screen.queryByText("Map budget")).toBeNull();
 		expect(fetchMock.mock.calls.map(([url]) => url)).toEqual(["/audience/map"]);
 	});
 
-	it("gives a signed-in viewer the host page's Explore panel", async () => {
+	it("gives a signed-in viewer the host page's distilling in the Spotlight", async () => {
 		vi.stubGlobal(
 			"fetch",
 			vi.fn(async () => new Response(JSON.stringify({}), { status: 200 })),
@@ -436,7 +439,9 @@ describe("AudienceMapAdapter", () => {
 
 		render(adapter(true, 0, undefined, true));
 		await screen.findByText("Audience tree renderer");
-		expect(screen.getByRole("region", { name: "Explore" })).toBeTruthy();
+		expect(
+			await screen.findByText(/rest the cursor on a cluster/),
+		).toBeTruthy();
 	});
 
 	it("shows the evidence behind a finding, attributed and linking nowhere", async () => {
@@ -484,10 +489,10 @@ describe("AudienceMapAdapter", () => {
 		const root = screen.getByTestId("audience-map-root");
 		expect(root.getAttribute("data-theme")).toBe("dark");
 		expect(root.style.getPropertyValue("--map-text")).toBe("#F6F4F1");
-		expect(root.style.getPropertyValue("--map-surface")).toBe("#1B1B1A");
+		expect(root.style.getPropertyValue("--map-surface")).toBe("#000000");
 		// Mantine's panels in this app follow the two app variables, so the
 		// panels, the detail card and the waiting line come with them.
-		expect(root.style.getPropertyValue("--app-background")).toBe("#262625");
+		expect(root.style.getPropertyValue("--app-background")).toBe("#161615");
 		expect(tree.getAttribute("data-dark")).toBe("true");
 		expect(
 			screen.getByText("Audience local renderer").getAttribute("data-dark"),

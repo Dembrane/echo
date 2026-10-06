@@ -15,12 +15,12 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { BookmarkSimple } from "@phosphor-icons/react";
 import {
-	IconArrowUpRight,
-	IconFileText,
-	IconMessages,
-} from "@tabler/icons-react";
+	BookmarkSimple,
+	ArrowUpRightIcon,
+	ChatsIcon,
+	FileTextIcon,
+} from "@phosphor-icons/react";
 import { formatDate } from "date-fns";
 import type React from "react";
 import { Children, useMemo } from "react";
@@ -78,18 +78,13 @@ const getLinkLabel = (children: React.ReactNode) => {
 // One readable link style for everything the agent cites: underlined text
 // with a small external-arrow, never a pill.
 const AGENTIC_LINK_CLASSES =
-	"not-prose inline-flex items-baseline gap-0.5 text-[var(--mantine-color-anchor)] underline underline-offset-2 transition-colors hover:text-[var(--mantine-color-blue-7)]";
+	"not-prose inline-flex items-baseline gap-0.5 text-[var(--app-action)] underline underline-offset-2 transition-colors hover:text-[var(--app-text)]";
 
 // The same flash the transcript page gives a deep-linked chunk
 // (ConversationChunkAudioTranscript), so a footnote hop reads as the one
-// highlight language the product has. Class names must match ones already in
-// source, or the Tailwind build will not carry them.
-const FOOTNOTE_HIGHLIGHT_CLASSES = [
-	"!bg-cyan-50",
-	"ring-2",
-	"ring-cyan-300",
-	"rounded-sm",
-];
+// highlight language the product has: the action tint, no ring. Class names
+// must match ones already in source, or the Tailwind build will not carry them.
+const FOOTNOTE_HIGHLIGHT_CLASSES = ["!bg-[var(--app-action-tint)]"];
 const FOOTNOTE_HIGHLIGHT_MS = 5000;
 
 const flashFootnoteTarget = (target: HTMLElement) => {
@@ -141,15 +136,13 @@ const DocsChoiceCard = ({
 		href={href}
 		target="_blank"
 		rel="noreferrer"
-		className="block cursor-pointer rounded-xl border-2 border-gray-300 bg-white p-6 no-underline transition-all hover:border-[var(--mantine-color-primary-4)] hover:bg-[var(--mantine-color-primary-0)]"
+		className="app-do block p-6 no-underline"
 	>
-		<Stack gap="sm" align="center" className="justify-center py-2 text-center">
+		<Stack gap="sm" py="sm">
 			<Group gap="sm" align="center">
 				{icon}
-				<Title order={4} fw={600}>
-					{title}
-				</Title>
-				<IconArrowUpRight size={18} stroke={1.9} />
+				<Title order={4}>{title}</Title>
+				<ArrowUpRightIcon size={16} />
 			</Group>
 			<Text size="sm">{description}</Text>
 		</Stack>
@@ -171,7 +164,7 @@ const AgenticCitation = ({
 		<Popover.Target>
 			<button
 				type="button"
-				className="not-prose mx-[1px] inline-flex -translate-y-[0.4em] cursor-pointer items-center rounded-sm border-0 bg-[var(--mantine-color-primary-0)] px-1 align-baseline text-xs leading-tight text-[var(--mantine-color-primary-7)] transition-colors hover:bg-[var(--mantine-color-primary-1)]"
+				className="not-prose mx-[1px] inline-flex -translate-y-[0.4em] cursor-pointer items-center rounded-sm border-0 bg-[var(--app-action-tint)] px-1 align-baseline text-xs leading-tight text-[var(--app-action)] transition-colors hover:bg-[var(--app-quiet)]"
 				aria-label={t`Source ${getLinkLabel(children)}`}
 				data-testid="agentic-citation"
 			>
@@ -179,8 +172,8 @@ const AgenticCitation = ({
 			</button>
 		</Popover.Target>
 		<Popover.Dropdown data-testid="agentic-citation-popover">
-			<Stack gap={6}>
-				<Text size="sm" fw={600}>
+			<Stack gap="xs">
+				<Text size="sm">
 					{citation.name ? (
 						<Trans>{citation.name}'s conversation</Trans>
 					) : (
@@ -196,7 +189,7 @@ const AgenticCitation = ({
 					<span>
 						<Trans>Open conversation</Trans>
 					</span>
-					<IconArrowUpRight size={12} stroke={1.9} className="self-center" />
+					<ArrowUpRightIcon size={16} className="self-center" />
 				</a>
 			</Stack>
 		</Popover.Dropdown>
@@ -234,7 +227,7 @@ const AgenticDocsLink = ({
 				}}
 			>
 				<span>{getLinkLabel(children)}</span>
-				<IconArrowUpRight size={12} stroke={1.9} className="self-center" />
+				<ArrowUpRightIcon size={16} className="self-center" />
 			</a>
 			<Modal
 				opened={opened}
@@ -246,13 +239,13 @@ const AgenticDocsLink = ({
 				<SimpleGrid cols={{ base: 1, xs: 2 }} spacing="md">
 					<DocsChoiceCard
 						href={href}
-						icon={<IconFileText size={28} stroke={1.7} />}
+						icon={<FileTextIcon size={20} />}
 						title={<Trans>Open documentation</Trans>}
 						description={<Trans>The page this answer refers to.</Trans>}
 					/>
 					<DocsChoiceCard
 						href={chatDocsHref}
-						icon={<IconMessages size={28} stroke={1.7} />}
+						icon={<ChatsIcon size={20} />}
 						title={<Trans>Open chat documentation</Trans>}
 						description={<Trans>How Ask works and what it can do.</Trans>}
 					/>
@@ -351,11 +344,7 @@ export const ChatHistoryMessage = ({
 								{...props}
 							>
 								<span>{getLinkLabel(children)}</span>
-								<IconArrowUpRight
-									size={12}
-									stroke={1.9}
-									className="self-center"
-								/>
+								<ArrowUpRightIcon size={16} className="self-center" />
 							</a>
 						</Tooltip>
 					);
@@ -365,7 +354,7 @@ export const ChatHistoryMessage = ({
 					<a
 						href={href}
 						className={cn(
-							"text-[var(--mantine-color-anchor)] underline underline-offset-2 transition-colors hover:text-[var(--mantine-color-blue-7)]",
+							"text-[var(--app-action)] underline underline-offset-2 transition-colors hover:text-[var(--app-text)]",
 							className,
 						)}
 						{...props}
@@ -401,7 +390,7 @@ export const ChatHistoryMessage = ({
 						chatMode={chatMode}
 						section={
 							<Group w="100%" gap="lg">
-								<Text className={cn("italic")} size="xs" c="gray.7">
+								<Text className={cn("italic")} size="xs" c="dimmed">
 									{formatDate(
 										// @ts-expect-error message is not typed
 										new Date(message.createdAt ?? new Date()),
@@ -422,12 +411,11 @@ export const ChatHistoryMessage = ({
 									{message.role === "user" && onSaveAsTemplate && (
 										<Tooltip label={t`Save as template`}>
 											<ActionIcon
-												size="xs"
 												variant="subtle"
 												color="gray"
 												onClick={() => onSaveAsTemplate(message.content)}
 											>
-												<BookmarkSimple size={14} />
+												<BookmarkSimple size={20} />
 											</ActionIcon>
 										</Tooltip>
 									)}
@@ -466,7 +454,8 @@ export const ChatHistoryMessage = ({
 						{portalStartLink ? (
 							<Box
 								mt="sm"
-								className="w-fit rounded-md bg-white p-2"
+								className="w-fit p-2"
+								style={{ backgroundColor: "var(--app-surface)" }}
 								data-testid="assistant-portal-link-qr"
 							>
 								<QRCode
@@ -519,7 +508,7 @@ export const ChatHistoryMessage = ({
 			// biome-ignore lint/a11y/useValidAriaRole: role is a component prop for styling, not an ARIA attribute
 			<ChatMessage key={message.id} role="dembrane" section={section}>
 				<Group gap="xs" align="baseline">
-					<Text size="xs" c="dimmed" fw={500}>
+					<Text size="xs" c="dimmed">
 						<Trans>Context added:</Trans>
 					</Text>
 					<ConversationLinks

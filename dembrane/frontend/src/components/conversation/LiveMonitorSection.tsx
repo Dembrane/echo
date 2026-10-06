@@ -1,23 +1,24 @@
 import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
 import {
-	ActionIcon,
 	Box,
+	Button,
 	Card,
 	Collapse,
 	Divider,
 	Group,
 	SegmentedControl,
 	SimpleGrid,
+	Skeleton,
 	Stack,
 	Text,
+	Title,
 	Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
 	BatteryLowIcon,
 	CaretRightIcon,
-	ChartBarIcon,
 	MicrophoneIcon,
 	WarningCircleIcon,
 	WifiSlashIcon,
@@ -25,7 +26,7 @@ import {
 import posthog from "posthog-js";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
-import DembraneLoadingSpinner from "@/components/common/DembraneLoadingSpinner";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import {
 	type MonitorConversation,
@@ -55,6 +56,18 @@ type GroupBy = "tag" | "status";
 // How often the settle clock is re-evaluated while grouping by status.
 const SETTLE_TICK_MS = 1000;
 
+// Stable keys for the placeholder tiles shown on first load.
+const SKELETON_TILES = ["k1", "k2", "k3", "k4", "k5", "k6"];
+
+// The timer dot in role colours, so it lifts in dark; grape and mauve keep
+// their shade.
+const DOT_ROLE: Record<string, string> = {
+	gray: "var(--app-muted)",
+	primary: "var(--app-action)",
+	red: "var(--app-danger)",
+	yellow: "var(--app-warning)",
+};
+
 // Stable keys for the meter segments (index drives the fill).
 const METER_SEGMENTS = ["s1", "s2", "s3", "s4", "s5"];
 // Voice RMS sits in this low band (nowhere near 1.0); normalize it to the full
@@ -82,18 +95,15 @@ const AudioLevelMeter = ({ level }: { level: number }) => {
 			}
 			withArrow
 		>
-			<Group gap={3} align="center" wrap="nowrap" aria-hidden>
-				<MicrophoneIcon size={13} />
+			<Group gap="xs" align="center" wrap="nowrap" aria-hidden>
+				<MicrophoneIcon size={16} />
 				<Group gap={2} align="center" wrap="nowrap">
 					{METER_SEGMENTS.map((id, i) => (
 						<Box
 							key={id}
 							style={{
 								backgroundColor:
-									i < active
-										? "var(--mantine-color-green-6)"
-										: "var(--mantine-color-gray-3)",
-								borderRadius: 1,
+									i < active ? "var(--app-success)" : "var(--app-rule-color)",
 								height: 10,
 								width: 3,
 							}}
@@ -179,11 +189,14 @@ const LiveDuration = ({
 	// State-colored dot (same colors as the StatePill) + graphite tabular clock.
 	const dotColor = stateColor(conversation.state);
 	return (
-		<Group gap={4} align="center" wrap="nowrap">
+		<Group gap="xs" align="center" wrap="nowrap">
 			<span
 				aria-hidden
 				className="inline-block h-1.5 w-1.5 rounded-full"
-				style={{ backgroundColor: `var(--mantine-color-${dotColor}-6)` }}
+				style={{
+					backgroundColor:
+						DOT_ROLE[dotColor] ?? `var(--mantine-color-${dotColor}-6)`,
+				}}
 			/>
 			<Text size="xs" style={{ fontVariantNumeric: "tabular-nums" }}>
 				{label}
@@ -219,98 +232,94 @@ const MonitorTile = ({
 	const weakNetwork = isWeakNetwork(conversation);
 	const lowBattery = isLowBattery(conversation);
 	const isLocked = conversation.locked;
-	// Locked tiles open the upgrade modal; unlocked tiles open the edit modal.
-	const clickable = isLocked || !!onEdit;
 
-	const card = (
-		<Card
-			withBorder
-			p="xs"
-			radius="sm"
-			className={`transition-colors h-full ${clickable ? "hover:!border-primary-400 cursor-pointer" : ""} ${highlighted ? "!border-primary-500 ring-2 ring-primary-200" : ""}`}
+	const body = (
+		<Stack
+			gap="xs"
+			justify="space-between"
+			style={{ height: "100%", minWidth: 0 }}
 		>
-			<Stack
-				gap={6}
-				justify="space-between"
-				style={{ height: "100%", minWidth: 0 }}
-			>
-				<Group justify="space-between" align="center" wrap="nowrap" gap={4}>
-					<StatePill state={conversation.state} />
-					<Group gap={4} align="center" wrap="nowrap">
-						{conversation.recording_health === "receiving" &&
-							typeof conversation.audio_level === "number" && (
-								<AudioLevelMeter level={conversation.audio_level} />
-							)}
-						{conversation.recording_health === "stalled" && (
-							<Tooltip
-								label={t`Audio was coming in but stopped. They may have lost connection or locked their phone.`}
-								multiline
-								maw={280}
-								withArrow
-							>
-								<span>
-									<WarningCircleIcon size={14} className="text-orange-500" />
-								</span>
-							</Tooltip>
+			<Group justify="space-between" align="center" wrap="nowrap" gap="xs">
+				<StatePill state={conversation.state} />
+				<Group gap="xs" align="center" wrap="nowrap">
+					{conversation.recording_health === "receiving" &&
+						typeof conversation.audio_level === "number" && (
+							<AudioLevelMeter level={conversation.audio_level} />
 						)}
-						{conversation.recording_health === "backgrounded" && (
-							<Tooltip
-								label={t`Their screen is locked or the tab is hidden. Recording pauses until they come back.`}
-								multiline
-								maw={280}
-								withArrow
-							>
-								<Text span size="xs" fw={600}>
-									{t`Away`}
-								</Text>
-							</Tooltip>
-						)}
-						{conversation.has_error && (
-							<Tooltip label={t`Error`} withArrow>
-								<span>
-									<WarningCircleIcon
-										size={14}
-										className="text-red-500 animate-pulse"
-									/>
-								</span>
-							</Tooltip>
-						)}
-					</Group>
+					{conversation.recording_health === "stalled" && (
+						<Tooltip
+							label={t`Audio was coming in but stopped. They may have lost connection or locked their phone.`}
+							multiline
+							maw={280}
+							withArrow
+						>
+							<Box component="span" c="yellow" className="inline-flex">
+								<WarningCircleIcon size={16} />
+							</Box>
+						</Tooltip>
+					)}
+					{conversation.recording_health === "backgrounded" && (
+						<Tooltip
+							label={t`Their screen is locked or the tab is hidden. Recording pauses until they come back.`}
+							multiline
+							maw={280}
+							withArrow
+						>
+							<Text span size="xs">
+								{t`Away`}
+							</Text>
+						</Tooltip>
+					)}
+					{conversation.has_error && (
+						<Tooltip label={t`Error`} withArrow>
+							<Box component="span" c="red" className="inline-flex">
+								<WarningCircleIcon size={16} className="animate-pulse" />
+							</Box>
+						</Tooltip>
+					)}
 				</Group>
+			</Group>
 
-				<Text size="sm" fw={600} truncate title={label}>
-					{label}
-				</Text>
+			<Text size="sm" truncate title={label}>
+				{label}
+			</Text>
 
-				<Group justify="space-between" align="center" wrap="nowrap" gap={4}>
-					<LiveDuration conversation={conversation} />
-					<Group gap={4} align="center" wrap="nowrap">
-						{weakNetwork && (
-							<Tooltip label={t`Weak network`} withArrow>
-								<WifiSlashIcon size={14} className="text-orange-500" />
-							</Tooltip>
-						)}
-						{lowBattery && (
-							<Tooltip label={t`Low battery`} withArrow>
-								<BatteryLowIcon size={14} className="text-orange-500" />
-							</Tooltip>
-						)}
-					</Group>
+			<Group justify="space-between" align="center" wrap="nowrap" gap="xs">
+				<LiveDuration conversation={conversation} />
+				<Group gap="xs" align="center" wrap="nowrap">
+					{weakNetwork && (
+						<Tooltip label={t`Weak network`} withArrow>
+							<Box component="span" c="yellow" className="inline-flex">
+								<WifiSlashIcon size={16} />
+							</Box>
+						</Tooltip>
+					)}
+					{lowBattery && (
+						<Tooltip label={t`Low battery`} withArrow>
+							<Box component="span" c="yellow" className="inline-flex">
+								<BatteryLowIcon size={16} />
+							</Box>
+						</Tooltip>
+					)}
 				</Group>
-			</Stack>
-		</Card>
+			</Group>
+		</Stack>
 	);
 
-	// The wrapper is the grid item, so it must carry the height for the card's
-	// h-full to resolve against, else the squares come out ragged.
+	// The pressable box is the grid item, so it carries the height (h-full),
+	// else the squares come out ragged. It draws the full box itself (app-do);
+	// the highlight (hovered from the funnel) is its selected state.
 
-	// Locked tiles open the upgrade modal instead of the (also-gated) detail view.
+	// Locked tiles open the upgrade modal instead of the (also-gated) detail
+	// view; unlocked tiles open the edit modal.
 	if (isLocked) {
 		return (
 			<Box
 				role="button"
 				tabIndex={0}
-				className="block h-full"
+				p="xs"
+				className="app-do block h-full"
+				data-selected={highlighted || undefined}
 				aria-label={t`Locked conversation, upgrade to view`}
 				onClick={onLockedClick}
 				onKeyDown={(event) => {
@@ -320,17 +329,24 @@ const MonitorTile = ({
 					}
 				}}
 			>
-				{card}
+				{body}
 			</Box>
 		);
 	}
 
-	if (!onEdit) return card;
+	if (!onEdit)
+		return (
+			<Card withBorder p="xs" className="h-full">
+				{body}
+			</Card>
+		);
 	return (
 		<Box
 			role="button"
 			tabIndex={0}
-			className="block h-full"
+			p="xs"
+			className="app-do block h-full"
+			data-selected={highlighted || undefined}
 			aria-label={t`Open ${label}`}
 			onClick={onEdit}
 			onKeyDown={(event) => {
@@ -340,7 +356,7 @@ const MonitorTile = ({
 				}
 			}}
 		>
-			{card}
+			{body}
 		</Box>
 	);
 };
@@ -517,19 +533,18 @@ const MonitorGroupSection = ({
 					}
 				}}
 			>
-				<ActionIcon variant="subtle" color="gray" size="sm" aria-hidden>
-					<CaretRightIcon
-						size={14}
-						style={{
-							transform: opened ? "rotate(90deg)" : "none",
-							transition: "transform 150ms ease",
-						}}
-					/>
-				</ActionIcon>
-				<Text size="xs" fw={600} tt="uppercase">
-					{group.label}
+				<CaretRightIcon
+					size={16}
+					aria-hidden
+					style={{
+						transform: opened ? "rotate(90deg)" : "none",
+						transition: "transform 150ms ease",
+					}}
+				/>
+				<Title order={5}>{group.label}</Title>
+				<Text size="sm" c="dimmed">
+					{group.items.length}
 				</Text>
-				<Text size="xs">{group.items.length}</Text>
 				{group.liveCount > 0 && (
 					<MonitorBadge size="xs" color="gray" variant="outline">
 						<Plural value={group.liveCount} one="# live" other="# live" />
@@ -553,21 +568,16 @@ const MonitorGroupSection = ({
 						))}
 					</SimpleGrid>
 					{overflow > 0 && (
-						<Text
-							size="xs"
-							role="button"
-							tabIndex={0}
-							className="cursor-pointer select-none pl-1 hover:underline"
-							onClick={() => setExpanded(true)}
-							onKeyDown={(event) => {
-								if (event.key === "Enter" || event.key === " ") {
-									if (event.key === " ") event.preventDefault();
-									setExpanded(true);
-								}
-							}}
-						>
-							<Trans>Show {overflow} more</Trans>
-						</Text>
+						<Group>
+							<Button
+								variant="subtle"
+								color="gray"
+								size="xs"
+								onClick={() => setExpanded(true)}
+							>
+								<Trans>Show {overflow} more</Trans>
+							</Button>
+						</Group>
 					)}
 				</Stack>
 			</Collapse>
@@ -636,15 +646,19 @@ export const LiveMonitorSection = ({
 		});
 	};
 
-	// First load: spinner on the dedicated page, nothing when embedded (no flicker).
+	// First load: skeleton tiles on the dedicated page, nothing when embedded
+	// (no flicker).
 	if (isLoading && summary.total === 0) {
 		if (!standalone) return null;
 		return (
-			<Card withBorder p="lg" radius="sm">
-				<Stack align="center">
-					<DembraneLoadingSpinner isLoading showMessage={false} />
-				</Stack>
-			</Card>
+			<Stack gap="xs" aria-busy>
+				<Skeleton h={16} w={160} />
+				<SimpleGrid cols={{ base: 2, lg: 5, md: 4, sm: 3, xl: 6 }} spacing="xs">
+					{SKELETON_TILES.map((id) => (
+						<Skeleton key={id} h={96} />
+					))}
+				</SimpleGrid>
+			</Stack>
 		);
 	}
 
@@ -652,37 +666,25 @@ export const LiveMonitorSection = ({
 	if (error && summary.total === 0) {
 		if (!standalone) return null;
 		return (
-			<Card withBorder p="lg" radius="sm">
-				<Stack gap="xs" align="center">
-					<WarningCircleIcon size={24} />
-					<Text size="sm" fw={500}>
-						<Trans>Couldn't load live activity</Trans>
-					</Text>
-					<Text size="xs" ta="center" maw={420}>
-						<Trans>The connection dropped. Retrying automatically.</Trans>
-					</Text>
-				</Stack>
-			</Card>
+			<ErrorNotice
+				error={error}
+				title={t`Couldn't load live activity. Retrying automatically.`}
+			/>
 		);
 	}
 
 	if (summary.total === 0) {
 		if (!standalone) return null;
+		// The only empty state on the Monitor page: the funnel above shows none
+		// of its own, so this sentence speaks for both.
 		return (
-			<Card withBorder p="lg" radius="sm">
-				<Stack gap="xs" align="center">
-					<ChartBarIcon size={24} />
-					<Text size="sm" fw={500}>
-						<Trans>No recent activity</Trans>
-					</Text>
-					<Text size="xs" ta="center" maw={420}>
-						<Trans>
-							Live recordings, transcription progress, and errors show up here
-							as participants start recording in the portal.
-						</Trans>
-					</Text>
-				</Stack>
-			</Card>
+			<Text size="sm" c="dimmed" maw={560}>
+				<Trans>
+					No recent activity. Participants appear here when they scan the QR
+					code, followed by their live recordings, transcription progress and
+					errors.
+				</Trans>
+			</Text>
 		);
 	}
 
@@ -691,12 +693,9 @@ export const LiveMonitorSection = ({
 			<Stack gap="lg">
 				{!hideHeader && (
 					<Group justify="space-between" align="center" gap="sm">
-						<Group gap="xs" align="center">
-							<ChartBarIcon size={16} />
-							<Text size="xs" tt="uppercase">
-								<Trans>Live monitoring</Trans>
-							</Text>
-						</Group>
+						<Title order={4}>
+							<Trans>Live monitoring</Trans>
+						</Title>
 						<Group gap="xs" align="center">
 							<SegmentedControl
 								size="xs"
@@ -721,7 +720,7 @@ export const LiveMonitorSection = ({
 										size="sm"
 										color="gray"
 										variant="outline"
-										leftSection={<WifiSlashIcon size={12} />}
+										leftSection={<WifiSlashIcon size={16} />}
 									>
 										<Plural
 											value={summary.offline}
@@ -735,7 +734,7 @@ export const LiveMonitorSection = ({
 										size="sm"
 										color="gray"
 										variant="outline"
-										leftSection={<WarningCircleIcon size={12} />}
+										leftSection={<WarningCircleIcon size={16} />}
 									>
 										<Plural
 											value={summary.not_receiving}
@@ -758,7 +757,7 @@ export const LiveMonitorSection = ({
 										size="sm"
 										color="gray"
 										variant="outline"
-										leftSection={<WarningCircleIcon size={12} />}
+										leftSection={<WarningCircleIcon size={16} />}
 									>
 										<Plural
 											value={summary.with_errors}
@@ -772,7 +771,7 @@ export const LiveMonitorSection = ({
 							{(!isStreaming ||
 								!!catchUpLabel(summary.catch_up_eta_seconds)) && (
 								<Group gap="xs" align="center" style={{ opacity: 0.65 }}>
-									<Divider orientation="vertical" h={14} />
+									<Divider orientation="vertical" h={16} />
 									{!isStreaming && (
 										<Tooltip
 											label={t`Live stream disconnected. Updating on a slower poll until it reconnects.`}
@@ -790,7 +789,7 @@ export const LiveMonitorSection = ({
 										>
 											<MonitorBadge size="sm" color="gray" variant="outline">
 												<Trans>
-													catch up {catchUpLabel(summary.catch_up_eta_seconds)}
+													Catch up {catchUpLabel(summary.catch_up_eta_seconds)}
 												</Trans>
 											</MonitorBadge>
 										</Tooltip>

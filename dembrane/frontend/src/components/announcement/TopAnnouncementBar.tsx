@@ -1,10 +1,5 @@
-import {
-	ActionIcon,
-	Box,
-	Group,
-	Text,
-	ThemeIcon,
-} from "@mantine/core";
+import { t } from "@lingui/core/macro";
+import { ActionIcon, Alert, Group, Text } from "@mantine/core";
 import { WarningCircle, X } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { useAnnouncementDrawer } from "@/components/announcement/hooks";
@@ -77,39 +72,32 @@ export function TopAnnouncementBar() {
 		open();
 	};
 
-	const bgColor =
-		announcement.level === "urgent"
-			? "rgba(255, 209, 102, 0.15)"
-			: "var(--mantine-color-blue-0)";
-
+	// Only urgent announcements reach the bar (see the guard above), so it
+	// is the yellow status alert.
 	return (
-		<Box
-			className="relative flex w-full cursor-pointer items-center justify-center px-4 py-3 text-center border-b"
-			bg={bgColor}
+		<Alert
+			color="yellow"
+			variant="light"
+			py="xs"
+			px="md"
+			icon={<WarningCircle size={20} />}
 			onClick={handleBarClick}
+			style={{ cursor: "pointer", width: "100%" }}
+			styles={{ icon: { alignSelf: "center" } }}
 		>
-			<Group justify="center" gap="md" wrap="nowrap" className="pr-9">
-				<ThemeIcon
-					size={25}
-					variant="transparent"
-					color={announcement.level === "urgent" ? "orange" : "blue"}
-					radius="xl"
-				>
-					<WarningCircle size={20} weight="fill" />
-				</ThemeIcon>
-				<Text size="sm" className="line-clamp-1">
+			<Group justify="space-between" gap="md" wrap="nowrap">
+				<Text size="sm" lineClamp={1}>
 					{title}
 				</Text>
+				<ActionIcon
+					variant="subtle"
+					color="gray"
+					onClick={handleClose}
+					aria-label={t`Dismiss`}
+				>
+					<X size={20} />
+				</ActionIcon>
 			</Group>
-
-			<ActionIcon
-				variant="transparent"
-				size="sm"
-				onClick={handleClose}
-				className="absolute right-6"
-			>
-				<X size={16} />
-			</ActionIcon>
-		</Box>
+		</Alert>
 	);
 }

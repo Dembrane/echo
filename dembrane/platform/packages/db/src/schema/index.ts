@@ -1996,6 +1996,42 @@ export const map_fact_check = pgTable(
   ],
 );
 
+// A cluster a host held the cursor over on the Map, titled by the `map.group` run. One row
+// per selection of a snapshot (selection_key); members are revision and object ids, most
+// central first, so a group still finds its objects after a regeneration.
+export const map_group = pgTable(
+  "map_group",
+  {
+    id: uuid().primaryKey().notNull(),
+    project_id: uuid().notNull(),
+    snapshot_id: uuid().notNull(),
+    selection_key: varchar({ length: 64 }).notNull(),
+    members: json().notNull(),
+    status: varchar({ length: 32 }).notNull(),
+    attempt: integer().default(1).notNull(),
+    title: text(),
+    error: text(),
+    model: varchar({ length: 255 }),
+    prompt_version: varchar({ length: 128 }),
+    requested_by: varchar({ length: 64 }),
+    created_at: timestamp({ withTimezone: true, mode: "string" }).defaultNow().notNull(),
+    updated_at: timestamp({ withTimezone: true, mode: "string" }).defaultNow().notNull(),
+    completed_at: timestamp({ withTimezone: true, mode: "string" }),
+  },
+  (table): PgTableExtraConfigValue[] => [
+    uniqueIndex("map_group_project_selection").using(
+      "btree",
+      table.project_id.asc().nullsLast(),
+      table.selection_key.asc().nullsLast(),
+    ),
+    foreignKey({
+      columns: [table.project_id],
+      foreignColumns: [project.id],
+      name: "map_group_project_id_foreign",
+    }).onDelete("cascade"),
+  ],
+);
+
 export const methodology = pgTable(
   "methodology",
   {

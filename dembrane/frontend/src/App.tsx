@@ -1,9 +1,9 @@
-import "@fontsource-variable/space-grotesk";
 import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
 import "@mantine/dropzone/styles.css";
 
 import { MantineProvider } from "@mantine/core";
+import { IconContext } from "@phosphor-icons/react";
 import "@mantine/core/styles.css";
 import { DatesProvider } from "@mantine/dates";
 import { ModalsProvider } from "@mantine/modals";
@@ -15,6 +15,7 @@ import {
 } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect } from "react";
 import { RouterProvider } from "react-router/dom";
+import { LoadingStage } from "./components/common/BeautifulLoading";
 import { notifyError } from "./components/error/notifyError";
 import { I18nProvider } from "./components/layout/I18nProvider";
 import { ENABLE_AGENTATION, USE_PARTICIPANT_ROUTER } from "./config";
@@ -44,7 +45,8 @@ function WorkspaceProvider({ children }: PropsWithChildren) {
 }
 
 import { mainRouter, participantRouter } from "./Router";
-import { theme } from "./theme";
+import { cssVariablesResolver, theme } from "./theme";
+import { roomColorSchemeManager } from "./components/present/hooks/useAudienceTheme";
 
 // Pilot hard-block (matrix §8): intercept 402 + copy-locked body from
 // host-side mutations and fan out a level-3 modal. Detection is
@@ -151,10 +153,20 @@ export const App = () => {
 	if (audienceEntry) {
 		return (
 			<QueryClientProvider client={queryClient}>
-				<MantineProvider theme={theme}>
-					<I18nProvider>
-						<RouterProvider router={router} />
-					</I18nProvider>
+				{/* The app's light or dark, but a link's ?theme= wins and System
+				    opens light: a room never follows the laptop's OS. */}
+				<MantineProvider
+					theme={theme}
+					cssVariablesResolver={cssVariablesResolver}
+					colorSchemeManager={roomColorSchemeManager}
+					defaultColorScheme="light"
+				>
+					<IconContext.Provider value={{ weight: "light" }}>
+						<I18nProvider>
+							<RouterProvider router={router} />
+						</I18nProvider>
+					</IconContext.Provider>
+					<LoadingStage />
 				</MantineProvider>
 			</QueryClientProvider>
 		);
@@ -163,30 +175,40 @@ export const App = () => {
 	return (
 		<QueryClientProvider client={queryClient}>
 			{/* <ReactQueryDevtools initialIsOpen={false} /> */}
-			<MantineProvider theme={theme}>
-				<DatesProvider settings={{ consistentWeeks: true }}>
-					<AppPreferencesProvider>
-						<WhitelabelLogoProvider>
-							<WorkspaceProvider>
-								{/* I18nProvider must wrap ModalsProvider: Mantine's
+			{/* Light or dark follows the device unless the user picks one
+			    (Settings > Appearance); index.html applies it before mount. */}
+			<MantineProvider
+				theme={theme}
+				cssVariablesResolver={cssVariablesResolver}
+				defaultColorScheme="auto"
+			>
+				{/* Phosphor's light cut, topped up to the one 1px stroke in rules.css */}
+				<IconContext.Provider value={{ weight: "light" }}>
+					<DatesProvider settings={{ consistentWeeks: true }}>
+						<AppPreferencesProvider>
+							<WhitelabelLogoProvider>
+								<WorkspaceProvider>
+									{/* I18nProvider must wrap ModalsProvider: Mantine's
 								    modal portal re-enters the tree outside any
 								    non-context-aware ancestor, so <Trans> inside
 								    modals.openConfirmModal children needs Lingui
 								    context available from this level down. */}
-								<I18nProvider>
-									<ModalsProvider>
-										<RouterProvider router={router} />
-										{ENABLE_AGENTATION && (
-											<Suspense fallback={null}>
-												<Agentation />
-											</Suspense>
-										)}
-									</ModalsProvider>
-								</I18nProvider>
-							</WorkspaceProvider>
-						</WhitelabelLogoProvider>
-					</AppPreferencesProvider>
-				</DatesProvider>
+									<I18nProvider>
+										<ModalsProvider>
+											<RouterProvider router={router} />
+											{ENABLE_AGENTATION && (
+												<Suspense fallback={null}>
+													<Agentation />
+												</Suspense>
+											)}
+										</ModalsProvider>
+									</I18nProvider>
+									<LoadingStage />
+								</WorkspaceProvider>
+							</WhitelabelLogoProvider>
+						</AppPreferencesProvider>
+					</DatesProvider>
+				</IconContext.Provider>
 			</MantineProvider>
 		</QueryClientProvider>
 	);

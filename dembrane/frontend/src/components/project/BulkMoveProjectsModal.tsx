@@ -31,7 +31,9 @@ export const BulkMoveProjectsModal = ({
 	onMoved,
 }: Props) => {
 	const { workspaces } = useWorkspace();
-	const [targetWorkspaceId, setTargetWorkspaceId] = useState<string | null>(null);
+	const [targetWorkspaceId, setTargetWorkspaceId] = useState<string | null>(
+		null,
+	);
 	const bulkMove = useBulkMoveProjectsMutation();
 
 	// Same context key as billing_service._billing_context_key: an external
@@ -101,22 +103,24 @@ export const BulkMoveProjectsModal = ({
 						{...testId("bulk-move-projects-select")}
 					/>
 				)}
-				<Group justify="flex-end">
+				<Group gap="sm">
 					<Button
-						variant="subtle"
-						onClick={onClose}
-						disabled={bulkMove.isPending}
-						{...testId("bulk-move-projects-cancel")}
-					>
-						<Trans>Cancel</Trans>
-					</Button>
-					<Button
+						variant="filled"
 						onClick={handleMove}
 						loading={bulkMove.isPending}
 						disabled={!targetWorkspaceId || bulkMove.isPending}
 						{...testId("bulk-move-projects-confirm")}
 					>
 						<Trans>Move</Trans>
+					</Button>
+					<Button
+						variant="subtle"
+						color="gray"
+						onClick={onClose}
+						disabled={bulkMove.isPending}
+						{...testId("bulk-move-projects-cancel")}
+					>
+						<Trans>Cancel</Trans>
 					</Button>
 				</Group>
 			</Stack>

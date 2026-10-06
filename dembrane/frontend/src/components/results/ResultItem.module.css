@@ -15,16 +15,16 @@
 
 .item,
 .stage {
-	--parchment: #f6f4f1;
-	--paper: #ffffff;
-	--graphite: #2d2d2c;
-	--blue: #4169e1;
-	--hairline: #e6e3df;
+	--parchment: var(--app-background);
+	--paper: var(--app-surface);
+	--graphite: var(--app-text);
+	--blue: var(--app-action);
+	--hairline: var(--app-quiet);
 	/* Soft ink carries words and is readable on parchment; faint ink is for
 	   the lines and underlines nobody is asked to read. */
-	--ink-soft: rgba(45, 45, 44, 0.72);
-	--ink-faint: rgba(45, 45, 44, 0.38);
-	--ink-tag: rgba(45, 45, 44, 0.78);
+	--ink-soft: color-mix(in srgb, var(--app-text) 72%, transparent);
+	--ink-faint: color-mix(in srgb, var(--app-text) 38%, transparent);
+	--ink-tag: color-mix(in srgb, var(--app-text) 78%, transparent);
 	--curve: cubic-bezier(0.25, 0.8, 0.3, 1);
 
 	container-type: inline-size;
@@ -36,11 +36,11 @@
 :global([data-theme="dark"]) .item,
 :global([data-theme="dark"]) .stage,
 .item[data-theme="dark"] .stage {
-	--parchment: #1b1b1a;
-	--paper: #262625;
+	--parchment: #000000;
+	--paper: #161615;
 	--graphite: #f6f4f1;
 	--blue: #7c9bff;
-	--hairline: #3a3a38;
+	--hairline: #262625;
 	--ink-soft: rgba(246, 244, 241, 0.74);
 	--ink-faint: rgba(246, 244, 241, 0.4);
 	--ink-tag: rgba(246, 244, 241, 0.78);
@@ -261,7 +261,6 @@
 .aside {
 	font-family: var(--app-font-family, inherit);
 	font-size: var(--app-font-size-sm, 0.9375rem);
-	font-weight: 400;
 	margin-top: 0.4em;
 }
 
@@ -280,7 +279,6 @@
 
 .verdictWord {
 	color: var(--graphite);
-	font-weight: 450;
 	margin: 0;
 }
 
@@ -289,7 +287,6 @@
 	display: flex;
 	flex-direction: column;
 	font-size: var(--app-font-size-sm, 0.9375rem);
-	font-weight: 400;
 	gap: 1.75rem;
 	line-height: 1.45;
 	min-width: 0;
@@ -306,12 +303,10 @@
 	gap: 0;
 }
 
-/* Sentence case, weight 500, like the list's group headers. The dashboard's
-   face has one weight, so the title borrows the variable cut to have its 500. */
+/* Sentence case, like the list's group headers, in the card's cut. */
 .sectionTitle {
 	color: var(--graphite);
 	font-family: var(--app-content-bold-font-family, inherit);
-	font-weight: 500;
 	margin: 0;
 }
 
@@ -574,12 +569,15 @@
 	margin: 0;
 }
 
-/* Paper on parchment: the one place the host writes. Never under 16 px, so a
-   phone does not zoom the page on focus. */
+/* Paper on parchment: the one place the host writes, drawn as a field is:
+   rules at the sides. Never under 16 px, so a phone does not zoom the page on
+   focus. */
 .reasonField {
 	background: var(--paper);
-	border: 1px solid var(--hairline);
+	border-color: var(--app-control-rule, #878785);
 	border-radius: 0;
+	border-style: solid;
+	border-width: 0 1px;
 	color: var(--graphite);
 	display: block;
 	font: inherit;
@@ -592,14 +590,10 @@
 	width: 100%;
 }
 
-.reasonField:hover {
-	border-color: var(--ink-faint);
-}
-
-/* The ring sits on the hairline rather than outside it: one line, not two. */
+/* Focus turns the side rules blue, as every field's does. */
 .item .reasonField:focus-visible {
 	border-color: var(--blue);
-	outline-offset: -1px;
+	outline: none;
 }
 
 .reasonActions {

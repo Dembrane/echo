@@ -11,7 +11,7 @@ import {
 	Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconTrash, IconUpload, IconUser } from "@tabler/icons-react";
+import { TrashIcon, UploadSimpleIcon } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { useCurrentUser } from "@/components/auth/hooks";
@@ -124,14 +124,11 @@ export const AccountSettingsCard = () => {
 
 	return (
 		<>
-			<Card withBorder p="lg" radius="md">
+			<Card withBorder p="lg">
 				<Stack gap="md">
-					<Group gap="sm">
-						<IconUser size={24} stroke={1.5} />
-						<Title order={3}>
-							<Trans>Account</Trans>
-						</Title>
-					</Group>
+					<Title order={4}>
+						<Trans>Account</Trans>
+					</Title>
 
 					{/* Avatar */}
 					<Group gap="lg" align="center">
@@ -145,9 +142,8 @@ export const AccountSettingsCard = () => {
 								>
 									{(props) => (
 										<Button
-											variant="light"
 											size="compact-sm"
-											leftSection={<IconUpload size={14} />}
+											leftSection={<UploadSimpleIcon size={20} />}
 											loading={uploadAvatarMutation.isPending}
 											{...props}
 										>
@@ -160,7 +156,7 @@ export const AccountSettingsCard = () => {
 										variant="subtle"
 										color="red"
 										size="compact-sm"
-										leftSection={<IconTrash size={14} />}
+										leftSection={<TrashIcon size={20} />}
 										loading={removeAvatarMutation.isPending}
 										onClick={openRemoveConfirm}
 									>
@@ -188,6 +184,7 @@ export const AccountSettingsCard = () => {
 					{hasNameChanged && (
 						<Group>
 							<Button
+								variant="filled"
 								onClick={() => updateNameMutation.mutate(name.trim())}
 								loading={updateNameMutation.isPending}
 								disabled={!name.trim()}
@@ -225,7 +222,7 @@ export const AccountSettingsCard = () => {
 					onCropComplete={handleCropComplete}
 					aspect={1}
 					cropShape="round"
-					title={t`Crop Avatar`}
+					title={t`Crop avatar`}
 				/>
 			)}
 		</>

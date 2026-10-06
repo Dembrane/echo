@@ -47,7 +47,7 @@ export function VoiceFields({
 	const isDefault = !voice.note && !otherOpen;
 	return (
 		<Stack gap="sm">
-			<Text fw={500}>
+			<Text>
 				<Trans>How should the phrases sound?</Trans>
 			</Text>
 			<Checkbox
@@ -137,12 +137,7 @@ export function PopcornVoiceSection({
 		});
 
 	return (
-		<Paper
-			withBorder
-			className="rounded-md"
-			p="lg"
-			{...testId("popcorn-voice")}
-		>
+		<Paper withBorder p="lg" {...testId("popcorn-voice")}>
 			<Stack gap="md">
 				<Group justify="space-between">
 					<Title order={4}>
@@ -177,7 +172,7 @@ export function PopcornVoiceSection({
 					voice={draft.voice}
 					onChange={(voice) => changeDraft({ ...draft, voice })}
 				/>
-				<Text size="sm">
+				<Text size="sm" c="dimmed">
 					<Trans>
 						Voice changes apply the next time you prepare or update Popcorn
 						results.

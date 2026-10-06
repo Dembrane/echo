@@ -19,6 +19,7 @@ import {
 	AUDIENCE_RETRY_MIN_MS,
 	AUDIENCE_SAFETY_REFRESH_MS,
 } from "./audienceContract";
+import { roomColorSchemeManager } from "./hooks/useAudienceTheme";
 
 const { useServerEventsMock } = vi.hoisted(() => ({
 	useServerEventsMock: vi.fn(),
@@ -69,7 +70,11 @@ const renderAudience = (props: {
 	render(
 		<QueryClientProvider client={new QueryClient()}>
 			<I18nProvider i18n={i18n}>
-				<MantineProvider>
+				{/* As App.tsx mounts the room: a link's ?theme= wins, System opens light. */}
+				<MantineProvider
+					colorSchemeManager={roomColorSchemeManager}
+					defaultColorScheme="light"
+				>
 					<AudienceScreen {...props} />
 				</MantineProvider>
 			</I18nProvider>
@@ -552,6 +557,125 @@ describe("AudienceScreen lifecycle", () => {
 		expect(
 			screen.getByRole("tab", { name: "Tensions" }).hasAttribute("disabled"),
 		).toBe(false);
+	});
+
+	it("moves like a presentation: keys and side zones, a position, no wrap", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn().mockResolvedValue({
+				json: async () => response(["popcorn", "tensions", "map"]),
+				ok: true,
+				status: 200,
+			}),
+		);
+		renderAudience({ presentationId: "presentation-1" });
+		const selected = () =>
+			screen
+				.getAllByRole("tab")
+				.find((tab) => tab.getAttribute("aria-selected") === "true")
+				?.textContent;
+		expect(await screen.findByText("Slide 1 of 3")).toBeTruthy();
+		expect(screen.queryByRole("button", { name: "Previous slide" })).toBeNull();
+
+		fireEvent.keyDown(window, { key: "ArrowRight" });
+		expect(selected()).toBe("Tensions");
+		fireEvent.click(screen.getByRole("button", { name: "Next slide" }));
+		expect(selected()).toBe("Map");
+		expect(screen.getByText("Slide 3 of 3")).toBeTruthy();
+		// The last slide is the end: no way on, and the keys do not wrap.
+		expect(screen.queryByRole("button", { name: "Next slide" })).toBeNull();
+		fireEvent.keyDown(window, { key: "PageDown" });
+		expect(selected()).toBe("Map");
+
+		fireEvent.keyDown(window, { key: "Home" });
+		expect(selected()).toBe("Popcorn");
+		fireEvent.keyDown(window, { key: " " });
+		expect(selected()).toBe("Tensions");
+		fireEvent.click(screen.getByRole("button", { name: "Previous slide" }));
+		expect(selected()).toBe("Popcorn");
+	});
+
+	it("steps through the deck's opening, even a locked one, and follows the deck's keys", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn().mockResolvedValue({
+				json: async () => ({
+					...response(["popcorn", "tensions"]),
+					bundle: {
+						files: {
+							"session.json": {
+								data: { title: "Data" },
+								intro: { enabled: true },
+								ui_language: "en",
+							},
+						},
+					},
+				}),
+				ok: true,
+				status: 200,
+			}),
+		);
+		renderAudience({ presentationId: "presentation-1" });
+		const iframe = (await screen.findByTitle(
+			"Presentation",
+		)) as HTMLIFrameElement;
+		const post = vi.spyOn(iframe.contentWindow as Window, "postMessage");
+		const fromDeck = (data: Record<string, unknown>) =>
+			act(() => {
+				window.dispatchEvent(
+					new MessageEvent("message", {
+						data: {
+							presentationId: "presentation-1",
+							source: "dembrane-present-deck",
+							version: 1,
+							...data,
+						},
+						origin: new URL(iframe.src).origin,
+						source: iframe.contentWindow,
+					}),
+				);
+			});
+		const navigated = () =>
+			post.mock.calls
+				.map(([message]) => message as { command?: string; to?: string })
+				.filter((message) => message.command === "navigate")
+				.map((message) => message.to);
+
+		fromDeck({
+			locked: true,
+			open: true,
+			screen: "intro",
+			step: 1,
+			steps: 3,
+			type: "opening",
+		});
+		expect(screen.getByText("Slide 1 of 5")).toBeTruthy();
+		fireEvent.click(screen.getByRole("button", { name: "Next slide" }));
+		expect(navigated()).toEqual(["next"]);
+
+		fromDeck({ locked: false, open: false, steps: 3, type: "opening" });
+		expect(screen.getByText("Slide 4 of 5")).toBeTruthy();
+		fromDeck({ to: "next", type: "navigate" });
+		expect(screen.getByText("Slide 5 of 5")).toBeTruthy();
+		// Back from the first activity is the opening's last screen, which the deck opens.
+		fromDeck({ to: "previous", type: "navigate" });
+		fromDeck({ to: "previous", type: "navigate" });
+		expect(navigated()).toEqual(["next", "previous"]);
+
+		// End inside an unlocked opening goes to the last activity.
+		fromDeck({
+			open: true,
+			screen: "data",
+			step: 3,
+			steps: 3,
+			type: "opening",
+		});
+		fromDeck({ to: "last", type: "navigate" });
+		expect(
+			screen
+				.getByRole("tab", { name: "Tensions" })
+				.getAttribute("aria-selected"),
+		).toBe("true");
 	});
 
 	it("follows the page's event stream in an embedded preview and opens none of its own", async () => {

@@ -1,8 +1,13 @@
+import { t } from "@lingui/core/macro";
 import { CaretRight, type Icon } from "@phosphor-icons/react";
 import { motion } from "motion/react";
 import type { ReactNode } from "react";
 import { NavLink, useMatch, useParams, useResolvedPath } from "react-router";
+import { brandColors, roles } from "@/colors";
 import { SUPPORTED_LANGUAGES } from "@/config";
+import { finishedTitle, runningSummary } from "@/features/processes/copy";
+import { Dial } from "@/features/processes/Dial";
+import type { Tool, ToolStatus } from "@/features/processes/store";
 import { useLanguage } from "@/hooks/useLanguage";
 import { cn } from "@/lib/utils";
 import { TIMINGS } from "../animations/motion";
@@ -24,32 +29,36 @@ interface NavItemProps {
 	disabled?: boolean;
 	/** Indent to align with an icon-bearing row's label, for sub-rows. */
 	inset?: boolean;
+	/** Work this tool is doing: a dial while it runs, a chit once it's done. */
+	process?: { tool: Tool; status?: ToolStatus };
 }
 
 export const BADGE_TONES = {
+	danger: {
+		backgroundColor: roles.dangerTint,
+		color: roles.dangerOnTint,
+	},
 	muted: {
-		backgroundColor: "rgba(45, 45, 44, 0.06)",
-		color: "rgba(45, 45, 44, 0.55)",
+		backgroundColor: roles.quiet,
+		color: roles.muted,
 	},
 	notification: {
-		backgroundColor: "rgba(65, 105, 225, 0.18)",
-		color: "#4169e1",
+		backgroundColor: roles.actionTint,
+		color: roles.action,
 	},
-	// Pending action (e.g. high-risk training nudge). No yellow exists in the
-	// palette, so we use the closest warm tone — Peach (#FFD166, from
-	// colors.ts) at a soft tint. Badge text stays graphite (--app-text), not
-	// colored, per the founder decision.
+	// Pending action (e.g. high-risk training nudge): the warning tint, with
+	// graphite text.
 	pending: {
-		backgroundColor: "rgba(255, 209, 102, 0.35)",
-		color: "#2d2d2c",
+		backgroundColor: roles.warningTint,
+		color: roles.text,
 	},
 } as const;
 
 // Rail dots for badges that ask for attention. Counts and labels ("Beta")
 // move into the tooltip instead.
 const RAIL_DOT_COLORS = {
-	notification: "#4169e1",
-	pending: "#FFD166",
+	notification: roles.action,
+	pending: brandColors.yellow[3],
 } as const;
 
 function useLocalePath(to: string): string {
@@ -84,6 +93,7 @@ export const NavItem = ({
 	accent,
 	disabled,
 	inset,
+	process,
 }: NavItemProps) => {
 	const localePath = useLocalePath(to);
 	const resolved = useResolvedPath(localePath);
@@ -93,36 +103,66 @@ export const NavItem = ({
 	const { overlay } = useSidebarView();
 	const active = forcedActive ?? (match != null && !overlay);
 	const inRail = useInRail();
+	const status = process?.status;
+	const running = !!status?.running;
+	const chit = status?.chit;
 
 	if (inRail) {
 		// The rail is icons only; a row without one (an inset sub-row) stays in
 		// the full sidebar.
 		if (!Icon) return null;
-		const name = (
-			<>
-				{label}
-				{badge != null ? <> {badge}</> : null}
-			</>
-		);
-		const dot =
-			badge != null && badgeTone !== "muted" ? (
-				<span
-					data-testid="rail-badge-dot"
-					aria-hidden="true"
-					className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full ring-2 ring-parchment"
-					style={{ backgroundColor: RAIL_DOT_COLORS[badgeTone] }}
-				/>
-			) : null;
+		const name =
+			process && status && running ? (
+				<>
+					{label}: {runningSummary(process.tool, status)}
+				</>
+			) : process && chit ? (
+				<>
+					{finishedTitle(process.tool, chit.failed)}
+					{chit.message ? `: ${chit.message}` : null}
+				</>
+			) : (
+				<>
+					{label}
+					{badge != null ? <> {badge}</> : null}
+				</>
+			);
+		const dotColor = chit
+			? chit.failed
+				? roles.danger
+				: roles.action
+			: badge != null && badgeTone !== "muted"
+				? RAIL_DOT_COLORS[badgeTone]
+				: null;
+		// The rail has no room for tags: the dial takes the corner they use.
+		const dot = running ? (
+			<span
+				className="absolute right-0.5 top-0.5 flex rounded-full p-px"
+				style={{ backgroundColor: "var(--app-background)" }}
+			>
+				<Dial size={14} done={status.done} total={status.total} />
+			</span>
+		) : dotColor ? (
+			<span
+				data-testid={chit ? "rail-process-chit" : "rail-badge-dot"}
+				aria-hidden="true"
+				className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full ring-2 ring-[var(--app-background)]"
+				style={{ backgroundColor: dotColor }}
+			/>
+		) : null;
 
 		if (disabled) {
 			return (
 				<RailTip label={name}>
 					<div
-						className={cn(RAIL_ITEM_CLASS, "cursor-not-allowed opacity-60")}
-						style={{ color: "rgba(45, 45, 44, 0.55)" }}
+						className={cn(
+							RAIL_ITEM_CLASS,
+							"app-muted cursor-not-allowed opacity-60",
+						)}
+						style={{ color: "var(--mantine-color-dimmed)" }}
 						aria-disabled="true"
 					>
-						<Icon size={18} aria-hidden="true" />
+						<Icon size={20} aria-hidden="true" />
 						<span className="sr-only">{name}</span>
 					</div>
 				</RailTip>
@@ -130,28 +170,32 @@ export const NavItem = ({
 		}
 
 		return (
-			<RailTip label={name}>
+			<RailTip label={name} forceOpen={status?.popout}>
 				<NavLink
 					to={localePath}
 					end={end}
-					className={cn(RAIL_ITEM_CLASS, !active && "hover:bg-black/[0.04]")}
+					className={cn(
+						RAIL_ITEM_CLASS,
+						!active && "hover:bg-[var(--app-quiet)]",
+						!active && muted && "app-muted",
+					)}
 					style={{
 						color: active
-							? (accent ?? "#4169e1")
+							? (accent ?? roles.action)
 							: muted
-								? "rgba(45, 45, 44, 0.55)"
-								: (accent ?? "#2d2d2c"),
+								? "var(--mantine-color-dimmed)"
+								: (accent ?? roles.text),
 					}}
 				>
 					{active && (
 						<motion.span
 							layoutId="sidebar-active-pill"
 							transition={TIMINGS.activePill}
-							className="absolute inset-0 rounded-md"
-							style={{ backgroundColor: "rgba(65, 105, 225, 0.08)" }}
+							className="absolute inset-0"
+							style={{ backgroundColor: roles.actionTint }}
 						/>
 					)}
-					<Icon size={18} className="relative" aria-hidden="true" />
+					<Icon size={20} className="relative" aria-hidden="true" />
 					<span className="sr-only">{name}</span>
 					{dot}
 				</NavLink>
@@ -162,8 +206,8 @@ export const NavItem = ({
 	if (disabled) {
 		return (
 			<div
-				className="relative flex h-[30px] cursor-not-allowed items-center gap-2 rounded-md px-2 text-sm leading-tight opacity-60"
-				style={{ color: "rgba(45, 45, 44, 0.55)" }}
+				className="app-muted relative flex h-[30px] cursor-not-allowed items-center gap-2 px-2 text-sm leading-tight opacity-60"
+				style={{ color: "var(--mantine-color-dimmed)" }}
 				aria-disabled="true"
 			>
 				<span className="relative flex flex-1 items-center gap-2 truncate">
@@ -172,7 +216,7 @@ export const NavItem = ({
 				</span>
 				{badge != null && (
 					<span
-						className="relative shrink-0 rounded px-1.5 py-0.5 text-xs leading-none"
+						className="relative shrink-0 px-1 py-0.5 text-xs leading-none"
 						style={BADGE_TONES[badgeTone]}
 					>
 						{badge}
@@ -186,40 +230,72 @@ export const NavItem = ({
 		<NavLink
 			to={localePath}
 			end={end}
-			className={`relative flex h-[30px] items-center gap-2 rounded-md text-sm leading-tight transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#4169e1] ${inset ? "pr-2 pl-8" : "px-2"}`}
+			className={cn(
+				"relative flex h-[30px] items-center gap-2 text-sm leading-tight transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--app-action)]",
+				inset ? "pr-2 pl-8" : "px-2",
+				!active && muted && "app-muted",
+			)}
 			style={{
 				color: active
-					? (accent ?? "#4169e1")
+					? (accent ?? roles.action)
 					: muted
-						? "rgba(45, 45, 44, 0.55)"
-						: (accent ?? "#2d2d2c"),
+						? "var(--mantine-color-dimmed)"
+						: (accent ?? roles.text),
 			}}
 		>
 			{active && (
 				<motion.span
 					layoutId="sidebar-active-pill"
 					transition={TIMINGS.activePill}
-					className="absolute inset-0 rounded-md"
-					style={{ backgroundColor: "rgba(65, 105, 225, 0.08)" }}
+					className="absolute inset-0"
+					style={{ backgroundColor: roles.actionTint }}
 				/>
 			)}
 			<span className="relative flex flex-1 items-center gap-2 truncate">
 				{Icon ? <Icon size={16} /> : null}
 				<span className="truncate">{label}</span>
 			</span>
-			{/* != null, not truthiness: badge={0} would render a bare "0" */}
-			{badge != null && (
+			{/* The tool's work sits with its tags: the dial, then its count in
+			    place of the badge. */}
+			{running ? (
+				<Dial
+					size={16}
+					done={status.done}
+					total={status.total}
+					className="relative"
+				/>
+			) : null}
+			{running && status.total ? (
 				<span
-					className="relative shrink-0 rounded px-1.5 py-0.5 text-xs leading-none"
-					style={BADGE_TONES[badgeTone]}
+					className="app-muted relative shrink-0 text-xs leading-none"
+					style={{ color: "var(--mantine-color-dimmed)" }}
 				>
-					{badge}
+					{t`${status.done ?? 0} of ${status.total}`}
 				</span>
+			) : !running && chit ? (
+				<span
+					data-testid="nav-process-chit"
+					className="relative shrink-0 px-1 py-0.5 text-xs leading-none"
+					style={BADGE_TONES[chit.failed ? "danger" : "notification"]}
+				>
+					{chit.failed ? t`Failed` : t`Ready`}
+				</span>
+			) : (
+				/* != null, not truthiness: badge={0} would render a bare "0" */
+				badge != null && (
+					<span
+						className="relative shrink-0 px-1 py-0.5 text-xs leading-none"
+						style={BADGE_TONES[badgeTone]}
+					>
+						{badge}
+					</span>
+				)
 			)}
 			{pushes && (
 				<CaretRight
-					size={13}
-					className="relative shrink-0 opacity-45"
+					size={16}
+					className="relative shrink-0"
+					style={{ color: "var(--mantine-color-dimmed)" }}
 					aria-hidden="true"
 				/>
 			)}

@@ -20,15 +20,10 @@ export const ProjectSettingsSection = ({
 	id,
 }: ProjectSettingsSectionProps) => {
 	return (
-		<Paper
-			id={id}
-			radius="md"
-			withBorder={false}
-			p={{ base: "1.25rem", md: "1.75rem" }}
-		>
-			<Stack gap="1.5rem">
+		<Paper id={id} withBorder={false} p={{ base: "md", md: "lg" }}>
+			<Stack gap="lg">
 				<Group justify="space-between" align="flex-start">
-					<Stack gap="0.4rem">
+					<Stack gap="xs">
 						<Title order={2}>{title}</Title>
 						{description && (
 							<Text size="sm" c="dimmed">
@@ -39,10 +34,7 @@ export const ProjectSettingsSection = ({
 					{headerRight}
 				</Group>
 
-				<Stack
-					gap="1.25rem"
-					align={align === "start" ? "flex-start" : "stretch"}
-				>
+				<Stack gap="md" align={align === "start" ? "flex-start" : "stretch"}>
 					{children}
 				</Stack>
 			</Stack>

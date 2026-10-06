@@ -15,8 +15,9 @@ import { isFinishedSession, isOnRecordingPage } from "./monitorGrouping";
 // stay smooth. Clicks hit-test to the nearest dot for the drilldown.
 
 // Fallback hexes only kick in before the theme's CSS variables exist (SSR,
-// or a stylesheet that hasn't loaded yet). Live colours are sourced from the
-// Mantine theme so the funnel stays in sync with the rest of the monitor.
+// or a stylesheet that hasn't loaded yet). Live colours are the app's role
+// variables, so the funnel stays in sync with the rest of the monitor and
+// takes the lifted colours in dark.
 const FALLBACK_COLORS = {
 	backgrounded: "#868e96",
 	finished: "#868e96",
@@ -38,26 +39,21 @@ const readCssVar = (name: string, fallback: string): string => {
 	return value || fallback;
 };
 
-// Reads the Mantine theme's CSS variables once and caches the result, so we
-// never touch getComputedStyle from the animation loop. Left uncached until
-// `document` exists so SSR doesn't freeze the fallback hexes permanently.
+// Reads the role variables once and caches the result, so we never touch
+// getComputedStyle from the animation loop. Left uncached until `document`
+// exists so SSR doesn't freeze the fallback hexes permanently; the component
+// drops the cache when the colour scheme changes.
 const resolveColors = (): typeof FALLBACK_COLORS => {
 	if (cachedColors) return cachedColors;
 	if (typeof document === "undefined") return FALLBACK_COLORS;
 	const colors = {
-		backgrounded: readCssVar(
-			"--mantine-color-gray-6",
-			FALLBACK_COLORS.backgrounded,
-		),
-		finished: readCssVar("--mantine-color-gray-6", FALLBACK_COLORS.finished),
-		recording: readCssVar("--mantine-color-red-6", FALLBACK_COLORS.recording),
-		recordingPage: readCssVar(
-			"--mantine-color-yellow-6",
-			FALLBACK_COLORS.recordingPage,
-		),
-		scanned: readCssVar("--mantine-color-gray-5", FALLBACK_COLORS.scanned),
-		setup: readCssVar("--mantine-color-primary-6", FALLBACK_COLORS.setup),
-		stalled: readCssVar("--mantine-color-orange-7", FALLBACK_COLORS.stalled),
+		backgrounded: readCssVar("--app-muted", FALLBACK_COLORS.backgrounded),
+		finished: readCssVar("--app-muted", FALLBACK_COLORS.finished),
+		recording: readCssVar("--app-danger", FALLBACK_COLORS.recording),
+		recordingPage: readCssVar("--app-warning", FALLBACK_COLORS.recordingPage),
+		scanned: readCssVar("--app-control-rule", FALLBACK_COLORS.scanned),
+		setup: readCssVar("--app-action", FALLBACK_COLORS.setup),
+		stalled: readCssVar("--app-warning", FALLBACK_COLORS.stalled),
 	};
 	cachedColors = colors;
 	return colors;
@@ -155,6 +151,14 @@ export const FunnelCanvas = ({
 		resize();
 		const observer = new ResizeObserver(resize);
 		observer.observe(wrap);
+		// The scheme switches by attribute on <html>; the role variables follow
+		// it, so drop the cached colours and let the next frame re-read them.
+		const schemeObserver = new MutationObserver(() => {
+			cachedColors = null;
+		});
+		schemeObserver.observe(document.documentElement, {
+			attributeFilter: ["data-mantine-color-scheme"],
+		});
 
 		const layout = () => {
 			const { w, h } = sizeRef.current;
@@ -256,23 +260,28 @@ export const FunnelCanvas = ({
 		let dirtyWeights: number[] | null = null;
 		let dirtyW = -1;
 		let dirtyH = -1;
+		let dirtyColors: typeof FALLBACK_COLORS | null = null;
 
 		let last = 0;
 		const frame = (time: number) => {
 			const { w, h } = sizeRef.current;
 			const currentNodes = nodesRef.current;
 			const currentWeights = weightsRef.current;
+			// A new colours object means the scheme changed: recolour the dots.
+			const colors = resolveColors();
 			if (
 				currentNodes !== dirtyNodes ||
 				currentWeights !== dirtyWeights ||
 				w !== dirtyW ||
-				h !== dirtyH
+				h !== dirtyH ||
+				colors !== dirtyColors
 			) {
 				layout();
 				dirtyNodes = currentNodes;
 				dirtyWeights = currentWeights;
 				dirtyW = w;
 				dirtyH = h;
+				dirtyColors = colors;
 			}
 			ctx.clearRect(0, 0, w, h);
 			const dt = last ? Math.min((time - last) / 16.67, 3) : 1;
@@ -313,6 +322,7 @@ export const FunnelCanvas = ({
 		return () => {
 			cancelAnimationFrame(raf);
 			observer.disconnect();
+			schemeObserver.disconnect();
 		};
 	}, [height]);
 
@@ -380,7 +390,7 @@ export const FunnelCanvas = ({
 			/>
 			{hover && (
 				<div
-					className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded bg-graphite px-2 py-1 text-xs text-parchment shadow"
+					className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded bg-[var(--app-text)] px-2 py-1 text-xs text-[var(--app-background)] shadow"
 					style={{ left: hover.x, top: hover.y - 6 }}
 				>
 					{hover.label}

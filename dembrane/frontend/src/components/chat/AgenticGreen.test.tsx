@@ -63,7 +63,7 @@ describe("the agentic chat is neutral apart from the mark", () => {
 		expect((bubble as HTMLElement).style.borderColor).toBe("");
 	});
 
-	it("keeps the cyan border on a Specific Details message", () => {
+	it("keeps a Specific Details message neutral too", () => {
 		renderUi(
 			// biome-ignore lint/a11y/useValidAriaRole: ChatMessage's own role prop, not ARIA
 			<ChatMessage role="user" chatMode="deep_dive">
@@ -71,6 +71,6 @@ describe("the agentic chat is neutral apart from the mark", () => {
 			</ChatMessage>,
 		);
 		const bubble = screen.getByText("hi").closest(".mantine-Paper-root");
-		expect((bubble as HTMLElement).style.borderColor).not.toBe("");
+		expect((bubble as HTMLElement).style.borderColor).toBe("");
 	});
 });

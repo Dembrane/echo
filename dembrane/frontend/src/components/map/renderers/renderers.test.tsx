@@ -163,6 +163,9 @@ const localSvgOf = (container: Element) =>
 		'svg[aria-label="Local argument map"]',
 	) as SVGSVGElement;
 
+const mstSvgOf = (container: Element) =>
+	container.querySelector('svg[aria-label="Argument map"]') as SVGSVGElement;
+
 /** Where a node sits on screen, through the map's current zoom. */
 const screenPointOf = (
 	svg: SVGSVGElement,
@@ -174,6 +177,13 @@ const screenPointOf = (
 		x: (datum.x ?? 0) * transform.k + transform.x,
 		y: (datum.y ?? 0) * transform.k + transform.y,
 	};
+};
+
+/** Moves the cursor on the tree to a node, or `dx` px to its right. */
+const hoverNear = (container: Element, circle: Element, dx = 0) => {
+	const svg = mstSvgOf(container);
+	const { x, y } = screenPointOf(svg, datumOf(circle));
+	fireEvent.mouseMove(svg, { clientX: x + dx, clientY: y });
 };
 
 type SimulatedNode = Datum & SimulationNodeDatum;
@@ -321,12 +331,32 @@ describe("MstMap", () => {
 		// Hover every node in turn; the largest downstream set is the full tree.
 		let largest = 0;
 		for (const circle of circles) {
-			fireEvent.mouseEnter(circle);
+			hoverNear(container, circle);
 			largest = Math.max(largest, store.getState().highlightedNodeIds.size);
 			expect(store.getState().highlightSource).toBe("mst-hover");
-			fireEvent.mouseLeave(circle);
 		}
+		fireEvent.mouseLeave(mstSvgOf(container));
 		expect(largest).toBe(20);
+		expect(store.getState().highlightedNodeIds.size).toBe(0);
+	});
+
+	it("lights the branch of the nearest node within the ring, and none past it", () => {
+		const store = createMapInteractionStore();
+		const { container } = renderInMap(
+			<MstMap edgeLimit={EDGE_LIMIT} nodes={nodes} autoAdvance={false} />,
+			store,
+		);
+		const circle = container.querySelectorAll("circle.node")[5];
+		const id = datumOf(circle).id;
+		const svg = mstSvgOf(container);
+		const { x, y } = screenPointOf(svg, datumOf(circle));
+
+		// Off the dot but near it: its branch lights as if it were hovered
+		hoverNear(container, circle, 20);
+		expect(store.getState().highlightedNodeIds.has(id)).toBe(true);
+
+		// Far from every node: nothing lights
+		fireEvent.mouseMove(svg, { clientX: x + 100_000, clientY: y });
 		expect(store.getState().highlightedNodeIds.size).toBe(0);
 	});
 
@@ -337,10 +367,10 @@ describe("MstMap", () => {
 		);
 
 		fireEvent.click(
-			screen.getByRole("button", { name: "Force Graph Settings" }),
+			screen.getByRole("button", { name: "Force graph settings" }),
 		);
 
-		expect(screen.getByText("Force Parameters")).toBeTruthy();
+		expect(screen.getByText("Force parameters")).toBeTruthy();
 		expect(screen.getAllByRole("slider")).toHaveLength(5);
 		expect(screen.getByRole("button", { name: "Reset" })).toBeTruthy();
 	});
@@ -418,7 +448,7 @@ describe("MstMap", () => {
 		};
 
 		fireEvent.click(
-			screen.getByRole("button", { name: "Force Graph Settings" }),
+			screen.getByRole("button", { name: "Force graph settings" }),
 		);
 
 		vi.mocked(mstLinkDistance).mockClear();
@@ -453,7 +483,7 @@ describe("MstMap", () => {
 
 		const hovered = view.container.querySelectorAll("circle.node")[5];
 		const hoveredId = datumOf(hovered).id;
-		fireEvent.mouseEnter(hovered);
+		hoverNear(view.container, hovered);
 		expect(highlighted().has(hoveredId)).toBe(true);
 
 		// The node goes without a mouseleave, and stays unhighlighted when it returns
@@ -473,7 +503,10 @@ describe("MstMap", () => {
 		);
 		expect(highlighted().size).toBe(0);
 
-		fireEvent.mouseEnter(view.container.querySelectorAll("circle.node")[0]);
+		hoverNear(
+			view.container,
+			view.container.querySelectorAll("circle.node")[0],
+		);
 		expect(highlighted().size).toBeGreaterThan(0);
 		view.rerender(
 			inMap(
@@ -489,7 +522,10 @@ describe("MstMap", () => {
 				store,
 			),
 		);
-		fireEvent.mouseEnter(view.container.querySelectorAll("circle.node")[0]);
+		hoverNear(
+			view.container,
+			view.container.querySelectorAll("circle.node")[0],
+		);
 		expect(highlighted().size).toBeGreaterThan(0);
 		view.unmount();
 		expect(highlighted().size).toBe(0);
@@ -808,8 +844,8 @@ describe("LocalMap", () => {
 		fireEvent.click(screen.getByRole("button", { name: "Pause physics" }));
 		expect(screen.getByRole("button", { name: "Resume physics" })).toBeTruthy();
 
-		fireEvent.click(screen.getByRole("button", { name: "LocalMap Settings" }));
-		expect(screen.getByText("LocalMap Forces")).toBeTruthy();
+		fireEvent.click(screen.getByRole("button", { name: "Local map settings" }));
+		expect(screen.getByText("Local map forces")).toBeTruthy();
 		expect(screen.getAllByRole("slider")).toHaveLength(7);
 	});
 
@@ -820,7 +856,7 @@ describe("LocalMap", () => {
 		);
 		const circles = Array.from(container.querySelectorAll("circle.node"));
 
-		fireEvent.click(screen.getByRole("button", { name: "LocalMap Settings" }));
+		fireEvent.click(screen.getByRole("button", { name: "Local map settings" }));
 		const [cMedSlider] = screen.getAllByRole("slider");
 		fireEvent.change(cMedSlider, { target: { value: "20" } });
 		act(() => resizeContainers(1440, 900));
@@ -837,7 +873,7 @@ describe("LocalMap", () => {
 			<LocalMap edgeLimit={EDGE_LIMIT} nodes={nodes} />,
 			createMapInteractionStore(),
 		);
-		fireEvent.click(screen.getByRole("button", { name: "LocalMap Settings" }));
+		fireEvent.click(screen.getByRole("button", { name: "Local map settings" }));
 
 		const panel = screen.getByTestId("map-settings-panel");
 		expect(panel.className).toContain("max-w-[calc(100%-2rem)]");
@@ -992,7 +1028,7 @@ describe("LocalMap", () => {
 		restart.mockClear();
 
 		// A slider change and a resize must not wake the old simulation
-		fireEvent.click(screen.getByRole("button", { name: "LocalMap Settings" }));
+		fireEvent.click(screen.getByRole("button", { name: "Local map settings" }));
 		const [cMedSlider] = screen.getAllByRole("slider");
 		fireEvent.change(cMedSlider, { target: { value: "20" } });
 		act(() => resizeContainers(1440, 900));
@@ -1154,9 +1190,6 @@ const mapSvgs = (container: Element) =>
 			'svg[aria-label="Argument map"], svg[aria-label="Local argument map"]',
 		),
 	);
-
-const mstSvgOf = (container: Element) =>
-	container.querySelector('svg[aria-label="Argument map"]') as SVGSVGElement;
 
 const positionsById = (svg: Element) =>
 	new Map(

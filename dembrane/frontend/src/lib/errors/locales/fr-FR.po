@@ -124,6 +124,11 @@ msgid "error.webhook.invalid_target"
 msgstr "Choisissez où va ce webhook : une adresse web, ou la boîte de réception de sam avec un code connu."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:17
+msgid "error.map.groups_need_snapshot"
+msgstr "Les groupes se conservent sur une carte régénérée. Régénérez la carte et réessayez."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:27
 msgid "error.document.dpa_not_authorised"
 msgstr "Confirmez que vous êtes autorisé à accepter le traitement des données pour votre organisation."
@@ -299,7 +304,7 @@ msgid "error.member.owner_removes_owner"
 msgstr "Seul un propriétaire peut supprimer un autre propriétaire."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:17
+#: src/lib/errors/messages/map.ts:26
 msgid "error.map.not_a_claim"
 msgstr "Seules les affirmations peuvent être vérifiées. Choisissez une affirmation et réessayez."
 
@@ -354,7 +359,7 @@ msgid "error.project.share_admin_only"
 msgstr "Seuls les administrateurs de l'espace de travail peuvent partager des projets."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:29
+#: src/lib/errors/messages/map.ts:38
 msgid "error.map.selection_not_in_map"
 msgstr "Une partie de votre sélection ne figure plus sur la carte. Rechargez la carte et sélectionnez à nouveau."
 
@@ -429,7 +434,7 @@ msgid "error.webhook.sam_inbox_unavailable"
 msgstr "La boîte de réception de sam n'est pas configurée ici, et un webhook vers sam ne peut pas être testé."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:43
+#: src/lib/errors/messages/map.ts:52
 msgid "error.map.selection_too_small"
 msgstr "Sélectionnez quelques éléments supplémentaires pour créer un titre."
 
@@ -564,12 +569,12 @@ msgid "error.present.map_results_not_ready"
 msgstr "La carte n'est pas encore prête. Elle s'affichera ici dès qu'elle le sera."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:25
+#: src/lib/errors/messages/map.ts:34
 msgid "error.map.not_ready"
 msgstr "La carte est toujours en cours de création. Patientez un instant et réessayez."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:34
+#: src/lib/errors/messages/map.ts:43
 msgid "error.map.selection_other_snapshot"
 msgstr "La carte a été mise à jour depuis votre sélection. Rechargez la carte et sélectionnez à nouveau."
 
@@ -924,7 +929,7 @@ msgid "error.project.no_conversations"
 msgstr "Ce projet ne contient encore aucune conversation."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:13
+#: src/lib/errors/messages/map.ts:22
 msgid "error.map.no_map_yet"
 msgstr "Ce projet n'a pas encore de carte. Créez-en une pour la voir ici."
 
@@ -1144,7 +1149,7 @@ msgid "error.billing.request_failed"
 msgstr "Impossible de modifier la facturation. Contactez-nous et nous réglerons cela."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:51
+#: src/lib/errors/messages/map.ts:60
 msgid "error.map.title_failed"
 msgstr "Impossible de créer un titre pour le moment. Réessayez."
 
@@ -1229,7 +1234,7 @@ msgid "error.training.license_not_found"
 msgstr "Licence introuvable."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:21
+#: src/lib/errors/messages/map.ts:30
 msgid "error.map.not_found"
 msgstr "Impossible de trouver cette carte."
 
@@ -1344,12 +1349,17 @@ msgid "error.verify.artifact_not_found"
 msgstr "Impossible de trouver cet élément. Il a peut-être été supprimé."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:13
+msgid "error.map.group_not_started"
+msgstr "Impossible de conserver ce groupe. Réessayez dans un instant."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:46
 msgid "error.analysis.storage_unavailable"
 msgstr "Impossible de charger l'analyse pour le moment. Réessayez dans un instant."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:47
+#: src/lib/errors/messages/map.ts:56
 msgid "error.map.storage_unavailable"
 msgstr "Impossible de charger la carte pour le moment. Réessayez dans un instant."
 
@@ -1564,7 +1574,7 @@ msgid "error.auth.user_required"
 msgstr "Vous devez être connecté pour cela. Connectez-vous et réessayez."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:39
+#: src/lib/errors/messages/map.ts:48
 msgid "error.map.selection_too_large"
 msgstr "Vous avez sélectionné trop d'éléments. Sélectionnez-en moins et réessayez."
 

@@ -23,6 +23,7 @@ import {
 	PanelHeader,
 	VERDICT_CHIP_CLASS,
 	valenceChipClass,
+	valenceChipStyle,
 	valenceLabel,
 	verdictLabel,
 } from "./shared";
@@ -39,8 +40,7 @@ type ShowcasePanelProps = {
 	inspection?: NodeInspection | null;
 };
 
-const STATIC_CHIP =
-	"inline-block rounded-none px-2 py-0.5 text-xs font-semibold uppercase tracking-wider";
+const STATIC_CHIP = "inline-block px-2 py-1 text-xs";
 
 /** The random walk in large type, with a countdown to the next step. */
 export const ShowcasePanel = memo(function ShowcasePanel({
@@ -99,7 +99,10 @@ export const ShowcasePanel = memo(function ShowcasePanel({
 
 						<div className="flex flex-wrap gap-2">
 							{valenceApplies && (
-								<span className={cn(STATIC_CHIP, valenceChipClass(valence))}>
+								<span
+									className={cn(STATIC_CHIP, valenceChipClass(valence))}
+									style={valenceChipStyle(valence)}
+								>
 									{valenceLabel(valence)}
 								</span>
 							)}
@@ -110,9 +113,7 @@ export const ShowcasePanel = memo(function ShowcasePanel({
 							)}
 						</div>
 
-						{timestamp ? (
-							<p className="text-xs uppercase tracking-widest">{timestamp}</p>
-						) : null}
+						{timestamp ? <p className="text-xs">{timestamp}</p> : null}
 					</div>
 				) : (
 					<CaptionText>
@@ -136,11 +137,10 @@ export const ShowcasePanel = memo(function ShowcasePanel({
 						className="bg-cyan"
 					/>
 				</div>
-				<p className="text-xs uppercase tracking-widest">
+				<p className="text-xs">
 					{hasTimer ? (
 						<Trans>
-							Next change in{" "}
-							<span className="font-semibold">{remainingSeconds}s</span>
+							Next change in <b>{remainingSeconds}s</b>
 						</Trans>
 					) : (
 						<Trans>Waiting for the next node</Trans>

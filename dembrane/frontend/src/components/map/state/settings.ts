@@ -13,8 +13,26 @@ export const MAP_SETTINGS_STORAGE_KEY = "dembrane-map-settings";
  * conversation by default, and moves a host who never chose another mode onto
  * it. Version 5 shows the legend by default, now that the colours stand for
  * conversations and need saying, and moves a host who never turned it on.
+ * Version 6 hides the legend by default again, to give the map its space,
+ * and moves every host onto it once: a saved true can't tell a choice from
+ * the version 5 default.
+ * Version 7 opens the map on the cluster map alone, the tree one choice away
+ * under Advanced, and moves every host onto it once.
  */
-export const MAP_SETTINGS_VERSION = 5;
+export const MAP_SETTINGS_VERSION = 7;
+
+/**
+ * The cluster density dial: a multiplier on the layout's repulsion. Above 1
+ * spreads the map into more, smaller clusters; below 1 clumps it.
+ */
+export const CLUSTER_DENSITY_MIN = 0.25;
+export const CLUSTER_DENSITY_MAX = 16;
+
+export const isClusterDensity = (value: unknown): value is number =>
+	typeof value === "number" &&
+	Number.isFinite(value) &&
+	value >= CLUSTER_DENSITY_MIN &&
+	value <= CLUSTER_DENSITY_MAX;
 
 export type MapSettings = {
 	showExplore: boolean;
@@ -31,21 +49,35 @@ export type MapSettings = {
 	/** Custom visible-edge budget; null follows the deployment default. */
 	edgeLimit: number | null;
 	showRelationships: boolean;
+	clusterDensity: number;
+	/** The force panels of the maps, from Advanced. */
+	showForceSettings: boolean;
 };
 
 export const DEFAULT_MAP_SETTINGS: MapSettings = {
 	autoFactCheckClaims: false,
+	clusterDensity: 1,
 	colorBy: "conversation",
 	darkMode: false,
 	edgeLimit: null,
 	nodeLimit: null,
 	showClusters: true,
 	showExplore: true,
-	showLegend: true,
+	showForceSettings: false,
+	showLegend: false,
 	showRelationships: false,
 	showShowcase: false,
 	showSpotlight: true,
 	showTree: true,
+};
+
+/**
+ * What the host's Map page starts from: the cluster map alone, the tree one
+ * choice away under Advanced. The room keeps the shared defaults above.
+ */
+export const MAP_PAGE_DEFAULTS: MapSettings = {
+	...DEFAULT_MAP_SETTINGS,
+	showTree: false,
 };
 
 const COLOR_BY: ReadonlySet<string> = new Set(COLOR_BY_OPTIONS);
@@ -63,6 +95,7 @@ const BOOLEAN_KEYS = [
 	"autoFactCheckClaims",
 	"darkMode",
 	"showRelationships",
+	"showForceSettings",
 ] as const;
 
 /**
@@ -73,14 +106,14 @@ const BOOLEAN_KEYS = [
 export function migrateMapSettings(
 	stored: Record<string, unknown>,
 ): MapSettings {
-	const settings: MapSettings = { ...DEFAULT_MAP_SETTINGS };
+	const settings: MapSettings = { ...MAP_PAGE_DEFAULTS };
 	const version =
 		typeof stored.version === "number" ? stored.version : MAP_SETTINGS_VERSION;
 	for (const key of BOOLEAN_KEYS) {
-		// Off was the old default, so a host who never touched the legend has
-		// it saved off. They meet it once; a host who turned it off since keeps
-		// it off.
-		if (key === "showLegend" && version < 5) continue;
+		// Every saved legend before version 6 resets to the new default (off).
+		if (key === "showLegend" && version < 6) continue;
+		// Every saved layout before version 7 opens on the cluster map once.
+		if ((key === "showTree" || key === "showClusters") && version < 7) continue;
 		if (typeof stored[key] === "boolean") settings[key] = stored[key];
 	}
 	if (isColorBy(stored.colorBy)) {
@@ -96,6 +129,8 @@ export function migrateMapSettings(
 		settings.nodeLimit = stored.nodeLimit;
 	if (isPositiveInteger(stored.edgeLimit))
 		settings.edgeLimit = stored.edgeLimit;
+	if (isClusterDensity(stored.clusterDensity))
+		settings.clusterDensity = stored.clusterDensity;
 	return settings;
 }
 
@@ -105,18 +140,18 @@ export function readMapSettings(): MapSettings {
 	try {
 		raw = globalThis.localStorage?.getItem(MAP_SETTINGS_STORAGE_KEY) ?? null;
 	} catch {
-		return { ...DEFAULT_MAP_SETTINGS };
+		return { ...MAP_PAGE_DEFAULTS };
 	}
-	if (!raw) return { ...DEFAULT_MAP_SETTINGS };
+	if (!raw) return { ...MAP_PAGE_DEFAULTS };
 
 	let parsed: unknown;
 	try {
 		parsed = JSON.parse(raw);
 	} catch {
-		return { ...DEFAULT_MAP_SETTINGS };
+		return { ...MAP_PAGE_DEFAULTS };
 	}
 	if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-		return { ...DEFAULT_MAP_SETTINGS };
+		return { ...MAP_PAGE_DEFAULTS };
 	}
 	return migrateMapSettings(parsed as Record<string, unknown>);
 }

@@ -3,7 +3,6 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	Alert,
-	Badge,
 	Button,
 	Container,
 	Loader,
@@ -153,14 +152,11 @@ export const AcceptInviteRoute = () => {
 
 	return (
 		<Container size="xs" py="xl" px="lg">
-			<Stack gap={24} mt="10vh">
+			<Stack gap="lg" mt="10vh">
 				<Paper p="xl" radius="md" withBorder>
-					<Stack gap={20}>
-						<Stack gap={6}>
-							<Badge size="sm" variant="light" color="primary" w="fit-content">
-								<Trans>Invitation</Trans>
-							</Badge>
-							<Title order={3} fw={400}>
+					<Stack gap="md">
+						<Stack gap="xs">
+							<Title order={2}>
 								<Trans>
 									{inviterName} invited you to join {resolvedWorkspaceName}
 								</Trans>
@@ -171,8 +167,8 @@ export const AcceptInviteRoute = () => {
 						    generic to avoid leaking link structure. */}
 						{!hash && (
 							<Alert color="red" variant="light">
-								<Stack gap={4}>
-									<Text size="sm" fw={500}>
+								<Stack gap="xs">
+									<Text size="sm">
 										<Trans>This invite link isn't valid</Trans>
 									</Text>
 									<Text size="xs">
@@ -198,8 +194,8 @@ export const AcceptInviteRoute = () => {
 								{!publicInspectLoading &&
 									publicInviteState?.status === "not_found" && (
 										<Alert color="red" variant="light">
-											<Stack gap={4}>
-												<Text size="sm" fw={500}>
+											<Stack gap="xs">
+												<Text size="sm">
 													<Trans>This invite is no longer valid</Trans>
 												</Text>
 												<Text size="xs">
@@ -215,8 +211,8 @@ export const AcceptInviteRoute = () => {
 								{!publicInspectLoading &&
 									publicInviteState?.status === "expired" && (
 										<Alert color="yellow" variant="light">
-											<Stack gap={4}>
-												<Text size="sm" fw={500}>
+											<Stack gap="xs">
+												<Text size="sm">
 													<Trans>This invite has expired</Trans>
 												</Text>
 												<Text size="xs">
@@ -232,8 +228,8 @@ export const AcceptInviteRoute = () => {
 								{!publicInspectLoading &&
 									publicInviteState?.status === "workspace_deleted" && (
 										<Alert color="red" variant="light">
-											<Stack gap={4}>
-												<Text size="sm" fw={500}>
+											<Stack gap="xs">
+												<Text size="sm">
 													<Trans>This workspace no longer exists</Trans>
 												</Text>
 												<Text size="xs">
@@ -249,8 +245,8 @@ export const AcceptInviteRoute = () => {
 								{!publicInspectLoading &&
 									publicInviteState?.status === "org_deleted" && (
 										<Alert color="red" variant="light">
-											<Stack gap={4}>
-												<Text size="sm" fw={500}>
+											<Stack gap="xs">
+												<Text size="sm">
 													<Trans>This organisation no longer exists</Trans>
 												</Text>
 												<Text size="xs">
@@ -267,10 +263,10 @@ export const AcceptInviteRoute = () => {
 								    duplicate an existing account). */}
 								{!publicInspectLoading &&
 									publicInviteState?.status === "accepted" && (
-										<Stack gap={8}>
+										<Stack gap="sm">
 											<Alert color="primary" variant="light">
-												<Stack gap={4}>
-													<Text size="sm" fw={500}>
+												<Stack gap="xs">
+													<Text size="sm">
 														<Trans>This invite has already been used</Trans>
 													</Text>
 													<Text size="xs">
@@ -281,6 +277,7 @@ export const AcceptInviteRoute = () => {
 												</Stack>
 											</Alert>
 											<Button
+												variant="filled"
 												size="md"
 												fullWidth
 												onClick={() => navigate(loginUrl)}
@@ -310,8 +307,9 @@ export const AcceptInviteRoute = () => {
 													</Trans>
 												)}
 											</Text>
-											<Stack gap={8}>
+											<Stack gap="sm">
 												<Button
+													variant="filled"
 													size="md"
 													fullWidth
 													onClick={() => navigate(registerUrl)}
@@ -321,7 +319,6 @@ export const AcceptInviteRoute = () => {
 												<Button
 													size="md"
 													fullWidth
-													variant="outline"
 													onClick={() => navigate(loginUrl)}
 												>
 													<Trans>Already have an account? Log in</Trans>
@@ -334,10 +331,10 @@ export const AcceptInviteRoute = () => {
 
 						{/* Email mismatch — accept would 404; offer logout + retry. */}
 						{hash && isAuthenticated && emailMismatch && (
-							<Stack gap={8}>
+							<Stack gap="sm">
 								<Alert color="yellow" variant="light">
-									<Stack gap={4}>
-										<Text size="sm" fw={500}>
+									<Stack gap="xs">
+										<Text size="sm">
 											<Trans>This invite isn't for this account</Trans>
 										</Text>
 										<Text size="xs">
@@ -350,6 +347,7 @@ export const AcceptInviteRoute = () => {
 									</Stack>
 								</Alert>
 								<Button
+									variant="filled"
 									size="md"
 									fullWidth
 									loading={logoutMutation.isPending}
@@ -360,7 +358,8 @@ export const AcceptInviteRoute = () => {
 								<Button
 									size="md"
 									fullWidth
-									variant="outline"
+									variant="subtle"
+									color="gray"
 									onClick={() => navigate("/o")}
 								>
 									<Trans>Back to my workspaces</Trans>
@@ -379,8 +378,8 @@ export const AcceptInviteRoute = () => {
 
 								{!inspectLoading && inviteState?.status === "not_found" && (
 									<Alert color="red" variant="light">
-										<Stack gap={4}>
-											<Text size="sm" fw={500}>
+										<Stack gap="xs">
+											<Text size="sm">
 												<Trans>
 													This invite link isn't valid for this account
 												</Trans>
@@ -398,8 +397,8 @@ export const AcceptInviteRoute = () => {
 
 								{!inspectLoading && inviteState?.status === "expired" && (
 									<Alert color="yellow" variant="light">
-										<Stack gap={4}>
-											<Text size="sm" fw={500}>
+										<Stack gap="xs">
+											<Text size="sm">
 												<Trans>This invite has expired</Trans>
 											</Text>
 											<Text size="xs">
@@ -415,8 +414,8 @@ export const AcceptInviteRoute = () => {
 								{!inspectLoading &&
 									inviteState?.status === "workspace_deleted" && (
 										<Alert color="red" variant="light">
-											<Stack gap={4}>
-												<Text size="sm" fw={500}>
+											<Stack gap="xs">
+												<Text size="sm">
 													<Trans>This workspace no longer exists</Trans>
 												</Text>
 												<Text size="xs">
@@ -431,8 +430,8 @@ export const AcceptInviteRoute = () => {
 
 								{!inspectLoading && inviteState?.status === "org_deleted" && (
 									<Alert color="red" variant="light">
-										<Stack gap={4}>
-											<Text size="sm" fw={500}>
+										<Stack gap="xs">
+											<Text size="sm">
 												<Trans>This organisation no longer exists</Trans>
 											</Text>
 											<Text size="xs">
@@ -448,10 +447,10 @@ export const AcceptInviteRoute = () => {
 								{/* Consumed. No "Accept and join" — jump-to-workspace
 								    if they're a member, ask-admin if they're not. */}
 								{!inspectLoading && inviteState?.status === "accepted" && (
-									<Stack gap={8}>
+									<Stack gap="sm">
 										<Alert color="primary" variant="light">
-											<Stack gap={4}>
-												<Text size="sm" fw={500}>
+											<Stack gap="xs">
+												<Text size="sm">
 													<Trans>This invite has already been used</Trans>
 												</Text>
 												{inviteState.is_member ? (
@@ -477,6 +476,7 @@ export const AcceptInviteRoute = () => {
 												? inviteState.org_id
 												: inviteState.workspace_id) && (
 												<Button
+													variant="filled"
 													size="md"
 													fullWidth
 													onClick={() =>
@@ -493,7 +493,8 @@ export const AcceptInviteRoute = () => {
 										<Button
 											size="md"
 											fullWidth
-											variant="outline"
+											variant="subtle"
+											color="gray"
 											onClick={() => navigate("/o")}
 										>
 											<Trans>Back to my workspaces</Trans>
@@ -505,7 +506,7 @@ export const AcceptInviteRoute = () => {
 								{!inspectLoading &&
 									inviteState?.status === "pending" &&
 									inviteState.is_member && (
-										<Stack gap={8}>
+										<Stack gap="sm">
 											<Alert color="primary" variant="light">
 												<Text size="sm">
 													<Trans>
@@ -517,6 +518,7 @@ export const AcceptInviteRoute = () => {
 												? inviteState.org_id
 												: inviteState.workspace_id) && (
 												<Button
+													variant="filled"
 													size="md"
 													fullWidth
 													onClick={() =>
@@ -553,8 +555,9 @@ export const AcceptInviteRoute = () => {
 													</Trans>
 												)}
 											</Text>
-											<Stack gap={8}>
+											<Stack gap="sm">
 												<Button
+													variant="filled"
 													size="md"
 													fullWidth
 													loading={acceptMutation.isPending}
@@ -569,7 +572,8 @@ export const AcceptInviteRoute = () => {
 												<Button
 													size="md"
 													fullWidth
-													variant="outline"
+													variant="subtle"
+													color="gray"
 													onClick={() => navigate("/o")}
 												>
 													<Trans>Not now</Trans>
@@ -581,8 +585,8 @@ export const AcceptInviteRoute = () => {
 													color={errorStatus === 402 ? "yellow" : "red"}
 													variant="light"
 												>
-													<Stack gap={4}>
-														<Text size="sm" fw={500}>
+													<Stack gap="xs">
+														<Text size="sm">
 															<Trans>Couldn't join right now</Trans>
 														</Text>
 														<Text size="xs">{errorMsg}</Text>

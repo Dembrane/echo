@@ -31,9 +31,9 @@ export const MapLoadingOverlay = ({
 			backgroundColor: `color-mix(in srgb, ${MAP_SURFACE} 80%, transparent)`,
 		}}
 	>
-		<div className="bg-graphite p-6 shadow-xl">
-			<div className="flex items-center gap-3">
-				<Loader color="primary" size={32} />
+		<div className="bg-graphite p-6">
+			<div className="flex items-center gap-4">
+				<Loader color="primary" size="sm" />
 				<Text size="md" className="text-parchment">
 					{label}
 				</Text>
@@ -58,12 +58,10 @@ export const MapChromeButton = ({
 	<div className={cn("absolute top-4 z-10", className)}>
 		<ActionIcon
 			variant="subtle"
-			size={42}
-			radius={0}
 			onClick={onClick}
 			title={label}
 			aria-label={label}
-			className="shadow-lg transition-colors"
+			className="transition-colors"
 			vars={() => ({
 				root: {
 					"--ai-bd": `1px solid ${MAP_BORDER}`,
@@ -102,15 +100,17 @@ export const MapSettingsPanel = ({
 			p="md"
 			style={{
 				backgroundColor: MAP_SURFACE_RAISED,
-				border: `1px solid ${MAP_BORDER}`,
+				borderColor: MAP_BORDER,
+				borderStyle: "solid",
+				borderWidth: "1px 0",
 				color: MAP_TEXT,
 			}}
 		>
 			<div className="mb-4 flex items-center justify-between">
-				<Text component="h3" size="md" fw={600}>
+				<Text component="h3" size="md">
 					{title}
 				</Text>
-				<Button size="compact-sm" variant="subtle" radius={0} onClick={onReset}>
+				<Button size="compact-sm" variant="subtle" onClick={onReset}>
 					<Trans>Reset</Trans>
 				</Button>
 			</div>
@@ -156,7 +156,7 @@ export const RangeSetting = ({
 	const id = useId();
 	return (
 		<div>
-			<label htmlFor={id} className="mb-1 block text-xs font-medium">
+			<label htmlFor={id} className="mb-1 block text-xs">
 				{label}
 			</label>
 			<input

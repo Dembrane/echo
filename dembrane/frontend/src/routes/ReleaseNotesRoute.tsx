@@ -17,10 +17,10 @@ export const ReleaseNotesRoute = () => {
 		<Container size="lg" px={{ base: "md", sm: "xl" }} py="xl">
 			<Stack gap="xl">
 				<Stack gap="sm" className={timelineStyles.intro}>
-					<Title order={1}>
+					<Title order={2}>
 						<Trans>Release notes</Trans>
 					</Title>
-					<Text>
+					<Text c="dimmed">
 						<Trans>New features, improvements and fixes in dembrane.</Trans>
 					</Text>
 					<Anchor
@@ -33,7 +33,7 @@ export const ReleaseNotesRoute = () => {
 					</Anchor>
 				</Stack>
 				{releases.length === 0 ? (
-					<Text>
+					<Text size="sm" c="dimmed">
 						<Trans>No release notes yet.</Trans>
 					</Text>
 				) : null}

@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
-import { Group, Stack, Text } from "@mantine/core";
+import { Badge, Group, Stack, Text } from "@mantine/core";
 import { Sparkle } from "@phosphor-icons/react";
 import { ReleaseChanges } from "./ReleaseChanges";
 import { ReleaseDescription } from "./ReleaseDescription";
@@ -94,10 +94,13 @@ export const ReleaseTimeline = ({
 													latest={release.version === latestVersion}
 												/>
 												{release.highlight ? (
-													<span className={styles.highlightBadge}>
-														<Sparkle size={16} aria-hidden />
+													<Badge
+														variant="light"
+														color="gray"
+														leftSection={<Sparkle size={16} aria-hidden />}
+													>
 														<Trans>Highlight</Trans>
-													</span>
+													</Badge>
 												) : null}
 											</Group>
 											<h3 className={styles.title}>{release.title}</h3>

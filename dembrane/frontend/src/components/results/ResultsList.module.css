@@ -4,19 +4,19 @@
    `[data-theme="dark"]`, never the operating system. */
 
 .list {
-	--parchment: #f6f4f1;
-	--paper: #ffffff;
-	--graphite: #2d2d2c;
-	--blue: #4169e1;
-	--hairline: #e6e3df;
+	--parchment: var(--app-background);
+	--paper: var(--app-surface);
+	--graphite: var(--app-text);
+	--blue: var(--app-action);
+	--hairline: var(--app-quiet);
 	/* Three inks, and the two that carry words are readable on the dashboard's
 	   own parchment: soft ink for small print at 4.5:1, resting ink for a
 	   control that says itself in a glyph or a number at 3:1, faint ink for
 	   the lines and underlines that are not asked to be read. */
-	--ink-soft: rgba(45, 45, 44, 0.72);
-	--ink-rest: rgba(45, 45, 44, 0.62);
-	--ink-faint: rgba(45, 45, 44, 0.38);
-	--ink-tag: rgba(45, 45, 44, 0.78);
+	--ink-soft: color-mix(in srgb, var(--app-text) 72%, transparent);
+	--ink-rest: color-mix(in srgb, var(--app-text) 62%, transparent);
+	--ink-faint: color-mix(in srgb, var(--app-text) 38%, transparent);
+	--ink-tag: color-mix(in srgb, var(--app-text) 78%, transparent);
 	--curve: cubic-bezier(0.25, 0.8, 0.3, 1);
 	/* The height of one line of words, which the controls beside them centre on. */
 	--line: calc(1.45 * var(--app-font-size-sm, 0.9375rem));
@@ -33,75 +33,15 @@
 }
 
 :global([data-theme="dark"]) .list {
-	--parchment: #1b1b1a;
-	--paper: #262625;
+	--parchment: #000000;
+	--paper: #161615;
 	--graphite: #f6f4f1;
 	--blue: #7c9bff;
-	--hairline: #3a3a38;
+	--hairline: #262625;
 	--ink-soft: rgba(246, 244, 241, 0.74);
 	--ink-rest: rgba(246, 244, 241, 0.64);
 	--ink-faint: rgba(246, 244, 241, 0.4);
 	--ink-tag: rgba(246, 244, 241, 0.78);
-}
-
-/* The thin filter row: one line in the meta line's size, the labels faint,
-   the choices in soft ink. Only the search has a line to write on. It is a
-   sentence about what is shown, never a toolbar. */
-.filters {
-	align-items: baseline;
-	color: var(--ink-soft);
-	display: flex;
-	flex-wrap: wrap;
-	font-size: var(--app-font-size-xs, 0.75rem);
-	gap: 0 1.5rem;
-	margin-bottom: -0.75rem;
-}
-
-.filterLabel {
-	align-items: baseline;
-	color: var(--ink-faint);
-	display: inline-flex;
-	gap: 0.4rem;
-}
-
-.filterControl {
-	background: none;
-	border: 0;
-	border-radius: 0;
-	color: var(--ink-soft);
-	cursor: pointer;
-	/* As wide as what it says, where the browser can; never as wide as its
-	   longest choice. */
-	field-sizing: content;
-	font: inherit;
-	min-height: 2.25rem;
-	padding: 0;
-	transition: color 0.15s var(--curve);
-}
-
-.filterControl:hover,
-.filterControl:focus-visible {
-	color: var(--graphite);
-}
-
-input.filterControl {
-	border-bottom: 1px solid var(--hairline);
-	color: var(--graphite);
-	cursor: text;
-	min-height: 0;
-	padding: 0.15rem 0;
-	width: 11rem;
-}
-
-input.filterControl:hover {
-	border-bottom-color: var(--ink-faint);
-}
-
-/* A phone zooms the page when a field under 16 px takes the caret. */
-@media (pointer: coarse) {
-	.filterControl {
-		font-size: 16px;
-	}
 }
 
 .group {
@@ -110,7 +50,7 @@ input.filterControl:hover {
 	gap: 0.25rem;
 }
 
-/* Sentence case, weight 500, the count beside it. The header holds the top of
+/* Sentence case, the count beside it. The header holds the top of
    whatever scrolls the list, on the page's own ground, so the kind a host is
    reading is never off the screen. */
 .groupHead {
@@ -118,7 +58,6 @@ input.filterControl:hover {
 	color: var(--graphite);
 	font-family: var(--app-content-bold-font-family, inherit);
 	font-size: 1em;
-	font-weight: 500;
 	margin: 0 0 0.35rem;
 	padding-block: 0.35rem;
 	position: sticky;
@@ -128,7 +67,6 @@ input.filterControl:hover {
 
 .count {
 	color: var(--ink-rest);
-	font-weight: 400;
 }
 
 /* The kinds this list holds, as one line of small print under the words that
@@ -137,7 +75,7 @@ input.filterControl:hover {
 	align-items: baseline;
 	display: flex;
 	flex-wrap: wrap;
-	font-size: 0.8125rem;
+	font-size: var(--app-font-size-xs, 0.75rem);
 	gap: 0 0.75rem;
 	margin-bottom: -1.25rem;
 }
@@ -211,15 +149,14 @@ input.filterControl:hover {
 	opacity: 0.55;
 }
 
-/* The words are the thing: the one line in the row with a real weight, from
-   the cut the item's card is set in, at a measure that can be read. */
+/* The words are the thing: set in the cut the item's card is set in, at a
+   measure that can be read. */
 .primary {
 	align-items: baseline;
 	color: var(--graphite);
 	display: flex;
 	flex-wrap: wrap;
 	font-family: var(--app-content-bold-font-family, inherit);
-	font-weight: 400;
 	gap: 0 0.45em;
 	margin: 0;
 }
@@ -248,7 +185,6 @@ input.filterControl:hover {
 	color: var(--ink-tag);
 	font-family: var(--app-font-family, inherit);
 	font-size: var(--app-font-size-xs, 0.75rem);
-	font-weight: 400;
 	line-height: 1.15;
 	padding: 0.15em 0.55em;
 	white-space: nowrap;
@@ -546,7 +482,7 @@ input.filterControl:hover {
    doors open: a size up from the small print around them, and a 32 px target
    made of room rather than bulk. A finger gets 44. */
 .promptOptions > .control {
-	font-size: 0.8125rem;
+	font-size: var(--app-font-size-xs, 0.75rem);
 	min-height: 2rem;
 	padding-block: 0.3rem;
 }
@@ -636,12 +572,15 @@ input.filterControl:hover {
 	color: var(--graphite);
 }
 
-/* Paper on parchment: the one place the host writes. Never under 16 px, so a
-   phone does not zoom the page on focus. */
+/* Paper on parchment: the one place the host writes, drawn as a field is:
+   rules at the sides. Never under 16 px, so a phone does not zoom the page on
+   focus. */
 .field {
 	background: var(--paper);
-	border: 1px solid var(--hairline);
+	border-color: var(--app-control-rule, #878785);
 	border-radius: 0;
+	border-style: solid;
+	border-width: 0 1px;
 	color: var(--graphite);
 	display: block;
 	font: inherit;
@@ -653,15 +592,10 @@ input.filterControl:hover {
 	width: 100%;
 }
 
-.field:hover {
-	border-color: var(--ink-faint);
-}
-
-/* The ring sits on the hairline rather than outside it: one line, not two. */
+/* Focus turns the side rules blue, as every field's does. */
 .field:focus-visible {
 	border-color: var(--blue);
-	outline: 2px solid var(--blue);
-	outline-offset: -1px;
+	outline: none;
 }
 
 .note {

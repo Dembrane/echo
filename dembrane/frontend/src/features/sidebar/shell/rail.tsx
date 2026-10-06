@@ -41,7 +41,7 @@ export const FullOnly = ({ children }: { children: ReactNode }) =>
 /** Visible icon-only row classes, shared by every rail item. 40px with a
  * mouse, 44px under a finger. */
 export const RAIL_ITEM_CLASS =
-	"relative flex h-10 w-10 shrink-0 items-center justify-center self-center rounded-md transition-colors [-webkit-touch-callout:none] select-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#4169e1] [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11";
+	"relative flex h-10 w-10 shrink-0 items-center justify-center self-center transition-colors [-webkit-touch-callout:none] select-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--app-action)] [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11";
 
 /** The item's name, beside it: on hover, on keyboard focus, and when a
  * finger holds it. A held item does not activate when the finger lifts; a
@@ -49,9 +49,12 @@ export const RAIL_ITEM_CLASS =
 export const RailTip = ({
 	label,
 	children,
+	forceOpen,
 }: {
 	label: ReactNode;
 	children: ReactNode;
+	/** Holds the name out regardless (a phone's "Map ready" pop-out). */
+	forceOpen?: boolean;
 }) => {
 	const [opened, setOpened] = useState(false);
 	const holdTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
@@ -100,10 +103,13 @@ export const RailTip = ({
 	return (
 		<Tooltip
 			label={label}
-			opened={opened}
+			opened={opened || !!forceOpen}
 			position="right"
 			offset={8}
 			withArrow
+			// The name reads over the page beside the rail, so it sits above
+			// anything the page lays over itself while it loads.
+			zIndex={1000}
 		>
 			{/* biome-ignore lint/a11y/noStaticElementInteractions: a pass-through wrapper; the link or button inside is the interactive element */}
 			<span

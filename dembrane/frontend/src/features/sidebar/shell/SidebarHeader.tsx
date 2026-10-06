@@ -17,17 +17,17 @@ export const SidebarHeader = () => {
 		return (
 			<div
 				className="flex shrink-0 flex-col items-center border-b pb-1.5"
-				style={{ borderColor: "rgba(45, 45, 44, 0.06)" }}
+				style={{ borderColor: "var(--app-rule-color)" }}
 			>
 				<div className="flex h-[57px] items-center">
-					<RailTip label="dembrane home">
+					<RailTip label={t`dembrane home`}>
 						<I18nLink
 							to="/o"
 							className={cn(
 								RAIL_ITEM_CLASS,
 								"transition-opacity hover:opacity-80",
 							)}
-							aria-label="dembrane home"
+							aria-label={t`dembrane home`}
 						>
 							<Logo hideTitle hideEnvBadge h="24px" />
 						</I18nLink>
@@ -38,10 +38,10 @@ export const SidebarHeader = () => {
 						type="button"
 						onClick={() => setCollapsed(false)}
 						aria-label={t`Open menu`}
-						className={cn(RAIL_ITEM_CLASS, "hover:bg-black/[0.04]")}
-						style={{ color: "rgba(45, 45, 44, 0.75)" }}
+						className={cn(RAIL_ITEM_CLASS, "app-muted hover:bg-[var(--app-quiet)]")}
+						style={{ color: "var(--mantine-color-dimmed)" }}
 					>
-						<SidebarSimple size={18} aria-hidden="true" />
+						<SidebarSimple size={20} aria-hidden="true" />
 					</button>
 				</RailTip>
 			</div>
@@ -51,18 +51,17 @@ export const SidebarHeader = () => {
 	return (
 		<div
 			className="flex h-[57px] shrink-0 items-center justify-between border-b pl-[12.5px] pr-3"
-			style={{ borderColor: "rgba(45, 45, 44, 0.06)" }}
+			style={{ borderColor: "var(--app-rule-color)" }}
 		>
-			<Logo hideTitle={false} to="/o" linkLabel="dembrane home" />
+			<Logo hideTitle={false} to="/o" linkLabel={t`dembrane home`} />
 
 			<ActionIcon
 				variant="subtle"
 				color="gray"
 				onClick={() => setCollapsed(true)}
-				aria-label="Collapse sidebar"
-				size={28}
+				aria-label={t`Collapse sidebar`}
 			>
-				<SidebarSimple size={18} />
+				<SidebarSimple size={20} />
 			</ActionIcon>
 		</div>
 	);

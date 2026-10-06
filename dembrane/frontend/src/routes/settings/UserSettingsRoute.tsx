@@ -4,14 +4,13 @@ import {
 	ActionIcon,
 	Box,
 	Container,
-	Group,
 	ScrollArea,
 	Stack,
 	Text,
 	Title,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
-import { IconArrowLeft } from "@tabler/icons-react";
+import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { useParams } from "react-router";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { AccountSettingsCard } from "@/components/settings/AccountSettingsCard";
@@ -19,7 +18,7 @@ import { AssistantMemoryCard } from "@/components/settings/AssistantMemoryCard";
 import { AuditLogsCard } from "@/components/settings/AuditLogsCard";
 import { BetaFeaturesCard } from "@/components/settings/BetaFeaturesCard";
 import { ChangePasswordCard } from "@/components/settings/ChangePasswordCard";
-import { FontSettingsCard } from "@/components/settings/FontSettingsCard";
+import { ColorSchemeSettingsCard } from "@/components/settings/ColorSchemeSettingsCard";
 import { FontSizeSettingsCard } from "@/components/settings/FontSizeSettingsCard";
 import { LanguageSettingsCard } from "@/components/settings/LanguageSettingsCard";
 import { MyAccessCard } from "@/components/settings/MyAccessCard";
@@ -46,16 +45,14 @@ export const UserSettingsRoute = () => {
 		<Container size="xl" px="lg" py="xl">
 			<Stack gap="lg">
 				<div className="flex items-center">
-					<div className="hidden md:flex w-[57px] shrink-0 items-center">
+					<div className="hidden md:flex w-14 shrink-0 items-center">
 						<ActionIcon
 							variant="subtle"
 							color="gray"
 							onClick={() => navigate("..")}
 							aria-label={t`Go back`}
-							size={32}
-							className="opacity-40 hover:opacity-100 transition-opacity"
 						>
-							<IconArrowLeft size={18} />
+							<ArrowLeftIcon size={20} />
 						</ActionIcon>
 					</div>
 					<Title order={2}>
@@ -69,7 +66,7 @@ export const UserSettingsRoute = () => {
 					<ScrollArea>
 						{activeSection === "account" && (
 							<Stack gap="lg">
-								<Title order={3}>
+								<Title order={4}>
 									<Trans>Account & security</Trans>
 								</Title>
 
@@ -89,7 +86,7 @@ export const UserSettingsRoute = () => {
 						{activeSection === "access" && (
 							<Stack gap="lg">
 								<Stack gap={4}>
-									<Title order={3}>
+									<Title order={4}>
 										<Trans>My access</Trans>
 									</Title>
 									<Text size="sm" c="dimmed">
@@ -105,11 +102,11 @@ export const UserSettingsRoute = () => {
 
 						{activeSection === "appearance" && (
 							<Stack gap="lg">
-								<Title order={3}>
+								<Title order={4}>
 									<Trans>Appearance</Trans>
 								</Title>
 
-								<FontSettingsCard />
+								<ColorSchemeSettingsCard />
 								<FontSizeSettingsCard />
 								<LanguageSettingsCard />
 								<BetaFeaturesCard />
@@ -118,7 +115,7 @@ export const UserSettingsRoute = () => {
 
 						{activeSection === "assistant" && (
 							<Stack gap="lg">
-								<Title order={3}>
+								<Title order={4}>
 									<Trans>Assistant</Trans>
 								</Title>
 

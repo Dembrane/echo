@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { Button, Tooltip } from "@mantine/core";
-import { IconMicrophone } from "@tabler/icons-react";
+import { MicrophoneIcon } from "@phosphor-icons/react";
 import { testId } from "@/lib/testUtils";
 
 /** Starts a voice note. Shaped like the composer's other footer control so the
@@ -32,10 +32,10 @@ export const VoiceInputButton = ({
 			size="compact-sm"
 			type="button"
 			variant="subtle"
+			leftSection={<MicrophoneIcon size={20} />}
 			{...(id ? testId(id) : {})}
 		>
-			<IconMicrophone size={18} />
-			<span className="ms-1.5 hidden md:inline">
+			<span className="hidden md:inline">
 				<Trans>Voice</Trans>
 			</span>
 		</Button>

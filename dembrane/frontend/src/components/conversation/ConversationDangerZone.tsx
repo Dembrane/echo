@@ -1,8 +1,8 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Button, Group, Stack, Tooltip } from "@mantine/core";
+import { Button, Stack, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconDownload, IconTrash } from "@tabler/icons-react";
+import { DownloadSimpleIcon, TrashIcon } from "@phosphor-icons/react";
 import posthog from "posthog-js";
 import { useParams } from "react-router";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
@@ -40,10 +40,10 @@ export const ConversationDangerZone = ({
 	};
 
 	return (
-		<Stack gap="3rem">
-			<Stack gap="1.5rem">
+		<Stack gap="xl">
+			<Stack gap="lg">
 				<div className="flex">
-					<Stack gap="1rem">
+					<Stack gap="md">
 						<MoveConversationButton conversation={conversation} />
 
 						<Tooltip
@@ -59,8 +59,7 @@ export const ConversationDangerZone = ({
 							multiline
 						>
 							<Button
-								variant="outline"
-								rightSection={<IconDownload size={16} />}
+								leftSection={<DownloadSimpleIcon size={20} />}
 								component="a"
 								target="_blank"
 								href={
@@ -76,9 +75,7 @@ export const ConversationDangerZone = ({
 								disabled={disableDownloadAudio || locked}
 								{...testId("conversation-download-audio-button")}
 							>
-								<Group>
-									<Trans>Download Audio</Trans>
-								</Group>
+								<Trans>Download audio</Trans>
 							</Button>
 						</Tooltip>
 
@@ -86,11 +83,10 @@ export const ConversationDangerZone = ({
 							<Button
 								onClick={openConfirm}
 								color="red"
-								variant="outline"
-								rightSection={<IconTrash size={16} />}
+								leftSection={<TrashIcon size={20} />}
 								{...testId("conversation-delete-button")}
 							>
-								<Trans>Delete Conversation</Trans>
+								<Trans>Delete conversation</Trans>
 							</Button>
 						)}
 					</Stack>

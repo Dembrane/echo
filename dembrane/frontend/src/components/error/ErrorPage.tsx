@@ -5,6 +5,7 @@ import {
 	Container,
 	Group,
 	LoadingOverlay,
+	Paper,
 	Stack,
 	Text,
 	Title,
@@ -69,23 +70,25 @@ export const ErrorPage = () => {
 
 	return (
 		<BaseLayout>
-			<Box className="flex h-[calc(100vh-60px)] flex-col items-center justify-center p-4">
-				<Stack align="center" gap="md" maw={440} ta="center">
-					<Title order={1}>{title}</Title>
+			<Box className="flex h-[calc(100vh-60px)] flex-col justify-center p-4">
+				<Stack gap="md" w="100%" maw={440} mx="auto">
+					<Title order={2}>{title}</Title>
 					<Text c="dimmed">{message}</Text>
 					{DEBUG_MODE && (
-						<div className="rounded-md border border-red-500 bg-gray-100 p-4">
-							<pre>{JSON.stringify(error, null, 2)}</pre>
-						</div>
+						<Paper p="md">
+							<pre className="overflow-auto">
+								{JSON.stringify(error, null, 2)}
+							</pre>
+						</Paper>
 					)}
-					<Group>
+					<Group gap="sm">
 						{!isNotFound && (
-							<Button onClick={() => window.location.reload()}>
+							<Button variant="filled" onClick={() => window.location.reload()}>
 								<Trans>Reload page</Trans>
 							</Button>
 						)}
 						<Button
-							variant={isNotFound ? "filled" : "outline"}
+							variant={isNotFound ? "filled" : undefined}
 							onClick={() => {
 								window.location.href = "/";
 							}}

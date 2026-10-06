@@ -1,17 +1,18 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
-	ActionIcon,
 	Button,
 	Checkbox,
 	Divider,
 	NumberInput,
 	Popover,
 	Radio,
+	ScrollArea,
+	SegmentedControl,
 	Stack,
 	Text,
 } from "@mantine/core";
-import { GearSixIcon } from "@phosphor-icons/react";
+import { FunnelSimpleIcon, GearSixIcon } from "@phosphor-icons/react";
 import { attributeFor, COLOR_BY_OPTIONS } from "../attributes";
 import type {
 	BudgetAdjustment,
@@ -49,19 +50,31 @@ type MapSettingsMenuProps = {
 	 * surface's colours and stays visible while the surface is fullscreen.
 	 */
 	withinPortal?: boolean;
+	/** The map's conversations, in palette order; none where it can't filter. */
+	conversations?: ReadonlyArray<MapConversation>;
+	hiddenConversations?: ReadonlySet<string>;
+	onHiddenConversationsChange?: (hidden: ReadonlySet<string>) => void;
+	/** Tags on the map's conversations; none where the map has no tags to offer. */
+	tags?: ReadonlyArray<MapConversation>;
+	chosenTags?: ReadonlySet<string>;
+	onChosenTagsChange?: (chosen: ReadonlySet<string>) => void;
 };
+
+export type MapConversation = { id: string; name: string; color: string };
+
+const NO_CONVERSATIONS: ReadonlyArray<MapConversation> = [];
+const NONE_HIDDEN: ReadonlySet<string> = new Set();
 
 export type MapSettingsControl =
 	| "showExplore"
 	| "showRelationships"
-	| "darkMode";
+	| "darkMode"
+	| "layout"
+	| "showForceSettings";
 
 const PANEL_TOGGLES: { key: keyof MapSettings; label: () => string }[] = [
-	{ key: "showExplore", label: () => t`Explore` },
 	{ key: "showShowcase", label: () => t`Showcase` },
 	{ key: "showSpotlight", label: () => t`Spotlight` },
-	{ key: "showTree", label: () => t`Tree` },
-	{ key: "showClusters", label: () => t`Clusters` },
 	{ key: "showLegend", label: () => t`Legend` },
 ];
 
@@ -88,6 +101,26 @@ export const budgetAdjustmentLabel = (
 
 const NOTHING_HIDDEN: ReadonlyArray<MapSettingsControl> = [];
 
+type MapLayout = "clusters" | "tree" | "split";
+
+/** The maps each layout draws. */
+const LAYOUTS: Record<
+	MapLayout,
+	Pick<MapSettings, "showClusters" | "showTree">
+> = {
+	clusters: { showClusters: true, showTree: false },
+	split: { showClusters: true, showTree: true },
+	tree: { showClusters: false, showTree: true },
+};
+
+/** The layout the saved panel switches describe; the cluster map when unclear. */
+const layoutOf = (settings: MapSettings): MapLayout =>
+	settings.showTree && settings.showClusters
+		? "split"
+		: settings.showTree
+			? "tree"
+			: "clusters";
+
 const readBudget = (value: string | number): number | null =>
 	typeof value === "number" && Number.isFinite(value) ? value : null;
 
@@ -108,7 +141,7 @@ const BudgetControls = ({
 		settings.nodeLimit !== null || settings.edgeLimit !== null;
 	return (
 		<Stack gap="xs">
-			<Text size="xs" className="uppercase tracking-widest">
+			<Text size="xs">
 				<Trans>Map budget</Trans>
 			</Text>
 			<NumberInput
@@ -146,7 +179,6 @@ const BudgetControls = ({
 				<Button
 					size="compact-xs"
 					variant="subtle"
-					radius={0}
 					onClick={() => onChange({ edgeLimit: null, nodeLimit: null })}
 				>
 					<Trans>Use the default budget</Trans>
@@ -156,7 +188,151 @@ const BudgetControls = ({
 	);
 };
 
-/** Panel visibility, colour mode, budgets, fact-check options and dark mode. */
+/**
+ * Which data the map shows: tags and conversations. Its own quiet trigger
+ * beside Settings; nothing where the map has neither to filter by.
+ */
+export const MapFilterMenu = ({
+	conversations = NO_CONVERSATIONS,
+	hiddenConversations = NONE_HIDDEN,
+	onHiddenConversationsChange,
+	tags = NO_CONVERSATIONS,
+	chosenTags = NONE_HIDDEN,
+	onChosenTagsChange,
+	withinPortal = true,
+}: Pick<
+	MapSettingsMenuProps,
+	| "conversations"
+	| "hiddenConversations"
+	| "onHiddenConversationsChange"
+	| "tags"
+	| "chosenTags"
+	| "onChosenTagsChange"
+	| "withinPortal"
+>) => {
+	const toggleTag = (id: string, chosen: boolean) => {
+		const next = new Set(chosenTags);
+		if (chosen) next.add(id);
+		else next.delete(id);
+		onChosenTagsChange?.(next);
+	};
+	const toggleConversation = (id: string, shown: boolean) => {
+		const next = new Set(hiddenConversations);
+		if (shown) next.delete(id);
+		else next.add(id);
+		onHiddenConversationsChange?.(next);
+	};
+	const hasTags = Boolean(onChosenTagsChange) && tags.length > 0;
+	const hasConversations =
+		Boolean(onHiddenConversationsChange) && conversations.length > 1;
+	if (!hasTags && !hasConversations) return null;
+	return (
+		<Popover
+			position="bottom-end"
+			shadow="xl"
+			width={300}
+			radius={0}
+			withinPortal={withinPortal}
+		>
+			<Popover.Target>
+				<Button
+					variant="subtle"
+					color="gray"
+					leftSection={<FunnelSimpleIcon size={20} />}
+				>
+					<Trans>Filter</Trans>
+				</Button>
+			</Popover.Target>
+			<Popover.Dropdown>
+				<Stack gap="sm">
+					<Text size="sm">
+						<Trans>Filter</Trans>
+					</Text>
+					{onChosenTagsChange && tags.length > 0 && (
+						<>
+							<Stack gap="xs">
+								<Stack gap={4}>
+									<Text size="xs">
+										<Trans>Tags</Trans>
+									</Text>
+									<Text size="xs" c="dimmed">
+										<Trans>
+											Show only conversations with any of the ticked tags.
+										</Trans>
+									</Text>
+								</Stack>
+								<ScrollArea.Autosize mah={160} type="auto">
+									<Stack gap="xs">
+										{tags.map((tag) => (
+											<Checkbox
+												key={tag.id}
+												size="sm"
+												label={
+													<span className="inline-flex items-center gap-2">
+														<span
+															aria-hidden="true"
+															className="inline-block size-2 shrink-0 rounded-full"
+															style={{ backgroundColor: tag.color }}
+														/>
+														{tag.name}
+													</span>
+												}
+												checked={chosenTags.has(tag.id)}
+												onChange={(event) =>
+													toggleTag(tag.id, event.currentTarget.checked)
+												}
+											/>
+										))}
+									</Stack>
+								</ScrollArea.Autosize>
+							</Stack>
+						</>
+					)}
+
+					{onHiddenConversationsChange && conversations.length > 1 && (
+						<>
+							{hasTags && <Divider />}
+							<Stack gap="xs">
+								<Text size="xs">
+									<Trans>Conversations</Trans>
+								</Text>
+								<ScrollArea.Autosize mah={200} type="auto">
+									<Stack gap="xs">
+										{conversations.map((conversation) => (
+											<Checkbox
+												key={conversation.id}
+												size="sm"
+												label={
+													<span className="inline-flex items-center gap-2">
+														<span
+															aria-hidden="true"
+															className="inline-block size-2 shrink-0 rounded-full"
+															style={{ backgroundColor: conversation.color }}
+														/>
+														{conversation.name}
+													</span>
+												}
+												checked={!hiddenConversations.has(conversation.id)}
+												onChange={(event) =>
+													toggleConversation(
+														conversation.id,
+														event.currentTarget.checked,
+													)
+												}
+											/>
+										))}
+									</Stack>
+								</ScrollArea.Autosize>
+							</Stack>
+						</>
+					)}
+				</Stack>
+			</Popover.Dropdown>
+		</Popover>
+	);
+};
+
+/** Panel visibility, layout, colour mode, budgets, fact-check, forces and dark mode. */
 export const MapSettingsMenu = ({
 	settings,
 	onChange,
@@ -169,7 +345,12 @@ export const MapSettingsMenu = ({
 	canFactCheck,
 	hide = NOTHING_HIDDEN,
 	withinPortal = true,
+	tags = NO_CONVERSATIONS,
 }: MapSettingsMenuProps) => {
+	// Colouring by tag is offered only where there are tags to colour by.
+	const colorOptions = MAP_COLOR_BY_OPTIONS.filter(
+		(option) => option !== "tag" || tags.length > 0,
+	);
 	return (
 		<Popover
 			position="bottom-end"
@@ -179,21 +360,40 @@ export const MapSettingsMenu = ({
 			withinPortal={withinPortal}
 		>
 			<Popover.Target>
-				<ActionIcon
+				{/* Quiet and closed by default: the toolbar on the map holds the
+				    main controls; how the map looks and behaves waits here. */}
+				<Button
 					variant="subtle"
-					size="lg"
-					radius={0}
-					aria-label={t`Panel settings`}
-					title={t`Panel settings`}
+					color="gray"
+					leftSection={<GearSixIcon size={20} />}
 				>
-					<GearSixIcon size={20} />
-				</ActionIcon>
+					<Trans>Settings</Trans>
+				</Button>
 			</Popover.Target>
 			<Popover.Dropdown>
 				<Stack gap="sm">
-					<Text size="sm" fw={600}>
-						<Trans>Panel settings</Trans>
+					<Text size="sm">
+						<Trans>Settings</Trans>
 					</Text>
+
+					{!hide.includes("layout") && (
+						<Stack gap={4}>
+							<Text size="xs">
+								<Trans>Map</Trans>
+							</Text>
+							<SegmentedControl
+								size="xs"
+								fullWidth
+								value={layoutOf(settings)}
+								onChange={(value) => onChange(LAYOUTS[value as MapLayout])}
+								data={[
+									{ label: t`Clusters`, value: "clusters" },
+									{ label: t`Tree`, value: "tree" },
+									{ label: t`Side by side`, value: "split" },
+								]}
+							/>
+						</Stack>
+					)}
 
 					<Stack gap="xs">
 						{PANEL_TOGGLES.filter(
@@ -227,13 +427,13 @@ export const MapSettingsMenu = ({
 						value={colorBy}
 						onChange={(value) => onColorByChange(value as ColorBy)}
 						label={
-							<Text size="xs" className="uppercase tracking-widest">
+							<Text size="xs">
 								<Trans>Color nodes by</Trans>
 							</Text>
 						}
 					>
 						<Stack gap="xs" mt="xs">
-							{MAP_COLOR_BY_OPTIONS.map((option) => (
+							{colorOptions.map((option) => (
 								<Radio
 									key={option}
 									size="sm"
@@ -257,15 +457,14 @@ export const MapSettingsMenu = ({
 							/>
 							<Button
 								size="sm"
-								radius={0}
 								fullWidth
 								disabled={pendingClaimCount === 0}
 								onClick={onFactCheckAll}
 							>
 								{pendingClaimCount > 0 ? (
-									<Trans>Fact check all ({pendingClaimCount})</Trans>
+									<Trans>Fact-check all ({pendingClaimCount})</Trans>
 								) : (
-									<Trans>Fact check all</Trans>
+									<Trans>Fact-check all</Trans>
 								)}
 							</Button>
 						</>
@@ -279,6 +478,20 @@ export const MapSettingsMenu = ({
 								onChange={onChange}
 								budgets={budgets}
 								bounds={bounds}
+							/>
+						</>
+					)}
+
+					{!hide.includes("showForceSettings") && (
+						<>
+							<Divider />
+							<Checkbox
+								size="sm"
+								label={t`Force settings`}
+								checked={settings.showForceSettings}
+								onChange={(event) =>
+									onChange({ showForceSettings: event.currentTarget.checked })
+								}
 							/>
 						</>
 					)}

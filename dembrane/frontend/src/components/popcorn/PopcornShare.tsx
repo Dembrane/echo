@@ -1,48 +1,32 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import {
-	Button,
-	CopyButton,
-	Group,
-	Paper,
-	Stack,
-	Switch,
-	Text,
-	Textarea,
-	Title,
-} from "@mantine/core";
-import {
-	ArrowSquareOutIcon,
-	CheckIcon,
-	CodeIcon,
-	CopyIcon,
-	LinkIcon,
-} from "@phosphor-icons/react";
-import { useState } from "react";
+import { Paper, Stack, Title } from "@mantine/core";
+import type { ReactNode } from "react";
 import {
 	type PopcornDetail,
 	popcornEmbedSnippet,
 	popcornPublicUrl,
 	usePopcornSettingsMutation,
 } from "@/components/popcorn/hooks";
-import { FIELD_SIZE } from "@/components/popcorn/PopcornVoiceSection";
+import { QRShare, ShareControls } from "@/components/sharing/Share";
 import { testId } from "@/lib/testUtils";
 
-// Sharing, the way a video site does it: one switch to make the page public,
-// then Link or Embed, each with the thing to copy right there.
+// Share, as on every outcome: the Public page switch, then the code.
 export function PopcornShare({
 	projectId,
 	popcorn,
 	embedded = false,
 	presentation = false,
+	extras,
 }: {
 	projectId: string;
 	popcorn: PopcornDetail;
 	embedded?: boolean;
 	presentation?: boolean;
+	/** Menu items this outcome adds under the code's shortcuts. */
+	extras?: ReactNode;
 }) {
 	const settings = usePopcornSettingsMutation(projectId, popcorn.id);
-	const [showEmbed, setShowEmbed] = useState(false);
 	const token = popcorn.public_token;
 	const publicUrl = token
 		? presentation
@@ -52,114 +36,38 @@ export function PopcornShare({
 				).toString()
 			: popcornPublicUrl(token)
 		: null;
-	const isPublic = popcorn.settings.public && !!publicUrl;
 	const embed = token
 		? presentation && publicUrl
 			? `<iframe src="${publicUrl}" title="Presentation" width="100%" height="720" style="border:0" allowfullscreen></iframe>`
 			: popcornEmbedSnippet(token)
-		: "";
+		: undefined;
 
+	const controls = (
+		<ShareControls
+			isPublic={popcorn.settings.public}
+			onPublicChange={(value) => settings.mutate({ public: value })}
+			pending={settings.isPending}
+			description={t`Anyone with the link can watch. No login, and no transcripts.`}
+			qr={
+				publicUrl && (
+					<QRShare
+						links={{ url: publicUrl }}
+						embed={embed}
+						fileName={popcorn.name || "presentation"}
+						extras={extras}
+					/>
+				)
+			}
+		/>
+	);
+	if (embedded) return controls;
 	return (
-		<Paper
-			withBorder={!embedded}
-			className="rounded-md"
-			p={embedded ? 0 : "lg"}
-			{...testId("popcorn-share")}
-		>
+		<Paper withBorder p="lg" {...testId("popcorn-share")}>
 			<Stack gap="md">
-				{!embedded && (
-					<Title order={4}>
-						<Trans>Share</Trans>
-					</Title>
-				)}
-				<Switch
-					size={FIELD_SIZE}
-					label={t`Public page`}
-					description={t`Anyone with the link can watch. No login, and no transcripts.`}
-					checked={popcorn.settings.public}
-					disabled={settings.isPending}
-					onChange={(event) =>
-						settings.mutate({ public: event.currentTarget.checked })
-					}
-					{...testId("popcorn-public-toggle")}
-				/>
-				{isPublic && publicUrl ? (
-					<>
-						<Group grow gap="sm" align="stretch">
-							<CopyButton value={publicUrl} timeout={2000}>
-								{({ copied, copy }) => (
-									<Button
-										variant={copied ? "filled" : "outline"}
-										leftSection={
-											copied ? <CheckIcon size={16} /> : <LinkIcon size={16} />
-										}
-										onClick={copy}
-										{...testId("popcorn-copy-link")}
-									>
-										{copied ? t`Link copied` : t`Share link`}
-									</Button>
-								)}
-							</CopyButton>
-							<Button
-								variant="outline"
-								leftSection={<CodeIcon size={16} />}
-								onClick={() => setShowEmbed((current) => !current)}
-								{...testId("popcorn-share-embed")}
-							>
-								<Trans>Embed in a webpage</Trans>
-							</Button>
-						</Group>
-						{showEmbed ? (
-							<Stack gap="xs">
-								<Textarea
-									value={embed}
-									readOnly
-									autosize
-									minRows={3}
-									styles={{ input: { fontFamily: "monospace", fontSize: 12 } }}
-									aria-label={t`Embed code`}
-									{...testId("popcorn-embed-code")}
-								/>
-								<Group justify="space-between" align="center">
-									<Text size="xs">
-										<Trans>Paste it into any page. It stays live.</Trans>
-									</Text>
-									<CopyButton value={embed} timeout={2000}>
-										{({ copied, copy }) => (
-											<Button
-												size="xs"
-												onClick={copy}
-												leftSection={
-													copied ? (
-														<CheckIcon size={14} />
-													) : (
-														<CopyIcon size={14} />
-													)
-												}
-												{...testId("popcorn-copy-embed")}
-											>
-												{copied ? t`Copied` : t`Copy code`}
-											</Button>
-										)}
-									</CopyButton>
-								</Group>
-							</Stack>
-						) : null}
-						<Button
-							variant="subtle"
-							size="xs"
-							component="a"
-							href={publicUrl}
-							target="_blank"
-							rel="noopener noreferrer"
-							leftSection={<ArrowSquareOutIcon size={14} />}
-							className="self-start"
-							{...testId("popcorn-public-url")}
-						>
-							<Trans>Open the public page</Trans>
-						</Button>
-					</>
-				) : null}
+				<Title order={4}>
+					<Trans>Share</Trans>
+				</Title>
+				{controls}
 			</Stack>
 		</Paper>
 	);

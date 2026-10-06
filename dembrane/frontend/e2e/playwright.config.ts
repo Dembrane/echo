@@ -5,17 +5,15 @@ import { defineConfig, devices } from "@playwright/test";
 // a seeded partner-org login provided via env (E2E_EMAIL / E2E_PASSWORD); the
 // smoke spec needs no auth. See e2e/README.md.
 export default defineConfig({
-	testDir: ".",
-	timeout: 30_000,
 	expect: { timeout: 10_000 },
 	fullyParallel: false,
+	projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
 	reporter: [["list"]],
+	testDir: ".",
+	timeout: 30_000,
 	use: {
 		baseURL: process.env.E2E_BASE_URL ?? "http://localhost:5173",
 		screenshot: "only-on-failure",
 		trace: "retain-on-failure",
 	},
-	projects: [
-		{ name: "chromium", use: { ...devices["Desktop Chrome"] } },
-	],
 });

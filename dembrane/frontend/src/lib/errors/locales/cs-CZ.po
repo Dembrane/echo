@@ -124,6 +124,11 @@ msgid "error.webhook.invalid_target"
 msgstr "Vyberte, kam tento webhook směřuje: na webovou adresu, nebo do schránky sama se známým kódem."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:17
+msgid "error.map.groups_need_snapshot"
+msgstr "Shluky lze uložit na znovu vygenerované mapě. Vygenerujte mapu znovu a zkuste to znovu."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:27
 msgid "error.document.dpa_not_authorised"
 msgstr "Potvrďte, že jste oprávněni schválit zpracování osobních údajů za svou organizaci."
@@ -299,7 +304,7 @@ msgid "error.member.owner_removes_owner"
 msgstr "Odebrat jiného vlastníka může pouze vlastník."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:17
+#: src/lib/errors/messages/map.ts:26
 msgid "error.map.not_a_claim"
 msgstr "Ověřovat lze pouze tvrzení. Vyberte tvrzení a zkuste to znovu."
 
@@ -354,7 +359,7 @@ msgid "error.project.share_admin_only"
 msgstr "Sdílet projekty mohou pouze správci pracovního prostoru."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:29
+#: src/lib/errors/messages/map.ts:38
 msgid "error.map.selection_not_in_map"
 msgstr "Část vašeho výběru už na mapě není. Načtěte mapu znovu a proveďte výběr."
 
@@ -429,7 +434,7 @@ msgid "error.webhook.sam_inbox_unavailable"
 msgstr "Schránka sama zde není nastavena a webhook směřující k samovi nelze otestovat."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:43
+#: src/lib/errors/messages/map.ts:52
 msgid "error.map.selection_too_small"
 msgstr "Vyberte ještě několik položek a vytvořte název."
 
@@ -564,12 +569,12 @@ msgid "error.present.map_results_not_ready"
 msgstr "Mapa ještě není připravena. Jakmile bude, zobrazí se zde."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:25
+#: src/lib/errors/messages/map.ts:34
 msgid "error.map.not_ready"
 msgstr "Mapa se stále vytváří. Chvíli počkejte a zkuste to znovu."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:34
+#: src/lib/errors/messages/map.ts:43
 msgid "error.map.selection_other_snapshot"
 msgstr "Mapa byla od vašeho výběru aktualizována. Obnovte mapu a vyberte položky znovu."
 
@@ -924,7 +929,7 @@ msgid "error.project.no_conversations"
 msgstr "Tento projekt zatím nemá žádné rozhovory."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:13
+#: src/lib/errors/messages/map.ts:22
 msgid "error.map.no_map_yet"
 msgstr "Tento projekt zatím nemá mapu. Jakmile ji vytvoříte, uvidíte ji zde."
 
@@ -1144,7 +1149,7 @@ msgid "error.billing.request_failed"
 msgstr "Tuto změnu fakturace se nepodařilo dokončit. Kontaktujte nás a my to vyřešíme."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:51
+#: src/lib/errors/messages/map.ts:60
 msgid "error.map.title_failed"
 msgstr "Název se právě nepodařilo vytvořit. Zkuste to znovu."
 
@@ -1229,7 +1234,7 @@ msgid "error.training.license_not_found"
 msgstr "Tuto licenci se nepodařilo najít."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:21
+#: src/lib/errors/messages/map.ts:30
 msgid "error.map.not_found"
 msgstr "Tuto mapu se nám nepodařilo najít."
 
@@ -1344,12 +1349,17 @@ msgid "error.verify.artifact_not_found"
 msgstr "Toto se nám nepodařilo najít. Možná to bylo odstraněno."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/map.ts:13
+msgid "error.map.group_not_started"
+msgstr "Tento shluk se nepodařilo uložit. Zkuste to za chvíli znovu."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/analysis.ts:46
 msgid "error.analysis.storage_unavailable"
 msgstr "Analýzu se právě nepodařilo načíst. Zkuste to za chvíli znovu."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:47
+#: src/lib/errors/messages/map.ts:56
 msgid "error.map.storage_unavailable"
 msgstr "Mapu se právě nepodařilo načíst. Zkuste to za chvíli znovu."
 
@@ -1564,7 +1574,7 @@ msgid "error.auth.user_required"
 msgstr "K tomu musíte být přihlášeni. Přihlaste se a zkuste to znovu."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/map.ts:39
+#: src/lib/errors/messages/map.ts:48
 msgid "error.map.selection_too_large"
 msgstr "Vybrali jste příliš mnoho položek. Vyberte jich méně a zkuste to znovu."
 

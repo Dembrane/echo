@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Popover, Tooltip } from "@mantine/core";
+import { Popover, TextInput, Tooltip } from "@mantine/core";
 import {
 	ArrowRightIcon,
 	EyeSlashIcon,
@@ -131,12 +131,11 @@ function FeedbackForm({
 				{/* The field appears only for the tick that needs it, so the popover
 				    is four lines until the host asks for a fifth. */}
 				{other && (
-					<input
+					<TextInput
 						aria-label={t`In your own words`}
 						className={classes.noteField}
 						data-testid="curate-feedback-note"
 						onChange={(event) => setNote(event.currentTarget.value)}
-						type="text"
 						value={note}
 					/>
 				)}
@@ -149,7 +148,7 @@ function FeedbackForm({
 						onSend(tags, other ? note.trim() || undefined : undefined)
 					}
 				>
-					<ArrowRightIcon aria-hidden size={16} />
+					<ArrowRightIcon aria-hidden size={20} />
 				</button>
 			</div>
 		</div>
@@ -261,9 +260,9 @@ export function RowTools({
 							onClick={() => press(rating)}
 						>
 							{rating === "up" ? (
-								<ThumbsUpIcon aria-hidden size={18} />
+								<ThumbsUpIcon aria-hidden size={20} />
 							) : (
-								<ThumbsDownIcon aria-hidden size={18} />
+								<ThumbsDownIcon aria-hidden size={20} />
 							)}
 						</button>
 					</Tooltip>
@@ -287,8 +286,8 @@ export function RowTools({
 									edit.start();
 								}}
 							>
+								<PencilSimpleIcon aria-hidden size={20} />
 								<Trans>Edit</Trans>
-								<PencilSimpleIcon aria-hidden size={16} />
 							</button>
 							<button
 								type="button"
@@ -299,8 +298,8 @@ export function RowTools({
 									hide.hide();
 								}}
 							>
+								<EyeSlashIcon aria-hidden size={20} />
 								<Trans>Hide</Trans>
-								<EyeSlashIcon aria-hidden size={16} />
 							</button>
 						</div>
 					) : (
@@ -323,7 +322,7 @@ export function RowTools({
 			{thumb("up")}
 			{thumb("down")}
 			<Tool
-				icon={<EyeSlashIcon aria-hidden size={18} />}
+				icon={<EyeSlashIcon aria-hidden size={20} />}
 				label={hide.held ? t`Show again` : t`Hide from this presentation`}
 				on={hide.held}
 				onClick={hide.held ? hide.show : hide.hide}
@@ -331,7 +330,7 @@ export function RowTools({
 				testId={`curate-hide-${item.objectId}`}
 			/>
 			<Tool
-				icon={<PencilSimpleIcon aria-hidden size={18} />}
+				icon={<PencilSimpleIcon aria-hidden size={20} />}
 				innerRef={edit.pencil}
 				label={t`Edit`}
 				on={edit.on || edit.lit}
@@ -350,7 +349,7 @@ export function RowTools({
 						to={analysisHref}
 						{...{ "data-testid": `curate-analysis-${item.objectId}` }}
 					>
-						<ListMagnifyingGlassIcon aria-hidden size={18} />
+						<ListMagnifyingGlassIcon aria-hidden size={20} />
 					</I18nLink>
 				</span>
 			</Tooltip>

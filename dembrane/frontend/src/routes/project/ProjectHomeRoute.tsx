@@ -5,8 +5,8 @@ import {
 	Badge,
 	Button,
 	Card,
+	Grid,
 	Group,
-	SimpleGrid,
 	Skeleton,
 	Stack,
 	Text,
@@ -15,22 +15,20 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
+	BookOpenIcon,
 	ChatCircleDotsIcon,
 	FileTextIcon,
-	PaintBrushIcon,
 	PencilSimpleIcon,
 	TargetIcon,
 	TextAaIcon,
 	UploadSimpleIcon,
 } from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
+import type { ReactNode } from "react";
 import { useParams } from "react-router";
 import { InputModal } from "@/components/common/InputModal";
 import { I18nLink } from "@/components/common/i18nLink";
-import { useInfiniteConversationsByProjectId } from "@/components/conversation/hooks";
-import { LiveMonitorSection } from "@/components/conversation/LiveMonitorSection";
-import { LockedTranscriptOverlay } from "@/components/conversation/LockedTranscriptOverlay";
-import { getConversationStartTime } from "@/components/conversation/utils";
+import { ConversationsMiniList } from "@/components/conversation/ConversationsMiniList";
 import { PageContainer } from "@/components/layout/PageContainer";
 import {
 	useProjectById,
@@ -38,43 +36,20 @@ import {
 } from "@/components/project/hooks";
 import { KEY_TERMS_HASH } from "@/components/project/KeyTermsInput";
 import { PortalSettingsOverview } from "@/components/project/PortalSettingsOverview";
-import { ProjectHostGuideLink } from "@/components/project/ProjectHostGuideLink";
 import { PROJECT_CONTEXT_HASH } from "@/components/project/ProjectContextInput";
+import { ProjectQRCode } from "@/components/project/ProjectQRCode";
 import { useLatestProjectReport } from "@/components/report/hooks";
-import { UpgradeModal } from "@/components/workspace/FeatureGate";
-import { ENABLE_MONITOR } from "@/config";
-import { useConversationMonitor } from "@/hooks/useConversationMonitor";
-import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { reportStatusLabel } from "@/components/sharing/StatusLine";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { canUseChat, isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
-import { SELLABLE_TIER, type Tier } from "@/lib/tiers";
-
-const lineClampStyle = {
-	display: "-webkit-box",
-	overflow: "hidden",
-	WebkitBoxOrient: "vertical",
-	WebkitLineClamp: 2,
-} as const;
-
-const tagText = (tag: ConversationProjectTag) => {
-	const projectTag = tag.project_tag_id as ProjectTag | string | null;
-	return typeof projectTag === "object" && projectTag ? projectTag.text : null;
-};
-
-const conversationTitle = (conversation: Conversation) =>
-	conversation.title?.trim() ||
-	conversation.participant_name?.trim() ||
-	t`Untitled conversation`;
 
 export const ProjectHomeRoute = () => {
 	const { workspaceId, projectId } = useParams<{
 		workspaceId: string;
 		projectId: string;
 	}>();
-	const navigate = useI18nNavigate();
 	const { workspace } = useWorkspace();
-	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 	const [renameOpened, renameHandlers] = useDisclosure(false);
 	const queryClient = useQueryClient();
 	const updateProject = useUpdateProjectByIdMutation();
@@ -103,42 +78,60 @@ export const ProjectHomeRoute = () => {
 		},
 	});
 	const reportQuery = useLatestProjectReport(projectId ?? "");
-	const recentConversationsQuery = useInfiniteConversationsByProjectId(
-		projectId ?? "",
-		false,
-		false,
-		{ sort: "-created_at" },
-		undefined,
-		{ initialLimit: 2 },
-	);
 
 	const project = projectQuery.data;
 	const report = reportQuery.data;
 	const reportTitle = report?.title?.trim();
-	const allRecentConversations =
-		recentConversationsQuery.data?.pages.flatMap(
-			(page) => page.conversations,
-		) ?? [];
-	// The live monitor above already shows recently-active conversations; drop
-	// those from the recent-cards so nothing appears twice in "Live & recent".
-	const { conversations: monitorConversations } = useConversationMonitor(
-		projectId ?? "",
-		!!projectId && ENABLE_MONITOR,
-	);
-	const monitorIds = new Set(monitorConversations.map((c) => c.id));
-	const recentConversations = allRecentConversations.filter(
-		(conversation) => !monitorIds.has(conversation.id),
-	);
 
 	const base = `/w/${workspaceId}/projects/${projectId}`;
+	// The portal editor sits in the settings summary, so it isn't repeated here.
+	const jumps = [
+		canChat && {
+			icon: <ChatCircleDotsIcon size={20} />,
+			label: <Trans>Start a chat</Trans>,
+			to: "chats/new",
+		},
+		canEditProject && {
+			icon: <UploadSimpleIcon size={20} />,
+			label: <Trans>Upload audio</Trans>,
+			to: "upload",
+		},
+		{
+			icon: <BookOpenIcon size={20} />,
+			label: <Trans>Host guide</Trans>,
+			to: "host-guide",
+		},
+		{
+			icon: <FileTextIcon size={20} />,
+			label: <Trans>Report</Trans>,
+			to: "report",
+		},
+		canEditProject && {
+			icon: <TextAaIcon size={20} />,
+			label: <Trans>Set key terms</Trans>,
+			testId: "project-home-set-key-terms",
+			to: `portal-editor#${KEY_TERMS_HASH}`,
+		},
+		canEditProject && {
+			icon: <TargetIcon size={20} />,
+			label: <Trans>Set project context</Trans>,
+			testId: "project-home-set-project-context",
+			to: `overview#${PROJECT_CONTEXT_HASH}`,
+		},
+	].filter(Boolean) as {
+		to: string;
+		icon: ReactNode;
+		label: ReactNode;
+		testId?: string;
+	}[];
 
 	return (
 		<PageContainer width="xl">
 			<Stack gap="xl">
-				<Stack gap={4}>
+				<Stack gap="xs">
 					{project?.name ? (
 						<Group gap="xs" align="center" wrap="nowrap">
-							<Title order={2} fw={500} lineClamp={1}>
+							<Title order={2} lineClamp={1}>
 								{project.name}
 							</Title>
 							{canEditProject && (
@@ -146,12 +139,11 @@ export const ProjectHomeRoute = () => {
 									<ActionIcon
 										variant="subtle"
 										color="gray"
-										size="md"
 										aria-label={t`Rename project`}
 										onClick={renameHandlers.open}
 										{...testId("project-home-rename-button")}
 									>
-										<PencilSimpleIcon size={18} />
+										<PencilSimpleIcon size={20} />
 									</ActionIcon>
 								</Tooltip>
 							)}
@@ -167,227 +159,78 @@ export const ProjectHomeRoute = () => {
 					</Text>
 				</Stack>
 
-				<PortalSettingsOverview project={project} base={base} />
-
-				<Stack gap="sm">
-					<Text size="xs" c="dimmed" tt="uppercase">
-						<Trans>Jump to</Trans>
-					</Text>
-					<Group gap="sm" wrap="wrap">
-						{canChat && (
-							<Button
-								size="sm"
-								leftSection={<ChatCircleDotsIcon size={16} />}
-								onClick={() => navigate(`${base}/chats/new`)}
-							>
-								<Trans>Start a chat</Trans>
-							</Button>
-						)}
-						{canEditProject && (
-							<Button
-								size="sm"
-								leftSection={<UploadSimpleIcon size={16} />}
-								variant="outline"
-								onClick={() => navigate(`${base}/upload`)}
-							>
-								<Trans>Upload audio</Trans>
-							</Button>
-						)}
-						<Button
-							size="sm"
-							leftSection={<PaintBrushIcon size={16} />}
-							variant="outline"
-							onClick={() => navigate(`${base}/portal-editor`)}
-						>
-							<Trans>Portal editor</Trans>
-						</Button>
-						<ProjectHostGuideLink projectId={projectId} variant="outline" />
-						<Button
-							size="sm"
-							leftSection={<FileTextIcon size={16} />}
-							variant="outline"
-							onClick={() => navigate(`${base}/report`)}
-						>
-							<Trans>Report</Trans>
-						</Button>
-						{canEditProject && (
-							<>
-								<Button
-									size="sm"
-									leftSection={<TextAaIcon size={16} />}
-									variant="outline"
-									onClick={() =>
-										navigate(`${base}/portal-editor#${KEY_TERMS_HASH}`)
-									}
-									{...testId("project-home-set-key-terms")}
-								>
-									<Trans>Set key terms</Trans>
-								</Button>
-								<Button
-									size="sm"
-									leftSection={<TargetIcon size={16} />}
-									variant="outline"
-									onClick={() =>
-										navigate(`${base}/overview#${PROJECT_CONTEXT_HASH}`)
-									}
-									{...testId("project-home-set-project-context")}
-								>
-									<Trans>Set project context</Trans>
-								</Button>
-							</>
-						)}
-					</Group>
-				</Stack>
-
-				{(monitorConversations.length > 0 ||
-					recentConversationsQuery.isLoading ||
-					recentConversations.length > 0) && (
-					<Stack gap="sm">
-						<Group justify="space-between" align="center" gap="sm">
-							<Text size="xs" c="dimmed" tt="uppercase">
-								<Trans>Live & recent</Trans>
-							</Text>
-							<Button
-								variant="subtle"
-								size="xs"
-								onClick={() => navigate(`${base}/conversations`)}
-							>
-								<Trans>Open all</Trans>
-							</Button>
-						</Group>
-
-						{projectId && ENABLE_MONITOR && (
-							<LiveMonitorSection projectId={projectId} hideHeader />
-						)}
-
-						{recentConversationsQuery.isLoading ? (
-							<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-								<Skeleton height={128} radius="sm" />
-								<Skeleton height={128} radius="sm" />
-							</SimpleGrid>
-						) : (
-							<SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-								{recentConversations.slice(0, 2).map((conversation) => {
-									const tags =
-										(conversation.tags as
-											| ConversationProjectTag[]
-											| undefined) ?? [];
-									const isLocked = !!conversation.locked;
-									const startedAt = getConversationStartTime(conversation);
-
-									const card = (
-										<Card
-											withBorder
-											p="md"
-											radius="sm"
-											className={`h-full transition-colors ${isLocked ? "cursor-pointer" : ""} hover:!border-primary-400`}
-											onClick={
-												isLocked ? () => upgradeHandlers.open() : undefined
-											}
-										>
-											<Stack gap="xs">
-												<Stack gap={2} style={{ minWidth: 0 }}>
-													<Text size="sm" fw={500} truncate>
-														{conversationTitle(conversation)}
-													</Text>
-													<Group gap="xs" align="center" wrap="nowrap">
-														<Text size="xs" c="dimmed">
-															{startedAt
-																? new Date(startedAt).toLocaleDateString()
-																: ""}
-														</Text>
-														{conversation.live && (
-															<Badge size="xs" color="red" variant="light">
-																<Trans>Ongoing</Trans>
-															</Badge>
-														)}
-													</Group>
-												</Stack>
-
-												{isLocked ? (
-													<LockedTranscriptOverlay compact variant="summary" />
-												) : (
-													<Text size="sm" c="dimmed" style={lineClampStyle}>
-														{conversation.summary?.trim() || (
-															<Trans>No summary yet</Trans>
-														)}
-													</Text>
-												)}
-
-												{tags.length > 0 && (
-													<Group gap={6} wrap="wrap">
-														{tags.slice(0, 4).map((tag) => {
-															const label = tagText(tag);
-															if (!label) return null;
-															return (
-																<Badge
-																	key={tag.id}
-																	size="xs"
-																	variant="light"
-																	color="gray"
-																	radius="sm"
-																>
-																	{label}
-																</Badge>
-															);
-														})}
-													</Group>
-												)}
-											</Stack>
-										</Card>
-									);
-
-									if (isLocked) {
-										return <div key={conversation.id}>{card}</div>;
-									}
-
-									return (
-										<I18nLink
-											key={conversation.id}
-											to={`${base}/conversations/${conversation.id}`}
-											className="no-underline block h-full"
-										>
-											{card}
-										</I18nLink>
-									);
-								})}
-							</SimpleGrid>
-						)}
-					</Stack>
-				)}
-
-				{report && reportTitle && (
-					<Stack gap="sm">
-						<Text size="xs" c="dimmed" tt="uppercase">
-							<Trans>Latest report</Trans>
-						</Text>
-						<I18nLink to={`${base}/report`} className="no-underline block">
-							<Card
-								component="a"
-								withBorder
-								p="md"
-								radius="sm"
-								className="hover:!border-primary-400 transition-colors"
-							>
-								<Stack gap={2}>
-									<Group gap="xs" align="center">
-										<Text size="sm" fw={500}>
-											{reportTitle}
-										</Text>
-										<Badge size="xs" variant="light">
-											{report.status}
-										</Badge>
-									</Group>
-									{report.date_created && (
-										<Text size="xs" c="dimmed">
-											{new Date(report.date_created).toLocaleString()}
-										</Text>
-									)}
+				<Grid gutter="xl">
+					<Grid.Col span={{ base: 12, md: 8 }}>
+						<Stack gap="xl">
+							<Card p="md">
+								<Stack gap="md">
+									<Title order={4}>
+										<Trans>Take part</Trans>
+									</Title>
+									<ProjectQRCode project={project} />
 								</Stack>
 							</Card>
-						</I18nLink>
-					</Stack>
-				)}
+
+							{projectId && workspaceId && (
+								<ConversationsMiniList
+									projectId={projectId}
+									workspaceId={workspaceId}
+									withTitle
+								/>
+							)}
+
+							{report && reportTitle && (
+								<Stack gap="sm">
+									<Title order={5}>
+										<Trans>Latest report</Trans>
+									</Title>
+									<Card component={I18nLink} to={`${base}/report`} p="md">
+										<Stack gap="xs">
+											<Group gap="xs" align="center">
+												<Text size="sm">{reportTitle}</Text>
+												<Badge size="xs" variant="light">
+													{reportStatusLabel(report.status)}
+												</Badge>
+											</Group>
+											{report.date_created && (
+												<Text size="xs" c="dimmed">
+													{new Date(report.date_created).toLocaleString()}
+												</Text>
+											)}
+										</Stack>
+									</Card>
+								</Stack>
+							)}
+						</Stack>
+					</Grid.Col>
+
+					<Grid.Col span={{ base: 12, md: 4 }}>
+						<Stack gap="xl">
+							<PortalSettingsOverview project={project} base={base} />
+
+							<Stack gap="sm">
+								<Title order={5}>
+									<Trans>Jump to</Trans>
+								</Title>
+								<Stack gap="xs">
+									{jumps.map((jump) => (
+										<Button
+											key={jump.to}
+											component={I18nLink}
+											to={`${base}/${jump.to}`}
+											fullWidth
+											justify="flex-start"
+											leftSection={jump.icon}
+											{...(jump.testId ? testId(jump.testId) : {})}
+										>
+											{jump.label}
+										</Button>
+									))}
+								</Stack>
+							</Stack>
+						</Stack>
+					</Grid.Col>
+				</Grid>
 			</Stack>
 			<InputModal
 				opened={renameOpened}
@@ -416,19 +259,6 @@ export const ProjectHomeRoute = () => {
 					);
 				}}
 				data-testid="project-rename-modal"
-			/>
-
-			<UpgradeModal
-				opened={upgradeOpened}
-				onClose={upgradeHandlers.close}
-				currentTier={(workspace?.tier ?? "free") as Tier}
-				requiredTier={SELLABLE_TIER}
-				canRequestUpgrade={
-					workspace?.role === "admin" || workspace?.role === "owner"
-				}
-				workspaceId={workspaceId ?? ""}
-				wallKey="transcription_cap"
-				projectId={projectId}
 			/>
 		</PageContainer>
 	);

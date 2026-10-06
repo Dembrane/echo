@@ -354,7 +354,7 @@ describe("Spotlight fact-check controls", () => {
 			}),
 		);
 		expect(
-			screen.getByRole("button", { name: "Fact check this claim" }),
+			screen.getByRole("button", { name: "Fact-check this claim" }),
 		).toBeTruthy();
 	});
 
@@ -366,8 +366,41 @@ describe("Spotlight fact-check controls", () => {
 			}),
 		);
 		expect(
-			screen.queryByRole("button", { name: "Fact check this claim" }),
+			screen.queryByRole("button", { name: "Fact-check this claim" }),
 		).toBeNull();
+	});
+
+	it("leads with the statement and its chips, with details on demand", () => {
+		const node = withMetadata(argumentNode, { factCheckEligible: false });
+		const onOpenDetails = vi.fn();
+		render(
+			<Providers>
+				<SpotlightPanel
+					node={node}
+					evidence={[]}
+					factCheck={undefined}
+					colorBy="factCheck"
+					onColorByChange={vi.fn()}
+					canFactCheck
+					onFactCheck={vi.fn()}
+					onCancelFactCheck={vi.fn()}
+					onOpenDetails={onOpenDetails}
+					rows={<p>earlier rows</p>}
+				/>
+			</Providers>,
+		);
+		expect(screen.getByTestId("spotlight-statement").textContent).toBe(
+			node.label,
+		);
+		expect(screen.queryByTestId("result-stage")).toBeNull();
+		expect(
+			screen.getByText(
+				"Arguments express stances or preferences and aren't fact-checked.",
+			),
+		).toBeTruthy();
+		fireEvent.click(screen.getByRole("button", { name: "Connections" }));
+		expect(onOpenDetails).toHaveBeenCalledWith("connections");
+		expect(screen.getByText("earlier rows")).toBeTruthy();
 	});
 
 	it("says factual status does not apply to a tension", () => {
@@ -376,7 +409,7 @@ describe("Spotlight fact-check controls", () => {
 			screen.getByText("Factual status does not apply to this object."),
 		).toBeTruthy();
 		expect(
-			screen.queryByRole("button", { name: "Fact check this claim" }),
+			screen.queryByRole("button", { name: "Fact-check this claim" }),
 		).toBeNull();
 	});
 });
@@ -439,11 +472,11 @@ describe("Spotlight conversation chits", () => {
 		expect(onColorByChange).toHaveBeenCalledWith("conversation");
 	});
 
-	it("shows the selected ring while the map is coloured by conversation", () => {
+	it("shows the selected state while the map is coloured by conversation", () => {
 		renderSpotlight(withSlots([0]), { colorBy: "conversation" });
 		const chit = screen.getByTestId("conversation-chit-slot-0");
 		expect(chit.getAttribute("aria-pressed")).toBe("true");
-		expect(chit.className).toContain("ring-2");
+		expect(chit.hasAttribute("data-selected")).toBe(true);
 	});
 
 	it("gives a merge of three conversations a chit each, in slot order", () => {

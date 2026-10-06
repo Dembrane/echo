@@ -4,15 +4,15 @@
    Dark follows the nearest `[data-theme="dark"]`, never the operating system. */
 
 .panel {
-	--parchment: #f6f4f1;
-	--paper: #ffffff;
-	--graphite: #2d2d2c;
-	--blue: #4169e1;
-	--hairline: #e6e3df;
-	--ink-soft: rgba(45, 45, 44, 0.72);
-	--ink-rest: rgba(45, 45, 44, 0.62);
-	--ink-faint: rgba(45, 45, 44, 0.38);
-	--ink-tag: rgba(45, 45, 44, 0.78);
+	--parchment: var(--app-background);
+	--paper: var(--app-surface);
+	--graphite: var(--app-text);
+	--blue: var(--app-action);
+	--hairline: var(--app-quiet);
+	--ink-soft: color-mix(in srgb, var(--app-text) 72%, transparent);
+	--ink-rest: color-mix(in srgb, var(--app-text) 62%, transparent);
+	--ink-faint: color-mix(in srgb, var(--app-text) 38%, transparent);
+	--ink-tag: color-mix(in srgb, var(--app-text) 78%, transparent);
 	--curve: cubic-bezier(0.25, 0.8, 0.3, 1);
 	--line: calc(1.45 * var(--app-font-size-sm, 0.9375rem));
 
@@ -28,11 +28,11 @@
 }
 
 :global([data-theme="dark"]) .panel {
-	--parchment: #1b1b1a;
-	--paper: #262625;
+	--parchment: #000000;
+	--paper: #161615;
 	--graphite: #f6f4f1;
 	--blue: #7c9bff;
-	--hairline: #3a3a38;
+	--hairline: #262625;
 	--ink-soft: rgba(246, 244, 241, 0.74);
 	--ink-rest: rgba(246, 244, 241, 0.64);
 	--ink-faint: rgba(246, 244, 241, 0.4);
@@ -50,8 +50,11 @@
 .tabs {
 	border-bottom: 1px solid var(--hairline);
 	display: flex;
-	flex-wrap: wrap;
+	/* One row that scrolls, never a second line (rule 04), as the app's tabs. */
+	flex-wrap: nowrap;
 	gap: 0 clamp(0.9rem, 3cqi, 2rem);
+	overflow-x: auto;
+	scrollbar-width: none;
 	margin-bottom: -0.25rem;
 }
 
@@ -64,6 +67,7 @@
 	color: var(--graphite);
 	cursor: pointer;
 	display: inline-flex;
+	flex-shrink: 0;
 	font: inherit;
 	gap: 0.35em;
 	margin-bottom: -1px;
@@ -80,13 +84,11 @@
 .tab[aria-selected="true"] {
 	border-bottom-color: var(--blue);
 	color: var(--blue);
-	font-weight: 500;
 }
 
 .tabCount {
 	color: var(--ink-rest);
 	font-variant-numeric: tabular-nums;
-	font-weight: 400;
 }
 
 .tab[aria-selected="true"] .tabCount {
@@ -96,7 +98,6 @@
 /* A tab whose block is off in this presentation says so in the row. */
 .tabOff {
 	color: var(--ink-soft);
-	font-weight: 400;
 }
 
 /* The row under the tabs, where there is more than one language to read the
@@ -246,7 +247,8 @@
 .table thead th {
 	border-bottom: 1px solid var(--hairline);
 	color: var(--graphite);
-	font-weight: 500;
+	/* A header cell is bold by default; here it is the text's weight. */
+	font-weight: inherit;
 	padding-bottom: 0.5rem;
 }
 
@@ -456,7 +458,6 @@
 }
 
 .feedbackHead {
-	font-weight: 500;
 	margin: 0;
 }
 
@@ -491,21 +492,15 @@
 }
 
 .noteField {
-	background: none;
-	border: 1px solid var(--hairline);
-	border-radius: 2px;
-	color: var(--graphite);
 	flex: 1 1 auto;
-	font: inherit;
 	min-width: 0;
-	padding: 0.35rem 0.5rem;
 }
 
 .send {
 	align-items: center;
 	background: none;
 	border: 1px solid var(--hairline);
-	border-radius: 2px;
+	border-radius: 0;
 	color: var(--graphite);
 	cursor: pointer;
 	display: inline-flex;
@@ -533,7 +528,7 @@
 	align-items: center;
 	background: none;
 	border: 1px solid var(--hairline);
-	border-radius: 2px;
+	border-radius: 0;
 	color: var(--graphite);
 	cursor: pointer;
 	display: inline-flex;
@@ -741,7 +736,7 @@ input.filterControl:hover {
    highlight would be the fifth thing on the page asking to be looked at. */
 .cut {
 	font-family: var(--app-content-bold-font-family, inherit);
-	font-weight: 500;
+	font-weight: 600;
 }
 
 .verdict {
@@ -925,8 +920,10 @@ input.filterControl:hover {
 
 .words {
 	background: var(--paper);
-	border: 1px solid var(--hairline);
-	border-radius: 2px;
+	border-color: var(--app-control-rule, #878785);
+	border-radius: 0;
+	border-style: solid;
+	border-width: 0 1px;
 	color: var(--graphite);
 	display: block;
 	field-sizing: content;
@@ -940,8 +937,7 @@ input.filterControl:hover {
 
 .words:focus-visible {
 	border-color: var(--blue);
-	outline: 2px solid var(--blue);
-	outline-offset: -1px;
+	outline: none;
 }
 
 @keyframes fade {

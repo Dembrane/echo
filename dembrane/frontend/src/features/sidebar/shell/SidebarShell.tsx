@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { roles } from "@/colors";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "../hooks/useIsMobile";
 import { useSidebarState } from "../hooks/useSidebarState";
@@ -47,8 +48,8 @@ export const SidebarShell = ({
 						: "relative",
 				)}
 				style={{
-					backgroundColor: "#f6f4f1",
-					borderColor: "rgba(45, 45, 44, 0.08)",
+					backgroundColor: roles.bg,
+					borderColor: "var(--app-rule-color)",
 					width: collapsed ? RAIL_WIDTH : width,
 				}}
 			>
@@ -61,7 +62,7 @@ export const SidebarShell = ({
 						<div
 							className="flex flex-col gap-0.5 border-t p-1.5"
 							style={{
-								borderColor: "rgba(45, 45, 44, 0.06)",
+								borderColor: "var(--app-rule-color)",
 								paddingBottom:
 									"max(0.375rem, env(safe-area-inset-bottom, 0px))",
 							}}

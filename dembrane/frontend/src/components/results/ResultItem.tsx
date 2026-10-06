@@ -245,11 +245,7 @@ export function ResultStage({
 										key={index}
 										className={classes.quote}
 									>
-										<QuotesIcon
-											aria-hidden
-											className={classes.mark}
-											weight="fill"
-										/>
+										<QuotesIcon aria-hidden className={classes.mark} />
 										<span className={classes.quoteText}>{quote}</span>
 									</blockquote>
 								))}

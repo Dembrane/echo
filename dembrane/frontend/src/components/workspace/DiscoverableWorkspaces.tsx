@@ -8,16 +8,18 @@ import {
 	Paper,
 	Stack,
 	Text,
+	Title,
 	UnstyledButton,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
-import { IconChevronDown, IconLock } from "@tabler/icons-react";
+import { CaretDownIcon, LockIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
+import { ruleBetween } from "@/components/workspace/ruleBetween";
 import { API_BASE_URL } from "@/config";
 import { ApiRequestError } from "@/lib/errors/read";
 
@@ -233,28 +235,24 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 
 	return (
 		<>
-			<Stack gap={8}>
+			<Stack gap="sm">
 				<UnstyledButton
 					onClick={() => setOpen((v) => !v)}
 					aria-expanded={open}
 					style={{
 						alignItems: "center",
 						display: "inline-flex",
-						gap: 6,
-						padding: "2px 0",
+						gap: "var(--mantine-spacing-xs)",
 					}}
 				>
-					<IconChevronDown
-						size={14}
+					<CaretDownIcon
+						size={16}
 						style={{
-							color: "var(--mantine-color-gray-6)",
 							transform: open ? "rotate(0deg)" : "rotate(-90deg)",
 							transition: "transform 0.15s ease",
 						}}
 					/>
-					<Text size="xs" fw={500} c="dimmed" tt="uppercase" lts={0.5}>
-						{headerLabel}
-					</Text>
+					<Title order={5}>{headerLabel}</Title>
 					<Text size="xs" c="dimmed">
 						<Plural
 							value={joinable.length}
@@ -264,7 +262,7 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 					</Text>
 				</UnstyledButton>
 				<Collapse in={open}>
-					<Stack gap={6}>
+					<Stack gap="sm">
 						{joinRows.length > 0 && (
 							<>
 								<Text size="xs" c="dimmed">
@@ -280,25 +278,25 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 									onChange={toggleAll}
 									label={<Trans>Select all</Trans>}
 								/>
-								{joinRows.map((ws) => (
-									<Paper
-										key={ws.id}
-										p="sm"
-										radius="sm"
-										withBorder
-										style={{ background: "transparent" }}
-									>
-										<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
+								<Paper withBorder>
+									{joinRows.map((ws, i) => (
+										<Group
+											key={ws.id}
+											gap="xs"
+											wrap="nowrap"
+											p="sm"
+											style={{
+												minWidth: 0,
+												...ruleBetween(i, joinRows.length),
+											}}
+										>
 											<Checkbox
 												size="xs"
 												checked={selected.has(ws.id)}
 												onChange={() => toggle(ws.id)}
 												aria-label={ws.name}
 											/>
-											<IconLock
-												size={14}
-												style={{ color: "var(--mantine-color-gray-6)" }}
-											/>
+											<LockIcon size={16} color="var(--mantine-color-dimmed)" />
 											<Text size="sm" lineClamp={1}>
 												{ws.name}
 											</Text>
@@ -319,19 +317,13 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 												/>
 											</Text>
 										</Group>
-									</Paper>
-								))}
+									))}
+								</Paper>
 								{selectedIds.length > 0 && (
-									<Group justify="space-between" mt={4}>
-										<Text size="xs" c="dimmed">
-											<Plural
-												value={selectedIds.length}
-												one="# selected"
-												other="# selected"
-											/>
-										</Text>
+									<Group justify="flex-start" gap="sm">
 										<Button
 											size="compact-sm"
+											variant="filled"
 											onClick={() => {
 												posthog?.capture("workspace_join_started", {
 													count: selectedIds.length,
@@ -342,58 +334,66 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 										>
 											<Trans>Join as admin</Trans> ({selectedIds.length})
 										</Button>
+										<Text size="xs" c="dimmed">
+											<Plural
+												value={selectedIds.length}
+												one="# selected"
+												other="# selected"
+											/>
+										</Text>
 									</Group>
 								)}
 							</>
 						)}
-						{otherRows.map((ws) => (
-							<Paper
-								key={ws.id}
-								p="sm"
-								radius="sm"
-								withBorder
-								style={{ background: "transparent" }}
-							>
-								<Group justify="space-between" wrap="nowrap">
-									<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
-										{ws.visibility === "private" && (
-											<IconLock
-												size={14}
-												style={{ color: "var(--mantine-color-gray-6)" }}
-											/>
+						{otherRows.length > 0 && (
+							<Paper withBorder>
+								{otherRows.map((ws, i) => (
+									<Group
+										key={ws.id}
+										justify="space-between"
+										wrap="nowrap"
+										p="sm"
+										style={ruleBetween(i, otherRows.length)}
+									>
+										<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
+											{ws.visibility === "private" && (
+												<LockIcon
+													size={16}
+													color="var(--mantine-color-dimmed)"
+												/>
+											)}
+											<Text size="sm" lineClamp={1}>
+												{ws.name}
+											</Text>
+											<Text size="xs" c="dimmed">
+												<Plural
+													value={ws.member_count}
+													one="# member"
+													other="# members"
+												/>
+											</Text>
+										</Group>
+										{ws.action === "request-access" && (
+											<Button
+												size="compact-xs"
+												loading={
+													requestMutation.isPending &&
+													requestMutation.variables === ws.id
+												}
+												onClick={() => requestMutation.mutate(ws.id)}
+											>
+												<Trans>Request access</Trans>
+											</Button>
 										)}
-										<Text size="sm" lineClamp={1}>
-											{ws.name}
-										</Text>
-										<Text size="xs" c="dimmed">
-											<Plural
-												value={ws.member_count}
-												one="# member"
-												other="# members"
-											/>
-										</Text>
+										{ws.action === "pending" && (
+											<Text size="xs" c="dimmed" fs="italic">
+												<Trans>Request sent</Trans>
+											</Text>
+										)}
 									</Group>
-									{ws.action === "request-access" && (
-										<Button
-											size="compact-xs"
-											variant="outline"
-											loading={
-												requestMutation.isPending &&
-												requestMutation.variables === ws.id
-											}
-											onClick={() => requestMutation.mutate(ws.id)}
-										>
-											<Trans>Request access</Trans>
-										</Button>
-									)}
-									{ws.action === "pending" && (
-										<Text size="xs" c="dimmed" fs="italic">
-											<Trans>Request sent</Trans>
-										</Text>
-									)}
-								</Group>
+								))}
 							</Paper>
-						))}
+						)}
 					</Stack>
 				</Collapse>
 			</Stack>

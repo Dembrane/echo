@@ -127,9 +127,9 @@ function SortHead({
 				{label}
 				{on &&
 					(sort.ascending ? (
-						<CaretUpIcon aria-hidden className={classes.caret} size={12} />
+						<CaretUpIcon aria-hidden className={classes.caret} size={16} />
 					) : (
-						<CaretDownIcon aria-hidden className={classes.caret} size={12} />
+						<CaretDownIcon aria-hidden className={classes.caret} size={16} />
 					))}
 			</button>
 		</th>

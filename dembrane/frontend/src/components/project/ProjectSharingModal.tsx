@@ -13,7 +13,7 @@ import {
 	Text,
 } from "@mantine/core";
 import { usePostHog } from "@posthog/react";
-import { IconAlertTriangle, IconTrash, IconX } from "@tabler/icons-react";
+import { TrashIcon, WarningIcon, XIcon } from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
@@ -279,7 +279,7 @@ export function ProjectSharingModal({
 	};
 
 	const title = (
-		<Text size="lg" fw={500}>
+		<Text size="lg">
 			<Trans>Who can see this project?</Trans>
 		</Text>
 	);
@@ -300,22 +300,23 @@ export function ProjectSharingModal({
 								</Trans>
 							)}
 						</Text>
-						<Text size="xs" c="dimmed" mt={4}>
+						<Text size="xs" c="dimmed" mt="xs">
 							<Trans>
 								Make it private to share with specific people only. Private
 								projects require the innovator plan or above.
 							</Trans>
 						</Text>
 					</Alert>
-					<Group justify="flex-end">
-						<Button variant="subtle" onClick={onClose}>
-							<Trans>Cancel</Trans>
-						</Button>
+					<Group gap="sm">
 						<Button
+							variant="filled"
 							loading={setVisibility.isPending}
 							onClick={handleMakePrivate}
 						>
 							<Trans>Make private</Trans>
+						</Button>
+						<Button variant="subtle" color="gray" onClick={onClose}>
+							<Trans>Cancel</Trans>
 						</Button>
 					</Group>
 				</Stack>
@@ -375,14 +376,14 @@ export function ProjectSharingModal({
 							<ActionIcon
 								variant="subtle"
 								color="gray"
-								size="sm"
+								aria-label={t`Remove access`}
 								onClick={() => {
 									revoke
 										.mutateAsync(share.user_id)
 										.catch((err: Error) => void notifyError(err));
 								}}
 							>
-								<IconTrash size={14} />
+								<TrashIcon size={20} />
 							</ActionIcon>
 						</Group>
 					))}
@@ -408,12 +409,11 @@ export function ProjectSharingModal({
 							<ActionIcon
 								variant="subtle"
 								color="gray"
-								size="sm"
 								aria-label={t`Revoke invite`}
 								loading={revokeInvite.isPending}
 								onClick={() => void handleRevokeInvite(inv.id)}
 							>
-								<IconX size={14} />
+								<XIcon size={20} />
 							</ActionIcon>
 						</Group>
 					))}
@@ -434,7 +434,7 @@ export function ProjectSharingModal({
 						color="yellow"
 						variant="light"
 						p="xs"
-						icon={<IconAlertTriangle size={16} />}
+						icon={<WarningIcon size={16} />}
 						data-testid="project-share-invite-prompt"
 					>
 						<Text size="sm" style={{ overflowWrap: "anywhere" }}>
@@ -474,54 +474,54 @@ export function ProjectSharingModal({
 					/>
 				)}
 
-				<Group justify="space-between" mt="md">
+				<Group gap="sm" mt="md">
+					{inviteStep ? (
+						<Button
+							variant="filled"
+							size="sm"
+							loading={inviteAndShare.isPending}
+							disabled={!canInvite}
+							onClick={handleSendInvites}
+							data-testid="project-share-invite-confirm"
+						>
+							{pendingInvites.length > 1 ? (
+								<Trans>Send {pendingInvites.length} invites</Trans>
+							) : (
+								<Trans>Send invite</Trans>
+							)}
+						</Button>
+					) : (
+						<Button
+							variant="filled"
+							size="sm"
+							loading={sharing}
+							disabled={validChips.length === 0 || hasInvalidChips}
+							onClick={handleShare}
+							data-testid="project-share-confirm"
+						>
+							{validChips.length > 1 ? (
+								<Trans>Share with {validChips.length} people</Trans>
+							) : (
+								<Trans>Share</Trans>
+							)}
+						</Button>
+					)}
 					<Button
-						variant="outline"
 						size="sm"
 						onClick={handleMakeOpen}
 						loading={setVisibility.isPending}
 					>
 						<Trans>Share with whole workspace</Trans>
 					</Button>
-					<Group gap="xs">
-						<Button
-							variant="subtle"
-							size="sm"
-							onClick={handleClose}
-							data-testid="project-share-cancel"
-						>
-							<Trans>Cancel</Trans>
-						</Button>
-						{inviteStep ? (
-							<Button
-								size="sm"
-								loading={inviteAndShare.isPending}
-								disabled={!canInvite}
-								onClick={handleSendInvites}
-								data-testid="project-share-invite-confirm"
-							>
-								{pendingInvites.length > 1 ? (
-									<Trans>Send {pendingInvites.length} invites</Trans>
-								) : (
-									<Trans>Send invite</Trans>
-								)}
-							</Button>
-						) : (
-							<Button
-								size="sm"
-								loading={sharing}
-								disabled={validChips.length === 0 || hasInvalidChips}
-								onClick={handleShare}
-								data-testid="project-share-confirm"
-							>
-								{validChips.length > 1 ? (
-									<Trans>Share with {validChips.length} people</Trans>
-								) : (
-									<Trans>Share</Trans>
-								)}
-							</Button>
-						)}
-					</Group>
+					<Button
+						variant="subtle"
+						color="gray"
+						size="sm"
+						onClick={handleClose}
+						data-testid="project-share-cancel"
+					>
+						<Trans>Cancel</Trans>
+					</Button>
 				</Group>
 			</Stack>
 		</Modal>

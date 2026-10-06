@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Button, Group, Paper, Stack, Text } from "@mantine/core";
+import { Button, Group, Paper, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
 	keepPreviousData,
@@ -154,7 +154,7 @@ export function SupportAccessSection({
 			toast.success(
 				vars.decision === "approve"
 					? t`Access granted for 24 hours.`
-					: t`Request denied.`,
+					: t`Request declined.`,
 			);
 			invalidateAll();
 		},
@@ -190,11 +190,16 @@ export function SupportAccessSection({
 			{pending.length > 0 && (
 				<Paper withBorder radius="sm" p="sm">
 					<Stack gap="xs">
-						<Text size="sm" fw={500}>
+						<Title order={5}>
 							<Trans>Pending access requests</Trans>
-						</Text>
+						</Title>
 						{pending.map((req) => (
-							<Group key={req.id} justify="space-between" wrap="nowrap">
+							<Group
+								key={req.id}
+								className="app-stack-narrow"
+								justify="space-between"
+								wrap="nowrap"
+							>
 								<Stack gap={0}>
 									<Text size="sm">
 										<Trans>{req.requested_by_name} from dembrane</Trans>
@@ -205,8 +210,16 @@ export function SupportAccessSection({
 								<Group gap="sm" wrap="nowrap">
 									<Button
 										size="xs"
-										variant="outline"
-										color="red"
+										disabled={resolveMutation.isPending}
+										onClick={() => {
+											setConfirmTarget(req);
+											openConfirm();
+										}}
+									>
+										<Trans>Approve</Trans>
+									</Button>
+									<Button
+										size="xs"
 										disabled={resolveMutation.isPending}
 										onClick={() =>
 											resolveMutation.mutate({
@@ -215,17 +228,7 @@ export function SupportAccessSection({
 											})
 										}
 									>
-										<Trans>Deny</Trans>
-									</Button>
-									<Button
-										size="xs"
-										disabled={resolveMutation.isPending}
-										onClick={() => {
-											setConfirmTarget(req);
-											openConfirm();
-										}}
-									>
-										<Trans>Approve</Trans>
+										<Trans>Decline</Trans>
 									</Button>
 								</Group>
 							</Group>
@@ -236,9 +239,9 @@ export function SupportAccessSection({
 
 			{events.length > 0 && (
 				<Stack gap="xs">
-					<Text size="sm" fw={500}>
+					<Title order={5}>
 						<Trans>Access history</Trans>
-					</Text>
+					</Title>
 					{events.map((e) => (
 						<Group key={e.id} justify="space-between" wrap="nowrap">
 							<Text size="xs">

@@ -8,11 +8,17 @@ export type MapUrlState = {
 	/** A result scope, such as one deduplication result. */
 	scope: string | null;
 	colorBy: ColorBy | null;
+	/** Conversations whose arguments the map leaves out, by id. */
+	hidden: string[];
+	/** Tags the map is narrowed to (any of them), by id; none is everything. */
+	tags: string[];
 };
 
 export const MAP_URL_PARAMS = {
 	colorBy: "colorBy",
+	hidden: "hidden",
 	scope: "scope",
+	tags: "tags",
 } as const;
 
 export function parseMapSearchParams(params: URLSearchParams): MapUrlState {
@@ -23,7 +29,11 @@ export function parseMapSearchParams(params: URLSearchParams): MapUrlState {
 				? "none"
 				: colorBy
 			: null,
+		hidden: (params.get(MAP_URL_PARAMS.hidden) ?? "")
+			.split(",")
+			.filter(Boolean),
 		scope: params.get(MAP_URL_PARAMS.scope) || null,
+		tags: (params.get(MAP_URL_PARAMS.tags) ?? "").split(",").filter(Boolean),
 	};
 }
 
@@ -41,11 +51,20 @@ export function applyMapUrlState(
 		}
 	};
 	if ("scope" in patch) set(MAP_URL_PARAMS.scope, patch.scope ?? null);
+	if ("hidden" in patch) {
+		set(
+			MAP_URL_PARAMS.hidden,
+			patch.hidden?.length ? patch.hidden.join(",") : null,
+		);
+	}
 	if ("colorBy" in patch) {
 		set(
 			MAP_URL_PARAMS.colorBy,
 			patch.colorBy === "type" ? "none" : (patch.colorBy ?? null),
 		);
+	}
+	if ("tags" in patch) {
+		set(MAP_URL_PARAMS.tags, patch.tags?.length ? patch.tags.join(",") : null);
 	}
 	// Strip legacy controls when this page next writes its URL. They must not
 	// restore the retired list or mixed-object surfaces on a shared link.

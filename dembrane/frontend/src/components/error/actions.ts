@@ -25,7 +25,7 @@ const LABELS = {
 		message: "Contact support",
 	}),
 	retry: msg({ id: "error.action.retry", message: "Try again" }),
-	signIn: msg({ id: "error.action.sign_in", message: "Sign in again" }),
+	signIn: msg({ id: "error.action.sign_in", message: "Log in again" }),
 	upgrade: msg({ id: "error.action.upgrade", message: "See plans" }),
 };
 

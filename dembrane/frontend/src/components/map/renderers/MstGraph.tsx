@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { GearIcon } from "@phosphor-icons/react";
+import { GearSixIcon } from "@phosphor-icons/react";
 import {
 	memo,
 	useCallback,
@@ -17,6 +17,7 @@ import {
 	type MstRepulsionForce,
 	mstLinkDistance,
 	mstViewportForces,
+	treeForceParams,
 } from "../graph/forces";
 import { calculateInitialPositions } from "../graph/layout";
 import {
@@ -121,6 +122,13 @@ export interface MstGraphProps {
 	onNodeHover?: (node: MapGraphNode | null) => void;
 	timerActive?: boolean;
 	timerProgress?: number;
+	/** The host's cluster density dial: above 1 spreads, below 1 clumps. */
+	density?: number;
+	/**
+	 * The host's force-settings switch (Advanced). Given, it shows the force
+	 * panel and the map draws no gear of its own.
+	 */
+	showForceSettings?: boolean;
 	className?: string;
 	// Optional style overrides
 	/** Base node radius; each node's size scale multiplies it. */
@@ -223,6 +231,8 @@ export const MstGraph = ({
 	onNodeHover,
 	timerActive = false,
 	timerProgress = 0,
+	density = 1,
+	showForceSettings,
 	className = "",
 	nodeRadius = 6,
 	edgeColor = DEFAULT_EDGE_COLOR,
@@ -290,8 +300,6 @@ export const MstGraph = ({
 	onNodeClickRef.current = onNodeClick;
 	const onNodeHoverRef = useRef(onNodeHover);
 	onNodeHoverRef.current = onNodeHover;
-	const highlightModeRef = useRef(highlightMode);
-	highlightModeRef.current = highlightMode;
 
 	const [cursorPosition, setCursorPosition] = useState<{
 		x: number;
@@ -351,22 +359,28 @@ export const MstGraph = ({
 		MST_FORCE_DEFAULTS.mstRepulsionCoeff,
 	);
 
+	// The dial scales the forces in play; the panel's sliders keep their own values.
 	const params = useMemo<MstForceParams>(
-		() => ({
-			chargeStrength,
-			link: {
-				constant: linkDistanceConstant,
-				linear: linkDistanceLinear,
-				quadratic: linkDistanceQuadratic,
-			},
-			mstRepulsionCoeff,
-		}),
+		() =>
+			treeForceParams(
+				{
+					chargeStrength,
+					link: {
+						constant: linkDistanceConstant,
+						linear: linkDistanceLinear,
+						quadratic: linkDistanceQuadratic,
+					},
+					mstRepulsionCoeff,
+				},
+				density,
+			),
 		[
 			chargeStrength,
 			linkDistanceConstant,
 			linkDistanceLinear,
 			linkDistanceQuadratic,
 			mstRepulsionCoeff,
+			density,
 		],
 	);
 	const paramsRef = useRef(params);
@@ -455,56 +469,81 @@ export const MstGraph = ({
 	);
 	useReportEdgeCounts(edgeSelection.counts, onEdgeCounts);
 
-	// Radius mode: highlight nodes near the cursor
+	// Nodes near the cursor: radius mode lights them all, downstream mode
+	// treats the nearest as hovered, so a branch lights without aiming at a dot.
 	useEffect(() => {
 		if (!svgRef.current) return;
 
 		const svg = svgRef.current;
 		const HIGHLIGHT_RADIUS = 50;
 
+		// Every node within the radius of a cursor at (x, y) on the SVG, by its
+		// distance: 0 at the cursor, 1 at the edge of the radius.
+		const nodesNear = (x: number, y: number): Map<string, number> => {
+			const distances = new Map<string, number>();
+			const simulation = simulationRef.current;
+			if (!simulation) return distances;
+			const transform = d3.zoomTransform(svg);
+
+			for (const node of simulation.nodes()) {
+				if (node.x !== undefined && node.y !== undefined) {
+					// Node position in screen coordinates
+					const screenX = node.x * transform.k + transform.x;
+					const screenY = node.y * transform.k + transform.y;
+					// A larger node reaches the cursor sooner by its extra radius
+					const extraRadius =
+						Math.max(0, radiusOfRef.current(node.id) - nodeRadiusRef.current) *
+						transform.k;
+					const distance = Math.max(
+						0,
+						Math.hypot(screenX - x, screenY - y) - extraRadius,
+					);
+
+					if (distance <= HIGHLIGHT_RADIUS) {
+						distances.set(node.id, distance / HIGHLIGHT_RADIUS);
+					}
+				}
+			}
+			return distances;
+		};
+
+		const cursorOf = (event: MouseEvent) => {
+			const rect = svg.getBoundingClientRect();
+			return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+		};
+
+		if (highlightMode === "downstream") {
+			const handleMouseMove = (event: MouseEvent) => {
+				const { x, y } = cursorOf(event);
+				let nearest: string | null = null;
+				let nearestDistance = Number.POSITIVE_INFINITY;
+				for (const [id, distance] of nodesNear(x, y)) {
+					if (distance < nearestDistance) {
+						nearest = id;
+						nearestDistance = distance;
+					}
+				}
+				setHoveredNodeId(nearest);
+			};
+			const handleMouseLeave = () => setHoveredNodeId(null);
+
+			svg.addEventListener("mousemove", handleMouseMove);
+			svg.addEventListener("mouseleave", handleMouseLeave);
+			return () => {
+				svg.removeEventListener("mousemove", handleMouseMove);
+				svg.removeEventListener("mouseleave", handleMouseLeave);
+			};
+		}
+
 		if (highlightMode === "radius") {
 			// Immediate visual feedback, debounced timer/calculations
 			const handleMouseMove = (event: MouseEvent) => {
-				const rect = svg.getBoundingClientRect();
-				const x = event.clientX - rect.left;
-				const y = event.clientY - rect.top;
+				const { x, y } = cursorOf(event);
 
 				setCursorPosition({ x, y });
 
-				const simulation = simulationRef.current;
-				if (!simulation) {
-					setLocalHighlightedNodeIds(new Set());
-					setLocalHighlightedNodesDistance(new Map());
-					return;
-				}
-
-				const highlighted = new Set<string>();
-				const distances = new Map<string, number>();
-				const transform = d3.zoomTransform(svg);
-
-				for (const node of simulation.nodes()) {
-					if (node.x !== undefined && node.y !== undefined) {
-						// Node position in screen coordinates
-						const screenX = node.x * transform.k + transform.x;
-						const screenY = node.y * transform.k + transform.y;
-						// A larger node reaches the cursor sooner by its extra radius
-						const extraRadius =
-							Math.max(
-								0,
-								radiusOfRef.current(node.id) - nodeRadiusRef.current,
-							) * transform.k;
-						const distance = Math.max(
-							0,
-							Math.hypot(screenX - x, screenY - y) - extraRadius,
-						);
-
-						if (distance <= HIGHLIGHT_RADIUS) {
-							highlighted.add(node.id);
-							// 0 = at cursor, 1 = at edge of radius
-							distances.set(node.id, distance / HIGHLIGHT_RADIUS);
-						}
-					}
-				}
+				const distances = nodesNear(x, y);
+				const highlighted = new Set(distances.keys());
 
 				setLocalHighlightedNodeIds(highlighted);
 				setLocalHighlightedNodesDistance(distances);
@@ -1013,15 +1052,9 @@ export const MstGraph = ({
 						.on("mouseenter", (_event: MouseEvent, d) => {
 							const graphNode = nodeByIdRef.current.get(d.id);
 							if (graphNode) onNodeHoverRef.current?.(graphNode);
-							if (highlightModeRef.current === "downstream") {
-								setHoveredNodeId(d.id);
-							}
 						})
 						.on("mouseleave", () => {
 							onNodeHoverRef.current?.(null);
-							if (highlightModeRef.current === "downstream") {
-								setHoveredNodeId(null);
-							}
 						});
 					return circles;
 				},
@@ -1044,8 +1077,11 @@ export const MstGraph = ({
 			: (id: string) => styleOf(id).fill;
 		circleSelection
 			.attr("fill", (d) => fillOf(d.id))
-			.attr("stroke", (d) => outlineFor(d.id).stroke)
+			// A style, not an attribute: the hairline is a CSS colour. It and
+			// the hover outline keep their width at any zoom.
+			.style("stroke", (d) => outlineFor(d.id).stroke)
 			.attr("stroke-width", (d) => outlineFor(d.id).strokeWidth)
+			.attr("vector-effect", "non-scaling-stroke")
 			.attr("r", (d) => radiusOf(d.id) * scaleFor(d.id))
 			.attr("opacity", (d) => (styleOf(d.id).pulse ? 0.9 : 1))
 			.select("title")
@@ -1174,17 +1210,19 @@ export const MstGraph = ({
 				aria-label={t`Argument map`}
 			/>
 
-			<MapChromeButton
-				label={t`Force Graph Settings`}
-				onClick={() => setShowSettings(!showSettings)}
-				className="right-4"
-			>
-				<GearIcon size={24} />
-			</MapChromeButton>
+			{showForceSettings === undefined && (
+				<MapChromeButton
+					label={t`Force graph settings`}
+					onClick={() => setShowSettings(!showSettings)}
+					className="right-4"
+				>
+					<GearSixIcon size={20} />
+				</MapChromeButton>
+			)}
 
-			{showSettings && (
+			{(showForceSettings ?? showSettings) && (
 				<MapSettingsPanel
-					title={<Trans>Force Parameters</Trans>}
+					title={<Trans>Force parameters</Trans>}
 					onReset={resetToDefaults}
 				>
 					<RangeSetting
@@ -1366,14 +1404,16 @@ export const MstMap = memo(function MstMap({
 		pendingOwn: null,
 	});
 
+	// `auto` marks the map's own picks (the first node, the walk), which the
+	// History leaves out.
 	const selectNode = useCallback(
-		(nodeId: string) => {
+		(nodeId: string, auto = false) => {
 			const node = nodeById.get(nodeId);
 			if (!node) return;
 
 			const expiresAt = Date.now() + walkIntervalMs;
 			walkRef.current.pendingOwn = { expiresAt, id: nodeId };
-			setSharedSelectedNodeId(nodeId);
+			setSharedSelectedNodeId(nodeId, { auto });
 			onActiveNodeChangeRef.current?.(node, expiresAt, walkIntervalMs);
 		},
 		[nodeById, walkIntervalMs, setSharedSelectedNodeId],
@@ -1418,7 +1458,7 @@ export const MstMap = memo(function MstMap({
 			return;
 		}
 
-		selectNode(nodes[Math.floor(Math.random() * nodes.length)].id);
+		selectNode(nodes[Math.floor(Math.random() * nodes.length)].id, true);
 	}, [
 		nodes,
 		nodeById,
@@ -1469,7 +1509,7 @@ export const MstMap = memo(function MstMap({
 
 		const timeoutId = setTimeout(
 			() => {
-				selectNode(pickRandomNeighbor(sharedSelectedNodeId));
+				selectNode(pickRandomNeighbor(sharedSelectedNodeId), true);
 			},
 			Math.max(0, walk.expiresAt - now),
 		);

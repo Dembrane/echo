@@ -1,10 +1,10 @@
 import { t } from "@lingui/core/macro";
-import { IconBulb, IconCalculator, IconNotes } from "@tabler/icons-react";
+import { CalculatorIcon, LightbulbIcon, NoteIcon } from "@phosphor-icons/react";
 
 export interface Template {
 	id: string;
 	title: string;
-	icon?: typeof IconNotes;
+	icon?: typeof NoteIcon;
 	content: string;
 }
 
@@ -21,7 +21,7 @@ Structure for clarity and impact
 Balance depth with accessibility
 
 Note: If the similarities/differences are too superficial, let me know we need more complex material to analyze.`,
-		icon: IconNotes,
+		icon: NoteIcon,
 		id: "summarize",
 		title: t`Summarize`,
 	},
@@ -37,7 +37,7 @@ Structure the analysis to build understanding
 Draw insights that challenge conventional wisdom
 
 Note: If the similarities/differences are too superficial, let me know we need more complex material to analyze.`,
-		icon: IconCalculator,
+		icon: CalculatorIcon,
 		id: "compare-contrast",
 		title: t`Compare & Contrast`,
 	},
@@ -53,7 +53,7 @@ Organize for clarity and future reference
 Balance tactical details with strategic vision
 
 Note: If the discussion lacks substantial decision points or insights, flag it for deeper exploration next time.`,
-		icon: IconNotes,
+		icon: NoteIcon,
 		id: "meeting-notes",
 		title: t`Meeting Notes`,
 	},
@@ -69,7 +69,7 @@ Structure the plan for both immediate action and long-term vision
 Include decision gates and pivot points
 
 Note: Focus on strategies that create sustainable competitive advantages, not just incremental improvements.`,
-		icon: IconBulb,
+		icon: LightbulbIcon,
 		id: "strategic-planning",
 		title: t`Strategic Planning`,
 	},
@@ -84,13 +84,13 @@ export const quickAccessTemplates = Templates.slice(0, 3);
 export const narrativesTemplates: Template[] = [
 	{
 		content: `Use a double diamond approach (design science approach) on all conversations in this dataset to develop a MECE set of 7+/-2 narratives that explain the variance within this dataset. Pay special attention to outliers. Quantify the evidence for each narrative as the number of "occurrences" where the data supports a particular narrative hypothesis.`,
-		icon: IconNotes,
+		icon: NoteIcon,
 		id: "narratives",
 		title: t`Narratives (English)`,
 	},
 	{
 		content: `Gebruik een double diamond-aanpak (design science approach) op alle gesprekken in deze dataset om een MECE-set van 7+/-2 narratieven te ontwikkelen die de variantie binnen deze dataset verklaren. Let daarbij extra op de uitschieters. Kwantificeer het bewijs voor elk narratief als het aantal "verschijnselen" waarin de data een bepaalde narratieve hypothese ondersteunt.`,
-		icon: IconNotes,
+		icon: NoteIcon,
 		id: "narratives-nl",
 		title: "Narratieven (Nederlands)",
 	},
@@ -108,7 +108,7 @@ Please:
 - Ground each major claim in available evidence and cite conversation IDs when possible.
 - Flag uncertainty and evidence gaps clearly.
 - End with suggested next questions that would deepen the analysis.`,
-		icon: IconNotes,
+		icon: NoteIcon,
 		id: "project-meta-summary",
 		title: t`Project Meta Summary`,
 	},
@@ -123,7 +123,7 @@ Please:
 - Show where viewpoints converge, diverge, and conflict.
 - Explain why those differences matter for decisions or strategy.
 - Call out missing evidence and what additional data would resolve ambiguity.`,
-		icon: IconCalculator,
+		icon: CalculatorIcon,
 		id: "compare-contrast-insights",
 		title: t`Compare & Contrast Insights`,
 	},
@@ -138,7 +138,7 @@ Please:
 - Show how different participants frame or contest the concept.
 - Explain practical implications and where this concept affects decisions.
 - Flag unresolved questions and suggest what to examine next.`,
-		icon: IconNotes,
+		icon: NoteIcon,
 		id: "highlight-specific-concept",
 		title: t`Highlight specific Concept`,
 	},

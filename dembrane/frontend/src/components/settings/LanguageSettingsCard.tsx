@@ -1,18 +1,14 @@
 import { Trans } from "@lingui/react/macro";
-import { Card, Group, Stack, Text, Title } from "@mantine/core";
-import { IconLanguage } from "@tabler/icons-react";
+import { Card, Stack, Text, Title } from "@mantine/core";
 import { LanguagePicker } from "@/components/language/LanguagePicker";
 
 export const LanguageSettingsCard = () => {
 	return (
-		<Card withBorder p="lg" radius="md">
+		<Card withBorder p="lg">
 			<Stack gap="md">
-				<Group gap="sm">
-					<IconLanguage size={24} stroke={1.5} />
-					<Title order={3}>
-						<Trans>Language</Trans>
-					</Title>
-				</Group>
+				<Title order={4}>
+					<Trans>Language</Trans>
+				</Title>
 				<Text size="sm" c="dimmed">
 					<Trans>Choose your preferred language for the interface</Trans>
 				</Text>

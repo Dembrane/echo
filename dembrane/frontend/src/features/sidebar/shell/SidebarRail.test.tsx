@@ -125,6 +125,12 @@ const location = () => screen.getByTestId("location").textContent;
 beforeAll(() => {
 	i18n.load("en", {});
 	i18n.activate("en");
+	// The user menu stays mounted, and its theme control measures itself.
+	globalThis.ResizeObserver = class {
+		observe() {}
+		unobserve() {}
+		disconnect() {}
+	};
 });
 
 beforeEach(() => {
@@ -418,5 +424,68 @@ describe("the shell", () => {
 		expect(aside?.className).toContain("relative");
 		expect(screen.queryByTestId("sidebar-mobile-backdrop")).toBeNull();
 		expect(screen.getByTestId("mode").textContent).toBe("rail");
+	});
+});
+
+describe("a rail item's process status", () => {
+	const idle = { details: [], popout: false, running: 0 };
+
+	it("draws the dial and names the count while the tool works", () => {
+		renderIn(
+			<NavItem
+				to="/map"
+				label="Map"
+				icon={BroadcastIcon}
+				process={{
+					status: {
+						...idle,
+						details: ["6 of 26 conversations"],
+						done: 6,
+						running: 1,
+						total: 26,
+					},
+					tool: "map",
+				}}
+			/>,
+		);
+		expect(
+			screen.getByTestId("process-dial").getAttribute("data-counted"),
+		).toBe("true");
+		expect(screen.getByRole("link").textContent).toBe(
+			"Map: 6 of 26 conversations",
+		);
+	});
+
+	it("leaves a red chit with the error once it fails", () => {
+		renderIn(
+			<NavItem
+				to="/map"
+				label="Map"
+				icon={BroadcastIcon}
+				badge="Beta"
+				process={{
+					status: { ...idle, chit: { failed: true, message: "Boom" } },
+					tool: "map",
+				}}
+			/>,
+		);
+		expect(screen.queryByTestId("process-dial")).toBeNull();
+		expect(screen.getByTestId("rail-process-chit")).toBeTruthy();
+		expect(screen.getByRole("link").textContent).toBe("Map failed: Boom");
+	});
+
+	it("says Ready in place of its badge in the full sidebar", () => {
+		renderIn(
+			<NavItem
+				to="/map"
+				label="Map"
+				icon={BroadcastIcon}
+				badge="Beta"
+				process={{ status: { ...idle, chit: { failed: false } }, tool: "map" }}
+			/>,
+			{ inRail: false },
+		);
+		expect(screen.getByTestId("nav-process-chit").textContent).toBe("Ready");
+		expect(screen.queryByText("Beta")).toBeNull();
 	});
 });

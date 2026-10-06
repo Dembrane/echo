@@ -1,6 +1,6 @@
 import {
+	Box,
 	Group,
-	Paper,
 	type PolymorphicComponentProps,
 	Text,
 	Tooltip,
@@ -14,7 +14,6 @@ import { LoadingSpinner } from "./LoadingSpinner";
 
 type Props = {
 	to?: string;
-	borderColor?: string;
 	rightIcon?: React.ReactNode;
 	rightSection?: React.ReactNode;
 	active?: boolean;
@@ -27,7 +26,6 @@ type Props = {
 export const NavigationButton = ({
 	children,
 	to,
-	borderColor,
 	rightSection,
 	rightIcon,
 	active,
@@ -48,23 +46,13 @@ export const NavigationButton = ({
 	);
 
 	const content = (
-		<Paper
+		<Box
 			className={cn(
-				"w-full border border-gray-200 transition-colors",
-				active && !borderColor ? "border-primary-500" : "",
-				disabled || loading
-					? "opacity-60 hover:border-gray-300"
-					: borderColor === "green"
-						? "hover:border-green-500"
-						: borderColor
-							? "" // custom borderColor handled via style
-							: "hover:border-primary-500",
+				"app-do w-full transition-colors",
+				(disabled || loading) && "opacity-60",
 				props.className,
 			)}
-			style={{
-				backgroundColor: "var(--app-background)",
-				...(borderColor && borderColor !== "green" ? { borderColor } : {}),
-			}}
+			data-selected={active || undefined}
 		>
 			<Group align="center" wrap="nowrap">
 				{to ? (
@@ -77,7 +65,7 @@ export const NavigationButton = ({
 							)}
 						>
 							<Group className="w-full justify-between">
-								<Text size="lg" className="font-semibold max-w-full flex-1">
+								<Text size="lg" className="max-w-full flex-1">
 									{children}
 								</Text>
 								{!!rightContent && rightContent}
@@ -94,9 +82,7 @@ export const NavigationButton = ({
 						)}
 					>
 						<Group className="h-full w-full justify-between">
-							<Text size="lg" className="font-semibold">
-								{children}
-							</Text>
+							<Text size="lg">{children}</Text>
 							{!!rightContent && rightContent}
 						</Group>
 					</UnstyledButton>
@@ -113,7 +99,7 @@ export const NavigationButton = ({
 					</UnstyledButton>
 				)}
 			</Group>
-		</Paper>
+		</Box>
 	);
 
 	return disabled && disabledTooltip ? (

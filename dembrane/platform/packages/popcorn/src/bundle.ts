@@ -259,6 +259,19 @@ export function buildBundle(a: BuildArgs): Json {
   session.date_iso = sessionDay(report.date_created, now);
   if (truthy(dict(settings.data).enabled))
     session.data = dataScreen(project, session.language as string);
+  // The host guide: the code to take part and how, between the data policy and the outcomes.
+  const guide = dict(settings.guide);
+  const guideSteps = orStr(guide.steps)
+    .split("\n")
+    .map((step) => step.trim())
+    .filter(Boolean);
+  const takePart = participantUrl(project, participantBaseUrl);
+  if (!demo.synthetic && truthy(guide.enabled) && guideSteps.length && takePart)
+    session.guide = {
+      title: orStr(guide.title),
+      steps: guideSteps,
+      qr: { url: takePart, svg: qrSvgMarkup(takePart) },
+    };
   if (truthy(settings.show_qr)) {
     // A demo's QR opens dembrane's sales portal, in the screen's language where there is one.
     const portals = dict(demo.portal_urls);
