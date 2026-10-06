@@ -75,11 +75,10 @@ const ConversationStatus = ({
 				<Trans>Transcription error</Trans>
 			</Text>
 		);
-	const isTranscribing =
+	if (
 		!conversation.has_only_text_chunks &&
-		(conversation.is_finished === false ||
-			conversation.is_all_chunks_transcribed === false);
-	if (isTranscribing)
+		isTranscribing(conversation)
+	)
 		return (
 			<Text size="xs" c="dimmed">
 				<Trans>Transcribing</Trans>
@@ -421,4 +420,24 @@ const MiniRow = ({
 			)}
 		</Group>
 	);
+};
+
+const isTranscribing = (conversation: MiniConversation): boolean => {
+	if (conversation.has_only_text_chunks) return false;
+	if (conversation.is_all_chunks_transcribed === true) return false;
+	// When is_all_chunks_transcribed is null, active conversations (chunks pending or recording)
+	// should show Transcribing. Legacy rows or empty idle-finished conversations fall back to Done.
+	if (
+		conversation.is_finished &&
+		conversation.is_all_chunks_transcribed == null
+	) {
+		const isLegacy =
+			Boolean(conversation.summary) ||
+			(!conversation.has_transcript && !conversation.duration) ||
+			(conversation.created_at
+				? Date.now() - new Date(conversation.created_at).getTime() > 86_400_000
+				: false);
+		if (isLegacy) return false;
+	}
+	return true;
 };

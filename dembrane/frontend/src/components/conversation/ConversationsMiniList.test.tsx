@@ -54,8 +54,22 @@ vi.mock("./useConversationList", async (importOriginal) => ({
 				is_all_chunks_transcribed: true,
 				conversation_artifacts: [{ approved_at: "2026-10-01" }],
 			},
+			{
+				id: "c6",
+				title: "Table 6",
+				created_at: new Date().toISOString(),
+				is_finished: true,
+				is_all_chunks_transcribed: null,
+			},
+			{
+				id: "c7",
+				title: "Table 7",
+				created_at: "2024-01-01T00:00:00Z",
+				is_finished: true,
+				is_all_chunks_transcribed: null,
+			},
 		],
-		conversationsCountQuery: { data: 5 },
+		conversationsCountQuery: { data: 7 },
 		conversationsQuery: { isLoading: false, isFetchingNextPage: false },
 		hasActiveFilters: false,
 		search: "",
@@ -138,8 +152,8 @@ describe("ConversationsMiniList", () => {
 	it("renders status correctly for live, transcribing, verified, and finished conversations", () => {
 		renderList();
 		expect(screen.getByText("Live")).toBeTruthy();
-		expect(screen.getByText("Done")).toBeTruthy();
-		expect(screen.getByText("Transcribing")).toBeTruthy();
 		expect(screen.getByText("Verified")).toBeTruthy();
+		expect(screen.getAllByText("Done")).toHaveLength(3);
+		expect(screen.getAllByText("Transcribing")).toHaveLength(2);
 	});
 });
