@@ -73,7 +73,8 @@ export const DEFAULT_MAP_SETTINGS: MapSettings = {
 
 /**
  * What the host's Map page starts from: the cluster map alone, the tree one
- * choice away under Advanced. The room keeps the shared defaults above.
+ * choice away under Advanced. The room starts from the host's saved settings,
+ * so where none are saved it opens on these too.
  */
 export const MAP_PAGE_DEFAULTS: MapSettings = {
 	...DEFAULT_MAP_SETTINGS,

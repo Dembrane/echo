@@ -250,7 +250,7 @@ msgstr "{0, plural, one {# угода} few {# угоди} many {# угод} othe
 
 #. placeholder {0}: nodes.length
 #. placeholder {0}: target.nodes.length
-#: src/components/present/AudienceMapAdapter.tsx:285
+#: src/components/present/AudienceMapAdapter.tsx:320
 #: src/components/map/panels/HistoryPanel.tsx:49
 #: src/components/map/panels/DetailsModal.tsx:149
 #: src/components/map/panels/ClusterSummary.tsx:148
@@ -2321,7 +2321,7 @@ msgstr "Карта аргументів"
 msgid "Argument tree"
 msgstr "Дерево аргументів"
 
-#: src/components/map/MapExperience.tsx:547
+#: src/components/map/MapExperience.tsx:557
 msgid "Argument tree (MST)"
 msgstr "Дерево аргументів (MST)"
 
@@ -3372,7 +3372,7 @@ msgstr "Виберіть розмову"
 msgid "Choose a logo file"
 msgstr "Choose a logo file"
 
-#: src/components/map/MapExperience.tsx:625
+#: src/components/map/MapExperience.tsx:635
 msgid "Choose a map under Advanced"
 msgstr "Виберіть мапу в розділі «Додатково»"
 
@@ -5386,7 +5386,7 @@ msgstr "Кожен новий учасник оплачується за міс�
 msgid "Each popcorn pops once per language: the original first, then these in random order."
 msgstr "Кожен popcorn показується один раз для кожної мови: спочатку оригінал, потім інші у довільному порядку."
 
-#: src/components/map/panels/HistoryPanel.tsx:128
+#: src/components/map/panels/HistoryPanel.tsx:129
 msgid "Earlier in the spotlight"
 msgstr "Раніше в центрі уваги"
 
@@ -8313,7 +8313,7 @@ msgstr "Loading…"
 msgid "Local argument map"
 msgstr "Локальна мапа аргументів"
 
-#: src/components/map/MapExperience.tsx:590
+#: src/components/map/MapExperience.tsx:600
 msgid "Local map"
 msgstr "Локальна мапа"
 
@@ -8561,7 +8561,7 @@ msgstr "Карта опрацьовує стенограми цього проє
 msgid "Map ready"
 msgstr "Карта готова"
 
-#: src/components/present/AudienceMapAdapter.tsx:443
+#: src/components/present/AudienceMapAdapter.tsx:481
 msgid "Map results are not ready yet."
 msgstr "Результати карти ще не готові."
 
@@ -9358,7 +9358,7 @@ msgstr "Логотип не встановлено. Використовуват
 msgid "No map has been generated for this project yet."
 msgstr "Для цього проєкту мапу ще не створено."
 
-#: src/components/present/AudienceMapAdapter.tsx:269
+#: src/components/present/AudienceMapAdapter.tsx:304
 msgid "No map results are ready yet."
 msgstr "Результати для мапи ще не готові."
 
@@ -14909,7 +14909,7 @@ msgstr "Агент діє від вашого імені: він бачить л
 msgid "The agent and the company running it will receive the conversation content you allow."
 msgstr "Агент і компанія, що ним керує, отримають доступ до вмісту розмови, який ви дозволите."
 
-#: src/components/map/panels/HistoryPanel.tsx:122
+#: src/components/map/panels/HistoryPanel.tsx:123
 msgid "The arguments you click are kept here."
 msgstr "Аргументи, на які ви натискаєте, зберігаються тут."
 
@@ -15080,7 +15080,7 @@ msgstr "Не вдалося згенерувати мапу. {0}"
 msgid "The map could not be loaded"
 msgstr "Не вдалося завантажити карту"
 
-#: src/components/present/AudienceMapAdapter.tsx:453
+#: src/components/present/AudienceMapAdapter.tsx:491
 msgid "The map could not be loaded."
 msgstr "Не вдалося завантажити мапу."
 
@@ -16227,7 +16227,7 @@ msgstr "Не вдається увійти? Напишіть на support@dembra
 #: src/components/present/TranslationStatus.tsx:143
 #: src/components/map/MapPage.tsx:145
 #: src/components/map/panels/SpotlightPanel.tsx:414
-#: src/components/map/panels/HistoryPanel.tsx:163
+#: src/components/map/panels/HistoryPanel.tsx:165
 #: src/components/dropzone/UploadConversationDropzone.tsx:862
 #: src/components/common/FetchErrorPanel.tsx:35
 #: src/components/billing/BillingManager.tsx:1217
@@ -17438,7 +17438,7 @@ msgstr "Що розв'язало б це напруження"
 msgid "What would you like to explore?"
 msgstr "What would you like to explore?"
 
-#: src/components/map/panels/HistoryPanel.tsx:117
+#: src/components/map/panels/HistoryPanel.tsx:118
 msgid "What you spotlight is kept here: click an argument, or rest the cursor on a cluster until the circle closes."
 msgstr "Те, що ви виводите в центр уваги, зберігається тут: натисніть на аргумент або затримайте курсор на кластері, доки коло не замкнеться."
 

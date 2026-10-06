@@ -251,7 +251,7 @@ msgstr "{0, plural, one {# accord} other {# accords}}"
 
 #. placeholder {0}: nodes.length
 #. placeholder {0}: target.nodes.length
-#: src/components/present/AudienceMapAdapter.tsx:285
+#: src/components/present/AudienceMapAdapter.tsx:320
 #: src/components/map/panels/HistoryPanel.tsx:49
 #: src/components/map/panels/DetailsModal.tsx:149
 #: src/components/map/panels/ClusterSummary.tsx:148
@@ -2322,7 +2322,7 @@ msgstr "Carte des arguments"
 msgid "Argument tree"
 msgstr "Arbre des arguments"
 
-#: src/components/map/MapExperience.tsx:547
+#: src/components/map/MapExperience.tsx:557
 msgid "Argument tree (MST)"
 msgstr "Arbre des arguments (MST)"
 
@@ -3373,7 +3373,7 @@ msgstr "Choisir une conversation"
 msgid "Choose a logo file"
 msgstr "Choisir un fichier logo"
 
-#: src/components/map/MapExperience.tsx:625
+#: src/components/map/MapExperience.tsx:635
 msgid "Choose a map under Advanced"
 msgstr "Choisissez une carte dans Avancé"
 
@@ -5387,7 +5387,7 @@ msgstr "Chaque nouveau membre est facturé par siège sur votre forfait."
 msgid "Each popcorn pops once per language: the original first, then these in random order."
 msgstr "Chaque popcorn s'affiche une fois par langue : l'original d'abord, puis les autres dans un ordre aléatoire."
 
-#: src/components/map/panels/HistoryPanel.tsx:128
+#: src/components/map/panels/HistoryPanel.tsx:129
 msgid "Earlier in the spotlight"
 msgstr "Déjà mis en lumière"
 
@@ -8314,7 +8314,7 @@ msgstr "Chargement…"
 msgid "Local argument map"
 msgstr "Carte d'arguments locale"
 
-#: src/components/map/MapExperience.tsx:590
+#: src/components/map/MapExperience.tsx:600
 msgid "Local map"
 msgstr "Carte locale"
 
@@ -8562,7 +8562,7 @@ msgstr "La Carte analyse les transcriptions de ce projet, identifie les argument
 msgid "Map ready"
 msgstr "Carte prête"
 
-#: src/components/present/AudienceMapAdapter.tsx:443
+#: src/components/present/AudienceMapAdapter.tsx:481
 msgid "Map results are not ready yet."
 msgstr "Les résultats de la carte ne sont pas encore prêts."
 
@@ -9359,7 +9359,7 @@ msgstr "Aucun logo défini. Le logo dembrane par défaut sera utilisé."
 msgid "No map has been generated for this project yet."
 msgstr "Aucune carte n'a encore été générée pour ce projet."
 
-#: src/components/present/AudienceMapAdapter.tsx:269
+#: src/components/present/AudienceMapAdapter.tsx:304
 msgid "No map results are ready yet."
 msgstr "Aucun résultat de carte n'est encore prêt."
 
@@ -14910,7 +14910,7 @@ msgstr "L'agent agit en votre nom : il ne peut voir que ce à quoi vous avez dé
 msgid "The agent and the company running it will receive the conversation content you allow."
 msgstr "L'agent et l'entreprise qui l'exploite recevront le contenu de la conversation que vous autorisez."
 
-#: src/components/map/panels/HistoryPanel.tsx:122
+#: src/components/map/panels/HistoryPanel.tsx:123
 msgid "The arguments you click are kept here."
 msgstr "Les arguments sur lesquels vous cliquez sont conservés ici."
 
@@ -15081,7 +15081,7 @@ msgstr "Impossible de générer la carte. {0}"
 msgid "The map could not be loaded"
 msgstr "Impossible de charger la carte"
 
-#: src/components/present/AudienceMapAdapter.tsx:453
+#: src/components/present/AudienceMapAdapter.tsx:491
 msgid "The map could not be loaded."
 msgstr "Impossible de charger la carte."
 
@@ -16225,7 +16225,7 @@ msgstr "Des difficultés pour vous connecter ? Contactez support@dembrane.com."
 #: src/components/present/TranslationStatus.tsx:143
 #: src/components/map/MapPage.tsx:145
 #: src/components/map/panels/SpotlightPanel.tsx:414
-#: src/components/map/panels/HistoryPanel.tsx:163
+#: src/components/map/panels/HistoryPanel.tsx:165
 #: src/components/dropzone/UploadConversationDropzone.tsx:862
 #: src/components/common/FetchErrorPanel.tsx:35
 #: src/components/billing/BillingManager.tsx:1217
@@ -17436,7 +17436,7 @@ msgstr "Ce qui résoudrait cette tension"
 msgid "What would you like to explore?"
 msgstr "Qu’est-ce que tu veux explorer ?"
 
-#: src/components/map/panels/HistoryPanel.tsx:117
+#: src/components/map/panels/HistoryPanel.tsx:118
 msgid "What you spotlight is kept here: click an argument, or rest the cursor on a cluster until the circle closes."
 msgstr "Ce que vous mettez en lumière est conservé ici : cliquez sur un argument, ou laissez le curseur sur un groupe jusqu’à ce que le cercle se ferme."
 

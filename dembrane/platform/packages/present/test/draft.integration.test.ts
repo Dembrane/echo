@@ -4,12 +4,12 @@ import type { Access, Policy } from "@dembrane/access";
 import { ForbiddenError } from "@dembrane/core";
 import { createDb, migrate } from "@dembrane/db";
 import { createLogger } from "@dembrane/observability";
-import { type PopcornDeps, popcornDeps } from "@dembrane/popcorn";
+import { type PopcornDeps, popcornDeps, publicRoutes } from "@dembrane/popcorn";
 import { MemoryRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { Hono } from "hono";
 import { freshDatabase } from "../../popcorn/test/fixtures/tick/seed";
 import type { MapStore } from "../src/map";
-import { presentRoutes } from "../src/routes";
+import { presentRoutes, publicAudienceMap } from "../src/routes";
 import { ensureDefault } from "../src/service";
 
 // The host's draft against Postgres: what "Show them" publishes, and what the draft says
@@ -184,5 +184,90 @@ run("the presentation draft after Show them", () => {
     // The change that was waiting can still be shown.
     expect((await publish(id, held.revision)).status).toBe(200);
     expect((await draft(id)).has_changes).toBe(false);
+  });
+
+  test("the public map route carries the project's groups, never who made them", async () => {
+    const id = await presentation(5, { tier: "innovator" });
+    const saved = await save(id, 0, {
+      public: true,
+      presentation: { blocks: ["popcorn", "map"], hidden_items: ["o4"] },
+    });
+    expect(saved.status).toBe(200);
+    expect((await publish(id, saved.body.revision)).status).toBe(200);
+    const report = await d.store.report(id);
+    const token = String(report?.public_token ?? "");
+    expect(token.length).toBeGreaterThan(15);
+
+    const member = (i: number) => ({ revisionId: `r${i}`, objectId: `o${i}`, type: "argument" });
+    const group = (gid: string, status: string, members: number[]) => ({
+      id: gid,
+      project_id: project(5),
+      snapshot_id: "s1",
+      members: members.map(member),
+      status,
+      title: status === "ready" ? "Shared housing costs" : null,
+      error: status === "failed" ? "Interrupted" : null,
+      requested_by: USER,
+      created_at: "2026-10-06 10:00:00+00",
+    });
+    const map = {
+      ceilings: { nodeLimit: null, edgeLimit: null },
+      snapshot: async () => null,
+      currentSnapshot: async () => ({ id: "s1", projectId: project(5), createdAt: null }),
+      legacyResults: async () => [],
+      graph: async () => ({
+        payload: {
+          version: 2,
+          snapshot: { id: "s1", createdAt: null },
+          nodes: [1, 2, 3, 4].map((i) => ({
+            objectId: `o${i}`,
+            revisionId: `r${i}`,
+            type: "argument",
+            label: `Argument ${i}`,
+            embedding: [i, 0],
+            detail: {},
+          })),
+        },
+        factChecks: {},
+      }),
+      legacyGraph: async () => null,
+      requestGeneration: async () => {},
+      groups: async () => [
+        group("g1", "ready", [1, 2, 3]),
+        group("g2", "pending", [1, 2]),
+        group("g3", "failed", [2, 3]),
+        group("g4", "ready", [2, 3, 4]),
+      ],
+    } as unknown as MapStore;
+    const pub = new Hono();
+    pub.onError((err, c) =>
+      c.json(
+        { code: (err as { code?: string }).code },
+        ((err as { status?: number }).status ?? 500) as 403,
+      ),
+    );
+    pub.route(
+      "/",
+      publicRoutes({
+        ...d,
+        hub: async () => ({}) as never,
+        audienceMap: publicAudienceMap({ ...d, map }),
+      }),
+    );
+    const res = await pub.request(`/api/v2/popcorn/public/${token}/map`);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { groups: Record<string, unknown>[] };
+    // g4 is over the argument the presenter hid.
+    expect(body.groups.map((g) => [g.id, g.status, g.title])).toEqual([
+      ["g1", "ready", "Shared housing costs"],
+      ["g2", "pending", null],
+      ["g3", "failed", null],
+    ]);
+    for (const g of body.groups) {
+      expect(g).not.toHaveProperty("requested_by");
+      expect(g).not.toHaveProperty("requestedBy");
+      expect(g.error).toBeNull();
+    }
+    expect(JSON.stringify(body.groups)).not.toContain(USER);
   });
 });

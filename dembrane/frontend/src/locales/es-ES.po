@@ -251,7 +251,7 @@ msgstr "{0, plural, one {# acuerdo} other {# acuerdos}}"
 
 #. placeholder {0}: nodes.length
 #. placeholder {0}: target.nodes.length
-#: src/components/present/AudienceMapAdapter.tsx:285
+#: src/components/present/AudienceMapAdapter.tsx:320
 #: src/components/map/panels/HistoryPanel.tsx:49
 #: src/components/map/panels/DetailsModal.tsx:149
 #: src/components/map/panels/ClusterSummary.tsx:148
@@ -2322,7 +2322,7 @@ msgstr "Mapa de argumentos"
 msgid "Argument tree"
 msgstr "Árbol de argumentos"
 
-#: src/components/map/MapExperience.tsx:547
+#: src/components/map/MapExperience.tsx:557
 msgid "Argument tree (MST)"
 msgstr "Árbol de argumentos (MST)"
 
@@ -3373,7 +3373,7 @@ msgstr "Elige una conversación"
 msgid "Choose a logo file"
 msgstr "Elegir un archivo de logo"
 
-#: src/components/map/MapExperience.tsx:625
+#: src/components/map/MapExperience.tsx:635
 msgid "Choose a map under Advanced"
 msgstr "Elige un mapa en Avanzado"
 
@@ -5387,7 +5387,7 @@ msgstr "Cada nuevo miembro se factura por asiento en tu plan."
 msgid "Each popcorn pops once per language: the original first, then these in random order."
 msgstr "Cada palomita estalla una vez por idioma: primero el original, luego estos en orden aleatorio."
 
-#: src/components/map/panels/HistoryPanel.tsx:128
+#: src/components/map/panels/HistoryPanel.tsx:129
 msgid "Earlier in the spotlight"
 msgstr "Antes en el foco"
 
@@ -8314,7 +8314,7 @@ msgstr "Cargando…"
 msgid "Local argument map"
 msgstr "Mapa local de argumentos"
 
-#: src/components/map/MapExperience.tsx:590
+#: src/components/map/MapExperience.tsx:600
 msgid "Local map"
 msgstr "Mapa local"
 
@@ -8562,7 +8562,7 @@ msgstr "El mapa lee las transcripciones de este proyecto, encuentra los argument
 msgid "Map ready"
 msgstr "Mapa listo"
 
-#: src/components/present/AudienceMapAdapter.tsx:443
+#: src/components/present/AudienceMapAdapter.tsx:481
 msgid "Map results are not ready yet."
 msgstr "Los resultados del mapa aún no están listos."
 
@@ -9359,7 +9359,7 @@ msgstr "No se ha configurado ningún logo. Se usará el predeterminado de dembra
 msgid "No map has been generated for this project yet."
 msgstr "Aún no se ha generado ningún mapa para este proyecto."
 
-#: src/components/present/AudienceMapAdapter.tsx:269
+#: src/components/present/AudienceMapAdapter.tsx:304
 msgid "No map results are ready yet."
 msgstr "Aún no hay resultados del mapa listos."
 
@@ -14910,7 +14910,7 @@ msgstr "El agente actúa en tu nombre: solo puede ver lo que tú ya puedes ver."
 msgid "The agent and the company running it will receive the conversation content you allow."
 msgstr "El agente y la empresa que lo gestiona recibirán el contenido de la conversación que permitas."
 
-#: src/components/map/panels/HistoryPanel.tsx:122
+#: src/components/map/panels/HistoryPanel.tsx:123
 msgid "The arguments you click are kept here."
 msgstr "Los argumentos en los que haces clic se guardan aquí."
 
@@ -15081,7 +15081,7 @@ msgstr "No se pudo generar el mapa. {0}"
 msgid "The map could not be loaded"
 msgstr "No se pudo cargar el mapa"
 
-#: src/components/present/AudienceMapAdapter.tsx:453
+#: src/components/present/AudienceMapAdapter.tsx:491
 msgid "The map could not be loaded."
 msgstr "No se pudo cargar el mapa."
 
@@ -16228,7 +16228,7 @@ msgstr "¿Problemas para iniciar sesión? Contacta con support@dembrane.com."
 #: src/components/present/TranslationStatus.tsx:143
 #: src/components/map/MapPage.tsx:145
 #: src/components/map/panels/SpotlightPanel.tsx:414
-#: src/components/map/panels/HistoryPanel.tsx:163
+#: src/components/map/panels/HistoryPanel.tsx:165
 #: src/components/dropzone/UploadConversationDropzone.tsx:862
 #: src/components/common/FetchErrorPanel.tsx:35
 #: src/components/billing/BillingManager.tsx:1217
@@ -17439,7 +17439,7 @@ msgstr "Qué resolvería esta tensión"
 msgid "What would you like to explore?"
 msgstr "¿Qué te gustaría explorar?"
 
-#: src/components/map/panels/HistoryPanel.tsx:117
+#: src/components/map/panels/HistoryPanel.tsx:118
 msgid "What you spotlight is kept here: click an argument, or rest the cursor on a cluster until the circle closes."
 msgstr "Lo que pones en el foco se guarda aquí: haz clic en un argumento, o deja el cursor sobre un grupo hasta que se cierre el círculo."
 

@@ -19,7 +19,7 @@ import {
 } from "./data/adapter";
 import { relatedObjects } from "./data/relations";
 import { MAP_EDGE_GREY } from "./graph/nodeStyle";
-import type { FactCheckStates } from "./hooks";
+import type { FactCheckStates, MapGroupDoc } from "./hooks";
 import { localGroupBackend, useMapGroups } from "./hooks/useMapGroups";
 import type { EdgeCounts } from "./layout/edgeBudget";
 import { EMPTY_EDGES, useMapGeometry } from "./layout/useMapGeometry";
@@ -168,6 +168,12 @@ export type MapExperienceProps = {
 	tags?: ReadonlyArray<{ name: string; slot: number }>;
 	/** False where the payload withholds provenance: no source line is shown. */
 	provenance?: boolean;
+	/**
+	 * The project's groups as the room reads them with its map. History lists
+	 * them and picking one highlights its members, as on the host's page, but
+	 * resting the cursor makes none and a failed one offers no retry.
+	 */
+	groups?: ReadonlyArray<MapGroupDoc>;
 };
 
 const EMPTY_EVIDENCE: never[] = [];
@@ -195,6 +201,7 @@ export const MapExperience = ({
 	titles = true,
 	provenance = true,
 	tags,
+	groups,
 }: MapExperienceProps) => {
 	const { i18n } = useLingui();
 
@@ -225,12 +232,15 @@ export const MapExperience = ({
 
 	// Dwelled clusters are kept as the project's groups. Whoever may change
 	// the project (the same right a fact-check needs) makes them on a map with
-	// a snapshot to keep them in; everyone signed in sees them.
+	// a snapshot to keep them in; everyone signed in sees them. The room is
+	// handed them with its map and makes none.
+	const canGroup = !groups && (offline || (canFactCheck && !!graph.snapshotId));
 	const title = useMapGroups({
 		backend: offline ? fixtureGroups : undefined,
-		canCommit: offline || (canFactCheck && !!graph.snapshotId),
+		canCommit: canGroup,
+		docs: groups,
 		edges: geometry.status === "ready" ? mstEdges : EMPTY_EDGES,
-		enabled: titles,
+		enabled: titles || !!groups,
 		nodes: placedNodes,
 		resultId: graph.resultId,
 		snapshotId: graph.snapshotId,
@@ -496,8 +506,8 @@ export const MapExperience = ({
 												items={historyRows}
 												nodesById={nodesById}
 												onSelect={selectHistoryItem}
-												onRetry={title.retry}
-												titles={titles}
+												onRetry={canGroup ? title.retry : undefined}
+												canGroup={canGroup && titles}
 											/>
 										}
 									/>

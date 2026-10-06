@@ -14,10 +14,20 @@ import {
 	within,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { COMMIT_FLASH_MS, DWELL_MS } from "@/components/map/hooks/useMapGroups";
+import type { MapInteractionStore } from "@/components/map/state/interactionStore";
+import {
+	MAP_SETTINGS_STORAGE_KEY,
+	MAP_SETTINGS_VERSION,
+} from "@/components/map/state/settings";
 import { AudienceMapAdapter } from "./AudienceMapAdapter";
 
 const geometryDisposed = vi.hoisted(() => vi.fn());
 const walkStep = vi.hoisted(() => vi.fn());
+/** The room's interaction store, as the cluster map renderer holds it. */
+const roomStore = vi.hoisted(() => ({
+	current: null as MapInteractionStore | null,
+}));
 
 const node = (index: number, label: string) => ({
 	embedding: [0, index],
@@ -49,7 +59,11 @@ const mapObject = (index: number, statement: string) => ({
 vi.mock("@/components/map/data/adapter", async (importOriginal) => ({
 	...(await importOriginal<typeof import("@/components/map/data/adapter")>()),
 	buildMapGraph: () => ({
-		allNodes: [node(1, "A result"), node(2, "A later result")],
+		allNodes: [
+			node(1, "A result"),
+			node(2, "A later result"),
+			node(3, "A third result"),
+		],
 		budgetBounds: null,
 		conversationNames: new Map([[1, "Ada"]]),
 		counts: { argument: 2 },
@@ -71,9 +85,14 @@ vi.mock("@/components/map/data/adapter", async (importOriginal) => ({
 		objectsById: new Map([
 			["revision-1", mapObject(1, "A result")],
 			["revision-2", mapObject(2, "A later result")],
+			["revision-3", mapObject(3, "A third result")],
 		]),
 		overBudget: false,
-		placedNodes: [node(1, "A result"), node(2, "A later result")],
+		placedNodes: [
+			node(1, "A result"),
+			node(2, "A later result"),
+			node(3, "A third result"),
+		],
 		relatedStubs: new Map(),
 		relations: [],
 		resultId: "snapshot-1",
@@ -146,17 +165,51 @@ vi.mock("@/components/map/renderers/MstGraph", async () => {
 	};
 });
 
-vi.mock("@/components/map/renderers/LocalMapGraph", () => ({
-	LocalMap: ({ darkMode }: { darkMode?: boolean }) => (
-		<div data-dark={darkMode ? "true" : "false"}>Audience local renderer</div>
-	),
-}));
+// Stands in for the cluster map: it says which nodes are highlighted and
+// whether the dwell circle runs, and hands the test the room's store.
+vi.mock("@/components/map/renderers/LocalMapGraph", async () => {
+	const { useMapInteraction, useMapInteractionStore } = await import(
+		"@/components/map/state/interactionStore"
+	);
+	return {
+		LocalMap: ({
+			darkMode,
+			density,
+			showForceSettings,
+			timerActive,
+		}: {
+			darkMode?: boolean;
+			density?: number;
+			showForceSettings?: boolean;
+			timerActive?: boolean;
+		}) => {
+			roomStore.current = useMapInteractionStore();
+			const highlighted = useMapInteraction(
+				(state) => state.highlightedNodeIds,
+			);
+			return (
+				<div
+					data-dark={darkMode ? "true" : "false"}
+					data-density={density}
+					data-forces={showForceSettings ? "true" : "false"}
+					data-highlighted={[...highlighted].sort().join(",")}
+					data-testid="local-map"
+					data-timer={timerActive ? "true" : "false"}
+				>
+					Audience local renderer
+				</div>
+			);
+		},
+	};
+});
 
 i18n.load("en-US", {});
 i18n.activate("en-US");
 
 afterEach(() => {
 	cleanup();
+	roomStore.current = null;
+	globalThis.localStorage?.removeItem(MAP_SETTINGS_STORAGE_KEY);
 	geometryDisposed.mockClear();
 	walkStep.mockClear();
 	vi.useRealTimers();
@@ -243,7 +296,7 @@ describe("AudienceMapAdapter", () => {
 		vi.stubGlobal("fetch", fetchMock);
 
 		const view = render(adapter(true, 1));
-		await screen.findByText("Audience tree renderer");
+		await screen.findByText("Audience local renderer");
 		expect(fetchMock).toHaveBeenCalledTimes(1);
 
 		view.rerender(adapter(false, 2));
@@ -273,7 +326,7 @@ describe("AudienceMapAdapter", () => {
 		await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
 
 		expect(screen.getAllByText("A result").length).toBeGreaterThan(0);
-		expect(screen.getByText("Audience tree renderer")).toBeTruthy();
+		expect(screen.getByText("Audience local renderer")).toBeTruthy();
 		expect(screen.queryByText("The map could not be loaded.")).toBeNull();
 	});
 
@@ -283,8 +336,9 @@ describe("AudienceMapAdapter", () => {
 			vi.fn(async () => new Response(JSON.stringify({}), { status: 200 })),
 		);
 		const view = render(adapter(true));
-		await screen.findByText("Audience tree renderer");
-		expect(screen.getByText("Audience local renderer")).toBeTruthy();
+		// Clusters first, as on the host's Map page.
+		await screen.findByText("Audience local renderer");
+		expect(screen.queryByText("Audience tree renderer")).toBeNull();
 		fireEvent.click(screen.getByRole("button", { name: "Settings" }));
 		fireEvent.click(await screen.findByRole("radio", { name: "Tree" }));
 		expect(screen.queryByText("Audience local renderer")).toBeNull();
@@ -329,11 +383,14 @@ describe("AudienceMapAdapter", () => {
 	});
 
 	/**
-	 * Opens the display controls and hands back the Showcase toggle, so a test
-	 * can switch the walk on once its timers are the fake ones.
+	 * Opens the display controls, puts the tree up (the walk lives on it, as on
+	 * the host's page) and hands back the Showcase toggle, so a test can switch
+	 * the walk on once its timers are the fake ones.
 	 */
 	const showcaseToggle = async () => {
 		fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+		fireEvent.click(await screen.findByRole("radio", { name: "Tree" }));
+		await screen.findByText("Audience tree renderer");
 		return await screen.findByRole("checkbox", { name: "Showcase" });
 	};
 
@@ -359,7 +416,7 @@ describe("AudienceMapAdapter", () => {
 		vi.stubGlobal("fetch", fetchMock);
 
 		render(adapter(true));
-		await screen.findByText("Audience tree renderer");
+		await screen.findByText("Audience local renderer");
 		expect(screen.queryByRole("region", { name: "Showcase" })).toBeNull();
 
 		const toggle = await showcaseToggle();
@@ -385,7 +442,7 @@ describe("AudienceMapAdapter", () => {
 		);
 
 		const view = render(adapter(true));
-		await screen.findByText("Audience tree renderer");
+		await screen.findByText("Audience local renderer");
 		const toggle = await showcaseToggle();
 		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
 		fireEvent.click(toggle);
@@ -417,7 +474,7 @@ describe("AudienceMapAdapter", () => {
 		vi.stubGlobal("fetch", fetchMock);
 
 		render(adapter(true));
-		await screen.findByText("Audience tree renderer");
+		await screen.findByText("Audience local renderer");
 		// No distilling for a public room: only clicked arguments are kept.
 		expect(
 			await screen.findByText("The arguments you click are kept here."),
@@ -425,23 +482,143 @@ describe("AudienceMapAdapter", () => {
 		fireEvent.click(screen.getByRole("button", { name: "Settings" }));
 		await screen.findByRole("checkbox", { name: "Showcase" });
 		expect(screen.queryByRole("checkbox", { name: "History" })).toBeNull();
-		// The room's switch and the server's budget are not this menu's.
+		// The room's switch, the server's budget and the host's forces are not
+		// this menu's.
 		expect(screen.queryByRole("checkbox", { name: "Dark mode" })).toBeNull();
 		expect(screen.queryByText("Map budget")).toBeNull();
+		expect(
+			screen.queryByRole("checkbox", { name: "Force settings" }),
+		).toBeNull();
 		expect(fetchMock.mock.calls.map(([url]) => url)).toEqual(["/audience/map"]);
 	});
 
-	it("gives a signed-in viewer the host page's distilling in the Spotlight", async () => {
-		vi.stubGlobal(
-			"fetch",
-			vi.fn(async () => new Response(JSON.stringify({}), { status: 200 })),
+	it("never offers a signed-in room the dwell that makes a group", async () => {
+		const fetchMock = vi.fn(
+			async (_url: string, _init?: RequestInit) =>
+				new Response(JSON.stringify({}), { status: 200 }),
 		);
+		vi.stubGlobal("fetch", fetchMock);
 
 		render(adapter(true, 0, undefined, true));
-		await screen.findByText("Audience tree renderer");
+		await screen.findByText("Audience local renderer");
 		expect(
-			await screen.findByText(/rest the cursor on a cluster/),
+			await screen.findByText("The arguments you click are kept here."),
 		).toBeTruthy();
+		expect(screen.queryByText(/rest the cursor on a cluster/)).toBeNull();
+		// The groups come with the map: the room asks the host's list for none.
+		expect(fetchMock.mock.calls.map(([url]) => url)).toEqual(["/audience/map"]);
+	});
+
+	const groupsPayload = {
+		groups: [
+			{
+				createdAt: "2026-10-06T10:02:00+00:00",
+				error: null,
+				id: "group-titled",
+				members: [1, 2, 3].map((index) => ({
+					objectId: `object-${index}`,
+					revisionId: `revision-${index}`,
+					type: "argument",
+				})),
+				snapshotId: "snapshot-1",
+				status: "ready",
+				title: "Bins and buses",
+			},
+			{
+				createdAt: "2026-10-06T10:01:00+00:00",
+				error: null,
+				id: "group-pending",
+				members: [1, 2].map((index) => ({
+					objectId: `object-${index}`,
+					revisionId: `revision-${index}`,
+					type: "argument",
+				})),
+				snapshotId: "snapshot-1",
+				status: "pending",
+				title: null,
+			},
+			{
+				createdAt: "2026-10-06T10:00:00+00:00",
+				error: null,
+				id: "group-failed",
+				members: [2, 3].map((index) => ({
+					objectId: `object-${index}`,
+					revisionId: `revision-${index}`,
+					type: "argument",
+				})),
+				snapshotId: "snapshot-1",
+				status: "failed",
+				title: null,
+			},
+		],
+	};
+
+	it("shows the project's groups in History, read-only", async () => {
+		const fetchMock = vi.fn(
+			async (_url: string, _init?: RequestInit) =>
+				new Response(JSON.stringify(groupsPayload), { status: 200 }),
+		);
+		vi.stubGlobal("fetch", fetchMock);
+
+		render(adapter(true));
+		expect(await screen.findByText("Bins and buses")).toBeTruthy();
+		expect(screen.getByText("Distilling core idea…")).toBeTruthy();
+		expect(screen.getByText("The title could not be generated.")).toBeTruthy();
+		expect(screen.getAllByTestId("history-cluster")).toHaveLength(3);
+		// A failed group offers no retry on the room.
+		expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
+		expect(fetchMock.mock.calls.map(([url]) => url)).toEqual(["/audience/map"]);
+	});
+
+	it("highlights a group's members when it is picked, and shows it in Spotlight", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(
+				async () =>
+					new Response(JSON.stringify(groupsPayload), { status: 200 }),
+			),
+		);
+
+		render(adapter(true));
+		const row = (await screen.findByText("Bins and buses")).closest("button");
+		expect(row).toBeTruthy();
+		expect(screen.getByTestId("local-map").dataset.highlighted).toBe("");
+		fireEvent.click(row as HTMLElement);
+		expect(screen.getByTestId("local-map").dataset.highlighted).toBe(
+			"revision-1,revision-2,revision-3",
+		);
+		// Spotlight leads with the group; History keeps the other two.
+		expect(screen.getAllByText("Bins and buses").length).toBeGreaterThan(0);
+		expect(screen.getAllByTestId("history-cluster")).toHaveLength(2);
+	});
+
+	it("commits nothing when the cursor rests on a cluster", async () => {
+		const fetchMock = vi.fn(
+			async (_url: string, _init?: RequestInit) =>
+				new Response(JSON.stringify({}), { status: 200 }),
+		);
+		vi.stubGlobal("fetch", fetchMock);
+
+		render(adapter(true, 0, undefined, true));
+		await screen.findByText("Audience local renderer");
+		const store = roomStore.current;
+		expect(store).toBeTruthy();
+
+		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+		act(() => {
+			store?.setHighlightedNodeIds(
+				new Set(["revision-1", "revision-2", "revision-3"]),
+				{ isPreview: false, source: "local-hover" },
+			);
+		});
+		expect(screen.getByTestId("local-map").dataset.timer).toBe("false");
+		act(() => {
+			vi.advanceTimersByTime(DWELL_MS + COMMIT_FLASH_MS);
+		});
+		expect(screen.getByTestId("local-map").dataset.timer).toBe("false");
+		expect(screen.queryByText("Distilling core idea…")).toBeNull();
+		expect(fetchMock).toHaveBeenCalledTimes(1);
+		expect(fetchMock.mock.calls[0]?.[1]?.method).toBeUndefined();
 	});
 
 	it("shows the evidence behind a finding, attributed and linking nowhere", async () => {
@@ -451,7 +628,7 @@ describe("AudienceMapAdapter", () => {
 		);
 
 		render(adapter(true));
-		await screen.findByText("Audience tree renderer");
+		await screen.findByText("Audience local renderer");
 		expect(
 			(await screen.findAllByText("The bins are always full.")).length,
 		).toBeGreaterThan(0);
@@ -468,14 +645,42 @@ describe("AudienceMapAdapter", () => {
 		);
 
 		render(adapter(true));
-		const tree = await screen.findByText("Audience tree renderer");
+		const clusters = await screen.findByText("Audience local renderer");
 		const root = screen.getByTestId("audience-map-root");
 		expect(root.getAttribute("data-theme")).toBeNull();
 		expect(root.style.getPropertyValue("--map-surface")).toBe("");
-		expect(tree.getAttribute("data-dark")).toBe("false");
+		expect(clusters.getAttribute("data-dark")).toBe("false");
+		// Clusters first, as the host's Map page opens.
+		expect(screen.queryByText("Audience tree renderer")).toBeNull();
+	});
+
+	it("draws the clusters at the density the host saved, with Spotlight and without the force panels", async () => {
+		globalThis.localStorage.setItem(
+			MAP_SETTINGS_STORAGE_KEY,
+			JSON.stringify({
+				clusterDensity: 4,
+				showForceSettings: true,
+				showSpotlight: false,
+				version: MAP_SETTINGS_VERSION,
+			}),
+		);
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async () => new Response(JSON.stringify({}), { status: 200 })),
+		);
+
+		render(adapter(true));
+		await screen.findByText("Audience local renderer");
+		const clusters = screen.getByTestId("local-map");
+		expect(clusters.dataset.density).toBe("4");
+		expect(clusters.dataset.forces).toBe("false");
+		// History lives in Spotlight, so the room opens with it.
 		expect(
-			screen.getByText("Audience local renderer").getAttribute("data-dark"),
-		).toBe("false");
+			await screen.findByText("The arguments you click are kept here."),
+		).toBeTruthy();
+		// No toolbar: the room reads the density and never sets it.
+		expect(screen.queryByLabelText("Map controls")).toBeNull();
+		expect(screen.queryByRole("slider")).toBeNull();
 	});
 
 	it("relights the Map's own variables when the room is dark", async () => {
@@ -485,7 +690,7 @@ describe("AudienceMapAdapter", () => {
 		);
 
 		render(adapter(true, 0, "dark"));
-		const tree = await screen.findByText("Audience tree renderer");
+		const clusters = await screen.findByText("Audience local renderer");
 		const root = screen.getByTestId("audience-map-root");
 		expect(root.getAttribute("data-theme")).toBe("dark");
 		expect(root.style.getPropertyValue("--map-text")).toBe("#F6F4F1");
@@ -493,10 +698,7 @@ describe("AudienceMapAdapter", () => {
 		// Mantine's panels in this app follow the two app variables, so the
 		// panels, the detail card and the waiting line come with them.
 		expect(root.style.getPropertyValue("--app-background")).toBe("#161615");
-		expect(tree.getAttribute("data-dark")).toBe("true");
-		expect(
-			screen.getByText("Audience local renderer").getAttribute("data-dark"),
-		).toBe("true");
+		expect(clusters.getAttribute("data-dark")).toBe("true");
 	});
 
 	it("keeps the waiting state inside the themed root", async () => {
