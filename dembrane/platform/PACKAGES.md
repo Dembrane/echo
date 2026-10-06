@@ -21,7 +21,7 @@ Most namespaces use core, db, observability, http, access, legacy-shape, queue, 
 - **conversations** (in 5, out 16): Conversations, the participant portal, the audio pipeline, live monitoring and search. Used by agentic, verify, agent-access, api and 1 more. Uses projects, webhooks, prompts, transcription, audio and 3 more.
 - **projects** (in 4, out 7): Projects, tags, goals, methodologies, prompt templates and the report request. Used by conversations, agentic, reports, api. Uses realtime.
 - **notifications** (in 4, out 5): In-app notifications and announcements, and the Notifier other namespaces emit through. Used by account, agentic, reports, api. Uses only the common ones.
-- **popcorn** (in 4, out 12): Popcorn: one live deck per project, refreshed on a tick, with demos and translations. Used by accounts, present, api, worker. Uses analysis, analytics, realtime, llm.
+- **popcorn** (in 4, out 13): Popcorn: one live deck per project, refreshed on a tick, with demos and translations. Used by accounts, present, api, worker. Uses analysis, analytics, realtime, config, llm.
 - **account** (in 3, out 14): The signed-in user's own account: profile, onboarding, settings, invites, transactional email. Used by accounts, api, worker. Uses notifications, billing, auth, i18n, mail and 2 more.
 - **accounts** (in 3, out 15): Customer accounts as sales runs them: offers, contracts, signing, demos, reminders. Used by api, migrate, worker. Uses account, popcorn, webhooks, i18n, mail and 3 more.
 - **map** (in 3, out 11): Argument maps: saved maps, the graph, generation, titles and fact-checks. Used by present, api, worker. Uses analysis, realtime, llm.
@@ -51,8 +51,8 @@ Most namespaces use core, db, observability, http, access, legacy-shape, queue, 
 - **queue** (in 19, out 2): Durable background jobs and workflows on Postgres (DBOS): define, enqueue, run. Used by webhooks, billing, analysis, conversations and 15 more. Uses observability, db.
 - **ratelimit** (in 15, out 2): Rate limits counted in Postgres or memory. Used by analysis, conversations, popcorn, account and 11 more. Uses db, core.
 - **llm** (in 14, out 0): Language model and embedding calls on Vertex, with fallbacks and fakes for tests. Used by i18n, transcription, analysis, conversations and 10 more. Uses nothing.
+- **config** (in 11, out 0): Typed configuration per environment, and the `bun run config` checks. Used by i18n, popcorn, account, accounts and 7 more. Uses nothing.
 - **realtime** (in 10, out 2): Live updates: Postgres LISTEN fanned out to server-sent event streams. Used by analysis, conversations, projects, popcorn and 6 more. Uses observability, core.
-- **config** (in 10, out 0): Typed configuration per environment, and the `bun run config` checks. Used by i18n, account, accounts, agentic and 6 more. Uses nothing.
 - **storage** (in 9, out 0): Object storage (S3 or local disk) and presigned uploads. Used by conversations, account, accounts, feedback and 5 more. Uses nothing.
 - **mail** (in 8, out 0): Sending email (SendGrid, or memory in tests). Used by billing, account, accounts, tenancy and 4 more. Uses nothing.
 - **i18n** (in 7, out 4): Server-rendered texts in the recipient's language, and the catalog translator. Used by billing, account, accounts, tenancy and 3 more. Uses config, llm, db, core.
