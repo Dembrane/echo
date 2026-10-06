@@ -18,6 +18,7 @@ import {
   directusTime,
   isRecord,
   type Json,
+  list,
   orStr,
   pyEqual,
   pyIso,
@@ -186,7 +187,41 @@ export async function loadSettingsFor(store: PopcornStore, report: Row): Promise
   return normalizeSettings(config?.popcorn_settings, orStr(report.user_instructions, "Popcorn"));
 }
 
-function loopPayload(loop: Row | null, run: Row | null, nextAt: string | null): Json | null {
+/** A finish read that has not written its run within this long has stopped. */
+const FINISH_READING_MS = 15 * 60_000;
+
+/**
+ * What the finish reads say about the loop: the conversations whose finish caused the last
+ * read (null when a host's press or the live chain caused it), and whether the read under
+ * way is one, so the dashboard shows it working without announcing it.
+ */
+export async function finishReadState(
+  store: PopcornStore,
+  loopId: string,
+  run: Row | null,
+  now: Date,
+): Promise<{ after: Json[] | null; reading: boolean }> {
+  const started = await store.startedFinishReads(loopId, 5);
+  const last = run ? started.find((f) => f.run_id && String(f.run_id) === String(run.id)) : null;
+  let after: Json[] | null = null;
+  if (last) {
+    const ids = list(dict(last.payload).conversation_ids).map(String);
+    const rows = await store.conversationNames(ids);
+    const names = new Map(rows.map((r) => [String(r.id), orStr(r.participant_name) || null]));
+    after = ids.filter((id) => names.has(id)).map((id) => ({ id, name: names.get(id) ?? null }));
+  }
+  const newest = started[0];
+  const claimed = newest ? new Date(String(newest.claimed_at)).getTime() : Number.NaN;
+  const reading = Boolean(newest && !newest.run_id && now.getTime() - claimed < FINISH_READING_MS);
+  return { after, reading };
+}
+
+function loopPayload(
+  loop: Row | null,
+  run: Row | null,
+  nextAt: string | null,
+  finish: { after: Json[] | null; reading: boolean } = { after: null, reading: false },
+): Json | null {
   if (!loop) return null;
   const booking = liveBooking(loop);
   return {
@@ -203,6 +238,9 @@ function loopPayload(loop: Row | null, run: Row | null, nextAt: string | null): 
     last_run_started_at: iso(run?.started_at),
     last_run_status: run?.status ?? null,
     last_run_detail: run?.detail ?? null,
+    // The conversations whose finish caused the last read, and whether one is reading now.
+    last_read_after: finish.after,
+    reading_after_finish: finish.reading,
   };
 }
 
@@ -230,6 +268,7 @@ export async function popcornPayload(
   const state = normalizeState(loop?.popcorn_state);
   if (capture) Object.assign(capture, { loop, run, config, state });
   const nextAt = loop ? ((await store.pendingTickTimes(String(loop.id)))[0] ?? null) : null;
+  const finish = loop ? await finishReadState(store, String(loop.id), run, new Date()) : undefined;
   return {
     id: reportId,
     kind: REPORT_KIND,
@@ -241,7 +280,7 @@ export async function popcornPayload(
     // A synthetic demo's disclosure and notice are the demo's; the dashboard leaves them out.
     synthetic: isSyntheticSession(state),
     public_token: report.public_token ?? null,
-    loop: loopPayload(loop, run, nextAt),
+    loop: loopPayload(loop, run, nextAt, finish),
     counts: stateCounts(state),
   };
 }

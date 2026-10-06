@@ -4,8 +4,8 @@ import { createDb, migrate } from "@dembrane/db";
 import { FakeCompleter } from "@dembrane/llm";
 import postgres from "postgres";
 import { FINISH_WINDOW_MS, finishReads, queueFinishRead } from "../src/finish";
-import { goLive, type PopcornDeps, stopLive } from "../src/service";
-import { client, type Row } from "../src/storage";
+import { finishReadState, goLive, type PopcornDeps, stopLive } from "../src/service";
+import { client, popcornStore, type Row } from "../src/storage";
 import { runPopcornTick } from "../src/tick/run";
 import { dispatchDueTicks, type PopcornWorkerDeps, type TickArgs, tickDeps } from "../src/worker";
 import { NO_ANALYSIS } from "./fixtures/tick/analysis";
@@ -45,8 +45,10 @@ run("popcorn read when a conversation finishes", () => {
     analysis: () => NO_ANALYSIS,
     now: () => now,
   });
-  const finish = (projectId: string, now: Date) =>
-    client(database.db).begin((tx) => queueFinishRead(tx, projectId, now)) as Promise<boolean>;
+  const finish = (projectId: string, now: Date, conversationId: string | null = null) =>
+    client(database.db).begin((tx) =>
+      queueFinishRead(tx, projectId, now, conversationId),
+    ) as Promise<boolean>;
   const pending = () =>
     raw`select payload, scheduled_at from scheduled_task
       where task_type = 'popcorn_tick' and status = 'scheduled' order by scheduled_at`;
@@ -93,6 +95,46 @@ run("popcorn read when a conversation finishes", () => {
 
     // Once that read has started, the next finish books a read of its own.
     expect(await finish(ids.project, new Date(now.getTime() + FINISH_WINDOW_MS + 2))).toBe(true);
+  });
+
+  // Jorim's pick 2:A (October 6th 2026): the read works quietly and says which conversations.
+  test("the waiting read names every conversation, and the dashboard learns which read it is", async () => {
+    await clear();
+    const now = new Date();
+    const convs = await raw`select id, participant_name from conversation
+      where project_id = ${ids.project} order by created_at limit 2`;
+    const [one, two] = convs.map((c) => String(c.id));
+    expect(await finish(ids.project, now, one as string)).toBe(true);
+    expect(await finish(ids.project, now, two as string)).toBe(false);
+    expect(await finish(ids.project, now, one as string)).toBe(false);
+    const [row] = await pending();
+    expect((row?.payload as Record<string, unknown> | undefined)?.conversation_ids).toEqual([
+      one,
+      two,
+    ]);
+
+    const store = popcornStore(raw);
+    const later = new Date(now.getTime() + FINISH_WINDOW_MS + 1);
+    let requestId = "";
+    await dispatchDueTicks(workerDeps(later), async (args) => {
+      requestId = args.requestId as string;
+    });
+    // Started, no run yet: the dashboard shows it working, the last read is not it.
+    expect(await finishReadState(store, ids.loop, null, later)).toEqual({
+      after: null,
+      reading: true,
+    });
+    // Its run written: no longer reading, and the last read names both conversations.
+    await raw`insert into agent_loop_run (id, loop_id, status, started_at, finished_at)
+      values (${requestId}, ${ids.loop}, 'ok', now(), now())`;
+    const run = (await raw`select * from agent_loop_run where id = ${requestId}`)[0] as Row;
+    expect(await finishReadState(store, ids.loop, run, later)).toEqual({
+      after: convs.map((c) => ({ id: String(c.id), name: c.participant_name ?? null })),
+      reading: false,
+    });
+    // A later read a host asked for is not one.
+    const other = { ...run, id: newId() };
+    expect((await finishReadState(store, ids.loop, other, later)).after).toBeNull();
   });
 
   test("a project without popcorn books nothing", async () => {

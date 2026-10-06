@@ -1,7 +1,7 @@
 import { newId } from "@dembrane/core";
 import type { Logger } from "@dembrane/observability";
 import type postgres from "postgres";
-import { pyIso } from "./py";
+import { dict, list, pyIso } from "./py";
 import { isPopcornLoop, type PopcornFlags } from "./service";
 import { FINISH_TICK, popcornStore, type Sql } from "./storage";
 
@@ -22,7 +22,12 @@ export const FINISH_WINDOW_MS = 60_000;
  * the caller's transaction (the claim that marks the transcript complete). Returns whether
  * a read was booked.
  */
-export async function queueFinishRead(tx: Sql, projectId: string, now: Date): Promise<boolean> {
+export async function queueFinishRead(
+  tx: Sql,
+  projectId: string,
+  now: Date,
+  conversationId: string | null = null,
+): Promise<boolean> {
   const store = popcornStore(tx);
   const report = await store.popcornReport(projectId);
   if (!report) return false;
@@ -31,10 +36,27 @@ export async function queueFinishRead(tx: Sql, projectId: string, now: Date): Pr
   const loopId = String(loop.id);
   // Two transcripts completing at once would both see no waiting read.
   await tx`select pg_advisory_xact_lock(hashtextextended(${`popcorn:finish-read:${loopId}`}, 0))`;
-  if (await store.hasPendingFinishRead(loopId)) return false;
+  // The waiting read also names this conversation, so the host sees which ones it read.
+  const waiting = await store.pendingFinishRead(loopId);
+  if (waiting) {
+    const payload = dict(waiting.payload);
+    const named = list(payload.conversation_ids).map(String);
+    if (conversationId && !named.includes(conversationId))
+      await store.updateTaskPayload(
+        String(waiting.id),
+        { ...payload, conversation_ids: [...named, conversationId] },
+        pyIso(now),
+      );
+    return false;
+  }
   await store.scheduleTick({
     id: newId(),
-    payload: { loop_id: loopId, tick_kind: FINISH_TICK, request_id: newId() },
+    payload: {
+      loop_id: loopId,
+      tick_kind: FINISH_TICK,
+      request_id: newId(),
+      conversation_ids: conversationId ? [conversationId] : [],
+    },
     scheduledAt: pyIso(new Date(now.getTime() + FINISH_WINDOW_MS)),
     now: pyIso(now),
   });
@@ -59,7 +81,7 @@ export function finishReads(deps: {
     try {
       // A savepoint, so a failed booking does not abort the claim's transaction.
       await tx.savepoint((sp) =>
-        queueFinishRead(sp, projectId, (deps.now ?? (() => new Date()))()),
+        queueFinishRead(sp, projectId, (deps.now ?? (() => new Date()))(), conversationId),
       );
     } catch (err) {
       deps.logger.warn(

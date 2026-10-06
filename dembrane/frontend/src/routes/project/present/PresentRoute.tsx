@@ -32,6 +32,7 @@ import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { SaveStatus } from "@/components/form/SaveStatus";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { readAfterFinish } from "@/components/popcorn/finishedRead";
 import {
 	liveBooking,
 	usePopcornLiveMutation,
@@ -494,6 +495,7 @@ function Session({
 	const refresh = useRefreshPopcornMutation(projectId, presentation.id);
 	const isLive = presentation.loop?.mode === "live";
 	const booking = liveBooking(presentation.loop);
+	const readAfter = readAfterFinish(presentation.loop);
 	const [eventTick, setEventTick] = useState(0);
 	useServerEvents(
 		`${API_BASE_URL}/v2/bff/popcorn/${encodeURIComponent(presentation.id)}/events`,
@@ -644,8 +646,8 @@ function Session({
 								liveUntil={presentation.loop?.expires_at}
 								booking={booking}
 								isPublic={isPublic}
-								extra={
-									waiting
+								extra={[
+									...(waiting
 										? [
 												changes
 													? plural(changes, {
@@ -654,8 +656,9 @@ function Session({
 														})
 													: t`Changes not shown yet`,
 											]
-										: []
-								}
+										: []),
+									...(readAfter ? [readAfter] : []),
+								]}
 							/>
 							{waiting && (
 								<>

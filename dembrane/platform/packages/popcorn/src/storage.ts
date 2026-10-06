@@ -224,12 +224,37 @@ export function popcornStore(sql: Sql) {
     },
 
     /** A read booked by a finished conversation that has not started yet. */
-    async hasPendingFinishRead(loopId: string): Promise<boolean> {
-      const [r] = await sql`select 1 from scheduled_task
+    async pendingFinishRead(loopId: string): Promise<Row | null> {
+      const [r] = await sql`select id, payload from scheduled_task
         where task_type = ${TASK_POPCORN_TICK} and status = 'scheduled'
           and payload->>'loop_id' = ${loopId} and payload->>'tick_kind' = ${FINISH_TICK}
-        limit 1`;
-      return Boolean(r);
+        order by scheduled_at limit 1`;
+      return r ?? null;
+    },
+
+    async updateTaskPayload(id: string, payload: Json, now: string): Promise<void> {
+      await sql`update scheduled_task set payload = ${j(payload)}, updated_at = ${now}
+        where id = ${id}`;
+    },
+
+    /**
+     * Finish reads the worker has started, newest first, each with the id of the run it
+     * wrote (null while it reads).
+     */
+    async startedFinishReads(loopId: string, limit: number): Promise<Row[]> {
+      return sql`select t.payload, t.claimed_at, r.id as run_id from scheduled_task t
+        left join agent_loop_run r on r.id::text = t.payload->>'request_id'
+        where t.task_type = ${TASK_POPCORN_TICK} and t.status in ('processing', 'completed')
+          and t.payload->>'loop_id' = ${loopId} and t.payload->>'tick_kind' = ${FINISH_TICK}
+        order by t.claimed_at desc nulls last limit ${limit}`;
+    },
+
+    /** Conversations by id with the name a participant gave, deleted ones left out. */
+    async conversationNames(ids: readonly string[]): Promise<Row[]> {
+      const valid = ids.filter(isUuid);
+      if (!valid.length) return [];
+      return sql`select id, participant_name from conversation
+        where id in ${sql(valid)} and deleted_at is null`;
     },
 
     async versions(reportId: string, limit: number): Promise<Row[]> {
