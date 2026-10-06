@@ -1,0 +1,278 @@
+{
+  "about": "Popcorn eval cases. A point is kept when one surviving popcorn matches its topic and every detail group (each a list of alternatives, case-insensitive regular expressions). Typed cases are invented; the Millbrook cases are the invented sample conversations in packages/samples.",
+  "cases": [
+    {
+      "id": "typed-four-points",
+      "title": "A typed submission with four long, digested points",
+      "text": "Four things I want the council to hear before the vote.\nFirst, do it street by street, not house by house. When the whole of Quarry Row is done in one go the scaffolding and the trench are shared, and the builders told us that takes about a quarter off the cost of each house.\nSecond, stop sending letters. Half my street puts anything with the council crest straight in the recycling. What got my mother to sign up for the insulation survey was the electrician from number eight knocking on her door and showing her his own meter.\nThird, renters need protection written into the scheme, not a promise. My landlord has ignored the mould in our back bedroom for two winters. If the street scheme is voluntary for landlords, tenants like me will be the last ones still on gas in 2035, and then we pay the rent rise after the refit.\nFourth, keep the pool warm. The Mell Valley pool is the only place the older people on Linden Terrace exercise in winter. If the river heat network cannot promise the water stays at 29 degrees, say so before the vote, not after.",
+      "expect": {
+        "min": 4
+      },
+      "points": [
+        {
+          "id": "whole-street",
+          "says": "Do whole streets at once; shared scaffolding takes a quarter off each house",
+          "topic": ["street", "house by house", "in one go"],
+          "detail": [["quarter", "25", "twenty.?five", "scaffold", "trench"]]
+        },
+        {
+          "id": "letters",
+          "says": "Letters go in the recycling; a neighbour at the door works",
+          "topic": ["letter", "crest", "recycling"],
+          "detail": [["neighbou?r", "electrician", "knock", "door"]]
+        },
+        {
+          "id": "renters",
+          "says": "Renters need protection in the scheme or they are last on gas",
+          "topic": ["rent", "landlord", "tenant"],
+          "detail": [["mould", "mold", "last", "still on gas", "voluntary", "rent rise"]]
+        },
+        {
+          "id": "pool",
+          "says": "Promise the pool stays at 29 degrees before the vote",
+          "topic": ["pool"],
+          "detail": [["29", "twenty.?nine"]]
+        }
+      ]
+    },
+    {
+      "id": "typed-four-lines",
+      "title": "A typed submission with four short lines, one point each (the shape of the case Jorim reported)",
+      "text": "Feeling really good! Quiet weekend and feeling hopeful\nI would like a clear picture of who owns what by when and for what purpose. This week is for clarity and for sorting all the ideas on how to improve the rollout and the shared plan\nThe garden fund is doing better than we hoped. The council grant lands this month.\nHow do we make the next season brilliant?",
+      "expect": {
+        "min": 4
+      },
+      "points": [
+        {
+          "id": "mood",
+          "says": "Feeling good after a quiet weekend, hopeful",
+          "topic": ["good", "quiet", "hopeful", "weekend"],
+          "detail": [["quiet", "weekend", "hopeful"]]
+        },
+        {
+          "id": "clarity",
+          "says": "Who owns what by when and for what purpose",
+          "topic": ["who owns what", "clarity", "by when"],
+          "detail": [["by when"], ["purpose"]]
+        },
+        {
+          "id": "fund",
+          "says": "The fund is doing better than hoped; the grant lands this month",
+          "topic": ["fund", "grant", "money"],
+          "detail": [["grant"], ["this month"]]
+        },
+        {
+          "id": "season",
+          "says": "How do we make the next season brilliant",
+          "topic": ["season"],
+          "detail": [["brilliant"]]
+        }
+      ]
+    },
+    {
+      "id": "typed-long-point",
+      "title": "A typed submission whose point needs more than twelve words",
+      "text": "The last bus back to Thornby Hollow leaves Market Square at 6pm, so anyone up there without a car cannot come to the evening sessions at the Weavers' Hall. Hold at least one session on a Saturday morning, or run a minibus. Otherwise the hamlet that is off the gas grid, and has the most to lose from all this, is the one that is never in the room.",
+      "points": [
+        {
+          "id": "last-bus",
+          "says": "The last bus leaves at 6pm, so people without a car miss evening sessions",
+          "topic": ["bus", "car", "evening"],
+          "detail": [["6 ?pm", "six"]]
+        },
+        {
+          "id": "saturday",
+          "says": "Hold a Saturday morning session or run a minibus",
+          "topic": ["saturday", "minibus"],
+          "detail": []
+        },
+        {
+          "id": "never-in-room",
+          "says": "The off-grid hamlet with the most to lose is never in the room",
+          "topic": ["thornby", "hamlet", "off the gas grid", "off.grid"],
+          "detail": [["most to lose", "never in the room", "not in the room"]]
+        }
+      ]
+    },
+    {
+      "id": "millbrook-table-1",
+      "title": "Millbrook table 1: who goes first",
+      "millbrook": "table-1",
+      "points": [
+        {
+          "id": "quote",
+          "says": "A heat pump quote of 14,800 leaves nine thousand out of a nurse's pocket",
+          "topic": ["heat pump", "quote", "grant", "pocket", "savings", "upfront", "capital"],
+          "detail": [["14,?800", "fourteen thousand", "nine thousand", "9,?000"]]
+        },
+        {
+          "id": "frozen-stock",
+          "says": "Four thousand of frozen stock at risk; nobody pays for lost trade",
+          "topic": ["trade", "shop", "stock", "frozen", "dairy", "chiller", "power"],
+          "detail": [["4,?000", "four thousand", "frozen", "dairy", "lost trade"]]
+        },
+        {
+          "id": "whole-street",
+          "says": "Whole streets at once knock 20 to 25 percent off",
+          "topic": ["street"],
+          "detail": [["twenty", "25", "20", "quarter", "scaffold", "trench", "bulk"]]
+        },
+        {
+          "id": "rent-rise",
+          "says": "A subsidised refit then a 200 a month rent rise puts renters out",
+          "topic": ["rent", "landlord", "tenant"],
+          "detail": [
+            [
+              "two hundred",
+              "200",
+              "rent (rise|rises|jump|jumps|goes up|increase)",
+              "raises? (my |the )?rent",
+              "evict",
+              "out on the street"
+            ]
+          ]
+        },
+        {
+          "id": "letters",
+          "says": "Council letters get binned; a neighbour who explains works",
+          "topic": ["letter", "crest", "recycling"],
+          "detail": [["neighbou?r", "electrician", "knock", "door", "buddy"]]
+        },
+        {
+          "id": "demo-house",
+          "says": "A demonstration house with real bills on a cold January day",
+          "topic": ["demonstrat", "show house", "walk inside", "live demo"],
+          "detail": [["eighty", "80", "meter", "bill", "twenty degrees", "cold", "january"]]
+        },
+        {
+          "id": "threshold",
+          "says": "An 80 percent sign-up threshold earns the whole street a bonus",
+          "topic": ["eighty", "80", "threshold", "bonus", "incentive", "discount"],
+          "detail": [["eighty", "80"]]
+        },
+        {
+          "id": "repairs",
+          "says": "Six weeks without heat waiting for a part; local repair within 48 hours",
+          "topic": ["repair", "six weeks", "part", "call ?out", "technician"],
+          "detail": [["six weeks", "forty.?eight", "48", "germany"]]
+        },
+        {
+          "id": "voluntary",
+          "says": "Voluntary or mandatory: the unresolved divide",
+          "topic": ["voluntary", "mandatory", "compuls", "force"],
+          "detail": []
+        },
+        {
+          "id": "two-rules",
+          "says": "Mandatory standards for landlords, incentives for owner occupiers",
+          "topic": ["landlord", "rental", "rented"],
+          "detail": [["owner"]]
+        }
+      ]
+    },
+    {
+      "id": "millbrook-trades",
+      "title": "Millbrook trades table: delivery and skills",
+      "millbrook": "trades-table",
+      "points": [
+        {
+          "id": "spares",
+          "says": "Twelve thousand of gas spares become scrap",
+          "topic": ["spares?", "scrap", "kit", "garage", "stock"],
+          "detail": [["twelve thousand", "12,?000", "scrap"]]
+        },
+        {
+          "id": "paid-training",
+          "says": "Pay the day rate while trades retrain, like jury service",
+          "topic": ["train", "retrain", "course", "classroom", "workshop"],
+          "detail": [
+            [
+              "wage",
+              "day rate",
+              "daily rate",
+              "paid",
+              "pay",
+              "two thousand",
+              "2,?000",
+              "billings",
+              "jury"
+            ]
+          ]
+        },
+        {
+          "id": "wiring",
+          "says": "Sixty amp fuses need 1,500 to 2,000 of electrical work first",
+          "topic": [
+            "fuse",
+            "wiring",
+            "wired",
+            "amp",
+            "electric",
+            "consumer unit",
+            "cupboard",
+            "not ready"
+          ],
+          "detail": [
+            ["sixty", "60", "fifteen hundred", "1,?500", "two thousand", "2,?000", "two grand"]
+          ]
+        },
+        {
+          "id": "same-day",
+          "says": "A dead combi is fixed the same day; a heat pump takes three weeks",
+          "topic": ["combi", "boiler", "weeks", "afternoon", "freeze"],
+          "detail": [["three weeks", "four o.?clock", "same day", "by four", "4 ?pm"]]
+        },
+        {
+          "id": "local-first",
+          "says": "Ring-fence the work for local trades, not out-of-town contractors",
+          "topic": ["local", "contractor", "procure", "out.of.town", "tier one", "consortium"],
+          "detail": [["local", "town trades", "millbrook firms?"]]
+        },
+        {
+          "id": "tooling",
+          "says": "4,500 of tooling and a new van before the first job",
+          "topic": ["tool", "van", "manifold", "equip"],
+          "detail": [["four thousand five hundred", "4,?500", "thirty", "forty grand", "finance"]]
+        },
+        {
+          "id": "pipeline",
+          "says": "Ten years of steady work, not nine-month voucher schemes",
+          "topic": ["pipeline", "boom", "bust", "voucher", "steady", "ten (solid )?years"],
+          "detail": [["ten (solid )?years", "10 years", "nine.month", "march", "boom"]]
+        },
+        {
+          "id": "grid",
+          "says": "Reinforce the grid street by street before any mandate; no 700 fee on one home",
+          "topic": [
+            "grid",
+            "substation",
+            "network operator",
+            "dno",
+            "reinforce",
+            "unloop",
+            "cable"
+          ],
+          "detail": [["seven hundred", "700", "four thousand", "4,?000", "public", "before"]]
+        },
+        {
+          "id": "apprentices",
+          "says": "Eighty percent of apprentice places sit with small gas firms",
+          "topic": ["apprentice"],
+          "detail": [["eighty", "80"]]
+        },
+        {
+          "id": "respect",
+          "says": "Respect what the trades already know about these houses",
+          "topic": [
+            "dinosaur",
+            "know these houses",
+            "respect",
+            "kept millbrook warm",
+            "work with us"
+          ],
+          "detail": []
+        }
+      ]
+    }
+  ]
+}

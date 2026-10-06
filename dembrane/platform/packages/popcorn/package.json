@@ -32,5 +32,8 @@
     "hono": "^4.9.0",
     "postgres": "^3.4.9",
     "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "@dembrane/config": "workspace:*"
   }
 }

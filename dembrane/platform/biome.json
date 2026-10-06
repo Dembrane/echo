@@ -9,7 +9,8 @@
       "!**/*.local.ts",
       "!**/.parity-out",
       "!**/.terraform",
-      "!**/test/fixtures/*.html"
+      "!**/test/fixtures/*.html",
+      "!packages/popcorn/eval/runs"
     ]
   },
   "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 100 },
