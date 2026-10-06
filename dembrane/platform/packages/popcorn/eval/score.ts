@@ -20,8 +20,17 @@ export interface PointResult {
   readonly phrase: string | null;
 }
 
+/**
+ * A pattern starts at a word boundary, so "20" never matches inside "2035". A number also
+ * ends at one; a word may run on, so "demonstrat" matches "demonstration".
+ */
+export function patternRegExp(pattern: string): RegExp {
+  const number = /^[\d,?]+$/u.test(pattern);
+  return new RegExp(`(?<![\\p{L}\\p{N}])(?:${pattern})${number ? "(?!\\p{N})" : ""}`, "iu");
+}
+
 const anyOf = (patterns: readonly string[], text: string) =>
-  patterns.some((p) => new RegExp(p, "iu").test(text));
+  patterns.some((p) => patternRegExp(p).test(text));
 
 const matchesTopic = (point: EvalPoint, phrase: string) => anyOf(point.topic, phrase);
 const carriesDetail = (point: EvalPoint, phrase: string) =>

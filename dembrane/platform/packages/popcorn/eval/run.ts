@@ -130,7 +130,15 @@ for (const c of cases) {
     );
     const shaped = shapePopcornItems(raw, tid);
     const shapedSet = new Set(shaped.map((i) => String(i.phrase)));
-    const shapedOut = rawPhrases.filter((p) => !shapedSet.has(p.replace(/[.!?;:]+$/u, "").trim()));
+    // What the shaper does to a phrase before judging it: whitespace, quotes, end marks.
+    const tidy = (p: string) =>
+      p
+        .replace(/\s+/gu, " ")
+        .replace(/^["'“”‘’]+|["'“”‘’]+$/gu, "")
+        .trim()
+        .replace(/[.!?;:]+$/u, "")
+        .trim();
+    const shapedOut = rawPhrases.filter((p) => !shapedSet.has(tidy(p)));
     const [kept, suppressed] = gateItems(shaped, introducedNames(text), new Set());
     const items = groundItems(kept, text);
     let unrooted: string[] | null = null;

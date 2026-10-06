@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { type EvalPoint, scorePoints } from "../eval/score";
+import { type EvalPoint, patternRegExp, scorePoints } from "../eval/score";
 import { gateItems } from "../src/tick/flags";
 
 const point = (id: string, topic: string[], detail: string[][] = []): EvalPoint => ({
@@ -25,6 +25,14 @@ describe("eval scoring", () => {
     expect(got.map((r) => r.status)).toEqual(["kept", "thin", "missing"]);
   });
 
+  test("patterns start at a word boundary, and numbers end at one", () => {
+    expect(patternRegExp("20").test("by 2035")).toBe(false);
+    expect(patternRegExp("20").test("knocks 20 percent off")).toBe(true);
+    expect(patternRegExp("4,?000").test("14,000 euros")).toBe(false);
+    expect(patternRegExp("car").test("scarce")).toBe(false);
+    expect(patternRegExp("demonstrat").test("a demonstration house")).toBe(true);
+  });
+
   test("one phrase answers for one point", () => {
     const points = [point("a", ["street"]), point("b", ["street"])];
     const got = scorePoints(points, ["Do the whole street at once"]);
@@ -44,7 +52,7 @@ describe("eval scoring", () => {
     for (const c of cases)
       for (const p of c.points)
         for (const pattern of [...p.topic, ...p.detail.flat()])
-          expect(() => new RegExp(pattern, "iu")).not.toThrow();
+          expect(() => patternRegExp(pattern)).not.toThrow();
   });
 });
 
