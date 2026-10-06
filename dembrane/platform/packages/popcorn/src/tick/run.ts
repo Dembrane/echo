@@ -20,7 +20,14 @@ import {
   truthy,
   utcNowIso,
 } from "../py";
-import { forgetBundle, isPopcornLoop, type PopcornFlags, projectJson } from "../service";
+import {
+  forgetBundle,
+  isPopcornLoop,
+  liveBooking,
+  type PopcornFlags,
+  projectJson,
+  withoutBooking,
+} from "../service";
 import {
   DEFAULT_CADENCE_MINUTES,
   MIN_CADENCE_MINUTES,
@@ -30,7 +37,7 @@ import {
   voiceHostNote,
 } from "../settings";
 import { freshState, normalizeState, referencedQuoteIds } from "../state";
-import type { PopcornStore, Row } from "../storage";
+import { type PopcornStore, type Row, START_TICK } from "../storage";
 import { norm as normText } from "../text";
 import {
   cacheKey,
@@ -992,6 +999,28 @@ export async function runPopcornTick(
       startedAt,
     });
     return { status: "disabled", run };
+  }
+
+  // A booked start ("Ready by"): live from now until the expiry booked with it, then this
+  // read runs as a manual one and the chain books the next.
+  if (tickKind === START_TICK) {
+    if (!liveBooking(loop)) {
+      const run = await createRun(d, {
+        loopId,
+        status: "no_op",
+        detail: "No start booked",
+        startedAt,
+      });
+      return { status: "no_op", run };
+    }
+    await d.store.updateLoop(
+      loopId,
+      { status: "active", failure_count: 0, caps: withoutBooking(loop.caps) },
+      utcNowIso(d.now()),
+    );
+    // Pages showing "Ready by" turn live now, whatever the read finds.
+    await nudgeLoop(d, loop);
+    return runPopcornTick(d, loopId, "manual", requestId);
   }
 
   // Only the scheduled chain answers to the mode and the expiry.

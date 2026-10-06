@@ -62,6 +62,7 @@ vi.mock("@/components/popcorn/PopcornShare", () => ({
 }));
 const saveSettings = vi.fn();
 vi.mock("@/components/popcorn/hooks", () => ({
+	liveBooking: () => null,
 	usePopcornLiveMutation: () => ({ mutate: vi.fn() }),
 	usePopcornSettingsMutation: () => ({
 		mutate: saveSettings,

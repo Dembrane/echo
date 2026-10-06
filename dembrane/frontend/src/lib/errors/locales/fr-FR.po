@@ -374,6 +374,11 @@ msgid "error.report.schedule_too_soon"
 msgstr "Choisissez une heure située au moins 10 minutes plus tard."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/popcorn.ts:23
+msgid "error.popcorn.invalid_ready_by"
+msgstr "Choisissez une heure à venir, dans les 7 prochains jours."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:5
 msgid "error.canvas.expiry_in_past"
 msgstr "Choisissez une date de fin future."
@@ -484,7 +489,7 @@ msgid "error.analysis.revision_conflict"
 msgstr "Quelqu'un a modifié ce résultat pendant que vous le consultiez. Rechargez la page pour voir sa version, puis effectuez à nouveau vos modifications."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/popcorn.ts:40
+#: src/lib/errors/messages/popcorn.ts:44
 msgid "error.popcorn.settings_busy"
 msgstr "Quelqu'un d'autre enregistre ces paramètres en ce moment. Réessayez dans un instant."
 
@@ -549,7 +554,7 @@ msgid "error.project.methodology_read_only"
 msgstr "La méthodologie dembrane ne peut pas être modifiée. Faites-en une copie pour la modifier."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/popcorn.ts:45
+#: src/lib/errors/messages/popcorn.ts:49
 msgid "error.popcorn.synthetic_frame_locked"
 msgstr "Le cadre d'une présentation de démonstration est défini avec la démo et ne peut pas être modifié ici."
 
@@ -904,12 +909,12 @@ msgid "error.present.map_not_in_presentation"
 msgstr "Cette présentation ne comporte pas de carte."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/popcorn.ts:27
+#: src/lib/errors/messages/popcorn.ts:31
 msgid "error.popcorn.loop_not_found"
 msgstr "Cette présentation n'est pas en cours. Relancez-la pour continuer."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/popcorn.ts:35
+#: src/lib/errors/messages/popcorn.ts:39
 msgid "error.popcorn.public_not_found"
 msgstr "Ce lien de présentation ne fonctionne plus. Demandez un nouveau lien à l'hôte."
 
@@ -1034,7 +1039,7 @@ msgid "error.analysis.revision_not_found"
 msgstr "Cette version du résultat n'existe plus. Rechargez la page pour afficher la plus récente."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/popcorn.ts:23
+#: src/lib/errors/messages/popcorn.ts:27
 msgid "error.popcorn.just_refreshed"
 msgstr "Mise à jour récente. Attendez quelques secondes avant de réessayer."
 
@@ -1264,7 +1269,7 @@ msgid "error.organisation.not_found"
 msgstr "Impossible de trouver cette organisation."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/popcorn.ts:31
+#: src/lib/errors/messages/popcorn.ts:35
 msgid "error.popcorn.not_found"
 msgstr "Impossible de trouver cette présentation."
 
@@ -1329,7 +1334,7 @@ msgid "error.training.not_found"
 msgstr "Impossible de trouver cette formation."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/popcorn.ts:50
+#: src/lib/errors/messages/popcorn.ts:54
 msgid "error.popcorn.version_not_found"
 msgstr "Impossible de trouver cette version de la présentation."
 

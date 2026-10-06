@@ -9,6 +9,7 @@ import {
 } from "@phosphor-icons/react";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import {
+	liveBooking,
 	type PopcornDetail,
 	popcornPresenterUrl,
 	usePopcornLiveMutation,
@@ -20,7 +21,7 @@ import { LiveButton } from "@/components/sharing/LiveButton";
 import { testId } from "@/lib/testUtils";
 
 // What a host can do with a session: open the wall, read once, read from
-// nothing, or go live for a while.
+// nothing, or go live for a while, now or ready by a time.
 export function PopcornActions({
 	projectId,
 	popcorn,
@@ -34,6 +35,7 @@ export function PopcornActions({
 	const stopLive = usePopcornStopLiveMutation(projectId, popcorn.id);
 	const [rerunOpened, rerunModal] = useDisclosure(false);
 	const isLive = popcorn.loop?.mode === "live";
+	const booking = liveBooking(popcorn.loop);
 
 	return (
 		<Group gap="xs" wrap="wrap" {...testId("popcorn-actions")}>
@@ -65,8 +67,10 @@ export function PopcornActions({
 			</Button>
 			<LiveButton
 				live={isLive}
-				pending={isLive ? stopLive.isPending : live.isPending}
-				onGoLive={(hours) => live.mutate(hours)}
+				booking={booking}
+				pending={live.isPending || stopLive.isPending}
+				onGoLive={(hours) => live.mutate({ hours })}
+				onReadyBy={(hours, readyBy) => live.mutate({ hours, readyBy })}
 				onStop={() => stopLive.mutate()}
 			/>
 			<ConfirmModal
