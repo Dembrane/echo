@@ -1,5 +1,5 @@
 import { Plural, Trans } from "@lingui/react/macro";
-import { Group, Stack, Text } from "@mantine/core";
+import { Stack, Text } from "@mantine/core";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { CSSProperties, ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -22,11 +22,7 @@ import {
 	MapSurface,
 } from "@/components/map/MapExperience";
 import { OverBudgetState } from "@/components/map/panels/BudgetStates";
-import {
-	type MapSettingsControl,
-	MapSettingsMenu,
-} from "@/components/map/panels/MapSettingsMenu";
-import { DensityDial } from "@/components/map/panels/MapToolbar";
+import type { MapSettingsControl } from "@/components/map/panels/MapSettingsMenu";
 import {
 	createMapInteractionStore,
 	MapInteractionProvider,
@@ -40,6 +36,7 @@ import type {
 	FactCheckState,
 	FactCheckVerdict,
 } from "@/components/map/types";
+import { RoomMapRail } from "./RoomMapRail";
 
 type AudienceMapAdapterProps = {
 	active: boolean;
@@ -117,7 +114,8 @@ const readGroups = (payload: MapGraphResponse): MapGroupDoc[] => {
  * first, the same density and colours); any other device opens on the Map
  * page's defaults. The room always opens with Spotlight, where History lives,
  * and never with the force panels; of the toolbar it keeps only the density
- * dial, which changes this screen's drawing and nothing else.
+ * dial and the view, in its rail, which change this screen's drawing and
+ * nothing else.
  */
 const roomStartSettings = (): MapSettings => ({
 	...readMapSettings(),
@@ -187,11 +185,12 @@ const noFactCheck = () => {};
 
 /**
  * The room's dark switch is the shell's, the budget is the server's, the
- * projection carries no relations to draw, and the map's forces are the
- * host's to set.
+ * projection carries no relations to draw, the map's forces are the host's
+ * to set, and clusters or tree is the rail's.
  */
 const ROOM_HIDDEN_CONTROLS: MapSettingsControl[] = [
 	"darkMode",
+	"layout",
 	"showRelationships",
 	"showForceSettings",
 ];
@@ -311,62 +310,56 @@ const AudienceMap = ({
 
 	return (
 		<div
-			className="flex h-full min-h-0 flex-col"
+			// The map takes the height and everything left of the rail; on a
+			// phone the rail drops to a row under it.
+			className="flex h-full min-h-0 flex-col sm:flex-row"
 			// Dark is relit on the themed root; light is the host page's own.
 			style={dark ? undefined : MAP_LIGHT_VARS}
 		>
-			{/* The room's pane already keeps the screen's edge, so this row and
-			    the surface under it add none of their own. */}
-			<Group justify="space-between" gap="xs" wrap="nowrap" px={0} pt="xs">
-				<Text size="sm">
+			{/* The room's pane already keeps the screen's edge, so the surface
+			    and the rail add none of their own. */}
+			<div className="flex min-h-0 min-w-0 flex-1 flex-col">
+				<MapSurface darkMode={false} inset={false}>
+					<MapInteractionProvider store={store}>
+						<MapExperience
+							graph={roomGraph}
+							placedNodes={nodes}
+							visibleIds={visibleIds}
+							budgets={budgets}
+							colorBy={settings.colorBy}
+							onColorByChange={handleColorByChange}
+							settings={roomSettings}
+							factCheckStates={factCheckStates}
+							onFactCheck={noFactCheck}
+							onCancelFactCheck={noFactCheck}
+							canFactCheck={false}
+							offline={false}
+							titles={titles}
+							// The projection carries the evidence but never its sources,
+							// so the panels must not state a provenance they were not
+							// given, and no quote links back into the workspace.
+							provenance={false}
+							// The project's groups come with the map: History lists
+							// them, and the room makes, retries and renames none.
+							groups={groups}
+							// A room needs no count; the host finds it in the settings.
+							counts={false}
+						/>
+					</MapInteractionProvider>
+				</MapSurface>
+			</div>
+			<RoomMapRail
+				settings={settings}
+				menuSettings={roomSettings}
+				onSettingsChange={onSettingsChange}
+				onColorByChange={handleColorByChange}
+				hide={
+					titles ? ROOM_HIDDEN_CONTROLS : ROOM_HIDDEN_CONTROLS_WITHOUT_TITLES
+				}
+				count={
 					<Plural value={nodes.length} one="# argument" other="# arguments" />
-				</Text>
-				<Group gap="xs" wrap="nowrap">
-					<DensityDial
-						density={settings.clusterDensity}
-						onChange={(clusterDensity) => onSettingsChange({ clusterDensity })}
-					/>
-					<MapSettingsMenu
-						settings={roomSettings}
-						onChange={onSettingsChange}
-						colorBy={settings.colorBy}
-						onColorByChange={handleColorByChange}
-						canFactCheck={false}
-						hide={
-							titles
-								? ROOM_HIDDEN_CONTROLS
-								: ROOM_HIDDEN_CONTROLS_WITHOUT_TITLES
-						}
-						withinPortal={false}
-					/>
-				</Group>
-			</Group>
-			<MapSurface darkMode={false} inset={false}>
-				<MapInteractionProvider store={store}>
-					<MapExperience
-						graph={roomGraph}
-						placedNodes={nodes}
-						visibleIds={visibleIds}
-						budgets={budgets}
-						colorBy={settings.colorBy}
-						onColorByChange={handleColorByChange}
-						settings={roomSettings}
-						factCheckStates={factCheckStates}
-						onFactCheck={noFactCheck}
-						onCancelFactCheck={noFactCheck}
-						canFactCheck={false}
-						offline={false}
-						titles={titles}
-						// The projection carries the evidence but never its sources,
-						// so the panels must not state a provenance they were not
-						// given, and no quote links back into the workspace.
-						provenance={false}
-						// The project's groups come with the map: History lists
-						// them, and the room makes, retries and renames none.
-						groups={groups}
-					/>
-				</MapInteractionProvider>
-			</MapSurface>
+				}
+			/>
 		</div>
 	);
 };

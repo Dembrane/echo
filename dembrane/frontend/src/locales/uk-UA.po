@@ -250,7 +250,7 @@ msgstr "{0, plural, one {# угода} few {# угоди} many {# угод} othe
 
 #. placeholder {0}: nodes.length
 #. placeholder {0}: target.nodes.length
-#: src/components/present/AudienceMapAdapter.tsx:322
+#: src/components/present/AudienceMapAdapter.tsx:360
 #: src/components/map/panels/HistoryPanel.tsx:49
 #: src/components/map/panels/DetailsModal.tsx:149
 #: src/components/map/panels/ClusterSummary.tsx:148
@@ -772,7 +772,7 @@ msgstr "{conversations, plural, one {# розмова} few {# розмови} ma
 msgid "{conversations} conversations with a transcript, about {minutes} minutes of talk. Ready."
 msgstr "Розмов із транскриптом: {conversations}, близько {minutes} хв мовлення. Готово."
 
-#: src/components/map/MapExperience.tsx:136
+#: src/components/map/MapExperience.tsx:138
 msgid "{count, plural, one {# argument} other {# arguments}}"
 msgstr "{count, plural, one {# аргумент} few {# аргументи} many {# аргументів} other {# аргументи}}"
 
@@ -2317,11 +2317,12 @@ msgstr "Аргумент"
 msgid "Argument map"
 msgstr "Карта аргументів"
 
-#: src/components/map/panels/MapToolbar.tsx:208
+#: src/components/present/RoomMapRail.tsx:75
+#: src/components/map/panels/MapToolbar.tsx:287
 msgid "Argument tree"
 msgstr "Дерево аргументів"
 
-#: src/components/map/MapExperience.tsx:557
+#: src/components/map/MapExperience.tsx:563
 msgid "Argument tree (MST)"
 msgstr "Дерево аргументів (MST)"
 
@@ -2562,7 +2563,7 @@ msgstr "Audit logs exported to JSON"
 msgid "Authenticator code"
 msgstr "Authenticator code"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:452
+#: src/components/map/panels/MapSettingsMenu.tsx:475
 msgid "Auto fact-check new claims"
 msgstr "Автоматично перевіряти факти в нових твердженнях"
 
@@ -3372,7 +3373,7 @@ msgstr "Виберіть розмову"
 msgid "Choose a logo file"
 msgstr "Choose a logo file"
 
-#: src/components/map/MapExperience.tsx:635
+#: src/components/map/MapExperience.tsx:641
 msgid "Choose a map under Advanced"
 msgstr "Виберіть мапу в розділі «Додатково»"
 
@@ -3596,19 +3597,22 @@ msgstr "Сумісність із CLOUD Act"
 #~ msgid "Clumped"
 #~ msgstr "Згуртовано"
 
-#: src/components/map/panels/MapToolbar.tsx:112
+#: src/components/map/panels/MapToolbar.tsx:128
+#: src/components/map/panels/MapToolbar.tsx:191
 msgid "Cluster density"
 msgstr "Щільність кластерів"
 
-#: src/components/map/panels/MapToolbar.tsx:115
+#: src/components/map/panels/MapToolbar.tsx:144
+#: src/components/map/panels/MapToolbar.tsx:194
 msgid "Cluster density: fewer or more clusters"
 msgstr "Щільність кластерів: менше чи більше кластерів"
 
-#: src/components/map/panels/MapToolbar.tsx:201
+#: src/components/present/RoomMapRail.tsx:75
+#: src/components/map/panels/MapToolbar.tsx:280
 msgid "Cluster map"
 msgstr "Мапа кластерів"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:390
+#: src/components/map/panels/MapSettingsMenu.tsx:413
 msgid "Clusters"
 msgstr "Кластери"
 
@@ -3654,7 +3658,7 @@ msgstr "Колір графа за фактичним статусом"
 msgid "Color graph by valence"
 msgstr "Колір графа за тональністю"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:431
+#: src/components/map/panels/MapSettingsMenu.tsx:454
 msgid "Color nodes by"
 msgstr "Колір вузлів за"
 
@@ -4028,7 +4032,7 @@ msgstr "conversations"
 #: src/components/workspace/OrganisationProjectsTable.tsx:225
 #: src/components/report/ReportTimeline.tsx:302
 #: src/components/project/ProjectUsageAndSharing.tsx:471
-#: src/components/map/panels/MapSettingsMenu.tsx:297
+#: src/components/map/panels/MapSettingsMenu.tsx:308
 #: src/components/map/panels/ClusterSummary.tsx:155
 #: src/components/conversation/ProjectConversationsPanel.tsx:623
 #: src/components/conversation/ConversationsMiniList.tsx:141
@@ -4691,7 +4695,7 @@ msgstr "Небезпечна зона"
 msgid "Dark"
 msgstr "Темна"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:505
+#: src/components/map/panels/MapSettingsMenu.tsx:528
 msgid "Dark mode"
 msgstr "Темна тема"
 
@@ -4798,11 +4802,11 @@ msgstr "За замовчуванням – без інструкції (лиш�
 #~ msgid "Default - No tutorial (Only privacy statements)"
 #~ msgstr "Default - No tutorial (Only privacy statements)"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:161
+#: src/components/map/panels/MapSettingsMenu.tsx:172
 msgid "Default {defaultEdges}"
 msgstr "За замовчуванням: {defaultEdges}"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:150
+#: src/components/map/panels/MapSettingsMenu.tsx:161
 msgid "Default {defaultNodes}"
 msgstr "За замовчуванням: {defaultNodes}"
 
@@ -6043,11 +6047,11 @@ msgstr "Додаткові учасники"
 msgid "Fact-check"
 msgstr "Перевірити факти"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:467
+#: src/components/map/panels/MapSettingsMenu.tsx:490
 msgid "Fact-check all"
 msgstr "Перевірити всі факти"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:465
+#: src/components/map/panels/MapSettingsMenu.tsx:488
 msgid "Fact-check all ({pendingClaimCount})"
 msgstr "Перевірити всі факти ({pendingClaimCount})"
 
@@ -6334,8 +6338,8 @@ msgstr "File size: Min {0}, Max {1}, up to {MAX_FILES} files"
 msgid "Filename from uploaded file"
 msgstr "Filename from uploaded file"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:243
-#: src/components/map/panels/MapSettingsMenu.tsx:249
+#: src/components/map/panels/MapSettingsMenu.tsx:254
+#: src/components/map/panels/MapSettingsMenu.tsx:260
 msgid "Filter"
 msgstr "Фільтр"
 
@@ -6547,8 +6551,8 @@ msgstr "Параметри сили"
 #~ msgid "Force Parameters"
 #~ msgstr "Параметри сили"
 
-#: src/components/map/panels/MapToolbar.tsx:177
-#: src/components/map/panels/MapSettingsMenu.tsx:490
+#: src/components/map/panels/MapToolbar.tsx:256
+#: src/components/map/panels/MapSettingsMenu.tsx:513
 msgid "Force settings"
 msgstr "Налаштування сил"
 
@@ -7987,7 +7991,7 @@ msgstr "Правову підставу збережено"
 msgid "Legal entity name"
 msgstr "Назва юридичної особи"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:78
+#: src/components/map/panels/MapSettingsMenu.tsx:89
 #: src/components/map/panels/Legend.tsx:78
 msgid "Legend"
 msgstr "Легенда"
@@ -8313,7 +8317,7 @@ msgstr "Loading…"
 msgid "Local argument map"
 msgstr "Локальна мапа аргументів"
 
-#: src/components/map/MapExperience.tsx:600
+#: src/components/map/MapExperience.tsx:606
 msgid "Local map"
 msgstr "Локальна мапа"
 
@@ -8529,7 +8533,7 @@ msgstr "Щойно було запущено багато карт. Спробу
 #: src/routes/project/present/blockLabel.ts:6
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:152
 #: src/components/map/MapPage.tsx:666
-#: src/components/map/panels/MapSettingsMenu.tsx:382
+#: src/components/map/panels/MapSettingsMenu.tsx:405
 msgid "Map"
 msgstr "Карта"
 
@@ -8541,13 +8545,17 @@ msgstr "Карта | dembrane"
 msgid "Map arguments"
 msgstr "Аргументи з Map"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:145
+#: src/components/map/panels/MapSettingsMenu.tsx:156
 msgid "Map budget"
 msgstr "Бюджет карти"
 
-#: src/components/map/panels/MapToolbar.tsx:162
+#: src/components/map/panels/MapToolbar.tsx:241
 msgid "Map controls"
 msgstr "Керування мапою"
+
+#: src/components/present/RoomMapRail.tsx:106
+msgid "Map display"
+msgstr "Відображення карти"
 
 #: src/features/processes/copy.ts:13
 msgid "Map failed"
@@ -8561,7 +8569,7 @@ msgstr "Карта опрацьовує стенограми цього проє
 msgid "Map ready"
 msgstr "Карта готова"
 
-#: src/components/present/AudienceMapAdapter.tsx:491
+#: src/components/present/AudienceMapAdapter.tsx:484
 msgid "Map results are not ready yet."
 msgstr "Результати карти ще не готові."
 
@@ -9358,7 +9366,7 @@ msgstr "Логотип не встановлено. Використовуват
 msgid "No map has been generated for this project yet."
 msgstr "Для цього проєкту мапу ще не створено."
 
-#: src/components/present/AudienceMapAdapter.tsx:306
+#: src/components/present/AudienceMapAdapter.tsx:305
 msgid "No map results are ready yet."
 msgstr "Результати для мапи ще не готові."
 
@@ -9671,7 +9679,7 @@ msgstr "Зараз з вами не поділилися жодним робоч
 msgid "No workspaces match \"{search}\"."
 msgstr "Жоден робочий простір не відповідає запиту «{search}»."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:149
+#: src/components/map/panels/MapSettingsMenu.tsx:160
 msgid "Nodes"
 msgstr "Вузли"
 
@@ -9953,7 +9961,7 @@ msgstr "Once you have discussed, hit \"revise\" to see the {objectLabel} change 
 msgid "participant.verify.instructions.read.aloud"
 msgstr "Once you receive the {objectLabel}, read it aloud and share out loud what you want to change, if anything."
 
-#: src/components/map/panels/MapToolbar.tsx:187
+#: src/components/map/panels/MapToolbar.tsx:266
 msgid "One at a time"
 msgstr "По одній"
 
@@ -10653,7 +10661,7 @@ msgstr "Passwords do not match"
 #~ msgstr "Вставте його на будь-яку сторінку. Дані оновлюються в реальному часі."
 
 #: src/components/map/renderers/LocalMapGraph.tsx:1234
-#: src/components/map/panels/MapToolbar.tsx:167
+#: src/components/map/panels/MapToolbar.tsx:246
 msgid "Pause physics"
 msgstr "Призупинити фізику"
 
@@ -11988,7 +11996,7 @@ msgstr "Register | dembrane"
 
 #: src/components/map/panels/NodeDetailCard.tsx:323
 #: src/components/map/panels/NodeDetailCard.tsx:529
-#: src/components/map/panels/MapSettingsMenu.tsx:415
+#: src/components/map/panels/MapSettingsMenu.tsx:438
 msgid "Relationships"
 msgstr "Зв'язки"
 
@@ -12573,7 +12581,7 @@ msgid "participant.button.stop.resume"
 msgstr "Resume"
 
 #: src/components/map/renderers/LocalMapGraph.tsx:1234
-#: src/components/map/panels/MapToolbar.tsx:167
+#: src/components/map/panels/MapToolbar.tsx:246
 msgid "Resume physics"
 msgstr "Відновити фізику"
 
@@ -13600,8 +13608,9 @@ msgstr "Налаштування"
 #: src/features/sidebar/views/user/UserSettingsView.tsx:15
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:31
 #: src/features/sidebar/views/org/OrgHomeView.tsx:151
-#: src/components/map/panels/MapSettingsMenu.tsx:370
-#: src/components/map/panels/MapSettingsMenu.tsx:376
+#: src/components/present/RoomMapRail.tsx:137
+#: src/components/map/panels/MapSettingsMenu.tsx:385
+#: src/components/map/panels/MapSettingsMenu.tsx:393
 #: src/components/layout/ParticipantHeader.tsx:125
 #: src/components/layout/ParticipantHeader.tsx:126
 msgid "Settings"
@@ -13834,7 +13843,7 @@ msgstr "Показати більше версій"
 msgid "Show on the map"
 msgstr "Показати на карті"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:259
+#: src/components/map/panels/MapSettingsMenu.tsx:270
 msgid "Show only conversations with any of the ticked tags."
 msgstr "Показувати лише розмови з будь-яким із позначених тегів."
 
@@ -13906,7 +13915,7 @@ msgstr "Показуйте учасникам власний логотип, д�
 
 #: src/components/map/panels/ShowcasePanel.tsx:86
 #: src/components/map/panels/ShowcasePanel.tsx:89
-#: src/components/map/panels/MapSettingsMenu.tsx:76
+#: src/components/map/panels/MapSettingsMenu.tsx:87
 msgid "Showcase"
 msgstr "Вітрина"
 
@@ -13958,8 +13967,8 @@ msgstr "Відображається вгорі екрана. Змінюйте �
 msgid "Shown in the organisation header and in email subject lines."
 msgstr "Відображається в заголовку організації та в темах листів."
 
-#: src/components/map/panels/MapToolbar.tsx:187
-#: src/components/map/panels/MapSettingsMenu.tsx:392
+#: src/components/map/panels/MapToolbar.tsx:266
+#: src/components/map/panels/MapSettingsMenu.tsx:415
 msgid "Side by side"
 msgstr "Поруч"
 
@@ -14223,7 +14232,7 @@ msgstr "Чат конкретних деталей враховує ручний
 
 #: src/components/map/panels/SpotlightPanel.tsx:218
 #: src/components/map/panels/SpotlightPanel.tsx:220
-#: src/components/map/panels/MapSettingsMenu.tsx:77
+#: src/components/map/panels/MapSettingsMenu.tsx:88
 msgid "Spotlight"
 msgstr "Фокус"
 
@@ -14693,7 +14702,7 @@ msgstr "Тег видалено"
 
 #: src/components/project/ProjectTagsInput.tsx:255
 #: src/components/participant/ParticipantInitiateForm.tsx:281
-#: src/components/map/panels/MapSettingsMenu.tsx:256
+#: src/components/map/panels/MapSettingsMenu.tsx:267
 #: src/components/conversation/ProjectConversationsPanel.tsx:706
 #: src/components/conversation/ConversationsMiniList.tsx:179
 #: src/components/conversation/ConversationEdit.tsx:424
@@ -14961,7 +14970,7 @@ msgstr "Не вдалося завантажити чернетку"
 #~ msgid "The draft could not be loaded."
 #~ msgstr "Не вдалося завантажити чернетку."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:92
+#: src/components/map/panels/MapSettingsMenu.tsx:103
 msgid "The edge budget must be a whole number above zero, so {applied} applies."
 msgstr "Ліміт зв'язків має бути цілим числом більше нуля, тому застосовано {applied}."
 
@@ -15046,7 +15055,7 @@ msgstr "Запрошення надіслано на {invitedEmail}, але ви
 msgid "The last generation failed, so this is still the previous map. {0}"
 msgstr "Останнє генерування не вдалося, тому це все ще попередня мапа. {0}"
 
-#: src/components/map/MapExperience.tsx:130
+#: src/components/map/MapExperience.tsx:131
 msgid "The layout could not be computed for this scope."
 msgstr "Не вдалося розрахувати макет для цього обсягу."
 
@@ -15080,7 +15089,7 @@ msgstr "Не вдалося згенерувати мапу. {0}"
 msgid "The map could not be loaded"
 msgstr "Не вдалося завантажити карту"
 
-#: src/components/present/AudienceMapAdapter.tsx:501
+#: src/components/present/AudienceMapAdapter.tsx:494
 msgid "The map could not be loaded."
 msgstr "Не вдалося завантажити мапу."
 
@@ -15130,7 +15139,7 @@ msgstr "Ім'я цієї зацікавленої сторони"
 msgid "The new sidebar brings organisations, workspaces, members and settings together."
 msgstr "Нова бічна панель об'єднує організації, робочі простори, учасників і налаштування."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:91
+#: src/components/map/panels/MapSettingsMenu.tsx:102
 msgid "The node budget must be a whole number above zero, so {applied} applies."
 msgstr "Ліміт вузлів має бути цілим числом більше нуля, тому застосовано {applied}."
 
@@ -15438,11 +15447,11 @@ msgstr "This conversation is a copy of"
 msgid "This deployment can open maps with up to {maximumCount} arguments."
 msgstr "У цьому середовищі можна відкривати мапи щонайбільше з {maximumCount} аргументами."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:96
+#: src/components/map/panels/MapSettingsMenu.tsx:107
 msgid "This deployment shows up to {applied} edges."
 msgstr "У цьому розгортанні показується до {applied} ребер."
 
-#: src/components/map/panels/MapSettingsMenu.tsx:95
+#: src/components/map/panels/MapSettingsMenu.tsx:106
 msgid "This deployment shows up to {applied} nodes."
 msgstr "У цьому розгортанні показується до {applied} вузлів."
 
@@ -16189,7 +16198,7 @@ msgstr "Перекладаємо: {translated} із {total} мовою: {languag
 msgid "Translation progress"
 msgstr "Перебіг перекладу"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:391
+#: src/components/map/panels/MapSettingsMenu.tsx:414
 #: src/components/map/panels/DetailsModal.tsx:137
 msgid "Tree"
 msgstr "Дерево"
@@ -16815,7 +16824,7 @@ msgstr "Використовуйте закріплені та збережен�
 msgid "Use Shift + Enter to add a new line"
 msgstr "Use Shift + Enter to add a new line"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:184
+#: src/components/map/panels/MapSettingsMenu.tsx:195
 msgid "Use the default budget"
 msgstr "Використовувати стандартний бюджет"
 
@@ -17047,11 +17056,11 @@ msgstr "Перегляди: {0}"
 msgid "Visible columns"
 msgstr "Видимі стовпці"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:160
+#: src/components/map/panels/MapSettingsMenu.tsx:171
 msgid "Visible edges"
 msgstr "Видимі зв'язки"
 
-#: src/components/map/panels/MapSettingsMenu.tsx:98
+#: src/components/map/panels/MapSettingsMenu.tsx:109
 msgid "Visible edges raised to {applied} so the tree over {nodeLimit} nodes fits."
 msgstr "Видимі зв'язки збільшено до {applied}, щоб дерево з понад {nodeLimit} вузлів умістилося."
 

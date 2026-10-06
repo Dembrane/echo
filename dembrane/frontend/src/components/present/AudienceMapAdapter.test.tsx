@@ -339,8 +339,7 @@ describe("AudienceMapAdapter", () => {
 		// Clusters first, as on the host's Map page.
 		await screen.findByText("Audience local renderer");
 		expect(screen.queryByText("Audience tree renderer")).toBeNull();
-		fireEvent.click(screen.getByRole("button", { name: "Settings" }));
-		fireEvent.click(await screen.findByRole("radio", { name: "Tree" }));
+		fireEvent.click(screen.getByRole("button", { name: "Argument tree" }));
 		expect(screen.queryByText("Audience local renderer")).toBeNull();
 		expect(screen.getByText("Audience tree renderer")).toBeTruthy();
 
@@ -383,14 +382,14 @@ describe("AudienceMapAdapter", () => {
 	});
 
 	/**
-	 * Opens the display controls, puts the tree up (the walk lives on it, as on
-	 * the host's page) and hands back the Showcase toggle, so a test can switch
-	 * the walk on once its timers are the fake ones.
+	 * Puts the tree up from the rail (the walk lives on it, as on the host's
+	 * page), opens the settings and hands back the Showcase toggle, so a test
+	 * can switch the walk on once its timers are the fake ones.
 	 */
 	const showcaseToggle = async () => {
-		fireEvent.click(screen.getByRole("button", { name: "Settings" }));
-		fireEvent.click(await screen.findByRole("radio", { name: "Tree" }));
+		fireEvent.click(screen.getByRole("button", { name: "Argument tree" }));
 		await screen.findByText("Audience tree renderer");
+		fireEvent.click(screen.getByRole("button", { name: "Settings" }));
 		return await screen.findByRole("checkbox", { name: "Showcase" });
 	};
 
@@ -683,17 +682,113 @@ describe("AudienceMapAdapter", () => {
 		expect(screen.getAllByRole("slider")).toHaveLength(1);
 	});
 
-	it("lets the room change its own density with the dial", async () => {
+	it("holds the dial, clusters or tree and the settings in a rail beside the map", async () => {
 		vi.stubGlobal(
 			"fetch",
 			vi.fn(async () => new Response(JSON.stringify({}), { status: 200 })),
 		);
 		render(adapter(true));
 		await screen.findByText("Audience local renderer");
-		const before = screen.getByTestId("local-map").dataset.density;
+		const rail = screen.getByRole("group", { name: "Map display" });
+		const controls = [
+			within(rail).getByRole("slider", {
+				name: "Cluster density: fewer or more clusters",
+			}),
+			within(rail).getByRole("button", { name: "Cluster map" }),
+			within(rail).getByRole("button", { name: "Argument tree" }),
+			within(rail).getByRole("button", { name: "Settings" }),
+		];
+		// Top to bottom, in that order, and the dial stands upright.
+		for (let index = 1; index < controls.length; index += 1) {
+			expect(
+				controls[index - 1].compareDocumentPosition(controls[index]) &
+					Node.DOCUMENT_POSITION_FOLLOWING,
+			).toBeTruthy();
+		}
+		expect(controls[0].getAttribute("aria-orientation")).toBe("vertical");
+		// The rail sits after the map, so it lands on the map's right.
+		expect(
+			screen.getByTestId("local-map").compareDocumentPosition(rail) &
+				Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
+
+		// Clusters first; the tree takes over from the rail.
+		const clusters = within(rail).getByRole("button", { name: "Cluster map" });
+		const tree = within(rail).getByRole("button", { name: "Argument tree" });
+		expect(clusters.getAttribute("aria-pressed")).toBe("true");
+		expect(tree.getAttribute("aria-pressed")).toBe("false");
+		fireEvent.click(tree);
+		expect(await screen.findByText("Audience tree renderer")).toBeTruthy();
+		expect(tree.getAttribute("aria-pressed")).toBe("true");
+		fireEvent.click(clusters);
+		expect(await screen.findByText("Audience local renderer")).toBeTruthy();
+	});
+
+	it("keeps the count out of the room's view and in the settings heading", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async () => new Response(JSON.stringify({}), { status: 200 })),
+		);
+		render(adapter(true));
+		await screen.findByText("Audience local renderer");
+		expect(screen.queryByText("3 arguments")).toBeNull();
+		fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+		await screen.findByRole("checkbox", { name: "Showcase" });
+		expect(screen.getByText("3 arguments")).toBeTruthy();
+		// Clusters or tree is the rail's, so the menu does not offer it twice.
+		expect(screen.queryByRole("radio", { name: "Tree" })).toBeNull();
+		// Colour stays in the menu.
+		expect(screen.getByText("Color nodes by")).toBeTruthy();
+	});
+
+	it("lets the room change its own density with the dial's keys", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async () => new Response(JSON.stringify({}), { status: 200 })),
+		);
+		render(adapter(true));
+		await screen.findByText("Audience local renderer");
+		const density = () =>
+			Number(screen.getByTestId("local-map").dataset.density);
+		const before = density();
 		const dial = screen.getByRole("slider");
 		dial.focus();
-		fireEvent.keyDown(dial, { key: "ArrowRight" });
+		fireEvent.keyDown(dial, { key: "ArrowUp" });
+		await waitFor(() => expect(density()).toBeGreaterThan(before));
+		const raised = density();
+		fireEvent.keyDown(dial, { key: "ArrowDown" });
+		fireEvent.keyDown(dial, { key: "ArrowDown" });
+		await waitFor(() => expect(density()).toBeLessThan(raised));
+		fireEvent.keyDown(dial, { key: "End" });
+		await waitFor(() => expect(density()).toBeCloseTo(16));
+		fireEvent.keyDown(dial, { key: "Home" });
+		await waitFor(() => expect(density()).toBeCloseTo(0.25));
+	});
+
+	it("lays the dial flat in a row under the map at phone width", async () => {
+		vi.stubGlobal(
+			"matchMedia",
+			vi.fn((query: string) => ({
+				addEventListener: vi.fn(),
+				matches: query.includes("max-width: 639px"),
+				removeEventListener: vi.fn(),
+			})),
+		);
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async () => new Response(JSON.stringify({}), { status: 200 })),
+		);
+		render(adapter(true));
+		await screen.findByText("Audience local renderer");
+		const rail = screen.getByRole("group", { name: "Map display" });
+		await waitFor(() =>
+			expect(
+				within(rail).getByRole("slider").getAttribute("aria-orientation"),
+			).not.toBe("vertical"),
+		);
+		const before = screen.getByTestId("local-map").dataset.density;
+		const dial = within(rail).getByRole("slider");
+		dial.focus();
 		fireEvent.keyDown(dial, { key: "End" });
 		await waitFor(() =>
 			expect(screen.getByTestId("local-map").dataset.density).not.toBe(before),

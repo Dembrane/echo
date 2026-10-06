@@ -115,7 +115,8 @@ const MapSectionHeader = ({
 	layoutFailed = false,
 }: {
 	title: ReactNode;
-	count: number;
+	/** Left out where the surface shows no count (the room). */
+	count?: number;
 	edgeCounts?: EdgeCounts | null;
 	/** The page's own copy; the layout's raw error is never shown. */
 	layoutFailed?: boolean;
@@ -132,9 +133,11 @@ const MapSectionHeader = ({
 		) : (
 			<EdgeCountNote counts={edgeCounts} />
 		)}
-		<p className="text-xs">
-			<Plural value={count} one="# argument" other="# arguments" />
-		</p>
+		{count !== undefined && (
+			<p className="text-xs">
+				<Plural value={count} one="# argument" other="# arguments" />
+			</p>
+		)}
 	</div>
 );
 
@@ -174,6 +177,8 @@ export type MapExperienceProps = {
 	 * resting the cursor makes none and a failed one offers no retry.
 	 */
 	groups?: ReadonlyArray<MapGroupDoc>;
+	/** False where the surface shows no argument count over its maps (the room). */
+	counts?: boolean;
 };
 
 const EMPTY_EVIDENCE: never[] = [];
@@ -202,6 +207,7 @@ export const MapExperience = ({
 	provenance = true,
 	tags,
 	groups,
+	counts = true,
 }: MapExperienceProps) => {
 	const { i18n } = useLingui();
 
@@ -555,7 +561,7 @@ export const MapExperience = ({
 						>
 							<MapSectionHeader
 								title={<Trans>Argument tree (MST)</Trans>}
-								count={graphNodes.length}
+								count={counts ? graphNodes.length : undefined}
 								edgeCounts={treeEdgeCounts}
 								layoutFailed={layoutFailed}
 							/>
@@ -598,7 +604,7 @@ export const MapExperience = ({
 						>
 							<MapSectionHeader
 								title={<Trans>Local map</Trans>}
-								count={graphNodes.length}
+								count={counts ? graphNodes.length : undefined}
 								edgeCounts={localEdgeCounts}
 								layoutFailed={layoutFailed}
 							/>

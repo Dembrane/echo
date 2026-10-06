@@ -97,36 +97,115 @@ const Rule = () => (
 	/>
 );
 
+const DIAL_KEY_STEPS: Record<string, number> = {
+	ArrowDown: -1,
+	ArrowLeft: -1,
+	ArrowRight: 1,
+	ArrowUp: 1,
+	PageDown: -10,
+	PageUp: 10,
+};
+
 /**
- * The cluster density dial, from clumped to spread out. Its own piece, so the
- * room's map can offer it without the rest of the toolbar: it changes only the
- * drawing on this screen and asks the server for nothing.
+ * The dial standing up: fewer clusters at the bottom, more at the top, as a
+ * fader rises. Mantine's Slider reads the pointer along x only, so this is the
+ * browser's own range turned upright. Its keys are handled here, so every
+ * browser steps it the same way the horizontal dial does.
  */
-export const DensityDial = ({
+const VerticalDial = ({
 	density,
 	onChange,
 }: {
 	density: number;
 	onChange: (density: number) => void;
-}) => (
-	<div className="flex items-center gap-1.5 px-1" title={t`Cluster density`}>
-		<CirclesThreeIcon size={16} aria-hidden style={{ opacity: 0.6 }} />
-		<Slider
-			thumbLabel={t`Cluster density: fewer or more clusters`}
-			className="w-28"
-			size="xs"
-			min={0}
-			max={100}
-			step={1}
-			value={densityToDial(density)}
-			onChange={(dial) => onChange(dialToDensity(dial))}
-			label={null}
-			color="primary"
-			thumbSize={12}
-		/>
-		<DotsNineIcon size={16} aria-hidden style={{ opacity: 0.6 }} />
-	</div>
-);
+}) => {
+	const dial = densityToDial(density);
+	const set = (next: number) =>
+		onChange(dialToDensity(Math.min(100, Math.max(0, next))));
+	return (
+		<div
+			className="flex w-9 flex-col items-center gap-2 py-2"
+			title={t`Cluster density`}
+			style={{
+				backgroundColor: "var(--mantine-color-default)",
+				borderColor: "var(--app-control-rule)",
+				borderStyle: "solid",
+				borderWidth: "0 1px",
+				color: mapVars.text,
+			}}
+		>
+			<DotsNineIcon size={20} aria-hidden />
+			<input
+				type="range"
+				min={0}
+				max={100}
+				step={1}
+				value={dial}
+				aria-label={t`Cluster density: fewer or more clusters`}
+				aria-orientation="vertical"
+				className="h-32 w-4 cursor-pointer"
+				style={{
+					accentColor: mapVars.accentText,
+					direction: "rtl",
+					writingMode: "vertical-lr",
+				}}
+				onChange={(event) => set(Number(event.currentTarget.value))}
+				onKeyDown={(event) => {
+					const step = DIAL_KEY_STEPS[event.key];
+					const next =
+						step !== undefined
+							? dial + step
+							: event.key === "Home"
+								? 0
+								: event.key === "End"
+									? 100
+									: null;
+					if (next === null) return;
+					event.preventDefault();
+					set(next);
+				}}
+			/>
+			<CirclesThreeIcon size={20} aria-hidden />
+		</div>
+	);
+};
+
+/**
+ * The cluster density dial, from clumped to spread out. Its own piece, so the
+ * room's map can offer it without the rest of the toolbar: it changes only the
+ * drawing on this screen and asks the server for nothing. Upright, it fits a
+ * rail beside the map.
+ */
+export const DensityDial = ({
+	density,
+	onChange,
+	orientation = "horizontal",
+}: {
+	density: number;
+	onChange: (density: number) => void;
+	orientation?: "horizontal" | "vertical";
+}) =>
+	orientation === "vertical" ? (
+		<VerticalDial density={density} onChange={onChange} />
+	) : (
+		<div className="flex items-center gap-1.5 px-1" title={t`Cluster density`}>
+			<CirclesThreeIcon size={16} aria-hidden style={{ opacity: 0.6 }} />
+			<Slider
+				thumbLabel={t`Cluster density: fewer or more clusters`}
+				className="w-28"
+				size="xs"
+				min={0}
+				max={100}
+				step={1}
+				value={densityToDial(density)}
+				onChange={(dial) => onChange(dialToDensity(dial))}
+				label={null}
+				color="primary"
+				thumbSize={12}
+			/>
+			<DotsNineIcon size={16} aria-hidden style={{ opacity: 0.6 }} />
+		</div>
+	);
 
 /**
  * The map's one row of controls, on the map itself: physics, the cluster
