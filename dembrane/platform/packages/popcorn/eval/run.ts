@@ -6,6 +6,7 @@
  *
  *   bun eval/run.ts --label baseline [--repeat 3] [--validate] [--only id,id]
  *   bun eval/run.ts --label baseline --rescore    (scores a saved run again, no model calls)
+ *   bun eval/run.ts --label try --prompt popcorn-v1.9    (another prompt file in prompts/)
  *
  * Calls go to Vertex with Application Default Credentials. LLM_VERTEX_PROJECT defaults to
  * dembrane-jorim-cli here. Set POPCORN_EVAL_CORPUS to a folder holding a cases.json whose
@@ -44,6 +45,7 @@ const { values: args } = parseArgs({
     validate: { type: "boolean", default: false },
     only: { type: "string" },
     rescore: { type: "boolean", default: false },
+    prompt: { type: "string" },
   },
 });
 if (!args.label) throw new Error("--label is required");
@@ -181,7 +183,12 @@ async function runCases(): Promise<Saved[]> {
     const text = caseText(c);
     const tid = c.id;
     for (let run = 1; run <= Number(args.repeat); run++) {
-      const raw = await model.extract({ transcriptId: tid, transcript: text, hostNote: "" });
+      const raw = await model.extract({
+        transcriptId: tid,
+        transcript: text,
+        hostNote: "",
+        ...(args.prompt && { prompt: args.prompt }),
+      });
       const rawPhrases = ((raw as { items?: { phrase?: string }[] }).items ?? []).map((i) =>
         String(i.phrase ?? ""),
       );
@@ -210,7 +217,7 @@ async function runCases(): Promise<Saved[]> {
       const saved = score(c, {
         case: c.id,
         run,
-        prompt: POPCORN_PROMPT,
+        prompt: args.prompt ?? POPCORN_PROMPT,
         head,
         model: completer.modelIdentity("multi_modal_fast"),
         raw: rawPhrases,

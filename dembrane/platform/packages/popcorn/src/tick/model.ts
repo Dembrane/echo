@@ -121,10 +121,10 @@ export interface PhraseArgs {
 export class PopcornModel {
   constructor(readonly completer: Completer) {}
 
-  /** One fast extractor per transcript; the raw `{items: [...]}`. */
-  extract(o: { transcriptId: string; transcript: string; hostNote: string }) {
+  /** One fast extractor per transcript; the raw `{items: [...]}`. The eval names other prompts. */
+  extract(o: { transcriptId: string; transcript: string; hostNote: string; prompt?: string }) {
     return structured(this.completer, {
-      system: promptText(POPCORN_PROMPT),
+      system: promptText(o.prompt ?? POPCORN_PROMPT),
       user: transcriptMessage(o.transcriptId, o.transcript, o.hostNote),
       schema: POPCORN_SCHEMA,
       maxTokens: 2000,
