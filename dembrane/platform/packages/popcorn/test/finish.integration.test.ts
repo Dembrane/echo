@@ -144,6 +144,17 @@ run("popcorn read when a conversation finishes", () => {
     expect(await kinds()).toEqual(["finish"]);
   });
 
+  // Jorim's pick 1:A (October 6th 2026): Stop live ends the live reads, not the finish reads.
+  test("a conversation that finishes after Stop live is still read", async () => {
+    await clear();
+    const now = new Date();
+    await goLive(liveDeps(now), await loopRow(), 1);
+    await stopLive(liveDeps(now), await loopRow());
+    expect((await loopRow()).status).toBe("paused");
+    expect(await finish(ids.project, new Date(now.getTime() + 4 * 60_000))).toBe(true);
+    expect(await kinds()).toEqual(["finish"]);
+  });
+
   test("the read runs on a paused loop and leaves the mode and the live window alone", async () => {
     await clear();
     const before = await loopRow();

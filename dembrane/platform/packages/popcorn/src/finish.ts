@@ -10,7 +10,8 @@ import { FINISH_TICK, popcornStore, type Sql } from "./storage";
  * is a popcorn_tick row booked FINISH_WINDOW_MS out, so conversations finishing close
  * together share it; the worker's minute claim of due rows starts it with the row's request
  * id, and the tick's run lock serialises it with any other read of the loop. It runs whether
- * or not the loop is live and never changes the mode or the live window.
+ * or not the loop is live, also after a host's Stop live, and never changes the mode or the
+ * live window.
  */
 
 /** Finishes this close together share one read. */
