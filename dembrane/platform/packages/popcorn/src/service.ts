@@ -558,7 +558,8 @@ export async function goLive(
   const loopId = String(loop.id);
   await client(d.db).begin(async (tx) => {
     const store = popcornStore(tx);
-    await store.cancelPendingTicks(loopId, pyIso(now), { withStart: true });
+    // A read a finished conversation booked stays: a booked start may be days away.
+    await store.cancelPendingTicks(loopId, pyIso(now), { withStart: true, keepFinish: true });
     if (span.booked && readyBy) {
       await store.updateLoop(
         loopId,
@@ -596,12 +597,15 @@ export async function goLive(
   });
 }
 
-/** Back to manual: nothing scheduled, no start booked, the deck stays, refresh still works. */
+/**
+ * Back to manual: no live read scheduled, no start booked, the deck stays, refresh still
+ * works. A read a finished conversation booked still runs.
+ */
 export async function stopLive(d: PopcornDeps, loop: Row): Promise<void> {
   const now = pyIso(d.now());
   await client(d.db).begin(async (tx) => {
     const store = popcornStore(tx);
-    await store.cancelPendingTicks(String(loop.id), now, { withStart: true });
+    await store.cancelPendingTicks(String(loop.id), now, { withStart: true, keepFinish: true });
     await store.updateLoop(
       String(loop.id),
       { status: "paused", expires_at: now, caps: withoutBooking(loop.caps) },

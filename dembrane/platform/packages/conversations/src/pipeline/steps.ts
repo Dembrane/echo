@@ -38,6 +38,15 @@ export interface PipelineDeps {
   readonly logger: Logger;
   readonly now: () => Date;
   readonly webhooks: { readonly enabled: boolean; readonly dashboardUrl: string };
+  /**
+   * Told once per finished conversation whose every chunk is transcribed, inside the
+   * transaction that marks it so. The worker books the project's popcorn read here.
+   */
+  readonly onTranscribed?: (
+    tx: Tx["sql"],
+    projectId: string,
+    conversationId: string,
+  ) => Promise<void>;
   /** Files above this are split before transcription; tests lower it to split small files. */
   readonly maxChunkBytes?: number;
 }
@@ -571,6 +580,7 @@ export async function claimFinalize(
       .set({ is_all_chunks_transcribed: true, updated_at: d.now().toISOString() })
       .where(eq(conversation.id, conversationId));
     await webhook(d, tx, row.project_id, conversationId, "conversation.transcribed");
+    await d.onTranscribed?.(tx.sql, row.project_id, conversationId);
     return row.project_id;
   });
 }
