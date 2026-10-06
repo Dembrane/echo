@@ -3,7 +3,7 @@
   "cases": [
     {
       "id": "typed-four-points",
-      "title": "A typed submission with four digested points (stand-in until the real text arrives)",
+      "title": "A typed submission with four long, digested points",
       "text": "Four things I want the council to hear before the vote.\nFirst, do it street by street, not house by house. When the whole of Quarry Row is done in one go the scaffolding and the trench are shared, and the builders told us that takes about a quarter off the cost of each house.\nSecond, stop sending letters. Half my street puts anything with the council crest straight in the recycling. What got my mother to sign up for the insulation survey was the electrician from number eight knocking on her door and showing her his own meter.\nThird, renters need protection written into the scheme, not a promise. My landlord has ignored the mould in our back bedroom for two winters. If the street scheme is voluntary for landlords, tenants like me will be the last ones still on gas in 2035, and then we pay the rent rise after the refit.\nFourth, keep the pool warm. The Mell Valley pool is the only place the older people on Linden Terrace exercise in winter. If the river heat network cannot promise the water stays at 29 degrees, say so before the vote, not after.",
       "expect": {
         "min": 4
@@ -32,6 +32,40 @@
           "says": "Promise the pool stays at 29 degrees before the vote",
           "topic": ["pool"],
           "detail": [["29", "twenty.?nine"]]
+        }
+      ]
+    },
+    {
+      "id": "typed-four-lines",
+      "title": "A typed submission with four short lines, one point each (the shape of the case Jorim reported)",
+      "text": "Feeling really good! Quiet weekend and feeling hopeful\nI would like a clear picture of who owns what by when and for what purpose. This week is for clarity and for sorting all the ideas on how to improve the rollout and the shared plan\nThe garden fund is doing better than we hoped. The council grant lands this month.\nHow do we make the next season brilliant?",
+      "expect": {
+        "min": 4
+      },
+      "points": [
+        {
+          "id": "mood",
+          "says": "Feeling good after a quiet weekend, hopeful",
+          "topic": ["good", "quiet", "hopeful", "weekend"],
+          "detail": [["quiet", "weekend", "hopeful"]]
+        },
+        {
+          "id": "clarity",
+          "says": "Who owns what by when and for what purpose",
+          "topic": ["who owns what", "clarity", "by when"],
+          "detail": [["by when"], ["purpose"]]
+        },
+        {
+          "id": "fund",
+          "says": "The fund is doing better than hoped; the grant lands this month",
+          "topic": ["fund", "grant", "money"],
+          "detail": [["grant"], ["this month"]]
+        },
+        {
+          "id": "season",
+          "says": "How do we make the next season brilliant",
+          "topic": ["season"],
+          "detail": [["brilliant"]]
         }
       ]
     },
