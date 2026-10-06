@@ -1,0 +1,65 @@
+# Weekly dependency updates. Each ecosystem gets one pull request for its minor and patch
+# updates together; a major update comes on its own.
+version: 2
+updates:
+  # The Bun workspace: every package under dembrane/platform shares one bun.lock.
+  - package-ecosystem: bun
+    directory: /dembrane/platform
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 3
+    commit-message: { prefix: chore }
+    groups:
+      platform:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  # The frontend installs with pnpm, which Dependabot reads as npm. The cooldown matches
+  # minimumReleaseAge in pnpm-workspace.yaml.
+  - package-ecosystem: npm
+    directory: /dembrane/frontend
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 3
+    commit-message: { prefix: chore }
+    cooldown: { default-days: 3 }
+    groups:
+      frontend:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 3
+    commit-message: { prefix: chore }
+    groups:
+      actions:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  # The base images of the five platform images and the alert relay.
+  - package-ecosystem: docker
+    directories:
+      - /dembrane/platform/apps/*
+      - /dembrane/infra/alert-relay
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 3
+    commit-message: { prefix: chore }
+    groups:
+      images:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  # The providers of the three environments and the module they share.
+  - package-ecosystem: terraform
+    directories:
+      - /dembrane/infra/preview
+      - /dembrane/infra/staging
+      - /dembrane/infra/prod
+      - /dembrane/infra/modules/platform
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 3
+    commit-message: { prefix: chore }
+    groups:
+      terraform:
+        patterns: ["*"]
+        update-types: [minor, patch]
