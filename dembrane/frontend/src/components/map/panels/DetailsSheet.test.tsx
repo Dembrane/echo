@@ -27,13 +27,19 @@ import {
 } from "../state/interactionStore";
 import { DEFAULT_MAP_SETTINGS } from "../state/settings";
 import type { MapGraphNode } from "../types";
+import { type Focus, TRAIL_STEPS, travelTo } from "./DetailsSheet";
 import { KnowledgeGraph, knowledgeGraph } from "./KnowledgeGraph";
 
+// The tree the sheet reads, set per test; one array, so a render keeps it.
+const geometry = vi.hoisted(() => ({
+	mstEdges: [] as Array<{ source: string; target: string; distance: number }>,
+	neighbours: { fpLinks: [], nnLinks: [] },
+}));
 vi.mock("../layout/useMapGeometry", () => ({
 	EMPTY_EDGES: [],
 	useMapGeometry: () => ({
-		mstEdges: [],
-		neighbours: { fpLinks: [], nnLinks: [] },
+		mstEdges: geometry.mstEdges,
+		neighbours: geometry.neighbours,
 		status: "ready",
 	}),
 }));
@@ -70,6 +76,7 @@ beforeEach(() => {
 afterEach(() => {
 	cleanup();
 	vi.unstubAllGlobals();
+	geometry.mstEdges = [];
 });
 
 const group = (
@@ -105,6 +112,16 @@ const makeGraph = (): MapGraphData => {
 		[b.id, [group("conv-ada", "Ada's table", 0, ["Bins overflow."])]],
 		[c.id, []],
 	]);
+	// The first argument supports the second.
+	graph.relations = [
+		{
+			basis: "inferred",
+			id: "rel-ab",
+			source: a.id,
+			target: b.id,
+			type: "supports",
+		},
+	];
 	return graph;
 };
 
@@ -138,7 +155,7 @@ const renderMap = ({
 	const client = new QueryClient({
 		defaultOptions: { queries: { retry: false } },
 	});
-	render(
+	const view = render(
 		<QueryClientProvider client={client}>
 			<MemoryRouter>
 				<I18nProvider i18n={i18n}>
@@ -179,8 +196,25 @@ const renderMap = ({
 			</MemoryRouter>
 		</QueryClientProvider>,
 	);
-	return graph;
+	return { graph, store, view };
 };
+
+/** A dot in the sheet's graph: an argument by its id, a quote by `id#n`. */
+const dot = (sheet: HTMLElement, id: string) => {
+	const found = [...sheet.querySelectorAll<SVGGElement>("[data-node-id]")].find(
+		(element) => element.getAttribute("data-node-id") === id,
+	);
+	if (!found) throw new Error(`No dot ${id} in the graph`);
+	return found;
+};
+
+/** The trail's steps as read. */
+const trail = (sheet: HTMLElement) =>
+	[
+		...within(sheet)
+			.getByTestId("sheet-trail")
+			.querySelectorAll("button, [aria-current]"),
+	].map((step) => step.textContent);
 
 const openCluster = async (from: RegExp) => {
 	fireEvent.click(await screen.findByText("Safer crossings near the school"));
@@ -215,7 +249,7 @@ describe("the details sheet", () => {
 	});
 
 	it("opens a single argument with its own quotes", async () => {
-		const graph = renderMap();
+		const { graph } = renderMap();
 		fireEvent.click(
 			await screen.findByRole("button", { name: /^Quotes \(4\)$/ }),
 		);
@@ -229,7 +263,7 @@ describe("the details sheet", () => {
 	});
 
 	it("shows the first two quotes of an argument, then all of them", async () => {
-		const graph = renderMap();
+		const { graph } = renderMap();
 		const sheet = await openCluster(/^Quotes \(5\)$/);
 		const first = within(sheet)
 			.getAllByRole("article")
@@ -242,27 +276,222 @@ describe("the details sheet", () => {
 		expect(within(first).getAllByRole("listitem")).toHaveLength(4);
 	});
 
-	it("marks an argument's quotes when its node is picked, and one quote when its leaf is", async () => {
-		const graph = renderMap();
+	it("travels to an argument picked in a cluster's graph, and marks one quote when its leaf is", async () => {
+		const { graph } = renderMap();
 		const sheet = await openCluster(/^Connections$/);
 		const [a] = graph.placedNodes;
-		const nodes = sheet.querySelectorAll<SVGGElement>(
-			`[data-node-kind="argument"][data-node-id="${a.id}"]`,
+		fireEvent.click(dot(sheet, a.id));
+		expect(within(sheet).getByTestId("sheet-focus-title").textContent).toBe(
+			a.label,
 		);
-		fireEvent.click(nodes[0]);
+		// The focus is ringed in the middle of the graph.
+		expect(dot(sheet, a.id).getAttribute("aria-current")).toBe("true");
+		expect(within(sheet).getByTestId("graph-mark")).toBeTruthy();
 		const marked = () =>
 			[...sheet.querySelectorAll("[data-quote-id][data-selected]")].map(
 				(element) => element.getAttribute("data-quote-id"),
 			);
-		expect(marked()).toEqual([`${a.id}#0`, `${a.id}#1`]);
-		expect(within(sheet).getByTestId("graph-mark")).toBeTruthy();
+		expect(marked()).toEqual([]);
 
-		// The third quote is folded; picking its leaf opens the list on it.
-		const leaf = sheet.querySelector<SVGGElement>(
-			`[data-node-id="${a.id}#2"]`,
-		) as SVGGElement;
-		fireEvent.click(leaf);
+		// The third quote is folded; picking its leaf opens the list on it and
+		// stays on the same argument.
+		fireEvent.click(dot(sheet, `${a.id}#2`));
 		expect(marked()).toEqual([`${a.id}#2`]);
+		expect(
+			within(sheet).getByText("My kids walk it every morning."),
+		).toBeTruthy();
+		expect(within(sheet).getByTestId("sheet-focus-title").textContent).toBe(
+			a.label,
+		);
+	});
+
+	it("goes on to a neighbour picked in the graph, with its quotes under it", async () => {
+		const { graph } = renderMap();
+		const [a, b] = graph.placedNodes;
+		fireEvent.click(
+			await screen.findByRole("button", { name: /^Quotes \(4\)$/ }),
+		);
+		const sheet = await screen.findByRole("dialog");
+		const panel = within(sheet).getByTestId("sheet-panel");
+		expect(
+			within(panel).getByText("The crossing is the worst part."),
+		).toBeTruthy();
+
+		fireEvent.click(dot(sheet, b.id));
+		expect(within(sheet).getByTestId("sheet-focus-title").textContent).toBe(
+			b.label,
+		);
+		expect(within(panel).getByText("Bins overflow.")).toBeTruthy();
+		expect(
+			within(panel).queryByText("The crossing is the worst part."),
+		).toBeNull();
+		// Its relationship back is the dashed list, and it travels too.
+		fireEvent.click(within(panel).getByTestId(`sheet-relation-${a.id}`));
+		expect(within(sheet).getByTestId("sheet-focus-title").textContent).toBe(
+			a.label,
+		);
+	});
+
+	it("keeps clicking through the tree's neighbours", async () => {
+		const { graph: first } = renderMap();
+		cleanup();
+		const [a, b, c] = first.placedNodes;
+		geometry.mstEdges = [{ distance: 0.3, source: b.id, target: c.id }];
+		renderMap();
+		fireEvent.click(
+			await screen.findByRole("button", { name: /^Quotes \(4\)$/ }),
+		);
+		const sheet = await screen.findByRole("dialog");
+		fireEvent.click(dot(sheet, b.id));
+		// From the second argument its tree neighbour is one click on.
+		fireEvent.click(dot(sheet, c.id));
+		expect(within(sheet).getByTestId("sheet-focus-title").textContent).toBe(
+			c.label,
+		);
+		expect(
+			within(sheet).getByText("No quotes for this argument."),
+		).toBeTruthy();
+		expect(trail(sheet)).toEqual([a.label, b.label, c.label]);
+	});
+
+	it("shows the path in the trail and travels back along it", async () => {
+		const { graph } = renderMap();
+		const [a, b] = graph.placedNodes;
+		const sheet = await openCluster(/^Connections$/);
+		// At the cluster there is nowhere to go back to.
+		expect(within(sheet).queryByTestId("sheet-trail")).toBeNull();
+
+		fireEvent.click(dot(sheet, a.id));
+		fireEvent.click(dot(sheet, b.id));
+		expect(trail(sheet)).toEqual([
+			"Safer crossings near the school",
+			a.label,
+			b.label,
+		]);
+		const path = within(sheet).getByRole("navigation", { name: "Trail" });
+		// The step you are on is not a button.
+		expect(within(path).getAllByRole("button")).toHaveLength(2);
+
+		fireEvent.click(within(path).getByRole("button", { name: a.label }));
+		expect(within(sheet).getByTestId("sheet-focus-title").textContent).toBe(
+			a.label,
+		);
+		expect(trail(sheet)).toEqual(["Safer crossings near the school", a.label]);
+
+		fireEvent.click(
+			within(sheet).getByRole("button", {
+				name: "Safer crossings near the school",
+			}),
+		);
+		expect(within(sheet).getByTestId("sheet-cluster")).toBeTruthy();
+		expect(within(sheet).queryByTestId("sheet-trail")).toBeNull();
+	});
+
+	it("keeps the trail to the last steps, the item it opened on first", () => {
+		const step = (id: string): Focus => ({ id, kind: "argument" });
+		let path: Focus[] = [{ kind: "cluster" }];
+		for (const id of ["a", "b", "c", "d", "e"]) path = travelTo(path, step(id));
+		expect(path).toHaveLength(TRAIL_STEPS);
+		expect(path).toEqual([
+			{ kind: "cluster" },
+			step("c"),
+			step("d"),
+			step("e"),
+		]);
+		// Going to a step on the trail goes back to it.
+		expect(travelTo(path, step("d"))).toEqual([
+			{ kind: "cluster" },
+			step("c"),
+			step("d"),
+		]);
+	});
+
+	it("scrolls nothing on a click, not the sheet and not the page", async () => {
+		const scrollIntoView = vi.fn();
+		const scrollTo = vi.fn();
+		Element.prototype.scrollIntoView = scrollIntoView;
+		Element.prototype.scrollTo = scrollTo as unknown as Element["scrollTo"];
+		vi.stubGlobal("scrollTo", scrollTo);
+		try {
+			const { graph } = renderMap();
+			const [a, b] = graph.placedNodes;
+			const sheet = await openCluster(/^Connections$/);
+			fireEvent.click(dot(sheet, a.id));
+			fireEvent.click(dot(sheet, `${a.id}#2`));
+			fireEvent.click(dot(sheet, b.id));
+			fireEvent.click(
+				within(sheet).getByRole("button", {
+					name: "Safer crossings near the school",
+				}),
+			);
+			expect(scrollIntoView).not.toHaveBeenCalled();
+			expect(scrollTo).not.toHaveBeenCalled();
+			expect(within(sheet).getByTestId("sheet-scroll").scrollTop).toBe(0);
+			let ancestor: HTMLElement | null = sheet.parentElement;
+			while (ancestor) {
+				expect(ancestor.scrollTop).toBe(0);
+				ancestor = ancestor.parentElement;
+			}
+		} finally {
+			delete (Element.prototype as Partial<Element>).scrollIntoView;
+			delete (Element.prototype as Partial<Element>).scrollTo;
+		}
+	});
+
+	it("opens a cluster from Arguments on its arguments, and All quotes groups them", async () => {
+		const { graph } = renderMap();
+		const [a, b] = graph.placedNodes;
+		const sheet = await openCluster(/^Arguments \(2\)$/);
+		const cluster = within(sheet).getByTestId("sheet-cluster");
+		expect(within(cluster).getByTestId("sheet-count").textContent).toBe(
+			"From 5 quotes in 2 conversations",
+		);
+		// Each argument with its first quote, to pick from the list too.
+		expect(
+			within(cluster).getByTestId(`sheet-argument-${a.id}`).textContent,
+		).toContain("The crossing is the worst part.");
+		expect(within(cluster).queryByTestId("sheet-all-quotes")).toBeNull();
+
+		const all = within(cluster).getByRole("button", { name: "All quotes" });
+		fireEvent.click(all);
+		expect(all.getAttribute("aria-pressed")).toBe("true");
+		const grouped = within(cluster).getByTestId("sheet-all-quotes");
+		expect(
+			[...grouped.querySelectorAll("article")].map((article) =>
+				article.getAttribute("data-argument-id"),
+			),
+		).toEqual([a.id, b.id]);
+		expect(within(grouped).getByText("Bins overflow.")).toBeTruthy();
+
+		// Picking from the list travels like a dot does.
+		fireEvent.click(all);
+		fireEvent.click(within(cluster).getByTestId(`sheet-argument-${b.id}`));
+		expect(within(sheet).getByTestId("sheet-focus-title").textContent).toBe(
+			b.label,
+		);
+	});
+
+	it("marks the travelled argument on the main map, and moves no selection", async () => {
+		const { graph, store } = renderMap();
+		const [a, b] = graph.placedNodes;
+		fireEvent.click(
+			await screen.findByRole("button", { name: /^Quotes \(4\)$/ }),
+		);
+		const sheet = await screen.findByRole("dialog");
+		const revision = store.getState().selectionRevision;
+		fireEvent.click(dot(sheet, b.id));
+		const state = store.getState();
+		expect([...state.highlightedNodeIds]).toEqual([b.id]);
+		expect(state.highlightSource).toBe("history");
+		expect(state.selectedNodeId).toBe(a.id);
+		expect(state.selectionRevision).toBe(revision);
+		// Spotlight still shows what the sheet was opened on, and so does the
+		// sheet's own title.
+		expect(within(sheet).getByTestId("sheet-title").textContent).toBe(a.label);
+
+		fireEvent.keyDown(document, { key: "Escape" });
+		await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+		expect(store.getState().highlightedNodeIds.size).toBe(0);
 	});
 
 	it("names a node under the graph when it is focused", async () => {
@@ -284,12 +513,25 @@ describe("the details sheet", () => {
 		expect(links[0].getAttribute("href")).toContain("/conversations/conv-ada");
 	});
 
-	it("shows no conversation links in the room", async () => {
-		renderMap({ provenance: false });
+	it("shows no conversation links in the room, and travels from the keyboard", async () => {
+		const { graph } = renderMap({ provenance: false });
+		const [a, b] = graph.placedNodes;
 		const sheet = await openCluster(/^Quotes \(5\)$/);
 		expect(within(sheet).queryAllByRole("link")).toHaveLength(0);
 		// The conversation is still named, as the room names it.
 		expect(within(sheet).getAllByText("Ada's table").length).toBeGreaterThan(0);
+
+		// The dots take focus, and Enter travels.
+		fireEvent.keyDown(dot(sheet, a.id), { key: "Enter" });
+		expect(within(sheet).getByTestId("sheet-focus-title").textContent).toBe(
+			a.label,
+		);
+		fireEvent.keyDown(dot(sheet, b.id), { key: "Enter" });
+		expect(within(sheet).getByTestId("sheet-focus-title").textContent).toBe(
+			b.label,
+		);
+		expect(dot(sheet, b.id).getAttribute("tabindex")).toBe("0");
+		expect(within(sheet).queryAllByRole("link")).toHaveLength(0);
 	});
 
 	it("keeps the room's dark colours", async () => {

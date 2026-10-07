@@ -1,0 +1,46 @@
+/* What travels in the details sheet: the trail's steps, a cluster's
+   arguments and the relationships under an argument. They sit on the map's
+   own surface, so they take the map's tokens (`--map-*`), which the dark
+   map relights. */
+
+.travel {
+	appearance: none;
+	background: none;
+	border: 0;
+	color: inherit;
+	cursor: pointer;
+	margin: 0;
+	padding: 0;
+	text-align: left;
+}
+
+.travel:focus-visible {
+	outline: 1px solid var(--map-accent-text);
+	outline-offset: 2px;
+}
+
+/* A row you press lifts on hover, in the map's card tint. */
+.row {
+	display: block;
+	padding: 1rem 0.5rem;
+	width: 100%;
+}
+
+.row:hover {
+	background: var(--map-card);
+}
+
+/* The trail's earlier steps read as quiet links. */
+.step {
+	max-width: 12em;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.step:hover {
+	color: var(--map-text);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}

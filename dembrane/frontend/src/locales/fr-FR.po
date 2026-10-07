@@ -771,7 +771,7 @@ msgstr "{conversations, plural, one {# conversation} other {# conversations}}"
 msgid "{conversations} conversations with a transcript, about {minutes} minutes of talk. Ready."
 msgstr "{conversations} conversations avec une transcription, soit environ {minutes} minutes de discussion. Prêt."
 
-#: src/components/map/MapExperience.tsx:142
+#: src/components/map/MapExperience.tsx:143
 msgid "{count, plural, one {# argument} other {# arguments}}"
 msgstr "{count, plural, one {# argument} other {# arguments}}"
 
@@ -1616,8 +1616,8 @@ msgstr "Ajoutées"
 msgid "Added {granted} people"
 msgstr "{granted} personnes ajoutées"
 
-#: src/components/map/panels/shared.tsx:98
-#: src/components/map/panels/shared.tsx:123
+#: src/components/map/panels/shared.tsx:104
+#: src/components/map/panels/shared.tsx:129
 msgid "Added by a host"
 msgstr "Ajouté par un hôte"
 
@@ -1752,7 +1752,7 @@ msgstr "Paramètres avancés"
 #~ msgid "Advanced Settings"
 #~ msgstr "Paramètres avancés"
 
-#: src/components/map/panels/shared.tsx:87
+#: src/components/map/panels/shared.tsx:93
 msgid "Affected by"
 msgstr "Affecté par"
 
@@ -1841,6 +1841,10 @@ msgstr "Tous les types"
 #: src/routes/project/ProjectsHome.tsx:346
 msgid "All projects"
 msgstr "Tous les projets"
+
+#: src/components/map/panels/DetailsSheet.tsx:534
+msgid "All quotes"
+msgstr "Toutes les citations"
 
 #: src/features/sidebar/views/InboxView.tsx:179
 msgid "All read"
@@ -2007,6 +2011,7 @@ msgid "An event or a workshop."
 msgstr "Un événement ou un atelier."
 
 #: src/components/map/panels/NodeDetailCard.tsx:200
+#: src/components/map/panels/DetailsSheet.tsx:258
 msgid "An object outside this view"
 msgstr "Un élément en dehors de cette vue"
 
@@ -2321,7 +2326,7 @@ msgstr "Carte des arguments"
 msgid "Argument tree"
 msgstr "Arbre des arguments"
 
-#: src/components/map/MapExperience.tsx:571
+#: src/components/map/MapExperience.tsx:620
 msgid "Argument tree (MST)"
 msgstr "Arbre des arguments (MST)"
 
@@ -2329,6 +2334,7 @@ msgstr "Arbre des arguments (MST)"
 #: src/components/results/ResultsList.tsx:265
 #: src/components/results/curate/CurateTabs.tsx:19
 #: src/components/map/attributes.ts:128
+#: src/components/map/panels/DetailsSheet.tsx:506
 #: src/components/map/panels/ArgumentAccordion.tsx:173
 msgid "Arguments"
 msgstr "Arguments"
@@ -3354,7 +3360,7 @@ msgid "Checking your session."
 msgstr "Vérification de votre session."
 
 #: src/components/map/attributes.ts:383
-#: src/components/map/panels/shared.tsx:147
+#: src/components/map/panels/shared.tsx:153
 #: src/components/map/panels/SpotlightPanel.tsx:354
 msgid "Checking…"
 msgstr "Vérification…"
@@ -3372,7 +3378,7 @@ msgstr "Choisir une conversation"
 msgid "Choose a logo file"
 msgstr "Choisir un fichier logo"
 
-#: src/components/map/MapExperience.tsx:649
+#: src/components/map/MapExperience.tsx:698
 msgid "Choose a map under Advanced"
 msgstr "Choisissez une carte dans Avancé"
 
@@ -3564,7 +3570,7 @@ msgstr "Cloner le projet"
 #: src/components/results/ResultRow.tsx:435
 #: src/components/results/ResultItem.tsx:860
 #: src/components/results/ResultItem.tsx:870
-#: src/components/map/panels/DetailsSheet.tsx:432
+#: src/components/map/panels/DetailsSheet.tsx:800
 #: src/components/dropzone/UploadConversationDropzone.tsx:882
 #: src/components/conversation/ConversationLinks.tsx:105
 #: src/components/common/FeedbackPortalModal.tsx:158
@@ -3596,6 +3602,10 @@ msgstr "Conforme au Cloud Act"
 #: src/components/map/panels/DensityControl.tsx:47
 #~ msgid "Clumped"
 #~ msgstr "Regroupé"
+
+#: src/components/map/panels/DetailsSheet.tsx:459
+msgid "Cluster"
+msgstr "Cluster"
 
 #: src/components/map/panels/MapToolbar.tsx:128
 #: src/components/map/panels/MapToolbar.tsx:191
@@ -3675,7 +3685,7 @@ msgstr "regroupé"
 msgid "Combined arguments"
 msgstr "Arguments regroupés"
 
-#: src/components/map/panels/shared.tsx:83
+#: src/components/map/panels/shared.tsx:89
 msgid "Combined from"
 msgstr "Regroupé à partir de"
 
@@ -3826,7 +3836,7 @@ msgstr "Connexion défectueuse"
 
 #: src/components/map/panels/SpotlightPanel.tsx:239
 #: src/components/map/panels/SpotlightPanel.tsx:429
-#: src/components/map/panels/DetailsSheet.tsx:451
+#: src/components/map/panels/DetailsSheet.tsx:612
 msgid "Connections"
 msgstr "Liens"
 
@@ -3865,7 +3875,7 @@ msgid "Content"
 msgstr "Contenu"
 
 #: src/components/map/attributes.ts:380
-#: src/components/map/panels/shared.tsx:145
+#: src/components/map/panels/shared.tsx:151
 msgid "Contested"
 msgstr "Contesté"
 
@@ -5162,7 +5172,7 @@ msgstr "Liens dissemblables : {0}"
 #~ msgstr "Extraction de l'idée clé..."
 
 #: src/components/map/panels/HistoryPanel.tsx:59
-#: src/components/map/panels/DetailsSheet.tsx:371
+#: src/components/map/panels/DetailsSheet.tsx:760
 #: src/components/map/panels/ClusterSummary.tsx:144
 msgid "Distilling core idea…"
 msgstr "Distillation de l’idée centrale…"
@@ -5393,7 +5403,7 @@ msgstr "Chaque popcorn s'affiche une fois par langue : l'original d'abord, puis 
 msgid "Earlier in the spotlight"
 msgstr "Déjà mis en lumière"
 
-#: src/components/map/panels/shared.tsx:118
+#: src/components/map/panels/shared.tsx:124
 msgid "Earlier map result"
 msgstr "Résultat de carte précédent"
 
@@ -6609,11 +6619,15 @@ msgstr "Français"
 msgid "friction"
 msgstr "friction"
 
-#: src/components/map/panels/DetailsSheet.tsx:414
+#: src/components/map/panels/DetailsSheet.tsx:199
 msgid "From {quoteCount, plural, one {# quote} other {# quotes}} in {conversationCount, plural, one {# conversation} other {# conversations}}"
 msgstr "{quoteCount, plural, one {# citation} other {# citations}} dans {conversationCount, plural, one {# conversation} other {# conversations}}"
 
-#: src/components/map/panels/shared.tsx:96
+#: src/components/map/panels/DetailsSheet.tsx:198
+#~ msgid "From {quotes, plural, one {# quote} other {# quotes}} in {conversations, plural, one {# conversation} other {# conversations}}"
+#~ msgstr ""
+
+#: src/components/map/panels/shared.tsx:102
 msgid "From the transcript"
 msgstr "Extrait de la transcription"
 
@@ -6724,7 +6738,7 @@ msgstr "Générer un résumé"
 msgid "Generate tensions"
 msgstr "Générer les tensions"
 
-#: src/components/map/panels/shared.tsx:121
+#: src/components/map/panels/shared.tsx:127
 msgid "Generated"
 msgstr "Généré"
 
@@ -7064,7 +7078,7 @@ msgstr "Historique / détails"
 msgid "History note"
 msgstr "Note d'historique"
 
-#: src/components/map/panels/shared.tsx:85
+#: src/components/map/panels/shared.tsx:91
 msgid "Holds position"
 msgstr "Garde sa position"
 
@@ -7257,7 +7271,7 @@ msgstr "Style d'image"
 msgid "Images must be under {MAX_FILE_MB}MB"
 msgstr "Les images doivent faire moins de {MAX_FILE_MB} Mo"
 
-#: src/components/map/panels/shared.tsx:125
+#: src/components/map/panels/shared.tsx:131
 msgid "Imported"
 msgstr "Importé"
 
@@ -7330,8 +7344,8 @@ msgid "Incorrect or made up"
 msgstr "Incorrect ou inventé"
 
 #: src/components/results/ResultItem.tsx:89
-#: src/components/map/panels/shared.tsx:100
-#: src/components/map/panels/shared.tsx:111
+#: src/components/map/panels/shared.tsx:106
+#: src/components/map/panels/shared.tsx:117
 msgid "Inferred"
 msgstr "Déduit"
 
@@ -7872,7 +7886,7 @@ msgstr "Type de changement non enregistré"
 msgid "Kinds of finding"
 msgstr "Types de constats"
 
-#: src/components/map/panels/KnowledgeGraph.tsx:298
+#: src/components/map/panels/KnowledgeGraph.tsx:436
 msgid "Knowledge graph"
 msgstr "Graphe de connaissances"
 
@@ -8059,12 +8073,12 @@ msgid "Light"
 msgstr "Clair"
 
 #: src/components/map/attributes.ts:379
-#: src/components/map/panels/shared.tsx:143
+#: src/components/map/panels/shared.tsx:149
 msgid "Likely false"
 msgstr "Probablement faux"
 
 #: src/components/map/attributes.ts:378
-#: src/components/map/panels/shared.tsx:141
+#: src/components/map/panels/shared.tsx:147
 msgid "Likely true"
 msgstr "Probablement vrai"
 
@@ -8324,7 +8338,7 @@ msgstr "Chargement…"
 msgid "Local argument map"
 msgstr "Carte d'arguments locale"
 
-#: src/components/map/MapExperience.tsx:614
+#: src/components/map/MapExperience.tsx:663
 msgid "Local map"
 msgstr "Carte locale"
 
@@ -8994,7 +9008,7 @@ msgid "name@example.com, name2@example.com"
 msgstr "nom@exemple.com, nom2@exemple.com"
 
 #: src/components/results/ResultItem.tsx:88
-#: src/components/map/panels/shared.tsx:109
+#: src/components/map/panels/shared.tsx:115
 msgid "Named by participants"
 msgstr "Nommé par les participants"
 
@@ -9027,7 +9041,7 @@ msgid "Needs review"
 msgstr "À vérifier"
 
 #: src/components/map/attributes.ts:346
-#: src/components/map/panels/shared.tsx:32
+#: src/components/map/panels/shared.tsx:38
 msgid "Negative"
 msgstr "Négatif"
 
@@ -9045,7 +9059,7 @@ msgid "Neighbours in the tree"
 msgstr "Voisins dans l'arbre"
 
 #: src/components/map/attributes.ts:347
-#: src/components/map/panels/shared.tsx:34
+#: src/components/map/panels/shared.tsx:40
 msgid "Neutral"
 msgstr "Neutre"
 
@@ -9517,7 +9531,7 @@ msgstr "Aucun projet trouvé pour ce terme de recherche"
 msgid "No projects match."
 msgstr "Aucun projet ne correspond."
 
-#: src/components/map/panels/DetailsSheet.tsx:194
+#: src/components/map/panels/DetailsSheet.tsx:158
 msgid "No quotes for this argument."
 msgstr "Aucune citation pour cet argument."
 
@@ -9525,7 +9539,7 @@ msgstr "Aucune citation pour cet argument."
 msgid "No quotes were kept with this finding."
 msgstr "Aucune citation n'a été conservée avec ce constat."
 
-#: src/components/map/panels/DetailsSheet.tsx:424
+#: src/components/map/panels/DetailsSheet.tsx:208
 msgid "No quotes yet"
 msgstr "Pas encore de citations"
 
@@ -9729,7 +9743,7 @@ msgid "Not applicable"
 msgstr "Non applicable"
 
 #: src/components/map/attributes.ts:348
-#: src/components/map/panels/shared.tsx:36
+#: src/components/map/panels/shared.tsx:42
 msgid "Not assessed"
 msgstr "Non évalué"
 
@@ -9777,7 +9791,7 @@ msgstr "Non placé sur la carte"
 msgid "Not recognizable"
 msgstr "Non reconnaissable"
 
-#: src/components/map/panels/shared.tsx:113
+#: src/components/map/panels/shared.tsx:119
 msgid "Not recorded"
 msgstr "Non enregistré"
 
@@ -10832,8 +10846,8 @@ msgid "Pick a date"
 msgstr "Choisir une date"
 
 #: src/components/map/panels/KnowledgeGraph.tsx:423
-msgid "Pick a dot to read its words below."
-msgstr "Choisissez un point pour lire ses mots ci-dessous."
+#~ msgid "Pick a dot to read its words below."
+#~ msgstr "Choisissez un point pour lire ses mots ci-dessous."
 
 #: src/components/pricing/PricingConfigurator.tsx:842
 #: src/components/pricing/PricingBookingStep.tsx:345
@@ -10847,6 +10861,10 @@ msgstr "Choisissez un créneau avec {host}."
 #: src/routes/admin/AdminSettingsRoute.tsx:2991
 msgid "Pick an account"
 msgstr "Choisir un compte"
+
+#: src/components/map/panels/KnowledgeGraph.tsx:562
+msgid "Pick an argument to go to it, or a quote to find it below."
+msgstr "Choisissez un argument pour y aller, ou une citation pour la retrouver plus bas."
 
 #: src/components/invite/InviteModal.tsx:652
 msgid "Pick at least one workspace to send the invite."
@@ -11139,7 +11157,7 @@ msgid "Portal tutorial"
 msgstr "Tutoriel du portail"
 
 #: src/components/map/attributes.ts:345
-#: src/components/map/panels/shared.tsx:30
+#: src/components/map/panels/shared.tsx:36
 msgid "Positive"
 msgstr "Positif"
 
@@ -11589,7 +11607,7 @@ msgstr "Des questions sur le fonctionnement de dembrane, et pas seulement sur vo
 msgid "Queued"
 msgstr "En file d'attente"
 
-#: src/components/map/panels/DetailsSheet.tsx:471
+#: src/components/map/panels/DetailsSheet.tsx:506
 #: src/components/map/panels/ArgumentAccordion.tsx:279
 msgid "Quotes"
 msgstr "Citations"
@@ -12017,6 +12035,7 @@ msgstr "S'enregistrer | dembrane"
 #: src/components/map/panels/NodeDetailCard.tsx:325
 #: src/components/map/panels/NodeDetailCard.tsx:531
 #: src/components/map/panels/MapSettingsMenu.tsx:438
+#: src/components/map/panels/DetailsSheet.tsx:253
 msgid "Relationships"
 msgstr "Relations"
 
@@ -13797,7 +13816,7 @@ msgstr "Réafficher"
 #. placeholder {0}: voices.length
 #. placeholder {0}: ordered.length
 #: src/components/results/curate/ArgumentsTab.tsx:368
-#: src/components/map/panels/DetailsSheet.tsx:199
+#: src/components/map/panels/DetailsSheet.tsx:181
 #: src/components/map/panels/ArgumentAccordion.tsx:330
 msgid "Show all {0}"
 msgstr "Afficher les {0}"
@@ -13951,7 +13970,7 @@ msgstr "Affichage de {0} sur {1}"
 msgid "Showing {displayFrom}–{displayTo} of {totalItems} entries"
 msgstr "Affichage de {displayFrom}–{displayTo} sur {totalItems} entrées"
 
-#: src/components/map/MapExperience.tsx:108
+#: src/components/map/MapExperience.tsx:109
 msgid "Showing {drawn} of {available} connections"
 msgstr "Affichage de {drawn} connexions sur {available}"
 
@@ -14648,11 +14667,11 @@ msgstr "En soutien au pôle B"
 msgid "Supporting quotes display correctly."
 msgstr "Les citations d'appui s'affichent correctement."
 
-#: src/components/map/panels/shared.tsx:79
+#: src/components/map/panels/shared.tsx:85
 msgid "Supports pole A"
 msgstr "Soutient le pôle A"
 
-#: src/components/map/panels/shared.tsx:81
+#: src/components/map/panels/shared.tsx:87
 msgid "Supports pole B"
 msgstr "Soutient le pôle B"
 
@@ -15077,7 +15096,7 @@ msgstr "L'invitation a été envoyée à {invitedEmail}, mais vous êtes connect
 msgid "The last generation failed, so this is still the previous map. {0}"
 msgstr "La dernière génération a échoué ; la carte précédente reste affichée. {0}"
 
-#: src/components/map/MapExperience.tsx:135
+#: src/components/map/MapExperience.tsx:136
 msgid "The layout could not be computed for this scope."
 msgstr "Impossible de calculer la disposition pour ce périmètre."
 
@@ -15297,7 +15316,7 @@ msgstr "La transcription n'est pas terminée. Réessayez."
 msgid "The translation could not be started"
 msgstr "Impossible de lancer la traduction"
 
-#: src/components/map/panels/shared.tsx:72
+#: src/components/map/panels/shared.tsx:78
 msgid "The valence of this object has not been assessed."
 msgstr "La valence de cet objet n'a pas été évaluée."
 
@@ -15422,15 +15441,15 @@ msgstr "Ce compte est connecté ailleurs"
 msgid "This area is for dembrane staff. If you think you should have access, email support@dembrane.com."
 msgstr "Cet espace est réservé à l'équipe de dembrane. Si vous pensez devoir y avoir accès, écrivez à support@dembrane.com."
 
-#: src/components/map/panels/shared.tsx:68
+#: src/components/map/panels/shared.tsx:74
 msgid "This argument expresses opposition, disagreement, or concern."
 msgstr "Cet argument exprime une opposition, un désaccord ou une préoccupation."
 
-#: src/components/map/panels/shared.tsx:66
+#: src/components/map/panels/shared.tsx:72
 msgid "This argument expresses support, agreement, or a positive stance toward its subject."
 msgstr "Cet argument exprime un soutien, un accord ou une position favorable."
 
-#: src/components/map/panels/shared.tsx:70
+#: src/components/map/panels/shared.tsx:76
 msgid "This argument is observational or balanced, neither for nor against."
 msgstr "Cet argument est factuel ou nuancé, ni pour ni contre."
 
@@ -16051,6 +16070,10 @@ msgstr "Total"
 msgid "Total due now"
 msgstr "Total dû maintenant"
 
+#: src/components/map/panels/DetailsSheet.tsx:621
+msgid "Trail"
+msgstr "Parcours"
+
 #: src/components/training/TrainingRoster.tsx:86
 msgid "Trained"
 msgstr "Formé"
@@ -16544,7 +16567,7 @@ msgid "Untitled report"
 msgstr "Rapport sans titre"
 
 #: src/components/map/attributes.ts:382
-#: src/components/map/panels/shared.tsx:149
+#: src/components/map/panels/shared.tsx:155
 msgid "Unverified"
 msgstr "Non vérifié"
 
@@ -17120,7 +17143,7 @@ msgstr "La saisie vocale respecte la limite d'enregistrement du forfait Free."
 #~ msgid "Voiced directly"
 #~ msgstr ""
 
-#: src/components/map/panels/shared.tsx:107
+#: src/components/map/panels/shared.tsx:113
 msgid "Voiced in a conversation"
 msgstr "Exprimé dans une conversation"
 

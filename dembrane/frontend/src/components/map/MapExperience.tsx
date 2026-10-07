@@ -6,6 +6,7 @@ import {
 	useCallback,
 	useEffect,
 	useMemo,
+	useRef,
 	useState,
 } from "react";
 import { baseColors, brandColors, stateColors } from "@/colors";
@@ -29,13 +30,13 @@ import {
 	DetailsSheet,
 	type DetailsTarget,
 } from "./panels/DetailsSheet";
-import { MapToolbar, VIEWS, viewOf } from "./panels/MapToolbar";
 import {
 	type HistoryItem,
 	HistoryRows,
 	resolveNodes,
 } from "./panels/HistoryPanel";
 import { Legend } from "./panels/Legend";
+import { MapToolbar, VIEWS, viewOf } from "./panels/MapToolbar";
 import type { ConversationHref, NodeInspection } from "./panels/NodeDetailCard";
 import { ShowcasePanel } from "./panels/ShowcasePanel";
 import { type DetailsFrom, SpotlightPanel } from "./panels/SpotlightPanel";
@@ -363,11 +364,63 @@ export const MapExperience = ({
 		: 0;
 	// The details sheet, and which way in it was opened by.
 	const [details, setDetails] = useState<DetailsRequest | null>(null);
+	// What the main map highlighted when the sheet opened, and what the sheet
+	// marked on it since, so closing the sheet puts the map back.
+	const sheetMarks = useRef<{
+		open: boolean;
+		before: { ids: Set<string>; distances: Map<string, number> } | null;
+		last: Set<string> | null;
+	}>({ before: null, last: null, open: false });
 	const openDetails = useCallback(
-		(from: DetailsFrom) => setDetails({ at: Date.now(), from }),
-		[],
+		(from: DetailsFrom) => {
+			setDetails({ at: Date.now(), from });
+			// Asked again while open, the map keeps what it had before the first.
+			if (sheetMarks.current.open) return;
+			const state = store.getState();
+			sheetMarks.current = {
+				// Only a group's highlight comes back; a cursor's is gone by now.
+				before:
+					state.highlightSource === "history"
+						? {
+								distances: state.highlightedNodesDistance,
+								ids: state.highlightedNodeIds,
+							}
+						: null,
+				last: null,
+				open: true,
+			};
+		},
+		[store],
 	);
-	const closeDetails = useCallback(() => setDetails(null), []);
+	// Travelling in the sheet marks the same arguments on the main map the way
+	// a group from History is marked: no selection moves, so Spotlight and the
+	// sheet stay where they are, and a mark never starts a new cluster.
+	const markFromSheet = useCallback(
+		(nodeIds: string[]) => {
+			const ids = new Set(nodeIds);
+			sheetMarks.current.last = ids;
+			store.setHighlightedNodeIds(ids, { isPreview: false, source: "history" });
+			store.setHighlightedNodesDistance(
+				new Map(nodeIds.map((id) => [id, 0] as const)),
+			);
+		},
+		[store],
+	);
+	const closeDetails = useCallback(() => {
+		const { before, last } = sheetMarks.current;
+		sheetMarks.current = { before: null, last: null, open: false };
+		setDetails(null);
+		// Put back what the sheet replaced, unless something else has marked
+		// the map since.
+		const now = store.getState().highlightedNodeIds;
+		if (!last || now.size !== last.size || [...last].some((id) => !now.has(id)))
+			return;
+		store.setHighlightedNodeIds(before?.ids ?? new Set(), {
+			isPreview: false,
+			source: "history",
+		});
+		store.setHighlightedNodesDistance(before?.distances ?? new Map());
+	}, [store]);
 	const selectHistoryItem = useCallback(
 		(item: HistoryItem) => {
 			if (item.kind === "argument") store.setSelectedNodeId(item.nodeId);
@@ -439,11 +492,7 @@ export const MapExperience = ({
 	const detailsTarget: DetailsTarget | null = spotlightCluster
 		? { kind: "cluster", ...spotlightCluster }
 		: spotlight.node
-			? {
-					inspection: spotlightInspection,
-					kind: "argument",
-					node: spotlight.node,
-				}
+			? { kind: "argument", node: spotlight.node }
 			: null;
 	const { showShowcase, showSpotlight, showTree, showClusters } = settings;
 	const hasLeftPanel = showShowcase || showSpotlight;
@@ -502,7 +551,7 @@ export const MapExperience = ({
 							relations={graph.relations}
 							colorBy={colorBy}
 							darkMode={settings.darkMode}
-							onSelect={selectNode}
+							onMark={markFromSheet}
 						/>
 					)}
 					{hasLeftPanel && (

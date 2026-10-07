@@ -23,6 +23,12 @@ export const mapVars = {
 	text: "var(--map-text)",
 } as const;
 
+/** True where the reader asks for less motion: glides and scrolls jump. */
+export const prefersReducedMotion = () =>
+	typeof window !== "undefined" &&
+	typeof window.matchMedia === "function" &&
+	window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 /** A missing valence is "Not assessed", never neutral. */
 export const valenceLabel = (valence: MapValence | undefined): string => {
 	switch (valence) {

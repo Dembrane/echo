@@ -770,7 +770,7 @@ msgstr "{conversations, plural, one {# розмова} few {# розмови} ma
 msgid "{conversations} conversations with a transcript, about {minutes} minutes of talk. Ready."
 msgstr "Розмов із транскриптом: {conversations}, близько {minutes} хв мовлення. Готово."
 
-#: src/components/map/MapExperience.tsx:142
+#: src/components/map/MapExperience.tsx:143
 msgid "{count, plural, one {# argument} other {# arguments}}"
 msgstr "{count, plural, one {# аргумент} few {# аргументи} many {# аргументів} other {# аргументи}}"
 
@@ -1615,8 +1615,8 @@ msgstr "Added"
 msgid "Added {granted} people"
 msgstr "Додано {granted} користувачів"
 
-#: src/components/map/panels/shared.tsx:98
-#: src/components/map/panels/shared.tsx:123
+#: src/components/map/panels/shared.tsx:104
+#: src/components/map/panels/shared.tsx:129
 msgid "Added by a host"
 msgstr "Додано ведучим"
 
@@ -1751,7 +1751,7 @@ msgstr "Розширені налаштування"
 #~ msgid "Advanced Settings"
 #~ msgstr "Advanced Settings"
 
-#: src/components/map/panels/shared.tsx:87
+#: src/components/map/panels/shared.tsx:93
 msgid "Affected by"
 msgstr "Зазнає впливу від"
 
@@ -1840,6 +1840,10 @@ msgstr "Усі види"
 #: src/routes/project/ProjectsHome.tsx:346
 msgid "All projects"
 msgstr "Усі проєкти"
+
+#: src/components/map/panels/DetailsSheet.tsx:534
+msgid "All quotes"
+msgstr "Усі цитати"
 
 #: src/features/sidebar/views/InboxView.tsx:179
 msgid "All read"
@@ -2006,6 +2010,7 @@ msgid "An event or a workshop."
 msgstr "Подія або воркшоп."
 
 #: src/components/map/panels/NodeDetailCard.tsx:200
+#: src/components/map/panels/DetailsSheet.tsx:258
 msgid "An object outside this view"
 msgstr "Об'єкт за межами цього перегляду"
 
@@ -2320,7 +2325,7 @@ msgstr "Карта аргументів"
 msgid "Argument tree"
 msgstr "Дерево аргументів"
 
-#: src/components/map/MapExperience.tsx:571
+#: src/components/map/MapExperience.tsx:620
 msgid "Argument tree (MST)"
 msgstr "Дерево аргументів (MST)"
 
@@ -2328,6 +2333,7 @@ msgstr "Дерево аргументів (MST)"
 #: src/components/results/ResultsList.tsx:265
 #: src/components/results/curate/CurateTabs.tsx:19
 #: src/components/map/attributes.ts:128
+#: src/components/map/panels/DetailsSheet.tsx:506
 #: src/components/map/panels/ArgumentAccordion.tsx:173
 msgid "Arguments"
 msgstr "Аргументи"
@@ -3353,7 +3359,7 @@ msgid "Checking your session."
 msgstr "Перевіряємо вашу сесію."
 
 #: src/components/map/attributes.ts:383
-#: src/components/map/panels/shared.tsx:147
+#: src/components/map/panels/shared.tsx:153
 #: src/components/map/panels/SpotlightPanel.tsx:354
 msgid "Checking…"
 msgstr "Перевірка…"
@@ -3371,7 +3377,7 @@ msgstr "Виберіть розмову"
 msgid "Choose a logo file"
 msgstr "Choose a logo file"
 
-#: src/components/map/MapExperience.tsx:649
+#: src/components/map/MapExperience.tsx:698
 msgid "Choose a map under Advanced"
 msgstr "Виберіть мапу в розділі «Додатково»"
 
@@ -3563,7 +3569,7 @@ msgstr "Clone project"
 #: src/components/results/ResultRow.tsx:435
 #: src/components/results/ResultItem.tsx:860
 #: src/components/results/ResultItem.tsx:870
-#: src/components/map/panels/DetailsSheet.tsx:432
+#: src/components/map/panels/DetailsSheet.tsx:800
 #: src/components/dropzone/UploadConversationDropzone.tsx:882
 #: src/components/conversation/ConversationLinks.tsx:105
 #: src/components/common/FeedbackPortalModal.tsx:158
@@ -3595,6 +3601,10 @@ msgstr "Сумісність із CLOUD Act"
 #: src/components/map/panels/DensityControl.tsx:47
 #~ msgid "Clumped"
 #~ msgstr "Згуртовано"
+
+#: src/components/map/panels/DetailsSheet.tsx:459
+msgid "Cluster"
+msgstr "Кластер"
 
 #: src/components/map/panels/MapToolbar.tsx:128
 #: src/components/map/panels/MapToolbar.tsx:191
@@ -3674,7 +3684,7 @@ msgstr "об'єднано"
 msgid "Combined arguments"
 msgstr "Об'єднані аргументи"
 
-#: src/components/map/panels/shared.tsx:83
+#: src/components/map/panels/shared.tsx:89
 msgid "Combined from"
 msgstr "Об'єднано з"
 
@@ -3825,7 +3835,7 @@ msgstr "Connection unhealthy"
 
 #: src/components/map/panels/SpotlightPanel.tsx:239
 #: src/components/map/panels/SpotlightPanel.tsx:429
-#: src/components/map/panels/DetailsSheet.tsx:451
+#: src/components/map/panels/DetailsSheet.tsx:612
 msgid "Connections"
 msgstr "Зв’язки"
 
@@ -3864,7 +3874,7 @@ msgid "Content"
 msgstr "Content"
 
 #: src/components/map/attributes.ts:380
-#: src/components/map/panels/shared.tsx:145
+#: src/components/map/panels/shared.tsx:151
 msgid "Contested"
 msgstr "Спірне"
 
@@ -5161,7 +5171,7 @@ msgstr "Несхожі зв'язки: {0}"
 #~ msgstr "Виділення головної ідеї..."
 
 #: src/components/map/panels/HistoryPanel.tsx:59
-#: src/components/map/panels/DetailsSheet.tsx:371
+#: src/components/map/panels/DetailsSheet.tsx:760
 #: src/components/map/panels/ClusterSummary.tsx:144
 msgid "Distilling core idea…"
 msgstr "Виділяємо ключову ідею…"
@@ -5392,7 +5402,7 @@ msgstr "Кожен popcorn показується один раз для кож�
 msgid "Earlier in the spotlight"
 msgstr "Раніше в центрі уваги"
 
-#: src/components/map/panels/shared.tsx:118
+#: src/components/map/panels/shared.tsx:124
 msgid "Earlier map result"
 msgstr "Попередній результат карти"
 
@@ -6608,11 +6618,15 @@ msgstr "French"
 msgid "friction"
 msgstr "тертя"
 
-#: src/components/map/panels/DetailsSheet.tsx:414
+#: src/components/map/panels/DetailsSheet.tsx:199
 msgid "From {quoteCount, plural, one {# quote} other {# quotes}} in {conversationCount, plural, one {# conversation} other {# conversations}}"
 msgstr "З {quoteCount, plural, one {# цитати} few {# цитат} many {# цитат} other {# цитати}} у {conversationCount, plural, one {# розмові} few {# розмовах} many {# розмовах} other {# розмови}}"
 
-#: src/components/map/panels/shared.tsx:96
+#: src/components/map/panels/DetailsSheet.tsx:198
+#~ msgid "From {quotes, plural, one {# quote} other {# quotes}} in {conversations, plural, one {# conversation} other {# conversations}}"
+#~ msgstr ""
+
+#: src/components/map/panels/shared.tsx:102
 msgid "From the transcript"
 msgstr "З транскрипту"
 
@@ -6723,7 +6737,7 @@ msgstr "Згенерувати підсумок"
 msgid "Generate tensions"
 msgstr "Згенерувати точки напруги"
 
-#: src/components/map/panels/shared.tsx:121
+#: src/components/map/panels/shared.tsx:127
 msgid "Generated"
 msgstr "Згенеровано"
 
@@ -7063,7 +7077,7 @@ msgstr "Історія / деталі"
 msgid "History note"
 msgstr "Примітка до історії"
 
-#: src/components/map/panels/shared.tsx:85
+#: src/components/map/panels/shared.tsx:91
 msgid "Holds position"
 msgstr "Утримує позицію"
 
@@ -7256,7 +7270,7 @@ msgstr "Стиль зображення"
 msgid "Images must be under {MAX_FILE_MB}MB"
 msgstr "Зображення мають бути менші за {MAX_FILE_MB} МБ"
 
-#: src/components/map/panels/shared.tsx:125
+#: src/components/map/panels/shared.tsx:131
 msgid "Imported"
 msgstr "Імпортовано"
 
@@ -7329,8 +7343,8 @@ msgid "Incorrect or made up"
 msgstr "Неправильно або вигадано"
 
 #: src/components/results/ResultItem.tsx:89
-#: src/components/map/panels/shared.tsx:100
-#: src/components/map/panels/shared.tsx:111
+#: src/components/map/panels/shared.tsx:106
+#: src/components/map/panels/shared.tsx:117
 msgid "Inferred"
 msgstr "Виведено"
 
@@ -7871,7 +7885,7 @@ msgstr "Тип зміни не зафіксовано"
 msgid "Kinds of finding"
 msgstr "Типи знахідок"
 
-#: src/components/map/panels/KnowledgeGraph.tsx:298
+#: src/components/map/panels/KnowledgeGraph.tsx:436
 msgid "Knowledge graph"
 msgstr "Граф знань"
 
@@ -8058,12 +8072,12 @@ msgid "Light"
 msgstr "Світла"
 
 #: src/components/map/attributes.ts:379
-#: src/components/map/panels/shared.tsx:143
+#: src/components/map/panels/shared.tsx:149
 msgid "Likely false"
 msgstr "Скоріше хибно"
 
 #: src/components/map/attributes.ts:378
-#: src/components/map/panels/shared.tsx:141
+#: src/components/map/panels/shared.tsx:147
 msgid "Likely true"
 msgstr "Скоріше істинно"
 
@@ -8323,7 +8337,7 @@ msgstr "Loading…"
 msgid "Local argument map"
 msgstr "Локальна мапа аргументів"
 
-#: src/components/map/MapExperience.tsx:614
+#: src/components/map/MapExperience.tsx:663
 msgid "Local map"
 msgstr "Локальна мапа"
 
@@ -8993,7 +9007,7 @@ msgid "name@example.com, name2@example.com"
 msgstr "name@example.com, name2@example.com"
 
 #: src/components/results/ResultItem.tsx:88
-#: src/components/map/panels/shared.tsx:109
+#: src/components/map/panels/shared.tsx:115
 msgid "Named by participants"
 msgstr "Названо учасниками"
 
@@ -9026,7 +9040,7 @@ msgid "Needs review"
 msgstr "Потребує перевірки"
 
 #: src/components/map/attributes.ts:346
-#: src/components/map/panels/shared.tsx:32
+#: src/components/map/panels/shared.tsx:38
 msgid "Negative"
 msgstr "Негативно"
 
@@ -9044,7 +9058,7 @@ msgid "Neighbours in the tree"
 msgstr "Сусіди в дереві"
 
 #: src/components/map/attributes.ts:347
-#: src/components/map/panels/shared.tsx:34
+#: src/components/map/panels/shared.tsx:40
 msgid "Neutral"
 msgstr "Нейтрально"
 
@@ -9516,7 +9530,7 @@ msgstr "No projects found for search term"
 msgid "No projects match."
 msgstr "Жоден проєкт не відповідає критеріям."
 
-#: src/components/map/panels/DetailsSheet.tsx:194
+#: src/components/map/panels/DetailsSheet.tsx:158
 msgid "No quotes for this argument."
 msgstr "Для цього аргументу немає цитат."
 
@@ -9524,7 +9538,7 @@ msgstr "Для цього аргументу немає цитат."
 msgid "No quotes were kept with this finding."
 msgstr "До цього висновку не збережено цитат."
 
-#: src/components/map/panels/DetailsSheet.tsx:424
+#: src/components/map/panels/DetailsSheet.tsx:208
 msgid "No quotes yet"
 msgstr "Цитат поки немає"
 
@@ -9728,7 +9742,7 @@ msgid "Not applicable"
 msgstr "Не застосовується"
 
 #: src/components/map/attributes.ts:348
-#: src/components/map/panels/shared.tsx:36
+#: src/components/map/panels/shared.tsx:42
 msgid "Not assessed"
 msgstr "Не оцінено"
 
@@ -9776,7 +9790,7 @@ msgstr "Не розміщено на мапі"
 msgid "Not recognizable"
 msgstr "Не вдається розпізнати"
 
-#: src/components/map/panels/shared.tsx:113
+#: src/components/map/panels/shared.tsx:119
 msgid "Not recorded"
 msgstr "Не записано"
 
@@ -10831,8 +10845,8 @@ msgid "Pick a date"
 msgstr "Оберiть дату"
 
 #: src/components/map/panels/KnowledgeGraph.tsx:423
-msgid "Pick a dot to read its words below."
-msgstr "Виберіть точку, щоб прочитати її слова нижче."
+#~ msgid "Pick a dot to read its words below."
+#~ msgstr "Виберіть точку, щоб прочитати її слова нижче."
 
 #: src/components/pricing/PricingConfigurator.tsx:842
 #: src/components/pricing/PricingBookingStep.tsx:345
@@ -10846,6 +10860,10 @@ msgstr "Оберіть час із {host}."
 #: src/routes/admin/AdminSettingsRoute.tsx:2991
 msgid "Pick an account"
 msgstr "Оберіть обліковий запис"
+
+#: src/components/map/panels/KnowledgeGraph.tsx:562
+msgid "Pick an argument to go to it, or a quote to find it below."
+msgstr "Оберіть аргумент, щоб перейти до нього, або цитату, щоб знайти її нижче."
 
 #: src/components/invite/InviteModal.tsx:652
 msgid "Pick at least one workspace to send the invite."
@@ -11138,7 +11156,7 @@ msgid "Portal tutorial"
 msgstr "Інструкція для порталу"
 
 #: src/components/map/attributes.ts:345
-#: src/components/map/panels/shared.tsx:30
+#: src/components/map/panels/shared.tsx:36
 msgid "Positive"
 msgstr "Позитивно"
 
@@ -11588,7 +11606,7 @@ msgstr "Запитання про роботу dembrane, а не лише про
 msgid "Queued"
 msgstr "У черзі"
 
-#: src/components/map/panels/DetailsSheet.tsx:471
+#: src/components/map/panels/DetailsSheet.tsx:506
 #: src/components/map/panels/ArgumentAccordion.tsx:279
 msgid "Quotes"
 msgstr "Цитати"
@@ -12016,6 +12034,7 @@ msgstr "Register | dembrane"
 #: src/components/map/panels/NodeDetailCard.tsx:325
 #: src/components/map/panels/NodeDetailCard.tsx:531
 #: src/components/map/panels/MapSettingsMenu.tsx:438
+#: src/components/map/panels/DetailsSheet.tsx:253
 msgid "Relationships"
 msgstr "Зв'язки"
 
@@ -13796,7 +13815,7 @@ msgstr "Показати знову"
 #. placeholder {0}: voices.length
 #. placeholder {0}: ordered.length
 #: src/components/results/curate/ArgumentsTab.tsx:368
-#: src/components/map/panels/DetailsSheet.tsx:199
+#: src/components/map/panels/DetailsSheet.tsx:181
 #: src/components/map/panels/ArgumentAccordion.tsx:330
 msgid "Show all {0}"
 msgstr "Показати всі {0}"
@@ -13950,7 +13969,7 @@ msgstr "Показано {0} із {1}"
 msgid "Showing {displayFrom}–{displayTo} of {totalItems} entries"
 msgstr "Showing {displayFrom}–{displayTo} of {totalItems} entries"
 
-#: src/components/map/MapExperience.tsx:108
+#: src/components/map/MapExperience.tsx:109
 msgid "Showing {drawn} of {available} connections"
 msgstr "Показано {drawn} із {available} зв’язків"
 
@@ -14647,11 +14666,11 @@ msgstr "Підтримка полюса B"
 msgid "Supporting quotes display correctly."
 msgstr "Супутні цитати відображаються коректно."
 
-#: src/components/map/panels/shared.tsx:79
+#: src/components/map/panels/shared.tsx:85
 msgid "Supports pole A"
 msgstr "Підтримує полюс A"
 
-#: src/components/map/panels/shared.tsx:81
+#: src/components/map/panels/shared.tsx:87
 msgid "Supports pole B"
 msgstr "Підтримує полюс B"
 
@@ -15076,7 +15095,7 @@ msgstr "Запрошення надіслано на {invitedEmail}, але ви
 msgid "The last generation failed, so this is still the previous map. {0}"
 msgstr "Останнє генерування не вдалося, тому це все ще попередня мапа. {0}"
 
-#: src/components/map/MapExperience.tsx:135
+#: src/components/map/MapExperience.tsx:136
 msgid "The layout could not be computed for this scope."
 msgstr "Не вдалося розрахувати макет для цього обсягу."
 
@@ -15296,7 +15315,7 @@ msgstr "Транскрибування не завершилося. Спробу
 msgid "The translation could not be started"
 msgstr "Не вдалося розпочати переклад"
 
-#: src/components/map/panels/shared.tsx:72
+#: src/components/map/panels/shared.tsx:78
 msgid "The valence of this object has not been assessed."
 msgstr "Валентність цього об'єкта ще не оцінено."
 
@@ -15421,15 +15440,15 @@ msgstr "У цей обліковий запис уже ввійшли в інш�
 msgid "This area is for dembrane staff. If you think you should have access, email support@dembrane.com."
 msgstr "Цей розділ призначено для команди dembrane. Якщо вважаєте, що повинні мати доступ, напишіть на support@dembrane.com."
 
-#: src/components/map/panels/shared.tsx:68
+#: src/components/map/panels/shared.tsx:74
 msgid "This argument expresses opposition, disagreement, or concern."
 msgstr "Цей аргумент виражає незгоду, заперечення або занепокоєння."
 
-#: src/components/map/panels/shared.tsx:66
+#: src/components/map/panels/shared.tsx:72
 msgid "This argument expresses support, agreement, or a positive stance toward its subject."
 msgstr "Цей аргумент виражає підтримку, згоду або позитивне ставлення до теми."
 
-#: src/components/map/panels/shared.tsx:70
+#: src/components/map/panels/shared.tsx:76
 msgid "This argument is observational or balanced, neither for nor against."
 msgstr "Цей аргумент має спостережливий або зважений характер: ані за, ані проти."
 
@@ -16050,6 +16069,10 @@ msgstr "Усього"
 msgid "Total due now"
 msgstr "Усього до сплати зараз"
 
+#: src/components/map/panels/DetailsSheet.tsx:621
+msgid "Trail"
+msgstr "Шлях"
+
 #: src/components/training/TrainingRoster.tsx:86
 msgid "Trained"
 msgstr "Пройдено тренінг"
@@ -16546,7 +16569,7 @@ msgid "Untitled report"
 msgstr "Untitled report"
 
 #: src/components/map/attributes.ts:382
-#: src/components/map/panels/shared.tsx:149
+#: src/components/map/panels/shared.tsx:155
 msgid "Unverified"
 msgstr "Не перевірено"
 
@@ -17122,7 +17145,7 @@ msgstr "Голосове введення враховує ліміт запис
 #~ msgid "Voiced directly"
 #~ msgstr ""
 
-#: src/components/map/panels/shared.tsx:107
+#: src/components/map/panels/shared.tsx:113
 msgid "Voiced in a conversation"
 msgstr "Озвучено в розмові"
 

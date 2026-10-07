@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useElementSize } from "@mantine/hooks";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
 	conversationColor,
 	MAP_NEUTRAL_GREY,
@@ -12,7 +12,7 @@ import { getNodeStyle, mapHighlight, NODE_OUTLINE } from "../graph/nodeStyle";
 import { d3, type SimulationNodeDatum } from "../renderers/d3";
 import { RELATION_DASH, relationStroke } from "../renderers/relations";
 import type { ColorBy, Edge, MapGraphNode, MapRelation } from "../types";
-import { mapVars } from "./shared";
+import { mapVars, prefersReducedMotion } from "./shared";
 
 /** The drawing's height; its width is the sheet's. */
 export const GRAPH_HEIGHT = 280;
@@ -152,22 +152,61 @@ export const knowledgeGraph = ({
 
 type Placed = SimulationNodeDatum & { id: string; quote: boolean };
 
+type Point = { x: number; y: number };
+
+/** How long a travel glides; none where the reader asks for less motion. */
+export const GLIDE_MS = 300;
+
+const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+
 /**
  * The map's force layout at the sheet's size: leaves close round their
  * argument, arguments apart, the whole held in the box. It is run to rest
  * before it is drawn, so the drawing holds still.
+ *
+ * With a `centre`, that node is pinned in the middle of the box and the fit
+ * keeps it there. With a `seed` (the last layout), the nodes that were drawn
+ * before start where they were, moved with the centre, so a travel shifts
+ * the drawing rather than reshuffling it.
  */
 export const layoutKnowledgeGraph = (
 	graph: KnowledgeGraphData,
 	width: number,
 	height: number,
-): Map<string, { x: number; y: number }> => {
-	const nodes: Placed[] = graph.nodes.map((node) => ({
-		id: node.id,
-		quote: node.kind === "quote",
-	}));
+	{
+		centre = null,
+		seed,
+	}: {
+		centre?: string | null;
+		seed?: ReadonlyMap<string, Point>;
+	} = {},
+): Map<string, Point> => {
 	const cx = width / 2;
 	const cy = height / 2;
+	const pinned =
+		centre && graph.nodes.some((node) => node.id === centre) ? centre : null;
+	const from = pinned ? seed?.get(pinned) : undefined;
+	const shiftX = from ? cx - from.x : 0;
+	const shiftY = from ? cy - from.y : 0;
+	const nodes: Placed[] = graph.nodes.map((node, index) => {
+		const placed: Placed = { id: node.id, quote: node.kind === "quote" };
+		const before = seed?.get(node.id);
+		if (node.id === pinned) {
+			placed.fx = cx;
+			placed.fy = cy;
+			placed.x = cx;
+			placed.y = cy;
+		} else if (before) {
+			placed.x = before.x + shiftX;
+			placed.y = before.y + shiftY;
+		} else if (seed) {
+			// New nodes start in a small spiral round the middle.
+			const radius = 24 + 4 * index;
+			placed.x = cx + radius * Math.cos(index * GOLDEN_ANGLE);
+			placed.y = cy + radius * Math.sin(index * GOLDEN_ANGLE);
+		}
+		return placed;
+	});
 	if (nodes.length > 0) {
 		d3.forceSimulation<Placed>(nodes)
 			.force(
@@ -207,6 +246,25 @@ export const layoutKnowledgeGraph = (
 	// stays a hairline and a dot keeps its size at any width.
 	const xs = nodes.map((node) => node.x ?? cx);
 	const ys = nodes.map((node) => node.y ?? cy);
+	if (pinned) {
+		// Scale about the middle, so the centre stays the centre.
+		const reachX = Math.max(1, ...xs.map((x) => Math.abs(x - cx)));
+		const reachY = Math.max(1, ...ys.map((y) => Math.abs(y - cy)));
+		const scale = Math.min(
+			1,
+			(width / 2 - PAD) / reachX,
+			(height / 2 - PAD) / reachY,
+		);
+		return new Map(
+			nodes.map((node) => [
+				node.id,
+				{
+					x: cx + ((node.x ?? cx) - cx) * scale,
+					y: cy + ((node.y ?? cy) - cy) * scale,
+				},
+			]),
+		);
+	}
 	const minX = Math.min(...xs, cx);
 	const maxX = Math.max(...xs, cx);
 	const minY = Math.min(...ys, cy);
@@ -229,12 +287,82 @@ export const layoutKnowledgeGraph = (
 	);
 };
 
+const ease = (k: number) => 1 - (1 - k) ** 3;
+
+/**
+ * The drawn positions, gliding from the last ones to `target` whenever the
+ * graph changes: dots that stay move, new dots come out of `origin` (the dot
+ * that was picked). A resize or reduced motion jumps.
+ */
+const useGlide = (
+	target: Map<string, Point>,
+	graph: KnowledgeGraphData,
+	origin: string | null,
+): Map<string, Point> => {
+	const [drawn, setDrawn] = useState(target);
+	const drawnRef = useRef(target);
+	const graphRef = useRef(graph);
+	useEffect(() => {
+		const from = drawnRef.current;
+		const travelled = graphRef.current !== graph;
+		graphRef.current = graph;
+		if (from === target) return;
+		if (
+			!travelled ||
+			prefersReducedMotion() ||
+			typeof requestAnimationFrame !== "function"
+		) {
+			drawnRef.current = target;
+			setDrawn(target);
+			return;
+		}
+		const out = (origin && from.get(origin)) || null;
+		const start = new Map(
+			[...target].map(([id, point]) => [id, from.get(id) ?? out ?? point]),
+		);
+		// Every dot is drawn from the first frame, where the glide starts it.
+		drawnRef.current = start;
+		setDrawn(start);
+		const began = performance.now();
+		let frame = 0;
+		const step = (now: number) => {
+			const k = Math.min(1, (now - began) / GLIDE_MS);
+			const e = ease(k);
+			const next =
+				k >= 1
+					? target
+					: new Map(
+							[...target].map(([id, point]) => {
+								const a = start.get(id) ?? point;
+								return [
+									id,
+									{
+										x: a.x + (point.x - a.x) * e,
+										y: a.y + (point.y - a.y) * e,
+									},
+								];
+							}),
+						);
+			drawnRef.current = next;
+			setDrawn(next);
+			if (k < 1) frame = requestAnimationFrame(step);
+		};
+		frame = requestAnimationFrame(step);
+		return () => {
+			cancelAnimationFrame(frame);
+			// Interrupted mid-glide: the next one starts where this one stopped.
+		};
+	}, [target, graph, origin]);
+	return drawn;
+};
+
 /**
  * The knowledge graph of a cluster or an argument, drawn with the map's own
  * engine: its force layout, its colours and its hairlines. Arguments are dots
  * in the map's colours; every quote is a small leaf in its conversation's
  * colour. Pointing at a dot names it under the drawing; picking one hands it
- * to the sheet, which scrolls its words into view.
+ * to the sheet. When the focus moves to another argument, the drawing glides
+ * to put it in the middle.
  */
 export const KnowledgeGraph = ({
 	graph,
@@ -242,6 +370,7 @@ export const KnowledgeGraph = ({
 	colorBy,
 	darkMode,
 	marked,
+	centre = null,
 	onPick,
 }: {
 	graph: KnowledgeGraphData;
@@ -250,14 +379,23 @@ export const KnowledgeGraph = ({
 	darkMode: boolean;
 	/** The node picked last, ringed. */
 	marked: string | null;
+	/** The argument held in the middle of the drawing, if there is one. */
+	centre?: string | null;
 	onPick: (node: KnowledgeNode) => void;
 }) => {
 	const { ref, width: measured } = useElementSize<HTMLDivElement>();
 	const width = Math.round(measured) || FALLBACK_WIDTH;
-	const at = useMemo(
-		() => layoutKnowledgeGraph(graph, width, GRAPH_HEIGHT),
-		[graph, width],
-	);
+	// The last layout seeds the next, so a travel moves the drawing on.
+	const lastLayout = useRef<Map<string, Point> | undefined>(undefined);
+	const target = useMemo(() => {
+		const next = layoutKnowledgeGraph(graph, width, GRAPH_HEIGHT, {
+			centre,
+			seed: lastLayout.current,
+		});
+		lastLayout.current = next;
+		return next;
+	}, [graph, width, centre]);
+	const at = useGlide(target, graph, centre);
 	const [active, setActive] = useState<string | null>(null);
 	const highlight = mapHighlight(darkMode);
 	const byId = useMemo(
@@ -350,6 +488,7 @@ export const KnowledgeGraph = ({
 							tabIndex={0}
 							aria-label={label}
 							aria-pressed={node.id === marked}
+							aria-current={node.id === centre || undefined}
 							data-node-kind={node.kind}
 							data-node-id={node.id}
 							className="cursor-pointer outline-none"
@@ -401,7 +540,7 @@ export const KnowledgeGraph = ({
 				})}
 			</svg>
 			{/* One line under the drawing names what is pointed at; a room that
-			    cannot hover reads the same words in the list below. */}
+			    cannot hover reads the same words in the panel below. */}
 			<p
 				className="line-clamp-2 min-h-[2lh] text-xs"
 				style={{ color: shown ? mapVars.text : "var(--map-muted)" }}
@@ -420,7 +559,9 @@ export const KnowledgeGraph = ({
 						labelOf(shown)
 					)
 				) : (
-					<Trans>Pick a dot to read its words below.</Trans>
+					<Trans>
+						Pick an argument to go to it, or a quote to find it below.
+					</Trans>
 				)}
 			</p>
 		</div>
