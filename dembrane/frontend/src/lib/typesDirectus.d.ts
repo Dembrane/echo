@@ -108,6 +108,8 @@ interface Conversation {
 	// Derived by the conversations BFF: at least one chunk failed to
 	// transcribe (error set, no transcript). Surfaced as a list-row badge.
 	has_transcription_error?: boolean;
+	// Derived by the conversations BFF: a chunk has neither transcript nor error yet.
+	has_pending_chunks?: boolean;
 	// Derived by the conversations BFF. lock_reason explains why `locked`;
 	// summary_locked marks a server-scrubbed summary (1-hour recording cap gate).
 	lock_reason?: "hours_cap" | null;

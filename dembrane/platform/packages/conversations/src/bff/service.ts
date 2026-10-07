@@ -140,6 +140,7 @@ export async function listConversations(
     conv.last_chunk_at = f?.lastTs ? directusRow({ t: f.lastTs }).t : null;
     conv.has_only_text_chunks = onlyText(f);
     conv.has_transcription_error = (f?.errors ?? 0) > 0;
+    conv.has_pending_chunks = (f?.pending ?? 0) > 0;
   }
   if (q.include_chunks) {
     const locked = new Set(convs.filter((c) => c.locked).map((c) => String(c.id)));

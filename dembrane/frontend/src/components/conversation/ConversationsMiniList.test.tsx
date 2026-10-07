@@ -9,6 +9,7 @@ import { ConversationsMiniList } from "./ConversationsMiniList";
 
 const navigate = vi.hoisted(() => vi.fn());
 const role = vi.hoisted(() => ({ current: "owner" }));
+const extra = vi.hoisted(() => ({ conversations: [] as object[] }));
 
 vi.mock("@/hooks/useI18nNavigate", () => ({ useI18nNavigate: () => navigate }));
 vi.mock("@/hooks/useWorkspace", () => ({
@@ -24,12 +25,13 @@ vi.mock("./useConversationList", async (importOriginal) => ({
 	useConversationList: () => ({
 		activeFiltersCount: 0,
 		allConversations: [
-			{ id: "c1", title: "Table 1", live: true, created_at: null },
-			{ id: "c2", title: "Table 2", created_at: null },
-			{ id: "c3", title: "Table 3", created_at: null, has_transcript: false },
+			{ created_at: null, id: "c1", live: true, title: "Table 1" },
+			{ created_at: null, id: "c2", title: "Table 2" },
+			{ created_at: null, has_transcript: false, id: "c3", title: "Table 3" },
+			...extra.conversations,
 		],
 		conversationsCountQuery: { data: 3 },
-		conversationsQuery: { isLoading: false, isFetchingNextPage: false },
+		conversationsQuery: { isFetchingNextPage: false, isLoading: false },
 		hasActiveFilters: false,
 		search: "",
 		selectedTagIds: [],
@@ -61,6 +63,7 @@ afterEach(() => {
 	cleanup();
 	navigate.mockReset();
 	role.current = "owner";
+	extra.conversations = [];
 });
 
 const renderList = () =>
@@ -83,7 +86,9 @@ describe("ConversationsMiniList", () => {
 		fireEvent.click(screen.getByRole("checkbox", { name: "Select Table 1" }));
 		expect(screen.getByRole("button", { name: "Ask about this" })).toBeTruthy();
 		fireEvent.click(screen.getByRole("checkbox", { name: "Select Table 2" }));
-		fireEvent.click(screen.getByRole("button", { name: "Ask about these (2)" }));
+		fireEvent.click(
+			screen.getByRole("button", { name: "Ask about these (2)" }),
+		);
 
 		expect(navigate).toHaveBeenCalledWith("/w/w1/projects/p1/chats/new", {
 			state: { selectedConversationIds: ["c1", "c2"] },
@@ -106,5 +111,41 @@ describe("ConversationsMiniList", () => {
 		renderList();
 		expect(screen.queryByRole("checkbox")).toBeNull();
 		expect(screen.getByRole("link", { name: /Table 1/ })).toBeTruthy();
+	});
+
+	it("shows transcribing while recording or while chunks wait for a transcript", () => {
+		// Stored flags are unset on older rows, so the status reads the chunks.
+		extra.conversations = [
+			{
+				created_at: null,
+				has_pending_chunks: false,
+				id: "c4",
+				is_all_chunks_transcribed: null,
+				is_audio_processing_finished: false,
+				is_finished: true,
+				title: "Transcribed",
+			},
+			{
+				created_at: null,
+				has_pending_chunks: true,
+				id: "c5",
+				is_finished: true,
+				title: "Pending",
+			},
+			{
+				created_at: null,
+				has_pending_chunks: false,
+				id: "c6",
+				is_finished: false,
+				title: "Unfinished",
+			},
+		];
+		renderList();
+		const status = (title: string) =>
+			screen.getByRole("link", { name: new RegExp(title) }).textContent;
+		expect(status("Transcribed")).toContain("Done");
+		expect(status("Transcribed")).not.toContain("Transcribing");
+		expect(status("Pending")).toContain("Transcribing");
+		expect(status("Unfinished")).toContain("Transcribing");
 	});
 });

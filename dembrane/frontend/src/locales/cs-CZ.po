@@ -290,7 +290,7 @@ msgid "{0, plural, one {# conversation} other {# conversations}}"
 msgstr "{0, plural, one {# conversation} other {# conversations}}"
 
 #. placeholder {0}: list.activeFiltersCount
-#: src/components/conversation/ConversationsMiniList.tsx:211
+#: src/components/conversation/ConversationsMiniList.tsx:212
 msgid "{0, plural, one {# filter} other {# filters}}"
 msgstr "{0, plural, one {# filtr} few {# filtry} many {# filtru} other {# filtrů}}"
 
@@ -400,7 +400,7 @@ msgid "{0, plural, one {# workspace} other {# workspaces}}"
 msgstr "{0, plural, one {# workspace} other {# workspaces}}"
 
 #. placeholder {0}: selection.length
-#: src/components/conversation/ConversationsMiniList.tsx:230
+#: src/components/conversation/ConversationsMiniList.tsx:231
 msgid "{0, plural, one {Ask about this} other {Ask about these (#)}}"
 msgstr "{0, plural, one {Zeptat se na tento rozhovor} few {Zeptat se na tyto rozhovory (#)} many {Zeptat se na tyto rozhovory (#)} other {Zeptat se na tyto rozhovory (#)}}"
 
@@ -2134,7 +2134,7 @@ msgid "another reason"
 msgstr "jiný důvod"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:707
-#: src/components/conversation/ConversationsMiniList.tsx:180
+#: src/components/conversation/ConversationsMiniList.tsx:181
 msgid "Any tag"
 msgstr "Any tag"
 
@@ -3432,7 +3432,7 @@ msgstr "Město"
 
 #: src/components/results/curate/CurateTable.tsx:114
 #: src/components/conversation/ProjectConversationsPanel.tsx:789
-#: src/components/conversation/ConversationsMiniList.tsx:241
+#: src/components/conversation/ConversationsMiniList.tsx:242
 msgid "Clear"
 msgstr "Vymazat"
 
@@ -3441,7 +3441,7 @@ msgid "Clear all"
 msgstr "Vymazat vše"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:830
-#: src/components/conversation/ConversationsMiniList.tsx:264
+#: src/components/conversation/ConversationsMiniList.tsx:265
 msgid "Clear filters"
 msgstr "Clear filters"
 
@@ -4017,7 +4017,7 @@ msgstr "conversations"
 #: src/components/map/panels/MapSettingsMenu.tsx:297
 #: src/components/map/panels/ClusterSummary.tsx:155
 #: src/components/conversation/ProjectConversationsPanel.tsx:623
-#: src/components/conversation/ConversationsMiniList.tsx:141
+#: src/components/conversation/ConversationsMiniList.tsx:142
 #: src/components/conversation/ConversationAccordion.tsx:1100
 msgid "Conversations"
 msgstr "Conversations"
@@ -5183,7 +5183,7 @@ msgstr "Neaktualizuje se automaticky. Aktualizováno {updatedAgo}."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:527
 #: src/components/invite/InviteModal.tsx:809
-#: src/components/conversation/ConversationsMiniList.tsx:98
+#: src/components/conversation/ConversationsMiniList.tsx:99
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:642
 #: src/components/chat/AgenticPlanCard.tsx:34
 #: src/components/chat/AgenticChatPanel.tsx:431
@@ -6325,7 +6325,7 @@ msgstr "Filename from uploaded file"
 msgid "Filter"
 msgstr "Filtr"
 
-#: src/components/conversation/ConversationsMiniList.tsx:153
+#: src/components/conversation/ConversationsMiniList.tsx:154
 msgid "Filter and sort"
 msgstr "Filtrovat a řadit"
 
@@ -8338,7 +8338,7 @@ msgstr "Locked"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:441
 #: src/components/conversation/LiveMonitorSection.tsx:323
-#: src/components/conversation/ConversationsMiniList.tsx:404
+#: src/components/conversation/ConversationsMiniList.tsx:405
 msgid "Locked conversation, upgrade to view"
 msgstr "Uzamčený rozhovor, pro zobrazení přejděte na vyšší tarif"
 
@@ -9256,7 +9256,7 @@ msgid "No conversations found. Start a conversation using the participation invi
 msgstr "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:823
-#: src/components/conversation/ConversationsMiniList.tsx:257
+#: src/components/conversation/ConversationsMiniList.tsx:258
 msgid "No conversations match these filters."
 msgstr "No conversations match these filters."
 
@@ -9266,7 +9266,7 @@ msgid "select.all.modal.no.conversations"
 msgstr "No conversations were processed. This may happen if all conversations are already in context or don't match the selected filters."
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:825
-#: src/components/conversation/ConversationsMiniList.tsx:259
+#: src/components/conversation/ConversationsMiniList.tsx:260
 msgid "No conversations yet."
 msgstr "No conversations yet."
 
@@ -12425,7 +12425,7 @@ msgstr "Reset"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:724
 #: src/components/conversation/ProjectConversationsPanel.tsx:728
-#: src/components/conversation/ConversationsMiniList.tsx:202
+#: src/components/conversation/ConversationsMiniList.tsx:203
 msgid "Reset filters"
 msgstr "Reset filters"
 
@@ -12987,7 +12987,7 @@ msgstr "Scroll to bottom"
 #: src/components/results/ResultsList.tsx:288
 #: src/components/conversation/ProjectConversationsPanel.tsx:676
 #: src/components/conversation/MoveConversationButton.tsx:155
-#: src/components/conversation/ConversationsMiniList.tsx:162
+#: src/components/conversation/ConversationsMiniList.tsx:163
 msgid "Search"
 msgstr "Search"
 
@@ -13204,7 +13204,7 @@ msgstr "Vybrat"
 msgid "Select {0}"
 msgstr "Select {0}"
 
-#: src/components/conversation/ConversationsMiniList.tsx:393
+#: src/components/conversation/ConversationsMiniList.tsx:394
 msgid "Select {title}"
 msgstr "Vybrat {title}"
 
@@ -14107,7 +14107,7 @@ msgid "participant.go.deeper.content.policy.violation.error.message"
 msgstr "Sorry, we cannot process this request due to an LLM provider's content policy."
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:696
-#: src/components/conversation/ConversationsMiniList.tsx:169
+#: src/components/conversation/ConversationsMiniList.tsx:170
 #: src/components/conversation/ConversationAccordion.tsx:1206
 #: src/components/conversation/ConversationAccordion.tsx:1213
 msgid "Sort"
@@ -14631,7 +14631,7 @@ msgstr "Tag deleted"
 #: src/components/participant/ParticipantInitiateForm.tsx:281
 #: src/components/map/panels/MapSettingsMenu.tsx:256
 #: src/components/conversation/ProjectConversationsPanel.tsx:706
-#: src/components/conversation/ConversationsMiniList.tsx:179
+#: src/components/conversation/ConversationsMiniList.tsx:180
 #: src/components/conversation/ConversationEdit.tsx:424
 #: src/components/conversation/ConversationDrilldownModal.tsx:200
 #: src/components/conversation/ConversationAccordion.tsx:1275
@@ -15846,7 +15846,7 @@ msgid "Title guidance"
 msgstr "Doporučení k názvu"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:677
-#: src/components/conversation/ConversationsMiniList.tsx:163
+#: src/components/conversation/ConversationsMiniList.tsx:164
 msgid "Title or participant"
 msgstr "Title or participant"
 
@@ -16011,7 +16011,7 @@ msgstr "Školení"
 msgid "Transcribe a conversation again"
 msgstr "Přepiš rozhovor znovu"
 
-#: src/components/conversation/ConversationsMiniList.tsx:84
+#: src/components/conversation/ConversationsMiniList.tsx:85
 msgid "Transcribing"
 msgstr "Probíhá přepis"
 
@@ -16442,7 +16442,7 @@ msgstr "Plátno bez názvu"
 #: src/components/project/ProjectUsageAndSharing.tsx:509
 #: src/components/project/ProjectUsageAndSharing.tsx:544
 #: src/components/conversation/ProjectConversationsPanel.tsx:223
-#: src/components/conversation/ConversationsMiniList.tsx:331
+#: src/components/conversation/ConversationsMiniList.tsx:332
 #: src/components/chat/References.tsx:63
 msgid "Untitled conversation"
 msgstr "Untitled conversation"
@@ -16864,8 +16864,8 @@ msgid "select.all.modal.loading.verified"
 msgstr "Verified"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:717
-#: src/components/conversation/ConversationsMiniList.tsx:92
-#: src/components/conversation/ConversationsMiniList.tsx:189
+#: src/components/conversation/ConversationsMiniList.tsx:93
+#: src/components/conversation/ConversationsMiniList.tsx:190
 msgid "Verified"
 msgstr "Verified"
 
