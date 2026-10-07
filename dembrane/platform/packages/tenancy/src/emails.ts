@@ -142,28 +142,6 @@ export function orgInviteEmail(
   };
 }
 
-/** org_added: an existing user was added (or re-added) to an org. */
-export function orgAddedEmail(
-  d: { readded: boolean; inviterName: string; orgName: string; role: string; inviteUrl: string },
-  locale?: string | null,
-): RenderedEmail {
-  const tr = translator(locale);
-  const k = "email.org_added";
-  const p = { inviter_name: d.inviterName, org_name: d.orgName, role: d.role };
-  const bodyKey = d.role && d.role !== "member" ? `${k}.body_role` : `${k}.body`;
-  return {
-    subject: tr(d.readded ? `${k}.subject_again` : `${k}.subject`, p),
-    html: layout(tr, {
-      title: tr(`${k}.subject`, escAll(p)),
-      preview: tr(`${k}.preview`, escAll(p)),
-      heading: tr(`${k}.heading`),
-      body: `${P(17, "0 0 28px", tr(bodyKey, { ...escAll(p), org_name: EM(d.orgName), role: EM(d.role) }))}\n${P(15, "0 0 28px", tr(`${k}.next`))}`,
-      cta: cta(tr(`${k}.cta`), d.inviteUrl),
-    }),
-    text: `${tr(bodyKey, p)}\n\n${tr(`${k}.next`)}\n\n${tr(`${k}.text_cta`)}\n${d.inviteUrl}\n\n${tr("email.common.signoff")}`,
-  };
-}
-
 /** workspace_invite, used for the data owner of an external-client workspace. */
 export function workspaceInviteEmail(
   d: { subject?: string; inviterName: string; workspaceName: string; inviteUrl: string },

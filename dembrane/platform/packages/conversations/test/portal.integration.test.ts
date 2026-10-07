@@ -119,6 +119,25 @@ run("portal uploads and audio routes", () => {
     expect(forged.status).toBe(403);
   });
 
+  test("initiate with a tag the participant picked links the tag to the conversation", async () => {
+    await seed(sql, newId());
+    const tag = newId();
+    await sql`insert into project_tag (id, project_id, text) values (${tag}, ${PROJECT}, 'Lighting')`;
+    const res = await post(`/api/participant/projects/${PROJECT}/conversations/initiate`, {
+      name: "Tagged",
+      pin: "",
+      source: "PORTAL_AUDIO",
+      tag_id_list: [tag],
+      user_agent: "Mozilla/5.0",
+      visitor_id: "69e5a80c-a25e-49db-84e5-7eb947c1ad84",
+    });
+    expect(res.status).toBe(200);
+    const { id } = (await res.json()) as { id: string };
+    const links =
+      await sql`select project_tag_id from conversation_project_tag where conversation_id = ${id}`;
+    expect(links.map((l) => l.project_tag_id)).toEqual([tag]);
+  });
+
   test("replies: oldest first, only through the conversation's own project", async () => {
     const conv = newId();
     await seed(sql, conv);
