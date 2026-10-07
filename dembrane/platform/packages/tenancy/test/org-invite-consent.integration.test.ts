@@ -153,4 +153,13 @@ run("organisation invites and consent", () => {
       P.xavier.email,
     ]);
   });
+
+  test("an organisation invite's notice expires with the invite", async () => {
+    const [row] = await sql`select i.expires_at as invite, n.expires_at as notice
+      from org_invite i, notification n
+      where i.email = ${P.xavier.email} and n.audience_user_id = ${P.xavier.app}
+        and n.event_code = 'INVITE_RECEIVED'`;
+    const { invite, notice } = row as { invite: Date; notice: Date | null };
+    expect(notice?.toISOString()).toBe(invite.toISOString());
+  });
 });

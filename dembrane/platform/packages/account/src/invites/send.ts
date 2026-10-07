@@ -297,13 +297,14 @@ export async function inviteToWorkspace(
   }
 
   const inviteId = newId();
+  const expiresAt = new Date(now.getTime() + INVITE_DAYS * 86_400_000).toISOString();
   await store.insertWorkspaceInvite({
     id: inviteId,
     workspace_id: workspaceId,
     email,
     role,
     invited_by: me,
-    expires_at: new Date(now.getTime() + INVITE_DAYS * 86_400_000).toISOString(),
+    expires_at: expiresAt,
     created_at: now.toISOString(),
     ...(shareProject && { project_id: shareProject.id }),
   });
@@ -330,6 +331,7 @@ export async function inviteToWorkspace(
       message: `Accept the invite to join **${wsName ?? ""}** as ${role}.`,
       action: "NAVIGATE_INVITE",
       refWorkspaceId: workspaceId,
+      expiresAt,
     });
   return response("invited", email, sent, inviteUrl, shareProject ? "pending" : null);
 }

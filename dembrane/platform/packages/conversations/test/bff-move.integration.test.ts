@@ -143,4 +143,21 @@ run("BFF conversation move", () => {
     expect(((await res.json()) as { code: string }).code).toBe("conversation.move_same_project");
     expect(await stored(id)).toEqual({ project_id: alpha, move_history: null });
   });
+
+  test("the detail says whether a conversation is typed text only, as the list does", async () => {
+    const typed = await conversationIn(alpha);
+    const recorded = await conversationIn(alpha);
+    await sql`insert into conversation_chunk (id, conversation_id, timestamp, source, transcript, created_at, updated_at) values
+      (${newId()}, ${typed}, now(), 'PORTAL_TEXT', 'hello', now(), now()),
+      (${newId()}, ${recorded}, now(), 'PORTAL_AUDIO', null, now(), now())`;
+    const detail = async (id: string) =>
+      (
+        (await (await app.request(`/api/v2/bff/conversations/${id}`)).json()) as Record<
+          string,
+          unknown
+        >
+      ).has_only_text_chunks;
+    expect(await detail(typed)).toBe(true);
+    expect(await detail(recorded)).toBe(false);
+  });
 });

@@ -138,7 +138,7 @@ export async function listConversations(
     conv.conversation_artifacts = artifacts.get(id) ?? [];
     conv.has_transcript = (f?.transcribed ?? 0) > 0;
     conv.last_chunk_at = f?.lastTs ? directusRow({ t: f.lastTs }).t : null;
-    conv.has_only_text_chunks = (f?.total ?? 0) > 0 && (f?.nonText ?? 0) === 0;
+    conv.has_only_text_chunks = onlyText(f);
     conv.has_transcription_error = (f?.errors ?? 0) > 0;
   }
   if (q.include_chunks) {
@@ -202,6 +202,10 @@ export async function countRemaining(
   return { count: await store.countWithTranscript(ids) };
 }
 
+/** Every chunk is typed text: there is no audio to download. */
+const onlyText = (f: { total: number; nonText: number } | undefined) =>
+  (f?.total ?? 0) > 0 && (f?.nonText ?? 0) === 0;
+
 export async function getConversation(
   d: Deps,
   who: Signed,
@@ -212,6 +216,9 @@ export async function getConversation(
   const store = bffStore(d.db);
   const conv = (await store.conversationStar(conversationId)) as Row;
   enrich(conv, pa.tier, await activeFor(store, pa));
+  conv.has_only_text_chunks = onlyText(
+    (await store.chunkFacts([conversationId])).get(conversationId),
+  );
   if (q.include_chunks) {
     const chunks = await store.allChunks(conversationId);
     if (conv.locked) for (const ch of chunks) scrubChunk(ch);

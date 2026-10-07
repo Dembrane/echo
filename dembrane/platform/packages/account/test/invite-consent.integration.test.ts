@@ -44,6 +44,7 @@ const P = {
   xavier: person(5, "xavier"),
   sam: person(6, "sam"),
   rob: person(7, "rob"),
+  tess: person(10, "tess"),
 };
 // Signed up but not onboarded yet: no app_user row. nina verified her email, uma did not.
 const NEW = { nina: person(8, "nina"), uma: person(9, "uma") };
@@ -318,5 +319,25 @@ run("workspace invites and consent", () => {
     expect((await invite(NEW.uma.email)).status).toBe("invited");
     const res = await call(NEW.uma, "GET", "/api/v2/me/invites");
     expect(await res.json()).toEqual([]);
+  });
+
+  test("an invite's notice expires with it, and a resend keeps it alive as long", async () => {
+    expect((await invite(P.tess.email)).status).toBe("invited");
+    const expiries = async () =>
+      (
+        await sql`select i.id, i.expires_at as invite, n.expires_at as notice
+          from workspace_invite i, notification n
+          where i.email = ${P.tess.email} and n.audience_user_id = ${P.tess.app}
+            and n.event_code = 'INVITE_RECEIVED'`
+      )[0] as { id: string; invite: Date; notice: Date | null };
+    const sent = await expiries();
+    expect(sent.notice?.toISOString()).toBe(sent.invite.toISOString());
+
+    await sql`update workspace_invite set expires_at = now() - interval '1 day' where id = ${sent.id}`;
+    await sql`update notification set expires_at = now() - interval '1 day' where audience_user_id = ${P.tess.app}`;
+    expect((await call(P.alice, "POST", `/api/v2/invites/${sent.id}/resend`)).status).toBe(200);
+    const resent = await expiries();
+    expect(resent.invite.getTime()).toBeGreaterThan(Date.now());
+    expect(resent.notice?.toISOString()).toBe(resent.invite.toISOString());
   });
 });

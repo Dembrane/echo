@@ -63,6 +63,7 @@ import {
 } from "@/lib/avatar";
 import { ApiRequestError } from "@/lib/errors/read";
 import { openConfirm } from "@/lib/openConfirm";
+import { invalidateOrgMembersEverywhere } from "@/lib/orgQueryKeys";
 import { displayRole, isOutsiderRole, roleColor } from "@/lib/roles";
 import { SELLABLE_TIER, type Tier } from "@/lib/tiers";
 import { OrganisationExternalView } from "./OrganisationExternalView";
@@ -87,6 +88,11 @@ interface OrganisationDetail {
 	workspace_count: number;
 	external_count: number;
 }
+
+/** Everyone with access, as the People section lists them: members and externals. */
+export const orgPeopleCount = (
+	org: Pick<OrganisationDetail, "member_count" | "external_count">,
+) => org.member_count + (org.external_count ?? 0);
 
 interface WorkspaceMemberPreview {
 	display_name: string;
@@ -446,9 +452,7 @@ export const OrganisationRoute = () => {
 		},
 		onError: (e: Error) => void notifyError(e),
 		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: ["v2", "organisation", organisationId, "members"],
-			});
+			invalidateOrgMembersEverywhere(queryClient, organisationId ?? "");
 			// Org admins derive workspace seats; role changes shift effective seat counts.
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-usage"] });
 			toast.success(t`Role changed`);
@@ -472,9 +476,7 @@ export const OrganisationRoute = () => {
 		}) => changeWorkspaceMemberRole(workspaceId, membershipId, role),
 		onError: (e: Error) => void notifyError(e),
 		onSuccess: (_data, variables) => {
-			queryClient.invalidateQueries({
-				queryKey: ["v2", "organisation", organisationId, "members"],
-			});
+			invalidateOrgMembersEverywhere(queryClient, organisationId ?? "");
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "workspace-settings", variables.workspaceId],
 			});
@@ -496,9 +498,7 @@ export const OrganisationRoute = () => {
 		},
 		onError: (e: Error) => void notifyError(e),
 		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: ["v2", "organisation", organisationId, "members"],
-			});
+			invalidateOrgMembersEverywhere(queryClient, organisationId ?? "");
 			// Removal cascades direct memberships across all org workspaces.
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "organisation", organisationId, "workspaces"],
@@ -541,9 +541,7 @@ export const OrganisationRoute = () => {
 		},
 		onError: (e: Error) => void notifyError(e),
 		onSuccess: (_data, variables) => {
-			queryClient.invalidateQueries({
-				queryKey: ["v2", "organisation", organisationId, "members"],
-			});
+			invalidateOrgMembersEverywhere(queryClient, organisationId ?? "");
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "workspace-settings", variables.workspaceId],
 			});
@@ -571,9 +569,7 @@ export const OrganisationRoute = () => {
 		},
 		onError: (e: Error) => void notifyError(e),
 		onSuccess: (_data, workspaceId) => {
-			queryClient.invalidateQueries({
-				queryKey: ["v2", "organisation", organisationId, "members"],
-			});
+			invalidateOrgMembersEverywhere(queryClient, organisationId ?? "");
 			// Refresh the workspace lists so the joined workspace shows in the
 			// sidebar and overview right away.
 			for (const key of [
@@ -695,6 +691,8 @@ export const OrganisationRoute = () => {
 		);
 	}
 
+	const peopleCount = orgPeopleCount(organisation);
+
 	return (
 		<Container size="xl" py="xl" px="lg">
 			<Stack gap={24}>
@@ -720,8 +718,7 @@ export const OrganisationRoute = () => {
 								{organisation.workspace_count === 1
 									? t`workspace`
 									: t`workspaces`}{" "}
-								· {organisation.member_count}{" "}
-								{organisation.member_count === 1 ? t`person` : t`people`}
+								· {peopleCount} {peopleCount === 1 ? t`person` : t`people`}
 							</Text>
 							{/* Matrix §5: organisation-level role set is Admin / Billing /
 							    Member — no organisation-level Guest. Guest count intentionally

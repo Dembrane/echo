@@ -6,23 +6,17 @@ const NS_NEW = "orgs" as const;
 const NS_OLD = "organisation" as const;
 
 export const orgQueryKeys = {
-	// Single org resource (settings, name, top-level fields)
-	root: (orgId: string) => ["v2", NS_NEW, orgId] as const,
 	// Members list (org People tab + workspace settings members table)
 	members: (orgId: string) => ["v2", NS_NEW, orgId, "members"] as const,
-	// Workspaces in an org (org overview + invite modal's workspace picker)
-	workspaces: (orgId: string) => ["v2", NS_NEW, orgId, "workspaces"] as const,
 	// Pending invites (org-wide + per-workspace via key suffix)
 	pendingInvites: (orgId: string) =>
 		["v2", NS_NEW, orgId, "pending-invites"] as const,
 	pendingInvitesForWorkspace: (orgId: string, workspaceId: string) =>
-		[
-			"v2",
-			NS_NEW,
-			orgId,
-			"pending-invites",
-			{ workspaceId },
-		] as const,
+		["v2", NS_NEW, orgId, "pending-invites", { workspaceId }] as const,
+	// Single org resource (settings, name, top-level fields)
+	root: (orgId: string) => ["v2", NS_NEW, orgId] as const,
+	// Workspaces in an org (org overview + invite modal's workspace picker)
+	workspaces: (orgId: string) => ["v2", NS_NEW, orgId, "workspaces"] as const,
 };
 
 export function invalidateOrgMembersEverywhere(
@@ -31,6 +25,8 @@ export function invalidateOrgMembersEverywhere(
 ): void {
 	qc.invalidateQueries({ queryKey: orgQueryKeys.members(orgId) });
 	qc.invalidateQueries({ queryKey: ["v2", NS_OLD, orgId, "members"] });
+	// The organisation header's people count.
+	qc.invalidateQueries({ exact: true, queryKey: ["v2", NS_OLD, orgId] });
 }
 
 export function invalidateOrgWorkspacesEverywhere(
@@ -53,4 +49,11 @@ export function invalidatePendingInvitesEverywhere(
 			queryKey: orgQueryKeys.pendingInvitesForWorkspace(orgId, workspaceId),
 		});
 	}
+}
+
+/** Conversation counts and hours on workspace cards and usage, after an upload, delete or move. */
+export function invalidateConversationCounts(qc: QueryClient): void {
+	qc.invalidateQueries({ queryKey: ["v2", "workspaces"] });
+	qc.invalidateQueries({ queryKey: ["v2", "workspace-usage"] });
+	qc.invalidateQueries({ queryKey: ["v2", "org-usage"] });
 }

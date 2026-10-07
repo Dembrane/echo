@@ -508,6 +508,7 @@ export function orgService(deps: TenancyDeps) {
         };
       const inviteId = newId();
       const url = link(inviteId);
+      const expiresAt = iso(new Date(now.getTime() + 7 * 86_400_000));
       await db.transaction(async (tx) => {
         await insertOrgInvite(tx, {
           id: inviteId,
@@ -515,7 +516,7 @@ export function orgService(deps: TenancyDeps) {
           email,
           role,
           invited_by: member.appUserId,
-          expires_at: iso(new Date(now.getTime() + 7 * 86_400_000)),
+          expires_at: expiresAt,
           created_at: iso(now),
         });
         // No account yet, or one we can match by email: theirs, else the inviter's.
@@ -532,6 +533,7 @@ export function orgService(deps: TenancyDeps) {
             message: `Accept the invite to join **${orgName}** as ${role}.`,
             action: "NAVIGATE_INVITE",
             orgId,
+            expiresAt,
           });
       });
       return {
