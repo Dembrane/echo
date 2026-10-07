@@ -32,8 +32,8 @@ export function searchStorage(db: Db) {
           name: project.name,
           workspace_id: project.workspace_id,
           updated_at: project.updated_at,
-          // Directus's count(conversations) counted every related row, deleted ones too.
-          conversations_count: sql<number>`(select count(*)::int from conversation c where c.project_id = "project"."id")`,
+          // Live conversations only, as the project list counts them.
+          conversations_count: sql<number>`(select count(*)::int from conversation c where c.project_id = "project"."id" and c.deleted_at is null)`,
         })
         .from(project)
         .where(and(allTokens([project.name], term), isNull(project.deleted_at)))

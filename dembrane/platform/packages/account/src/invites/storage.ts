@@ -267,14 +267,11 @@ export function inviteStorage(db: Db) {
         .where(eq(workspace_invite.id, id))
         .returning({ email: workspace_invite.email, workspaceId: workspace_invite.workspace_id });
       const at = settledAt(patch);
-      if (at)
-        for (const r of rows)
-          await settleInviteNotices(
-            db,
-            r.email,
-            eq(notification.ref_workspace_id, r.workspaceId),
-            at,
-          );
+      for (const r of rows) {
+        const scope = eq(notification.ref_workspace_id, r.workspaceId);
+        if (at) await settleInviteNotices(db, r.email, scope, at);
+        else if (patch.expires_at) await extendInviteNotices(db, r.email, scope, patch.expires_at);
+      }
     },
 
     async updateOrgInvite(id: string, patch: Partial<typeof org_invite.$inferInsert>) {
@@ -284,14 +281,14 @@ export function inviteStorage(db: Db) {
         .where(eq(org_invite.id, id))
         .returning({ email: org_invite.email, orgId: org_invite.org_id });
       const at = settledAt(patch);
-      if (at)
-        for (const r of rows)
-          await settleInviteNotices(
-            db,
-            r.email,
-            and(eq(notification.ref_org_id, r.orgId), isNull(notification.ref_workspace_id)) as SQL,
-            at,
-          );
+      for (const r of rows) {
+        const scope = and(
+          eq(notification.ref_org_id, r.orgId),
+          isNull(notification.ref_workspace_id),
+        ) as SQL;
+        if (at) await settleInviteNotices(db, r.email, scope, at);
+        else if (patch.expires_at) await extendInviteNotices(db, r.email, scope, patch.expires_at);
+      }
     },
 
     // ── workspaces and orgs ──
@@ -631,22 +628,33 @@ const settledAt = (p: {
   deleted_at?: string | null | undefined;
 }) => p.accepted_at ?? p.deleted_at ?? null;
 
-/** A settled invite's "invited you" notices leave the invitee's inbox. */
-async function settleInviteNotices(db: Db, email: string, scope: SQL, at: string) {
+/** The invitee's unread "invited you" notices for one invite's workspace or org. */
+function openInviteNotices(db: Db, email: string, scope: SQL) {
   const invitee = db
     .select({ id: app_user.id })
     .from(app_user)
     .innerJoin(auth_user, eq(auth_user.id, app_user.directus_user_id))
     .where(eq(sql`lower(${auth_user.email})`, email.toLowerCase()));
+  return and(
+    inArray(notification.audience_user_id, invitee),
+    eq(notification.event_code, "INVITE_RECEIVED"),
+    isNull(notification.read_at),
+    scope,
+  );
+}
+
+/** A settled invite's "invited you" notices leave the invitee's inbox. */
+async function settleInviteNotices(db: Db, email: string, scope: SQL, at: string) {
   await db
     .update(notification)
     .set({ read_at: at, updated_at: at })
-    .where(
-      and(
-        inArray(notification.audience_user_id, invitee),
-        eq(notification.event_code, "INVITE_RECEIVED"),
-        isNull(notification.read_at),
-        scope,
-      ),
-    );
+    .where(openInviteNotices(db, email, scope));
+}
+
+/** An extended invite's notices stay in the inbox as long as the invite does. */
+async function extendInviteNotices(db: Db, email: string, scope: SQL, expiresAt: string) {
+  await db
+    .update(notification)
+    .set({ expires_at: expiresAt, updated_at: new Date().toISOString() })
+    .where(openInviteNotices(db, email, scope));
 }

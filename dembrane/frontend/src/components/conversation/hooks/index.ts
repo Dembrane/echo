@@ -23,6 +23,7 @@ import {
 } from "@/lib/api";
 import { bff } from "@/lib/bff";
 import type { ListQuery } from "@/lib/listQuery";
+import { invalidateConversationCounts } from "@/lib/orgQueryKeys";
 
 type ConversationBffListParams = {
 	search_text?: string;
@@ -232,6 +233,7 @@ export const useDeleteConversationByIdMutation = () => {
 			queryClient.invalidateQueries({
 				queryKey: ["v2", "conversation-monitor"],
 			});
+			invalidateConversationCounts(queryClient);
 			toast.success("Conversation deleted");
 		},
 	});
@@ -257,6 +259,7 @@ export const useMoveConversationMutation = () => {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["conversations"] });
 			queryClient.invalidateQueries({ queryKey: ["projects"] });
+			invalidateConversationCounts(queryClient);
 			toast.success("Conversation moved successfully");
 		},
 	});
@@ -632,7 +635,7 @@ export const useGetConversationTranscriptStringMutation = () => {
 
 export const useConversationChunks = (
 	conversationId: string,
-	refetchInterval = 10000,
+	refetchInterval: number | false = 10000,
 	fields: string[] = ["id"],
 ) => {
 	return useQuery({
@@ -657,6 +660,18 @@ export const useConversationEmails = (
 		queryKey: ["conversations", conversationId, "emails"],
 	});
 };
+
+/** Ongoing: a portal session, not finished, with a chunk newer than the cutoff. */
+export const isLiveConversation = (
+	conversation: Partial<
+		Pick<Conversation, "source" | "last_chunk_at" | "is_finished">
+	>,
+	cutoffTime: Date,
+) =>
+	["PORTAL_AUDIO", "PORTAL_TEXT"].includes(conversation.source ?? "") &&
+	!conversation.is_finished &&
+	!!conversation.last_chunk_at &&
+	new Date(conversation.last_chunk_at) > cutoffTime;
 
 export const useConversationsByProjectId = (
 	projectId: string,
@@ -698,22 +713,10 @@ export const useConversationsByProjectId = (
 
 			if (data.length === 0) return [];
 
-			return data.map((conversation) => {
-				// Only portal sessions can show as live/Ongoing
-				if (
-					!["PORTAL_AUDIO", "PORTAL_TEXT"].includes(conversation.source ?? "")
-				)
-					return {
-						...conversation,
-						live: false,
-					};
-
-				const lastChunkAt = conversation.last_chunk_at;
-				return {
-					...conversation,
-					live: lastChunkAt ? new Date(lastChunkAt) > cutoffTime : false,
-				};
-			});
+			return data.map((conversation) => ({
+				...conversation,
+				live: isLiveConversation(conversation, cutoffTime),
+			}));
 		},
 	});
 };
@@ -745,7 +748,8 @@ export const useConversationById = ({
 	loadConversationChunks = false,
 	query = {},
 	useQueryOpts = {
-		refetchInterval: 10000,
+		// A deleted conversation answers 404 for good; stop asking.
+		refetchInterval: (q) => (q.state.status === "error" ? false : 10000),
 	},
 }: {
 	conversationId: string;
@@ -823,24 +827,10 @@ export const useInfiniteConversationsByProjectId = (
 				...data,
 				pages: data.pages.map((page) => ({
 					...page,
-					conversations: page.conversations.map((conversation) => {
-						// Only portal sessions can show as live/Ongoing
-						if (
-							!["PORTAL_AUDIO", "PORTAL_TEXT"].includes(
-								conversation.source ?? "",
-							)
-						)
-							return {
-								...conversation,
-								live: false,
-							};
-
-						const lastChunkAt = conversation.last_chunk_at;
-						return {
-							...conversation,
-							live: lastChunkAt ? new Date(lastChunkAt) > cutoffTime : false,
-						};
-					}),
+					conversations: page.conversations.map((conversation) => ({
+						...conversation,
+						live: isLiveConversation(conversation, cutoffTime),
+					})),
 				})),
 			};
 		},

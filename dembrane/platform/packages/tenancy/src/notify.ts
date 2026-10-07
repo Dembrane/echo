@@ -39,6 +39,8 @@ export interface Notice {
   readonly workspaceId?: string | null;
   readonly projectId?: string | null;
   readonly params?: Record<string, unknown> | null;
+  /** Leaves the inbox at this time, e.g. with the invite it announces. */
+  readonly expiresAt?: string | null;
 }
 
 /**
@@ -79,6 +81,7 @@ export async function emit(db: Conn, now: Date, to: string, n: Notice): Promise<
     ref_org_id: n.orgId ?? null,
     ref_workspace_id: n.workspaceId ?? null,
     ref_project_id: n.projectId ?? null,
+    expires_at: n.expiresAt ?? null,
     created_at: at,
     updated_at: at,
   });

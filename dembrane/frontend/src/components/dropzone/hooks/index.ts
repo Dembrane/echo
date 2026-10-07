@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
 import { initiateAndUploadConversationChunk } from "@/lib/api";
+import { invalidateConversationCounts } from "@/lib/orgQueryKeys";
 
 export const useUploadConversation = () => {
 	const queryClient = useQueryClient();
@@ -34,6 +35,7 @@ export const useUploadConversation = () => {
 			queryClient.invalidateQueries({
 				queryKey: ["projects"],
 			});
+			invalidateConversationCounts(queryClient);
 			toast.success("Conversation(s) uploaded successfully");
 		},
 		retry: 3, // Reduced retry count to avoid too many duplicate attempts
