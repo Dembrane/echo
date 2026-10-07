@@ -291,7 +291,7 @@ msgid "{0, plural, one {# conversation} other {# conversations}}"
 msgstr "{0, plural, one {# gesprek} other {# gesprekken}}"
 
 #. placeholder {0}: list.activeFiltersCount
-#: src/components/conversation/ConversationsMiniList.tsx:211
+#: src/components/conversation/ConversationsMiniList.tsx:212
 msgid "{0, plural, one {# filter} other {# filters}}"
 msgstr "{0, plural, one {# filter} other {# filters}}"
 
@@ -401,7 +401,7 @@ msgid "{0, plural, one {# workspace} other {# workspaces}}"
 msgstr "{0, plural, one {# werkruimte} other {# werkruimtes}}"
 
 #. placeholder {0}: selection.length
-#: src/components/conversation/ConversationsMiniList.tsx:230
+#: src/components/conversation/ConversationsMiniList.tsx:231
 msgid "{0, plural, one {Ask about this} other {Ask about these (#)}}"
 msgstr "{0, plural, one {Vraag hierover} other {Vraag over deze (#)}}"
 
@@ -2132,7 +2132,7 @@ msgid "another reason"
 msgstr "een andere reden"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:707
-#: src/components/conversation/ConversationsMiniList.tsx:180
+#: src/components/conversation/ConversationsMiniList.tsx:181
 msgid "Any tag"
 msgstr "Elke tag"
 
@@ -3430,7 +3430,7 @@ msgstr "Plaats"
 
 #: src/components/results/curate/CurateTable.tsx:114
 #: src/components/conversation/ProjectConversationsPanel.tsx:789
-#: src/components/conversation/ConversationsMiniList.tsx:241
+#: src/components/conversation/ConversationsMiniList.tsx:242
 msgid "Clear"
 msgstr "Wissen"
 
@@ -3439,7 +3439,7 @@ msgid "Clear all"
 msgstr "Alles wissen"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:830
-#: src/components/conversation/ConversationsMiniList.tsx:264
+#: src/components/conversation/ConversationsMiniList.tsx:265
 msgid "Clear filters"
 msgstr "Filters wissen"
 
@@ -4015,7 +4015,7 @@ msgstr "gesprekken"
 #: src/components/map/panels/MapSettingsMenu.tsx:297
 #: src/components/map/panels/ClusterSummary.tsx:155
 #: src/components/conversation/ProjectConversationsPanel.tsx:623
-#: src/components/conversation/ConversationsMiniList.tsx:141
+#: src/components/conversation/ConversationsMiniList.tsx:142
 #: src/components/conversation/ConversationAccordion.tsx:1100
 msgid "Conversations"
 msgstr "Gesprekken"
@@ -5181,7 +5181,7 @@ msgstr "Wordt niet vanzelf bijgewerkt. Bijgewerkt {updatedAgo}."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:527
 #: src/components/invite/InviteModal.tsx:809
-#: src/components/conversation/ConversationsMiniList.tsx:98
+#: src/components/conversation/ConversationsMiniList.tsx:99
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:642
 #: src/components/chat/AgenticPlanCard.tsx:34
 #: src/components/chat/AgenticChatPanel.tsx:431
@@ -6323,7 +6323,7 @@ msgstr "Bestandsnaam van het geüploade bestand"
 msgid "Filter"
 msgstr "Filter"
 
-#: src/components/conversation/ConversationsMiniList.tsx:153
+#: src/components/conversation/ConversationsMiniList.tsx:154
 msgid "Filter and sort"
 msgstr "Filteren en sorteren"
 
@@ -8336,7 +8336,7 @@ msgstr "Vergrendeld"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:441
 #: src/components/conversation/LiveMonitorSection.tsx:323
-#: src/components/conversation/ConversationsMiniList.tsx:404
+#: src/components/conversation/ConversationsMiniList.tsx:405
 msgid "Locked conversation, upgrade to view"
 msgstr "Gesprek vergrendeld, upgrade om te bekijken"
 
@@ -9254,7 +9254,7 @@ msgid "No conversations found. Start a conversation using the participation invi
 msgstr "Geen gesprekken gevonden. Start een gesprek met behulp van de deelname-uitnodigingslink uit het <0><1>projectoverzicht.</1></0>"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:823
-#: src/components/conversation/ConversationsMiniList.tsx:257
+#: src/components/conversation/ConversationsMiniList.tsx:258
 msgid "No conversations match these filters."
 msgstr "Geen gesprekken voldoen aan deze filters."
 
@@ -9264,7 +9264,7 @@ msgid "select.all.modal.no.conversations"
 msgstr "Er zijn geen gesprekken verwerkt. Dit kan gebeuren als alle gesprekken al in de context zijn of niet overeenkomen met de geselecteerde filters."
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:825
-#: src/components/conversation/ConversationsMiniList.tsx:259
+#: src/components/conversation/ConversationsMiniList.tsx:260
 msgid "No conversations yet."
 msgstr "Nog geen gesprekken."
 
@@ -12423,7 +12423,7 @@ msgstr "Resetten"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:724
 #: src/components/conversation/ProjectConversationsPanel.tsx:728
-#: src/components/conversation/ConversationsMiniList.tsx:202
+#: src/components/conversation/ConversationsMiniList.tsx:203
 msgid "Reset filters"
 msgstr "Filters resetten"
 
@@ -12985,7 +12985,7 @@ msgstr "Scroll naar beneden"
 #: src/components/results/ResultsList.tsx:288
 #: src/components/conversation/ProjectConversationsPanel.tsx:676
 #: src/components/conversation/MoveConversationButton.tsx:155
-#: src/components/conversation/ConversationsMiniList.tsx:162
+#: src/components/conversation/ConversationsMiniList.tsx:163
 msgid "Search"
 msgstr "Zoeken"
 
@@ -13202,7 +13202,7 @@ msgstr "Selecteren"
 msgid "Select {0}"
 msgstr "{0} selecteren"
 
-#: src/components/conversation/ConversationsMiniList.tsx:393
+#: src/components/conversation/ConversationsMiniList.tsx:394
 msgid "Select {title}"
 msgstr "{title} selecteren"
 
@@ -14105,7 +14105,7 @@ msgid "participant.go.deeper.content.policy.violation.error.message"
 msgstr "We kunnen hier niet dieper op ingaan door onze contentregels."
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:696
-#: src/components/conversation/ConversationsMiniList.tsx:169
+#: src/components/conversation/ConversationsMiniList.tsx:170
 #: src/components/conversation/ConversationAccordion.tsx:1206
 #: src/components/conversation/ConversationAccordion.tsx:1213
 msgid "Sort"
@@ -14629,7 +14629,7 @@ msgstr "Tag verwijderd"
 #: src/components/participant/ParticipantInitiateForm.tsx:281
 #: src/components/map/panels/MapSettingsMenu.tsx:256
 #: src/components/conversation/ProjectConversationsPanel.tsx:706
-#: src/components/conversation/ConversationsMiniList.tsx:179
+#: src/components/conversation/ConversationsMiniList.tsx:180
 #: src/components/conversation/ConversationEdit.tsx:424
 #: src/components/conversation/ConversationDrilldownModal.tsx:200
 #: src/components/conversation/ConversationAccordion.tsx:1275
@@ -15844,7 +15844,7 @@ msgid "Title guidance"
 msgstr "Titelrichtlijn"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:677
-#: src/components/conversation/ConversationsMiniList.tsx:163
+#: src/components/conversation/ConversationsMiniList.tsx:164
 msgid "Title or participant"
 msgstr "Titel of deelnemer"
 
@@ -16009,7 +16009,7 @@ msgstr "Trainingen"
 msgid "Transcribe a conversation again"
 msgstr "Een gesprek opnieuw transcriberen"
 
-#: src/components/conversation/ConversationsMiniList.tsx:84
+#: src/components/conversation/ConversationsMiniList.tsx:85
 msgid "Transcribing"
 msgstr "Wordt getranscribeerd"
 
@@ -16438,7 +16438,7 @@ msgstr "Naamloos canvas"
 #: src/components/project/ProjectUsageAndSharing.tsx:509
 #: src/components/project/ProjectUsageAndSharing.tsx:544
 #: src/components/conversation/ProjectConversationsPanel.tsx:223
-#: src/components/conversation/ConversationsMiniList.tsx:331
+#: src/components/conversation/ConversationsMiniList.tsx:332
 #: src/components/chat/References.tsx:63
 msgid "Untitled conversation"
 msgstr "Naamloos gesprek"
@@ -16860,8 +16860,8 @@ msgid "select.all.modal.loading.verified"
 msgstr "Geverifieerd"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:717
-#: src/components/conversation/ConversationsMiniList.tsx:92
-#: src/components/conversation/ConversationsMiniList.tsx:189
+#: src/components/conversation/ConversationsMiniList.tsx:93
+#: src/components/conversation/ConversationsMiniList.tsx:190
 msgid "Verified"
 msgstr "Geverifieerd"
 

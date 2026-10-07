@@ -291,7 +291,7 @@ msgid "{0, plural, one {# conversation} other {# conversations}}"
 msgstr "{0, plural, one {# conversación} other {# conversaciones}}"
 
 #. placeholder {0}: list.activeFiltersCount
-#: src/components/conversation/ConversationsMiniList.tsx:211
+#: src/components/conversation/ConversationsMiniList.tsx:212
 msgid "{0, plural, one {# filter} other {# filters}}"
 msgstr "{0, plural, one {# filtro} other {# filtros}}"
 
@@ -401,7 +401,7 @@ msgid "{0, plural, one {# workspace} other {# workspaces}}"
 msgstr "{0, plural, one {# espacio de trabajo} other {# espacios de trabajo}}"
 
 #. placeholder {0}: selection.length
-#: src/components/conversation/ConversationsMiniList.tsx:230
+#: src/components/conversation/ConversationsMiniList.tsx:231
 msgid "{0, plural, one {Ask about this} other {Ask about these (#)}}"
 msgstr "{0, plural, one {Preguntar sobre esto} other {Preguntar sobre estas (#)}}"
 
@@ -2135,7 +2135,7 @@ msgid "another reason"
 msgstr "otra razón"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:707
-#: src/components/conversation/ConversationsMiniList.tsx:180
+#: src/components/conversation/ConversationsMiniList.tsx:181
 msgid "Any tag"
 msgstr "Cualquier etiqueta"
 
@@ -3433,7 +3433,7 @@ msgstr "Ciudad"
 
 #: src/components/results/curate/CurateTable.tsx:114
 #: src/components/conversation/ProjectConversationsPanel.tsx:789
-#: src/components/conversation/ConversationsMiniList.tsx:241
+#: src/components/conversation/ConversationsMiniList.tsx:242
 msgid "Clear"
 msgstr "Borrar"
 
@@ -3442,7 +3442,7 @@ msgid "Clear all"
 msgstr "Borrar todo"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:830
-#: src/components/conversation/ConversationsMiniList.tsx:264
+#: src/components/conversation/ConversationsMiniList.tsx:265
 msgid "Clear filters"
 msgstr "Borrar filtros"
 
@@ -4018,7 +4018,7 @@ msgstr "conversaciones"
 #: src/components/map/panels/MapSettingsMenu.tsx:297
 #: src/components/map/panels/ClusterSummary.tsx:155
 #: src/components/conversation/ProjectConversationsPanel.tsx:623
-#: src/components/conversation/ConversationsMiniList.tsx:141
+#: src/components/conversation/ConversationsMiniList.tsx:142
 #: src/components/conversation/ConversationAccordion.tsx:1100
 msgid "Conversations"
 msgstr "Conversaciones"
@@ -5184,7 +5184,7 @@ msgstr "No se actualiza automáticamente. Se actualizó {updatedAgo}."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:527
 #: src/components/invite/InviteModal.tsx:809
-#: src/components/conversation/ConversationsMiniList.tsx:98
+#: src/components/conversation/ConversationsMiniList.tsx:99
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:642
 #: src/components/chat/AgenticPlanCard.tsx:34
 #: src/components/chat/AgenticChatPanel.tsx:431
@@ -6326,7 +6326,7 @@ msgstr "Nombre de archivo desde el archivo subido"
 msgid "Filter"
 msgstr "Filtrar"
 
-#: src/components/conversation/ConversationsMiniList.tsx:153
+#: src/components/conversation/ConversationsMiniList.tsx:154
 msgid "Filter and sort"
 msgstr "Filtrar y ordenar"
 
@@ -8339,7 +8339,7 @@ msgstr "Bloqueada"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:441
 #: src/components/conversation/LiveMonitorSection.tsx:323
-#: src/components/conversation/ConversationsMiniList.tsx:404
+#: src/components/conversation/ConversationsMiniList.tsx:405
 msgid "Locked conversation, upgrade to view"
 msgstr "Conversación bloqueada, mejora tu plan para verla"
 
@@ -9257,7 +9257,7 @@ msgid "No conversations found. Start a conversation using the participation invi
 msgstr "No se encontraron conversaciones. Inicia una conversación usando el enlace de invitación de participación desde la <0><1>vista general del proyecto.</1></0>"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:823
-#: src/components/conversation/ConversationsMiniList.tsx:257
+#: src/components/conversation/ConversationsMiniList.tsx:258
 msgid "No conversations match these filters."
 msgstr "Ninguna conversación coincide con estos filtros."
 
@@ -9267,7 +9267,7 @@ msgid "select.all.modal.no.conversations"
 msgstr "No se procesaron conversaciones. Esto puede ocurrir si todas las conversaciones ya están en el contexto o no coinciden con los filtros seleccionados."
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:825
-#: src/components/conversation/ConversationsMiniList.tsx:259
+#: src/components/conversation/ConversationsMiniList.tsx:260
 msgid "No conversations yet."
 msgstr "Aún no hay conversaciones."
 
@@ -12426,7 +12426,7 @@ msgstr "Restablecer"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:724
 #: src/components/conversation/ProjectConversationsPanel.tsx:728
-#: src/components/conversation/ConversationsMiniList.tsx:202
+#: src/components/conversation/ConversationsMiniList.tsx:203
 msgid "Reset filters"
 msgstr "Restablecer filtros"
 
@@ -12988,7 +12988,7 @@ msgstr "Desplazarse al final"
 #: src/components/results/ResultsList.tsx:288
 #: src/components/conversation/ProjectConversationsPanel.tsx:676
 #: src/components/conversation/MoveConversationButton.tsx:155
-#: src/components/conversation/ConversationsMiniList.tsx:162
+#: src/components/conversation/ConversationsMiniList.tsx:163
 msgid "Search"
 msgstr "Buscar"
 
@@ -13205,7 +13205,7 @@ msgstr "Seleccionar"
 msgid "Select {0}"
 msgstr "Seleccionar {0}"
 
-#: src/components/conversation/ConversationsMiniList.tsx:393
+#: src/components/conversation/ConversationsMiniList.tsx:394
 msgid "Select {title}"
 msgstr "Seleccionar {title}"
 
@@ -14108,7 +14108,7 @@ msgid "participant.go.deeper.content.policy.violation.error.message"
 msgstr "Lo sentimos, no podemos procesar esta solicitud debido a la política de contenido del proveedor de LLM."
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:696
-#: src/components/conversation/ConversationsMiniList.tsx:169
+#: src/components/conversation/ConversationsMiniList.tsx:170
 #: src/components/conversation/ConversationAccordion.tsx:1206
 #: src/components/conversation/ConversationAccordion.tsx:1213
 msgid "Sort"
@@ -14632,7 +14632,7 @@ msgstr "Etiqueta eliminada"
 #: src/components/participant/ParticipantInitiateForm.tsx:281
 #: src/components/map/panels/MapSettingsMenu.tsx:256
 #: src/components/conversation/ProjectConversationsPanel.tsx:706
-#: src/components/conversation/ConversationsMiniList.tsx:179
+#: src/components/conversation/ConversationsMiniList.tsx:180
 #: src/components/conversation/ConversationEdit.tsx:424
 #: src/components/conversation/ConversationDrilldownModal.tsx:200
 #: src/components/conversation/ConversationAccordion.tsx:1275
@@ -15848,7 +15848,7 @@ msgid "Title guidance"
 msgstr "Guía para el título"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:677
-#: src/components/conversation/ConversationsMiniList.tsx:163
+#: src/components/conversation/ConversationsMiniList.tsx:164
 msgid "Title or participant"
 msgstr "Título o participante"
 
@@ -16013,7 +16013,7 @@ msgstr "Formaciones"
 msgid "Transcribe a conversation again"
 msgstr "Transcribe de nuevo una conversación"
 
-#: src/components/conversation/ConversationsMiniList.tsx:84
+#: src/components/conversation/ConversationsMiniList.tsx:85
 msgid "Transcribing"
 msgstr "Transcribiendo"
 
@@ -16444,7 +16444,7 @@ msgstr "Lienzo sin título"
 #: src/components/project/ProjectUsageAndSharing.tsx:509
 #: src/components/project/ProjectUsageAndSharing.tsx:544
 #: src/components/conversation/ProjectConversationsPanel.tsx:223
-#: src/components/conversation/ConversationsMiniList.tsx:331
+#: src/components/conversation/ConversationsMiniList.tsx:332
 #: src/components/chat/References.tsx:63
 msgid "Untitled conversation"
 msgstr "Conversación sin título"
@@ -16866,8 +16866,8 @@ msgid "select.all.modal.loading.verified"
 msgstr "Verificado"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:717
-#: src/components/conversation/ConversationsMiniList.tsx:92
-#: src/components/conversation/ConversationsMiniList.tsx:189
+#: src/components/conversation/ConversationsMiniList.tsx:93
+#: src/components/conversation/ConversationsMiniList.tsx:190
 msgid "Verified"
 msgstr "Verificado"
 
