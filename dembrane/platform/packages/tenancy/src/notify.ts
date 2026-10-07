@@ -13,7 +13,8 @@ export type NotificationAction =
   | "NAVIGATE_WS"
   | "NAVIGATE_PROJECT"
   | "NAVIGATE_ORGANISATION_SETTINGS"
-  | "NAVIGATE_WORKSPACE_SETTINGS";
+  | "NAVIGATE_WORKSPACE_SETTINGS"
+  | "NAVIGATE_INVITE";
 
 /** Row styling in the inbox; anything unlisted is plain information. */
 const SEVERITY: Record<string, "info" | "action_required" | "destructive"> = {
@@ -22,6 +23,7 @@ const SEVERITY: Record<string, "info" | "action_required" | "destructive"> = {
   PROJECT_SHARE_REVOKED: "destructive",
   TIER_DOWNGRADED: "destructive",
   MEMBERSHIP_REQUESTED: "action_required",
+  INVITE_RECEIVED: "action_required",
   PARTNER_HANDOFF_PENDING: "action_required",
   SUPPORT_ACCESS_REQUESTED: "action_required",
   SUPPORT_ACCESS_REMINDER: "action_required",

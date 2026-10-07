@@ -44,7 +44,6 @@ export type WorkspaceInvitePayload = {
 	// invited | added | reactivated | already_member | already_invited
 	status: string;
 	email: string;
-	user_existed?: boolean;
 	email_sent: boolean;
 	invite_url?: string | null;
 	// Only when the invite carried a project (see inviteToWorkspace opts.projectId).

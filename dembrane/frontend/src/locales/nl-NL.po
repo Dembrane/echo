@@ -349,7 +349,7 @@ msgstr "{0, plural, one {# plek} other {# plekken}}"
 #. placeholder {0}: line.addedSeats
 #. placeholder {1}: fmtEur(line.proratedNow)
 #. placeholder {2}: fmtEur(line.recurringDelta)
-#: src/components/invite/InviteModal.tsx:727
+#: src/components/invite/InviteModal.tsx:729
 msgid "{0, plural, one {# seat} other {# seats}} · {1} now · +{2}/{cadence} at renewal"
 msgstr "{0, plural, one {# plek} other {# plekken}} · nu {1} · +{2}/{cadence} bij verlenging"
 
@@ -721,6 +721,10 @@ msgstr "{accessCount, plural, one {# persoon} other {# personen}}"
 msgid "{accessCount, plural, one {# person} other {# people}} in {0}"
 msgstr "{accessCount, plural, one {# persoon} other {# personen}} in {0}"
 
+#: src/components/invite/InviteModal.tsx:464
+msgid "{addedCount} added. Check the list below."
+msgstr "Toegevoegd: {addedCount}. Bekijk de lijst hieronder."
+
 #: src/components/project/ProjectSharingModal.tsx:237
 msgid "{alreadyPending} people were already invited. The project is shared once they join."
 msgstr "{alreadyPending} mensen waren al uitgenodigd. Het project wordt gedeeld zodra ze meedoen."
@@ -924,7 +928,7 @@ msgstr "{sent} uitnodigingen verstuurd"
 msgid "{sent} invites sent. The project is shared once they join."
 msgstr "{sent} uitnodigingen verstuurd. Het project wordt gedeeld zodra ze meedoen."
 
-#: src/components/invite/InviteModal.tsx:465
+#: src/components/invite/InviteModal.tsx:467
 msgid "{sentCount} invites sent."
 msgstr "{sentCount} uitnodigingen verstuurd."
 
@@ -1552,7 +1556,7 @@ msgstr "Toevoegen aan filters"
 msgid "Add to this chat"
 msgstr "Voeg toe aan dit gesprek"
 
-#: src/components/invite/InviteModal.tsx:592
+#: src/components/invite/InviteModal.tsx:594
 msgid "Add to workspaces"
 msgstr "Toevoegen aan werkruimtes"
 
@@ -1595,6 +1599,7 @@ msgstr "je logo toe te voegen"
 
 #: src/components/project/ProjectSharingModal.tsx:163
 #: src/components/project/ProjectSharingModal.tsx:231
+#: src/components/invite/InviteResultsList.tsx:46
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:139
 msgid "Added"
 msgstr "Toegevoegd"
@@ -1905,7 +1910,7 @@ msgstr "Bijna klaar"
 msgid "Almost there"
 msgstr "Bijna klaar"
 
-#: src/components/invite/InviteResultsList.tsx:45
+#: src/components/invite/InviteResultsList.tsx:48
 msgid "Already a member"
 msgstr "Al lid"
 
@@ -1922,7 +1927,7 @@ msgstr "Heb je al een account? Log in"
 msgid "Already in context"
 msgstr "Al in context"
 
-#: src/components/invite/InviteResultsList.tsx:47
+#: src/components/invite/InviteResultsList.tsx:50
 msgid "Already invited"
 msgstr "Al uitgenodigd"
 
@@ -2941,7 +2946,7 @@ msgstr "Kun je ons meer vertellen?"
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:294
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:378
 #: src/components/map/panels/SpotlightPanel.tsx:363
-#: src/components/invite/InviteModal.tsx:798
+#: src/components/invite/InviteModal.tsx:800
 #: src/components/goal/ProjectGoalSection.tsx:165
 #: src/components/dropzone/UploadConversationDropzone.tsx:750
 #: src/components/dropzone/UploadConversationDropzone.tsx:882
@@ -3728,7 +3733,7 @@ msgstr "Bevestigen"
 msgid "participant.mic.settings.modal.second.confirm.button"
 msgstr "Doorgaan"
 
-#: src/components/invite/InviteModal.tsx:783
+#: src/components/invite/InviteModal.tsx:785
 msgid "Confirm and send"
 msgstr "Bevestigen en versturen"
 
@@ -3861,7 +3866,7 @@ msgstr "Contextuele suggesties"
 #: src/components/pricing/PricingConfigurator.tsx:844
 #: src/components/organisation/CreateOrganisationModal.tsx:210
 #: src/components/language/LanguagePicker.tsx:157
-#: src/components/invite/InviteModal.tsx:785
+#: src/components/invite/InviteModal.tsx:787
 #: src/components/billing/BillingManager.tsx:1469
 msgid "Continue"
 msgstr "Doorgaan"
@@ -4086,8 +4091,8 @@ msgstr "Insluitcode kopiëren"
 
 #: src/components/members/PendingInvitesSection.tsx:171
 #: src/components/members/PendingInvitesSection.tsx:175
-#: src/components/invite/InviteResultsList.tsx:113
-#: src/components/invite/InviteResultsList.tsx:119
+#: src/components/invite/InviteResultsList.tsx:116
+#: src/components/invite/InviteResultsList.tsx:122
 msgid "Copy invite link"
 msgstr "Uitnodigingslink kopiëren"
 
@@ -4342,7 +4347,7 @@ msgstr "1 lid kon niet worden toegevoegd. Voeg het toe via de instellingen van d
 #~ msgstr "Zichtbaarheid kon niet worden gewijzigd"
 
 #: src/components/members/PendingInvitesSection.tsx:89
-#: src/components/invite/InviteResultsList.tsx:74
+#: src/components/invite/InviteResultsList.tsx:77
 msgid "Couldn't copy the link."
 msgstr "De link kon niet worden gekopieerd."
 
@@ -4389,7 +4394,7 @@ msgstr "Organisatieleden konden niet worden geladen. Probeer te vernieuwen, en n
 #~ msgid "Couldn't load workspaces. Close and reopen to retry."
 #~ msgstr "Werkruimtes konden niet worden geladen. Sluit en open opnieuw om het nogmaals te proberen."
 
-#: src/components/invite/InviteModal.tsx:599
+#: src/components/invite/InviteModal.tsx:601
 msgid "Couldn't load workspaces. Close and reopen to try again."
 msgstr "Werkruimtes konden niet worden geladen. Sluit en open opnieuw om het nog eens te proberen."
 
@@ -5171,7 +5176,7 @@ msgid "Does not update on its own. Updated {updatedAgo}."
 msgstr "Wordt niet vanzelf bijgewerkt. Bijgewerkt {updatedAgo}."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:527
-#: src/components/invite/InviteModal.tsx:807
+#: src/components/invite/InviteModal.tsx:809
 #: src/components/conversation/ConversationsMiniList.tsx:98
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:642
 #: src/components/chat/AgenticPlanCard.tsx:34
@@ -5994,7 +5999,7 @@ msgstr "Externen"
 msgid "Externals are not added to your organisation. They can only see the workspaces you select here."
 msgstr "Externen worden niet aan je organisatie toegevoegd. Ze zien alleen de werkruimtes die je hier selecteert."
 
-#: src/components/invite/InviteModal.tsx:634
+#: src/components/invite/InviteModal.tsx:636
 msgid "Externals only exist inside a workspace. Pick at least one to send the invite."
 msgstr "Externen bestaan alleen binnen een werkruimte. Kies er minstens één om de uitnodiging te versturen."
 
@@ -6043,7 +6048,7 @@ msgstr "Feitelijke status is niet van toepassing op dit object."
 #: src/routes/admin/AdminSettingsRoute.tsx:2695
 #: src/routes/admin/AdminSettingsRoute.tsx:2757
 #: src/features/sidebar/primitives/NavItem.tsx:281
-#: src/components/invite/InviteResultsList.tsx:58
+#: src/components/invite/InviteResultsList.tsx:61
 #: src/components/dropzone/UploadConversationDropzone.tsx:808
 #: src/components/billing/BillingManager.tsx:230
 msgid "Failed"
@@ -7390,7 +7395,7 @@ msgstr "Ongeldige code. Vraag een nieuwe aan."
 msgid "Invalid credentials."
 msgstr "Ongeldige inloggegevens."
 
-#: src/components/invite/InviteResultsList.tsx:55
+#: src/components/invite/InviteResultsList.tsx:58
 msgid "Invalid email"
 msgstr "Ongeldige e-mail"
 
@@ -7438,7 +7443,7 @@ msgstr "Alleen op uitnodiging"
 msgid "Invite people"
 msgstr "Mensen uitnodigen"
 
-#: src/components/invite/InviteModal.tsx:568
+#: src/components/invite/InviteModal.tsx:570
 msgid "Invite people to {orgName}"
 msgstr "Nodig mensen uit voor {orgName}"
 
@@ -7456,7 +7461,7 @@ msgstr "Uitnodiging ingetrokken"
 msgid "Invite sent"
 msgstr "Uitnodiging verstuurd"
 
-#: src/components/invite/InviteModal.tsx:462
+#: src/components/invite/InviteModal.tsx:466
 msgid "Invite sent."
 msgstr "Uitnodiging verstuurd."
 
@@ -8041,7 +8046,7 @@ msgid "Link"
 msgstr "Link"
 
 #: src/components/members/PendingInvitesSection.tsx:83
-#: src/components/invite/InviteResultsList.tsx:68
+#: src/components/invite/InviteResultsList.tsx:71
 msgid "Link copied"
 msgstr "Link gekopieerd"
 
@@ -8731,7 +8736,7 @@ msgstr "Antwoordt niet op de vraag"
 msgid "Missing features I need"
 msgstr "Ik mis functies die ik nodig heb"
 
-#: src/components/invite/InviteModal.tsx:713
+#: src/components/invite/InviteModal.tsx:715
 msgid "mo"
 msgstr "mnd"
 
@@ -9307,7 +9312,7 @@ msgstr "Nog geen doel ingesteld."
 msgid "No goal yet. Set one here, or let the assistant interview you in chat."
 msgstr "Nog geen doel. Stel er hier een in, of laat de assistent je erover interviewen in de chat."
 
-#: src/components/invite/InviteModal.tsx:468
+#: src/components/invite/InviteModal.tsx:470
 msgid "No invites went out. Check the list below."
 msgstr "Er zijn geen uitnodigingen verstuurd. Bekijk de lijst hieronder."
 
@@ -9359,7 +9364,7 @@ msgstr "Geen naam"
 msgid "No new feedback detected yet. Please continue your discussion and try again soon."
 msgstr "Noch geen nieuwe feedback gedetecteerd. Ga door met je gesprek en probeer het opnieuw binnenkort."
 
-#: src/components/invite/InviteModal.tsx:464
+#: src/components/invite/InviteModal.tsx:462
 msgid "No new invites needed. Check the list below."
 msgstr "Geen nieuwe uitnodigingen nodig. Bekijk de lijst hieronder."
 
@@ -9622,7 +9627,7 @@ msgstr "Nog geen webhooks. Voeg een webhook toe om automatisch gespreksdata te o
 msgid "No workspace access yet"
 msgstr "Nog geen werkruimtetoegang"
 
-#: src/components/invite/InviteModal.tsx:643
+#: src/components/invite/InviteModal.tsx:645
 msgid "No workspace picked. They'll be added to {orgName} and can request workspace access themselves."
 msgstr "Geen werkruimte gekozen. Ze worden toegevoegd aan {orgName} en kunnen zelf werkruimtetoegang aanvragen."
 
@@ -9853,7 +9858,7 @@ msgstr "Waarnemers zijn gratis en alleen-lezen, en alleen voor werkruimtes van e
 msgid "Observers are free, read-only guests. To give edit access, remove them and re-invite as a member."
 msgstr "Observers zijn gratis gasten die alleen kunnen meelezen. Wil je ze laten bewerken? Verwijder ze en nodig ze opnieuw uit als lid."
 
-#: src/components/invite/InviteModal.tsx:662
+#: src/components/invite/InviteModal.tsx:664
 msgid "Observers are only available in workspaces for an external client. Pick only external-client workspaces, or choose a different role."
 msgstr "Waarnemers zijn alleen beschikbaar in werkruimtes voor een externe klant. Kies alleen werkruimtes van externe klanten, of kies een andere rol."
 
@@ -10336,7 +10341,7 @@ msgid "Organisation not found"
 msgstr "Organisatie niet gevonden"
 
 #: src/routes/invite/MyInvitesRoute.tsx:187
-#: src/components/invite/InviteResultsList.tsx:99
+#: src/components/invite/InviteResultsList.tsx:102
 msgid "Organisation only"
 msgstr "Alleen organisatie"
 
@@ -10577,7 +10582,7 @@ msgid "partner"
 msgstr "partner"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:534
-#: src/components/invite/InviteModal.tsx:724
+#: src/components/invite/InviteModal.tsx:726
 msgid "Partner"
 msgstr "Partner"
 
@@ -10733,7 +10738,7 @@ msgstr "Personen met toegang"
 msgid "People, groups and what matters to them"
 msgstr "Mensen, groepen en wat voor hen belangrijk is"
 
-#: src/components/invite/InviteModal.tsx:674
+#: src/components/invite/InviteModal.tsx:676
 msgid "Per-recipient results:"
 msgstr "Resultaten per ontvanger:"
 
@@ -10788,7 +10793,7 @@ msgstr "Kies een tijd met {host}."
 msgid "Pick an account"
 msgstr "Kies een account"
 
-#: src/components/invite/InviteModal.tsx:652
+#: src/components/invite/InviteModal.tsx:654
 msgid "Pick at least one workspace to send the invite."
 msgstr "Kies minstens één werkruimte om de uitnodiging te versturen."
 
@@ -11450,7 +11455,7 @@ msgstr "Voorgesteld"
 msgid "Proposed changes"
 msgstr "Voorgestelde wijzigingen"
 
-#: src/components/invite/InviteModal.tsx:765
+#: src/components/invite/InviteModal.tsx:767
 msgid "Prorated for the rest of this billing period."
 msgstr "Naar rato voor de rest van deze factureringsperiode."
 
@@ -11546,7 +11551,7 @@ msgstr "Citaten ({quotes})"
 msgid "Ran {0} steps at once"
 msgstr "{0} stappen tegelijk uitgevoerd"
 
-#: src/components/invite/InviteResultsList.tsx:49
+#: src/components/invite/InviteResultsList.tsx:52
 msgid "Rate limited"
 msgstr "Snelheidslimiet bereikt"
 
@@ -11567,11 +11572,11 @@ msgstr "Voer het nieuwe wachtwoord opnieuw in"
 msgid "Re-use settings from an existing webhook"
 msgstr "Gebruik instellingen van een bestaande webhook"
 
-#: src/components/invite/InviteModal.tsx:692
+#: src/components/invite/InviteModal.tsx:694
 msgid "Reactivate"
 msgstr "Heractiveren"
 
-#: src/components/invite/InviteResultsList.tsx:53
+#: src/components/invite/InviteResultsList.tsx:56
 msgid "Reactivate plan"
 msgstr "Plan heractiveren"
 
@@ -13132,7 +13137,7 @@ msgid "Seats"
 msgstr "Plekken"
 
 #: src/components/invite/WorkspaceSelectList.tsx:203
-#: src/components/invite/InviteResultsList.tsx:51
+#: src/components/invite/InviteResultsList.tsx:54
 msgid "Seats full"
 msgstr "Plekken vol"
 
@@ -13384,7 +13389,7 @@ msgstr "Verzenden"
 #. placeholder {0}: pendingInvites.length
 #. placeholder {0}: validChips.length
 #: src/components/project/ProjectSharingModal.tsx:488
-#: src/components/invite/InviteModal.tsx:787
+#: src/components/invite/InviteModal.tsx:789
 msgid "Send {0} invites"
 msgstr "{0} uitnodigingen versturen"
 
@@ -13397,7 +13402,7 @@ msgid "Send feedback"
 msgstr "Feedback versturen"
 
 #: src/components/project/ProjectSharingModal.tsx:490
-#: src/components/invite/InviteModal.tsx:789
+#: src/components/invite/InviteModal.tsx:791
 msgid "Send invite"
 msgstr "Uitnodiging versturen"
 
@@ -13431,12 +13436,12 @@ msgstr "Stuur Slack/Teams notificaties wanneer nieuwe gesprekken zijn voltooid"
 msgid "Send to dembrane"
 msgstr "Naar dembrane sturen"
 
-#: src/components/invite/InviteResultsList.tsx:43
+#: src/components/invite/InviteResultsList.tsx:44
 msgid "Sent"
 msgstr "Verstuurd"
 
 #. placeholder {0}: rows.length
-#: src/components/invite/InviteModal.tsx:471
+#: src/components/invite/InviteModal.tsx:473
 msgid "Sent {sentCount} of {0}. Check the list below."
 msgstr "{sentCount} van {0} verstuurd. Bekijk de lijst hieronder."
 
@@ -15274,7 +15279,7 @@ msgstr "Deze gesprekken werden uitgesloten vanwege ontbrekende transcripties."
 msgid "These tag changes are applied to your project."
 msgstr "Deze tagwijzigingen zijn toegepast op je project."
 
-#: src/components/invite/InviteModal.tsx:617
+#: src/components/invite/InviteModal.tsx:619
 msgid "These workspaces are billed separately. Each person you add takes a seat in {billingContextCount} billing contexts, each invoiced on its own."
 msgstr "Deze werkruimtes worden apart gefactureerd. Elke persoon die je toevoegt neemt een plek in {billingContextCount} factureringscontexten in, die elk afzonderlijk worden gefactureerd."
 
@@ -15413,7 +15418,7 @@ msgid "This invite link isn't valid for this account"
 msgstr "Deze uitnodigingslink is niet geldig voor dit account"
 
 #. placeholder {0}: confirm.length
-#: src/components/invite/InviteModal.tsx:705
+#: src/components/invite/InviteModal.tsx:707
 msgid "This invite spans {0} billing contexts, each invoiced on its own:"
 msgstr "Deze uitnodiging beslaat {0} factureringscontexten, die elk apart worden gefactureerd:"
 
@@ -15935,7 +15940,7 @@ msgstr "totaal"
 msgid "Total"
 msgstr "Totaal"
 
-#: src/components/invite/InviteModal.tsx:754
+#: src/components/invite/InviteModal.tsx:756
 msgid "Total due now"
 msgstr "Nu te betalen totaal"
 
@@ -18009,7 +18014,7 @@ msgstr "Je zit nog in geen enkele organisatie. Maak een werkruimte om een organi
 msgid "You're not part of any organisation right now."
 msgstr "Je maakt op dit moment deel uit van geen enkele organisatie."
 
-#: src/components/invite/InviteModal.tsx:742
+#: src/components/invite/InviteModal.tsx:744
 msgid "You're reusing seats you already paid for this period (someone left), so there's no charge now for those. The renewal reflects them."
 msgstr "Je hergebruikt plekken waarvoor je deze periode al hebt betaald (iemand is vertrokken), dus daar wordt nu niets voor in rekening gebracht. De verlenging houdt er rekening mee."
 
@@ -18229,7 +18234,7 @@ msgstr "Je abonnement is geregeld met dembrane, dus hier valt niets te betalen. 
 msgid "Your plan is back on. You keep your current period."
 msgstr "Je abonnement is weer actief. Je behoudt je huidige periode."
 
-#: src/components/invite/InviteModal.tsx:684
+#: src/components/invite/InviteModal.tsx:686
 msgid "Your plan is inactive. Reactivate it to add members."
 msgstr "Je abonnement is inactief. Activeer het opnieuw om leden toe te voegen."
 
@@ -18279,7 +18284,7 @@ msgstr "Je werkruimte staat klaar. Klik op doorgaan om samen te werken."
 msgid "Yours"
 msgstr "Van jou"
 
-#: src/components/invite/InviteModal.tsx:713
+#: src/components/invite/InviteModal.tsx:715
 msgid "yr"
 msgstr "jr"
 

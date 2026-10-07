@@ -14,7 +14,8 @@ import { usePostHog } from "@posthog/react";
 import { toast } from "@/components/common/Toaster";
 
 export type InviteResultState =
-	| "sent" // status: invited (new user) / added (existing user) / reactivated
+	| "sent" // status: invited, waiting for the recipient to accept
+	| "added" // status: added / reactivated, an organisation member joined at once
 	| "already_member" // idempotent — already in workspace/org
 	| "already_invited" // idempotent — an unaccepted invite is already pending
 	| "rate_limited" // 429
@@ -41,6 +42,8 @@ function badgeForState(state: InviteResultState) {
 	switch (state) {
 		case "sent":
 			return { color: "green", label: <Trans>Sent</Trans> };
+		case "added":
+			return { color: "green", label: <Trans>Added</Trans> };
 		case "already_member":
 			return { color: "gray", label: <Trans>Already a member</Trans> };
 		case "already_invited":
