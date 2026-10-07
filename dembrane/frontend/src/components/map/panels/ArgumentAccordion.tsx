@@ -35,6 +35,31 @@ function evidenceWords(quotes: number, conversations: number): string {
 	return `${quoteWords}${SEPARATOR}${conversationWords}`;
 }
 
+/** True when `element` scrolls its own content, not when an ancestor does. */
+const scrollsItself = (element: HTMLElement): boolean => {
+	if (element.scrollHeight <= element.clientHeight) return false;
+	const { overflowY } = getComputedStyle(element);
+	return overflowY === "auto" || overflowY === "scroll";
+};
+
+/**
+ * Brings `row` into view inside `container` by moving the container's own
+ * scrollTop, and only when the container is its own scroll box. Unlike
+ * `scrollIntoView`, no ancestor and never the page moves.
+ */
+const revealWithin = (container: HTMLElement, row: HTMLElement) => {
+	if (!scrollsItself(container)) return;
+	const box = container.getBoundingClientRect();
+	const target = row.getBoundingClientRect();
+	const top = target.top - box.top + container.scrollTop;
+	const bottom = top + target.height;
+	if (top < container.scrollTop) {
+		container.scrollTop = top;
+	} else if (bottom > container.scrollTop + container.clientHeight) {
+		container.scrollTop = Math.min(top, bottom - container.clientHeight);
+	}
+};
+
 export type ArgumentAccordionProps = {
 	/** Every placed node; the list keeps the arguments among them. */
 	nodes: ReadonlyArray<MapGraphNode>;
@@ -116,16 +141,22 @@ export const ArgumentAccordion = memo(function ArgumentAccordion({
 	const visible = ordered.slice(0, room);
 
 	// The map and the list share one selection, so a node clicked on the map
-	// opens its row here. The list only scrolls to it when the reader is
-	// already looking at the list; a click on the map must not yank the page.
+	// opens its row here. The page never moves for it: the list brings the
+	// row into view only inside its own scroll box, never on the first
+	// selection (the map picks one as it opens) and never for the map's own
+	// picks.
+	const seenSelection = useRef(false);
 	// biome-ignore lint/correctness/useExhaustiveDependencies: runs when the selection moves, which is what the open row follows
 	useEffect(() => {
+		if (!selectedNodeId) return;
+		if (!seenSelection.current) {
+			seenSelection.current = true;
+			return;
+		}
+		if (store.getState().selectionAuto) return;
 		const row = openRow.current;
 		const container = list.current;
-		if (!row || !container) return;
-		const box = container.getBoundingClientRect?.();
-		if (!box || box.top > globalThis.innerHeight || box.bottom < 0) return;
-		row.scrollIntoView?.({ block: "nearest" });
+		if (row && container) revealWithin(container, row);
 	}, [selectedNodeId]);
 
 	if (ordered.length === 0) return null;

@@ -1759,7 +1759,7 @@ msgstr "Betroffen von"
 #: src/components/results/ResultRow.tsx:107
 #: src/components/results/curate/ArgumentsTab.tsx:42
 #: src/components/results/curate/ArgumentsTab.tsx:230
-#: src/components/map/panels/ArgumentAccordion.tsx:186
+#: src/components/map/panels/ArgumentAccordion.tsx:217
 msgid "against"
 msgstr "dagegen"
 
@@ -2329,7 +2329,7 @@ msgstr "Argumentationsbaum (MST)"
 #: src/components/results/ResultsList.tsx:265
 #: src/components/results/curate/CurateTabs.tsx:19
 #: src/components/map/attributes.ts:128
-#: src/components/map/panels/ArgumentAccordion.tsx:142
+#: src/components/map/panels/ArgumentAccordion.tsx:173
 msgid "Arguments"
 msgstr "Argumente"
 
@@ -3680,7 +3680,7 @@ msgid "Combined from"
 msgstr "Kombiniert aus"
 
 #. placeholder {0}: consolidation.memberCount
-#: src/components/map/panels/ArgumentAccordion.tsx:199
+#: src/components/map/panels/ArgumentAccordion.tsx:230
 msgid "combined from {0}"
 msgstr "zusammengefasst aus {0}"
 
@@ -6482,7 +6482,7 @@ msgstr "Schriftgröße"
 #: src/components/results/ResultRow.tsx:106
 #: src/components/results/curate/ArgumentsTab.tsx:40
 #: src/components/results/curate/ArgumentsTab.tsx:228
-#: src/components/map/panels/ArgumentAccordion.tsx:184
+#: src/components/map/panels/ArgumentAccordion.tsx:215
 msgid "for"
 msgstr "dafür"
 
@@ -9040,7 +9040,7 @@ msgstr "Negativ"
 msgid "Neighbour attraction: {0}"
 msgstr "Nachbar-Anziehungskraft: {0}"
 
-#: src/components/map/panels/ArgumentAccordion.tsx:212
+#: src/components/map/panels/ArgumentAccordion.tsx:243
 msgid "Neighbours in the tree"
 msgstr "Nachbarn im Baum"
 
@@ -9702,7 +9702,7 @@ msgstr "Knoten"
 msgid "None"
 msgstr "Keine"
 
-#: src/components/map/panels/ArgumentAccordion.tsx:216
+#: src/components/map/panels/ArgumentAccordion.tsx:247
 msgid "None in this view."
 msgstr "Keine in dieser Ansicht."
 
@@ -11590,7 +11590,7 @@ msgid "Queued"
 msgstr "In der Warteschlange"
 
 #: src/components/map/panels/DetailsSheet.tsx:471
-#: src/components/map/panels/ArgumentAccordion.tsx:248
+#: src/components/map/panels/ArgumentAccordion.tsx:279
 msgid "Quotes"
 msgstr "Zitate"
 
@@ -13798,7 +13798,7 @@ msgstr "Wieder anzeigen"
 #. placeholder {0}: ordered.length
 #: src/components/results/curate/ArgumentsTab.tsx:368
 #: src/components/map/panels/DetailsSheet.tsx:199
-#: src/components/map/panels/ArgumentAccordion.tsx:299
+#: src/components/map/panels/ArgumentAccordion.tsx:330
 msgid "Show all {0}"
 msgstr "Alle {0} anzeigen"
 

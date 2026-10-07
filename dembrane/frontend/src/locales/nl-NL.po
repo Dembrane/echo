@@ -1759,7 +1759,7 @@ msgstr "Beïnvloed door"
 #: src/components/results/ResultRow.tsx:107
 #: src/components/results/curate/ArgumentsTab.tsx:42
 #: src/components/results/curate/ArgumentsTab.tsx:230
-#: src/components/map/panels/ArgumentAccordion.tsx:186
+#: src/components/map/panels/ArgumentAccordion.tsx:217
 msgid "against"
 msgstr "tegen"
 
@@ -2326,7 +2326,7 @@ msgstr "Argumentenboom (MST)"
 #: src/components/results/ResultsList.tsx:265
 #: src/components/results/curate/CurateTabs.tsx:19
 #: src/components/map/attributes.ts:128
-#: src/components/map/panels/ArgumentAccordion.tsx:142
+#: src/components/map/panels/ArgumentAccordion.tsx:173
 msgid "Arguments"
 msgstr "Argumenten"
 
@@ -3677,7 +3677,7 @@ msgid "Combined from"
 msgstr "Samengesteld uit"
 
 #. placeholder {0}: consolidation.memberCount
-#: src/components/map/panels/ArgumentAccordion.tsx:199
+#: src/components/map/panels/ArgumentAccordion.tsx:230
 msgid "combined from {0}"
 msgstr "samengevoegd uit {0}"
 
@@ -6479,7 +6479,7 @@ msgstr "Lettergrootte"
 #: src/components/results/ResultRow.tsx:106
 #: src/components/results/curate/ArgumentsTab.tsx:40
 #: src/components/results/curate/ArgumentsTab.tsx:228
-#: src/components/map/panels/ArgumentAccordion.tsx:184
+#: src/components/map/panels/ArgumentAccordion.tsx:215
 msgid "for"
 msgstr "voor"
 
@@ -9037,7 +9037,7 @@ msgstr "Negatief"
 msgid "Neighbour attraction: {0}"
 msgstr "Aantrekking buurnodes: {0}"
 
-#: src/components/map/panels/ArgumentAccordion.tsx:212
+#: src/components/map/panels/ArgumentAccordion.tsx:243
 msgid "Neighbours in the tree"
 msgstr "Buren in de boom"
 
@@ -9699,7 +9699,7 @@ msgstr "Knooppunten"
 msgid "None"
 msgstr "Geen"
 
-#: src/components/map/panels/ArgumentAccordion.tsx:216
+#: src/components/map/panels/ArgumentAccordion.tsx:247
 msgid "None in this view."
 msgstr "Geen in deze weergave."
 
@@ -11587,7 +11587,7 @@ msgid "Queued"
 msgstr "In de wachtrij"
 
 #: src/components/map/panels/DetailsSheet.tsx:471
-#: src/components/map/panels/ArgumentAccordion.tsx:248
+#: src/components/map/panels/ArgumentAccordion.tsx:279
 msgid "Quotes"
 msgstr "Citaten"
 
@@ -13795,7 +13795,7 @@ msgstr "Weer tonen"
 #. placeholder {0}: ordered.length
 #: src/components/results/curate/ArgumentsTab.tsx:368
 #: src/components/map/panels/DetailsSheet.tsx:199
-#: src/components/map/panels/ArgumentAccordion.tsx:299
+#: src/components/map/panels/ArgumentAccordion.tsx:330
 msgid "Show all {0}"
 msgstr "Toon alle {0}"
 
