@@ -211,9 +211,13 @@ const useChunkedAudioRecorder = ({
 		}
 
 		// Ensure that any previous MediaRecorder instance is stopped before creating a new one
+		// A restart runs from onstop, where that recorder is already inactive, and
+		// stop() on an inactive recorder throws in some browsers.
 		if (mediaRecorderRef.current) {
 			log("startRecordingChunk: stopping previous MediaRecorder instance");
-			mediaRecorderRef.current.stop();
+			if (mediaRecorderRef.current.state !== "inactive") {
+				mediaRecorderRef.current.stop();
+			}
 			mediaRecorderRef.current = null;
 		}
 
@@ -229,6 +233,39 @@ const useChunkedAudioRecorder = ({
 			log("ondataavailable", event.data.size, "bytes");
 			if (event.data.size > 0) {
 				chunkBufferRef.current.push(event.data);
+			}
+		};
+
+		const reportInterruption = () => {
+			hadConsecutiveSuspiciousChunksRef.current = true;
+			hasCalledInterruptionCallbackRef.current = true;
+
+			// Play notification sound for interruption using pre-unlocked audio
+			if (audioAlertRef.current) {
+				audioAlertRef.current.muted = false;
+				audioAlertRef.current.currentTime = 0;
+				audioAlertRef.current.play().catch((error) => {
+					console.error("Failed to play notification sound:", error);
+				});
+			}
+
+			chunkBufferRef.current = [];
+			onRecordingInterrupted?.();
+		};
+
+		// The mic track can end between chunks (a phone call, or another app
+		// takes the device), and then start() throws. Nothing catches a throw
+		// inside onstop: capture stops, but the UI still shows recording. End the
+		// session as an interruption, so the participant gets the alert.
+		const restartChunk = () => {
+			try {
+				startRecordingChunk();
+			} catch (error) {
+				console.error("Failed to restart recording chunk", error);
+				mediaRecorderRef.current = null;
+				if (!hasCalledInterruptionCallbackRef.current) {
+					reportInterruption();
+				}
 			}
 		};
 
@@ -252,27 +289,14 @@ const useChunkedAudioRecorder = ({
 					suspiciousChunkCountRef.current >= 2 &&
 					!hasCalledInterruptionCallbackRef.current
 				) {
-					hadConsecutiveSuspiciousChunksRef.current = true;
-					hasCalledInterruptionCallbackRef.current = true;
-
-					// Play notification sound for interruption using pre-unlocked audio
-					if (audioAlertRef.current) {
-						audioAlertRef.current.muted = false;
-						audioAlertRef.current.currentTime = 0;
-						audioAlertRef.current.play().catch((error) => {
-							console.error("Failed to play notification sound:", error);
-						});
-					}
-
 					// Don't upload suspicious chunk, don't restart recording
-					chunkBufferRef.current = [];
-					onRecordingInterrupted?.();
+					reportInterruption();
 					return;
 				}
 
 				// First suspicious chunk - don't upload it, but continue recording
 				chunkBufferRef.current = [];
-				startRecordingChunk();
+				restartChunk();
 				return;
 			}
 
@@ -282,7 +306,7 @@ const useChunkedAudioRecorder = ({
 
 			// flush the buffer and restart
 			chunkBufferRef.current = [];
-			startRecordingChunk();
+			restartChunk();
 		};
 
 		// allow for some room to restart so all is just one chunk as per mediarec
