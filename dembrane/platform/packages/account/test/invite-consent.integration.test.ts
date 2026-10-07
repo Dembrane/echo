@@ -45,6 +45,8 @@ const P = {
   sam: person(6, "sam"),
   rob: person(7, "rob"),
 };
+// Signed up but not onboarded yet: no app_user row. nina verified her email, uma did not.
+const NEW = { nina: person(8, "nina"), uma: person(9, "uma") };
 
 run("workspace invites and consent", () => {
   setDefaultTimeout(60_000);
@@ -72,6 +74,10 @@ run("workspace invites and consent", () => {
       await sql`insert into directus_users (id, email) values (${p.directus}, ${p.email})`;
       await sql`insert into auth_user (id, email, email_verified, name) values (${p.directus}, ${p.email}, true, ${p.email})`;
       await sql`insert into app_user (id, directus_user_id, email, display_name) values (${p.app}, ${p.directus}, ${p.email}, ${displayName(p)})`;
+    }
+    for (const p of Object.values(NEW)) {
+      await sql`insert into directus_users (id, email) values (${p.directus}, ${p.email})`;
+      await sql`insert into auth_user (id, email, email_verified, name) values (${p.directus}, ${p.email}, ${p === NEW.nina}, ${p.email})`;
     }
     let m = 0;
     const orgMember = (p: Person, org: string, role: string, deleted = false) =>
@@ -115,6 +121,13 @@ run("workspace invites and consent", () => {
     app = new Hono<Env>();
     app.use(async (c, next) => {
       const who = Object.values(P).find((p) => p.email === c.req.header("x-as"));
+      const newcomer = Object.values(NEW).find((p) => p.email === c.req.header("x-as"));
+      if (newcomer)
+        c.set("principal", {
+          appUserId: null,
+          directusUserId: newcomer.directus,
+          isStaff: false,
+        } as unknown as Signed);
       if (who)
         c.set("principal", {
           appUserId: who.app,
@@ -286,5 +299,24 @@ run("workspace invites and consent", () => {
       ["Alice invited you to Main", true],
       ["Org invite", true],
     ]);
+  });
+
+  test("someone not onboarded yet sees invites to their verified email, so onboarding can name the organisation", async () => {
+    expect((await invite(NEW.nina.email)).status).toBe("invited");
+    await sql`insert into org_invite (id, org_id, email, role, invited_by, expires_at)
+      values (${n("e9", 3)}, ${ORG_B}, ${NEW.nina.email}, 'member', ${P.xavier.app}, now() + interval '7 days')`;
+    const res = await call(NEW.nina, "GET", "/api/v2/me/invites");
+    expect(res.status).toBe(200);
+    const list = (await res.json()) as { type: string; org_name: string }[];
+    expect(list.map((i) => [i.type, i.org_name]).sort()).toEqual([
+      ["org", "Org B"],
+      ["workspace", "Org A"],
+    ]);
+  });
+
+  test("an unverified email sees no invites", async () => {
+    expect((await invite(NEW.uma.email)).status).toBe("invited");
+    const res = await call(NEW.uma, "GET", "/api/v2/me/invites");
+    expect(await res.json()).toEqual([]);
   });
 });
