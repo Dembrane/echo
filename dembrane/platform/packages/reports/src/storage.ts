@@ -111,7 +111,7 @@ function queries(sql: Sql) {
 
     async appUserByDirectusId(directusUserId: string) {
       const [row] = await sql`select id, email from app_user
-        where directus_user_id = ${directusUserId} and deleted_at is null limit 1`;
+        where directus_user_id = ${directusUserId} limit 1`;
       return (row as { id: string; email: string | null } | undefined) ?? null;
     },
 
