@@ -2545,7 +2545,7 @@ msgstr "Journaux d'audit exportés en CSV"
 msgid "Audit logs exported to JSON"
 msgstr "Journaux d'audit exportés en JSON"
 
-#: src/routes/auth/Login.tsx:475
+#: src/routes/auth/Login.tsx:479
 #: src/components/settings/TwoFactorSettingsCard.tsx:224
 #: src/components/settings/TwoFactorSettingsCard.tsx:349
 msgid "Authenticator code"
@@ -4448,7 +4448,7 @@ msgid "Create account"
 msgstr "Créer un compte"
 
 #: src/routes/auth/Register.tsx:129
-#: src/routes/auth/Login.tsx:603
+#: src/routes/auth/Login.tsx:607
 msgid "Create an account"
 msgstr "Créer un compte"
 
@@ -5535,9 +5535,9 @@ msgstr "Section de l’éditeur"
 
 #: src/routes/auth/RequestPasswordReset.tsx:51
 #: src/routes/auth/RequestPasswordReset.tsx:54
-#: src/routes/auth/Login.tsx:395
-#: src/routes/auth/Login.tsx:512
+#: src/routes/auth/Login.tsx:399
 #: src/routes/auth/Login.tsx:516
+#: src/routes/auth/Login.tsx:520
 #: src/components/settings/AccountSettingsCard.tsx:182
 #: src/components/participant/ParticipantShareModal.tsx:135
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:351
@@ -5554,11 +5554,11 @@ msgstr "Envoyer un e-mail à {name}"
 msgid "Email address"
 msgstr "Adresse e-mail"
 
-#: src/routes/auth/Login.tsx:412
+#: src/routes/auth/Login.tsx:416
 msgid "Email me a code"
 msgstr "M'envoyer un code par e-mail"
 
-#: src/routes/auth/Login.tsx:578
+#: src/routes/auth/Login.tsx:582
 msgid "Email me a sign-in code instead"
 msgstr "M'envoyer plutôt un code de connexion par e-mail"
 
@@ -5727,7 +5727,7 @@ msgstr "Entrez le nom du fichier (sans extension)"
 msgid "Enter new password"
 msgstr "Saisir le nouveau mot de passe"
 
-#: src/routes/auth/Login.tsx:260
+#: src/routes/auth/Login.tsx:264
 msgid "Enter the 6-digit code from your authenticator app."
 msgstr "Entrez le code à 6 chiffres de votre application d'authentification."
 
@@ -6543,7 +6543,7 @@ msgstr "Prévisions"
 msgid "Forgetting a saved memory"
 msgstr "Oubli d'un souvenir enregistré"
 
-#: src/routes/auth/Login.tsx:588
+#: src/routes/auth/Login.tsx:592
 msgid "Forgot your password?"
 msgstr "Mot de passe oublié ?"
 
@@ -7394,7 +7394,7 @@ msgstr "Titre de l’introduction"
 msgid "Invalid code. Please request a new one."
 msgstr "Code invalide. Veuillez en demander un nouveau."
 
-#: src/routes/auth/Login.tsx:341
+#: src/routes/auth/Login.tsx:345
 msgid "Invalid credentials."
 msgstr "Identifiants invalides."
 
@@ -8341,8 +8341,8 @@ msgstr "Verrouillé pour correspondre à l'invitation. Pour utiliser une autre a
 
 #: src/routes/invite/AcceptInviteRoute.tsx:285
 #: src/routes/auth/VerifyEmail.tsx:161
-#: src/routes/auth/Login.tsx:439
-#: src/routes/auth/Login.tsx:556
+#: src/routes/auth/Login.tsx:443
+#: src/routes/auth/Login.tsx:560
 msgid "Log in"
 msgstr "Se connecter"
 
@@ -10217,7 +10217,7 @@ msgstr "Ouvrir l'espace de travail"
 msgid "Open workspace actions"
 msgstr "Ouvrir les actions de l'espace de travail"
 
-#: src/routes/auth/Login.tsx:503
+#: src/routes/auth/Login.tsx:507
 msgid "Open your authenticator app and enter the current six-digit code."
 msgstr "Ouvrez votre application d'authentification et entrez le code actuel à six chiffres."
 
@@ -10269,7 +10269,7 @@ msgid "Options"
 msgstr "Options"
 
 #: src/routes/auth/Register.tsx:292
-#: src/routes/auth/Login.tsx:594
+#: src/routes/auth/Login.tsx:598
 msgid "or"
 msgstr "ou"
 
@@ -10603,8 +10603,8 @@ msgid "Partner workspace, billed separately from the organisation."
 msgstr "Espace de travail partenaire, facturé séparément de l'organisation."
 
 #: src/routes/auth/Register.tsx:217
-#: src/routes/auth/Login.tsx:526
 #: src/routes/auth/Login.tsx:530
+#: src/routes/auth/Login.tsx:534
 msgid "Password"
 msgstr "Mot de passe"
 
@@ -10902,7 +10902,7 @@ msgstr "Veuillez activer la participation pour activer le partage"
 msgid "Please enter a valid email."
 msgstr "Veuillez entrer une adresse e-mail valide."
 
-#: src/routes/auth/Login.tsx:385
+#: src/routes/auth/Login.tsx:389
 msgid "Please log in to continue."
 msgstr "Veuillez vous connecter pour continuer."
 
@@ -13396,7 +13396,7 @@ msgstr "Envoyer"
 msgid "Send {0} invites"
 msgstr "Envoyer {0} invitations"
 
-#: src/routes/auth/Login.tsx:447
+#: src/routes/auth/Login.tsx:451
 msgid "Send a new code"
 msgstr "Envoyer un nouveau code"
 
@@ -14018,8 +14018,8 @@ msgstr "Quelque chose bloque votre connexion. Votre audio ne sera pas sauvegard�
 #: src/routes/project/report/ProjectReportRoute.tsx:754
 #: src/routes/project/report/ProjectReportRoute.tsx:848
 #: src/routes/project/report/ProjectReportRoute.tsx:1204
-#: src/routes/auth/Login.tsx:233
-#: src/routes/auth/Login.tsx:306
+#: src/routes/auth/Login.tsx:237
+#: src/routes/auth/Login.tsx:310
 #: src/components/project/ProjectAccessGuard.tsx:109
 #: src/components/error/ErrorPage.tsx:56
 #: src/components/error/ErrorBoundary.tsx:44
@@ -14793,7 +14793,7 @@ msgstr "Merci ! Cela nous aide beaucoup."
 msgid "That code did not work. Try again with a new code."
 msgstr "Ce code n'a pas fonctionné. Réessayez avec un nouveau code."
 
-#: src/routes/auth/Login.tsx:283
+#: src/routes/auth/Login.tsx:287
 msgid "That code didn't work. Try again with a fresh code from your authenticator app."
 msgstr "Ce code n'a pas fonctionné. Réessayez avec un nouveau code de votre application d'authentification."
 
@@ -16726,7 +16726,7 @@ msgstr "Utilisez l'italien pour le chat, les rapports, la transcription et les f
 msgid "Use latest results"
 msgstr "Utiliser les derniers résultats"
 
-#: src/routes/auth/Login.tsx:460
+#: src/routes/auth/Login.tsx:464
 msgid "Use my password instead"
 msgstr "Utiliser plutôt mon mot de passe"
 
@@ -16884,7 +16884,7 @@ msgstr "Vérifier"
 msgid "participant.echo.verify"
 msgstr "Vérifier"
 
-#: src/routes/auth/Login.tsx:554
+#: src/routes/auth/Login.tsx:558
 msgid "Verify code"
 msgstr "Vérifier le code"
 
@@ -17146,7 +17146,7 @@ msgstr "Nous avons envoyé un nouveau lien de vérification."
 msgid "We sent a new verification link. You can send another in {wait} seconds."
 msgstr "Nous avons envoyé un nouveau lien de vérification. Vous pourrez en envoyer un autre dans {wait} secondes."
 
-#: src/routes/auth/Login.tsx:418
+#: src/routes/auth/Login.tsx:422
 msgid "We sent a six-digit code to {codeEmail}."
 msgstr "Nous avons envoyé un code à six chiffres à {codeEmail}."
 
@@ -17231,13 +17231,13 @@ msgid "Webhooks come with a paid plan."
 msgstr "Les webhooks sont inclus avec un forfait payant."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:125
-#: src/routes/auth/Login.tsx:373
+#: src/routes/auth/Login.tsx:377
 #: src/components/participant/ParticipantBody.tsx:113
 msgid "Welcome"
 msgstr "Bienvenue"
 
 #: src/routes/auth/Login.tsx:139
-#: src/routes/auth/Login.tsx:217
+#: src/routes/auth/Login.tsx:219
 msgid "Welcome back"
 msgstr "Bon retour"
 
@@ -17918,7 +17918,7 @@ msgstr "Vous n'avez encore vérifié aucun résultat. Souhaitez-vous vérifier a
 msgid "You left the workspace"
 msgstr "Vous avez quitté l'espace de travail"
 
-#: src/routes/auth/Login.tsx:346
+#: src/routes/auth/Login.tsx:350
 msgid "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 msgstr "Vous devez vous connecter avec le même fournisseur que vous avez utilisé pour vous inscrire. Si vous rencontrez des problèmes, veuillez contacter le support."
 
@@ -18127,7 +18127,7 @@ msgstr "Votre adresse e-mail est déjà vérifiée"
 msgid "Your email is not verified yet. Check your inbox for the verification link."
 msgstr "Votre adresse e-mail n'est pas encore vérifiée. Consultez votre boîte de réception pour trouver le lien de vérification."
 
-#: src/routes/auth/Login.tsx:378
+#: src/routes/auth/Login.tsx:382
 msgid "Your email is verified. Log in to continue."
 msgstr "Votre adresse e-mail est vérifiée. Connectez-vous pour continuer."
 
