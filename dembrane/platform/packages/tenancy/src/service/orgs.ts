@@ -15,7 +15,7 @@ import type { Signed } from "@dembrane/http";
 import { localeOfEmail, localesOfAppUsers } from "@dembrane/i18n";
 import { isoTimestamp } from "@dembrane/legacy-shape";
 import { commercial, orgAccountForNewWorkspace, reconcileSeats } from "../billing";
-import { type Member, requireOnboarded } from "../context";
+import { type Member, requireOnboarded, WorkspaceContext } from "../context";
 import { iso, isUuid } from "../db";
 import { clock, type TenancyDeps } from "../deps";
 import { orgInviteEmail } from "../emails";
@@ -376,9 +376,20 @@ export function orgService(deps: TenancyDeps) {
     /** Pending org and workspace invites, newest first; `workspaceId` narrows to one workspace. */
     async pendingInvites(who: Signed, orgId: string, workspaceId: string | null) {
       const member = requireOnboarded(who);
-      await requireOrgRole(orgId, member, "admin");
-      const now = iso(clock(deps));
       const wsRows = await orgWorkspaces(db, orgId);
+      // A workspace's own list is also for whoever manages its members, as access requests are.
+      const access =
+        workspaceId !== null && wsRows.some((w) => w.id === workspaceId)
+          ? await resolveWorkspace(deps.accessStore, workspaceId, member, clock(deps))
+          : null;
+      const managesWorkspace =
+        !!access &&
+        access.source !== "staff_support" &&
+        new WorkspaceContext(member, access).allows("member:manage");
+      if (!managesWorkspace) await requireOrgRole(orgId, member, "admin");
+      else if ((await orgById(db, orgId))?.deleted_at !== null)
+        throw new ForbiddenError("organisation.no_access");
+      const now = iso(clock(deps));
       const wsName = new Map(wsRows.map((w) => [w.id, w.name ?? ""]));
       let scope = wsRows.map((w) => w.id);
       let includeOrg = true;

@@ -45,7 +45,7 @@ const expired = (expiresAt: string | null, now: Date) =>
 /** Pending workspace and org invites addressed to the caller's verified email, newest first. */
 export async function listMyInvites(ctx: InviteCtx, who: Signed) {
   const { store, now } = ctx;
-  if (!who.appUserId || !(await store.appUser(who.appUserId))) return [];
+  // Not gated on onboarding: onboarding names the organisation from this list.
   const email = await store.verifiedEmail(who.directusUserId);
   if (!email) return [];
   const [wsInvites, orgInvites] = await Promise.all([
