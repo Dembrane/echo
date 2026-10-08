@@ -388,7 +388,8 @@ const NotificationRowItem = ({
 		? formatRelative(new Date(row.created_at), new Date())
 		: "";
 	const isDestructive = row.severity === "destructive";
-	const isActionRequired = row.severity === "action_required";
+	// A settled invite is marked read, so it no longer asks for action.
+	const isActionRequired = row.severity === "action_required" && !row.read;
 
 	// Status lives on the dot and the badge; the row itself stays unfilled.
 	const dotColor = isDestructive ? roles.danger : roles.action;

@@ -569,7 +569,7 @@ export const UploadConversationDropzone = (
 						<>
 							<CommonDropzone
 								onDrop={handleDrop}
-								maxFiles={MAX_FILES}
+								// No maxFiles: it rejects the whole drop; handleDrop keeps the first MAX_FILES.
 								maxSize={MAX_FILE_SIZE}
 								onReject={(files) => {
 									const errorFile = files[0];
