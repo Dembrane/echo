@@ -116,14 +116,19 @@ export async function reply(
   const headers: Record<string, string> = { "Content-Type": "text/event-stream" };
   if (protocol === "data") headers["x-vercel-ai-data-stream"] = "v1";
 
+  // The host pressing Stop cancels the body; that ends the turn, it is not a failure.
+  const stop = new AbortController();
   const stream = new ReadableStream<Uint8Array>({
+    cancel() {
+      stop.abort();
+    },
     async start(controller) {
       const send = (s: string) => controller.enqueue(enc.encode(s));
       let first = false;
       const timer =
         protocol === "data"
           ? setTimeout(() => {
-              if (!first) send(HIGH_LOAD);
+              if (!first && !stop.signal.aborted) send(HIGH_LOAD);
             }, d.highLoadDelayMs)
           : undefined;
       try {
@@ -132,6 +137,7 @@ export async function reply(
           messages: formatted,
           allowSystemInMessages: true,
           timeout: 300_000,
+          abortSignal: stop.signal,
           // Errors arrive as stream parts and are handled below; the default handler only prints.
           onError: () => {},
         });
@@ -147,6 +153,7 @@ export async function reply(
           mode: "context",
         });
       } catch (err) {
+        if (stop.signal.aborted) return;
         d.logger.error({ err, chatId }, "chat reply stream failed");
         await d.capture(distinctId, "server_chat_error", {
           chat_id: chatId,
@@ -164,7 +171,7 @@ export async function reply(
         );
       } finally {
         clearTimeout(timer);
-        controller.close();
+        if (!stop.signal.aborted) controller.close();
       }
     },
   });
