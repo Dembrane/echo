@@ -480,7 +480,7 @@ export function projectsStorage(db: Db) {
       await db.insert(scheduled_task).values(values);
     },
 
-    /** Cancels still-scheduled tasks of a type whose JSON payload holds every given key and value. */
+    /** Cancels still-scheduled tasks of a type whose JSON payload holds every given key and value; ids match as string or number. */
     async cancelScheduledTasks(taskType: string, match: Record<string, unknown>, now: string) {
       const rows = await db
         .select({ id: scheduled_task.id, payload: scheduled_task.payload })
@@ -489,7 +489,11 @@ export function projectsStorage(db: Db) {
       let n = 0;
       for (const r of rows) {
         const payload = (r.payload ?? {}) as Record<string, unknown>;
-        if (Object.entries(match).every(([k, v]) => payload[k] === v)) {
+        if (
+          Object.entries(match).every(
+            ([k, v]) => payload[k] != null && String(payload[k]) === String(v),
+          )
+        ) {
           await db
             .update(scheduled_task)
             .set({ status: "cancelled", updated_at: now })
