@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import {
 	Alert,
 	Anchor,
@@ -283,9 +283,11 @@ function Draft({
 				)}
 				{demo.conversations != null && (
 					<Text size="xs" c="dimmed">
-						<Trans>
-							{demo.conversations} fictional conversations authored.
-						</Trans>
+						<Plural
+							value={demo.conversations}
+							one="# fictional conversation authored."
+							other="# fictional conversations authored."
+						/>
 					</Text>
 				)}
 			</Stack>

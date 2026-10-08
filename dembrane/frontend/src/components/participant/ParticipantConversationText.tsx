@@ -184,6 +184,7 @@ export const ParticipantConversationText = () => {
 						projectId={projectId ?? ""}
 						conversationId={conversationId ?? ""}
 						isAnonymized={conversationQuery.data?.is_anonymized ?? false}
+						mode="text"
 					/>
 				)}
 

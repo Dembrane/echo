@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import {
 	Badge,
 	Box,
@@ -162,7 +162,12 @@ export const ConversationLinks = ({
 							ml="xs"
 							onClick={() => setModalOpened(true)}
 						>
-							<Trans>+{hiddenCount} conversations</Trans>
+							+
+							<Plural
+								value={hiddenCount}
+								one="# conversation"
+								other="# conversations"
+							/>
 						</Badge>
 					</Tooltip>
 				)}

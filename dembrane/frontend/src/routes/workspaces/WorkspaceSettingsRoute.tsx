@@ -1942,8 +1942,8 @@ function PrivacyAndDefaultsSection({
 									</Text>
 									<Text size="xs">
 										<Trans>
-											Hidden from organisation members. Organisation admins can
-											still find and join.
+											Only the people you add can see it. The organisation owner
+											can also find and join.
 										</Trans>
 									</Text>
 								</Stack>

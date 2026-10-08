@@ -241,7 +241,7 @@ export function ProjectAccess({ projectId, visibility }: Props) {
 								in {workspace?.name ?? t`this workspace`}
 							</Trans>
 						) : accessCount === 0 ? (
-							<Trans>Just you — plus workspace admins.</Trans>
+							<Trans>Just you, plus workspace admins.</Trans>
 						) : (
 							<>
 								<Plural value={accessCount} one="# person" other="# people" />

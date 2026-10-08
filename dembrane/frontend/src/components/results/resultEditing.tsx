@@ -1,3 +1,4 @@
+import { i18n } from "@lingui/core";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
@@ -82,7 +83,7 @@ function whoWord(revision: Record<string, unknown>, name?: string): string {
 			: null;
 	const said = name ?? t`Someone else`;
 	if (minutes === null) return said;
-	const ago = new Intl.RelativeTimeFormat(undefined, {
+	const ago = new Intl.RelativeTimeFormat(i18n.locale, {
 		numeric: "auto",
 	}).format(-Math.max(minutes, 0), "minute");
 	return `${said}, ${ago}`;

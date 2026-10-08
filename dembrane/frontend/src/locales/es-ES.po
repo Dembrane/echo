@@ -169,11 +169,11 @@ msgstr "Bienvenido de nuevo"
 #~ msgid "participant.button.finish.yes.text.mode"
 #~ msgstr "Sí"
 
-#: src/components/popcorn/PopcornStatus.tsx:40
+#: src/components/popcorn/PopcornStatus.tsx:47
 msgid " · {heldBack} held back"
 msgstr "· {heldBack} retenidas"
 
-#: src/components/popcorn/PopcornStatus.tsx:59
+#: src/components/popcorn/PopcornStatus.tsx:69
 msgid " · failed"
 msgstr "· con error"
 
@@ -274,7 +274,7 @@ msgid "{0, plural, one {# conversation is hidden from the map.} other {# convers
 msgstr "{0, plural, one {# conversación está oculta en el mapa.} other {# conversaciones están ocultas en el mapa.}}"
 
 #. placeholder {0}: summary.live
-#: src/features/processes/watchers.tsx:154
+#: src/features/processes/watchers.tsx:164
 msgid "{0, plural, one {# conversation recording} other {# conversations recording}}"
 msgstr "{0, plural, one {# conversación grabando} other {# conversaciones grabando}}"
 
@@ -283,9 +283,13 @@ msgstr "{0, plural, one {# conversación grabando} other {# conversaciones graba
 msgid "{0, plural, one {# conversation will be hidden along with it.} other {# conversations will be hidden along with it.}}"
 msgstr "{0, plural, one {# conversación se ocultará junto con este.} other {# conversaciones se ocultarán junto con este.}}"
 
+#. placeholder {0}: counts.conversations
 #. placeholder {0}: p.conversation_count
-#. placeholder {0}: unique.length
+#. placeholder {0}: project.conversations_count ?? project?.conversations?.length ?? 0
+#: src/routes/project/popcorn/PopcornRoute.tsx:44
 #: src/components/workspace/OrganisationUsageRollup.tsx:812
+#: src/components/project/ProjectListItem.tsx:219
+#: src/components/popcorn/PopcornStatus.tsx:39
 #: src/components/map/panels/SpotlightPanel.tsx:144
 msgid "{0, plural, one {# conversation} other {# conversations}}"
 msgstr "{0, plural, one {# conversación} other {# conversaciones}}"
@@ -316,7 +320,7 @@ msgid "{0, plural, one {# offline} other {# offline}}"
 msgstr "{0, plural, one {# desconectada} other {# desconectadas}}"
 
 #. placeholder {0}: summary.pending_transcription
-#: src/features/processes/watchers.tsx:160
+#: src/features/processes/watchers.tsx:170
 msgid "{0, plural, one {# part to transcribe} other {# parts to transcribe}}"
 msgstr "{0, plural, one {# parte por transcribir} other {# partes por transcribir}}"
 
@@ -328,7 +332,9 @@ msgid "{0, plural, one {# payment} other {# payments}}"
 msgstr "{0, plural, one {# pago} other {# pagos}}"
 
 #. placeholder {0}: presentation.counts.phrases
+#. placeholder {0}: counts.phrases
 #: src/routes/project/present/PresentRoute.tsx:833
+#: src/routes/project/popcorn/PopcornRoute.tsx:48
 msgid "{0, plural, one {# phrase} other {# phrases}}"
 msgstr "{0, plural, one {# frase} other {# frases}}"
 
@@ -400,6 +406,11 @@ msgstr "{0, plural, one {# palabra eliminada} other {# palabras eliminadas}}"
 msgid "{0, plural, one {# workspace} other {# workspaces}}"
 msgstr "{0, plural, one {# espacio de trabajo} other {# espacios de trabajo}}"
 
+#. placeholder {0}: conversations - NAMED_CONVERSATIONS
+#: src/components/map/panels/Legend.tsx:97
+msgid "{0, plural, one {and # more conversation} other {and # more conversations}}"
+msgstr "{0, plural, one {y # conversación más} other {y # conversaciones más}}"
+
 #. placeholder {0}: selection.length
 #: src/components/conversation/ConversationsMiniList.tsx:231
 msgid "{0, plural, one {Ask about this} other {Ask about these (#)}}"
@@ -419,6 +430,12 @@ msgstr "{0, plural, one {Mensaje de dembrane} other {Mensajes de dembrane}}"
 #: src/components/project/BulkMoveProjectsModal.tsx:83
 msgid "{0, plural, one {Move # project to another workspace.} other {Move # projects to another workspace.}}"
 msgstr "{0, plural, one {Mueve # proyecto a otro espacio de trabajo.} other {Mueve # proyectos a otro espacio de trabajo.}}"
+
+#. placeholder {0}: counts.conversations
+#: src/features/processes/watchers.tsx:107
+#: src/components/popcorn/PopcornStatus.tsx:52
+msgid "{0, plural, one {Reading {reading} of # conversation…} other {Reading {reading} of # conversations…}}"
+msgstr "{0, plural, one {Leyendo {reading} de # conversación…} other {Leyendo {reading} de # conversaciones…}}"
 
 #. placeholder {0}: status.running
 #: src/features/processes/copy.ts:40
@@ -513,25 +530,27 @@ msgstr "{0} añadidos desde tu organización"
 msgid "{0} calls this month"
 msgstr "{0} llamadas este mes"
 
-#. placeholder {0}: counts.conversations
-#. placeholder {0}: project.conversations_count ?? project?.conversations?.length ?? 0
 #: src/routes/project/popcorn/PopcornRoute.tsx:44
 #: src/components/project/ProjectListItem.tsx:219
-msgid "{0} conversations"
-msgstr "{0} conversaciones"
+#~ msgid "{0} conversations"
+#~ msgstr "{0} conversaciones"
 
 #: src/components/project/ProjectListItem.tsx:241
 #~ msgid "{0} Conversations"
 #~ msgstr "{0} Conversaciones"
 
-#. placeholder {0}: counts.conversations
 #: src/components/popcorn/PopcornStatus.tsx:39
-msgid "{0} conversations · {phrases} phrases · {validated} validated"
-msgstr "{0} conversaciones · {phrases} frases · {validated} validadas"
+#~ msgid "{0} conversations · {phrases} phrases · {validated} validated"
+#~ msgstr "{0} conversaciones · {phrases} frases · {validated} validadas"
 
 #: src/components/project/ProjectCard.tsx:46
 #~ msgid "{0} Conversations • Edited {1}"
 #~ msgstr "{0} Conversaciones • Editado {1}"
+
+#. placeholder {0}: n(86_400_000)
+#: src/lib/time.ts:20
+msgid "{0} d ago"
+msgstr "hace {0} d"
 
 #. placeholder {0}: convUsage.deleted.length
 #: src/components/project/ProjectUsageAndSharing.tsx:495
@@ -548,8 +567,13 @@ msgstr "Error al subir {0} archivo(s). Vuelve a intentarlo."
 msgid "{0} from dembrane"
 msgstr "{0} de dembrane"
 
+#. placeholder {0}: n(3_600_000)
+#: src/lib/time.ts:19
+msgid "{0} h ago"
+msgstr "hace {0} h"
+
 #. placeholder {0}: counts.held_back
-#: src/routes/project/popcorn/PopcornRoute.tsx:48
+#: src/routes/project/popcorn/PopcornRoute.tsx:51
 msgid "{0} held back"
 msgstr "{0} retenidas"
 
@@ -574,6 +598,11 @@ msgstr "Logo de {0}"
 #: src/components/agent-access/AgentGrantsCard.tsx:201
 msgid "{0} loses access immediately. To connect it again, start over from the agent."
 msgstr "{0} pierde el acceso de inmediato. Para volver a conectarlo, empieza de nuevo desde el agente."
+
+#. placeholder {0}: n(60_000)
+#: src/lib/time.ts:18
+msgid "{0} min ago"
+msgstr "hace {0} min"
 
 #. js-lingui-explicit-id
 #. placeholder {0}: reallySkipped.length
@@ -603,7 +632,7 @@ msgstr "{0} de {1} miembros tienen formación."
 
 #. placeholder {0}: translation.translated
 #. placeholder {1}: translation.total
-#: src/features/processes/watchers.tsx:115
+#: src/features/processes/watchers.tsx:125
 msgid "{0} of {1} texts translated"
 msgstr "{0} de {1} textos traducidos"
 
@@ -628,9 +657,7 @@ msgstr "{0} personas aún no están en este espacio de trabajo."
 msgid "{0} people aren't in this workspace yet. Ask a workspace admin to invite them."
 msgstr "{0} personas aún no están en este espacio de trabajo. Pide a un administrador que las invite."
 
-#. placeholder {0}: counts.phrases
 #. placeholder {0}: popcorn.counts.phrases
-#: src/routes/project/popcorn/PopcornRoute.tsx:45
 #: src/routes/project/library/LibraryRoute.tsx:86
 msgid "{0} phrases"
 msgstr "{0} frases"
@@ -667,7 +694,7 @@ msgid "{0} total rises to {1} when {pendingInvites} pending {2} accepted"
 msgstr "El total de {0} sube a {1} cuando se {2} {pendingInvites} pendientes"
 
 #. placeholder {0}: counts.validated ?? 0
-#: src/routes/project/popcorn/PopcornRoute.tsx:46
+#: src/routes/project/popcorn/PopcornRoute.tsx:49
 msgid "{0} validated"
 msgstr "{0} validadas"
 
@@ -712,6 +739,11 @@ msgstr "Conversación de {0}"
 msgid "{0}% discount"
 msgstr "{0}% de descuento"
 
+#. placeholder {0}: n(1000)
+#: src/lib/time.ts:17
+msgid "{0}s ago"
+msgstr "hace {0} s"
+
 #: src/components/project/ProjectUsageAndSharing.tsx:247
 msgid "{accessCount, plural, one {# person} other {# people}}"
 msgstr "{accessCount, plural, one {# persona} other {# personas}}"
@@ -749,10 +781,13 @@ msgstr "{clientName} y la empresa responsable recibirán el contenido de la conv
 msgid "{compedCount, plural, one {# comped} other {# comped}}"
 msgstr "{compedCount, plural, one {# de cortesía} other {# de cortesía}}"
 
-#. placeholder {0}: formatRelative( new Date(project.updated_at ?? new Date()), new Date(), )
 #: src/components/project/PinnedProjectCard.tsx:191
-msgid "{conversationCount} conversations · Edited {0}"
-msgstr "{conversationCount} conversaciones · Editado {0}"
+msgid "{conversationCount, plural, one {# conversation} other {# conversations}}"
+msgstr "{conversationCount, plural, one {# conversación} other {# conversaciones}}"
+
+#: src/components/project/PinnedProjectCard.tsx:191
+#~ msgid "{conversationCount} conversations · Edited {0}"
+#~ msgstr "{conversationCount} conversaciones · Editado {0}"
 
 #: src/components/project/PinnedProjectCard.tsx:202
 #~ msgid "{conversationCount} Conversations • Edited {0}"
@@ -762,6 +797,10 @@ msgstr "{conversationCount} conversaciones · Editado {0}"
 msgid "{conversationCount} selected"
 msgstr "{conversationCount} seleccionadas"
 
+#: src/components/popcorn/PopcornStart.tsx:66
+msgid "{conversations, plural, one {# conversation with a transcript, about {minutes} minutes of talk. Ready.} other {# conversations with a transcript, about {minutes} minutes of talk. Ready.}}"
+msgstr "{conversations, plural, one {# conversación con transcripción, unos {minutes} minutos de charla. Todo listo.} other {# conversaciones con transcripción, unos {minutes} minutos de charla. Todo listo.}}"
+
 #: src/components/results/resultContent.ts:267
 #: src/components/results/curate/TensionsTab.tsx:56
 #: src/components/map/panels/ArgumentAccordion.tsx:29
@@ -769,8 +808,8 @@ msgid "{conversations, plural, one {# conversation} other {# conversations}}"
 msgstr "{conversations, plural, one {# conversación} other {# conversaciones}}"
 
 #: src/components/popcorn/PopcornStart.tsx:66
-msgid "{conversations} conversations with a transcript, about {minutes} minutes of talk. Ready."
-msgstr "{conversations} conversaciones con transcripción, unos {minutes} minutos de conversación. Todo listo."
+#~ msgid "{conversations} conversations with a transcript, about {minutes} minutes of talk. Ready."
+#~ msgstr "{conversations} conversaciones con transcripción, unos {minutes} minutos de conversación. Todo listo."
 
 #: src/components/map/MapExperience.tsx:136
 msgid "{count, plural, one {# argument} other {# arguments}}"
@@ -797,8 +836,8 @@ msgid "{discountPct}% discount applied"
 msgstr "{discountPct}% de descuento aplicado"
 
 #: src/features/processes/watchers.tsx:63
-msgid "{done} of {total} conversations"
-msgstr "{done} de {total} conversaciones"
+#~ msgid "{done} of {total} conversations"
+#~ msgstr "{done} de {total} conversaciones"
 
 #. placeholder {0}: plan.steps.length
 #: src/components/chat/AgenticPlanCard.tsx:94
@@ -820,6 +859,10 @@ msgstr "{empty, plural, one {# conversación aún no tiene transcripción, así 
 #: src/components/common/MoveHistory.tsx:45
 msgid "{from} → {to}"
 msgstr "{from} → {to}"
+
+#: src/components/conversation/ConversationLinks.tsx:166
+msgid "{hiddenCount, plural, one {# conversation} other {# conversations}}"
+msgstr "{hiddenCount, plural, one {# conversación} other {# conversaciones}}"
 
 #: src/components/results/curate/CuratePanel.tsx:304
 msgid "{hiddenCount} hidden"
@@ -857,7 +900,7 @@ msgstr "Extracto de la transcripción de {name}"
 msgid "{names} and {extra} more"
 msgstr "{names} y {extra} más"
 
-#: src/features/processes/watchers.tsx:168
+#: src/features/processes/watchers.tsx:178
 msgid "{newErrors, plural, one {# conversation could not be transcribed.} other {# conversations could not be transcribed.}}"
 msgstr "{newErrors, plural, one {# conversación no se pudo transcribir.} other {# conversaciones no se pudieron transcribir.}}"
 
@@ -881,6 +924,10 @@ msgstr "{pendingInvites} invitación(es) pendiente(s). Se contarán una vez acep
 #: src/routes/organisation/OrganisationRoute.tsx:1787
 msgid "{person} will lose access to every workspace in this organisation. Direct-only workspace invites stay intact."
 msgstr "{person} perderá el acceso a todos los espacios de trabajo de esta organización. Las invitaciones directas a espacios de trabajo se mantendrán."
+
+#: src/components/popcorn/PopcornStatus.tsx:44
+msgid "{phrases, plural, one {# phrase} other {# phrases}}"
+msgstr "{phrases, plural, one {# frase} other {# frases}}"
 
 #: src/routes/project/chat/NewChatRoute.tsx:591
 msgid "{pickedCount, plural, one {Focusing on # conversation} other {Focusing on # conversations}}"
@@ -919,7 +966,7 @@ msgstr "{seats, plural, one {# plaza} other {# plazas}}"
 msgid "{selectedCount} of {totalCount} fields selected. Accept applies only the ticked ones."
 msgstr "{selectedCount} de {totalCount} campos seleccionados. Aceptar solo aplica los marcados."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:254
+#: src/routes/onboarding/OnboardingRoute.tsx:260
 #: src/components/organisation/CreateOrganisationModal.tsx:130
 msgid "{sent} invites sent"
 msgstr "{sent} invitaciones enviadas"
@@ -935,6 +982,14 @@ msgstr "{sentCount} invitaciones enviadas."
 #: src/components/conversation/LiveFunnelSection.tsx:95
 msgid "{tag} (preselected)"
 msgstr "{tag} (preseleccionado)"
+
+#: src/features/processes/watchers.tsx:64
+msgid "{total, plural, one {{done} of # conversation} other {{done} of # conversations}}"
+msgstr "{total, plural, one {{done} de # conversación} other {{done} de # conversaciones}}"
+
+#: src/components/conversation/hooks/index.ts:523
+msgid "{total, plural, one {Cleared {cleared} of # conversation} other {Cleared {cleared} of # conversations}}"
+msgstr "{total, plural, one {{cleared} de # conversación eliminada} other {{cleared} de # conversaciones eliminadas}}"
 
 #: src/components/conversation/LiveFunnelSection.tsx:226
 msgid "{totalActive, plural, one {# active} other {# active}}"
@@ -956,6 +1011,10 @@ msgstr "{translated} de {total} traducidos, {failed} no se pudieron traducir"
 msgid "{unplacedCount, plural, one {# argument could not be placed on the map.} other {# arguments could not be placed on the map.}}"
 msgstr "{unplacedCount, plural, one {# argumento no se pudo colocar en el mapa.} other {# argumentos no se pudieron colocar en el mapa.}}"
 
+#: src/components/popcorn/PopcornStatus.tsx:46
+msgid "{validated} validated"
+msgstr "{validated} validadas"
+
 #: src/components/participant/UserChunkMessage.tsx:108
 msgid "*Transcription in progress.*"
 msgstr "*Transcripción en progreso.*"
@@ -976,8 +1035,8 @@ msgid "+{0} more"
 msgstr "+{0} más"
 
 #: src/components/conversation/ConversationLinks.tsx:165
-msgid "+{hiddenCount} conversations"
-msgstr "+{hiddenCount} conversaciones"
+#~ msgid "+{hiddenCount} conversations"
+#~ msgstr "+{hiddenCount} conversaciones"
 
 #. placeholder {0}: product.extra_price_eur
 #. placeholder {1}: product.included_participants
@@ -1084,7 +1143,7 @@ msgstr "8 horas"
 msgid "A blue bar across the top of every tab, with your text and a link back to the opening."
 msgstr "Una barra azul en la parte superior de cada pestaña, con tu texto y un enlace de vuelta al inicio."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:456
+#: src/routes/onboarding/OnboardingRoute.tsx:462
 msgid "A couple of quick questions and you're in."
 msgstr "Un par de preguntas rápidas y estás dentro."
 
@@ -1211,7 +1270,7 @@ msgstr "Un interruptor sin texto no muestra nada en la pantalla."
 msgid "A title and subtitle before the countdown."
 msgstr "Un título y subtítulo antes de la cuenta atrás."
 
-#: src/components/results/resultEditing.tsx:482
+#: src/components/results/resultEditing.tsx:483
 #: src/components/results/ResultItem.tsx:279
 msgid "A typo"
 msgstr "Una errata"
@@ -1225,8 +1284,8 @@ msgstr "un espacio de trabajo"
 msgid "About the suggested project update: {hostNote}"
 msgstr "Sobre la actualización sugerida del proyecto: {hostNote}"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:125
-#: src/routes/onboarding/OnboardingRoute.tsx:126
+#: src/routes/onboarding/OnboardingRoute.tsx:129
+#: src/routes/onboarding/OnboardingRoute.tsx:130
 msgid "About you"
 msgstr "Sobre ti"
 
@@ -1902,7 +1961,7 @@ msgstr "Permitir acceso MCP en {0}"
 #~ msgid "Allow participants using the link to start new conversations"
 #~ msgstr "Permitir a los participantes usar el enlace para iniciar nuevas conversaciones"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:453
+#: src/routes/onboarding/OnboardingRoute.tsx:459
 msgid "Almost ready"
 msgstr "Casi listo"
 
@@ -2059,10 +2118,9 @@ msgstr ""
 "\n"
 "Nota: Si las similitudes/diferencias son demasiado superficiales, por favor házmelo saber, necesitamos material más complejo para analizar."
 
-#. placeholder {0}: conversations - NAMED_CONVERSATIONS
 #: src/components/map/panels/Legend.tsx:97
-msgid "and {0} more conversations"
-msgstr "y {0} conversaciones más"
+#~ msgid "and {0} more conversations"
+#~ msgstr "y {0} conversaciones más"
 
 #: src/components/inbox/Inbox.tsx:226
 msgid "Announcements"
@@ -2635,7 +2693,7 @@ msgstr "Ausente"
 #: src/routes/project/report/ProjectReportRoute.tsx:496
 #: src/routes/organisation/OrganisationRoute.tsx:664
 #: src/routes/organisation/OrganisationRoute.tsx:687
-#: src/routes/onboarding/OnboardingRoute.tsx:443
+#: src/routes/onboarding/OnboardingRoute.tsx:449
 #: src/routes/auth/Register.tsx:247
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:322
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:360
@@ -2743,7 +2801,7 @@ msgid "Before you connect an agent"
 msgstr "Antes de conectar un agente"
 
 #: src/routes/project/ProjectMonitorRoute.tsx:86
-#: src/routes/project/popcorn/PopcornRoute.tsx:99
+#: src/routes/project/popcorn/PopcornRoute.tsx:102
 #: src/routes/project/library/LibraryRoute.tsx:98
 #: src/routes/project/chat/NewChatRoute.tsx:700
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:112
@@ -3457,14 +3515,14 @@ msgid "Clear search"
 msgstr "Borrar búsqueda"
 
 #: src/components/conversation/hooks/index.ts:522
-msgid "Cleared {cleared} of {total} conversations"
-msgstr "Se han borrado {cleared} de {total} conversaciones"
+#~ msgid "Cleared {cleared} of {total} conversations"
+#~ msgstr "Se han borrado {cleared} de {total} conversaciones"
 
 #: src/components/release/releaseHistory.ts:100
 msgid "Clearer sources in chat"
 msgstr "Fuentes más claras en el chat"
 
-#: src/components/results/resultEditing.tsx:485
+#: src/components/results/resultEditing.tsx:486
 #: src/components/results/ResultItem.tsx:281
 msgid "Clearer words, same meaning"
 msgstr "Palabras más claras, el mismo significado"
@@ -3603,7 +3661,7 @@ msgstr "Clústeres"
 msgid "Collapse sidebar"
 msgstr "Contraer barra lateral"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:338
+#: src/routes/onboarding/OnboardingRoute.tsx:344
 #: src/components/organisation/CreateOrganisationModal.tsx:226
 msgid "Colleagues you invite can explore conversations, share insights, and build reports with you."
 msgstr "Los compañeros a los que invites pueden explorar conversaciones, compartir hallazgos y crear informes contigo."
@@ -3722,7 +3780,7 @@ msgstr "Completado"
 msgid "Completed on"
 msgstr "Completado el"
 
-#: src/components/project/ProjectListItem.tsx:351
+#: src/components/project/ProjectListItem.tsx:354
 msgid "Configure portal"
 msgstr "Configurar portal"
 
@@ -3867,8 +3925,8 @@ msgstr "Sugerencias contextuales"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:763
 #: src/routes/project/CreateProjectRoute.tsx:425
-#: src/routes/onboarding/OnboardingRoute.tsx:527
-#: src/routes/onboarding/OnboardingRoute.tsx:668
+#: src/routes/onboarding/OnboardingRoute.tsx:533
+#: src/routes/onboarding/OnboardingRoute.tsx:674
 #: src/routes/auth/Register.tsx:207
 #: src/components/pricing/PricingConfigurator.tsx:844
 #: src/components/organisation/CreateOrganisationModal.tsx:210
@@ -5155,7 +5213,7 @@ msgstr "Destilando la idea central…"
 msgid "Do I need this?"
 msgstr "¿Necesito esto?"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:463
+#: src/routes/onboarding/OnboardingRoute.tsx:469
 msgid "Do you plan to use dembrane in health, education, recruitment, critical infrastructure management, law enforcement or justice contexts?"
 msgstr "¿Planeas usar dembrane en contextos de salud, educación, selección de personal, gestión de infraestructuras críticas, orden público o justicia?"
 
@@ -5182,7 +5240,7 @@ msgstr "No se actualiza automáticamente."
 msgid "Does not update on its own. Updated {updatedAgo}."
 msgstr "No se actualiza automáticamente. Se actualizó {updatedAgo}."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:527
+#: src/routes/onboarding/OnboardingRoute.tsx:533
 #: src/components/invite/InviteModal.tsx:809
 #: src/components/conversation/ConversationsMiniList.tsx:99
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:642
@@ -5521,7 +5579,8 @@ msgid "edited"
 msgstr "editado"
 
 #. placeholder {0}: formatRelative( new Date(project.updated_at ?? new Date()), new Date(), )
-#: src/components/project/ProjectListItem.tsx:229
+#: src/components/project/ProjectListItem.tsx:232
+#: src/components/project/PinnedProjectCard.tsx:197
 msgid "Edited {0}"
 msgstr "Editado {0}"
 
@@ -6198,7 +6257,7 @@ msgstr "Error al eliminar el logo"
 msgid "Failed to reschedule. Please choose a time further in the future and try again."
 msgstr "Error al reprogramar. Por favor, elija un horario mas lejano e intentelo de nuevo."
 
-#: src/components/conversation/hooks/index.ts:617
+#: src/components/conversation/hooks/index.ts:622
 msgid "Failed to retranscribe conversation. Please try again."
 msgstr "Error al retranscribir la conversación. Por favor, inténtalo de nuevo."
 
@@ -6377,7 +6436,7 @@ msgid "participant.button.finish.confirm.text.mode"
 msgstr "Terminar"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationText.tsx:246
+#: src/components/participant/ParticipantConversationText.tsx:247
 msgid "participant.button.finish.text.mode"
 msgstr "Finalizar"
 
@@ -6749,7 +6808,7 @@ msgstr "Obtén una respuesta inmediata de dembrane para ayudarte a profundizar e
 msgid "participant.refine.go.deeper.description"
 msgstr "Obtén una respuesta inmediata de dembrane para ayudarte a profundizar en la conversación."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:698
+#: src/routes/onboarding/OnboardingRoute.tsx:704
 #: src/features/sidebar/views/user/UserHomeView.tsx:83
 msgid "Get started"
 msgstr "Empezar"
@@ -6772,7 +6831,7 @@ msgstr "Vota las respuestas del chat con un pulgar arriba o abajo."
 #~ msgstr "Dame una lista de 5-10 temas que se están discutiendo."
 
 #: src/components/popcorn/PopcornVoiceSection.tsx:161
-#: src/components/popcorn/PopcornStart.tsx:99
+#: src/components/popcorn/PopcornStart.tsx:102
 msgid "Give the session a title"
 msgstr "Ponle un título a la sesión"
 
@@ -6904,7 +6963,7 @@ msgstr "Guiado"
 msgid "Has verified artifacts"
 msgstr "Tiene artefactos verificados"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:485
+#: src/routes/onboarding/OnboardingRoute.tsx:491
 msgid "Have you completed a training?"
 msgstr "¿Has completado una formación?"
 
@@ -6944,7 +7003,6 @@ msgid "Hidden by the Objects filter"
 msgstr "Oculto por el filtro de objetos"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1924
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1944
 msgid "Hidden from organisation members. Organisation admins can still find and join."
 msgstr "Oculto para los miembros de la organización. Los administradores de la organización aún pueden encontrarlo y unirse."
 
@@ -7422,7 +7480,7 @@ msgstr "PIN o correo electrónico no válido. Inténtalo de nuevo."
 msgid "Invitations waiting for you. Accept to get started."
 msgstr "Invitaciones esperándote. Acepta para empezar."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:126
+#: src/routes/onboarding/OnboardingRoute.tsx:130
 #: src/components/organisation/CreateOrganisationModal.tsx:176
 msgid "Invite"
 msgstr "Invitar"
@@ -7463,7 +7521,7 @@ msgstr "Invitación reenviada"
 msgid "Invite revoked"
 msgstr "Invitación revocada"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:254
+#: src/routes/onboarding/OnboardingRoute.tsx:260
 #: src/components/organisation/CreateOrganisationModal.tsx:130
 msgid "Invite sent"
 msgstr "Invitación enviada"
@@ -7484,7 +7542,7 @@ msgstr "Invita a un espacio de trabajo, o solo a la organización."
 msgid "Invite to this workspace, or just the organisation."
 msgstr "Invita a este espacio de trabajo, o solo a la organización."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:335
+#: src/routes/onboarding/OnboardingRoute.tsx:341
 msgid "Invite your team"
 msgstr "Invita a tu equipo"
 
@@ -7728,6 +7786,7 @@ msgstr "Ir al último mensaje del chat en tablet y ordenador."
 msgid "Just a moment"
 msgstr "Un momento"
 
+#: src/lib/time.ts:15
 #: src/components/conversation/LiveFunnelSection.tsx:42
 msgid "just now"
 msgstr "hace un momento"
@@ -7762,12 +7821,16 @@ msgid "Just talk or type naturally. Your input goes directly to our product team
 msgstr "Simplemente hable o escriba de forma natural. Su aporte llega directamente a nuestro equipo de producto y realmente nos ayuda a mejorar dembrane. Lo leemos todo."
 
 #: src/components/project/ProjectUsageAndSharing.tsx:244
-msgid "Just you — plus workspace admins."
-msgstr "Solo tú (y los administradores del espacio de trabajo)."
+#~ msgid "Just you — plus workspace admins."
+#~ msgstr "Solo tú (y los administradores del espacio de trabajo)."
 
 #: src/components/project/ProjectSharingModal.tsx:350
 msgid "Just you, for now."
 msgstr "Solo tú, por ahora."
+
+#: src/components/project/ProjectUsageAndSharing.tsx:244
+msgid "Just you, plus workspace admins."
+msgstr "Solo tú y los administradores del espacio de trabajo."
 
 #: src/components/project/ProjectSharingStrip.tsx:65
 #~ msgid "Just you. Share with specific people →"
@@ -7887,7 +7950,7 @@ msgstr "Apellidos"
 msgid "Last page"
 msgstr "Última página"
 
-#: src/components/popcorn/PopcornStatus.tsx:58
+#: src/components/popcorn/PopcornStatus.tsx:68
 msgid "Last read {startedLabel}"
 msgstr "Última lectura {startedLabel}"
 
@@ -8172,7 +8235,7 @@ msgid "Live until {0}"
 msgstr "En directo hasta {0}"
 
 #. placeholder {0}: format(expiry, "EEE d MMM, HH:mm")
-#: src/routes/project/popcorn/PopcornRoute.tsx:54
+#: src/routes/project/popcorn/PopcornRoute.tsx:57
 msgid "live until {0}, reads every {every} min"
 msgstr "en directo hasta el {0}, lee cada {every} min"
 
@@ -8181,7 +8244,7 @@ msgstr "en directo hasta el {0}, lee cada {every} min"
 msgid "Live, {0} phrases so far"
 msgstr "En directo, {0} frases por ahora"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:55
+#: src/routes/project/popcorn/PopcornRoute.tsx:58
 msgid "live, reads every {every} min"
 msgstr "en directo, lee cada {every} min"
 
@@ -8936,7 +8999,7 @@ msgstr "Dale el nombre del tema, la iniciativa o la pregunta que estés exploran
 msgid "Name updated"
 msgstr "Nombre actualizado"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:644
+#: src/routes/onboarding/OnboardingRoute.tsx:650
 msgid "Name your organisation to get started. You can invite members right after, or join other organisations later from settings."
 msgstr "Ponle un nombre a tu organización para empezar. Podrás invitar a miembros justo después, o unirte a otras organizaciones más adelante desde los ajustes."
 
@@ -9144,8 +9207,8 @@ msgstr "Página siguiente"
 #~ msgid "Next: pick a time"
 #~ msgstr "Siguiente: elige una hora"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:476
-#: src/routes/onboarding/OnboardingRoute.tsx:490
+#: src/routes/onboarding/OnboardingRoute.tsx:482
+#: src/routes/onboarding/OnboardingRoute.tsx:496
 msgid "No"
 msgstr "No"
 
@@ -9597,7 +9660,7 @@ msgstr "Aún no hay formaciones."
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "Aún no existe transcripción para esta conversación. Por favor, revisa más tarde."
 
-#: src/components/popcorn/PopcornStart.tsx:67
+#: src/components/popcorn/PopcornStart.tsx:70
 msgid "No transcripts yet. You can run popcorn now; the screen fills as conversations land."
 msgstr "Aún no hay transcripciones. Puedes ejecutar Popcorn ahora; la pantalla se irá llenando a medida que lleguen las conversaciones."
 
@@ -10013,6 +10076,10 @@ msgstr "Solo se pueden adjuntar imágenes"
 msgid "Only organisation admins and owners can create workspaces. Ask an admin on your organisation to create one, or to promote you first."
 msgstr "Solo los administradores y propietarios de la organización pueden crear espacios de trabajo. Pídele a un administrador de tu organización que cree uno o que te ascienda primero."
 
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1944
+msgid "Only the people you add can see it. The organisation owner can also find and join."
+msgstr "Solo las personas que añadas pueden verlo. Quien sea propietario de la organización también puede encontrarlo y unirse."
+
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:391
 msgid "Only the people you add or invite can see it."
 msgstr "Solo las personas que añadas o invites pueden verlo."
@@ -10301,7 +10368,7 @@ msgstr "Solo organización"
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:475
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:705
 #: src/routes/organisation/OrganisationExternalView.tsx:39
-#: src/routes/onboarding/OnboardingRoute.tsx:126
+#: src/routes/onboarding/OnboardingRoute.tsx:130
 #: src/features/sidebar/views/org/OrgHomeView.tsx:82
 #: src/features/sidebar/hooks/useSearchHits.ts:134
 #: src/components/training/StaffTrainingPanel.tsx:146
@@ -10342,7 +10409,7 @@ msgid "Organisation members load faster."
 msgstr "Los miembros de la organización cargan más rápido."
 
 #: src/routes/organisation/OrganisationRoute.tsx:1076
-#: src/routes/onboarding/OnboardingRoute.tsx:682
+#: src/routes/onboarding/OnboardingRoute.tsx:688
 #: src/components/organisation/CreateOrganisationModal.tsx:195
 msgid "Organisation name"
 msgstr "Nombre de la organización"
@@ -10828,7 +10895,7 @@ msgstr "Límite del piloto alcanzado"
 msgid "Pin"
 msgstr "Fijar"
 
-#: src/components/project/ProjectListItem.tsx:293
+#: src/components/project/ProjectListItem.tsx:296
 msgid "Pin project"
 msgstr "Fijar proyecto"
 
@@ -10936,7 +11003,7 @@ msgstr "Inicia sesión para continuar."
 #~ "(pantalla negra = no está grabando).\n"
 #~ "Esta transcripción será anonimizada y su anfitrión no podrá escuchar su grabación."
 
-#: src/components/participant/ParticipantBody.tsx:159
+#: src/components/participant/ParticipantBody.tsx:166
 msgid ""
 "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
 "**Please keep this screen lit up**\n"
@@ -10946,7 +11013,7 @@ msgstr ""
 "**Mantenga esta pantalla encendida**\n"
 "(pantalla bloqueada = no está grabando)"
 
-#: src/components/participant/ParticipantBody.tsx:155
+#: src/components/participant/ParticipantBody.tsx:162
 msgid ""
 "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
 "**Please keep this screen lit up**\n"
@@ -10957,6 +11024,18 @@ msgstr ""
 "**Mantenga esta pantalla encendida**\n"
 "(pantalla bloqueada = no está grabando).\n"
 "Esta transcripción será anonimizada y su anfitrión no podrá escuchar su grabación."
+
+#: src/components/participant/ParticipantBody.tsx:160
+msgid "Please type your response in the box below. You may also choose to record your response by clicking the microphone icon."
+msgstr "Escribe tu respuesta en el cuadro de abajo. También puedes grabarla pulsando el icono del micrófono."
+
+#: src/components/participant/ParticipantBody.tsx:158
+msgid ""
+"Please type your response in the box below. You may also choose to record your response by clicking the microphone icon.\n"
+"This transcript will be anonymized."
+msgstr ""
+"Escribe tu respuesta en el cuadro de abajo. También puedes grabarla pulsando el icono del micrófono.\n"
+"Esta transcripción se anonimizará."
 
 #: src/components/conversation/RetranscribeConversation.tsx:164
 msgid "Please wait while we process your retranscription request. You will be redirected to the new conversation when ready."
@@ -10999,7 +11078,7 @@ msgstr "Popcorn"
 msgid "Popcorn also in"
 msgstr "Popcorn también en"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:174
+#: src/routes/project/popcorn/PopcornRoute.tsx:177
 msgid "Popcorn could not be loaded"
 msgstr "No se pudo cargar Popcorn"
 
@@ -11380,7 +11459,7 @@ msgstr "Proyecto movido"
 
 #: src/routes/project/ProjectHomeRoute.tsx:239
 #: src/routes/project/CreateProjectRoute.tsx:236
-#: src/components/project/ProjectListItem.tsx:400
+#: src/components/project/ProjectListItem.tsx:403
 #: src/components/project/ProjectDangerZone.tsx:136
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:68
 msgid "Project name"
@@ -11398,7 +11477,7 @@ msgstr "El nombre del proyecto debe tener al menos 4 caracteres"
 msgid "Project not found"
 msgstr "Proyecto no encontrado"
 
-#: src/components/project/ProjectListItem.tsx:318
+#: src/components/project/ProjectListItem.tsx:321
 msgid "Project options"
 msgstr "Opciones del proyecto"
 
@@ -11654,11 +11733,10 @@ msgstr "Leyendo el resumen de {0}"
 msgid "Reading {0}'s transcript"
 msgstr "Leyendo la transcripción de {0}"
 
-#. placeholder {0}: counts.conversations
 #: src/features/processes/watchers.tsx:100
 #: src/components/popcorn/PopcornStatus.tsx:45
-msgid "Reading {reading} of {0} conversations…"
-msgstr "Leyendo {reading} de {0} conversaciones…"
+#~ msgid "Reading {reading} of {0} conversations…"
+#~ msgstr "Leyendo {reading} de {0} conversaciones…"
 
 #: src/components/chat/agenticToolActivity.ts:144
 msgid "Reading a conversation summary"
@@ -12118,8 +12196,8 @@ msgstr "Renombrar chat"
 #: src/routes/project/ProjectHomeRoute.tsx:138
 #: src/routes/project/ProjectHomeRoute.tsx:142
 #: src/routes/project/ProjectHomeRoute.tsx:238
-#: src/components/project/ProjectListItem.tsx:341
-#: src/components/project/ProjectListItem.tsx:399
+#: src/components/project/ProjectListItem.tsx:344
+#: src/components/project/ProjectListItem.tsx:402
 msgid "Rename project"
 msgstr "Cambiar el nombre del proyecto"
 
@@ -12746,7 +12824,7 @@ msgstr "¿Aproximadamente cuántos?"
 msgid "Rows per page"
 msgstr "Filas por página"
 
-#: src/components/popcorn/PopcornStart.tsx:112
+#: src/components/popcorn/PopcornStart.tsx:115
 msgid "Run"
 msgstr "Ejecutar"
 
@@ -12798,7 +12876,7 @@ msgstr "Sesión de Popcorn de muestra"
 #: src/components/settings/LegalBasisCard.tsx:226
 #: src/components/settings/ChangePasswordCard.tsx:100
 #: src/components/settings/AccountSettingsCard.tsx:192
-#: src/components/results/resultEditing.tsx:479
+#: src/components/results/resultEditing.tsx:480
 #: src/components/results/ReasonPrompt.tsx:229
 #: src/components/project/CustomTopicModal.tsx:252
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:370
@@ -12860,15 +12938,15 @@ msgstr "Guardado"
 msgid "Saved appearance settings apply when the page first loads."
 msgstr "Los ajustes de apariencia guardados se aplican al cargar la página por primera vez."
 
-#: src/components/results/resultEditing.tsx:566
+#: src/components/results/resultEditing.tsx:567
 msgid "Saved as a change of meaning."
 msgstr "Guardado como cambio de significado."
 
-#: src/components/results/resultEditing.tsx:562
+#: src/components/results/resultEditing.tsx:563
 msgid "Saved as a typo."
 msgstr "Guardado como errata."
 
-#: src/components/results/resultEditing.tsx:564
+#: src/components/results/resultEditing.tsx:565
 msgid "Saved as clearer words."
 msgstr "Guardado como palabras más claras."
 
@@ -13312,7 +13390,7 @@ msgstr "Seleccionar todos los hallazgos mostrados"
 msgid "Select multiple conversations"
 msgstr "Seleccionar varias conversaciones"
 
-#: src/components/project/ProjectListItem.tsx:370
+#: src/components/project/ProjectListItem.tsx:373
 msgid "Select project"
 msgstr "Seleccionar proyecto"
 
@@ -13417,7 +13495,7 @@ msgstr "Enviar comentarios"
 msgid "Send invite"
 msgstr "Enviar invitación"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:362
+#: src/routes/onboarding/OnboardingRoute.tsx:368
 #: src/components/organisation/CreateOrganisationModal.tsx:243
 msgid "Send invites"
 msgstr "Enviar invitaciones"
@@ -13476,7 +13554,7 @@ msgstr "Nombre de la sesión"
 #~ msgid "Session Name"
 #~ msgstr "Nombre de la Sesión"
 
-#: src/components/popcorn/PopcornStart.tsx:74
+#: src/components/popcorn/PopcornStart.tsx:77
 msgid "Session title"
 msgstr "Título de la sesión"
 
@@ -13530,12 +13608,12 @@ msgstr "Configurar espacio de trabajo"
 msgid "Set up your first organisation"
 msgstr "Configura tu primera organización"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:596
+#: src/routes/onboarding/OnboardingRoute.tsx:602
 #: src/features/sidebar/views/user/UserHomeView.tsx:130
 msgid "Set up your organisation"
 msgstr "Configura tu organización"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:158
+#: src/routes/onboarding/OnboardingRoute.tsx:162
 msgid "Set up your workspace | dembrane"
 msgstr "Configura tu espacio de trabajo | dembrane"
 
@@ -13543,7 +13621,7 @@ msgstr "Configura tu espacio de trabajo | dembrane"
 msgid "Set who can see and join."
 msgstr "Elige quién puede ver y unirse."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:301
+#: src/routes/onboarding/OnboardingRoute.tsx:307
 msgid "Setting things up for you"
 msgstr "Preparando todo para ti"
 
@@ -13908,7 +13986,7 @@ msgstr "Mostrando su informe completado más reciente."
 msgid "Shown at the top of the screen."
 msgstr "Se muestra en la parte superior de la pantalla."
 
-#: src/components/popcorn/PopcornStart.tsx:75
+#: src/components/popcorn/PopcornStart.tsx:78
 msgid "Shown at the top of the screen. Change it any time."
 msgstr "Se muestra en la parte superior de la pantalla. Cámbialo cuando quieras."
 
@@ -13937,8 +14015,8 @@ msgstr "Los enlaces de inicio de sesión verifican tu acceso antes de abrir una 
 msgid "Six weekends across seven months"
 msgstr "Seis fines de semana a lo largo de siete meses"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:370
-#: src/routes/onboarding/OnboardingRoute.tsx:536
+#: src/routes/onboarding/OnboardingRoute.tsx:376
+#: src/routes/onboarding/OnboardingRoute.tsx:542
 #: src/components/pricing/PricingConfigurator.tsx:879
 #: src/components/organisation/CreateOrganisationModal.tsx:251
 #: src/components/feedback/ResponseFeedbackControls.tsx:227
@@ -13992,7 +14070,7 @@ msgstr "Alguien"
 msgid "Someone changed this while you had it open. Open it again to see their version."
 msgstr "Alguien cambió esto mientras lo tenías abierto. Ábrelo otra vez para ver su versión."
 
-#: src/components/results/resultEditing.tsx:83
+#: src/components/results/resultEditing.tsx:84
 msgid "Someone else"
 msgstr "Otra persona"
 
@@ -14001,7 +14079,7 @@ msgstr "Otra persona"
 msgid "Someone reworded this"
 msgstr "Alguien reformuló esto"
 
-#: src/components/results/resultEditing.tsx:538
+#: src/components/results/resultEditing.tsx:539
 msgid "Someone reworded this after you did. Their words stand. Open it to read them"
 msgstr "Alguien reformuló esto después que tú. Sus palabras quedan. Ábrelo para leerlas"
 
@@ -14076,7 +14154,7 @@ msgstr "Algo ha fallado y tenemos que arreglarlo. Contacta con soporte y te ayud
 msgid "Something went wrong while transcribing. Try again."
 msgstr "Algo salió mal al transcribir. Vuelve a intentarlo."
 
-#: src/components/participant/ParticipantBody.tsx:129
+#: src/components/participant/ParticipantBody.tsx:131
 msgid "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 msgstr "Algo salió mal con la conversación. Por favor, inténtalo de nuevo o contacta al soporte si el problema persiste"
 
@@ -14421,7 +14499,7 @@ msgid "Submit"
 msgstr "Enviar"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationText.tsx:226
+#: src/components/participant/ParticipantConversationText.tsx:227
 msgid "participant.button.submit.text.mode"
 msgstr "Enviar"
 
@@ -14562,7 +14640,7 @@ msgstr "Apoya al polo A"
 msgid "Supports pole B"
 msgstr "Apoya al polo B"
 
-#: src/components/participant/ParticipantConversationText.tsx:233
+#: src/components/participant/ParticipantConversationText.tsx:234
 msgid "Switch to audio"
 msgstr "Cambiar a audio"
 
@@ -14810,7 +14888,7 @@ msgstr "Ese código no funcionó. Inténtalo de nuevo con un código nuevo de tu
 msgid "That code is not right or has expired. Request a new one."
 msgstr "Ese código no es correcto o ha caducado. Solicita uno nuevo."
 
-#: src/components/results/resultEditing.tsx:547
+#: src/components/results/resultEditing.tsx:548
 msgid "That did not save. Your words are still here."
 msgstr "No se guardó. Tus palabras siguen aquí."
 
@@ -15037,7 +15115,7 @@ msgstr "El mapa se está generando. Aparecerá aquí en cuanto esté listo."
 msgid "The map loads after you choose to open it."
 msgstr "El mapa se carga después de elegir abrirlo."
 
-#: src/components/results/resultEditing.tsx:489
+#: src/components/results/resultEditing.tsx:490
 #: src/components/results/ResultItem.tsx:283
 msgid "The meaning"
 msgstr "El significado"
@@ -15818,7 +15896,7 @@ msgstr "Marca de tiempo"
 msgid "Timestamps and duration"
 msgstr "Marcas de tiempo y duración"
 
-#: src/components/participant/ParticipantBody.tsx:121
+#: src/components/participant/ParticipantBody.tsx:123
 msgid "Tip"
 msgstr "Consejo"
 
@@ -16167,7 +16245,7 @@ msgstr "¿Problemas para iniciar sesión? Contacta con support@dembrane.com."
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:457
 #: src/routes/invite/MyInvitesRoute.tsx:225
 #: src/routes/invite/AcceptInviteRoute.tsx:567
-#: src/components/results/resultEditing.tsx:554
+#: src/components/results/resultEditing.tsx:555
 #: src/components/pricing/PricingTextInput.tsx:330
 #: src/components/present/TranslationStatus.tsx:143
 #: src/components/map/MapPage.tsx:145
@@ -16292,7 +16370,7 @@ msgstr "Escribe <0>{0}</0> para confirmar."
 msgid "Type a message or press / for templates..."
 msgstr "Escribe un mensaje o pulsa / para plantillas..."
 
-#: src/components/participant/ParticipantConversationText.tsx:211
+#: src/components/participant/ParticipantConversationText.tsx:212
 msgid "Type your response here"
 msgstr "Escribe tu respuesta aquí"
 
@@ -16335,7 +16413,7 @@ msgstr "Bajo tu organización"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:567
 #: src/routes/project/chat/NewChatRoute.tsx:311
-#: src/components/results/resultEditing.tsx:573
+#: src/components/results/resultEditing.tsx:574
 #: src/components/results/ResultRow.tsx:367
 #: src/components/chat/AgenticChatPanel.tsx:1705
 msgid "Undo"
@@ -16348,7 +16426,7 @@ msgstr "Deshacer la retirada"
 #: src/components/settings/AuditLogsCard.tsx:265
 #: src/components/project/ProjectSharingModal.tsx:360
 #: src/components/project/ProjectListItem.tsx:97
-#: src/components/project/ProjectListItem.tsx:255
+#: src/components/project/ProjectListItem.tsx:258
 #: src/components/project/PinnedProjectCard.tsx:72
 msgid "Unknown"
 msgstr "Desconocido"
@@ -16386,11 +16464,11 @@ msgstr "Desfijar"
 msgid "Unpin a project first (max {MAX_PINNED})"
 msgstr "Desancla primero un proyecto (máx. {MAX_PINNED})"
 
-#: src/components/project/ProjectListItem.tsx:294
+#: src/components/project/ProjectListItem.tsx:297
 msgid "Unpin a project first (max 3)"
 msgstr "Desancla primero un proyecto (máx. 3)"
 
-#: src/components/project/ProjectListItem.tsx:291
+#: src/components/project/ProjectListItem.tsx:294
 #: src/components/project/PinnedProjectCard.tsx:162
 msgid "Unpin project"
 msgstr "Desanclar proyecto"
@@ -16817,7 +16895,7 @@ msgstr "¿Usando webhooks? Nos encantaría escuchar de ti"
 msgid "Valence"
 msgstr "Valencia"
 
-#: src/components/popcorn/PopcornStatus.tsx:52
+#: src/components/popcorn/PopcornStatus.tsx:62
 msgid "Validation progress"
 msgstr "Progreso de la validación"
 
@@ -16970,7 +17048,7 @@ msgstr "Ver recetas"
 msgid "View results"
 msgstr "Ver resultados"
 
-#: src/components/participant/ParticipantBody.tsx:216
+#: src/components/participant/ParticipantBody.tsx:223
 msgid "View your responses"
 msgstr "Ver tus respuestas"
 
@@ -17203,7 +17281,7 @@ msgstr "Vamos a probar tu micrófono para asegurarnos de que todos tengan la mej
 #~ msgid "We’re picking up some silence. Try speaking up so your voice comes through clearly."
 #~ msgstr "Estamos escuchando algo de silencio. Intenta hablar más fuerte para que tu voz salga claramente."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:638
+#: src/routes/onboarding/OnboardingRoute.tsx:644
 msgid "We've added organisations so you can organise projects and share them with colleagues. Everything you had before is still here. We just need a name for your organisation."
 msgstr "Hemos añadido organizaciones para que puedas organizar proyectos y compartirlos con tus colegas. Todo lo que tenías sigue aquí. Solo necesitamos un nombre para tu organización."
 
@@ -17250,9 +17328,9 @@ msgstr "Los webhooks no están habilitados para este entorno."
 msgid "Webhooks come with a paid plan."
 msgstr "Los webhooks están incluidos en un plan de pago."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:125
+#: src/routes/onboarding/OnboardingRoute.tsx:129
 #: src/routes/auth/Login.tsx:377
-#: src/components/participant/ParticipantBody.tsx:113
+#: src/components/participant/ParticipantBody.tsx:115
 msgid "Welcome"
 msgstr "Bienvenido"
 
@@ -17261,11 +17339,11 @@ msgstr "Bienvenido"
 msgid "Welcome back"
 msgstr "Bienvenido de nuevo"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:592
+#: src/routes/onboarding/OnboardingRoute.tsx:598
 msgid "Welcome back, {displayName}"
 msgstr "¡Te damos la bienvenida de nuevo, {displayName}!"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:589
+#: src/routes/onboarding/OnboardingRoute.tsx:595
 #: src/routes/auth/Login.tsx:139
 msgid "Welcome to dembrane"
 msgstr "Te damos la bienvenida a dembrane"
@@ -17282,8 +17360,8 @@ msgstr "¡Bienvenido a dembrane!"
 msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode."
 msgstr "Bienvenido al modo Resumen. Tengo cargados los resúmenes de todas tus conversaciones. Pregúntame por patrones, temas e insights en tus datos. Para citas exactas, inicia un nuevo chat en el modo Contexto Específico."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:587
-#: src/routes/onboarding/OnboardingRoute.tsx:594
+#: src/routes/onboarding/OnboardingRoute.tsx:593
+#: src/routes/onboarding/OnboardingRoute.tsx:600
 msgid "Welcome, {displayName}"
 msgstr "¡Te damos la bienvenida, {displayName}!"
 
@@ -17303,11 +17381,11 @@ msgstr "¿Qué estás intentando aprender?"
 msgid "What data is sent?"
 msgstr "¿Qué datos se envían?"
 
-#: src/components/results/resultEditing.tsx:470
+#: src/components/results/resultEditing.tsx:471
 msgid "What did you change?"
 msgstr "¿Qué has cambiado?"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:499
+#: src/routes/onboarding/OnboardingRoute.tsx:505
 msgid "What do you plan to use dembrane for?"
 msgstr "¿Para qué planeas usar dembrane?"
 
@@ -17508,7 +17586,7 @@ msgstr "Quién de tu equipo tiene una licencia de formación activa. Reserva una
 msgid "Why not in this presentation?"
 msgstr "¿Por qué no en esta presentación?"
 
-#: src/components/results/resultEditing.tsx:474
+#: src/components/results/resultEditing.tsx:475
 #: src/components/results/ResultItem.tsx:742
 #: src/components/results/curate/CurateOpen.tsx:141
 msgid "Why? One sentence, for the people you work with and anyone who checks later."
@@ -17522,7 +17600,7 @@ msgstr "se incluirá en tu informe"
 msgid "wish"
 msgstr "deseo"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:511
+#: src/routes/onboarding/OnboardingRoute.tsx:517
 msgid "With external clients"
 msgstr "Con clientes externos"
 
@@ -17576,7 +17654,7 @@ msgstr "Retirado del análisis"
 msgid "Withdrawn from the analysis."
 msgstr "Retirado del análisis."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:506
+#: src/routes/onboarding/OnboardingRoute.tsx:512
 msgid "Within my organisation"
 msgstr "Dentro de mi organización"
 
@@ -17745,8 +17823,8 @@ msgstr "Idioma o tono equivocado"
 msgid "Wrong sources"
 msgstr "Fuentes equivocadas"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:475
-#: src/routes/onboarding/OnboardingRoute.tsx:489
+#: src/routes/onboarding/OnboardingRoute.tsx:481
+#: src/routes/onboarding/OnboardingRoute.tsx:495
 msgid "Yes"
 msgstr "Sí"
 
@@ -17786,7 +17864,7 @@ msgstr "Estás en el plan Free. Todavía no hay ningún pago que gestionar."
 msgid "You are the data owner"
 msgstr "Eres el titular de los datos"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:681
+#: src/routes/onboarding/OnboardingRoute.tsx:687
 #: src/components/organisation/CreateOrganisationModal.tsx:196
 msgid "You can change this anytime in settings."
 msgstr "Puedes cambiar esto cuando quieras en ajustes."
@@ -17946,7 +18024,7 @@ msgstr "Debes iniciar sesión con el mismo proveedor con el que te registraste. 
 msgid "You need an invitation from a colleague"
 msgstr "Necesitas la invitación de un compañero"
 
-#: src/components/participant/ParticipantBody.tsx:120
+#: src/components/participant/ParticipantBody.tsx:122
 msgid "You seem to be offline, please check your internet connection"
 msgstr "Pareces estar desconectado, por favor verifica tu conexión a internet"
 
@@ -17967,7 +18045,7 @@ msgstr "Se te añadirá como administrador a {0} espacios de trabajo privados. A
 msgid "You'll be added as an admin to {singleName}. It'll appear in your sidebar right after."
 msgstr "Se te añadirá como administrador a {singleName}. Aparecerá en tu barra lateral justo después."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:703
+#: src/routes/onboarding/OnboardingRoute.tsx:709
 msgid "You'll find all your projects waiting for you."
 msgstr "Encontrarás todos tus proyectos esperándote."
 
@@ -18047,22 +18125,22 @@ msgid "You're the only admin. Promote someone else before changing your role."
 msgstr "Eres el único administrador. Da ese rol a otra persona antes de cambiar el tuyo."
 
 #. placeholder {0}: inviteOrganisations.length
-#: src/routes/onboarding/OnboardingRoute.tsx:609
+#: src/routes/onboarding/OnboardingRoute.tsx:615
 msgid "You've been invited to collaborate with {0} organisations. We'll take you in once you continue."
 msgstr "Te han invitado a colaborar con {0} organizaciones. Te llevaremos allí en cuanto continúes."
 
 #. placeholder {0}: inviteOrganisations[0]
-#: src/routes/onboarding/OnboardingRoute.tsx:603
+#: src/routes/onboarding/OnboardingRoute.tsx:609
 msgid "You've been invited to collaborate with <0>{0}</0>. We'll take you there in a moment."
 msgstr "Te han invitado a colaborar con <0>{0}</0>. Te llevaremos allí en un momento."
 
 #. placeholder {0}: inviteOrganisations.length
-#: src/routes/onboarding/OnboardingRoute.tsx:627
+#: src/routes/onboarding/OnboardingRoute.tsx:633
 msgid "You've been invited to join {0} organisations. We'll take you in once you continue."
 msgstr "Te han invitado a unirte a {0} organizaciones. Te llevaremos allí en cuanto continúes."
 
 #. placeholder {0}: inviteOrganisations[0]
-#: src/routes/onboarding/OnboardingRoute.tsx:621
+#: src/routes/onboarding/OnboardingRoute.tsx:627
 msgid "You've been invited to join <0>{0}</0>. We'll take you there in a moment."
 msgstr "Te han invitado a unirte a <0>{0}</0>. Te llevaremos allí en un momento."
 
@@ -18209,11 +18287,11 @@ msgstr "Se incluyen su nombre, su correo y la página actual para que podamos re
 msgid "Your organisation is on the free plan by default. One plan covers every workspace, billed per seat once you upgrade."
 msgstr "Tu organización está en el plan Free por defecto. Un solo plan cubre cada espacio de trabajo, facturado por asiento al mejorar de plan."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:632
+#: src/routes/onboarding/OnboardingRoute.tsx:638
 msgid "Your organisation is waiting for you. Click continue to join."
 msgstr "Tu organización te está esperando. Haz clic en continuar para unirte."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:684
+#: src/routes/onboarding/OnboardingRoute.tsx:690
 #: src/components/organisation/CreateOrganisationModal.tsx:197
 msgid "Your organisation or company"
 msgstr "Tu organización o empresa"
@@ -18287,7 +18365,7 @@ msgstr "Hemos recibido tu solicitud."
 msgid "Your response has been recorded. You may now close this tab. You may also share the QR code so others can contribute, or record another conversation."
 msgstr "Tu respuesta ha sido registrada. Puedes cerrar esta pestaña ahora. También puedes compartir el código QR para que otras personas puedan contribuir, o registrar otra conversación."
 
-#: src/components/participant/ParticipantBody.tsx:225
+#: src/components/participant/ParticipantBody.tsx:232
 msgid "Your responses"
 msgstr "Tus respuestas"
 
@@ -18300,11 +18378,11 @@ msgstr "Tu sesión ha caducado. Vuelve a iniciar sesión para continuar."
 #~ msgid "Your view has been created. Please wait as we process and analyse the data."
 #~ msgstr "Tu vista ha sido creada. Por favor, espera mientras procesamos y analizamos los datos."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:615
+#: src/routes/onboarding/OnboardingRoute.tsx:621
 msgid "Your workspace is waiting for you. Click continue to collaborate."
 msgstr "Tu espacio de trabajo te espera. Haz clic en continuar para colaborar."
 
-#: src/components/results/resultEditing.tsx:529
+#: src/components/results/resultEditing.tsx:530
 msgid "Yours"
 msgstr "Las tuyas"
 

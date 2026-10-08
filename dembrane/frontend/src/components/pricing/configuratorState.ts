@@ -228,3 +228,25 @@ export const clearStoredConfiguration = (): void => {
 		// Same reason as above.
 	}
 };
+
+/** Which opener had the modal up, so a reload reopens that one and not every gate on the page. */
+const OPENER_STORAGE_KEY = "dembrane-pricing-opener";
+
+export const readStoredOpener = (): string | null => {
+	try {
+		return storage()?.getItem(OPENER_STORAGE_KEY) ?? null;
+	} catch {
+		return null;
+	}
+};
+
+export const writeStoredOpener = (opener: string | null): void => {
+	const store = storage();
+	if (!store) return;
+	try {
+		if (opener) store.setItem(OPENER_STORAGE_KEY, opener);
+		else store.removeItem(OPENER_STORAGE_KEY);
+	} catch {
+		// Losing this only means a reload closes the modal.
+	}
+};
