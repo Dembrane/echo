@@ -295,7 +295,7 @@ msgid "{0, plural, one {# conversation} other {# conversations}}"
 msgstr "{0, plural, one {# Gespräch} other {# Gespräche}}"
 
 #. placeholder {0}: list.activeFiltersCount
-#: src/components/conversation/ConversationsMiniList.tsx:212
+#: src/components/conversation/ConversationsMiniList.tsx:219
 msgid "{0, plural, one {# filter} other {# filters}}"
 msgstr "{0, plural, one {# Filter} other {# Filter}}"
 
@@ -412,7 +412,7 @@ msgid "{0, plural, one {and # more conversation} other {and # more conversations
 msgstr "{0, plural, one {und # weiteres Gespräch} other {und # weitere Gespräche}}"
 
 #. placeholder {0}: selection.length
-#: src/components/conversation/ConversationsMiniList.tsx:231
+#: src/components/conversation/ConversationsMiniList.tsx:238
 msgid "{0, plural, one {Ask about this} other {Ask about these (#)}}"
 msgstr "{0, plural, one {Dazu fragen} other {Zu diesen fragen (#)}}"
 
@@ -454,14 +454,14 @@ msgid "select.all.modal.tags"
 msgstr "{0, plural, one {Tag:} other {Tags:}}"
 
 #. placeholder {0}: contextToBeAdded.conversations.length
-#: src/routes/project/chat/ProjectChatRoute.tsx:933
+#: src/routes/project/chat/ProjectChatRoute.tsx:935
 msgid "{0, plural, one {Using # conversation:} other {Using # conversations:}}"
 msgstr "{0, plural, one {# Gespräch wird verwendet:} other {# Gespräche werden verwendet:}}"
 
 #. placeholder {0}: isAssistantTyping ? "Assistant is typing..." : "Thinking..."
 #. placeholder {0}: formatDistanceToNowStrict(new Date(startedAt), { addSuffix: true, })
 #. placeholder {0}: citation.reference_text
-#: src/routes/project/chat/ProjectChatRoute.tsx:775
+#: src/routes/project/chat/ProjectChatRoute.tsx:777
 #: src/components/conversation/useConversationList.ts:42
 #: src/components/chat/References.tsx:41
 msgid "{0}"
@@ -1414,7 +1414,7 @@ msgstr "Aktion von"
 #~ msgid "Action By"
 #~ msgstr "Aktion von"
 
-#: src/features/sidebar/views/InboxView.tsx:469
+#: src/features/sidebar/views/InboxView.tsx:470
 #: src/components/inbox/Inbox.tsx:442
 msgid "Action needed"
 msgstr "Handlungsbedarf"
@@ -2055,7 +2055,7 @@ msgstr "Beim Laden des Portals ist ein Fehler aufgetreten. Bitte kontaktieren Si
 #~ msgid "An error occurred while loading the Portal. Please contact the support team."
 #~ msgstr "Beim Laden des Portals ist ein Fehler aufgetreten. Bitte kontaktieren Sie das Support-Team."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:829
+#: src/routes/project/chat/ProjectChatRoute.tsx:831
 msgid "An error occurred."
 msgstr "Ein Fehler ist aufgetreten."
 
@@ -2193,7 +2193,7 @@ msgid "another reason"
 msgstr "ein anderer Grund"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:707
-#: src/components/conversation/ConversationsMiniList.tsx:181
+#: src/components/conversation/ConversationsMiniList.tsx:188
 msgid "Any tag"
 msgstr "Beliebiger Tag"
 
@@ -3019,7 +3019,7 @@ msgstr "Können Sie uns mehr darüber erzählen?"
 #: src/components/conversation/ConversationAccordion.tsx:337
 #: src/components/common/InputModal.tsx:87
 #: src/components/common/ImageCropModal.tsx:146
-#: src/components/common/ConfirmModal.tsx:54
+#: src/components/common/ConfirmModal.tsx:63
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:730
 #: src/components/chat/AgenticChatPanel.tsx:751
 #: src/components/chat/AgenticChatPanel.tsx:2219
@@ -3279,8 +3279,8 @@ msgstr "Ladungsabstand (Viewport-Anteil): {0}"
 #~ msgid "Charge Distance (viewport fraction): {0}"
 #~ msgstr "Ladungsabstand (Viewport-Anteil): {0}"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:680
-#: src/routes/project/chat/ProjectChatRoute.tsx:686
+#: src/routes/project/chat/ProjectChatRoute.tsx:682
+#: src/routes/project/chat/ProjectChatRoute.tsx:688
 #: src/features/sidebar/hooks/useSearchHits.ts:254
 #: src/features/sidebar/hooks/useSearchHits.ts:256
 #: src/features/sidebar/hooks/useSearchHits.ts:257
@@ -3289,7 +3289,7 @@ msgstr "Ladungsabstand (Viewport-Anteil): {0}"
 msgid "Chat"
 msgstr "Chat"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:330
+#: src/routes/project/chat/ProjectChatRoute.tsx:332
 msgid "Chat | dembrane"
 msgstr "Chat | dembrane"
 
@@ -3305,7 +3305,7 @@ msgstr "Chat erstellt"
 msgid "Chat deleted"
 msgstr "Chat gelöscht"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:617
+#: src/routes/project/chat/ProjectChatRoute.tsx:619
 #: src/routes/project/chat/NewChatRoute.tsx:540
 msgid "Chat isn't available on your access level. Reach out to your workspace admin to request an upgrade."
 msgstr "Der Chat ist mit Ihrer Berechtigungsstufe nicht verfügbar. Wenden Sie sich an Ihren Arbeitsbereich-Administrator, um ein Upgrade anzufragen."
@@ -3491,7 +3491,7 @@ msgstr "Stadt"
 
 #: src/components/results/curate/CurateTable.tsx:114
 #: src/components/conversation/ProjectConversationsPanel.tsx:789
-#: src/components/conversation/ConversationsMiniList.tsx:242
+#: src/components/conversation/ConversationsMiniList.tsx:249
 msgid "Clear"
 msgstr "Zurücksetzen"
 
@@ -3500,7 +3500,7 @@ msgid "Clear all"
 msgstr "Alles löschen"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:830
-#: src/components/conversation/ConversationsMiniList.tsx:265
+#: src/components/conversation/ConversationsMiniList.tsx:272
 msgid "Clear filters"
 msgstr "Filter zurücksetzen"
 
@@ -3789,7 +3789,7 @@ msgid "Configure settings for each legal basis."
 msgstr "Einstellungen für jede Rechtsgrundlage konfigurieren."
 
 #: src/lib/openConfirm.tsx:47
-#: src/components/common/ConfirmModal.tsx:46
+#: src/components/common/ConfirmModal.tsx:55
 msgid "Confirm"
 msgstr "Bestätigen"
 
@@ -4076,7 +4076,7 @@ msgstr "Gespräche"
 #: src/components/map/panels/MapSettingsMenu.tsx:297
 #: src/components/map/panels/ClusterSummary.tsx:155
 #: src/components/conversation/ProjectConversationsPanel.tsx:623
-#: src/components/conversation/ConversationsMiniList.tsx:142
+#: src/components/conversation/ConversationsMiniList.tsx:149
 #: src/components/conversation/ConversationAccordion.tsx:1100
 msgid "Conversations"
 msgstr "Gespräche"
@@ -4998,8 +4998,8 @@ msgstr "dembrane bei Ihrem Event?"
 msgid "dembrane B.V. {0}, all rights reserved."
 msgstr "dembrane B.V. {0}, alle Rechte vorbehalten."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1019
-#: src/routes/project/chat/ProjectChatRoute.tsx:1029
+#: src/routes/project/chat/ProjectChatRoute.tsx:1021
+#: src/routes/project/chat/ProjectChatRoute.tsx:1031
 #: src/components/chat/AgenticChatPanel.tsx:2353
 msgid "dembrane can make mistakes. Please double-check responses."
 msgstr "dembrane kann Fehler machen. Bitte überprüfen Sie Antworten."
@@ -5242,7 +5242,7 @@ msgstr "Aktualisiert sich nicht von selbst. Aktualisiert vor {updatedAgo}."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:533
 #: src/components/invite/InviteModal.tsx:809
-#: src/components/conversation/ConversationsMiniList.tsx:99
+#: src/components/conversation/ConversationsMiniList.tsx:106
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:642
 #: src/components/chat/AgenticPlanCard.tsx:34
 #: src/components/chat/AgenticChatPanel.tsx:431
@@ -5671,6 +5671,7 @@ msgstr "Emoji, das neben dem Thema angezeigt wird, z.B. 💡 🔍 📊"
 msgid "emptied out"
 msgstr "geleert"
 
+#: src/components/conversation/ConversationsMiniList.tsx:82
 #: src/components/conversation/ConversationTranscriptSection.tsx:116
 msgid "Empty"
 msgstr "Leer"
@@ -5815,7 +5816,7 @@ msgstr "Von dem Teilnehmer auf dem Portal eingetragen"
 msgid "Entered details"
 msgstr "Eingegebene Angaben"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:824
+#: src/routes/project/chat/ProjectChatRoute.tsx:826
 #: src/routes/project/canvas/CanvasRoute.tsx:337
 #: src/components/dropzone/UploadConversationDropzone.tsx:723
 #: src/components/dropzone/UploadConversationDropzone.tsx:833
@@ -6385,7 +6386,7 @@ msgstr "Dateiname aus hochgeladener Datei"
 msgid "Filter"
 msgstr "Filter"
 
-#: src/components/conversation/ConversationsMiniList.tsx:154
+#: src/components/conversation/ConversationsMiniList.tsx:161
 msgid "Filter and sort"
 msgstr "Filtern und sortieren"
 
@@ -8402,7 +8403,7 @@ msgstr "Gesperrt"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:441
 #: src/components/conversation/LiveMonitorSection.tsx:323
-#: src/components/conversation/ConversationsMiniList.tsx:405
+#: src/components/conversation/ConversationsMiniList.tsx:412
 msgid "Locked conversation, upgrade to view"
 msgstr "Gesperrtes Gespräch, Tarif upgraden zum Anzeigen"
 
@@ -8631,14 +8632,14 @@ msgstr "Alle als gelesen markieren"
 msgid "Mark as attended"
 msgstr "Als teilgenommen markieren"
 
-#: src/features/sidebar/views/InboxView.tsx:479
-#: src/features/sidebar/views/InboxView.tsx:570
+#: src/features/sidebar/views/InboxView.tsx:480
+#: src/features/sidebar/views/InboxView.tsx:571
 #: src/components/inbox/Inbox.tsx:397
 #: src/components/announcement/AnnouncementItem.tsx:148
 msgid "Mark as read"
 msgstr "Als gelesen markieren"
 
-#: src/features/sidebar/views/InboxView.tsx:570
+#: src/features/sidebar/views/InboxView.tsx:571
 #: src/components/announcement/AnnouncementItem.tsx:137
 msgid "Mark as unread"
 msgstr "Als ungelesen markieren"
@@ -9320,7 +9321,7 @@ msgid "No conversations found. Start a conversation using the participation invi
 msgstr "Keine Gespräche gefunden. Starten Sie ein Gespräch über den Teilnahme-Einladungslink aus der <0><1>Projektübersicht.</1></0>"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:823
-#: src/components/conversation/ConversationsMiniList.tsx:258
+#: src/components/conversation/ConversationsMiniList.tsx:265
 msgid "No conversations match these filters."
 msgstr "Keine Gespräche entsprechen diesen Filtern."
 
@@ -9330,7 +9331,7 @@ msgid "select.all.modal.no.conversations"
 msgstr "Es wurden keine Unterhaltungen verarbeitet. Dies kann passieren, wenn alle Unterhaltungen bereits im Kontext sind oder nicht den ausgewählten Filtern entsprechen."
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:825
-#: src/components/conversation/ConversationsMiniList.tsx:260
+#: src/components/conversation/ConversationsMiniList.tsx:267
 msgid "No conversations yet."
 msgstr "Noch keine Gespräche."
 
@@ -11989,7 +11990,7 @@ msgid "Refreshing…"
 msgstr "Wird aktualisiert…"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:460
-#: src/routes/project/chat/ProjectChatRoute.tsx:752
+#: src/routes/project/chat/ProjectChatRoute.tsx:754
 #: src/routes/project/canvas/CanvasRoute.tsx:690
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:625
 #: src/components/popcorn/PopcornActions.tsx:64
@@ -12504,7 +12505,7 @@ msgstr "Zurücksetzen"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:724
 #: src/components/conversation/ProjectConversationsPanel.tsx:728
-#: src/components/conversation/ConversationsMiniList.tsx:203
+#: src/components/conversation/ConversationsMiniList.tsx:210
 msgid "Reset filters"
 msgstr "Filter zurücksetzen"
 
@@ -13066,7 +13067,7 @@ msgstr "Nach unten scrollen"
 #: src/components/results/ResultsList.tsx:288
 #: src/components/conversation/ProjectConversationsPanel.tsx:676
 #: src/components/conversation/MoveConversationButton.tsx:155
-#: src/components/conversation/ConversationsMiniList.tsx:163
+#: src/components/conversation/ConversationsMiniList.tsx:170
 msgid "Search"
 msgstr "Suchen"
 
@@ -13283,11 +13284,11 @@ msgstr "Auswählen"
 msgid "Select {0}"
 msgstr "{0} auswählen"
 
-#: src/components/conversation/ConversationsMiniList.tsx:394
+#: src/components/conversation/ConversationsMiniList.tsx:401
 msgid "Select {title}"
 msgstr "{title} auswählen"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:886
+#: src/routes/project/chat/ProjectChatRoute.tsx:888
 msgid "Select a conversation to continue"
 msgstr "Wählen Sie ein Gespräch aus, um fortzufahren"
 
@@ -13363,10 +13364,10 @@ msgstr "Audiodateien auswählen"
 msgid "Select conversation"
 msgstr "Gespräch auswählen"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:895
-#: src/routes/project/chat/ProjectChatRoute.tsx:954
-#: src/routes/project/chat/ProjectChatRoute.tsx:955
-#: src/routes/project/chat/ProjectChatRoute.tsx:1040
+#: src/routes/project/chat/ProjectChatRoute.tsx:897
+#: src/routes/project/chat/ProjectChatRoute.tsx:956
+#: src/routes/project/chat/ProjectChatRoute.tsx:957
+#: src/routes/project/chat/ProjectChatRoute.tsx:1042
 #: src/routes/project/chat/NewChatRoute.tsx:624
 #: src/routes/project/chat/NewChatRoute.tsx:626
 #: src/routes/project/chat/NewChatRoute.tsx:733
@@ -13468,7 +13469,7 @@ msgstr "Auswahl zu groß. Einige Gespräche wurden nicht hinzugefügt."
 msgid "Self-serve"
 msgstr "Self-Service"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:979
+#: src/routes/project/chat/ProjectChatRoute.tsx:981
 #: src/routes/project/chat/NewChatRoute.tsx:647
 #: src/components/feedback/ResponseFeedbackControls.tsx:219
 #: src/components/chat/AgenticChatPanel.tsx:2284
@@ -13848,13 +13849,13 @@ msgstr "Einführung anzeigen"
 msgid "Show IP addresses"
 msgstr "IP-Adressen anzeigen"
 
-#: src/features/sidebar/views/InboxView.tsx:564
+#: src/features/sidebar/views/InboxView.tsx:565
 #: src/components/chat/CanvasSuggestionCard.tsx:292
 #: src/components/announcement/AnnouncementItem.tsx:119
 msgid "Show less"
 msgstr "Weniger anzeigen"
 
-#: src/features/sidebar/views/InboxView.tsx:564
+#: src/features/sidebar/views/InboxView.tsx:565
 #: src/components/workspace/SupportAccessSection.tsx:262
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:237
 #: src/components/chat/CanvasSuggestionCard.tsx:292
@@ -14186,7 +14187,7 @@ msgid "participant.go.deeper.content.policy.violation.error.message"
 msgstr "Der Inhalt verstößt gegen unsere Richtlinien. Änder den Text und versuch es nochmal."
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:696
-#: src/components/conversation/ConversationsMiniList.tsx:170
+#: src/components/conversation/ConversationsMiniList.tsx:177
 #: src/components/conversation/ConversationAccordion.tsx:1206
 #: src/components/conversation/ConversationAccordion.tsx:1213
 msgid "Sort"
@@ -14414,7 +14415,7 @@ msgstr "Schritte und Protokolle"
 msgid "Still stuck? Email <0>support@dembrane.com</0>."
 msgstr "Kommen Sie nicht weiter? Schreiben Sie an <0>support@dembrane.com</0>."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:787
+#: src/routes/project/chat/ProjectChatRoute.tsx:789
 #: src/components/pricing/PricingTextInput.tsx:251
 #: src/components/feedback/ReportIssueModal.tsx:242
 #: src/components/chat/AgenticChatPanel.tsx:2242
@@ -14710,7 +14711,7 @@ msgstr "Tag gelöscht"
 #: src/components/participant/ParticipantInitiateForm.tsx:281
 #: src/components/map/panels/MapSettingsMenu.tsx:256
 #: src/components/conversation/ProjectConversationsPanel.tsx:706
-#: src/components/conversation/ConversationsMiniList.tsx:180
+#: src/components/conversation/ConversationsMiniList.tsx:187
 #: src/components/conversation/ConversationEdit.tsx:424
 #: src/components/conversation/ConversationDrilldownModal.tsx:200
 #: src/components/conversation/ConversationAccordion.tsx:1275
@@ -14773,7 +14774,7 @@ msgstr "Teilen Sie den Administratoren des Arbeitsbereichs mit, wofür Sie Zugri
 msgid "Tell us what you need"
 msgstr "Sagen Sie uns, was Sie benötigen"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:565
+#: src/routes/project/chat/ProjectChatRoute.tsx:567
 #: src/routes/project/chat/NewChatRoute.tsx:309
 #: src/components/chat/AgenticChatPanel.tsx:1703
 msgid "Template applied"
@@ -15926,7 +15927,7 @@ msgid "Title guidance"
 msgstr "Hinweise zum Titel"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:677
-#: src/components/conversation/ConversationsMiniList.tsx:164
+#: src/components/conversation/ConversationsMiniList.tsx:171
 msgid "Title or participant"
 msgstr "Titel oder Teilnehmer"
 
@@ -16091,7 +16092,7 @@ msgstr "Schulungen"
 msgid "Transcribe a conversation again"
 msgstr "Ein Gespräch erneut transkribieren"
 
-#: src/components/conversation/ConversationsMiniList.tsx:85
+#: src/components/conversation/ConversationsMiniList.tsx:92
 msgid "Transcribing"
 msgstr "Wird transkribiert"
 
@@ -16238,7 +16239,7 @@ msgstr "Probleme bei der Anmeldung? Wenden Sie sich an support@dembrane.com."
 
 #: src/routes/project/present/PresentRoute.tsx:932
 #: src/routes/project/present/PresentResultsPanel.tsx:158
-#: src/routes/project/chat/ProjectChatRoute.tsx:837
+#: src/routes/project/chat/ProjectChatRoute.tsx:839
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:165
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:457
 #: src/routes/invite/MyInvitesRoute.tsx:225
@@ -16364,7 +16365,7 @@ msgstr "Typ"
 msgid "Type <0>{0}</0> to confirm."
 msgstr "Geben Sie <0>{0}</0> ein, um zu bestätigen."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:988
+#: src/routes/project/chat/ProjectChatRoute.tsx:990
 msgid "Type a message or press / for templates..."
 msgstr "Nachricht eingeben oder / für Vorlagen drücken..."
 
@@ -16409,7 +16410,7 @@ msgstr "Unter 50."
 msgid "Under your organisation"
 msgstr "Unter Ihrer Organisation"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:567
+#: src/routes/project/chat/ProjectChatRoute.tsx:569
 #: src/routes/project/chat/NewChatRoute.tsx:311
 #: src/components/results/resultEditing.tsx:574
 #: src/components/results/ResultRow.tsx:367
@@ -16520,7 +16521,7 @@ msgstr "Unbenanntes Canvas"
 #: src/components/project/ProjectUsageAndSharing.tsx:509
 #: src/components/project/ProjectUsageAndSharing.tsx:544
 #: src/components/conversation/ProjectConversationsPanel.tsx:223
-#: src/components/conversation/ConversationsMiniList.tsx:332
+#: src/components/conversation/ConversationsMiniList.tsx:339
 #: src/components/chat/References.tsx:63
 msgid "Untitled conversation"
 msgstr "Unbenanntes Gespräch"
@@ -16830,8 +16831,8 @@ msgstr "Stattdessen Passwort verwenden"
 msgid "Use pinned and saved question templates, including the / shortcut, from Ask."
 msgstr "Verwenden Sie angeheftete und gespeicherte Fragevorlagen, einschließlich des Kurzbefehls /, direkt aus „Fragen“."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1016
-#: src/routes/project/chat/ProjectChatRoute.tsx:1026
+#: src/routes/project/chat/ProjectChatRoute.tsx:1018
+#: src/routes/project/chat/ProjectChatRoute.tsx:1028
 #: src/components/chat/AgenticChatPanel.tsx:2349
 msgid "Use Shift + Enter to add a new line"
 msgstr "Verwenden Sie Shift + Enter, um eine neue Zeile hinzuzufügen"
@@ -16942,8 +16943,8 @@ msgid "select.all.modal.loading.verified"
 msgstr "Verifiziert"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:717
-#: src/components/conversation/ConversationsMiniList.tsx:93
-#: src/components/conversation/ConversationsMiniList.tsx:190
+#: src/components/conversation/ConversationsMiniList.tsx:100
+#: src/components/conversation/ConversationsMiniList.tsx:197
 msgid "Verified"
 msgstr "Verifiziert"
 
@@ -17346,7 +17347,7 @@ msgstr "Willkommen zurück, {displayName}"
 msgid "Welcome to dembrane"
 msgstr "Willkommen bei dembrane"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:709
+#: src/routes/project/chat/ProjectChatRoute.tsx:711
 msgid "Welcome to dembrane chat. Select the conversations you want to analyse, then ask about details, quotes, and summaries."
 msgstr "Willkommen beim dembrane-Chat. Wählen Sie die Gespräche aus, die Sie analysieren möchten, und fragen Sie nach Details, Zitaten und Zusammenfassungen."
 
@@ -17354,7 +17355,7 @@ msgstr "Willkommen beim dembrane-Chat. Wählen Sie die Gespräche aus, die Sie a
 msgid "Welcome to dembrane!"
 msgstr "Willkommen bei dembrane!"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:708
+#: src/routes/project/chat/ProjectChatRoute.tsx:710
 msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode."
 msgstr "Willkommen im Übersichtmodus! Ich hab Zusammenfassungen von all deinen Gesprächen geladen. Frag mich nach Mustern, Themen und Insights in deinen Daten. Für genaue Zitate start eine neue Chat im Modus „Genauer Kontext“."
 
