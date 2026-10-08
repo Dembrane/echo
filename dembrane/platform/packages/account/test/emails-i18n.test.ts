@@ -48,3 +48,28 @@ test("the password reset email carries the link and speaks the recipient's langu
   expect(text).toContain("https://d/password-reset?token=abc&x=1");
   expect(subjectOf(reset, "nl-NL")).toBe("Stel je dembrane-wachtwoord opnieuw in");
 });
+
+test("the report published email links the report and the unsubscribe page in the recipient's locale", () => {
+  const published = {
+    template: "report_published",
+    data: {
+      portal_url: "https://portal.example",
+      project_id: "p1",
+      token: "t-1",
+      conversation_name: "Resident 1",
+    },
+  } as const;
+  expect(subjectOf(published)).toBe("A report featuring your input is ready");
+  const { html, text } = render(published, "nl");
+  expect(html).toContain('Je rapport over "Resident 1" is klaar.');
+  expect(html).toContain('href="https://portal.example/nl-NL/p1/report"');
+  expect(html).toContain(
+    'href="https://portal.example/nl-NL/p1/unsubscribe?token=t-1&amp;project_id=p1"',
+  );
+  expect(text).toContain("https://portal.example/nl-NL/p1/report");
+  expect(text).toContain("https://portal.example/nl-NL/p1/unsubscribe?token=t-1&project_id=p1");
+
+  const anonymous = { ...published, data: { ...published.data, conversation_name: "" } };
+  expect(render(anonymous).html).toContain("Your report is ready.");
+  expect(render(anonymous).html).toContain('href="https://portal.example/en-US/p1/report"');
+});

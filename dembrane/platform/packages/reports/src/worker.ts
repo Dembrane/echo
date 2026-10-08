@@ -2,10 +2,12 @@ import type { Db } from "@dembrane/db";
 import type { Completer } from "@dembrane/llm";
 import { Notifier } from "@dembrane/notifications";
 import type { Logger } from "@dembrane/observability";
+import { notifyReportSubscribers } from "@dembrane/projects";
 import type { Queue } from "@dembrane/queue";
 import { enqueueConversationEvent, enqueueReportEvent, webhooksStorage } from "@dembrane/webhooks";
 import type postgres from "postgres";
 import { registerReportJobs, reportWorkerJobs } from "./jobs";
+import { emailReportSubscribers } from "./notify";
 import { reportsStorage } from "./storage";
 import { type Summarizer, summarizeConversation } from "./summarize";
 
@@ -14,12 +16,17 @@ export interface ReportsWorkerDeps {
   readonly logger: Logger;
   readonly completer: Completer;
   readonly dashboardUrl: string;
+  /** The participant portal, which a published report's emails link to. */
+  readonly portalUrl: string;
   readonly config: { readonly reports: { readonly maxContextTokens: number } };
   /** The conversations namespace's summarizer once it exists; the port below until then. */
   readonly summarizer?: Summarizer;
 }
 
-/** Report generation, the scheduled report runner and its reconciler, for the worker. */
+/**
+ * Report generation, the scheduled report runner and its reconciler, and the emails to a
+ * published report's subscribers, for the worker.
+ */
 export function reportsWorker(deps: ReportsWorkerDeps) {
   return {
     jobs: reportWorkerJobs,
@@ -59,6 +66,14 @@ export function reportsWorker(deps: ReportsWorkerDeps) {
         reportGenerated: (projectId, reportId) =>
           enqueueReportEvent(webhookDeps, projectId, reportId, "report.generated"),
         jobs: { enqueue: (def, payload, opts) => queue.enqueue(def, payload, opts as never) },
+      });
+      await queue.work(notifyReportSubscribers, { concurrency: 2 }, async (p, job) => {
+        const n = await emailReportSubscribers(
+          { store, portalUrl: deps.portalUrl, jobs: { enqueue: queue.enqueue.bind(queue) } },
+          p,
+          job.id,
+        );
+        deps.logger.info({ reportId: p.reportId, emails: n }, "report subscribers emailed");
       });
     },
   };

@@ -5,6 +5,7 @@ import {
 	Anchor,
 	Badge,
 	Button,
+	Center,
 	Divider,
 	Group,
 	LoadingOverlay,
@@ -16,8 +17,8 @@ import {
 } from "@mantine/core";
 import { useClipboard, useDisclosure } from "@mantine/hooks";
 import {
-	DetectiveIcon,
 	ArrowClockwiseIcon,
+	DetectiveIcon,
 	LockIcon,
 	SealCheckIcon,
 } from "@phosphor-icons/react";
@@ -43,11 +44,14 @@ import {
 import { LockedTranscriptOverlay } from "@/components/conversation/LockedTranscriptOverlay";
 import { getConversationStartTime } from "@/components/conversation/utils";
 import { VerifiedArtefactsSection } from "@/components/conversation/VerifiedArtefactsSection";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { useProjectById } from "@/components/project/hooks";
 import { TRANSCRIPT_TROUBLESHOOTING_DOCS_URL } from "@/config";
+import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { generateConversationSummary } from "@/lib/api";
+import { readApiError } from "@/lib/errors/read";
 import { isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 
@@ -62,8 +66,9 @@ const hasVerifiedArtifacts = (conversation: Conversation) =>
 	) ?? false;
 
 export const ProjectConversationRoute = () => {
-	const { conversationId, projectId } = useParams();
+	const { conversationId, projectId, workspaceId } = useParams();
 	const queryClient = useQueryClient();
+	const navigate = useI18nNavigate();
 	const { workspace } = useWorkspace();
 	// /summarize needs project:update, which observers lack.
 	const canGenerateSummary = !!workspace && !isReadOnlyRole(workspace.role);
@@ -71,9 +76,10 @@ export const ProjectConversationRoute = () => {
 	const conversationQuery = useConversationById({
 		conversationId: conversationId ?? "",
 	});
+	const gone = conversationQuery.isError;
 	const conversationChunksQuery = useConversationChunks(
 		conversationId ?? "",
-		10000,
+		gone ? false : 10000,
 		["id"],
 	);
 	const projectQuery = useProjectById({
@@ -87,7 +93,7 @@ export const ProjectConversationRoute = () => {
 	const chunksWithTranscriptQuery = useConversationHasTranscript(
 		conversationId ?? "",
 		10000,
-		!!conversationId && !conversationQuery.data?.summary,
+		!!conversationId && !gone && !conversationQuery.data?.summary,
 	);
 	const hasTranscript = (chunksWithTranscriptQuery.data ?? 0) > 0;
 
@@ -172,6 +178,41 @@ export const ProjectConversationRoute = () => {
 		regenerateConfirmOpened,
 		{ open: openRegenerateConfirm, close: closeRegenerateConfirm },
 	] = useDisclosure(false);
+
+	if (gone) {
+		const notFound = readApiError(conversationQuery.error).status === 404;
+		return (
+			<Center style={{ height: "60vh" }}>
+				<Stack align="center" gap="md" maw={420} px="lg">
+					<Title order={4} ta="center">
+						{notFound ? (
+							<Trans>This conversation is no longer available</Trans>
+						) : (
+							<Trans>Something went wrong</Trans>
+						)}
+					</Title>
+					{notFound ? (
+						<Text size="sm" c="dimmed" ta="center" lh={1.6}>
+							<Trans>It may have been deleted.</Trans>
+						</Text>
+					) : (
+						<ErrorNotice
+							error={conversationQuery.error}
+							onRetry={() => conversationQuery.refetch()}
+						/>
+					)}
+					<Button
+						size="sm"
+						onClick={() =>
+							navigate(`/w/${workspaceId}/projects/${projectId}/conversations`)
+						}
+					>
+						<Trans>Back to conversations</Trans>
+					</Button>
+				</Stack>
+			</Center>
+		);
+	}
 
 	return (
 		<Stack gap="xl" className="relative px-8 py-4">

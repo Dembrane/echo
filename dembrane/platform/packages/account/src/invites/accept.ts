@@ -45,7 +45,7 @@ const expired = (expiresAt: string | null, now: Date) =>
 /** Pending workspace and org invites addressed to the caller's verified email, newest first. */
 export async function listMyInvites(ctx: InviteCtx, who: Signed) {
   const { store, now } = ctx;
-  if (!who.appUserId || !(await store.appUser(who.appUserId))) return [];
+  // Not gated on onboarding: onboarding names the organisation from this list.
   const email = await store.verifiedEmail(who.directusUserId);
   if (!email) return [];
   const [wsInvites, orgInvites] = await Promise.all([
@@ -243,7 +243,7 @@ export async function declineMyInvite(ctx: InviteCtx, who: Signed, inviteId: str
       audienceUserId: invite.invited_by,
       actorUserId: me.id,
       eventCode: "INVITE_DECLINED",
-      title: `${email} declined your invite`,
+      title: `${me.display_name || email} declined your invite`,
       message: `They chose not to join **${ws?.name || "a workspace"}**.`,
       action: "NAVIGATE_WORKSPACE_SETTINGS",
       refWorkspaceId: wsInv.workspace_id,
@@ -254,7 +254,7 @@ export async function declineMyInvite(ctx: InviteCtx, who: Signed, inviteId: str
       audienceUserId: invite.invited_by,
       actorUserId: me.id,
       eventCode: "INVITE_DECLINED",
-      title: `${email} declined your invite`,
+      title: `${me.display_name || email} declined your invite`,
       message: `They chose not to join **${org?.name || "an organisation"}**.`,
       action: "NAVIGATE_ORGANISATION_SETTINGS",
       refOrgId: orgInv.org_id,

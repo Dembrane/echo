@@ -92,8 +92,8 @@ const summaryFields = {
   language: project.language,
   pin_order: project.pin_order,
   visibility: project.visibility,
-  // Every conversation row, deleted ones included, as Directus's count(conversations) was.
-  conversations_count: sql<number>`(select count(*)::int from "conversation" c where c.project_id = "project"."id")`,
+  // Live conversations only; Directus's count(conversations) also counted deleted rows.
+  conversations_count: sql<number>`(select count(*)::int from "conversation" c where c.project_id = "project"."id" and c.deleted_at is null)`,
 };
 
 export interface ProjectListQuery {

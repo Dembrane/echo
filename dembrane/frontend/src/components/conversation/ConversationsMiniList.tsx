@@ -75,9 +75,17 @@ const ConversationStatus = ({
 				<Trans>Transcription error</Trans>
 			</Text>
 		);
+	// No chunk yet: nothing to transcribe, though it stays open for a while.
+	if (conversation.last_chunk_at === null)
+		return (
+			<Text size="xs" c="dimmed">
+				<Trans>Empty</Trans>
+			</Text>
+		);
+	// Derived from the chunks: the stored flags are unset on older rows.
 	if (
-		conversation.is_audio_processing_finished === false &&
-		!conversation.has_only_text_chunks
+		!conversation.has_only_text_chunks &&
+		(!conversation.is_finished || conversation.has_pending_chunks)
 	)
 		return (
 			<Text size="xs" c="dimmed">

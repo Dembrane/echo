@@ -156,6 +156,8 @@ export const LoginRoute = () => {
 			});
 			if (meResponse.ok) {
 				const meData = await meResponse.json();
+				// Onboarding reads this cache; it may still hold a 401 from before sign-in.
+				queryClient.setQueryData(["v2", "me"], meData);
 				needsOnboarding = meData.onboarding_completed === false;
 				// Required-but-non-blocking questionnaire (ISSUE-012): if the
 				// user is onboarded but never answered, route through the
@@ -227,6 +229,8 @@ export const LoginRoute = () => {
 		try {
 			await replaceOtherSessions();
 			await queryClient.invalidateQueries({ queryKey: ["auth", "session"] });
+			// /v2/me answered 401 while the sign-in was held.
+			await queryClient.invalidateQueries({ queryKey: ["v2", "me"] });
 			await afterSignIn(elsewhere.email, false);
 		} catch {
 			setElsewhere(null);

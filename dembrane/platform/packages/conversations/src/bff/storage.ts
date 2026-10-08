@@ -350,6 +350,8 @@ export function bffStore(db: Db) {
           nonText: sql<number>`count(*) filter (where ${text})::int`,
           transcribed: sql<number>`count(*) filter (where ${nonEmpty(conversation_chunk.transcript)})::int`,
           errors: sql<number>`count(*) filter (where ${errored})::int`,
+          // The pipeline's pendingChunks: neither a transcript nor an error yet.
+          pending: sql<number>`count(*) filter (where ${conversation_chunk.transcript} is null and ${conversation_chunk.error} is null)::int`,
           lastTs: max(conversation_chunk.timestamp),
         })
         .from(conversation_chunk)

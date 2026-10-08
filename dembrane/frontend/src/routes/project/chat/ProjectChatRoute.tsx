@@ -85,6 +85,7 @@ import { FREE_TIER_MAX_CHAT_USER_TURNS } from "@/lib/freeTier";
 import { isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 import { resolveChatScreen } from "./chatModeRouting";
+import { stoppedAnswer } from "./stoppedAnswer";
 
 const useDembraneChat = ({ chatId }: { chatId: string }) => {
 	const chatHistoryQuery = useChatHistory(chatId);
@@ -168,18 +169,7 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 					project_chat_id: chatId,
 					text: message.content,
 				},
-				{
-					// Swap the streamed nanoid for the persisted uuid so it can be rated.
-					onSuccess: (created) => {
-						const persistedId = (created as { id?: unknown } | null)?.id;
-						if (!isPersistedMessageId(persistedId)) return;
-						setMessages((current) =>
-							current.map((m) =>
-								m.id === message.id ? { ...m, id: persistedId } : m,
-							),
-						);
-					},
-				},
+				{ onSuccess: swapToPersistedId(message.id) },
 			);
 
 			// scroll to the last message
@@ -198,10 +188,21 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 		isLoading,
 	});
 
+	// Swap the streamed nanoid for the persisted uuid so it can be rated.
+	const swapToPersistedId = (streamedId: string) => (created: unknown) => {
+		const persistedId = (created as { id?: unknown } | null)?.id;
+		if (!isPersistedMessageId(persistedId)) return;
+		setMessages((current) =>
+			current.map((m) => (m.id === streamedId ? { ...m, id: persistedId } : m)),
+		);
+	};
+
 	const customHandleStop = () => {
 		stop();
 
-		const incompleteMessage = messages[messages.length - 1];
+		// onFinish never fires on abort, so the partial reply is saved here.
+		const incompleteMessage = stoppedAnswer(messages);
+		if (!incompleteMessage) return;
 
 		const body = {
 			date_created: new Date(
@@ -212,8 +213,9 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 			text: incompleteMessage.content,
 		};
 
-		// publish the incomplete result to the backend
-		addChatMessageMutation.mutate(body as Partial<ProjectChatMessage>);
+		addChatMessageMutation.mutate(body as Partial<ProjectChatMessage>, {
+			onSuccess: swapToPersistedId(incompleteMessage.id),
+		});
 	};
 
 	const customHandleSubmit = async () => {

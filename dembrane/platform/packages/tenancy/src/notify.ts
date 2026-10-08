@@ -13,7 +13,8 @@ export type NotificationAction =
   | "NAVIGATE_WS"
   | "NAVIGATE_PROJECT"
   | "NAVIGATE_ORGANISATION_SETTINGS"
-  | "NAVIGATE_WORKSPACE_SETTINGS";
+  | "NAVIGATE_WORKSPACE_SETTINGS"
+  | "NAVIGATE_INVITE";
 
 /** Row styling in the inbox; anything unlisted is plain information. */
 const SEVERITY: Record<string, "info" | "action_required" | "destructive"> = {
@@ -22,6 +23,7 @@ const SEVERITY: Record<string, "info" | "action_required" | "destructive"> = {
   PROJECT_SHARE_REVOKED: "destructive",
   TIER_DOWNGRADED: "destructive",
   MEMBERSHIP_REQUESTED: "action_required",
+  INVITE_RECEIVED: "action_required",
   PARTNER_HANDOFF_PENDING: "action_required",
   SUPPORT_ACCESS_REQUESTED: "action_required",
   SUPPORT_ACCESS_REMINDER: "action_required",
@@ -37,6 +39,8 @@ export interface Notice {
   readonly workspaceId?: string | null;
   readonly projectId?: string | null;
   readonly params?: Record<string, unknown> | null;
+  /** Leaves the inbox at this time, e.g. with the invite it announces. */
+  readonly expiresAt?: string | null;
 }
 
 /**
@@ -77,6 +81,7 @@ export async function emit(db: Conn, now: Date, to: string, n: Notice): Promise<
     ref_org_id: n.orgId ?? null,
     ref_workspace_id: n.workspaceId ?? null,
     ref_project_id: n.projectId ?? null,
+    expires_at: n.expiresAt ?? null,
     created_at: at,
     updated_at: at,
   });

@@ -1,4 +1,4 @@
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import { memo } from "react";
 import {
 	conversationColor,
@@ -94,9 +94,11 @@ export const Legend = memo(function Legend({
 			))}
 			{colorBy === "conversation" && conversations > NAMED_CONVERSATIONS && (
 				<p>
-					<Trans>
-						and {conversations - NAMED_CONVERSATIONS} more conversations
-					</Trans>
+					<Plural
+						value={conversations - NAMED_CONVERSATIONS}
+						one="and # more conversation"
+						other="and # more conversations"
+					/>
 				</p>
 			)}
 		</div>

@@ -5,6 +5,7 @@ import {
   C,
   CHAT_P1,
   type Harness,
+  ORG,
   P,
   REPORT_P1,
   startHarness,
@@ -732,6 +733,10 @@ run("security: new holes and medium and low fixes against the whole API", () => 
 
   test("L-14: a revived membership drops its old support expiry and custom policies", async () => {
     const ws = WS.aDefault;
+    // Only organisation members are re-added directly; everyone else gets a pending invite.
+    await h.sql`
+      insert into org_membership (id, org_id, user_id, role)
+      values (gen_random_uuid(), ${ORG.a}, ${U.bob.app}, 'member')`;
     await h.sql`
       insert into workspace_membership (id, workspace_id, user_id, role, source, expires_at, custom_policies, deleted_at)
       values (gen_random_uuid(), ${ws}, ${U.bob.app}, 'admin', 'staff_support', now() - interval '1 day',

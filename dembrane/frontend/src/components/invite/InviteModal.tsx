@@ -33,6 +33,7 @@ import {
 	InviteResultsList,
 } from "@/components/invite/InviteResultsList";
 import { type InviteRole, RoleSelect } from "@/components/invite/RoleSelect";
+import { resultStateFor } from "@/components/invite/resultState";
 import {
 	type InviteableWorkspace,
 	WorkspaceSelectList,
@@ -389,11 +390,7 @@ export function InviteModal({
 						status?: string;
 						invite_url?: string | null;
 					};
-					const status = value.status ?? "sent";
-					// invited/added/reactivated → sent; already_member / already_invited surface as their own states.
-					let state: InviteResultState = "sent";
-					if (status === "already_member") state = "already_member";
-					else if (status === "already_invited") state = "already_invited";
+					const state = resultStateFor(value.status);
 					return {
 						email: call.email,
 						inviteUrl: value.invite_url ?? null,
@@ -450,7 +447,10 @@ export function InviteModal({
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-usage"] });
 
 			// already_member / already_invited are idempotent outcomes, not failures.
-			const sentCount = rows.filter((r) => r.state === "sent").length;
+			// Direct adds count as sent; only an all-added result is worded on its own.
+			const addedCount = rows.filter((r) => r.state === "added").length;
+			const sentCount =
+				rows.filter((r) => r.state === "sent").length + addedCount;
 			const idempotentCount = rows.filter(
 				(r) => r.state === "already_member" || r.state === "already_invited",
 			).length;
@@ -458,11 +458,13 @@ export function InviteModal({
 			const failedCount = rows.length - okCount;
 			if (failedCount === 0) {
 				toast.success(
-					sentCount === 1 && idempotentCount === 0
-						? t`Invite sent.`
-						: sentCount === 0
-							? t`No new invites needed. Check the list below.`
-							: t`${sentCount} invites sent.`,
+					sentCount === 0
+						? t`No new invites needed. Check the list below.`
+						: addedCount === sentCount
+							? t`${addedCount} added. Check the list below.`
+							: sentCount === 1 && idempotentCount === 0
+								? t`Invite sent.`
+								: t`${sentCount} invites sent.`,
 				);
 			} else if (okCount === 0) {
 				toast.error(t`No invites went out. Check the list below.`);

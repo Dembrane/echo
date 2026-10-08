@@ -15,15 +15,15 @@ import type { Signed } from "@dembrane/http";
 import { localeOfEmail, localesOfAppUsers } from "@dembrane/i18n";
 import { isoTimestamp } from "@dembrane/legacy-shape";
 import { commercial, orgAccountForNewWorkspace, reconcileSeats } from "../billing";
-import { type Member, requireOnboarded } from "../context";
+import { type Member, requireOnboarded, WorkspaceContext } from "../context";
 import { iso, isUuid } from "../db";
 import { clock, type TenancyDeps } from "../deps";
-import { orgAddedEmail, orgInviteEmail } from "../emails";
+import { orgInviteEmail } from "../emails";
 import { emailJob } from "../jobs";
 import { inviteAcceptUrl, inviteHash } from "../links";
 import { checkLogoFile, deleteLogo, isOwnedFile, saveLogo } from "../logos";
 import { derivationView, effectiveMembers, followsOrgAdmins, seatState } from "../members";
-import { emit, emitToAll, orgAdmins, staffAppUsers } from "../notify";
+import { emit, emitToAll, staffAppUsers } from "../notify";
 import { pyInt, pyRound } from "../numbers";
 import {
   countPendingInvites,
@@ -376,9 +376,20 @@ export function orgService(deps: TenancyDeps) {
     /** Pending org and workspace invites, newest first; `workspaceId` narrows to one workspace. */
     async pendingInvites(who: Signed, orgId: string, workspaceId: string | null) {
       const member = requireOnboarded(who);
-      await requireOrgRole(orgId, member, "admin");
-      const now = iso(clock(deps));
       const wsRows = await orgWorkspaces(db, orgId);
+      // A workspace's own list is also for whoever manages its members, as access requests are.
+      const access =
+        workspaceId !== null && wsRows.some((w) => w.id === workspaceId)
+          ? await resolveWorkspace(deps.accessStore, workspaceId, member, clock(deps))
+          : null;
+      const managesWorkspace =
+        !!access &&
+        access.source !== "staff_support" &&
+        new WorkspaceContext(member, access).allows("member:manage");
+      if (!managesWorkspace) await requireOrgRole(orgId, member, "admin");
+      else if ((await orgById(db, orgId))?.deleted_at !== null)
+        throw new ForbiddenError("organisation.no_access");
+      const now = iso(clock(deps));
       const wsName = new Map(wsRows.map((w) => [w.id, w.name ?? ""]));
       let scope = wsRows.map((w) => w.id);
       let includeOrg = true;
@@ -448,8 +459,8 @@ export function orgService(deps: TenancyDeps) {
     },
 
     /**
-     * Invites to the org without any workspace. An existing account is added at once (or
-     * re-added); anyone else gets an invite link valid for seven days.
+     * Invites to the org without any workspace. Everyone not already a member, with or
+     * without an account, gets an invite link valid for seven days to accept or decline.
      */
     async invite(who: Signed, orgId: string, body: { email: string; role: string }) {
       const member = requireOnboarded(who);
@@ -465,7 +476,6 @@ export function orgService(deps: TenancyDeps) {
       const orgName = org.name || "your organisation";
       const inviterName = me?.display_name || "An admin";
       const now = clock(deps);
-      const orgUrl = `${deps.dashboardUrl}/o/${orgId}`;
 
       const directusUser = await directusUserByEmail(db, email);
       const invitee = directusUser ? await appUserByDirectusId(db, directusUser.id) : null;
@@ -473,57 +483,10 @@ export function orgService(deps: TenancyDeps) {
         if (MANAGERS.includes(role)) await requireNotExternal(orgId, invitee.id);
         const existing = await anyOrgMembership(db, orgId, invitee.id);
         if (existing && existing.deleted_at === null)
-          return {
-            status: "already_member",
-            email,
-            user_existed: true,
-            email_sent: false,
-            invite_url: null,
-          };
-        return db.transaction(async (tx) => {
-          if (existing) {
-            await updateOrgMembership(tx, existing.id, {
-              deleted_at: null,
-              role,
-              updated_at: iso(now),
-            });
-          } else {
-            await insertOrgMembership(tx, {
-              id: newId(),
-              org_id: orgId,
-              user_id: invitee.id,
-              role,
-              created_at: iso(now),
-              updated_at: iso(now),
-            });
-            const others = (await orgAdmins(tx, orgId)).filter(
-              (a) => a !== member.appUserId && a !== invitee.id,
-            );
-            await emitToAll(tx, now, others, {
-              actor: member.appUserId,
-              event: "ORGANISATION_MEMBER_ADDED",
-              title: `${invitee.display_name || email} joined ${orgName}`,
-              message: "They're now an organisation member.",
-              action: "NAVIGATE_ORGANISATION_SETTINGS",
-              orgId,
-            });
-          }
-          // They have an account: their own language, else the inviter's.
-          const langs = await localesOfAppUsers(tx, [invitee.id, member.appUserId]);
-          const mail = orgAddedEmail(
-            { readded: Boolean(existing), inviterName, orgName, role, inviteUrl: orgUrl },
-            langs.get(invitee.id) ?? langs.get(member.appUserId),
-          );
-          await deps.jobs.enqueue(emailJob, { to: email, ...mail, tags: ["org_added"] }, { tx });
-          return {
-            status: existing ? "reactivated" : "added",
-            email,
-            user_existed: true,
-            email_sent: true,
-            invite_url: null,
-          };
-        });
+          return { status: "already_member", email, email_sent: false, invite_url: null };
       }
+      // Anyone not already in the organisation, with or without an account, gets the same
+      // pending invite, so the answer never shows an account exists.
 
       const link = (inviteId: string) =>
         inviteAcceptUrl({
@@ -540,12 +503,12 @@ export function orgService(deps: TenancyDeps) {
         return {
           status: "already_invited",
           email,
-          user_existed: Boolean(directusUser),
           email_sent: false,
           invite_url: link(pending.id),
         };
       const inviteId = newId();
       const url = link(inviteId);
+      const expiresAt = iso(new Date(now.getTime() + 7 * 86_400_000));
       await db.transaction(async (tx) => {
         await insertOrgInvite(tx, {
           id: inviteId,
@@ -553,7 +516,7 @@ export function orgService(deps: TenancyDeps) {
           email,
           role,
           invited_by: member.appUserId,
-          expires_at: iso(new Date(now.getTime() + 7 * 86_400_000)),
+          expires_at: expiresAt,
           created_at: iso(now),
         });
         // No account yet, or one we can match by email: theirs, else the inviter's.
@@ -562,11 +525,20 @@ export function orgService(deps: TenancyDeps) {
           (await localesOfAppUsers(tx, [member.appUserId])).get(member.appUserId);
         const mail = orgInviteEmail({ inviterName, orgName, role, inviteUrl: url }, language);
         await deps.jobs.enqueue(emailJob, { to: email, ...mail, tags: ["org_invite"] }, { tx });
+        if (invitee)
+          await emit(tx, now, invitee.id, {
+            actor: member.appUserId,
+            event: "INVITE_RECEIVED",
+            title: `${inviterName} invited you to ${orgName}`,
+            message: `Accept the invite to join **${orgName}** as ${role}.`,
+            action: "NAVIGATE_INVITE",
+            orgId,
+            expiresAt,
+          });
       });
       return {
         status: "invited",
         email,
-        user_existed: Boolean(directusUser),
         email_sent: true,
         invite_url: url,
       };

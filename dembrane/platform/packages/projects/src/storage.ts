@@ -31,6 +31,7 @@ const {
   processing_status,
   project_chat,
   verification_topic,
+  verification_topic_translations,
   scheduled_task,
   workspace,
   billing_account,
@@ -167,6 +168,43 @@ export function projectsStorage(db: Db) {
         .limit(opts.limit)
         .offset(opts.offset);
       return rows.map(directusRow);
+    },
+
+    // ── verify topics ─────────────────────────────────────────────────
+
+    /** The project's own verify topics with their labels. */
+    async customTopics(projectId: string) {
+      const topics = await db
+        .select()
+        .from(verification_topic)
+        .where(eq(verification_topic.project_id, projectId))
+        .orderBy(asc(verification_topic.key));
+      if (!topics.length) return [];
+      const labels = await db
+        .select()
+        .from(verification_topic_translations)
+        .where(
+          inArray(
+            verification_topic_translations.verification_topic_key,
+            topics.map((t) => t.key),
+          ),
+        )
+        .orderBy(asc(verification_topic_translations.id));
+      return topics.map((t) => ({
+        topic: t,
+        labels: labels.filter((l) => l.verification_topic_key === t.key),
+      }));
+    },
+
+    async insertCustomTopic(
+      topic: typeof verification_topic.$inferInsert,
+      labels: { languages_code: string | null; label: string | null }[],
+    ) {
+      await db.insert(verification_topic).values(topic);
+      if (labels.length)
+        await db
+          .insert(verification_topic_translations)
+          .values(labels.map((l) => ({ ...l, verification_topic_key: topic.key })));
     },
 
     // ── tags ──────────────────────────────────────────────────────────
@@ -442,7 +480,7 @@ export function projectsStorage(db: Db) {
       await db.insert(scheduled_task).values(values);
     },
 
-    /** Cancels still-scheduled tasks of a type whose JSON payload holds every given key and value. */
+    /** Cancels still-scheduled tasks of a type whose JSON payload holds every given key and value; ids match as string or number. */
     async cancelScheduledTasks(taskType: string, match: Record<string, unknown>, now: string) {
       const rows = await db
         .select({ id: scheduled_task.id, payload: scheduled_task.payload })
@@ -451,7 +489,11 @@ export function projectsStorage(db: Db) {
       let n = 0;
       for (const r of rows) {
         const payload = (r.payload ?? {}) as Record<string, unknown>;
-        if (Object.entries(match).every(([k, v]) => payload[k] === v)) {
+        if (
+          Object.entries(match).every(
+            ([k, v]) => payload[k] != null && String(payload[k]) === String(v),
+          )
+        ) {
           await db
             .update(scheduled_task)
             .set({ status: "cancelled", updated_at: now })

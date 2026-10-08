@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Avatar,
@@ -188,8 +188,14 @@ export const PinnedProjectCard = ({
 								{" · "}
 							</>
 						)}
+						<Plural
+							value={conversationCount}
+							one="# conversation"
+							other="# conversations"
+						/>
+						{" · "}
 						<Trans>
-							{conversationCount} conversations · Edited{" "}
+							Edited{" "}
 							{formatRelative(
 								new Date(project.updated_at ?? new Date()),
 								new Date(),

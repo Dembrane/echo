@@ -15,9 +15,10 @@ import {
 	waitFor,
 } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { MemoryRouter } from "react-router";
+import { MemoryRouter, Route as Path, Routes } from "react-router";
 import { afterEach, beforeAll, expect, it, vi } from "vitest";
 import { TransitionCurtainProvider } from "@/components/layout/TransitionCurtainProvider";
+import { useV2Me } from "@/hooks/useV2Me";
 import { CheckYourEmailRoute } from "./CheckYourEmail";
 import { LoginRoute } from "./Login";
 import { RegisterRoute } from "./Register";
@@ -253,3 +254,45 @@ it("a reset request confirms on the page instead of the verification screen", as
 		"reset@example.com",
 	);
 });
+
+it("logging in anyway lands on onboarding with the fresh /v2/me, not the 401 from the held sign-in", async () => {
+	let held = true;
+	stubFetch((url) => {
+		if (url.endsWith("/auth/sign-in/email")) return json(200, {});
+		if (url.endsWith("/auth/other-sessions"))
+			return json(200, { held, since: null });
+		if (url.endsWith("/auth/other-sessions/replace")) {
+			held = false;
+			return json(200, {});
+		}
+		if (url.endsWith("/v2/me"))
+			return held
+				? json(401, {})
+				: json(200, { has_pending_invites: true, onboarding_completed: false });
+		return undefined;
+	});
+	// App.tsx keeps a /v2/me query mounted on every page, the login page included.
+	const AlwaysOn = () => {
+		useV2Me();
+		return null;
+	};
+	const Onboarding = () => {
+		const { data } = useV2Me();
+		return <p>{data?.has_pending_invites ? "invited" : "not invited"}</p>;
+	};
+	wrap(
+		<>
+			<AlwaysOn />
+			<Routes>
+				<Path path="/login" element={<LoginRoute />} />
+				<Path path="/:language/onboarding" element={<Onboarding />} />
+			</Routes>
+		</>,
+		"/login",
+	);
+	logIn("invitee@example.com");
+	fireEvent.click(
+		await screen.findByText("Log in anyway", {}, { timeout: 5000 }),
+	);
+	await screen.findByText("invited", {}, { timeout: 5000 });
+}, 15_000);

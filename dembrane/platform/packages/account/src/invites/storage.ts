@@ -1,7 +1,7 @@
 import { newId } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
-import { and, asc, desc, eq, gt, inArray, isNull, ne } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNull, ne, type SQL, sql } from "drizzle-orm";
 
 const {
   app_user,
@@ -16,6 +16,7 @@ const {
   project,
   project_membership,
   billing_account,
+  notification,
 } = schema;
 
 export type WorkspaceInvite = typeof workspace_invite.$inferSelect;
@@ -260,11 +261,34 @@ export function inviteStorage(db: Db) {
     },
 
     async updateWorkspaceInvite(id: string, patch: Partial<typeof workspace_invite.$inferInsert>) {
-      await db.update(workspace_invite).set(patch).where(eq(workspace_invite.id, id));
+      const rows = await db
+        .update(workspace_invite)
+        .set(patch)
+        .where(eq(workspace_invite.id, id))
+        .returning({ email: workspace_invite.email, workspaceId: workspace_invite.workspace_id });
+      const at = settledAt(patch);
+      for (const r of rows) {
+        const scope = eq(notification.ref_workspace_id, r.workspaceId);
+        if (at) await settleInviteNotices(db, r.email, scope, at);
+        else if (patch.expires_at) await extendInviteNotices(db, r.email, scope, patch.expires_at);
+      }
     },
 
     async updateOrgInvite(id: string, patch: Partial<typeof org_invite.$inferInsert>) {
-      await db.update(org_invite).set(patch).where(eq(org_invite.id, id));
+      const rows = await db
+        .update(org_invite)
+        .set(patch)
+        .where(eq(org_invite.id, id))
+        .returning({ email: org_invite.email, orgId: org_invite.org_id });
+      const at = settledAt(patch);
+      for (const r of rows) {
+        const scope = and(
+          eq(notification.ref_org_id, r.orgId),
+          isNull(notification.ref_workspace_id),
+        ) as SQL;
+        if (at) await settleInviteNotices(db, r.email, scope, at);
+        else if (patch.expires_at) await extendInviteNotices(db, r.email, scope, patch.expires_at);
+      }
     },
 
     // ── workspaces and orgs ──
@@ -597,3 +621,40 @@ export function inviteStorage(db: Db) {
 }
 
 export type InviteStorage = ReturnType<typeof inviteStorage>;
+
+/** When an invite was accepted, declined or revoked; null while it is still open. */
+const settledAt = (p: {
+  accepted_at?: string | null | undefined;
+  deleted_at?: string | null | undefined;
+}) => p.accepted_at ?? p.deleted_at ?? null;
+
+/** The invitee's unread "invited you" notices for one invite's workspace or org. */
+function openInviteNotices(db: Db, email: string, scope: SQL) {
+  const invitee = db
+    .select({ id: app_user.id })
+    .from(app_user)
+    .innerJoin(auth_user, eq(auth_user.id, app_user.directus_user_id))
+    .where(eq(sql`lower(${auth_user.email})`, email.toLowerCase()));
+  return and(
+    inArray(notification.audience_user_id, invitee),
+    eq(notification.event_code, "INVITE_RECEIVED"),
+    isNull(notification.read_at),
+    scope,
+  );
+}
+
+/** A settled invite's "invited you" notices leave the invitee's inbox. */
+async function settleInviteNotices(db: Db, email: string, scope: SQL, at: string) {
+  await db
+    .update(notification)
+    .set({ read_at: at, updated_at: at })
+    .where(openInviteNotices(db, email, scope));
+}
+
+/** An extended invite's notices stay in the inbox as long as the invite does. */
+async function extendInviteNotices(db: Db, email: string, scope: SQL, expiresAt: string) {
+  await db
+    .update(notification)
+    .set({ expires_at: expiresAt, updated_at: new Date().toISOString() })
+    .where(openInviteNotices(db, email, scope));
+}

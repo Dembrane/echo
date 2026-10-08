@@ -66,21 +66,23 @@ async function conversationAggregate(
 }
 
 /**
- * The four card figures: hours all time and this month (deleted conversations keep their
- * billable time), conversation counts all time and this month (live ones only).
+ * The four card figures: hours all time and this month (deleted conversations and projects
+ * keep their billable time), conversation counts all time and this month (live ones of live
+ * projects only).
  */
 export async function cardAggregates(
   db: Conn,
   projectIds: readonly string[],
+  liveProjectIds: readonly string[],
   monthStartIso: string,
 ) {
   const live = isNull(conversation.deleted_at);
   const inMonth = gte(conversation.created_at, monthStartIso);
   const [total, liveAll, month, liveMonth] = await Promise.all([
     conversationAggregate(db, projectIds),
-    conversationAggregate(db, projectIds, live),
+    conversationAggregate(db, liveProjectIds, live),
     conversationAggregate(db, projectIds, inMonth),
-    conversationAggregate(db, projectIds, and(inMonth, live)),
+    conversationAggregate(db, liveProjectIds, and(inMonth, live)),
   ]);
   return {
     hoursSeconds: total.sum,

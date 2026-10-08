@@ -40,7 +40,7 @@ export interface CardUsage {
 
 /**
  * Hours and conversation counts for a workspace card: all time and this month. Hours keep
- * soft-deleted conversations (deleting keeps billable time); counts leave them out.
+ * soft-deleted conversations and projects (deleting keeps billable time); counts leave them out.
  */
 export async function cardUsage(db: Conn, workspaceId: string, now: Date): Promise<CardUsage> {
   const base: CardUsage = {
@@ -54,9 +54,11 @@ export async function cardUsage(db: Conn, workspaceId: string, now: Date): Promi
     approaching_cap: false,
     usage_gates: { over_cap_active: false, uploads_locked: false, upgrade_cta_tier: null },
   };
-  const ids = (await workspaceProjects(db, workspaceId)).map((p) => p.id);
-  if (!ids.length) return base;
-  const agg = await cardAggregates(db, ids, pyIso(monthBounds(now)[0]));
+  const projects = await workspaceProjects(db, workspaceId);
+  if (!projects.length) return base;
+  const ids = projects.map((p) => p.id);
+  const liveIds = projects.filter((p) => !p.deleted_at).map((p) => p.id);
+  const agg = await cardAggregates(db, ids, liveIds, pyIso(monthBounds(now)[0]));
   return {
     ...base,
     audio_hours: pyRound(agg.hoursSeconds / 3600, 1),

@@ -81,7 +81,6 @@ type ShareOutcome = "granted" | "pending" | "pending_other_project" | null;
 function response(
   status: string,
   email: string,
-  userExisted: boolean,
   emailSent: boolean,
   inviteUrl: string | null,
   projectShare: ShareOutcome,
@@ -89,7 +88,6 @@ function response(
   return {
     status,
     email,
-    user_existed: userExisted,
     email_sent: emailSent,
     invite_url: inviteUrl,
     project_share: projectShare,
@@ -110,9 +108,9 @@ async function queueEmail(
 }
 
 /**
- * Invites someone to a workspace by email. An onboarded user is added at once (no
- * consent step, as today); anyone else gets a pending invite with a 7-day link that
- * registration and onboarding accept. `role` is the single axis: external and observer
+ * Invites someone to a workspace by email. A member of the workspace's organisation is
+ * added at once; anyone else, with or without an account, gets a pending invite with a
+ * 7-day link they accept or decline. `role` is the single axis: external and observer
  * are outsiders and never get an org membership.
  */
 export async function inviteToWorkspace(
@@ -172,35 +170,32 @@ export async function inviteToWorkspace(
   const wsName = ws.name;
   const inviterName = inviter?.display_name || "Your organisation";
   const existingUser = await store.directusUserByEmail(email);
-  const userExisted = existingUser !== null;
   const invitee = existingUser ? await store.appUserByDirectusId(existingUser.id) : null;
+  // Only members of the workspace's organisation are added without asking. Anyone else gets
+  // the pending invite an unknown email gets, so the answer never shows an account exists.
+  const inOrg =
+    invitee !== null &&
+    ws.org_id !== null &&
+    (await store.orgMemberships(ws.org_id, invitee.id, { activeOnly: true })).length > 0;
 
-  if (invitee) {
-    const [row] = await store.workspaceMemberships(workspaceId, invitee.id, { activeOnly: false });
-    if (row && !row.deleted_at) {
-      // Re-inviting an active member changes nothing except sweeping their stale invites.
-      try {
-        for (const inv of await store.openWorkspaceInvitesFor(workspaceId, email)) {
-          await grantInviteProjectShare(store, inv, invitee.id, now, deps.logger);
-          await store.updateWorkspaceInvite(inv.id, { accepted_at: now.toISOString() });
-        }
-      } catch (err) {
-        deps.logger?.error({ err, workspaceId }, "already_member: stale invite cleanup failed");
+  const [row] = invitee
+    ? await store.workspaceMemberships(workspaceId, invitee.id, { activeOnly: false })
+    : [];
+  if (invitee && row && !row.deleted_at) {
+    // Re-inviting an active member changes nothing except sweeping their stale invites.
+    try {
+      for (const inv of await store.openWorkspaceInvitesFor(workspaceId, email)) {
+        await grantInviteProjectShare(store, inv, invitee.id, now, deps.logger);
+        await store.updateWorkspaceInvite(inv.id, { accepted_at: now.toISOString() });
       }
-      if (shareProject) await store.upsertProjectShare(shareProject.id, invitee.id, me, now);
-      return response("already_member", email, true, false, null, shareProject ? "granted" : null);
+    } catch (err) {
+      deps.logger?.error({ err, workspaceId }, "already_member: stale invite cleanup failed");
     }
+    if (shareProject) await store.upsertProjectShare(shareProject.id, invitee.id, me, now);
+    return response("already_member", email, false, null, shareProject ? "granted" : null);
+  }
 
-    let newlyJoinedOrg = false;
-    if (!outsider && ws.org_id) {
-      const orgRows = await store.orgMemberships(ws.org_id, invitee.id, { activeOnly: true });
-      if (!orgRows.length)
-        newlyJoinedOrg = await store.createMembership(
-          "org",
-          { orgId: ws.org_id, userId: invitee.id, role: "member" },
-          now,
-        );
-    }
+  if (invitee && inOrg) {
     if (outsider && ws.org_id) await reconcileOutsider(store, ws.org_id, invitee.id, now);
 
     let reactivated = false;
@@ -232,18 +227,6 @@ export async function inviteToWorkspace(
       refWorkspaceId: workspaceId,
       refOrgId: ws.org_id,
     });
-    if (newlyJoinedOrg && ws.org_id) {
-      const admins = await ctx.audiences.organisationAdmins(ws.org_id);
-      const org = await store.org(ws.org_id);
-      await deps.notifier.emitToAudience(admins, {
-        actorUserId: me,
-        eventCode: "ORGANISATION_MEMBER_ADDED",
-        title: `${invitee.display_name || email || "A new member"} joined ${org?.name || "the organisation"}`,
-        message: "They're now a organisation member.",
-        action: "NAVIGATE_ORGANISATION_SETTINGS",
-        refOrgId: ws.org_id,
-      });
-    }
     if (outsider) {
       const admins = (await ctx.audiences.workspaceAdmins(workspaceId)).filter(
         (a) => a !== me && a !== invitee.id,
@@ -281,7 +264,6 @@ export async function inviteToWorkspace(
     return response(
       reactivated ? "reactivated" : "added",
       email,
-      true,
       sent,
       null,
       shareProject ? "granted" : null,
@@ -311,17 +293,18 @@ export async function inviteToWorkspace(
         pending = "pending";
       } else pending = "pending_other_project";
     }
-    return response("already_invited", email, userExisted, false, url(existing.id), pending);
+    return response("already_invited", email, false, url(existing.id), pending);
   }
 
   const inviteId = newId();
+  const expiresAt = new Date(now.getTime() + INVITE_DAYS * 86_400_000).toISOString();
   await store.insertWorkspaceInvite({
     id: inviteId,
     workspace_id: workspaceId,
     email,
     role,
     invited_by: me,
-    expires_at: new Date(now.getTime() + INVITE_DAYS * 86_400_000).toISOString(),
+    expires_at: expiresAt,
     created_at: now.toISOString(),
     ...(shareProject && { project_id: shareProject.id }),
   });
@@ -339,5 +322,16 @@ export async function inviteToWorkspace(
     },
     context: `workspace_invite / workspace ${workspaceId}`,
   });
-  return response("invited", email, userExisted, sent, inviteUrl, shareProject ? "pending" : null);
+  if (invitee)
+    await deps.notifier.emit({
+      audienceUserId: invitee.id,
+      actorUserId: me,
+      eventCode: "INVITE_RECEIVED",
+      title: `${inviterName} invited you to ${wsName ?? "a workspace"}`,
+      message: `Accept the invite to join **${wsName ?? ""}** as ${role}.`,
+      action: "NAVIGATE_INVITE",
+      refWorkspaceId: workspaceId,
+      expiresAt,
+    });
+  return response("invited", email, sent, inviteUrl, shareProject ? "pending" : null);
 }

@@ -143,4 +143,42 @@ run("BFF conversation move", () => {
     expect(((await res.json()) as { code: string }).code).toBe("conversation.move_same_project");
     expect(await stored(id)).toEqual({ project_id: alpha, move_history: null });
   });
+
+  test("the detail says whether a conversation is typed text only, as the list does", async () => {
+    const typed = await conversationIn(alpha);
+    const recorded = await conversationIn(alpha);
+    await sql`insert into conversation_chunk (id, conversation_id, timestamp, source, transcript, created_at, updated_at) values
+      (${newId()}, ${typed}, now(), 'PORTAL_TEXT', 'hello', now(), now()),
+      (${newId()}, ${recorded}, now(), 'PORTAL_AUDIO', null, now(), now())`;
+    const detail = async (id: string) =>
+      (
+        (await (await app.request(`/api/v2/bff/conversations/${id}`)).json()) as Record<
+          string,
+          unknown
+        >
+      ).has_only_text_chunks;
+    expect(await detail(typed)).toBe(true);
+    expect(await detail(recorded)).toBe(false);
+  });
+
+  test("the list says which conversations still have chunks waiting for a transcript", async () => {
+    const project = newId();
+    await sql`insert into project (id, name, workspace_id, is_conversation_allowed) values (${project}, 'Pending', ${wsA}, true)`;
+    const [waiting, done, failed, empty] = [
+      await conversationIn(project),
+      await conversationIn(project),
+      await conversationIn(project),
+      await conversationIn(project),
+    ];
+    await sql`insert into conversation_chunk (id, conversation_id, timestamp, source, transcript, error, created_at, updated_at) values
+      (${newId()}, ${waiting}, now(), 'PORTAL_AUDIO', 'heard', null, now(), now()),
+      (${newId()}, ${waiting}, now(), 'PORTAL_AUDIO', null, null, now(), now()),
+      (${newId()}, ${done}, now(), 'PORTAL_AUDIO', 'heard', null, now(), now()),
+      (${newId()}, ${failed}, now(), 'PORTAL_AUDIO', null, 'Audio not playable', now(), now())`;
+    const rows = (await (
+      await app.request(`/api/v2/bff/conversations?project_id=${project}`)
+    ).json()) as { id: string; has_pending_chunks: unknown }[];
+    const pending = Object.fromEntries(rows.map((r) => [r.id, r.has_pending_chunks]));
+    expect(pending).toEqual({ [waiting]: true, [done]: false, [failed]: false, [empty]: false });
+  });
 });

@@ -25,6 +25,7 @@ const SEVERITY: Record<string, NotificationSeverity> = {
   INVITE_CANCELLED: "destructive",
   REPORT_FAILED: "destructive",
   MEMBERSHIP_REQUESTED: "action_required",
+  INVITE_RECEIVED: "action_required",
   INVITE_BLOCKED_AT_CAP: "action_required",
   INVITE_PENDING_AT_CAP: "action_required",
   WORKSPACE_REQUEST_SUBMITTED: "action_required",

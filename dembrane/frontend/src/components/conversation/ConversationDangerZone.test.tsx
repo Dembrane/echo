@@ -73,7 +73,7 @@ beforeAll(() => {
 
 const conversation = { id: "c1" } as Conversation;
 
-const renderZone = () =>
+const renderZone = (c: Conversation = conversation) =>
 	render(
 		<I18nProvider i18n={i18n}>
 			<MantineProvider>
@@ -81,7 +81,7 @@ const renderZone = () =>
 					<Routes>
 						<Route
 							path="/w/:workspaceId/projects/:projectId/conversations/:conversationId"
-							element={<ConversationDangerZone conversation={conversation} />}
+							element={<ConversationDangerZone conversation={c} />}
 						/>
 					</Routes>
 				</MemoryRouter>
@@ -136,5 +136,20 @@ describe("ConversationDangerZone role gating", () => {
 		expect(
 			screen.getByTestId("conversation-download-audio-button"),
 		).toBeTruthy();
+	});
+});
+
+describe("ConversationDangerZone download", () => {
+	it("a text-only conversation has no audio to download", () => {
+		renderZone({ ...conversation, has_only_text_chunks: true });
+		const button = screen.getByTestId("conversation-download-audio-button");
+		expect(button.getAttribute("href")).toBeNull();
+		expect(button.getAttribute("data-disabled")).toBe("true");
+	});
+
+	it("a recorded conversation links to its audio", () => {
+		renderZone();
+		const button = screen.getByTestId("conversation-download-audio-button");
+		expect(button.getAttribute("href")).toContain("/conversations/c1/content");
 	});
 });

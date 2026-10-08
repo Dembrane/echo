@@ -197,6 +197,7 @@ export function buildApp(deps: Deps) {
       jobs: queueSink(deps.queue),
       dashboardUrl: deps.config.http.dashboardUrl,
       inviteSecret: deps.config.account.inviteHashSecret,
+      logos: { objects: deps.files, location: deps.config.files.directusLocation },
       onProjectCreated: onboarding.projectCreated,
     }),
   );

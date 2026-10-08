@@ -35,6 +35,9 @@ export const ConversationDangerZone = ({
 	const [confirmOpened, { open: openConfirm, close: closeConfirm }] =
 		useDisclosure(false);
 
+	const textOnly = !!conversation.has_only_text_chunks;
+	const noDownload = disableDownloadAudio || locked || textOnly;
+
 	const handleDownloadAudio = () => {
 		posthog.capture("conversation_audio_downloaded");
 	};
@@ -52,9 +55,11 @@ export const ConversationDangerZone = ({
 									? t`Upgrade your workspace to download audio for conversations recorded after the cap`
 									: disableDownloadAudio
 										? t`Audio download not available for anonymized conversations`
-										: undefined
+										: textOnly
+											? t`This conversation is text only, so there is no audio to download`
+											: undefined
 							}
-							disabled={!disableDownloadAudio && !locked}
+							disabled={!noDownload}
 							maw={250}
 							multiline
 						>
@@ -63,16 +68,12 @@ export const ConversationDangerZone = ({
 								component="a"
 								target="_blank"
 								href={
-									disableDownloadAudio || locked
+									noDownload
 										? undefined
 										: getConversationContentLink(conversation.id)
 								}
-								onClick={
-									disableDownloadAudio || locked
-										? undefined
-										: handleDownloadAudio
-								}
-								disabled={disableDownloadAudio || locked}
+								onClick={noDownload ? undefined : handleDownloadAudio}
+								disabled={noDownload}
 								{...testId("conversation-download-audio-button")}
 							>
 								<Trans>Download audio</Trans>

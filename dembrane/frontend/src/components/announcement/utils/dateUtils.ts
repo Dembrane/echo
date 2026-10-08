@@ -1,20 +1,6 @@
 import { formatRelative } from "date-fns";
-import { cs, de, enUS, es, fr, it, nl, uk } from "date-fns/locale";
 import { useLanguage } from "@/hooks/useLanguage";
-
-// Map of supported locales to date-fns locales
-const localeMap = {
-	"cs-CZ": cs,
-	"de-DE": de,
-	"en-US": enUS,
-	"es-ES": es,
-	"fr-FR": fr,
-	"it-IT": it,
-	"nl-NL": nl,
-	"uk-UA": uk,
-} as const;
-
-type SupportedLocale = keyof typeof localeMap;
+import { dateFnsLocale } from "@/lib/dateLocale";
 
 export const formatDate = (
 	date: string | Date | null | undefined,
@@ -26,10 +12,7 @@ export const formatDate = (
 
 	if (Number.isNaN(dateObj.getTime())) return "";
 
-	const currentLocale =
-		localeMap[locale as SupportedLocale] || localeMap["en-US"];
-
-	return formatRelative(dateObj, new Date(), { locale: currentLocale });
+	return formatRelative(dateObj, new Date(), { locale: dateFnsLocale(locale) });
 };
 
 export const useFormatDate = () => {

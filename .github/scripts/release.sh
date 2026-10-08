@@ -5,8 +5,17 @@
 #   release.sh prs <from> <to>                      merged PRs with a commit in from..to (JSON)
 #   release.sh staging-summary <from> <to>             the staging deploy summary (Markdown)
 #   release.sh release-notes <tag> [<prev> [<to>]]  the release title, then its notes
+#   release.sh announce-start <staging|prod> <ref>     as a deploy begins: "... environment updating" in Slack
+#   release.sh announce-failed <staging|prod> <ref> [<step>]   a deploy that stopped: "... not updated"
 #   release.sh announce-staging <sha>                  after a staging deploy: job summary, Slack, PR comments
 #   release.sh publish-release <tag>                after a prod deploy: Release, Slack, PR comments, sam
+#
+# #alerts-ci gets one message per deploy. It is posted as the deploy begins ("Staging
+# environment updating", with each PR the deploy carries: its title, the first paragraph of its
+# description, its author and its link) and edited in place when the deploy ends, to "updated"
+# with the dashboard's full link or to "not updated" with what stopped it. SLACK_TS is the
+# message to edit; without it the final state is posted as a new message. slack.jq draws the
+# messages.
 #
 # DRY_RUN=1 reads GitHub as usual and prints each post, comment, release and event instead of
 # sending it. Nothing here is customer-facing: the in-app release notes are drafted by sam from
@@ -21,10 +30,15 @@ SERVER=${GITHUB_SERVER_URL:-https://github.com}
 RUN_URL=${GITHUB_RUN_ID:+$SERVER/$REPO/actions/runs/$GITHUB_RUN_ID}
 DRY_RUN=${DRY_RUN:-0}
 TEAM_CHANNEL=${TEAM_CHANNEL:-C0884QPQF6W} # #team-engineering: releases to prod
-STAGING_CHANNEL=${STAGING_CHANNEL:-C0C4HBZNSNT} # #alerts-ci: every staging deploy
+ALERTS_CHANNEL=${ALERTS_CHANNEL:-C0C4HBZNSNT} # #alerts-ci: every staging and prod deploy
 STAGING_DASHBOARD_URL=${STAGING_DASHBOARD_URL:-https://dashboard.staging.dembrane.com}
 PROD_DASHBOARD_URL=${PROD_DASHBOARD_URL:-https://dashboard.dembrane.com}
 SLACK_LINES=${SLACK_LINES:-40}
+# A message holds at most 50 blocks; each PR takes three.
+SLACK_PRS=${SLACK_PRS:-10}
+LIB=$(dirname "${BASH_SOURCE[0]}")
+# shellcheck source=.github/scripts/slack.sh
+. "$LIB/slack.sh"
 failed=0
 
 now() { date -u '+%Y-%m-%d %H:%M UTC'; }
@@ -37,20 +51,26 @@ prs() {
   # to contain a commit (a long-lived branch's PR) are left out.
   gh api "repos/$REPO/compare/$from...$to?per_page=100" --paginate --jq '.commits[].sha' |
     xargs -r -P 8 -I{} gh api "repos/$REPO/commits/{}/pulls" \
-      --jq '.[] | select(.merged_at != null) | {number, title, author: .user.login, url: .html_url} | @json' |
+      --jq '.[] | select(.merged_at != null) | {number, title, author: .user.login, url: .html_url, body: (.body // "")} | @json' |
     jq -s 'unique_by(.number)'
 }
 
 short() { gh api "repos/$REPO/commits/$1" --jq '.sha[0:7]'; }
+
+# A PR's description is only for the #alerts-ci messages.
+without_bodies() { jq 'map(del(.body))'; }
 
 # One line per PR: markdown for GitHub, mrkdwn for Slack.
 md_lines() { jq -r '.[] | "- #\(.number) \(.title) @\(.author)"'; }
 slack_lines() {
   jq -r --argjson max "$SLACK_LINES" '
     def esc: gsub("&"; "&amp;") | gsub("<"; "&lt;") | gsub(">"; "&gt;");
-    (.[:$max][] | "• <\(.url)|#\(.number)> \(.title | esc) (\(.author))"),
+    (.[:$max][] | "• \(.title | esc) (\(.author)) \(.url)"),
     (if length > $max then "and \(length - $max) more in the compare view" else empty end)'
 }
+
+# A message slack.jq draws from the PRs a deploy carries.
+message() { jq -c -L "$LIB" --argjson max "$SLACK_PRS" "include \"slack\"; $1" "${@:2}"; }
 
 staging_summary() {
   local from=$1 to=$2 list=${3:-} a b n
@@ -117,14 +137,10 @@ release_notes() {
   echo "**Full Changelog**: $SERVER/$REPO/compare/$prev...$tag"
 }
 
+# slack_send, with a post that did not arrive counted as a failed step.
 slack_post() {
-  local channel=$1 text=$2
-  if dry; then printf '[dry run] Slack %s:\n%s\n\n' "$channel" "$text"; return 0; fi
-  [ -n "${SLACK_TOKEN:-}" ] || { warn "SLACK_TOKEN is not set; skipped the Slack post"; return 0; }
-  jq -n --arg c "$channel" --arg t "$text" '{channel: $c, text: $t, unfurl_links: false, unfurl_media: false}' |
-    curl -sS -X POST https://slack.com/api/chat.postMessage \
-      -H "Authorization: Bearer $SLACK_TOKEN" -H 'content-type: application/json; charset=utf-8' --data @- |
-    jq -e .ok >/dev/null || warn "Slack post to $channel failed"
+  slack_send "$@"
+  [ -n "$slack_ts" ] || warn "Slack post to $1 failed"
 }
 
 comment_prs() {
@@ -149,22 +165,47 @@ previous_deploy() {
   echo "$(gh api "repos/$REPO/releases/latest" --jq .tag_name) release"
 }
 
+# Where the list of PRs for a deploy of <ref> to <env> starts, and how it was found.
+# STAGING_FROM=<sha> starts staging's list there instead, as if it had last been deployed from it.
+deploy_from() {
+  case "$1" in
+    staging) if [ -n "${STAGING_FROM:-}" ]; then echo "$STAGING_FROM deployment"; else previous_deploy staging; fi ;;
+    prod) echo "${PREV_TAG:-$(previous_tag "$2")} release" ;;
+    *) echo "unknown environment: $1" >&2; exit 2 ;;
+  esac
+}
+env_name() { [ "$1" = prod ] && echo Production || echo Staging; }
+
+# Posted as the deploy begins; the workflow hands its timestamp to the step that ends it.
+announce_start() {
+  local env=$1 ref=$2 prev list
+  read -r prev _ < <(deploy_from "$env" "$ref")
+  list=$(prs "$prev" "$ref")
+  slack_post "$ALERTS_CHANNEL" "$(message 'starting($head; $run; $max)' --arg head "$(env_name "$env") environment updating" --arg run "$RUN_URL" <<<"$list")"
+  dry || [ -z "${GITHUB_OUTPUT:-}" ] || echo "slack_ts=$slack_ts" >> "$GITHUB_OUTPUT"
+}
+
+# <step> is the deploy job's step that failed, or "cancelled".
+announce_failed() {
+  local env=$1 ref=$2 step=${3:-} prev list name
+  read -r prev _ < <(deploy_from "$env" "$ref")
+  list=$(prs "$prev" "$ref") || list='[]'
+  name=$(env_name "$env")
+  slack_post "$ALERTS_CHANNEL" "$(message 'stopped($head; ([{name: "deploy", step: $step}] | reasons) + ", so \($name | ascii_downcase) was not updated."; $run; $max)' \
+    --arg head "$name environment not updated" --arg name "$name" --arg step "$step" --arg run "$RUN_URL" <<<"$list")" "" "${SLACK_TS:-}"
+}
+
 announce_staging() {
-  local sha=$1 prev kind list b text
-  # STAGING_FROM=<sha> starts the list there instead, as if staging had last been deployed from it.
-  if [ -n "${STAGING_FROM:-}" ]; then prev=$STAGING_FROM kind=deployment
-  else read -r prev kind < <(previous_deploy staging); fi
+  local sha=$1 prev kind list b
+  read -r prev kind < <(deploy_from staging "$sha")
   list=$(prs "$prev" "$sha")
   b=$(short "$sha")
   echo "::group::staging summary ($kind $prev..$b)"
   staging_summary "$prev" "$sha" "$list" | summary
   echo "::endgroup::"
-  # What changed and where to look at it: the pull requests by title, and the dashboard.
-  # Commit ids stay in the job summary.
-  text="*Staging updated* · <$STAGING_DASHBOARD_URL|open staging>"
-  if [ "$(jq length <<<"$list")" = 0 ]; then text+=$'\n'"No new pull requests."
-  else text+=$'\n'"$(slack_lines <<<"$list")"; fi
-  slack_post "$STAGING_CHANNEL" "$text"
+  # What changed and where to look at it: the dashboard's link and the pull requests. Commit
+  # ids stay in the job summary.
+  slack_post "$ALERTS_CHANNEL" "$(message 'environment(":large_blue_circle:"; "Staging environment updated"; $url; $max)' --arg url "$STAGING_DASHBOARD_URL" <<<"$list")" "" "${SLACK_TS:-}"
   # Without an earlier staging deployment the list reaches back to the last release, and those
   # PRs were never told they were on staging: comments start from the second deploy.
   if [ "$kind" = deployment ]; then
@@ -211,12 +252,13 @@ publish_release() {
       warn "creating the $tag release failed"
   fi
   n=$(jq length <<<"$list")
-  text="*$title* is live on prod · $n pull request$([ "$n" = 1 ] || echo s) since $prev · <$url|release notes> · <$PROD_DASHBOARD_URL|open the dashboard>"
+  text="*$title* is live on prod · $n pull request$([ "$n" = 1 ] || echo s) since $prev"$'\n'"Release notes: $url"$'\n'"Dashboard: $PROD_DASHBOARD_URL"
   [ "$n" = 0 ] || text+=$'\n'"$(slack_lines <<<"$list")"
-  slack_post "$TEAM_CHANNEL" "$text"
+  slack_post "$TEAM_CHANNEL" "$(jq -n --arg t "$text" '{text: $t}')"
+  slack_post "$ALERTS_CHANNEL" "$(message 'environment(":large_green_circle:"; "Production environment updated"; $url; $max)' --arg url "$PROD_DASHBOARD_URL" <<<"$list")" "" "${SLACK_TS:-}"
   comment_prs "$list" "Released in [$tag]($url)."
   sam_event "$(jq -n --arg tag "$tag" --arg title "$title" --arg url "$url" --arg sha "$sha" \
-    --arg prev "$prev" --arg notes "$notes" --arg repo "$REPO" --argjson prs "$list" \
+    --arg prev "$prev" --arg notes "$notes" --arg repo "$REPO" --argjson prs "$(without_bodies <<<"$list")" \
     --arg id "$(python3 -c 'import uuid; print(uuid.uuid4())')" --arg ts "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)" '
     {event: "release.published", id: $id, timestamp: $ts,
      release: {repository: $repo, tag: $tag, name: $title, url: $url, sha: $sha, previous_tag: $prev,
@@ -224,11 +266,13 @@ publish_release() {
 }
 
 case "${1:-}" in
-  prs) prs "$2" "$3" ;;
+  prs) prs "$2" "$3" | without_bodies ;;
   staging-summary) staging_summary "$2" "$3" ;;
   release-notes) release_notes "$2" "${3:-}" "${4:-}" ;;
+  announce-start) announce_start "$2" "$3" ;;
+  announce-failed) announce_failed "$2" "$3" "${4:-}" ;;
   announce-staging) announce_staging "$2" ;;
   publish-release) publish_release "$2" ;;
-  *) sed -n '2,9p' "$0"; exit 2 ;;
+  *) sed -n '2,11p' "$0"; exit 2 ;;
 esac
 exit "$failed"

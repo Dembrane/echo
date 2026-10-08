@@ -345,10 +345,10 @@
     "live": "aktivní",
     "not live until you publish": "není aktivní, dokud nezveřejníte",
     "ready to publish": "připraveno ke zveřejnění",
+    "{0, plural, one {# fictional conversation authored.} other {# fictional conversations authored.}}": "{0, plural, one {# vytvořený fiktivní rozhovor.} few {# vytvořené fiktivní rozhovory.} other {# vytvořených fiktivních rozhovorů.}}",
     "{0, plural, one {# field} other {# fields}}": "{0, plural, one {# pole} few {# pole} other {# polí}}",
     "{0, plural, one {You have # thing to do in {name}} other {You have # things to do in {name}}}": "{0, plural, one {V {name} na vás čeká # úkol} few {V {name} na vás čekají # úkoly} many {V {name} na vás čeká # úkolu} other {V {name} na vás čeká # úkolů}}",
     "{0} excl. VAT, {1} incl.": "{0} bez VAT, {1} vč.",
-    "{0} fictional conversations authored.": "Vytvořeno {0} fiktivních rozhovorů.",
     "{0} of {1} done": "{0} z {1} hotovo",
     "{0} signed on {1}. The signed copy is in your documents.": "{0} podepsáno dne {1}. Podepsaná kopie je ve vašich dokumentech.",
     "{done} of {total} filled": "{done} z {total} vyplněno"
@@ -699,10 +699,10 @@
     "live": "live",
     "not live until you publish": "nicht live, bis Sie veröffentlichen",
     "ready to publish": "bereit zum Veröffentlichen",
+    "{0, plural, one {# fictional conversation authored.} other {# fictional conversations authored.}}": "{0, plural, one {# fiktives Gespräch erstellt.} other {# fiktive Gespräche erstellt.}}",
     "{0, plural, one {# field} other {# fields}}": "{0, plural, one {# Feld} other {# Felder}}",
     "{0, plural, one {You have # thing to do in {name}} other {You have # things to do in {name}}}": "{0, plural, one {Bei {name} wartet # Aufgabe auf Sie} other {Bei {name} warten # Aufgaben auf Sie}}",
     "{0} excl. VAT, {1} incl.": "{0} zzgl. VAT, {1} inkl.",
-    "{0} fictional conversations authored.": "{0} fiktive Gespräche erstellt.",
     "{0} of {1} done": "{0} von {1} erledigt",
     "{0} signed on {1}. The signed copy is in your documents.": "{0} hat am {1} unterschrieben. Die signierte Kopie befindet sich in Ihren Dokumenten.",
     "{done} of {total} filled": "{done} von {total} ausgefüllt"
@@ -1053,10 +1053,10 @@
     "live": "activa",
     "not live until you publish": "no estará activa hasta que la publiques",
     "ready to publish": "listo para publicar",
+    "{0, plural, one {# fictional conversation authored.} other {# fictional conversations authored.}}": "{0, plural, one {# conversación ficticia creada.} other {# conversaciones ficticias creadas.}}",
     "{0, plural, one {# field} other {# fields}}": "{0, plural, one {# campo} other {# campos}}",
     "{0, plural, one {You have # thing to do in {name}} other {You have # things to do in {name}}}": "{0, plural, one {Tienes # cosa por hacer en {name}} other {Tienes # cosas por hacer en {name}}}",
     "{0} excl. VAT, {1} incl.": "{0} sin VAT, {1} con VAT",
-    "{0} fictional conversations authored.": "{0} conversaciones ficticias creadas.",
     "{0} of {1} done": "{0} de {1} completadas",
     "{0} signed on {1}. The signed copy is in your documents.": "{0} firmó el {1}. La copia firmada está en tus documentos.",
     "{done} of {total} filled": "{done} de {total} completados"
@@ -1407,10 +1407,10 @@
     "live": "en direct",
     "not live until you publish": "pas en ligne tant que vous n'avez pas publié",
     "ready to publish": "prêt à publier",
+    "{0, plural, one {# fictional conversation authored.} other {# fictional conversations authored.}}": "{0, plural, one {# conversation fictive créée.} other {# conversations fictives créées.}}",
     "{0, plural, one {# field} other {# fields}}": "{0, plural, one {# champ} other {# champs}}",
     "{0, plural, one {You have # thing to do in {name}} other {You have # things to do in {name}}}": "{0, plural, one {Vous avez # chose à faire chez {name}} other {Vous avez # choses à faire chez {name}}}",
     "{0} excl. VAT, {1} incl.": "{0} hors VAT, {1} avec.",
-    "{0} fictional conversations authored.": "{0} conversations fictives créées.",
     "{0} of {1} done": "{0} sur {1} terminées",
     "{0} signed on {1}. The signed copy is in your documents.": "{0} a signé le {1}. L'exemplaire signé est dans vos documents.",
     "{done} of {total} filled": "{done} sur {total} remplis"
@@ -1761,10 +1761,10 @@
     "live": "pubblicato",
     "not live until you publish": "non visibile finché non pubblichi",
     "ready to publish": "pronto per la pubblicazione",
+    "{0, plural, one {# fictional conversation authored.} other {# fictional conversations authored.}}": "{0, plural, one {# conversazione fittizia creata.} other {# conversazioni fittizie create.}}",
     "{0, plural, one {# field} other {# fields}}": "{0, plural, one {# campo} other {# campi}}",
     "{0, plural, one {You have # thing to do in {name}} other {You have # things to do in {name}}}": "{0, plural, one {Hai # cosa da fare in {name}} other {Hai # cose da fare in {name}}}",
     "{0} excl. VAT, {1} incl.": "{0} IVA esclusa, {1} IVA inclusa",
-    "{0} fictional conversations authored.": "{0} conversazioni fittizie create.",
     "{0} of {1} done": "{0} di {1} completate",
     "{0} signed on {1}. The signed copy is in your documents.": "{0} ha firmato il {1}. La copia firmata è nei tuoi documenti.",
     "{done} of {total} filled": "{done} di {total} compilati"
@@ -1776,7 +1776,8 @@
     "Open the tutorial": "Open de tutorial",
     "See how dembrane works, from setting up a project to reading what people said.": "Zie hoe dembrane werkt, van een project opzetten tot teruglezen wat mensen zeiden.",
     "Set up a project of your own for your first real session.": "Zet een eigen project op voor je eerste echte sessie.",
-    "Watch the tutorial": "Bekijk de tutorial"
+    "Watch the tutorial": "Bekijk de tutorial",
+    "{0, plural, one {# fictional conversation authored.} other {# fictional conversations authored.}}": "{0, plural, one {# fictief gesprek gemaakt.} other {# fictieve gesprekken gemaakt.}}"
   },
   "uk-UA": {
     "A draft on their account, for you to send after the demo.": "Чернетка в їхньому обліковому записі, яку ви зможете надіслати після демо.",
@@ -2124,10 +2125,10 @@
     "live": "опубліковано",
     "not live until you publish": "недоступно, доки ви не опублікуєте",
     "ready to publish": "готово до публікації",
+    "{0, plural, one {# fictional conversation authored.} other {# fictional conversations authored.}}": "{0, plural, one {Створено # вигадану розмову.} few {Створено # вигадані розмови.} other {Створено # вигаданих розмов.}}",
     "{0, plural, one {# field} other {# fields}}": "{0, plural, one {# поле} few {# поля} many {# полів} other {# поля}}",
     "{0, plural, one {You have # thing to do in {name}} other {You have # things to do in {name}}}": "{0, plural, one {У {name} на Вас чекає # завдання} few {У {name} на Вас чекають # завдання} many {У {name} на Вас чекають # завдань} other {У {name} на Вас чекають # завдання}}",
     "{0} excl. VAT, {1} incl.": "{0} без ПДВ, {1} з ПДВ",
-    "{0} fictional conversations authored.": "Створено {0} вигаданих розмов.",
     "{0} of {1} done": "Виконано {0} з {1}",
     "{0} signed on {1}. The signed copy is in your documents.": "{0} підписав(-ла) {1}. Підписана копія у ваших документах.",
     "{done} of {total} filled": "Заповнено {done} з {total}"

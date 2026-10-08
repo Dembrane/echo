@@ -137,6 +137,12 @@ describe("isPersistedMessageId", () => {
 		);
 	});
 
+	it("accepts the platform's v7 ids", () => {
+		expect(isPersistedMessageId("01a11bc1-786a-70c8-9ab5-aac2371d501f")).toBe(
+			true,
+		);
+	});
+
 	it("rejects ai-sdk nanoids, the init placeholder, and non-strings", () => {
 		expect(isPersistedMessageId("kX9fQ2LmN7pR3sT4v")).toBe(false);
 		expect(isPersistedMessageId("init")).toBe(false);

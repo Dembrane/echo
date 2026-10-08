@@ -166,13 +166,13 @@ msgstr "Welcome back"
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationText.tsx:206
 #~ msgid "participant.button.finish.yes.text.mode"
-#~ msgstr "Yes"
+#~ msgstr "Yes<<<<<<< HEAD"
 
-#: src/components/popcorn/PopcornStatus.tsx:42
+#: src/components/popcorn/PopcornStatus.tsx:49
 msgid " · {heldBack} held back"
 msgstr "· {heldBack} pozastaveno"
 
-#: src/components/popcorn/PopcornStatus.tsx:61
+#: src/components/popcorn/PopcornStatus.tsx:71
 msgid " · failed"
 msgstr "· selhalo"
 
@@ -271,7 +271,7 @@ msgid "{0, plural, one {# conversation is hidden from the map.} other {# convers
 msgstr "{0, plural, one {# konverzace je na mapě skrytá.} few {# konverzace jsou na mapě skryté.} many {# konverzace je na mapě skryto.} other {# konverzací je na mapě skryto.}}"
 
 #. placeholder {0}: summary.live
-#: src/features/processes/watchers.tsx:157
+#: src/features/processes/watchers.tsx:167
 msgid "{0, plural, one {# conversation recording} other {# conversations recording}}"
 msgstr "{0, plural, one {# konverzace se nahrává} few {# konverzace se nahrávají} many {# konverzace se nahrává} other {# konverzací se nahrává}}"
 
@@ -280,15 +280,19 @@ msgstr "{0, plural, one {# konverzace se nahrává} few {# konverzace se nahráv
 msgid "{0, plural, one {# conversation will be hidden along with it.} other {# conversations will be hidden along with it.}}"
 msgstr "{0, plural, one {# conversation will be hidden along with it.} other {# conversations will be hidden along with it.}}"
 
+#. placeholder {0}: counts.conversations
 #. placeholder {0}: p.conversation_count
-#. placeholder {0}: unique.length
+#. placeholder {0}: project.conversations_count ?? project?.conversations?.length ?? 0
+#: src/routes/project/popcorn/PopcornRoute.tsx:49
 #: src/components/workspace/OrganisationUsageRollup.tsx:812
+#: src/components/project/ProjectListItem.tsx:219
+#: src/components/popcorn/PopcornStatus.tsx:41
 #: src/components/map/panels/SpotlightPanel.tsx:144
 msgid "{0, plural, one {# conversation} other {# conversations}}"
 msgstr "{0, plural, one {# conversation} other {# conversations}}"
 
 #. placeholder {0}: list.activeFiltersCount
-#: src/components/conversation/ConversationsMiniList.tsx:211
+#: src/components/conversation/ConversationsMiniList.tsx:219
 msgid "{0, plural, one {# filter} other {# filters}}"
 msgstr "{0, plural, one {# filtr} few {# filtry} many {# filtru} other {# filtrů}}"
 
@@ -313,7 +317,7 @@ msgid "{0, plural, one {# offline} other {# offline}}"
 msgstr "{0, plural, one {# offline} few {# offline} other {# offline}}"
 
 #. placeholder {0}: summary.pending_transcription
-#: src/features/processes/watchers.tsx:163
+#: src/features/processes/watchers.tsx:173
 msgid "{0, plural, one {# part to transcribe} other {# parts to transcribe}}"
 msgstr "{0, plural, one {# část k přepisu} few {# části k přepisu} many {# části k přepisu} other {# částí k přepisu}}"
 
@@ -325,7 +329,9 @@ msgid "{0, plural, one {# payment} other {# payments}}"
 msgstr "{0, plural, one {# platba} few {# platby} other {# plateb}}"
 
 #. placeholder {0}: presentation.counts.phrases
+#. placeholder {0}: counts.phrases
 #: src/routes/project/present/PresentRoute.tsx:858
+#: src/routes/project/popcorn/PopcornRoute.tsx:53
 msgid "{0, plural, one {# phrase} other {# phrases}}"
 msgstr "{0, plural, one {# fráze} few {# fráze} other {# frází}}"
 
@@ -346,7 +352,7 @@ msgstr "{0, plural, one {# místo} few {# místa} other {# míst}}"
 #. placeholder {0}: line.addedSeats
 #. placeholder {1}: fmtEur(line.proratedNow)
 #. placeholder {2}: fmtEur(line.recurringDelta)
-#: src/components/invite/InviteModal.tsx:727
+#: src/components/invite/InviteModal.tsx:729
 msgid "{0, plural, one {# seat} other {# seats}} · {1} now · +{2}/{cadence} at renewal"
 msgstr "{0, plural, one {# místo} few {# místa} other {# míst}} · {1} nyní · +{2}/{cadence} při obnovení"
 
@@ -397,8 +403,13 @@ msgstr "{0, plural, one {# odebrané slovo} few {# odebraná slova} other {# ode
 msgid "{0, plural, one {# workspace} other {# workspaces}}"
 msgstr "{0, plural, one {# workspace} other {# workspaces}}"
 
+#. placeholder {0}: conversations - NAMED_CONVERSATIONS
+#: src/components/map/panels/Legend.tsx:97
+msgid "{0, plural, one {and # more conversation} other {and # more conversations}}"
+msgstr "{0, plural, one {a ještě # rozhovor} few {a ještě # rozhovory} other {a ještě # rozhovorů}}"
+
 #. placeholder {0}: selection.length
-#: src/components/conversation/ConversationsMiniList.tsx:230
+#: src/components/conversation/ConversationsMiniList.tsx:238
 msgid "{0, plural, one {Ask about this} other {Ask about these (#)}}"
 msgstr "{0, plural, one {Zeptat se na tento rozhovor} few {Zeptat se na tyto rozhovory (#)} many {Zeptat se na tyto rozhovory (#)} other {Zeptat se na tyto rozhovory (#)}}"
 
@@ -415,12 +426,18 @@ msgstr "{0, plural, one {Message from dembrane} other {Messages from dembrane}}"
 #. placeholder {0}: projectIds.length
 #: src/components/project/BulkMoveProjectsModal.tsx:83
 msgid "{0, plural, one {Move # project to another workspace.} other {Move # projects to another workspace.}}"
-msgstr "{0, plural, one {Přesunout # projekt do jiného pracovního prostoru.} few {Přesunout # projekty do jiného pracovního prostoru.} other {Přesunout # projektů do jiného pracovního prostoru.}}"
+msgstr "{0, plural, one {Přesunout # projekt do jiného pracovního prostoru.} few {Přesunout # projekty do jiného pracovního prostoru.} other {Přesunout # projektů do jiného pracovního prostoru.}}<<<<<<< HEAD"
 
 #. placeholder {0}: after.length
 #: src/components/popcorn/finishedRead.ts:11
 msgid "{0, plural, one {Read after a conversation finished} other {Read after # conversations finished}}"
-msgstr "{0, plural, one {Přečteno po dokončení jednoho rozhovoru} few {Přečteno po dokončení # rozhovorů} many {Přečteno po dokončení # rozhovoru} other {Přečteno po dokončení # rozhovorů}}"
+msgstr "{0, plural, one {Přečteno po dokončení jednoho rozhovoru} few {Přečteno po dokončení # rozhovorů} many {Přečteno po dokončení # rozhovoru} other {Přečteno po dokončení # rozhovorů}}======="
+
+#. placeholder {0}: counts.conversations
+#: src/features/processes/watchers.tsx:110
+#: src/components/popcorn/PopcornStatus.tsx:54
+msgid "{0, plural, one {Reading {reading} of # conversation…} other {Reading {reading} of # conversations…}}"
+msgstr "{0, plural, one {Čtení {reading} z # rozhovoru…} few {Čtení {reading} z # rozhovorů…} other {Čtení {reading} z # rozhovorů…}}>>>>>>> origin/main"
 
 #. placeholder {0}: status.running
 #: src/features/processes/copy.ts:40
@@ -439,14 +456,14 @@ msgid "select.all.modal.tags"
 msgstr "{0, plural, one {Tag:} other {Tags:}}"
 
 #. placeholder {0}: contextToBeAdded.conversations.length
-#: src/routes/project/chat/ProjectChatRoute.tsx:933
+#: src/routes/project/chat/ProjectChatRoute.tsx:935
 msgid "{0, plural, one {Using # conversation:} other {Using # conversations:}}"
 msgstr "{0, plural, one {Využívá se # rozhovor:} few {Využívají se # rozhovory:} other {Využívá se # rozhovorů:}}"
 
 #. placeholder {0}: isAssistantTyping ? "Assistant is typing..." : "Thinking..."
 #. placeholder {0}: formatDistanceToNowStrict(new Date(startedAt), { addSuffix: true, })
 #. placeholder {0}: citation.reference_text
-#: src/routes/project/chat/ProjectChatRoute.tsx:775
+#: src/routes/project/chat/ProjectChatRoute.tsx:777
 #: src/components/conversation/useConversationList.ts:42
 #: src/components/chat/References.tsx:41
 msgid "{0}"
@@ -490,7 +507,7 @@ msgid "{0} accounts, {1} workspaces, {2} active"
 msgstr "{0} účtů, {1} pracovních prostorů, {2} aktivních"
 
 #. placeholder {0}: displayRole(reached[0].role as string)
-#: src/routes/organisation/OrganisationRoute.tsx:1731
+#: src/routes/organisation/OrganisationRoute.tsx:1728
 msgid "{0} across all"
 msgstr "{0} across all"
 
@@ -513,27 +530,30 @@ msgstr "{0} přidáno z vaší organizace"
 #. placeholder {0}: org.calls_this_month
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:33
 msgid "{0} calls this month"
-msgstr "{0} volání tento měsíc"
+msgstr "{0} volání tento měsíc<<<<<<< HEAD"
 
-#. placeholder {0}: counts.conversations
-#. placeholder {0}: project.conversations_count ?? project?.conversations?.length ?? 0
 #: src/routes/project/popcorn/PopcornRoute.tsx:49
+#: src/routes/project/popcorn/PopcornRoute.tsx:44
 #: src/components/project/ProjectListItem.tsx:219
-msgid "{0} conversations"
-msgstr "{0} rozhovorů"
+#~ msgid "{0} conversations"
+#~ msgstr "{0} rozhovorů"
 
 #: src/components/project/ProjectListItem.tsx:241
 #~ msgid "{0} Conversations"
-#~ msgstr "{0} Conversations"
+#~ msgstr "{0} Conversations<<<<<<< HEAD"
 
-#. placeholder {0}: counts.conversations
-#: src/components/popcorn/PopcornStatus.tsx:41
-msgid "{0} conversations · {phrases} phrases · {validated} validated"
-msgstr "{0} rozhovorů · {phrases} frází · {validated} ověřeno"
+#: src/components/popcorn/PopcornStatus.tsx:39
+#~ msgid "{0} conversations · {phrases} phrases · {validated} validated"
+#~ msgstr "{0} rozhovorů · {phrases} frází · {validated} ověřeno>>>>>>> origin/main"
 
 #: src/components/project/ProjectCard.tsx:46
 #~ msgid "{0} Conversations • Edited {1}"
 #~ msgstr "{0} Conversations • Edited {1}"
+
+#. placeholder {0}: n(86_400_000)
+#: src/lib/time.ts:20
+msgid "{0} d ago"
+msgstr "před {0} d"
 
 #. placeholder {0}: convUsage.deleted.length
 #: src/components/project/ProjectUsageAndSharing.tsx:495
@@ -550,8 +570,13 @@ msgstr "{0} souborů se nepodařilo nahrát. Zkuste to znovu."
 msgid "{0} from dembrane"
 msgstr "{0} z dembrane"
 
+#. placeholder {0}: n(3_600_000)
+#: src/lib/time.ts:19
+msgid "{0} h ago"
+msgstr "před {0} h"
+
 #. placeholder {0}: counts.held_back
-#: src/routes/project/popcorn/PopcornRoute.tsx:53
+#: src/routes/project/popcorn/PopcornRoute.tsx:56
 msgid "{0} held back"
 msgstr "{0} pozastaveno"
 
@@ -567,8 +592,8 @@ msgstr "{0} v tomto pracovním prostoru ještě není. Požádejte správce prac
 
 #. placeholder {0}: organisation.name
 #. placeholder {0}: workspace.name
-#: src/routes/organisation/OrganisationRoute.tsx:709
-#: src/routes/organisation/OrganisationRoute.tsx:1544
+#: src/routes/organisation/OrganisationRoute.tsx:707
+#: src/routes/organisation/OrganisationRoute.tsx:1541
 msgid "{0} logo"
 msgstr "{0} logo"
 
@@ -576,6 +601,11 @@ msgstr "{0} logo"
 #: src/components/agent-access/AgentGrantsCard.tsx:201
 msgid "{0} loses access immediately. To connect it again, start over from the agent."
 msgstr "{0} okamžitě ztratí přístup. Chcete-li ho znovu připojit, začněte znovu z agenta."
+
+#. placeholder {0}: n(60_000)
+#: src/lib/time.ts:18
+msgid "{0} min ago"
+msgstr "před {0} min"
 
 #. js-lingui-explicit-id
 #. placeholder {0}: reallySkipped.length
@@ -605,7 +635,7 @@ msgstr "{0} z {1} členů je proškoleno."
 
 #. placeholder {0}: translation.translated
 #. placeholder {1}: translation.total
-#: src/features/processes/watchers.tsx:118
+#: src/features/processes/watchers.tsx:128
 msgid "{0} of {1} texts translated"
 msgstr "Přeloženo {0} z {1} textů"
 
@@ -630,9 +660,7 @@ msgstr "{0} lidí v tomto pracovním prostoru ještě není."
 msgid "{0} people aren't in this workspace yet. Ask a workspace admin to invite them."
 msgstr "{0} lidí v tomto pracovním prostoru ještě není. Požádejte správce pracovního prostoru o jejich pozvání."
 
-#. placeholder {0}: counts.phrases
 #. placeholder {0}: popcorn.counts.phrases
-#: src/routes/project/popcorn/PopcornRoute.tsx:50
 #: src/routes/project/library/LibraryRoute.tsx:86
 msgid "{0} phrases"
 msgstr "{0} frází"
@@ -669,7 +697,7 @@ msgid "{0} total rises to {1} when {pendingInvites} pending {2} accepted"
 msgstr "Celková částka ({0}) se zvýší na {1}, jakmile bude přijato {pendingInvites} čekajících {2}"
 
 #. placeholder {0}: counts.validated ?? 0
-#: src/routes/project/popcorn/PopcornRoute.tsx:51
+#: src/routes/project/popcorn/PopcornRoute.tsx:54
 msgid "{0} validated"
 msgstr "{0} ověřeno"
 
@@ -714,6 +742,11 @@ msgstr "Rozhovor uživatele {0}"
 msgid "{0}% discount"
 msgstr "Sleva {0} %"
 
+#. placeholder {0}: n(1000)
+#: src/lib/time.ts:17
+msgid "{0}s ago"
+msgstr "před {0} s"
+
 #: src/components/project/ProjectUsageAndSharing.tsx:247
 msgid "{accessCount, plural, one {# person} other {# people}}"
 msgstr "{accessCount, plural, one {# person} other {# people}}"
@@ -722,6 +755,10 @@ msgstr "{accessCount, plural, one {# person} other {# people}}"
 #: src/components/project/ProjectUsageAndSharing.tsx:239
 msgid "{accessCount, plural, one {# person} other {# people}} in {0}"
 msgstr "{accessCount, plural, one {# person} other {# people}} in {0}"
+
+#: src/components/invite/InviteModal.tsx:464
+msgid "{addedCount} added. Check the list below."
+msgstr "Přidáno: {addedCount}. Zkontrolujte seznam níže."
 
 #: src/components/project/ProjectSharingModal.tsx:237
 msgid "{alreadyPending} people were already invited. The project is shared once they join."
@@ -747,10 +784,13 @@ msgstr "{clientName} a společnost, která jej provozuje, obdrží vámi povolen
 msgid "{compedCount, plural, one {# comped} other {# comped}}"
 msgstr "{compedCount, plural, one {# zdarma} few {# zdarma} other {# zdarma}}"
 
-#. placeholder {0}: formatRelative( new Date(project.updated_at ?? new Date()), new Date(), )
 #: src/components/project/PinnedProjectCard.tsx:191
-msgid "{conversationCount} conversations · Edited {0}"
-msgstr "{conversationCount} rozhovorů · Upraveno {0}"
+msgid "{conversationCount, plural, one {# conversation} other {# conversations}}"
+msgstr "{conversationCount, plural, one {# rozhovor} few {# rozhovory} other {# rozhovorů}}"
+
+#: src/components/project/PinnedProjectCard.tsx:191
+#~ msgid "{conversationCount} conversations · Edited {0}"
+#~ msgstr "{conversationCount} rozhovorů · Upraveno {0}"
 
 #: src/components/project/PinnedProjectCard.tsx:202
 #~ msgid "{conversationCount} Conversations • Edited {0}"
@@ -760,6 +800,10 @@ msgstr "{conversationCount} rozhovorů · Upraveno {0}"
 msgid "{conversationCount} selected"
 msgstr "{conversationCount} selected"
 
+#: src/components/popcorn/PopcornStart.tsx:66
+msgid "{conversations, plural, one {# conversation with a transcript, about {minutes} minutes of talk. Ready.} other {# conversations with a transcript, about {minutes} minutes of talk. Ready.}}"
+msgstr "{conversations, plural, one {# rozhovor s přepisem, zhruba {minutes} minut hovoru. Připraveno.} few {# rozhovory s přepisem, zhruba {minutes} minut hovoru. Připraveno.} other {# rozhovorů s přepisem, zhruba {minutes} minut hovoru. Připraveno.}}"
+
 #: src/components/results/resultContent.ts:267
 #: src/components/results/curate/TensionsTab.tsx:56
 #: src/components/map/panels/ArgumentAccordion.tsx:29
@@ -767,8 +811,8 @@ msgid "{conversations, plural, one {# conversation} other {# conversations}}"
 msgstr "{conversations, plural, one {# konverzace} few {# konverzace} many {# konverzace} other {# konverzací}}"
 
 #: src/components/popcorn/PopcornStart.tsx:66
-msgid "{conversations} conversations with a transcript, about {minutes} minutes of talk. Ready."
-msgstr "{conversations} rozhovorů s přepisem, zhruba {minutes} minut hovoru. Připraveno."
+#~ msgid "{conversations} conversations with a transcript, about {minutes} minutes of talk. Ready."
+#~ msgstr "{conversations} rozhovorů s přepisem, zhruba {minutes} minut hovoru. Připraveno."
 
 #: src/components/map/MapExperience.tsx:143
 msgid "{count, plural, one {# argument} other {# arguments}}"
@@ -795,8 +839,8 @@ msgid "{discountPct}% discount applied"
 msgstr "Uplatněna sleva {discountPct} %"
 
 #: src/features/processes/watchers.tsx:63
-msgid "{done} of {total} conversations"
-msgstr "{done} z {total} konverzací"
+#~ msgid "{done} of {total} conversations"
+#~ msgstr "{done} z {total} konverzací"
 
 #. placeholder {0}: plan.steps.length
 #: src/components/chat/AgenticPlanCard.tsx:94
@@ -818,6 +862,10 @@ msgstr "{empty, plural, one {# rozhovor zatím nemá přepis, proto byl vynechá
 #: src/components/common/MoveHistory.tsx:45
 msgid "{from} → {to}"
 msgstr "{from} → {to}"
+
+#: src/components/conversation/ConversationLinks.tsx:166
+msgid "{hiddenCount, plural, one {# conversation} other {# conversations}}"
+msgstr "{hiddenCount, plural, one {# rozhovor} few {# rozhovory} other {# rozhovorů}}"
 
 #: src/components/results/curate/CuratePanel.tsx:304
 msgid "{hiddenCount} hidden"
@@ -853,9 +901,9 @@ msgstr "Úryvek přepisu uživatele {name}"
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:104
 msgid "{names} and {extra} more"
-msgstr "{names} a {extra} dalších"
+msgstr "{names} a {extra} dalších<<<<<<< HEAD"
 
-#: src/features/processes/watchers.tsx:171
+#: src/features/processes/watchers.tsx:181
 msgid "{newErrors, plural, one {# conversation could not be transcribed.} other {# conversations could not be transcribed.}}"
 msgstr "{newErrors, plural, one {# konverzaci se nepodařilo přepsat.} few {# konverzace se nepodařilo přepsat.} many {# konverzace se nepodařilo přepsat.} other {# konverzací se nepodařilo přepsat.}}"
 
@@ -876,9 +924,13 @@ msgstr "{overLimit, plural, one {# rozhovor se do tohoto chatu nevešel. Zbytek 
 msgid "{pendingInvites} invite(s) pending. Counted once accepted."
 msgstr "{pendingInvites} nevyřízených pozvánek. Započítají se až po přijetí."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1790
+#: src/routes/organisation/OrganisationRoute.tsx:1787
 msgid "{person} will lose access to every workspace in this organisation. Direct-only workspace invites stay intact."
 msgstr "{person} will lose access to every workspace in this organisation. Direct-only workspace invites stay intact."
+
+#: src/components/popcorn/PopcornStatus.tsx:46
+msgid "{phrases, plural, one {# phrase} other {# phrases}}"
+msgstr "{phrases, plural, one {# fráze} few {# fráze} other {# frází}}"
 
 #: src/routes/project/chat/NewChatRoute.tsx:591
 msgid "{pickedCount, plural, one {Focusing on # conversation} other {Focusing on # conversations}}"
@@ -917,7 +969,7 @@ msgstr "{seats, plural, one {# místo} few {# místa} other {# míst}}"
 msgid "{selectedCount} of {totalCount} fields selected. Accept applies only the ticked ones."
 msgstr "Vybráno {selectedCount} z {totalCount} polí. Tlačítkem Přijmout se použijí pouze zaškrtnutá pole."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:254
+#: src/routes/onboarding/OnboardingRoute.tsx:260
 #: src/components/organisation/CreateOrganisationModal.tsx:130
 msgid "{sent} invites sent"
 msgstr "{sent} invites sent"
@@ -926,13 +978,21 @@ msgstr "{sent} invites sent"
 msgid "{sent} invites sent. The project is shared once they join."
 msgstr "Odesláno {sent} pozvánek. Projekt bude nasdílen, jakmile se připojí."
 
-#: src/components/invite/InviteModal.tsx:465
+#: src/components/invite/InviteModal.tsx:467
 msgid "{sentCount} invites sent."
 msgstr "{sentCount} invites sent."
 
 #: src/components/conversation/LiveFunnelSection.tsx:95
 msgid "{tag} (preselected)"
 msgstr "{tag} (předvybráno)"
+
+#: src/features/processes/watchers.tsx:64
+msgid "{total, plural, one {{done} of # conversation} other {{done} of # conversations}}"
+msgstr "{total, plural, one {{done} z # rozhovoru} few {{done} z # rozhovorů} other {{done} z # rozhovorů}}"
+
+#: src/components/conversation/hooks/index.ts:523
+msgid "{total, plural, one {Cleared {cleared} of # conversation} other {Cleared {cleared} of # conversations}}"
+msgstr "{total, plural, one {Smazáno {cleared} z # rozhovoru} few {Smazáno {cleared} z # rozhovorů} other {Smazáno {cleared} z # rozhovorů}}"
 
 #: src/components/conversation/LiveFunnelSection.tsx:226
 msgid "{totalActive, plural, one {# active} other {# active}}"
@@ -954,6 +1014,10 @@ msgstr "{translated} z {total} přeloženo, {failed} se nepodařilo přeložit"
 msgid "{unplacedCount, plural, one {# argument could not be placed on the map.} other {# arguments could not be placed on the map.}}"
 msgstr "{unplacedCount, plural, one {# argument se nepodařilo umístit na mapu.} few {# argumenty se nepodařilo umístit na mapu.} other {# argumentů se nepodařilo umístit na mapu.}}"
 
+#: src/components/popcorn/PopcornStatus.tsx:48
+msgid "{validated} validated"
+msgstr "{validated} ověřeno"
+
 #: src/components/participant/UserChunkMessage.tsx:108
 msgid "*Transcription in progress.*"
 msgstr "*Transcription in progress.*"
@@ -974,8 +1038,8 @@ msgid "+{0} more"
 msgstr "+{0} more"
 
 #: src/components/conversation/ConversationLinks.tsx:165
-msgid "+{hiddenCount} conversations"
-msgstr "+{hiddenCount} conversations"
+#~ msgid "+{hiddenCount} conversations"
+#~ msgstr "+{hiddenCount} conversations"
 
 #. placeholder {0}: product.extra_price_eur
 #. placeholder {1}: product.included_participants
@@ -1082,7 +1146,7 @@ msgstr "8 hodin"
 msgid "A blue bar across the top of every tab, with your text and a link back to the opening."
 msgstr "Modrý pruh v horní části každé záložky s vaším textem a odkazem zpět na úvod."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:456
+#: src/routes/onboarding/OnboardingRoute.tsx:462
 msgid "A couple of quick questions and you're in."
 msgstr "Pár rychlých otázek a jste uvnitř."
 
@@ -1193,7 +1257,7 @@ msgstr "Místo představuje jednoho člena. Místa zůstávají k dispozici až 
 msgid "A separate data-ownership and billing context. It can be handed off to that organisation later with no data movement."
 msgstr "Oddělený kontext pro vlastnictví dat a fakturaci. Později jej lze předat dané organizaci bez nutnosti přesouvat data."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1103
+#: src/routes/organisation/OrganisationRoute.tsx:1100
 msgid "A short blurb shown on the organisation overview."
 msgstr "A short blurb shown on the organisation overview."
 
@@ -1213,7 +1277,7 @@ msgstr "Přepínač bez textu nezobrazí na obrazovce nic."
 msgid "A title and subtitle before the countdown."
 msgstr "Název a podnázev před odpočtem."
 
-#: src/components/results/resultEditing.tsx:482
+#: src/components/results/resultEditing.tsx:483
 #: src/components/results/ResultItem.tsx:279
 msgid "A typo"
 msgstr "Překlep"
@@ -1227,8 +1291,8 @@ msgstr "a workspace"
 msgid "About the suggested project update: {hostNote}"
 msgstr "K navrhované aktualizaci projektu: {hostNote}"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:125
-#: src/routes/onboarding/OnboardingRoute.tsx:126
+#: src/routes/onboarding/OnboardingRoute.tsx:129
+#: src/routes/onboarding/OnboardingRoute.tsx:130
 msgid "About you"
 msgstr "O vás"
 
@@ -1357,7 +1421,7 @@ msgstr "Autor akce"
 #~ msgid "Action By"
 #~ msgstr "Action By"
 
-#: src/features/sidebar/views/InboxView.tsx:469
+#: src/features/sidebar/views/InboxView.tsx:470
 #: src/components/inbox/Inbox.tsx:442
 msgid "Action needed"
 msgstr "Action needed"
@@ -1400,10 +1464,10 @@ msgid "Activity"
 msgstr "Aktivita"
 
 #: src/routes/participant/ParticipantPostConversation.tsx:201
-#: src/routes/organisation/OrganisationRoute.tsx:2017
-#: src/routes/organisation/OrganisationRoute.tsx:2024
-#: src/routes/organisation/OrganisationRoute.tsx:2037
-#: src/routes/organisation/OrganisationRoute.tsx:2060
+#: src/routes/organisation/OrganisationRoute.tsx:2014
+#: src/routes/organisation/OrganisationRoute.tsx:2021
+#: src/routes/organisation/OrganisationRoute.tsx:2034
+#: src/routes/organisation/OrganisationRoute.tsx:2057
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:185
 #: src/components/billing/BillingManager.tsx:1393
 msgid "Add"
@@ -1414,8 +1478,8 @@ msgstr "Add"
 #. placeholder {1}: ws.name
 #. placeholder {2}: displayRole("external")
 #. placeholder {2}: displayRole(roleOpt)
-#: src/routes/organisation/OrganisationRoute.tsx:2007
-#: src/routes/organisation/OrganisationRoute.tsx:2048
+#: src/routes/organisation/OrganisationRoute.tsx:2004
+#: src/routes/organisation/OrganisationRoute.tsx:2045
 msgid "Add {0} to {1} as <0>{2}</0>?"
 msgstr "Add {0} to {1} as <0>{2}</0>?"
 
@@ -1539,8 +1603,8 @@ msgid "Add tip"
 msgstr "Přidat tip"
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:2020
-#: src/routes/organisation/OrganisationRoute.tsx:2064
+#: src/routes/organisation/OrganisationRoute.tsx:2017
+#: src/routes/organisation/OrganisationRoute.tsx:2061
 msgid "Add to {0}?"
 msgstr "Add to {0}?"
 
@@ -1558,7 +1622,7 @@ msgstr "Přidat do filtrů"
 msgid "Add to this chat"
 msgstr "Add to this chat"
 
-#: src/components/invite/InviteModal.tsx:592
+#: src/components/invite/InviteModal.tsx:594
 msgid "Add to workspaces"
 msgstr "Add to workspaces"
 
@@ -1601,6 +1665,7 @@ msgstr "přidat své logo"
 
 #: src/components/project/ProjectSharingModal.tsx:163
 #: src/components/project/ProjectSharingModal.tsx:231
+#: src/components/invite/InviteResultsList.tsx:46
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:139
 msgid "Added"
 msgstr "Added"
@@ -1624,7 +1689,7 @@ msgstr "Přidal hostitel"
 msgid "Added emails"
 msgstr "Added emails"
 
-#: src/routes/organisation/OrganisationRoute.tsx:553
+#: src/routes/organisation/OrganisationRoute.tsx:551
 msgid "Added to workspace"
 msgstr "Added to workspace"
 
@@ -1707,7 +1772,7 @@ msgstr "Admin"
 msgid "Admin dashboard"
 msgstr "Admin dashboard"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1942
+#: src/routes/organisation/OrganisationRoute.tsx:1939
 msgid "Admin here via organisation role"
 msgstr "Admin here via organisation role"
 
@@ -1716,12 +1781,12 @@ msgid "Admin, dembrane"
 msgstr "Admin, dembrane"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:803
-#: src/routes/organisation/OrganisationRoute.tsx:851
+#: src/routes/organisation/OrganisationRoute.tsx:848
 #: src/components/project/ProjectUsageAndSharing.tsx:262
 msgid "Admins"
 msgstr "Admins"
 
-#: src/routes/organisation/OrganisationRoute.tsx:989
+#: src/routes/organisation/OrganisationRoute.tsx:986
 msgid "Admins can reach every workspace in this organisation. Members and externals only see the workspaces they've been given access to."
 msgstr "Admins can reach every workspace in this organisation. Members and externals only see the workspaces they've been given access to."
 
@@ -1789,7 +1854,7 @@ msgid "Agentic chat"
 msgstr "Agentní chat"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:802
-#: src/routes/organisation/OrganisationRoute.tsx:850
+#: src/routes/organisation/OrganisationRoute.tsx:847
 #: src/routes/admin/AdminSettingsRoute.tsx:2023
 #: src/routes/admin/AdminSettingsRoute.tsx:2693
 #: src/components/workspace/OrganisationUsageRollup.tsx:534
@@ -1907,7 +1972,7 @@ msgstr "Povolit přístup k MCP v {0}"
 #~ msgid "Allow participants using the link to start new conversations"
 #~ msgstr "Allow participants using the link to start new conversations"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:453
+#: src/routes/onboarding/OnboardingRoute.tsx:459
 msgid "Almost ready"
 msgstr "Téměř hotovo"
 
@@ -1915,7 +1980,7 @@ msgstr "Téměř hotovo"
 msgid "Almost there"
 msgstr "Almost there"
 
-#: src/components/invite/InviteResultsList.tsx:45
+#: src/components/invite/InviteResultsList.tsx:48
 msgid "Already a member"
 msgstr "Already a member"
 
@@ -1932,7 +1997,7 @@ msgstr "Already have an account? Log in"
 msgid "Already in context"
 msgstr "Already in context"
 
-#: src/components/invite/InviteResultsList.tsx:47
+#: src/components/invite/InviteResultsList.tsx:50
 msgid "Already invited"
 msgstr "Already invited"
 
@@ -2001,7 +2066,7 @@ msgstr "Při načítání portálu došlo k chybě. Kontaktujte prosím tým pod
 #~ msgid "An error occurred while loading the Portal. Please contact the support team."
 #~ msgstr "An error occurred while loading the Portal. Please contact the support team."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:829
+#: src/routes/project/chat/ProjectChatRoute.tsx:831
 msgid "An error occurred."
 msgstr "An error occurred."
 
@@ -2073,10 +2138,9 @@ msgstr ""
 "\n"
 "Note: If the similarities/differences are too superficial, let me know we need more complex material to analyze."
 
-#. placeholder {0}: conversations - NAMED_CONVERSATIONS
 #: src/components/map/panels/Legend.tsx:97
-msgid "and {0} more conversations"
-msgstr "a dalších {0} rozhovorů"
+#~ msgid "and {0} more conversations"
+#~ msgstr "a dalších {0} rozhovorů"
 
 #: src/components/inbox/Inbox.tsx:226
 msgid "Announcements"
@@ -2120,8 +2184,8 @@ msgstr "Anonymizovat přepisy"
 msgid "anonymized conversation"
 msgstr "anonymized conversation"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:197
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:202
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:238
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:243
 #: src/components/conversation/ProjectConversationsPanel.tsx:303
 #: src/components/conversation/ProjectConversationsPanel.tsx:308
 #: src/components/conversation/ConversationAccordion.tsx:589
@@ -2149,7 +2213,7 @@ msgid "another reason"
 msgstr "jiný důvod"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:707
-#: src/components/conversation/ConversationsMiniList.tsx:180
+#: src/components/conversation/ConversationsMiniList.tsx:188
 msgid "Any tag"
 msgstr "Any tag"
 
@@ -2262,7 +2326,7 @@ msgstr "Are you sure you want to delete the webhook \"{0}\"? This action cannot 
 msgid "Are you sure you want to delete this chat? This action cannot be undone."
 msgstr "Are you sure you want to delete this chat? This action cannot be undone."
 
-#: src/components/conversation/ConversationDangerZone.tsx:101
+#: src/components/conversation/ConversationDangerZone.tsx:102
 msgid "Are you sure you want to delete this conversation? This action cannot be undone."
 msgstr "Are you sure you want to delete this conversation? This action cannot be undone."
 
@@ -2295,7 +2359,7 @@ msgstr "Are you sure you want to finish the conversation?"
 #~ msgid "Are you sure you want to generate the library? This will take a while and overwrite your current views and insights."
 #~ msgstr "Are you sure you want to generate the library? This will take a while and overwrite your current views and insights."
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:403
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:444
 msgid "Are you sure you want to regenerate the summary? You will lose the current summary."
 msgstr "Are you sure you want to regenerate the summary? You will lose the current summary."
 
@@ -2507,7 +2571,7 @@ msgstr "Audio"
 msgid "Audio and text uploads feed into conversation analysis."
 msgstr "Nahrané audio a text slouží jako podklad pro analýzu rozhovoru."
 
-#: src/components/conversation/ConversationDangerZone.tsx:54
+#: src/components/conversation/ConversationDangerZone.tsx:57
 msgid "Audio download not available for anonymized conversations"
 msgstr "Audio download not available for anonymized conversations"
 
@@ -2561,7 +2625,7 @@ msgstr "Audit logs exported to CSV"
 msgid "Audit logs exported to JSON"
 msgstr "Audit logs exported to JSON"
 
-#: src/routes/auth/Login.tsx:475
+#: src/routes/auth/Login.tsx:479
 #: src/components/settings/TwoFactorSettingsCard.tsx:224
 #: src/components/settings/TwoFactorSettingsCard.tsx:349
 msgid "Authenticator code"
@@ -2649,9 +2713,9 @@ msgstr "Pryč"
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:785
 #: src/routes/project/CreateProjectRoute.tsx:444
 #: src/routes/project/report/ProjectReportRoute.tsx:496
-#: src/routes/organisation/OrganisationRoute.tsx:668
-#: src/routes/organisation/OrganisationRoute.tsx:691
-#: src/routes/onboarding/OnboardingRoute.tsx:443
+#: src/routes/organisation/OrganisationRoute.tsx:664
+#: src/routes/organisation/OrganisationRoute.tsx:687
+#: src/routes/onboarding/OnboardingRoute.tsx:449
 #: src/routes/auth/Register.tsx:247
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:322
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:360
@@ -2675,6 +2739,10 @@ msgstr "Zpět"
 #: src/routes/settings/AgentConsentRoute.tsx:225
 msgid "Back to Connect your agent"
 msgstr "Zpět na připojení agenta"
+
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:210
+msgid "Back to conversations"
+msgstr "Zpět na rozhovory"
 
 #: src/components/pricing/PricingConfigurator.tsx:938
 msgid "Back to dembrane"
@@ -2755,7 +2823,7 @@ msgid "Before you connect an agent"
 msgstr "Než připojíte agenta"
 
 #: src/routes/project/ProjectMonitorRoute.tsx:86
-#: src/routes/project/popcorn/PopcornRoute.tsx:105
+#: src/routes/project/popcorn/PopcornRoute.tsx:108
 #: src/routes/project/library/LibraryRoute.tsx:98
 #: src/routes/project/chat/NewChatRoute.tsx:700
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:112
@@ -2829,8 +2897,8 @@ msgstr "Účtováno v rámci tarifu vaší organizace, společně s ostatními p
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:805
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1049
-#: src/routes/organisation/OrganisationRoute.tsx:803
-#: src/routes/organisation/OrganisationRoute.tsx:853
+#: src/routes/organisation/OrganisationRoute.tsx:800
+#: src/routes/organisation/OrganisationRoute.tsx:850
 #: src/lib/roles.ts:13
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:49
 #: src/components/invite/RoleSelect.tsx:48
@@ -2940,12 +3008,12 @@ msgstr "Můžete nám říct víc?"
 #: src/routes/project/ProjectsHome.tsx:453
 #: src/routes/project/CreateProjectRoute.tsx:444
 #: src/routes/project/report/ProjectReportRoute.tsx:277
-#: src/routes/organisation/OrganisationRoute.tsx:1755
-#: src/routes/organisation/OrganisationRoute.tsx:1778
-#: src/routes/organisation/OrganisationRoute.tsx:1801
-#: src/routes/organisation/OrganisationRoute.tsx:1977
-#: src/routes/organisation/OrganisationRoute.tsx:2017
-#: src/routes/organisation/OrganisationRoute.tsx:2059
+#: src/routes/organisation/OrganisationRoute.tsx:1752
+#: src/routes/organisation/OrganisationRoute.tsx:1775
+#: src/routes/organisation/OrganisationRoute.tsx:1798
+#: src/routes/organisation/OrganisationRoute.tsx:1974
+#: src/routes/organisation/OrganisationRoute.tsx:2014
+#: src/routes/organisation/OrganisationRoute.tsx:2056
 #: src/routes/invite/MyInvitesRoute.tsx:80
 #: src/routes/admin/AdminSettingsRoute.tsx:858
 #: src/routes/admin/AdminSettingsRoute.tsx:1172
@@ -2971,7 +3039,7 @@ msgstr "Můžete nám říct víc?"
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:294
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:378
 #: src/components/map/panels/SpotlightPanel.tsx:363
-#: src/components/invite/InviteModal.tsx:798
+#: src/components/invite/InviteModal.tsx:800
 #: src/components/goal/ProjectGoalSection.tsx:165
 #: src/components/dropzone/UploadConversationDropzone.tsx:750
 #: src/components/dropzone/UploadConversationDropzone.tsx:882
@@ -2979,7 +3047,7 @@ msgstr "Můžete nám říct víc?"
 #: src/components/conversation/ConversationAccordion.tsx:337
 #: src/components/common/InputModal.tsx:87
 #: src/components/common/ImageCropModal.tsx:146
-#: src/components/common/ConfirmModal.tsx:54
+#: src/components/common/ConfirmModal.tsx:63
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:730
 #: src/components/chat/AgenticChatPanel.tsx:751
 #: src/components/chat/AgenticChatPanel.tsx:2219
@@ -3118,13 +3186,13 @@ msgstr "Změnit"
 
 #. placeholder {0}: displayRole(member.role)
 #. placeholder {1}: displayRole(next)
-#: src/routes/organisation/OrganisationRoute.tsx:1749
+#: src/routes/organisation/OrganisationRoute.tsx:1746
 msgid "Change {person}'s organisation role from <0>{0}</0> to <1>{1}</1>?"
 msgstr "Change {person}'s organisation role from <0>{0}</0> to <1>{1}</1>?"
 
 #. placeholder {0}: displayRole(currentRole)
 #. placeholder {1}: displayRole(next)
-#: src/routes/organisation/OrganisationRoute.tsx:1772
+#: src/routes/organisation/OrganisationRoute.tsx:1769
 msgid "Change {person}'s role on {wsName} from <0>{0}</0> to <1>{1}</1>?"
 msgstr "Change {person}'s role on {wsName} from <0>{0}</0> to <1>{1}</1>?"
 
@@ -3132,7 +3200,7 @@ msgstr "Change {person}'s role on {wsName} from <0>{0}</0> to <1>{1}</1>?"
 msgid "Change anyway"
 msgstr "Change anyway"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1941
+#: src/routes/organisation/OrganisationRoute.tsx:1938
 msgid "Change in workspace settings"
 msgstr "Change in workspace settings"
 
@@ -3140,7 +3208,7 @@ msgstr "Change in workspace settings"
 msgid "Change language"
 msgstr "Change language"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1757
+#: src/routes/organisation/OrganisationRoute.tsx:1754
 msgid "Change organisation role?"
 msgstr "Change organisation role?"
 
@@ -3157,8 +3225,8 @@ msgstr "Změnit platební metodu"
 msgid "change project settings"
 msgstr "změnit nastavení projektu"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1755
-#: src/routes/organisation/OrganisationRoute.tsx:1778
+#: src/routes/organisation/OrganisationRoute.tsx:1752
+#: src/routes/organisation/OrganisationRoute.tsx:1775
 msgid "Change role"
 msgstr "Change role"
 
@@ -3173,7 +3241,7 @@ msgstr "Uprav slova, přečti si doklady, nebo nech zjištění mimo tuto prezen
 msgid "Change tier"
 msgstr "Change tier"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1780
+#: src/routes/organisation/OrganisationRoute.tsx:1777
 msgid "Change workspace role?"
 msgstr "Change workspace role?"
 
@@ -3239,8 +3307,8 @@ msgstr "Vzdálenost náboje (podíl výřezu): {0}"
 #~ msgid "Charge Distance (viewport fraction): {0}"
 #~ msgstr "Vzdálenost náboje (podíl výřezu): {0}"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:680
-#: src/routes/project/chat/ProjectChatRoute.tsx:686
+#: src/routes/project/chat/ProjectChatRoute.tsx:682
+#: src/routes/project/chat/ProjectChatRoute.tsx:688
 #: src/features/sidebar/hooks/useSearchHits.ts:254
 #: src/features/sidebar/hooks/useSearchHits.ts:256
 #: src/features/sidebar/hooks/useSearchHits.ts:257
@@ -3249,7 +3317,7 @@ msgstr "Vzdálenost náboje (podíl výřezu): {0}"
 msgid "Chat"
 msgstr "Chat"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:330
+#: src/routes/project/chat/ProjectChatRoute.tsx:332
 msgid "Chat | dembrane"
 msgstr "Chat | dembrane"
 
@@ -3265,7 +3333,7 @@ msgstr "Chat vytvořen"
 msgid "Chat deleted"
 msgstr "Chat deleted"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:617
+#: src/routes/project/chat/ProjectChatRoute.tsx:619
 #: src/routes/project/chat/NewChatRoute.tsx:540
 msgid "Chat isn't available on your access level. Reach out to your workspace admin to request an upgrade."
 msgstr "Chat není pro vaši úroveň přístupu dostupný. Požádejte správce pracovního prostoru o navýšení."
@@ -3451,7 +3519,7 @@ msgstr "Město"
 
 #: src/components/results/curate/CurateTable.tsx:114
 #: src/components/conversation/ProjectConversationsPanel.tsx:789
-#: src/components/conversation/ConversationsMiniList.tsx:241
+#: src/components/conversation/ConversationsMiniList.tsx:249
 msgid "Clear"
 msgstr "Vymazat"
 
@@ -3460,7 +3528,7 @@ msgid "Clear all"
 msgstr "Vymazat vše"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:830
-#: src/components/conversation/ConversationsMiniList.tsx:264
+#: src/components/conversation/ConversationsMiniList.tsx:272
 msgid "Clear filters"
 msgstr "Clear filters"
 
@@ -3474,15 +3542,15 @@ msgstr "Clear filters"
 msgid "Clear search"
 msgstr "Clear search"
 
-#: src/components/conversation/hooks/index.ts:519
-msgid "Cleared {cleared} of {total} conversations"
-msgstr "Vymazáno {cleared} z {total} rozhovorů"
+#: src/components/conversation/hooks/index.ts:522
+#~ msgid "Cleared {cleared} of {total} conversations"
+#~ msgstr "Vymazáno {cleared} z {total} rozhovorů"
 
 #: src/components/release/releaseHistory.ts:100
 msgid "Clearer sources in chat"
 msgstr "Jasnější zdroje v chatu"
 
-#: src/components/results/resultEditing.tsx:485
+#: src/components/results/resultEditing.tsx:486
 #: src/components/results/ResultItem.tsx:281
 msgid "Clearer words, same meaning"
 msgstr "Jasnější slova, stejný význam"
@@ -3629,7 +3697,7 @@ msgstr "Shluky"
 msgid "Collapse sidebar"
 msgstr "Sbalit postranní panel"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:338
+#: src/routes/onboarding/OnboardingRoute.tsx:344
 #: src/components/organisation/CreateOrganisationModal.tsx:226
 msgid "Colleagues you invite can explore conversations, share insights, and build reports with you."
 msgstr "Colleagues you invite can explore conversations, share insights, and build reports with you."
@@ -3748,7 +3816,7 @@ msgstr "Dokončeno"
 msgid "Completed on"
 msgstr "Dokončeno dne"
 
-#: src/components/project/ProjectListItem.tsx:351
+#: src/components/project/ProjectListItem.tsx:354
 msgid "Configure portal"
 msgstr "Nastavit portál"
 
@@ -3757,7 +3825,7 @@ msgid "Configure settings for each legal basis."
 msgstr "Upravte nastavení pro každý právní základ."
 
 #: src/lib/openConfirm.tsx:47
-#: src/components/common/ConfirmModal.tsx:46
+#: src/components/common/ConfirmModal.tsx:55
 msgid "Confirm"
 msgstr "Confirm"
 
@@ -3766,7 +3834,7 @@ msgstr "Confirm"
 msgid "participant.mic.settings.modal.second.confirm.button"
 msgstr "Confirm"
 
-#: src/components/invite/InviteModal.tsx:783
+#: src/components/invite/InviteModal.tsx:785
 msgid "Confirm and send"
 msgstr "Potvrdit a odeslat"
 
@@ -3892,13 +3960,13 @@ msgstr "Contextual suggestions"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:763
 #: src/routes/project/CreateProjectRoute.tsx:425
-#: src/routes/onboarding/OnboardingRoute.tsx:527
-#: src/routes/onboarding/OnboardingRoute.tsx:668
+#: src/routes/onboarding/OnboardingRoute.tsx:533
+#: src/routes/onboarding/OnboardingRoute.tsx:674
 #: src/routes/auth/Register.tsx:207
 #: src/components/pricing/PricingConfigurator.tsx:844
 #: src/components/organisation/CreateOrganisationModal.tsx:210
 #: src/components/language/LanguagePicker.tsx:157
-#: src/components/invite/InviteModal.tsx:785
+#: src/components/invite/InviteModal.tsx:787
 #: src/components/billing/BillingManager.tsx:1469
 msgid "Continue"
 msgstr "Continue"
@@ -3936,7 +4004,7 @@ msgstr "Pokračovat"
 msgid "Controls how far charge forces act (higher = more global)"
 msgstr "Určuje, jak daleko působí nábojové síly (vyšší = globálnější)"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1584
+#: src/routes/organisation/OrganisationRoute.tsx:1581
 msgid "conversation"
 msgstr "conversation"
 
@@ -3956,7 +4024,7 @@ msgstr "Conversation"
 msgid "Conversation {0}"
 msgstr "Rozhovor {0}"
 
-#: src/components/conversation/hooks/index.ts:365
+#: src/components/conversation/hooks/index.ts:368
 msgid "Conversation added to chat"
 msgstr "Conversation added to chat"
 
@@ -3985,7 +4053,7 @@ msgstr "Názvy rozhovorů se zobrazují v Knihovně a závěrečná obrazovka po
 msgid "Conversation pages and data loading are streamlined."
 msgstr "Stránky rozhovorů a načítání dat jsou přehlednější a rychlejší."
 
-#: src/components/conversation/hooks/index.ts:473
+#: src/components/conversation/hooks/index.ts:476
 msgid "Conversation removed from chat"
 msgstr "Conversation removed from chat"
 
@@ -4030,7 +4098,7 @@ msgstr "Štítky rozhovorů jsou lépe čitelné."
 msgid "Conversation transcribed"
 msgstr "Rozhovor přepsán"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1584
+#: src/routes/organisation/OrganisationRoute.tsx:1581
 #: src/components/report/CreateReportForm.tsx:206
 #: src/components/chat/NavigationSuggestionCard.tsx:57
 msgid "conversations"
@@ -4043,12 +4111,12 @@ msgstr "conversations"
 #: src/components/map/panels/MapSettingsMenu.tsx:308
 #: src/components/map/panels/ClusterSummary.tsx:155
 #: src/components/conversation/ProjectConversationsPanel.tsx:623
-#: src/components/conversation/ConversationsMiniList.tsx:141
+#: src/components/conversation/ConversationsMiniList.tsx:149
 #: src/components/conversation/ConversationAccordion.tsx:1100
 msgid "Conversations"
 msgstr "Conversations"
 
-#: src/components/conversation/hooks/index.ts:509
+#: src/components/conversation/hooks/index.ts:512
 msgid "Conversations cleared"
 msgstr "Rozhovory smazány"
 
@@ -4123,8 +4191,8 @@ msgstr "Kopírovat kód pro vložení"
 
 #: src/components/members/PendingInvitesSection.tsx:171
 #: src/components/members/PendingInvitesSection.tsx:175
-#: src/components/invite/InviteResultsList.tsx:113
-#: src/components/invite/InviteResultsList.tsx:119
+#: src/components/invite/InviteResultsList.tsx:116
+#: src/components/invite/InviteResultsList.tsx:122
 msgid "Copy invite link"
 msgstr "Kopírovat odkaz na pozvánku"
 
@@ -4147,7 +4215,7 @@ msgstr "Copy report content"
 msgid "Copy secret"
 msgstr "Copy secret"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:272
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:313
 msgid "Copy summary"
 msgstr "Kopírovat shrnutí"
 
@@ -4379,7 +4447,7 @@ msgstr "Nepodařilo se přidat 1 člena. Přidejte ho v nastavení pracovního p
 #~ msgstr "Couldn't change visibility"
 
 #: src/components/members/PendingInvitesSection.tsx:89
-#: src/components/invite/InviteResultsList.tsx:74
+#: src/components/invite/InviteResultsList.tsx:77
 msgid "Couldn't copy the link."
 msgstr "Odkaz se nepodařilo zkopírovat."
 
@@ -4404,7 +4472,7 @@ msgstr "Vzpomínky se nepodařilo načíst. Zkuste to znovu obnovením stránky.
 #~ msgid "Couldn't load organisation ({0})"
 #~ msgstr "Couldn't load organisation ({0})"
 
-#: src/routes/organisation/OrganisationRoute.tsx:865
+#: src/routes/organisation/OrganisationRoute.tsx:862
 msgid "Couldn't load organisation members. Try refreshing, and if it keeps failing, contact support."
 msgstr "Couldn't load organisation members. Try refreshing, and if it keeps failing, contact support."
 
@@ -4426,7 +4494,7 @@ msgstr "Couldn't load organisation members. Try refreshing, and if it keeps fail
 #~ msgid "Couldn't load workspaces. Close and reopen to retry."
 #~ msgstr "Couldn't load workspaces. Close and reopen to retry."
 
-#: src/components/invite/InviteModal.tsx:599
+#: src/components/invite/InviteModal.tsx:601
 msgid "Couldn't load workspaces. Close and reopen to try again."
 msgstr "Pracovní prostory se nepodařilo načíst. Zavřete a znovu otevřete, abyste to zkusili znovu."
 
@@ -4477,7 +4545,7 @@ msgid "Create account"
 msgstr "Create account"
 
 #: src/routes/auth/Register.tsx:129
-#: src/routes/auth/Login.tsx:603
+#: src/routes/auth/Login.tsx:607
 msgid "Create an account"
 msgstr "Create an account"
 
@@ -4559,7 +4627,7 @@ msgstr "Vytvořit nastavení hlasu"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:425
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:776
-#: src/routes/organisation/OrganisationRoute.tsx:1420
+#: src/routes/organisation/OrganisationRoute.tsx:1417
 msgid "Create workspace"
 msgstr "Create workspace"
 
@@ -4691,7 +4759,7 @@ msgstr "České rozhovory, české odpovědi"
 msgid "d̄_adj: {0}"
 msgstr "d̄_adj: {0}"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1132
+#: src/routes/organisation/OrganisationRoute.tsx:1129
 msgid "Danger"
 msgstr "Danger"
 
@@ -4836,7 +4904,7 @@ msgstr "Delegate multi-step analysis with live tool execution"
 #: src/components/participant/UserChunkMessage.tsx:100
 #: src/components/conversation/ConversationDrilldownModal.tsx:248
 #: src/components/conversation/ConversationDrilldownModal.tsx:263
-#: src/components/conversation/ConversationDangerZone.tsx:102
+#: src/components/conversation/ConversationDangerZone.tsx:103
 #: src/components/chat/TemplatesModal.tsx:429
 #: src/components/chat/TemplatesModal.tsx:512
 #: src/components/chat/TemplatesModal.tsx:624
@@ -4859,8 +4927,8 @@ msgid "Delete chat"
 msgstr "Delete chat"
 
 #: src/components/conversation/ConversationDrilldownModal.tsx:256
-#: src/components/conversation/ConversationDangerZone.tsx:89
-#: src/components/conversation/ConversationDangerZone.tsx:99
+#: src/components/conversation/ConversationDangerZone.tsx:90
+#: src/components/conversation/ConversationDangerZone.tsx:100
 msgid "Delete conversation"
 msgstr "Delete conversation"
 
@@ -4943,7 +5011,7 @@ msgstr "Deleted successfully"
 #~ msgid "Deleting a organisation is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you — all workspaces must be empty and deleted first."
 #~ msgstr "Deleting a organisation is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you — all workspaces must be empty and deleted first."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1135
+#: src/routes/organisation/OrganisationRoute.tsx:1132
 msgid "Deleting an organisation is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you — all workspaces must be empty and deleted first."
 msgstr "Smazání organizace probíhá s pomocí podpory. Napište na <0>support@dembrane.com</0> a projdeme to s vámi. Všechny pracovní prostory musí být nejprve vyprázdněny a smazány."
 
@@ -4965,8 +5033,8 @@ msgstr "dembrane na vaší akci?"
 msgid "dembrane B.V. {0}, all rights reserved."
 msgstr "dembrane B.V. {0}, všechna práva vyhrazena."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1019
-#: src/routes/project/chat/ProjectChatRoute.tsx:1029
+#: src/routes/project/chat/ProjectChatRoute.tsx:1021
+#: src/routes/project/chat/ProjectChatRoute.tsx:1031
 #: src/components/chat/AgenticChatPanel.tsx:2353
 msgid "dembrane can make mistakes. Please double-check responses."
 msgstr "dembrane can make mistakes. Please double-check responses."
@@ -5031,7 +5099,7 @@ msgid "Describe what the language model should extract or summarize from the con
 msgstr "Describe what the language model should extract or summarize from the conversation..."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1572
-#: src/routes/organisation/OrganisationRoute.tsx:1102
+#: src/routes/organisation/OrganisationRoute.tsx:1099
 #: src/routes/admin/AdminSettingsRoute.tsx:2644
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:262
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:328
@@ -5180,7 +5248,7 @@ msgstr "Destiluje se hlavní myšlenka…"
 msgid "Do I need this?"
 msgstr "Do I need this?"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:463
+#: src/routes/onboarding/OnboardingRoute.tsx:469
 msgid "Do you plan to use dembrane in health, education, recruitment, critical infrastructure management, law enforcement or justice contexts?"
 msgstr "Plánujete dembrane používat ve zdravotnictví, školství, náboru, správě kritické infrastruktury, vymáhání práva nebo justici?"
 
@@ -5207,9 +5275,9 @@ msgstr "Neaktualizuje se automaticky."
 msgid "Does not update on its own. Updated {updatedAgo}."
 msgstr "Neaktualizuje se automaticky. Aktualizováno {updatedAgo}."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:527
-#: src/components/invite/InviteModal.tsx:807
-#: src/components/conversation/ConversationsMiniList.tsx:98
+#: src/routes/onboarding/OnboardingRoute.tsx:533
+#: src/components/invite/InviteModal.tsx:809
+#: src/components/conversation/ConversationsMiniList.tsx:106
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:642
 #: src/components/chat/AgenticPlanCard.tsx:34
 #: src/components/chat/AgenticChatPanel.tsx:431
@@ -5250,7 +5318,7 @@ msgstr "Stáhnout jako PDF"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:350
 #: src/components/conversation/ProjectConversationsPanel.tsx:354
-#: src/components/conversation/ConversationDangerZone.tsx:78
+#: src/components/conversation/ConversationDangerZone.tsx:79
 msgid "Download audio"
 msgstr "Download audio"
 
@@ -5546,7 +5614,8 @@ msgid "edited"
 msgstr "upraveno"
 
 #. placeholder {0}: formatRelative( new Date(project.updated_at ?? new Date()), new Date(), )
-#: src/components/project/ProjectListItem.tsx:229
+#: src/components/project/ProjectListItem.tsx:232
+#: src/components/project/PinnedProjectCard.tsx:197
 msgid "Edited {0}"
 msgstr "Edited {0}"
 
@@ -5564,9 +5633,9 @@ msgstr "Část editoru"
 
 #: src/routes/auth/RequestPasswordReset.tsx:51
 #: src/routes/auth/RequestPasswordReset.tsx:54
-#: src/routes/auth/Login.tsx:395
-#: src/routes/auth/Login.tsx:512
+#: src/routes/auth/Login.tsx:399
 #: src/routes/auth/Login.tsx:516
+#: src/routes/auth/Login.tsx:520
 #: src/components/settings/AccountSettingsCard.tsx:182
 #: src/components/participant/ParticipantShareModal.tsx:135
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:351
@@ -5583,11 +5652,11 @@ msgstr "Napsat e-mail: {name}"
 msgid "Email address"
 msgstr "Email address"
 
-#: src/routes/auth/Login.tsx:412
+#: src/routes/auth/Login.tsx:416
 msgid "Email me a code"
 msgstr "Poslat kód e-mailem"
 
-#: src/routes/auth/Login.tsx:578
+#: src/routes/auth/Login.tsx:582
 msgid "Email me a sign-in code instead"
 msgstr "Poslat přihlašovací kód raději e-mailem"
 
@@ -5637,6 +5706,7 @@ msgstr "Emoji shown next to the topic e.g. 💡 🔍 📊"
 msgid "emptied out"
 msgstr "vyprázdněno"
 
+#: src/components/conversation/ConversationsMiniList.tsx:82
 #: src/components/conversation/ConversationTranscriptSection.tsx:116
 msgid "Empty"
 msgstr "Empty"
@@ -5756,7 +5826,7 @@ msgstr "Enter filename (without extension)"
 msgid "Enter new password"
 msgstr "Enter new password"
 
-#: src/routes/auth/Login.tsx:260
+#: src/routes/auth/Login.tsx:264
 msgid "Enter the 6-digit code from your authenticator app."
 msgstr "Enter the 6-digit code from your authenticator app."
 
@@ -5781,7 +5851,7 @@ msgstr "Entered by the participant on the portal"
 msgid "Entered details"
 msgstr "Zadané údaje"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:824
+#: src/routes/project/chat/ProjectChatRoute.tsx:826
 #: src/routes/project/canvas/CanvasRoute.tsx:337
 #: src/components/dropzone/UploadConversationDropzone.tsx:723
 #: src/components/dropzone/UploadConversationDropzone.tsx:833
@@ -6000,8 +6070,8 @@ msgstr "Prodloužit o 24 h"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:934
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1020
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1312
-#: src/routes/organisation/OrganisationRoute.tsx:1355
-#: src/routes/organisation/OrganisationRoute.tsx:1850
+#: src/routes/organisation/OrganisationRoute.tsx:1352
+#: src/routes/organisation/OrganisationRoute.tsx:1847
 #: src/routes/organisation/OrganisationExternalView.tsx:62
 #: src/lib/roles.ts:15
 #: src/features/sidebar/views/user/UserHomeView.tsx:116
@@ -6021,7 +6091,7 @@ msgid "External of partner"
 msgstr "Externí od partnera"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:809
-#: src/routes/organisation/OrganisationRoute.tsx:857
+#: src/routes/organisation/OrganisationRoute.tsx:854
 #: src/components/workspace/UsageCard.tsx:220
 #: src/components/project/ProjectUsageAndSharing.tsx:265
 msgid "Externals"
@@ -6031,7 +6101,7 @@ msgstr "Externals"
 msgid "Externals are not added to your organisation. They can only see the workspaces you select here."
 msgstr "Externals are not added to your organisation. They can only see the workspaces you select here."
 
-#: src/components/invite/InviteModal.tsx:634
+#: src/components/invite/InviteModal.tsx:636
 msgid "Externals only exist inside a workspace. Pick at least one to send the invite."
 msgstr "Externals only exist inside a workspace. Pick at least one to send the invite."
 
@@ -6080,7 +6150,7 @@ msgstr "Na tento objekt se faktický stav nevztahuje."
 #: src/routes/admin/AdminSettingsRoute.tsx:2695
 #: src/routes/admin/AdminSettingsRoute.tsx:2757
 #: src/features/sidebar/primitives/NavItem.tsx:281
-#: src/components/invite/InviteResultsList.tsx:58
+#: src/components/invite/InviteResultsList.tsx:61
 #: src/components/dropzone/UploadConversationDropzone.tsx:808
 #: src/components/billing/BillingManager.tsx:230
 msgid "Failed"
@@ -6104,8 +6174,8 @@ msgstr "Failed to add conversations to context"
 #~ msgid "Failed to approve outcome. Please try again."
 #~ msgstr "Failed to approve outcome. Please try again."
 
-#: src/components/conversation/hooks/index.ts:500
-#: src/components/conversation/hooks/index.ts:516
+#: src/components/conversation/hooks/index.ts:503
+#: src/components/conversation/hooks/index.ts:519
 msgid "Failed to clear conversations"
 msgstr "Rozhovory se nepodařilo vymazat"
 
@@ -6154,7 +6224,7 @@ msgstr "Failed to finish conversation. Please try again."
 msgid "Failed to generate {label}. Please try again."
 msgstr "Failed to generate {label}. Please try again."
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:127
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:133
 msgid "Failed to generate the summary. Please try again later."
 msgstr "Failed to generate the summary. Please try again later."
 
@@ -6195,7 +6265,7 @@ msgstr "Failed to mark announcement as unread"
 msgid "Failed to reconnect. Please try reloading the page."
 msgstr "Failed to reconnect. Please try reloading the page."
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:126
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:132
 msgid "Failed to regenerate the summary. Please try again later."
 msgstr "Failed to regenerate the summary. Please try again later."
 
@@ -6223,7 +6293,7 @@ msgstr "Failed to remove logo"
 msgid "Failed to reschedule. Please choose a time further in the future and try again."
 msgstr "Failed to reschedule. Please choose a time further in the future and try again."
 
-#: src/components/conversation/hooks/index.ts:614
+#: src/components/conversation/hooks/index.ts:622
 msgid "Failed to retranscribe conversation. Please try again."
 msgstr "Failed to retranscribe conversation. Please try again."
 
@@ -6351,7 +6421,7 @@ msgstr "Filename from uploaded file"
 msgid "Filter"
 msgstr "Filtr"
 
-#: src/components/conversation/ConversationsMiniList.tsx:153
+#: src/components/conversation/ConversationsMiniList.tsx:161
 msgid "Filter and sort"
 msgstr "Filtrovat a řadit"
 
@@ -6402,7 +6472,7 @@ msgid "participant.button.finish.confirm.text.mode"
 msgstr "Dokončit"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationText.tsx:246
+#: src/components/participant/ParticipantConversationText.tsx:247
 msgid "participant.button.finish.text.mode"
 msgstr "Finish"
 
@@ -6522,7 +6592,7 @@ msgstr "Například: zachovejte vlastní slova členů, vynechejte cokoliv o kon
 msgid "For internal use"
 msgstr "Pro interní použití"
 
-#: src/routes/organisation/OrganisationRoute.tsx:814
+#: src/routes/organisation/OrganisationRoute.tsx:811
 msgid "For invoices, a shared contract, to discuss a partnership, or anything custom, email <0>support@dembrane.com</0>."
 msgstr "Pro faktury, sdílené smlouvy, projednání partnerství nebo individuální požadavky napište na <0>support@dembrane.com</0>."
 
@@ -6572,7 +6642,7 @@ msgstr "Předpověď"
 msgid "Forgetting a saved memory"
 msgstr "Odstraňuje se uložená vzpomínka"
 
-#: src/routes/auth/Login.tsx:588
+#: src/routes/auth/Login.tsx:592
 msgid "Forgot your password?"
 msgstr "Forgot your password?"
 
@@ -6598,7 +6668,7 @@ msgstr "Organizace s tarifem Free mají měsíční limit {freeTierMonthlyCalls}
 msgid "Free plan allows 1 report per workspace"
 msgstr "Tarif Free umožňuje 1 zprávu na pracovní prostor"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1424
+#: src/routes/organisation/OrganisationRoute.tsx:1421
 msgid "Free plan allows 1 workspace per organisation"
 msgstr "Tarif Free umožňuje 1 pracovní prostor na organizaci"
 
@@ -6725,7 +6795,7 @@ msgstr "Generate secret"
 msgid "Generate stakeholders"
 msgstr "Vygenerovat zúčastněné strany"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:335
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:376
 msgid "Generate summary"
 msgstr "Vygenerovat shrnutí"
 
@@ -6757,7 +6827,7 @@ msgstr "Generuje se"
 msgid "Generating report..."
 msgstr "Generating report..."
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:130
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:136
 msgid "Generating the summary. Please wait..."
 msgstr "Generating the summary. Please wait..."
 
@@ -6782,7 +6852,7 @@ msgstr "Get an immediate reply from dembrane to help you deepen the conversation
 msgid "participant.refine.go.deeper.description"
 msgstr "Get an immediate reply from dembrane to help you deepen the conversation."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:698
+#: src/routes/onboarding/OnboardingRoute.tsx:704
 #: src/features/sidebar/views/user/UserHomeView.tsx:83
 msgid "Get started"
 msgstr "Get started"
@@ -6805,7 +6875,7 @@ msgstr "Ohodnoťte odpovědi v chatu palcem nahoru nebo dolů."
 #~ msgstr "Give me a list of 5-10 topics that are being discussed."
 
 #: src/components/popcorn/PopcornVoiceSection.tsx:161
-#: src/components/popcorn/PopcornStart.tsx:99
+#: src/components/popcorn/PopcornStart.tsx:102
 msgid "Give the session a title"
 msgstr "Pojmenujte relaci"
 
@@ -6931,13 +7001,13 @@ msgstr "Guide the report"
 msgid "Guided"
 msgstr "Guided"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:185
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:226
 #: src/components/conversation/ProjectConversationsPanel.tsx:291
 #: src/components/conversation/ConversationAccordion.tsx:575
 msgid "Has verified artifacts"
 msgstr "Has verified artifacts"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:485
+#: src/routes/onboarding/OnboardingRoute.tsx:491
 msgid "Have you completed a training?"
 msgstr "Absolvovali jste školení?"
 
@@ -6977,7 +7047,6 @@ msgid "Hidden by the Objects filter"
 msgstr "Skryto filtrem objektů"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1924
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1944
 msgid "Hidden from organisation members. Organisation admins can still find and join."
 msgstr "Skryto před členy organizace. Správci organizace mohou prostor stále najít a připojit se."
 
@@ -7003,7 +7072,7 @@ msgstr "Hide"
 msgid "Hide data"
 msgstr "Hide data"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1866
+#: src/routes/organisation/OrganisationRoute.tsx:1863
 msgid "Hide detail"
 msgstr "Hide detail"
 
@@ -7431,11 +7500,11 @@ msgstr "Nadpis úvodu"
 msgid "Invalid code. Please request a new one."
 msgstr "Invalid code. Please request a new one."
 
-#: src/routes/auth/Login.tsx:341
+#: src/routes/auth/Login.tsx:345
 msgid "Invalid credentials."
 msgstr "Invalid credentials."
 
-#: src/components/invite/InviteResultsList.tsx:55
+#: src/components/invite/InviteResultsList.tsx:58
 msgid "Invalid email"
 msgstr "Invalid email"
 
@@ -7455,7 +7524,7 @@ msgstr "Neplatný PIN nebo e-mail. Zkuste to prosím znovu."
 msgid "Invitations waiting for you. Accept to get started."
 msgstr "Invitations waiting for you. Accept to get started."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:126
+#: src/routes/onboarding/OnboardingRoute.tsx:130
 #: src/components/organisation/CreateOrganisationModal.tsx:176
 msgid "Invite"
 msgstr "Pozvat"
@@ -7479,11 +7548,11 @@ msgid "Invite only"
 msgstr "Jen na pozvání"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:827
-#: src/routes/organisation/OrganisationRoute.tsx:893
+#: src/routes/organisation/OrganisationRoute.tsx:890
 msgid "Invite people"
 msgstr "Invite people"
 
-#: src/components/invite/InviteModal.tsx:568
+#: src/components/invite/InviteModal.tsx:570
 msgid "Invite people to {orgName}"
 msgstr "Invite people to {orgName}"
 
@@ -7496,12 +7565,12 @@ msgstr "Invite resent"
 msgid "Invite revoked"
 msgstr "Invite revoked"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:254
+#: src/routes/onboarding/OnboardingRoute.tsx:260
 #: src/components/organisation/CreateOrganisationModal.tsx:130
 msgid "Invite sent"
 msgstr "Invite sent"
 
-#: src/components/invite/InviteModal.tsx:462
+#: src/components/invite/InviteModal.tsx:466
 msgid "Invite sent."
 msgstr "Invite sent."
 
@@ -7509,7 +7578,7 @@ msgstr "Invite sent."
 msgid "Invite sent. The project is shared once they join."
 msgstr "Pozvánka odeslána. Projekt se nasdílí, jakmile se připojí."
 
-#: src/routes/organisation/OrganisationRoute.tsx:895
+#: src/routes/organisation/OrganisationRoute.tsx:892
 msgid "Invite to a workspace, or just the organisation."
 msgstr "Invite to a workspace, or just the organisation."
 
@@ -7517,11 +7586,11 @@ msgstr "Invite to a workspace, or just the organisation."
 msgid "Invite to this workspace, or just the organisation."
 msgstr "Invite to this workspace, or just the organisation."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:335
+#: src/routes/onboarding/OnboardingRoute.tsx:341
 msgid "Invite your team"
 msgstr "Invite your team"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1224
+#: src/routes/organisation/OrganisationRoute.tsx:1221
 msgid "Invite-only workspace"
 msgstr "Pracovní prostor jen na pozvání"
 
@@ -7619,6 +7688,10 @@ msgstr "It looks like you don't have a report for this project yet. Generate one
 msgid "It may have already been used or expired. If your email is verified, log in to continue."
 msgstr "It may have already been used or expired. If your email is verified, log in to continue."
 
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:196
+msgid "It may have been deleted."
+msgstr "Možná byl smazán."
+
 #: src/components/participant/hooks/useConversationIssueBanner.ts:17
 #~ msgid "It sounds like more than one person is speaking. Taking turns will help us hear everyone clearly."
 #~ msgstr "It sounds like more than one person is speaking. Taking turns will help us hear everyone clearly."
@@ -7660,23 +7733,23 @@ msgstr "John"
 msgid "john@doe.com"
 msgstr "john@doe.com"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1977
-#: src/routes/organisation/OrganisationRoute.tsx:1983
+#: src/routes/organisation/OrganisationRoute.tsx:1974
+#: src/routes/organisation/OrganisationRoute.tsx:1980
 msgid "Join"
 msgstr "Join"
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:1971
+#: src/routes/organisation/OrganisationRoute.tsx:1968
 msgid "Join {0} as <0>admin</0>? It'll show in your sidebar right after."
 msgstr "Připojit se k {0} jako <0>správce</0>? Hned poté se vám zobrazí v bočním panelu."
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:1989
+#: src/routes/organisation/OrganisationRoute.tsx:1986
 msgid "Join {0} as an admin first to add others."
 msgstr "Nejprve se k {0} připojte jako správce, abyste mohli přidávat další."
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:1979
+#: src/routes/organisation/OrganisationRoute.tsx:1976
 msgid "Join {0}?"
 msgstr "Připojit se k {0}?"
 
@@ -7693,7 +7766,7 @@ msgstr "Připojit se jako správce"
 msgid "Join as admin?"
 msgstr "Připojit se jako správce?"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1994
+#: src/routes/organisation/OrganisationRoute.tsx:1991
 msgid "Join first"
 msgstr "Nejprve se připojit"
 
@@ -7733,7 +7806,7 @@ msgstr "Join this workspace to collaborate on conversations, share insights, and
 msgid "Joined {subjectName}"
 msgstr "Joined {subjectName}"
 
-#: src/routes/organisation/OrganisationRoute.tsx:588
+#: src/routes/organisation/OrganisationRoute.tsx:584
 msgid "Joined as admin"
 msgstr "Připojeno jako správce"
 
@@ -7757,6 +7830,7 @@ msgstr "Přejděte na nejnovější zprávu v chatu na tabletu i počítači."
 msgid "Just a moment"
 msgstr "Just a moment"
 
+#: src/lib/time.ts:15
 #: src/components/conversation/LiveFunnelSection.tsx:42
 msgid "just now"
 msgstr "právě teď"
@@ -7791,12 +7865,16 @@ msgid "Just talk or type naturally. Your input goes directly to our product team
 msgstr "Just talk or type naturally. Your input goes directly to our product team and genuinely helps us make dembrane better. We read everything."
 
 #: src/components/project/ProjectUsageAndSharing.tsx:244
-msgid "Just you — plus workspace admins."
-msgstr "Just you — plus workspace admins."
+#~ msgid "Just you — plus workspace admins."
+#~ msgstr "Just you — plus workspace admins."
 
 #: src/components/project/ProjectSharingModal.tsx:350
 msgid "Just you, for now."
 msgstr "Just you, for now."
+
+#: src/components/project/ProjectUsageAndSharing.tsx:244
+msgid "Just you, plus workspace admins."
+msgstr "Jen vy a správci pracovního prostoru."
 
 #: src/components/project/ProjectSharingStrip.tsx:65
 #~ msgid "Just you. Share with specific people →"
@@ -7918,9 +7996,9 @@ msgstr "Last name"
 
 #: src/theme.tsx:327
 msgid "Last page"
-msgstr "Poslední stránka"
+msgstr "Poslední stránka<<<<<<< HEAD"
 
-#: src/components/popcorn/PopcornStatus.tsx:60
+#: src/components/popcorn/PopcornStatus.tsx:70
 msgid "Last read {startedLabel}"
 msgstr "Naposledy načteno {startedLabel}"
 
@@ -8090,7 +8168,7 @@ msgid "Link"
 msgstr "Link"
 
 #: src/components/members/PendingInvitesSection.tsx:83
-#: src/components/invite/InviteResultsList.tsx:68
+#: src/components/invite/InviteResultsList.tsx:71
 msgid "Link copied"
 msgstr "Link copied"
 
@@ -8205,16 +8283,16 @@ msgid "Live until {0}"
 msgstr "Živě do {0}"
 
 #. placeholder {0}: format(expiry, "EEE d MMM, HH:mm")
-#: src/routes/project/popcorn/PopcornRoute.tsx:59
+#: src/routes/project/popcorn/PopcornRoute.tsx:62
 msgid "live until {0}, reads every {every} min"
 msgstr "živě do {0}, čte se každých {every} min"
 
 #. placeholder {0}: popcorn.counts.phrases
 #: src/routes/project/library/LibraryRoute.tsx:85
 msgid "Live, {0} phrases so far"
-msgstr "Živě, zatím {0} frází"
+msgstr "Živě, zatím {0} frází<<<<<<< HEAD"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:60
+#: src/routes/project/popcorn/PopcornRoute.tsx:63
 msgid "live, reads every {every} min"
 msgstr "živě, čte se každých {every} min"
 
@@ -8273,7 +8351,7 @@ msgstr "Načítá se průvodce pro hostitele"
 msgid "Loading indicators and error messages give clearer feedback."
 msgstr "Indikátory načítání a chybové zprávy poskytují jasnější zpětnou vazbu."
 
-#: src/routes/organisation/OrganisationRoute.tsx:906
+#: src/routes/organisation/OrganisationRoute.tsx:903
 msgid "Loading members"
 msgstr "Načítání členů"
 
@@ -8325,7 +8403,7 @@ msgstr "Loading workspaces…"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:129
 #: src/components/conversation/ConversationAccordion.tsx:119
-#: src/components/conversation/hooks/index.ts:338
+#: src/components/conversation/hooks/index.ts:341
 msgid "Loading..."
 msgstr "Loading..."
 
@@ -8365,14 +8443,14 @@ msgstr "Parametry z článku LocalMAP"
 #~ msgid "LocalMap Settings"
 #~ msgstr "Nastavení LocalMap"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:217
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:258
 #: src/components/conversation/ConversationAccordion.tsx:612
 msgid "Locked"
 msgstr "Locked"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:441
 #: src/components/conversation/LiveMonitorSection.tsx:323
-#: src/components/conversation/ConversationsMiniList.tsx:404
+#: src/components/conversation/ConversationsMiniList.tsx:412
 msgid "Locked conversation, upgrade to view"
 msgstr "Uzamčený rozhovor, pro zobrazení přejděte na vyšší tarif"
 
@@ -8382,8 +8460,8 @@ msgstr "Locked to match the invite. To use a different address, ask the admin to
 
 #: src/routes/invite/AcceptInviteRoute.tsx:285
 #: src/routes/auth/VerifyEmail.tsx:161
-#: src/routes/auth/Login.tsx:439
-#: src/routes/auth/Login.tsx:556
+#: src/routes/auth/Login.tsx:443
+#: src/routes/auth/Login.tsx:560
 msgid "Log in"
 msgstr "Log in"
 
@@ -8501,7 +8579,7 @@ msgstr "Spravovat účastníky"
 msgid "Manage billing accounts, payments and workspace upgrade requests."
 msgstr "Spravujte fakturační účty, platby a žádosti o navýšení tarifu pracovního prostoru."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1383
+#: src/routes/organisation/OrganisationRoute.tsx:1380
 msgid "Manage members"
 msgstr "Manage members"
 
@@ -8605,14 +8683,14 @@ msgstr "Mark all read"
 msgid "Mark as attended"
 msgstr "Označit jako absolvované"
 
-#: src/features/sidebar/views/InboxView.tsx:479
-#: src/features/sidebar/views/InboxView.tsx:570
+#: src/features/sidebar/views/InboxView.tsx:480
+#: src/features/sidebar/views/InboxView.tsx:571
 #: src/components/inbox/Inbox.tsx:397
 #: src/components/announcement/AnnouncementItem.tsx:148
 msgid "Mark as read"
 msgstr "Mark as read"
 
-#: src/features/sidebar/views/InboxView.tsx:570
+#: src/features/sidebar/views/InboxView.tsx:571
 #: src/components/announcement/AnnouncementItem.tsx:137
 msgid "Mark as unread"
 msgstr "Mark as unread"
@@ -8706,7 +8784,7 @@ msgstr "members"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:786
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:807
-#: src/routes/organisation/OrganisationRoute.tsx:855
+#: src/routes/organisation/OrganisationRoute.tsx:852
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:78
 #: src/features/sidebar/views/org/OrgHomeView.tsx:132
 #: src/components/workspace/UsageCard.tsx:210
@@ -8784,7 +8862,7 @@ msgstr "Mimo položenou otázku"
 msgid "Missing features I need"
 msgstr "Chybí mi potřebné funkce"
 
-#: src/components/invite/InviteModal.tsx:713
+#: src/components/invite/InviteModal.tsx:715
 msgid "mo"
 msgstr "měs."
 
@@ -8981,7 +9059,7 @@ msgstr "Name it after the topic, engagement, or question you're exploring."
 msgid "Name updated"
 msgstr "Name updated"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:644
+#: src/routes/onboarding/OnboardingRoute.tsx:650
 msgid "Name your organisation to get started. You can invite members right after, or join other organisations later from settings."
 msgstr "Name your organisation to get started. You can invite members right after, or join other organisations later from settings."
 
@@ -9072,7 +9150,7 @@ msgstr "Nikdy"
 msgid "new"
 msgstr "nové"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1617
+#: src/routes/organisation/OrganisationRoute.tsx:1614
 #: src/components/workspace/TierStatusBadge.tsx:38
 msgid "New"
 msgstr "New"
@@ -9189,12 +9267,12 @@ msgstr "Další stránka"
 #~ msgid "Next: pick a time"
 #~ msgstr "Dále: vyberte čas"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:476
-#: src/routes/onboarding/OnboardingRoute.tsx:490
+#: src/routes/onboarding/OnboardingRoute.tsx:482
+#: src/routes/onboarding/OnboardingRoute.tsx:496
 msgid "No"
 msgstr "Ne"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2076
+#: src/routes/organisation/OrganisationRoute.tsx:2073
 msgid "No access"
 msgstr "No access"
 
@@ -9302,7 +9380,7 @@ msgid "No conversations found. Start a conversation using the participation invi
 msgstr "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:823
-#: src/components/conversation/ConversationsMiniList.tsx:257
+#: src/components/conversation/ConversationsMiniList.tsx:265
 msgid "No conversations match these filters."
 msgstr "No conversations match these filters."
 
@@ -9312,7 +9390,7 @@ msgid "select.all.modal.no.conversations"
 msgstr "No conversations were processed. This may happen if all conversations are already in context or don't match the selected filters."
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:825
-#: src/components/conversation/ConversationsMiniList.tsx:259
+#: src/components/conversation/ConversationsMiniList.tsx:267
 msgid "No conversations yet."
 msgstr "No conversations yet."
 
@@ -9368,7 +9446,7 @@ msgstr "Zatím žádný cíl."
 msgid "No goal yet. Set one here, or let the assistant interview you in chat."
 msgstr "Zatím žádný cíl. Nastavte si ho zde, nebo se nechte vyzpovídat asistentem v chatu."
 
-#: src/components/invite/InviteModal.tsx:468
+#: src/components/invite/InviteModal.tsx:470
 msgid "No invites went out. Check the list below."
 msgstr "No invites went out. Check the list below."
 
@@ -9420,7 +9498,7 @@ msgstr "No name"
 msgid "No new feedback detected yet. Please continue your discussion and try again soon."
 msgstr "No new feedback detected yet. Please continue your discussion and try again soon."
 
-#: src/components/invite/InviteModal.tsx:464
+#: src/components/invite/InviteModal.tsx:462
 msgid "No new invites needed. Check the list below."
 msgstr "No new invites needed. Check the list below."
 
@@ -9445,7 +9523,7 @@ msgid "No one is auto-blocked for non-payment. Watch failed charges here and fol
 msgstr "Nikdo není automaticky blokován z důvodu neplacení. Zde můžete sledovat neúspěšné platby a řešit je."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1198
-#: src/routes/organisation/OrganisationRoute.tsx:970
+#: src/routes/organisation/OrganisationRoute.tsx:967
 #: src/components/project/ProjectUsageAndSharing.tsx:371
 msgid "No one matches that filter."
 msgstr "No one matches that filter."
@@ -9455,15 +9533,15 @@ msgstr "No one matches that filter."
 #~ msgid "No one on the organisation yet."
 #~ msgstr "No one on the organisation yet."
 
-#: src/routes/organisation/OrganisationRoute.tsx:915
+#: src/routes/organisation/OrganisationRoute.tsx:912
 msgid "No one on the organisation yet. Organisation members appear here once they join a workspace."
 msgstr "V organizaci zatím nikdo není. Členové organizace se zde zobrazí, jakmile se připojí k pracovnímu prostoru."
 
-#: src/routes/organisation/OrganisationRoute.tsx:877
+#: src/routes/organisation/OrganisationRoute.tsx:874
 msgid "No one on the organisation yet. Organisation members appear here once they join a workspace. Invites are sent from each workspace's Members tab."
 msgstr "V organizaci zatím nikdo není. Členové organizace se zde zobrazí, jakmile se připojí k pracovnímu prostoru. Pozvánky se odesílají z karty Členové v každém pracovním prostoru."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1346
+#: src/routes/organisation/OrganisationRoute.tsx:1343
 msgid "No one on this organisation yet."
 msgstr "No one on this organisation yet."
 
@@ -9476,7 +9554,7 @@ msgstr "No one shared yet"
 msgid "No one's on the workspace yet."
 msgstr "No one's on the workspace yet."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1845
+#: src/routes/organisation/OrganisationRoute.tsx:1842
 msgid "No organisation role. Access via workspace invites."
 msgstr "No organisation role. Access via workspace invites."
 
@@ -9650,7 +9728,7 @@ msgstr "Zatím žádná školení."
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "No transcript exists for this conversation yet. Please check back later."
 
-#: src/components/popcorn/PopcornStart.tsx:67
+#: src/components/popcorn/PopcornStart.tsx:70
 msgid "No transcripts yet. You can run popcorn now; the screen fills as conversations land."
 msgstr "Zatím žádné přepisy. Popcorn můžete spustit hned; obrazovka se bude plnit, jakmile dorazí rozhovory."
 
@@ -9687,15 +9765,15 @@ msgstr "No webhooks found"
 msgid "No webhooks yet. Add a webhook to automatically receive conversation data when events happen."
 msgstr "Zatím žádné webhooky. Přidejte webhook a data rozhovorů budete dostávat automaticky, když nastanou události."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1728
+#: src/routes/organisation/OrganisationRoute.tsx:1725
 msgid "No workspace access yet"
 msgstr "No workspace access yet"
 
-#: src/components/invite/InviteModal.tsx:643
+#: src/components/invite/InviteModal.tsx:645
 msgid "No workspace picked. They'll be added to {orgName} and can request workspace access themselves."
 msgstr "No workspace picked. They'll be added to {orgName} and can request workspace access themselves."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1910
+#: src/routes/organisation/OrganisationRoute.tsx:1907
 msgid "No workspace role change. Add this person to the organisation, then re-invite from the workspace."
 msgstr "No workspace role change. Add this person to the organisation, then re-invite from the workspace."
 
@@ -9922,7 +10000,7 @@ msgstr "Pozorovatelé jsou zdarma, mají přístup pouze pro čtení a jsou urč
 msgid "Observers are free, read-only guests. To give edit access, remove them and re-invite as a member."
 msgstr "Pozorovatelé jsou bezplatní hosté s přístupem pouze pro čtení. Chcete-li jim udělit práva k úpravám, odeberte je a znovu pozvěte jako členy."
 
-#: src/components/invite/InviteModal.tsx:662
+#: src/components/invite/InviteModal.tsx:664
 msgid "Observers are only available in workspaces for an external client. Pick only external-client workspaces, or choose a different role."
 msgstr "Pozorovatelé jsou k dispozici pouze v pracovních prostorech pro externí klienty. Vyberte pouze pracovní prostory pro externí klienty nebo zvolte jinou roli."
 
@@ -10065,6 +10143,10 @@ msgstr "Přikládat lze jen obrázky"
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:359
 msgid "Only organisation admins and owners can create workspaces. Ask an admin on your organisation to create one, or to promote you first."
 msgstr "Pracovní prostory mohou vytvářet pouze správci a vlastníci organizace. Požádejte správce své organizace o vytvoření, nebo o přidělení vyšších práv."
+
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1944
+msgid "Only the people you add can see it. The organisation owner can also find and join."
+msgstr "Uvidí jej pouze lidé, které přidáte. Vlastník organizace ho může také najít a připojit se."
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:391
 msgid "Only the people you add or invite can see it."
@@ -10278,7 +10360,7 @@ msgstr "Otevřít pracovní prostor"
 msgid "Open workspace actions"
 msgstr "Otevřít akce pracovního prostoru"
 
-#: src/routes/auth/Login.tsx:503
+#: src/routes/auth/Login.tsx:507
 msgid "Open your authenticator app and enter the current six-digit code."
 msgstr "Open your authenticator app and enter the current six-digit code."
 
@@ -10330,7 +10412,7 @@ msgid "Options"
 msgstr "Options"
 
 #: src/routes/auth/Register.tsx:292
-#: src/routes/auth/Login.tsx:594
+#: src/routes/auth/Login.tsx:598
 msgid "or"
 msgstr "or"
 
@@ -10354,7 +10436,7 @@ msgstr "Org only"
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:475
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:705
 #: src/routes/organisation/OrganisationExternalView.tsx:39
-#: src/routes/onboarding/OnboardingRoute.tsx:126
+#: src/routes/onboarding/OnboardingRoute.tsx:130
 #: src/features/sidebar/views/org/OrgHomeView.tsx:82
 #: src/features/sidebar/hooks/useSearchHits.ts:134
 #: src/components/training/StaffTrainingPanel.tsx:146
@@ -10365,7 +10447,7 @@ msgstr "Org only"
 msgid "Organisation"
 msgstr "Organisation"
 
-#: src/routes/organisation/OrganisationRoute.tsx:371
+#: src/routes/organisation/OrganisationRoute.tsx:377
 msgid "Organisation | dembrane"
 msgstr "Organisation | dembrane"
 
@@ -10394,18 +10476,18 @@ msgstr "Organisation member"
 msgid "Organisation members load faster."
 msgstr "Členové organizace se načítají rychleji."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1079
-#: src/routes/onboarding/OnboardingRoute.tsx:682
+#: src/routes/organisation/OrganisationRoute.tsx:1076
+#: src/routes/onboarding/OnboardingRoute.tsx:688
 #: src/components/organisation/CreateOrganisationModal.tsx:195
 msgid "Organisation name"
 msgstr "Organisation name"
 
-#: src/routes/organisation/OrganisationRoute.tsx:688
+#: src/routes/organisation/OrganisationRoute.tsx:684
 msgid "Organisation not found"
 msgstr "Organisation not found"
 
 #: src/routes/invite/MyInvitesRoute.tsx:187
-#: src/components/invite/InviteResultsList.tsx:99
+#: src/components/invite/InviteResultsList.tsx:102
 msgid "Organisation only"
 msgstr "Organisation only"
 
@@ -10641,12 +10723,12 @@ msgstr "Účastníkům se před ukončením rozhovoru zobrazí připomínka k ov
 msgid "Participants will be able to select tags when creating conversations"
 msgstr "Participants will be able to select tags when creating conversations"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1567
+#: src/routes/organisation/OrganisationRoute.tsx:1564
 msgid "partner"
 msgstr "partner"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:534
-#: src/components/invite/InviteModal.tsx:724
+#: src/components/invite/InviteModal.tsx:726
 msgid "Partner"
 msgstr "Partner"
 
@@ -10655,7 +10737,7 @@ msgstr "Partner"
 msgid "Partner organisation"
 msgstr "Partner organisation"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1563
+#: src/routes/organisation/OrganisationRoute.tsx:1560
 msgid "Partner workspace, billed on its own and not part of the organisation's plan."
 msgstr "Partnerský pracovní prostor, účtovaný zvlášť a nezahrnutý v tarifu organizace."
 
@@ -10664,8 +10746,8 @@ msgid "Partner workspace, billed separately from the organisation."
 msgstr "Partnerský pracovní prostor, účtovaný odděleně od organizace."
 
 #: src/routes/auth/Register.tsx:217
-#: src/routes/auth/Login.tsx:526
 #: src/routes/auth/Login.tsx:530
+#: src/routes/auth/Login.tsx:534
 msgid "Password"
 msgstr "Password"
 
@@ -10784,12 +10866,12 @@ msgstr "Pending invites"
 msgid "Pending invites | dembrane"
 msgstr "Pending invites | dembrane"
 
-#: src/routes/organisation/OrganisationRoute.tsx:724
+#: src/routes/organisation/OrganisationRoute.tsx:721
 msgid "people"
 msgstr "people"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:732
-#: src/routes/organisation/OrganisationRoute.tsx:1334
+#: src/routes/organisation/OrganisationRoute.tsx:1331
 msgid "People"
 msgstr "People"
 
@@ -10802,11 +10884,11 @@ msgstr "People with access"
 msgid "People, groups and what matters to them"
 msgstr "Lidé, skupiny a to, na čem jim záleží"
 
-#: src/components/invite/InviteModal.tsx:674
+#: src/components/invite/InviteModal.tsx:676
 msgid "Per-recipient results:"
 msgstr "Per-recipient results:"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1881
+#: src/routes/organisation/OrganisationRoute.tsx:1878
 msgid "Per-workspace access"
 msgstr "Per-workspace access"
 
@@ -10818,7 +10900,7 @@ msgstr "Percent"
 msgid "Period"
 msgstr "Period"
 
-#: src/routes/organisation/OrganisationRoute.tsx:724
+#: src/routes/organisation/OrganisationRoute.tsx:721
 msgid "person"
 msgstr "person"
 
@@ -10859,13 +10941,13 @@ msgstr "Vyberte si čas ({host})."
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2991
 msgid "Pick an account"
-msgstr "Vyberte účet"
+msgstr "Vyberte účet<<<<<<< HEAD"
 
 #: src/components/map/panels/KnowledgeGraph.tsx:562
 msgid "Pick an argument to go to it, or a quote to find it below."
 msgstr "Vyberte argument a přejděte na něj, nebo citaci a najděte ji níže."
 
-#: src/components/invite/InviteModal.tsx:652
+#: src/components/invite/InviteModal.tsx:654
 msgid "Pick at least one workspace to send the invite."
 msgstr "Pick at least one workspace to send the invite."
 
@@ -10889,7 +10971,7 @@ msgstr "Pilot limit reached"
 msgid "Pin"
 msgstr "Pin"
 
-#: src/components/project/ProjectListItem.tsx:293
+#: src/components/project/ProjectListItem.tsx:296
 msgid "Pin project"
 msgstr "Pin project"
 
@@ -10971,7 +11053,7 @@ msgstr "Please enable participation to enable sharing"
 msgid "Please enter a valid email."
 msgstr "Please enter a valid email."
 
-#: src/routes/auth/Login.tsx:385
+#: src/routes/auth/Login.tsx:389
 msgid "Please log in to continue."
 msgstr "Please log in to continue."
 
@@ -10997,7 +11079,7 @@ msgstr "Please log in to continue."
 #~ "(black screen = not recording).\n"
 #~ "This transcript will be anonymized and your host will not be able to listen to your recording."
 
-#: src/components/participant/ParticipantBody.tsx:159
+#: src/components/participant/ParticipantBody.tsx:166
 msgid ""
 "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
 "**Please keep this screen lit up**\n"
@@ -11007,7 +11089,7 @@ msgstr ""
 "**Please keep this screen lit up**\n"
 "(zamčená obrazovka = nenahrává se)"
 
-#: src/components/participant/ParticipantBody.tsx:155
+#: src/components/participant/ParticipantBody.tsx:162
 msgid ""
 "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
 "**Please keep this screen lit up**\n"
@@ -11018,6 +11100,18 @@ msgstr ""
 "**Please keep this screen lit up**\n"
 "(zamčená obrazovka = nenahrává se).\n"
 "This transcript will be anonymized and your host will not be able to listen to your recording."
+
+#: src/components/participant/ParticipantBody.tsx:160
+msgid "Please type your response in the box below. You may also choose to record your response by clicking the microphone icon."
+msgstr "Napište prosím svou odpověď do pole níže. Můžete ji také nahrát kliknutím na ikonu mikrofonu."
+
+#: src/components/participant/ParticipantBody.tsx:158
+msgid ""
+"Please type your response in the box below. You may also choose to record your response by clicking the microphone icon.\n"
+"This transcript will be anonymized."
+msgstr ""
+"Napište prosím svou odpověď do pole níže. Můžete ji také nahrát kliknutím na ikonu mikrofonu.\n"
+"Tento přepis bude anonymizován."
 
 #: src/components/conversation/RetranscribeConversation.tsx:164
 msgid "Please wait while we process your retranscription request. You will be redirected to the new conversation when ready."
@@ -11058,9 +11152,9 @@ msgstr "Popcorn"
 
 #: src/components/popcorn/PopcornLanguageSettings.tsx:68
 msgid "Popcorn also in"
-msgstr "Popcorn také v jazyce"
+msgstr "Popcorn také v jazyce<<<<<<< HEAD"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:180
+#: src/routes/project/popcorn/PopcornRoute.tsx:183
 msgid "Popcorn could not be loaded"
 msgstr "Popcorn se nepodařilo načíst"
 
@@ -11324,7 +11418,7 @@ msgstr "Private · only invited people can see this"
 msgid "Private project"
 msgstr "Private project"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1215
+#: src/routes/organisation/OrganisationRoute.tsx:1212
 #: src/components/workspace/OrganisationUsageRollup.tsx:328
 msgid "Private workspace"
 msgstr "Private workspace"
@@ -11359,7 +11453,7 @@ msgstr "Processing your retranscription request..."
 msgid "Procurement help"
 msgstr "Nákup a fakturace"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1577
+#: src/routes/organisation/OrganisationRoute.tsx:1574
 msgid "project"
 msgstr "project"
 
@@ -11446,7 +11540,7 @@ msgstr "Projekt byl přesunut"
 
 #: src/routes/project/ProjectHomeRoute.tsx:239
 #: src/routes/project/CreateProjectRoute.tsx:236
-#: src/components/project/ProjectListItem.tsx:400
+#: src/components/project/ProjectListItem.tsx:403
 #: src/components/project/ProjectDangerZone.tsx:136
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:68
 msgid "Project name"
@@ -11464,7 +11558,7 @@ msgstr "Project name must be at least 4 characters long"
 msgid "Project not found"
 msgstr "Project not found"
 
-#: src/components/project/ProjectListItem.tsx:318
+#: src/components/project/ProjectListItem.tsx:321
 msgid "Project options"
 msgstr "Možnosti projektu"
 
@@ -11492,7 +11586,7 @@ msgstr "Předpokládaný měsíční součet"
 msgid "Projected yearly total"
 msgstr "Předpokládaný roční součet"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1577
+#: src/routes/organisation/OrganisationRoute.tsx:1574
 #: src/routes/organisation/OrganisationExternalView.tsx:105
 msgid "projects"
 msgstr "projects"
@@ -11532,7 +11626,7 @@ msgstr "Proposed"
 msgid "Proposed changes"
 msgstr "Navrhované změny"
 
-#: src/components/invite/InviteModal.tsx:765
+#: src/components/invite/InviteModal.tsx:767
 msgid "Prorated for the rest of this billing period."
 msgstr "Poměrná částka do konce tohoto zúčtovacího období."
 
@@ -11629,7 +11723,7 @@ msgstr "Citace ({quoteCount})"
 msgid "Ran {0} steps at once"
 msgstr "Provedeno {0} kroků najednou"
 
-#: src/components/invite/InviteResultsList.tsx:49
+#: src/components/invite/InviteResultsList.tsx:52
 msgid "Rate limited"
 msgstr "Rate limited"
 
@@ -11650,11 +11744,11 @@ msgstr "Re-enter new password"
 msgid "Re-use settings from an existing webhook"
 msgstr "Re-use settings from an existing webhook"
 
-#: src/components/invite/InviteModal.tsx:692
+#: src/components/invite/InviteModal.tsx:694
 msgid "Reactivate"
 msgstr "Znovu aktivovat"
 
-#: src/components/invite/InviteResultsList.tsx:53
+#: src/components/invite/InviteResultsList.tsx:56
 msgid "Reactivate plan"
 msgstr "Znovu aktivovat tarif"
 
@@ -11702,7 +11796,7 @@ msgstr "Čtěte odpovědi hned, jak dorazí."
 msgid "Read shared findings, inspect their evidence and see how they were produced."
 msgstr "Přečtěte si sdílené poznatky, prozkoumejte jejich podklady a podívejte se, jak vznikly."
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:413
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:454
 #: src/components/conversation/RetranscribeConversation.tsx:187
 msgid "Read the troubleshooting guide for transcripts and summaries"
 msgstr "Přečtěte si průvodce řešením problémů s přepisy a shrnutími"
@@ -11723,13 +11817,12 @@ msgstr "Čte se shrnutí uživatele {0}"
 #. placeholder {0}: context.participantName
 #: src/components/chat/agenticToolActivity.ts:148
 msgid "Reading {0}'s transcript"
-msgstr "Čte se přepis uživatele {0}"
+msgstr "Čte se přepis uživatele {0}<<<<<<< HEAD"
 
-#. placeholder {0}: counts.conversations
-#: src/features/processes/watchers.tsx:103
-#: src/components/popcorn/PopcornStatus.tsx:47
-msgid "Reading {reading} of {0} conversations…"
-msgstr "Čte se {reading} z {0} rozhovorů…"
+#: src/features/processes/watchers.tsx:100
+#: src/components/popcorn/PopcornStatus.tsx:45
+#~ msgid "Reading {reading} of {0} conversations…"
+#~ msgstr "Čte se {reading} z {0} rozhovorů…>>>>>>> origin/main"
 
 #: src/components/chat/agenticToolActivity.ts:144
 msgid "Reading a conversation summary"
@@ -11993,8 +12086,8 @@ msgstr "Obnovení bude fungovat, jakmile bude služba plátna připravena."
 msgid "Refreshing…"
 msgstr "Refreshing…"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:419
-#: src/routes/project/chat/ProjectChatRoute.tsx:752
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:460
+#: src/routes/project/chat/ProjectChatRoute.tsx:754
 #: src/routes/project/canvas/CanvasRoute.tsx:690
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:625
 #: src/components/popcorn/PopcornActions.tsx:66
@@ -12009,8 +12102,8 @@ msgstr "Regenerate"
 msgid "Regenerate popcorn?"
 msgstr "Znovu vygenerovat Popcorn?"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:277
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:398
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:318
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:439
 msgid "Regenerate summary"
 msgstr "Regenerate summary"
 
@@ -12023,7 +12116,7 @@ msgstr "Regenerate summary"
 msgid "participant.regenerating.outcome"
 msgstr "Regenerating the outcome"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:129
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:135
 msgid "Regenerating the summary. Please wait..."
 msgstr "Regenerating the summary. Please wait..."
 
@@ -12089,7 +12182,7 @@ msgstr "Připomínka odeslána: přístup podpory je stále aktivní"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1659
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1726
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1806
-#: src/routes/organisation/OrganisationRoute.tsx:1801
+#: src/routes/organisation/OrganisationRoute.tsx:1798
 #: src/components/settings/WhitelabelLogoCard.tsx:146
 #: src/components/settings/WhitelabelLogoCard.tsx:180
 #: src/components/settings/AccountSettingsCard.tsx:163
@@ -12144,11 +12237,11 @@ msgstr "Remove file"
 msgid "Remove from chat"
 msgstr "Remove from chat"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2094
+#: src/routes/organisation/OrganisationRoute.tsx:2091
 msgid "Remove from organisation"
 msgstr "Remove from organisation"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1803
+#: src/routes/organisation/OrganisationRoute.tsx:1800
 msgid "Remove from organisation?"
 msgstr "Remove from organisation?"
 
@@ -12202,8 +12295,8 @@ msgstr "Rename chat"
 #: src/routes/project/ProjectHomeRoute.tsx:138
 #: src/routes/project/ProjectHomeRoute.tsx:142
 #: src/routes/project/ProjectHomeRoute.tsx:238
-#: src/components/project/ProjectListItem.tsx:341
-#: src/components/project/ProjectListItem.tsx:399
+#: src/components/project/ProjectListItem.tsx:344
+#: src/components/project/ProjectListItem.tsx:402
 msgid "Rename project"
 msgstr "Přejmenovat projekt"
 
@@ -12510,7 +12603,7 @@ msgstr "Reset"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:724
 #: src/components/conversation/ProjectConversationsPanel.tsx:728
-#: src/components/conversation/ConversationsMiniList.tsx:202
+#: src/components/conversation/ConversationsMiniList.tsx:210
 msgid "Reset filters"
 msgstr "Reset filters"
 
@@ -12809,8 +12902,8 @@ msgstr "Right-click to highlight"
 msgid "Role"
 msgstr "Role"
 
-#: src/routes/organisation/OrganisationRoute.tsx:454
-#: src/routes/organisation/OrganisationRoute.tsx:481
+#: src/routes/organisation/OrganisationRoute.tsx:458
+#: src/routes/organisation/OrganisationRoute.tsx:483
 msgid "Role changed"
 msgstr "Role changed"
 
@@ -12830,7 +12923,7 @@ msgstr "Přibližně kolik?"
 msgid "Rows per page"
 msgstr "Rows per page"
 
-#: src/components/popcorn/PopcornStart.tsx:112
+#: src/components/popcorn/PopcornStart.tsx:115
 msgid "Run"
 msgstr "Spustit"
 
@@ -12882,7 +12975,7 @@ msgstr "Ukázková relace Popcorn"
 #: src/components/settings/LegalBasisCard.tsx:226
 #: src/components/settings/ChangePasswordCard.tsx:100
 #: src/components/settings/AccountSettingsCard.tsx:192
-#: src/components/results/resultEditing.tsx:479
+#: src/components/results/resultEditing.tsx:480
 #: src/components/results/ReasonPrompt.tsx:229
 #: src/components/project/CustomTopicModal.tsx:252
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:370
@@ -12933,7 +13026,7 @@ msgstr "Save template"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1435
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1467
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1487
-#: src/routes/organisation/OrganisationRoute.tsx:1069
+#: src/routes/organisation/OrganisationRoute.tsx:1066
 #: src/routes/admin/AdminSettingsRoute.tsx:449
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:108
 #: src/components/conversation/ConversationDrilldownModal.tsx:144
@@ -12944,15 +13037,15 @@ msgstr "Saved"
 msgid "Saved appearance settings apply when the page first loads."
 msgstr "Uložené nastavení vzhledu se použije při prvním načtení stránky."
 
-#: src/components/results/resultEditing.tsx:566
+#: src/components/results/resultEditing.tsx:567
 msgid "Saved as a change of meaning."
 msgstr "Uloženo jako změna významu."
 
-#: src/components/results/resultEditing.tsx:562
+#: src/components/results/resultEditing.tsx:563
 msgid "Saved as a typo."
 msgstr "Uloženo jako překlep."
 
-#: src/components/results/resultEditing.tsx:564
+#: src/components/results/resultEditing.tsx:565
 msgid "Saved as clearer words."
 msgstr "Uloženo jako jasnější formulace."
 
@@ -13072,7 +13165,7 @@ msgstr "Scroll to bottom"
 #: src/components/results/ResultsList.tsx:288
 #: src/components/conversation/ProjectConversationsPanel.tsx:676
 #: src/components/conversation/MoveConversationButton.tsx:155
-#: src/components/conversation/ConversationsMiniList.tsx:162
+#: src/components/conversation/ConversationsMiniList.tsx:170
 msgid "Search"
 msgstr "Search"
 
@@ -13232,7 +13325,7 @@ msgid "Seats"
 msgstr "Seats"
 
 #: src/components/invite/WorkspaceSelectList.tsx:203
-#: src/components/invite/InviteResultsList.tsx:51
+#: src/components/invite/InviteResultsList.tsx:54
 msgid "Seats full"
 msgstr "Seats full"
 
@@ -13289,11 +13382,11 @@ msgstr "Vybrat"
 msgid "Select {0}"
 msgstr "Select {0}"
 
-#: src/components/conversation/ConversationsMiniList.tsx:393
+#: src/components/conversation/ConversationsMiniList.tsx:401
 msgid "Select {title}"
 msgstr "Vybrat {title}"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:886
+#: src/routes/project/chat/ProjectChatRoute.tsx:888
 msgid "Select a conversation to continue"
 msgstr "Vyberte rozhovor pro pokračování"
 
@@ -13369,10 +13462,10 @@ msgstr "Vybrat zvukové soubory"
 msgid "Select conversation"
 msgstr "Vybrat rozhovor"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:895
-#: src/routes/project/chat/ProjectChatRoute.tsx:954
-#: src/routes/project/chat/ProjectChatRoute.tsx:955
-#: src/routes/project/chat/ProjectChatRoute.tsx:1040
+#: src/routes/project/chat/ProjectChatRoute.tsx:897
+#: src/routes/project/chat/ProjectChatRoute.tsx:956
+#: src/routes/project/chat/ProjectChatRoute.tsx:957
+#: src/routes/project/chat/ProjectChatRoute.tsx:1042
 #: src/routes/project/chat/NewChatRoute.tsx:624
 #: src/routes/project/chat/NewChatRoute.tsx:626
 #: src/routes/project/chat/NewChatRoute.tsx:733
@@ -13396,7 +13489,7 @@ msgstr "Vybrat všechna zobrazená zjištění"
 msgid "Select multiple conversations"
 msgstr "Vybrat více konverzací"
 
-#: src/components/project/ProjectListItem.tsx:370
+#: src/components/project/ProjectListItem.tsx:373
 msgid "Select project"
 msgstr "Vybrat projekt"
 
@@ -13478,7 +13571,7 @@ msgstr "Selection too large. Some conversations weren't added."
 msgid "Self-serve"
 msgstr "Samoobslužné"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:979
+#: src/routes/project/chat/ProjectChatRoute.tsx:981
 #: src/routes/project/chat/NewChatRoute.tsx:647
 #: src/components/feedback/ResponseFeedbackControls.tsx:219
 #: src/components/chat/AgenticChatPanel.tsx:2284
@@ -13488,11 +13581,11 @@ msgstr "Send"
 #. placeholder {0}: pendingInvites.length
 #. placeholder {0}: validChips.length
 #: src/components/project/ProjectSharingModal.tsx:488
-#: src/components/invite/InviteModal.tsx:787
+#: src/components/invite/InviteModal.tsx:789
 msgid "Send {0} invites"
 msgstr "Send {0} invites"
 
-#: src/routes/auth/Login.tsx:447
+#: src/routes/auth/Login.tsx:451
 msgid "Send a new code"
 msgstr "Odeslat nový kód"
 
@@ -13501,11 +13594,11 @@ msgid "Send feedback"
 msgstr "Odeslat zpětnou vazbu"
 
 #: src/components/project/ProjectSharingModal.tsx:490
-#: src/components/invite/InviteModal.tsx:789
+#: src/components/invite/InviteModal.tsx:791
 msgid "Send invite"
 msgstr "Send invite"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:362
+#: src/routes/onboarding/OnboardingRoute.tsx:368
 #: src/components/organisation/CreateOrganisationModal.tsx:243
 msgid "Send invites"
 msgstr "Send invites"
@@ -13535,12 +13628,12 @@ msgstr "Send Slack/Teams notifications when new conversations are completed"
 msgid "Send to dembrane"
 msgstr "Odeslat do dembrane"
 
-#: src/components/invite/InviteResultsList.tsx:43
+#: src/components/invite/InviteResultsList.tsx:44
 msgid "Sent"
 msgstr "Sent"
 
 #. placeholder {0}: rows.length
-#: src/components/invite/InviteModal.tsx:471
+#: src/components/invite/InviteModal.tsx:473
 msgid "Sent {sentCount} of {0}. Check the list below."
 msgstr "Sent {sentCount} of {0}. Check the list below."
 
@@ -13564,7 +13657,7 @@ msgstr "Název setkání"
 #~ msgid "Session Name"
 #~ msgstr "Session Name"
 
-#: src/components/popcorn/PopcornStart.tsx:74
+#: src/components/popcorn/PopcornStart.tsx:77
 msgid "Session title"
 msgstr "Název setkání"
 
@@ -13618,12 +13711,12 @@ msgstr "Set up workspace"
 msgid "Set up your first organisation"
 msgstr "Set up your first organisation"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:596
+#: src/routes/onboarding/OnboardingRoute.tsx:602
 #: src/features/sidebar/views/user/UserHomeView.tsx:130
 msgid "Set up your organisation"
 msgstr "Set up your organisation"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:158
+#: src/routes/onboarding/OnboardingRoute.tsx:162
 msgid "Set up your workspace | dembrane"
 msgstr "Set up your workspace | dembrane"
 
@@ -13631,7 +13724,7 @@ msgstr "Set up your workspace | dembrane"
 msgid "Set who can see and join."
 msgstr "Set who can see and join."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:301
+#: src/routes/onboarding/OnboardingRoute.tsx:307
 msgid "Setting things up for you"
 msgstr "Setting things up for you"
 
@@ -13841,7 +13934,7 @@ msgstr "Zobrazit aktuální argumenty"
 msgid "Show data"
 msgstr "Show data"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1866
+#: src/routes/organisation/OrganisationRoute.tsx:1863
 msgid "Show detail"
 msgstr "Show detail"
 
@@ -13861,13 +13954,13 @@ msgstr "Zobrazit úvod"
 msgid "Show IP addresses"
 msgstr "Show IP addresses"
 
-#: src/features/sidebar/views/InboxView.tsx:564
+#: src/features/sidebar/views/InboxView.tsx:565
 #: src/components/chat/CanvasSuggestionCard.tsx:292
 #: src/components/announcement/AnnouncementItem.tsx:119
 msgid "Show less"
 msgstr "Show less"
 
-#: src/features/sidebar/views/InboxView.tsx:564
+#: src/features/sidebar/views/InboxView.tsx:565
 #: src/components/workspace/SupportAccessSection.tsx:262
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:237
 #: src/components/chat/CanvasSuggestionCard.tsx:292
@@ -13999,11 +14092,11 @@ msgstr "Showing your most recent completed report."
 msgid "Shown at the top of the screen."
 msgstr "Zobrazuje se v horní části obrazovky."
 
-#: src/components/popcorn/PopcornStart.tsx:75
+#: src/components/popcorn/PopcornStart.tsx:78
 msgid "Shown at the top of the screen. Change it any time."
 msgstr "Zobrazuje se v horní části obrazovky. Kdykoli to můžete změnit."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1080
+#: src/routes/organisation/OrganisationRoute.tsx:1077
 msgid "Shown in the organisation header and in email subject lines."
 msgstr "Shown in the organisation header and in email subject lines."
 
@@ -14028,8 +14121,8 @@ msgstr "Přihlašovací odkazy před otevřením organizace nebo projektu zkontr
 msgid "Six weekends across seven months"
 msgstr "Šest víkendů v průběhu sedmi měsíců"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:370
-#: src/routes/onboarding/OnboardingRoute.tsx:536
+#: src/routes/onboarding/OnboardingRoute.tsx:376
+#: src/routes/onboarding/OnboardingRoute.tsx:542
 #: src/components/pricing/PricingConfigurator.tsx:879
 #: src/components/organisation/CreateOrganisationModal.tsx:251
 #: src/components/feedback/ResponseFeedbackControls.tsx:227
@@ -14083,7 +14176,7 @@ msgstr "Someone"
 msgid "Someone changed this while you had it open. Open it again to see their version."
 msgstr "Někdo to změnil, zatímco jsi to měl otevřené. Otevři to znovu a uvidíš jeho verzi."
 
-#: src/components/results/resultEditing.tsx:83
+#: src/components/results/resultEditing.tsx:84
 msgid "Someone else"
 msgstr "Někdo jiný"
 
@@ -14092,7 +14185,7 @@ msgstr "Někdo jiný"
 msgid "Someone reworded this"
 msgstr "Někdo to přeformuloval"
 
-#: src/components/results/resultEditing.tsx:538
+#: src/components/results/resultEditing.tsx:539
 msgid "Someone reworded this after you did. Their words stand. Open it to read them"
 msgstr "Někdo to přeformuloval po tobě. Jeho slova zůstávají. Otevři to a přečti si je"
 
@@ -14117,8 +14210,9 @@ msgstr "Something is blocking your connection. Your audio will not be saved unle
 #: src/routes/project/report/ProjectReportRoute.tsx:754
 #: src/routes/project/report/ProjectReportRoute.tsx:848
 #: src/routes/project/report/ProjectReportRoute.tsx:1204
-#: src/routes/auth/Login.tsx:233
-#: src/routes/auth/Login.tsx:306
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:191
+#: src/routes/auth/Login.tsx:237
+#: src/routes/auth/Login.tsx:310
 #: src/components/project/ProjectAccessGuard.tsx:109
 #: src/components/error/ErrorPage.tsx:56
 #: src/components/error/ErrorBoundary.tsx:44
@@ -14166,7 +14260,7 @@ msgstr "Došlo k chybě, kterou musíme opravit. Kontaktujte podporu a my vám p
 msgid "Something went wrong while transcribing. Try again."
 msgstr "Při přepisu došlo k chybě. Zkuste to znovu."
 
-#: src/components/participant/ParticipantBody.tsx:129
+#: src/components/participant/ParticipantBody.tsx:131
 msgid "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 msgstr "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 
@@ -14198,7 +14292,7 @@ msgid "participant.go.deeper.content.policy.violation.error.message"
 msgstr "Sorry, we cannot process this request due to an LLM provider's content policy."
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:696
-#: src/components/conversation/ConversationsMiniList.tsx:169
+#: src/components/conversation/ConversationsMiniList.tsx:177
 #: src/components/conversation/ConversationAccordion.tsx:1206
 #: src/components/conversation/ConversationAccordion.tsx:1213
 msgid "Sort"
@@ -14447,7 +14541,7 @@ msgstr "Kroky a záznamy"
 msgid "Still stuck? Email <0>support@dembrane.com</0>."
 msgstr "Still stuck? Email <0>support@dembrane.com</0>."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:787
+#: src/routes/project/chat/ProjectChatRoute.tsx:789
 #: src/components/pricing/PricingTextInput.tsx:251
 #: src/components/feedback/ReportIssueModal.tsx:242
 #: src/components/chat/AgenticChatPanel.tsx:2242
@@ -14533,7 +14627,7 @@ msgid "Submit"
 msgstr "Submit"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationText.tsx:226
+#: src/components/participant/ParticipantConversationText.tsx:227
 msgid "participant.button.submit.text.mode"
 msgstr "Submit"
 
@@ -14601,7 +14695,7 @@ msgstr "Summarize"
 msgid "Summarize this interview into a shareable article"
 msgstr "Summarize this interview into a shareable article"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:261
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:302
 #: src/components/conversation/ConversationEdit.tsx:455
 msgid "Summary"
 msgstr "Summary"
@@ -14610,15 +14704,15 @@ msgstr "Summary"
 msgid "Summary (when available)"
 msgstr "Summary (when available)"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:140
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:146
 msgid "Summary generated."
 msgstr "Summary generated."
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:139
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:145
 msgid "Summary regenerated."
 msgstr "Summary regenerated."
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:319
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:360
 msgid "Summary will be available once the conversation is transcribed"
 msgstr "Summary will be available once the conversation is transcribed"
 
@@ -14674,7 +14768,7 @@ msgstr "Podporuje pól A"
 msgid "Supports pole B"
 msgstr "Podporuje pól B"
 
-#: src/components/participant/ParticipantConversationText.tsx:233
+#: src/components/participant/ParticipantConversationText.tsx:234
 msgid "Switch to audio"
 msgstr "Přepnout na zvuk"
 
@@ -14744,7 +14838,7 @@ msgstr "Tag deleted"
 #: src/components/participant/ParticipantInitiateForm.tsx:281
 #: src/components/map/panels/MapSettingsMenu.tsx:267
 #: src/components/conversation/ProjectConversationsPanel.tsx:706
-#: src/components/conversation/ConversationsMiniList.tsx:179
+#: src/components/conversation/ConversationsMiniList.tsx:187
 #: src/components/conversation/ConversationEdit.tsx:424
 #: src/components/conversation/ConversationDrilldownModal.tsx:200
 #: src/components/conversation/ConversationAccordion.tsx:1275
@@ -14807,7 +14901,7 @@ msgstr "Sdělte správcům pracovního prostoru, k čemu přístup potřebujete.
 msgid "Tell us what you need"
 msgstr "Dejte nám vědět, co potřebujete"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:565
+#: src/routes/project/chat/ProjectChatRoute.tsx:567
 #: src/routes/project/chat/NewChatRoute.tsx:309
 #: src/components/chat/AgenticChatPanel.tsx:1703
 msgid "Template applied"
@@ -14914,7 +15008,7 @@ msgstr "Díky! To nám moc pomůže."
 msgid "That code did not work. Try again with a new code."
 msgstr "Tento kód nefungoval. Zkuste to znovu s novým kódem."
 
-#: src/routes/auth/Login.tsx:283
+#: src/routes/auth/Login.tsx:287
 msgid "That code didn't work. Try again with a fresh code from your authenticator app."
 msgstr "That code didn't work. Try again with a fresh code from your authenticator app."
 
@@ -14922,7 +15016,7 @@ msgstr "That code didn't work. Try again with a fresh code from your authenticat
 msgid "That code is not right or has expired. Request a new one."
 msgstr "Tento kód není správný nebo vypršel. Požádejte o nový."
 
-#: src/components/results/resultEditing.tsx:547
+#: src/components/results/resultEditing.tsx:548
 msgid "That did not save. Your words are still here."
 msgstr "Neuložilo se. Tvá slova tu zůstávají."
 
@@ -15148,7 +15242,7 @@ msgstr "Mapa se generuje. Jakmile bude hotová, zobrazí se zde."
 msgid "The map loads after you choose to open it."
 msgstr "Mapa se načte, až ji otevřete."
 
-#: src/components/results/resultEditing.tsx:489
+#: src/components/results/resultEditing.tsx:490
 #: src/components/results/ResultItem.tsx:283
 msgid "The meaning"
 msgstr "Význam"
@@ -15286,11 +15380,11 @@ msgstr "Boční panel lépe sedí na mobilních obrazovkách a má opravené fra
 msgid "The sidebar scrolls on short screens while keeping its header and footer available."
 msgstr "Boční panel se na menších obrazovkách posouvá, přičemž záhlaví a zápatí zůstávají dostupné."
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:144
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:150
 msgid "The summary is being generated. Please wait for it to be available."
 msgstr "The summary is being generated. Please wait for it to be available."
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:143
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:149
 msgid "The summary is being regenerated. Please wait for it to be available."
 msgstr "The summary is being regenerated. Please wait for it to be available."
 
@@ -15403,7 +15497,7 @@ msgstr "These conversations were excluded due to missing transcripts."
 msgid "These tag changes are applied to your project."
 msgstr "Tyto změny štítků jsou u vašeho projektu uplatněny."
 
-#: src/components/invite/InviteModal.tsx:617
+#: src/components/invite/InviteModal.tsx:619
 msgid "These workspaces are billed separately. Each person you add takes a seat in {billingContextCount} billing contexts, each invoiced on its own."
 msgstr "Tyto pracovní prostory jsou účtovány samostatně. Každá přidaná osoba obsadí místo v {billingContextCount} fakturačních kontextech, z nichž každý se fakturuje zvlášť."
 
@@ -15482,6 +15576,14 @@ msgstr "This conversation has the following copies:"
 msgid "conversation.linking_conversations.description"
 msgstr "This conversation is a copy of"
 
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:189
+msgid "This conversation is no longer available"
+msgstr "Tento rozhovor už není k dispozici"
+
+#: src/components/conversation/ConversationDangerZone.tsx:59
+msgid "This conversation is text only, so there is no audio to download"
+msgstr "Tento rozhovor je pouze textový, takže k němu není žádný zvuk ke stažení"
+
 #: src/components/map/panels/BudgetStates.tsx:58
 msgid "This deployment can open maps with up to {maximumCount} arguments."
 msgstr "Toto prostředí může otevřít mapy až s {maximumCount} argumenty."
@@ -15542,7 +15644,7 @@ msgid "This invite link isn't valid for this account"
 msgstr "This invite link isn't valid for this account"
 
 #. placeholder {0}: confirm.length
-#: src/components/invite/InviteModal.tsx:705
+#: src/components/invite/InviteModal.tsx:707
 msgid "This invite spans {0} billing contexts, each invoiced on its own:"
 msgstr "Tato pozvánka zahrnuje {0} fakturačních kontextů, každý fakturovaný samostatně:"
 
@@ -15657,11 +15759,11 @@ msgstr "This page is shown to participants when they start a conversation after 
 msgid "This part of the page failed to load. Reloading usually fixes it. If it keeps happening, head back home."
 msgstr "This part of the page failed to load. Reloading usually fixes it. If it keeps happening, head back home."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1745
-#: src/routes/organisation/OrganisationRoute.tsx:1768
-#: src/routes/organisation/OrganisationRoute.tsx:1785
-#: src/routes/organisation/OrganisationRoute.tsx:2011
-#: src/routes/organisation/OrganisationRoute.tsx:2052
+#: src/routes/organisation/OrganisationRoute.tsx:1742
+#: src/routes/organisation/OrganisationRoute.tsx:1765
+#: src/routes/organisation/OrganisationRoute.tsx:1782
+#: src/routes/organisation/OrganisationRoute.tsx:2008
+#: src/routes/organisation/OrganisationRoute.tsx:2049
 msgid "this person"
 msgstr "this person"
 
@@ -15921,7 +16023,7 @@ msgstr "Timestamp"
 msgid "Timestamps and duration"
 msgstr "Timestamps and duration"
 
-#: src/components/participant/ParticipantBody.tsx:121
+#: src/components/participant/ParticipantBody.tsx:123
 msgid "Tip"
 msgstr "Tip"
 
@@ -15951,7 +16053,7 @@ msgid "Title guidance"
 msgstr "Doporučení k názvu"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:677
-#: src/components/conversation/ConversationsMiniList.tsx:163
+#: src/components/conversation/ConversationsMiniList.tsx:171
 msgid "Title or participant"
 msgstr "Title or participant"
 
@@ -16056,7 +16158,7 @@ msgstr "Topic-based title describing what was discussed"
 #~ msgid "Topics"
 #~ msgstr "Topics"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1580
+#: src/routes/organisation/OrganisationRoute.tsx:1577
 msgid "total"
 msgstr "total"
 
@@ -16064,7 +16166,7 @@ msgstr "total"
 msgid "Total"
 msgstr "Total"
 
-#: src/components/invite/InviteModal.tsx:754
+#: src/components/invite/InviteModal.tsx:756
 msgid "Total due now"
 msgstr "K úhradě nyní"
 
@@ -16120,7 +16222,7 @@ msgstr "Školení"
 msgid "Transcribe a conversation again"
 msgstr "Přepiš rozhovor znovu"
 
-#: src/components/conversation/ConversationsMiniList.tsx:84
+#: src/components/conversation/ConversationsMiniList.tsx:92
 msgid "Transcribing"
 msgstr "Probíhá přepis"
 
@@ -16268,12 +16370,12 @@ msgstr "Trouble logging in? Contact support@dembrane.com."
 
 #: src/routes/project/present/PresentRoute.tsx:957
 #: src/routes/project/present/PresentResultsPanel.tsx:158
-#: src/routes/project/chat/ProjectChatRoute.tsx:837
+#: src/routes/project/chat/ProjectChatRoute.tsx:839
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:165
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:457
 #: src/routes/invite/MyInvitesRoute.tsx:225
 #: src/routes/invite/AcceptInviteRoute.tsx:567
-#: src/components/results/resultEditing.tsx:554
+#: src/components/results/resultEditing.tsx:555
 #: src/components/pricing/PricingTextInput.tsx:330
 #: src/components/present/TranslationStatus.tsx:143
 #: src/components/map/MapPage.tsx:145
@@ -16394,11 +16496,11 @@ msgstr "Type"
 msgid "Type <0>{0}</0> to confirm."
 msgstr "Type <0>{0}</0> to confirm."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:988
+#: src/routes/project/chat/ProjectChatRoute.tsx:990
 msgid "Type a message or press / for templates..."
 msgstr "Type a message or press / for templates..."
 
-#: src/components/participant/ParticipantConversationText.tsx:211
+#: src/components/participant/ParticipantConversationText.tsx:212
 msgid "Type your response here"
 msgstr "Type your response here"
 
@@ -16439,9 +16541,9 @@ msgstr "Méně než 50."
 msgid "Under your organisation"
 msgstr "Pod vaší organizací"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:567
+#: src/routes/project/chat/ProjectChatRoute.tsx:569
 #: src/routes/project/chat/NewChatRoute.tsx:311
-#: src/components/results/resultEditing.tsx:573
+#: src/components/results/resultEditing.tsx:574
 #: src/components/results/ResultRow.tsx:367
 #: src/components/chat/AgenticChatPanel.tsx:1705
 msgid "Undo"
@@ -16454,7 +16556,7 @@ msgstr "Zrušit stažení"
 #: src/components/settings/AuditLogsCard.tsx:265
 #: src/components/project/ProjectSharingModal.tsx:360
 #: src/components/project/ProjectListItem.tsx:97
-#: src/components/project/ProjectListItem.tsx:255
+#: src/components/project/ProjectListItem.tsx:258
 #: src/components/project/PinnedProjectCard.tsx:72
 msgid "Unknown"
 msgstr "Unknown"
@@ -16465,7 +16567,7 @@ msgid "Unknown date"
 msgstr "Unknown date"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:920
-#: src/routes/organisation/OrganisationRoute.tsx:1828
+#: src/routes/organisation/OrganisationRoute.tsx:1825
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:99
 #: src/components/agent-access/AgentGrantsCard.tsx:127
 msgid "Unknown member"
@@ -16492,11 +16594,11 @@ msgstr "Unpin"
 msgid "Unpin a project first (max {MAX_PINNED})"
 msgstr "Unpin a project first (max {MAX_PINNED})"
 
-#: src/components/project/ProjectListItem.tsx:294
+#: src/components/project/ProjectListItem.tsx:297
 msgid "Unpin a project first (max 3)"
 msgstr "Unpin a project first (max 3)"
 
-#: src/components/project/ProjectListItem.tsx:291
+#: src/components/project/ProjectListItem.tsx:294
 #: src/components/project/PinnedProjectCard.tsx:162
 msgid "Unpin project"
 msgstr "Unpin project"
@@ -16534,7 +16636,7 @@ msgstr "Zrušte zaškrtnutí pole, pokud ho chcete ponechat beze změny."
 msgid "until {0}"
 msgstr "do {0}"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1603
+#: src/routes/organisation/OrganisationRoute.tsx:1600
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:98
 #: src/components/workspace/OrganisationUsageRollup.tsx:809
 #: src/components/workspace/OrganisationProjectsTable.tsx:242
@@ -16546,11 +16648,11 @@ msgstr "Untitled"
 msgid "Untitled canvas"
 msgstr "Plátno bez názvu"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:102
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:108
 #: src/components/project/ProjectUsageAndSharing.tsx:509
 #: src/components/project/ProjectUsageAndSharing.tsx:544
 #: src/components/conversation/ProjectConversationsPanel.tsx:223
-#: src/components/conversation/ConversationsMiniList.tsx:331
+#: src/components/conversation/ConversationsMiniList.tsx:339
 #: src/components/chat/References.tsx:63
 msgid "Untitled conversation"
 msgstr "Untitled conversation"
@@ -16684,7 +16786,7 @@ msgstr "Přejděte na vyšší tarif a vygenerujte název tohoto rozhovoru"
 msgid "Upgrade to generate summaries for this conversation"
 msgstr "Přejděte na vyšší tarif a vygenerujte shrnutí tohoto rozhovoru"
 
-#: src/components/conversation/ConversationDangerZone.tsx:52
+#: src/components/conversation/ConversationDangerZone.tsx:55
 msgid "Upgrade your workspace to download audio for conversations recorded after the cap"
 msgstr "Upgrade your workspace to download audio for conversations recorded after the cap"
 
@@ -16692,7 +16794,7 @@ msgstr "Upgrade your workspace to download audio for conversations recorded afte
 msgid "Upgrade your workspace to view summaries for new conversations."
 msgstr "Upgrade your workspace to view summaries for new conversations."
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:210
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:251
 #: src/components/conversation/ConversationAccordion.tsx:604
 msgid "Upgrade your workspace to view this conversation"
 msgstr "Upgrade your workspace to view this conversation"
@@ -16852,7 +16954,7 @@ msgstr "Používejte italštinu pro chat, zprávy, přepis a karty pro onboardin
 msgid "Use latest results"
 msgstr "Použít nejnovější výsledky"
 
-#: src/routes/auth/Login.tsx:460
+#: src/routes/auth/Login.tsx:464
 msgid "Use my password instead"
 msgstr "Místo toho použít heslo"
 
@@ -16860,8 +16962,8 @@ msgstr "Místo toho použít heslo"
 msgid "Use pinned and saved question templates, including the / shortcut, from Ask."
 msgstr "Používejte připnuté a uložené šablony otázek z Ask, včetně zkratky /."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1016
-#: src/routes/project/chat/ProjectChatRoute.tsx:1026
+#: src/routes/project/chat/ProjectChatRoute.tsx:1018
+#: src/routes/project/chat/ProjectChatRoute.tsx:1028
 #: src/components/chat/AgenticChatPanel.tsx:2349
 msgid "Use Shift + Enter to add a new line"
 msgstr "Use Shift + Enter to add a new line"
@@ -16921,9 +17023,9 @@ msgstr "Using webhooks? We'd love to hear from you"
 #: src/components/map/attributes.ts:352
 #: src/components/map/panels/ClusterSummary.tsx:160
 msgid "Valence"
-msgstr "Valence"
+msgstr "Valence<<<<<<< HEAD"
 
-#: src/components/popcorn/PopcornStatus.tsx:54
+#: src/components/popcorn/PopcornStatus.tsx:64
 msgid "Validation progress"
 msgstr "Průběh ověření"
 
@@ -16972,8 +17074,8 @@ msgid "select.all.modal.loading.verified"
 msgstr "Verified"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:717
-#: src/components/conversation/ConversationsMiniList.tsx:92
-#: src/components/conversation/ConversationsMiniList.tsx:189
+#: src/components/conversation/ConversationsMiniList.tsx:100
+#: src/components/conversation/ConversationsMiniList.tsx:197
 msgid "Verified"
 msgstr "Verified"
 
@@ -16986,7 +17088,7 @@ msgstr "Verified"
 msgid "verified artifacts"
 msgstr "verified artifacts"
 
-#: src/routes/project/conversation/ProjectConversationRoute.tsx:190
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:231
 #: src/components/conversation/ProjectConversationsPanel.tsx:296
 msgid "Verified artifacts"
 msgstr "Verified artifacts"
@@ -17010,7 +17112,7 @@ msgstr "Verify"
 msgid "participant.echo.verify"
 msgstr "Verify"
 
-#: src/routes/auth/Login.tsx:554
+#: src/routes/auth/Login.tsx:558
 msgid "Verify code"
 msgstr "Verify code"
 
@@ -17076,7 +17178,7 @@ msgstr "Zobrazit postupy"
 msgid "View results"
 msgstr "Zobrazit výsledky"
 
-#: src/components/participant/ParticipantBody.tsx:216
+#: src/components/participant/ParticipantBody.tsx:223
 msgid "View your responses"
 msgstr "View your responses"
 
@@ -17218,7 +17320,7 @@ msgstr "Nepodařilo se strhnout platbu z vaší platební metody"
 msgid "We couldn't find the page you were looking for. It may have moved."
 msgstr "We couldn't find the page you were looking for. It may have moved."
 
-#: src/routes/organisation/OrganisationRoute.tsx:663
+#: src/routes/organisation/OrganisationRoute.tsx:659
 msgid "We couldn't load this organisation. Try again in a moment."
 msgstr "We couldn't load this organisation. Try again in a moment."
 
@@ -17226,7 +17328,7 @@ msgstr "We couldn't load this organisation. Try again in a moment."
 msgid "We couldn't load this organisation's usage."
 msgstr "We couldn't load this organisation's usage."
 
-#: src/routes/organisation/OrganisationRoute.tsx:742
+#: src/routes/organisation/OrganisationRoute.tsx:739
 msgid "We couldn't load this organisation's workspaces. Some controls may be missing."
 msgstr "Pracovní prostory této organizace se nepodařilo načíst. Některé ovládací prvky mohou chybět."
 
@@ -17271,7 +17373,7 @@ msgstr "Poslali jsme nový ověřovací odkaz."
 msgid "We sent a new verification link. You can send another in {wait} seconds."
 msgstr "Poslali jsme nový ověřovací odkaz. Další můžete odeslat za {wait} s."
 
-#: src/routes/auth/Login.tsx:418
+#: src/routes/auth/Login.tsx:422
 msgid "We sent a six-digit code to {codeEmail}."
 msgstr "Poslali jsme šestimístný kód na {codeEmail}."
 
@@ -17308,7 +17410,7 @@ msgstr "We'll test your microphone to ensure the best experience for everyone in
 #~ msgid "We’re picking up some silence. Try speaking up so your voice comes through clearly."
 #~ msgstr "We’re picking up some silence. Try speaking up so your voice comes through clearly."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:638
+#: src/routes/onboarding/OnboardingRoute.tsx:644
 msgid "We've added organisations so you can organise projects and share them with colleagues. Everything you had before is still here. We just need a name for your organisation."
 msgstr "Přidali jsme organizace, abyste mohli organizovat projekty a sdílet je s kolegy. Vše, co jste měli dříve, tu stále je. Potřebujeme jen název vaší organizace."
 
@@ -17355,27 +17457,27 @@ msgstr "Webhooks are not enabled for this environment."
 msgid "Webhooks come with a paid plan."
 msgstr "Webhooky jsou součástí placeného tarifu."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:125
-#: src/routes/auth/Login.tsx:373
-#: src/components/participant/ParticipantBody.tsx:113
+#: src/routes/onboarding/OnboardingRoute.tsx:129
+#: src/routes/auth/Login.tsx:377
+#: src/components/participant/ParticipantBody.tsx:115
 msgid "Welcome"
 msgstr "Welcome"
 
 #: src/routes/auth/Login.tsx:139
-#: src/routes/auth/Login.tsx:217
+#: src/routes/auth/Login.tsx:219
 msgid "Welcome back"
 msgstr "Welcome back"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:592
+#: src/routes/onboarding/OnboardingRoute.tsx:598
 msgid "Welcome back, {displayName}"
 msgstr "Welcome back, {displayName}"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:589
+#: src/routes/onboarding/OnboardingRoute.tsx:595
 #: src/routes/auth/Login.tsx:139
 msgid "Welcome to dembrane"
 msgstr "Welcome to dembrane"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:709
+#: src/routes/project/chat/ProjectChatRoute.tsx:711
 msgid "Welcome to dembrane chat. Select the conversations you want to analyse, then ask about details, quotes, and summaries."
 msgstr "Welcome to dembrane chat. Select the conversations you want to analyse, then ask about details, quotes, and summaries."
 
@@ -17383,12 +17485,12 @@ msgstr "Welcome to dembrane chat. Select the conversations you want to analyse, 
 msgid "Welcome to dembrane!"
 msgstr "Welcome to dembrane!"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:708
+#: src/routes/project/chat/ProjectChatRoute.tsx:710
 msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode."
 msgstr "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:587
-#: src/routes/onboarding/OnboardingRoute.tsx:594
+#: src/routes/onboarding/OnboardingRoute.tsx:593
+#: src/routes/onboarding/OnboardingRoute.tsx:600
 msgid "Welcome, {displayName}"
 msgstr "Welcome, {displayName}"
 
@@ -17408,11 +17510,11 @@ msgstr "What are you trying to learn?"
 msgid "What data is sent?"
 msgstr "What data is sent?"
 
-#: src/components/results/resultEditing.tsx:470
+#: src/components/results/resultEditing.tsx:471
 msgid "What did you change?"
 msgstr "Co jsi změnil?"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:499
+#: src/routes/onboarding/OnboardingRoute.tsx:505
 msgid "What do you plan to use dembrane for?"
 msgstr "K čemu plánujete dembrane používat?"
 
@@ -17613,7 +17715,7 @@ msgstr "Kdo z vašeho týmu má platnou licenci ke školení. Školení si můž
 msgid "Why not in this presentation?"
 msgstr "Proč ne v této prezentaci?"
 
-#: src/components/results/resultEditing.tsx:474
+#: src/components/results/resultEditing.tsx:475
 #: src/components/results/ResultItem.tsx:742
 #: src/components/results/curate/CurateOpen.tsx:141
 msgid "Why? One sentence, for the people you work with and anyone who checks later."
@@ -17627,7 +17729,7 @@ msgstr "will be included in your report"
 msgid "wish"
 msgstr "přání"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:511
+#: src/routes/onboarding/OnboardingRoute.tsx:517
 msgid "With external clients"
 msgstr "S externími klienty"
 
@@ -17681,7 +17783,7 @@ msgstr "Staženo z analýzy"
 msgid "Withdrawn from the analysis."
 msgstr "Staženo z analýzy."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:506
+#: src/routes/onboarding/OnboardingRoute.tsx:512
 msgid "Within my organisation"
 msgstr "V rámci mé organizace"
 
@@ -17706,7 +17808,7 @@ msgstr "probíhá"
 msgid "Working on your answer..."
 msgstr "Pracujeme na vaší odpovědi..."
 
-#: src/routes/organisation/OrganisationRoute.tsx:721
+#: src/routes/organisation/OrganisationRoute.tsx:719
 msgid "workspace"
 msgstr "workspace"
 
@@ -17787,11 +17889,11 @@ msgstr "Workspace settings | dembrane"
 msgid "Workspace-only guest. Not added to the organisation."
 msgstr "Workspace-only guest. Not added to the organisation."
 
-#: src/routes/organisation/OrganisationRoute.tsx:722
+#: src/routes/organisation/OrganisationRoute.tsx:720
 msgid "workspaces"
 msgstr "workspaces"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1405
+#: src/routes/organisation/OrganisationRoute.tsx:1402
 #: src/routes/admin/AdminSettingsRoute.tsx:1659
 #: src/features/sidebar/views/org/OrgHomeView.tsx:161
 msgid "Workspaces"
@@ -17850,8 +17952,8 @@ msgstr "Nesprávný jazyk nebo tón"
 msgid "Wrong sources"
 msgstr "Nesprávné zdroje"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:475
-#: src/routes/onboarding/OnboardingRoute.tsx:489
+#: src/routes/onboarding/OnboardingRoute.tsx:481
+#: src/routes/onboarding/OnboardingRoute.tsx:495
 msgid "Yes"
 msgstr "Ano"
 
@@ -17891,7 +17993,7 @@ msgstr "Využíváte tarif Free. Zatím není třeba spravovat žádné platby."
 msgid "You are the data owner"
 msgstr "Jste vlastníkem dat"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:681
+#: src/routes/onboarding/OnboardingRoute.tsx:687
 #: src/components/organisation/CreateOrganisationModal.tsx:196
 msgid "You can change this anytime in settings."
 msgstr "You can change this anytime in settings."
@@ -17921,7 +18023,7 @@ msgstr "You can navigate away and come back later. Your report will continue gen
 msgid "You can only upload up to {MAX_FILES} files at a time. Only the first {0} files will be added."
 msgstr "You can only upload up to {MAX_FILES} files at a time. Only the first {0} files will be added."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1796
+#: src/routes/organisation/OrganisationRoute.tsx:1793
 msgid "You can re-invite them later from any workspace."
 msgstr "You can re-invite them later from any workspace."
 
@@ -18030,7 +18132,7 @@ msgstr "K tomuto pracovnímu prostoru máte přístup podpory. Vyprší automati
 msgid "You have view-only access to this project, so you can't upload recordings."
 msgstr "K tomuto projektu máte přístup jen pro čtení, nahrávky proto nemůžete nahrát."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1440
+#: src/routes/organisation/OrganisationRoute.tsx:1437
 msgid "You haven't joined any workspace in this organisation yet."
 msgstr "You haven't joined any workspace in this organisation yet."
 
@@ -18043,7 +18145,7 @@ msgstr "You haven't verified any outcomes yet. Would you like to verify before f
 msgid "You left the workspace"
 msgstr "You left the workspace"
 
-#: src/routes/auth/Login.tsx:346
+#: src/routes/auth/Login.tsx:350
 msgid "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 msgstr "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 
@@ -18051,7 +18153,7 @@ msgstr "You must login with the same provider you used to sign up. If you face a
 msgid "You need an invitation from a colleague"
 msgstr "You need an invitation from a colleague"
 
-#: src/components/participant/ParticipantBody.tsx:120
+#: src/components/participant/ParticipantBody.tsx:122
 msgid "You seem to be offline, please check your internet connection"
 msgstr "You seem to be offline, please check your internet connection"
 
@@ -18072,7 +18174,7 @@ msgstr "Budete přidáni jako správce do {0, plural, one {# soukromého pracovn
 msgid "You'll be added as an admin to {singleName}. It'll appear in your sidebar right after."
 msgstr "Budete přidáni jako správce do {singleName}. Hned poté se objeví ve vašem bočním panelu."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:703
+#: src/routes/onboarding/OnboardingRoute.tsx:709
 msgid "You'll find all your projects waiting for you."
 msgstr "You'll find all your projects waiting for you."
 
@@ -18143,7 +18245,7 @@ msgstr "Zatím nejste v žádné organizaci. Vytvořte pracovní prostor a zalo�
 msgid "You're not part of any organisation right now."
 msgstr "You're not part of any organisation right now."
 
-#: src/components/invite/InviteModal.tsx:742
+#: src/components/invite/InviteModal.tsx:744
 msgid "You're reusing seats you already paid for this period (someone left), so there's no charge now for those. The renewal reflects them."
 msgstr "Znovu využíváte místa, která už máte v tomto období zaplacená (někdo odešel), takže za ně teď nic neplatíte. Projeví se to při obnovení."
 
@@ -18152,22 +18254,22 @@ msgid "You're the only admin. Promote someone else before changing your role."
 msgstr "You're the only admin. Promote someone else before changing your role."
 
 #. placeholder {0}: inviteOrganisations.length
-#: src/routes/onboarding/OnboardingRoute.tsx:609
+#: src/routes/onboarding/OnboardingRoute.tsx:615
 msgid "You've been invited to collaborate with {0} organisations. We'll take you in once you continue."
 msgstr "Máte pozvánku ke spolupráci s {0} organizacemi. Jakmile budete pokračovat, přesuneme vás tam."
 
 #. placeholder {0}: inviteOrganisations[0]
-#: src/routes/onboarding/OnboardingRoute.tsx:603
+#: src/routes/onboarding/OnboardingRoute.tsx:609
 msgid "You've been invited to collaborate with <0>{0}</0>. We'll take you there in a moment."
 msgstr "Máte pozvánku ke spolupráci s <0>{0}</0>. Za chvilku vás tam přesuneme."
 
 #. placeholder {0}: inviteOrganisations.length
-#: src/routes/onboarding/OnboardingRoute.tsx:627
+#: src/routes/onboarding/OnboardingRoute.tsx:633
 msgid "You've been invited to join {0} organisations. We'll take you in once you continue."
 msgstr "You've been invited to join {0} organisations. We'll take you in once you continue."
 
 #. placeholder {0}: inviteOrganisations[0]
-#: src/routes/onboarding/OnboardingRoute.tsx:621
+#: src/routes/onboarding/OnboardingRoute.tsx:627
 msgid "You've been invited to join <0>{0}</0>. We'll take you there in a moment."
 msgstr "You've been invited to join <0>{0}</0>. We'll take you there in a moment."
 
@@ -18252,7 +18354,7 @@ msgstr "Your email is already verified"
 msgid "Your email is not verified yet. Check your inbox for the verification link."
 msgstr "Váš e-mail ještě není ověřený. Zkontrolujte schránku a klikněte na ověřovací odkaz."
 
-#: src/routes/auth/Login.tsx:378
+#: src/routes/auth/Login.tsx:382
 msgid "Your email is verified. Log in to continue."
 msgstr "Your email is verified. Log in to continue."
 
@@ -18310,15 +18412,15 @@ msgstr "Your name"
 msgid "Your name, email and current page are included so we can follow up."
 msgstr "Přikládáme vaše jméno, e-mail a aktuální stránku, abychom se vám mohli ozvat."
 
-#: src/routes/organisation/OrganisationRoute.tsx:806
+#: src/routes/organisation/OrganisationRoute.tsx:803
 msgid "Your organisation is on the free plan by default. One plan covers every workspace, billed per seat once you upgrade."
 msgstr "Vaše organizace má ve výchozím nastavení tarif Free. Jeden tarif pokrývá každý pracovní prostor, po přechodu na placený se účtuje za místo."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:632
+#: src/routes/onboarding/OnboardingRoute.tsx:638
 msgid "Your organisation is waiting for you. Click continue to join."
 msgstr "Your organisation is waiting for you. Click continue to join."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:684
+#: src/routes/onboarding/OnboardingRoute.tsx:690
 #: src/components/organisation/CreateOrganisationModal.tsx:197
 msgid "Your organisation or company"
 msgstr "Your organisation or company"
@@ -18363,7 +18465,7 @@ msgstr "Váš tarif je sjednaný s dembrane, takže zde nemusíte nic platit. V�
 msgid "Your plan is back on. You keep your current period."
 msgstr "Váš tarif je znovu aktivní. Současné období vám zůstává."
 
-#: src/components/invite/InviteModal.tsx:684
+#: src/components/invite/InviteModal.tsx:686
 msgid "Your plan is inactive. Reactivate it to add members."
 msgstr "Váš tarif není aktivní. Chcete-li přidat členy, znovu jej aktivujte."
 
@@ -18392,7 +18494,7 @@ msgstr "Vaše žádost byla přijata."
 msgid "Your response has been recorded. You may now close this tab. You may also share the QR code so others can contribute, or record another conversation."
 msgstr "Vaše odpověď byla zaznamenána. Tuto kartu můžete zavřít. Můžete také sdílet QR kód, aby mohli přispět i ostatní, nebo nahrát další rozhovor."
 
-#: src/components/participant/ParticipantBody.tsx:225
+#: src/components/participant/ParticipantBody.tsx:232
 msgid "Your responses"
 msgstr "Your responses"
 
@@ -18405,15 +18507,15 @@ msgstr "Vaše relace vypršela. Chcete-li pokračovat, znovu se přihlaste."
 #~ msgid "Your view has been created. Please wait as we process and analyse the data."
 #~ msgstr "Your view has been created. Please wait as we process and analyse the data."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:615
+#: src/routes/onboarding/OnboardingRoute.tsx:621
 msgid "Your workspace is waiting for you. Click continue to collaborate."
 msgstr "Váš pracovní prostor na vás čeká. Klikněte na pokračovat a pusťte se do spolupráce."
 
-#: src/components/results/resultEditing.tsx:529
+#: src/components/results/resultEditing.tsx:530
 msgid "Yours"
 msgstr "Tvoje"
 
-#: src/components/invite/InviteModal.tsx:713
+#: src/components/invite/InviteModal.tsx:715
 msgid "yr"
 msgstr "rok"
 

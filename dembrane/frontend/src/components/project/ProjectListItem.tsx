@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Avatar,
@@ -216,12 +216,15 @@ export const ProjectListItem = ({
 								{" · "}
 							</>
 						)}
-						<Trans>
-							{project.conversations_count ??
+						<Plural
+							value={
+								project.conversations_count ??
 								project?.conversations?.length ??
-								0}{" "}
-							conversations
-						</Trans>
+								0
+							}
+							one="# conversation"
+							other="# conversations"
+						/>
 						{/* The language sits here, not beside the name, so a long
 							    name has the whole title line to itself. */}
 						{languageLabel && ` · ${languageLabel}`}

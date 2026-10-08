@@ -309,7 +309,7 @@ export const WorkspaceSettingsRoute = () => {
 			err instanceof WorkspaceAccessDeniedError ? false : failureCount < 3,
 	});
 
-	// Live count for the "N pending" counter; endpoint is org-admin-only so gate via enabled.
+	// Live count for the "N pending" counter; the endpoint lets member managers see their workspace.
 	const { data: livePendingInvites } = usePendingInvites({
 		enabled:
 			!!workspaceId &&
@@ -1201,7 +1201,7 @@ export const WorkspaceSettingsRoute = () => {
 									</Stack>
 								</Stack>
 
-								{/* Endpoint is org-admin-only; gate matches AccessRequestsList below. */}
+								{/* Org admins and this workspace's member managers; gate matches AccessRequestsList below. */}
 								{canManage && workspaceId && settings.org_id && (
 									<PendingInvitesSection
 										orgId={settings.org_id}
@@ -1942,8 +1942,8 @@ function PrivacyAndDefaultsSection({
 									</Text>
 									<Text size="xs">
 										<Trans>
-											Hidden from organisation members. Organisation admins can
-											still find and join.
+											Only the people you add can see it. The organisation owner
+											can also find and join.
 										</Trans>
 									</Text>
 								</Stack>

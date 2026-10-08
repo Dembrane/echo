@@ -1,5 +1,12 @@
 import { Trans } from "@lingui/react/macro";
-import { Button, Group, Modal, Stack, Text } from "@mantine/core";
+import {
+	Button,
+	Group,
+	getDefaultZIndex,
+	Modal,
+	Stack,
+	Text,
+} from "@mantine/core";
 import type { ReactNode } from "react";
 
 type ConfirmModalProps = {
@@ -31,6 +38,8 @@ export const ConfirmModal = ({
 		opened={opened}
 		onClose={onClose}
 		title={title}
+		// Above the dialog that asked for it, whichever mounted first.
+		zIndex={getDefaultZIndex("modal") + 1}
 		data-testid={dataTestId}
 	>
 		<Stack gap="md">
