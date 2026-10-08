@@ -362,7 +362,7 @@ function NotificationRowItem({
 		? formatRelative(new Date(row.created_at), new Date())
 		: "";
 	const isDestructive = row.severity === "destructive";
-	const isActionRequired = row.severity === "action_required";
+	const isActionRequired = row.severity === "action_required" && !row.read;
 
 	// Clicking the row fires `onClick` (mark-read + navigate when there's
 	// an action). Notifications without a navigation target (matrix §6

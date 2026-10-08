@@ -139,6 +139,14 @@ describe("ConversationsMiniList", () => {
 				is_finished: false,
 				title: "Unfinished",
 			},
+			{
+				created_at: null,
+				has_pending_chunks: false,
+				id: "c7",
+				is_finished: false,
+				last_chunk_at: null,
+				title: "Nothing recorded",
+			},
 		];
 		renderList();
 		const status = (title: string) =>
@@ -147,5 +155,7 @@ describe("ConversationsMiniList", () => {
 		expect(status("Transcribed")).not.toContain("Transcribing");
 		expect(status("Pending")).toContain("Transcribing");
 		expect(status("Unfinished")).toContain("Transcribing");
+		expect(status("Nothing recorded")).toContain("Empty");
+		expect(status("Nothing recorded")).not.toContain("Transcribing");
 	});
 });
