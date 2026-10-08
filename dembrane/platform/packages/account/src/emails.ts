@@ -5,7 +5,7 @@
  * byte for byte as the old templates did. HTML values are escaped the way Jinja's
  * autoescape did; the text part is sent alongside every HTML part.
  */
-import { type Translate, translator } from "@dembrane/i18n";
+import { resolveLocale, type Translate, translator } from "@dembrane/i18n";
 
 export interface RenderedEmail {
   readonly subject: string;
@@ -149,6 +149,15 @@ export type EmailTemplate =
       readonly template: "account_invite";
       readonly data: { org_name: string; sign_in_url: string };
     }
+  | {
+      readonly template: "report_published";
+      readonly data: {
+        portal_url: string;
+        project_id: string;
+        token: string;
+        conversation_name: string;
+      };
+    }
   | { readonly template: "plain"; readonly data: { text: string } };
 
 /** The subject line of a catalog email in `locale`; null for "plain", whose caller writes it. */
@@ -175,6 +184,8 @@ export function subjectOf(t: EmailTemplate, locale?: string | null): string | nu
       return tr("email.account_task_reminder.subject", t.data);
     case "account_invite":
       return tr("email.account_invite.subject", t.data);
+    case "report_published":
+      return tr("email.report_published.subject");
     case "plain":
       return null;
   }
@@ -370,6 +381,29 @@ export function render(t: EmailTemplate, locale?: string | null): { html: string
           disclaim: ignore,
         }),
         text: `${tr(`${k}.body`, d)}\n\n${tr(`${k}.text_cta`)}\n${d.sign_in_url}\n\n${ignoreText}\n\n${signoff}`,
+      };
+    }
+    case "report_published": {
+      // To participants who asked on the portal to hear when the report is published.
+      const d = t.data;
+      const k = "email.report_published";
+      const base = `${d.portal_url}/${resolveLocale(locale)}/${encodeURIComponent(d.project_id)}`;
+      const reportUrl = `${base}/report`;
+      const unsubscribeUrl = `${base}/unsubscribe?${new URLSearchParams({ token: d.token, project_id: d.project_id })}`;
+      const link = `<a href="${esc(unsubscribeUrl)}" style="color:#4169E1;">${tr(`${k}.unsubscribe_link`)}</a>`;
+      const heading = (name: string) =>
+        name ? tr(`${k}.heading_named`, { conversation_name: name }) : tr(`${k}.heading`);
+      return {
+        html: layout(tr, {
+          title: tr(`${k}.subject`),
+          preview: tr(`${k}.preview`),
+          heading: heading(esc(d.conversation_name)),
+          body: P(17, "0 0 28px", tr(`${k}.body`)),
+          cta: cta(tr(`${k}.cta`), reportUrl),
+          fallback: fallback(tr, reportUrl),
+          disclaim: P(15, "0 0 28px", tr(`${k}.unsubscribe`, { unsubscribe_link: link })),
+        }),
+        text: `${heading(d.conversation_name)}\n\n${tr(`${k}.body`)}\n\n${tr(`${k}.text_cta`)}\n${reportUrl}\n\n${tr(`${k}.unsubscribe_text`)}\n${unsubscribeUrl}\n\n${signoff}`,
       };
     }
     case "plain":

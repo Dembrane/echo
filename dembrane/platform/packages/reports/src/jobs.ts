@@ -1,7 +1,11 @@
 import { newId } from "@dembrane/core";
 import { type Completer, isRetryable } from "@dembrane/llm";
 import type { Logger } from "@dembrane/observability";
-import { generateReport, REPORT_PROGRESS_CHANNEL } from "@dembrane/projects";
+import {
+  generateReport,
+  notifyReportSubscribers,
+  REPORT_PROGRESS_CHANNEL,
+} from "@dembrane/projects";
 import { defineJob, type JobDefinition, type Parsed, type Queue, step } from "@dembrane/queue";
 import { z } from "zod";
 import {
@@ -500,6 +504,7 @@ export async function backfillScheduled(d: { store: ReportsStorage; now?: () => 
 
 export const reportWorkerJobs: readonly JobDefinition[] = [
   generateReport,
+  notifyReportSubscribers,
   scheduledReports,
   backfillScheduledReports,
 ];
