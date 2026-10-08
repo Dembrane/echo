@@ -28,7 +28,7 @@ export const useAutoSave = <T>({
 		setIsSaving(true);
 
 		try {
-			await onSave(formData);
+			await latestOnSave.current(formData);
 			setLastSavedAt(new Date());
 			if (version === generation.current) setIsPendingSave(false);
 			return true;

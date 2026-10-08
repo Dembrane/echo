@@ -81,6 +81,22 @@ describe("useAutoSave", () => {
 		expect(onSave).toHaveBeenCalledOnce();
 	});
 
+	it("a debounced save runs the onSave from the latest render", async () => {
+		const stale = vi.fn().mockResolvedValue(undefined);
+		const fresh = vi.fn().mockResolvedValue(undefined);
+		const { result, rerender } = renderHook(
+			({ onSave }) => useAutoSave({ onSave }),
+			{ initialProps: { onSave: stale } },
+		);
+
+		act(() => result.current.dispatchAutoSave("edit"));
+		rerender({ onSave: fresh });
+		await act(async () => vi.advanceTimersByTime(1_000));
+
+		expect(stale).not.toHaveBeenCalled();
+		expect(fresh).toHaveBeenCalledExactlyOnceWith("edit");
+	});
+
 	it("has nothing to save on unmount once the debounce has fired", async () => {
 		const onSave = vi.fn().mockResolvedValue(undefined);
 		const { result, unmount } = renderHook(() => useAutoSave({ onSave }));
