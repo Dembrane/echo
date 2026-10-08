@@ -241,7 +241,7 @@ export function registrations(deps: {
       completer: deps.completer,
       canvasEnabled: config.canvas.enabled,
     }),
-    reportsWorker(deps),
+    reportsWorker({ ...deps, portalUrl: deps.popcorn.portalUrl }),
     // The deck view follows the popcorn, tensions and stakeholders publications.
     analysisWorker({ ...analysisDeps, snapshotHooks: [popcornDeckHook(db, logger)] }),
     mapWorker({

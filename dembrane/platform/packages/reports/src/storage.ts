@@ -109,6 +109,33 @@ function queries(sql: Sql) {
         .join("\n");
     },
 
+    // ── report subscribers ────────────────────────────────────────────
+
+    /** Gives every opted-in subscriber of a project without an unsubscribe token one. */
+    async fillUnsubscribeTokens(projectId: string) {
+      await sql`update project_report_notification_participants set email_opt_out_token = gen_random_uuid()
+        where project_id = ${projectId} and email_opt_in and email_opt_out_token is null`;
+    },
+
+    /**
+     * Subscribers of a project, one per address, whose latest choice across that address's
+     * rows is opted in: unsubscribing through one row of a duplicate counts for all.
+     */
+    async reportSubscribers(projectId: string) {
+      return sql`select id, email, token, conversation_name from (
+          select distinct on (lower(s.email)) s.id, s.email, s.email_opt_in,
+            s.email_opt_out_token::text as token, coalesce(c.participant_name, '') as conversation_name
+          from project_report_notification_participants s
+          left join conversation c on c.id = s.conversation_id and c.deleted_at is null
+          where s.project_id = ${projectId} and s.email is not null
+          order by lower(s.email), coalesce(s.date_updated, s.date_submitted) desc nulls last, s.id
+        ) latest
+        where email_opt_in
+        order by lower(email)` as Promise<
+        { id: string; email: string; token: string; conversation_name: string }[]
+      >;
+    },
+
     async appUserByDirectusId(directusUserId: string) {
       const [row] = await sql`select id, email from app_user
         where directus_user_id = ${directusUserId} limit 1`;

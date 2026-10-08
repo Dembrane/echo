@@ -6,6 +6,7 @@
   "dembrane": {
     "layer": "namespace",
     "allow": {
+      "account": "Emails a published report's subscribers through account's email job and templates.",
       "notifications": "Notifies the requester when a report is ready.",
       "projects": "Handles the report job that projects defines and enqueues.",
       "webhooks": "A finished report fires the project's webhooks."
@@ -19,6 +20,7 @@
   },
   "dependencies": {
     "@dembrane/access": "workspace:*",
+    "@dembrane/account": "workspace:*",
     "@dembrane/core": "workspace:*",
     "@dembrane/db": "workspace:*",
     "@dembrane/http": "workspace:*",

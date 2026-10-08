@@ -8,7 +8,7 @@ import {
 import type { Signed } from "@dembrane/http";
 import { projectFor } from "@dembrane/http";
 import { directusRow, PaymentRequiredError, pythonIso } from "@dembrane/legacy-shape";
-import { generateReport } from "./jobs";
+import { generateReport, notifyReportSubscribers } from "./jobs";
 import type { ProjectDeps } from "./projects";
 
 /** The scheduled_task type the scheduler runner turns into a report generation. */
@@ -193,13 +193,17 @@ export async function updateReport(
   }
   if (!Object.keys(payload).length) throw new BadRequestError("request.nothing_to_update");
 
-  return d.store.transaction(async ({ store }) => {
+  return d.store.transaction(async ({ store, sql }) => {
     const stamp = now.toISOString();
+    // Locked, so of two publishes at once only the first emails the subscribers.
+    const [before] = await sql`select status from project_report where id = ${rid} for update`;
     if (payload.status === "published")
       for (const other of await store.otherPublishedReports(projectId, reportId(rid)))
         await store.updateReport(other, { status: "archived", date_updated: stamp });
     const updated = await store.updateReport(reportId(rid), { ...payload, date_updated: stamp });
     if (!updated) throw new NotFoundError("report.not_found");
+    if (updated.status === "published" && before?.status !== "published")
+      await d.jobs.enqueue(notifyReportSubscribers, { projectId, reportId: rid }, { tx: sql });
     if (scheduled && updated.status === "scheduled") {
       await store.cancelScheduledTasks(TASK_GENERATE_REPORT, { report_id: rid }, pythonIso(now));
       await store.scheduleTask({
