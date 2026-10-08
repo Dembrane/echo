@@ -55,8 +55,8 @@ export async function deleteProjectV1(d: ProjectDeps, who: Signed, projectId: st
 }
 
 /**
- * Shallow clone into the source's workspace: settings and tag names, no conversations.
- * The Python kept the clone owned by the source's creator; that stays.
+ * Shallow clone into the source's workspace: settings, tag names and custom verify topics,
+ * no conversations. The Python kept the clone owned by the source's creator; that stays.
  */
 export async function cloneProject(
   d: ProjectDeps,
@@ -68,7 +68,17 @@ export async function cloneProject(
   const src = await liveProject(d.store, pa.project.id);
   const id = newId();
   const now = d.now().toISOString();
+  // Hiding the event invitation is paid; a workspace since dropped to free shows it again.
+  const tier = src.workspace_id ? await d.store.workspaceTier(src.workspace_id) : null;
   await d.store.transaction(async ({ store }) => {
+    // Topic keys are global, so the clone's topics get fresh ones and the selection follows.
+    const topics = await store.customTopics(src.id);
+    const renamed = new Map(topics.map(({ topic }) => [topic.key, cloneTopicKey(topic.key)]));
+    const selected =
+      src.selected_verification_key_list
+        ?.split(",")
+        .map((k) => renamed.get(k.trim()) ?? k.trim())
+        .join(",") ?? null;
     await store.insertProject({
       id,
       name: body.name || src.name,
@@ -81,19 +91,46 @@ export async function cloneProject(
       default_conversation_finish_text: src.default_conversation_finish_text,
       default_conversation_ask_for_participant_name:
         src.default_conversation_ask_for_participant_name,
+      default_conversation_ask_for_participant_email:
+        src.default_conversation_ask_for_participant_email,
       default_conversation_tutorial_slug: src.default_conversation_tutorial_slug,
       default_conversation_transcript_prompt: src.default_conversation_transcript_prompt,
       conversation_ask_for_participant_name_label: src.conversation_ask_for_participant_name_label,
       image_generation_model: src.image_generation_model,
       is_enhanced_audio_processing_enabled: src.is_enhanced_audio_processing_enabled,
       is_get_reply_enabled: src.is_get_reply_enabled,
+      get_reply_mode: src.get_reply_mode,
+      get_reply_prompt: src.get_reply_prompt,
       is_project_notification_subscription_allowed:
         src.is_project_notification_subscription_allowed,
       is_verify_enabled: src.is_verify_enabled,
-      selected_verification_key_list: src.selected_verification_key_list,
+      is_verify_on_finish_enabled: src.is_verify_on_finish_enabled,
+      selected_verification_key_list: selected,
+      is_canvas_enabled: src.is_canvas_enabled,
+      is_dembrane_event_cta_enabled: tier === "free" || src.is_dembrane_event_cta_enabled,
+      anonymize_transcripts: src.anonymize_transcripts,
+      enable_ai_title_and_tags: src.enable_ai_title_and_tags,
+      conversation_title_prompt: src.conversation_title_prompt,
+      host_guide: src.host_guide,
+      methodology_version_id: src.methodology_version_id,
+      legal_basis: src.legal_basis,
+      privacy_policy_url: src.privacy_policy_url,
       ...(src.workspace_id && { workspace_id: src.workspace_id }),
       created_at: now,
     });
+    for (const { topic, labels } of topics)
+      await store.insertCustomTopic(
+        {
+          ...topic,
+          key: renamed.get(topic.key) as string,
+          project_id: id,
+          user_created: who.directusUserId,
+          date_created: now,
+          user_updated: null,
+          date_updated: null,
+        },
+        labels.map((l) => ({ languages_code: l.languages_code, label: l.label })),
+      );
     const tags = await store.tags(src.id);
     await store.insertTags(
       tags.map((t) => ({
@@ -105,6 +142,11 @@ export async function cloneProject(
     );
   });
   return id;
+}
+
+/** Swaps the random suffix createCustomTopic puts on a topic key for a new one. */
+function cloneTopicKey(key: string): string {
+  return `${key.replace(/-[0-9a-f]{8}$/, "")}-${newId().replace(/-/g, "").slice(-8)}`;
 }
 
 /** Keeps letters and digits, joins the rest with single underscores, as the export names files. */
