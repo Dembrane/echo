@@ -5,7 +5,7 @@ import { createDb, migrate } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import postgres from "postgres";
 import type { ProjectDeps } from "../src/projects";
-import { updateReport } from "../src/reports";
+import { createReport, updateReport } from "../src/reports";
 import { projectsStorage } from "../src/storage";
 
 // Publishing a report emails its subscribers; the job must commit with the publish, once.
@@ -80,5 +80,31 @@ run("report publish", () => {
     await updateReport(d, owner, project, rid, { ...edit, status: "archived" });
     await updateReport(d, owner, project, rid, { ...edit, status: "published" });
     expect(enqueued.map((e) => e.name)).toEqual(["reports.notify-subscribers"]);
+  });
+
+  test("moving a scheduled report later cancels the task at the original time", async () => {
+    // A fresh workspace, so the free tier's one report is still available.
+    const [org, ws, billing, p] = [newId(), newId(), newId(), newId()];
+    await sql`insert into directus_users (id, email) values (${owner.directusUserId}, 'o@example.com')`;
+    await sql`insert into org (id, name) values (${org}, 'Org 2')`;
+    await sql`insert into billing_account (id, org_id) values (${billing}, ${org})`;
+    await sql`insert into workspace (id, name, org_id, billing_account_id) values (${ws}, 'W2', ${org}, ${billing})`;
+    await sql`insert into workspace_membership (id, workspace_id, user_id, role) values (${newId()}, ${ws}, ${owner.appUserId}, 'owner')`;
+    await sql`insert into project (id, name, workspace_id, is_conversation_allowed) values (${p}, 'P2', ${ws}, true)`;
+
+    const first = new Date(Date.now() + 60 * 60_000).toISOString();
+    const later = new Date(Date.now() + 3 * 60 * 60_000).toISOString();
+    const created = await createReport(d, owner, p, {
+      language: "en",
+      user_instructions: null,
+      scheduled_at: first,
+    });
+    const rid = Number(created.id);
+    await updateReport(d, owner, p, rid, { ...edit, scheduled_at: later });
+
+    const live = await sql`select scheduled_at from scheduled_task
+      where task_type = 'generate_report' and status = 'scheduled'
+        and payload->>'report_id' = ${String(rid)}`;
+    expect(live.map((t) => new Date(t.scheduled_at).toISOString())).toEqual([later]);
   });
 });
