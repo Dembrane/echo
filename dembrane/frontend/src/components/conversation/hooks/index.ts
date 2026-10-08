@@ -1,4 +1,4 @@
-import { t } from "@lingui/core/macro";
+import { plural, t } from "@lingui/core/macro";
 import {
 	type UseQueryOptions,
 	useInfiniteQuery,
@@ -519,7 +519,12 @@ export const useClearChatContextMutation = () => {
 				toast.error(t`Failed to clear conversations`);
 				return;
 			}
-			toast.error(t`Cleared ${cleared} of ${total} conversations`);
+			toast.error(
+				plural(total, {
+					one: `Cleared ${cleared} of # conversation`,
+					other: `Cleared ${cleared} of # conversations`,
+				}),
+			);
 		},
 	});
 };

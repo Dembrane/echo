@@ -88,7 +88,7 @@ export function FeatureGate({
 	wallKey,
 	workspaceId,
 }: FeatureGateProps) {
-	const configurator = usePricingConfigurator();
+	const configurator = usePricingConfigurator(wallKey);
 
 	if (meetsTier(currentTier, requiredTier)) {
 		return <>{children}</>;

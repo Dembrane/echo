@@ -1,7 +1,9 @@
 import { i18n } from "@lingui/core";
+import { setDefaultOptions } from "date-fns";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { SUPPORTED_LANGUAGES } from "@/config";
+import { dateFnsLocale } from "@/lib/dateLocale";
 import { readStoredLanguage } from "@/lib/language";
 
 export const defaultLanguage = "en-US";
@@ -10,6 +12,11 @@ export const defaultLanguage = "en-US";
 // chunk, fetched when it is chosen, so the participant portal's first load carries one
 // catalog instead of eight.
 import { messages as enMessages } from "../locales/en-US";
+
+// Every date-fns call ("5 minutes ago", "today at 3:41 PM") follows the UI language.
+i18n.on("change", () => {
+	setDefaultOptions({ locale: dateFnsLocale(i18n.locale) });
+});
 
 i18n.load("en-US", enMessages);
 i18n.activate(defaultLanguage);

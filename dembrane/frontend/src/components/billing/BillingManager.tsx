@@ -649,7 +649,7 @@ function CancelSubscriptionModal({
  */
 function NothingToBillPanel({ tier }: { tier: string }) {
 	const comped = tier !== "free";
-	const configurator = usePricingConfigurator();
+	const configurator = usePricingConfigurator("billing");
 	return (
 		<Paper withBorder p="md" radius="sm">
 			<Stack gap="sm">

@@ -71,11 +71,15 @@ export const OnboardingRoute = () => {
 	// Invited users see a different flow — they're not creating a organisation,
 	// they're joining one (or several). Pull the invite list so we can
 	// show them which workspaces they're about to land in.
+	// Fixed when the flow starts: onboarding accepts the invites, which flips the live flag.
+	const [startedWithInvites, setStartedWithInvites] = useState<boolean | null>(
+		null,
+	);
+	const hasInvites = startedWithInvites ?? meV2?.has_pending_invites === true;
 	const { data: pendingInvites } = useMyInvites({
-		enabled: meV2?.has_pending_invites === true,
+		enabled: hasInvites,
 	});
 	const displayName = (user.data as Record<string, string>)?.first_name || "";
-	const hasInvites = meV2?.has_pending_invites === true;
 	const inviteOrganisations = Array.from(
 		new Set(
 			(pendingInvites ?? [])
@@ -165,6 +169,8 @@ export const OnboardingRoute = () => {
 		// straight to workspace home, silently skipping the invite step.
 		if (step !== "loading") return;
 		if (meLoading) return;
+
+		setStartedWithInvites(meV2?.has_pending_invites === true);
 
 		if (meV2?.onboarding_completed === true) {
 			// Onboarded already. If they never answered the questionnaire

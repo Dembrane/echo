@@ -17,6 +17,11 @@ msgstr ""
 #~ msgid "{0, plural, one {{1} of # step done} other {{2} of # steps done}}"
 #~ msgstr ""
 
+#. placeholder {0}: demo.conversations
+#: src/features/accounts/staff/DemoRoute.tsx:286
+msgid "{0, plural, one {# fictional conversation authored.} other {# fictional conversations authored.}}"
+msgstr "{0, plural, one {# fiktives Gespräch erstellt.} other {# fiktive Gespräche erstellt.}}"
+
 #. placeholder {0}: fields.length
 #: src/features/accounts/staff/FieldEditorRoute.tsx:447
 msgid "{0, plural, one {# field} other {# fields}}"
@@ -37,10 +42,9 @@ msgstr "{0, plural, one {Bei {name} wartet # Aufgabe auf Sie} other {Bei {name} 
 msgid "{0} excl. VAT, {1} incl."
 msgstr "{0} zzgl. VAT, {1} inkl."
 
-#. placeholder {0}: demo.conversations
 #: src/features/accounts/staff/DemoRoute.tsx:286
-msgid "{0} fictional conversations authored."
-msgstr "{0} fiktive Gespräche erstellt."
+#~ msgid "{0} fictional conversations authored."
+#~ msgstr "{0} fiktive Gespräche erstellt."
 
 #. placeholder {0}: org.tasks_done
 #. placeholder {1}: org.tasks_total
@@ -974,7 +978,7 @@ msgstr "Interessenten"
 msgid "Public demo ({0})"
 msgstr "Öffentliche Demo ({0})"
 
-#: src/features/accounts/staff/DemoRoute.tsx:340
+#: src/features/accounts/staff/DemoRoute.tsx:342
 msgid "Publish"
 msgstr "Veröffentlichen"
 
@@ -984,20 +988,20 @@ msgid "Published {0}."
 msgstr "Veröffentlicht am {0}."
 
 #. placeholder {0}: demo.contact_email
-#: src/features/accounts/staff/DemoRoute.tsx:311
+#: src/features/accounts/staff/DemoRoute.tsx:313
 msgid "Published. {0} has the sign-in invitation."
 msgstr "Veröffentlicht. {0} hat die Einladung zur Anmeldung erhalten."
 
-#: src/features/accounts/staff/DemoRoute.tsx:315
+#: src/features/accounts/staff/DemoRoute.tsx:317
 msgid "Published. No email went out; share the demo link yourself."
 msgstr "Veröffentlicht. Es wurde keine E-Mail gesendet; teilen Sie den Demo-Link selbst."
 
 #. placeholder {0}: demo.contact_email
-#: src/features/accounts/staff/DemoRoute.tsx:328
+#: src/features/accounts/staff/DemoRoute.tsx:330
 msgid "Publishing emails {0} a sign-in code."
 msgstr "Beim Veröffentlichen erhält {0} einen Anmeldecode per E-Mail."
 
-#: src/features/accounts/staff/DemoRoute.tsx:329
+#: src/features/accounts/staff/DemoRoute.tsx:331
 msgid "Publishing makes the demo live. No email goes out."
 msgstr "Durch das Veröffentlichen wird die Demo live geschaltet. Es wird keine E-Mail gesendet."
 
@@ -1079,7 +1083,7 @@ msgid "Required"
 msgstr "Erforderlich"
 
 #: src/features/accounts/staff/DemoRoute.tsx:57
-#: src/features/accounts/staff/DemoRoute.tsx:295
+#: src/features/accounts/staff/DemoRoute.tsx:297
 msgid "Research"
 msgstr "Recherche"
 
@@ -1161,7 +1165,7 @@ msgstr "Angebot senden"
 msgid "Send the link"
 msgstr "Link senden"
 
-#: src/features/accounts/staff/DemoRoute.tsx:325
+#: src/features/accounts/staff/DemoRoute.tsx:327
 msgid "Send the sign-in invitation"
 msgstr "Anmelde-Einladung senden"
 
@@ -1212,12 +1216,12 @@ msgstr "Gesendet. Der Kunde hat eine Aufgabe zum Unterschreiben."
 msgid "Set up a project of your own for your first real session."
 msgstr "Richten Sie ein eigenes Projekt für Ihre erste echte Sitzung ein."
 
-#: src/features/accounts/staff/DemoRoute.tsx:299
+#: src/features/accounts/staff/DemoRoute.tsx:301
 #: src/features/accounts/staff/AccountCardRoute.tsx:760
 msgid "Show all"
 msgstr "Alle anzeigen"
 
-#: src/features/accounts/staff/DemoRoute.tsx:300
+#: src/features/accounts/staff/DemoRoute.tsx:302
 #: src/features/accounts/staff/AccountCardRoute.tsx:760
 msgid "Show less"
 msgstr "Weniger anzeigen"

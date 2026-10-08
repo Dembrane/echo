@@ -1,4 +1,4 @@
-import { t } from "@lingui/core/macro";
+import { plural, t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	Badge,
@@ -41,8 +41,11 @@ function statusLine(popcorn: PopcornDetail): string {
 	const counts = popcorn.counts;
 	if (counts.conversations === 0) return t`Waiting for the first conversation`;
 	const parts = [
-		t`${counts.conversations} conversations`,
-		t`${counts.phrases} phrases`,
+		plural(counts.conversations, {
+			one: "# conversation",
+			other: "# conversations",
+		}),
+		plural(counts.phrases, { one: "# phrase", other: "# phrases" }),
 		t`${counts.validated ?? 0} validated`,
 	];
 	if (counts.held_back) parts.push(t`${counts.held_back} held back`);

@@ -1,4 +1,4 @@
-import { t } from "@lingui/core/macro";
+import { plural, t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	Button,
@@ -63,7 +63,10 @@ export function PopcornStart({
 						{readiness === undefined
 							? t`Looking at the conversations…`
 							: ready
-								? t`${conversations} conversations with a transcript, about ${minutes} minutes of talk. Ready.`
+								? plural(conversations, {
+										one: `# conversation with a transcript, about ${minutes} minutes of talk. Ready.`,
+										other: `# conversations with a transcript, about ${minutes} minutes of talk. Ready.`,
+									})
 								: t`No transcripts yet. You can run popcorn now; the screen fills as conversations land.`}
 					</Text>
 				</Stack>

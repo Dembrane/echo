@@ -339,6 +339,33 @@
 :root .app-toast-info [data-icon] {
   color: var(--app-action);
 }
+/* An action wraps onto its own line, under the text. */
+:root .app-toast:has([data-button]) {
+  flex-wrap: wrap;
+}
+:root .app-toast [data-content] {
+  flex: 1 1 0;
+  min-width: 0;
+  padding-right: 20px;
+}
+:root .app-toast:has([data-button]) [data-content] {
+  flex-basis: calc(100% - 40px);
+}
+:root .app-toast [data-button] {
+  background: transparent;
+  border: 0;
+  color: var(--app-action);
+  cursor: pointer;
+  font: inherit;
+  font-size: 15px;
+  /* Lines up with the text past the icon. */
+  margin-left: 27px;
+  padding: 0;
+  white-space: nowrap;
+}
+:root .app-toast [data-button]:hover {
+  text-decoration: underline;
+}
 
 /* ---------- molecules ---------- */
 

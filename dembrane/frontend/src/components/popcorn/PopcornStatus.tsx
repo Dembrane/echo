@@ -1,4 +1,4 @@
-import { t } from "@lingui/core/macro";
+import { plural, t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Paper, Progress, Stack, Text, Title } from "@mantine/core";
 import { format } from "date-fns";
@@ -36,13 +36,23 @@ export function PopcornStatus({ popcorn }: { popcorn: PopcornDetail }) {
 					</Text>
 				) : (
 					<Text size="sm" {...testId("popcorn-tally")}>
-						{t`${counts.conversations} conversations · ${phrases} phrases · ${validated} validated`}
+						{plural(counts.conversations, {
+							one: "# conversation",
+							other: "# conversations",
+						})}
+						{" · "}
+						{plural(phrases, { one: "# phrase", other: "# phrases" })}
+						{" · "}
+						{t`${validated} validated`}
 						{heldBack ? t` · ${heldBack} held back` : ""}
 					</Text>
 				)}
 				{reading > 0 ? (
 					<Text size="sm">
-						{t`Reading ${reading} of ${counts.conversations} conversations…`}
+						{plural(counts.conversations, {
+							one: `Reading ${reading} of # conversation…`,
+							other: `Reading ${reading} of # conversations…`,
+						})}
 					</Text>
 				) : null}
 				{validating && phrases > 0 ? (

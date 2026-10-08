@@ -60,7 +60,14 @@ const MapWatcher = ({ projectId, base, onPage }: WatcherProps) => {
 			meta,
 			isAttemptRunning(attempt)
 				? total
-					? { detail: t`${done} of ${total} conversations`, done, total }
+					? {
+							detail: plural(total, {
+								one: `${done} of # conversation`,
+								other: `${done} of # conversations`,
+							}),
+							done,
+							total,
+						}
 					: {}
 				: null,
 			attempt?.status === "failed" ? (attempt.error ?? "") : undefined,
@@ -97,7 +104,10 @@ const PresentWatcher = ({ projectId, base, onPage }: WatcherProps) => {
 			{ ...meta, quiet: loop?.mode === "live" },
 			counts && reading > 0
 				? {
-						detail: t`Reading ${reading} of ${counts.conversations} conversations…`,
+						detail: plural(counts.conversations, {
+							one: `Reading ${reading} of # conversation…`,
+							other: `Reading ${reading} of # conversations…`,
+						}),
 						done: counts.conversations_read,
 						total: counts.conversations,
 					}

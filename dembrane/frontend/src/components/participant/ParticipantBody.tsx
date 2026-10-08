@@ -30,6 +30,7 @@ export const ParticipantBody = ({
 	isRecording = false,
 	isAnonymized = false,
 	connectionHealthy = true,
+	mode = "audio",
 }: PropsWithChildren<{
 	projectId: string;
 	conversationId: string;
@@ -39,6 +40,7 @@ export const ParticipantBody = ({
 	isAnonymized?: boolean;
 	/** From the recording screen's liveness ping. */
 	connectionHealthy?: boolean;
+	mode?: "audio" | "text";
 }>) => {
 	const [ref] = useAutoAnimate();
 	const [chatRef] = useAutoAnimate();
@@ -151,12 +153,17 @@ export const ParticipantBody = ({
 
 					<SystemMessage
 						markdown={
-							isAnonymized
-								? t`Please record your response by clicking the "Record" button below. You may also choose to respond in text by clicking the text icon.
+							mode === "text"
+								? isAnonymized
+									? t`Please type your response in the box below. You may also choose to record your response by clicking the microphone icon.
+This transcript will be anonymized.`
+									: t`Please type your response in the box below. You may also choose to record your response by clicking the microphone icon.`
+								: isAnonymized
+									? t`Please record your response by clicking the "Record" button below. You may also choose to respond in text by clicking the text icon.
 **Please keep this screen lit up**
 (locked screen = not recording).
 This transcript will be anonymized and your host will not be able to listen to your recording.`
-								: t`Please record your response by clicking the "Record" button below. You may also choose to respond in text by clicking the text icon.
+									: t`Please record your response by clicking the "Record" button below. You may also choose to respond in text by clicking the text icon.
 **Please keep this screen lit up**
 (locked screen = not recording)`
 						}

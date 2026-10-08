@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+
 /**
  * Relative-time + duration helpers used by every "usage" surface.
  *
@@ -10,11 +12,12 @@
 export function formatRelativeAgo(ms: number | undefined | null): string {
 	if (!ms) return "";
 	const diff = Date.now() - ms;
-	if (diff < 30_000) return "just now";
-	if (diff < 60_000) return `${Math.round(diff / 1000)}s ago`;
-	if (diff < 3_600_000) return `${Math.round(diff / 60_000)} min ago`;
-	if (diff < 86_400_000) return `${Math.round(diff / 3_600_000)} h ago`;
-	return `${Math.round(diff / 86_400_000)} d ago`;
+	if (diff < 30_000) return t`just now`;
+	const n = (unit: number) => Math.round(diff / unit);
+	if (diff < 60_000) return t`${n(1000)}s ago`;
+	if (diff < 3_600_000) return t`${n(60_000)} min ago`;
+	if (diff < 86_400_000) return t`${n(3_600_000)} h ago`;
+	return t`${n(86_400_000)} d ago`;
 }
 
 /**
@@ -32,7 +35,9 @@ export function formatRelativeAgo(ms: number | undefined | null): string {
  * Minimum one minute for any positive sub-minute value so "30 seconds
  * of audio" doesn't show as "0 min".
  */
-export function formatDurationFromHours(hours: number | null | undefined): string {
+export function formatDurationFromHours(
+	hours: number | null | undefined,
+): string {
 	if (hours == null || !Number.isFinite(hours) || hours <= 0) return "0 min";
 	const totalMins = Math.max(1, Math.round(hours * 60));
 	if (totalMins < 60) return `${totalMins} min`;
