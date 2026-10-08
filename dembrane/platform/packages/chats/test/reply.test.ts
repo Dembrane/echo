@@ -216,6 +216,38 @@ describe("chat reply stream", () => {
     );
   });
 
+  test("the host stopping the reply keeps their message", async () => {
+    const w = world();
+    const slow = fakeModel({ chunks: ["a", "b", "c", "d"] });
+    const inner = slow.doStream.bind(slow);
+    slow.doStream = async (o) => {
+      const r = await inner(o);
+      const paced = new TransformStream({
+        async transform(part, ctl) {
+          await Bun.sleep(20);
+          ctl.enqueue(part);
+        },
+      });
+      return { ...r, stream: r.stream.pipeThrough(paced) };
+    };
+    const captured: unknown[][] = [];
+    const d = fakeDeps({ store: w.store, reads: w.reads, captured, model: slow });
+    const res = await reply(
+      d,
+      host,
+      CHAT,
+      { messages: [{ role: "user", content: "Hi" }], template_key: null },
+      "data",
+      "en",
+    );
+    const reader = res.body!.getReader();
+    await reader.read();
+    await reader.cancel();
+    await Bun.sleep(200);
+    expect(w.deleted).toEqual([]);
+    expect(captured.map((c) => c[1])).not.toContain("server_chat_error");
+  });
+
   test("agentic chats and spent free-tier turns are refused before anything is stored", async () => {
     const agentic = world({ mode: "agentic" });
     await expect(
