@@ -31,6 +31,7 @@ import {
   popcornDemoRoutes,
   popcornDeps,
   popcornFlags,
+  popcornProjectNudge,
   popcornRoutes,
   publicRoutes,
   queueDispatch,
@@ -179,6 +180,8 @@ export function buildApp(deps: Deps) {
       embeddingLocation: deps.config.llm.embeddingLocation,
       nodeLimitCeiling: deps.config.analysis.nodeLimitCeiling ?? null,
       edgeLimitCeiling: deps.config.analysis.edgeLimitCeiling ?? null,
+      // The room shows the project's groups and follows its popcorn session's channel.
+      onGroupChanged: popcornProjectNudge(deps.db, deps.logger),
     }),
   );
   app.route(

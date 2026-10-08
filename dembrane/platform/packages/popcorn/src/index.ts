@@ -95,6 +95,7 @@ export {
   type Adoption,
   type PopcornWorkerDeps,
   popcornDeckHook,
+  popcornProjectNudge,
   popcornWorker,
   runtimeAnalysis,
   type TickAnalysis,

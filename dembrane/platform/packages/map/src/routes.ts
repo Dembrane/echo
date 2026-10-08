@@ -60,6 +60,8 @@ export interface MapRoutesDeps {
   readonly embeddingLocation: string;
   readonly nodeLimitCeiling: number | null;
   readonly edgeLimitCeiling: number | null;
+  /** Wakes the screens outside the Map page that show a project's groups. */
+  readonly onGroupChanged?: (projectId: string) => Promise<void>;
 }
 
 const GENERATE_LIMIT = { name: "map_generate", capacity: 10, windowSeconds: 600 };
@@ -146,6 +148,7 @@ export function mapRoutes(deps: MapRoutesDeps) {
       deps.jobs.enqueue(mapFactCheck, job, { singletonKey: `${job.factCheckId}:${job.attempt}` }),
     dispatchGroup: (job) =>
       deps.jobs.enqueue(mapGroup, job, { singletonKey: `${job.groupId}:${job.attempt}` }),
+    onGroupChanged: deps.onGroupChanged,
   };
   const ceilings = { nodeLimit: deps.nodeLimitCeiling, edgeLimit: deps.edgeLimitCeiling };
   const app = new Hono<Env>();

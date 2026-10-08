@@ -24,6 +24,7 @@ import {
   type PopcornWorkerDeps,
   popcornDeckHook,
   popcornFlags,
+  popcornProjectNudge,
   popcornWorker,
   runPopcornTick,
   runtimeAnalysis,
@@ -258,6 +259,8 @@ export function registrations(deps: {
         embeddingModel: config.llm.embeddingModel,
         embeddingLocation: config.llm.embeddingLocation,
       },
+      // A group landing wakes the room, which follows its popcorn session's channel.
+      onGroupChanged: popcornProjectNudge(db, logger),
     }),
     accountsWorker({
       db,

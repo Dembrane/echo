@@ -569,6 +569,35 @@ describe("AudienceMapAdapter", () => {
 		expect(fetchMock.mock.calls.map(([url]) => url)).toEqual(["/audience/map"]);
 	});
 
+	it("shows a pending group's title once an audience event re-reads the map", async () => {
+		const pending = groupsPayload.groups[1];
+		let landed = false;
+		const fetchMock = vi.fn(
+			async (_url: string, _init?: RequestInit) =>
+				new Response(
+					JSON.stringify({
+						groups: [
+							landed
+								? { ...pending, status: "ready", title: "Ferry timetables" }
+								: pending,
+						],
+					}),
+					{ status: 200 },
+				),
+		);
+		vi.stubGlobal("fetch", fetchMock);
+
+		const view = render(adapter(true, 0));
+		expect(await screen.findByText("Distilling core idea…")).toBeTruthy();
+
+		// The title lands; the group's event reaches the room as an audience event.
+		landed = true;
+		view.rerender(adapter(true, 1));
+		expect(await screen.findByText("Ferry timetables")).toBeTruthy();
+		expect(screen.queryByText("Distilling core idea…")).toBeNull();
+		expect(fetchMock).toHaveBeenCalledTimes(2);
+	});
+
 	it("highlights a group's members when it is picked, and shows it in Spotlight", async () => {
 		vi.stubGlobal(
 			"fetch",
