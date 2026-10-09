@@ -2,8 +2,10 @@ import { t } from "@lingui/core/macro";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useContext } from "react";
 import { toast } from "@/components/common/Toaster";
+import { notifyError } from "@/components/error/notifyError";
 import { API_BASE_URL } from "@/config";
 import { bff } from "@/lib/bff";
+import { readApiError } from "@/lib/errors/read";
 import { SettingsSaveContext } from "../SettingsSaveContext";
 
 export type PopcornLoop = {
@@ -13,11 +15,19 @@ export type PopcornLoop = {
 	// minutes until expires_at, then back to manual.
 	mode: "manual" | "live";
 	expires_at?: string | null;
+	// A booked start ("Ready by"): the time asked for and the first read, a fixed 15
+	// minutes before it. Set while the loop is still manual, null otherwise.
+	ready_by?: string | null;
+	starts_at?: string | null;
 	cadence_minutes?: number | null;
 	next_read_at?: string | null;
 	last_run_started_at?: string | null;
 	last_run_status?: "ok" | "no_op" | "error" | string | null;
 	last_run_detail?: string | null;
+	// The conversations whose finish caused the last read; null when a host's
+	// press or the live chain did. reading_after_finish: such a read is under way.
+	last_read_after?: { id: string; name: string | null }[] | null;
+	reading_after_finish?: boolean;
 };
 
 export type PopcornTabs = {
@@ -143,6 +153,14 @@ export type PopcornProject = {
 };
 
 export type LiveHours = 1 | 8 | 24;
+
+export type LiveBooking = { readyBy: string; startsAt: string };
+
+/** The start a manual session has booked, or null. */
+export const liveBooking = (loop?: PopcornLoop | null): LiveBooking | null =>
+	loop && loop.mode !== "live" && loop.ready_by && loop.starts_at
+		? { readyBy: loop.ready_by, startsAt: loop.starts_at }
+		: null;
 
 export type PopcornSettingsPatch = Partial<
 	Omit<
@@ -273,7 +291,12 @@ export const usePopcornSettingsMutation = (
 						`/popcorn/${encodeURIComponent(popcornId)}/settings`,
 						patch,
 					),
-		onError: () => toast.error(t`Could not save changes. Try again.`),
+		// A refusal with a reason (a plan the change needs) says the reason and offers its
+		// action; anything else gets the plain retry line.
+		onError: (error) => {
+			if (readApiError(error).code) void notifyError(error);
+			else toast.error(t`Could not save changes. Try again.`);
+		},
 		onSuccess: (detail) => {
 			if (editor) return;
 			putPopcorn(queryClient, projectId, detail);
@@ -338,10 +361,11 @@ export const usePopcornLiveMutation = (
 ) => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: (hours: LiveHours) =>
+		// With readyBy the first read is booked 15 minutes before it, not now.
+		mutationFn: ({ hours, readyBy }: { hours: LiveHours; readyBy?: Date }) =>
 			bff.post<PopcornDetail>(
 				`/popcorn/${encodeURIComponent(popcornId)}/live`,
-				{ hours },
+				readyBy ? { hours, ready_by: readyBy.toISOString() } : { hours },
 			),
 		onError: () => toast.error(t`Could not go live`),
 		onSuccess: (detail) => {

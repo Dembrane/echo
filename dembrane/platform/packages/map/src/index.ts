@@ -7,6 +7,7 @@ export {
   assessmentState,
   compareTimestamps,
   factCheckStates,
+  groupDoc,
   type MapDeps,
   requestGeneration,
 } from "./service";

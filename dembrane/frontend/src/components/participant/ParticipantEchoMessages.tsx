@@ -18,10 +18,15 @@ export const ParticipantEchoMessages = ({
 	status,
 	error,
 }: ParticipantEchoMessagesProps) => {
+	// User messages render nothing.
+	const firstReplyIndex = echoMessages.findIndex((m) => m.role === "assistant");
+	const ruleClass = (isFirst: boolean) =>
+		isFirst ? "!border-y-0" : "!border-b-0";
+
 	return (
 		<Stack gap="sm" {...testId("portal-explore-messages-container")}>
 			{echoMessages && echoMessages.length > 0 && (
-				<>
+				<Stack gap={0}>
 					{echoMessages.map((message, index) => (
 						<SpikeMessage
 							key={message.id}
@@ -33,7 +38,7 @@ export const ParticipantEchoMessages = ({
 								type: message.role === "assistant" ? "assistant_reply" : "user",
 							}}
 							loading={index === echoMessages.length - 1 && isLoading}
-							className={`min-h-[180px] md:min-h-[169px] ${index !== echoMessages.length - 1 ? "border-b" : ""}`}
+							className={ruleClass(index === firstReplyIndex)}
 							dataTestId={`portal-explore-message-${index}`}
 						/>
 					))}
@@ -48,11 +53,11 @@ export const ParticipantEchoMessages = ({
 								type: "assistant_reply",
 							}}
 							loading={true}
-							className="min-h-[180px] md:min-h-[169px]"
+							className={ruleClass(firstReplyIndex === -1)}
 							dataTestId="portal-explore-thinking"
 						/>
 					)}
-				</>
+				</Stack>
 			)}
 
 			{error && <EchoErrorAlert error={error} />}

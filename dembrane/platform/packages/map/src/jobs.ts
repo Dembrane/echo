@@ -16,6 +16,8 @@ export interface MapWorkerDeps {
   readonly completer: Completer;
   readonly embedder: Embedder;
   readonly config: RuntimeConfig;
+  /** Wakes the screens outside the Map page that show a project's groups. */
+  readonly onGroupChanged?: (projectId: string) => Promise<void>;
 }
 
 /** The worker's registration: the fact-check and group workflows. Generation is the analysis run workflow. */
@@ -35,7 +37,10 @@ export function mapWorker(deps: MapWorkerDeps) {
       });
       // A group is one short title call; hosts make them by the dozen.
       await queue.workflow(mapGroup, { concurrency: 8 }, async (job) => {
-        const outcome = await groupWorkflow({ store, rt, completer: deps.completer }, job);
+        const outcome = await groupWorkflow(
+          { store, rt, completer: deps.completer, onGroupChanged: deps.onGroupChanged },
+          job,
+        );
         deps.logger.info(
           { group_id: job.groupId, attempt: job.attempt, outcome },
           "map group finished",

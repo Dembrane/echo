@@ -3,7 +3,7 @@ import type { Completer } from "@dembrane/llm";
 import { defineJob, step } from "@dembrane/queue";
 import { z } from "zod";
 import { TITLE_PROMPT, titleSelection } from "./model";
-import { snapshotTitleLines } from "./service";
+import { announceGroup, type GroupAnnounce, snapshotTitleLines } from "./service";
 import type { MapStore } from "./store";
 
 /**
@@ -11,7 +11,8 @@ import type { MapStore } from "./store";
  * committed by the API, and from here it no longer depends on the page. Load the pending
  * group, read its members' title lines from the snapshot it was made in, ask the title
  * model, and write the title only while the attempt is current. Every outcome is
- * published on the map channel, so everyone on the page sees the group land.
+ * published on the map channel and to the screens showing the project's groups, so
+ * everyone on the page and in the room sees the group land.
  */
 
 export const mapGroup = defineJob(
@@ -20,7 +21,7 @@ export const mapGroup = defineJob(
   { retryLimit: 0, expireInSeconds: 5 * 60 },
 );
 
-export interface GroupWorkerDeps {
+export interface GroupWorkerDeps extends GroupAnnounce {
   readonly store: MapStore;
   readonly rt: AnalysisRuntime;
   readonly completer: Completer;
@@ -40,7 +41,7 @@ export async function runGroup(
       () => d.store.failGroup(job.groupId, job.attempt, message),
       60_000,
     );
-    if (written) await d.rt.publishMap(projectId, { type: "group", group_id: job.groupId });
+    if (written) await announceGroup(d, projectId, job.groupId);
     return written ? "failed" : "stale";
   };
 
@@ -99,7 +100,7 @@ export async function runGroup(
     60_000,
   );
   if (!written) return "stale";
-  await d.rt.publishMap(projectId, { type: "group", group_id: job.groupId });
+  await announceGroup(d, projectId, job.groupId);
   return "ready";
 }
 
@@ -111,9 +112,15 @@ export async function groupWorkflow(d: GroupWorkerDeps, job: z.output<typeof map
     );
   } catch (err) {
     // An attempt that dies leaves a failed group the host can retry, never one pending.
-    await step("interrupted", () =>
+    const failed = await step("interrupted", () =>
       d.store.failGroup(job.groupId, job.attempt, "The group was interrupted. Try again."),
     );
+    // Telling the pages is best effort; the attempt's own error is what the run reports.
+    if (failed)
+      await step("interrupted-announce", async () => {
+        const row = await d.store.getGroup(job.groupId);
+        if (row) await announceGroup(d, String(row.project_id), job.groupId);
+      }).catch(() => {});
     throw err;
   }
 }

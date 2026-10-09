@@ -15,6 +15,7 @@
   --graphite: #2D2D2C;
   --blue: #4169E1;
   --hairline: #E6E3DF;
+  --recording: #C0434E;
   --ink-soft: rgba(45, 45, 44, 0.62);
   --ink-faint: rgba(45, 45, 44, 0.38);
   --text-weight: 320;
@@ -843,11 +844,38 @@ body:has(.quote-veil.show) .pop { animation-play-state: paused; }
   position: absolute;
   left: 50%; top: 45%;
   transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35em;
   color: var(--ink-faint);
   font-size: clamp(22px, 2.4vw, 36px);
   font-weight: 300;
+  text-align: center;
   white-space: nowrap;
 }
+.popcorn-waiting p { margin: 0; }
+.popcorn-waiting .waiting-line { display: flex; align-items: center; gap: 0.5em; }
+/* what the room is waiting on: the conversations recording, large, and the
+   finished ones being read beneath */
+.popcorn-waiting .waiting-count { font-size: clamp(72px, 10vw, 180px); line-height: 1; color: var(--graphite); }
+.popcorn-waiting .waiting-count + .waiting-line { color: var(--ink-soft); }
+.popcorn-waiting .waiting-sub { font-size: 0.66em; }
+.popcorn-waiting .recording-dot { width: 0.4em; height: 0.4em; border-radius: 50%; background: var(--recording); }
+/* the host's quiet Analyse now; the public page never draws it */
+.popcorn-waiting .analyse-now {
+  margin-top: 0.9em;
+  padding: 0.45em 1.1em;
+  font: inherit;
+  font-size: 0.5em;
+  font-weight: var(--text-weight);
+  color: var(--ink-soft);
+  background: none;
+  border: 1px solid var(--hairline);
+  cursor: pointer;
+}
+.popcorn-waiting .analyse-now:hover { color: var(--blue); border-color: var(--blue); }
+.popcorn-waiting .analyse-now:disabled { opacity: 0.5; cursor: default; }
 
 
 /* ---------- recommendations ---------- */
@@ -1397,6 +1425,7 @@ details.theme-block[open] .theme-body { animation: rise-in 0.38s cubic-bezier(0.
   --ink-soft: rgba(246, 244, 241, 0.64);
   --ink-faint: rgba(246, 244, 241, 0.40);
   --hairline: #262625;
+  --recording: #F58A93;       /* the recording dot, lifted to read on black */
   --blue: #7C9BFF;            /* blue as text and as a line, lifted to clear */
   --flow-neutral: #7C9BFF;    /* the neutral stakeholder line */
   --qr-card: #000000;         /* the QR turns over too: light modules... */

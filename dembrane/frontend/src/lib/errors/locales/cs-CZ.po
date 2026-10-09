@@ -374,6 +374,11 @@ msgid "error.report.schedule_too_soon"
 msgstr "Zvolte čas alespoň 10 minut od této chvíle."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/popcorn.ts:23
+msgid "error.popcorn.invalid_ready_by"
+msgstr "Vyberte čas, který teprve přijde, nejpozději za 7 dní."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:5
 msgid "error.canvas.expiry_in_past"
 msgstr "Vyberte datum ukončení v budoucnosti."
@@ -484,7 +489,7 @@ msgid "error.analysis.revision_conflict"
 msgstr "Někdo tento výsledek změnil, zatímco jste si ho prohlíželi. Obnovte stránku, abyste viděli jeho verzi, a pak úpravu proveďte znovu."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/popcorn.ts:40
+#: src/lib/errors/messages/popcorn.ts:44
 msgid "error.popcorn.settings_busy"
 msgstr "Někdo jiný právě toto nastavení ukládá. Zkuste to za chvíli znovu."
 
@@ -549,7 +554,7 @@ msgid "error.project.methodology_read_only"
 msgstr "Metodiku dembrane nelze měnit. Chcete-li ji upravit, vytvořte si kopii."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/popcorn.ts:45
+#: src/lib/errors/messages/popcorn.ts:49
 msgid "error.popcorn.synthetic_frame_locked"
 msgstr "Rámec ukázkové prezentace je nastaven s ukázkou a nelze ho zde měnit."
 
@@ -904,12 +909,12 @@ msgid "error.present.map_not_in_presentation"
 msgstr "Tato prezentace neobsahuje mapu."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/popcorn.ts:27
+#: src/lib/errors/messages/popcorn.ts:31
 msgid "error.popcorn.loop_not_found"
 msgstr "Tato prezentace neběží. Pokračujte jejím opětovným spuštěním."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/popcorn.ts:35
+#: src/lib/errors/messages/popcorn.ts:39
 msgid "error.popcorn.public_not_found"
 msgstr "Tento odkaz na prezentaci již nefunguje. Požádejte hostitele o nový odkaz."
 
@@ -1034,7 +1039,7 @@ msgid "error.analysis.revision_not_found"
 msgstr "Tato verze výsledku již neexistuje. Načtěte stránku znovu a uvidíte tu nejnovější."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/popcorn.ts:23
+#: src/lib/errors/messages/popcorn.ts:27
 msgid "error.popcorn.just_refreshed"
 msgstr "Tento obsah byl právě aktualizován. Před dalším pokusem počkejte několik sekund."
 
@@ -1264,7 +1269,7 @@ msgid "error.organisation.not_found"
 msgstr "Tuto organizaci se nám nepodařilo najít."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/popcorn.ts:31
+#: src/lib/errors/messages/popcorn.ts:35
 msgid "error.popcorn.not_found"
 msgstr "Tuto prezentaci se nám nepodařilo najít."
 
@@ -1329,7 +1334,7 @@ msgid "error.training.not_found"
 msgstr "Toto školení se nám nepodařilo najít."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/popcorn.ts:50
+#: src/lib/errors/messages/popcorn.ts:54
 msgid "error.popcorn.version_not_found"
 msgstr "Tuto verzi prezentace se nám nepodařilo najít."
 

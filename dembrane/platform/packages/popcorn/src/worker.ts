@@ -96,6 +96,25 @@ export function runtimeAnalysis(
 }
 
 /**
+ * Wakes the screens following the project's popcorn session, for a change outside the deck
+ * (a map group made, titled or failed): the room, the public page and the Present preview
+ * reread what they show. Best effort: a failed lookup is logged, and the screens' safety
+ * reread catches up.
+ */
+export function popcornProjectNudge(db: Db, logger: Logger): (projectId: string) => Promise<void> {
+  const sql = client(db);
+  const store = popcornStore(sql);
+  return async (projectId) => {
+    try {
+      const report = await store.popcornReport(projectId);
+      if (report) await publishNudge(sql, String(report.id), logger);
+    } catch (err) {
+      logger.warn({ err, project_id: projectId }, "popcorn nudge failed");
+    }
+  };
+}
+
+/**
  * The deck view follows its producers (bundle.py deck_view_hook): the analysis outbox runs
  * this after each publication, and the screens of the project's popcorn session reread.
  */

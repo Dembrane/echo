@@ -371,7 +371,7 @@
 
 /* Modal: a floating sheet between two rules; the title is a heading step. */
 :root .mantine-Modal-header {
-  background: transparent;
+  background: inherit;
 }
 :root .mantine-Modal-title {
   font-size: 24.88px;

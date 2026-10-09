@@ -233,4 +233,57 @@ describe("useMapGroups", () => {
 		expect(server.backend.create).not.toHaveBeenCalled();
 		expect(server.backend.list).toHaveBeenCalled();
 	});
+
+	it("lists groups it is handed without asking the server, and makes none", async () => {
+		const server = fakeServer();
+		const store = createMapInteractionStore();
+		const client = new QueryClient({
+			defaultOptions: { queries: { retry: false } },
+		});
+		const wrapper = ({ children }: { children: ReactNode }) => (
+			<QueryClientProvider client={client}>
+				<MapInteractionProvider store={store}>
+					{children}
+				</MapInteractionProvider>
+			</QueryClientProvider>
+		);
+		const docs: MapGroupDoc[] = [
+			{
+				createdAt: "2026-10-06T10:00:00+00:00",
+				error: null,
+				id: "room-group",
+				members: ids(0, 4, 8).map((revisionId) => ({
+					objectId: revisionId,
+					revisionId,
+					type: "argument",
+				})),
+				snapshotId: "snapshot-1",
+				status: "failed",
+				title: null,
+			},
+		];
+		const hook = renderHook(
+			() =>
+				useMapGroups({
+					backend: server.backend,
+					canCommit: false,
+					docs,
+					edges,
+					nodes,
+					resultId: "result-1",
+					snapshotId: "snapshot-1",
+				}),
+			{ wrapper },
+		);
+		expect(hook.result.current.history.map((entry) => entry.id)).toEqual([
+			"room-group",
+		]);
+		highlight(store, ids(1, 5, 9));
+		expect(hook.result.current.timerActive).toBe(false);
+		await wait(DWELL_MS + POLL_MS);
+		act(() => hook.result.current.retry("room-group"));
+		await wait(0);
+		expect(server.backend.list).not.toHaveBeenCalled();
+		expect(server.backend.create).not.toHaveBeenCalled();
+	});
 });

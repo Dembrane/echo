@@ -60,6 +60,8 @@ type NodeDetailCardProps = {
 	collapsibleQuotes?: boolean;
 	/** False where the host shows the statement itself, above its own controls. */
 	statement?: boolean;
+	/** False where the host lists the quotes itself, as the details sheet does. */
+	quotes?: boolean;
 	inspection?: NodeInspection | null;
 };
 
@@ -400,6 +402,7 @@ export const NodeDetailCard = memo(function NodeDetailCard({
 	conversationHref,
 	collapsibleQuotes = false,
 	statement = true,
+	quotes = true,
 	inspection = null,
 }: NodeDetailCardProps) {
 	// Where the quotes fold, they start folded: the statement leads, and the
@@ -414,10 +417,9 @@ export const NodeDetailCard = memo(function NodeDetailCard({
 		);
 	}
 
-	const quoteCount = evidence.reduce(
-		(total, group) => total + group.quotes.length,
-		0,
-	);
+	const quoteCount = quotes
+		? evidence.reduce((total, group) => total + group.quotes.length, 0)
+		: 0;
 	// One conversation needs no heading over its quotes: the node's chit
 	// already names it. Several do, so a quote is read where it was spoken.
 	const headings = evidence.length > 1;

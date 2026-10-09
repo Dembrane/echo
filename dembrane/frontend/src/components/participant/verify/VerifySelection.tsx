@@ -3,7 +3,6 @@ import { Trans } from "@lingui/react/macro";
 import {
 	Button,
 	Group,
-	Skeleton,
 	Stack,
 	Text,
 	Title,
@@ -13,6 +12,7 @@ import { ArrowRightIcon } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 
+import { Logo } from "@/components/common/Logo";
 import { toast } from "@/components/common/Toaster";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -200,13 +200,10 @@ export const VerifySelection = () => {
 		(singleTopicKey && !showInstructions && !hasAutoTriedSingle)
 	) {
 		return (
-			<Stack gap="md" className="h-full pt-10">
-				<Skeleton height={32} width="60%" />
-				<Group gap="sm">
-					<Skeleton height={48} width={120} />
-					<Skeleton height={48} width={120} />
-					<Skeleton height={48} width={120} />
-				</Group>
+			<Stack justify="center" className="h-full">
+				<div className="animate-spin self-start">
+					<Logo hideTitle hideEnvBadge alwaysDembrane h="48px" />
+				</div>
 			</Stack>
 		);
 	}

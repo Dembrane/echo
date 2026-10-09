@@ -103,6 +103,11 @@ export type UseMapGroupsOptions = {
 	enabled?: boolean;
 	/** False where groups are shown but not made (no right to change the project). */
 	canCommit?: boolean;
+	/**
+	 * The groups as read elsewhere (the room reads them with its map), in place
+	 * of the project's list: nothing is fetched or polled for them.
+	 */
+	docs?: ReadonlyArray<MapGroupDoc>;
 };
 
 const setsEqual = (a: ReadonlySet<string>, b: ReadonlySet<string>) => {
@@ -143,20 +148,21 @@ export function useMapGroups({
 	backend = serverGroupBackend,
 	enabled = true,
 	canCommit = true,
+	docs: givenDocs,
 }: UseMapGroupsOptions) {
 	const store = useMapInteractionStore();
 	const queryClient = useQueryClient();
 	const listKey = mapKeys.groups(resultId ?? "");
 
 	const query = useQuery({
-		enabled: enabled && !!resultId,
+		enabled: enabled && !!resultId && !givenDocs,
 		queryFn: () => backend.list(resultId as string),
 		queryKey: listKey,
 		refetchInterval: (q) =>
 			q.state.data?.some((doc) => doc.status === "pending") ? POLL_MS : false,
 		refetchOnWindowFocus: false,
 	});
-	const docs = query.data;
+	const docs = givenDocs ?? query.data;
 
 	// Commits the server has not answered, or refused: kept on this page only.
 	const [local, setLocal] = useState<Distillation[]>([]);
@@ -518,6 +524,7 @@ export function useMapGroups({
 	/** Commits again a group whose run or commit failed. */
 	const retry = useCallback(
 		(id: string) => {
+			if (!latestRef.current.canCommit) return;
 			const entry = historyRef.current.find((item) => item.id === id);
 			if (entry?.status === "failed") send(entry.nodeIds);
 		},
