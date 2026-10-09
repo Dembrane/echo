@@ -182,7 +182,7 @@ export const AccountSettingsCard = () => {
 					<TextInput label={t`Email`} value={user?.email ?? ""} disabled />
 
 					{hasNameChanged && (
-						<Group mt="xs">
+						<Group mt="sm">
 							<Button
 								variant="filled"
 								onClick={() => updateNameMutation.mutate(name.trim())}

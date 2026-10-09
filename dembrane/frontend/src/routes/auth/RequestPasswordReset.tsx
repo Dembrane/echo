@@ -56,7 +56,7 @@ export const RequestPasswordResetRoute = () => {
 									type="email"
 								/>
 								<Button
-									mt="xs"
+									mt="sm"
 									variant="filled"
 									size="md"
 									type="submit"

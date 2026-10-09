@@ -94,7 +94,7 @@ export const DownloadConversationTranscriptModal = (props: {
 					{...testId("transcript-download-filename-input")}
 				/>
 				<Button
-					mt="xs"
+					mt="sm"
 					variant="filled"
 					loading={getConversationTranscriptStringMutation.isPending}
 					disabled={getConversationTranscriptStringMutation.isPending}

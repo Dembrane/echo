@@ -1,410 +1,100 @@
 {
-	"desktop · /$project/no-such-page · page": {
-		"type.size": 1
-	},
-	"desktop · /$project/conversation/$conversation/finish · page": {
-		"type.size": 1
-	},
-	"desktop · /$project/conversation/$conversation/text · page": {
-		"type.size": 1
-	},
-	"desktop · /$project/conversation/$conversation/verify/approve · page": {
-		"type.size": 1
-	},
-	"desktop · /$project/report · page": {
-		"type.size": 1
-	},
 	"desktop · /$project/start · page": {
 		"icon.size": 1
 	},
 	"desktop · /$project/unsubscribe · page": {
-		"type.size": 1,
 		"icon.size": 1
-	},
-	"desktop · /account · page": {
-		"icon.size": 2
-	},
-	"desktop · /connect-agent · page": {
-		"icon.size": 2
-	},
-	"desktop · /o · page": {
-		"icon.size": 3
-	},
-	"desktop · /o/$org/overview · page": {
-		"axe.color-contrast": 1,
-		"icon.size": 1
-	},
-	"desktop · /o/$org/usage · page": {
-		"axe.aria-progressbar-name": 1,
-		"icon.size": 1
-	},
-	"desktop · /o/$org/billing · page": {
-		"icon.size": 1
-	},
-	"desktop · /o/$org/training · page": {
-		"axe.color-contrast": 1,
-		"type.transform": 3,
-		"icon.size": 1
-	},
-	"desktop · /o/$org/agents · page": {
-		"icon.size": 1
-	},
-	"desktop · /o/$org/members · page": {
-		"icon.size": 2
-	},
-	"desktop · /o/$org/account · page": {
-		"icon.size": 2
 	},
 	"desktop · /o/$org/account/documents/$doc/sign · page": {
-		"grammar.read": 2,
-		"icon.size": 1
-	},
-	"desktop · /present/screen/$presentation · page": {
-		"icon.size": 2
-	},
-	"desktop · /register · page": {
-		"type.size": 1
-	},
-	"desktop · /release-notes · page": {
-		"axe.aria-allowed-attr": 1,
-		"axe.aria-prohibited-attr": 1,
-		"axe.button-name": 1,
-		"icon.size": 2
-	},
-	"desktop · /request-password-reset · page": {
-		"rule05": 1
+		"grammar.read": 2
 	},
 	"desktop · /settings · page": {
-		"axe.aria-progressbar-name": 1,
-		"rule05": 1,
-		"flow.primary-first": 1,
-		"icon.size": 7
-	},
-	"desktop · /settings/access · page": {
-		"icon.size": 1
+		"flow.primary-first": 1
 	},
 	"desktop · /settings/appearance · page": {
-		"type.size": 4,
-		"icon.size": 1
-	},
-	"desktop · /settings/assistant · page": {
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/home · page": {
-		"axe.button-name": 1,
-		"type.transform": 1,
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/home · select": {
-		"axe.nested-interactive": 1,
-		"type.transform": 1,
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/members/ · page": {
-		"axe.label": 1,
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/projects/$project/access · page": {
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/projects/$project/analysis · page": {
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/projects/$project/analysis/results · page": {
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/projects/$project/analysis/recipes · page": {
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/projects/$project/analysis/runs · page": {
-		"icon.size": 1
+		"type.size": 4
 	},
 	"desktop · /w/$workspace/projects/$project/chats/new · page": {
-		"axe.button-name": 1,
 		"rule05": 1,
-		"flow.primary-first": 1,
-		"icon.size": 1
+		"flow.primary-first": 1
 	},
 	"desktop · /w/$workspace/projects/$project/chats/new · templates": {
-		"axe.aria-command-name": 1,
-		"axe.button-name": 1,
 		"shape.radius": 1,
 		"rule05": 1,
-		"flow.primary-first": 1,
-		"icon.size": 1
+		"flow.primary-first": 1
 	},
 	"desktop · /w/$workspace/projects/$project/chats/new · agentic intro": {
-		"axe.button-name": 1,
 		"rule05": 1,
 		"flow.primary-first": 1,
-		"icon.size": 4
-	},
-	"desktop · /w/$workspace/projects/$project/conversations · page": {
-		"axe.button-name": 1,
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/projects/$project/conversations · upload": {
-		"axe.button-name": 1,
-		"axe.label": 1,
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/projects/$project/conversations/$conversation · page": {
-		"axe.button-name": 1,
-		"icon.size": 1
+		"icon.size": 3
 	},
 	"desktop · /w/$workspace/projects/$project/conversations/$conversation · move": {
-		"axe.button-name": 1,
-		"rule05": 1,
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/projects/$project/conversations/$conversation · delete": {
-		"axe.button-name": 1,
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/projects/$project/conversations/$conversation · download": {
-		"axe.button-name": 1,
-		"rule05": 1,
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/projects/$project/conversations/$conversation · retranscribe": {
-		"axe.button-name": 1,
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/projects/$project/export · page": {
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/projects/$project/home · page": {
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/projects/$project/home · rename": {
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/projects/$project/host-guide · page": {
-		"axe.aria-command-name": 1,
-		"axe.button-name": 1,
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/projects/$project/integrations · page": {
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/projects/$project/library · page": {
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/projects/$project/map · page": {
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/projects/$project/monitor · page": {
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/projects/$project/overview · page": {
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/projects/$project/overview · clone": {
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/projects/$project/overview · delete": {
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/projects/$project/portal-editor · page": {
-		"axe.button-name": 1,
-		"axe.nested-interactive": 1,
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/projects/$project/portal-editor · preview": {
-		"axe.button-name": 1,
-		"axe.nested-interactive": 1,
-		"icon.size": 1
+		"rule05": 1
 	},
 	"desktop · /w/$workspace/projects/$project/present · page": {
 		"rule05": 1,
 		"flow.one-primary": 1,
-		"flow.primary-first": 1,
-		"icon.size": 1
+		"flow.primary-first": 1
 	},
 	"desktop · /w/$workspace/projects/$project/present/$presentation/edit · page": {
 		"rule05": 1,
 		"flow.one-primary": 1,
-		"flow.primary-first": 1,
-		"icon.size": 1
+		"flow.primary-first": 1
 	},
 	"desktop · /w/$workspace/projects/$project/report · page": {
-		"rule05": 2,
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/projects/$project/upload · page": {
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/projects/$project/usage · page": {
-		"icon.size": 1
+		"rule05": 2
 	},
 	"desktop · /w/$workspace/projects/new · page": {
-		"rule05": 1,
-		"icon.size": 1
+		"rule05": 1
 	},
 	"desktop · /w/$workspace/settings/general · page": {
-		"axe.aria-allowed-attr": 1,
-		"rule05": 3,
-		"flow.one-primary": 1,
-		"flow.primary-first": 2,
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/settings/members · page": {
-		"axe.label": 1,
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/settings/training · page": {
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/settings/billing · page": {
-		"axe.aria-progressbar-name": 1,
-		"icon.size": 1
-	},
-	"desktop · /w/$workspace/settings/danger · page": {
-		"icon.size": 1
-	},
-	"desktop · /w/new · page": {
 		"rule05": 1,
-		"icon.size": 2
-	},
-	"phone · /$project/no-such-page · page": {
-		"type.size": 1
-	},
-	"phone · /$project/conversation/$conversation/finish · page": {
-		"type.size": 1
-	},
-	"phone · /$project/conversation/$conversation/text · page": {
-		"type.size": 1
-	},
-	"phone · /$project/conversation/$conversation/verify/approve · page": {
-		"type.size": 1
-	},
-	"phone · /$project/report · page": {
-		"type.size": 1
+		"flow.one-primary": 1,
+		"flow.primary-first": 2
 	},
 	"phone · /$project/start · page": {
 		"icon.size": 1
 	},
 	"phone · /$project/unsubscribe · page": {
-		"type.size": 1,
 		"icon.size": 1
-	},
-	"phone · /o · page": {
-		"icon.size": 1
-	},
-	"phone · /o/$org/overview · page": {
-		"axe.color-contrast": 1
 	},
 	"phone · /o/$org/usage · page": {
-		"axe.aria-progressbar-name": 1,
 		"rule05": 1
-	},
-	"phone · /o/$org/training · page": {
-		"axe.color-contrast": 1,
-		"axe.scrollable-region-focusable": 1,
-		"type.transform": 3
-	},
-	"phone · /o/$org/members · page": {
-		"icon.size": 1
-	},
-	"phone · /o/$org/account · page": {
-		"icon.size": 1
 	},
 	"phone · /o/$org/account/documents/$doc/sign · page": {
-		"grammar.read": 2,
-		"icon.size": 1
-	},
-	"phone · /register · page": {
-		"axe.button-name": 1,
-		"type.size": 1
-	},
-	"phone · /release-notes · page": {
-		"axe.aria-allowed-attr": 1,
-		"axe.aria-prohibited-attr": 1,
-		"axe.button-name": 1
-	},
-	"phone · /request-password-reset · page": {
-		"rule05": 1
+		"grammar.read": 2
 	},
 	"phone · /settings · page": {
-		"axe.aria-progressbar-name": 1,
-		"axe.scrollable-region-focusable": 1,
-		"rule05": 1,
-		"flow.primary-first": 1,
-		"icon.size": 8
+		"flow.primary-first": 1
 	},
 	"phone · /settings/appearance · page": {
 		"type.size": 4
 	},
-	"phone · /w/$workspace/home · page": {
-		"axe.button-name": 1,
-		"type.transform": 1
-	},
-	"phone · /w/$workspace/home · select": {
-		"axe.nested-interactive": 1,
-		"type.transform": 1
-	},
 	"phone · /w/$workspace/members/ · page": {
-		"axe.label": 1,
-		"rule05": 1,
-		"icon.size": 1
-	},
-	"phone · /w/$workspace/projects/$project/access · page": {
-		"icon.size": 1
+		"rule05": 1
 	},
 	"phone · /w/$workspace/projects/$project/chats/new · page": {
-		"axe.button-name": 1,
 		"rule05": 1,
 		"flow.primary-first": 1
 	},
 	"phone · /w/$workspace/projects/$project/chats/new · templates": {
-		"axe.aria-command-name": 1,
-		"axe.button-name": 1,
 		"shape.radius": 1,
 		"rule05": 1,
 		"flow.primary-first": 1
 	},
 	"phone · /w/$workspace/projects/$project/chats/new · agentic intro": {
-		"axe.button-name": 1,
 		"rule05": 1,
 		"flow.primary-first": 1,
 		"icon.size": 3
 	},
 	"phone · /w/$workspace/projects/$project/conversations · page": {
-		"axe.button-name": 1,
 		"rule05": 2
 	},
 	"phone · /w/$workspace/projects/$project/conversations · upload": {
-		"axe.button-name": 1,
-		"axe.label": 1,
 		"rule05": 2
 	},
-	"phone · /w/$workspace/projects/$project/conversations/$conversation · page": {
-		"axe.button-name": 1
-	},
 	"phone · /w/$workspace/projects/$project/conversations/$conversation · move": {
-		"axe.button-name": 1,
 		"rule05": 1
-	},
-	"phone · /w/$workspace/projects/$project/conversations/$conversation · download": {
-		"axe.button-name": 1,
-		"rule05": 1
-	},
-	"phone · /w/$workspace/projects/$project/conversations/$conversation · retranscribe": {
-		"axe.button-name": 1
-	},
-	"phone · /w/$workspace/projects/$project/host-guide · page": {
-		"axe.aria-command-name": 1,
-		"axe.button-name": 1
-	},
-	"phone · /w/$workspace/projects/$project/portal-editor · page": {
-		"axe.button-name": 1,
-		"axe.nested-interactive": 1,
-		"icon.size": 1
-	},
-	"phone · /w/$workspace/projects/$project/portal-editor · preview": {
-		"axe.button-name": 1,
-		"axe.nested-interactive": 1,
-		"icon.size": 1
 	},
 	"phone · /w/$workspace/projects/$project/present · page": {
 		"rule05": 1,
@@ -420,28 +110,14 @@
 		"rule05": 2
 	},
 	"phone · /w/$workspace/projects/new · page": {
-		"axe.button-name": 1,
 		"rule05": 1
 	},
 	"phone · /w/$workspace/settings/general · page": {
-		"axe.aria-allowed-attr": 1,
-		"rule05": 3,
+		"rule05": 1,
 		"flow.one-primary": 1,
 		"flow.primary-first": 2
 	},
 	"phone · /w/$workspace/settings/members · page": {
-		"axe.label": 1,
-		"rule05": 1,
-		"icon.size": 1
-	},
-	"phone · /w/$workspace/settings/training · page": {
-		"axe.scrollable-region-focusable": 1
-	},
-	"phone · /w/$workspace/settings/billing · page": {
-		"axe.aria-progressbar-name": 1
-	},
-	"phone · /w/new · page": {
-		"axe.button-name": 1,
 		"rule05": 1
 	}
 }

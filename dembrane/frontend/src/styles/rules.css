@@ -1079,3 +1079,8 @@
     gap: 8px;
   }
 }
+
+/* Icons keep their size: 16 or 20, never squeezed by a tight row. */
+:root .mantine-Group-root > svg {
+  flex: none;
+}
