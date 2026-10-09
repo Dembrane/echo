@@ -344,6 +344,8 @@ async function check(page: Page, phone: boolean, portal: boolean) {
 		.withTags(AXE_TAGS)
 		// The audience deck's own look, previewed in the present editor.
 		.exclude('[data-testid="present-preview-stage"]')
+		// YouTube's own player, embedded in the release notes: not our markup.
+		.exclude('iframe[src*="youtube"]')
 		.analyze();
 	for (const v of axe.violations) {
 		out.axe.push({

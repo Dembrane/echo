@@ -97,6 +97,7 @@ export const ProjectTagPill = ({
 				size="lg"
 				rightSection={
 					<ActionIcon
+						aria-label={t`Delete tag`}
 						onClick={(e) => handleDelete(e)}
 						size="xs"
 						variant="transparent"
@@ -105,10 +106,11 @@ export const ProjectTagPill = ({
 						<XIcon size={16} />
 					</ActionIcon>
 				}
-				{...attributes}
-				{...listeners}
 			>
-				<span>{tag.text}</span>
+				{/* The name is the drag handle, so the remove button isn't nested in it. */}
+				<span {...attributes} {...listeners}>
+					{tag.text}
+				</span>
 			</Badge>
 			<ConfirmModal
 				opened={confirmOpened}

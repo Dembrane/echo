@@ -1131,6 +1131,7 @@ export const ConversationAccordion = ({
 								rightSection={
 									!!conversationSearch && (
 										<ActionIcon
+											aria-label={t`Clear search`}
 											variant="transparent"
 											onClick={() => {
 												setConversationSearch("");
@@ -1289,6 +1290,7 @@ export const ConversationAccordion = ({
 												rightSection={
 													!!tagSearch && (
 														<ActionIcon
+															aria-label={t`Clear search`}
 															variant="transparent"
 															onClick={() => setTagSearch("")}
 															size="sm"

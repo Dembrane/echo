@@ -1412,7 +1412,6 @@ function OrganisationOverviewPanel({
 							<Button
 								leftSection={<PlusIcon size={20} />}
 								onClick={onRequestWorkspace}
-								opacity={atWorkspaceLimit ? 0.8 : 1}
 							>
 								<Trans>Create workspace</Trans>
 							</Button>

@@ -24,7 +24,7 @@ export const DownloadConversationTranscriptModalActionIcon = ({
 	return (
 		<>
 			<Tooltip label={t`Download transcript`}>
-				<ActionIcon
+				<ActionIcon aria-label={t`Download transcript`}
 					onClick={open}
 					variant="subtle"
 					color="gray"

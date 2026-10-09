@@ -62,7 +62,6 @@ export const TrainingCatalog = ({
 						key={p.type}
 						withBorder
 						className={isWide ? cardClasses.wideWrap : cardClasses.wrap}
-						style={p.coming_soon ? { opacity: 0.6 } : undefined}
 					>
 						<Stack
 							gap={0}

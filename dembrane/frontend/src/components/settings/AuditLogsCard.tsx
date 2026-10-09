@@ -478,7 +478,7 @@ export const AuditLogsCard = () => {
 
 				{isError ? <ErrorNotice error={error} /> : null}
 
-				<ScrollArea>
+				<ScrollArea viewportProps={{ tabIndex: 0 }}>
 					<Table striped highlightOnHover>
 						<Table.Thead>
 							{table.getHeaderGroups().map((headerGroup) => (

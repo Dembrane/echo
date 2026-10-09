@@ -50,6 +50,7 @@ export const RetranscribeConversationModalActionIcon = ({
 				}
 			>
 				<ActionIcon
+					aria-label={t`Retranscribe conversation`}
 					onClick={open}
 					variant="subtle"
 					color="gray"

@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Group, Progress, Stack, Text, ThemeIcon } from "@mantine/core";
 import { CheckIcon, XIcon } from "@phosphor-icons/react";
@@ -34,6 +35,7 @@ export const PasswordRequirements = ({ value }: { value: string }) => {
 	return (
 		<Stack gap="xs" mt="xs">
 			<Progress
+				aria-label={t`Password strength`}
 				value={value.length === 0 ? 0 : bar.value}
 				color={value.length === 0 ? "gray" : bar.color}
 				size="sm"

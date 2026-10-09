@@ -553,8 +553,10 @@ export const TemplatesModal = ({
 						<Tooltip label={t`Drag to reorder`} position="left" openDelay={400}>
 							{/* biome-ignore lint/a11y/noStaticElementInteractions: drag handle managed by dnd-kit */}
 							{/* biome-ignore lint/a11y/useKeyWithClickEvents: drag handle managed by dnd-kit */}
+							{/* biome-ignore lint/a11y/useAriaPropsSupportedByRole: dnd-kit's attributes make it a button */}
 							<div
 								{...dragHandleProps}
+								aria-label={t`Drag to reorder`}
 								className="flex cursor-grab items-center active:cursor-grabbing"
 								style={{ color: "var(--mantine-color-dimmed)" }}
 								onClick={(e) => e.stopPropagation()}
@@ -582,7 +584,7 @@ export const TemplatesModal = ({
 					<Group gap={0} wrap="nowrap">
 						{tmpl.source === "dembrane" && (
 							<Tooltip label={t`Duplicate`}>
-								<ActionIcon
+								<ActionIcon aria-label={t`Duplicate`}
 									variant="subtle"
 									onClick={(e) => {
 										e.stopPropagation();
@@ -597,7 +599,7 @@ export const TemplatesModal = ({
 							<>
 								{tmpl.canEdit && (
 									<Tooltip label={t`Edit`}>
-										<ActionIcon
+										<ActionIcon aria-label={t`Edit`}
 											variant="subtle"
 											onClick={(e) => {
 												e.stopPropagation();
@@ -610,7 +612,7 @@ export const TemplatesModal = ({
 									</Tooltip>
 								)}
 								<Tooltip label={t`Duplicate`}>
-									<ActionIcon
+									<ActionIcon aria-label={t`Duplicate`}
 										variant="subtle"
 										onClick={(e) => {
 											e.stopPropagation();
@@ -622,7 +624,7 @@ export const TemplatesModal = ({
 								</Tooltip>
 								{tmpl.canEdit && (
 									<Tooltip label={t`Delete`}>
-										<ActionIcon
+										<ActionIcon aria-label={t`Delete`}
 											variant="subtle"
 											color="red"
 											loading={isDeleting}
@@ -641,7 +643,7 @@ export const TemplatesModal = ({
 						{onSaveQuickAccess &&
 							(showDragHandle ? (
 								<Tooltip label={t`Unpin`}>
-									<ActionIcon
+									<ActionIcon aria-label={t`Unpin`}
 										variant="subtle"
 										color="primary"
 										onClick={(e) => {
@@ -661,6 +663,7 @@ export const TemplatesModal = ({
 									}
 								>
 									<ActionIcon
+										aria-label={t`Pin`}
 										variant="subtle"
 										disabled={quickAccessItems.length >= 5}
 										onClick={(e) => {

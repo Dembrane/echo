@@ -574,7 +574,7 @@ const WebhookRow = ({ webhook, projectId, onEdit }: WebhookRowProps) => {
 				<Table.Td>
 					<Group gap="xs">
 						<Tooltip label={t`Test webhook`}>
-							<ActionIcon
+							<ActionIcon aria-label={t`Test webhook`}
 								variant="subtle"
 								onClick={handleTest}
 								loading={testMutation.isPending}
@@ -583,12 +583,12 @@ const WebhookRow = ({ webhook, projectId, onEdit }: WebhookRowProps) => {
 							</ActionIcon>
 						</Tooltip>
 						<Tooltip label={t`Edit`}>
-							<ActionIcon variant="subtle" onClick={() => onEdit(webhook)}>
+							<ActionIcon aria-label={t`Edit`} variant="subtle" onClick={() => onEdit(webhook)}>
 								<PencilSimpleIcon size={20} />
 							</ActionIcon>
 						</Tooltip>
 						<Tooltip label={t`Delete`}>
-							<ActionIcon
+							<ActionIcon aria-label={t`Delete`}
 								variant="subtle"
 								color="red"
 								onClick={() => setDeleteConfirmOpen(true)}
