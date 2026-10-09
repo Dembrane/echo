@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Fails when the participant portal's first load grows: the entry chunk and every chunk it
 // imports statically (what the browser fetches before the start screen renders), gzipped.
-// The start route is bundled into the entry (Router.tsx imports ParticipantStart eagerly);
+// The start route is bundled into the entry (src/portal/routes.tsx imports ParticipantStart eagerly);
 // if it ever becomes its own chunk, that chunk and its imports are counted too.
 //
 // Why: the portal serves participants on phones at events, often on poor networks, and the

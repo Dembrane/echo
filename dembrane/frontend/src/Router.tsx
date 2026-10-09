@@ -15,18 +15,7 @@ import { ProjectOverviewLayout } from "./components/layout/ProjectOverviewLayout
 import { WorkspaceLayout } from "./components/layout/WorkspaceLayout";
 import { ProjectAccessGuard } from "./components/project/ProjectAccessGuard";
 import { ENABLE_CANVAS, ENABLE_MONITOR, ENABLE_PRESENT } from "./config";
-import { ParticipantConversationAudioContent } from "./portal/components/conversation/audio/ParticipantConversationAudioContent";
-import { RefineSelection } from "./portal/components/refine/RefineSelection";
-import { Verify } from "./portal/components/verify/Verify";
-import { VerifyArtefact } from "./portal/components/verify/VerifyArtefact";
-import { VerifySelection } from "./portal/components/verify/VerifySelection";
-import { ParticipantLayout } from "./portal/layout/ParticipantLayout";
-import {
-	ParticipantConversationAudioRoute,
-	ParticipantConversationTextRoute,
-} from "./portal/routes/ParticipantConversation";
-import { ParticipantPostConversation } from "./portal/routes/ParticipantPostConversation";
-import { ParticipantStartRoute } from "./portal/routes/ParticipantStart";
+import { participantRoutes } from "./portal/routes";
 import { ProjectConversationRoute } from "./routes/project/conversation/ProjectConversationRoute";
 import { ProjectHomeRoute } from "./routes/project/ProjectHomeRoute";
 import { ProjectMonitorRoute } from "./routes/project/ProjectMonitorRoute";
@@ -114,14 +103,6 @@ const AudienceScreenRoute = createLazyNamedRoute(
 const MapRoute = createLazyNamedRoute(
 	() => import("./routes/project/map/MapRoute"),
 	"MapRoute",
-);
-const ParticipantReport = createLazyNamedRoute(
-	() => import("./portal/routes/ParticipantReport"),
-	"ParticipantReport",
-);
-const ProjectUnsubscribe = createLazyNamedRoute(
-	() => import("./portal/routes/ProjectUnsubscribe"),
-	"ProjectUnsubscribe",
 );
 const DebugPage = createLazyRoute(() => import("./routes/Debug"));
 const UserSettingsRoute = createLazyNamedRoute(
@@ -689,68 +670,4 @@ export const mainRouter = createBrowserRouter([
 	},
 ]);
 
-export const participantRouter = createBrowserRouter([
-	{
-		children: [
-			{
-				element: <Navigate to="start" />,
-				path: "",
-			},
-			{
-				element: <ParticipantStartRoute />,
-				path: "start",
-			},
-			{
-				children: [
-					{
-						element: <ParticipantConversationAudioContent />,
-						index: true,
-					},
-					{
-						element: <RefineSelection />,
-						path: "refine",
-					},
-					{
-						children: [
-							{
-								element: <VerifySelection />,
-								index: true,
-							},
-							{
-								element: <VerifyArtefact />,
-								path: "approve",
-							},
-						],
-						element: <Verify />,
-						path: "verify",
-					},
-				],
-				element: <ParticipantConversationAudioRoute />,
-				path: "conversation/:conversationId",
-			},
-			{
-				element: <ParticipantConversationTextRoute />,
-				path: "conversation/:conversationId/text",
-			},
-			{
-				element: <ParticipantPostConversation />,
-				path: "conversation/:conversationId/finish",
-			},
-			{
-				element: <ParticipantReport />,
-				path: "report",
-			},
-			{
-				element: <ProjectUnsubscribe />,
-				path: "unsubscribe",
-			},
-			{
-				element: <ErrorPage />,
-				path: "*",
-			},
-		],
-		element: <ParticipantLayout />,
-		errorElement: <ErrorPage />,
-		path: "/:language?/:projectId",
-	},
-]);
+export const participantRouter = createBrowserRouter(participantRoutes);
