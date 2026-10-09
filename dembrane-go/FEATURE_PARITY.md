@@ -5,10 +5,14 @@ Systematic map of the **echo web frontend** functions (audited from `dembrane/fr
 Legend: ✅ built · � gated (needs echo backend, Sameer's OK) · 🖥️ desktop-only (out of scope for the mobile capture app) · ⏳ deferred.
 
 ## Auth
-- ✅ Login (email/password) — Directus `/auth/login` → Bearer
+- ✅ Login (email/password) — `/api/auth/sign-in/email` → Bearer session token
+- ✅ Two-factor (authenticator code) — `/api/auth/two-factor/verify-totp`
+- ✅ Emailed sign-in code — `/api/auth/email-otp/send-verification-otp` → `/api/auth/sign-in/email-otp`
+- ✅ One device per account — a sign-in that meets another device waits behind "Log in anyway" (`/api/auth/other-sessions`, `/replace`)
+- 🖥️ Google sign-in — web only; those accounts use the emailed code here
 - ✅ Register (3-step) — `/api/v2/auth/register`
 - ✅ Forgot password — opens dashboard reset page (web)
-- ✅ Logout · session restore (Keychain on device / UserDefaults on sim)
+- ✅ Logout (`/api/auth/sign-out`) · session restore (Keychain on device / UserDefaults on sim); the server keeps a session alive while it is used and ends it after seven days without use
 - ✅ Sign in with Apple — **not required** (Guideline 4.8: own email/password auth, no social login → exempt). Only becomes required if a social/third-party login is added.
 
 ## Home / navigation
@@ -21,7 +25,7 @@ Legend: ✅ built · � gated (needs echo backend, Sameer's OK) · 🖥️ desk
 - ✅ 30s chunked upload during capture (crash-safe) · background/locked recording
 - ✅ Live Activity / Dynamic Island (logomark + timer + waveform glyph)
 - ✅ Location-based naming (Voice Memos style, optional/graceful)
-- ✅ Share Extension — import audio shared from Voice Memos / Files (App Group passes the active project/env; uploads via the public participant flow, source `GO_SHARE`)
+- ✅ Share Extension — import audio shared from Voice Memos / Files (App Group passes the active project/env; uploads via the public participant flow with the conversation's `x-participant-token`, source `GO_SHARE`)
 
 ## Conversations
 - ✅ List (full-width project header, relative time + duration, summary, search, cache+reconcile)

@@ -33,9 +33,8 @@ public protocol DembraneAPIClientProtocol: Sendable {
     func replaceConversationTags(conversationId: String, tagIds: [String]) async throws
 }
 
-/// Real client. Cookie-based Directus session is carried by the injected
-/// URLSession's `HTTPCookieStorage`. Response envelopes are decoded leniently;
-/// they'll be tightened in M1 when wired against the live server.
+/// Real client. Every call carries the session token as `Authorization: Bearer`
+/// from `tokenProvider`. Response envelopes are decoded leniently.
 public actor LiveAPIClient: DembraneAPIClientProtocol {
     private let endpoints: DembraneEndpoints
     private let session: URLSession

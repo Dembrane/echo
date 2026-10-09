@@ -1,23 +1,28 @@
 import Foundation
 
-/// A logged-in dembrane session (Directus tokens). Persisted via `SessionStore`.
+/// A signed-in dembrane session: the bearer token sign-in returned, sent as
+/// `Authorization: Bearer` on every call. Persisted via `SessionStore`.
 public struct DembraneSession: Codable, Sendable, Equatable {
     public var accessToken: String
-    public var refreshToken: String
     public var expiresAt: Date?
 
-    public init(accessToken: String, refreshToken: String, expiresAt: Date? = nil) {
+    public init(accessToken: String, expiresAt: Date? = nil) {
         self.accessToken = accessToken
-        self.refreshToken = refreshToken
         self.expiresAt = expiresAt
     }
 }
 
 public enum AuthError: Error, Sendable, Equatable {
     case invalidCredentials
-    case otpRequired          // 2FA enabled — a valid OTP is needed (or was wrong)
+    case otpRequired          // 2FA enabled — a valid authenticator code is needed (or was wrong)
+    case invalidCode          // the emailed sign-in code was wrong or has expired
+    case emailNotVerified
+    /// The account is signed in on another device. The sign-in is kept waiting
+    /// until `replaceOtherSessions()` or `cancelHeldSignIn()`.
+    case signedInElsewhere(since: Date?)
+    case rateLimited(retryAfter: Int?)
+    case accountInactive
     case server(status: Int)
-    case noRefreshToken
     case badResponse
 }
 
@@ -37,7 +42,6 @@ public actor SessionManager {
 
     public func current() -> DembraneSession? { cached }
     public func accessToken() -> String? { cached?.accessToken }
-    public func refreshToken() -> String? { cached?.refreshToken }
     public func isAuthenticated() -> Bool { cached != nil }
 
     public func set(_ session: DembraneSession) throws {
@@ -52,29 +56,131 @@ public actor SessionManager {
     }
 }
 
-/// Email/password auth against Directus (echo has no login proxy). Returns the
-/// Directus access token used as `Authorization: Bearer` on echo BFF calls.
+/// A random id this install keeps and sends with every sign-in call, so the
+/// server can tell this phone signing in again from a second device. It holds
+/// nothing about the phone, and reinstalling the app makes a new one.
+public enum DeviceIdentity {
+    public static let defaultsKey = "dembrane.go.deviceId"
+
+    public static func current(defaults: UserDefaults = .standard) -> String {
+        if let existing = defaults.string(forKey: defaultsKey), !existing.isEmpty { return existing }
+        let fresh = UUID().uuidString.lowercased()
+        defaults.set(fresh, forKey: defaultsKey)
+        return fresh
+    }
+}
+
+/// Sign-in against the dembrane API: password, authenticator code, emailed
+/// code, and the one-device rule. The token it stores is what every other
+/// client sends as `Authorization: Bearer`.
 public actor AuthService {
     private let endpoints: DembraneEndpoints
     private let session: URLSession
     private let sessionManager: SessionManager
-    /// A refresh already in flight. Concurrent 401s share it instead of each
-    /// firing their own refresh (see `refresh()`).
-    private var inFlightRefresh: Task<Bool, Error>?
+    private let deviceId: String
+    /// A sign-in the server accepted but keeps waiting because the account is
+    /// signed in on another device. It signs nobody in until replaced.
+    private var held: DembraneSession?
 
-    public init(env: AppEnvironment, session: URLSession = .shared, sessionManager: SessionManager) {
+    /// The server refuses a sign-in call that carries cookies without a browser
+    /// origin, so sign-in runs on a session that neither stores nor sends them.
+    public static let cookielessSession: URLSession = {
+        let config = URLSessionConfiguration.ephemeral
+        config.httpCookieStorage = nil
+        config.httpShouldSetCookies = false
+        config.httpCookieAcceptPolicy = .never
+        return URLSession(configuration: config)
+    }()
+
+    public init(env: AppEnvironment,
+                session: URLSession = AuthService.cookielessSession,
+                sessionManager: SessionManager,
+                deviceId: String = DeviceIdentity.current()) {
         self.endpoints = DembraneEndpoints(env: env)
         self.session = session
         self.sessionManager = sessionManager
+        self.deviceId = deviceId
     }
 
+    /// Email and password. With two-factor on, a call without `otp` throws
+    /// `otpRequired`; the next call carries the authenticator code.
     public func login(email: String, password: String, otp: String? = nil) async throws -> DembraneSession {
-        var body = ["email": email, "password": password]
-        if let otp, !otp.isEmpty { body["otp"] = otp }
-        let auth = try await post(endpoints.directusLogin(), json: body)
-        let newSession = makeSession(from: auth)
-        try await sessionManager.set(newSession)
-        return newSession
+        var reply = try await post(endpoints.signInEmail(), json: ["email": email, "password": password])
+        if reply.body.twoFactorRedirect == true {
+            guard let otp, !otp.isEmpty else { throw AuthError.otpRequired }
+            guard let cookie = reply.twoFactorCookie else { throw AuthError.badResponse }
+            do {
+                reply = try await post(endpoints.verifyTOTP(), json: ["code": otp], cookie: cookie)
+            } catch AuthError.invalidCredentials {
+                throw AuthError.otpRequired
+            }
+        }
+        return try await finishSignIn(reply)
+    }
+
+    /// Emails a six-digit sign-in code. People who never set a password (they
+    /// were invited, or use Google on the web) sign in this way. The answer is
+    /// the same whether or not the address has an account.
+    public func sendSignInCode(email: String) async throws {
+        _ = try await post(endpoints.sendSignInCode(), json: ["email": email, "type": "sign-in"])
+    }
+
+    public func login(email: String, code: String) async throws -> DembraneSession {
+        let reply: Reply
+        do {
+            reply = try await post(endpoints.signInEmailCode(), json: ["email": email, "otp": code])
+        } catch AuthError.invalidCredentials {
+            throw AuthError.invalidCode
+        }
+        return try await finishSignIn(reply)
+    }
+
+    /// Signs the account out on its other devices and completes the sign-in
+    /// that `signedInElsewhere` left waiting.
+    public func replaceOtherSessions() async throws -> DembraneSession {
+        guard let held else { throw AuthError.badResponse }
+        _ = try await post(endpoints.replaceOtherSessions(), json: [:], token: held.accessToken)
+        try await sessionManager.set(held)
+        self.held = nil
+        return held
+    }
+
+    /// Drops a waiting sign-in the person chose not to complete.
+    public func cancelHeldSignIn() async {
+        guard let held else { return }
+        self.held = nil
+        _ = try? await post(endpoints.signOut(), json: [:], token: held.accessToken)
+    }
+
+    /// Asks the server whether the stored session still signs someone in. The
+    /// API client calls this on a 401: true means retry, false means the session
+    /// is gone (expired, signed out from another device, account closed).
+    ///
+    /// There is no token to renew: the server extends a session each day it is
+    /// used and ends it after seven days without use.
+    @discardableResult
+    public func refresh() async throws -> Bool {
+        guard let current = await sessionManager.current() else { return false }
+        var req = request(endpoints.getSession(), method: "GET", token: current.accessToken)
+        req.cachePolicy = .reloadIgnoringLocalCacheData
+        let (data, resp) = try await session.data(for: req)
+        guard (resp as? HTTPURLResponse)?.statusCode == 200,
+              let found = try? DembraneJSON.decoder().decode(SessionEnvelope?.self, from: data),
+              found.session.held != true else { return false }
+        if found.session.expiresAt != current.expiresAt {
+            try await sessionManager.set(DembraneSession(accessToken: current.accessToken,
+                                                         expiresAt: found.session.expiresAt))
+        }
+        return true
+    }
+
+    /// Ends the session on the server, then forgets it here. The local sign-out
+    /// happens even offline; the server session then runs out on its own.
+    public func logout() async {
+        if let token = await sessionManager.accessToken() {
+            _ = try? await post(endpoints.signOut(), json: [:], token: token)
+        }
+        try? await sessionManager.clear()
     }
 
     /// Register a new account (info-neutral on the backend — always succeeds
@@ -87,95 +193,142 @@ public actor AuthService {
             "first_name": firstName, "verification_url": verificationURL,
         ]
         if let lastName, !lastName.isEmpty { body["last_name"] = lastName }
-        var req = URLRequest(url: endpoints.register())
-        req.httpMethod = "POST"
+        var req = request(endpoints.register(), method: "POST")
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        req.setValue("application/json", forHTTPHeaderField: "Accept")
         req.httpBody = try JSONSerialization.data(withJSONObject: body)
         let (_, resp) = try await session.data(for: req)
         let code = (resp as? HTTPURLResponse)?.statusCode ?? -1
+        if code == 429 { throw AuthError.rateLimited(retryAfter: Self.retryAfter(resp)) }
         guard (200..<300).contains(code) else { throw AuthError.server(status: code) }
-    }
-
-    /// Refresh the access token. Returns true on success (used by the API
-    /// client's 401 retry).
-    ///
-    /// Single-flighted: Directus rotates the refresh token on every use (the old
-    /// one is invalidated the moment a new pair is issued), so two refreshes
-    /// running with the same token would race — the loser is rejected and the
-    /// app would spuriously sign out. When several authed calls 401 at once they
-    /// therefore await one shared refresh rather than each firing their own.
-    @discardableResult
-    public func refresh() async throws -> Bool {
-        if let inFlightRefresh {
-            return try await inFlightRefresh.value
-        }
-        let task = Task { try await self.performRefresh() }
-        inFlightRefresh = task
-        defer { inFlightRefresh = nil }
-        return try await task.value
-    }
-
-    private func performRefresh() async throws -> Bool {
-        guard let refreshToken = await sessionManager.refreshToken() else {
-            throw AuthError.noRefreshToken
-        }
-        let body: [String: String] = ["refresh_token": refreshToken, "mode": "json"]
-        let auth = try await post(endpoints.directusRefresh(), json: body)
-        try await sessionManager.set(makeSession(from: auth))
-        return true
-    }
-
-    public func logout() async {
-        try? await sessionManager.clear()
     }
 
     // MARK: - helpers
 
-    private func makeSession(from auth: DirectusAuthData) -> DembraneSession {
-        // Directus `expires` is the access-token TTL in milliseconds.
-        let expiresAt = auth.expires.map { Date().addingTimeInterval(Double($0) / 1000.0) }
-        return DembraneSession(accessToken: auth.accessToken,
-                               refreshToken: auth.refreshToken,
-                               expiresAt: expiresAt)
+    private struct Reply {
+        let body: SignInBody
+        let headerToken: String?
+        let twoFactorCookie: String?
     }
 
-    private func post(_ url: URL, json: [String: String]) async throws -> DirectusAuthData {
-        var req = URLRequest(url: url)
-        req.httpMethod = "POST"
-        req.timeoutInterval = 20
-        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        req.setValue("application/json", forHTTPHeaderField: "Accept")
-        req.httpBody = try JSONSerialization.data(withJSONObject: json)
-        let (data, resp) = try await session.data(for: req)
-        let code = (resp as? HTTPURLResponse)?.statusCode ?? -1
-        guard (200..<300).contains(code) else {
-            // Directus signals 2FA with the error code INVALID_OTP (missing/wrong OTP).
-            if let err = try? DembraneJSON.decoder().decode(DirectusErrorResponse.self, from: data),
-               err.errors.first?.extensions?.code == "INVALID_OTP" {
-                throw AuthError.otpRequired
-            }
-            if code == 401 { throw AuthError.invalidCredentials }
-            throw AuthError.server(status: code)
-        }
-        guard let decoded = try? DembraneJSON.decoder().decode(DirectusAuthResponse.self, from: data) else {
+    /// Stores the session a sign-in returned, unless the server is holding it
+    /// because the account is signed in on another device.
+    private func finishSignIn(_ reply: Reply) async throws -> DembraneSession {
+        guard let token = reply.headerToken ?? reply.body.token, !token.isEmpty else {
             throw AuthError.badResponse
         }
-        return decoded.data
+        let new = DembraneSession(accessToken: token)
+        if let hold = await hold(token: token) {
+            held = new
+            throw AuthError.signedInElsewhere(since: hold.since)
+        }
+        held = nil
+        try await sessionManager.set(new)
+        return new
+    }
+
+    /// Non-nil when the new session is being held. A server that cannot say
+    /// reads as not held, so this check alone never blocks a sign-in.
+    private func hold(token: String) async -> OtherSessions? {
+        let req = request(endpoints.otherSessions(), method: "GET", token: token)
+        guard let (data, resp) = try? await session.data(for: req),
+              (resp as? HTTPURLResponse)?.statusCode == 200,
+              let state = try? DembraneJSON.decoder().decode(OtherSessions.self, from: data),
+              state.held else { return nil }
+        return state
+    }
+
+    private func request(_ url: URL, method: String, token: String? = nil) -> URLRequest {
+        var req = URLRequest(url: url)
+        req.httpMethod = method
+        req.timeoutInterval = 20
+        req.httpShouldHandleCookies = false
+        req.setValue("application/json", forHTTPHeaderField: "Accept")
+        req.setValue(deviceId, forHTTPHeaderField: "x-device-id")
+        if let token { req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
+        return req
+    }
+
+    private func post(_ url: URL, json: [String: String], token: String? = nil,
+                      cookie: String? = nil) async throws -> Reply {
+        var req = request(url, method: "POST", token: token)
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        if let cookie {
+            // The authenticator step is tied to the password step by a short-lived
+            // cookie, and the server takes a cookie only together with the
+            // dashboard's origin.
+            req.setValue(cookie, forHTTPHeaderField: "Cookie")
+            req.setValue(Self.origin(of: endpoints.env.dashboardBaseURL), forHTTPHeaderField: "Origin")
+        }
+        req.httpBody = try JSONSerialization.data(withJSONObject: json)
+        let (data, resp) = try await session.data(for: req)
+        let http = resp as? HTTPURLResponse
+        let code = http?.statusCode ?? -1
+        guard (200..<300).contains(code) else {
+            throw Self.error(status: code, data: data, response: resp)
+        }
+        let body = (try? DembraneJSON.decoder().decode(SignInBody.self, from: data)) ?? SignInBody()
+        return Reply(body: body,
+                     headerToken: http?.value(forHTTPHeaderField: "set-auth-token"),
+                     twoFactorCookie: http.flatMap { Self.twoFactorCookie(in: $0, for: url) })
+    }
+
+    private static func error(status: Int, data: Data, response: URLResponse) -> AuthError {
+        if status == 429 { return .rateLimited(retryAfter: retryAfter(response)) }
+        let code = (try? JSONDecoder().decode(ErrorBody.self, from: data))?.code
+        switch code {
+        case "INVALID_EMAIL_OR_PASSWORD": return .invalidCredentials
+        case "EMAIL_NOT_VERIFIED": return .emailNotVerified
+        case "INVALID_CODE", "INVALID_TWO_FACTOR_CODE": return .otpRequired
+        case "INVALID_OTP", "OTP_EXPIRED", "TOO_MANY_ATTEMPTS": return .invalidCode
+        default: break
+        }
+        if status == 401 { return .invalidCredentials }
+        // A closed or suspended account is refused a session with a 403.
+        if status == 403 { return .accountInactive }
+        return .server(status: status)
+    }
+
+    private static func retryAfter(_ response: URLResponse) -> Int? {
+        guard let http = response as? HTTPURLResponse else { return nil }
+        let raw = http.value(forHTTPHeaderField: "X-Retry-After") ?? http.value(forHTTPHeaderField: "Retry-After")
+        return raw.flatMap { Int($0) }
+    }
+
+    /// `name=value` of the cookie that carries a password sign-in over to the
+    /// authenticator step. Its name ends in `two_factor` behind a prefix that
+    /// differs between https and local servers.
+    static func twoFactorCookie(in response: HTTPURLResponse, for url: URL) -> String? {
+        let headers = response.allHeaderFields.reduce(into: [String: String]()) { out, pair in
+            if let k = pair.key as? String, let v = pair.value as? String { out[k] = v }
+        }
+        return HTTPCookie.cookies(withResponseHeaderFields: headers, for: url)
+            .first { $0.name.hasSuffix("two_factor") && !$0.value.isEmpty }
+            .map { "\($0.name)=\($0.value)" }
+    }
+
+    static func origin(of url: URL) -> String {
+        var out = "\(url.scheme ?? "https")://\(url.host ?? "")"
+        if let port = url.port { out += ":\(port)" }
+        return out
     }
 }
 
-struct DirectusErrorResponse: Decodable {
-    struct Item: Decodable {
-        struct Extensions: Decodable { let code: String? }
-        let extensions: Extensions?
-    }
-    let errors: [Item]
+struct SignInBody: Decodable {
+    var token: String?
+    var twoFactorRedirect: Bool?
 }
 
-struct DirectusAuthResponse: Decodable { let data: DirectusAuthData }
-struct DirectusAuthData: Decodable {
-    let accessToken: String
-    let refreshToken: String
-    let expires: Int?
+struct OtherSessions: Decodable {
+    let held: Bool
+    let since: Date?
 }
+
+struct SessionEnvelope: Decodable {
+    struct Session: Decodable {
+        let expiresAt: Date?
+        let held: Bool?
+    }
+    let session: Session
+}
+
+private struct ErrorBody: Decodable { let code: String? }

@@ -53,7 +53,7 @@ frontend→app parity audit, and [TESTFLIGHT.md](TESTFLIGHT.md) for shipping.
 - Settings → open the project's portal editor on the dashboard.
 
 **Auth & settings**
-- Login (email/password via Directus), 3-step Register, forgot-password (web).
+- Login (email/password, authenticator code, or an emailed sign-in code), 3-step Register, forgot-password (web). An account is signed in on one device at a time: signing in here asks before signing the other device out.
 - Session restore (Keychain on device / UserDefaults on simulator), sign out.
 - Settings: account, default project, source link, version.
 
@@ -98,7 +98,7 @@ frontend→app parity audit, and [TESTFLIGHT.md](TESTFLIGHT.md) for shipping.
 
 - **Sign in with Apple — not required.** Guideline 4.8 only triggers when an app
   uses a third-party/social login to set up the primary account. dembrane-go uses
-  only its own email/password (Directus) auth, so it's covered by the "exclusively
+  only its own email/password auth, so it's covered by the "exclusively
   uses your company's own account setup" carve-out. *Adding a social login (e.g.
   "Continue with Google") would make Sign in with Apple — or an equivalent — required.*
 - **In-App Purchase — not triggered.** Nothing is sold or unlocked in-app; billing
