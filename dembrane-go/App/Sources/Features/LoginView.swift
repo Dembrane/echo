@@ -105,7 +105,7 @@ struct LoginView: View {
                     Button("Use my password instead") { setCodeMode(false) }
                 } else {
                     Button("Forgot your password?") {
-                        safariURL = model.environment.dashboardBaseURL.appendingPathComponent("forgot-password").appendingUTMSource()
+                        safariURL = model.environment.dashboardBaseURL.appendingPathComponent("request-password-reset").appendingUTMSource()
                     }
                     Button("Email me a sign-in code instead") { setCodeMode(true) }
                 }
