@@ -22,19 +22,19 @@ import { useParams, useSearchParams } from "react-router";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
-import {
-	useConversationChunksQuery,
-	useConversationQuery,
-	useParticipantProjectById,
-	useUploadConversationTextChunk,
-} from "@/components/participant/hooks";
-import { ConversationErrorView } from "@/components/participant/ConversationErrorView";
-import { ParticipantBody } from "@/components/participant/ParticipantBody";
 import { useProjectSharingLink } from "@/components/project/ProjectQRCode";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { finishConversation } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
+import { ConversationErrorView } from "@/portal/components/conversation/ConversationErrorView";
+import { ParticipantBody } from "@/portal/components/conversation/ParticipantBody";
+import {
+	useConversationChunksQuery,
+	useConversationQuery,
+	useParticipantProjectById,
+	useUploadConversationTextChunk,
+} from "@/portal/hooks";
 
 export const ParticipantConversationText = () => {
 	const { projectId, conversationId } = useParams();

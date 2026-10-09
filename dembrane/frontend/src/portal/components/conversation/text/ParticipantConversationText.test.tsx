@@ -38,7 +38,7 @@ vi.mock("@/components/common/Toaster", () => ({
 	toast: { error: (...args: unknown[]) => toastError(...args) },
 }));
 
-vi.mock("@/components/participant/ParticipantBody", () => ({
+vi.mock("@/portal/components/conversation/ParticipantBody", () => ({
 	ParticipantBody: () => null,
 }));
 
@@ -46,7 +46,7 @@ vi.mock("@/components/project/ProjectQRCode", () => ({
 	useProjectSharingLink: () => null,
 }));
 
-vi.mock("@/components/participant/hooks", () => ({
+vi.mock("@/portal/hooks", () => ({
 	useConversationChunksQuery: () => ({ data: [{ id: "chunk1" }] }),
 	useConversationQuery: () => ({
 		data: { id: "c1" },

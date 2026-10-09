@@ -143,14 +143,14 @@ vi.mock("./hooks/usePingConnectionHealth", () => ({
 vi.mock("./ParticipantRecordingWaveform", () => ({
 	ParticipantRecordingWaveform: () => null,
 }));
-vi.mock("./ParticipantSettingsModal", () => ({
+vi.mock("../../settings/ParticipantSettingsModal", () => ({
 	ParticipantSettingsModal: () => null,
 }));
 vi.mock("./PermissionErrorModal", () => ({
 	PermissionErrorModal: () => null,
 }));
 
-vi.mock("./verify/hooks", () => ({
+vi.mock("../../verify/hooks", () => ({
 	useConversationArtefacts: () => ({ data: [] }),
 }));
 
@@ -166,7 +166,7 @@ let conversationQuery: {
 let project: Record<string, unknown>;
 let chunks: { id: string }[];
 
-vi.mock("./hooks", () => ({
+vi.mock("../../../hooks", () => ({
 	useConversationChunksQuery: () => ({ data: chunks }),
 	useConversationQuery: () => conversationQuery,
 	useParticipantProjectById: () => ({ data: project, isLoading: false }),

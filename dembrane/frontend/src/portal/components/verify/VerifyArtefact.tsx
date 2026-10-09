@@ -25,9 +25,9 @@ import { useCooldown } from "@/hooks/useCooldown";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { errorCode } from "@/lib/errors/read";
 import { testId } from "@/lib/testUtils";
-import { Markdown } from "../../common/Markdown";
-import { MarkdownWYSIWYG } from "../../form/MarkdownWYSIWYG/MarkdownWYSIWYG";
-import { useParticipantProjectById } from "../hooks";
+import { Markdown } from "../../../components/common/Markdown";
+import { MarkdownWYSIWYG } from "../../../components/form/MarkdownWYSIWYG/MarkdownWYSIWYG";
+import { useParticipantProjectById } from "../../hooks";
 import {
 	useUpdateVerificationArtefact,
 	useVerificationArtefactById,

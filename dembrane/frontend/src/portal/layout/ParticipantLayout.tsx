@@ -2,9 +2,9 @@ import { useEffect } from "react";
 import { Outlet, useLocation, useParams } from "react-router";
 import { useWhitelabelLogo } from "@/hooks/useWhitelabelLogo";
 import { logoUrl } from "@/lib/avatar";
-import { Toaster } from "../common/Toaster";
-import { useParticipantProjectById } from "../participant/hooks";
-import { I18nProvider } from "./I18nProvider";
+import { Toaster } from "../../components/common/Toaster";
+import { I18nProvider } from "../../components/layout/I18nProvider";
+import { useParticipantProjectById } from "../hooks";
 import { ParticipantHeader } from "./ParticipantHeader";
 
 export const ParticipantLayout = () => {

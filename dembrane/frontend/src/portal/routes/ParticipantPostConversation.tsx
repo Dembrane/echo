@@ -24,13 +24,13 @@ import { type KeyboardEvent, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
 import { Markdown } from "@/components/common/Markdown";
-import { DembraneEventCta } from "@/components/participant/DembraneEventCta";
+import { testId } from "@/lib/testUtils";
+import { DembraneEventCta } from "@/portal/components/finish/DembraneEventCta";
+import { ParticipantShareModal } from "@/portal/components/ParticipantShareModal";
 import {
 	useParticipantProjectById,
 	useSubmitNotificationParticipant,
-} from "@/components/participant/hooks";
-import { ParticipantShareModal } from "@/components/participant/ParticipantShareModal";
-import { testId } from "@/lib/testUtils";
+} from "@/portal/hooks";
 
 export const ParticipantPostConversation = () => {
 	const { projectId, conversationId } = useParams();

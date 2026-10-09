@@ -17,11 +17,11 @@ import {
 	useConversationQuery,
 	useConversationRepliesQuery,
 	useParticipantProjectById,
-} from "./hooks";
-import { ParticipantBody } from "./ParticipantBody";
+} from "../../../hooks";
+import { useConversationArtefacts } from "../../verify/hooks";
+import { VerifiedArtefactsList } from "../../verify/VerifiedArtefactsList";
+import { ParticipantBody } from "../ParticipantBody";
 import { ParticipantEchoMessages } from "./ParticipantEchoMessages";
-import { useConversationArtefacts } from "./verify/hooks";
-import { VerifiedArtefactsList } from "./verify/VerifiedArtefactsList";
 
 const VERIFICATION_BANNER_THRESHOLD_SECONDS = 60;
 

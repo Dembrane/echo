@@ -2,8 +2,8 @@ import type { Message } from "@ai-sdk/react";
 import { t } from "@lingui/core/macro";
 import { Stack } from "@mantine/core";
 import { testId } from "@/lib/testUtils";
+import SpikeMessage from "../SpikeMessage";
 import { EchoErrorAlert } from "./EchoErrorAlert";
-import SpikeMessage from "./SpikeMessage";
 
 type ParticipantEchoMessagesProps = {
 	echoMessages: Message[];

@@ -25,7 +25,7 @@ vi.mock("@/lib/api", () => ({
 	initiateConversation: (...args: unknown[]) => initiate(...args),
 }));
 
-vi.mock("./hooks", () => ({
+vi.mock("../../hooks", () => ({
 	useInitiateConversationMutation: () => ({
 		data: undefined,
 		error: null,

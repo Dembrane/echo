@@ -17,7 +17,7 @@ import { toast } from "@/components/common/Toaster";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
 import { testId } from "@/lib/testUtils";
-import { useParticipantProjectById } from "../hooks";
+import { useParticipantProjectById } from "../../hooks";
 import { startCooldown } from "../refine/hooks/useRefineSelectionCooldown";
 import {
 	useGenerateVerificationArtefactMutation,

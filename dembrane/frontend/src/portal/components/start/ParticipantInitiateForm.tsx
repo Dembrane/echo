@@ -20,7 +20,7 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { initiateConversation as requestConversation } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 import { getVisitorId } from "@/lib/visitorId";
-import { useInitiateConversationMutation } from "./hooks";
+import { useInitiateConversationMutation } from "../../hooks";
 import { resolvePortalMode } from "./recordingCap";
 
 const FormSchema = z.object({

@@ -2,9 +2,9 @@ import { Trans } from "@lingui/react/macro";
 import { Progress, Stack, Text, Title, UnstyledButton } from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
 import { useParams } from "react-router";
-import { useParticipantProjectById } from "@/components/participant/hooks";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { testId } from "@/lib/testUtils";
+import { useParticipantProjectById } from "@/portal/hooks";
 import { useRefineSelectionCooldown } from "./hooks/useRefineSelectionCooldown";
 
 export const RefineSelection = () => {

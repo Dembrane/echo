@@ -9,24 +9,24 @@ import { AuthLayout } from "./components/layout/AuthLayout";
 // Layout components - keep as regular imports since they're used frequently
 import { BaseLayout } from "./components/layout/BaseLayout";
 import { LanguageLayout } from "./components/layout/LanguageLayout";
-import { ParticipantLayout } from "./components/layout/ParticipantLayout";
 import { ProjectLayout } from "./components/layout/ProjectLayout";
 import { ProjectLibraryLayout } from "./components/layout/ProjectLibraryLayout";
 import { ProjectOverviewLayout } from "./components/layout/ProjectOverviewLayout";
 import { WorkspaceLayout } from "./components/layout/WorkspaceLayout";
-import { ParticipantConversationAudioContent } from "./components/participant/ParticipantConversationAudioContent";
-import { RefineSelection } from "./components/participant/refine/RefineSelection";
-import { Verify } from "./components/participant/verify/Verify";
-import { VerifyArtefact } from "./components/participant/verify/VerifyArtefact";
-import { VerifySelection } from "./components/participant/verify/VerifySelection";
 import { ProjectAccessGuard } from "./components/project/ProjectAccessGuard";
 import { ENABLE_CANVAS, ENABLE_MONITOR, ENABLE_PRESENT } from "./config";
+import { ParticipantConversationAudioContent } from "./portal/components/conversation/audio/ParticipantConversationAudioContent";
+import { RefineSelection } from "./portal/components/refine/RefineSelection";
+import { Verify } from "./portal/components/verify/Verify";
+import { VerifyArtefact } from "./portal/components/verify/VerifyArtefact";
+import { VerifySelection } from "./portal/components/verify/VerifySelection";
+import { ParticipantLayout } from "./portal/layout/ParticipantLayout";
 import {
 	ParticipantConversationAudioRoute,
 	ParticipantConversationTextRoute,
-} from "./routes/participant/ParticipantConversation";
-import { ParticipantPostConversation } from "./routes/participant/ParticipantPostConversation";
-import { ParticipantStartRoute } from "./routes/participant/ParticipantStart";
+} from "./portal/routes/ParticipantConversation";
+import { ParticipantPostConversation } from "./portal/routes/ParticipantPostConversation";
+import { ParticipantStartRoute } from "./portal/routes/ParticipantStart";
 import { ProjectConversationRoute } from "./routes/project/conversation/ProjectConversationRoute";
 import { ProjectHomeRoute } from "./routes/project/ProjectHomeRoute";
 import { ProjectMonitorRoute } from "./routes/project/ProjectMonitorRoute";
@@ -116,7 +116,7 @@ const MapRoute = createLazyNamedRoute(
 	"MapRoute",
 );
 const ParticipantReport = createLazyNamedRoute(
-	() => import("./routes/participant/ParticipantReport"),
+	() => import("./portal/routes/ParticipantReport"),
 	"ParticipantReport",
 );
 const ProjectUnsubscribe = createLazyNamedRoute(

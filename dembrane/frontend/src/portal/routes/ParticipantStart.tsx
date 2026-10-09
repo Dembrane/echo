@@ -6,12 +6,12 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 import useSessionStorageState from "use-session-storage-state";
 import DembraneLoadingSpinner from "@/components/common/DembraneLoadingSpinner";
-import { useParticipantProjectById } from "@/components/participant/hooks";
-import { InAppBrowserNotice } from "@/components/participant/InAppBrowserNotice";
-import ParticipantOnboardingCards from "@/components/participant/ParticipantOnboardingCards";
 import { ENABLE_MONITOR } from "@/config";
 import { useVisitorBeacon } from "@/hooks/useVisitorBeacon";
 import { testId } from "@/lib/testUtils";
+import { InAppBrowserNotice } from "@/portal/components/start/InAppBrowserNotice";
+import ParticipantOnboardingCards from "@/portal/components/start/ParticipantOnboardingCards";
+import { useParticipantProjectById } from "@/portal/hooks";
 
 type FunnelStageReport = {
 	stage: string;

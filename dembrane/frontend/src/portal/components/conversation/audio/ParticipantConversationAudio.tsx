@@ -21,19 +21,21 @@ import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useVideoWakeLockFallback } from "@/hooks/useVideoWakeLockFallback";
 import { finishConversation } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
-import { I18nLink } from "../common/i18nLink";
-import { ScrollToBottomButton } from "../common/ScrollToBottom";
-import { toast } from "../common/Toaster";
-import { useProjectSharingLink } from "../project/ProjectQRCode";
-import { ConversationErrorView } from "./ConversationErrorView";
+import { I18nLink } from "../../../../components/common/i18nLink";
+import { ScrollToBottomButton } from "../../../../components/common/ScrollToBottom";
+import { toast } from "../../../../components/common/Toaster";
+import { useProjectSharingLink } from "../../../../components/project/ProjectQRCode";
+import { useDocumentHidden } from "../../../../hooks/useDocumentHidden";
 import {
 	useConversationChunksQuery,
 	useConversationQuery,
 	useParticipantProjectById,
 	useUploadConversationChunk,
-} from "./hooks";
+} from "../../../hooks";
+import { ParticipantSettingsModal } from "../../settings/ParticipantSettingsModal";
+import { useConversationArtefacts } from "../../verify/hooks";
+import { ConversationErrorView } from "../ConversationErrorView";
 import useChunkedAudioRecorder from "./hooks/useChunkedAudioRecorder";
-import { useDocumentHidden } from "./hooks/useDocumentHidden";
 import { useMonitorBeacon } from "./hooks/useMonitorBeacon";
 import { usePendingUploads } from "./hooks/usePendingUploads";
 import { usePingConnectionHealth } from "./hooks/usePingConnectionHealth";
@@ -46,14 +48,12 @@ import { useRecordingWakeLock } from "./hooks/useRecordingWakeLock";
 import { useS3ConnectivityCheck } from "./hooks/useS3ConnectivityCheck";
 import type { RecordingMeterStatus } from "./ParticipantRecordingWaveform";
 import { ParticipantRecordingWaveform } from "./ParticipantRecordingWaveform";
-import { ParticipantSettingsModal } from "./ParticipantSettingsModal";
 import { PermissionErrorModal } from "./PermissionErrorModal";
 import { deriveParticipantState } from "./participantState";
 import { RecordingInterruptedModal } from "./RecordingInterruptedModal";
 import { RefineInfoModal } from "./RefineInfoModal";
 import { StopRecordingConfirmationModal } from "./StopRecordingConfirmationModal";
 import { StorageCheckModal } from "./StorageCheckModal";
-import { useConversationArtefacts } from "./verify/hooks";
 
 const CONVERSATION_DELETION_STATUS_CODES = [404, 403, 410];
 const REFINE_BUTTON_THRESHOLD_SECONDS = 60;
