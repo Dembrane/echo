@@ -72,6 +72,33 @@
 			}
 		}
 	},
+	"overrides": [
+		{
+			"includes": ["src/**", "!src/portal/**", "!src/Router.tsx"],
+			"linter": {
+				"rules": {
+					"style": {
+						"noRestrictedImports": {
+							"level": "error",
+							"options": {
+								"patterns": [
+									{
+										"group": [
+											"@/portal",
+											"@/portal/**",
+											"**/portal",
+											"**/portal/**"
+										],
+										"message": "The participant portal (src/portal) is on its way to being its own app, so nothing outside it may import from it. Move what both need into shared code instead; only Router.tsx mounts the portal."
+									}
+								]
+							}
+						}
+					}
+				}
+			}
+		}
+	],
 	"vcs": {
 		"clientKind": "git",
 		"enabled": true,
