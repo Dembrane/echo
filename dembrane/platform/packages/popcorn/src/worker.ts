@@ -69,11 +69,17 @@ export interface PopcornWorkerDeps {
   readonly databaseUrl: string;
   /** The analysis store the tick reads the deck from and publishes through, on the worker's queue. */
   readonly analysis: (jobs: JobSink) => TickAnalysis;
+  /** The inbox message to the project's people when the read of a booked start is in. */
+  readonly notifyReady?: (o: { projectId: string; reportId: string }) => Promise<void>;
   readonly now?: () => Date;
 }
 
-/** A presentation adopting the first results a read produced (adopt_results, initial_only). */
-export type Adoption = (report: Row, projectId: string) => Promise<void>;
+/** What Present does around a read: bind its results to the presentation, and ask for a map. */
+export interface Adoption {
+  /** adopt_results: the first results a read produced, or the newest of every outcome. */
+  adopt(report: Row, projectId: string, newest: boolean): Promise<void>;
+  requestMap(projectId: string, actorId: string | null): Promise<void>;
+}
 
 export interface TickAnalysis {
   readonly deck: DeckAnalysis;
@@ -158,7 +164,13 @@ export function tickDeps(
     model: new PopcornModel(deps.completer),
     deck: analysis.deck,
     analysis: analysis.executor,
-    adoptInitialResults: analysis.adopt ?? null,
+    adoptResults: analysis.adopt
+      ? (r, p, newest) => analysis.adopt?.adopt(r, p, newest) ?? Promise.resolve()
+      : null,
+    requestMap: analysis.adopt
+      ? (p, a) => analysis.adopt?.requestMap(p, a) ?? Promise.resolve()
+      : null,
+    notifyReady: deps.notifyReady ?? null,
     flags: deps.flags,
     participantBaseUrl: deps.participantBaseUrl,
     adminBaseUrl: deps.adminBaseUrl,

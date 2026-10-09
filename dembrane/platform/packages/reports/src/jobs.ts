@@ -1,4 +1,3 @@
-import { newId } from "@dembrane/core";
 import { type Completer, isRetryable } from "@dembrane/llm";
 import type { Logger } from "@dembrane/observability";
 import {
@@ -479,24 +478,26 @@ export async function backfillScheduled(d: { store: ReportsStorage; now?: () => 
   const reports = await sql`select id, project_id, language, user_instructions, scheduled_at
     from project_report where status = 'scheduled' and deleted_at is null order by id limit 100`;
   if (!reports.length) return 0;
-  const tasks = await sql`select payload from scheduled_task
-    where task_type = 'generate_report' and status in ('scheduled', 'processing')`;
+  const tasks = await d.store.pendingTasks();
   const covered = new Set(
     tasks
-      .map((t) => (t.payload as { report_id?: unknown } | null)?.report_id)
+      .map((t) => t.payload.report_id)
       .filter((v) => v != null)
       .map(String),
   );
   let n = 0;
   for (const r of reports) {
     if (!r.project_id || !r.scheduled_at || covered.has(String(r.id))) continue;
-    await sql`insert into scheduled_task (id, task_type, payload, scheduled_at, status, attempts, created_at, updated_at)
-      values (${newId()}, 'generate_report', ${JSON.stringify({
+    await d.store.bookTask(
+      {
         report_id: Number(r.id),
         project_id: r.project_id,
         language: r.language || "en",
         user_instructions: r.user_instructions || "",
-      })}::text::json, ${r.scheduled_at}, 'scheduled', 0, ${nowIso}, ${nowIso})`;
+      },
+      r.scheduled_at,
+      nowIso,
+    );
     n++;
   }
   return n;

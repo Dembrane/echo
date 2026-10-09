@@ -18,6 +18,7 @@ import { supportForwardRegistration, supportInboxMessage, supportOutbox } from "
 import type { Completer, Embedder, Models } from "@dembrane/llm";
 import type { Mailer } from "@dembrane/mail";
 import { mapWorker } from "@dembrane/map";
+import { audiences, Notifier } from "@dembrane/notifications";
 import type { Logger } from "@dembrane/observability";
 import {
   finishReads,
@@ -149,6 +150,20 @@ export function registrations(deps: {
     participantBaseUrl: deps.popcorn.portalUrl,
     adminBaseUrl: deps.dashboardUrl,
     databaseUrl: deps.popcorn.databaseUrl,
+    // A booked read is in: everyone who can open the project hears it, with the reminder
+    // to look before the room does.
+    notifyReady: async ({ projectId, reportId }) => {
+      const people = await audiences(db).projectPeople(projectId);
+      await new Notifier(db, logger).emitToAudience(people.userIds, {
+        eventCode: "PRESENT_READY",
+        title: "Your results are ready to review",
+        message: "Take a few minutes to look through them before you present.",
+        action: "NAVIGATE_PRESENT",
+        refProjectId: projectId,
+        refReportId: reportId,
+        refWorkspaceId: people.workspaceId,
+      });
+    },
     analysis: runtimeAnalysis(analysisDeps, (rt, deck, jobs) =>
       presentAdoption({
         rt,
