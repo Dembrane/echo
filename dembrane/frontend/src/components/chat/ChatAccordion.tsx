@@ -101,6 +101,7 @@ export const ChatAccordionItemMenu = ({
 			<Menu shadow="md" position="right" {...testId("chat-item-menu")}>
 				<Menu.Target>
 					<ActionIcon
+						aria-label={t`More actions`}
 						variant="subtle"
 						color="gray"
 						size={size}

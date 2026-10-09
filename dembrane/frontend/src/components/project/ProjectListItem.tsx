@@ -166,11 +166,8 @@ export const ProjectListItem = ({
 					    mirrors the pin on the right. Read-only: the whole card is
 					    the click target in select mode. */}
 				{selectable && (
-					<Checkbox
+					<Checkbox.Indicator
 						checked={!!selected}
-						readOnly
-						tabIndex={-1}
-						aria-hidden
 						data-testid={`project-select-${project.id}`}
 					/>
 				)}
@@ -287,7 +284,8 @@ export const ProjectListItem = ({
 				{/* Pin and menu read as one cluster: the space between them
 					    stays smaller than the space from the menu to the card edge. */}
 				<Group gap={0} mr={4} wrap="nowrap" align="center">
-					{onTogglePin && (
+					{/* In select mode the row is a checkbox; a pin inside it would nest a button. */}
+					{onTogglePin && !selectable && (
 						<Tooltip
 							label={
 								isPinned
@@ -298,6 +296,7 @@ export const ProjectListItem = ({
 							}
 						>
 							<ActionIcon
+								aria-label={isPinned ? t`Unpin project` : t`Pin project`}
 								variant="subtle"
 								color={isPinned ? "primary" : "gray"}
 								onClick={(e) => {
@@ -370,9 +369,16 @@ export const ProjectListItem = ({
 			className="app-do group relative"
 			data-selected={selected || undefined}
 			aria-checked={selected}
-			aria-label={t`Select project`}
+			aria-label={project.name ?? t`Select project`}
 			onClick={onToggleSelect}
+			onKeyDown={(e) => {
+				if (e.key === " " || e.key === "Enter") {
+					e.preventDefault();
+					onToggleSelect?.();
+				}
+			}}
 			role="checkbox"
+			tabIndex={0}
 			{...testId(`project-list-item-${project.id}`)}
 		>
 			{content}

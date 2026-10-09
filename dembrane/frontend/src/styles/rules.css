@@ -76,6 +76,7 @@
     .mantine-SegmentedControl-control,
     .mantine-Switch-track,
     .mantine-Checkbox-input,
+    .mantine-CheckboxIndicator-indicator,
     .mantine-Radio-radio,
     .mantine-Dropzone-root
   ) {
@@ -603,7 +604,8 @@
 /* Choices: a square checkbox and a round radio, both drawn with the stroke.
  * Controls are white: an empty choice is a place to set something, the same
  * white as a field, with the control line. */
-:root .mantine-Checkbox-input {
+:root .mantine-Checkbox-input,
+:root .mantine-CheckboxIndicator-indicator {
   background-color: var(--app-surface);
   border: var(--app-stroke) solid var(--app-rule-color);
   border-radius: 0;
@@ -615,12 +617,14 @@
 /* Checked fills blue with a white mark, as the switch's on does: off is an
  * outline, on is a fill, across every choice control. */
 :root .mantine-Checkbox-input:checked,
+:root .mantine-CheckboxIndicator-indicator[data-checked],
 :root .mantine-Radio-radio:checked {
   background-color: var(--app-action-fill);
   border-color: var(--app-action-fill);
 }
 :root .mantine-Radio-radio:checked + .mantine-Radio-icon,
-:root .mantine-Checkbox-input:checked + .mantine-Checkbox-icon {
+:root .mantine-Checkbox-input:checked + .mantine-Checkbox-icon,
+:root .mantine-CheckboxIndicator-indicator[data-checked] {
   color: var(--app-on-fill);
 }
 :root .mantine-Checkbox-label,
@@ -940,7 +944,8 @@
   :root
     .mantine-Stepper-step:not([data-progress])
     :is(.mantine-Stepper-stepWrapper, .mantine-Stepper-stepBody) {
-    visibility: hidden;
+    /* Out of sight but still read out: visibility would drop the step's name. */
+    clip-path: inset(50%);
   }
   :root .mantine-Stepper-step[data-progress] {
     overflow: visible;
@@ -1073,4 +1078,9 @@
     flex-direction: column;
     gap: 8px;
   }
+}
+
+/* Icons keep their size: 16 or 20, never squeezed by a tight row. */
+:root .mantine-Group-root > svg {
+  flex: none;
 }

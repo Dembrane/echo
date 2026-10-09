@@ -241,7 +241,7 @@ function RoleBadgeMenu({
 					size={size}
 					variant="light"
 					color={roleColor(currentRole)}
-					rightSection={<CaretDownIcon size={10} />}
+					rightSection={<CaretDownIcon size={16} />}
 				>
 					{displayRole(currentRole)}
 				</Badge>
@@ -1412,7 +1412,6 @@ function OrganisationOverviewPanel({
 							<Button
 								leftSection={<PlusIcon size={20} />}
 								onClick={onRequestWorkspace}
-								opacity={atWorkspaceLimit ? 0.8 : 1}
 							>
 								<Trans>Create workspace</Trans>
 							</Button>
@@ -2029,7 +2028,7 @@ function OrganisationPersonCard({
 													<Button
 														size="compact-xs"
 														leftSection={<PlusIcon size={12} />}
-														rightSection={<CaretDownIcon size={10} />}
+														rightSection={<CaretDownIcon size={16} />}
 													>
 														<Trans>Add</Trans>
 													</Button>

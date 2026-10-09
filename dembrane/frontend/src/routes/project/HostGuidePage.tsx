@@ -623,9 +623,11 @@ const StepRow = ({
 					position: "relative",
 				}}
 			>
+				{/* biome-ignore lint/a11y/useAriaPropsSupportedByRole: dnd-kit's attributes make it a button */}
 				<div
 					{...attributes}
 					{...listeners}
+					aria-label={t`Drag to reorder`}
 					className="no-print"
 					style={{
 						alignItems: "center",
@@ -684,6 +686,7 @@ const StepRow = ({
 				</span>
 				{showDelete && onDelete && (
 					<ActionIcon
+						aria-label={t`Delete`}
 						variant="subtle"
 						color="gray"
 						size="sm"
@@ -794,9 +797,11 @@ const TipRow = ({
 					position: "relative",
 				}}
 			>
+				{/* biome-ignore lint/a11y/useAriaPropsSupportedByRole: dnd-kit's attributes make it a button */}
 				<div
 					{...attributes}
 					{...listeners}
+					aria-label={t`Drag to reorder`}
 					className="no-print"
 					style={{
 						alignItems: "center",
@@ -856,6 +861,7 @@ const TipRow = ({
 				</span>
 				{showDelete && onDelete && (
 					<ActionIcon
+						aria-label={t`Delete`}
 						variant="subtle"
 						color="gray"
 						size="sm"

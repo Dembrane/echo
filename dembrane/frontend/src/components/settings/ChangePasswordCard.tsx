@@ -90,7 +90,7 @@ export const ChangePasswordCard = () => {
 					}
 				/>
 
-				<Group>
+				<Group mt="sm">
 					<Button
 						variant="filled"
 						onClick={() => mutation.mutate()}

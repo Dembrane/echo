@@ -1,5 +1,6 @@
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Group, Progress, Stack, Text, ThemeIcon } from "@mantine/core";
+import { Group, Progress, Stack, Text } from "@mantine/core";
 import { CheckIcon, XIcon } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import { type PasswordStrength, validatePassword } from "@/lib/passwordPolicy";
@@ -13,14 +14,11 @@ const STRENGTH_BAR: Record<PasswordStrength, { value: number; color: string }> =
 
 const Requirement = ({ met, label }: { met: boolean; label: ReactNode }) => (
 	<Group gap="xs" wrap="nowrap">
-		<ThemeIcon
-			size={18}
-			radius="xl"
-			variant={met ? "filled" : "light"}
-			color={met ? "teal" : "gray"}
-		>
-			{met ? <CheckIcon size={12} /> : <XIcon size={12} />}
-		</ThemeIcon>
+		{met ? (
+			<CheckIcon size={16} color="var(--mantine-color-teal-7)" />
+		) : (
+			<XIcon size={16} color="var(--mantine-color-dimmed)" />
+		)}
 		<Text size="xs" c={met ? undefined : "dimmed"}>
 			{label}
 		</Text>
@@ -34,6 +32,7 @@ export const PasswordRequirements = ({ value }: { value: string }) => {
 	return (
 		<Stack gap="xs" mt="xs">
 			<Progress
+				aria-label={t`Password strength`}
 				value={value.length === 0 ? 0 : bar.value}
 				color={value.length === 0 ? "gray" : bar.color}
 				size="sm"

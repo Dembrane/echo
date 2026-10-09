@@ -10,7 +10,7 @@ import {
 	Title,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
-import { House, MagnifyingGlassIcon } from "@phosphor-icons/react";
+import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useRef, useState } from "react";
 import { Navigate } from "react-router";
@@ -238,7 +238,6 @@ export const WorkspaceSelectorRoute = () => {
 	if (orgList.length > 0) {
 		content = (
 			<Box w="100%" maw={FRAME_MAX_WIDTH} mt={FRAME_TOP_MARGIN}>
-				<House aria-hidden size={32} style={{ marginBottom: 16 }} />
 				<Title order={2}>
 					{firstName ? <Trans>Hi {firstName}</Trans> : <Trans>Hi</Trans>}
 				</Title>

@@ -208,7 +208,7 @@ export const LegalBasisCard = ({
 					/>
 				)}
 
-				<Group>
+				<Group mt="sm">
 					<Button
 						variant="filled"
 						onClick={() => {

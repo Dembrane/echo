@@ -200,7 +200,7 @@ const ProjectReportAnalytics = ({
 				<Title order={4}>
 					<Trans>Analytics</Trans>
 				</Title>
-				<ActionIcon onClick={toggle}>
+				<ActionIcon aria-label={t`Settings`} onClick={toggle}>
 					<GearSixIcon size={20} />
 				</ActionIcon>
 			</Group>
@@ -1026,7 +1026,7 @@ export const ProjectReportRoute = () => {
 										<Menu shadow="md" position="bottom-start">
 											<Menu.Target>
 												<Tooltip label={t`More actions`}>
-													<ActionIcon {...testId("report-actions-menu")}>
+													<ActionIcon aria-label={t`More actions`} {...testId("report-actions-menu")}>
 														<DotsThreeVerticalIcon size={20} />
 													</ActionIcon>
 												</Tooltip>
@@ -1137,6 +1137,7 @@ export const ProjectReportRoute = () => {
 												label={fullscreen ? t`Exit fullscreen` : t`Fullscreen`}
 											>
 												<ActionIcon
+													aria-label={fullscreen ? t`Exit fullscreen` : t`Fullscreen`}
 													onClick={toggleFullscreen}
 													{...testId("report-fullscreen-button")}
 												>

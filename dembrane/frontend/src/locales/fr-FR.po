@@ -285,8 +285,8 @@ msgstr "{0, plural, one {# conversation sera masquée avec lui.} other {# conver
 #. placeholder {0}: p.conversation_count
 #. placeholder {0}: project.conversations_count ?? project?.conversations?.length ?? 0
 #: src/routes/project/popcorn/PopcornRoute.tsx:49
-#: src/components/workspace/OrganisationUsageRollup.tsx:812
-#: src/components/project/ProjectListItem.tsx:219
+#: src/components/workspace/OrganisationUsageRollup.tsx:822
+#: src/components/project/ProjectListItem.tsx:216
 #: src/components/popcorn/PopcornStatus.tsx:41
 #: src/components/map/panels/SpotlightPanel.tsx:144
 msgid "{0, plural, one {# conversation} other {# conversations}}"
@@ -306,7 +306,7 @@ msgstr "{0, plural, one {# en direct} other {# en direct}}"
 
 #. placeholder {0}: workspace.member_count
 #. placeholder {0}: ws.member_count
-#: src/routes/project/ProjectsHome.tsx:255
+#: src/routes/project/ProjectsHome.tsx:256
 #: src/components/workspace/DiscoverableWorkspaces.tsx:313
 #: src/components/workspace/DiscoverableWorkspaces.tsx:369
 msgid "{0, plural, one {# member} other {# members}}"
@@ -338,7 +338,7 @@ msgstr "{0, plural, one {# phrase} other {# phrases}}"
 
 #. placeholder {0}: data.project_count
 #. placeholder {0}: ws.project_count
-#: src/components/workspace/UsageCard.tsx:257
+#: src/components/workspace/UsageCard.tsx:267
 #: src/components/settings/MyAccessCard.tsx:214
 msgid "{0, plural, one {# project} other {# projects}}"
 msgstr "{0, plural, one {# projet} other {# projets}}"
@@ -364,7 +364,7 @@ msgstr "{0, plural, one {# place payée} other {# places payées}} pour cette p�
 
 #. placeholder {0}: selection.count
 #. placeholder {0}: selectedIds.length
-#: src/routes/project/ProjectsHome.tsx:424
+#: src/routes/project/ProjectsHome.tsx:423
 #: src/components/workspace/DiscoverableWorkspaces.tsx:338
 msgid "{0, plural, one {# selected} other {# selected}}"
 msgstr "{0, plural, one {# sélectionné} other {# sélectionnés}}"
@@ -508,7 +508,7 @@ msgid "{0} accounts, {1} workspaces, {2} active"
 msgstr "{0} comptes, {1} espaces de travail, {2} actifs"
 
 #. placeholder {0}: displayRole(reached[0].role as string)
-#: src/routes/organisation/OrganisationRoute.tsx:1728
+#: src/routes/organisation/OrganisationRoute.tsx:1727
 msgid "{0} across all"
 msgstr "{0} partout"
 
@@ -594,7 +594,7 @@ msgstr "{0} ne fait pas encore partie de cet espace de travail. Demandez à un a
 #. placeholder {0}: organisation.name
 #. placeholder {0}: workspace.name
 #: src/routes/organisation/OrganisationRoute.tsx:707
-#: src/routes/organisation/OrganisationRoute.tsx:1541
+#: src/routes/organisation/OrganisationRoute.tsx:1540
 msgid "{0} logo"
 msgstr "Logo {0}"
 
@@ -716,7 +716,7 @@ msgstr "{0} demande un accès MCP à dembrane"
 #. placeholder {2}: data.total_observer_count
 #. placeholder {3}: formatDurationFromHours(data.total_audio_hours)
 #. placeholder {4}: formatCycleMonth(data.cycle_start)
-#: src/components/workspace/OrganisationUsageRollup.tsx:501
+#: src/components/workspace/OrganisationUsageRollup.tsx:511
 msgid "{0} workspaces · {1} paid seats · {2} free observers · {3} in {4}"
 msgstr "{0} espaces de travail · {1} places payantes · {2} observateurs gratuits · {3} en {4}"
 
@@ -823,7 +823,7 @@ msgstr "{count, plural, one {# argument} other {# arguments}}"
 msgid "{count} history entries"
 msgstr "{count} entrées d'historique"
 
-#: src/routes/project/HostGuidePage.tsx:975
+#: src/routes/project/HostGuidePage.tsx:981
 msgid "{count} on record"
 msgstr "{count} enregistrées"
 
@@ -884,7 +884,7 @@ msgstr "{invalidCount} adresses nécessitent votre attention"
 msgid "{inviterName} invited you to join {resolvedWorkspaceName}"
 msgstr "{inviterName} vous a invité à rejoindre {resolvedWorkspaceName}"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1257
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1258
 msgid "{liveProjectCount, plural, one {Delete the # project in this workspace before deleting the workspace itself.} other {Delete the # projects in this workspace before deleting the workspace itself.}}"
 msgstr "{liveProjectCount, plural, one {Supprimez le # projet de cet espace de travail avant de supprimer l'espace de travail lui-même.} other {Supprimez les # projets de cet espace de travail avant de supprimer l'espace de travail lui-même.}}"
 
@@ -925,7 +925,7 @@ msgstr "{overLimit, plural, one {# conversation n'a pas pu être incluse dans ce
 msgid "{pendingInvites} invite(s) pending. Counted once accepted."
 msgstr "{pendingInvites} invitation(s) en attente. Prises en compte dès acceptation."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1787
+#: src/routes/organisation/OrganisationRoute.tsx:1786
 msgid "{person} will lose access to every workspace in this organisation. Direct-only workspace invites stay intact."
 msgstr "{person} perdra l'accès à tous les espaces de travail de cette organisation. Les invitations directes à un espace de travail sont conservées."
 
@@ -1019,7 +1019,7 @@ msgstr "{unplacedCount, plural, one {# argument n’a pas pu être placé sur la
 msgid "{validated} validated"
 msgstr "{validated} validées"
 
-#: src/components/participant/UserChunkMessage.tsx:108
+#: src/components/participant/UserChunkMessage.tsx:113
 msgid "*Transcription in progress.*"
 msgstr "*Transcription en cours.*"
 
@@ -1049,7 +1049,7 @@ msgid "€{0} each, beyond the included {1}"
 msgstr "{0} € chacun, au-delà des {1} inclus"
 
 #. placeholder {0}: p.extra_price_eur
-#: src/components/training/TrainingCatalog.tsx:56
+#: src/components/training/TrainingCatalog.tsx:57
 msgid "€{0} per extra participant"
 msgstr "{0} € par participant supplémentaire"
 
@@ -1212,7 +1212,7 @@ msgstr "Un portail participant pour enregistrer les conversations."
 msgid "A privacy policy link is required for consent-based processing. It must start with http:// or https:// and be at most 255 characters."
 msgstr "Un lien vers la politique de confidentialité est obligatoire pour le traitement basé sur le consentement. Il doit commencer par http:// ou https:// et compter au maximum 255 caractères."
 
-#: src/routes/project/ProjectsHome.tsx:297
+#: src/routes/project/ProjectsHome.tsx:296
 msgid "A project holds everything for one topic. Share its link with participants, gather voices, then let dembrane turn them into insights."
 msgstr "Un projet réunit tout ce qui concerne un sujet. Partagez son lien avec les participants, recueillez leurs voix, puis laissez dembrane les transformer en idées clés."
 
@@ -1283,7 +1283,7 @@ msgstr "Un titre et un sous-titre avant le compte à rebours."
 msgid "A typo"
 msgstr "Une faute de frappe"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:337
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:336
 #: src/routes/invite/AcceptInviteRoute.tsx:48
 msgid "a workspace"
 msgstr "un espace de travail"
@@ -1311,7 +1311,7 @@ msgstr "Accepter et rejoindre"
 msgid "Accepted terms"
 msgstr "Conditions acceptées"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1886
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1888
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:592
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:725
 #: src/routes/project/CreateProjectRoute.tsx:281
@@ -1443,8 +1443,8 @@ msgstr "Actions"
 #: src/routes/admin/AdminSettingsRoute.tsx:1502
 #: src/routes/admin/AdminSettingsRoute.tsx:1706
 #: src/routes/admin/AdminSettingsRoute.tsx:2024
-#: src/components/workspace/OrganisationUsageRollup.tsx:393
-#: src/components/workspace/OrganisationUsageRollup.tsx:535
+#: src/components/workspace/OrganisationUsageRollup.tsx:403
+#: src/components/workspace/OrganisationUsageRollup.tsx:545
 #: src/components/billing/BillingManager.tsx:1243
 #: src/components/agent-access/format.ts:31
 msgid "Active"
@@ -1465,10 +1465,10 @@ msgid "Activity"
 msgstr "Activité"
 
 #: src/routes/participant/ParticipantPostConversation.tsx:201
-#: src/routes/organisation/OrganisationRoute.tsx:2014
-#: src/routes/organisation/OrganisationRoute.tsx:2021
-#: src/routes/organisation/OrganisationRoute.tsx:2034
-#: src/routes/organisation/OrganisationRoute.tsx:2057
+#: src/routes/organisation/OrganisationRoute.tsx:2013
+#: src/routes/organisation/OrganisationRoute.tsx:2020
+#: src/routes/organisation/OrganisationRoute.tsx:2033
+#: src/routes/organisation/OrganisationRoute.tsx:2056
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:185
 #: src/components/billing/BillingManager.tsx:1393
 msgid "Add"
@@ -1479,8 +1479,8 @@ msgstr "Ajouter"
 #. placeholder {1}: ws.name
 #. placeholder {2}: displayRole("external")
 #. placeholder {2}: displayRole(roleOpt)
-#: src/routes/organisation/OrganisationRoute.tsx:2004
-#: src/routes/organisation/OrganisationRoute.tsx:2045
+#: src/routes/organisation/OrganisationRoute.tsx:2003
+#: src/routes/organisation/OrganisationRoute.tsx:2044
 msgid "Add {0} to {1} as <0>{2}</0>?"
 msgstr "Ajouter {0} à {1} en tant que <0>{2}</0> ?"
 
@@ -1570,11 +1570,11 @@ msgstr "Ajoutez des personnes par e-mail. Celles qui ne sont pas encore dans l'e
 msgid "Add people from your organisation"
 msgstr "Ajouter des personnes de votre organisation"
 
-#: src/routes/project/HostGuidePage.tsx:1688
+#: src/routes/project/HostGuidePage.tsx:1694
 msgid "Add step"
 msgstr "Ajouter une étape"
 
-#: src/components/project/ProjectTagsInput.tsx:275
+#: src/components/project/ProjectTagsInput.tsx:277
 msgid "Add tag"
 msgstr "Ajouter une étiquette"
 
@@ -1587,7 +1587,7 @@ msgstr "Ajouter une étiquette"
 msgid "add.tag.filter.modal.title"
 msgstr "Ajouter une étiquette aux filtres"
 
-#: src/components/project/ProjectTagsInput.tsx:275
+#: src/components/project/ProjectTagsInput.tsx:277
 msgid "Add tags"
 msgstr "Ajouter des étiquettes"
 
@@ -1599,13 +1599,13 @@ msgstr "Ajouter des étiquettes"
 msgid "Add the people, places, organisations and jargon you expect to hear."
 msgstr "Ajoutez les personnes, lieux, organisations et termes techniques que vous vous attendez à entendre."
 
-#: src/routes/project/HostGuidePage.tsx:1725
+#: src/routes/project/HostGuidePage.tsx:1731
 msgid "Add tip"
 msgstr "Ajouter un conseil"
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:2017
-#: src/routes/organisation/OrganisationRoute.tsx:2061
+#: src/routes/organisation/OrganisationRoute.tsx:2016
+#: src/routes/organisation/OrganisationRoute.tsx:2060
 msgid "Add to {0}?"
 msgstr "Ajouter à {0} ?"
 
@@ -1762,7 +1762,7 @@ msgstr "Ajuster la taille de la police de base pour l'interface"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:985
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1001
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1050
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1051
 #: src/routes/admin/AdminSettingsRoute.tsx:3154
 #: src/lib/roles.ts:9
 #: src/components/invite/RoleSelect.tsx:53
@@ -1773,7 +1773,7 @@ msgstr "Administrateur"
 msgid "Admin dashboard"
 msgstr "Tableau de bord d'administration"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1939
+#: src/routes/organisation/OrganisationRoute.tsx:1938
 msgid "Admin here via organisation role"
 msgstr "Administrateur ici via le rôle dans l'organisation"
 
@@ -1858,7 +1858,7 @@ msgstr "Chat avec agent"
 #: src/routes/organisation/OrganisationRoute.tsx:847
 #: src/routes/admin/AdminSettingsRoute.tsx:2023
 #: src/routes/admin/AdminSettingsRoute.tsx:2693
-#: src/components/workspace/OrganisationUsageRollup.tsx:534
+#: src/components/workspace/OrganisationUsageRollup.tsx:544
 #: src/components/training/StaffTrainingPanel.tsx:124
 #: src/components/results/curate/ArgumentsTab.tsx:226
 #: src/components/project/ProjectUsageAndSharing.tsx:261
@@ -1895,7 +1895,7 @@ msgstr "Toutes les conversations"
 msgid "all eligible project conversations"
 msgstr "toutes les conversations éligibles du projet"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:849
+#: src/components/dropzone/UploadConversationDropzone.tsx:850
 msgid "All files were uploaded successfully."
 msgstr "Tous les fichiers ont été téléchargés avec succès."
 
@@ -1903,7 +1903,7 @@ msgstr "Tous les fichiers ont été téléchargés avec succès."
 msgid "All kinds"
 msgstr "Tous les types"
 
-#: src/routes/project/ProjectsHome.tsx:346
+#: src/routes/project/ProjectsHome.tsx:345
 msgid "All projects"
 msgstr "Tous les projets"
 
@@ -1927,11 +1927,11 @@ msgstr "Toutes les places sont occupées sur ce forfait. Retirez un membre ou un
 msgid "All seats are taken. Free a seat or upgrade to invite more."
 msgstr "Toutes les places sont occupées. Libérez une place ou changez de forfait pour inviter plus de monde."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:314
+#: src/components/workspace/OrganisationUsageRollup.tsx:322
 msgid "All seats taken"
 msgstr "Toutes les places sont occupées"
 
-#: src/components/chat/TemplatesModal.tsx:799
+#: src/components/chat/TemplatesModal.tsx:802
 msgid "All templates"
 msgstr "Tous les modèles"
 
@@ -1940,7 +1940,7 @@ msgstr "Tous les modèles"
 #~ msgstr "Tous les modèles"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2011
-#: src/components/workspace/OrganisationUsageRollup.tsx:522
+#: src/components/workspace/OrganisationUsageRollup.tsx:532
 msgid "All tiers"
 msgstr "Tous les forfaits"
 
@@ -1956,7 +1956,7 @@ msgstr "Tous les espaces de travail"
 msgid "Allow"
 msgstr "Autoriser"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1982
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1984
 msgid "Allow dembrane staff to access this workspace for support"
 msgstr "Autoriser l'équipe de dembrane à accéder à cet espace de travail pour l'assistance"
 
@@ -2051,11 +2051,11 @@ msgstr "Une formulation antérieure rétablie"
 #~ msgid "An email notification will be sent to {0} participant{1}. Do you want to proceed?"
 #~ msgstr "Une notification par e-mail sera envoyée à {0} participant{1}. Voulez-vous continuer ?"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1246
+#: src/routes/project/report/ProjectReportRoute.tsx:1247
 msgid "An email notification will be sent to {participantCount, plural, one {# participant} other {# participants}}. Do you want to proceed?"
 msgstr "Une notification par e-mail sera envoyée à {participantCount, plural, one {# participant} other {# participants}}. Voulez-vous continuer ?"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1256
+#: src/routes/project/report/ProjectReportRoute.tsx:1257
 msgid "An email notification will be sent to participants. Do you want to proceed?"
 msgstr "Une notification par e-mail sera envoyée aux participants. Voulez-vous continuer ?"
 
@@ -2167,7 +2167,7 @@ msgstr "Anonymiser les transcriptions"
 msgid "Anonymised transcripts have clearer labels."
 msgstr "Les transcriptions anonymisées ont des libellés plus clairs."
 
-#: src/components/conversation/RetranscribeConversation.tsx:202
+#: src/components/conversation/RetranscribeConversation.tsx:203
 msgid "Anonymize transcript"
 msgstr "Anonymiser la transcription"
 
@@ -2205,7 +2205,7 @@ msgstr "Participant anonyme"
 msgid "Anonymous visitor"
 msgstr "Visiteur anonyme"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1083
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1084
 msgid "Another admin or owner will need to restore you."
 msgstr "Un autre administrateur ou propriétaire devra rétablir votre accès."
 
@@ -2218,7 +2218,7 @@ msgstr "une autre raison"
 msgid "Any tag"
 msgstr "N'importe quelle étiquette"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1905
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1907
 msgid "Anyone in your organisation can find this workspace. Admins can join; members can request access."
 msgstr "Tous les membres de votre organisation peuvent trouver cet espace de travail. Les administrateurs peuvent le rejoindre ; les membres peuvent demander un accès."
 
@@ -2282,7 +2282,7 @@ msgstr "Appliquer"
 msgid "Applying a template shows a confirmation with Undo."
 msgstr "L'application d'un modèle affiche une confirmation avec l'option Annuler."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:323
+#: src/components/workspace/OrganisationUsageRollup.tsx:331
 msgid "Approaching a limit this month"
 msgstr "Limite bientôt atteinte ce mois-ci"
 
@@ -2323,7 +2323,7 @@ msgstr "Archivé"
 msgid "Are you sure you want to delete the webhook \"{0}\"? This action cannot be undone."
 msgstr "Êtes-vous sûr de vouloir supprimer le webhook \"{0}\" ? Cette action ne peut pas être annulée."
 
-#: src/components/chat/ChatAccordion.tsx:159
+#: src/components/chat/ChatAccordion.tsx:160
 msgid "Are you sure you want to delete this chat? This action cannot be undone."
 msgstr "Êtes-vous sûr de vouloir supprimer ce chat ? Cette action est irréversible."
 
@@ -2339,11 +2339,11 @@ msgstr "Êtes-vous sûr de vouloir supprimer ce sujet personnalisé ? Cette acti
 msgid "Are you sure you want to delete this project? This action cannot be undone."
 msgstr "Êtes-vous sûr de vouloir supprimer ce projet ? Cette action est irréversible."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1271
+#: src/routes/project/report/ProjectReportRoute.tsx:1272
 msgid "Are you sure you want to delete this report? This action cannot be undone."
 msgstr "Êtes-vous sûr de vouloir supprimer ce rapport ? Cette action est irréversible."
 
-#: src/components/project/ProjectTagsInput.tsx:118
+#: src/components/project/ProjectTagsInput.tsx:120
 msgid "Are you sure you want to delete this tag? This will remove the tag from existing conversations that contain it."
 msgstr "Êtes-vous sûr de vouloir supprimer cette étiquette ? Cela supprimera l'étiquette des conversations existantes qui la contiennent."
 
@@ -2521,7 +2521,7 @@ msgstr "Attribuer"
 msgid "Assistant"
 msgstr "Assistant"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1595
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1596
 msgid "Assistant context"
 msgstr "Contexte de l'assistant"
 
@@ -2530,7 +2530,7 @@ msgstr "Contexte de l'assistant"
 msgid "Assistant memory"
 msgstr "Mémoire de l'assistant"
 
-#: src/components/auth/PasswordRequirements.tsx:55
+#: src/components/auth/PasswordRequirements.tsx:54
 msgid "At least 8 characters"
 msgstr "Au moins 8 caractères"
 
@@ -2546,7 +2546,7 @@ msgstr "À la fin de cette période"
 msgid "At your busiest moment, how many conversations will be running at once?"
 msgstr "Au moment le plus chargé, combien de conversations auront lieu en même temps ?"
 
-#: src/components/conversation/RetranscribeConversation.tsx:214
+#: src/components/conversation/RetranscribeConversation.tsx:215
 msgid "Attach verified artifacts"
 msgstr "Joindre les artéfacts vérifiés"
 
@@ -2564,6 +2564,7 @@ msgid "Audience preview"
 msgstr "Aperçu pour le public"
 
 #: src/components/workspace/UsageCard.tsx:169
+#: src/components/workspace/UsageCard.tsx:183
 #: src/components/project/ProjectUsageAndSharing.tsx:463
 msgid "Audio"
 msgstr "Audio"
@@ -2721,7 +2722,7 @@ msgstr "Absent"
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:322
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:360
 #: src/components/pricing/PricingConfigurator.tsx:867
-#: src/components/dropzone/UploadConversationDropzone.tsx:872
+#: src/components/dropzone/UploadConversationDropzone.tsx:873
 #: src/components/chat/TemplatesModal.tsx:456
 msgid "Back"
 msgstr "Retour"
@@ -2839,7 +2840,7 @@ msgstr "Avant de connecter un agent"
 #: src/components/project/ProjectPortalEditor.tsx:1452
 #: src/components/project/ProjectExperimentalSection.tsx:50
 #: src/components/map/MapPage.tsx:669
-#: src/components/conversation/RetranscribeConversation.tsx:155
+#: src/components/conversation/RetranscribeConversation.tsx:156
 #: src/components/chat/ChatModeSelector.tsx:105
 #: src/components/chat/AgenticIntroModal.tsx:25
 #: src/components/agent-access/AgentAccessSection.tsx:152
@@ -2880,11 +2881,11 @@ msgstr "Facturé annuellement"
 msgid "Billed monthly"
 msgstr "Facturé mensuellement"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:342
+#: src/components/workspace/OrganisationUsageRollup.tsx:350
 msgid "Billed on its own plan, not your organisation's. Manage it from this workspace's billing."
 msgstr "Facturé selon son propre forfait, pas celui de votre organisation. Gérez-le depuis la facturation de cet espace de travail."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:345
+#: src/components/workspace/OrganisationUsageRollup.tsx:353
 msgid "Billed separately"
 msgstr "Facturé séparément"
 
@@ -2897,7 +2898,7 @@ msgid "Billed under your organisation's plan, alongside your other workspaces."
 msgstr "Facturé dans le forfait de votre organisation, avec vos autres espaces de travail."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:805
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1049
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1050
 #: src/routes/organisation/OrganisationRoute.tsx:800
 #: src/routes/organisation/OrganisationRoute.tsx:850
 #: src/lib/roles.ts:13
@@ -3000,21 +3001,21 @@ msgstr "C_Med : {0}"
 msgid "Can you tell us more?"
 msgstr "Pouvez-vous nous en dire plus ?"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1092
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1140
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1174
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1335
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1970
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1093
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1141
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1175
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1336
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1972
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:785
-#: src/routes/project/ProjectsHome.tsx:453
+#: src/routes/project/ProjectsHome.tsx:452
 #: src/routes/project/CreateProjectRoute.tsx:444
 #: src/routes/project/report/ProjectReportRoute.tsx:277
-#: src/routes/organisation/OrganisationRoute.tsx:1752
-#: src/routes/organisation/OrganisationRoute.tsx:1775
-#: src/routes/organisation/OrganisationRoute.tsx:1798
-#: src/routes/organisation/OrganisationRoute.tsx:1974
-#: src/routes/organisation/OrganisationRoute.tsx:2014
-#: src/routes/organisation/OrganisationRoute.tsx:2056
+#: src/routes/organisation/OrganisationRoute.tsx:1751
+#: src/routes/organisation/OrganisationRoute.tsx:1774
+#: src/routes/organisation/OrganisationRoute.tsx:1797
+#: src/routes/organisation/OrganisationRoute.tsx:1973
+#: src/routes/organisation/OrganisationRoute.tsx:2013
+#: src/routes/organisation/OrganisationRoute.tsx:2055
 #: src/routes/invite/MyInvitesRoute.tsx:80
 #: src/routes/admin/AdminSettingsRoute.tsx:858
 #: src/routes/admin/AdminSettingsRoute.tsx:1172
@@ -3042,8 +3043,8 @@ msgstr "Pouvez-vous nous en dire plus ?"
 #: src/components/map/panels/SpotlightPanel.tsx:363
 #: src/components/invite/InviteModal.tsx:800
 #: src/components/goal/ProjectGoalSection.tsx:165
-#: src/components/dropzone/UploadConversationDropzone.tsx:750
-#: src/components/dropzone/UploadConversationDropzone.tsx:882
+#: src/components/dropzone/UploadConversationDropzone.tsx:751
+#: src/components/dropzone/UploadConversationDropzone.tsx:883
 #: src/components/conversation/MoveConversationButton.tsx:250
 #: src/components/conversation/ConversationAccordion.tsx:337
 #: src/components/common/InputModal.tsx:87
@@ -3187,21 +3188,21 @@ msgstr "Modifier"
 
 #. placeholder {0}: displayRole(member.role)
 #. placeholder {1}: displayRole(next)
-#: src/routes/organisation/OrganisationRoute.tsx:1746
+#: src/routes/organisation/OrganisationRoute.tsx:1745
 msgid "Change {person}'s organisation role from <0>{0}</0> to <1>{1}</1>?"
 msgstr "Modifier le rôle de {person} dans l'organisation de <0>{0}</0> à <1>{1}</1> ?"
 
 #. placeholder {0}: displayRole(currentRole)
 #. placeholder {1}: displayRole(next)
-#: src/routes/organisation/OrganisationRoute.tsx:1769
+#: src/routes/organisation/OrganisationRoute.tsx:1768
 msgid "Change {person}'s role on {wsName} from <0>{0}</0> to <1>{1}</1>?"
 msgstr "Modifier le rôle de {person} sur {wsName} de <0>{0}</0> à <1>{1}</1> ?"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1093
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1094
 msgid "Change anyway"
 msgstr "Modifier quand même"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1938
+#: src/routes/organisation/OrganisationRoute.tsx:1937
 msgid "Change in workspace settings"
 msgstr "Modifier dans les paramètres de l'espace de travail"
 
@@ -3209,7 +3210,7 @@ msgstr "Modifier dans les paramètres de l'espace de travail"
 msgid "Change language"
 msgstr "Changer de langue"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1754
+#: src/routes/organisation/OrganisationRoute.tsx:1753
 msgid "Change organisation role?"
 msgstr "Modifier le rôle dans l'organisation ?"
 
@@ -3226,8 +3227,8 @@ msgstr "Changer de moyen de paiement"
 msgid "change project settings"
 msgstr "modifier les paramètres du projet"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1752
-#: src/routes/organisation/OrganisationRoute.tsx:1775
+#: src/routes/organisation/OrganisationRoute.tsx:1751
+#: src/routes/organisation/OrganisationRoute.tsx:1774
 msgid "Change role"
 msgstr "Modifier le rôle"
 
@@ -3242,11 +3243,11 @@ msgstr "Changez les mots, lisez les preuves, ou gardez un résultat hors de cett
 msgid "Change tier"
 msgstr "Changer de niveau"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1777
+#: src/routes/organisation/OrganisationRoute.tsx:1776
 msgid "Change workspace role?"
 msgstr "Modifier le rôle dans l'espace de travail ?"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1100
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1101
 msgid "Change your own role?"
 msgstr "Modifier votre propre rôle ?"
 
@@ -3343,7 +3344,7 @@ msgstr "Le chat n'est pas disponible avec votre niveau d'accès. Contactez l'adm
 msgid "Chat limit reached"
 msgstr "Limite de chats atteinte"
 
-#: src/components/chat/ChatAccordion.tsx:140
+#: src/components/chat/ChatAccordion.tsx:141
 msgid "Chat name"
 msgstr "Nom du chat"
 
@@ -3373,7 +3374,7 @@ msgid "chat.accordion.skeleton.title"
 msgstr "Discussions"
 
 #. js-lingui-explicit-id
-#: src/components/chat/ChatAccordion.tsx:272
+#: src/components/chat/ChatAccordion.tsx:273
 msgid "project.sidebar.chat.title"
 msgstr "Discussions"
 
@@ -3533,13 +3534,15 @@ msgstr "Tout effacer"
 msgid "Clear filters"
 msgstr "Effacer les filtres"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:266
-#: src/routes/project/ProjectsHome.tsx:374
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:265
+#: src/routes/project/ProjectsHome.tsx:373
 #: src/routes/project/chat/NewChatRoute.tsx:171
 #: src/features/sidebar/blocks/SearchBlock.tsx:168
 #: src/components/invite/WorkspaceSelectList.tsx:98
 #: src/components/conversation/ProjectConversationsPanel.tsx:683
-#: src/components/chat/TemplatesModal.tsx:721
+#: src/components/conversation/ConversationAccordion.tsx:1134
+#: src/components/conversation/ConversationAccordion.tsx:1293
+#: src/components/chat/TemplatesModal.tsx:724
 msgid "Clear search"
 msgstr "Effacer la recherche"
 
@@ -3576,7 +3579,7 @@ msgstr "Cliquez sur un nœud dans l'arborescence ou la carte des clusters pour l
 #~ msgid "Click an argument, or rest the cursor on a cluster until the circle closes, and it is kept here."
 #~ msgstr "Cliquez sur un argument, ou laissez le curseur sur un groupe jusqu’à ce que le cercle se ferme, et il est conservé ici."
 
-#: src/routes/project/HostGuidePage.tsx:1596
+#: src/routes/project/HostGuidePage.tsx:1602
 msgid "Click to edit"
 msgstr "Cliquer pour modifier"
 
@@ -3585,7 +3588,7 @@ msgid "Click to see all {totalCount} conversations"
 msgstr "Cliquez pour voir les {totalCount} conversations"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2117
-#: src/components/workspace/OrganisationUsageRollup.tsx:595
+#: src/components/workspace/OrganisationUsageRollup.tsx:605
 msgid "Click to sort"
 msgstr "Cliquer pour trier"
 
@@ -3632,14 +3635,14 @@ msgstr "Cloner le projet"
 #~ msgid "Clone Project"
 #~ msgstr "Cloner le projet"
 
-#: src/theme.tsx:317
+#: src/theme.tsx:322
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:790
 #: src/components/results/ResultRow.tsx:432
 #: src/components/results/ResultRow.tsx:435
 #: src/components/results/ResultItem.tsx:860
 #: src/components/results/ResultItem.tsx:870
 #: src/components/map/panels/DetailsSheet.tsx:800
-#: src/components/dropzone/UploadConversationDropzone.tsx:882
+#: src/components/dropzone/UploadConversationDropzone.tsx:883
 #: src/components/conversation/ConversationLinks.tsx:105
 #: src/components/common/FeedbackPortalModal.tsx:158
 #: src/components/agent-access/AgentAccessSection.tsx:98
@@ -3740,7 +3743,7 @@ msgstr "Colorer le graphe par valence"
 msgid "Color nodes by"
 msgstr "Colorer les nœuds par"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:545
+#: src/components/workspace/OrganisationUsageRollup.tsx:555
 msgid "Columns"
 msgstr "Colonnes"
 
@@ -3775,8 +3778,8 @@ msgstr "Regroupé à partir de {0} arguments"
 #~ msgstr ""
 
 #: src/components/workspace/TierStatusBadge.tsx:30
-#: src/components/training/TrainingCatalog.tsx:79
-#: src/components/training/TrainingCatalog.tsx:109
+#: src/components/training/TrainingCatalog.tsx:77
+#: src/components/training/TrainingCatalog.tsx:107
 msgid "Coming soon"
 msgstr "Bientôt disponible"
 
@@ -3805,7 +3808,7 @@ msgstr "Essai offert. Revenu : 0 €."
 msgid "Comped trial. Expires {0}. €0 revenue."
 msgstr "Essai offert. Expire le {0}. Revenu : 0 €."
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:806
+#: src/components/dropzone/UploadConversationDropzone.tsx:807
 msgid "Complete"
 msgstr "Terminé"
 
@@ -3817,7 +3820,7 @@ msgstr "Terminé"
 msgid "Completed on"
 msgstr "Terminé le"
 
-#: src/components/project/ProjectListItem.tsx:354
+#: src/components/project/ProjectListItem.tsx:353
 msgid "Configure portal"
 msgstr "Configurer le portail"
 
@@ -3934,7 +3937,7 @@ msgstr "Contacter le support"
 #~ msgid "Contact support"
 #~ msgstr "Contacter le support"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:363
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:362
 msgid "Contact the admin if this was unexpected."
 msgstr "Contactez l'administrateur si cela n'était pas prévu."
 
@@ -3955,7 +3958,7 @@ msgstr "Contesté"
 msgid "Context added:"
 msgstr "Contexte ajouté :"
 
-#: src/components/chat/TemplatesModal.tsx:701
+#: src/components/chat/TemplatesModal.tsx:704
 msgid "Contextual suggestions"
 msgstr "Suggestions contextuelles"
 
@@ -4005,7 +4008,7 @@ msgstr "Continuer"
 msgid "Controls how far charge forces act (higher = more global)"
 msgstr "Contrôle la portée des forces de charge (plus élevé = plus global)"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1581
+#: src/routes/organisation/OrganisationRoute.tsx:1580
 msgid "conversation"
 msgstr "conversation"
 
@@ -4020,7 +4023,7 @@ msgstr "Conversation"
 
 #. placeholder {0}: conv.id.slice(-6)
 #. placeholder {0}: slot + 1
-#: src/routes/project/HostGuidePage.tsx:1005
+#: src/routes/project/HostGuidePage.tsx:1011
 #: src/components/map/attributes.ts:308
 msgid "Conversation {0}"
 msgstr "Conversation {0}"
@@ -4099,7 +4102,7 @@ msgstr "Les étiquettes de conversation sont plus lisibles."
 msgid "Conversation transcribed"
 msgstr "Conversation transcrite"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1581
+#: src/routes/organisation/OrganisationRoute.tsx:1580
 #: src/components/report/CreateReportForm.tsx:206
 #: src/components/chat/NavigationSuggestionCard.tsx:57
 msgid "conversations"
@@ -4151,8 +4154,10 @@ msgstr "Période de repos. Disponible dans {0}"
 #: src/components/participant/InAppBrowserNotice.tsx:66
 #: src/components/conversation/CopyConversationTranscript.tsx:44
 #: src/components/conversation/ConversationEdit.tsx:51
+#: src/components/conversation/ConversationEdit.tsx:52
 #: src/components/common/CopyRichTextIconButton.tsx:37
 #: src/components/common/CopyIconButton.tsx:17
+#: src/components/common/CopyIconButton.tsx:18
 #: src/components/agent-access/AgentAccessSection.tsx:38
 msgid "Copied"
 msgstr "Copié"
@@ -4173,12 +4178,15 @@ msgid "copy"
 msgstr "copie"
 
 #: src/components/conversation/ConversationEdit.tsx:51
+#: src/components/conversation/ConversationEdit.tsx:52
 #: src/components/common/CopyRichTextIconButton.tsx:37
+#: src/components/common/CopyRichTextIconButton.tsx:40
 #: src/components/common/CopyIconButton.tsx:8
+#: src/components/common/CopyIconButton.tsx:18
 msgid "Copy"
 msgstr "Copier"
 
-#: src/components/conversation/RetranscribeConversation.tsx:215
+#: src/components/conversation/RetranscribeConversation.tsx:216
 msgid "Copy approved outcomes to the new conversation so they aren't lost when the original is deleted."
 msgstr "Copiez les résultats approuvés vers la nouvelle conversation afin de ne pas les perdre lors de la suppression de l'originale."
 
@@ -4226,6 +4234,7 @@ msgstr "Copier le résumé"
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:1028
 #: src/components/conversation/CopyConversationTranscript.tsx:45
+#: src/components/conversation/CopyConversationTranscript.tsx:49
 msgid "Copy to clipboard"
 msgstr "Copier dans le presse-papiers"
 
@@ -4584,8 +4593,8 @@ msgstr "Créer une organisation"
 msgid "Create password"
 msgstr "Créer un mot de passe"
 
-#: src/routes/project/ProjectsHome.tsx:313
-#: src/routes/project/ProjectsHome.tsx:356
+#: src/routes/project/ProjectsHome.tsx:312
+#: src/routes/project/ProjectsHome.tsx:355
 #: src/routes/project/CreateProjectRoute.tsx:216
 #: src/routes/project/CreateProjectRoute.tsx:435
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:68
@@ -4606,7 +4615,7 @@ msgstr "Créer un rapport"
 #~ msgid "Create Report"
 #~ msgstr "Créer un rapport"
 
-#: src/components/chat/TemplatesModal.tsx:739
+#: src/components/chat/TemplatesModal.tsx:742
 msgid "Create template"
 msgstr "Créer un modèle"
 
@@ -4628,7 +4637,7 @@ msgstr "Créer les paramètres vocaux"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:425
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:776
-#: src/routes/organisation/OrganisationRoute.tsx:1417
+#: src/routes/organisation/OrganisationRoute.tsx:1416
 msgid "Create workspace"
 msgstr "Créer un espace de travail"
 
@@ -4670,7 +4679,7 @@ msgstr "Recadrer l'image"
 #~ msgid "Crop Image"
 #~ msgstr "Recadrer l'image"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1784
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1785
 #: src/components/settings/WhitelabelLogoCard.tsx:199
 msgid "Crop logo"
 msgstr "Recadrer le logo"
@@ -4679,7 +4688,7 @@ msgstr "Recadrer le logo"
 #~ msgid "Crop Logo"
 #~ msgstr "Recadrer le logo"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1786
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1787
 #: src/components/settings/WhitelabelLogoCard.tsx:201
 msgid "Crop your logo to a 3:1 horizontal aspect ratio (recommended e.g. 600×200px)."
 msgstr "Recadrez votre logo au format horizontal 3:1 (recommandé : 600×200 px)."
@@ -4715,7 +4724,7 @@ msgstr "Personnalisé"
 msgid "Custom chat templates save and share correctly again."
 msgstr "Les modèles de chat personnalisés s'enregistrent et se partagent à nouveau correctement."
 
-#: src/components/conversation/DownloadConversationTranscript.tsx:90
+#: src/components/conversation/DownloadConversationTranscript.tsx:91
 msgid "Custom filename"
 msgstr "Nom de fichier personnalisé"
 
@@ -4735,11 +4744,11 @@ msgstr "Logo personnalisé"
 msgid "Custom title prompt"
 msgstr "Prompt de titre personnalisé"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1704
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1705
 msgid "Custom workspace logo shown to participants."
 msgstr "Logo personnalisé de l'espace de travail affiché aux participants."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1635
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1636
 msgid "Custom workspace logo shown to participants. Recommended aspect ratio is 3:1 (e.g. 600×200px horizontal format)."
 msgstr "Logo personnalisé de l'espace de travail affiché aux participants. Format recommandé : 3:1 (ex. horizontal 600×200 px)."
 
@@ -4895,26 +4904,30 @@ msgstr "Par défaut : {defaultValue}"
 msgid "Delegate multi-step analysis with live tool execution"
 msgstr "Déléguer une analyse multi-étapes avec l'exécution en direct des outils"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1272
+#: src/routes/project/HostGuidePage.tsx:689
+#: src/routes/project/HostGuidePage.tsx:864
+#: src/routes/project/report/ProjectReportRoute.tsx:1273
 #: src/components/workspace/OrganisationProjectsTable.tsx:164
-#: src/components/project/ProjectTagsInput.tsx:119
+#: src/components/project/ProjectTagsInput.tsx:121
 #: src/components/project/ProjectPortalEditor.tsx:1637
 #: src/components/project/ProjectDangerZone.tsx:169
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:590
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:591
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:624
-#: src/components/participant/UserChunkMessage.tsx:100
+#: src/components/participant/UserChunkMessage.tsx:105
 #: src/components/conversation/ConversationDrilldownModal.tsx:248
 #: src/components/conversation/ConversationDrilldownModal.tsx:263
 #: src/components/conversation/ConversationDangerZone.tsx:103
 #: src/components/chat/TemplatesModal.tsx:429
 #: src/components/chat/TemplatesModal.tsx:512
-#: src/components/chat/TemplatesModal.tsx:624
-#: src/components/chat/ChatAccordion.tsx:160
+#: src/components/chat/TemplatesModal.tsx:626
+#: src/components/chat/TemplatesModal.tsx:627
+#: src/components/chat/ChatAccordion.tsx:161
 msgid "Delete"
 msgstr "Supprimer"
 
 #. js-lingui-explicit-id
-#: src/components/chat/ChatAccordion.tsx:130
+#: src/components/chat/ChatAccordion.tsx:131
 msgid "project.sidebar.chat.delete"
 msgstr "Supprimer la discussion"
 
@@ -4923,7 +4936,7 @@ msgstr "Supprimer la discussion"
 msgid "Delete {0}?"
 msgstr "Supprimer {0} ?"
 
-#: src/components/chat/ChatAccordion.tsx:158
+#: src/components/chat/ChatAccordion.tsx:159
 msgid "Delete chat"
 msgstr "Supprimer le chat"
 
@@ -4953,11 +4966,12 @@ msgstr "Supprimer le projet"
 #~ msgstr "Supprimer le projet"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1057
-#: src/routes/project/report/ProjectReportRoute.tsx:1270
+#: src/routes/project/report/ProjectReportRoute.tsx:1271
 msgid "Delete report"
 msgstr "Supprimer le rapport"
 
-#: src/components/project/ProjectTagsInput.tsx:116
+#: src/components/project/ProjectTagsInput.tsx:100
+#: src/components/project/ProjectTagsInput.tsx:118
 msgid "Delete tag"
 msgstr "Supprimer le tag"
 
@@ -4970,11 +4984,11 @@ msgstr "Supprimer le modèle"
 msgid "Delete this project in {0}? All conversations and data are permanently removed."
 msgstr "Supprimer ce projet dans {0} ? Toutes les conversations et données seront définitivement effacées."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1229
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1230
 msgid "Delete this workspace"
 msgstr "Supprimer cet espace de travail"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1232
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1233
 msgid "Delete this workspace. Members lose access immediately and all conversations and data are permanently removed."
 msgstr "Supprimer cet espace de travail. Les membres perdront immédiatement l'accès et toutes les conversations et données seront définitivement effacées."
 
@@ -4990,7 +5004,7 @@ msgstr "Supprimer le webhook"
 #~ msgid "Delete Webhook"
 #~ msgstr "Supprimer le webhook"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1290
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1291
 msgid "Delete workspace"
 msgstr "Supprimer l'espace de travail"
 
@@ -5099,7 +5113,7 @@ msgstr "Décrivez le problème"
 msgid "Describe what the language model should extract or summarize from the conversation..."
 msgstr "Décrivez ce que le modèle de langage doit extraire ou résumer de la conversation..."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1572
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1573
 #: src/routes/organisation/OrganisationRoute.tsx:1099
 #: src/routes/admin/AdminSettingsRoute.tsx:2644
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:262
@@ -5297,7 +5311,7 @@ msgstr "Terminé"
 msgid "Downgrade to Free now"
 msgstr "Passer au forfait Free maintenant"
 
-#: src/components/conversation/DownloadConversationTranscript.tsx:106
+#: src/components/conversation/DownloadConversationTranscript.tsx:108
 msgid "Download"
 msgstr "Télécharger"
 
@@ -5335,7 +5349,7 @@ msgstr "Téléchargez l’audio et organisez les conversations"
 msgid "Download audio from conversations."
 msgstr "Téléchargez l'audio des conversations."
 
-#: src/routes/project/HostGuidePage.tsx:1562
+#: src/routes/project/HostGuidePage.tsx:1568
 #: src/components/sharing/Share.tsx:249
 msgid "Download event printouts"
 msgstr "Télécharger les documents à imprimer pour l’événement"
@@ -5349,10 +5363,11 @@ msgid "Download QR code"
 msgstr "Télécharger le QR code"
 
 #: src/components/conversation/DownloadConversationTranscript.tsx:26
+#: src/components/conversation/DownloadConversationTranscript.tsx:28
 msgid "Download transcript"
 msgstr "Télécharger la transcription"
 
-#: src/components/conversation/DownloadConversationTranscript.tsx:84
+#: src/components/conversation/DownloadConversationTranscript.tsx:85
 msgid "Download transcript options"
 msgstr "Options de téléchargement de la transcription"
 
@@ -5376,8 +5391,11 @@ msgstr "Rédaction d'un message que vous pouvez envoyer à l'équipe dembrane"
 msgid "Drag audio files here or click to select files"
 msgstr "Glissez les fichiers audio ici ou cliquez pour sélectionner des fichiers"
 
-#: src/routes/project/HostGuidePage.tsx:1608
+#: src/routes/project/HostGuidePage.tsx:630
+#: src/routes/project/HostGuidePage.tsx:804
+#: src/routes/project/HostGuidePage.tsx:1614
 #: src/components/chat/TemplatesModal.tsx:553
+#: src/components/chat/TemplatesModal.tsx:559
 msgid "Drag to reorder"
 msgstr "Glisser pour réorganiser"
 
@@ -5385,8 +5403,10 @@ msgstr "Glisser pour réorganiser"
 msgid "Drops to the free tier. They can subscribe to a paid plan anytime."
 msgstr "Passe au forfait gratuit. Ils peuvent souscrire un forfait payant à tout moment."
 
-#: src/components/chat/TemplatesModal.tsx:584
-#: src/components/chat/TemplatesModal.tsx:612
+#: src/components/chat/TemplatesModal.tsx:586
+#: src/components/chat/TemplatesModal.tsx:587
+#: src/components/chat/TemplatesModal.tsx:614
+#: src/components/chat/TemplatesModal.tsx:615
 msgid "Duplicate"
 msgstr "Dupliquer"
 
@@ -5419,7 +5439,7 @@ msgstr "p. ex. \"Focus sur les thèmes de durabilité\" ou \"Que pensent les par
 msgid "e.g. \"Use short noun phrases like 'Urban Green Spaces' or 'Youth Employment'. Avoid generic titles.\""
 msgstr "par exemple : \"Utiliser des phrases adjectivales courtes comme 'Espaces verts urbains' ou 'Emploi des jeunes'. Éviter les titres génériques.\""
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1547
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1548
 msgid "e.g. Client Alpha"
 msgstr "ex. Client Alpha"
 
@@ -5427,7 +5447,7 @@ msgstr "ex. Client Alpha"
 msgid "e.g. Client Alpha, Q1 Research"
 msgstr "ex. Client Alpha, Recherche T1"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1574
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1575
 msgid "e.g. Client onboarding interviews, Q1 product research"
 msgstr "ex. Entretiens d'intégration client, recherche produit T1"
 
@@ -5439,7 +5459,7 @@ msgstr "ex. Consultation Climat, Recherche T1"
 msgid "e.g. investigating the report issue you emailed about"
 msgstr "ex. examen du problème de rapport que vous avez signalé par e-mail"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1597
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1598
 msgid "e.g. We are a research agency. Reports go to municipal clients, so keep summaries formal and in Dutch."
 msgstr "ex. Nous sommes une agence de recherche. Les rapports sont destinés à des municipalités, gardez donc un ton formel et en néerlandais."
 
@@ -5491,9 +5511,11 @@ msgstr "ECHO"
 #: src/components/results/curate/RowTools.tsx:290
 #: src/components/results/curate/RowTools.tsx:335
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:585
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:586
 #: src/components/participant/verify/VerifyArtefact.tsx:444
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:235
-#: src/components/chat/TemplatesModal.tsx:599
+#: src/components/chat/TemplatesModal.tsx:601
+#: src/components/chat/TemplatesModal.tsx:602
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:642
 msgid "Edit"
 msgstr "Modifier"
@@ -5514,7 +5536,8 @@ msgstr "Modifier le sujet personnalisé"
 #~ msgid "Edit Custom Topic"
 #~ msgstr "Modifier le sujet personnalisé"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:682
+#: src/components/dropzone/UploadConversationDropzone.tsx:683
+#: src/components/dropzone/UploadConversationDropzone.tsx:684
 msgid "Edit file name"
 msgstr "Modifier le nom du fichier"
 
@@ -5615,7 +5638,7 @@ msgid "edited"
 msgstr "modifié"
 
 #. placeholder {0}: formatRelative( new Date(project.updated_at ?? new Date()), new Date(), )
-#: src/components/project/ProjectListItem.tsx:232
+#: src/components/project/ProjectListItem.tsx:229
 #: src/components/project/PinnedProjectCard.tsx:197
 msgid "Edited {0}"
 msgstr "Modifié le {0}"
@@ -5732,7 +5755,7 @@ msgstr "Activer 2FA"
 msgid "Enable Explore"
 msgstr "Activer Explorer"
 
-#: src/routes/project/HostGuidePage.tsx:1745
+#: src/routes/project/HostGuidePage.tsx:1751
 msgid "Enable participation"
 msgstr "Activer la participation"
 
@@ -5791,7 +5814,7 @@ msgstr "Langue de secours : anglais"
 msgid "Enter a key term or proper noun"
 msgstr "Entrez un terme clé ou un nom propre"
 
-#: src/components/conversation/RetranscribeConversation.tsx:195
+#: src/components/conversation/RetranscribeConversation.tsx:196
 msgid "Enter a name for the new conversation"
 msgstr "Entrez un nom pour le nouveau conversation"
 
@@ -5854,8 +5877,8 @@ msgstr "Coordonnées saisies"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:826
 #: src/routes/project/canvas/CanvasRoute.tsx:337
-#: src/components/dropzone/UploadConversationDropzone.tsx:723
-#: src/components/dropzone/UploadConversationDropzone.tsx:833
+#: src/components/dropzone/UploadConversationDropzone.tsx:724
+#: src/components/dropzone/UploadConversationDropzone.tsx:834
 #: src/components/conversation/LiveMonitorSection.tsx:274
 #: src/components/chat/AgenticChatPanel.tsx:436
 #: src/components/chat/AgenticChatPanel.tsx:1835
@@ -5886,7 +5909,7 @@ msgstr "Une erreur s'est produite"
 #~ msgid "Error uploading \"{0}\": {1}"
 #~ msgstr "Erreur lors du téléchargement de \"{0}\": {1}"
 
-#: src/components/training/StaffTrainingPanel.tsx:161
+#: src/components/training/StaffTrainingPanel.tsx:164
 msgid "Estimated cost"
 msgstr "Coût estimé"
 
@@ -5952,7 +5975,7 @@ msgstr "Accessible à tous. Les administrateurs rejoignent directement ; les mem
 msgid "Everyone in {0} can find and open this project."
 msgstr "Tous les membres de {0} peuvent trouver et ouvrir ce projet."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1902
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1904
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:387
 #: src/components/workspace/DiscoverableWorkspaces.tsx:305
 msgid "Everyone in your organisation"
@@ -5996,6 +6019,7 @@ msgid "Exceeds seat cap. Overage billing applies."
 msgstr "Dépasse la limite de sièges. Des frais de dépassement s'appliquent."
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1137
+#: src/routes/project/report/ProjectReportRoute.tsx:1140
 #: src/routes/project/canvas/CanvasRoute.tsx:608
 #: src/routes/project/canvas/CanvasRoute.tsx:613
 msgid "Exit fullscreen"
@@ -6019,7 +6043,7 @@ msgstr "Expiré"
 msgid "Expires"
 msgstr "Expire le"
 
-#: src/components/training/TrainingRoster.tsx:90
+#: src/components/training/TrainingRoster.tsx:93
 msgid "Expiring soon"
 msgstr "Expire bientôt"
 
@@ -6070,9 +6094,9 @@ msgstr "Prolonger de 24h"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:934
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1020
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1312
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1313
 #: src/routes/organisation/OrganisationRoute.tsx:1352
-#: src/routes/organisation/OrganisationRoute.tsx:1847
+#: src/routes/organisation/OrganisationRoute.tsx:1846
 #: src/routes/organisation/OrganisationExternalView.tsx:62
 #: src/lib/roles.ts:15
 #: src/features/sidebar/views/user/UserHomeView.tsx:116
@@ -6093,7 +6117,7 @@ msgstr "Externe du partenaire"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:809
 #: src/routes/organisation/OrganisationRoute.tsx:854
-#: src/components/workspace/UsageCard.tsx:220
+#: src/components/workspace/UsageCard.tsx:230
 #: src/components/project/ProjectUsageAndSharing.tsx:265
 msgid "Externals"
 msgstr "Externes"
@@ -6152,7 +6176,7 @@ msgstr "Le statut factuel ne s'applique pas à cet objet."
 #: src/routes/admin/AdminSettingsRoute.tsx:2757
 #: src/features/sidebar/primitives/NavItem.tsx:281
 #: src/components/invite/InviteResultsList.tsx:61
-#: src/components/dropzone/UploadConversationDropzone.tsx:808
+#: src/components/dropzone/UploadConversationDropzone.tsx:809
 #: src/components/billing/BillingManager.tsx:230
 msgid "Failed"
 msgstr "Échec"
@@ -6344,7 +6368,7 @@ msgstr "Impossible de télécharger l'avatar"
 msgid "Failed to upload logo"
 msgstr "Échec du téléchargement du logo"
 
-#: src/components/auth/PasswordRequirements.tsx:46
+#: src/components/auth/PasswordRequirements.tsx:45
 msgid "Fair password"
 msgstr "Mot de passe moyen"
 
@@ -6502,7 +6526,7 @@ msgstr "Clôture en cours"
 msgid "First name"
 msgstr "Prénom"
 
-#: src/theme.tsx:326
+#: src/theme.tsx:331
 msgid "First page"
 msgstr "Première page"
 
@@ -6669,7 +6693,7 @@ msgstr "Les organisations Free ont une limite mensuelle de {freeTierMonthlyCalls
 msgid "Free plan allows 1 report per workspace"
 msgstr "Le forfait Free permet 1 rapport par espace de travail"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1421
+#: src/routes/organisation/OrganisationRoute.tsx:1420
 msgid "Free plan allows 1 workspace per organisation"
 msgstr "Le forfait Free permet 1 espace de travail par organisation"
 
@@ -6711,6 +6735,7 @@ msgid "Full transcript (when available)"
 msgstr "Transcription complète (lorsqu'elle est disponible)"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1137
+#: src/routes/project/report/ProjectReportRoute.tsx:1140
 msgid "Fullscreen"
 msgstr "Plein écran"
 
@@ -6885,7 +6910,7 @@ msgstr "Donnez un titre à la session"
 msgid "Go back"
 msgstr "Retour"
 
-#: src/routes/project/HostGuidePage.tsx:1569
+#: src/routes/project/HostGuidePage.tsx:1575
 msgid "Go fullscreen"
 msgstr "Plein écran"
 
@@ -6929,7 +6954,7 @@ msgstr "Aller à la bibliothèque"
 msgid "Go to monitor"
 msgstr "Aller au suivi"
 
-#: src/components/conversation/RetranscribeConversation.tsx:135
+#: src/components/conversation/RetranscribeConversation.tsx:136
 msgid "Go to new conversation"
 msgstr "Aller à la nouvelle conversation"
 
@@ -6970,6 +6995,7 @@ msgid "Good finding"
 msgstr "Bonne observation"
 
 #: src/components/feedback/ResponseFeedbackControls.tsx:148
+#: src/components/feedback/ResponseFeedbackControls.tsx:149
 msgid "Good response"
 msgstr "Bonne réponse"
 
@@ -7031,11 +7057,11 @@ msgstr "Aide"
 msgid "Help setting up your project."
 msgstr "De l'aide pour configurer votre projet."
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:243
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:242
 msgid "Hi"
 msgstr "Bonjour"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:243
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:242
 msgid "Hi {firstName}"
 msgstr "Bonjour {firstName}"
 
@@ -7047,7 +7073,7 @@ msgstr "Masqué"
 msgid "Hidden by the Objects filter"
 msgstr "Masqué par le filtre Objets"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1924
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1926
 msgid "Hidden from organisation members. Organisation admins can still find and join."
 msgstr "Masqué pour les membres de l'organisation. Les administrateurs de l'organisation peuvent toujours le trouver et le rejoindre."
 
@@ -7073,7 +7099,7 @@ msgstr "Masquer"
 msgid "Hide data"
 msgstr "Masquer les données"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1863
+#: src/routes/organisation/OrganisationRoute.tsx:1862
 msgid "Hide detail"
 msgstr "Masquer le détail"
 
@@ -7089,7 +7115,7 @@ msgstr "Masquer les arguments manquants"
 msgid "Hide preview"
 msgstr "Masquer l'aperçu"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:291
+#: src/components/workspace/OrganisationUsageRollup.tsx:299
 msgid "Hide projects"
 msgstr "Masquer les projets"
 
@@ -7185,7 +7211,8 @@ msgstr "Les hôtes peuvent activer les réponses et personnaliser leur consigne 
 #: src/routes/admin/AdminSettingsRoute.tsx:1563
 #: src/routes/admin/AdminSettingsRoute.tsx:1676
 #: src/components/workspace/TierCapacityMatrix.tsx:110
-#: src/components/workspace/OrganisationUsageRollup.tsx:373
+#: src/components/workspace/OrganisationUsageRollup.tsx:375
+#: src/components/workspace/OrganisationUsageRollup.tsx:382
 #: src/components/workspace/OrganisationProjectsTable.tsx:220
 msgid "Hours"
 msgstr "Heures"
@@ -7312,7 +7339,7 @@ msgstr "Si vous êtes satisfait de {objectLabel}, cliquez sur \"Approuver\" pour
 msgid "If you need something different, we will draft an offer for your use case."
 msgstr "Si vous avez d'autres besoins, nous vous préparerons une offre sur mesure."
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:376
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:375
 msgid "If you were expecting access, please ask the person who invited you to send it again."
 msgstr "Si vous attendiez un accès, veuillez demander à la personne qui vous a invité de vous le renvoyer."
 
@@ -7379,8 +7406,8 @@ msgstr "Avec vos propres mots"
 #: src/routes/admin/AdminSettingsRoute.tsx:1502
 #: src/routes/admin/AdminSettingsRoute.tsx:1714
 #: src/routes/admin/AdminSettingsRoute.tsx:2025
-#: src/components/workspace/OrganisationUsageRollup.tsx:397
-#: src/components/workspace/OrganisationUsageRollup.tsx:536
+#: src/components/workspace/OrganisationUsageRollup.tsx:407
+#: src/components/workspace/OrganisationUsageRollup.tsx:546
 msgid "Inactive"
 msgstr "Inactif"
 
@@ -7400,7 +7427,7 @@ msgstr "Inclure le lien du portail"
 msgid "Included hours used up"
 msgstr "Heures incluses épuisées"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:313
+#: src/components/workspace/OrganisationUsageRollup.tsx:321
 msgid "Included hours used up this month"
 msgstr "Heures incluses épuisées ce mois-ci"
 
@@ -7542,7 +7569,7 @@ msgstr "Invitez des collaborateurs et observateurs externes avec leurs propres r
 msgid "Invite members to collaborate on projects and conversations in this workspace."
 msgstr "Invitez des membres à collaborer sur les projets et conversations de cet espace de travail."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1921
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1923
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:393
 #: src/components/workspace/DiscoverableWorkspaces.tsx:307
 msgid "Invite only"
@@ -7734,23 +7761,23 @@ msgstr "Jean"
 msgid "john@doe.com"
 msgstr "jean@dupont.fr"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1974
-#: src/routes/organisation/OrganisationRoute.tsx:1980
+#: src/routes/organisation/OrganisationRoute.tsx:1973
+#: src/routes/organisation/OrganisationRoute.tsx:1979
 msgid "Join"
 msgstr "Rejoindre"
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:1968
+#: src/routes/organisation/OrganisationRoute.tsx:1967
 msgid "Join {0} as <0>admin</0>? It'll show in your sidebar right after."
 msgstr "Rejoindre {0} en tant qu'<0>administrateur</0> ? Il apparaîtra aussitôt dans votre barre latérale."
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:1986
+#: src/routes/organisation/OrganisationRoute.tsx:1985
 msgid "Join {0} as an admin first to add others."
 msgstr "Rejoignez d'abord {0} en tant qu'administrateur pour ajouter d'autres personnes."
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:1976
+#: src/routes/organisation/OrganisationRoute.tsx:1975
 msgid "Join {0}?"
 msgstr "Rejoindre {0} ?"
 
@@ -7767,7 +7794,7 @@ msgstr "Rejoindre en tant qu'administrateur"
 msgid "Join as admin?"
 msgstr "Rejoindre en tant qu'administrateur ?"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1991
+#: src/routes/organisation/OrganisationRoute.tsx:1990
 msgid "Join first"
 msgstr "Rejoindre d'abord"
 
@@ -7995,7 +8022,7 @@ msgstr "Le mois dernier"
 msgid "Last name"
 msgstr "Nom"
 
-#: src/theme.tsx:327
+#: src/theme.tsx:332
 msgid "Last page"
 msgstr "Dernière page<<<<<<< HEAD"
 
@@ -8058,13 +8085,13 @@ msgstr "Donner votre avis"
 msgid "Leave now"
 msgstr "Quitter maintenant"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1122
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1141
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1145
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1148
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1336
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1340
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1344
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1123
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1142
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1146
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1149
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1337
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1341
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1345
 msgid "Leave workspace"
 msgstr "Quitter l'espace de travail"
 
@@ -8099,7 +8126,7 @@ msgstr "Légende"
 #~ msgid "Let's go!"
 #~ msgstr "C'est parti !"
 
-#: src/routes/project/ProjectsHome.tsx:287
+#: src/routes/project/ProjectsHome.tsx:286
 msgid "Let's hear your first conversation."
 msgstr "Écoutons votre première conversation."
 
@@ -8133,7 +8160,7 @@ msgstr "Plaque d'immatriculation"
 msgid "License revoked"
 msgstr "Licence révoquée"
 
-#: src/components/training/StaffTrainingPanel.tsx:173
+#: src/components/training/StaffTrainingPanel.tsx:176
 msgid "Licenses"
 msgstr "Licences"
 
@@ -8254,7 +8281,7 @@ msgstr "Aperçu en direct"
 #~ msgid "Live Preview"
 #~ msgstr "Vue en direct"
 
-#: src/routes/project/HostGuidePage.tsx:1592
+#: src/routes/project/HostGuidePage.tsx:1598
 msgid "Live recordings"
 msgstr "Enregistrements en direct"
 
@@ -8344,7 +8371,7 @@ msgstr "Chargement du brouillon"
 #~ msgid "Loading draft…"
 #~ msgstr "Chargement du brouillon…"
 
-#: src/routes/project/HostGuidePage.tsx:1477
+#: src/routes/project/HostGuidePage.tsx:1483
 msgid "Loading host guide"
 msgstr "Chargement du guide de l'hôte"
 
@@ -8507,17 +8534,17 @@ msgstr "Signalement en cours à l'équipe dembrane"
 #~ msgid "Login | dembrane"
 #~ msgstr "Connexion | dembrane"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1632
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1701
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1633
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1702
 msgid "Logo"
 msgstr "Logo"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1517
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1518
 #: src/components/settings/WhitelabelLogoCard.tsx:89
 msgid "Logo removed"
 msgstr "Logo supprimé"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1507
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1508
 #: src/components/settings/WhitelabelLogoCard.tsx:66
 msgid "Logo updated"
 msgstr "Logo mis à jour"
@@ -8562,7 +8589,7 @@ msgstr "Rendre privé"
 
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:23
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:174
-#: src/components/training/StaffTrainingPanel.tsx:175
+#: src/components/training/StaffTrainingPanel.tsx:178
 #: src/components/project/ProjectSharingStrip.tsx:98
 #: src/components/conversation/ProjectConversationsPanel.tsx:369
 #: src/components/conversation/ProjectConversationsPanel.tsx:373
@@ -8589,6 +8616,7 @@ msgid "Manage organisation billing"
 msgstr "Gérer la facturation de l'organisation"
 
 #: src/components/chat/ChatTemplatesMenu.tsx:446
+#: src/components/chat/ChatTemplatesMenu.tsx:447
 msgid "Manage templates"
 msgstr "Gérer les modèles"
 
@@ -8765,10 +8793,10 @@ msgstr "Notes de réunion"
 msgid "member"
 msgstr "membre"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1048
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1049
 #: src/lib/roles.ts:11
-#: src/components/training/TrainingRoster.tsx:44
-#: src/components/training/TrainingRoster.tsx:56
+#: src/components/training/TrainingRoster.tsx:47
+#: src/components/training/TrainingRoster.tsx:59
 #: src/components/invite/RoleSelect.tsx:43
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:76
 #: src/components/agent-access/AgentGrantsCard.tsx:90
@@ -8788,7 +8816,7 @@ msgstr "membres"
 #: src/routes/organisation/OrganisationRoute.tsx:852
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:78
 #: src/features/sidebar/views/org/OrgHomeView.tsx:132
-#: src/components/workspace/UsageCard.tsx:210
+#: src/components/workspace/UsageCard.tsx:220
 #: src/components/project/ProjectUsageAndSharing.tsx:233
 #: src/components/project/ProjectUsageAndSharing.tsx:263
 msgid "Members"
@@ -8892,6 +8920,9 @@ msgid "More"
 msgstr "Plus"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:1028
+#: src/routes/project/report/ProjectReportRoute.tsx:1029
+#: src/components/participant/UserChunkMessage.tsx:90
+#: src/components/chat/ChatAccordion.tsx:104
 msgid "More actions"
 msgstr "Plus d'actions"
 
@@ -8967,7 +8998,7 @@ msgstr "Historique des déplacements"
 msgid "Move project"
 msgstr "Déplacer le projet"
 
-#: src/routes/project/ProjectsHome.tsx:443
+#: src/routes/project/ProjectsHome.tsx:442
 #: src/components/project/BulkMoveProjectsModal.tsx:78
 msgid "Move projects"
 msgstr "Déplacer les projets"
@@ -9018,11 +9049,11 @@ msgstr "Doit etre au moins 10 minutes dans le futur"
 msgid "My access"
 msgstr "Mes accès"
 
-#: src/components/chat/TemplatesModal.tsx:807
+#: src/components/chat/TemplatesModal.tsx:810
 msgid "My templates"
 msgstr "Mes modèles"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1545
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1546
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:453
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:699
 #: src/routes/project/CreateProjectRoute.tsx:232
@@ -9110,7 +9141,7 @@ msgstr "Récits (anglais)"
 msgid "Need more access? Ask the person who invited you to add you to the organisation or another workspace."
 msgstr "Besoin de plus d'accès ? Demandez à la personne qui vous a invité de vous ajouter à l'organisation ou à un autre espace de travail."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:960
+#: src/components/workspace/OrganisationUsageRollup.tsx:970
 msgid "Needs attention"
 msgstr "Nécessite une attention"
 
@@ -9151,7 +9182,7 @@ msgstr "Jamais"
 msgid "new"
 msgstr "nouveau"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1614
+#: src/routes/organisation/OrganisationRoute.tsx:1613
 #: src/components/workspace/TierStatusBadge.tsx:38
 msgid "New"
 msgstr "Nouveau"
@@ -9165,7 +9196,7 @@ msgstr "Nouvelle discussion à propos de ce canevas"
 msgid "New chat modes and question suggestions support analysis."
 msgstr "De nouveaux modes de discussion et suggestions de questions facilitent l'analyse."
 
-#: src/components/conversation/RetranscribeConversation.tsx:194
+#: src/components/conversation/RetranscribeConversation.tsx:195
 msgid "New conversation name"
 msgstr "Nouveau nom de la conversation"
 
@@ -9256,7 +9287,7 @@ msgstr "Prochain changement dans <0>{remainingSeconds}s</0>"
 msgid "Next invoice"
 msgstr "Prochaine facture"
 
-#: src/theme.tsx:328
+#: src/theme.tsx:333
 msgid "Next page"
 msgstr "Page suivante"
 
@@ -9273,7 +9304,7 @@ msgstr "Page suivante"
 msgid "No"
 msgstr "Non"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2073
+#: src/routes/organisation/OrganisationRoute.tsx:2072
 msgid "No access"
 msgstr "Aucun accès"
 
@@ -9310,7 +9341,7 @@ msgstr "Aucun argument n’a été trouvé dans les conversations de ce projet."
 msgid "No arguments yet. They appear after the first analysis."
 msgstr "Aucun argument pour le moment. Ils apparaîtront après la première analyse."
 
-#: src/components/settings/AuditLogsCard.tsx:601
+#: src/components/settings/AuditLogsCard.tsx:602
 msgid "No audit logs match the current filters."
 msgstr "Aucun journal d'audit ne correspond aux filtres actuels."
 
@@ -9340,7 +9371,7 @@ msgid "No change"
 msgstr "Aucun changement"
 
 #. js-lingui-explicit-id
-#: src/components/chat/ChatAccordion.tsx:281
+#: src/components/chat/ChatAccordion.tsx:282
 msgid "project.sidebar.chat.empty.description"
 msgstr "Aucune discussion trouvée. Commencez une discussion en utilisant le bouton \"Demander\"."
 
@@ -9376,7 +9407,7 @@ msgstr "Aucun contenu"
 msgid "No conversations found."
 msgstr "Aucune conversation trouvée."
 
-#: src/components/conversation/ConversationAccordion.tsx:1462
+#: src/components/conversation/ConversationAccordion.tsx:1464
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "Aucune conversation trouvée. Commencez une conversation en utilisant le lien d'invitation à participer depuis la <0><1>vue d'ensemble du projet.</1></0>"
 
@@ -9456,8 +9487,8 @@ msgstr "Aucune invitation n'a été envoyée. Vérifiez la liste ci-dessous."
 msgid "No linked arguments."
 msgstr "Aucun argument associé."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1664
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1738
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1665
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1739
 msgid "No logo set. dembrane default will be used."
 msgstr "Aucun logo défini. Le logo dembrane par défaut sera utilisé."
 
@@ -9474,7 +9505,7 @@ msgstr "Aucun résultat de carte n'est encore prêt."
 msgid "No matches"
 msgstr "Aucun résultat"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:290
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:289
 msgid "No matches found"
 msgstr "Aucun résultat trouvé"
 
@@ -9523,7 +9554,7 @@ msgstr "Il n'y a encore personne ici."
 msgid "No one is auto-blocked for non-payment. Watch failed charges here and follow up."
 msgstr "Personne n'est bloqué automatiquement pour défaut de paiement. Surveillez les échecs de prélèvement ici et faites un suivi."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1198
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1199
 #: src/routes/organisation/OrganisationRoute.tsx:967
 #: src/components/project/ProjectUsageAndSharing.tsx:371
 msgid "No one matches that filter."
@@ -9555,7 +9586,7 @@ msgstr "Partagé avec personne pour l'instant"
 msgid "No one's on the workspace yet."
 msgstr "Il n'y a encore personne sur cet espace de travail."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1842
+#: src/routes/organisation/OrganisationRoute.tsx:1841
 msgid "No organisation role. Access via workspace invites."
 msgstr "Aucun rôle dans l'organisation. Accès via les invitations à l'espace de travail."
 
@@ -9592,7 +9623,7 @@ msgstr "Aucun popcorn pour l'instant. Ils apparaîtront après la première anal
 msgid "No prepared results yet. Open Recipes to prepare results from this project's eligible conversations."
 msgstr "Aucun résultat préparé pour l'instant. Ouvrez les Recettes pour préparer des résultats à partir des conversations éligibles de ce projet."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:797
+#: src/components/workspace/OrganisationUsageRollup.tsx:807
 msgid "No project activity this period."
 msgstr "Aucune activité de projet sur cette période."
 
@@ -9601,7 +9632,7 @@ msgstr "Aucune activité de projet sur cette période."
 msgid "No projects found {0}"
 msgstr "Aucun projet trouvé {0}"
 
-#: src/routes/project/ProjectsHome.tsx:393
+#: src/routes/project/ProjectsHome.tsx:392
 msgid "No projects found for search term"
 msgstr "Aucun projet trouvé pour ce terme de recherche"
 
@@ -9653,7 +9684,7 @@ msgstr "Aucun rapport trouvé"
 msgid "No reports yet"
 msgstr "Pas encore de rapports"
 
-#: src/components/settings/AuditLogsCard.tsx:623
+#: src/components/settings/AuditLogsCard.tsx:624
 msgid "No results"
 msgstr "Aucun résultat"
 
@@ -9689,15 +9720,15 @@ msgstr "Aucun résumé pour l'instant"
 msgid "No tag"
 msgstr "Sans étiquette"
 
-#: src/components/conversation/ConversationAccordion.tsx:1376
+#: src/components/conversation/ConversationAccordion.tsx:1378
 msgid "No tags found"
 msgstr "Aucune étiquette trouvée"
 
-#: src/components/project/ProjectTagsInput.tsx:281
+#: src/components/project/ProjectTagsInput.tsx:283
 msgid "No tags have been added to this project yet. Add a tag using the text input above to get started."
 msgstr "Aucune étiquette n'a encore été ajoutée à ce projet. Ajoutez une étiquette en utilisant le champ de texte ci-dessus pour commencer."
 
-#: src/components/chat/TemplatesModal.tsx:822
+#: src/components/chat/TemplatesModal.tsx:825
 msgid "No templates match '{searchQuery}'"
 msgstr "Aucun modèle ne correspond à '{searchQuery}'"
 
@@ -9766,7 +9797,7 @@ msgstr "Aucun webhook trouvé"
 msgid "No webhooks yet. Add a webhook to automatically receive conversation data when events happen."
 msgstr "Aucun webhook pour l'instant. Ajoutez un webhook pour recevoir automatiquement les données de conversation lorsque des événements se produisent."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1725
+#: src/routes/organisation/OrganisationRoute.tsx:1724
 msgid "No workspace access yet"
 msgstr "Pas encore d'accès à l'espace de travail"
 
@@ -9774,7 +9805,7 @@ msgstr "Pas encore d'accès à l'espace de travail"
 msgid "No workspace picked. They'll be added to {orgName} and can request workspace access themselves."
 msgstr "Aucun espace de travail sélectionné. Cette personne sera ajoutée à {orgName} et pourra demander un accès elle-même."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1907
+#: src/routes/organisation/OrganisationRoute.tsx:1906
 msgid "No workspace role change. Add this person to the organisation, then re-invite from the workspace."
 msgstr "Aucun changement de rôle dans l'espace de travail. Ajoutez cette personne à l'organisation, puis réinvitez-la depuis l'espace de travail."
 
@@ -9881,7 +9912,7 @@ msgstr "Non pertinent"
 msgid "Not renewing"
 msgstr "Non renouvelé"
 
-#: src/components/training/StaffTrainingPanel.tsx:234
+#: src/components/training/StaffTrainingPanel.tsx:237
 msgid "Not scheduled"
 msgstr "Non planifié"
 
@@ -9904,7 +9935,7 @@ msgstr "Pas encore sûr."
 #~ msgid "Not this one"
 #~ msgstr "Pas celui-ci"
 
-#: src/components/training/TrainingRoster.tsx:78
+#: src/components/training/TrainingRoster.tsx:81
 msgid "Not trained"
 msgstr "Non formé"
 
@@ -9917,7 +9948,7 @@ msgid "note"
 msgstr "note"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2301
-#: src/components/training/StaffTrainingPanel.tsx:164
+#: src/components/training/StaffTrainingPanel.tsx:167
 msgid "Notes"
 msgstr "Notes"
 
@@ -9942,7 +9973,7 @@ msgstr "Notes enregistrées par l'assistant sur cet espace de travail au fil des
 msgid "Nothing from dembrane right now."
 msgstr "Rien de nouveau de dembrane pour le moment."
 
-#: src/routes/project/ProjectsHome.tsx:285
+#: src/routes/project/ProjectsHome.tsx:284
 msgid "Nothing here for you yet."
 msgstr "Rien pour vous ici pour le moment."
 
@@ -9958,7 +9989,7 @@ msgstr "Rien n'est masqué dans cette présentation."
 msgid "Nothing is sent until you send it. Edit anything below first."
 msgstr "Rien n'est envoyé tant que vous ne le validez pas. Vous pouvez tout modifier ci-dessous avant l'envoi."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:691
+#: src/components/workspace/OrganisationUsageRollup.tsx:701
 msgid "Nothing matches the filter."
 msgstr "Aucun résultat ne correspond au filtre."
 
@@ -9989,7 +10020,7 @@ msgstr "Notifier les participants lorsqu'un rapport est publié."
 msgid "Observer"
 msgstr "Observateur"
 
-#: src/components/workspace/UsageCard.tsx:230
+#: src/components/workspace/UsageCard.tsx:240
 msgid "Observers (free)"
 msgstr "Observateurs (gratuit)"
 
@@ -10085,11 +10116,11 @@ msgstr "d'une seule conversation"
 msgid "One day in October"
 msgstr "Un jour en octobre"
 
-#: src/components/auth/PasswordRequirements.tsx:63
+#: src/components/auth/PasswordRequirements.tsx:62
 msgid "One lowercase letter"
 msgstr "Une lettre minuscule"
 
-#: src/components/auth/PasswordRequirements.tsx:65
+#: src/components/auth/PasswordRequirements.tsx:64
 msgid "One number"
 msgstr "Un chiffre"
 
@@ -10108,11 +10139,11 @@ msgstr "Une phrase, pour vos collègues et pour toute personne qui vérifiera pl
 msgid "One side of this tension"
 msgstr "Un côté de cette tension"
 
-#: src/components/auth/PasswordRequirements.tsx:66
+#: src/components/auth/PasswordRequirements.tsx:65
 msgid "One symbol"
 msgstr "Un symbole"
 
-#: src/components/auth/PasswordRequirements.tsx:59
+#: src/components/auth/PasswordRequirements.tsx:58
 msgid "One uppercase letter"
 msgstr "Une lettre majuscule"
 
@@ -10145,7 +10176,7 @@ msgstr "Seules les images peuvent être jointes"
 msgid "Only organisation admins and owners can create workspaces. Ask an admin on your organisation to create one, or to promote you first."
 msgstr "Seuls les administrateurs et propriétaires de l'organisation peuvent créer des espaces de travail. Demandez à un administrateur d'en créer un, ou de vous promouvoir d'abord."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1944
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1946
 msgid "Only the people you add can see it. The organisation owner can also find and join."
 msgstr "Seules les personnes que vous ajoutez peuvent le voir. Le propriétaire de l'organisation peut aussi le trouver et le rejoindre."
 
@@ -10403,12 +10434,12 @@ msgstr "Champ optionnel sur la page de démarrage"
 msgid "Optional field on the thank you page"
 msgstr "Champ optionnel sur la page de remerciements"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1573
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1574
 msgid "Optional. What this workspace is for."
 msgstr "Facultatif. L'utilité de cet espace de travail."
 
-#: src/components/conversation/ConversationAccordion.tsx:1151
-#: src/components/conversation/ConversationAccordion.tsx:1156
+#: src/components/conversation/ConversationAccordion.tsx:1152
+#: src/components/conversation/ConversationAccordion.tsx:1157
 msgid "Options"
 msgstr "Options"
 
@@ -10440,7 +10471,7 @@ msgstr "Organisation seulement"
 #: src/routes/onboarding/OnboardingRoute.tsx:130
 #: src/features/sidebar/views/org/OrgHomeView.tsx:82
 #: src/features/sidebar/hooks/useSearchHits.ts:134
-#: src/components/training/StaffTrainingPanel.tsx:146
+#: src/components/training/StaffTrainingPanel.tsx:149
 #: src/components/organisation/CreateOrganisationModal.tsx:175
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:174
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:348
@@ -10492,7 +10523,7 @@ msgstr "Organisation introuvable"
 msgid "Organisation only"
 msgstr "Organisation uniquement"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:488
+#: src/components/workspace/OrganisationUsageRollup.tsx:498
 msgid "Organisation usage"
 msgstr "Utilisation de l'organisation"
 
@@ -10700,7 +10731,7 @@ msgstr "Abonnement aux actualités pour les participants"
 msgid "Participant verification"
 msgstr "Vérification des participants"
 
-#: src/components/training/StaffTrainingPanel.tsx:158
+#: src/components/training/StaffTrainingPanel.tsx:161
 msgid "Participants"
 msgstr "Participants"
 
@@ -10720,11 +10751,11 @@ msgstr "Les participants peuvent vérifier les résultats et affiner les répons
 msgid "Participants receive a reminder to verify before ending a conversation."
 msgstr "Les participants reçoivent un rappel pour vérifier avant de clore une conversation."
 
-#: src/components/project/ProjectTagsInput.tsx:259
+#: src/components/project/ProjectTagsInput.tsx:261
 msgid "Participants will be able to select tags when creating conversations"
 msgstr "Les participants pourront sélectionner des étiquettes lors de la création de conversations"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1564
+#: src/routes/organisation/OrganisationRoute.tsx:1563
 msgid "partner"
 msgstr "partenaire"
 
@@ -10738,7 +10769,7 @@ msgstr "Partenaire"
 msgid "Partner organisation"
 msgstr "Organisation partenaire"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1560
+#: src/routes/organisation/OrganisationRoute.tsx:1559
 msgid "Partner workspace, billed on its own and not part of the organisation's plan."
 msgstr "Espace de travail partenaire, facturé séparément et non inclus dans le forfait de l'organisation."
 
@@ -10760,6 +10791,10 @@ msgstr "Mot de passe modifié"
 #: src/routes/auth/PasswordReset.tsx:28
 msgid "Password does not meet the requirements."
 msgstr "Le mot de passe ne respecte pas les critères requis."
+
+#: src/components/auth/PasswordRequirements.tsx:35
+msgid "Password strength"
+msgstr "Force du mot de passe"
 
 #: src/routes/auth/Register.tsx:94
 #: src/routes/auth/PasswordReset.tsx:32
@@ -10858,7 +10893,7 @@ msgid "Pending action"
 msgstr "Action en attente"
 
 #: src/routes/invite/MyInvitesRoute.tsx:139
-#: src/components/workspace/UsageCard.tsx:240
+#: src/components/workspace/UsageCard.tsx:250
 #: src/components/members/PendingInvitesSection.tsx:129
 msgid "Pending invites"
 msgstr "Invitations en attente"
@@ -10889,7 +10924,7 @@ msgstr "Personnes, groupes et ce qui compte pour eux"
 msgid "Per-recipient results:"
 msgstr "Résultats par destinataire :"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1878
+#: src/routes/organisation/OrganisationRoute.tsx:1877
 msgid "Per-workspace access"
 msgstr "Accès par espace de travail"
 
@@ -10905,7 +10940,7 @@ msgstr "Période"
 msgid "person"
 msgstr "personne"
 
-#: src/components/conversation/RetranscribeConversation.tsx:206
+#: src/components/conversation/RetranscribeConversation.tsx:207
 msgid "Personal information will be replaced with placeholders. Audio playback, download, and retranscription will be disabled for the new conversation."
 msgstr "Les informations personnelles seront remplacées par des espaces réservés. La lecture audio, le téléchargement et la retranscription seront désactivés pour la nouvelle conversation."
 
@@ -10968,15 +11003,17 @@ msgstr "Choisis l’approche qui correspond à ta question"
 msgid "Pilot limit reached"
 msgstr "Limite de la version pilote atteinte"
 
-#: src/components/chat/TemplatesModal.tsx:660
+#: src/components/chat/TemplatesModal.tsx:662
+#: src/components/chat/TemplatesModal.tsx:666
 msgid "Pin"
 msgstr "Épingler"
 
-#: src/components/project/ProjectListItem.tsx:296
+#: src/components/project/ProjectListItem.tsx:294
+#: src/components/project/ProjectListItem.tsx:299
 msgid "Pin project"
 msgstr "Épingler le projet"
 
-#: src/components/chat/TemplatesModal.tsx:791
+#: src/components/chat/TemplatesModal.tsx:794
 msgid "Pin templates here for quick access."
 msgstr "Épinglez des modèles ici pour un accès rapide."
 
@@ -10988,11 +11025,11 @@ msgstr "Épinglez jusqu'à trois projets en haut de votre liste de projets."
 msgid "Pin your most-used templates directly in chat."
 msgstr "Épinglez vos modèles les plus utilisés directement dans le chat."
 
-#: src/routes/project/ProjectsHome.tsx:323
+#: src/routes/project/ProjectsHome.tsx:322
 msgid "Pinned"
 msgstr "Épinglé"
 
-#: src/components/chat/TemplatesModal.tsx:659
+#: src/components/chat/TemplatesModal.tsx:661
 msgid "Pinned is full (max 5)"
 msgstr "Épinglés est plein (max 5)"
 
@@ -11000,7 +11037,7 @@ msgstr "Épinglés est plein (max 5)"
 msgid "Pinned projects"
 msgstr "Projets épinglés"
 
-#: src/components/chat/TemplatesModal.tsx:767
+#: src/components/chat/TemplatesModal.tsx:770
 msgid "Pinned templates"
 msgstr "Modèles épinglés"
 
@@ -11114,7 +11151,7 @@ msgstr ""
 "Veuillez saisir votre réponse dans le champ ci-dessous. Vous pouvez également l'enregistrer en cliquant sur l'icône du micro.\n"
 "Cette transcription sera anonymisée."
 
-#: src/components/conversation/RetranscribeConversation.tsx:164
+#: src/components/conversation/RetranscribeConversation.tsx:165
 msgid "Please wait while we process your retranscription request. You will be redirected to the new conversation when ready."
 msgstr "Veuillez patienter pendant que nous traitons votre demande de retranscription. Vous serez redirigé vers la nouvelle conversation lorsque prêt."
 
@@ -11135,6 +11172,7 @@ msgstr "PNG, JPEG ou WebP. Sera recadré en cercle."
 #~ msgstr ""
 
 #: src/components/feedback/ResponseFeedbackControls.tsx:160
+#: src/components/feedback/ResponseFeedbackControls.tsx:161
 msgid "Poor response"
 msgstr "Mauvaise réponse"
 
@@ -11259,7 +11297,7 @@ msgstr "Positif"
 msgid "Postal code"
 msgstr "Code postal"
 
-#: src/components/common/Logo.tsx:50
+#: src/components/common/Logo.tsx:54
 msgid "PR #{number}"
 msgstr "PR #{number}"
 
@@ -11367,7 +11405,7 @@ msgstr "Aperçu : Le rapide brun fox saute sur le chien paresseux."
 msgid "Previous"
 msgstr "Précédent"
 
-#: src/theme.tsx:329
+#: src/theme.tsx:334
 msgid "Previous page"
 msgstr "Page précédente"
 
@@ -11399,7 +11437,7 @@ msgstr "URL de la politique de confidentialité"
 #~ msgid "Privacy Policy URL"
 #~ msgstr "URL de la politique de confidentialité"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1941
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1943
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:399
 #: src/routes/project/CreateProjectRoute.tsx:315
 #: src/routes/project/CreateProjectRoute.tsx:385
@@ -11414,13 +11452,13 @@ msgstr "Privé"
 msgid "Private · only invited people can see this"
 msgstr "Privé · seules les personnes invitées peuvent voir ceci"
 
-#: src/components/project/ProjectListItem.tsx:196
-#: src/components/project/ProjectListItem.tsx:203
+#: src/components/project/ProjectListItem.tsx:193
+#: src/components/project/ProjectListItem.tsx:200
 msgid "Private project"
 msgstr "Projet privé"
 
 #: src/routes/organisation/OrganisationRoute.tsx:1212
-#: src/components/workspace/OrganisationUsageRollup.tsx:328
+#: src/components/workspace/OrganisationUsageRollup.tsx:336
 msgid "Private workspace"
 msgstr "Espace de travail privé"
 
@@ -11446,7 +11484,7 @@ msgstr "Continuer"
 msgid "select.all.modal.loading.description"
 msgstr "Traitement de <0>{totalCount, plural, one {# conversation} other {# conversations}}</0> et ajout à votre chat"
 
-#: src/components/conversation/RetranscribeConversation.tsx:163
+#: src/components/conversation/RetranscribeConversation.tsx:164
 msgid "Processing your retranscription request..."
 msgstr "Traitement de votre demande de retranscription..."
 
@@ -11454,7 +11492,7 @@ msgstr "Traitement de votre demande de retranscription..."
 msgid "Procurement help"
 msgstr "Aide aux achats"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1574
+#: src/routes/organisation/OrganisationRoute.tsx:1573
 msgid "project"
 msgstr "projet"
 
@@ -11502,7 +11540,7 @@ msgstr "Projet créé"
 #~ msgid "Project Created"
 #~ msgstr "Projet créé"
 
-#: src/components/conversation/RetranscribeConversation.tsx:205
+#: src/components/conversation/RetranscribeConversation.tsx:206
 msgid "Project default: enabled. Personal information will be replaced with placeholders. Audio playback, download, and retranscription will be disabled for the new conversation."
 msgstr "Valeur par défaut du projet : activé. Les informations personnelles seront remplacées par des espaces réservés. La lecture audio, le téléchargement et la retranscription seront désactivés pour la nouvelle conversation."
 
@@ -11541,7 +11579,7 @@ msgstr "Projet déplacé"
 
 #: src/routes/project/ProjectHomeRoute.tsx:239
 #: src/routes/project/CreateProjectRoute.tsx:236
-#: src/components/project/ProjectListItem.tsx:403
+#: src/components/project/ProjectListItem.tsx:409
 #: src/components/project/ProjectDangerZone.tsx:136
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:68
 msgid "Project name"
@@ -11559,7 +11597,7 @@ msgstr "Le nom du projet doit comporter au moins 4 caractères"
 msgid "Project not found"
 msgstr "Projet introuvable"
 
-#: src/components/project/ProjectListItem.tsx:321
+#: src/components/project/ProjectListItem.tsx:320
 msgid "Project options"
 msgstr "Options du projet"
 
@@ -11587,16 +11625,16 @@ msgstr "Total mensuel estimé"
 msgid "Projected yearly total"
 msgstr "Total annuel estimé"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1574
+#: src/routes/organisation/OrganisationRoute.tsx:1573
 #: src/routes/organisation/OrganisationExternalView.tsx:105
 msgid "projects"
 msgstr "projets"
 
-#: src/components/workspace/UsageCard.tsx:251
+#: src/components/workspace/UsageCard.tsx:261
 msgid "Projects"
 msgstr "Projets"
 
-#: src/routes/project/ProjectsHome.tsx:57
+#: src/routes/project/ProjectsHome.tsx:58
 msgid "Projects | dembrane"
 msgstr "Projets | dembrane"
 
@@ -11609,7 +11647,7 @@ msgstr "Projets dans toute l'organisation · {0}"
 msgid "Projects moved"
 msgstr "Projets déplacés"
 
-#: src/routes/project/ProjectsHome.tsx:292
+#: src/routes/project/ProjectsHome.tsx:291
 msgid "Projects will show up here once someone on the organisation shares one with you."
 msgstr "Les projets apparaîtront ici dès qu'un membre de l'organisation en partagera un avec vous."
 
@@ -11644,7 +11682,7 @@ msgstr "Protégez la connexion avec l'authentification à deux facteurs."
 msgid "Public page"
 msgstr "Page publique"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1262
+#: src/routes/project/report/ProjectReportRoute.tsx:1263
 msgid "Publish"
 msgstr "Publier"
 
@@ -11652,7 +11690,7 @@ msgstr "Publier"
 #~ msgid "Publish changes"
 #~ msgstr "Publier les modifications"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1243
+#: src/routes/project/report/ProjectReportRoute.tsx:1244
 msgid "Publish report"
 msgstr "Publier le rapport"
 
@@ -11798,7 +11836,7 @@ msgid "Read shared findings, inspect their evidence and see how they were produc
 msgstr "Lisez les conclusions partagées, examinez leurs preuves et découvrez comment elles ont été produites."
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:454
-#: src/components/conversation/RetranscribeConversation.tsx:187
+#: src/components/conversation/RetranscribeConversation.tsx:188
 msgid "Read the troubleshooting guide for transcripts and summaries"
 msgstr "Consulter le guide de dépannage pour les transcriptions et résumés"
 
@@ -12104,6 +12142,7 @@ msgid "Regenerate popcorn?"
 msgstr "Régénérer Popcorn ?"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:318
+#: src/routes/project/conversation/ProjectConversationRoute.tsx:319
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:439
 msgid "Regenerate summary"
 msgstr "Régénérer le résumé"
@@ -12179,11 +12218,11 @@ msgstr "Rappeler aux utilisateurs de vérifier avant de finir"
 msgid "Reminder sent: support access still on"
 msgstr "Rappel envoyé : accès d'assistance toujours activé"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1175
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1659
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1726
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1806
-#: src/routes/organisation/OrganisationRoute.tsx:1798
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1176
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1660
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1727
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1807
+#: src/routes/organisation/OrganisationRoute.tsx:1797
 #: src/components/settings/WhitelabelLogoCard.tsx:146
 #: src/components/settings/WhitelabelLogoCard.tsx:180
 #: src/components/settings/AccountSettingsCard.tsx:163
@@ -12205,7 +12244,7 @@ msgid "Remove {0}"
 msgstr "Supprimer {0}"
 
 #. placeholder {0}: member.display_name
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1164
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1165
 msgid "Remove {0} from this workspace? They'll lose access to all projects inside it."
 msgstr "Retirer {0} de cet espace de travail ? Cette personne perdra l'accès à tous les projets qu'il contient."
 
@@ -12229,7 +12268,8 @@ msgstr "Supprimer l'e-mail"
 #~ msgid "Remove Email"
 #~ msgstr "Supprimer l'e-mail"
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:698
+#: src/components/dropzone/UploadConversationDropzone.tsx:699
+#: src/components/dropzone/UploadConversationDropzone.tsx:700
 msgid "Remove file"
 msgstr "Supprimer le fichier"
 
@@ -12238,11 +12278,11 @@ msgstr "Supprimer le fichier"
 msgid "Remove from chat"
 msgstr "Retirer du chat"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2091
+#: src/routes/organisation/OrganisationRoute.tsx:2090
 msgid "Remove from organisation"
 msgstr "Retirer de l'organisation"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1800
+#: src/routes/organisation/OrganisationRoute.tsx:1799
 msgid "Remove from organisation?"
 msgstr "Retirer de l'organisation ?"
 
@@ -12250,24 +12290,24 @@ msgstr "Retirer de l'organisation ?"
 msgid "Remove from this chat"
 msgstr "Supprimer de cette conversation"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1800
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1801
 #: src/components/settings/WhitelabelLogoCard.tsx:177
 msgid "Remove logo"
 msgstr "Supprimer le logo"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1155
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1179
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1182
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1156
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1180
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1183
 msgid "Remove member"
 msgstr "Retirer le membre"
 
 #: src/components/project/ProjectLegalBasisSection.tsx:232
-#: src/components/project/ProjectLegalBasisSection.tsx:281
-#: src/components/project/ProjectLegalBasisSection.tsx:289
+#: src/components/project/ProjectLegalBasisSection.tsx:284
+#: src/components/project/ProjectLegalBasisSection.tsx:292
 msgid "Remove override"
 msgstr "Supprimer le remplacement"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1802
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1803
 msgid "Remove the custom logo? The dembrane default will be used instead."
 msgstr "Retirer le logo personnalisé ? Le logo dembrane par défaut sera utilisé à la place."
 
@@ -12284,11 +12324,11 @@ msgid "Removed from organisation"
 msgstr "Retiré de l'organisation"
 
 #. js-lingui-explicit-id
-#: src/components/chat/ChatAccordion.tsx:122
+#: src/components/chat/ChatAccordion.tsx:123
 msgid "project.sidebar.chat.rename"
 msgstr "Renommer"
 
-#: src/components/chat/ChatAccordion.tsx:139
+#: src/components/chat/ChatAccordion.tsx:140
 #: src/components/chat/AgenticChatPanel.tsx:1796
 msgid "Rename chat"
 msgstr "Renommer le chat"
@@ -12296,8 +12336,8 @@ msgstr "Renommer le chat"
 #: src/routes/project/ProjectHomeRoute.tsx:138
 #: src/routes/project/ProjectHomeRoute.tsx:142
 #: src/routes/project/ProjectHomeRoute.tsx:238
-#: src/components/project/ProjectListItem.tsx:344
-#: src/components/project/ProjectListItem.tsx:402
+#: src/components/project/ProjectListItem.tsx:343
+#: src/components/project/ProjectListItem.tsx:408
 msgid "Rename project"
 msgstr "Renommer le projet"
 
@@ -12386,7 +12426,7 @@ msgstr "Rapport généré"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:753
 #: src/routes/project/report/ProjectReportRoute.tsx:847
-#: src/routes/project/report/ProjectReportRoute.tsx:1203
+#: src/routes/project/report/ProjectReportRoute.tsx:1204
 msgid "Report generation cancelled"
 msgstr "Génération du rapport annulée"
 
@@ -12399,7 +12439,7 @@ msgid "Report generation in progress..."
 msgstr "Génération du rapport en cours..."
 
 #: src/routes/project/report/ProjectReportRoute.tsx:758
-#: src/routes/project/report/ProjectReportRoute.tsx:1208
+#: src/routes/project/report/ProjectReportRoute.tsx:1209
 msgid "Report generation was cancelled. You can start a new report below."
 msgstr "La génération du rapport a été annulée. Vous pouvez démarrer un nouveau rapport ci-dessous."
 
@@ -12471,7 +12511,7 @@ msgstr "Demander une formation {0}"
 msgid "Request a plan through the needs form and book a follow-up call."
 msgstr "Demandez un forfait via le formulaire de besoins et réservez un appel de suivi."
 
-#: src/components/training/TrainingCatalog.tsx:122
+#: src/components/training/TrainingCatalog.tsx:120
 msgid "Request a training"
 msgstr "Demander une formation"
 
@@ -12538,7 +12578,7 @@ msgid "Request withdrawn."
 msgstr "Demande retirée."
 
 #: src/components/training/StaffTrainingPanel.tsx:125
-#: src/components/training/StaffTrainingPanel.tsx:152
+#: src/components/training/StaffTrainingPanel.tsx:155
 msgid "Requested"
 msgstr "Demandé"
 
@@ -12546,7 +12586,7 @@ msgstr "Demandé"
 msgid "Requested and scheduled trainings. Mark a training complete to grant each attendee a one-year license."
 msgstr "Formations demandées et planifiées. Marquez une formation comme terminée pour attribuer à chaque participant une licence d'un an."
 
-#: src/components/training/StaffTrainingPanel.tsx:149
+#: src/components/training/StaffTrainingPanel.tsx:152
 msgid "Requester"
 msgstr "Demandeur"
 
@@ -12597,7 +12637,7 @@ msgstr "Renvoyer l'e-mail d'invitation"
 msgid "Resend verification email"
 msgstr "Renvoyer l'e-mail de vérification"
 
-#: src/routes/project/HostGuidePage.tsx:1585
+#: src/routes/project/HostGuidePage.tsx:1591
 #: src/components/map/renderers/MapChrome.tsx:114
 msgid "Reset"
 msgstr "Réinitialiser"
@@ -12608,7 +12648,7 @@ msgstr "Réinitialiser"
 msgid "Reset filters"
 msgstr "Réinitialiser les filtres"
 
-#: src/routes/project/HostGuidePage.tsx:1579
+#: src/routes/project/HostGuidePage.tsx:1585
 msgid "Reset guide"
 msgstr "Réinitialiser le guide"
 
@@ -12638,12 +12678,12 @@ msgstr "Réinitialiser le mot de passe | dembrane"
 #~ msgid "Reset Password | dembrane"
 #~ msgstr "Réinitialiser le Mot de Passe | dembrane"
 
-#: src/routes/project/HostGuidePage.tsx:1581
+#: src/routes/project/HostGuidePage.tsx:1587
 msgid "Reset the guide?"
 msgstr "Réinitialiser le guide ?"
 
-#: src/components/conversation/ConversationAccordion.tsx:1399
-#: src/components/conversation/ConversationAccordion.tsx:1404
+#: src/components/conversation/ConversationAccordion.tsx:1401
+#: src/components/conversation/ConversationAccordion.tsx:1406
 msgid "Reset to default"
 msgstr "Réinitialiser aux paramètres par défaut"
 
@@ -12741,12 +12781,13 @@ msgstr "retiré pour l'équipe dembrane"
 msgid "Retracting a note for the dembrane team"
 msgstr "Retrait d'une note pour l'équipe dembrane"
 
-#: src/components/conversation/RetranscribeConversation.tsx:230
+#: src/components/conversation/RetranscribeConversation.tsx:231
 msgid "Retranscribe"
 msgstr "Rétranscrire"
 
 #: src/components/conversation/RetranscribeConversation.tsx:49
-#: src/components/conversation/RetranscribeConversation.tsx:153
+#: src/components/conversation/RetranscribeConversation.tsx:53
+#: src/components/conversation/RetranscribeConversation.tsx:154
 msgid "Retranscribe conversation"
 msgstr "Rétranscrire la conversation"
 
@@ -12758,7 +12799,7 @@ msgstr "Rétranscrire la conversation"
 msgid "Retranscription not available for anonymized conversations"
 msgstr "La rétranscrire n'est pas disponible pour les conversations anonymisées"
 
-#: src/components/conversation/RetranscribeConversation.tsx:129
+#: src/components/conversation/RetranscribeConversation.tsx:130
 msgid "Retranscription started. New conversation will be available soon."
 msgstr "La rétranscrire a commencé. La nouvelle conversation sera disponible bientôt."
 
@@ -12850,7 +12891,7 @@ msgstr "Réviser"
 #~ msgid "Revision {0}"
 #~ msgstr ""
 
-#: src/components/settings/AuditLogsCard.tsx:575
+#: src/components/settings/AuditLogsCard.tsx:576
 msgid "Revision #{revisionNumber}"
 msgstr "Révision #{revisionNumber}"
 
@@ -12894,10 +12935,11 @@ msgstr "Révoquer cette connexion ?"
 msgid "Revoked"
 msgstr "Révoqué"
 
-#: src/routes/project/HostGuidePage.tsx:1602
+#: src/routes/project/HostGuidePage.tsx:1608
 msgid "Right-click to highlight"
 msgstr "Cliquez avec le bouton droit pour mettre en évidence"
 
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1042
 #: src/components/results/curate/StakeholdersTab.tsx:48
 #: src/components/invite/RoleSelect.tsx:78
 msgid "Role"
@@ -12920,7 +12962,7 @@ msgstr "Estimation approximative pour terminer la transcription en attente"
 msgid "Roughly how many?"
 msgstr "Environ combien ?"
 
-#: src/components/settings/AuditLogsCard.tsx:613
+#: src/components/settings/AuditLogsCard.tsx:614
 msgid "Rows per page"
 msgstr "Lignes par page"
 
@@ -12981,8 +13023,9 @@ msgstr "Exemple de session Popcorn"
 #: src/components/project/CustomTopicModal.tsx:252
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:370
 #: src/components/goal/ProjectGoalSection.tsx:154
+#: src/components/dropzone/UploadConversationDropzone.tsx:642
 #: src/components/common/InputModal.tsx:78
-#: src/components/chat/ChatAccordion.tsx:142
+#: src/components/chat/ChatAccordion.tsx:143
 msgid "Save"
 msgstr "Enregistrer"
 
@@ -12991,11 +13034,12 @@ msgstr "Enregistrer"
 msgid "participant.concrete.action.button.save"
 msgstr "Enregistrer"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1962
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1964
 msgid "Save access"
 msgstr "Enregistrer les accès"
 
 #: src/components/chat/ChatHistoryMessage.tsx:412
+#: src/components/chat/ChatHistoryMessage.tsx:413
 msgid "Save as template"
 msgstr "Enregistrer comme modèle"
 
@@ -13023,10 +13067,10 @@ msgstr "Enregistrer la remise"
 msgid "Save template"
 msgstr "Enregistrer le modèle"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1416
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1435
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1467
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1487
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1417
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1436
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1468
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1488
 #: src/routes/organisation/OrganisationRoute.tsx:1066
 #: src/routes/admin/AdminSettingsRoute.tsx:449
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:108
@@ -13125,7 +13169,7 @@ msgid "Schedule training"
 msgstr "Planifier une formation"
 
 #: src/components/training/StaffTrainingPanel.tsx:126
-#: src/components/training/StaffTrainingPanel.tsx:170
+#: src/components/training/StaffTrainingPanel.tsx:173
 #: src/components/sharing/StatusLine.tsx:48
 msgid "Scheduled"
 msgstr "Planifié"
@@ -13200,7 +13244,7 @@ msgstr "Rechercher par organisation"
 msgid "Search chats"
 msgstr "Rechercher des discussions"
 
-#: src/components/conversation/ConversationAccordion.tsx:1144
+#: src/components/conversation/ConversationAccordion.tsx:1145
 msgid "Search conversations"
 msgstr "Rechercher des conversations"
 
@@ -13228,7 +13272,7 @@ msgstr "Rechercher des personnes ou saisir un e-mail"
 msgid "Search project or workspace"
 msgstr "Rechercher un projet ou un espace de travail"
 
-#: src/routes/project/ProjectsHome.tsx:381
+#: src/routes/project/ProjectsHome.tsx:380
 msgid "Search projects"
 msgstr "Rechercher des projets"
 
@@ -13240,7 +13284,7 @@ msgstr "Rechercher des projets"
 msgid "Search projects, conversations, transcripts…"
 msgstr "Rechercher des projets, conversations, transcriptions…"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:254
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:253
 msgid "Search projects, organisations, workspaces, settings…"
 msgstr "Rechercher des projets, organisations, espaces de travail, paramètres…"
 
@@ -13249,12 +13293,12 @@ msgstr "Rechercher des projets, organisations, espaces de travail, paramètres�
 msgid "Search projects..."
 msgstr "Rechercher des projets..."
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:280
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:279
 #: src/features/sidebar/blocks/SearchBlock.tsx:178
 msgid "Search results"
 msgstr "Résultats de recherche"
 
-#: src/components/conversation/ConversationAccordion.tsx:1285
+#: src/components/conversation/ConversationAccordion.tsx:1286
 msgid "Search tags"
 msgstr "Rechercher des tags"
 
@@ -13262,7 +13306,7 @@ msgstr "Rechercher des tags"
 msgid "Search tags and clear conversation filters in one click."
 msgstr "Recherchez des tags et effacez les filtres de conversation en un clic."
 
-#: src/components/chat/TemplatesModal.tsx:713
+#: src/components/chat/TemplatesModal.tsx:716
 msgid "Search templates..."
 msgstr "Rechercher des templates..."
 
@@ -13275,7 +13319,7 @@ msgstr "Texte de recherche :"
 msgid "Search webhooks..."
 msgstr "Rechercher des webhooks..."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:512
+#: src/components/workspace/OrganisationUsageRollup.tsx:522
 #: src/components/invite/WorkspaceSelectList.tsx:89
 msgid "Search workspaces"
 msgstr "Rechercher des espaces de travail"
@@ -13306,7 +13350,7 @@ msgstr "Recherche dans les transcriptions"
 msgid "Searching transcripts for \"{0}\""
 msgstr "Recherche de « {0} » dans les transcriptions"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:288
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:287
 #: src/features/sidebar/blocks/SearchBlock.tsx:183
 msgid "Searching…"
 msgstr "Recherche en cours…"
@@ -13317,9 +13361,11 @@ msgstr "places"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1566
 #: src/routes/admin/AdminSettingsRoute.tsx:1681
-#: src/components/workspace/UsageCard.tsx:192
+#: src/components/workspace/UsageCard.tsx:197
+#: src/components/workspace/UsageCard.tsx:211
 #: src/components/workspace/TierCapacityMatrix.tsx:109
-#: src/components/workspace/OrganisationUsageRollup.tsx:385
+#: src/components/workspace/OrganisationUsageRollup.tsx:389
+#: src/components/workspace/OrganisationUsageRollup.tsx:395
 #: src/components/billing/BillingManager.tsx:342
 #: src/components/billing/BillingManager.tsx:1260
 msgid "Seats"
@@ -13373,7 +13419,7 @@ msgstr "À bientôt"
 msgid "Sees usage and invoices. No project or content access."
 msgstr "Consulte l'utilisation et les factures. Aucun accès aux projets ou aux contenus."
 
-#: src/routes/project/ProjectsHome.tsx:465
+#: src/routes/project/ProjectsHome.tsx:464
 #: src/components/billing/BillingManager.tsx:451
 msgid "Select"
 msgstr "Sélectionner"
@@ -13407,7 +13453,7 @@ msgstr "Sélectionner un microphone"
 msgid "Select a webhook to clone"
 msgstr "Sélectionner un webhook à cloner"
 
-#: src/routes/project/HostGuidePage.tsx:1806
+#: src/routes/project/HostGuidePage.tsx:1812
 msgid "Select a word first"
 msgstr "Sélectionnez d'abord un mot"
 
@@ -13416,13 +13462,13 @@ msgstr "Sélectionnez d'abord un mot"
 msgid "Select a workspace"
 msgstr "Sélectionner un espace de travail"
 
-#: src/routes/project/ProjectsHome.tsx:430
+#: src/routes/project/ProjectsHome.tsx:429
 #: src/components/workspace/DiscoverableWorkspaces.tsx:279
-#: src/components/conversation/ConversationAccordion.tsx:1442
+#: src/components/conversation/ConversationAccordion.tsx:1444
 msgid "Select all"
 msgstr "Tout sélectionner"
 
-#: src/components/conversation/ConversationAccordion.tsx:1440
+#: src/components/conversation/ConversationAccordion.tsx:1442
 msgid "Select all ({remainingCount})"
 msgstr "Tout sélectionner ({remainingCount})"
 
@@ -13490,7 +13536,7 @@ msgstr "Sélectionner tous les constats affichés"
 msgid "Select multiple conversations"
 msgstr "Sélectionner plusieurs conversations"
 
-#: src/components/project/ProjectListItem.tsx:373
+#: src/components/project/ProjectListItem.tsx:372
 msgid "Select project"
 msgstr "Sélectionner le projet"
 
@@ -13617,7 +13663,7 @@ msgstr "Envoyer le signalement"
 msgid "Send request"
 msgstr "Envoyer la demande"
 
-#: src/routes/auth/RequestPasswordReset.tsx:65
+#: src/routes/auth/RequestPasswordReset.tsx:66
 msgid "Send reset link"
 msgstr "Envoyer le lien de réinitialisation"
 
@@ -13734,7 +13780,8 @@ msgid "Setting up"
 msgstr "Configuration"
 
 #: src/routes/settings/UserSettingsRoute.tsx:59
-#: src/routes/project/ProjectsHome.tsx:250
+#: src/routes/project/ProjectsHome.tsx:251
+#: src/routes/project/report/ProjectReportRoute.tsx:203
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:28
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:83
 #: src/features/sidebar/views/user/UserSettingsView.tsx:15
@@ -13880,7 +13927,7 @@ msgstr "Afficher"
 msgid "Show \"made with dembrane\" on the screen"
 msgstr "Afficher « made with dembrane » à l'écran"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:987
+#: src/components/workspace/OrganisationUsageRollup.tsx:997
 msgid "Show {hidden} more"
 msgstr "Afficher {hidden} de plus"
 
@@ -13935,7 +13982,7 @@ msgstr "Afficher les arguments actuels"
 msgid "Show data"
 msgstr "Afficher les données"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1863
+#: src/routes/organisation/OrganisationRoute.tsx:1862
 msgid "Show detail"
 msgstr "Afficher les détails"
 
@@ -13989,7 +14036,7 @@ msgstr "Afficher uniquement les modifications"
 msgid "Show preview"
 msgstr "Afficher l'aperçu"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:291
+#: src/components/workspace/OrganisationUsageRollup.tsx:299
 msgid "Show projects"
 msgstr "Afficher les projets"
 
@@ -14059,7 +14106,7 @@ msgstr "Vitrine"
 msgid "Showing {0} of {1}"
 msgstr "Affichage de {0} sur {1}"
 
-#: src/components/settings/AuditLogsCard.tsx:625
+#: src/components/settings/AuditLogsCard.tsx:626
 msgid "Showing {displayFrom}–{displayTo} of {totalItems} entries"
 msgstr "Affichage de {displayFrom}–{displayTo} sur {totalItems} entrées"
 
@@ -14210,7 +14257,7 @@ msgstr "Quelque chose bloque votre connexion. Votre audio ne sera pas sauvegard�
 
 #: src/routes/project/report/ProjectReportRoute.tsx:754
 #: src/routes/project/report/ProjectReportRoute.tsx:848
-#: src/routes/project/report/ProjectReportRoute.tsx:1204
+#: src/routes/project/report/ProjectReportRoute.tsx:1205
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:191
 #: src/routes/auth/Login.tsx:237
 #: src/routes/auth/Login.tsx:310
@@ -14231,7 +14278,7 @@ msgid "Something went wrong generating your latest report."
 msgstr "Un problème est survenu lors de la génération de votre dernier rapport."
 
 #: src/routes/project/report/ProjectReportRoute.tsx:765
-#: src/routes/project/report/ProjectReportRoute.tsx:1217
+#: src/routes/project/report/ProjectReportRoute.tsx:1218
 msgid "Something went wrong generating your report."
 msgstr "Un problème est survenu lors de la génération de votre rapport."
 
@@ -14294,8 +14341,8 @@ msgstr "Désolé, nous ne pouvons pas traiter cette demande en raison de la poli
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:696
 #: src/components/conversation/ConversationsMiniList.tsx:177
-#: src/components/conversation/ConversationAccordion.tsx:1206
-#: src/components/conversation/ConversationAccordion.tsx:1213
+#: src/components/conversation/ConversationAccordion.tsx:1207
+#: src/components/conversation/ConversationAccordion.tsx:1214
 msgid "Sort"
 msgstr "Trier"
 
@@ -14388,7 +14435,7 @@ msgstr "Remise collaborateur"
 msgid "Staff only"
 msgstr "Équipe interne uniquement"
 
-#: src/components/training/StaffTrainingPanel.tsx:192
+#: src/components/training/StaffTrainingPanel.tsx:195
 msgid "Staff-created"
 msgstr "Créé par l'équipe"
 
@@ -14420,7 +14467,7 @@ msgstr "Position"
 msgid "Standard access. Collaborates in the workspaces they're added to."
 msgstr "Accès standard. Collabore dans les espaces de travail auxquels il ou elle est ajouté(e)."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1596
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1597
 msgid "Standing guidance the assistant gets in every project chat in this workspace. Saves automatically."
 msgstr "Instructions permanentes fournies à l'assistant dans chaque chat de projet de cet espace de travail. Enregistrement automatique."
 
@@ -14493,8 +14540,8 @@ msgstr "Affirmation"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1671
 #: src/routes/admin/AdminSettingsRoute.tsx:2613
-#: src/components/workspace/OrganisationUsageRollup.tsx:400
-#: src/components/training/StaffTrainingPanel.tsx:167
+#: src/components/workspace/OrganisationUsageRollup.tsx:410
+#: src/components/training/StaffTrainingPanel.tsx:170
 #: src/components/results/ResultsList.tsx:283
 #: src/components/report/ConversationStatusTable.tsx:62
 #: src/components/popcorn/PopcornStatus.tsx:33
@@ -14619,7 +14666,7 @@ msgstr "Arrêter pendant la demande d'accès au micro libère celui-ci pour vous
 msgid "Strategic Planning"
 msgstr "Planification Stratégique"
 
-#: src/components/auth/PasswordRequirements.tsx:44
+#: src/components/auth/PasswordRequirements.tsx:43
 msgid "Strong password"
 msgstr "Mot de passe robuste"
 
@@ -14640,11 +14687,11 @@ msgstr "Envoyé par saisie de texte"
 msgid "Subscribe to report notifications."
 msgstr "S'abonner aux notifications de rapports."
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:846
+#: src/components/dropzone/UploadConversationDropzone.tsx:847
 msgid "Success"
 msgstr "Succès"
 
-#: src/components/chat/TemplatesModal.tsx:702
+#: src/components/chat/TemplatesModal.tsx:705
 msgid "Suggest dynamic suggestions based on your conversation."
 msgstr "Suggérer des suggestions dynamiques basées sur votre conversation."
 
@@ -14835,15 +14882,15 @@ msgstr "Étiquette {0}"
 msgid "Tag deleted"
 msgstr "Étiquette supprimée"
 
-#: src/components/project/ProjectTagsInput.tsx:255
+#: src/components/project/ProjectTagsInput.tsx:257
 #: src/components/participant/ParticipantInitiateForm.tsx:281
 #: src/components/map/panels/MapSettingsMenu.tsx:267
 #: src/components/conversation/ProjectConversationsPanel.tsx:706
 #: src/components/conversation/ConversationsMiniList.tsx:187
 #: src/components/conversation/ConversationEdit.tsx:424
 #: src/components/conversation/ConversationDrilldownModal.tsx:200
-#: src/components/conversation/ConversationAccordion.tsx:1275
-#: src/components/conversation/ConversationAccordion.tsx:1278
+#: src/components/conversation/ConversationAccordion.tsx:1276
+#: src/components/conversation/ConversationAccordion.tsx:1279
 msgid "Tags"
 msgstr "Étiquettes"
 
@@ -14897,7 +14944,7 @@ msgstr "Tâches"
 msgid "Tell the workspace admins what you need access for. This note is optional."
 msgstr "Indiquez aux administrateurs de l'espace de travail la raison de votre demande d'accès. Cette note est facultative."
 
-#: src/components/workspace/FeatureGatePopover.tsx:115
+#: src/components/workspace/FeatureGatePopover.tsx:120
 #: src/components/billing/BillingManager.tsx:690
 msgid "Tell us what you need"
 msgstr "Dites-nous ce dont vous avez besoin"
@@ -14962,6 +15009,7 @@ msgid "test mode"
 msgstr "mode test"
 
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:576
+#: src/components/project/webhooks/WebhookSettingsCard.tsx:577
 msgid "Test webhook"
 msgstr "Tester le webhook"
 
@@ -15761,11 +15809,11 @@ msgstr "Cette page est affichée aux participants lorsqu'ils commencent une conv
 msgid "This part of the page failed to load. Reloading usually fixes it. If it keeps happening, head back home."
 msgstr "Cette partie de la page n'a pas pu se charger. Recharger la page règle souvent le problème. Si cela continue, revenez à l'accueil."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1742
-#: src/routes/organisation/OrganisationRoute.tsx:1765
-#: src/routes/organisation/OrganisationRoute.tsx:1782
-#: src/routes/organisation/OrganisationRoute.tsx:2008
-#: src/routes/organisation/OrganisationRoute.tsx:2049
+#: src/routes/organisation/OrganisationRoute.tsx:1741
+#: src/routes/organisation/OrganisationRoute.tsx:1764
+#: src/routes/organisation/OrganisationRoute.tsx:1781
+#: src/routes/organisation/OrganisationRoute.tsx:2007
+#: src/routes/organisation/OrganisationRoute.tsx:2048
 msgid "this person"
 msgstr "cette personne"
 
@@ -15808,7 +15856,7 @@ msgstr "Ce projet est visible par tous les membres de l'espace de travail."
 
 #. placeholder {0}: LEGAL_BASIS_LABELS[data._legal.inherited.legal_basis]()
 #. placeholder {1}: sourceLabel(data._legal.inherited.source)
-#: src/components/project/ProjectLegalBasisSection.tsx:283
+#: src/components/project/ProjectLegalBasisSection.tsx:286
 msgid "This project will follow the inherited setting instead: {0} ({1})."
 msgstr "Ce projet suivra alors le réglage hérité : {0} ({1})."
 
@@ -15911,7 +15959,7 @@ msgstr "Impossible de charger cette vue."
 msgid "This will create a copy of the current project. Only settings and tags are copied. Reports, chats and conversations are not included in the clone. You will be redirected to the new project after cloning."
 msgstr "Cela créera une copie du projet actuel. Seuls les paramètres et les étiquettes sont copiés. Les rapports, les chats et les conversations ne sont pas inclus dans le clonage. Vous serez redirigé vers le nouveau projet après le clonage."
 
-#: src/components/conversation/RetranscribeConversation.tsx:176
+#: src/components/conversation/RetranscribeConversation.tsx:177
 msgid "This will create a new conversation with the same audio but a fresh transcription. The original conversation will remain unchanged."
 msgstr "Cela créera une nouvelle conversation avec la même audio mais une transcription fraîche. La conversation d'origine restera inchangée."
 
@@ -15995,7 +16043,7 @@ msgstr "Cochez tout ce qui est pertinent"
 #: src/routes/admin/AdminSettingsRoute.tsx:1560
 #: src/routes/admin/AdminSettingsRoute.tsx:2587
 #: src/routes/admin/AdminSettingsRoute.tsx:3009
-#: src/components/workspace/OrganisationUsageRollup.tsx:358
+#: src/components/workspace/OrganisationUsageRollup.tsx:366
 msgid "Tier"
 msgstr "Forfait"
 
@@ -16084,7 +16132,7 @@ msgstr "À résoudre :"
 msgid "To talk about what you need, email <0>support@dembrane.com</0>."
 msgstr "Pour discuter de vos besoins, écrivez à <0>support@dembrane.com</0>."
 
-#: src/routes/project/HostGuidePage.tsx:1802
+#: src/routes/project/HostGuidePage.tsx:1808
 msgid "Toggle highlight \"{contextMenuWord}\""
 msgstr "Activer/désactiver la mise en évidence de « {contextMenuWord} »"
 
@@ -16160,11 +16208,11 @@ msgstr "Titre basé sur le sujet décrivant ce qui a été discuté"
 #~ msgid "Topics"
 #~ msgstr "Sujets"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1577
+#: src/routes/organisation/OrganisationRoute.tsx:1576
 msgid "total"
 msgstr "total"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:663
+#: src/components/workspace/OrganisationUsageRollup.tsx:673
 msgid "Total"
 msgstr "Total"
 
@@ -16176,18 +16224,18 @@ msgstr "Total dû maintenant"
 msgid "Trail"
 msgstr "Parcours"
 
-#: src/components/training/TrainingRoster.tsx:86
+#: src/components/training/TrainingRoster.tsx:89
 msgid "Trained"
 msgstr "Formé"
 
-#: src/components/training/TrainingRoster.tsx:86
+#: src/components/training/TrainingRoster.tsx:89
 msgid "Trained until {until}"
 msgstr "Formé jusqu'au {until}"
 
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:46
 #: src/features/sidebar/views/org/OrgHomeView.tsx:137
 #: src/components/training/WorkspaceTrainingPanel.tsx:43
-#: src/components/training/TrainingRoster.tsx:47
+#: src/components/training/TrainingRoster.tsx:50
 #: src/components/training/OrgTrainingPanel.tsx:74
 msgid "Training"
 msgstr "Formation"
@@ -16380,7 +16428,7 @@ msgstr "Des difficultés pour vous connecter ? Contactez support@dembrane.com."
 #: src/components/map/MapPage.tsx:145
 #: src/components/map/panels/SpotlightPanel.tsx:414
 #: src/components/map/panels/HistoryPanel.tsx:165
-#: src/components/dropzone/UploadConversationDropzone.tsx:862
+#: src/components/dropzone/UploadConversationDropzone.tsx:863
 #: src/components/common/FetchErrorPanel.tsx:35
 #: src/components/billing/BillingManager.tsx:1217
 msgid "Try again"
@@ -16484,14 +16532,14 @@ msgstr "Authentification à deux facteurs activée"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:424
 #: src/routes/admin/AdminSettingsRoute.tsx:2634
-#: src/components/training/StaffTrainingPanel.tsx:155
+#: src/components/training/StaffTrainingPanel.tsx:158
 #: src/components/settings/AuditLogsCard.tsx:190
 #: src/components/map/attributes.ts:332
 msgid "Type"
 msgstr "Type"
 
 #. placeholder {0}: settings.name
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1269
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1270
 msgid "Type <0>{0}</0> to confirm."
 msgstr "Tapez <0>{0}</0> pour confirmer."
 
@@ -16555,7 +16603,7 @@ msgstr "Annuler le retrait"
 #: src/components/settings/AuditLogsCard.tsx:265
 #: src/components/project/ProjectSharingModal.tsx:360
 #: src/components/project/ProjectListItem.tsx:97
-#: src/components/project/ProjectListItem.tsx:258
+#: src/components/project/ProjectListItem.tsx:255
 #: src/components/project/PinnedProjectCard.tsx:72
 msgid "Unknown"
 msgstr "Inconnu"
@@ -16566,7 +16614,7 @@ msgid "Unknown date"
 msgstr "Date inconnue"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:920
-#: src/routes/organisation/OrganisationRoute.tsx:1825
+#: src/routes/organisation/OrganisationRoute.tsx:1824
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:99
 #: src/components/agent-access/AgentGrantsCard.tsx:127
 msgid "Unknown member"
@@ -16585,20 +16633,23 @@ msgstr "Heure inconnue"
 msgid "Unnamed webhook"
 msgstr "Webhook sans nom"
 
-#: src/components/chat/TemplatesModal.tsx:643
+#: src/components/chat/TemplatesModal.tsx:645
+#: src/components/chat/TemplatesModal.tsx:646
 msgid "Unpin"
 msgstr "Détacher"
 
-#: src/routes/project/ProjectsHome.tsx:180
+#: src/routes/project/ProjectsHome.tsx:181
 msgid "Unpin a project first (max {MAX_PINNED})"
 msgstr "Désépinglez d'abord un projet (max {MAX_PINNED})"
 
-#: src/components/project/ProjectListItem.tsx:297
+#: src/components/project/ProjectListItem.tsx:295
 msgid "Unpin a project first (max 3)"
 msgstr "Désépinglez d'abord un projet (max 3)"
 
-#: src/components/project/ProjectListItem.tsx:294
+#: src/components/project/ProjectListItem.tsx:292
+#: src/components/project/ProjectListItem.tsx:299
 #: src/components/project/PinnedProjectCard.tsx:162
+#: src/components/project/PinnedProjectCard.tsx:163
 msgid "Unpin project"
 msgstr "Désépingler le projet"
 
@@ -16635,9 +16686,9 @@ msgstr "Décochez un champ pour le laisser tel quel."
 msgid "until {0}"
 msgstr "jusqu'au {0}"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1600
+#: src/routes/organisation/OrganisationRoute.tsx:1599
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:98
-#: src/components/workspace/OrganisationUsageRollup.tsx:809
+#: src/components/workspace/OrganisationUsageRollup.tsx:819
 #: src/components/workspace/OrganisationProjectsTable.tsx:242
 msgid "Untitled"
 msgstr "Sans titre"
@@ -16674,7 +16725,7 @@ msgid "Unverified"
 msgstr "Non vérifié"
 
 #. placeholder {0}: p.included_participants
-#: src/components/training/TrainingCatalog.tsx:54
+#: src/components/training/TrainingCatalog.tsx:55
 msgid "Up to {0} participants"
 msgstr "Jusqu'à {0} participants"
 
@@ -16840,7 +16891,8 @@ msgstr "Télécharger des conversations"
 msgid "Upload failed. Please try again."
 msgstr "Le téléchargement a échoué. Veuillez réessayer."
 
-#: src/components/dropzone/UploadConversationDropzone.tsx:741
+#: src/components/dropzone/UploadConversationDropzone.tsx:742
+#: src/components/dropzone/Dropzone.tsx:31
 msgid "Upload files"
 msgstr "Importer des fichiers"
 
@@ -16858,8 +16910,8 @@ msgstr "Limite d'importation atteinte"
 msgid "Upload limit reached. Upgrade your workspace."
 msgstr "Limite d'importation atteinte. Mettez à niveau votre espace de travail."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1683
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1766
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1684
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1767
 msgid "Upload logo"
 msgstr "Importer le logo"
 
@@ -17079,7 +17131,7 @@ msgid "Verified"
 msgstr "Vérifié"
 
 #. js-lingui-explicit-id
-#: src/components/conversation/ConversationAccordion.tsx:1394
+#: src/components/conversation/ConversationAccordion.tsx:1396
 msgid "conversation.filters.verified.text"
 msgstr "Vérifié"
 
@@ -17165,7 +17217,7 @@ msgstr "Vue"
 msgid "View example payload"
 msgstr "Voir un exemple de payload"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:347
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:346
 msgid "View invite"
 msgstr "Voir l'invitation"
 
@@ -17195,7 +17247,7 @@ msgstr "Vues"
 msgid "Views: {0}"
 msgstr "Vues : {0}"
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:550
+#: src/components/workspace/OrganisationUsageRollup.tsx:560
 msgid "Visible columns"
 msgstr "Colonnes visibles"
 
@@ -17253,7 +17305,7 @@ msgstr "Exprimé dans une conversation"
 msgid "Waiting for conversations to finish before generating a report."
 msgstr "En attente de la fin des conversations avant de générer un rapport."
 
-#: src/routes/project/HostGuidePage.tsx:973
+#: src/routes/project/HostGuidePage.tsx:979
 msgid "Waiting for conversations..."
 msgstr "En attente des conversations..."
 
@@ -17323,7 +17375,7 @@ msgstr "Nous n'avons pas trouvé la page que vous cherchiez. Elle a peut-être �
 msgid "We couldn't load this organisation. Try again in a moment."
 msgstr "Impossible de charger cette organisation. Réessayez dans un instant."
 
-#: src/components/workspace/OrganisationUsageRollup.tsx:466
+#: src/components/workspace/OrganisationUsageRollup.tsx:476
 msgid "We couldn't load this organisation's usage."
 msgstr "Impossible de charger l'utilisation de cette organisation."
 
@@ -17428,7 +17480,7 @@ msgstr "Nous avons envoyé un lien de vérification à <0>{0}</0>. Ouvrez l'e-ma
 msgid "Weak network"
 msgstr "Réseau faible"
 
-#: src/components/auth/PasswordRequirements.tsx:48
+#: src/components/auth/PasswordRequirements.tsx:47
 msgid "Weak password"
 msgstr "Mot de passe faible"
 
@@ -17651,7 +17703,7 @@ msgstr "Lorsqu'il est activé, tous les nouveaux transcriptions auront des infor
 msgid "When finishing the conversation, participants who haven't verified yet will be prompted to verify or skip"
 msgstr "Lorsque vous terminez la conversation, les participants qui n'ont pas encore vérifié seront invités à vérifier ou à sauter"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1987
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1989
 msgid "When on, dembrane support staff can join this workspace to help you. Their access ends automatically after 24 hours."
 msgstr "Lorsqu'elle est activée, l'équipe d'assistance de dembrane peut rejoindre cet espace de travail pour vous aider. Son accès expire automatiquement au bout de 24 heures."
 
@@ -17676,7 +17728,7 @@ msgstr "Lorsque le résumé est généré"
 msgid "When the summary is ready (includes both transcript and summary)"
 msgstr "Lorsque le résumé est prêt (inclut à la fois le transcript et le résumé)"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:246
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:245
 msgid "Where would you like to go?"
 msgstr "Où souhaitez-vous aller ?"
 
@@ -17816,9 +17868,9 @@ msgstr "espace de travail"
 #: src/routes/admin/AdminSettingsRoute.tsx:1666
 #: src/routes/admin/AdminSettingsRoute.tsx:2214
 #: src/features/sidebar/hooks/useSearchHits.ts:164
-#: src/components/workspace/OrganisationUsageRollup.tsx:352
+#: src/components/workspace/OrganisationUsageRollup.tsx:360
 #: src/components/workspace/OrganisationProjectsTable.tsx:215
-#: src/components/chat/TemplatesModal.tsx:574
+#: src/components/chat/TemplatesModal.tsx:576
 msgid "Workspace"
 msgstr "Espace de travail"
 
@@ -17856,8 +17908,8 @@ msgstr "Espace de travail supprimé"
 msgid "Workspace is full"
 msgstr "L'espace de travail est complet"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1644
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1711
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1645
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1712
 msgid "Workspace logo"
 msgstr "Logo de l'espace de travail"
 
@@ -17865,7 +17917,7 @@ msgstr "Logo de l'espace de travail"
 msgid "Workspace name"
 msgstr "Nom de l'espace de travail"
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1546
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1547
 msgid "Workspace name. Saves automatically."
 msgstr "Nom de l'espace de travail. Enregistrement automatique."
 
@@ -17873,7 +17925,7 @@ msgstr "Nom de l'espace de travail. Enregistrement automatique."
 msgid "Workspace permissions, member counts and account-specific data loading are corrected."
 msgstr "Les autorisations de l'espace de travail, le décompte des membres et le chargement des données spécifiques au compte sont corrigés."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1450
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1451
 msgid "Workspace renamed"
 msgstr "Espace de travail renommé"
 
@@ -18023,7 +18075,7 @@ msgstr "Vous pouvez quitter cette page et revenir plus tard. Votre rapport conti
 msgid "You can only upload up to {MAX_FILES} files at a time. Only the first {0} files will be added."
 msgstr "Vous ne pouvez télécharger que jusqu'à {MAX_FILES} fichiers à la fois. Seuls les premiers {0} fichiers seront ajoutés."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1793
+#: src/routes/organisation/OrganisationRoute.tsx:1792
 msgid "You can re-invite them later from any workspace."
 msgstr "Vous pourrez les réinviter ultérieurement depuis n'importe quel espace de travail."
 
@@ -18039,7 +18091,7 @@ msgstr "Vous pourrez révoquer ceci plus tard sous <0>Aide, Connecter votre agen
 msgid "You can skip this and add them later."
 msgstr "Vous pouvez ignorer cette étape et les ajouter plus tard."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1222
+#: src/routes/project/report/ProjectReportRoute.tsx:1223
 msgid "You can try again below."
 msgstr "Vous pouvez réessayer ci-dessous."
 
@@ -18097,12 +18149,12 @@ msgid "You have a pending invite"
 msgstr "Vous avez une invitation en attente"
 
 #. placeholder {0}: invites[0].org_name
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:330
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:329
 msgid "You have a pending invite to {0}. Open it to join the organisation."
 msgstr "Vous avez une invitation en attente pour {0}. Ouvrez-la pour rejoindre l'organisation."
 
 #. placeholder {0}: invites[0].workspace_name ?? t`a workspace`
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:335
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:334
 msgid "You have a pending invite to {0}. The admin needs to free a seat before you can join."
 msgstr "Vous avez une invitation en attente pour {0}. L'administrateur doit libérer une place avant que vous puissiez rejoindre."
 
@@ -18111,7 +18163,7 @@ msgstr "Vous avez une invitation en attente pour {0}. L'administrateur doit lib�
 msgid "select.all.modal.already.added"
 msgstr "Vous avez déjà ajouté <0>{existingContextCount, plural, one {# conversation} other {# conversations}}</0> à ce chat."
 
-#: src/components/conversation/ConversationAccordion.tsx:1424
+#: src/components/conversation/ConversationAccordion.tsx:1426
 msgid "You have already added all the conversations related to this"
 msgstr "Vous avez déjà ajouté toutes les conversations liées à ceci"
 
@@ -18132,7 +18184,7 @@ msgstr "Vous avez un accès d'assistance à cet espace de travail. Il prend fin 
 msgid "You have view-only access to this project, so you can't upload recordings."
 msgstr "Vous avez un accès en lecture seule à ce projet, vous ne pouvez donc pas importer d'enregistrements."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1437
+#: src/routes/organisation/OrganisationRoute.tsx:1436
 msgid "You haven't joined any workspace in this organisation yet."
 msgstr "Vous n'avez encore rejoint aucun espace de travail dans cette organisation."
 
@@ -18182,11 +18234,11 @@ msgstr "Tous vos projets vous attendent déjà."
 msgid "You'll land in a chat where dembrane helps shape the project before you collect conversations."
 msgstr "Vous arriverez dans une discussion où dembrane vous aidera à cadrer le projet avant de recueillir des conversations."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1328
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1329
 msgid "You'll lose access to this workspace."
 msgstr "Vous perdrez l'accès à cet espace de travail."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1131
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1132
 msgid "You'll lose access to this workspace. Projects you created stay; your role here is removed."
 msgstr "Vous perdrez l'accès à cet espace de travail. Les projets que vous avez créés sont conservés ; votre rôle ici est supprimé."
 
@@ -18200,7 +18252,7 @@ msgid "You'll verify your new payment method on the next screen. You won't be ch
 msgstr "Vous validerez votre nouveau moyen de paiement sur l'écran suivant. Aucun montant ne vous sera débité, cela confirme simplement la nouvelle carte."
 
 #. placeholder {0}: displayRole(v)
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1072
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1073
 msgid "You're about to change your own role to <0>{0}</0>. You'll immediately lose access to workspace settings, invites, and member management."
 msgstr "Vous êtes sur le point de changer votre propre rôle en <0>{0}</0>. Vous perdrez immédiatement l'accès aux paramètres de l'espace de travail, aux invitations et à la gestion des membres."
 
@@ -18241,7 +18293,7 @@ msgstr "Vous vous connectez avec la mauvaise adresse e-mail"
 msgid "You're not in any organisation yet. Create a workspace to start an organisation, or ask a member for an invite."
 msgstr "Vous ne faites encore partie d'aucune organisation. Créez un espace de travail pour lancer une organisation, ou demandez une invitation à un membre."
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:373
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:372
 msgid "You're not part of any organisation right now."
 msgstr "Vous ne faites partie d'aucune organisation pour l'instant."
 
@@ -18289,13 +18341,13 @@ msgstr "Vous avez atteint votre limite de transcriptions"
 msgid "You've used all 10 hours of the pilot. Host-side tools (chat, reports, analysis, exports) are paused."
 msgstr "Vous avez utilisé l'intégralité des 10 heures du pilote. Les outils d'hôte (chat, rapports, analyses, exports) sont suspendus."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1308
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1309
 msgid "Your access"
 msgstr "Votre accès"
 
 #. placeholder {0}: recentRemovals[0].workspace_name
 #. placeholder {1}: new Date(recentRemovals[0].ended_at).toLocaleDateString()
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:357
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:356
 msgid "Your access to {0} ended on {1}."
 msgstr "Votre accès à {0} a pris fin le {1}."
 
@@ -18342,7 +18394,7 @@ msgstr "Vos informations"
 msgid "Your draft won't be saved."
 msgstr "Votre brouillon ne sera pas enregistré."
 
-#: src/routes/project/HostGuidePage.tsx:1577
+#: src/routes/project/HostGuidePage.tsx:1583
 msgid "Your edits to this guide are lost and it goes back to the default text."
 msgstr "Vos modifications de ce guide seront perdues et il reviendra au texte par défaut."
 
@@ -18396,7 +18448,7 @@ msgstr "Votre dernier paiement a échoué. Votre forfait reste actif. Mettez à 
 msgid "Your latest report generation was cancelled. Showing your most recent completed report."
 msgstr "La génération de votre dernier rapport a été annulée. Affichage de votre rapport le plus récent."
 
-#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1730
+#: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1731
 msgid "Your logo is still active but can't be changed on this tier."
 msgstr "Votre logo est toujours actif, mais ne peut pas être modifié avec ce niveau de forfait."
 

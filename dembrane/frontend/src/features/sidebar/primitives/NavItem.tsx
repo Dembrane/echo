@@ -211,7 +211,7 @@ export const NavItem = ({
 				aria-disabled="true"
 			>
 				<span className="relative flex flex-1 items-center gap-2 truncate">
-					{Icon ? <Icon size={16} /> : null}
+					{Icon ? <Icon size={16} className="shrink-0" /> : null}
 					<span className="truncate">{label}</span>
 				</span>
 				{badge != null && (
@@ -252,7 +252,7 @@ export const NavItem = ({
 				/>
 			)}
 			<span className="relative flex flex-1 items-center gap-2 truncate">
-				{Icon ? <Icon size={16} /> : null}
+				{Icon ? <Icon size={16} className="shrink-0" /> : null}
 				<span className="truncate">{label}</span>
 			</span>
 			{/* The tool's work sits with its tags: the dial, then its count in
