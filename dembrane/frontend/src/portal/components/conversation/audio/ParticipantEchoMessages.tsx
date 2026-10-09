@@ -2,7 +2,7 @@ import type { Message } from "@ai-sdk/react";
 import { t } from "@lingui/core/macro";
 import { Stack } from "@mantine/core";
 import { testId } from "@/lib/testUtils";
-import SpikeMessage from "../SpikeMessage";
+import { EchoReplyMessage } from "../EchoReplyMessage";
 import { EchoErrorAlert } from "./EchoErrorAlert";
 
 type ParticipantEchoMessagesProps = {
@@ -23,7 +23,7 @@ export const ParticipantEchoMessages = ({
 			{echoMessages && echoMessages.length > 0 && (
 				<>
 					{echoMessages.map((message, index) => (
-						<SpikeMessage
+						<EchoReplyMessage
 							key={message.id}
 							message={{
 								content_text: message.content,
@@ -38,7 +38,7 @@ export const ParticipantEchoMessages = ({
 						/>
 					))}
 					{status !== "streaming" && status !== "ready" && !error && (
-						<SpikeMessage
+						<EchoReplyMessage
 							key="thinking"
 							message={{
 								content_text: t`Thinking...`,

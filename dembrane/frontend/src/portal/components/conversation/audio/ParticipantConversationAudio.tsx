@@ -52,8 +52,8 @@ import { PermissionErrorModal } from "./PermissionErrorModal";
 import { deriveParticipantState } from "./participantState";
 import { RecordingInterruptedModal } from "./RecordingInterruptedModal";
 import { RefineInfoModal } from "./RefineInfoModal";
+import { S3CheckModal } from "./S3CheckModal";
 import { StopRecordingConfirmationModal } from "./StopRecordingConfirmationModal";
-import { StorageCheckModal } from "./StorageCheckModal";
 
 const CONVERSATION_DELETION_STATUS_CODES = [404, 403, 410];
 const REFINE_BUTTON_THRESHOLD_SECONDS = 60;
@@ -469,7 +469,7 @@ export const ParticipantConversationAudio = () => {
 			{/* modal for permissions error */}
 			<PermissionErrorModal permissionError={permissionError} />
 
-			<StorageCheckModal status={s3Status} onReconnect={handleS3Reconnect} />
+			<S3CheckModal status={s3Status} onReconnect={handleS3Reconnect} />
 
 			{/* modal for stop recording confirmation */}
 			<ParticipantSettingsModal

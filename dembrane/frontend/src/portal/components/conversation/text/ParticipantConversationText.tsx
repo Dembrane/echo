@@ -28,7 +28,7 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { finishConversation } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 import { ConversationErrorView } from "@/portal/components/conversation/ConversationErrorView";
-import { ParticipantBody } from "@/portal/components/conversation/ParticipantBody";
+import { ConversationMessages } from "@/portal/components/conversation/ConversationMessages";
 import {
 	useConversationChunksQuery,
 	useConversationQuery,
@@ -179,7 +179,7 @@ export const ParticipantConversationText = () => {
 				className={clsx("relative flex-grow px-4 pt-4 pb-12 transition-all")}
 			>
 				{projectQuery.data && conversationQuery.data && (
-					<ParticipantBody
+					<ConversationMessages
 						viewResponses
 						projectId={projectId ?? ""}
 						conversationId={conversationId ?? ""}

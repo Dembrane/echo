@@ -20,7 +20,7 @@ import {
 } from "../../../hooks";
 import { useConversationArtefacts } from "../../verify/hooks";
 import { VerifiedArtefactsList } from "../../verify/VerifiedArtefactsList";
-import { ParticipantBody } from "../ParticipantBody";
+import { ConversationMessages } from "../ConversationMessages";
 import { ParticipantEchoMessages } from "./ParticipantEchoMessages";
 
 const VERIFICATION_BANNER_THRESHOLD_SECONDS = 60;
@@ -136,7 +136,7 @@ export const ParticipantConversationAudioContent = () => {
 	return (
 		<>
 			{projectQuery.data && conversationQuery.data && (
-				<ParticipantBody
+				<ConversationMessages
 					interleaveMessages={false}
 					projectId={projectId ?? ""}
 					conversationId={conversationId ?? ""}

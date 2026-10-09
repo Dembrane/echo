@@ -1,7 +1,7 @@
 import { Trans } from "@lingui/react/macro";
 import { Modal } from "@mantine/core";
 import { testId } from "@/lib/testUtils";
-import MicrophoneTest from "./MicrophoneTest";
+import { MicrophoneCheck } from "./MicrophoneCheck";
 
 interface ParticipantSettingsModalProps {
 	opened: boolean;
@@ -24,7 +24,7 @@ export function ParticipantSettingsModal({
 			centered
 			{...testId("portal-settings-modal")}
 		>
-			<MicrophoneTest
+			<MicrophoneCheck
 				onContinue={(_id: string) => {
 					onClose();
 				}}

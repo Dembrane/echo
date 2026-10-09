@@ -11,7 +11,7 @@ import { PARTICIPANT_BASE_URL } from "@/config";
 import { useLanguage } from "@/hooks/useLanguage";
 import { testId } from "@/lib/testUtils";
 import { cn } from "@/lib/utils";
-import { useOnboardingCards } from "./hooks/useOnboardingCards";
+import { useOnboardingCards } from "./onboardingCards";
 import {
 	ParticipantInitiateForm,
 	portalHasNothingToAsk,

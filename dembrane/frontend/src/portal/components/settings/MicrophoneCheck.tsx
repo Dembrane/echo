@@ -17,14 +17,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router";
 import { testId } from "@/lib/testUtils";
 
-interface MicrophoneTestProps {
+interface MicrophoneCheckProps {
 	onContinue: (deviceId: string) => void;
 	onMicTestSuccess: (success: boolean) => void;
 	onMicAccessDenied?: (denied: boolean) => void;
 	isInModal?: boolean;
 }
 
-const MicrophoneTest: React.FC<MicrophoneTestProps> = ({
+export const MicrophoneCheck: React.FC<MicrophoneCheckProps> = ({
 	onContinue,
 	onMicTestSuccess,
 	onMicAccessDenied,
@@ -456,5 +456,3 @@ const MicrophoneTest: React.FC<MicrophoneTestProps> = ({
 		</Box>
 	);
 };
-
-export default MicrophoneTest;

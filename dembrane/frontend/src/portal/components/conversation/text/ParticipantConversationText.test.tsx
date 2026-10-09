@@ -38,8 +38,8 @@ vi.mock("@/components/common/Toaster", () => ({
 	toast: { error: (...args: unknown[]) => toastError(...args) },
 }));
 
-vi.mock("@/portal/components/conversation/ParticipantBody", () => ({
-	ParticipantBody: () => null,
+vi.mock("@/portal/components/conversation/ConversationMessages", () => ({
+	ConversationMessages: () => null,
 }));
 
 vi.mock("@/components/project/ProjectQRCode", () => ({

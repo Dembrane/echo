@@ -1,4 +1,4 @@
-import type { LanguageCards } from "../ParticipantOnboardingCards";
+import type { LanguageCards } from "./ParticipantOnboardingCards";
 
 type LegalBasis = ParticipantProject["legal_basis"];
 

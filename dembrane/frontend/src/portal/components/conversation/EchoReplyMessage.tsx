@@ -3,7 +3,7 @@ import clsx from "clsx";
 import { Logo } from "@/components/common/Logo";
 import SystemMessage from "./SystemMessage";
 
-const SpikeMessage = ({
+export const EchoReplyMessage = ({
 	message,
 	loading,
 	className,
@@ -41,5 +41,3 @@ const SpikeMessage = ({
 	}
 	return null;
 };
-
-export default SpikeMessage;

@@ -16,11 +16,11 @@ import {
 } from "@/portal/hooks";
 
 import { TipBanner } from "../../../components/common/TipBanner";
-import SpikeMessage from "./SpikeMessage";
+import { EchoReplyMessage } from "./EchoReplyMessage";
 import SystemMessage from "./SystemMessage";
 import UserChunkMessage from "./UserChunkMessage";
 
-export const ParticipantBody = ({
+export const ConversationMessages = ({
 	projectId,
 	conversationId,
 	viewResponses = false,
@@ -178,7 +178,7 @@ This transcript will be anonymized and your host will not be able to listen to y
 									{message.type === "user_chunk" ? (
 										<UserChunkMessage chunk={message.data} />
 									) : (
-										<SpikeMessage
+										<EchoReplyMessage
 											message={message.data as unknown as ConversationReply}
 											className={
 												index !== combinedMessages.length - 1 ? "border-b" : ""

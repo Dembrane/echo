@@ -4,16 +4,13 @@ import { WarningIcon } from "@phosphor-icons/react";
 import { testId } from "@/lib/testUtils";
 import type { S3Status } from "./hooks/useS3ConnectivityCheck";
 
-type StorageCheckModalProps = {
+type S3CheckModalProps = {
 	status: S3Status;
 	onReconnect: () => void;
 };
 
 /** Blocks recording while audio storage can't be reached. */
-export const StorageCheckModal = ({
-	status,
-	onReconnect,
-}: StorageCheckModalProps) => (
+export const S3CheckModal = ({ status, onReconnect }: S3CheckModalProps) => (
 	<Modal
 		opened={status === "failed"}
 		onClose={() => {}}
