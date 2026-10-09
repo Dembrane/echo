@@ -131,7 +131,7 @@ function Header({
 							aria-label={t`Back to account`}
 						>
 							<ThemeIcon variant="subtle" color="gray" size="md">
-								<ArrowLeftIcon size={18} />
+								<ArrowLeftIcon size={20} />
 							</ThemeIcon>
 						</I18nLink>
 					)}

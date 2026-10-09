@@ -174,11 +174,11 @@ function Step({
 
 	const marker = done ? (
 		<ThemeIcon size={26} radius="xl" color="green" variant="light">
-			<CheckIcon size={14} />
+			<CheckIcon size={16} />
 		</ThemeIcon>
 	) : locked ? (
 		<ThemeIcon size={26} radius="xl" color="gray" variant="light">
-			<LockSimpleIcon size={13} />
+			<LockSimpleIcon size={16} />
 		</ThemeIcon>
 	) : (
 		<ThemeIcon

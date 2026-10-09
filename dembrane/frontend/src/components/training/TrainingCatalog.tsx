@@ -15,6 +15,7 @@ import { CheckIcon } from "@phosphor-icons/react";
 import posthog from "posthog-js";
 // Reuse the billing plan-card styling so Training and Change-plan read as one
 // system (bordered card, divider, check-mark specs, price pinned to the footer).
+import { tierName } from "@/components/workspace/TierBadge";
 import cardClasses from "@/components/workspace/tier-pricing-cards.module.css";
 import type { CatalogProduct } from "./hooks";
 
@@ -70,9 +71,7 @@ export const TrainingCatalog = ({
 							}
 						>
 							<Group gap="sm" wrap="nowrap" justify="space-between">
-								<Text size="lg" className={cardClasses.tierName}>
-									{p.name}
-								</Text>
+								<Text size="lg">{tierName(p.name)}</Text>
 								{p.coming_soon && (
 									<Badge size="xs" variant="light" color="parchment">
 										<Trans>Coming soon</Trans>

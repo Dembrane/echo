@@ -193,7 +193,7 @@ export const WorkspaceDataOwnershipSection = ({
 				</Alert>
 			)}
 
-			<Group justify="flex-start">
+			<Group justify="flex-start" mt="xs">
 				<Button
 					variant="filled"
 					onClick={() => mutation.mutate()}

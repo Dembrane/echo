@@ -31,8 +31,12 @@ type LogoProps = {
 } & GroupProps;
 
 const BADGE_CLASS =
-	"absolute -bottom-1 -right-[15px] -translate-x-1/2 pl-1 text-xs leading-none whitespace-nowrap";
-const BADGE_STYLE = { color: roles.action };
+	"absolute -bottom-1 -right-[15px] -translate-x-1/2 pl-1 leading-none whitespace-nowrap";
+// The portal's root is smaller, so xs alone falls under the 14px floor there.
+const BADGE_STYLE = {
+	color: roles.action,
+	fontSize: "max(var(--app-font-size-xs), 14px)",
+};
 
 /** The text under the logo: the PR on a PR preview, else the environment. */
 const EnvBadge = () => {

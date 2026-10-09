@@ -24,7 +24,8 @@ export const DownloadConversationTranscriptModalActionIcon = ({
 	return (
 		<>
 			<Tooltip label={t`Download transcript`}>
-				<ActionIcon aria-label={t`Download transcript`}
+				<ActionIcon
+					aria-label={t`Download transcript`}
 					onClick={open}
 					variant="subtle"
 					color="gray"
@@ -93,6 +94,7 @@ export const DownloadConversationTranscriptModal = (props: {
 					{...testId("transcript-download-filename-input")}
 				/>
 				<Button
+					mt="xs"
 					variant="filled"
 					loading={getConversationTranscriptStringMutation.isPending}
 					disabled={getConversationTranscriptStringMutation.isPending}
