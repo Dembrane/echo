@@ -1,5 +1,5 @@
 # Local dev without docker: Postgres runs natively (e.g. Postgres.app on :5432).
-# Setup and usage: "Run it locally" in platform/README.md. Run `mprocs` from dembrane/.
+# Setup and usage: "Run it without docker" in platform/README.md. Run `mprocs` from dembrane/.
 procs:
   api:
     cwd: "<CONFIG_DIR>/platform"

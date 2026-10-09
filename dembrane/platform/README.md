@@ -11,11 +11,9 @@ bun --env-file=.env.local apps/worker/src/main.ts   # worker
 bun run check        # lint, types, the layer rule, tests
 ```
 
-## Run it locally
+## Run it without docker
 
-With docker, `bun run setup` starts Postgres from `compose.yml`, migrates and seeds, and `bun run dev` starts the API.
-
-Without docker, run Postgres natively and start everything with [mprocs](https://github.com/pvolok/mprocs) from `dembrane/mprocs.yaml`.
+`bun run setup` above runs Postgres in docker. To go without docker, run Postgres natively and start everything with [mprocs](https://github.com/pvolok/mprocs) from `dembrane/mprocs.yaml`.
 
 You need bun (the version in `.bun-version`), pnpm, mprocs, ffmpeg on your `PATH` (with no `MEDIA_URL` the API and worker run it in-process), and Postgres 16 with pgvector on port 5432. [Postgres.app](https://postgresapp.com) ships pgvector.
 
