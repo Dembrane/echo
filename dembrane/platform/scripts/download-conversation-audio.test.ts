@@ -186,6 +186,35 @@ async function run(args: string[], input = "", outDir = join(root, `out-${++runs
   return { stdout, stderr, code, outDir };
 }
 
+/** Runs the script in a terminal, as a person would, and sends `keys` once `prompt` shows. */
+async function runInTerminal(args: string[], prompt: string, keys: string) {
+  let output = "";
+  const decoder = new TextDecoder();
+  const proc = Bun.spawn(
+    ["bun", script, "--api-url", `http://127.0.0.1:${api.port}/api/`, ...args],
+    {
+      terminal: {
+        cols: 200,
+        rows: 50,
+        data: (_terminal, data) => {
+          output += decoder.decode(data);
+        },
+      },
+    },
+  );
+  try {
+    while (!output.includes(prompt)) {
+      if (proc.exitCode !== null) throw new Error(`Exited before "${prompt}":\n${output}`);
+      await Bun.sleep(20);
+    }
+    proc.terminal?.write(keys);
+    const code = await Promise.race([proc.exited, Bun.sleep(3000).then(() => "still running")]);
+    return { code, output };
+  } finally {
+    proc.kill();
+  }
+}
+
 /** Every file under the run's out dir, relative to it. */
 function files(outDir: string) {
   try {
@@ -384,6 +413,12 @@ function files(outDir: string) {
       expect(code).toBe(0);
       expect(requests.find((r) => r.path.startsWith("/api/"))?.auth).toBe("Bearer good-token");
     }, 30_000);
+
+    test("Ctrl+C at a picker quits instead of asking again", async () => {
+      const { code, output } = await runInTerminal(["--token", "good-token"], "Which?", "\x03");
+      expect(code).toBe(130);
+      expect(output).not.toContain("Aborted with Ctrl+C");
+    });
 
     test("signs in to Directus, asking for a 2FA code when it wants one", async () => {
       const args = [PROJECTS[0]!.id, "--conversation", "c2222222-bbbb", "--target", "prod"];

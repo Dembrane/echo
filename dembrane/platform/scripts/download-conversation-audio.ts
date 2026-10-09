@@ -168,6 +168,12 @@ async function ask(question: string): Promise<string> {
     return next.value.trim();
   }
   const rl = createInterface({ input: process.stdin, output: process.stdout });
+  // Readline takes Ctrl+C as a key, not a signal, and would only reject the question.
+  rl.on("SIGINT", () => {
+    rl.close();
+    print();
+    process.exit(130);
+  });
   try {
     return (await rl.question(`${question} `)).trim();
   } finally {
