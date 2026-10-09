@@ -45,6 +45,7 @@ import {
 	useUploadConversationChunk,
 } from "./hooks";
 import useChunkedAudioRecorder from "./hooks/useChunkedAudioRecorder";
+import { usePendingUploads } from "./hooks/usePendingUploads";
 import { usePingConnectionHealth } from "./hooks/usePingConnectionHealth";
 import { useS3ConnectivityCheck } from "./hooks/useS3ConnectivityCheck";
 import type { RecordingMeterStatus } from "./ParticipantRecordingWaveform";
@@ -80,24 +81,30 @@ export const ParticipantConversationAudio = () => {
 	const chunks = useConversationChunksQuery(projectId, conversationId);
 	const uploadChunkMutation = useUploadConversationChunk();
 	const artefactsQuery = useConversationArtefacts(conversationId);
-	const pendingUploadsRef = useRef<Promise<unknown>[]>([]);
+	const pendingUploads = usePendingUploads();
 
 	const onChunk = (chunk: Blob) => {
-		const uploadPromise = uploadChunkMutation.mutateAsync({
-			chunk,
-			conversationId: conversationId ?? "",
-			runFinishHook: false,
-			source: "PORTAL_AUDIO",
-			timestamp: new Date(),
-		});
+		pendingUploads.track(
+			uploadChunkMutation.mutateAsync({
+				chunk,
+				conversationId: conversationId ?? "",
+				runFinishHook: false,
+				source: "PORTAL_AUDIO",
+				timestamp: new Date(),
+			}),
+		);
+	};
 
-		pendingUploadsRef.current.push(uploadPromise);
-
-		// Clean up promise from array when done (success or error)
-		uploadPromise.finally(() => {
-			pendingUploadsRef.current = pendingUploadsRef.current.filter(
-				(p) => p !== uploadPromise,
-			);
+	// Before leaving the screen. Gives up after 30s rather than strand the
+	// participant, and records that some audio may not have landed.
+	const waitForPendingUploads = async (context: "finish" | "reconnect") => {
+		if ((await pendingUploads.waitForAll()) === "done") return;
+		console.warn("Upload wait timeout reached, proceeding anyway");
+		posthog.capture("portal_uploads_incomplete_on_finish", {
+			context,
+			conversation_id: conversationId,
+			pending_uploads: pendingUploads.count(),
+			project_id: projectId,
 		});
 	};
 
@@ -411,7 +418,7 @@ export const ParticipantConversationAudio = () => {
 				posthog.capture("portal_abandoned", {
 					conversation_id: conversationId,
 					participant_state: abandonStateRef.current.participantState,
-					pending_uploads: pendingUploadsRef.current.length,
+					pending_uploads: pendingUploads.count(),
 					project_id: projectId,
 					recording_time_seconds: abandonStateRef.current.recordingTime,
 				});
@@ -419,7 +426,7 @@ export const ParticipantConversationAudio = () => {
 		};
 		window.addEventListener("pagehide", onPageHide);
 		return () => window.removeEventListener("pagehide", onPageHide);
-	}, [conversationId, projectId]);
+	}, [conversationId, projectId, pendingUploads.count]);
 
 	// Monitor conversation status during recording - handle deletion mid-recording
 	useEffect(() => {
@@ -503,30 +510,7 @@ export const ParticipantConversationAudio = () => {
 			wakeLock.releaseWakeLock();
 			wakeLock.disableAutoReacquire();
 
-			// Small delay to ensure final chunk's upload promise is added to the array
-			await new Promise((resolve) => setTimeout(resolve, 100));
-
-			// Wait for all pending uploads to complete (with timeout)
-			if (pendingUploadsRef.current.length > 0) {
-				const timeoutPromise = new Promise<"timeout">((resolve) =>
-					setTimeout(() => resolve("timeout"), 30000),
-				);
-
-				const result = await Promise.race([
-					Promise.allSettled(pendingUploadsRef.current).then(() => "done"),
-					timeoutPromise,
-				]);
-
-				if (result === "timeout") {
-					console.warn("Upload wait timeout reached, proceeding anyway");
-					posthog.capture("portal_uploads_incomplete_on_finish", {
-						context: "finish",
-						conversation_id: conversationId,
-						pending_uploads: pendingUploadsRef.current.length,
-						project_id: projectId,
-					});
-				}
-			}
+			await waitForPendingUploads("finish");
 
 			await finishConversation(conversationId ?? "");
 			posthog.capture("conversation_finished", {
@@ -617,30 +601,7 @@ export const ParticipantConversationAudio = () => {
 	const handleReconnect = async () => {
 		setIsReconnecting(true);
 		try {
-			// Small delay to ensure final chunk's upload promise is added to the array
-			await new Promise((resolve) => setTimeout(resolve, 100));
-
-			// Wait for all pending uploads to complete (with timeout)
-			if (pendingUploadsRef.current.length > 0) {
-				const timeoutPromise = new Promise<"timeout">((resolve) =>
-					setTimeout(() => resolve("timeout"), 30000),
-				);
-
-				const result = await Promise.race([
-					Promise.allSettled(pendingUploadsRef.current).then(() => "done"),
-					timeoutPromise,
-				]);
-
-				if (result === "timeout") {
-					console.warn("Upload wait timeout reached, proceeding anyway");
-					posthog.capture("portal_uploads_incomplete_on_finish", {
-						context: "reconnect",
-						conversation_id: conversationId,
-						pending_uploads: pendingUploadsRef.current.length,
-						project_id: projectId,
-					});
-				}
-			}
+			await waitForPendingUploads("reconnect");
 
 			reportInterruption();
 
