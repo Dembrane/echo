@@ -17,9 +17,12 @@ export const usePendingUploads = () => {
 
 	const track = useCallback((upload: Promise<unknown>) => {
 		pendingRef.current.push(upload);
-		upload.finally(() => {
+		const untrack = () => {
 			pendingRef.current = pendingRef.current.filter((p) => p !== upload);
-		});
+		};
+		// Not .finally(): that hands back a promise rejecting with the upload's
+		// error, which nothing handles, so PostHog logged it as an exception.
+		upload.then(untrack, untrack);
 	}, []);
 
 	const count = useCallback(() => pendingRef.current.length, []);
