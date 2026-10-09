@@ -17,6 +17,7 @@ import { NotFoundError, UnavailableError, ValidationError } from "@dembrane/core
 import {
   assessmentState,
   factCheckStates,
+  groupDoc,
   type MapStore as MapRows,
   MapStoreError,
   requestGeneration,
@@ -48,6 +49,8 @@ export interface MapStore {
   legacyGraph(resultId: string, budgets: ResolvedBudgets): Promise<GraphAndChecks | null>;
   /** Starts a map generation for the project, as the host's Generate does. */
   requestGeneration(projectId: string, actorId: string): Promise<void>;
+  /** The project's groups as stored, newest first: the host map's History. */
+  groups(projectId: string): Promise<Row[]>;
   /** The deployment's budget ceilings (ANALYSIS_NODE_LIMIT_CEILING and the edge one). */
   readonly ceilings: Ceilings;
 }
@@ -93,6 +96,7 @@ export function analysisMapStore(rt: AnalysisRuntime, rows: MapRows, ceilings: C
     async requestGeneration(projectId, actorId) {
       await requestGeneration(deps, projectId, actorId);
     },
+    groups: (projectId) => rows.listGroups(projectId),
   };
 }
 
@@ -289,9 +293,47 @@ export function audienceAssessments(states: Json, graph: Json): Json {
   return out;
 }
 
+function hiddenItems(settings: Json | null): string[] {
+  return list(dict(dict(settings).presentation).hidden_items).map((x) => pyStr(x));
+}
+
 function curateMap(payload: Json, settings: Json | null): Json {
-  const hidden = list(dict(dict(settings).presentation).hidden_items).map((x) => pyStr(x));
-  return withoutNodes(payload, new Set(hidden));
+  return withoutNodes(payload, new Set(hiddenItems(settings)));
+}
+
+const AUDIENCE_GROUP_STATUSES = new Set(["ready", "pending", "failed"]);
+
+/**
+ * The project's groups as the room may read them: the host map's History, read-only. A
+ * group stays out when any of its members is an object the room is not shown, because
+ * its title was written over that member. Never who made a group, nor why one failed.
+ */
+export function audienceGroups(rows: readonly Row[], hidden: ReadonlySet<string>): Json[] {
+  const groups: Json[] = [];
+  for (const row of rows) {
+    if (!AUDIENCE_GROUP_STATUSES.has(String(row.status))) continue;
+    const members = list(row.members)
+      .filter(isRecord)
+      .map((m) => ({
+        revisionId: m.revisionId ? pyStr(m.revisionId) : null,
+        objectId: m.objectId ? pyStr(m.objectId) : null,
+        type: m.type ? pyStr(m.type) : null,
+      }))
+      .filter((m) => m.revisionId !== null);
+    if (!members.length || members.some((m) => m.objectId !== null && hidden.has(m.objectId)))
+      continue;
+    const doc = groupDoc(row);
+    groups.push({
+      id: doc.id,
+      status: doc.status,
+      title: doc.status === "ready" ? (doc.title ?? null) : null,
+      error: null,
+      members,
+      snapshotId: doc.snapshotId ?? null,
+      createdAt: doc.createdAt ?? null,
+    });
+  }
+  return groups;
 }
 
 export interface AudienceMapArgs {
@@ -323,7 +365,13 @@ export async function audienceMap(store: MapStore, a: AudienceMapArgs): Promise<
     const project = async ({ payload, factChecks }: GraphAndChecks) => {
       const projected = curateMap(sanitizeMap(payload, a.legend.order, names), a.settings);
       projected.fact_checks = audienceAssessments(factChecks, projected);
-      return withoutNodes(projected, await a.excluded());
+      const excluded = await a.excluded();
+      const shown = withoutNodes(projected, excluded);
+      shown.groups = audienceGroups(
+        await store.groups(a.projectId),
+        new Set([...hiddenItems(a.settings), ...excluded]),
+      );
+      return shown;
     };
     if (
       !bound &&

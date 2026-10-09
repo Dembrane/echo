@@ -22,6 +22,7 @@ export {
 export { demoFromFixture, type FixtureInputs } from "./demo-fixture";
 export { type DemoRoutesDeps, type ProspectHook, popcornDemoRoutes } from "./demo-routes";
 export { publishNudge, updateStream } from "./events";
+export { FINISH_WINDOW_MS, finishReads, queueFinishRead } from "./finish";
 export { popcornApiJobs, popcornTick, queueDispatch } from "./jobs";
 export {
   type AudienceMap,
@@ -94,6 +95,7 @@ export {
   type Adoption,
   type PopcornWorkerDeps,
   popcornDeckHook,
+  popcornProjectNudge,
   popcornWorker,
   runtimeAnalysis,
   type TickAnalysis,

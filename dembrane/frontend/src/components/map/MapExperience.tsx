@@ -6,6 +6,7 @@ import {
 	useCallback,
 	useEffect,
 	useMemo,
+	useRef,
 	useState,
 } from "react";
 import { baseColors, brandColors, stateColors } from "@/colors";
@@ -19,19 +20,23 @@ import {
 } from "./data/adapter";
 import { relatedObjects } from "./data/relations";
 import { MAP_EDGE_GREY } from "./graph/nodeStyle";
-import type { FactCheckStates } from "./hooks";
+import type { FactCheckStates, MapGroupDoc } from "./hooks";
 import { localGroupBackend, useMapGroups } from "./hooks/useMapGroups";
 import type { EdgeCounts } from "./layout/edgeBudget";
 import { EMPTY_EDGES, useMapGeometry } from "./layout/useMapGeometry";
 import { ArgumentAccordion } from "./panels/ArgumentAccordion";
-import { MapToolbar, VIEWS, viewOf } from "./panels/MapToolbar";
-import { DetailsModal, type DetailsTarget } from "./panels/DetailsModal";
+import {
+	type DetailsRequest,
+	DetailsSheet,
+	type DetailsTarget,
+} from "./panels/DetailsSheet";
 import {
 	type HistoryItem,
 	HistoryRows,
 	resolveNodes,
 } from "./panels/HistoryPanel";
 import { Legend } from "./panels/Legend";
+import { MapToolbar, VIEWS, viewOf } from "./panels/MapToolbar";
 import type { ConversationHref, NodeInspection } from "./panels/NodeDetailCard";
 import { ShowcasePanel } from "./panels/ShowcasePanel";
 import { type DetailsFrom, SpotlightPanel } from "./panels/SpotlightPanel";
@@ -115,7 +120,8 @@ const MapSectionHeader = ({
 	layoutFailed = false,
 }: {
 	title: ReactNode;
-	count: number;
+	/** Left out where the surface shows no count (the room). */
+	count?: number;
 	edgeCounts?: EdgeCounts | null;
 	/** The page's own copy; the layout's raw error is never shown. */
 	layoutFailed?: boolean;
@@ -132,9 +138,11 @@ const MapSectionHeader = ({
 		) : (
 			<EdgeCountNote counts={edgeCounts} />
 		)}
-		<p className="text-xs">
-			<Plural value={count} one="# argument" other="# arguments" />
-		</p>
+		{count !== undefined && (
+			<p className="text-xs">
+				<Plural value={count} one="# argument" other="# arguments" />
+			</p>
+		)}
 	</div>
 );
 
@@ -168,6 +176,14 @@ export type MapExperienceProps = {
 	tags?: ReadonlyArray<{ name: string; slot: number }>;
 	/** False where the payload withholds provenance: no source line is shown. */
 	provenance?: boolean;
+	/**
+	 * The project's groups as the room reads them with its map. History lists
+	 * them and picking one highlights its members, as on the host's page, but
+	 * resting the cursor makes none and a failed one offers no retry.
+	 */
+	groups?: ReadonlyArray<MapGroupDoc>;
+	/** False where the surface shows no argument count over its maps (the room). */
+	counts?: boolean;
 };
 
 const EMPTY_EVIDENCE: never[] = [];
@@ -195,6 +211,8 @@ export const MapExperience = ({
 	titles = true,
 	provenance = true,
 	tags,
+	groups,
+	counts = true,
 }: MapExperienceProps) => {
 	const { i18n } = useLingui();
 
@@ -225,12 +243,15 @@ export const MapExperience = ({
 
 	// Dwelled clusters are kept as the project's groups. Whoever may change
 	// the project (the same right a fact-check needs) makes them on a map with
-	// a snapshot to keep them in; everyone signed in sees them.
+	// a snapshot to keep them in; everyone signed in sees them. The room is
+	// handed them with its map and makes none.
+	const canGroup = !groups && (offline || (canFactCheck && !!graph.snapshotId));
 	const title = useMapGroups({
 		backend: offline ? fixtureGroups : undefined,
-		canCommit: offline || (canFactCheck && !!graph.snapshotId),
+		canCommit: canGroup,
+		docs: groups,
 		edges: geometry.status === "ready" ? mstEdges : EMPTY_EDGES,
-		enabled: titles,
+		enabled: titles || !!groups,
 		nodes: placedNodes,
 		resultId: graph.resultId,
 		snapshotId: graph.snapshotId,
@@ -341,7 +362,65 @@ export const MapExperience = ({
 				0,
 			)
 		: 0;
-	const [details, setDetails] = useState<DetailsFrom | null>(null);
+	// The details sheet, and which way in it was opened by.
+	const [details, setDetails] = useState<DetailsRequest | null>(null);
+	// What the main map highlighted when the sheet opened, and what the sheet
+	// marked on it since, so closing the sheet puts the map back.
+	const sheetMarks = useRef<{
+		open: boolean;
+		before: { ids: Set<string>; distances: Map<string, number> } | null;
+		last: Set<string> | null;
+	}>({ before: null, last: null, open: false });
+	const openDetails = useCallback(
+		(from: DetailsFrom) => {
+			setDetails({ at: Date.now(), from });
+			// Asked again while open, the map keeps what it had before the first.
+			if (sheetMarks.current.open) return;
+			const state = store.getState();
+			sheetMarks.current = {
+				// Only a group's highlight comes back; a cursor's is gone by now.
+				before:
+					state.highlightSource === "history"
+						? {
+								distances: state.highlightedNodesDistance,
+								ids: state.highlightedNodeIds,
+							}
+						: null,
+				last: null,
+				open: true,
+			};
+		},
+		[store],
+	);
+	// Travelling in the sheet marks the same arguments on the main map the way
+	// a group from History is marked: no selection moves, so Spotlight and the
+	// sheet stay where they are, and a mark never starts a new cluster.
+	const markFromSheet = useCallback(
+		(nodeIds: string[]) => {
+			const ids = new Set(nodeIds);
+			sheetMarks.current.last = ids;
+			store.setHighlightedNodeIds(ids, { isPreview: false, source: "history" });
+			store.setHighlightedNodesDistance(
+				new Map(nodeIds.map((id) => [id, 0] as const)),
+			);
+		},
+		[store],
+	);
+	const closeDetails = useCallback(() => {
+		const { before, last } = sheetMarks.current;
+		sheetMarks.current = { before: null, last: null, open: false };
+		setDetails(null);
+		// Put back what the sheet replaced, unless something else has marked
+		// the map since.
+		const now = store.getState().highlightedNodeIds;
+		if (!last || now.size !== last.size || [...last].some((id) => !now.has(id)))
+			return;
+		store.setHighlightedNodeIds(before?.ids ?? new Set(), {
+			isPreview: false,
+			source: "history",
+		});
+		store.setHighlightedNodesDistance(before?.distances ?? new Map());
+	}, [store]);
 	const selectHistoryItem = useCallback(
 		(item: HistoryItem) => {
 			if (item.kind === "argument") store.setSelectedNodeId(item.nodeId);
@@ -413,17 +492,7 @@ export const MapExperience = ({
 	const detailsTarget: DetailsTarget | null = spotlightCluster
 		? { kind: "cluster", ...spotlightCluster }
 		: spotlight.node
-			? {
-					inspection: spotlightInspection && {
-						...spotlightInspection,
-						onSelect: (nodeId: string) => {
-							setDetails(null);
-							selectNode(nodeId);
-						},
-					},
-					kind: "argument",
-					node: spotlight.node,
-				}
+			? { kind: "argument", node: spotlight.node }
 			: null;
 	const { showShowcase, showSpotlight, showTree, showClusters } = settings;
 	const hasLeftPanel = showShowcase || showSpotlight;
@@ -466,7 +535,25 @@ export const MapExperience = ({
 						/>
 					</div>
 				)}
-				<div className="grid min-h-0 flex-1 grid-cols-12 grid-rows-[minmax(0,1fr)] gap-2">
+				<div className="relative grid min-h-0 flex-1 grid-cols-12 grid-rows-[minmax(0,1fr)] gap-2">
+					{/* A cluster's or an argument's details: a sheet over the
+					    right of the maps, inside the map's own colours. */}
+					{details && detailsTarget && (
+						<DetailsSheet
+							target={detailsTarget}
+							request={details}
+							onClose={closeDetails}
+							evidenceFor={evidenceFor}
+							conversationHref={conversationHref}
+							provenance={provenance}
+							nodesById={graphNodesById}
+							edges={mstEdges}
+							relations={graph.relations}
+							colorBy={colorBy}
+							darkMode={settings.darkMode}
+							onMark={markFromSheet}
+						/>
+					)}
 					{hasLeftPanel && (
 						<section className="col-span-3 flex min-h-0 flex-col gap-2 overflow-hidden p-2">
 							{showSpotlight && (
@@ -490,30 +577,16 @@ export const MapExperience = ({
 										inspection={spotlightInspection}
 										cluster={spotlightCluster}
 										clusterQuoteCount={clusterQuoteCount}
-										onOpenDetails={setDetails}
+										onOpenDetails={openDetails}
 										rows={
 											<HistoryRows
 												items={historyRows}
 												nodesById={nodesById}
 												onSelect={selectHistoryItem}
-												onRetry={title.retry}
-												titles={titles}
+												onRetry={canGroup ? title.retry : undefined}
+												canGroup={canGroup && titles}
 											/>
 										}
-									/>
-									<DetailsModal
-										target={detailsTarget}
-										opened={details !== null}
-										onClose={() => setDetails(null)}
-										quotesOpen={details === "quotes"}
-										evidenceFor={evidenceFor}
-										conversationHref={conversationHref}
-										nodesById={graphNodesById}
-										edges={mstEdges}
-										relations={graph.relations}
-										colorBy={colorBy}
-										darkMode={settings.darkMode}
-										onSelect={selectNode}
 									/>
 								</div>
 							)}
@@ -545,7 +618,7 @@ export const MapExperience = ({
 						>
 							<MapSectionHeader
 								title={<Trans>Argument tree (MST)</Trans>}
-								count={graphNodes.length}
+								count={counts ? graphNodes.length : undefined}
 								edgeCounts={treeEdgeCounts}
 								layoutFailed={layoutFailed}
 							/>
@@ -588,7 +661,7 @@ export const MapExperience = ({
 						>
 							<MapSectionHeader
 								title={<Trans>Local map</Trans>}
-								count={graphNodes.length}
+								count={counts ? graphNodes.length : undefined}
 								edgeCounts={localEdgeCounts}
 								layoutFailed={layoutFailed}
 							/>

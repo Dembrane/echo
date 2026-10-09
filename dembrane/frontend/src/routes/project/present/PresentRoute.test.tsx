@@ -61,13 +61,16 @@ vi.mock("@/components/popcorn/PopcornShare", () => ({
 	PopcornShare: () => <div>Sharing settings</div>,
 }));
 const saveSettings = vi.fn();
+const goLive = vi.fn();
 vi.mock("@/components/popcorn/hooks", () => ({
-	usePopcornLiveMutation: () => ({ mutate: vi.fn() }),
+	liveBooking: () => null,
+	usePopcornLiveMutation: () => ({ mutate: goLive }),
 	usePopcornSettingsMutation: () => ({
 		mutate: saveSettings,
 		mutateAsync: vi.fn(),
 	}),
 	usePopcornStopLiveMutation: () => ({ mutate: vi.fn() }),
+	useRefreshPopcornMutation: () => ({ mutate: vi.fn() }),
 }));
 
 const presentation = {
@@ -161,13 +164,16 @@ describe("Preparing the room before recordings", () => {
 			"/present/projects/empty/default",
 		);
 	});
-	it("keeps Go live and Share beside Present, and opens the screen without a processing request", async () => {
+	it("puts Share beside Present, which opens the screen and starts the analysis for 8 hours", async () => {
 		const open = vi.spyOn(window, "open").mockReturnValue(null);
 		show();
 		const present = await screen.findByRole("button", {
 			name: "Present",
 		});
-		expect(screen.getByRole("button", { name: "Go live" })).toBeTruthy();
+		expect(screen.queryByRole("button", { name: "Analyse" })).toBeNull();
+		expect(
+			screen.getByRole("button", { name: "More ways to present" }),
+		).toBeTruthy();
 		expect(screen.getByRole("button", { name: "Share" })).toBeTruthy();
 		fireEvent.click(present);
 		expect(open).toHaveBeenCalledWith(
@@ -175,7 +181,25 @@ describe("Preparing the room before recordings", () => {
 			"_blank",
 			"noopener",
 		);
-		expect(bff.post).not.toHaveBeenCalled();
+		expect(goLive).toHaveBeenCalledExactlyOnceWith({ hours: 8 });
+	});
+	it("only opens the screen when popcorn is already live", async () => {
+		const open = vi.spyOn(window, "open").mockReturnValue(null);
+		const livePresentation = { ...presentation, loop: { mode: "live" } };
+		vi.mocked(bff.get).mockImplementation(async (url) => {
+			if (url.endsWith("/draft"))
+				return {
+					has_changes: false,
+					presentation: livePresentation,
+					revision: 0,
+				};
+			if (url.endsWith("/updates")) return { available: false };
+			return { can_edit: true, presentation: livePresentation };
+		});
+		show();
+		fireEvent.click(await screen.findByRole("button", { name: "Present" }));
+		expect(open).toHaveBeenCalledOnce();
+		expect(goLive).not.toHaveBeenCalled();
 	});
 	it("scales the room's screen down instead of squeezing it into the column", async () => {
 		show();
@@ -428,6 +452,50 @@ describe("Keeping the presentation and its results apart", () => {
 				expected_revision: 4,
 			}),
 		);
+		await waitFor(() =>
+			expect(screen.queryByText("1 change not shown yet")).toBeNull(),
+		);
+		expect(screen.queryByRole("button", { name: "Show them" })).toBeNull();
+	});
+
+	it("says beside Show them why the changes could not be shown, and what holds them back", async () => {
+		const shown = {
+			...presentation,
+			settings: { ...presentation.settings, public: false },
+		};
+		const edited = {
+			...shown,
+			settings: { ...shown.settings, public: true, title: "Day two" },
+		};
+		vi.mocked(bff.get).mockImplementation(async (url) => {
+			if (url.endsWith("/draft"))
+				return { has_changes: true, presentation: edited, revision: 16 };
+			if (url.endsWith("/updates")) return { available: false };
+			return { can_edit: true, presentation: shown };
+		});
+		const { ApiRequestError } = await import("@/lib/errors/read");
+		vi.mocked(bff.post).mockRejectedValue(
+			new ApiRequestError(403, {
+				code: "billing.tier_required",
+				params: { required: "innovator", tier: "free" },
+			}),
+		);
+		show();
+		const button = await screen.findByRole("button", { name: "Show them" });
+		expect(screen.getByText("2 changes not shown yet")).toBeTruthy();
+		fireEvent.click(button);
+		const reason = await screen.findByText(
+			"A public page needs a higher plan. Switch Public page off under Share to show the other changes.",
+		);
+		// Read where the host pressed, above the editor, not under the preview.
+		const editor = screen.getByText("Presentation editor");
+		expect(
+			button.compareDocumentPosition(reason) & Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
+		expect(
+			reason.compareDocumentPosition(editor) & Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
+		expect(screen.getByText("2 changes not shown yet")).toBeTruthy();
 	});
 
 	it("lets the host type into the opening on the preview, into the draft", async () => {

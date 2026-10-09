@@ -2,6 +2,7 @@ import { plural, t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Paper, Progress, Stack, Text, Title } from "@mantine/core";
 import { format } from "date-fns";
+import { readAfterFinish } from "@/components/popcorn/finishedRead";
 import type { PopcornDetail } from "@/components/popcorn/hooks";
 import { testId } from "@/lib/testUtils";
 
@@ -22,6 +23,7 @@ export function PopcornStatus({ popcorn }: { popcorn: PopcornDetail }) {
 			? format(started, "EEE d MMM, HH:mm")
 			: null;
 	const detail = (loop?.last_run_detail ?? "").slice(0, 200);
+	const after = readAfterFinish(loop);
 	const validating = reading > 0 || (phrases > 0 && validated < phrases);
 
 	return (
@@ -67,6 +69,11 @@ export function PopcornStatus({ popcorn }: { popcorn: PopcornDetail }) {
 					<Text size="xs" c="dimmed" {...testId("popcorn-last-read")}>
 						{t`Last read ${startedLabel}`}
 						{loop?.last_run_status === "error" ? t` · failed` : ""}
+					</Text>
+				) : null}
+				{after ? (
+					<Text size="xs" c="dimmed" {...testId("popcorn-read-after-finish")}>
+						{after}
 					</Text>
 				) : null}
 				{detail ? (

@@ -99,9 +99,12 @@ const PresentWatcher = ({ projectId, base, onPage }: WatcherProps) => {
 		const reading = counts?.reading ?? 0;
 		trackProcess(
 			`present:read:${projectId}`,
-			// A live loop reads every few minutes: show it working, never
-			// announce each read.
-			{ ...meta, quiet: loop?.mode === "live" },
+			// A live loop reads every few minutes, and a finished conversation
+			// starts a read of its own: show it working, never announce it.
+			{
+				...meta,
+				quiet: loop?.mode === "live" || loop?.reading_after_finish === true,
+			},
 			counts && reading > 0
 				? {
 						detail: plural(counts.conversations, {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Edge, MapRelation } from "../types";
-import { neighbourhood } from "./LocalGraph";
+import { neighbourhood } from "./KnowledgeGraph";
 
 const edge = (source: string, target: string): Edge => ({
 	distance: 0.5,

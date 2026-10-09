@@ -4,6 +4,7 @@ import {
 	Button,
 	Checkbox,
 	Divider,
+	type FloatingPosition,
 	NumberInput,
 	Popover,
 	Radio,
@@ -13,6 +14,7 @@ import {
 	Text,
 } from "@mantine/core";
 import { FunnelSimpleIcon, GearSixIcon } from "@phosphor-icons/react";
+import type { ReactElement, ReactNode } from "react";
 import { attributeFor, COLOR_BY_OPTIONS } from "../attributes";
 import type {
 	BudgetAdjustment,
@@ -58,6 +60,15 @@ type MapSettingsMenuProps = {
 	tags?: ReadonlyArray<MapConversation>;
 	chosenTags?: ReadonlySet<string>;
 	onChosenTagsChange?: (chosen: ReadonlySet<string>) => void;
+	/**
+	 * What opens the menu, where the surface draws its own controls (the
+	 * room's rail); a quiet "Settings" button otherwise. It must take a ref.
+	 */
+	trigger?: ReactElement;
+	/** Where the menu opens from its trigger; below it by default. */
+	position?: FloatingPosition;
+	/** A line under the menu's heading, such as how much the map holds. */
+	description?: ReactNode;
 };
 
 export type MapConversation = { id: string; name: string; color: string };
@@ -346,6 +357,9 @@ export const MapSettingsMenu = ({
 	hide = NOTHING_HIDDEN,
 	withinPortal = true,
 	tags = NO_CONVERSATIONS,
+	trigger,
+	position = "bottom-end",
+	description,
 }: MapSettingsMenuProps) => {
 	// Colouring by tag is offered only where there are tags to colour by.
 	const colorOptions = MAP_COLOR_BY_OPTIONS.filter(
@@ -353,7 +367,7 @@ export const MapSettingsMenu = ({
 	);
 	return (
 		<Popover
-			position="bottom-end"
+			position={position}
 			shadow="xl"
 			width={300}
 			radius={0}
@@ -362,19 +376,28 @@ export const MapSettingsMenu = ({
 			<Popover.Target>
 				{/* Quiet and closed by default: the toolbar on the map holds the
 				    main controls; how the map looks and behaves waits here. */}
-				<Button
-					variant="subtle"
-					color="gray"
-					leftSection={<GearSixIcon size={20} />}
-				>
-					<Trans>Settings</Trans>
-				</Button>
+				{trigger ?? (
+					<Button
+						variant="subtle"
+						color="gray"
+						leftSection={<GearSixIcon size={20} />}
+					>
+						<Trans>Settings</Trans>
+					</Button>
+				)}
 			</Popover.Target>
 			<Popover.Dropdown>
 				<Stack gap="sm">
-					<Text size="sm">
-						<Trans>Settings</Trans>
-					</Text>
+					<Stack gap={4}>
+						<Text size="sm">
+							<Trans>Settings</Trans>
+						</Text>
+						{description && (
+							<Text size="xs" c="dimmed">
+								{description}
+							</Text>
+						)}
+					</Stack>
 
 					{!hide.includes("layout") && (
 						<Stack gap={4}>

@@ -4,7 +4,15 @@ import { I18nProvider } from "@lingui/react";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { act } from "react";
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import {
+	afterEach,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
 import type { EvidenceGroup } from "../data/adapter";
 import {
 	createMapInteractionStore,
@@ -195,6 +203,113 @@ describe("the arguments under the map", () => {
 		renderList({ evidence: {}, store });
 		expect(screen.getByText("Neighbours in the tree")).toBeTruthy();
 		expect(screen.queryByText("Quotes")).toBeNull();
+	});
+
+	describe("scrolling", () => {
+		const scrollIntoView = vi.fn();
+		const windowScroll = vi.fn();
+		beforeEach(() => {
+			Element.prototype.scrollIntoView = scrollIntoView;
+			vi.stubGlobal("scrollTo", windowScroll);
+		});
+		afterEach(() => {
+			delete (Element.prototype as Partial<Element>).scrollIntoView;
+			vi.unstubAllGlobals();
+			scrollIntoView.mockReset();
+			windowScroll.mockReset();
+		});
+
+		/** The list inside a page that scrolls, the way the Map page and the room hold it. */
+		const renderInPage = (
+			store: ReturnType<typeof createMapInteractionStore>,
+		) => {
+			render(
+				<Providers store={store}>
+					<div data-testid="page" style={{ height: 200, overflowY: "auto" }}>
+						<div data-testid="pane" style={{ overflowY: "auto" }}>
+							<ArgumentAccordion
+								nodes={nodes}
+								mstEdges={edges}
+								evidenceFor={(id) => evidence[id] ?? []}
+							/>
+						</div>
+					</div>
+				</Providers>,
+			);
+			return {
+				list: screen.getByTestId("map-argument-list"),
+				page: screen.getByTestId("page"),
+				pane: screen.getByTestId("pane"),
+			};
+		};
+
+		/** Gives jsdom the boxes it never measures. */
+		const box = (element: HTMLElement, top: number, height: number) => {
+			element.getBoundingClientRect = () =>
+				({
+					bottom: top + height,
+					height,
+					left: 0,
+					right: 100,
+					top,
+					width: 100,
+					x: 0,
+					y: top,
+				}) as DOMRect;
+		};
+
+		it("moves nothing on mount with a first selection", () => {
+			const store = createMapInteractionStore({ selectedNodeId: "leaf-c" });
+			const { page, pane } = renderInPage(store);
+			expect(screen.getByText("Neighbours in the tree")).toBeTruthy();
+			expect(scrollIntoView).not.toHaveBeenCalled();
+			expect(windowScroll).not.toHaveBeenCalled();
+			expect(page.scrollTop).toBe(0);
+			expect(pane.scrollTop).toBe(0);
+		});
+
+		it("moves nothing when the map picks its first node after mount", () => {
+			const store = createMapInteractionStore();
+			const { page, pane } = renderInPage(store);
+			act(() => store.setSelectedNodeId("leaf-c", { auto: true }));
+			act(() => store.setSelectedNodeId("leaf-b", { auto: true }));
+			expect(scrollIntoView).not.toHaveBeenCalled();
+			expect(page.scrollTop).toBe(0);
+			expect(pane.scrollTop).toBe(0);
+		});
+
+		it("does not scroll where an ancestor holds the scroll, not the list", () => {
+			const store = createMapInteractionStore({ selectedNodeId: "hub" });
+			const { list, page, pane } = renderInPage(store);
+			act(() => store.setSelectedNodeId("leaf-c"));
+			expect(scrollIntoView).not.toHaveBeenCalled();
+			expect(list.scrollTop).toBe(0);
+			expect(page.scrollTop).toBe(0);
+			expect(pane.scrollTop).toBe(0);
+		});
+
+		it("moves only its own scrollTop on a later selection", () => {
+			const store = createMapInteractionStore({ selectedNodeId: "hub" });
+			const { list, page, pane } = renderInPage(store);
+			// Make the list its own scroll box, 100 tall over 1000 of rows.
+			list.style.overflowY = "auto";
+			Object.defineProperty(list, "clientHeight", { value: 100 });
+			Object.defineProperty(list, "scrollHeight", { value: 1000 });
+			box(list, 0, 100);
+
+			// The row to open sits 400 down the list, out of its view.
+			const row = screen.getByTestId("map-argument-row-leaf-c")
+				.parentElement as HTMLElement;
+			box(row, 400, 60);
+			act(() => store.setSelectedNodeId("leaf-c"));
+
+			// Its bottom lands on the bottom of the list's view.
+			expect(list.scrollTop).toBe(360);
+			expect(scrollIntoView).not.toHaveBeenCalled();
+			expect(windowScroll).not.toHaveBeenCalled();
+			expect(page.scrollTop).toBe(0);
+			expect(pane.scrollTop).toBe(0);
+		});
 	});
 
 	it("shows a page and opens the rest in place", () => {

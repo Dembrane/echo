@@ -20,9 +20,11 @@ import type { Mailer } from "@dembrane/mail";
 import { mapWorker } from "@dembrane/map";
 import type { Logger } from "@dembrane/observability";
 import {
+  finishReads,
   type PopcornWorkerDeps,
   popcornDeckHook,
   popcornFlags,
+  popcornProjectNudge,
   popcornWorker,
   runPopcornTick,
   runtimeAnalysis,
@@ -234,7 +236,11 @@ export function registrations(deps: {
       environment: environmentName(deps.dashboardUrl),
       logger,
     }),
-    conversationWorker(deps.conversations),
+    // A finished conversation's transcript books one popcorn read of its project.
+    conversationWorker({
+      ...deps.conversations,
+      onTranscribed: finishReads({ flags: popcornFlags(config), logger }),
+    }),
     canvasWorker({
       db: deps.db,
       logger,
@@ -253,6 +259,8 @@ export function registrations(deps: {
         embeddingModel: config.llm.embeddingModel,
         embeddingLocation: config.llm.embeddingLocation,
       },
+      // A group landing wakes the room, which follows its popcorn session's channel.
+      onGroupChanged: popcornProjectNudge(db, logger),
     }),
     accountsWorker({
       db,

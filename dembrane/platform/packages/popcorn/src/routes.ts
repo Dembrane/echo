@@ -8,6 +8,7 @@ import type { Hub } from "@dembrane/realtime";
 import { Hono } from "hono";
 import {
   type AccessDeps,
+  allows,
   popcornProject,
   popcornReport,
   requirePolicy,
@@ -26,6 +27,7 @@ import {
   forgetBundle,
   goLive,
   InvalidHours,
+  InvalidReadyBy,
   listVersions,
   loadSettingsFor,
   type PopcornDeps,
@@ -99,14 +101,19 @@ export function html(body: string, status = 200) {
   });
 }
 
+/** A request's datetime as pydantic read it: ISO text, a date, or unix seconds or millis. */
+function requestTime(v: string | number): Date | null {
+  if (typeof v === "number" || /^[+-]?\d+(\.\d+)?$/.test(v)) {
+    const n = Number(v);
+    // pydantic reads a large number as milliseconds.
+    return new Date(Math.abs(n) > 2e10 ? n : n * 1000);
+  }
+  return parseDt(v.length === 10 ? `${v}T00:00:00` : v);
+}
+
 /** Live until the expiry, rounded up to the nearest duration the deprecated route allowed. */
 function hoursUntil(expires: string | number, now: Date): number {
-  let at: Date | null;
-  if (typeof expires === "number" || /^[+-]?\d+(\.\d+)?$/.test(expires)) {
-    const n = Number(expires);
-    // pydantic reads a large number as milliseconds.
-    at = new Date(Math.abs(n) > 2e10 ? n : n * 1000);
-  } else at = parseDt(expires.length === 10 ? `${expires}T00:00:00` : expires);
+  const at = requestTime(expires);
   const left = ((at ?? now).getTime() - now.getTime()) / 3_600_000;
   return LIVE_HOURS.find((h) => h >= left) ?? 24;
 }
@@ -267,13 +274,16 @@ export function popcornRoutes(deps: PopcornRoutesDeps) {
     const { body } = await p.validate(c.req, { body: liveBody });
     const { report } = await popcornReport(ad, who, c.req.param("popcorn_id"), "project:update");
     const loop = await loopOf(report);
+    const readyBy = body.data.ready_by === null ? null : requestTime(body.data.ready_by);
     try {
-      await goLive(d, loop, body.data.hours);
+      if (body.data.ready_by !== null && !readyBy) throw new InvalidReadyBy("unreadable ready_by");
+      await goLive(d, loop, body.data.hours, readyBy);
     } catch (err) {
       if (err instanceof InvalidHours)
         throw new ValidationError("popcorn.invalid_live_hours", {
           params: { hours: LIVE_HOURS.join(", ") },
         });
+      if (err instanceof InvalidReadyBy) throw new ValidationError("popcorn.invalid_ready_by");
       throw err;
     }
     return c.json(await payload(report));
@@ -330,10 +340,12 @@ export function popcornRoutes(deps: PopcornRoutesDeps) {
   app.get(`${base}/:popcorn_id/view/`, async (c) => {
     gate();
     const who = requireUser(c);
-    await popcornReport(ad, who, c.req.param("popcorn_id"));
+    const { report } = await popcornReport(ad, who, c.req.param("popcorn_id"));
     // The page picks a saved run from its own query string; a bad link fails early here.
     versionId(c.req.query("version"));
-    return html(renderPopcornPage({ mode: "host" }));
+    // The waiting stage's Analyse now posts to this session's refresh, for a host who may.
+    const canRead = await allows(ad, who, String(report.project_id), "project:update");
+    return html(renderPopcornPage({ mode: "host", ...(canRead && { analyseNow: "../refresh" }) }));
   });
 
   app.get(`${base}/:popcorn_id/view/events`, async (c) => {
