@@ -11,7 +11,7 @@ import { PARTICIPANT_BASE_URL } from "@/config";
 import { useLanguage } from "@/hooks/useLanguage";
 import { testId } from "@/lib/testUtils";
 import { cn } from "@/lib/utils";
-import { useOnboardingCards } from "./onboardingCards";
+import { getSystemCards } from "./onboardingCards";
 import {
 	ParticipantInitiateForm,
 	portalHasNothingToAsk,
@@ -106,8 +106,6 @@ const ParticipantOnboardingCards = ({
 	// on its own, so it drops its heading rather than asking a question it is
 	// about to answer.
 	const nothingToAsk = portalHasNothingToAsk(project);
-
-	const { getSystemCards } = useOnboardingCards();
 
 	const tutorialSlug = project.default_conversation_tutorial_slug ?? "none";
 	const legalBasis = project.legal_basis ?? "client-managed";

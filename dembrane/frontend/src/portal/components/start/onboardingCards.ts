@@ -2,1659 +2,1644 @@ import type { LanguageCards } from "./ParticipantOnboardingCards";
 
 type LegalBasis = ParticipantProject["legal_basis"];
 
-export const useOnboardingCards = () => {
-	const getSystemCards = (
-		lang: string,
-		tutorialSlug?: string,
-		legalBasis?: LegalBasis,
-		privacyPolicyUrl?: string | null,
-		organiserName?: string | null,
-	): LanguageCards[string] => {
-		const basis = legalBasis ?? "client-managed";
+export const getSystemCards = (
+	lang: string,
+	tutorialSlug?: string,
+	legalBasis?: LegalBasis,
+	privacyPolicyUrl?: string | null,
+	organiserName?: string | null,
+): LanguageCards[string] => {
+	const basis = legalBasis ?? "client-managed";
 
-		// Normalize and fallback invalid values to "none"
-		const normalizedSlug = tutorialSlug?.toLowerCase();
-		const validSlugs = ["none", "basic", "advanced"];
-		const finalSlug = validSlugs.includes(normalizedSlug || "")
-			? normalizedSlug
-			: "none";
+	// Normalize and fallback invalid values to "none"
+	const normalizedSlug = tutorialSlug?.toLowerCase();
+	const validSlugs = ["none", "basic", "advanced"];
+	const finalSlug = validSlugs.includes(normalizedSlug || "")
+		? normalizedSlug
+		: "none";
 
-		// none: Only privacy statement
-		if (finalSlug === "none") {
-			const privacyCard = getPrivacyCard(
-				lang,
-				basis,
-				privacyPolicyUrl,
-				organiserName,
-			);
-			return privacyCard ? [privacyCard] : [];
-		}
+	// none: Only privacy statement
+	if (finalSlug === "none") {
+		const privacyCard = getPrivacyCard(
+			lang,
+			basis,
+			privacyPolicyUrl,
+			organiserName,
+		);
+		return privacyCard ? [privacyCard] : [];
+	}
 
-		// basic: Tutorial slides + privacy statement
-		if (finalSlug === "basic") {
-			const tutorialCards = getBasicTutorialCards(lang);
-			const privacyCard = getPrivacyCard(
-				lang,
-				basis,
-				privacyPolicyUrl,
-				organiserName,
-			);
-			return [...tutorialCards, ...(privacyCard ? [privacyCard] : [])];
-		}
+	// basic: Tutorial slides + privacy statement
+	if (finalSlug === "basic") {
+		const tutorialCards = getBasicTutorialCards(lang);
+		const privacyCard = getPrivacyCard(
+			lang,
+			basis,
+			privacyPolicyUrl,
+			organiserName,
+		);
+		return [...tutorialCards, ...(privacyCard ? [privacyCard] : [])];
+	}
 
-		// advanced: Full tutorial + privacy statement + best practices
-		if (finalSlug === "advanced") {
-			const tutorialCards = getAdvancedTutorialCards(
-				lang,
-				basis,
-				privacyPolicyUrl,
-				organiserName,
-			);
-			return tutorialCards;
-		}
+	// advanced: Full tutorial + privacy statement + best practices
+	if (finalSlug === "advanced") {
+		const tutorialCards = getAdvancedTutorialCards(
+			lang,
+			basis,
+			privacyPolicyUrl,
+			organiserName,
+		);
+		return tutorialCards;
+	}
 
-		return [];
-	};
+	return [];
+};
 
-	const getBasicTutorialCards = (lang: string): LanguageCards[string] => {
-		const tutorialCards: Record<string, LanguageCards[string]> = {
-			"de-DE": [
-				{
-					section: "Willkommen",
-					slides: [
-						{
-							content:
-								"Nehmen Sie Ihre Stimme auf, um Fragen zu beantworten und Einfluss zu nehmen.",
-							cta: "Los geht's!",
-							extraHelp:
-								"Dies ist ein Mini-Tutorial. Nutzen Sie die Vor- und Zurück-Tasten zur Navigation. Nach Abschluss gelangen Sie zum Aufnahmeportal.",
-							title: "Willkommen bei dembrane!",
-						},
-						{
-							content:
-								"dembrane hilft Menschen, einfach Input von großen Gruppen zu sammeln.",
-							cta: "Mehr erfahren",
-							extraHelp:
-								"Ob Feedback für eine Kommune, Input im Arbeitsumfeld oder Teilnahme an Forschung – Ihre Stimme zählt!",
-							title: "Was ist dembrane?",
-						},
-						{
-							content:
-								"Beantworten Sie Fragen in Ihrem eigenen Tempo durch Sprechen oder Tippen.",
-							cta: "Weiter",
-							extraHelp:
-								"Spracheingabe ist unser bevorzugter Modus, da sie natürlichere und detailliertere Antworten ermöglicht. Tippen steht immer als Alternative zur Verfügung.",
-							title: "Sagen Sie einfach Ihre Meinung",
-						},
-						{
-							content: "dembrane macht in Gruppen mehr Spaß!",
-							cta: "Weiter",
-							extraHelp:
-								"dembrane macht mehr Spaß, wenn Sie jemanden finden, um die Fragen gemeinsam zu besprechen und Ihr Gespräch aufzunehmen. Wir können nicht sagen, wer was gesagt hat, nur welche Ideen geteilt wurden.",
-							title: "Allein oder in der Gruppe",
-						},
-					],
-				},
-				{
-					section: "Wie es funktioniert",
-					slides: [
-						{
-							content:
-								"Sie erhalten die Fragen, sobald Sie im Aufnahmeportal sind.",
-							cta: "Verstanden",
-							extraHelp:
-								"Die Fragen variieren je nach Bedürfnissen der Gastgeber*innen. Sie können sich auf kommunale Themen, Arbeitserfahrungen oder Forschungsthemen beziehen. Wenn es keine spezifischen Fragen gibt, können Sie gerne alle Gedanken oder Anliegen teilen.",
-							title: "Fragerunde",
-						},
-					],
-				},
-				{
-					section: "Datenschutz",
-					slides: [
-						{
-							content:
-								"Als aufnehmende Person, haben Sie die Kontrolle über das, was Sie teilen.",
-							cta: "Mehr erfahren",
-							extraHelp:
-								"Vermeiden Sie die Weitergabe von Details, die Sie dem Gastgeber nicht mitteilen möchten. Seien Sie achtsam und nehmen Sie andere nicht ohne deren Zustimmung auf.",
-							title: "Datenschutz ist wichtig",
-						},
-					],
-				},
-			],
-			"en-US": [
-				{
-					section: "Welcome",
-					slides: [
-						{
-							content:
-								"Record your voice to answer questions and make an impact.",
-							cta: "Let's go!",
-							extraHelp:
-								"This is a mini-tutorial. Use the previous and next buttons to navigate. Once completed, you'll enter the recording portal.",
-							title: "Welcome to dembrane!",
-						},
-						{
-							content:
-								"dembrane helps people gather input from large groups easily.",
-							cta: "Tell me more",
-							extraHelp:
-								"Whether it's feedback for a local municipality, input in a work setting, or participation in research, your voice matters!",
-							title: "What is dembrane?",
-						},
-						{
-							content:
-								"Answer questions in your own time by speaking or typing.",
-							cta: "Continue",
-							extraHelp:
-								"Voice input is our primary mode, allowing for more natural and detailed responses. Typing is always available as a backup.",
-							title: "Just speak your mind",
-						},
-						{
-							content: "dembrane is more fun in groups!",
-							cta: "Continue",
-							extraHelp:
-								"dembrane is more fun when you find someone to discuss the questions together and record your conversation. We can't tell who said what, just what ideas were shared.",
-							title: "Solo or in a Group",
-						},
-					],
-				},
-				{
-					section: "How it works",
-					slides: [
-						{
-							content:
-								"You'll receive the questions once in the recording portal.",
-							cta: "Got it",
-							extraHelp:
-								"Questions vary based on the host's needs. They could be about community issues, work experiences, or research topics. If there are no specific questions, you're free to share any thoughts or concerns.",
-							title: "Question time",
-						},
-					],
-				},
-				{
-					section: "Privacy",
-					slides: [
-						{
-							content: "As the recorder, you are in control of what you share.",
-							cta: "Tell me more",
-							extraHelp:
-								"Avoid sharing details you don't want the host to know. Be mindful and don't record others without their consent.",
-							title: "Privacy matters",
-						},
-					],
-				},
-			],
-			"es-ES": [
-				{
-					section: "Bienvenido",
-					slides: [
-						{
-							content:
-								"Graba tu voz para responder preguntas y generar impacto.",
-							cta: "¡Vamos!",
-							extraHelp:
-								"Este es un mini-tutorial. Usa los botones de anterior y siguiente para navegar. Una vez completado, entrarás al portal de grabación.",
-							title: "¡Bienvenido a dembrane!",
-						},
-						{
-							content:
-								"dembrane ayuda a las personas a recopilar aportaciones de grandes grupos fácilmente.",
-							cta: "Cuéntame más",
-							extraHelp:
-								"Ya sea retroalimentación para una municipalidad local, aportaciones en el trabajo o participación en investigación, ¡tu voz importa!",
-							title: "¿Qué es dembrane?",
-						},
-						{
-							content:
-								"Responde preguntas a tu propio ritmo hablando o escribiendo.",
-							cta: "Siguiente",
-							extraHelp:
-								"La entrada de voz es nuestro modo principal, permitiendo respuestas más naturales y detalladas. Escribir siempre está disponible como respaldo.",
-							title: "Solo di lo que piensas",
-						},
-						{
-							content: "¡dembrane es más divertido en grupos!",
-							cta: "Siguiente",
-							extraHelp:
-								"dembrane es más divertido cuando encuentras a alguien para discutir las preguntas juntos y grabar su conversación. No podemos distinguir quién dijo qué, solo qué ideas se compartieron.",
-							title: "Solo o en Grupo",
-						},
-					],
-				},
-				{
-					section: "Cómo funciona",
-					slides: [
-						{
-							content:
-								"Recibirás las preguntas una vez en el portal de grabación.",
-							cta: "Entendido",
-							extraHelp:
-								"Las preguntas varían según las necesidades del anfitrión. Pueden ser sobre temas comunitarios, experiencias laborales o temas de investigación. Si no hay preguntas específicas, eres libre de compartir cualquier pensamiento o inquietud.",
-							title: "Hora de Preguntas",
-						},
-					],
-				},
-				{
-					section: "Privacidad",
-					slides: [
-						{
-							content: "Como grabador, tú controlas lo que compartes.",
-							cta: "Cuéntame más",
-							extraHelp:
-								"Evita compartir detalles que no quieras que el anfitrión conozca. Sé consciente y no grabes a otros sin su consentimiento.",
-							title: "La privacidad importa",
-						},
-					],
-				},
-			],
-			"fr-FR": [
-				{
-					section: "Bienvenue",
-					slides: [
-						{
-							content:
-								"Enregistrez votre voix pour répondre aux questions et avoir un impact.",
-							cta: "C'est parti !",
-							extraHelp:
-								"Ceci est un mini-tutoriel. Utilisez les boutons précédent et suivant pour naviguer. Une fois terminé, vous entrerez dans le portail d'enregistrement.",
-							title: "Bienvenue sur dembrane !",
-						},
-						{
-							content:
-								"dembrane aide les gens à recueillir facilement les contributions de grands groupes.",
-							cta: "Dites-m'en plus",
-							extraHelp:
-								"Qu'il s'agisse de commentaires pour une municipalité locale, de contributions dans un cadre professionnel ou de participation à une recherche, votre voix compte !",
-							title: "Qu'est-ce que dembrane ?",
-						},
-						{
-							content:
-								"Répondez aux questions à votre rythme en parlant ou en tapant.",
-							cta: "Suivant",
-							extraHelp:
-								"La saisie vocale est notre mode principal, permettant des réponses plus naturelles et détaillées. La saisie au clavier est toujours disponible en secours.",
-							title: "Dites simplement ce que vous pensez",
-						},
-						{
-							content: "dembrane est plus amusant en groupe !",
-							cta: "Suivant",
-							extraHelp:
-								"dembrane est plus amusant lorsque vous trouvez quelqu'un pour discuter des questions ensemble et enregistrer votre conversation. Nous ne pouvons pas dire qui a dit quoi, juste quelles idées ont été partagées.",
-							title: "Seul ou en Groupe",
-						},
-					],
-				},
-				{
-					section: "Comment ça marche",
-					slides: [
-						{
-							content:
-								"Vous recevrez les questions une fois dans le portail d'enregistrement.",
-							cta: "Compris",
-							extraHelp:
-								"Les questions varient en fonction des besoins de l'hôte. Elles peuvent concerner des problèmes communautaires, des expériences professionnelles ou des sujets de recherche. S'il n'y a pas de questions spécifiques, vous êtes libre de partager vos pensées ou préoccupations.",
-							title: "Heure des Questions",
-						},
-					],
-				},
-				{
-					section: "Confidentialité",
-					slides: [
-						{
-							content:
-								"En tant qu'enregistreur, vous contrôlez ce que vous partagez.",
-							cta: "Dites-m'en plus",
-							extraHelp:
-								"Évitez de partager des détails que vous ne voulez pas que l'hôte connaisse. Soyez attentif et n'enregistrez pas les autres sans leur consentement.",
-							title: "La confidentialité compte",
-						},
-					],
-				},
-			],
-			"it-IT": [
-				{
-					section: "Benvenuto",
-					slides: [
-						{
-							content:
-								"Registra la tua voce per rispondere alle domande e dire la tua.",
-							cta: "Andiamo!",
-							extraHelp:
-								"Questo è un breve tutorial. Usa i pulsanti per andare avanti e indietro. Alla fine entri nel portale di registrazione.",
-							title: "Benvenuto su dembrane",
-						},
-						{
-							content: "dembrane aiuta a raccogliere idee da gruppi grandi.",
-							cta: "Dimmi di più",
-							extraHelp:
-								"Feedback per il comune, idee al lavoro, ricerca: la tua voce conta.",
-							title: "Cos'è dembrane?",
-						},
-						{
-							content:
-								"Rispondi alle domande a tuo ritmo, parlando o scrivendo.",
-							cta: "Avanti",
-							extraHelp:
-								"Parlare è il modo principale: le risposte sono più naturali. Ma puoi anche scrivere.",
-							title: "Di' cosa pensi",
-						},
-						{
-							content: "dembrane è più bello in gruppo.",
-							cta: "Avanti",
-							extraHelp:
-								"Trova qualcuno per parlare insieme delle domande e registrare la conversazione. Non sappiamo chi ha detto cosa, solo quali idee sono state condivise.",
-							title: "Da solo o in gruppo",
-						},
-					],
-				},
-				{
-					section: "Come funziona",
-					slides: [
-						{
-							content:
-								"Le domande arrivano quando entri nel portale di registrazione.",
-							cta: "Capito",
-							extraHelp:
-								"Le domande dipendono dall'host. Possono parlare di temi della comunità, lavoro o ricerca. Se non ci sono domande, puoi condividere qualsiasi pensiero o preoccupazione.",
-							title: "Le domande",
-						},
-					],
-				},
-				{
-					section: "Privacy",
-					slides: [
-						{
-							content: "Scegli tu cosa condividere.",
-							cta: "Dimmi di più",
-							extraHelp:
-								"Non condividere dettagli che non vuoi far sapere all'host. Chiedi sempre il permesso prima di registrare altre persone.",
-							title: "La privacy conta",
-						},
-					],
-				},
-			],
-			"nl-NL": [
-				{
-					section: "Welkom",
-					slides: [
-						{
-							content:
-								"Neem je stem op om vragen te beantwoorden en impact te maken.",
-							cta: "Aan de slag!",
-							extraHelp:
-								"Dit is een mini-handleiding. Gebruik de knoppen om te navigeren. Na afloop van de handleiding kom je in de opnameportaal terecht.",
-							title: "Welkom bij dembrane!",
-						},
-						{
-							content:
-								"dembrane helpt mensen gemakkelijk input van grote groepen te verzamelen.",
-							cta: "Vertel me meer",
-							extraHelp:
-								"Of het nu gaat om feedback voor de gemeente, input op het werk, of deelname aan onderzoek, jouw stem telt!",
-							title: "Wat is dembrane?",
-						},
-						{
-							content:
-								"Beantwoord vragen in je eigen tempo door te spreken of te typen.",
-							cta: "Volgende",
-							extraHelp:
-								"Spraak is onze voorkeursmethode, omdat het natuurlijker en gedetailleerder is. Typen kan natuurlijk ook altijd.",
-							title: "Zeg het maar",
-						},
-						{
-							content: "dembrane is leuker met een groep!",
-							cta: "Volgende",
-							extraHelp:
-								"dembrane is leuker als je iemand vindt om de vragen samen te bespreken en jullie gesprek op te nemen. We kunnen niet horen wie wat zei, alleen welke ideeën er gedeeld zijn.",
-							title: "Alleen of in een groep",
-						},
-					],
-				},
-				{
-					section: "Hoe het werkt",
-					slides: [
-						{
-							content:
-								"Je krijgt de vragen te zien zodra je in de opnameportal bent.",
-							cta: "Begrepen",
-							extraHelp:
-								"Vragen variëren afhankelijk van wat de organisator wil weten. Het kan gaan over de buurt, werkervaringen, of onderzoeksonderwerpen. Als er geen specifieke vragen zijn, kun je gewoon je gedachten of zorgen delen.",
-							title: "Vragenronde",
-						},
-					],
-				},
-				{
-					section: "Privacy",
-					slides: [
-						{
-							content: "Als opnemer heb je zelf controle over wat je deelt.",
-							cta: "Vertel me meer",
-							extraHelp:
-								"Vermijd het delen van details die je niet met de organisator wilt delen. Wees voorzichtig en neem anderen niet op zonder hun toestemming.",
-							title: "Privacy is belangrijk",
-						},
-					],
-				},
-			],
-			"uk-UA": [
-				{
-					section: "Ласкаво просимо",
-					slides: [
-						{
-							content:
-								"Запишіть свій голос, щоб відповісти на запитання та зробити свій внесок.",
-							cta: "Почнімо!",
-							extraHelp:
-								"Це міні-інструкція. Використовуйте кнопки «назад» і «далі» для навігації. Після завершення ви потрапите на портал запису.",
-							title: "Ласкаво просимо до dembrane!",
-						},
-						{
-							content:
-								"dembrane допомагає людям легко збирати думки великих груп.",
-							cta: "Розкажіть більше",
-							extraHelp:
-								"Чи то зворотний зв'язок для місцевої громади, чи думки в робочому середовищі, чи участь у дослідженні — ваш голос має значення!",
-							title: "Що таке dembrane?",
-						},
-						{
-							content:
-								"Відповідайте на запитання у зручному темпі, говорячи або друкуючи.",
-							cta: "Далі",
-							extraHelp:
-								"Голосовий ввід — наш основний режим, який дозволяє давати більш природні та детальні відповіді. Друкування завжди доступне як альтернатива.",
-							title: "Просто скажіть, що думаєте",
-						},
-						{
-							content: "dembrane цікавіше у групі!",
-							cta: "Далі",
-							extraHelp:
-								"dembrane цікавіше, коли ви знаходите когось, щоб обговорити запитання разом і записати вашу розмову. Ми не можемо визначити, хто що сказав, лише які ідеї були висловлені.",
-							title: "Наодинці чи в групі",
-						},
-					],
-				},
-				{
-					section: "Як це працює",
-					slides: [
-						{
-							content:
-								"Ви отримаєте запитання, коли потрапите на портал запису.",
-							cta: "Зрозуміло",
-							extraHelp:
-								"Запитання залежать від потреб організатора. Вони можуть стосуватися громадських питань, робочого досвіду або дослідницьких тем. Якщо конкретних запитань немає, ви можете вільно поділитися будь-якими думками чи проблемами.",
-							title: "Час запитань",
-						},
-					],
-				},
-				{
-					section: "Конфіденційність",
-					slides: [
-						{
-							content: "Як записувач, ви контролюєте те, чим ділитесь.",
-							cta: "Розкажіть більше",
-							extraHelp:
-								"Уникайте обміну деталями, які ви не хочете повідомляти організатору. Будьте уважні та не записуйте інших без їхньої згоди.",
-							title: "Конфіденційність важлива",
-						},
-					],
-				},
-			],
-		};
-
-		// Fallback to English if language not found
-		return tutorialCards[lang] || tutorialCards["en-US"] || [];
-	};
-
-	const getAdvancedTutorialCards = (
-		lang: string,
-		legalBasis: LegalBasis = "client-managed",
-		privacyPolicyUrl?: string | null,
-		organiserName?: string | null,
-	): LanguageCards[string] => {
-		const tutorialCards: Record<string, LanguageCards[string]> = {
-			"de-DE": [
-				{
-					section: "Willkommen",
-					slides: [
-						{
-							content:
-								"Nehmen Sie Ihre Stimme auf, um Fragen zu beantworten und Einfluss zu nehmen.",
-							cta: "Los geht's!",
-							extraHelp:
-								"Dies ist ein Mini-Tutorial. Nutzen Sie die Vor- und Zurück-Tasten zur Navigation. Nach Abschluss gelangen Sie zum Aufnahmeportal.",
-							title: "Willkommen bei dembrane!",
-						},
-						{
-							content:
-								"dembrane hilft Menschen, einfach Input von großen Gruppen zu sammeln.",
-							cta: "Mehr erfahren",
-							extraHelp:
-								"Ob Feedback für eine Kommune, Input im Arbeitsumfeld oder Teilnahme an Forschung – Ihre Stimme zählt!",
-							title: "Was ist dembrane?",
-						},
-						{
-							content:
-								"Beantworten Sie Fragen in Ihrem eigenen Tempo durch Sprechen oder Tippen.",
-							cta: "Weiter",
-							extraHelp:
-								"Spracheingabe ist unser bevorzugter Modus, da sie natürlichere und detailliertere Antworten ermöglicht. Tippen steht immer als Alternative zur Verfügung.",
-							title: "Sagen Sie einfach Ihre Meinung",
-						},
-						{
-							content: "dembrane macht in Gruppen mehr Spaß!",
-							cta: "Weiter",
-							extraHelp:
-								"dembrane macht mehr Spaß, wenn Sie jemanden finden, um die Fragen gemeinsam zu besprechen und Ihr Gespräch aufzunehmen. Wir können nicht sagen, wer was gesagt hat, nur welche Ideen geteilt wurden.",
-							title: "Allein oder in der Gruppe",
-						},
-					],
-				},
-				{
-					section: "Wie es funktioniert",
-					slides: [
-						{
-							content:
-								"Sie erhalten die Fragen, sobald Sie im Aufnahmeportal sind.",
-							cta: "Verstanden",
-							extraHelp:
-								"Die Fragen variieren je nach Bedürfnissen der Gastgeber*innen. Sie können sich auf kommunale Themen, Arbeitserfahrungen oder Forschungsthemen beziehen. Wenn es keine spezifischen Fragen gibt, können Sie gerne alle Gedanken oder Anliegen teilen.",
-							title: "Fragerunde",
-						},
-					],
-				},
-				{
-					section: "Datenschutz",
-					slides: [
-						{
-							content:
-								"Als aufnehmende Person, haben Sie die Kontrolle über das, was Sie teilen.",
-							cta: "Mehr erfahren",
-							extraHelp:
-								"Vermeiden Sie die Weitergabe von Details, die Sie dem Gastgeber nicht mitteilen möchten. Seien Sie achtsam und nehmen Sie andere nicht ohne deren Zustimmung auf.",
-							title: "Datenschutz ist wichtig",
-						},
-						...(getPrivacyCard(
-							"de-DE",
-							legalBasis,
-							privacyPolicyUrl,
-							organiserName,
-						)?.slides || []),
-					],
-				},
-				{
-					section: "Best practices",
-					slides: [
-						{
-							content:
-								"Stellen Sie sich vor, dembrane ist auf Lautsprecher mit Ihnen. Wenn Sie sich selbst hören können, ist alles in Ordnung.",
-							cta: "Verstanden",
-							extraHelp:
-								"Etwas Hintergrundgeräusch ist in Ordnung, solange klar ist, wer spricht.",
-							title: "Hintergrundgeräusche reduzieren",
-						},
-						{
-							content:
-								"Stellen Sie eine stabile Verbindung für eine reibungslose Aufnahme sicher.",
-							cta: "Bereit!",
-							extraHelp:
-								"WLAN oder gute mobile Daten funktionieren am besten. Wenn Ihre Verbindung abbricht, keine Sorge. Sie können immer dort weitermachen, wo Sie aufgehört haben.",
-							title: "Starke Internetverbindung",
-						},
-						{
-							content:
-								"Vermeiden Sie Unterbrechungen, indem Sie Ihr Gerät entsperrt halten. Wenn es sich sperrt, entsperren Sie es einfach und fahren Sie fort.",
-							cta: "Okay",
-							extraHelp:
-								"dembrane versucht, Ihr Gerät aktiv zu halten, aber manchmal können Geräte dies überschreiben. Sie können Ihre Geräteeinstellungen anpassen, um länger entsperrt zu bleiben, wenn nötig.",
-							title: "Gerät nicht sperren!",
-						},
-					],
-				},
-			],
-			"en-US": [
-				{
-					section: "Welcome",
-					slides: [
-						{
-							content:
-								"Record your voice to answer questions and make an impact.",
-							cta: "Let's go!",
-							extraHelp:
-								"This is a mini-tutorial. Use the previous and next buttons to navigate. Once completed, you'll enter the recording portal.",
-							title: "Welcome to dembrane!",
-						},
-						{
-							content:
-								"dembrane helps people gather input from large groups easily.",
-							cta: "Tell me more",
-							extraHelp:
-								"Whether it's feedback for a local municipality, input in a work setting, or participation in research, your voice matters!",
-							title: "What is dembrane?",
-						},
-						{
-							content:
-								"Answer questions in your own time by speaking or typing.",
-							cta: "Continue",
-							extraHelp:
-								"Voice input is our primary mode, allowing for more natural and detailed responses. Typing is always available as a backup.",
-							title: "Just speak your mind",
-						},
-						{
-							content: "dembrane is more fun in groups!",
-							cta: "Continue",
-							extraHelp:
-								"dembrane is more fun when you find someone to discuss the questions together and record your conversation. We can't tell who said what, just what ideas were shared.",
-							title: "Solo or in a Group",
-						},
-					],
-				},
-				{
-					section: "How it works",
-					slides: [
-						{
-							content:
-								"You'll receive the questions once in the recording portal.",
-							cta: "Got it",
-							extraHelp:
-								"Questions vary based on the host's needs. They could be about community issues, work experiences, or research topics. If there are no specific questions, you're free to share any thoughts or concerns.",
-							title: "Question time",
-						},
-					],
-				},
-				{
-					section: "Privacy",
-					slides: [
-						{
-							content: "As the recorder, you are in control of what you share.",
-							cta: "Tell me more",
-							extraHelp:
-								"Avoid sharing details you don't want the host to know. Be mindful and don't record others without their consent.",
-							title: "Privacy matters",
-						},
-						...(getPrivacyCard(
-							"en-US",
-							legalBasis,
-							privacyPolicyUrl,
-							organiserName,
-						)?.slides || []),
-					],
-				},
-				{
-					section: "Best practices",
-					slides: [
-						{
-							content:
-								"Imagine dembrane is on speakerphone with you. If you can hear yourself, you're good to go.",
-							cta: "Noted",
-							extraHelp:
-								"Some background noise is okay, as long as who is speaking is clear.",
-							title: "Reduce background noise",
-						},
-						{
-							content: "Ensure a stable connection for smooth recording.",
-							cta: "Ready!",
-							extraHelp:
-								"Wi-Fi or good mobile data works best. If your connection drops, don't worry. You can always restart where you left off.",
-							title: "Strong internet connection",
-						},
-						{
-							content:
-								"Prevent interruptions by keeping your device unlocked. If it locks, just unlock and continue.",
-							cta: "Okay",
-							extraHelp:
-								"dembrane tries to keep your device active, but sometimes devices can override it, for example if you have low power mode active. You can adjust your device settings to stay unlocked longer if needed.",
-							title: "Don't lock your device!",
-						},
-					],
-				},
-			],
-			"es-ES": [
-				{
-					section: "Bienvenido",
-					slides: [
-						{
-							content:
-								"Graba tu voz para responder preguntas y generar impacto.",
-							cta: "¡Vamos!",
-							extraHelp:
-								"Este es un mini-tutorial. Usa los botones de anterior y siguiente para navegar. Una vez completado, entrarás al portal de grabación.",
-							title: "¡Bienvenido a dembrane!",
-						},
-						{
-							content:
-								"dembrane ayuda a las personas a recopilar aportaciones de grandes grupos fácilmente.",
-							cta: "Cuéntame más",
-							extraHelp:
-								"Ya sea retroalimentación para una municipalidad local, aportaciones en el trabajo o participación en investigación, ¡tu voz importa!",
-							title: "¿Qué es dembrane?",
-						},
-						{
-							content:
-								"Responde preguntas a tu propio ritmo hablando o escribiendo.",
-							cta: "Siguiente",
-							extraHelp:
-								"La entrada de voz es nuestro modo principal, permitiendo respuestas más naturales y detalladas. Escribir siempre está disponible como respaldo.",
-							title: "Solo di lo que piensas",
-						},
-						{
-							content: "¡dembrane es más divertido en grupos!",
-							cta: "Siguiente",
-							extraHelp:
-								"dembrane es más divertido cuando encuentras a alguien para discutir las preguntas juntos y grabar su conversación. No podemos distinguir quién dijo qué, solo qué ideas se compartieron.",
-							title: "Solo o en Grupo",
-						},
-					],
-				},
-				{
-					section: "Cómo funciona",
-					slides: [
-						{
-							content:
-								"Recibirás las preguntas una vez en el portal de grabación.",
-							cta: "Entendido",
-							extraHelp:
-								"Las preguntas varían según las necesidades del anfitrión. Pueden ser sobre temas comunitarios, experiencias laborales o temas de investigación. Si no hay preguntas específicas, eres libre de compartir cualquier pensamiento o inquietud.",
-							title: "Hora de Preguntas",
-						},
-					],
-				},
-				{
-					section: "Privacidad",
-					slides: [
-						{
-							content: "Como grabador, tú controlas lo que compartes.",
-							cta: "Cuéntame más",
-							extraHelp:
-								"Evita compartir detalles que no quieras que el anfitrión conozca. Sé consciente y no grabes a otros sin su consentimiento.",
-							title: "La privacidad importa",
-						},
-						...(getPrivacyCard(
-							"es-ES",
-							legalBasis,
-							privacyPolicyUrl,
-							organiserName,
-						)?.slides || []),
-					],
-				},
-				{
-					section: "Mejores prácticas",
-					slides: [
-						{
-							content:
-								"Imagina que dembrane está en altavoz contigo. Si puedes escucharte, estás listo.",
-							cta: "Entendido",
-							extraHelp:
-								"Un poco de ruido de fondo está bien, siempre que se entienda quién está hablando.",
-							title: "Reduce el Ruido de Fondo",
-						},
-						{
-							content:
-								"Asegura una conexión estable para una grabación fluida.",
-							cta: "¡Listo!",
-							extraHelp:
-								"Wi-Fi o buenos datos móviles funcionan mejor. Si se cae tu conexión, no te preocupes. Siempre puedes reiniciar donde lo dejaste.",
-							title: "Conexión a internet fuerte",
-						},
-						{
-							content:
-								"Evita interrupciones manteniendo tu dispositivo desbloqueado. Si se bloquea, simplemente desbloquéalo y continúa.",
-							cta: "De acuerdo",
-							extraHelp:
-								"dembrane intenta mantener tu dispositivo activo, pero a veces los dispositivos pueden anularlo. Puedes ajustar la configuración de tu dispositivo para permanecer desbloqueado más tiempo si es necesario.",
-							title: "¡No bloquees tu dispositivo!",
-						},
-					],
-				},
-			],
-			"fr-FR": [
-				{
-					section: "Bienvenue",
-					slides: [
-						{
-							content:
-								"Enregistrez votre voix pour répondre aux questions et avoir un impact.",
-							cta: "C'est parti !",
-							extraHelp:
-								"Ceci est un mini-tutoriel. Utilisez les boutons précédent et suivant pour naviguer. Une fois terminé, vous entrerez dans le portail d'enregistrement.",
-							title: "Bienvenue sur dembrane !",
-						},
-						{
-							content:
-								"dembrane aide les gens à recueillir facilement les contributions de grands groupes.",
-							cta: "Dites-m'en plus",
-							extraHelp:
-								"Qu'il s'agisse de commentaires pour une municipalité locale, de contributions dans un cadre professionnel ou de participation à une recherche, votre voix compte !",
-							title: "Qu'est-ce que dembrane ?",
-						},
-						{
-							content:
-								"Répondez aux questions à votre rythme en parlant ou en tapant.",
-							cta: "Suivant",
-							extraHelp:
-								"La saisie vocale est notre mode principal, permettant des réponses plus naturelles et détaillées. La saisie au clavier est toujours disponible en secours.",
-							title: "Dites simplement ce que vous pensez",
-						},
-						{
-							content: "dembrane est plus amusant en groupe !",
-							cta: "Suivant",
-							extraHelp:
-								"dembrane est plus amusant lorsque vous trouvez quelqu'un pour discuter des questions ensemble et enregistrer votre conversation. Nous ne pouvons pas dire qui a dit quoi, juste quelles idées ont été partagées.",
-							title: "Seul ou en Groupe",
-						},
-					],
-				},
-				{
-					section: "Comment ça marche",
-					slides: [
-						{
-							content:
-								"Vous recevrez les questions une fois dans le portail d'enregistrement.",
-							cta: "Compris",
-							extraHelp:
-								"Les questions varient en fonction des besoins de l'hôte. Elles peuvent concerner des problèmes communautaires, des expériences professionnelles ou des sujets de recherche. S'il n'y a pas de questions spécifiques, vous êtes libre de partager vos pensées ou préoccupations.",
-							title: "Heure des Questions",
-						},
-					],
-				},
-				{
-					section: "Confidentialité",
-					slides: [
-						{
-							content:
-								"En tant qu'enregistreur, vous contrôlez ce que vous partagez.",
-							cta: "Dites-m'en plus",
-							extraHelp:
-								"Évitez de partager des détails que vous ne voulez pas que l'hôte connaisse. Soyez attentif et n'enregistrez pas les autres sans leur consentement.",
-							title: "La confidentialité compte",
-						},
-						...(getPrivacyCard(
-							"fr-FR",
-							legalBasis,
-							privacyPolicyUrl,
-							organiserName,
-						)?.slides || []),
-					],
-				},
-				{
-					section: "Meilleures pratiques",
-					slides: [
-						{
-							content:
-								"Imaginez que dembrane est sur haut-parleur avec vous. Si vous pouvez vous entendre, c'est bon.",
-							cta: "Noté",
-							extraHelp:
-								"Un peu de bruit de fond est acceptable, tant qu'on sait qui parle.",
-							title: "Réduire le Bruit de Fond",
-						},
-						{
-							content:
-								"Assurez une connexion stable pour un enregistrement fluide.",
-							cta: "Prêt !",
-							extraHelp:
-								"Le Wi-Fi ou de bonnes données mobiles fonctionnent mieux. Si votre connexion tombe, ne vous inquiétez pas. Vous pouvez toujours reprendre là où vous vous êtes arrêté.",
-							title: "Connexion internet forte",
-						},
-						{
-							content:
-								"Évitez les interruptions en gardant votre appareil déverrouillé. S'il se verrouille, déverrouillez-le simplement et continuez.",
-							cta: "D'accord",
-							extraHelp:
-								"dembrane essaie de garder votre appareil actif, mais parfois les appareils peuvent l'annuler. Vous pouvez ajuster les paramètres de votre appareil pour rester déverrouillé plus longtemps si nécessaire.",
-							title: "Ne verrouillez pas votre appareil !",
-						},
-					],
-				},
-			],
-			"it-IT": [
-				{
-					section: "Benvenuto",
-					slides: [
-						{
-							content:
-								"Registra la tua voce per rispondere alle domande e dire la tua.",
-							cta: "Andiamo!",
-							extraHelp:
-								"Questo è un breve tutorial. Usa i pulsanti per andare avanti e indietro. Alla fine entri nel portale di registrazione.",
-							title: "Benvenuto su dembrane",
-						},
-						{
-							content: "dembrane aiuta a raccogliere idee da gruppi grandi.",
-							cta: "Dimmi di più",
-							extraHelp:
-								"Feedback per il comune, idee al lavoro, ricerca: la tua voce conta.",
-							title: "Cos'è dembrane?",
-						},
-						{
-							content:
-								"Rispondi alle domande a tuo ritmo, parlando o scrivendo.",
-							cta: "Avanti",
-							extraHelp:
-								"Parlare è il modo principale: le risposte sono più naturali. Ma puoi anche scrivere.",
-							title: "Di' cosa pensi",
-						},
-						{
-							content: "dembrane è più bello in gruppo.",
-							cta: "Avanti",
-							extraHelp:
-								"Trova qualcuno per parlare insieme delle domande e registrare la conversazione. Non sappiamo chi ha detto cosa, solo quali idee sono state condivise.",
-							title: "Da solo o in gruppo",
-						},
-					],
-				},
-				{
-					section: "Come funziona",
-					slides: [
-						{
-							content:
-								"Le domande arrivano quando entri nel portale di registrazione.",
-							cta: "Capito",
-							extraHelp:
-								"Le domande dipendono dall'host. Possono parlare di temi della comunità, lavoro o ricerca. Se non ci sono domande, puoi condividere qualsiasi pensiero o preoccupazione.",
-							title: "Le domande",
-						},
-					],
-				},
-				{
-					section: "Privacy",
-					slides: [
-						{
-							content: "Scegli tu cosa condividere.",
-							cta: "Dimmi di più",
-							extraHelp:
-								"Non condividere dettagli che non vuoi far sapere all'host. Chiedi sempre il permesso prima di registrare altre persone.",
-							title: "La privacy conta",
-						},
-						...(getPrivacyCard(
-							"it-IT",
-							legalBasis,
-							privacyPolicyUrl,
-							organiserName,
-						)?.slides || []),
-					],
-				},
-				{
-					section: "Consigli utili",
-					slides: [
-						{
-							content:
-								"Pensa che dembrane sia in vivavoce con te. Se senti la tua voce, va bene.",
-							cta: "Capito",
-							extraHelp:
-								"Un po' di rumore va bene. Importante: deve essere chiaro chi parla.",
-							title: "Riduci il rumore di fondo",
-						},
-						{
-							content: "Usa una connessione stabile per registrare bene.",
-							cta: "Pronto!",
-							extraHelp:
-								"Wi-Fi o dati mobili buoni vanno bene. Se la connessione cade, non preoccuparti: puoi continuare da dove hai lasciato.",
-							title: "Connessione stabile",
-						},
-						{
-							content:
-								"Tieni il telefono sbloccato. Se si blocca, sbloccalo e continua.",
-							cta: "Ok",
-							extraHelp:
-								"dembrane prova a tenere il telefono attivo. A volte non funziona: puoi cambiare le impostazioni del telefono per stare sbloccato più a lungo.",
-							title: "Non bloccare il telefono",
-						},
-					],
-				},
-			],
-			"nl-NL": [
-				{
-					section: "Welkom",
-					slides: [
-						{
-							content:
-								"Neem je stem op om vragen te beantwoorden en impact te maken.",
-							cta: "Aan de slag!",
-							extraHelp:
-								"Dit is een mini-handleiding. Gebruik de knoppen om te navigeren. Na afloop van de handleiding kom je in de opnameportaal terecht.",
-							title: "Welkom bij dembrane!",
-						},
-						{
-							content:
-								"dembrane helpt mensen gemakkelijk input van grote groepen te verzamelen.",
-							cta: "Vertel me meer",
-							extraHelp:
-								"Of het nu gaat om feedback voor de gemeente, input op het werk, of deelname aan onderzoek, jouw stem telt!",
-							title: "Wat is dembrane?",
-						},
-						{
-							content:
-								"Beantwoord vragen in je eigen tempo door te spreken of te typen.",
-							cta: "Volgende",
-							extraHelp:
-								"Spraak is onze voorkeursmethode, omdat het natuurlijker en gedetailleerder is. Typen kan natuurlijk ook altijd.",
-							title: "Zeg het maar",
-						},
-						{
-							content: "dembrane is leuker met een groep!",
-							cta: "Volgende",
-							extraHelp:
-								"dembrane is leuker als je iemand vindt om de vragen samen te bespreken en jullie gesprek op te nemen. We kunnen niet horen wie wat zei, alleen welke ideeën er gedeeld zijn.",
-							title: "Alleen of in een groep",
-						},
-					],
-				},
-				{
-					section: "Hoe het werkt",
-					slides: [
-						{
-							content:
-								"Je krijgt de vragen te zien zodra je in de opnameportal bent.",
-							cta: "Begrepen",
-							extraHelp:
-								"Vragen variëren afhankelijk van wat de organisator wil weten. Het kan gaan over de buurt, werkervaringen, of onderzoeksonderwerpen. Als er geen specifieke vragen zijn, kun je gewoon je gedachten of zorgen delen.",
-							title: "Vragenronde",
-						},
-					],
-				},
-				{
-					section: "Privacy",
-					slides: [
-						{
-							content: "Als opnemer heb je zelf controle over wat je deelt.",
-							cta: "Vertel me meer",
-							extraHelp:
-								"Vermijd het delen van details die je niet met de organisator wilt delen. Wees voorzichtig en neem anderen niet op zonder hun toestemming.",
-							title: "Privacy is belangrijk",
-						},
-						...(getPrivacyCard(
-							"nl-NL",
-							legalBasis,
-							privacyPolicyUrl,
-							organiserName,
-						)?.slides || []),
-					],
-				},
-				{
-					section: "Tips",
-					slides: [
-						{
-							content:
-								"Stel je voor dat dembrane via de luidspreker met je praat. Als je jezelf kunt horen, zit je goed.",
-							cta: "Begrepen",
-							extraHelp:
-								"Een beetje achtergrondgeluid is geen probleem, zolang duidelijk is wie er spreekt.",
-							title: "Verminder achtergrondgeluid",
-						},
-						{
-							content:
-								"Zorg voor een stabiele verbinding voor een soepele opname.",
-							cta: "Klaar!",
-							extraHelp:
-								"Wi-Fi of een goede mobiele verbinding werkt het beste. Valt je verbinding weg? Geen zorgen, je kunt altijd opnieuw beginnen waar je gebleven was.",
-							title: "Goede internetverbinding",
-						},
-						{
-							content:
-								"Voorkom onderbrekingen door je apparaat ontgrendeld te houden. Als het toch vergrendelt, ontgrendel je het gewoon en ga je verder.",
-							cta: "Oké",
-							extraHelp:
-								"dembrane probeert je apparaat actief te houden, maar soms kunnen apparaten dit overrulen. Je kunt de instellingen van je apparaat aanpassen om langer ontgrendeld te blijven als dat nodig is.",
-							title: "Vergrendel je apparaat niet!",
-						},
-					],
-				},
-			],
-			"uk-UA": [
-				{
-					section: "Ласкаво просимо",
-					slides: [
-						{
-							content:
-								"Запишіть свій голос, щоб відповісти на запитання та зробити свій внесок.",
-							cta: "Почнімо!",
-							extraHelp:
-								"Це міні-інструкція. Використовуйте кнопки «назад» і «далі» для навігації. Після завершення ви потрапите на портал запису.",
-							title: "Ласкаво просимо до dembrane!",
-						},
-						{
-							content:
-								"dembrane допомагає людям легко збирати думки великих груп.",
-							cta: "Розкажіть більше",
-							extraHelp:
-								"Чи то зворотний зв'язок для місцевої громади, чи думки в робочому середовищі, чи участь у дослідженні — ваш голос має значення!",
-							title: "Що таке dembrane?",
-						},
-						{
-							content:
-								"Відповідайте на запитання у зручному темпі, говорячи або друкуючи.",
-							cta: "Далі",
-							extraHelp:
-								"Голосовий ввід — наш основний режим, який дозволяє давати більш природні та детальні відповіді. Друкування завжди доступне як альтернатива.",
-							title: "Просто скажіть, що думаєте",
-						},
-						{
-							content: "dembrane цікавіше у групі!",
-							cta: "Далі",
-							extraHelp:
-								"dembrane цікавіше, коли ви знаходите когось, щоб обговорити запитання разом і записати вашу розмову. Ми не можемо визначити, хто що сказав, лише які ідеї були висловлені.",
-							title: "Наодинці чи в групі",
-						},
-					],
-				},
-				{
-					section: "Як це працює",
-					slides: [
-						{
-							content:
-								"Ви отримаєте запитання, коли потрапите на портал запису.",
-							cta: "Зрозуміло",
-							extraHelp:
-								"Запитання залежать від потреб організатора. Вони можуть стосуватися громадських питань, робочого досвіду або дослідницьких тем. Якщо конкретних запитань немає, ви можете вільно поділитися будь-якими думками чи проблемами.",
-							title: "Час запитань",
-						},
-					],
-				},
-				{
-					section: "Конфіденційність",
-					slides: [
-						{
-							content: "Як записувач, ви контролюєте те, чим ділитесь.",
-							cta: "Розкажіть більше",
-							extraHelp:
-								"Уникайте обміну деталями, які ви не хочете повідомляти організатору. Будьте уважні та не записуйте інших без їхньої згоди.",
-							title: "Конфіденційність важлива",
-						},
-						...(getPrivacyCard(
-							"uk-UA",
-							legalBasis,
-							privacyPolicyUrl,
-							organiserName,
-						)?.slides || []),
-					],
-				},
-				{
-					section: "Корисні поради",
-					slides: [
-						{
-							content:
-								"Уявіть, що dembrane на гучному зв'язку з вами. Якщо ви чуєте себе — все добре.",
-							cta: "Зрозуміло",
-							extraHelp:
-								"Невеликий фоновий шум — це нормально, головне, щоб було зрозуміло, хто говорить.",
-							title: "Зменшіть фоновий шум",
-						},
-						{
-							content:
-								"Забезпечте стабільне з'єднання для безперебійного запису.",
-							cta: "Готово!",
-							extraHelp:
-								"Wi-Fi або хороший мобільний інтернет працюють найкраще. Якщо з'єднання обірветься, не хвилюйтесь. Ви завжди можете продовжити з того місця, де зупинились.",
-							title: "Надійне інтернет-з'єднання",
-						},
-						{
-							content:
-								"Запобігайте перервам, тримаючи пристрій розблокованим. Якщо він заблокується, просто розблокуйте і продовжуйте.",
-							cta: "Добре",
-							extraHelp:
-								"dembrane намагається тримати ваш пристрій активним, але іноді пристрої можуть це перевизначити. Ви можете налаштувати параметри пристрою, щоб він залишався розблокованим довше, якщо потрібно.",
-							title: "Не блокуйте пристрій!",
-						},
-					],
-				},
-			],
-		};
-
-		// Fallback to English if language not found
-		return tutorialCards[lang] || tutorialCards["en-US"] || [];
-	};
-
-	const getPrivacyCard = (
-		lang: string,
-		legalBasis: LegalBasis = "client-managed",
-		privacyPolicyUrl?: string | null,
-		organiserName?: string | null,
-	): LanguageCards[string][number] | null => {
-		if (legalBasis === "client-managed") {
-			return getClientManagedPrivacyCard(lang);
-		}
-		if (legalBasis === "dembrane-events") {
-			return getDembraneEventsPrivacyCard(lang);
-		}
-		return getConsentPrivacyCard(lang, privacyPolicyUrl, organiserName);
-	};
-
-	const getClientManagedPrivacyCard = (
-		lang: string,
-	): LanguageCards[string][number] | null => {
-		const cards: Record<string, LanguageCards[string][number]> = {
-			"de-DE": {
-				section: "Privatsphäre",
+const getBasicTutorialCards = (lang: string): LanguageCards[string] => {
+	const tutorialCards: Record<string, LanguageCards[string]> = {
+		"de-DE": [
+			{
+				section: "Willkommen",
 				slides: [
 					{
 						content:
-							"Die Organisator*innen sind dafür verantwortlich, wie Ihre Daten in dieser Sitzung verwendet werden, dembrane verarbeitet Ihr Gespräch im Auftrag dieser.",
-						cta: "Ich verstehe",
+							"Nehmen Sie Ihre Stimme auf, um Fragen zu beantworten und Einfluss zu nehmen.",
+						cta: "Los geht's!",
 						extraHelp:
-							"Aufnahmen werden transkribiert und für Erkenntnisse analysiert. Ihre Daten werden auf gesicherten Servern in Europa gespeichert, nicht zum Trainieren von KI-Modellen verwendet und innerhalb von 30 Tagen nach Projektende gelöscht.\n\nFragen zu Ihrer Privatsphäre? Wenden Sie sich direkt an den Organisator.",
-						title: "Verantwortung, Nutzung und Sicherheit.",
+							"Dies ist ein Mini-Tutorial. Nutzen Sie die Vor- und Zurück-Tasten zur Navigation. Nach Abschluss gelangen Sie zum Aufnahmeportal.",
+						title: "Willkommen bei dembrane!",
+					},
+					{
+						content:
+							"dembrane hilft Menschen, einfach Input von großen Gruppen zu sammeln.",
+						cta: "Mehr erfahren",
+						extraHelp:
+							"Ob Feedback für eine Kommune, Input im Arbeitsumfeld oder Teilnahme an Forschung – Ihre Stimme zählt!",
+						title: "Was ist dembrane?",
+					},
+					{
+						content:
+							"Beantworten Sie Fragen in Ihrem eigenen Tempo durch Sprechen oder Tippen.",
+						cta: "Weiter",
+						extraHelp:
+							"Spracheingabe ist unser bevorzugter Modus, da sie natürlichere und detailliertere Antworten ermöglicht. Tippen steht immer als Alternative zur Verfügung.",
+						title: "Sagen Sie einfach Ihre Meinung",
+					},
+					{
+						content: "dembrane macht in Gruppen mehr Spaß!",
+						cta: "Weiter",
+						extraHelp:
+							"dembrane macht mehr Spaß, wenn Sie jemanden finden, um die Fragen gemeinsam zu besprechen und Ihr Gespräch aufzunehmen. Wir können nicht sagen, wer was gesagt hat, nur welche Ideen geteilt wurden.",
+						title: "Allein oder in der Gruppe",
 					},
 				],
 			},
-			"en-US": {
+			{
+				section: "Wie es funktioniert",
+				slides: [
+					{
+						content:
+							"Sie erhalten die Fragen, sobald Sie im Aufnahmeportal sind.",
+						cta: "Verstanden",
+						extraHelp:
+							"Die Fragen variieren je nach Bedürfnissen der Gastgeber*innen. Sie können sich auf kommunale Themen, Arbeitserfahrungen oder Forschungsthemen beziehen. Wenn es keine spezifischen Fragen gibt, können Sie gerne alle Gedanken oder Anliegen teilen.",
+						title: "Fragerunde",
+					},
+				],
+			},
+			{
+				section: "Datenschutz",
+				slides: [
+					{
+						content:
+							"Als aufnehmende Person, haben Sie die Kontrolle über das, was Sie teilen.",
+						cta: "Mehr erfahren",
+						extraHelp:
+							"Vermeiden Sie die Weitergabe von Details, die Sie dem Gastgeber nicht mitteilen möchten. Seien Sie achtsam und nehmen Sie andere nicht ohne deren Zustimmung auf.",
+						title: "Datenschutz ist wichtig",
+					},
+				],
+			},
+		],
+		"en-US": [
+			{
+				section: "Welcome",
+				slides: [
+					{
+						content:
+							"Record your voice to answer questions and make an impact.",
+						cta: "Let's go!",
+						extraHelp:
+							"This is a mini-tutorial. Use the previous and next buttons to navigate. Once completed, you'll enter the recording portal.",
+						title: "Welcome to dembrane!",
+					},
+					{
+						content:
+							"dembrane helps people gather input from large groups easily.",
+						cta: "Tell me more",
+						extraHelp:
+							"Whether it's feedback for a local municipality, input in a work setting, or participation in research, your voice matters!",
+						title: "What is dembrane?",
+					},
+					{
+						content: "Answer questions in your own time by speaking or typing.",
+						cta: "Continue",
+						extraHelp:
+							"Voice input is our primary mode, allowing for more natural and detailed responses. Typing is always available as a backup.",
+						title: "Just speak your mind",
+					},
+					{
+						content: "dembrane is more fun in groups!",
+						cta: "Continue",
+						extraHelp:
+							"dembrane is more fun when you find someone to discuss the questions together and record your conversation. We can't tell who said what, just what ideas were shared.",
+						title: "Solo or in a Group",
+					},
+				],
+			},
+			{
+				section: "How it works",
+				slides: [
+					{
+						content:
+							"You'll receive the questions once in the recording portal.",
+						cta: "Got it",
+						extraHelp:
+							"Questions vary based on the host's needs. They could be about community issues, work experiences, or research topics. If there are no specific questions, you're free to share any thoughts or concerns.",
+						title: "Question time",
+					},
+				],
+			},
+			{
 				section: "Privacy",
 				slides: [
 					{
-						content:
-							"The organiser is responsible for how your data is used in this session. dembrane processes your conversation on their behalf.",
-						cta: "I understand",
+						content: "As the recorder, you are in control of what you share.",
+						cta: "Tell me more",
 						extraHelp:
-							"Recordings are transcribed and analysed for insights. Your data is stored on secured servers in Europe, is not used to train AI models, and is deleted within 30 days after the project has ended.\n\nQuestions about your privacy? Contact the organiser directly.",
-						title: "Data controller, usage and security.",
+							"Avoid sharing details you don't want the host to know. Be mindful and don't record others without their consent.",
+						title: "Privacy matters",
 					},
 				],
 			},
-			"es-ES": {
-				section: "Privacidad",
+		],
+		"es-ES": [
+			{
+				section: "Bienvenido",
+				slides: [
+					{
+						content: "Graba tu voz para responder preguntas y generar impacto.",
+						cta: "¡Vamos!",
+						extraHelp:
+							"Este es un mini-tutorial. Usa los botones de anterior y siguiente para navegar. Una vez completado, entrarás al portal de grabación.",
+						title: "¡Bienvenido a dembrane!",
+					},
+					{
+						content:
+							"dembrane ayuda a las personas a recopilar aportaciones de grandes grupos fácilmente.",
+						cta: "Cuéntame más",
+						extraHelp:
+							"Ya sea retroalimentación para una municipalidad local, aportaciones en el trabajo o participación en investigación, ¡tu voz importa!",
+						title: "¿Qué es dembrane?",
+					},
+					{
+						content:
+							"Responde preguntas a tu propio ritmo hablando o escribiendo.",
+						cta: "Siguiente",
+						extraHelp:
+							"La entrada de voz es nuestro modo principal, permitiendo respuestas más naturales y detalladas. Escribir siempre está disponible como respaldo.",
+						title: "Solo di lo que piensas",
+					},
+					{
+						content: "¡dembrane es más divertido en grupos!",
+						cta: "Siguiente",
+						extraHelp:
+							"dembrane es más divertido cuando encuentras a alguien para discutir las preguntas juntos y grabar su conversación. No podemos distinguir quién dijo qué, solo qué ideas se compartieron.",
+						title: "Solo o en Grupo",
+					},
+				],
+			},
+			{
+				section: "Cómo funciona",
 				slides: [
 					{
 						content:
-							"El organizador es responsable de cómo se utilizan sus datos en esta sesión. dembrane procesa su conversación en su nombre.",
-						cta: "Entiendo",
+							"Recibirás las preguntas una vez en el portal de grabación.",
+						cta: "Entendido",
 						extraHelp:
-							"Las grabaciones se transcriben y analizan para obtener información. Sus datos se almacenan en servidores seguros en Europa, no se utilizan para entrenar modelos de IA y se eliminan dentro de los 30 días posteriores a la finalización del proyecto.\n\n¿Preguntas sobre su privacidad? Contacte directamente al organizador.",
-						title: "Responsable del tratamiento, uso y seguridad.",
+							"Las preguntas varían según las necesidades del anfitrión. Pueden ser sobre temas comunitarios, experiencias laborales o temas de investigación. Si no hay preguntas específicas, eres libre de compartir cualquier pensamiento o inquietud.",
+						title: "Hora de Preguntas",
 					},
 				],
 			},
-			"fr-FR": {
+			{
+				section: "Privacidad",
+				slides: [
+					{
+						content: "Como grabador, tú controlas lo que compartes.",
+						cta: "Cuéntame más",
+						extraHelp:
+							"Evita compartir detalles que no quieras que el anfitrión conozca. Sé consciente y no grabes a otros sin su consentimiento.",
+						title: "La privacidad importa",
+					},
+				],
+			},
+		],
+		"fr-FR": [
+			{
+				section: "Bienvenue",
+				slides: [
+					{
+						content:
+							"Enregistrez votre voix pour répondre aux questions et avoir un impact.",
+						cta: "C'est parti !",
+						extraHelp:
+							"Ceci est un mini-tutoriel. Utilisez les boutons précédent et suivant pour naviguer. Une fois terminé, vous entrerez dans le portail d'enregistrement.",
+						title: "Bienvenue sur dembrane !",
+					},
+					{
+						content:
+							"dembrane aide les gens à recueillir facilement les contributions de grands groupes.",
+						cta: "Dites-m'en plus",
+						extraHelp:
+							"Qu'il s'agisse de commentaires pour une municipalité locale, de contributions dans un cadre professionnel ou de participation à une recherche, votre voix compte !",
+						title: "Qu'est-ce que dembrane ?",
+					},
+					{
+						content:
+							"Répondez aux questions à votre rythme en parlant ou en tapant.",
+						cta: "Suivant",
+						extraHelp:
+							"La saisie vocale est notre mode principal, permettant des réponses plus naturelles et détaillées. La saisie au clavier est toujours disponible en secours.",
+						title: "Dites simplement ce que vous pensez",
+					},
+					{
+						content: "dembrane est plus amusant en groupe !",
+						cta: "Suivant",
+						extraHelp:
+							"dembrane est plus amusant lorsque vous trouvez quelqu'un pour discuter des questions ensemble et enregistrer votre conversation. Nous ne pouvons pas dire qui a dit quoi, juste quelles idées ont été partagées.",
+						title: "Seul ou en Groupe",
+					},
+				],
+			},
+			{
+				section: "Comment ça marche",
+				slides: [
+					{
+						content:
+							"Vous recevrez les questions une fois dans le portail d'enregistrement.",
+						cta: "Compris",
+						extraHelp:
+							"Les questions varient en fonction des besoins de l'hôte. Elles peuvent concerner des problèmes communautaires, des expériences professionnelles ou des sujets de recherche. S'il n'y a pas de questions spécifiques, vous êtes libre de partager vos pensées ou préoccupations.",
+						title: "Heure des Questions",
+					},
+				],
+			},
+			{
 				section: "Confidentialité",
 				slides: [
 					{
 						content:
-							"L'organisateur est responsable de la manière dont vos données sont utilisées dans cette session. dembrane traite votre conversation en son nom.",
-						cta: "Je comprends",
+							"En tant qu'enregistreur, vous contrôlez ce que vous partagez.",
+						cta: "Dites-m'en plus",
 						extraHelp:
-							"Les enregistrements sont transcrits et analysés pour en tirer des enseignements. Vos données sont stockées sur des serveurs sécurisés en Europe, ne sont pas utilisées pour entraîner des modèles d'IA et sont supprimées dans les 30 jours suivant la fin du projet.\n\nDes questions sur votre vie privée ? Contactez directement l'organisateur.",
-						title: "Responsable du traitement, utilisation et sécurité.",
+							"Évitez de partager des détails que vous ne voulez pas que l'hôte connaisse. Soyez attentif et n'enregistrez pas les autres sans leur consentement.",
+						title: "La confidentialité compte",
 					},
 				],
 			},
-			"it-IT": {
-				section: "Privacy",
+		],
+		"it-IT": [
+			{
+				section: "Benvenuto",
 				slides: [
 					{
 						content:
-							"L'organizzatore decide come usare i tuoi dati in questa sessione. dembrane lavora per lui.",
-						cta: "Ho capito",
+							"Registra la tua voce per rispondere alle domande e dire la tua.",
+						cta: "Andiamo!",
 						extraHelp:
-							"Trascriviamo e analizziamo le registrazioni per ottenere informazioni utili. I tuoi dati restano su server sicuri in Europa. Non li usiamo per addestrare modelli di IA. Li cancelliamo entro 30 giorni dalla fine del progetto.\n\nHai domande sulla privacy? Scrivi direttamente all'organizzatore.",
-						title: "I tuoi dati: chi, come, sicurezza",
+							"Questo è un breve tutorial. Usa i pulsanti per andare avanti e indietro. Alla fine entri nel portale di registrazione.",
+						title: "Benvenuto su dembrane",
+					},
+					{
+						content: "dembrane aiuta a raccogliere idee da gruppi grandi.",
+						cta: "Dimmi di più",
+						extraHelp:
+							"Feedback per il comune, idee al lavoro, ricerca: la tua voce conta.",
+						title: "Cos'è dembrane?",
+					},
+					{
+						content: "Rispondi alle domande a tuo ritmo, parlando o scrivendo.",
+						cta: "Avanti",
+						extraHelp:
+							"Parlare è il modo principale: le risposte sono più naturali. Ma puoi anche scrivere.",
+						title: "Di' cosa pensi",
+					},
+					{
+						content: "dembrane è più bello in gruppo.",
+						cta: "Avanti",
+						extraHelp:
+							"Trova qualcuno per parlare insieme delle domande e registrare la conversazione. Non sappiamo chi ha detto cosa, solo quali idee sono state condivise.",
+						title: "Da solo o in gruppo",
 					},
 				],
 			},
-			"nl-NL": {
-				section: "Privacy",
+			{
+				section: "Come funziona",
 				slides: [
 					{
 						content:
-							"De organisator is verantwoordelijk voor hoe jouw gegevens worden gebruikt in deze sessie. dembrane verwerkt jouw gesprek namens hen.",
-						cta: "Ik begrijp het",
+							"Le domande arrivano quando entri nel portale di registrazione.",
+						cta: "Capito",
 						extraHelp:
-							"Opnames worden getranscribeerd en geanalyseerd om inzichten te genereren. Jouw gegevens worden opgeslagen op beveiligde servers in Europa, niet gebruikt om AI-modellen te trainen, en verwijderd binnen 30 dagen na afloop van het project.\n\nVragen over jouw privacy? Neem contact op met de organisator.",
-						title: "Gegevensbeheer, gebruik en beveiliging.",
+							"Le domande dipendono dall'host. Possono parlare di temi della comunità, lavoro o ricerca. Se non ci sono domande, puoi condividere qualsiasi pensiero o preoccupazione.",
+						title: "Le domande",
 					},
 				],
 			},
-			"uk-UA": {
+			{
+				section: "Privacy",
+				slides: [
+					{
+						content: "Scegli tu cosa condividere.",
+						cta: "Dimmi di più",
+						extraHelp:
+							"Non condividere dettagli che non vuoi far sapere all'host. Chiedi sempre il permesso prima di registrare altre persone.",
+						title: "La privacy conta",
+					},
+				],
+			},
+		],
+		"nl-NL": [
+			{
+				section: "Welkom",
+				slides: [
+					{
+						content:
+							"Neem je stem op om vragen te beantwoorden en impact te maken.",
+						cta: "Aan de slag!",
+						extraHelp:
+							"Dit is een mini-handleiding. Gebruik de knoppen om te navigeren. Na afloop van de handleiding kom je in de opnameportaal terecht.",
+						title: "Welkom bij dembrane!",
+					},
+					{
+						content:
+							"dembrane helpt mensen gemakkelijk input van grote groepen te verzamelen.",
+						cta: "Vertel me meer",
+						extraHelp:
+							"Of het nu gaat om feedback voor de gemeente, input op het werk, of deelname aan onderzoek, jouw stem telt!",
+						title: "Wat is dembrane?",
+					},
+					{
+						content:
+							"Beantwoord vragen in je eigen tempo door te spreken of te typen.",
+						cta: "Volgende",
+						extraHelp:
+							"Spraak is onze voorkeursmethode, omdat het natuurlijker en gedetailleerder is. Typen kan natuurlijk ook altijd.",
+						title: "Zeg het maar",
+					},
+					{
+						content: "dembrane is leuker met een groep!",
+						cta: "Volgende",
+						extraHelp:
+							"dembrane is leuker als je iemand vindt om de vragen samen te bespreken en jullie gesprek op te nemen. We kunnen niet horen wie wat zei, alleen welke ideeën er gedeeld zijn.",
+						title: "Alleen of in een groep",
+					},
+				],
+			},
+			{
+				section: "Hoe het werkt",
+				slides: [
+					{
+						content:
+							"Je krijgt de vragen te zien zodra je in de opnameportal bent.",
+						cta: "Begrepen",
+						extraHelp:
+							"Vragen variëren afhankelijk van wat de organisator wil weten. Het kan gaan over de buurt, werkervaringen, of onderzoeksonderwerpen. Als er geen specifieke vragen zijn, kun je gewoon je gedachten of zorgen delen.",
+						title: "Vragenronde",
+					},
+				],
+			},
+			{
+				section: "Privacy",
+				slides: [
+					{
+						content: "Als opnemer heb je zelf controle over wat je deelt.",
+						cta: "Vertel me meer",
+						extraHelp:
+							"Vermijd het delen van details die je niet met de organisator wilt delen. Wees voorzichtig en neem anderen niet op zonder hun toestemming.",
+						title: "Privacy is belangrijk",
+					},
+				],
+			},
+		],
+		"uk-UA": [
+			{
+				section: "Ласкаво просимо",
+				slides: [
+					{
+						content:
+							"Запишіть свій голос, щоб відповісти на запитання та зробити свій внесок.",
+						cta: "Почнімо!",
+						extraHelp:
+							"Це міні-інструкція. Використовуйте кнопки «назад» і «далі» для навігації. Після завершення ви потрапите на портал запису.",
+						title: "Ласкаво просимо до dembrane!",
+					},
+					{
+						content:
+							"dembrane допомагає людям легко збирати думки великих груп.",
+						cta: "Розкажіть більше",
+						extraHelp:
+							"Чи то зворотний зв'язок для місцевої громади, чи думки в робочому середовищі, чи участь у дослідженні — ваш голос має значення!",
+						title: "Що таке dembrane?",
+					},
+					{
+						content:
+							"Відповідайте на запитання у зручному темпі, говорячи або друкуючи.",
+						cta: "Далі",
+						extraHelp:
+							"Голосовий ввід — наш основний режим, який дозволяє давати більш природні та детальні відповіді. Друкування завжди доступне як альтернатива.",
+						title: "Просто скажіть, що думаєте",
+					},
+					{
+						content: "dembrane цікавіше у групі!",
+						cta: "Далі",
+						extraHelp:
+							"dembrane цікавіше, коли ви знаходите когось, щоб обговорити запитання разом і записати вашу розмову. Ми не можемо визначити, хто що сказав, лише які ідеї були висловлені.",
+						title: "Наодинці чи в групі",
+					},
+				],
+			},
+			{
+				section: "Як це працює",
+				slides: [
+					{
+						content: "Ви отримаєте запитання, коли потрапите на портал запису.",
+						cta: "Зрозуміло",
+						extraHelp:
+							"Запитання залежать від потреб організатора. Вони можуть стосуватися громадських питань, робочого досвіду або дослідницьких тем. Якщо конкретних запитань немає, ви можете вільно поділитися будь-якими думками чи проблемами.",
+						title: "Час запитань",
+					},
+				],
+			},
+			{
 				section: "Конфіденційність",
 				slides: [
 					{
-						content:
-							"Організатор відповідає за те, як використовуються ваші дані в цій сесії. dembrane обробляє вашу розмову від його імені.",
-						cta: "Я розумію",
+						content: "Як записувач, ви контролюєте те, чим ділитесь.",
+						cta: "Розкажіть більше",
 						extraHelp:
-							"Записи транскрибуються та аналізуються для отримання висновків. Ваші дані зберігаються на захищених серверах у Європі, не використовуються для навчання моделей ШІ та видаляються протягом 30 днів після завершення проєкту.\n\nПитання щодо вашої конфіденційності? Зверніться безпосередньо до організатора.",
-						title: "Контролер даних, використання та безпека.",
+							"Уникайте обміну деталями, які ви не хочете повідомляти організатору. Будьте уважні та не записуйте інших без їхньої згоди.",
+						title: "Конфіденційність важлива",
 					},
 				],
 			},
-		};
-
-		return cards[lang] || cards["en-US"] || null;
+		],
 	};
 
-	const getConsentPrivacyCard = (
-		lang: string,
-		privacyPolicyUrl?: string | null,
-		organiserName?: string | null,
-	): LanguageCards[string][number] | null => {
-		const policyUrl = privacyPolicyUrl || undefined;
-		// no name = keep the generic "the organiser" wording
-		const name = organiserName?.trim() || undefined;
+	// Fallback to English if language not found
+	return tutorialCards[lang] || tutorialCards["en-US"] || [];
+};
 
-		const cards: Record<string, LanguageCards[string][number]> = {
-			"de-DE": {
-				section: "Privatsphäre",
+const getAdvancedTutorialCards = (
+	lang: string,
+	legalBasis: LegalBasis = "client-managed",
+	privacyPolicyUrl?: string | null,
+	organiserName?: string | null,
+): LanguageCards[string] => {
+	const tutorialCards: Record<string, LanguageCards[string]> = {
+		"de-DE": [
+			{
+				section: "Willkommen",
 				slides: [
 					{
-						checkbox: {
-							label:
-								"Ich stimme zu, dass mein Gespräch aufgezeichnet und verarbeitet wird.",
-							required: true,
-						},
-						content: name
-							? `${name} ist dafür verantwortlich, wie Ihre Daten in dieser Sitzung verwendet werden, dembrane verarbeitet Ihr Gespräch im Auftrag dieser.`
-							: "Die Organisator*innen sind dafür verantwortlich, wie Ihre Daten in dieser Sitzung verwendet werden, dembrane verarbeitet Ihr Gespräch im Auftrag dieser.",
-						cta: "Ich verstehe",
+						content:
+							"Nehmen Sie Ihre Stimme auf, um Fragen zu beantworten und Einfluss zu nehmen.",
+						cta: "Los geht's!",
 						extraHelp:
-							"Aufnahmen werden transkribiert und für Erkenntnisse analysiert. Ihre Daten werden auf gesicherten Servern in Europa gespeichert, nicht zum Trainieren von KI-Modellen verwendet und innerhalb von 30 Tagen nach Projektende gelöscht.\n\nFragen zu Ihrer Privatsphäre? Wenden Sie sich direkt an den Organisator.",
-						...(policyUrl
-							? {
-									link: {
-										label: "Datenschutzrichtlinie des Organisators lesen",
-										url: policyUrl,
-									},
-								}
-							: {}),
-						title: "Verantwortung, Nutzung und Sicherheit.",
+							"Dies ist ein Mini-Tutorial. Nutzen Sie die Vor- und Zurück-Tasten zur Navigation. Nach Abschluss gelangen Sie zum Aufnahmeportal.",
+						title: "Willkommen bei dembrane!",
+					},
+					{
+						content:
+							"dembrane hilft Menschen, einfach Input von großen Gruppen zu sammeln.",
+						cta: "Mehr erfahren",
+						extraHelp:
+							"Ob Feedback für eine Kommune, Input im Arbeitsumfeld oder Teilnahme an Forschung – Ihre Stimme zählt!",
+						title: "Was ist dembrane?",
+					},
+					{
+						content:
+							"Beantworten Sie Fragen in Ihrem eigenen Tempo durch Sprechen oder Tippen.",
+						cta: "Weiter",
+						extraHelp:
+							"Spracheingabe ist unser bevorzugter Modus, da sie natürlichere und detailliertere Antworten ermöglicht. Tippen steht immer als Alternative zur Verfügung.",
+						title: "Sagen Sie einfach Ihre Meinung",
+					},
+					{
+						content: "dembrane macht in Gruppen mehr Spaß!",
+						cta: "Weiter",
+						extraHelp:
+							"dembrane macht mehr Spaß, wenn Sie jemanden finden, um die Fragen gemeinsam zu besprechen und Ihr Gespräch aufzunehmen. Wir können nicht sagen, wer was gesagt hat, nur welche Ideen geteilt wurden.",
+						title: "Allein oder in der Gruppe",
 					},
 				],
 			},
-			"en-US": {
+			{
+				section: "Wie es funktioniert",
+				slides: [
+					{
+						content:
+							"Sie erhalten die Fragen, sobald Sie im Aufnahmeportal sind.",
+						cta: "Verstanden",
+						extraHelp:
+							"Die Fragen variieren je nach Bedürfnissen der Gastgeber*innen. Sie können sich auf kommunale Themen, Arbeitserfahrungen oder Forschungsthemen beziehen. Wenn es keine spezifischen Fragen gibt, können Sie gerne alle Gedanken oder Anliegen teilen.",
+						title: "Fragerunde",
+					},
+				],
+			},
+			{
+				section: "Datenschutz",
+				slides: [
+					{
+						content:
+							"Als aufnehmende Person, haben Sie die Kontrolle über das, was Sie teilen.",
+						cta: "Mehr erfahren",
+						extraHelp:
+							"Vermeiden Sie die Weitergabe von Details, die Sie dem Gastgeber nicht mitteilen möchten. Seien Sie achtsam und nehmen Sie andere nicht ohne deren Zustimmung auf.",
+						title: "Datenschutz ist wichtig",
+					},
+					...(getPrivacyCard(
+						"de-DE",
+						legalBasis,
+						privacyPolicyUrl,
+						organiserName,
+					)?.slides || []),
+				],
+			},
+			{
+				section: "Best practices",
+				slides: [
+					{
+						content:
+							"Stellen Sie sich vor, dembrane ist auf Lautsprecher mit Ihnen. Wenn Sie sich selbst hören können, ist alles in Ordnung.",
+						cta: "Verstanden",
+						extraHelp:
+							"Etwas Hintergrundgeräusch ist in Ordnung, solange klar ist, wer spricht.",
+						title: "Hintergrundgeräusche reduzieren",
+					},
+					{
+						content:
+							"Stellen Sie eine stabile Verbindung für eine reibungslose Aufnahme sicher.",
+						cta: "Bereit!",
+						extraHelp:
+							"WLAN oder gute mobile Daten funktionieren am besten. Wenn Ihre Verbindung abbricht, keine Sorge. Sie können immer dort weitermachen, wo Sie aufgehört haben.",
+						title: "Starke Internetverbindung",
+					},
+					{
+						content:
+							"Vermeiden Sie Unterbrechungen, indem Sie Ihr Gerät entsperrt halten. Wenn es sich sperrt, entsperren Sie es einfach und fahren Sie fort.",
+						cta: "Okay",
+						extraHelp:
+							"dembrane versucht, Ihr Gerät aktiv zu halten, aber manchmal können Geräte dies überschreiben. Sie können Ihre Geräteeinstellungen anpassen, um länger entsperrt zu bleiben, wenn nötig.",
+						title: "Gerät nicht sperren!",
+					},
+				],
+			},
+		],
+		"en-US": [
+			{
+				section: "Welcome",
+				slides: [
+					{
+						content:
+							"Record your voice to answer questions and make an impact.",
+						cta: "Let's go!",
+						extraHelp:
+							"This is a mini-tutorial. Use the previous and next buttons to navigate. Once completed, you'll enter the recording portal.",
+						title: "Welcome to dembrane!",
+					},
+					{
+						content:
+							"dembrane helps people gather input from large groups easily.",
+						cta: "Tell me more",
+						extraHelp:
+							"Whether it's feedback for a local municipality, input in a work setting, or participation in research, your voice matters!",
+						title: "What is dembrane?",
+					},
+					{
+						content: "Answer questions in your own time by speaking or typing.",
+						cta: "Continue",
+						extraHelp:
+							"Voice input is our primary mode, allowing for more natural and detailed responses. Typing is always available as a backup.",
+						title: "Just speak your mind",
+					},
+					{
+						content: "dembrane is more fun in groups!",
+						cta: "Continue",
+						extraHelp:
+							"dembrane is more fun when you find someone to discuss the questions together and record your conversation. We can't tell who said what, just what ideas were shared.",
+						title: "Solo or in a Group",
+					},
+				],
+			},
+			{
+				section: "How it works",
+				slides: [
+					{
+						content:
+							"You'll receive the questions once in the recording portal.",
+						cta: "Got it",
+						extraHelp:
+							"Questions vary based on the host's needs. They could be about community issues, work experiences, or research topics. If there are no specific questions, you're free to share any thoughts or concerns.",
+						title: "Question time",
+					},
+				],
+			},
+			{
 				section: "Privacy",
 				slides: [
 					{
-						checkbox: {
-							label:
-								"I consent to my conversation being recorded and processed.",
-							required: true,
-						},
-						content: name
-							? `${name} is responsible for how your data is used in this session. dembrane processes your conversation on their behalf.`
-							: "The organiser is responsible for how your data is used in this session. dembrane processes your conversation on their behalf.",
-						cta: "I understand",
+						content: "As the recorder, you are in control of what you share.",
+						cta: "Tell me more",
 						extraHelp:
-							"Recordings are transcribed and analysed for insights. Your data is stored on secured servers in Europe, is not used to train AI models, and is deleted within 30 days after the project has ended.\n\nQuestions about your privacy? Contact the organiser directly.",
-						...(policyUrl
-							? {
-									link: {
-										label: "Read the organiser's privacy policy",
-										url: policyUrl,
-									},
-								}
-							: {}),
-						title: "Data controller, usage and security.",
+							"Avoid sharing details you don't want the host to know. Be mindful and don't record others without their consent.",
+						title: "Privacy matters",
+					},
+					...(getPrivacyCard(
+						"en-US",
+						legalBasis,
+						privacyPolicyUrl,
+						organiserName,
+					)?.slides || []),
+				],
+			},
+			{
+				section: "Best practices",
+				slides: [
+					{
+						content:
+							"Imagine dembrane is on speakerphone with you. If you can hear yourself, you're good to go.",
+						cta: "Noted",
+						extraHelp:
+							"Some background noise is okay, as long as who is speaking is clear.",
+						title: "Reduce background noise",
+					},
+					{
+						content: "Ensure a stable connection for smooth recording.",
+						cta: "Ready!",
+						extraHelp:
+							"Wi-Fi or good mobile data works best. If your connection drops, don't worry. You can always restart where you left off.",
+						title: "Strong internet connection",
+					},
+					{
+						content:
+							"Prevent interruptions by keeping your device unlocked. If it locks, just unlock and continue.",
+						cta: "Okay",
+						extraHelp:
+							"dembrane tries to keep your device active, but sometimes devices can override it, for example if you have low power mode active. You can adjust your device settings to stay unlocked longer if needed.",
+						title: "Don't lock your device!",
 					},
 				],
 			},
-			"es-ES": {
+		],
+		"es-ES": [
+			{
+				section: "Bienvenido",
+				slides: [
+					{
+						content: "Graba tu voz para responder preguntas y generar impacto.",
+						cta: "¡Vamos!",
+						extraHelp:
+							"Este es un mini-tutorial. Usa los botones de anterior y siguiente para navegar. Una vez completado, entrarás al portal de grabación.",
+						title: "¡Bienvenido a dembrane!",
+					},
+					{
+						content:
+							"dembrane ayuda a las personas a recopilar aportaciones de grandes grupos fácilmente.",
+						cta: "Cuéntame más",
+						extraHelp:
+							"Ya sea retroalimentación para una municipalidad local, aportaciones en el trabajo o participación en investigación, ¡tu voz importa!",
+						title: "¿Qué es dembrane?",
+					},
+					{
+						content:
+							"Responde preguntas a tu propio ritmo hablando o escribiendo.",
+						cta: "Siguiente",
+						extraHelp:
+							"La entrada de voz es nuestro modo principal, permitiendo respuestas más naturales y detalladas. Escribir siempre está disponible como respaldo.",
+						title: "Solo di lo que piensas",
+					},
+					{
+						content: "¡dembrane es más divertido en grupos!",
+						cta: "Siguiente",
+						extraHelp:
+							"dembrane es más divertido cuando encuentras a alguien para discutir las preguntas juntos y grabar su conversación. No podemos distinguir quién dijo qué, solo qué ideas se compartieron.",
+						title: "Solo o en Grupo",
+					},
+				],
+			},
+			{
+				section: "Cómo funciona",
+				slides: [
+					{
+						content:
+							"Recibirás las preguntas una vez en el portal de grabación.",
+						cta: "Entendido",
+						extraHelp:
+							"Las preguntas varían según las necesidades del anfitrión. Pueden ser sobre temas comunitarios, experiencias laborales o temas de investigación. Si no hay preguntas específicas, eres libre de compartir cualquier pensamiento o inquietud.",
+						title: "Hora de Preguntas",
+					},
+				],
+			},
+			{
 				section: "Privacidad",
 				slides: [
 					{
-						checkbox: {
-							label:
-								"Doy mi consentimiento para que mi conversación sea grabada y procesada.",
-							required: true,
-						},
-						content: name
-							? `${name} es responsable de cómo se utilizan sus datos en esta sesión. dembrane procesa su conversación en su nombre.`
-							: "El organizador es responsable de cómo se utilizan sus datos en esta sesión. dembrane procesa su conversación en su nombre.",
-						cta: "Entiendo",
+						content: "Como grabador, tú controlas lo que compartes.",
+						cta: "Cuéntame más",
 						extraHelp:
-							"Las grabaciones se transcriben y analizan para obtener información. Sus datos se almacenan en servidores seguros en Europa, no se utilizan para entrenar modelos de IA y se eliminan dentro de los 30 días posteriores a la finalización del proyecto.\n\n¿Preguntas sobre su privacidad? Contacte directamente al organizador.",
-						...(policyUrl
-							? {
-									link: {
-										label: "Lea la política de privacidad del organizador",
-										url: policyUrl,
-									},
-								}
-							: {}),
-						title: "Responsable del tratamiento, uso y seguridad.",
+							"Evita compartir detalles que no quieras que el anfitrión conozca. Sé consciente y no grabes a otros sin su consentimiento.",
+						title: "La privacidad importa",
 					},
+					...(getPrivacyCard(
+						"es-ES",
+						legalBasis,
+						privacyPolicyUrl,
+						organiserName,
+					)?.slides || []),
 				],
 			},
-			"fr-FR": {
-				section: "Confidentialité",
-				slides: [
-					{
-						checkbox: {
-							label:
-								"Je consens à ce que ma conversation soit enregistrée et traitée.",
-							required: true,
-						},
-						content: name
-							? `${name} est responsable de la manière dont vos données sont utilisées dans cette session. dembrane traite votre conversation en son nom.`
-							: "L'organisateur est responsable de la manière dont vos données sont utilisées dans cette session. dembrane traite votre conversation en son nom.",
-						cta: "Je comprends",
-						extraHelp:
-							"Les enregistrements sont transcrits et analysés pour en tirer des enseignements. Vos données sont stockées sur des serveurs sécurisés en Europe, ne sont pas utilisées pour entraîner des modèles d'IA et sont supprimées dans les 30 jours suivant la fin du projet.\n\nDes questions sur votre vie privée ? Contactez directement l'organisateur.",
-						...(policyUrl
-							? {
-									link: {
-										label:
-											"Lire la politique de confidentialité de l'organisateur",
-										url: policyUrl,
-									},
-								}
-							: {}),
-						title: "Responsable du traitement, utilisation et sécurité.",
-					},
-				],
-			},
-			"it-IT": {
-				section: "Privacy",
-				slides: [
-					{
-						checkbox: {
-							label:
-								"Accetto che la mia conversazione sia registrata e trattata.",
-							required: true,
-						},
-						content: name
-							? `${name} decide come usare i tuoi dati in questa sessione. dembrane lavora per suo conto.`
-							: "L'organizzatore decide come usare i tuoi dati in questa sessione. dembrane lavora per lui.",
-						cta: "Ho capito",
-						extraHelp:
-							"Trascriviamo e analizziamo le registrazioni per ottenere informazioni utili. I tuoi dati restano su server sicuri in Europa. Non li usiamo per addestrare modelli di IA. Li cancelliamo entro 30 giorni dalla fine del progetto.\n\nHai domande sulla privacy? Scrivi direttamente all'organizzatore.",
-						...(policyUrl
-							? {
-									link: {
-										label:
-											"Leggi l'informativa sulla privacy dell'organizzatore",
-										url: policyUrl,
-									},
-								}
-							: {}),
-						title: "I tuoi dati: chi, come, sicurezza",
-					},
-				],
-			},
-			"nl-NL": {
-				section: "Privacy",
-				slides: [
-					{
-						checkbox: {
-							label:
-								"Ik geef toestemming voor het opnemen en verwerken van mijn gesprek.",
-							required: true,
-						},
-						content: name
-							? `${name} is verantwoordelijk voor hoe jouw gegevens worden gebruikt in deze sessie. dembrane verwerkt jouw gesprek namens hen.`
-							: "De organisator is verantwoordelijk voor hoe jouw gegevens worden gebruikt in deze sessie. dembrane verwerkt jouw gesprek namens hen.",
-						cta: "Ik begrijp het",
-						extraHelp:
-							"Opnames worden getranscribeerd en geanalyseerd om inzichten te genereren. Jouw gegevens worden opgeslagen op beveiligde servers in Europa, niet gebruikt om AI-modellen te trainen, en verwijderd binnen 30 dagen na afloop van het project.\n\nVragen over jouw privacy? Neem contact op met de organisator.",
-						...(policyUrl
-							? {
-									link: {
-										label: "Lees het privacybeleid van de organisator",
-										url: policyUrl,
-									},
-								}
-							: {}),
-						title: "Gegevensbeheer, gebruik en beveiliging.",
-					},
-				],
-			},
-			"uk-UA": {
-				section: "Конфіденційність",
-				slides: [
-					{
-						checkbox: {
-							label: "Я даю згоду на запис і обробку моєї розмови.",
-							required: true,
-						},
-						content: name
-							? `${name} відповідає за те, як використовуються ваші дані в цій сесії. dembrane обробляє вашу розмову від імені цієї організації.`
-							: "Організатор відповідає за те, як використовуються ваші дані в цій сесії. dembrane обробляє вашу розмову від його імені.",
-						cta: "Я розумію",
-						extraHelp:
-							"Записи транскрибуються та аналізуються для отримання висновків. Ваші дані зберігаються на захищених серверах у Європі, не використовуються для навчання моделей ШІ та видаляються протягом 30 днів після завершення проєкту.\n\nПитання щодо вашої конфіденційності? Зверніться безпосередньо до організатора.",
-						...(policyUrl
-							? {
-									link: {
-										label:
-											"Ознайомтесь з політикою конфіденційності організатора",
-										url: policyUrl,
-									},
-								}
-							: {}),
-						title: "Контролер даних, використання та безпека.",
-					},
-				],
-			},
-		};
-
-		return cards[lang] || cards["en-US"] || null;
-	};
-
-	const getDembraneEventsPrivacyCard = (
-		lang: string,
-	): LanguageCards[string][number] | null => {
-		const dembranePrivacyUrl =
-			"https://dembrane.notion.site/Privacy-Statement-Dembrane-1439cd84270580748046cc589861d115";
-
-		const cards: Record<string, LanguageCards[string][number]> = {
-			"de-DE": {
-				section: "Privatsphäre",
+			{
+				section: "Mejores prácticas",
 				slides: [
 					{
 						content:
-							"dembrane zeichnet dieses Gespräch auf und analysiert es auf Grundlage unseres berechtigten Interesses: Diskussionen genau festzuhalten, zuverlässige Erkenntnisse zu liefern und unsere Plattform weiterzuentwickeln.",
-						cta: "Ich verstehe",
+							"Imagina que dembrane está en altavoz contigo. Si puedes escucharte, estás listo.",
+						cta: "Entendido",
 						extraHelp:
-							"Aufnahmen und Transkripte werden innerhalb von 30 Tagen nach Schließung der Sitzung gelöscht. Daten werden auf gesicherten Servern in Europa gespeichert und nicht zum Trainieren von KI-Modellen verwendet.\n\nFragen oder Einwände? Kontaktieren Sie uns unter info@dembrane.com oder lesen Sie unsere Datenschutzrichtlinie.",
-						link: {
-							label: "Vollständige Datenschutzrichtlinie lesen",
-							url: dembranePrivacyUrl,
-						},
-						title: "Datenverwendung und Sicherheit",
+							"Un poco de ruido de fondo está bien, siempre que se entienda quién está hablando.",
+						title: "Reduce el Ruido de Fondo",
+					},
+					{
+						content: "Asegura una conexión estable para una grabación fluida.",
+						cta: "¡Listo!",
+						extraHelp:
+							"Wi-Fi o buenos datos móviles funcionan mejor. Si se cae tu conexión, no te preocupes. Siempre puedes reiniciar donde lo dejaste.",
+						title: "Conexión a internet fuerte",
+					},
+					{
+						content:
+							"Evita interrupciones manteniendo tu dispositivo desbloqueado. Si se bloquea, simplemente desbloquéalo y continúa.",
+						cta: "De acuerdo",
+						extraHelp:
+							"dembrane intenta mantener tu dispositivo activo, pero a veces los dispositivos pueden anularlo. Puedes ajustar la configuración de tu dispositivo para permanecer desbloqueado más tiempo si es necesario.",
+						title: "¡No bloquees tu dispositivo!",
 					},
 				],
 			},
-			"en-US": {
-				section: "Privacy",
+		],
+		"fr-FR": [
+			{
+				section: "Bienvenue",
 				slides: [
 					{
 						content:
-							"dembrane records and analyses this conversation based on our legitimate interest: to capture discussions accurately, deliver reliable insights, and develop our platform.",
-						cta: "I understand",
+							"Enregistrez votre voix pour répondre aux questions et avoir un impact.",
+						cta: "C'est parti !",
 						extraHelp:
-							"Recordings and transcripts are deleted within 30 days of the session closing. Data is stored on secured servers in Europe and is not used to train AI models.\n\nQuestions or want to object? Contact us at info@dembrane.com or see our privacy policy.",
-						link: {
-							label: "Read the full privacy policy",
-							url: dembranePrivacyUrl,
-						},
-						title: "Data usage and security",
+							"Ceci est un mini-tutoriel. Utilisez les boutons précédent et suivant pour naviguer. Une fois terminé, vous entrerez dans le portail d'enregistrement.",
+						title: "Bienvenue sur dembrane !",
+					},
+					{
+						content:
+							"dembrane aide les gens à recueillir facilement les contributions de grands groupes.",
+						cta: "Dites-m'en plus",
+						extraHelp:
+							"Qu'il s'agisse de commentaires pour une municipalité locale, de contributions dans un cadre professionnel ou de participation à une recherche, votre voix compte !",
+						title: "Qu'est-ce que dembrane ?",
+					},
+					{
+						content:
+							"Répondez aux questions à votre rythme en parlant ou en tapant.",
+						cta: "Suivant",
+						extraHelp:
+							"La saisie vocale est notre mode principal, permettant des réponses plus naturelles et détaillées. La saisie au clavier est toujours disponible en secours.",
+						title: "Dites simplement ce que vous pensez",
+					},
+					{
+						content: "dembrane est plus amusant en groupe !",
+						cta: "Suivant",
+						extraHelp:
+							"dembrane est plus amusant lorsque vous trouvez quelqu'un pour discuter des questions ensemble et enregistrer votre conversation. Nous ne pouvons pas dire qui a dit quoi, juste quelles idées ont été partagées.",
+						title: "Seul ou en Groupe",
 					},
 				],
 			},
-			"es-ES": {
-				section: "Privacidad",
+			{
+				section: "Comment ça marche",
 				slides: [
 					{
 						content:
-							"dembrane graba y analiza esta conversación basándose en nuestro interés legítimo: capturar las discusiones con precisión, ofrecer información fiable y desarrollar nuestra plataforma.",
-						cta: "Entiendo",
+							"Vous recevrez les questions une fois dans le portail d'enregistrement.",
+						cta: "Compris",
 						extraHelp:
-							"Las grabaciones y transcripciones se eliminan dentro de los 30 días posteriores al cierre de la sesión. Los datos se almacenan en servidores seguros en Europa y no se utilizan para entrenar modelos de IA.\n\n¿Preguntas o desea objetar? Contáctenos en info@dembrane.com o consulte nuestra política de privacidad.",
-						link: {
-							label: "Lea la política de privacidad completa",
-							url: dembranePrivacyUrl,
-						},
-						title: "Uso de datos y seguridad",
+							"Les questions varient en fonction des besoins de l'hôte. Elles peuvent concerner des problèmes communautaires, des expériences professionnelles ou des sujets de recherche. S'il n'y a pas de questions spécifiques, vous êtes libre de partager vos pensées ou préoccupations.",
+						title: "Heure des Questions",
 					},
 				],
 			},
-			"fr-FR": {
+			{
 				section: "Confidentialité",
 				slides: [
 					{
 						content:
-							"dembrane enregistre et analyse cette conversation sur la base de notre intérêt légitime : capturer les discussions avec précision, fournir des informations fiables et développer notre plateforme.",
-						cta: "Je comprends",
+							"En tant qu'enregistreur, vous contrôlez ce que vous partagez.",
+						cta: "Dites-m'en plus",
 						extraHelp:
-							"Les enregistrements et les transcriptions sont supprimés dans les 30 jours suivant la clôture de la session. Les données sont stockées sur des serveurs sécurisés en Europe et ne sont pas utilisées pour entraîner des modèles d'IA.\n\nDes questions ou souhaitez-vous vous opposer ? Contactez-nous à info@dembrane.com ou consultez notre politique de confidentialité.",
-						link: {
-							label: "Lire la politique de confidentialité complète",
-							url: dembranePrivacyUrl,
-						},
-						title: "Utilisation des données et sécurité",
+							"Évitez de partager des détails que vous ne voulez pas que l'hôte connaisse. Soyez attentif et n'enregistrez pas les autres sans leur consentement.",
+						title: "La confidentialité compte",
 					},
+					...(getPrivacyCard(
+						"fr-FR",
+						legalBasis,
+						privacyPolicyUrl,
+						organiserName,
+					)?.slides || []),
 				],
 			},
-			"it-IT": {
-				section: "Privacy",
+			{
+				section: "Meilleures pratiques",
 				slides: [
 					{
 						content:
-							"dembrane registra e analizza questa conversazione. Lo facciamo per legittimo interesse: registrare bene le discussioni, dare informazioni affidabili, migliorare la nostra piattaforma.",
-						cta: "Ho capito",
+							"Imaginez que dembrane est sur haut-parleur avec vous. Si vous pouvez vous entendre, c'est bon.",
+						cta: "Noté",
 						extraHelp:
-							"Cancelliamo registrazioni e trascrizioni entro 30 giorni dalla fine della sessione. I dati restano su server sicuri in Europa. Non li usiamo per addestrare modelli di IA.\n\nHai domande o vuoi opporti? Scrivi a info@dembrane.com o leggi l'informativa sulla privacy.",
-						link: {
-							label: "Leggi l'informativa sulla privacy completa",
-							url: dembranePrivacyUrl,
-						},
-						title: "Uso dei dati e sicurezza",
+							"Un peu de bruit de fond est acceptable, tant qu'on sait qui parle.",
+						title: "Réduire le Bruit de Fond",
+					},
+					{
+						content:
+							"Assurez une connexion stable pour un enregistrement fluide.",
+						cta: "Prêt !",
+						extraHelp:
+							"Le Wi-Fi ou de bonnes données mobiles fonctionnent mieux. Si votre connexion tombe, ne vous inquiétez pas. Vous pouvez toujours reprendre là où vous vous êtes arrêté.",
+						title: "Connexion internet forte",
+					},
+					{
+						content:
+							"Évitez les interruptions en gardant votre appareil déverrouillé. S'il se verrouille, déverrouillez-le simplement et continuez.",
+						cta: "D'accord",
+						extraHelp:
+							"dembrane essaie de garder votre appareil actif, mais parfois les appareils peuvent l'annuler. Vous pouvez ajuster les paramètres de votre appareil pour rester déverrouillé plus longtemps si nécessaire.",
+						title: "Ne verrouillez pas votre appareil !",
 					},
 				],
 			},
-			"nl-NL": {
-				section: "Privacy",
+		],
+		"it-IT": [
+			{
+				section: "Benvenuto",
 				slides: [
 					{
 						content:
-							"dembrane neemt dit gesprek op en analyseert het op basis van ons gerechtvaardigd belang: om discussies nauwkeurig vast te leggen, betrouwbare inzichten te leveren en ons platform te ontwikkelen.",
-						cta: "Ik begrijp het",
+							"Registra la tua voce per rispondere alle domande e dire la tua.",
+						cta: "Andiamo!",
 						extraHelp:
-							"Opnames en transcripties worden binnen 30 dagen na het sluiten van de sessie verwijderd. Gegevens worden opgeslagen op beveiligde servers in Europa en worden niet gebruikt om AI-modellen te trainen.\n\nVragen of bezwaar indienen? Neem contact met ons op via info@dembrane.com of bekijk ons privacybeleid.",
-						link: {
-							label: "Lees het volledige privacybeleid",
-							url: dembranePrivacyUrl,
-						},
-						title: "Gegevensgebruik en beveiliging",
+							"Questo è un breve tutorial. Usa i pulsanti per andare avanti e indietro. Alla fine entri nel portale di registrazione.",
+						title: "Benvenuto su dembrane",
+					},
+					{
+						content: "dembrane aiuta a raccogliere idee da gruppi grandi.",
+						cta: "Dimmi di più",
+						extraHelp:
+							"Feedback per il comune, idee al lavoro, ricerca: la tua voce conta.",
+						title: "Cos'è dembrane?",
+					},
+					{
+						content: "Rispondi alle domande a tuo ritmo, parlando o scrivendo.",
+						cta: "Avanti",
+						extraHelp:
+							"Parlare è il modo principale: le risposte sono più naturali. Ma puoi anche scrivere.",
+						title: "Di' cosa pensi",
+					},
+					{
+						content: "dembrane è più bello in gruppo.",
+						cta: "Avanti",
+						extraHelp:
+							"Trova qualcuno per parlare insieme delle domande e registrare la conversazione. Non sappiamo chi ha detto cosa, solo quali idee sono state condivise.",
+						title: "Da solo o in gruppo",
 					},
 				],
 			},
-			"uk-UA": {
+			{
+				section: "Come funziona",
+				slides: [
+					{
+						content:
+							"Le domande arrivano quando entri nel portale di registrazione.",
+						cta: "Capito",
+						extraHelp:
+							"Le domande dipendono dall'host. Possono parlare di temi della comunità, lavoro o ricerca. Se non ci sono domande, puoi condividere qualsiasi pensiero o preoccupazione.",
+						title: "Le domande",
+					},
+				],
+			},
+			{
+				section: "Privacy",
+				slides: [
+					{
+						content: "Scegli tu cosa condividere.",
+						cta: "Dimmi di più",
+						extraHelp:
+							"Non condividere dettagli che non vuoi far sapere all'host. Chiedi sempre il permesso prima di registrare altre persone.",
+						title: "La privacy conta",
+					},
+					...(getPrivacyCard(
+						"it-IT",
+						legalBasis,
+						privacyPolicyUrl,
+						organiserName,
+					)?.slides || []),
+				],
+			},
+			{
+				section: "Consigli utili",
+				slides: [
+					{
+						content:
+							"Pensa che dembrane sia in vivavoce con te. Se senti la tua voce, va bene.",
+						cta: "Capito",
+						extraHelp:
+							"Un po' di rumore va bene. Importante: deve essere chiaro chi parla.",
+						title: "Riduci il rumore di fondo",
+					},
+					{
+						content: "Usa una connessione stabile per registrare bene.",
+						cta: "Pronto!",
+						extraHelp:
+							"Wi-Fi o dati mobili buoni vanno bene. Se la connessione cade, non preoccuparti: puoi continuare da dove hai lasciato.",
+						title: "Connessione stabile",
+					},
+					{
+						content:
+							"Tieni il telefono sbloccato. Se si blocca, sbloccalo e continua.",
+						cta: "Ok",
+						extraHelp:
+							"dembrane prova a tenere il telefono attivo. A volte non funziona: puoi cambiare le impostazioni del telefono per stare sbloccato più a lungo.",
+						title: "Non bloccare il telefono",
+					},
+				],
+			},
+		],
+		"nl-NL": [
+			{
+				section: "Welkom",
+				slides: [
+					{
+						content:
+							"Neem je stem op om vragen te beantwoorden en impact te maken.",
+						cta: "Aan de slag!",
+						extraHelp:
+							"Dit is een mini-handleiding. Gebruik de knoppen om te navigeren. Na afloop van de handleiding kom je in de opnameportaal terecht.",
+						title: "Welkom bij dembrane!",
+					},
+					{
+						content:
+							"dembrane helpt mensen gemakkelijk input van grote groepen te verzamelen.",
+						cta: "Vertel me meer",
+						extraHelp:
+							"Of het nu gaat om feedback voor de gemeente, input op het werk, of deelname aan onderzoek, jouw stem telt!",
+						title: "Wat is dembrane?",
+					},
+					{
+						content:
+							"Beantwoord vragen in je eigen tempo door te spreken of te typen.",
+						cta: "Volgende",
+						extraHelp:
+							"Spraak is onze voorkeursmethode, omdat het natuurlijker en gedetailleerder is. Typen kan natuurlijk ook altijd.",
+						title: "Zeg het maar",
+					},
+					{
+						content: "dembrane is leuker met een groep!",
+						cta: "Volgende",
+						extraHelp:
+							"dembrane is leuker als je iemand vindt om de vragen samen te bespreken en jullie gesprek op te nemen. We kunnen niet horen wie wat zei, alleen welke ideeën er gedeeld zijn.",
+						title: "Alleen of in een groep",
+					},
+				],
+			},
+			{
+				section: "Hoe het werkt",
+				slides: [
+					{
+						content:
+							"Je krijgt de vragen te zien zodra je in de opnameportal bent.",
+						cta: "Begrepen",
+						extraHelp:
+							"Vragen variëren afhankelijk van wat de organisator wil weten. Het kan gaan over de buurt, werkervaringen, of onderzoeksonderwerpen. Als er geen specifieke vragen zijn, kun je gewoon je gedachten of zorgen delen.",
+						title: "Vragenronde",
+					},
+				],
+			},
+			{
+				section: "Privacy",
+				slides: [
+					{
+						content: "Als opnemer heb je zelf controle over wat je deelt.",
+						cta: "Vertel me meer",
+						extraHelp:
+							"Vermijd het delen van details die je niet met de organisator wilt delen. Wees voorzichtig en neem anderen niet op zonder hun toestemming.",
+						title: "Privacy is belangrijk",
+					},
+					...(getPrivacyCard(
+						"nl-NL",
+						legalBasis,
+						privacyPolicyUrl,
+						organiserName,
+					)?.slides || []),
+				],
+			},
+			{
+				section: "Tips",
+				slides: [
+					{
+						content:
+							"Stel je voor dat dembrane via de luidspreker met je praat. Als je jezelf kunt horen, zit je goed.",
+						cta: "Begrepen",
+						extraHelp:
+							"Een beetje achtergrondgeluid is geen probleem, zolang duidelijk is wie er spreekt.",
+						title: "Verminder achtergrondgeluid",
+					},
+					{
+						content:
+							"Zorg voor een stabiele verbinding voor een soepele opname.",
+						cta: "Klaar!",
+						extraHelp:
+							"Wi-Fi of een goede mobiele verbinding werkt het beste. Valt je verbinding weg? Geen zorgen, je kunt altijd opnieuw beginnen waar je gebleven was.",
+						title: "Goede internetverbinding",
+					},
+					{
+						content:
+							"Voorkom onderbrekingen door je apparaat ontgrendeld te houden. Als het toch vergrendelt, ontgrendel je het gewoon en ga je verder.",
+						cta: "Oké",
+						extraHelp:
+							"dembrane probeert je apparaat actief te houden, maar soms kunnen apparaten dit overrulen. Je kunt de instellingen van je apparaat aanpassen om langer ontgrendeld te blijven als dat nodig is.",
+						title: "Vergrendel je apparaat niet!",
+					},
+				],
+			},
+		],
+		"uk-UA": [
+			{
+				section: "Ласкаво просимо",
+				slides: [
+					{
+						content:
+							"Запишіть свій голос, щоб відповісти на запитання та зробити свій внесок.",
+						cta: "Почнімо!",
+						extraHelp:
+							"Це міні-інструкція. Використовуйте кнопки «назад» і «далі» для навігації. Після завершення ви потрапите на портал запису.",
+						title: "Ласкаво просимо до dembrane!",
+					},
+					{
+						content:
+							"dembrane допомагає людям легко збирати думки великих груп.",
+						cta: "Розкажіть більше",
+						extraHelp:
+							"Чи то зворотний зв'язок для місцевої громади, чи думки в робочому середовищі, чи участь у дослідженні — ваш голос має значення!",
+						title: "Що таке dembrane?",
+					},
+					{
+						content:
+							"Відповідайте на запитання у зручному темпі, говорячи або друкуючи.",
+						cta: "Далі",
+						extraHelp:
+							"Голосовий ввід — наш основний режим, який дозволяє давати більш природні та детальні відповіді. Друкування завжди доступне як альтернатива.",
+						title: "Просто скажіть, що думаєте",
+					},
+					{
+						content: "dembrane цікавіше у групі!",
+						cta: "Далі",
+						extraHelp:
+							"dembrane цікавіше, коли ви знаходите когось, щоб обговорити запитання разом і записати вашу розмову. Ми не можемо визначити, хто що сказав, лише які ідеї були висловлені.",
+						title: "Наодинці чи в групі",
+					},
+				],
+			},
+			{
+				section: "Як це працює",
+				slides: [
+					{
+						content: "Ви отримаєте запитання, коли потрапите на портал запису.",
+						cta: "Зрозуміло",
+						extraHelp:
+							"Запитання залежать від потреб організатора. Вони можуть стосуватися громадських питань, робочого досвіду або дослідницьких тем. Якщо конкретних запитань немає, ви можете вільно поділитися будь-якими думками чи проблемами.",
+						title: "Час запитань",
+					},
+				],
+			},
+			{
 				section: "Конфіденційність",
 				slides: [
 					{
-						content:
-							"dembrane записує та аналізує цю розмову на основі нашого законного інтересу: точно фіксувати обговорення, надавати надійні висновки та розвивати нашу платформу.",
-						cta: "Я розумію",
+						content: "Як записувач, ви контролюєте те, чим ділитесь.",
+						cta: "Розкажіть більше",
 						extraHelp:
-							"Записи та транскрипції видаляються протягом 30 днів після закриття сесії. Дані зберігаються на захищених серверах у Європі та не використовуються для навчання моделей ШІ.\n\nПитання або бажаєте заперечити? Зв'яжіться з нами за адресою info@dembrane.com або ознайомтесь з нашою політикою конфіденційності.",
-						link: {
-							label: "Ознайомтесь з повною політикою конфіденційності",
-							url: dembranePrivacyUrl,
-						},
-						title: "Використання даних та безпека",
+							"Уникайте обміну деталями, які ви не хочете повідомляти організатору. Будьте уважні та не записуйте інших без їхньої згоди.",
+						title: "Конфіденційність важлива",
+					},
+					...(getPrivacyCard(
+						"uk-UA",
+						legalBasis,
+						privacyPolicyUrl,
+						organiserName,
+					)?.slides || []),
+				],
+			},
+			{
+				section: "Корисні поради",
+				slides: [
+					{
+						content:
+							"Уявіть, що dembrane на гучному зв'язку з вами. Якщо ви чуєте себе — все добре.",
+						cta: "Зрозуміло",
+						extraHelp:
+							"Невеликий фоновий шум — це нормально, головне, щоб було зрозуміло, хто говорить.",
+						title: "Зменшіть фоновий шум",
+					},
+					{
+						content:
+							"Забезпечте стабільне з'єднання для безперебійного запису.",
+						cta: "Готово!",
+						extraHelp:
+							"Wi-Fi або хороший мобільний інтернет працюють найкраще. Якщо з'єднання обірветься, не хвилюйтесь. Ви завжди можете продовжити з того місця, де зупинились.",
+						title: "Надійне інтернет-з'єднання",
+					},
+					{
+						content:
+							"Запобігайте перервам, тримаючи пристрій розблокованим. Якщо він заблокується, просто розблокуйте і продовжуйте.",
+						cta: "Добре",
+						extraHelp:
+							"dembrane намагається тримати ваш пристрій активним, але іноді пристрої можуть це перевизначити. Ви можете налаштувати параметри пристрою, щоб він залишався розблокованим довше, якщо потрібно.",
+						title: "Не блокуйте пристрій!",
 					},
 				],
 			},
-		};
-
-		return cards[lang] || cards["en-US"] || null;
+		],
 	};
 
-	return { getSystemCards };
+	// Fallback to English if language not found
+	return tutorialCards[lang] || tutorialCards["en-US"] || [];
+};
+
+const getPrivacyCard = (
+	lang: string,
+	legalBasis: LegalBasis = "client-managed",
+	privacyPolicyUrl?: string | null,
+	organiserName?: string | null,
+): LanguageCards[string][number] | null => {
+	if (legalBasis === "client-managed") {
+		return getClientManagedPrivacyCard(lang);
+	}
+	if (legalBasis === "dembrane-events") {
+		return getDembraneEventsPrivacyCard(lang);
+	}
+	return getConsentPrivacyCard(lang, privacyPolicyUrl, organiserName);
+};
+
+const getClientManagedPrivacyCard = (
+	lang: string,
+): LanguageCards[string][number] | null => {
+	const cards: Record<string, LanguageCards[string][number]> = {
+		"de-DE": {
+			section: "Privatsphäre",
+			slides: [
+				{
+					content:
+						"Die Organisator*innen sind dafür verantwortlich, wie Ihre Daten in dieser Sitzung verwendet werden, dembrane verarbeitet Ihr Gespräch im Auftrag dieser.",
+					cta: "Ich verstehe",
+					extraHelp:
+						"Aufnahmen werden transkribiert und für Erkenntnisse analysiert. Ihre Daten werden auf gesicherten Servern in Europa gespeichert, nicht zum Trainieren von KI-Modellen verwendet und innerhalb von 30 Tagen nach Projektende gelöscht.\n\nFragen zu Ihrer Privatsphäre? Wenden Sie sich direkt an den Organisator.",
+					title: "Verantwortung, Nutzung und Sicherheit.",
+				},
+			],
+		},
+		"en-US": {
+			section: "Privacy",
+			slides: [
+				{
+					content:
+						"The organiser is responsible for how your data is used in this session. dembrane processes your conversation on their behalf.",
+					cta: "I understand",
+					extraHelp:
+						"Recordings are transcribed and analysed for insights. Your data is stored on secured servers in Europe, is not used to train AI models, and is deleted within 30 days after the project has ended.\n\nQuestions about your privacy? Contact the organiser directly.",
+					title: "Data controller, usage and security.",
+				},
+			],
+		},
+		"es-ES": {
+			section: "Privacidad",
+			slides: [
+				{
+					content:
+						"El organizador es responsable de cómo se utilizan sus datos en esta sesión. dembrane procesa su conversación en su nombre.",
+					cta: "Entiendo",
+					extraHelp:
+						"Las grabaciones se transcriben y analizan para obtener información. Sus datos se almacenan en servidores seguros en Europa, no se utilizan para entrenar modelos de IA y se eliminan dentro de los 30 días posteriores a la finalización del proyecto.\n\n¿Preguntas sobre su privacidad? Contacte directamente al organizador.",
+					title: "Responsable del tratamiento, uso y seguridad.",
+				},
+			],
+		},
+		"fr-FR": {
+			section: "Confidentialité",
+			slides: [
+				{
+					content:
+						"L'organisateur est responsable de la manière dont vos données sont utilisées dans cette session. dembrane traite votre conversation en son nom.",
+					cta: "Je comprends",
+					extraHelp:
+						"Les enregistrements sont transcrits et analysés pour en tirer des enseignements. Vos données sont stockées sur des serveurs sécurisés en Europe, ne sont pas utilisées pour entraîner des modèles d'IA et sont supprimées dans les 30 jours suivant la fin du projet.\n\nDes questions sur votre vie privée ? Contactez directement l'organisateur.",
+					title: "Responsable du traitement, utilisation et sécurité.",
+				},
+			],
+		},
+		"it-IT": {
+			section: "Privacy",
+			slides: [
+				{
+					content:
+						"L'organizzatore decide come usare i tuoi dati in questa sessione. dembrane lavora per lui.",
+					cta: "Ho capito",
+					extraHelp:
+						"Trascriviamo e analizziamo le registrazioni per ottenere informazioni utili. I tuoi dati restano su server sicuri in Europa. Non li usiamo per addestrare modelli di IA. Li cancelliamo entro 30 giorni dalla fine del progetto.\n\nHai domande sulla privacy? Scrivi direttamente all'organizzatore.",
+					title: "I tuoi dati: chi, come, sicurezza",
+				},
+			],
+		},
+		"nl-NL": {
+			section: "Privacy",
+			slides: [
+				{
+					content:
+						"De organisator is verantwoordelijk voor hoe jouw gegevens worden gebruikt in deze sessie. dembrane verwerkt jouw gesprek namens hen.",
+					cta: "Ik begrijp het",
+					extraHelp:
+						"Opnames worden getranscribeerd en geanalyseerd om inzichten te genereren. Jouw gegevens worden opgeslagen op beveiligde servers in Europa, niet gebruikt om AI-modellen te trainen, en verwijderd binnen 30 dagen na afloop van het project.\n\nVragen over jouw privacy? Neem contact op met de organisator.",
+					title: "Gegevensbeheer, gebruik en beveiliging.",
+				},
+			],
+		},
+		"uk-UA": {
+			section: "Конфіденційність",
+			slides: [
+				{
+					content:
+						"Організатор відповідає за те, як використовуються ваші дані в цій сесії. dembrane обробляє вашу розмову від його імені.",
+					cta: "Я розумію",
+					extraHelp:
+						"Записи транскрибуються та аналізуються для отримання висновків. Ваші дані зберігаються на захищених серверах у Європі, не використовуються для навчання моделей ШІ та видаляються протягом 30 днів після завершення проєкту.\n\nПитання щодо вашої конфіденційності? Зверніться безпосередньо до організатора.",
+					title: "Контролер даних, використання та безпека.",
+				},
+			],
+		},
+	};
+
+	return cards[lang] || cards["en-US"] || null;
+};
+
+const getConsentPrivacyCard = (
+	lang: string,
+	privacyPolicyUrl?: string | null,
+	organiserName?: string | null,
+): LanguageCards[string][number] | null => {
+	const policyUrl = privacyPolicyUrl || undefined;
+	// no name = keep the generic "the organiser" wording
+	const name = organiserName?.trim() || undefined;
+
+	const cards: Record<string, LanguageCards[string][number]> = {
+		"de-DE": {
+			section: "Privatsphäre",
+			slides: [
+				{
+					checkbox: {
+						label:
+							"Ich stimme zu, dass mein Gespräch aufgezeichnet und verarbeitet wird.",
+						required: true,
+					},
+					content: name
+						? `${name} ist dafür verantwortlich, wie Ihre Daten in dieser Sitzung verwendet werden, dembrane verarbeitet Ihr Gespräch im Auftrag dieser.`
+						: "Die Organisator*innen sind dafür verantwortlich, wie Ihre Daten in dieser Sitzung verwendet werden, dembrane verarbeitet Ihr Gespräch im Auftrag dieser.",
+					cta: "Ich verstehe",
+					extraHelp:
+						"Aufnahmen werden transkribiert und für Erkenntnisse analysiert. Ihre Daten werden auf gesicherten Servern in Europa gespeichert, nicht zum Trainieren von KI-Modellen verwendet und innerhalb von 30 Tagen nach Projektende gelöscht.\n\nFragen zu Ihrer Privatsphäre? Wenden Sie sich direkt an den Organisator.",
+					...(policyUrl
+						? {
+								link: {
+									label: "Datenschutzrichtlinie des Organisators lesen",
+									url: policyUrl,
+								},
+							}
+						: {}),
+					title: "Verantwortung, Nutzung und Sicherheit.",
+				},
+			],
+		},
+		"en-US": {
+			section: "Privacy",
+			slides: [
+				{
+					checkbox: {
+						label: "I consent to my conversation being recorded and processed.",
+						required: true,
+					},
+					content: name
+						? `${name} is responsible for how your data is used in this session. dembrane processes your conversation on their behalf.`
+						: "The organiser is responsible for how your data is used in this session. dembrane processes your conversation on their behalf.",
+					cta: "I understand",
+					extraHelp:
+						"Recordings are transcribed and analysed for insights. Your data is stored on secured servers in Europe, is not used to train AI models, and is deleted within 30 days after the project has ended.\n\nQuestions about your privacy? Contact the organiser directly.",
+					...(policyUrl
+						? {
+								link: {
+									label: "Read the organiser's privacy policy",
+									url: policyUrl,
+								},
+							}
+						: {}),
+					title: "Data controller, usage and security.",
+				},
+			],
+		},
+		"es-ES": {
+			section: "Privacidad",
+			slides: [
+				{
+					checkbox: {
+						label:
+							"Doy mi consentimiento para que mi conversación sea grabada y procesada.",
+						required: true,
+					},
+					content: name
+						? `${name} es responsable de cómo se utilizan sus datos en esta sesión. dembrane procesa su conversación en su nombre.`
+						: "El organizador es responsable de cómo se utilizan sus datos en esta sesión. dembrane procesa su conversación en su nombre.",
+					cta: "Entiendo",
+					extraHelp:
+						"Las grabaciones se transcriben y analizan para obtener información. Sus datos se almacenan en servidores seguros en Europa, no se utilizan para entrenar modelos de IA y se eliminan dentro de los 30 días posteriores a la finalización del proyecto.\n\n¿Preguntas sobre su privacidad? Contacte directamente al organizador.",
+					...(policyUrl
+						? {
+								link: {
+									label: "Lea la política de privacidad del organizador",
+									url: policyUrl,
+								},
+							}
+						: {}),
+					title: "Responsable del tratamiento, uso y seguridad.",
+				},
+			],
+		},
+		"fr-FR": {
+			section: "Confidentialité",
+			slides: [
+				{
+					checkbox: {
+						label:
+							"Je consens à ce que ma conversation soit enregistrée et traitée.",
+						required: true,
+					},
+					content: name
+						? `${name} est responsable de la manière dont vos données sont utilisées dans cette session. dembrane traite votre conversation en son nom.`
+						: "L'organisateur est responsable de la manière dont vos données sont utilisées dans cette session. dembrane traite votre conversation en son nom.",
+					cta: "Je comprends",
+					extraHelp:
+						"Les enregistrements sont transcrits et analysés pour en tirer des enseignements. Vos données sont stockées sur des serveurs sécurisés en Europe, ne sont pas utilisées pour entraîner des modèles d'IA et sont supprimées dans les 30 jours suivant la fin du projet.\n\nDes questions sur votre vie privée ? Contactez directement l'organisateur.",
+					...(policyUrl
+						? {
+								link: {
+									label:
+										"Lire la politique de confidentialité de l'organisateur",
+									url: policyUrl,
+								},
+							}
+						: {}),
+					title: "Responsable du traitement, utilisation et sécurité.",
+				},
+			],
+		},
+		"it-IT": {
+			section: "Privacy",
+			slides: [
+				{
+					checkbox: {
+						label:
+							"Accetto che la mia conversazione sia registrata e trattata.",
+						required: true,
+					},
+					content: name
+						? `${name} decide come usare i tuoi dati in questa sessione. dembrane lavora per suo conto.`
+						: "L'organizzatore decide come usare i tuoi dati in questa sessione. dembrane lavora per lui.",
+					cta: "Ho capito",
+					extraHelp:
+						"Trascriviamo e analizziamo le registrazioni per ottenere informazioni utili. I tuoi dati restano su server sicuri in Europa. Non li usiamo per addestrare modelli di IA. Li cancelliamo entro 30 giorni dalla fine del progetto.\n\nHai domande sulla privacy? Scrivi direttamente all'organizzatore.",
+					...(policyUrl
+						? {
+								link: {
+									label: "Leggi l'informativa sulla privacy dell'organizzatore",
+									url: policyUrl,
+								},
+							}
+						: {}),
+					title: "I tuoi dati: chi, come, sicurezza",
+				},
+			],
+		},
+		"nl-NL": {
+			section: "Privacy",
+			slides: [
+				{
+					checkbox: {
+						label:
+							"Ik geef toestemming voor het opnemen en verwerken van mijn gesprek.",
+						required: true,
+					},
+					content: name
+						? `${name} is verantwoordelijk voor hoe jouw gegevens worden gebruikt in deze sessie. dembrane verwerkt jouw gesprek namens hen.`
+						: "De organisator is verantwoordelijk voor hoe jouw gegevens worden gebruikt in deze sessie. dembrane verwerkt jouw gesprek namens hen.",
+					cta: "Ik begrijp het",
+					extraHelp:
+						"Opnames worden getranscribeerd en geanalyseerd om inzichten te genereren. Jouw gegevens worden opgeslagen op beveiligde servers in Europa, niet gebruikt om AI-modellen te trainen, en verwijderd binnen 30 dagen na afloop van het project.\n\nVragen over jouw privacy? Neem contact op met de organisator.",
+					...(policyUrl
+						? {
+								link: {
+									label: "Lees het privacybeleid van de organisator",
+									url: policyUrl,
+								},
+							}
+						: {}),
+					title: "Gegevensbeheer, gebruik en beveiliging.",
+				},
+			],
+		},
+		"uk-UA": {
+			section: "Конфіденційність",
+			slides: [
+				{
+					checkbox: {
+						label: "Я даю згоду на запис і обробку моєї розмови.",
+						required: true,
+					},
+					content: name
+						? `${name} відповідає за те, як використовуються ваші дані в цій сесії. dembrane обробляє вашу розмову від імені цієї організації.`
+						: "Організатор відповідає за те, як використовуються ваші дані в цій сесії. dembrane обробляє вашу розмову від його імені.",
+					cta: "Я розумію",
+					extraHelp:
+						"Записи транскрибуються та аналізуються для отримання висновків. Ваші дані зберігаються на захищених серверах у Європі, не використовуються для навчання моделей ШІ та видаляються протягом 30 днів після завершення проєкту.\n\nПитання щодо вашої конфіденційності? Зверніться безпосередньо до організатора.",
+					...(policyUrl
+						? {
+								link: {
+									label:
+										"Ознайомтесь з політикою конфіденційності організатора",
+									url: policyUrl,
+								},
+							}
+						: {}),
+					title: "Контролер даних, використання та безпека.",
+				},
+			],
+		},
+	};
+
+	return cards[lang] || cards["en-US"] || null;
+};
+
+const getDembraneEventsPrivacyCard = (
+	lang: string,
+): LanguageCards[string][number] | null => {
+	const dembranePrivacyUrl =
+		"https://dembrane.notion.site/Privacy-Statement-Dembrane-1439cd84270580748046cc589861d115";
+
+	const cards: Record<string, LanguageCards[string][number]> = {
+		"de-DE": {
+			section: "Privatsphäre",
+			slides: [
+				{
+					content:
+						"dembrane zeichnet dieses Gespräch auf und analysiert es auf Grundlage unseres berechtigten Interesses: Diskussionen genau festzuhalten, zuverlässige Erkenntnisse zu liefern und unsere Plattform weiterzuentwickeln.",
+					cta: "Ich verstehe",
+					extraHelp:
+						"Aufnahmen und Transkripte werden innerhalb von 30 Tagen nach Schließung der Sitzung gelöscht. Daten werden auf gesicherten Servern in Europa gespeichert und nicht zum Trainieren von KI-Modellen verwendet.\n\nFragen oder Einwände? Kontaktieren Sie uns unter info@dembrane.com oder lesen Sie unsere Datenschutzrichtlinie.",
+					link: {
+						label: "Vollständige Datenschutzrichtlinie lesen",
+						url: dembranePrivacyUrl,
+					},
+					title: "Datenverwendung und Sicherheit",
+				},
+			],
+		},
+		"en-US": {
+			section: "Privacy",
+			slides: [
+				{
+					content:
+						"dembrane records and analyses this conversation based on our legitimate interest: to capture discussions accurately, deliver reliable insights, and develop our platform.",
+					cta: "I understand",
+					extraHelp:
+						"Recordings and transcripts are deleted within 30 days of the session closing. Data is stored on secured servers in Europe and is not used to train AI models.\n\nQuestions or want to object? Contact us at info@dembrane.com or see our privacy policy.",
+					link: {
+						label: "Read the full privacy policy",
+						url: dembranePrivacyUrl,
+					},
+					title: "Data usage and security",
+				},
+			],
+		},
+		"es-ES": {
+			section: "Privacidad",
+			slides: [
+				{
+					content:
+						"dembrane graba y analiza esta conversación basándose en nuestro interés legítimo: capturar las discusiones con precisión, ofrecer información fiable y desarrollar nuestra plataforma.",
+					cta: "Entiendo",
+					extraHelp:
+						"Las grabaciones y transcripciones se eliminan dentro de los 30 días posteriores al cierre de la sesión. Los datos se almacenan en servidores seguros en Europa y no se utilizan para entrenar modelos de IA.\n\n¿Preguntas o desea objetar? Contáctenos en info@dembrane.com o consulte nuestra política de privacidad.",
+					link: {
+						label: "Lea la política de privacidad completa",
+						url: dembranePrivacyUrl,
+					},
+					title: "Uso de datos y seguridad",
+				},
+			],
+		},
+		"fr-FR": {
+			section: "Confidentialité",
+			slides: [
+				{
+					content:
+						"dembrane enregistre et analyse cette conversation sur la base de notre intérêt légitime : capturer les discussions avec précision, fournir des informations fiables et développer notre plateforme.",
+					cta: "Je comprends",
+					extraHelp:
+						"Les enregistrements et les transcriptions sont supprimés dans les 30 jours suivant la clôture de la session. Les données sont stockées sur des serveurs sécurisés en Europe et ne sont pas utilisées pour entraîner des modèles d'IA.\n\nDes questions ou souhaitez-vous vous opposer ? Contactez-nous à info@dembrane.com ou consultez notre politique de confidentialité.",
+					link: {
+						label: "Lire la politique de confidentialité complète",
+						url: dembranePrivacyUrl,
+					},
+					title: "Utilisation des données et sécurité",
+				},
+			],
+		},
+		"it-IT": {
+			section: "Privacy",
+			slides: [
+				{
+					content:
+						"dembrane registra e analizza questa conversazione. Lo facciamo per legittimo interesse: registrare bene le discussioni, dare informazioni affidabili, migliorare la nostra piattaforma.",
+					cta: "Ho capito",
+					extraHelp:
+						"Cancelliamo registrazioni e trascrizioni entro 30 giorni dalla fine della sessione. I dati restano su server sicuri in Europa. Non li usiamo per addestrare modelli di IA.\n\nHai domande o vuoi opporti? Scrivi a info@dembrane.com o leggi l'informativa sulla privacy.",
+					link: {
+						label: "Leggi l'informativa sulla privacy completa",
+						url: dembranePrivacyUrl,
+					},
+					title: "Uso dei dati e sicurezza",
+				},
+			],
+		},
+		"nl-NL": {
+			section: "Privacy",
+			slides: [
+				{
+					content:
+						"dembrane neemt dit gesprek op en analyseert het op basis van ons gerechtvaardigd belang: om discussies nauwkeurig vast te leggen, betrouwbare inzichten te leveren en ons platform te ontwikkelen.",
+					cta: "Ik begrijp het",
+					extraHelp:
+						"Opnames en transcripties worden binnen 30 dagen na het sluiten van de sessie verwijderd. Gegevens worden opgeslagen op beveiligde servers in Europa en worden niet gebruikt om AI-modellen te trainen.\n\nVragen of bezwaar indienen? Neem contact met ons op via info@dembrane.com of bekijk ons privacybeleid.",
+					link: {
+						label: "Lees het volledige privacybeleid",
+						url: dembranePrivacyUrl,
+					},
+					title: "Gegevensgebruik en beveiliging",
+				},
+			],
+		},
+		"uk-UA": {
+			section: "Конфіденційність",
+			slides: [
+				{
+					content:
+						"dembrane записує та аналізує цю розмову на основі нашого законного інтересу: точно фіксувати обговорення, надавати надійні висновки та розвивати нашу платформу.",
+					cta: "Я розумію",
+					extraHelp:
+						"Записи та транскрипції видаляються протягом 30 днів після закриття сесії. Дані зберігаються на захищених серверах у Європі та не використовуються для навчання моделей ШІ.\n\nПитання або бажаєте заперечити? Зв'яжіться з нами за адресою info@dembrane.com або ознайомтесь з нашою політикою конфіденційності.",
+					link: {
+						label: "Ознайомтесь з повною політикою конфіденційності",
+						url: dembranePrivacyUrl,
+					},
+					title: "Використання даних та безпека",
+				},
+			],
+		},
+	};
+
+	return cards[lang] || cards["en-US"] || null;
 };
