@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import useSessionStorageState from "use-session-storage-state";
 import { checkS3Connectivity } from "@/lib/api";
 
-type S3Status = "pending" | "checking" | "passed" | "failed";
+export type S3Status = "pending" | "checking" | "passed" | "failed";
 
 export const useS3ConnectivityCheck = (
 	conversationId: string | undefined,

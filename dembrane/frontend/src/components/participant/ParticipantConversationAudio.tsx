@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Box, Button, Group, Loader, Modal, Stack, Text } from "@mantine/core";
+import { Box, Button, Group, Stack, Text } from "@mantine/core";
 import { useDisclosure, useLocalStorage, useWindowEvent } from "@mantine/hooks";
 import {
 	ArticleNyTimesIcon,
@@ -8,7 +8,6 @@ import {
 	MicrophoneIcon,
 	PauseIcon,
 	StopIcon,
-	WarningIcon,
 } from "@phosphor-icons/react";
 import clsx from "clsx";
 import Cookies from "js-cookie";
@@ -20,7 +19,6 @@ import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useVideoWakeLockFallback } from "@/hooks/useVideoWakeLockFallback";
-import { useWakeLock } from "@/hooks/useWakeLock";
 import { finishConversation } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 import { I18nLink } from "../common/i18nLink";
@@ -44,13 +42,17 @@ import {
 	captureRecordingInterrupted,
 	useRecordingTelemetry,
 } from "./hooks/useRecordingTelemetry";
+import { useRecordingWakeLock } from "./hooks/useRecordingWakeLock";
 import { useS3ConnectivityCheck } from "./hooks/useS3ConnectivityCheck";
 import type { RecordingMeterStatus } from "./ParticipantRecordingWaveform";
 import { ParticipantRecordingWaveform } from "./ParticipantRecordingWaveform";
 import { ParticipantSettingsModal } from "./ParticipantSettingsModal";
 import { PermissionErrorModal } from "./PermissionErrorModal";
 import { deriveParticipantState } from "./participantState";
+import { RecordingInterruptedModal } from "./RecordingInterruptedModal";
+import { RefineInfoModal } from "./RefineInfoModal";
 import { StopRecordingConfirmationModal } from "./StopRecordingConfirmationModal";
+import { StorageCheckModal } from "./StorageCheckModal";
 import { useConversationArtefacts } from "./verify/hooks";
 
 const CONVERSATION_DELETION_STATUS_CODES = [404, 403, 410];
@@ -155,7 +157,7 @@ export const ParticipantConversationAudio = () => {
 		projectQuery.data,
 		"portal",
 	);
-	const wakeLock = useWakeLock();
+	const wakeLock = useRecordingWakeLock();
 
 	// Ref to store callback that will be set after audioRecorder is created
 	const onRecordingInterruptedRef = useRef<(() => void) | null>(null);
@@ -180,8 +182,7 @@ export const ParticipantConversationAudio = () => {
 
 		// Stop recording and release wake lock.
 		audioRecorder.stopRecording();
-		wakeLock.releaseWakeLock();
-		wakeLock.disableAutoReacquire();
+		wakeLock.release();
 
 		// Show the interruption modal.
 		openInterruptionModal();
@@ -325,8 +326,7 @@ export const ParticipantConversationAudio = () => {
 			setStoppedRecordingTime(recordingTime); // Capture time before stopping
 			stopRecording(); // Actually stop to trigger final chunk upload immediately
 			// Release wakelock and disable auto-reacquire when stopping
-			wakeLock.releaseWakeLock();
-			wakeLock.disableAutoReacquire();
+			wakeLock.release();
 			open();
 		}
 	};
@@ -336,8 +336,7 @@ export const ParticipantConversationAudio = () => {
 		try {
 			stopRecording();
 			// Release wakelock when finishing
-			wakeLock.releaseWakeLock();
-			wakeLock.disableAutoReacquire();
+			wakeLock.release();
 
 			await waitForPendingUploads("finish");
 
@@ -372,10 +371,7 @@ export const ParticipantConversationAudio = () => {
 		const started = await startRecording(timeToResume);
 		if (!started) return;
 		// Obtain wakelock on user interaction
-		if (wakeLock.isSupported) {
-			wakeLock.obtainWakeLock();
-			wakeLock.enableAutoReacquire();
-		}
+		wakeLock.hold();
 	};
 
 	const handleVerify = () => {
@@ -425,10 +421,7 @@ export const ParticipantConversationAudio = () => {
 			conversation_id: conversationId,
 			project_id: projectId,
 		});
-		if (wakeLock.isSupported) {
-			wakeLock.obtainWakeLock();
-			wakeLock.enableAutoReacquire();
-		}
+		wakeLock.hold();
 	};
 
 	const showVerify = projectQuery.data?.is_verify_enabled;
@@ -466,57 +459,6 @@ export const ParticipantConversationAudio = () => {
 		100,
 	);
 
-	const getRefineInfoText = () => {
-		if (showVerify && showEcho) {
-			return t`Take some time to create an outcome that makes your contribution concrete or get an immediate reply from dembrane to help you deepen the conversation.`;
-		}
-		if (showVerify) {
-			return t`Take some time to create an outcome that makes your contribution concrete.`;
-		}
-		if (showEcho) {
-			return t`Get an immediate reply from dembrane to help you deepen the conversation.`;
-		}
-		return "";
-	};
-
-	const getRefineModalTitle = () => {
-		if (showVerify && showEcho) {
-			return (
-				<Trans id="participant.modal.echo.info.title.generic">
-					"ECHO" available soon
-				</Trans>
-			);
-		}
-		if (showVerify) {
-			return (
-				<Trans id="participant.modal.echo.info.title.concrete">
-					"Verify" available soon
-				</Trans>
-			);
-		}
-		if (showEcho) {
-			return (
-				<Trans id="participant.modal.echo.info.title.go.deeper">
-					"Explore" available soon
-				</Trans>
-			);
-		}
-		return (
-			<Trans id="participant.modal.echo.info.title">
-				Feature available soon
-			</Trans>
-		);
-	};
-
-	const getRefineInfoReason = () => {
-		return (
-			<Trans id="participant.modal.echo.info.reason">
-				We need a bit more context to help you use ECHO effectively. Please
-				continue recording so we can provide better suggestions.
-			</Trans>
-		);
-	};
-
 	const remainingTime = Math.max(
 		0,
 		REFINE_BUTTON_THRESHOLD_SECONDS - Math.floor(recordingTime),
@@ -527,54 +469,7 @@ export const ParticipantConversationAudio = () => {
 			{/* modal for permissions error */}
 			<PermissionErrorModal permissionError={permissionError} />
 
-			{/* modal for S3 connectivity error */}
-			<Modal
-				opened={s3Status === "failed"}
-				onClose={() => {}}
-				withCloseButton={false}
-				centered
-				size="sm"
-				padding="xl"
-				closeOnClickOutside={false}
-				closeOnEscape={false}
-				title={
-					<Group gap="sm" wrap="nowrap">
-						<WarningIcon size={20} color="var(--mantine-color-error)" />
-						<Trans id="participant.modal.s3check.title">Connection issue</Trans>
-					</Group>
-				}
-				role="alertdialog"
-				aria-live="assertive"
-				aria-atomic="true"
-				{...testId("portal-audio-s3-check-modal")}
-			>
-				<Stack gap="md">
-					<Text>
-						<Trans id="participant.modal.s3check.message">
-							Something is blocking your connection. Your audio will not be
-							saved unless this is resolved.
-						</Trans>
-					</Text>
-					<Text size="sm" c="dimmed">
-						<Trans id="participant.modal.s3check.suggestions">
-							This can happen when a VPN or firewall is blocking the connection.
-							Try disabling your VPN, switching to a different network (e.g.
-							mobile hotspot), or contact your IT department for help.
-						</Trans>
-					</Text>
-					<Button
-						onClick={handleS3Reconnect}
-						loading={s3Status === "checking"}
-						disabled={s3Status === "checking"}
-						fullWidth
-						variant="filled"
-						size="lg"
-						{...testId("portal-audio-s3-check-reconnect-button")}
-					>
-						<Trans id="participant.button.s3check.reconnect">Reconnect</Trans>
-					</Button>
-				</Stack>
-			</Modal>
+			<StorageCheckModal status={s3Status} onReconnect={handleS3Reconnect} />
 
 			{/* modal for stop recording confirmation */}
 			<ParticipantSettingsModal
@@ -595,96 +490,20 @@ export const ParticipantConversationAudio = () => {
 				handleVerify={handleVerify}
 			/>
 
-			{/* Modal for refine info */}
-			<Modal
+			<RefineInfoModal
 				opened={refineInfoModalOpened}
 				onClose={closeRefineInfoModal}
-				centered
-				size="sm"
-				padding="xl"
-				title={getRefineModalTitle()}
-				{...testId("portal-audio-echo-info-modal")}
-			>
-				<Stack gap="lg">
-					<Text>{getRefineInfoText()}</Text>
-					<Text c="dimmed" size="sm">
-						{getRefineInfoReason()}
-					</Text>
-					<Text c="dimmed" size="sm">
-						<Trans id="participant.modal.refine.info.available.in">
-							This feature will be available in {remainingTime} seconds.
-						</Trans>
-					</Text>
-					<Button
-						onClick={closeRefineInfoModal}
-						fullWidth
-						variant="filled"
-						size="md"
-						{...testId("portal-audio-echo-info-close-button")}
-					>
-						<Trans id="participant.button.i.understand">I understand</Trans>
-					</Button>
-				</Stack>
-			</Modal>
+				showVerify={!!showVerify}
+				showEcho={!!showEcho}
+				remainingSeconds={remainingTime}
+			/>
 
-			{/* Modal for recording interruption */}
-			<Modal
+			<RecordingInterruptedModal
 				opened={interruptionModalOpened}
-				onClose={() => {}}
-				withCloseButton={false}
-				centered
-				size="sm"
-				padding="xl"
-				closeOnClickOutside={false}
-				closeOnEscape={false}
-				title={
-					<Group gap="sm" wrap="nowrap">
-						<WarningIcon size={20} color="var(--mantine-color-error)" />
-						<Trans id="participant.modal.interruption.title">
-							Recording interrupted
-						</Trans>
-					</Group>
-				}
-				role="alertdialog"
-				aria-live="assertive"
-				aria-atomic="true"
-				{...testId("portal-audio-interruption-modal")}
-			>
-				<Stack gap="md">
-					<Text>
-						<Trans id="participant.modal.interruption.issue.message">
-							Attention! We lost the last 60 seconds or so of your recording due
-							to some interruption. Please press the button below to reconnect.
-						</Trans>
-					</Text>
-
-					{/* Uploading indicator - same pattern as StopRecordingConfirmationModal */}
-					{uploadChunkMutation.isPending && (
-						<Group gap="xs" justify="flex-start" py="xs">
-							<Loader size="sm" />
-							<Text size="sm" c="dimmed">
-								<Trans id="participant.modal.interruption.uploading">
-									Uploading audio...
-								</Trans>
-							</Text>
-						</Group>
-					)}
-
-					<Button
-						onClick={handleReconnect}
-						loading={isReconnecting}
-						disabled={isReconnecting || uploadChunkMutation.isPending}
-						fullWidth
-						variant="filled"
-						size="lg"
-						{...testId("portal-audio-interruption-reconnect-button")}
-					>
-						<Trans id="participant.button.interruption.reconnect">
-							Reconnect
-						</Trans>
-					</Button>
-				</Stack>
-			</Modal>
+				isUploading={uploadChunkMutation.isPending}
+				isReconnecting={isReconnecting}
+				onReconnect={handleReconnect}
+			/>
 
 			<Box className={clsx("relative flex-grow p-4 transition-all")}>
 				<Outlet
