@@ -120,7 +120,7 @@ const ParticipantReport = createLazyNamedRoute(
 	"ParticipantReport",
 );
 const ProjectUnsubscribe = createLazyNamedRoute(
-	() => import("./routes/project/unsubscribe/ProjectUnsubscribe"),
+	() => import("./portal/routes/ProjectUnsubscribe"),
 	"ProjectUnsubscribe",
 );
 const DebugPage = createLazyRoute(() => import("./routes/Debug"));

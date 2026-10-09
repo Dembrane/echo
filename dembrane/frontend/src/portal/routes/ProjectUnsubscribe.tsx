@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { useSearchParams } from "react-router";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
-import { useCheckUnsubscribeStatus } from "@/components/unsubscribe/hooks";
+import { useCheckUnsubscribeStatus } from "@/portal/components/unsubscribe/hooks";
 import { unsubscribeParticipant } from "@/lib/api";
 
 export const ProjectUnsubscribe = () => {
