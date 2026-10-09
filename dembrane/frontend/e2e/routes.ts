@@ -4,7 +4,9 @@ import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
 // Every page the app can route to, read from src/Router.tsx with the TypeScript
-// AST, so a route added there shows up here without anyone listing it. A page is
+// AST, so a route added there shows up here without anyone listing it. The
+// portal's routes live in src/portal/routes.tsx, which is read alongside it for
+// the route lists Router.tsx imports. A page is
 // a route with an element and no children (or an index route); layouts are
 // walked through. Feature-flagged spreads (`...(FLAG ? [...] : [])`) count as on.
 // The leading "/:language?" (dashboard) and "/:language?/:projectId" (portal)
@@ -21,35 +23,44 @@ export type RouterPath = {
 	redirect: boolean;
 };
 
-const ROUTER_FILE = path.resolve(
-	path.dirname(fileURLToPath(import.meta.url)),
-	"../src/Router.tsx",
-);
+const here = path.dirname(fileURLToPath(import.meta.url));
+const ROUTER_FILE = path.resolve(here, "../src/Router.tsx");
+const PORTAL_ROUTES_FILE = path.resolve(here, "../src/portal/routes.tsx");
 
-export function routerPaths(file = ROUTER_FILE): RouterPath[] {
-	const sf = ts.createSourceFile(
+const parse = (file: string) =>
+	ts.createSourceFile(
 		file,
 		readFileSync(file, "utf8"),
 		ts.ScriptTarget.Latest,
 		true,
 		ts.ScriptKind.TSX,
 	);
+
+export function routerPaths(
+	file = ROUTER_FILE,
+	routeFiles = [PORTAL_ROUTES_FILE],
+): RouterPath[] {
+	const sf = parse(file);
 	const consts = new Map<string, ts.Expression>();
 	const routers: [Router, ts.Expression][] = [];
-	for (const st of sf.statements) {
-		if (!ts.isVariableStatement(st)) continue;
-		for (const d of st.declarationList.declarations) {
-			if (!ts.isIdentifier(d.name) || !d.initializer) continue;
-			consts.set(d.name.text, d.initializer);
-			const init = d.initializer;
-			if (
-				ts.isCallExpression(init) &&
-				init.expression.getText(sf) === "createBrowserRouter"
-			)
-				routers.push([
-					d.name.text === "participantRouter" ? "portal" : "dashboard",
-					init.arguments[0],
-				]);
+	// Top-level consts from the route files first, so Router.tsx's own win.
+	for (const source of [...routeFiles.map(parse), sf]) {
+		for (const st of source.statements) {
+			if (!ts.isVariableStatement(st)) continue;
+			for (const d of st.declarationList.declarations) {
+				if (!ts.isIdentifier(d.name) || !d.initializer) continue;
+				consts.set(d.name.text, d.initializer);
+				const init = d.initializer;
+				if (
+					source === sf &&
+					ts.isCallExpression(init) &&
+					init.expression.getText() === "createBrowserRouter"
+				)
+					routers.push([
+						d.name.text === "participantRouter" ? "portal" : "dashboard",
+						init.arguments[0],
+					]);
+			}
 		}
 	}
 
@@ -66,14 +77,14 @@ export function routerPaths(file = ROUTER_FILE): RouterPath[] {
 	const tagOf = (e: ts.Expression | undefined): string => {
 		if (!e) return "";
 		const x = unwrap(e);
-		if (ts.isJsxSelfClosingElement(x)) return x.tagName.getText(sf);
+		if (ts.isJsxSelfClosingElement(x)) return x.tagName.getText();
 		if (ts.isJsxElement(x)) {
 			const kids = x.children.filter(
 				(c) => ts.isJsxElement(c) || ts.isJsxSelfClosingElement(c),
 			);
 			return kids.length === 1
 				? tagOf(kids[0] as ts.Expression)
-				: x.openingElement.tagName.getText(sf);
+				: x.openingElement.tagName.getText();
 		}
 		return "";
 	};
@@ -81,7 +92,7 @@ export function routerPaths(file = ROUTER_FILE): RouterPath[] {
 		`/${[a, b].join("/").split("/").filter(Boolean).join("/")}`;
 	const prop = (o: ts.ObjectLiteralExpression, name: string) => {
 		const p = o.properties.find(
-			(p) => ts.isPropertyAssignment(p) && p.name.getText(sf) === name,
+			(p) => ts.isPropertyAssignment(p) && p.name.getText() === name,
 		);
 		return p && ts.isPropertyAssignment(p) ? p.initializer : undefined;
 	};
