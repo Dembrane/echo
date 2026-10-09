@@ -186,12 +186,12 @@ msgstr "· mislukt"
 #~ msgstr " Afmelden voor meldingen"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:723
+#: src/components/participant/ParticipantConversationAudio.tsx:738
 msgid "participant.modal.echo.info.title.generic"
 msgstr "\"ECHO\" binnenkort beschikbaar"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:737
+#: src/components/participant/ParticipantConversationAudio.tsx:752
 msgid "participant.modal.echo.info.title.go.deeper"
 msgstr "\"Verkennen\" binnenkort beschikbaar"
 
@@ -200,7 +200,7 @@ msgid "\"made with dembrane\" stays on the screen."
 msgstr "\"made with dembrane\" blijft in beeld."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:730
+#: src/components/participant/ParticipantConversationAudio.tsx:745
 msgid "participant.modal.echo.info.title.concrete"
 msgstr "\"Verifiëren\" binnenkort beschikbaar"
 
@@ -2294,7 +2294,7 @@ msgid "Approve"
 msgstr "Goedkeuren"
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefact.tsx:413
+#: src/components/participant/verify/VerifyArtefact.tsx:417
 msgid "participant.concrete.action.button.approve"
 msgstr "Goedkeuren"
 
@@ -2548,7 +2548,7 @@ msgid "Attach verified artifacts"
 msgstr "Geverifieerde artefacten toevoegen"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:893
+#: src/components/participant/ParticipantConversationAudio.tsx:911
 msgid "participant.modal.interruption.issue.message"
 msgstr "Let op! We hebben de laatste 60 seconden van je opname verloren door een onderbreking. Druk op de knop hieronder om opnieuw verbinding te maken."
 
@@ -3063,7 +3063,7 @@ msgid "participant.mic.settings.modal.second.confirm.cancel"
 msgstr "Annuleren"
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefact.tsx:391
+#: src/components/participant/verify/VerifyArtefact.tsx:395
 msgid "participant.concrete.action.button.cancel"
 msgstr "Annuleren"
 
@@ -3887,7 +3887,7 @@ msgstr "Gekoppelde agents"
 #~ msgstr "Verbinding maken met rapportservices..."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:781
+#: src/components/participant/ParticipantConversationAudio.tsx:799
 msgid "participant.modal.s3check.title"
 msgstr "Verbindingsprobleem"
 
@@ -3985,7 +3985,7 @@ msgid "participant.button.continue"
 msgstr "Doorgaan"
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifySelection.tsx:276
+#: src/components/participant/verify/VerifySelection.tsx:273
 msgid "participant.verify.selection.button.next"
 msgstr "Doorgaan"
 
@@ -5481,14 +5481,14 @@ msgid "Early features you can try on this project before they are ready for ever
 msgstr "Nieuwe functies die je in dit project kunt proberen voordat ze klaar zijn voor iedereen."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:1090
+#: src/components/participant/ParticipantConversationAudio.tsx:1109
 msgid "participant.button.echo"
 msgstr "ECHO"
 
 #: src/components/results/curate/RowTools.tsx:290
 #: src/components/results/curate/RowTools.tsx:335
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:585
-#: src/components/participant/verify/VerifyArtefact.tsx:444
+#: src/components/participant/verify/VerifyArtefact.tsx:448
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:235
 #: src/components/chat/TemplatesModal.tsx:599
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:642
@@ -6355,7 +6355,7 @@ msgstr "Afstoting verre paren: {0}"
 #~ msgstr "Afstoting verre paren: {0}"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:743
+#: src/components/participant/ParticipantConversationAudio.tsx:758
 msgid "participant.modal.echo.info.title"
 msgstr "Functie binnenkort beschikbaar"
 
@@ -6475,7 +6475,7 @@ msgid "participant.button.finish.text.mode"
 msgstr "Voltooien"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:1059
+#: src/components/participant/ParticipantConversationAudio.tsx:1078
 msgid "participant.button.finish"
 msgstr "Voltooien"
 
@@ -6841,7 +6841,7 @@ msgstr "Duits"
 msgid "Get a reply during a conversation"
 msgstr "Krijg een antwoord tijdens een gesprek"
 
-#: src/components/participant/ParticipantConversationAudio.tsx:715
+#: src/components/participant/ParticipantConversationAudio.tsx:730
 msgid "Get an immediate reply from dembrane to help you deepen the conversation."
 msgstr "Krijg direct een reactie van dembrane om het gesprek te verdiepen."
 
@@ -7254,7 +7254,7 @@ msgid "I need strict privacy guarantees"
 msgstr "Ik heb strikte privacygaranties nodig"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:863
+#: src/components/participant/ParticipantConversationAudio.tsx:881
 msgid "participant.button.i.understand"
 msgstr "Ik begrijp het"
 
@@ -8321,7 +8321,7 @@ msgid "Loading actions..."
 msgstr "Acties worden geladen..."
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefactLoading.tsx:9
+#: src/components/participant/verify/VerifyArtefactLoading.tsx:13
 msgid "participant.concrete.loading.artefact"
 msgstr "Tekst aan het laden…"
 
@@ -9738,7 +9738,7 @@ msgstr "Nog geen verbruik deze cyclus."
 msgid "No valid audio files were selected. Please select audio files only (MP3, WAV, OGG, etc)."
 msgstr "Er zijn geen geldige audiobestanden geselecteerd. Selecteer alleen audiobestanden (MP3, WAV, OGG, etc)."
 
-#: src/components/participant/verify/VerifySelection.tsx:246
+#: src/components/participant/verify/VerifySelection.tsx:243
 msgid "No verification topics are configured for this project."
 msgstr "Er zijn geen verificatie-onderwerpen voor dit project geconfigureerd."
 
@@ -10773,7 +10773,7 @@ msgstr "Wachtwoorden komen niet overeen"
 msgid "Pause physics"
 msgstr "Fysica pauzeren"
 
-#: src/components/participant/verify/VerifyArtefact.tsx:338
+#: src/components/participant/verify/VerifyArtefact.tsx:342
 msgid "Pause reading"
 msgstr "Pauzeer het voorlezen"
 
@@ -11754,7 +11754,7 @@ msgstr "Plan heractiveren"
 msgid "Read after {name} finished"
 msgstr "Gelezen nadat {name} klaar was"
 
-#: src/components/participant/verify/VerifyArtefact.tsx:338
+#: src/components/participant/verify/VerifyArtefact.tsx:342
 msgid "Read aloud"
 msgstr "Lees hardop voor"
 
@@ -11939,12 +11939,12 @@ msgid "Recommended apps"
 msgstr "Aanbevolen apps"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:812
+#: src/components/participant/ParticipantConversationAudio.tsx:830
 msgid "participant.button.s3check.reconnect"
 msgstr "Opnieuw verbinden"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:920
+#: src/components/participant/ParticipantConversationAudio.tsx:938
 msgid "participant.button.interruption.reconnect"
 msgstr "Opnieuw verbinden"
 
@@ -11953,7 +11953,7 @@ msgid "Reconnecting"
 msgstr "Opnieuw verbinden"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:1033
+#: src/components/participant/ParticipantConversationAudio.tsx:1052
 msgid "participant.button.record"
 msgstr "Opname starten"
 
@@ -11998,7 +11998,7 @@ msgid "Recording duration stays accurate after pausing and resuming."
 msgstr "De opnameduur blijft correct na pauzeren en hervatten."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:881
+#: src/components/participant/ParticipantConversationAudio.tsx:899
 msgid "participant.modal.interruption.title"
 msgstr "Opname onderbroken"
 
@@ -12110,7 +12110,7 @@ msgstr "Samenvatting opnieuw genereren"
 #~ msgstr "Samenvatting opnieuw genereren"
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefact.tsx:315
+#: src/components/participant/verify/VerifyArtefact.tsx:322
 msgid "participant.regenerating.outcome"
 msgstr "Uitkomst wordt opnieuw gegenereerd"
 
@@ -12835,7 +12835,7 @@ msgid "Review, edit, and open every conversation in this project."
 msgstr "Bekijk, bewerk en open elk gesprek in dit project."
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefact.tsx:435
+#: src/components/participant/verify/VerifyArtefact.tsx:439
 msgid "participant.concrete.action.button.revise"
 msgstr "Aanpassen"
 
@@ -12984,7 +12984,7 @@ msgid "Save"
 msgstr "Opslaan"
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefact.tsx:381
+#: src/components/participant/verify/VerifyArtefact.tsx:385
 msgid "participant.concrete.action.button.save"
 msgstr "Opslaan"
 
@@ -14201,7 +14201,7 @@ msgid "error.fallback.fix_input"
 msgstr "Er klopt iets niet in het formulier. Controleer het en probeer het opnieuw."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:791
+#: src/components/participant/ParticipantConversationAudio.tsx:809
 msgid "participant.modal.s3check.message"
 msgstr "Iets blokkeert je verbinding. Je audio wordt niet opgeslagen tenzij dit wordt opgelost."
 
@@ -14547,7 +14547,7 @@ msgid "Stop"
 msgstr "Stop"
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:1111
+#: src/components/participant/ParticipantConversationAudio.tsx:1130
 msgid "participant.button.stop"
 msgstr "Stop"
 
@@ -14779,7 +14779,7 @@ msgstr "Overzetten naar self-serve"
 msgid "Switch to self-serve billing"
 msgstr "Overzetten naar self-serve facturering"
 
-#: src/components/participant/ParticipantConversationAudio.tsx:1040
+#: src/components/participant/ParticipantConversationAudio.tsx:1059
 msgid "Switch to text"
 msgstr "Overschakelen naar tekst"
 
@@ -14865,11 +14865,11 @@ msgstr "Breng me naar {resolvedWorkspaceName}"
 msgid "Take part"
 msgstr "Doe mee"
 
-#: src/components/participant/ParticipantConversationAudio.tsx:709
+#: src/components/participant/ParticipantConversationAudio.tsx:724
 msgid "Take some time to create an outcome that makes your contribution concrete or get an immediate reply from dembrane to help you deepen the conversation."
 msgstr "Kijk of de uitkomst klopt, en pas aan waar nodig of krijg direct een reactie van dembrane om het gesprek te verdiepen."
 
-#: src/components/participant/ParticipantConversationAudio.tsx:712
+#: src/components/participant/ParticipantConversationAudio.tsx:727
 msgid "Take some time to create an outcome that makes your contribution concrete."
 msgstr "Kijk of de uitkomst klopt, en pas aan waar nodig."
 
@@ -15511,7 +15511,7 @@ msgstr "Ze worden toegevoegd als leden. Je kunt er later meer toevoegen."
 msgid "Things like: A call with your DPO or CISO, a security review or custom DPIA."
 msgstr "Denk aan: een gesprek met je DPO of CISO, een beveiligingsbeoordeling of een DPIA op maat."
 
-#: src/components/participant/ParticipantEchoMessages.tsx:44
+#: src/components/participant/ParticipantEchoMessages.tsx:49
 msgid "Thinking..."
 msgstr "Denken..."
 
@@ -15548,7 +15548,7 @@ msgid "This browser cannot record audio. Chrome, Edge and Safari can."
 msgstr "Deze browser kan geen audio opnemen. Chrome, Edge en Safari wel."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:797
+#: src/components/participant/ParticipantConversationAudio.tsx:815
 msgid "participant.modal.s3check.suggestions"
 msgstr "Dit kan gebeuren wanneer een VPN of firewall de verbinding blokkeert. Probeer je VPN uit te schakelen, over te schakelen naar een ander netwerk (bijv. mobiele hotspot) of neem contact op met je IT-afdeling voor hulp."
 
@@ -15599,7 +15599,7 @@ msgid "This email is already in the list."
 msgstr "Deze e-mail is al in de lijst."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:852
+#: src/components/participant/ParticipantConversationAudio.tsx:870
 msgid "participant.modal.refine.info.available.in"
 msgstr "Deze functie is beschikbaar over {remainingTime} seconden."
 
@@ -15917,12 +15917,12 @@ msgid "add.tag.filter.modal.info"
 msgstr "Dit zal de conversatielijst filteren om conversaties met deze tag weer te geven."
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefact.tsx:320
+#: src/components/participant/verify/VerifyArtefact.tsx:327
 msgid "participant.concrete.regenerating.artefact.description"
 msgstr "We zijn je tekst aan het vernieuwen. Dit duurt meestal maar een paar seconden."
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifyArtefactLoading.tsx:14
+#: src/components/participant/verify/VerifyArtefactLoading.tsx:18
 msgid "participant.concrete.loading.artefact.description"
 msgstr "We zijn je tekst aan het ophalen. Even geduld."
 
@@ -16878,7 +16878,7 @@ msgid "participant.modal.uploading"
 msgstr "Audio uploaden..."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:904
+#: src/components/participant/ParticipantConversationAudio.tsx:922
 msgid "participant.modal.interruption.uploading"
 msgstr "Audio uploaden..."
 
@@ -17357,7 +17357,7 @@ msgid "We couldn't update your payment method. Your old one is still active. Ple
 msgstr "We konden je betaalmethode niet bijwerken. Je oude methode is nog actief. Probeer het opnieuw."
 
 #. js-lingui-explicit-id
-#: src/components/participant/ParticipantConversationAudio.tsx:751
+#: src/components/participant/ParticipantConversationAudio.tsx:766
 msgid "participant.modal.echo.info.reason"
 msgstr "We hebben iets meer context nodig om u te helpen ECHO effectief te gebruiken. Ga door met opnemen zodat we betere suggesties kunnen geven."
 
@@ -17519,7 +17519,7 @@ msgid "What do you want to use dembrane for?"
 msgstr "Waarvoor wil je dembrane gebruiken?"
 
 #. js-lingui-explicit-id
-#: src/components/participant/verify/VerifySelection.tsx:237
+#: src/components/participant/verify/VerifySelection.tsx:234
 msgid "participant.verify.selection.title"
 msgstr "Wat wil je verifiëren?"
 
