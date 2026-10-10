@@ -21,6 +21,14 @@ export {
   workerFreshness,
 } from "./recovery";
 export {
+  type CancelOptions,
+  runDueTasks,
+  type ScheduledTask,
+  type ScheduledTasks,
+  STALE_CLAIM_MS,
+  scheduledTasks,
+} from "./scheduled-tasks";
+export {
   currentWorkflowId,
   durableSleep,
   isFinalAttempt,

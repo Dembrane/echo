@@ -1,3 +1,4 @@
+import { isWorkspaceRole, roleHas } from "@dembrane/access";
 import type { Db } from "@dembrane/db";
 import { notificationStorage } from "./storage";
 
@@ -43,6 +44,30 @@ export function audiences(db: Db) {
       return (await effectiveMembers(workspaceId))
         .filter((m) => m.role === "admin" || m.role === "owner")
         .map((m) => m.userId);
+    },
+    /**
+     * Everyone who can open a project, with the workspace it sits in: the workspace's people
+     * whose role reads projects, or for a private project its admins and owners plus the
+     * people it is shared with.
+     */
+    async projectPeople(
+      projectId: string,
+    ): Promise<{ workspaceId: string | null; userIds: string[] }> {
+      const p = await store.projectForAudience(projectId);
+      if (!p || p.deletedAt || !p.workspaceId) return { workspaceId: null, userIds: [] };
+      const members = await effectiveMembers(p.workspaceId);
+      const isPrivate = p.visibility === "private";
+      const out = new Set(
+        members
+          .filter((m) =>
+            isPrivate
+              ? m.role === "admin" || m.role === "owner"
+              : isWorkspaceRole(m.role) && roleHas(m.role, "project:read"),
+          )
+          .map((m) => m.userId),
+      );
+      if (isPrivate) for (const s of await store.projectShares(projectId)) out.add(s.userId);
+      return { workspaceId: p.workspaceId, userIds: [...out] };
     },
     async organisationAdmins(orgId: string) {
       return (await store.orgMembers(orgId, ["admin", "owner"])).map((r) => r.userId);

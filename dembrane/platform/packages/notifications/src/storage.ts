@@ -11,6 +11,7 @@ const {
   project,
   org_membership,
   workspace_membership,
+  project_membership,
 } = schema;
 
 export type NotificationInsert = typeof notification.$inferInsert;
@@ -136,6 +137,27 @@ export function notificationStorage(db: Db) {
         .where(eq(workspace.id, workspaceId))
         .limit(1);
       return row ?? null;
+    },
+
+    async projectForAudience(projectId: string) {
+      const [row] = await db
+        .select({
+          workspaceId: project.workspace_id,
+          visibility: project.visibility,
+          deletedAt: project.deleted_at,
+        })
+        .from(project)
+        .where(eq(project.id, projectId))
+        .limit(1);
+      return row ?? null;
+    },
+
+    async projectShares(projectId: string) {
+      return db
+        .select({ userId: project_membership.user_id })
+        .from(project_membership)
+        .where(eq(project_membership.project_id, projectId))
+        .orderBy(asc(project_membership.id));
     },
 
     async directMembers(workspaceId: string) {

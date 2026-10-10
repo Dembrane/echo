@@ -1,4 +1,5 @@
 import { newId } from "@dembrane/core";
+import { scheduledTasks } from "@dembrane/queue";
 import type { Json } from "../py";
 import { type Row, type Sql, TASK_POPCORN_TICK } from "../storage";
 
@@ -23,6 +24,7 @@ const runKey = (loopId: string) => `popcorn:run:${loopId}`;
 const aliveKey = (loopId: string) => `popcorn:alive:${loopId}`;
 
 export function tickStore(sql: Sql) {
+  const tasks = scheduledTasks(sql);
   return {
     sql,
 
@@ -120,41 +122,23 @@ export function tickStore(sql: Sql) {
     },
 
     async pendingTasks(): Promise<Row[]> {
-      return sql`select id, payload, status, claimed_at from scheduled_task
-        where task_type = ${TASK_POPCORN_TICK} and status in ('scheduled', 'processing')`;
+      return (await tasks.pending(TASK_POPCORN_TICK)) as unknown as Row[];
     },
 
     async failTask(id: string, error: string, now: string): Promise<void> {
-      await sql`update scheduled_task set status = 'failed', error = ${error}, updated_at = ${now}
-        where id = ${id}`;
+      await tasks.settle(id, now, error);
     },
 
     async resetStaleClaims(now: string, staleBefore: string): Promise<number> {
-      const rows = await sql`update scheduled_task
-        set status = 'scheduled', claimed_at = null, updated_at = ${now}
-        where status = 'processing' and claimed_at < ${staleBefore} and task_type = ${TASK_POPCORN_TICK}
-        returning id`;
-      return rows.length;
+      return tasks.resetStaleClaims([TASK_POPCORN_TICK], now, staleBefore);
     },
 
     async claimDue(now: string, limit: number): Promise<Row[]> {
-      return sql`update scheduled_task t
-        set status = 'processing', claimed_at = ${now}, attempts = coalesce(t.attempts, 0) + 1,
-            updated_at = ${now}
-        where t.id in (
-          select id from scheduled_task
-          where status = 'scheduled' and scheduled_at <= ${now} and task_type = ${TASK_POPCORN_TICK}
-          order by scheduled_at limit ${limit} for update skip locked)
-        returning t.*`;
+      return (await tasks.claimDue([TASK_POPCORN_TICK], now, limit)) as unknown as Row[];
     },
 
     async settleTask(id: string, now: string, error: string | null): Promise<void> {
-      if (error === null)
-        await sql`update scheduled_task set status = 'completed', error = null, updated_at = ${now}
-          where id = ${id}`;
-      else
-        await sql`update scheduled_task set status = 'failed', error = ${error.slice(0, 5000)},
-          updated_at = ${now} where id = ${id}`;
+      await tasks.settle(id, now, error);
     },
   };
 }

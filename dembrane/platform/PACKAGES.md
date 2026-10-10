@@ -8,7 +8,7 @@ Most namespaces use core, db, observability, http, access, legacy-shape, queue, 
 **Apps**
 
 - **api** (in 0, out 40): The HTTP server: mounts every namespace's routes and answers the dashboard, the portal and outside agents. Uses 23 namespaces and 17 capabilities.
-- **worker** (in 0, out 28): Runs queued jobs and schedules: the audio pipeline, analysis, reports, emails, billing timers. Uses 15 namespaces and 13 capabilities.
+- **worker** (in 0, out 29): Runs queued jobs and schedules: the audio pipeline, analysis, reports, emails, billing timers. Uses 16 namespaces and 13 capabilities.
 - **migrate** (in 0, out 8): The job that runs before every rollout: schema migrations, the queue schema, database grants, the default verification topics, and on PR previews the sample data. Uses accounts, verify, samples and 5 capabilities.
 - **media** (in 0, out 3): The ffmpeg service: probes, converts, splits and merges audio, one job per instance. Uses observability, config, audio.
 - **web** (in 0, out 3): Serves the built dashboard and participant portal and proxies /api to the API. Uses observability, http, config.
@@ -18,20 +18,20 @@ Most namespaces use core, db, observability, http, access, legacy-shape, queue, 
 - **billing** (in 6, out 9): Plans, seats, Mollie payments, invoices and overage. Used by account, tenancy, staff, training and 2 more. Uses i18n, mail.
 - **webhooks** (in 6, out 7): A project's outbound webhooks: settings, signed delivery, retries. Used by conversations, accounts, reports, agent-access and 2 more. Uses only the common ones.
 - **analysis** (in 5, out 10): The analysis engine: recipes, runs, snapshots and revisions that maps and popcorn build on. Used by popcorn, map, present, api and 1 more. Uses realtime, llm.
+- **notifications** (in 5, out 5): In-app notifications and announcements, and the Notifier other namespaces emit through. Used by account, agentic, reports, api and 1 more. Uses only the common ones.
 - **conversations** (in 5, out 16): Conversations, the participant portal, the audio pipeline, live monitoring and search. Used by agentic, verify, agent-access, api and 1 more. Uses projects, webhooks, prompts, transcription, audio and 3 more.
 - **projects** (in 4, out 7): Projects, tags, goals, methodologies, prompt templates and the report request. Used by conversations, agentic, reports, api. Uses realtime.
-- **notifications** (in 4, out 5): In-app notifications and announcements, and the Notifier other namespaces emit through. Used by account, agentic, reports, api. Uses only the common ones.
 - **account** (in 4, out 14): The signed-in user's own account: profile, onboarding, settings, invites, transactional email. Used by accounts, reports, api, worker. Uses notifications, billing, auth, i18n, mail and 2 more.
 - **popcorn** (in 4, out 13): Popcorn: one live deck per project, refreshed on a tick, with demos and translations. Used by accounts, present, api, worker. Uses analysis, analytics, realtime, config, llm.
 - **accounts** (in 3, out 15): Customer accounts as sales runs them: offers, contracts, signing, demos, reminders. Used by api, migrate, worker. Uses account, popcorn, webhooks, i18n, mail and 3 more.
 - **map** (in 3, out 11): Argument maps: saved maps, the graph, generation, titles and fact-checks. Used by present, api, worker. Uses analysis, realtime, llm.
 - **chats** (in 2, out 9): Chat with a project's conversations (the v1 chats and the chat BFF). Used by agentic, api. Uses analytics, llm.
-- **agentic** (in 2, out 15): The assistant: agent runs, their event streams, memory, and its own canvas tools. Used by api, worker. Uses chats, notifications, projects, conversations, analytics and 3 more.
+- **agentic** (in 2, out 15): The assistant: agent runs, their event streams, memory, and its own canvas tools. Used by api, worker. Uses chats, projects, conversations, notifications, analytics and 3 more.
 - **canvas** (in 2, out 10): Dynamic canvases: a live wall built from recent transcript, redrawn on a tick. Used by api, worker. Uses realtime, llm.
 - **feedback** (in 2, out 9): Bug reports, feedback responses and the forward to support. Used by api, worker. Uses storage.
 - **present** (in 2, out 11): Present: the published, audience-facing view of a popcorn deck and a map. Used by api, worker. Uses map, popcorn, analysis, realtime.
 - **pricing** (in 2, out 8): The pricing configurator and the bookings it forwards. Used by api, worker. Uses storage.
-- **reports** (in 2, out 12): Report generation and the report timeline. Used by api, worker. Uses account, notifications, projects, webhooks, llm.
+- **reports** (in 2, out 12): Report generation and the report timeline. Used by api, worker. Uses account, projects, notifications, webhooks, llm.
 - **tenancy** (in 2, out 11): Orgs and workspaces: members, settings, access requests, support access, project shares. Used by api, worker. Uses billing, i18n, mail, storage.
 - **verify** (in 2, out 7): Verification topics and artifacts participants see in the portal. Used by api, migrate. Uses conversations, prompts.
 - **agent-access** (in 1, out 11): Outside AI agents reaching dembrane: the MCP server, OAuth, and the tools it exposes. Used by api. Uses conversations, webhooks, analytics, realtime.

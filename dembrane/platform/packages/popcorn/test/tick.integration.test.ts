@@ -363,6 +363,38 @@ run("popcorn tick against Postgres", () => {
     expect((await pending()).length).toBe(0);
   });
 
+  test("a booked start tells the project's people once its first read is in", async () => {
+    const now = new Date();
+    await goLive(liveDeps(now, []), await loopRow(), 8, new Date(now.getTime() + 3_600_000));
+    await raw`update scheduled_task set status = 'completed' where task_type = 'popcorn_tick'`;
+    const told: unknown[] = [];
+    const loop = await loopRow();
+    await runPopcornTick(
+      {
+        ...deps(recorded(fixture.ticks), "w-start-notice"),
+        notifyReady: async (o) => {
+          told.push(o);
+        },
+      },
+      ids.loop,
+      "start",
+    );
+    expect(told).toEqual([{ projectId: loop.project_id, reportId: String(loop.report_id) }]);
+    // A later read of the live session is not a booked start: nobody is told again.
+    await runPopcornTick(
+      {
+        ...deps(recorded(fixture.ticks), "w-after-notice"),
+        notifyReady: async (o) => {
+          told.push(o);
+        },
+      },
+      ids.loop,
+      "manual",
+    );
+    expect(told.length).toBe(1);
+    await stopLive(liveDeps(new Date(), []), await loopRow());
+  });
+
   test("a booked start that was cancelled reads nothing", async () => {
     const got = await runPopcornTick(deps(recorded(fixture.ticks), "w-late"), ids.loop, "start");
     expect(got.status).toBe("no_op");
