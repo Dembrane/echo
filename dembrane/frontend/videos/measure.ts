@@ -171,6 +171,8 @@ async function sample(
 		.waitFor({ timeout: 60_000 });
 	const openShown = performance.now() - start;
 	const openReady = Math.max(openShown, await data);
+	// v2 rotates its refresh token on use, so the next run needs this run's cookies.
+	await context.storageState({ path: state });
 	await context.close();
 	return { coldReady, coldShown, openReady, openShown };
 }
@@ -191,14 +193,17 @@ const results: Record<string, Sample[]> = {};
 try {
 	const outDir = join(here, "out", "measure");
 	mkdirSync(outDir, { recursive: true });
+	const state = (t: Target) => join(outDir, `${t.name}.session.json`);
 	for (const t of targets) {
-		const state = join(outDir, `${t.name}.session.json`);
-		await signIn(browser, t, state);
+		await signIn(browser, t, state(t));
 		results[t.name] = [];
 		// One warm-up run, not counted: the first request can wake a sleeping server.
-		await sample(browser, t, state);
-		for (let i = 0; i < runs; i++) {
-			const s = await sample(browser, t, state);
+		await sample(browser, t, state(t));
+	}
+	// Alternate between targets so a slow patch of network hits both alike.
+	for (let i = 0; i < runs; i++) {
+		for (const t of targets) {
+			const s = await sample(browser, t, state(t));
 			results[t.name].push(s);
 			console.log(
 				`${t.name} ${i + 1}/${runs}: load ${Math.round(s.coldShown)}/${Math.round(s.coldReady)} ms, open ${Math.round(s.openShown)}/${Math.round(s.openReady)} ms`,
@@ -215,7 +220,7 @@ try {
 	const lines = [
 		`# Project open times, ${stamp.slice(0, 10)}`,
 		"",
-		`${runs} runs per environment from one machine, after one uncounted warm-up run. Times in ms, p50 / p90.`,
+		`${runs} runs per environment from one machine, alternating between environments, after one uncounted warm-up run each. Times in ms, p50 / p90.`,
 		"",
 		`| Step | ${targets.map((t) => t.name).join(" | ")} |`,
 		`|---|${targets.map(() => "---").join("|")}|`,
