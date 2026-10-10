@@ -22,7 +22,6 @@ export const ONBOARDING: Scene[] = [
 	app.conversations,
 	app.ask,
 	app.report,
-	app.keyboard,
 	cards.nextSteps,
 ];
 
