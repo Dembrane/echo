@@ -66,6 +66,13 @@ describe("the best-practices fixture", () => {
     expect(everything).not.toMatch(/\+?\d[\d ()-]{8,}\d/);
   });
 
+  // Users read this as dembrane talking about itself, so it follows the brand guidelines.
+  test("writes dembrane in lowercase and uses no em dashes", () => {
+    expect(everything).not.toContain("Dembrane");
+    expect(everything).not.toContain("—");
+    for (const c of conversations) expect(c.summary.startsWith("Synthetic sample.")).toBe(true);
+  });
+
   test("names its rows after the workspace and stamps copies with the fixture", () => {
     const a = "3f1b7e0a-5c1d-4e6f-9a2b-0c4d8e6f1a2b";
     const b = "7c2d9e1f-6a3b-4c5d-8e7f-1a2b3c4d5e6f";
