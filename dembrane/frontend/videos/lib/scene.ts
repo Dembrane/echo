@@ -20,6 +20,8 @@ export interface Cue {
 	start: number;
 	end: number;
 	text: string;
+	/** The scripted line, when the caption shows what the narrator said instead. */
+	script?: string;
 	/** The narrator's recording of this line, when there is one. */
 	voice?: string;
 }

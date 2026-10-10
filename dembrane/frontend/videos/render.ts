@@ -2,7 +2,7 @@
 //
 //   node videos/render.ts [--release v3.0.0] [--videos onboarding,whats-new] [--langs en,nl]
 //                         [--only <scene id>,...] [--burn] [--no-seed] [--no-record]
-//                         [--voice <dir>] [--script]
+//                         [--voice <dir> [--transcribe]] [--script]
 
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -22,7 +22,7 @@ import {
 	type Scene,
 	vtt,
 } from "./lib/scene.ts";
-import { type Line, prepareVoice } from "./lib/voice.ts";
+import { type Line, prepareVoice, transcribe } from "./lib/voice.ts";
 import {
 	ONBOARDING,
 	type Release,
@@ -55,6 +55,8 @@ const { values: args } = parseArgs({
 		/** Write the narration script from the last recording, and stop. */
 		script: { default: false, type: "boolean" },
 		seed: { default: true, type: "boolean" },
+		/** Caption each recorded line with what was said (Whisper), not the script. */
+		transcribe: { default: false, type: "boolean" },
 		videos: { default: "onboarding,whats-new", type: "string" },
 		/** The narrator's takes: <voice>/<lang>/<scene id>.<ext>. See lib/voice.ts. */
 		voice: { type: "string" },
@@ -222,7 +224,9 @@ async function recordScene(
 					? Math.max(start + spoken.seconds, clock() - BREATH)
 					: clock(),
 				start,
-				text: text[lang],
+				text: spoken?.text ?? text[lang],
+				...(spoken?.text &&
+					spoken.text !== text[lang] && { script: text[lang] }),
 				...(spoken && { voice: spoken.file }),
 			});
 		},
@@ -381,6 +385,19 @@ function lineCounts(scenes: Scene[], lang: Lang) {
 	);
 }
 
+/** The scripted text of each line in the last recording, keyed "<scene id>-<n>". */
+function scriptedLines(scenes: Scene[], lang: Lang) {
+	const lines = new Map<string, string>();
+	for (const s of scenes) {
+		const json = join(outDir, lang, "clips", `${s.id}.json`);
+		if (!existsSync(json)) continue;
+		(JSON.parse(readFileSync(json, "utf8")).cues as Cue[]).forEach((c, i) => {
+			lines.set(`${s.id}-${i + 1}`, c.script ?? c.text);
+		});
+	}
+	return lines;
+}
+
 /**
  * The narrator's script: every line of both videos, per scene and language, with how long
  * it is on screen now. Built from the last recording, so it matches what was filmed.
@@ -428,7 +445,8 @@ function writeScript(scenes: Scene[]) {
 				`In: ${where}. About ${half(spoken)} s.${scene.about.startsWith("Placeholder") ? " **Skip for now: the lines will change.**" : ""}`,
 				"",
 				...cues.map(
-					(c, n) => `${n + 1}. ${c.text} *(${half(c.end - c.start)} s)*`,
+					(c, n) =>
+						`${n + 1}. ${c.script ?? c.text} *(${half(c.end - c.start)} s)*`,
 				),
 				"",
 			);
@@ -479,6 +497,7 @@ try {
 			: new Map<string, Line>();
 		if (voice.size)
 			console.log(`  ${lang}: ${voice.size} recorded lines from ${voiceDir}`);
+		if (args.transcribe) transcribe(voice, lang, scriptedLines(scenes, lang));
 		for (const scene of scenes) {
 			if (!args.record || (only && !only.includes(scene.id))) continue;
 			await recordScene(scene, state, lang, shared, voice);

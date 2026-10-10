@@ -42,6 +42,8 @@ const DEEP_FILTER = {
 export interface Line {
 	file: string;
 	seconds: number;
+	/** What was said, when the lines were transcribed. */
+	text?: string;
 }
 
 /** The deep-filter binary: $VIDEO_DEEP_FILTER, or a pinned release downloaded once. */
@@ -328,4 +330,52 @@ export function prepareVoice(o: {
 		if (!known.has(name))
 			console.warn(`voiceover: ${o.lang}/${byName.get(name)} matches no scene`);
 	return found;
+}
+
+/** Words speech recognition tends to get wrong, written the way the brand writes them. */
+const SPELLING: [RegExp, string][] = [
+	[/\b(dembrane|dem brain|the membrane)\b/gi, "dembrane"],
+];
+
+/**
+ * Sets each line's text to what the narrator said, using Whisper (faster-whisper, run by
+ * lib/transcribe.py), so captions match ad libs. `prompts` are the scripted lines by key.
+ */
+export function transcribe(
+	lines: Map<string, Line>,
+	lang: string,
+	prompts: Map<string, string>,
+) {
+	if (lines.size === 0) return;
+	const keys = [...lines.keys()];
+	const r = spawnSync(
+		process.env.VIDEO_PYTHON ?? "python3",
+		[join(import.meta.dirname, "transcribe.py")],
+		{
+			encoding: "utf8",
+			input: JSON.stringify({
+				lang,
+				lines: keys.map((k) => ({
+					file: lines.get(k)?.file,
+					prompt: prompts.get(k) ?? "",
+				})),
+				model: process.env.VIDEO_WHISPER_MODEL ?? "large-v3-turbo",
+			}),
+			maxBuffer: 1 << 24,
+			stdio: ["pipe", "pipe", "inherit"],
+		},
+	);
+	if (r.status !== 0)
+		throw new Error(
+			"transcribing the voiceover failed; it needs Python with `pip install faster-whisper`",
+		);
+	const texts = JSON.parse(r.stdout) as string[];
+	keys.forEach((k, i) => {
+		const line = lines.get(k);
+		if (!line || !texts[i]) return;
+		line.text = SPELLING.reduce(
+			(t, [from, to]) => t.replace(from, to),
+			texts[i],
+		);
+	});
 }
