@@ -24,34 +24,6 @@ export const welcome = cardScene({
 	since: "v2.0.0",
 });
 
-// Stands in until the best practices project ships (thread "Best practices starter
-// project"); then this becomes an app scene that opens it and asks it a question.
-export const bestPractices = cardScene({
-	about: "Placeholder: the best practices project every new user is added to",
-	card: {
-		en: {
-			headline: "Start in the best practices project",
-			kicker: "Placeholder scene",
-			kind: "title",
-			sub: "Ask it how other organisations use dembrane, before you plan your own.",
-		},
-		nl: {
-			headline: "Begin in het project met goede voorbeelden",
-			kicker: "Tijdelijke scène",
-			kind: "title",
-			sub: "Vraag hoe andere organisaties dembrane gebruiken, voordat je je eigen traject plant.",
-		},
-	},
-	id: "best-practices",
-	say: [
-		{
-			en: "Your account comes with a best practices project. Ask it how other organisations use dembrane.",
-			nl: "Je account heeft een project met goede voorbeelden. Vraag het hoe andere organisaties dembrane gebruiken.",
-		},
-	],
-	since: "v3.0.0",
-});
-
 export const nextSteps = cardScene({
 	about: "Closing card",
 	card: {

@@ -18,7 +18,7 @@ pnpm build
 pnpm videos --burn
 ```
 
-`pnpm videos` seeds the local database first (`apps/migrate/src/video-seed.ts`: an ordinary user, Alex Morgan, who owns the Millbrook sample) and removes whatever the previous recording created. It writes to `videos/out/<release>/`:
+`pnpm videos` seeds the local database first (`apps/migrate/src/video-seed.ts`: an ordinary user, Alex Morgan, who owns the Millbrook and best practices samples) and removes whatever the previous recording created. It writes to `videos/out/<release>/`:
 
 - `onboarding.en.mp4`, `onboarding.en.vtt`, and `.captioned.mp4` with `--burn`
 - the same for `whats-new` and for `nl`
@@ -63,5 +63,4 @@ Copy follows `skills/brand-guidelines.md`: lowercase dembrane, British spelling,
 
 ## Not yet
 
-- The best practices project scene is a placeholder card until that project exists.
 - The sample conversations are in English, so the Dutch video shows a Dutch interface over English content.

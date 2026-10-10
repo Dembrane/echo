@@ -11,6 +11,9 @@ export interface Fixtures {
 	project_id: string;
 	chat_id: string;
 	report_id: string;
+	/** The best practices sample in the same workspace, and its seeded chat. */
+	best_practices_project_id: string;
+	best_practices_chat_id: string;
 }
 
 export interface Cue {
