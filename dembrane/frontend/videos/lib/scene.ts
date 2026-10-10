@@ -17,6 +17,8 @@ export interface Cue {
 	start: number;
 	end: number;
 	text: string;
+	/** The narrator's recording of this line, when there is one. */
+	voice?: string;
 }
 
 export interface Ctx {
