@@ -83,7 +83,7 @@ Tag the release on main with an annotated tag whose first line is the headline (
 - documentation updates the changes call for;
 - a video suggestion when a change is worth showing.
 
-Record the release videos (a person), then publish the in-app announcement (`create-announcement.md`).
+Record the release videos with `pnpm videos` (`dembrane/frontend/videos/README.md`: fill in the release's cards, re-record, watch both and upload them; a person decides they are good enough), then publish the in-app announcement (`create-announcement.md`).
 
 ## Decisions only a person makes
 

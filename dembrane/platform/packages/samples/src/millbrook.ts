@@ -38,6 +38,11 @@ export const MILLBROOK_IDS = {
   conversation: (key: string) => id(`conversation:${key}`),
 };
 
+/** Every conversation the sample holds, so a caller can tell them from ones added since. */
+export const MILLBROOK_CONVERSATION_IDS: readonly string[] = conversations.map((c) =>
+  MILLBROOK_IDS.conversation(c.key),
+);
+
 export interface SampleOwner {
   /** directus_users.id: projects, reports and chats name their creator by it. */
   readonly userId: string;
