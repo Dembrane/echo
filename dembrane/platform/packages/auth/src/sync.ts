@@ -3,8 +3,11 @@ import type postgres from "postgres";
 /**
  * Copies Directus identities into Better Auth's tables. Idempotent: runs with every
  * migration job until cutover, so users created through Directus in the meantime can sign
- * in to the new stack with the same password or Google account. Suspended users are left
- * out, and a user already present is never overwritten.
+ * in to the new stack with the same password or Google account. Every user with an email is
+ * copied whatever its status, so none is left without an identity: a suspended or archived
+ * one still gets no session (auth.ts refuses it by its Directus status) and can be made
+ * active again later, and an unverified or invited one has to prove its email first. A user
+ * already present is never overwritten.
  */
 export async function syncIdentitiesFromDirectus(
   sql: postgres.Sql,
@@ -13,9 +16,9 @@ export async function syncIdentitiesFromDirectus(
     insert into auth_user (id, name, email, email_verified, created_at, updated_at)
     select d.id,
            coalesce(nullif(trim(concat_ws(' ', d.first_name, d.last_name)), ''), split_part(d.email, '@', 1)),
-           lower(d.email), true, now(), now()
+           lower(d.email), d.status in ('active', 'suspended', 'archived'), now(), now()
     from directus_users d
-    where d.email is not null and d.status = 'active'
+    where d.email is not null
     on conflict do nothing
     returning id`;
   const passwords = await sql`
