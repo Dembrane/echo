@@ -3,6 +3,11 @@ import type { Release } from "./release.ts";
 
 // dembrane 3: faster, more stable, accessible. Numbers in square brackets are
 // placeholders; the render warns while any are left.
+//
+// Faster: pnpm videos:measure on 2026-10-10, production v2.4.2 against staging v3.0.2,
+// 20 alternating runs each from one machine on an empty project, median times. Write-up in
+// the project files, videos/v3/v2-v3-timings.md. No environment records time to transcript,
+// so the card makes no claim about it.
 
 export const v3: Release = {
 	version: "v3.0.0",
@@ -38,27 +43,30 @@ export const v3: Release = {
 				en: {
 					headline: "Faster",
 					kind: "stats",
-					note: "Measured on [where and how; fill in].",
+					note: "Our test, October 2026: the same empty project opened 20 times on each version, from one machine.",
 					stats: [
-						{ label: "to open a project", value: "[x]s" },
-						{ label: "from recording to transcript", value: "[x] min" },
+						{ label: "faster to open a project from your list", value: "36%" },
+						{ label: "faster to load a project from a link", value: "27%" },
 					],
 				},
 				nl: {
 					headline: "Sneller",
 					kind: "stats",
-					note: "Gemeten op [waar en hoe; invullen].",
+					note: "Onze test, oktober 2026: hetzelfde lege project 20 keer geopend in elke versie, vanaf één computer.",
 					stats: [
-						{ label: "om een project te openen", value: "[x]s" },
-						{ label: "van opname tot transcript", value: "[x] min" },
+						{
+							label: "sneller een project openen vanuit je lijst",
+							value: "36%",
+						},
+						{ label: "sneller een project laden via een link", value: "27%" },
 					],
 				},
 			},
 			id: "v3-faster",
 			say: [
 				{
-					en: "Projects open faster, and transcripts are ready sooner after a recording ends.",
-					nl: "Projecten openen sneller en transcripten zijn eerder klaar na een opname.",
+					en: "In our tests, projects open about a third faster than in dembrane 2.",
+					nl: "In onze tests openen projecten ongeveer een derde sneller dan in dembrane 2.",
 				},
 			],
 			since: "v3.0.0",

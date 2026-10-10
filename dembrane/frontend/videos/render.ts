@@ -29,6 +29,7 @@ import {
 	whatsNewScenes,
 } from "./releases/release.ts";
 import { v3 } from "./releases/v3.0.0.ts";
+import { PLACEHOLDERS } from "./scenes/card-scene.ts";
 
 const RELEASES: Release[] = [v3];
 const here = dirname(fileURLToPath(import.meta.url));
@@ -442,9 +443,8 @@ function writeScript(scenes: Scene[]) {
 }
 
 function warnPlaceholders(scenes: Scene[]) {
-	const text = JSON.stringify(release?.whatsNew);
-	const left = text.match(/\[[^\]]*(x|fill in|invullen)[^\]]*\]/g);
-	if (left && scenes.length)
+	const left = scenes.flatMap((s) => PLACEHOLDERS.get(s.id) ?? []);
+	if (left.length)
 		console.warn(
 			`placeholders left in ${release?.version}: ${[...new Set(left)].join(", ")}`,
 		);
