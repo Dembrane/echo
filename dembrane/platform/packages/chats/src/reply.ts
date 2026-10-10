@@ -48,13 +48,15 @@ export async function reply(
   protocol: string,
   language: string,
 ): Promise<Response> {
-  const { chat } = await chatFor({ access: d.access, store: d.store }, who, chatId, {
+  const { chat, access } = await chatFor({ access: d.access, store: d.store }, who, chatId, {
     withUsed: true,
   });
   if (chat.chat_mode === "agentic") throw new BadRequestError("chat.agentic_endpoint_required");
   const projectId = chatProjectId(chat);
   if (!projectId) throw new Error("Chat is missing a project reference");
+  // The turn cap leaves a sample copy's chats alone, as the chat allowance does.
   if (
+    !access.project.isSample &&
     isFreeTier(await d.reads.projectTier(projectId)) &&
     (await d.store.countUserTurns(chatId)) >= FREE_TIER_MAX_CHAT_USER_TURNS
   )

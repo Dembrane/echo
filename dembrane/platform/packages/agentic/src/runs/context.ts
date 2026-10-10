@@ -103,6 +103,13 @@ export async function projectTier(sql: postgres.Sql, projectId: string): Promise
   return (row?.tier as string | null) ?? null;
 }
 
+/** A seeded sample copy (project.is_sample), which free-tier limits leave alone. */
+export async function isSampleProject(sql: postgres.Sql, projectId: string): Promise<boolean> {
+  if (!isUuid(projectId)) return false;
+  const [row] = await sql`select is_sample from project where id = ${projectId}`;
+  return row?.is_sample === true;
+}
+
 export const FREE_TIER_MAX_CHAT_USER_TURNS = 3;
 
 /** The shared 402 the frontend keys on (error FREE_TIER_LIMIT) to offer the upgrade. */

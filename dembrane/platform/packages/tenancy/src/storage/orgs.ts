@@ -15,6 +15,7 @@ import {
   sql,
 } from "drizzle-orm";
 import type { Conn } from "../db";
+import { notSample } from "./usage";
 
 const {
   org,
@@ -73,7 +74,7 @@ export async function countsByWorkspace(db: Conn, workspaceIds: readonly string[
   for (const r of await db
     .select({ ws: project.workspace_id, n: sql<number>`count(*)::int` })
     .from(project)
-    .where(and(inArray(project.workspace_id, ids), isNull(project.deleted_at)))
+    .where(and(inArray(project.workspace_id, ids), isNull(project.deleted_at), notSample))
     .groupBy(project.workspace_id))
     projects.set(r.ws ?? "", r.n);
   for (const r of await db
@@ -106,7 +107,10 @@ export async function pinnedProjects(db: Conn, workspaceId: string, includePriva
     .limit(3);
 }
 
-/** Live projects of the given workspaces, newest first. */
+/**
+ * Live projects of the given workspaces, newest first, for winding workspaces down: a
+ * sample copy is not among them, since it goes with its workspace.
+ */
 export async function liveProjectsIn(db: Conn, workspaceIds: readonly string[]) {
   if (!workspaceIds.length) return [];
   return db
@@ -118,7 +122,9 @@ export async function liveProjectsIn(db: Conn, workspaceIds: readonly string[]) 
       created_at: project.created_at,
     })
     .from(project)
-    .where(and(inArray(project.workspace_id, [...workspaceIds]), isNull(project.deleted_at)))
+    .where(
+      and(inArray(project.workspace_id, [...workspaceIds]), isNull(project.deleted_at), notSample),
+    )
     .orderBy(desc(project.created_at));
 }
 

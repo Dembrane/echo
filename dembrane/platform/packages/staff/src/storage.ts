@@ -61,10 +61,17 @@ export function staffStorage(db: Db) {
 
     async liveProjects(workspaceIds: readonly string[]) {
       if (!workspaceIds.length) return [];
+      // A sample copy's invented hours are no customer's usage.
       return db
         .select({ id: project.id, workspace_id: project.workspace_id })
         .from(project)
-        .where(and(inArray(project.workspace_id, [...workspaceIds]), isNull(project.deleted_at)))
+        .where(
+          and(
+            inArray(project.workspace_id, [...workspaceIds]),
+            isNull(project.deleted_at),
+            eq(project.is_sample, false),
+          ),
+        )
         .orderBy(asc(project.id));
     },
 

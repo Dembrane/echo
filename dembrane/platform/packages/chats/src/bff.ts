@@ -18,8 +18,10 @@ export async function createChat(
   body: { project_id: string; name: string | null },
 ) {
   const access = await projectFor(d.access, who, body.project_id, "chat:use");
+  // A sample copy is there to be asked: its chats neither need nor spend the allowance.
   if (
     isFreeTier(access.tier) &&
+    !access.project.isSample &&
     (await d.reads.workspaceChatsWithUserMessages(access.project.workspaceId)) >=
       FREE_TIER_MAX_CHATS
   )
