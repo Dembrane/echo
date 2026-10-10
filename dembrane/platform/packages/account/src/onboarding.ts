@@ -13,7 +13,7 @@ const ANSWERS_LIMIT = { name: "onboarding_answers", capacity: 10, windowSeconds:
  * One-time onboarding, safe to repeat. Creates the app_user row, accepts every pending
  * invite for the user's verified email, and creates a personal org with a default
  * workspace only when the user has legacy projects to move or no invite of any kind (an
- * invited user belongs to the inviter's org, not a stray one of their own).
+ * invited user belongs to the inviter's org, not a stray one of their own, on a repeat too).
  */
 export async function completeOnboarding(ctx: InviteCtx, who: Signed, body: { org_name: string }) {
   const { store, now, deps } = ctx;
@@ -131,8 +131,15 @@ export async function completeOnboarding(ctx: InviteCtx, who: Signed, body: { or
   let orgId: string | null = null;
   let workspaceId = firstWorkspaceId;
 
-  if (hasOwnProjects || (!joinedAnOrg && !joinedAnyWorkspace && !hadPendingInvite)) {
-    orgId = await store.ownedOrgId(userId);
+  const invited = joinedAnOrg || joinedAnyWorkspace || hadPendingInvite;
+  const owned = await store.ownedOrgId(userId);
+  // A repeat has no invite left to accept: someone who joined on an earlier call still
+  // belongs to the inviter's org, and only an owner goes back to an org of their own.
+  const belongs = invited || owned ? null : await store.belonging(userId);
+  if (belongs) workspaceId = belongs.workspaceId;
+
+  if (hasOwnProjects || (!invited && !belongs)) {
+    orgId = owned;
     if (!orgId) {
       orgId = await store.createOrg({ name: orgName, createdBy: userId }, now);
       await store.createMembership("org", { orgId, userId, role: "owner" }, now);
