@@ -197,8 +197,8 @@ first `platform` workflow run with target staging or prod. Before it:
   (`dns_authorizations`) in Cloudflare, so the certificates are ACTIVE before the switch.
   staging: add its one `_acme-challenge` CNAME and the `*.staging` A record (`lb_ip`) the
   same way; its certificate is a wildcard, authorised once.
-- Run the workflow with target staging or prod. `hold_data` (on by default) deploys the migrate
+- Run the workflow with target staging or prod. Ticking `hold_data` deploys the migrate
   job without running it and keeps the worker pool at 0, for a database that a restore fills
-  first; run with it off once the data is in.
+  first; run with it off (the default) once the data is in.
 - After the first deploy set `monitor_api_ready` and `monitor_worker_ready` to true in the
   root; on prod set `monitor_domains` once DNS points at the load balancer.
