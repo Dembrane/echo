@@ -93,9 +93,15 @@ if (!existsSync(args.fixtures))
 	throw new Error(
 		`${args.fixtures} is missing: run without --no-seed, or write the ids there`,
 	);
-// The seed prints {login, sample}; a hand-written file may hold the ids directly.
+// The seed prints {login, sample, bestPractices}; a hand-written file may hold the ids directly.
 const seeded = JSON.parse(readFileSync(args.fixtures, "utf8"));
-const fixtures: Fixtures = seeded.sample ?? seeded;
+const fixtures: Fixtures = seeded.sample
+	? {
+			...seeded.sample,
+			best_practices_chat_id: seeded.bestPractices.chat_id,
+			best_practices_project_id: seeded.bestPractices.project_id,
+		}
+	: seeded;
 
 const playlists: Record<string, Scene[]> = {
 	onboarding: ONBOARDING,

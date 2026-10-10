@@ -11,6 +11,71 @@ const project = (ctx: Ctx, rest = "") =>
 
 const settle = (ctx: Ctx, ms = 1200) => ctx.page.waitForTimeout(ms);
 
+export const bestPractices: Scene = {
+	about: "The best practices sample project, and its answer on how to start",
+	id: "best-practices",
+	async run(ctx) {
+		const { page } = ctx;
+		const pid = ctx.fixtures.best_practices_project_id;
+		await ctx.say(
+			{
+				en: "Every new account comes with a sample project: invented conversations about how organisations use dembrane.",
+				nl: "Elk nieuw account krijgt een voorbeeldproject: verzonnen gesprekken over hoe organisaties dembrane gebruiken.",
+			},
+			async () => {
+				await click(page, page.getByTestId(`project-list-item-${pid}`));
+				await page.getByTestId("sample-project-notice").waitFor();
+				await settle(ctx, 600);
+				await moveTo(page, page.getByTestId("sample-project-notice"));
+			},
+		);
+		await ctx.say(
+			{
+				en: "Start by asking it how to set up your first project.",
+				nl: "Begin met de vraag hoe je je eerste project opzet.",
+			},
+			async () => {
+				await click(
+					page,
+					page.locator(`a[href$="/projects/${pid}/chats/new"]`).first(),
+				);
+				const chat = page
+					.locator(`a[href*="/chats/${ctx.fixtures.best_practices_chat_id}"]`)
+					.first();
+				await chat.waitFor();
+				await settle(ctx, 500);
+				await click(page, chat);
+				await page.getByTestId("chat-interface").waitFor();
+				// Hold on the question and the start of the answer before scrolling.
+				await settle(ctx, 2500);
+			},
+		);
+		await ctx.say(
+			{
+				en: "The answer gives six habits, and names the conversations each one comes from.",
+				nl: "Het antwoord geeft zes gewoontes, en noemt bij elke gewoonte de gesprekken waar die vandaan komt.",
+			},
+			async () => {
+				await page.getByTestId("chat-interface").hover();
+				for (let i = 0; i < 5; i++) {
+					await page.mouse.wheel(0, 220);
+					await settle(ctx, 900);
+				}
+			},
+		);
+		await hideCursor(page);
+	},
+	async setup(ctx) {
+		await ctx.page.goto(ctx.url(`/w/${ctx.fixtures.workspace_id}/home`));
+		await ctx.page
+			.getByTestId(
+				`project-list-item-${ctx.fixtures.best_practices_project_id}`,
+			)
+			.waitFor();
+	},
+	since: "v3.0.0",
+};
+
 export const home: Scene = {
 	about: "Home: the starting point, and search across everything",
 	id: "home",
