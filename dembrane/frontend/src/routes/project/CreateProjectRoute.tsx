@@ -233,6 +233,7 @@ export const CreateProjectRoute = () => {
 						<Stack gap="md" mt="md">
 							<TextInput
 								autoFocus
+								data-testid="create-project-name-input"
 								label={t`Project name`}
 								description={t`Name it after the topic, engagement, or question you're exploring.`}
 								placeholder={t`e.g. Climate Listening, Q1 Research`}
@@ -247,6 +248,7 @@ export const CreateProjectRoute = () => {
 							/>
 
 							<ProjectContextInput
+								data-testid="create-project-context-input"
 								value={context}
 								onChange={(e) => setContext(e.currentTarget.value)}
 							/>
@@ -421,6 +423,7 @@ export const CreateProjectRoute = () => {
 							size="sm"
 							disabled={step === 0 && !canAdvanceFromName}
 							onClick={() => setStep(step + 1)}
+							data-testid="create-project-continue-button"
 						>
 							<Trans>Continue</Trans>
 						</Button>
@@ -431,6 +434,7 @@ export const CreateProjectRoute = () => {
 							loading={submit.isPending}
 							disabled={!canCreate}
 							onClick={() => submit.mutate()}
+							data-testid="create-project-submit-button"
 						>
 							<Trans>Create project</Trans>
 						</Button>
