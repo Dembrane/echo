@@ -232,6 +232,10 @@ jobs:
           --health-cmd "pg_isready -U echo -d postgres" --health-interval 1s --health-retries 60
     env:
       TEST_DATABASE_ADMIN_URL: postgres://echo:echo@localhost:5432/postgres
+      # The suites that run on the seeded fixture (legacy/parity/README.md).
+      TEST_PARITY_ADMIN_URL: postgres://echo:echo@localhost:5432/postgres
+      TEST_PARITY_DATABASE_URL: postgres://echo:echo@localhost:5432/parity_auth
+      TEST_PARITY_USER_PASSWORD: parity-fixture-password
       SAVE_CACHE: ${{ github.event_name != 'pull_request' }}
     steps:
       - name: Check out code
@@ -302,9 +306,18 @@ jobs:
         run: |
           node scripts/sync-accounts-contract.mjs --check
           node scripts/sync-error-codes.mjs --check
+      # The seeded fixture with this commit's migrations on top, for the suites that copy it.
+      - name: Build the parity template
+        env:
+          DB_CONTAINER: ${{ job.services.postgres.id }}
+        run: legacy/parity/fixture/load.sh "$TEST_DATABASE_ADMIN_URL"
       # Files in parallel, each database test on its own database.
       - name: Run tests
-        run: bun test --parallel
+        run: bun test --parallel --reporter=junit --reporter-outfile="$RUNNER_TEMP/tests.xml"
+      # A suite skips itself when what it needs is absent. Here everything is provided, apart
+      # from what the script lists.
+      - name: Check no suite skipped itself
+        run: bun scripts/skipped-tests.ts "$RUNNER_TEMP/tests.xml"
       - name: Save Bun cache
         if: env.SAVE_CACHE == 'true' && steps.bun-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
