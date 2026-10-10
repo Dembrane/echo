@@ -14,6 +14,7 @@ import {
 import type { Signed } from "@dembrane/http";
 import { localeOfEmail, localesOfAppUsers } from "@dembrane/i18n";
 import { isoTimestamp } from "@dembrane/legacy-shape";
+import { seedBestPracticesJob } from "@dembrane/samples/jobs";
 import { commercial, orgAccountForNewWorkspace, reconcileSeats } from "../billing";
 import { type Member, requireOnboarded, WorkspaceContext } from "../context";
 import { iso, isUuid } from "../db";
@@ -248,6 +249,8 @@ export function orgService(deps: TenancyDeps) {
           created_at: iso(now),
           updated_at: iso(now),
         });
+        // Its copy of the best-practices sample, seeded by the worker once this commits.
+        await deps.jobs.enqueue(seedBestPracticesJob, { workspaceId: wsId }, { tx });
         // An external of a partner starting their own org is an upsell signal for staff (ISSUE-028).
         const partners = await partnerOrgNamesExternalOf(tx, member.appUserId);
         if (partners.length) {

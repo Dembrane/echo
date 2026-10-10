@@ -112,6 +112,7 @@ export class DrizzleAccessStore implements AccessStore {
         visibility: project.visibility,
         deletedAt: project.deleted_at,
         legacyOwner: project.directus_user_id,
+        isSample: project.is_sample,
       })
       .from(project)
       .where(eq(project.id, id))
@@ -123,6 +124,7 @@ export class DrizzleAccessStore implements AccessStore {
       visibility: row.visibility === "private" ? ("private" as const) : ("workspace" as const),
       deleted: row.deletedAt !== null,
       legacyOwnerDirectusUserId: row.legacyOwner,
+      isSample: row.isSample,
     };
   }
 
