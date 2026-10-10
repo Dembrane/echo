@@ -38,6 +38,18 @@ Lines without a recording keep their reading time and are listed when the videos
 
 The dev server shows developer overlays, which is why the videos record a production build.
 
+## Measure
+
+Release cards that compare speed need numbers from the same steps on both versions. `pnpm videos:measure` signs in to each environment with a test account and times opening a project, as a full page load and as a click from the project list, until its name shows and until its API requests have finished:
+
+```sh
+MEASURE_EMAIL=... MEASURE_PASSWORD=... pnpm videos:measure \
+  --target prod=https://dashboard.dembrane.com/w/<ws>/projects/<id> \
+  --target staging=https://dashboard.staging.dembrane.com/w/<ws>/projects/<id> --runs 20
+```
+
+Per-environment logins go in `MEASURE_<NAME>_EMAIL` and `MEASURE_<NAME>_PASSWORD`. Pick projects of a similar size. It only reads, and writes p50/p90 per step to `out/measure/<time>.md`. The numbers are synthetic, from one machine: say so on the card.
+
 ## Each release
 
 1. Copy `releases/v3.0.0.ts` to the new version and register it in `RELEASES` in `render.ts`.
