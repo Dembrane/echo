@@ -4,6 +4,9 @@ import type { Release } from "./release.ts";
 // dembrane 3: faster, more stable, accessible. Numbers in square brackets are
 // placeholders; the render warns while any are left.
 //
+// Accessible: e2e/grammar.spec.ts checks pages with axe against WCAG 2.1 A and AA, so the
+// video says "tested against WCAG 2.1 AA", never "compliant" (that needs a full audit).
+//
 // Faster: pnpm videos:measure on 2026-10-10, production v2.4.2 against staging v3.0.2,
 // 20 alternating runs each from one machine on an empty project, median times. Write-up in
 // the project files, videos/v3/v2-v3-timings.md. No environment records time to transcript,
@@ -21,20 +24,20 @@ export const v3: Release = {
 					headline: "What's new in dembrane 3",
 					kicker: "Release v3.0.0",
 					kind: "title",
-					sub: "Faster, more stable, and easier to use for everyone.",
+					sub: "Faster, more stable, and tested against WCAG 2.1 AA.",
 				},
 				nl: {
 					headline: "Nieuw in dembrane 3",
 					kicker: "Release v3.0.0",
 					kind: "title",
-					sub: "Sneller, stabieler en voor iedereen makkelijker te gebruiken.",
+					sub: "Sneller, stabieler en getest tegen WCAG 2.1 AA.",
 				},
 			},
 			id: "v3-title",
 			say: [
 				{
-					en: "dembrane 3 is faster, more stable, and easier to use for everyone.",
-					nl: "dembrane 3 is sneller, stabieler en voor iedereen makkelijker te gebruiken.",
+					en: "dembrane 3 is faster, more stable, and tested against the WCAG 2.1 AA accessibility guidelines.",
+					nl: "dembrane 3 is sneller, stabieler en getest tegen de toegankelijkheidsrichtlijnen WCAG 2.1 AA.",
 				},
 			],
 			since: "v3.0.0",
