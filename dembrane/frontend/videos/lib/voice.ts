@@ -15,6 +15,9 @@ import { join, parse } from "node:path";
 // scene's lines read in order with a pause between them. A file named <scene id>-<n> replaces
 // line n alone, for a retake.
 //
+// A text file <scene id>-<n>.txt beside the takes holds what was said in that line, when it
+// differs from the script; the caption shows it.
+//
 // Or one file for the whole script, <voice dir>/<lang>/all.<ext>: every scene in script order,
 // with a pause of about 3 s between scenes and about 1.5 s between lines. Scene files and
 // retakes still replace their part of it.
@@ -318,6 +321,11 @@ export function prepareVoice(o: {
 			cut(cleaned, part, file);
 			found.set(`${id}-${n}`, { file, seconds: seconds(file) });
 		}
+	}
+	// A text file beside a take, <scene id>-<n>.txt, is what was said in it, for the caption.
+	for (const [key, line] of found) {
+		const said = join(dir, `${key}.txt`);
+		if (existsSync(said)) line.text = readFileSync(said, "utf8").trim();
 	}
 	const known = new Set(
 		Object.entries(o.lines).flatMap(([id, n]) => [
