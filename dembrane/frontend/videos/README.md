@@ -31,7 +31,7 @@ Options: `--langs en`, `--videos whats-new`, `--only keyboard,portal` (records o
 The narration is a person's own recordings, cleaned up; nothing is synthesised.
 
 1. `pnpm videos --script` writes `out/<release>/narration-script.md` from the last recording: every line per scene and language, with how long it is on screen now.
-2. The narrator records one file per scene and language, the lines in order with a pause of about a second between them: `<voice dir>/<lang>/<scene id>.m4a` (any common format). A retake of one line is `<scene id>-<n>.m4a`, which replaces line n.
+2. The narrator records one file per language, the whole script in order, with about 3 s of silence between scenes and about 1.5 s between lines: `<voice dir>/<lang>/all.m4a` (any common format). The scene breaks are found at pauses of 2 s or more, and their count must match the script. One file per scene, `<scene id>.m4a`, also works and replaces that scene's part. A retake of one line is `<scene id>-<n>.m4a`, which replaces line n.
 3. `pnpm videos --voice <voice dir>` (or `VIDEO_VOICE_DIR`; the default is `out/<release>/voiceover`). Each take goes through DeepFilterNet 3 (speech enhancement: removes noise and hum, keeps the voice; the pinned binary downloads once to `out/bin`), a high-pass and loudness normalisation to -16 LUFS, and is cut at its longest pauses into the scene's lines. Each shot then holds until its line has been spoken, and the lines are mixed into the videos at their captions' start.
 
 Lines without a recording keep their reading time and are listed when the videos are assembled. Takes are matched to lines by order, so after adding or removing a line in a scene, record that scene again.

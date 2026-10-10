@@ -14,8 +14,8 @@ export interface Release {
 /** The onboarding video, in order: a new user's first walk through dembrane. */
 export const ONBOARDING: Scene[] = [
 	cards.welcome,
-	app.bestPractices,
 	app.home,
+	app.bestPractices,
 	app.createProject,
 	app.share,
 	app.portal,

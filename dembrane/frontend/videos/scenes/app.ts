@@ -52,8 +52,8 @@ export const bestPractices: Scene = {
 		);
 		await ctx.say(
 			{
-				en: "The answer gives six habits, and names the conversations each one comes from.",
-				nl: "Het antwoord geeft zes gewoontes, en noemt bij elke gewoonte de gesprekken waar die vandaan komt.",
+				en: "The answer gives practical advice, and names the conversations it comes from.",
+				nl: "Het antwoord geeft praktisch advies, en noemt de gesprekken waar het vandaan komt.",
 			},
 			async () => {
 				await page.getByTestId("chat-interface").hover();
