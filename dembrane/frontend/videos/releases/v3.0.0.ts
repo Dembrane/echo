@@ -8,6 +8,8 @@ import type { Release } from "./release.ts";
 // 20 alternating runs each from one machine on an empty project, median times. Write-up in
 // the project files, videos/v3/v2-v3-timings.md. No environment records time to transcript,
 // so the card makes no claim about it.
+// More stable: no numbers until v3 has run in production long enough to compare uptime and
+// failed uploads with v2.
 
 export const v3: Release = {
 	version: "v3.0.0",
@@ -76,28 +78,20 @@ export const v3: Release = {
 			card: {
 				en: {
 					headline: "More stable",
-					kind: "stats",
-					note: "Compared with v2.4, over [period; fill in].",
-					stats: [
-						{ label: "uptime", value: "[x]%" },
-						{ label: "fewer failed uploads", value: "[x]%" },
-					],
+					kind: "title",
+					sub: "dembrane 3 runs on a new backend, rebuilt from the ground up.",
 				},
 				nl: {
 					headline: "Stabieler",
-					kind: "stats",
-					note: "Vergeleken met v2.4, over [periode; invullen].",
-					stats: [
-						{ label: "beschikbaarheid", value: "[x]%" },
-						{ label: "minder mislukte uploads", value: "[x]%" },
-					],
+					kind: "title",
+					sub: "dembrane 3 draait op een nieuwe backend, helemaal opnieuw gebouwd.",
 				},
 			},
 			id: "v3-stable",
 			say: [
 				{
-					en: "A new backend means fewer interruptions, and recordings that arrive reliably.",
-					nl: "Een nieuwe backend betekent minder onderbrekingen, en opnames die betrouwbaar binnenkomen.",
+					en: "dembrane 3 runs on a new backend, rebuilt from the ground up.",
+					nl: "dembrane 3 draait op een nieuwe backend, helemaal opnieuw gebouwd.",
 				},
 			],
 			since: "v3.0.0",
