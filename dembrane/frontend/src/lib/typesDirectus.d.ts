@@ -257,6 +257,9 @@ interface Project {
 	// participant API forces it on there whatever this says.
 	is_dembrane_event_cta_enabled: boolean | null;
 	is_verify_on_finish_enabled: boolean | null;
+	// A sample copy dembrane seeds in every workspace: invented conversations,
+	// shown with a notice, closed to participants. Never set by the dashboard.
+	is_sample?: boolean | null;
 	selected_verification_key_list: string | null;
 	conversations: string[] | Conversation[];
 	tags: string[] | ProjectTag[];

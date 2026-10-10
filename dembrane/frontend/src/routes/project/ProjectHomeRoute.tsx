@@ -38,6 +38,7 @@ import { KEY_TERMS_HASH } from "@/components/project/KeyTermsInput";
 import { PortalSettingsOverview } from "@/components/project/PortalSettingsOverview";
 import { PROJECT_CONTEXT_HASH } from "@/components/project/ProjectContextInput";
 import { ProjectQRCode } from "@/components/project/ProjectQRCode";
+import { SampleProjectNotice } from "@/components/project/SampleProjectNotice";
 import { useLatestProjectReport } from "@/components/report/hooks";
 import { reportStatusLabel } from "@/components/sharing/StatusLine";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -74,12 +75,15 @@ export const ProjectHomeRoute = () => {
 				"default_conversation_ask_for_participant_name",
 				"default_conversation_ask_for_participant_email",
 				"is_dembrane_event_cta_enabled",
+				"is_sample",
 			],
 		},
 	});
 	const reportQuery = useLatestProjectReport(projectId ?? "");
 
 	const project = projectQuery.data;
+	// A sample project takes no conversations, so sharing and uploads are left out.
+	const isSample = project?.is_sample === true;
 	const report = reportQuery.data;
 	const reportTitle = report?.title?.trim();
 
@@ -91,11 +95,12 @@ export const ProjectHomeRoute = () => {
 			label: <Trans>Start a chat</Trans>,
 			to: "chats/new",
 		},
-		canEditProject && {
-			icon: <UploadSimpleIcon size={20} />,
-			label: <Trans>Upload audio</Trans>,
-			to: "upload",
-		},
+		canEditProject &&
+			!isSample && {
+				icon: <UploadSimpleIcon size={20} />,
+				label: <Trans>Upload audio</Trans>,
+				to: "upload",
+			},
 		{
 			icon: <BookOpenIcon size={20} />,
 			label: <Trans>Host guide</Trans>,
@@ -159,17 +164,21 @@ export const ProjectHomeRoute = () => {
 					</Text>
 				</Stack>
 
+				{isSample && <SampleProjectNotice />}
+
 				<Grid gutter="xl">
 					<Grid.Col span={{ base: 12, md: 8 }}>
 						<Stack gap="xl">
-							<Card p="md">
-								<Stack gap="md">
-									<Title order={4}>
-										<Trans>Take part</Trans>
-									</Title>
-									<ProjectQRCode project={project} />
-								</Stack>
-							</Card>
+							{!isSample && (
+								<Card p="md">
+									<Stack gap="md">
+										<Title order={4}>
+											<Trans>Take part</Trans>
+										</Title>
+										<ProjectQRCode project={project} />
+									</Stack>
+								</Card>
+							)}
 
 							{projectId && workspaceId && (
 								<ConversationsMiniList

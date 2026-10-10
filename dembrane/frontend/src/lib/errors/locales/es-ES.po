@@ -139,6 +139,11 @@ msgid "error.conversation.move_context_mismatch"
 msgstr "Las conversaciones solo pueden moverse a espacios de trabajo con el mismo titular de datos y facturación. Elige un proyecto de otro espacio de trabajo."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/conversation.ts:24
+msgid "error.conversation.move_sample"
+msgstr ""
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/internal.ts:5
 msgid "error.internal.busy"
 msgstr "dembrane está ocupado con esto ahora mismo. Inténtalo de nuevo en un segundo."
@@ -224,7 +229,7 @@ msgid "error.workspace.visibility_requires_tier"
 msgstr "Los espacios de trabajo privados o solo por invitación requieren el plan Innovator o superior. Créalo como abierto por ahora o mejora tu plan primero."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:28
+#: src/lib/errors/messages/conversation.ts:33
 msgid "error.conversation.no_summary"
 msgstr "Crea primero un resumen de esta conversación y luego inténtalo de nuevo."
 
@@ -674,7 +679,7 @@ msgid "error.agent_access.request_expired"
 msgstr "Esta solicitud de conexión ha caducado. Vuelve a empezar desde tu agente."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:24
+#: src/lib/errors/messages/conversation.ts:29
 msgid "error.conversation.no_content"
 msgstr "Esta conversación aún no tiene audio."
 
@@ -694,7 +699,7 @@ msgid "error.chat.conversation_not_in_chat"
 msgstr "Esta conversación ya no está en el chat."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:36
+#: src/lib/errors/messages/conversation.ts:41
 msgid "error.conversation.not_open"
 msgstr "Esta conversación no está abierta ahora mismo. Pide un nuevo enlace a la persona que organiza."
 
@@ -1209,7 +1214,7 @@ msgid "error.chat.not_found"
 msgstr "No pudimos encontrar este chat. Puede que haya sido eliminado."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:32
+#: src/lib/errors/messages/conversation.ts:37
 msgid "error.conversation.not_found"
 msgstr "No pudimos encontrar esta conversación. Puede que haya sido eliminada."
 

@@ -7162,7 +7162,7 @@ msgstr "Organizzatore"
 msgid "host guide"
 msgstr "guida per l'host"
 
-#: src/routes/project/ProjectHomeRoute.tsx:101
+#: src/routes/project/ProjectHomeRoute.tsx:106
 #: src/routes/project/present/PresentRoute.tsx:129
 #: src/components/project/ProjectHostGuideLink.tsx:34
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:59
@@ -7814,7 +7814,7 @@ msgstr "Accesso effettuato come amministratore"
 msgid "Joined the conversation"
 msgstr "Ha partecipato alla conversazione"
 
-#: src/routes/project/ProjectHomeRoute.tsx:213
+#: src/routes/project/ProjectHomeRoute.tsx:222
 msgid "Jump to"
 msgstr "Vai a"
 
@@ -8032,7 +8032,7 @@ msgstr "Latest"
 msgid "Latest release"
 msgstr "Ultima versione"
 
-#: src/routes/project/ProjectHomeRoute.tsx:185
+#: src/routes/project/ProjectHomeRoute.tsx:194
 msgid "Latest report"
 msgstr "Ultimo report"
 
@@ -11538,7 +11538,7 @@ msgstr "Project Meta Summary"
 msgid "Project moved"
 msgstr "Progetto spostato"
 
-#: src/routes/project/ProjectHomeRoute.tsx:239
+#: src/routes/project/ProjectHomeRoute.tsx:248
 #: src/routes/project/CreateProjectRoute.tsx:236
 #: src/components/project/ProjectListItem.tsx:403
 #: src/components/project/ProjectDangerZone.tsx:136
@@ -12292,9 +12292,9 @@ msgstr "Rename"
 msgid "Rename chat"
 msgstr "Rename chat"
 
-#: src/routes/project/ProjectHomeRoute.tsx:138
-#: src/routes/project/ProjectHomeRoute.tsx:142
-#: src/routes/project/ProjectHomeRoute.tsx:238
+#: src/routes/project/ProjectHomeRoute.tsx:143
+#: src/routes/project/ProjectHomeRoute.tsx:147
+#: src/routes/project/ProjectHomeRoute.tsx:247
 #: src/components/project/ProjectListItem.tsx:344
 #: src/components/project/ProjectListItem.tsx:402
 msgid "Rename project"
@@ -12344,7 +12344,7 @@ msgstr "Prompt di risposta"
 msgid "report"
 msgstr "report"
 
-#: src/routes/project/ProjectHomeRoute.tsx:106
+#: src/routes/project/ProjectHomeRoute.tsx:111
 #: src/routes/project/report/ProjectReportRoute.tsx:170
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:159
 #: src/components/report/ReportRenderer.tsx:65
@@ -13674,7 +13674,7 @@ msgstr "impostato da {0} {relative}"
 msgid "Set goal"
 msgstr "Imposta obiettivo"
 
-#: src/routes/project/ProjectHomeRoute.tsx:111
+#: src/routes/project/ProjectHomeRoute.tsx:116
 msgid "Set key terms"
 msgstr "Imposta termini chiave"
 
@@ -13682,7 +13682,7 @@ msgstr "Imposta termini chiave"
 msgid "Set managed"
 msgstr "Imposta gestito"
 
-#: src/routes/project/ProjectHomeRoute.tsx:117
+#: src/routes/project/ProjectHomeRoute.tsx:122
 msgid "Set project context"
 msgstr "Imposta contesto del progetto"
 
@@ -13805,7 +13805,7 @@ msgstr "Condividi il portale"
 #~ msgid "Share report"
 #~ msgstr "Share report"
 
-#: src/routes/project/ProjectHomeRoute.tsx:155
+#: src/routes/project/ProjectHomeRoute.tsx:160
 msgid "Share the project, watch live activity, and jump into the main tools from one place."
 msgstr "Condividi il progetto, segui l'attività in tempo reale e accedi agli strumenti principali da un unico punto."
 
@@ -14423,7 +14423,7 @@ msgstr "Accesso standard. Collabora negli spazi di lavoro a cui viene aggiunto."
 msgid "Standing guidance the assistant gets in every project chat in this workspace. Saves automatically."
 msgstr "Istruzioni fisse che l'assistente riceve in ogni chat di progetto in questo spazio di lavoro. Si salvano automaticamente."
 
-#: src/routes/project/ProjectHomeRoute.tsx:91
+#: src/routes/project/ProjectHomeRoute.tsx:95
 msgid "Start a chat"
 msgstr "Avvia una chat"
 
@@ -14863,7 +14863,7 @@ msgstr "Tag aggiornati. Puoi perfezionarli in qualsiasi momento nell'editor del 
 msgid "Take me to {resolvedWorkspaceName}"
 msgstr "Portami a {resolvedWorkspaceName}"
 
-#: src/routes/project/ProjectHomeRoute.tsx:168
+#: src/routes/project/ProjectHomeRoute.tsx:176
 msgid "Take part"
 msgstr "Partecipa"
 
@@ -15656,6 +15656,10 @@ msgstr "This is a live preview of the participant's portal. You will need to ref
 #: src/routes/settings/UserSettingsRoute.tsx:93
 msgid "This is a map of every organisation and workspace you are a member of."
 msgstr "Questa è una mappa di tutte le organizzazioni e gli spazi di lavoro di cui fai parte."
+
+#: src/components/project/SampleProjectNotice.tsx:16
+msgid "This is a sample project. The organisations, people and conversations in it are invented."
+msgstr ""
 
 #: src/components/popcorn/PopcornOpeningSettings.tsx:165
 msgid "This is a synthetic demo. Its disclosure and frame are set with the demo and always show."
@@ -16818,7 +16822,7 @@ msgstr "Upload"
 msgid "Upload a custom logo to replace the dembrane logo across the portal, dashboard, reports, and host guide. Recommended aspect ratio is 3:1 (e.g. 600×200px horizontal format)."
 msgstr "Carica un logo personalizzato per sostituire il logo dembrane nel portale, nella dashboard, nei report e nella guida per l'host. Il formato consigliato è 3:1 (es. 600×200 px orizzontale)."
 
-#: src/routes/project/ProjectHomeRoute.tsx:96
+#: src/routes/project/ProjectHomeRoute.tsx:101
 msgid "Upload audio"
 msgstr "Carica audio"
 

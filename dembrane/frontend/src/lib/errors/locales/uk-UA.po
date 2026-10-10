@@ -139,6 +139,11 @@ msgid "error.conversation.move_context_mismatch"
 msgstr "Розмови можна переміщувати лише до робочих просторів з тим самим власником даних і платником. Виберіть проєкт в іншому робочому просторі."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/conversation.ts:24
+msgid "error.conversation.move_sample"
+msgstr ""
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/internal.ts:5
 msgid "error.internal.busy"
 msgstr "dembrane зараз цим зайнятий. Спробуйте ще раз за секунду."
@@ -224,7 +229,7 @@ msgid "error.workspace.visibility_requires_tier"
 msgstr "Робочі простори з доступом за запрошенням і приватні простори потребують тарифу Innovator або вище. Створіть його поки відкритим або спочатку оновіть тариф."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:28
+#: src/lib/errors/messages/conversation.ts:33
 msgid "error.conversation.no_summary"
 msgstr "Спочатку створіть підсумок цієї розмови, а потім спробуйте знову."
 
@@ -674,7 +679,7 @@ msgid "error.agent_access.request_expired"
 msgstr "Термін дії запиту на підключення минув. Почніть знову зі свого агента."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:24
+#: src/lib/errors/messages/conversation.ts:29
 msgid "error.conversation.no_content"
 msgstr "У цій розмові ще немає аудіо."
 
@@ -694,7 +699,7 @@ msgid "error.chat.conversation_not_in_chat"
 msgstr "Цієї розмови більше немає в чаті."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:36
+#: src/lib/errors/messages/conversation.ts:41
 msgid "error.conversation.not_open"
 msgstr "Ця розмова зараз закрита. Попросіть організатора надіслати нове посилання."
 
@@ -1209,7 +1214,7 @@ msgid "error.chat.not_found"
 msgstr "Не вдалося знайти цей чат. Можливо, його було видалено."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:32
+#: src/lib/errors/messages/conversation.ts:37
 msgid "error.conversation.not_found"
 msgstr "Не вдалося знайти цю розмову. Можливо, її було видалено."
 
