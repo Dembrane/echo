@@ -63,7 +63,18 @@ export function buildApp(deps: Deps) {
   const app = new Hono<Env>();
   app.use(correlation(deps));
   app.use(clientAddress(deps));
-  app.use(secureHeaders());
+  // The local file routes stand in for the buckets, whose URLs the dashboard and portal load
+  // from their own origin (an <audio src>), so those may be read by the rest of the site.
+  const localStorePaths = [deps.files, deps.audio].flatMap((s) =>
+    s instanceof FilesystemStorage ? [s.routePath] : [],
+  );
+  const headers = secureHeaders();
+  const localStoreHeaders = secureHeaders({ crossOriginResourcePolicy: "same-site" });
+  app.use((c, next) =>
+    localStorePaths.some((p) => c.req.path === p || c.req.path.startsWith(`${p}/`))
+      ? localStoreHeaders(c, next)
+      : headers(c, next),
+  );
   app.use(
     "/api/*",
     cors({
