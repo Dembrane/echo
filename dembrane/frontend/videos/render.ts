@@ -2,6 +2,7 @@
 //
 //   node videos/render.ts [--release v3.0.0] [--videos onboarding,whats-new] [--langs en,nl]
 //                         [--only <scene id>,...] [--burn] [--no-seed] [--no-record]
+//                         [--voice <dir>] [--script]
 
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -21,6 +22,7 @@ import {
 	type Scene,
 	vtt,
 } from "./lib/scene.ts";
+import { type Line, prepareVoice } from "./lib/voice.ts";
 import {
 	ONBOARDING,
 	type Release,
@@ -49,8 +51,12 @@ const { values: args } = parseArgs({
 		},
 		record: { default: true, type: "boolean" },
 		release: { default: RELEASES[RELEASES.length - 1].version, type: "string" },
+		/** Write the narration script from the last recording, and stop. */
+		script: { default: false, type: "boolean" },
 		seed: { default: true, type: "boolean" },
 		videos: { default: "onboarding,whats-new", type: "string" },
+		/** The narrator's takes: <voice>/<lang>/<scene id>.<ext>. See lib/voice.ts. */
+		voice: { type: "string" },
 	},
 });
 
@@ -61,6 +67,10 @@ const videos = args.videos.split(",") as ("onboarding" | "whats-new")[];
 const email = process.env.VIDEO_EMAIL ?? "alex@example.org";
 const password = process.env.VIDEO_PASSWORD ?? "video-recording-only";
 const outDir = join(here, "out", release.version);
+const voiceDir =
+	args.voice ?? process.env.VIDEO_VOICE_DIR ?? join(outDir, "voiceover");
+/** Silence after each spoken line before the next one starts. */
+const BREATH = 0.35;
 
 /**
  * Seeds the local database (apps/migrate/src/video-seed.ts) and keeps the ids it prints.
@@ -78,7 +88,7 @@ function seed() {
 	mkdirSync(dirname(args.fixtures), { recursive: true });
 	writeFileSync(args.fixtures, printed);
 }
-if (args.seed && args.record) seed();
+if (args.seed && args.record && !args.script) seed();
 if (!existsSync(args.fixtures))
 	throw new Error(
 		`${args.fixtures} is missing: run without --no-seed, or write the ids there`,
@@ -174,6 +184,7 @@ async function recordScene(
 	state: string,
 	lang: Lang,
 	shared: Record<string, string>,
+	voice: Map<string, Line>,
 ) {
 	const dir = join(outDir, lang, "clips");
 	mkdirSync(dir, { recursive: true });
@@ -182,6 +193,7 @@ async function recordScene(
 	await installCursor(page);
 	const cues: Cue[] = [];
 	let clock = () => 0;
+	let line = 0;
 	const ctx: Ctx = {
 		fixtures,
 		lang,
@@ -189,10 +201,23 @@ async function recordScene(
 		portalUrl: (path) => `${args.portal}/${LANGS[lang]}${path}`,
 		async say(text, action) {
 			const start = clock();
+			const spoken = voice.get(`${scene.id}-${++line}`);
 			await action?.();
-			const left = readingSeconds(text[lang]) - (clock() - start);
+			// With a recorded line, the shot holds until it has been spoken; the caption is
+			// on screen for as long as the voice is.
+			const hold = spoken
+				? spoken.seconds + BREATH
+				: readingSeconds(text[lang]);
+			const left = hold - (clock() - start);
 			if (left > 0) await page.waitForTimeout(left * 1000);
-			cues.push({ end: clock(), start, text: text[lang] });
+			cues.push({
+				end: spoken
+					? Math.max(start + spoken.seconds, clock() - BREATH)
+					: clock(),
+				start,
+				text: text[lang],
+				...(spoken && { voice: spoken.file }),
+			});
 		},
 		shared,
 		url: (path) => `${args.dashboard}/${LANGS[lang]}${path}`,
@@ -231,6 +256,7 @@ function assemble(name: string, scenes: Scene[], lang: Lang) {
 	const inputs: string[] = [];
 	const filters: string[] = [];
 	const cues: Cue[] = [];
+	const spoken: { file: string; at: number }[] = [];
 	let offset = 0;
 	scenes.forEach((scene, i) => {
 		const { cues: own, duration } = JSON.parse(
@@ -240,20 +266,44 @@ function assemble(name: string, scenes: Scene[], lang: Lang) {
 		filters.push(
 			`[${i}:v]fade=t=in:st=0:d=${fade}:color=${PARCHMENT},fade=t=out:st=${(duration - fade).toFixed(3)}:d=${fade}:color=${PARCHMENT},setsar=1,setpts=PTS-STARTPTS[v${i}]`,
 		);
-		for (const c of own)
+		for (const c of own) {
 			cues.push({ end: c.end + offset, start: c.start + offset, text: c.text });
+			if (c.voice && existsSync(c.voice))
+				spoken.push({ at: c.start + offset, file: c.voice });
+		}
 		offset += duration;
 	});
+	const missing = cues.length - spoken.length;
+	if (spoken.length && missing)
+		console.warn(`  ${name} ${lang}: ${missing} lines have no voiceover yet`);
+	// The voiceover: each line placed at its caption's start, on one track.
+	const audio = spoken.length
+		? {
+				filter: `${spoken
+					.map(
+						(s, k) =>
+							`[${scenes.length + k}:a]adelay=${Math.round(s.at * 1000)}:all=1[a${k}];`,
+					)
+					.join(
+						"",
+					)}${spoken.map((_, k) => `[a${k}]`).join("")}amix=inputs=${spoken.length}:normalize=0:dropout_transition=0,apad,atrim=0:${offset.toFixed(3)}[aout]`,
+				inputs: spoken.flatMap((s) => ["-i", s.file]),
+			}
+		: undefined;
 	const base = join(outDir, `${name}.${lang}`);
 	execFileSync("ffmpeg", [
 		"-y",
 		"-loglevel",
 		"error",
 		...inputs,
+		...(audio?.inputs ?? []),
 		"-filter_complex",
-		`${filters.join(";")};${scenes.map((_, i) => `[v${i}]`).join("")}concat=n=${scenes.length}:v=1:a=0[out]`,
+		`${filters.join(";")};${scenes.map((_, i) => `[v${i}]`).join("")}concat=n=${scenes.length}:v=1:a=0[out]${audio ? `;${audio.filter}` : ""}`,
 		"-map",
 		"[out]",
+		...(audio
+			? ["-map", "[aout]", "-c:a", "aac", "-b:a", "192k", "-ar", "48000"]
+			: []),
 		"-c:v",
 		"libx264",
 		"-preset",
@@ -293,6 +343,8 @@ function burn(base: string) {
 		`${base}.mp4`,
 		"-vf",
 		`subtitles=${base}.vtt:fontsdir=${fonts}:force_style='${style}'`,
+		"-c:a",
+		"copy",
 		"-c:v",
 		"libx264",
 		"-preset",
@@ -307,6 +359,82 @@ function burn(base: string) {
 	]);
 }
 
+/** How many lines each scene had in its last recording, or undefined if never recorded. */
+function lineCounts(scenes: Scene[], lang: Lang) {
+	return Object.fromEntries(
+		scenes.map((s) => {
+			const json = join(outDir, lang, "clips", `${s.id}.json`);
+			return [
+				s.id,
+				existsSync(json)
+					? (JSON.parse(readFileSync(json, "utf8")).cues as Cue[]).length
+					: undefined,
+			];
+		}),
+	);
+}
+
+/**
+ * The narrator's script: every line of both videos, per scene and language, with how long
+ * it is on screen now. Built from the last recording, so it matches what was filmed.
+ */
+function writeScript(scenes: Scene[]) {
+	const half = (n: number) =>
+		(Math.round(n * 2) / 2).toFixed(1).replace(/\.0$/, "");
+	const out = [
+		`# Narration script, dembrane ${release?.version}`,
+		"",
+		"How to record:",
+		"",
+		"- One file per scene and language, named after the scene, for example `home.m4a`. A phone voice memo is fine; any common audio format works.",
+		"- Read the scene's lines in order, with a pause of about a second between lines. The pauses are where the recording is cut.",
+		"- A quiet room with soft furnishings, about a hand's width or two from the microphone. Background noise and hum are cleaned up afterwards; echo is harder to remove.",
+		"- If you slip, read the whole scene again in a new file, or record only that line as `<scene>-<line>`, for example `home-2.m4a`.",
+		"- The times are how long each line is on screen now. The video waits for your voice, so read at a natural pace; near the time is ideal, a little longer is fine.",
+		"",
+	];
+	for (const lang of langs) {
+		const names = { en: "English", nl: "Nederlands" };
+		out.push(`## ${names[lang]} (folder \`${lang}\`)`, "");
+		let total = 0;
+		const body: string[] = [];
+		scenes.forEach((scene, i) => {
+			const json = join(outDir, lang, "clips", `${scene.id}.json`);
+			const where = videos
+				.filter((v) => playlists[v].includes(scene))
+				.map((v) => (v === "whats-new" ? "what's new" : v))
+				.join(", ");
+			if (!existsSync(json)) {
+				body.push(`### ${i + 1}. \`${scene.id}\` (not recorded yet)`, "");
+				return;
+			}
+			const { cues } = JSON.parse(readFileSync(json, "utf8")) as {
+				cues: Cue[];
+			};
+			const spoken = cues.reduce((t, c) => t + c.end - c.start, 0);
+			total += spoken;
+			body.push(
+				`### ${i + 1}. \`${scene.id}\`: ${scene.about}`,
+				"",
+				`In: ${where}. About ${half(spoken)} s.${scene.about.startsWith("Placeholder") ? " **Skip for now: the lines will change.**" : ""}`,
+				"",
+				...cues.map(
+					(c, n) => `${n + 1}. ${c.text} *(${half(c.end - c.start)} s)*`,
+				),
+				"",
+			);
+		});
+		out.push(
+			`${scenes.length} files, about ${Math.round(total / 60)} min of speaking in total.`,
+			"",
+			...body,
+		);
+	}
+	const file = join(outDir, "narration-script.md");
+	writeFileSync(file, out.join("\n"));
+	console.log(file);
+}
+
 function warnPlaceholders(scenes: Scene[]) {
 	const text = JSON.stringify(release?.whatsNew);
 	const left = text.match(/\[[^\]]*(x|fill in|invullen)[^\]]*\]/g);
@@ -318,19 +446,34 @@ function warnPlaceholders(scenes: Scene[]) {
 
 mkdirSync(outDir, { recursive: true });
 try {
-	const state = args.record ? await signIn() : "";
 	const only = args.only?.split(",");
 	const scenes = [
 		...new Map(
 			videos.flatMap((v) => playlists[v]).map((s) => [s.id, s]),
 		).values(),
 	];
+	if (args.script) {
+		writeScript(scenes);
+		process.exit(0);
+	}
+	const state = args.record ? await signIn() : "";
 	for (const [i, lang] of langs.entries()) {
 		if (args.seed && args.record && i > 0) seed();
 		const shared: Record<string, string> = {};
+		const voice = args.record
+			? prepareVoice({
+					binDir: join(here, "out", "bin"),
+					lang,
+					lines: lineCounts(scenes, lang),
+					outDir: join(outDir, "voice"),
+					voiceDir,
+				})
+			: new Map<string, Line>();
+		if (voice.size)
+			console.log(`  ${lang}: ${voice.size} recorded lines from ${voiceDir}`);
 		for (const scene of scenes) {
 			if (!args.record || (only && !only.includes(scene.id))) continue;
-			await recordScene(scene, state, lang, shared);
+			await recordScene(scene, state, lang, shared, voice);
 		}
 		if (only) continue;
 		for (const v of videos) assemble(v, playlists[v], lang);

@@ -1,16 +1,16 @@
 {
 	"compilerOptions": {
-		"target": "ES2023",
-		"module": "NodeNext",
-		"moduleResolution": "NodeNext",
-		"lib": ["ES2023", "DOM", "DOM.Iterable"],
-		"types": ["node"],
-		"strict": true,
-		"noEmit": true,
 		"allowImportingTsExtensions": true,
 		"erasableSyntaxOnly": true,
-		"skipLibCheck": true
+		"lib": ["ES2023", "DOM", "DOM.Iterable"],
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"noEmit": true,
+		"skipLibCheck": true,
+		"strict": true,
+		"target": "ES2023",
+		"types": ["node"]
 	},
-	"include": ["**/*.ts"],
-	"exclude": ["out"]
+	"exclude": ["out"],
+	"include": ["**/*.ts"]
 }

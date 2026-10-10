@@ -24,7 +24,17 @@ pnpm videos --burn
 - the same for `whats-new` and for `nl`
 - `<lang>/clips/<scene>.mp4`: every scene on its own
 
-Options: `--langs en`, `--videos whats-new`, `--only keyboard,portal` (records only those clips, for working on a scene), `--release v3.0.0`, `--no-seed`.
+Options: `--langs en`, `--videos whats-new`, `--only keyboard,portal` (records only those clips, for working on a scene), `--release v3.0.0`, `--no-seed`, `--no-record` (assembles the clips already recorded), `--voice <dir>`, `--script`.
+
+## Voiceover
+
+The narration is a person's own recordings, cleaned up; nothing is synthesised.
+
+1. `pnpm videos --script` writes `out/<release>/narration-script.md` from the last recording: every line per scene and language, with how long it is on screen now.
+2. The narrator records one file per scene and language, the lines in order with a pause of about a second between them: `<voice dir>/<lang>/<scene id>.m4a` (any common format). A retake of one line is `<scene id>-<n>.m4a`, which replaces line n.
+3. `pnpm videos --voice <voice dir>` (or `VIDEO_VOICE_DIR`; the default is `out/<release>/voiceover`). Each take goes through DeepFilterNet 3 (speech enhancement: removes noise and hum, keeps the voice; the pinned binary downloads once to `out/bin`), a high-pass and loudness normalisation to -16 LUFS, and is cut at its longest pauses into the scene's lines. Each shot then holds until its line has been spoken, and the lines are mixed into the videos at their captions' start.
+
+Lines without a recording keep their reading time and are listed when the videos are assembled. Takes are matched to lines by order, so after adding or removing a line in a scene, record that scene again.
 
 The dev server shows developer overlays, which is why the videos record a production build.
 
@@ -53,6 +63,5 @@ Copy follows `skills/brand-guidelines.md`: lowercase dembrane, British spelling,
 
 ## Not yet
 
-- Voiceover. `ctx.say` already times each shot to its line; a voiceover would time it to the audio instead and add the track in `assemble`.
 - The best practices project scene is a placeholder card until that project exists.
 - The sample conversations are in English, so the Dutch video shows a Dutch interface over English content.
