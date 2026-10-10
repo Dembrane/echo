@@ -4,6 +4,13 @@ Each environment is its own GCP project, directly under the dembrane.com organiz
 its own Terraform root, state and identities. No identity of one environment holds a role
 in another's project, so a preview (which any PR branch can deploy) cannot reach staging or prod.
 
+Production services do not run here: they run on DigitalOcean Kubernetes through
+Dembrane/echo-gitops (`helm/dembrane-web`), and the `platform` workflow's prod job only pushes
+images to `registry.digitalocean.com/dbr-cr` and bumps the image tag there. `prod/` still
+holds the `dembrane-web-prod` project (the Vertex AI project prod's models are billed to).
+Every push to main takes the same path to echo-next (the `dembrane-web-dummy` app on the
+DigitalOcean dev cluster), through its own values file, with no tag and no approval.
+
 | Environment | Project | Number | Root | State |
 |---|---|---|---|---|
 | preview | `dembrane-web-previews` | 218237812097 | `preview/` | `gs://dembrane-web-previews-tf-state` |
@@ -183,7 +190,7 @@ and needs an organization admin; an organization policy on `gcp.resourceLocation
 ## First deploy of staging and prod
 
 Terraform has made everything around the services; the services themselves come from the
-first `platform` workflow run with target staging or prod. Before it:
+first `platform` workflow run with target staging. Before it:
 
 - Add a value to each empty secret with `gcloud secrets versions add echo-<env>-<name>
   --data-file=-`. `invite-hash-secret` must hold Directus's SECRET while Directus-era invite
@@ -197,7 +204,7 @@ first `platform` workflow run with target staging or prod. Before it:
   (`dns_authorizations`) in Cloudflare, so the certificates are ACTIVE before the switch.
   staging: add its one `_acme-challenge` CNAME and the `*.staging` A record (`lb_ip`) the
   same way; its certificate is a wildcard, authorised once.
-- Run the workflow with target staging or prod. `hold_data` (on by default) deploys the migrate
+- Run the workflow with target staging. `hold_data` (on by default) deploys the migrate
   job without running it and keeps the worker pool at 0, for a database that a restore fills
   first; run with it off once the data is in.
 - After the first deploy set `monitor_api_ready` and `monitor_worker_ready` to true in the
