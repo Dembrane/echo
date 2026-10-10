@@ -373,7 +373,7 @@ export const report: Scene = {
 };
 
 export const keyboard: Scene = {
-	about: "Keyboard use and visible focus (v3 accessibility work)",
+	about: "Keyboard use, visible focus and WCAG 2.1 AA (v3 accessibility work)",
 	id: "keyboard",
 	async run(ctx) {
 		const { page } = ctx;
@@ -392,8 +392,8 @@ export const keyboard: Scene = {
 		);
 		await ctx.say(
 			{
-				en: "Text and controls are checked for contrast, in light and dark mode.",
-				nl: "Tekst en knoppen zijn gecontroleerd op contrast, in de lichte en de donkere modus.",
+				en: "dembrane is tested against WCAG 2.1 AA, the accessibility guidelines. That includes contrast for text and controls, in light and dark mode.",
+				nl: "dembrane is getest tegen WCAG 2.1 AA, de richtlijnen voor toegankelijkheid. Dat geldt ook voor het contrast van tekst en knoppen, in de lichte en de donkere modus.",
 			},
 			() => tab(5),
 		);
