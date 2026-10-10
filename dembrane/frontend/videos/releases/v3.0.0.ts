@@ -77,7 +77,6 @@ export const v3: Release = {
 			],
 			since: "v3.0.0",
 		}),
-		"keyboard",
 		"best-practices",
 		cardScene({
 			about: "Closing",
