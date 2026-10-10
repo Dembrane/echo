@@ -414,7 +414,7 @@ msgid "{0, plural, one {Ask about this} other {Ask about these (#)}}"
 msgstr "{0, plural, one {Запитати про цю розмову} few {Запитати про ці розмови (#)} many {Запитати про ці розмови (#)} other {Запитати про ці розмови (#)}}"
 
 #. placeholder {0}: focusedContextConversations.length
-#: src/components/chat/AgenticChatPanel.tsx:2181
+#: src/components/chat/AgenticChatPanel.tsx:2196
 msgid "{0, plural, one {Focusing on # conversation:} other {Focusing on # conversations:}}"
 msgstr "{0, plural, one {Фокус на # розмові:} few {Фокус на # розмовах:} many {Фокус на # розмовах:} other {Фокус на # розмовах:}}"
 
@@ -456,14 +456,14 @@ msgid "select.all.modal.tags"
 msgstr "{0, plural, one {Tag:} other {Tags:}}"
 
 #. placeholder {0}: contextToBeAdded.conversations.length
-#: src/routes/project/chat/ProjectChatRoute.tsx:935
+#: src/routes/project/chat/ProjectChatRoute.tsx:957
 msgid "{0, plural, one {Using # conversation:} other {Using # conversations:}}"
 msgstr "{0, plural, one {Використовується # розмова:} few {Використовуються # розмови:} many {Використовується # розмов:} other {Використовується # розмов:}}"
 
 #. placeholder {0}: isAssistantTyping ? "Assistant is typing..." : "Thinking..."
 #. placeholder {0}: formatDistanceToNowStrict(new Date(startedAt), { addSuffix: true, })
 #. placeholder {0}: citation.reference_text
-#: src/routes/project/chat/ProjectChatRoute.tsx:777
+#: src/routes/project/chat/ProjectChatRoute.tsx:799
 #: src/components/conversation/useConversationList.ts:42
 #: src/components/chat/References.tsx:41
 msgid "{0}"
@@ -2066,7 +2066,7 @@ msgstr "Під час завантаження порталу сталася п�
 #~ msgid "An error occurred while loading the Portal. Please contact the support team."
 #~ msgstr "An error occurred while loading the Portal. Please contact the support team."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:831
+#: src/routes/project/chat/ProjectChatRoute.tsx:853
 msgid "An error occurred."
 msgstr "An error occurred."
 
@@ -2286,7 +2286,7 @@ msgid "Approaching a limit this month"
 msgstr "Наближення до ліміту цього місяця"
 
 #. placeholder {0}: input.length.toLocaleString()
-#: src/components/chat/AgenticChatPanel.tsx:2334
+#: src/components/chat/AgenticChatPanel.tsx:2349
 msgid "Approaching limit: {0} / 32,000 characters"
 msgstr "Наближення до ліміту: {0} / 32 000 символів"
 
@@ -2423,7 +2423,7 @@ msgstr "Ask"
 msgid "Ask | dembrane"
 msgstr "Запитати | dembrane"
 
-#: src/components/chat/AgenticChatPanel.tsx:1884
+#: src/components/chat/AgenticChatPanel.tsx:1899
 msgid "Ask a question about the conversations in this project, or get help setting it up. Any change is proposed for review first, and nothing is saved until it's approved."
 msgstr "Поставте запитання про розмови в цьому проєкті або отримайте допомогу з його налаштуванням. Будь-які зміни спочатку пропонуються на розгляд і зберігаються лише після затвердження."
 
@@ -2448,7 +2448,7 @@ msgid "Ask about these"
 msgstr "Запитати про це"
 
 #: src/routes/project/chat/NewChatRoute.tsx:673
-#: src/components/chat/AgenticChatPanel.tsx:2310
+#: src/components/chat/AgenticChatPanel.tsx:2325
 msgid "Ask about your conversations..."
 msgstr "Запитайте про ваші розмови..."
 
@@ -3050,7 +3050,7 @@ msgstr "Розкажете докладніше?"
 #: src/components/common/ConfirmModal.tsx:63
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:730
 #: src/components/chat/AgenticChatPanel.tsx:751
-#: src/components/chat/AgenticChatPanel.tsx:2219
+#: src/components/chat/AgenticChatPanel.tsx:2234
 msgid "Cancel"
 msgstr "Cancel"
 
@@ -3307,17 +3307,17 @@ msgstr "Дистанція заряду (частка області перег�
 #~ msgid "Charge Distance (viewport fraction): {0}"
 #~ msgstr "Дистанція заряду (частка області перегляду): {0}"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:682
-#: src/routes/project/chat/ProjectChatRoute.tsx:688
+#: src/routes/project/chat/ProjectChatRoute.tsx:704
+#: src/routes/project/chat/ProjectChatRoute.tsx:710
 #: src/features/sidebar/hooks/useSearchHits.ts:254
 #: src/features/sidebar/hooks/useSearchHits.ts:256
 #: src/features/sidebar/hooks/useSearchHits.ts:257
 #: src/features/sidebar/hooks/useSearchHits.ts:262
-#: src/components/chat/AgenticChatPanel.tsx:1733
+#: src/components/chat/AgenticChatPanel.tsx:1748
 msgid "Chat"
 msgstr "Chat"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:332
+#: src/routes/project/chat/ProjectChatRoute.tsx:346
 msgid "Chat | dembrane"
 msgstr "Chat | dembrane"
 
@@ -3333,7 +3333,7 @@ msgstr "Чат створено"
 msgid "Chat deleted"
 msgstr "Чат видалено"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:619
+#: src/routes/project/chat/ProjectChatRoute.tsx:641
 #: src/routes/project/chat/NewChatRoute.tsx:540
 msgid "Chat isn't available on your access level. Reach out to your workspace admin to request an upgrade."
 msgstr "Чат недоступний для вашого рівня доступу. Зверніться до адміністратора робочого простору, щоб отримати доступ."
@@ -5033,9 +5033,9 @@ msgstr "dembrane на вашій події?"
 msgid "dembrane B.V. {0}, all rights reserved."
 msgstr "dembrane B.V. {0}, усі права захищено."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1021
-#: src/routes/project/chat/ProjectChatRoute.tsx:1031
-#: src/components/chat/AgenticChatPanel.tsx:2353
+#: src/routes/project/chat/ProjectChatRoute.tsx:1043
+#: src/routes/project/chat/ProjectChatRoute.tsx:1053
+#: src/components/chat/AgenticChatPanel.tsx:2368
 msgid "dembrane can make mistakes. Please double-check responses."
 msgstr "dembrane може припускатися помилок. Будь ласка, перевіряйте відповіді."
 
@@ -5851,13 +5851,13 @@ msgstr "Entered by the participant on the portal"
 msgid "Entered details"
 msgstr "Введені дані"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:826
+#: src/routes/project/chat/ProjectChatRoute.tsx:848
 #: src/routes/project/canvas/CanvasRoute.tsx:337
 #: src/components/dropzone/UploadConversationDropzone.tsx:723
 #: src/components/dropzone/UploadConversationDropzone.tsx:833
 #: src/components/conversation/LiveMonitorSection.tsx:274
 #: src/components/chat/AgenticChatPanel.tsx:436
-#: src/components/chat/AgenticChatPanel.tsx:1835
+#: src/components/chat/AgenticChatPanel.tsx:1850
 msgid "Error"
 msgstr "Error"
 
@@ -6305,11 +6305,11 @@ msgstr "Failed to retranscribe conversation. Please try again."
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Failed to stop recording on device change. Please try again."
 
-#: src/components/chat/AgenticChatPanel.tsx:1726
+#: src/components/chat/AgenticChatPanel.tsx:1741
 msgid "Failed to stop run"
 msgstr "Не вдалося зупинити запуск"
 
-#: src/components/chat/AgenticChatPanel.tsx:1672
+#: src/components/chat/AgenticChatPanel.tsx:1687
 msgid "Failed to submit agentic message"
 msgstr "Не вдалося надіслати повідомлення агента"
 
@@ -6520,9 +6520,9 @@ msgstr "Зразок"
 msgid "Focus"
 msgstr "Focus"
 
-#: src/components/chat/AgenticChatPanel.tsx:2223
-#: src/components/chat/AgenticChatPanel.tsx:2224
-#: src/components/chat/AgenticChatPanel.tsx:2363
+#: src/components/chat/AgenticChatPanel.tsx:2238
+#: src/components/chat/AgenticChatPanel.tsx:2239
+#: src/components/chat/AgenticChatPanel.tsx:2378
 msgid "Focus on conversations"
 msgstr "Зосередитися на розмовах"
 
@@ -7162,7 +7162,7 @@ msgstr "Організатор"
 msgid "host guide"
 msgstr "посібник ведучого"
 
-#: src/routes/project/ProjectHomeRoute.tsx:101
+#: src/routes/project/ProjectHomeRoute.tsx:106
 #: src/routes/project/present/PresentRoute.tsx:129
 #: src/components/project/ProjectHostGuideLink.tsx:34
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:59
@@ -7231,11 +7231,11 @@ msgstr "Як завгодно: дата, пора року чи те, що ви 
 msgid "https://www.youtube.com/watch?v=XSFAF3uSvMg"
 msgstr "https://www.youtube.com/watch?v=XSFAF3uSvMg"
 
-#: src/components/chat/AgenticChatPanel.tsx:2007
+#: src/components/chat/AgenticChatPanel.tsx:2022
 msgid "I applied the canvas."
 msgstr "Я застосував канвас."
 
-#: src/components/chat/AgenticChatPanel.tsx:2023
+#: src/components/chat/AgenticChatPanel.tsx:2038
 msgid "I applied the goal."
 msgstr "Я застосував ціль."
 
@@ -7351,7 +7351,7 @@ msgstr "Імпортовано з попереднього аналізу"
 msgid "Imported from an earlier analysis, {day}"
 msgstr "Імпортовано з попереднього аналізу, {day}"
 
-#: src/components/chat/AgenticChatPanel.tsx:1904
+#: src/components/chat/AgenticChatPanel.tsx:1919
 msgid "Improve my setup"
 msgstr "Покращити налаштування"
 
@@ -7814,7 +7814,7 @@ msgstr "Приєднано як адміністратор"
 msgid "Joined the conversation"
 msgstr "Приєдналися до розмови"
 
-#: src/routes/project/ProjectHomeRoute.tsx:213
+#: src/routes/project/ProjectHomeRoute.tsx:222
 msgid "Jump to"
 msgstr "Перейти до"
 
@@ -8032,7 +8032,7 @@ msgstr "Latest"
 msgid "Latest release"
 msgstr "Останній випуск"
 
-#: src/routes/project/ProjectHomeRoute.tsx:185
+#: src/routes/project/ProjectHomeRoute.tsx:194
 msgid "Latest report"
 msgstr "Останній звіт"
 
@@ -8176,11 +8176,11 @@ msgstr "Посилання скопійовано"
 msgid "Link to the privacy policy shown to participants"
 msgstr "Посилання на політику конфіденційності, яку бачать учасники"
 
-#: src/components/chat/AgenticChatPanel.tsx:1894
+#: src/components/chat/AgenticChatPanel.tsx:1909
 msgid "List my conversations"
 msgstr "Показати мої розмови"
 
-#: src/components/chat/AgenticChatPanel.tsx:1895
+#: src/components/chat/AgenticChatPanel.tsx:1910
 msgid "List the conversations in this project."
 msgstr "Показати розмови в цьому проєкті."
 
@@ -8273,7 +8273,7 @@ msgstr "Слайди наживо для зали, створені з розм�
 msgid "Live stream disconnected. Updating on a slower poll until it reconnects."
 msgstr "Пряму трансляцію відключено. Оновлення відбуватиметься повільніше до відновлення з'єднання."
 
-#: src/components/chat/AgenticChatPanel.tsx:1351
+#: src/components/chat/AgenticChatPanel.tsx:1365
 msgid "Live stream interrupted. Falling back to polling."
 msgstr "Пряму трансляцію перервано. Перехід на регулярне опитування."
 
@@ -8380,7 +8380,7 @@ msgstr "Мапа завантажується."
 msgid "Loading the new scope. The current map stays until then."
 msgstr "Завантажуємо нову область. Поки що відображається поточна мапа."
 
-#: src/components/chat/AgenticChatPanel.tsx:1846
+#: src/components/chat/AgenticChatPanel.tsx:1861
 msgid "Loading this chat..."
 msgstr "Завантаження цього чату..."
 
@@ -8810,7 +8810,7 @@ msgstr "Пам'ять"
 msgid "Memory removed"
 msgstr "Пам'ять видалено"
 
-#: src/components/chat/AgenticChatPanel.tsx:2329
+#: src/components/chat/AgenticChatPanel.tsx:2344
 msgid "Message is too long (maximum 32,000 characters). Please attach conversations or shorten your message."
 msgstr "Повідомлення задовге (максимум 32 000 символів). Будь ласка, прикріпіть розмови або скоротіть повідомлення."
 
@@ -11538,7 +11538,7 @@ msgstr "Project Meta Summary"
 msgid "Project moved"
 msgstr "Проєкт переміщено"
 
-#: src/routes/project/ProjectHomeRoute.tsx:239
+#: src/routes/project/ProjectHomeRoute.tsx:248
 #: src/routes/project/CreateProjectRoute.tsx:236
 #: src/components/project/ProjectListItem.tsx:403
 #: src/components/project/ProjectDangerZone.tsx:136
@@ -11961,7 +11961,7 @@ msgstr "Record"
 
 #: src/components/pricing/PricingTextInput.tsx:255
 #: src/components/feedback/ReportIssueModal.tsx:246
-#: src/components/chat/AgenticChatPanel.tsx:2247
+#: src/components/chat/AgenticChatPanel.tsx:2262
 msgid "Record a voice message"
 msgstr "Записати голосове повідомлення"
 
@@ -12025,7 +12025,7 @@ msgstr "Запис призупинено"
 msgid "Recording started"
 msgstr "Запис розпочато"
 
-#: src/components/chat/AgenticChatPanel.tsx:876
+#: src/components/chat/AgenticChatPanel.tsx:887
 msgid "Recording stopped at the five minute limit. Turning what you recorded into text."
 msgstr "Запис зупинено через 5-хвилинний ліміт. Перетворюємо записане на текст."
 
@@ -12087,7 +12087,7 @@ msgid "Refreshing…"
 msgstr "Оновлення…"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:460
-#: src/routes/project/chat/ProjectChatRoute.tsx:754
+#: src/routes/project/chat/ProjectChatRoute.tsx:776
 #: src/routes/project/canvas/CanvasRoute.tsx:690
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:625
 #: src/components/popcorn/PopcornActions.tsx:66
@@ -12288,13 +12288,13 @@ msgid "project.sidebar.chat.rename"
 msgstr "Rename"
 
 #: src/components/chat/ChatAccordion.tsx:139
-#: src/components/chat/AgenticChatPanel.tsx:1796
+#: src/components/chat/AgenticChatPanel.tsx:1811
 msgid "Rename chat"
 msgstr "Rename chat"
 
-#: src/routes/project/ProjectHomeRoute.tsx:138
-#: src/routes/project/ProjectHomeRoute.tsx:142
-#: src/routes/project/ProjectHomeRoute.tsx:238
+#: src/routes/project/ProjectHomeRoute.tsx:143
+#: src/routes/project/ProjectHomeRoute.tsx:147
+#: src/routes/project/ProjectHomeRoute.tsx:247
 #: src/components/project/ProjectListItem.tsx:344
 #: src/components/project/ProjectListItem.tsx:402
 msgid "Rename project"
@@ -12344,7 +12344,7 @@ msgstr "Промпт для відповіді"
 msgid "report"
 msgstr "звіт"
 
-#: src/routes/project/ProjectHomeRoute.tsx:106
+#: src/routes/project/ProjectHomeRoute.tsx:111
 #: src/routes/project/report/ProjectReportRoute.tsx:170
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:159
 #: src/components/report/ReportRenderer.tsx:65
@@ -12815,7 +12815,7 @@ msgstr "Перевірте перед створенням."
 msgid "Review files before uploading"
 msgstr "Review files before uploading"
 
-#: src/components/chat/AgenticChatPanel.tsx:1905
+#: src/components/chat/AgenticChatPanel.tsx:1920
 msgid "Review my project settings and suggest improvements."
 msgstr "Перегляньте налаштування мого проєкту та запропонуйте покращення."
 
@@ -13386,7 +13386,7 @@ msgstr "Вибрати {0}"
 msgid "Select {title}"
 msgstr "Вибрати {title}"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:888
+#: src/routes/project/chat/ProjectChatRoute.tsx:910
 msgid "Select a conversation to continue"
 msgstr "Виберіть розмову, щоб продовжити"
 
@@ -13462,10 +13462,10 @@ msgstr "Вибрати аудіофайли"
 msgid "Select conversation"
 msgstr "Вибрати розмову"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:897
-#: src/routes/project/chat/ProjectChatRoute.tsx:956
-#: src/routes/project/chat/ProjectChatRoute.tsx:957
-#: src/routes/project/chat/ProjectChatRoute.tsx:1042
+#: src/routes/project/chat/ProjectChatRoute.tsx:919
+#: src/routes/project/chat/ProjectChatRoute.tsx:978
+#: src/routes/project/chat/ProjectChatRoute.tsx:979
+#: src/routes/project/chat/ProjectChatRoute.tsx:1064
 #: src/routes/project/chat/NewChatRoute.tsx:624
 #: src/routes/project/chat/NewChatRoute.tsx:626
 #: src/routes/project/chat/NewChatRoute.tsx:733
@@ -13571,10 +13571,10 @@ msgstr "Selection too large. Some conversations weren't added."
 msgid "Self-serve"
 msgstr "Самообслуговування"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:981
+#: src/routes/project/chat/ProjectChatRoute.tsx:1003
 #: src/routes/project/chat/NewChatRoute.tsx:647
 #: src/components/feedback/ResponseFeedbackControls.tsx:219
-#: src/components/chat/AgenticChatPanel.tsx:2284
+#: src/components/chat/AgenticChatPanel.tsx:2299
 msgid "Send"
 msgstr "Send"
 
@@ -13674,7 +13674,7 @@ msgstr "встановлено: {0} {relative}"
 msgid "Set goal"
 msgstr "Встановити ціль"
 
-#: src/routes/project/ProjectHomeRoute.tsx:111
+#: src/routes/project/ProjectHomeRoute.tsx:116
 msgid "Set key terms"
 msgstr "Вказати ключові терміни"
 
@@ -13682,7 +13682,7 @@ msgstr "Вказати ключові терміни"
 msgid "Set managed"
 msgstr "Зробити керованим"
 
-#: src/routes/project/ProjectHomeRoute.tsx:117
+#: src/routes/project/ProjectHomeRoute.tsx:122
 msgid "Set project context"
 msgstr "Налаштувати контекст проєкту"
 
@@ -13805,7 +13805,7 @@ msgstr "Поділитися порталом"
 #~ msgid "Share report"
 #~ msgstr "Share report"
 
-#: src/routes/project/ProjectHomeRoute.tsx:155
+#: src/routes/project/ProjectHomeRoute.tsx:160
 msgid "Share the project, watch live activity, and jump into the main tools from one place."
 msgstr "Діліться проєктом, спостерігайте за діями наживо та переходьте до основних інструментів з одного місця."
 
@@ -14423,7 +14423,7 @@ msgstr "Стандартний доступ. Співпраця в робочи�
 msgid "Standing guidance the assistant gets in every project chat in this workspace. Saves automatically."
 msgstr "Постійні вказівки, які асистент отримує в кожному чаті проєкту в цьому робочому просторі. Зберігається автоматично."
 
-#: src/routes/project/ProjectHomeRoute.tsx:91
+#: src/routes/project/ProjectHomeRoute.tsx:95
 msgid "Start a chat"
 msgstr "Почати чат"
 
@@ -14541,10 +14541,10 @@ msgstr "Кроки та журнали"
 msgid "Still stuck? Email <0>support@dembrane.com</0>."
 msgstr "Усе ще потрібна допомога? Напишіть на <0>support@dembrane.com</0>."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:789
+#: src/routes/project/chat/ProjectChatRoute.tsx:811
 #: src/components/pricing/PricingTextInput.tsx:251
 #: src/components/feedback/ReportIssueModal.tsx:242
-#: src/components/chat/AgenticChatPanel.tsx:2242
+#: src/components/chat/AgenticChatPanel.tsx:2257
 msgid "Stop"
 msgstr "Stop"
 
@@ -14576,7 +14576,7 @@ msgstr "Зупинити трансляцію"
 
 #: src/components/pricing/PricingTextInput.tsx:242
 #: src/components/feedback/ReportIssueModal.tsx:234
-#: src/components/chat/AgenticChatPanel.tsx:2233
+#: src/components/chat/AgenticChatPanel.tsx:2248
 msgid "Stop recording and turn it into text"
 msgstr "Зупинити запис і перетворити на текст"
 
@@ -14863,7 +14863,7 @@ msgstr "Теги оновлено. Ви можете підкоригувати 
 msgid "Take me to {resolvedWorkspaceName}"
 msgstr "Перейти до {resolvedWorkspaceName}"
 
-#: src/routes/project/ProjectHomeRoute.tsx:168
+#: src/routes/project/ProjectHomeRoute.tsx:176
 msgid "Take part"
 msgstr "Взяти участь"
 
@@ -14901,9 +14901,9 @@ msgstr "Повідомте адміністраторам робочого пр�
 msgid "Tell us what you need"
 msgstr "Розкажіть нам про ваші потреби"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:567
+#: src/routes/project/chat/ProjectChatRoute.tsx:589
 #: src/routes/project/chat/NewChatRoute.tsx:309
-#: src/components/chat/AgenticChatPanel.tsx:1703
+#: src/components/chat/AgenticChatPanel.tsx:1718
 msgid "Template applied"
 msgstr "Template applied"
 
@@ -15657,6 +15657,10 @@ msgstr "This is a live preview of the participant's portal. You will need to ref
 msgid "This is a map of every organisation and workspace you are a member of."
 msgstr "Це мапа кожної організації та робочого простору, де ви є учасником."
 
+#: src/components/project/SampleProjectNotice.tsx:16
+msgid "This is a sample project. The organisations, people and conversations in it are invented."
+msgstr "Це зразковий проєкт. Організації, люди та розмови в ньому вигадані."
+
 #: src/components/popcorn/PopcornOpeningSettings.tsx:165
 msgid "This is a synthetic demo. Its disclosure and frame are set with the demo and always show."
 msgstr "Це синтетичне демо. Його опис і рамка задані в демо й показуються завжди."
@@ -15937,7 +15941,7 @@ msgstr "цей робочий простір"
 msgid "This workspace has reached its recording cap. Upgrade to upload more audio."
 msgstr "Цей робочий простір досяг ліміту запису. Оновіть тариф, щоб завантажити більше аудіо."
 
-#: src/components/chat/AgenticChatPanel.tsx:2261
+#: src/components/chat/AgenticChatPanel.tsx:2276
 msgid "This workspace has used its recording hours. Upgrade to keep using voice."
 msgstr "Цей робочий простір вичерпав години запису. Оновіть тариф, щоб продовжувати користуватися голосом."
 
@@ -16112,7 +16116,7 @@ msgstr "Занадто довго або незрозуміло"
 msgid "Too many reports. Wait a few minutes and try again"
 msgstr "Надто багато повідомлень. Зачекайте кілька хвилин і спробуйте ще раз"
 
-#: src/components/chat/AgenticChatPanel.tsx:2197
+#: src/components/chat/AgenticChatPanel.tsx:2212
 msgid "Too many to list here. The assistant reads through them in batches."
 msgstr "Забагато, щоб показати всі тут. Асистент опрацьовує їх частинами."
 
@@ -16371,7 +16375,7 @@ msgstr "Не вдається увійти? Напишіть на support@dembra
 
 #: src/routes/project/present/PresentRoute.tsx:957
 #: src/routes/project/present/PresentResultsPanel.tsx:158
-#: src/routes/project/chat/ProjectChatRoute.tsx:839
+#: src/routes/project/chat/ProjectChatRoute.tsx:861
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:165
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:457
 #: src/routes/invite/MyInvitesRoute.tsx:225
@@ -16497,7 +16501,7 @@ msgstr "Type"
 msgid "Type <0>{0}</0> to confirm."
 msgstr "Введіть <0>{0}</0> для підтвердження."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:990
+#: src/routes/project/chat/ProjectChatRoute.tsx:1012
 msgid "Type a message or press / for templates..."
 msgstr "Type a message or press / for templates..."
 
@@ -16542,11 +16546,11 @@ msgstr "Менше ніж 50."
 msgid "Under your organisation"
 msgstr "У вашій організації"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:569
+#: src/routes/project/chat/ProjectChatRoute.tsx:591
 #: src/routes/project/chat/NewChatRoute.tsx:311
 #: src/components/results/resultEditing.tsx:574
 #: src/components/results/ResultRow.tsx:367
-#: src/components/chat/AgenticChatPanel.tsx:1705
+#: src/components/chat/AgenticChatPanel.tsx:1720
 msgid "Undo"
 msgstr "Undo"
 
@@ -16818,7 +16822,7 @@ msgstr "Upload"
 msgid "Upload a custom logo to replace the dembrane logo across the portal, dashboard, reports, and host guide. Recommended aspect ratio is 3:1 (e.g. 600×200px horizontal format)."
 msgstr "Завантажте власний логотип, щоб замінити логотип dembrane на порталі, панелі керування, у звітах та в посібнику для ведучого. Рекомендоване співвідношення сторін: 3:1 (наприклад, горизонтальний формат 600×200 пікселів)."
 
-#: src/routes/project/ProjectHomeRoute.tsx:96
+#: src/routes/project/ProjectHomeRoute.tsx:101
 msgid "Upload audio"
 msgstr "Завантажити аудіо"
 
@@ -16963,9 +16967,9 @@ msgstr "Натомість використати пароль"
 msgid "Use pinned and saved question templates, including the / shortcut, from Ask."
 msgstr "Використовуйте закріплені та збережені шаблони запитань у розділі «Запитати», зокрема за допомогою скорочення /."
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:1018
-#: src/routes/project/chat/ProjectChatRoute.tsx:1028
-#: src/components/chat/AgenticChatPanel.tsx:2349
+#: src/routes/project/chat/ProjectChatRoute.tsx:1040
+#: src/routes/project/chat/ProjectChatRoute.tsx:1050
+#: src/components/chat/AgenticChatPanel.tsx:2364
 msgid "Use Shift + Enter to add a new line"
 msgstr "Use Shift + Enter to add a new line"
 
@@ -17479,7 +17483,7 @@ msgstr "З поверненням, {displayName}"
 msgid "Welcome to dembrane"
 msgstr "Ласкаво просимо до dembrane"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:711
+#: src/routes/project/chat/ProjectChatRoute.tsx:733
 msgid "Welcome to dembrane chat. Select the conversations you want to analyse, then ask about details, quotes, and summaries."
 msgstr "Ласкаво просимо до чату dembrane. Виберіть розмови, які хочете проаналізувати, а потім запитуйте про деталі, цитати та підсумки."
 
@@ -17487,7 +17491,7 @@ msgstr "Ласкаво просимо до чату dembrane. Виберіть �
 msgid "Welcome to dembrane!"
 msgstr "Welcome to dembrane!"
 
-#: src/routes/project/chat/ProjectChatRoute.tsx:710
+#: src/routes/project/chat/ProjectChatRoute.tsx:732
 msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode."
 msgstr "Ласкаво просимо в режим Огляду! Я завантажив підсумки всіх ваших розмов. Запитуйте мене про закономірності, теми та висновки у ваших даних. Для точних цитат розпочніть нову бесіду в режимі Конкретного Контексту."
 
@@ -17554,11 +17558,11 @@ msgstr "Що тут варто змінити?"
 msgid "What should ECHO analyse or generate from the conversations?"
 msgstr "What should ECHO analyse or generate from the conversations?"
 
-#: src/components/chat/AgenticChatPanel.tsx:1900
+#: src/components/chat/AgenticChatPanel.tsx:1915
 msgid "What themes came up across the conversations in this project?"
 msgstr "Які теми лунали в розмовах цього проєкту?"
 
-#: src/components/chat/AgenticChatPanel.tsx:1899
+#: src/components/chat/AgenticChatPanel.tsx:1914
 msgid "What themes came up?"
 msgstr "Які теми лунали?"
 
@@ -17683,7 +17687,7 @@ msgid "Where would you like to go?"
 msgstr "Куди ви хочете перейти?"
 
 #: src/routes/project/chat/NewChatRoute.tsx:572
-#: src/components/chat/AgenticChatPanel.tsx:1881
+#: src/components/chat/AgenticChatPanel.tsx:1896
 msgid "Where would you like to start?"
 msgstr "З чого ви хочете почати?"
 
@@ -17806,7 +17810,7 @@ msgstr "Опрацьовано кроків: {0}"
 msgid "working"
 msgstr "триває"
 
-#: src/components/chat/AgenticChatPanel.tsx:1758
+#: src/components/chat/AgenticChatPanel.tsx:1773
 msgid "Working on your answer..."
 msgstr "Працюємо над відповіддю..."
 

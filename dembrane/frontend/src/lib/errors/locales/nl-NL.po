@@ -139,6 +139,11 @@ msgid "error.conversation.move_context_mismatch"
 msgstr "Gesprekken kunnen alleen worden verplaatst naar werkruimtes met dezelfde eigenaar voor facturering en gegevens. Kies een project in een andere werkruimte."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/conversation.ts:24
+msgid "error.conversation.move_sample"
+msgstr "Gesprekken kunnen niet naar of uit een voorbeeldproject worden verplaatst. Kies een ander project."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/internal.ts:5
 msgid "error.internal.busy"
 msgstr "dembrane is hier nu even druk mee. Probeer het zo meteen nog eens."
@@ -224,7 +229,7 @@ msgid "error.workspace.visibility_requires_tier"
 msgstr "Voor besloten en privéwerkruimtes is het Innovator-abonnement of hoger nodig. Maak deze nu aan als openbaar, of upgrade eerst."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:28
+#: src/lib/errors/messages/conversation.ts:33
 msgid "error.conversation.no_summary"
 msgstr "Maak eerst een samenvatting van dit gesprek en probeer het dan opnieuw."
 
@@ -674,7 +679,7 @@ msgid "error.agent_access.request_expired"
 msgstr "Dit koppelingsverzoek is verlopen. Begin opnieuw vanuit je agent."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:24
+#: src/lib/errors/messages/conversation.ts:29
 msgid "error.conversation.no_content"
 msgstr "Dit gesprek heeft nog geen audio."
 
@@ -694,7 +699,7 @@ msgid "error.chat.conversation_not_in_chat"
 msgstr "Dit gesprek bevindt zich niet meer in de chat."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:36
+#: src/lib/errors/messages/conversation.ts:41
 msgid "error.conversation.not_open"
 msgstr "Dit gesprek is op dit moment niet geopend. Vraag de organisator om een nieuwe link."
 
@@ -1209,7 +1214,7 @@ msgid "error.chat.not_found"
 msgstr "We konden deze chat niet vinden. Mogelijk is deze verwijderd."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:32
+#: src/lib/errors/messages/conversation.ts:37
 msgid "error.conversation.not_found"
 msgstr "We konden dit gesprek niet vinden. Mogelijk is het verwijderd."
 

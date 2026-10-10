@@ -28,6 +28,7 @@ import { projectJobs } from "@dembrane/projects";
 import { Queue, workerFreshness } from "@dembrane/queue";
 import { PostgresRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { Hub } from "@dembrane/realtime";
+import { samplesApiJobs } from "@dembrane/samples/jobs";
 import { FilesystemStorage, requireBucket, S3Storage } from "@dembrane/storage";
 import { tenancyApiJobs } from "@dembrane/tenancy";
 import { GeminiTranscriber } from "@dembrane/transcription";
@@ -154,6 +155,7 @@ const queueReady = (async () => {
         ...canvasApiJobs,
         ...popcornApiJobs,
         ...accountsApiJobs,
+        ...samplesApiJobs,
         sendEmail,
       ]);
       return;

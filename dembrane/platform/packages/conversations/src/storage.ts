@@ -60,7 +60,10 @@ export function conversationStore(db: Db) {
         .from(project)
         .where(and(eq(project.id, id), isNull(project.deleted_at)))
         .limit(1);
-      return row ?? null;
+      if (!row) return null;
+      // A sample copy never takes a conversation, whatever its portal toggle says: what
+      // is recorded there would count toward no limit (packages/samples).
+      return row.is_sample ? { ...row, is_conversation_allowed: false } : row;
     },
 
     async chunk(id: string): Promise<ChunkRow | null> {

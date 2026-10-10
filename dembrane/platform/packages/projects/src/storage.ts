@@ -397,6 +397,7 @@ export function projectsStorage(db: Db) {
       return Boolean(row);
     },
 
+    /** The free tier's report count: a sample copy's reports are not the workspace's own. */
     async countWorkspaceReports(workspaceId: string) {
       const [row] = await db
         .select({ n: count(project_report.id) })
@@ -405,6 +406,22 @@ export function projectsStorage(db: Db) {
         .where(
           and(
             eq(project.workspace_id, workspaceId),
+            eq(project.is_sample, false),
+            isNull(project_report.deleted_at),
+            eq(project_report.kind, "report"),
+          ),
+        );
+      return row?.n ?? 0;
+    },
+
+    /** A sample copy's live reports, for its own free-tier report. */
+    async countProjectReports(projectId: string) {
+      const [row] = await db
+        .select({ n: count(project_report.id) })
+        .from(project_report)
+        .where(
+          and(
+            eq(project_report.project_id, projectId),
             isNull(project_report.deleted_at),
             eq(project_report.kind, "report"),
           ),

@@ -139,6 +139,11 @@ msgid "error.conversation.move_context_mismatch"
 msgstr "Gespräche können nur in Arbeitsbereiche mit demselben Rechnungs- und Dateneigentümer verschoben werden. Wählen Sie ein Projekt in einem anderen Arbeitsbereich."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/conversation.ts:24
+msgid "error.conversation.move_sample"
+msgstr "Gespräche können nicht in ein Beispielprojekt oder aus einem Beispielprojekt verschoben werden. Wählen Sie ein anderes Projekt."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/internal.ts:5
 msgid "error.internal.busy"
 msgstr "dembrane ist gerade damit beschäftigt. Versuchen Sie es gleich noch einmal."
@@ -224,7 +229,7 @@ msgid "error.workspace.visibility_requires_tier"
 msgstr "Arbeitsbereiche mit Beitritt nur auf Einladung sowie private Arbeitsbereiche erfordern den Tarif Innovator oder höher. Erstellen Sie ihn vorerst als offen oder führen Sie zuerst ein Upgrade durch."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:28
+#: src/lib/errors/messages/conversation.ts:33
 msgid "error.conversation.no_summary"
 msgstr "Erstellen Sie zuerst eine Zusammenfassung dieses Gesprächs und versuchen Sie es dann erneut."
 
@@ -674,7 +679,7 @@ msgid "error.agent_access.request_expired"
 msgstr "Diese Verbindungsanfrage ist abgelaufen. Starten Sie erneut über Ihren Agenten."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:24
+#: src/lib/errors/messages/conversation.ts:29
 msgid "error.conversation.no_content"
 msgstr "Dieses Gespräch hat noch keine Audioaufnahme."
 
@@ -694,7 +699,7 @@ msgid "error.chat.conversation_not_in_chat"
 msgstr "Dieses Gespräch befindet sich nicht mehr im Chat."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:36
+#: src/lib/errors/messages/conversation.ts:41
 msgid "error.conversation.not_open"
 msgstr "Dieses Gespräch ist derzeit nicht geöffnet. Bitten Sie den Organisator um einen neuen Link."
 
@@ -1209,7 +1214,7 @@ msgid "error.chat.not_found"
 msgstr "Dieser Chat konnte nicht gefunden werden. Er wurde möglicherweise gelöscht."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:32
+#: src/lib/errors/messages/conversation.ts:37
 msgid "error.conversation.not_found"
 msgstr "Dieses Gespräch konnte nicht gefunden werden. Es wurde möglicherweise gelöscht."
 

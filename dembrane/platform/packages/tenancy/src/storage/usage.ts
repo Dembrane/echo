@@ -4,15 +4,25 @@ import type { Conn } from "../db";
 
 const { project, conversation, project_chat, project_chat_message, project_report } = schema;
 
-/** Every project a workspace ever had, soft-deleted ones included: deletion keeps billable hours. */
+/**
+ * Not a sample copy (packages/samples): every count and sum of usage, and every free-tier
+ * allowance, leaves the invented project out, along with its chats and reports.
+ */
+export const notSample = eq(project.is_sample, false);
+
+/**
+ * Every project a workspace ever had, soft-deleted ones included: deletion keeps billable
+ * hours. Usage reads these, so a sample copy is not among them.
+ */
 export async function workspaceProjects(db: Conn, workspaceId: string) {
   return db
     .select({ id: project.id, name: project.name, deleted_at: project.deleted_at })
     .from(project)
-    .where(eq(project.workspace_id, workspaceId))
+    .where(and(eq(project.workspace_id, workspaceId), notSample))
     .orderBy(asc(project.id));
 }
 
+/** The workspaces' projects for usage rollups, soft-deleted ones included, samples not. */
 export async function projectsIn(db: Conn, workspaceIds: readonly string[]) {
   if (!workspaceIds.length) return [];
   return db
@@ -22,25 +32,42 @@ export async function projectsIn(db: Conn, workspaceIds: readonly string[]) {
       deleted_at: project.deleted_at,
     })
     .from(project)
-    .where(inArray(project.workspace_id, [...workspaceIds]))
+    .where(and(inArray(project.workspace_id, [...workspaceIds]), notSample))
     .orderBy(asc(project.id));
 }
 
+/** The workspace's own live projects: a sample copy neither counts nor keeps it from deletion. */
 export async function countLiveProjects(db: Conn, workspaceId: string) {
   const [row] = await db
     .select({ n: sql<number>`count(${project.id})::int` })
     .from(project)
-    .where(and(eq(project.workspace_id, workspaceId), isNull(project.deleted_at)));
+    .where(and(eq(project.workspace_id, workspaceId), isNull(project.deleted_at), notSample));
   return row?.n ?? 0;
 }
 
-/** Live project counts per workspace. */
+/** A deleted workspace's sample copy goes with it; nothing else of it is deleted. */
+export async function deleteSampleProjects(db: Conn, workspaceId: string, nowIso: string) {
+  await db
+    .update(project)
+    .set({ deleted_at: nowIso, updated_at: nowIso })
+    .where(
+      and(
+        eq(project.workspace_id, workspaceId),
+        eq(project.is_sample, true),
+        isNull(project.deleted_at),
+      ),
+    );
+}
+
+/** Live project counts per workspace, samples left out. */
 export async function liveProjectCounts(db: Conn, workspaceIds: readonly string[]) {
   if (!workspaceIds.length) return new Map<string, number>();
   const rows = await db
     .select({ ws: project.workspace_id, n: sql<number>`count(${project.id})::int` })
     .from(project)
-    .where(and(inArray(project.workspace_id, [...workspaceIds]), isNull(project.deleted_at)))
+    .where(
+      and(inArray(project.workspace_id, [...workspaceIds]), isNull(project.deleted_at), notSample),
+    )
     .groupBy(project.workspace_id);
   return new Map(rows.map((r) => [r.ws ?? "", r.n]));
 }

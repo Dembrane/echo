@@ -18,7 +18,9 @@ import { startTurn } from "../jobs";
 import {
   currentGoal,
   FREE_TIER_MAX_CHAT_USER_TURNS,
+  FREE_TIER_MAX_SAMPLE_USER_TURNS,
   freeTierLimitError,
+  isSampleProject,
   liveProject,
   projectTier,
   workspaceContext,
@@ -116,8 +118,11 @@ async function focusedConversations(
 async function checkFreeTierTurns(d: RunsDeps, projectId: string | null, chatId: string | null) {
   if (!chatId || !projectId) return;
   if ((await projectTier(d.store.sql, projectId)) !== "free") return;
-  if ((await d.chats.countUserTurns(chatId)) >= FREE_TIER_MAX_CHAT_USER_TURNS)
-    throw freeTierLimitError("chat_turns");
+  // A sample copy's chats skip the per-chat cap and share the sample's own allowance.
+  const spent = (await isSampleProject(d.store.sql, projectId))
+    ? (await d.chats.countProjectUserTurns(projectId)) >= FREE_TIER_MAX_SAMPLE_USER_TURNS
+    : (await d.chats.countUserTurns(chatId)) >= FREE_TIER_MAX_CHAT_USER_TURNS;
+  if (spent) throw freeTierLimitError("chat_turns");
 }
 
 async function persistUserMessage(d: RunsDeps, chatId: string | null, text: string) {

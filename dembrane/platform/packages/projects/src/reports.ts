@@ -50,8 +50,9 @@ const ISO_FORMS =
 
 /**
  * Starts a report, now or at a scheduled time. Generating needs report:generate; a free
- * workspace gets one report. One draft at a time per project, so a double click does not
- * start two generations.
+ * workspace gets one report, and its sample copy gets one of its own that does not spend
+ * the workspace's. One
+ * draft at a time per project, so a double click does not start two generations.
  */
 export async function createReport(
   d: ProjectDeps,
@@ -61,7 +62,10 @@ export async function createReport(
 ) {
   const pa = await projectFor(d.access, who, projectId, "report:generate");
   if (pa.tier === "free" && pa.project.workspaceId) {
-    if ((await d.store.countWorkspaceReports(pa.project.workspaceId)) >= 1)
+    const spent = pa.project.isSample
+      ? await d.store.countProjectReports(projectId)
+      : await d.store.countWorkspaceReports(pa.project.workspaceId);
+    if (spent >= 1)
       throw new PaymentRequiredError("billing.tier_limit", {
         params: { limit: "report" },
         details: { error: "FREE_TIER_LIMIT", limit: "report", upgrade_cta_tier: "changemaker" },
