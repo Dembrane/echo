@@ -32,7 +32,7 @@
       },
       {
         "at_s": 198,
-        "text": "For me, the open answers in the citizen panel survey. We get thousands of free text answers and we read maybe a sample. I understand you can upload text, so we could put them in and ask questions across all of them. Although I would want to split them by question, not one giant file. And Jonas, you wanted to say every meeting. I did want to say every meeting, but please, please not every meeting. I'm the one who gets the tickets."
+        "text": "For me, the open answers in the citizen panel survey. We get thousands of free text answers and we read maybe a sample. I understand you can upload text, so we could put them in and ask questions across all of them. Upload is only for audio files, Ravi. Text goes in through the portal's text option, you paste it in and it becomes a conversation. Then I'd paste them in one conversation per question, clearly named, not one giant text. And Jonas, you wanted to say every meeting. I did want to say every meeting, but please, please not every meeting. I'm the one who gets the tickets."
       },
       {
         "at_s": 232,
@@ -380,7 +380,7 @@
     "name": "Municipal pilot evaluation after three months",
     "origin": "generated",
     "started_at": "2026-09-30T13:00:00Z",
-    "summary": "Synthetic sample. Five colleagues at a mid-sized Danish municipality record their evaluation of a three-month dembrane pilot, in English so they can share it with a Nordic network of municipalities. Henrik ran the pilot; Mette (planning), Aisha (youth work), Lars (communications) and Birgitte (department head) take part. They used it at two park redesign evenings, a youth club session, an uploaded batch of online form answers and the Monitor once it arrived in August. Ask the morning after was the big win. Reports were rewritten by hand: the generated one was too high-level for the council and missed the allotment holders' objection until Mette asked what only one table said. Verify was barely used because it was placed at the end of a long evening, though the one table that used it corrected a key point. Failures included confusion over the language setting (Danish is not a portal language, so screens and summaries came in English while transcripts were Danish), a portal language change after printing that changed the QR code, empty rows from an everyone-scan moment, and a giant single upload. They renew for the next programme with conditions, and list advice for other municipalities.",
+    "summary": "Synthetic sample. Five colleagues at a mid-sized Danish municipality record their evaluation of a three-month dembrane pilot, in English so they can share it with a Nordic network of municipalities. Henrik ran the pilot; Mette (planning), Aisha (youth work), Lars (communications) and Birgitte (department head) take part. They used it at two park redesign evenings, a youth club session, a batch of online form answers pasted in through the portal's text option and the Monitor once it arrived in August. Ask the morning after was the big win. Reports were rewritten by hand: the generated one was too high-level for the council and missed the allotment holders' objection until Mette asked what only one table said. Verify was barely used because it was placed at the end of a long evening, though the one table that used it corrected a key point. Failures included confusion over the language setting (Danish is not a portal language, so screens and summaries came in English while transcripts were Danish), a portal language change after printing that changed the QR code, empty rows from an everyone-scan moment, and one giant pasted text. They renew for the next programme with conditions, and list advice for other municipalities.",
     "chunks": [
       {
         "at_s": 0,
@@ -388,7 +388,7 @@
       },
       {
         "at_s": 35,
-        "text": "Let me say what we actually did, Henrik, because I've lost track. Two evenings for Engparken, the park redesign, in July and September. One session at the youth club. The online form answers from the spring consultation, we uploaded them as text. And our own team day, which was mostly to practise. Around seventy conversations in total, if you don't count the empty ones. Which we'll talk about. Yes, we'll definitely talk about the empty ones, Aisha."
+        "text": "Let me say what we actually did, Henrik, because I've lost track. Two evenings for Engparken, the park redesign, in July and September. One session at the youth club. The online form answers from the spring consultation, we pasted them in as text through the portal's text option. And our own team day, which was mostly to practise. Around seventy conversations in total, if you don't count the empty ones. Which we'll talk about. Yes, we'll definitely talk about the empty ones, Aisha."
       },
       {
         "at_s": 66,
@@ -432,7 +432,7 @@
       },
       {
         "at_s": 428,
-        "text": "And the upload. The online form, three hundred answers. We put it in as one giant text, and it was slow and the answers were vague. We split it into one upload per question and then it was useful. So don't upload one huge file. Split by question. Henrik, the Monitor? We only got it in August. In July, one table recorded nothing, a screen lock, and we found out the next morning. In September I had Mette's colleague on the Monitor laptop all evening."
+        "text": "And the form answers. The online form, three hundred answers. We pasted it into the portal's text option as one giant text, and it was slow and the answers were vague. We split it into one text conversation per question, named by question, and then it was useful. So don't paste in one huge text. Split by question. Henrik, the Monitor? We only got it in August. In July, one table recorded nothing, a screen lock, and we found out the next morning. In September I had Mette's colleague on the Monitor laptop all evening."
       },
       {
         "at_s": 463,
@@ -809,7 +809,7 @@
     "name": "Planning drop-in, sorting what's fixed and what's open",
     "origin": "generated",
     "started_at": "2026-08-28T08:45:00Z",
-    "summary": "Synthetic sample. The morning after a planning drop-in evening in an invented Scottish town, planning officer Fiona and engagement officer Dev record themselves working through the project so a colleague can run the next one. Eight staff with phones held 127 short one-to-one conversations at six map tables, using recording links with the tag and title already filled in, which worked until staff moved tables and their conversations kept the wrong tag. They clean up first: check for a transcript rather than trusting the duration column, retag, add place names to key terms and retranscribe the handful that came out wrong, deleting the old copies. The core move is a project context that spells out what is already decided and what is open, then an Ask prompt that sorts comments into decided, open and outside the council's remit, with sources. Clicking into the sources shows \"came up a lot\" means three or four, so Fiona never lets the model count, and Dev argues against numbers at all because one resident visited three tables. They ask who is talked about but absent (teenagers, shift workers) and build a four-part committee report where every point carries a quote copied from the transcript and the conversation name, published by link and sent to residents who left an email.",
+    "summary": "Synthetic sample. The morning after a planning drop-in in an invented Scottish town, planning officer Fiona and engagement officer Dev record themselves working through the project so a colleague can run the next one. Eight staff with phones held 127 one-to-one conversations at six map tables, using recording links with tag and title prefilled, which broke when staff moved tables. They clean up first: check for a transcript instead of the duration column, retag, add place names to key terms and retranscribe, deleting the old copies. The core move is a project context that spells out what is already decided and what is open, then an Ask prompt that sorts comments into decided, open and outside the council's remit, with sources. Clicking into the sources shows \"came up a lot\" means three or four, so Fiona never lets the model count, and Dev argues against any numbers because one resident visited three tables. They ask who is talked about but absent (teenagers, shift workers) and, rather than asking the model what teenagers would think, book sessions at the youth club and distribution centre canteen at shift change. Then they build a four-part committee report where every point carries a quote copied from the transcript and the conversation name, published by link and sent to residents who left an email.",
     "chunks": [
       {
         "at_s": 0,
@@ -873,15 +873,19 @@
       },
       {
         "at_s": 488,
-        "text": "And we can do something about it, with the school session in September. Exactly. Now the report. For the committee I want four sections. What we heard on the open questions, theme by theme. What people said about things already decided, so the committee sees it and it isn't hidden. Things outside our remit, to pass on to roads and the health board. And who we didn't hear. Every point gets a short quote copied from the transcript, not from the chat answer, plus the name of the conversation, so any councillor can look it up."
+        "text": "And not just noted. I'll ring the youth club this afternoon, Dev. Their Thursday night, their room, phones on the pool table. And the distribution centre canteen at the six o'clock shift change, half an hour either side. Both before Strathcorran. Or, Fiona, we save ourselves the trip and ask the assistant what teenagers would think. Ha. No, Dev. It would write us a lovely paragraph about the skate park and every word of it would be made up. They're down the road. We go and ask them."
       },
       {
-        "at_s": 527,
+        "at_s": 521,
+        "text": "And the school session in September on top of that. Exactly. Now the report. For the committee I want four sections. What we heard on the open questions, theme by theme. What people said about things already decided, so the committee sees it and it isn't hidden. Things outside our remit, to pass on to roads and the health board. And who we didn't hear. Every point gets a short quote copied from the transcript, not from the chat answer, plus the name of the conversation, so any councillor can look it up."
+      },
+      {
+        "at_s": 560,
         "text": "Do they get access? We publish the report as a link and walk them through the conversations at the briefing on the fourth. And we had participant updates turned on in the portal, so the residents who left an email at the end get the report when we publish. Twenty-six of them, I think. Then we read it properly before we publish. Out loud, both of us. Last time the first draft said residents \"welcomed\" the green link. They didn't welcome it. Two people liked it, and one woman was worried it would bring motorbikes along the burn."
       },
       {
-        "at_s": 567,
-        "text": "Put the motorbikes in. That's exactly the kind of thing that disappears in a summary and comes back as a complaint in two years. Right, Isla, that's us. Stay at your table or reopen the link. Decide what's fixed and write it in the context. Don't let it count for you. Ask who's missing. And read every quote in the transcript before it goes in. Stop the recording, Dev."
+        "at_s": 600,
+        "text": "Put the motorbikes in. That's exactly the kind of thing that disappears in a summary and comes back as a complaint in two years. Right, Isla, that's us. Stay at your table or reopen the link. Decide what's fixed and write it in the context. Don't let it count for you. Ask who's missing, then go and find them. And read every quote in the transcript before it goes in. Stop the recording, Dev."
       }
     ]
   },
@@ -967,7 +971,7 @@
     "name": "Ministry analyst onboarding a new colleague",
     "origin": "generated",
     "started_at": "2026-09-29T09:10:00Z",
-    "summary": "Synthetic sample. Henrike, a senior policy analyst at a national transport ministry with nearly two hundred projects behind her, onboards Ruben in his second week. She makes the case for boring, predictable setups: a fixed naming pattern, \"one report means one project\" with tags per region, and a five-part context skeleton (the policy question, who is in the room by role, what is decided and what is open, terms and acronyms, what the analysis is for plus \"do not mention names\") so outputs from different projects can be compared. She shows four pinned custom templates, including one for tensions and one for who wasn't heard. Each week she schedules a report for Friday afternoon and reads it before publishing it for a steering group, since the time she published one unread with a technician's microphone test in it; a Thursday clean-up hour comes first. Chat works inside one project, so she compares across projects by keeping setups the same, uploads earlier reports as clearly labelled text conversations (one was once quoted back as if a participant had said it), and pilots the MCP connection only with information security's approval. Her list of when not to use dembrane: casework, simple minutes, decisions already taken, sessions where you can't say what happens with input, and huge single uploads.",
+    "summary": "Synthetic sample. Henrike, a senior policy analyst at a national transport ministry with nearly two hundred projects behind her, onboards Ruben in his second week. She makes the case for boring, predictable setups: a fixed naming pattern, \"one report means one project\" with tags per region, and a five-part context skeleton (the policy question, who is in the room by role, what is decided and what is open, terms and acronyms, what the analysis is for plus \"do not mention names\") so outputs from different projects can be compared. She shows four pinned custom templates, including one for tensions and one for who wasn't heard. Each week she schedules a report for Friday afternoon and reads it before publishing it for a steering group, since the time she published one unread with a technician's microphone test in it; a Thursday clean-up hour comes first. Chat works inside one project, so she compares across projects by keeping setups the same, pastes earlier reports into the portal as clearly labelled text conversations (one was once quoted back as if a participant had said it), and pilots the MCP connection only with information security's approval. Her list of when not to use dembrane: casework, simple minutes, decisions already taken, sessions where you can't say what happens with input, and huge single pastes.",
     "chunks": [
       {
         "at_s": 0,
@@ -1011,7 +1015,7 @@
       },
       {
         "at_s": 332,
-        "text": "Second, when a new round builds on an old one, I upload the old report as a text conversation into the new project. Clearly named: \"Prior report 2025, not a session\". Then I can ask in the new project, what's different from last year's report? You have to name it clearly, and say in the context that it's a document, not participants, or it gets mixed into \"what people said\". Has that happened? Once. A summary quoted my own report back to me as if a participant had said it. Very flattering. Very wrong."
+        "text": "Second, when a new round builds on an old one, I paste the old report into the new project's portal, using the text option, so it becomes a text conversation. Clearly named: \"Prior report 2025, not a session\". Then I can ask in the new project, what's different from last year's report? You have to name it clearly, and say in the context that it's a document, not participants, or it gets mixed into \"what people said\". Has that happened? Once. A summary quoted my own report back to me as if a participant had said it. Very flattering. Very wrong."
       },
       {
         "at_s": 370,
@@ -1035,7 +1039,7 @@
       },
       {
         "at_s": 520,
-        "text": "And five? Five is technical. The written consultation on the road safety plan, fourteen hundred form answers. Someone uploaded them as one enormous text, and it took ages and the answers we got out of it were mush. If you have written input, split it. Per question, or per batch of respondents. Smaller pieces, clearly named."
+        "text": "And five? Five is technical. The written consultation on the road safety plan, fourteen hundred form answers. Someone pasted them into the portal's text option as one enormous text, and it took ages and the answers we got out of it were mush. If you have written input, split it. Per question, or per batch of respondents. Smaller pieces, one text conversation each, clearly named."
       },
       {
         "at_s": 543,
@@ -1210,7 +1214,7 @@
     "name": "Care team evaluation leads, coaching call",
     "origin": "generated",
     "started_at": "2026-09-24T08:30:00Z",
-    "summary": "Synthetic sample. Solveig, who leads a qualitative evaluation of community care teams in a Norwegian city, and her analyst Sanna coach Pieter, who starts a similar evaluation in a Flemish city in November. Solveig explains why they made one project per district, all sharing one project context template where only the last paragraph changes, plus the same four questions every month so districts can be compared. Teams record the last 25 minutes of their regular team meeting, never the case round; one team leader forgot and they deleted a recording full of case details, because anonymise transcripts removes names and addresses but not schools or diagnoses. The biggest issue was staff feeling surveilled: one district said no for two months, and its conditions (team reads its summary first, no managers in the project, pause any time, Verify at the end) became the rule. Sanna describes a district stuck on the wrong conversation language that could not be retranscribed, because retranscribe is off for anonymised conversations, and the workaround for comparing districts: the same saved Ask template in each project, then the seven answers uploaded as text into a comparison project, always checked back against transcripts. Solveig and Sanna still disagree about projects versus tags. They are holding back on MCP until the privacy officer has looked at it.",
+    "summary": "Synthetic sample. Solveig, who leads a qualitative evaluation of community care teams in a Norwegian city, and her analyst Sanna coach Pieter, who starts a similar evaluation in a Flemish city in November. Solveig explains why they made one project per district, all sharing one project context template where only the last paragraph changes, plus the same four questions every month so districts can be compared. Teams record the last 25 minutes of their regular team meeting, never the case round; one team leader forgot and they deleted a recording full of case details, because anonymise transcripts removes names and addresses but not schools or diagnoses. The biggest issue was staff feeling surveilled: one district said no for two months, and its conditions (team reads its summary first, no managers in the project, pause any time, Verify at the end) became the rule. Sanna describes a district stuck on the wrong conversation language that could not be retranscribed, because retranscribe is off for anonymised conversations, and the workaround for comparing districts: the same saved Ask template in each project, then the seven answers pasted into a comparison project as text, always checked back against transcripts. Solveig and Sanna still disagree about projects versus tags. They are holding back on MCP until the privacy officer has looked at it.",
     "chunks": [
       {
         "at_s": 0,
@@ -1278,7 +1282,7 @@
       },
       {
         "at_s": 547,
-        "text": "We wrote a custom template with our four questions and some instructions: use the verified points and the transcripts, give a quote and the session for each point, and say clearly when a district did not talk about something at all. That last line is important. Same template, seven projects, every quarter. And then? Then I read each of the seven answers against its sources, corrected what was wrong, and uploaded the corrected answers as text into one extra project."
+        "text": "We wrote a custom template with our four questions and some instructions: use the verified points and the transcripts, give a quote and the session for each point, and say clearly when a district did not talk about something at all. That last line is important. Same template, seven projects, every quarter. And then? Then I read each of the seven answers against its sources, corrected what was wrong, and pasted the corrected answers into one extra project through its portal's text option, one text conversation per district, named by district."
       },
       {
         "at_s": 579,
@@ -1319,7 +1323,7 @@
     "name": "Nurses and researcher, burnout dialogues look-back",
     "origin": "generated",
     "started_at": "2026-09-03T13:15:00Z",
-    "summary": "Synthetic sample. Siobhán, a workforce researcher, looks back with three nurses (Aoife, Comfort and Raj) on eleven burnout dialogue sessions at an Irish hospital. They moved out of a staff room full of bleeps and fridge visits to a quiet library, and learned that if you can follow the talk yourself, the phone can too. Anonymise transcripts was switched on before collecting, with name and email off and the legal basis set with information governance; nurses came because nobody could play back their voice, though it meant misheard drug names could not be checked. Groups of five let one senior nurse dominate, so they switched to trios; Comfort found trios too intense, and they settled on trios for personal experience and groups of six for ward ideas. People spoke openly because the researcher left the room and the phone \"doesn't nod\". A face-down phone locked and lost twenty minutes until the Monitor was used. Explore helped one trio and sounded like a staff survey to another. Verify let nurses sharpen a vague point. The first report missed night staff until asked directly, and named a small ward. Results went back as one-page summaries with a QR code for reactions, but too slowly.",
+    "summary": "Synthetic sample. Siobhán, a workforce researcher, looks back with three nurses (Aoife, Comfort and Raj) on eleven burnout dialogue sessions at an Irish hospital. They moved out of a staff room full of bleeps and fridge visits to a quiet library, and learned that if you can follow the talk yourself, the phone can too. Anonymise transcripts was switched on before collecting, with name and email off and the legal basis set with information governance; nurses came because nobody could play back their voice, though it meant misheard drug names could not be checked. Groups of five let one senior nurse dominate, so they switched to trios; Comfort found trios too intense, and they settled on trios for personal experience and groups of six for ward ideas. People spoke openly because the researcher left the room and the phone \"doesn't nod\". A face-down phone locked and lost twenty minutes until the Monitor was used. Explore helped one trio and sounded like a staff survey to another. Verify let nurses sharpen a vague point. The first report missed night staff until asked directly, and named a small ward. Results went back as one-page summaries with a QR code for reactions, but too slowly, and without saying what was turned down, so pages will get a \"not taken forward, and why\" box.",
     "chunks": [
       {
         "at_s": 0,
@@ -1407,11 +1411,15 @@
       },
       {
         "at_s": 717,
-        "text": "But it came straight from the sessions, and we can point to the quotes it came from. That's the bit I'd underline for anyone else doing this. The tool made it possible to hear people clearly and to show where every point came from. It doesn't make anything change by itself. That's on us, and on the people who read the summary. Can I say one thing I'd change?"
+        "text": "But it came straight from the sessions, and we can point to the quotes it came from. That's the bit I'd underline for anyone else doing this. The tool made it possible to hear people clearly and to show where every point came from. It doesn't make anything change by itself. That's on us, and on the people who read the summary. Can I say what I'd change?"
       },
       {
         "at_s": 745,
-        "text": "I'd do the sharing back faster. People in June heard nothing until September. That's too long. By September half of them had forgotten they'd even taken part. Agreed. Next round, a short what we heard within a week, and the full thing later. Okay. Anyone want anything taken out of this one? No? Then I'm stopping it. Thank you. Biscuits are yours."
+        "text": "Can I go first, Siobhán? Because it's in the reactions. A lot of the reactions were the same question: what happened to the rest? The page said what we told you. It didn't say what had been looked at and turned down. The agency cover on nights, the parking, the rota system. People assumed it had been lost. It hadn't been lost, it had been turned down, and that's different. Fair. I'd rather be told no, with a reason, than hear nothing."
+      },
+      {
+        "at_s": 778,
+        "text": "So next time every page gets a box at the bottom, not taken forward, and why, one line each. Yes. And mine: I'd do the sharing back faster. People in June heard nothing until September. That's too long. By September half of them had forgotten they'd even taken part. Agreed. Next round, a short what we heard within a week, and the full thing later. Okay. Anyone want anything taken out of this one? No? Then I'm stopping it. Thank you. Biscuits are yours."
       }
     ]
   },
@@ -1513,7 +1521,7 @@
     "name": "Tenant committee kitchen table, renovation planning",
     "origin": "generated",
     "started_at": "2026-09-15T17:20:00Z",
-    "summary": "Synthetic sample. At Bernie's kitchen table, a housing association's tenant participation officer (Shona) plans a renovation consultation on a three-block estate in England with two tenant committee members: Bernie, the 74-year-old chair, and Delroy, who is sceptical. They argue and settle on several practices. Tenants never need their own phone: committee members act as table hosts with one charged phone per table, screen on, and anyone can type instead or use a paper table, with paper cards typed in afterwards as text uploads. Shona will edit the printed host guide in large type, starting with \"you do not have to be recorded\". Delroy insists the project context and the opening say what is fixed (fire rules) and what is open (colours, timing, moving out during the works). Bernie wants names on so long-standing damp complaints are on record; they keep anonymise on and put a repairs desk at the door instead. Delroy calls Explore patronising, Bernie wants to see it handle the bins, and they trial it at two tables. They decide against Popcorn on a hall screen. Results go back on paper through every door, at a feedback evening, and by email to those who leave one, worded as \"what happens next and when\", not \"we did\".",
+    "summary": "Synthetic sample. At Bernie's kitchen table, a housing association's tenant participation officer (Shona) plans a renovation consultation on a three-block estate in England with two tenant committee members: Bernie, the 74-year-old chair, and Delroy, who is sceptical. They argue and settle on several practices. Tenants never need their own phone: committee members act as table hosts with one charged phone per table, screen on, and anyone can type instead or use a paper table, with paper cards typed in afterwards through the portal's text option. Shona will edit the printed host guide in large type, starting with \"you do not have to be recorded\". Delroy insists the project context and the opening say what is fixed (fire rules) and what is open (colours, timing, moving out during the works). Bernie wants names on so long-standing damp complaints are on record; they keep anonymise on and put a repairs desk at the door instead. Delroy calls Explore patronising, Bernie wants to see it handle the bins, and they trial it at two tables. They decide against Popcorn on a hall screen. Results go back on paper through every door, at a feedback evening, and by email to those who leave one, worded as \"what happens next and when\", not \"we did\".",
     "chunks": [
       {
         "at_s": 0,
@@ -1529,7 +1537,7 @@
       },
       {
         "at_s": 100,
-        "text": "And for anyone who'd rather write, there's a type instead option on the phone. And there's a paper table with comment cards, and I'll type those in myself afterwards as text uploads, labelled per block. Paper counts the same. Does it, though? Count the same? It goes into the same project, and when I ask questions of it, the cards come up next to the conversations. I'll make sure of that. And I'll check it, because I want to see Ash House's cards in there. Okay, my question."
+        "text": "And for anyone who'd rather write, there's a type instead option on the phone. And there's a paper table with comment cards, and I'll type those in myself afterwards through the same type instead option, one text conversation per block, named by block. Paper counts the same. Does it, though? Count the same? It goes into the same project, and when I ask questions of it, the cards come up next to the conversations. I'll make sure of that. And I'll check it, because I want to see Ash House's cards in there. Okay, my question."
       },
       {
         "at_s": 135,
@@ -1606,7 +1614,7 @@
     "name": "Youth council handover to next year's council",
     "origin": "generated",
     "started_at": "2026-08-27T16:00:00Z",
-    "summary": "Synthetic sample. Four members of a Scottish youth council (Ailsa, Josh, Mariam and Leo), with their youth worker Fraser mostly listening, record a handover for next year's council about \"getting home after dark\", a consultation they ran themselves with about 140 young people. Before using dembrane at all, the council held a debate and a vote, with a slide on what they would gain, what they would lose without it, and the privacy and environment worries Mariam raised. They passed it 11 to 3, and every session then voted again on phone or paper; two groups chose paper, which was typed in as text. They rewrote the adult-written project context in their own words and filled key terms with bus numbers and local nicknames. The first session ran with anonymise off and the summary named the facilitator, so they switched it on for every later session and deleted that one. Trios held the phone like a microphone. Explore felt \"cringe\" until it rescued a flat conversation. The report missed rural young people until they asked who they had not heard from. What adults got wrong: jargon, sessions in exam season, a teacher staying in the room, softening quotes, asking for transcripts, and quoting a percentage that no one had ever counted.",
+    "summary": "Synthetic sample. Four members of a Scottish youth council (Ailsa, Josh, Mariam and Leo), with their youth worker Fraser mostly listening, record a handover for next year's council about \"getting home after dark\", a consultation they ran themselves with about 140 young people. Before using dembrane at all, the council held a debate and a vote, with a slide on what they would gain, what they would lose without it, and the privacy and environment worries Mariam raised. They passed it 11 to 3, and every session then voted again on phone or paper; two groups chose paper, which was typed into the portal as text. They rewrote the adult-written project context in their own words and filled key terms with bus numbers and local nicknames. The first session ran with anonymise off and the summary named the facilitator, so they switched it on for every later session and deleted that one. Trios held the phone like a microphone. Explore felt \"cringe\" until it rescued a flat conversation. The report missed rural young people until they asked who they had not heard from. What adults got wrong: jargon, sessions in exam season, a teacher staying in the room, softening quotes, asking for transcripts, and quoting a percentage that no one had ever counted.",
     "chunks": [
       {
         "at_s": 0,
@@ -1630,7 +1638,7 @@
       },
       {
         "at_s": 175,
-        "text": "Then we voted. Eleven for, three against. I voted against. And I'd still vote against, a bit. But the bit that changed my mind was the next decision. Which was that every session also votes. At the start of every session, the facilitator explains it in about one minute, and the group decides. Phone, or paper. Two groups chose paper, one at the college and one at the football club. And for those, we wrote notes on big sheets and typed them up afterwards and uploaded them as text."
+        "text": "Then we voted. Eleven for, three against. I voted against. And I'd still vote against, a bit. But the bit that changed my mind was the next decision. Which was that every session also votes. At the start of every session, the facilitator explains it in about one minute, and the group decides. Phone, or paper. Two groups chose paper, one at the college and one at the football club. And for those, we wrote notes on big sheets and afterwards typed them into the portal with the text option, one text conversation per group, named by group."
       },
       {
         "at_s": 211,
@@ -2043,7 +2051,7 @@
     "name": "Member network general assembly to roadmap, peer phone call",
     "origin": "generated",
     "started_at": "2026-10-01T08:30:00Z",
-    "summary": "Synthetic sample. Rafael, who directs a network of food cooperatives in Portugal and is planning his own general assembly in November, phones Birgit, general secretary of a German federation of about 140 community energy cooperatives. He records the call on speaker to keep notes. Birgit explains how her annual general assembly became a member roadmap: the formal votes were not recorded, then three rounds at fourteen tables, with a new recording per round and names like \"R2 T09\" so round and table are readable everywhere. Round three tables drafted roadmap items themselves and read them aloud. She uploaded the board's strategy paper from last year as text, split into chapters named with a DOC prefix, and said in the project context that these were board documents, not member voices. Her first report draft still presented an idea from the strategy paper as a member wish, which a board member caught; she fixed it with report instructions and by checking every item against a member source. Small rural cooperatives only showed up when she asked for them directly. The report went by email to members who left an address at the finish screen. They disagree on whether documents belong in a separate project.",
+    "summary": "Synthetic sample. Rafael, who directs a network of food cooperatives in Portugal and is planning his own general assembly in November, phones Birgit, general secretary of a German federation of about 140 community energy cooperatives. He records the call on speaker to keep notes. Birgit explains how her annual general assembly became a member roadmap: the formal votes were not recorded, then three rounds at fourteen tables, with a new recording per round and names like \"R2 T09\" so round and table are readable everywhere. Round three tables drafted roadmap items themselves and read them aloud. She pasted the board's strategy paper from last year in through the portal's text option, one text conversation per chapter, named with a DOC prefix, and said in the project context that these were board documents, not member voices. Her first report draft still presented an idea from the strategy paper as a member wish, which a board member caught; she fixed it with report instructions and by checking every item against a member source. Small rural cooperatives only showed up when she asked for them directly. The report went by email to members who left an address at the finish screen. They disagree on whether documents belong in a separate project.",
     "chunks": [
       {
         "at_s": 0,
@@ -2071,11 +2079,11 @@
       },
       {
         "at_s": 201,
-        "text": "So after last year's assembly the board wrote a strategy paper, about forty pages. And this year's round one was literally, what has changed since that paper. So I wanted the paper in the project, so I could ask, where do members confirm it, where do they contradict it, where do they go further. And you uploaded it? Uploaded it as text. But first I put in the whole forty pages as one text."
+        "text": "So after last year's assembly the board wrote a strategy paper, about forty pages. And this year's round one was literally, what has changed since that paper. So I wanted the paper in the project, so I could ask, where do members confirm it, where do they contradict it, where do they go further. And you uploaded it? Not uploaded, upload is only for audio. I opened our own portal link, chose the text option and pasted it in. But first I pasted the whole forty pages as one text."
       },
       {
         "at_s": 231,
-        "text": "Then every source in an answer just pointed at that one huge document, and you can't check anything that way. So I split it. One upload per chapter, five chapters. And I named every one with \"DOC\" at the start. \"DOC Strategy, chapter 2, grid access\". So in every list and every source you see immediately: this is a document, not a member talking. And in the project context I wrote it out. Something like: conversations whose name starts with DOC are chapters of last year's strategy paper, written by the board."
+        "text": "Then every source in an answer just pointed at that one huge document, and you can't check anything that way. So I split it. One text conversation per chapter, five chapters. And I named every one with \"DOC\" at the start. \"DOC Strategy, chapter 2, grid access\". So in every list and every source you see immediately: this is a document, not a member talking. And in the project context I wrote it out. Something like: conversations whose name starts with DOC are chapters of last year's strategy paper, written by the board."
       },
       {
         "at_s": 268,
@@ -3031,7 +3039,7 @@
     "name": "Town centre day, the blunt retrospective",
     "origin": "generated",
     "started_at": "2026-08-27T08:30:00Z",
-    "summary": "Synthetic sample. Five organisers of a residents' day in a small English market town (about 160 people, 22 tables) hold a blunt retrospective. Five recordings stopped because hosts' phones auto-locked; the Monitor showed Screen locked but sat minimised. The comms officer edited the portal's welcome and finish text the night before, the QR code on the dashboard looked different from the 30 printed cards, and the team reprinted at dawn before learning that text edits never change the link. A merged table put nine people on one phone: two voices and a murmur. Two Polish-speaking tables sat in an English-language project: the Polish transcripts held up, but consent screens were English only and two summaries were confidently wrong (sarcasm read as a request); the community liaison uploaded her own notes as text, clearly labelled. Changes for next time: a dedicated Monitor laptop and watcher, Ready Check Go read aloud with auto-lock set to never, the portal frozen 48 hours ahead with one owner and every reprint tested on two phones, a team walk of the live preview, six per phone at most with spares, a separate project for the Polish tables on coloured cards with a Polish consent sheet and a Polish speaker checking summaries, and portal tags per table. The failures go in the report's method section.",
+    "summary": "Synthetic sample. Five organisers of a residents' day in a small English market town (about 160 people, 22 tables) hold a blunt retrospective. Five recordings stopped because hosts' phones auto-locked; the Monitor showed Screen locked but sat minimised. The comms officer edited the portal's welcome and finish text the night before, the QR code on the dashboard looked different from the 30 printed cards, and the team reprinted at dawn before learning that text edits never change the link. A merged table put nine people on one phone: two voices and a murmur. Two Polish-speaking tables sat in an English-language project: the Polish transcripts held up, but consent screens were English only and two summaries were confidently wrong (sarcasm read as a request); the community liaison pasted in her own notes as text, clearly labelled. Changes for next time: a dedicated Monitor laptop and watcher, Ready Check Go read aloud with auto-lock set to never, the portal frozen 48 hours ahead with one owner and every reprint tested on two phones, a team walk of the live preview, six per phone at most with spares, a separate project for the Polish tables on coloured cards with a Polish consent sheet and a Polish speaker checking summaries, and portal tags per table. The failures go in the report's method section.",
     "chunks": [
       {
         "at_s": 0,
@@ -3103,7 +3111,7 @@
       },
       {
         "at_s": 515,
-        "text": "I read both transcripts on Monday evening and wrote up the main points in English, two pages per table. We uploaded those as text into the project, labelled as Ola's notes. But they're my notes. They're my summary of their words, not their words, and I said that to the centre when I told them what happened. They were kind about it. They said, next time, ask us what language before, not on the day."
+        "text": "I read both transcripts on Monday evening and wrote up the main points in English, two pages per table. We pasted those into the project through the portal's text option, one text conversation per table, labelled as Ola's notes. But they're my notes. They're my summary of their words, not their words, and I said that to the centre when I told them what happened. They were kind about it. They said, next time, ask us what language before, not on the day."
       },
       {
         "at_s": 545,
@@ -3310,7 +3318,7 @@
     "name": "Live or overnight, trios or fives: a friendly disagreement",
     "origin": "generated",
     "started_at": "2026-10-03T14:20:00Z",
-    "summary": "Synthetic sample. A recorded session at a practitioners' network day in Belgium. A moderator puts two experienced hosts on stage: Wouter, who runs assemblies and neighbourhood labs and synthesises live, and Helen, who has run tenant and health consultations for eleven years and records now and synthesises overnight. Wouter argues for the moment people see their words come back the same day; Helen for calm checking, morning recaps on multi-day processes, and care with rooms that have been misheard before. Both concede points: typing live while sixty people wait is a mistake, prompts should be saved as templates and someone else should run the laptop, and a one-line steer between rounds is acceptable to both. They split on Popcorn (ambience in a coffee area versus half-formed ideas misrepresenting a group). On group size Wouter defends trios (no one shut out, no facilitator needed, rotations meet six people) and Helen fives (fewer phones, fewer failures, less tidying, older residents wanting to hear the room). Helen admits quiet people vanish in fives and now opens with a go-round; Wouter admits twenty-five rows on the Monitor need a dedicated watcher. Both refuse nine on a phone, and both say online sessions are awkward.",
+    "summary": "Synthetic sample. A recorded session at a practitioners' network day in Belgium. A moderator puts two hosts on stage: Wouter, who runs assemblies and neighbourhood labs and synthesises live, and Helen, who runs tenant and health consultations and synthesises overnight. Wouter argues for the moment people see their words come back the same day; Helen for calm checking, morning recaps on multi-day processes (tables sort a page of unsorted quotes themselves before she offers back what no table kept; she admits handing out six themes once made the room go quiet), and care with rooms that have been misheard before. Both concede points: typing live while sixty people wait is a mistake, prompts should be saved as templates and someone else should run the laptop, and a one-line steer between rounds is acceptable to both. They split on Popcorn (ambience in a coffee area versus half-formed ideas misrepresenting a group). On group size Wouter defends trios (no one shut out, no facilitator needed, rotations meet six people) and Helen fives (fewer phones, fewer failures, less tidying, older residents wanting to hear the room). Helen admits quiet people vanish in fives and now opens with a go-round; Wouter admits twenty-five rows on the Monitor need a dedicated watcher. Both refuse nine on a phone, and both say online sessions are awkward.",
     "chunks": [
       {
         "at_s": 0,
@@ -3322,70 +3330,74 @@
       },
       {
         "at_s": 60,
-        "text": "But they don't go home in a multi-day process, Wouter. That's my point. In a three-day assembly they come back. Day one, I record everything, nothing live. That night I sit with it properly. I read the summaries, I ask the assistant for themes, I click every source. And day two starts with, here's what you said yesterday, sorted into six themes, and they sort themselves into the themes. It's calm. Nobody is typing at the front while sixty people wait."
+        "text": "But they don't go home in a multi-day process, Wouter. In a three-day assembly they come back. Day one, I record everything, nothing live. That night I sit with it properly. I ask the assistant for the strongest quotes from each table, I click every source, and I copy about forty onto one page, in no order. Day two, the tables sort that page themselves. Then I say, here's what I held on to that none of you kept, do you want it back? Nobody is typing at the front while sixty people wait."
       },
       {
-        "at_s": 92,
+        "at_s": 97,
+        "text": "You didn't always do it that way, Helen. Two years ago you put up six themes on a slide first thing. I was in the room. I did. And the room went quiet. They looked at my six headings, nodded, and that was the morning gone. When they sort the quotes themselves they argue about why two things belong together, and that argument is the useful bit. My six themes were just me, tidied up."
+      },
+      {
+        "at_s": 124,
         "text": "Point to Helen on the typing. I've done that. The worst moment of my year was standing at the front with a laptop while the answer was still coming in, and the room just watching me. Now I never ask anything live that I haven't prepared. The prompts are saved as templates the day before, and a colleague runs the laptop. I just read. That's the only way I'd do it now."
       },
       {
-        "at_s": 121,
+        "at_s": 153,
         "text": "And when it's wrong? Live, it's wrong in front of everyone. Sometimes. And then they correct it, and that's good, it's in the record. It's good if the room can take it. I did a health consultation with patients who'd waited two years for an operation. You do not stand in front of them and read a half-right summary of their pain. They'd been misheard enough. I wanted to be sure before I said anything back to them."
       },
       {
-        "at_s": 152,
+        "at_s": 184,
         "text": "So is it about the room, rather than live versus overnight? Partly. Trust in the room, and time to check. A summary at lunch has been checked by nobody. At two in the morning it's been checked by me, which isn't perfect, I'm tired, but it's someone. I'd say you can check three sources in ten minutes and say the word draft out loud. That's enough for here's what I'm hearing. It's not enough for a report."
       },
       {
-        "at_s": 183,
+        "at_s": 215,
         "text": "And there's a middle thing I do now that maybe Helen would accept. Between rounds, I don't read a summary at all, I just say one line. In round two, keep in mind that three tables raised the bus route and nobody's talked about evenings yet. One sentence. It's light, it can't do much harm, and it steers a bit. I'd accept that. That's a facilitator's sentence, informed by the recording. That's not the model talking to the room."
       },
       {
-        "at_s": 214,
+        "at_s": 246,
         "text": "Someone in the audience asked me at the break about Popcorn. Wouter, you've used it? Once, last month, on the screen in the coffee area. It's early beta, so I didn't build anything around it. People's own phrases on the screen, and they'd stand there and say, hey, that's ours. It kept the thing alive through the day. That's all I'd claim. I'll be honest, I'm not keen. Half-finished ideas on a wall can make a group look like it thinks something it doesn't."
       },
       {
-        "at_s": 248,
+        "at_s": 280,
         "text": "For anything sensitive, I'd want it off. Fair. I wouldn't put it up at your waiting list consultation either. Okay, let's move on, because I know this one gets heated. Group size. Wouter, trios. Trios. Three people, one phone. At four, two conversations can start at once. At three they can't. And I've never seen a trio shut someone out. If one person dominates, the other two have the numbers. I tell them that at the start, literally. If someone talks too much, there are two of you."
       },
       {
-        "at_s": 283,
+        "at_s": 315,
         "text": "And you don't need a facilitator at each table. That's huge. I can run sixty people in twenty trios with three facilitators walking around. And I rotate them. Three rounds of trios and each person has met six others. That's the same as a group of seven, except everyone actually talked. Everyone talked to two people at a time, Wouter. Which is when people actually talk, Helen."
       },
       {
-        "at_s": 310,
+        "at_s": 342,
         "text": "My turn. Twenty trios is twenty phones. Twenty people who have to scan, allow the microphone, keep the screen on and press finish. At my one tenants' day with trios, I had four phones lock, two people who scanned and never pressed record, and one phone face down in a handbag. Twenty-one conversations, seven unusable. With fives I have twelve phones, twelve table hosts I've briefed, and twelve rows on the Monitor I can actually watch."
       },
       {
-        "at_s": 340,
+        "at_s": 372,
         "text": "Point to Helen. The Monitor with twenty-five rows is a lot. I now have a colleague who only watches it, nothing else. And the tidying afterwards. Every trio is its own conversation. Twenty-one conversations with names like trio, Trio 4, me and Karin. I spent a whole morning on it. I use portal tags for the round now, and the name field for the table letter. It helps. It doesn't solve it."
       },
       {
-        "at_s": 369,
+        "at_s": 401,
         "text": "The other thing. With tenants, people come with their neighbour. They want to hear the room. Trios felt like an interview to some of my older residents. One man said, I came to hear what the others think, not to be questioned by two strangers. In a five, you hear more views, you get a bit of the whole building. Diversity inside the group matters to people, not only across rotations."
       },
       {
-        "at_s": 398,
+        "at_s": 430,
         "text": "That's real, I won't argue with it. For that kind of room I'd start with a plenary or a five, and maybe use trios for one round. But I'll give you this, Wouter. In my fives, the quiet ones drop off. I've listened back and you can hear it: a woman says one sentence in forty minutes. In a five it's very easy to disappear. So now every table starts with a go-round, one minute each, before the open part. It helps. It's not the same as a trio."
       },
       {
-        "at_s": 433,
+        "at_s": 465,
         "text": "And above five? I saw a nine-person table on someone's slide this morning. No. No. Nine on one phone is two voices and a murmur. If you have to, two phones, and split them. Six is the most I'd ever put on one phone, and I mean six around a small round table, not six along a long one. Agreed. That might be the only number we agree on."
       },
       {
-        "at_s": 461,
+        "at_s": 493,
         "text": "Let me try to sum up where you agree, and then questions. Live works if the prompts are ready, someone else runs the laptop, you check a few sources and you say draft. Overnight works when the room needs care, or when it's multi-day and the morning recap does the job of you were heard. A one-line steer between rounds is fine for both of you. Popcorn, ambience at most, and off for sensitive rooms."
       },
       {
-        "at_s": 491,
+        "at_s": 523,
         "text": "Trios: everyone talks, no facilitator needed, but more phones, more failures, more tidying. Fives: you hear more of the room, fewer phones, but quiet people disappear, so go-round first. Nine: never. Can I add one? Whatever you do, decide it in the run sheet. The worst sessions I've seen are the ones where the host decides at lunch to try something live. Yes. That one I'd sign without reading."
       },
       {
-        "at_s": 518,
+        "at_s": 550,
         "text": "Questions. Yes, at the front. Do you tell participants which one you're doing, live or overnight? Always. I say, tonight I'll read everything you said, and tomorrow morning I'll show you what I heard, and if I got it wrong, tell me. Same, but at lunch. And I add, it's a language model draft, so it'll be wrong somewhere, and finding where is your job. People like having a job."
       },
       {
-        "at_s": 546,
+        "at_s": 578,
         "text": "One more, at the back. What about online, on video calls? Ah. Phone next to the laptop speaker, no headphones, two people per breakout recording in case one fails. And it's still awkward, I won't pretend. Online I do everything overnight. Wouter, even you? Even me. Live online is a stunt. Okay, on that rare moment of total agreement, thank you both. Coffee's at the back."
       }
     ]
@@ -3395,7 +3407,7 @@
     "name": "Library table hosts on Explore and Verify",
     "origin": "generated",
     "started_at": "2026-08-20T01:20:00Z",
-    "summary": "Synthetic sample. After the third of four evening conversations on the future of a public library system in a Canadian town, the coordinator and four volunteer table hosts (a retired teacher, a librarian, a seventeen-year-old youth council member and a volunteer in her seventies) debrief on Explore and Verify. Explore produced the best moment of the series when a question about who the opening hours exclude drew in a night-shift worker; it misfired when pressed in the first minute, when a table was stuck, and when a lively parents' table was interrupted. They conclude it lands only when a conversation is alive but could go deeper, and that briefing people first stops it feeling spooky. Verify ran as a five-minute moment in the run sheet with a timer on screen: tables had a half-joking point taken out, sharpened another, and added a widower's own sentence. Asking 'is this what we said?' instead of 'do you agree?' stopped tables debating, and a custom Verify topic gave shorter outcomes. For the final session on a branch closure they turn Explore off, keep Verify optional and read slowly, and switch anonymise transcripts on before anyone records, accepting the loss of audio playback.",
+    "summary": "Synthetic sample. After the third of four evening conversations on the future of a public library system in a Canadian town, the coordinator and four volunteer table hosts (a retired teacher, a librarian, a seventeen-year-old youth council member and a volunteer in her seventies) debrief on Explore and Verify. Explore produced the best moment of the series when a question about who the opening hours exclude drew in a night-shift worker; it misfired when pressed in the first minute, when a table was stuck, and when a lively parents' table was interrupted, and pressing it again after the cooldown gave almost the same question, so the hosts settle on once per conversation. They conclude it lands only when a conversation is alive but could go deeper, and that briefing people first stops it feeling spooky. Verify ran as a five-minute moment in the run sheet with a timer on screen: tables had a half-joking point taken out, sharpened another, and added a widower's own sentence. Asking 'is this what we said?' instead of 'do you agree?' stopped tables debating, and a custom Verify topic gave shorter outcomes. For the final session on a branch closure they turn Explore off, keep Verify optional and read slowly, and switch anonymise transcripts on before anyone records, accepting the loss of audio playback.",
     "chunks": [
       {
         "at_s": 0,
@@ -3427,51 +3439,55 @@
       },
       {
         "at_s": 208,
-        "text": "So, Explore lands when the conversation is alive but could go deeper. Not when it's stuck, not when it's flying. That's a narrow window. And you can only press it so often, there's a cooldown, which is good, otherwise someone would press it every two minutes. I tried. It made me wait. Of course you did, Imran. Okay. Verify. For the record, the run sheet has it at seven forty. Five minutes, end of round two."
+        "text": "So, Explore lands when the conversation is alive but could go deeper. Not when it's stuck, not when it's flying. That's a narrow window. And you can only press it so often, there's a cooldown, which is good, otherwise someone would press it every two minutes. I tried. It made me wait. Of course you did, Imran. And when it let me press again, the second question was basically the first one. Who isn't here because of the hours, in slightly different words."
       },
       {
         "at_s": 238,
+        "text": "Same table, same conversation. I suppose the language model reads the same talk, its own first question included, and still lands in the same place. My table noticed. Someone said, it's stuck on us. So that's a rule, then. Once per conversation, and if it lands, leave it. If you want a new question after that, it's your job, not a second press. Fine by me. Okay. Verify. For the record, the run sheet has it at seven forty. Five minutes, end of round two."
+      },
+      {
+        "at_s": 268,
         "text": "Before people get up for the final plenary. I put a timer on the big screen and say, table hosts, it's Verify time. The host taps the ECHO button on the recording screen, then Verify, picks the topic, and gets a short outcome written from their table's conversation. They read it out. The table says what's wrong with it, out loud, while it's still recording. Then the host presses revise so it rewrites from what they just said, or edits it by hand, and approves it when the table's happy."
       },
       {
-        "at_s": 274,
+        "at_s": 304,
         "text": "That worked. Genuinely, better than I expected. My parents' table got an outcome that said the group supports reducing the adult fiction collection to make room for study space. And one of the dads said, that was one person, and it was me, and I was half joking. So that came out. Another line said quiet study space for teenagers, and they edited it to quiet study space for teenagers after school, until nine, because the times mattered to them."
       },
       {
-        "at_s": 306,
+        "at_s": 336,
         "text": "Mine was lovely, actually, after the Explore disaster. We had a man who lost his wife last year and comes to the library every day, and the outcome said the library is important for people who live alone. And he said, put it's the only place I talk to anyone some days. I typed it in, and he watched me do it, and he said thank you. I think that was the most important five minutes of the evening for him."
       },
       {
-        "at_s": 339,
+        "at_s": 369,
         "text": "The thing I'd change is the question we ask. The first time, I said to my table, do you agree with these? And they started voting, basically. Debating whether each point was right. That's not what it's for. Now I say, is this what we said? Not do we agree. Did we say it. Totally different conversation, and much faster. Write that on the host card, Grace. Literally. Is this what we said?"
       },
       {
-        "at_s": 368,
+        "at_s": 398,
         "text": "Five minutes is tight, though. Our outcome had six points in it and we spent four minutes on one. Should it be ten? Maybe seven. Or fewer points. We set a custom topic in the portal editor for session three, what we want the library board to hear, and that gave shorter outcomes, more focused. The general one gave too much. Okay, so we keep the custom topic. That's decided."
       },
       {
-        "at_s": 396,
+        "at_s": 426,
         "text": "And the board will actually see these? The verified ones? Yes, Owen. They show up on each conversation as verified outcomes, and in the report I'll say which points were checked by the table and which only come from the transcript. I think the board should know the difference. A point a table said yes to, out loud, together, is worth more than a summary line nobody at that table ever read."
       },
       {
-        "at_s": 425,
+        "at_s": 455,
         "text": "Okay. The real question. Session four is the Eastgate branch closure. People are upset. Some of them have used that branch for forty years. My instinct is to turn Explore off in the portal editor and keep Verify. What do you think? Off. Absolutely off. Imagine someone crying about the branch where they took their children, and a phone asks them about service delivery models. No, Nadia."
       },
       {
-        "at_s": 452,
+        "at_s": 482,
         "text": "I'd keep it, honestly. It got my best conversation. For session four, though, Imran? Think of the Eastgate people. They're coming because they're angry. A question from a machine is going to feel like the library is trying to manage them. Okay. Yeah. Fair. Off for four. But back on for the next series, please. Agreed. Off for four, back on later."
       },
       {
-        "at_s": 476,
+        "at_s": 506,
         "text": "And Verify stays, but differently. For Eastgate I'll ask the hosts to read the points slowly, and to say first, this is what the recording heard, you can change anything, tell us it's wrong, or say nothing at all. And if a table doesn't want to do it, they don't. Margaret, is that okay? That's okay. Give them the choice. Some of them will want their words checked very carefully, and some won't want to look."
       },
       {
-        "at_s": 507,
+        "at_s": 537,
         "text": "One practical thing for session four. Can we turn on anonymise transcripts? People will say names, of staff at Eastgate, of each other. I don't want Linda at the desk in a report to the board. Good thinking, Grace. I'll do it tonight, before anyone records. It only applies to what comes in after you switch it on, so it has to be before. We lose audio playback, which is fine. And I'll reread the consent cards and the privacy link on the portal while I'm in there."
       },
       {
-        "at_s": 542,
-        "text": "So, to sum up. Explore: lovely when the table is alive and could go deeper, useless when it's stuck, annoying when it's flying. Brief people first so it isn't spooky. Off for Eastgate. Verify: five minutes in the run sheet, timer on screen, custom topic, ask is this what we said, maybe fewer points, optional for Eastgate. Anonymise on before session four. Anything I missed? The robot voice. We are not putting the robot voice on the host card. Thanks, everyone. Stopping."
+        "at_s": 572,
+        "text": "So, to sum up. Explore: lovely when the table is alive and could go deeper, useless when it's stuck, annoying when it's flying. Brief people first so it isn't spooky. Once per conversation. Off for Eastgate. Verify: five minutes in the run sheet, timer on screen, custom topic, ask is this what we said, maybe fewer points, optional for Eastgate. Anonymise on before session four. Anything I missed? The robot voice. We are not putting the robot voice on the host card. Thanks, everyone. Stopping."
       }
     ]
   },
@@ -3569,7 +3585,7 @@
     "name": "We recorded ourselves first: an assumptions check",
     "origin": "generated",
     "started_at": "2026-09-17T10:30:00Z",
-    "summary": "Synthetic sample. A programme officer at a regional arts funder in Finland explains to a sceptical new board member why the team recorded its own planning meetings before consulting artists on new grant criteria. The planners' meetings went into a separate internal project; Explore, pressed during one of them, asked which they feared more, artists rejecting the criteria or nobody coming at all. The assistant then listed every assumption the team had made about artists, with quotes, and the team edited and signed off that list by hand. After six public sessions (anonymise on, artists told up front that the funder had recorded itself first), the list was uploaded as text into the public project, tagged and described in the context as the organisers' view, not participants'. Asking which assumptions artists contradicted showed they wanted smaller, faster grants rather than bigger ones, and that reporting, not the application form, was the burden; asking what the team had never considered surfaced care responsibilities and school-holiday deadlines. A report draft then presented an assumption as an artist's finding, so they moved the document back to the internal project and regenerated. They softened one 'contradicted' verdict by hand and published the assumptions and what happened to each.",
+    "summary": "Synthetic sample. A programme officer at a regional arts funder in Finland explains to a sceptical new board member why the team recorded its own planning meetings before consulting artists on new grant criteria. The planners' meetings went into a separate internal project; Explore, pressed during one of them, asked which they feared more, artists rejecting the criteria or nobody coming at all. The assistant then listed every assumption the team had made about artists, with quotes, and the team edited and signed off that list by hand. After six public sessions (anonymise on, artists told up front that the funder had recorded itself first), the list was pasted into the public project's portal as a text conversation, tagged and described in the context as the organisers' view, not participants'. Asking which assumptions artists contradicted showed they wanted smaller, faster grants rather than bigger ones, and that reporting, not the application form, was the burden; asking what the team had never considered surfaced care responsibilities and school-holiday deadlines. A report draft then presented an assumption as an artist's finding, so they moved the document back to the internal project and regenerated. They softened one 'contradicted' verdict by hand and published the assumptions and what happened to each.",
     "chunks": [
       {
         "at_s": 0,
@@ -3613,7 +3629,7 @@
       },
       {
         "at_s": 276,
-        "text": "Okay. And how do you compare the list with what artists said, if they're in different projects? Ask works on one project at a time. So, after the last session, I uploaded our fourteen assumptions as a text conversation into the public project. Named it Organisers' assumptions, tagged it organisers, not participants, and added a line to the context saying exactly that: this document is the funder's own view, never treat it as something an artist said."
+        "text": "Okay. And how do you compare the list with what artists said, if they're in different projects? Ask works on one project at a time. So, after the last session, I pasted our fourteen assumptions into the public project's portal, using the text option, as one text conversation. Named it Organisers' assumptions, tagged it organisers, not participants, and added a line to the context saying exactly that: this document is the funder's own view, never treat it as something an artist said."
       },
       {
         "at_s": 305,
@@ -3633,7 +3649,7 @@
       },
       {
         "at_s": 410,
-        "text": "Okay, I'm less sceptical. But what went wrong? Because something did, you've got the face. Something did. I generated a first draft of the report from the public project, and the uploaded document was still in there. And the draft said, artists in the north report a lack of professional networks. Which was our assumption. The one the artists had contradicted. It turned our guess into their finding."
+        "text": "Okay, I'm less sceptical. But what went wrong? Because something did, you've got the face. Something did. I generated a first draft of the report from the public project, and the pasted document was still in there. And the draft said, artists in the north report a lack of professional networks. Which was our assumption. The one the artists had contradicted. It turned our guess into their finding."
       },
       {
         "at_s": 435,
@@ -3650,6 +3666,793 @@
       {
         "at_s": 516,
         "text": "So, for your board notes. Record the planning meetings in their own project. Ask for the assumptions with quotes, then edit and sign them off yourselves. Tell participants you did it. Bring the list in only to compare, tagged and named in the context, and take it out again before the report. Ask what you never considered. Soften verdicts that rest on a few voices. I'll put that in the minutes, Aino. Reluctantly impressed. That's all I wanted. Stopping."
+      }
+    ]
+  },
+  {
+    "key": "participatory-budget-timeline-wall",
+    "name": "Neighbourhood budget team, walking the timeline wall",
+    "origin": "generated",
+    "started_at": "2026-10-08T16:20:00Z",
+    "summary": "Synthetic sample. Four people from a district council in Spain walk a paper timeline taped along their office corridor, recording a retrospective of a year-long neighbourhood budget cycle for next year's team and two partner districts: Nuria, the participation officer, Óscar, a resident delegate, Maite from communications and Ramón from the budget office. About 340 residents in six neighbourhoods took part. They explain the scope paragraph in the project context and why it must also be read aloud (the first market session skipped it and residents proposed fixing the health centre), checking last year's and a 2024 project with the same question, word for word, before asking again, sessions at varied times with portal tags, type instead and typed-in paper cards, and one project per phase, closed to new conversations when the phase ended. A first ideas report was published unread and reached every subscriber with two proposals merged into one. Their \"what happened to your proposal\" report gave each of 31 proposals an outcome, residents' quotes and a reason, but went out months late. Ramón and Óscar argue about quoting proposals that lost; Maite and Nuria still disagree about how often to email everyone. A dog park split is shown as a split.",
+    "chunks": [
+      {
+        "at_s": 0,
+        "text": "Is it recording? The red dot, yes. Okay. So, hello to next year's team, and hello to our friends in the two partner districts, that's why we do this in English, so forgive our accents. We are four. I'm Nuria, the participation officer. With me Óscar from the neighbours' association in Las Huertas, Maite from communications, and Ramón from the budget office. We taped the whole year on the corridor wall, February by the lift and September by the toilets. We walk it and say what we would keep."
+      },
+      {
+        "at_s": 36,
+        "text": "And what we would never do again. Maite, don't look at me like that. I'm looking at the wall, Óscar. Okay, February. The first sheet is the scope paragraph, and I think it's the most important sheet here. We wrote it into the project context in February. Residents decide how a fixed sum from the district budget is spent on small works in public space in the six neighbourhoods. It can pay for benches, shade, lighting, play areas, small repairs to streets and squares."
+      },
+      {
+        "at_s": 71,
+        "text": "It cannot pay for the health centre, the metro, the river path, anything that is regional, or staff. And then, the council funds the proposals that win the vote, inside the sum, if the technical check says they can be built. Five sentences. Ramón rewrote the last one three times. Because the first version said \"will fund the winning proposals\", full stop. And I've been in this job long enough to know there is always a winner with a gas pipe under it."
+      },
+      {
+        "at_s": 104,
+        "text": "So the context had it, and the context steers what the chat and the reports say. But the context is for the language model. People need to hear it. And here's our first red sticker. The first market Saturday in March, I didn't read it aloud. I was setting up, Óscar was handing out cards, there was a queue for the churros. And at the Los Pinos table three people spent twenty minutes on the health centre. Their proposal was, fix the health centre."
+      },
+      {
+        "at_s": 139,
+        "text": "Which is the only thing anybody in Los Pinos really wants, to be fair. I know. And in June they saw it wasn't on the ballot and they felt misled. One woman told Maite, you let us talk about it for twenty minutes, you recorded it, and then nothing. She was right. So from the second session, every session, I read the paragraph aloud at the start. Even at the home visits. Forty seconds. And then the second sentence. Óscar, you say it."
+      },
+      {
+        "at_s": 173,
+        "text": "\"You told us this last time. We are not asking again, we are asking what has changed.\" I stole it from my wife, she says it to the plumber. But it worked, because in Las Huertas we had been asked about the market square three times in four years. A survey, a walk with an architect, and something with post-its at the school. Nobody ever came back to us. So when Nuria's people came the fourth time, half my street said no, thank you."
+      },
+      {
+        "at_s": 207,
+        "text": "That's the next sheet. Before any session, I checked what we already heard. The chat works inside one project, it doesn't look across projects, so I did it by hand. I opened last year's project, the small pilot, and the 2024 consultation project from urban planning, they gave me access. In each one I asked the same question, word for word, pasted from one note: what did residents already say about shade, lighting and the market square, with quotes, and from which neighbourhood."
+      },
+      {
+        "at_s": 241,
+        "text": "Then I put the two answers side by side in a document and compared them myself, and opened the sources for anything I wanted to use. Heat and shade had moved up a lot. In 2024 shade was one point among many. Last year it came first almost everywhere. Parking went down. In 2024 it was parking, parking, parking. Because the summers are what they are now. Yes, Ramón, exactly. So we didn't ask \"what do you want\". We put the old quotes on a card and asked, is this still right?"
+      },
+      {
+        "at_s": 278,
+        "text": "Can I tell Las Huertas? It was the turning point for me. The association refused another session. So Nuria went to their Tuesday meeting with Óscar, with one printed page, eight quotes from 2024 about the square. The shade, the fountain that never works, the bins. And she said, this is what you told the city two years ago. Was this right, and what has changed? And they read it very slowly, and old Remedios said, that one's mine, I said that."
+      },
+      {
+        "at_s": 312,
+        "text": "And then they talked for an hour, and we recorded it, with everyone's yes. One of the best conversations of the year. Okay, March and April, the idea sessions. Varied times, planned from the start. Market Saturday morning, the school gate at half past four, one evening in each civic centre, and home visits. One housebound man in San Roque, ninety-one, recorded with record yourself on my laptop at his kitchen table, his daughter next to him. He talked about the bench at the bus stop for forty minutes. It's funded now."
+      },
+      {
+        "at_s": 349,
+        "text": "Every conversation got two portal tags when people scanned: the neighbourhood, and the type of session, so market, school gate, evening or home. Later I could filter on the school gate tag, select those conversations, and ask what the parents said about lighting. Type instead was on, a few people didn't want their voice recorded and typed on their phone. And many older people wanted paper cards. Those I typed in afterwards through the portal, switched to text, each table's cards as one typed conversation, with \"idea cards, typed in, not a recording\" as the name."
+      },
+      {
+        "at_s": 389,
+        "text": "And two settings you should copy. Key terms: the six neighbourhood names, every square and street people mention, the civic centres, calle Tejares. Before that the square names came out wrong half the time. And anonymise transcripts on, all year. People name neighbours constantly. Paco's bar, the lady with the dogs on the third floor. That's how you talk about a street, but we didn't want it in summaries sent by email. You can't play back or download the audio then, we accepted that."
+      },
+      {
+        "at_s": 423,
+        "text": "Structure. Why three projects, Ramón asked me in February. Ideas, deliberation, follow-up. Because each phase has its own report for a different reader. Ideas for the delegates, deliberation for the technical check and the ballot, follow-up for everyone. And at the end of each phase I closed the portal to new conversations, so when someone scanned an old QR from a lamppost in July, they didn't add a new idea to a phase that was finished. Three QR codes on lampposts. Three lampposts, Óscar."
+      },
+      {
+        "at_s": 457,
+        "text": "The long sheet is the ideas report. The idea was that the draft grows with the cycle instead of me writing everything in July. So after each session I generated a new version. From mid-April reports could take our own instructions, and ours were: list proposals by neighbourhood, keep proposals separate unless residents themselves said they were the same, quote residents, say which session. Then I read it against the sources. Then it went to the delegates. Except the first time. Tell them, Maite, it's your sticker. It's everybody's sticker."
+      },
+      {
+        "at_s": 494,
+        "text": "The first version was published before anybody read it. With report notifications on, publishing emails everyone who left an email, so two hundred people. And one line merged two proposals: shade sails for the playground at the El Carmen school and trees along calle Tejares became \"shade for children on the way to school\". Two groups of parents, two different things, both angry the same afternoon. The publish button even says how many people it will email. I just didn't think. Now nothing is published until someone has read every proposal and every quote against the sources."
+      },
+      {
+        "at_s": 533,
+        "text": "And the drafts after that, I copied the report content into a document and sent it to the delegates only, from our own list. You can only download the PDF once it's published, and publishing emails everyone. That's where we still disagree. I think all 340 should see the draft growing, that's the point. And I think 340 people getting a long email every two weeks is how you lose them. They unsubscribe, and then they don't get the one that matters, in September. Write that down for next year, it isn't settled."
+      },
+      {
+        "at_s": 571,
+        "text": "May, the two deliberation evenings. We had no Monitor then, it arrived in the summer, so I walked round looking at phones, and one table's phone was locked for twenty minutes before I saw it. At the closing evening in September we had the Monitor on a laptop, it said screen locked at table four, and Óscar was there before I'd read it. And the dog park. Oh, the dog park. A fenced dog area on the strip of park between San Roque and La Estación."
+      },
+      {
+        "at_s": 607,
+        "text": "San Roque wants it badly. La Estación says that strip is where their children play. In the deliberation report I asked for disagreements with reasons from both sides, with quotes. Ramón wanted the report to say which side was more feasible. I wanted it to help, Nuria. I know. But it doesn't decide, that's the vote's job. So it went to the ballot with both sides' reasons, in residents' words. It lost, narrowly. And a man from La Estación said, at least they wrote down why."
+      },
+      {
+        "at_s": 642,
+        "text": "June is the vote, on paper and on the city's own voting system. Not in dembrane, and we said that every time. dembrane is how we listened, the ballot is the ballot. Then the follow-up, the \"what happened to your proposal\" document. I made it as a report in the ideas project, where the proposals and most emails were. I typed the council's decision sheet in as text, named \"council decisions after the vote, not residents\"."
+      },
+      {
+        "at_s": 673,
+        "text": "The instructions: for each of the 31 proposals, the outcome, funded, merged, not feasible or lost the vote. One or two residents' quotes showing what people wanted and why. And the reason for anything not funded. Twelve funded, five merged, six not feasible, eight lost. Then I read every line against the transcripts and copied each quote from the transcript itself, not from the draft. And here Ramón and I had our big argument. Not big. Medium."
+      },
+      {
+        "at_s": 704,
+        "text": "Because, Nuria, quotes next to proposals that lost reopen the argument. You put a lovely quote next to the losing dog park and people say, why did that lose, it's so reasonable. And Ramón, leaving them out is exactly what made people stop coming last time. Years ago the council put a list of winners online and the rest disappeared. My neighbour's proposal just vanished. She never came again. So we settled: quote, plus the reason, plus a line saying it can come back in the next cycle and how. I still think it reopens things. Maybe that's allowed."
+      },
+      {
+        "at_s": 744,
+        "text": "The bad sticker. We promised the document for July. It went out at the end of September, nearly four months after the vote. Because the technical checks took until August, Nuria, and I wasn't going to publish \"not feasible\" without the engineer's reason in writing. Next time we promise a date we can keep, or send a short note in July saying where it is. We published it, so everyone who left an email got it, Maite printed it for the market stall, and we read it aloud at the closing evening. Óscar read Los Pinos."
+      },
+      {
+        "at_s": 784,
+        "text": "Including the health centre. I said, this budget can't pay for it, we should have told you on the first day, and we didn't. Sorry. People clapped, which I didn't expect. The last sheet is the evaluation evening, in the follow-up project, where residents judged the process itself. I asked one thing in the chat: what did people say about the process, including complaints. You have to ask for complaints, otherwise you get thank yous. They came: weekday vote, school gate too short, too many sessions in Las Huertas before."
+      },
+      {
+        "at_s": 820,
+        "text": "Okay, one thing each to next year's team. Maite? Never publish what nobody has read. Ramón? Read the scope aloud, and keep the reason next to every no. Óscar? Bring them their old words first. People come back when they see you kept them. Nuria? Promise a date you can keep. And keep the wall. Okay. That's the corridor. I'll stop it."
+      }
+    ]
+  },
+  {
+    "key": "creche-forum-supervision-own-clusters",
+    "name": "Crèche forum facilitators, supervision call on letting groups sort",
+    "origin": "generated",
+    "started_at": "2026-09-26T07:30:00Z",
+    "summary": "Synthetic sample. Thandeka, a senior facilitator, and Lwazi, her mentee in his first year with dembrane, hold their monthly supervision call about recent workshops for a crèche forum in KwaZulu-Natal, South Africa, recorded into Lwazi's private learning project. In June Lwazi showed seven themes from the chat on the projector after lunch; the room went quiet and the afternoon only agreed with them. In August groups clustered their own cards on the floor while recording, Lwazi typed the clusters in as one labelled text conversation, and asked what was said in the recordings but appears in no group's clusters. Four points came back; the room revived two, found a duplicate and dropped one with its reason on the record. Only then did the assistant merge the groups' clusters into a draft the room corrected, and each group checked a printed summary for what it got wrong. In September a power cut meant everything ran on paper, which Thandeka calls the real test. They disagree about merging at a 200-person meeting, counting who talks (there are no speaker labels, and equal time is not fairness) and when to mix owners with officials. Two practitioners will train as table hosts.",
+    "chunks": [
+      {
+        "at_s": 0,
+        "text": "Okay, it's recording, Thandeka. Record yourself on the laptop, you're on speaker. This goes into my learning project, the private one, only me, not the forum's projects. So you can be as rude as you like. I'm never rude, I'm accurate. Good morning. How is your mother? Better, thank you, she's back at church. Good. So, supervision. I want to go through the three workshops, June, August and last week. I think I learned more in these three months than in the whole year before."
+      },
+      {
+        "at_s": 35,
+        "text": "Start with June, then. Because you still don't like talking about June. No. Okay. The June workshop, forty-five crèche owners and practitioners, six groups, each with a phone recording. Each group had a QR card, and when they scanned they picked the workshop and their group as tags. The question was what support people need from the forum this year. Registration paperwork, food, training, children with disabilities, all of it. And over lunch I was excited."
+      },
+      {
+        "at_s": 66,
+        "text": "I selected the six recordings in the chat, I asked for the main themes with quotes, and it gave me seven themes. Very clean. And after lunch I put them on the projector. And the room went quiet. Properly quiet. One of the older owners, from the crèche by the taxi rank, said, \"so the phone has already decided\". Everybody laughed, but not a happy laugh. And the afternoon was flat. Each group picked one of my seven themes and agreed with it. I got very tidy flip charts."
+      },
+      {
+        "at_s": 102,
+        "text": "And what did I say to you in the car? You said the sorting is where people think. Yes. When a group stands over its cards and somebody says, no, that one doesn't go with food, it goes with the municipality, because the food grant comes from the municipality and it's never on time. That sentence is the thinking. If you sort for them at lunch, you've taken the most important part of the day and done it in the back room. And seven neat themes on a big screen look finished. Nobody argues with finished."
+      },
+      {
+        "at_s": 141,
+        "text": "So, mid-August. We changed the order. Each group writes cards first, one idea per card, and then clusters them on the floor, because the tables were too small and people can walk around the floor. And the phone keeps recording through the clustering. That was your idea. It was a guess. A good guess, because when I read the transcripts that evening, the clustering was the best part. Every time someone moves a card, they say why. \"These two are the same, it's the same clinic sister who never comes.\""
+      },
+      {
+        "at_s": 178,
+        "text": "I didn't get that in June. In June they talked and I sorted. Then at tea, Nomvula read each group's clusters off the floor, the cluster names and the cards under them, and I typed them into the portal's text option on my laptop, one conversation for all six groups. I named it \"groups' own clusters, typed at tea, not a recording\", and I put the same line in the project context, so the assistant treats it as the groups' sorting and not as a conversation. It took twenty-five minutes. Tea is twenty minutes. Nomvula's tea was cold. She told me."
+      },
+      {
+        "at_s": 219,
+        "text": "And then I asked one question, only one, on the six recordings and the typed clusters together. What was said in the recordings that does not appear in any group's clusters? Give the quotes. Four points came back. For each one I opened the source and read that bit of the transcript, to be sure it was really said and not guessed. Some passages are rough where a group switches into isiZulu, so Nomvula reads those. She's faster than me anyway."
+      },
+      {
+        "at_s": 252,
+        "text": "The first point was from a practitioner in group five, a very quiet woman, maybe three sentences all morning. She said children with disabilities get turned away, because crèches don't know how to register them and they're scared the inspector will close them. Nobody picked it up, it never became a card. The second was transport money to get to training. The third, a landlord problem. The fourth, that the food grant forms are only in English. And how did you read them back?"
+      },
+      {
+        "at_s": 287,
+        "text": "Like you said. Not \"here's what the analysis found\". I said, these four things were said this morning and then dropped. Do you want them back? I read the quotes without saying who or which group. And the room did three different things, which I loved. Two they revived. The disabilities one, an owner said, \"that's my crèche too, I've turned away two children\", and suddenly it was a new cluster with five cards. Transport money they revived as well."
+      },
+      {
+        "at_s": 319,
+        "text": "The landlord one, they said it's already there, in group two's cluster about premises, just in different words. So the assistant missed that it was a duplicate. And the forms one they dropped on purpose. An owner said yes, the forms are English, but the forum already has volunteers who help fill them, it's not our priority this year. Everyone agreed, and that reason is on the recording. That's what I want. Dropped with a reason, not lost on the way."
+      },
+      {
+        "at_s": 352,
+        "text": "And then the merge. Only then. After the room had revived or dropped things, I asked Ask to merge the six groups' clusters into one draft, because six groups overlap a lot and merging is boring work. That's the tool's kind of work. I read it out as a draft and the room corrected it. They split \"training\" into training for owners and training for practitioners, because they're different people with different problems. That's the right job for it, merging what they've already sorted."
+      },
+      {
+        "at_s": 387,
+        "text": "And each group got a one-page summary of its own conversation, printed, with one instruction on top: find two things this got wrong or made too tidy. Group three found it said \"participants agreed\", and they had not agreed, they had shouted. Anonymise was on, and the context says don't name children or crèches, because they talk about children by name all the time. It held. Only one summary said \"the crèche next to the church\". Everyone knows which that is. That's a small-place problem, not a software problem. Take that line out before you print."
+      },
+      {
+        "at_s": 426,
+        "text": "Then September, which you keep calling the real test. Because it was. Tell it. A power cut, and then the whole area went down, no signal at all, the hall dark until eleven. No phones, no Ask, nothing. I panicked inside. And the groups just did it. Cards, floor, clusters, the read-back of what was dropped, which Nomvula and I did from our notes. On paper, by the window. Honestly, maybe better than June."
+      },
+      {
+        "at_s": 456,
+        "text": "And that's the test I care about. If they couldn't have done it without the phones, then we'd have made the forum depend on us, and on something that needs electricity and signal. They could. So I'm not worried about the tool, I'd only worry if September had failed. Afterwards I typed our paper notes in as text, one conversation per group, labelled \"paper notes, typed by facilitators\". So the record is complete, but I know it's our words, not theirs. It's thinner."
+      },
+      {
+        "at_s": 490,
+        "text": "And Explore, I tried once, in August, group four. The ECHO button on the phone. It asked a fair question, something like, who else looks after these children during the day, and were they asked? And the group talked about fathers, and grandmothers who run crèches informally in their houses and never come to the forum. Good question. But it couldn't bring them. It can ask about the people who aren't there, it can't put them in the room. So what did you do? Nothing yet. It's on my list. Put it higher."
+      },
+      {
+        "at_s": 528,
+        "text": "Okay, the first thing I'm stuck on. In February there's the regional meeting, two hundred people, thirty tables. You can't cluster thirty tables on one floor. So there I think merging across tables is fair. Let the assistant merge. I agree, but only if every table clusters its own first. On paper, on the floor, wherever. Then you type their clusters, and the tool merges thirty sets of clusters, not thirty conversations. That's a different thing. And you still read back what got dropped. Thirty tables of typing. Then find more typists."
+      },
+      {
+        "at_s": 565,
+        "text": "Second thing. I wanted to count who talks most, from the transcripts, to show the forum that the same five owners speak every time. You can't. The transcripts don't say who's speaking, there are no speaker names, it's one stream of words. And even if you could, I wouldn't want the number. Equal time isn't fairness. The older owners tell long stories, and the story is the point. Some practitioners come in once, at the end, and say the thing. So how do you know who's quiet?"
+      },
+      {
+        "at_s": 601,
+        "text": "I read. After every workshop I read two transcripts properly, start to end, two different groups each time. And I listen for who never comes in, by what's missing. Nobody from the crèches with babies said anything. Or the three young practitioners in group one, I hear them laugh but never speak. Then I talk to that group's host, privately, not in front of anyone. It's slower than a number, yes. I think you're half right. I still want something faster. Then find it and tell me."
+      },
+      {
+        "at_s": 636,
+        "text": "Third. I want to put the municipal officials in a room with the owners and have the hard conversation. Registration delays, the food grant, the inspector, face to face. And I want same-role groups first. Owners with owners. Because some owners already feel small in front of a man with a lanyard. If you mix them on the first morning, the official talks and the owners nod. But if we always protect them, they never get that exchange, and the officials never hear it straight."
+      },
+      {
+        "at_s": 671,
+        "text": "Yes. That's fair. And honestly, I don't know where gentle turns into keeping them out. Twenty years and I still don't know. My rule is same-role first, then mixed, with their own clusters in their hands, so they don't start from nothing. But I could be wrong for this forum. Try one mixed group in November and we'll read that transcript together. Okay. Deal."
+      },
+      {
+        "at_s": 697,
+        "text": "My question, I ask it after every workshop. Will the forum be more able to run its own meeting next year than it was this year? Not, will the report be better. Will they need us less. In June the answer was no. In September, yes. And what are you doing about it? Two practitioners from group five, including the quiet one, actually, want to be table hosts. They come to the training in October. I'll show them the QR cards, how to stop the phone, and how to read back the dropped points."
+      },
+      {
+        "at_s": 736,
+        "text": "Good. And write in your notes that June wasn't a disaster. It was a lesson that cost one afternoon. And that people sort better than you. I'm not writing that last bit. Write it. Okay. Same time next month? Same time. Greet your mother. I will. Stopping it now."
+      }
+    ]
+  },
+  {
+    "key": "fourth-line-screens-podcast",
+    "name": "Development agencies podcast, four rounds and a fourth line",
+    "origin": "generated",
+    "started_at": "2026-10-02T13:00:00Z",
+    "summary": "Synthetic sample. An episode of a European network of regional development agencies' internal peer podcast, recorded with record yourself. Saskia, the host, talks to Zuzana and Radek from an agency in Moravia, Czech Republic, about an evening with about forty machine shop owners, vocational teachers, apprentices and two regional officials on what would make young people stay after vocational school. Four twenty-minute rounds at five tables, rotating, each recording named by round and table and tagged by round. Between rounds a seven-minute screen: three lines heard across tables and a fourth line, the strongest objection in the speaker's words, attributed to a table and checked with it first. Radek runs a saved template on the round's tag and checks two sources per line; Zuzana never touches the laptop. A teacher's objection that the screen turns everything into brochure language made round three franker; an apprentice showed that wages, rent and the bus were one question. Things went wrong: a slide built from the wrong round's tag, a line overstated from one table, a last round that only argued with the screen, an online edition dropped. They still disagree about how strict the objection rule should be. The report goes screen by screen and admits what was never answered.",
+    "chunks": [
+      {
+        "at_s": 0,
+        "text": "Welcome to episode eleven of our peer podcast, for colleagues across the network. I'm Saskia. Today, two people from a small development agency in Moravia: Zuzana, who facilitated the evening, and Radek, whose job title, Zuzana tells me, was \"screen keeper\". Self-appointed. We're recording this in the browser into the network's podcast project, so if you'd rather read than listen, the transcript is in there. Zuzana, start with the evening itself."
+      },
+      {
+        "at_s": 29,
+        "text": "About forty people, two weeks ago, in the old cultural house in our town. Owners of small machine shops, vocational teachers, apprentices, and two officials from the region. One question all evening: what would make young people stay after vocational school? Because they finish, they get the certificate, and they leave for the big city or for Germany. Five tables of eight, four rounds of twenty minutes, and people rotate every round so you always sit with new faces."
+      },
+      {
+        "at_s": 61,
+        "text": "And between rounds, the screen. Seven minutes of screen, the same shape every time. Three lines, things we heard across the tables in that round. And a fourth line, which is always the strongest objection raised in that round, in the speaker's own words, attributed to a table, never to a person. \"Table 3, round 2.\" That's why we call it the fourth line. Then people rotate and go again, and they can pick up the screen or argue with it."
+      },
+      {
+        "at_s": 94,
+        "text": "Radek, how do you physically do that in seven minutes? Okay, setup first. Every recording is named by round and table, so \"round 2 table 3\", and when people scan, the portal asks for the round as a tag. Conversation language is Czech, the evening is in Czech. And in the project context we wrote that \"a region of skilled hands\" is our agency's slogan, the organisers' words, not something participants said. It's on every poster, and people repeat it, mostly ironically."
+      },
+      {
+        "at_s": 128,
+        "text": "During the round I have a saved custom template, written and tested before the evening. I run it only on conversations with that round's tag. It asks for three points raised at more than one table, each with the tables, and then the strongest objection raised this round, in the speaker's words, with the table. Then I check two sources for every line. I click, I read that bit of the transcript. If I can't find two, the line doesn't go up. And I type the lines onto a plain slide myself."
+      },
+      {
+        "at_s": 165,
+        "text": "White slide, black text, big. Zuzana never touches the laptop. I don't want to. My job is the room. If I'm looking at a laptop, I don't see that table four has gone quiet because the official just sat down. And the objection line, how do you avoid embarrassing someone? Before it goes up, I walk to the table. \"Happy for this to be on screen as table 3?\" Twice they changed a word. Once they said no, and I used the next strongest."
+      },
+      {
+        "at_s": 200,
+        "text": "Tell the round two story, I've heard about it. Round two. One of the vocational teachers, thirty years teaching, objected to the method itself. He said, more or less: this screen turns what we say into brochure language. It keeps the polite version. \"Better cooperation between schools and firms. We have said that for twenty years.\" And Radek put it up as the fourth line. His exact words, table 2. I asked him first, and he said, put it up, I'd like to see you do it."
+      },
+      {
+        "at_s": 235,
+        "text": "The room laughed, and then something changed. Round three got franker. Nobody said \"better cooperation\" again. They started on why it never happened. Firm owners said the schools change the curriculum every two years. A teacher said firms take apprentices as cheap labour and don't teach them. An apprentice said her master doesn't let her touch the CNC machine. That was the real evening, round three. Did you expect that? I hoped. I didn't expect."
+      },
+      {
+        "at_s": 266,
+        "text": "Same screen, round two, the three lines were wages, rent and the early bus. Three neat lines. And an apprentice at table five said out loud, while people were moving, \"those are one thing. Can you live here on an apprentice wage? That's it.\" And she was right. Wages, rent, the bus to the industrial zone at six in the morning. For an eighteen-year-old it's one question. So I changed the round three question on the spot. I asked tables to re-cut the screen itself. Is this three things or one? What's missing?"
+      },
+      {
+        "at_s": 304,
+        "text": "And for the next screen I changed the prompt. Not \"list the main points\", but \"what connects the points raised at different tables, with quotes\". What came back was much closer: living on an apprentice wage, with quotes from three tables, wages, rent and the bus all in one line. I'm careful with the list version now. It makes things look separate that people live as one thing. And the room had told us that before the template did."
+      },
+      {
+        "at_s": 336,
+        "text": "You also had Popcorn running, which some of us haven't tried. It's an early beta, you switch it on per project. I had it on a side screen by the coffee during rotations, as ambience. Half phrases from the conversations coming up. People stood with a coffee and pointed, \"that's ours\". I like it. I don't trust half phrases. A half phrase can mean the opposite of the whole sentence. So it stayed on the side screen, never the main one. We agree on where, not on whether."
+      },
+      {
+        "at_s": 372,
+        "text": "What went wrong? My favourite. The screen after round three. I ran the template on the round one tag, picked the wrong one in the list, under pressure. The slide went up and someone at the back said, \"we already said that. An hour ago.\" They were right. I stood up and said, sorry, that's round one, my mistake, three minutes. Which he did very well. People liked him more after. Now the round is in the slide title, big. If the title says three, the tag had better say three."
+      },
+      {
+        "at_s": 409,
+        "text": "Round four, partly because of that and partly not, was the weakest. It had no new question, just \"go deeper on what's on the screen\", and they only argued about whether the screen was right. Nothing new came in. So next time the last round gets a fresh question, something like, what would you personally do in the next year. And the screen goes dark. No screen after round four, just the closing. Dark is a nice idea."
+      },
+      {
+        "at_s": 441,
+        "text": "One more honest one. A line in the first screen said \"firms are willing to pay towards apprentices' housing\". I had two sources, but both were from the same table, two moments in one conversation, one owner saying it twice. A teacher caught it. She said, who said that? That's one man. She was right, and it had gone up as if the room said it. That's when the rule got stricter. Two sources from two different tables, or it says \"one table\"."
+      },
+      {
+        "at_s": 475,
+        "text": "And this is where Radek and I still disagree a bit. I think the objection should always be on the screen. Every round. The moment you skip it, people learn the screen is the polite version. And I worry one loud voice gets amplified. If the same man objects every round, he gets the fourth line four times. That's not the room, that's him with a microphone. So what's the rule now? Strongest objection, raised at more than one table where possible, checked with the table. Where possible. I wanted \"must\". I still want \"must\"."
+      },
+      {
+        "at_s": 513,
+        "text": "Some colleagues in the network read the round back aloud instead of projecting. Why the screen? People need to see their own words. Written, big, with their table. When the teacher saw his sentence up there, that's different from me repeating it. And to be honest, the other half is that people read the screen silently and nod. Seven minutes of forty people reading and nodding. It's not always a discussion. That's why the rotation matters. They take the screen to the next table and argue there."
+      },
+      {
+        "at_s": 549,
+        "text": "Did you try it online? Once, for people in the villages who couldn't travel. A video call with breakout rooms, and in each room one person had the portal open on their laptop. And the screen was never ready inside the break. The breakout rooms close, everyone's back, and Radek is still checking sources. Twice we just looked at each other. So we dropped the screen online. Online we do the rounds and send the report afterwards. It's not really the tool. Online the break is two minutes, not seven, and I'm not skipping the checking."
+      },
+      {
+        "at_s": 588,
+        "text": "And afterwards, the report? A report with our own instructions. One page per screen, in order. The screen as it was shown, and then what the next round did with each line: picked up, pushed back, or ignored, with quotes from the next round attributed to tables, never to people. So you can follow the evening as it moved. And at the end a section called \"what we did not get to\". That's the most important page for the region."
+      },
+      {
+        "at_s": 621,
+        "text": "Because there's a question the screens never answered. Who moves first. Every round, the firms said the schools should, the schools said the firms, and the two officials said the region is waiting for both. Four rounds, nobody answered it. So it's written down as not answered, not as \"broad agreement on the need for cooperation\". Which is exactly the brochure sentence. Then I read the whole report against the sources. A whole afternoon. Two lines changed, and one quote replaced because it came from the wrong round."
+      },
+      {
+        "at_s": 657,
+        "text": "Then we published it, so everyone who left an email at the end got it, about half the room. The officials got it the same day as the apprentices, which mattered to the apprentices. What would you tell a colleague who wants to try this next month? Two people. One for the room, one for the screen, never both. Save the template before the evening, test it on a rehearsal, put the round in the slide title. And walk to the table before the objection goes up."
+      },
+      {
+        "at_s": 692,
+        "text": "So, did it make anyone stay? Ask me in five years. Two firms and the school are meeting about apprentice wages in November. That's not staying, that's a meeting. But it's a meeting about the real question. Can I add one thing? The tables were too big. Eight people around one phone, and there are bits in the transcript where two conversations run over each other. Next time six. Noted. Zuzana, Radek, thank you. That's the episode."
+      }
+    ]
+  },
+  {
+    "key": "heat-plan-partner-call-who-was-missing",
+    "name": "Heat plan lead and workers' centre organiser, phone call on who was missing",
+    "origin": "generated",
+    "started_at": "2026-08-14T16:30:00Z",
+    "summary": "Synthetic sample. Dana, who leads a county public health department's extreme heat plan in the south-western United States, phones Lupe, an organiser at a workers' centre for day labourers, roofers and landscapers; Marcus, the county analyst, joins halfway. After two public listening sessions with about ninety residents, Dana separated three questions: who is talked about but did not take part and whose concerns appear only in other people's words, both asked of the assistant with sources, and who was present but quiet (renters at tables with landlords), answered by reading transcripts and asking table hosts. Marcus explains that portal tags are picked at scan time by whoever holds the phone, count conversations rather than people, and that the first tag list had no option for outdoor work. Before session three, the centre ran its own sessions at a 5:30 am hiring corner and a Sunday football league, in a private Spanish project with anonymise on, read by the centre first by agreement. They tell how a fluent, invented answer about outdoor workers reached a draft slide and was pulled, compare the two projects by hand with the same saved question, disagree about merging projects, plan a homeowners' association session at its clubhouse, and keep a section on who they have not heard from yet.",
+    "chunks": [
+      {
+        "at_s": 0,
+        "text": "Okay, I've hit record. Lupe, can you hear me alright? You're on speaker, I'm in the small conference room with the door shut. Just so it's on the recording: this goes into our team notes project, not the listening sessions project, so it never ends up in a report. And you're recording on your side? I am, the phone's on my desk. Good. We both keep a copy, so nobody has to trust the other one's notes."
+      },
+      {
+        "at_s": 32,
+        "text": "Ha. That's kind of the whole thing, isn't it. Marcus joins in about twenty minutes, after the budget meeting. So, where we are. Two public listening sessions done, the branch library on the fourth and the high school gym on the sixth. About ninety residents, fifteen tables. Then your two sessions. But first, why I called you last week, because I think I explained it badly."
+      },
+      {
+        "at_s": 59,
+        "text": "You did it fine. You said, we asked the computer who's missing and it said you guys. More or less, yeah. But it was three questions, not one, and that matters. After the gym I asked the assistant, with sources, who is talked about in these conversations but doesn't seem to have taken part. And it came back with three groups. Outdoor workers, so roofers, landscapers, people waiting for day work. Older people living alone in mobile homes. And people who are unhoused."
+      },
+      {
+        "at_s": 94,
+        "text": "And every one came with sources, so I clicked through them. Table after table of people saying things like, my neighbour's husband does roofing and he comes home grey. Or, there's an old man in the park off the highway who won't run his AC because of the bill. People talking about them. Not them talking. That was question one. Question two I asked separately: whose concerns show up only in other people's words. And that's a slightly different list."
+      },
+      {
+        "at_s": 127,
+        "text": "The unhoused residents, for example. They're in there, but only through the library staff and a pastor at the gym. Every quote is somebody speaking for them, kindly, but for them. And the third thing I couldn't ask the assistant at all. Who was there and stayed quiet. The transcripts don't say who's speaking, there are no speaker labels, so there's nothing to count. I read them myself, and I asked the table hosts what they saw."
+      },
+      {
+        "at_s": 159,
+        "text": "Table six at the library. A woman, a renter, starts, well, in our unit the AC has been out since June. And a landlord at the same table says, you have to put in a work order, and talks for about four minutes about work orders, and she doesn't say another word for the rest of the hour. You can read it happening. The host saw it too. So renters at tables with landlords. That's a third kind of missing. They were in the room."
+      },
+      {
+        "at_s": 194,
+        "text": "Yeah. And that's the corner too, you know. Some of my guys came to the library. Three of them. Did they? I didn't know that. Because your list didn't have a box for them. What list? When they scanned. Where do you live, how does the heat affect you. At home, caring for someone, a health condition, other. No I work outside. So they picked other. Oh, no. Yeah. So in your project they're just other. Hidden."
+      },
+      {
+        "at_s": 226,
+        "text": "That's on us. We copied the tag list from an old air quality project and nobody read it with outdoor work in mind. Now the part I care most about. I didn't want to call you after the report and say, sorry, we missed you, here's a survey. Session three is the twentieth. I wanted to change who's in the room before anything gets written. Which is why I said yes. With a finished report I'd have hung up."
+      },
+      {
+        "at_s": 258,
+        "text": "So tell me about the corner. Tuesday, five thirty in the morning, the hiring corner by the lumber yard. It's already eighty-something degrees. We brought coffee and pan dulce, and three of our phones, the centre's phones, not anybody's own. Groups of four or five, standing, phones on the tailgate of my truck. One question to start: tell me about the worst hot day you had this summer. Everybody has one. Everybody has one ready."
+      },
+      {
+        "at_s": 289,
+        "text": "I said the consent part out loud, in Spanish, before anyone scanned. What's recorded, that names get taken out, that the county sees nothing until we've read it, that you can stop and walk away. Two men said no thanks, fine, they talked with me off to the side and I wrote nothing down. Then at six fifteen the first contractor's truck pulls up and half of one group just leaves. Mid sentence."
+      },
+      {
+        "at_s": 319,
+        "text": "It's in the transcript. A guy is explaining how he hides water in the shade of the truck so the foreman doesn't see him stopping, and then it's just, ya llegó, and car doors. I love that. It's true to the place. And Sunday? The football league, between games, under the canopy by the snack stand. Families, kids running around, older men who don't get picked up for work any more."
+      },
+      {
+        "at_s": 348,
+        "text": "Very different talk. The apartment at night, the kids, the power bill, who in the family can't take the heat. And technically? I know Marcus sent you notes. He did. Its own project, private, three people in it. Me, Chayo from the centre, and Marcus, for if something breaks. Conversation language Spanish. Anonymise transcripts on before the first recording."
+      },
+      {
+        "at_s": 372,
+        "text": "No names asked, no email asked. And the deal, which I want on this recording too: Chayo and I read every summary first. The county works from the report we approve, not from the transcripts. Marcus can open it, and he tells me the county's workspace admins can open any private project, so that part is an agreement between us, not a setting. Marcus doesn't read anything until I say. Agreed. Completely. And Marcus is just walking in, hang on."
+      },
+      {
+        "at_s": 402,
+        "text": "Hi Lupe, sorry. Did I miss the part where you say I can't read anything? You just missed it. You can't read anything. Understood. I watched the Monitor at both sessions, so I knew every table recorded, but it can't tell you who's at the table. And the tags thing. You're right, and it's worse than missing a box. The tags are picked at scan time, by whoever is holding the phone. One phone per table. So the tag describes one person's choice for a table of six."
+      },
+      {
+        "at_s": 438,
+        "text": "And they count conversations, not people. If I say twelve conversations tagged at home, that's twelve tables or twelve phones, not twelve residents. So for the library, where the outdoor workers were hiding under other, I opened a Specific Details chat on just the conversations tagged other, eleven of them, and asked for every passage about working outside, with sources. Three tables. Your three guys, I think, spread over two tables, plus a woman who does landscaping."
+      },
+      {
+        "at_s": 470,
+        "text": "Did it get them right? Mostly. One passage was a guy talking about his yard, not his job, so I took it out. I like Specific Details for this, I know exactly which eleven it's looking at. Can I say the thing now, Dana? Which thing. The slide. Somebody at your office told me about a slide. Okay. Yes. It's mine to tell."
+      },
+      {
+        "at_s": 496,
+        "text": "Before I called you, Trevor, he's new, he's good, was building the draft deck for the board briefing, with a gap where outdoor workers should be. So he asked the assistant what outdoor workers would probably say about cooling centres. A very fluent answer. Transportation is a barrier, people need rides to the cooling centres, more bus passes. It sounded completely plausible. He put it on a slide with a little heading, outdoor worker perspectives."
+      },
+      {
+        "at_s": 527,
+        "text": "I caught it the night before and pulled it. I sat with him the next morning, not to tell him off, it's the easiest mistake in the world. You ask a question, it answers. It doesn't say, I wasn't there. And here's what makes it worse. Lupe, tell Marcus what your guys actually said about cooling centres. Nobody said rides. They said the cooling centre is open nine to five, and we work nine to five."
+      },
+      {
+        "at_s": 558,
+        "text": "By the time we're off the roof it's closing. And some people won't walk into anything with a county seal on the door, for reasons you can guess. And mostly they don't want a cooling centre, they want shade and water at the job, and to stop for ten minutes without losing the day. So the made-up version was wrong in a way that would have sent money to bus passes. Yeah. That's what scares me. Not that it was rude. That it was believable."
+      },
+      {
+        "at_s": 593,
+        "text": "So two things changed. There's a line in the project context now. Something like: do not speculate about what groups who did not take part might think. If a group is only described by others, say so. And the rule for the team, which I said out loud at the staff meeting: nobody asks the assistant to speak for anyone. We ask what people said. If they didn't say it, we go and ask them. Which is what this whole call is."
+      },
+      {
+        "at_s": 627,
+        "text": "Can I do the comparison bit? Because I think that's the useful part for the plan. Go ahead. So Ask works inside one project, it can't look across two. So I wrote one question, saved the exact wording, and pasted it into Ask in each project. What makes a hot day dangerous for the people in these conversations, what do they already do to cope, what would help. Quotes with sources. Don't generalise beyond these conversations. Then I pasted both answers side by side in a document and compared them by hand."
+      },
+      {
+        "at_s": 663,
+        "text": "And they barely overlap. Power bills, both. Older relatives, both. But the public sessions are about cooling centres, trees, library hours. Yours is water on the job, rest breaks, the foreman, the hours, and the county building thing. Which I'd have told you, Marcus. Sure. But now it's in their words, with sources. That's not the same as me saying it. That's the part I want."
+      },
+      {
+        "at_s": 691,
+        "text": "Here's where we disagree, so let's have it on tape. I still think the Spanish sessions should go into the main project. One Ask, one report. No. Lupe, hear me out. I heard you last week. Our people said things on a tailgate at five thirty in the morning because I told them it stays with us until we've read it. If it moves into your project, it's yours."
+      },
+      {
+        "at_s": 719,
+        "text": "And there's the boring reason that wins anyway. Language is set per project. The transcript follows whatever people speak, but in an English project the summaries and the screens people see come out in English. So two projects, compare by hand. I lose, gracefully. And the report? Lupe, what do you want for the workers' section? Published the way we approve it. Not cut down, not reworded so it sounds nicer for the board."
+      },
+      {
+        "at_s": 745,
+        "text": "I don't trust the county not to pick the three quotes it likes. No offence, Dana. None taken, I've been in the county long enough. So, yes. The workers' section goes in as the centre approves it. And before anything goes to the board, you get the full draft with every quote checked against the transcript, so you can see where your section sits next to everything else. Not just your part. And the quotes stay in Spanish, with our translation under them. Chayo and I do the translation."
+      },
+      {
+        "at_s": 781,
+        "text": "Agreed. Two more things. The homeowners' association, the one against the shade tree requirement for new subdivisions. They didn't come to either session, they sent a letter. I've offered them their own recorded session, at their clubhouse, on a weeknight that suits them. Same deal as you, their arguments in their own words, they see their section before the board does. You'll go to their clubhouse. My guys had to stand in a parking lot at five thirty."
+      },
+      {
+        "at_s": 813,
+        "text": "Your guys chose the parking lot. Their terms. Their clubhouse is theirs. Same principle. Hm. Fair is fair. Better their arguments in their words than someone at the county guessing what they think, like the slide. That's exactly it. Last thing. The report has a section called who we have not heard from yet. Right now it still says older residents alone in mobile homes. And unhoused residents, only heard through staff and a pastor."
+      },
+      {
+        "at_s": 846,
+        "text": "Next week two community health workers go door to door in the two parks off the old highway, in the mornings. Short conversations, one per household, consent said at the door, on the portal on their phones. With an I live in a mobile home tag this time. Marcus read the tag list twice. And an I work outdoors one, before you ask."
+      },
+      {
+        "at_s": 872,
+        "text": "So, for my notes: three separate questions. Change who's in the room before session three. The centre's project stays the centre's. Same wording in both, compared by hand. Nobody asks it to speak for anyone. And the gap stays in the report until it's filled. I'll send the draft when the quotes are checked. Send it to Chayo too. Will do. Stopping it now. Thanks, Lupe."
+      }
+    ]
+  },
+  {
+    "key": "nature-park-scoping-what-earns-its-place",
+    "name": "Nature park charter revision, scoping what earns its place",
+    "origin": "generated",
+    "started_at": "2026-08-20T09:15:00Z",
+    "summary": "Synthetic sample. Before anything is set up, Claire, participation lead at a regional nature park in France, director Bernard and independent facilitator Yasmina scope fourteen autumn sessions for the park's charter revision, recording into a sandbox project to share with the steering committee and a twinned park abroad. At a whiteboard they go through dembrane and switch on only what earns its place: recording everywhere, because the 2015 flip charts are lost and the regional council asked how outcomes traced back to residents; Verify only at village evenings, after the first round rather than at the end, with three custom topics; Explore off at facilitated, contentious tables; nothing projected live; Ask for merging across tables, what was missed, and disagreements with reasons from both sides. Wolf management follows national rules, so they will say plainly it is not being consulted on. They explain why recorded tables replace a 2019 comment form full of two-line opinions, keep a short form in its own project, offer the hunters' federation a session in its own hall, refuse a university's request for transcripts, and turn anonymise on everywhere with a rule not to name farms or hamlets. Bernard wants one recommendation per chapter; they agree the board decides with the split on record. Project structure stays open.",
+    "chunks": [
+      {
+        "at_s": 0,
+        "text": "Right, it's recording. This is going into the sandbox project, so nothing here gets mixed with real sessions. Hello to the steering committee, and hello to our colleagues in the twinned park, which is why we're doing this in English, sorry Bernard. It's fine, I need the practice. So. Twentieth of August, the three of us at headquarters, the charter revision. Fourteen sessions planned this autumn and nothing set up yet. Which is the point. We decide what we use before we use anything."
+      },
+      {
+        "at_s": 34,
+        "text": "Claire, you have the whiteboard. I have the whiteboard. Three columns. What it does, on or off, and where. And I want us to go through every part of dembrane and only switch on what earns its place. Not everything because it's there. Yasmina, you said that to me in June and it stuck. Because I've seen the opposite. A client turns everything on, the participants press buttons all evening, and nobody actually talks. Start with recording, then. Recording is easy. Yes, everywhere."
+      },
+      {
+        "at_s": 68,
+        "text": "Every session, every table. And I want to say why on the recording, because the twinned park asked us. Two reasons. One, the flip charts from the 2015 charter consultation are gone. Gone. They were in boxes in the old building in the valley and when we moved, nobody knows. We have a twelve-page summary written by a consultant and no way to check a single line of it. Two, the regional council asked us last time, quite politely, how the outcomes traced back to residents."
+      },
+      {
+        "at_s": 103,
+        "text": "And we couldn't answer. I couldn't answer, I was the one in the room. I said, well, it's in the summary. And the councillor said, and where does the summary come from? So recording. The transcripts are the record, and every claim in the report points back to one. Okay. Next column. Verify. This is the five minutes where the table picks a topic, hears what was drawn from its own conversation, and revises or edits it until they can approve it. Or they don't approve it. I want it only at the village evenings."
+      },
+      {
+        "at_s": 137,
+        "text": "Not at the stakeholder sessions? Not at first. The village evenings are where trust is lowest. People have been consulted before and they think the park already knows what it wants. Seeing their own points and being able to say no, that's not what we said, is worth five minutes there. With the farmers' union or the tourism people, they're professionals, they'll correct the report anyway. And early in the evening. Not at the end. Why not at the end? Bernard, you've been to a village evening."
+      },
+      {
+        "at_s": 173,
+        "text": "At half past ten people want to go home and feed the dog. If Verify comes at the end it's homework, they'll approve anything. I'd put it after the first round, maybe forty minutes in, while they still have energy and before the second question. And I'd set the topics myself. There's a setting for custom Verify topics. I'd use three: what we agree on, where we disagree and why, and what we want the park board to know. So the disagreement has its own place."
+      },
+      {
+        "at_s": 208,
+        "text": "Writing that down. Verify, villages only, after round one, three topics. Explore? Explore is the button that asks the table one question based on what it's been talking about. For our tables, off. Off? I thought you liked it. I like it at tables with nobody facilitating. Walking pairs, self-run groups. But at the stakeholder sessions I'll have a facilitator at every table, and those are contentious. Hunters, walkers, a farmer, a gîte owner at one table."
+      },
+      {
+        "at_s": 240,
+        "text": "A question popping up from a phone in the middle of a tense moment, I don't want it. My facilitators are trained to hold those moments. A clumsy question at the wrong second and it feels like a gimmick, and you've lost the table. Off. And nothing on a screen live, before you ask, Bernard. No projected results at the evenings. Fine by me. I don't want the mayors reading a screen. Okay. And Ask, the assistant. That's the big one."
+      },
+      {
+        "at_s": 273,
+        "text": "That's where I'll spend my time. But for three things, specifically. First, merging across tables. Each table writes its own points on paper at the end and reads them aloud into the recording, and afterwards I use Ask to merge and de-duplicate across all the tables, as a draft. Second, what have we missed. What came up once and disappeared, who is talked about but wasn't there. Third, disagreements, with reasons from both sides. Not the majority view. Why people disagree."
+      },
+      {
+        "at_s": 306,
+        "text": "Can I stop you there. Because this is the part I want to talk about. Of course. I need, at the end, one recommendation per chapter. Landscape and farming, water, access and tourism, energy, biodiversity. One recommendation each. That's what the board can act on. If I bring them a document that says, well, some villages think this and the hunters think that, they'll say, so what do we do? And the consultant last time gave them exactly that. One clean line."
+      },
+      {
+        "at_s": 340,
+        "text": "Can I tell the story? Because the twinned park should hear it. Go. Last time, the consultant presented at the mayors' meeting. Slide, big letters, the analysis says residents want to limit motor traffic on the forest roads. And one mayor, from one of the small communes up on the plateau, stood up and said, nobody in my village said that, where does it come from? And the consultant said, the analysis. And he walked out. He's still angry about it. He'll be at the first evening."
+      },
+      {
+        "at_s": 376,
+        "text": "And that's why I won't write the split out of the report. Bernard, I understand what the board needs. But if the forest roads split the villages and the walkers, the report has to show the split, with quotes from both sides and their reasons. The decision is the board's, and that's how it should be. But the record has to show what they're deciding between. Otherwise you get another mayor walking out, and this time he'll be right."
+      },
+      {
+        "at_s": 408,
+        "text": "So who writes the recommendation? The board. Not me, not the assistant. The board, in its meeting, with the split in front of it. Hm. Bernard? I'm thinking. It's slower. It's slower, but it's yours. You decide, and you say why. And then the report gets a third part later: what the board decided and the reason. Okay. I can live with that if every chapter starts with what people actually agree on. So the board isn't drowning in disagreements. Yes. Agreed first, always."
+      },
+      {
+        "at_s": 442,
+        "text": "Let me write the report shape, then, so we have it agreed today and not in December. Per chapter: what people agreed on. Live disagreements, with reasons and quotes from both sides. Then, added later, what the park board decided and why. And every output we share is called a draft and carries quotes. No more the analysis says. Never. Next. What we don't ask about. Wolves. Ah. Wolves. Wolf management follows the national rules. The charter cannot change it."
+      },
+      {
+        "at_s": 475,
+        "text": "So we don't consult on it. And we say so plainly, in the project context and in the opening of every evening. I'd rather say it on day one than pretend it's open and disappoint everyone in March. But they'll talk about wolves anyway. Of course they will. Especially on the plateau, the sheep farmers. And we won't stop them, it'll be in the recording. But the opening says: wolf management is decided nationally, this charter can't change it. What the charter can do is support herders."
+      },
+      {
+        "at_s": 511,
+        "text": "And that we'll pass on what's said, without promising anything. And the context says it too, so the assistant doesn't write a chapter recommendation about wolf quotas because people talked about it at every table. Context. While we're there. What else goes in? Who we are, what the charter is, the five chapters, the two series of sessions, what's fixed and what's open. Then the names. Key terms: the hamlets, the rivers, the species. Grand tétras, sabot de Vénus, the Lirande, the Combettes."
+      },
+      {
+        "at_s": 545,
+        "text": "Without key terms the transcripts will be full of nonsense, I tested one in July and it turned a hamlet into a brand of cheese. And conversation language French, of course, for all the sessions. Only this meeting is in English. And anonymise. Anonymise transcripts on for every session. Every one. Even the stakeholder ones? Every one. People in the villages name their neighbours, they name farms. Old Mr whatever's field by the bridge. It's how people talk here."
+      },
+      {
+        "at_s": 577,
+        "text": "And we lose the audio. With anonymise on, you can't play it back or download it. I know. I'm accepting that. I'd rather lose the audio than have a transcript where someone's neighbour is named next to a complaint about his dogs. And one more rule in the context: do not name farms or hamlets in any output. Wait, you just put the hamlets in key terms. Yes, both. Key terms so the transcript spells them right, for us. The context rule so the summaries and reports don't attach a view to a hamlet."
+      },
+      {
+        "at_s": 616,
+        "text": "With forty people in a hamlet, saying the hamlet is saying the person. Clever. Annoying, but clever. And the legal basis, I've set it with our data protection contact, she's happy, that's done. Now. The form. I know you want to drop it. I don't want to drop it, I want it in its place. In 2019 the park ran an online comment form on the draft management plan. Over a thousand comments. And almost all of them were two lines. I want more walking paths. Stop the quads."
+      },
+      {
+        "at_s": 652,
+        "text": "No reasons. You can't learn much from a thousand quick opinions. You learn something from people giving each other reasons around a table and changing their minds a little. That's why recorded tables. But there are people who can't come. Shift workers, the old lady with no car. Yes. So a short form stays. Three questions, one of them why. We paste the answers in through the portal's text option, label every one clearly as a written comment, and analyse them separately. Not mixed into the tables. Its own project."
+      },
+      {
+        "at_s": 687,
+        "text": "Otherwise a hundred two-line comments outweigh a two-hour conversation in every summary. Fine. Its own project. The hunters. Ah. The federation said no to the mixed evenings. They said they'd be outnumbered and shouted down. Which, in one valley, is not wrong. So I've offered them a session in their own hall. On their terms, their evening, their coffee. Their arguments in their own words, in the record. Not paraphrased by us, not by the walkers. With Verify on, so they sign off on their own points."
+      },
+      {
+        "at_s": 723,
+        "text": "Won't they just use it to make speeches? Some of it will be speeches. But I'll have a facilitator, and the questions are the same as everywhere. And when the report says the hunters' federation argues this, there's a quote and a transcript behind it. Which is more than the hunters ever got from us before, to be honest. Then the university. Yes. The university in the city wrote last week. They want the transcripts for a research project on rural participation. Very nice letter."
+      },
+      {
+        "at_s": 758,
+        "text": "The answer is no. Not without the participants' separate consent. People are agreeing to talk to the park about the charter. Not to be research data. If the university wants to do something later, it's a separate question, with its own consent, and exporting anything would be a decision for the park and the participants together. Not a button I press because they asked nicely. Agreed. I'll write back. Now, our open question. Projects. One or several. I want one project."
+      },
+      {
+        "at_s": 791,
+        "text": "For the whole revision. Tags per chapter, tags per series. One place to ask everything. And I'd rather one project per series. The village evenings and the stakeholder sessions. Each gets its own report, for different readers. And the settings are different. Verify on at the villages, and Verify and Explore are switched on per project, in the portal settings, so the stakeholder series needs different settings anyway. Hm. That's a real point. But I lose asking across everything in one go. You do."
+      },
+      {
+        "at_s": 827,
+        "text": "You'd compare by hand. I know. Let's not decide it today. We test both in the sandbox next week with a dummy evening and see. Leave it open, then. Open. Okay, I think we have the whiteboard. Recording everywhere. Verify at the villages, after round one, with our three topics. Explore off. Nothing projected. Ask for merging, what we missed, and disagreements with both sides. No consultation on wolves, said plainly. Anonymise on, no farms or hamlets in any output. Form in its own project."
+      },
+      {
+        "at_s": 862,
+        "text": "Hunters in their own hall. University, no. Report: agreed, split, then the board's decision and why. And everything is a draft with quotes. And the board decides. The board decides. With the split in front of it. Good. Bernard, you look almost happy. I'm thinking about the mayor from the plateau. If he reads his village's words in the report next spring, I'll be happy. Okay, I'll stop it there."
+      }
+    ]
+  },
+  {
+    "key": "teacher-college-peer-observation",
+    "name": "Teacher college, peer observation after a trainee deliberation",
+    "origin": "generated",
+    "started_at": "2026-09-18T09:40:00Z",
+    "summary": "Synthetic sample. Meera, a senior lecturer at a teacher education college in southern India, gives peer observation feedback to Farhan the day after he ran a deliberation with 48 trainee teachers in twelve groups of four on whether continuous assessment should replace end-of-year exams in practice schools. Recorded with record yourself into his private portfolio project. Three groups opened with chatbot-generated pros and cons and stayed general, so the next pre-task is one question and one memory from their own schooling, no position. A table card asking what experience or value a view comes from brought reasons into the transcripts. Farhan's two-minute timer cut off a story and a fast exchange; they drop it for a short opening go-round, noting nobody can count airtime without speaker labels. Two quiet trainees used type instead and a second QR on the door tagged \"added afterwards\"; five entries held the most candid points, about fear of the inspector. Meera worries this turns deliberation private, so the points go back to the groups next week. Also: Explore helping once and repeating itself, Ask on reasons rather than majorities, a summary calling a split group a consensus (fixed with a context line), a locked phone missed on the Monitor while Farhan took notes, and Verify used as reflection. Meera proposes one session without phones.",
+    "chunks": [
+      {
+        "at_s": 0,
+        "text": "Is it recording? Yes, red dot. Okay. Farhan, this goes into your teaching portfolio project, the private one, so it's only you unless you share it. For the record: peer observation debrief, Farhan's session yesterday afternoon with the second-years. Forty-eight trainees, twelve groups of four, deliberating whether continuous assessment should replace the end-of-year exam in their practice schools. I'm Meera, I observed from the back, under the fan."
+      },
+      {
+        "at_s": 30,
+        "text": "And I'm Farhan, who was observed and did not sleep much. Good news or bad news first? Neither. Tell me what you think happened, then I tell you what I saw, and then we look at the transcripts, because I read four of them last night and they don't fully agree with either of us. Fair. Okay."
+      },
+      {
+        "at_s": 54,
+        "text": "The setup I was happy with. One project, portal in English because that's our medium, a QR card on every table with the group number on it, the host guide folded beside it. I went through consent and the legal basis with the data officer two weeks before, she wanted to see the welcome cards. And at the start I said recording is optional and any group can stop the phone. Nobody said no out loud."
+      },
+      {
+        "at_s": 88,
+        "text": "Nobody said no out loud. Hold that, we'll come back to it. Then the pre-task, which is where it went wrong first. I told them, come prepared, think about both sides. And three groups out of twelve opened by reading pros and cons that a chatbot had given them. Off their phones. In bullet points."
+      },
+      {
+        "at_s": 111,
+        "text": "I saw. Group two, group five and the one by the window. Nine, Divya's group. They read the list, everyone nodded, and then for ten minutes it was general. Reduces exam stress. Holistic development. Burden on teachers. Like a guide book. Nobody said I, nobody said my school. Group five's first ten minutes, I could have written that transcript without being in the room."
+      },
+      {
+        "at_s": 137,
+        "text": "It wasn't wrong, that's what annoys me. Every point on those lists is real. No, it wasn't wrong. It was finished. They came already decided, and someone who has decided doesn't need anybody else at the table. So next time? Don't ask for positions at all. Ask them to bring one question they really don't know the answer to, and one memory from their own schooling. A test, a teacher, a result. No position."
+      },
+      {
+        "at_s": 167,
+        "text": "And say please don't look it up. As a request, not a rule. If they look it up anyway, they still have to bring a memory, and the chatbot doesn't have their memory. One question, one memory, no position. I'll put it on the sheet. Good. Now the card, because that worked and I want you to know it worked."
+      },
+      {
+        "at_s": 194,
+        "text": "The reasons card. I put it out about fifteen minutes in, when I saw how flat it was. A half sheet on each table: what experience or value is this coming from? That's all. I watched group nine read it, and Divya turned it face down, which I thought was a bad sign. Then Rohan said, okay, my experience is my uncle failed the tenth standard board and never went back. And the table changed."
+      },
+      {
+        "at_s": 225,
+        "text": "It's in the transcripts. Before the card, the list. After the card, people. Group four, Pradeep says continuous assessment is just more chances for a teacher to have favourites, someone asks him where that comes from, and he talks about a teacher in his village who gave internal marks to children whose parents brought him vegetables. The group spends ten minutes on what would stop that. That's a reason, not a pro or a con."
+      },
+      {
+        "at_s": 257,
+        "text": "Should I give the card out from the start? Maybe. Or keep it for when it goes flat. Fifteen minutes of guide book talk isn't wasted if they feel the difference afterwards. I'll try both, morning batch and afternoon batch. Fine. Now the thing I wrote most about in my notebook. Your notebook? Your notebook, Farhan. You wrote the whole time."
+      },
+      {
+        "at_s": 282,
+        "text": "Habit. Twelve years of writing everything down. You were taking notes on a session being recorded twelve times over. And while you were writing about group three, group seven stopped talking. I timed it, six minutes. Phone still on the table, nobody went over. I thought they were thinking. They were stuck on whether internal marks count for college admission, and nobody knew."
+      },
+      {
+        "at_s": 308,
+        "text": "So that's my main feedback. The recording is taking the notes. You watch the room. Walk, listen for silences. The transcripts will tell you what was said better than your handwriting. And honestly the notes are for me, they make me feel I'm doing something. Watching the room is doing something. It just doesn't leave a page behind."
+      },
+      {
+        "at_s": 335,
+        "text": "The timer. Go on, you first. I gave everyone two minutes per turn on a phone timer, to make it fair, so the confident ones didn't take over. At group eleven Lakshmi was telling a story about her younger brother and his board exam, the timer went, and she stopped. Mid sentence. She never came back to it."
+      },
+      {
+        "at_s": 362,
+        "text": "And group six had a fast exchange, four people going back and forth, really useful, working out what a portfolio would look like for a class of sixty. The timer kept cutting it. So it was fair on paper and worse in the room. Equal time isn't fairness. Stories need room, a quick back and forth needs no timer at all, and quiet people often come in late, after the timer has given their turn away."
+      },
+      {
+        "at_s": 393,
+        "text": "So drop it. Drop it. Keep a short go-round at the start, everyone says their memory in a sentence or two, so everyone has spoken once. Then let it run, and you watch. I wanted to count, actually, who spoke how much, from the transcripts. You can't. There are no names on the lines, it's one block of text per group. You can read it and get a feeling. There's no number."
+      },
+      {
+        "at_s": 424,
+        "text": "Which is fine. A number would tell you who talked, not who was heard. Okay, the quiet ones, and your \"nobody said no out loud\". Two trainees came to me at the break. One said the phone in the middle made her quieter. The other, I won't say who, didn't want her spoken English recorded. She's shy of her accent. She writes beautifully."
+      },
+      {
+        "at_s": 450,
+        "text": "So I told her she could use type instead, scan the card on her own phone and type. And I put a second QR on the door, a link that sets a tag, added afterwards, so anyone could add something alone after the session, spoken or typed. Five did, out of forty-eight. And those five are the most candid material in the whole project. Three are about the inspector."
+      },
+      {
+        "at_s": 481,
+        "text": "The fear that continuous assessment means the inspector checks your registers every month instead of results once a year. One of them typed, and I copied this from the transcript, not from a summary: in the group I said it is good for children, but really I am afraid every mark I give will be checked and I will be the one who failed. Nobody said that in a group."
+      },
+      {
+        "at_s": 510,
+        "text": "Here I disagree with you a bit. Those five are valuable. But a deliberation is people working something out in front of each other. If the honest points go out the back door into private recordings, the groups never have to deal with them. It turns into a suggestion box. The inspector fear never met the group that says it's good for children."
+      },
+      {
+        "at_s": 536,
+        "text": "But they would never have said it in the group, Meera. Maybe not yesterday. The week after, if they knew someone else felt it, some might. So bring it back. Next Thursday, start with: here are points someone added afterwards, not who, just what, do you want to take any up? And if they don't, they don't. That I can live with. Then it's not a side door, it's a way back in."
+      },
+      {
+        "at_s": 567,
+        "text": "Explore. Did you see group nine again? Stuck on the list a second time, after the card wore off, and Rohan pressed the ECHO button and chose Explore. It only appears after about a minute of recording, they had forty. It asked something like, which of these points have you seen happen in a real classroom? And it came down to the ground at once. Divya told the story of her practice school's weekly unit tests."
+      },
+      {
+        "at_s": 598,
+        "text": "Then group two pressed it twice, a few minutes apart, and the second time it was more or less the same question back. There's a wait between presses as well, they found that out. They laughed and stopped. So, once, when they're going in circles, not as a toy. It only works with what they're already half saying. Group nine had something there. Group two didn't, yet."
+      },
+      {
+        "at_s": 628,
+        "text": "And afterwards, what did you ask? The actual question. I did not ask what the majority thinks, because forty-eight trainees in twelve groups is not a vote. I asked, which reasons did groups give, and what experiences were they based on, with the sources open. Then a separate question, only on the added afterwards conversations: what appears here that doesn't appear in any group conversation?"
+      },
+      {
+        "at_s": 655,
+        "text": "The first answer grouped reasons by experience: own schooling, practice school, family. Every point had sources. I opened all of them, and two quotes were cut in a way that shifted the meaning, so I copied from the transcripts instead. The second answer is where the inspector came from. In three of the five, in none of the groups. Which I checked by reading, because I wasn't going to trust a no."
+      },
+      {
+        "at_s": 686,
+        "text": "And group four's summary? I saw it this morning. It says the group reached consensus that continuous assessment should come in gradually. Two of the four never agreed, Pradeep and the girl beside him, it's plain in the transcript. I've put one line in the project context: do not describe a group as having reached consensus unless everyone in it said so, and name the disagreement. Regenerated, it now says two for, two against because of favouritism. Which is what happened."
+      },
+      {
+        "at_s": 719,
+        "text": "And Verify. You gave them five minutes at the end of a long afternoon. I was nervous. And it was the best five minutes. They picked a topic, read out what it drew from their conversation, revised or edited it, and most approved in the end. One group wouldn't approve theirs at all. Group eleven changed exams are unfair into exams are unfair to the ones who freeze. I heard, did we actually say that? And, we said it, but we didn't mean it like that."
+      },
+      {
+        "at_s": 749,
+        "text": "That's reflection, Farhan, don't sell it as checking the tool. They're trainee teachers, hearing what they sounded like is the most useful thing they did all day. Last thing. The phone. Group ten. I had the Monitor open on the laptop and didn't look at it for twenty minutes. Because you were writing. Because I was writing. It said Screen locked. Someone had laid it face down, and they lost about twelve minutes."
+      },
+      {
+        "at_s": 781,
+        "text": "I told them screen on, once, at the start, along with ten other things. Put it on the card: screen on, face up, in the middle. And glance at the Monitor every few minutes, which you'll have time for, because you won't be writing. Okay, I hear it. Let me say what I'm changing so it's on the recording. One question and one memory, no position. Reasons card. No timer, a short go-round. I watch, I don't write."
+      },
+      {
+        "at_s": 816,
+        "text": "The door QR stays, and on Thursday I read those points back as points someone added. Screen on, on the card. Explore once, when they're stuck. The consensus line in the context. Ask for reasons and experiences, never majorities, and copy every quote from the transcript. Verify as reflection. Good list. One more from me. Next term, run one session with no phones at all, paper only."
+      },
+      {
+        "at_s": 844,
+        "text": "Without the tool? If the reasons only appear when there's a card and a phone, we haven't taught them anything, we've built a nice room. Most of them will teach in schools where nobody puts a phone on the table. That's annoying and right. Stop the recording? Stop it. Then go and eat something, you look terrible. Thank you, Meera."
+      }
+    ]
+  },
+  {
+    "key": "community-radio-resident-hosts",
+    "name": "Community radio, resident hosts on the drains conversations",
+    "origin": "generated",
+    "started_at": "2026-08-29T10:05:00Z",
+    "summary": "Synthetic sample. On a monthly community radio programme in Ghana, Kwesi interviews Abena, a community development officer at a municipal assembly, and Efua, a 19-year-old lead host, about community conversations on market drainage and sanitation that youth and women's groups in three neighbourhoods now host themselves. Residents host with printed QR cards and a host guide they rewrote; two lead hosts per neighbourhood have member access to their neighbourhood's private project to read summaries, tidy names and tags and lead Verify, while Abena stays admin and they decide together what is published, one project per neighbourhood. Twi-only sessions stay on paper, typed in as notes, as Twi transcription is untested. Efua's first session skipped a spoken consent explanation; she now opens in her own words and stops the phone when asked. A listener asks whether recordings could be used against traders, and Abena explains anonymise and who can open the project without promising more. Failures: a chat-drafted letter that \"sounds like us, but is not ours\", rewritten aloud, quoting the recording; one neighbourhood recording into the wrong project; a month that depended on one host. They settle on one shared question plus one of the hosts' own, report monthly on what the assembly did and did not do, and celebrate by reading chosen quotes aloud with the speakers' agreement.",
+    "chunks": [
+      {
+        "at_s": 0,
+        "text": "Good morning, good morning, and welcome to Community Hour, last Saturday of the month, when we talk about our own town and what is being done about it. I am Kwesi. Small announcement first: Madam Abena from the assembly is recording this programme on her phone, with the station's agreement, for the programme's own record. So if you call in, you are on the radio and on her phone. Madam Abena, good morning."
+      },
+      {
+        "at_s": 32,
+        "text": "Good morning, Kwesi, good morning everybody. Yes, it is only our record of the series, so next month we can check what we promised today. And beside me, Efua from Ekyir Ridge. Good morning, Uncle Kwesi, good morning everyone. Efua is nineteen and she is one of our lead hosts. Efua, somebody stopped me at the lorry park and asked, so now Efua works for the assembly?"
+      },
+      {
+        "at_s": 60,
+        "text": "No, no, I don't work for the assembly. I'm a host. Since June the youth and women's groups in three neighbourhoods are running the community conversations on the drains and sanitation ourselves, after the assembly staff ran the first two rounds. So I bring people together, eight or ten, at a shop front or under the tree by the chapel, and we put the phone in the middle. You scan the card with the code, and the phone records. Nobody needs an account."
+      },
+      {
+        "at_s": 94,
+        "text": "And there is a printed guide that goes with the card. The first one was written for a meeting hall, so I edited it with the hosts. Ours says put the phone on a stool, not on the floor where the gutter is loud, keep the screen on, and when a car with music passes, wait. Those were Efua's lines. Then the lead hosts, two per neighbourhood, get more. After one Saturday morning of training I gave them member access."
+      },
+      {
+        "at_s": 128,
+        "text": "So we can open our own neighbourhood's project and read the summaries, and correct the names and tags of the conversations. Madam Abena stays the admin, she sets things up. Each neighbourhood has its own project in the assembly's workspace, three projects. And what gets published, the hosts and I decide together, not me alone. Efua, tell them about the tidying, people think it's boring. It is a bit boring, Madam. But it matters."
+      },
+      {
+        "at_s": 160,
+        "text": "The first week every conversation was just called conversation and I didn't know which was where. Now we write the place and the day. Fish section Tuesday. Chapel tree Thursday evening. And tags, women's group, youth, traders, so we can see who we have talked to and who not yet. And at the end of each session we do the checking, Verify. We pick a topic, the phone writes up what it heard, I read it out, and people edit it or press revise until they can approve it. Or they don't approve it."
+      },
+      {
+        "at_s": 193,
+        "text": "The market women like that part. One of them said, at last somebody writes down what I said and asks me if it is right. Now Efua, I have my sources, I heard your first session was not so smooth. Uncle Kwesi! Okay, it's true. In June I was so worried about the phone working that I forgot to explain anything. The phone shows some cards about recording, and people pressed yes, yes, yes, like installing an app."
+      },
+      {
+        "at_s": 225,
+        "text": "Nobody said it aloud. And afterwards an auntie asked me, so where is this going? And I didn't have a good answer, and she had talked about her stall, her husband, everything. So now I start every session the same way, in my own words. This phone records what we say, it goes to the assembly's project, names are taken out of the writing. You don't have to talk on it. If anybody says stop, I stop."
+      },
+      {
+        "at_s": 257,
+        "text": "And I mean it. Two weeks ago a man said stop when he started on the revenue collectors, I paused it, he finished, and then we went on. Kwesi, I can give a training, but that she learned by getting it wrong once. Now, language. Some sessions are in English, some are mixed, and those go on the phone. The sessions fully in Twi we keep on paper. A note-taker writes, and afterwards we type the notes in as text, labelled as notes, not as a recording."
+      },
+      {
+        "at_s": 294,
+        "text": "Why paper? The phone doesn't hear Twi? Honestly, Kwesi, we have not tested it, so I won't say yes or no on the radio. When we have tried it properly, I will tell you here. Until then, paper, and the note-taker reads her notes back to the group before they go, so it is still checked. Slower. I prefer slow and checked to fast and maybe wrong. Okay, we have a caller. Hello, you are on Community Hour."
+      },
+      {
+        "at_s": 329,
+        "text": "Hello Kwesi, it's Auntie Adwoa from the fish section. My question is for the assembly lady. These recordings. The assembly is the same people who send the revenue collectors and who moved our tables last year. How do we know what traders say will not be used against us? One woman complains about the levy and next week they come to her table. People are asking this at the market."
+      },
+      {
+        "at_s": 361,
+        "text": "Thank you, Auntie, it's a fair question. Let me say what I can say, and no more. The projects are set to anonymise transcripts, so personal names are taken out of the writing, and with that setting nobody opening the project can play back or download the audio. Each neighbourhood's project is private, shared only with its lead hosts. Who can open yours: me and one colleague, we are the admins, and your two lead hosts. That's the list today."
+      },
+      {
+        "at_s": 394,
+        "text": "And if anybody wants their conversation taken out, tell your host or tell me and we remove it. What I will not do is promise you nothing can ever go wrong, because I don't promise what I have not checked. And the levy, Uncle Kwesi? Auntie, the levy is another programme. Thank you for calling. But she has a point, Kwesi. Taking names out doesn't help if the story itself shows who you are."
+      },
+      {
+        "at_s": 427,
+        "text": "That's why I check for it when I read summaries. If somebody says my table is the third after the cold store, that can come out in the summary even with no name. So Madam Abena put a line in the project context, the part where we describe what the project is for: do not mention stall positions or family names. Since then it is better. Not perfect, I still read every one."
+      },
+      {
+        "at_s": 460,
+        "text": "Now, Madam Abena, in May you promised on this programme that every month you would tell us what was heard and what the assembly did. So, August. What was heard this month, in all three neighbourhoods, is that the drain behind the fish section is blocked again, three weeks after it was desilted, because waste from the stalls goes straight in. The desilting we did. What we did not do is put the bins people asked for in July."
+      },
+      {
+        "at_s": 494,
+        "text": "The bins wait for the budget review in October. I say it plainly because last month I said soon, and that was not fair. And the toilet at the lorry park, residents want it open at four in the morning for the traders. That one is leased to an operator, it is not ours alone, so I passed it on and I'll report his answer next month. Efua, tell them about the letter. Oh, the letter."
+      },
+      {
+        "at_s": 527,
+        "text": "This one is my mistake. Mine and Yaw's. After the July sessions in Ekyir Ridge we wanted to send a letter from the neighbourhood to the assembly. Eleven conversations, we were busy, so we asked the chat in our project to draft a letter to the chief executive from the residents, using what people said. And it wrote one. Good English, polite, all the points."
+      },
+      {
+        "at_s": 555,
+        "text": "Then at the feedback meeting we read it out, and Maame Esi, she sells cloth, stood up and said: it sounds like us, but it is not ours. Everybody went quiet, because she was right. It said, residents respectfully request improved waste management infrastructure. Nobody said that. What people said was, we are tired of carrying our children over the gutter. The letter was polite about something people are angry about."
+      },
+      {
+        "at_s": 585,
+        "text": "And what they did next is the part I am proud of. They didn't throw it away and they didn't argue about it. They put the phone in the middle, right there, and wrote the letter together aloud, recording, sentence by sentence. Who says the first line? It took one hour twenty. And it was hot. The letter now quotes that recording, and the gutter line is in it, word for word, copied from the transcript."
+      },
+      {
+        "at_s": 617,
+        "text": "At the office they read it differently. When the letter says we, and it is their we, people listen. So you don't use the assistant now? We use it to find things. What did the women's group say about the toilets, show me where. Then I open where and listen. No, read, we can't listen, the names setting. I read where. But letters, we write ourselves."
+      },
+      {
+        "at_s": 644,
+        "text": "Let me ask about the Water Tank end. I heard they started on their own. They did! The Water Tank end's youth group heard about Ekyir Ridge and in July just started holding sessions, with a card somebody had photographed. But they didn't tell me, and the card was Ekyir Ridge's card. So for three weeks the Water Tank end's conversations went into Ekyir Ridge's project."
+      },
+      {
+        "at_s": 669,
+        "text": "And I was reading summaries about a drain I don't know! I said, where is this cemetery road? We don't have a cemetery road. So I moved their nine conversations into a new project of their own, a few clicks, gave them their own cards, and next Saturday their hosts come for training. Nobody did wrong. But if you want to start, call me first, so you get your own code."
+      },
+      {
+        "at_s": 701,
+        "text": "Efua, they say for a while it was only you. For July, everything in Ekyir Ridge was me. My partner host travelled, so every session, the names, the checking, everything. Market at six, summaries at night. And when I was sick for one week, nothing happened. No sessions. That's on me, not her. If it depends on one person, it's not community-led, Kwesi, it's Efua-led."
+      },
+      {
+        "at_s": 730,
+        "text": "So now Yaw from the youth group and Afia from the women's group are training, and from September each neighbourhood will have three or four people who can host. I'm teaching Yaw to do the consent part in his own words, not mine. He is funnier than me. Now, I must ask about the disagreement, because last time you two were outside in the car park arguing."
+      },
+      {
+        "at_s": 760,
+        "text": "It was not arguing. It was a little bit arguing, Madam. Okay. I want the same questions and the same naming in every neighbourhood, because when I go to the assembly I want the three side by side. Same template, same question in each project, I can compare. And I said, if we only ask your questions, it's the assembly's conversation in our mouths. In Ekyir Ridge people want to talk about the flooded school path, which is not exactly the market."
+      },
+      {
+        "at_s": 796,
+        "text": "So we agreed one shared question, the same everywhere: what is the biggest problem with the drains and waste where you live, and what should be done first. And one question the hosts choose. Ours this month: who cleans the gutter now, and who should. The Water Tank end asked about the toilets. The shared one I can compare. The hosts' one is where I learn what I didn't know to ask. I still want the names the same, though. That one I agree, Madam."
+      },
+      {
+        "at_s": 830,
+        "text": "Five minutes left. Tell people about the closing evening, my wife went and came home talking about it. At the end of July, the chapel compound, all three neighbourhoods, food, music after. Each host chose quotes from their conversations, things that were true or brave or funny. But that same evening we first asked the people who said them, may I read this aloud? If no, we didn't. One man said, read it, but don't look at me."
+      },
+      {
+        "at_s": 862,
+        "text": "Then I read, we are tired of carrying our children over the gutter, and the woman who said it was there, and people clapped. For their neighbour. I had planned a report-back with a summary, and it became a celebration. Nobody clapped for the assembly, they clapped for each other, which is right. And the reports? The hosts and I read each neighbourhood's report against the transcripts, quote by quote, before publishing."
+      },
+      {
+        "at_s": 895,
+        "text": "Participant updates are on, so everyone who left an email gets it when we publish, but most traders didn't leave one, so we print it, the hosts carry it, and the main points come here. Last word, Efua, for anyone who wants to host. You don't need to be educated or know phones. You need to listen, and to stop when somebody says stop. Madam? Next month I come back and tell you about the bins, whatever the answer. You heard her. After the news, music."
       }
     ]
   }
