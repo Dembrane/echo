@@ -393,10 +393,12 @@ function writeScript(scenes: Scene[]) {
 		"",
 		"How to record:",
 		"",
-		"- One file per scene and language, named after the scene, for example `home.m4a`. A phone voice memo is fine; any common audio format works.",
-		"- Read the scene's lines in order, with a pause of about a second between lines. The pauses are where the recording is cut.",
+		"- One file per language, named `all`, for example `en/all.m4a`. A phone voice memo is fine; any common audio format works.",
+		"- Read every scene below in order. Leave about 3 seconds of silence between scenes and about 1.5 seconds between lines, and no pause of 2 seconds or more inside a scene. The pauses are where the recording is cut.",
+		"- Or record one file per scene, named after the scene, for example `home.m4a`. A scene file replaces that scene's part of `all`.",
 		"- A quiet room with soft furnishings, about a hand's width or two from the microphone. Background noise and hum are cleaned up afterwards; echo is harder to remove.",
-		"- If you slip, read the whole scene again in a new file, or record only that line as `<scene>-<line>`, for example `home-2.m4a`.",
+		"- If you slip, carry on, and afterwards record only that line as `<scene>-<line>`, for example `home-2.m4a`, or the whole scene as `<scene>`.",
+		"- You can put lines in your own words. Keep each one about what is on screen then, since every line goes with an action in the video.",
 		"- The times are how long each line is on screen now. The video waits for your voice, so read at a natural pace; near the time is ideal, a little longer is fine.",
 		"",
 	];
@@ -432,7 +434,7 @@ function writeScript(scenes: Scene[]) {
 			);
 		});
 		out.push(
-			`${scenes.length} files, about ${Math.round(total / 60)} min of speaking in total.`,
+			`${scenes.length} scenes, about ${Math.round(total / 60)} min of speaking in total.`,
 			"",
 			...body,
 		);

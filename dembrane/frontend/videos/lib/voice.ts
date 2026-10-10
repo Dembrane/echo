@@ -15,6 +15,10 @@ import { join, parse } from "node:path";
 // scene's lines read in order with a pause between them. A file named <scene id>-<n> replaces
 // line n alone, for a retake.
 //
+// Or one file for the whole script, <voice dir>/<lang>/all.<ext>: every scene in script order,
+// with a pause of about 3 s between scenes and about 1.5 s between lines. Scene files and
+// retakes still replace their part of it.
+//
 // Clean-up is DeepFilterNet 3 (speech enhancement: removes room noise and hum, keeps the
 // voice), then a high-pass and EBU R128 loudness normalisation. Nothing is synthesised.
 
@@ -140,9 +144,8 @@ function clean(raw: string, out: string, work: string, bin: string) {
 	rmSync(work, { force: true, recursive: true });
 }
 
-/** Spoken stretches of a cleaned take, split at its longest pauses into `lines` parts. */
-function split(file: string, lines: number | undefined): [number, number][] {
-	const total = seconds(file);
+/** Pauses in a cleaned take as [start, end] seconds, from ffmpeg's silencedetect. */
+function pauses(file: string): [number, number][] {
 	const log = ffLog([
 		"-i",
 		file,
@@ -158,7 +161,40 @@ function split(file: string, lines: number | undefined): [number, number][] {
 	))
 		quiet.push([Number(m[1]), Number(m[2])]);
 	const tail = log.match(/silence_start: ([\d.]+)(?![\s\S]*silence_end)/);
-	if (tail) quiet.push([Number(tail[1]), total]);
+	if (tail) quiet.push([Number(tail[1]), seconds(file)]);
+	return quiet;
+}
+
+/** A pause this long or longer, in a whole-script take, is a break between scenes. */
+const SCENE_BREAK = 2;
+
+const clock = (t: number) =>
+	`${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
+
+/**
+ * Splits a whole-script take into one stretch per scene, at its `scenes - 1` longest pauses.
+ * Throws, naming the times, when the long pauses don't match the scene count.
+ */
+function splitScenes(file: string, scenes: string[]): [number, number][] {
+	const total = seconds(file);
+	const long = pauses(file)
+		.filter(([s, e]) => s > 0.05 && e < total - 0.05)
+		.filter(([s, e]) => e - s >= SCENE_BREAK);
+	if (long.length !== scenes.length - 1)
+		throw new Error(
+			`${file}: the script has ${scenes.length} scenes, so it needs ${scenes.length - 1} pauses of ${SCENE_BREAK} s or more, but has ${long.length}${long.length ? ` (at ${long.map(([s]) => clock(s)).join(", ")})` : ""}. Leave about 3 s between scenes and less than ${SCENE_BREAK} s inside a scene.`,
+		);
+	const edges = [0, ...long.flatMap(([s, e]) => [s + 0.1, e - 0.1]), total];
+	const parts: [number, number][] = [];
+	for (let i = 0; i < edges.length; i += 2)
+		parts.push([edges[i], edges[i + 1]]);
+	return parts;
+}
+
+/** Spoken stretches of a cleaned take, split at its longest pauses into `lines` parts. */
+function split(file: string, lines: number | undefined): [number, number][] {
+	const total = seconds(file);
+	const quiet = pauses(file);
 	// Silence at the very start or end is trimmed, not a break.
 	const first =
 		quiet.length && quiet[0][0] < 0.05 ? (quiet.shift()?.[1] ?? 0) : 0;
@@ -229,6 +265,35 @@ export function prepareVoice(o: {
 	mkdirSync(out, { recursive: true });
 	const work = join(out, ".work");
 	const byName = new Map(takes.map((f) => [parse(f).name, f]));
+	const all = byName.get("all");
+	if (all) {
+		const ids = Object.keys(o.lines);
+		const missing = ids.filter((id) => !o.lines[id]);
+		if (missing.length)
+			throw new Error(
+				`voiceover: record the video once before using ${o.lang}/${all}; no line count yet for ${missing.join(", ")}`,
+			);
+		const cleaned = join(out, "all.take.wav");
+		clean(join(dir, all), cleaned, work, bin);
+		splitScenes(cleaned, ids).forEach((scene, s) => {
+			const id = ids[s];
+			const part = join(out, `${id}.part.wav`);
+			cut(cleaned, scene, part);
+			let lines: [number, number][];
+			try {
+				lines = split(part, o.lines[id]);
+			} catch {
+				throw new Error(
+					`voiceover: ${o.lang}/${all}, scene ${s + 1} (${id}, from ${clock(scene[0])}): expected ${o.lines[id]} lines with a pause between each`,
+				);
+			}
+			lines.forEach((line, i) => {
+				const file = join(out, `${id}-${i + 1}.wav`);
+				cut(part, line, file);
+				found.set(`${id}-${i + 1}`, { file, seconds: seconds(file) });
+			});
+		});
+	}
 	for (const [id, count] of Object.entries(o.lines)) {
 		const take = byName.get(id);
 		if (take) {
@@ -258,6 +323,7 @@ export function prepareVoice(o: {
 			...Array.from({ length: n ?? 20 }, (_, i) => `${id}-${i + 1}`),
 		]),
 	);
+	known.add("all");
 	for (const name of byName.keys())
 		if (!known.has(name))
 			console.warn(`voiceover: ${o.lang}/${byName.get(name)} matches no scene`);
