@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
+import { newId } from "@dembrane/core";
 import { createDb, migrate } from "@dembrane/db";
 import { type CompletionRequest, FakeCompleter } from "@dembrane/llm";
 import postgres from "postgres";
@@ -393,6 +394,20 @@ run("popcorn tick against Postgres", () => {
     );
     expect(told.length).toBe(1);
     await stopLive(liveDeps(new Date(), []), await loopRow());
+  });
+
+  test("a read that ends leaves the read a finished conversation booked", async () => {
+    const d = deps(recorded(fixture.ticks), "w-keeps-finish");
+    const now = new Date();
+    await d.store.scheduleTick({
+      id: newId(),
+      payload: { loop_id: ids.loop, tick_kind: "finish", conversation_ids: [] },
+      scheduledAt: pyIso(new Date(now.getTime() + 60_000)),
+      now: pyIso(now),
+    });
+    await enqueueNextIfDue(d, await loopRow());
+    expect((await pending()).map((t) => (t.payload as Json).tick_kind)).toEqual(["finish"]);
+    await raw`update scheduled_task set status = 'cancelled' where task_type = 'popcorn_tick'`;
   });
 
   test("a booked start that was cancelled reads nothing", async () => {

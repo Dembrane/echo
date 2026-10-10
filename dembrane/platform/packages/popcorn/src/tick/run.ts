@@ -268,7 +268,8 @@ async function nudgeLoop(d: TickDeps, loop: Row) {
 export async function enqueueNextIfDue(d: TickDeps, loop: Row, when?: Date): Promise<void> {
   const loopId = String(loop.id);
   const now = d.now();
-  await d.store.cancelPendingTicks(loopId, utcNowIso(now));
+  // A read a finished conversation booked stays: this read may have gathered before it ended.
+  await d.store.cancelPendingTicks(loopId, utcNowIso(now), { keepFinish: true });
   const fresh = await d.store.loop(loopId);
   if (fresh?.status !== "active") return;
   const expiresAt = parseDt(fresh.expires_at);
