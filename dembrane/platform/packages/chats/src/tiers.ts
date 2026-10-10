@@ -7,6 +7,9 @@ import { PaymentRequiredError } from "@dembrane/core";
  */
 export const FREE_TIER_MAX_CHATS = 1;
 export const FREE_TIER_MAX_CHAT_USER_TURNS = 3;
+// A sample copy has its own allowance instead: this many user turns across all its chats,
+// the seeded opening question included.
+export const FREE_TIER_MAX_SAMPLE_USER_TURNS = 10;
 
 // Paid tiers are not hour-capped; free is, and so is any other named tier.
 const OVERAGE_TIERS = new Set(["innovator", "changemaker", "guardian"]);

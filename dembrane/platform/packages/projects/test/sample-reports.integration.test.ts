@@ -4,7 +4,7 @@ import type postgres from "postgres";
 import { projectsStorage } from "../src/storage";
 
 // A free workspace gets one report. Reports on its sample copy (project.is_sample) are not
-// the workspace's own and leave that report free.
+// the workspace's own and leave that report free; the sample counts its own.
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
 const run = admin ? describe : describe.skip;
 const dbName = `projects_sample_reports_${process.pid}`;
@@ -48,5 +48,7 @@ run("the free report and a sample project", () => {
     expect(await store.countWorkspaceReports(ws)).toBe(0);
     await sql`insert into project_report (project_id, kind, status, content) values (${own}, 'report', 'published', 'x')`;
     expect(await store.countWorkspaceReports(ws)).toBe(1);
+    expect(await store.countProjectReports(sample)).toBe(1);
+    expect(await store.countProjectReports(own)).toBe(1);
   });
 });

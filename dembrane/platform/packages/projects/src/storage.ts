@@ -414,6 +414,21 @@ export function projectsStorage(db: Db) {
       return row?.n ?? 0;
     },
 
+    /** A sample copy's live reports, for its own free-tier report. */
+    async countProjectReports(projectId: string) {
+      const [row] = await db
+        .select({ n: count(project_report.id) })
+        .from(project_report)
+        .where(
+          and(
+            eq(project_report.project_id, projectId),
+            isNull(project_report.deleted_at),
+            eq(project_report.kind, "report"),
+          ),
+        );
+      return row?.n ?? 0;
+    },
+
     async insertReport(values: typeof project_report.$inferInsert) {
       const [row] = await db.insert(project_report).values(values).returning();
       if (!row) throw new Error("report insert returned nothing");

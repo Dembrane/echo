@@ -111,6 +111,8 @@ export async function isSampleProject(sql: postgres.Sql, projectId: string): Pro
 }
 
 export const FREE_TIER_MAX_CHAT_USER_TURNS = 3;
+// User turns across all of a sample copy's chats, the seeded opening question included.
+export const FREE_TIER_MAX_SAMPLE_USER_TURNS = 10;
 
 /** The shared 402 the frontend keys on (error FREE_TIER_LIMIT) to offer the upgrade. */
 export function freeTierLimitError(limit: string): PaymentRequiredError {

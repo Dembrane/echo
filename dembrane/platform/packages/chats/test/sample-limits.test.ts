@@ -5,8 +5,8 @@ import { reply } from "../src/reply";
 import { fakeDeps, fakeModel, host } from "./fakes";
 
 // On a free workspace, a sample copy (project.is_sample) is there to be asked: a chat on it
-// needs no free chat slot and is not stopped at three turns, while the workspace's own
-// projects keep both limits.
+// needs no free chat slot and is not stopped at three turns, but all its chats share an
+// allowance of ten user turns. The workspace's own projects keep the usual limits.
 const OWN = "f0000000-0000-4000-8000-000000000011";
 const SAMPLE = "f0000000-0000-4000-8000-000000000012";
 const CHAT = "c3000000-0000-4000-8000-000000000011";
@@ -44,7 +44,7 @@ function freeAccess(): Access {
   return new Access(store);
 }
 
-function deps(projectId: string, turns = 0) {
+function deps(projectId: string, turns = 0, projectTurns = 0) {
   const inserted: unknown[] = [];
   const store = {
     insertChat: async (v: unknown) => {
@@ -62,6 +62,7 @@ function deps(projectId: string, turns = 0) {
       used_conversations: [],
     }),
     countUserTurns: async () => turns,
+    countProjectUserTurns: async () => projectTurns,
     createMessage: async (v: unknown) => v,
     messages: async () => [],
     deleteMessage: async () => {},
@@ -105,9 +106,18 @@ describe("free-tier chat limits and a sample project", () => {
       status: 402,
       details: { limit: "chat_turns" },
     });
-    const sample = deps(SAMPLE, 3);
+    const sample = deps(SAMPLE, 3, 9);
     const res = await reply(sample.d, host, CHAT, message, "text", "en");
     expect(res.status).toBe(200);
     expect(await res.text()).toBe("answer");
+  });
+
+  test("the sample's chats stop once they share ten user turns", async () => {
+    const message = { messages: [{ role: "user" as const, content: "x" }], template_key: null };
+    const sample = deps(SAMPLE, 0, 10);
+    await expect(reply(sample.d, host, CHAT, message, "text", "en")).rejects.toMatchObject({
+      status: 402,
+      details: { limit: "chat_turns" },
+    });
   });
 });

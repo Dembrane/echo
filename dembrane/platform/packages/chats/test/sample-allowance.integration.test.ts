@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "
 import { connect, createDb, migrate } from "@dembrane/db";
 import type postgres from "postgres";
 import { chatReads } from "../src/conversations";
+import { chatsStorage } from "../src/storage";
 
 // The free chat allowance counts chats with a user message. A sample copy's seeded chat
 // has one, and so may chats the user starts on it: neither spends the allowance.
@@ -56,5 +57,14 @@ run("the free chat allowance and a sample project", () => {
     expect(await reads.workspaceChatsWithUserMessages(ws)).toBe(0);
     await chatWithQuestion(own);
     expect(await reads.workspaceChatsWithUserMessages(ws)).toBe(1);
+  });
+
+  test("the sample's own allowance counts user turns across its live chats", async () => {
+    const store = chatsStorage(database.db);
+    const before = await store.countProjectUserTurns(sample);
+    await chatWithQuestion(sample);
+    expect(await store.countProjectUserTurns(sample)).toBe(before + 1);
+    await sql`update project_chat set deleted_at = now() where project_id = ${sample}`;
+    expect(await store.countProjectUserTurns(sample)).toBe(0);
   });
 });

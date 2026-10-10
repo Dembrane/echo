@@ -6,7 +6,12 @@ import { chatContext } from "./context";
 import type { ChatDeps } from "./deps";
 import { generateTitle } from "./llm";
 import { systemMessagesForChat } from "./prompt";
-import { FREE_TIER_MAX_CHAT_USER_TURNS, freeTierLimit, isFreeTier } from "./tiers";
+import {
+  FREE_TIER_MAX_CHAT_USER_TURNS,
+  FREE_TIER_MAX_SAMPLE_USER_TURNS,
+  freeTierLimit,
+  isFreeTier,
+} from "./tiers";
 
 export interface ReplyBody {
   messages: { role: "user" | "assistant" | "dembrane"; content: string }[];
@@ -54,13 +59,13 @@ export async function reply(
   if (chat.chat_mode === "agentic") throw new BadRequestError("chat.agentic_endpoint_required");
   const projectId = chatProjectId(chat);
   if (!projectId) throw new Error("Chat is missing a project reference");
-  // The turn cap leaves a sample copy's chats alone, as the chat allowance does.
-  if (
-    !access.project.isSample &&
-    isFreeTier(await d.reads.projectTier(projectId)) &&
-    (await d.store.countUserTurns(chatId)) >= FREE_TIER_MAX_CHAT_USER_TURNS
-  )
-    throw freeTierLimit("chat_turns");
+  // A sample copy's chats skip the per-chat cap and share the sample's own allowance.
+  if (isFreeTier(await d.reads.projectTier(projectId))) {
+    const spent = access.project.isSample
+      ? (await d.store.countProjectUserTurns(projectId)) >= FREE_TIER_MAX_SAMPLE_USER_TURNS
+      : (await d.store.countUserTurns(chatId)) >= FREE_TIER_MAX_CHAT_USER_TURNS;
+    if (spent) throw freeTierLimit("chat_turns");
+  }
 
   const last = body.messages[body.messages.length - 1];
   if (!last) throw new Error("list index out of range");
