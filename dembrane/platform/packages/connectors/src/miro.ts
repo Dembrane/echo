@@ -210,9 +210,26 @@ const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : 0
 /** The board id in a Miro link (miro.com/app/board/<id>/) or a bare id; null otherwise. */
 export function miroBoardId(input: string): string | null {
   const s = input.trim();
-  const m = s.match(/miro\.com\/app\/board\/([^/?#]+)/);
-  const id = m ? decodeURIComponent(m[1] as string) : s;
+  let id = s;
+  if (isMiroLink(s)) {
+    const m = new URL(s).pathname.match(/^\/app\/board\/([^/]+)/);
+    if (!m) return null;
+    id = decodeURIComponent(m[1] as string);
+  }
   return /^[A-Za-z0-9_=-]{6,64}$/.test(id) ? id : null;
+}
+
+/** A link on miro.com itself (or a subdomain), judged by its parsed host. */
+export function isMiroLink(input: string): boolean {
+  try {
+    const u = new URL(input.trim());
+    return (
+      (u.protocol === "https:" || u.protocol === "http:") &&
+      (u.hostname === "miro.com" || u.hostname.endsWith(".miro.com"))
+    );
+  } catch {
+    return false;
+  }
 }
 
 /** A link that opens the board on this frame. Board ids keep their `=` as Miro writes them. */

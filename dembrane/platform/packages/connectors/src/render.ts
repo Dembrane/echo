@@ -45,13 +45,17 @@ export function segments(items: readonly MiroItem[]): Segment[] {
 
 /** Miro's rich text is a small HTML subset; keep the line breaks, drop the markup. */
 export function htmlToText(html: string): string {
-  return decodeEntities(
-    html
-      .replace(/<br\s*\/?>/gi, "\n")
-      .replace(/<\/(p|div|li|h[1-6])>/gi, "\n")
-      .replace(/<li[^>]*>/gi, "- ")
-      .replace(/<[^>]*>/g, ""),
-  )
+  let text = html
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|li|h[1-6])>/gi, "\n")
+    .replace(/<li[^>]*>/gi, "- ");
+  // Strip until nothing changes, so a tag split around another ("<scr<b>ipt>") cannot
+  // survive, then drop any lone bracket left over. Escaped brackets (&lt;) come back as text.
+  for (let prev = ""; prev !== text; ) {
+    prev = text;
+    text = text.replace(/<[^<>]*>/g, "");
+  }
+  return decodeEntities(text.replace(/[<>]/g, ""))
     .split("\n")
     .map((l) => l.replace(/[ \t ]+/g, " ").trim())
     .filter(Boolean)

@@ -12,7 +12,7 @@ import { projectFor, type Signed } from "@dembrane/http";
 import type { Logger } from "@dembrane/observability";
 import type { JobSink } from "@dembrane/queue";
 import { syncSource } from "./jobs";
-import { MIRO_AUTHORIZE_URL, type Miro, MiroError, miroBoardId } from "./miro";
+import { isMiroLink, MIRO_AUTHORIZE_URL, type Miro, MiroError, miroBoardId } from "./miro";
 import { readState, type Sealer, signState } from "./seal";
 import type { ConnectionRow, ConnectorStorage, SourceRow } from "./storage";
 
@@ -231,7 +231,7 @@ export async function boards(
   const { miro } = miroOf(d);
   // A pasted link or id finds that board directly, even when search would not list it.
   const direct = query ? miroBoardId(query) : null;
-  if (direct && query?.includes("miro.com")) {
+  if (direct && query && isMiroLink(query)) {
     const b = await miroCall(d, conn, () => miro.board(token, direct));
     if (!b) throw new NotFoundError("connector.board_not_found");
     return [b];

@@ -66,6 +66,8 @@ describe("frame text", () => {
     );
     expect(htmlToText("<ul><li>one</li><li>two</li></ul>")).toBe("- one\n- two");
     expect(htmlToText("a<br/>b &#233; &#x1F600;")).toBe("a\nb é 😀");
+    expect(htmlToText("<scr<b>ipt>alert(1)</script>")).toBe("alert(1)");
+    expect(htmlToText("1 &lt; 2")).toBe("1 < 2");
   });
 
   test("reads rows top to bottom and left to right, tolerating uneven heights", () => {
@@ -104,6 +106,8 @@ describe("miro client", () => {
     );
     expect(miroBoardId("uXjVKabc123=")).toBe("uXjVKabc123=");
     expect(miroBoardId("https://evil.test/../x")).toBeNull();
+    expect(miroBoardId("https://evil.test/miro.com/app/board/uXjVKabc123=/")).toBeNull();
+    expect(miroBoardId("https://miro.com.evil.test/app/board/uXjVKabc123=/")).toBeNull();
   });
 
   test("follows cursors for a frame's items and reads titles and content", async () => {
