@@ -18,4 +18,7 @@ export default {
   // echo-next serves the popcorn flow page today (the Python stack gates it on
   // SERVE_API_DOCS=1 there, 0 on prod); keeping it on keeps that page for the team.
   popcorn: { showFlow: true },
+  // sam takes the three messages of the offer flow from staging (its temp channel), so the
+  // whole flow can be tried here before production turns them on.
+  accounts: { offerMessages: true },
 } satisfies Environment;
