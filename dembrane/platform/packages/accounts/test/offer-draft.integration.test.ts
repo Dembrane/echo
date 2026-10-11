@@ -1,17 +1,19 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
-import { sendEmail } from "@dembrane/account";
+import { emailHandler, sendEmail } from "@dembrane/account";
 import { schema } from "@dembrane/db";
+import { MemoryMailer } from "@dembrane/mail";
 import { deliverSamMessage } from "@dembrane/webhooks";
 import { eq } from "drizzle-orm";
 import * as K from "../src/contract";
 import type { AccountsDeps } from "../src/deps";
 import { accountsRoutes } from "../src/routes";
 import { store } from "../src/storage";
-import { admin, call, dropDatabase, pngB64, type World, world } from "./helpers";
+import { admin, call, dropDatabase, pngB64, silent, type World, world } from "./helpers";
 
 // An offer as a draft: staff make it, read it, change it and send it; the customer's
-// account shows nothing of it until it is sent. Then the invoice request: one message
-// when a signed offer and complete billing details both exist.
+// account shows nothing of it until it is sent, and then the people who run the account
+// get one email. Then the invoice request: one message when a signed offer and complete
+// billing details both exist.
 const run = admin ? describe : describe.skip;
 const DB = `accounts_draft_${process.pid}`;
 
@@ -86,6 +88,29 @@ run("an offer draft, and the invoice request after the signature", () => {
       .of(deliverSamMessage.name)
       .filter((m) => m.code === code)
       .map((m) => (JSON.parse(m.body as string) as { json: Record<string, unknown> }).json);
+
+  type OfferEmail = {
+    to: string;
+    subject: string;
+    language: string;
+    template: string;
+    data: { org_name: string; document_title: string; sign_url: string };
+  };
+  /** The emails queued about one offer, by the address they go to. */
+  const offerEmails = (docId: string, org = w.orgId) =>
+    (w.jobs.of(sendEmail.name) as OfferEmail[])
+      .filter(
+        (m) =>
+          m.template === "account_offer_sent" &&
+          m.data.sign_url === `https://dash.test/o/${org}/account/documents/${docId}/sign`,
+      )
+      .sort((x, y) => x.to.localeCompare(y.to));
+
+  const setLanguage = (who: keyof World["people"], language: string | null) =>
+    w.db
+      .update(schema.directus_users)
+      .set({ language })
+      .where(eq(schema.directus_users.id, w.people[who].directusUserId));
 
   const withInbox = () => {
     (w.deps as { settings: AccountsDeps["settings"] }).settings = {
@@ -234,8 +259,10 @@ run("an offer draft, and the invoice request after the signature", () => {
         customer: `https://dash.test/o/${org}/account/documents/${doc.id}/sign`,
       },
     });
-    // Sending queues no email: the customer sees the offer when they next sign in.
-    expect(w.jobs.of(sendEmail.name)).toEqual([]);
+    // The person who runs the account is told by email, with the link sam is given.
+    expect(offerEmails(doc.id, org)).toMatchObject([
+      { to: "outsider@example.test", data: { org_name: "Elders BV" } },
+    ]);
 
     // A date set in the future stays.
     const later = await draft(org, { reference: "OFFER-902", date: "2026-11-01" });
@@ -393,5 +420,150 @@ run("an offer draft, and the invoice request after the signature", () => {
     expect((await summary()).map((s) => s.name)).toEqual(["Nieuw BV"]);
     const [row] = await w.db.select().from(schema.org).where(eq(schema.org.id, fresh));
     expect(row?.account_stage ?? null).toBeNull();
+  });
+
+  test("sending an offer queues one email to each person who runs the account, with the link where it is signed", async () => {
+    w.clock.now = new Date("2026-10-02T09:00:00.000Z");
+    const pushed = K.PushOfferResponse.parse(
+      (await call(w, "POST", `${S()}/offers`, "staff", offer({ reference: "OFFER-910" }))).data,
+    ).document;
+    expect(pushed.status).toBe("sent");
+    const link = `https://dash.test/o/${w.orgId}/account/documents/${pushed.id}/sign`;
+    // The admin and the billing member; a plain member does not run the account.
+    expect(offerEmails(pushed.id)).toEqual([
+      {
+        to: "admin@example.test",
+        subject: "Your offer from dembrane is ready to sign",
+        language: "en-US",
+        template: "account_offer_sent",
+        data: {
+          org_name: "Gemeente Testdorp",
+          document_title: "Gemeente Testdorp x dembrane",
+          sign_url: link,
+        },
+        context: `account offer sent ${pushed.id}`,
+      },
+      expect.objectContaining({ to: "billing@example.test", language: "en-US" }),
+    ] as unknown as OfferEmail[]);
+
+    // The worker's handler turns the job into the message the mailer sends.
+    const mailer = new MemoryMailer();
+    for (const job of offerEmails(pushed.id)) await emailHandler(mailer, silent)(job as never);
+    expect(mailer.sent.map((m) => m.to)).toEqual(["admin@example.test", "billing@example.test"]);
+    expect(mailer.sent[0]).toMatchObject({
+      subject: "Your offer from dembrane is ready to sign",
+      tags: ["account_offer_sent"],
+    });
+    expect(mailer.sent[0]?.text).toContain(
+      "We sent Gemeente Testdorp an offer: Gemeente Testdorp x dembrane.",
+    );
+    expect(mailer.sent[0]?.text).toContain(link);
+    expect(mailer.sent[0]?.html).toContain(`href="${link}"`);
+  });
+
+  test("the offer email is worded in each person's language, else in the organisation's", async () => {
+    // The admin reads German; the billing member has no setting and gets the language of
+    // the organisation's newest document, this Dutch offer.
+    await setLanguage("admin", "de-DE");
+    try {
+      const pushed = K.PushOfferResponse.parse(
+        (
+          await call(
+            w,
+            "POST",
+            `${S()}/offers`,
+            "staff",
+            offer({ reference: "OFFER-911", language: "nl" }),
+          )
+        ).data,
+      ).document;
+      // The job names the language; the words come from the worker, which has the catalogs.
+      expect(offerEmails(pushed.id).map((m) => [m.to, m.language, m.subject])).toEqual([
+        ["admin@example.test", "de-DE", "Your offer from dembrane is ready to sign"],
+        ["billing@example.test", "nl-NL", "Your offer from dembrane is ready to sign"],
+      ]);
+      const mailer = new MemoryMailer();
+      for (const job of offerEmails(pushed.id)) await emailHandler(mailer, silent)(job as never);
+      expect(mailer.sent.map((m) => [m.to, m.subject])).toEqual([
+        ["admin@example.test", "Ihr Angebot von dembrane liegt zur Unterzeichnung bereit"],
+        ["billing@example.test", "Je offerte van dembrane staat klaar om te ondertekenen"],
+      ]);
+      expect(mailer.sent[1]?.text).toContain(
+        "We hebben Gemeente Testdorp een offerte gestuurd: Gemeente Testdorp x dembrane.",
+      );
+    } finally {
+      await setLanguage("admin", null);
+    }
+  });
+
+  test("a draft queues no email; sending it later queues one for each person, once", async () => {
+    const before = w.jobs.of(sendEmail.name).length;
+    const doc = await draft(w.orgId, { reference: "OFFER-912" });
+    expect(w.jobs.of(sendEmail.name)).toHaveLength(before);
+
+    await send(doc.id);
+    expect(offerEmails(doc.id).map((m) => m.to)).toEqual([
+      "admin@example.test",
+      "billing@example.test",
+    ]);
+    expect(w.jobs.of(sendEmail.name)).toHaveLength(before + 2);
+    // One run for the offer and the person, so the queue takes it once.
+    expect(
+      w.jobs.jobs
+        .filter((j) => j.workflowId?.startsWith(`accounts.offer-sent:${doc.id}:`))
+        .map((j) => j.workflowId)
+        .sort(),
+    ).toEqual(
+      [w.people.admin.appUserId, w.people.billing.appUserId]
+        .map((id) => `accounts.offer-sent:${doc.id}:${id}`)
+        .sort(),
+    );
+
+    // A sent offer is not sent again.
+    expect((await call(w, "POST", `${S()}/documents/${doc.id}/send`, "staff", {})).status).toBe(
+      409,
+    );
+    expect(w.jobs.of(sendEmail.name)).toHaveLength(before + 2);
+  });
+
+  test("a document that is not an offer queues no email, sent at once or later", async () => {
+    const before = w.jobs.of(sendEmail.name).length;
+    const plan = K.PushDocumentResponse.parse(
+      (
+        await call(w, "POST", `${S()}/documents`, "staff", {
+          kind: "other",
+          title: "Werkplan workshop",
+          body: "# Werkplan\n\nWe beginnen om 9 uur.",
+          requires_signature: true,
+          task: { title: "Teken het werkplan" },
+        })
+      ).data,
+    ).document;
+    expect(plan.status).toBe("sent");
+
+    const note = K.PushDocumentResponse.parse(
+      (
+        await call(w, "POST", `${S()}/documents`, "staff", {
+          kind: "other",
+          title: "Agenda",
+          body: "# Agenda\n\nWelkom.",
+          send: false,
+        })
+      ).data,
+    ).document;
+    expect(note.status).toBe("draft");
+    expect((await send(note.id)).status).toBe("sent");
+
+    expect(w.jobs.of(sendEmail.name)).toHaveLength(before);
+  });
+
+  test("an account nobody runs yet gets the offer and no email", async () => {
+    const { newId } = await import("@dembrane/core");
+    const empty = newId();
+    await w.db.insert(schema.org).values({ id: empty, name: "Leeg BV" });
+    const before = w.jobs.of(sendEmail.name).length;
+    const doc = await draft(empty, { reference: "OFFER-913" });
+    expect((await send(doc.id, empty)).status).toBe("sent");
+    expect(w.jobs.of(sendEmail.name)).toHaveLength(before);
   });
 });

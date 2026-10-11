@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { assetPath } from "@dembrane/core";
-import { catalogEntries } from "@dembrane/i18n";
+import { catalogEntries, LOCALES } from "@dembrane/i18n";
 import { render, subjectOf } from "../src/emails";
 
 const reminder = {
@@ -72,4 +72,51 @@ test("the report published email links the report and the unsubscribe page in th
   const anonymous = { ...published, data: { ...published.data, conversation_name: "" } };
   expect(render(anonymous).html).toContain("Your report is ready.");
   expect(render(anonymous).html).toContain('href="https://portal.example/en-US/p1/report"');
+});
+
+test("the offer sent email names the organisation and the offer and links where it is signed, in English and Dutch", () => {
+  const sent = {
+    template: "account_offer_sent",
+    data: {
+      org_name: "Acme & Co",
+      document_title: "Acme x dembrane",
+      sign_url: "https://d/o/1/account/documents/2/sign",
+    },
+  } as const;
+  expect(subjectOf(sent)).toBe("Your offer from dembrane is ready to sign");
+  const en = render(sent);
+  expect(en.text).toBe(
+    "We sent Acme & Co an offer: Acme x dembrane. Read it and sign it in dembrane.\n\nRead and sign the offer:\nhttps://d/o/1/account/documents/2/sign\n\nThe dembrane team",
+  );
+  expect(en.html).toContain("Your offer from dembrane is ready to sign.");
+  expect(en.html).toContain("We sent Acme &amp; Co an offer: ");
+  expect(en.html).toContain(">Acme x dembrane</em>");
+  expect(en.html).toContain('href="https://d/o/1/account/documents/2/sign"');
+  expect(en.html).toContain("Read and sign the offer");
+  expect(en.html).toContain("Or paste this into your browser:<br>");
+
+  expect(subjectOf(sent, "nl-NL")).toBe("Je offerte van dembrane staat klaar om te ondertekenen");
+  const nl = render(sent, "nl");
+  expect(nl.text).toBe(
+    "We hebben Acme & Co een offerte gestuurd: Acme x dembrane. Lees de offerte en onderteken hem in dembrane.\n\nOfferte lezen en ondertekenen:\nhttps://d/o/1/account/documents/2/sign\n\nHet dembrane-team",
+  );
+  expect(nl.html).toContain("Je offerte van dembrane staat klaar om te ondertekenen.");
+  expect(nl.html).toContain("We hebben Acme &amp; Co een offerte gestuurd: ");
+  expect(nl.html).toContain('href="https://d/o/1/account/documents/2/sign"');
+  expect(nl.html).toContain("Offerte lezen en ondertekenen");
+});
+
+test("the offer sent email has its own words in every language", () => {
+  const ids = ["subject", "heading", "body", "cta", "text_cta"].map(
+    (k) => `email.account_offer_sent.${k}`,
+  );
+  const words = (locale: string) =>
+    catalogEntries(readFileSync(assetPath("i18n", "locales", `${locale}.po`), "utf8"));
+  const english = words("en-US");
+  for (const locale of LOCALES.filter((l) => l !== "en-US"))
+    for (const id of ids) {
+      const text = words(locale).get(id);
+      expect(text, `${locale} ${id}`).toBeTruthy();
+      expect(text, `${locale} ${id}`).not.toBe(english.get(id));
+    }
 });
