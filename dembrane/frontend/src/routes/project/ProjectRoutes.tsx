@@ -1,7 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Alert, Divider, Stack } from "@mantine/core";
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import { useParams } from "react-router";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
@@ -10,7 +10,6 @@ import { ProjectGoalSection } from "@/components/goal/ProjectGoalSection";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ProjectMemorySection } from "@/components/memory/ProjectMemorySection";
 import { ProjectMethodologySection } from "@/components/methodology/ProjectMethodologySection";
-import { ProjectConnectorsSection } from "@/components/project/connectors/ProjectConnectorsSection";
 import {
 	useProjectById,
 	useVerificationTopicsQuery,
@@ -34,6 +33,15 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { getProjectTranscriptsLink } from "@/lib/api";
 import { canUseChat, isReadOnlyRole } from "@/lib/roles";
 import type { Tier } from "@/lib/tiers";
+
+// Dashboard only: loaded with the integrations page, never with the portal's first load.
+const ProjectConnectorsSection = lazy(() =>
+	import("@/components/project/connectors/ProjectConnectorsSection").then(
+		(m) => ({
+			default: m.ProjectConnectorsSection,
+		}),
+	),
+);
 
 // Observers lack project:update, so editing and upload controls are hidden or
 // read-only rather than shown and answered with a 403.
@@ -203,7 +211,9 @@ export const ProjectIntegrationsRoute = () => {
 	return (
 		<PageContainer>
 			<Stack gap="xl">
-				<ProjectConnectorsSection projectId={projectId} canEdit={canEdit} />
+				<Suspense fallback={null}>
+					<ProjectConnectorsSection projectId={projectId} canEdit={canEdit} />
+				</Suspense>
 				{!ENABLE_WEBHOOKS && (
 					<Alert variant="outline">
 						<Trans>Webhooks are not enabled for this environment.</Trans>

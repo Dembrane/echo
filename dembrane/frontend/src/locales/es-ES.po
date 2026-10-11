@@ -5928,10 +5928,10 @@ msgstr "Error al clonar el proyecto"
 msgid "Error creating report"
 msgstr "Error al crear el informe"
 
-#: src/routes/project/ProjectRoutes.tsx:120
-#: src/routes/project/ProjectRoutes.tsx:248
-#: src/routes/project/ProjectRoutes.tsx:323
-#: src/routes/project/ProjectRoutes.tsx:359
+#: src/routes/project/ProjectRoutes.tsx:128
+#: src/routes/project/ProjectRoutes.tsx:258
+#: src/routes/project/ProjectRoutes.tsx:333
+#: src/routes/project/ProjectRoutes.tsx:369
 msgid "Error loading project"
 msgstr "Error al cargar el proyecto"
 
@@ -10271,7 +10271,7 @@ msgstr "Solo los administradores del espacio de trabajo pueden cambiar la base l
 msgid "Only workspace admins can change these settings. Ask an admin if something needs updating."
 msgstr "Solo los administradores del espacio de trabajo pueden cambiar estos ajustes. Pídele a un administrador si hace falta actualizar algo."
 
-#: src/routes/project/ProjectRoutes.tsx:214
+#: src/routes/project/ProjectRoutes.tsx:224
 msgid "Only workspace admins can manage project automation."
 msgstr "Solo los administradores del espacio de trabajo pueden gestionar la automatización del proyecto."
 
@@ -17595,7 +17595,7 @@ msgstr "Webhook"
 msgid "Webhook URL"
 msgstr "URL del Webhook"
 
-#: src/routes/project/ProjectRoutes.tsx:221
+#: src/routes/project/ProjectRoutes.tsx:231
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:879
 msgid "Webhooks"
 msgstr "Webhooks"
@@ -17604,7 +17604,7 @@ msgstr "Webhooks"
 msgid "Webhooks are automated messages sent from one app to another when something happens. Think of them as a \"notification system\" for your other tools."
 msgstr "Los webhooks son mensajes automatizados enviados de una aplicación a otra cuando ocurre algo. Piénsalos como un \"sistema de notificaciones\" para tus otras herramientas."
 
-#: src/routes/project/ProjectRoutes.tsx:209
+#: src/routes/project/ProjectRoutes.tsx:219
 msgid "Webhooks are not enabled for this environment."
 msgstr "Los webhooks no están habilitados para este entorno."
 

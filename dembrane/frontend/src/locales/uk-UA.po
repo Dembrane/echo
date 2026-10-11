@@ -5927,10 +5927,10 @@ msgstr "Error cloning project"
 msgid "Error creating report"
 msgstr "Error creating report"
 
-#: src/routes/project/ProjectRoutes.tsx:120
-#: src/routes/project/ProjectRoutes.tsx:248
-#: src/routes/project/ProjectRoutes.tsx:323
-#: src/routes/project/ProjectRoutes.tsx:359
+#: src/routes/project/ProjectRoutes.tsx:128
+#: src/routes/project/ProjectRoutes.tsx:258
+#: src/routes/project/ProjectRoutes.tsx:333
+#: src/routes/project/ProjectRoutes.tsx:369
 msgid "Error loading project"
 msgstr "Error loading project"
 
@@ -10270,7 +10270,7 @@ msgstr "Лише адміністратори робочого простору 
 msgid "Only workspace admins can change these settings. Ask an admin if something needs updating."
 msgstr "Лише адміністратори робочого простору можуть змінювати ці налаштування. Зверніться до адміністратора, якщо потрібно щось оновити."
 
-#: src/routes/project/ProjectRoutes.tsx:214
+#: src/routes/project/ProjectRoutes.tsx:224
 msgid "Only workspace admins can manage project automation."
 msgstr "Лише адміністратори робочого простору можуть керувати автоматизацією проєктів."
 
@@ -17594,7 +17594,7 @@ msgstr "Webhook"
 msgid "Webhook URL"
 msgstr "Webhook URL"
 
-#: src/routes/project/ProjectRoutes.tsx:221
+#: src/routes/project/ProjectRoutes.tsx:231
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:879
 msgid "Webhooks"
 msgstr "Webhooks"
@@ -17603,7 +17603,7 @@ msgstr "Webhooks"
 msgid "Webhooks are automated messages sent from one app to another when something happens. Think of them as a \"notification system\" for your other tools."
 msgstr "Webhooks are automated messages sent from one app to another when something happens. Think of them as a \"notification system\" for your other tools."
 
-#: src/routes/project/ProjectRoutes.tsx:209
+#: src/routes/project/ProjectRoutes.tsx:219
 msgid "Webhooks are not enabled for this environment."
 msgstr "Вебхуки не ввімкнено для цього середовища."
 

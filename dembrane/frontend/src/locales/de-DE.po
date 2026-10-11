@@ -5928,10 +5928,10 @@ msgstr "Fehler beim Klonen des Projekts"
 msgid "Error creating report"
 msgstr "Fehler beim Erstellen des Berichts"
 
-#: src/routes/project/ProjectRoutes.tsx:120
-#: src/routes/project/ProjectRoutes.tsx:248
-#: src/routes/project/ProjectRoutes.tsx:323
-#: src/routes/project/ProjectRoutes.tsx:359
+#: src/routes/project/ProjectRoutes.tsx:128
+#: src/routes/project/ProjectRoutes.tsx:258
+#: src/routes/project/ProjectRoutes.tsx:333
+#: src/routes/project/ProjectRoutes.tsx:369
 msgid "Error loading project"
 msgstr "Fehler beim Laden des Projekts"
 
@@ -10271,7 +10271,7 @@ msgstr "Nur Workspace-Administrator*innen können die Rechtsgrundlage ändern."
 msgid "Only workspace admins can change these settings. Ask an admin if something needs updating."
 msgstr "Nur Arbeitsbereichs-Administratoren können diese Einstellungen ändern. Bitten Sie einen Administrator darum, falls etwas aktualisiert werden muss."
 
-#: src/routes/project/ProjectRoutes.tsx:214
+#: src/routes/project/ProjectRoutes.tsx:224
 msgid "Only workspace admins can manage project automation."
 msgstr "Nur Arbeitsbereichs-Administratoren können die Projektautomatisierung verwalten."
 
@@ -17593,7 +17593,7 @@ msgstr "Webhook"
 msgid "Webhook URL"
 msgstr "Webhook URL"
 
-#: src/routes/project/ProjectRoutes.tsx:221
+#: src/routes/project/ProjectRoutes.tsx:231
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:879
 msgid "Webhooks"
 msgstr "Webhooks"
@@ -17602,7 +17602,7 @@ msgstr "Webhooks"
 msgid "Webhooks are automated messages sent from one app to another when something happens. Think of them as a \"notification system\" for your other tools."
 msgstr "Webhooks sind automatisierte Nachrichten, die von einer App zu einer anderen gesendet werden, wenn etwas passiert. Denken Sie daran, sie als eine \"Benachrichtigungssystem\" für Ihre anderen Tools."
 
-#: src/routes/project/ProjectRoutes.tsx:209
+#: src/routes/project/ProjectRoutes.tsx:219
 msgid "Webhooks are not enabled for this environment."
 msgstr "Webhooks sind für diese Umgebung nicht aktiviert."
 
