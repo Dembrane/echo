@@ -11,9 +11,10 @@ import { buildDemo, type DemoBuildDeps } from "./demo/build";
 import { demoBuild } from "./demo/job";
 import { ACCOUNT_EVENT_CODES, type InboxEvent } from "./events";
 import { refreshLegalTexts } from "./legal/store";
+import { accountRecipients } from "./recipients";
 import type { AccountsJobs } from "./sink";
 import { store } from "./storage";
-import { languageOf, taskTitle } from "./task-text";
+import { taskTitle } from "./task-text";
 
 /**
  * One account event to sam. The payload is built when the event happens, so a retry sends
@@ -110,20 +111,15 @@ export async function runTaskReminder(
   if (!task || !["open", "changes_requested"].includes(task.status)) return "skipped";
   const org = await store.org(d.db, task.orgId);
   if (!org || org.deleted_at) return "skipped";
-  // Each person gets it in their own language (their dashboard setting), else in the
-  // organisation's (the language of its newest document), else in English.
-  const people = (await store.accountPeople(d.db, task.orgId)).filter((p) => p.email);
+  const people = await accountRecipients(d.db, task.orgId);
   if (!people.length) {
     d.logger.warn({ task_id: task.id, org_id: org.id }, "task reminder has nobody to go to");
     return "skipped";
   }
-  const [newest] = await store.documents(d.db, org.id);
-  const orgLanguage = languageOf(newest?.language);
+  // One message per language, to everyone who reads it.
   const byLanguage = new Map<Locale, Set<string>>();
-  for (const p of people) {
-    const lang = p.language ? languageOf(p.language) : orgLanguage;
-    byLanguage.set(lang, (byLanguage.get(lang) ?? new Set()).add(p.email as string));
-  }
+  for (const p of people)
+    byLanguage.set(p.language, (byLanguage.get(p.language) ?? new Set()).add(p.email));
   const to = [...byLanguage.values()].flatMap((set) => [...set]);
   for (const [language, emails] of byLanguage) {
     const email = {

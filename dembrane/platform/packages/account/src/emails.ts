@@ -150,6 +150,10 @@ export type EmailTemplate =
       readonly data: { org_name: string; sign_in_url: string };
     }
   | {
+      readonly template: "account_offer_sent";
+      readonly data: { org_name: string; document_title: string; sign_url: string };
+    }
+  | {
       readonly template: "report_published";
       readonly data: {
         portal_url: string;
@@ -184,6 +188,8 @@ export function subjectOf(t: EmailTemplate, locale?: string | null): string | nu
       return tr("email.account_task_reminder.subject", t.data);
     case "account_invite":
       return tr("email.account_invite.subject", t.data);
+    case "account_offer_sent":
+      return tr("email.account_offer_sent.subject");
     case "report_published":
       return tr("email.report_published.subject");
     case "plain":
@@ -381,6 +387,30 @@ export function render(t: EmailTemplate, locale?: string | null): { html: string
           disclaim: ignore,
         }),
         text: `${tr(`${k}.body`, d)}\n\n${tr(`${k}.text_cta`)}\n${d.sign_in_url}\n\n${ignoreText}\n\n${signoff}`,
+      };
+    }
+    case "account_offer_sent": {
+      // To the people who run the account, when staff send it an offer. The link opens the
+      // offer where it is read and signed; someone signed out signs in first.
+      const d = t.data;
+      const k = "email.account_offer_sent";
+      return {
+        html: layout(tr, {
+          title: tr(`${k}.subject`),
+          preview: tr(`${k}.body`, escAll(d)),
+          heading: tr(`${k}.heading`),
+          body: P(
+            17,
+            "0 0 28px",
+            tr(`${k}.body`, {
+              org_name: esc(d.org_name),
+              document_title: em(d.document_title),
+            }),
+          ),
+          cta: cta(tr(`${k}.cta`), d.sign_url),
+          fallback: fallback(tr, d.sign_url),
+        }),
+        text: `${tr(`${k}.body`, d)}\n\n${tr(`${k}.text_cta`)}\n${d.sign_url}\n\n${signoff}`,
       };
     }
     case "report_published": {

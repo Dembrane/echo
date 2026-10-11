@@ -1,3 +1,4 @@
+import { type EmailTemplate, sendEmail, subjectOf } from "@dembrane/account";
 import {
   BadRequestError,
   ConflictError,
@@ -32,6 +33,7 @@ import {
 } from "./onboarding";
 import { offerPdf, type PlacedField, pageCountOf, textPdf } from "./pdf";
 import { releaseHeldContacts } from "./prospect";
+import { accountRecipients } from "./recipients";
 import { type DocumentRow, type LegalRow, type OrgRow, store } from "./storage";
 import { createTask, ensureBillingTask, settleTask, type TaskKind } from "./tasks";
 import {
@@ -469,8 +471,8 @@ export async function updateOffer(
 
 /**
  * Sends an offer that is still a draft: its PDF and fields freeze, "Review and sign the
- * offer" opens, the onboarding steps not yet taken are withdrawn, and the timeline notes
- * the legal versions it carries.
+ * offer" opens, the onboarding steps not yet taken are withdrawn, the timeline notes the
+ * legal versions it carries, and the people who run the account are told by email.
  */
 async function sendOfferIn(
   d: AccountsDeps,
@@ -517,7 +519,43 @@ async function sendOfferIn(
     },
     webhook: await sentPayload(d, tx, who, orgId, docId),
   });
+  await tellCustomerOfOffer(d, tx, orgId, doc);
   return task.id;
+}
+
+/**
+ * One email to each person who runs the account, in their language, with the link where
+ * the offer is read and signed. Queued in the transaction of the send, so it exists only
+ * if the offer was sent; the run id is the offer and the person, so one offer reaches one
+ * person once. A signer the customer names later gets their own invitation.
+ */
+async function tellCustomerOfOffer(d: AccountsDeps, tx: Conn, orgId: string, doc: DocumentRow) {
+  const recipients = await accountRecipients(tx, orgId);
+  if (!recipients.length) {
+    d.logger.warn({ document_id: doc.id, org_id: orgId }, "offer sent email has nobody to go to");
+    return;
+  }
+  const org = (await store.org(tx, orgId)) as OrgRow;
+  const email = {
+    template: "account_offer_sent",
+    data: {
+      org_name: org.name,
+      document_title: doc.title,
+      sign_url: customerSignUrl(d.settings.dashboardUrl, orgId, doc.id),
+    },
+  } satisfies EmailTemplate;
+  for (const r of recipients)
+    await d.jobs.enqueue(
+      sendEmail,
+      {
+        ...email,
+        language: r.language,
+        to: r.email,
+        subject: subjectOf(email, r.language) as string,
+        context: `account offer sent ${doc.id}`,
+      },
+      { tx, workflowId: `accounts.offer-sent:${doc.id}:${r.appUserId}` },
+    );
 }
 
 /** `account.document.sent`: what staff sent, to whom it is shown, and who sent it. */

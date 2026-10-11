@@ -433,7 +433,7 @@ run("demos made in echo", () => {
     expect(await store.mayReceiveCode(w.db, "joop@voorbeeldstad.example", w.clock.now)).toBe(false);
   });
 
-  test("sending the demo's offer releases the held contact, without an email", async () => {
+  test("sending the demo's offer releases the held contact and emails them the offer", async () => {
     const { published } = await publishHeld("lotte@voorbeeldstad.example");
     w.jobs.jobs.length = 0;
     const sent = await call(
@@ -445,7 +445,16 @@ run("demos made in echo", () => {
     );
     expect(sent.status).toBe(200);
     expect(await store.mayReceiveCode(w.db, "lotte@voorbeeldstad.example", w.clock.now)).toBe(true);
-    expect(w.jobs.of("account.send-email")).toHaveLength(0);
+    // The contact runs the account: the one email is theirs, with the link to the offer.
+    expect(w.jobs.of("account.send-email")).toMatchObject([
+      {
+        to: "lotte@voorbeeldstad.example",
+        template: "account_offer_sent",
+        data: {
+          sign_url: `https://dash.test/o/${published.org_id}/account/documents/${published.offer_document_id}/sign`,
+        },
+      },
+    ]);
   });
 
   test("enabling the account releases the held contact, without an email", async () => {
