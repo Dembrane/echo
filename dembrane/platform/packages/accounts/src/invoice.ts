@@ -64,7 +64,12 @@ export async function requestInvoices(d: AccountsDeps, tx: Conn, org: OrgRow): P
   return out;
 }
 
-const base = (dashboardUrl: string) => dashboardUrl.replace(/\/+$/, "");
+/** The dashboard address without the slashes it may end in. */
+function base(dashboardUrl: string): string {
+  let end = dashboardUrl.length;
+  while (end > 0 && dashboardUrl[end - 1] === "/") end--;
+  return dashboardUrl.slice(0, end);
+}
 
 /** The organisation's card in the staff console. */
 export const staffAccountUrl = (dashboardUrl: string, orgId: string) =>
