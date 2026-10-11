@@ -11,7 +11,7 @@ export default {
   database: { poolMax: 5, queuePoolMax: 3 },
   observability: { gcpProject: "dembrane-web-staging", traceSampleRatio: 0 },
   llm: { vertexProject: "dembrane-web-staging" },
-  auth: { cookieDomain: "staging.dembrane.com" },
+  auth: { cookieDomain: "staging.dembrane.com", cookiePrefix: "dembrane-staging" },
   // The dashboard and portal forward /api here, server to server, so the browser stays on
   // one origin and the deploy's check works before the certificate is active.
   web: { apiOrigin: "https://echo-staging-api-1089877593337.europe-west4.run.app" },
