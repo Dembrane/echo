@@ -45,12 +45,56 @@ export const getReleases = (): Release[] => [
 	{
 		changes: [
 			{
-				text: t`In our tests, projects open about a third faster than in dembrane 2.`,
+				text: t`Map (Beta) reads a project's transcripts, finds the arguments people make and places related arguments close together.`,
+				type: "feature",
+			},
+			{
+				text: t`Present (Beta) is now in every project. Changes show on the room screen as you make them, and wait while someone is watching.`,
+				type: "feature",
+			},
+			{
+				text: t`Start a Popcorn analysis with Analyse, or book it with Ready by: it starts 15 minutes before the time you choose.`,
+				type: "feature",
+			},
+			{
+				text: t`Choose a light or dark theme, or follow your device, in your settings or the user menu.`,
+				type: "feature",
+			},
+			{
+				text: t`Sign in with a code sent to your email instead of a password.`,
+				type: "feature",
+			},
+			{
+				text: t`Agentic chat answers at once with a plan and ticks it off as it works. You can close the page and get a notification when it is done.`,
 				type: "improvement",
 			},
 			{
-				text: t`dembrane 3 is tested against the WCAG 2.1 AA accessibility guidelines.`,
+				text: t`Key terms are a step in project creation, and a project can be renamed from its overview or from the menu on its row.`,
 				type: "improvement",
+			},
+			{
+				text: t`The collapsed sidebar is now a rail of icons, with each name on hover or on press and hold.`,
+				type: "improvement",
+			},
+			{
+				text: t`A refreshed design across the dashboard and the portal, with text and control colours checked for WCAG AA contrast in light and dark.`,
+				type: "improvement",
+			},
+			{
+				text: t`People outside your organisation accept an invitation before they join, and workspace admins see their workspace's pending invites.`,
+				type: "improvement",
+			},
+			{
+				text: t`An account is signed in on one device at a time. Signing in on another asks first, then logs the other one out.`,
+				type: "improvement",
+			},
+			{
+				text: t`Participants who open the portal inside LinkedIn, Instagram or Facebook are asked to open it in their browser, because the microphone may not work there.`,
+				type: "improvement",
+			},
+			{
+				text: t`Cloning a project keeps all its settings and custom verify topics.`,
+				type: "fix",
 			},
 		],
 		highlight: true,

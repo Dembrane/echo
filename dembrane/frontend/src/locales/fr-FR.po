@@ -1220,6 +1220,10 @@ msgstr "Un projet réunit tout ce qui concerne un sujet. Partagez son lien avec 
 msgid "A public page needs a higher plan. Switch Public page off under Share to show the other changes."
 msgstr "Une page publique nécessite une offre supérieure. Désactive Page publique dans Partager pour afficher les autres modifications."
 
+#: src/components/release/releases.ts:80
+msgid "A refreshed design across the dashboard and the portal, with text and control colours checked for WCAG AA contrast in light and dark."
+msgstr "Un design rafraîchi dans le tableau de bord et le portail, avec des couleurs de texte et de commandes vérifiées pour le contraste WCAG AA, en clair comme en sombre."
+
 #: src/components/report/UpdateReportModalButton.tsx:249
 #: src/components/report/CreateReportForm.tsx:141
 msgid "A report is already being generated for this project. Please wait for it to complete."
@@ -1854,6 +1858,10 @@ msgstr "Agentic - Exécution guidée par les outils"
 msgid "Agentic chat"
 msgstr "Chat avec agent"
 
+#: src/components/release/releases.ts:68
+msgid "Agentic chat answers at once with a plan and ticks it off as it works. You can close the page and get a notification when it is done."
+msgstr "Le chat avec agent répond aussitôt avec un plan et le coche au fil du travail. Vous pouvez fermer la page et recevoir une notification quand c'est terminé."
+
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:802
 #: src/routes/organisation/OrganisationRoute.tsx:847
 #: src/routes/admin/AdminSettingsRoute.tsx:2023
@@ -2030,6 +2038,10 @@ msgstr "Montant"
 #: src/routes/admin/AdminSettingsRoute.tsx:3052
 msgid "Amounts default to the account's seats times the per-seat price. Override only when you need to."
 msgstr "Les montants correspondent par défaut au nombre de places du compte multiplié par le prix par place. Ne modifiez ce montant que si nécessaire."
+
+#: src/components/release/releases.ts:88
+msgid "An account is signed in on one device at a time. Signing in on another asks first, then logs the other one out."
+msgstr "Un compte est connecté sur un seul appareil à la fois. Se connecter sur un autre demande d'abord confirmation, puis déconnecte le premier."
 
 #: src/components/workspace/TierCapacityMatrix.tsx:210
 msgid "An additional training is mandatory for teams using dembrane in situations classified as high risk under the EU AI Act."
@@ -3442,6 +3454,10 @@ msgstr "Vérifications"
 msgid "Choose a conversation"
 msgstr "Choisir une conversation"
 
+#: src/components/release/releases.ts:60
+msgid "Choose a light or dark theme, or follow your device, in your settings or the user menu."
+msgstr "Choisissez un thème clair ou sombre, ou suivez votre appareil, dans vos paramètres ou dans le menu utilisateur."
+
 #: src/components/settings/WhitelabelLogoCard.tsx:167
 msgid "Choose a logo file"
 msgstr "Choisir un fichier logo"
@@ -3631,6 +3647,10 @@ msgstr "Cloner le projet"
 #: src/components/project/ProjectDangerZone.tsx:119
 #~ msgid "Clone Project"
 #~ msgstr "Cloner le projet"
+
+#: src/components/release/releases.ts:96
+msgid "Cloning a project keeps all its settings and custom verify topics."
+msgstr "Cloner un projet conserve tous ses paramètres et ses thèmes de vérification personnalisés."
 
 #: src/theme.tsx:317
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:790
@@ -5025,13 +5045,9 @@ msgstr "dembrane"
 msgid "dembrane - the default"
 msgstr "dembrane - par défaut"
 
-#: src/components/release/releases.ts:58
+#: src/components/release/releases.ts:102
 msgid "dembrane 3"
 msgstr "dembrane 3"
-
-#: src/components/release/releases.ts:52
-msgid "dembrane 3 is tested against the WCAG 2.1 AA accessibility guidelines."
-msgstr "dembrane 3 est testé par rapport aux règles d'accessibilité WCAG 2.1 AA."
 
 #: src/components/participant/DembraneEventCta.tsx:61
 msgid "dembrane at your event?"
@@ -6045,7 +6061,7 @@ msgstr "Explorer"
 msgid "Explore recurring themes in the Library"
 msgstr "Explorez les thèmes récurrents dans la Library"
 
-#: src/components/release/releases.ts:76
+#: src/components/release/releases.ts:120
 msgid "Explore stories and perspectives with the Narratives chat template, in English and Dutch."
 msgstr "Explore les récits et les perspectives avec le modèle de chat Narratives, en anglais et en néerlandais."
 
@@ -7368,10 +7384,6 @@ msgstr "Améliorer ma configuration"
 msgid "Improvements"
 msgstr "Améliorations"
 
-#: src/components/release/releases.ts:48
-msgid "In our tests, projects open about a third faster than in dembrane 2."
-msgstr "Lors de nos tests, les projets s'ouvrent environ un tiers plus vite que dans dembrane 2."
-
 #: src/components/chat/AgenticPlanCard.tsx:41
 msgid "In progress"
 msgstr "En cours"
@@ -7497,7 +7509,7 @@ msgstr "entretien"
 msgid "Intro"
 msgstr "Intro"
 
-#: src/components/release/releases.ts:94
+#: src/components/release/releases.ts:138
 msgid "Introducing Popcorn"
 msgstr "Voici Popcorn"
 
@@ -7954,6 +7966,10 @@ msgstr "Conserve le forfait jusqu'à la date ci-dessous, puis repasse au forfait
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:54
 msgid "Key terms"
 msgstr "Termes clés"
+
+#: src/components/release/releases.ts:72
+msgid "Key terms are a step in project creation, and a project can be renamed from its overview or from the menu on its row."
+msgstr "Les termes clés sont une étape de la création d'un projet, et un projet se renomme depuis son aperçu ou depuis le menu de sa ligne."
 
 #: src/components/project/KeyTermsInput.tsx:68
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:84
@@ -8648,6 +8664,10 @@ msgstr "De nombreuses cartes viennent d'être lancées. Réessayez dans un insta
 msgid "Map"
 msgstr "Carte"
 
+#: src/components/release/releases.ts:48
+msgid "Map (Beta) reads a project's transcripts, finds the arguments people make and places related arguments close together."
+msgstr "Carte (Bêta) lit les transcriptions d'un projet, repère les arguments avancés et rapproche les arguments liés."
+
 #: src/routes/project/map/MapRoute.tsx:14
 msgid "Map | dembrane"
 msgstr "Carte | dembrane"
@@ -8748,7 +8768,7 @@ msgstr "L'accès MCP pour {0} est désactivé"
 msgid "MCP access for {0} is on"
 msgstr "L'accès MCP pour {0} est activé"
 
-#: src/components/release/releases.ts:68
+#: src/components/release/releases.ts:112
 msgid "MCP connections let your agent find projects, search conversations, read transcripts and consult documentation, with organisation controls and explicit consent."
 msgstr "Les connexions MCP permettent à ton agent de trouver des projets, rechercher des conversations, lire des transcriptions et consulter la documentation, avec des contrôles par organisation et un consentement explicite."
 
@@ -10720,7 +10740,7 @@ msgstr "Participants"
 msgid "Participants can request a reply during a recording."
 msgstr "Les participants peuvent demander une réponse pendant un enregistrement."
 
-#: src/components/release/releases.ts:72
+#: src/components/release/releases.ts:116
 msgid "Participants can share the portal from the header or the thank you page: a QR code, a copyable link, WhatsApp, email or the device's own share sheet."
 msgstr "Les participants peuvent partager le portail depuis l'en-tête ou la page de remerciement : code QR, lien à copier, WhatsApp, e-mail ou menu de partage de l'appareil."
 
@@ -10731,6 +10751,10 @@ msgstr "Les participants peuvent vérifier les résultats et affiner les répons
 #: src/components/release/releaseHistory.ts:402
 msgid "Participants receive a reminder to verify before ending a conversation."
 msgstr "Les participants reçoivent un rappel pour vérifier avant de clore une conversation."
+
+#: src/components/release/releases.ts:92
+msgid "Participants who open the portal inside LinkedIn, Instagram or Facebook are asked to open it in their browser, because the microphone may not work there."
+msgstr "Les participants qui ouvrent le portail dans LinkedIn, Instagram ou Facebook sont invités à l'ouvrir dans leur navigateur, car le micro risque de ne pas y fonctionner."
 
 #: src/components/project/ProjectTagsInput.tsx:259
 msgid "Participants will be able to select tags when creating conversations"
@@ -10887,6 +10911,10 @@ msgstr "personnes"
 #: src/routes/organisation/OrganisationRoute.tsx:1331
 msgid "People"
 msgstr "Personnes"
+
+#: src/components/release/releases.ts:84
+msgid "People outside your organisation accept an invitation before they join, and workspace admins see their workspace's pending invites."
+msgstr "Les personnes extérieures à votre organisation acceptent une invitation avant de rejoindre, et les administrateurs d'un espace de travail voient ses invitations en attente."
 
 #: src/components/project/ProjectListItem.tsx:89
 #: src/components/project/PinnedProjectCard.tsx:64
@@ -11334,6 +11362,10 @@ msgstr "Préparation de votre expérience"
 #: src/components/sharing/PresentButton.tsx:57
 msgid "Present"
 msgstr "Présenter"
+
+#: src/components/release/releases.ts:52
+msgid "Present (Beta) is now in every project. Changes show on the room screen as you make them, and wait while someone is watching."
+msgstr "Présenter (Bêta) est désormais disponible dans chaque projet. Les modifications s'affichent sur l'écran de la salle au fur et à mesure, et attendent tant que quelqu'un regarde."
 
 #: src/components/present/AudienceScreen.tsx:1052
 msgid "Presentation activities"
@@ -13868,7 +13900,7 @@ msgstr "Partagé avec {0}"
 msgid "Shared with {0} and {overflow} others"
 msgstr "Partagé avec {0} et {overflow} autres"
 
-#: src/components/release/releases.ts:84
+#: src/components/release/releases.ts:128
 msgid "Sharing a private project with a non-member now offers an invitation instead of an error, granting access when they join the workspace."
 msgstr "Partager un projet privé avec une personne non membre propose désormais une invitation au lieu d’une erreur. L’accès est accordé quand elle rejoint l’espace de travail."
 
@@ -14125,6 +14157,10 @@ msgstr "Impossible de charger la barre latérale."
 #: src/routes/auth/Login.tsx:438
 #~ msgid "Sign in"
 #~ msgstr "Se connecter"
+
+#: src/components/release/releases.ts:64
+msgid "Sign in with a code sent to your email instead of a password."
+msgstr "Connectez-vous avec un code envoyé à votre adresse e-mail plutôt qu'avec un mot de passe."
 
 #: src/components/release/releaseHistory.ts:29
 msgid "Sign-in links check your access before opening an organisation or project."
@@ -14444,6 +14480,10 @@ msgstr "Démarrer une discussion"
 #: src/components/chat/AgenticIntroModal.tsx:82
 msgid "Start a new chat"
 msgstr "Démarrer une nouvelle discussion"
+
+#: src/components/release/releases.ts:56
+msgid "Start a Popcorn analysis with Analyse, or book it with Ready by: it starts 15 minutes before the time you choose."
+msgstr "Lancez une analyse Popcorn avec Analyser, ou planifiez-la avec Prêt à : elle démarre 15 minutes avant l'heure choisie."
 
 #: src/routes/settings/AgentConsentRoute.tsx:214
 msgid "Start again from your agent. It will open a fresh request here."
@@ -15086,6 +15126,10 @@ msgstr "L'assistant suggère de mettre à jour {headlineFields}. En attente de v
 msgid "The code didn't work, please try again."
 msgstr "Le code n'a pas fonctionné, veuillez réessayer."
 
+#: src/components/release/releases.ts:76
+msgid "The collapsed sidebar is now a rail of icons, with each name on hover or on press and hold."
+msgstr "La barre latérale réduite devient une rangée d'icônes, avec le nom de chacune au survol ou par un appui long."
+
 #: src/components/conversation/LiveMonitorSection.tsx:662
 #~ msgid "The connection dropped. Retrying automatically."
 #~ msgstr "La connexion a été interrompue. Nouvelle tentative automatique en cours."
@@ -15099,7 +15143,7 @@ msgstr "La conversation n'a pas pu être chargée. Veuillez réessayer ou contac
 msgid "The conversation list shows clearer totals."
 msgstr "La liste des conversations affiche des totaux plus clairs."
 
-#: src/components/release/releases.ts:80
+#: src/components/release/releases.ts:124
 msgid "The default host guide now reminds hosts to turn on focus mode so notifications stay off the screen while recording."
 msgstr "Le guide de l'hôte par défaut rappelle désormais d'activer le mode Ne pas déranger pour masquer les notifications pendant l'enregistrement."
 
@@ -15386,7 +15430,7 @@ msgstr "la conversation sélectionnée"
 #~ msgid "The shared screen shows your published presentation. Publish changes to update its content and access."
 #~ msgstr "L'écran partagé affiche votre présentation publiée. Publiez les modifications pour mettre à jour son contenu et son accès."
 
-#: src/components/release/releases.ts:88
+#: src/components/release/releases.ts:132
 msgid "The sidebar fits mobile screens more reliably, with corrected French navigation labels."
 msgstr "La barre latérale s'adapte mieux aux écrans mobiles, avec des libellés de navigation en français corrigés."
 
@@ -16435,7 +16479,7 @@ msgstr "Vous souhaitez rejoindre une organisation existante ?"
 #~ msgid "Trying to join an existing organization?"
 #~ msgstr "Vous souhaitez rejoindre une organisation existante ?"
 
-#: src/components/release/releases.ts:64
+#: src/components/release/releases.ts:108
 msgid "Turn conversations into live slides. Run a live session or an on-demand analysis, present to the room and trace insights to their sources."
 msgstr "Transforme les conversations en diapositives en direct. Lance une session en direct ou une analyse à la demande, présente au groupe et retrouve les sources des observations."
 
