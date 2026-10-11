@@ -314,6 +314,7 @@ export function registrations(deps: {
             eventsEnabled: Boolean(config.accounts.eventsUrl),
             slackEnabled: Boolean(config.accounts.slackWebhookUrl),
             samInbox: Boolean(inboxTarget),
+            offerMessages: config.accounts.offerMessages,
             reminderIntervalDays: config.accounts.reminderIntervalDays,
             // Demo builds send no invite links; publishing (in the API) does.
             inviteSecret: "",

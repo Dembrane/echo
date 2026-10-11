@@ -12,6 +12,7 @@ import { localeOfEmail, resolveLocale } from "@dembrane/i18n";
 import { customerOrg, documentFor } from "./access";
 import type { AccountsDeps } from "./deps";
 import { billingPayload, emit, orgPayload, taskPayload, ticketPayload } from "./events";
+import { requestInvoices, staffDocumentUrl } from "./invoice";
 import { accountPageUrl } from "./jobs";
 import type { PricedLine } from "./money";
 import type { OfferContent } from "./offer";
@@ -137,6 +138,8 @@ export async function documentDetail(
       : null,
     signature: sig ? signatureView(sig) : null,
     access: via,
+    staff_url:
+      via === "staff" ? staffDocumentUrl(d.settings.dashboardUrl, doc.orgId, doc.id) : null,
   };
 }
 
@@ -356,6 +359,7 @@ export async function updateBilling(d: AccountsDeps, who: Signed, orgId: string,
   const now = d.now();
   const me = await store.identity(d.db, who.directusUserId);
   await d.db.transaction(async (tx) => {
+    await store.lockOrg(tx, org.id);
     const patch = {
       billing_legal_name: b.legal_name,
       billing_email: b.billing_email.trim().toLowerCase(),
@@ -406,6 +410,8 @@ export async function updateBilling(d: AccountsDeps, who: Signed, orgId: string,
       },
       slack: `:receipt: Billing details for ${org.name} submitted by ${me?.email ?? "a member"}: ${b.legal_name}${b.po_number ? `, PO ${b.po_number}` : ""}.`,
     });
+    // With an offer already signed, these details are the last thing the invoice waited for.
+    await requestInvoices(d, tx, org);
   });
   return billingView(await store.billing(d.db, org.id));
 }

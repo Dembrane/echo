@@ -106,6 +106,10 @@ export const flows: Record<string, Flow> = {
 		roles: ["staff"],
 	},
 	"/admin/accounts/:orgId": { params: { orgId: "$org" }, roles: ["staff"] },
+	"/admin/accounts/:orgId/documents/:docId": {
+		params: { docId: "$doc", orgId: "$org" },
+		roles: ["staff"],
+	},
 	"/admin/accounts/:orgId/documents/:docId/fields": {
 		params: { docId: "$doc", orgId: "$org" },
 		roles: ["staff"],
