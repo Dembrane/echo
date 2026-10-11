@@ -21,6 +21,7 @@ import { FakeCompleter } from "@dembrane/llm";
 import { createLogger } from "@dembrane/observability";
 import { projectRoutes } from "@dembrane/projects";
 import { MemoryRateCounter, RateLimiter } from "@dembrane/ratelimit";
+import { backfillBestPractices, seedBestPractices } from "@dembrane/samples";
 import { computeStats, statsStorage } from "@dembrane/stats";
 import { FilesystemStorage } from "@dembrane/storage";
 import { MemoryJobSink, tenancyRoutes } from "@dembrane/tenancy";
@@ -88,6 +89,7 @@ run("a staff demo where the deployment is production", () => {
   let demo: K.DemoStatusT;
   let demoWorkspace = "";
   let demoProject = "";
+  let ownProject = "";
   let contact: Person;
   let statsBefore: Awaited<ReturnType<typeof computeStats>>;
 
@@ -403,6 +405,12 @@ run("a staff demo where the deployment is production", () => {
     expect(all?.n).toBe(marked.length);
     // Staff's record of the demo names the same project.
     expect(demo.links.projects.map((p) => p.project_id)).toEqual([demoProject]);
+    // The project is a sample, and no copy of a fixture: it carries no fixture stamp.
+    const [project] = await db
+      .select({ sample: schema.project.is_sample, stamp: schema.project.sample_version })
+      .from(schema.project)
+      .where(eq(schema.project.id, demoProject));
+    expect(project).toEqual({ sample: true, stamp: null });
   });
 
   test("the demo adds nothing to the organisation's usage, and real recordings still count", async () => {
@@ -410,23 +418,54 @@ run("a staff demo where the deployment is production", () => {
     const before = (await get(contact, path)).data;
     expect(before).toMatchObject({
       tier: "free",
+      project_count: 0,
       audio_hours: 0,
       usage_gates: { over_cap_active: false, uploads_locked: false },
       free_tier: { active: true, chats_used: 0, reports_used: 0 },
     });
     // The prospect's first own project, in the same workspace: half an hour, then the hour.
-    const own = newId();
-    await realProject(own, demoWorkspace, contact);
-    await record(own, 1800);
+    ownProject = newId();
+    await realProject(ownProject, demoWorkspace, contact);
+    await record(ownProject, 1800);
     expect((await get(contact, path)).data).toMatchObject({
+      project_count: 1,
       audio_hours: 0.5,
       usage_gates: { over_cap_active: false, uploads_locked: false },
     });
-    await record(own, 1800);
+    await record(ownProject, 1800);
     expect((await get(contact, path)).data).toMatchObject({
       audio_hours: 1,
       usage_gates: { over_cap_active: true, uploads_locked: true },
     });
+  });
+
+  test("the demo has a report and questions of its own, and spends none of the free plan's", async () => {
+    const usage = async () =>
+      (await get(contact, `/api/v2/workspaces/${demoWorkspace}/usage`)).data.free_tier;
+    const report = async (project: string) =>
+      (
+        await app.request(`/api/projects/${project}/create-report`, {
+          method: "POST",
+          headers: as(contact),
+          body: JSON.stringify({}),
+        })
+      ).status;
+    // One report on the demo, and a question asked of it.
+    expect(await report(demoProject)).toBe(202);
+    expect(await report(demoProject)).toBe(402);
+    const chat = newId();
+    await db.insert(schema.project_chat).values({ id: chat, project_id: demoProject });
+    await db.insert(schema.project_chat_message).values({
+      id: newId(),
+      project_chat_id: chat,
+      message_from: "user",
+      text: "What stood out?",
+    });
+    expect(await usage()).toMatchObject({ chats_used: 0, reports_used: 0 });
+    // The free plan's one report is still there for the prospect's own project.
+    expect(await report(ownProject)).toBe(202);
+    expect(await report(ownProject)).toBe(402);
+    expect(await usage()).toMatchObject({ chats_used: 0, reports_used: 1 });
   });
 
   test("the public numbers count the real project and leave the demo out", async () => {
@@ -434,6 +473,11 @@ run("a staff demo where the deployment is production", () => {
     // project with two conversations was added; the demo's project and conversations are not in.
     expect(statsBefore).toEqual({ projects_count: 1, conversations_count: 1, hours_recorded: 0 });
     expect(await stats()).toEqual({ projects_count: 2, conversations_count: 3, hours_recorded: 2 });
+    // The count views of the operations dashboards see the same three conversations.
+    const [counted] = (await db.execute(
+      sql`select coalesce(sum(created), 0)::int as n from obs.day_conversations`,
+    )) as unknown as { n: number }[];
+    expect(counted?.n).toBe(3);
   });
 
   test("the demo reaches no other organisation, and no other organisation reaches it", async () => {
@@ -468,6 +512,34 @@ run("a staff demo where the deployment is production", () => {
       403,
     );
     expect((await access.project(contact, demoProject, "project:read")).role).toBe("admin");
+  });
+
+  test("the sample updater brings an older best-practices copy up to date and leaves the demo as it is", async () => {
+    const live = async () =>
+      (
+        (await db.execute(sql`select count(*)::int as n from conversation
+          where project_id = ${demoProject} and deleted_at is null`)) as unknown as { n: number }[]
+      )[0]?.n;
+    // A best-practices copy beside the demo, stamped as an older fixture's.
+    const owner = { appUserId: contact.appUserId as string, userId: contact.directusUserId };
+    const copy = await seedBestPractices(db, owner, demoWorkspace, new Date());
+    expect(copy.status).toBe("created");
+    await db
+      .update(schema.project)
+      .set({ sample_version: "best-practices@older" })
+      .where(eq(schema.project.id, copy.project_id));
+    const report = await backfillBestPractices(db, { now: new Date() });
+    expect(report).toMatchObject({ updated: 1, failed: 0 });
+    expect(await live()).toBe(AUTHORED.conversations.length);
+    const [project] = await db
+      .select({
+        sample: schema.project.is_sample,
+        stamp: schema.project.sample_version,
+        deleted: schema.project.deleted_at,
+      })
+      .from(schema.project)
+      .where(eq(schema.project.id, demoProject));
+    expect(project).toEqual({ sample: true, stamp: null, deleted: null });
   });
 
   test("the organisation's admin removes the demo by deleting its project; nobody else can", async () => {

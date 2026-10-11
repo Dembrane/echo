@@ -232,6 +232,9 @@ run("demos made in echo", () => {
       .where(eq(schema.project.id, project?.project_id as string));
     expect(proj?.name).toStartWith("[SYNTHETIC]");
     expect(proj?.is_conversation_allowed).toBe(false);
+    // A sample: out of usage, limits and numbers, and no copy of a fixture.
+    expect(proj?.is_sample).toBe(true);
+    expect(proj?.sample_version).toBeNull();
     // The contact owns it: the popcorn read acts as the owner.
     const [contact] = await w.db
       .select()
