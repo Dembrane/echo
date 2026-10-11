@@ -6,8 +6,8 @@ import type {
   LanguageModelV4StreamPart,
 } from "@ai-sdk/provider";
 import { embed, generateText, streamText } from "ai";
-import { FallbackModel, type ModelCall } from "../src";
-import { errorLabel, observedEmbedding } from "../src/observe";
+import { FallbackModel, type ModelCall, resetObserverFaults } from "../src";
+import { errorLabel, observedEmbedding, observeSafely } from "../src/observe";
 
 type Behaviour = "ok" | "safety" | 429 | 400 | 503 | "stream-error";
 
@@ -184,7 +184,7 @@ describe("observe", () => {
         return { embeddings: [[0.1, 0.2]], usage: { tokens: 7 }, warnings: [] } as never;
       },
     };
-    const m = observedEmbedding(raw, "embedding", (c) => calls.push(c));
+    const m = observedEmbedding(raw, "embedding", (make) => calls.push(make()));
     await embed({ model: m, value: "hi" });
     expect(calls[0]).toMatchObject({
       group: "embedding",
@@ -207,5 +207,115 @@ describe("observe", () => {
     expect(errorLabel(new Error("plain"))).toBe("error");
     expect(errorLabel(new RangeError("plain"))).toBe("RangeError");
     expect(errorLabel("string")).toBe("error");
+  });
+});
+
+describe("a faulty observer never changes a call", () => {
+  const boom = () => {
+    throw new Error("metering is broken");
+  };
+  // A model whose scripted answers are consumed, so an untouched script proves no call.
+  const scripted = (id: string, script: Behaviour[]) => ({ id, script, model: model(id, script) });
+
+  test("generate keeps its result, the fallback stays untried, the fault is reported once", async () => {
+    resetObserverFaults();
+    const faults: unknown[] = [];
+    const a = scripted("gemini-a", ["ok", "ok"]);
+    const b = scripted("gemini-b", ["ok"]);
+    const m = new FallbackModel(
+      "text_fast",
+      [
+        { label: "a", model: a.model },
+        { label: "b", model: b.model },
+      ],
+      { ...fast, observe: boom, onObserverFault: (err) => faults.push(err) },
+    );
+    expect((await generateText({ model: m, prompt: "hi" })).text).toBe("answer from gemini-a");
+    expect((await generateText({ model: m, prompt: "hi" })).text).toBe("answer from gemini-a");
+    expect(b.script).toEqual(["ok"]);
+    expect(faults).toHaveLength(1);
+    expect(String(faults[0])).toContain("metering is broken");
+  });
+
+  test("a failing call still fails with its own error, and retries as before", async () => {
+    resetObserverFaults();
+    const m = group({ "gemini-a": [429, "ok"] }, []);
+    const faulty = new FallbackModel(
+      "text_fast",
+      [{ label: "a", model: model("gemini-a", [400]) }],
+      {
+        ...fast,
+        observe: boom,
+        onObserverFault: () => {},
+      },
+    );
+    await expect(generateText({ model: faulty, prompt: "hi" })).rejects.toThrow("400");
+    expect((await generateText({ model: m, prompt: "hi" })).text).toBe("answer from gemini-a");
+  });
+
+  test("a stream delivers every part and closes normally", async () => {
+    resetObserverFaults();
+    const m = new FallbackModel("text_fast", [{ label: "a", model: model("gemini-a", ["ok"]) }], {
+      ...fast,
+      observe: boom,
+      onObserverFault: () => {},
+    });
+    const { stream } = await m.doStream({ prompt: [] });
+    const parts: string[] = [];
+    for await (const part of stream) parts.push(part.type);
+    expect(parts).toEqual([
+      "stream-start",
+      "response-metadata",
+      "text-start",
+      "text-delta",
+      "text-delta",
+      "text-end",
+      "finish",
+    ]);
+    const result = streamText({ model: m, prompt: "hi" });
+    let text = "";
+    for await (const delta of result.textStream) text += delta;
+    expect(text).toBe("hello world");
+  });
+
+  test("an embedding keeps its vector", async () => {
+    resetObserverFaults();
+    const raw: EmbeddingModelV4 = {
+      specificationVersion: "v4",
+      provider: "fake",
+      modelId: "embed-1",
+      maxEmbeddingsPerCall: 1,
+      supportsParallelCalls: false,
+      async doEmbed() {
+        return { embeddings: [[0.1, 0.2]], usage: { tokens: 7 }, warnings: [] } as never;
+      },
+    };
+    const faults: unknown[] = [];
+    const m = observedEmbedding(raw, "embedding", (make) =>
+      observeSafely(boom, (err) => faults.push(err), make),
+    );
+    expect((await embed({ model: m, value: "hi" })).embedding).toEqual([0.1, 0.2]);
+    expect(faults).toHaveLength(1);
+  });
+
+  test("a mapping fault on an odd provider result is held the same way", async () => {
+    resetObserverFaults();
+    const odd: LanguageModelV4 = {
+      ...model("gemini-odd", ["ok"]),
+      async doGenerate() {
+        // No usage and no finish reason at all: the mapping must cope, and if it did not, the guard would.
+        return { content: [{ type: "text", text: "odd" }], warnings: [] } as never;
+      },
+    };
+    const calls: ModelCall[] = [];
+    const m = new FallbackModel("text_fast", [{ label: "odd", model: odd }], {
+      ...fast,
+      observe: (c) => calls.push(c),
+      onObserverFault: () => {},
+    });
+    // Straight to the model: the AI SDK itself refuses a result without usage.
+    const r = await m.doGenerate({ prompt: [] });
+    expect((r.content[0] as { text: string }).text).toBe("odd");
+    expect(calls[0]).toMatchObject({ status: "ok", inputTokens: null, finishReason: null });
   });
 });

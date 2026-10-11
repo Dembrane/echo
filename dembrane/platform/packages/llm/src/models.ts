@@ -1,7 +1,7 @@
 import { createVertex } from "@ai-sdk/google-vertex";
 import type { EmbeddingModelV4, LanguageModelV4 } from "@ai-sdk/provider";
 import { type Deployment, FallbackModel, type FallbackOptions } from "./fallback";
-import { observedEmbedding } from "./observe";
+import { observedEmbedding, observeSafely } from "./observe";
 
 /** The model groups callers ask for by purpose, never by vendor model name. */
 export type ModelGroup = "text_fast" | "multi_modal_fast" | "multi_modal_pro";
@@ -45,7 +45,11 @@ export function createModels(cfg: ModelsConfig, opts: Partial<FallbackOptions> =
   };
   const regional = createVertex({ project: cfg.vertexProject, location: cfg.embeddingLocation });
   const raw = regional.textEmbeddingModel(cfg.embeddingModel) as EmbeddingModelV4;
-  const embedding = opts.observe ? observedEmbedding(raw, "embedding", opts.observe) : raw;
+  const embedding = opts.observe
+    ? observedEmbedding(raw, "embedding", (make) =>
+        observeSafely(opts.observe, opts.onObserverFault, make),
+      )
+    : raw;
   return {
     model: (g) => built[g],
     embedding: () => ({ model: embedding, dimensions: cfg.embeddingDimensions }),

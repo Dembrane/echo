@@ -11,7 +11,13 @@ export {
 export { type FakeAnswer, FakeCompleter, FakeEmbedder } from "./fake";
 export { type Deployment, FallbackModel, type FallbackOptions, isRetryable } from "./fallback";
 export { createModels, type ModelGroup, type Models, type ModelsConfig } from "./models";
-export { errorLabel, type ModelCall, type ModelCallObserver } from "./observe";
+export {
+  errorLabel,
+  type ModelCall,
+  type ModelCallObserver,
+  observeSafely,
+  resetObserverFaults,
+} from "./observe";
 export {
   LANGUAGE_NAMES,
   TRANSLATION_SCHEMA,

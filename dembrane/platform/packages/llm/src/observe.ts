@@ -32,6 +32,41 @@ export interface ModelCall {
 
 export type ModelCallObserver = (call: ModelCall) => void;
 
+/** Builds and hands over one ModelCall; the guard runs it where no fault can reach the caller. */
+export type Report = (make: () => ModelCall) => void;
+
+let faultReported = false;
+
+/**
+ * The one door every observation goes through: the mapping and the observer run inside it,
+ * it never throws, and the first fault per process goes to onFault (console.warn without one);
+ * later faults are silent. Metering can be wrong; a model call must not pay for it.
+ */
+export function observeSafely(
+  observe: ModelCallObserver | undefined,
+  onFault: ((err: unknown) => void) | undefined,
+  make: () => ModelCall,
+): void {
+  if (!observe) return;
+  try {
+    observe(make());
+  } catch (err) {
+    if (faultReported) return;
+    faultReported = true;
+    try {
+      if (onFault) onFault(err);
+      else console.warn("model call metering failed; later faults are silent:", err);
+    } catch {
+      // The fault sink itself failed: there is nowhere left to say so.
+    }
+  }
+}
+
+/** Forgets that a fault was reported, so a test can see the next one. */
+export function resetObserverFaults(): void {
+  faultReported = false;
+}
+
 export interface CallMeta {
   readonly group: string;
   readonly model: string;
@@ -132,18 +167,18 @@ export function observedStream(
   meta: CallMeta,
   startedAt: Date,
   t0: number,
-  observe: ModelCallObserver,
+  report: Report,
 ): ReadableStream<LanguageModelV4StreamPart> {
   const reader = stream.getReader();
   let usage: LanguageModelV4Usage | undefined;
   let finish: LanguageModelV4FinishReason | undefined;
   let failure: unknown;
   let reported = false;
-  const report = (err?: unknown) => {
+  const done = (err?: unknown) => {
     if (reported) return;
     reported = true;
     const error = err ?? failure;
-    observe(
+    report(() =>
       error !== undefined
         ? failedCall(meta, "stream", startedAt, t0, error)
         : {
@@ -161,12 +196,12 @@ export function observedStream(
       try {
         next = await reader.read();
       } catch (err) {
-        report(err);
+        done(err);
         controller.error(err);
         return;
       }
       if (next.done) {
-        report();
+        done();
         controller.close();
         return;
       }
@@ -180,7 +215,7 @@ export function observedStream(
       controller.enqueue(part);
     },
     cancel(cause) {
-      report(cause ?? new Error("cancelled"));
+      done(cause ?? new Error("cancelled"));
       return reader.cancel(cause);
     },
   });
@@ -190,7 +225,7 @@ export function observedStream(
 export function observedEmbedding(
   model: EmbeddingModelV4,
   group: string,
-  observe: ModelCallObserver,
+  report: Report,
 ): EmbeddingModelV4 {
   const meta: CallMeta = { group, model: model.modelId, attempt: 1, fallback: false };
   return new Proxy(model, {
@@ -199,14 +234,15 @@ export function observedEmbedding(
       return async (options: Parameters<EmbeddingModelV4["doEmbed"]>[0]) => {
         const startedAt = new Date();
         const t0 = performance.now();
+        let result: Awaited<ReturnType<EmbeddingModelV4["doEmbed"]>>;
         try {
-          const result = await target.doEmbed(options);
-          observe(embedCall(meta, startedAt, t0, result.usage));
-          return result;
+          result = await target.doEmbed(options);
         } catch (err) {
-          observe(failedCall(meta, "embed", startedAt, t0, err));
+          report(() => failedCall(meta, "embed", startedAt, t0, err));
           throw err;
         }
+        report(() => embedCall(meta, startedAt, t0, result.usage));
+        return result;
       };
     },
   });

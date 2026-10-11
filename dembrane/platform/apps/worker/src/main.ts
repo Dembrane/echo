@@ -109,7 +109,11 @@ const models = createModels(
     embeddingLocation: config.llm.embeddingLocation,
     embeddingDimensions: config.llm.embeddingDimensions,
   },
-  { observe: metering.observe },
+  {
+    observe: metering.observe,
+    onObserverFault: (err) =>
+      logger.warn({ err }, "model call metering failed; later faults are silent"),
+  },
 );
 const audio = config.audio.s3Bucket
   ? new S3Storage({

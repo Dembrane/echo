@@ -10,6 +10,8 @@ import {
   generateCall,
   type ModelCallObserver,
   observedStream,
+  observeSafely,
+  type Report,
 } from "./observe";
 
 export interface Deployment {
@@ -29,6 +31,8 @@ export interface FallbackOptions {
   readonly onFallback?: (event: { from: string; to: string | null; error: unknown }) => void;
   /** Told about every attempt on every deployment: the metering's only source. */
   readonly observe?: ModelCallObserver;
+  /** Hears the first fault of the observer or its mapping, once per process. */
+  readonly onObserverFault?: (err: unknown) => void;
 }
 
 const DEFAULTS: FallbackOptions = {
@@ -65,18 +69,23 @@ export class FallbackModel implements LanguageModelV4 {
     return (this.deployments[0] as Deployment).model.supportedUrls;
   }
 
+  /** Metering never changes a call: it runs after the result is in hand and cannot throw. */
+  private readonly report: Report = (make) =>
+    observeSafely(this.opts.observe, this.opts.onObserverFault, make);
+
   doGenerate(options: LanguageModelV4CallOptions): Promise<LanguageModelV4GenerateResult> {
     return this.run(async (d, meta) => {
       const startedAt = new Date();
       const t0 = performance.now();
+      let result: LanguageModelV4GenerateResult;
       try {
-        const result = await d.model.doGenerate(options);
-        this.opts.observe?.(generateCall(meta, startedAt, t0, result));
-        return result;
+        result = await d.model.doGenerate(options);
       } catch (err) {
-        this.opts.observe?.(failedCall(meta, "generate", startedAt, t0, err));
+        this.report(() => failedCall(meta, "generate", startedAt, t0, err));
         throw err;
       }
+      this.report(() => generateCall(meta, startedAt, t0, result));
+      return result;
     }, options.abortSignal);
   }
 
@@ -84,15 +93,15 @@ export class FallbackModel implements LanguageModelV4 {
     return this.run(async (d, meta) => {
       const startedAt = new Date();
       const t0 = performance.now();
+      let result: LanguageModelV4StreamResult;
       try {
-        const result = await d.model.doStream(options);
-        const observe = this.opts.observe;
-        if (!observe) return result;
-        return { ...result, stream: observedStream(result.stream, meta, startedAt, t0, observe) };
+        result = await d.model.doStream(options);
       } catch (err) {
-        this.opts.observe?.(failedCall(meta, "stream", startedAt, t0, err));
+        this.report(() => failedCall(meta, "stream", startedAt, t0, err));
         throw err;
       }
+      if (!this.opts.observe) return result;
+      return { ...result, stream: observedStream(result.stream, meta, startedAt, t0, this.report) };
     }, options.abortSignal);
   }
 
