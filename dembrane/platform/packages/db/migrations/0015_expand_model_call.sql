@@ -152,12 +152,14 @@ SELECT started_at, service, coalesce(operation, '(none)') AS operation, model_gr
        status, error, finish_reason, attempt, fallback, ms, input_tokens, output_tokens
 FROM model_call
 WHERE started_at >= now() - interval '7 days';--> statement-breakpoint
+-- A chunk's timestamp comes from the client clock and can sit in the future; the indexed
+-- timestamp narrows the scan, created_at decides what counts as now.
 CREATE OR REPLACE VIEW "obs"."live_now" AS
 SELECT (SELECT count(*) FROM platform_presence WHERE kind = 'liveness' AND expires_at > now())::int AS participants_live,
        (SELECT count(*) FROM platform_presence WHERE kind = 'active' AND expires_at > now())::int AS conversations_active,
-       (SELECT count(DISTINCT conversation_id) FROM conversation_chunk WHERE "timestamp" > now() - interval '10 minutes')::int AS conversations_with_audio_10m,
+       (SELECT count(DISTINCT conversation_id) FROM conversation_chunk WHERE "timestamp" > now() - interval '10 minutes' AND "timestamp" < now() + interval '10 minutes' AND created_at > now() - interval '10 minutes')::int AS conversations_with_audio_10m,
        (SELECT count(*) FROM conversation WHERE is_finished = false AND deleted_at IS NULL AND created_at > now() - interval '24 hours')::int AS unfinished_24h,
-       (SELECT count(*) FROM conversation_chunk WHERE "timestamp" > now() - interval '1 hour' AND transcript IS NULL AND error IS NULL)::int AS chunks_waiting_1h;--> statement-breakpoint
+       (SELECT count(*) FROM conversation_chunk WHERE "timestamp" > now() - interval '1 hour' AND "timestamp" < now() + interval '10 minutes' AND created_at > now() - interval '1 hour' AND transcript IS NULL AND error IS NULL)::int AS chunks_waiting_1h;--> statement-breakpoint
 DO $$
 BEGIN
   -- The dashboard role is made by operations, outside migrations (it carries a password).
