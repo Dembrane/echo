@@ -70,8 +70,6 @@ export function freshSteps(): Steps {
 export interface DemoSettings {
   readonly portalUrl: string;
   readonly apiUrl: string;
-  /** This deployment's own addresses, refused like the seed route refuses them on production. */
-  readonly ownUrls: readonly string[];
   /** Staff's workspace for demo projects, so staff can review them; null puts them in the prospect's organisation. */
   readonly workspaceId: string | null;
   /** Where the QR leads: dembrane's Product Feedback portal on production. */

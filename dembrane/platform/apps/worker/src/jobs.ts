@@ -327,7 +327,6 @@ export function registrations(deps: {
           demo: {
             portalUrl: deps.popcorn.portalUrl,
             apiUrl: config.http.publicUrl,
-            ownUrls: [config.http.publicUrl, deps.dashboardUrl, deps.popcorn.portalUrl],
             workspaceId: config.accounts.demoWorkspaceId ?? null,
             feedbackUrl: config.accounts.demoFeedbackUrl,
           },

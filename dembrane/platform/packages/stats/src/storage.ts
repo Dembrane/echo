@@ -1,8 +1,15 @@
 import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
-import { and, eq, gte, inArray, isNotNull, isNull, notInArray, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, isNotNull, isNull, not, notInArray, sql } from "drizzle-orm";
 
 const { directus_users, directus_roles, project, conversation } = schema;
+
+/**
+ * A project whose popcorn session is a synthetic demo. Its conversations are invented by
+ * us, so the public numbers leave the project and its conversations out.
+ */
+const SYNTHETIC_DEMO = sql`exists (select 1 from agent_loop l where l.project_id = ${project.id}
+  and l.popcorn_state->'demo'->>'synthetic' = 'true')`;
 
 export interface StatsStore {
   /** Directus users in the Administrator role, whose projects never count. */
@@ -37,6 +44,8 @@ export function statsStorage(db: Db): StatsStore {
           isNotNull(project.directus_user_id),
           notInArray(project.directus_user_id, [...excluded]),
         );
+      // A demo in a prospect's own organisation is owned by the prospect, not by staff.
+      conds.push(not(SYNTHETIC_DEMO));
       const rows = await db
         .select({ id: project.id })
         .from(project)

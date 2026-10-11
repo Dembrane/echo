@@ -143,32 +143,35 @@ run("demos made in echo", () => {
   const load = async (id: string) =>
     (await w.db.select().from(schema.account_demo).where(eq(schema.account_demo.id, id)))[0];
 
-  test("starting: staff only, validated, refused towards production, queued as a workflow run", async () => {
+  test("starting: staff only, validated, on production too, queued as a workflow run", async () => {
     expect((await call(w, "POST", "/api/v2/admin/accounts/demos", "admin", {})).status).toBe(403);
     expect((await start({ contact_email: undefined })).status).toBe(422);
     expect((await start({ website_url: "ftp://x.example" })).status).toBe(422);
-    // The same host refusal as the seed route: this deployment's own address counts.
-    await expect(
-      createDemo(
-        w.deps,
-        {
-          ownUrls: ["https://api.dembrane.com"],
-          portalUrl: "https://portal.example.test",
-          apiUrl: "https://api.example.test",
+    // A deployment at the production addresses starts a demo like any other.
+    const onProduction = await createDemo(
+      {
+        ...w.deps,
+        settings: {
+          ...w.deps.settings,
+          dashboardUrl: "https://dashboard.dembrane.com",
+          demo: {
+            portalUrl: "https://portal.dembrane.com",
+            apiUrl: "https://api.dembrane.com",
+            workspaceId: null,
+          },
         },
-        w.people.staff,
-        {
-          ...K.DemoCreateRequest.parse({
-            organisation_name: "X",
-            website_url: "https://x.example",
-            brief: "b",
-            language: "en",
-            contact_name: "c",
-            contact_email: "c@x.example",
-          }),
-        },
-      ),
-    ).rejects.toThrow(/staging/);
+      },
+      w.people.staff,
+      K.DemoCreateRequest.parse({
+        organisation_name: "X",
+        website_url: "https://x.example",
+        brief: "b",
+        language: "en",
+        contact_name: "c",
+        contact_email: "c@x.example",
+      }),
+    );
+    expect(onProduction.status).toBe("queued");
     w.jobs.jobs.length = 0;
     const r = await start();
     expect(r.status).toBe(201);
