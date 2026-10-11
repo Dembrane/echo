@@ -197,6 +197,7 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
       eventsEnabled: false,
       slackEnabled: false,
       samInbox: false,
+      offerMessages: false,
       reminderIntervalDays: 7,
       inviteSecret: "unused",
     },

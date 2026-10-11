@@ -32,6 +32,12 @@ export interface AccountsSettings {
    * and sam posts their Slack line, so echo does not.
    */
   readonly samInbox: boolean;
+  /**
+   * sam handles the offer flow's messages (ACCOUNTS_OFFER_MESSAGES): a document sent or
+   * withdrawn by staff, and the invoice request. Off, they are not made, so nothing sam
+   * would refuse is queued.
+   */
+  readonly offerMessages: boolean;
   readonly reminderIntervalDays: number;
   /** Signs invite links like every other invite (account.inviteHashSecret). */
   readonly inviteSecret: string;
