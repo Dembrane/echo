@@ -211,10 +211,11 @@ run("demos made in echo", () => {
     expect(view.research).not.toContain("budget");
     expect(view.research).toContain("Invented themes (fiction");
     expect(view.conversations).toBe(8);
-    // Seed: the organisation as a prospect, the contact its admin but held back from signing in.
+    // Seed: the organisation as a prospect, its contact held: no member yet, and no sign-in.
     expect(view.slug).toBe(demoSlug("Gemeente Voorbeeldstad", status.id));
     const org = await store.org(w.db, view.org_id as string);
     expect(org?.account_stage).toBe("prospect");
+    expect(await store.members(w.db, view.org_id as string)).toEqual([]);
     expect(await store.mayReceiveCode(w.db, "anna@voorbeeldstad.example", w.clock.now)).toBe(false);
     const project = view.links.projects[0];
     const conversations = await w.db
@@ -231,7 +232,7 @@ run("demos made in echo", () => {
       .where(eq(schema.project.id, project?.project_id as string));
     expect(proj?.name).toStartWith("[SYNTHETIC]");
     expect(proj?.is_conversation_allowed).toBe(false);
-    // The contact owns it, so the popcorn read (acting as the owner) can reach the project.
+    // The contact owns it: the popcorn read acts as the owner.
     const [contact] = await w.db
       .select()
       .from(schema.directus_users)
@@ -464,6 +465,130 @@ run("demos made in echo", () => {
     expect(enabled.status).toBe(200);
     expect(await store.mayReceiveCode(w.db, "sanne@voorbeeldstad.example", w.clock.now)).toBe(true);
     expect(w.jobs.of("account.send-email")).toHaveLength(0);
+  });
+
+  /** What a person has of the demo's organisation, read the way the dashboard reads it. */
+  const has = async (who: string, view: K.DemoStatusT) => {
+    const as = who as keyof World["people"];
+    const person = w.people[as];
+    const summary = K.TasksSummary.parse(
+      (await call(w, "GET", "/api/v2/account/tasks-summary", as)).data,
+    );
+    return {
+      account_page: (await call(w, "GET", `/api/v2/orgs/${view.org_id}/account`, as)).status,
+      in_tasks_summary: summary.some((o) => o.org_id === view.org_id),
+      demo_project: await w.deps.access
+        .project(person, view.links.projects[0]?.project_id as string, "project:read")
+        .then(
+          (a) => a.role,
+          () => null,
+        ),
+      member_as:
+        (await store.members(w.db, view.org_id as string)).find(
+          (m) => m.appUserId === person.appUserId,
+        )?.role ?? null,
+    };
+  };
+  const NOTHING = {
+    account_page: 404,
+    in_tasks_summary: false,
+    demo_project: null,
+    member_as: null,
+  };
+  const ADMIN = {
+    account_page: 200,
+    in_tasks_summary: true,
+    demo_project: "admin",
+    member_as: "admin",
+  } as const;
+  /** A draft demo for a contact; someone new is added to the world's people under `who`. */
+  const draftFor = async (who: string) => {
+    const email = `${who}@example.test`;
+    const status = K.DemoStatus.parse((await start({ contact_email: email })).data);
+    await buildDemo(deps, status.id, 1);
+    const user = await store.identityByEmail(w.db, email);
+    const app = await store.appUserByDirectusId(w.db, user?.id as string);
+    (w.people as Record<string, World["people"]["admin"]>)[who] ??= {
+      appUserId: app?.id as string,
+      directusUserId: user?.id as string,
+      isStaff: false,
+      email,
+    };
+    return K.DemoStatus.parse(
+      (await call(w, "GET", `/api/v2/admin/accounts/demos/${status.id}`, "staff")).data,
+    );
+  };
+  const publish = (id: string) =>
+    call(w, "POST", `/api/v2/admin/accounts/demos/${id}/publish`, "staff", { sign_in: true });
+
+  test("a contact with an account gets the organisation when staff publish, the same as a new contact", async () => {
+    // "outsider" signed up before and runs an organisation of their own; "nieuw" is new.
+    const theirs = await draftFor("outsider");
+    const fresh = await draftFor("nieuw");
+    expect(await has("outsider", theirs)).toEqual(NOTHING);
+    expect(await has("nieuw", fresh)).toEqual(NOTHING);
+    // Their own account is as it was: they sign in, and see only their own organisation.
+    expect(await store.mayReceiveCode(w.db, "outsider@example.test", w.clock.now)).toBe(true);
+    expect(await store.mayReceiveCode(w.db, "nieuw@example.test", w.clock.now)).toBe(false);
+    expect(
+      K.TasksSummary.parse(
+        (await call(w, "GET", "/api/v2/account/tasks-summary", "outsider")).data,
+      ).map((o) => o.org_id),
+    ).toEqual([w.otherOrgId]);
+    w.jobs.jobs.length = 0;
+    expect((await publish(theirs.id)).status).toBe(200);
+    expect((await publish(fresh.id)).status).toBe(200);
+    expect(await has("outsider", theirs)).toEqual(ADMIN);
+    expect(await has("nieuw", fresh)).toEqual(ADMIN);
+    expect(await store.mayReceiveCode(w.db, "nieuw@example.test", w.clock.now)).toBe(true);
+    expect(w.jobs.of("account.send-email").map((m) => (m as { to: string }).to)).toEqual([
+      "outsider@example.test",
+      "nieuw@example.test",
+    ]);
+    // Publishing again adds no second membership.
+    await publish(theirs.id);
+    expect(await store.members(w.db, theirs.org_id as string)).toHaveLength(1);
+  });
+
+  test("sending the offer of an unpublished demo gives its contact the organisation", async () => {
+    const demo = await draftFor("signer");
+    expect(await has("signer", demo)).toEqual(NOTHING);
+    const sent = await call(
+      w,
+      "POST",
+      `/api/v2/admin/accounts/${demo.org_id}/documents/${demo.offer_document_id}/send`,
+      "staff",
+      {},
+    );
+    expect(sent.status).toBe(200);
+    expect(await has("signer", demo)).toEqual(ADMIN);
+    // They can open what was sent to them.
+    const page = K.AccountPage.parse(
+      (await call(w, "GET", `/api/v2/orgs/${demo.org_id}/account`, "signer")).data,
+    );
+    expect(page.documents.map((d) => d.id)).toEqual([demo.offer_document_id as string]);
+    expect(page.tasks.some((t) => t.code === "sign_offer" && t.status === "open")).toBe(true);
+  });
+
+  test("enabling the account of an unpublished demo gives its contact the organisation", async () => {
+    const demo = await draftFor("member");
+    expect(await has("member", demo)).toEqual(NOTHING);
+    const enabled = await call(w, "POST", `/api/v2/admin/accounts/${demo.org_id}/enable`, "staff", {
+      stage: "prospect",
+    });
+    expect(enabled.status).toBe(200);
+    expect(await has("member", demo)).toEqual(ADMIN);
+  });
+
+  test("a contact of two demos gets each organisation with its own demo", async () => {
+    const first = await draftFor("tweemaal");
+    const second = await draftFor("tweemaal");
+    expect(second.org_id).not.toBe(first.org_id);
+    expect((await publish(second.id)).status).toBe(200);
+    expect(await has("tweemaal", second)).toEqual(ADMIN);
+    expect(await has("tweemaal", first)).toEqual(NOTHING);
+    expect((await publish(first.id)).status).toBe(200);
+    expect(await has("tweemaal", first)).toEqual(ADMIN);
   });
 
   test("a failed step: the demo says which and why; a retry resumes there without repeating the others", async () => {

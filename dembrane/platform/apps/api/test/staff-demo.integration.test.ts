@@ -3,12 +3,13 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Writable } from "node:stream";
-import { Access, DrizzleAccessStore, DrizzleStaffAudit } from "@dembrane/access";
+import { Access, DrizzleAccessStore, DrizzleStaffAudit, resolveProject } from "@dembrane/access";
 import {
   type AccountsDeps,
   accountsRoutes,
   buildDemo,
   type DemoBuildDeps,
+  demoBuildAccess,
   ensureUser,
   contract as K,
   MemoryJobs,
@@ -217,6 +218,7 @@ run("a staff demo where the deployment is production", () => {
         eventsEnabled: false,
         slackEnabled: false,
         samInbox: false,
+        offerMessages: false,
         reminderIntervalDays: 7,
         inviteSecret: "x".repeat(32),
         demo: demoSettings,
@@ -309,7 +311,20 @@ run("a staff demo where the deployment is production", () => {
     await a.end();
   });
 
-  test("the demo is a draft in an organisation of its own, with the contact as its only member", async () => {
+  const members = () =>
+    db
+      .select({ user: schema.org_membership.user_id, role: schema.org_membership.role })
+      .from(schema.org_membership)
+      .where(eq(schema.org_membership.org_id, demo.org_id as string));
+  const signIn = async () =>
+    (
+      await db
+        .select({ status: schema.directus_users.status })
+        .from(schema.directus_users)
+        .where(eq(schema.directus_users.id, contact.directusUserId))
+    )[0]?.status;
+
+  test("the demo is a draft in an organisation of its own, with no member until staff publish", async () => {
     expect(demo.status).toBe("draft");
     expect(demo.org_id).not.toBe(customer.org);
     const [workspace] = await db
@@ -317,18 +332,45 @@ run("a staff demo where the deployment is production", () => {
       .from(schema.workspace)
       .where(eq(schema.workspace.id, demoWorkspace));
     expect(workspace?.org_id).toBe(demo.org_id as string);
-    const members = await db
-      .select({ user: schema.org_membership.user_id, role: schema.org_membership.role })
-      .from(schema.org_membership)
-      .where(eq(schema.org_membership.org_id, demo.org_id as string));
-    expect(members).toEqual([{ user: contact.appUserId as string, role: "admin" }]);
+    expect(await members()).toEqual([]);
     // A new contact cannot sign in before staff publish, and no email was queued.
-    const [held] = await db
-      .select({ status: schema.directus_users.status })
-      .from(schema.directus_users)
-      .where(eq(schema.directus_users.id, contact.directusUserId));
-    expect(held?.status).toBe("draft");
+    expect(await signIn()).toBe("draft");
     expect((deps.jobs as MemoryJobs).of("account.send-email")).toEqual([]);
+    await expect(access.project(contact, demoProject, "project:read")).rejects.toThrow();
+    const theirs = (await get(contact, "/api/v2/workspaces")).data as {
+      organisations: { id: string }[];
+    };
+    expect(theirs.organisations).toEqual([]);
+  });
+
+  test("the build's read reaches the demo project as its contact, and no other project", async () => {
+    const who = { appUserId: contact.appUserId, directusUserId: contact.directusUserId };
+    const build = demoBuildAccess(db);
+    expect((await resolveProject(build, demoProject, who, new Date()))?.role).toBe("admin");
+    expect(await resolveProject(build, customer.project, who, new Date())).toBeNull();
+    // Only the demo's contact is counted, and only by the build's store.
+    const other = {
+      appUserId: people.customer.appUserId,
+      directusUserId: people.customer.directusUserId,
+    };
+    expect(await resolveProject(build, demoProject, other, new Date())).toBeNull();
+    expect(
+      await resolveProject(new DrizzleAccessStore(db), demoProject, who, new Date()),
+    ).toBeNull();
+  });
+
+  test("staff publish with sign-in: the contact is the organisation's only member and is invited", async () => {
+    const res = await app.request(`/api/v2/admin/accounts/demos/${demo.id}/publish`, {
+      method: "POST",
+      headers: as(people.staff),
+      body: JSON.stringify({ sign_in: true }),
+    });
+    expect(res.status).toBe(200);
+    expect(await members()).toEqual([{ user: contact.appUserId as string, role: "admin" }]);
+    expect(await signIn()).toBe("active");
+    expect((deps.jobs as MemoryJobs).of("account.send-email")).toMatchObject([
+      { to: "robin@harbourtown.example", template: "account_invite" },
+    ]);
   });
 
   test("every demo conversation is marked synthetic and can be found by that mark", async () => {

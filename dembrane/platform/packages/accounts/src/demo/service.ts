@@ -7,7 +7,7 @@ import { desc, eq } from "drizzle-orm";
 import type { AccountsDeps } from "../deps";
 import { isUuid } from "../deps";
 import { emit } from "../events";
-import { releaseSignIn } from "../prospect";
+import { releaseHeldContacts } from "../prospect";
 import { staffBase } from "../views";
 import { DEMO_STEPS, type DemoInput, freshSteps, type SeedOutput, type Steps } from "./build";
 import { demoBuild, demoWorkflowId } from "./job";
@@ -138,9 +138,9 @@ export async function retryDemo(d: AccountsDeps, id: string) {
 
 /**
  * Makes the draft public: each session's public setting goes on, so its link serves. With
- * sign-in on, the contact is released (codes may now reach them), the page gets its
- * "Continue in dembrane" link, and the invitation email goes out: at publish, never before.
- * Publishing twice changes nothing.
+ * sign-in on, the contact is released (they become the organisation's admin, and codes may
+ * now reach someone new), the page gets its "Continue in dembrane" link, and the invitation
+ * email goes out: at publish, never before. Publishing twice changes nothing.
  */
 export async function publishDemo(
   d: AccountsDeps,
@@ -183,7 +183,7 @@ export async function publishDemo(
       }
     }
     if (signIn) {
-      await releaseSignIn(tx, seed.contact_user_id);
+      if (row.orgId) await releaseHeldContacts(tx, row.orgId, now);
       // The contact's own language when they already had an account, else the demo's.
       const language =
         (await localeOfEmail(tx, input.contact_email)) ?? resolveLocale(input.language);

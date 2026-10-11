@@ -4,6 +4,7 @@ import {
   type AccountsJobs,
   accountsWorker,
   DEMO_IDS,
+  demoBuildAccess,
   demoHttpGet,
   httpFetchText,
   queueJobs,
@@ -321,9 +322,16 @@ export function registrations(deps: {
           },
           completer: deps.completer,
           get: demoHttpGet(config.webhooks.allowPrivateTargets),
+          // The read acts as the demo's contact, who is held until staff release them.
           extract: async (loopId, runId) =>
-            (await runPopcornTick(tickDeps(popcornDeps, runId, analysis), loopId, "manual", runId))
-              .status,
+            (
+              await runPopcornTick(
+                { ...tickDeps(popcornDeps, runId, analysis), access: demoBuildAccess(db) },
+                loopId,
+                "manual",
+                runId,
+              )
+            ).status,
           demo: {
             portalUrl: deps.popcorn.portalUrl,
             apiUrl: config.http.publicUrl,
