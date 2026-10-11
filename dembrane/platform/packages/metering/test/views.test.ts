@@ -10,7 +10,9 @@ const admin = process.env.TEST_DATABASE_ADMIN_URL;
 const base = admin?.slice(0, admin.lastIndexOf("/"));
 const run = admin ? describe : describe.skip;
 const NAME = "metering_views";
-const ROLE = "grafana_obs";
+// Roles are cluster wide and other test files migrate their own databases on the same
+// server at the same time, so the role is this run's own and never the production name.
+const ROLE = `grafana_obs_t${process.pid}`;
 
 const quiet = { info() {}, warn() {}, error() {}, debug() {} } as never;
 
@@ -20,18 +22,13 @@ run("obs views", () => {
   beforeAll(async () => {
     await sql.unsafe(`drop database if exists ${NAME}`);
     await sql.unsafe(`create database ${NAME}`);
-    // The dashboard role exists before the migration runs, as it will in a deployment, so
-    // the migration's own grant step is what gives it the views.
-    await sql.unsafe(
-      `do $$ begin if not exists (select 1 from pg_roles where rolname = '${ROLE}') then create role ${ROLE} login password 'x'; end if; end $$`,
-    );
     await migrate(`${base}/${NAME}`, { appEnv: "test" });
     db = createDb({ url: `${base}/${NAME}`, poolMax: 2 });
   }, 60_000);
   afterAll(async () => {
     await db?.close();
     const cleanup = postgres(`${base}/${NAME}`, { max: 1, onnotice: () => {} });
-    await cleanup.unsafe(`drop owned by ${ROLE}; drop role ${ROLE}`);
+    await cleanup.unsafe(`drop owned by ${ROLE}; drop role ${ROLE}`).catch(() => undefined);
     await cleanup.end();
     // migrate() keeps its own pool open; the scratch database stays, as the db tests leave
     // theirs, and the next run replaces it.
@@ -124,7 +121,17 @@ run("obs views", () => {
     });
   });
 
-  test("the dashboard role, granted by the migration, sees the obs views and nothing in public", async () => {
+  test("the dashboard role, granted as operations grants it, sees obs and nothing in public, later views included", async () => {
+    // The grants of helm/monitoring/sql/grafana-obs-role.sql (echo-gitops), run as the
+    // migration owner after the release: usage, select on what exists, and default
+    // privileges so a view a later migration adds is covered without a second step.
+    const owner = postgres(`${base}/${NAME}`, { max: 1, onnotice: () => {} });
+    await owner.unsafe(`create role ${ROLE} login password 'x'`);
+    await owner.unsafe(`grant usage on schema obs to ${ROLE}`);
+    await owner.unsafe(`grant select on all tables in schema obs to ${ROLE}`);
+    await owner.unsafe(`alter default privileges in schema obs grant select on tables to ${ROLE}`);
+    await owner.unsafe("create view obs.later_view as select 1 as one");
+    await owner.end();
     const url = new URL(`${base}/${NAME}`);
     url.username = ROLE;
     url.password = "x";
@@ -144,6 +151,7 @@ run("obs views", () => {
         "select count(*)::int as n from obs.day_model_calls",
       );
       expect(counted[0]?.n).toBe(2);
+      expect(await outcome("select one from obs.later_view")).toBe("allowed");
       expect(await outcome("select * from public.model_call")).toMatch(/permission denied/);
       expect(await outcome("select * from public.conversation")).toMatch(/permission denied/);
     } finally {

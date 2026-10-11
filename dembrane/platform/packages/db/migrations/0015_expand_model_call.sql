@@ -20,7 +20,7 @@ CREATE TABLE "model_call" (
 CREATE INDEX "model_call_started_at_idx" ON "model_call" USING btree ("started_at");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "processing_status_timestamp_idx" ON "processing_status" USING btree ("timestamp");--> statement-breakpoint
 CREATE SCHEMA IF NOT EXISTS "obs";--> statement-breakpoint
-COMMENT ON SCHEMA "obs" IS 'Aggregate views for dashboards: counts, durations and sizes per Amsterdam day, never text or people. A read-only role (grafana_obs) sees this schema and nothing else.';--> statement-breakpoint
+COMMENT ON SCHEMA "obs" IS 'Aggregate views for dashboards: counts, durations and sizes per Amsterdam day, never text or people. Operations grant a read-only role (grafana_obs) this schema and nothing else, with default privileges so later views are covered.';--> statement-breakpoint
 CREATE OR REPLACE VIEW "obs"."day_conversations" AS
 SELECT (created_at AT TIME ZONE 'Europe/Amsterdam')::date AS day,
        count(*)::int AS created,
@@ -159,13 +159,4 @@ SELECT (SELECT count(*) FROM platform_presence WHERE kind = 'liveness' AND expir
        (SELECT count(*) FROM platform_presence WHERE kind = 'active' AND expires_at > now())::int AS conversations_active,
        (SELECT count(DISTINCT conversation_id) FROM conversation_chunk WHERE "timestamp" > now() - interval '10 minutes' AND "timestamp" < now() + interval '10 minutes' AND created_at > now() - interval '10 minutes')::int AS conversations_with_audio_10m,
        (SELECT count(*) FROM conversation WHERE is_finished = false AND deleted_at IS NULL AND created_at > now() - interval '24 hours')::int AS unfinished_24h,
-       (SELECT count(*) FROM conversation_chunk WHERE "timestamp" > now() - interval '1 hour' AND "timestamp" < now() + interval '10 minutes' AND created_at > now() - interval '1 hour' AND transcript IS NULL AND error IS NULL)::int AS chunks_waiting_1h;--> statement-breakpoint
-DO $$
-BEGIN
-  -- The dashboard role is made by operations, outside migrations (it carries a password).
-  -- When it exists, every migration keeps its grants on the views current.
-  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'grafana_obs') THEN
-    GRANT USAGE ON SCHEMA obs TO grafana_obs;
-    GRANT SELECT ON ALL TABLES IN SCHEMA obs TO grafana_obs;
-  END IF;
-END $$;
+       (SELECT count(*) FROM conversation_chunk WHERE "timestamp" > now() - interval '1 hour' AND "timestamp" < now() + interval '10 minutes' AND created_at > now() - interval '1 hour' AND transcript IS NULL AND error IS NULL)::int AS chunks_waiting_1h;
