@@ -180,7 +180,7 @@ export async function enableAccount(
     // A prospect gets the billing details task with its first offer, not before.
     if (input.stage !== "prospect") await ensureBillingTask(d, tx, org.id, who.directusUserId);
     // Enabling is staff saying the customer may use their account now.
-    await releaseHeldContacts(tx, org.id);
+    await releaseHeldContacts(tx, org.id, d.now());
     await emit(d, tx, {
       orgId: org.id,
       actor: actorOf(who),
@@ -483,8 +483,8 @@ async function sendOfferIn(
   const now = d.now();
   const doc = (await store.document(tx, orgId, docId)) as DocumentRow;
   await store.updateDocument(tx, docId, { status: "sent", sentAt: now, updatedAt: now });
-  // The customer must sign it, so a contact held by an unpublished demo can now sign in.
-  await releaseHeldContacts(tx, orgId);
+  // The customer must sign it, so a contact held by an unpublished demo is let in now.
+  await releaseHeldContacts(tx, orgId, now);
   const task = await createTask(d, tx, {
     ...(taskId && { id: taskId }),
     orgId,
@@ -699,8 +699,8 @@ async function markSent(
   const now = d.now();
   const doc = (await store.document(tx, orgId, docId)) as DocumentRow;
   await store.updateDocument(tx, docId, { status: "sent", sentAt: now, updatedAt: now });
-  // A document to sign needs the customer to act, so a held contact can now sign in.
-  if (doc.requiresSignature) await releaseHeldContacts(tx, orgId);
+  // A document to sign needs the customer to act, so a held contact is let in now.
+  if (doc.requiresSignature) await releaseHeldContacts(tx, orgId, now);
   let taskId: string | null = null;
   if (task)
     taskId = (

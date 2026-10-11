@@ -86,6 +86,17 @@ run("the demo route's prospect block", () => {
       body: JSON.stringify(body),
     });
 
+  test("the seed route still refuses the production addresses", async () => {
+    const res = await post({
+      ...(await demoBody()),
+      api_base_url: "https://api.dembrane.com",
+      workspace_id: workspaceId,
+      owner_id: w.people.staff.directusUserId,
+    });
+    expect(res.status).toBe(403);
+    expect(await w.db.select().from(schema.agent_loop)).toHaveLength(0);
+  });
+
   test("without the block the demo seeds exactly as before", async () => {
     const res = await post({
       ...(await demoBody()),

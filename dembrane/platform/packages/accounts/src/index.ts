@@ -1,5 +1,6 @@
 export { customerOrg, documentFor } from "./access";
 export * as contract from "./contract";
+export { demoBuildAccess } from "./demo/access";
 export { buildDemo, type DemoBuildDeps } from "./demo/build";
 export { httpGet as demoHttpGet } from "./demo/fetch";
 export { demoBuild } from "./demo/job";

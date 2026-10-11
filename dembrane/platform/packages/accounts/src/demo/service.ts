@@ -3,21 +3,13 @@ import { ConflictError, NotFoundError, newId, ValidationError } from "@dembrane/
 import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import { localeOfEmail, resolveLocale } from "@dembrane/i18n";
-import { refuseProduction } from "@dembrane/popcorn";
 import { desc, eq } from "drizzle-orm";
 import type { AccountsDeps } from "../deps";
 import { isUuid } from "../deps";
 import { emit } from "../events";
-import { releaseSignIn } from "../prospect";
+import { releaseHeldContacts } from "../prospect";
 import { staffBase } from "../views";
-import {
-  DEMO_STEPS,
-  type DemoInput,
-  type DemoSettings,
-  freshSteps,
-  type SeedOutput,
-  type Steps,
-} from "./build";
+import { DEMO_STEPS, type DemoInput, freshSteps, type SeedOutput, type Steps } from "./build";
 import { demoBuild, demoWorkflowId } from "./job";
 
 type Row = typeof schema.account_demo.$inferSelect;
@@ -79,16 +71,13 @@ async function load(d: AccountsDeps, id: string): Promise<Row> {
 }
 
 /**
- * Starts a demo. Refused on production like the seed route. The row and the workflow's
- * first run commit together, so a demo never waits for a run that was not queued.
+ * Starts a demo, on production too: the prospect's demo lives in the organisation their
+ * offer and tasks later go to. Unlike the seed route, the caller names no workspace and no
+ * owner; the build writes only into the organisation it creates for this demo (or into
+ * staff's demo workspace when one is configured). The row and the workflow's first run
+ * commit together, so a demo never waits for a run that was not queued.
  */
-export async function createDemo(
-  d: AccountsDeps,
-  demo: Pick<DemoSettings, "ownUrls" | "portalUrl" | "apiUrl">,
-  who: Signed,
-  input: DemoInput,
-) {
-  refuseProduction([...demo.ownUrls, demo.portalUrl, demo.apiUrl]);
+export async function createDemo(d: AccountsDeps, who: Signed, input: DemoInput) {
   if (!/^https?:\/\//i.test(input.website_url)) throw new ValidationError("demo.website_invalid");
   const id = newId();
   const now = d.now();
@@ -149,9 +138,9 @@ export async function retryDemo(d: AccountsDeps, id: string) {
 
 /**
  * Makes the draft public: each session's public setting goes on, so its link serves. With
- * sign-in on, the contact is released (codes may now reach them), the page gets its
- * "Continue in dembrane" link, and the invitation email goes out: at publish, never before.
- * Publishing twice changes nothing.
+ * sign-in on, the contact is released (they become the organisation's admin, and codes may
+ * now reach someone new), the page gets its "Continue in dembrane" link, and the invitation
+ * email goes out: at publish, never before. Publishing twice changes nothing.
  */
 export async function publishDemo(
   d: AccountsDeps,
@@ -194,7 +183,7 @@ export async function publishDemo(
       }
     }
     if (signIn) {
-      await releaseSignIn(tx, seed.contact_user_id);
+      if (row.orgId) await releaseHeldContacts(tx, row.orgId, now);
       // The contact's own language when they already had an account, else the demo's.
       const language =
         (await localeOfEmail(tx, input.contact_email)) ?? resolveLocale(input.language);

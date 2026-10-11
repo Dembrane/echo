@@ -41,11 +41,10 @@ export interface AccountsSettings {
   readonly reminderIntervalDays: number;
   /** Signs invite links like every other invite (account.inviteHashSecret). */
   readonly inviteSecret: string;
-  /** Demos made in echo: where they are seeded and which hosts are refused. */
+  /** Demos made in echo: where they are seeded. */
   readonly demo?: {
     readonly portalUrl: string;
     readonly apiUrl: string;
-    readonly ownUrls: readonly string[];
     readonly workspaceId: string | null;
     /** Where a demo's QR leads (the build reads it; the API does not). */
     readonly feedbackUrl?: string;
