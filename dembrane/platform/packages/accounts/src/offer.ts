@@ -2,10 +2,11 @@ import { dutchDate } from "./legal/parse";
 import { type OfferLine, type PricedLine, priceLines, type Totals } from "./money";
 
 /**
- * The offer as today's Google Doc templates lay it out (packages/accounts/reference: subscription
+ * The offer in the words of the Google Doc templates (packages/accounts/reference: subscription
  * and event, English and Dutch): letterhead, "<Name> x dembrane", date and offer id, a
  * greeting, the lines table, the total excluding VAT, the closing, the acceptance block and
  * the incorporation clause naming the pinned terms, SLA and DPA, then the validity line.
+ * The template and the language choose the words; every offer has the same look (offer-pdf.ts).
  * The same structure feeds the text the customer reads (and the sha256 binds) and the PDF.
  * Versions and dates of the legal texts always come from the pinned rows, never from here.
  */
@@ -153,7 +154,13 @@ const DPA_EN_SUB: ClauseLine = [
   " to assess whether separate signing is required. The Agreement is only complete upon valid acceptance of the Data Processing Agreement (art. 3.6 of the General Terms and Conditions).",
 ];
 const DPA_EN_EVENT: ClauseLine = [
-  " If the signatory of this offer is not authorized to enter into data processing agreements on behalf of the organization, the Data Processing Agreement must be signed separately by an authorized representative. A signed copy (PDF) is available via the link at Appendix B. It is your responsibility to determine whether separate signing is required. The Agreement is only complete after valid acceptance of the Data Processing Agreement (art. 3.6 of the General Terms and Conditions).",
+  " If the signatory of this offer is ",
+  u("not authorized"),
+  " to enter into data processing agreements on behalf of the organization, the Data Processing Agreement must be signed ",
+  u("separately"),
+  " by an authorized representative. A signed copy (PDF) is available via the link at Appendix B. It is ",
+  u("your responsibility"),
+  " to determine whether separate signing is required. The Agreement is only complete after valid acceptance of the Data Processing Agreement (art. 3.6 of the General Terms and Conditions).",
 ];
 const DPA_NL: ClauseLine = [
   " Indien de ondertekenaar van deze offerte ",

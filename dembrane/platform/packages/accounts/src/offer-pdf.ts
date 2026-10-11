@@ -2,8 +2,6 @@ import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument, type PDFFont, type PDFImage, type PDFPage, PDFString, rgb } from "pdf-lib";
 import boldTtf from "../assets/fonts/DMSans-Bold.ttf" with { type: "file" };
 import lightTtf from "../assets/fonts/DMSans-Light.ttf" with { type: "file" };
-import italicTtf from "../assets/fonts/DMSans-LightItalic.ttf" with { type: "file" };
-import regularTtf from "../assets/fonts/DMSans-Regular.ttf" with { type: "file" };
 import calendarPng from "../assets/offer/calendar.png" with { type: "file" };
 import logoPng from "../assets/offer/logo.png" with { type: "file" };
 import sparklesPng from "../assets/offer/sparkles.png" with { type: "file" };
@@ -12,11 +10,11 @@ import { layoutOffer } from "./offer";
 import type { PlacedField, RenderedPdf } from "./pdf";
 
 /**
- * The offer PDF, laid out as the four Google Doc templates sales sends today
- * (packages/accounts/reference): the letterhead and logo on every page, DM Sans, the green
- * table head, the acceptance block on its own page with the legal texts linked by name, and
- * the validity line in the footer. The templates differ from each other in type and table
- * details, so each one has its own script below, with the measures of its Google Doc.
+ * The offer PDF. Every offer has one look, whatever its template and language: the
+ * letterhead and logo on every page, DM Sans light in black, the green table head, the
+ * acceptance block on its own page with the legal texts linked by name, and the validity
+ * line in the footer. It is the look the Google Doc templates of sales share; the template
+ * and the language only choose the words (offer.ts), never the layout.
  *
  * Text flows the way the Docs do: a line is its font's natural height times the paragraph's
  * line spacing, the text sits at the top of that line, and the space after one paragraph
@@ -36,12 +34,10 @@ const BODY_BOTTOM = 762;
 /** DM Sans: ascent and descent per unit of size; a line's natural height is their sum. */
 const ASCENT = 0.992;
 const NATURAL = 1.302;
-/** An empty paragraph in the Docs' default face (Space Grotesk 12) is this tall per line. */
-const DEFAULT_EMPTY = 15.31;
 /** The same render must give the same bytes, so the dates are fixed. */
 const EPOCH = new Date("2026-01-01T00:00:00Z");
 
-type FontKey = "light" | "italic" | "regular" | "bold";
+type FontKey = "light" | "bold";
 type Color = ReturnType<typeof rgb>;
 type Emoji = "sparkles" | "calendar";
 
@@ -74,8 +70,6 @@ interface Para {
   readonly runs: readonly Run[];
   /** Natural height of a line that holds no text (the paragraph mark's font). */
   readonly empty: number;
-  /** Natural height of every line, where the Doc's line holds a larger run than its text. */
-  readonly natural?: number;
   readonly line: number;
   readonly before?: number;
   readonly after?: number;
@@ -83,7 +77,7 @@ interface Para {
   readonly right?: number;
   /** Extra indent of the first line; later lines start at `left`. */
   readonly first?: number;
-  readonly align?: "left" | "right" | "center" | "both";
+  readonly align?: "left" | "right" | "center";
   /** A list marker on the first line, `at` points from the container's left. */
   readonly marker?: { readonly at: number; readonly draw: TextRun | { disc: number; c: Color } };
 }
@@ -105,7 +99,6 @@ interface Line {
   readonly natural: number;
   readonly size: number;
   readonly indent: number;
-  readonly last: boolean;
 }
 interface Laid {
   readonly para: Para;
@@ -158,23 +151,12 @@ function assets(): Promise<Assets> {
   loaded ??= (async () => ({
     fonts: {
       light: await read(lightTtf),
-      italic: await read(italicTtf),
-      regular: await read(regularTtf),
       bold: await read(boldTtf),
     },
     logo: await read(logoPng),
     emoji: { sparkles: await read(sparklesPng), calendar: await read(calendarPng) },
   }))();
   return loaded;
-}
-
-/** How the letterhead and the footer differ between the templates. */
-interface Frame {
-  readonly name: FontKey;
-  readonly details: FontKey;
-  readonly validity: FontKey;
-  /** The sign-off is centred, or starts at this x where the Doc indents it by hand. */
-  readonly signOffAt: number | null;
 }
 
 class Sheet {
@@ -193,7 +175,6 @@ class Sheet {
     private readonly shapers: Record<FontKey, Shaper>,
     readonly logo: PDFImage,
     readonly emoji: Record<Emoji, PDFImage>,
-    private readonly frame: Frame,
     private readonly layout: OfferLayout,
   ) {
     this.newPage();
@@ -284,12 +265,12 @@ class Sheet {
     const c = LETTERHEAD;
     const [address, vat, iban, kvk] = this.layout.letterhead.rows;
     this.image(this.logo, 515.1, 26.04, 44.62);
-    this.at(this.clean(this.layout.letterhead.name, this.frame.name), 44.85, 50.22, {
-      f: this.frame.name,
+    this.at(this.clean(this.layout.letterhead.name, "light"), 44.85, 50.22, {
+      f: "light",
       s: 10.5,
       c,
     });
-    const d = { f: this.frame.details, s: 9.5, c };
+    const d = { f: "light" as const, s: 9.5, c };
     const cell = (text: string, x: number, top: number) =>
       this.at(this.clean(text, d.f), x, top, d);
     // Two rows of label and value, in the four columns of the Docs' letterhead table.
@@ -303,7 +284,7 @@ class Sheet {
     cell(kvk?.[1] ?? "", 372.93, 80.17);
 
     const validity = textRuns(this.layout.validity, {
-      f: this.frame.validity,
+      f: "light",
       s: 10,
       c: FOOTER_GREY,
     });
@@ -314,7 +295,7 @@ class Sheet {
     this.drawLaid(laid, 0, 776.31);
     const signOff = { f: "bold" as const, s: 10, c: BLACK };
     const text = this.clean(this.layout.signOff, "bold");
-    const x = this.frame.signOffAt ?? (PAGE_W - this.width(text, signOff)) / 2;
+    const x = (PAGE_W - this.width(text, signOff)) / 2;
     this.at(text, x, 791.28, signOff);
   }
 
@@ -367,19 +348,16 @@ class Sheet {
     let current: Word[] = [];
     let used = 0;
     const limit = (n: number) => width - left - right - (n === 0 ? first : 0);
-    const close = (last: boolean) => {
+    const close = () => {
       const sizes = current.flatMap((w) => w.pieces.map((p) => p.run.s));
       const text = current.flatMap((w) => w.pieces.filter((p) => !("emoji" in p.run)));
       const size = text.length ? Math.max(...text.map((p) => p.run.s)) : 0;
       lines.push({
         words: current,
         width: used,
-        natural:
-          para.natural ??
-          (size ? size * NATURAL : sizes.length ? Math.max(...sizes) * NATURAL : para.empty),
+        natural: size ? size * NATURAL : sizes.length ? Math.max(...sizes) * NATURAL : para.empty,
         size,
         indent: left + (lines.length === 0 ? first : 0),
-        last,
       });
       current = [];
       used = 0;
@@ -387,7 +365,7 @@ class Sheet {
     for (const word of words) {
       const next = used + (current.length ? word.space : 0) + word.width;
       if (current.length && next > limit(lines.length) + 0.01) {
-        close(false);
+        close();
         current.push(word);
         used = word.width;
       } else {
@@ -395,7 +373,7 @@ class Sheet {
         used = next;
       }
     }
-    close(true);
+    close();
     const height = lines.reduce((s, l) => s + l.natural * para.line, 0);
     return { para, lines, height, width };
   }
@@ -407,8 +385,6 @@ class Sheet {
     let y = top;
     laid.lines.forEach((line, n) => {
       const room = laid.width - line.indent - right - line.width;
-      const gaps = line.words.length - 1;
-      const stretch = para.align === "both" && !line.last && gaps > 0 ? room / gaps : 0;
       let cx =
         x + line.indent + (para.align === "right" ? room : para.align === "center" ? room / 2 : 0);
       const baseline = y + ASCENT * (line.size || para.empty / NATURAL);
@@ -420,7 +396,7 @@ class Sheet {
         span = null;
       };
       line.words.forEach((word, i) => {
-        if (i > 0) cx += word.space + stretch;
+        if (i > 0) cx += word.space;
         for (const piece of word.pieces) {
           this.piece(piece, cx, baseline);
           const { run } = piece;
@@ -499,10 +475,6 @@ class Sheet {
     this.drawLaid(laid, box.x, this.y);
     this.y += laid.height;
     this.pendingAfter = para.after ?? 0;
-  }
-
-  gap(height: number) {
-    this.y += Math.max(height, 0);
   }
 
   /** A table whose rows stay whole; a row that does not fit moves to the next page. */
@@ -614,16 +586,6 @@ class Sheet {
     }
     this.y += height;
   }
-
-  /** A rule across part of the page, `at` points below the current position. */
-  rule(x1: number, x2: number, at: number, width: number, color: Color) {
-    this.page.drawLine({
-      start: { x: x1, y: PAGE_H - (this.y + at) },
-      end: { x: x2, y: PAGE_H - (this.y + at) },
-      thickness: width,
-      color,
-    });
-  }
 }
 
 /** The emoji of the templates take this much of the line per unit of size. */
@@ -653,47 +615,42 @@ function clauseRuns(line: ClauseLine, style: Omit<TextRun, "t">, link: Color): R
   return runs;
 }
 
-/** One template: how its letterhead and footer are set, and the script that lays it out. */
-interface Script {
-  readonly frame: Frame;
-  draw(s: Sheet, l: OfferLayout): void;
-}
-
 type Style = Omit<TextRun, "t">;
 
-/** Where the rules of the acceptance block start, as each Doc places them. */
-interface BlankMeasures {
-  /** Space above the first blank line. */
-  readonly first: number;
-  /** From the end of the words to the rule; `rest` where a field has no entry. */
-  readonly gaps: Partial<Record<"organisation" | "address" | "date" | "signature", number>> & {
-    readonly rest: number;
-  };
-  /** From the date's rule to the word before the signature's rule. */
-  readonly signatureLead: number;
-}
+const LIGHT: Style = { f: "light", s: 10.5, c: BLACK };
+const BOLD: Style = { f: "bold", s: 10.5, c: BLACK };
+const LINK = hex("1155cc");
+/** The natural height of a line of body text. */
+const LINE = 10.5 * NATURAL;
+/** The lines table: its left edge from the margin, and description, two numbers, total. */
+const TABLE_AT = 29.43;
+const TABLE_COLS = [290.25, 68, 68, 68];
+/** Space above the first blank of the acceptance block, and above each later one. */
+const FIRST_BLANK = 22.59;
+const NEXT_BLANK = 21.09;
+
+const empty = (line: number): Para => ({ runs: [], empty: LINE, line });
 
 /**
- * The acceptance blanks. The templates write the sentence as blanks between its words, then
- * the date and the signature on one line. The role is asked on a line of its own after the
- * sentence: the Docs have no such blank, the signature record needs it.
+ * The acceptance blanks. The sentence is written as blanks between its words, then the
+ * date and the signature share one line. The role is asked on a line of its own after the
+ * sentence: the signature record names it.
  */
-function acceptance(s: Sheet, l: OfferLayout, style: Style, m: BlankMeasures) {
+function acceptance(s: Sheet, l: OfferLayout) {
   const reach = PAGE_W - MARGIN - 35.35;
+  // A rule starts closer to "organisation" and to "Signature:", which end without a space.
   const gapOf = (f: AcceptanceField) =>
-    (f.kind === "date" || f.kind === "signature" ? m.gaps[f.kind] : undefined) ??
-    (f.key === "organisation" || f.key === "address" ? m.gaps[f.key] : undefined) ??
-    m.gaps.rest;
+    f.key === "organisation" || f.kind === "signature" ? 1.5 : 4.3;
   const sentence = l.acceptance.fields.filter((f) => f.kind !== "role");
   const role = l.acceptance.fields.filter((f) => f.kind === "role");
   const one = (field: AcceptanceField, above: number) => {
     const gap = gapOf(field);
-    const start = MARGIN + INDENT + s.width(s.clean(field.prefix, style.f), style) + gap;
+    const start = MARGIN + INDENT + s.width(s.clean(field.prefix, "light"), LIGHT) + gap;
     s.blanks(
       [
         {
           field,
-          style,
+          style: LIGHT,
           gap,
           rule: field.key === "organisation" ? 146.25 : 129,
           reach: reach - start,
@@ -703,491 +660,148 @@ function acceptance(s: Sheet, l: OfferLayout, style: Style, m: BlankMeasures) {
     );
   };
   sentence.forEach((field, i) => {
-    one(field, i === 0 ? m.first : 21.09);
+    one(field, i === 0 ? FIRST_BLANK : NEXT_BLANK);
   });
   s.para({
-    runs: textRuns(l.acceptance.statement, style),
-    empty: style.s * NATURAL,
+    runs: textRuns(l.acceptance.statement, LIGHT),
+    empty: LINE,
     line: 1.15,
     left: INDENT,
     right: 35.35,
   });
-  for (const field of role) one(field, 22.59);
+  for (const field of role) one(field, FIRST_BLANK);
   s.blanks(
     l.acceptance.signing.map((field, i) => ({
       field,
-      style,
+      style: LIGHT,
       gap: gapOf(field),
-      lead: i === 0 ? 0 : m.signatureLead,
+      lead: i === 0 ? 0 : 7.3,
       rule: 129,
     })),
-    { above: role.length ? 21.09 : 22.59, line: 1.15 },
+    { above: role.length ? NEXT_BLANK : FIRST_BLANK, line: 1.15 },
   );
 }
 
-/** The numbered documents of the clause and the two lines that close it. */
-function clauseList(
-  s: Sheet,
-  l: OfferLayout,
-  style: Style,
-  link: Color,
-  space: { first: number; between: number; last: number; closing: number },
-) {
-  const { items, closing } = l.clauseParts;
+/** The one layout of an offer; `l` carries the words of its template and language. */
+function draw(s: Sheet, l: OfferLayout) {
+  const text = (t: string, over: Partial<Para> = {}): Para => ({
+    runs: textRuns(t, LIGHT),
+    empty: LINE,
+    line: 1,
+    left: INDENT,
+    right: 78,
+    ...over,
+  });
+  s.para({
+    runs: [{ t: l.title, f: "bold", s: 15, c: BLACK }],
+    empty: 15 * NATURAL,
+    line: 1.15,
+    before: 18,
+    after: 4,
+    left: INDENT,
+    right: 78,
+  });
+  s.para({ runs: textRuns(l.meta, { ...LIGHT, s: 10 }), empty: 13.02, line: 1.2, left: INDENT });
+  s.para({ runs: [], empty: 13.02, line: 1.2 });
+  s.para(text(l.greeting, { line: 1.2, right: 0 }));
+  s.para(empty(1.2));
+  // An event offer's introduction has a heading as its second line ("Dembrane's Role:"),
+  // set in bold above its paragraph.
+  const [opening, ...rest] = l.intro;
+  s.para(text(opening ?? ""));
+  if (rest.length) {
+    s.para(empty(1));
+    const [heading, ...paragraphs] = rest;
+    s.para({ ...text(heading ?? ""), runs: textRuns(heading ?? "", BOLD) });
+    for (const p of paragraphs) s.para(text(p));
+  }
+  for (let i = 0; i < 3; i++) s.para(empty(1));
+
+  const cell = (t: string, over: Partial<Para> = {}): Cell => ({
+    paras: [{ runs: textRuns(t, LIGHT), empty: LINE, line: 1, ...over }],
+  });
+  s.table({
+    x: MARGIN + TABLE_AT,
+    cols: TABLE_COLS,
+    pad: 5,
+    border: { width: 1, color: BLACK },
+    rows: [
+      { minHeight: 20.5, fill: HEAD_FILL, cells: l.columns.map((c) => cell(c)) },
+      ...l.rows.map((r) => ({
+        minHeight: 20.5,
+        cells: [
+          {
+            paras: [
+              { runs: textRuns(r.description, BOLD), empty: LINE, line: 1.2 },
+              ...r.bullets.map(
+                (b): Para => ({
+                  runs: textRuns(b, LIGHT),
+                  empty: LINE,
+                  line: 1.2,
+                  left: 36,
+                  marker: { at: 18, draw: { disc: 10.5, c: BLACK } },
+                }),
+              ),
+            ],
+          },
+          ...r.cells.map((c) => cell(c, { align: "center" })),
+        ],
+      })),
+    ],
+  });
+
+  s.para(empty(1));
+  s.para({ runs: textRuns(l.total, BOLD), empty: LINE, line: 1, align: "right", right: 35.35 });
+  s.para(empty(1));
+  for (let i = 0; i < 4; i++) s.para(empty(1.15));
+  const closing = (t: string) => s.para(text(t, { line: 1.15, right: 35.35 }));
+  l.closing.forEach((line, i) => {
+    // Two empty lines above the team's name, the last line.
+    if (i > 0 && i === l.closing.length - 1) for (let k = 0; k < 2; k++) s.para(empty(1.15));
+    closing(line);
+  });
+
+  // The acceptance block starts its own page.
+  s.newPage();
+  s.para({
+    runs: [{ t: l.acceptanceTitle, f: "light", s: 15, c: BLACK }],
+    empty: 15 * NATURAL,
+    line: 1.15,
+    after: 4,
+    left: INDENT,
+    right: 78,
+  });
+  s.para(text(l.acceptanceIntro, { line: 1.15, right: 35.35 }));
+  acceptance(s, l);
+
+  const { opening: clause, items, closing: after } = l.clauseParts;
+  s.para({
+    runs: textRuns(clause, BOLD),
+    empty: LINE,
+    line: 1.15,
+    before: 12,
+    after: 12,
+    left: INDENT,
+  });
   items.forEach((item, i) => {
     s.para({
-      runs: clauseRuns(item, style, link),
-      empty: style.s * NATURAL,
+      runs: clauseRuns(item, LIGHT, LINK),
+      empty: LINE,
       line: 1.15,
-      before: i === 0 ? space.first : 0,
-      after: i === items.length - 1 ? space.last : space.between,
+      before: i === 0 ? 12 : 0,
+      after: i === items.length - 1 ? 12 : 0,
       left: INDENT,
       first: 36,
-      marker: { at: INDENT, draw: { ...style, t: `${i + 1}.` } },
+      marker: { at: INDENT, draw: { ...LIGHT, t: `${i + 1}.` } },
     });
   });
-  for (const p of closing)
-    s.para({
-      runs: textRuns(p, style),
-      empty: style.s * NATURAL,
-      line: 1.15,
-      before: space.closing === 12 ? 12 : 0,
-      after: space.closing,
-      left: INDENT,
-    });
+  for (const p of after) s.para(text(p, { line: 1.15, before: 12, after: 12, right: 0 }));
 }
 
-/** The subscription templates: light type in black, a black-ruled table, the total in bold. */
-function subscription(language: "en" | "nl"): Script {
-  const light: Style = { f: "light", s: 10.5, c: BLACK };
-  const bold: Style = { f: "bold", s: 10.5, c: BLACK };
-  const nat = 10.5 * NATURAL;
-  const en = language === "en";
-  const blank = (line: number, before = 0): Para => ({ runs: [], empty: nat, line, before });
-  return {
-    frame: { name: "light", details: "light", validity: "light", signOffAt: null },
-    draw(s, l) {
-      s.para({
-        runs: [{ t: l.title, f: "bold", s: 15, c: BLACK }],
-        empty: 15 * NATURAL,
-        line: 1.15,
-        before: 18,
-        after: 4,
-        left: INDENT,
-        right: 78,
-      });
-      s.para({
-        runs: textRuns(l.meta, { ...light, s: 10 }),
-        empty: 13.02,
-        line: 1.2,
-        left: INDENT,
-      });
-      s.para({ runs: [], empty: 13.02, line: 1.2 });
-      s.para({ runs: textRuns(l.greeting, light), empty: nat, line: 1.2, left: INDENT });
-      if (en) s.para(blank(1.2));
-      for (const p of l.intro)
-        s.para({ runs: textRuns(p, light), empty: nat, line: 1, left: INDENT, right: 78 });
-      for (let i = 0; i < 3; i++) s.para(blank(1));
-
-      // Description, price per seat, seats, total: the widths of each Doc's table.
-      const head: Style = { ...light, f: en ? "italic" : "light" };
-      const number = (text: string, i: number): Cell => ({
-        paras: [
-          en
-            ? {
-                runs: textRuns(text, light),
-                empty: nat,
-                line: 1,
-                align: "center",
-                left: i < 2 ? 36 : 0,
-              }
-            : {
-                runs: textRuns(text, light),
-                empty: nat,
-                line: i === 0 ? 1.2 : 1,
-                align: i === 0 ? "center" : "left",
-                left: i === 0 ? 0 : 36,
-              },
-        ],
-      });
-      s.table({
-        x: MARGIN + (en ? 29.43 : 22.68),
-        cols: en ? [297.75, 74.25, 56.25, 66] : [267, 77.25, 54, 117.75],
-        pad: 5,
-        border: { width: 1, color: BLACK },
-        rows: [
-          {
-            minHeight: 20.5,
-            fill: HEAD_FILL,
-            cells: l.columns.map((c) => ({
-              paras: [{ runs: textRuns(c, head), empty: nat, line: 1 }],
-            })),
-          },
-          ...l.rows.map((r) => ({
-            minHeight: 20.5,
-            cells: [
-              {
-                paras: [
-                  { runs: textRuns(r.description, bold), empty: nat, line: 1.2 },
-                  ...r.bullets.map(
-                    (b): Para => ({
-                      runs: textRuns(b, light),
-                      empty: nat,
-                      line: 1.2,
-                      left: 36,
-                      marker: en
-                        ? { at: 18, draw: { ...light, t: "-" } }
-                        : { at: 18, draw: { disc: 10.5, c: BLACK } },
-                    }),
-                  ),
-                ],
-              },
-              ...r.cells.map(number),
-            ],
-          })),
-        ],
-      });
-
-      s.para(en ? blank(1) : blank(1.15, 12));
-      s.para({ runs: textRuns(l.total, bold), empty: nat, line: 1, align: "right", right: 35.35 });
-      if (en) s.para(blank(1));
-      for (let i = 0; i < (en ? 4 : 3); i++) s.para(blank(1.15));
-      closingLines(s, l, light, 1.15, 2);
-
-      // The acceptance block starts its own page; the English Doc has one empty line above it.
-      s.newPage();
-      if (en) s.gap(DEFAULT_EMPTY * 1.2);
-      s.para({
-        runs: [{ t: l.acceptanceTitle, f: "light", s: 15, c: BLACK }],
-        empty: 15 * NATURAL,
-        line: 1.15,
-        before: en ? 18 : 0,
-        after: 4,
-        left: INDENT,
-        right: 78,
-      });
-      s.para({
-        runs: textRuns(l.acceptanceIntro, light),
-        empty: nat,
-        line: 1.15,
-        left: INDENT,
-        right: 35.35,
-      });
-      if (!en) s.para(blank(1.15));
-      acceptance(
-        s,
-        l,
-        light,
-        en
-          ? {
-              first: 22.59,
-              gaps: { rest: 4.3, organisation: 1.4, date: 4.4, signature: 1.5 },
-              signatureLead: 7.3,
-            }
-          : {
-              first: 22.59,
-              gaps: { rest: 4.4, organisation: 1.56, address: 1.56, date: 4.5, signature: 1.6 },
-              signatureLead: 7.17,
-            },
-      );
-      // The Dutch Doc has an empty line between the signature and the clause.
-      if (!en) s.para({ runs: [], empty: nat, line: 1.15, before: 12 });
-      s.para({
-        runs: textRuns(l.clauseParts.opening, bold),
-        empty: nat,
-        line: 1.15,
-        before: 12,
-        after: 12,
-        left: INDENT,
-      });
-      clauseList(s, l, light, hex("1155cc"), { first: 12, between: 0, last: 12, closing: 12 });
-    },
-  };
-}
-
-/** The closing lines: the wish, the regards, then the team's name under `gapLines` empty lines. */
-function closingLines(
-  s: Sheet,
-  l: OfferLayout,
-  style: Style,
-  line: number,
-  gapLines: number,
-  spaced = false,
-) {
-  const nat = style.s * NATURAL;
-  const closing = (text: string) =>
-    s.para({
-      runs: textRuns(text, style),
-      empty: nat,
-      line,
-      left: INDENT,
-      right: spaced ? 0 : 35.35,
-    });
-  const empty = () => s.para({ runs: [], empty: nat, line });
-  const [first, ...rest] = l.closing;
-  closing(first ?? "");
-  rest.forEach((text, i) => {
-    if (spaced) empty();
-    else if (i === rest.length - 1) for (let k = 0; k < gapLines; k++) empty();
-    closing(text);
-  });
-}
-
-/** The event templates: the role of dembrane above the table, the total under a rule. */
-function eventEn(): Script {
-  const ink = hex("333333");
-  const text: Style = { f: "regular", s: 12, c: ink };
-  const strong: Style = { f: "bold", s: 12, c: ink };
-  const small: Style = { f: "regular", s: 10.5, c: ink };
-  const nat = 12 * NATURAL;
-  return {
-    frame: { name: "bold", details: "regular", validity: "regular", signOffAt: 172.35 },
-    draw(s, l) {
-      s.para({
-        runs: [{ t: l.title, f: "bold", s: 15, c: BLACK }],
-        empty: 15 * NATURAL,
-        line: 1.15,
-        left: INDENT,
-        right: 78,
-      });
-      s.para({
-        runs: textRuns(l.meta, { f: "light", s: 10, c: BLACK }),
-        empty: 10.5 * NATURAL,
-        natural: 10.5 * NATURAL,
-        line: 1.2,
-        left: INDENT,
-      });
-      s.para({ runs: [], empty: 10.5 * NATURAL, line: 1.2 });
-      const flow = (t: string, style: Style) =>
-        s.para({
-          runs: textRuns(t, style),
-          empty: nat,
-          line: 1.15,
-          after: 10,
-          left: INDENT,
-          align: "both",
-        });
-      flow(l.greeting, text);
-      // The second line of the introduction is the heading "Dembrane's Role:".
-      l.intro.forEach((p, i) => {
-        flow(p, i === 1 ? strong : text);
-      });
-
-      const cell = (t: string, style: Style, over: Partial<Para> = {}): Para => ({
-        runs: textRuns(t, style),
-        empty: nat,
-        line: 1,
-        left: INDENT,
-        ...over,
-      });
-      s.table({
-        x: MARGIN + 25.5,
-        cols: [245.25, 79.5, 103.5, 90],
-        pad: 9,
-        border: { width: 0.75, color: hex("999999") },
-        rows: [
-          {
-            minHeight: 41.25,
-            fill: HEAD_FILL,
-            cells: l.columns.map((c, i) => ({
-              paras: [cell(c, text, { left: i === 1 ? 7.09 : INDENT })],
-            })),
-          },
-          ...l.rows.map((r) => ({
-            minHeight: 57,
-            cells: [
-              {
-                paras: [
-                  cell(r.description, strong),
-                  ...r.bullets.map((b) =>
-                    cell(b, text, {
-                      first: 36,
-                      marker: { at: INDENT, draw: { disc: 12, c: ink } },
-                    }),
-                  ),
-                ],
-              },
-              { paras: [cell(r.cells[0], text, { align: "center" })] },
-              { paras: [cell(r.cells[1], text, { align: "right" })] },
-              { paras: [cell(r.cells[2], text, { align: "right" })] },
-            ],
-          })),
-        ],
-      });
-      // The Doc draws the rule above the total as a row of underscores.
-      s.para({
-        runs: [{ ...text, t: "_".repeat(37) }],
-        empty: nat,
-        line: 1,
-        align: "right",
-        left: INDENT,
-      });
-      s.para({ runs: textRuns(l.total, text), empty: nat, line: 1, align: "right", left: INDENT });
-      closingLines(s, l, text, 1, 0, true);
-
-      s.newPage();
-      s.para({
-        runs: [{ t: l.acceptanceTitle, f: "bold", s: 18, c: ink }],
-        empty: 18 * NATURAL,
-        line: 1.15,
-        left: INDENT,
-      });
-      s.para({
-        runs: textRuns(l.acceptanceIntro, { f: "regular", s: 10, c: ink }),
-        empty: 10 * NATURAL,
-        line: 1.7,
-        left: INDENT,
-      });
-      acceptance(s, l, small, {
-        first: 22.59,
-        gaps: { rest: 4.25, date: 7.1, signature: 4.4 },
-        signatureLead: 4.38,
-      });
-      s.gap(10.5 * NATURAL * 1.7);
-      s.para({
-        runs: textRuns(l.clauseParts.opening, { ...small, f: "bold" }),
-        empty: 10.5 * NATURAL,
-        line: 1.15,
-        after: 10,
-        left: INDENT,
-      });
-      clauseList(s, l, small, hex("1976d2"), { first: 0, between: 10, last: 10, closing: 10 });
-    },
-  };
-}
-
-function eventNl(): Script {
-  const light: Style = { f: "light", s: 10.5, c: BLACK };
-  const strong: Style = { f: "bold", s: 10.5, c: hex("434343") };
-  const nat = 10.5 * NATURAL;
-  const blank = (line: number): Para => ({ runs: [], empty: nat, line });
-  return {
-    frame: { name: "bold", details: "regular", validity: "light", signOffAt: null },
-    draw(s, l) {
-      s.para({
-        runs: [{ t: l.title, f: "bold", s: 15, c: BLACK }],
-        empty: 15 * NATURAL,
-        line: 1.15,
-        before: 18,
-        after: 4,
-        left: INDENT,
-        right: 78,
-      });
-      s.para({
-        runs: textRuns(l.meta, { ...light, s: 10 }),
-        empty: nat,
-        natural: nat,
-        line: 1.2,
-        left: INDENT,
-      });
-      s.para(blank(1.2));
-      const flow = (t: string, style: Style, first = 0) =>
-        s.para({
-          runs: textRuns(t, style),
-          empty: nat,
-          line: 1,
-          left: INDENT,
-          right: 78,
-          first,
-          align: "both",
-        });
-      flow(l.greeting, light);
-      // An empty line after the greeting and after the first sentence; the heading
-      // "Rol van dembrane:" sits directly on its paragraph, whose first line is indented.
-      l.intro.forEach((p, i) => {
-        if (i < 2) s.para(blank(1));
-        flow(p, i === 1 ? strong : light, i === 2 ? 7.65 : 0);
-      });
-      for (let i = 0; i < 2; i++) s.para(blank(1));
-
-      const cell = (t: string, over: Partial<Para> = {}): Para => ({
-        runs: textRuns(t, light),
-        empty: nat,
-        line: 1,
-        ...over,
-      });
-      s.table({
-        x: MARGIN + 22.68,
-        cols: [281.25, 37.5, 71.25, 71.25],
-        pad: 5,
-        border: { width: 1, color: BLACK },
-        rows: [
-          { minHeight: 20.5, fill: HEAD_FILL, cells: l.columns.map((c) => ({ paras: [cell(c)] })) },
-          ...l.rows.map((r) => ({
-            minHeight: 20.5,
-            cells: [
-              {
-                paras: [
-                  { runs: textRuns(r.description, strong), empty: nat, line: 1.2 },
-                  ...r.bullets.map((b) =>
-                    cell(b, {
-                      line: 1.2,
-                      left: 36,
-                      marker: { at: 18, draw: { ...light, t: "-" } },
-                    }),
-                  ),
-                ],
-              },
-              { paras: [cell(r.cells[0], { align: "center" })] },
-              { paras: [cell(r.cells[1], { left: 7.09 })] },
-              { paras: [cell(r.cells[2], { left: 14.17 })] },
-            ],
-          })),
-        ],
-      });
-      // The total sits in a second, borderless table: a rule over its right half.
-      s.rule(MARGIN + 275.25, MARGIN + 480.75, 15.25, 0.5, BLACK);
-      s.gap(21.84);
-      s.para({ runs: textRuns(l.total, light), empty: nat, line: 1, align: "right", right: 73.58 });
-      s.gap(5);
-      s.para(blank(1.15));
-      closingLines(s, l, light, 1.15, 2);
-
-      s.newPage();
-      s.para({
-        runs: [{ t: l.acceptanceTitle, f: "bold", s: 15, c: hex("434343") }],
-        empty: 15 * NATURAL,
-        line: 1.15,
-        after: 4,
-        left: INDENT - 0.3,
-        right: 78,
-      });
-      s.para({
-        runs: textRuns(l.acceptanceIntro, light),
-        empty: nat,
-        line: 1.15,
-        left: INDENT,
-        right: 35.35,
-      });
-      acceptance(s, l, light, {
-        first: 22.59,
-        gaps: { rest: 4.4, organisation: 1.56, address: 1.56, date: 4.5, signature: 1.5 },
-        signatureLead: 4.28,
-      });
-      s.gap(7 * NATURAL * 1.15);
-      s.para({
-        runs: textRuns(l.clauseParts.opening, strong),
-        empty: nat,
-        line: 1.15,
-        before: 12,
-        after: 12,
-        left: INDENT,
-      });
-      clauseList(s, l, light, hex("1155cc"), { first: 12, between: 0, last: 12, closing: 12 });
-    },
-  };
-}
-
-const SCRIPTS: Record<OfferContent["template"], Record<OfferContent["language"], Script>> = {
-  subscription: { en: subscription("en"), nl: subscription("nl") },
-  event: { en: eventEn(), nl: eventNl() },
-};
-
-/** The offer as its Google Doc template lays it out, with the acceptance blanks as fields. */
+/** The offer in its one look, with the acceptance blanks as fields. */
 export async function offerPdf(content: OfferContent): Promise<RenderedPdf> {
   const a = await assets();
   const l = layoutOffer(content);
-  const script = SCRIPTS[content.template][content.language];
   const doc = await PDFDocument.create();
   doc.registerFontkit(fontkit);
   // A fixed name keeps the bytes of the same render the same.
@@ -1195,8 +809,6 @@ export async function offerPdf(content: OfferContent): Promise<RenderedPdf> {
     doc.embedFont(a.fonts[key], { subset: true, customName: name });
   const fonts = {
     light: await embed("light", "DMSans-Light"),
-    italic: await embed("italic", "DMSans-LightItalic"),
-    regular: await embed("regular", "DMSans-Regular"),
     bold: await embed("bold", "DMSans-Bold"),
   };
   const shaper = (key: FontKey) => fontkit.create(a.fonts[key]) as unknown as Shaper;
@@ -1205,8 +817,6 @@ export async function offerPdf(content: OfferContent): Promise<RenderedPdf> {
     fonts,
     {
       light: shaper("light"),
-      italic: shaper("italic"),
-      regular: shaper("regular"),
       bold: shaper("bold"),
     },
     await doc.embedPng(a.logo),
@@ -1214,10 +824,9 @@ export async function offerPdf(content: OfferContent): Promise<RenderedPdf> {
       sparkles: await doc.embedPng(a.emoji.sparkles),
       calendar: await doc.embedPng(a.emoji.calendar),
     },
-    script.frame,
     l,
   );
-  script.draw(sheet, l);
+  draw(sheet, l);
   doc.setTitle(l.title);
   doc.setAuthor("dembrane B.V.");
   doc.setProducer("dembrane echo");
