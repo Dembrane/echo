@@ -35,6 +35,7 @@
         "@dembrane/llm": "workspace:*",
         "@dembrane/mail": "workspace:*",
         "@dembrane/map": "workspace:*",
+        "@dembrane/metering": "workspace:*",
         "@dembrane/notifications": "workspace:*",
         "@dembrane/observability": "workspace:*",
         "@dembrane/popcorn": "workspace:*",
@@ -118,6 +119,7 @@
         "@dembrane/llm": "workspace:*",
         "@dembrane/mail": "workspace:*",
         "@dembrane/map": "workspace:*",
+        "@dembrane/metering": "workspace:*",
         "@dembrane/notifications": "workspace:*",
         "@dembrane/observability": "workspace:*",
         "@dembrane/popcorn": "workspace:*",
@@ -487,6 +489,17 @@
         "hono": "^4.9.0",
         "postgres": "^3.4.9",
         "zod": "^4.1.0",
+      },
+    },
+    "packages/metering": {
+      "name": "@dembrane/metering",
+      "dependencies": {
+        "@dembrane/db": "workspace:*",
+        "@dembrane/llm": "workspace:*",
+        "@dembrane/observability": "workspace:*",
+      },
+      "devDependencies": {
+        "postgres": "^3.4.9",
       },
     },
     "packages/notifications": {
@@ -900,6 +913,8 @@
     "@dembrane/map": ["@dembrane/map@workspace:packages/map"],
 
     "@dembrane/media": ["@dembrane/media@workspace:apps/media"],
+
+    "@dembrane/metering": ["@dembrane/metering@workspace:packages/metering"],
 
     "@dembrane/migrate": ["@dembrane/migrate@workspace:apps/migrate"],
 
