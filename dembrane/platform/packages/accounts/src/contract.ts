@@ -253,6 +253,11 @@ export const DocumentDetail = DocumentSummary.extend({
   signature: Signature.nullable(),
   /** How the caller reaches it: as a member, as the named signer, or as staff. */
   access: z.enum(["member", "signer", "staff"]),
+  /**
+   * Staff only, else null: the dashboard page where staff read this document, and change
+   * and send it while it is a draft. The link sam gives the deal owner.
+   */
+  staff_url: z.string().nullable(),
 });
 
 /**
@@ -578,12 +583,20 @@ export const PushOfferRequest = z.object({
   supersedes_id: nullish(Uuid),
   /**
    * Send now (default), or keep a draft that staff send later with POST .../send. A draft
-   * re-pins the newest legal texts when it is sent.
+   * is seen by staff only and adds nothing to the customer's account. When it is sent it
+   * gets that day's date (a date in the future stays) and the legal texts in force then.
    */
   send: z.boolean().default(true),
 });
 /** `task` is null for a draft: "Review and sign the offer" is created when it is sent. */
 export const PushOfferResponse = z.object({ document: DocumentDetail, task: Task.nullable() });
+
+/**
+ * PUT .../offers/:docId replaces what a draft offer says, in place: the document id, its
+ * reference and its staff page stay. `reference`, `date` and `external_ref` keep the
+ * draft's value when absent. A sent offer answers 409.
+ */
+export const UpdateOfferRequest = PushOfferRequest.omit({ send: true, supersedes_id: true });
 
 export const PushDocumentRequest = z.object({
   kind: z.enum(["dpa", "other"]),
@@ -968,6 +981,13 @@ export const ROUTES = {
     request: PushOfferRequest,
     response: PushOfferResponse,
     status: 201,
+  },
+  updateOffer: {
+    method: "PUT",
+    path: `${S}/:orgId/offers/:docId`,
+    permission: "staff:accounts",
+    request: UpdateOfferRequest,
+    response: DocumentDetail,
   },
   pushDocument: {
     method: "POST",

@@ -52,6 +52,14 @@ export const store = {
     await c.insert(org).values(row);
   },
 
+  /**
+   * Holds the organisation's row until the transaction ends, so two writes that each
+   * decide from the other's result (a signature and the billing details) run one after
+   * the other. Take it first in the transaction: a later lock could deadlock.
+   */
+  async lockOrg(c: Conn, id: string): Promise<void> {
+    await c.select({ id: org.id }).from(org).where(eq(org.id, id)).for("update");
+  },
   async updateOrg(c: Conn, id: string, patch: Partial<typeof org.$inferInsert>) {
     await c.update(org).set(patch).where(eq(org.id, id));
   },
@@ -450,6 +458,14 @@ export const store = {
   async insertEvent(c: Conn, row: typeof event.$inferInsert) {
     await c.insert(event).values(row);
   },
+  /** The subjects that already have an event of `type`: what was announced is never announced twice. */
+  async eventSubjects(c: Conn, orgId: string, type: string): Promise<Set<string>> {
+    const rows = await c
+      .select({ id: event.subjectId })
+      .from(event)
+      .where(and(eq(event.orgId, orgId), eq(event.type, type)));
+    return new Set(rows.flatMap((r) => (r.id ? [r.id] : [])));
+  },
 
   // ── legal texts ───────────────────────────────────────────────────────
 
@@ -532,9 +548,9 @@ export const store = {
           ),
         )
         .groupBy(org.id)
-        // Only organisations with account content: a stage, a task, or a document.
+        // Only organisations with account content: a stage, a task, or a document that was sent.
         .having(
-          sql`${org.account_stage} is not null or count(${task.id}) > 0 or exists (select 1 from account_document d where d.org_id = ${org.id})`,
+          sql`${org.account_stage} is not null or count(${task.id}) > 0 or exists (select 1 from account_document d where d.org_id = ${org.id} and d.status <> 'draft')`,
         )
         .orderBy(asc(org.name))
     );

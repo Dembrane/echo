@@ -11,4 +11,5 @@ export default {
   web: { apiOrigin: "http://localhost:8080", distDir: "../frontend/dist" },
   webhooks: { allowPrivateTargets: true },
   popcorn: { showFlow: true },
+  accounts: { offerMessages: true },
 } satisfies Environment;

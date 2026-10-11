@@ -97,7 +97,7 @@ function Editor() {
 			}),
 		queryKey: accountKeys.fields(orgId ?? "", docId ?? ""),
 	});
-	const pdf = usePdfData(doc.data?.file_url);
+	const pdf = usePdfData(doc.data?.file_url, doc.data?.sha256);
 	const [fields, setFields] = useState<DraftField[] | null>(null);
 	const [selected, setSelected] = useState<string | null>(null);
 	const [dirty, setDirty] = useState(false);

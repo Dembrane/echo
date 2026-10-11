@@ -45,6 +45,7 @@ import {
   staffOpenTicket,
   staffReply,
   updateAccount,
+  updateOffer,
   upsertInvoice,
   voidDocument,
 } from "./staff";
@@ -246,6 +247,11 @@ export function accountsRoutes(d: AccountsDeps) {
   app.post(R.pushOffer.path, async (c) => {
     const who = await staff(c, "accounts.offer.push");
     return c.json(await pushOffer(d, who, p(c, "orgId"), await body(c, K.PushOfferRequest)), 201);
+  });
+  app.put(R.updateOffer.path, async (c) => {
+    const who = await staff(c, "accounts.offer.update");
+    const b = await body(c, K.UpdateOfferRequest);
+    return c.json(await updateOffer(d, who, p(c, "orgId"), p(c, "docId"), b));
   });
   app.post(R.pushDocument.path, async (c) => {
     const who = await staff(c, "accounts.document.push");

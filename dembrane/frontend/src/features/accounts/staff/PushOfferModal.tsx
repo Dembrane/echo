@@ -17,6 +17,7 @@ import { toast } from "@/components/common/Toaster";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { AccountsApiError } from "../api/client";
 import { useAccountsMutation } from "../api/hooks";
+import type { DocumentDetailT } from "../contract/contract.gen";
 import { formatMoney } from "../format";
 import {
 	cents,
@@ -26,34 +27,92 @@ import {
 	toItems,
 } from "./LinesEditor";
 
+type Content = NonNullable<DocumentDetailT["content"]>;
+
+const toLines = (content: Content): Line[] =>
+	content.items.map((item) => ({
+		bullets: item.bullets.join("\n"),
+		description: item.description,
+		id: crypto.randomUUID(),
+		quantity: item.quantity,
+		unitPrice: item.unit_price_cents / 100,
+		vatPercent: item.vat_rate_bps / 100,
+	}));
+
 /**
  * Staff: an offer from lines, a template and a language. The backend lays it out as the
- * Google Doc templates do, pins the legal versions, places the signing fields and opens
- * "Review and sign the offer" for the customer.
+ * Google Doc templates do, pins the legal versions and places the signing fields.
+ *
+ * "Send offer" opens "Review and sign the offer" for the customer at once. "Save draft"
+ * keeps it for staff only and leads to the page where it is read, changed and sent. With
+ * `draft` the dialog changes that draft in place.
  */
 export function PushOfferModal({
 	opened,
 	onClose,
 	orgId,
 	orgName,
+	draft = null,
+	onDraft,
 }: {
 	opened: boolean;
 	onClose: () => void;
 	orgId: string;
 	orgName: string;
+	/** A draft offer to change; absent for a new offer. */
+	draft?: DocumentDetailT | null;
+	/** Called with the document id after a new draft is saved. */
+	onDraft?: (docId: string) => void;
+}) {
+	return (
+		<Modal
+			opened={opened}
+			onClose={onClose}
+			title={draft ? t`Change the draft` : t`Push an offer`}
+			size="xl"
+		>
+			{/* The dialog's content mounts when it opens, so each opening starts from the draft as it is. */}
+			<OfferForm
+				key={draft?.id ?? "new"}
+				onClose={onClose}
+				orgId={orgId}
+				orgName={orgName}
+				draft={draft}
+				onDraft={onDraft}
+			/>
+		</Modal>
+	);
+}
+
+function OfferForm({
+	onClose,
+	orgId,
+	orgName,
+	draft,
+	onDraft,
+}: {
+	onClose: () => void;
+	orgId: string;
+	orgName: string;
+	draft: DocumentDetailT | null;
+	onDraft?: (docId: string) => void;
 }) {
 	const { i18n } = useLingui();
+	const from = draft?.content ?? null;
 	const [template, setTemplate] = useState<"subscription" | "event">(
-		"subscription",
+		from?.template ?? "subscription",
 	);
-	const [language, setLanguage] = useState<"en" | "nl">("nl");
-	const [offerName, setOfferName] = useState(orgName);
-	const [personName, setPersonName] = useState("");
-	const [attention, setAttention] = useState("");
-	const [lines, setLines] = useState<Line[]>([emptyLine()]);
+	const [language, setLanguage] = useState<"en" | "nl">(from?.language ?? "nl");
+	const [offerName, setOfferName] = useState(from?.offer_name ?? orgName);
+	const [personName, setPersonName] = useState(from?.person_name ?? "");
+	const [attention, setAttention] = useState(from?.attention ?? "");
+	const [lines, setLines] = useState<Line[]>(
+		from ? toLines(from) : [emptyLine()],
+	);
 	const push = useAccountsMutation("pushOffer", { orgId });
-	const fields =
-		push.error instanceof AccountsApiError ? push.error.fields : {};
+	const update = useAccountsMutation("updateOffer", { orgId });
+	const error = push.error ?? update.error;
+	const fields = error instanceof AccountsApiError ? error.fields : {};
 
 	const net = lines.reduce((a, l) => a + l.quantity * cents(l.unitPrice), 0);
 	const vat = lines.reduce(
@@ -62,115 +121,145 @@ export function PushOfferModal({
 		0,
 	);
 
-	const submit = () =>
-		push.mutate(
-			{
-				body: {
-					attention: template === "event" ? attention : null,
-					currency: "EUR",
-					items: toItems(lines),
-					language,
-					offer_name: offerName,
-					person_name: personName,
-					template,
+	const body = {
+		attention: template === "event" ? attention : null,
+		currency: "EUR",
+		items: toItems(lines),
+		language,
+		offer_name: offerName,
+		person_name: personName,
+		template,
+	};
+
+	const submit = (send: boolean) => {
+		if (draft) {
+			update.mutate(
+				{ body, params: { docId: draft.id } },
+				{
+					onSuccess: () => {
+						toast.success(t`Draft saved`);
+						onClose();
+					},
 				},
-			},
+			);
+			return;
+		}
+		push.mutate(
+			{ body: { ...body, send } },
 			{
-				onSuccess: () => {
+				onSuccess: (res) => {
 					toast.success(
-						t`Offer sent. The customer sees it the next time they sign in.`,
+						send
+							? t`Offer sent. The customer sees it the next time they sign in.`
+							: t`Draft saved`,
 					);
 					setLines([emptyLine()]);
 					onClose();
+					if (!send) onDraft?.(res.document.id);
 				},
 			},
 		);
+	};
+	// Which of the two buttons is working, so only that one spins.
+	const sending = push.isPending && push.variables?.body?.send !== false;
+	const saving = update.isPending || (push.isPending && !sending);
 
 	return (
-		<Modal opened={opened} onClose={onClose} title={t`Push an offer`} size="xl">
-			<Stack gap="md">
-				<SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
-					<Stack gap={4}>
-						<Text size="sm">
-							<Trans>Template</Trans>
-						</Text>
-						<SegmentedControl
-							value={template}
-							onChange={(v) => setTemplate(v as typeof template)}
-							data={[
-								{ label: t`Subscription`, value: "subscription" },
-								{ label: t`Event`, value: "event" },
-							]}
-						/>
-					</Stack>
-					<Stack gap={4}>
-						<Text size="sm">
-							<Trans>Language</Trans>
-						</Text>
-						<SegmentedControl
-							value={language}
-							onChange={(v) => setLanguage(v as typeof language)}
-							data={[
-								{ label: "Nederlands", value: "nl" },
-								{ label: "English", value: "en" },
-							]}
-						/>
-					</Stack>
-					<TextInput
-						label={t`Customer name in the title`}
-						description={t`Reads "${offerName || "..."} x dembrane"`}
-						value={offerName}
-						onChange={(e) => setOfferName(e.currentTarget.value)}
-						error={fields.offer_name}
-						data-testid="offer-name"
+		<Stack gap="md">
+			<SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
+				<Stack gap={4}>
+					<Text size="sm">
+						<Trans>Template</Trans>
+					</Text>
+					<SegmentedControl
+						value={template}
+						onChange={(v) => setTemplate(v as typeof template)}
+						data={[
+							{ label: t`Subscription`, value: "subscription" },
+							{ label: t`Event`, value: "event" },
+						]}
 					/>
+				</Stack>
+				<Stack gap={4}>
+					<Text size="sm">
+						<Trans>Language</Trans>
+					</Text>
+					<SegmentedControl
+						value={language}
+						onChange={(v) => setLanguage(v as typeof language)}
+						data={[
+							{ label: "Nederlands", value: "nl" },
+							{ label: "English", value: "en" },
+						]}
+					/>
+				</Stack>
+				<TextInput
+					label={t`Customer name in the title`}
+					description={t`Reads "${offerName || "..."} x dembrane"`}
+					value={offerName}
+					onChange={(e) => setOfferName(e.currentTarget.value)}
+					error={fields.offer_name}
+					data-testid="offer-name"
+				/>
+				<TextInput
+					label={t`Name in the greeting`}
+					description={t`Optional`}
+					value={personName}
+					onChange={(e) => setPersonName(e.currentTarget.value)}
+					data-testid="offer-person"
+				/>
+				{template === "event" && (
 					<TextInput
-						label={t`Name in the greeting`}
+						label={t`For the attention of`}
 						description={t`Optional`}
-						value={personName}
-						onChange={(e) => setPersonName(e.currentTarget.value)}
-						data-testid="offer-person"
+						value={attention}
+						onChange={(e) => setAttention(e.currentTarget.value)}
 					/>
-					{template === "event" && (
-						<TextInput
-							label={t`For the attention of`}
-							description={t`Optional`}
-							value={attention}
-							onChange={(e) => setAttention(e.currentTarget.value)}
-						/>
-					)}
-				</SimpleGrid>
-
-				<Divider label={t`Lines`} labelPosition="left" />
-				<LinesEditor lines={lines} onChange={setLines} errors={fields} />
-
-				<Group justify="space-between" align="flex-end">
-					<Stack gap={0}>
-						<Text size="sm">
-							<Trans>
-								{formatMoney(net, "EUR", i18n.locale)} excl. VAT,{" "}
-								{formatMoney(net + vat, "EUR", i18n.locale)} incl.
-							</Trans>
-						</Text>
-						<Text size="xs" c="dimmed">
-							<Trans>
-								Valid 14 days. The terms, SLA and DPA versions in force today
-								are pinned.
-							</Trans>
-						</Text>
-					</Stack>
-					<Button
-						onClick={submit}
-						loading={push.isPending}
-						data-testid="offer-submit"
-					>
-						<Trans>Send offer</Trans>
-					</Button>
-				</Group>
-				{push.error && !Object.keys(fields).length && (
-					<ErrorNotice error={push.error} />
 				)}
-			</Stack>
-		</Modal>
+			</SimpleGrid>
+
+			<Divider label={t`Lines`} labelPosition="left" />
+			<LinesEditor lines={lines} onChange={setLines} errors={fields} />
+
+			<Group justify="space-between" align="flex-end">
+				<Stack gap={0}>
+					<Text size="sm">
+						<Trans>
+							{formatMoney(net, "EUR", i18n.locale)} excl. VAT,{" "}
+							{formatMoney(net + vat, "EUR", i18n.locale)} incl.
+						</Trans>
+					</Text>
+					<Text size="xs" c="dimmed">
+						<Trans>
+							Valid 14 days. The terms, SLA and DPA versions in force today are
+							pinned.
+						</Trans>
+					</Text>
+				</Stack>
+				<Group gap="xs">
+					{/* Quiet beside "Send offer", so the button people know stays the obvious one. */}
+					<Button
+						variant={draft ? undefined : "subtle"}
+						onClick={() => submit(false)}
+						loading={saving}
+						disabled={sending}
+						data-testid="offer-save-draft"
+					>
+						<Trans>Save draft</Trans>
+					</Button>
+					{!draft && (
+						<Button
+							onClick={() => submit(true)}
+							loading={sending}
+							disabled={saving}
+							data-testid="offer-submit"
+						>
+							<Trans>Send offer</Trans>
+						</Button>
+					)}
+				</Group>
+			</Group>
+			{error && !Object.keys(fields).length && <ErrorNotice error={error} />}
+		</Stack>
 	);
 }

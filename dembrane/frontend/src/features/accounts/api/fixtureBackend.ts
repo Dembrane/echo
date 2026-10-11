@@ -87,6 +87,7 @@ function demoStore(): Store {
 		sha256: null,
 		signature: null,
 		signing_note: null,
+		staff_url: null,
 	};
 	const tasks: StoredTask[] = fx.accountPage.tasks.map((t) => clone(t));
 	return {
@@ -374,6 +375,10 @@ function withUrls(
 		file_url: `${base}/documents/${doc.id}/file`,
 		signed_pdf_url:
 			doc.status === "signed" ? `${base}/documents/${doc.id}/signed.pdf` : null,
+		staff_url:
+			access === "staff"
+				? `${base.replace(/^\/api\/v2/, "")}/documents/${doc.id}`
+				: null,
 	};
 }
 
@@ -390,9 +395,55 @@ function summary(doc: DocumentDetailT): DocumentSummaryT {
 		confirmation: _cf,
 		signature: _sg,
 		access: _a,
+		staff_url: _su,
 		...rest
 	} = doc;
 	return rest;
+}
+
+type OfferItems = NonNullable<DocumentDetailT["content"]>["items"];
+
+/** An offer's lines with their totals, as the API prices them. */
+function priced(raw: unknown) {
+	const items = raw as OfferItems;
+	const lines = items.map((it) => {
+		const net = it.quantity * it.unit_price_cents;
+		const vat = Math.round((net * it.vat_rate_bps) / 10_000);
+		return { ...it, net_cents: net, total_cents: net + vat, vat_cents: vat };
+	});
+	return {
+		items,
+		lines,
+		subtotal: lines.reduce((a, l) => a + l.net_cents, 0),
+		vat: lines.reduce((a, l) => a + l.vat_cents, 0),
+	};
+}
+
+/** The locked billing details step that comes with a sent offer, named after it. */
+function billingStepFor(s: Store, d: DocumentDetailT) {
+	const billing = s.tasks.find(
+		(x) => x.kind === "billing_details" && x.status === "locked",
+	);
+	if (billing) {
+		billing.locked_until_document_id = d.id;
+		billing.locked_until_title = d.title;
+	} else if (!s.tasks.some((x) => x.kind === "billing_details")) {
+		openTask(s, {
+			body:
+				d.language === "nl"
+					? "Aan wie we factureren. Deze stap opent zodra de offerte is ondertekend."
+					: "Who we invoice. This step opens once the offer is signed.",
+			code: "billing_details",
+			document_id: null,
+			due_on: null,
+			kind: "billing_details",
+			locked: true,
+			locked_until: d.id,
+			reminder_interval_days: null,
+			status: "locked",
+			title: d.language === "nl" ? "Factuurgegevens" : "Billing details",
+		});
+	}
 }
 
 const TASK_ORDER: Record<TaskT["status"], number> = {
@@ -1242,25 +1293,61 @@ export async function handle(
 					event(s, "account.stage_set", "staff", {}, { stage: s.stage });
 				}
 				return card(s);
+			case "updateOffer": {
+				const d = doc();
+				if (d.kind !== "offer" || !d.content) throw notFound();
+				if (d.status !== "draft")
+					throw new AccountsApiError(409, "Only a draft can be changed.");
+				const language = body.language as "en" | "nl";
+				const { items, lines, subtotal, vat } = priced(body.items);
+				const date = (body.date as string | null) ?? d.content.date;
+				const reference =
+					(body.reference as string | null) ?? d.content.reference;
+				d.title =
+					(body.title as string | null) ?? `${body.offer_name} x dembrane`;
+				d.content = {
+					...d.content,
+					attention: (body.attention as string | null) ?? null,
+					date,
+					items,
+					language,
+					offer_name: String(body.offer_name),
+					person_name: (body.person_name as string | null) ?? null,
+					reference,
+					template: body.template as "subscription" | "event",
+				};
+				d.language = language;
+				d.reference = reference;
+				d.lines = lines;
+				d.subtotal_cents = subtotal;
+				d.vat_cents = vat;
+				d.total_cents = subtotal + vat;
+				d.valid_until = new Date(new Date(date).getTime() + 14 * 86_400_000)
+					.toISOString()
+					.slice(0, 10);
+				d.sha256 = randomHex();
+				d.fields = offerFields(language);
+				d.confirmation = confirmationFor(
+					language,
+					d.title,
+					reference,
+					d.sha256,
+					true,
+					d.fields,
+					s.name,
+				);
+				event(
+					s,
+					"document.updated",
+					"staff",
+					{ id: d.id, type: "document" },
+					{ kind: "offer", total_cents: d.total_cents },
+				);
+				return withUrls(d, sBase, "staff");
+			}
 			case "pushOffer": {
 				const language = body.language as "en" | "nl";
-				const items = body.items as DocumentDetailT["content"] extends infer C
-					? C extends { items: infer I }
-						? I
-						: never
-					: never;
-				const lines = items.map((it) => {
-					const net = it.quantity * it.unit_price_cents;
-					const vat = Math.round((net * it.vat_rate_bps) / 10_000);
-					return {
-						...it,
-						net_cents: net,
-						total_cents: net + vat,
-						vat_cents: vat,
-					};
-				});
-				const subtotal = lines.reduce((a, l) => a + l.net_cents, 0);
-				const vat = lines.reduce((a, l) => a + l.vat_cents, 0);
+				const { items, lines, subtotal, vat } = priced(body.items);
 				const date = (body.date as string | null) ?? today();
 				const reference =
 					(body.reference as string | null) ??
@@ -1338,32 +1425,11 @@ export async function handle(
 									? "Lees de offerte en onderteken hem hier."
 									: "Read the offer and sign it here.",
 							);
-				const billing = s.tasks.find(
-					(x) => x.kind === "billing_details" && x.status === "locked",
-				);
-				if (billing) {
-					billing.locked_until_document_id = d.id;
-					billing.locked_until_title = d.title;
-				} else if (!s.tasks.some((x) => x.kind === "billing_details")) {
-					openTask(s, {
-						body:
-							language === "nl"
-								? "Aan wie we factureren. Deze stap opent zodra de offerte is ondertekend."
-								: "Who we invoice. This step opens once the offer is signed.",
-						code: "billing_details",
-						document_id: null,
-						due_on: null,
-						kind: "billing_details",
-						locked: true,
-						locked_until: d.id,
-						reminder_interval_days: null,
-						status: "locked",
-						title: language === "nl" ? "Factuurgegevens" : "Billing details",
-					});
-				}
+				// A draft adds nothing to the customer's account; the billing step comes with the send.
+				if (body.send !== false) billingStepFor(s, d);
 				event(
 					s,
-					"document.sent",
+					body.send === false ? "document.drafted" : "document.sent",
 					"staff",
 					{ id: d.id, type: "document" },
 					{ kind: "offer", total_cents: d.total_cents },
@@ -1407,6 +1473,7 @@ export async function handle(
 					signed_pdf_url: null,
 					signer: null,
 					signing_note: null,
+					staff_url: null,
 					status: sendNow ? "sent" : "draft",
 					subtotal_cents: null,
 					title: (body.title as string | null) ?? "Document",
@@ -1515,6 +1582,7 @@ export async function handle(
 				}
 				d.status = "sent";
 				d.sent_at = now();
+				if (d.kind === "offer") billingStepFor(s, d);
 				// An offer keeps the confirmation its template gave it; other documents get
 				// theirs from the fields they were sent with.
 				if (d.requires_signature && d.kind !== "offer") seal(s, d);

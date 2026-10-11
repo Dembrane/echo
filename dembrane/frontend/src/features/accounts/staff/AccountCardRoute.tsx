@@ -169,15 +169,26 @@ function Documents({ orgId, card }: { orgId: string; card: AccountCardT }) {
 				</UnstyledButton>
 			</Menu.Target>
 			<Menu.Dropdown>
-				{doc.status === "draft" && doc.requires_signature && (
+				{doc.status === "draft" && doc.kind === "offer" && (
 					<Menu.Item
 						onClick={() =>
-							navigate(`/admin/accounts/${orgId}/documents/${doc.id}/fields`)
+							navigate(`/admin/accounts/${orgId}/documents/${doc.id}`)
 						}
 					>
-						<Trans>Place fields</Trans>
+						<Trans>Review and send</Trans>
 					</Menu.Item>
 				)}
+				{doc.status === "draft" &&
+					doc.kind !== "offer" &&
+					doc.requires_signature && (
+						<Menu.Item
+							onClick={() =>
+								navigate(`/admin/accounts/${orgId}/documents/${doc.id}/fields`)
+							}
+						>
+							<Trans>Place fields</Trans>
+						</Menu.Item>
+					)}
 				{doc.status === "draft" && !doc.requires_signature && (
 					<Menu.Item
 						onClick={() =>
@@ -276,9 +287,23 @@ function Documents({ orgId, card }: { orgId: string; card: AccountCardT }) {
 								data-status={doc.status}
 							>
 								<Table.Td>
-									<Text size="sm" truncate>
-										{doc.title}
-									</Text>
+									{doc.file_url ? (
+										<Anchor
+											component={I18nLink}
+											to={`/admin/accounts/${orgId}/documents/${doc.id}`}
+											size="sm"
+											c="inherit"
+											truncate
+											display="block"
+											data-testid="staff-doc-open"
+										>
+											{doc.title}
+										</Anchor>
+									) : (
+										<Text size="sm" truncate>
+											{doc.title}
+										</Text>
+									)}
 									<Text size="xs" c="dimmed" truncate>
 										{documentKindLabel(doc.kind)} ·{" "}
 										{formatDate(doc.signed_at ?? doc.sent_at, i18n.locale) ||
@@ -313,6 +338,9 @@ function Documents({ orgId, card }: { orgId: string; card: AccountCardT }) {
 				onClose={() => setOfferOpen(false)}
 				orgId={orgId}
 				orgName={card.organisation.name}
+				onDraft={(docId) =>
+					navigate(`/admin/accounts/${orgId}/documents/${docId}`)
+				}
 			/>
 			<UploadPdfModal
 				opened={uploadOpen}
@@ -702,8 +730,10 @@ const eventLabel = (type: string): string =>
 		"document.signed": t`Document signed`,
 		"document.signer_named": t`Signer named`,
 		"document.signer_replaced": t`Signer replaced`,
+		"document.updated": t`Draft changed`,
 		"document.viewed": t`Document viewed`,
 		"document.voided": t`Document withdrawn`,
+		"invoice.requested": t`Ready to invoice`,
 		"onboarding.added": t`Onboarding tasks added`,
 		"onboarding.withdrawn": t`Onboarding tasks withdrawn`,
 		"task.approve": t`Task approved`,

@@ -27,12 +27,28 @@ export type AccountEvent = (typeof ACCOUNT_EVENTS)[number];
 /**
  * Events only sam's inbox carries. ACCOUNTS_EVENTS_URL never received them, so without the
  * inbox they stay on the timeline, as before.
+ *
+ * `account.document.sent` and `account.document.voided` tell sam what staff did with a
+ * document, so it can close its review step and move the deal. `account.invoice.requested`
+ * is the one message a person needs to send an invoice: see invoice.ts.
  */
-export const INBOX_ONLY_EVENTS = ["account.call.booked"] as const;
+export const INBOX_ONLY_EVENTS = [
+  "account.call.booked",
+  "account.document.sent",
+  "account.document.voided",
+  "account.invoice.requested",
+] as const;
 export type InboxEvent = AccountEvent | (typeof INBOX_ONLY_EVENTS)[number];
 
 const isAccountEvent = (e: InboxEvent): e is AccountEvent =>
   (ACCOUNT_EVENTS as readonly string[]).includes(e);
+
+/** The offer flow's messages: made only where sam is known to take them (offerMessages). */
+const OFFER_FLOW: readonly InboxEvent[] = [
+  "account.document.sent",
+  "account.document.voided",
+  "account.invoice.requested",
+];
 
 /**
  * The inbox code of each event. Named one by one, never derived from the dotted name, so
@@ -40,6 +56,9 @@ const isAccountEvent = (e: InboxEvent): e is AccountEvent =>
  */
 export const ACCOUNT_EVENT_CODES: Record<InboxEvent, string> = {
   "account.call.booked": "echo_account_call_booked_v1",
+  "account.document.sent": "echo_account_document_sent_v1",
+  "account.document.voided": "echo_account_document_voided_v1",
+  "account.invoice.requested": "echo_account_invoice_requested_v1",
   "account.document.signed": "echo_account_document_signed_v1",
   "account.document.declined": "echo_account_document_declined_v1",
   "account.billing_details.updated": "echo_account_billing_details_updated_v1",
@@ -73,8 +92,9 @@ export async function emit(d: AccountsDeps, tx: Conn, e: Emit): Promise<void> {
     detail: e.detail ?? null,
     createdAt: d.now(),
   });
-  const toInbox = Boolean(e.webhook && d.settings.samInbox);
-  if (e.webhook) {
+  const held = e.webhook && OFFER_FLOW.includes(e.webhook.event) && !d.settings.offerMessages;
+  const toInbox = Boolean(e.webhook && d.settings.samInbox && !held);
+  if (e.webhook && !held) {
     // The manager is read here, in the cause's transaction, and frozen into the stored
     // payload: a message already queued keeps the manager it was written with, so a retry
     // or a late drain never re-addresses it to someone who took the account over since.

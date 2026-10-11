@@ -274,11 +274,11 @@ run("demos made in echo", () => {
       view.offer_document_id as string,
     );
     expect(offer?.status).toBe("draft");
-    // Billing details wait for the offer to be signed; the prospect's onboarding tasks
-    // are open, lead to the demo project and never remind.
+    // A draft offer adds nothing to the prospect's account: billing details are asked
+    // when the offer is sent. The onboarding tasks are open, lead to the demo project and
+    // never remind.
     const tasks = await store.tasks(w.db, view.org_id as string);
     expect(tasks.map((t) => `${t.code}:${t.status}`)).toEqual([
-      "billing_details:locked",
       "explore_demo:open",
       "watch_tutorial:open",
       "create_project:open",

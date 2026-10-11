@@ -17,4 +17,7 @@ export default {
   // Preview has never delivered project webhooks. The default turned on to match prod;
   // turning preview on too is a separate decision about whose endpoints it may reach.
   webhooks: { enabled: false },
+  // A preview has no sam inbox, so nothing is sent; on, the timeline records the invoice
+  // request and the offer flow can be walked end to end.
+  accounts: { offerMessages: true },
 } satisfies Environment;
