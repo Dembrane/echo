@@ -161,6 +161,36 @@ describe("the offer", () => {
     expect(Buffer.from(again.bytes).equals(Buffer.from(r.bytes))).toBe(true);
   });
 
+  test("each template puts the acceptance block on its own page and links the pinned texts", async () => {
+    for (const template of ["subscription", "event"] as const)
+      for (const language of ["en", "nl"] as const) {
+        const content = offer({ template, language });
+        const r = await offerPdf(content);
+        expect(r.pageCount).toBe(2);
+        expect(r.fields.every((f) => f.page === 2)).toBe(true);
+        // The date and the signature share one line, the date first.
+        const [date, signature] = r.fields.slice(-2);
+        expect([date?.kind, signature?.kind]).toEqual(["date", "signature"]);
+        expect((date?.y ?? 0) + (date?.height ?? 0)).toBeCloseTo(
+          (signature?.y ?? 0) + (signature?.height ?? 0),
+          6,
+        );
+        expect(date?.x).toBeLessThan(signature?.x ?? 0);
+        const text = Buffer.from(r.bytes).toString("latin1");
+        for (const t of Object.values(content.legal)) expect(text).toContain(`(${t.url})`);
+        expect(text).toContain("DMSans-Light");
+      }
+  });
+
+  test("a long offer keeps its rows whole and still ends on the acceptance page", async () => {
+    const one = offer().items[0] as OfferContent["items"][number];
+    const r = await offerPdf(
+      offer({ items: Array.from({ length: 8 }, () => ({ ...one, bullets: ["a", "b", "c"] })) }),
+    );
+    expect(r.pageCount).toBe(3);
+    expect(r.fields.every((f) => f.page === 3)).toBe(true);
+  });
+
   test("stamping values and the signature adds the audit page", async () => {
     const r = await textPdf("Plan", "# Plan\n\nText", { signing: true, language: "en" });
     const fields = r.fields.map((f, i) => ({ ...f, id: `f${i}` }));
