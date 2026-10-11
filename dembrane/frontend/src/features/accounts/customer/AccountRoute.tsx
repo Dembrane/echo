@@ -110,8 +110,16 @@ const AccountPage = () => {
 				)}
 
 				{!billingHidden && (
-					<div ref={billingRef}>
-						<BillingForm orgId={organisationId} billing={data.billing} />
+					// The margin keeps the title clear of the page header after "Fill in" scrolls here.
+					<div ref={billingRef} style={{ scrollMarginTop: 16 }}>
+						<BillingForm
+							orgId={organisationId}
+							billing={data.billing}
+							pending={
+								billingTask?.status === "open" ||
+								billingTask?.status === "changes_requested"
+							}
+						/>
 					</div>
 				)}
 
