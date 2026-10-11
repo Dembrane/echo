@@ -5025,6 +5025,14 @@ msgstr "dembrane"
 msgid "dembrane - the default"
 msgstr "dembrane - par défaut"
 
+#: src/components/release/releases.ts:58
+msgid "dembrane 3"
+msgstr "dembrane 3"
+
+#: src/components/release/releases.ts:52
+msgid "dembrane 3 is tested against the WCAG 2.1 AA accessibility guidelines."
+msgstr "dembrane 3 est testé par rapport aux règles d'accessibilité WCAG 2.1 AA."
+
 #: src/components/participant/DembraneEventCta.tsx:61
 msgid "dembrane at your event?"
 msgstr "dembrane pour votre événement ?"
@@ -6037,7 +6045,7 @@ msgstr "Explorer"
 msgid "Explore recurring themes in the Library"
 msgstr "Explorez les thèmes récurrents dans la Library"
 
-#: src/components/release/releases.ts:60
+#: src/components/release/releases.ts:76
 msgid "Explore stories and perspectives with the Narratives chat template, in English and Dutch."
 msgstr "Explore les récits et les perspectives avec le modèle de chat Narratives, en anglais et en néerlandais."
 
@@ -7360,6 +7368,10 @@ msgstr "Améliorer ma configuration"
 msgid "Improvements"
 msgstr "Améliorations"
 
+#: src/components/release/releases.ts:48
+msgid "In our tests, projects open about a third faster than in dembrane 2."
+msgstr "Lors de nos tests, les projets s'ouvrent environ un tiers plus vite que dans dembrane 2."
+
 #: src/components/chat/AgenticPlanCard.tsx:41
 msgid "In progress"
 msgstr "En cours"
@@ -7485,7 +7497,7 @@ msgstr "entretien"
 msgid "Intro"
 msgstr "Intro"
 
-#: src/components/release/releases.ts:78
+#: src/components/release/releases.ts:94
 msgid "Introducing Popcorn"
 msgstr "Voici Popcorn"
 
@@ -8736,7 +8748,7 @@ msgstr "L'accès MCP pour {0} est désactivé"
 msgid "MCP access for {0} is on"
 msgstr "L'accès MCP pour {0} est activé"
 
-#: src/components/release/releases.ts:52
+#: src/components/release/releases.ts:68
 msgid "MCP connections let your agent find projects, search conversations, read transcripts and consult documentation, with organisation controls and explicit consent."
 msgstr "Les connexions MCP permettent à ton agent de trouver des projets, rechercher des conversations, lire des transcriptions et consulter la documentation, avec des contrôles par organisation et un consentement explicite."
 
@@ -10708,7 +10720,7 @@ msgstr "Participants"
 msgid "Participants can request a reply during a recording."
 msgstr "Les participants peuvent demander une réponse pendant un enregistrement."
 
-#: src/components/release/releases.ts:56
+#: src/components/release/releases.ts:72
 msgid "Participants can share the portal from the header or the thank you page: a QR code, a copyable link, WhatsApp, email or the device's own share sheet."
 msgstr "Les participants peuvent partager le portail depuis l'en-tête ou la page de remerciement : code QR, lien à copier, WhatsApp, e-mail ou menu de partage de l'appareil."
 
@@ -13856,7 +13868,7 @@ msgstr "Partagé avec {0}"
 msgid "Shared with {0} and {overflow} others"
 msgstr "Partagé avec {0} et {overflow} autres"
 
-#: src/components/release/releases.ts:68
+#: src/components/release/releases.ts:84
 msgid "Sharing a private project with a non-member now offers an invitation instead of an error, granting access when they join the workspace."
 msgstr "Partager un projet privé avec une personne non membre propose désormais une invitation au lieu d’une erreur. L’accès est accordé quand elle rejoint l’espace de travail."
 
@@ -15087,7 +15099,7 @@ msgstr "La conversation n'a pas pu être chargée. Veuillez réessayer ou contac
 msgid "The conversation list shows clearer totals."
 msgstr "La liste des conversations affiche des totaux plus clairs."
 
-#: src/components/release/releases.ts:64
+#: src/components/release/releases.ts:80
 msgid "The default host guide now reminds hosts to turn on focus mode so notifications stay off the screen while recording."
 msgstr "Le guide de l'hôte par défaut rappelle désormais d'activer le mode Ne pas déranger pour masquer les notifications pendant l'enregistrement."
 
@@ -15374,7 +15386,7 @@ msgstr "la conversation sélectionnée"
 #~ msgid "The shared screen shows your published presentation. Publish changes to update its content and access."
 #~ msgstr "L'écran partagé affiche votre présentation publiée. Publiez les modifications pour mettre à jour son contenu et son accès."
 
-#: src/components/release/releases.ts:72
+#: src/components/release/releases.ts:88
 msgid "The sidebar fits mobile screens more reliably, with corrected French navigation labels."
 msgstr "La barre latérale s'adapte mieux aux écrans mobiles, avec des libellés de navigation en français corrigés."
 
@@ -16423,7 +16435,7 @@ msgstr "Vous souhaitez rejoindre une organisation existante ?"
 #~ msgid "Trying to join an existing organization?"
 #~ msgstr "Vous souhaitez rejoindre une organisation existante ?"
 
-#: src/components/release/releases.ts:48
+#: src/components/release/releases.ts:64
 msgid "Turn conversations into live slides. Run a live session or an on-demand analysis, present to the room and trace insights to their sources."
 msgstr "Transforme les conversations en diapositives en direct. Lance une session en direct ou une analyse à la demande, présente au groupe et retrouve les sources des observations."
 

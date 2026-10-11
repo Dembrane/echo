@@ -5022,6 +5022,14 @@ msgstr "dembrane"
 msgid "dembrane - the default"
 msgstr "dembrane, de standaard"
 
+#: src/components/release/releases.ts:58
+msgid "dembrane 3"
+msgstr "dembrane 3"
+
+#: src/components/release/releases.ts:52
+msgid "dembrane 3 is tested against the WCAG 2.1 AA accessibility guidelines."
+msgstr "dembrane 3 is getest tegen de toegankelijkheidsrichtlijnen WCAG 2.1 AA."
+
 #: src/components/participant/DembraneEventCta.tsx:61
 msgid "dembrane at your event?"
 msgstr "Ook dembrane inzetten?"
@@ -6034,7 +6042,7 @@ msgstr "Verkennen"
 msgid "Explore recurring themes in the Library"
 msgstr "Verken terugkerende thema’s in de Library"
 
-#: src/components/release/releases.ts:60
+#: src/components/release/releases.ts:76
 msgid "Explore stories and perspectives with the Narratives chat template, in English and Dutch."
 msgstr "Verken verhalen en perspectieven met de chattemplate Narratives, in het Engels en Nederlands."
 
@@ -7357,6 +7365,10 @@ msgstr "Verbeter mijn instellingen"
 msgid "Improvements"
 msgstr "Verbeteringen"
 
+#: src/components/release/releases.ts:48
+msgid "In our tests, projects open about a third faster than in dembrane 2."
+msgstr "In onze tests openen projecten ongeveer een derde sneller dan in dembrane 2."
+
 #: src/components/chat/AgenticPlanCard.tsx:41
 msgid "In progress"
 msgstr "Bezig"
@@ -7482,7 +7494,7 @@ msgstr "interview"
 msgid "Intro"
 msgstr "Intro"
 
-#: src/components/release/releases.ts:78
+#: src/components/release/releases.ts:94
 msgid "Introducing Popcorn"
 msgstr "Nieuw: Popcorn"
 
@@ -8733,7 +8745,7 @@ msgstr "MCP-toegang voor {0} staat uit"
 msgid "MCP access for {0} is on"
 msgstr "MCP-toegang voor {0} staat aan"
 
-#: src/components/release/releases.ts:52
+#: src/components/release/releases.ts:68
 msgid "MCP connections let your agent find projects, search conversations, read transcripts and consult documentation, with organisation controls and explicit consent."
 msgstr "Met MCP-verbindingen kan je agent projecten vinden, gesprekken doorzoeken, transcripties lezen en documentatie raadplegen, met organisatie-instellingen en expliciete toestemming."
 
@@ -10705,7 +10717,7 @@ msgstr "Deelnemers"
 msgid "Participants can request a reply during a recording."
 msgstr "Deelnemers kunnen tijdens een opname om een antwoord vragen."
 
-#: src/components/release/releases.ts:56
+#: src/components/release/releases.ts:72
 msgid "Participants can share the portal from the header or the thank you page: a QR code, a copyable link, WhatsApp, email or the device's own share sheet."
 msgstr "Deelnemers kunnen de portal delen vanuit de header of de bedankpagina: via een QR-code, een kopieerbare link, WhatsApp, e-mail of het deelmenu van het apparaat."
 
@@ -13853,7 +13865,7 @@ msgstr "Gedeeld met {0}"
 msgid "Shared with {0} and {overflow} others"
 msgstr "Gedeeld met {0} en {overflow} anderen"
 
-#: src/components/release/releases.ts:68
+#: src/components/release/releases.ts:84
 msgid "Sharing a private project with a non-member now offers an invitation instead of an error, granting access when they join the workspace."
 msgstr "Als je een privéproject deelt met iemand die nog geen lid is, kun je diegene nu uitnodigen in plaats van een foutmelding te krijgen. De toegang wordt verleend zodra diegene lid wordt van de werkruimte."
 
@@ -15084,7 +15096,7 @@ msgstr "Er is iets misgegaan met het gesprek. Probeer het alstublieft opnieuw of
 msgid "The conversation list shows clearer totals."
 msgstr "De gesprekslijst toont duidelijkere totalen."
 
-#: src/components/release/releases.ts:64
+#: src/components/release/releases.ts:80
 msgid "The default host guide now reminds hosts to turn on focus mode so notifications stay off the screen while recording."
 msgstr "De standaard hostgids herinnert hosts er nu aan om de focusmodus in te schakelen, zodat meldingen tijdens het opnemen niet op het scherm verschijnen."
 
@@ -15370,7 +15382,7 @@ msgstr "het geselecteerde gesprek"
 #~ msgid "The shared screen shows your published presentation. Publish changes to update its content and access."
 #~ msgstr "Het gedeelde scherm toont je gepubliceerde presentatie. Publiceer wijzigingen om de inhoud en toegang bij te werken."
 
-#: src/components/release/releases.ts:72
+#: src/components/release/releases.ts:88
 msgid "The sidebar fits mobile screens more reliably, with corrected French navigation labels."
 msgstr "De zijbalk past beter op mobiele schermen en heeft verbeterde Franse navigatieteksten."
 
@@ -16420,7 +16432,7 @@ msgstr "Wil je je aansluiten bij een bestaande organisatie?"
 #~ msgid "Trying to join an existing organization?"
 #~ msgstr "Wil je je aansluiten bij een bestaande organisatie?"
 
-#: src/components/release/releases.ts:48
+#: src/components/release/releases.ts:64
 msgid "Turn conversations into live slides. Run a live session or an on-demand analysis, present to the room and trace insights to their sources."
 msgstr "Zet gesprekken om in live slides. Start een live sessie of een analyse op aanvraag, presenteer aan de groep en bekijk de bronnen achter inzichten."
 

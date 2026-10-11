@@ -5024,6 +5024,14 @@ msgstr "dembrane"
 msgid "dembrane - the default"
 msgstr "dembrane – výchozí"
 
+#: src/components/release/releases.ts:58
+msgid "dembrane 3"
+msgstr "dembrane 3"
+
+#: src/components/release/releases.ts:52
+msgid "dembrane 3 is tested against the WCAG 2.1 AA accessibility guidelines."
+msgstr "dembrane 3 je testován vůči pravidlům přístupnosti WCAG 2.1 AA."
+
 #: src/components/participant/DembraneEventCta.tsx:61
 msgid "dembrane at your event?"
 msgstr "dembrane na vaší akci?"
@@ -6036,7 +6044,7 @@ msgstr "Explore"
 msgid "Explore recurring themes in the Library"
 msgstr "Prozkoumej opakující se témata v Library"
 
-#: src/components/release/releases.ts:60
+#: src/components/release/releases.ts:76
 msgid "Explore stories and perspectives with the Narratives chat template, in English and Dutch."
 msgstr "Prozkoumej příběhy a pohledy pomocí šablony chatu Narratives v angličtině a nizozemštině."
 
@@ -7359,6 +7367,10 @@ msgstr "Vylepšit nastavení"
 msgid "Improvements"
 msgstr "Vylepšení"
 
+#: src/components/release/releases.ts:48
+msgid "In our tests, projects open about a third faster than in dembrane 2."
+msgstr "V našich testech se projekty otevírají přibližně o třetinu rychleji než v dembrane 2."
+
 #: src/components/chat/AgenticPlanCard.tsx:41
 msgid "In progress"
 msgstr "Probíhá"
@@ -7484,7 +7496,7 @@ msgstr "rozhovor"
 msgid "Intro"
 msgstr "Úvod"
 
-#: src/components/release/releases.ts:78
+#: src/components/release/releases.ts:94
 msgid "Introducing Popcorn"
 msgstr "Představujeme Popcorn"
 
@@ -8735,7 +8747,7 @@ msgstr "Přístup přes MCP pro {0} je vypnutý"
 msgid "MCP access for {0} is on"
 msgstr "Přístup přes MCP pro {0} je zapnutý"
 
-#: src/components/release/releases.ts:52
+#: src/components/release/releases.ts:68
 msgid "MCP connections let your agent find projects, search conversations, read transcripts and consult documentation, with organisation controls and explicit consent."
 msgstr "Připojení MCP umožní tvému agentovi hledat projekty a konverzace, číst přepisy a procházet dokumentaci, s kontrolou organizace a výslovným souhlasem."
 
@@ -10707,7 +10719,7 @@ msgstr "Účastníci"
 msgid "Participants can request a reply during a recording."
 msgstr "Účastníci mohou během nahrávání požádat o odpověď."
 
-#: src/components/release/releases.ts:56
+#: src/components/release/releases.ts:72
 msgid "Participants can share the portal from the header or the thank you page: a QR code, a copyable link, WhatsApp, email or the device's own share sheet."
 msgstr "Účastníci mohou portál sdílet ze záhlaví nebo děkovné stránky: přes QR kód, zkopírovatelný odkaz, WhatsApp, e-mail nebo nabídku sdílení v zařízení."
 
@@ -13855,7 +13867,7 @@ msgstr "Shared with {0}"
 msgid "Shared with {0} and {overflow} others"
 msgstr "Shared with {0} and {overflow} others"
 
-#: src/components/release/releases.ts:68
+#: src/components/release/releases.ts:84
 msgid "Sharing a private project with a non-member now offers an invitation instead of an error, granting access when they join the workspace."
 msgstr "Při sdílení soukromého projektu s nečlenem se nyní místo chyby nabídne pozvánka. Přístup získá po připojení k pracovnímu prostoru."
 
@@ -15086,7 +15098,7 @@ msgstr "The conversation could not be loaded. Please try again or contact suppor
 msgid "The conversation list shows clearer totals."
 msgstr "V seznamu rozhovorů se přehledněji zobrazují součty."
 
-#: src/components/release/releases.ts:64
+#: src/components/release/releases.ts:80
 msgid "The default host guide now reminds hosts to turn on focus mode so notifications stay off the screen while recording."
 msgstr "Výchozí průvodce pro hostitele nyní připomíná, aby zapnuli režim soustředění a notifikace během nahrávání nerušily na obrazovce."
 
@@ -15372,7 +15384,7 @@ msgstr "vybraný rozhovor"
 #~ msgid "The shared screen shows your published presentation. Publish changes to update its content and access."
 #~ msgstr "Sdílená obrazovka zobrazuje vaši publikovanou prezentaci. Zveřejněním změn aktualizujete její obsah i přístup."
 
-#: src/components/release/releases.ts:72
+#: src/components/release/releases.ts:88
 msgid "The sidebar fits mobile screens more reliably, with corrected French navigation labels."
 msgstr "Boční panel lépe sedí na mobilních obrazovkách a má opravené francouzské navigační popisky."
 
@@ -16424,7 +16436,7 @@ msgstr "Snažíte se připojit k existující organizaci?"
 #~ msgid "Trying to join an existing organization?"
 #~ msgstr "Trying to join an existing organization?"
 
-#: src/components/release/releases.ts:48
+#: src/components/release/releases.ts:64
 msgid "Turn conversations into live slides. Run a live session or an on-demand analysis, present to the room and trace insights to their sources."
 msgstr "Proměň konverzace v živé snímky. Spusť živou relaci nebo analýzu na vyžádání, prezentuj skupině a dohledávej zdroje poznatků."
 

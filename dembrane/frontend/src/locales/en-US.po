@@ -5019,6 +5019,14 @@ msgstr "dembrane"
 msgid "dembrane - the default"
 msgstr "dembrane - the default"
 
+#: src/components/release/releases.ts:58
+msgid "dembrane 3"
+msgstr "dembrane 3"
+
+#: src/components/release/releases.ts:52
+msgid "dembrane 3 is tested against the WCAG 2.1 AA accessibility guidelines."
+msgstr "dembrane 3 is tested against the WCAG 2.1 AA accessibility guidelines."
+
 #: src/components/participant/DembraneEventCta.tsx:61
 msgid "dembrane at your event?"
 msgstr "dembrane at your event?"
@@ -6031,7 +6039,7 @@ msgstr "Explore"
 msgid "Explore recurring themes in the Library"
 msgstr "Explore recurring themes in the Library"
 
-#: src/components/release/releases.ts:60
+#: src/components/release/releases.ts:76
 msgid "Explore stories and perspectives with the Narratives chat template, in English and Dutch."
 msgstr "Explore stories and perspectives with the Narratives chat template, in English and Dutch."
 
@@ -7354,6 +7362,10 @@ msgstr "Improve my setup"
 msgid "Improvements"
 msgstr "Improvements"
 
+#: src/components/release/releases.ts:48
+msgid "In our tests, projects open about a third faster than in dembrane 2."
+msgstr "In our tests, projects open about a third faster than in dembrane 2."
+
 #: src/components/chat/AgenticPlanCard.tsx:41
 msgid "In progress"
 msgstr "In progress"
@@ -7479,7 +7491,7 @@ msgstr "interview"
 msgid "Intro"
 msgstr "Intro"
 
-#: src/components/release/releases.ts:78
+#: src/components/release/releases.ts:94
 msgid "Introducing Popcorn"
 msgstr "Introducing Popcorn"
 
@@ -8730,7 +8742,7 @@ msgstr "MCP access for {0} is off"
 msgid "MCP access for {0} is on"
 msgstr "MCP access for {0} is on"
 
-#: src/components/release/releases.ts:52
+#: src/components/release/releases.ts:68
 msgid "MCP connections let your agent find projects, search conversations, read transcripts and consult documentation, with organisation controls and explicit consent."
 msgstr "MCP connections let your agent find projects, search conversations, read transcripts and consult documentation, with organisation controls and explicit consent."
 
@@ -10702,7 +10714,7 @@ msgstr "Participants"
 msgid "Participants can request a reply during a recording."
 msgstr "Participants can request a reply during a recording."
 
-#: src/components/release/releases.ts:56
+#: src/components/release/releases.ts:72
 msgid "Participants can share the portal from the header or the thank you page: a QR code, a copyable link, WhatsApp, email or the device's own share sheet."
 msgstr "Participants can share the portal from the header or the thank you page: a QR code, a copyable link, WhatsApp, email or the device's own share sheet."
 
@@ -13850,7 +13862,7 @@ msgstr "Shared with {0}"
 msgid "Shared with {0} and {overflow} others"
 msgstr "Shared with {0} and {overflow} others"
 
-#: src/components/release/releases.ts:68
+#: src/components/release/releases.ts:84
 msgid "Sharing a private project with a non-member now offers an invitation instead of an error, granting access when they join the workspace."
 msgstr "Sharing a private project with a non-member now offers an invitation instead of an error, granting access when they join the workspace."
 
@@ -15081,7 +15093,7 @@ msgstr "The conversation could not be loaded. Please try again or contact suppor
 msgid "The conversation list shows clearer totals."
 msgstr "The conversation list shows clearer totals."
 
-#: src/components/release/releases.ts:64
+#: src/components/release/releases.ts:80
 msgid "The default host guide now reminds hosts to turn on focus mode so notifications stay off the screen while recording."
 msgstr "The default host guide now reminds hosts to turn on focus mode so notifications stay off the screen while recording."
 
@@ -15367,7 +15379,7 @@ msgstr "the selected conversation"
 #~ msgid "The shared screen shows your published presentation. Publish changes to update its content and access."
 #~ msgstr "The shared screen shows your published presentation. Publish changes to update its content and access."
 
-#: src/components/release/releases.ts:72
+#: src/components/release/releases.ts:88
 msgid "The sidebar fits mobile screens more reliably, with corrected French navigation labels."
 msgstr "The sidebar fits mobile screens more reliably, with corrected French navigation labels."
 
@@ -16419,7 +16431,7 @@ msgstr "Trying to join an existing organisation?"
 #~ msgid "Trying to join an existing organization?"
 #~ msgstr "Trying to join an existing organization?"
 
-#: src/components/release/releases.ts:48
+#: src/components/release/releases.ts:64
 msgid "Turn conversations into live slides. Run a live session or an on-demand analysis, present to the room and trace insights to their sources."
 msgstr "Turn conversations into live slides. Run a live session or an on-demand analysis, present to the room and trace insights to their sources."
 

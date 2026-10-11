@@ -45,6 +45,22 @@ export const getReleases = (): Release[] => [
 	{
 		changes: [
 			{
+				text: t`In our tests, projects open about a third faster than in dembrane 2.`,
+				type: "improvement",
+			},
+			{
+				text: t`dembrane 3 is tested against the WCAG 2.1 AA accessibility guidelines.`,
+				type: "improvement",
+			},
+		],
+		highlight: true,
+		publication: { date: "2026-10-11", tag: "v3.0.0" },
+		title: t`dembrane 3`,
+		version: "v3.0.0",
+	},
+	{
+		changes: [
+			{
 				text: t`Turn conversations into live slides. Run a live session or an on-demand analysis, present to the room and trace insights to their sources.`,
 				type: "feature",
 			},

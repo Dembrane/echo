@@ -5024,6 +5024,14 @@ msgstr "dembrane"
 msgid "dembrane - the default"
 msgstr "dembrane: стандартно"
 
+#: src/components/release/releases.ts:58
+msgid "dembrane 3"
+msgstr "dembrane 3"
+
+#: src/components/release/releases.ts:52
+msgid "dembrane 3 is tested against the WCAG 2.1 AA accessibility guidelines."
+msgstr "dembrane 3 протестовано на відповідність настановам з доступності WCAG 2.1 AA."
+
 #: src/components/participant/DembraneEventCta.tsx:61
 msgid "dembrane at your event?"
 msgstr "dembrane на вашій події?"
@@ -6036,7 +6044,7 @@ msgstr "Explore"
 msgid "Explore recurring themes in the Library"
 msgstr "Досліджуйте повторювані теми в Library"
 
-#: src/components/release/releases.ts:60
+#: src/components/release/releases.ts:76
 msgid "Explore stories and perspectives with the Narratives chat template, in English and Dutch."
 msgstr "Досліджуй історії та погляди за допомогою шаблону чату Narratives англійською та нідерландською."
 
@@ -7359,6 +7367,10 @@ msgstr "Покращити налаштування"
 msgid "Improvements"
 msgstr "Покращення"
 
+#: src/components/release/releases.ts:48
+msgid "In our tests, projects open about a third faster than in dembrane 2."
+msgstr "У наших тестах проєкти відкриваються приблизно на третину швидше, ніж у dembrane 2."
+
 #: src/components/chat/AgenticPlanCard.tsx:41
 msgid "In progress"
 msgstr "У процесі"
@@ -7484,7 +7496,7 @@ msgstr "інтерв'ю"
 msgid "Intro"
 msgstr "Вступ"
 
-#: src/components/release/releases.ts:78
+#: src/components/release/releases.ts:94
 msgid "Introducing Popcorn"
 msgstr "Представляємо Popcorn"
 
@@ -8735,7 +8747,7 @@ msgstr "Доступ через MCP для {0} вимкнено"
 msgid "MCP access for {0} is on"
 msgstr "Доступ через MCP для {0} увімкнено"
 
-#: src/components/release/releases.ts:52
+#: src/components/release/releases.ts:68
 msgid "MCP connections let your agent find projects, search conversations, read transcripts and consult documentation, with organisation controls and explicit consent."
 msgstr "З’єднання MCP дають твоєму агенту змогу знаходити проєкти, шукати розмови, читати транскрипти та переглядати документацію з контролем організації та явною згодою."
 
@@ -10707,7 +10719,7 @@ msgstr "Учасники"
 msgid "Participants can request a reply during a recording."
 msgstr "Учасники можуть запросити відповідь під час запису."
 
-#: src/components/release/releases.ts:56
+#: src/components/release/releases.ts:72
 msgid "Participants can share the portal from the header or the thank you page: a QR code, a copyable link, WhatsApp, email or the device's own share sheet."
 msgstr "Учасники можуть поділитися порталом із шапки або зі сторінки подяки: через QR-код, посилання, WhatsApp, електронну пошту або стандартне меню поширення пристрою."
 
@@ -13855,7 +13867,7 @@ msgstr "Надано доступ для {0}"
 msgid "Shared with {0} and {overflow} others"
 msgstr "Надано доступ для {0} та ще {overflow}"
 
-#: src/components/release/releases.ts:68
+#: src/components/release/releases.ts:84
 msgid "Sharing a private project with a non-member now offers an invitation instead of an error, granting access when they join the workspace."
 msgstr "Коли ти ділишся приватним проєктом із людиною, яка ще не є учасником, тепер можна надіслати запрошення замість отримання помилки. Доступ надається після приєднання до робочого простору."
 
@@ -15086,7 +15098,7 @@ msgstr "The conversation could not be loaded. Please try again or contact suppor
 msgid "The conversation list shows clearer totals."
 msgstr "У списку розмов тепер чіткіше відображаються підсумки."
 
-#: src/components/release/releases.ts:64
+#: src/components/release/releases.ts:80
 msgid "The default host guide now reminds hosts to turn on focus mode so notifications stay off the screen while recording."
 msgstr "Стандартний посібник ведучого тепер нагадує вмикати режим зосередження, щоб сповіщення не з'являлися на екрані під час запису."
 
@@ -15373,7 +15385,7 @@ msgstr "вибрана розмова"
 #~ msgid "The shared screen shows your published presentation. Publish changes to update its content and access."
 #~ msgstr "На спільному екрані показується ваша опублікована презентація. Опублікуйте зміни, щоб оновити її вміст і доступ."
 
-#: src/components/release/releases.ts:72
+#: src/components/release/releases.ts:88
 msgid "The sidebar fits mobile screens more reliably, with corrected French navigation labels."
 msgstr "Бічна панель тепер краще підлаштовується під мобільні екрани, а також виправлено підписи французькою мовою."
 
@@ -16425,7 +16437,7 @@ msgstr "Хочете приєднатися до наявної організа
 #~ msgid "Trying to join an existing organization?"
 #~ msgstr "Хочете приєднатися до наявної організації?"
 
-#: src/components/release/releases.ts:48
+#: src/components/release/releases.ts:64
 msgid "Turn conversations into live slides. Run a live session or an on-demand analysis, present to the room and trace insights to their sources."
 msgstr "Перетворюй розмови на слайди наживо. Запускай живу сесію або аналіз на запит, презентуй групі та перевіряй джерела висновків."
 
