@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, setDefaultTimeout, spyOn, test } from "bun:test";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -14,6 +14,8 @@ import {
 } from "@dembrane/popcorn";
 import { FilesystemStorage } from "@dembrane/storage";
 import { and, count, eq, ne } from "drizzle-orm";
+// The module that reads the server catalogs, so a test can stand in for their absence.
+import * as catalogs from "../../i18n/src/runtime";
 import { demoProspectHook } from "../src/demo-hook";
 import { accountsRoutes } from "../src/routes";
 import { CUSTOMER_EMAIL, DEMO_IDS, ORG_NAME, STAFF_EMAIL, seedAccountsDemo } from "../src/seed";
@@ -443,5 +445,38 @@ run("bun run seed:accounts-demo", () => {
     const third = await seedAccountsDemo(await options());
     expect(third.offer_created).toBe(true);
     expect(third.offer_id).not.toBe(offer?.id);
+  });
+
+  test("builds the demo and sends its offer where the server catalogs are absent, as in the migrate image", async () => {
+    // The preview seed runs in the migrate binary, which carries the demo files and the
+    // migrations and no catalogs: a text looked up there fails on the missing file.
+    const absent = () => {
+      throw new Error("ENOENT: no such file or directory, open 'i18n/locales/en-US.po'");
+    };
+    const spies = [
+      spyOn(catalogs, "message").mockImplementation(absent),
+      spyOn(catalogs, "translator").mockImplementation(() => absent),
+    ];
+    try {
+      // Withdraw the live offer, so this run sends a fresh one.
+      await database.db
+        .update(schema.account_document)
+        .set({ status: "void" })
+        .where(
+          and(
+            eq(schema.account_document.kind, "offer"),
+            ne(schema.account_document.status, "void"),
+          ),
+        );
+      const seeded = await seedAccountsDemo(await options());
+      expect(seeded.offer_created).toBe(true);
+      const [offer] = await database.db
+        .select()
+        .from(schema.account_document)
+        .where(eq(schema.account_document.id, seeded.offer_id));
+      expect(offer?.status).toBe("sent");
+    } finally {
+      for (const spy of spies) spy.mockRestore();
+    }
   });
 });

@@ -1,4 +1,4 @@
-import { type EmailTemplate, sendEmail, subjectOf } from "@dembrane/account";
+import { type EmailTemplate, sendEmail } from "@dembrane/account";
 import {
   BadRequestError,
   ConflictError,
@@ -523,11 +523,18 @@ async function sendOfferIn(
   return task.id;
 }
 
+/** The subject the job is queued under; the worker words it in the recipient's language. */
+const OFFER_SENT_SUBJECT = "Your offer from dembrane is ready to sign";
+
 /**
  * One email to each person who runs the account, in their language, with the link where
  * the offer is read and signed. Queued in the transaction of the send, so it exists only
  * if the offer was sent; the run id is the offer and the person, so one offer reaches one
  * person once. A signer the customer names later gets their own invitation.
+ *
+ * The job carries the template, its data and the language, and the worker words it from
+ * the catalogs. Nothing here reads them: the preview seed sends an offer from the migrate
+ * binary, which does not carry them.
  */
 async function tellCustomerOfOffer(d: AccountsDeps, tx: Conn, orgId: string, doc: DocumentRow) {
   const recipients = await accountRecipients(tx, orgId);
@@ -551,7 +558,7 @@ async function tellCustomerOfOffer(d: AccountsDeps, tx: Conn, orgId: string, doc
         ...email,
         language: r.language,
         to: r.email,
-        subject: subjectOf(email, r.language) as string,
+        subject: OFFER_SENT_SUBJECT,
         context: `account offer sent ${doc.id}`,
       },
       { tx, workflowId: `accounts.offer-sent:${doc.id}:${r.appUserId}` },

@@ -477,12 +477,17 @@ run("an offer draft, and the invoice request after the signature", () => {
           )
         ).data,
       ).document;
+      // The job names the language; the words come from the worker, which has the catalogs.
       expect(offerEmails(pushed.id).map((m) => [m.to, m.language, m.subject])).toEqual([
-        ["admin@example.test", "de-DE", "Ihr Angebot von dembrane liegt zur Unterzeichnung bereit"],
-        ["billing@example.test", "nl-NL", "Je offerte van dembrane staat klaar om te ondertekenen"],
+        ["admin@example.test", "de-DE", "Your offer from dembrane is ready to sign"],
+        ["billing@example.test", "nl-NL", "Your offer from dembrane is ready to sign"],
       ]);
       const mailer = new MemoryMailer();
       for (const job of offerEmails(pushed.id)) await emailHandler(mailer, silent)(job as never);
+      expect(mailer.sent.map((m) => [m.to, m.subject])).toEqual([
+        ["admin@example.test", "Ihr Angebot von dembrane liegt zur Unterzeichnung bereit"],
+        ["billing@example.test", "Je offerte van dembrane staat klaar om te ondertekenen"],
+      ]);
       expect(mailer.sent[1]?.text).toContain(
         "We hebben Gemeente Testdorp een offerte gestuurd: Gemeente Testdorp x dembrane.",
       );
