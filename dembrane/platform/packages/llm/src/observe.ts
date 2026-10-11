@@ -39,8 +39,8 @@ let faultReported = false;
 
 /**
  * The one door every observation goes through: the mapping and the observer run inside it,
- * it never throws, and the first fault per process goes to onFault (console.warn without one);
- * later faults are silent. Metering can be wrong; a model call must not pay for it.
+ * it never throws, and the first fault per process goes to onFault; later faults, and every
+ * fault without a sink, are silent. Metering can be wrong; a model call must not pay for it.
  */
 export function observeSafely(
   observe: ModelCallObserver | undefined,
@@ -54,8 +54,7 @@ export function observeSafely(
     if (faultReported) return;
     faultReported = true;
     try {
-      if (onFault) onFault(err);
-      else console.warn("model call metering failed; later faults are silent:", err);
+      onFault?.(err);
     } catch {
       // The fault sink itself failed: there is nowhere left to say so.
     }
