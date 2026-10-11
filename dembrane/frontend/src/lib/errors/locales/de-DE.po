@@ -19,6 +19,16 @@ msgid "error.request.field_empty"
 msgstr "{field} darf nicht leer sein. Füllen Sie es aus oder entfernen Sie es."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:26
+msgid "error.connector.provider_refused"
+msgstr "{provider} hat nicht wie erwartet geantwortet. Versuchen Sie es gleich noch einmal."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:18
+msgid "error.connector.not_configured"
+msgstr "{provider} ist auf diesem dembrane-Server noch nicht eingerichtet."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:58
 msgid "error.document.image_too_large"
 msgstr "{what, select, initials {Das Bild Ihrer Initialen} other {Das Bild Ihrer Unterschrift}} ist zu groß. Bitte unter 512 KB halten."
@@ -124,6 +134,11 @@ msgid "error.webhook.invalid_target"
 msgstr "Wählen Sie, wohin dieser Webhook geht: eine Webadresse oder sams Posteingang mit einem bekannten Code."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:10
+msgid "error.connector.invalid_voice"
+msgstr "Wählen Sie, wessen Worte das sind: Teilnehmende, Organisationsteam oder gemischt."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:17
 msgid "error.map.groups_need_snapshot"
 msgstr "Cluster lassen sich auf einer neu erstellten Map speichern. Erstellen Sie die Map neu und versuchen Sie es noch einmal."
@@ -132,6 +147,11 @@ msgstr "Cluster lassen sich auf einer neu erstellten Map speichern. Erstellen Si
 #: src/lib/errors/messages/document.ts:27
 msgid "error.document.dpa_not_authorised"
 msgstr "Bestätigen Sie, dass Sie berechtigt sind, der Datenverarbeitung für Ihre Organisation zuzustimmen."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:22
+msgid "error.connector.not_connected"
+msgstr "Verbinden Sie zuerst {provider} und versuchen Sie es dann erneut."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:19
@@ -389,6 +409,11 @@ msgid "error.canvas.expiry_too_far"
 msgstr "Wählen Sie ein Enddatum innerhalb der nächsten 7 Tage."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:14
+msgid "error.connector.no_frames"
+msgstr "Wählen Sie mindestens einen Frame des Boards."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:19
 msgid "error.project.legal_basis_invalid"
 msgstr "Wählen Sie eine der Optionen für die Rechtsgrundlage aus."
@@ -592,6 +617,11 @@ msgstr "Die PDF-Datei dieses Dokuments ist nicht verfügbar. Kontaktieren Sie un
 #: src/lib/errors/messages/billing.ts:17
 msgid "error.billing.invoice_pdf_missing"
 msgstr "Die PDF-Datei dieser Rechnung ist noch nicht fertig. Versuchen Sie es gleich noch einmal."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:30
+msgid "error.connector.sign_in_expired"
+msgstr "Die Anmeldung bei {provider} ist abgelaufen. Starten Sie sie erneut."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:13
@@ -1299,6 +1329,11 @@ msgid "error.analysis.object_not_found"
 msgstr "Wir konnten dieses Ergebnis nicht finden. Es wurde möglicherweise bei der erneuten Analyse entfernt."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:34
+msgid "error.connector.source_not_found"
+msgstr "Wir konnten diese Quelle nicht finden. Vielleicht wurde sie entfernt."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/participant.ts:27
 msgid "error.participant.unsubscribe_link_unknown"
 msgstr "Wir konnten dieses Abonnement nicht finden. Sie sind möglicherweise bereits abgemeldet."
@@ -1372,6 +1407,11 @@ msgstr "Wir konnten die Map gerade nicht laden. Versuchen Sie es gleich noch ein
 #: src/lib/errors/messages/account.ts:45
 msgid "error.account.user_not_found"
 msgstr "Wir konnten Ihr Konto nicht laden. Wenden Sie sich an den Support, und wir kümmern uns darum."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:5
+msgid "error.connector.board_not_found"
+msgstr "Wir konnten dieses Board nicht öffnen. Prüfen Sie den Link und ob Ihr Miro-Konto es sehen kann."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:13

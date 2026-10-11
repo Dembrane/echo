@@ -10,6 +10,7 @@ import { auth } from "./auth";
 import { billing } from "./billing";
 import { canvas } from "./canvas";
 import { chat } from "./chat";
+import { connector } from "./connector";
 import { conversation } from "./conversation";
 import { demo } from "./demo";
 import { document } from "./document";
@@ -59,6 +60,7 @@ export const ERROR_MESSAGES: Partial<Record<ErrorCode, MessageDescriptor>> = {
 	...billing,
 	...canvas,
 	...chat,
+	...connector,
 	...conversation,
 	...demo,
 	...document,

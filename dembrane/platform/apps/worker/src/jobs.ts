@@ -12,6 +12,7 @@ import { analysisWorker } from "@dembrane/analysis";
 import { type Billing, billingRegistration, overageInboxMessage } from "@dembrane/billing";
 import { canvasWorker } from "@dembrane/canvas";
 import type { Config } from "@dembrane/config";
+import { connectorDeps, connectorWorker, httpMiro, tokenSealer } from "@dembrane/connectors";
 import { conversationWorker, liveRecordings, type PipelineDeps } from "@dembrane/conversations";
 import type { Db } from "@dembrane/db";
 import { supportForwardRegistration, supportInboxMessage, supportOutbox } from "@dembrane/feedback";
@@ -90,6 +91,7 @@ export function registrations(deps: {
     | "database"
     | "accounts"
     | "samInbox"
+    | "connectors"
   >;
   /** Sends the email jobs enqueue. */
   mailer: Mailer;
@@ -256,6 +258,31 @@ export function registrations(deps: {
       ...deps.conversations,
       onTranscribed: finishReads({ flags: popcornFlags(config), logger }),
     }),
+    // A connected board's frames become conversations the pipeline above finishes.
+    connectorWorker(
+      connectorDeps({
+        db,
+        access: new Access(new DrizzleAccessStore(db)),
+        // The real queue: a sync enqueues each input's finish in the transaction that writes it.
+        queue: deps.conversations.jobs,
+        logger,
+        miro:
+          config.connectors.miroClientId &&
+          config.connectors.miroClientSecret &&
+          config.connectors.tokenKey
+            ? httpMiro({
+                clientId: config.connectors.miroClientId,
+                clientSecret: config.connectors.miroClientSecret,
+              })
+            : null,
+        miroClientId: config.connectors.miroClientId ?? null,
+        sealer: config.connectors.tokenKey ? tokenSealer(config.connectors.tokenKey) : null,
+        // The worker never signs or reads an OAuth state.
+        stateSecret: "",
+        publicUrl: config.http.publicUrl,
+        dashboardUrl: deps.dashboardUrl,
+      }),
+    ),
     canvasWorker({
       db: deps.db,
       logger,

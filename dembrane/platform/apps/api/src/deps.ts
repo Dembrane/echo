@@ -4,6 +4,7 @@ import type { Media } from "@dembrane/audio";
 import type { Auth, IdentityAccount } from "@dembrane/auth";
 import type { Billing } from "@dembrane/billing";
 import type { Config } from "@dembrane/config";
+import type { Miro } from "@dembrane/connectors";
 import type { Db } from "@dembrane/db";
 import type { Env, Signed } from "@dembrane/http";
 import type { Models } from "@dembrane/llm";
@@ -58,6 +59,8 @@ export interface Deps {
   readonly transcriber: Transcriber;
   /** Live events from Postgres NOTIFY; null where nothing listens (tests). */
   readonly hub: Hub | null;
+  /** Miro's API; a fake in tests. Unset builds the real client from config. */
+  readonly miro?: Miro;
   /** GETs dembrane.com's legal pages when an offer is pushed; a fake in tests. */
   readonly fetchText?: (url: string) => Promise<string>;
 }

@@ -5,11 +5,12 @@ import { useMemo, useState } from "react";
 import { useParams } from "react-router";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
-import { ProjectGoalSection } from "@/components/goal/ProjectGoalSection";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
+import { ProjectGoalSection } from "@/components/goal/ProjectGoalSection";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ProjectMemorySection } from "@/components/memory/ProjectMemorySection";
 import { ProjectMethodologySection } from "@/components/methodology/ProjectMethodologySection";
+import { ProjectConnectorsSection } from "@/components/project/connectors/ProjectConnectorsSection";
 import {
 	useProjectById,
 	useVerificationTopicsQuery,
@@ -188,6 +189,7 @@ export const ProjectUploadRoute = () => {
 export const ProjectIntegrationsRoute = () => {
 	const { projectId } = useParams();
 	const { workspace, workspaceId } = useWorkspace();
+	const canEdit = useCanEditProject();
 
 	if (!projectId) return null;
 
@@ -201,6 +203,7 @@ export const ProjectIntegrationsRoute = () => {
 	return (
 		<PageContainer>
 			<Stack gap="xl">
+				<ProjectConnectorsSection projectId={projectId} canEdit={canEdit} />
 				{!ENABLE_WEBHOOKS && (
 					<Alert variant="outline">
 						<Trans>Webhooks are not enabled for this environment.</Trans>

@@ -8,6 +8,7 @@ import { auth } from "./auth";
 import { billing } from "./billing";
 import { canvas } from "./canvas";
 import { chat } from "./chat";
+import { connector } from "./connector";
 import { conversation } from "./conversation";
 import { demo } from "./demo";
 import { document } from "./document";
@@ -65,6 +66,7 @@ export const ERROR_CATALOG = {
   ...tag,
   ...webhook,
   ...conversation,
+  ...connector,
   ...upload,
   ...participant,
   ...chat,

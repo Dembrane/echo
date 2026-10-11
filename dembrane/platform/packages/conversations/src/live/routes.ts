@@ -277,7 +277,7 @@ export function liveRoutes(d: ConversationsDeps) {
       select c.id, c.participant_name
       from conversation_chunk ch join conversation c on c.id = ch.conversation_id
       where c.project_id = ${query.project_id}
-        and ch.source not in ('DASHBOARD_UPLOAD', 'CLONE') and ch.timestamp > ${cutoff}
+        and ch.source not in ('DASHBOARD_UPLOAD', 'CLONE', 'MIRO') and ch.timestamp > ${cutoff}
       order by ch.id limit 200`;
     const out = new Map<string, { id: string; participant_name: string | null }>();
     for (const r of rows)

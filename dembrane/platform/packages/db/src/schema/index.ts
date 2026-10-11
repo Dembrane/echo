@@ -14,6 +14,7 @@ import {
   index,
   integer,
   json,
+  jsonb,
   pgTable,
   real,
   serial,
@@ -33,6 +34,8 @@ const vector = customType<{ data: number[]; driverData: string }>({
 });
 
 import { sql } from "drizzle-orm";
+// Circular on purpose, as in accounts.ts: the foreign key callbacks run after both load.
+import { connector_source } from "./connectors";
 
 export const analysis_last_opened = pgTable(
   "analysis_last_opened",
@@ -1108,6 +1111,14 @@ export const conversation = pgTable(
     move_history: json(),
     token_count: integer(),
     recording_started_at: timestamp({ withTimezone: true, mode: "string" }),
+    /** Whose words these are: participants, organisers or mixed. Null is participants. */
+    voice: varchar({ length: 32 }),
+    /** Where an input from another app came from (provider, ids, link); null for the portal. */
+    origin: jsonb(),
+    /** The connector source that produced this input; removing the source removes it. */
+    connector_source_id: uuid(),
+    /** The provider's id for this input within its source (Miro: the frame id). */
+    external_ref: varchar({ length: 255 }),
   },
   (table): PgTableExtraConfigValue[] => [
     foreignKey({
@@ -1115,6 +1126,18 @@ export const conversation = pgTable(
       foreignColumns: [project.id],
       name: "conversation_project_id_foreign",
     }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.connector_source_id],
+      foreignColumns: [connector_source.id],
+      name: "conversation_connector_source_id_foreign",
+    }).onDelete("cascade"),
+    uniqueIndex("conversation_connector_source_ref")
+      .using(
+        "btree",
+        table.connector_source_id.asc().nullsLast(),
+        table.external_ref.asc().nullsLast(),
+      )
+      .where(sql`connector_source_id is not null`),
   ],
 );
 
@@ -3429,5 +3452,6 @@ export const verification_topic = pgTable(
 );
 export * from "./accounts";
 export * from "./auth";
+export * from "./connectors";
 export * from "./platform";
 export * from "./staff";

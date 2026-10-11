@@ -19,6 +19,16 @@ msgid "error.request.field_empty"
 msgstr "{field} non può essere vuoto. Compilalo o rimuovilo."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:26
+msgid "error.connector.provider_refused"
+msgstr "{provider} non ha risposto come previsto. Riprova tra poco."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:18
+msgid "error.connector.not_configured"
+msgstr "{provider} non è ancora configurato su questo server dembrane."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:58
 msgid "error.document.image_too_large"
 msgstr "{what, select, initials {L'immagine delle tue iniziali} other {L'immagine della tua firma}} è troppo grande. Mantienila sotto i 512 KB."
@@ -124,6 +134,11 @@ msgid "error.webhook.invalid_target"
 msgstr "Scegli dove va questo webhook: un indirizzo web o la casella di sam con un codice noto."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:10
+msgid "error.connector.invalid_voice"
+msgstr "Scegli di chi sono queste parole: partecipanti, organizzatori o misto."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:17
 msgid "error.map.groups_need_snapshot"
 msgstr "I gruppi si salvano su una mappa rigenerata. Rigenera la mappa e riprova."
@@ -132,6 +147,11 @@ msgstr "I gruppi si salvano su una mappa rigenerata. Rigenera la mappa e riprova
 #: src/lib/errors/messages/document.ts:27
 msgid "error.document.dpa_not_authorised"
 msgstr "Conferma di essere autorizzato ad accettare il trattamento dei dati per la tua organizzazione."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:22
+msgid "error.connector.not_connected"
+msgstr "Collega prima {provider}, poi riprova."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:19
@@ -389,6 +409,11 @@ msgid "error.canvas.expiry_too_far"
 msgstr "Scegli una data di fine entro i prossimi 7 giorni."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:14
+msgid "error.connector.no_frames"
+msgstr "Scegli almeno un frame della lavagna."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:19
 msgid "error.project.legal_basis_invalid"
 msgstr "Scegli una delle opzioni relative alla base giuridica."
@@ -592,6 +617,11 @@ msgstr "Il PDF di questo documento non è disponibile. Contattaci e te lo invier
 #: src/lib/errors/messages/billing.ts:17
 msgid "error.billing.invoice_pdf_missing"
 msgstr "Il PDF di questa fattura non è ancora pronto. Riprova tra poco."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:30
+msgid "error.connector.sign_in_expired"
+msgstr "L'accesso a {provider} è scaduto. Ricomincia."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:13
@@ -1299,6 +1329,11 @@ msgid "error.analysis.object_not_found"
 msgstr "Non siamo riusciti a trovare questo risultato. Potrebbe essere stato rimosso dopo una nuova analisi."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:34
+msgid "error.connector.source_not_found"
+msgstr "Non abbiamo trovato questa fonte. Potrebbe essere stata rimossa."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/participant.ts:27
 msgid "error.participant.unsubscribe_link_unknown"
 msgstr "Non siamo riusciti a trovare questa iscrizione. Potresti già esserti disiscritto."
@@ -1372,6 +1407,11 @@ msgstr "Non siamo riusciti a caricare la mappa in questo momento. Riprova tra po
 #: src/lib/errors/messages/account.ts:45
 msgid "error.account.user_not_found"
 msgstr "Non siamo riusciti a caricare il tuo account. Contatta l'assistenza e risolveremo il problema."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:5
+msgid "error.connector.board_not_found"
+msgstr "Non siamo riusciti ad aprire quella lavagna. Controlla il link e che il tuo account Miro possa vederla."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:13

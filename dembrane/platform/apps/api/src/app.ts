@@ -15,6 +15,7 @@ import { AUTH_CLIENT_IP_HEADER } from "@dembrane/auth";
 import { billingRoutes, mollieWebhookRoutes } from "@dembrane/billing";
 import { canvasRoutes } from "@dembrane/canvas";
 import { chatRoutes } from "@dembrane/chats";
+import { connectorRoutes, httpMiro, tokenSealer } from "@dembrane/connectors";
 import {
   AudioUrls,
   type ConversationsDeps,
@@ -254,6 +255,28 @@ export function buildApp(deps: Deps) {
     now: () => new Date(),
   };
   app.route("/", conversationRoutes(conversations));
+  // Connectors are off until MIRO_CLIENT_* and CONNECTOR_TOKEN_KEY are set (together).
+  const cx = deps.config.connectors;
+  const miroOn = Boolean(cx.miroClientId && cx.miroClientSecret && cx.tokenKey);
+  app.route(
+    "/",
+    connectorRoutes({
+      db: deps.db,
+      access: deps.access,
+      queue: deps.queue,
+      logger: deps.logger,
+      miro:
+        deps.miro ??
+        (miroOn
+          ? httpMiro({ clientId: cx.miroClientId ?? "", clientSecret: cx.miroClientSecret ?? "" })
+          : null),
+      miroClientId: cx.miroClientId ?? null,
+      sealer: cx.tokenKey ? tokenSealer(cx.tokenKey) : null,
+      stateSecret: deps.config.auth.secret,
+      publicUrl: deps.config.http.publicUrl,
+      dashboardUrl: deps.config.http.dashboardUrl,
+    }),
+  );
   app.route("/", verifyRoutes(conversations));
   app.route(
     "/",

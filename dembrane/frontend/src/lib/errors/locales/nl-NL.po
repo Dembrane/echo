@@ -19,6 +19,16 @@ msgid "error.request.field_empty"
 msgstr "{field} kan niet leeg zijn. Vul het in of verwijder het."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:26
+msgid "error.connector.provider_refused"
+msgstr "{provider} antwoordde niet zoals verwacht. Probeer het zo opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:18
+msgid "error.connector.not_configured"
+msgstr "{provider} is nog niet ingesteld op deze dembrane-server."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:58
 msgid "error.document.image_too_large"
 msgstr "{what, select, initials {De afbeelding van je paraaf} other {De afbeelding van je handtekening}} is te groot. Houd deze onder 512 KB."
@@ -124,6 +134,11 @@ msgid "error.webhook.invalid_target"
 msgstr "Kies waar deze webhook heen gaat: een webadres, of de inbox van sam met een bekende code."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:10
+msgid "error.connector.invalid_voice"
+msgstr "Kies van wie deze woorden zijn: deelnemers, organisatoren of gemengd."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:17
 msgid "error.map.groups_need_snapshot"
 msgstr "Clusters bewaar je op een opnieuw gegenereerde kaart. Genereer de kaart opnieuw en probeer het nog eens."
@@ -132,6 +147,11 @@ msgstr "Clusters bewaar je op een opnieuw gegenereerde kaart. Genereer de kaart 
 #: src/lib/errors/messages/document.ts:27
 msgid "error.document.dpa_not_authorised"
 msgstr "Bevestig dat je bevoegd bent om namens je organisatie akkoord te gaan met gegevensverwerking."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:22
+msgid "error.connector.not_connected"
+msgstr "Koppel eerst {provider} en probeer het dan opnieuw."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:19
@@ -389,6 +409,11 @@ msgid "error.canvas.expiry_too_far"
 msgstr "Kies een einddatum binnen de komende 7 dagen."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:14
+msgid "error.connector.no_frames"
+msgstr "Kies minstens één frame van het bord."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:19
 msgid "error.project.legal_basis_invalid"
 msgstr "Kies een van de opties voor rechtsgrond."
@@ -592,6 +617,11 @@ msgstr "De pdf van dit document is niet beschikbaar. Neem contact met ons op, da
 #: src/lib/errors/messages/billing.ts:17
 msgid "error.billing.invoice_pdf_missing"
 msgstr "De pdf van deze factuur is nog niet klaar. Probeer het over een tijdje opnieuw."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:30
+msgid "error.connector.sign_in_expired"
+msgstr "Het inloggen bij {provider} is verlopen. Begin opnieuw."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:13
@@ -1299,6 +1329,11 @@ msgid "error.analysis.object_not_found"
 msgstr "We konden dit resultaat niet vinden. Mogelijk is het verwijderd toen de analyse opnieuw werd uitgevoerd."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:34
+msgid "error.connector.source_not_found"
+msgstr "We konden deze bron niet vinden. Misschien is die verwijderd."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/participant.ts:27
 msgid "error.participant.unsubscribe_link_unknown"
 msgstr "We konden deze inschrijving niet vinden. Mogelijk ben je al uitgeschreven."
@@ -1372,6 +1407,11 @@ msgstr "We konden de kaart op dit moment niet laden. Probeer het zo opnieuw."
 #: src/lib/errors/messages/account.ts:45
 msgid "error.account.user_not_found"
 msgstr "We konden je account niet laden. Neem contact op met support, dan lossen we het op."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:5
+msgid "error.connector.board_not_found"
+msgstr "We konden dat bord niet openen. Controleer de link en of je Miro-account het kan zien."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:13
