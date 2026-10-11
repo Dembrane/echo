@@ -1,6 +1,7 @@
 import { createVertex } from "@ai-sdk/google-vertex";
 import type { EmbeddingModelV4, LanguageModelV4 } from "@ai-sdk/provider";
 import { type Deployment, FallbackModel, type FallbackOptions } from "./fallback";
+import { observedEmbedding, observeSafely } from "./observe";
 
 /** The model groups callers ask for by purpose, never by vendor model name. */
 export type ModelGroup = "text_fast" | "multi_modal_fast" | "multi_modal_pro";
@@ -23,7 +24,8 @@ export interface Models {
 
 /**
  * Builds the groups from config. text_fast falls back to multi_modal_pro after its own
- * deployments, as the Python router did for text-only work.
+ * deployments, as the Python router did for text-only work. `opts.observe` hears every
+ * attempt of every group and the embedding model: the one place all model calls pass.
  */
 export function createModels(cfg: ModelsConfig, opts: Partial<FallbackOptions> = {}): Models {
   const vertex = createVertex({ project: cfg.vertexProject, location: cfg.vertexLocation });
@@ -42,7 +44,12 @@ export function createModels(cfg: ModelsConfig, opts: Partial<FallbackOptions> =
     multi_modal_pro: new FallbackModel("multi_modal_pro", deployments("multi_modal_pro"), opts),
   };
   const regional = createVertex({ project: cfg.vertexProject, location: cfg.embeddingLocation });
-  const embedding = regional.textEmbeddingModel(cfg.embeddingModel) as EmbeddingModelV4;
+  const raw = regional.textEmbeddingModel(cfg.embeddingModel) as EmbeddingModelV4;
+  const embedding = opts.observe
+    ? observedEmbedding(raw, "embedding", (make) =>
+        observeSafely(opts.observe, opts.onObserverFault, make),
+      )
+    : raw;
   return {
     model: (g) => built[g],
     embedding: () => ({ model: embedding, dimensions: cfg.embeddingDimensions }),

@@ -307,6 +307,7 @@ export class Queue {
                 requestId: jobId,
                 traceId: sc.traceId,
                 spanId: sc.spanId,
+                operation: def.name,
                 ...(envelope.meta?.causedByRequestId && {
                   causedByRequestId: envelope.meta.causedByRequestId,
                 }),

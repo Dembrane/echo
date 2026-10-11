@@ -1,21 +1,16 @@
 import { PDFDocument, type PDFFont, type PDFPage, rgb, StandardFonts } from "pdf-lib";
-import {
-  type AcceptanceField,
-  type FieldKind,
-  type Language,
-  layoutOffer,
-  type OfferContent,
-} from "./offer";
+import type { AcceptanceField, FieldKind, Language } from "./offer";
+
+export { offerPdf } from "./offer-pdf";
 
 /**
  * PDFs of account documents, with pdf-lib (pure JavaScript, so it runs under Bun and in the
- * compiled API binary). echo renders the offer and text documents itself and knows where
- * it drew each blank, so their fields are placed automatically; an uploaded PDF gets its
- * fields from staff. Signing stamps the values and the signature image onto the unsigned
- * PDF at the field positions and appends an audit page. The standard fonts encode
- * Windows-1252 only; other characters (emoji, most non-Latin scripts) are left out of the
- * PDF, never out of the stored values. Embedding a Unicode font is the next step if a
- * customer's name needs it.
+ * compiled API binary). echo renders the offer (offer-pdf.ts) and text documents itself and
+ * knows where it drew each blank, so their fields are placed automatically; an uploaded PDF
+ * gets its fields from staff. Signing stamps the values and the signature image onto the
+ * unsigned PDF at the field positions and appends an audit page. Text documents and stamped
+ * values use the standard fonts, which encode Windows-1252 only; other characters (emoji,
+ * most non-Latin scripts) are left out of the PDF, never out of the stored values.
  */
 
 /** A field as placed: fractions of the page from its top-left corner, pages from 1. */
@@ -233,88 +228,6 @@ async function finish(w: Writer, title: string): Promise<RenderedPdf> {
   w.doc.setModificationDate(EPOCH);
   const bytes = await w.doc.save({ useObjectStreams: false });
   return { bytes, pageCount: w.doc.getPageCount(), fields: w.fields };
-}
-
-/** The offer as the Google Doc templates lay it out, with its acceptance blanks as fields. */
-export async function offerPdf(content: OfferContent): Promise<RenderedPdf> {
-  const w = await start();
-  const l = layoutOffer(content);
-  w.text(l.letterhead.name, { bold: true, size: 12 });
-  for (const [k, value] of l.letterhead.rows) w.text(`${k} ${value}`, { size: 8.5, color: MUTED });
-  w.space(18);
-  w.text(l.title, { bold: true, size: 18, gap: 2 });
-  w.text(l.meta, { size: 9, color: MUTED, gap: 14 });
-  w.text(l.greeting, { gap: 6 });
-  for (const p of l.intro) w.text(p, { gap: 6 });
-  w.space(8);
-
-  const tableWidth = A4[0] - 2 * MARGIN;
-  const cols = [tableWidth * 0.46, tableWidth * 0.18, tableWidth * 0.14, tableWidth * 0.22];
-  const xs = [MARGIN];
-  for (let i = 1; i < cols.length; i++) xs.push((xs[i - 1] as number) + (cols[i - 1] as number));
-  const header = l.columns.map((h, i) => w.wrap(h, 8.5, w.bold, (cols[i] as number) - 8));
-  const headerHeight = Math.max(...header.map((h) => h.length)) * 12 + 6;
-  w.ensure(headerHeight + 20);
-  header.forEach((lines, i) => {
-    lines.forEach((line, j) => {
-      w.page.drawText(line, {
-        x: xs[i] as number,
-        y: w.y - 9 - j * 12,
-        size: 8.5,
-        font: w.bold,
-        color: INK,
-      });
-    });
-  });
-  w.y -= headerHeight;
-  w.rule();
-  for (const row of l.rows) {
-    const desc = [row.description, ...row.bullets.map((b) => `• ${b}`)].flatMap((t, k) =>
-      w
-        .wrap(t, 9.5, k === 0 ? w.bold : w.regular, (cols[0] as number) - 10)
-        .map((line) => ({ line, bold: k === 0 })),
-    );
-    const height = desc.length * 13 + 6;
-    w.ensure(height);
-    desc.forEach((d, j) => {
-      w.page.drawText(d.line, {
-        x: xs[0] as number,
-        y: w.y - 10 - j * 13,
-        size: 9.5,
-        font: d.bold ? w.bold : w.regular,
-        color: INK,
-      });
-    });
-    row.cells.forEach((cell, i) => {
-      const text = w.clean(cell);
-      const right = (xs[i + 1] as number) + (cols[i + 1] as number) - 6;
-      w.page.drawText(text, {
-        x: right - w.width(text, 9.5, w.regular),
-        y: w.y - 10,
-        size: 9.5,
-        font: w.regular,
-        color: INK,
-      });
-    });
-    w.y -= height;
-    w.rule();
-  }
-  w.space(4);
-  w.text(l.total, { bold: true, size: 11, gap: 14 });
-  for (const line of l.closing) w.text(line, { gap: 4 });
-  w.space(16);
-  w.ensure(260);
-  w.text(l.acceptanceTitle, { bold: true, size: 13, gap: 4 });
-  w.text(l.acceptanceIntro, { gap: 8 });
-  for (const a of l.acceptance.fields) w.blank(a);
-  w.text(l.acceptance.statement, { gap: 6 });
-  for (const a of l.acceptance.signing) w.blank(a);
-  w.space(10);
-  for (const p of l.clause) w.text(p, { size: 8.5, gap: 3 });
-  w.space(8);
-  w.text(l.validity, { size: 9 });
-  w.text(l.signOff, { size: 9, color: MUTED });
-  return finish(w, l.title);
 }
 
 const SIGNING_BLOCK: Record<Language, { title: string; fields: AcceptanceField[] }> = {
