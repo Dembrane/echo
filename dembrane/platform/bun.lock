@@ -45,6 +45,7 @@
         "@dembrane/ratelimit": "workspace:*",
         "@dembrane/realtime": "workspace:*",
         "@dembrane/reports": "workspace:*",
+        "@dembrane/signals": "workspace:*",
         "@dembrane/staff": "workspace:*",
         "@dembrane/stats": "workspace:*",
         "@dembrane/storage": "workspace:*",
@@ -129,6 +130,7 @@
         "@dembrane/ratelimit": "workspace:*",
         "@dembrane/realtime": "workspace:*",
         "@dembrane/reports": "workspace:*",
+        "@dembrane/signals": "workspace:*",
         "@dembrane/storage": "workspace:*",
         "@dembrane/tenancy": "workspace:*",
         "@dembrane/transcription": "workspace:*",
@@ -671,6 +673,19 @@
         "postgres": "^3.4.9",
       },
     },
+    "packages/signals": {
+      "name": "@dembrane/signals",
+      "dependencies": {
+        "@dembrane/core": "workspace:*",
+        "@dembrane/db": "workspace:*",
+        "@dembrane/llm": "workspace:*",
+        "@dembrane/observability": "workspace:*",
+        "drizzle-orm": "^0.45.3",
+      },
+      "devDependencies": {
+        "postgres": "^3.4.9",
+      },
+    },
     "packages/staff": {
       "name": "@dembrane/staff",
       "dependencies": {
@@ -764,6 +779,7 @@
         "@dembrane/llm": "workspace:*",
         "@dembrane/projects": "workspace:*",
         "@dembrane/prompts": "workspace:*",
+        "@dembrane/signals": "workspace:*",
         "ai": "^7.0.118",
         "drizzle-orm": "^0.45.3",
         "hono": "^4.9.0",
@@ -930,6 +946,8 @@
     "@dembrane/reports": ["@dembrane/reports@workspace:packages/reports"],
 
     "@dembrane/samples": ["@dembrane/samples@workspace:packages/samples"],
+
+    "@dembrane/signals": ["@dembrane/signals@workspace:packages/signals"],
 
     "@dembrane/staff": ["@dembrane/staff@workspace:packages/staff"],
 

@@ -192,6 +192,99 @@ export const agent_token = pgTable(
   ],
 );
 
+/**
+ * One language model call: which step asked, with which prompt version, on which model,
+ * for which artefact. The output itself stays in the artefact's own table, so erasing a
+ * conversation or project erases its text once.
+ */
+export const ai_generation = pgTable(
+  "ai_generation",
+  {
+    id: uuid().primaryKey().notNull(),
+    created_at: timestamp({ withTimezone: true, mode: "string" }).defaultNow().notNull(),
+    step: varchar({ length: 64 }).notNull(),
+    model_group: varchar({ length: 64 }).notNull(),
+    deployment: varchar({ length: 255 }),
+    prompt_ref: varchar({ length: 128 }),
+    prompt_version: varchar({ length: 128 }),
+    project_id: uuid(),
+    conversation_id: uuid(),
+    target_type: varchar({ length: 64 }),
+    target_id: varchar({ length: 255 }),
+    status: varchar({ length: 16 }).notNull(),
+    streamed: boolean().default(false).notNull(),
+    input_tokens: integer(),
+    output_tokens: integer(),
+    latency_ms: integer(),
+  },
+  (table): PgTableExtraConfigValue[] => [
+    index("ai_generation_target").using(
+      "btree",
+      table.target_type.asc().nullsLast(),
+      table.target_id.asc().nullsLast(),
+    ),
+    index("ai_generation_step_created").using(
+      "btree",
+      table.step.asc().nullsLast(),
+      table.created_at.asc().nullsLast(),
+    ),
+    foreignKey({
+      columns: [table.project_id],
+      foreignColumns: [project.id],
+      name: "ai_generation_project_id_foreign",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.conversation_id],
+      foreignColumns: [conversation.id],
+      name: "ai_generation_conversation_id_foreign",
+    }).onDelete("cascade"),
+  ],
+);
+
+/**
+ * What a person did with an artefact a model made: accepted, edited, asked for a revision,
+ * rated. `payload` holds the before and after text of an edit, which is the training pair.
+ */
+export const ai_signal = pgTable(
+  "ai_signal",
+  {
+    id: uuid().primaryKey().notNull(),
+    created_at: timestamp({ withTimezone: true, mode: "string" }).defaultNow().notNull(),
+    step: varchar({ length: 64 }).notNull(),
+    kind: varchar({ length: 32 }).notNull(),
+    value: real(),
+    target_type: varchar({ length: 64 }).notNull(),
+    target_id: varchar({ length: 255 }).notNull(),
+    project_id: uuid(),
+    conversation_id: uuid(),
+    actor_kind: varchar({ length: 32 }).notNull(),
+    actor_id: varchar({ length: 255 }),
+    payload: json(),
+  },
+  (table): PgTableExtraConfigValue[] => [
+    index("ai_signal_target").using(
+      "btree",
+      table.target_type.asc().nullsLast(),
+      table.target_id.asc().nullsLast(),
+    ),
+    index("ai_signal_step_created").using(
+      "btree",
+      table.step.asc().nullsLast(),
+      table.created_at.asc().nullsLast(),
+    ),
+    foreignKey({
+      columns: [table.project_id],
+      foreignColumns: [project.id],
+      name: "ai_signal_project_id_foreign",
+    }).onDelete("cascade"),
+    foreignKey({
+      columns: [table.conversation_id],
+      foreignColumns: [conversation.id],
+      name: "ai_signal_conversation_id_foreign",
+    }).onDelete("cascade"),
+  ],
+);
+
 export const analysis_object_revision = pgTable(
   "analysis_object_revision",
   {
@@ -1108,6 +1201,9 @@ export const conversation = pgTable(
     move_history: json(),
     token_count: integer(),
     recording_started_at: timestamp({ withTimezone: true, mode: "string" }),
+    /** When the participant agreed that this conversation may train AI models, and to which text. */
+    training_consent_at: timestamp({ withTimezone: true, mode: "string" }),
+    training_consent_version: varchar({ length: 64 }),
   },
   (table): PgTableExtraConfigValue[] => [
     foreignKey({
@@ -2631,6 +2727,9 @@ export const project = pgTable(
     legal_basis: varchar({ length: 255 }).default(sql`NULL`),
     privacy_policy_url: varchar({ length: 255 }).default(sql`NULL`),
     is_dembrane_event_cta_enabled: boolean().default(true),
+    /** "opt-in" or "opt-out" overrides the workspace; null inherits it. */
+    ai_training: varchar({ length: 16 }),
+    ai_training_updated_at: timestamp({ withTimezone: true, mode: "string" }),
   },
   (table): PgTableExtraConfigValue[] => [
     foreignKey({
@@ -3200,6 +3299,9 @@ export const workspace = pgTable(
     partner_agreement_accepted_at: timestamp({ withTimezone: true, mode: "string" }),
     allow_support_access: boolean().default(false).notNull(),
     context: text(),
+    /** The client's choice on AI training: "opt-in" or "opt-out"; null means opt-out. */
+    ai_training: varchar({ length: 16 }),
+    ai_training_updated_at: timestamp({ withTimezone: true, mode: "string" }),
   },
   (table): PgTableExtraConfigValue[] => [
     foreignKey({

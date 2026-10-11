@@ -1,1 +1,1 @@
-export { hasTemplate, pythonStr, renderPrompt } from "./render";
+export { hasTemplate, pythonStr, renderPrompt, templateVersion } from "./render";

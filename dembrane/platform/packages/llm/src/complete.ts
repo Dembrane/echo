@@ -5,6 +5,7 @@ import type {
   LanguageModelV4Prompt,
 } from "@ai-sdk/provider";
 import type { ModelGroup, Models } from "./models";
+import { type CallTrace, withTrace } from "./trace";
 
 /**
  * One chat completion the way the Python features asked LiteLLM for it: a system prompt, a
@@ -26,6 +27,8 @@ export interface CompletionRequest {
   readonly googleSearch?: boolean;
   readonly timeoutMs?: number;
   readonly signal?: AbortSignal;
+  /** What the call is for, recorded in the generation log. */
+  readonly trace?: CallTrace;
 }
 
 export interface Completion {
@@ -108,10 +111,13 @@ export async function completeWith(
         },
       ],
     }),
-    ...(request.thinkingBudget !== undefined && {
-      providerOptions: {
-        vertex: { thinkingConfig: { thinkingBudget: request.thinkingBudget } },
-      },
+    ...((request.thinkingBudget !== undefined || request.trace) && {
+      providerOptions: withTrace(
+        request.trace,
+        request.thinkingBudget !== undefined
+          ? { vertex: { thinkingConfig: { thinkingBudget: request.thinkingBudget } } }
+          : {},
+      ),
     }),
     ...(signals.length && { abortSignal: AbortSignal.any(signals) }),
   };

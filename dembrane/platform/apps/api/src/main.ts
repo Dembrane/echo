@@ -28,6 +28,7 @@ import { projectJobs } from "@dembrane/projects";
 import { Queue, workerFreshness } from "@dembrane/queue";
 import { PostgresRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { Hub } from "@dembrane/realtime";
+import { generationLog } from "@dembrane/signals";
 import { FilesystemStorage, requireBucket, S3Storage } from "@dembrane/storage";
 import { tenancyApiJobs } from "@dembrane/tenancy";
 import { GeminiTranscriber } from "@dembrane/transcription";
@@ -244,18 +245,21 @@ void (async () => {
   }
 })();
 
-const models = createModels({
-  vertexProject: config.llm.vertexProject,
-  vertexLocation: config.llm.vertexLocation,
-  groups: {
-    text_fast: config.llm.textFast,
-    multi_modal_fast: config.llm.multiModalFast,
-    multi_modal_pro: config.llm.multiModalPro,
+const models = createModels(
+  {
+    vertexProject: config.llm.vertexProject,
+    vertexLocation: config.llm.vertexLocation,
+    groups: {
+      text_fast: config.llm.textFast,
+      multi_modal_fast: config.llm.multiModalFast,
+      multi_modal_pro: config.llm.multiModalPro,
+    },
+    embeddingModel: config.llm.embeddingModel,
+    embeddingLocation: config.llm.embeddingLocation,
+    embeddingDimensions: config.llm.embeddingDimensions,
   },
-  embeddingModel: config.llm.embeddingModel,
-  embeddingLocation: config.llm.embeddingLocation,
-  embeddingDimensions: config.llm.embeddingDimensions,
-});
+  { onCall: generationLog(database.db, logger) },
+);
 
 const app = buildApp({
   config,

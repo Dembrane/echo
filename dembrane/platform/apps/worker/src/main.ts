@@ -9,6 +9,7 @@ import { createModels, vertexCompleter, vertexEmbedder } from "@dembrane/llm";
 import { type Mailer, SendGridMailer } from "@dembrane/mail";
 import { createLogger, initTracing } from "@dembrane/observability";
 import { Queue } from "@dembrane/queue";
+import { generationLog } from "@dembrane/signals";
 import { FilesystemStorage, requireBucket, S3Storage } from "@dembrane/storage";
 import { queueSink } from "@dembrane/tenancy";
 import { GeminiTranscriber } from "@dembrane/transcription";
@@ -93,18 +94,21 @@ const billing = createBilling({
 // The model groups serve the conversation pipeline (with the audio bucket, ffmpeg from the
 // media service in the cloud or in-process locally, and Gemini transcription) and the
 // analysis, map, canvas and report jobs, which also embed, and the chat assistant.
-const models = createModels({
-  vertexProject: config.llm.vertexProject,
-  vertexLocation: config.llm.vertexLocation,
-  groups: {
-    text_fast: config.llm.textFast,
-    multi_modal_fast: config.llm.multiModalFast,
-    multi_modal_pro: config.llm.multiModalPro,
+const models = createModels(
+  {
+    vertexProject: config.llm.vertexProject,
+    vertexLocation: config.llm.vertexLocation,
+    groups: {
+      text_fast: config.llm.textFast,
+      multi_modal_fast: config.llm.multiModalFast,
+      multi_modal_pro: config.llm.multiModalPro,
+    },
+    embeddingModel: config.llm.embeddingModel,
+    embeddingLocation: config.llm.embeddingLocation,
+    embeddingDimensions: config.llm.embeddingDimensions,
   },
-  embeddingModel: config.llm.embeddingModel,
-  embeddingLocation: config.llm.embeddingLocation,
-  embeddingDimensions: config.llm.embeddingDimensions,
-});
+  { onCall: generationLog(database.db, logger) },
+);
 const audio = config.audio.s3Bucket
   ? new S3Storage({
       endpoint: config.audio.s3Endpoint ?? "",

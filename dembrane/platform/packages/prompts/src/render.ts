@@ -75,12 +75,34 @@ export function renderPrompt(
   language: string,
   vars: Record<string, unknown> = {},
 ): string {
-  let file = `${name}.${language}.jinja`;
-  if (!(file in TEMPLATES)) {
-    const fallback = `${name}.en.jinja`;
-    if (!(fallback in TEMPLATES))
-      throw new Error(`Prompt template ${file} not found and no default available`);
-    file = fallback;
+  return env.render(templateFile(name, language), vars);
+}
+
+function templateFile(name: string, language: string): string {
+  const file = `${name}.${language}.jinja`;
+  if (file in TEMPLATES) return file;
+  const fallback = `${name}.en.jinja`;
+  if (!(fallback in TEMPLATES))
+    throw new Error(`Prompt template ${file} not found and no default available`);
+  return fallback;
+}
+
+const versions = new Map<string, string>();
+
+/**
+ * The version of the template renderPrompt would use: the first 12 hex digits of its
+ * text's SHA-256. These templates carry no version of their own, so any edit to one shows
+ * up in the generation log as a new version.
+ */
+export function templateVersion(name: string, language: string): string {
+  const file = templateFile(name, language);
+  let v = versions.get(file);
+  if (!v) {
+    v = new Bun.CryptoHasher("sha256")
+      .update(TEMPLATES[file] as string)
+      .digest("hex")
+      .slice(0, 12);
+    versions.set(file, v);
   }
-  return env.render(file, vars);
+  return v;
 }

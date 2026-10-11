@@ -12,6 +12,13 @@ export { type FakeAnswer, FakeCompleter, FakeEmbedder } from "./fake";
 export { type Deployment, FallbackModel, type FallbackOptions, isRetryable } from "./fallback";
 export { createModels, type ModelGroup, type Models, type ModelsConfig } from "./models";
 export {
+  type CallRecord,
+  type CallTrace,
+  TRACE_KEY,
+  takeTrace,
+  withTrace,
+} from "./trace";
+export {
   LANGUAGE_NAMES,
   TRANSLATION_SCHEMA,
   type TranslateOptions,
