@@ -2631,6 +2631,14 @@ export const project = pgTable(
     legal_basis: varchar({ length: 255 }).default(sql`NULL`),
     privacy_policy_url: varchar({ length: 255 }).default(sql`NULL`),
     is_dembrane_event_cta_enabled: boolean().default(true),
+    /**
+     * A sample copy dembrane seeds (packages/samples): invented conversations no one
+     * recorded. Usage, limits and public numbers leave it out, and it takes no new
+     * conversations.
+     */
+    is_sample: boolean().default(false).notNull(),
+    /** The fixture a sample copy was last seeded from, so a newer fixture updates it once. */
+    sample_version: varchar({ length: 64 }),
   },
   (table): PgTableExtraConfigValue[] => [
     foreignKey({

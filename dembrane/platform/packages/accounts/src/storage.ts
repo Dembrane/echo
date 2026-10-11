@@ -26,9 +26,12 @@ const {
 
 /** Statuses in which a task still waits on the customer. */
 const OPEN = ["open", "changes_requested"] as const;
-/** A project whose popcorn session is a synthetic demo: its conversations are invented. */
-const NOT_SYNTHETIC = sql`not exists (select 1 from agent_loop l where l.project_id = p.id
-  and l.popcorn_state->'demo'->>'synthetic' = 'true')`;
+/**
+ * Not a synthetic demo (its popcorn session says so) and not a seeded sample copy: the
+ * conversations of both are invented, and neither is a project the customer made.
+ */
+const NOT_SYNTHETIC = sql`not p.is_sample and not exists (select 1 from agent_loop l
+  where l.project_id = p.id and l.popcorn_state->'demo'->>'synthetic' = 'true')`;
 
 export type OrgRow = typeof org.$inferSelect;
 export type BillingRow = typeof billing_account.$inferSelect;

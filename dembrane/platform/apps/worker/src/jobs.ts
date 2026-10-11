@@ -3,6 +3,7 @@ import { emailHandler, sendEmail } from "@dembrane/account";
 import {
   type AccountsJobs,
   accountsWorker,
+  DEMO_IDS,
   demoHttpGet,
   httpFetchText,
   queueJobs,
@@ -42,6 +43,7 @@ import {
 import { defineJob, type JobDefinition, type Queue } from "@dembrane/queue";
 import { PostgresRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { reportsWorker } from "@dembrane/reports";
+import { MILLBROOK_IDS, samplesWorker } from "@dembrane/samples";
 import type { ObjectStorage } from "@dembrane/storage";
 import { type JobSink, tenancyWorker } from "@dembrane/tenancy";
 import {
@@ -223,6 +225,8 @@ export function registrations(deps: {
       },
     },
     tenancyWorker(deps),
+    // Every workspace's best-practices sample, but none in the synthetic demo or preview orgs.
+    samplesWorker({ db, logger, excludeOrgIds: [DEMO_IDS.org, MILLBROOK_IDS.org] }),
     billingRegistration({
       billing: deps.billing,
       mailer: deps.mailer,

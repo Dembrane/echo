@@ -6,7 +6,8 @@
   "dembrane": {
     "layer": "namespace",
     "allow": {
-      "billing": "Membership changes reconcile the org's paid seats."
+      "billing": "Membership changes reconcile the org's paid seats.",
+      "samples": "A new org or workspace queues its copy of the best-practices sample."
     }
   },
   "exports": {
@@ -26,6 +27,7 @@
     "@dembrane/mail": "workspace:*",
     "@dembrane/observability": "workspace:*",
     "@dembrane/queue": "workspace:*",
+    "@dembrane/samples": "workspace:*",
     "@dembrane/storage": "workspace:*",
     "drizzle-orm": "^0.45.3",
     "hono": "^4.9.0",
