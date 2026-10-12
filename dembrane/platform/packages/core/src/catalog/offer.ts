@@ -50,4 +50,11 @@ export const offer = {
     audience: "staff",
     description: "The offer's lines add up to zero, so there is nothing to ask the customer for.",
   },
+  "offer.amendments_custom_only": {
+    action: "fix_input",
+    detail: "Only a custom offer can carry amendments",
+    audience: "staff",
+    description:
+      "A subscription or event offer was given amendments; they change the standard documents, so the offer must be custom.",
+  },
 } as const satisfies Codes<"offer">;

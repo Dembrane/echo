@@ -265,9 +265,15 @@ run("an offer draft, and the invoice request after the signature", () => {
     expect(sent.sha256).not.toBe(doc.sha256);
 
     const page = K.AccountPage.parse((await call(w, "GET", C(org), "outsider")).data);
-    expect(page.documents.map((d) => [d.id, d.status])).toEqual([[doc.id, "sent"]]);
+    // The DPA goes out with the offer, as its own document to sign.
+    expect(page.documents.map((d) => [d.kind, d.status]).sort()).toEqual([
+      ["dpa", "sent"],
+      ["offer", "sent"],
+    ]);
+    expect(page.documents.find((d) => d.kind === "offer")?.id).toBe(doc.id);
     expect(page.tasks.map((t) => `${t.code}:${t.status}`).sort()).toEqual([
       "billing_details:locked",
+      "sign_dpa:open",
       "sign_offer:open",
     ]);
 
@@ -396,6 +402,22 @@ run("an offer draft, and the invoice request after the signature", () => {
     expect(free.status).toBe(422);
     expect(JSON.stringify(free.data)).toContain("give a price");
     expect(requested()).toHaveLength(before + 1);
+  });
+
+  test("only a custom offer carries amendments", async () => {
+    const amendments = [{ title: "Liability cap", body: "dembrane is liable up to €30,000." }];
+    const refused = await call(
+      w,
+      "POST",
+      `${S()}/offers`,
+      "staff",
+      offer({ send: false, reference: "OFFER-AM1", amendments }),
+    );
+    expect(refused.status).toBe(422);
+    expect(JSON.stringify(refused.data)).toContain("Only a custom offer");
+    const doc = await draft(w.orgId, { template: "custom", reference: "OFFER-AM2", amendments });
+    expect(doc.content?.amendments).toEqual(amendments);
+    expect(doc.body).toContain("Amendment 1: Liability cap, as set out in this offer.");
   });
 
   test("an offer is not drafted or changed without amounts", async () => {

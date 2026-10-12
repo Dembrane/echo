@@ -38,7 +38,7 @@ msgstr "{0, plural, one {Bei {name} wartet # Aufgabe auf Sie} other {Bei {name} 
 
 #. placeholder {0}: formatMoney(net, "EUR", i18n.locale)
 #. placeholder {1}: formatMoney(net + vat, "EUR", i18n.locale)
-#: src/features/accounts/staff/PushOfferModal.tsx:227
+#: src/features/accounts/staff/PushOfferModal.tsx:232
 msgid "{0} excl. VAT, {1} incl."
 msgstr "{0} zzgl. VAT, {1} inkl."
 
@@ -364,6 +364,10 @@ msgstr "Ein Projekt erstellen"
 msgid "Create task"
 msgstr "Aufgabe erstellen"
 
+#: src/features/accounts/staff/PushOfferModal.tsx:184
+msgid "Custom"
+msgstr "Individuell"
+
 #: src/features/accounts/format.ts:107
 #: src/features/accounts/staff/AccountCardRoute.tsx:777
 #: src/features/accounts/customer/Questions.tsx:169
@@ -374,7 +378,7 @@ msgstr "Kunde"
 #~ msgid "Customer accounts: what each one still has to do, and what waits on us."
 #~ msgstr ""
 
-#: src/features/accounts/staff/PushOfferModal.tsx:197
+#: src/features/accounts/staff/PushOfferModal.tsx:202
 msgid "Customer name in the title"
 msgstr "Kundenname im Titel"
 
@@ -474,8 +478,8 @@ msgstr "Entwurf geändert"
 msgid "Draft ready"
 msgstr "Entwurf bereit"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:140
-#: src/features/accounts/staff/PushOfferModal.tsx:154
+#: src/features/accounts/staff/PushOfferModal.tsx:144
+#: src/features/accounts/staff/PushOfferModal.tsx:158
 msgid "Draft saved"
 msgstr "Entwurf gespeichert"
 
@@ -512,7 +516,7 @@ msgstr "Konto aktivieren"
 msgid "Enable it to push offers and tasks. They get an Account page with a billing details step."
 msgstr "Aktivieren, um Angebote und Aufgaben zu senden. Es wird eine Kontoseite mit einem Schritt für Rechnungsdaten bereitgestellt."
 
-#: src/features/accounts/staff/PushOfferModal.tsx:179
+#: src/features/accounts/staff/PushOfferModal.tsx:183
 #: src/features/accounts/staff/NewDemoRoute.tsx:230
 msgid "Event"
 msgstr "Veranstaltung"
@@ -557,7 +561,7 @@ msgstr "Bitte ausfüllen."
 #~ msgid "For e-invoicing"
 #~ msgstr "Für die elektronische Rechnungsstellung"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:213
+#: src/features/accounts/staff/PushOfferModal.tsx:218
 msgid "For the attention of"
 msgstr "Zu Händen von"
 
@@ -649,7 +653,7 @@ msgid "Label"
 msgstr "Bezeichnung"
 
 #: src/features/accounts/staff/UploadPdfModal.tsx:145
-#: src/features/accounts/staff/PushOfferModal.tsx:185
+#: src/features/accounts/staff/PushOfferModal.tsx:190
 #: src/features/accounts/staff/AccountCardRoute.tsx:540
 msgid "Language"
 msgstr "Sprache"
@@ -674,7 +678,7 @@ msgstr "Anmeldung per E-Mail-Code ermöglichen"
 msgid "Line total"
 msgstr "Zeilenbetrag"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:221
+#: src/features/accounts/staff/PushOfferModal.tsx:226
 msgid "Lines"
 msgstr "Positionen"
 
@@ -699,7 +703,7 @@ msgstr "Nachricht"
 msgid "Name"
 msgstr "Name"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:205
+#: src/features/accounts/staff/PushOfferModal.tsx:210
 msgid "Name in the greeting"
 msgstr "Name in der Anrede"
 
@@ -835,7 +839,7 @@ msgstr "Angebot"
 msgid "Offer language"
 msgstr "Sprache des Angebots"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:153
+#: src/features/accounts/staff/PushOfferModal.tsx:157
 #: src/features/accounts/staff/DocumentRoute.tsx:157
 msgid "Offer sent. The customer sees it the next time they sign in."
 msgstr "Angebot gesendet. Der Kunde sieht es bei der nächsten Anmeldung."
@@ -924,8 +928,8 @@ msgid "Opens after you sign {0}."
 msgstr "Öffnet sich, sobald Sie {0} signiert haben."
 
 #: src/features/accounts/staff/TaskModals.tsx:52
-#: src/features/accounts/staff/PushOfferModal.tsx:206
-#: src/features/accounts/staff/PushOfferModal.tsx:214
+#: src/features/accounts/staff/PushOfferModal.tsx:211
+#: src/features/accounts/staff/PushOfferModal.tsx:219
 #: src/features/accounts/signing/SignRoute.tsx:664
 #: src/features/accounts/signing/SignRoute.tsx:881
 #: src/features/accounts/customer/NextSteps.tsx:436
@@ -1091,7 +1095,7 @@ msgid "Read the offer and sign it here. Someone else signs for your organisation
 msgstr "Lesen Sie das Angebot und unterschreiben Sie es hier. Jemand anderes unterschreibt für Ihre Organisation? Geben Sie die Person im Angebot an; sie erhält einen eigenen Link."
 
 #. placeholder {0}: offerName || "..."
-#: src/features/accounts/staff/PushOfferModal.tsx:198
+#: src/features/accounts/staff/PushOfferModal.tsx:203
 msgid "Reads \"{0} x dembrane\""
 msgstr "Lautet „{0} x dembrane“"
 
@@ -1181,7 +1185,7 @@ msgstr "Speichern"
 msgid "Save billing details"
 msgstr "Rechnungsdaten speichern"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:248
+#: src/features/accounts/staff/PushOfferModal.tsx:253
 msgid "Save draft"
 msgstr "Entwurf speichern"
 
@@ -1229,7 +1233,7 @@ msgstr "Senden"
 msgid "Send back"
 msgstr "Zurücksenden"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:257
+#: src/features/accounts/staff/PushOfferModal.tsx:262
 #: src/features/accounts/staff/DocumentRoute.tsx:164
 msgid "Send offer"
 msgstr "Angebot senden"
@@ -1411,7 +1415,7 @@ msgstr "Betreff"
 msgid "Submitted"
 msgstr "Eingereicht"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:178
+#: src/features/accounts/staff/PushOfferModal.tsx:182
 #: src/features/accounts/staff/NewDemoRoute.tsx:229
 msgid "Subscription"
 msgstr "Abonnement"
@@ -1459,7 +1463,7 @@ msgstr "Aufgaben"
 msgid "Tasks | dembrane"
 msgstr "Aufgaben | dembrane"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:172
+#: src/features/accounts/staff/PushOfferModal.tsx:176
 #: src/features/accounts/staff/NewDemoRoute.tsx:223
 msgid "Template"
 msgstr "Vorlage"
@@ -1636,7 +1640,7 @@ msgstr "PDF hochladen"
 msgid "Use this"
 msgstr "Dies verwenden"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:233
+#: src/features/accounts/staff/PushOfferModal.tsx:238
 msgid "Valid 14 days. The terms, SLA and DPA versions in force today are pinned."
 msgstr "14 Tage gültig. Es gelten die heute aktuellen Versionen der AGB, SLA und AVV."
 

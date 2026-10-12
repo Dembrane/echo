@@ -7,7 +7,7 @@ import { runDeliverEvent, runNotifySlack } from "../src/jobs";
 import { legalSha256, parseLegalDump, parseLegalPage } from "../src/legal/parse";
 import { REFERENCE_DPA, REFERENCE_SLA, REFERENCE_TERMS } from "../src/legal/reference";
 import { fitsVatTreatment, priceLines, requireAmounts, vatOf } from "../src/money";
-import { euro, layoutOffer, type OfferContent, offerText } from "../src/offer";
+import { euro, layoutOffer, legalKinds, type OfferContent, offerText } from "../src/offer";
 import { ONBOARDING_CODES } from "../src/onboarding";
 import { offerPdf, signedPdf, textPdf } from "../src/pdf";
 import { checkValues, pngBytes, signerFacts } from "../src/signing";
@@ -213,8 +213,8 @@ describe("the offer", () => {
     expect(Buffer.from(again.bytes).equals(Buffer.from(r.bytes))).toBe(true);
   });
 
-  test("each template puts the acceptance block on its own page and links the pinned texts", async () => {
-    for (const template of ["subscription", "event"] as const)
+  test("each template puts the acceptance block on its own page and links the texts that apply", async () => {
+    for (const template of ["subscription", "event", "custom"] as const)
       for (const language of ["en", "nl"] as const) {
         const content = offer({ template, language });
         const r = await offerPdf(content);
@@ -229,9 +229,37 @@ describe("the offer", () => {
         );
         expect(date?.x).toBeLessThan(signature?.x ?? 0);
         const text = Buffer.from(r.bytes).toString("latin1");
-        for (const t of Object.values(content.legal)) expect(text).toContain(`(${t.url})`);
+        for (const kind of legalKinds(template))
+          expect(text).toContain(`(${content.legal[kind].url})`);
+        // A single event has no SLA, so its offer does not name one.
+        if (template === "event") expect(text).not.toContain(`(${content.legal.sla.url})`);
         expect(text).toContain("DMSans-Text");
       }
+  });
+
+  test("a custom offer carries numbered amendments that take precedence, and every offer is signed electronically", async () => {
+    const amendments = [
+      {
+        title: "Liability cap",
+        body: "Regardless of article 12 of the General Terms and Conditions, dembrane's liability is capped at €30,000.\n\nThis applies per year.",
+      },
+    ];
+    const text = offerText(offer({ template: "custom", amendments }));
+    expect(text).toContain("## Amendments to the standard documents");
+    expect(text).toContain("Amendment 1: Liability cap\nRegardless of article 12");
+    expect(text).toContain("\nThis applies per year.");
+    expect(text).toContain("5. Amendment 1: Liability cap, as set out in this offer.");
+    expect(text).toContain("the amendment applies");
+    expect(text).toContain("article 3:15a of the Dutch Civil Code");
+    // Without amendments, the clause says nothing about them.
+    const plain = offerText(offer({ template: "custom" }));
+    expect(plain).not.toContain("Amendment");
+    expect(plain).toContain("article 3:15a");
+    const nl = offerText(offer({ template: "custom", language: "nl", amendments }));
+    expect(nl).toContain("5. Aanvulling 1: Liability cap, zoals opgenomen in deze offerte.");
+    expect(nl).toContain("artikel 3:15a BW");
+    const pdf = await offerPdf(offer({ template: "custom", amendments }));
+    expect(pdf.fields.every((f) => f.page === pdf.pageCount)).toBe(true);
   });
 
   test("a long offer keeps its rows whole and still ends on the acceptance page", async () => {

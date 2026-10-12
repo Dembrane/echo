@@ -96,6 +96,7 @@ export const pushOfferRequest: Out<typeof PushOfferRequest> = {
   date: "2026-09-28",
   items,
   vat_treatment: "standard",
+  amendments: [],
   external_ref: "attio-deal-8f2c",
   supersedes_id: null,
   send: true,
