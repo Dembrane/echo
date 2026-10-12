@@ -579,6 +579,9 @@ async function tellCustomerOfOffer(d: AccountsDeps, tx: Conn, orgId: string, doc
     d.logger.warn({ document_id: doc.id, org_id: orgId }, "offer sent email has nobody to go to");
     return;
   }
+  // An offer without an amount is never sent; the send refuses it before this point.
+  if (doc.totalCents == null || !doc.currency)
+    throw new Error(`offer ${doc.id} has no total; it cannot be sent`);
   const org = (await store.org(tx, orgId)) as OrgRow;
   // The account's manager signs the email and gets the replies; without one, the team signs.
   const manager = await accountManagerPayload(tx, orgId);
@@ -589,8 +592,8 @@ async function tellCustomerOfOffer(d: AccountsDeps, tx: Conn, orgId: string, doc
       document_title: doc.title,
       sign_url: customerSignUrl(d.settings.dashboardUrl, orgId, doc.id),
       ...(doc.reference && { reference: doc.reference }),
-      ...(doc.totalCents != null &&
-        doc.currency && { total_cents: String(doc.totalCents), currency: doc.currency }),
+      total_cents: String(doc.totalCents),
+      currency: doc.currency,
       ...(doc.validUntil && { valid_until: doc.validUntil }),
       ...(manager?.name && { manager_name: manager.name }),
     },

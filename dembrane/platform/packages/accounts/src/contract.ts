@@ -699,13 +699,14 @@ export const VoidRequest = z.object({ reason: optText(2000) });
  * A message to the people who run an account, asked for by sam (or staff): sam decides
  * when to write and about what; echo renders it in the email frame, in each recipient's
  * language, signed by the account's manager. `note` is sam's own line, shown as written,
- * so sam writes it in the account's language. `dry_run` renders without sending.
+ * so sam writes it in the account's language. `dry_run` renders without sending. Invoices
+ * are not among them: Exact sends the invoice itself.
  */
-export const MessageKind = z.enum(["invoice_issued", "document_withdrawn", "task_reminder"]);
+export const MessageKind = z.enum(["document_withdrawn", "task_reminder"]);
 export const SendMessageRequest = z
   .object({
     kind: MessageKind,
-    /** The invoice or the withdrawn document. */
+    /** The withdrawn document. */
     document_id: nullish(Uuid),
     /** The task to check in on. */
     task_id: nullish(Uuid),
@@ -713,7 +714,7 @@ export const SendMessageRequest = z
     dry_run: z.boolean().default(false),
   })
   .refine((m) => (m.kind === "task_reminder" ? Boolean(m.task_id) : Boolean(m.document_id)), {
-    message: "task_reminder takes task_id; the other kinds take document_id",
+    message: "task_reminder takes task_id; document_withdrawn takes document_id",
   });
 export const RenderedMessage = z.object({
   to: z.string(),
