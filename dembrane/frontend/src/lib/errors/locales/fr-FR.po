@@ -19,6 +19,16 @@ msgid "error.request.field_empty"
 msgstr "{field} ne peut pas être vide. Remplissez-le ou supprimez-le."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:26
+msgid "error.connector.provider_refused"
+msgstr "{provider} n'a pas répondu comme prévu. Réessayez dans un instant."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:18
+msgid "error.connector.not_configured"
+msgstr "{provider} n'est pas encore configuré sur ce serveur dembrane."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:58
 msgid "error.document.image_too_large"
 msgstr "{what, select, initials {L'image de vos initiales} other {L'image de votre signature}} est trop volumineuse. Elle doit faire moins de 512 Ko."
@@ -124,6 +134,11 @@ msgid "error.webhook.invalid_target"
 msgstr "Choisissez où va ce webhook : une adresse web, ou la boîte de réception de sam avec un code connu."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:10
+msgid "error.connector.invalid_voice"
+msgstr "Indiquez qui s'exprime : participants, organisateurs ou mixte."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:17
 msgid "error.map.groups_need_snapshot"
 msgstr "Les groupes se conservent sur une carte régénérée. Régénérez la carte et réessayez."
@@ -132,6 +147,11 @@ msgstr "Les groupes se conservent sur une carte régénérée. Régénérez la c
 #: src/lib/errors/messages/document.ts:27
 msgid "error.document.dpa_not_authorised"
 msgstr "Confirmez que vous êtes autorisé à accepter le traitement des données pour votre organisation."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:22
+msgid "error.connector.not_connected"
+msgstr "Connectez d'abord {provider}, puis réessayez."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:19
@@ -394,6 +414,11 @@ msgid "error.canvas.expiry_too_far"
 msgstr "Choisissez une date de fin dans les 7 prochains jours."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:14
+msgid "error.connector.no_frames"
+msgstr "Choisissez au moins un cadre du tableau."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:19
 msgid "error.project.legal_basis_invalid"
 msgstr "Choisissez l'une des options de base juridique."
@@ -597,6 +622,11 @@ msgstr "Le PDF de ce document n'est pas disponible. Contactez-nous et nous vous 
 #: src/lib/errors/messages/billing.ts:17
 msgid "error.billing.invoice_pdf_missing"
 msgstr "Le PDF de cette facture n'est pas encore prêt. Réessayez dans un court instant."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:30
+msgid "error.connector.sign_in_expired"
+msgstr "La connexion à {provider} a expiré. Recommencez."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:13
@@ -1304,6 +1334,11 @@ msgid "error.analysis.object_not_found"
 msgstr "Impossible de trouver ce résultat. Il a peut-être disparu lors de la nouvelle analyse."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:34
+msgid "error.connector.source_not_found"
+msgstr "Source introuvable. Elle a peut-être été retirée."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/participant.ts:27
 msgid "error.participant.unsubscribe_link_unknown"
 msgstr "Impossible de trouver cet abonnement. Vous êtes peut-être déjà désabonné."
@@ -1377,6 +1412,11 @@ msgstr "Impossible de charger la carte pour le moment. Réessayez dans un instan
 #: src/lib/errors/messages/account.ts:45
 msgid "error.account.user_not_found"
 msgstr "Impossible de charger votre compte. Contactez l'assistance et nous réglerons cela."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:5
+msgid "error.connector.board_not_found"
+msgstr "Impossible d'ouvrir ce tableau. Vérifiez le lien et que votre compte Miro y a accès."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:13

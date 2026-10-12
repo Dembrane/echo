@@ -859,6 +859,14 @@ msgstr "Uživatel {email} byl přidán na seznam čekajících, ale e-mail s poz
 msgid "{empty, plural, one {# conversation has no transcript yet, so it was left out.} other {# conversations have no transcript yet, so they were left out.}}"
 msgstr "{empty, plural, one {# rozhovor zatím nemá přepis, proto byl vynechán.} few {# rozhovory zatím nemají přepis, proto byly vynechány.} other {# rozhovorů zatím nemá přepis, proto byly vynechány.}}"
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:252
+msgid "{frames} frames picked, {inputs} inputs, synced {ago}."
+msgstr "Vybrané rámce: {frames}, vstupy: {inputs}, synchronizováno {ago}."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:253
+msgid "{frames} frames picked."
+msgstr "Vybrané rámce: {frames}."
+
 #: src/components/common/MoveHistory.tsx:45
 msgid "{from} → {to}"
 msgstr "{from} → {to}"
@@ -1490,6 +1498,11 @@ msgstr "Přidejte rozhovor přímo do kontextu chatu."
 #: src/components/project/ProjectUsageAndSharing.tsx:280
 msgid "Add a member and pick their access."
 msgstr "Add a member and pick their access."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:120
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:296
+msgid "Add a Miro board"
+msgstr "Přidat tabuli Miro"
 
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:70
 msgid "Add a name and a prompt before applying."
@@ -2921,6 +2934,10 @@ msgstr "Fakturaci spravuje vaše organizace"
 msgid "Billing mode"
 msgstr "Režim fakturace"
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:303
+msgid "Board"
+msgstr "Tabule"
+
 #: src/components/sharing/LiveButton.tsx:116
 msgid "Book"
 msgstr "Naplánovat"
@@ -2961,6 +2978,10 @@ msgstr "Breakdown by tier"
 #: src/components/chat/CanvasSuggestionCard.tsx:95
 msgid "Brief"
 msgstr "Zadání"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:104
+msgid "Bring material from other apps into this project. Each Miro frame you pick becomes an input that chats, reports and analysis read, marked with whose words it holds."
+msgstr "Přeneste do projektu materiály z jiných aplikací. Každý vybraný rámec z Miro se stane vstupem, který čtou chaty, zprávy a analýzy, s označením, čí slova obsahuje."
 
 #: src/lib/tiers.ts:107
 msgid "Bring your own LLM"
@@ -3869,6 +3890,10 @@ msgstr "Confirm your password to generate a new secret for your authenticator ap
 msgid "Connect"
 msgstr "Připojit"
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:128
+msgid "Connect Miro"
+msgstr "Připojit Miro"
+
 #: src/features/sidebar/blocks/HelpBlock.tsx:111
 #: src/components/agent-access/AgentAccessSection.tsx:149
 msgid "Connect your agent"
@@ -3883,6 +3908,26 @@ msgstr "Připojte svého agenta | dembrane"
 #: src/components/agent-access/AgentAccessSection.tsx:193
 msgid "Connected agents"
 msgstr "Připojení agenti"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:102
+msgid "Connected apps"
+msgstr "Připojené aplikace"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:137
+#~ msgid "Connected to Miro as {0}."
+#~ msgstr ""
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:138
+msgid "Connected to Miro as {account}."
+msgstr "Připojeno k Miro jako {account}."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:139
+msgid "Connected to Miro."
+msgstr "Připojeno k Miro."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:90
+msgid "Connecting Miro did not work. Try again."
+msgstr "Připojení Miro se nezdařilo. Zkuste to znovu."
 
 #: src/components/report/ReportModalNavigationButton.tsx:85
 #~ msgid "Connecting to report services..."
@@ -5062,6 +5107,10 @@ msgstr "Domů na dembrane"
 msgid "dembrane is not responsible for what a third party does with that content."
 msgstr "dembrane neodpovídá za to, jak s tímto obsahem naloží třetí strana."
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:131
+msgid "dembrane only reads boards. It never changes them."
+msgstr "dembrane tabule jen čte. Nikdy je nemění."
+
 #: src/components/workspace/SupportAccessSection.tsx:60
 msgid "dembrane staff access ended automatically"
 msgstr "Přístup týmu dembrane byl automaticky ukončen"
@@ -5190,6 +5239,10 @@ msgstr "Discard this workspace?"
 #: src/components/popcorn/PopcornOpeningSettings.tsx:194
 msgid "Disclosure"
 msgstr "Prohlášení"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:146
+msgid "Disconnect"
+msgstr "Odpojit"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:420
 msgid "Discount"
@@ -5453,6 +5506,10 @@ msgstr "např. upozornění ve Slacku, workflow v Make"
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:389
 #~ msgid "e.g., Slack Notifications, Make Workflow"
 #~ msgstr "e.g., Slack Notifications, Make Workflow"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:339
+msgid "Each frame becomes one input."
+msgstr "Každý rámec se stane jedním vstupem."
 
 #: src/components/popcorn/PopcornOpeningSettings.tsx:195
 msgid "Each line becomes a paragraph."
@@ -5870,10 +5927,10 @@ msgstr "Error cloning project"
 msgid "Error creating report"
 msgstr "Error creating report"
 
-#: src/routes/project/ProjectRoutes.tsx:119
-#: src/routes/project/ProjectRoutes.tsx:245
-#: src/routes/project/ProjectRoutes.tsx:320
-#: src/routes/project/ProjectRoutes.tsx:356
+#: src/routes/project/ProjectRoutes.tsx:128
+#: src/routes/project/ProjectRoutes.tsx:258
+#: src/routes/project/ProjectRoutes.tsx:333
+#: src/routes/project/ProjectRoutes.tsx:369
 msgid "Error loading project"
 msgstr "Error loading project"
 
@@ -6649,6 +6706,18 @@ msgstr "Forgot your password?"
 #: src/components/popcorn/PopcornOpeningSettings.tsx:269
 msgid "Frame text"
 msgstr "Rámovací text"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:225
+msgid "Frames"
+msgstr "Rámce"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:296
+msgid "Frames from {boardName}"
+msgstr "Rámce z {boardName}"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:338
+msgid "Frames to bring in"
+msgstr "Rámce k přenesení"
 
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:270
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:336
@@ -7712,6 +7781,10 @@ msgstr "Italština (pouze funkce ECHO, přepis a shrnutí)"
 #: src/components/release/releaseHistory.ts:485
 msgid "Italian for your core workflows"
 msgstr "Italština pro hlavní postupy"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:235
+msgid "Its {inputs} inputs are deleted from the project. The board on Miro stays as it is."
+msgstr "Jeho vstupy ({inputs}) budou z projektu odstraněny. Tabule v Miro zůstane beze změny."
 
 #: src/components/map/panels/DetailsModal.tsx:174
 #~ msgid "Its arguments, and the tree between them"
@@ -8854,6 +8927,26 @@ msgstr "min. {minimum}"
 msgid "Minimum link length: {0}"
 msgstr "Minimální délka propojení: {0}"
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:196
+msgid "Miro board"
+msgstr "Tabule Miro"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:60
+msgid "Miro did not answer. We will try again."
+msgstr "Miro neodpovědělo. Zkusíme to znovu."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:88
+msgid "Miro is connected."
+msgstr "Miro je připojeno."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:57
+msgid "Miro is no longer connected. Connect it again to keep this board in sync."
+msgstr "Miro už není připojeno. Připojte ho znovu, aby tabule zůstala synchronizovaná."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:89
+msgid "Miro was not connected."
+msgstr "Miro nebylo připojeno."
+
 #: src/components/feedback/reasons.ts:19
 msgid "Missed the question"
 msgstr "Mimo položenou otázku"
@@ -8861,6 +8954,10 @@ msgstr "Mimo položenou otázku"
 #: src/components/billing/BillingManager.tsx:512
 msgid "Missing features I need"
 msgstr "Chybí mi potřebné funkce"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:50
+msgid "Mixed"
+msgstr "Smíšené"
 
 #: src/components/invite/InviteModal.tsx:715
 msgid "mo"
@@ -9320,6 +9417,10 @@ msgstr "Zatím nemáte fakturační účet. Napište na <0>support@dembrane.com<
 #: src/routes/admin/AdminSettingsRoute.tsx:1545
 msgid "No billing accounts match the current filters."
 msgstr "Aktuálním filtrům neodpovídají žádné fakturační účty."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:318
+msgid "No boards found."
+msgstr "Nenašly se žádné tabule."
 
 #: src/routes/project/library/LibraryRoute.tsx:224
 #~ msgid "No canvases yet"
@@ -10169,7 +10270,7 @@ msgstr "Právní základ mohou měnit pouze administrátoři workspace."
 msgid "Only workspace admins can change these settings. Ask an admin if something needs updating."
 msgstr "Only workspace admins can change these settings. Ask an admin if something needs updating."
 
-#: src/routes/project/ProjectRoutes.tsx:211
+#: src/routes/project/ProjectRoutes.tsx:224
 msgid "Only workspace admins can manage project automation."
 msgstr "Automatizaci projektů mohou spravovat pouze správci pracovního prostoru."
 
@@ -10248,6 +10349,10 @@ msgstr "Otevřít v analýze"
 #: src/components/chat/CanvasSuggestionCard.tsx:230
 msgid "Open in library"
 msgstr "Otevřít v knihovně"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:201
+msgid "Open in Miro"
+msgstr "Otevřít v Miro"
 
 #: src/components/sharing/Share.tsx:138
 msgid "Open link"
@@ -10516,6 +10621,10 @@ msgstr "Organizace, pracovní prostory a projekty"
 msgid "Organise projects into workspaces within your organisation."
 msgstr "Uspořádejte si projekty do pracovních prostorů v rámci organizace."
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:51
+msgid "Organising team"
+msgstr "Organizační tým"
+
 #: src/components/release/releaseHistory.ts:150
 msgid "Organization"
 msgstr "Organizace"
@@ -10700,6 +10809,7 @@ msgid "Participant verification"
 msgstr "Ověření účastníka"
 
 #: src/components/training/StaffTrainingPanel.tsx:158
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:52
 msgid "Participants"
 msgstr "Účastníci"
 
@@ -10946,6 +11056,10 @@ msgstr "Vyberte účet<<<<<<< HEAD"
 #: src/components/map/panels/KnowledgeGraph.tsx:562
 msgid "Pick an argument to go to it, or a quote to find it below."
 msgstr "Vyberte argument a přejděte na něj, nebo citaci a najděte ji níže."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:367
+msgid "Pick another board"
+msgstr "Vybrat jinou tabuli"
 
 #: src/components/invite/InviteModal.tsx:654
 msgid "Pick at least one workspace to send the invite."
@@ -11809,6 +11923,10 @@ msgstr "Read-only"
 msgid "Read-only steps"
 msgstr "Kroky pouze pro čtení"
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:356
+msgid "Readers can keep the organising team's material apart from what participants said."
+msgstr "Čtenáři tak mohou oddělit materiály organizačního týmu od toho, co řekli účastníci."
+
 #. placeholder {0}: context.participantName
 #: src/components/chat/agenticToolActivity.ts:143
 msgid "Reading {0}'s summary"
@@ -11855,6 +11973,10 @@ msgstr "Čte se kontext projektu"
 #: src/components/chat/agenticToolActivity.ts:119
 msgid "Reading project settings"
 msgstr "Čte se nastavení projektu"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:250
+msgid "Reading the board…"
+msgstr "Čteme tabuli…"
 
 #: src/components/popcorn/hooks/index.ts:328
 msgid "Reading the conversations again"
@@ -12187,6 +12309,8 @@ msgstr "Připomínka odeslána: přístup podpory je stále aktivní"
 #: src/components/settings/WhitelabelLogoCard.tsx:180
 #: src/components/settings/AccountSettingsCard.tsx:163
 #: src/components/settings/AccountSettingsCard.tsx:205
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:237
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:243
 #: src/components/organisation/InviteEmailList.tsx:57
 #: src/components/memory/MemoryList.tsx:107
 #: src/components/memory/MemoryList.tsx:127
@@ -12269,6 +12393,10 @@ msgstr "Odebrat přepsání"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1802
 msgid "Remove the custom logo? The dembrane default will be used instead."
 msgstr "Remove the custom logo? The dembrane default will be used instead."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:239
+msgid "Remove this board?"
+msgstr "Odebrat tuto tabuli?"
 
 #: src/components/memory/MemoryList.tsx:116
 msgid "Remove this memory?"
@@ -12994,6 +13122,10 @@ msgstr "Save"
 msgid "Save access"
 msgstr "Uložit přístup"
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:384
+msgid "Save and sync"
+msgstr "Uložit a synchronizovat"
+
 #: src/components/chat/ChatHistoryMessage.tsx:412
 msgid "Save as template"
 msgstr "Save as template"
@@ -13278,6 +13410,10 @@ msgstr "Search webhooks..."
 #: src/components/invite/WorkspaceSelectList.tsx:89
 msgid "Search workspaces"
 msgstr "Search workspaces"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:304
+msgid "Search your boards or paste a board link"
+msgstr "Vyhledejte své tabule nebo vložte odkaz na tabuli"
 
 #: src/components/chat/SourcesSearched.tsx:10
 msgid "Searched through the most relevant sources"
@@ -14798,6 +14934,10 @@ msgstr "Vypnutí je součástí placeného plánu."
 msgid "Switching to another tool"
 msgstr "Přecházím na jiný nástroj"
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:217
+msgid "Sync now"
+msgstr "Synchronizovat nyní"
+
 #: src/components/settings/ColorSchemeSettingsCard.tsx:43
 #: src/components/settings/AuditLogsCard.tsx:88
 msgid "System"
@@ -15063,6 +15203,10 @@ msgstr "Asistent to ve všech budoucích chatech zapomene."
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:581
 msgid "The assistant suggests updating {headlineFields}. Waiting on you."
 msgstr "Asistent navrhuje aktualizovat {headlineFields}. Čeká se na vás."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:59
+msgid "The board was deleted or your Miro account lost access to it."
+msgstr "Tabule byla smazána nebo k ní váš účet Miro už nemá přístup."
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:329
 #~ msgid "The change could not be published."
@@ -15544,6 +15688,10 @@ msgstr "Tento argument vyjadřuje podporu, souhlas nebo pozitivní postoj k tém
 #: src/components/map/panels/shared.tsx:76
 msgid "This argument is observational or balanced, neither for nor against."
 msgstr "Tento argument je věcný či vyvážený, není ani pro, ani proti."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:330
+msgid "This board has no frames. Group the content you want in frames on Miro first."
+msgstr "Tato tabule nemá žádné rámce. Nejprve v Miro seskupte požadovaný obsah do rámců."
 
 #: src/components/voice/VoiceInputError.tsx:29
 msgid "This browser cannot record audio. Chrome, Edge and Safari can."
@@ -16665,6 +16813,10 @@ msgstr "Untitled conversation"
 #~ msgid "Untitled Conversation"
 #~ msgstr "Untitled Conversation"
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:348
+msgid "Untitled frame"
+msgstr "Rámec bez názvu"
+
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:210
 msgid "Untitled methodology"
 msgstr "Metodika bez názvu"
@@ -17444,7 +17596,7 @@ msgstr "Webhook"
 msgid "Webhook URL"
 msgstr "Webhook URL"
 
-#: src/routes/project/ProjectRoutes.tsx:218
+#: src/routes/project/ProjectRoutes.tsx:231
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:879
 msgid "Webhooks"
 msgstr "Webhooks"
@@ -17453,7 +17605,7 @@ msgstr "Webhooks"
 msgid "Webhooks are automated messages sent from one app to another when something happens. Think of them as a \"notification system\" for your other tools."
 msgstr "Webhooks are automated messages sent from one app to another when something happens. Think of them as a \"notification system\" for your other tools."
 
-#: src/routes/project/ProjectRoutes.tsx:206
+#: src/routes/project/ProjectRoutes.tsx:219
 msgid "Webhooks are not enabled for this environment."
 msgstr "Webhooks are not enabled for this environment."
 
@@ -17714,6 +17866,10 @@ msgstr "Kdo je zúčastněnou stranou a jaké jsou vzájemné vztahy."
 #: src/components/training/WorkspaceTrainingPanel.tsx:46
 msgid "Who on your team holds a current training license. Book a training from your organisation's Training view."
 msgstr "Kdo z vašeho týmu má platnou licenci ke školení. Školení si můžete zarezervovat v zobrazení Školení vaší organizace."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:355
+msgid "Whose words are these?"
+msgstr "Čí jsou to slova?"
 
 #: src/components/results/ResultRow.tsx:286
 msgid "Why not in this presentation?"

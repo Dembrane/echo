@@ -26,7 +26,8 @@ const MONITOR_TRANSCRIBE_SECONDS_PER_CLIP = 20;
 const FUNNEL_STAGES = ["scanned", "terms", "profile"] as const;
 // Stages written by portals from before the microphone check was removed; they passed consent.
 const RETIRED_MIC_STAGES = new Set(["mic_ok", "mic_skipped", "mic_blocked"]);
-const PORTAL_ONLY = ["DASHBOARD_UPLOAD", "CLONE"];
+// Chunks no one is recording live: uploads, clones and inputs from other apps (Miro frames).
+const PORTAL_ONLY = ["DASHBOARD_UPLOAD", "CLONE", "MIRO"];
 // tier_capacity: paid tiers are never hour capped; free has a one-hour lifetime cap.
 const OVERAGE_TIERS = new Set(["innovator", "changemaker", "guardian"]);
 const INCLUDED_HOURS: Record<string, number | null> = {

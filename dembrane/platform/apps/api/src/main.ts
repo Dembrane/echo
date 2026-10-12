@@ -14,6 +14,7 @@ import {
   loadSections,
   publicValues,
 } from "@dembrane/config";
+import { connectorApiJobs } from "@dembrane/connectors";
 import { conversationApiJobs } from "@dembrane/conversations";
 import { bootAssets } from "@dembrane/core";
 import { connect, createDb, withDatabase } from "@dembrane/db";
@@ -152,6 +153,7 @@ const queueReady = (async () => {
         ...tenancyApiJobs,
         ...billingApiJobs,
         ...conversationApiJobs,
+        ...connectorApiJobs,
         ...analysisJobs,
         ...mapJobs,
         ...canvasApiJobs,

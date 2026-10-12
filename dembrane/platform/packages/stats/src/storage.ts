@@ -52,7 +52,12 @@ export function statsStorage(db: Db): StatsStore {
         })
         .from(conversation)
         .where(
-          and(inArray(conversation.project_id, [...projectIds]), isNull(conversation.deleted_at)),
+          and(
+            inArray(conversation.project_id, [...projectIds]),
+            isNull(conversation.deleted_at),
+            // Inputs from other apps (a Miro frame) are not conversations anyone held.
+            isNull(conversation.connector_source_id),
+          ),
         );
       return { count: row?.count ?? 0, seconds: row?.seconds ?? 0 };
     },

@@ -19,6 +19,16 @@ msgid "error.request.field_empty"
 msgstr "Pole {field} nesmí být prázdné. Vyplňte ho nebo smažte."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:26
+msgid "error.connector.provider_refused"
+msgstr "{provider} neodpovědělo podle očekávání. Zkuste to za chvíli znovu."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:18
+msgid "error.connector.not_configured"
+msgstr "{provider} zatím není na tomto serveru dembrane nastaveno."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:58
 msgid "error.document.image_too_large"
 msgstr "{what, select, initials {Obrázek s vašimi iniciálami} other {Obrázek s vaším podpisem}} je příliš velký. Zmenšete jej pod 512 KB."
@@ -124,6 +134,11 @@ msgid "error.webhook.invalid_target"
 msgstr "Vyberte, kam tento webhook směřuje: na webovou adresu, nebo do schránky sama se známým kódem."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:10
+msgid "error.connector.invalid_voice"
+msgstr "Vyberte, čí jsou to slova: účastníků, organizátorů, nebo smíšené."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:17
 msgid "error.map.groups_need_snapshot"
 msgstr "Shluky lze uložit na znovu vygenerované mapě. Vygenerujte mapu znovu a zkuste to znovu."
@@ -132,6 +147,11 @@ msgstr "Shluky lze uložit na znovu vygenerované mapě. Vygenerujte mapu znovu 
 #: src/lib/errors/messages/document.ts:27
 msgid "error.document.dpa_not_authorised"
 msgstr "Potvrďte, že jste oprávněni schválit zpracování osobních údajů za svou organizaci."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:22
+msgid "error.connector.not_connected"
+msgstr "Nejprve připojte {provider} a pak to zkuste znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:19
@@ -394,6 +414,11 @@ msgid "error.canvas.expiry_too_far"
 msgstr "Vyberte datum ukončení během následujících 7 dnů."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:14
+msgid "error.connector.no_frames"
+msgstr "Vyberte alespoň jeden rámec z tabule."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:19
 msgid "error.project.legal_basis_invalid"
 msgstr "Vyberte jednu z možností právního základu."
@@ -597,6 +622,11 @@ msgstr "PDF tohoto dokumentu není k dispozici. Kontaktujte nás a my vám ho po
 #: src/lib/errors/messages/billing.ts:17
 msgid "error.billing.invoice_pdf_missing"
 msgstr "PDF této faktury ještě není připraveno. Zkuste to za chvíli znovu."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:30
+msgid "error.connector.sign_in_expired"
+msgstr "Přihlášení k {provider} vypršelo. Začněte znovu."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:13
@@ -1304,6 +1334,11 @@ msgid "error.analysis.object_not_found"
 msgstr "Tento výsledek se nám nepodařilo najít. Možná byl při opakování analýzy odstraněn."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:34
+msgid "error.connector.source_not_found"
+msgstr "Tento zdroj se nepodařilo najít. Možná byl odebrán."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/participant.ts:27
 msgid "error.participant.unsubscribe_link_unknown"
 msgstr "Tento odběr se nám nepodařilo najít. Možná už jste odhlášeni."
@@ -1377,6 +1412,11 @@ msgstr "Mapu se právě nepodařilo načíst. Zkuste to za chvíli znovu."
 #: src/lib/errors/messages/account.ts:45
 msgid "error.account.user_not_found"
 msgstr "Váš účet se nepodařilo načíst. Kontaktujte podporu a my to vyřešíme."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:5
+msgid "error.connector.board_not_found"
+msgstr "Tuto tabuli se nepodařilo otevřít. Zkontrolujte odkaz a zda ji váš účet Miro vidí."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:13

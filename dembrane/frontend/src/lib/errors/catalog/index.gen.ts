@@ -10,6 +10,7 @@ import { auth } from "./auth.gen";
 import { billing } from "./billing.gen";
 import { canvas } from "./canvas.gen";
 import { chat } from "./chat.gen";
+import { connector } from "./connector.gen";
 import { conversation } from "./conversation.gen";
 import { demo } from "./demo.gen";
 import { document } from "./document.gen";
@@ -67,6 +68,7 @@ export const ERROR_CATALOG = {
   ...tag,
   ...webhook,
   ...conversation,
+  ...connector,
   ...upload,
   ...participant,
   ...chat,

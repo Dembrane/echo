@@ -19,6 +19,16 @@ msgid "error.request.field_empty"
 msgstr "{field} cannot be empty. Fill it in or remove it."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:26
+msgid "error.connector.provider_refused"
+msgstr "{provider} did not answer as expected. Try again in a moment."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:18
+msgid "error.connector.not_configured"
+msgstr "{provider} is not set up on this dembrane server yet."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:58
 msgid "error.document.image_too_large"
 msgstr "{what, select, initials {Your initials image} other {Your signature image}} is too large. Keep it under 512 KB."
@@ -124,6 +134,11 @@ msgid "error.webhook.invalid_target"
 msgstr "Choose where this webhook goes: a web address, or sam's inbox with a known code."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:10
+msgid "error.connector.invalid_voice"
+msgstr "Choose whose words these are: participants, organisers or mixed."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:17
 msgid "error.map.groups_need_snapshot"
 msgstr "Clusters can be kept on a regenerated map. Regenerate the map and try again."
@@ -132,6 +147,11 @@ msgstr "Clusters can be kept on a regenerated map. Regenerate the map and try ag
 #: src/lib/errors/messages/document.ts:27
 msgid "error.document.dpa_not_authorised"
 msgstr "Confirm that you are authorised to agree to data processing for your organisation."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:22
+msgid "error.connector.not_connected"
+msgstr "Connect {provider} first, then try again."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:19
@@ -394,6 +414,11 @@ msgid "error.canvas.expiry_too_far"
 msgstr "Pick an end date within the next 7 days."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:14
+msgid "error.connector.no_frames"
+msgstr "Pick at least one frame from the board."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:19
 msgid "error.project.legal_basis_invalid"
 msgstr "Pick one of the legal basis options."
@@ -597,6 +622,11 @@ msgstr "The PDF of this document is not available. Contact us and we will send i
 #: src/lib/errors/messages/billing.ts:17
 msgid "error.billing.invoice_pdf_missing"
 msgstr "The PDF of this invoice is not ready yet. Try again in a little while."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:30
+msgid "error.connector.sign_in_expired"
+msgstr "The sign-in with {provider} expired. Start it again."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:13
@@ -1304,6 +1334,11 @@ msgid "error.analysis.object_not_found"
 msgstr "We could not find this result. It may have been removed when the analysis ran again."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:34
+msgid "error.connector.source_not_found"
+msgstr "We could not find this source. It may have been removed."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/participant.ts:27
 msgid "error.participant.unsubscribe_link_unknown"
 msgstr "We could not find this subscription. You may already be unsubscribed."
@@ -1377,6 +1412,11 @@ msgstr "We could not load the map just now. Try again in a moment."
 #: src/lib/errors/messages/account.ts:45
 msgid "error.account.user_not_found"
 msgstr "We could not load your account. Contact support and we will sort it out."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:5
+msgid "error.connector.board_not_found"
+msgstr "We could not open that board. Check the link, and that your Miro account can see it."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:13

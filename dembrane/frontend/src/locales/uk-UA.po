@@ -859,6 +859,14 @@ msgstr "Користувача {email} додано до списку очіку
 msgid "{empty, plural, one {# conversation has no transcript yet, so it was left out.} other {# conversations have no transcript yet, so they were left out.}}"
 msgstr "{empty, plural, one {# розмова ще не має транскрипту, тому її пропущено.} few {# розмови ще не мають транскрипту, тому їх пропущено.} many {# розмов ще не мають транскрипту, тому їх пропущено.} other {# розмов ще не мають транскрипту, тому їх пропущено.}}"
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:252
+msgid "{frames} frames picked, {inputs} inputs, synced {ago}."
+msgstr "Вибрано фреймів: {frames}, матеріалів: {inputs}, синхронізовано {ago}."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:253
+msgid "{frames} frames picked."
+msgstr "Вибрано фреймів: {frames}."
+
 #: src/components/common/MoveHistory.tsx:45
 msgid "{from} → {to}"
 msgstr "{from} → {to}"
@@ -1490,6 +1498,11 @@ msgstr "Додавайте розмову безпосередньо до кон
 #: src/components/project/ProjectUsageAndSharing.tsx:280
 msgid "Add a member and pick their access."
 msgstr "Додайте учасника та оберіть його рівень доступу."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:120
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:296
+msgid "Add a Miro board"
+msgstr "Додати дошку Miro"
 
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:70
 msgid "Add a name and a prompt before applying."
@@ -2921,6 +2934,10 @@ msgstr "Оплатою керує ваша організація"
 msgid "Billing mode"
 msgstr "Режим оплати"
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:303
+msgid "Board"
+msgstr "Дошка"
+
 #: src/components/sharing/LiveButton.tsx:116
 msgid "Book"
 msgstr "Запланувати"
@@ -2961,6 +2978,10 @@ msgstr "Розподіл за рівнями"
 #: src/components/chat/CanvasSuggestionCard.tsx:95
 msgid "Brief"
 msgstr "Короткий опис"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:104
+msgid "Bring material from other apps into this project. Each Miro frame you pick becomes an input that chats, reports and analysis read, marked with whose words it holds."
+msgstr "Додайте до проєкту матеріали з інших застосунків. Кожен вибраний фрейм Miro стає матеріалом, який читають чати, звіти й аналіз, із позначкою, чиї це слова."
 
 #: src/lib/tiers.ts:107
 msgid "Bring your own LLM"
@@ -3869,6 +3890,10 @@ msgstr "Confirm your password to generate a new secret for your authenticator ap
 msgid "Connect"
 msgstr "Підключити"
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:128
+msgid "Connect Miro"
+msgstr "Під’єднати Miro"
+
 #: src/features/sidebar/blocks/HelpBlock.tsx:111
 #: src/components/agent-access/AgentAccessSection.tsx:149
 msgid "Connect your agent"
@@ -3883,6 +3908,26 @@ msgstr "Підключіть свого агента | dembrane"
 #: src/components/agent-access/AgentAccessSection.tsx:193
 msgid "Connected agents"
 msgstr "Підключені агенти"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:102
+msgid "Connected apps"
+msgstr "Під’єднані застосунки"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:137
+#~ msgid "Connected to Miro as {0}."
+#~ msgstr ""
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:138
+msgid "Connected to Miro as {account}."
+msgstr "Під’єднано до Miro як {account}."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:139
+msgid "Connected to Miro."
+msgstr "Під’єднано до Miro."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:90
+msgid "Connecting Miro did not work. Try again."
+msgstr "Не вдалося під’єднати Miro. Спробуйте ще раз."
 
 #: src/components/report/ReportModalNavigationButton.tsx:85
 #~ msgid "Connecting to report services..."
@@ -5062,6 +5107,10 @@ msgstr "Головна dembrane"
 msgid "dembrane is not responsible for what a third party does with that content."
 msgstr "dembrane не несе відповідальності за дії третіх сторін із цим вмістом."
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:131
+msgid "dembrane only reads boards. It never changes them."
+msgstr "dembrane лише читає дошки й ніколи їх не змінює."
+
 #: src/components/workspace/SupportAccessSection.tsx:60
 msgid "dembrane staff access ended automatically"
 msgstr "Доступ команди dembrane завершився автоматично"
@@ -5190,6 +5239,10 @@ msgstr "Скасувати створення цього робочого про
 #: src/components/popcorn/PopcornOpeningSettings.tsx:194
 msgid "Disclosure"
 msgstr "Вступна заява"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:146
+msgid "Disconnect"
+msgstr "Від’єднати"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:420
 msgid "Discount"
@@ -5453,6 +5506,10 @@ msgstr "наприклад, сповіщення в Slack, сценарій Make
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:389
 #~ msgid "e.g., Slack Notifications, Make Workflow"
 #~ msgstr "e.g., Slack Notifications, Make Workflow"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:339
+msgid "Each frame becomes one input."
+msgstr "Кожен фрейм стає окремим матеріалом."
 
 #: src/components/popcorn/PopcornOpeningSettings.tsx:195
 msgid "Each line becomes a paragraph."
@@ -5870,10 +5927,10 @@ msgstr "Error cloning project"
 msgid "Error creating report"
 msgstr "Error creating report"
 
-#: src/routes/project/ProjectRoutes.tsx:119
-#: src/routes/project/ProjectRoutes.tsx:245
-#: src/routes/project/ProjectRoutes.tsx:320
-#: src/routes/project/ProjectRoutes.tsx:356
+#: src/routes/project/ProjectRoutes.tsx:128
+#: src/routes/project/ProjectRoutes.tsx:258
+#: src/routes/project/ProjectRoutes.tsx:333
+#: src/routes/project/ProjectRoutes.tsx:369
 msgid "Error loading project"
 msgstr "Error loading project"
 
@@ -6649,6 +6706,18 @@ msgstr "Forgot your password?"
 #: src/components/popcorn/PopcornOpeningSettings.tsx:269
 msgid "Frame text"
 msgstr "Текст обрамлення"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:225
+msgid "Frames"
+msgstr "Фрейми"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:296
+msgid "Frames from {boardName}"
+msgstr "Фрейми з {boardName}"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:338
+msgid "Frames to bring in"
+msgstr "Фрейми для додавання"
 
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:270
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:336
@@ -7712,6 +7781,10 @@ msgstr "Італійська (лише функції ECHO, транскрипц
 #: src/components/release/releaseHistory.ts:485
 msgid "Italian for your core workflows"
 msgstr "Італійська для основних процесів"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:235
+msgid "Its {inputs} inputs are deleted from the project. The board on Miro stays as it is."
+msgstr "Його матеріали ({inputs}) буде видалено з проєкту. Дошка в Miro залишиться без змін."
 
 #: src/components/map/panels/DetailsModal.tsx:174
 #~ msgid "Its arguments, and the tree between them"
@@ -8854,6 +8927,26 @@ msgstr "мін. {minimum}"
 msgid "Minimum link length: {0}"
 msgstr "Мінімальна довжина зв'язку: {0}"
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:196
+msgid "Miro board"
+msgstr "Дошка Miro"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:60
+msgid "Miro did not answer. We will try again."
+msgstr "Miro не відповів. Ми спробуємо ще раз."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:88
+msgid "Miro is connected."
+msgstr "Miro під’єднано."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:57
+msgid "Miro is no longer connected. Connect it again to keep this board in sync."
+msgstr "Miro більше не під’єднано. Під’єднайте його знову, щоб дошка залишалася синхронізованою."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:89
+msgid "Miro was not connected."
+msgstr "Miro не під’єднано."
+
 #: src/components/feedback/reasons.ts:19
 msgid "Missed the question"
 msgstr "Не відповідає на питання"
@@ -8861,6 +8954,10 @@ msgstr "Не відповідає на питання"
 #: src/components/billing/BillingManager.tsx:512
 msgid "Missing features I need"
 msgstr "Бракує потрібних функцій"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:50
+msgid "Mixed"
+msgstr "Змішано"
 
 #: src/components/invite/InviteModal.tsx:715
 msgid "mo"
@@ -9320,6 +9417,10 @@ msgstr "Платіжного акаунту ще немає. Напишіть н
 #: src/routes/admin/AdminSettingsRoute.tsx:1545
 msgid "No billing accounts match the current filters."
 msgstr "Жоден платіжний акаунт не відповідає поточним фільтрам."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:318
+msgid "No boards found."
+msgstr "Дошок не знайдено."
 
 #: src/routes/project/library/LibraryRoute.tsx:224
 #~ msgid "No canvases yet"
@@ -10169,7 +10270,7 @@ msgstr "Лише адміністратори робочого простору 
 msgid "Only workspace admins can change these settings. Ask an admin if something needs updating."
 msgstr "Лише адміністратори робочого простору можуть змінювати ці налаштування. Зверніться до адміністратора, якщо потрібно щось оновити."
 
-#: src/routes/project/ProjectRoutes.tsx:211
+#: src/routes/project/ProjectRoutes.tsx:224
 msgid "Only workspace admins can manage project automation."
 msgstr "Лише адміністратори робочого простору можуть керувати автоматизацією проєктів."
 
@@ -10248,6 +10349,10 @@ msgstr "Відкрити в аналізі"
 #: src/components/chat/CanvasSuggestionCard.tsx:230
 msgid "Open in library"
 msgstr "Відкрити в бібліотеці"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:201
+msgid "Open in Miro"
+msgstr "Відкрити в Miro"
 
 #: src/components/sharing/Share.tsx:138
 msgid "Open link"
@@ -10516,6 +10621,10 @@ msgstr "Організації, робочі простори та проєкт�
 msgid "Organise projects into workspaces within your organisation."
 msgstr "Впорядковуйте проєкти за робочими просторами у вашій організації."
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:51
+msgid "Organising team"
+msgstr "Команда організаторів"
+
 #: src/components/release/releaseHistory.ts:150
 msgid "Organization"
 msgstr "Організація"
@@ -10700,6 +10809,7 @@ msgid "Participant verification"
 msgstr "Верифікація учасника"
 
 #: src/components/training/StaffTrainingPanel.tsx:158
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:52
 msgid "Participants"
 msgstr "Учасники"
 
@@ -10946,6 +11056,10 @@ msgstr "Оберіть обліковий запис<<<<<<< HEAD"
 #: src/components/map/panels/KnowledgeGraph.tsx:562
 msgid "Pick an argument to go to it, or a quote to find it below."
 msgstr "Оберіть аргумент, щоб перейти до нього, або цитату, щоб знайти її нижче."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:367
+msgid "Pick another board"
+msgstr "Вибрати іншу дошку"
 
 #: src/components/invite/InviteModal.tsx:654
 msgid "Pick at least one workspace to send the invite."
@@ -11809,6 +11923,10 @@ msgstr "Лише читання"
 msgid "Read-only steps"
 msgstr "Кроки лише для читання"
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:356
+msgid "Readers can keep the organising team's material apart from what participants said."
+msgstr "Так матеріали команди організаторів можна відрізнити від того, що сказали учасники."
+
 #. placeholder {0}: context.participantName
 #: src/components/chat/agenticToolActivity.ts:143
 msgid "Reading {0}'s summary"
@@ -11855,6 +11973,10 @@ msgstr "Зчитуємо контекст проєкту"
 #: src/components/chat/agenticToolActivity.ts:119
 msgid "Reading project settings"
 msgstr "Зчитуємо налаштування проєкту"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:250
+msgid "Reading the board…"
+msgstr "Читаємо дошку…"
 
 #: src/components/popcorn/hooks/index.ts:328
 msgid "Reading the conversations again"
@@ -12187,6 +12309,8 @@ msgstr "Нагадування надіслано: доступ підтримк
 #: src/components/settings/WhitelabelLogoCard.tsx:180
 #: src/components/settings/AccountSettingsCard.tsx:163
 #: src/components/settings/AccountSettingsCard.tsx:205
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:237
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:243
 #: src/components/organisation/InviteEmailList.tsx:57
 #: src/components/memory/MemoryList.tsx:107
 #: src/components/memory/MemoryList.tsx:127
@@ -12269,6 +12393,10 @@ msgstr "Видалити перевизначення"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1802
 msgid "Remove the custom logo? The dembrane default will be used instead."
 msgstr "Вилучити власний логотип? Замість нього використовуватиметься стандартний логотип dembrane."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:239
+msgid "Remove this board?"
+msgstr "Вилучити цю дошку?"
 
 #: src/components/memory/MemoryList.tsx:116
 msgid "Remove this memory?"
@@ -12994,6 +13122,10 @@ msgstr "Save"
 msgid "Save access"
 msgstr "Зберегти доступ"
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:384
+msgid "Save and sync"
+msgstr "Зберегти й синхронізувати"
+
 #: src/components/chat/ChatHistoryMessage.tsx:412
 msgid "Save as template"
 msgstr "Save as template"
@@ -13278,6 +13410,10 @@ msgstr "Search webhooks..."
 #: src/components/invite/WorkspaceSelectList.tsx:89
 msgid "Search workspaces"
 msgstr "Пошук робочих просторів"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:304
+msgid "Search your boards or paste a board link"
+msgstr "Шукайте серед своїх дошок або вставте посилання на дошку"
 
 #: src/components/chat/SourcesSearched.tsx:10
 msgid "Searched through the most relevant sources"
@@ -14798,6 +14934,10 @@ msgstr "Вимкнення доступне в платному плані."
 msgid "Switching to another tool"
 msgstr "Переходжу на інший інструмент"
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:217
+msgid "Sync now"
+msgstr "Синхронізувати зараз"
+
 #: src/components/settings/ColorSchemeSettingsCard.tsx:43
 #: src/components/settings/AuditLogsCard.tsx:88
 msgid "System"
@@ -15063,6 +15203,10 @@ msgstr "Асистент забуде це для всіх майбутніх ч
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:581
 msgid "The assistant suggests updating {headlineFields}. Waiting on you."
 msgstr "Асистент пропонує оновити {headlineFields}. Очікуємо на ваше рішення."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:59
+msgid "The board was deleted or your Miro account lost access to it."
+msgstr "Дошку видалено, або ваш обліковий запис Miro більше не має до неї доступу."
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:329
 #~ msgid "The change could not be published."
@@ -15545,6 +15689,10 @@ msgstr "Цей аргумент виражає підтримку, згоду а
 #: src/components/map/panels/shared.tsx:76
 msgid "This argument is observational or balanced, neither for nor against."
 msgstr "Цей аргумент має спостережливий або зважений характер: ані за, ані проти."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:330
+msgid "This board has no frames. Group the content you want in frames on Miro first."
+msgstr "На цій дошці немає фреймів. Спершу згрупуйте потрібний вміст у фрейми в Miro."
 
 #: src/components/voice/VoiceInputError.tsx:29
 msgid "This browser cannot record audio. Chrome, Edge and Safari can."
@@ -16666,6 +16814,10 @@ msgstr "Розмова без назви"
 #~ msgid "Untitled Conversation"
 #~ msgstr "Untitled Conversation"
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:348
+msgid "Untitled frame"
+msgstr "Фрейм без назви"
+
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:210
 msgid "Untitled methodology"
 msgstr "Методологія без назви"
@@ -17446,7 +17598,7 @@ msgstr "Webhook"
 msgid "Webhook URL"
 msgstr "Webhook URL"
 
-#: src/routes/project/ProjectRoutes.tsx:218
+#: src/routes/project/ProjectRoutes.tsx:231
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:879
 msgid "Webhooks"
 msgstr "Webhooks"
@@ -17455,7 +17607,7 @@ msgstr "Webhooks"
 msgid "Webhooks are automated messages sent from one app to another when something happens. Think of them as a \"notification system\" for your other tools."
 msgstr "Webhooks are automated messages sent from one app to another when something happens. Think of them as a \"notification system\" for your other tools."
 
-#: src/routes/project/ProjectRoutes.tsx:206
+#: src/routes/project/ProjectRoutes.tsx:219
 msgid "Webhooks are not enabled for this environment."
 msgstr "Вебхуки не ввімкнено для цього середовища."
 
@@ -17716,6 +17868,10 @@ msgstr "Хто є стейкхолдером та як вони пов'язан�
 #: src/components/training/WorkspaceTrainingPanel.tsx:46
 msgid "Who on your team holds a current training license. Book a training from your organisation's Training view."
 msgstr "Хто у вашій команді має дійсну ліцензію на навчання. Забронюйте навчання у вкладці «Навчання» вашої організації."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:355
+msgid "Whose words are these?"
+msgstr "Чиї це слова?"
 
 #: src/components/results/ResultRow.tsx:286
 msgid "Why not in this presentation?"

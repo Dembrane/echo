@@ -19,6 +19,16 @@ msgid "error.request.field_empty"
 msgstr "Поле «{field}» не може бути порожнім. Заповніть його або видаліть."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:26
+msgid "error.connector.provider_refused"
+msgstr "{provider} відповів не так, як очікувалося. Спробуйте ще раз за хвилину."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:18
+msgid "error.connector.not_configured"
+msgstr "{provider} ще не налаштовано на цьому сервері dembrane."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:58
 msgid "error.document.image_too_large"
 msgstr "{what, select, initials {Зображення ваших ініціалів} other {Зображення вашого підпису}} завелике. Розмір має бути менше 512 КБ."
@@ -124,6 +134,11 @@ msgid "error.webhook.invalid_target"
 msgstr "Оберіть, куди надсилається цей вебхук: на вебадресу або до скриньки sam із відомим кодом."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:10
+msgid "error.connector.invalid_voice"
+msgstr "Виберіть, чиї це слова: учасників, організаторів чи змішано."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:17
 msgid "error.map.groups_need_snapshot"
 msgstr "Кластери зберігаються на перегенерованій мапі. Перегенеруйте мапу й спробуйте ще раз."
@@ -132,6 +147,11 @@ msgstr "Кластери зберігаються на перегенерова�
 #: src/lib/errors/messages/document.ts:27
 msgid "error.document.dpa_not_authorised"
 msgstr "Підтвердьте, що ви маєте право погоджувати обробку даних для вашої організації."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:22
+msgid "error.connector.not_connected"
+msgstr "Спершу під’єднайте {provider}, а потім спробуйте ще раз."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/conversation.ts:19
@@ -394,6 +414,11 @@ msgid "error.canvas.expiry_too_far"
 msgstr "Виберіть дату завершення протягом наступних 7 днів."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:14
+msgid "error.connector.no_frames"
+msgstr "Виберіть принаймні один фрейм на дошці."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/project.ts:19
 msgid "error.project.legal_basis_invalid"
 msgstr "Виберіть один із варіантів правової основи."
@@ -597,6 +622,11 @@ msgstr "PDF цього документа недоступний. Зв'яжіт�
 #: src/lib/errors/messages/billing.ts:17
 msgid "error.billing.invoice_pdf_missing"
 msgstr "PDF цього рахунка ще не готовий. Спробуйте трохи пізніше."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:30
+msgid "error.connector.sign_in_expired"
+msgstr "Час входу в {provider} минув. Почніть знову."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:13
@@ -1304,6 +1334,11 @@ msgid "error.analysis.object_not_found"
 msgstr "Не вдалося знайти цей результат. Можливо, його було видалено під час повторного аналізу."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:34
+msgid "error.connector.source_not_found"
+msgstr "Не вдалося знайти це джерело. Можливо, його вилучено."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/participant.ts:27
 msgid "error.participant.unsubscribe_link_unknown"
 msgstr "Не вдалося знайти цю підписку. Можливо, ви вже відписалися."
@@ -1377,6 +1412,11 @@ msgstr "Не вдалося завантажити мапу. Спробуйте 
 #: src/lib/errors/messages/account.ts:45
 msgid "error.account.user_not_found"
 msgstr "Не вдалося завантажити ваш обліковий запис. Зверніться до підтримки, і ми допоможемо."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/connector.ts:5
+msgid "error.connector.board_not_found"
+msgstr "Не вдалося відкрити цю дошку. Перевірте посилання та чи має ваш обліковий запис Miro до неї доступ."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:13

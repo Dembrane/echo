@@ -40,6 +40,7 @@ const loaded = loadSections([
   "agentic",
   "accounts",
   "samInbox",
+  "connectors",
   "samples",
   "files",
 ]);

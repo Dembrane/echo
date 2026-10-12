@@ -860,6 +860,14 @@ msgstr "{email} figure dans les invitations en attente, mais l'e-mail n'a pas pu
 msgid "{empty, plural, one {# conversation has no transcript yet, so it was left out.} other {# conversations have no transcript yet, so they were left out.}}"
 msgstr "{empty, plural, one {# conversation n'a pas encore de transcription et a donc été exclue.} other {# conversations n'ont pas encore de transcription et ont donc été exclues.}}"
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:252
+msgid "{frames} frames picked, {inputs} inputs, synced {ago}."
+msgstr "{frames} cadres choisis, {inputs} contenus, synchronisés {ago}."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:253
+msgid "{frames} frames picked."
+msgstr "{frames} cadres choisis."
+
 #: src/components/common/MoveHistory.tsx:45
 msgid "{from} → {to}"
 msgstr "{from} → {to}"
@@ -1491,6 +1499,11 @@ msgstr "Ajoutez une conversation directement au contexte de discussion."
 #: src/components/project/ProjectUsageAndSharing.tsx:280
 msgid "Add a member and pick their access."
 msgstr "Ajoutez un membre et choisissez son accès."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:120
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:296
+msgid "Add a Miro board"
+msgstr "Ajouter un tableau Miro"
 
 #: src/components/chat/CustomVerificationTopicSuggestionCard.tsx:70
 msgid "Add a name and a prompt before applying."
@@ -2922,6 +2935,10 @@ msgstr "La facturation est gérée par votre organisation"
 msgid "Billing mode"
 msgstr "Mode de facturation"
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:303
+msgid "Board"
+msgstr "Tableau"
+
 #: src/components/sharing/LiveButton.tsx:116
 msgid "Book"
 msgstr "Planifier"
@@ -2962,6 +2979,10 @@ msgstr "Répartition par niveau"
 #: src/components/chat/CanvasSuggestionCard.tsx:95
 msgid "Brief"
 msgstr "Brief"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:104
+msgid "Bring material from other apps into this project. Each Miro frame you pick becomes an input that chats, reports and analysis read, marked with whose words it holds."
+msgstr "Importez dans ce projet des contenus d'autres applications. Chaque cadre Miro choisi devient un contenu que les chats, rapports et analyses lisent, avec l'indication de qui s'exprime."
 
 #: src/lib/tiers.ts:107
 msgid "Bring your own LLM"
@@ -3870,6 +3891,10 @@ msgstr "Confirmez votre mot de passe pour générer un nouveau secret pour votre
 msgid "Connect"
 msgstr "Connecter"
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:128
+msgid "Connect Miro"
+msgstr "Connecter Miro"
+
 #: src/features/sidebar/blocks/HelpBlock.tsx:111
 #: src/components/agent-access/AgentAccessSection.tsx:149
 msgid "Connect your agent"
@@ -3884,6 +3909,26 @@ msgstr "Connecter votre agent | dembrane"
 #: src/components/agent-access/AgentAccessSection.tsx:193
 msgid "Connected agents"
 msgstr "Agents connectés"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:102
+msgid "Connected apps"
+msgstr "Applications connectées"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:137
+#~ msgid "Connected to Miro as {0}."
+#~ msgstr ""
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:138
+msgid "Connected to Miro as {account}."
+msgstr "Connecté à Miro en tant que {account}."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:139
+msgid "Connected to Miro."
+msgstr "Connecté à Miro."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:90
+msgid "Connecting Miro did not work. Try again."
+msgstr "La connexion à Miro n'a pas abouti. Réessayez."
 
 #: src/components/report/ReportModalNavigationButton.tsx:85
 #~ msgid "Connecting to report services..."
@@ -5063,6 +5108,10 @@ msgstr "Accueil dembrane"
 msgid "dembrane is not responsible for what a third party does with that content."
 msgstr "dembrane n'est pas responsable de ce qu'un tiers fait de ce contenu."
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:131
+msgid "dembrane only reads boards. It never changes them."
+msgstr "dembrane lit les tableaux sans jamais les modifier."
+
 #: src/components/workspace/SupportAccessSection.tsx:60
 msgid "dembrane staff access ended automatically"
 msgstr "L'accès de l'équipe dembrane s'est terminé automatiquement"
@@ -5191,6 +5240,10 @@ msgstr "Abandonner cet espace de travail ?"
 #: src/components/popcorn/PopcornOpeningSettings.tsx:194
 msgid "Disclosure"
 msgstr "Mentions légales"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:146
+msgid "Disconnect"
+msgstr "Déconnecter"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:420
 msgid "Discount"
@@ -5454,6 +5507,10 @@ msgstr "par exemple : notifications Slack, workflow Make"
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:389
 #~ msgid "e.g., Slack Notifications, Make Workflow"
 #~ msgstr "par exemple : Notifications Slack, Make Workflow"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:339
+msgid "Each frame becomes one input."
+msgstr "Chaque cadre devient un contenu."
 
 #: src/components/popcorn/PopcornOpeningSettings.tsx:195
 msgid "Each line becomes a paragraph."
@@ -5871,10 +5928,10 @@ msgstr "Erreur lors du clonage du projet"
 msgid "Error creating report"
 msgstr "Erreur lors de la création du rapport"
 
-#: src/routes/project/ProjectRoutes.tsx:119
-#: src/routes/project/ProjectRoutes.tsx:245
-#: src/routes/project/ProjectRoutes.tsx:320
-#: src/routes/project/ProjectRoutes.tsx:356
+#: src/routes/project/ProjectRoutes.tsx:128
+#: src/routes/project/ProjectRoutes.tsx:258
+#: src/routes/project/ProjectRoutes.tsx:333
+#: src/routes/project/ProjectRoutes.tsx:369
 msgid "Error loading project"
 msgstr "Erreur lors du chargement du projet"
 
@@ -6650,6 +6707,18 @@ msgstr "Mot de passe oublié ?"
 #: src/components/popcorn/PopcornOpeningSettings.tsx:269
 msgid "Frame text"
 msgstr "Texte de cadrage"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:225
+msgid "Frames"
+msgstr "Cadres"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:296
+msgid "Frames from {boardName}"
+msgstr "Cadres de {boardName}"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:338
+msgid "Frames to bring in"
+msgstr "Cadres à importer"
 
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:270
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:336
@@ -7713,6 +7782,10 @@ msgstr "Italien (fonctionnalités ECHO uniquement, transcription et résumés)"
 #: src/components/release/releaseHistory.ts:485
 msgid "Italian for your core workflows"
 msgstr "L’italien pour vos fonctions essentielles"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:235
+msgid "Its {inputs} inputs are deleted from the project. The board on Miro stays as it is."
+msgstr "Ses {inputs} contenus sont supprimés du projet. Le tableau reste inchangé dans Miro."
 
 #: src/components/map/panels/DetailsModal.tsx:174
 #~ msgid "Its arguments, and the tree between them"
@@ -8855,6 +8928,26 @@ msgstr "min {minimum}"
 msgid "Minimum link length: {0}"
 msgstr "Longueur minimale des liens : {0}"
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:196
+msgid "Miro board"
+msgstr "Tableau Miro"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:60
+msgid "Miro did not answer. We will try again."
+msgstr "Miro n'a pas répondu. Nous réessaierons."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:88
+msgid "Miro is connected."
+msgstr "Miro est connecté."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:57
+msgid "Miro is no longer connected. Connect it again to keep this board in sync."
+msgstr "Miro n'est plus connecté. Reconnectez-le pour garder ce tableau à jour."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:89
+msgid "Miro was not connected."
+msgstr "Miro n'a pas été connecté."
+
 #: src/components/feedback/reasons.ts:19
 msgid "Missed the question"
 msgstr "Ne répond pas à la question"
@@ -8862,6 +8955,10 @@ msgstr "Ne répond pas à la question"
 #: src/components/billing/BillingManager.tsx:512
 msgid "Missing features I need"
 msgstr "Il manque des fonctionnalités dont j'ai besoin"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:50
+msgid "Mixed"
+msgstr "Mixte"
 
 #: src/components/invite/InviteModal.tsx:715
 msgid "mo"
@@ -9321,6 +9418,10 @@ msgstr "Aucun compte de facturation pour le moment. Écrivez à <0>support@dembr
 #: src/routes/admin/AdminSettingsRoute.tsx:1545
 msgid "No billing accounts match the current filters."
 msgstr "Aucun compte de facturation ne correspond aux filtres actuels."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:318
+msgid "No boards found."
+msgstr "Aucun tableau trouvé."
 
 #: src/routes/project/library/LibraryRoute.tsx:224
 #~ msgid "No canvases yet"
@@ -10170,7 +10271,7 @@ msgstr "Seuls les administrateurs de l'espace de travail peuvent modifier la bas
 msgid "Only workspace admins can change these settings. Ask an admin if something needs updating."
 msgstr "Seuls les administrateurs de l'espace de travail peuvent modifier ces paramètres. Contactez un administrateur si un changement est nécessaire."
 
-#: src/routes/project/ProjectRoutes.tsx:211
+#: src/routes/project/ProjectRoutes.tsx:224
 msgid "Only workspace admins can manage project automation."
 msgstr "Seuls les administrateurs de l'espace de travail peuvent gérer l'automatisation du projet."
 
@@ -10249,6 +10350,10 @@ msgstr "Ouvrir dans Analyse"
 #: src/components/chat/CanvasSuggestionCard.tsx:230
 msgid "Open in library"
 msgstr "Ouvrir dans la bibliothèque"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:201
+msgid "Open in Miro"
+msgstr "Ouvrir dans Miro"
 
 #: src/components/sharing/Share.tsx:138
 msgid "Open link"
@@ -10517,6 +10622,10 @@ msgstr "Organisations, espaces de travail et projets"
 msgid "Organise projects into workspaces within your organisation."
 msgstr "Organisez vos projets dans des espaces de travail au sein de votre organisation."
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:51
+msgid "Organising team"
+msgstr "Équipe organisatrice"
+
 #: src/components/release/releaseHistory.ts:150
 msgid "Organization"
 msgstr "Organisation"
@@ -10701,6 +10810,7 @@ msgid "Participant verification"
 msgstr "Vérification des participants"
 
 #: src/components/training/StaffTrainingPanel.tsx:158
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:52
 msgid "Participants"
 msgstr "Participants"
 
@@ -10947,6 +11057,10 @@ msgstr "Choisir un compte<<<<<<< HEAD"
 #: src/components/map/panels/KnowledgeGraph.tsx:562
 msgid "Pick an argument to go to it, or a quote to find it below."
 msgstr "Choisissez un argument pour y aller, ou une citation pour la retrouver plus bas."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:367
+msgid "Pick another board"
+msgstr "Choisir un autre tableau"
 
 #: src/components/invite/InviteModal.tsx:654
 msgid "Pick at least one workspace to send the invite."
@@ -11810,6 +11924,10 @@ msgstr "Lecture seule"
 msgid "Read-only steps"
 msgstr "Étapes en lecture seule"
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:356
+msgid "Readers can keep the organising team's material apart from what participants said."
+msgstr "Les lecteurs peuvent ainsi distinguer les contenus de l'équipe organisatrice de ce qu'ont dit les participants."
+
 #. placeholder {0}: context.participantName
 #: src/components/chat/agenticToolActivity.ts:143
 msgid "Reading {0}'s summary"
@@ -11856,6 +11974,10 @@ msgstr "Lecture du contexte du projet"
 #: src/components/chat/agenticToolActivity.ts:119
 msgid "Reading project settings"
 msgstr "Lecture des paramètres du projet"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:250
+msgid "Reading the board…"
+msgstr "Lecture du tableau…"
 
 #: src/components/popcorn/hooks/index.ts:328
 msgid "Reading the conversations again"
@@ -12188,6 +12310,8 @@ msgstr "Rappel envoyé : accès d'assistance toujours activé"
 #: src/components/settings/WhitelabelLogoCard.tsx:180
 #: src/components/settings/AccountSettingsCard.tsx:163
 #: src/components/settings/AccountSettingsCard.tsx:205
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:237
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:243
 #: src/components/organisation/InviteEmailList.tsx:57
 #: src/components/memory/MemoryList.tsx:107
 #: src/components/memory/MemoryList.tsx:127
@@ -12270,6 +12394,10 @@ msgstr "Supprimer le remplacement"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1802
 msgid "Remove the custom logo? The dembrane default will be used instead."
 msgstr "Retirer le logo personnalisé ? Le logo dembrane par défaut sera utilisé à la place."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:239
+msgid "Remove this board?"
+msgstr "Retirer ce tableau ?"
 
 #: src/components/memory/MemoryList.tsx:116
 msgid "Remove this memory?"
@@ -12995,6 +13123,10 @@ msgstr "Enregistrer"
 msgid "Save access"
 msgstr "Enregistrer les accès"
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:384
+msgid "Save and sync"
+msgstr "Enregistrer et synchroniser"
+
 #: src/components/chat/ChatHistoryMessage.tsx:412
 msgid "Save as template"
 msgstr "Enregistrer comme modèle"
@@ -13279,6 +13411,10 @@ msgstr "Rechercher des webhooks..."
 #: src/components/invite/WorkspaceSelectList.tsx:89
 msgid "Search workspaces"
 msgstr "Rechercher des espaces de travail"
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:304
+msgid "Search your boards or paste a board link"
+msgstr "Cherchez parmi vos tableaux ou collez un lien de tableau"
 
 #: src/components/chat/SourcesSearched.tsx:10
 msgid "Searched through the most relevant sources"
@@ -14799,6 +14935,10 @@ msgstr "La désactiver fait partie d'un forfait payant."
 msgid "Switching to another tool"
 msgstr "Je passe à un autre outil"
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:217
+msgid "Sync now"
+msgstr "Synchroniser"
+
 #: src/components/settings/ColorSchemeSettingsCard.tsx:43
 #: src/components/settings/AuditLogsCard.tsx:88
 msgid "System"
@@ -15064,6 +15204,10 @@ msgstr "L'assistant l'oubliera dans tous les prochains échanges."
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:581
 msgid "The assistant suggests updating {headlineFields}. Waiting on you."
 msgstr "L'assistant suggère de mettre à jour {headlineFields}. En attente de votre décision."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:59
+msgid "The board was deleted or your Miro account lost access to it."
+msgstr "Le tableau a été supprimé ou votre compte Miro n'y a plus accès."
 
 #: src/components/analysis/EvidenceInspectionDrawer.tsx:329
 #~ msgid "The change could not be published."
@@ -15546,6 +15690,10 @@ msgstr "Cet argument exprime un soutien, un accord ou une position favorable."
 #: src/components/map/panels/shared.tsx:76
 msgid "This argument is observational or balanced, neither for nor against."
 msgstr "Cet argument est factuel ou nuancé, ni pour ni contre."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:330
+msgid "This board has no frames. Group the content you want in frames on Miro first."
+msgstr "Ce tableau n'a pas de cadres. Regroupez d'abord dans Miro le contenu voulu dans des cadres."
 
 #: src/components/voice/VoiceInputError.tsx:29
 msgid "This browser cannot record audio. Chrome, Edge and Safari can."
@@ -16664,6 +16812,10 @@ msgstr "Conversation sans titre"
 #~ msgid "Untitled Conversation"
 #~ msgstr "Conversation sans titre"
 
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:348
+msgid "Untitled frame"
+msgstr "Cadre sans titre"
+
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:210
 msgid "Untitled methodology"
 msgstr "Méthodologie sans titre"
@@ -17444,7 +17596,7 @@ msgstr "Webhook"
 msgid "Webhook URL"
 msgstr "URL du webhook"
 
-#: src/routes/project/ProjectRoutes.tsx:218
+#: src/routes/project/ProjectRoutes.tsx:231
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:879
 msgid "Webhooks"
 msgstr "Webhooks"
@@ -17453,7 +17605,7 @@ msgstr "Webhooks"
 msgid "Webhooks are automated messages sent from one app to another when something happens. Think of them as a \"notification system\" for your other tools."
 msgstr "Les webhooks sont des messages automatisés envoyés d'une application à une autre lorsqu'un événement se produit. Pensez à eux comme à un \"système de notification\" pour vos autres outils."
 
-#: src/routes/project/ProjectRoutes.tsx:206
+#: src/routes/project/ProjectRoutes.tsx:219
 msgid "Webhooks are not enabled for this environment."
 msgstr "Les webhooks ne sont pas activés pour cet environnement."
 
@@ -17714,6 +17866,10 @@ msgstr "Qui sont les parties prenantes et comment elles interagissent."
 #: src/components/training/WorkspaceTrainingPanel.tsx:46
 msgid "Who on your team holds a current training license. Book a training from your organisation's Training view."
 msgstr "Membres de votre équipe disposant d'une licence de formation active. Réservez une formation depuis la vue Formations de votre organisation."
+
+#: src/components/project/connectors/ProjectConnectorsSection.tsx:355
+msgid "Whose words are these?"
+msgstr "Qui s'exprime ici ?"
 
 #: src/components/results/ResultRow.tsx:286
 msgid "Why not in this presentation?"

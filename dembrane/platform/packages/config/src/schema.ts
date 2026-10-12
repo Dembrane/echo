@@ -492,6 +492,28 @@ export const schema = defineSchema({
       secret: true,
     }),
   },
+  connectors: {
+    tokenKey: key(
+      "CONNECTOR_TOKEN_KEY",
+      z
+        .string()
+        .regex(/^[A-Za-z0-9+/]{43}=$/, "32 bytes, base64")
+        .optional(),
+      {
+        description:
+          "Seals the OAuth tokens of connected apps (AES-256-GCM) before they are stored. 32 random bytes, base64 (openssl rand -base64 32). Rotating it disconnects every app.",
+        secret: true,
+      },
+    ),
+    miroClientId: key("MIRO_CLIENT_ID", z.string().optional(), {
+      description:
+        "Client id of dembrane's Miro app. Set with MIRO_CLIENT_SECRET and CONNECTOR_TOKEN_KEY or not at all; unset hides Miro from project integrations.",
+    }),
+    miroClientSecret: key("MIRO_CLIENT_SECRET", z.string().optional(), {
+      description: "Client secret of dembrane's Miro app.",
+      secret: true,
+    }),
+  },
   samInbox: {
     url: key("SAM_INBOX_URL", z.url().optional(), {
       description:
@@ -519,6 +541,7 @@ export const schema = defineSchema({
 /** Keys that mean nothing alone: a partial set fails at boot instead of sending unsigned. */
 export const together: readonly (readonly string[])[] = [
   ["samInbox.url", "samInbox.secret", "samInbox.from"],
+  ["connectors.miroClientId", "connectors.miroClientSecret", "connectors.tokenKey"],
 ];
 
 export type Schema = typeof schema;
