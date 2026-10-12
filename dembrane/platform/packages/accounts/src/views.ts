@@ -254,6 +254,10 @@ export function billingView(b: BillingRow | null) {
     billing_email: b?.billing_email ?? null,
     po_number: b?.po_number ?? null,
     peppol_id: b?.peppol_id ?? null,
+    peppol_match: b?.peppol_id
+      ? { participant_id: b.peppol_id, name: b.peppol_name ?? null }
+      : null,
+    invoice_delivery: (b?.invoice_delivery as "peppol" | "email" | null | undefined) ?? null,
     address_line1: b?.billing_address_line1 ?? null,
     address_line2: b?.billing_address_line2 ?? null,
     postal_code: b?.billing_postal_code ?? null,

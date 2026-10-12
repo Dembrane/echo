@@ -10,6 +10,7 @@ import { fitsVatTreatment, priceLines, requireAmounts, vatOf } from "../src/mone
 import { euro, layoutOffer, legalKinds, type OfferContent, offerText } from "../src/offer";
 import { ONBOARDING_CODES } from "../src/onboarding";
 import { offerPdf, signedPdf, textPdf } from "../src/pdf";
+import { candidates, lookupPeppol } from "../src/peppol";
 import { checkValues, pngBytes, signerFacts } from "../src/signing";
 import type { FieldRow } from "../src/storage";
 import { taskBody, taskTitle } from "../src/task-text";
@@ -461,5 +462,46 @@ describe("onboarding task words", () => {
     expect(taskTitle({ code: "book_call", params: {}, title: null }, "en-US")).toBe(
       "Book a call with us",
     );
+  });
+});
+
+describe("peppol", () => {
+  const logger = { warn: () => {} } as never;
+  const answer = (value: string, name: string) =>
+    JSON.stringify({ matches: [{ participantID: { value }, entities: [{ name: [{ name }] }] }] });
+
+  test("tries KvK, KBO, then a Dutch or Belgian VAT number", () => {
+    expect(candidates({ kvk_number: "1234 5678" })).toEqual(["0106:12345678"]);
+    expect(candidates({ kbo_number: "0123.456.789" })).toEqual(["0208:0123456789"]);
+    expect(candidates({ vat_id: "nl 001234567 B01" })).toEqual(["9944:NL001234567B01"]);
+    expect(candidates({ vat_id: "BE0123456789" })).toEqual([
+      "9925:BE0123456789",
+      "0208:0123456789",
+    ]);
+    expect(candidates({ vat_id: "DE123456789" })).toEqual([]);
+  });
+
+  test("the first identifier the directory knows wins; an empty answer tries the next", async () => {
+    const asked: string[] = [];
+    const fetchText = async (url: string) => {
+      asked.push(url);
+      return url.includes("0106")
+        ? JSON.stringify({ matches: [] })
+        : answer("9944:NL001234567B01", "Gemeente X");
+    };
+    expect(
+      await lookupPeppol(
+        { fetchText, logger },
+        { kvk_number: "12345678", vat_id: "NL001234567B01" },
+      ),
+    ).toEqual({ participant_id: "9944:NL001234567B01", name: "Gemeente X" });
+    expect(asked[0]).toContain(encodeURIComponent("iso6523-actorid-upis::0106:12345678"));
+  });
+
+  test("a directory that fails is no match", async () => {
+    const fetchText = async () => {
+      throw new Error("down");
+    };
+    expect(await lookupPeppol({ fetchText, logger }, { kvk_number: "12345678" })).toBeNull();
   });
 });

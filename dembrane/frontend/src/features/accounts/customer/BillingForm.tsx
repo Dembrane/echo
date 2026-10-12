@@ -19,13 +19,15 @@ import type { AccountPageT } from "../contract/contract.gen";
 import { Section } from "../ui";
 
 type Billing = AccountPageT["billing"];
-type Key = keyof Billing;
+/** The typed fields; the Peppol match and the delivery choice are not text. */
+type Key = Exclude<keyof Billing, "peppol_match" | "invoice_delivery">;
 
 const toForm = (b: Billing): Record<Key, string> =>
-	Object.fromEntries(Object.entries(b).map(([k, v]) => [k, v ?? ""])) as Record<
-		Key,
-		string
-	>;
+	Object.fromEntries(
+		Object.entries(b)
+			.filter(([k]) => k !== "peppol_match" && k !== "invoice_delivery")
+			.map(([k, v]) => [k, v ?? ""]),
+	) as Record<Key, string>;
 
 /** What an invoice cannot do without. */
 const REQUIRED: Key[] = [

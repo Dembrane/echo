@@ -14,6 +14,7 @@ import {
   mySigningRequests,
   nameSigner,
   openTicket,
+  peppolLookup,
   readBilling,
   readDocument,
   recordBooking,
@@ -156,6 +157,11 @@ export function accountsRoutes(d: AccountsDeps) {
       await updateBilling(d, who, p(c, "orgId"), await body(c, K.BillingUpdateRequest)),
     );
   });
+  app.post(R.lookupPeppol.path, async (c) =>
+    c.json(
+      await peppolLookup(d, requireUser(c), p(c, "orgId"), await body(c, K.PeppolLookupRequest)),
+    ),
+  );
   app.post(R.submitTask.path, async (c) => {
     const who = requireUser(c);
     const input = await taskSubmission(c);

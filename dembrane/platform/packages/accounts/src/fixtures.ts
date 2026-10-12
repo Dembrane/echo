@@ -503,6 +503,8 @@ const emptyBilling = {
   billing_email: "robin@example-town.example",
   po_number: null,
   peppol_id: null,
+  peppol_match: null,
+  invoice_delivery: null,
   address_line1: null,
   address_line2: null,
   postal_code: null,
