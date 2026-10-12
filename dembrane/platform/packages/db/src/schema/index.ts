@@ -1035,6 +1035,10 @@ export const billing_account = pgTable(
     billing_email: varchar({ length: 255 }),
     po_number: varchar({ length: 255 }),
     peppol_id: varchar({ length: 255 }),
+    // The Peppol directory's name for peppol_id, when echo found it there.
+    peppol_name: varchar({ length: 255 }),
+    // "peppol" or "email"; null until chosen: Peppol when peppol_id is known, else email.
+    invoice_delivery: varchar({ length: 16 }),
   },
   (table): PgTableExtraConfigValue[] => [
     foreignKey({

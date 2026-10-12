@@ -38,7 +38,7 @@ msgstr "{0, plural, one {У {name} на Вас чекає # завдання} fe
 
 #. placeholder {0}: formatMoney(net, "EUR", i18n.locale)
 #. placeholder {1}: formatMoney(net + vat, "EUR", i18n.locale)
-#: src/features/accounts/staff/PushOfferModal.tsx:227
+#: src/features/accounts/staff/PushOfferModal.tsx:232
 msgid "{0} excl. VAT, {1} incl."
 msgstr "{0} без ПДВ, {1} з ПДВ"
 
@@ -380,6 +380,10 @@ msgstr "Створіть проєкт"
 msgid "Create task"
 msgstr "Створити завдання"
 
+#: src/features/accounts/staff/PushOfferModal.tsx:184
+msgid "Custom"
+msgstr "Індивідуальний"
+
 #: src/features/accounts/format.ts:107
 #: src/features/accounts/staff/AccountCardRoute.tsx:777
 #: src/features/accounts/customer/Questions.tsx:171
@@ -390,7 +394,7 @@ msgstr "Клієнт"
 #~ msgid "Customer accounts: what each one still has to do, and what waits on us."
 #~ msgstr ""
 
-#: src/features/accounts/staff/PushOfferModal.tsx:197
+#: src/features/accounts/staff/PushOfferModal.tsx:202
 msgid "Customer name in the title"
 msgstr "Ім'я клієнта в назві"
 
@@ -496,8 +500,8 @@ msgstr "Чернетку змінено"
 msgid "Draft ready"
 msgstr "Чернетка готова"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:140
-#: src/features/accounts/staff/PushOfferModal.tsx:154
+#: src/features/accounts/staff/PushOfferModal.tsx:144
+#: src/features/accounts/staff/PushOfferModal.tsx:158
 msgid "Draft saved"
 msgstr "Чернетку збережено"
 
@@ -542,7 +546,7 @@ msgstr "Увімкнути обліковий запис"
 msgid "Enable it to push offers and tasks. They get an Account page with a billing details step."
 msgstr "Увімкніть, щоб надсилати пропозиції та завдання. З'явиться сторінка облікового запису з кроком платіжних даних."
 
-#: src/features/accounts/staff/PushOfferModal.tsx:179
+#: src/features/accounts/staff/PushOfferModal.tsx:183
 #: src/features/accounts/staff/NewDemoRoute.tsx:230
 msgid "Event"
 msgstr "Подія"
@@ -587,7 +591,7 @@ msgstr "Заповніть це поле."
 #~ msgid "For e-invoicing"
 #~ msgstr "Для електронних рахунків"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:213
+#: src/features/accounts/staff/PushOfferModal.tsx:218
 msgid "For the attention of"
 msgstr "До уваги"
 
@@ -698,7 +702,7 @@ msgid "Label"
 msgstr "Мітка"
 
 #: src/features/accounts/staff/UploadPdfModal.tsx:145
-#: src/features/accounts/staff/PushOfferModal.tsx:185
+#: src/features/accounts/staff/PushOfferModal.tsx:190
 #: src/features/accounts/staff/AccountCardRoute.tsx:540
 msgid "Language"
 msgstr "Мова"
@@ -723,7 +727,7 @@ msgstr "Дозволити вхід за кодом з електронної п
 msgid "Line total"
 msgstr "Підсумок рядка"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:221
+#: src/features/accounts/staff/PushOfferModal.tsx:226
 msgid "Lines"
 msgstr "Рядки"
 
@@ -748,7 +752,7 @@ msgstr "Повідомлення"
 msgid "Name"
 msgstr "Назва"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:205
+#: src/features/accounts/staff/PushOfferModal.tsx:210
 msgid "Name in the greeting"
 msgstr "Ім'я у привітанні"
 
@@ -886,7 +890,7 @@ msgstr "Пропозиція"
 msgid "Offer language"
 msgstr "Мова пропозиції"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:153
+#: src/features/accounts/staff/PushOfferModal.tsx:157
 #: src/features/accounts/staff/DocumentRoute.tsx:157
 msgid "Offer sent. The customer sees it the next time they sign in."
 msgstr "Пропозицію надіслано. Клієнт побачить її під час наступного входу."
@@ -983,8 +987,8 @@ msgid "Opens after you sign {0}."
 msgstr "Відкриється після того, як ви підпишете {0}."
 
 #: src/features/accounts/staff/TaskModals.tsx:52
-#: src/features/accounts/staff/PushOfferModal.tsx:206
-#: src/features/accounts/staff/PushOfferModal.tsx:214
+#: src/features/accounts/staff/PushOfferModal.tsx:211
+#: src/features/accounts/staff/PushOfferModal.tsx:219
 #: src/features/accounts/signing/SignRoute.tsx:664
 #: src/features/accounts/signing/SignRoute.tsx:881
 #: src/features/accounts/customer/NextSteps.tsx:440
@@ -1173,7 +1177,7 @@ msgid "Read the offer and sign it here. Someone else signs for your organisation
 msgstr "Ознайомтеся з пропозицією та підпишіть її тут. За вашу організацію підписує хтось інший? Вкажіть цю людину в пропозиції, і вона отримає власне посилання."
 
 #. placeholder {0}: offerName || "..."
-#: src/features/accounts/staff/PushOfferModal.tsx:198
+#: src/features/accounts/staff/PushOfferModal.tsx:203
 msgid "Reads \"{0} x dembrane\""
 msgstr "Відображається як \"{0} x dembrane\""
 
@@ -1263,7 +1267,7 @@ msgstr "Зберегти"
 msgid "Save billing details"
 msgstr "Зберегти платіжні дані"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:248
+#: src/features/accounts/staff/PushOfferModal.tsx:253
 msgid "Save draft"
 msgstr "Зберегти чернетку"
 
@@ -1311,7 +1315,7 @@ msgstr "Надіслати"
 msgid "Send back"
 msgstr "Повернути"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:257
+#: src/features/accounts/staff/PushOfferModal.tsx:262
 #: src/features/accounts/staff/DocumentRoute.tsx:164
 msgid "Send offer"
 msgstr "Надіслати пропозицію"
@@ -1500,7 +1504,7 @@ msgstr "Тема"
 msgid "Submitted"
 msgstr "Надіслано"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:178
+#: src/features/accounts/staff/PushOfferModal.tsx:182
 #: src/features/accounts/staff/NewDemoRoute.tsx:229
 msgid "Subscription"
 msgstr "Підписка"
@@ -1551,7 +1555,7 @@ msgstr "Завдання"
 msgid "Tasks | dembrane"
 msgstr "Завдання | dembrane"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:172
+#: src/features/accounts/staff/PushOfferModal.tsx:176
 #: src/features/accounts/staff/NewDemoRoute.tsx:223
 msgid "Template"
 msgstr "Шаблон"
@@ -1737,7 +1741,7 @@ msgstr "Завантажити PDF"
 msgid "Use this"
 msgstr "Використати цей"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:233
+#: src/features/accounts/staff/PushOfferModal.tsx:238
 msgid "Valid 14 days. The terms, SLA and DPA versions in force today are pinned."
 msgstr "Діє 14 днів. Закріплено версії умов, SLA та DPA, чинні сьогодні."
 

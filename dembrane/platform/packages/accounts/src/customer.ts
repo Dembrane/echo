@@ -17,6 +17,7 @@ import { accountPageUrl } from "./jobs";
 import type { PricedLine } from "./money";
 import type { OfferContent } from "./offer";
 import { completeOnboarding, isOnboardingCode } from "./onboarding";
+import { lookupPeppol, type TaxIds } from "./peppol";
 import { type DocumentRow, store } from "./storage";
 import { isTaskCode } from "./task-text";
 import { settleTask } from "./tasks";
@@ -101,6 +102,7 @@ export async function documentDetail(
   // Placeholders for what the signer's fields provide; the organisation's own name when
   // the document has no organisation field, and no role when it has no role field.
   const org = await store.org(d.db, doc.orgId);
+  const isEvent = (doc.content as OfferContent | null)?.template === "event";
   const has = (pick: (f: (typeof fields)[number]) => boolean) => fields.some(pick);
   const placeholders = {
     name: "{name}",
@@ -122,8 +124,9 @@ export async function documentDetail(
     sha256: doc.sha256,
     page_count: doc.pageCount,
     fields: fields.map(fieldView),
+    // The texts the document incorporates; an event offer has no SLA.
     legal: [legalView("terms", terms), legalView("sla", sla), legalView("dpa", dpa)].filter(
-      Boolean,
+      (x) => x && (x.kind !== "sla" || !isEvent),
     ),
     signing_note: doc.requiresSignature ? signingNote(doc) : null,
     // The sentence the signer confirms; the page fills in the three values it asks for.
@@ -131,7 +134,7 @@ export async function documentDetail(
       ? {
           dpa_authorised: confirmationText(doc, { ...placeholders, dpa_authorised: true }),
           dpa_not_authorised:
-            doc.kind === "offer"
+            doc.kind === "offer" && !(doc.content as OfferContent | null)?.dpa_separate
               ? confirmationText(doc, { ...placeholders, dpa_authorised: false })
               : null,
         }
@@ -341,6 +344,13 @@ export interface BillingInput {
   readonly kbo_number: string | null;
   readonly po_number: string | null;
   readonly peppol_id: string | null;
+  readonly invoice_delivery?: "peppol" | "email" | null | undefined;
+}
+
+/** The Peppol directory entry for numbers the customer is typing, before they save. */
+export async function peppolLookup(d: AccountsDeps, who: Signed, orgId: string, ids: TaxIds) {
+  await customerOrg(d, who, orgId, "account:billing");
+  return { match: await lookupPeppol(d, ids) };
 }
 
 export async function readBilling(d: AccountsDeps, who: Signed, orgId: string) {
@@ -358,6 +368,9 @@ export async function updateBilling(d: AccountsDeps, who: Signed, orgId: string,
     throw new ValidationError("billing.tax_id_required");
   const now = d.now();
   const me = await store.identity(d.db, who.directusUserId);
+  // A Peppol id typed by the customer wins; otherwise the directory is asked, outside the
+  // transaction so a slow directory holds no lock.
+  const match = b.peppol_id ? null : await lookupPeppol(d, b);
   await d.db.transaction(async (tx) => {
     await store.lockOrg(tx, org.id);
     const patch = {
@@ -372,7 +385,9 @@ export async function updateBilling(d: AccountsDeps, who: Signed, orgId: string,
       kvk_number: b.kvk_number,
       kbo_number: b.kbo_number,
       po_number: b.po_number,
-      peppol_id: b.peppol_id,
+      peppol_id: b.peppol_id ?? match?.participant_id ?? null,
+      peppol_name: b.peppol_id ? null : (match?.name ?? null),
+      ...(b.invoice_delivery !== undefined ? { invoice_delivery: b.invoice_delivery } : {}),
       updated_at: now.toISOString(),
     };
     const account = await store.billing(tx, org.id);

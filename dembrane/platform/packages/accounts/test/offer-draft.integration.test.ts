@@ -128,6 +128,31 @@ run("an offer draft, and the invoice request after the signature", () => {
     await dropDatabase(DB);
   });
 
+  test("a reverse-charged offer takes only 0% lines, and its text says why there is no VAT", async () => {
+    const zero = [
+      { description: "Licence", quantity: 12, unit_price_cents: 8600, vat_rate_bps: 0 },
+    ];
+    const refused = await call(
+      w,
+      "POST",
+      `${S()}/offers`,
+      "staff",
+      offer({ send: false, vat_treatment: "reverse_charge", reference: "OFFER-RC1" }),
+    );
+    expect(refused.status).toBe(422);
+    const doc = await draft(w.orgId, {
+      vat_treatment: "reverse_charge",
+      items: zero,
+      reference: "OFFER-RC2",
+      language: "nl",
+    });
+    const [row] = await w.db
+      .select({ body: schema.account_document.body })
+      .from(schema.account_document)
+      .where(eq(schema.account_document.id, doc.id));
+    expect(row?.body).toContain("Btw verlegd");
+  });
+
   test("a draft adds nothing to the customer's account", async () => {
     const doc = await draft();
     expect(doc.status).toBe("draft");
@@ -240,9 +265,15 @@ run("an offer draft, and the invoice request after the signature", () => {
     expect(sent.sha256).not.toBe(doc.sha256);
 
     const page = K.AccountPage.parse((await call(w, "GET", C(org), "outsider")).data);
-    expect(page.documents.map((d) => [d.id, d.status])).toEqual([[doc.id, "sent"]]);
+    // The DPA goes out with the offer, as its own document to sign.
+    expect(page.documents.map((d) => [d.kind, d.status]).sort()).toEqual([
+      ["dpa", "sent"],
+      ["offer", "sent"],
+    ]);
+    expect(page.documents.find((d) => d.kind === "offer")?.id).toBe(doc.id);
     expect(page.tasks.map((t) => `${t.code}:${t.status}`).sort()).toEqual([
       "billing_details:locked",
+      "sign_dpa:open",
       "sign_offer:open",
     ]);
 
@@ -327,12 +358,16 @@ run("an offer draft, and the invoice request after the signature", () => {
         po_number: "PO-77",
         address: { line1: "Dorpsstraat 1", postal_code: "1234 AB", city: "Testdorp" },
       },
+      invoice: { vat_treatment: "standard", po_number: "PO-77" },
       links: {
         account: `https://dash.test/admin/accounts/${org}`,
         document: `https://dash.test/admin/accounts/${org}/documents/${docId}`,
+        mirror: `/api/v2/admin/accounts/${org}/invoices/:exactId`,
       },
       account_manager: null,
     });
+    const invoice = message.invoice as { items: { description: string; quantity: number }[] };
+    expect(invoice.items.map((x) => x.quantity)).toEqual([12]);
     expect((message.document as { lines: unknown[] }).lines).toHaveLength(1);
 
     // Saving the details again asks nothing new.
@@ -356,13 +391,63 @@ run("an offer draft, and the invoice request after the signature", () => {
     expect(requested()).toHaveLength(before + 1);
     expect(requested().at(-1)).toMatchObject({ document: { reference: "OFFER-904" } });
 
-    const free = await draft(org, {
-      reference: "OFFER-905",
-      items: [{ description: "Pilot", quantity: 1, unit_price_cents: 0, vat_rate_bps: 2100 }],
-    });
-    await send(free.id, org);
-    expect((await sign(free.id, "outsider", org)).status).toBe(200);
+    // An offer without amounts is never drafted, so there is nothing to sign or invoice.
+    const free = await call(
+      w,
+      "POST",
+      `${S(org)}/offers`,
+      "staff",
+      offer({
+        send: false,
+        reference: "OFFER-905",
+        items: [{ description: "Pilot", quantity: 1, unit_price_cents: 0, vat_rate_bps: 2100 }],
+      }),
+    );
+    expect(free.status).toBe(422);
+    expect(JSON.stringify(free.data)).toContain("give a price");
     expect(requested()).toHaveLength(before + 1);
+  });
+
+  test("only a custom offer carries amendments", async () => {
+    const amendments = [{ title: "Liability cap", body: "dembrane is liable up to €30,000." }];
+    const refused = await call(
+      w,
+      "POST",
+      `${S()}/offers`,
+      "staff",
+      offer({ send: false, reference: "OFFER-AM1", amendments }),
+    );
+    expect(refused.status).toBe(422);
+    expect(JSON.stringify(refused.data)).toContain("Only a custom offer");
+    const doc = await draft(w.orgId, { template: "custom", reference: "OFFER-AM2", amendments });
+    expect(doc.content?.amendments).toEqual(amendments);
+    expect(doc.body).toContain("Amendment 1: Liability cap, as set out in this offer.");
+  });
+
+  test("an offer is not drafted or changed without amounts", async () => {
+    const lines = (...prices: number[]) =>
+      prices.map((p, i) => ({
+        description: `Line ${i + 1}`,
+        quantity: 1,
+        unit_price_cents: p,
+        vat_rate_bps: 2100,
+      }));
+    const push = (items: unknown, reference: string) =>
+      call(w, "POST", `${S()}/offers`, "staff", offer({ send: true, reference, items }));
+    const unpriced = await push(lines(10000, 0), "OFFER-A1");
+    expect(unpriced.status).toBe(422);
+    expect(JSON.stringify(unpriced.data)).toContain("give a price");
+    const zero = await push(lines(10000, -10000), "OFFER-A2");
+    expect(zero.status).toBe(422);
+    expect(JSON.stringify(zero.data)).toContain("more than zero");
+    // A discount is still an amount.
+    expect((await push(lines(10000, -2500), "OFFER-A3")).status).toBe(201);
+    // A draft cannot be changed into one without amounts either.
+    const doc = await draft(w.orgId, { reference: "OFFER-A4" });
+    const changed = offer({ reference: null, external_ref: null, items: lines(0) });
+    const r = await call(w, "PUT", `${S()}/offers/${doc.id}`, "staff", changed);
+    expect(r.status).toBe(422);
+    expect(JSON.stringify(r.data)).toContain("give a price");
   });
 
   test("where sam does not take the offer flow's messages yet, none is made and no request is recorded", async () => {

@@ -38,7 +38,7 @@ msgstr "{0, plural, one {You have # thing to do in {name}} other {You have # thi
 
 #. placeholder {0}: formatMoney(net, "EUR", i18n.locale)
 #. placeholder {1}: formatMoney(net + vat, "EUR", i18n.locale)
-#: src/features/accounts/staff/PushOfferModal.tsx:227
+#: src/features/accounts/staff/PushOfferModal.tsx:232
 msgid "{0} excl. VAT, {1} incl."
 msgstr "{0} excl. VAT, {1} incl."
 
@@ -380,6 +380,10 @@ msgstr "Create a project"
 msgid "Create task"
 msgstr "Create task"
 
+#: src/features/accounts/staff/PushOfferModal.tsx:184
+msgid "Custom"
+msgstr "Custom"
+
 #: src/features/accounts/format.ts:107
 #: src/features/accounts/staff/AccountCardRoute.tsx:777
 #: src/features/accounts/customer/Questions.tsx:171
@@ -390,7 +394,7 @@ msgstr "Customer"
 #~ msgid "Customer accounts: what each one still has to do, and what waits on us."
 #~ msgstr "Customer accounts: what each one still has to do, and what waits on us."
 
-#: src/features/accounts/staff/PushOfferModal.tsx:197
+#: src/features/accounts/staff/PushOfferModal.tsx:202
 msgid "Customer name in the title"
 msgstr "Customer name in the title"
 
@@ -496,8 +500,8 @@ msgstr "Draft changed"
 msgid "Draft ready"
 msgstr "Draft ready"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:140
-#: src/features/accounts/staff/PushOfferModal.tsx:154
+#: src/features/accounts/staff/PushOfferModal.tsx:144
+#: src/features/accounts/staff/PushOfferModal.tsx:158
 msgid "Draft saved"
 msgstr "Draft saved"
 
@@ -542,7 +546,7 @@ msgstr "Enable account"
 msgid "Enable it to push offers and tasks. They get an Account page with a billing details step."
 msgstr "Enable it to push offers and tasks. They get an Account page with a billing details step."
 
-#: src/features/accounts/staff/PushOfferModal.tsx:179
+#: src/features/accounts/staff/PushOfferModal.tsx:183
 #: src/features/accounts/staff/NewDemoRoute.tsx:230
 msgid "Event"
 msgstr "Event"
@@ -587,7 +591,7 @@ msgstr "Fill this in."
 #~ msgid "For e-invoicing"
 #~ msgstr "For e-invoicing"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:213
+#: src/features/accounts/staff/PushOfferModal.tsx:218
 msgid "For the attention of"
 msgstr "For the attention of"
 
@@ -698,7 +702,7 @@ msgid "Label"
 msgstr "Label"
 
 #: src/features/accounts/staff/UploadPdfModal.tsx:145
-#: src/features/accounts/staff/PushOfferModal.tsx:185
+#: src/features/accounts/staff/PushOfferModal.tsx:190
 #: src/features/accounts/staff/AccountCardRoute.tsx:540
 msgid "Language"
 msgstr "Language"
@@ -723,7 +727,7 @@ msgstr "Let them sign in with an email code"
 msgid "Line total"
 msgstr "Line total"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:221
+#: src/features/accounts/staff/PushOfferModal.tsx:226
 msgid "Lines"
 msgstr "Lines"
 
@@ -748,7 +752,7 @@ msgstr "Message"
 msgid "Name"
 msgstr "Name"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:205
+#: src/features/accounts/staff/PushOfferModal.tsx:210
 msgid "Name in the greeting"
 msgstr "Name in the greeting"
 
@@ -886,7 +890,7 @@ msgstr "Offer"
 msgid "Offer language"
 msgstr "Offer language"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:153
+#: src/features/accounts/staff/PushOfferModal.tsx:157
 #: src/features/accounts/staff/DocumentRoute.tsx:157
 msgid "Offer sent. The customer sees it the next time they sign in."
 msgstr "Offer sent. The customer sees it the next time they sign in."
@@ -983,8 +987,8 @@ msgid "Opens after you sign {0}."
 msgstr "Opens after you sign {0}."
 
 #: src/features/accounts/staff/TaskModals.tsx:52
-#: src/features/accounts/staff/PushOfferModal.tsx:206
-#: src/features/accounts/staff/PushOfferModal.tsx:214
+#: src/features/accounts/staff/PushOfferModal.tsx:211
+#: src/features/accounts/staff/PushOfferModal.tsx:219
 #: src/features/accounts/signing/SignRoute.tsx:664
 #: src/features/accounts/signing/SignRoute.tsx:881
 #: src/features/accounts/customer/NextSteps.tsx:440
@@ -1173,7 +1177,7 @@ msgid "Read the offer and sign it here. Someone else signs for your organisation
 msgstr "Read the offer and sign it here. Someone else signs for your organisation? Name them on the offer; they get their own link."
 
 #. placeholder {0}: offerName || "..."
-#: src/features/accounts/staff/PushOfferModal.tsx:198
+#: src/features/accounts/staff/PushOfferModal.tsx:203
 msgid "Reads \"{0} x dembrane\""
 msgstr "Reads \"{0} x dembrane\""
 
@@ -1263,7 +1267,7 @@ msgstr "Save"
 msgid "Save billing details"
 msgstr "Save billing details"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:248
+#: src/features/accounts/staff/PushOfferModal.tsx:253
 msgid "Save draft"
 msgstr "Save draft"
 
@@ -1311,7 +1315,7 @@ msgstr "Send"
 msgid "Send back"
 msgstr "Send back"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:257
+#: src/features/accounts/staff/PushOfferModal.tsx:262
 #: src/features/accounts/staff/DocumentRoute.tsx:164
 msgid "Send offer"
 msgstr "Send offer"
@@ -1500,7 +1504,7 @@ msgstr "Subject"
 msgid "Submitted"
 msgstr "Submitted"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:178
+#: src/features/accounts/staff/PushOfferModal.tsx:182
 #: src/features/accounts/staff/NewDemoRoute.tsx:229
 msgid "Subscription"
 msgstr "Subscription"
@@ -1551,7 +1555,7 @@ msgstr "Tasks"
 msgid "Tasks | dembrane"
 msgstr "Tasks | dembrane"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:172
+#: src/features/accounts/staff/PushOfferModal.tsx:176
 #: src/features/accounts/staff/NewDemoRoute.tsx:223
 msgid "Template"
 msgstr "Template"
@@ -1737,7 +1741,7 @@ msgstr "Upload PDF"
 msgid "Use this"
 msgstr "Use this"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:233
+#: src/features/accounts/staff/PushOfferModal.tsx:238
 msgid "Valid 14 days. The terms, SLA and DPA versions in force today are pinned."
 msgstr "Valid 14 days. The terms, SLA and DPA versions in force today are pinned."
 

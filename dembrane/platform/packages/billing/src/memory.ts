@@ -61,6 +61,8 @@ export function accountRow(p: Partial<AccountRow> & { id: string }): AccountRow 
     billing_email: null,
     po_number: null,
     peppol_id: null,
+    peppol_name: null,
+    invoice_delivery: null,
     ...p,
   };
 }

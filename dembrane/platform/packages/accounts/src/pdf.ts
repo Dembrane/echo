@@ -1,4 +1,8 @@
-import { PDFDocument, type PDFFont, type PDFPage, rgb, StandardFonts } from "pdf-lib";
+import { brand } from "@dembrane/mail";
+import fontkit from "@pdf-lib/fontkit";
+import { PDFDocument, type PDFFont, type PDFPage, rgb } from "pdf-lib";
+import displayTtf from "../assets/fonts/DMSans-Display.ttf" with { type: "file" };
+import textTtf from "../assets/fonts/DMSans-Text.ttf" with { type: "file" };
 import type { AcceptanceField, FieldKind, Language } from "./offer";
 
 export { offerPdf } from "./offer-pdf";
@@ -8,9 +12,10 @@ export { offerPdf } from "./offer-pdf";
  * compiled API binary). echo renders the offer (offer-pdf.ts) and text documents itself and
  * knows where it drew each blank, so their fields are placed automatically; an uploaded PDF
  * gets its fields from staff. Signing stamps the values and the signature image onto the
- * unsigned PDF at the field positions and appends an audit page. Text documents and stamped
- * values use the standard fonts, which encode Windows-1252 only; other characters (emoji,
- * most non-Latin scripts) are left out of the PDF, never out of the stored values.
+ * unsigned PDF at the field positions and appends an audit page. Text documents, stamped
+ * values and the audit page are set in the offer's DM Sans (one weight; size and the muted
+ * colour make the hierarchy). Characters it has no glyph for (emoji, most non-Latin
+ * scripts) are left out of the PDF, never out of the stored values.
  */
 
 /** A field as placed: fractions of the page from its top-left corner, pages from 1. */
@@ -44,7 +49,8 @@ export interface AuditRecord {
   readonly organisation: string;
   readonly address: string | null;
   readonly vatNumber: string | null;
-  readonly dpaAuthorised: boolean;
+  /** Whether the signer said they may agree to data processing; null when not asked. */
+  readonly dpaAuthorised: boolean | null;
   readonly signedAt: string;
   readonly ip: string | null;
   readonly userAgent: string | null;
@@ -62,9 +68,39 @@ export interface AuditRecord {
 
 const A4: [number, number] = [595.28, 841.89];
 const MARGIN = 56;
-const INK = rgb(0.176, 0.176, 0.173);
-const MUTED = rgb(0.45, 0.45, 0.45);
-const FIELD_LINE = rgb(0.72, 0.72, 0.72);
+const hex = (h: string) =>
+  rgb(
+    Number.parseInt(h.slice(1, 3), 16) / 255,
+    Number.parseInt(h.slice(3, 5), 16) / 255,
+    Number.parseInt(h.slice(5, 7), 16) / 255,
+  );
+const INK = hex(brand.color.text);
+const MUTED = hex(brand.color.muted);
+const FIELD_LINE = hex(brand.color.control);
+
+/** The DM Sans cuts, read once: the bytes to embed and the characters they can draw. */
+let cuts: Promise<{ text: Uint8Array; display: Uint8Array; chars: Set<number> }> | null = null;
+function fonts() {
+  cuts ??= (async () => {
+    const text = await Bun.file(textTtf).bytes();
+    const display = await Bun.file(displayTtf).bytes();
+    const chars = new Set(
+      (fontkit.create(text) as unknown as { characterSet: number[] }).characterSet,
+    );
+    return { text, display, chars };
+  })();
+  return cuts;
+}
+
+/** Embeds the text cut as `regular` and the display cut (for titles) as `bold`. */
+async function embedFonts(doc: PDFDocument) {
+  const f = await fonts();
+  doc.registerFontkit(fontkit);
+  // A fixed name keeps the bytes of the same render the same.
+  const regular = await doc.embedFont(f.text, { subset: true, customName: "DMSans-Text" });
+  const bold = await doc.embedFont(f.display, { subset: true, customName: "DMSans-Display" });
+  return { regular, bold, chars: f.chars };
+}
 /** A date's and a PDF's metadata must not change the bytes of the same render. */
 const EPOCH = new Date("2026-01-01T00:00:00Z");
 
@@ -76,24 +112,21 @@ class Writer {
   constructor(
     readonly doc: PDFDocument,
     readonly regular: PDFFont,
+    /** The display cut: same weight, for titles. Hierarchy is size, never weight. */
     readonly bold: PDFFont,
+    private readonly chars: Set<number>,
   ) {
     this.page = doc.addPage(A4);
     this.y = A4[1] - MARGIN;
   }
 
-  /** Drops characters the font cannot encode, so drawing never throws. */
-  clean(text: string, font: PDFFont = this.regular): string {
+  /** Drops characters the font has no glyph for. */
+  clean(text: string, _font: PDFFont = this.regular): string {
     let out = "";
     for (const ch of text.replace(/\t/g, "    ")) {
       let ok = this.cache.get(ch);
       if (ok === undefined) {
-        try {
-          font.encodeText(ch);
-          ok = true;
-        } catch {
-          ok = false;
-        }
+        ok = this.chars.has(ch.codePointAt(0) as number);
         this.cache.set(ch, ok);
       }
       if (ok) out += ch;
@@ -122,7 +155,17 @@ class Writer {
     const lines: string[] = [];
     for (const para of this.clean(text, font).split("\n")) {
       let line = "";
-      for (const word of para.split(/ +/)) {
+      for (const whole of para.split(/ +/)) {
+        // A word wider than the line (a hash, a long address) breaks between characters.
+        let word = whole;
+        while (this.width(word, size, font) > maxWidth && word.length > 1) {
+          let n = word.length - 1;
+          while (n > 1 && this.width(word.slice(0, n), size, font) > maxWidth) n--;
+          if (line) lines.push(line);
+          lines.push(word.slice(0, n));
+          line = "";
+          word = word.slice(n);
+        }
         const next = line ? `${line} ${word}` : word;
         if (this.width(next, size, font) <= maxWidth || !line) line = next;
         else {
@@ -214,9 +257,8 @@ class Writer {
 
 async function start() {
   const doc = await PDFDocument.create();
-  const regular = await doc.embedFont(StandardFonts.Helvetica);
-  const bold = await doc.embedFont(StandardFonts.HelveticaBold);
-  return new Writer(doc, regular, bold);
+  const { regular, bold, chars } = await embedFonts(doc);
+  return new Writer(doc, regular, bold, chars);
 }
 
 async function finish(w: Writer, title: string): Promise<RenderedPdf> {
@@ -281,7 +323,7 @@ export async function textPdf(
   opts: { signing: boolean; language: Language },
 ): Promise<RenderedPdf> {
   const w = await start();
-  w.text(title, { bold: true, size: 16, gap: 10 });
+  w.text(title, { bold: true, size: brand.type.print.display, gap: 14 });
   for (const raw of body.split("\n")) {
     const line = raw.trimEnd();
     if (!line) {
@@ -290,14 +332,18 @@ export async function textPdf(
     }
     const heading = /^(#{1,3})\s+(.*)$/.exec(line);
     if (heading)
-      w.text(heading[2] as string, { bold: true, size: heading[1] === "#" ? 13 : 11, gap: 2 });
-    else w.text(line, { size: 9.5, gap: 1 });
+      w.text(heading[2] as string, {
+        bold: heading[1] === "#",
+        size: heading[1] === "#" ? brand.type.print.title : brand.type.print.lead,
+        gap: 3,
+      });
+    else w.text(line, { size: 9.5, gap: 1.5 });
   }
   if (opts.signing) {
     const block = SIGNING_BLOCK[opts.language];
     w.space(16);
     w.ensure(230);
-    w.text(block.title, { bold: true, size: 13, gap: 8 });
+    w.text(block.title, { bold: true, size: brand.type.print.title, gap: 10 });
     for (const a of block.fields) w.blank(a);
   }
   return finish(w, title);
@@ -323,12 +369,11 @@ export async function signedPdf(
   audit: AuditRecord,
 ): Promise<Uint8Array> {
   const doc = await PDFDocument.load(unsigned, { updateMetadata: false });
-  const regular = await doc.embedFont(StandardFonts.Helvetica);
-  const bold = await doc.embedFont(StandardFonts.HelveticaBold);
+  const { regular, bold, chars } = await embedFonts(doc);
   const signature = await doc.embedPng(images.signature);
   const initials = images.initials ? await doc.embedPng(images.initials) : signature;
   const pages = doc.getPages();
-  const w = new Writer(doc, regular, bold);
+  const w = new Writer(doc, regular, bold, chars);
   // Writer adds a page for itself; it becomes the audit page, after the document's pages.
   for (const f of fields) {
     const page = pages[f.page - 1];
@@ -368,7 +413,7 @@ export async function signedPdf(
 }
 
 function drawAudit(w: Writer, a: AuditRecord) {
-  w.text("Signature record", { bold: true, size: 16, gap: 4 });
+  w.text("Signature record", { bold: true, size: brand.type.print.title, gap: 6 });
   w.text("Simple electronic signature (eIDAS art. 3(10)), recorded by dembrane.", {
     size: 9,
     color: MUTED,
@@ -386,7 +431,14 @@ function drawAudit(w: Writer, a: AuditRecord) {
     ["Organisation", a.organisation],
     ...(a.address ? ([["Address", a.address]] as [string, string][]) : []),
     ...(a.vatNumber ? ([["VAT number", a.vatNumber]] as [string, string][]) : []),
-    ["May agree to data processing", a.dpaAuthorised ? "yes" : "no, the DPA is signed separately"],
+    ...(a.dpaAuthorised === null
+      ? []
+      : ([
+          [
+            "May agree to data processing",
+            a.dpaAuthorised ? "yes" : "no, the DPA is signed separately",
+          ],
+        ] as [string, string][])),
     ["Signature made", a.method],
     ["SHA-256 of the signature image", a.imageSha256],
     ["Signed at (UTC)", a.signedAt],
@@ -402,13 +454,13 @@ function drawAudit(w: Writer, a: AuditRecord) {
   for (const [k, value] of rows) {
     const before = w.y;
     const page = w.page;
-    w.text(k, { bold: true, size: 9, width: 150 });
+    w.text(k, { size: 9, width: 150, color: MUTED });
     const after = w.y;
     if (w.page === page) w.y = before;
     w.text(value, { size: 9, x: MARGIN + 160 });
     w.y = Math.min(after, w.y) - 3;
   }
   w.space(10);
-  w.text("Confirmation shown and accepted", { bold: true, size: 10, gap: 2 });
+  w.text("Confirmation shown and accepted", { size: brand.type.print.lead, gap: 4 });
   w.text(a.confirmationText, { size: 9.5 });
 }

@@ -38,7 +38,7 @@ msgstr "{0, plural, one {V {name} na vás čeká # úkol} few {V {name} na vás 
 
 #. placeholder {0}: formatMoney(net, "EUR", i18n.locale)
 #. placeholder {1}: formatMoney(net + vat, "EUR", i18n.locale)
-#: src/features/accounts/staff/PushOfferModal.tsx:227
+#: src/features/accounts/staff/PushOfferModal.tsx:232
 msgid "{0} excl. VAT, {1} incl."
 msgstr "{0} bez VAT, {1} vč."
 
@@ -380,6 +380,10 @@ msgstr "Vytvořte projekt"
 msgid "Create task"
 msgstr "Vytvořit úkol"
 
+#: src/features/accounts/staff/PushOfferModal.tsx:184
+msgid "Custom"
+msgstr "Na míru"
+
 #: src/features/accounts/format.ts:107
 #: src/features/accounts/staff/AccountCardRoute.tsx:777
 #: src/features/accounts/customer/Questions.tsx:171
@@ -390,7 +394,7 @@ msgstr "Zákazník"
 #~ msgid "Customer accounts: what each one still has to do, and what waits on us."
 #~ msgstr ""
 
-#: src/features/accounts/staff/PushOfferModal.tsx:197
+#: src/features/accounts/staff/PushOfferModal.tsx:202
 msgid "Customer name in the title"
 msgstr "Jméno zákazníka v názvu"
 
@@ -496,8 +500,8 @@ msgstr "Koncept upraven"
 msgid "Draft ready"
 msgstr "Koncept připraven"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:140
-#: src/features/accounts/staff/PushOfferModal.tsx:154
+#: src/features/accounts/staff/PushOfferModal.tsx:144
+#: src/features/accounts/staff/PushOfferModal.tsx:158
 msgid "Draft saved"
 msgstr "Koncept uložen"
 
@@ -542,7 +546,7 @@ msgstr "Aktivovat účet"
 msgid "Enable it to push offers and tasks. They get an Account page with a billing details step."
 msgstr "Aktivujte pro odesílání nabídek a úkolů. Získají stránku Účet s krokem pro fakturační údaje."
 
-#: src/features/accounts/staff/PushOfferModal.tsx:179
+#: src/features/accounts/staff/PushOfferModal.tsx:183
 #: src/features/accounts/staff/NewDemoRoute.tsx:230
 msgid "Event"
 msgstr "Událost"
@@ -587,7 +591,7 @@ msgstr "Vyplňte toto pole."
 #~ msgid "For e-invoicing"
 #~ msgstr "Pro elektronickou fakturaci"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:213
+#: src/features/accounts/staff/PushOfferModal.tsx:218
 msgid "For the attention of"
 msgstr "K rukám"
 
@@ -698,7 +702,7 @@ msgid "Label"
 msgstr "Štítek"
 
 #: src/features/accounts/staff/UploadPdfModal.tsx:145
-#: src/features/accounts/staff/PushOfferModal.tsx:185
+#: src/features/accounts/staff/PushOfferModal.tsx:190
 #: src/features/accounts/staff/AccountCardRoute.tsx:540
 msgid "Language"
 msgstr "Jazyk"
@@ -723,7 +727,7 @@ msgstr "Nechat je přihlásit se pomocí kódu z e-mailu"
 msgid "Line total"
 msgstr "Celkem za položku"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:221
+#: src/features/accounts/staff/PushOfferModal.tsx:226
 msgid "Lines"
 msgstr "Položky"
 
@@ -748,7 +752,7 @@ msgstr "Zpráva"
 msgid "Name"
 msgstr "Název"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:205
+#: src/features/accounts/staff/PushOfferModal.tsx:210
 msgid "Name in the greeting"
 msgstr "Jméno v oslovení"
 
@@ -886,7 +890,7 @@ msgstr "Nabídka"
 msgid "Offer language"
 msgstr "Jazyk nabídky"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:153
+#: src/features/accounts/staff/PushOfferModal.tsx:157
 #: src/features/accounts/staff/DocumentRoute.tsx:157
 msgid "Offer sent. The customer sees it the next time they sign in."
 msgstr "Nabídka odeslána. Zákazník ji uvidí, jakmile se příště přihlásí."
@@ -983,8 +987,8 @@ msgid "Opens after you sign {0}."
 msgstr "Otevře se po podepsání {0}."
 
 #: src/features/accounts/staff/TaskModals.tsx:52
-#: src/features/accounts/staff/PushOfferModal.tsx:206
-#: src/features/accounts/staff/PushOfferModal.tsx:214
+#: src/features/accounts/staff/PushOfferModal.tsx:211
+#: src/features/accounts/staff/PushOfferModal.tsx:219
 #: src/features/accounts/signing/SignRoute.tsx:664
 #: src/features/accounts/signing/SignRoute.tsx:881
 #: src/features/accounts/customer/NextSteps.tsx:440
@@ -1173,7 +1177,7 @@ msgid "Read the offer and sign it here. Someone else signs for your organisation
 msgstr "Přečtěte si nabídku a podepište ji zde. Podepisuje za vaši organizaci někdo jiný? Uveďte ho v nabídce; obdrží vlastní odkaz."
 
 #. placeholder {0}: offerName || "..."
-#: src/features/accounts/staff/PushOfferModal.tsx:198
+#: src/features/accounts/staff/PushOfferModal.tsx:203
 msgid "Reads \"{0} x dembrane\""
 msgstr "Znění: „{0} x dembrane“"
 
@@ -1263,7 +1267,7 @@ msgstr "Uložit"
 msgid "Save billing details"
 msgstr "Uložit fakturační údaje"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:248
+#: src/features/accounts/staff/PushOfferModal.tsx:253
 msgid "Save draft"
 msgstr "Uložit koncept"
 
@@ -1311,7 +1315,7 @@ msgstr "Odeslat"
 msgid "Send back"
 msgstr "Vrátit zpět"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:257
+#: src/features/accounts/staff/PushOfferModal.tsx:262
 #: src/features/accounts/staff/DocumentRoute.tsx:164
 msgid "Send offer"
 msgstr "Odeslat nabídku"
@@ -1500,7 +1504,7 @@ msgstr "Předmět"
 msgid "Submitted"
 msgstr "Odesláno"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:178
+#: src/features/accounts/staff/PushOfferModal.tsx:182
 #: src/features/accounts/staff/NewDemoRoute.tsx:229
 msgid "Subscription"
 msgstr "Předplatné"
@@ -1551,7 +1555,7 @@ msgstr "Úkoly"
 msgid "Tasks | dembrane"
 msgstr "Úkoly | dembrane"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:172
+#: src/features/accounts/staff/PushOfferModal.tsx:176
 #: src/features/accounts/staff/NewDemoRoute.tsx:223
 msgid "Template"
 msgstr "Šablona"
@@ -1737,7 +1741,7 @@ msgstr "Nahrát PDF"
 msgid "Use this"
 msgstr "Použít toto"
 
-#: src/features/accounts/staff/PushOfferModal.tsx:233
+#: src/features/accounts/staff/PushOfferModal.tsx:238
 msgid "Valid 14 days. The terms, SLA and DPA versions in force today are pinned."
 msgstr "Platnost 14 dní. Zahrnuty jsou aktuálně platné verze podmínek, SLA a DPA."
 
