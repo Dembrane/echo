@@ -6,7 +6,7 @@ import { walkOrder } from "../src/documents";
 import { runDeliverEvent, runNotifySlack } from "../src/jobs";
 import { legalSha256, parseLegalDump, parseLegalPage } from "../src/legal/parse";
 import { REFERENCE_DPA, REFERENCE_SLA, REFERENCE_TERMS } from "../src/legal/reference";
-import { priceLines, vatOf } from "../src/money";
+import { fitsVatTreatment, priceLines, vatOf } from "../src/money";
 import { euro, layoutOffer, type OfferContent, offerText } from "../src/offer";
 import { ONBOARDING_CODES } from "../src/onboarding";
 import { offerPdf, signedPdf, textPdf } from "../src/pdf";
@@ -164,6 +164,19 @@ describe("the offer", () => {
       "VAT",
       "Total (incl. VAT)",
     ]);
+  });
+
+  test("reverse charge and outside the EU say why there is no VAT, as the invoice does", () => {
+    const zero = offer().items.map((i) => ({ ...i, vat_rate_bps: 0 }));
+    const nl = layoutOffer(offer({ language: "nl", vat_treatment: "reverse_charge", items: zero }));
+    expect(nl.totals[1]).toEqual(["Btw 0%", "€ 0,00"]);
+    expect(nl.vatNote).toBe("Btw verlegd: artikel 196, Richtlijn 2006/112/EG.");
+    const en = offerText(offer({ vat_treatment: "outside_eu", items: zero }));
+    expect(en).toContain("No Dutch VAT: the service is supplied outside the EU");
+    expect(layoutOffer(offer()).vatNote).toBeNull();
+    expect(fitsVatTreatment("reverse_charge", zero)).toBe(true);
+    expect(fitsVatTreatment("reverse_charge", offer().items)).toBe(false);
+    expect(fitsVatTreatment("standard", zero)).toBe(true);
   });
 
   test("the PDF places the acceptance blanks as fields, on the page, in walk order", async () => {

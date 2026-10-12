@@ -128,6 +128,31 @@ run("an offer draft, and the invoice request after the signature", () => {
     await dropDatabase(DB);
   });
 
+  test("a reverse-charged offer takes only 0% lines, and its text says why there is no VAT", async () => {
+    const zero = [
+      { description: "Licence", quantity: 12, unit_price_cents: 8600, vat_rate_bps: 0 },
+    ];
+    const refused = await call(
+      w,
+      "POST",
+      `${S()}/offers`,
+      "staff",
+      offer({ send: false, vat_treatment: "reverse_charge", reference: "OFFER-RC1" }),
+    );
+    expect(refused.status).toBe(422);
+    const doc = await draft(w.orgId, {
+      vat_treatment: "reverse_charge",
+      items: zero,
+      reference: "OFFER-RC2",
+      language: "nl",
+    });
+    const [row] = await w.db
+      .select({ body: schema.account_document.body })
+      .from(schema.account_document)
+      .where(eq(schema.account_document.id, doc.id));
+    expect(row?.body).toContain("Btw verlegd");
+  });
+
   test("a draft adds nothing to the customer's account", async () => {
     const doc = await draft();
     expect(doc.status).toBe("draft");

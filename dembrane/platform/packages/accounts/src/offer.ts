@@ -1,5 +1,11 @@
 import { dutchDate } from "./legal/parse";
-import { type OfferLine, type PricedLine, priceLines, type Totals } from "./money";
+import {
+  type OfferLine,
+  type PricedLine,
+  priceLines,
+  type Totals,
+  type VatTreatment,
+} from "./money";
 
 /**
  * The words of an offer, from the Google Doc templates of sales (packages/accounts/reference:
@@ -76,6 +82,8 @@ export interface OfferContent {
     readonly dpa: PinnedText;
   };
   readonly items: readonly OfferItem[];
+  /** Absent on offers made before it existed: Dutch VAT on the lines. */
+  readonly vat_treatment?: VatTreatment;
 }
 
 interface Copy {
@@ -91,6 +99,8 @@ interface Copy {
   readonly intro: readonly string[];
   readonly columns: readonly [string, string, string, string];
   readonly totals: { readonly subtotal: string; readonly vat: string; readonly total: string };
+  /** Why there is no VAT, in the words the invoice uses. */
+  readonly vatNote: Record<Exclude<VatTreatment, "standard">, string>;
   readonly closing: readonly string[];
   readonly acceptanceTitle: string;
   readonly acceptanceIntro: string;
@@ -277,6 +287,11 @@ const EN_FRAME = {
     attention: "For the attention of",
   },
   totals: { subtotal: "Subtotal (excl. VAT)", vat: "VAT", total: "Total (incl. VAT)" },
+  vatNote: {
+    reverse_charge: "VAT reverse-charged: Article 196, Directive 2006/112/EC.",
+    outside_eu:
+      "No Dutch VAT: the service is supplied outside the EU (Article 44, Directive 2006/112/EC).",
+  },
   acceptanceTitle: "Accept this offer",
   acceptanceIntro: "To accept this offer, fill in the fields below and sign.",
   acceptance: EN_ACCEPT,
@@ -286,6 +301,11 @@ const NL_FRAME = {
   kind: "Offerte",
   facts: { reference: "Referentie", date: "Datum", validUntil: "Geldig tot", attention: "T.a.v." },
   totals: { subtotal: "Subtotaal (excl. btw)", vat: "Btw", total: "Totaal (incl. btw)" },
+  vatNote: {
+    reverse_charge: "Btw verlegd: artikel 196, Richtlijn 2006/112/EG.",
+    outside_eu:
+      "Geen Nederlandse btw: de dienst wordt buiten de EU verricht (artikel 44, Richtlijn 2006/112/EG).",
+  },
   acceptanceTitle: "Offerte accepteren",
   acceptanceIntro: "Vul de velden hieronder in en onderteken om deze offerte te accepteren.",
   months: NL_MONTHS,
@@ -450,6 +470,8 @@ export interface OfferLayout {
   }[];
   /** Subtotal, VAT and total, label and amount; the last is what is paid. */
   readonly totals: readonly (readonly [string, string])[];
+  /** Why there is no VAT, when it is reverse-charged or the service is outside the EU. */
+  readonly vatNote: string | null;
   readonly closing: readonly string[];
   readonly acceptanceTitle: string;
   readonly acceptanceIntro: string;
@@ -471,6 +493,7 @@ export function layoutOffer(content: OfferContent): OfferLayout {
   const unitFirst = content.template === "subscription";
   const clause = copy.clause(content.legal);
   const money = (cents: number) => euro(cents, content.currency, content.language);
+  const treatment = content.vat_treatment ?? "standard";
   const rates = new Set(content.items.map((i) => i.vat_rate_bps));
   const onlyRate = rates.size === 1 ? [...rates][0] : undefined;
   const vatLabel =
@@ -514,6 +537,7 @@ export function layoutOffer(content: OfferContent): OfferLayout {
       [vatLabel, money(totals.vat_cents)],
       [copy.totals.total, money(totals.total_cents)],
     ],
+    vatNote: treatment === "standard" ? null : copy.vatNote[treatment],
     closing: copy.closing,
     acceptanceTitle: copy.acceptanceTitle,
     acceptanceIntro: copy.acceptanceIntro,
@@ -551,6 +575,7 @@ export function offerText(content: OfferContent): string {
   out.push(
     "",
     ...l.totals.map(([k, v]) => `${k}: ${v}`),
+    ...(l.vatNote ? [l.vatNote] : []),
     "",
     ...l.closing,
     "",

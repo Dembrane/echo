@@ -16,6 +16,7 @@ import { fieldProblems, sha256Hex, storePdf, storeRendered, writeFields } from "
 import { documentPayload, emit, orgPayload } from "./events";
 import { customerSignUrl, staffDocumentUrl } from "./invoice";
 import { legalForPush } from "./legal/store";
+import { fitsVatTreatment, type VatTreatment } from "./money";
 import {
   type Language,
   type OfferContent,
@@ -246,6 +247,8 @@ export interface PushOfferInput {
   readonly currency: string;
   readonly date: string | null;
   readonly items: readonly OfferItem[];
+  /** Absent means Dutch VAT on the lines. */
+  readonly vat_treatment?: VatTreatment;
   readonly external_ref: string | null;
   readonly supersedes_id: string | null;
   /** False keeps a draft; staff send it later. */
@@ -288,10 +291,20 @@ function offerContent(
   pinned: Awaited<ReturnType<typeof legalForPush>>,
   o: Pick<
     PushOfferInput,
-    "template" | "language" | "offer_name" | "person_name" | "attention" | "currency" | "items"
+    | "template"
+    | "language"
+    | "offer_name"
+    | "person_name"
+    | "attention"
+    | "currency"
+    | "items"
+    | "vat_treatment"
   > & { date: string; reference: string },
 ): OfferContent {
+  const vatTreatment = o.vat_treatment ?? "standard";
+  if (!fitsVatTreatment(vatTreatment, o.items)) throw new ValidationError("document.vat_treatment");
   return {
+    vat_treatment: vatTreatment,
     template: o.template,
     language: o.language,
     offer_name: o.offer_name,

@@ -579,6 +579,12 @@ function lines(s: Sheet, l: OfferLayout) {
       s.y += T.body * BODY_LEADING;
     }
   });
+  // Without VAT, the reason sits under the total, as the invoice puts it.
+  if (l.vatNote)
+    s.para(
+      { runs: runs(l.vatNote, { ...CAPTION, s: 8.5 }), leading: 1.45, before: 2 },
+      { x: labelX, width: RIGHT - labelX },
+    );
   s.done(36);
 }
 
