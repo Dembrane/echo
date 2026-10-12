@@ -68,8 +68,8 @@ msgid "{done} of {total} filled"
 msgstr "{done} van {total} ingevuld"
 
 #: src/features/accounts/customer/AccountRoute.tsx:156
-msgid "{mine, plural, one {One thing needs you.} other {# things need you.}}"
-msgstr "{mine, plural, one {Er is één ding voor jou.} other {Er zijn # dingen voor jou.}}"
+#~ msgid "{mine, plural, one {One thing needs you.} other {# things need you.}}"
+#~ msgstr "{mine, plural, one {Er is één ding voor jou.} other {Er zijn # dingen voor jou.}}"
 
 #: src/features/accounts/staff/NewDemoRoute.tsx:214
 msgid "A draft on their account, for you to send after the demo."
@@ -96,8 +96,8 @@ msgstr "Een tekstantwoord"
 #~ msgstr "Account"
 
 #: src/features/accounts/customer/AccountRoute.tsx:36
-msgid "Account | dembrane"
-msgstr "Account | dembrane"
+#~ msgid "Account | dembrane"
+#~ msgstr "Account | dembrane"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:722
 msgid "Account created"
@@ -177,7 +177,7 @@ msgstr "Beantwoord"
 msgid "Approve"
 msgstr "Goedkeuren"
 
-#: src/features/accounts/customer/TalkToUs.tsx:43
+#: src/features/accounts/customer/TalkToUs.tsx:59
 #: src/features/accounts/customer/Questions.tsx:55
 msgid "Ask a question"
 msgstr "Stel een vraag"
@@ -225,7 +225,7 @@ msgstr "Factuurgegevens opgeslagen"
 msgid "Billing details updated"
 msgstr "Factuurgegevens bijgewerkt"
 
-#: src/features/accounts/customer/TalkToUs.tsx:51
+#: src/features/accounts/customer/TalkToUs.tsx:67
 #: src/features/accounts/customer/NextSteps.tsx:348
 #: src/features/accounts/customer/BookCallModal.tsx:26
 msgid "Book a call"
@@ -462,7 +462,9 @@ msgid "Document withdrawn"
 msgstr "Document ingetrokken"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:238
-#: src/features/accounts/customer/DocumentsTable.tsx:29
+#: src/features/accounts/customer/DocumentsTable.tsx:25
+#: src/features/accounts/customer/AccountRoute.tsx:102
+#: src/features/accounts/customer/AccountRoute.tsx:102
 msgid "Documents"
 msgstr "Documenten"
 
@@ -473,7 +475,7 @@ msgid "Done"
 msgstr "Klaar"
 
 #: src/features/accounts/customer/ToPay.tsx:153
-#: src/features/accounts/customer/DocumentsTable.tsx:103
+#: src/features/accounts/customer/DocumentsTable.tsx:107
 msgid "Download PDF"
 msgstr "PDF downloaden"
 
@@ -707,6 +709,10 @@ msgstr "Taal"
 msgid "Later"
 msgstr "Later"
 
+#: src/features/accounts/customer/TalkToUs.tsx:52
+msgid "Leave feedback"
+msgstr "Feedback geven"
+
 #: src/features/accounts/staff/AccountCardRoute.tsx:697
 msgid "Legal name"
 msgstr "Juridische naam"
@@ -870,9 +876,10 @@ msgid "Note"
 msgstr "Toelichting"
 
 #: src/features/accounts/customer/AccountRoute.tsx:161
-msgid "Nothing needs you right now. We are working on our part."
-msgstr "Er is nu niets voor jou. Wij werken aan ons deel."
+#~ msgid "Nothing needs you right now. We are working on our part."
+#~ msgstr "Er is nu niets voor jou. Wij werken aan ons deel."
 
+#: src/features/accounts/customer/AccountRoute.tsx:144
 #: src/features/accounts/customer/AccountPickerRoute.tsx:54
 msgid "Nothing to do right now."
 msgstr "Er is nu niets te doen."
@@ -891,7 +898,7 @@ msgstr "Taal van de offerte"
 msgid "Offer sent. The customer sees it the next time they sign in."
 msgstr "Offerte verstuurd. De klant ziet hem bij de volgende keer inloggen."
 
-#: src/features/accounts/customer/DocumentsTable.tsx:32
+#: src/features/accounts/customer/DocumentsTable.tsx:36
 msgid "Offers, agreements and invoices appear here once we send them."
 msgstr "Offertes, overeenkomsten en facturen verschijnen hier zodra we ze sturen."
 
@@ -916,8 +923,12 @@ msgid "Only staff see this draft. When you send it, it gets that day's date and 
 msgstr "Alleen medewerkers zien dit concept. Als je het verstuurt, krijgt het de datum van die dag en is het 14 dagen geldig."
 
 #: src/features/accounts/customer/AccountRoute.tsx:57
-msgid "Only the organisation's admins and billing contacts see the account."
-msgstr "Alleen de beheerders en factuurcontacten van de organisatie zien het account."
+#~ msgid "Only the organisation's admins and billing contacts see the account."
+#~ msgstr "Alleen de beheerders en factuurcontacten van de organisatie zien het account."
+
+#: src/features/accounts/customer/AccountRoute.tsx:213
+msgid "Only the organisation's admins and billing contacts see this page."
+msgstr "Alleen de beheerders en factuurcontacten van de organisatie zien deze pagina."
 
 #: src/features/accounts/format.ts:90
 #: src/features/accounts/format.ts:98
@@ -965,7 +976,7 @@ msgstr "Open de ondertekende pdf"
 msgid "Open the tutorial"
 msgstr "Open de tutorial"
 
-#: src/features/accounts/customer/DocumentsTable.tsx:92
+#: src/features/accounts/customer/DocumentsTable.tsx:96
 msgid "Open to sign"
 msgstr "Openen om te ondertekenen"
 
@@ -1009,7 +1020,7 @@ msgstr "Organisatie"
 msgid "Organisation name"
 msgstr "Naam organisatie"
 
-#: src/features/accounts/customer/TalkToUs.tsx:44
+#: src/features/accounts/customer/TalkToUs.tsx:60
 msgid "Our answer appears here, on this page."
 msgstr "Ons antwoord verschijnt hier, op deze pagina."
 
@@ -1057,7 +1068,7 @@ msgstr "Online betalen"
 msgid "Peppol ID"
 msgstr "Peppol-ID"
 
-#: src/features/accounts/customer/TalkToUs.tsx:52
+#: src/features/accounts/customer/TalkToUs.tsx:68
 msgid "Pick a time that suits you."
 msgstr "Kies een moment dat jou uitkomt."
 
@@ -1509,7 +1520,7 @@ msgstr "Abonnement"
 msgid "System"
 msgstr "Systeem"
 
-#: src/features/accounts/customer/TalkToUs.tsx:31
+#: src/features/accounts/customer/TalkToUs.tsx:40
 msgid "Talk to us"
 msgstr "Contact"
 
@@ -1543,6 +1554,8 @@ msgid "Task withdrawn"
 msgstr "Taak ingetrokken"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:370
+#: src/features/accounts/customer/AccountRoute.tsx:93
+#: src/features/accounts/customer/AccountRoute.tsx:93
 #: src/features/accounts/customer/AccountPickerRoute.tsx:44
 msgid "Tasks"
 msgstr "Taken"
@@ -1550,6 +1563,10 @@ msgstr "Taken"
 #: src/features/accounts/customer/AccountPickerRoute.tsx:34
 msgid "Tasks | dembrane"
 msgstr "Taken | dembrane"
+
+#: src/features/accounts/customer/TalkToUs.tsx:53
+msgid "Tell us what works and what does not."
+msgstr "Vertel ons wat werkt en wat niet."
 
 #: src/features/accounts/staff/PushOfferModal.tsx:172
 #: src/features/accounts/staff/NewDemoRoute.tsx:223
@@ -1577,8 +1594,8 @@ msgid "The account"
 msgstr "Het account"
 
 #: src/features/accounts/customer/AccountRoute.tsx:62
-msgid "The account could not be loaded. Try again in a moment."
-msgstr "Het account kon niet worden geladen. Probeer het zo opnieuw."
+#~ msgid "The account could not be loaded. Try again in a moment."
+#~ msgstr "Het account kon niet worden geladen. Probeer het zo opnieuw."
 
 #: src/features/accounts/staff/TaskModals.tsx:59
 msgid "The customer answers with"
@@ -1650,6 +1667,10 @@ msgstr "Dit document is verstuurd. De velden liggen vast; stuur een nieuwe versi
 #: src/features/accounts/staff/AccountCardRoute.tsx:515
 msgid "This organisation has no account yet"
 msgstr "Deze organisatie heeft nog geen account"
+
+#: src/features/accounts/customer/AccountRoute.tsx:218
+msgid "This page could not be loaded. Try again in a moment."
+msgstr "Deze pagina kon niet worden geladen. Probeer het zo opnieuw."
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:760
 msgid "Timeline"
@@ -1870,8 +1891,8 @@ msgid "You"
 msgstr "Jij"
 
 #: src/features/accounts/customer/AccountRoute.tsx:162
-msgid "You are all set. Nothing needs you right now."
-msgstr "Alles is geregeld. Er is nu niets voor jou."
+#~ msgid "You are all set. Nothing needs you right now."
+#~ msgstr "Alles is geregeld. Er is nu niets voor jou."
 
 #: src/features/accounts/customer/NextSteps.tsx:439
 msgid "Your answer"

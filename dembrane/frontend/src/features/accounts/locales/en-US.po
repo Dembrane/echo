@@ -68,8 +68,8 @@ msgid "{done} of {total} filled"
 msgstr "{done} of {total} filled"
 
 #: src/features/accounts/customer/AccountRoute.tsx:156
-msgid "{mine, plural, one {One thing needs you.} other {# things need you.}}"
-msgstr "{mine, plural, one {One thing needs you.} other {# things need you.}}"
+#~ msgid "{mine, plural, one {One thing needs you.} other {# things need you.}}"
+#~ msgstr "{mine, plural, one {One thing needs you.} other {# things need you.}}"
 
 #: src/features/accounts/staff/NewDemoRoute.tsx:214
 msgid "A draft on their account, for you to send after the demo."
@@ -96,8 +96,8 @@ msgstr "A text answer"
 #~ msgstr "Account"
 
 #: src/features/accounts/customer/AccountRoute.tsx:36
-msgid "Account | dembrane"
-msgstr "Account | dembrane"
+#~ msgid "Account | dembrane"
+#~ msgstr "Account | dembrane"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:722
 msgid "Account created"
@@ -177,7 +177,7 @@ msgstr "Answered"
 msgid "Approve"
 msgstr "Approve"
 
-#: src/features/accounts/customer/TalkToUs.tsx:43
+#: src/features/accounts/customer/TalkToUs.tsx:59
 #: src/features/accounts/customer/Questions.tsx:55
 msgid "Ask a question"
 msgstr "Ask a question"
@@ -225,7 +225,7 @@ msgstr "Billing details saved"
 msgid "Billing details updated"
 msgstr "Billing details updated"
 
-#: src/features/accounts/customer/TalkToUs.tsx:51
+#: src/features/accounts/customer/TalkToUs.tsx:67
 #: src/features/accounts/customer/NextSteps.tsx:348
 #: src/features/accounts/customer/BookCallModal.tsx:26
 msgid "Book a call"
@@ -462,7 +462,9 @@ msgid "Document withdrawn"
 msgstr "Document withdrawn"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:238
-#: src/features/accounts/customer/DocumentsTable.tsx:29
+#: src/features/accounts/customer/DocumentsTable.tsx:25
+#: src/features/accounts/customer/AccountRoute.tsx:102
+#: src/features/accounts/customer/AccountRoute.tsx:102
 msgid "Documents"
 msgstr "Documents"
 
@@ -473,7 +475,7 @@ msgid "Done"
 msgstr "Done"
 
 #: src/features/accounts/customer/ToPay.tsx:153
-#: src/features/accounts/customer/DocumentsTable.tsx:103
+#: src/features/accounts/customer/DocumentsTable.tsx:107
 msgid "Download PDF"
 msgstr "Download PDF"
 
@@ -707,6 +709,10 @@ msgstr "Language"
 msgid "Later"
 msgstr "Later"
 
+#: src/features/accounts/customer/TalkToUs.tsx:52
+msgid "Leave feedback"
+msgstr "Leave feedback"
+
 #: src/features/accounts/staff/AccountCardRoute.tsx:697
 msgid "Legal name"
 msgstr "Legal name"
@@ -870,9 +876,10 @@ msgid "Note"
 msgstr "Note"
 
 #: src/features/accounts/customer/AccountRoute.tsx:161
-msgid "Nothing needs you right now. We are working on our part."
-msgstr "Nothing needs you right now. We are working on our part."
+#~ msgid "Nothing needs you right now. We are working on our part."
+#~ msgstr "Nothing needs you right now. We are working on our part."
 
+#: src/features/accounts/customer/AccountRoute.tsx:144
 #: src/features/accounts/customer/AccountPickerRoute.tsx:54
 msgid "Nothing to do right now."
 msgstr "Nothing to do right now."
@@ -891,7 +898,7 @@ msgstr "Offer language"
 msgid "Offer sent. The customer sees it the next time they sign in."
 msgstr "Offer sent. The customer sees it the next time they sign in."
 
-#: src/features/accounts/customer/DocumentsTable.tsx:32
+#: src/features/accounts/customer/DocumentsTable.tsx:36
 msgid "Offers, agreements and invoices appear here once we send them."
 msgstr "Offers, agreements and invoices appear here once we send them."
 
@@ -916,8 +923,12 @@ msgid "Only staff see this draft. When you send it, it gets that day's date and 
 msgstr "Only staff see this draft. When you send it, it gets that day's date and is valid for 14 days."
 
 #: src/features/accounts/customer/AccountRoute.tsx:57
-msgid "Only the organisation's admins and billing contacts see the account."
-msgstr "Only the organisation's admins and billing contacts see the account."
+#~ msgid "Only the organisation's admins and billing contacts see the account."
+#~ msgstr "Only the organisation's admins and billing contacts see the account."
+
+#: src/features/accounts/customer/AccountRoute.tsx:213
+msgid "Only the organisation's admins and billing contacts see this page."
+msgstr "Only the organisation's admins and billing contacts see this page."
 
 #: src/features/accounts/format.ts:90
 #: src/features/accounts/format.ts:98
@@ -965,7 +976,7 @@ msgstr "Open the signed PDF"
 msgid "Open the tutorial"
 msgstr "Open the tutorial"
 
-#: src/features/accounts/customer/DocumentsTable.tsx:92
+#: src/features/accounts/customer/DocumentsTable.tsx:96
 msgid "Open to sign"
 msgstr "Open to sign"
 
@@ -1009,7 +1020,7 @@ msgstr "Organisation"
 msgid "Organisation name"
 msgstr "Organisation name"
 
-#: src/features/accounts/customer/TalkToUs.tsx:44
+#: src/features/accounts/customer/TalkToUs.tsx:60
 msgid "Our answer appears here, on this page."
 msgstr "Our answer appears here, on this page."
 
@@ -1057,7 +1068,7 @@ msgstr "Pay online"
 msgid "Peppol ID"
 msgstr "Peppol ID"
 
-#: src/features/accounts/customer/TalkToUs.tsx:52
+#: src/features/accounts/customer/TalkToUs.tsx:68
 msgid "Pick a time that suits you."
 msgstr "Pick a time that suits you."
 
@@ -1509,7 +1520,7 @@ msgstr "Subscription"
 msgid "System"
 msgstr "System"
 
-#: src/features/accounts/customer/TalkToUs.tsx:31
+#: src/features/accounts/customer/TalkToUs.tsx:40
 msgid "Talk to us"
 msgstr "Talk to us"
 
@@ -1543,6 +1554,8 @@ msgid "Task withdrawn"
 msgstr "Task withdrawn"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:370
+#: src/features/accounts/customer/AccountRoute.tsx:93
+#: src/features/accounts/customer/AccountRoute.tsx:93
 #: src/features/accounts/customer/AccountPickerRoute.tsx:44
 msgid "Tasks"
 msgstr "Tasks"
@@ -1550,6 +1563,10 @@ msgstr "Tasks"
 #: src/features/accounts/customer/AccountPickerRoute.tsx:34
 msgid "Tasks | dembrane"
 msgstr "Tasks | dembrane"
+
+#: src/features/accounts/customer/TalkToUs.tsx:53
+msgid "Tell us what works and what does not."
+msgstr "Tell us what works and what does not."
 
 #: src/features/accounts/staff/PushOfferModal.tsx:172
 #: src/features/accounts/staff/NewDemoRoute.tsx:223
@@ -1577,8 +1594,8 @@ msgid "The account"
 msgstr "The account"
 
 #: src/features/accounts/customer/AccountRoute.tsx:62
-msgid "The account could not be loaded. Try again in a moment."
-msgstr "The account could not be loaded. Try again in a moment."
+#~ msgid "The account could not be loaded. Try again in a moment."
+#~ msgstr "The account could not be loaded. Try again in a moment."
 
 #: src/features/accounts/staff/TaskModals.tsx:59
 msgid "The customer answers with"
@@ -1650,6 +1667,10 @@ msgstr "This document was sent. Its fields are fixed; send a new version to chan
 #: src/features/accounts/staff/AccountCardRoute.tsx:515
 msgid "This organisation has no account yet"
 msgstr "This organisation has no account yet"
+
+#: src/features/accounts/customer/AccountRoute.tsx:218
+msgid "This page could not be loaded. Try again in a moment."
+msgstr "This page could not be loaded. Try again in a moment."
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:760
 msgid "Timeline"
@@ -1870,8 +1891,8 @@ msgid "You"
 msgstr "You"
 
 #: src/features/accounts/customer/AccountRoute.tsx:162
-msgid "You are all set. Nothing needs you right now."
-msgstr "You are all set. Nothing needs you right now."
+#~ msgid "You are all set. Nothing needs you right now."
+#~ msgstr "You are all set. Nothing needs you right now."
 
 #: src/features/accounts/customer/NextSteps.tsx:439
 msgid "Your answer"

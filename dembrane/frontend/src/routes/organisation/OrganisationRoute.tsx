@@ -1,4 +1,4 @@
-import { t } from "@lingui/core/macro";
+import { plural, t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
@@ -7,7 +7,6 @@ import {
 	Badge,
 	Button,
 	Center,
-	Container,
 	Group,
 	Image,
 	Menu,
@@ -32,7 +31,7 @@ import {
 	UsersThree,
 } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router";
 import { OrgAgentAccessPanel } from "@/components/agent-access/OrgAgentAccessPanel";
 import { OrgBillingTab } from "@/components/billing/BillingManager";
@@ -42,6 +41,7 @@ import { toast } from "@/components/common/Toaster";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { notifyError } from "@/components/error/notifyError";
 import { InviteModal } from "@/components/invite/InviteModal";
+import { PageContainer } from "@/components/layout/PageContainer";
 import {
 	InviteMemberCard,
 	MembersToolbar,
@@ -51,7 +51,8 @@ import { OrgTrainingPanel } from "@/components/training";
 import { DiscoverableWorkspaces } from "@/components/workspace/DiscoverableWorkspaces";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { OrganisationUsageRollup } from "@/components/workspace/OrganisationUsageRollup";
-import { API_BASE_URL } from "@/config";
+import { API_BASE_URL, ENABLE_TRAINING } from "@/config";
+import { useTasksSummary } from "@/features/accounts/help/tasksSummary";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useUrlSearch } from "@/hooks/useUrlSearch";
 import { useV2Me } from "@/hooks/useV2Me";
@@ -67,6 +68,19 @@ import { invalidateOrgMembersEverywhere } from "@/lib/orgQueryKeys";
 import { displayRole, isOutsiderRole, roleColor } from "@/lib/roles";
 import { SELLABLE_TIER, type Tier } from "@/lib/tiers";
 import { OrganisationExternalView } from "./OrganisationExternalView";
+
+// The customer account's parts of the overview, for orgs with account content. Lazy, like
+// the rest of src/features/accounts: they bring that feature's catalog and screens.
+const AccountOverviewWork = lazy(() =>
+	import("@/features/accounts/customer/AccountRoute").then((m) => ({
+		default: m.AccountOverviewWork,
+	})),
+);
+const AccountOverviewContact = lazy(() =>
+	import("@/features/accounts/customer/AccountRoute").then((m) => ({
+		default: m.AccountOverviewContact,
+	})),
+);
 
 /**
  * Organisation admin page — single-page matrix view.
@@ -322,7 +336,7 @@ export const OrganisationRoute = () => {
 		"overview",
 		"usage",
 		"members",
-		"training",
+		...(ENABLE_TRAINING ? (["training"] as const) : []),
 		"billing",
 		"agents",
 	] as const;
@@ -337,7 +351,7 @@ export const OrganisationRoute = () => {
 				const section = segments[1] ?? "general";
 				if (section === "usage") return "usage";
 				if (section === "members") return "members";
-				if (section === "training") return "training";
+				if (section === "training" && ENABLE_TRAINING) return "training";
 				if (section === "billing") return "billing";
 				if (section === "agents") return "agents";
 				// general / anything else → overview (general settings).
@@ -374,8 +388,6 @@ export const OrganisationRoute = () => {
 		navigate(`/o/${organisationId}/${value}${urlSearch}`, { replace: true });
 	};
 
-	useDocumentTitle(t`Organisation | dembrane`);
-
 	const {
 		data: organisation,
 		isLoading: organisationLoading,
@@ -386,6 +398,15 @@ export const OrganisationRoute = () => {
 		queryKey: ["v2", "organisation", organisationId],
 		staleTime: 30_000,
 	});
+	useDocumentTitle(
+		organisation
+			? `${organisation.name} | dembrane`
+			: t`Organisation | dembrane`,
+	);
+	// The org's row in the account tasks summary: present when it has account content
+	// (an offer, a task, a document) the caller may see, with what waits on them.
+	const { data: tasksSummary } = useTasksSummary();
+	const account = tasksSummary?.find((o) => o.org_id === organisationId);
 	const {
 		data: membersData,
 		error: membersError,
@@ -692,9 +713,28 @@ export const OrganisationRoute = () => {
 	}
 
 	const peopleCount = orgPeopleCount(organisation);
+	// Under the name, only what there is: open tasks, workspaces, and the people once
+	// there is more than the one looking.
+	const facts = [
+		account && account.tasks_waiting > 0
+			? plural(account.tasks_waiting, {
+					one: "# open task",
+					other: "# open tasks",
+				})
+			: null,
+		organisation.workspace_count > 0
+			? plural(organisation.workspace_count, {
+					one: "# workspace",
+					other: "# workspaces",
+				})
+			: null,
+		peopleCount > 1
+			? plural(peopleCount, { one: "# member", other: "# members" })
+			: null,
+	].filter(Boolean);
 
 	return (
-		<Container size="xl" py="xl" px="lg">
+		<PageContainer width="xl">
 			<Stack gap={24}>
 				{/* Header — minimal. Name + counts on the left, action cluster
 				    on the right. Tier is intentionally absent (it's a
@@ -713,13 +753,11 @@ export const OrganisationRoute = () => {
 						)}
 						<Stack gap="xs" style={{ minWidth: 0 }}>
 							<Title order={2}>{organisation.name}</Title>
-							<Text size="sm" c="dimmed">
-								{organisation.workspace_count}{" "}
-								{organisation.workspace_count === 1
-									? t`workspace`
-									: t`workspaces`}{" "}
-								· {peopleCount} {peopleCount === 1 ? t`person` : t`people`}
-							</Text>
+							{facts.length > 0 && (
+								<Text size="sm" c="dimmed" data-testid="org-facts">
+									{facts.join(" · ")}
+								</Text>
+							)}
 							{/* Matrix §5: organisation-level role set is Admin / Billing /
 							    Member — no organisation-level Guest. Guest count intentionally
 							    dropped from the header summary (HCD audit). */}
@@ -761,6 +799,7 @@ export const OrganisationRoute = () => {
 								membersLoading={membersLoading}
 								workspaces={workspaces}
 								isManager={isAdmin}
+								hasAccount={Boolean(account)}
 								atWorkspaceLimit={atWorkspaceLimit}
 								onOpenWorkspace={(id) => {
 									// Sync context first so workspace-scoped queries don't lag.
@@ -821,9 +860,11 @@ export const OrganisationRoute = () => {
 						</Tabs.Panel>
 					)}
 
-					<Tabs.Panel value="training" pt="md">
-						{organisationId && <OrgTrainingPanel orgId={organisationId} />}
-					</Tabs.Panel>
+					{ENABLE_TRAINING && (
+						<Tabs.Panel value="training" pt="md">
+							{organisationId && <OrgTrainingPanel orgId={organisationId} />}
+						</Tabs.Panel>
+					)}
 
 					{isAdmin && (
 						<Tabs.Panel value="agents" pt="md">
@@ -1002,7 +1043,7 @@ export const OrganisationRoute = () => {
 				workspaceId=""
 				wallKey="workspace_cap"
 			/>
-		</Container>
+		</PageContainer>
 	);
 };
 
@@ -1234,6 +1275,7 @@ function OrganisationOverviewPanel({
 	membersLoading,
 	workspaces,
 	isManager,
+	hasAccount,
 	atWorkspaceLimit = false,
 	onOpenWorkspace,
 	onOpenProject,
@@ -1248,6 +1290,8 @@ function OrganisationOverviewPanel({
 	// the user can't actually open.
 	workspaces: OrganisationWorkspace[];
 	isManager: boolean;
+	/** The org has customer-account content the caller sees: tasks, documents, contact. */
+	hasAccount: boolean;
 	atWorkspaceLimit?: boolean;
 	onOpenWorkspace: (workspaceId: string) => void;
 	onOpenProject: (workspaceId: string, projectId: string) => void;
@@ -1313,8 +1357,21 @@ function OrganisationOverviewPanel({
 	const visiblePeople = people.slice(0, MAX_BUBBLES);
 	const overflowPeople = people.length - visiblePeople.length;
 
+	// The overview gathers what is open and relevant from the org's own pages, and leaves
+	// out what has nothing to say: Members while you are alone, Workspaces while there are
+	// none. A manager of a self-serve org still sees Workspaces, to create the first one.
+	const showMembers = membersLoading || people.length > 1;
+	const showWorkspaces =
+		workspacesLoading || myCards.length > 0 || (isManager && !hasAccount);
+
 	return (
 		<Stack gap={32}>
+			{hasAccount && (
+				<Suspense fallback={null}>
+					<AccountOverviewWork orgId={orgId} />
+				</Suspense>
+			)}
+
 			{organisation.description && (
 				<Text
 					size="sm"
@@ -1325,136 +1382,146 @@ function OrganisationOverviewPanel({
 				</Text>
 			)}
 
-			<Stack gap="sm">
-				<Group gap="xs" align="baseline">
-					<Title order={4}>
-						<Trans>People</Trans>
-					</Title>
-					{!membersLoading && (
-						<Text size="sm" c="dimmed">
-							{people.length}
-						</Text>
-					)}
-				</Group>
-				{membersLoading && people.length === 0 ? (
-					<Skeleton h={36} w={240} />
-				) : people.length === 0 ? (
-					<Text size="sm" c="dimmed">
-						<Trans>No one on this organisation yet.</Trans>
-					</Text>
-				) : (
-					<Tooltip.Group>
-						<Avatar.Group spacing="sm">
-							{visiblePeople.map((m) => (
-								<Tooltip
-									key={m.user_id}
-									label={`${m.display_name} · ${
-										m.is_external ? t`External` : displayRole(m.role)
-									}`}
-									withArrow
-								>
-									<Avatar
-										size={36}
-										radius="full"
-										src={avatarUrl(m.avatar)}
-										color="primary"
-										style={{ cursor: "pointer" }}
-										onClick={handlePeopleClick}
-									>
-										{memberInitials(m.display_name, m.email)}
-									</Avatar>
-								</Tooltip>
-							))}
-							{overflowPeople > 0 && (
-								<Avatar
-									size={36}
-									radius="full"
-									color="gray"
-									style={{ cursor: "pointer" }}
-									onClick={handlePeopleClick}
-								>
-									+{overflowPeople}
-								</Avatar>
-							)}
-							{isManager && (
-								<Tooltip label={t`Manage members`} withArrow>
-									<Avatar
-										size={36}
-										radius="full"
-										color="primary"
-										variant="light"
-										style={{ cursor: "pointer" }}
-										onClick={handlePeopleClick}
-									>
-										<PlusIcon size={16} />
-									</Avatar>
-								</Tooltip>
-							)}
-						</Avatar.Group>
-					</Tooltip.Group>
-				)}
-			</Stack>
-
-			<Stack gap="sm">
-				<Group justify="space-between" align="center">
+			{showMembers && (
+				<Stack gap="sm">
 					<Group gap="xs" align="baseline">
-						<Title order={4}>
-							<Trans>Workspaces</Trans>
+						<Title order={2} size="h3">
+							<Trans>Members</Trans>
 						</Title>
-						{!workspacesLoading && (
+						{!membersLoading && (
 							<Text size="sm" c="dimmed">
-								{myCards.length}
+								{people.length}
 							</Text>
 						)}
 					</Group>
-					{isManager && (
-						<Group gap={4}>
-							<Button
-								leftSection={<PlusIcon size={20} />}
-								onClick={onRequestWorkspace}
-								opacity={atWorkspaceLimit ? 0.8 : 1}
-							>
-								<Trans>Create workspace</Trans>
-							</Button>
-							{atWorkspaceLimit && (
-								<Tooltip
-									label={t`Free plan allows 1 workspace per organisation`}
-								>
-									<InfoIcon
-										size={16}
-										color="var(--mantine-color-dimmed)"
-										style={{ cursor: "help" }}
-									/>
-								</Tooltip>
+					{membersLoading && people.length === 0 ? (
+						<Skeleton h={36} w={240} />
+					) : people.length === 0 ? (
+						<Text size="sm" c="dimmed">
+							<Trans>No one on this organisation yet.</Trans>
+						</Text>
+					) : (
+						<Tooltip.Group>
+							<Avatar.Group spacing="sm">
+								{visiblePeople.map((m) => (
+									<Tooltip
+										key={m.user_id}
+										label={`${m.display_name} · ${
+											m.is_external ? t`External` : displayRole(m.role)
+										}`}
+										withArrow
+									>
+										<Avatar
+											size={36}
+											radius="full"
+											src={avatarUrl(m.avatar)}
+											color="primary"
+											style={{ cursor: "pointer" }}
+											onClick={handlePeopleClick}
+										>
+											{memberInitials(m.display_name, m.email)}
+										</Avatar>
+									</Tooltip>
+								))}
+								{overflowPeople > 0 && (
+									<Avatar
+										size={36}
+										radius="full"
+										color="gray"
+										style={{ cursor: "pointer" }}
+										onClick={handlePeopleClick}
+									>
+										+{overflowPeople}
+									</Avatar>
+								)}
+								{isManager && (
+									<Tooltip label={t`Manage members`} withArrow>
+										<Avatar
+											size={36}
+											radius="full"
+											color="primary"
+											variant="light"
+											style={{ cursor: "pointer" }}
+											onClick={handlePeopleClick}
+										>
+											<PlusIcon size={16} />
+										</Avatar>
+									</Tooltip>
+								)}
+							</Avatar.Group>
+						</Tooltip.Group>
+					)}
+				</Stack>
+			)}
+
+			{showWorkspaces && (
+				<Stack gap="sm">
+					<Group justify="space-between" align="center">
+						<Group gap="xs" align="baseline">
+							<Title order={2} size="h3">
+								<Trans>Workspaces</Trans>
+							</Title>
+							{!workspacesLoading && (
+								<Text size="sm" c="dimmed">
+									{myCards.length}
+								</Text>
 							)}
 						</Group>
+						{isManager && (
+							<Group gap={4}>
+								<Button
+									leftSection={<PlusIcon size={20} />}
+									onClick={onRequestWorkspace}
+									opacity={atWorkspaceLimit ? 0.8 : 1}
+								>
+									<Trans>Create workspace</Trans>
+								</Button>
+								{atWorkspaceLimit && (
+									<Tooltip
+										label={t`Free plan allows 1 workspace per organisation`}
+									>
+										<InfoIcon
+											size={16}
+											color="var(--mantine-color-dimmed)"
+											style={{ cursor: "help" }}
+										/>
+									</Tooltip>
+								)}
+							</Group>
+						)}
+					</Group>
+					{workspacesLoading && myCards.length === 0 ? (
+						<Skeleton h={160} />
+					) : myCards.length === 0 ? (
+						<Text size="sm" c="dimmed">
+							<Trans>
+								You haven't joined any workspace in this organisation yet.
+							</Trans>
+						</Text>
+					) : (
+						<SimpleGrid cols={{ base: 1, lg: 3, sm: 2 }} spacing="md">
+							{myCards.map((ws) => (
+								<OrganisationWorkspaceCard
+									key={ws.id}
+									workspace={ws}
+									onOpen={() => onOpenWorkspace(ws.id)}
+									onOpenProject={(projectId) => onOpenProject(ws.id, projectId)}
+								/>
+							))}
+						</SimpleGrid>
 					)}
-				</Group>
-				{workspacesLoading && myCards.length === 0 ? (
-					<Skeleton h={160} />
-				) : myCards.length === 0 ? (
-					<Text size="sm" c="dimmed">
-						<Trans>
-							You haven't joined any workspace in this organisation yet.
-						</Trans>
-					</Text>
-				) : (
-					<SimpleGrid cols={{ base: 1, lg: 3, sm: 2 }} spacing="md">
-						{myCards.map((ws) => (
-							<OrganisationWorkspaceCard
-								key={ws.id}
-								workspace={ws}
-								onOpen={() => onOpenWorkspace(ws.id)}
-								onOpenProject={(projectId) => onOpenProject(ws.id, projectId)}
-							/>
-						))}
-					</SimpleGrid>
-				)}
-			</Stack>
+				</Stack>
+			)}
 
 			{/* Workspaces in this org the caller isn't a member of but can join or
 			    request access to. Self-hides when there's nothing to surface. */}
 			<DiscoverableWorkspaces orgId={orgId} />
+
+			{hasAccount && (
+				<Suspense fallback={null}>
+					<AccountOverviewContact orgId={orgId} />
+				</Suspense>
+			)}
 		</Stack>
 	);
 }

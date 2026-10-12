@@ -188,9 +188,17 @@ const AdminSettingsRoute = createLazyNamedRoute(
 // Customer accounts (src/features/accounts). Dashboard only and lazy: pdf.js, the
 // signature pad and the cal.com step load with these screens, never with the shell or the
 // portal.
-const AccountRoute = createLazyNamedRoute(
+const AccountRedirect = createLazyNamedRoute(
 	() => import("./features/accounts/customer/AccountRoute"),
-	"AccountRoute",
+	"AccountRedirect",
+);
+const AccountTasksRoute = createLazyNamedRoute(
+	() => import("./features/accounts/customer/AccountRoute"),
+	"AccountTasksRoute",
+);
+const AccountDocumentsRoute = createLazyNamedRoute(
+	() => import("./features/accounts/customer/AccountRoute"),
+	"AccountDocumentsRoute",
 );
 const SignRoute = createLazyNamedRoute(
 	() => import("./features/accounts/signing/SignRoute"),
@@ -524,9 +532,18 @@ export const mainRouter = createBrowserRouter([
 						index: true,
 					},
 					{
-						// The customer's account page; ranked above the splat below.
-						element: <AccountRoute />,
+						// The customer account's pages; ranked above the splat below. The old
+						// single account page now lives on the overview.
+						element: <AccountRedirect />,
 						path: ":organisationId/account",
+					},
+					{
+						element: <AccountTasksRoute />,
+						path: ":organisationId/tasks",
+					},
+					{
+						element: <AccountDocumentsRoute />,
+						path: ":organisationId/documents",
 					},
 					{
 						// Splat so tab state lives in the path
@@ -624,7 +641,7 @@ export const mainRouter = createBrowserRouter([
 				path: "release-notes",
 			},
 			{
-				// "Tasks" in the Help menu, when the caller has account tasks in several orgs.
+				// The organisations with account tasks, one card each; once Help's "Tasks".
 				children: [{ element: <AccountPickerRoute />, index: true }],
 				element: (
 					<Protected>

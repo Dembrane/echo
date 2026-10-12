@@ -1,5 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { useMemo } from "react";
+import { ENABLE_TRAINING } from "@/config";
 import { useV2Me } from "@/hooks/useV2Me";
 
 /**
@@ -26,7 +27,7 @@ export const useTrainingPendingActions = (): PendingAction[] => {
 	const { data: me } = useV2Me();
 
 	return useMemo(() => {
-		if (!me) return [];
+		if (!me || !ENABLE_TRAINING) return [];
 		const trained = me.training_status?.trained ?? false;
 		if (!me.high_risk_context || trained) return [];
 

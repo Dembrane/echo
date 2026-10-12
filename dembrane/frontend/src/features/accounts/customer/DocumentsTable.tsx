@@ -1,6 +1,7 @@
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import { Anchor, Group, Stack, Text } from "@mantine/core";
+import type { ReactNode } from "react";
 import { I18nLink } from "@/components/common/i18nLink";
 import { usePdfHref } from "../api/hooks";
 import type { DocumentSummaryT } from "../contract/contract.gen";
@@ -21,12 +22,15 @@ import { PageSection, Row, Rows } from "./PageSection";
 export function DocumentsTable({
 	orgId,
 	documents,
+	title = <Trans>Documents</Trans>,
 }: {
 	orgId: string;
 	documents: DocumentSummaryT[];
+	/** The section heading; null on the Documents page, whose own title says it. */
+	title?: ReactNode;
 }) {
 	return (
-		<PageSection title={<Trans>Documents</Trans>} testId="documents">
+		<PageSection title={title} testId="documents">
 			{documents.length === 0 ? (
 				<Text c="dimmed">
 					<Trans>

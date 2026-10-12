@@ -6,15 +6,22 @@ import {
 	Text,
 	UnstyledButton,
 } from "@mantine/core";
-import { CalendarBlankIcon, ChatTextIcon } from "@phosphor-icons/react";
+import {
+	CalendarBlankIcon,
+	ChatCircleIcon,
+	ChatTextIcon,
+} from "@phosphor-icons/react";
 import { type ReactNode, useState } from "react";
+import { useParams } from "react-router";
+import { ReportIssueModal } from "@/components/feedback/ReportIssueModal";
 import type { TicketT } from "../contract/contract.gen";
 import { PageSection } from "./PageSection";
 import { AskForm, TicketItem } from "./Questions";
 
 /**
- * Two ways to reach dembrane, side by side as equals: a written question, answered here,
- * or a call. Earlier questions follow, newest first as the API sends them.
+ * The three ways to reach dembrane, side by side as equals, the same three as the Help
+ * menu: feedback (a heads-up, no answer needed), a written question answered here, or a
+ * call. Earlier questions follow, newest first as the API sends them.
  */
 export function TalkToUs({
 	orgId,
@@ -27,6 +34,8 @@ export function TalkToUs({
 	onBookCall?: () => void;
 }) {
 	const [asking, setAsking] = useState(false);
+	const [feedback, setFeedback] = useState(false);
+	const { language } = useParams();
 	return (
 		<PageSection title={<Trans>Talk to us</Trans>} testId="questions">
 			<Stack gap="md">
@@ -37,7 +46,14 @@ export function TalkToUs({
 						onDone={() => setAsking(false)}
 					/>
 				) : (
-					<SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
+					<SimpleGrid cols={{ base: 1, sm: onBookCall ? 3 : 2 }} spacing="sm">
+						<Choice
+							icon={<ChatCircleIcon size={20} aria-hidden />}
+							title={<Trans>Leave feedback</Trans>}
+							body={<Trans>Tell us what works and what does not.</Trans>}
+							onClick={() => setFeedback(true)}
+							testId="leave-feedback"
+						/>
 						<Choice
 							icon={<ChatTextIcon size={20} aria-hidden />}
 							title={<Trans>Ask a question</Trans>}
@@ -69,6 +85,11 @@ export function TalkToUs({
 					</Accordion>
 				)}
 			</Stack>
+			<ReportIssueModal
+				opened={feedback}
+				onClose={() => setFeedback(false)}
+				locale={language}
+			/>
 		</PageSection>
 	);
 }

@@ -68,8 +68,8 @@ msgid "{done} of {total} filled"
 msgstr "{done} z {total} vyplněno"
 
 #: src/features/accounts/customer/AccountRoute.tsx:156
-msgid "{mine, plural, one {One thing needs you.} other {# things need you.}}"
-msgstr "{mine, plural, one {Čeká na vás jedna věc.} few {Čekají na vás # věci.} many {Čeká na vás # věcí.} other {Čeká na vás # věcí.}}"
+#~ msgid "{mine, plural, one {One thing needs you.} other {# things need you.}}"
+#~ msgstr "{mine, plural, one {Čeká na vás jedna věc.} few {Čekají na vás # věci.} many {Čeká na vás # věcí.} other {Čeká na vás # věcí.}}"
 
 #: src/features/accounts/staff/NewDemoRoute.tsx:214
 msgid "A draft on their account, for you to send after the demo."
@@ -96,8 +96,8 @@ msgstr "Textová odpověď"
 #~ msgstr ""
 
 #: src/features/accounts/customer/AccountRoute.tsx:36
-msgid "Account | dembrane"
-msgstr "Účet | dembrane"
+#~ msgid "Account | dembrane"
+#~ msgstr "Účet | dembrane"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:722
 msgid "Account created"
@@ -177,7 +177,7 @@ msgstr "Zodpovězeno"
 msgid "Approve"
 msgstr "Schválit"
 
-#: src/features/accounts/customer/TalkToUs.tsx:43
+#: src/features/accounts/customer/TalkToUs.tsx:59
 #: src/features/accounts/customer/Questions.tsx:55
 msgid "Ask a question"
 msgstr "Položit otázku"
@@ -225,7 +225,7 @@ msgstr "Fakturační údaje uloženy"
 msgid "Billing details updated"
 msgstr "Fakturační údaje aktualizovány"
 
-#: src/features/accounts/customer/TalkToUs.tsx:51
+#: src/features/accounts/customer/TalkToUs.tsx:67
 #: src/features/accounts/customer/NextSteps.tsx:348
 #: src/features/accounts/customer/BookCallModal.tsx:26
 msgid "Book a call"
@@ -462,7 +462,9 @@ msgid "Document withdrawn"
 msgstr "Dokument stažen zpět"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:238
-#: src/features/accounts/customer/DocumentsTable.tsx:29
+#: src/features/accounts/customer/DocumentsTable.tsx:25
+#: src/features/accounts/customer/AccountRoute.tsx:102
+#: src/features/accounts/customer/AccountRoute.tsx:102
 msgid "Documents"
 msgstr "Dokumenty"
 
@@ -473,7 +475,7 @@ msgid "Done"
 msgstr "Hotovo"
 
 #: src/features/accounts/customer/ToPay.tsx:153
-#: src/features/accounts/customer/DocumentsTable.tsx:103
+#: src/features/accounts/customer/DocumentsTable.tsx:107
 msgid "Download PDF"
 msgstr "Stáhnout PDF"
 
@@ -707,6 +709,10 @@ msgstr "Jazyk"
 msgid "Later"
 msgstr "Později"
 
+#: src/features/accounts/customer/TalkToUs.tsx:52
+msgid "Leave feedback"
+msgstr "Zanechat zpětnou vazbu"
+
 #: src/features/accounts/staff/AccountCardRoute.tsx:697
 msgid "Legal name"
 msgstr "Právní název"
@@ -870,9 +876,10 @@ msgid "Note"
 msgstr "Poznámka"
 
 #: src/features/accounts/customer/AccountRoute.tsx:161
-msgid "Nothing needs you right now. We are working on our part."
-msgstr "Teď na vás nic nečeká. Pracujeme na své části."
+#~ msgid "Nothing needs you right now. We are working on our part."
+#~ msgstr "Teď na vás nic nečeká. Pracujeme na své části."
 
+#: src/features/accounts/customer/AccountRoute.tsx:144
 #: src/features/accounts/customer/AccountPickerRoute.tsx:54
 msgid "Nothing to do right now."
 msgstr "V tuto chvíli není co dělat."
@@ -891,7 +898,7 @@ msgstr "Jazyk nabídky"
 msgid "Offer sent. The customer sees it the next time they sign in."
 msgstr "Nabídka odeslána. Zákazník ji uvidí, jakmile se příště přihlásí."
 
-#: src/features/accounts/customer/DocumentsTable.tsx:32
+#: src/features/accounts/customer/DocumentsTable.tsx:36
 msgid "Offers, agreements and invoices appear here once we send them."
 msgstr "Nabídky, smlouvy a faktury se zde zobrazí, jakmile je odešleme."
 
@@ -916,8 +923,12 @@ msgid "Only staff see this draft. When you send it, it gets that day's date and 
 msgstr "Tento koncept vidí jen zaměstnanci. Po odeslání dostane datum toho dne a platí 14 dní."
 
 #: src/features/accounts/customer/AccountRoute.tsx:57
-msgid "Only the organisation's admins and billing contacts see the account."
-msgstr "Účet vidí pouze správci a fakturační kontakty organizace."
+#~ msgid "Only the organisation's admins and billing contacts see the account."
+#~ msgstr "Účet vidí pouze správci a fakturační kontakty organizace."
+
+#: src/features/accounts/customer/AccountRoute.tsx:213
+msgid "Only the organisation's admins and billing contacts see this page."
+msgstr "Tuto stránku vidí jen správci a fakturační kontakty organizace."
 
 #: src/features/accounts/format.ts:90
 #: src/features/accounts/format.ts:98
@@ -965,7 +976,7 @@ msgstr "Otevřít podepsané PDF"
 msgid "Open the tutorial"
 msgstr "Otevřít návod"
 
-#: src/features/accounts/customer/DocumentsTable.tsx:92
+#: src/features/accounts/customer/DocumentsTable.tsx:96
 msgid "Open to sign"
 msgstr "Otevřít k podpisu"
 
@@ -1009,7 +1020,7 @@ msgstr "Organizace"
 msgid "Organisation name"
 msgstr "Název organizace"
 
-#: src/features/accounts/customer/TalkToUs.tsx:44
+#: src/features/accounts/customer/TalkToUs.tsx:60
 msgid "Our answer appears here, on this page."
 msgstr "Naše odpověď se zobrazí zde, na této stránce."
 
@@ -1057,7 +1068,7 @@ msgstr "Zaplatit online"
 msgid "Peppol ID"
 msgstr "Peppol ID"
 
-#: src/features/accounts/customer/TalkToUs.tsx:52
+#: src/features/accounts/customer/TalkToUs.tsx:68
 msgid "Pick a time that suits you."
 msgstr "Vyberte si čas, který vám vyhovuje."
 
@@ -1509,7 +1520,7 @@ msgstr "Předplatné"
 msgid "System"
 msgstr "Systém"
 
-#: src/features/accounts/customer/TalkToUs.tsx:31
+#: src/features/accounts/customer/TalkToUs.tsx:40
 msgid "Talk to us"
 msgstr "Napište nám"
 
@@ -1543,6 +1554,8 @@ msgid "Task withdrawn"
 msgstr "Úkol stažen"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:370
+#: src/features/accounts/customer/AccountRoute.tsx:93
+#: src/features/accounts/customer/AccountRoute.tsx:93
 #: src/features/accounts/customer/AccountPickerRoute.tsx:44
 msgid "Tasks"
 msgstr "Úkoly"
@@ -1550,6 +1563,10 @@ msgstr "Úkoly"
 #: src/features/accounts/customer/AccountPickerRoute.tsx:34
 msgid "Tasks | dembrane"
 msgstr "Úkoly | dembrane"
+
+#: src/features/accounts/customer/TalkToUs.tsx:53
+msgid "Tell us what works and what does not."
+msgstr "Řekněte nám, co funguje a co ne."
 
 #: src/features/accounts/staff/PushOfferModal.tsx:172
 #: src/features/accounts/staff/NewDemoRoute.tsx:223
@@ -1577,8 +1594,8 @@ msgid "The account"
 msgstr "Účet"
 
 #: src/features/accounts/customer/AccountRoute.tsx:62
-msgid "The account could not be loaded. Try again in a moment."
-msgstr "Účet se nepodařilo načíst. Zkuste to za chvíli znovu."
+#~ msgid "The account could not be loaded. Try again in a moment."
+#~ msgstr "Účet se nepodařilo načíst. Zkuste to za chvíli znovu."
 
 #: src/features/accounts/staff/TaskModals.tsx:59
 msgid "The customer answers with"
@@ -1650,6 +1667,10 @@ msgstr "Tento dokument byl odeslán. Jeho pole jsou uzamčena; pro jejich změnu
 #: src/features/accounts/staff/AccountCardRoute.tsx:515
 msgid "This organisation has no account yet"
 msgstr "Tato organizace zatím nemá účet"
+
+#: src/features/accounts/customer/AccountRoute.tsx:218
+msgid "This page could not be loaded. Try again in a moment."
+msgstr "Stránku se nepodařilo načíst. Zkuste to za chvíli znovu."
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:760
 msgid "Timeline"
@@ -1870,8 +1891,8 @@ msgid "You"
 msgstr "Vy"
 
 #: src/features/accounts/customer/AccountRoute.tsx:162
-msgid "You are all set. Nothing needs you right now."
-msgstr "Vše je hotovo. Teď na vás nic nečeká."
+#~ msgid "You are all set. Nothing needs you right now."
+#~ msgstr "Vše je hotovo. Teď na vás nic nečeká."
 
 #: src/features/accounts/customer/NextSteps.tsx:439
 msgid "Your answer"
