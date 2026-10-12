@@ -235,7 +235,7 @@ msgstr "Назад до облікового запису"
 msgid "Back to the account"
 msgstr "Назад до облікового запису"
 
-#: src/features/accounts/customer/NextSteps.tsx:275
+#: src/features/accounts/customer/NextSteps.tsx:277
 msgid "Before {date}"
 msgstr "До {date}"
 
@@ -255,7 +255,7 @@ msgid "Billing details updated"
 msgstr "Платіжні реквізити оновлено"
 
 #: src/features/accounts/customer/TalkToUs.tsx:67
-#: src/features/accounts/customer/NextSteps.tsx:467
+#: src/features/accounts/customer/NextSteps.tsx:469
 #: src/features/accounts/customer/BookCallModal.tsx:26
 msgid "Book a call"
 msgstr "Запланувати дзвінок"
@@ -344,7 +344,7 @@ msgstr "Зв'язатися з клієнтом: {0}"
 msgid "Checkbox"
 msgstr "Прапорець"
 
-#: src/features/accounts/customer/NextSteps.tsx:548
+#: src/features/accounts/customer/NextSteps.tsx:550
 msgid "Choose a file"
 msgstr "Виберіть файл"
 
@@ -561,7 +561,7 @@ msgstr "Документи"
 #: src/features/accounts/customer/WhoSigns.tsx:247
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:152
 #: src/features/accounts/customer/NextSteps.tsx:96
-#: src/features/accounts/customer/NextSteps.tsx:374
+#: src/features/accounts/customer/NextSteps.tsx:376
 msgid "Done"
 msgstr "Готово"
 
@@ -692,7 +692,7 @@ msgstr "Поля | dembrane"
 msgid "Fields saved"
 msgstr "Поля збережено"
 
-#: src/features/accounts/customer/NextSteps.tsx:233
+#: src/features/accounts/customer/NextSteps.tsx:234
 msgid "Fill in"
 msgstr "Заповнити"
 
@@ -978,7 +978,7 @@ msgstr "Нове демо | dembrane"
 msgid "New message"
 msgstr "Нове повідомлення"
 
-#: src/features/accounts/customer/NextSteps.tsx:458
+#: src/features/accounts/customer/NextSteps.tsx:460
 msgid "New project"
 msgstr "Новий проєкт"
 
@@ -1027,7 +1027,7 @@ msgid "No documents yet."
 msgstr "Документів ще немає."
 
 #: src/features/accounts/staff/UploadPdfModal.tsx:114
-#: src/features/accounts/customer/NextSteps.tsx:553
+#: src/features/accounts/customer/NextSteps.tsx:555
 msgid "No file chosen"
 msgstr "Файл не вибрано"
 
@@ -1074,7 +1074,7 @@ msgstr "недоступно, доки ви не опублікуєте"
 msgid "Not sent"
 msgstr "Не надіслано"
 
-#: src/features/accounts/customer/NextSteps.tsx:558
+#: src/features/accounts/customer/NextSteps.tsx:560
 msgid "Note"
 msgstr "Примітка"
 
@@ -1152,7 +1152,7 @@ msgstr "Відкрити завдання"
 #~ msgid "Open the account"
 #~ msgstr ""
 
-#: src/features/accounts/customer/NextSteps.tsx:431
+#: src/features/accounts/customer/NextSteps.tsx:433
 msgid "Open the demo"
 msgstr "Відкрити демо"
 
@@ -1174,7 +1174,7 @@ msgstr "Відкрити PDF"
 msgid "Open the signed PDF"
 msgstr "Відкрити підписаний PDF"
 
-#: src/features/accounts/customer/NextSteps.tsx:453
+#: src/features/accounts/customer/NextSteps.tsx:455
 msgid "Open the tutorial"
 msgstr "Відкрити посібник"
 
@@ -1186,16 +1186,16 @@ msgstr "Відкрити для підпису"
 msgid "Opens after signing"
 msgstr "Відкривається після підписання"
 
-#: src/features/accounts/customer/NextSteps.tsx:371
+#: src/features/accounts/customer/NextSteps.tsx:373
 msgid "Opens after signing."
 msgstr "Відкривається після підписання."
 
 #. placeholder {0}: task.locked_until_title
-#: src/features/accounts/customer/NextSteps.tsx:369
+#: src/features/accounts/customer/NextSteps.tsx:371
 msgid "Opens after you sign {0}."
 msgstr "Відкриється після того, як ви підпишете {0}."
 
-#: src/features/accounts/customer/NextSteps.tsx:366
+#: src/features/accounts/customer/NextSteps.tsx:368
 msgid "Opens after you tell us who signs."
 msgstr "Відкриється, коли ви повідомите, хто підписує."
 
@@ -1203,7 +1203,7 @@ msgstr "Відкриється, коли ви повідомите, хто пі�
 #: src/features/accounts/staff/PushOfferModal.tsx:211
 #: src/features/accounts/staff/PushOfferModal.tsx:219
 #: src/features/accounts/signing/SignRoute.tsx:692
-#: src/features/accounts/customer/NextSteps.tsx:559
+#: src/features/accounts/customer/NextSteps.tsx:561
 msgid "Optional"
 msgstr "Необов'язково"
 
@@ -1439,7 +1439,7 @@ msgstr "Видалити рядок"
 
 #: src/features/accounts/customer/Questions.tsx:179
 #: src/features/accounts/customer/Questions.tsx:204
-#: src/features/accounts/customer/NextSteps.tsx:239
+#: src/features/accounts/customer/NextSteps.tsx:240
 msgid "Reply"
 msgstr "Відповісти"
 
@@ -1466,7 +1466,7 @@ msgstr "Переглянути й надіслати"
 
 #: src/features/accounts/signing/SignRoute.tsx:862
 #: src/features/accounts/customer/WhoSigns.tsx:256
-#: src/features/accounts/customer/NextSteps.tsx:193
+#: src/features/accounts/customer/NextSteps.tsx:194
 msgid "Review and sign"
 msgstr "Переглянути та підписати"
 
@@ -1536,7 +1536,7 @@ msgstr "Виберіть поле, щоб налаштувати його тип
 #: src/features/accounts/staff/AccountCardRoute.tsx:206
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:241
 #: src/features/accounts/customer/Questions.tsx:263
-#: src/features/accounts/customer/NextSteps.tsx:572
+#: src/features/accounts/customer/NextSteps.tsx:574
 msgid "Send"
 msgstr "Надіслати"
 
@@ -1568,8 +1568,8 @@ msgstr "Надіслати на підпис"
 
 #: src/features/accounts/signing/SignRoute.tsx:229
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:124
-#: src/features/accounts/customer/NextSteps.tsx:200
-#: src/features/accounts/customer/NextSteps.tsx:329
+#: src/features/accounts/customer/NextSteps.tsx:201
+#: src/features/accounts/customer/NextSteps.tsx:331
 msgid "Send to someone else"
 msgstr "Надіслати іншій особі"
 
@@ -1593,7 +1593,7 @@ msgstr "Надіслано"
 msgid "Sent {0}"
 msgstr "Надіслано {0}"
 
-#: src/features/accounts/customer/NextSteps.tsx:376
+#: src/features/accounts/customer/NextSteps.tsx:378
 msgid "Sent {when}. We are on it."
 msgstr "Надіслано {when}. Ми вже працюємо над цим."
 
@@ -1608,7 +1608,7 @@ msgstr "Надсилається одразу для ознайомлення."
 #~ msgid "Sent to {name}"
 #~ msgstr "Надіслано {name}"
 
-#: src/features/accounts/customer/NextSteps.tsx:514
+#: src/features/accounts/customer/NextSteps.tsx:516
 msgid "Sent to dembrane"
 msgstr "Надіслано до dembrane"
 
@@ -1739,7 +1739,7 @@ msgid "Stage set"
 msgstr "Етап встановлено"
 
 #: src/features/accounts/signing/SignRoute.tsx:452
-#: src/features/accounts/customer/NextSteps.tsx:212
+#: src/features/accounts/customer/NextSteps.tsx:213
 msgid "Start"
 msgstr "Почати"
 
@@ -2101,7 +2101,7 @@ msgid "Unsigned"
 msgstr "Не підписано"
 
 #: src/features/accounts/signing/SignatureCapture.tsx:252
-#: src/features/accounts/customer/NextSteps.tsx:239
+#: src/features/accounts/customer/NextSteps.tsx:240
 msgid "Upload"
 msgstr "Завантажити"
 
@@ -2152,7 +2152,7 @@ msgstr "VAT %"
 msgid "VAT number"
 msgstr "Номер VAT"
 
-#: src/features/accounts/customer/NextSteps.tsx:336
+#: src/features/accounts/customer/NextSteps.tsx:338
 msgid "View"
 msgstr "Переглянути"
 
@@ -2169,11 +2169,11 @@ msgstr "Переглянуто"
 #~ msgid "Waiting on {who}, {0}. We emailed them a link to sign."
 #~ msgstr ""
 
-#: src/features/accounts/customer/NextSteps.tsx:318
+#: src/features/accounts/customer/NextSteps.tsx:320
 msgid "Waiting on {who}, {jobTitle}. We emailed them a link to sign."
 msgstr "Очікуємо на {who}, {jobTitle}. Ми надіслали посилання для підпису."
 
-#: src/features/accounts/customer/NextSteps.tsx:322
+#: src/features/accounts/customer/NextSteps.tsx:324
 msgid "Waiting on {who}. We emailed them a link to sign."
 msgstr "Очікуємо на {who}. Ми надіслали посилання для підпису."
 
@@ -2196,12 +2196,12 @@ msgstr "Перегляньте посібник"
 msgid "We are on it"
 msgstr "Ми працюємо над цим"
 
-#: src/features/accounts/customer/NextSteps.tsx:378
+#: src/features/accounts/customer/NextSteps.tsx:380
 msgid "We are on it."
 msgstr "Ми працюємо над цим."
 
 #. placeholder {0}: task.review_note
-#: src/features/accounts/customer/NextSteps.tsx:255
+#: src/features/accounts/customer/NextSteps.tsx:257
 msgid "We asked for a change: {0}"
 msgstr "Ми попросили про зміну: {0}"
 
@@ -2356,7 +2356,7 @@ msgstr "Ви увійшли як {0}. Вийдіть, щоб відкрити й
 msgid "Your address is empty."
 msgstr "Адресу не вказано."
 
-#: src/features/accounts/customer/NextSteps.tsx:558
+#: src/features/accounts/customer/NextSteps.tsx:560
 msgid "Your answer"
 msgstr "Ваша відповідь"
 

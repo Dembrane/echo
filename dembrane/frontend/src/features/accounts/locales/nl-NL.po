@@ -235,7 +235,7 @@ msgstr "Terug naar account"
 msgid "Back to the account"
 msgstr "Terug naar het account"
 
-#: src/features/accounts/customer/NextSteps.tsx:275
+#: src/features/accounts/customer/NextSteps.tsx:277
 msgid "Before {date}"
 msgstr "Vóór {date}"
 
@@ -255,7 +255,7 @@ msgid "Billing details updated"
 msgstr "Factuurgegevens bijgewerkt"
 
 #: src/features/accounts/customer/TalkToUs.tsx:67
-#: src/features/accounts/customer/NextSteps.tsx:467
+#: src/features/accounts/customer/NextSteps.tsx:469
 #: src/features/accounts/customer/BookCallModal.tsx:26
 msgid "Book a call"
 msgstr "Plan een gesprek"
@@ -344,7 +344,7 @@ msgstr "Contact opnemen vanaf {0}"
 msgid "Checkbox"
 msgstr "Vinkje"
 
-#: src/features/accounts/customer/NextSteps.tsx:548
+#: src/features/accounts/customer/NextSteps.tsx:550
 msgid "Choose a file"
 msgstr "Kies een bestand"
 
@@ -561,7 +561,7 @@ msgstr "Documenten"
 #: src/features/accounts/customer/WhoSigns.tsx:247
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:152
 #: src/features/accounts/customer/NextSteps.tsx:96
-#: src/features/accounts/customer/NextSteps.tsx:374
+#: src/features/accounts/customer/NextSteps.tsx:376
 msgid "Done"
 msgstr "Klaar"
 
@@ -692,7 +692,7 @@ msgstr "Velden | dembrane"
 msgid "Fields saved"
 msgstr "Velden opgeslagen"
 
-#: src/features/accounts/customer/NextSteps.tsx:233
+#: src/features/accounts/customer/NextSteps.tsx:234
 msgid "Fill in"
 msgstr "Invullen"
 
@@ -978,7 +978,7 @@ msgstr "Nieuwe demo | dembrane"
 msgid "New message"
 msgstr "Nieuw bericht"
 
-#: src/features/accounts/customer/NextSteps.tsx:458
+#: src/features/accounts/customer/NextSteps.tsx:460
 msgid "New project"
 msgstr "Nieuw project"
 
@@ -1027,7 +1027,7 @@ msgid "No documents yet."
 msgstr "Nog geen documenten."
 
 #: src/features/accounts/staff/UploadPdfModal.tsx:114
-#: src/features/accounts/customer/NextSteps.tsx:553
+#: src/features/accounts/customer/NextSteps.tsx:555
 msgid "No file chosen"
 msgstr "Geen bestand gekozen"
 
@@ -1074,7 +1074,7 @@ msgstr "pas live als je publiceert"
 msgid "Not sent"
 msgstr "Niet verstuurd"
 
-#: src/features/accounts/customer/NextSteps.tsx:558
+#: src/features/accounts/customer/NextSteps.tsx:560
 msgid "Note"
 msgstr "Toelichting"
 
@@ -1152,7 +1152,7 @@ msgstr "Open taken"
 #~ msgid "Open the account"
 #~ msgstr "Open het account"
 
-#: src/features/accounts/customer/NextSteps.tsx:431
+#: src/features/accounts/customer/NextSteps.tsx:433
 msgid "Open the demo"
 msgstr "Open de demo"
 
@@ -1174,7 +1174,7 @@ msgstr "Open de pdf"
 msgid "Open the signed PDF"
 msgstr "Open de ondertekende pdf"
 
-#: src/features/accounts/customer/NextSteps.tsx:453
+#: src/features/accounts/customer/NextSteps.tsx:455
 msgid "Open the tutorial"
 msgstr "Open de tutorial"
 
@@ -1186,16 +1186,16 @@ msgstr "Openen om te ondertekenen"
 msgid "Opens after signing"
 msgstr "Opent na ondertekening"
 
-#: src/features/accounts/customer/NextSteps.tsx:371
+#: src/features/accounts/customer/NextSteps.tsx:373
 msgid "Opens after signing."
 msgstr "Opent na ondertekening."
 
 #. placeholder {0}: task.locked_until_title
-#: src/features/accounts/customer/NextSteps.tsx:369
+#: src/features/accounts/customer/NextSteps.tsx:371
 msgid "Opens after you sign {0}."
 msgstr "Opent als je {0} hebt ondertekend."
 
-#: src/features/accounts/customer/NextSteps.tsx:366
+#: src/features/accounts/customer/NextSteps.tsx:368
 msgid "Opens after you tell us who signs."
 msgstr "Gaat open zodra je hebt laten weten wie tekent."
 
@@ -1203,7 +1203,7 @@ msgstr "Gaat open zodra je hebt laten weten wie tekent."
 #: src/features/accounts/staff/PushOfferModal.tsx:211
 #: src/features/accounts/staff/PushOfferModal.tsx:219
 #: src/features/accounts/signing/SignRoute.tsx:692
-#: src/features/accounts/customer/NextSteps.tsx:559
+#: src/features/accounts/customer/NextSteps.tsx:561
 msgid "Optional"
 msgstr "Optioneel"
 
@@ -1439,7 +1439,7 @@ msgstr "Regel verwijderen"
 
 #: src/features/accounts/customer/Questions.tsx:179
 #: src/features/accounts/customer/Questions.tsx:204
-#: src/features/accounts/customer/NextSteps.tsx:239
+#: src/features/accounts/customer/NextSteps.tsx:240
 msgid "Reply"
 msgstr "Antwoorden"
 
@@ -1466,7 +1466,7 @@ msgstr "Bekijken en versturen"
 
 #: src/features/accounts/signing/SignRoute.tsx:862
 #: src/features/accounts/customer/WhoSigns.tsx:256
-#: src/features/accounts/customer/NextSteps.tsx:193
+#: src/features/accounts/customer/NextSteps.tsx:194
 msgid "Review and sign"
 msgstr "Bekijken en ondertekenen"
 
@@ -1536,7 +1536,7 @@ msgstr "Kies een veld om soort, label en verplicht in te stellen. Sleep om te ve
 #: src/features/accounts/staff/AccountCardRoute.tsx:206
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:241
 #: src/features/accounts/customer/Questions.tsx:263
-#: src/features/accounts/customer/NextSteps.tsx:572
+#: src/features/accounts/customer/NextSteps.tsx:574
 msgid "Send"
 msgstr "Versturen"
 
@@ -1568,8 +1568,8 @@ msgstr "Ter ondertekening versturen"
 
 #: src/features/accounts/signing/SignRoute.tsx:229
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:124
-#: src/features/accounts/customer/NextSteps.tsx:200
-#: src/features/accounts/customer/NextSteps.tsx:329
+#: src/features/accounts/customer/NextSteps.tsx:201
+#: src/features/accounts/customer/NextSteps.tsx:331
 msgid "Send to someone else"
 msgstr "Naar iemand anders sturen"
 
@@ -1593,7 +1593,7 @@ msgstr "Verstuurd"
 msgid "Sent {0}"
 msgstr "Verstuurd op {0}"
 
-#: src/features/accounts/customer/NextSteps.tsx:376
+#: src/features/accounts/customer/NextSteps.tsx:378
 msgid "Sent {when}. We are on it."
 msgstr "Verstuurd op {when}. We zijn ermee bezig."
 
@@ -1608,7 +1608,7 @@ msgstr "Wordt direct verstuurd, om te lezen."
 #~ msgid "Sent to {name}"
 #~ msgstr "Verstuurd naar {name}"
 
-#: src/features/accounts/customer/NextSteps.tsx:514
+#: src/features/accounts/customer/NextSteps.tsx:516
 msgid "Sent to dembrane"
 msgstr "Verstuurd naar dembrane"
 
@@ -1739,7 +1739,7 @@ msgid "Stage set"
 msgstr "Fase ingesteld"
 
 #: src/features/accounts/signing/SignRoute.tsx:452
-#: src/features/accounts/customer/NextSteps.tsx:212
+#: src/features/accounts/customer/NextSteps.tsx:213
 msgid "Start"
 msgstr "Beginnen"
 
@@ -2101,7 +2101,7 @@ msgid "Unsigned"
 msgstr "Niet ondertekend"
 
 #: src/features/accounts/signing/SignatureCapture.tsx:252
-#: src/features/accounts/customer/NextSteps.tsx:239
+#: src/features/accounts/customer/NextSteps.tsx:240
 msgid "Upload"
 msgstr "Uploaden"
 
@@ -2152,7 +2152,7 @@ msgstr "Btw %"
 msgid "VAT number"
 msgstr "Btw-nummer"
 
-#: src/features/accounts/customer/NextSteps.tsx:336
+#: src/features/accounts/customer/NextSteps.tsx:338
 msgid "View"
 msgstr "Bekijken"
 
@@ -2169,11 +2169,11 @@ msgstr "Bekeken"
 #~ msgid "Waiting on {who}, {0}. We emailed them a link to sign."
 #~ msgstr ""
 
-#: src/features/accounts/customer/NextSteps.tsx:318
+#: src/features/accounts/customer/NextSteps.tsx:320
 msgid "Waiting on {who}, {jobTitle}. We emailed them a link to sign."
 msgstr "Wacht op {who}, {jobTitle}. We hebben een link gemaild om te ondertekenen."
 
-#: src/features/accounts/customer/NextSteps.tsx:322
+#: src/features/accounts/customer/NextSteps.tsx:324
 msgid "Waiting on {who}. We emailed them a link to sign."
 msgstr "Wacht op {who}. We hebben een link gemaild om te ondertekenen."
 
@@ -2196,12 +2196,12 @@ msgstr "Bekijk de tutorial"
 msgid "We are on it"
 msgstr "We zijn ermee bezig"
 
-#: src/features/accounts/customer/NextSteps.tsx:378
+#: src/features/accounts/customer/NextSteps.tsx:380
 msgid "We are on it."
 msgstr "We zijn ermee bezig."
 
 #. placeholder {0}: task.review_note
-#: src/features/accounts/customer/NextSteps.tsx:255
+#: src/features/accounts/customer/NextSteps.tsx:257
 msgid "We asked for a change: {0}"
 msgstr "We vroegen om een wijziging: {0}"
 
@@ -2356,7 +2356,7 @@ msgstr "Je bent ingelogd als {0}. Log uit om hem te openen als {invitee}."
 msgid "Your address is empty."
 msgstr "Je adres is leeg."
 
-#: src/features/accounts/customer/NextSteps.tsx:558
+#: src/features/accounts/customer/NextSteps.tsx:560
 msgid "Your answer"
 msgstr "Je antwoord"
 

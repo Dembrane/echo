@@ -235,7 +235,7 @@ msgstr "Zurück zum Konto"
 msgid "Back to the account"
 msgstr "Zurück zum Konto"
 
-#: src/features/accounts/customer/NextSteps.tsx:275
+#: src/features/accounts/customer/NextSteps.tsx:277
 msgid "Before {date}"
 msgstr "Bis {date}"
 
@@ -255,7 +255,7 @@ msgid "Billing details updated"
 msgstr "Rechnungsdetails aktualisiert"
 
 #: src/features/accounts/customer/TalkToUs.tsx:67
-#: src/features/accounts/customer/NextSteps.tsx:467
+#: src/features/accounts/customer/NextSteps.tsx:469
 #: src/features/accounts/customer/BookCallModal.tsx:26
 msgid "Book a call"
 msgstr "Gespräch vereinbaren"
@@ -344,7 +344,7 @@ msgstr "Nachfassen ab {0}"
 msgid "Checkbox"
 msgstr "Kontrollkästchen"
 
-#: src/features/accounts/customer/NextSteps.tsx:548
+#: src/features/accounts/customer/NextSteps.tsx:550
 msgid "Choose a file"
 msgstr "Datei auswählen"
 
@@ -561,7 +561,7 @@ msgstr "Dokumente"
 #: src/features/accounts/customer/WhoSigns.tsx:247
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:152
 #: src/features/accounts/customer/NextSteps.tsx:96
-#: src/features/accounts/customer/NextSteps.tsx:374
+#: src/features/accounts/customer/NextSteps.tsx:376
 msgid "Done"
 msgstr "Fertig"
 
@@ -692,7 +692,7 @@ msgstr "Felder | dembrane"
 msgid "Fields saved"
 msgstr "Felder gespeichert"
 
-#: src/features/accounts/customer/NextSteps.tsx:233
+#: src/features/accounts/customer/NextSteps.tsx:234
 msgid "Fill in"
 msgstr "Ausfüllen"
 
@@ -978,7 +978,7 @@ msgstr "Neue Demo | dembrane"
 msgid "New message"
 msgstr "Neue Nachricht"
 
-#: src/features/accounts/customer/NextSteps.tsx:458
+#: src/features/accounts/customer/NextSteps.tsx:460
 msgid "New project"
 msgstr "Neues Projekt"
 
@@ -1027,7 +1027,7 @@ msgid "No documents yet."
 msgstr "Noch keine Dokumente."
 
 #: src/features/accounts/staff/UploadPdfModal.tsx:114
-#: src/features/accounts/customer/NextSteps.tsx:553
+#: src/features/accounts/customer/NextSteps.tsx:555
 msgid "No file chosen"
 msgstr "Keine Datei ausgewählt"
 
@@ -1074,7 +1074,7 @@ msgstr "nicht live, bis Sie veröffentlichen"
 msgid "Not sent"
 msgstr "Nicht gesendet"
 
-#: src/features/accounts/customer/NextSteps.tsx:558
+#: src/features/accounts/customer/NextSteps.tsx:560
 msgid "Note"
 msgstr "Notiz"
 
@@ -1152,7 +1152,7 @@ msgstr "Aufgaben öffnen"
 #~ msgid "Open the account"
 #~ msgstr ""
 
-#: src/features/accounts/customer/NextSteps.tsx:431
+#: src/features/accounts/customer/NextSteps.tsx:433
 msgid "Open the demo"
 msgstr "Demo öffnen"
 
@@ -1174,7 +1174,7 @@ msgstr "PDF öffnen"
 msgid "Open the signed PDF"
 msgstr "Signiertes PDF öffnen"
 
-#: src/features/accounts/customer/NextSteps.tsx:453
+#: src/features/accounts/customer/NextSteps.tsx:455
 msgid "Open the tutorial"
 msgstr "Tutorial öffnen"
 
@@ -1186,16 +1186,16 @@ msgstr "Zum Unterschreiben öffnen"
 msgid "Opens after signing"
 msgstr "Öffnet sich nach der Signatur"
 
-#: src/features/accounts/customer/NextSteps.tsx:371
+#: src/features/accounts/customer/NextSteps.tsx:373
 msgid "Opens after signing."
 msgstr "Öffnet sich nach der Signatur."
 
 #. placeholder {0}: task.locked_until_title
-#: src/features/accounts/customer/NextSteps.tsx:369
+#: src/features/accounts/customer/NextSteps.tsx:371
 msgid "Opens after you sign {0}."
 msgstr "Öffnet sich, sobald Sie {0} signiert haben."
 
-#: src/features/accounts/customer/NextSteps.tsx:366
+#: src/features/accounts/customer/NextSteps.tsx:368
 msgid "Opens after you tell us who signs."
 msgstr "Öffnet sich, sobald Sie uns sagen, wer unterschreibt."
 
@@ -1203,7 +1203,7 @@ msgstr "Öffnet sich, sobald Sie uns sagen, wer unterschreibt."
 #: src/features/accounts/staff/PushOfferModal.tsx:211
 #: src/features/accounts/staff/PushOfferModal.tsx:219
 #: src/features/accounts/signing/SignRoute.tsx:692
-#: src/features/accounts/customer/NextSteps.tsx:559
+#: src/features/accounts/customer/NextSteps.tsx:561
 msgid "Optional"
 msgstr "Optional"
 
@@ -1439,7 +1439,7 @@ msgstr "Zeile entfernen"
 
 #: src/features/accounts/customer/Questions.tsx:179
 #: src/features/accounts/customer/Questions.tsx:204
-#: src/features/accounts/customer/NextSteps.tsx:239
+#: src/features/accounts/customer/NextSteps.tsx:240
 msgid "Reply"
 msgstr "Antworten"
 
@@ -1466,7 +1466,7 @@ msgstr "Prüfen und senden"
 
 #: src/features/accounts/signing/SignRoute.tsx:862
 #: src/features/accounts/customer/WhoSigns.tsx:256
-#: src/features/accounts/customer/NextSteps.tsx:193
+#: src/features/accounts/customer/NextSteps.tsx:194
 msgid "Review and sign"
 msgstr "Prüfen und unterschreiben"
 
@@ -1536,7 +1536,7 @@ msgstr "Wählen Sie ein Feld aus, um Art, Beschriftung und Pflichtangabe festzul
 #: src/features/accounts/staff/AccountCardRoute.tsx:206
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:241
 #: src/features/accounts/customer/Questions.tsx:263
-#: src/features/accounts/customer/NextSteps.tsx:572
+#: src/features/accounts/customer/NextSteps.tsx:574
 msgid "Send"
 msgstr "Senden"
 
@@ -1568,8 +1568,8 @@ msgstr "Zum Unterschreiben senden"
 
 #: src/features/accounts/signing/SignRoute.tsx:229
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:124
-#: src/features/accounts/customer/NextSteps.tsx:200
-#: src/features/accounts/customer/NextSteps.tsx:329
+#: src/features/accounts/customer/NextSteps.tsx:201
+#: src/features/accounts/customer/NextSteps.tsx:331
 msgid "Send to someone else"
 msgstr "An jemand anderen senden"
 
@@ -1593,7 +1593,7 @@ msgstr "Gesendet"
 msgid "Sent {0}"
 msgstr "Gesendet am {0}"
 
-#: src/features/accounts/customer/NextSteps.tsx:376
+#: src/features/accounts/customer/NextSteps.tsx:378
 msgid "Sent {when}. We are on it."
 msgstr "Gesendet am {when}. Wir kümmern uns darum."
 
@@ -1608,7 +1608,7 @@ msgstr "Direkt zum Lesen gesendet."
 #~ msgid "Sent to {name}"
 #~ msgstr "Gesendet an {name}"
 
-#: src/features/accounts/customer/NextSteps.tsx:514
+#: src/features/accounts/customer/NextSteps.tsx:516
 msgid "Sent to dembrane"
 msgstr "Gesendet an dembrane"
 
@@ -1739,7 +1739,7 @@ msgid "Stage set"
 msgstr "Phase festgelegt"
 
 #: src/features/accounts/signing/SignRoute.tsx:452
-#: src/features/accounts/customer/NextSteps.tsx:212
+#: src/features/accounts/customer/NextSteps.tsx:213
 msgid "Start"
 msgstr "Start"
 
@@ -2101,7 +2101,7 @@ msgid "Unsigned"
 msgstr "Nicht unterzeichnet"
 
 #: src/features/accounts/signing/SignatureCapture.tsx:252
-#: src/features/accounts/customer/NextSteps.tsx:239
+#: src/features/accounts/customer/NextSteps.tsx:240
 msgid "Upload"
 msgstr "Hochladen"
 
@@ -2152,7 +2152,7 @@ msgstr "VAT %"
 msgid "VAT number"
 msgstr "USt-IdNr."
 
-#: src/features/accounts/customer/NextSteps.tsx:336
+#: src/features/accounts/customer/NextSteps.tsx:338
 msgid "View"
 msgstr "Ansehen"
 
@@ -2169,11 +2169,11 @@ msgstr "Angesehen"
 #~ msgid "Waiting on {who}, {0}. We emailed them a link to sign."
 #~ msgstr ""
 
-#: src/features/accounts/customer/NextSteps.tsx:318
+#: src/features/accounts/customer/NextSteps.tsx:320
 msgid "Waiting on {who}, {jobTitle}. We emailed them a link to sign."
 msgstr "Wartet auf {who}, {jobTitle}. Wir haben einen Link zum Unterschreiben gesendet."
 
-#: src/features/accounts/customer/NextSteps.tsx:322
+#: src/features/accounts/customer/NextSteps.tsx:324
 msgid "Waiting on {who}. We emailed them a link to sign."
 msgstr "Wartet auf {who}. Wir haben einen Link zum Unterschreiben gesendet."
 
@@ -2196,12 +2196,12 @@ msgstr "Das Tutorial ansehen"
 msgid "We are on it"
 msgstr "Wir kümmern uns darum"
 
-#: src/features/accounts/customer/NextSteps.tsx:378
+#: src/features/accounts/customer/NextSteps.tsx:380
 msgid "We are on it."
 msgstr "Wir kümmern uns darum."
 
 #. placeholder {0}: task.review_note
-#: src/features/accounts/customer/NextSteps.tsx:255
+#: src/features/accounts/customer/NextSteps.tsx:257
 msgid "We asked for a change: {0}"
 msgstr "Wir haben um eine Änderung gebeten: {0}"
 
@@ -2356,7 +2356,7 @@ msgstr "Sie sind als {0} angemeldet. Melden Sie sich ab, um sie als {invitee} zu
 msgid "Your address is empty."
 msgstr "Ihre Adresse ist leer."
 
-#: src/features/accounts/customer/NextSteps.tsx:558
+#: src/features/accounts/customer/NextSteps.tsx:560
 msgid "Your answer"
 msgstr "Ihre Antwort"
 
