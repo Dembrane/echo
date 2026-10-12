@@ -1066,7 +1066,7 @@ export async function addOnboarding(d: AccountsDeps, who: Signed, orgId: string)
   };
 }
 
-/** Approve (done), send back (open again, reminding), or withdraw (no longer asked). */
+/** Approve (done), send back (open again, with check-ins), or withdraw (no longer asked). */
 export async function reviewTask(
   d: AccountsDeps,
   who: Signed,

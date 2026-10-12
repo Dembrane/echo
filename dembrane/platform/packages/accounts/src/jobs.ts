@@ -1,20 +1,24 @@
-import { render, subjectOf } from "@dembrane/account";
-import { newId } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
-import type { Locale } from "@dembrane/i18n";
-import type { Mailer } from "@dembrane/mail";
 import type { Logger } from "@dembrane/observability";
 import { defineJob, type JobDefinition, type Queue, step } from "@dembrane/queue";
 import { type Deliver, enqueueSamMessage, type SamQueue } from "@dembrane/webhooks";
 import { z } from "zod";
 import { buildDemo, type DemoBuildDeps } from "./demo/build";
 import { demoBuild } from "./demo/job";
-import { ACCOUNT_EVENT_CODES, type InboxEvent } from "./events";
+import {
+  ACCOUNT_EVENT_CODES,
+  documentPayload,
+  emit,
+  type InboxEvent,
+  inboxTakes,
+  orgPayload,
+  waitingTaskPayload,
+} from "./events";
+import { staffAccountUrl, staffDocumentUrl } from "./invoice";
 import { refreshLegalTexts } from "./legal/store";
-import { accountRecipients } from "./recipients";
 import type { AccountsJobs } from "./sink";
 import { store } from "./storage";
-import { taskTitle } from "./task-text";
+import { WAITING_ON_CUSTOMER } from "./tasks";
 
 /**
  * One account event to sam. The payload is built when the event happens, so a retry sends
@@ -34,14 +38,17 @@ export const notifySlack = defineJob("accounts.notify-slack", z.object({ text: z
   expireInSeconds: 60,
 });
 
-/** Every 15 minutes: queue the reminders that fell due. */
+/** Every 15 minutes: queue the check-ins that fell due. */
 export const remindersTick = defineJob("accounts.reminders-tick", z.object({}), {
   policy: "singleton",
   retryLimit: 0,
   expireInSeconds: 5 * 60,
 });
 
-/** One reminder email for one task at one due time (the run id is both). */
+/**
+ * One check-in asked of the account's owner, for one task at one due time (the run id is
+ * both). The customer is not written to.
+ */
 export const taskReminder = defineJob(
   "accounts.task-reminder",
   z.object({ taskId: z.string(), dueAt: z.string() }),
@@ -66,9 +73,9 @@ export function accountPageUrl(dashboardUrl: string, orgId: string): string {
 }
 
 /**
- * Claims each due reminder by moving the task's next reminder on by its interval, and
- * enqueues the email in the same transaction with the task and due time as the run id,
- * so a tick that runs twice (or overlaps a retry) sends one email per due time.
+ * Claims each due check-in by moving the task's next one on by its interval, and enqueues
+ * it in the same transaction with the task and due time as the run id, so a tick that runs
+ * twice (or overlaps a retry) asks once per due time.
  */
 export async function runRemindersTick(d: {
   db: Db;
@@ -82,7 +89,7 @@ export async function runRemindersTick(d: {
   for (const task of await store.dueReminders(d.db, now, 200)) {
     const due = task.nextReminderAt as Date;
     const days = task.reminderIntervalDays ?? d.intervalDays;
-    // Never schedule into the past: a worker that was down catches up with one email.
+    // Never schedule into the past: a worker that was down catches up with one ask.
     let next = new Date(due.getTime() + days * DAY_MS);
     while (next <= now) next = new Date(next.getTime() + days * DAY_MS);
     await d.db.transaction(async (tx) => {
@@ -95,63 +102,93 @@ export async function runRemindersTick(d: {
     });
     queued++;
   }
-  if (queued) d.logger.info({ reminders: queued }, "account task reminders queued");
+  if (queued) d.logger.info({ check_ins: queued }, "account task check-ins queued");
   return queued;
 }
 
 /**
- * Sends one reminder, unless the task stopped waiting on the customer since it was queued.
- * Goes to the people who run the account (owners, admins, billing).
+ * A task has waited on the customer for its interval: the account's owner at dembrane is
+ * asked to check in, through sam, unless the task stopped waiting since this was queued.
+ * The customer gets nothing from echo; whether and how to write them is the owner's call.
+ *
+ * Where no inbox takes the message (inboxTakes) nobody is asked and nothing is recorded,
+ * so the count and the timeline only ever say what happened; the next due time asks again.
  */
 export async function runTaskReminder(
-  d: { db: Db; mailer: Mailer; logger: Logger; dashboardUrl: string; now: () => Date },
+  d: {
+    db: Db;
+    jobs: AccountsJobs;
+    logger: Logger;
+    dashboardUrl: string;
+    now: () => Date;
+    samInbox: boolean;
+    offerMessages: boolean;
+  },
   p: { taskId: string; dueAt: string },
-): Promise<"sent" | "skipped"> {
+): Promise<"asked" | "skipped"> {
   const task = await store.taskById(d.db, p.taskId);
-  if (!task || !["open", "changes_requested"].includes(task.status)) return "skipped";
+  if (!task || !(WAITING_ON_CUSTOMER as readonly string[]).includes(task.status)) return "skipped";
   const org = await store.org(d.db, task.orgId);
   if (!org || org.deleted_at) return "skipped";
-  const people = await accountRecipients(d.db, task.orgId);
-  if (!people.length) {
-    d.logger.warn({ task_id: task.id, org_id: org.id }, "task reminder has nobody to go to");
+  const settings = {
+    samInbox: d.samInbox,
+    offerMessages: d.offerMessages,
+    eventsEnabled: false,
+    slackEnabled: false,
+  };
+  if (!inboxTakes(settings, "account.task.waiting")) {
+    d.logger.info(
+      { signal: "accounts.task_waiting_untold", task_id: task.id, org_id: org.id },
+      "a task waits on the customer and no inbox takes the check-in",
+    );
     return "skipped";
   }
-  // One message per language, to everyone who reads it.
-  const byLanguage = new Map<Locale, Set<string>>();
-  for (const p of people)
-    byLanguage.set(p.language, (byLanguage.get(p.language) ?? new Set()).add(p.email));
-  const to = [...byLanguage.values()].flatMap((set) => [...set]);
-  for (const [language, emails] of byLanguage) {
-    const email = {
-      template: "account_task_reminder",
-      data: {
-        org_name: org.name,
-        task_title: taskTitle(task, language),
-        task_url: accountPageUrl(d.dashboardUrl, org.id),
-      },
-    } as const;
-    await d.mailer.send({
-      to: [...emails],
-      subject: subjectOf(email, language) as string,
-      ...render(email, language),
-      tags: ["account_task_reminder"],
-    });
-  }
+  const doc = task.documentId ? await store.document(d.db, org.id, task.documentId) : null;
+  const timesAsked = task.remindersSent + 1;
+  const waiting = waitingTaskPayload(task, d.now(), timesAsked);
   await d.db.transaction(async (tx) => {
-    await store.updateTask(tx, task.id, { remindersSent: task.remindersSent + 1 });
-    await store.insertEvent(tx, {
-      id: newId(),
+    await store.updateTask(tx, task.id, { remindersSent: timesAsked });
+    await emit({ jobs: d.jobs, now: d.now, settings }, tx, {
       orgId: org.id,
-      actorKind: "system",
-      actorUserId: null,
-      type: "task.reminded",
-      subjectType: "task",
-      subjectId: task.id,
-      detail: { due_at: p.dueAt, recipients: to.length },
-      createdAt: d.now(),
+      actor: { kind: "system", userId: null },
+      type: "task.check_in_asked",
+      subject: { type: "task", id: task.id },
+      detail: { due_at: p.dueAt, days_waiting: waiting.days_waiting, times_asked: timesAsked },
+      webhook: {
+        event: "account.task.waiting",
+        org: orgPayload(org),
+        task: waiting,
+        document: doc ? { ...documentPayload(doc), status: doc.status } : null,
+        /** The people who run the account on the customer's side, in the order they joined. */
+        contacts: await customerContacts(tx, org.id),
+        links: {
+          /** The organisation's card in the staff console. */
+          account: staffAccountUrl(d.dashboardUrl, org.id),
+          /** The task's document as staff see it, when it has one. */
+          document: doc ? staffDocumentUrl(d.dashboardUrl, org.id, doc.id) : null,
+          /** Where the customer does the task, after signing in. */
+          customer: accountPageUrl(d.dashboardUrl, org.id),
+        },
+      },
     });
   });
-  return "sent";
+  return "asked";
+}
+
+/** Owners, admins and billing members with an address, each address once. */
+async function customerContacts(
+  c: Parameters<typeof store.accountPeople>[0],
+  orgId: string,
+): Promise<{ name: string | null; email: string; role: string }[]> {
+  const seen = new Set<string>();
+  const out: { name: string | null; email: string; role: string }[] = [];
+  for (const p of await store.accountPeople(c, orgId)) {
+    const address = p.email?.trim().toLowerCase();
+    if (!address || seen.has(address)) continue;
+    seen.add(address);
+    out.push({ name: p.name || null, email: p.email as string, role: p.role });
+  }
+  return out;
 }
 
 /**
@@ -228,7 +265,6 @@ export async function runNotifySlack(
 
 export interface AccountsWorkerDeps {
   readonly db: Db;
-  readonly mailer: Mailer;
   readonly logger: Logger;
   readonly jobs: AccountsJobs;
   readonly deliver: Deliver;
@@ -237,6 +273,8 @@ export interface AccountsWorkerDeps {
   readonly eventsSecret: string | null;
   /** SAM_INBOX_* is set: queued account events drain through the inbox. */
   readonly samInbox?: boolean;
+  /** ACCOUNTS_OFFER_MESSAGES: sam takes the check-in for a task that waits on a customer. */
+  readonly offerMessages?: boolean;
   readonly slackWebhookUrl: string | null;
   readonly reminderIntervalDays: number;
   readonly fetchText: (url: string) => Promise<string>;
@@ -298,10 +336,12 @@ export function accountsWorker(deps: AccountsWorkerDeps) {
         await runTaskReminder(
           {
             db: deps.db,
-            mailer: deps.mailer,
+            jobs: deps.jobs,
             logger: deps.logger,
             dashboardUrl: deps.dashboardUrl,
             now,
+            samInbox: Boolean(deps.samInbox),
+            offerMessages: Boolean(deps.offerMessages),
           },
           p,
         );

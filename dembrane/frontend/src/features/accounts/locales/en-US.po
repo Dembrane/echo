@@ -103,6 +103,10 @@ msgstr "Account created"
 msgid "Account enabled"
 msgstr "Account enabled"
 
+#: src/features/accounts/staff/AccountCardRoute.tsx:740
+msgid "Account manager asked to check in"
+msgstr "Account manager asked to check in"
+
 #: src/features/accounts/customer/DocumentsTable.tsx:266
 msgid "Account name"
 msgstr "Account name"
@@ -278,6 +282,11 @@ msgstr "Change the draft"
 msgid "Check out the demo we made for you"
 msgstr "Check out the demo we made for you"
 
+#. placeholder {0}: formatDate(task.next_reminder_at, i18n.locale)
+#: src/features/accounts/staff/AccountCardRoute.tsx:419
+msgid "Check-in due {0}"
+msgstr "Check-in due {0}"
+
 #: src/features/accounts/staff/FieldEditorRoute.tsx:63
 msgid "Checkbox"
 msgstr "Checkbox"
@@ -351,12 +360,12 @@ msgstr "Country"
 msgid "Create a project"
 msgstr "Create a project"
 
-#: src/features/accounts/staff/TaskModals.tsx:110
+#: src/features/accounts/staff/TaskModals.tsx:111
 msgid "Create task"
 msgstr "Create task"
 
 #: src/features/accounts/format.ts:107
-#: src/features/accounts/staff/AccountCardRoute.tsx:776
+#: src/features/accounts/staff/AccountCardRoute.tsx:777
 #: src/features/accounts/customer/Questions.tsx:169
 msgid "Customer"
 msgstr "Customer"
@@ -728,10 +737,9 @@ msgstr "New task"
 msgid "Next"
 msgstr "Next"
 
-#. placeholder {0}: formatDate(task.next_reminder_at, i18n.locale)
 #: src/features/accounts/staff/AccountCardRoute.tsx:419
-msgid "Next reminder {0}"
-msgstr "Next reminder {0}"
+#~ msgid "Next reminder {0}"
+#~ msgstr "Next reminder {0}"
 
 #: src/features/accounts/customer/NextSteps.tsx:76
 msgid "Next steps"
@@ -1069,7 +1077,7 @@ msgstr "Push offer"
 msgid "Quantity"
 msgstr "Quantity"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:745
+#: src/features/accounts/staff/AccountCardRoute.tsx:746
 msgid "Question opened"
 msgstr "Question opened"
 
@@ -1215,8 +1223,8 @@ msgstr "Select a field to set its kind, label and whether it is required. Drag t
 msgid "Send"
 msgstr "Send"
 
-#: src/features/accounts/staff/TaskModals.tsx:134
-#: src/features/accounts/staff/TaskModals.tsx:166
+#: src/features/accounts/staff/TaskModals.tsx:135
+#: src/features/accounts/staff/TaskModals.tsx:167
 #: src/features/accounts/staff/AccountCardRoute.tsx:457
 msgid "Send back"
 msgstr "Send back"
@@ -1287,12 +1295,12 @@ msgid "Set up a project of your own for your first real session."
 msgstr "Set up a project of your own for your first real session."
 
 #: src/features/accounts/staff/DemoRoute.tsx:301
-#: src/features/accounts/staff/AccountCardRoute.tsx:790
+#: src/features/accounts/staff/AccountCardRoute.tsx:791
 msgid "Show all"
 msgstr "Show all"
 
 #: src/features/accounts/staff/DemoRoute.tsx:302
-#: src/features/accounts/staff/AccountCardRoute.tsx:790
+#: src/features/accounts/staff/AccountCardRoute.tsx:791
 msgid "Show less"
 msgstr "Show less"
 
@@ -1361,7 +1369,7 @@ msgstr "Someone else signs"
 msgid "Someone who may agree to data processing for your organisation signs it."
 msgstr "Someone who may agree to data processing for your organisation signs it."
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:778
+#: src/features/accounts/staff/AccountCardRoute.tsx:779
 msgid "Staff"
 msgstr "Staff"
 
@@ -1408,7 +1416,7 @@ msgstr "Submitted"
 msgid "Subscription"
 msgstr "Subscription"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:779
+#: src/features/accounts/staff/AccountCardRoute.tsx:780
 msgid "System"
 msgstr "System"
 
@@ -1420,24 +1428,24 @@ msgstr "Task"
 msgid "Task approved"
 msgstr "Task approved"
 
-#: src/features/accounts/staff/TaskModals.tsx:99
-#: src/features/accounts/staff/AccountCardRoute.tsx:740
+#: src/features/accounts/staff/TaskModals.tsx:100
+#: src/features/accounts/staff/AccountCardRoute.tsx:741
 msgid "Task created"
 msgstr "Task created"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:741
+#: src/features/accounts/staff/AccountCardRoute.tsx:742
 msgid "Task done"
 msgstr "Task done"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:742
+#: src/features/accounts/staff/AccountCardRoute.tsx:743
 msgid "Task sent back"
 msgstr "Task sent back"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:743
+#: src/features/accounts/staff/AccountCardRoute.tsx:744
 msgid "Task submitted"
 msgstr "Task submitted"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:744
+#: src/features/accounts/staff/AccountCardRoute.tsx:745
 msgid "Task withdrawn"
 msgstr "Task withdrawn"
 
@@ -1485,8 +1493,12 @@ msgid "The customer answers with"
 msgstr "The customer answers with"
 
 #: src/features/accounts/staff/TaskModals.tsx:79
-msgid "The customer gets a reminder every seven days until it is done."
-msgstr "The customer gets a reminder every seven days until it is done."
+#~ msgid "The customer gets a reminder every seven days until it is done."
+#~ msgstr "The customer gets a reminder every seven days until it is done."
+
+#: src/features/accounts/staff/TaskModals.tsx:79
+msgid "The customer gets no automatic reminder. After seven days the account manager is asked to check in."
+msgstr "The customer gets no automatic reminder. After seven days the account manager is asked to check in."
 
 #: src/features/accounts/signing/SignRoute.tsx:940
 msgid "The document could not be loaded. Check your connection and try again."
@@ -1547,7 +1559,7 @@ msgstr "This document was sent. Its fields are fixed; send a new version to chan
 msgid "This organisation has no account yet"
 msgstr "This organisation has no account yet"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:759
+#: src/features/accounts/staff/AccountCardRoute.tsx:760
 msgid "Timeline"
 msgstr "Timeline"
 
@@ -1699,7 +1711,7 @@ msgstr "What each of your organisations still has to do for dembrane."
 msgid "What they want to hear from whom, and why now."
 msgstr "What they want to hear from whom, and why now."
 
-#: src/features/accounts/staff/TaskModals.tsx:140
+#: src/features/accounts/staff/TaskModals.tsx:141
 msgid "What to change"
 msgstr "What to change"
 

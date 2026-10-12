@@ -34,8 +34,8 @@ export interface AccountsSettings {
   readonly samInbox: boolean;
   /**
    * sam handles the offer flow's messages (ACCOUNTS_OFFER_MESSAGES): a document sent or
-   * withdrawn by staff, and the invoice request. Off, they are not made, so nothing sam
-   * would refuse is queued.
+   * withdrawn by staff, the invoice request, and the check-in for a task that waits on the
+   * customer. Off, they are not made, so nothing sam would refuse is queued.
    */
   readonly offerMessages: boolean;
   readonly reminderIntervalDays: number;

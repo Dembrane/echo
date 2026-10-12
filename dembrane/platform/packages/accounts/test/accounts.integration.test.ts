@@ -1,7 +1,8 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { createHash } from "node:crypto";
+import { sendEmail } from "@dembrane/account";
 import { schema } from "@dembrane/db";
-import { MemoryMailer } from "@dembrane/mail";
+import { deliverSamMessage } from "@dembrane/webhooks";
 import { and, eq, sql } from "drizzle-orm";
 import { PDFDocument } from "pdf-lib";
 import postgres from "postgres";
@@ -765,11 +766,10 @@ run("accounts routes against Postgres", () => {
     ).toBe("done");
   });
 
-  test("reminders: due tasks waiting on the customer email the account's people once per due time", async () => {
+  test("check-ins: a task that waits on the customer asks the account's owner once per due time, and writes the customer nothing", async () => {
     const t = K.Task.parse(
       (await call(w, "POST", `${S()}/tasks`, "staff", { title: "Stuur de deelnemerslijst" })).data,
     );
-    const mailer = new MemoryMailer();
     w.jobs.jobs.length = 0;
     const tick = (at: string) =>
       runRemindersTick({
@@ -791,30 +791,91 @@ run("accounts routes against Postgres", () => {
     expect((await store.task(w.db, w.orgId, t.id))?.nextReminderAt?.toISOString()).toBe(
       "2026-10-12T09:00:00.000Z",
     );
-    // The same due time again does not queue a second email.
+    // The same due time again does not queue a second ask.
     await tick("2026-10-05T09:45:00.000Z");
     expect(
       w.jobs.jobs.filter((j) => (j.payload as { taskId?: string }).taskId === t.id),
     ).toHaveLength(1);
+    const run = queued[0]?.payload as { taskId: string; dueAt: string };
     const deps = {
       db: w.db,
-      mailer,
+      jobs: w.jobs,
       logger: w.deps.logger,
       dashboardUrl: "https://dash.test",
       now: () => new Date("2026-10-05T09:31:00Z"),
+      samInbox: true,
+      offerMessages: true,
     };
+    const asks = () =>
+      w.jobs
+        .of(deliverSamMessage.name)
+        .filter((m) => m.code === "echo_account_task_waiting_v1")
+        .map((m) => JSON.parse(m.body as string).json);
+    const asked = async () =>
+      (await store.events(w.db, w.orgId)).filter(
+        (e) => e.type === "task.check_in_asked" && e.subjectId === t.id,
+      );
+
+    // No inbox, or a sam that does not take the message yet: nobody is asked, and neither
+    // the count nor the timeline says someone was.
+    for (const off of [{ samInbox: false }, { offerMessages: false }])
+      expect(await runTaskReminder({ ...deps, ...off }, run)).toBe("skipped");
+    expect(asks()).toHaveLength(0);
+    expect(await asked()).toHaveLength(0);
+    expect((await store.task(w.db, w.orgId, t.id))?.remindersSent).toBe(0);
+
+    expect(await runTaskReminder(deps, run)).toBe("asked");
+    const [first] = asks();
+    expect(first).toMatchObject({
+      event: "account.task.waiting",
+      timestamp: "2026-10-05T09:31:00.000Z",
+      org: { id: w.orgId, name: "Gemeente Testdorp" },
+      task: {
+        id: t.id,
+        title: "Stuur de deelnemerslijst",
+        code: null,
+        kind: "generic",
+        document_id: null,
+        status: "open",
+        waiting_since: "2026-09-28T09:00:00.000Z",
+        days_waiting: 7,
+        times_asked: 1,
+      },
+      document: null,
+      links: {
+        account: `https://dash.test/admin/accounts/${w.orgId}`,
+        document: null,
+        customer: `https://dash.test/o/${w.orgId}/account`,
+      },
+    });
+    expect(first.contacts).toEqual([
+      { name: "admin", email: "admin@example.test", role: "admin" },
+      { name: "billing", email: "billing@example.test", role: "billing" },
+    ]);
+    expect("account_manager" in first).toBe(true);
+    expect((await asked()).map((e) => e.detail)).toEqual([
+      { due_at: "2026-10-05T09:00:00.000Z", days_waiting: 7, times_asked: 1 },
+    ]);
+    // The next due time asks again, and says it is the second time.
     expect(
-      await runTaskReminder(deps, queued[0]?.payload as { taskId: string; dueAt: string }),
-    ).toBe("sent");
-    expect(mailer.sent[0]?.to).toEqual(["admin@example.test", "billing@example.test"]);
-    expect(mailer.sent[0]?.text).toContain(`https://dash.test/o/${w.orgId}/account`);
-    // A task waiting on us, or done, does not remind.
+      await runTaskReminder(
+        { ...deps, now: () => new Date("2026-10-12T09:01:00Z") },
+        { taskId: t.id, dueAt: "2026-10-12T09:00:00.000Z" },
+      ),
+    ).toBe("asked");
+    expect(asks()[1]?.task).toMatchObject({ days_waiting: 14, times_asked: 2 });
+    expect((await store.task(w.db, w.orgId, t.id))?.remindersSent).toBe(2);
+    // Nothing in this flow is an email: the customer hears from a person, not from echo.
+    expect(w.jobs.of(sendEmail.name)).toHaveLength(0);
+
+    // A task waiting on us, or done, asks nobody.
     await call(w, "POST", `${C()}/tasks/${t.id}/submit`, "admin", {
       response_text: "lijst.xlsx volgt",
     });
-    expect(await runTaskReminder(deps, { taskId: t.id, dueAt: "2026-10-12T09:00:00.000Z" })).toBe(
+    expect(await runTaskReminder(deps, { taskId: t.id, dueAt: "2026-10-19T09:00:00.000Z" })).toBe(
       "skipped",
     );
+    expect(asks()).toHaveLength(2);
     const locked = (await store.dueReminders(w.db, new Date("2030-01-01"), 500)).filter(
       (x) => x.status === "locked" || x.status === "submitted",
     );
