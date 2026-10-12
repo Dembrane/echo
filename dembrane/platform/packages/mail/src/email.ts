@@ -47,7 +47,7 @@ const px = (n: number) => `${Math.round(n * 100) / 100}px`;
 const BODY = `font-size:${px(type.screen.body)}; line-height:${type.leading.body}; color:${color.text}; font-weight:${font.emailWeight};`;
 const CAPTION = `font-size:${px(type.screen.caption)}; line-height:${type.leading.body}; color:${color.muted}; font-weight:${font.emailWeight};`;
 const RULE = `1px solid ${color.quiet}`;
-const GUTTER = space[12];
+const GUTTER = space[8];
 
 /** A paragraph of running text. */
 export const p = (html: string) => `<p style="margin:0 0 ${space[4]}px; ${BODY}">${html}</p>`;
@@ -117,17 +117,17 @@ export function emailFrame(f: EmailFrame): string {
 <meta name="supported-color-schemes" content="light">
 <title>${esc(f.title)}</title>
 <style>
-@media (max-width: 600px) {
-  .card-pad { padding-left: ${space[6]}px !important; padding-right: ${space[6]}px !important; }
-  .outer-pad { padding: ${space[4]}px ${space[2]}px !important; }
+@media (max-width: 640px) {
+  .card-pad { padding-left: ${space[4]}px !important; padding-right: ${space[4]}px !important; }
+  .outer-pad { padding: ${space[4]}px 0 !important; }
 }
 </style>
 </head>
 <body style="margin:0; padding:0; background-color:${color.parchment}; font-family:${font.family}; color:${color.text}; font-weight:${font.emailWeight}; -webkit-text-size-adjust:100%;">
 <div style="display:none; max-height:0; max-width:0; overflow:hidden; opacity:0; font-size:1px; line-height:1px; color:${color.parchment};">${esc(f.preview)}${PREVIEW_PAD}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${color.parchment};">
-<tr><td align="center" class="outer-pad" style="padding:${space[12]}px ${space[4]}px;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;">
+<tr><td align="center" class="outer-pad" style="padding:${space[8]}px ${space[4]}px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:640px;">
 <tr><td class="card-pad" style="background-color:${color.surface}; border-top:${RULE}; border-bottom:${RULE}; padding:${space[8]}px ${GUTTER}px ${space[8]}px; font-family:${font.family};">
 <img src="${asset.wordmark}" alt="dembrane" width="118" height="24" border="0" style="display:block; width:118px; height:auto; border:0; outline:none; text-decoration:none;">
 <h1 style="margin:${space[12]}px 0 ${space[6]}px; font-family:${font.family}; font-size:${px(type.screen.title)}; line-height:${type.leading.title}; font-weight:${font.emailWeight}; color:${color.text};">${esc(f.heading)}</h1>
