@@ -8,8 +8,6 @@ Production services do not run here: they run on DigitalOcean Kubernetes through
 Dembrane/echo-gitops (`helm/dembrane-web`), and the `platform` workflow's prod job only pushes
 images to `registry.digitalocean.com/dbr-cr` and bumps the image tag there. `prod/` still
 holds the `dembrane-web-prod` project (the Vertex AI project prod's models are billed to).
-Every push to main takes the same path to echo-next (the `dembrane-web-dummy` app on the
-DigitalOcean dev cluster), through its own values file, with no tag and no approval.
 
 | Environment | Project | Number | Root | State |
 |---|---|---|---|---|
