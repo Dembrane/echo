@@ -7,7 +7,7 @@ import { testId } from "@/lib/testUtils";
 type VerifiedArtefactItemProps = {
 	artefact: VerificationArtifact;
 	label: string;
-
+	icon?: string;
 	onViewArtefact: (artefactId: string) => void;
 	dataTestId?: string;
 };
@@ -25,6 +25,7 @@ const formatArtefactTime = (timestamp: string | null | undefined): string => {
 export const VerifiedArtefactItem = ({
 	artefact,
 	label,
+	icon,
 	onViewArtefact,
 	dataTestId,
 }: VerifiedArtefactItemProps) => {
@@ -42,7 +43,10 @@ export const VerifiedArtefactItem = ({
 			>
 				<Group gap="sm" wrap="nowrap">
 					<Group align="baseline">
-						<Text size="sm">{label}</Text>
+						<Text size="sm">
+							{icon ? <span className="mr-1">{icon}</span> : null}
+							{label}
+						</Text>
 						{formattedDate && (
 							<Text size="xs" c="dimmed">
 								{formattedDate}
