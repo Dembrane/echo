@@ -54,6 +54,7 @@ const switches = [
     prod: "on",
     staging: "off",
   },
+  { path: "samples.enabled", env: "ENABLE_SAMPLES", default: false, prod: false, staging: true },
   {
     path: "popcorn.showFlow",
     env: "POPCORN_SHOW_FLOW",

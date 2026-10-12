@@ -9,6 +9,7 @@ import {
   BEST_PRACTICES_IDS,
   BEST_PRACTICES_VERSION,
   backfillBestPractices,
+  runBackfillJob,
   runSeedJob,
   seedBestPractices,
 } from "../src";
@@ -301,13 +302,47 @@ run("the best-practices sample", () => {
 
   test("the seed job skips excluded organisations and workspaces without an owner", async () => {
     const logger = createLogger({ service: "test", release: "r", env: "test", level: "error" });
-    const deps = { db: db(), logger, excludeOrgIds: [excludedOrg], now: () => T0 };
+    const deps = { db: db(), logger, enabled: true, excludeOrgIds: [excludedOrg], now: () => T0 };
     const u = await user();
     const ws = await workspace(u);
     expect((await runSeedJob(deps, ws))?.status).toBe("created");
     expect(await runSeedJob(deps, await workspace(u, { orgId: excludedOrg }))).toBeNull();
     expect(await runSeedJob(deps, await workspace(null))).toBeNull();
     expect(await runSeedJob(deps, crypto.randomUUID())).toBeNull();
+  });
+
+  test("where samples are off, the seed and the backfill write nothing and leave copies alone", async () => {
+    const logger = createLogger({ service: "test", release: "r", env: "test", level: "error" });
+    const base = { db: db(), logger, excludeOrgIds: [excludedOrg], now: () => T0 };
+    const off = { ...base, enabled: false };
+    const u = await user();
+    const fresh = await workspace(u);
+    const seeded = await workspace(u);
+    await seedBestPractices(db(), u, seeded, T0);
+    // A copy of an older fixture, which the backfill would rewrite.
+    await db()
+      .update(schema.project)
+      .set({ sample_version: "best-practices@older" })
+      .where(eq(schema.project.id, BEST_PRACTICES_IDS.project(seeded)));
+    const rows = async () => {
+      const [p] = await db().select({ n: count() }).from(schema.project);
+      const [c] = await db().select({ n: count() }).from(schema.conversation);
+      const [k] = await db().select({ n: count() }).from(schema.conversation_chunk);
+      return [p?.n, c?.n, k?.n];
+    };
+    const before = await rows();
+
+    expect(await runSeedJob(off, fresh)).toBeNull();
+    expect(await runBackfillJob(off)).toBeNull();
+    expect(await rows()).toEqual(before);
+    expect((await copyOf(fresh)).project).toBeUndefined();
+    expect((await copyOf(seeded)).project?.sample_version).toBe("best-practices@older");
+
+    // On again, the same two workspaces get what they missed.
+    const report = await runBackfillJob({ ...base, enabled: true });
+    expect(report?.failed).toBe(0);
+    expect((await copyOf(fresh)).project?.sample_version).toBe(BEST_PRACTICES_VERSION);
+    expect((await copyOf(seeded)).project?.sample_version).toBe(BEST_PRACTICES_VERSION);
   });
 
   test("a deleted workspace gets no copy", async () => {
