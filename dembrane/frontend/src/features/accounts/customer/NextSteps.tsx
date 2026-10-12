@@ -66,7 +66,7 @@ export function NextSteps({
 	const [asking, setAsking] = useState<TaskT | null>(null);
 	const [paying, setPaying] = useState<DocumentSummaryT | null>(null);
 	const [showDone, setShowDone] = useState(false);
-	const { toPay, toDo, waiting, withUs, later, done, withDpa } = plan;
+	const { toDo, waiting, withUs, later, done, withDpa } = plan;
 	const coming = [...withUs, ...later];
 	const ahead = waiting.length + coming.length;
 	const items = toDoInOrder(plan, documents);
