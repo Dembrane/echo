@@ -13,7 +13,7 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
-import { useDocumentTitle } from "@mantine/hooks";
+import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { usePostHog } from "@posthog/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -23,6 +23,7 @@ import { notifyError } from "@/components/error/notifyError";
 import { useUpdateProjectByIdMutation } from "@/components/project/hooks";
 import { KeyTermsInput } from "@/components/project/KeyTermsInput";
 import { ProjectContextInput } from "@/components/project/ProjectContextInput";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import {
 	AGENTIC_CHAT_IS_DEFAULT,
 	API_BASE_URL,
@@ -33,6 +34,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useCreateWorkspaceProject } from "@/hooks/useWorkspaceProjects";
 import { ApiRequestError } from "@/lib/errors/read";
+import { isFreeTierLimitError } from "@/lib/freeTier";
 import { openConfirm } from "@/lib/openConfirm";
 import { isOutsiderRole } from "@/lib/roles";
 
@@ -98,6 +100,7 @@ export const CreateProjectRoute = () => {
 	const privateTiers = new Set(["innovator", "changemaker", "guardian"]);
 	const privateAvailable = privateTiers.has(tier);
 
+	const [upgradeOpened, upgradeHandlers] = useDisclosure(false);
 	const createProject = useCreateWorkspaceProject();
 	const updateProject = useUpdateProjectByIdMutation();
 
@@ -129,6 +132,10 @@ export const CreateProjectRoute = () => {
 			return project;
 		},
 		onError: (error: Error) => {
+			if (isFreeTierLimitError(error) === "projects") {
+				upgradeHandlers.open();
+				return;
+			}
 			void notifyError(error);
 		},
 		onSuccess: (project) => {
@@ -445,6 +452,14 @@ export const CreateProjectRoute = () => {
 					</Button>
 				</Group>
 			</Stack>
-		</Container>
-	);
-};
+			{workspaceId && (
+				<UpgradeModal
+					opened={upgradeOpened}
+					onClose={upgradeHandlers.close}
+					workspaceId={workspaceId}
+					upgradeTier="changemaker"
+				/>
+			)}
+			</Container>
+		);
+	};

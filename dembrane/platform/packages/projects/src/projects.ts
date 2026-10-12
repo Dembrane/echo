@@ -1,5 +1,5 @@
 import type { Access } from "@dembrane/access";
-import { BadRequestError, ForbiddenError, NotFoundError, newId, zip } from "@dembrane/core";
+import { BadRequestError, ForbiddenError, NotFoundError, PaymentRequiredError, newId, zip } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { projectAllows, projectFor, projectSource } from "@dembrane/http";
 import { directusRow, pythonIso } from "@dembrane/legacy-shape";
@@ -70,6 +70,16 @@ export async function cloneProject(
   const now = d.now().toISOString();
   // Hiding the event invitation is paid; a workspace since dropped to free shows it again.
   const tier = src.workspace_id ? await d.store.workspaceTier(src.workspace_id) : null;
+  if (!who.isStaff && tier === "free" && src.workspace_id) {
+    const liveCount = await d.store.countLiveProjects(src.workspace_id);
+    if (liveCount >= 1) {
+      throw new PaymentRequiredError("billing.tier_limit", {
+        message: "free tier limit",
+        params: { limit: "projects" },
+        details: { error: "FREE_TIER_LIMIT", limit: "projects", upgrade_cta_tier: "changemaker" },
+      });
+    }
+  }
   await d.store.transaction(async ({ store }) => {
     // Topic keys are global, so the clone's topics get fresh ones and the selection follows.
     const topics = await store.customTopics(src.id);

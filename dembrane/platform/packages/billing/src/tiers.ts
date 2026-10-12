@@ -16,8 +16,11 @@ export interface TierCapacity {
   readonly priceNote: string;
   /** Hard seat cap. Null everywhere: seats are metered, never walled. */
   readonly includedSeats: number | null;
-  /** Free is capped at one recorded hour; paid tiers are unlimited under fair use. */
+  /** Free is capped at 5 conversations per month (up to 1h each); paid tiers are unlimited under fair use. */
   readonly includedHours: number | null;
+  readonly includedConversationsMonthly?: number | null;
+  readonly includedProjects?: number | null;
+  readonly maxConversationDurationMinutes?: number | null;
   readonly trainingIncluded: string;
   readonly duration: string;
   readonly billingPeriodApplicable: boolean;
@@ -30,7 +33,10 @@ export const TIER_CAPACITIES: Readonly<Record<string, TierCapacity>> = {
     priceEurMonthly: null,
     priceNote: "free",
     includedSeats: null,
-    includedHours: 1,
+    includedHours: 5,
+    includedConversationsMonthly: 5,
+    includedProjects: 1,
+    maxConversationDurationMinutes: 60,
     trainingIncluded: "Sold separately",
     duration: "—",
     billingPeriodApplicable: false,
@@ -42,6 +48,9 @@ export const TIER_CAPACITIES: Readonly<Record<string, TierCapacity>> = {
     priceNote: "per seat / month",
     includedSeats: null,
     includedHours: null,
+    includedConversationsMonthly: null,
+    includedProjects: null,
+    maxConversationDurationMinutes: null,
     trainingIncluded: "Sold separately",
     duration: "ongoing",
     billingPeriodApplicable: true,
@@ -53,6 +62,9 @@ export const TIER_CAPACITIES: Readonly<Record<string, TierCapacity>> = {
     priceNote: "per seat / month",
     includedSeats: null,
     includedHours: null,
+    includedConversationsMonthly: null,
+    includedProjects: null,
+    maxConversationDurationMinutes: null,
     trainingIncluded: "Sold separately",
     duration: "ongoing",
     billingPeriodApplicable: true,
@@ -64,6 +76,9 @@ export const TIER_CAPACITIES: Readonly<Record<string, TierCapacity>> = {
     priceNote: "per seat / month",
     includedSeats: null,
     includedHours: null,
+    includedConversationsMonthly: null,
+    includedProjects: null,
+    maxConversationDurationMinutes: null,
     trainingIncluded: "Sold separately",
     duration: "ongoing",
     billingPeriodApplicable: true,

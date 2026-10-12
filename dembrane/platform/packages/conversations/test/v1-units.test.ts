@@ -13,13 +13,23 @@ test.each(fixtures.map((f) => [f.text.slice(0, 30), f] as const))(
   },
 );
 
-test("only free is hour-capped; unknown tiers never lock", () => {
+test("only free is capped (5 convs/mo up to 1h each); unknown/paid tiers never lock", () => {
   expect(tierAllowsOverage("changemaker")).toBe(true);
   expect(tierAllowsOverage("free")).toBe(false);
-  expect(computeIsOverCap("free", 1.5, 0.4)).toBe(true);
-  expect(computeIsOverCap("free", 1.2, 0.4)).toBe(false);
-  expect(computeIsOverCap("pilot", 99, 0)).toBe(false);
-  expect(computeIsOverCap("guardian", 99, 0)).toBe(false);
+  // Free tier: <= 5 conversations in the month, each <= 3600s
+  expect(computeIsOverCap("free", 0, 1800)).toBe(false);
+  expect(computeIsOverCap("free", 4, 3600)).toBe(false);
+  expect(computeIsOverCap("free", 4, 60)).toBe(false); // 1-minute conversation still counts under cap
+  // Free tier: 6th conversation in the month is over cap
+  expect(computeIsOverCap("free", 5, 60)).toBe(true);
+  expect(computeIsOverCap("free", 6, 120)).toBe(true);
+  // Free tier: conversation exceeding 1 hour (3600s) is over cap even if within count quota
+  expect(computeIsOverCap("free", 0, 3601)).toBe(true);
+  expect(computeIsOverCap("free", 2, 4000)).toBe(true);
+  // Paid and legacy tiers are never capped
+  expect(computeIsOverCap("pilot", 99, 7200)).toBe(false);
+  expect(computeIsOverCap("guardian", 99, 7200)).toBe(false);
+  expect(computeIsOverCap("innovator", 99, 7200)).toBe(false);
   expect(isConversationLocked({ is_over_cap: true }, "free")).toBe(true);
   expect(isConversationLocked({ is_over_cap: true }, "innovator")).toBe(false);
   expect(isConversationLocked({ is_over_cap: true }, null)).toBe(false);

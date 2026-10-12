@@ -6,17 +6,15 @@ import { isUuid } from "./storage";
 const { project, workspace, billing_account } = schema;
 
 /**
- * The hour-cap rules of tier_capacity.py that conversations need: paid tiers
- * have unlimited hours and never lock; free has a one hour lifetime cap. Unknown tiers
- * (legacy pilot, pioneer) have no capacity row and are never capped.
+ * Free-tier conversation limits:
+ * - 5 conversations per month (any duration counts as 1 conversation)
+ * - Each conversation is free up to 1 hour (3600 seconds)
+ * Paid tiers (innovator, changemaker, guardian) have unlimited hours/conversations.
  */
+export const FREE_TIER_MAX_CONVERSATIONS_PER_MONTH = 5;
+export const FREE_TIER_MAX_CONVERSATION_DURATION_SECONDS = 3600;
+
 const OVERAGE_TIERS = new Set(["innovator", "changemaker", "guardian"]);
-const INCLUDED_HOURS: Readonly<Record<string, number | null>> = {
-  free: 1,
-  innovator: null,
-  changemaker: null,
-  guardian: null,
-};
 
 /** True for paid tiers (unlimited hours); false for free and anything unknown. */
 export function tierAllowsOverage(tier: string | null | undefined): boolean {
@@ -24,19 +22,21 @@ export function tierAllowsOverage(tier: string | null | undefined): boolean {
 }
 
 /**
- * The finish-time stamp: over cap when the tier is capped and the hours recorded before
- * this conversation already reached the cap, so a conversation that started under the
- * cap stays unlocked even if its own recording crossed it.
+ * The finish-time stamp: for free tier, a conversation is over cap if:
+ * 1. The workspace already reached 5 conversations in the calendar month prior to this one, OR
+ * 2. This conversation's duration exceeded the 1 hour (3600s) free conversation limit.
+ * Paid tiers and unknown tiers never lock.
  */
 export function computeIsOverCap(
   tier: string,
-  workspaceAudioHours: number,
-  conversationHours: number,
+  priorConversationsInMonth: number,
+  conversationDurationSeconds: number,
 ): boolean {
   if (tierAllowsOverage(tier)) return false;
-  const included = INCLUDED_HOURS[tier];
-  if (included === undefined || included === null) return false;
-  return workspaceAudioHours - conversationHours >= included;
+  if (tier !== "free") return false;
+  if (priorConversationsInMonth >= FREE_TIER_MAX_CONVERSATIONS_PER_MONTH) return true;
+  if (conversationDurationSeconds > FREE_TIER_MAX_CONVERSATION_DURATION_SECONDS) return true;
+  return false;
 }
 
 /** The live lock: the stamp says over cap and the current tier is hour-capped. */
