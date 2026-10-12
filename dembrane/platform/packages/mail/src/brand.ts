@@ -42,7 +42,10 @@ export const font = {
   /** Email loads no web font (privacy, and few clients honour it); where DM Sans is installed, 300 is the nearest static cut. */
   emailWeight: 300,
   emphasis: 600,
-  /** The warm single-storey a, g, u, y. The PDF cuts have them frozen in. */
+  /**
+   * The warm single-storey a, g, u, y, only where DM Sans itself is loaded (the app; the PDF
+   * cuts have them frozen in). Never in email: fallbacks such as Inter draw circled glyphs.
+   */
   features: '"ss01","ss02","ss03","ss04","ss05","ss06"',
 } as const;
 

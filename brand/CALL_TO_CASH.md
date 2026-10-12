@@ -27,9 +27,11 @@ The values live in code once, in `platform/packages/mail/src/brand.ts` (`brand` 
 6. **Accents are decoration.** Cyan, spring green, mauve and lime never mean success,
    warning or anything else. Status has its own colours and appears only when something
    is wrong, late or done.
-7. **Plain words.** Warm, direct, short sentences; the reader's language, Dutch or
-   English, never mixed on one page. "dembrane" is always lowercase. Legal text keeps its
-   words; only its setting changes.
+7. **Plain words.** Warm, direct, short sentences; the reader's language, never mixed on
+   one page. "dembrane" is always lowercase. Legal text keeps its words; only its setting
+   changes. Each language keeps the register the server catalogue already uses: informal
+   in Dutch (je, jullie), Spanish and Italian; formal in German (Sie) and French (vous).
+   Legal text keeps its own register (the Dutch clause says u).
 
 ## Tokens
 
@@ -47,9 +49,10 @@ The values live in code once, in `platform/packages/mail/src/brand.ts` (`brand` 
 | accents | cyan, spring green, mauve, lime | decorative only |
 
 **Type.** DM Sans at 320, with stylistic sets ss01 to ss06 (the single-storey a, g, u,
-y). Email names DM Sans at 300 and loads no web font, so most readers see the system
-sans. Print uses static cuts made from the app's variable font
-(`packages/accounts/assets/fonts/build.py`) with the sets frozen in.
+y) wherever DM Sans itself is loaded: the app, and the PDFs, whose cuts have the sets
+frozen in (`packages/accounts/assets/fonts/build.py`). Email names DM Sans at 300, loads
+no web font and turns no stylistic set on: most readers see a fallback, and in some
+fallbacks (Inter) ss01 to ss06 draw circled letters and digits.
 
 | Step | Screen and email (px) | Print (pt) | Use |
 |---|---|---|---|
