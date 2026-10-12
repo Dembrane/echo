@@ -15,7 +15,7 @@ import { usePdfHref } from "../api/hooks";
 import type { DocumentSummaryT } from "../contract/contract.gen";
 import { formatDate, formatMoney } from "../format";
 import { isOverdue } from "./plan";
-import { Figure, TaskLine } from "./TaskLine";
+import { Figure, KindIcon, TaskLine } from "./TaskLine";
 
 /**
  * An invoice still to pay, as a task line in To do: what to pay and by when, the amount
@@ -43,6 +43,7 @@ export function PayLine({
 		<TaskLine
 			testId="invoice"
 			data-overdue={late ? "true" : undefined}
+			marker={<KindIcon kind="pay" />}
 			title={payTitle(doc)}
 			fact={
 				late ? (

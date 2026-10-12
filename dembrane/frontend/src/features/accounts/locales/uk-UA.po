@@ -67,19 +67,20 @@ msgstr "Виконано {0} з {1}"
 
 #. placeholder {0}: doc.signature.name
 #. placeholder {1}: formatDateTime(doc.signature.signed_at, i18n.locale)
-#: src/features/accounts/signing/SignRoute.tsx:1056
+#: src/features/accounts/signing/SignRoute.tsx:1088
 msgid "{0} signed on {1}. The signed copy is in your documents."
 msgstr "{0} підписав(-ла) {1}. Підписана копія у ваших документах."
 
-#: src/features/accounts/customer/Pay.tsx:52
+#: src/features/accounts/customer/Pay.tsx:53
 msgid "{days, plural, one {# day overdue} other {# days overdue}}"
 msgstr "{days, plural, one {прострочено на # день} few {прострочено на # дні} many {прострочено на # днів} other {прострочено на # дня}}"
 
-#: src/features/accounts/customer/NextSteps.tsx:392
+#: src/features/accounts/signing/SignRoute.tsx:232
+#: src/features/accounts/customer/NextSteps.tsx:375
 msgid "{days, plural, one {# day} other {# days}}"
 msgstr "{days, plural, one {# день} few {# дні} many {# днів} other {# дня}}"
 
-#: src/features/accounts/signing/SignRoute.tsx:432
+#: src/features/accounts/signing/SignRoute.tsx:450
 msgid "{done} of {total} filled"
 msgstr "Заповнено {done} з {total}"
 
@@ -87,7 +88,7 @@ msgstr "Заповнено {done} з {total}"
 msgid "{inviter} from {org} invited you to sign"
 msgstr "{inviter} з {org} запрошує вас підписати"
 
-#: src/features/accounts/signing/SignRoute.tsx:653
+#: src/features/accounts/signing/SignRoute.tsx:678
 msgid "{label} is empty."
 msgstr "{label} порожнє."
 
@@ -98,7 +99,7 @@ msgstr "{label} порожнє."
 msgid "{org} invited you to sign"
 msgstr "{org} запрошує вас підписати"
 
-#: src/features/accounts/customer/NextSteps.tsx:267
+#: src/features/accounts/customer/NextSteps.tsx:254
 msgid "3 questions"
 msgstr "3 запитання"
 
@@ -181,7 +182,7 @@ msgstr "Додати рядок"
 #~ msgid "add a signature field to send"
 #~ msgstr ""
 
-#: src/features/accounts/signing/SignRoute.tsx:373
+#: src/features/accounts/signing/SignRoute.tsx:391
 msgid "Add your signature first."
 msgstr "Спершу додайте свій підпис."
 
@@ -201,11 +202,11 @@ msgid "All"
 msgstr "Усі"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:292
-#: src/features/accounts/customer/Pay.tsx:203
+#: src/features/accounts/customer/Pay.tsx:204
 msgid "Amount"
 msgstr "Сума"
 
-#: src/features/accounts/signing/SignRoute.tsx:936
+#: src/features/accounts/signing/SignRoute.tsx:967
 msgid "Answer the question"
 msgstr "Дайте відповідь на питання"
 
@@ -226,7 +227,7 @@ msgstr "Поставити запитання"
 msgid "Asks for"
 msgstr "Запитує"
 
-#: src/features/accounts/customer/DocumentPreview.tsx:38
+#: src/features/accounts/customer/DocumentPreview.tsx:36
 msgid "Assigned to {who}. Only they can sign it."
 msgstr "Призначено: {who}. Підписати може лише ця особа."
 
@@ -234,15 +235,14 @@ msgstr "Призначено: {who}. Підписати може лише ця �
 #~ msgstr "Принаймні одне з трьох."
 
 #: src/features/accounts/signing/SignatureCapture.tsx:233
-#: src/features/accounts/signing/SignRoute.tsx:604
-#: src/features/accounts/customer/WhoSigns.tsx:364
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:220
+#: src/features/accounts/signing/SignRoute.tsx:629
+#: src/features/accounts/customer/WhoSigns.tsx:369
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:225
 msgid "Back"
 msgstr "Назад"
 
-#: src/features/accounts/signing/SignRoute.tsx:124
-#: src/features/accounts/signing/SignRoute.tsx:232
-#: src/features/accounts/signing/SignRoute.tsx:1082
+#: src/features/accounts/signing/SignRoute.tsx:128
+#: src/features/accounts/signing/SignRoute.tsx:1114
 msgid "Back to account"
 msgstr "Назад до облікового запису"
 
@@ -255,7 +255,7 @@ msgstr "Назад до облікового запису"
 #~ msgid "Before {date}"
 #~ msgstr "До {date}"
 
-#: src/features/accounts/customer/NextSteps.tsx:270
+#: src/features/accounts/customer/NextSteps.tsx:257
 msgid "Before {due}"
 msgstr "До {due}"
 
@@ -275,7 +275,7 @@ msgid "Billing details updated"
 msgstr "Платіжні реквізити оновлено"
 
 #: src/features/accounts/customer/TalkToUs.tsx:67
-#: src/features/accounts/customer/NextSteps.tsx:585
+#: src/features/accounts/customer/NextSteps.tsx:558
 #: src/features/accounts/customer/BookCallModal.tsx:26
 msgid "Book a call"
 msgstr "Запланувати дзвінок"
@@ -310,11 +310,11 @@ msgstr "Маркери списку"
 #~ msgid "by {due}"
 #~ msgstr ""
 
-#: src/features/accounts/customer/Pay.tsx:165
+#: src/features/accounts/customer/Pay.tsx:166
 msgid "By bank transfer"
 msgstr "Банківським переказом"
 
-#: src/features/accounts/signing/SignRoute.tsx:900
+#: src/features/accounts/signing/SignRoute.tsx:926
 msgid "By selecting Sign, you sign electronically. Your electronic signature is as binding as one made by hand."
 msgstr "Натиснувши «Підписати», ви підписуєте електронно. Ваш електронний підпис має таку саму силу, як власноручний."
 
@@ -327,8 +327,8 @@ msgid "Call booked"
 msgstr "Дзвінок заплановано"
 
 #: src/features/accounts/staff/EmailCustomerModal.tsx:113
-#: src/features/accounts/customer/WhoSigns.tsx:364
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:220
+#: src/features/accounts/customer/WhoSigns.tsx:369
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:225
 #: src/features/accounts/customer/Questions.tsx:250
 #: src/features/accounts/customer/BillingForm.tsx:234
 msgid "Cancel"
@@ -339,7 +339,7 @@ msgid "Cancelled"
 msgstr "Скасовано"
 
 #: src/features/accounts/staff/DocumentRoute.tsx:145
-#: src/features/accounts/signing/SignRoute.tsx:758
+#: src/features/accounts/signing/SignRoute.tsx:784
 msgid "Change"
 msgstr "Змінити"
 
@@ -368,7 +368,7 @@ msgstr "Зв'язатися з клієнтом: {0}"
 msgid "Checkbox"
 msgstr "Прапорець"
 
-#: src/features/accounts/customer/NextSteps.tsx:666
+#: src/features/accounts/customer/NextSteps.tsx:639
 msgid "Choose a file"
 msgstr "Виберіть файл"
 
@@ -376,7 +376,7 @@ msgstr "Виберіть файл"
 msgid "Choose a PDF"
 msgstr "Виберіть PDF"
 
-#: src/features/accounts/customer/WhoSigns.tsx:126
+#: src/features/accounts/customer/WhoSigns.tsx:127
 msgid "Choose an answer"
 msgstr "Виберіть відповідь"
 
@@ -384,19 +384,19 @@ msgstr "Виберіть відповідь"
 msgid "Choose an image"
 msgstr "Виберіть зображення"
 
-#: src/features/accounts/signing/SignRoute.tsx:875
+#: src/features/accounts/signing/SignRoute.tsx:901
 msgid "Choose one to continue."
 msgstr "Виберіть варіант, щоб продовжити."
 
-#: src/features/accounts/customer/WhoSigns.tsx:276
-#: src/features/accounts/customer/WhoSigns.tsx:308
-#: src/features/accounts/customer/WhoSigns.tsx:345
+#: src/features/accounts/customer/WhoSigns.tsx:277
+#: src/features/accounts/customer/WhoSigns.tsx:309
+#: src/features/accounts/customer/WhoSigns.tsx:346
 msgid "Choose one."
 msgstr "Виберіть один варіант."
 
-#: src/features/accounts/customer/WhoSigns.tsx:109
-#: src/features/accounts/customer/WhoSigns.tsx:118
-#: src/features/accounts/customer/NextSteps.tsx:309
+#: src/features/accounts/customer/WhoSigns.tsx:110
+#: src/features/accounts/customer/WhoSigns.tsx:119
+#: src/features/accounts/customer/NextSteps.tsx:296
 msgid "Choose who signs"
 msgstr "Виберіть, хто підписує"
 
@@ -413,7 +413,7 @@ msgstr "Місто"
 msgid "Clear"
 msgstr "Очистити"
 
-#: src/features/accounts/customer/WhoSigns.tsx:238
+#: src/features/accounts/customer/WhoSigns.tsx:239
 msgid "Close"
 msgstr "Закрити"
 
@@ -422,11 +422,11 @@ msgstr "Закрити"
 msgid "Closed"
 msgstr "Закрито"
 
-#: src/features/accounts/customer/NextSteps.tsx:130
+#: src/features/accounts/customer/NextSteps.tsx:117
 msgid "Coming up"
 msgstr "Далі"
 
-#: src/features/accounts/customer/WhoSigns.tsx:374
+#: src/features/accounts/customer/WhoSigns.tsx:381
 msgid "Confirm"
 msgstr "Підтвердити"
 
@@ -442,21 +442,22 @@ msgstr "Ел. пошта контакту"
 msgid "Contact name"
 msgstr "Ім'я контакту"
 
-#: src/features/accounts/customer/WhoSigns.tsx:376
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:230
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:236
+#: src/features/accounts/FitLabel.tsx:11
+#: src/features/accounts/customer/WhoSigns.tsx:383
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:237
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:243
 msgid "Continue"
 msgstr "Продовжити"
 
-#: src/features/accounts/customer/Pay.tsx:235
+#: src/features/accounts/customer/Pay.tsx:230
 msgid "Copied"
 msgstr "Скопійовано"
 
-#: src/features/accounts/customer/Pay.tsx:235
+#: src/features/accounts/customer/Pay.tsx:230
 msgid "Copy"
 msgstr "Копіювати"
 
-#: src/features/accounts/customer/Pay.tsx:233
+#: src/features/accounts/customer/Pay.tsx:228
 msgid "Copy {label}"
 msgstr "Копіювати {label}"
 
@@ -541,7 +542,7 @@ msgstr "Демо"
 msgid "Description"
 msgstr "Опис"
 
-#: src/features/accounts/customer/WhoSigns.tsx:343
+#: src/features/accounts/customer/WhoSigns.tsx:344
 msgid "Do you need your own data protection impact assessment (DPIA)?"
 msgstr "Чи потрібна вам власна оцінка впливу на захист даних (DPIA)?"
 
@@ -583,10 +584,10 @@ msgid "Documents"
 msgstr "Документи"
 
 #: src/features/accounts/format.ts:88
-#: src/features/accounts/customer/WhoSigns.tsx:247
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:152
-#: src/features/accounts/customer/NextSteps.tsx:130
-#: src/features/accounts/customer/NextSteps.tsx:487
+#: src/features/accounts/customer/WhoSigns.tsx:248
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:153
+#: src/features/accounts/customer/NextSteps.tsx:117
+#: src/features/accounts/customer/NextSteps.tsx:460
 msgid "Done"
 msgstr "Готово"
 
@@ -594,7 +595,7 @@ msgstr "Готово"
 msgid "Download PDF"
 msgstr "Завантажити PDF"
 
-#: src/features/accounts/customer/Pay.tsx:178
+#: src/features/accounts/customer/Pay.tsx:179
 msgid "Download the invoice as PDF"
 msgstr "Завантажити рахунок у PDF"
 
@@ -626,7 +627,7 @@ msgstr "Чернетку збережено"
 msgid "Draw"
 msgstr "Намалювати"
 
-#: src/features/accounts/signing/SignRoute.tsx:756
+#: src/features/accounts/signing/SignRoute.tsx:782
 msgid "Draw initials instead"
 msgstr "Намалювати ініціали"
 
@@ -651,7 +652,7 @@ msgstr "Спершу намалюйте підпис у полі."
 #~ msgid "Due"
 #~ msgstr "Термін"
 
-#: src/features/accounts/customer/Pay.tsx:70
+#: src/features/accounts/customer/Pay.tsx:71
 msgid "Due {due}"
 msgstr "Сплатити до {due}"
 
@@ -724,35 +725,35 @@ msgstr "Поля збережено"
 #~ msgid "Fill in"
 #~ msgstr "Заповнити"
 
-#: src/features/accounts/signing/SignRoute.tsx:653
+#: src/features/accounts/signing/SignRoute.tsx:678
 msgid "Fill in {label}"
 msgstr "Заповніть {label}"
 
-#: src/features/accounts/customer/NextSteps.tsx:330
+#: src/features/accounts/customer/NextSteps.tsx:317
 msgid "Fill in billing details"
 msgstr "Заповнити платіжні дані"
 
-#: src/features/accounts/signing/SignRoute.tsx:627
+#: src/features/accounts/signing/SignRoute.tsx:652
 msgid "Fill in the date"
 msgstr "Вкажіть дату"
 
-#: src/features/accounts/customer/WhoSigns.tsx:112
-#: src/features/accounts/customer/WhoSigns.tsx:121
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:232
+#: src/features/accounts/customer/WhoSigns.tsx:113
+#: src/features/accounts/customer/WhoSigns.tsx:122
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:239
 msgid "Fill in their email"
 msgstr "Вкажіть електронну пошту"
 
-#: src/features/accounts/customer/WhoSigns.tsx:113
-#: src/features/accounts/customer/WhoSigns.tsx:122
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:238
+#: src/features/accounts/customer/WhoSigns.tsx:114
+#: src/features/accounts/customer/WhoSigns.tsx:123
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:245
 msgid "Fill in their name"
 msgstr "Вкажіть ім'я"
 
-#: src/features/accounts/signing/SignRoute.tsx:921
+#: src/features/accounts/signing/SignRoute.tsx:949
 msgid "Fill in what is left"
 msgstr "Заповніть решту"
 
-#: src/features/accounts/signing/SignRoute.tsx:638
+#: src/features/accounts/signing/SignRoute.tsx:663
 msgid "Fill in your address"
 msgstr "Вкажіть адресу"
 
@@ -760,23 +761,23 @@ msgstr "Вкажіть адресу"
 msgid "Fill in your first name."
 msgstr "Вкажіть своє ім'я."
 
-#: src/features/accounts/signing/SignRoute.tsx:623
+#: src/features/accounts/signing/SignRoute.tsx:648
 msgid "Fill in your job title"
 msgstr "Вкажіть посаду"
 
-#: src/features/accounts/signing/SignRoute.tsx:620
+#: src/features/accounts/signing/SignRoute.tsx:645
 msgid "Fill in your name"
 msgstr "Вкажіть ім'я"
 
-#: src/features/accounts/signing/SignRoute.tsx:633
+#: src/features/accounts/signing/SignRoute.tsx:658
 msgid "Fill in your organisation"
 msgstr "Вкажіть організацію"
 
-#: src/features/accounts/signing/SignRoute.tsx:648
+#: src/features/accounts/signing/SignRoute.tsx:673
 msgid "Fill in your PO number"
 msgstr "Вкажіть номер замовлення"
 
-#: src/features/accounts/signing/SignRoute.tsx:643
+#: src/features/accounts/signing/SignRoute.tsx:668
 msgid "Fill in your VAT number"
 msgstr "Вкажіть номер платника ПДВ"
 
@@ -802,7 +803,7 @@ msgstr "До уваги"
 msgid "Give feedback"
 msgstr "Надіслати відгук"
 
-#: src/features/accounts/signing/SignRoute.tsx:1147
+#: src/features/accounts/signing/SignRoute.tsx:1179
 msgid "Go to the account page"
 msgstr "Перейти до облікового запису"
 
@@ -823,7 +824,7 @@ msgstr "До Ваших завдань"
 #~ msgid "Hide done steps"
 #~ msgstr ""
 
-#: src/features/accounts/customer/NextSteps.tsx:143
+#: src/features/accounts/customer/NextSteps.tsx:130
 msgid "Hide finished"
 msgstr "Сховати завершені"
 
@@ -831,16 +832,16 @@ msgstr "Сховати завершені"
 msgid "How we handle your details"
 msgstr "Як ми обробляємо ваші дані"
 
-#: src/features/accounts/customer/WhoSigns.tsx:279
-#: src/features/accounts/customer/WhoSigns.tsx:320
+#: src/features/accounts/customer/WhoSigns.tsx:280
+#: src/features/accounts/customer/WhoSigns.tsx:321
 msgid "I do"
 msgstr "Я"
 
-#: src/features/accounts/signing/SignRoute.tsx:874
+#: src/features/accounts/signing/SignRoute.tsx:900
 msgid "If not, the data processing agreement becomes a separate document for someone who may."
 msgstr "Якщо ні, договір про обробку даних стане окремим документом для того, хто має право підпису."
 
-#: src/features/accounts/customer/WhoSigns.tsx:344
+#: src/features/accounts/customer/WhoSigns.tsx:345
 msgid "If you do, we get in touch to work on it with you."
 msgstr "Якщо так, ми зв’яжемося з вами, щоб підготувати її разом."
 
@@ -849,18 +850,18 @@ msgid "If your finance team uses one"
 msgstr "Якщо ваша фінансова команда використовує це"
 
 #. placeholder {0}: money(doc.vat_cents)
-#: src/features/accounts/customer/Pay.tsx:138
+#: src/features/accounts/customer/Pay.tsx:139
 msgid "incl. {0} VAT"
 msgstr "вкл. ПДВ {0}"
 
-#: src/features/accounts/customer/Pay.tsx:79
-#: src/features/accounts/customer/NextSteps.tsx:218
+#: src/features/accounts/customer/Pay.tsx:80
+#: src/features/accounts/customer/NextSteps.tsx:205
 msgid "incl. {vat} VAT"
 msgstr "зокрема ПДВ {vat}"
 
-#: src/features/accounts/customer/NextSteps.tsx:264
-#: src/features/accounts/customer/NextSteps.tsx:405
-#: src/features/accounts/customer/NextSteps.tsx:508
+#: src/features/accounts/customer/NextSteps.tsx:251
+#: src/features/accounts/customer/NextSteps.tsx:388
+#: src/features/accounts/customer/NextSteps.tsx:481
 msgid "Includes the data processing agreement"
 msgstr "Разом з угодою про обробку даних"
 
@@ -868,7 +869,7 @@ msgstr "Разом з угодою про обробку даних"
 msgid "Initials"
 msgstr "Ініціали"
 
-#: src/features/accounts/signing/SignRoute.tsx:764
+#: src/features/accounts/signing/SignRoute.tsx:790
 msgid "Initials fields use this signature unless you draw initials."
 msgstr "Поля ініціалів використовують цей підпис, якщо ви не намалюєте окремі ініціали."
 
@@ -900,7 +901,7 @@ msgstr "Email для рахунків"
 msgid "Invoices go to"
 msgstr "Рахунки надсилаються на"
 
-#: src/features/accounts/customer/WhoSigns.tsx:307
+#: src/features/accounts/customer/WhoSigns.tsx:308
 msgid "It is a separate document. Some organisations have it signed by someone else, such as their data protection officer."
 msgstr "Це окремий документ. Деякі організації доручають його підписати іншій особі, наприклад відповідальному за захист даних."
 
@@ -984,7 +985,7 @@ msgstr "Увійти"
 msgid "Log in to download the signed copy."
 msgstr "Увійдіть, щоб завантажити підписаний примірник."
 
-#: src/features/accounts/signing/SignRoute.tsx:873
+#: src/features/accounts/signing/SignRoute.tsx:899
 msgid "May you also agree to data processing for your organisation?"
 msgstr "Чи можете ви також надати згоду на обробку даних для вашої організації?"
 
@@ -1021,7 +1022,7 @@ msgstr "Нове демо | dembrane"
 msgid "New message"
 msgstr "Нове повідомлення"
 
-#: src/features/accounts/customer/NextSteps.tsx:576
+#: src/features/accounts/customer/NextSteps.tsx:549
 msgid "New project"
 msgstr "Новий проєкт"
 
@@ -1030,7 +1031,7 @@ msgstr "Новий проєкт"
 msgid "New task"
 msgstr "Нове завдання"
 
-#: src/features/accounts/signing/SignRoute.tsx:718
+#: src/features/accounts/signing/SignRoute.tsx:744
 msgid "Next"
 msgstr "Далі"
 
@@ -1053,7 +1054,7 @@ msgstr "Далі: {0}"
 msgid "Next: {next}"
 msgstr "Далі: {next}"
 
-#: src/features/accounts/customer/WhoSigns.tsx:348
+#: src/features/accounts/customer/WhoSigns.tsx:349
 msgid "No"
 msgstr "Ні"
 
@@ -1070,7 +1071,7 @@ msgid "No documents yet."
 msgstr "Документів ще немає."
 
 #: src/features/accounts/staff/UploadPdfModal.tsx:114
-#: src/features/accounts/customer/NextSteps.tsx:671
+#: src/features/accounts/customer/NextSteps.tsx:644
 msgid "No file chosen"
 msgstr "Файл не вибрано"
 
@@ -1093,7 +1094,7 @@ msgstr "Запитань ще немає."
 msgid "No tasks."
 msgstr "Завдань немає."
 
-#: src/features/accounts/signing/SignRoute.tsx:881
+#: src/features/accounts/signing/SignRoute.tsx:907
 msgid "No, someone else signs it"
 msgstr "Ні, підписує хтось інший"
 
@@ -1117,7 +1118,7 @@ msgstr "недоступно, доки ви не опублікуєте"
 msgid "Not sent"
 msgstr "Не надіслано"
 
-#: src/features/accounts/customer/NextSteps.tsx:676
+#: src/features/accounts/customer/NextSteps.tsx:649
 msgid "Note"
 msgstr "Примітка"
 
@@ -1159,7 +1160,7 @@ msgstr "Завдання для початку роботи відкликано
 msgid "One per line"
 msgstr "По одному на рядок"
 
-#: src/features/accounts/customer/Pay.tsx:149
+#: src/features/accounts/customer/Pay.tsx:150
 msgid "Online"
 msgstr "Онлайн"
 
@@ -1199,7 +1200,7 @@ msgstr "Відкрити завдання"
 #~ msgid "Open the account"
 #~ msgstr ""
 
-#: src/features/accounts/customer/NextSteps.tsx:549
+#: src/features/accounts/customer/NextSteps.tsx:522
 msgid "Open the demo"
 msgstr "Відкрити демо"
 
@@ -1217,11 +1218,11 @@ msgstr "Відкрити PDF"
 #~ msgid "Open the public demo"
 #~ msgstr ""
 
-#: src/features/accounts/signing/SignRoute.tsx:1074
+#: src/features/accounts/signing/SignRoute.tsx:1106
 msgid "Open the signed PDF"
 msgstr "Відкрити підписаний PDF"
 
-#: src/features/accounts/customer/NextSteps.tsx:571
+#: src/features/accounts/customer/NextSteps.tsx:544
 msgid "Open the tutorial"
 msgstr "Відкрити посібник"
 
@@ -1230,7 +1231,7 @@ msgid "Open to sign"
 msgstr "Відкрити для підпису"
 
 #: src/features/accounts/staff/TaskModals.tsx:70
-#: src/features/accounts/customer/NextSteps.tsx:484
+#: src/features/accounts/customer/NextSteps.tsx:457
 msgid "Opens after signing"
 msgstr "Відкривається після підписання"
 
@@ -1246,11 +1247,11 @@ msgstr "Відкривається після підписання"
 #~ msgid "Opens after you sign {0}."
 #~ msgstr "Відкриється після того, як ви підпишете {0}."
 
-#: src/features/accounts/customer/NextSteps.tsx:482
+#: src/features/accounts/customer/NextSteps.tsx:455
 msgid "Opens after you sign {until}"
 msgstr "Відкриється після підписання {until}"
 
-#: src/features/accounts/customer/NextSteps.tsx:479
+#: src/features/accounts/customer/NextSteps.tsx:452
 msgid "Opens after you tell us who signs"
 msgstr "Відкриється, коли ви повідомите, хто підписує"
 
@@ -1261,8 +1262,8 @@ msgstr "Відкриється, коли ви повідомите, хто пі�
 #: src/features/accounts/staff/TaskModals.tsx:52
 #: src/features/accounts/staff/PushOfferModal.tsx:211
 #: src/features/accounts/staff/PushOfferModal.tsx:219
-#: src/features/accounts/signing/SignRoute.tsx:692
-#: src/features/accounts/customer/NextSteps.tsx:677
+#: src/features/accounts/signing/SignRoute.tsx:717
+#: src/features/accounts/customer/NextSteps.tsx:650
 msgid "Optional"
 msgstr "Необов'язково"
 
@@ -1270,8 +1271,8 @@ msgstr "Необов'язково"
 msgid "Optional. A past event or customer to model the demo on."
 msgstr "Необов'язково. Минула подія або клієнт як основа для демо."
 
-#: src/features/accounts/customer/WhoSigns.tsx:445
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:201
+#: src/features/accounts/customer/WhoSigns.tsx:453
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:202
 msgid "Optional. It goes on the signature."
 msgstr "Необов'язково. Зазначається біля підпису."
 
@@ -1295,7 +1296,7 @@ msgstr "Наша відповідь з’явиться тут, на цій ст
 
 #: src/features/accounts/format.ts:54
 #: src/features/accounts/staff/AccountsPanel.tsx:127
-#: src/features/accounts/customer/Pay.tsx:58
+#: src/features/accounts/customer/Pay.tsx:59
 msgid "Overdue"
 msgstr "Прострочено"
 
@@ -1323,11 +1324,11 @@ msgstr "Оплачено"
 #~ msgid "Pay {0}"
 #~ msgstr ""
 
-#: src/features/accounts/customer/Pay.tsx:86
+#: src/features/accounts/customer/Pay.tsx:87
 msgid "Pay {amount}"
 msgstr "Сплатити {amount}"
 
-#: src/features/accounts/customer/Pay.tsx:97
+#: src/features/accounts/customer/Pay.tsx:98
 msgid "Pay {title}"
 msgstr "Сплатити {title}"
 
@@ -1339,11 +1340,11 @@ msgstr "Сплатити {title}"
 #~ msgid "Pay invoice {0}"
 #~ msgstr ""
 
-#: src/features/accounts/customer/Pay.tsx:97
+#: src/features/accounts/customer/Pay.tsx:98
 msgid "Pay invoice {number}"
 msgstr "Сплатити рахунок {number}"
 
-#: src/features/accounts/customer/Pay.tsx:159
+#: src/features/accounts/customer/Pay.tsx:160
 msgid "Pay online"
 msgstr "Оплатити онлайн"
 
@@ -1384,7 +1385,7 @@ msgstr "Поштовий індекс"
 msgid "Prepare an offer"
 msgstr "Підготувати пропозицію"
 
-#: src/features/accounts/signing/SignRoute.tsx:424
+#: src/features/accounts/signing/SignRoute.tsx:442
 #: src/features/accounts/customer/AccountPickerRoute.tsx:82
 msgid "Progress"
 msgstr "Прогрес"
@@ -1449,7 +1450,7 @@ msgstr "Надіслати пропозицію"
 msgid "Push offer"
 msgstr "Надіслати пропозицію"
 
-#: src/features/accounts/customer/Pay.tsx:245
+#: src/features/accounts/customer/Pay.tsx:240
 msgid "Put the reference on the transfer so we can match your payment."
 msgstr "Вкажіть призначення платежу в переказі, щоб ми могли зіставити вашу оплату."
 
@@ -1494,7 +1495,7 @@ msgstr "готово до публікації"
 #~ msgstr "Запишіть тестову розмову"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:698
-#: src/features/accounts/customer/Pay.tsx:209
+#: src/features/accounts/customer/Pay.tsx:210
 msgid "Reference"
 msgstr "Номер посилання"
 
@@ -1527,7 +1528,7 @@ msgstr "Видалити рядок"
 
 #: src/features/accounts/customer/Questions.tsx:179
 #: src/features/accounts/customer/Questions.tsx:204
-#: src/features/accounts/customer/NextSteps.tsx:336
+#: src/features/accounts/customer/NextSteps.tsx:323
 msgid "Reply"
 msgstr "Відповісти"
 
@@ -1552,9 +1553,9 @@ msgstr "Повторити"
 msgid "Review and send"
 msgstr "Переглянути й надіслати"
 
-#: src/features/accounts/signing/SignRoute.tsx:862
-#: src/features/accounts/customer/WhoSigns.tsx:256
-#: src/features/accounts/customer/NextSteps.tsx:290
+#: src/features/accounts/signing/SignRoute.tsx:888
+#: src/features/accounts/customer/WhoSigns.tsx:257
+#: src/features/accounts/customer/NextSteps.tsx:277
 msgid "Review and sign"
 msgstr "Переглянути та підписати"
 
@@ -1622,9 +1623,9 @@ msgstr "Виберіть поле, щоб налаштувати його тип
 
 #: src/features/accounts/staff/EmailCustomerModal.tsx:136
 #: src/features/accounts/staff/AccountCardRoute.tsx:206
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:241
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:248
 #: src/features/accounts/customer/Questions.tsx:263
-#: src/features/accounts/customer/NextSteps.tsx:690
+#: src/features/accounts/customer/NextSteps.tsx:663
 msgid "Send"
 msgstr "Надіслати"
 
@@ -1654,10 +1655,10 @@ msgstr "Надіслати запрошення для входу"
 msgid "Send to sign"
 msgstr "Надіслати на підпис"
 
-#: src/features/accounts/signing/SignRoute.tsx:229
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:124
-#: src/features/accounts/customer/NextSteps.tsx:297
-#: src/features/accounts/customer/NextSteps.tsx:439
+#: src/features/accounts/signing/SignRoute.tsx:249
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:125
+#: src/features/accounts/customer/NextSteps.tsx:284
+#: src/features/accounts/customer/NextSteps.tsx:426
 msgid "Send to someone else"
 msgstr "Надіслати іншій особі"
 
@@ -1672,7 +1673,7 @@ msgstr "Надішліть нам номер замовлення (PO)"
 #: src/features/accounts/staff/UploadPdfModal.tsx:96
 #: src/features/accounts/staff/FieldEditorRoute.tsx:268
 #: src/features/accounts/staff/AccountCardRoute.tsx:201
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:122
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:123
 msgid "Sent"
 msgstr "Надіслано"
 
@@ -1681,7 +1682,7 @@ msgstr "Надіслано"
 msgid "Sent {0}"
 msgstr "Надіслано {0}"
 
-#: src/features/accounts/customer/NextSteps.tsx:489
+#: src/features/accounts/customer/NextSteps.tsx:462
 msgid "Sent {when}. We are on it."
 msgstr "Надіслано {when}. Ми вже працюємо над цим."
 
@@ -1693,14 +1694,23 @@ msgstr "Повернуто"
 msgid "Sent right away, to read."
 msgstr "Надсилається одразу для ознайомлення."
 
+#: src/features/accounts/signing/SignRoute.tsx:236
+#~ msgid "sent to {0}"
+#~ msgstr ""
+
+#: src/features/accounts/signing/SignRoute.tsx:237
+msgid "sent to {email}"
+msgstr "надіслано на {email}"
+
 #~ msgid "Sent to {name}"
 #~ msgstr "Надіслано {name}"
 
-#: src/features/accounts/customer/NextSteps.tsx:632
+#: src/features/accounts/customer/NextSteps.tsx:605
 msgid "Sent to dembrane"
 msgstr "Надіслано до dembrane"
 
-#: src/features/accounts/customer/NextSteps.tsx:390
+#: src/features/accounts/signing/SignRoute.tsx:230
+#: src/features/accounts/customer/NextSteps.tsx:373
 msgid "sent today"
 msgstr "надіслано сьогодні"
 
@@ -1721,7 +1731,7 @@ msgid "Show all"
 msgstr "Показати всі"
 
 #. placeholder {0}: done.length
-#: src/features/accounts/customer/NextSteps.tsx:145
+#: src/features/accounts/customer/NextSteps.tsx:132
 msgid "Show finished ({0})"
 msgstr "Показати завершені ({0})"
 
@@ -1734,7 +1744,7 @@ msgstr "Показати менше"
 msgid "Shown as written, under the opening. Write it in the customer's language."
 msgstr "Показується як є, під вступом. Пишіть мовою клієнта."
 
-#: src/features/accounts/signing/SignRoute.tsx:938
+#: src/features/accounts/signing/SignRoute.tsx:970
 msgid "Sign"
 msgstr "Підписати"
 
@@ -1742,7 +1752,7 @@ msgstr "Підписати"
 msgid "Sign {doc}"
 msgstr "Підписати {doc}"
 
-#: src/features/accounts/signing/SignRoute.tsx:72
+#: src/features/accounts/signing/SignRoute.tsx:76
 #: src/features/accounts/signing/SignGate.tsx:155
 msgid "Sign | dembrane"
 msgstr "Підписання | dembrane"
@@ -1764,7 +1774,7 @@ msgid "Signature fields placed"
 msgstr "Поля для підпису розміщено"
 
 #: src/features/accounts/format.ts:63
-#: src/features/accounts/signing/SignRoute.tsx:1052
+#: src/features/accounts/signing/SignRoute.tsx:1084
 msgid "Signed"
 msgstr "Підписано"
 
@@ -1797,12 +1807,12 @@ msgstr "З {0}"
 msgid "So the signature record can read it"
 msgstr "Щоб запис про підпис міг це зчитати"
 
-#: src/features/accounts/signing/SignRoute.tsx:866
+#: src/features/accounts/signing/SignRoute.tsx:892
 msgid "Some required fields are still empty."
 msgstr "Деякі обов’язкові поля все ще не заповнені."
 
-#: src/features/accounts/customer/WhoSigns.tsx:282
-#: src/features/accounts/customer/WhoSigns.tsx:321
+#: src/features/accounts/customer/WhoSigns.tsx:283
+#: src/features/accounts/customer/WhoSigns.tsx:322
 msgid "Someone else"
 msgstr "Хтось інший"
 
@@ -1834,7 +1844,7 @@ msgstr "Етап"
 msgid "Stage set"
 msgstr "Етап встановлено"
 
-#: src/features/accounts/signing/SignRoute.tsx:452
+#: src/features/accounts/signing/SignRoute.tsx:470
 msgid "Start"
 msgstr "Почати"
 
@@ -1854,8 +1864,8 @@ msgstr "Статус"
 msgid "Stay signed in as {0}"
 msgstr "Залишитися в системі як {0}"
 
-#: src/features/accounts/customer/WhoSigns.tsx:265
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:160
+#: src/features/accounts/customer/WhoSigns.tsx:266
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:161
 msgid "Step {count} of 3"
 msgstr "Крок {count} з 3"
 
@@ -1948,7 +1958,7 @@ msgstr "Шаблон"
 msgid "Text"
 msgstr "Текст"
 
-#: src/features/accounts/customer/WhoSigns.tsx:183
+#: src/features/accounts/customer/WhoSigns.tsx:184
 msgid "Thank you"
 msgstr "Дякуємо"
 
@@ -1970,7 +1980,7 @@ msgstr "Акаунт"
 #~ msgid "The account could not be loaded. Try again in a moment."
 #~ msgstr "Не вдалося завантажити акаунт. Спробуйте знову за мить."
 
-#: src/features/accounts/signing/SignRoute.tsx:629
+#: src/features/accounts/signing/SignRoute.tsx:654
 msgid "The box is not ticked yet."
 msgstr "Позначку ще не встановлено."
 
@@ -1985,15 +1995,15 @@ msgstr "Клієнт відповідає у форматі"
 msgid "The customer gets no automatic reminder. After seven days the account manager is asked to check in."
 msgstr "Клієнт не отримує автоматичних нагадувань. Через сім днів менеджера акаунта просять зв'язатися з клієнтом."
 
-#: src/features/accounts/signing/SignRoute.tsx:627
+#: src/features/accounts/signing/SignRoute.tsx:652
 msgid "The date is empty."
 msgstr "Дату не вказано."
 
-#: src/features/accounts/signing/SignRoute.tsx:1124
+#: src/features/accounts/signing/SignRoute.tsx:1156
 msgid "The document could not be loaded. Check your connection and try again."
 msgstr "Не вдалося завантажити документ. Перевірте з'єднання та спробуйте ще раз."
 
-#: src/features/accounts/customer/DocumentPreview.tsx:46
+#: src/features/accounts/customer/DocumentPreview.tsx:44
 msgid "The document could not be loaded. Try again in a moment."
 msgstr "Не вдалося завантажити документ. Спробуйте ще раз за мить."
 
@@ -2001,12 +2011,12 @@ msgstr "Не вдалося завантажити документ. Спроб�
 msgid "The draft is ready. Check it, then publish."
 msgstr "Чернетка готова. Перевірте її та опублікуйте."
 
-#: src/features/accounts/customer/WhoSigns.tsx:428
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:177
+#: src/features/accounts/customer/WhoSigns.tsx:436
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:178
 msgid "The email address is empty."
 msgstr "Адресу електронної пошти не вказано."
 
-#: src/features/accounts/signing/SignRoute.tsx:1118
+#: src/features/accounts/signing/SignRoute.tsx:1150
 msgid "The file for this document is missing on our side, so it cannot be signed yet. Tell us with a question on your account page and we will send it again."
 msgstr "Файл для цього документа відсутній з нашого боку, тому його ще не можна підписати. Повідомте нас через запитання на сторінці акаунта, і ми надішлемо його знову."
 
@@ -2017,8 +2027,8 @@ msgstr "Запрошення надіслано на"
 #~ msgid "The invitation was sent to this address."
 #~ msgstr ""
 
-#: src/features/accounts/customer/WhoSigns.tsx:439
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:193
+#: src/features/accounts/customer/WhoSigns.tsx:447
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:194
 msgid "The name is empty."
 msgstr "Ім'я не вказано."
 
@@ -2026,26 +2036,26 @@ msgstr "Ім'я не вказано."
 msgid "The reminder did not go out. Try again in a moment."
 msgstr "Нагадування не надіслано. Спробуйте ще раз за мить."
 
-#: src/features/accounts/customer/WhoSigns.tsx:318
+#: src/features/accounts/customer/WhoSigns.tsx:319
 msgid "The same person who signs the offer"
 msgstr "Та сама особа, що підписує пропозицію"
 
-#: src/features/accounts/signing/SignRoute.tsx:1062
+#: src/features/accounts/signing/SignRoute.tsx:1094
 msgid "The signed copy is in your documents."
 msgstr "Підписана копія міститься у ваших документах."
 
-#: src/features/accounts/customer/WhoSigns.tsx:418
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:165
+#: src/features/accounts/customer/WhoSigns.tsx:426
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:166
 msgid "Their email address"
 msgstr "Їхня електронна пошта"
 
-#: src/features/accounts/customer/WhoSigns.tsx:444
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:200
+#: src/features/accounts/customer/WhoSigns.tsx:452
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:201
 msgid "Their job title"
 msgstr "Їхня посада"
 
-#: src/features/accounts/customer/WhoSigns.tsx:434
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:186
+#: src/features/accounts/customer/WhoSigns.tsx:442
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:187
 msgid "Their name"
 msgstr "Їхнє ім'я"
 
@@ -2059,7 +2069,7 @@ msgstr "Цей розділ лише для команди dembrane."
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:133
 #: src/features/accounts/staff/DocumentRoute.tsx:70
-#: src/features/accounts/signing/SignRoute.tsx:90
+#: src/features/accounts/signing/SignRoute.tsx:94
 msgid "This document could not be loaded."
 msgstr "Не вдалося завантажити цей документ."
 
@@ -2071,26 +2081,26 @@ msgid "This document has no PDF."
 msgstr "Цей документ не має PDF."
 
 #: src/features/accounts/signing/SignRoute.tsx:213
-msgid "This document is assigned to {name}"
-msgstr "Цей документ призначено: {name}"
+#~ msgid "This document is assigned to {name}"
+#~ msgstr "Цей документ призначено: {name}"
 
 #: src/features/accounts/signing/SignRoute.tsx:209
-msgid "This document is assigned to {name}, {jobTitle}"
-msgstr "Цей документ призначено: {name}, {jobTitle}"
+#~ msgid "This document is assigned to {name}, {jobTitle}"
+#~ msgstr "Цей документ призначено: {name}, {jobTitle}"
 
 #: src/features/accounts/signing/SignGate.tsx:197
 msgid "This document is no longer open for signing"
 msgstr "Цей документ більше не можна підписати"
 
-#: src/features/accounts/signing/SignRoute.tsx:164
+#: src/features/accounts/signing/SignRoute.tsx:168
 msgid "This document is no longer open for signing."
 msgstr "Цей документ більше не доступний для підписання."
 
-#: src/features/accounts/signing/SignRoute.tsx:85
+#: src/features/accounts/signing/SignRoute.tsx:89
 msgid "This document is not shared with you. Sign in with the email address the link was sent to."
 msgstr "Цей документ не надано вам. Будь ласка, увійдіть з адреси електронної пошти, на яку було надіслано посилання."
 
-#: src/features/accounts/signing/SignRoute.tsx:159
+#: src/features/accounts/signing/SignRoute.tsx:163
 msgid "This document was declined. Ask us a question on your account page if that was a mistake."
 msgstr "Цей документ відхилено. Якщо це помилка, поставте нам запитання на сторінці вашого облікового запису."
 
@@ -2106,8 +2116,8 @@ msgstr "Не вдалося завантажити це запрошення"
 msgid "This invitation is for {invitee}"
 msgstr "Це запрошення для {invitee}"
 
-#: src/features/accounts/customer/WhoSigns.tsx:427
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:176
+#: src/features/accounts/customer/WhoSigns.tsx:435
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:177
 msgid "This is not an email address."
 msgstr "Це не адреса електронної пошти."
 
@@ -2123,7 +2133,7 @@ msgstr "Ця організація ще не має облікового зап
 msgid "This page could not be loaded. Try again in a moment."
 msgstr "Не вдалося завантажити сторінку. Спробуйте трохи згодом."
 
-#: src/features/accounts/signing/SignRoute.tsx:629
+#: src/features/accounts/signing/SignRoute.tsx:654
 msgid "Tick the box"
 msgstr "Поставте позначку"
 
@@ -2136,15 +2146,15 @@ msgstr "Хронологія"
 msgid "Title"
 msgstr "Назва"
 
-#: src/features/accounts/customer/Pay.tsx:206
+#: src/features/accounts/customer/Pay.tsx:207
 msgid "To"
 msgstr "Отримувач"
 
-#: src/features/accounts/customer/WhoSigns.tsx:353
+#: src/features/accounts/customer/WhoSigns.tsx:354
 msgid "To change these answers later, ask us a question."
 msgstr "Щоб пізніше змінити ці відповіді, поставте нам запитання."
 
-#: src/features/accounts/customer/NextSteps.tsx:97
+#: src/features/accounts/customer/NextSteps.tsx:84
 msgid "To do"
 msgstr "Зробити"
 
@@ -2177,7 +2187,7 @@ msgstr "Кому: {0}"
 #~ msgid "Transfer {amount} to {0}, IBAN {1}, BIC {2}"
 #~ msgstr ""
 
-#: src/features/accounts/signing/SignRoute.tsx:1138
+#: src/features/accounts/signing/SignRoute.tsx:1170
 #: src/features/accounts/pdf/PdfPages.tsx:94
 msgid "Try again"
 msgstr "Спробувати знову"
@@ -2203,7 +2213,7 @@ msgid "Unsigned"
 msgstr "Не підписано"
 
 #: src/features/accounts/signing/SignatureCapture.tsx:252
-#: src/features/accounts/customer/NextSteps.tsx:336
+#: src/features/accounts/customer/NextSteps.tsx:323
 msgid "Upload"
 msgstr "Завантажити"
 
@@ -2243,7 +2253,7 @@ msgstr "Діє 14 днів. Закріплено версії умов, SLA та
 msgid "Valid until {0}"
 msgstr "Дійсна до {0}"
 
-#: src/features/accounts/customer/NextSteps.tsx:263
+#: src/features/accounts/customer/NextSteps.tsx:250
 msgid "Valid until {validUntil}"
 msgstr "Дійсна до {validUntil}"
 
@@ -2262,15 +2272,15 @@ msgstr "Номер VAT"
 #~ msgid "View"
 #~ msgstr "Переглянути"
 
-#: src/features/accounts/customer/NextSteps.tsx:428
+#: src/features/accounts/customer/NextSteps.tsx:413
 msgid "View agreement"
 msgstr "Переглянути угоду"
 
-#: src/features/accounts/customer/NextSteps.tsx:430
+#: src/features/accounts/customer/NextSteps.tsx:417
 msgid "View document"
 msgstr "Переглянути документ"
 
-#: src/features/accounts/customer/NextSteps.tsx:426
+#: src/features/accounts/customer/NextSteps.tsx:415
 msgid "View offer"
 msgstr "Переглянути пропозицію"
 
@@ -2281,7 +2291,8 @@ msgstr "Переглянути пропозицію"
 msgid "Viewed"
 msgstr "Переглянуто"
 
-#: src/features/accounts/customer/NextSteps.tsx:403
+#: src/features/accounts/signing/SignRoute.tsx:225
+#: src/features/accounts/customer/NextSteps.tsx:386
 msgid "Waiting on {assignee}"
 msgstr "Очікує: {assignee}"
 
@@ -2309,7 +2320,7 @@ msgstr "Очікує на dembrane"
 msgid "Waiting on us"
 msgstr "Очікує на нас"
 
-#: src/features/accounts/customer/Pay.tsx:64
+#: src/features/accounts/customer/Pay.tsx:65
 msgid "was due {due}"
 msgstr "строк сплати {due}"
 
@@ -2322,12 +2333,12 @@ msgstr "Перегляньте посібник"
 msgid "We are on it"
 msgstr "Ми працюємо над цим"
 
-#: src/features/accounts/customer/NextSteps.tsx:491
+#: src/features/accounts/customer/NextSteps.tsx:464
 msgid "We are on it."
 msgstr "Ми працюємо над цим."
 
 #. placeholder {0}: task.review_note
-#: src/features/accounts/customer/NextSteps.tsx:259
+#: src/features/accounts/customer/NextSteps.tsx:246
 msgid "We asked for a change: {0}"
 msgstr "Ми попросили про зміну: {0}"
 
@@ -2347,7 +2358,7 @@ msgstr "Ми створимо синтетичне демо на основі ї
 #~ msgid "We emailed {0} at {1} with a link to sign. The task now waits on {first}, and their signature completes it."
 #~ msgstr ""
 
-#: src/features/accounts/customer/WhoSigns.tsx:215
+#: src/features/accounts/customer/WhoSigns.tsx:216
 msgid "We emailed {dpaName} at {dpaEmail} a link to sign the data processing agreement."
 msgstr "Ми надіслали {dpaName} на {dpaEmail} посилання для підписання угоди про обробку даних."
 
@@ -2355,15 +2366,15 @@ msgstr "Ми надіслали {dpaName} на {dpaEmail} посилання д�
 msgid "We emailed {name} the link again."
 msgstr "Ми знову надіслали посилання: {name}."
 
-#: src/features/accounts/customer/WhoSigns.tsx:200
+#: src/features/accounts/customer/WhoSigns.tsx:201
 msgid "We emailed {offerName} at {offerEmail} a link to sign the offer and the data processing agreement."
 msgstr "Ми надіслали {offerName} на {offerEmail} посилання для підписання пропозиції та угоди про обробку даних."
 
-#: src/features/accounts/customer/WhoSigns.tsx:207
+#: src/features/accounts/customer/WhoSigns.tsx:208
 msgid "We emailed {offerName} at {offerEmail} a link to sign the offer."
 msgstr "Ми надіслали {offerName} на {offerEmail} посилання для підписання пропозиції."
 
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:140
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:141
 msgid "We emailed {theirName} at {theirEmail} with a link to sign. The task now waits on {first}, and their signature completes it."
 msgstr "Ми надіслали {theirName} ({theirEmail}) посилання для підпису. Завдання тепер чекає на {first}, і їхній підпис його завершить."
 
@@ -2377,17 +2388,15 @@ msgstr "Ми відповіли"
 #~ msgid "We send them their own link to this document."
 #~ msgstr "Ми надішлемо їм окреме посилання на цей документ."
 
-#. placeholder {0}: signer.email
-#. placeholder {1}: doc.title
 #: src/features/accounts/signing/SignRoute.tsx:217
-msgid "We sent {0} a link to sign {1}. You'll see it signed on your account page."
-msgstr "Ми надіслали {0} посилання, щоб підписати {1}. Підписаний документ ви побачите на сторінці свого облікового запису."
+#~ msgid "We sent {0} a link to sign {1}. You'll see it signed on your account page."
+#~ msgstr "Ми надіслали {0} посилання, щоб підписати {1}. Підписаний документ ви побачите на сторінці свого облікового запису."
 
 #: src/features/accounts/format.ts:176
 msgid "We walk through your demo with you and plan a first session."
 msgstr "Ми разом із Вами переглянемо демо й сплануємо першу сесію."
 
-#: src/features/accounts/customer/WhoSigns.tsx:228
+#: src/features/accounts/customer/WhoSigns.tsx:229
 msgid "We will get in touch about your DPIA."
 msgstr "Ми зв’яжемося з вами щодо вашої DPIA."
 
@@ -2416,7 +2425,7 @@ msgstr "Що ми просимо"
 msgid "What we put on your invoices."
 msgstr "Що ми вказуємо у ваших рахунках."
 
-#: src/features/accounts/customer/WhoSigns.tsx:306
+#: src/features/accounts/customer/WhoSigns.tsx:307
 msgid "Who signs the data processing agreement?"
 msgstr "Хто підписує угоду про обробку даних?"
 
@@ -2424,7 +2433,7 @@ msgstr "Хто підписує угоду про обробку даних?"
 msgid "Who signs the offer and the data processing agreement, and whether you need your own DPIA."
 msgstr "Хто підписує пропозицію та угоду про обробку даних і чи потрібна вам власна DPIA."
 
-#: src/features/accounts/customer/WhoSigns.tsx:275
+#: src/features/accounts/customer/WhoSigns.tsx:276
 msgid "Who signs the offer?"
 msgstr "Хто підписує пропозицію?"
 
@@ -2450,11 +2459,11 @@ msgstr "Відкликано"
 msgid "Write a reply"
 msgstr "Написати відповідь"
 
-#: src/features/accounts/customer/WhoSigns.tsx:349
+#: src/features/accounts/customer/WhoSigns.tsx:350
 msgid "Yes"
 msgstr "Так"
 
-#: src/features/accounts/signing/SignRoute.tsx:878
+#: src/features/accounts/signing/SignRoute.tsx:904
 msgid "Yes, I may"
 msgstr "Так, я маю право"
 
@@ -2469,7 +2478,7 @@ msgstr "У вас уже є обліковий запис dembrane з {email}. �
 #~ msgid "You are all set. Nothing needs you right now."
 #~ msgstr "Усе готово. Зараз від вас нічого не потрібно."
 
-#: src/features/accounts/customer/WhoSigns.tsx:223
+#: src/features/accounts/customer/WhoSigns.tsx:224
 msgid "You can review and sign the offer now."
 msgstr "Тепер ви можете переглянути й підписати пропозицію."
 
@@ -2482,11 +2491,11 @@ msgstr "Ви підпишете електронно. Ваш електронн�
 msgid "You're signed in as {0}. Sign out to open it as {invitee}."
 msgstr "Ви увійшли як {0}. Вийдіть, щоб відкрити його як {invitee}."
 
-#: src/features/accounts/signing/SignRoute.tsx:639
+#: src/features/accounts/signing/SignRoute.tsx:664
 msgid "Your address is empty."
 msgstr "Адресу не вказано."
 
-#: src/features/accounts/customer/NextSteps.tsx:676
+#: src/features/accounts/customer/NextSteps.tsx:649
 msgid "Your answer"
 msgstr "Ваша відповідь"
 
@@ -2498,7 +2507,7 @@ msgstr "Ваш браузер не зміг відобразити цей док
 msgid "Your initials"
 msgstr "Ваші ініціали"
 
-#: src/features/accounts/signing/SignRoute.tsx:624
+#: src/features/accounts/signing/SignRoute.tsx:649
 msgid "Your job title is empty."
 msgstr "Посаду не вказано."
 
@@ -2506,11 +2515,11 @@ msgstr "Посаду не вказано."
 msgid "Your name"
 msgstr "Ваше ім'я"
 
-#: src/features/accounts/signing/SignRoute.tsx:620
+#: src/features/accounts/signing/SignRoute.tsx:645
 msgid "Your name is empty."
 msgstr "Ім'я не вказано."
 
-#: src/features/accounts/signing/SignRoute.tsx:634
+#: src/features/accounts/signing/SignRoute.tsx:659
 msgid "Your organisation is empty."
 msgstr "Організацію не вказано."
 
@@ -2518,7 +2527,7 @@ msgstr "Організацію не вказано."
 msgid "Your own line (optional)"
 msgstr "Ваш власний рядок (необов'язково)"
 
-#: src/features/accounts/signing/SignRoute.tsx:649
+#: src/features/accounts/signing/SignRoute.tsx:674
 msgid "Your PO number is empty."
 msgstr "Номер замовлення не вказано."
 
@@ -2526,10 +2535,10 @@ msgstr "Номер замовлення не вказано."
 msgid "Your question"
 msgstr "Ваше запитання"
 
-#: src/features/accounts/signing/SignRoute.tsx:442
+#: src/features/accounts/signing/SignRoute.tsx:460
 msgid "Your signature completes the agreement."
 msgstr "Ваш підпис завершує укладення угоди."
 
-#: src/features/accounts/signing/SignRoute.tsx:644
+#: src/features/accounts/signing/SignRoute.tsx:669
 msgid "Your VAT number is empty."
 msgstr "Номер платника ПДВ не вказано."

@@ -2,19 +2,17 @@ import { Trans } from "@lingui/react/macro";
 import { Box, Group, Loader, Stack, Text } from "@mantine/core";
 import { HourglassSimpleIcon } from "@phosphor-icons/react";
 import { usePdfData } from "../api/hooks";
-import type { DocumentSummaryT } from "../contract/contract.gen";
 import { PdfPages } from "../pdf/PdfPages";
 
 /**
- * A document someone else signs, opened under its task to read along: the pages in a
- * frame, under a band saying whose it is. Loaded on demand, so the account page does not
- * carry the PDF renderer.
+ * A document someone else signs, to read along: the pages in a frame, under a band saying
+ * whose it is. Nothing on it can be filled in or signed.
  */
 export function DocumentPreview({
 	doc,
 	who,
 }: {
-	doc: DocumentSummaryT;
+	doc: { file_url: string | null };
 	/** "Taylor Lake, Mayor": whom it is assigned to. */
 	who: string;
 }) {
@@ -38,7 +36,7 @@ export function DocumentPreview({
 					<Trans>Assigned to {who}. Only they can sign it.</Trans>
 				</Text>
 			</Group>
-			<Box p="md" style={{ maxHeight: 560, overflowY: "auto" }}>
+			<Box p="md">
 				{pdf.data ? (
 					<PdfPages data={pdf.data} />
 				) : pdf.isError ? (

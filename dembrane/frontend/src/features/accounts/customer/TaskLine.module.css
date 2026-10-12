@@ -9,10 +9,10 @@
 	padding: 24px 0;
 }
 
+/* The kind's icon, 20px, centred on the title's 24px line. */
 .marker {
-	color: var(--app-muted);
 	line-height: 0;
-	padding-top: 4px;
+	padding-top: 2px;
 }
 
 .words {
@@ -23,7 +23,10 @@
 }
 
 .figure {
+	display: flex;
+	flex-direction: column;
 	font-variant-numeric: tabular-nums;
+	gap: 4px;
 	text-align: right;
 }
 
@@ -34,12 +37,6 @@
 	gap: 12px 16px;
 	grid-column: 2 / -1;
 	margin-top: 16px;
-}
-
-.more {
-	grid-column: 2 / -1;
-	margin-top: 16px;
-	min-width: 0;
 }
 
 /* On a phone the figure folds under the fact line; nothing else moves. */

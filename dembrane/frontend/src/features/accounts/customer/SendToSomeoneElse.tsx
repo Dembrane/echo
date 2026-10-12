@@ -6,6 +6,7 @@ import { type FormEvent, useEffect, useRef, useState } from "react";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { AccountsApiError } from "../api/client";
 import { useAccountsMutation } from "../api/hooks";
+import { FitLabel, fitting } from "../FitLabel";
 
 type Step = "email" | "name" | "job" | "sent";
 const ORDER: Step[] = ["email", "name", "job"];
@@ -216,7 +217,11 @@ export function SendToSomeoneElse({
 							wrap="nowrap"
 							style={{ justifyContent: "space-between" }}
 						>
-							<Button onClick={back} data-testid="send-to-back">
+							<Button
+								onClick={back}
+								data-testid="send-to-back"
+								style={{ flexShrink: 0 }}
+							>
 								{step === "email" ? <Trans>Cancel</Trans> : <Trans>Back</Trans>}
 							</Button>
 							<Button
@@ -224,22 +229,25 @@ export function SendToSomeoneElse({
 								variant="filled"
 								loading={mutation.isPending}
 								data-testid="send-to-next"
+								{...fitting}
 							>
-								{step === "email" ? (
-									email.trim() ? (
-										<Trans>Continue</Trans>
+								<FitLabel>
+									{step === "email" ? (
+										email.trim() ? (
+											<Trans>Continue</Trans>
+										) : (
+											<Trans>Fill in their email</Trans>
+										)
+									) : step === "name" ? (
+										name.trim() ? (
+											<Trans>Continue</Trans>
+										) : (
+											<Trans>Fill in their name</Trans>
+										)
 									) : (
-										<Trans>Fill in their email</Trans>
-									)
-								) : step === "name" ? (
-									name.trim() ? (
-										<Trans>Continue</Trans>
-									) : (
-										<Trans>Fill in their name</Trans>
-									)
-								) : (
-									<Trans>Send</Trans>
-								)}
+										<Trans>Send</Trans>
+									)}
+								</FitLabel>
 							</Button>
 						</Group>
 					</Stack>

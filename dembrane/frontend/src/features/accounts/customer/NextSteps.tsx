@@ -6,27 +6,14 @@ import {
 	Button,
 	FileButton,
 	Group,
-	Loader,
 	Modal,
 	Stack,
 	Text,
 	Textarea,
 } from "@mantine/core";
-import {
-	CheckCircleIcon,
-	ClockIcon,
-	HourglassSimpleIcon,
-	LockSimpleIcon,
-} from "@phosphor-icons/react";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-	Fragment,
-	lazy,
-	type ReactNode,
-	Suspense,
-	useEffect,
-	useState,
-} from "react";
+import { Fragment, type ReactNode, useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
@@ -41,7 +28,7 @@ import { PayLine, PayModal } from "./Pay";
 import { type AccountPlan, waitsOnWhoSigns } from "./plan";
 import { mayRemind, RemindSigner } from "./RemindSigner";
 import { SendToSomeoneElse } from "./SendToSomeoneElse";
-import { Figure, secondary, TaskLine } from "./TaskLine";
+import { Figure, KindIcon, kindOf, secondary, TaskLine } from "./TaskLine";
 import { WhoSigns } from "./WhoSigns";
 
 /** Steps done by taking them, never by a reply: their button leads to the step. */
@@ -342,6 +329,7 @@ function OpenTask({
 		<TaskLine
 			testId={`task-${task.kind}`}
 			data-status={task.status}
+			marker={<KindIcon kind={kindOf(task)} />}
 			title={title}
 			fact={fact}
 			figure={signing ? <DocFigure doc={doc} /> : null}
@@ -353,10 +341,6 @@ function OpenTask({
 /** Days since someone was named to sign, from when they were named. */
 const daysSince = (iso: string | null) =>
 	iso == null ? null : Math.floor((Date.now() - Date.parse(iso)) / 864e5);
-
-const DocumentPreview = lazy(() =>
-	import("./DocumentPreview").then((m) => ({ default: m.DocumentPreview })),
-);
 
 /**
  * A signature handed to someone else: it waits on them, and their signature completes it.
@@ -378,7 +362,6 @@ function WaitingTask({
 	orgId: string;
 	onSendTo: () => void;
 }) {
-	const [open, setOpen] = useState(false);
 	const { title } = taskText(task);
 	const who = signer.name || signer.email;
 	const jobTitle = signer.role;
@@ -395,7 +378,7 @@ function WaitingTask({
 		<TaskLine
 			testId="task-waiting"
 			data-status="waiting"
-			marker={<HourglassSimpleIcon size={16} aria-hidden />}
+			marker={<KindIcon kind={kindOf(task)} quiet />}
 			title={title}
 			fact={
 				<span data-testid="waiting-on">
@@ -415,17 +398,21 @@ function WaitingTask({
 							name={firstName}
 						/>
 					)}
-					{doc?.file_url && (
+					{task.document_id && (
+						// The document opens in its own window, read-only, saying whose it is.
 						<Button
 							{...secondary}
-							onClick={() => setOpen((v) => !v)}
-							aria-expanded={open}
+							component={I18nLink}
+							to={`/o/${orgId}/account/documents/${task.document_id}/sign`}
+							target="_blank"
+							rel="noopener"
+							rightSection={<ArrowSquareOutIcon size={16} aria-hidden />}
 							data-testid="action-view-offer"
 						>
-							{doc.kind === "offer" ? (
-								<Trans>View offer</Trans>
-							) : doc.kind === "dpa" ? (
+							{doc?.kind === "dpa" ? (
 								<Trans>View agreement</Trans>
+							) : doc?.kind === "offer" ? (
+								<Trans>View offer</Trans>
 							) : (
 								<Trans>View document</Trans>
 							)}
@@ -439,13 +426,6 @@ function WaitingTask({
 						<Trans>Send to someone else</Trans>
 					</Button>
 				</>
-			}
-			more={
-				open && doc ? (
-					<Suspense fallback={<Loader size="sm" />}>
-						<DocumentPreview doc={doc} who={assignee} />
-					</Suspense>
-				) : null
 			}
 		/>
 	);
@@ -466,13 +446,6 @@ function QuietTask({
 	const { title } = taskText(task);
 	const locked = afterWhoSigns || task.locked || task.status === "locked";
 	const done = task.status === "done";
-	const marker = done ? (
-		<CheckCircleIcon size={16} color="var(--app-success)" aria-hidden />
-	) : locked ? (
-		<LockSimpleIcon size={16} aria-hidden />
-	) : (
-		<ClockIcon size={16} aria-hidden />
-	);
 	const when = formatDate(task.submitted_at, i18n.locale);
 	const until = task.locked_until_title;
 	const note = afterWhoSigns ? (
@@ -494,7 +467,7 @@ function QuietTask({
 		<TaskLine
 			testId={`task-${task.kind}`}
 			data-status={task.status}
-			marker={marker}
+			marker={<KindIcon kind={kindOf(task)} quiet />}
 			title={
 				done ? (
 					<Text span inherit c="dimmed">
