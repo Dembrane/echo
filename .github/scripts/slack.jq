@@ -72,7 +72,7 @@ def reply($emoji; $head; $detail; $run):
 # without a line is named as it is: "frontend checks failed at "Check path case"".
 def reasons:
   def job: sub("^[0-9]+-"; "") | {"images": "build-images", "deploy-pr": "deploy", "deploy-pr-preview": "deploy",
-    "deploy-staging": "deploy", "deploy-echo-next": "deploy", "deploy-prod": "deploy", "teardown-pr-preview": "teardown-pr"}[.] // .;
+    "deploy-staging": "deploy", "deploy-prod": "deploy", "teardown-pr-preview": "teardown-pr"}[.] // .;
   def steps: {
     "check-server/Install dependencies": "the server dependencies did not install",
     "check-server/Lint and format": "the server code has lint or format errors",
