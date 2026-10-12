@@ -8,17 +8,19 @@ import { createDb, schema } from "@dembrane/db";
 import {
   buildBundle,
   demoFromFixture,
+  demoIdentity,
   dict,
   type Json,
   popcornDemoRoutes,
 } from "@dembrane/popcorn";
 import { FilesystemStorage } from "@dembrane/storage";
-import { and, count, eq, ne } from "drizzle-orm";
+import { and, count, eq, inArray, ne } from "drizzle-orm";
 // The module that reads the server catalogs, so a test can stand in for their absence.
 import * as catalogs from "../../i18n/src/runtime";
 import { demoProspectHook } from "../src/demo-hook";
 import { accountsRoutes } from "../src/routes";
 import { CUSTOMER_EMAIL, DEMO_IDS, ORG_NAME, STAFF_EMAIL, seedAccountsDemo } from "../src/seed";
+import { GALLERY_SLUG } from "../src/seed-gallery";
 import { admin, dropDatabase, FakeWeb, freshDatabase, silent, type World, world } from "./helpers";
 
 // The prospect block of the demo seed route, and the accounts demo seed.
@@ -486,6 +488,53 @@ run("bun run seed:accounts-demo", () => {
         .from(schema.account_document)
         .where(eq(schema.account_document.id, seeded.offer_id));
       expect(offer?.status).toBe("sent");
+    } finally {
+      for (const spy of spies) spy.mockRestore();
+    }
+  });
+  test("the call-to-cash gallery: every offer and invoice state, once, without catalogs", async () => {
+    const absent = () => {
+      throw new Error("ENOENT: no such file or directory, open 'i18n/locales/en-US.po'");
+    };
+    const spies = [
+      spyOn(catalogs, "message").mockImplementation(absent),
+      spyOn(catalogs, "translator").mockImplementation(() => absent),
+    ];
+    try {
+      const first = await seedAccountsDemo({ ...(await options()), gallery: true });
+      expect(first.gallery.map((g) => g.name)).toEqual([
+        "Harbour City Council (sample)",
+        "Westhoek (sample)",
+        "Northfield Library (sample)",
+        "Riverside Region (sample)",
+      ]);
+      const after = await counts();
+      await seedAccountsDemo({ ...(await options()), gallery: true });
+      expect(await counts()).toEqual(after);
+      const docs = await database.db
+        .select()
+        .from(schema.account_document)
+        .where(
+          inArray(
+            schema.account_document.orgId,
+            first.gallery.map((g) => g.org_id),
+          ),
+        );
+      expect(
+        docs.map((x) => `${x.reference}:${x.status}:${x.invoiceStatus ?? "-"}`).sort(),
+      ).toEqual([
+        "2026-0398:sent:paid",
+        "2026-0402:sent:paid",
+        "2026-0455:sent:overdue",
+        "2026-0471:sent:open",
+        "DMB-GALLERY-HARBOUR:signed:-",
+        "DMB-GALLERY-NORTHFIELD:sent:-",
+        "DMB-GALLERY-RIVERSIDE:signed:-",
+        "DMB-GALLERY-WESTHOEK:viewed:-",
+      ]);
+      // Every invoice has its stand-in for Exact's PDF.
+      for (const x of docs.filter((x) => x.kind === "invoice")) expect(x.fileKey).not.toBeNull();
+      expect(first.gallery[0]?.org_id).toBe(demoIdentity(GALLERY_SLUG, "org-harbour"));
     } finally {
       for (const spy of spies) spy.mockRestore();
     }
