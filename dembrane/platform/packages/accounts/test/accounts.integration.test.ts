@@ -861,6 +861,60 @@ run("accounts routes against Postgres", () => {
     expect(review.status).toBe(409);
   });
 
+  test("billing details: Peppol from the directory, delivery by email when chosen, by customer or staff", async () => {
+    const id = "iso6523-actorid-upis::0106:87654321";
+    w.web.pages.set(
+      `https://directory.peppol.eu/search/1.0/json?participant=${encodeURIComponent(id)}`,
+      JSON.stringify({
+        matches: [
+          {
+            participantID: { value: "0106:87654321" },
+            entities: [{ name: [{ name: "Gemeente Testdorp" }] }],
+          },
+        ],
+      }),
+    );
+    const looked = await call(w, "POST", `${C()}/peppol-lookup`, "billing", {
+      kvk_number: "87654321",
+    });
+    expect(K.PeppolLookupResponse.parse(looked.data).match).toEqual({
+      participant_id: "0106:87654321",
+      name: "Gemeente Testdorp",
+    });
+    const details = {
+      legal_name: "Gemeente Testdorp",
+      billing_email: "facturen@testdorp.example",
+      address_line1: "Dorpsstraat 1",
+      postal_code: "1234 AB",
+      city: "Testdorp",
+      country: "NL",
+      kvk_number: "87654321",
+    };
+    w.jobs.jobs.length = 0;
+    const saved = K.BillingDetails.parse(
+      (await call(w, "PUT", `${C()}/billing`, "billing", details)).data,
+    );
+    expect(saved).toMatchObject({
+      peppol_id: "0106:87654321",
+      peppol_match: { participant_id: "0106:87654321", name: "Gemeente Testdorp" },
+      invoice_delivery: null,
+    });
+    expect(w.jobs.of("accounts.deliver-event")[0]?.payload).toMatchObject({
+      billing: { peppol_id: "0106:87654321", invoice_delivery: "peppol" },
+    });
+    const byEmail = await call(w, "PUT", `${C()}/billing`, "billing", {
+      ...details,
+      invoice_delivery: "email",
+    });
+    expect(K.BillingDetails.parse(byEmail.data).invoice_delivery).toBe("email");
+    const staff = await call(w, "PATCH", S(), "staff", { invoice_delivery: "peppol" });
+    expect(staff.status).toBe(200);
+    expect(
+      K.BillingDetails.parse((await call(w, "GET", `${C()}/billing`, "admin")).data)
+        .invoice_delivery,
+    ).toBe("peppol");
+  });
+
   test("a repeat offer after complete billing details asks for none: no new task, signing leaves them done", async () => {
     const billingTasks = async () =>
       (await store.tasks(w.db, w.orgId)).filter((t) => t.kind === "billing_details");

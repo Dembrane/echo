@@ -370,6 +370,9 @@ export const Ticket = z.object({
   messages: z.array(TicketMessage),
 });
 
+export const InvoiceDelivery = z.enum(["peppol", "email"]);
+export const PeppolMatch = z.object({ participant_id: z.string(), name: z.string().nullable() });
+
 export const BillingDetails = z.object({
   legal_name: z.string().nullable(),
   vat_id: z.string().nullable(),
@@ -378,6 +381,10 @@ export const BillingDetails = z.object({
   billing_email: z.string().nullable(),
   po_number: z.string().nullable(),
   peppol_id: z.string().nullable(),
+  /** The Peppol directory's entry for the saved VAT, KvK or KBO number. */
+  peppol_match: PeppolMatch.nullable(),
+  /** null: not chosen yet, so Peppol when there is a match and email otherwise. */
+  invoice_delivery: InvoiceDelivery.nullable(),
   address_line1: z.string().nullable(),
   address_line2: z.string().nullable(),
   postal_code: z.string().nullable(),
@@ -512,7 +519,17 @@ export const BillingUpdateRequest = z.object({
   kbo_number: optText(32),
   po_number: optText(128),
   peppol_id: optText(128),
+  /** Left out: unchanged. */
+  invoice_delivery: InvoiceDelivery.nullable().optional(),
 });
+
+/** The Peppol directory entry for these numbers, before saving them. */
+export const PeppolLookupRequest = z.object({
+  vat_id: optText(64),
+  kvk_number: optText(32),
+  kbo_number: optText(32),
+});
+export const PeppolLookupResponse = z.object({ match: PeppolMatch.nullable() });
 
 /** JSON form; the multipart form sends `response_text` and `file` (max 20 MB). */
 export const TaskSubmitRequest = z.object({ response_text: optText(8000) });
@@ -640,6 +657,8 @@ export const UpdateAccountRequest = z.object({
   account_stage: AccountStage.optional(),
   /** An @dembrane.com app user, or null to clear. */
   account_manager_id: Uuid.nullable().optional(),
+  /** How Exact delivers this customer's invoices; null: Peppol when found, else email. */
+  invoice_delivery: InvoiceDelivery.nullable().optional(),
 });
 
 export const PushOfferRequest = z.object({
@@ -1047,6 +1066,13 @@ export const ROUTES = {
     permission: "account:billing",
     request: BillingUpdateRequest,
     response: BillingDetails,
+  },
+  lookupPeppol: {
+    method: "POST",
+    path: `${C}/peppol-lookup`,
+    permission: "account:billing",
+    request: PeppolLookupRequest,
+    response: PeppolLookupResponse,
   },
   submitTask: {
     method: "POST",

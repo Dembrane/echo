@@ -17,6 +17,7 @@ import { requestInvoices, staffDocumentUrl } from "./invoice";
 import type { PricedLine } from "./money";
 import type { OfferContent } from "./offer";
 import { completeOnboarding, isOnboardingCode } from "./onboarding";
+import { lookupPeppol, type TaxIds } from "./peppol";
 import { type BillingRow, type DocumentRow, store } from "./storage";
 import { isTaskCode } from "./task-text";
 import { settleTask } from "./tasks";
@@ -523,6 +524,13 @@ export interface BillingInput {
   readonly kbo_number: string | null;
   readonly po_number: string | null;
   readonly peppol_id: string | null;
+  readonly invoice_delivery?: "peppol" | "email" | null | undefined;
+}
+
+/** The Peppol directory entry for numbers the customer is typing, before they save. */
+export async function peppolLookup(d: AccountsDeps, who: Signed, orgId: string, ids: TaxIds) {
+  await customerOrg(d, who, orgId, "account:billing");
+  return { match: await lookupPeppol(d, ids) };
 }
 
 export async function readBilling(d: AccountsDeps, who: Signed, orgId: string) {
@@ -540,6 +548,9 @@ export async function updateBilling(d: AccountsDeps, who: Signed, orgId: string,
     throw new ValidationError("billing.tax_id_required");
   const now = d.now();
   const me = await store.identity(d.db, who.directusUserId);
+  // A Peppol id typed by the customer wins; otherwise the directory is asked, outside the
+  // transaction so a slow directory holds no lock.
+  const match = b.peppol_id ? null : await lookupPeppol(d, b);
   await d.db.transaction(async (tx) => {
     await store.lockOrg(tx, org.id);
     const patch = {
@@ -554,7 +565,9 @@ export async function updateBilling(d: AccountsDeps, who: Signed, orgId: string,
       kvk_number: b.kvk_number,
       kbo_number: b.kbo_number,
       po_number: b.po_number,
-      peppol_id: b.peppol_id,
+      peppol_id: b.peppol_id ?? match?.participant_id ?? null,
+      peppol_name: b.peppol_id ? null : (match?.name ?? null),
+      ...(b.invoice_delivery !== undefined ? { invoice_delivery: b.invoice_delivery } : {}),
       updated_at: now.toISOString(),
     };
     const account = await store.billing(tx, org.id);

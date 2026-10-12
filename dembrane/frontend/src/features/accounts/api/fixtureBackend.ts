@@ -1304,6 +1304,16 @@ export async function handle(
 				event(s, "task.submitted", "customer", { id: t.id, type: "task" });
 				return publicTask(t);
 			}
+			case "lookupPeppol": {
+				// The fixtures know every Dutch KvK number; the real directory may not.
+				const kvk = String(body.kvk_number ?? "").replace(/\D/g, "");
+				return {
+					match:
+						kvk.length === 8
+							? { participant_id: `0106:${kvk}`, name: s.billing.legal_name }
+							: null,
+				};
+			}
 			case "submitTask": {
 				const t = task();
 				t.status = "submitted";
@@ -1433,6 +1443,10 @@ export async function handle(
 			case "accountCard":
 				return card(s);
 			case "updateAccount":
+				if (body.invoice_delivery !== undefined) {
+					s.billing.invoice_delivery =
+						body.invoice_delivery as Billing["invoice_delivery"];
+				}
 				if (body.account_stage) {
 					s.stage = body.account_stage as Store["stage"];
 					event(s, "account.stage_set", "staff", {}, { stage: s.stage });

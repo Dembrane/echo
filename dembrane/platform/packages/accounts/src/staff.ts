@@ -201,7 +201,11 @@ export async function updateAccount(
   d: AccountsDeps,
   who: Signed,
   orgId: string,
-  patch: { account_stage?: string | undefined; account_manager_id?: string | null | undefined },
+  patch: {
+    account_stage?: string | undefined;
+    account_manager_id?: string | null | undefined;
+    invoice_delivery?: "peppol" | "email" | null | undefined;
+  },
 ) {
   const org = await staffOrg(d, orgId);
   const now = d.now();
@@ -224,6 +228,14 @@ export async function updateAccount(
       if (!account) throw new ConflictError("billing.no_billing_account");
       await store.updateBilling(tx, account.id, {
         account_manager_id: patch.account_manager_id,
+        updated_at: now.toISOString(),
+      });
+    }
+    if (patch.invoice_delivery !== undefined) {
+      const account = await store.billing(tx, org.id);
+      if (!account) throw new ConflictError("billing.no_billing_account");
+      await store.updateBilling(tx, account.id, {
+        invoice_delivery: patch.invoice_delivery,
         updated_at: now.toISOString(),
       });
     }

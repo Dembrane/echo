@@ -169,6 +169,13 @@ export function orgPayload(o: OrgRow) {
   return { id: o.id, name: o.name, account_stage: o.account_stage };
 }
 
+/** How Exact sends the invoice: the choice made, else Peppol when the customer is on it. */
+export function invoiceDelivery(b: BillingRow | null): "peppol" | "email" {
+  if (b?.invoice_delivery === "peppol" || b?.invoice_delivery === "email")
+    return b.invoice_delivery;
+  return b?.peppol_id ? "peppol" : "email";
+}
+
 export function billingPayload(b: BillingRow | null) {
   return {
     legal_name: b?.billing_legal_name ?? null,
@@ -178,6 +185,7 @@ export function billingPayload(b: BillingRow | null) {
     billing_email: b?.billing_email ?? null,
     po_number: b?.po_number ?? null,
     peppol_id: b?.peppol_id ?? null,
+    invoice_delivery: invoiceDelivery(b),
     address: {
       line1: b?.billing_address_line1 ?? null,
       line2: b?.billing_address_line2 ?? null,
