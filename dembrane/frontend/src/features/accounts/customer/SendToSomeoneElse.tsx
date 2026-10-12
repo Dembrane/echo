@@ -19,18 +19,21 @@ const looksLikeEmail = (v: string) =>
  * Handing a document to the person who signs it, one question per step: their email
  * first, as that is what people have at hand, then their name, then their job title. The
  * last step sends and says so. One signer per document: sending again replaces the one
- * named before. Every step has its primary action on the right and Back on the left, on
+ * named before; the one named now starts filled in, to correct an address. Every step has its primary action on the right and Back on the left, on
  * one row.
  */
 export function SendToSomeoneElse({
 	orgId,
 	docId,
 	opened,
+	current = null,
 	onClose,
 }: {
 	orgId: string;
 	docId: string | null;
 	opened: boolean;
+	/** Whoever is named now: their details start filled in, so a mistyped address can be put right. */
+	current?: { email: string; name: string | null; role: string | null } | null;
 	onClose: () => void;
 }) {
 	const [step, setStep] = useState<Step>("email");
@@ -49,9 +52,9 @@ export function SendToSomeoneElse({
 	useEffect(() => {
 		if (!opened) return;
 		setStep("email");
-		setEmail("");
-		setName("");
-		setJob("");
+		setEmail(current?.email ?? "");
+		setName(current?.name ?? "");
+		setJob(current?.role ?? "");
 		setEmpty(false);
 		mutation.reset();
 	}, [opened]);

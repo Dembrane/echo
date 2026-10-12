@@ -102,6 +102,8 @@ export const Signer = z.object({
   role: z.string().nullable(),
   /** When they were named: the task has waited on them since. */
   named_at: IsoTime.nullable(),
+  /** When they were last reminded: Remind waits a day after naming and after each reminder. */
+  reminded_at: IsoTime.nullable(),
 });
 
 export const DocumentSummary = z.object({

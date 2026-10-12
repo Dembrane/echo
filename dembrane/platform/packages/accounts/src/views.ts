@@ -44,6 +44,8 @@ export function documentSummary(
   sig: SignatureRow | null,
   company: Company,
   base: string,
+  /** When the named signer was last reminded (account_event), if ever. */
+  remindedAt: Date | null = null,
 ) {
   return {
     id: doc.id,
@@ -69,6 +71,7 @@ export function documentSummary(
           email: doc.signerEmail,
           name: doc.signerName,
           named_at: iso(doc.signerInvitedAt),
+          reminded_at: iso(remindedAt),
           role: doc.signerRole,
         }
       : null,

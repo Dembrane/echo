@@ -15,20 +15,23 @@ import { usePdfHref } from "../api/hooks";
 import type { DocumentSummaryT } from "../contract/contract.gen";
 import { formatDate, formatMoney } from "../format";
 import { isOverdue } from "./plan";
-import { Figure, KindIcon, TaskLine } from "./TaskLine";
+import { Figure, KindIcon, secondary, TaskLine } from "./TaskLine";
 
 /**
  * An invoice still to pay, as a task line in To do: what to pay and by when, the amount
- * at the right, and one pill that says it. Paying opens the pay step, which has paying
+ * at the right, and its action, "Pay €X" (the pill when it is next). Paying opens the pay step, which has paying
  * online and the bank transfer details side by side.
  */
 export function PayLine({
 	doc,
 	today,
+	primary,
 	onPay,
 }: {
 	doc: DocumentSummaryT;
 	today: string;
+	/** The next task: the page's one blue pill. */
+	primary: boolean;
 	onPay: () => void;
 }) {
 	const { i18n } = useLingui();
@@ -83,7 +86,11 @@ export function PayLine({
 				/>
 			}
 			actions={
-				<Button variant="filled" onClick={onPay} data-testid="invoice-pay">
+				<Button
+					{...(primary ? ({ variant: "filled" } as const) : secondary)}
+					onClick={onPay}
+					data-testid="invoice-pay"
+				>
 					<Trans>Pay {amount}</Trans>
 				</Button>
 			}

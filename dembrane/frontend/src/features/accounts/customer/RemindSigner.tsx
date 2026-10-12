@@ -1,9 +1,11 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Button } from "@mantine/core";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { call } from "../api/client";
+import { accountKeys } from "../api/hooks";
 import { secondary } from "./TaskLine";
 
 /**
@@ -14,9 +16,17 @@ import { secondary } from "./TaskLine";
 
 const DAY = 24 * 60 * 60 * 1000;
 
-/** Only once a full day has passed since they were named. */
-export const mayRemind = (namedAt: string | null, now = Date.now()) =>
-	namedAt != null && now - Date.parse(namedAt) > DAY;
+/**
+ * Once a full day has passed since they were named, and at most once a day after that
+ * (the server holds to it too).
+ */
+export const mayRemind = (
+	signer: { named_at: string | null; reminded_at: string | null },
+	now = Date.now(),
+) =>
+	signer.named_at != null &&
+	now - Date.parse(signer.named_at) > DAY &&
+	(signer.reminded_at == null || now - Date.parse(signer.reminded_at) > DAY);
 
 export function RemindSigner({
 	orgId,
@@ -29,12 +39,15 @@ export function RemindSigner({
 	name: string;
 }) {
 	const [state, setState] = useState<"idle" | "sending" | "sent">("idle");
+	const queryClient = useQueryClient();
 	const remind = async () => {
 		setState("sending");
 		try {
 			await call("remindSigner", { params: { docId, orgId } });
 			toast.success(t`We emailed ${name} the link again.`);
 			setState("sent");
+			// The next reminder waits a day; the refreshed signer says so.
+			void queryClient.invalidateQueries({ queryKey: accountKeys.all });
 		} catch {
 			toast.error(t`The reminder did not go out. Try again in a moment.`);
 			setState("idle");

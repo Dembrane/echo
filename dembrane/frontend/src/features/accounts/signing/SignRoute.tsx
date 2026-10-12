@@ -223,6 +223,8 @@ function MaybeWaiting({
 						</Title>
 						<Text size="xs" c="dimmed" data-testid="sign-waiting-on">
 							<Trans>Waiting on {assignee}</Trans>
+							{" · "}
+							{email}
 							{days != null && (
 								<>
 									{" · "}
@@ -233,12 +235,10 @@ function MaybeWaiting({
 									)}
 								</>
 							)}
-							{" · "}
-							<Trans>sent to {email}</Trans>
 						</Text>
 					</Stack>
 					<Group gap="md">
-						{mayRemind(signer.named_at) && (
+						{mayRemind(signer) && (
 							<RemindSigner orgId={orgId} docId={doc.id} name={firstName} />
 						)}
 						<Button
@@ -255,6 +255,7 @@ function MaybeWaiting({
 			<SendToSomeoneElse
 				orgId={orgId}
 				docId={doc.id}
+				current={signer}
 				opened={reassigning}
 				onClose={() => setReassigning(false)}
 			/>

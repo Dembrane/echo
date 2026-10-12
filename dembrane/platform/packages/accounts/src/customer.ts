@@ -37,12 +37,13 @@ import {
 /** The customer's account, as one page reads it: tasks, documents, billing, questions. */
 export async function accountPage(d: AccountsDeps, who: Signed, orgId: string) {
   const org = await customerOrg(d, who, orgId, "account:read");
-  const [docs, sigs, tasks, tickets, billing] = await Promise.all([
+  const [docs, sigs, tasks, tickets, billing, reminded] = await Promise.all([
     store.documents(d.db, org.id),
     store.signatures(d.db, org.id),
     store.tasks(d.db, org.id),
     store.tickets(d.db, org.id),
     store.billing(d.db, org.id),
+    store.lastReminders(d.db, org.id),
   ]);
   const messages = await store.messages(
     d.db,
@@ -66,6 +67,7 @@ export async function accountPage(d: AccountsDeps, who: Signed, orgId: string) {
           sigs.find((s) => s.documentId === x.id) ?? null,
           d.settings.company,
           customerBase(org.id),
+          reminded.get(x.id) ?? null,
         ),
       ),
     billing: billingView(billing),
@@ -91,12 +93,13 @@ export async function documentDetail(
   doc: DocumentRow,
   via: "member" | "signer" | "staff",
 ) {
-  const [sig, fields, terms, sla, dpa] = await Promise.all([
+  const [sig, fields, terms, sla, dpa, reminded] = await Promise.all([
     store.signatureOf(d.db, doc.id),
     store.fields(d.db, doc.id),
     store.legalById(d.db, doc.termsTextId),
     store.legalById(d.db, doc.slaTextId),
     store.legalById(d.db, doc.dpaTextId),
+    store.lastReminders(d.db, doc.orgId, doc.id),
   ]);
   // Placeholders for what the signer's fields provide; the organisation's own name when
   // the document has no organisation field, and no role when it has no role field.
@@ -119,6 +122,7 @@ export async function documentDetail(
       sig,
       d.settings.company,
       via === "staff" ? staffBase(doc.orgId) : customerBase(doc.orgId),
+      reminded.get(doc.id) ?? null,
     ),
     body: doc.body,
     content: (doc.content ?? null) as OfferContent | null,
@@ -236,6 +240,8 @@ export async function declineDocument(
 
 /** Each naming sends an invitation, so ten an hour per organisation, like invite resends. */
 const SIGNER_LIMIT = { name: "account_signer", capacity: 10, windowSeconds: 3600 };
+/** A named signer is reminded at most once a day. */
+const REMIND_LIMIT = { name: "account_signer_remind", capacity: 1, windowSeconds: 86_400 };
 
 /**
  * Names someone else to sign. They get an email with a link; signing in with a code sent
@@ -288,7 +294,13 @@ export async function nameSigner(
     });
   });
   return {
-    signer: { email, name: signer.name, named_at: now.toISOString(), role: signer.role },
+    signer: {
+      email,
+      name: signer.name,
+      named_at: now.toISOString(),
+      reminded_at: null,
+      role: signer.role,
+    },
   };
 }
 
@@ -308,6 +320,7 @@ export async function remindSigner(d: AccountsDeps, who: Signed, orgId: string, 
     !doc.signerInvitedAt
   )
     throw new ConflictError("document.not_awaiting_signature");
+  await d.limiter.check(REMIND_LIMIT, doc.id);
   await d.limiter.check(SIGNER_LIMIT, org.id);
   const email = doc.signerEmail;
   await d.db.transaction(async (tx) => {
@@ -325,6 +338,7 @@ export async function remindSigner(d: AccountsDeps, who: Signed, orgId: string, 
       email,
       name: doc.signerName,
       named_at: doc.signerInvitedAt.toISOString(),
+      reminded_at: d.now().toISOString(),
       role: doc.signerRole,
     },
   };

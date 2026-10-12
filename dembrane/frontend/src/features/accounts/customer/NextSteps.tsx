@@ -25,19 +25,16 @@ import type { DocumentSummaryT, TaskT } from "../contract/contract.gen";
 import { formatDate, formatMoney, taskText } from "../format";
 import { PageSection, Rows } from "./PageSection";
 import { PayLine, PayModal } from "./Pay";
-import { type AccountPlan, waitsOnWhoSigns } from "./plan";
+import {
+	type AccountPlan,
+	isGetStarted,
+	toDoInOrder,
+	waitsOnWhoSigns,
+} from "./plan";
 import { mayRemind, RemindSigner } from "./RemindSigner";
 import { SendToSomeoneElse } from "./SendToSomeoneElse";
 import { Figure, KindIcon, kindOf, secondary, TaskLine } from "./TaskLine";
 import { WhoSigns } from "./WhoSigns";
-
-/** Steps done by taking them, never by a reply: their button leads to the step. */
-const ONBOARDING: NonNullable<TaskT["code"]>[] = [
-	"explore_demo",
-	"watch_tutorial",
-	"create_project",
-	"book_call",
-];
 
 /**
  * What the customer has to do, then what is coming: tasks are a set, not a sequence, so
@@ -72,43 +69,61 @@ export function NextSteps({
 	const { toPay, toDo, waiting, withUs, later, done, withDpa } = plan;
 	const coming = [...withUs, ...later];
 	const ahead = waiting.length + coming.length;
-	const open = toPay.length + toDo.length;
+	const items = toDoInOrder(plan, documents);
+	const starting = toDo.filter(isGetStarted);
 	const docOf = (task: TaskT) =>
 		documents.find((d) => d.id === task.document_id) ?? null;
-	if (open + ahead + done.length === 0) return null;
+	if (items.length + starting.length + ahead + done.length === 0) return null;
+	const openTask = (task: TaskT, primary: boolean) => (
+		<OpenTask
+			key={task.id}
+			task={task}
+			primary={primary}
+			doc={docOf(task)}
+			withDpa={withDpa.has(task.id)}
+			orgId={orgId}
+			onBilling={onBilling}
+			onBookCall={onBookCall}
+			onRespond={() => setResponding(task)}
+			onSendTo={() => setSendingTo(task.document_id)}
+			onWhoSigns={() => setAsking(task)}
+		/>
+	);
 
 	return (
 		<>
-			{open > 0 && (
+			{items.length > 0 && (
 				<PageSection
 					title={<Trans>To do</Trans>}
-					count={open}
+					count={items.length}
 					testId="next-steps"
 				>
+					{/* The first is next: the page's one blue pill. */}
 					<Rows>
-						{toPay.map((doc) => (
-							<PayLine
-								key={doc.id}
-								doc={doc}
-								today={today}
-								onPay={() => setPaying(doc)}
-							/>
-						))}
-						{toDo.map((task) => (
-							<OpenTask
-								key={task.id}
-								task={task}
-								doc={docOf(task)}
-								withDpa={withDpa.has(task.id)}
-								orgId={orgId}
-								onBilling={onBilling}
-								onBookCall={onBookCall}
-								onRespond={() => setResponding(task)}
-								onSendTo={() => setSendingTo(task.document_id)}
-								onWhoSigns={() => setAsking(task)}
-							/>
-						))}
+						{items.map((item, i) =>
+							item.kind === "invoice" ? (
+								<PayLine
+									key={item.id}
+									doc={item.doc}
+									today={today}
+									primary={i === 0}
+									onPay={() => setPaying(item.doc)}
+								/>
+							) : (
+								openTask(item.task, i === 0)
+							),
+						)}
 					</Rows>
+				</PageSection>
+			)}
+
+			{starting.length > 0 && (
+				<PageSection
+					title={<Trans>Get started</Trans>}
+					count={<Trans>optional</Trans>}
+					testId="get-started"
+				>
+					<Rows>{starting.map((task) => openTask(task, false))}</Rows>
 				</PageSection>
 			)}
 
@@ -172,6 +187,7 @@ export function NextSteps({
 				orgId={orgId}
 				docId={sendingTo}
 				opened={sendingTo !== null}
+				current={documents.find((d) => d.id === sendingTo)?.signer ?? null}
 				onClose={() => setSendingTo(null)}
 			/>
 		</>
@@ -211,6 +227,7 @@ function DocFigure({ doc }: { doc: DocumentSummaryT | null }) {
 
 function OpenTask({
 	task,
+	primary,
 	doc,
 	withDpa,
 	orgId,
@@ -221,6 +238,8 @@ function OpenTask({
 	onWhoSigns,
 }: {
 	task: TaskT;
+	/** The next task: the page's one blue pill. Every other action is a secondary. */
+	primary: boolean;
 	doc: DocumentSummaryT | null;
 	withDpa: boolean;
 	orgId: string;
@@ -232,8 +251,7 @@ function OpenTask({
 }) {
 	const { i18n } = useLingui();
 	const { title, body } = taskText(task);
-	// Every To do line's own action is its blue pill: one clear next step per line.
-	const variant = "filled";
+	const action = primary ? ({ variant: "filled" } as const) : secondary;
 	const sentBack = task.status === "changes_requested";
 	const signing = task.kind === "sign" && task.document_id;
 	const validUntil = formatDate(doc?.valid_until, i18n.locale);
@@ -269,7 +287,7 @@ function OpenTask({
 			return (
 				<>
 					<Button
-						variant={variant}
+						{...action}
 						component={I18nLink}
 						to={`/o/${orgId}/account/documents/${task.document_id}/sign`}
 						data-testid="action-sign"
@@ -288,38 +306,30 @@ function OpenTask({
 		}
 		if (task.code === "who_signs") {
 			return (
-				<Button
-					variant={variant}
-					onClick={onWhoSigns}
-					data-testid="action-who-signs"
-				>
+				<Button {...action} onClick={onWhoSigns} data-testid="action-who-signs">
 					<Trans>Choose who signs</Trans>
 				</Button>
 			);
 		}
-		if (task.code && ONBOARDING.includes(task.code)) {
+		if (isGetStarted(task)) {
 			return (
 				<OnboardingAction
 					task={task}
 					orgId={orgId}
-					variant={variant}
+					action={action}
 					onBookCall={onBookCall}
 				/>
 			);
 		}
 		if (task.kind === "billing_details") {
 			return (
-				<Button
-					variant={variant}
-					onClick={onBilling}
-					data-testid="action-billing"
-				>
+				<Button {...action} onClick={onBilling} data-testid="action-billing">
 					<Trans>Fill in billing details</Trans>
 				</Button>
 			);
 		}
 		return (
-			<Button variant={variant} onClick={onRespond}>
+			<Button {...action} onClick={onRespond}>
 				{task.kind === "upload" ? <Trans>Upload</Trans> : <Trans>Reply</Trans>}
 			</Button>
 		);
@@ -384,6 +394,7 @@ function WaitingTask({
 				<span data-testid="waiting-on">
 					{facts(
 						<Trans>Waiting on {assignee}</Trans>,
+						signer.email,
 						waited,
 						withDpa && <Trans>Includes the data processing agreement</Trans>,
 					)}
@@ -391,7 +402,7 @@ function WaitingTask({
 			}
 			actions={
 				<>
-					{mayRemind(signer.named_at) && task.document_id && (
+					{mayRemind(signer) && task.document_id && (
 						<RemindSigner
 							orgId={orgId}
 							docId={task.document_id}
@@ -493,12 +504,13 @@ function QuietTask({
 function OnboardingAction({
 	task,
 	orgId,
-	variant,
+	action,
 	onBookCall,
 }: {
 	task: TaskT;
 	orgId: string;
-	variant: "filled" | "outline";
+	/** The pill, or the secondary. */
+	action: { variant: "filled" } | typeof secondary;
 	onBookCall: () => void;
 }) {
 	const { language } = useParams<{ language?: string }>();
@@ -506,7 +518,7 @@ function OnboardingAction({
 	const workspace = task.params?.workspace_id;
 	const link = (to: string, label: ReactNode) => (
 		<Button
-			variant={variant}
+			{...action}
 			component={I18nLink}
 			to={to}
 			data-testid={`action-${task.code}`}
@@ -527,7 +539,7 @@ function OnboardingAction({
 			// step. The documentation stands in until the tutorial video exists.
 			return (
 				<Button
-					variant={variant}
+					{...action}
 					component="a"
 					href={getDocumentationUrl(language)}
 					target="_blank"
@@ -550,11 +562,7 @@ function OnboardingAction({
 				: null;
 		case "book_call":
 			return (
-				<Button
-					variant={variant}
-					onClick={onBookCall}
-					data-testid="action-book_call"
-				>
+				<Button {...action} onClick={onBookCall} data-testid="action-book_call">
 					<Trans>Book a call</Trans>
 				</Button>
 			);

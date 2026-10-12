@@ -1202,9 +1202,10 @@ export async function handle(
 					email: String(body.email),
 					name: String(body.name),
 					named_at: now(),
+					reminded_at: null,
 					role: (body.role as string | null) ?? null,
 				};
-				const replaced = previous && previous.email !== d.signer.email;
+				const replaced = previous && previous.email !== body.email;
 				event(
 					s,
 					replaced ? "document.signer_replaced" : "document.signer_named",
@@ -1223,6 +1224,10 @@ export async function handle(
 						409,
 						"This document is not waiting for a signature",
 					);
+				const last = d.signer.reminded_at;
+				if (last && Date.now() - Date.parse(last) < 864e5)
+					throw new AccountsApiError(429, "Try again tomorrow.");
+				d.signer.reminded_at = now();
 				event(
 					s,
 					"document.signer_reminded",
@@ -1266,6 +1271,7 @@ export async function handle(
 						email: p.email.toLowerCase(),
 						name: p.name,
 						named_at: now(),
+						reminded_at: null,
 						role: p.role,
 					};
 					event(

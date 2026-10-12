@@ -15,7 +15,7 @@ export const PageSection = ({
 	testId,
 }: {
 	title: ReactNode;
-	count?: number;
+	count?: ReactNode;
 	action?: ReactNode;
 	children: ReactNode;
 	testId?: string;

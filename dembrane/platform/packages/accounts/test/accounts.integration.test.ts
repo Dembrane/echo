@@ -1433,8 +1433,17 @@ run("accounts routes against Postgres", () => {
     expect((await call(w, "POST", remind, "member", {})).status).toBe(403);
     const r = await call(w, "POST", remind, "billing", {});
     expect(r.status).toBe(200);
-    expect(K.NameSignerResponse.parse(r.data).signer).toEqual(named.signer);
+    expect(K.NameSignerResponse.parse(r.data).signer).toEqual({
+      ...named.signer,
+      reminded_at: w.clock.now.toISOString(),
+    });
     expect(link()).toBe(first);
+    // Once a day per document.
+    expect((await call(w, "POST", remind, "admin", {})).status).toBe(429);
+    const page = K.AccountPage.parse((await call(w, "GET", C(), "admin")).data);
+    expect(page.documents.find((x) => x.id === id)?.signer?.reminded_at).toBe(
+      w.clock.now.toISOString(),
+    );
     const types = (await store.events(w.db, w.orgId))
       .filter((e) => e.subjectId === id)
       .map((e) => e.type);

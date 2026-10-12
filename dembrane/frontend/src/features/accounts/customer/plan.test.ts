@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { DocumentSummaryT, TaskT } from "../contract/contract.gen";
 import { accountPage } from "../contract/fixtures.gen";
-import { planAccount } from "./plan";
+import { planAccount, toDoInOrder } from "./plan";
 
 const base = accountPage.tasks.find((t) => t.code === "sign_offer") as TaskT;
 const task = (id: string, over: Partial<TaskT>): TaskT => ({
@@ -121,6 +121,7 @@ describe("planAccount", () => {
 				email: "Taylor@Lake.example",
 				name: "Taylor Lake",
 				named_at: null,
+				reminded_at: null,
 				role: null,
 			},
 		} as DocumentSummaryT;
@@ -149,7 +150,9 @@ describe("planAccount", () => {
 			id,
 			invoice: undefined,
 			kind: id === "p" ? "dpa" : "offer",
-			signer: email ? { email, name: email, named_at: null, role: null } : null,
+			signer: email
+				? { email, name: email, named_at: null, reminded_at: null, role: null }
+				: null,
 		});
 		const tasks = [
 			task("offer", { document_id: "o", kind: "sign", status: "open" }),
@@ -183,5 +186,34 @@ describe("planAccount", () => {
 		);
 		expect(two.waiting.map((w) => w.task.id)).toEqual(["offer", "dpa"]);
 		expect(two.withDpa.size).toBe(0);
+	});
+
+	it("puts the next task first: most overdue, else the nearest deadline, sent-back on a tie", () => {
+		const plan = planAccount(
+			[
+				task("reply", { code: null, kind: "generic", status: "open" }),
+				task("back", {
+					code: null,
+					due_on: "2026-10-20",
+					kind: "upload",
+					status: "changes_requested",
+				}),
+				task("po", {
+					code: null,
+					due_on: "2026-10-20",
+					kind: "generic",
+					status: "open",
+				}),
+				task("demo", { code: "explore_demo", kind: "generic", status: "open" }),
+			],
+			[invoice("late", { due_on: "2026-10-01", status: "open" })],
+			"2026-10-12",
+		);
+		expect(toDoInOrder(plan, []).map((x) => x.id)).toEqual([
+			"late",
+			"back",
+			"po",
+			"reply",
+		]);
 	});
 });

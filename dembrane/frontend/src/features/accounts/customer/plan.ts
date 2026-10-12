@@ -150,6 +150,59 @@ function foldDpa(plan: AccountPlan, documents: DocumentSummaryT[]) {
 	plan.waiting = plan.waiting.filter((w) => kept.has(w.task.id));
 }
 
+/** Steps that help a new customer start, never required: they sit under To do on their own. */
+export const GET_STARTED: NonNullable<TaskT["code"]>[] = [
+	"explore_demo",
+	"watch_tutorial",
+	"create_project",
+	"book_call",
+];
+
+export const isGetStarted = (task: TaskT) =>
+	task.code != null && GET_STARTED.includes(task.code);
+
+export type ToDoItem =
+	| { kind: "invoice"; id: string; doc: DocumentSummaryT }
+	| { kind: "task"; id: string; task: TaskT };
+
+/**
+ * What is the customer's to do, the next one first: it alone gets the blue pill. Next is
+ * the most overdue, else the nearest deadline (an invoice's due date, a task's due date,
+ * an offer's valid-until); on a tie, or with no deadline, a sent-back task, then who
+ * signs, then a signature, then the rest, each in the order they came.
+ */
+export function toDoInOrder(
+	plan: Pick<AccountPlan, "toPay" | "toDo">,
+	documents: DocumentSummaryT[],
+): ToDoItem[] {
+	const deadline = (item: ToDoItem): string | null => {
+		if (item.kind === "invoice") return item.doc.invoice?.due_on ?? null;
+		const { task } = item;
+		if (task.due_on) return task.due_on;
+		if (task.kind !== "sign") return null;
+		return (
+			documents.find((d) => d.id === task.document_id)?.valid_until ?? null
+		);
+	};
+	const rank = (item: ToDoItem) =>
+		item.kind === "invoice" ? 3 : todoRank(item.task);
+	const items: ToDoItem[] = [
+		...plan.toPay.map((doc) => ({ doc, id: doc.id, kind: "invoice" as const })),
+		...plan.toDo
+			.filter((task) => !isGetStarted(task))
+			.map((task) => ({ id: task.id, kind: "task" as const, task })),
+	];
+	return items
+		.map((item, i) => ({ d: deadline(item), i, item }))
+		.sort(
+			(a, b) =>
+				(a.d ?? "9999").localeCompare(b.d ?? "9999") ||
+				rank(a.item) - rank(b.item) ||
+				a.i - b.i,
+		)
+		.map(({ item }) => item);
+}
+
 /** Today as YYYY-MM-DD in the viewer's own calendar, to compare with due dates. */
 export const localToday = (now = new Date()): string =>
 	`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
