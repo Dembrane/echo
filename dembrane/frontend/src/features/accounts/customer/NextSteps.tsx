@@ -43,22 +43,19 @@ const ONBOARDING: NonNullable<TaskT["code"]>[] = [
 
 /**
  * What the customer has to do, then what is coming: tasks are a set, not a sequence, so
- * there are no step numbers. Each open task is a row with its words and its action; the
- * first one carries the page's primary pill unless an invoice already does. Below it,
+ * there are no step numbers. Each open task is a row with its words and its action, and
+ * that action is the row's one blue pill. Below it,
  * quieter, what dembrane is working on and what opens after a signature, and the finished
  * tasks folded away.
  */
 export function NextSteps({
 	orgId,
 	plan,
-	primary,
 	onBilling,
 	onBookCall,
 }: {
 	orgId: string;
 	plan: Pick<AccountPlan, "toDo" | "waiting" | "withUs" | "later" | "done">;
-	/** The first task's action is the page's one primary action. */
-	primary: boolean;
 	onBilling: () => void;
 	onBookCall: () => void;
 }) {
@@ -82,7 +79,6 @@ export function NextSteps({
 								key={task.id}
 								task={task}
 								first={i === 0}
-								primary={primary && i === 0}
 								orgId={orgId}
 								onBilling={onBilling}
 								onBookCall={onBookCall}
@@ -161,7 +157,6 @@ export function NextSteps({
 function OpenTask({
 	task,
 	first,
-	primary,
 	orgId,
 	onBilling,
 	onBookCall,
@@ -171,7 +166,6 @@ function OpenTask({
 }: {
 	task: TaskT;
 	first: boolean;
-	primary: boolean;
 	orgId: string;
 	onBilling: () => void;
 	onBookCall: () => void;
@@ -180,7 +174,8 @@ function OpenTask({
 	onWhoSigns: () => void;
 }) {
 	const { title, body } = taskText(task);
-	const variant = primary ? "filled" : "outline";
+	// Every task's own action is its blue pill: one clear next step per row.
+	const variant = "filled";
 	const sentBack = task.status === "changes_requested";
 
 	const action = (() => {
@@ -190,19 +185,19 @@ function OpenTask({
 			return (
 				<Group gap="xs" wrap="wrap">
 					<Button
-						variant="outline"
-						onClick={onSendTo}
-						data-testid="action-send-to"
-					>
-						<Trans>Send to someone else</Trans>
-					</Button>
-					<Button
 						variant={variant}
 						component={I18nLink}
 						to={`/o/${orgId}/account/documents/${task.document_id}/sign`}
 						data-testid="action-sign"
 					>
 						<Trans>Review and sign</Trans>
+					</Button>
+					<Button
+						variant="outline"
+						onClick={onSendTo}
+						data-testid="action-send-to"
+					>
+						<Trans>Send to someone else</Trans>
 					</Button>
 				</Group>
 			);
