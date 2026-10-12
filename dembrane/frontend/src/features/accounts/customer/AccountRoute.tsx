@@ -43,7 +43,7 @@ export function AccountOverviewWork({ orgId }: { orgId: string }) {
 	if (!ready || !data) return null;
 	const today = localToday();
 	const plan = planAccount(data.tasks, data.documents, today, me?.email);
-	// One primary action on the page: paying, when it can be done online, else the first task.
+	// Paying online is the invoice's pill; each task carries its own.
 	const payFirst = Boolean(plan.toPay[0]?.invoice?.payment_url);
 	return (
 		<>
@@ -52,7 +52,6 @@ export function AccountOverviewWork({ orgId }: { orgId: string }) {
 			<NextSteps
 				orgId={orgId}
 				plan={{ ...plan, done: [] }}
-				primary={!payFirst}
 				onBilling={() => navigate(`/o/${orgId}/tasks#billing`)}
 				onBookCall={() => setBooking(true)}
 			/>
@@ -151,7 +150,6 @@ function TasksBody({ orgId, data }: { orgId: string; data: AccountPageT }) {
 			<NextSteps
 				orgId={orgId}
 				plan={plan}
-				primary={!payFirst}
 				onBilling={toBilling}
 				onBookCall={() => setBooking(true)}
 			/>

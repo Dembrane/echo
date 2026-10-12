@@ -221,19 +221,15 @@ function MaybeWaiting({
 					</Text>
 					<Group>
 						<Button
-							component={I18nLink}
-							to={`/o/${orgId}/account`}
 							size="md"
 							variant="filled"
-						>
-							<Trans>Back to account</Trans>
-						</Button>
-						<Button
-							size="md"
 							onClick={() => setReassigning(true)}
 							data-testid="sign-reassign"
 						>
 							<Trans>Send to someone else</Trans>
+						</Button>
+						<Button component={I18nLink} to={`/o/${orgId}/account`} size="md">
+							<Trans>Back to account</Trans>
 						</Button>
 					</Group>
 				</Stack>
