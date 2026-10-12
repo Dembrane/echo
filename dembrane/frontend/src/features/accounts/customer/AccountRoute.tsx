@@ -6,6 +6,7 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Navigate, useLocation, useParams } from "react-router";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useV2Me } from "@/hooks/useV2Me";
 import { AccountsApiError } from "../api/client";
 import { useAccountPage } from "../api/hooks";
 import type { AccountPageT } from "../contract/contract.gen";
@@ -36,11 +37,12 @@ export const AccountRedirect = () => (
 export function AccountOverviewWork({ orgId }: { orgId: string }) {
 	const ready = useAccountsCatalog();
 	const { data } = useAccountPage(orgId);
+	const { data: me } = useV2Me();
 	const navigate = useI18nNavigate();
 	const [booking, setBooking] = useState(false);
 	if (!ready || !data) return null;
 	const today = localToday();
-	const plan = planAccount(data.tasks, data.documents, today);
+	const plan = planAccount(data.tasks, data.documents, today, me?.email);
 	// One primary action on the page: paying, when it can be done online, else the first task.
 	const payFirst = Boolean(plan.toPay[0]?.invoice?.payment_url);
 	return (
@@ -111,8 +113,9 @@ function TasksBody({ orgId, data }: { orgId: string; data: AccountPageT }) {
 	const billingRef = useRef<HTMLDivElement>(null);
 	const [booking, setBooking] = useState(false);
 	const { hash } = useLocation();
+	const { data: me } = useV2Me();
 	const today = localToday();
-	const plan = planAccount(data.tasks, data.documents, today);
+	const plan = planAccount(data.tasks, data.documents, today, me?.email);
 	const billingTask = data.tasks.find(
 		(task) => task.kind === "billing_details",
 	);

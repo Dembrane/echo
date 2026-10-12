@@ -18,6 +18,7 @@ import { and, eq } from "drizzle-orm";
 import type { AccountsDeps, Company } from "./deps";
 import { emit } from "./events";
 import { seedLegalTexts } from "./legal/store";
+import { offerTitle } from "./offer";
 import { createAccount, ensureUser } from "./prospect";
 import { type GallerySummary, seedCallToCashGallery } from "./seed-gallery";
 import { sha256Hex } from "./signing";
@@ -318,8 +319,12 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
   const docs = await store.documents(o.db, account.org_id);
   let waiting = docs.find((x) => x.kind === "offer" && ["sent", "viewed"].includes(x.status));
   // A demo rebuilt in the other language, or under another organisation name, withdraws
-  // the offer that shows the old words.
-  if (waiting && (waiting.language !== lang || !waiting.title.startsWith(ORG_NAME))) {
+  // the offer that shows the old words; so does one named the old way ("<org> x dembrane").
+  const current = (doc: NonNullable<typeof waiting>) =>
+    doc.language === lang &&
+    (doc.content as { offer_name?: string } | null)?.offer_name === ORG_NAME &&
+    doc.title === offerTitle("subscription", lang, doc.reference ?? "");
+  if (waiting && !current(waiting)) {
     await store.updateDocument(o.db, waiting.id, {
       status: "void",
       voidedAt: o.now,

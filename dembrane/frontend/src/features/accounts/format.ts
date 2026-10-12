@@ -119,11 +119,20 @@ export const codedTaskText = (
 ): { title: string; body: string } => {
 	const doc = params?.document_title ?? "";
 	switch (code) {
-		case "sign_offer":
-			return {
-				body: t`Read the offer and sign it here. Someone else signs for your organisation? Name them on the offer; they get their own link.`,
-				title: doc ? t`Review and sign ${doc}` : t`Review and sign the offer`,
-			};
+		case "sign_offer": {
+			// Named by what it is for and its number, which is what people pass on.
+			const number = params?.offer_reference ?? "";
+			const title =
+				number && params?.offer_template === "event"
+					? t`Review and sign event offer ${number}`
+					: number && params?.offer_template === "subscription"
+						? t`Review and sign yearly license offer ${number}`
+						: doc
+							? t`Review and sign ${doc}`
+							: t`Review and sign the offer`;
+			// The two buttons on the task say what there is to do.
+			return { body: "", title };
+		}
 		case "sign_dpa":
 			return {
 				body: t`Someone who may agree to data processing for your organisation signs it.`,

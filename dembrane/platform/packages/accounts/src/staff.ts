@@ -23,6 +23,7 @@ import {
   type OfferItem,
   type OfferTemplate,
   offerText,
+  offerTitle,
   offerTotals,
   validUntil,
 } from "./offer";
@@ -396,7 +397,7 @@ export async function pushOffer(
       id,
       orgId: org.id,
       kind: "offer",
-      title: input.title ?? `${input.offer_name} x dembrane`,
+      title: input.title ?? offerTitle(content.template, content.language, content.reference),
       version: prev ? prev.version + 1 : 1,
       supersedesId: prev?.id ?? null,
       ...offerColumns(content, pinned),
@@ -464,7 +465,7 @@ export async function updateOffer(
     if (locked?.status !== "draft") throw new ConflictError("document.already_sent");
     const file = await storeRendered(d, doc.orgId, doc.id, rendered);
     await store.updateDocument(tx, doc.id, {
-      title: input.title ?? `${input.offer_name} x dembrane`,
+      title: input.title ?? offerTitle(content.template, content.language, content.reference),
       ...offerColumns(content, pinned),
       ...file,
       externalRef: input.external_ref ?? doc.externalRef,
@@ -500,11 +501,18 @@ async function sendOfferIn(
   await store.updateDocument(tx, docId, { status: "sent", sentAt: now, updatedAt: now });
   // The customer must sign it, so a contact held by an unpublished demo is let in now.
   await releaseHeldContacts(tx, orgId, now);
+  const content = doc.content as OfferContent | null;
   const task = await createTask(d, tx, {
     ...(taskId && { id: taskId }),
     orgId,
     code: "sign_offer",
-    params: { document_title: doc.title },
+    // The task is worded from the kind of offer and its number ("Review and sign event
+    // offer 515"); the title stays for older readers and the server's own wording.
+    params: {
+      document_title: doc.title,
+      ...(content && { offer_template: content.template }),
+      ...(doc.reference && { offer_reference: doc.reference }),
+    },
     title: null,
     kind: "sign",
     documentId: docId,
@@ -512,7 +520,6 @@ async function sendOfferIn(
   });
   await ensureBillingTask(d, tx, orgId, who.directusUserId);
   await withdrawOnboarding(d, tx, orgId, actorOf(who));
-  const content = doc.content as OfferContent | null;
   await emit(d, tx, {
     orgId,
     actor: actorOf(who),

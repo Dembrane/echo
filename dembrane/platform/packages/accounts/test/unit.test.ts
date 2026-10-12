@@ -108,7 +108,7 @@ describe("money", () => {
 describe("the offer", () => {
   test("follows the template: facts, columns, totals with VAT, acceptance, pinned versions", () => {
     const text = offerText(offer());
-    expect(text).toContain("# Gemeente Voorbeeldstad x dembrane");
+    expect(text).toContain("Yearly license offer\n# Gemeente Voorbeeldstad\n");
     expect(text).toContain("Reference: DMB-1");
     expect(text).toContain("Date: 28 September 2026");
     // Validity counts from the offer's own valid_days.

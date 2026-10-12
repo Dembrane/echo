@@ -5,14 +5,17 @@ import type { DocumentSummaryT, TaskT } from "../contract/contract.gen";
  * first and the most urgent of them on top: paying is what the page is most often opened
  * for, and an overdue invoice is the one thing that should never be missed. Then the
  * customer's open tasks, a sent-back one before the rest and a signature before the
- * smaller asks, because signing opens the steps after it. What waits on dembrane, what
- * waits on a signature, and what is done follow, each in the order staff gave them.
+ * smaller asks, because signing opens the steps after it. A signature handed to someone
+ * else waits on them and leads what is coming; then what waits on dembrane, what waits on
+ * a signature, and what is done, each in the order staff gave them.
  */
 export interface AccountPlan {
 	/** Unpaid invoices, overdue first, then by due date. */
 	toPay: DocumentSummaryT[];
 	/** The customer's open and sent-back tasks. */
 	toDo: TaskT[];
+	/** Signing tasks handed to someone else: their signature completes them. */
+	waiting: { task: TaskT; signer: NonNullable<DocumentSummaryT["signer"]> }[];
 	/** Sent in, waiting on dembrane. */
 	withUs: TaskT[];
 	/** Waiting on a signature before they open. */
@@ -38,9 +41,28 @@ export function planAccount(
 	tasks: TaskT[],
 	documents: DocumentSummaryT[],
 	today: string,
+	/** The viewer's email: a document named to them is still theirs to sign. */
+	me: string | null = null,
 ): AccountPlan {
-	const live = tasks.filter((task) => task.status !== "withdrawn");
 	const isLocked = (task: TaskT) => task.locked || task.status === "locked";
+	const signerOf = (task: TaskT) => {
+		if (task.kind !== "sign" || !task.document_id || isLocked(task))
+			return null;
+		if (task.status !== "open" && task.status !== "changes_requested")
+			return null;
+		const signer = documents.find((d) => d.id === task.document_id)?.signer;
+		if (!signer) return null;
+		return me && signer.email.toLowerCase() === me.toLowerCase()
+			? null
+			: signer;
+	};
+	const waiting: AccountPlan["waiting"] = [];
+	const live = tasks.filter((task) => {
+		if (task.status === "withdrawn") return false;
+		const signer = signerOf(task);
+		if (signer) waiting.push({ signer, task });
+		return !signer;
+	});
 	return {
 		done: live.filter((task) => task.status === "done"),
 		later: live.filter((task) => isLocked(task) && task.status !== "done"),
@@ -62,6 +84,7 @@ export function planAccount(
 						b.invoice?.due_on ?? "9999",
 					),
 			),
+		waiting,
 		withUs: live.filter(
 			(task) => !isLocked(task) && task.status === "submitted",
 		),

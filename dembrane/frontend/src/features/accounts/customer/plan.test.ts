@@ -69,4 +69,31 @@ describe("planAccount", () => {
 		);
 		expect(plan.toPay.map((d) => d.id)).toEqual(["late", "soon", "later"]);
 	});
+
+	it("hands a signature named to someone else to them, unless the viewer is that person", () => {
+		const offer = {
+			...invoiceDoc,
+			id: "doc",
+			invoice: undefined,
+			kind: "offer",
+			signer: { email: "Taylor@Lake.example", name: "Taylor Lake", role: null },
+		} as DocumentSummaryT;
+		const tasks = [
+			task("sign", { document_id: "doc", kind: "sign", status: "open" }),
+			task("other", { kind: "generic", status: "open" }),
+		];
+		const plan = planAccount(tasks, [offer], "2026-10-12", "me@x.example");
+		expect(plan.toDo.map((t) => t.id)).toEqual(["other"]);
+		expect(plan.waiting.map((w) => [w.task.id, w.signer.name])).toEqual([
+			["sign", "Taylor Lake"],
+		]);
+		const theirs = planAccount(
+			tasks,
+			[offer],
+			"2026-10-12",
+			"taylor@lake.example",
+		);
+		expect(theirs.toDo.map((t) => t.id)).toEqual(["sign", "other"]);
+		expect(theirs.waiting).toEqual([]);
+	});
 });

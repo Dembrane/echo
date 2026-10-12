@@ -196,6 +196,58 @@ export const store = {
       .orderBy(asc(org_membership.created_at));
   },
 
+  /**
+   * Someone named to sign shows among the organisation's members as invited, with the
+   * billing role (signing and paying is what it is for). Their invitation email is the
+   * signing email, so none goes out here. Nothing changes when they are a member already
+   * or have an invitation waiting; true when an invitation was made.
+   */
+  async inviteSigner(
+    c: Conn,
+    row: { id: string; orgId: string; email: string; invitedBy: string | null; now: Date },
+  ): Promise<boolean> {
+    const e = row.email.trim().toLowerCase();
+    const at = row.now.toISOString();
+    const [member] = await c
+      .select({ id: org_membership.id })
+      .from(org_membership)
+      .innerJoin(app_user, eq(app_user.id, org_membership.user_id))
+      .leftJoin(auth_user, eq(auth_user.id, app_user.directus_user_id))
+      .where(
+        and(
+          eq(org_membership.org_id, row.orgId),
+          isNull(org_membership.deleted_at),
+          sql`lower(coalesce(${auth_user.email}, ${app_user.email})) = ${e}`,
+        ),
+      )
+      .limit(1);
+    if (member) return false;
+    const [pending] = await c
+      .select({ id: org_invite.id })
+      .from(org_invite)
+      .where(
+        and(
+          eq(org_invite.org_id, row.orgId),
+          sql`lower(${org_invite.email}) = ${e}`,
+          isNull(org_invite.accepted_at),
+          isNull(org_invite.deleted_at),
+          gt(org_invite.expires_at, at),
+        ),
+      )
+      .limit(1);
+    if (pending) return false;
+    await c.insert(org_invite).values({
+      id: row.id,
+      org_id: row.orgId,
+      email: e,
+      role: "billing",
+      invited_by: row.invitedBy,
+      // As long as an offer stays open to sign.
+      expires_at: new Date(row.now.getTime() + 30 * 86_400_000).toISOString(),
+    });
+    return true;
+  },
+
   async usage(c: Conn, orgId: string) {
     const [row] = await c
       .select({
