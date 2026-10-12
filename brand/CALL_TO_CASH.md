@@ -47,8 +47,9 @@ The values live in code once, in `platform/packages/mail/src/brand.ts` (`brand` 
 | accents | cyan, spring green, mauve, lime | decorative only |
 
 **Type.** DM Sans at 320, with stylistic sets ss01 to ss06 (the single-storey a, g, u,
-y). Email asks for 300, the nearest cut clients load. Print uses static cuts made from the
-app's variable font (`packages/accounts/assets/fonts/build.py`) with the sets frozen in.
+y). Email names DM Sans at 300 and loads no web font, so most readers see the system
+sans. Print uses static cuts made from the app's variable font
+(`packages/accounts/assets/fonts/build.py`) with the sets frozen in.
 
 | Step | Screen and email (px) | Print (pt) | Use |
 |---|---|---|---|
@@ -74,5 +75,8 @@ Running text at 1.55 line height, titles at 1.2. Space in steps of 4 (px or pt).
   and how to pay before anything else.
 - **Account page.** The app's system as it is, applied without local exceptions.
 - **Emails.** One frame for every email: parchment behind a white card ruled top and
-  bottom, the wordmark, a title, the body, one pill, and a quiet footer. Built once and
-  shared, including with sam.
+  bottom, the wordmark, a title, the body, one pill, and a quiet footer. It is built once,
+  as `emailFrame` in `platform/packages/mail/src/email.ts` with its helpers (`facts`,
+  `code`, `money`, `day`), and every email uses it, sam's included. Email loads no web
+  font: only Apple Mail honours an `@import`, and it would send each reader's address to
+  Google. The font stack falls back to the system sans where DM Sans is not installed.
