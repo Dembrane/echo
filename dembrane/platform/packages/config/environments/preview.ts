@@ -21,4 +21,6 @@ export default {
   // A preview has no sam inbox, so nothing is sent; on, the timeline records the invoice
   // request and the offer flow can be walked end to end.
   accounts: { offerMessages: true },
+  // A preview seeds the sample project, so a pull request that touches it can be walked.
+  samples: { enabled: true },
 } satisfies Environment;

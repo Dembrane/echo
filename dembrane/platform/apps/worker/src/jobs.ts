@@ -93,6 +93,7 @@ export function registrations(deps: {
     | "database"
     | "accounts"
     | "samInbox"
+    | "samples"
   >;
   /** Sends the email jobs enqueue. */
   mailer: Mailer;
@@ -226,8 +227,14 @@ export function registrations(deps: {
       },
     },
     tenancyWorker(deps),
-    // Every workspace's best-practices sample, but none in the synthetic demo or preview orgs.
-    samplesWorker({ db, logger, excludeOrgIds: [DEMO_IDS.org, MILLBROOK_IDS.org] }),
+    // Every workspace's best-practices sample where samples are on, but none in the synthetic
+    // demo or preview orgs.
+    samplesWorker({
+      db,
+      logger,
+      enabled: config.samples.enabled,
+      excludeOrgIds: [DEMO_IDS.org, MILLBROOK_IDS.org],
+    }),
     billingRegistration({
       billing: deps.billing,
       mailer: deps.mailer,

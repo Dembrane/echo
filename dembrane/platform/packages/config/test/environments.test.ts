@@ -48,3 +48,15 @@ test("previews and staging name their sign-in cookies; the others keep the defau
   expect(prefix("local")).toBeUndefined();
   expect(() => loadConfig({ APP_ENV: "preview", ...secrets, AUTH_COOKIE_PREFIX: "a b" })).toThrow();
 });
+
+test("the sample project is seeded in local, previews and staging; prod and tests leave it off", () => {
+  const on = (name: string) => loadConfig({ APP_ENV: name, ...secrets }).values.samples.enabled;
+  expect(on("local")).toBe(true);
+  expect(on("preview")).toBe(true);
+  expect(on("staging")).toBe(true);
+  expect(on("prod")).toBe(false);
+  expect(on("test")).toBe(false);
+  expect(
+    loadConfig({ APP_ENV: "prod", ...secrets, ENABLE_SAMPLES: "true" }).values.samples.enabled,
+  ).toBe(true);
+});

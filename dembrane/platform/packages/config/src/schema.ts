@@ -422,6 +422,12 @@ export const schema = defineSchema({
       secret: true,
     }),
   },
+  samples: {
+    enabled: key("ENABLE_SAMPLES", bool.default(false), {
+      description:
+        "Gives every workspace its copy of the best-practices sample project and keeps the copies up to date. Off, the seed and the backfill write nothing: no workspace gets a copy, and copies that exist stay as they are. On everywhere but prod, which turns it on when the sample is released there.",
+    }),
+  },
   popcorn: {
     showFlow: key("POPCORN_SHOW_FLOW", bool.default(false), {
       description:

@@ -21,4 +21,6 @@ export default {
   // sam takes the three messages of the offer flow from staging (its temp channel), so the
   // whole flow can be tried here before production turns them on.
   accounts: { offerMessages: true },
+  // The sample project is seeded here, so it can be tried before production turns it on.
+  samples: { enabled: true },
 } satisfies Environment;
