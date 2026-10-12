@@ -6,6 +6,7 @@ import { testId } from "@/lib/testUtils";
 import { ArtefactModal } from "./ArtefactModal";
 import { useConversationArtefacts, useVerificationTopics } from "./hooks";
 import { VerifiedArtefactItem } from "./VerifiedArtefactItem";
+import { TOPIC_ICON_MAP } from "./VerifySelection";
 
 type VerifiedArtefactsListProps = {
 	conversationId: string;
@@ -45,6 +46,9 @@ export const VerifiedArtefactsList = ({
 		availableTopics.map((topic) => [
 			topic.key,
 			{
+				icon:
+					TOPIC_ICON_MAP[topic.key] ??
+					(topic.icon && !topic.icon.startsWith(":") ? topic.icon : undefined),
 				label:
 					topic.translations?.[locale]?.label ??
 					topic.translations?.["en-US"]?.label ??
@@ -96,6 +100,7 @@ export const VerifiedArtefactsList = ({
 							artefact.topic_label ??
 							artefact.key
 						}
+						icon={topicMetadataMap.get(artefact.key)?.icon}
 						onViewArtefact={handleViewArtefact}
 						dataTestId={`portal-verified-artefact-item-${index}`}
 					/>

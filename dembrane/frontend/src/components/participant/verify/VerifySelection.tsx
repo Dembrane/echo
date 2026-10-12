@@ -38,6 +38,15 @@ const LANGUAGE_TO_LOCALE: Record<LanguageCode, string> = {
 	uk: "uk-UA",
 };
 
+export const TOPIC_ICON_MAP: Record<string, string> = {
+	actions: "↗️",
+	agreements: "✅",
+	disagreements: "⚠️",
+	gems: "🔍",
+	moments: "🚀",
+	truths: "👀",
+};
+
 const localeFromLanguage = (language?: string) => {
 	if (!language) return undefined;
 	const iso = language.includes("-") ? language.split("-")[0] : language;
@@ -80,7 +89,13 @@ export const VerifySelection = () => {
 				translations["en-US"]?.label ??
 				topic.key;
 
+			const icon =
+				TOPIC_ICON_MAP[topic.key] ??
+				(topic.icon && !topic.icon.startsWith(":") ? topic.icon : undefined) ??
+				(topic.is_custom ? undefined : "•");
+
 			return {
+				icon,
 				key: topic.key,
 				label: localizedLabel,
 			};
@@ -254,7 +269,12 @@ export const VerifySelection = () => {
 							aria-pressed={selectedOption === option.key}
 							{...testId(`portal-verify-topic-${option.key}`)}
 						>
-							<Text size="sm">{option.label}</Text>
+							<Group gap="sm" wrap="nowrap">
+								{option.icon ? (
+									<span className="text-xl">{option.icon}</span>
+								) : null}
+								<Text size="sm">{option.label}</Text>
+							</Group>
 						</UnstyledButton>
 					))}
 				</Group>
