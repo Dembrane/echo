@@ -1,11 +1,18 @@
 import { dutchDate } from "./legal/parse";
-import { type OfferLine, type PricedLine, priceLines, type Totals } from "./money";
+import {
+  type OfferLine,
+  type PricedLine,
+  priceLines,
+  type Totals,
+  type VatTreatment,
+} from "./money";
 
 /**
- * The offer in the words of the Google Doc templates (packages/accounts/reference: subscription
- * and event, English and Dutch): letterhead, "<Name> x dembrane", date and offer id, a
- * greeting, the lines table, the total excluding VAT, the closing, the acceptance block and
- * the incorporation clause naming the pinned terms, SLA and DPA, then the validity line.
+ * The words of an offer, from the Google Doc templates of sales (packages/accounts/reference:
+ * subscription and event, English and Dutch) rewritten in dembrane's voice: what it is and
+ * "<Name> x dembrane", the facts (reference, date, valid until), a greeting, the lines table,
+ * subtotal, VAT and total, the closing, the acceptance and the incorporation clause naming
+ * the pinned terms, SLA and DPA. The clause keeps the templates' legal wording word for word.
  * The template and the language choose the words; every offer has the same look (offer-pdf.ts).
  * The same structure feeds the text the customer reads (and the sha256 binds) and the PDF.
  * Versions and dates of the legal texts always come from the pinned rows, never from here.
@@ -75,21 +82,31 @@ export interface OfferContent {
     readonly dpa: PinnedText;
   };
   readonly items: readonly OfferItem[];
+  /** Absent on offers made before it existed: Dutch VAT on the lines. */
+  readonly vat_treatment?: VatTreatment;
 }
 
 interface Copy {
-  readonly metaId: string;
-  readonly attention: string;
+  /** What the document is, above its title: "Offer". */
+  readonly kind: string;
+  readonly facts: {
+    readonly reference: string;
+    readonly date: string;
+    readonly validUntil: string;
+    readonly attention: string;
+  };
   readonly greeting: string;
   readonly intro: readonly string[];
   readonly columns: readonly [string, string, string, string];
-  readonly total: string;
+  readonly totals: { readonly subtotal: string; readonly vat: string; readonly total: string };
+  /** Why there is no VAT, in the words the invoice uses. */
+  readonly vatNote: Record<Exclude<VatTreatment, "standard">, string>;
   readonly closing: readonly string[];
   readonly acceptanceTitle: string;
   readonly acceptanceIntro: string;
   readonly acceptance: Acceptance;
   readonly clause: (l: OfferContent["legal"]) => Clause;
-  readonly validity: string;
+  readonly months: readonly string[];
 }
 
 const blank = "____________________";
@@ -124,24 +141,18 @@ export function clauseText(line: ClauseLine): string {
     )
     .join("");
 }
+/** A field as the offer asks for it: its label over a line to write on. */
 const f = (
-  prefix: string,
-  kind: FieldKind,
   label: string,
+  kind: FieldKind,
   key: string | null = null,
   required = true,
-): AcceptanceField => ({ prefix, kind, key, label, required });
+): AcceptanceField => ({ prefix: label, kind, key, label, required });
 
-// The acceptance blanks of each template become the offer's fields. The templates ask for
-// no role; a role field is added because the signature record and its confirmation name it.
-const EN_SIGNING = [
-  f("Date of signing:", "date", "Date of signing"),
-  f("Signature:", "signature", "Signature"),
-];
-const NL_SIGNING = [
-  f("Datum van ondertekening:", "date", "Datum van ondertekening"),
-  f("Handtekening:", "signature", "Handtekening"),
-];
+// The acceptance fields of each template. The templates ask for no role; a role field is
+// added because the signature record and its confirmation name it.
+const EN_SIGNING = [f("Date", "date"), f("Signature", "signature")];
+const NL_SIGNING = [f("Datum", "date"), f("Handtekening", "signature")];
 
 // The words the templates underline in the DPA sentence stay underlined in the PDF.
 const DPA_EN_SUB: ClauseLine = [
@@ -213,57 +224,103 @@ const NL_CLAUSE = (l: OfferContent["legal"]): Clause => ({
   ],
 });
 
+const EN_ACCEPT: Acceptance = {
+  fields: [
+    f("Name", "name"),
+    f("Organisation", "text", "organisation"),
+    f("Address", "text", "address"),
+    f("Role", "role"),
+  ],
+  statement:
+    "By signing, the person named below accepts this offer on behalf of the organisation named below.",
+  signing: EN_SIGNING,
+};
+
 const NL_ACCEPT = (withVat: boolean): Acceptance => ({
   fields: [
-    f("Bij deze gaat", "name", "Naam"),
-    f("van de organisatie", "text", "Organisatie", "organisation"),
-    f("die is gevestigd op", "text", "Adres", "address"),
-    ...(withVat ? [f("met het btw nummer", "text", "Btw-nummer", "vat_number", false)] : []),
-    f("Functie:", "role", "Functie"),
+    f("Naam", "name"),
+    f("Organisatie", "text", "organisation"),
+    f("Adres", "text", "address"),
+    ...(withVat ? [f("Btw-nummer", "text", "vat_number", false)] : []),
+    f("Functie", "role"),
   ],
-  statement: "akkoord bij de inhoud van de opgemaakt offerte.",
+  statement:
+    "Met ondertekening aanvaardt de hieronder genoemde persoon deze offerte namens de hieronder genoemde organisatie.",
   signing: NL_SIGNING,
 });
 
-const EVENT_ROLE_EN = [
-  "Dembrane's Role:",
-  "Dembrane is a tech for good start-up from Eindhoven that provides an accessible, digital way to collect input from participants during an event, making it directly visible and analyzable, and reporting quickly – supplementing traditional methods.",
+const EN_MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
-const EVENT_ROLE_NL = [
-  "Rol van dembrane:",
-  "Dembrane is een tech for good start-up uit Eindhoven en biedt een laagdrempelige, digitale manier om input van deelnemers tijdens een evenement te verzamelen, direct inzichtelijk en analyseerbaar te maken, en snel te rapporteren – ter aanvulling van traditionele methoden.",
+const NL_MONTHS = [
+  "januari",
+  "februari",
+  "maart",
+  "april",
+  "mei",
+  "juni",
+  "juli",
+  "augustus",
+  "september",
+  "oktober",
+  "november",
+  "december",
 ];
+
+const EN_FRAME = {
+  kind: "Offer",
+  facts: {
+    reference: "Reference",
+    date: "Date",
+    validUntil: "Valid until",
+    attention: "For the attention of",
+  },
+  totals: { subtotal: "Subtotal (excl. VAT)", vat: "VAT", total: "Total (incl. VAT)" },
+  vatNote: {
+    reverse_charge: "VAT reverse-charged: Article 196, Directive 2006/112/EC.",
+    outside_eu:
+      "No Dutch VAT: the service is supplied outside the EU (Article 44, Directive 2006/112/EC).",
+  },
+  acceptanceTitle: "Accept this offer",
+  acceptanceIntro: "To accept this offer, fill in the fields below and sign.",
+  acceptance: EN_ACCEPT,
+  months: EN_MONTHS,
+};
+const NL_FRAME = {
+  kind: "Offerte",
+  facts: { reference: "Referentie", date: "Datum", validUntil: "Geldig tot", attention: "T.a.v." },
+  totals: { subtotal: "Subtotaal (excl. btw)", vat: "Btw", total: "Totaal (incl. btw)" },
+  vatNote: {
+    reverse_charge: "Btw verlegd: artikel 196, Richtlijn 2006/112/EG.",
+    outside_eu:
+      "Geen Nederlandse btw: de dienst wordt buiten de EU verricht (artikel 44, Richtlijn 2006/112/EG).",
+  },
+  acceptanceTitle: "Offerte accepteren",
+  acceptanceIntro: "Vul de velden hieronder in en onderteken om deze offerte te accepteren.",
+  months: NL_MONTHS,
+};
 
 const COPY: Record<OfferTemplate, Record<Language, Copy>> = {
   subscription: {
     en: {
-      metaId: "Offer ID",
-      attention: "Attn.",
+      ...EN_FRAME,
       greeting: "Hi",
       intro: [
-        "Below you can find the details for your dembrane subscription. If you have any questions, don’t hesitate to ask them.",
+        "Here is what your dembrane subscription includes and what it costs. If anything is unclear, ask us; we are happy to talk it through.",
       ],
-      columns: [
-        "Description",
-        "Price per seat/month (excl. VAT)",
-        "Amount of seats",
-        "Total Price (excl. VAT)",
-      ],
-      total: "Total price (excl. VAT):",
-      closing: ["We look forward to our future collaboration ✨", "Best regards,", "Team dembrane"],
-      acceptanceTitle: "Offer acceptance",
-      acceptanceIntro:
-        "If you wish to accept this offer, please complete the fields below and sign the document as a final step.",
-      acceptance: {
-        fields: [
-          f("Hereby,", "name", "Name"),
-          f("of the organisation", "text", "Organisation", "organisation"),
-          f("located at", "text", "Address", "address"),
-          f("Role:", "role", "Role"),
-        ],
-        statement: "agrees to the contents of this offer.",
-        signing: EN_SIGNING,
-      },
+      columns: ["Description", "Price per seat per month", "Seats", "Amount"],
+      closing: ["We look forward to working with you.", "Best regards,", "Team dembrane"],
       clause: (l) => ({
         opening:
           "By signing this offer, you also declare that you have read and agree to the following documents, which together constitute the Agreement:",
@@ -297,55 +354,30 @@ const COPY: Record<OfferTemplate, Record<Language, Copy>> = {
           "By signing, you declare that you have received the above documents or are able to access them via the links provided.",
         ],
       }),
-      validity: "\u{1F4C5} This offer is valid for 14 days starting from the date it was made",
     },
     nl: {
-      metaId: "Offer ID",
-      attention: "T.a.v.",
-      greeting: "Hi",
+      ...NL_FRAME,
+      greeting: "Beste",
       intro: [
-        "Hieronder vind u het overzicht voor het abonnement bij dembrane. Indien u verdere vragen heeft dan gaan we graag verder in gesprek daarover.",
+        "Hieronder staat wat het dembrane-abonnement inhoudt en wat het kost. Is iets niet duidelijk? Vraag het ons gerust; we lichten het graag toe.",
       ],
-      columns: ["Description", "Prijs/seat/maand", "Aantal", "Totaal (excl. BTW)"],
-      total: "Totale prijs (excl. BTW):",
-      closing: [
-        "We kijken alvast uit naar een verdere samenwerking ✨",
-        "Met vriendelijke groeten,",
-        "Team dembrane",
-      ],
-      acceptanceTitle: "Acceptatie offerte",
-      acceptanceIntro:
-        "Indien je deze offerte wilt accepteren, vul dan gelieve onderstaande velden in en onderteken als laatste stap het document.",
+      columns: ["Omschrijving", "Prijs per seat per maand", "Seats", "Bedrag"],
+      closing: ["We kijken uit naar de samenwerking.", "Met vriendelijke groet,", "Team dembrane"],
       acceptance: NL_ACCEPT(true),
       clause: NL_CLAUSE,
-      validity: "\u{1F4C5} Deze offerte is 14 dagen geldig vanaf de datum van opstellen.",
     },
   },
   event: {
     en: {
-      metaId: "Offer ID",
-      attention: "Attn.",
+      ...EN_FRAME,
       greeting: "Dear",
       intro: [
-        "Please find enclosed the offer for deploying dembrane at your event.",
-        ...EVENT_ROLE_EN,
+        "Here is our offer for using dembrane at your event.",
+        "What dembrane does",
+        "dembrane is a tech-for-good company from Eindhoven. During your event, participants share their input in an accessible, digital way; that input is visible and ready to analyse straight away, and we report on it quickly, alongside your usual methods.",
       ],
-      columns: ["Description", "Quantity", "Price per Unit", "Total Price (excl. VAT)"],
-      total: "Total price (excl. VAT):",
-      closing: ["We look forward to further collaboration ✨", "Kind regards,", "Team dembrane"],
-      acceptanceTitle: "Offer Acceptance",
-      acceptanceIntro:
-        "If you wish to accept this offer, please fill in the fields below and sign as the final step of the document.",
-      acceptance: {
-        fields: [
-          f("By this", "name", "Name"),
-          f("on behalf of the organization", "text", "Organisation", "organisation"),
-          f("which is located at", "text", "Address", "address"),
-          f("Role:", "role", "Role"),
-        ],
-        statement: "agree with the content of the prepared offer.",
-        signing: EN_SIGNING,
-      },
+      columns: ["Description", "Quantity", "Unit price", "Amount"],
+      closing: ["We look forward to working with you.", "Kind regards,", "Team dembrane"],
       clause: (l) => ({
         opening:
           "By signing this offer, you declare that you have received knowledge of and agree with the following documents, which together form the Agreement:",
@@ -379,53 +411,55 @@ const COPY: Record<OfferTemplate, Record<Language, Copy>> = {
           "By signing, you declare that you have received the aforementioned documents or can consult them via the above links.",
         ],
       }),
-      validity: "\u{1F4C5} This offer is valid for 14 days from the date of preparation.",
     },
     nl: {
-      metaId: "Offerte ID",
-      attention: "T.a.v.",
+      ...NL_FRAME,
       greeting: "Beste",
       intro: [
-        "Bij deze de offerte voor dembrane in te zetten op jullie evenement.",
-        ...EVENT_ROLE_NL,
+        "Hierbij onze offerte om dembrane in te zetten op jullie evenement.",
+        "Wat dembrane doet",
+        "dembrane is een tech-for-good-bedrijf uit Eindhoven. Tijdens het evenement delen deelnemers hun input op een laagdrempelige, digitale manier; die input is direct zichtbaar en analyseerbaar, en we rapporteren er snel over, als aanvulling op jullie gebruikelijke methoden.",
       ],
-      columns: ["Beschrijving", "Aantal", "Prijs per stuk", "Totale Prijs (excl. BTW)"],
-      total: "Totale prijs (excl. BTW):",
-      closing: [
-        "We kijken alvast uit naar een verdere samenwerking ✨",
-        "Met vriendelijke groeten,",
-        "Team dembrane",
-      ],
-      acceptanceTitle: "Acceptatie offerte",
-      acceptanceIntro:
-        "Indien je deze offerte wilt accepteren, vul dan gelieve onderstaande velden in en onderteken als laatste stap het document.",
+      columns: ["Omschrijving", "Aantal", "Prijs per stuk", "Bedrag"],
+      closing: ["We kijken uit naar de samenwerking.", "Met vriendelijke groet,", "Team dembrane"],
       acceptance: NL_ACCEPT(false),
       clause: NL_CLAUSE,
-      validity: "\u{1F4C5} Deze offerte is 14 dagen geldig vanaf de datum van opstellen.",
     },
   },
 };
 
-export const SIGN_OFF = "Excited to turn Dialogue into Societal Success.";
+/** "28 September 2026" or "28 september 2026". */
+function longDate(iso: string, months: readonly string[]): string {
+  const [y, m, d] = iso.split("-");
+  return `${Number(d)} ${months[Number(m) - 1]} ${y}`;
+}
 
-/** "€1.250" for whole euros and "€1.250,50" otherwise, as the templates write amounts. */
-export function euro(cents: number, currency = "EUR"): string {
+/**
+ * An amount as the reader's language writes it, always with cents so a column lines up:
+ * "€1,250.00" in English, "€ 1.250,00" in Dutch.
+ */
+export function euro(cents: number, currency = "EUR", language: Language = "en"): string {
   const sign = cents < 0 ? "-" : "";
   const abs = Math.abs(cents);
+  const [group, decimal] = language === "nl" ? [".", ","] : [",", "."];
   const whole = Math.floor(abs / 100)
     .toString()
-    .replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  const frac = abs % 100 ? `,${String(abs % 100).padStart(2, "0")}` : "";
-  const symbol = currency === "EUR" ? "€" : `${currency} `;
-  return `${sign}${symbol}${whole}${frac}`;
+    .replace(/\B(?=(\d{3})+(?!\d))/g, group);
+  const frac = String(abs % 100).padStart(2, "0");
+  const symbol = currency === "EUR" ? (language === "nl" ? "€ " : "€") : `${currency} `;
+  return `${sign}${symbol}${whole}${decimal}${frac}`;
 }
 
 /** The parts of an offer both renderers lay out, in reading order. */
 export interface OfferLayout {
-  readonly letterhead: { readonly name: string; readonly rows: readonly [string, string][] };
+  /** dembrane's company details: the footer of every page. */
+  readonly company: { readonly name: string; readonly lines: readonly string[] };
+  readonly kind: string;
   readonly title: string;
-  readonly meta: string;
+  /** Reference, date, valid until and, when there is one, who it is for: label and value. */
+  readonly facts: readonly (readonly [string, string])[];
   readonly greeting: string;
+  /** Paragraphs; an event offer's second paragraph is a heading over its third. */
   readonly intro: readonly string[];
   readonly columns: readonly [string, string, string, string];
   readonly rows: readonly {
@@ -434,7 +468,10 @@ export interface OfferLayout {
     /** The three number columns, in the order `columns` names them. */
     readonly cells: readonly [string, string, string];
   }[];
-  readonly total: string;
+  /** Subtotal, VAT and total, label and amount; the last is what is paid. */
+  readonly totals: readonly (readonly [string, string])[];
+  /** Why there is no VAT, when it is reverse-charged or the service is outside the EU. */
+  readonly vatNote: string | null;
   readonly closing: readonly string[];
   readonly acceptanceTitle: string;
   readonly acceptanceIntro: string;
@@ -443,8 +480,6 @@ export interface OfferLayout {
   readonly clause: readonly string[];
   /** The same clause in parts, for the PDF: linked names, underlined words. */
   readonly clauseParts: Clause;
-  readonly validity: string;
-  readonly signOff: string;
 }
 
 export function offerTotals(content: OfferContent): Totals {
@@ -457,26 +492,35 @@ export function layoutOffer(content: OfferContent): OfferLayout {
   const c = content.company;
   const unitFirst = content.template === "subscription";
   const clause = copy.clause(content.legal);
-  const meta = [`${dutchDate(content.date)} | ${copy.metaId}: ${content.reference}`];
-  if (content.attention) meta.push(`${copy.attention} ${content.attention}`);
+  const money = (cents: number) => euro(cents, content.currency, content.language);
+  const treatment = content.vat_treatment ?? "standard";
+  const rates = new Set(content.items.map((i) => i.vat_rate_bps));
+  const onlyRate = rates.size === 1 ? [...rates][0] : undefined;
+  const vatLabel =
+    onlyRate === undefined ? copy.totals.vat : `${copy.totals.vat} ${onlyRate / 100}%`;
+  const facts: [string, string][] = [
+    [copy.facts.reference, content.reference],
+    [copy.facts.date, longDate(content.date, copy.months)],
+    [copy.facts.validUntil, longDate(validUntil(content.date, content.valid_days), copy.months)],
+  ];
+  if (content.attention) facts.push([copy.facts.attention, content.attention]);
   return {
-    letterhead: {
+    company: {
       name: c.name,
-      rows: [
-        ["Address:", c.address],
-        ["VAT:", c.vat],
-        ["IBAN:", c.iban],
-        ["KVK:", c.kvk],
+      lines: [
+        `${c.name} · ${c.address}`,
+        `KvK ${c.kvk} · ${copy.totals.vat} ${c.vat} · IBAN ${c.iban} · BIC ${c.bic}`,
       ],
     },
+    kind: copy.kind,
     title: `${content.offer_name} x dembrane`,
-    meta: meta.join(" | "),
+    facts,
     greeting: `${copy.greeting}${content.person_name ? ` ${content.person_name}` : ""},`,
     intro: copy.intro,
     // Subscriptions put the price per seat before the number of seats; events the reverse.
     columns: copy.columns,
     rows: totals.lines.map((l: PricedLine, i) => {
-      const unit = euro(l.unit_price_cents, content.currency);
+      const unit = money(l.unit_price_cents);
       const quantity = String(l.quantity);
       return {
         description: l.description,
@@ -484,11 +528,16 @@ export function layoutOffer(content: OfferContent): OfferLayout {
         cells: [
           unitFirst ? unit : quantity,
           unitFirst ? quantity : unit,
-          euro(l.net_cents, content.currency),
+          money(l.net_cents),
         ] as const,
       };
     }),
-    total: `${copy.total} ${euro(totals.subtotal_cents, content.currency)}`,
+    totals: [
+      [copy.totals.subtotal, money(totals.subtotal_cents)],
+      [vatLabel, money(totals.vat_cents)],
+      [copy.totals.total, money(totals.total_cents)],
+    ],
+    vatNote: treatment === "standard" ? null : copy.vatNote[treatment],
     closing: copy.closing,
     acceptanceTitle: copy.acceptanceTitle,
     acceptanceIntro: copy.acceptanceIntro,
@@ -499,8 +548,6 @@ export function layoutOffer(content: OfferContent): OfferLayout {
       ...clause.closing,
     ],
     clauseParts: clause,
-    validity: copy.validity,
-    signOff: SIGN_OFF,
   };
 }
 
@@ -511,11 +558,9 @@ export function layoutOffer(content: OfferContent): OfferLayout {
 export function offerText(content: OfferContent): string {
   const l = layoutOffer(content);
   const out: string[] = [
-    l.letterhead.name,
-    ...l.letterhead.rows.map(([k, val]) => `${k} ${val}`),
-    "",
+    l.kind,
     `# ${l.title}`,
-    l.meta,
+    ...l.facts.map(([k, v]) => `${k}: ${v}`),
     "",
     l.greeting,
     "",
@@ -529,20 +574,20 @@ export function offerText(content: OfferContent): string {
   }
   out.push(
     "",
-    l.total,
+    ...l.totals.map(([k, v]) => `${k}: ${v}`),
+    ...(l.vatNote ? [l.vatNote] : []),
     "",
     ...l.closing,
     "",
     `## ${l.acceptanceTitle}`,
     l.acceptanceIntro,
-    ...l.acceptance.fields.map((a) => `${a.prefix} ${blank}`),
     l.acceptance.statement,
-    ...l.acceptance.signing.map((a) => `${a.prefix} ${blank}`),
+    ...[...l.acceptance.fields, ...l.acceptance.signing].map((a) => `${a.label}: ${blank}`),
     "",
     ...l.clause,
     "",
-    l.validity,
-    l.signOff,
+    "---",
+    ...l.company.lines,
   );
   return out.join("\n");
 }

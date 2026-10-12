@@ -6,7 +6,7 @@ import { walkOrder } from "../src/documents";
 import { runDeliverEvent, runNotifySlack } from "../src/jobs";
 import { legalSha256, parseLegalDump, parseLegalPage } from "../src/legal/parse";
 import { REFERENCE_DPA, REFERENCE_SLA, REFERENCE_TERMS } from "../src/legal/reference";
-import { priceLines, vatOf } from "../src/money";
+import { fitsVatTreatment, priceLines, vatOf } from "../src/money";
 import { euro, layoutOffer, type OfferContent, offerText } from "../src/offer";
 import { ONBOARDING_CODES } from "../src/onboarding";
 import { offerPdf, signedPdf, textPdf } from "../src/pdf";
@@ -98,44 +98,85 @@ describe("money", () => {
     ).toBe(6050);
   });
   test("amounts as the templates write them", () => {
-    expect(euro(8600)).toBe("€86");
-    expect(euro(125000)).toBe("€1.250");
-    expect(euro(123456)).toBe("€1.234,56");
+    expect(euro(8600)).toBe("€86.00");
+    expect(euro(125000)).toBe("€1,250.00");
+    expect(euro(123456, "EUR", "nl")).toBe("€ 1.234,56");
+    expect(euro(-5000, "EUR", "nl")).toBe("-€ 50,00");
   });
 });
 
 describe("the offer", () => {
-  test("follows the template: letterhead, title, meta, columns, total, acceptance, pinned versions", () => {
+  test("follows the template: facts, columns, totals with VAT, acceptance, pinned versions", () => {
     const text = offerText(offer());
-    expect(text).toContain("IBAN: NL49 RABO 0318910535");
     expect(text).toContain("# Gemeente Voorbeeldstad x dembrane");
-    expect(text).toContain("28-09-2026 | Offer ID: DMB-1");
+    expect(text).toContain("Reference: DMB-1");
+    expect(text).toContain("Date: 28 September 2026");
+    // Validity counts from the offer's own valid_days.
+    expect(text).toContain("Valid until: 12 October 2026");
+    expect(offerText(offer({ valid_days: 30 }))).toContain("Valid until: 28 October 2026");
+    expect(text).toContain("| Description | Price per seat per month | Seats | Amount |");
     expect(text).toContain(
-      "| Description | Price per seat/month (excl. VAT) | Amount of seats | Total Price (excl. VAT) |",
+      "| Changemaker<br>• Unlimited recording hours | €86.00 | 60 | €5,160.00 |",
     );
-    expect(text).toContain("| Changemaker<br>• Unlimited recording hours | €86 | 60 | €5.160 |");
-    expect(text).toContain("Total price (excl. VAT): €6.410");
+    expect(text).toContain("Subtotal (excl. VAT): €6,410.00");
+    expect(text).toContain("VAT 21%: €1,346.10");
+    expect(text).toContain("Total (incl. VAT): €7,756.10");
+    expect(text).toContain("IBAN NL49 RABO 0318910535");
     expect(text).toContain(
       "Annex B: Data Processing Agreement (version 3.0.1, 17-07-2026, https://www.dembrane.com/legal/dpa)",
     );
-    expect(text).toContain("valid for 14 days");
     const nl = offerText(offer({ language: "nl" }));
-    expect(nl).toContain("met het btw nummer");
+    expect(nl).toContain("Btw-nummer: ");
+    expect(nl).toContain("Totaal (incl. btw): € 7.756,10");
     expect(nl).toContain("Bijlage B: Verwerkersovereenkomst (versie 3.0.1, 17-07-2026");
     const event = layoutOffer(offer({ template: "event", attention: "Anna" }));
-    expect(event.columns).toEqual([
-      "Description",
-      "Quantity",
-      "Price per Unit",
-      "Total Price (excl. VAT)",
-    ]);
-    expect(event.rows[0]?.cells).toEqual(["60", "€86", "€5.160"]);
-    expect(event.meta).toBe("28-09-2026 | Offer ID: DMB-1 | Attn. Anna");
+    expect(event.columns).toEqual(["Description", "Quantity", "Unit price", "Amount"]);
+    expect(event.rows[0]?.cells).toEqual(["60", "€86.00", "€5,160.00"]);
+    expect(event.facts.at(-1)).toEqual(["For the attention of", "Anna"]);
     expect(
       layoutOffer(offer({ template: "event", language: "nl" })).acceptance.fields.some(
         (f) => f.key === "vat_number",
       ),
     ).toBe(false);
+    // Mixed rates show one VAT line without a rate.
+    const mixed = layoutOffer(
+      offer({
+        items: [
+          {
+            description: "A",
+            bullets: [],
+            quantity: 1,
+            unit_price_cents: 10000,
+            vat_rate_bps: 2100,
+          },
+          {
+            description: "B",
+            bullets: [],
+            quantity: 1,
+            unit_price_cents: 10000,
+            vat_rate_bps: 900,
+          },
+        ],
+      }),
+    );
+    expect(mixed.totals.map(([k]) => k)).toEqual([
+      "Subtotal (excl. VAT)",
+      "VAT",
+      "Total (incl. VAT)",
+    ]);
+  });
+
+  test("reverse charge and outside the EU say why there is no VAT, as the invoice does", () => {
+    const zero = offer().items.map((i) => ({ ...i, vat_rate_bps: 0 }));
+    const nl = layoutOffer(offer({ language: "nl", vat_treatment: "reverse_charge", items: zero }));
+    expect(nl.totals[1]).toEqual(["Btw 0%", "€ 0,00"]);
+    expect(nl.vatNote).toBe("Btw verlegd: artikel 196, Richtlijn 2006/112/EG.");
+    const en = offerText(offer({ vat_treatment: "outside_eu", items: zero }));
+    expect(en).toContain("No Dutch VAT: the service is supplied outside the EU");
+    expect(layoutOffer(offer()).vatNote).toBeNull();
+    expect(fitsVatTreatment("reverse_charge", zero)).toBe(true);
+    expect(fitsVatTreatment("reverse_charge", offer().items)).toBe(false);
+    expect(fitsVatTreatment("standard", zero)).toBe(true);
   });
 
   test("the PDF places the acceptance blanks as fields, on the page, in walk order", async () => {
@@ -178,7 +219,7 @@ describe("the offer", () => {
         expect(date?.x).toBeLessThan(signature?.x ?? 0);
         const text = Buffer.from(r.bytes).toString("latin1");
         for (const t of Object.values(content.legal)) expect(text).toContain(`(${t.url})`);
-        expect(text).toContain("DMSans-Light");
+        expect(text).toContain("DMSans-Text");
       }
   });
 

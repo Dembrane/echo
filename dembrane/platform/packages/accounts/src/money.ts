@@ -25,6 +25,18 @@ export interface Totals {
   readonly total_cents: number;
 }
 
+/**
+ * How VAT applies to an offer or invoice: Dutch VAT on the lines, reverse-charged to a
+ * business elsewhere in the EU, or none for a service supplied outside the EU. The last two
+ * carry only 0% lines and say why on the document.
+ */
+export const VAT_TREATMENTS = ["standard", "reverse_charge", "outside_eu"] as const;
+export type VatTreatment = (typeof VAT_TREATMENTS)[number];
+
+/** Whether lines fit the treatment: reverse charge and outside the EU have no VAT. */
+export const fitsVatTreatment = (t: VatTreatment, lines: readonly OfferLine[]) =>
+  t === "standard" || lines.every((l) => l.vat_rate_bps === 0);
+
 /** Rates we invoice at: NL standard and reduced, and zero (reverse charge, outside the EU). */
 export const VAT_RATES_BPS = [0, 900, 2100] as const;
 

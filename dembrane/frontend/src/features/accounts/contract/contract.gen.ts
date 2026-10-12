@@ -584,6 +584,11 @@ export const PushOfferRequest = z.object({
   /** The offer date; today when absent. Valid for 14 days from it. */
   date: nullish(IsoDate),
   items: z.array(OfferItem).min(1).max(50),
+  /**
+   * Dutch VAT on the lines (default), reverse-charged within the EU, or none outside it.
+   * The last two take only 0% lines, and the offer says why there is no VAT.
+   */
+  vat_treatment: z.enum(["standard", "reverse_charge", "outside_eu"]).default("standard"),
   /** The Attio deal id, echoed in every event about this offer. */
   external_ref: optText(255),
   /** An unsigned offer this one replaces; it is voided. */
