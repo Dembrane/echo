@@ -1,14 +1,6 @@
-import { t } from "@lingui/core/macro";
+import { plural, t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import {
-	Alert,
-	Container,
-	Group,
-	Loader,
-	Stack,
-	Text,
-	Title,
-} from "@mantine/core";
+import { Alert, Container, Loader, Stack, Text, Title } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import { useRef, useState } from "react";
 import { useParams } from "react-router";
@@ -16,15 +8,18 @@ import { AccountsApiError } from "../api/client";
 import { useAccountPage } from "../api/hooks";
 import { AccountsI18n } from "../i18n";
 import { BillingForm } from "./BillingForm";
-import { BookCallButton, BookCallModal } from "./BookCallButton";
+import { BookCallModal } from "./BookCallModal";
 import { DocumentsTable } from "./DocumentsTable";
 import { NextSteps } from "./NextSteps";
-import { Questions } from "./Questions";
+import { type AccountPlan, localToday, planAccount } from "./plan";
+import { TalkToUs } from "./TalkToUs";
+import { ToPay } from "./ToPay";
 
 /**
- * The customer's account: everything between dembrane and this organisation on one page.
- * Next steps first, because that is why someone opens it; then documents, billing
- * details and questions. Signing is its own screen, opened from a step.
+ * The customer's account: everything between dembrane and this organisation on one page,
+ * ordered by who has the next move. What to pay, then what to do, then what is coming;
+ * the record (documents, billing details) and a way to reach us below. Signing is its
+ * own screen, opened from a task or a document.
  */
 export const AccountRoute = () => (
 	<AccountsI18n>
@@ -38,7 +33,7 @@ const AccountPage = () => {
 	const billingRef = useRef<HTMLDivElement>(null);
 	const [booking, setBooking] = useState(false);
 	useDocumentTitle(
-		data ? `${data.organisation.name} | dembrane` : t`Tasks | dembrane`,
+		data ? `${data.organisation.name} | dembrane` : t`Account | dembrane`,
 	);
 
 	if (isLoading) {
@@ -73,6 +68,8 @@ const AccountPage = () => {
 		);
 	}
 
+	const today = localToday();
+	const plan = planAccount(data.tasks, data.documents, today);
 	const billingTask = data.tasks.find(
 		(task) => task.kind === "billing_details",
 	);
@@ -87,15 +84,25 @@ const AccountPage = () => {
 			task.code === "book_call" &&
 			(task.status === "open" || task.status === "changes_requested"),
 	);
+	// One primary action on the page: paying, when it can be done online, else the first task.
+	const payFirst = Boolean(plan.toPay[0]?.invoice?.payment_url);
 
 	return (
 		<Container size="md" px={{ base: "md", sm: "lg" }} py="xl">
-			<Stack gap={36}>
-				<Title order={3}>{data.organisation.name}</Title>
+			<Stack gap="xl">
+				<Stack gap="xs">
+					<Title order={1} size="h2" style={{ overflowWrap: "anywhere" }}>
+						{data.organisation.name}
+					</Title>
+					<Summary plan={plan} />
+				</Stack>
+
+				<ToPay invoices={plan.toPay} today={today} primary={payFirst} />
 
 				<NextSteps
 					orgId={organisationId}
-					tasks={data.tasks}
+					plan={plan}
+					primary={!payFirst}
 					onBilling={() =>
 						billingRef.current?.scrollIntoView({
 							behavior: "smooth",
@@ -123,18 +130,10 @@ const AccountPage = () => {
 					</div>
 				)}
 
-				<Questions
+				<TalkToUs
 					orgId={organisationId}
 					tickets={data.tickets}
-					extraAction={
-						bookingStep ? undefined : (
-							<BookCallButton
-								orgId={organisationId}
-								reference={data.needs_form_reference}
-								orgName={data.organisation.name}
-							/>
-						)
-					}
+					onBookCall={bookingStep ? undefined : () => setBooking(true)}
 				/>
 			</Stack>
 			<BookCallModal
@@ -147,3 +146,23 @@ const AccountPage = () => {
 		</Container>
 	);
 };
+
+/** One sentence under the name: whose move it is. */
+function Summary({ plan }: { plan: AccountPlan }) {
+	const mine = plan.toPay.length + plan.toDo.length;
+	const ours = plan.withUs.length;
+	const text =
+		mine > 0
+			? plural(mine, {
+					one: "One thing needs you.",
+					other: "# things need you.",
+				})
+			: ours > 0
+				? t`Nothing needs you right now. We are working on our part.`
+				: t`You are all set. Nothing needs you right now.`;
+	return (
+		<Text c="dimmed" data-testid="account-summary">
+			{text}
+		</Text>
+	);
+}

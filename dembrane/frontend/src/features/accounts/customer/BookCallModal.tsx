@@ -1,43 +1,11 @@
 import { t } from "@lingui/core/macro";
-import { Trans } from "@lingui/react/macro";
-import { Button, Loader, Modal, Stack } from "@mantine/core";
-import { lazy, Suspense, useState } from "react";
+import { Loader, Modal, Stack } from "@mantine/core";
+import { lazy, Suspense } from "react";
 
 // The cal.com step and its script load when the dialog opens, never with the page.
 const BookCall = lazy(() => import("./BookCall"));
 
-export function BookCallButton({
-	orgId,
-	reference,
-	orgName,
-}: {
-	orgId: string;
-	reference: string | null;
-	orgName: string;
-}) {
-	const [open, setOpen] = useState(false);
-	return (
-		<>
-			<Button
-				size="xs"
-				variant="default"
-				onClick={() => setOpen(true)}
-				data-testid="book-call"
-			>
-				<Trans>Book a call</Trans>
-			</Button>
-			<BookCallModal
-				opened={open}
-				onClose={() => setOpen(false)}
-				orgId={orgId}
-				reference={reference}
-				orgName={orgName}
-			/>
-		</>
-	);
-}
-
-/** The booking dialog on its own, for the "Book a call with us" step. */
+/** The booking dialog, opened from the "Book a call with us" step or from Talk to us. */
 export function BookCallModal({
 	opened,
 	onClose,
