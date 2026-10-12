@@ -30,6 +30,7 @@ import type { TaskT } from "../contract/contract.gen";
 import { formatDate, taskText } from "../format";
 import { PageSection, Row, Rows } from "./PageSection";
 import type { AccountPlan } from "./plan";
+import { SendToSomeoneElse } from "./SendToSomeoneElse";
 
 /** Steps done by taking them, never by a reply: their button leads to the step. */
 const ONBOARDING: NonNullable<TaskT["code"]>[] = [
@@ -54,17 +55,19 @@ export function NextSteps({
 	onBookCall,
 }: {
 	orgId: string;
-	plan: Pick<AccountPlan, "toDo" | "withUs" | "later" | "done">;
+	plan: Pick<AccountPlan, "toDo" | "waiting" | "withUs" | "later" | "done">;
 	/** The first task's action is the page's one primary action. */
 	primary: boolean;
 	onBilling: () => void;
 	onBookCall: () => void;
 }) {
 	const [responding, setResponding] = useState<TaskT | null>(null);
+	const [sendingTo, setSendingTo] = useState<string | null>(null);
 	const [showDone, setShowDone] = useState(false);
-	const { toDo, withUs, later, done } = plan;
+	const { toDo, waiting, withUs, later, done } = plan;
 	const coming = [...withUs, ...later];
-	const nothing = toDo.length + coming.length + done.length === 0;
+	const ahead = waiting.length + coming.length;
+	const nothing = toDo.length + ahead + done.length === 0;
 	if (nothing) return null;
 
 	return (
@@ -82,17 +85,16 @@ export function NextSteps({
 								onBilling={onBilling}
 								onBookCall={onBookCall}
 								onRespond={() => setResponding(task)}
+								onSendTo={() => setSendingTo(task.document_id)}
 							/>
 						))}
 					</Rows>
 				</PageSection>
 			)}
 
-			{(coming.length > 0 || done.length > 0) && (
+			{(ahead > 0 || done.length > 0) && (
 				<PageSection
-					title={
-						coming.length > 0 ? <Trans>Coming up</Trans> : <Trans>Done</Trans>
-					}
+					title={ahead > 0 ? <Trans>Coming up</Trans> : <Trans>Done</Trans>}
 					testId="coming-up"
 					action={
 						done.length > 0 ? (
@@ -112,8 +114,17 @@ export function NextSteps({
 						) : undefined
 					}
 				>
-					{(coming.length > 0 || showDone) && (
+					{(ahead > 0 || showDone) && (
 						<Rows>
+							{waiting.map(({ task, signer }) => (
+								<WaitingTask
+									key={task.id}
+									task={task}
+									signer={signer}
+									orgId={orgId}
+									onSendTo={() => setSendingTo(task.document_id)}
+								/>
+							))}
 							{coming.map((task) => (
 								<QuietTask key={task.id} task={task} />
 							))}
@@ -129,6 +140,12 @@ export function NextSteps({
 				orgId={orgId}
 				onClose={() => setResponding(null)}
 			/>
+			<SendToSomeoneElse
+				orgId={orgId}
+				docId={sendingTo}
+				opened={sendingTo !== null}
+				onClose={() => setSendingTo(null)}
+			/>
 		</>
 	);
 }
@@ -141,6 +158,7 @@ function OpenTask({
 	onBilling,
 	onBookCall,
 	onRespond,
+	onSendTo,
 }: {
 	task: TaskT;
 	first: boolean;
@@ -149,6 +167,7 @@ function OpenTask({
 	onBilling: () => void;
 	onBookCall: () => void;
 	onRespond: () => void;
+	onSendTo: () => void;
 }) {
 	const { title, body } = taskText(task);
 	const variant = primary ? "filled" : "outline";
@@ -156,15 +175,26 @@ function OpenTask({
 
 	const action = (() => {
 		if (task.kind === "sign" && task.document_id) {
+			// Signing it, or handing it to whoever signs for the organisation: both are
+			// right here, so the task needs no words of its own.
 			return (
-				<Button
-					variant={variant}
-					component={I18nLink}
-					to={`/o/${orgId}/account/documents/${task.document_id}/sign`}
-					data-testid="action-sign"
-				>
-					<Trans>Review and sign</Trans>
-				</Button>
+				<Group gap="xs" wrap="wrap" justify="flex-end">
+					<Button
+						variant="outline"
+						onClick={onSendTo}
+						data-testid="action-send-to"
+					>
+						<Trans>Send to someone else</Trans>
+					</Button>
+					<Button
+						variant={variant}
+						component={I18nLink}
+						to={`/o/${orgId}/account/documents/${task.document_id}/sign`}
+						data-testid="action-sign"
+					>
+						<Trans>Review and sign</Trans>
+					</Button>
+				</Group>
 			);
 		}
 		if (task.code && ONBOARDING.includes(task.code)) {
@@ -202,7 +232,7 @@ function OpenTask({
 			data-current={first ? "true" : undefined}
 		>
 			<Group justify="space-between" align="center" gap="sm" wrap="wrap">
-				<Stack gap="xs" style={{ flex: "1 1 340px", minWidth: 0 }}>
+				<Stack gap={4} style={{ flex: "1 1 260px", minWidth: 0 }}>
 					<Text>{title}</Text>
 					{sentBack && task.review_note ? (
 						<Text size="sm" c="var(--app-warning)">
@@ -228,6 +258,71 @@ function Due({ iso }: { iso: string }) {
 		<Text size="sm" c="dimmed">
 			<Trans>Before {date}</Trans>
 		</Text>
+	);
+}
+
+/**
+ * A signature handed to someone else: it waits on them, and their signature completes it.
+ * The offer can still be read here, and handed to someone else again.
+ */
+function WaitingTask({
+	task,
+	signer,
+	orgId,
+	onSendTo,
+}: {
+	task: TaskT;
+	signer: { name: string | null; email: string; role: string | null };
+	orgId: string;
+	onSendTo: () => void;
+}) {
+	const { title } = taskText(task);
+	const who = signer.name || signer.email;
+	const jobTitle = signer.role;
+	return (
+		<Row testId="task-waiting" data-status="waiting">
+			<Group justify="space-between" align="center" gap="sm" wrap="wrap">
+				<Group
+					gap="sm"
+					wrap="nowrap"
+					align="flex-start"
+					style={{ flex: "1 1 260px", minWidth: 0 }}
+				>
+					<Box pt="xs" style={{ flexShrink: 0, lineHeight: 0 }}>
+						<HourglassSimpleIcon
+							size={16}
+							color="var(--app-muted)"
+							aria-hidden
+						/>
+					</Box>
+					<Stack gap={4} style={{ minWidth: 0 }}>
+						<Text>{title}</Text>
+						<Text size="sm" c="dimmed" data-testid="waiting-on">
+							{jobTitle ? (
+								<Trans>
+									Waiting on {who}, {jobTitle}. We emailed them a link to
+									sign.
+								</Trans>
+							) : (
+								<Trans>Waiting on {who}. We emailed them a link to sign.</Trans>
+							)}
+						</Text>
+					</Stack>
+				</Group>
+				<Group gap="xs" wrap="wrap" justify="flex-end">
+					<Anchor component="button" size="sm" onClick={onSendTo}>
+						<Trans>Send to someone else</Trans>
+					</Anchor>
+					<Button
+						component={I18nLink}
+						to={`/o/${orgId}/account/documents/${task.document_id}/sign`}
+						data-testid="action-view-offer"
+					>
+						<Trans>View</Trans>
+					</Button>
+				</Group>
+			</Group>
+		</Row>
 	);
 }
 

@@ -253,6 +253,11 @@ export const DocumentDetail = DocumentSummary.extend({
     .object({ dpa_authorised: z.string(), dpa_not_authorised: z.string().nullable() })
     .nullable(),
   signature: Signature.nullable(),
+  /**
+   * What the signing screen fills in for the `organisation` and `address` text fields: the
+   * billed name (else the organisation's) and the billing address, null when unknown.
+   */
+  prefill: z.object({ organisation: z.string().nullable(), address: z.string().nullable() }),
   /** How the caller reaches it: as a member, as the named signer, or as staff. */
   access: z.enum(["member", "signer", "staff"]),
   /**
@@ -264,8 +269,9 @@ export const DocumentDetail = DocumentSummary.extend({
 
 /**
  * Tasks echo creates itself carry a code and its params, never text: the UI words them in
- * the viewer's language. `sign_offer` and `sign_dpa` have `document_title`; `billing_details`
- * has none. Tasks staff or sam write have no code and carry their own title and body.
+ * the viewer's language. `sign_offer` and `sign_dpa` have `document_title`, and `sign_offer`
+ * also `offer_template` (`event`, `subscription`) and `offer_reference` when the offer has
+ * them; `billing_details` has none. Tasks staff or sam write have no code and carry their own title and body.
  *
  * The four onboarding codes are done by the step itself, never by a reply, and ask for no
  * check-in: `explore_demo` (params `project_id`, `workspace_id`: the demo project) is
@@ -571,7 +577,10 @@ export const UpdateAccountRequest = z.object({
 export const PushOfferRequest = z.object({
   template: OfferTemplate,
   language: Language,
-  /** The customer's name in the title, "<offer_name> x dembrane". */
+  /**
+   * Who the offer is for, under its kind on the PDF ("Event offer", "Yearly license
+   * offer"). The document's name is the kind and the reference ("Event offer 515").
+   */
   offer_name: text(200),
   /** Who the greeting names. */
   person_name: optText(200),

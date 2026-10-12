@@ -4,6 +4,7 @@ import { Alert, Container, Loader, Stack, Text, Title } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import { useRef, useState } from "react";
 import { useParams } from "react-router";
+import { useV2Me } from "@/hooks/useV2Me";
 import { AccountsApiError } from "../api/client";
 import { useAccountPage } from "../api/hooks";
 import { AccountsI18n } from "../i18n";
@@ -30,6 +31,7 @@ export const AccountRoute = () => (
 const AccountPage = () => {
 	const { organisationId } = useParams<{ organisationId: string }>();
 	const { data, isLoading, error } = useAccountPage(organisationId);
+	const { data: me } = useV2Me();
 	const billingRef = useRef<HTMLDivElement>(null);
 	const [booking, setBooking] = useState(false);
 	useDocumentTitle(
@@ -69,7 +71,7 @@ const AccountPage = () => {
 	}
 
 	const today = localToday();
-	const plan = planAccount(data.tasks, data.documents, today);
+	const plan = planAccount(data.tasks, data.documents, today, me?.email);
 	const billingTask = data.tasks.find(
 		(task) => task.kind === "billing_details",
 	);
