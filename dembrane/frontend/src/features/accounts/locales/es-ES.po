@@ -37,7 +37,7 @@ msgid "{0, plural, one {You have # thing to do in {name}} other {You have # thin
 msgstr "{0, plural, one {Tienes # cosa por hacer en {name}} other {Tienes # cosas por hacer en {name}}}"
 
 #. placeholder {0}: r.queued
-#: src/features/accounts/staff/EmailCustomerModal.tsx:128
+#: src/features/accounts/staff/EmailCustomerModal.tsx:125
 msgid "{0} emails sent"
 msgstr "{0} correos enviados"
 
@@ -271,7 +271,7 @@ msgstr "Llamada"
 msgid "Call booked"
 msgstr "Llamada programada"
 
-#: src/features/accounts/staff/EmailCustomerModal.tsx:113
+#: src/features/accounts/staff/EmailCustomerModal.tsx:136
 #: src/features/accounts/customer/Questions.tsx:248
 msgid "Cancel"
 msgstr "Cancelar"
@@ -527,7 +527,7 @@ msgstr "Vencimiento"
 msgid "Email"
 msgstr "Correo electrónico"
 
-#: src/features/accounts/staff/EmailCustomerModal.tsx:127
+#: src/features/accounts/staff/EmailCustomerModal.tsx:124
 msgid "Email sent"
 msgstr "Correo enviado"
 
@@ -877,7 +877,7 @@ msgstr "Idioma de la oferta"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:157
 #: src/features/accounts/staff/DocumentRoute.tsx:157
-msgid "Offer sent. The customer sees it the next time they sign in."
+msgid "Offer sent. The customer sees it the next time they log in."
 msgstr "Oferta enviada. El cliente la verá la próxima vez que inicie sesión."
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:785
@@ -1269,7 +1269,7 @@ msgstr "Poblando datos"
 msgid "Select a field to set its kind, label and whether it is required. Drag to move, pull the corner to resize."
 msgstr "Selecciona un campo para definir su tipo, etiqueta y si es obligatorio. Arrastra para mover o tira de la esquina para cambiar el tamaño."
 
-#: src/features/accounts/staff/EmailCustomerModal.tsx:136
+#: src/features/accounts/staff/EmailCustomerModal.tsx:133
 #: src/features/accounts/staff/AccountCardRoute.tsx:206
 #: src/features/accounts/customer/Questions.tsx:261
 #: src/features/accounts/customer/NextSteps.tsx:449

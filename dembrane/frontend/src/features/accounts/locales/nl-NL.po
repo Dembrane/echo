@@ -37,7 +37,7 @@ msgid "{0, plural, one {You have # thing to do in {name}} other {You have # thin
 msgstr "{0, plural, one {Er staat # taak voor je klaar bij {name}} other {Er staan # taken voor je klaar bij {name}}}"
 
 #. placeholder {0}: r.queued
-#: src/features/accounts/staff/EmailCustomerModal.tsx:128
+#: src/features/accounts/staff/EmailCustomerModal.tsx:125
 msgid "{0} emails sent"
 msgstr "{0} e-mails verstuurd"
 
@@ -271,7 +271,7 @@ msgstr "Gesprek"
 msgid "Call booked"
 msgstr "Gesprek gepland"
 
-#: src/features/accounts/staff/EmailCustomerModal.tsx:113
+#: src/features/accounts/staff/EmailCustomerModal.tsx:136
 #: src/features/accounts/customer/Questions.tsx:248
 msgid "Cancel"
 msgstr "Annuleren"
@@ -527,7 +527,7 @@ msgstr "Uiterlijk"
 msgid "Email"
 msgstr "E-mail"
 
-#: src/features/accounts/staff/EmailCustomerModal.tsx:127
+#: src/features/accounts/staff/EmailCustomerModal.tsx:124
 msgid "Email sent"
 msgstr "E-mail verstuurd"
 
@@ -877,7 +877,7 @@ msgstr "Taal van de offerte"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:157
 #: src/features/accounts/staff/DocumentRoute.tsx:157
-msgid "Offer sent. The customer sees it the next time they sign in."
+msgid "Offer sent. The customer sees it the next time they log in."
 msgstr "Offerte verstuurd. De klant ziet hem bij de volgende keer inloggen."
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:785
@@ -1269,7 +1269,7 @@ msgstr "Vullen"
 msgid "Select a field to set its kind, label and whether it is required. Drag to move, pull the corner to resize."
 msgstr "Kies een veld om soort, label en verplicht in te stellen. Sleep om te verplaatsen, trek aan de hoek om de maat te wijzigen."
 
-#: src/features/accounts/staff/EmailCustomerModal.tsx:136
+#: src/features/accounts/staff/EmailCustomerModal.tsx:133
 #: src/features/accounts/staff/AccountCardRoute.tsx:206
 #: src/features/accounts/customer/Questions.tsx:261
 #: src/features/accounts/customer/NextSteps.tsx:449

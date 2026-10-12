@@ -154,7 +154,7 @@ function OfferForm({
 				onSuccess: (res) => {
 					toast.success(
 						send
-							? t`Offer sent. The customer sees it the next time they sign in.`
+							? t`Offer sent. The customer sees it the next time they log in.`
 							: t`Draft saved`,
 					);
 					setLines([emptyLine()]);

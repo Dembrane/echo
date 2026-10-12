@@ -37,7 +37,7 @@ msgid "{0, plural, one {You have # thing to do in {name}} other {You have # thin
 msgstr "{0, plural, one {У {name} на Вас чекає # завдання} few {У {name} на Вас чекають # завдання} many {У {name} на Вас чекають # завдань} other {У {name} на Вас чекають # завдання}}"
 
 #. placeholder {0}: r.queued
-#: src/features/accounts/staff/EmailCustomerModal.tsx:128
+#: src/features/accounts/staff/EmailCustomerModal.tsx:125
 msgid "{0} emails sent"
 msgstr "Надіслано листів: {0}"
 
@@ -271,7 +271,7 @@ msgstr "Дзвінок"
 msgid "Call booked"
 msgstr "Дзвінок заплановано"
 
-#: src/features/accounts/staff/EmailCustomerModal.tsx:113
+#: src/features/accounts/staff/EmailCustomerModal.tsx:136
 #: src/features/accounts/customer/Questions.tsx:248
 msgid "Cancel"
 msgstr "Скасувати"
@@ -527,7 +527,7 @@ msgstr "Термін"
 msgid "Email"
 msgstr "Електронна пошта"
 
-#: src/features/accounts/staff/EmailCustomerModal.tsx:127
+#: src/features/accounts/staff/EmailCustomerModal.tsx:124
 msgid "Email sent"
 msgstr "Лист надіслано"
 
@@ -877,7 +877,7 @@ msgstr "Мова пропозиції"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:157
 #: src/features/accounts/staff/DocumentRoute.tsx:157
-msgid "Offer sent. The customer sees it the next time they sign in."
+msgid "Offer sent. The customer sees it the next time they log in."
 msgstr "Пропозицію надіслано. Клієнт побачить її під час наступного входу."
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:785
@@ -1269,7 +1269,7 @@ msgstr "Заповнення даними"
 msgid "Select a field to set its kind, label and whether it is required. Drag to move, pull the corner to resize."
 msgstr "Виберіть поле, щоб налаштувати його тип, назву та обов'язковість. Перетягуйте, щоб перемістити, потягніть за кут, щоб змінити розмір."
 
-#: src/features/accounts/staff/EmailCustomerModal.tsx:136
+#: src/features/accounts/staff/EmailCustomerModal.tsx:133
 #: src/features/accounts/staff/AccountCardRoute.tsx:206
 #: src/features/accounts/customer/Questions.tsx:261
 #: src/features/accounts/customer/NextSteps.tsx:449
