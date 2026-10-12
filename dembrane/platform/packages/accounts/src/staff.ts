@@ -515,17 +515,29 @@ async function sendOfferIn(
   // The customer must sign it, so a contact held by an unpublished demo is let in now.
   await releaseHeldContacts(tx, orgId, now);
   const content = doc.content as OfferContent | null;
+  // The task is worded from the kind of offer and its number ("Review and sign event
+  // offer 515"); the title stays for older readers and the server's own wording.
+  const params = {
+    document_title: doc.title,
+    ...(content && { offer_template: content.template }),
+    ...(doc.reference && { offer_reference: doc.reference }),
+  };
+  // First who signs: the offer and the DPA may be signed by different people, and the
+  // answer says which signing tasks there are and whose they are.
+  await createTask(d, tx, {
+    orgId,
+    code: "who_signs",
+    params,
+    title: null,
+    kind: "generic",
+    documentId: docId,
+    createdBy: who.directusUserId,
+  });
   const task = await createTask(d, tx, {
     ...(taskId && { id: taskId }),
     orgId,
     code: "sign_offer",
-    // The task is worded from the kind of offer and its number ("Review and sign event
-    // offer 515"); the title stays for older readers and the server's own wording.
-    params: {
-      document_title: doc.title,
-      ...(content && { offer_template: content.template }),
-      ...(doc.reference && { offer_reference: doc.reference }),
-    },
+    params,
     title: null,
     kind: "sign",
     documentId: docId,

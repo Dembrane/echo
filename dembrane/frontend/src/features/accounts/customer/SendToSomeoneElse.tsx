@@ -130,9 +130,9 @@ export function SendToSomeoneElse({
 				<Stack gap="md" data-testid="send-to-sent">
 					<Group gap="sm" wrap="nowrap" align="flex-start">
 						<CheckCircleIcon
-							size={24}
+							size={20}
 							color="var(--app-success)"
-							weight="fill"
+							weight="light"
 							aria-hidden
 							style={{ flexShrink: 0 }}
 						/>
@@ -143,7 +143,7 @@ export function SendToSomeoneElse({
 							</Trans>
 						</Text>
 					</Group>
-					<Group justify="flex-end">
+					<Group>
 						<Button
 							variant="filled"
 							onClick={onClose}
@@ -227,13 +227,13 @@ export function SendToSomeoneElse({
 							>
 								{step === "email" ? (
 									email.trim() ? (
-										<Trans>Next</Trans>
+										<Trans>Continue</Trans>
 									) : (
 										<Trans>Fill in their email</Trans>
 									)
 								) : step === "name" ? (
 									name.trim() ? (
-										<Trans>Next</Trans>
+										<Trans>Continue</Trans>
 									) : (
 										<Trans>Fill in their name</Trans>
 									)

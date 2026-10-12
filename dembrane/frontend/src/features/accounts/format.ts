@@ -133,6 +133,19 @@ export const codedTaskText = (
 			// The two buttons on the task say what there is to do.
 			return { body: "", title };
 		}
+		case "who_signs": {
+			const number = params?.offer_reference ?? "";
+			const title =
+				number && params?.offer_template === "event"
+					? t`Tell us who signs event offer ${number}`
+					: number && params?.offer_template === "subscription"
+						? t`Tell us who signs yearly license offer ${number}`
+						: t`Tell us who signs the offer`;
+			return {
+				body: t`Who signs the offer and the data processing agreement, and whether you need your own DPIA.`,
+				title,
+			};
+		}
 		case "sign_dpa":
 			return {
 				body: t`Someone who may agree to data processing for your organisation signs it.`,

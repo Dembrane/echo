@@ -29,8 +29,9 @@ import { accountKeys } from "../api/hooks";
 import type { TaskT } from "../contract/contract.gen";
 import { formatDate, taskText } from "../format";
 import { PageSection, Row, Rows } from "./PageSection";
-import type { AccountPlan } from "./plan";
+import { type AccountPlan, waitsOnWhoSigns } from "./plan";
 import { SendToSomeoneElse } from "./SendToSomeoneElse";
+import { WhoSigns } from "./WhoSigns";
 
 /** Steps done by taking them, never by a reply: their button leads to the step. */
 const ONBOARDING: NonNullable<TaskT["code"]>[] = [
@@ -63,6 +64,7 @@ export function NextSteps({
 }) {
 	const [responding, setResponding] = useState<TaskT | null>(null);
 	const [sendingTo, setSendingTo] = useState<string | null>(null);
+	const [asking, setAsking] = useState<TaskT | null>(null);
 	const [showDone, setShowDone] = useState(false);
 	const { toDo, waiting, withUs, later, done } = plan;
 	const coming = [...withUs, ...later];
@@ -86,6 +88,7 @@ export function NextSteps({
 								onBookCall={onBookCall}
 								onRespond={() => setResponding(task)}
 								onSendTo={() => setSendingTo(task.document_id)}
+								onWhoSigns={() => setAsking(task)}
 							/>
 						))}
 					</Rows>
@@ -126,7 +129,11 @@ export function NextSteps({
 								/>
 							))}
 							{coming.map((task) => (
-								<QuietTask key={task.id} task={task} />
+								<QuietTask
+									key={task.id}
+									task={task}
+									afterWhoSigns={waitsOnWhoSigns(task, toDo)}
+								/>
 							))}
 							{showDone &&
 								done.map((task) => <QuietTask key={task.id} task={task} />)}
@@ -140,6 +147,7 @@ export function NextSteps({
 				orgId={orgId}
 				onClose={() => setResponding(null)}
 			/>
+			<WhoSigns orgId={orgId} task={asking} onClose={() => setAsking(null)} />
 			<SendToSomeoneElse
 				orgId={orgId}
 				docId={sendingTo}
@@ -159,6 +167,7 @@ function OpenTask({
 	onBookCall,
 	onRespond,
 	onSendTo,
+	onWhoSigns,
 }: {
 	task: TaskT;
 	first: boolean;
@@ -168,6 +177,7 @@ function OpenTask({
 	onBookCall: () => void;
 	onRespond: () => void;
 	onSendTo: () => void;
+	onWhoSigns: () => void;
 }) {
 	const { title, body } = taskText(task);
 	const variant = primary ? "filled" : "outline";
@@ -178,7 +188,7 @@ function OpenTask({
 			// Signing it, or handing it to whoever signs for the organisation: both are
 			// right here, so the task needs no words of its own.
 			return (
-				<Group gap="xs" wrap="wrap" justify="flex-end">
+				<Group gap="xs" wrap="wrap">
 					<Button
 						variant="outline"
 						onClick={onSendTo}
@@ -195,6 +205,17 @@ function OpenTask({
 						<Trans>Review and sign</Trans>
 					</Button>
 				</Group>
+			);
+		}
+		if (task.code === "who_signs") {
+			return (
+				<Button
+					variant={variant}
+					onClick={onWhoSigns}
+					data-testid="action-who-signs"
+				>
+					<Trans>Start</Trans>
+				</Button>
 			);
 		}
 		if (task.code && ONBOARDING.includes(task.code)) {
@@ -326,10 +347,17 @@ function WaitingTask({
 }
 
 /** A task that is not the customer's move: with dembrane, waiting on a signature, or done. */
-function QuietTask({ task }: { task: TaskT }) {
+function QuietTask({
+	task,
+	afterWhoSigns = false,
+}: {
+	task: TaskT;
+	/** A signature that opens once the customer has said who signs. */
+	afterWhoSigns?: boolean;
+}) {
 	const { i18n } = useLingui();
 	const { title } = taskText(task);
-	const locked = task.locked || task.status === "locked";
+	const locked = afterWhoSigns || task.locked || task.status === "locked";
 	const done = task.status === "done";
 	const icon = done ? (
 		<CheckIcon size={16} color="var(--app-success)" aria-hidden />
@@ -339,7 +367,9 @@ function QuietTask({ task }: { task: TaskT }) {
 		<HourglassSimpleIcon size={16} color="var(--app-muted)" aria-hidden />
 	);
 	const when = formatDate(task.submitted_at, i18n.locale);
-	const note = locked ? (
+	const note = afterWhoSigns ? (
+		<Trans>Opens after you tell us who signs.</Trans>
+	) : locked ? (
 		task.locked_until_title ? (
 			<Trans>Opens after you sign {task.locked_until_title}.</Trans>
 		) : (

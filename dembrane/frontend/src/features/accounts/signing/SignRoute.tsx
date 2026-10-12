@@ -840,7 +840,7 @@ function FinishStep({
 	const unanswered = asksDpa && dpa === null;
 	return (
 		<Stack gap="sm" data-testid="sign-finish">
-			<Text fw={500}>
+			<Text size="lg">
 				<Trans>Review and sign</Trans>
 			</Text>
 			{!complete && (

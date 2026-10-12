@@ -287,7 +287,10 @@ export const DocumentDetail = DocumentSummary.extend({
  * Tasks echo creates itself carry a code and its params, never text: the UI words them in
  * the viewer's language. `sign_offer` and `sign_dpa` have `document_title`, and `sign_offer`
  * also `offer_template` (`event`, `subscription`) and `offer_reference` when the offer has
- * them; `billing_details` has none. Tasks staff or sam write have no code and carry their own title and body.
+ * them; `billing_details` has none. `who_signs` (the offer's params and, once answered,
+ * `dpa_same` and `dpia` as "true"/"false") asks who signs the offer and the DPA sent with
+ * it, and is done by its own form (answerWhoSigns), never by a reply. Tasks staff or sam
+ * write have no code and carry their own title and body.
  *
  * The four onboarding codes are done by the step itself, never by a reply, and ask for no
  * check-in: `explore_demo` (params `project_id`, `workspace_id`: the demo project) is
@@ -298,6 +301,7 @@ export const DocumentDetail = DocumentSummary.extend({
  * withdraws the ones not yet done, so the offer's tasks stand alone.
  */
 export const TaskCode = z.enum([
+  "who_signs",
   "sign_offer",
   "billing_details",
   "sign_dpa",
@@ -470,6 +474,19 @@ export const AcceptSignerInviteRequest = z.object({
   last_name: optText(100),
 });
 export const AcceptSignerInviteResponse = z.object({ org_id: Uuid, document_id: Uuid });
+
+/**
+ * Who signs an offer, asked once before it is signed. `offer_signer` null: the person
+ * answering. `dpa_same`: whoever signs the offer also signs the DPA sent with it; else
+ * `dpa_signer` does (null: the person answering). `dpia`: they want their own data
+ * protection impact assessment, which sam follows up from the task's response.
+ */
+export const WhoSignsRequest = z.object({
+  offer_signer: NameSignerRequest.nullable(),
+  dpa_same: z.boolean(),
+  dpa_signer: NameSignerRequest.nullable(),
+  dpia: z.boolean(),
+});
 
 /**
  * Saving the billing details completes the billing details task at once (status `done`, no
@@ -982,6 +999,13 @@ export const ROUTES = {
     permission: "account:sign",
     request: NameSignerRequest,
     response: NameSignerResponse,
+  },
+  answerWhoSigns: {
+    method: "POST",
+    path: `${C}/tasks/:taskId/who-signs`,
+    permission: "account:sign",
+    request: WhoSignsRequest,
+    response: Task,
   },
   /** The unsigned PDF (file_url): what the viewer renders under the fields. */
   documentFile: {

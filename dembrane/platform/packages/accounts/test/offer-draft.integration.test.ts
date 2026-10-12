@@ -275,6 +275,7 @@ run("an offer draft, and the invoice request after the signature", () => {
       "billing_details:locked",
       "sign_dpa:open",
       "sign_offer:open",
+      "who_signs:open",
     ]);
 
     const [message] = inbox("echo_account_document_sent_v1").filter(

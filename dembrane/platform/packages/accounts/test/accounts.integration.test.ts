@@ -238,7 +238,7 @@ run("accounts routes against Postgres", () => {
       const r = await call(w, "GET", C(), as);
       expect(r.status).toBe(200);
       const page = K.AccountPage.parse(r.data);
-      expect(page.tasks[0]?.code).toBe("sign_offer");
+      expect(page.tasks.map((t) => t.code).slice(0, 2)).toEqual(["who_signs", "sign_offer"]);
       expect(page.tasks.find((t) => t.kind === "billing_details")?.locked).toBe(true);
       expect(page.documents.find((d) => d.id === offerId)?.file_url).toBe(
         `${C()}/documents/${offerId}/file`,
@@ -420,6 +420,75 @@ run("accounts routes against Postgres", () => {
     expect((await call(w, "POST", `${S()}/documents/${offerId}/void`, "staff", {})).status).toBe(
       409,
     );
+  });
+
+  test("who signs: the answers name the signers of the offer and its DPA, and settle the task for sam", async () => {
+    const pushed = K.PushOfferResponse.parse(
+      (await call(w, "POST", `${S()}/offers`, "staff", offerBody())).data,
+    );
+    const id = pushed.document.id;
+    const asked = (await store.tasks(w.db, w.orgId)).find(
+      (t) => t.code === "who_signs" && t.documentId === id,
+    );
+    expect(asked?.status).toBe("open");
+    expect(asked?.params).toEqual({
+      document_title: pushed.document.title,
+      offer_template: "subscription",
+      offer_reference: pushed.document.reference as string,
+    });
+    const path = `${C()}/tasks/${asked?.id}/who-signs`;
+    const officer = { name: "Data Officer", email: "dpo@example.test", role: "FG" };
+    const answer = { offer_signer: officer, dpa_same: true, dpa_signer: null, dpia: true };
+    expect((await call(w, "POST", path, "member", answer)).status).toBe(403);
+    // Not answered by a reply: it has its own form.
+    expect(
+      (await call(w, "POST", `${C()}/tasks/${asked?.id}/submit`, "admin", { response_text: "x" }))
+        .status,
+    ).toBe(409);
+    w.jobs.jobs.length = 0;
+    const r = await call(w, "POST", path, "admin", answer);
+    expect(r.status).toBe(200);
+    const done = K.Task.parse(r.data);
+    expect(done.status).toBe("done");
+    expect(done.params).toMatchObject({ dpa_same: "true", dpia: "true" });
+    expect(done.response_text).toContain("Offer: signed by Data Officer (dpo@example.test, FG).");
+    expect(done.response_text).toContain("own data protection impact assessment");
+    expect(w.jobs.of("accounts.deliver-event").map((j) => j.payload)).toContainEqual(
+      expect.objectContaining({ event: "account.task.submitted" }),
+    );
+    expect((await call(w, "POST", path, "admin", answer)).status).toBe(409);
+    // The same person signs the offer and the DPA sent with it.
+    const dpa = (await store.documents(w.db, w.orgId)).find(
+      (x) => x.kind === "dpa" && ["sent", "viewed"].includes(x.status),
+    );
+    expect((await store.document(w.db, w.orgId, id))?.signerEmail).toBe("dpo@example.test");
+    expect(dpa?.signerEmail).toBe("dpo@example.test");
+    // Back to the admin, who signs the DPA in the next test.
+    expect(
+      (
+        await call(w, "POST", `${C()}/documents/${dpa?.id}/signer`, "admin", {
+          name: "Admin",
+          email: "admin@example.test",
+          role: null,
+        })
+      ).status,
+    ).toBe(200);
+
+    // An offer signed without answering first settles the question too.
+    const other = K.PushOfferResponse.parse(
+      (await call(w, "POST", `${S()}/offers`, "staff", offerBody())).data,
+    );
+    const signed = await signPayload(other.document.id, "admin");
+    expect(
+      (await call(w, "POST", `${C()}/documents/${other.document.id}/sign`, "admin", signed.body))
+        .status,
+    ).toBe(200);
+    expect(
+      (await store.tasks(w.db, w.orgId))
+        .filter((t) => t.documentId === other.document.id)
+        .map((t) => `${t.code}:${t.status}`)
+        .sort(),
+    ).toEqual(["sign_offer:done", "who_signs:done"]);
   });
 
   test("the DPA goes out with the offer as its own document; signing the offer asks nothing about it", async () => {

@@ -292,8 +292,13 @@ async function afterSigned(
   who: Signed,
 ) {
   const tasks = await store.tasks(tx, org.id);
+  // Signed without saying who signs first: the signer answered it by signing.
   for (const t of tasks)
-    if (t.kind === "sign" && t.documentId === doc.id && !["done", "withdrawn"].includes(t.status))
+    if (
+      (t.kind === "sign" || t.code === "who_signs") &&
+      t.documentId === doc.id &&
+      !["done", "withdrawn"].includes(t.status)
+    )
       await settleTask(d, tx, t.id, "done");
   for (const t of tasks)
     if (
