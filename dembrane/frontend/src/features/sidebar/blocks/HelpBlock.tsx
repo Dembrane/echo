@@ -66,7 +66,7 @@ export const HelpBlock = () => {
 			key: "feedback",
 			node: (
 				<NavButton
-					label={<Trans>Leave feedback</Trans>}
+					label={<Trans>Give feedback</Trans>}
 					icon={ChatCircle}
 					iconColor={roles.action}
 					labelColor={roles.action}

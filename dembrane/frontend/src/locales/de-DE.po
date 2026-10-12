@@ -6891,6 +6891,12 @@ msgstr "{0} von dembrane für 24 Stunden Administratorzugriff auf diesen Arbeits
 msgid "Give chat responses a thumbs up or thumbs down."
 msgstr "Chat-Antworten positiv oder negativ bewerten."
 
+#: src/features/sidebar/views/HelpView.tsx:43
+#: src/features/sidebar/blocks/HelpBlock.tsx:69
+#: src/components/feedback/ReportIssueModal.tsx:182
+msgid "Give feedback"
+msgstr "Feedback geben"
+
 #: src/components/view/CreateViewForm.tsx:133
 #~ msgid "Give me a list of 5-10 topics that are being discussed."
 #~ msgstr "Geben Sie mir eine Liste von 5-10 Themen, die diskutiert werden."
@@ -8070,10 +8076,7 @@ msgstr "Mehr über Webhooks erfahren"
 msgid "Leave empty to keep existing"
 msgstr "Leer lassen, um das bestehende zu behalten"
 
-#: src/features/sidebar/views/HelpView.tsx:43
-#: src/features/sidebar/blocks/HelpBlock.tsx:69
 #: src/components/results/curate/RowTools.tsx:108
-#: src/components/feedback/ReportIssueModal.tsx:182
 msgid "Leave feedback"
 msgstr "Feedback geben"
 

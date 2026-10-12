@@ -5,7 +5,7 @@ import { ReportIssueModal } from "@/components/feedback/ReportIssueModal";
 import { useSidebarView } from "./useSidebarView";
 
 type HelpModals = {
-	/** "Leave feedback": the one way to give dembrane a heads-up, issues included. */
+	/** "Give feedback": the one way to give dembrane a heads-up, issues included. */
 	openFeedback: () => void;
 };
 

@@ -49,10 +49,10 @@ export function TalkToUs({
 					<SimpleGrid cols={{ base: 1, sm: onBookCall ? 3 : 2 }} spacing="sm">
 						<Choice
 							icon={<ChatCircleIcon size={20} aria-hidden />}
-							title={<Trans>Leave feedback</Trans>}
+							title={<Trans>Give feedback</Trans>}
 							body={<Trans>Tell us what works and what does not.</Trans>}
 							onClick={() => setFeedback(true)}
-							testId="leave-feedback"
+							testId="give-feedback"
 						/>
 						<Choice
 							icon={<ChatTextIcon size={20} aria-hidden />}

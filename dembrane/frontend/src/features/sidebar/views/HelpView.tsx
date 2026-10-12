@@ -40,7 +40,7 @@ export const HelpView = () => {
 
 			<div className="mt-auto" />
 			<NavButton
-				label={<Trans>Leave feedback</Trans>}
+				label={<Trans>Give feedback</Trans>}
 				icon={ChatCircle}
 				iconColor="var(--app-action)"
 				labelColor="var(--app-action)"
