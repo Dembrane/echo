@@ -265,8 +265,8 @@ export const DocumentDetail = DocumentSummary.extend({
  * the viewer's language. `sign_offer` and `sign_dpa` have `document_title`; `billing_details`
  * has none. Tasks staff or sam write have no code and carry their own title and body.
  *
- * The four onboarding codes are done by the step itself, never by a reply, and send no
- * reminders: `explore_demo` (params `project_id`, `workspace_id`: the demo project) is
+ * The four onboarding codes are done by the step itself, never by a reply, and ask for no
+ * check-in: `explore_demo` (params `project_id`, `workspace_id`: the demo project) is
  * done when a member opens it, `watch_tutorial` when the tutorial link is clicked from the
  * task (no one can tell a video was watched), `create_project` (`workspace_id` where a
  * first project goes, when there is one) when a project that is not a synthetic demo is
@@ -309,6 +309,11 @@ export const Task = z.object({
   submitted_at: IsoTime.nullable(),
   review_note: z.string().nullable(),
   reviewed_at: IsoTime.nullable(),
+  /**
+   * A task that waits on the customer never emails them. When it has waited its interval
+   * the account's owner at dembrane is asked to check in: next at this time, every
+   * `reminder_interval_days`, `reminders_sent` times so far.
+   */
   next_reminder_at: IsoTime.nullable(),
   reminder_interval_days: z.number().int().nullable(),
   reminders_sent: z.number().int(),
@@ -665,7 +670,7 @@ export const CreateTaskRequest = z.object({
   due_on: nullish(IsoDate),
   /** Locked (greyed out) until this document is signed. */
   locked_until_document_id: nullish(Uuid),
-  /** Days between reminders; the configured default (7) when absent. */
+  /** Days between check-ins asked of the account's owner; the configured default (7) when absent. */
   reminder_interval_days: nullish(z.number().int().min(1).max(365)),
 });
 

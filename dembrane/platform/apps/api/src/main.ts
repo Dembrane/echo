@@ -81,6 +81,7 @@ const auth = createAuth({
   baseURL: config.http.publicUrl,
   trustedOrigins: [config.http.dashboardUrl, config.http.portalUrl],
   cookieDomain: config.auth.cookieDomain,
+  cookiePrefix: config.auth.cookiePrefix,
   secureCookies: config.app.env !== "local" && config.app.env !== "test",
   google:
     config.auth.googleClientId && config.auth.googleClientSecret

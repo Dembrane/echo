@@ -18,4 +18,4 @@ export {
   type SampleSummary,
   seedMillbrook,
 } from "./millbrook";
-export { runSeedJob, type SamplesWorkerDeps, samplesWorker } from "./worker";
+export { runBackfillJob, runSeedJob, type SamplesWorkerDeps, samplesWorker } from "./worker";

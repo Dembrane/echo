@@ -96,6 +96,7 @@ run("account events and sam's inbox", () => {
       "echo_account_document_sent_v1",
       "echo_account_document_voided_v1",
       "echo_account_invoice_requested_v1",
+      "echo_account_task_waiting_v1",
     ]);
     for (const [i, event] of all.entries()) {
       const m = sent[i] as { code: string; id: string; body: string };

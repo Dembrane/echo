@@ -12,4 +12,5 @@ export default {
   webhooks: { allowPrivateTargets: true },
   popcorn: { showFlow: true },
   accounts: { offerMessages: true },
+  samples: { enabled: true },
 } satisfies Environment;

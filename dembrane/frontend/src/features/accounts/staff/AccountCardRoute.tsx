@@ -416,7 +416,7 @@ function Tasks({ orgId, card }: { orgId: string; card: AccountCardT }) {
 													.filter(Boolean)
 													.join(" · ") || t`Submitted`
 											: task.next_reminder_at
-												? t`Next reminder ${formatDate(task.next_reminder_at, i18n.locale)}`
+												? t`Check-in due ${formatDate(task.next_reminder_at, i18n.locale)}`
 												: (task.review_note ?? "")}
 									</Text>
 									{/* On a phone the status sits under the title. */}
@@ -737,6 +737,7 @@ const eventLabel = (type: string): string =>
 		"onboarding.added": t`Onboarding tasks added`,
 		"onboarding.withdrawn": t`Onboarding tasks withdrawn`,
 		"task.approve": t`Task approved`,
+		"task.check_in_asked": t`Account manager asked to check in`,
 		"task.created": t`Task created`,
 		"task.done": t`Task done`,
 		"task.send_back": t`Task sent back`,

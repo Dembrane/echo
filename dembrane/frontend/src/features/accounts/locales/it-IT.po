@@ -103,6 +103,10 @@ msgstr "Account creato"
 msgid "Account enabled"
 msgstr "Account abilitato"
 
+#: src/features/accounts/staff/AccountCardRoute.tsx:740
+msgid "Account manager asked to check in"
+msgstr "Chiesto all'account manager di ricontattare il cliente"
+
 #: src/features/accounts/customer/DocumentsTable.tsx:266
 msgid "Account name"
 msgstr "Nome dell'account"
@@ -278,6 +282,11 @@ msgstr "Modifica la bozza"
 msgid "Check out the demo we made for you"
 msgstr "Dai un'occhiata alla demo che abbiamo preparato per te"
 
+#. placeholder {0}: formatDate(task.next_reminder_at, i18n.locale)
+#: src/features/accounts/staff/AccountCardRoute.tsx:419
+msgid "Check-in due {0}"
+msgstr "Ricontatto previsto il {0}"
+
 #: src/features/accounts/staff/FieldEditorRoute.tsx:63
 msgid "Checkbox"
 msgstr "Casella di controllo"
@@ -351,12 +360,12 @@ msgstr "Paese"
 msgid "Create a project"
 msgstr "Crea un progetto"
 
-#: src/features/accounts/staff/TaskModals.tsx:110
+#: src/features/accounts/staff/TaskModals.tsx:111
 msgid "Create task"
 msgstr "Crea attività"
 
 #: src/features/accounts/format.ts:107
-#: src/features/accounts/staff/AccountCardRoute.tsx:776
+#: src/features/accounts/staff/AccountCardRoute.tsx:777
 #: src/features/accounts/customer/Questions.tsx:169
 msgid "Customer"
 msgstr "Cliente"
@@ -728,10 +737,9 @@ msgstr "Nuova attività"
 msgid "Next"
 msgstr "Avanti"
 
-#. placeholder {0}: formatDate(task.next_reminder_at, i18n.locale)
 #: src/features/accounts/staff/AccountCardRoute.tsx:419
-msgid "Next reminder {0}"
-msgstr "Prossimo promemoria {0}"
+#~ msgid "Next reminder {0}"
+#~ msgstr "Prossimo promemoria {0}"
 
 #: src/features/accounts/customer/NextSteps.tsx:76
 msgid "Next steps"
@@ -1069,7 +1077,7 @@ msgstr "Invia offerta"
 msgid "Quantity"
 msgstr "Quantità"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:745
+#: src/features/accounts/staff/AccountCardRoute.tsx:746
 msgid "Question opened"
 msgstr "Domanda aperta"
 
@@ -1215,8 +1223,8 @@ msgstr "Seleziona un campo per impostarne tipo, etichetta e obbligatorietà. Tra
 msgid "Send"
 msgstr "Invia"
 
-#: src/features/accounts/staff/TaskModals.tsx:134
-#: src/features/accounts/staff/TaskModals.tsx:166
+#: src/features/accounts/staff/TaskModals.tsx:135
+#: src/features/accounts/staff/TaskModals.tsx:167
 #: src/features/accounts/staff/AccountCardRoute.tsx:457
 msgid "Send back"
 msgstr "Rimanda indietro"
@@ -1287,12 +1295,12 @@ msgid "Set up a project of your own for your first real session."
 msgstr "Imposta un progetto tutto tuo per la tua prima sessione reale."
 
 #: src/features/accounts/staff/DemoRoute.tsx:301
-#: src/features/accounts/staff/AccountCardRoute.tsx:790
+#: src/features/accounts/staff/AccountCardRoute.tsx:791
 msgid "Show all"
 msgstr "Mostra tutto"
 
 #: src/features/accounts/staff/DemoRoute.tsx:302
-#: src/features/accounts/staff/AccountCardRoute.tsx:790
+#: src/features/accounts/staff/AccountCardRoute.tsx:791
 msgid "Show less"
 msgstr "Mostra meno"
 
@@ -1361,7 +1369,7 @@ msgstr "Firma un'altra persona"
 msgid "Someone who may agree to data processing for your organisation signs it."
 msgstr "La firma deve essere di chi può autorizzare il trattamento dei dati per la tua organizzazione."
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:778
+#: src/features/accounts/staff/AccountCardRoute.tsx:779
 msgid "Staff"
 msgstr "Staff"
 
@@ -1408,7 +1416,7 @@ msgstr "Inviato"
 msgid "Subscription"
 msgstr "Abbonamento"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:779
+#: src/features/accounts/staff/AccountCardRoute.tsx:780
 msgid "System"
 msgstr "Sistema"
 
@@ -1420,24 +1428,24 @@ msgstr "Attività"
 msgid "Task approved"
 msgstr "Attività approvata"
 
-#: src/features/accounts/staff/TaskModals.tsx:99
-#: src/features/accounts/staff/AccountCardRoute.tsx:740
+#: src/features/accounts/staff/TaskModals.tsx:100
+#: src/features/accounts/staff/AccountCardRoute.tsx:741
 msgid "Task created"
 msgstr "Attività creata"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:741
+#: src/features/accounts/staff/AccountCardRoute.tsx:742
 msgid "Task done"
 msgstr "Attività completata"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:742
+#: src/features/accounts/staff/AccountCardRoute.tsx:743
 msgid "Task sent back"
 msgstr "Attività rimandata indietro"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:743
+#: src/features/accounts/staff/AccountCardRoute.tsx:744
 msgid "Task submitted"
 msgstr "Attività inviata"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:744
+#: src/features/accounts/staff/AccountCardRoute.tsx:745
 msgid "Task withdrawn"
 msgstr "Attività ritirata"
 
@@ -1485,8 +1493,12 @@ msgid "The customer answers with"
 msgstr "Il cliente risponde con"
 
 #: src/features/accounts/staff/TaskModals.tsx:79
-msgid "The customer gets a reminder every seven days until it is done."
-msgstr "Il cliente riceve un promemoria ogni sette giorni fino al completamento."
+#~ msgid "The customer gets a reminder every seven days until it is done."
+#~ msgstr "Il cliente riceve un promemoria ogni sette giorni fino al completamento."
+
+#: src/features/accounts/staff/TaskModals.tsx:79
+msgid "The customer gets no automatic reminder. After seven days the account manager is asked to check in."
+msgstr "Il cliente non riceve promemoria automatici. Dopo sette giorni viene chiesto all'account manager di ricontattarlo."
 
 #: src/features/accounts/signing/SignRoute.tsx:940
 msgid "The document could not be loaded. Check your connection and try again."
@@ -1547,7 +1559,7 @@ msgstr "Questo documento è stato inviato. I suoi campi non sono modificabili; i
 msgid "This organisation has no account yet"
 msgstr "Questa organizzazione non ha ancora un account"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:759
+#: src/features/accounts/staff/AccountCardRoute.tsx:760
 msgid "Timeline"
 msgstr "Cronologia"
 
@@ -1699,7 +1711,7 @@ msgstr "Cosa deve ancora completare ciascuna delle tue organizzazioni per dembra
 msgid "What they want to hear from whom, and why now."
 msgstr "Cosa vogliono sapere, da chi e perché proprio ora."
 
-#: src/features/accounts/staff/TaskModals.tsx:140
+#: src/features/accounts/staff/TaskModals.tsx:141
 msgid "What to change"
 msgstr "Cosa modificare"
 
