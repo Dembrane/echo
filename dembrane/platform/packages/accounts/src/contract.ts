@@ -424,6 +424,35 @@ export const NameSignerRequest = z.object({
 });
 export const NameSignerResponse = z.object({ signer: Signer });
 
+/** The token from the invitation link (`?invite=`), which nameSigner puts in the email. */
+const InviteToken = z.string().trim().min(16).max(64);
+export const SignerInviteQuery = z.object({ invite: InviteToken });
+/**
+ * The invitation page, before sign-in: who asked, for which document, and the person named,
+ * split into the names the page fills in. `has_account`: the address already has a dembrane
+ * account, so the page asks only for the code. `status`: `open` while it waits for them.
+ */
+export const SignerInvite = z.object({
+  organisation: z.object({ name: z.string() }),
+  inviter: z.object({ name: z.string() }).nullable(),
+  document: z.object({ title: z.string(), kind: DocumentKind, reference: z.string().nullable() }),
+  signer: z.object({
+    email: z.string(),
+    first_name: z.string(),
+    last_name: z.string(),
+    role: z.string().nullable(),
+  }),
+  status: z.enum(["open", "signed", "closed"]),
+  has_account: z.boolean(),
+});
+/** After the code sign-in: the names someone new confirmed; an existing account keeps its own. */
+export const AcceptSignerInviteRequest = z.object({
+  invite: InviteToken,
+  first_name: text(100),
+  last_name: optText(100),
+});
+export const AcceptSignerInviteResponse = z.object({ org_id: Uuid, document_id: Uuid });
+
 /**
  * Saving the billing details completes the billing details task at once (status `done`, no
  * review by us); we hear about it through the event and the Slack post.
@@ -866,6 +895,7 @@ export type Permission =
   | "account:tasks"
   | "account:support"
   | "signed-in"
+  | "invite-link"
   | "staff:accounts"
   | "staff:workspaces";
 
@@ -874,7 +904,8 @@ export interface RouteSpec {
   readonly path: string;
   /**
    * Org account policy (org owners, admins, billing), `staff:accounts` (staff and sam's
-   * staff key, audited), or `signed-in`. `+signer` routes also admit the person named to
+   * staff key, audited), `signed-in`, or `invite-link` (no session; the link's token).
+   * `+signer` routes also admit the person named to
    * sign that one document.
    */
   readonly permission: Permission;
@@ -990,6 +1021,21 @@ export const ROUTES = {
     path: `${C}/tutorial-opened`,
     permission: "account:tasks",
     response: TutorialOpenedResponse,
+  },
+  /** No session: the token in the invitation link is the access. */
+  signerInvite: {
+    method: "GET",
+    path: `${C}/documents/:docId/invite`,
+    permission: "invite-link",
+    query: SignerInviteQuery,
+    response: SignerInvite,
+  },
+  acceptSignerInvite: {
+    method: "POST",
+    path: `${C}/documents/:docId/invite/accept`,
+    permission: "signed-in",
+    request: AcceptSignerInviteRequest,
+    response: AcceptSignerInviteResponse,
   },
   signingRequests: {
     method: "GET",

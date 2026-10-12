@@ -167,7 +167,63 @@ function Signing({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 			</>
 		);
 	}
+	if (doc.access === "member" && doc.signer)
+		return <MaybeWaiting doc={doc} orgId={orgId} signer={doc.signer} />;
 	return <Walk doc={doc} orgId={orgId} />;
+}
+
+/**
+ * Once someone else is named to sign, a member opening the link sees who it waits on, not
+ * a signing walk that would refuse them at the end. The named person signs in their own
+ * name, from their own invitation.
+ */
+function MaybeWaiting({
+	doc,
+	orgId,
+	signer,
+}: {
+	doc: DocumentDetailT;
+	orgId: string;
+	signer: NonNullable<DocumentDetailT["signer"]>;
+}) {
+	const { data: me, isLoading } = useV2Me();
+	if (isLoading)
+		return (
+			<Stack align="center" pt="20vh">
+				<Loader />
+			</Stack>
+		);
+	if (me?.email && me.email.toLowerCase() === signer.email.toLowerCase())
+		return <Walk doc={doc} orgId={orgId} />;
+	const name = signer.name || signer.email;
+	return (
+		<>
+			<Header doc={doc} orgId={orgId} />
+			<Container size="xs" pt="10vh">
+				<Stack gap="md" data-testid="sign-waiting">
+					<Title order={3}>
+						<Trans>Waiting on {name} to sign</Trans>
+					</Title>
+					<Text>
+						<Trans>
+							We sent {signer.email} a link to sign {doc.title}. You'll see it
+							signed on your account page.
+						</Trans>
+					</Text>
+					<Group>
+						<Button
+							component={I18nLink}
+							to={`/o/${orgId}/account`}
+							size="md"
+							variant="filled"
+						>
+							<Trans>Back to account</Trans>
+						</Button>
+					</Group>
+				</Stack>
+			</Container>
+		</>
+	);
 }
 
 /** Below the sticky header, so the panel and the field brought into view clear it. */
@@ -971,7 +1027,7 @@ function Signed({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 			<Header doc={doc} orgId={orgId} />
 			<Container size="xs" pt="10vh" px="md">
 				<Stack align="center" gap="md" ta="center" data-testid="sign-result">
-					<ThemeIcon size={56} radius="xl" color="green" variant="light">
+					<ThemeIcon size={56} color="green" variant="light">
 						<CheckIcon size={28} />
 					</ThemeIcon>
 					<Title order={3}>

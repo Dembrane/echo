@@ -60,5 +60,6 @@ export async function seedAccountsDemoFromEnv(
     language: o.language,
     fetchText: httpFetchText,
     gallery: true,
+    ...(e.INVITE_HASH_SECRET && { inviteSecret: e.INVITE_HASH_SECRET }),
   });
 }

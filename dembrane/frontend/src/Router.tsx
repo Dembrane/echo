@@ -200,9 +200,9 @@ const AccountDocumentsRoute = createLazyNamedRoute(
 	() => import("./features/accounts/customer/AccountRoute"),
 	"AccountDocumentsRoute",
 );
-const SignRoute = createLazyNamedRoute(
-	() => import("./features/accounts/signing/SignRoute"),
-	"SignRoute",
+const SignGate = createLazyNamedRoute(
+	() => import("./features/accounts/signing/SignGate"),
+	"SignGate",
 );
 const AccountCardRoute = createLazyNamedRoute(
 	() => import("./features/accounts/staff/AccountCardRoute"),
@@ -608,13 +608,10 @@ export const mainRouter = createBrowserRouter([
 			{
 				// Signing is one focused screen without the dashboard chrome: a person
 				// named to sign may not be a member of the organisation, and it has to
-				// work on a phone. Protected sends a signed-out signer to
+				// work on a phone. SignGate shows a signed-out invitee (?invite=) their
+				// invitation and a code sign-in; anyone else signed out goes through
 				// /login?next=..., which lands them back here.
-				element: (
-					<Protected>
-						<SignRoute />
-					</Protected>
-				),
+				element: <SignGate />,
 				path: "o/:organisationId/account/documents/:docId/sign",
 			},
 			{

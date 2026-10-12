@@ -138,8 +138,8 @@ export function SendToSomeoneElse({
 						/>
 						<Text>
 							<Trans>
-								We emailed {theirName} at {theirEmail} with a link to sign.
-								The task now waits on {first}, and their signature completes it.
+								We emailed {theirName} at {theirEmail} with a link to sign. The
+								task now waits on {first}, and their signature completes it.
 							</Trans>
 						</Text>
 					</Group>

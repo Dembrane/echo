@@ -12,8 +12,8 @@ import { localeOfEmail, resolveLocale } from "@dembrane/i18n";
 import { customerOrg, documentFor } from "./access";
 import type { AccountsDeps } from "./deps";
 import { billingPayload, emit, orgPayload, taskPayload, ticketPayload } from "./events";
+import { signerInviteUrl } from "./invite";
 import { requestInvoices, staffDocumentUrl } from "./invoice";
-import { accountPageUrl } from "./jobs";
 import type { PricedLine } from "./money";
 import type { OfferContent } from "./offer";
 import { completeOnboarding, isOnboardingCode } from "./onboarding";
@@ -291,7 +291,12 @@ export async function nameSigner(
           inviter_name: me?.name || me?.email || org.name,
           org_name: org.name,
           document_title: doc.title,
-          sign_url: `${accountPageUrl(d.settings.dashboardUrl, org.id)}/documents/${doc.id}/sign`,
+          // Opens the invitation page for this person, not a bare sign-in.
+          sign_url: signerInviteUrl(d.settings.dashboardUrl, d.settings.inviteSecret, {
+            ...doc,
+            signerEmail: email,
+            signerInvitedAt: now,
+          }),
         },
         context: `account signer invite ${doc.id}`,
       },

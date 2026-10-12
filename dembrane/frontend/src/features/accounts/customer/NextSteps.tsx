@@ -300,8 +300,7 @@ function WaitingTask({
 						<Text size="sm" c="dimmed" data-testid="waiting-on">
 							{jobTitle ? (
 								<Trans>
-									Waiting on {who}, {jobTitle}. We emailed them a link to
-									sign.
+									Waiting on {who}, {jobTitle}. We emailed them a link to sign.
 								</Trans>
 							) : (
 								<Trans>Waiting on {who}. We emailed them a link to sign.</Trans>
