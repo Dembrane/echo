@@ -1,7 +1,7 @@
 import type { Signed } from "@dembrane/http";
 import { demoIdentity } from "@dembrane/popcorn";
 import { PDFDocument, StandardFonts } from "pdf-lib";
-import { documentDetail, markViewed } from "./customer";
+import { documentDetail, markViewed, nameSigner } from "./customer";
 import type { AccountsDeps } from "./deps";
 import type { OfferItem } from "./offer";
 import { createAccount } from "./prospect";
@@ -18,6 +18,8 @@ import { store } from "./storage";
  *   both with VAT reverse-charged.
  * - Northfield Library (sample), English prospect: an event offer just sent, nothing else.
  * - Riverside Region (sample), English: offer signed and its invoice paid.
+ * - Lakeview Water Board (sample), English: the contact passed the offer to a colleague who
+ *   has no account yet, so it waits on them.
  *
  * Invoices go through upsertInvoice the way sam mirrors them from Exact Online, which renders
  * and sends the real invoice; their PDF here is a plain placeholder standing in for Exact's. Every id is fixed and every step checks for its own row first, so a
@@ -52,7 +54,9 @@ interface GalleryOffer {
   readonly reference: string;
   readonly items: readonly OfferItem[];
   readonly vat_treatment?: "reverse_charge";
-  readonly state: "sent" | "viewed" | "signed";
+  /** "delegated": opened, then passed to someone else to sign (`signer`). */
+  readonly state: "sent" | "viewed" | "delegated" | "signed";
+  readonly signer?: { readonly name: string; readonly email: string; readonly role: string };
 }
 
 interface GalleryInvoice {
@@ -262,6 +266,39 @@ function accounts(): GalleryAccount[] {
         },
       ],
     },
+    {
+      key: "lakeview",
+      name: "Lakeview Water Board (sample)",
+      email: "sameer+c2c-lakeview@dembrane.com",
+      contact: "Sam Lake (customer demo)",
+      firstName: "Sam",
+      stage: "prospect",
+      language: "en",
+      billTo: {
+        legal_name: "Lakeview Water Board (sample)",
+        attention: null,
+        address_line1: "Dijkweg 2",
+        address_line2: null,
+        postal_code: "2345 LW",
+        city: "Lakeview",
+        country: "Netherlands",
+        vat_id: "NL002223334B01",
+        kvk_number: null,
+        kbo_number: null,
+      },
+      offer: {
+        template: "subscription",
+        reference: "DMB-GALLERY-LAKEVIEW",
+        items: [licence("en", 3, 2100)],
+        state: "delegated",
+        signer: {
+          name: "Taylor Lake",
+          email: "sameer+c2c-lakeview-signer@dembrane.com",
+          role: "Head of Finance",
+        },
+      },
+      invoices: [],
+    },
   ];
 }
 
@@ -411,6 +448,8 @@ export async function seedCallToCashGallery(
       );
       if (a.offer.state !== "sent") await markViewed(d, customer, orgId, offerId);
       if (a.offer.state === "signed") await sign(d, customer, orgId, offerId, a);
+      if (a.offer.state === "delegated" && a.offer.signer)
+        await nameSigner(d, customer, orgId, offerId, a.offer.signer);
     }
 
     for (const inv of a.invoices) {

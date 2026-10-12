@@ -507,6 +507,7 @@ run("bun run seed:accounts-demo", () => {
         "Westhoek (sample)",
         "Northfield Library (sample)",
         "Riverside Region (sample)",
+        "Lakeview Water Board (sample)",
       ]);
       const after = await counts();
       await seedAccountsDemo({ ...(await options()), gallery: true });
@@ -528,10 +529,14 @@ run("bun run seed:accounts-demo", () => {
         "2026-0455:sent:overdue",
         "2026-0471:sent:open",
         "DMB-GALLERY-HARBOUR:signed:-",
+        "DMB-GALLERY-LAKEVIEW:viewed:-",
         "DMB-GALLERY-NORTHFIELD:sent:-",
         "DMB-GALLERY-RIVERSIDE:signed:-",
         "DMB-GALLERY-WESTHOEK:viewed:-",
       ]);
+      expect(docs.find((x) => x.reference === "DMB-GALLERY-LAKEVIEW")?.signerName).toBe(
+        "Taylor Lake",
+      );
       // Every invoice has its stand-in for Exact's PDF.
       for (const x of docs.filter((x) => x.kind === "invoice")) expect(x.fileKey).not.toBeNull();
       expect(first.gallery[0]?.org_id).toBe(demoIdentity(GALLERY_SLUG, "org-harbour"));
