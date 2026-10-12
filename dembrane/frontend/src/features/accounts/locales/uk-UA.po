@@ -442,12 +442,11 @@ msgstr "Ел. пошта контакту"
 msgid "Contact name"
 msgstr "Ім'я контакту"
 
-#: src/features/accounts/FitLabel.tsx:11
 #: src/features/accounts/customer/WhoSigns.tsx:383
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:240
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:246
-msgid "Continue"
-msgstr "Продовжити"
+#~ msgid "Continue"
+#~ msgstr "Продовжити"
 
 #: src/features/accounts/customer/Pay.tsx:237
 msgid "Copied"
@@ -1035,7 +1034,11 @@ msgstr "Новий проєкт"
 msgid "New task"
 msgstr "Нове завдання"
 
+#: src/features/accounts/FitLabel.tsx:11
 #: src/features/accounts/signing/SignRoute.tsx:745
+#: src/features/accounts/customer/WhoSigns.tsx:383
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:240
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:246
 msgid "Next"
 msgstr "Далі"
 

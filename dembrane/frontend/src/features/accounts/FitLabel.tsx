@@ -3,12 +3,12 @@ import { type ReactNode, useLayoutEffect, useRef, useState } from "react";
 
 /**
  * A step's pill keeps its row with Back: when its full label ("Fill in your address")
- * does not fit beside Back, it says the short one instead ("Continue"), and the full one
+ * does not fit beside Back, it says the short one instead ("Next"), and the full one
  * again once there is room. Spread `fitting` on the Button so it may shrink.
  */
 export function FitLabel({
 	children,
-	short = <Trans>Continue</Trans>,
+	short = <Trans>Next</Trans>,
 }: {
 	children: ReactNode;
 	short?: ReactNode;

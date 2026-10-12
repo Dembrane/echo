@@ -442,12 +442,11 @@ msgstr "Correo del contacto"
 msgid "Contact name"
 msgstr "Nombre del contacto"
 
-#: src/features/accounts/FitLabel.tsx:11
 #: src/features/accounts/customer/WhoSigns.tsx:383
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:240
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:246
-msgid "Continue"
-msgstr "Continuar"
+#~ msgid "Continue"
+#~ msgstr "Continuar"
 
 #: src/features/accounts/customer/Pay.tsx:237
 msgid "Copied"
@@ -1035,7 +1034,11 @@ msgstr "Nuevo proyecto"
 msgid "New task"
 msgstr "Nueva tarea"
 
+#: src/features/accounts/FitLabel.tsx:11
 #: src/features/accounts/signing/SignRoute.tsx:745
+#: src/features/accounts/customer/WhoSigns.tsx:383
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:240
+#: src/features/accounts/customer/SendToSomeoneElse.tsx:246
 msgid "Next"
 msgstr "Siguiente"
 
