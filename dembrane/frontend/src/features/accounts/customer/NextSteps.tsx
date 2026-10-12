@@ -1,19 +1,22 @@
 import { t } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import {
-	Badge,
+	Anchor,
 	Box,
 	Button,
 	FileButton,
 	Group,
 	Modal,
-	Paper,
 	Stack,
 	Text,
 	Textarea,
-	ThemeIcon,
 } from "@mantine/core";
-import { CheckIcon, LockSimpleIcon } from "@phosphor-icons/react";
+import {
+	CheckIcon,
+	HourglassSimpleIcon,
+	LockSimpleIcon,
+} from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useEffect, useState } from "react";
 import { useParams } from "react-router";
@@ -24,10 +27,9 @@ import { getDocumentationUrl } from "@/config";
 import { call, submitTaskWithFile } from "../api/client";
 import { accountKeys } from "../api/hooks";
 import type { TaskT } from "../contract/contract.gen";
-import { taskText } from "../format";
-import { Section } from "../ui";
-
-const ACTIVE: TaskT["status"][] = ["open", "changes_requested"];
+import { formatDate, taskText } from "../format";
+import { PageSection, Row, Rows } from "./PageSection";
+import type { AccountPlan } from "./plan";
 
 /** Steps done by taking them, never by a reply: their button leads to the step. */
 const ONBOARDING: NonNullable<TaskT["code"]>[] = [
@@ -37,101 +39,122 @@ const ONBOARDING: NonNullable<TaskT["code"]>[] = [
 	"book_call",
 ];
 
-/** Stepper order: what is done, what is with us, what is to do, what is still locked. */
-const RANK: Record<TaskT["status"], number> = {
-	changes_requested: 2,
-	done: 0,
-	locked: 3,
-	open: 2,
-	submitted: 1,
-	withdrawn: 4,
-};
-
 /**
- * Next steps as a numbered stepper: done steps checked, the current step highlighted
- * with its action, steps with dembrane marked and without an action, locked steps greyed
- * with the document they wait for.
+ * What the customer has to do, then what is coming: tasks are a set, not a sequence, so
+ * there are no step numbers. Each open task is a row with its words and its action; the
+ * first one carries the page's primary pill unless an invoice already does. Below it,
+ * quieter, what dembrane is working on and what opens after a signature, and the finished
+ * tasks folded away.
  */
 export function NextSteps({
 	orgId,
-	tasks,
+	plan,
+	primary,
 	onBilling,
 	onBookCall,
 }: {
 	orgId: string;
-	tasks: TaskT[];
+	plan: Pick<AccountPlan, "toDo" | "withUs" | "later" | "done">;
+	/** The first task's action is the page's one primary action. */
+	primary: boolean;
 	onBilling: () => void;
 	onBookCall: () => void;
 }) {
 	const [responding, setResponding] = useState<TaskT | null>(null);
-	const steps = tasks
-		.filter((task) => task.status !== "withdrawn")
-		.map((task, i) => ({ i, task }))
-		.sort((a, b) => RANK[a.task.status] - RANK[b.task.status] || a.i - b.i)
-		.map(({ task }) => task);
-	const currentId =
-		steps.find((task) => ACTIVE.includes(task.status))?.id ?? null;
+	const [showDone, setShowDone] = useState(false);
+	const { toDo, withUs, later, done } = plan;
+	const coming = [...withUs, ...later];
+	const nothing = toDo.length + coming.length + done.length === 0;
+	if (nothing) return null;
 
 	return (
-		<Section title={<Trans>Next steps</Trans>} testId="next-steps">
-			{steps.length === 0 ? (
-				<Text size="sm" c="dimmed">
-					<Trans>Nothing to do right now.</Trans>
-				</Text>
-			) : (
-				<Stack gap={0} component="ol" p={0} m={0} style={{ listStyle: "none" }}>
-					{steps.map((task, index) => (
-						<Step
-							key={task.id}
-							n={index + 1}
-							last={index === steps.length - 1}
-							task={task}
-							current={task.id === currentId}
-							orgId={orgId}
-							onBilling={onBilling}
-							onBookCall={onBookCall}
-							onRespond={() => setResponding(task)}
-						/>
-					))}
-				</Stack>
+		<>
+			{toDo.length > 0 && (
+				<PageSection title={<Trans>To do</Trans>} testId="next-steps">
+					<Rows>
+						{toDo.map((task, i) => (
+							<OpenTask
+								key={task.id}
+								task={task}
+								first={i === 0}
+								primary={primary && i === 0}
+								orgId={orgId}
+								onBilling={onBilling}
+								onBookCall={onBookCall}
+								onRespond={() => setResponding(task)}
+							/>
+						))}
+					</Rows>
+				</PageSection>
 			)}
+
+			{(coming.length > 0 || done.length > 0) && (
+				<PageSection
+					title={
+						coming.length > 0 ? <Trans>Coming up</Trans> : <Trans>Done</Trans>
+					}
+					testId="coming-up"
+					action={
+						done.length > 0 ? (
+							<Anchor
+								component="button"
+								size="sm"
+								onClick={() => setShowDone((v) => !v)}
+								aria-expanded={showDone}
+								data-testid="show-done"
+							>
+								{showDone ? (
+									<Trans>Hide finished</Trans>
+								) : (
+									<Trans>Show finished ({done.length})</Trans>
+								)}
+							</Anchor>
+						) : undefined
+					}
+				>
+					{(coming.length > 0 || showDone) && (
+						<Rows>
+							{coming.map((task) => (
+								<QuietTask key={task.id} task={task} />
+							))}
+							{showDone &&
+								done.map((task) => <QuietTask key={task.id} task={task} />)}
+						</Rows>
+					)}
+				</PageSection>
+			)}
+
 			<TaskResponseModal
 				task={responding}
 				orgId={orgId}
 				onClose={() => setResponding(null)}
 			/>
-		</Section>
+		</>
 	);
 }
 
-function Step({
-	n,
-	last,
+function OpenTask({
 	task,
-	current,
+	first,
+	primary,
 	orgId,
 	onBilling,
 	onBookCall,
 	onRespond,
 }: {
-	n: number;
-	last: boolean;
 	task: TaskT;
-	current: boolean;
+	first: boolean;
+	primary: boolean;
 	orgId: string;
 	onBilling: () => void;
 	onBookCall: () => void;
 	onRespond: () => void;
 }) {
 	const { title, body } = taskText(task);
-	const locked = task.locked || task.status === "locked";
-	const done = task.status === "done";
-	const withUs = task.status === "submitted";
-	const active = ACTIVE.includes(task.status);
-	const variant = current ? "filled" : "light";
+	const variant = primary ? "filled" : "outline";
+	const sentBack = task.status === "changes_requested";
 
 	const action = (() => {
-		if (!active) return null;
 		if (task.kind === "sign" && task.document_id) {
 			return (
 				<Button
@@ -172,102 +195,83 @@ function Step({
 		);
 	})();
 
-	const marker = done ? (
-		<ThemeIcon size={26} radius="xl" color="green" variant="light">
-			<CheckIcon size={14} />
-		</ThemeIcon>
-	) : locked ? (
-		<ThemeIcon size={26} radius="xl" color="gray" variant="light">
-			<LockSimpleIcon size={13} />
-		</ThemeIcon>
-	) : (
-		<ThemeIcon
-			size={26}
-			radius="xl"
-			color={current ? "blue" : "gray"}
-			variant={current ? "filled" : "light"}
-		>
-			<Text size="xs">{n}</Text>
-		</ThemeIcon>
-	);
-
 	return (
-		<Box
-			component="li"
-			data-testid={`task-${task.kind}`}
+		<Row
+			testId={`task-${task.kind}`}
 			data-status={task.status}
-			data-current={current ? "true" : undefined}
+			data-current={first ? "true" : undefined}
 		>
-			<Group gap="sm" align="stretch" wrap="nowrap">
-				{/* The marker column with the line down to the next step. */}
-				<Stack gap={0} align="center" style={{ flexShrink: 0 }}>
-					{marker}
-					{!last && (
-						<Box
-							style={{
-								background: "var(--app-quiet)",
-								flex: 1,
-								minHeight: 12,
-								width: 1.5,
-							}}
-						/>
-					)}
+			<Group justify="space-between" align="center" gap="sm" wrap="wrap">
+				<Stack gap="xs" style={{ flex: "1 1 340px", minWidth: 0 }}>
+					<Text>{title}</Text>
+					{sentBack && task.review_note ? (
+						<Text size="sm" c="var(--app-warning)">
+							<Trans>We asked for a change: {task.review_note}</Trans>
+						</Text>
+					) : body ? (
+						<Text size="sm" c="dimmed" lineClamp={first ? 4 : 2}>
+							{body}
+						</Text>
+					) : null}
+					{task.due_on && <Due iso={task.due_on} />}
 				</Stack>
-				<Paper
-					withBorder={current}
-					p={current ? "sm" : 0}
-					pb={last ? 0 : "md"}
-					radius="md"
-					style={{
-						background: current ? undefined : "transparent",
-						border: current ? undefined : 0,
-						flex: 1,
-						marginBottom: current && !last ? 12 : 0,
-						minWidth: 0,
-					}}
-				>
-					<Stack gap={6}>
-						<Group justify="space-between" wrap="wrap" gap="xs" align="center">
-							<Stack gap={2} style={{ flex: "1 1 220px", minWidth: 0 }}>
-								<Text
-									fw={current ? 600 : 320}
-									size="sm"
-									c={locked || done ? "dimmed" : undefined}
-									pt={current ? 0 : 3}
-								>
-									{title}
-								</Text>
-								{locked ? (
-									<Text size="sm" c="dimmed">
-										{task.locked_until_title ? (
-											<Trans>
-												Opens after you sign {task.locked_until_title}.
-											</Trans>
-										) : (
-											<Trans>Opens after signing.</Trans>
-										)}
-									</Text>
-								) : task.status === "changes_requested" && task.review_note ? (
-									<Text size="sm" c="var(--app-warning)">
-										<Trans>We asked for a change: {task.review_note}</Trans>
-									</Text>
-								) : active && body ? (
-									<Text size="sm" c="dimmed" lineClamp={current ? 3 : 1}>
-										{body}
-									</Text>
-								) : null}
-							</Stack>
-							{withUs && (
-								<Badge variant="light" color="gray" style={{ flexShrink: 0 }}>
-									<Trans>With dembrane</Trans>
-								</Badge>
-							)}
-							{action}
-						</Group>
-					</Stack>
-				</Paper>
+				{action}
 			</Group>
-		</Box>
+		</Row>
+	);
+}
+
+function Due({ iso }: { iso: string }) {
+	const { i18n } = useLingui();
+	const date = formatDate(iso, i18n.locale);
+	return (
+		<Text size="sm" c="dimmed">
+			<Trans>Before {date}</Trans>
+		</Text>
+	);
+}
+
+/** A task that is not the customer's move: with dembrane, waiting on a signature, or done. */
+function QuietTask({ task }: { task: TaskT }) {
+	const { i18n } = useLingui();
+	const { title } = taskText(task);
+	const locked = task.locked || task.status === "locked";
+	const done = task.status === "done";
+	const icon = done ? (
+		<CheckIcon size={16} color="var(--app-success)" aria-hidden />
+	) : locked ? (
+		<LockSimpleIcon size={16} color="var(--app-muted)" aria-hidden />
+	) : (
+		<HourglassSimpleIcon size={16} color="var(--app-muted)" aria-hidden />
+	);
+	const when = formatDate(task.submitted_at, i18n.locale);
+	const note = locked ? (
+		task.locked_until_title ? (
+			<Trans>Opens after you sign {task.locked_until_title}.</Trans>
+		) : (
+			<Trans>Opens after signing.</Trans>
+		)
+	) : done ? (
+		<Trans>Done</Trans>
+	) : when ? (
+		<Trans>Sent {when}. We are on it.</Trans>
+	) : (
+		<Trans>We are on it.</Trans>
+	);
+	return (
+		<Row testId={`task-${task.kind}`} data-status={task.status}>
+			<Group gap="sm" wrap="nowrap" align="flex-start">
+				<Box pt="xs" style={{ flexShrink: 0, lineHeight: 0 }}>
+					{icon}
+				</Box>
+				<Stack gap="xs" style={{ minWidth: 0 }}>
+					<Text c={done ? "dimmed" : undefined}>{title}</Text>
+					<Text size="sm" c="dimmed">
+						{note}
+					</Text>
+				</Stack>
+			</Group>
+		</Row>
 	);
 }
 
@@ -284,7 +288,7 @@ function OnboardingAction({
 }: {
 	task: TaskT;
 	orgId: string;
-	variant: "filled" | "light";
+	variant: "filled" | "outline";
 	onBookCall: () => void;
 }) {
 	const { language } = useParams<{ language?: string }>();

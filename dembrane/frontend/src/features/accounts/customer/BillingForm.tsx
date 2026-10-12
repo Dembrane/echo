@@ -1,6 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
+	Anchor,
 	Box,
 	Button,
 	Group,
@@ -9,14 +10,13 @@ import {
 	Text,
 	TextInput,
 } from "@mantine/core";
-import { CheckIcon } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { AccountsApiError } from "../api/client";
 import { useAccountsMutation } from "../api/hooks";
 import type { AccountPageT } from "../contract/contract.gen";
-import { Section } from "../ui";
+import { PageSection } from "./PageSection";
 
 type Billing = AccountPageT["billing"];
 type Key = keyof Billing;
@@ -72,6 +72,8 @@ export function BillingForm({
 	const complete =
 		REQUIRED.every((k) => saved[k].trim()) &&
 		NUMBERS.some((k) => saved[k].trim());
+	// Complete details read as what goes on the invoice; the form opens on "Edit".
+	const [editing, setEditing] = useState(() => pending || !complete);
 
 	const input = (
 		key: Key,
@@ -104,16 +106,42 @@ export function BillingForm({
 		if (gaps.length) return;
 		mutation.mutate(
 			{ body: form },
-			{ onSuccess: () => toast.success(t`Billing details saved`) },
+			{
+				onSuccess: () => {
+					toast.success(t`Billing details saved`);
+					setEditing(false);
+				},
+			},
 		);
 	};
 
+	if (!editing) {
+		return (
+			<PageSection
+				title={<Trans>Billing details</Trans>}
+				testId="billing"
+				action={
+					<Anchor
+						component="button"
+						size="sm"
+						onClick={() => setEditing(true)}
+						data-testid="billing-edit"
+					>
+						<Trans>Edit</Trans>
+					</Anchor>
+				}
+			>
+				<BillingSummary billing={saved} />
+			</PageSection>
+		);
+	}
+
 	return (
-		<Section title={<Trans>Billing details</Trans>} testId="billing">
+		<PageSection title={<Trans>Billing details</Trans>} testId="billing">
 			<Box maw={640}>
 				<Stack gap="md">
-					<Text size="sm" c="dimmed">
-						<Trans>We put these on your invoice.</Trans>
+					<Text c="dimmed">
+						<Trans>What we put on your invoices.</Trans>
 					</Text>
 					<SimpleGrid
 						cols={{ base: 1, sm: 2 }}
@@ -151,7 +179,7 @@ export function BillingForm({
 						})}
 					</SimpleGrid>
 					<Stack
-						gap={6}
+						gap="xs"
 						role="group"
 						aria-labelledby="billing-numbers"
 						data-testid="billing-numbers"
@@ -159,7 +187,7 @@ export function BillingForm({
 						<Text
 							id="billing-numbers"
 							size="sm"
-							c={numberMissing ? "red" : undefined}
+							c={numberMissing ? "var(--app-danger)" : undefined}
 						>
 							<Trans>Registration number: fill in at least one</Trans>
 						</Text>
@@ -187,18 +215,24 @@ export function BillingForm({
 						<Button
 							onClick={save}
 							loading={mutation.isPending}
+							variant="filled"
 							disabled={!dirty && !pending}
 							data-testid="billing-save"
 						>
 							<Trans>Save billing details</Trans>
 						</Button>
-						{!dirty && !pending && complete && (
-							<Group gap={4} wrap="nowrap" data-testid="billing-saved">
-								<CheckIcon size={14} color="var(--mantine-color-green-7)" />
-								<Text size="sm" c="dimmed">
-									<Trans>Saved</Trans>
-								</Text>
-							</Group>
+						{!pending && complete && (
+							<Button
+								variant="subtle"
+								onClick={() => {
+									setForm(saved);
+									setMissing([]);
+									setEditing(false);
+								}}
+								data-testid="billing-cancel"
+							>
+								<Trans>Cancel</Trans>
+							</Button>
 						)}
 						{mutation.error &&
 							!(
@@ -208,6 +242,50 @@ export function BillingForm({
 					</Group>
 				</Stack>
 			</Box>
-		</Section>
+		</PageSection>
+	);
+}
+
+/** The saved details as they will read on an invoice. */
+function BillingSummary({ billing }: { billing: Record<Key, string> }) {
+	const address = [
+		billing.address_line1,
+		billing.address_line2,
+		[billing.postal_code, billing.city].filter(Boolean).join(" "),
+		billing.country,
+	].filter((line) => line.trim());
+	const rows: [string, string[]][] = [
+		[t`Organisation`, [billing.legal_name]],
+		[t`Address`, address],
+		[t`Invoices go to`, [billing.billing_email]],
+		[t`VAT number`, [billing.vat_id]],
+		[t`KvK number`, [billing.kvk_number]],
+		[t`KBO number`, [billing.kbo_number]],
+		[t`PO number`, [billing.po_number]],
+		[t`Peppol ID`, [billing.peppol_id]],
+	];
+	return (
+		<SimpleGrid
+			cols={{ base: 1, sm: 2 }}
+			spacing="lg"
+			verticalSpacing="sm"
+			maw={640}
+			data-testid="billing-summary"
+		>
+			{rows
+				.filter(([, lines]) => lines.some((line) => line.trim()))
+				.map(([label, lines]) => (
+					<Stack key={label} gap={0}>
+						<Text size="sm" c="dimmed">
+							{label}
+						</Text>
+						{lines.map((line) => (
+							<Text key={line} style={{ overflowWrap: "anywhere" }}>
+								{line}
+							</Text>
+						))}
+					</Stack>
+				))}
+		</SimpleGrid>
 	);
 }
