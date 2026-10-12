@@ -603,6 +603,19 @@ run("accounts routes against Postgres", () => {
     ).toBe(200);
     expect((await store.signatureOf(w.db, id))?.email).toBe("signer@example.test");
     expect((await call(w, "GET", `${C()}/documents/${id}/signed.pdf`, "signer")).status).toBe(200);
+    // Signing takes up the invitation the naming made: they are a billing member now.
+    const joined = await store.orgMembership(w.db, w.orgId, w.people.signer.appUserId as string);
+    expect(joined).toMatchObject({ role: "billing", deleted_at: null });
+    const [taken] = await w.db
+      .select({ accepted: schema.org_invite.accepted_at })
+      .from(schema.org_invite)
+      .where(
+        and(
+          eq(schema.org_invite.org_id, w.orgId),
+          eq(schema.org_invite.email, "signer@example.test"),
+        ),
+      );
+    expect(taken?.accepted).toBeTruthy();
   });
 
   test("the invitation link greets the person named before sign-in, and only they can take it up", async () => {
@@ -1050,7 +1063,9 @@ run("accounts routes against Postgres", () => {
         customer: `https://dash.test/o/${w.orgId}/account`,
       },
     });
+    // The signer named earlier joined as billing when they signed.
     expect(first.contacts).toEqual([
+      { name: "signer", email: "signer@example.test", role: "billing" },
       { name: "admin", email: "admin@example.test", role: "admin" },
       { name: "billing", email: "billing@example.test", role: "billing" },
     ]);

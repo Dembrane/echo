@@ -4,6 +4,7 @@ import { assertMaySign, documentFor } from "./access";
 import type { AccountsDeps, Conn } from "./deps";
 import { sha256Hex, storeRendered, writeFields } from "./documents";
 import { billingPayload, documentPayload, emit, orgPayload, signaturePayload } from "./events";
+import { joinOnSigning } from "./invite";
 import { requestInvoices } from "./invoice";
 import type { FieldKind, OfferContent } from "./offer";
 import { type AuditRecord, signedPdf, textPdf } from "./pdf";
@@ -251,6 +252,13 @@ export async function signDocument(
       });
       await store.updateDocument(tx, doc.id, { status: "signed", signedAt: now, updatedAt: now });
       await afterSigned(d, tx, org, doc, input, who);
+      if (access.via === "signer")
+        await joinOnSigning(
+          tx,
+          org.id,
+          { directusUserId: who.directusUserId, email: access.email as string },
+          now,
+        );
       const sig = (await store.signatureOf(tx, doc.id)) as SignatureRow;
       const fresh = (await store.document(tx, org.id, doc.id)) as DocumentRow;
       // Read again: signing an offer makes a prospect a customer.
