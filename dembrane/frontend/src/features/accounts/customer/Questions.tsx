@@ -87,7 +87,7 @@ export function Questions({
 	);
 }
 
-function TicketItem({
+export function TicketItem({
 	ticket,
 	orgId,
 	side,
@@ -120,7 +120,7 @@ function TicketItem({
 		<Accordion.Item value={ticket.id} data-testid="ticket">
 			<Accordion.Control>
 				<Group justify="space-between" wrap="nowrap" gap="xs">
-					<Text size="sm" truncate>
+					<Text size="sm" lineClamp={2}>
 						{ticket.subject}
 					</Text>
 					<Badge
@@ -129,7 +129,9 @@ function TicketItem({
 						color={ticket.status === "waiting_on_customer" ? "blue" : "gray"}
 						style={{ flexShrink: 0 }}
 					>
-						{ticketStatusLabel(ticket.status)}
+						{side === "customer"
+							? customerTicketStatus(ticket.status)
+							: ticketStatusLabel(ticket.status)}
 					</Badge>
 				</Group>
 			</Accordion.Control>
@@ -210,7 +212,7 @@ function TicketItem({
 	);
 }
 
-function AskForm({
+export function AskForm({
 	orgId,
 	side,
 	onDone,
@@ -265,3 +267,12 @@ function AskForm({
 		</Paper>
 	);
 }
+
+/** Whose move it is, from the customer's side. */
+const customerTicketStatus = (status: TicketT["status"]): string =>
+	({
+		closed: t`Closed`,
+		open: t`We are on it`,
+		waiting_on_customer: t`We replied`,
+		waiting_on_dembrane: t`We are on it`,
+	})[status];

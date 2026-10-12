@@ -6,10 +6,11 @@ import { walkOrder } from "../src/documents";
 import { runDeliverEvent, runNotifySlack } from "../src/jobs";
 import { legalSha256, parseLegalDump, parseLegalPage } from "../src/legal/parse";
 import { REFERENCE_DPA, REFERENCE_SLA, REFERENCE_TERMS } from "../src/legal/reference";
-import { priceLines, vatOf } from "../src/money";
-import { euro, layoutOffer, type OfferContent, offerText } from "../src/offer";
+import { fitsVatTreatment, priceLines, requireAmounts, vatOf } from "../src/money";
+import { euro, layoutOffer, legalKinds, type OfferContent, offerText } from "../src/offer";
 import { ONBOARDING_CODES } from "../src/onboarding";
-import { offerPdf, signedPdf, textPdf } from "../src/pdf";
+import { legalBlocks, offerPdf, signedPdf, textPdf } from "../src/pdf";
+import { candidates, lookupPeppol } from "../src/peppol";
 import { checkValues, pngBytes, signerFacts } from "../src/signing";
 import type { FieldRow } from "../src/storage";
 import { taskBody, taskTitle } from "../src/task-text";
@@ -97,45 +98,97 @@ describe("money", () => {
       ]).total_cents,
     ).toBe(6050);
   });
+  test("an offer that is sent carries amounts", () => {
+    const line = (unit_price_cents: number) => ({
+      description: "x",
+      quantity: 1,
+      unit_price_cents,
+      vat_rate_bps: 2100,
+    });
+    expect(() => requireAmounts([line(10000), line(0)])).toThrow(/Line 2: give a price/);
+    expect(() => requireAmounts([line(10000), line(-10000)])).toThrow(/more than zero/);
+    expect(requireAmounts([line(10000), line(-2500)]).total_cents).toBe(9075);
+  });
   test("amounts as the templates write them", () => {
-    expect(euro(8600)).toBe("€86");
-    expect(euro(125000)).toBe("€1.250");
-    expect(euro(123456)).toBe("€1.234,56");
+    expect(euro(8600)).toBe("€86.00");
+    expect(euro(125000)).toBe("€1,250.00");
+    expect(euro(123456, "EUR", "nl")).toBe("€ 1.234,56");
+    expect(euro(-5000, "EUR", "nl")).toBe("-€ 50,00");
   });
 });
 
 describe("the offer", () => {
-  test("follows the template: letterhead, title, meta, columns, total, acceptance, pinned versions", () => {
+  test("follows the template: facts, columns, totals with VAT, acceptance, pinned versions", () => {
     const text = offerText(offer());
-    expect(text).toContain("IBAN: NL49 RABO 0318910535");
-    expect(text).toContain("# Gemeente Voorbeeldstad x dembrane");
-    expect(text).toContain("28-09-2026 | Offer ID: DMB-1");
+    expect(text).toContain("Yearly license offer\n# Gemeente Voorbeeldstad\n");
+    expect(text).toContain("Reference: DMB-1");
+    expect(text).toContain("Date: 28 September 2026");
+    // Validity counts from the offer's own valid_days.
+    expect(text).toContain("Valid until: 12 October 2026");
+    expect(offerText(offer({ valid_days: 30 }))).toContain("Valid until: 28 October 2026");
+    expect(text).toContain("| Description | Price per seat per month | Seats | Amount |");
     expect(text).toContain(
-      "| Description | Price per seat/month (excl. VAT) | Amount of seats | Total Price (excl. VAT) |",
+      "| Changemaker<br>• Unlimited recording hours | €86.00 | 60 | €5,160.00 |",
     );
-    expect(text).toContain("| Changemaker<br>• Unlimited recording hours | €86 | 60 | €5.160 |");
-    expect(text).toContain("Total price (excl. VAT): €6.410");
+    expect(text).toContain("Subtotal (excl. VAT): €6,410.00");
+    expect(text).toContain("VAT 21%: €1,346.10");
+    expect(text).toContain("Total (incl. VAT): €7,756.10");
+    expect(text).toContain("IBAN NL49 RABO 0318910535");
     expect(text).toContain(
       "Annex B: Data Processing Agreement (version 3.0.1, 17-07-2026, https://www.dembrane.com/legal/dpa)",
     );
-    expect(text).toContain("valid for 14 days");
     const nl = offerText(offer({ language: "nl" }));
-    expect(nl).toContain("met het btw nummer");
+    expect(nl).toContain("Btw-nummer: ");
+    expect(nl).toContain("Totaal (incl. btw): € 7.756,10");
     expect(nl).toContain("Bijlage B: Verwerkersovereenkomst (versie 3.0.1, 17-07-2026");
     const event = layoutOffer(offer({ template: "event", attention: "Anna" }));
-    expect(event.columns).toEqual([
-      "Description",
-      "Quantity",
-      "Price per Unit",
-      "Total Price (excl. VAT)",
-    ]);
-    expect(event.rows[0]?.cells).toEqual(["60", "€86", "€5.160"]);
-    expect(event.meta).toBe("28-09-2026 | Offer ID: DMB-1 | Attn. Anna");
+    expect(event.columns).toEqual(["Description", "Quantity", "Unit price", "Amount"]);
+    expect(event.rows[0]?.cells).toEqual(["60", "€86.00", "€5,160.00"]);
+    expect(event.facts.at(-1)).toEqual(["For the attention of", "Anna"]);
     expect(
       layoutOffer(offer({ template: "event", language: "nl" })).acceptance.fields.some(
         (f) => f.key === "vat_number",
       ),
     ).toBe(false);
+    // Mixed rates show one VAT line without a rate.
+    const mixed = layoutOffer(
+      offer({
+        items: [
+          {
+            description: "A",
+            bullets: [],
+            quantity: 1,
+            unit_price_cents: 10000,
+            vat_rate_bps: 2100,
+          },
+          {
+            description: "B",
+            bullets: [],
+            quantity: 1,
+            unit_price_cents: 10000,
+            vat_rate_bps: 900,
+          },
+        ],
+      }),
+    );
+    expect(mixed.totals.map(([k]) => k)).toEqual([
+      "Subtotal (excl. VAT)",
+      "VAT",
+      "Total (incl. VAT)",
+    ]);
+  });
+
+  test("reverse charge and outside the EU say why there is no VAT, as the invoice does", () => {
+    const zero = offer().items.map((i) => ({ ...i, vat_rate_bps: 0 }));
+    const nl = layoutOffer(offer({ language: "nl", vat_treatment: "reverse_charge", items: zero }));
+    expect(nl.totals[1]).toEqual(["Btw 0%", "€ 0,00"]);
+    expect(nl.vatNote).toBe("Btw verlegd: artikel 196, Richtlijn 2006/112/EG.");
+    const en = offerText(offer({ vat_treatment: "outside_eu", items: zero }));
+    expect(en).toContain("No Dutch VAT: the service is supplied outside the EU");
+    expect(layoutOffer(offer()).vatNote).toBeNull();
+    expect(fitsVatTreatment("reverse_charge", zero)).toBe(true);
+    expect(fitsVatTreatment("reverse_charge", offer().items)).toBe(false);
+    expect(fitsVatTreatment("standard", zero)).toBe(true);
   });
 
   test("the PDF places the acceptance blanks as fields, on the page, in walk order", async () => {
@@ -161,8 +214,8 @@ describe("the offer", () => {
     expect(Buffer.from(again.bytes).equals(Buffer.from(r.bytes))).toBe(true);
   });
 
-  test("each template puts the acceptance block on its own page and links the pinned texts", async () => {
-    for (const template of ["subscription", "event"] as const)
+  test("each template puts the acceptance block on its own page and links the texts that apply", async () => {
+    for (const template of ["subscription", "event", "custom"] as const)
       for (const language of ["en", "nl"] as const) {
         const content = offer({ template, language });
         const r = await offerPdf(content);
@@ -177,9 +230,37 @@ describe("the offer", () => {
         );
         expect(date?.x).toBeLessThan(signature?.x ?? 0);
         const text = Buffer.from(r.bytes).toString("latin1");
-        for (const t of Object.values(content.legal)) expect(text).toContain(`(${t.url})`);
-        expect(text).toContain("DMSans-Light");
+        for (const kind of legalKinds(template))
+          expect(text).toContain(`(${content.legal[kind].url})`);
+        // A single event has no SLA, so its offer does not name one.
+        if (template === "event") expect(text).not.toContain(`(${content.legal.sla.url})`);
+        expect(text).toContain("DMSans-Text");
       }
+  });
+
+  test("a custom offer carries numbered amendments that take precedence, and every offer is signed electronically", async () => {
+    const amendments = [
+      {
+        title: "Liability cap",
+        body: "Regardless of article 12 of the General Terms and Conditions, dembrane's liability is capped at €30,000.\n\nThis applies per year.",
+      },
+    ];
+    const text = offerText(offer({ template: "custom", amendments }));
+    expect(text).toContain("## Amendments to the standard documents");
+    expect(text).toContain("Amendment 1: Liability cap\nRegardless of article 12");
+    expect(text).toContain("\nThis applies per year.");
+    expect(text).toContain("5. Amendment 1: Liability cap, as set out in this offer.");
+    expect(text).toContain("the amendment applies");
+    expect(text).toContain("article 3:15a of the Dutch Civil Code");
+    // Without amendments, the clause says nothing about them.
+    const plain = offerText(offer({ template: "custom" }));
+    expect(plain).not.toContain("Amendment");
+    expect(plain).toContain("article 3:15a");
+    const nl = offerText(offer({ template: "custom", language: "nl", amendments }));
+    expect(nl).toContain("5. Aanvulling 1: Liability cap, zoals opgenomen in deze offerte.");
+    expect(nl).toContain("artikel 3:15a BW");
+    const pdf = await offerPdf(offer({ template: "custom", amendments }));
+    expect(pdf.fields.every((f) => f.page === pdf.pageCount)).toBe(true);
   });
 
   test("a long offer keeps its rows whole and still ends on the acceptance page", async () => {
@@ -189,6 +270,49 @@ describe("the offer", () => {
     );
     expect(r.pageCount).toBe(3);
     expect(r.fields.every((f) => f.page === 3)).toBe(true);
+  });
+
+  test("a legal text gets back its headings, clauses, lists and tables", () => {
+    const body = [
+      "Article 2. Processing",
+      "2.4. Processor shall not be permitted to:",
+      "use the data for itself;",
+      "sell the data.",
+      "2.5. Workspaces and roles.",
+      "Annex III. Sub-processors",
+      "Sub-processor (location)",
+      "Website",
+      "Outsourced Processing",
+      "Retention Periods",
+      "DigitalOcean (EU)https://www.digitalocean.com/trust",
+      "Hosting",
+      "Duration of Agreement",
+    ].join("\n");
+    expect(legalBlocks(body)).toEqual([
+      { kind: "heading", level: 2, text: "Article 2. Processing" },
+      { kind: "clause", number: "2.4.", text: "Processor shall not be permitted to:" },
+      { kind: "item", text: "use the data for itself;" },
+      { kind: "item", text: "sell the data." },
+      { kind: "clause", number: "2.5.", text: "Workspaces and roles." },
+      { kind: "heading", level: 2, text: "Annex III. Sub-processors" },
+      {
+        kind: "table",
+        header: [
+          "Sub-processor (location)",
+          "Website",
+          "Outsourced Processing",
+          "Retention Periods",
+        ],
+        rows: [
+          [
+            "DigitalOcean (EU)",
+            "https://www.digitalocean.com/trust",
+            "Hosting",
+            "Duration of Agreement",
+          ],
+        ],
+      },
+    ]);
   });
 
   test("stamping values and the signature adds the audit page", async () => {
@@ -381,5 +505,46 @@ describe("onboarding task words", () => {
     expect(taskTitle({ code: "book_call", params: {}, title: null }, "en-US")).toBe(
       "Book a call with us",
     );
+  });
+});
+
+describe("peppol", () => {
+  const logger = { warn: () => {} } as never;
+  const answer = (value: string, name: string) =>
+    JSON.stringify({ matches: [{ participantID: { value }, entities: [{ name: [{ name }] }] }] });
+
+  test("tries KvK, KBO, then a Dutch or Belgian VAT number", () => {
+    expect(candidates({ kvk_number: "1234 5678" })).toEqual(["0106:12345678"]);
+    expect(candidates({ kbo_number: "0123.456.789" })).toEqual(["0208:0123456789"]);
+    expect(candidates({ vat_id: "nl 001234567 B01" })).toEqual(["9944:NL001234567B01"]);
+    expect(candidates({ vat_id: "BE0123456789" })).toEqual([
+      "9925:BE0123456789",
+      "0208:0123456789",
+    ]);
+    expect(candidates({ vat_id: "DE123456789" })).toEqual([]);
+  });
+
+  test("the first identifier the directory knows wins; an empty answer tries the next", async () => {
+    const asked: string[] = [];
+    const fetchText = async (url: string) => {
+      asked.push(url);
+      return url.includes("0106")
+        ? JSON.stringify({ matches: [] })
+        : answer("9944:NL001234567B01", "Gemeente X");
+    };
+    expect(
+      await lookupPeppol(
+        { fetchText, logger },
+        { kvk_number: "12345678", vat_id: "NL001234567B01" },
+      ),
+    ).toEqual({ participant_id: "9944:NL001234567B01", name: "Gemeente X" });
+    expect(asked[0]).toContain(encodeURIComponent("iso6523-actorid-upis::0106:12345678"));
+  });
+
+  test("a directory that fails is no match", async () => {
+    const fetchText = async () => {
+      throw new Error("down");
+    };
+    expect(await lookupPeppol({ fetchText, logger }, { kvk_number: "12345678" })).toBeNull();
   });
 });

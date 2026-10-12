@@ -37,6 +37,7 @@ import type {
 	DocumentSummaryT,
 	TaskT,
 } from "../contract/contract.gen";
+import { deliveryFor, InvoiceDelivery } from "../customer/InvoiceDelivery";
 import { Questions } from "../customer/Questions";
 import {
 	documentKindLabel,
@@ -51,6 +52,7 @@ import {
 } from "../format";
 import { AccountsI18n } from "../i18n";
 import { Section } from "../ui";
+import { EmailCustomerModal, type EmailSubject } from "./EmailCustomerModal";
 import { PushOfferModal } from "./PushOfferModal";
 import { NewTaskModal, SendBackModal } from "./TaskModals";
 import { UploadPdfModal } from "./UploadPdfModal";
@@ -160,6 +162,7 @@ function Documents({ orgId, card }: { orgId: string; card: AccountCardT }) {
 	const navigate = useI18nNavigate();
 	const send = useAccountsMutation("sendDocument", { orgId });
 	const voidDoc = useAccountsMutation("voidDocument", { orgId });
+	const [emailing, setEmailing] = useState<EmailSubject | null>(null);
 
 	const actions = (doc: DocumentSummaryT) => (
 		<Menu position="bottom-end" withinPortal>
@@ -229,6 +232,19 @@ function Documents({ orgId, card }: { orgId: string; card: AccountCardT }) {
 							<Trans>Withdraw</Trans>
 						</Menu.Item>
 					)}
+				{doc.status === "void" && doc.sent_at && (
+					<Menu.Item
+						onClick={() =>
+							setEmailing({
+								document_id: doc.id,
+								kind: "document_withdrawn",
+								label: doc.title,
+							})
+						}
+					>
+						<Trans>Email the customer</Trans>
+					</Menu.Item>
+				)}
 			</Menu.Dropdown>
 		</Menu>
 	);
@@ -350,6 +366,11 @@ function Documents({ orgId, card }: { orgId: string; card: AccountCardT }) {
 					navigate(`/admin/accounts/${orgId}/documents/${docId}/fields`)
 				}
 			/>
+			<EmailCustomerModal
+				subject={emailing}
+				onClose={() => setEmailing(null)}
+				orgId={orgId}
+			/>
 		</Section>
 	);
 }
@@ -358,6 +379,7 @@ function Tasks({ orgId, card }: { orgId: string; card: AccountCardT }) {
 	const { i18n } = useLingui();
 	const [newOpen, setNewOpen] = useState(false);
 	const [sendingBack, setSendingBack] = useState<TaskT | null>(null);
+	const [emailing, setEmailing] = useState<EmailSubject | null>(null);
 	const review = useAccountsMutation("reviewTask", { orgId });
 	const decide = (task: TaskT, decision: "approve" | "withdraw") =>
 		review.mutate(
@@ -466,6 +488,22 @@ function Tasks({ orgId, card }: { orgId: string; card: AccountCardT }) {
 											</>
 										)}
 										{(task.status === "open" ||
+											task.status === "changes_requested") && (
+											<Button
+												size="compact-xs"
+												variant="default"
+												onClick={() =>
+													setEmailing({
+														kind: "task_reminder",
+														label: taskText(task).title,
+														task_id: task.id,
+													})
+												}
+											>
+												<Trans>Remind</Trans>
+											</Button>
+										)}
+										{(task.status === "open" ||
 											task.status === "locked" ||
 											task.status === "changes_requested") && (
 											<Button
@@ -493,6 +531,11 @@ function Tasks({ orgId, card }: { orgId: string; card: AccountCardT }) {
 			<SendBackModal
 				task={sendingBack}
 				onClose={() => setSendingBack(null)}
+				orgId={orgId}
+			/>
+			<EmailCustomerModal
+				subject={emailing}
+				onClose={() => setEmailing(null)}
 				orgId={orgId}
 			/>
 		</Section>
@@ -684,6 +727,9 @@ function NeedsForm({ card }: { card: AccountCardT }) {
 
 function Billing({ card }: { card: AccountCardT }) {
 	const b = card.billing;
+	const update = useAccountsMutation("updateAccount", {
+		orgId: card.organisation.id,
+	});
 	const address = [
 		b.address_line1,
 		b.address_line2,
@@ -706,13 +752,26 @@ function Billing({ card }: { card: AccountCardT }) {
 	).filter((r): r is [string, string] => Boolean(r[1]));
 	return (
 		<Section title={<Trans>Billing details</Trans>} testId="staff-billing">
-			{rows.length === 0 ? (
-				<Text size="sm" c="dimmed">
-					<Trans>Not given yet.</Trans>
-				</Text>
-			) : (
-				<KeyValues rows={rows} />
-			)}
+			<Stack gap="sm">
+				{/* Staff can opt a customer out of Peppol too, or back in. */}
+				<InvoiceDelivery
+					side="staff"
+					match={b.peppol_match}
+					delivery={deliveryFor(b.peppol_match, b.invoice_delivery)}
+					email={b.billing_email}
+					onChange={(next) =>
+						update.mutate({ body: { invoice_delivery: next } })
+					}
+					disabled={update.isPending}
+				/>
+				{rows.length === 0 ? (
+					<Text size="sm" c="dimmed">
+						<Trans>Not given yet.</Trans>
+					</Text>
+				) : (
+					<KeyValues rows={rows} />
+				)}
+			</Stack>
 		</Section>
 	);
 }
@@ -720,30 +779,42 @@ function Billing({ card }: { card: AccountCardT }) {
 const eventLabel = (type: string): string =>
 	({
 		"account.created": t`Account created`,
+		"account.enabled": t`Account enabled`,
 		"account.stage_set": t`Stage set`,
+		"account.updated": t`Account updated`,
 		"billing_details.updated": t`Billing details updated`,
 		"booking.recorded": t`Call booked`,
+		"demo.published": t`Demo published`,
 		"demo.seeded": t`Demo seeded`,
 		"document.declined": t`Document declined`,
 		"document.drafted": t`Document drafted`,
+		"document.fields_set": t`Signature fields placed`,
 		"document.sent": t`Document sent`,
 		"document.signed": t`Document signed`,
 		"document.signer_named": t`Signer named`,
+		"document.signer_reminded": t`Signer reminded`,
 		"document.signer_replaced": t`Signer replaced`,
 		"document.updated": t`Draft changed`,
 		"document.viewed": t`Document viewed`,
 		"document.voided": t`Document withdrawn`,
+		"invoice.created": t`Invoice added`,
 		"invoice.requested": t`Ready to invoice`,
+		"message.sent": t`Customer emailed`,
 		"onboarding.added": t`Onboarding tasks added`,
 		"onboarding.withdrawn": t`Onboarding tasks withdrawn`,
 		"task.approve": t`Task approved`,
+		"task.approved": t`Task approved`,
 		"task.check_in_asked": t`Account manager asked to check in`,
 		"task.created": t`Task created`,
 		"task.done": t`Task done`,
 		"task.send_back": t`Task sent back`,
+		"task.sent_back": t`Task sent back`,
 		"task.submitted": t`Task submitted`,
 		"task.withdraw": t`Task withdrawn`,
+		"task.withdrawn": t`Task withdrawn`,
+		"ticket.closed": t`Question closed`,
 		"ticket.opened": t`Question opened`,
+		"ticket.replied": t`Question answered`,
 	})[type] ?? type;
 
 function Timeline({ card }: { card: AccountCardT }) {

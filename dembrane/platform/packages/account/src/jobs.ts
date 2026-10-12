@@ -23,6 +23,8 @@ export const sendEmail = defineJob(
      * field existed carry none and render with their English subject, as before.
      */
     language: z.string().optional(),
+    /** Replies go here instead of the no-reply sender: the account's manager at dembrane. */
+    replyTo: z.object({ email: z.string(), name: z.string().nullable() }).optional(),
   }),
   { retryLimit: 3, retryDelaySeconds: 30, expireInSeconds: 120 },
 );
@@ -33,7 +35,14 @@ export function emailHandler(mailer: Mailer, logger: Logger) {
     const { html, text } = render(template, p.language);
     const subject = p.language ? (subjectOf(template, p.language) ?? p.subject) : p.subject;
     try {
-      await mailer.send({ to: p.to, subject, html, text, tags: [p.template] });
+      await mailer.send({
+        to: p.to,
+        subject,
+        html,
+        text,
+        tags: [p.template],
+        ...(p.replyTo && { replyTo: p.replyTo }),
+      });
     } catch (err) {
       logger.error(
         { err, context: p.context, template: p.template },

@@ -1,5 +1,5 @@
 import type { Company } from "./deps";
-import type { Language } from "./offer";
+import type { Language, OfferContent } from "./offer";
 import type {
   BillingRow,
   DocumentRow,
@@ -44,6 +44,8 @@ export function documentSummary(
   sig: SignatureRow | null,
   company: Company,
   base: string,
+  /** When the named signer was last reminded (account_event), if ever. */
+  remindedAt: Date | null = null,
 ) {
   return {
     id: doc.id,
@@ -65,7 +67,13 @@ export function documentSummary(
     declined_at: iso(doc.declinedAt),
     voided_at: iso(doc.voidedAt),
     signer: doc.signerEmail
-      ? { email: doc.signerEmail, name: doc.signerName, role: doc.signerRole }
+      ? {
+          email: doc.signerEmail,
+          name: doc.signerName,
+          named_at: iso(doc.signerInvitedAt),
+          reminded_at: iso(remindedAt),
+          role: doc.signerRole,
+        }
       : null,
     file_url: doc.fileKey ? `${base}/documents/${doc.id}/file` : null,
     signed_pdf_url: sig ? `${base}/documents/${doc.id}/signed.pdf` : null,
@@ -122,7 +130,7 @@ export function confirmationText(doc: DocumentRow, f: ConfirmationFields): strin
   const base = nl
     ? `Ik, ${who}, bevestig dat ik namens ${f.organisation} mag tekenen, en ik onderteken "${doc.title}"${ref} zoals aan mij getoond, SHA-256 ${doc.sha256}.`
     : `I, ${who}, confirm that I may sign on behalf of ${f.organisation}, and I sign "${doc.title}"${ref} as shown to me, SHA-256 ${doc.sha256}.`;
-  if (doc.kind !== "offer") return base;
+  if (doc.kind !== "offer" || (doc.content as OfferContent | null)?.dpa_separate) return base;
   const dpa = f.dpa_authorised
     ? nl
       ? " Ik ben ook bevoegd om namens deze organisatie verwerkingsafspraken aan te gaan."
@@ -254,6 +262,10 @@ export function billingView(b: BillingRow | null) {
     billing_email: b?.billing_email ?? null,
     po_number: b?.po_number ?? null,
     peppol_id: b?.peppol_id ?? null,
+    peppol_match: b?.peppol_id
+      ? { participant_id: b.peppol_id, name: b.peppol_name ?? null }
+      : null,
+    invoice_delivery: (b?.invoice_delivery as "peppol" | "email" | null | undefined) ?? null,
     address_line1: b?.billing_address_line1 ?? null,
     address_line2: b?.billing_address_line2 ?? null,
     postal_code: b?.billing_postal_code ?? null,

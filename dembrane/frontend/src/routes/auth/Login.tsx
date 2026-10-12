@@ -34,6 +34,11 @@ import {
 import { I18nLink } from "@/components/common/i18nLink";
 import { useTransitionCurtain } from "@/components/layout/TransitionCurtainProvider";
 import { API_BASE_URL } from "@/config";
+import { promptFor } from "@/features/accounts/help/tasksPromptState";
+import {
+	fetchTasksSummary,
+	tasksSummaryKey,
+} from "@/features/accounts/help/tasksSummary";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import {
 	otherSessions,
@@ -148,6 +153,7 @@ export const LoginRoute = () => {
 		// were removed — /o is the canonical landing.
 		let needsOnboarding = false;
 		let onboardingIncomplete = false;
+		let accountLanding: string | null = null;
 		let wsList: { id: string; org_id?: string }[] = [];
 		try {
 			await new Promise((r) => setTimeout(r, 300));
@@ -166,6 +172,16 @@ export const LoginRoute = () => {
 				onboardingIncomplete =
 					meData.onboarding_completed === true &&
 					!meData.onboarding_answer_json;
+			}
+
+			// Someone who came to dembrane through an offer, a customer's contact who has
+			// never used it on their own, skips the questionnaire: their organisation's
+			// overview, with what to sign or fill in, is where they are expected.
+			if (onboardingIncomplete) {
+				const summary = await fetchTasksSummary();
+				queryClient.setQueryData(tasksSummaryKey, summary);
+				const org = promptFor(summary) ?? summary[0];
+				if (org) accountLanding = `/o/${org.org_id}/overview`;
 			}
 
 			// Workspace list still needed to validate a ?next deep-link
@@ -189,6 +205,11 @@ export const LoginRoute = () => {
 		// signer with no workspace to set up, and onboarding would drop the link.
 		if (isSafeNextPath(next) && !isAuthPath(next) && isAccountPath(next)) {
 			navigate(next);
+			return;
+		}
+
+		if (accountLanding) {
+			navigate(accountLanding);
 			return;
 		}
 

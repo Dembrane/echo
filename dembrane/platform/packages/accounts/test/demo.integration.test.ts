@@ -286,8 +286,8 @@ run("bun run seed:accounts-demo", () => {
     const first = await seedAccountsDemo(await options());
     expect(first.offer_created).toBe(true);
     const after = await counts();
-    expect(after.account_document).toBe(2); // the offer and the invoice
-    expect(after.account_task).toBe(4); // sign, billing (locked), PO, logo
+    expect(after.account_document).toBe(3); // the offer, its DPA and the invoice
+    expect(after.account_task).toBe(6); // who signs, sign, sign the DPA, billing (locked), PO, logo
     expect(after.account_ticket_message).toBe(2);
     expect(after.conversation).toBeGreaterThan(0);
     const second = await seedAccountsDemo(await options());
@@ -302,6 +302,8 @@ run("bun run seed:accounts-demo", () => {
     expect(tasks.map((t) => `${t.kind}:${t.status}`).sort()).toEqual([
       "billing_details:locked",
       "generic:open",
+      "generic:open",
+      "sign:open",
       "sign:open",
       "upload:submitted",
     ]);
@@ -433,7 +435,8 @@ run("bun run seed:accounts-demo", () => {
     expect(ORG_NAME).toEndWith("(sample)");
     const fresh = await live();
     expect(fresh?.id).toBe(again.offer_id);
-    expect(fresh?.title).toBe(`${ORG_NAME} x dembrane`);
+    expect(fresh?.title).toMatch(/^Yearly license offer 2026-5\d\d$/);
+    expect((fresh?.content as { offer_name: string } | undefined)?.offer_name).toBe(ORG_NAME);
     const [customer] = await database.db
       .select({ name: schema.auth_user.name })
       .from(schema.auth_user)

@@ -1,11 +1,5 @@
 import { Trans } from "@lingui/react/macro";
-import {
-	Bug,
-	ChatCircle,
-	Note,
-	Pulse,
-	Users,
-} from "@phosphor-icons/react";
+import { ChatCircle, Note, Pulse, Users } from "@phosphor-icons/react";
 import { useParams } from "react-router";
 import { COMMUNITY_SLACK_URL, getDocumentationUrl } from "@/config";
 import { useHelpModals } from "../hooks/useHelpModals";
@@ -16,7 +10,7 @@ import { ViewHeader } from "../primitives/ViewHeader";
 export const HelpView = () => {
 	const { backTo } = useSidebarView();
 	const { language } = useParams();
-	const { openFeedback, openReportIssue } = useHelpModals();
+	const { openFeedback } = useHelpModals();
 	const docUrl = getDocumentationUrl(language);
 
 	return (
@@ -46,14 +40,7 @@ export const HelpView = () => {
 
 			<div className="mt-auto" />
 			<NavButton
-				label={<Trans>Report an issue</Trans>}
-				icon={Bug}
-				iconColor="var(--app-action)"
-				labelColor="var(--app-action)"
-				onClick={openReportIssue}
-			/>
-			<NavButton
-				label={<Trans>Feedback</Trans>}
+				label={<Trans>Give feedback</Trans>}
 				icon={ChatCircle}
 				iconColor="var(--app-action)"
 				labelColor="var(--app-action)"
