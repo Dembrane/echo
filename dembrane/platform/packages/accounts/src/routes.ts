@@ -25,6 +25,7 @@ import {
 } from "./customer";
 import { createDemo, demoStatus, listDemos, publishDemo, retryDemo } from "./demo/service";
 import type { AccountsDeps } from "./deps";
+import { sendMessage } from "./messages";
 import { createAccount } from "./prospect";
 import { signDocument } from "./signing";
 import {
@@ -299,6 +300,11 @@ export function accountsRoutes(d: AccountsDeps) {
     const who = await staff(c, "accounts.document.void");
     const b = await body(c, K.VoidRequest);
     return c.json(await voidDocument(d, who, p(c, "orgId"), p(c, "docId"), b.reason));
+  });
+  app.post(R.sendMessage.path, async (c) => {
+    const who = await staff(c, "accounts.message.send");
+    const b = await body(c, K.SendMessageRequest);
+    return c.json(await sendMessage(d, who, p(c, "orgId"), b));
   });
   app.put(R.upsertInvoice.path, async (c) => {
     const who = await staff(c, "accounts.invoice.upsert");

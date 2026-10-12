@@ -13,7 +13,7 @@ import { staffOrg } from "./access";
 import { documentDetail, fileBytes, signedBytes, ticketOf } from "./customer";
 import { type AccountsDeps, type Conn, isStaffEmail, isUuid } from "./deps";
 import { fieldProblems, sha256Hex, storePdf, storeRendered, writeFields } from "./documents";
-import { documentPayload, emit, orgPayload } from "./events";
+import { accountManagerPayload, documentPayload, emit, orgPayload } from "./events";
 import { customerSignUrl, staffDocumentUrl } from "./invoice";
 import { legalForPush } from "./legal/store";
 import { fitsVatTreatment, type VatTreatment } from "./money";
@@ -556,12 +556,19 @@ async function tellCustomerOfOffer(d: AccountsDeps, tx: Conn, orgId: string, doc
     return;
   }
   const org = (await store.org(tx, orgId)) as OrgRow;
+  // The account's manager signs the email and gets the replies; without one, the team signs.
+  const manager = await accountManagerPayload(tx, orgId);
   const email = {
     template: "account_offer_sent",
     data: {
       org_name: org.name,
       document_title: doc.title,
       sign_url: customerSignUrl(d.settings.dashboardUrl, orgId, doc.id),
+      ...(doc.reference && { reference: doc.reference }),
+      ...(doc.totalCents != null &&
+        doc.currency && { total_cents: String(doc.totalCents), currency: doc.currency }),
+      ...(doc.validUntil && { valid_until: doc.validUntil }),
+      ...(manager?.name && { manager_name: manager.name }),
     },
   } satisfies EmailTemplate;
   for (const r of recipients)
@@ -573,6 +580,7 @@ async function tellCustomerOfOffer(d: AccountsDeps, tx: Conn, orgId: string, doc
         to: r.email,
         subject: OFFER_SENT_SUBJECT,
         context: `account offer sent ${doc.id}`,
+        ...(manager && { replyTo: manager }),
       },
       { tx, workflowId: `accounts.offer-sent:${doc.id}:${r.appUserId}` },
     );

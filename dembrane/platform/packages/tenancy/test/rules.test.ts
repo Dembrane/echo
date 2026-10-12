@@ -78,7 +78,7 @@ test("calendar months are UTC and printed the way Python's isoformat prints them
   expect(pyIso(end)).toBe("2026-01-01T00:00:00+00:00");
 });
 
-test("email text parts equal the old Jinja .txt renders", () => {
+test("email text parts carry the heading copy, the link and the sign-off", () => {
   expect(
     orgInviteEmail({ inviterName: "Ann", orgName: "Org A", role: "admin", inviteUrl: "http://u" })
       .text,
@@ -95,12 +95,12 @@ test("email text parts equal the old Jinja .txt renders", () => {
     tierDowngradedEmail({ ...base, toTier: "free", freezeItems: ["a", "b"], revertItems: ["c"] })
       .text,
   ).toBe(
-    "W moved from changemaker to free on 07 September 2026.\n\nFrozen. Existing state stays, with no new use until upgrade:\n- a\n- b\n\n\nReverted:\n- c\n\n\nEverything else keeps working as it did.\n\nOpen the workspace:\nhttp://w\n\nThe dembrane team",
+    "W moved from changemaker to free on 07 September 2026.\n\nPaused until you upgrade (what you made stays):\n- a\n- b\n\nBack to defaults:\n- c\n\nEverything else keeps working as it did.\n\nOpen the workspace:\nhttp://w\n\nThe dembrane team\n",
   );
   expect(
     tierDowngradedEmail({ ...base, toTier: "innovator", freezeItems: [], revertItems: ["c"] }).text,
   ).toBe(
-    "W moved from changemaker to innovator on 07 September 2026.\n\n\nReverted:\n- c\n\n\nEverything else keeps working as it did.\n\nOpen the workspace:\nhttp://w\n\nThe dembrane team",
+    "W moved from changemaker to innovator on 07 September 2026.\n\nBack to defaults:\n- c\n\nEverything else keeps working as it did.\n\nOpen the workspace:\nhttp://w\n\nThe dembrane team\n",
   );
   const invite = workspaceInviteEmail({
     subject: "s",

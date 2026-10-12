@@ -88,7 +88,7 @@ Most namespaces use core, db, observability, http, access, queue, legacy-shape, 
 - reports uses notifications: Notifies the requester when a report is ready.
 - reports uses projects: Handles the report job that projects defines and enqueues.
 - reports uses webhooks: A finished report fires the project's webhooks.
-- staff uses billing: Staff rollups and support tools read and change billing state, and reuse its email frame.
+- staff uses billing: Staff rollups and support tools read and change billing state.
 - tenancy uses billing: Membership changes reconcile the org's paid seats.
 - tenancy uses samples: A new org or workspace queues its copy of the best-practices sample.
 - training uses billing: Licence changes notify org admins through billing's own Notifier.
