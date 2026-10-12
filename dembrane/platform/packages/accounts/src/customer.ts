@@ -104,6 +104,7 @@ export async function documentDetail(
     store.org(d.db, doc.orgId),
     store.billing(d.db, doc.orgId),
   ]);
+  const isEvent = (doc.content as OfferContent | null)?.template === "event";
   const has = (pick: (f: (typeof fields)[number]) => boolean) => fields.some(pick);
   const placeholders = {
     name: "{name}",
@@ -125,8 +126,9 @@ export async function documentDetail(
     sha256: doc.sha256,
     page_count: doc.pageCount,
     fields: fields.map(fieldView),
+    // The texts the document incorporates; an event offer has no SLA.
     legal: [legalView("terms", terms), legalView("sla", sla), legalView("dpa", dpa)].filter(
-      Boolean,
+      (x) => x && (x.kind !== "sla" || !isEvent),
     ),
     signing_note: doc.requiresSignature ? signingNote(doc) : null,
     // The sentence the signer confirms; the page fills in the three values it asks for.
@@ -134,7 +136,7 @@ export async function documentDetail(
       ? {
           dpa_authorised: confirmationText(doc, { ...placeholders, dpa_authorised: true }),
           dpa_not_authorised:
-            doc.kind === "offer"
+            doc.kind === "offer" && !(doc.content as OfferContent | null)?.dpa_separate
               ? confirmationText(doc, { ...placeholders, dpa_authorised: false })
               : null,
         }
@@ -203,7 +205,7 @@ export async function declineDocument(
     });
     for (const t of await store.tasks(tx, a.org.id))
       if (
-        t.kind === "sign" &&
+        (t.kind === "sign" || t.code === "who_signs") &&
         t.documentId === a.doc.id &&
         !["done", "withdrawn"].includes(t.status)
       )
@@ -306,6 +308,91 @@ export async function nameSigner(
     });
   });
   return { signer: { email, name: signer.name, role: signer.role } };
+}
+
+type Person = { name: string; email: string; role: string | null };
+
+/**
+ * The answers to "who signs": who signs the offer (null: the person answering), whether the
+ * same person signs the DPA, else who does (null: the person answering), and whether they
+ * want their own DPIA. The DPA is its own document, sent with the offer (openDpa); the
+ * answers only say whose each signature is. Asked once per offer, before signing; changing
+ * it later goes through a question to us.
+ */
+export async function answerWhoSigns(
+  d: AccountsDeps,
+  who: Signed,
+  orgId: string,
+  taskId: string,
+  input: {
+    offer_signer: Person | null;
+    dpa_same: boolean;
+    dpa_signer: Person | null;
+    dpia: boolean;
+  },
+) {
+  const org = await customerOrg(d, who, orgId, "account:sign");
+  const task = await store.task(d.db, org.id, taskId);
+  if (task?.code !== "who_signs") throw new NotFoundError("task.not_found");
+  if (!["open", "changes_requested"].includes(task.status))
+    throw new ConflictError("task.not_waiting");
+  const offer = task.documentId ? await store.document(d.db, org.id, task.documentId) : null;
+  if (!offer || !["sent", "viewed"].includes(offer.status))
+    throw new ConflictError("document.not_awaiting_signature");
+  const dpaSigner = input.dpa_same ? input.offer_signer : input.dpa_signer;
+  // The DPA the offer went out with, while it still waits on a signature.
+  const dpa = (await store.documents(d.db, org.id)).find(
+    (x) =>
+      x.kind === "dpa" && x.dpaTextId === offer.dpaTextId && ["sent", "viewed"].includes(x.status),
+  );
+  const me = await store.identity(d.db, who.directusUserId);
+  const self = me?.name ? `${me.name} (${me.email})` : (me?.email ?? "the person answering");
+  const person = (p: Person | null) =>
+    p ? `${p.name} (${p.email}${p.role ? `, ${p.role}` : ""})` : self;
+
+  // Each naming stands on its own, so answering again after a failure picks up where it
+  // stopped: naming the same signer again changes nothing.
+  if (input.offer_signer) await nameSigner(d, who, org.id, offer.id, input.offer_signer);
+  if (dpa && dpaSigner) await nameSigner(d, who, org.id, dpa.id, dpaSigner);
+
+  const summary = [
+    `Offer: signed by ${person(input.offer_signer)}.`,
+    `Data processing agreement: signed by ${
+      input.dpa_same ? "the same person" : person(input.dpa_signer)
+    }.`,
+    input.dpia
+      ? "They want their own data protection impact assessment (DPIA)."
+      : "No DPIA of their own.",
+  ].join("\n");
+  await d.db.transaction(async (tx) => {
+    await settleTask(d, tx, task.id, "done", {
+      params: {
+        ...((task.params ?? {}) as Record<string, string>),
+        dpa_same: input.dpa_same ? "true" : "false",
+        dpia: input.dpia ? "true" : "false",
+      },
+      responseText: summary,
+      submittedAt: d.now(),
+      submittedBy: who.directusUserId,
+    });
+    const fresh = (await store.task(tx, org.id, task.id)) as NonNullable<
+      Awaited<ReturnType<typeof store.task>>
+    >;
+    await emit(d, tx, {
+      orgId: org.id,
+      actor: { kind: "customer", userId: who.directusUserId },
+      type: "task.submitted",
+      subject: { type: "task", id: task.id },
+      // sam reads the answers, and follows up on a DPIA, from the task's response.
+      webhook: { event: "account.task.submitted", org: orgPayload(org), task: taskPayload(fresh) },
+    });
+  });
+  return taskView(
+    (await store.task(d.db, org.id, task.id)) as NonNullable<
+      Awaited<ReturnType<typeof store.task>>
+    >,
+    await store.documents(d.db, org.id),
+  );
 }
 
 /** Documents waiting for the caller's own signature, in any organisation. */
@@ -470,6 +557,8 @@ export async function submitTask(
   // An onboarding step is done by taking it (opening the demo, creating a project), never
   // by a reply that staff would then have to review.
   if (isOnboardingCode(task.code)) throw new ConflictError("task.not_waiting");
+  // Who signs is answered in its own form, which names the signers.
+  if (task.code === "who_signs") throw new ConflictError("task.not_waiting");
   if (!["open", "changes_requested"].includes(task.status))
     throw new ConflictError(task.status === "locked" ? "task.not_open" : "task.not_waiting");
   if (task.kind === "upload" && !input.file) throw new ValidationError("task.file_required");

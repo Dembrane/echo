@@ -190,16 +190,18 @@ run("accounts for any organisation, and the tasks summary", () => {
       (await call(w, "GET", "/api/v2/account/tasks-summary", "admin")).data,
     );
     const mine = summary.find((s) => s.org_id === selfServe);
-    // billing (locked) + sign (open) + logo (done); the withdrawn one is left out.
+    // who signs + billing (locked) + sign + sign the DPA (open) + logo (done); the withdrawn
+    // one is left out.
     expect(mine).toMatchObject({
       name: "Self Serve Co",
       account_stage: "customer",
       tasks_done: 1,
-      tasks_total: 3,
+      tasks_total: 5,
     });
     // A task echo created comes as a code for the UI to word; no text.
     expect(mine?.next_task_title).toBeNull();
-    expect(mine?.next_task_code).toBe("sign_offer");
+    // Who signs comes first: its answers decide who each signing task goes to.
+    expect(mine?.next_task_code).toBe("who_signs");
     expect(mine?.next_task_params).toEqual({
       document_title: expect.stringMatching(/^Yearly license offer DMB-/),
       offer_reference: expect.stringMatching(/^DMB-/),

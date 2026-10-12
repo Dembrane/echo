@@ -39,6 +39,7 @@ const DPA = "0199a1b2-c3d4-7e5f-8a6b-7c8d9e0f1a3c";
 const INVOICE = "0199a1b2-c3d4-7e5f-8a6b-7c8d9e0f1a4d";
 const SIGN_TASK = "0199a1b3-0000-7000-8000-000000000001";
 const BILLING_TASK = "0199a1b3-0000-7000-8000-000000000002";
+const WHO_SIGNS_TASK = "0199a1b3-0000-7000-8000-000000000009";
 const PO_TASK = "0199a1b3-0000-7000-8000-000000000003";
 const LOGO_TASK = "0199a1b3-0000-7000-8000-000000000004";
 const TICKET = "0199a1b4-0000-7000-8000-000000000001";
@@ -98,6 +99,7 @@ export const pushOfferRequest: Out<typeof PushOfferRequest> = {
   date: "2026-09-28",
   items,
   vat_treatment: "standard",
+  amendments: [],
   external_ref: "attio-deal-8f2c",
   supersedes_id: null,
   send: true,
@@ -430,6 +432,15 @@ export const signTask: Out<typeof Task> = {
   reminders_sent: 0,
 };
 
+/** Asked first: who signs the offer and the DPA, and whether a DPIA is needed. */
+export const whoSignsTask: Out<typeof Task> = {
+  ...signTask,
+  id: WHO_SIGNS_TASK,
+  code: "who_signs",
+  kind: "generic",
+  next_reminder_at: null,
+};
+
 export const billingTask: Out<typeof Task> = {
   ...signTask,
   id: BILLING_TASK,
@@ -532,7 +543,7 @@ export const billingTaskDone: Out<typeof Task> = {
 /** GET /api/v2/orgs/:orgId/account */
 export const accountPage: Out<typeof AccountPage> = {
   organisation,
-  tasks: [signTask, poTask, billingTask, logoTask],
+  tasks: [whoSignsTask, signTask, poTask, billingTask, logoTask],
   documents: [offerSummary, invoiceSummary, dpaSummary],
   billing: emptyBilling,
   tickets: [ticket],

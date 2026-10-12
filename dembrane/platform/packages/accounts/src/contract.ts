@@ -32,7 +32,8 @@ const Uuid = z.uuid();
 
 export const AccountStage = z.enum(["prospect", "customer", "churned"]);
 export const Language = z.enum(["en", "nl"]);
-export const OfferTemplate = z.enum(["subscription", "event"]);
+/** A yearly licence, a single event, or a custom offer (the only kind with amendments). */
+export const OfferTemplate = z.enum(["subscription", "event", "custom"]);
 export const DocumentKind = z.enum(["offer", "dpa", "invoice", "other"]);
 export const DocumentStatus = z.enum(["draft", "sent", "viewed", "signed", "declined", "void"]);
 export const InvoiceStatus = z.enum(["open", "paid", "overdue", "void"]);
@@ -158,6 +159,18 @@ export const PricedLine = OfferItem.extend({
   total_cents: z.number().int(),
 });
 
+/**
+ * A term agreed with one customer that takes precedence over the standard documents, such
+ * as a higher liability cap. Written by staff or sam in the offer's language, never by the
+ * customer, and only on a custom offer.
+ */
+export const OfferAmendment = z.object({
+  /** What it changes, in a few words: "Liability cap". */
+  title: text(120),
+  /** The term itself; a blank line separates paragraphs. */
+  body: text(4000),
+});
+
 /** The structured offer both the page and the PDF lay out. */
 export const OfferContent = z.object({
   template: OfferTemplate,
@@ -172,6 +185,11 @@ export const OfferContent = z.object({
   company: Company,
   legal: z.object({ terms: PinnedText, sla: PinnedText, dpa: PinnedText }),
   items: z.array(OfferItem),
+  vat_treatment: z.enum(["standard", "reverse_charge", "outside_eu"]).optional(),
+  /** Custom offers: numbered terms that take precedence over the standard documents. */
+  amendments: z.array(OfferAmendment).optional(),
+  /** True when the DPA is its own document; absent on offers made before that. */
+  dpa_separate: z.boolean().optional(),
 });
 
 export const LegalPin = z.object({
@@ -269,7 +287,10 @@ export const DocumentDetail = DocumentSummary.extend({
  * Tasks echo creates itself carry a code and its params, never text: the UI words them in
  * the viewer's language. `sign_offer` and `sign_dpa` have `document_title`, and `sign_offer`
  * also `offer_template` (`event`, `subscription`) and `offer_reference` when the offer has
- * them; `billing_details` has none. Tasks staff or sam write have no code and carry their own title and body.
+ * them; `billing_details` has none. `who_signs` (the offer's params and, once answered,
+ * `dpa_same` and `dpia` as "true"/"false") asks who signs the offer and the DPA sent with
+ * it, and is done by its own form (answerWhoSigns), never by a reply. Tasks staff or sam
+ * write have no code and carry their own title and body.
  *
  * The four onboarding codes are done by the step itself, never by a reply, and ask for no
  * check-in: `explore_demo` (params `project_id`, `workspace_id`: the demo project) is
@@ -280,6 +301,7 @@ export const DocumentDetail = DocumentSummary.extend({
  * withdraws the ones not yet done, so the offer's tasks stand alone.
  */
 export const TaskCode = z.enum([
+  "who_signs",
   "sign_offer",
   "billing_details",
   "sign_dpa",
@@ -423,6 +445,19 @@ export const NameSignerRequest = z.object({
   role: optText(200),
 });
 export const NameSignerResponse = z.object({ signer: Signer });
+
+/**
+ * Who signs an offer, asked once before it is signed. `offer_signer` null: the person
+ * answering. `dpa_same`: whoever signs the offer also signs the DPA sent with it; else
+ * `dpa_signer` does (null: the person answering). `dpia`: they want their own data
+ * protection impact assessment, which sam follows up from the task's response.
+ */
+export const WhoSignsRequest = z.object({
+  offer_signer: NameSignerRequest.nullable(),
+  dpa_same: z.boolean(),
+  dpa_signer: NameSignerRequest.nullable(),
+  dpia: z.boolean(),
+});
 
 /**
  * Saving the billing details completes the billing details task at once (status `done`, no
@@ -596,6 +631,11 @@ export const PushOfferRequest = z.object({
    * The last two take only 0% lines, and the offer says why there is no VAT.
    */
   vat_treatment: z.enum(["standard", "reverse_charge", "outside_eu"]).default("standard"),
+  /**
+   * Custom offers only, at most 10: each is numbered, listed among the documents that form
+   * the agreement, and takes precedence over them where they differ.
+   */
+  amendments: z.array(OfferAmendment).max(10).default([]),
   /** The Attio deal id, echoed in every event about this offer. */
   external_ref: optText(255),
   /** An unsigned offer this one replaces; it is voided. */
@@ -927,6 +967,13 @@ export const ROUTES = {
     permission: "account:sign",
     request: NameSignerRequest,
     response: NameSignerResponse,
+  },
+  answerWhoSigns: {
+    method: "POST",
+    path: `${C}/tasks/:taskId/who-signs`,
+    permission: "account:sign",
+    request: WhoSignsRequest,
+    response: Task,
   },
   /** The unsigned PDF (file_url): what the viewer renders under the fields. */
   documentFile: {

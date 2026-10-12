@@ -700,6 +700,19 @@ function openTask(
 	return task;
 }
 
+/** How echo's coded tasks name an offer: by its kind and number. */
+function offerParams(doc: DocumentDetailT): Record<string, string> {
+	return {
+		document_title: doc.title,
+		...(doc.kind === "offer" && doc.content
+			? { offer_template: doc.content.template }
+			: {}),
+		...(doc.kind === "offer" && doc.reference
+			? { offer_reference: doc.reference }
+			: {}),
+	};
+}
+
 function signTaskFor(
 	s: Store,
 	doc: DocumentDetailT,
@@ -721,11 +734,83 @@ function signTaskFor(
 		kind: "sign",
 		locked: false,
 		locked_until: null,
-		params: code ? { document_title: doc.title } : null,
+		params: code ? offerParams(doc) : null,
 		reminder_interval_days: null,
 		status: "open",
 		title,
 	});
+}
+
+/**
+ * The DPA as a document of its own, for someone who may agree to data processing: made
+ * once per offer, when the signer may not or the customer said so up front.
+ */
+function separateDpaFor(s: Store, d: DocumentDetailT, signedAt: string) {
+	const made = dpaOf(s, d.id);
+	if (made) return made;
+	const dpa: DocumentDetailT = {
+		...clone(fx.signedDpaDetail),
+		declined_at: null,
+		fields: fx.signedDpaDetail.fields.map((f) => ({
+			...f,
+			id: uuid(),
+		})),
+		id: uuid(),
+		sent_at: signedAt,
+		sha256: randomHex(),
+		signature: null,
+		signed_at: null,
+		signer: null,
+		status: "sent",
+		viewed_at: null,
+	};
+	dpa.confirmation = confirmationFor(
+		dpa.language,
+		dpa.title,
+		dpa.reference ?? "",
+		dpa.sha256 ?? "",
+		false,
+		dpa.fields,
+		s.name,
+	);
+	s.docs.unshift(dpa);
+	const t = signTaskFor(
+		s,
+		dpa,
+		d.language === "nl"
+			? "Verwerkersovereenkomst laten tekenen"
+			: "Have the DPA signed",
+		d.language === "nl"
+			? "Iemand die namens jullie verwerkingsafspraken mag aangaan, tekent de verwerkersovereenkomst. Wijs diegene aan op het document."
+			: "Someone who may agree to data processing for your organisation signs the DPA. Name them on the document.",
+	);
+	t.params = { ...(t.params ?? {}), offer_id: d.id };
+	return dpa;
+}
+
+/** The first task on a sent offer: who signs it, and its DPA. */
+function whoSignsFor(s: Store, d: DocumentDetailT) {
+	return openTask(s, {
+		body: null,
+		code: "who_signs",
+		document_id: d.id,
+		due_on: null,
+		kind: "generic",
+		locked: false,
+		locked_until: null,
+		params: offerParams(d),
+		reminder_interval_days: null,
+		status: "open",
+		title: null,
+	});
+}
+
+/** The separate DPA made for an offer, if there is one. */
+function dpaOf(s: Store, offerId: string) {
+	const t = s.tasks.find(
+		(x) => x.code === "sign_dpa" && x.params?.offer_id === offerId,
+	);
+	return t ? (s.docs.find((x) => x.id === t.document_id) ?? null) : null;
 }
 
 /** A document ready to sign gets its confirmation from the fields it was sent with. */
@@ -1061,9 +1146,10 @@ export async function handle(
 					png: sig.png_base64,
 				};
 				for (const t of s.tasks) {
+					// Signing without saying who signs first answers that too.
 					if (
 						t.document_id === d.id &&
-						t.kind === "sign" &&
+						(t.kind === "sign" || t.code === "who_signs") &&
 						t.status !== "withdrawn"
 					) {
 						t.status = "done";
@@ -1088,44 +1174,8 @@ export async function handle(
 					{ id: d.id, type: "document" },
 					{ dpa_authorised: dpaAuthorised },
 				);
-				if (d.kind === "offer" && !dpaAuthorised) {
-					const dpa: DocumentDetailT = {
-						...clone(fx.signedDpaDetail),
-						declined_at: null,
-						fields: fx.signedDpaDetail.fields.map((f) => ({
-							...f,
-							id: uuid(),
-						})),
-						id: uuid(),
-						sent_at: signedAt,
-						sha256: randomHex(),
-						signature: null,
-						signed_at: null,
-						signer: null,
-						status: "sent",
-						viewed_at: null,
-					};
-					dpa.confirmation = confirmationFor(
-						dpa.language,
-						dpa.title,
-						dpa.reference ?? "",
-						dpa.sha256 ?? "",
-						false,
-						dpa.fields,
-						s.name,
-					);
-					s.docs.unshift(dpa);
-					signTaskFor(
-						s,
-						dpa,
-						d.language === "nl"
-							? "Verwerkersovereenkomst laten tekenen"
-							: "Have the DPA signed",
-						d.language === "nl"
-							? "Iemand die namens jullie verwerkingsafspraken mag aangaan, tekent de verwerkersovereenkomst. Wijs diegene aan op het document."
-							: "Someone who may agree to data processing for your organisation signs the DPA. Name them on the document.",
-					);
-				}
+				if (d.kind === "offer" && !dpaAuthorised)
+					separateDpaFor(s, d, signedAt);
 				return {
 					confirmation_text: body.confirmation_text,
 					signature_id: d.signature.id,
@@ -1185,6 +1235,50 @@ export async function handle(
 				}
 				event(s, "billing_details.updated", "customer");
 				return s.billing;
+			}
+			case "answerWhoSigns": {
+				const t = task();
+				if (t.code !== "who_signs") throw notFound();
+				if (t.status !== "open" && t.status !== "changes_requested")
+					throw new AccountsApiError(409, "This task is not waiting on you.");
+				const offer = s.docs.find((x) => x.id === t.document_id);
+				if (!offer) throw notFound();
+				type Named = { email: string; name: string; role: string | null };
+				const name = (d: DocumentDetailT, p: Named) => {
+					d.signer = {
+						email: p.email.toLowerCase(),
+						name: p.name,
+						role: p.role,
+					};
+					event(
+						s,
+						"document.signer_named",
+						"customer",
+						{
+							id: d.id,
+							type: "document",
+						},
+						{ email: p.email },
+					);
+				};
+				const offerSigner = body.offer_signer as Named | null;
+				const dpaSigner =
+					body.dpa_same === true
+						? offerSigner
+						: (body.dpa_signer as Named | null);
+				if (offerSigner) name(offer, offerSigner);
+				const dpa = dpaOf(s, offer.id);
+				if (dpa && dpaSigner && dpa.status !== "signed") name(dpa, dpaSigner);
+				t.status = "done";
+				t.submitted_at = now();
+				t.next_reminder_at = null;
+				t.params = {
+					...(t.params ?? {}),
+					dpa_same: String(body.dpa_same === true),
+					dpia: String(body.dpia === true),
+				};
+				event(s, "task.submitted", "customer", { id: t.id, type: "task" });
+				return publicTask(t);
 			}
 			case "submitTask": {
 				const t = task();
@@ -1411,8 +1505,11 @@ export async function handle(
 					vat_cents: vat,
 					viewed_at: null,
 				};
+				// The DPA goes out with it as its own document, listed after the offer.
+				if (body.send !== false) separateDpaFor(s, d, now());
 				s.docs.unshift(d);
-				// A draft offer gets its task when it is sent.
+				// Who signs comes first; a draft offer gets its tasks when it is sent.
+				if (body.send !== false) whoSignsFor(s, d);
 				const t =
 					body.send === false
 						? null

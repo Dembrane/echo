@@ -3,7 +3,7 @@ import type { DocumentSummaryT, TaskT } from "../contract/contract.gen";
 import { accountPage } from "../contract/fixtures.gen";
 import { planAccount } from "./plan";
 
-const base = accountPage.tasks[0] as TaskT;
+const base = accountPage.tasks.find((t) => t.code === "sign_offer") as TaskT;
 const task = (id: string, over: Partial<TaskT>): TaskT => ({
 	...base,
 	id,
@@ -37,6 +37,46 @@ describe("planAccount", () => {
 			"2026-10-12",
 		);
 		expect(plan.toDo.map((t) => t.id)).toEqual(["c", "b", "a"]);
+	});
+
+	it("asks who signs first, and keeps the offer's and the DPA's signatures for after", () => {
+		const plan = planAccount(
+			[
+				task("a", { code: null, kind: "generic", status: "open" }),
+				task("offer", { document_id: "o", kind: "sign", status: "open" }),
+				task("dpa", {
+					code: "sign_dpa",
+					document_id: "p",
+					kind: "sign",
+					status: "open",
+				}),
+				task("who", {
+					code: "who_signs",
+					document_id: "o",
+					kind: "generic",
+					status: "open",
+				}),
+			],
+			[],
+			"2026-10-12",
+		);
+		expect(plan.toDo.map((t) => t.id)).toEqual(["who", "a"]);
+		expect(plan.later.map((t) => t.id)).toEqual(["offer", "dpa"]);
+		// Answered: both open.
+		const answered = planAccount(
+			[
+				task("offer", { document_id: "o", kind: "sign", status: "open" }),
+				task("who", {
+					code: "who_signs",
+					document_id: "o",
+					kind: "generic",
+					status: "done",
+				}),
+			],
+			[],
+			"2026-10-12",
+		);
+		expect(answered.toDo.map((t) => t.id)).toEqual(["offer"]);
 	});
 
 	it("sorts tasks into with us, later and done, and drops withdrawn ones", () => {

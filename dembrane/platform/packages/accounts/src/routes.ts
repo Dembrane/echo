@@ -5,6 +5,7 @@ import { staffCan } from "./access";
 import * as K from "./contract";
 import {
   accountPage,
+  answerWhoSigns,
   customerFile,
   customerReply,
   declineDocument,
@@ -139,6 +140,11 @@ export function accountsRoutes(d: AccountsDeps) {
     const who = requireUser(c);
     const b = await body(c, K.NameSignerRequest);
     return c.json(await nameSigner(d, who, p(c, "orgId"), p(c, "docId"), b));
+  });
+  app.post(R.answerWhoSigns.path, async (c) => {
+    const who = requireUser(c);
+    const b = await body(c, K.WhoSignsRequest);
+    return c.json(await answerWhoSigns(d, who, p(c, "orgId"), p(c, "taskId"), b));
   });
   app.get(R.documentFile.path, async (c) => {
     const r = await customerFile(d, requireUser(c), p(c, "orgId"), p(c, "docId"), "file");

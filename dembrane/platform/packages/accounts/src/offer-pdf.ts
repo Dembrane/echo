@@ -615,6 +615,26 @@ function acceptance(s: Sheet, l: OfferLayout) {
   s.done(32);
 }
 
+/**
+ * Amendments: terms agreed with this customer that take precedence over the standard
+ * documents. In body size, where the offer is read, each under its number and title.
+ */
+function amendments(s: Sheet, l: OfferLayout) {
+  if (!l.amendments.length) return;
+  s.room(60);
+  s.para({ runs: runs(l.amendmentsTitle, { s: T.lead, c: TEXT }), leading: 1.3, after: 4 });
+  for (const a of l.amendments) {
+    s.room(40);
+    s.para({
+      runs: [...runs(`${a.label}  `, { ...CAPTION, s: T.body }), ...runs(a.title, BODY)],
+      leading: BODY_LEADING,
+      before: 10,
+    });
+    for (const p of a.paragraphs) s.para(text(p, { before: 4 }));
+  }
+  s.done(36);
+}
+
 /** The incorporation clause in small print, its documents numbered. */
 function clause(s: Sheet, l: OfferLayout) {
   const { opening, items, closing } = l.clauseParts;
@@ -653,6 +673,7 @@ function draw(s: Sheet, l: OfferLayout) {
     for (const p of paragraphs) s.para(text(p, { before: 6 }));
   }
   lines(s, l);
+  amendments(s, l);
   l.closing.forEach((line, i) => {
     // A line's space above the sign-off ("Best regards," and the team).
     s.para(text(line, { before: i === 1 ? 14 : 0 }));

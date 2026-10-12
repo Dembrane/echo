@@ -5,7 +5,8 @@ import type { DocumentSummaryT, TaskT } from "../contract/contract.gen";
  * first and the most urgent of them on top: paying is what the page is most often opened
  * for, and an overdue invoice is the one thing that should never be missed. Then the
  * customer's open tasks, a sent-back one before the rest and a signature before the
- * smaller asks, because signing opens the steps after it. A signature handed to someone
+ * smaller asks, because signing opens the steps after it. Who signs comes before the
+ * signature it is about, which waits for the answer. A signature handed to someone
  * else waits on them and leads what is coming; then what waits on dembrane, what waits on
  * a signature, and what is done, each in the order staff gave them.
  */
@@ -35,7 +36,30 @@ export const isOverdue = (doc: DocumentSummaryT, today: string): boolean =>
 	Boolean(doc.invoice?.due_on && doc.invoice.due_on < today);
 
 const todoRank = (task: TaskT) =>
-	task.status === "changes_requested" ? 0 : task.kind === "sign" ? 1 : 2;
+	task.status === "changes_requested"
+		? 0
+		: task.code === "who_signs"
+			? 1
+			: task.kind === "sign"
+				? 2
+				: 3;
+
+const isOpen = (task: TaskT) =>
+	task.status === "open" || task.status === "changes_requested";
+
+/**
+ * A signing task that waits until the customer says who signs: the offer's own, and the
+ * DPA sent with it. Each opens with the answer.
+ */
+export const waitsOnWhoSigns = (task: TaskT, tasks: TaskT[]): boolean =>
+	task.kind === "sign" &&
+	isOpen(task) &&
+	tasks.some(
+		(other) =>
+			other.code === "who_signs" &&
+			isOpen(other) &&
+			(other.document_id === task.document_id || task.code === "sign_dpa"),
+	);
 
 export function planAccount(
 	tasks: TaskT[],
@@ -44,7 +68,8 @@ export function planAccount(
 	/** The viewer's email: a document named to them is still theirs to sign. */
 	me: string | null = null,
 ): AccountPlan {
-	const isLocked = (task: TaskT) => task.locked || task.status === "locked";
+	const isLocked = (task: TaskT) =>
+		task.locked || task.status === "locked" || waitsOnWhoSigns(task, tasks);
 	const signerOf = (task: TaskT) => {
 		if (task.kind !== "sign" || !task.document_id || isLocked(task))
 			return null;

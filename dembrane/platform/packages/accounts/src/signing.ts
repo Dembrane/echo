@@ -5,7 +5,7 @@ import type { AccountsDeps, Conn } from "./deps";
 import { sha256Hex, storeRendered, writeFields } from "./documents";
 import { billingPayload, documentPayload, emit, orgPayload, signaturePayload } from "./events";
 import { requestInvoices } from "./invoice";
-import type { FieldKind } from "./offer";
+import type { FieldKind, OfferContent } from "./offer";
 import { type AuditRecord, signedPdf, textPdf } from "./pdf";
 import { type DocumentRow, type FieldRow, type OrgRow, type SignatureRow, store } from "./storage";
 import { createTask, settleTask, unlockTask } from "./tasks";
@@ -132,6 +132,11 @@ export async function signDocument(
   }
   if (doc.kind === "dpa" && !input.dpa_authorised)
     throw new ValidationError("document.dpa_not_authorised");
+  // An offer whose DPA is its own document asks nothing about data processing: its signer
+  // is recorded as not having agreed to it, and the DPA task stands on its own.
+  const dpaSeparate =
+    doc.kind === "offer" && Boolean((doc.content as OfferContent | null)?.dpa_separate);
+  const dpaAuthorised = dpaSeparate ? false : input.dpa_authorised;
   const fields = await store.fields(d.db, doc.id);
   checkValues(fields, input.values);
   const facts = signerFacts(fields, input.values, org.name);
@@ -142,7 +147,7 @@ export async function signDocument(
     name,
     role: facts.role ?? "",
     organisation: facts.organisation,
-    dpa_authorised: input.dpa_authorised,
+    dpa_authorised: dpaAuthorised,
   });
   if (!sameText(expected, input.confirmation_text))
     throw new ValidationError("document.confirmation_mismatch", { params: { expected } });
@@ -169,7 +174,7 @@ export async function signDocument(
     organisation: facts.organisation,
     address: facts.address,
     vatNumber: facts.vatNumber,
-    dpaAuthorised: input.dpa_authorised,
+    dpaAuthorised: dpaSeparate ? null : dpaAuthorised,
     signedAt,
     ip: meta.ip,
     userAgent: meta.userAgent,
@@ -184,7 +189,9 @@ export async function signDocument(
         ["dpa", dpa],
       ] as const
     ).flatMap(([kind, row]) =>
-      row ? [{ kind, version: row.version, effectiveOn: row.effectiveOn, sha256: row.sha256 }] : [],
+      row && !(kind === "sla" && (doc.content as OfferContent | null)?.template === "event")
+        ? [{ kind, version: row.version, effectiveOn: row.effectiveOn, sha256: row.sha256 }]
+        : [],
     ),
   };
   let pdf: Uint8Array;
@@ -228,7 +235,7 @@ export async function signDocument(
         organisation: facts.organisation,
         address: facts.address,
         vatNumber: facts.vatNumber,
-        dpaAuthorised: input.dpa_authorised,
+        dpaAuthorised,
         sha256: doc.sha256 as string,
         fieldValues: input.values,
         method: input.signature.method,
@@ -285,8 +292,13 @@ async function afterSigned(
   who: Signed,
 ) {
   const tasks = await store.tasks(tx, org.id);
+  // Signed without saying who signs first: the signer answered it by signing.
   for (const t of tasks)
-    if (t.kind === "sign" && t.documentId === doc.id && !["done", "withdrawn"].includes(t.status))
+    if (
+      (t.kind === "sign" || t.code === "who_signs") &&
+      t.documentId === doc.id &&
+      !["done", "withdrawn"].includes(t.status)
+    )
       await settleTask(d, tx, t.id, "done");
   for (const t of tasks)
     if (
@@ -300,42 +312,62 @@ async function afterSigned(
       account_stage: "customer",
       updated_at: d.now().toISOString(),
     });
-  if (input.dpa_authorised) return;
-  // The signer may not agree to data processing: the DPA becomes its own document for
-  // someone who may (art. 3.6 of the terms), with the same DPA text the offer pinned.
-  const dpa = await store.legalById(tx, doc.dpaTextId);
+  // Offers from before the DPA was its own document asked the signer whether they may also
+  // agree to data processing; a no sends the DPA on its own to someone who may.
+  if ((doc.content as OfferContent | null)?.dpa_separate || input.dpa_authorised) return;
+  await openDpa(d, tx, org.id, doc, who.directusUserId);
+}
+
+/**
+ * The DPA as its own document, with its own "Review and sign" task, for someone who may
+ * agree to data processing on behalf of the organisation (art. 3.6 of the terms). It
+ * carries the DPA text the offer pinned. One per organisation and text: an offer sent
+ * again, or a second offer on the same text, opens nothing new.
+ */
+export async function openDpa(
+  d: AccountsDeps,
+  tx: Conn,
+  orgId: string,
+  offer: DocumentRow,
+  createdBy: string | null,
+) {
+  const dpa = await store.legalById(tx, offer.dpaTextId);
   if (!dpa) return;
-  const lang = doc.language === "nl" ? "nl" : "en";
+  const open = (await store.documents(tx, orgId)).some(
+    (x) => x.kind === "dpa" && x.dpaTextId === dpa.id && x.status !== "void",
+  );
+  if (open) return;
+  const lang = offer.language === "nl" ? "nl" : "en";
   const id = newId();
   const now = d.now();
   const title = `${dpa.title} ${dpa.version}`;
   const rendered = await textPdf(title, dpa.body, { signing: true, language: lang });
-  const file = await storeRendered(d, org.id, id, rendered);
+  const file = await storeRendered(d, orgId, id, rendered);
   await store.insertDocument(tx, {
     id,
-    orgId: org.id,
+    orgId,
     kind: "dpa",
     title,
     language: lang,
-    reference: doc.reference ? `${doc.reference}-DPA` : null,
+    reference: offer.reference ? `${offer.reference}-DPA` : null,
     body: dpa.body,
     ...file,
     requiresSignature: true,
     status: "draft",
     dpaTextId: dpa.id,
-    externalRef: doc.externalRef,
+    externalRef: offer.externalRef,
     createdAt: now,
     updatedAt: now,
   });
   await writeFields(tx, id, rendered.fields);
   await store.updateDocument(tx, id, { status: "sent", sentAt: now, updatedAt: now });
   await createTask(d, tx, {
-    orgId: org.id,
+    orgId,
     code: "sign_dpa",
     params: { document_title: title },
     title: null,
     kind: "sign",
     documentId: id,
-    createdBy: who.directusUserId,
+    createdBy,
   });
 }

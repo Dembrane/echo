@@ -578,7 +578,9 @@ run("demos made in echo", () => {
     const page = K.AccountPage.parse(
       (await call(w, "GET", `/api/v2/orgs/${demo.org_id}/account`, "signer")).data,
     );
-    expect(page.documents.map((d) => d.id)).toEqual([demo.offer_document_id as string]);
+    // The offer, and the DPA that goes out with it.
+    expect(page.documents.map((d) => d.kind).sort()).toEqual(["dpa", "offer"]);
+    expect(page.documents.some((d) => d.id === demo.offer_document_id)).toBe(true);
     expect(page.tasks.some((t) => t.code === "sign_offer" && t.status === "open")).toBe(true);
   });
 

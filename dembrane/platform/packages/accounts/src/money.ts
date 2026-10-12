@@ -74,6 +74,22 @@ export function priceLines(lines: readonly OfferLine[]): Totals {
   return { lines: priced, subtotal_cents: subtotal, vat_cents: vat, total_cents: subtotal + vat };
 }
 
+/**
+ * An offer that goes to a customer asks for money: every line carries an amount (a discount
+ * may be negative) and the whole comes to more than zero. A missing price is a question for
+ * whoever drafts the offer, never a line that reads 0,00. Checked when an offer is drafted
+ * or changed, not when an old one is rendered.
+ */
+export function requireAmounts(lines: readonly OfferLine[]): Totals {
+  const totals = priceLines(lines);
+  totals.lines.forEach((l, i) => {
+    if (l.unit_price_cents === 0)
+      throw new ValidationError("offer.line_no_amount", { params: { line: i + 1 } });
+  });
+  if (totals.total_cents === 0) throw new ValidationError("offer.zero_total");
+  return totals;
+}
+
 /** 123456 cents as "1.234,56" for Dutch-reading documents, with the currency code before it. */
 export function formatMoney(cents: number, currency: string): string {
   const sign = cents < 0 ? "-" : "";
