@@ -25,6 +25,7 @@ import {
 } from "./customer";
 import { createDemo, demoStatus, listDemos, publishDemo, retryDemo } from "./demo/service";
 import type { AccountsDeps } from "./deps";
+import { acceptSignerInvite, signerInvite } from "./invite";
 import { sendMessage } from "./messages";
 import { createAccount } from "./prospect";
 import { signDocument } from "./signing";
@@ -178,6 +179,15 @@ export function accountsRoutes(d: AccountsDeps) {
   app.post(R.tutorialOpened.path, async (c) =>
     c.json(await recordTutorialOpened(d, requireUser(c), p(c, "orgId"))),
   );
+  app.get(R.signerInvite.path, async (c) => {
+    const q = parse(K.SignerInviteQuery, { invite: c.req.query("invite") });
+    return c.json(await signerInvite(d, p(c, "orgId"), p(c, "docId"), q.invite));
+  });
+  app.post(R.acceptSignerInvite.path, async (c) => {
+    const who = requireUser(c);
+    const b = await body(c, K.AcceptSignerInviteRequest);
+    return c.json(await acceptSignerInvite(d, who, p(c, "orgId"), p(c, "docId"), b));
+  });
   app.get(R.signingRequests.path, async (c) => c.json(await mySigningRequests(d, requireUser(c))));
   app.get(R.tasksSummary.path, async (c) => c.json(await tasksSummary(d, requireUser(c))));
 

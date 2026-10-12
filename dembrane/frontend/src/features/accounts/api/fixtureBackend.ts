@@ -1250,6 +1250,32 @@ export async function handle(
 					if (t.code === "watch_tutorial" && t.status === "open")
 						t.status = "done";
 				return { recorded: true };
+			// Any token opens the invitation in fixture mode; the API checks it.
+			case "signerInvite": {
+				const d = doc();
+				if (!d.signer) throw notFound();
+				const [first = "", ...rest] = (d.signer.name ?? "").split(" ");
+				return {
+					document: { kind: d.kind, reference: d.reference, title: d.title },
+					has_account: false,
+					inviter: { name: "Anna de Vries" },
+					organisation: { name: s.name },
+					signer: {
+						email: d.signer.email,
+						first_name: first,
+						last_name: rest.join(" "),
+						role: d.signer.role,
+					},
+					status:
+						d.status === "signed"
+							? "signed"
+							: d.status === "sent" || d.status === "viewed"
+								? "open"
+								: "closed",
+				};
+			}
+			case "acceptSignerInvite":
+				return { document_id: doc().id, org_id: orgId };
 			case "signingRequests":
 				return s.docs
 					.filter(
