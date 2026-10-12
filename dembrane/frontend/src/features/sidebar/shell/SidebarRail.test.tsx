@@ -302,11 +302,11 @@ describe("help in the rail", () => {
 		renderIn(<HelpBlock />, { url: "/en-US/o" });
 		const help = screen.getByRole("button", { name: "Help" });
 		expect(help.getAttribute("aria-expanded")).toBe("false");
-		expect(screen.queryByRole("button", { name: "Leave feedback" })).toBeNull();
+		expect(screen.queryByRole("button", { name: "Give feedback" })).toBeNull();
 
 		fireEvent.click(help);
 		expect(help.getAttribute("aria-expanded")).toBe("true");
-		expect(screen.getByRole("button", { name: "Leave feedback" })).toBeTruthy();
+		expect(screen.getByRole("button", { name: "Give feedback" })).toBeTruthy();
 		expect(screen.getByRole("button", { name: "Documentation" })).toBeTruthy();
 		// It opens in place: nothing navigates.
 		expect(screen.queryByRole("link")).toBeNull();
@@ -320,7 +320,7 @@ describe("help in the rail", () => {
 		fireEvent.click(help);
 		expect(help.getAttribute("aria-expanded")).toBe("false");
 		fireEvent.click(help);
-		fireEvent.keyDown(screen.getByRole("button", { name: "Leave feedback" }), {
+		fireEvent.keyDown(screen.getByRole("button", { name: "Give feedback" }), {
 			key: "Escape",
 		});
 		expect(help.getAttribute("aria-expanded")).toBe("false");

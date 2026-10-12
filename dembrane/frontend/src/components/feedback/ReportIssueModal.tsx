@@ -179,7 +179,7 @@ export const ReportIssueModal = ({
 			opened={opened}
 			onClose={handleClose}
 			onExitTransitionEnd={resetForm}
-			title={<Trans>Leave feedback</Trans>}
+			title={<Trans>Give feedback</Trans>}
 			size="lg"
 			data-testid="report-issue-modal"
 		>

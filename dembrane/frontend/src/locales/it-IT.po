@@ -6890,6 +6890,12 @@ msgstr "Vuoi concedere a {0} di dembrane l'accesso come amministratore a questo 
 msgid "Give chat responses a thumbs up or thumbs down."
 msgstr "Valuta le risposte della chat con un pollice in su o in giù."
 
+#: src/features/sidebar/views/HelpView.tsx:43
+#: src/features/sidebar/blocks/HelpBlock.tsx:69
+#: src/components/feedback/ReportIssueModal.tsx:182
+msgid "Give feedback"
+msgstr "Dai un feedback"
+
 #: src/components/view/CreateViewForm.tsx:133
 #~ msgid "Give me a list of 5-10 topics that are being discussed."
 #~ msgstr "Give me a list of 5-10 topics that are being discussed."
@@ -8069,10 +8075,7 @@ msgstr "Learn more about webhooks"
 msgid "Leave empty to keep existing"
 msgstr "Leave empty to keep existing"
 
-#: src/features/sidebar/views/HelpView.tsx:43
-#: src/features/sidebar/blocks/HelpBlock.tsx:69
 #: src/components/results/curate/RowTools.tsx:108
-#: src/components/feedback/ReportIssueModal.tsx:182
 msgid "Leave feedback"
 msgstr "Lascia un feedback"
 

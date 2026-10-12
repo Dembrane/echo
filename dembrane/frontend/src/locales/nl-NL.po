@@ -6888,6 +6888,12 @@ msgstr "{0} van dembrane 24 uur adminrechten geven voor deze werkruimte? De toeg
 msgid "Give chat responses a thumbs up or thumbs down."
 msgstr "Geef chatantwoorden een duim omhoog of omlaag."
 
+#: src/features/sidebar/views/HelpView.tsx:43
+#: src/features/sidebar/blocks/HelpBlock.tsx:69
+#: src/components/feedback/ReportIssueModal.tsx:182
+msgid "Give feedback"
+msgstr "Feedback geven"
+
 #: src/components/view/CreateViewForm.tsx:133
 #~ msgid "Give me a list of 5-10 topics that are being discussed."
 #~ msgstr "Geef me een lijst van 5-10 onderwerpen die worden besproken."
@@ -8067,10 +8073,7 @@ msgstr "Meer informatie over webhooks"
 msgid "Leave empty to keep existing"
 msgstr "Laat leeg om bestaande te behouden"
 
-#: src/features/sidebar/views/HelpView.tsx:43
-#: src/features/sidebar/blocks/HelpBlock.tsx:69
 #: src/components/results/curate/RowTools.tsx:108
-#: src/components/feedback/ReportIssueModal.tsx:182
 msgid "Leave feedback"
 msgstr "Laat feedback achter"
 
