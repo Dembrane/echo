@@ -6,8 +6,8 @@ import { createTask } from "./tasks";
 /**
  * Onboarding for someone who signed up: four nudges from the demo to the product, each
  * done by the step itself (opening the demo, clicking the tutorial link, creating a
- * project, a booked call), never by a reply. They are no obligation, so they never send a
- * reminder email, and an offer sent withdraws the ones not taken. Only the demo builder
+ * project, a booked call), never by a reply. They are no obligation, so nobody is asked
+ * to check in on them, and an offer sent withdraws the ones not taken. Only the demo builder
  * and staff (through the onboarding route, which sam calls once the team says yes) add
  * them; a self-serve signup gets none.
  */

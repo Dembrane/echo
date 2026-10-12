@@ -5,7 +5,7 @@ import type { Conn } from "./deps";
 /**
  * Enqueues a job inside the caller's transaction, so a job exists only if the write that
  * caused it committed. `workflowId` makes a second enqueue of the same run a no-op: the
- * reminder of one task at one due time is sent once however often the tick sees it.
+ * check-in for one task at one due time is asked once however often the tick sees it.
  */
 export interface AccountsJobs {
   enqueue<J extends JobDefinition>(

@@ -458,7 +458,7 @@ export const schema = defineSchema({
     }),
     reminderIntervalDays: key("ACCOUNTS_REMINDER_INTERVAL_DAYS", int.min(1).max(365).default(7), {
       description:
-        "Days between reminder emails for an open customer task; a task can set its own interval.",
+        "Days an open customer task may wait before the account's owner at dembrane is asked to check in, and between later asks; a task can set its own interval. The customer gets no email.",
     }),
     slackWebhookUrl: key("ACCOUNTS_SLACK_WEBHOOK_URL", z.url().optional(), {
       description:
@@ -481,7 +481,7 @@ export const schema = defineSchema({
     ),
     offerMessages: key("ACCOUNTS_OFFER_MESSAGES", bool.default(false), {
       description:
-        "sam's inbox takes the messages of the offer flow: echo_account_document_sent_v1, echo_account_document_voided_v1 and echo_account_invoice_requested_v1. Turn on once the sam that handles them runs for this environment; before that sam refuses the codes and each message stays in the queue as failed.",
+        "sam's inbox takes the messages of the offer flow: echo_account_document_sent_v1, echo_account_document_voided_v1, echo_account_invoice_requested_v1 and echo_account_task_waiting_v1. Turn on once the sam that handles them runs for this environment; before that sam refuses the codes and each message stays in the queue as failed. While it is off nobody is told that a customer task waits.",
     }),
     eventsUrl: key("ACCOUNTS_EVENTS_URL", z.url().optional(), {
       description:

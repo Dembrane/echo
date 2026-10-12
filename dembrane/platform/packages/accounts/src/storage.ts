@@ -391,7 +391,7 @@ export const store = {
       );
   },
 
-  /** Open tasks whose reminder is due, oldest first. Tasks waiting on us are not here. */
+  /** Open tasks whose check-in is due, oldest first. Tasks waiting on us are not here. */
   async dueReminders(c: Conn, now: Date, limit: number): Promise<TaskRow[]> {
     return c
       .select()

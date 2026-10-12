@@ -142,10 +142,6 @@ export type EmailTemplate =
       };
     }
   | {
-      readonly template: "account_task_reminder";
-      readonly data: { org_name: string; task_title: string; task_url: string };
-    }
-  | {
       readonly template: "account_invite";
       readonly data: { org_name: string; sign_in_url: string };
     }
@@ -184,8 +180,6 @@ export function subjectOf(t: EmailTemplate, locale?: string | null): string | nu
       return tr("email.sign_in_code.subject");
     case "account_signer_invite":
       return tr("email.account_signer_invite.subject", t.data);
-    case "account_task_reminder":
-      return tr("email.account_task_reminder.subject", t.data);
     case "account_invite":
       return tr("email.account_invite.subject", t.data);
     case "account_offer_sent":
@@ -354,22 +348,6 @@ export function render(t: EmailTemplate, locale?: string | null): { html: string
           disclaim: ignore,
         }),
         text: `${tr(`${k}.body`, d)}\n\n${tr(`${k}.text_cta`)}\n${d.sign_url}\n\n${ignoreText}\n\n${signoff}`,
-      };
-    }
-    case "account_task_reminder": {
-      // Sent every few days while a task waits on the customer; stops when it is done.
-      const d = t.data;
-      const k = "email.account_task_reminder";
-      return {
-        html: layout(tr, {
-          title: tr(`${k}.title`, escAll(d)),
-          preview: tr(`${k}.preview`, escAll(d)),
-          heading: tr(`${k}.heading`),
-          body: P(17, "0 0 28px", tr(`${k}.body`, { ...escAll(d), task_title: em(d.task_title) })),
-          cta: cta(tr(`${k}.cta`), d.task_url),
-          fallback: fallback(tr, d.task_url),
-        }),
-        text: `${tr(`${k}.body`, d)}\n\n${tr(`${k}.text_cta`)}\n${d.task_url}\n\n${signoff}`,
       };
     }
     case "account_invite": {

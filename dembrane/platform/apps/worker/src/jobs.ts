@@ -99,7 +99,7 @@ export function registrations(deps: {
   mailer: Mailer;
   /** Lets a job enqueue follow-up jobs (the support timers send email). */
   jobs: JobSink;
-  /** The same, with run ids: account reminders are sent once per task and due time. */
+  /** The same, with run ids: an account check-in is asked once per task and due time. */
   accountsJobs: AccountsJobs;
   /** Where email buttons point. */
   dashboardUrl: string;
@@ -291,7 +291,6 @@ export function registrations(deps: {
     }),
     accountsWorker({
       db,
-      mailer: deps.mailer,
       logger,
       jobs: deps.accountsJobs,
       deliver: httpDeliver({ allowPrivate: config.webhooks.allowPrivateTargets }),
@@ -299,6 +298,7 @@ export function registrations(deps: {
       eventsUrl: config.accounts.eventsUrl ?? null,
       eventsSecret: config.accounts.eventsSecret ?? null,
       samInbox: Boolean(inboxTarget),
+      offerMessages: config.accounts.offerMessages,
       slackWebhookUrl: config.accounts.slackWebhookUrl ?? null,
       reminderIntervalDays: config.accounts.reminderIntervalDays,
       fetchText: httpFetchText,

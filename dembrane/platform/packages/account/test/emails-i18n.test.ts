@@ -4,30 +4,31 @@ import { assetPath } from "@dembrane/core";
 import { catalogEntries, LOCALES } from "@dembrane/i18n";
 import { render, subjectOf } from "../src/emails";
 
-const reminder = {
-  template: "account_task_reminder",
-  data: { org_name: "Acme", task_title: "Factuurgegevens", task_url: "https://d/o/1/account" },
+const invite = {
+  template: "account_invite",
+  data: { org_name: "Acme", sign_in_url: "https://d/login?next=%2Fo%2F1" },
 } as const;
 
 test("an email in nl-NL is worded from the Dutch catalog", () => {
-  expect(subjectOf(reminder, "nl-NL")).toBe("Nog open: Factuurgegevens");
-  const { html, text } = render(reminder, "nl");
-  expect(text).toBe(
-    "Factuurgegevens staat nog open voor Acme op dembrane. Het kost een minuut, en het houdt de zaken bij ons in beweging.\n\nOpen de stap:\nhttps://d/o/1/account\n\nHet dembrane-team",
+  expect(subjectOf(invite, "nl-NL")).toBe("Je dembrane-account voor Acme");
+  const { html, text } = render(invite, "nl");
+  expect(text).toStartWith(
+    "We hebben Acme op dembrane voor je klaargezet. Log in met de code die we naar dit e-mailadres sturen: geen wachtwoord nodig.\n\nInloggen:\nhttps://d/login?next=%2Fo%2F1\n\n",
   );
-  expect(html).toContain("Er staat nog een stap open.");
-  expect(html).toContain("Open de stap");
+  expect(text).toEndWith("\n\nHet dembrane-team");
+  expect(html).toContain("Je account staat klaar.");
+  expect(html).toContain("Inloggen");
 });
 
 test("a text the locale has not translated yet renders in English", () => {
   // Read what nl-NL holds today, so the test stays true once the translator fills it.
   const nl = catalogEntries(readFileSync(assetPath("i18n", "locales", "nl-NL.po"), "utf8"));
   const expected = nl.get("email.common.fallback") ?? "Or paste this into your browser:";
-  expect(render(reminder, "nl-NL").html).toContain(`${expected}<br>`);
+  expect(render(invite, "nl-NL").html).toContain(`${expected}<br>`);
 });
 
 test("English is the default and matches the old subject lines", () => {
-  expect(subjectOf(reminder)).toBe("Still open: Factuurgegevens");
+  expect(subjectOf(invite)).toBe("Your dembrane account for Acme");
   expect(
     subjectOf({
       template: "org_invite",
