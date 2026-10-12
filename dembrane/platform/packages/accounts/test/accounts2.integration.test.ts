@@ -189,12 +189,12 @@ run("accounts for any organisation, and the tasks summary", () => {
       (await call(w, "GET", "/api/v2/account/tasks-summary", "admin")).data,
     );
     const mine = summary.find((s) => s.org_id === selfServe);
-    // billing (locked) + sign (open) + logo (done); the withdrawn one is left out.
+    // billing (locked) + sign + sign the DPA (open) + logo (done); the withdrawn one is left out.
     expect(mine).toMatchObject({
       name: "Self Serve Co",
       account_stage: "customer",
       tasks_done: 1,
-      tasks_total: 3,
+      tasks_total: 4,
     });
     // A task echo created comes as a code for the UI to word; no text.
     expect(mine?.next_task_title).toBeNull();

@@ -1,5 +1,5 @@
 import type { Company } from "./deps";
-import type { Language } from "./offer";
+import type { Language, OfferContent } from "./offer";
 import type {
   BillingRow,
   DocumentRow,
@@ -122,7 +122,7 @@ export function confirmationText(doc: DocumentRow, f: ConfirmationFields): strin
   const base = nl
     ? `Ik, ${who}, bevestig dat ik namens ${f.organisation} mag tekenen, en ik onderteken "${doc.title}"${ref} zoals aan mij getoond, SHA-256 ${doc.sha256}.`
     : `I, ${who}, confirm that I may sign on behalf of ${f.organisation}, and I sign "${doc.title}"${ref} as shown to me, SHA-256 ${doc.sha256}.`;
-  if (doc.kind !== "offer") return base;
+  if (doc.kind !== "offer" || (doc.content as OfferContent | null)?.dpa_separate) return base;
   const dpa = f.dpa_authorised
     ? nl
       ? " Ik ben ook bevoegd om namens deze organisatie verwerkingsafspraken aan te gaan."

@@ -416,7 +416,7 @@ run("accounts routes against Postgres", () => {
     );
   });
 
-  test("a signer who may not agree to data processing leaves a DPA to sign separately", async () => {
+  test("the DPA goes out with the offer as its own document; signing the offer asks nothing about it", async () => {
     const pushed = K.PushOfferResponse.parse(
       (
         await call(
@@ -428,10 +428,16 @@ run("accounts routes against Postgres", () => {
         )
       ).data,
     );
+    // An event has no SLA, so the DPA is the first appendix, and it is signed on its own.
     expect(pushed.document.body).toContain(
-      "Appendix B: Data Processing Agreement (version 3.0.1, 17-07-2026",
+      "Appendix A: Data Processing Agreement (version 3.0.1, 17-07-2026",
     );
-    const { body } = await signPayload(pushed.document.id, "admin", { dpa_authorised: false });
+    expect(pushed.document.body).not.toContain("Service Level Agreement");
+    expect(pushed.document.body).toContain("is signed separately");
+    expect(pushed.document.confirmation?.dpa_not_authorised).toBeNull();
+    expect(pushed.document.confirmation?.dpa_authorised).not.toContain("data processing");
+    expect(pushed.document.legal.map((l) => l.kind)).toEqual(["terms", "dpa"]);
+    const { body } = await signPayload(pushed.document.id, "admin");
     expect(
       (await call(w, "POST", `${C()}/documents/${pushed.document.id}/sign`, "admin", body)).status,
     ).toBe(200);
