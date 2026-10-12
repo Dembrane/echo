@@ -1,43 +1,6 @@
 import { newId } from "@dembrane/core";
 import { type Db, schema } from "@dembrane/db";
-import type { CallRecord } from "@dembrane/llm";
 import type { Logger } from "@dembrane/observability";
-
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const uuidOrNull = (v: string | undefined) => (v && UUID.test(v) ? v : null);
-const cut = (v: string | null | undefined, n: number) => (v ? v.slice(0, n) : null);
-
-/**
- * The FallbackModel's onCall for the api and the worker: one ai_generation row per call.
- * The write is not awaited by the call, and a failed write is logged, never thrown.
- */
-export function generationLog(db: Db, logger: Logger): (record: CallRecord) => void {
-  return (r) => {
-    const t = r.trace;
-    db.insert(schema.ai_generation)
-      .values({
-        id: newId(),
-        step: cut(t?.step, 64) ?? "untraced",
-        model_group: r.group.slice(0, 64),
-        deployment: cut(r.deployment, 255),
-        prompt_ref: cut(t?.promptRef, 128),
-        prompt_version: cut(t?.promptVersion, 128),
-        project_id: uuidOrNull(t?.projectId),
-        conversation_id: uuidOrNull(t?.conversationId),
-        target_type: cut(t?.targetType, 64),
-        target_id: cut(t?.targetId, 255),
-        status: r.status,
-        streamed: r.streamed,
-        input_tokens: r.inputTokens,
-        output_tokens: r.outputTokens,
-        latency_ms: Math.round(r.latencyMs),
-      })
-      .then(
-        () => {},
-        (err) => logger.warn({ err, step: t?.step }, "generation log write failed"),
-      );
-  };
-}
 
 export type SignalKind = "accept" | "edit" | "reject" | "revise" | "rate";
 export type ActorKind = "participant" | "host" | "staff" | "agent";

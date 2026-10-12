@@ -1,12 +1,12 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { newId } from "@dembrane/core";
-import { createDb, migrate, schema } from "@dembrane/db";
+import { createDb, migrate } from "@dembrane/db";
 import { createLogger } from "@dembrane/observability";
 import postgres from "postgres";
-import { generationLog, recordSignal, trainableSignals } from "../src";
+import { recordSignal, trainableSignals } from "../src";
 
 /**
- * The generation log, signals and the training export against a migrated database: only
+ * Signals and the training export against a migrated database: only
  * signals on conversations whose client opted in and whose participant consented leave,
  * and erasing a conversation erases its signals.
  */
@@ -47,31 +47,6 @@ run("signals", () => {
     await database?.close();
   });
 
-  test("a call is logged with its trace", async () => {
-    generationLog(
-      database.db,
-      quiet,
-    )({
-      group: "multi_modal_pro",
-      deployment: "multi_modal_pro[0]:gemini",
-      trace: { step: "verify.generate", conversationId: consented, projectId: "not-a-uuid" },
-      status: "ok",
-      streamed: false,
-      inputTokens: 10,
-      outputTokens: 5,
-      latencyMs: 12.4,
-    });
-    await Bun.sleep(200);
-    const rows = await database.db.select().from(schema.ai_generation);
-    expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({
-      step: "verify.generate",
-      conversation_id: consented,
-      project_id: null,
-      latency_ms: 12,
-    });
-  });
-
   test("only consented signals with an opted-in client are exported", async () => {
     for (const conversationId of [consented, notConsented, elsewhere])
       await recordSignal(database.db, quiet, {
@@ -101,11 +76,10 @@ run("signals", () => {
     });
   });
 
-  test("deleting a conversation deletes its signals and generations", async () => {
+  test("deleting a conversation deletes its signals", async () => {
     await sql`delete from conversation where id = ${consented}`;
-    const [row] = await sql`select
-      (select count(*) from ai_signal where conversation_id = ${consented}) +
-      (select count(*) from ai_generation where conversation_id = ${consented}) as n`;
+    const [row] =
+      await sql`select count(*) as n from ai_signal where conversation_id = ${consented}`;
     expect(Number(row?.n)).toBe(0);
   });
 });

@@ -2,11 +2,18 @@ import type {
   LanguageModelV4,
   LanguageModelV4CallOptions,
   LanguageModelV4GenerateResult,
-  LanguageModelV4StreamPart,
   LanguageModelV4StreamResult,
-  LanguageModelV4Usage,
 } from "@ai-sdk/provider";
-import { type CallRecord, type CallTrace, takeTrace } from "./trace";
+import {
+  type CallMeta,
+  failedCall,
+  generateCall,
+  type ModelCallObserver,
+  observedStream,
+  observeSafely,
+  type Report,
+} from "./observe";
+import { type CallTrace, takeTrace } from "./trace";
 
 export interface Deployment {
   readonly label: string;
@@ -23,8 +30,10 @@ export interface FallbackOptions {
   readonly now?: () => number;
   readonly sleep?: (ms: number) => Promise<void>;
   readonly onFallback?: (event: { from: string; to: string | null; error: unknown }) => void;
-  /** Every finished call, answered or failed, with the trace its caller handed in. */
-  readonly onCall?: (record: CallRecord) => void;
+  /** Told about every attempt on every deployment: the metering's only source. */
+  readonly observe?: ModelCallObserver;
+  /** Hears the first fault of the observer or its mapping, once per process. */
+  readonly onObserverFault?: (err: unknown) => void;
 }
 
 const DEFAULTS: FallbackOptions = {
@@ -61,92 +70,75 @@ export class FallbackModel implements LanguageModelV4 {
     return (this.deployments[0] as Deployment).model.supportedUrls;
   }
 
-  async doGenerate(options: LanguageModelV4CallOptions): Promise<LanguageModelV4GenerateResult> {
-    const { trace, call } = untraced(options);
-    const started = this.clock();
-    try {
-      const { value, label } = await this.run((m) => m.doGenerate(call), options.abortSignal);
-      this.report(trace, started, { deployment: label, status: "ok", usage: value.usage });
-      return value;
-    } catch (err) {
-      this.report(trace, started, { deployment: null, status: "error" });
-      throw err;
-    }
-  }
+  /** Metering never changes a call: it runs after the result is in hand and cannot throw. */
+  private readonly report: Report = (make) =>
+    observeSafely(this.opts.observe, this.opts.onObserverFault, make);
 
-  async doStream(options: LanguageModelV4CallOptions): Promise<LanguageModelV4StreamResult> {
-    const { trace, call } = untraced(options);
-    const started = this.clock();
-    let result: { value: LanguageModelV4StreamResult; label: string };
-    try {
-      result = await this.run((m) => m.doStream(call), options.abortSignal);
-    } catch (err) {
-      this.report(trace, started, { deployment: null, status: "error", streamed: true });
-      throw err;
-    }
-    if (!this.opts.onCall) return result.value;
-    // Usage arrives in the stream's finish part; the call is reported when the stream ends.
-    let usage: LanguageModelV4Usage | undefined;
-    const label = result.label;
-    const watch = new TransformStream<LanguageModelV4StreamPart, LanguageModelV4StreamPart>({
-      transform: (part, controller) => {
-        if (part.type === "finish") usage = part.usage;
-        controller.enqueue(part);
+  doGenerate(traced: LanguageModelV4CallOptions): Promise<LanguageModelV4GenerateResult> {
+    const { trace, options } = untraced(traced);
+    return this.run(
+      trace,
+      async (d, meta) => {
+        const startedAt = new Date();
+        const t0 = performance.now();
+        let result: LanguageModelV4GenerateResult;
+        try {
+          result = await d.model.doGenerate(options);
+        } catch (err) {
+          this.report(() => failedCall(meta, "generate", startedAt, t0, err));
+          throw err;
+        }
+        this.report(() => generateCall(meta, startedAt, t0, result));
+        return result;
       },
-      flush: () => {
-        this.report(trace, started, {
-          deployment: label,
-          status: usage ? "ok" : "error",
-          streamed: true,
-          usage,
-        });
+      options.abortSignal,
+    );
+  }
+
+  doStream(traced: LanguageModelV4CallOptions): Promise<LanguageModelV4StreamResult> {
+    const { trace, options } = untraced(traced);
+    return this.run(
+      trace,
+      async (d, meta) => {
+        const startedAt = new Date();
+        const t0 = performance.now();
+        let result: LanguageModelV4StreamResult;
+        try {
+          result = await d.model.doStream(options);
+        } catch (err) {
+          this.report(() => failedCall(meta, "stream", startedAt, t0, err));
+          throw err;
+        }
+        if (!this.opts.observe) return result;
+        return {
+          ...result,
+          stream: observedStream(result.stream, meta, startedAt, t0, this.report),
+        };
       },
-    });
-    return { ...result.value, stream: result.value.stream.pipeThrough(watch) };
-  }
-
-  private clock() {
-    return (this.opts.now ?? Date.now)();
-  }
-
-  private report(
-    trace: CallTrace | null,
-    started: number,
-    r: {
-      deployment: string | null;
-      status: "ok" | "error";
-      streamed?: boolean;
-      usage?: LanguageModelV4Usage | undefined;
-    },
-  ) {
-    if (!this.opts.onCall) return;
-    try {
-      this.opts.onCall({
-        group: this.group,
-        deployment: r.deployment,
-        trace,
-        status: r.status,
-        streamed: r.streamed ?? false,
-        inputTokens: r.usage?.inputTokens.total ?? null,
-        outputTokens: r.usage?.outputTokens.total ?? null,
-        latencyMs: Math.max(0, this.clock() - started),
-      });
-    } catch {
-      // A broken log never fails the call it describes.
-    }
+      options.abortSignal,
+    );
   }
 
   private async run<T>(
-    call: (m: LanguageModelV4) => PromiseLike<T>,
+    trace: CallTrace | null,
+    call: (d: Deployment, meta: CallMeta) => PromiseLike<T>,
     signal?: AbortSignal,
-  ): Promise<{ value: T; label: string }> {
+  ): Promise<T> {
     const order = this.healthyFirst();
     let last: unknown;
+    let attempts = 0;
     for (const [i, d] of order.entries()) {
       for (let attempt = 0; attempt < this.opts.attemptsPerDeployment; attempt++) {
         if (signal?.aborted) throw signal.reason ?? new Error("aborted");
+        attempts++;
         try {
-          return { value: await call(d.model), label: d.label };
+          return await call(d, {
+            group: this.group,
+            model: d.model.modelId,
+            attempt: attempts,
+            fallback: i > 0,
+            ...(trace && { trace }),
+          });
         } catch (err) {
           last = err;
           if (!isRetryable(err)) throw err;
@@ -177,13 +169,14 @@ export class FallbackModel implements LanguageModelV4 {
 }
 
 /** The call's trace, and the call without it, so the trace never reaches a provider. */
-function untraced(options: LanguageModelV4CallOptions): {
+function untraced(traced: LanguageModelV4CallOptions): {
   trace: CallTrace | null;
-  call: LanguageModelV4CallOptions;
+  options: LanguageModelV4CallOptions;
 } {
-  const { trace, rest } = takeTrace(options.providerOptions);
-  const { providerOptions: _, ...others } = options;
-  return { trace, call: rest ? { ...others, providerOptions: rest } : others };
+  const { trace, rest } = takeTrace(traced.providerOptions);
+  if (!trace && rest === traced.providerOptions) return { trace, options: traced };
+  const { providerOptions: _, ...others } = traced;
+  return { trace, options: rest ? { ...others, providerOptions: rest } : others };
 }
 
 /** Rate limits, overload, server errors and network failures are worth another deployment; bad requests are not. */

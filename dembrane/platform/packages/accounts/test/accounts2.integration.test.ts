@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { newId } from "@dembrane/core";
 import { schema } from "@dembrane/db";
-import { MemoryMailer } from "@dembrane/mail";
-import { eq, sql } from "drizzle-orm";
+import { deliverSamMessage } from "@dembrane/webhooks";
+import { sql } from "drizzle-orm";
 import * as K from "../src/contract";
 import { runTaskReminder } from "../src/jobs";
 import { accountsRoutes } from "../src/routes";
@@ -208,42 +208,39 @@ run("accounts for any organisation, and the tasks summary", () => {
     ).toEqual(["Gemeente Testdorp"]);
   });
 
-  test("a reminder of a system task is worded in each person's language, else the organisation's", async () => {
-    // The owner reads Dutch; a billing member has no setting and gets the org's language
-    // (its newest document, the English offer).
-    await w.db
-      .update(schema.directus_users)
-      .set({ language: "nl-NL" })
-      .where(eq(schema.directus_users.id, w.people.admin.directusUserId));
-    await w.db.insert(schema.org_membership).values({
-      id: newId(),
-      org_id: selfServe,
-      user_id: w.people.billing.appUserId as string,
-      role: "billing",
-    });
+  test("a check-in for a task echo made names it in English, with its document and where staff open it", async () => {
     const sign = (await store.tasks(w.db, selfServe)).find((t) => t.code === "sign_offer");
-    const mailer = new MemoryMailer();
-    const deps = {
-      db: w.db,
-      mailer,
-      logger: w.deps.logger,
-      dashboardUrl: "https://dash.test",
-      now: () => w.clock.now,
-    };
+    w.jobs.jobs.length = 0;
     expect(
-      await runTaskReminder(deps, {
-        taskId: sign?.id as string,
-        dueAt: "2026-10-05T09:00:00.000Z",
-      }),
-    ).toBe("sent");
-    const nl = mailer.sent.find((m) => (m.to as string[]).includes("admin@example.test"));
-    const en = mailer.sent.find((m) => (m.to as string[]).includes("billing@example.test"));
-    expect(nl?.subject).toBe(
-      "Nog open: Offerte bekijken en ondertekenen: Self Serve Co x dembrane",
+      await runTaskReminder(
+        {
+          db: w.db,
+          jobs: w.jobs,
+          logger: w.deps.logger,
+          dashboardUrl: "https://dash.test",
+          now: () => w.clock.now,
+          samInbox: true,
+          offerMessages: true,
+        },
+        { taskId: sign?.id as string, dueAt: "2026-10-05T09:00:00.000Z" },
+      ),
+    ).toBe("asked");
+    const [m] = w.jobs.of(deliverSamMessage.name);
+    expect(m?.code).toBe("echo_account_task_waiting_v1");
+    const json = JSON.parse(m?.body as string).json;
+    expect(json.task).toMatchObject({
+      id: sign?.id,
+      code: "sign_offer",
+      kind: "sign",
+      title: "Review and sign the offer: Self Serve Co x dembrane",
+      document_id: sign?.documentId,
+      times_asked: 1,
+    });
+    expect(json.document).toMatchObject({ id: sign?.documentId, kind: "offer", status: "sent" });
+    expect(json.links.document).toBe(
+      `https://dash.test/admin/accounts/${selfServe}/documents/${sign?.documentId}`,
     );
-    expect(nl?.text).toContain("staat nog open voor Self Serve Co");
-    expect(en?.subject).toBe("Still open: Review and sign the offer: Self Serve Co x dembrane");
-    expect(en?.text).toContain("is still waiting for Self Serve Co");
+    expect(json.org.name).toBe("Self Serve Co");
   });
 
   test("the summary's query has its indexes", async () => {

@@ -3,6 +3,8 @@ import { emailHandler, sendEmail } from "@dembrane/account";
 import {
   type AccountsJobs,
   accountsWorker,
+  DEMO_IDS,
+  demoBuildAccess,
   demoHttpGet,
   httpFetchText,
   queueJobs,
@@ -42,6 +44,7 @@ import {
 import { defineJob, type JobDefinition, type Queue } from "@dembrane/queue";
 import { PostgresRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { reportsWorker } from "@dembrane/reports";
+import { MILLBROOK_IDS, samplesWorker } from "@dembrane/samples";
 import type { ObjectStorage } from "@dembrane/storage";
 import { type JobSink, tenancyWorker } from "@dembrane/tenancy";
 import {
@@ -90,12 +93,13 @@ export function registrations(deps: {
     | "database"
     | "accounts"
     | "samInbox"
+    | "samples"
   >;
   /** Sends the email jobs enqueue. */
   mailer: Mailer;
   /** Lets a job enqueue follow-up jobs (the support timers send email). */
   jobs: JobSink;
-  /** The same, with run ids: account reminders are sent once per task and due time. */
+  /** The same, with run ids: an account check-in is asked once per task and due time. */
   accountsJobs: AccountsJobs;
   /** Where email buttons point. */
   dashboardUrl: string;
@@ -223,6 +227,14 @@ export function registrations(deps: {
       },
     },
     tenancyWorker(deps),
+    // Every workspace's best-practices sample where samples are on, but none in the synthetic
+    // demo or preview orgs.
+    samplesWorker({
+      db,
+      logger,
+      enabled: config.samples.enabled,
+      excludeOrgIds: [DEMO_IDS.org, MILLBROOK_IDS.org],
+    }),
     billingRegistration({
       billing: deps.billing,
       mailer: deps.mailer,
@@ -279,7 +291,6 @@ export function registrations(deps: {
     }),
     accountsWorker({
       db,
-      mailer: deps.mailer,
       logger,
       jobs: deps.accountsJobs,
       deliver: httpDeliver({ allowPrivate: config.webhooks.allowPrivateTargets }),
@@ -287,6 +298,7 @@ export function registrations(deps: {
       eventsUrl: config.accounts.eventsUrl ?? null,
       eventsSecret: config.accounts.eventsSecret ?? null,
       samInbox: Boolean(inboxTarget),
+      offerMessages: config.accounts.offerMessages,
       slackWebhookUrl: config.accounts.slackWebhookUrl ?? null,
       reminderIntervalDays: config.accounts.reminderIntervalDays,
       fetchText: httpFetchText,
@@ -310,19 +322,26 @@ export function registrations(deps: {
             eventsEnabled: Boolean(config.accounts.eventsUrl),
             slackEnabled: Boolean(config.accounts.slackWebhookUrl),
             samInbox: Boolean(inboxTarget),
+            offerMessages: config.accounts.offerMessages,
             reminderIntervalDays: config.accounts.reminderIntervalDays,
             // Demo builds send no invite links; publishing (in the API) does.
             inviteSecret: "",
           },
           completer: deps.completer,
           get: demoHttpGet(config.webhooks.allowPrivateTargets),
+          // The read acts as the demo's contact, who is held until staff release them.
           extract: async (loopId, runId) =>
-            (await runPopcornTick(tickDeps(popcornDeps, runId, analysis), loopId, "manual", runId))
-              .status,
+            (
+              await runPopcornTick(
+                { ...tickDeps(popcornDeps, runId, analysis), access: demoBuildAccess(db) },
+                loopId,
+                "manual",
+                runId,
+              )
+            ).status,
           demo: {
             portalUrl: deps.popcorn.portalUrl,
             apiUrl: config.http.publicUrl,
-            ownUrls: [config.http.publicUrl, deps.dashboardUrl, deps.popcorn.portalUrl],
             workspaceId: config.accounts.demoWorkspaceId ?? null,
             feedbackUrl: config.accounts.demoFeedbackUrl,
           },

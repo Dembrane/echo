@@ -1,6 +1,6 @@
 {
   "name": "@dembrane/signals",
-  "description": "The generation log, the human signals on what models made, and who agreed to AI training.",
+  "description": "The human signals on what models made, and who agreed to AI training.",
   "private": true,
   "type": "module",
   "dembrane": {
@@ -15,7 +15,6 @@
   "dependencies": {
     "@dembrane/core": "workspace:*",
     "@dembrane/db": "workspace:*",
-    "@dembrane/llm": "workspace:*",
     "@dembrane/observability": "workspace:*",
     "drizzle-orm": "^0.45.3"
   },

@@ -7,9 +7,9 @@ import { bootAssets } from "@dembrane/core";
 import { createDb, describeDbFailure, withDatabase } from "@dembrane/db";
 import { createModels, vertexCompleter, vertexEmbedder } from "@dembrane/llm";
 import { type Mailer, SendGridMailer } from "@dembrane/mail";
+import { modelCallRecorder, modelCallTable } from "@dembrane/metering";
 import { createLogger, initTracing } from "@dembrane/observability";
 import { Queue } from "@dembrane/queue";
-import { generationLog } from "@dembrane/signals";
 import { FilesystemStorage, requireBucket, S3Storage } from "@dembrane/storage";
 import { queueSink } from "@dembrane/tenancy";
 import { GeminiTranscriber } from "@dembrane/transcription";
@@ -40,6 +40,7 @@ const loaded = loadSections([
   "agentic",
   "accounts",
   "samInbox",
+  "samples",
   "files",
 ]);
 const config = loaded.values;
@@ -94,6 +95,8 @@ const billing = createBilling({
 // The model groups serve the conversation pipeline (with the audio bucket, ffmpeg from the
 // media service in the cloud or in-process locally, and Gemini transcription) and the
 // analysis, map, canvas and report jobs, which also embed, and the chat assistant.
+// Every model call is metered: one log line at once and one model_call row per batch.
+const metering = modelCallRecorder({ sink: modelCallTable(database.db), logger, service });
 const models = createModels(
   {
     vertexProject: config.llm.vertexProject,
@@ -107,7 +110,11 @@ const models = createModels(
     embeddingLocation: config.llm.embeddingLocation,
     embeddingDimensions: config.llm.embeddingDimensions,
   },
-  { onCall: generationLog(database.db, logger) },
+  {
+    observe: metering.observe,
+    onObserverFault: (err) =>
+      logger.warn({ err }, "model call metering failed; later faults are silent"),
+  },
 );
 const audio = config.audio.s3Bucket
   ? new S3Storage({
@@ -226,6 +233,7 @@ async function shutdown(signal: string) {
   logger.info({ signal }, "worker stopping");
   clearInterval(signals);
   await queue.stop();
+  await metering.flush();
   await Promise.allSettled([database.close(), tracing.shutdown()]);
   process.exit(0);
 }

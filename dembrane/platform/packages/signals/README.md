@@ -5,8 +5,8 @@ that made it, every human verdict on its output is logged against the same artef
 only data whose client and participant both agreed can leave for training.
 
 ```
- model call ──► ai_generation          step, prompt_ref, prompt_version, model, tokens, latency
-     │           (FallbackModel.onCall)  target_type + target_id of the artefact
+ model call ──► model_call (metering)  + step, prompt_ref, prompt_version,
+     │                                    target_type + target_id of the artefact
      ▼
  artefact ───► person acts ──► ai_signal   accept · edit (before/after) · revise · reject · rate
                                    │
@@ -24,21 +24,22 @@ only data whose client and participant both agreed can leave for training.
 | Piece | Where |
 |---|---|
 | Call trace: what a call is for, carried in `providerOptions.dembrane` and stripped before the provider sees it | `llm/src/trace.ts`, `CompletionRequest.trace`, `withTrace()` for direct AI SDK calls |
-| One `ai_generation` row per call, answered or failed, streams included | `FallbackModel` `onCall` hook, `generationLog()` wired in `apps/api` and `apps/worker` |
+| The trace on every metered call: five columns on `model_call`, which metering already writes for every attempt | `ModelCall.trace`, `metering` `toRow()` |
 | A version for every Jinja prompt: the first 12 hex digits of its SHA-256 | `prompts` `templateVersion()` |
 | `ai_signal`: what a person did with an artefact | `recordSignal()`, `classifyEdit()` |
 | Training consent: `ai_training` on workspace and project (project overrides), `training_consent_at` and `training_consent_version` on conversation | `trainingVerdict()` |
 | The one way signals leave for training | `trainableSignals()`, `bun run signals:export -- --out x.jsonl` |
 
-Generations store no text: the output stays in the artefact's own table. Both tables
-cascade from `project` and `conversation`, so erasure removes them with the conversation.
+`model_call` stores no text and no people's ids, only the artefact's id; the output stays in
+the artefact's own table. `ai_signal` cascades from `project` and `conversation`, so erasure
+removes it with the conversation.
 
 ## Steps wired so far
 
-| Step | Generation traced | Signal |
+| Step | Call traced | Signal |
 |---|---|---|
 | Verify (participant outcomes) | `verify.generate`, `verify.revise` | accept, edit (model text kept as `before`), revise |
-| Everything else | logged as `untraced` with group, model, tokens, latency | none yet |
+| Everything else | metered with its operation, no trace yet | none yet |
 
 ## Consent rule
 

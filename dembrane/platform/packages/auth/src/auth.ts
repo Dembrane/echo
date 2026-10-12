@@ -14,6 +14,11 @@ export interface AuthOptions {
   readonly baseURL: string;
   readonly trustedOrigins: readonly string[];
   readonly cookieDomain?: string | undefined;
+  /**
+   * First part of the cookies' names. An environment that shares a parent domain with
+   * another takes its own, so a browser signed in to both keeps one session for each.
+   */
+  readonly cookiePrefix?: string | undefined;
   readonly secureCookies: boolean;
   readonly google?: { readonly clientId: string; readonly clientSecret: string } | undefined;
   /** Delivers the one-time sign-in code. */
@@ -161,7 +166,7 @@ export function createAuth(opts: AuthOptions) {
       },
     },
     advanced: {
-      cookiePrefix: "dembrane",
+      cookiePrefix: opts.cookiePrefix ?? "dembrane",
       useSecureCookies: opts.secureCookies,
       ...(opts.cookieDomain && {
         crossSubDomainCookies: { enabled: true, domain: opts.cookieDomain },

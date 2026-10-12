@@ -3,30 +3,15 @@ import type { SharedV4ProviderOptions } from "@ai-sdk/provider";
 /**
  * What a model call is for: the step of the product that asked, the prompt and its
  * version, and the artefact the answer becomes. Callers hand it in with the call; the
- * FallbackModel reads it back and reports it to `onCall`, which is how every call reaches
- * the generation log without each feature writing to it.
+ * FallbackModel takes it off before the provider sees it and puts it on the ModelCall, so
+ * metering stores it in model_call without each feature writing there.
  */
 export interface CallTrace {
   readonly step: string;
   readonly promptRef?: string;
   readonly promptVersion?: string;
-  readonly projectId?: string;
-  readonly conversationId?: string;
   readonly targetType?: string;
   readonly targetId?: string;
-}
-
-/** One finished call as the FallbackModel saw it. */
-export interface CallRecord {
-  readonly group: string;
-  /** The deployment that answered, or null when none did. */
-  readonly deployment: string | null;
-  readonly trace: CallTrace | null;
-  readonly status: "ok" | "error";
-  readonly streamed: boolean;
-  readonly inputTokens: number | null;
-  readonly outputTokens: number | null;
-  readonly latencyMs: number;
 }
 
 /** The providerOptions key the trace travels under. Vertex reads only its own keys. */

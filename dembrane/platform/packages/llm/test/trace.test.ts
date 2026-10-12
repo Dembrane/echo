@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { LanguageModelV4, LanguageModelV4CallOptions } from "@ai-sdk/provider";
 import { generateText, streamText } from "ai";
-import { type CallRecord, completeWith, FallbackModel, TRACE_KEY, withTrace } from "../src";
+import { completeWith, FallbackModel, type ModelCall, TRACE_KEY, withTrace } from "../src";
 
 const usage = {
   inputTokens: { total: 3, noCache: 3, cacheRead: 0, cacheWrite: 0 },
@@ -9,7 +9,7 @@ const usage = {
 };
 
 /** A model that remembers the options it was called with. */
-function model(seen: LanguageModelV4CallOptions[], fail = false): LanguageModelV4 {
+function model(seen: LanguageModelV4CallOptions[]): LanguageModelV4 {
   return {
     specificationVersion: "v4",
     provider: "fake",
@@ -17,7 +17,6 @@ function model(seen: LanguageModelV4CallOptions[], fail = false): LanguageModelV
     supportedUrls: {},
     async doGenerate(o) {
       seen.push(o);
-      if (fail) throw Object.assign(new Error("bad"), { statusCode: 400, isRetryable: false });
       return {
         content: [{ type: "text", text: "hi" }],
         finishReason: { unified: "stop", raw: "stop" },
@@ -55,11 +54,11 @@ const trace = {
 };
 
 describe("call trace", () => {
-  test("a generated call is reported with its trace, and the trace never reaches the provider", async () => {
+  test("a generated call is observed with its trace, which never reaches the provider", async () => {
     const seen: LanguageModelV4CallOptions[] = [];
-    const calls: CallRecord[] = [];
-    const m = new FallbackModel("multi_modal_pro", [{ label: "a", model: model(seen) }], {
-      onCall: (r) => calls.push(r),
+    const calls: ModelCall[] = [];
+    const m = new FallbackModel("g", [{ label: "a", model: model(seen) }], {
+      observe: (c) => calls.push(c),
     });
     await generateText({
       model: m,
@@ -68,54 +67,32 @@ describe("call trace", () => {
     });
     expect(seen[0]?.providerOptions?.[TRACE_KEY]).toBeUndefined();
     expect(seen[0]?.providerOptions?.vertex).toEqual({ thinkingConfig: { thinkingBudget: 1 } });
-    expect(calls).toEqual([
-      {
-        group: "multi_modal_pro",
-        deployment: "a",
-        trace,
-        status: "ok",
-        streamed: false,
-        inputTokens: 3,
-        outputTokens: 4,
-        latencyMs: expect.any(Number),
-      },
-    ]);
+    expect(calls[0]?.trace).toEqual(trace);
   });
 
-  test("a failed call is reported as an error and still throws", async () => {
-    const calls: CallRecord[] = [];
-    const m = new FallbackModel("g", [{ label: "a", model: model([], true) }], {
-      onCall: (r) => calls.push(r),
-    });
-    await expect(generateText({ model: m, prompt: "x", maxRetries: 0 })).rejects.toThrow();
-    expect(calls.map((c) => [c.status, c.deployment, c.trace])).toEqual([["error", null, null]]);
-  });
-
-  test("a stream is reported when it ends, with the usage of its finish part", async () => {
-    const calls: CallRecord[] = [];
+  test("a stream carries its trace too", async () => {
+    const calls: ModelCall[] = [];
     const m = new FallbackModel("g", [{ label: "a", model: model([]) }], {
-      onCall: (r) => calls.push(r),
+      observe: (c) => calls.push(c),
     });
     const result = streamText({ model: m, prompt: "x", providerOptions: withTrace(trace) });
     expect(await result.text).toBe("hi");
-    expect(calls).toHaveLength(1);
-    expect(calls[0]).toMatchObject({ streamed: true, status: "ok", inputTokens: 3, trace });
+    expect(calls[0]).toMatchObject({ kind: "stream", status: "ok", trace });
   });
 
-  test("a broken log does not fail the call", async () => {
+  test("an untraced call has no trace", async () => {
+    const calls: ModelCall[] = [];
     const m = new FallbackModel("g", [{ label: "a", model: model([]) }], {
-      onCall: () => {
-        throw new Error("log down");
-      },
+      observe: (c) => calls.push(c),
     });
-    const { text } = await generateText({ model: m, prompt: "x" });
-    expect(text).toBe("hi");
+    await generateText({ model: m, prompt: "x" });
+    expect(calls[0] && "trace" in calls[0]).toBe(false);
   });
 
   test("completeWith carries the request's trace", async () => {
-    const calls: CallRecord[] = [];
+    const calls: ModelCall[] = [];
     const m = new FallbackModel("g", [{ label: "a", model: model([]) }], {
-      onCall: (r) => calls.push(r),
+      observe: (c) => calls.push(c),
     });
     await completeWith(m, { group: "text_fast", user: "x", trace: { step: "report" } });
     expect(calls[0]?.trace).toEqual({ step: "report" });

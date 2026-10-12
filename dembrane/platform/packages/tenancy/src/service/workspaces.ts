@@ -10,6 +10,7 @@ import {
 import type { Signed } from "@dembrane/http";
 import { localeOfEmail, localesOfAppUsers } from "@dembrane/i18n";
 import { isoTimestamp } from "@dembrane/legacy-shape";
+import { seedBestPracticesJob } from "@dembrane/samples/jobs";
 import {
   blocksNewWorkspace,
   commercial,
@@ -56,6 +57,7 @@ import {
   clearOverCapStamps,
   conversationDurationsIn,
   countLiveProjects,
+  deleteSampleProjects,
   workspaceProjects,
 } from "../storage/usage";
 import {
@@ -437,6 +439,8 @@ export function workspaceService(deps: TenancyDeps) {
           updated_at: iso(now),
         });
         await reconcileSeats(deps.jobs, tx, accountId);
+        // Its copy of the best-practices sample, seeded by the worker once this commits.
+        await deps.jobs.enqueue(seedBestPracticesJob, { workspaceId: wsId }, { tx });
         if (separate && dataOwnerEmail) {
           await inviteDataOwner(tx, now, {
             workspaceId: wsId,
@@ -467,8 +471,9 @@ export function workspaceService(deps: TenancyDeps) {
     },
 
     /**
-     * Soft delete, only when no live project is left. Admins and owners may; a staff support
-     * session may not (spec M-6).
+     * Soft delete, only when no live project is left; the sample copy does not count and is
+     * deleted with the workspace. Admins and owners may; a staff support session may not
+     * (spec M-6).
      */
     async remove(ctx: WorkspaceContext) {
       if (!ctx.allows("settings:manage") || ctx.isSupportSession)
@@ -479,6 +484,7 @@ export function workspaceService(deps: TenancyDeps) {
       const ws = await workspaceById(db, ctx.workspaceId);
       await db.transaction(async (tx) => {
         await updateWorkspace(tx, ctx.workspaceId, { deleted_at: iso(now), updated_at: iso(now) });
+        await deleteSampleProjects(tx, ctx.workspaceId, iso(now));
         const account = await billingAccountById(tx, ws?.billing_account_id);
         if (account) await reconcileSeats(deps.jobs, tx, account.id);
       });

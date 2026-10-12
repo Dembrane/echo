@@ -1,13 +1,14 @@
 {
   "name": "@dembrane/samples",
-  "description": "Sample data every PR preview carries: the Millbrook (sample) workspace in the Acme Civic (sample) org, with generated conversations, a report and a chat.",
+  "description": "Sample data: the best-practices sample every workspace gets its own copy of, and the Millbrook (sample) workspace in the Acme Civic (sample) org that every PR preview carries.",
   "private": true,
   "type": "module",
   "dembrane": {
     "layer": "namespace"
   },
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./jobs": "./src/jobs.ts"
   },
   "scripts": {
     "test": "bun test",
@@ -15,7 +16,10 @@
   },
   "dependencies": {
     "@dembrane/db": "workspace:*",
-    "drizzle-orm": "^0.45.3"
+    "@dembrane/observability": "workspace:*",
+    "@dembrane/queue": "workspace:*",
+    "drizzle-orm": "^0.45.3",
+    "zod": "^4.1.0"
   },
   "devDependencies": {
     "@dembrane/config": "workspace:*",

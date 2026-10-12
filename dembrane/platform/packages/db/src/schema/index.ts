@@ -193,55 +193,6 @@ export const agent_token = pgTable(
 );
 
 /**
- * One language model call: which step asked, with which prompt version, on which model,
- * for which artefact. The output itself stays in the artefact's own table, so erasing a
- * conversation or project erases its text once.
- */
-export const ai_generation = pgTable(
-  "ai_generation",
-  {
-    id: uuid().primaryKey().notNull(),
-    created_at: timestamp({ withTimezone: true, mode: "string" }).defaultNow().notNull(),
-    step: varchar({ length: 64 }).notNull(),
-    model_group: varchar({ length: 64 }).notNull(),
-    deployment: varchar({ length: 255 }),
-    prompt_ref: varchar({ length: 128 }),
-    prompt_version: varchar({ length: 128 }),
-    project_id: uuid(),
-    conversation_id: uuid(),
-    target_type: varchar({ length: 64 }),
-    target_id: varchar({ length: 255 }),
-    status: varchar({ length: 16 }).notNull(),
-    streamed: boolean().default(false).notNull(),
-    input_tokens: integer(),
-    output_tokens: integer(),
-    latency_ms: integer(),
-  },
-  (table): PgTableExtraConfigValue[] => [
-    index("ai_generation_target").using(
-      "btree",
-      table.target_type.asc().nullsLast(),
-      table.target_id.asc().nullsLast(),
-    ),
-    index("ai_generation_step_created").using(
-      "btree",
-      table.step.asc().nullsLast(),
-      table.created_at.asc().nullsLast(),
-    ),
-    foreignKey({
-      columns: [table.project_id],
-      foreignColumns: [project.id],
-      name: "ai_generation_project_id_foreign",
-    }).onDelete("cascade"),
-    foreignKey({
-      columns: [table.conversation_id],
-      foreignColumns: [conversation.id],
-      name: "ai_generation_conversation_id_foreign",
-    }).onDelete("cascade"),
-  ],
-);
-
-/**
  * What a person did with an artefact a model made: accepted, edited, asked for a revision,
  * rated. `payload` holds the before and after text of an edit, which is the training pair.
  */
@@ -2727,6 +2678,14 @@ export const project = pgTable(
     legal_basis: varchar({ length: 255 }).default(sql`NULL`),
     privacy_policy_url: varchar({ length: 255 }).default(sql`NULL`),
     is_dembrane_event_cta_enabled: boolean().default(true),
+    /**
+     * A sample copy dembrane seeds (packages/samples): invented conversations no one
+     * recorded. Usage, limits and public numbers leave it out, and it takes no new
+     * conversations.
+     */
+    is_sample: boolean().default(false).notNull(),
+    /** The fixture a sample copy was last seeded from, so a newer fixture updates it once. */
+    sample_version: varchar({ length: 64 }),
     /** "opt-in" or "opt-out" overrides the workspace; null inherits it. */
     ai_training: varchar({ length: 16 }),
     ai_training_updated_at: timestamp({ withTimezone: true, mode: "string" }),

@@ -27,11 +27,16 @@ export async function storeRendered(d: AccountsDeps, orgId: string, docId: strin
   return storePdf(d, orgId, docId, r.bytes, r.pageCount);
 }
 
-/** The "Next" walk: page by page, top to bottom, then left to right. */
-export function walkOrder<T extends Pick<PlacedField, "page" | "x" | "y">>(
+/**
+ * The "Next" walk: page by page, top to bottom, then left to right. A field's place is the
+ * line it sits on (the bottom of its box), so a date and a taller signature on one line
+ * are walked left to right.
+ */
+export function walkOrder<T extends Pick<PlacedField, "page" | "x" | "y" | "height">>(
   fields: readonly T[],
 ): T[] {
-  return [...fields].sort((a, b) => a.page - b.page || a.y - b.y || a.x - b.x);
+  const line = (f: T) => Math.round((f.y + f.height) * 10_000);
+  return [...fields].sort((a, b) => a.page - b.page || line(a) - line(b) || a.x - b.x);
 }
 
 export async function writeFields(

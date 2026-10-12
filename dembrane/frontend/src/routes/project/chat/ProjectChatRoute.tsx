@@ -81,11 +81,25 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useLoadNotification } from "@/hooks/useLoadNotification";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceUsage } from "@/hooks/useWorkspaceUsage";
-import { FREE_TIER_MAX_CHAT_USER_TURNS } from "@/lib/freeTier";
+import {
+	FREE_TIER_MAX_CHAT_USER_TURNS,
+	isFreeTierLimitError,
+} from "@/lib/freeTier";
 import { isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 import { resolveChatScreen } from "./chatModeRouting";
 import { stoppedAnswer } from "./stoppedAnswer";
+
+// useChat hands back a failed response as an Error whose message is the body.
+const isTurnLimitResponse = (error: Error | undefined) => {
+	try {
+		return (
+			isFreeTierLimitError(JSON.parse(error?.message ?? "")) === "chat_turns"
+		);
+	} catch {
+		return false;
+	}
+};
 
 const useDembraneChat = ({ chatId }: { chatId: string }) => {
 	const chatHistoryQuery = useChatHistory(chatId);
@@ -391,11 +405,13 @@ export const ProjectChatRoute = () => {
 	// modal below (workspace-scoped conversation list).
 	const projectForWorkspace = useProjectById({
 		projectId: projectId ?? "",
-		query: { fields: ["id", "workspace_id"] },
+		query: { fields: ["id", "workspace_id", "is_sample"] },
 	});
-	const projectWorkspaceId =
-		(projectForWorkspace.data as { workspace_id?: string | null } | undefined)
-			?.workspace_id ?? null;
+	const projectRow = projectForWorkspace.data as
+		| { workspace_id?: string | null; is_sample?: boolean | null }
+		| undefined;
+	const projectWorkspaceId = projectRow?.workspace_id ?? null;
+	const isSample = projectRow?.is_sample === true;
 
 	// Language for suggestions
 	const { language } = useLanguage();
@@ -477,15 +493,21 @@ export const ProjectChatRoute = () => {
 		setInput,
 	]);
 
-	// Free tier: max 3 user turns per chat. The 4th routes to upgrade.
+	// Free tier: max 3 user turns per chat. The 4th routes to upgrade. A sample
+	// project's chats share their own allowance, which only the server counts, so
+	// there the limit shows once a reply comes back refused.
 	const { freeTier } = useWorkspaceUsage(routeWorkspaceId);
 	const [chatUpgradeOpened, chatUpgradeHandlers] = useDisclosure(false);
 	const userTurnCount = useMemo(
 		() => (messages ?? []).filter((m) => m.role === "user").length,
 		[messages],
 	);
+	const sampleTurnsSpent = isSample && isTurnLimitResponse(error);
 	const atTurnLimit = Boolean(
-		freeTier?.active && userTurnCount >= FREE_TIER_MAX_CHAT_USER_TURNS,
+		freeTier?.active &&
+			(isSample
+				? sampleTurnsSpent
+				: userTurnCount >= FREE_TIER_MAX_CHAT_USER_TURNS),
 	);
 	const guardedSubmit = () => {
 		if (atTurnLimit) {
@@ -820,7 +842,7 @@ export const ProjectChatRoute = () => {
 							</div>
 						)}
 
-					{error && (
+					{error && !sampleTurnsSpent && (
 						<Alert
 							icon={<WarningCircleIcon size={20} />}
 							title={t`Error`}

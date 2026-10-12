@@ -43,7 +43,7 @@ export function emailLayout(p: EmailParts): string {
   <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:#F6F4F1; padding:40px 20px;">
     <tr><td align="center">
       <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="max-width:600px; background-color:#FFFFFF; border:1px solid #EFEAE2;">
-        <tr><td style="padding:32px 48px 0;"><img src="https://dashboard.echo-next.dembrane.com/dembrane-logo-email.png" alt="dembrane" width="147" height="30" border="0" style="height:30px; width:auto; max-width:100%; display:block; border:0; outline:none; text-decoration:none;"></td></tr>
+        <tr><td style="padding:32px 48px 0;"><img src="https://dashboard.dembrane.com/dembrane-logo-email.png" alt="dembrane" width="147" height="30" border="0" style="height:30px; width:auto; max-width:100%; display:block; border:0; outline:none; text-decoration:none;"></td></tr>
         <tr><td style="padding:28px 48px 0;">
           <h1 style="margin:0 0 20px; font-family:inherit; font-size:32px; font-weight: 400; letter-spacing:-0.01em; line-height:1.15; color:#2D2D2C;">${escapeHtml(p.heading)}</h1>
           <div style="font-size:17px; line-height:1.65; color:#2D2D2C; font-weight: 400;">${p.bodyHtml}</div>

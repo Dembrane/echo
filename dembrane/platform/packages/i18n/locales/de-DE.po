@@ -295,34 +295,6 @@ msgid "email.account_signer_invite.text_cta"
 msgstr "Lesen und unterzeichnen:"
 
 #. js-lingui-explicit-id
-msgid "email.account_task_reminder.subject"
-msgstr "Noch offen: {task_title}"
-
-#. js-lingui-explicit-id
-msgid "email.account_task_reminder.title"
-msgstr "Ein Schritt wartet auf {org_name}"
-
-#. js-lingui-explicit-id
-msgid "email.account_task_reminder.preview"
-msgstr "{task_title} ist auf dembrane noch offen."
-
-#. js-lingui-explicit-id
-msgid "email.account_task_reminder.heading"
-msgstr "Ein Schritt ist noch offen."
-
-#. js-lingui-explicit-id
-msgid "email.account_task_reminder.body"
-msgstr "{task_title} wartet auf dembrane noch auf {org_name}. Es dauert nur eine Minute und sorgt dafür, dass es bei uns weitergeht."
-
-#. js-lingui-explicit-id
-msgid "email.account_task_reminder.cta"
-msgstr "Schritt öffnen"
-
-#. js-lingui-explicit-id
-msgid "email.account_task_reminder.text_cta"
-msgstr "Schritt öffnen:"
-
-#. js-lingui-explicit-id
 msgid "email.account_invite.subject"
 msgstr "Ihr dembrane-Konto für {org_name}"
 
@@ -345,6 +317,26 @@ msgstr "Anmelden"
 #. js-lingui-explicit-id
 msgid "email.account_invite.text_cta"
 msgstr "Anmelden:"
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.subject"
+msgstr "Ihr Angebot von dembrane liegt zur Unterzeichnung bereit"
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.heading"
+msgstr "Ihr Angebot von dembrane liegt zur Unterzeichnung bereit."
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.body"
+msgstr "Wir haben {org_name} ein Angebot gesendet: {document_title}. Lesen und unterzeichnen Sie es in dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.cta"
+msgstr "Angebot lesen und unterzeichnen"
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.text_cta"
+msgstr "Angebot lesen und unterzeichnen:"
 
 #. js-lingui-explicit-id
 msgid "email.report_published.subject"
