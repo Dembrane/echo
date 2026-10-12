@@ -3,6 +3,9 @@ Files in this folder that dembrane did not make:
 fonts/DMSans-*.ttf
   DM Sans, Copyright 2014 The DM Sans Project Authors
   (https://github.com/googlefonts/dm-fonts), SIL Open Font License 1.1. See fonts/OFL.txt.
+  DMSans-Text.ttf and DMSans-Display.ttf are static instances of the variable font the app
+  ships (weight 320, optical size 10 and 24, stylistic sets ss01 to ss06 frozen in), made
+  by fonts/build.py.
 
 offer/sparkles.png, offer/calendar.png
   Noto Emoji (https://github.com/googlefonts/noto-emoji), rendered from 2D/svg/emoji_u2728.svg
