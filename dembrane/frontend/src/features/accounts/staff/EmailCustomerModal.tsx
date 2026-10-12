@@ -99,7 +99,7 @@ export function EmailCustomerModal({
 							{t`To: ${preview.messages.map((m) => m.to).join(", ")}`}
 						</Text>
 						<Paper withBorder p="sm" data-testid="email-preview">
-							<Text size="sm" fw={500}>
+							<Text size="md">
 								{first.subject}
 							</Text>
 							<Text size="sm" mt="xs" style={{ whiteSpace: "pre-wrap" }}>
@@ -108,10 +108,7 @@ export function EmailCustomerModal({
 						</Paper>
 					</>
 				)}
-				<Group justify="flex-end">
-					<Button variant="default" onClick={close}>
-						<Trans>Cancel</Trans>
-					</Button>
+				<Group>
 					<Button
 						disabled={!first}
 						loading={send.isPending}
@@ -134,6 +131,9 @@ export function EmailCustomerModal({
 						}
 					>
 						<Trans>Send</Trans>
+					</Button>
+					<Button variant="default" onClick={close}>
+						<Trans>Cancel</Trans>
 					</Button>
 				</Group>
 			</Stack>

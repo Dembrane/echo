@@ -106,7 +106,7 @@ function DocumentPage() {
 					py="xs"
 					style={{ background: "var(--app-background)", zIndex: 5 }}
 				>
-					<Stack gap={2} style={{ flex: "1 1 260px", minWidth: 0 }}>
+					<Stack gap="xs" style={{ flex: "1 1 260px", minWidth: 0 }}>
 						<Anchor
 							component={I18nLink}
 							to={`/admin/accounts/${orgId}`}
@@ -114,7 +114,7 @@ function DocumentPage() {
 							c="dimmed"
 						>
 							<Group gap={4}>
-								<ArrowLeftIcon size={14} />
+								<ArrowLeftIcon size={16} />
 								{orgName || <Trans>Back to the account</Trans>}
 							</Group>
 						</Anchor>
@@ -154,7 +154,7 @@ function DocumentPage() {
 												onError: (e) => void notifyError(e),
 												onSuccess: () =>
 													toast.success(
-														t`Offer sent. The customer sees it the next time they sign in.`,
+														t`Offer sent. The customer sees it the next time they log in.`,
 													),
 											},
 										)

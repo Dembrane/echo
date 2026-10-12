@@ -36,7 +36,7 @@ msgid "{0, plural, one {You have # thing to do in {name}} other {You have # thin
 msgstr "{0, plural, one {У {name} на Вас чекає # завдання} few {У {name} на Вас чекають # завдання} many {У {name} на Вас чекають # завдань} other {У {name} на Вас чекають # завдання}}"
 
 #. placeholder {0}: r.queued
-#: src/features/accounts/staff/EmailCustomerModal.tsx:128
+#: src/features/accounts/staff/EmailCustomerModal.tsx:125
 msgid "{0} emails sent"
 msgstr "Надіслано листів: {0}"
 
@@ -251,7 +251,6 @@ msgstr "Назад до облікового запису"
 msgid "Back to the account"
 msgstr "Назад до облікового запису"
 
-#: src/features/accounts/customer/NextSteps.tsx:277
 #~ msgid "Before {date}"
 #~ msgstr "До {date}"
 
@@ -326,7 +325,7 @@ msgstr "Дзвінок"
 msgid "Call booked"
 msgstr "Дзвінок заплановано"
 
-#: src/features/accounts/staff/EmailCustomerModal.tsx:113
+#: src/features/accounts/staff/EmailCustomerModal.tsx:136
 #: src/features/accounts/customer/WhoSigns.tsx:369
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:228
 #: src/features/accounts/customer/Questions.tsx:250
@@ -442,9 +441,6 @@ msgstr "Ел. пошта контакту"
 msgid "Contact name"
 msgstr "Ім'я контакту"
 
-#: src/features/accounts/customer/WhoSigns.tsx:383
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:240
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:246
 #~ msgid "Continue"
 #~ msgstr "Продовжити"
 
@@ -667,7 +663,7 @@ msgstr "Електронна пошта"
 msgid "Email me a code"
 msgstr "Надіслати мені код"
 
-#: src/features/accounts/staff/EmailCustomerModal.tsx:127
+#: src/features/accounts/staff/EmailCustomerModal.tsx:124
 msgid "Email sent"
 msgstr "Лист надіслано"
 
@@ -720,7 +716,6 @@ msgstr "Поля | dembrane"
 msgid "Fields saved"
 msgstr "Поля збережено"
 
-#: src/features/accounts/customer/NextSteps.tsx:234
 #~ msgid "Fill in"
 #~ msgstr "Заповнити"
 
@@ -820,7 +815,6 @@ msgstr "До Ваших завдань"
 #~ msgid "Greeting names"
 #~ msgstr ""
 
-#: src/features/accounts/customer/ToPay.tsx:139
 #~ msgid "Hide bank details"
 #~ msgstr "Сховати банківські реквізити"
 
@@ -1148,8 +1142,12 @@ msgstr "Мова пропозиції"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:157
 #: src/features/accounts/staff/DocumentRoute.tsx:157
-msgid "Offer sent. The customer sees it the next time they sign in."
+msgid "Offer sent. The customer sees it the next time they log in."
 msgstr "Пропозицію надіслано. Клієнт побачить її під час наступного входу."
+
+#: src/features/accounts/staff/PushOfferModal.tsx:NaN
+#~ msgid "Offer sent. The customer sees it the next time they sign in."
+#~ msgstr "Пропозицію надіслано. Клієнт побачить її під час наступного входу."
 
 #: src/features/accounts/customer/DocumentsTable.tsx:36
 msgid "Offers, agreements and invoices appear here once we send them."
@@ -1242,14 +1240,12 @@ msgstr "Відкрити для підпису"
 msgid "Opens after signing"
 msgstr "Відкривається після підписання"
 
-#: src/features/accounts/customer/NextSteps.tsx:373
 #~ msgid "Opens after signing."
 #~ msgstr "Відкривається після підписання."
 
 #~ msgid "Opens after you sign {0}"
 #~ msgstr ""
 
-#: src/features/accounts/customer/NextSteps.tsx:371
 #~ msgid "Opens after you sign {0}."
 #~ msgstr "Відкриється після того, як ви підпишете {0}."
 
@@ -1261,7 +1257,6 @@ msgstr "Відкриється після підписання {until}"
 msgid "Opens after you tell us who signs"
 msgstr "Відкриється, коли ви повідомите, хто підписує"
 
-#: src/features/accounts/customer/NextSteps.tsx:368
 #~ msgid "Opens after you tell us who signs."
 #~ msgstr "Відкриється, коли ви повідомите, хто підписує."
 
@@ -1310,7 +1305,6 @@ msgstr "Наша відповідь з’явиться тут, на цій ст
 msgid "Overdue"
 msgstr "Прострочено"
 
-#: src/features/accounts/customer/ToPay.tsx:100
 #~ msgid "Overdue since {due}"
 #~ msgstr "Прострочено з {due}"
 
@@ -1341,7 +1335,6 @@ msgstr "Сплатити {amount}"
 msgid "Pay {title}"
 msgstr "Сплатити {title}"
 
-#: src/features/accounts/customer/ToPay.tsx:141
 #~ msgid "Pay by bank transfer"
 #~ msgstr "Оплатити банківським переказом"
 
@@ -1629,7 +1622,7 @@ msgstr "Заповнення даними"
 msgid "Select a field to set its kind, label and whether it is required. Drag to move, pull the corner to resize."
 msgstr "Виберіть поле, щоб налаштувати його тип, назву та обов'язковість. Перетягуйте, щоб перемістити, потягніть за кут, щоб змінити розмір."
 
-#: src/features/accounts/staff/EmailCustomerModal.tsx:136
+#: src/features/accounts/staff/EmailCustomerModal.tsx:133
 #: src/features/accounts/staff/AccountCardRoute.tsx:206
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:251
 #: src/features/accounts/customer/Questions.tsx:263
@@ -2086,11 +2079,9 @@ msgstr "Не вдалося завантажити цей документ."
 msgid "This document has no PDF."
 msgstr "Цей документ не має PDF."
 
-#: src/features/accounts/signing/SignRoute.tsx:213
 #~ msgid "This document is assigned to {name}"
 #~ msgstr "Цей документ призначено: {name}"
 
-#: src/features/accounts/signing/SignRoute.tsx:209
 #~ msgid "This document is assigned to {name}, {jobTitle}"
 #~ msgstr "Цей документ призначено: {name}, {jobTitle}"
 
@@ -2274,7 +2265,6 @@ msgstr "VAT %"
 msgid "VAT number"
 msgstr "Номер VAT"
 
-#: src/features/accounts/customer/NextSteps.tsx:338
 #~ msgid "View"
 #~ msgstr "Переглянути"
 
@@ -2308,11 +2298,9 @@ msgstr "Очікує: {assignee}"
 #~ msgid "Waiting on {who}, {0}. We emailed them a link to sign."
 #~ msgstr ""
 
-#: src/features/accounts/customer/NextSteps.tsx:320
 #~ msgid "Waiting on {who}, {jobTitle}. We emailed them a link to sign."
 #~ msgstr "Очікуємо на {who}, {jobTitle}. Ми надіслали посилання для підпису."
 
-#: src/features/accounts/customer/NextSteps.tsx:324
 #~ msgid "Waiting on {who}. We emailed them a link to sign."
 #~ msgstr "Очікуємо на {who}. Ми надіслали посилання для підпису."
 
@@ -2394,7 +2382,6 @@ msgstr "Ми відповіли"
 #~ msgid "We send them their own link to this document."
 #~ msgstr "Ми надішлемо їм окреме посилання на цей документ."
 
-#: src/features/accounts/signing/SignRoute.tsx:217
 #~ msgid "We sent {0} a link to sign {1}. You'll see it signed on your account page."
 #~ msgstr "Ми надіслали {0} посилання, щоб підписати {1}. Підписаний документ ви побачите на сторінці свого облікового запису."
 

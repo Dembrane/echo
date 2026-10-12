@@ -36,7 +36,7 @@ msgid "{0, plural, one {You have # thing to do in {name}} other {You have # thin
 msgstr "{0, plural, one {Vous avez # chose à faire chez {name}} other {Vous avez # choses à faire chez {name}}}"
 
 #. placeholder {0}: r.queued
-#: src/features/accounts/staff/EmailCustomerModal.tsx:128
+#: src/features/accounts/staff/EmailCustomerModal.tsx:125
 msgid "{0} emails sent"
 msgstr "{0} e-mails envoyés"
 
@@ -251,7 +251,6 @@ msgstr "Retour au compte"
 msgid "Back to the account"
 msgstr "Retour au compte"
 
-#: src/features/accounts/customer/NextSteps.tsx:277
 #~ msgid "Before {date}"
 #~ msgstr "Avant le {date}"
 
@@ -326,7 +325,7 @@ msgstr "Appel"
 msgid "Call booked"
 msgstr "Appel réservé"
 
-#: src/features/accounts/staff/EmailCustomerModal.tsx:113
+#: src/features/accounts/staff/EmailCustomerModal.tsx:136
 #: src/features/accounts/customer/WhoSigns.tsx:369
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:228
 #: src/features/accounts/customer/Questions.tsx:250
@@ -442,9 +441,6 @@ msgstr "E-mail du contact"
 msgid "Contact name"
 msgstr "Nom du contact"
 
-#: src/features/accounts/customer/WhoSigns.tsx:383
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:240
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:246
 #~ msgid "Continue"
 #~ msgstr "Continuer"
 
@@ -667,7 +663,7 @@ msgstr "E-mail"
 msgid "Email me a code"
 msgstr "M'envoyer un code par e-mail"
 
-#: src/features/accounts/staff/EmailCustomerModal.tsx:127
+#: src/features/accounts/staff/EmailCustomerModal.tsx:124
 msgid "Email sent"
 msgstr "E-mail envoyé"
 
@@ -720,7 +716,6 @@ msgstr "Champs | dembrane"
 msgid "Fields saved"
 msgstr "Champs enregistrés"
 
-#: src/features/accounts/customer/NextSteps.tsx:234
 #~ msgid "Fill in"
 #~ msgstr "Remplir"
 
@@ -820,7 +815,6 @@ msgstr "Voir vos tâches"
 #~ msgid "Greeting names"
 #~ msgstr ""
 
-#: src/features/accounts/customer/ToPay.tsx:139
 #~ msgid "Hide bank details"
 #~ msgstr "Masquer les coordonnées bancaires"
 
@@ -1148,8 +1142,12 @@ msgstr "Langue de l'offre"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:157
 #: src/features/accounts/staff/DocumentRoute.tsx:157
-msgid "Offer sent. The customer sees it the next time they sign in."
+msgid "Offer sent. The customer sees it the next time they log in."
 msgstr "Offre envoyée. Le client la verra lors de sa prochaine connexion."
+
+#: src/features/accounts/staff/PushOfferModal.tsx:NaN
+#~ msgid "Offer sent. The customer sees it the next time they sign in."
+#~ msgstr "Offre envoyée. Le client la verra lors de sa prochaine connexion."
 
 #: src/features/accounts/customer/DocumentsTable.tsx:36
 msgid "Offers, agreements and invoices appear here once we send them."
@@ -1242,14 +1240,12 @@ msgstr "Ouvrir pour signer"
 msgid "Opens after signing"
 msgstr "S'ouvre après la signature"
 
-#: src/features/accounts/customer/NextSteps.tsx:373
 #~ msgid "Opens after signing."
 #~ msgstr "S'ouvre après la signature."
 
 #~ msgid "Opens after you sign {0}"
 #~ msgstr ""
 
-#: src/features/accounts/customer/NextSteps.tsx:371
 #~ msgid "Opens after you sign {0}."
 #~ msgstr "S'ouvre après avoir signé {0}."
 
@@ -1261,7 +1257,6 @@ msgstr "S'ouvre après la signature de {until}"
 msgid "Opens after you tell us who signs"
 msgstr "S'ouvre une fois que vous nous avez dit qui signe"
 
-#: src/features/accounts/customer/NextSteps.tsx:368
 #~ msgid "Opens after you tell us who signs."
 #~ msgstr "S’ouvre une fois que vous nous avez dit qui signe."
 
@@ -1310,7 +1305,6 @@ msgstr "Notre réponse apparaît ici, sur cette page."
 msgid "Overdue"
 msgstr "En retard"
 
-#: src/features/accounts/customer/ToPay.tsx:100
 #~ msgid "Overdue since {due}"
 #~ msgstr "En retard depuis le {due}"
 
@@ -1341,7 +1335,6 @@ msgstr "Payer {amount}"
 msgid "Pay {title}"
 msgstr "Payer {title}"
 
-#: src/features/accounts/customer/ToPay.tsx:141
 #~ msgid "Pay by bank transfer"
 #~ msgstr "Payer par virement"
 
@@ -1629,7 +1622,7 @@ msgstr "Génération des données"
 msgid "Select a field to set its kind, label and whether it is required. Drag to move, pull the corner to resize."
 msgstr "Sélectionnez un champ pour définir son type, son libellé et s'il est obligatoire. Glissez pour déplacer, étirez le coin pour redimensionner."
 
-#: src/features/accounts/staff/EmailCustomerModal.tsx:136
+#: src/features/accounts/staff/EmailCustomerModal.tsx:133
 #: src/features/accounts/staff/AccountCardRoute.tsx:206
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:251
 #: src/features/accounts/customer/Questions.tsx:263
@@ -2086,11 +2079,9 @@ msgstr "Impossible de charger ce document."
 msgid "This document has no PDF."
 msgstr "Ce document n'a pas de PDF."
 
-#: src/features/accounts/signing/SignRoute.tsx:213
 #~ msgid "This document is assigned to {name}"
 #~ msgstr "Ce document est attribué à {name}"
 
-#: src/features/accounts/signing/SignRoute.tsx:209
 #~ msgid "This document is assigned to {name}, {jobTitle}"
 #~ msgstr "Ce document est attribué à {name}, {jobTitle}"
 
@@ -2274,7 +2265,6 @@ msgstr "% VAT"
 msgid "VAT number"
 msgstr "Numéro de VAT"
 
-#: src/features/accounts/customer/NextSteps.tsx:338
 #~ msgid "View"
 #~ msgstr "Voir"
 
@@ -2308,11 +2298,9 @@ msgstr "En attente de {assignee}"
 #~ msgid "Waiting on {who}, {0}. We emailed them a link to sign."
 #~ msgstr ""
 
-#: src/features/accounts/customer/NextSteps.tsx:320
 #~ msgid "Waiting on {who}, {jobTitle}. We emailed them a link to sign."
 #~ msgstr "En attente de {who}, {jobTitle}. Nous lui avons envoyé un lien pour signer."
 
-#: src/features/accounts/customer/NextSteps.tsx:324
 #~ msgid "Waiting on {who}. We emailed them a link to sign."
 #~ msgstr "En attente de {who}. Nous lui avons envoyé un lien pour signer."
 
@@ -2394,7 +2382,6 @@ msgstr "Nous avons répondu"
 #~ msgid "We send them their own link to this document."
 #~ msgstr "Nous leur envoyons leur propre lien vers ce document."
 
-#: src/features/accounts/signing/SignRoute.tsx:217
 #~ msgid "We sent {0} a link to sign {1}. You'll see it signed on your account page."
 #~ msgstr "Nous avons envoyé à {0} un lien pour signer {1}. Vous le verrez signé sur la page de votre compte."
 

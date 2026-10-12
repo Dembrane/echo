@@ -36,7 +36,7 @@ msgid "{0, plural, one {You have # thing to do in {name}} other {You have # thin
 msgstr "{0, plural, one {Hai # cosa da fare in {name}} other {Hai # cose da fare in {name}}}"
 
 #. placeholder {0}: r.queued
-#: src/features/accounts/staff/EmailCustomerModal.tsx:128
+#: src/features/accounts/staff/EmailCustomerModal.tsx:125
 msgid "{0} emails sent"
 msgstr "{0} email inviate"
 
@@ -251,7 +251,6 @@ msgstr "Torna all'account"
 msgid "Back to the account"
 msgstr "Torna all'account"
 
-#: src/features/accounts/customer/NextSteps.tsx:277
 #~ msgid "Before {date}"
 #~ msgstr "Entro il {date}"
 
@@ -326,7 +325,7 @@ msgstr "Chiamata"
 msgid "Call booked"
 msgstr "Chiamata prenotata"
 
-#: src/features/accounts/staff/EmailCustomerModal.tsx:113
+#: src/features/accounts/staff/EmailCustomerModal.tsx:136
 #: src/features/accounts/customer/WhoSigns.tsx:369
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:228
 #: src/features/accounts/customer/Questions.tsx:250
@@ -442,9 +441,6 @@ msgstr "Email di contatto"
 msgid "Contact name"
 msgstr "Nome del contatto"
 
-#: src/features/accounts/customer/WhoSigns.tsx:383
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:240
-#: src/features/accounts/customer/SendToSomeoneElse.tsx:246
 #~ msgid "Continue"
 #~ msgstr "Continua"
 
@@ -667,7 +663,7 @@ msgstr "Email"
 msgid "Email me a code"
 msgstr "Inviami un codice via e-mail"
 
-#: src/features/accounts/staff/EmailCustomerModal.tsx:127
+#: src/features/accounts/staff/EmailCustomerModal.tsx:124
 msgid "Email sent"
 msgstr "Email inviata"
 
@@ -720,7 +716,6 @@ msgstr "Campi | dembrane"
 msgid "Fields saved"
 msgstr "Campi salvati"
 
-#: src/features/accounts/customer/NextSteps.tsx:234
 #~ msgid "Fill in"
 #~ msgstr "Compila"
 
@@ -820,7 +815,6 @@ msgstr "Vai alle tue attività"
 #~ msgid "Greeting names"
 #~ msgstr ""
 
-#: src/features/accounts/customer/ToPay.tsx:139
 #~ msgid "Hide bank details"
 #~ msgstr "Nascondi coordinate bancarie"
 
@@ -1148,8 +1142,12 @@ msgstr "Lingua dell'offerta"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:157
 #: src/features/accounts/staff/DocumentRoute.tsx:157
-msgid "Offer sent. The customer sees it the next time they sign in."
+msgid "Offer sent. The customer sees it the next time they log in."
 msgstr "Offerta inviata. Il cliente la vedrà al prossimo accesso."
+
+#: src/features/accounts/staff/PushOfferModal.tsx:NaN
+#~ msgid "Offer sent. The customer sees it the next time they sign in."
+#~ msgstr "Offerta inviata. Il cliente la vedrà al prossimo accesso."
 
 #: src/features/accounts/customer/DocumentsTable.tsx:36
 msgid "Offers, agreements and invoices appear here once we send them."
@@ -1242,14 +1240,12 @@ msgstr "Apri per firmare"
 msgid "Opens after signing"
 msgstr "Si sblocca dopo la firma"
 
-#: src/features/accounts/customer/NextSteps.tsx:373
 #~ msgid "Opens after signing."
 #~ msgstr "Si sblocca dopo la firma."
 
 #~ msgid "Opens after you sign {0}"
 #~ msgstr ""
 
-#: src/features/accounts/customer/NextSteps.tsx:371
 #~ msgid "Opens after you sign {0}."
 #~ msgstr "Si sblocca dopo aver firmato {0}."
 
@@ -1261,7 +1257,6 @@ msgstr "Si apre dopo che hai firmato {until}"
 msgid "Opens after you tell us who signs"
 msgstr "Si apre dopo che ci hai detto chi firma"
 
-#: src/features/accounts/customer/NextSteps.tsx:368
 #~ msgid "Opens after you tell us who signs."
 #~ msgstr "Si apre quando ci dici chi firma."
 
@@ -1310,7 +1305,6 @@ msgstr "La nostra risposta compare qui, in questa pagina."
 msgid "Overdue"
 msgstr "Scaduto"
 
-#: src/features/accounts/customer/ToPay.tsx:100
 #~ msgid "Overdue since {due}"
 #~ msgstr "Scaduta dal {due}"
 
@@ -1341,7 +1335,6 @@ msgstr "Paga {amount}"
 msgid "Pay {title}"
 msgstr "Paga {title}"
 
-#: src/features/accounts/customer/ToPay.tsx:141
 #~ msgid "Pay by bank transfer"
 #~ msgstr "Paga con bonifico"
 
@@ -1629,7 +1622,7 @@ msgstr "Inizializzazione"
 msgid "Select a field to set its kind, label and whether it is required. Drag to move, pull the corner to resize."
 msgstr "Seleziona un campo per impostarne tipo, etichetta e obbligatorietà. Trascina per spostare, trascina l'angolo per ridimensionare."
 
-#: src/features/accounts/staff/EmailCustomerModal.tsx:136
+#: src/features/accounts/staff/EmailCustomerModal.tsx:133
 #: src/features/accounts/staff/AccountCardRoute.tsx:206
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:251
 #: src/features/accounts/customer/Questions.tsx:263
@@ -2086,11 +2079,9 @@ msgstr "Impossibile caricare questo documento."
 msgid "This document has no PDF."
 msgstr "Questo documento non ha un PDF."
 
-#: src/features/accounts/signing/SignRoute.tsx:213
 #~ msgid "This document is assigned to {name}"
 #~ msgstr "Questo documento è assegnato a {name}"
 
-#: src/features/accounts/signing/SignRoute.tsx:209
 #~ msgid "This document is assigned to {name}, {jobTitle}"
 #~ msgstr "Questo documento è assegnato a {name}, {jobTitle}"
 
@@ -2274,7 +2265,6 @@ msgstr "% IVA"
 msgid "VAT number"
 msgstr "Partita IVA"
 
-#: src/features/accounts/customer/NextSteps.tsx:338
 #~ msgid "View"
 #~ msgstr "Visualizza"
 
@@ -2308,11 +2298,9 @@ msgstr "In attesa di {assignee}"
 #~ msgid "Waiting on {who}, {0}. We emailed them a link to sign."
 #~ msgstr ""
 
-#: src/features/accounts/customer/NextSteps.tsx:320
 #~ msgid "Waiting on {who}, {jobTitle}. We emailed them a link to sign."
 #~ msgstr "In attesa di {who}, {jobTitle}. Abbiamo inviato un link per firmare."
 
-#: src/features/accounts/customer/NextSteps.tsx:324
 #~ msgid "Waiting on {who}. We emailed them a link to sign."
 #~ msgstr "In attesa di {who}. Abbiamo inviato un link per firmare."
 
@@ -2394,7 +2382,6 @@ msgstr "Abbiamo risposto"
 #~ msgid "We send them their own link to this document."
 #~ msgstr "Invieremo loro un link personale a questo documento."
 
-#: src/features/accounts/signing/SignRoute.tsx:217
 #~ msgid "We sent {0} a link to sign {1}. You'll see it signed on your account page."
 #~ msgstr "Abbiamo inviato a {0} un link per firmare {1}. Lo vedrai firmato nella pagina del tuo account."
 
