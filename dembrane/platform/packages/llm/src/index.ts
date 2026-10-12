@@ -18,6 +18,7 @@ export {
   observeSafely,
   resetObserverFaults,
 } from "./observe";
+export { type CallTrace, TRACE_KEY, takeTrace, withTrace } from "./trace";
 export {
   LANGUAGE_NAMES,
   TRANSLATION_SCHEMA,

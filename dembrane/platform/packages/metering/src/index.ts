@@ -129,6 +129,11 @@ export function toRow(
     ms: call.ms,
     input_tokens: call.inputTokens,
     output_tokens: call.outputTokens,
+    step: call.trace?.step ?? null,
+    prompt_ref: call.trace?.promptRef ?? null,
+    prompt_version: call.trace?.promptVersion ?? null,
+    target_type: call.trace?.targetType ?? null,
+    target_id: call.trace?.targetId ?? null,
   };
 }
 

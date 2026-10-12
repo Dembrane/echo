@@ -126,10 +126,16 @@ describe("model call recorder", () => {
         "ms",
         "operation",
         "output_tokens",
+        "prompt_ref",
+        "prompt_version",
         "request_id",
         "service",
         "started_at",
         "status",
+        // The caller's trace: names, a prompt hash and the artefact's id, never its text.
+        "step",
+        "target_id",
+        "target_type",
       ].sort(),
     );
   });

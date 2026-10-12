@@ -1,0 +1,24 @@
+{
+  "name": "@dembrane/signals",
+  "description": "The human signals on what models made, and who agreed to AI training.",
+  "private": true,
+  "type": "module",
+  "dembrane": {
+    "layer": "capability"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@dembrane/core": "workspace:*",
+    "@dembrane/db": "workspace:*",
+    "@dembrane/observability": "workspace:*",
+    "drizzle-orm": "^0.45.3"
+  },
+  "devDependencies": {
+    "postgres": "^3.4.9"
+  }
+}

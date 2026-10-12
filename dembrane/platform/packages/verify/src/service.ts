@@ -3,7 +3,9 @@ import { type ConversationsDeps, PARTICIPANT_TOKEN_HEADER } from "@dembrane/conv
 import { BadRequestError, ForbiddenError, NotFoundError, newId, StatusError } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { directusRow, isoTimestamp } from "@dembrane/legacy-shape";
-import { renderPrompt } from "@dembrane/prompts";
+import { type CallTrace, withTrace } from "@dembrane/llm";
+import { renderPrompt, templateVersion } from "@dembrane/prompts";
+import { classifyEdit, recordSignal } from "@dembrane/signals";
 import { type FilePart, generateText, type TextPart } from "ai";
 import { type ArtifactRow, type VerifyStorage, verifyStorage } from "./storage";
 
@@ -335,13 +337,16 @@ async function complete(
   system: string,
   content: (TextPart | FilePart)[],
   failure: string,
+  trace: CallTrace,
 ) {
   try {
     const { text } = await generateText({
       model: ctx.d.models.model("multi_modal_pro"),
       system,
       messages: [{ role: "user", content }],
-      providerOptions: { vertex: { thinkingConfig: { thinkingBudget: 2048 } } },
+      providerOptions: withTrace(trace, {
+        vertex: { thinkingConfig: { thinkingBudget: 2048 } },
+      }),
     });
     return text;
   } catch (err) {
@@ -410,14 +415,22 @@ export async function generateArtifact(
     language: project.language || "en",
     pii_redaction: anonymized,
   });
+  const artifactId = newId();
   const text = await complete(
     ctx,
     system,
     [{ type: "text", text: lines.join("\n") }, ...(await audioParts(ctx, audio))],
     "Failed to generate verification artifact",
+    {
+      step: "verify.generate",
+      promptRef: "generate_artifact",
+      promptVersion: templateVersion("generate_artifact", "en"),
+      targetType: "conversation_artifact",
+      targetId: artifactId,
+    },
   );
   const created = await ctx.store.createArtifact({
-    id: newId(),
+    id: artifactId,
     conversationId: conv.id,
     key: targetKey,
     topicLabel: target.translations["en-US"]?.label || targetKey,
@@ -489,6 +502,13 @@ export async function updateArtifact(
         ...(await audioParts(ctx, audio)),
       ],
       "Failed to revise verification artifact",
+      {
+        step: "verify.revise",
+        promptRef: "revise_artifact",
+        promptVersion: templateVersion("revise_artifact", "en"),
+        targetType: "conversation_artifact",
+        targetId: artifactId,
+      },
     );
   } else if (body.content !== null) updates.content = body.content;
   if (!Object.keys(updates).length)
@@ -496,12 +516,45 @@ export async function updateArtifact(
       message: "No valid fields to update",
     });
   const updated = (await ctx.store.updateArtifact(artifactId, updates)) ?? artifact;
+  await recordVerifySignal(ctx, artifact, row.project?.id ?? null, body, updates);
   const v = artifactView(updated, artifact.conversation_id);
   return {
     ...v,
     topic_label: updated.topic_label || artifact.topic_label,
     content: updated.content || updates.content || artifact.content || "",
   };
+}
+
+/**
+ * The participant's verdict on an outcome: asking for a revision, approving it as written,
+ * or changing it (with or without approving). The text the model wrote is kept in the
+ * edit's payload, since the update below overwrites it.
+ */
+async function recordVerifySignal(
+  ctx: Ctx,
+  artifact: ArtifactRow,
+  projectId: string | null,
+  body: { useConversation: unknown; content: string | null; approvedAt: string | null },
+  updates: { content?: string },
+) {
+  const base = {
+    step: "verify",
+    targetType: "conversation_artifact",
+    targetId: artifact.id,
+    projectId,
+    conversationId: artifact.conversation_id,
+    actorKind: "participant" as const,
+  };
+  if (body.useConversation) {
+    await recordSignal(ctx.d.db, ctx.d.logger, {
+      ...base,
+      kind: "revise",
+      payload: { before: artifact.content ?? "", after: updates.content ?? "" },
+    });
+    return;
+  }
+  const verdict = classifyEdit(artifact.content, body.content, body.approvedAt !== null);
+  if (verdict) await recordSignal(ctx.d.db, ctx.d.logger, { ...base, ...verdict });
 }
 
 export { PARTICIPANT_TOKEN_HEADER };

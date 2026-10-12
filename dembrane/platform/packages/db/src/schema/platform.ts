@@ -70,6 +70,19 @@ export const model_call = pgTable(
     ms: integer("ms").notNull(),
     input_tokens: integer("input_tokens"),
     output_tokens: integer("output_tokens"),
+    /**
+     * What the call was for, when its caller says (llm CallTrace): the product step, the
+     * prompt and its version, and the artefact the answer became. Ids of artefacts only,
+     * never of people; ai_signal joins here on target_type and target_id.
+     */
+    step: text("step"),
+    prompt_ref: text("prompt_ref"),
+    prompt_version: text("prompt_version"),
+    target_type: text("target_type"),
+    target_id: text("target_id"),
   },
-  (t) => [index("model_call_started_at_idx").on(t.started_at)],
+  (t) => [
+    index("model_call_started_at_idx").on(t.started_at),
+    index("model_call_target_idx").on(t.target_type, t.target_id),
+  ],
 );

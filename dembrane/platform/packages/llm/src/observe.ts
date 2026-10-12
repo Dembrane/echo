@@ -5,6 +5,7 @@ import type {
   LanguageModelV4StreamPart,
   LanguageModelV4Usage,
 } from "@ai-sdk/provider";
+import type { CallTrace } from "./trace";
 
 /**
  * One call to one deployment, as metering sees it: names and numbers only, never the
@@ -28,6 +29,8 @@ export interface ModelCall {
   readonly error: string | null;
   readonly attempt: number;
   readonly fallback: boolean;
+  /** What the call was for, when the caller said so. */
+  readonly trace?: CallTrace;
 }
 
 export type ModelCallObserver = (call: ModelCall) => void;
@@ -71,6 +74,7 @@ export interface CallMeta {
   readonly model: string;
   readonly attempt: number;
   readonly fallback: boolean;
+  readonly trace?: CallTrace | undefined;
 }
 
 /** Tokens the vendor counted; undefined becomes null so a missing count never reads as zero. */
@@ -105,6 +109,7 @@ function base(meta: CallMeta, kind: ModelCall["kind"], startedAt: Date, t0: numb
     ms: Math.round(performance.now() - t0),
     attempt: meta.attempt,
     fallback: meta.fallback,
+    ...(meta.trace && { trace: meta.trace }),
   };
 }
 

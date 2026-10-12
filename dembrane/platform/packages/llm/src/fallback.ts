@@ -13,6 +13,7 @@ import {
   observeSafely,
   type Report,
 } from "./observe";
+import { type CallTrace, takeTrace } from "./trace";
 
 export interface Deployment {
   readonly label: string;
@@ -73,39 +74,53 @@ export class FallbackModel implements LanguageModelV4 {
   private readonly report: Report = (make) =>
     observeSafely(this.opts.observe, this.opts.onObserverFault, make);
 
-  doGenerate(options: LanguageModelV4CallOptions): Promise<LanguageModelV4GenerateResult> {
-    return this.run(async (d, meta) => {
-      const startedAt = new Date();
-      const t0 = performance.now();
-      let result: LanguageModelV4GenerateResult;
-      try {
-        result = await d.model.doGenerate(options);
-      } catch (err) {
-        this.report(() => failedCall(meta, "generate", startedAt, t0, err));
-        throw err;
-      }
-      this.report(() => generateCall(meta, startedAt, t0, result));
-      return result;
-    }, options.abortSignal);
+  doGenerate(traced: LanguageModelV4CallOptions): Promise<LanguageModelV4GenerateResult> {
+    const { trace, options } = untraced(traced);
+    return this.run(
+      trace,
+      async (d, meta) => {
+        const startedAt = new Date();
+        const t0 = performance.now();
+        let result: LanguageModelV4GenerateResult;
+        try {
+          result = await d.model.doGenerate(options);
+        } catch (err) {
+          this.report(() => failedCall(meta, "generate", startedAt, t0, err));
+          throw err;
+        }
+        this.report(() => generateCall(meta, startedAt, t0, result));
+        return result;
+      },
+      options.abortSignal,
+    );
   }
 
-  doStream(options: LanguageModelV4CallOptions): Promise<LanguageModelV4StreamResult> {
-    return this.run(async (d, meta) => {
-      const startedAt = new Date();
-      const t0 = performance.now();
-      let result: LanguageModelV4StreamResult;
-      try {
-        result = await d.model.doStream(options);
-      } catch (err) {
-        this.report(() => failedCall(meta, "stream", startedAt, t0, err));
-        throw err;
-      }
-      if (!this.opts.observe) return result;
-      return { ...result, stream: observedStream(result.stream, meta, startedAt, t0, this.report) };
-    }, options.abortSignal);
+  doStream(traced: LanguageModelV4CallOptions): Promise<LanguageModelV4StreamResult> {
+    const { trace, options } = untraced(traced);
+    return this.run(
+      trace,
+      async (d, meta) => {
+        const startedAt = new Date();
+        const t0 = performance.now();
+        let result: LanguageModelV4StreamResult;
+        try {
+          result = await d.model.doStream(options);
+        } catch (err) {
+          this.report(() => failedCall(meta, "stream", startedAt, t0, err));
+          throw err;
+        }
+        if (!this.opts.observe) return result;
+        return {
+          ...result,
+          stream: observedStream(result.stream, meta, startedAt, t0, this.report),
+        };
+      },
+      options.abortSignal,
+    );
   }
 
   private async run<T>(
+    trace: CallTrace | null,
     call: (d: Deployment, meta: CallMeta) => PromiseLike<T>,
     signal?: AbortSignal,
   ): Promise<T> {
@@ -122,6 +137,7 @@ export class FallbackModel implements LanguageModelV4 {
             model: d.model.modelId,
             attempt: attempts,
             fallback: i > 0,
+            ...(trace && { trace }),
           });
         } catch (err) {
           last = err;
@@ -150,6 +166,17 @@ export class FallbackModel implements LanguageModelV4 {
     const recent = (this.failures.get(label) ?? []).filter((t) => now - t < this.opts.cooldownMs);
     this.failures.set(label, [...recent, now]);
   }
+}
+
+/** The call's trace, and the call without it, so the trace never reaches a provider. */
+function untraced(traced: LanguageModelV4CallOptions): {
+  trace: CallTrace | null;
+  options: LanguageModelV4CallOptions;
+} {
+  const { trace, rest } = takeTrace(traced.providerOptions);
+  if (!trace && rest === traced.providerOptions) return { trace, options: traced };
+  const { providerOptions: _, ...others } = traced;
+  return { trace, options: rest ? { ...others, providerOptions: rest } : others };
 }
 
 /** Rate limits, overload, server errors and network failures are worth another deployment; bad requests are not. */
