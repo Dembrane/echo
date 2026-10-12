@@ -147,11 +147,11 @@ msgstr "Nejprve přidejte svůj podpis."
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:407
 #: src/features/accounts/staff/AccountCardRoute.tsx:699
-#: src/features/accounts/customer/BillingForm.tsx:133
+#: src/features/accounts/customer/BillingForm.tsx:135
 msgid "Address"
 msgstr "Adresa"
 
-#: src/features/accounts/customer/BillingForm.tsx:137
+#: src/features/accounts/customer/BillingForm.tsx:139
 msgid "Address line 2"
 msgstr "2. řádek adresy"
 
@@ -203,11 +203,11 @@ msgstr "Zpět na účet"
 
 #: src/features/accounts/format.ts:135
 #: src/features/accounts/staff/AccountCardRoute.tsx:708
-#: src/features/accounts/customer/BillingForm.tsx:112
+#: src/features/accounts/customer/BillingForm.tsx:114
 msgid "Billing details"
 msgstr "Fakturační údaje"
 
-#: src/features/accounts/customer/BillingForm.tsx:107
+#: src/features/accounts/customer/BillingForm.tsx:109
 msgid "Billing details saved"
 msgstr "Fakturační údaje uloženy"
 
@@ -308,7 +308,7 @@ msgstr "Vybrat obrázek"
 msgid "Churned"
 msgstr "Ztraceno"
 
-#: src/features/accounts/customer/BillingForm.tsx:144
+#: src/features/accounts/customer/BillingForm.tsx:146
 msgid "City"
 msgstr "Město"
 
@@ -352,7 +352,7 @@ msgstr "Kopírovat {label}"
 msgid "Corpus"
 msgstr "Korpus"
 
-#: src/features/accounts/customer/BillingForm.tsx:148
+#: src/features/accounts/customer/BillingForm.tsx:150
 msgid "Country"
 msgstr "Země"
 
@@ -553,7 +553,7 @@ msgstr "Pole uložena"
 msgid "Fill in"
 msgstr "Vyplnit"
 
-#: src/features/accounts/customer/BillingForm.tsx:68
+#: src/features/accounts/customer/BillingForm.tsx:70
 msgid "Fill this in."
 msgstr "Vyplňte toto pole."
 
@@ -593,7 +593,7 @@ msgstr "Přejít na úkoly"
 msgid "If not, the data processing agreement becomes a separate document for someone who may."
 msgstr "Pokud ne, smlouva o zpracování osobních údajů se stane samostatným dokumentem pro oprávněnou osobu."
 
-#: src/features/accounts/customer/BillingForm.tsx:180
+#: src/features/accounts/customer/BillingForm.tsx:182
 msgid "If your finance team uses one"
 msgstr "Pokud jej vaše finanční oddělení používá"
 
@@ -623,7 +623,7 @@ msgid "Invoice {0}"
 msgstr "Faktura {0}"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:698
-#: src/features/accounts/customer/BillingForm.tsx:127
+#: src/features/accounts/customer/BillingForm.tsx:129
 msgid "Invoice email"
 msgstr "Fakturační e-mail"
 
@@ -631,7 +631,7 @@ msgstr "Fakturační e-mail"
 msgid "KBO number"
 msgstr "Číslo KBO"
 
-#: src/features/accounts/customer/BillingForm.tsx:173
+#: src/features/accounts/customer/BillingForm.tsx:175
 msgid "KBO number (Belgium)"
 msgstr "Číslo KBO (Belgie)"
 
@@ -644,7 +644,7 @@ msgstr "Typ"
 msgid "KvK number"
 msgstr "Číslo KvK"
 
-#: src/features/accounts/customer/BillingForm.tsx:170
+#: src/features/accounts/customer/BillingForm.tsx:172
 msgid "KvK number (Netherlands)"
 msgstr "Číslo KvK (Nizozemsko)"
 
@@ -666,7 +666,7 @@ msgstr "Později"
 msgid "Legal name"
 msgstr "Právní název"
 
-#: src/features/accounts/customer/BillingForm.tsx:123
+#: src/features/accounts/customer/BillingForm.tsx:125
 msgid "Legal name of your organisation"
 msgstr "Právní název vaší organizace"
 
@@ -856,7 +856,7 @@ msgstr "Úvodní úkoly staženy"
 msgid "One per line"
 msgstr "Jedno na řádek"
 
-#: src/features/accounts/customer/BillingForm.tsx:183
+#: src/features/accounts/customer/BillingForm.tsx:185
 msgid "Only if you get invoices through Peppol"
 msgstr "Jen pokud dostáváte faktury přes Peppol"
 
@@ -984,7 +984,7 @@ msgid "Payment details"
 msgstr "Platební údaje"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:704
-#: src/features/accounts/customer/BillingForm.tsx:182
+#: src/features/accounts/customer/BillingForm.tsx:184
 msgid "Peppol ID"
 msgstr "Peppol ID"
 
@@ -999,11 +999,11 @@ msgstr "Umístit pole"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:409
 #: src/features/accounts/staff/AccountCardRoute.tsx:703
-#: src/features/accounts/customer/BillingForm.tsx:179
+#: src/features/accounts/customer/BillingForm.tsx:181
 msgid "PO number"
 msgstr "Číslo objednávky"
 
-#: src/features/accounts/customer/BillingForm.tsx:140
+#: src/features/accounts/customer/BillingForm.tsx:142
 msgid "Postal code"
 msgstr "PSČ"
 
@@ -1120,7 +1120,7 @@ msgstr "Reference"
 #~ msgid "reference {0}"
 #~ msgstr ""
 
-#: src/features/accounts/customer/BillingForm.tsx:164
+#: src/features/accounts/customer/BillingForm.tsx:166
 msgid "Registration number: fill in at least one"
 msgstr "Registrační číslo: vyplňte alespoň jedno"
 
@@ -1181,7 +1181,7 @@ msgstr "Role"
 msgid "Save"
 msgstr "Uložit"
 
-#: src/features/accounts/customer/BillingForm.tsx:193
+#: src/features/accounts/customer/BillingForm.tsx:195
 msgid "Save billing details"
 msgstr "Uložit fakturační údaje"
 
@@ -1189,7 +1189,7 @@ msgstr "Uložit fakturační údaje"
 msgid "Save draft"
 msgstr "Uložit koncept"
 
-#: src/features/accounts/customer/BillingForm.tsx:199
+#: src/features/accounts/customer/BillingForm.tsx:201
 msgid "Saved"
 msgstr "Uloženo"
 
@@ -1655,7 +1655,7 @@ msgstr "VAT %"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:408
 #: src/features/accounts/staff/AccountCardRoute.tsx:700
-#: src/features/accounts/customer/BillingForm.tsx:167
+#: src/features/accounts/customer/BillingForm.tsx:169
 msgid "VAT number"
 msgstr "DIČ (VAT)"
 
@@ -1690,7 +1690,7 @@ msgstr "Požádali jsme o změnu: {0}"
 msgid "We build a synthetic demo from their website and your brief. Nothing reaches them until you publish."
 msgstr "Vytvoříme syntetické demo na základě jejich webu a vašeho zadání. Dokud jej nezveřejníte, nic se k nim nedostane."
 
-#: src/features/accounts/customer/BillingForm.tsx:116
+#: src/features/accounts/customer/BillingForm.tsx:118
 msgid "We put these on your invoice."
 msgstr "Tyto údaje uvedeme na vaší faktuře."
 

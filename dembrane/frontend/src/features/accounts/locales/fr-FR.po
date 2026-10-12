@@ -147,11 +147,11 @@ msgstr "Ajoutez d'abord votre signature."
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:407
 #: src/features/accounts/staff/AccountCardRoute.tsx:699
-#: src/features/accounts/customer/BillingForm.tsx:133
+#: src/features/accounts/customer/BillingForm.tsx:135
 msgid "Address"
 msgstr "Adresse"
 
-#: src/features/accounts/customer/BillingForm.tsx:137
+#: src/features/accounts/customer/BillingForm.tsx:139
 msgid "Address line 2"
 msgstr "Complément d'adresse"
 
@@ -203,11 +203,11 @@ msgstr "Retour au compte"
 
 #: src/features/accounts/format.ts:135
 #: src/features/accounts/staff/AccountCardRoute.tsx:708
-#: src/features/accounts/customer/BillingForm.tsx:112
+#: src/features/accounts/customer/BillingForm.tsx:114
 msgid "Billing details"
 msgstr "Coordonnées de facturation"
 
-#: src/features/accounts/customer/BillingForm.tsx:107
+#: src/features/accounts/customer/BillingForm.tsx:109
 msgid "Billing details saved"
 msgstr "Coordonnées de facturation enregistrées"
 
@@ -308,7 +308,7 @@ msgstr "Choisir une image"
 msgid "Churned"
 msgstr "Désabonné"
 
-#: src/features/accounts/customer/BillingForm.tsx:144
+#: src/features/accounts/customer/BillingForm.tsx:146
 msgid "City"
 msgstr "Ville"
 
@@ -352,7 +352,7 @@ msgstr "Copier {label}"
 msgid "Corpus"
 msgstr "Corpus"
 
-#: src/features/accounts/customer/BillingForm.tsx:148
+#: src/features/accounts/customer/BillingForm.tsx:150
 msgid "Country"
 msgstr "Pays"
 
@@ -553,7 +553,7 @@ msgstr "Champs enregistrés"
 msgid "Fill in"
 msgstr "Remplir"
 
-#: src/features/accounts/customer/BillingForm.tsx:68
+#: src/features/accounts/customer/BillingForm.tsx:70
 msgid "Fill this in."
 msgstr "Renseignez ce champ."
 
@@ -593,7 +593,7 @@ msgstr "Voir vos tâches"
 msgid "If not, the data processing agreement becomes a separate document for someone who may."
 msgstr "Si ce n'est pas le cas, l'accord de traitement des données deviendra un document distinct destiné à une personne habilitée."
 
-#: src/features/accounts/customer/BillingForm.tsx:180
+#: src/features/accounts/customer/BillingForm.tsx:182
 msgid "If your finance team uses one"
 msgstr "Si votre équipe financière en utilise un"
 
@@ -623,7 +623,7 @@ msgid "Invoice {0}"
 msgstr "Facture {0}"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:698
-#: src/features/accounts/customer/BillingForm.tsx:127
+#: src/features/accounts/customer/BillingForm.tsx:129
 msgid "Invoice email"
 msgstr "E-mail de facturation"
 
@@ -631,7 +631,7 @@ msgstr "E-mail de facturation"
 msgid "KBO number"
 msgstr "Numéro KBO"
 
-#: src/features/accounts/customer/BillingForm.tsx:173
+#: src/features/accounts/customer/BillingForm.tsx:175
 msgid "KBO number (Belgium)"
 msgstr "Numéro KBO (Belgique)"
 
@@ -644,7 +644,7 @@ msgstr "Type"
 msgid "KvK number"
 msgstr "Numéro KvK"
 
-#: src/features/accounts/customer/BillingForm.tsx:170
+#: src/features/accounts/customer/BillingForm.tsx:172
 msgid "KvK number (Netherlands)"
 msgstr "Numéro KvK (Pays-Bas)"
 
@@ -666,7 +666,7 @@ msgstr "Plus tard"
 msgid "Legal name"
 msgstr "Nom légal"
 
-#: src/features/accounts/customer/BillingForm.tsx:123
+#: src/features/accounts/customer/BillingForm.tsx:125
 msgid "Legal name of your organisation"
 msgstr "Nom légal de votre organisation"
 
@@ -856,7 +856,7 @@ msgstr "Tâches d'accueil retirées"
 msgid "One per line"
 msgstr "Un par ligne"
 
-#: src/features/accounts/customer/BillingForm.tsx:183
+#: src/features/accounts/customer/BillingForm.tsx:185
 msgid "Only if you get invoices through Peppol"
 msgstr "Seulement si vous recevez vos factures via Peppol"
 
@@ -984,7 +984,7 @@ msgid "Payment details"
 msgstr "Détails du paiement"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:704
-#: src/features/accounts/customer/BillingForm.tsx:182
+#: src/features/accounts/customer/BillingForm.tsx:184
 msgid "Peppol ID"
 msgstr "Identifiant Peppol"
 
@@ -999,11 +999,11 @@ msgstr "Placer les champs"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:409
 #: src/features/accounts/staff/AccountCardRoute.tsx:703
-#: src/features/accounts/customer/BillingForm.tsx:179
+#: src/features/accounts/customer/BillingForm.tsx:181
 msgid "PO number"
 msgstr "Numéro de bon de commande"
 
-#: src/features/accounts/customer/BillingForm.tsx:140
+#: src/features/accounts/customer/BillingForm.tsx:142
 msgid "Postal code"
 msgstr "Code postal"
 
@@ -1120,7 +1120,7 @@ msgstr "Référence"
 #~ msgid "reference {0}"
 #~ msgstr ""
 
-#: src/features/accounts/customer/BillingForm.tsx:164
+#: src/features/accounts/customer/BillingForm.tsx:166
 msgid "Registration number: fill in at least one"
 msgstr "Numéro d'enregistrement : indiquez-en au moins un"
 
@@ -1181,7 +1181,7 @@ msgstr "Rôle"
 msgid "Save"
 msgstr "Enregistrer"
 
-#: src/features/accounts/customer/BillingForm.tsx:193
+#: src/features/accounts/customer/BillingForm.tsx:195
 msgid "Save billing details"
 msgstr "Enregistrer les informations de facturation"
 
@@ -1189,7 +1189,7 @@ msgstr "Enregistrer les informations de facturation"
 msgid "Save draft"
 msgstr "Enregistrer le brouillon"
 
-#: src/features/accounts/customer/BillingForm.tsx:199
+#: src/features/accounts/customer/BillingForm.tsx:201
 msgid "Saved"
 msgstr "Enregistré"
 
@@ -1655,7 +1655,7 @@ msgstr "% VAT"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:408
 #: src/features/accounts/staff/AccountCardRoute.tsx:700
-#: src/features/accounts/customer/BillingForm.tsx:167
+#: src/features/accounts/customer/BillingForm.tsx:169
 msgid "VAT number"
 msgstr "Numéro de VAT"
 
@@ -1690,7 +1690,7 @@ msgstr "Nous avons demandé une modification : {0}"
 msgid "We build a synthetic demo from their website and your brief. Nothing reaches them until you publish."
 msgstr "Nous créons une démo synthétique à partir de leur site web et de votre brief. Rien ne leur sera envoyé avant la publication."
 
-#: src/features/accounts/customer/BillingForm.tsx:116
+#: src/features/accounts/customer/BillingForm.tsx:118
 msgid "We put these on your invoice."
 msgstr "Ces informations figurent sur votre facture."
 
