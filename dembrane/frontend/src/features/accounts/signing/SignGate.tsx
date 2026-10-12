@@ -117,7 +117,7 @@ function SignedInWithInvite({ token }: { token: string }) {
 	return (
 		<Frame>
 			<Stack gap="md" data-testid="invite-not-you">
-				<Title order={3} style={{ overflowWrap: "anywhere" }}>
+				<Title order={2} style={{ overflowWrap: "anywhere" }}>
 					<Trans>This invitation is for {invitee}</Trans>
 				</Title>
 				<Text>
@@ -366,7 +366,7 @@ function OpenInvite({ invite, token }: { invite: Invite; token: string }) {
 								</Group>
 							</>
 						)}
-						<Stack gap={2} data-testid="invite-email">
+						<Stack gap="xs" data-testid="invite-email">
 							<Text size="sm" c="dimmed">
 								<Trans>The invitation was sent to</Trans>
 							</Text>
