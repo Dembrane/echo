@@ -9,9 +9,9 @@ import {
 
 /**
  * The words of an offer, from the Google Doc templates of sales (packages/accounts/reference:
- * subscription and event, English and Dutch) rewritten in dembrane's voice: what it is and
- * "<Name> x dembrane", the facts (reference, date, valid until), a greeting, the lines table,
- * subtotal, VAT and total, the closing, the acceptance and the incorporation clause naming
+ * subscription and event, English and Dutch) rewritten in dembrane's voice: the kind of
+ * offer over the customer's name, the facts (reference, date, valid until), a greeting, the
+ * lines table, subtotal, VAT and total, the closing, the acceptance and the incorporation clause naming
  * the pinned terms, SLA and DPA. The clause keeps the templates' legal wording word for word.
  * The template and the language choose the words; every offer has the same look (offer-pdf.ts).
  * The same structure feeds the text the customer reads (and the sha256 binds) and the PDF.
@@ -64,7 +64,7 @@ export interface Acceptance {
 export interface OfferContent {
   readonly template: OfferTemplate;
   readonly language: Language;
-  /** The customer's name in the title: "<offer_name> x dembrane". */
+  /** Who the offer is for: the name under "Event offer" on the PDF's first page. */
   readonly offer_name: string;
   /** ISO date the offer was made; validity counts from here. */
   readonly date: string;
@@ -87,8 +87,6 @@ export interface OfferContent {
 }
 
 interface Copy {
-  /** What the document is, above its title: "Offer". */
-  readonly kind: string;
   readonly facts: {
     readonly reference: string;
     readonly date: string;
@@ -279,7 +277,6 @@ const NL_MONTHS = [
 ];
 
 const EN_FRAME = {
-  kind: "Offer",
   facts: {
     reference: "Reference",
     date: "Date",
@@ -298,7 +295,6 @@ const EN_FRAME = {
   months: EN_MONTHS,
 };
 const NL_FRAME = {
-  kind: "Offerte",
   facts: { reference: "Referentie", date: "Datum", validUntil: "Geldig tot", attention: "T.a.v." },
   totals: { subtotal: "Subtotaal (excl. btw)", vat: "Btw", total: "Totaal (incl. btw)" },
   vatNote: {
@@ -482,6 +478,27 @@ export interface OfferLayout {
   readonly clauseParts: Clause;
 }
 
+/**
+ * There are two kinds of offer, an event and a yearly license, and the kind is what the
+ * customer recognises it by: "Event offer" above the customer's name on the PDF, and
+ * "Event offer 515" as the document's name in the app, where the customer is already
+ * themselves and the number is what they pass on to whoever signs or pays.
+ */
+const OFFER_KIND: Record<OfferTemplate, Record<Language, string>> = {
+  event: { en: "Event offer", nl: "Offerte evenement" },
+  subscription: { en: "Yearly license offer", nl: "Offerte jaarlicentie" },
+};
+
+export const offerKind = (template: OfferTemplate, language: Language): string =>
+  OFFER_KIND[template][language];
+
+/** The document's name: its kind and its number. */
+export const offerTitle = (
+  template: OfferTemplate,
+  language: Language,
+  reference: string,
+): string => `${offerKind(template, language)} ${reference}`;
+
 export function offerTotals(content: OfferContent): Totals {
   return priceLines(content.items);
 }
@@ -512,8 +529,8 @@ export function layoutOffer(content: OfferContent): OfferLayout {
         `KvK ${c.kvk} · ${copy.totals.vat} ${c.vat} · IBAN ${c.iban} · BIC ${c.bic}`,
       ],
     },
-    kind: copy.kind,
-    title: `${content.offer_name} x dembrane`,
+    kind: offerKind(content.template, content.language),
+    title: content.offer_name,
     facts,
     greeting: `${copy.greeting}${content.person_name ? ` ${content.person_name}` : ""},`,
     intro: copy.intro,

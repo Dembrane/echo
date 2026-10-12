@@ -217,7 +217,12 @@ run("accounts routes against Postgres", () => {
       "signature",
     ]);
     expect(pushed.task?.code).toBe("sign_offer");
-    expect(pushed.task?.params).toEqual({ document_title: pushed.document.title });
+    expect(pushed.task?.params).toEqual({
+      document_title: pushed.document.title,
+      offer_template: "subscription",
+      offer_reference: pushed.document.reference as string,
+    });
+    expect(pushed.document.title).toBe(`Offerte jaarlicentie ${pushed.document.reference}`);
     expect([pushed.task?.title, pushed.task?.body]).toEqual([null, null]);
     expect(pushed.task?.status).toBe("open");
     expect(pushed.task?.next_reminder_at).toBe("2026-10-05T09:00:00.000Z");
@@ -479,6 +484,26 @@ run("accounts routes against Postgres", () => {
     );
     expect(await store.mayReceiveCode(w.db, "signer@example.test", w.clock.now)).toBe(true);
     expect(await store.mayReceiveCode(w.db, "stranger@example.test", w.clock.now)).toBe(false);
+    // They show among the members as invited, once however often they are named; a
+    // member named to sign gets no invitation.
+    expect((await call(w, "POST", `${C()}/documents/${id}/signer`, "admin", named)).status).toBe(
+      200,
+    );
+    const invites = async (email: string) =>
+      w.db
+        .select({ role: schema.org_invite.role })
+        .from(schema.org_invite)
+        .where(and(eq(schema.org_invite.org_id, w.orgId), eq(schema.org_invite.email, email)));
+    expect(await invites("signer@example.test")).toEqual([{ role: "billing" }]);
+    expect(
+      await store.inviteSigner(w.db, {
+        id: crypto.randomUUID(),
+        orgId: w.orgId,
+        email: "Admin@Example.test",
+        invitedBy: null,
+        now: w.clock.now,
+      }),
+    ).toBe(false);
     // The signer sees that document, and nothing else of the organisation.
     const seen = await call(w, "GET", `${C()}/documents/${id}`, "signer");
     expect(seen.status).toBe(200);

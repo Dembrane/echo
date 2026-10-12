@@ -17,7 +17,7 @@ import { accountPageUrl } from "./jobs";
 import type { PricedLine } from "./money";
 import type { OfferContent } from "./offer";
 import { completeOnboarding, isOnboardingCode } from "./onboarding";
-import { type DocumentRow, store } from "./storage";
+import { type BillingRow, type DocumentRow, store } from "./storage";
 import { isTaskCode } from "./task-text";
 import { settleTask } from "./tasks";
 import {
@@ -100,7 +100,10 @@ export async function documentDetail(
   ]);
   // Placeholders for what the signer's fields provide; the organisation's own name when
   // the document has no organisation field, and no role when it has no role field.
-  const org = await store.org(d.db, doc.orgId);
+  const [org, billing] = await Promise.all([
+    store.org(d.db, doc.orgId),
+    store.billing(d.db, doc.orgId),
+  ]);
   const has = (pick: (f: (typeof fields)[number]) => boolean) => fields.some(pick);
   const placeholders = {
     name: "{name}",
@@ -137,9 +140,25 @@ export async function documentDetail(
         }
       : null,
     signature: sig ? signatureView(sig) : null,
+    prefill: signingPrefill(org?.name ?? null, billing),
     access: via,
     staff_url:
       via === "staff" ? staffDocumentUrl(d.settings.dashboardUrl, doc.orgId, doc.id) : null,
+  };
+}
+
+/**
+ * What the signer need not type: the organisation as it is billed (else its name) and the
+ * billing address, when we have them. The signer still sees and may change both.
+ */
+function signingPrefill(orgName: string | null, b: BillingRow | null) {
+  const place = [b?.billing_postal_code, b?.billing_city].filter(Boolean).join(" ");
+  const address = [b?.billing_address_line1, b?.billing_address_line2, place, b?.billing_country]
+    .filter(Boolean)
+    .join(", ");
+  return {
+    organisation: b?.billing_legal_name || orgName || null,
+    address: b?.billing_address_line1 ? address : null,
   };
 }
 
@@ -218,8 +237,10 @@ const SIGNER_LIMIT = { name: "account_signer", capacity: 10, windowSeconds: 3600
 
 /**
  * Names someone else to sign. They get an email with a link; signing in with a code sent
- * to that address reaches this one document and nothing else of the organisation. Naming
- * a different person than the one already named goes on the timeline as a replacement.
+ * to that address reaches this one document and nothing else of the organisation. They
+ * also show among the members as invited, and the signing task waits on them: their
+ * signature completes it. Naming a different person than the one already named goes on
+ * the timeline as a replacement.
  */
 export async function nameSigner(
   d: AccountsDeps,
@@ -251,6 +272,13 @@ export async function nameSigner(
       signerRole: signer.role,
       signerInvitedAt: now,
       updatedAt: now,
+    });
+    await store.inviteSigner(tx, {
+      id: newId(),
+      orgId: org.id,
+      email,
+      invitedBy: who.appUserId ?? null,
+      now,
     });
     await d.jobs.enqueue(
       sendEmail,

@@ -151,12 +151,13 @@ run("accounts for any organisation, and the tasks summary", () => {
     // The locked billing task now names the offer it opens after.
     const billing = after.tasks.find((t) => t.kind === "billing_details");
     expect(billing?.locked_until_document_id).toBe(pushed.document.id);
-    expect(billing?.locked_until_title).toBe("Self Serve Co x dembrane");
+    expect(billing?.locked_until_title).toBe(pushed.document.title);
+    expect(pushed.document.title).toBe(`Yearly license offer ${pushed.document.reference}`);
     const card = K.AccountCard.parse(
       (await call(w, "GET", `/api/v2/admin/accounts/${selfServe}`, "staff")).data,
     );
     expect(card.tasks.find((t) => t.kind === "billing_details")?.locked_until_title).toBe(
-      "Self Serve Co x dembrane",
+      pushed.document.title,
     );
   });
 
@@ -199,7 +200,11 @@ run("accounts for any organisation, and the tasks summary", () => {
     // A task echo created comes as a code for the UI to word; no text.
     expect(mine?.next_task_title).toBeNull();
     expect(mine?.next_task_code).toBe("sign_offer");
-    expect(mine?.next_task_params).toEqual({ document_title: "Self Serve Co x dembrane" });
+    expect(mine?.next_task_params).toEqual({
+      document_title: expect.stringMatching(/^Yearly license offer DMB-/),
+      offer_reference: expect.stringMatching(/^DMB-/),
+      offer_template: "subscription",
+    });
     // The billing role sees Gemeente Testdorp but not the self-serve org, where it has no role.
     expect(
       K.TasksSummary.parse(
@@ -232,7 +237,7 @@ run("accounts for any organisation, and the tasks summary", () => {
       id: sign?.id,
       code: "sign_offer",
       kind: "sign",
-      title: "Review and sign the offer: Self Serve Co x dembrane",
+      title: expect.stringMatching(/^Review and sign the offer: Yearly license offer DMB-/),
       document_id: sign?.documentId,
       times_asked: 1,
     });

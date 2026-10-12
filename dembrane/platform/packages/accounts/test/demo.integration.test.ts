@@ -435,7 +435,8 @@ run("bun run seed:accounts-demo", () => {
     expect(ORG_NAME).toEndWith("(sample)");
     const fresh = await live();
     expect(fresh?.id).toBe(again.offer_id);
-    expect(fresh?.title).toBe(`${ORG_NAME} x dembrane`);
+    expect(fresh?.title).toStartWith("Yearly license offer DMB-DEMO-");
+    expect((fresh?.content as { offer_name: string }).offer_name).toBe(ORG_NAME);
     const [customer] = await database.db
       .select({ name: schema.auth_user.name })
       .from(schema.auth_user)

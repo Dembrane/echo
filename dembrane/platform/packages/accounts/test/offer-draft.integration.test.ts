@@ -222,7 +222,7 @@ run("an offer draft, and the invoice request after the signature", () => {
     // What was not given stays: the reference and the deal it belongs to.
     expect(after.reference).toBe("OFFER-900");
     expect((await store.document(w.db, w.orgId, doc.id))?.externalRef).toBe("deal-900");
-    expect(after.title).toBe("Testdorp x dembrane");
+    expect(after.title).toBe("Offerte jaarlicentie OFFER-900");
     expect(after.language).toBe("nl");
     expect(after.content?.person_name).toBe("Bram");
     expect(after.subtotal_cents).toBe(6 * 8600 + 125000);
@@ -467,7 +467,7 @@ run("an offer draft, and the invoice request after the signature", () => {
         template: "account_offer_sent",
         data: {
           org_name: "Gemeente Testdorp",
-          document_title: "Gemeente Testdorp x dembrane",
+          document_title: "Yearly license offer OFFER-910",
           sign_url: link,
           reference: "OFFER-910",
           total_cents: "124872",
