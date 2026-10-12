@@ -181,9 +181,10 @@ function OpenTask({
 	const action = (() => {
 		if (task.kind === "sign" && task.document_id) {
 			// Signing it, or handing it to whoever signs for the organisation: both are
-			// right here, so the task needs no words of its own.
+			// right here, so the task needs no words of its own. Signing is the pill and
+			// comes first; handing it on is the outlined secondary, with room between.
 			return (
-				<Group gap="xs" wrap="wrap">
+				<Group gap="md" wrap="wrap">
 					<Button
 						variant={variant}
 						component={I18nLink}
@@ -247,8 +248,9 @@ function OpenTask({
 			data-status={task.status}
 			data-current={first ? "true" : undefined}
 		>
-			<Group justify="space-between" align="center" gap="sm" wrap="wrap">
-				<Stack gap={4} style={{ flex: "1 1 260px", minWidth: 0 }}>
+			{/* The action sits under the words it answers, primary first, at the left. */}
+			<Stack gap="sm" align="flex-start">
+				<Stack gap={4} style={{ minWidth: 0 }}>
 					<Text>{title}</Text>
 					{sentBack && task.review_note ? (
 						<Text size="sm" c="var(--app-warning)">
@@ -262,7 +264,7 @@ function OpenTask({
 					{task.due_on && <Due iso={task.due_on} />}
 				</Stack>
 				{action}
-			</Group>
+			</Stack>
 		</Row>
 	);
 }
