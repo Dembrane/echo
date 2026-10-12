@@ -1991,6 +1991,14 @@ msgstr "Номер платника ПДВ не вказано."
 msgid "Give feedback"
 msgstr "Надіслати відгук"
 
+#: src/features/accounts/signing/SignRoute.tsx:213
+msgid "This document is assigned to {name}"
+msgstr "Цей документ призначено: {name}"
+
+#: src/features/accounts/signing/SignRoute.tsx:209
+msgid "This document is assigned to {name}, {jobTitle}"
+msgstr "Цей документ призначено: {name}, {jobTitle}"
+
 #~ msgid "{0, plural, one {{1} of # step done} other {{2} of # steps done}}"
 #~ msgstr ""
 

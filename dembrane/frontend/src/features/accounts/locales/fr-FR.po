@@ -1991,6 +1991,14 @@ msgstr "Votre numéro de TVA est vide."
 msgid "Give feedback"
 msgstr "Donner votre avis"
 
+#: src/features/accounts/signing/SignRoute.tsx:213
+msgid "This document is assigned to {name}"
+msgstr "Ce document est attribué à {name}"
+
+#: src/features/accounts/signing/SignRoute.tsx:209
+msgid "This document is assigned to {name}, {jobTitle}"
+msgstr "Ce document est attribué à {name}, {jobTitle}"
+
 #~ msgid "{0, plural, one {{1} of # step done} other {{2} of # steps done}}"
 #~ msgstr ""
 

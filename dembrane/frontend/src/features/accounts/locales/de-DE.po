@@ -1991,6 +1991,14 @@ msgstr "Ihre USt-IdNr. ist leer."
 msgid "Give feedback"
 msgstr "Feedback geben"
 
+#: src/features/accounts/signing/SignRoute.tsx:213
+msgid "This document is assigned to {name}"
+msgstr "Dieses Dokument ist {name} zugewiesen"
+
+#: src/features/accounts/signing/SignRoute.tsx:209
+msgid "This document is assigned to {name}, {jobTitle}"
+msgstr "Dieses Dokument ist {name}, {jobTitle} zugewiesen"
+
 #~ msgid "{0, plural, one {{1} of # step done} other {{2} of # steps done}}"
 #~ msgstr ""
 

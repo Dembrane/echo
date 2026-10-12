@@ -1991,6 +1991,14 @@ msgstr "Je btw-nummer is leeg."
 msgid "Give feedback"
 msgstr "Feedback geven"
 
+#: src/features/accounts/signing/SignRoute.tsx:213
+msgid "This document is assigned to {name}"
+msgstr "Dit document is toegewezen aan {name}"
+
+#: src/features/accounts/signing/SignRoute.tsx:209
+msgid "This document is assigned to {name}, {jobTitle}"
+msgstr "Dit document is toegewezen aan {name}, {jobTitle}"
+
 #~ msgid "{0, plural, one {{1} of # step done} other {{2} of # steps done}}"
 #~ msgstr ""
 

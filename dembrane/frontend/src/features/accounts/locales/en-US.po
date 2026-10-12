@@ -1991,6 +1991,14 @@ msgstr "Your VAT number is empty."
 msgid "Give feedback"
 msgstr "Give feedback"
 
+#: src/features/accounts/signing/SignRoute.tsx:213
+msgid "This document is assigned to {name}"
+msgstr "This document is assigned to {name}"
+
+#: src/features/accounts/signing/SignRoute.tsx:209
+msgid "This document is assigned to {name}, {jobTitle}"
+msgstr "This document is assigned to {name}, {jobTitle}"
+
 #~ msgid "{0, plural, one {{1} of # step done} other {{2} of # steps done}}"
 #~ msgstr "{0, plural, one {{1} of # step done} other {{2} of # steps done}}"
 

@@ -1991,6 +1991,14 @@ msgstr "La partita IVA è vuota."
 msgid "Give feedback"
 msgstr "Dai un feedback"
 
+#: src/features/accounts/signing/SignRoute.tsx:213
+msgid "This document is assigned to {name}"
+msgstr "Questo documento è assegnato a {name}"
+
+#: src/features/accounts/signing/SignRoute.tsx:209
+msgid "This document is assigned to {name}, {jobTitle}"
+msgstr "Questo documento è assegnato a {name}, {jobTitle}"
+
 #~ msgid "{0, plural, one {{1} of # step done} other {{2} of # steps done}}"
 #~ msgstr ""
 

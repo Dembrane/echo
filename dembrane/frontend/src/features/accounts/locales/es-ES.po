@@ -1991,6 +1991,14 @@ msgstr "Tu NIF-IVA está vacío."
 msgid "Give feedback"
 msgstr "Dar tu opinión"
 
+#: src/features/accounts/signing/SignRoute.tsx:213
+msgid "This document is assigned to {name}"
+msgstr "Este documento está asignado a {name}"
+
+#: src/features/accounts/signing/SignRoute.tsx:209
+msgid "This document is assigned to {name}, {jobTitle}"
+msgstr "Este documento está asignado a {name}, {jobTitle}"
+
 #~ msgid "{0, plural, one {{1} of # step done} other {{2} of # steps done}}"
 #~ msgstr ""
 

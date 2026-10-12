@@ -1991,6 +1991,14 @@ msgstr "DIČ je prázdné."
 msgid "Give feedback"
 msgstr "Dát zpětnou vazbu"
 
+#: src/features/accounts/signing/SignRoute.tsx:213
+msgid "This document is assigned to {name}"
+msgstr "Tento dokument je přidělen: {name}"
+
+#: src/features/accounts/signing/SignRoute.tsx:209
+msgid "This document is assigned to {name}, {jobTitle}"
+msgstr "Tento dokument je přidělen: {name}, {jobTitle}"
+
 #~ msgid "{0, plural, one {{1} of # step done} other {{2} of # steps done}}"
 #~ msgstr ""
 
