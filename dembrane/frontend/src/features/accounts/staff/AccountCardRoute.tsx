@@ -51,6 +51,7 @@ import {
 } from "../format";
 import { AccountsI18n } from "../i18n";
 import { Section } from "../ui";
+import { EmailCustomerModal, type EmailSubject } from "./EmailCustomerModal";
 import { PushOfferModal } from "./PushOfferModal";
 import { NewTaskModal, SendBackModal } from "./TaskModals";
 import { UploadPdfModal } from "./UploadPdfModal";
@@ -160,6 +161,7 @@ function Documents({ orgId, card }: { orgId: string; card: AccountCardT }) {
 	const navigate = useI18nNavigate();
 	const send = useAccountsMutation("sendDocument", { orgId });
 	const voidDoc = useAccountsMutation("voidDocument", { orgId });
+	const [emailing, setEmailing] = useState<EmailSubject | null>(null);
 
 	const actions = (doc: DocumentSummaryT) => (
 		<Menu position="bottom-end" withinPortal>
@@ -229,6 +231,19 @@ function Documents({ orgId, card }: { orgId: string; card: AccountCardT }) {
 							<Trans>Withdraw</Trans>
 						</Menu.Item>
 					)}
+				{doc.status === "void" && doc.sent_at && (
+					<Menu.Item
+						onClick={() =>
+							setEmailing({
+								document_id: doc.id,
+								kind: "document_withdrawn",
+								label: doc.title,
+							})
+						}
+					>
+						<Trans>Email the customer</Trans>
+					</Menu.Item>
+				)}
 			</Menu.Dropdown>
 		</Menu>
 	);
@@ -350,6 +365,11 @@ function Documents({ orgId, card }: { orgId: string; card: AccountCardT }) {
 					navigate(`/admin/accounts/${orgId}/documents/${docId}/fields`)
 				}
 			/>
+			<EmailCustomerModal
+				subject={emailing}
+				onClose={() => setEmailing(null)}
+				orgId={orgId}
+			/>
 		</Section>
 	);
 }
@@ -358,6 +378,7 @@ function Tasks({ orgId, card }: { orgId: string; card: AccountCardT }) {
 	const { i18n } = useLingui();
 	const [newOpen, setNewOpen] = useState(false);
 	const [sendingBack, setSendingBack] = useState<TaskT | null>(null);
+	const [emailing, setEmailing] = useState<EmailSubject | null>(null);
 	const review = useAccountsMutation("reviewTask", { orgId });
 	const decide = (task: TaskT, decision: "approve" | "withdraw") =>
 		review.mutate(
@@ -466,6 +487,22 @@ function Tasks({ orgId, card }: { orgId: string; card: AccountCardT }) {
 											</>
 										)}
 										{(task.status === "open" ||
+											task.status === "changes_requested") && (
+											<Button
+												size="compact-xs"
+												variant="default"
+												onClick={() =>
+													setEmailing({
+														kind: "task_reminder",
+														label: taskText(task).title,
+														task_id: task.id,
+													})
+												}
+											>
+												<Trans>Remind</Trans>
+											</Button>
+										)}
+										{(task.status === "open" ||
 											task.status === "locked" ||
 											task.status === "changes_requested") && (
 											<Button
@@ -493,6 +530,11 @@ function Tasks({ orgId, card }: { orgId: string; card: AccountCardT }) {
 			<SendBackModal
 				task={sendingBack}
 				onClose={() => setSendingBack(null)}
+				orgId={orgId}
+			/>
+			<EmailCustomerModal
+				subject={emailing}
+				onClose={() => setEmailing(null)}
 				orgId={orgId}
 			/>
 		</Section>

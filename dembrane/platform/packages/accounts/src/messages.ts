@@ -13,10 +13,11 @@ import { taskBody, taskTitle } from "./task-text";
 import { WAITING_ON_CUSTOMER } from "./tasks";
 
 /**
- * The messages sam writes to the people who run an account: a document withdrawn, a
- * check-in on a task that waits on them. sam decides when; echo reads the facts from its
- * own tables, words them in each recipient's language and draws them in the email frame,
- * so every message looks and reads like the rest of dembrane. Signed by the account's
+ * The emails an account manager sends from the staff card to the people who run an
+ * account: a document withdrawn, a check-in on a task that waits on them. sam only tells
+ * the manager (Slack); the manager decides and sends. echo reads the facts from its own
+ * tables, words them in each recipient's language and draws them in the email frame, so
+ * every message looks and reads like the rest of dembrane. Signed by the account's
  * manager, replies reaching them. Invoices are not among them: Exact sends those.
  */
 export async function sendMessage(

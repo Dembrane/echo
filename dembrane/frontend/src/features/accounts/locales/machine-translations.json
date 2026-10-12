@@ -112,7 +112,12 @@
     "Due {due}": "Splatné {due}",
     "Edit": "Upravit",
     "Email": "E-mail",
+<<<<<<< HEAD
     "Email me a code": "Poslat kód e-mailem",
+=======
+    "Email sent": "E-mail odeslán",
+    "Email the customer": "Napsat zákazníkovi",
+>>>>>>> origin/claude/project-thread-r6k4mb
     "Enable account": "Aktivovat účet",
     "Enable it to push offers and tasks. They get an Account page with a billing details step.": "Aktivujte pro odesílání nabídek a úkolů. Získají stránku Účet s krokem pro fakturační údaje.",
     "Enter the six-digit code we sent to {email}.": "Zadejte šestimístný kód, který jsme poslali na {email}.",
@@ -196,6 +201,7 @@
     "No questions yet.": "Zatím žádné otázky.",
     "No tasks.": "Žádné úkoly.",
     "No, someone else signs it": "Ne, podepíše to někdo jiný",
+    "Nobody on this account has an email address yet.": "Nikdo na tomto účtu zatím nemá e-mailovou adresu.",
     "Not booked": "Nerezervováno",
     "Not given yet.": "Zatím nezadáno.",
     "Not sent": "Neodesláno",
@@ -268,6 +274,7 @@
     "Ready to invoice": "Připraveno k fakturaci",
     "Reference": "Reference",
     "Registration number: fill in at least one": "Registrační číslo: vyplňte alespoň jedno",
+    "Remind": "Připomenout",
     "Remove field": "Odebrat pole",
     "Remove line": "Odebrat položku",
     "Reply": "Odpovědět",
@@ -310,6 +317,7 @@
     "Show all": "Zobrazit vše",
     "Show finished ({0})": "Zobrazit dokončené ({0})",
     "Show less": "Zobrazit méně",
+    "Shown as written, under the opening. Write it in the customer's language.": "Zobrazí se doslova pod úvodem. Napište ho v jazyce zákazníka.",
     "Sign": "Podepsat",
     "Sign out and continue": "Odhlásit se a pokračovat",
     "Sign the data processing agreement": "Podepsat smlouvu o zpracování osobních údajů",
@@ -400,6 +408,7 @@
     "To send, add a name field: it names the signer.": "Pro odeslání přidejte pole se jménem: určuje podepisujícího.",
     "To send, add a signature field.": "Pro odeslání přidejte pole pro podpis.",
     "To sign": "K podpisu",
+    "To: {0}": "Komu: {0}",
     "Try again": "Zkusit znovu",
     "Type": "Napsat",
     "Type your initials first.": "Nejprve napište své iniciály.",
@@ -464,8 +473,12 @@
     "Your initials": "Vaše iniciály",
     "Your job title is empty.": "Pracovní pozice je prázdná.",
     "Your name": "Vaše jméno",
+<<<<<<< HEAD
     "Your name is empty.": "Jméno je prázdné.",
     "Your organisation is empty.": "Organizace je prázdná.",
+=======
+    "Your own line (optional)": "Vlastní řádek (nepovinné)",
+>>>>>>> origin/claude/project-thread-r6k4mb
     "Your question": "Váš dotaz",
     "Your signature completes the agreement.": "Váš podpis dokončí uzavření smlouvy.",
     "building": "vytváří se",
@@ -477,6 +490,7 @@
     "{0, plural, one {# fictional conversation authored.} other {# fictional conversations authored.}}": "{0, plural, one {# vytvořený fiktivní rozhovor.} few {# vytvořené fiktivní rozhovory.} other {# vytvořených fiktivních rozhovorů.}}",
     "{0, plural, one {# field} other {# fields}}": "{0, plural, one {# pole} few {# pole} other {# polí}}",
     "{0, plural, one {You have # thing to do in {name}} other {You have # things to do in {name}}}": "{0, plural, one {V {name} na vás čeká # úkol} few {V {name} na vás čekají # úkoly} many {V {name} na vás čeká # úkolu} other {V {name} na vás čeká # úkolů}}",
+    "{0} emails sent": "Odeslané e-maily: {0}",
     "{0} excl. VAT, {1} incl.": "{0} bez VAT, {1} vč.",
     "{0} incl. VAT": "{0} vč. DPH",
     "{0} is signed": "{0} je podepsáno",
@@ -600,7 +614,12 @@
     "Due {due}": "Fällig am {due}",
     "Edit": "Bearbeiten",
     "Email": "E-Mail",
+<<<<<<< HEAD
     "Email me a code": "Code per E-Mail senden",
+=======
+    "Email sent": "E-Mail gesendet",
+    "Email the customer": "Kunden per E-Mail informieren",
+>>>>>>> origin/claude/project-thread-r6k4mb
     "Enable account": "Konto aktivieren",
     "Enable it to push offers and tasks. They get an Account page with a billing details step.": "Aktivieren, um Angebote und Aufgaben zu senden. Es wird eine Kontoseite mit einem Schritt für Rechnungsdaten bereitgestellt.",
     "Enter the six-digit code we sent to {email}.": "Geben Sie den sechsstelligen Code ein, den wir an {email} gesendet haben.",
@@ -684,6 +703,7 @@
     "No questions yet.": "Noch keine Fragen.",
     "No tasks.": "Keine Aufgaben.",
     "No, someone else signs it": "Nein, jemand anderes unterzeichnet",
+    "Nobody on this account has an email address yet.": "Bei diesem Konto ist noch niemand mit E-Mail-Adresse hinterlegt.",
     "Not booked": "Nicht gebucht",
     "Not given yet.": "Noch nicht angegeben.",
     "Not sent": "Nicht gesendet",
@@ -756,6 +776,7 @@
     "Ready to invoice": "Bereit zur Rechnungsstellung",
     "Reference": "Referenz",
     "Registration number: fill in at least one": "Registrierungsnummer: mindestens eine angeben",
+    "Remind": "Erinnern",
     "Remove field": "Feld entfernen",
     "Remove line": "Zeile entfernen",
     "Reply": "Antworten",
@@ -798,6 +819,7 @@
     "Show all": "Alle anzeigen",
     "Show finished ({0})": "Erledigtes anzeigen ({0})",
     "Show less": "Weniger anzeigen",
+    "Shown as written, under the opening. Write it in the customer's language.": "Erscheint wörtlich unter der Einleitung. Schreiben Sie in der Sprache des Kunden.",
     "Sign": "Unterschreiben",
     "Sign out and continue": "Abmelden und fortfahren",
     "Sign the data processing agreement": "Auftragsverarbeitungsvertrag unterschreiben",
@@ -888,6 +910,7 @@
     "To send, add a name field: it names the signer.": "Fügen Sie zum Senden ein Namensfeld hinzu: Es benennt die unterzeichnende Person.",
     "To send, add a signature field.": "Fügen Sie zum Senden ein Unterschriftsfeld hinzu.",
     "To sign": "Zu unterzeichnen",
+    "To: {0}": "An: {0}",
     "Try again": "Erneut versuchen",
     "Type": "Tippen",
     "Type your initials first.": "Geben Sie zuerst Ihre Initialen ein.",
@@ -952,8 +975,12 @@
     "Your initials": "Ihre Initialen",
     "Your job title is empty.": "Ihre Berufsbezeichnung ist leer.",
     "Your name": "Ihr Name",
+<<<<<<< HEAD
     "Your name is empty.": "Ihr Name ist leer.",
     "Your organisation is empty.": "Ihre Organisation ist leer.",
+=======
+    "Your own line (optional)": "Ihre eigene Zeile (optional)",
+>>>>>>> origin/claude/project-thread-r6k4mb
     "Your question": "Ihre Frage",
     "Your signature completes the agreement.": "Mit Ihrer Unterschrift wird die Vereinbarung abgeschlossen.",
     "building": "wird erstellt",
@@ -965,6 +992,7 @@
     "{0, plural, one {# fictional conversation authored.} other {# fictional conversations authored.}}": "{0, plural, one {# fiktives Gespräch erstellt.} other {# fiktive Gespräche erstellt.}}",
     "{0, plural, one {# field} other {# fields}}": "{0, plural, one {# Feld} other {# Felder}}",
     "{0, plural, one {You have # thing to do in {name}} other {You have # things to do in {name}}}": "{0, plural, one {Bei {name} wartet # Aufgabe auf Sie} other {Bei {name} warten # Aufgaben auf Sie}}",
+    "{0} emails sent": "{0} E-Mails gesendet",
     "{0} excl. VAT, {1} incl.": "{0} zzgl. VAT, {1} inkl.",
     "{0} incl. VAT": "{0} inkl. MwSt.",
     "{0} is signed": "{0} ist unterschrieben",
@@ -1088,7 +1116,12 @@
     "Due {due}": "Vence el {due}",
     "Edit": "Editar",
     "Email": "Correo electrónico",
+<<<<<<< HEAD
     "Email me a code": "Enviarme un código por correo",
+=======
+    "Email sent": "Correo enviado",
+    "Email the customer": "Escribir al cliente",
+>>>>>>> origin/claude/project-thread-r6k4mb
     "Enable account": "Habilitar cuenta",
     "Enable it to push offers and tasks. They get an Account page with a billing details step.": "Habilítala para enviar ofertas y tareas. Recibirán una página de Cuenta con un paso para los datos de facturación.",
     "Enter the six-digit code we sent to {email}.": "Introduce el código de seis dígitos que enviamos a {email}.",
@@ -1172,6 +1205,7 @@
     "No questions yet.": "Aún no hay preguntas.",
     "No tasks.": "Sin tareas.",
     "No, someone else signs it": "No, lo firma otra persona",
+    "Nobody on this account has an email address yet.": "Nadie en esta cuenta tiene todavía una dirección de correo.",
     "Not booked": "No reservado",
     "Not given yet.": "Aún no se ha indicado.",
     "Not sent": "No enviado",
@@ -1244,6 +1278,7 @@
     "Ready to invoice": "Listo para facturar",
     "Reference": "Referencia",
     "Registration number: fill in at least one": "Número de registro: indica al menos uno",
+    "Remind": "Recordar",
     "Remove field": "Eliminar campo",
     "Remove line": "Eliminar línea",
     "Reply": "Responder",
@@ -1286,6 +1321,7 @@
     "Show all": "Mostrar todo",
     "Show finished ({0})": "Mostrar terminadas ({0})",
     "Show less": "Mostrar menos",
+    "Shown as written, under the opening. Write it in the customer's language.": "Se muestra tal cual, debajo de la apertura. Escríbelo en el idioma del cliente.",
     "Sign": "Firmar",
     "Sign out and continue": "Cerrar sesión y continuar",
     "Sign the data processing agreement": "Firmar el acuerdo de tratamiento de datos",
@@ -1376,6 +1412,7 @@
     "To send, add a name field: it names the signer.": "Para enviar, añade un campo de nombre: identifica al firmante.",
     "To send, add a signature field.": "Para enviar, añade un campo de firma.",
     "To sign": "Por firmar",
+    "To: {0}": "Para: {0}",
     "Try again": "Reintentar",
     "Type": "Escribir",
     "Type your initials first.": "Primero escribe tus iniciales.",
@@ -1440,8 +1477,12 @@
     "Your initials": "Tus iniciales",
     "Your job title is empty.": "Tu cargo está vacío.",
     "Your name": "Tu nombre",
+<<<<<<< HEAD
     "Your name is empty.": "Tu nombre está vacío.",
     "Your organisation is empty.": "Tu organización está vacía.",
+=======
+    "Your own line (optional)": "Tu propia línea (opcional)",
+>>>>>>> origin/claude/project-thread-r6k4mb
     "Your question": "Tu pregunta",
     "Your signature completes the agreement.": "Tu firma formaliza el acuerdo.",
     "building": "creando",
@@ -1453,6 +1494,7 @@
     "{0, plural, one {# fictional conversation authored.} other {# fictional conversations authored.}}": "{0, plural, one {# conversación ficticia creada.} other {# conversaciones ficticias creadas.}}",
     "{0, plural, one {# field} other {# fields}}": "{0, plural, one {# campo} other {# campos}}",
     "{0, plural, one {You have # thing to do in {name}} other {You have # things to do in {name}}}": "{0, plural, one {Tienes # cosa por hacer en {name}} other {Tienes # cosas por hacer en {name}}}",
+    "{0} emails sent": "{0} correos enviados",
     "{0} excl. VAT, {1} incl.": "{0} sin VAT, {1} con VAT",
     "{0} incl. VAT": "{0} IVA incluido",
     "{0} is signed": "{0} está firmado",
@@ -1576,7 +1618,12 @@
     "Due {due}": "À payer avant le {due}",
     "Edit": "Modifier",
     "Email": "E-mail",
+<<<<<<< HEAD
     "Email me a code": "M'envoyer un code par e-mail",
+=======
+    "Email sent": "E-mail envoyé",
+    "Email the customer": "Écrire au client",
+>>>>>>> origin/claude/project-thread-r6k4mb
     "Enable account": "Activer le compte",
     "Enable it to push offers and tasks. They get an Account page with a billing details step.": "Activez-le pour envoyer des offres et des tâches. Une page Compte avec une étape pour les informations de facturation leur sera attribuée.",
     "Enter the six-digit code we sent to {email}.": "Saisissez le code à six chiffres envoyé à {email}.",
@@ -1660,6 +1707,7 @@
     "No questions yet.": "Aucune question pour l'instant.",
     "No tasks.": "Aucune tâche.",
     "No, someone else signs it": "Non, quelqu'un d'autre signe",
+    "Nobody on this account has an email address yet.": "Personne sur ce compte n'a encore d'adresse e-mail.",
     "Not booked": "Non réservé",
     "Not given yet.": "Pas encore indiqué.",
     "Not sent": "Non envoyé",
@@ -1732,6 +1780,7 @@
     "Ready to invoice": "Prêt à facturer",
     "Reference": "Référence",
     "Registration number: fill in at least one": "Numéro d'enregistrement : indiquez-en au moins un",
+    "Remind": "Relancer",
     "Remove field": "Supprimer le champ",
     "Remove line": "Supprimer la ligne",
     "Reply": "Répondre",
@@ -1774,6 +1823,7 @@
     "Show all": "Tout afficher",
     "Show finished ({0})": "Afficher les tâches terminées ({0})",
     "Show less": "Afficher moins",
+    "Shown as written, under the opening. Write it in the customer's language.": "Affiché tel quel, sous l'introduction. Écrivez-le dans la langue du client.",
     "Sign": "Signer",
     "Sign out and continue": "Se déconnecter et continuer",
     "Sign the data processing agreement": "Signer l'accord de traitement des données",
@@ -1864,6 +1914,7 @@
     "To send, add a name field: it names the signer.": "Pour envoyer, ajoutez un champ nom : il identifie le signataire.",
     "To send, add a signature field.": "Pour envoyer, ajoutez un champ signature.",
     "To sign": "À signer",
+    "To: {0}": "À : {0}",
     "Try again": "Réessayer",
     "Type": "Saisir",
     "Type your initials first.": "Saisissez d'abord vos initiales.",
@@ -1928,8 +1979,12 @@
     "Your initials": "Vos initiales",
     "Your job title is empty.": "Votre fonction est vide.",
     "Your name": "Votre nom",
+<<<<<<< HEAD
     "Your name is empty.": "Votre nom est vide.",
     "Your organisation is empty.": "Votre organisation est vide.",
+=======
+    "Your own line (optional)": "Votre propre ligne (facultatif)",
+>>>>>>> origin/claude/project-thread-r6k4mb
     "Your question": "Votre question",
     "Your signature completes the agreement.": "Votre signature valide l'accord.",
     "building": "génération",
@@ -1941,6 +1996,7 @@
     "{0, plural, one {# fictional conversation authored.} other {# fictional conversations authored.}}": "{0, plural, one {# conversation fictive créée.} other {# conversations fictives créées.}}",
     "{0, plural, one {# field} other {# fields}}": "{0, plural, one {# champ} other {# champs}}",
     "{0, plural, one {You have # thing to do in {name}} other {You have # things to do in {name}}}": "{0, plural, one {Vous avez # chose à faire chez {name}} other {Vous avez # choses à faire chez {name}}}",
+    "{0} emails sent": "{0} e-mails envoyés",
     "{0} excl. VAT, {1} incl.": "{0} hors VAT, {1} avec.",
     "{0} incl. VAT": "{0} TVA incluse",
     "{0} is signed": "{0} est signé",
@@ -2064,7 +2120,12 @@
     "Due {due}": "Scadenza {due}",
     "Edit": "Modifica",
     "Email": "Email",
+<<<<<<< HEAD
     "Email me a code": "Inviami un codice via e-mail",
+=======
+    "Email sent": "Email inviata",
+    "Email the customer": "Scrivi al cliente",
+>>>>>>> origin/claude/project-thread-r6k4mb
     "Enable account": "Attiva account",
     "Enable it to push offers and tasks. They get an Account page with a billing details step.": "Attivalo per inviare offerte e attività. Riceveranno una pagina Account con un passaggio per i dati di fatturazione.",
     "Enter the six-digit code we sent to {email}.": "Inserisci il codice a sei cifre che abbiamo inviato a {email}.",
@@ -2148,6 +2209,7 @@
     "No questions yet.": "Nessuna domanda finora.",
     "No tasks.": "Nessuna attività.",
     "No, someone else signs it": "No, firmerà qualcun altro",
+    "Nobody on this account has an email address yet.": "Nessuno in questo account ha ancora un indirizzo email.",
     "Not booked": "Non prenotato",
     "Not given yet.": "Non ancora indicato.",
     "Not sent": "Non inviato",
@@ -2220,6 +2282,7 @@
     "Ready to invoice": "Pronto per la fatturazione",
     "Reference": "Riferimento",
     "Registration number: fill in at least one": "Numero di registrazione: compilane almeno uno",
+    "Remind": "Ricorda",
     "Remove field": "Rimuovi campo",
     "Remove line": "Rimuovi riga",
     "Reply": "Rispondi",
@@ -2262,6 +2325,7 @@
     "Show all": "Mostra tutto",
     "Show finished ({0})": "Mostra completate ({0})",
     "Show less": "Mostra meno",
+    "Shown as written, under the opening. Write it in the customer's language.": "Mostrata così com'è, sotto l'apertura. Scrivila nella lingua del cliente.",
     "Sign": "Firma",
     "Sign out and continue": "Esci e continua",
     "Sign the data processing agreement": "Firma l'accordo sul trattamento dei dati",
@@ -2352,6 +2416,7 @@
     "To send, add a name field: it names the signer.": "Per inviare, aggiungi un campo nome: serve a identificare chi firma.",
     "To send, add a signature field.": "Per inviare, aggiungi un campo firma.",
     "To sign": "Da firmare",
+    "To: {0}": "A: {0}",
     "Try again": "Riprova",
     "Type": "Digita",
     "Type your initials first.": "Prima scrivi le tue iniziali.",
@@ -2416,8 +2481,12 @@
     "Your initials": "Le tue iniziali",
     "Your job title is empty.": "Il tuo ruolo è vuoto.",
     "Your name": "Il tuo nome",
+<<<<<<< HEAD
     "Your name is empty.": "Il tuo nome è vuoto.",
     "Your organisation is empty.": "La tua organizzazione è vuota.",
+=======
+    "Your own line (optional)": "La tua riga (facoltativa)",
+>>>>>>> origin/claude/project-thread-r6k4mb
     "Your question": "La tua domanda",
     "Your signature completes the agreement.": "La tua firma perfeziona l'accordo.",
     "building": "in creazione",
@@ -2429,6 +2498,7 @@
     "{0, plural, one {# fictional conversation authored.} other {# fictional conversations authored.}}": "{0, plural, one {# conversazione fittizia creata.} other {# conversazioni fittizie create.}}",
     "{0, plural, one {# field} other {# fields}}": "{0, plural, one {# campo} other {# campi}}",
     "{0, plural, one {You have # thing to do in {name}} other {You have # things to do in {name}}}": "{0, plural, one {Hai # cosa da fare in {name}} other {Hai # cose da fare in {name}}}",
+    "{0} emails sent": "{0} email inviate",
     "{0} excl. VAT, {1} incl.": "{0} IVA esclusa, {1} IVA inclusa",
     "{0} incl. VAT": "{0} IVA inclusa",
     "{0} is signed": "{0} è firmato",
@@ -2464,6 +2534,7 @@
     "Download PDF": "PDF downloaden",
     "Draft changed": "Concept gewijzigd",
     "Draft saved": "Concept opgeslagen",
+<<<<<<< HEAD
     "Draw your initials in the box first.": "Teken eerst je initialen in het vak.",
     "Draw your signature in the box first.": "Teken eerst je handtekening in het vak.",
     "Due {due}": "Te betalen vóór {due}",
@@ -2482,6 +2553,10 @@
     "Fill in your name": "Vul je naam in",
     "Fill in your organisation": "Vul je organisatie in",
     "Fill in {label}": "Vul {label} in",
+=======
+    "Email sent": "E-mail verstuurd",
+    "Email the customer": "De klant mailen",
+>>>>>>> origin/claude/project-thread-r6k4mb
     "Fill this in.": "Vul dit in.",
     "First name": "Voornaam",
     "Hide bank details": "Bankgegevens verbergen",
@@ -2499,8 +2574,12 @@
     "Log in": "Inloggen",
     "Log in to download the signed copy.": "Log in om het ondertekende exemplaar te downloaden.",
     "New project": "Nieuw project",
+<<<<<<< HEAD
     "No": "Nee",
     "Offers, agreements and invoices appear here once we send them.": "Offertes, overeenkomsten en facturen verschijnen hier zodra we ze sturen.",
+=======
+    "Nobody on this account has an email address yet.": "Niemand op dit account heeft nog een e-mailadres.",
+>>>>>>> origin/claude/project-thread-r6k4mb
     "Only if you get invoices through Peppol": "Alleen als je facturen via Peppol ontvangt",
     "Only staff see this draft. When you send it, it gets that day's date and is valid for 14 days.": "Alleen medewerkers zien dit concept. Als je het verstuurt, krijgt het de datum van die dag en is het 14 dagen geldig.",
     "Only the organisation's admins and billing contacts see this page.": "Alleen de beheerders en factuurcontacten van de organisatie zien deze pagina.",
@@ -2516,6 +2595,7 @@
     "Put the reference on the transfer so we can match your payment.": "Zet het kenmerk bij je overboeking, dan kunnen we je betaling koppelen.",
     "Ready to invoice": "Klaar om te factureren",
     "Registration number: fill in at least one": "Registratienummer: vul er minstens één in",
+    "Remind": "Herinneren",
     "Review and send": "Bekijken en versturen",
     "Review and sign event offer {number}": "Offerte evenement {number} bekijken en ondertekenen",
     "Review and sign yearly license offer {number}": "Offerte jaarlicentie {number} bekijken en ondertekenen",
@@ -2526,8 +2606,12 @@
     "Sent {0}": "Verstuurd op {0}",
     "Sent {when}. We are on it.": "Verstuurd op {when}. We zijn ermee bezig.",
     "Set up a project of your own for your first real session.": "Zet een eigen project op voor je eerste echte sessie.",
+<<<<<<< HEAD
     "Show finished ({0})": "Afgerond tonen ({0})",
     "Sign out and continue": "Uitloggen en doorgaan",
+=======
+    "Shown as written, under the opening. Write it in the customer's language.": "Komt letterlijk onder de opening. Schrijf het in de taal van de klant.",
+>>>>>>> origin/claude/project-thread-r6k4mb
     "Signed {0}": "Ondertekend op {0}",
     "Someone else": "Iemand anders",
     "Something went wrong": "Er ging iets mis",
@@ -2550,6 +2634,7 @@
     "Their job title": "Hun functie",
     "Their name": "Hun naam",
     "This document has no PDF.": "Dit document heeft geen pdf.",
+<<<<<<< HEAD
     "This document is assigned to {name}": "Dit document is toegewezen aan {name}",
     "This document is assigned to {name}, {jobTitle}": "Dit document is toegewezen aan {name}, {jobTitle}",
     "This document is no longer open for signing": "Dit document kan niet meer ondertekend worden",
@@ -2566,11 +2651,15 @@
     "Type your name first.": "Typ eerst je naam.",
     "Use these initials": "Deze initialen gebruiken",
     "Use this signature": "Deze handtekening gebruiken",
+=======
+    "To: {0}": "Aan: {0}",
+>>>>>>> origin/claude/project-thread-r6k4mb
     "Valid until {0}": "Geldig tot {0}",
     "View": "Bekijken",
     "Waiting on {who}, {jobTitle}. We emailed them a link to sign.": "Wacht op {who}, {jobTitle}. We hebben een link gemaild om te ondertekenen.",
     "Waiting on {who}. We emailed them a link to sign.": "Wacht op {who}. We hebben een link gemaild om te ondertekenen.",
     "Watch the tutorial": "Bekijk de tutorial",
+<<<<<<< HEAD
     "We are on it": "We zijn ermee bezig",
     "We are on it.": "We zijn ermee bezig.",
     "We emailed {dpaName} at {dpaEmail} a link to sign the data processing agreement.": "We hebben {dpaName} op {dpaEmail} een link gemaild om de verwerkersovereenkomst te tekenen.",
@@ -2602,6 +2691,13 @@
     "{inviter} from {org} invited you to sign": "{inviter} van {org} vraagt je om te ondertekenen",
     "{label} is empty.": "{label} is leeg.",
     "{org} invited you to sign": "{org} vraagt je om te ondertekenen"
+=======
+    "We put these on your invoice.": "Deze gegevens zetten we op je factuur.",
+    "Your own line (optional)": "Je eigen regel (optioneel)",
+    "{0, plural, one {# fictional conversation authored.} other {# fictional conversations authored.}}": "{0, plural, one {# fictief gesprek gemaakt.} other {# fictieve gesprekken gemaakt.}}",
+    "{0} emails sent": "{0} e-mails verstuurd",
+    "{0} incl. VAT": "{0} incl. btw"
+>>>>>>> origin/claude/project-thread-r6k4mb
   },
   "uk-UA": {
     "A draft on their account, for you to send after the demo.": "Чернетка в їхньому обліковому записі, яку ви зможете надіслати після демо.",
@@ -2716,7 +2812,12 @@
     "Due {due}": "Сплатити до {due}",
     "Edit": "Редагувати",
     "Email": "Електронна пошта",
+<<<<<<< HEAD
     "Email me a code": "Надіслати мені код",
+=======
+    "Email sent": "Лист надіслано",
+    "Email the customer": "Написати клієнту",
+>>>>>>> origin/claude/project-thread-r6k4mb
     "Enable account": "Увімкнути обліковий запис",
     "Enable it to push offers and tasks. They get an Account page with a billing details step.": "Увімкніть, щоб надсилати пропозиції та завдання. З'явиться сторінка облікового запису з кроком платіжних даних.",
     "Enter the six-digit code we sent to {email}.": "Введіть шестизначний код, який ми надіслали на {email}.",
@@ -2800,6 +2901,7 @@
     "No questions yet.": "Запитань ще немає.",
     "No tasks.": "Завдань немає.",
     "No, someone else signs it": "Ні, підписує хтось інший",
+    "Nobody on this account has an email address yet.": "Ніхто в цьому обліковому записі ще не має адреси електронної пошти.",
     "Not booked": "Не заброньовано",
     "Not given yet.": "Ще не вказано.",
     "Not sent": "Не надіслано",
@@ -2872,6 +2974,7 @@
     "Ready to invoice": "Можна виставляти рахунок",
     "Reference": "Номер посилання",
     "Registration number: fill in at least one": "Реєстраційний номер: вкажіть принаймні один",
+    "Remind": "Нагадати",
     "Remove field": "Видалити поле",
     "Remove line": "Видалити рядок",
     "Reply": "Відповісти",
@@ -2914,6 +3017,7 @@
     "Show all": "Показати всі",
     "Show finished ({0})": "Показати завершені ({0})",
     "Show less": "Показати менше",
+    "Shown as written, under the opening. Write it in the customer's language.": "Показується як є, під вступом. Пишіть мовою клієнта.",
     "Sign": "Підписати",
     "Sign out and continue": "Вийти і продовжити",
     "Sign the data processing agreement": "Підписати договір про обробку даних",
@@ -3004,6 +3108,7 @@
     "To send, add a name field: it names the signer.": "Щоб надіслати, додайте поле з іменем: воно вказує підписанта.",
     "To send, add a signature field.": "Щоб надіслати, додайте поле для підпису.",
     "To sign": "На підпис",
+    "To: {0}": "Кому: {0}",
     "Try again": "Спробувати знову",
     "Type": "Надрукувати",
     "Type your initials first.": "Спершу введіть ініціали.",
@@ -3068,8 +3173,12 @@
     "Your initials": "Ваші ініціали",
     "Your job title is empty.": "Посаду не вказано.",
     "Your name": "Ваше ім'я",
+<<<<<<< HEAD
     "Your name is empty.": "Ім'я не вказано.",
     "Your organisation is empty.": "Організацію не вказано.",
+=======
+    "Your own line (optional)": "Ваш власний рядок (необов'язково)",
+>>>>>>> origin/claude/project-thread-r6k4mb
     "Your question": "Ваше запитання",
     "Your signature completes the agreement.": "Ваш підпис завершує укладення угоди.",
     "building": "створюється",
@@ -3081,6 +3190,7 @@
     "{0, plural, one {# fictional conversation authored.} other {# fictional conversations authored.}}": "{0, plural, one {Створено # вигадану розмову.} few {Створено # вигадані розмови.} other {Створено # вигаданих розмов.}}",
     "{0, plural, one {# field} other {# fields}}": "{0, plural, one {# поле} few {# поля} many {# полів} other {# поля}}",
     "{0, plural, one {You have # thing to do in {name}} other {You have # things to do in {name}}}": "{0, plural, one {У {name} на Вас чекає # завдання} few {У {name} на Вас чекають # завдання} many {У {name} на Вас чекають # завдань} other {У {name} на Вас чекають # завдання}}",
+    "{0} emails sent": "Надіслано листів: {0}",
     "{0} excl. VAT, {1} incl.": "{0} без ПДВ, {1} з ПДВ",
     "{0} incl. VAT": "{0} з ПДВ",
     "{0} is signed": "{0} підписано",

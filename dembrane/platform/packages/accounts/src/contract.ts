@@ -713,11 +713,12 @@ export const PushDocumentResponse = z.object({ document: DocumentDetail, task: T
 export const VoidRequest = z.object({ reason: optText(2000) });
 
 /**
- * A message to the people who run an account, asked for by sam (or staff): sam decides
- * when to write and about what; echo renders it in the email frame, in each recipient's
- * language, signed by the account's manager. `note` is sam's own line, shown as written,
- * so sam writes it in the account's language. `dry_run` renders without sending. Invoices
- * are not among them: Exact sends the invoice itself.
+ * A message to the people who run an account, sent by its account manager from the staff
+ * card: a withdrawn document, a check-in on a task that waits on them. sam does not send
+ * these; it tells the manager in Slack and the manager decides. echo renders the email in
+ * each recipient's language, signed by the account's manager, replies reaching them.
+ * `note` is the manager's own line, shown as written. `dry_run` renders without sending,
+ * for the preview. Invoices are not among them: Exact sends the invoice itself.
  */
 export const MessageKind = z.enum(["document_withdrawn", "task_reminder"]);
 export const SendMessageRequest = z
@@ -1186,7 +1187,7 @@ export const ROUTES = {
     request: VoidRequest,
     response: DocumentDetail,
   },
-  /** sam asks echo to write the account's people: see SendMessageRequest. */
+  /** The account manager emails the account's people: see SendMessageRequest. */
   sendMessage: {
     method: "POST",
     path: `${S}/:orgId/messages`,
