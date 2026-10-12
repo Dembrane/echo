@@ -748,10 +748,6 @@ msgid "email.account_offer_sent.signer"
 msgstr "Tekent iemand anders voor {org_name}? Open de offerte en vul daar zijn of haar naam in; diegene krijgt een eigen link."
 
 #. js-lingui-explicit-id
-msgid "email.account_offer_sent.footer"
-msgstr "Je krijgt deze e-mail omdat je het account van {org_name} op dembrane beheert."
-
-#. js-lingui-explicit-id
 msgid "email.account_signer_invite.how"
 msgstr "Via de knop log je in met een eenmalige code die we naar dit adres sturen, dus je hebt geen wachtwoord nodig. Je ziet alleen dit document."
 
@@ -786,3 +782,71 @@ msgstr "Upgrade aanvragen:"
 #. js-lingui-explicit-id
 msgid "email.tier_expired.text_cta"
 msgstr "Upgrade aanvragen:"
+
+#. js-lingui-explicit-id
+msgid "email.common.footer_account"
+msgstr "Je krijgt deze e-mail omdat je het account van {org_name} op dembrane beheert."
+
+#. js-lingui-explicit-id
+msgid "email.common.cta_account"
+msgstr "Open je accountpagina"
+
+#. js-lingui-explicit-id
+msgid "email.common.text_cta_account"
+msgstr "Open je accountpagina:"
+
+#. js-lingui-explicit-id
+msgid "email.facts.invoice"
+msgstr "Factuur"
+
+#. js-lingui-explicit-id
+msgid "email.facts.issued"
+msgstr "Datum"
+
+#. js-lingui-explicit-id
+msgid "email.facts.due"
+msgstr "Te betalen voor"
+
+#. js-lingui-explicit-id
+msgid "email.account_invoice_issued.subject"
+msgstr "Je factuur van dembrane voor {org_name}"
+
+#. js-lingui-explicit-id
+msgid "email.account_invoice_issued.heading"
+msgstr "Je factuur staat klaar"
+
+#. js-lingui-explicit-id
+msgid "email.account_invoice_issued.body"
+msgstr "Hier is de factuur voor {org_name}. Je vindt hem ook op je accountpagina, met de manieren om te betalen."
+
+#. js-lingui-explicit-id
+msgid "email.account_invoice_issued.cta_pay"
+msgstr "Nu betalen"
+
+#. js-lingui-explicit-id
+msgid "email.account_invoice_issued.text_cta_pay"
+msgstr "Nu betalen:"
+
+#. js-lingui-explicit-id
+msgid "email.account_document_withdrawn.subject"
+msgstr "{document_title} is ingetrokken"
+
+#. js-lingui-explicit-id
+msgid "email.account_document_withdrawn.heading"
+msgstr "We hebben {document_title} ingetrokken"
+
+#. js-lingui-explicit-id
+msgid "email.account_document_withdrawn.body"
+msgstr "We hebben {document_title} voor {org_name} ingetrokken, dus het kan niet meer worden ondertekend."
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.subject"
+msgstr "Nog open voor {org_name}: {task_title}"
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.heading"
+msgstr "Er staat nog een stap open"
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.body"
+msgstr "Er wacht nog een stap op je bij het account van {org_name}:"

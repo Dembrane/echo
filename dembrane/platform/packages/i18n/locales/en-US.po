@@ -748,10 +748,6 @@ msgid "email.account_offer_sent.signer"
 msgstr "Someone else signs for {org_name}? Open the offer and name them there; they get their own link."
 
 #. js-lingui-explicit-id
-msgid "email.account_offer_sent.footer"
-msgstr "You're getting this because you manage the {org_name} account on dembrane."
-
-#. js-lingui-explicit-id
 msgid "email.account_signer_invite.how"
 msgstr "The button signs you in with a one-time code sent to this address, so you don't need a password. You'll only see this document."
 
@@ -786,3 +782,71 @@ msgstr "Request an upgrade:"
 #. js-lingui-explicit-id
 msgid "email.tier_expired.text_cta"
 msgstr "Request an upgrade:"
+
+#. js-lingui-explicit-id
+msgid "email.common.footer_account"
+msgstr "You're getting this because you manage the {org_name} account on dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.common.cta_account"
+msgstr "Open your account page"
+
+#. js-lingui-explicit-id
+msgid "email.common.text_cta_account"
+msgstr "Open your account page:"
+
+#. js-lingui-explicit-id
+msgid "email.facts.invoice"
+msgstr "Invoice"
+
+#. js-lingui-explicit-id
+msgid "email.facts.issued"
+msgstr "Date"
+
+#. js-lingui-explicit-id
+msgid "email.facts.due"
+msgstr "Due"
+
+#. js-lingui-explicit-id
+msgid "email.account_invoice_issued.subject"
+msgstr "Your dembrane invoice for {org_name}"
+
+#. js-lingui-explicit-id
+msgid "email.account_invoice_issued.heading"
+msgstr "Your invoice is ready"
+
+#. js-lingui-explicit-id
+msgid "email.account_invoice_issued.body"
+msgstr "Here's the invoice for {org_name}. It's on your account page too, with the ways to pay."
+
+#. js-lingui-explicit-id
+msgid "email.account_invoice_issued.cta_pay"
+msgstr "Pay now"
+
+#. js-lingui-explicit-id
+msgid "email.account_invoice_issued.text_cta_pay"
+msgstr "Pay now:"
+
+#. js-lingui-explicit-id
+msgid "email.account_document_withdrawn.subject"
+msgstr "{document_title} has been withdrawn"
+
+#. js-lingui-explicit-id
+msgid "email.account_document_withdrawn.heading"
+msgstr "We've withdrawn {document_title}"
+
+#. js-lingui-explicit-id
+msgid "email.account_document_withdrawn.body"
+msgstr "We withdrew {document_title} for {org_name}, so it can no longer be signed."
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.subject"
+msgstr "Still open for {org_name}: {task_title}"
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.heading"
+msgstr "A step is still open"
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.body"
+msgstr "One step on the {org_name} account is still waiting for you:"

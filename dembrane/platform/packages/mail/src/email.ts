@@ -9,7 +9,8 @@ import { escapeHtml as esc } from "./mailer";
  * so a client that blocks images loses nothing but the logo.
  *
  * No web font is loaded (privacy, and few clients honour one): DM Sans where installed,
- * the system sans otherwise.
+ * the system sans otherwise. No stylistic sets either: in a fallback font ss01 to ss06 can
+ * mean anything (in some they turn letters into circled ones).
  *
  * Values are escaped by the helpers below (`em`, `facts`, `list`, `link`); `body` and the
  * `html` arguments are trusted HTML the templates build from catalog sentences.
@@ -116,7 +117,6 @@ export function emailFrame(f: EmailFrame): string {
 <meta name="supported-color-schemes" content="light">
 <title>${esc(f.title)}</title>
 <style>
-body, table, td, a, p { font-feature-settings: ${font.features}; }
 @media (max-width: 600px) {
   .card-pad { padding-left: ${space[6]}px !important; padding-right: ${space[6]}px !important; }
   .outer-pad { padding: ${space[4]}px ${space[2]}px !important; }

@@ -748,10 +748,6 @@ msgid "email.account_offer_sent.signer"
 msgstr "¿Firma otra persona por {org_name}? Abre la oferta e indícala allí; recibirá su propio enlace."
 
 #. js-lingui-explicit-id
-msgid "email.account_offer_sent.footer"
-msgstr "Recibes este correo porque gestionas la cuenta de {org_name} en dembrane."
-
-#. js-lingui-explicit-id
 msgid "email.account_signer_invite.how"
 msgstr "El botón te da acceso con un código de un solo uso enviado a esta dirección, así que no necesitas contraseña. Solo verás este documento."
 
@@ -786,3 +782,71 @@ msgstr "Solicitar una mejora:"
 #. js-lingui-explicit-id
 msgid "email.tier_expired.text_cta"
 msgstr "Solicitar una mejora:"
+
+#. js-lingui-explicit-id
+msgid "email.common.footer_account"
+msgstr "Recibes este correo porque gestionas la cuenta de {org_name} en dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.common.cta_account"
+msgstr "Abrir tu página de cuenta"
+
+#. js-lingui-explicit-id
+msgid "email.common.text_cta_account"
+msgstr "Abrir tu página de cuenta:"
+
+#. js-lingui-explicit-id
+msgid "email.facts.invoice"
+msgstr "Factura"
+
+#. js-lingui-explicit-id
+msgid "email.facts.issued"
+msgstr "Fecha"
+
+#. js-lingui-explicit-id
+msgid "email.facts.due"
+msgstr "Vencimiento"
+
+#. js-lingui-explicit-id
+msgid "email.account_invoice_issued.subject"
+msgstr "Tu factura de dembrane para {org_name}"
+
+#. js-lingui-explicit-id
+msgid "email.account_invoice_issued.heading"
+msgstr "Tu factura está lista"
+
+#. js-lingui-explicit-id
+msgid "email.account_invoice_issued.body"
+msgstr "Aquí tienes la factura para {org_name}. También está en tu página de cuenta, con las formas de pago."
+
+#. js-lingui-explicit-id
+msgid "email.account_invoice_issued.cta_pay"
+msgstr "Pagar ahora"
+
+#. js-lingui-explicit-id
+msgid "email.account_invoice_issued.text_cta_pay"
+msgstr "Pagar ahora:"
+
+#. js-lingui-explicit-id
+msgid "email.account_document_withdrawn.subject"
+msgstr "{document_title} se ha retirado"
+
+#. js-lingui-explicit-id
+msgid "email.account_document_withdrawn.heading"
+msgstr "Hemos retirado {document_title}"
+
+#. js-lingui-explicit-id
+msgid "email.account_document_withdrawn.body"
+msgstr "Hemos retirado {document_title} para {org_name}, así que ya no se puede firmar."
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.subject"
+msgstr "Pendiente para {org_name}: {task_title}"
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.heading"
+msgstr "Queda un paso pendiente"
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.body"
+msgstr "Un paso de la cuenta de {org_name} todavía te está esperando:"

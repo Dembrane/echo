@@ -748,10 +748,6 @@ msgid "email.account_offer_sent.signer"
 msgstr "Підписує хтось інший від імені {org_name}? Відкрийте пропозицію та вкажіть цю людину; вона отримає власне посилання."
 
 #. js-lingui-explicit-id
-msgid "email.account_offer_sent.footer"
-msgstr "Ви отримали цей лист, бо керуєте обліковим записом {org_name} у dembrane."
-
-#. js-lingui-explicit-id
 msgid "email.account_signer_invite.how"
 msgstr "Кнопка дає змогу увійти з одноразовим кодом, надісланим на цю адресу, тож пароль не потрібен. Ви побачите лише цей документ."
 
@@ -786,3 +782,71 @@ msgstr "Запросити підвищення тарифу:"
 #. js-lingui-explicit-id
 msgid "email.tier_expired.text_cta"
 msgstr "Запросити підвищення тарифу:"
+
+#. js-lingui-explicit-id
+msgid "email.common.footer_account"
+msgstr "Ви отримали цей лист, бо керуєте обліковим записом {org_name} у dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.common.cta_account"
+msgstr "Відкрити сторінку облікового запису"
+
+#. js-lingui-explicit-id
+msgid "email.common.text_cta_account"
+msgstr "Відкрити сторінку облікового запису:"
+
+#. js-lingui-explicit-id
+msgid "email.facts.invoice"
+msgstr "Рахунок"
+
+#. js-lingui-explicit-id
+msgid "email.facts.issued"
+msgstr "Дата"
+
+#. js-lingui-explicit-id
+msgid "email.facts.due"
+msgstr "Сплатити до"
+
+#. js-lingui-explicit-id
+msgid "email.account_invoice_issued.subject"
+msgstr "Ваш рахунок від dembrane для {org_name}"
+
+#. js-lingui-explicit-id
+msgid "email.account_invoice_issued.heading"
+msgstr "Ваш рахунок готовий"
+
+#. js-lingui-explicit-id
+msgid "email.account_invoice_issued.body"
+msgstr "Ось рахунок для {org_name}. Він також є на сторінці вашого облікового запису разом зі способами оплати."
+
+#. js-lingui-explicit-id
+msgid "email.account_invoice_issued.cta_pay"
+msgstr "Сплатити зараз"
+
+#. js-lingui-explicit-id
+msgid "email.account_invoice_issued.text_cta_pay"
+msgstr "Сплатити зараз:"
+
+#. js-lingui-explicit-id
+msgid "email.account_document_withdrawn.subject"
+msgstr "{document_title} відкликано"
+
+#. js-lingui-explicit-id
+msgid "email.account_document_withdrawn.heading"
+msgstr "Ми відкликали {document_title}"
+
+#. js-lingui-explicit-id
+msgid "email.account_document_withdrawn.body"
+msgstr "Ми відкликали {document_title} для {org_name}, тож його більше не можна підписати."
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.subject"
+msgstr "Ще не виконано для {org_name}: {task_title}"
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.heading"
+msgstr "Один крок ще не виконано"
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.body"
+msgstr "Один крок в обліковому записі {org_name} ще чекає на вас:"

@@ -631,6 +631,39 @@ export const PushDocumentResponse = z.object({ document: DocumentDetail, task: T
 
 export const VoidRequest = z.object({ reason: optText(2000) });
 
+/**
+ * A message to the people who run an account, asked for by sam (or staff): sam decides
+ * when to write and about what; echo renders it in the email frame, in each recipient's
+ * language, signed by the account's manager. `note` is sam's own line, shown as written,
+ * so sam writes it in the account's language. `dry_run` renders without sending.
+ */
+export const MessageKind = z.enum(["invoice_issued", "document_withdrawn", "task_reminder"]);
+export const SendMessageRequest = z
+  .object({
+    kind: MessageKind,
+    /** The invoice or the withdrawn document. */
+    document_id: nullish(Uuid),
+    /** The task to check in on. */
+    task_id: nullish(Uuid),
+    note: optText(1000),
+    dry_run: z.boolean().default(false),
+  })
+  .refine((m) => (m.kind === "task_reminder" ? Boolean(m.task_id) : Boolean(m.document_id)), {
+    message: "task_reminder takes task_id; the other kinds take document_id",
+  });
+export const RenderedMessage = z.object({
+  to: z.string(),
+  language: z.string(),
+  subject: z.string(),
+  html: z.string(),
+  text: z.string(),
+});
+export const SendMessageResponse = z.object({
+  /** How many emails were queued; 0 on a dry run. */
+  queued: z.number().int(),
+  messages: z.array(RenderedMessage),
+});
+
 export const DocumentFields = z.object({
   document_id: Uuid,
   status: DocumentStatus,
@@ -1046,6 +1079,14 @@ export const ROUTES = {
     permission: "staff:accounts",
     request: VoidRequest,
     response: DocumentDetail,
+  },
+  /** sam asks echo to write the account's people: see SendMessageRequest. */
+  sendMessage: {
+    method: "POST",
+    path: `${S}/:orgId/messages`,
+    permission: "staff:accounts",
+    request: SendMessageRequest,
+    response: SendMessageResponse,
   },
   upsertInvoice: {
     method: "PUT",

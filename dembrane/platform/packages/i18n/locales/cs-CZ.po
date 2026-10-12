@@ -748,10 +748,6 @@ msgid "email.account_offer_sent.signer"
 msgstr "Podepisuje za organizaci {org_name} někdo jiný? Otevřete nabídku a uveďte ho tam; dostane vlastní odkaz."
 
 #. js-lingui-explicit-id
-msgid "email.account_offer_sent.footer"
-msgstr "Tento e-mail dostáváte, protože spravujete účet organizace {org_name} v dembrane."
-
-#. js-lingui-explicit-id
 msgid "email.account_signer_invite.how"
 msgstr "Tlačítko vás přihlásí jednorázovým kódem zaslaným na tuto adresu, takže heslo nepotřebujete. Uvidíte jen tento dokument."
 
@@ -786,3 +782,71 @@ msgstr "Požádat o upgrade:"
 #. js-lingui-explicit-id
 msgid "email.tier_expired.text_cta"
 msgstr "Požádat o upgrade:"
+
+#. js-lingui-explicit-id
+msgid "email.common.footer_account"
+msgstr "Tento e-mail dostáváte, protože spravujete účet organizace {org_name} v dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.common.cta_account"
+msgstr "Otevřít stránku účtu"
+
+#. js-lingui-explicit-id
+msgid "email.common.text_cta_account"
+msgstr "Otevřít stránku účtu:"
+
+#. js-lingui-explicit-id
+msgid "email.facts.invoice"
+msgstr "Faktura"
+
+#. js-lingui-explicit-id
+msgid "email.facts.issued"
+msgstr "Datum"
+
+#. js-lingui-explicit-id
+msgid "email.facts.due"
+msgstr "Splatnost"
+
+#. js-lingui-explicit-id
+msgid "email.account_invoice_issued.subject"
+msgstr "Vaše faktura od dembrane pro {org_name}"
+
+#. js-lingui-explicit-id
+msgid "email.account_invoice_issued.heading"
+msgstr "Vaše faktura je připravena"
+
+#. js-lingui-explicit-id
+msgid "email.account_invoice_issued.body"
+msgstr "Posíláme fakturu pro organizaci {org_name}. Najdete ji i na stránce účtu spolu se způsoby platby."
+
+#. js-lingui-explicit-id
+msgid "email.account_invoice_issued.cta_pay"
+msgstr "Zaplatit"
+
+#. js-lingui-explicit-id
+msgid "email.account_invoice_issued.text_cta_pay"
+msgstr "Zaplatit:"
+
+#. js-lingui-explicit-id
+msgid "email.account_document_withdrawn.subject"
+msgstr "{document_title} byl stažen"
+
+#. js-lingui-explicit-id
+msgid "email.account_document_withdrawn.heading"
+msgstr "Stáhli jsme {document_title}"
+
+#. js-lingui-explicit-id
+msgid "email.account_document_withdrawn.body"
+msgstr "Stáhli jsme {document_title} pro organizaci {org_name}, takže ho už nelze podepsat."
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.subject"
+msgstr "Stále otevřené pro {org_name}: {task_title}"
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.heading"
+msgstr "Jeden krok je stále otevřený"
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.body"
+msgstr "Na účtu organizace {org_name} na vás ještě čeká jeden krok:"

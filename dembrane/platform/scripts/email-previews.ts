@@ -60,6 +60,41 @@ const previews: Record<string, Preview> = {
     template: "account_signer_invite",
     data: { ...offer, inviter_name: "Bram Jansen" },
   }),
+  account_invoice_issued: catalog({
+    template: "account_invoice_issued",
+    data: {
+      org_name: offer.org_name,
+      account_url: `${D}/o/1/account`,
+      reference: "2026-0430",
+      total_cents: "1210000",
+      currency: "EUR",
+      issued_on: "2026-10-01",
+      due_on: "2026-10-31",
+      pay_url: "https://www.mollie.com/checkout/xyz",
+      manager_name: "Anna de Vries",
+    },
+  }),
+  account_document_withdrawn: catalog({
+    template: "account_document_withdrawn",
+    data: {
+      org_name: offer.org_name,
+      account_url: `${D}/o/1/account`,
+      document_title: offer.document_title,
+      manager_name: "Anna de Vries",
+      note: "A corrected offer with the new start date follows this week.",
+    },
+  }),
+  account_task_reminder: catalog({
+    template: "account_task_reminder",
+    data: {
+      org_name: offer.org_name,
+      account_url: `${D}/o/1/account`,
+      task_title: "Billing details",
+      task_body:
+        "Who we invoice: legal name, address, VAT or KvK number, billing email and, if you use one, your PO number.",
+      manager_name: "Anna de Vries",
+    },
+  }),
   sign_in_code: catalog({ template: "sign_in_code", data: { code: "482913" } }),
   payment_failed: (l) => paymentFailedEmail(`${D}/o/1/settings/billing`, l),
   tier_expiring: (l) =>

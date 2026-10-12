@@ -440,6 +440,10 @@ run("an offer draft, and the invoice request after the signature", () => {
           org_name: "Gemeente Testdorp",
           document_title: "Gemeente Testdorp x dembrane",
           sign_url: link,
+          reference: "OFFER-910",
+          total_cents: "124872",
+          currency: "EUR",
+          valid_until: "2026-10-16",
         },
         context: `account offer sent ${pushed.id}`,
       },
@@ -454,9 +458,8 @@ run("an offer draft, and the invoice request after the signature", () => {
       subject: "Your offer from dembrane is ready to sign",
       tags: ["account_offer_sent"],
     });
-    expect(mailer.sent[0]?.text).toContain(
-      "We sent Gemeente Testdorp an offer: Gemeente Testdorp x dembrane.",
-    );
+    expect(mailer.sent[0]?.text).toContain("We've prepared an offer for Gemeente Testdorp.");
+    expect(mailer.sent[0]?.text).toContain("Total incl. VAT: €1,248.72");
     expect(mailer.sent[0]?.text).toContain(link);
     expect(mailer.sent[0]?.html).toContain(`href="${link}"`);
   });
@@ -489,8 +492,9 @@ run("an offer draft, and the invoice request after the signature", () => {
         ["billing@example.test", "Je offerte van dembrane staat klaar om te ondertekenen"],
       ]);
       expect(mailer.sent[1]?.text).toContain(
-        "We hebben Gemeente Testdorp een offerte gestuurd: Gemeente Testdorp x dembrane.",
+        "We hebben een offerte voor Gemeente Testdorp klaargezet.",
       );
+      expect(mailer.sent[1]?.text).toContain("Geldig tot: 16 oktober 2026");
     } finally {
       await setLanguage("admin", null);
     }

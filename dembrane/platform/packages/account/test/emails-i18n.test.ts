@@ -161,7 +161,7 @@ test("the sign-in code stands on its own line", () => {
 });
 
 test("the offer sent email has its own words in every language", () => {
-  const ids = ["subject", "preview", "heading", "body", "signer", "footer", "cta", "text_cta"].map(
+  const ids = ["subject", "preview", "heading", "body", "signer", "cta", "text_cta"].map(
     (k) => `email.account_offer_sent.${k}`,
   );
   const words = (locale: string) =>

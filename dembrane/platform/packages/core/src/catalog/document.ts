@@ -189,4 +189,16 @@ export const document = {
     audience: "staff",
     description: "Signed documents are final and cannot be withdrawn.",
   },
+  "document.not_an_invoice": {
+    action: "none",
+    detail: "This document is not an invoice",
+    audience: "staff",
+    description: "An invoice message was asked for a document of another kind.",
+  },
+  "document.not_withdrawn": {
+    action: "none",
+    detail: "This document has not been withdrawn",
+    audience: "staff",
+    description: "A withdrawal message was asked for a document that is not void.",
+  },
 } as const satisfies Codes<"document">;
