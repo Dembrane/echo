@@ -380,7 +380,7 @@ export function WhoSigns({
 										(step === "dpia" ? (
 											<Trans>Confirm</Trans>
 										) : (
-											<Trans>Continue</Trans>
+											<Trans>Next</Trans>
 										))}
 								</FitLabel>
 							</Button>

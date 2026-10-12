@@ -237,13 +237,13 @@ export function SendToSomeoneElse({
 								<FitLabel>
 									{step === "email" ? (
 										email.trim() ? (
-											<Trans>Continue</Trans>
+											<Trans>Next</Trans>
 										) : (
 											<Trans>Fill in their email</Trans>
 										)
 									) : step === "name" ? (
 										name.trim() ? (
-											<Trans>Continue</Trans>
+											<Trans>Next</Trans>
 										) : (
 											<Trans>Fill in their name</Trans>
 										)
