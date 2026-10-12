@@ -6,6 +6,7 @@ import { type FormEvent, useEffect, useRef, useState } from "react";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { AccountsApiError } from "../api/client";
 import { useAccountsMutation } from "../api/hooks";
+import { FitLabel, fitting } from "../FitLabel";
 
 type Step = "email" | "name" | "job" | "sent";
 const ORDER: Step[] = ["email", "name", "job"];
@@ -18,18 +19,21 @@ const looksLikeEmail = (v: string) =>
  * Handing a document to the person who signs it, one question per step: their email
  * first, as that is what people have at hand, then their name, then their job title. The
  * last step sends and says so. One signer per document: sending again replaces the one
- * named before. Every step has its primary action on the right and Back on the left, on
+ * named before; the one named now starts filled in, to correct an address. Every step has its primary action on the right and Back on the left, on
  * one row.
  */
 export function SendToSomeoneElse({
 	orgId,
 	docId,
 	opened,
+	current = null,
 	onClose,
 }: {
 	orgId: string;
 	docId: string | null;
 	opened: boolean;
+	/** Whoever is named now: their details start filled in, so a mistyped address can be put right. */
+	current?: { email: string; name: string | null; role: string | null } | null;
 	onClose: () => void;
 }) {
 	const [step, setStep] = useState<Step>("email");
@@ -48,9 +52,9 @@ export function SendToSomeoneElse({
 	useEffect(() => {
 		if (!opened) return;
 		setStep("email");
-		setEmail("");
-		setName("");
-		setJob("");
+		setEmail(current?.email ?? "");
+		setName(current?.name ?? "");
+		setJob(current?.role ?? "");
 		setEmpty(false);
 		mutation.reset();
 	}, [opened]);
@@ -216,7 +220,11 @@ export function SendToSomeoneElse({
 							wrap="nowrap"
 							style={{ justifyContent: "space-between" }}
 						>
-							<Button onClick={back} data-testid="send-to-back">
+							<Button
+								onClick={back}
+								data-testid="send-to-back"
+								style={{ flexShrink: 0 }}
+							>
 								{step === "email" ? <Trans>Cancel</Trans> : <Trans>Back</Trans>}
 							</Button>
 							<Button
@@ -224,22 +232,25 @@ export function SendToSomeoneElse({
 								variant="filled"
 								loading={mutation.isPending}
 								data-testid="send-to-next"
+								{...fitting}
 							>
-								{step === "email" ? (
-									email.trim() ? (
-										<Trans>Continue</Trans>
+								<FitLabel>
+									{step === "email" ? (
+										email.trim() ? (
+											<Trans>Continue</Trans>
+										) : (
+											<Trans>Fill in their email</Trans>
+										)
+									) : step === "name" ? (
+										name.trim() ? (
+											<Trans>Continue</Trans>
+										) : (
+											<Trans>Fill in their name</Trans>
+										)
 									) : (
-										<Trans>Fill in their email</Trans>
-									)
-								) : step === "name" ? (
-									name.trim() ? (
-										<Trans>Continue</Trans>
-									) : (
-										<Trans>Fill in their name</Trans>
-									)
-								) : (
-									<Trans>Send</Trans>
-								)}
+										<Trans>Send</Trans>
+									)}
+								</FitLabel>
 							</Button>
 						</Group>
 					</Stack>

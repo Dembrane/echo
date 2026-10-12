@@ -16,6 +16,7 @@ import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { AccountsApiError } from "../api/client";
 import { useAccountsMutation } from "../api/hooks";
 import type { TaskT } from "../contract/contract.gen";
+import { FitLabel, fitting } from "../FitLabel";
 import { taskText } from "../format";
 
 type Step = "offer" | "dpa" | "dpia" | "done";
@@ -360,21 +361,28 @@ export function WhoSigns({
 							<ErrorNotice error={mutation.error} />
 						) : null}
 						<ActionRow>
-							<Button onClick={back} data-testid="who-signs-back">
+							<Button
+								onClick={back}
+								data-testid="who-signs-back"
+								style={{ flexShrink: 0 }}
+							>
 								{step === "offer" ? <Trans>Cancel</Trans> : <Trans>Back</Trans>}
 							</Button>
 							<Button
+								{...fitting}
 								type="submit"
 								variant="filled"
 								loading={mutation.isPending}
 								data-testid="who-signs-next"
 							>
-								{need ??
-									(step === "dpia" ? (
-										<Trans>Confirm</Trans>
-									) : (
-										<Trans>Continue</Trans>
-									))}
+								<FitLabel>
+									{need ??
+										(step === "dpia" ? (
+											<Trans>Confirm</Trans>
+										) : (
+											<Trans>Continue</Trans>
+										))}
+								</FitLabel>
 							</Button>
 						</ActionRow>
 					</Stack>

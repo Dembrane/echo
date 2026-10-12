@@ -1201,9 +1201,11 @@ export async function handle(
 				d.signer = {
 					email: String(body.email),
 					name: String(body.name),
+					named_at: now(),
+					reminded_at: null,
 					role: (body.role as string | null) ?? null,
 				};
-				const replaced = previous && previous.email !== d.signer.email;
+				const replaced = previous && previous.email !== body.email;
 				event(
 					s,
 					replaced ? "document.signer_replaced" : "document.signer_named",
@@ -1212,6 +1214,26 @@ export async function handle(
 					replaced
 						? { email: body.email, previous_email: previous.email }
 						: { email: body.email },
+				);
+				return { signer: d.signer };
+			}
+			case "remindSigner": {
+				const d = doc();
+				if (!d.signer)
+					throw new AccountsApiError(
+						409,
+						"This document is not waiting for a signature",
+					);
+				const last = d.signer.reminded_at;
+				if (last && Date.now() - Date.parse(last) < 864e5)
+					throw new AccountsApiError(429, "Try again tomorrow.");
+				d.signer.reminded_at = now();
+				event(
+					s,
+					"document.signer_reminded",
+					"customer",
+					{ id: d.id, type: "document" },
+					{ email: d.signer.email },
 				);
 				return { signer: d.signer };
 			}
@@ -1248,6 +1270,8 @@ export async function handle(
 					d.signer = {
 						email: p.email.toLowerCase(),
 						name: p.name,
+						named_at: now(),
+						reminded_at: null,
 						role: p.role,
 					};
 					event(

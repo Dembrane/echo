@@ -1,9 +1,8 @@
 import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import {
 	Anchor,
-	Box,
 	Button,
 	FileButton,
 	Group,
@@ -12,13 +11,9 @@ import {
 	Text,
 	Textarea,
 } from "@mantine/core";
-import {
-	CheckIcon,
-	HourglassSimpleIcon,
-	LockSimpleIcon,
-} from "@phosphor-icons/react";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { type ReactNode, useEffect, useState } from "react";
+import { Fragment, type ReactNode, useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
@@ -26,77 +21,119 @@ import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { getDocumentationUrl } from "@/config";
 import { call, submitTaskWithFile } from "../api/client";
 import { accountKeys } from "../api/hooks";
-import type { TaskT } from "../contract/contract.gen";
-import { formatDate, taskText } from "../format";
-import { PageSection, Row, Rows } from "./PageSection";
-import { type AccountPlan, waitsOnWhoSigns } from "./plan";
+import type { DocumentSummaryT, TaskT } from "../contract/contract.gen";
+import { formatDate, formatMoney, taskText } from "../format";
+import { PageSection, Rows } from "./PageSection";
+import { PayLine, PayModal } from "./Pay";
+import {
+	type AccountPlan,
+	isGetStarted,
+	toDoInOrder,
+	waitsOnWhoSigns,
+} from "./plan";
+import { mayRemind, RemindSigner } from "./RemindSigner";
 import { SendToSomeoneElse } from "./SendToSomeoneElse";
+import { Figure, KindIcon, kindOf, secondary, TaskLine } from "./TaskLine";
 import { WhoSigns } from "./WhoSigns";
-
-/** Steps done by taking them, never by a reply: their button leads to the step. */
-const ONBOARDING: NonNullable<TaskT["code"]>[] = [
-	"explore_demo",
-	"watch_tutorial",
-	"create_project",
-	"book_call",
-];
 
 /**
  * What the customer has to do, then what is coming: tasks are a set, not a sequence, so
- * there are no step numbers. Each open task is a row with its words and its action, and
- * that action is the row's one blue pill. Below it,
- * quieter, what dembrane is working on and what opens after a signature, and the finished
- * tasks folded away.
+ * there are no step numbers. Every task is a task line (TaskLine): invoices to pay lead To
+ * do, then the open tasks, each with its one blue pill. Coming up holds what waits on
+ * someone else, on dembrane or on a signature, with secondary buttons only, and the
+ * finished tasks folded away.
  */
 export function NextSteps({
 	orgId,
 	plan,
+	documents,
+	today,
 	onBilling,
 	onBookCall,
 }: {
 	orgId: string;
-	plan: Pick<AccountPlan, "toDo" | "waiting" | "withUs" | "later" | "done">;
+	plan: Pick<
+		AccountPlan,
+		"toPay" | "toDo" | "waiting" | "withUs" | "later" | "done" | "withDpa"
+	>;
+	documents: DocumentSummaryT[];
+	today: string;
 	onBilling: () => void;
 	onBookCall: () => void;
 }) {
 	const [responding, setResponding] = useState<TaskT | null>(null);
 	const [sendingTo, setSendingTo] = useState<string | null>(null);
 	const [asking, setAsking] = useState<TaskT | null>(null);
+	const [paying, setPaying] = useState<DocumentSummaryT | null>(null);
 	const [showDone, setShowDone] = useState(false);
-	const { toDo, waiting, withUs, later, done } = plan;
+	const { toDo, waiting, withUs, later, done, withDpa } = plan;
 	const coming = [...withUs, ...later];
 	const ahead = waiting.length + coming.length;
-	const nothing = toDo.length + ahead + done.length === 0;
-	if (nothing) return null;
+	const items = toDoInOrder(plan, documents);
+	const starting = toDo.filter(isGetStarted);
+	const docOf = (task: TaskT) =>
+		documents.find((d) => d.id === task.document_id) ?? null;
+	if (items.length + starting.length + ahead + done.length === 0) return null;
+	const openTask = (task: TaskT, primary: boolean) => (
+		<OpenTask
+			key={task.id}
+			task={task}
+			primary={primary}
+			doc={docOf(task)}
+			withDpa={withDpa.has(task.id)}
+			orgId={orgId}
+			onBilling={onBilling}
+			onBookCall={onBookCall}
+			onRespond={() => setResponding(task)}
+			onSendTo={() => setSendingTo(task.document_id)}
+			onWhoSigns={() => setAsking(task)}
+		/>
+	);
 
 	return (
 		<>
-			{toDo.length > 0 && (
-				<PageSection title={<Trans>To do</Trans>} testId="next-steps">
+			{items.length > 0 && (
+				<PageSection
+					title={<Trans>To do</Trans>}
+					count={items.length}
+					testId="next-steps"
+				>
+					{/* The first is next: the page's one blue pill. */}
 					<Rows>
-						{toDo.map((task, i) => (
-							<OpenTask
-								key={task.id}
-								task={task}
-								first={i === 0}
-								orgId={orgId}
-								onBilling={onBilling}
-								onBookCall={onBookCall}
-								onRespond={() => setResponding(task)}
-								onSendTo={() => setSendingTo(task.document_id)}
-								onWhoSigns={() => setAsking(task)}
-							/>
-						))}
+						{items.map((item, i) =>
+							item.kind === "invoice" ? (
+								<PayLine
+									key={item.id}
+									doc={item.doc}
+									today={today}
+									primary={i === 0}
+									onPay={() => setPaying(item.doc)}
+								/>
+							) : (
+								openTask(item.task, i === 0)
+							),
+						)}
 					</Rows>
+				</PageSection>
+			)}
+
+			{starting.length > 0 && (
+				<PageSection
+					title={<Trans>Get started</Trans>}
+					count={<Trans>optional</Trans>}
+					testId="get-started"
+				>
+					<Rows>{starting.map((task) => openTask(task, false))}</Rows>
 				</PageSection>
 			)}
 
 			{(ahead > 0 || done.length > 0) && (
 				<PageSection
 					title={ahead > 0 ? <Trans>Coming up</Trans> : <Trans>Done</Trans>}
+					count={ahead > 0 ? ahead : done.length}
 					testId="coming-up"
 					action={
-						done.length > 0 ? (
+						done.length > 0 && ahead > 0 ? (
 							<Anchor
 								component="button"
 								size="sm"
@@ -113,31 +150,33 @@ export function NextSteps({
 						) : undefined
 					}
 				>
-					{(ahead > 0 || showDone) && (
-						<Rows>
-							{waiting.map(({ task, signer }) => (
-								<WaitingTask
-									key={task.id}
-									task={task}
-									signer={signer}
-									orgId={orgId}
-									onSendTo={() => setSendingTo(task.document_id)}
-								/>
-							))}
-							{coming.map((task) => (
-								<QuietTask
-									key={task.id}
-									task={task}
-									afterWhoSigns={waitsOnWhoSigns(task, toDo)}
-								/>
-							))}
-							{showDone &&
-								done.map((task) => <QuietTask key={task.id} task={task} />)}
-						</Rows>
-					)}
+					<Rows>
+						{waiting.map(({ task, signer }) => (
+							<WaitingTask
+								key={task.id}
+								task={task}
+								doc={docOf(task)}
+								withDpa={withDpa.has(task.id)}
+								signer={signer}
+								orgId={orgId}
+								onSendTo={() => setSendingTo(task.document_id)}
+							/>
+						))}
+						{coming.map((task) => (
+							<QuietTask
+								key={task.id}
+								task={task}
+								withDpa={withDpa.has(task.id)}
+								afterWhoSigns={waitsOnWhoSigns(task, toDo)}
+							/>
+						))}
+						{(showDone || ahead === 0) &&
+							done.map((task) => <QuietTask key={task.id} task={task} />)}
+					</Rows>
 				</PageSection>
 			)}
 
+			<PayModal doc={paying} onClose={() => setPaying(null)} />
 			<TaskResponseModal
 				task={responding}
 				orgId={orgId}
@@ -148,15 +187,49 @@ export function NextSteps({
 				orgId={orgId}
 				docId={sendingTo}
 				opened={sendingTo !== null}
+				current={documents.find((d) => d.id === sendingTo)?.signer ?? null}
 				onClose={() => setSendingTo(null)}
 			/>
 		</>
 	);
 }
 
+/** Facts for one line, set apart by a middle dot. */
+const facts = (...parts: ReactNode[]) => {
+	const shown = parts.filter(Boolean);
+	if (shown.length === 0) return null;
+	return shown.map((part, i) => (
+		// biome-ignore lint/suspicious/noArrayIndexKey: a fixed, ordered list of facts
+		<Fragment key={i}>
+			{i > 0 && " · "}
+			{part}
+		</Fragment>
+	));
+};
+
+/** The amount of a document to sign, when it has one, at the right of its line. */
+function DocFigure({ doc }: { doc: DocumentSummaryT | null }) {
+	const { i18n } = useLingui();
+	if (doc?.total_cents == null) return null;
+	const amount = formatMoney(doc.total_cents, doc.currency, i18n.locale);
+	const vat = formatMoney(doc.vat_cents, doc.currency, i18n.locale);
+	return (
+		<Figure
+			amount={amount}
+			vat={
+				doc.vat_cents != null && doc.vat_cents > 0 ? (
+					<Trans>incl. {vat} VAT</Trans>
+				) : undefined
+			}
+		/>
+	);
+}
+
 function OpenTask({
 	task,
-	first,
+	primary,
+	doc,
+	withDpa,
 	orgId,
 	onBilling,
 	onBookCall,
@@ -165,7 +238,10 @@ function OpenTask({
 	onWhoSigns,
 }: {
 	task: TaskT;
-	first: boolean;
+	/** The next task: the page's one blue pill. Every other action is a secondary. */
+	primary: boolean;
+	doc: DocumentSummaryT | null;
+	withDpa: boolean;
 	orgId: string;
 	onBilling: () => void;
 	onBookCall: () => void;
@@ -173,20 +249,45 @@ function OpenTask({
 	onSendTo: () => void;
 	onWhoSigns: () => void;
 }) {
+	const { i18n } = useLingui();
 	const { title, body } = taskText(task);
-	// Every task's own action is its blue pill: one clear next step per row.
-	const variant = "filled";
+	const action = primary ? ({ variant: "filled" } as const) : secondary;
 	const sentBack = task.status === "changes_requested";
+	const signing = task.kind === "sign" && task.document_id;
+	const validUntil = formatDate(doc?.valid_until, i18n.locale);
+	const due = formatDate(task.due_on, i18n.locale);
 
-	const action = (() => {
-		if (task.kind === "sign" && task.document_id) {
-			// Signing it, or handing it to whoever signs for the organisation: both are
-			// right here, so the task needs no words of its own. Signing is the pill and
-			// comes first; handing it on is the outlined secondary, with room between.
+	// One fact under the title; the title already says what to do.
+	const fact =
+		sentBack && task.review_note ? (
+			<Text span inherit c="var(--app-warning)">
+				<Trans>We asked for a change: {task.review_note}</Trans>
+			</Text>
+		) : signing ? (
+			facts(
+				validUntil && <Trans>Valid until {validUntil}</Trans>,
+				withDpa && <Trans>Includes the data processing agreement</Trans>,
+			)
+		) : task.code === "who_signs" ? (
+			<Trans>3 questions</Trans>
+		) : (
+			facts(
+				due && <Trans>Before {due}</Trans>,
+				body && (
+					<Text span inherit lineClamp={1}>
+						{body}
+					</Text>
+				),
+			)
+		);
+
+	const actions = (() => {
+		if (signing) {
+			// Signing is the pill and comes first; handing it on is the secondary.
 			return (
-				<Group gap="md" wrap="wrap">
+				<>
 					<Button
-						variant={variant}
+						{...action}
 						component={I18nLink}
 						to={`/o/${orgId}/account/documents/${task.document_id}/sign`}
 						data-testid="action-sign"
@@ -194,161 +295,161 @@ function OpenTask({
 						<Trans>Review and sign</Trans>
 					</Button>
 					<Button
-						variant="outline"
+						{...secondary}
 						onClick={onSendTo}
 						data-testid="action-send-to"
 					>
 						<Trans>Send to someone else</Trans>
 					</Button>
-				</Group>
+				</>
 			);
 		}
 		if (task.code === "who_signs") {
 			return (
-				<Button
-					variant={variant}
-					onClick={onWhoSigns}
-					data-testid="action-who-signs"
-				>
-					<Trans>Start</Trans>
+				<Button {...action} onClick={onWhoSigns} data-testid="action-who-signs">
+					<Trans>Choose who signs</Trans>
 				</Button>
 			);
 		}
-		if (task.code && ONBOARDING.includes(task.code)) {
+		if (isGetStarted(task)) {
 			return (
 				<OnboardingAction
 					task={task}
 					orgId={orgId}
-					variant={variant}
+					action={action}
 					onBookCall={onBookCall}
 				/>
 			);
 		}
 		if (task.kind === "billing_details") {
 			return (
-				<Button
-					variant={variant}
-					onClick={onBilling}
-					data-testid="action-billing"
-				>
-					<Trans>Fill in</Trans>
+				<Button {...action} onClick={onBilling} data-testid="action-billing">
+					<Trans>Fill in billing details</Trans>
 				</Button>
 			);
 		}
 		return (
-			<Button variant={variant} onClick={onRespond}>
+			<Button {...action} onClick={onRespond}>
 				{task.kind === "upload" ? <Trans>Upload</Trans> : <Trans>Reply</Trans>}
 			</Button>
 		);
 	})();
 
 	return (
-		<Row
+		<TaskLine
 			testId={`task-${task.kind}`}
 			data-status={task.status}
-			data-current={first ? "true" : undefined}
-		>
-			{/* The action sits under the words it answers, primary first, at the left. */}
-			<Stack gap="sm" align="flex-start">
-				<Stack gap={4} style={{ minWidth: 0 }}>
-					<Text>{title}</Text>
-					{sentBack && task.review_note ? (
-						<Text size="sm" c="var(--app-warning)">
-							<Trans>We asked for a change: {task.review_note}</Trans>
-						</Text>
-					) : body ? (
-						<Text size="sm" c="dimmed" lineClamp={first ? 4 : 2}>
-							{body}
-						</Text>
-					) : null}
-					{task.due_on && <Due iso={task.due_on} />}
-				</Stack>
-				{action}
-			</Stack>
-		</Row>
+			marker={<KindIcon kind={kindOf(task)} />}
+			title={title}
+			fact={fact}
+			figure={signing ? <DocFigure doc={doc} /> : null}
+			actions={actions}
+		/>
 	);
 }
 
-function Due({ iso }: { iso: string }) {
-	const { i18n } = useLingui();
-	const date = formatDate(iso, i18n.locale);
-	return (
-		<Text size="sm" c="dimmed">
-			<Trans>Before {date}</Trans>
-		</Text>
-	);
-}
+/** Days since someone was named to sign, from when they were named. */
+const daysSince = (iso: string | null) =>
+	iso == null ? null : Math.floor((Date.now() - Date.parse(iso)) / 864e5);
 
 /**
  * A signature handed to someone else: it waits on them, and their signature completes it.
- * The offer can still be read here, and handed to someone else again.
+ * The line says how long it has waited; after a day the person can be reminded. The
+ * document opens under the line to read along, and can be handed to someone else again.
  */
 function WaitingTask({
 	task,
+	doc,
+	withDpa,
 	signer,
 	orgId,
 	onSendTo,
 }: {
 	task: TaskT;
-	signer: { name: string | null; email: string; role: string | null };
+	doc: DocumentSummaryT | null;
+	withDpa: boolean;
+	signer: NonNullable<DocumentSummaryT["signer"]>;
 	orgId: string;
 	onSendTo: () => void;
 }) {
 	const { title } = taskText(task);
 	const who = signer.name || signer.email;
 	const jobTitle = signer.role;
+	const assignee = jobTitle ? `${who}, ${jobTitle}` : who;
+	const days = daysSince(signer.named_at);
+	const firstName = signer.name?.split(" ")[0] || signer.email;
+	const waited =
+		days == null ? null : days < 1 ? (
+			<Trans>sent today</Trans>
+		) : (
+			<Plural value={days} one="# day" other="# days" />
+		);
 	return (
-		<Row testId="task-waiting" data-status="waiting">
-			<Group justify="space-between" align="center" gap="sm" wrap="wrap">
-				<Group
-					gap="sm"
-					wrap="nowrap"
-					align="flex-start"
-					style={{ flex: "1 1 260px", minWidth: 0 }}
-				>
-					<Box pt="xs" style={{ flexShrink: 0, lineHeight: 0 }}>
-						<HourglassSimpleIcon
-							size={16}
-							color="var(--app-muted)"
-							aria-hidden
+		<TaskLine
+			testId="task-waiting"
+			data-status="waiting"
+			marker={<KindIcon kind={kindOf(task)} quiet />}
+			title={title}
+			fact={
+				<span data-testid="waiting-on">
+					{facts(
+						<Trans>Waiting on {assignee}</Trans>,
+						signer.email,
+						waited,
+						withDpa && <Trans>Includes the data processing agreement</Trans>,
+					)}
+				</span>
+			}
+			actions={
+				<>
+					{mayRemind(signer) && task.document_id && (
+						<RemindSigner
+							orgId={orgId}
+							docId={task.document_id}
+							name={firstName}
 						/>
-					</Box>
-					<Stack gap={4} style={{ minWidth: 0 }}>
-						<Text>{title}</Text>
-						<Text size="sm" c="dimmed" data-testid="waiting-on">
-							{jobTitle ? (
-								<Trans>
-									Waiting on {who}, {jobTitle}. We emailed them a link to sign.
-								</Trans>
+					)}
+					{task.document_id && (
+						// The document opens in its own window, read-only, saying whose it is.
+						<Button
+							{...secondary}
+							component={I18nLink}
+							to={`/o/${orgId}/account/documents/${task.document_id}/sign`}
+							target="_blank"
+							rel="noopener"
+							rightSection={<ArrowSquareOutIcon size={16} aria-hidden />}
+							data-testid="action-view-offer"
+						>
+							{doc?.kind === "dpa" ? (
+								<Trans>View agreement</Trans>
+							) : doc?.kind === "offer" ? (
+								<Trans>View offer</Trans>
 							) : (
-								<Trans>Waiting on {who}. We emailed them a link to sign.</Trans>
+								<Trans>View document</Trans>
 							)}
-						</Text>
-					</Stack>
-				</Group>
-				<Group gap="xs" wrap="wrap" justify="flex-end">
-					<Anchor component="button" size="sm" onClick={onSendTo}>
-						<Trans>Send to someone else</Trans>
-					</Anchor>
+						</Button>
+					)}
 					<Button
-						component={I18nLink}
-						to={`/o/${orgId}/account/documents/${task.document_id}/sign`}
-						data-testid="action-view-offer"
+						{...secondary}
+						onClick={onSendTo}
+						data-testid="action-send-to"
 					>
-						<Trans>View</Trans>
+						<Trans>Send to someone else</Trans>
 					</Button>
-				</Group>
-			</Group>
-		</Row>
+				</>
+			}
+		/>
 	);
 }
 
 /** A task that is not the customer's move: with dembrane, waiting on a signature, or done. */
 function QuietTask({
 	task,
+	withDpa = false,
 	afterWhoSigns = false,
 }: {
 	task: TaskT;
+	withDpa?: boolean;
 	/** A signature that opens once the customer has said who signs. */
 	afterWhoSigns?: boolean;
 }) {
@@ -356,21 +457,15 @@ function QuietTask({
 	const { title } = taskText(task);
 	const locked = afterWhoSigns || task.locked || task.status === "locked";
 	const done = task.status === "done";
-	const icon = done ? (
-		<CheckIcon size={16} color="var(--app-success)" aria-hidden />
-	) : locked ? (
-		<LockSimpleIcon size={16} color="var(--app-muted)" aria-hidden />
-	) : (
-		<HourglassSimpleIcon size={16} color="var(--app-muted)" aria-hidden />
-	);
 	const when = formatDate(task.submitted_at, i18n.locale);
+	const until = task.locked_until_title;
 	const note = afterWhoSigns ? (
-		<Trans>Opens after you tell us who signs.</Trans>
+		<Trans>Opens after you tell us who signs</Trans>
 	) : locked ? (
-		task.locked_until_title ? (
-			<Trans>Opens after you sign {task.locked_until_title}.</Trans>
+		until ? (
+			<Trans>Opens after you sign {until}</Trans>
 		) : (
-			<Trans>Opens after signing.</Trans>
+			<Trans>Opens after signing</Trans>
 		)
 	) : done ? (
 		<Trans>Done</Trans>
@@ -380,19 +475,24 @@ function QuietTask({
 		<Trans>We are on it.</Trans>
 	);
 	return (
-		<Row testId={`task-${task.kind}`} data-status={task.status}>
-			<Group gap="sm" wrap="nowrap" align="flex-start">
-				<Box pt="xs" style={{ flexShrink: 0, lineHeight: 0 }}>
-					{icon}
-				</Box>
-				<Stack gap="xs" style={{ minWidth: 0 }}>
-					<Text c={done ? "dimmed" : undefined}>{title}</Text>
-					<Text size="sm" c="dimmed">
-						{note}
+		<TaskLine
+			testId={`task-${task.kind}`}
+			data-status={task.status}
+			marker={<KindIcon kind={kindOf(task)} quiet />}
+			title={
+				done ? (
+					<Text span inherit c="dimmed">
+						{title}
 					</Text>
-				</Stack>
-			</Group>
-		</Row>
+				) : (
+					title
+				)
+			}
+			fact={facts(
+				withDpa && <Trans>Includes the data processing agreement</Trans>,
+				note,
+			)}
+		/>
 	);
 }
 
@@ -404,12 +504,13 @@ function QuietTask({
 function OnboardingAction({
 	task,
 	orgId,
-	variant,
+	action,
 	onBookCall,
 }: {
 	task: TaskT;
 	orgId: string;
-	variant: "filled" | "outline";
+	/** The pill, or the secondary. */
+	action: { variant: "filled" } | typeof secondary;
 	onBookCall: () => void;
 }) {
 	const { language } = useParams<{ language?: string }>();
@@ -417,7 +518,7 @@ function OnboardingAction({
 	const workspace = task.params?.workspace_id;
 	const link = (to: string, label: ReactNode) => (
 		<Button
-			variant={variant}
+			{...action}
 			component={I18nLink}
 			to={to}
 			data-testid={`action-${task.code}`}
@@ -438,7 +539,7 @@ function OnboardingAction({
 			// step. The documentation stands in until the tutorial video exists.
 			return (
 				<Button
-					variant={variant}
+					{...action}
 					component="a"
 					href={getDocumentationUrl(language)}
 					target="_blank"
@@ -461,11 +562,7 @@ function OnboardingAction({
 				: null;
 		case "book_call":
 			return (
-				<Button
-					variant={variant}
-					onClick={onBookCall}
-					data-testid="action-book_call"
-				>
+				<Button {...action} onClick={onBookCall} data-testid="action-book_call">
 					<Trans>Book a call</Trans>
 				</Button>
 			);

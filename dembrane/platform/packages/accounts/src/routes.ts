@@ -19,6 +19,7 @@ import {
   readDocument,
   recordBooking,
   recordTutorialOpened,
+  remindSigner,
   submitTask,
   type TaskFile,
   tasksSummary,
@@ -141,6 +142,10 @@ export function accountsRoutes(d: AccountsDeps) {
     const who = requireUser(c);
     const b = await body(c, K.NameSignerRequest);
     return c.json(await nameSigner(d, who, p(c, "orgId"), p(c, "docId"), b));
+  });
+  app.post(R.remindSigner.path, async (c) => {
+    const who = requireUser(c);
+    return c.json(await remindSigner(d, who, p(c, "orgId"), p(c, "docId")));
   });
   app.post(R.answerWhoSigns.path, async (c) => {
     const who = requireUser(c);

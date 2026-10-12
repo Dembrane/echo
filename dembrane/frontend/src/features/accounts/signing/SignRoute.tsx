@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import {
 	Alert,
 	Box,
@@ -31,7 +31,11 @@ import { presentError } from "@/lib/errors/present";
 import { AccountsApiError, call } from "../api/client";
 import { accountKeys, useDocument, usePdfData, usePdfHref } from "../api/hooks";
 import type { DocumentDetailT, DocumentFieldT } from "../contract/contract.gen";
+import { DocumentPreview } from "../customer/DocumentPreview";
+import { mayRemind, RemindSigner } from "../customer/RemindSigner";
 import { SendToSomeoneElse } from "../customer/SendToSomeoneElse";
+import { secondary } from "../customer/TaskLine";
+import { FitLabel, fitting } from "../FitLabel";
 import { formatDateTime } from "../format";
 import { AccountsI18n } from "../i18n";
 import { type PageBox, PdfPages } from "../pdf/PdfPages";
@@ -199,44 +203,59 @@ function MaybeWaiting({
 		return <Walk doc={doc} orgId={orgId} />;
 	const name = signer.name || signer.email;
 	const jobTitle = signer.role;
+	const assignee = jobTitle ? `${name}, ${jobTitle}` : name;
+	const email = signer.email;
+	const firstName = signer.name?.split(" ")[0] || signer.email;
+	const days =
+		signer.named_at == null
+			? null
+			: Math.floor((Date.now() - Date.parse(signer.named_at)) / 864e5);
+	// Read along, not sign: the document under a band saying whose it is. Nothing here is
+	// the viewer's to finish, so there is no pill; Back is in the header.
 	return (
 		<>
 			<Header doc={doc} orgId={orgId} />
-			<Container size="xs" pt="10vh">
+			<Container size="md" py="xl">
 				<Stack gap="md" data-testid="sign-waiting">
-					<Title order={3} data-testid="sign-assigned">
-						{jobTitle ? (
-							<Trans>
-								This document is assigned to {name}, {jobTitle}
-							</Trans>
-						) : (
-							<Trans>This document is assigned to {name}</Trans>
+					<Stack gap={4}>
+						<Title order={2} size="h4">
+							{doc.title}
+						</Title>
+						<Text size="xs" c="dimmed" data-testid="sign-waiting-on">
+							<Trans>Waiting on {assignee}</Trans>
+							{" · "}
+							{email}
+							{days != null && (
+								<>
+									{" · "}
+									{days < 1 ? (
+										<Trans>sent today</Trans>
+									) : (
+										<Plural value={days} one="# day" other="# days" />
+									)}
+								</>
+							)}
+						</Text>
+					</Stack>
+					<Group gap="md">
+						{mayRemind(signer) && (
+							<RemindSigner orgId={orgId} docId={doc.id} name={firstName} />
 						)}
-					</Title>
-					<Text>
-						<Trans>
-							We sent {signer.email} a link to sign {doc.title}. You'll see it
-							signed on your account page.
-						</Trans>
-					</Text>
-					<Group>
 						<Button
-							size="md"
-							variant="filled"
+							{...secondary}
 							onClick={() => setReassigning(true)}
 							data-testid="sign-reassign"
 						>
 							<Trans>Send to someone else</Trans>
 						</Button>
-						<Button component={I18nLink} to={`/o/${orgId}/account`} size="md">
-							<Trans>Back to account</Trans>
-						</Button>
 					</Group>
+					<DocumentPreview doc={doc} who={assignee} />
 				</Stack>
 			</Container>
 			<SendToSomeoneElse
 				orgId={orgId}
 				docId={doc.id}
+				current={signer}
 				opened={reassigning}
 				onClose={() => setReassigning(false)}
 			/>
@@ -555,7 +574,12 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 							top: HEADER_HEIGHT + 24,
 						}}
 					>
-						<Paper withBorder p="lg">
+						{/* Parchment with a quiet outline, so its white fields read as fields. */}
+						<Paper
+							p="lg"
+							bg="var(--app-background)"
+							style={{ border: "var(--app-stroke) solid var(--app-quiet)" }}
+						>
 							{panel}
 						</Paper>
 					</Box>
@@ -571,11 +595,9 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 						left={0}
 						right={0}
 						shadow="md"
-						withBorder
+						bg="var(--app-background)"
 						style={{
-							borderBottom: 0,
-							borderLeft: 0,
-							borderRight: 0,
+							borderTop: "var(--app-stroke) solid var(--app-quiet)",
 							zIndex: 30,
 						}}
 					>
@@ -600,7 +622,11 @@ function ActionRow({
 	return (
 		<Group justify="space-between" wrap="nowrap" gap="sm">
 			{onBack ? (
-				<Button onClick={onBack} data-testid="sign-back">
+				<Button
+					onClick={onBack}
+					data-testid="sign-back"
+					style={{ flexShrink: 0 }}
+				>
 					<Trans>Back</Trans>
 				</Button>
 			) : (
@@ -709,13 +735,14 @@ function FieldPanel({
 			onBack={onBack}
 			primary={
 				<Button
+					{...fitting}
 					variant="filled"
 					size="md"
 					onClick={advance}
 					data-testid="sign-next"
 					data-missing={missing ? "true" : undefined}
 				>
-					{missing ? ask.action : <Trans>Next</Trans>}
+					<FitLabel>{missing ? ask.action : <Trans>Next</Trans>}</FitLabel>
 				</Button>
 			}
 		/>
@@ -913,15 +940,19 @@ function FinishStep({
 				primary={
 					!complete ? (
 						<Button
+							{...fitting}
 							variant="filled"
 							size="md"
 							onClick={onFill}
 							data-testid="sign-fill-next"
 						>
-							<Trans>Fill in what is left</Trans>
+							<FitLabel>
+								<Trans>Fill in what is left</Trans>
+							</FitLabel>
 						</Button>
 					) : (
 						<Button
+							{...fitting}
 							variant="filled"
 							size="md"
 							loading={submitting}
@@ -933,7 +964,9 @@ function FinishStep({
 							data-testid="sign-submit"
 						>
 							{unanswered ? (
-								<Trans>Answer the question</Trans>
+								<FitLabel>
+									<Trans>Answer the question</Trans>
+								</FitLabel>
 							) : (
 								<Trans>Sign</Trans>
 							)}

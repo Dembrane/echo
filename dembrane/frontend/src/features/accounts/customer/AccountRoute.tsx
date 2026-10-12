@@ -15,9 +15,9 @@ import { BillingForm } from "./BillingForm";
 import { BookCallModal } from "./BookCallModal";
 import { DocumentsTable } from "./DocumentsTable";
 import { NextSteps } from "./NextSteps";
+import { Sections } from "./PageSection";
 import { localToday, planAccount } from "./plan";
 import { TalkToUs } from "./TalkToUs";
-import { ToPay } from "./ToPay";
 
 /**
  * Everything between dembrane and a customer organisation, spread over the organisation's
@@ -43,15 +43,14 @@ export function AccountOverviewWork({ orgId }: { orgId: string }) {
 	if (!ready || !data) return null;
 	const today = localToday();
 	const plan = planAccount(data.tasks, data.documents, today, me?.email);
-	// Paying online is the invoice's pill; each task carries its own.
-	const payFirst = Boolean(plan.toPay[0]?.invoice?.payment_url);
 	return (
-		<>
-			<ToPay invoices={plan.toPay} today={today} primary={payFirst} />
+		<Sections>
 			{/* Finished tasks live on Tasks; the overview shows only what is still open. */}
 			<NextSteps
 				orgId={orgId}
 				plan={{ ...plan, done: [] }}
+				documents={data.documents}
+				today={today}
 				onBilling={() => navigate(`/o/${orgId}/tasks#billing`)}
 				onBookCall={() => setBooking(true)}
 			/>
@@ -61,7 +60,7 @@ export function AccountOverviewWork({ orgId }: { orgId: string }) {
 				opened={booking}
 				onClose={() => setBooking(false)}
 			/>
-		</>
+		</Sections>
 	);
 }
 
@@ -122,7 +121,6 @@ function TasksBody({ orgId, data }: { orgId: string; data: AccountPageT }) {
 	const billingHidden = billingTask
 		? billingTask.locked
 		: data.organisation.account_stage === "prospect";
-	const payFirst = Boolean(plan.toPay[0]?.invoice?.payment_url);
 	const toBilling = () =>
 		billingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 
@@ -140,16 +138,17 @@ function TasksBody({ orgId, data }: { orgId: string; data: AccountPageT }) {
 		0;
 
 	return (
-		<>
+		<Sections>
 			{nothing && billingHidden && (
 				<Alert color="gray">
 					<Trans>Nothing to do right now.</Trans>
 				</Alert>
 			)}
-			<ToPay invoices={plan.toPay} today={today} primary={payFirst} />
 			<NextSteps
 				orgId={orgId}
 				plan={plan}
+				documents={data.documents}
+				today={today}
 				onBilling={toBilling}
 				onBookCall={() => setBooking(true)}
 			/>
@@ -172,7 +171,7 @@ function TasksBody({ orgId, data }: { orgId: string; data: AccountPageT }) {
 				opened={booking}
 				onClose={() => setBooking(false)}
 			/>
-		</>
+		</Sections>
 	);
 }
 

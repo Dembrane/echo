@@ -510,6 +510,22 @@ export const store = {
       .limit(limit);
   },
 
+  /** When each document's named signer was last reminded, by document id. */
+  async lastReminders(c: Conn, orgId: string, docId?: string): Promise<Map<string, Date>> {
+    const rows = await c
+      .select({ docId: event.subjectId, at: sql<Date>`max(${event.createdAt})` })
+      .from(event)
+      .where(
+        and(
+          eq(event.orgId, orgId),
+          eq(event.type, "document.signer_reminded"),
+          docId ? eq(event.subjectId, docId) : undefined,
+        ),
+      )
+      .groupBy(event.subjectId);
+    return new Map(rows.map((r) => [r.docId as string, new Date(r.at)]));
+  },
+
   async insertEvent(c: Conn, row: typeof event.$inferInsert) {
     await c.insert(event).values(row);
   },
