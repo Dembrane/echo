@@ -38,3 +38,13 @@ test("a PR preview's key prefix and pull request are read; no environment sets t
 
   expect(() => loadConfig({ APP_ENV: "preview", ...secrets, FILES_S3_PREFIX: "../x" })).toThrow();
 });
+
+test("previews and staging name their sign-in cookies; the others keep the default name", () => {
+  const prefix = (name: string) =>
+    loadConfig({ APP_ENV: name, ...secrets }).values.auth.cookiePrefix;
+  expect(prefix("preview")).toBe("dembrane-preview");
+  expect(prefix("staging")).toBe("dembrane-staging");
+  expect(prefix("prod")).toBeUndefined();
+  expect(prefix("local")).toBeUndefined();
+  expect(() => loadConfig({ APP_ENV: "preview", ...secrets, AUTH_COOKIE_PREFIX: "a b" })).toThrow();
+});

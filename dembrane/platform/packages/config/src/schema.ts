@@ -196,6 +196,17 @@ export const schema = defineSchema({
       description:
         "Parent domain shared by dashboard, portal and API, so one sign-in covers all three.",
     }),
+    cookiePrefix: key(
+      "AUTH_COOKIE_PREFIX",
+      z
+        .string()
+        .regex(/^[a-z][a-z0-9-]*$/)
+        .optional(),
+      {
+        description:
+          "First part of the sign-in cookies' names. Environments under one parent domain each take their own, so a browser keeps one session for each. Changing it signs everyone out.",
+      },
+    ),
     googleClientId: key("AUTH_GOOGLE_CLIENT_ID", z.string().optional(), {
       description: "Google sign-in. Unset hides the option.",
     }),
