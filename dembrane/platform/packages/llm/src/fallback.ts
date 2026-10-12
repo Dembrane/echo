@@ -4,6 +4,15 @@ import type {
   LanguageModelV4GenerateResult,
   LanguageModelV4StreamResult,
 } from "@ai-sdk/provider";
+import {
+  type CallMeta,
+  failedCall,
+  generateCall,
+  type ModelCallObserver,
+  observedStream,
+  observeSafely,
+  type Report,
+} from "./observe";
 
 export interface Deployment {
   readonly label: string;
@@ -20,6 +29,10 @@ export interface FallbackOptions {
   readonly now?: () => number;
   readonly sleep?: (ms: number) => Promise<void>;
   readonly onFallback?: (event: { from: string; to: string | null; error: unknown }) => void;
+  /** Told about every attempt on every deployment: the metering's only source. */
+  readonly observe?: ModelCallObserver;
+  /** Hears the first fault of the observer or its mapping, once per process. */
+  readonly onObserverFault?: (err: unknown) => void;
 }
 
 const DEFAULTS: FallbackOptions = {
@@ -56,25 +69,60 @@ export class FallbackModel implements LanguageModelV4 {
     return (this.deployments[0] as Deployment).model.supportedUrls;
   }
 
+  /** Metering never changes a call: it runs after the result is in hand and cannot throw. */
+  private readonly report: Report = (make) =>
+    observeSafely(this.opts.observe, this.opts.onObserverFault, make);
+
   doGenerate(options: LanguageModelV4CallOptions): Promise<LanguageModelV4GenerateResult> {
-    return this.run((m) => m.doGenerate(options), options.abortSignal);
+    return this.run(async (d, meta) => {
+      const startedAt = new Date();
+      const t0 = performance.now();
+      let result: LanguageModelV4GenerateResult;
+      try {
+        result = await d.model.doGenerate(options);
+      } catch (err) {
+        this.report(() => failedCall(meta, "generate", startedAt, t0, err));
+        throw err;
+      }
+      this.report(() => generateCall(meta, startedAt, t0, result));
+      return result;
+    }, options.abortSignal);
   }
 
   doStream(options: LanguageModelV4CallOptions): Promise<LanguageModelV4StreamResult> {
-    return this.run((m) => m.doStream(options), options.abortSignal);
+    return this.run(async (d, meta) => {
+      const startedAt = new Date();
+      const t0 = performance.now();
+      let result: LanguageModelV4StreamResult;
+      try {
+        result = await d.model.doStream(options);
+      } catch (err) {
+        this.report(() => failedCall(meta, "stream", startedAt, t0, err));
+        throw err;
+      }
+      if (!this.opts.observe) return result;
+      return { ...result, stream: observedStream(result.stream, meta, startedAt, t0, this.report) };
+    }, options.abortSignal);
   }
 
   private async run<T>(
-    call: (m: LanguageModelV4) => PromiseLike<T>,
+    call: (d: Deployment, meta: CallMeta) => PromiseLike<T>,
     signal?: AbortSignal,
   ): Promise<T> {
     const order = this.healthyFirst();
     let last: unknown;
+    let attempts = 0;
     for (const [i, d] of order.entries()) {
       for (let attempt = 0; attempt < this.opts.attemptsPerDeployment; attempt++) {
         if (signal?.aborted) throw signal.reason ?? new Error("aborted");
+        attempts++;
         try {
-          return await call(d.model);
+          return await call(d, {
+            group: this.group,
+            model: d.model.modelId,
+            attempt: attempts,
+            fallback: i > 0,
+          });
         } catch (err) {
           last = err;
           if (!isRetryable(err)) throw err;

@@ -4,6 +4,7 @@ import { assertMaySign, documentFor } from "./access";
 import type { AccountsDeps, Conn } from "./deps";
 import { sha256Hex, storeRendered, writeFields } from "./documents";
 import { billingPayload, documentPayload, emit, orgPayload, signaturePayload } from "./events";
+import { requestInvoices } from "./invoice";
 import type { FieldKind } from "./offer";
 import { type AuditRecord, signedPdf, textPdf } from "./pdf";
 import { type DocumentRow, type FieldRow, type OrgRow, type SignatureRow, store } from "./storage";
@@ -211,6 +212,7 @@ export async function signDocument(
 
   try {
     await d.db.transaction(async (tx) => {
+      await store.lockOrg(tx, org.id);
       const locked = await store.documentForUpdate(tx, org.id, doc.id);
       if (!locked || !["sent", "viewed"].includes(locked.status))
         throw new ConflictError("document.already_signed");
@@ -244,6 +246,8 @@ export async function signDocument(
       await afterSigned(d, tx, org, doc, input, who);
       const sig = (await store.signatureOf(tx, doc.id)) as SignatureRow;
       const fresh = (await store.document(tx, org.id, doc.id)) as DocumentRow;
+      // Read again: signing an offer makes a prospect a customer.
+      const signedFor = (await store.org(tx, org.id)) as OrgRow;
       await emit(d, tx, {
         orgId: org.id,
         actor: { kind: "customer", userId: who.directusUserId },
@@ -252,13 +256,15 @@ export async function signDocument(
         detail: { title: doc.title, signer: access.email, via: access.via },
         webhook: {
           event: "account.document.signed",
-          org: orgPayload((await store.org(tx, org.id)) as OrgRow),
+          org: orgPayload(signedFor),
           document: documentPayload(fresh),
           signature: signaturePayload(sig, `${staffBase(org.id)}/documents/${doc.id}/signed.pdf`),
           billing: billingPayload(await store.billing(tx, org.id)),
         },
         slack: `:black_nib: ${name} (${access.email}) signed "${doc.title}" for ${org.name}${doc.totalCents !== null ? `, ${(doc.totalCents / 100).toFixed(2)} ${doc.currency ?? ""} incl. VAT` : ""}.`,
       });
+      // A returning customer's billing details are on file: the invoice can go out now.
+      if (doc.kind === "offer") await requestInvoices(d, tx, signedFor);
     });
   } catch (err) {
     // Two signatures racing: the unique document id lets exactly one row in.

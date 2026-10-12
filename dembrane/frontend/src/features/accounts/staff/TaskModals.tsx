@@ -77,7 +77,8 @@ export function NewTaskModal({
 				)}
 				<Text size="xs" c="dimmed">
 					<Trans>
-						The customer gets a reminder every seven days until it is done.
+						The customer gets no automatic reminder. After seven days the
+						account manager is asked to check in.
 					</Trans>
 				</Text>
 				<Group justify="flex-end">

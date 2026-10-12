@@ -13,8 +13,14 @@ export default {
   database: { poolMax: 3, queuePoolMax: 2 },
   observability: { gcpProject: "dembrane-web-previews", traceSampleRatio: 0 },
   llm: { vertexProject: "dembrane-web-previews" },
+  auth: { cookiePrefix: "dembrane-preview" },
   web: { apiOrigin: "https://echo-preview-api-218237812097.europe-west4.run.app" },
   // Preview has never delivered project webhooks. The default turned on to match prod;
   // turning preview on too is a separate decision about whose endpoints it may reach.
   webhooks: { enabled: false },
+  // A preview has no sam inbox, so nothing is sent; on, the timeline records the invoice
+  // request and the offer flow can be walked end to end.
+  accounts: { offerMessages: true },
+  // A preview seeds the sample project, so a pull request that touches it can be walked.
+  samples: { enabled: true },
 } satisfies Environment;

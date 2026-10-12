@@ -1,6 +1,6 @@
 {
   "name": "@dembrane/accounts",
-  "description": "Customer accounts as sales runs them: offers, contracts, signing, demos, reminders.",
+  "description": "Customer accounts as sales runs them: offers, contracts, signing, demos, check-ins.",
   "private": true,
   "type": "module",
   "dembrane": {
@@ -35,6 +35,7 @@
     "@dembrane/ratelimit": "workspace:*",
     "@dembrane/storage": "workspace:*",
     "@dembrane/webhooks": "workspace:*",
+    "@pdf-lib/fontkit": "1.1.1",
     "drizzle-orm": "^0.45.3",
     "hono": "^4.9.0",
     "pdf-lib": "^1.17.1",

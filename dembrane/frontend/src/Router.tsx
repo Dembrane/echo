@@ -212,6 +212,10 @@ const AccountPickerRoute = createLazyNamedRoute(
 	() => import("./features/accounts/customer/AccountPickerRoute"),
 	"AccountPickerRoute",
 );
+const StaffDocumentRoute = createLazyNamedRoute(
+	() => import("./features/accounts/staff/DocumentRoute"),
+	"DocumentRoute",
+);
 const FieldEditorRoute = createLazyNamedRoute(
 	() => import("./features/accounts/staff/FieldEditorRoute"),
 	"FieldEditorRoute",
@@ -666,6 +670,10 @@ export const mainRouter = createBrowserRouter([
 					{ element: <NewDemoRoute />, path: "accounts/new-demo" },
 					{ element: <DemoRoute />, path: "accounts/demos/:demoId" },
 					{ element: <AccountCardRoute />, path: "accounts/:orgId" },
+					{
+						element: <StaffDocumentRoute />,
+						path: "accounts/:orgId/documents/:docId",
+					},
 					{
 						element: <FieldEditorRoute />,
 						path: "accounts/:orgId/documents/:docId/fields",

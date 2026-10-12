@@ -7,6 +7,7 @@ import { bootAssets } from "@dembrane/core";
 import { createDb, describeDbFailure, withDatabase } from "@dembrane/db";
 import { createModels, vertexCompleter, vertexEmbedder } from "@dembrane/llm";
 import { type Mailer, SendGridMailer } from "@dembrane/mail";
+import { modelCallRecorder, modelCallTable } from "@dembrane/metering";
 import { createLogger, initTracing } from "@dembrane/observability";
 import { Queue } from "@dembrane/queue";
 import { FilesystemStorage, requireBucket, S3Storage } from "@dembrane/storage";
@@ -40,6 +41,7 @@ const loaded = loadSections([
   "accounts",
   "samInbox",
   "connectors",
+  "samples",
   "files",
 ]);
 const config = loaded.values;
@@ -94,18 +96,27 @@ const billing = createBilling({
 // The model groups serve the conversation pipeline (with the audio bucket, ffmpeg from the
 // media service in the cloud or in-process locally, and Gemini transcription) and the
 // analysis, map, canvas and report jobs, which also embed, and the chat assistant.
-const models = createModels({
-  vertexProject: config.llm.vertexProject,
-  vertexLocation: config.llm.vertexLocation,
-  groups: {
-    text_fast: config.llm.textFast,
-    multi_modal_fast: config.llm.multiModalFast,
-    multi_modal_pro: config.llm.multiModalPro,
+// Every model call is metered: one log line at once and one model_call row per batch.
+const metering = modelCallRecorder({ sink: modelCallTable(database.db), logger, service });
+const models = createModels(
+  {
+    vertexProject: config.llm.vertexProject,
+    vertexLocation: config.llm.vertexLocation,
+    groups: {
+      text_fast: config.llm.textFast,
+      multi_modal_fast: config.llm.multiModalFast,
+      multi_modal_pro: config.llm.multiModalPro,
+    },
+    embeddingModel: config.llm.embeddingModel,
+    embeddingLocation: config.llm.embeddingLocation,
+    embeddingDimensions: config.llm.embeddingDimensions,
   },
-  embeddingModel: config.llm.embeddingModel,
-  embeddingLocation: config.llm.embeddingLocation,
-  embeddingDimensions: config.llm.embeddingDimensions,
-});
+  {
+    observe: metering.observe,
+    onObserverFault: (err) =>
+      logger.warn({ err }, "model call metering failed; later faults are silent"),
+  },
+);
 const audio = config.audio.s3Bucket
   ? new S3Storage({
       endpoint: config.audio.s3Endpoint ?? "",
@@ -223,6 +234,7 @@ async function shutdown(signal: string) {
   logger.info({ signal }, "worker stopping");
   clearInterval(signals);
   await queue.stop();
+  await metering.flush();
   await Promise.allSettled([database.close(), tracing.shutdown()]);
   process.exit(0);
 }

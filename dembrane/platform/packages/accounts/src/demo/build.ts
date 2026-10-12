@@ -70,8 +70,6 @@ export function freshSteps(): Steps {
 export interface DemoSettings {
   readonly portalUrl: string;
   readonly apiUrl: string;
-  /** This deployment's own addresses, refused like the seed route refuses them on production. */
-  readonly ownUrls: readonly string[];
   /** Staff's workspace for demo projects, so staff can review them; null puts them in the prospect's organisation. */
   readonly workspaceId: string | null;
   /** Where the QR leads: dembrane's Product Feedback portal on production. */
@@ -97,6 +95,11 @@ export interface SeedOutput {
   }[];
   readonly links: Json;
   readonly contact_user_id: string;
+  /**
+   * The contact has nothing of the organisation yet: no membership, and no sign-in for
+   * someone new. releaseHeldContacts lets them in and turns this off.
+   */
+  readonly contact_held?: boolean;
   readonly continue_url: string;
 }
 
@@ -242,7 +245,9 @@ export async function buildDemo(
       if (status !== "ok") throw new Error(`The popcorn read ended with status ${status}`);
       statuses.push(status);
     }
-    return { seed: { ...out, extraction: statuses } as never };
+    // Read again: staff may have released the contact while the read ran.
+    const seeded = (await load(d, r.id)).seed as SeedOutput;
+    return { seed: { ...seeded, extraction: statuses } as never };
   });
   await step("review", async () => ({ status: "draft" }));
   row = await load(d, demoId);
@@ -273,7 +278,7 @@ async function seed(d: DemoBuildDeps, row: Row, input: DemoInput) {
       language: input.language,
       org_id: demoIdentity(slug, "prospect-org"),
     },
-    { holdSignIn: true },
+    { hold: true },
   );
   await defaultManager(d, account.org_id, staffApp);
   const workspaceId = d.demo.workspaceId ?? (await prospectWorkspace(d, account.org_id, slug));
@@ -324,10 +329,15 @@ async function seed(d: DemoBuildDeps, row: Row, input: DemoInput) {
       out: { [language]: { state, settings } },
       salesPortal: SALES_PORTAL,
       feedbackUrl: d.demo.feedbackUrl,
+      // The same exemptions a seeded sample has: no usage, no free-plan chat or report
+      // spent, out of the public and staff numbers. Its sample_version stays empty, which
+      // is what keeps the best-practices updater (it selects by that stamp) away from it.
+      sample: true,
       workspaceId,
       // The popcorn read acts as the project's owner and must reach the project. In the
-      // prospect's own workspace that is the contact (its admin), never the staff member who
-      // is not in that organisation; a shared demo workspace stays with staff.
+      // prospect's own workspace that is the contact (its admin once released; the build
+      // reads through demoBuildAccess until then), never the staff member who is not in
+      // that organisation; a shared demo workspace stays with staff.
       ownerId: d.demo.workspaceId ? row.createdBy : account.contact.user_id,
       portalBaseUrl: d.demo.portalUrl,
       apiBaseUrl: d.demo.apiUrl,
@@ -396,6 +406,7 @@ async function seed(d: DemoBuildDeps, row: Row, input: DemoInput) {
     projects,
     links: seeded.result,
     contact_user_id: contact.id,
+    contact_held: true,
     continue_url: account.continue_url,
   };
   return { orgId: account.org_id, slug, seed: out, offerDocumentId };

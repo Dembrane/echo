@@ -1,0 +1,23 @@
+{
+  "name": "@dembrane/metering",
+  "description": "What each model call cost: one log line and one model_call row per call, which the obs views aggregate.",
+  "private": true,
+  "type": "module",
+  "dembrane": {
+    "layer": "capability"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@dembrane/db": "workspace:*",
+    "@dembrane/llm": "workspace:*",
+    "@dembrane/observability": "workspace:*"
+  },
+  "devDependencies": {
+    "postgres": "^3.4.9"
+  }
+}

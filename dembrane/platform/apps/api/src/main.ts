@@ -22,6 +22,7 @@ import { localeOfEmail } from "@dembrane/i18n";
 import { createModels } from "@dembrane/llm";
 import { type Mailer, MemoryMailer, SendGridMailer } from "@dembrane/mail";
 import { mapJobs } from "@dembrane/map";
+import { modelCallRecorder, modelCallTable } from "@dembrane/metering";
 import { Notifier } from "@dembrane/notifications";
 import { createLogger, initTracing } from "@dembrane/observability";
 import { popcornApiJobs } from "@dembrane/popcorn";
@@ -29,6 +30,7 @@ import { projectJobs } from "@dembrane/projects";
 import { Queue, workerFreshness } from "@dembrane/queue";
 import { PostgresRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { Hub } from "@dembrane/realtime";
+import { samplesApiJobs } from "@dembrane/samples/jobs";
 import { FilesystemStorage, requireBucket, S3Storage } from "@dembrane/storage";
 import { tenancyApiJobs } from "@dembrane/tenancy";
 import { GeminiTranscriber } from "@dembrane/transcription";
@@ -80,6 +82,7 @@ const auth = createAuth({
   baseURL: config.http.publicUrl,
   trustedOrigins: [config.http.dashboardUrl, config.http.portalUrl],
   cookieDomain: config.auth.cookieDomain,
+  cookiePrefix: config.auth.cookiePrefix,
   secureCookies: config.app.env !== "local" && config.app.env !== "test",
   google:
     config.auth.googleClientId && config.auth.googleClientSecret
@@ -156,6 +159,7 @@ const queueReady = (async () => {
         ...canvasApiJobs,
         ...popcornApiJobs,
         ...accountsApiJobs,
+        ...samplesApiJobs,
         sendEmail,
       ]);
       return;
@@ -246,18 +250,27 @@ void (async () => {
   }
 })();
 
-const models = createModels({
-  vertexProject: config.llm.vertexProject,
-  vertexLocation: config.llm.vertexLocation,
-  groups: {
-    text_fast: config.llm.textFast,
-    multi_modal_fast: config.llm.multiModalFast,
-    multi_modal_pro: config.llm.multiModalPro,
+// Every model call is metered: one log line at once and one model_call row per batch.
+const metering = modelCallRecorder({ sink: modelCallTable(database.db), logger, service });
+const models = createModels(
+  {
+    vertexProject: config.llm.vertexProject,
+    vertexLocation: config.llm.vertexLocation,
+    groups: {
+      text_fast: config.llm.textFast,
+      multi_modal_fast: config.llm.multiModalFast,
+      multi_modal_pro: config.llm.multiModalPro,
+    },
+    embeddingModel: config.llm.embeddingModel,
+    embeddingLocation: config.llm.embeddingLocation,
+    embeddingDimensions: config.llm.embeddingDimensions,
   },
-  embeddingModel: config.llm.embeddingModel,
-  embeddingLocation: config.llm.embeddingLocation,
-  embeddingDimensions: config.llm.embeddingDimensions,
-});
+  {
+    observe: metering.observe,
+    onObserverFault: (err) =>
+      logger.warn({ err }, "model call metering failed; later faults are silent"),
+  },
+);
 
 const app = buildApp({
   config,
@@ -314,6 +327,7 @@ async function shutdown(signal: string) {
   logger.info({ signal }, "shutting down");
   await server.stop();
   await Promise.allSettled([
+    metering.flush(),
     queue.stop(),
     hub.stop(),
     listener.end(),

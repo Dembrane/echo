@@ -295,34 +295,6 @@ msgid "email.account_signer_invite.text_cta"
 msgstr "Přečíst a podepsat:"
 
 #. js-lingui-explicit-id
-msgid "email.account_task_reminder.subject"
-msgstr "Stále čeká: {task_title}"
-
-#. js-lingui-explicit-id
-msgid "email.account_task_reminder.title"
-msgstr "Organizaci {org_name} čeká další krok"
-
-#. js-lingui-explicit-id
-msgid "email.account_task_reminder.preview"
-msgstr "{task_title} v dembrane stále čeká na dokončení."
-
-#. js-lingui-explicit-id
-msgid "email.account_task_reminder.heading"
-msgstr "Jeden krok stále čeká na dokončení."
-
-#. js-lingui-explicit-id
-msgid "email.account_task_reminder.body"
-msgstr "{task_title} v dembrane stále čeká na organizaci {org_name}. Zabere to jen minutku a nám to pomůže pokračovat dál."
-
-#. js-lingui-explicit-id
-msgid "email.account_task_reminder.cta"
-msgstr "Otevřít krok"
-
-#. js-lingui-explicit-id
-msgid "email.account_task_reminder.text_cta"
-msgstr "Otevřít krok:"
-
-#. js-lingui-explicit-id
 msgid "email.account_invite.subject"
 msgstr "Váš dembrane účet pro organizaci {org_name}"
 
@@ -345,6 +317,26 @@ msgstr "Přihlásit se"
 #. js-lingui-explicit-id
 msgid "email.account_invite.text_cta"
 msgstr "Přihlásit se:"
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.subject"
+msgstr "Vaše nabídka od dembrane je připravena k podpisu"
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.heading"
+msgstr "Vaše nabídka od dembrane je připravena k podpisu."
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.body"
+msgstr "Poslali jsme organizaci {org_name} nabídku: {document_title}. Přečtěte si ji a podepište ji v dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.cta"
+msgstr "Přečíst a podepsat nabídku"
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.text_cta"
+msgstr "Přečíst a podepsat nabídku:"
 
 #. js-lingui-explicit-id
 msgid "email.report_published.subject"
