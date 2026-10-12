@@ -435,8 +435,8 @@ run("bun run seed:accounts-demo", () => {
     expect(ORG_NAME).toEndWith("(sample)");
     const fresh = await live();
     expect(fresh?.id).toBe(again.offer_id);
-    expect(fresh?.title).toStartWith("Yearly license offer DMB-DEMO-");
-    expect((fresh?.content as { offer_name: string }).offer_name).toBe(ORG_NAME);
+    expect(fresh?.title).toMatch(/^Yearly license offer 2026-5\d\d$/);
+    expect((fresh?.content as { offer_name: string } | undefined)?.offer_name).toBe(ORG_NAME);
     const [customer] = await database.db
       .select({ name: schema.auth_user.name })
       .from(schema.auth_user)
@@ -531,16 +531,14 @@ run("bun run seed:accounts-demo", () => {
         "2026-0410:sent:paid",
         "2026-0455:sent:overdue",
         "2026-0471:sent:open",
-        "DMB-GALLERY-HARBOUR:signed:-",
-        "DMB-GALLERY-LAKEVIEW:viewed:-",
-        "DMB-GALLERY-MERIDIAN:signed:-",
-        "DMB-GALLERY-NORTHFIELD:sent:-",
-        "DMB-GALLERY-RIVERSIDE:signed:-",
-        "DMB-GALLERY-WESTHOEK:viewed:-",
+        "2026-515:signed:-",
+        "2026-516:viewed:-",
+        "2026-517:sent:-",
+        "2026-518:signed:-",
+        "2026-519:viewed:-",
+        "2026-520:signed:-",
       ]);
-      expect(docs.find((x) => x.reference === "DMB-GALLERY-LAKEVIEW")?.signerName).toBe(
-        "Taylor Lake",
-      );
+      expect(docs.find((x) => x.reference === "2026-519")?.signerName).toBe("Taylor Lake");
       // Every invoice has its stand-in for Exact's PDF.
       for (const x of docs.filter((x) => x.kind === "invoice")) expect(x.fileKey).not.toBeNull();
       expect(first.gallery[0]?.org_id).toBe(demoIdentity(GALLERY_SLUG, "org-harbour"));

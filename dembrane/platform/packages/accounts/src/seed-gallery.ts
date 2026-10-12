@@ -149,7 +149,7 @@ function accounts(): GalleryAccount[] {
       },
       offer: {
         template: "subscription",
-        reference: "DMB-GALLERY-HARBOUR",
+        reference: "2026-515",
         items: [licence("nl", 10, 2100), workshop("nl", 2100)],
         state: "signed",
       },
@@ -194,7 +194,7 @@ function accounts(): GalleryAccount[] {
       },
       offer: {
         template: "event",
-        reference: "DMB-GALLERY-WESTHOEK",
+        reference: "2026-516",
         items: [eventDay("nl", 0)],
         vat_treatment: "reverse_charge",
         state: "viewed",
@@ -232,7 +232,7 @@ function accounts(): GalleryAccount[] {
       },
       offer: {
         template: "event",
-        reference: "DMB-GALLERY-NORTHFIELD",
+        reference: "2026-517",
         items: [eventDay("en", 2100)],
         state: "sent",
       },
@@ -260,7 +260,7 @@ function accounts(): GalleryAccount[] {
       },
       offer: {
         template: "subscription",
-        reference: "DMB-GALLERY-RIVERSIDE",
+        reference: "2026-518",
         items: [licence("en", 5, 2100)],
         state: "signed",
       },
@@ -297,7 +297,7 @@ function accounts(): GalleryAccount[] {
       },
       offer: {
         template: "subscription",
-        reference: "DMB-GALLERY-LAKEVIEW",
+        reference: "2026-519",
         items: [licence("en", 3, 2100)],
         state: "delegated",
         signer: {
@@ -330,7 +330,7 @@ function accounts(): GalleryAccount[] {
       },
       offer: {
         template: "subscription",
-        reference: "DMB-GALLERY-MERIDIAN",
+        reference: "2026-520",
         items: [licence("en", 8, 2100)],
         state: "signed",
       },

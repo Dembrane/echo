@@ -356,7 +356,7 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
         offer_name: ORG_NAME,
         person_name: CONTACT_FIRST_NAME,
         attention: null,
-        reference: `DMB-DEMO-${generation}`,
+        reference: `2026-${500 + generation}`,
         title: null,
         currency: "EUR",
         date: nowIso.slice(0, 10),
