@@ -47,11 +47,11 @@ it("keeps each walkthrough with its own release, captions on", () => {
 	).toBeTruthy();
 	expect(within(articles[0]).queryByText("Upcoming")).toBeNull();
 	expect(
-		within(articles[0]).getByRole("link", { name: "v2.4.0" }),
+		within(articles[0]).getByRole("link", { name: "v3.0.0" }),
 	).toBeTruthy();
 	expect(within(articles[0]).getByText("Latest release")).toBeTruthy();
 	expect(within(articles[1]).queryByText("Latest release")).toBeNull();
-	expect(articles[0].querySelector("iframe")?.src).toContain(
+	expect(articles[1].querySelector("iframe")?.src).toContain(
 		"youtube-nocookie.com/embed/nKFxtUr13sI?rel=0&cc_load_policy=1&cc_lang_pref=en",
 	);
 	expect(
@@ -170,7 +170,10 @@ it("shows each category once and omits empty groups", () => {
 		expect(within(popcorn).getAllByRole("heading", { name })).toHaveLength(1);
 	}
 	expect(within(popcorn).getAllByRole("listitem")).toHaveLength(
-		releases.getReleases()[0].changes?.length ?? 0,
+		releases
+			.getReleases()
+			.find((release) => release.publication?.tag === "v2.4.0")?.changes
+			?.length ?? 0,
 	);
 	const fix = screen.getByRole("link", { name: "v2.1.1" }).closest("article");
 	if (!fix) throw new Error("Missing Czech fix release");
