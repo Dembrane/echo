@@ -1,7 +1,8 @@
 import type { AccountsDeps, Conn } from "./deps";
 import { billingPayload, documentPayload, emit, orgPayload, signaturePayload } from "./events";
 import { accountPageUrl, dashboardBase } from "./jobs";
-import { type OrgRow, store } from "./storage";
+import type { OfferContent } from "./offer";
+import { type BillingRow, type DocumentRow, type OrgRow, store } from "./storage";
 import { billingComplete } from "./tasks";
 import { staffBase } from "./views";
 
@@ -12,7 +13,10 @@ import { staffBase } from "./views";
  * has details on file), so both writes call this, and it asks once per offer.
  *
  * What it emits, `account.invoice.requested`, carries everything the invoice needs: what
- * was signed and for how much, who signed, who to invoice, and where to look. The
+ * was signed and for how much, who signed, who to invoice, and where to look. sam turns it
+ * into the invoice in Exact, which renders, sends and tracks it; sam then mirrors Exact's
+ * invoice and its PDF back with PUT .../invoices/:exactId, so the customer finds it on the
+ * account page. The
  * timeline row is the record that an offer was asked for, so saving the billing details
  * again asks nothing new. An offer of zero has nothing to invoice and is left out.
  *
@@ -49,6 +53,7 @@ export async function requestInvoices(d: AccountsDeps, tx: Conn, org: OrgRow): P
         document: documentPayload(doc),
         signature: signaturePayload(sig, signedPdf),
         billing: billingPayload(billing),
+        invoice: invoicePayload(doc, billing),
         links: {
           /** The organisation's card in the staff console, as a dashboard address. */
           account: staffAccountUrl(d.settings.dashboardUrl, org.id),
@@ -56,12 +61,30 @@ export async function requestInvoices(d: AccountsDeps, tx: Conn, org: OrgRow): P
           document: staffDocumentUrl(d.settings.dashboardUrl, org.id, doc.id),
           /** Staff API path of the signed PDF; fetched with the staff key. */
           signed_pdf: signedPdf,
+          /** Where sam puts Exact's invoice and its PDF, with Exact's id in place of :exactId. */
+          mirror: `${staffBase(org.id)}/invoices/:exactId`,
         },
       },
     });
     out.push(doc.id);
   }
   return out;
+}
+
+/**
+ * What Exact's invoice is made of, as the offer said it: its language, how VAT applies,
+ * the customer's PO number, and the lines with the bullets under each (seats, months,
+ * the period), which the invoice line carries as its extra description. The priced lines
+ * and totals are on `document`; Exact rounds VAT per line the same way (money.ts).
+ */
+function invoicePayload(doc: DocumentRow, billing: BillingRow | null) {
+  const content = doc.content as OfferContent | null;
+  return {
+    language: doc.language,
+    vat_treatment: content?.vat_treatment ?? "standard",
+    po_number: billing?.po_number ?? null,
+    items: content?.items ?? [],
+  };
 }
 
 /** The organisation's card in the staff console. */

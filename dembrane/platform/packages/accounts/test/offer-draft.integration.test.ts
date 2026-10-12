@@ -352,12 +352,16 @@ run("an offer draft, and the invoice request after the signature", () => {
         po_number: "PO-77",
         address: { line1: "Dorpsstraat 1", postal_code: "1234 AB", city: "Testdorp" },
       },
+      invoice: { vat_treatment: "standard", po_number: "PO-77" },
       links: {
         account: `https://dash.test/admin/accounts/${org}`,
         document: `https://dash.test/admin/accounts/${org}/documents/${docId}`,
+        mirror: `/api/v2/admin/accounts/${org}/invoices/:exactId`,
       },
       account_manager: null,
     });
+    const invoice = message.invoice as { items: { description: string; quantity: number }[] };
+    expect(invoice.items.map((x) => x.quantity)).toEqual([12]);
     expect((message.document as { lines: unknown[] }).lines).toHaveLength(1);
 
     // Saving the details again asks nothing new.
