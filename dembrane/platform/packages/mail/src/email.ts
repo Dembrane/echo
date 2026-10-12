@@ -8,6 +8,9 @@ import { escapeHtml as esc } from "./mailer";
  * only, so Outlook, Gmail and Apple Mail draw the same thing; no images but the wordmark,
  * so a client that blocks images loses nothing but the logo.
  *
+ * No web font is loaded (privacy, and few clients honour one): DM Sans where installed,
+ * the system sans otherwise.
+ *
  * Values are escaped by the helpers below (`em`, `facts`, `list`, `link`); `body` and the
  * `html` arguments are trusted HTML the templates build from catalog sentences.
  */
@@ -113,7 +116,6 @@ export function emailFrame(f: EmailFrame): string {
 <meta name="supported-color-schemes" content="light">
 <title>${esc(f.title)}</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300&display=swap');
 body, table, td, a, p { font-feature-settings: ${font.features}; }
 @media (max-width: 600px) {
   .card-pad { padding-left: ${space[6]}px !important; padding-right: ${space[6]}px !important; }
