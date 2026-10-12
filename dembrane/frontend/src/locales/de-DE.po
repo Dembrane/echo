@@ -222,7 +222,7 @@ msgstr "(keine)"
 msgid "(optional)"
 msgstr "(optional)"
 
-#: src/components/language/LanguagePicker.tsx:142
+#: src/components/language/LanguagePicker.tsx:144
 msgid "(Partial)"
 msgstr "(Teilweise)"
 
@@ -2626,7 +2626,7 @@ msgstr "Audit-Protokolle als CSV exportiert"
 msgid "Audit logs exported to JSON"
 msgstr "Audit-Protokolle als JSON exportiert"
 
-#: src/routes/auth/Login.tsx:479
+#: src/routes/auth/Login.tsx:466
 #: src/components/settings/TwoFactorSettingsCard.tsx:224
 #: src/components/settings/TwoFactorSettingsCard.tsx:349
 msgid "Authenticator code"
@@ -3205,7 +3205,7 @@ msgstr "Trotzdem ändern"
 msgid "Change in workspace settings"
 msgstr "In den Arbeitsbereich-Einstellungen ändern"
 
-#: src/components/language/LanguagePicker.tsx:154
+#: src/components/language/LanguagePicker.tsx:156
 msgid "Change language"
 msgstr "Sprache ändern"
 
@@ -3291,7 +3291,7 @@ msgstr "Änderungen erscheinen auf dem Raumbildschirm, sobald du sie machst."
 #~ msgid "Changes will be saved automatically"
 #~ msgstr "Änderungen werden automatisch gespeichert"
 
-#: src/components/language/LanguagePicker.tsx:156
+#: src/components/language/LanguagePicker.tsx:158
 msgid "Changing language during an active chat may lead to unexpected results. It's recommended to start a new chat after changing the language. Are you sure you want to continue?"
 msgstr "Das Ändern der Sprache während eines aktiven Chats kann unerwartete Ergebnisse hervorrufen. Es wird empfohlen, ein neues Gespräch zu beginnen, nachdem die Sprache geändert wurde. Sind Sie sicher, dass Sie fortfahren möchten?"
 
@@ -3966,7 +3966,7 @@ msgstr "Kontextbezogene Vorschläge"
 #: src/routes/auth/Register.tsx:207
 #: src/components/pricing/PricingConfigurator.tsx:844
 #: src/components/organisation/CreateOrganisationModal.tsx:210
-#: src/components/language/LanguagePicker.tsx:157
+#: src/components/language/LanguagePicker.tsx:159
 #: src/components/invite/InviteModal.tsx:787
 #: src/components/billing/BillingManager.tsx:1469
 msgid "Continue"
@@ -4546,7 +4546,7 @@ msgid "Create account"
 msgstr "Konto erstellen"
 
 #: src/routes/auth/Register.tsx:129
-#: src/routes/auth/Login.tsx:607
+#: src/routes/auth/Login.tsx:614
 msgid "Create an account"
 msgstr "Konto erstellen"
 
@@ -5635,8 +5635,8 @@ msgstr "Bereich des Editors"
 #: src/routes/auth/RequestPasswordReset.tsx:51
 #: src/routes/auth/RequestPasswordReset.tsx:54
 #: src/routes/auth/Login.tsx:399
-#: src/routes/auth/Login.tsx:516
-#: src/routes/auth/Login.tsx:520
+#: src/routes/auth/Login.tsx:503
+#: src/routes/auth/Login.tsx:507
 #: src/components/settings/AccountSettingsCard.tsx:182
 #: src/components/participant/ParticipantShareModal.tsx:135
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:351
@@ -5653,11 +5653,11 @@ msgstr "E-Mail an {name}"
 msgid "Email address"
 msgstr "E-Mail-Adresse"
 
-#: src/routes/auth/Login.tsx:416
+#: src/routes/auth/Login.tsx:417
 msgid "Email me a code"
 msgstr "Code per E-Mail senden"
 
-#: src/routes/auth/Login.tsx:582
+#: src/routes/auth/Login.tsx:588
 msgid "Email me a sign-in code instead"
 msgstr "Stattdessen Anmeldecode per E-Mail senden"
 
@@ -6643,7 +6643,7 @@ msgstr "Prognose"
 msgid "Forgetting a saved memory"
 msgstr "Gespeicherte Erinnerung wird vergessen"
 
-#: src/routes/auth/Login.tsx:592
+#: src/routes/auth/Login.tsx:598
 msgid "Forgot your password?"
 msgstr "Passwort vergessen?"
 
@@ -8461,8 +8461,8 @@ msgstr "Gesperrt, um mit der Einladung übereinzustimmen. Um eine andere Adresse
 
 #: src/routes/invite/AcceptInviteRoute.tsx:285
 #: src/routes/auth/VerifyEmail.tsx:161
-#: src/routes/auth/Login.tsx:443
-#: src/routes/auth/Login.tsx:560
+#: src/routes/auth/Login.tsx:448
+#: src/routes/auth/Login.tsx:547
 msgid "Log in"
 msgstr "Anmelden"
 
@@ -10361,7 +10361,7 @@ msgstr "Arbeitsbereich öffnen"
 msgid "Open workspace actions"
 msgstr "Arbeitsbereich-Aktionen öffnen"
 
-#: src/routes/auth/Login.tsx:507
+#: src/routes/auth/Login.tsx:494
 msgid "Open your authenticator app and enter the current six-digit code."
 msgstr "Öffnen Sie Ihre Authentifizierungs-App und geben Sie den aktuellen 6-stelligen Code ein."
 
@@ -10413,7 +10413,7 @@ msgid "Options"
 msgstr "Optionen"
 
 #: src/routes/auth/Register.tsx:292
-#: src/routes/auth/Login.tsx:598
+#: src/routes/auth/Login.tsx:605
 msgid "or"
 msgstr "oder"
 
@@ -10747,8 +10747,8 @@ msgid "Partner workspace, billed separately from the organisation."
 msgstr "Partner-Arbeitsbereich, wird getrennt von der Organisation abgerechnet."
 
 #: src/routes/auth/Register.tsx:217
-#: src/routes/auth/Login.tsx:530
-#: src/routes/auth/Login.tsx:534
+#: src/routes/auth/Login.tsx:517
+#: src/routes/auth/Login.tsx:521
 msgid "Password"
 msgstr "Passwort"
 
@@ -13586,7 +13586,7 @@ msgstr "Senden"
 msgid "Send {0} invites"
 msgstr "{0} Einladungen senden"
 
-#: src/routes/auth/Login.tsx:451
+#: src/routes/auth/Login.tsx:560
 msgid "Send a new code"
 msgstr "Neuen Code senden"
 
@@ -16958,7 +16958,7 @@ msgstr "Verwenden Sie Italienisch für Chat, Berichte, Transkription und Einfüh
 msgid "Use latest results"
 msgstr "Neueste Ergebnisse verwenden"
 
-#: src/routes/auth/Login.tsx:464
+#: src/routes/auth/Login.tsx:571
 msgid "Use my password instead"
 msgstr "Stattdessen Passwort verwenden"
 
@@ -17116,7 +17116,7 @@ msgstr "Verifizieren"
 msgid "participant.echo.verify"
 msgstr "Verifizieren"
 
-#: src/routes/auth/Login.tsx:558
+#: src/routes/auth/Login.tsx:545
 msgid "Verify code"
 msgstr "Code verifizieren"
 
@@ -17378,7 +17378,7 @@ msgstr "Wir haben einen neuen Bestätigungslink gesendet."
 msgid "We sent a new verification link. You can send another in {wait} seconds."
 msgstr "Wir haben einen neuen Bestätigungslink gesendet. Sie können in {wait} Sekunden einen weiteren anfordern."
 
-#: src/routes/auth/Login.tsx:422
+#: src/routes/auth/Login.tsx:425
 msgid "We sent a six-digit code to {codeEmail}."
 msgstr "Wir haben einen sechsstelligen Code an {codeEmail} gesendet."
 
