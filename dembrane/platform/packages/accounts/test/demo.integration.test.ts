@@ -508,6 +508,7 @@ run("bun run seed:accounts-demo", () => {
         "Northfield Library (sample)",
         "Riverside Region (sample)",
         "Lakeview Water Board (sample)",
+        "Meridian Housing (sample)",
       ]);
       const after = await counts();
       await seedAccountsDemo({ ...(await options()), gallery: true });
@@ -526,10 +527,12 @@ run("bun run seed:accounts-demo", () => {
       ).toEqual([
         "2026-0398:sent:paid",
         "2026-0402:sent:paid",
+        "2026-0410:sent:paid",
         "2026-0455:sent:overdue",
         "2026-0471:sent:open",
         "DMB-GALLERY-HARBOUR:signed:-",
         "DMB-GALLERY-LAKEVIEW:viewed:-",
+        "DMB-GALLERY-MERIDIAN:signed:-",
         "DMB-GALLERY-NORTHFIELD:sent:-",
         "DMB-GALLERY-RIVERSIDE:signed:-",
         "DMB-GALLERY-WESTHOEK:viewed:-",
@@ -540,6 +543,28 @@ run("bun run seed:accounts-demo", () => {
       // Every invoice has its stand-in for Exact's PDF.
       for (const x of docs.filter((x) => x.kind === "invoice")) expect(x.fileKey).not.toBeNull();
       expect(first.gallery[0]?.org_id).toBe(demoIdentity(GALLERY_SLUG, "org-harbour"));
+      // Meridian has colleagues and a workspace, so the overview shows Members and Workspaces.
+      const meridian = demoIdentity(GALLERY_SLUG, "org-meridian");
+      const members = await database.db
+        .select()
+        .from(schema.org_membership)
+        .where(eq(schema.org_membership.org_id, meridian));
+      expect(members.length).toBe(4);
+      const inWorkspace = await database.db
+        .select()
+        .from(schema.workspace_membership)
+        .where(
+          eq(
+            schema.workspace_membership.workspace_id,
+            demoIdentity(GALLERY_SLUG, "workspace-meridian"),
+          ),
+        );
+      expect(inWorkspace.map((m) => m.role).sort()).toEqual([
+        "member",
+        "member",
+        "member",
+        "owner",
+      ]);
     } finally {
       for (const spy of spies) spy.mockRestore();
     }
