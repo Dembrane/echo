@@ -1,0 +1,64 @@
+/* The task line (to-do board, v2): one grid for every task in every section. A marker
+ * column that is always there, so every title shares one left edge; the words; and a
+ * figure column for money, so amounts share one right edge. Actions sit under the words. */
+.line {
+	border-bottom: var(--app-stroke) solid var(--app-quiet);
+	column-gap: 16px;
+	display: grid;
+	grid-template-columns: 24px minmax(0, 1fr) auto;
+	padding: 24px 0;
+}
+
+.marker {
+	color: var(--app-muted);
+	line-height: 0;
+	padding-top: 4px;
+}
+
+.words {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+}
+
+.figure {
+	font-variant-numeric: tabular-nums;
+	text-align: right;
+}
+
+.actions {
+	align-items: center;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px 16px;
+	grid-column: 2 / -1;
+	margin-top: 16px;
+}
+
+.more {
+	grid-column: 2 / -1;
+	margin-top: 16px;
+	min-width: 0;
+}
+
+/* On a phone the figure folds under the fact line; nothing else moves. */
+@media (max-width: 40em) {
+	.line {
+		grid-template-columns: 24px minmax(0, 1fr);
+	}
+	.figure {
+		grid-column: 2;
+		margin-top: 8px;
+		text-align: left;
+	}
+}
+
+/* The secondary: a white box with the control's darker edge, square, the label in action
+ * blue. Never a bare link, so a row of buttons has no dip. */
+.secondary[data-variant="outline"] {
+	--app-rule-color: var(--app-control-rule);
+}
+.secondary[data-variant="outline"]:not(:hover, :disabled, [data-disabled]) {
+	background-color: var(--app-surface);
+}

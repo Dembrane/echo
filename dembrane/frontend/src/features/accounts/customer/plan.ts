@@ -22,6 +22,12 @@ export interface AccountPlan {
 	/** Waiting on a signature before they open. */
 	later: TaskT[];
 	done: TaskT[];
+	/**
+	 * Offer signing tasks that also cover the DPA: while one person signs both (the same
+	 * named signer, or nobody named), the DPA's task folds into the offer's and is not
+	 * listed on its own. The who-signs form naming two people splits them.
+	 */
+	withDpa: Set<string>;
 }
 
 const unpaid = (doc: DocumentSummaryT) =>
@@ -88,7 +94,7 @@ export function planAccount(
 		if (signer) waiting.push({ signer, task });
 		return !signer;
 	});
-	return {
+	const plan: AccountPlan = {
 		done: live.filter((task) => task.status === "done"),
 		later: live.filter((task) => isLocked(task) && task.status !== "done"),
 		toDo: live
@@ -110,10 +116,38 @@ export function planAccount(
 					),
 			),
 		waiting,
+		withDpa: new Set(),
 		withUs: live.filter(
 			(task) => !isLocked(task) && task.status === "submitted",
 		),
 	};
+	foldDpa(plan, documents);
+	return plan;
+}
+
+/** Folds each DPA signature into an offer signature in the same place with the same signer. */
+function foldDpa(plan: AccountPlan, documents: DocumentSummaryT[]) {
+	const signer = (task: TaskT) =>
+		documents
+			.find((d) => d.id === task.document_id)
+			?.signer?.email.toLowerCase() ?? null;
+	const fold = (list: TaskT[]): TaskT[] =>
+		list.filter((dpa) => {
+			if (dpa.code !== "sign_dpa") return true;
+			const offer = list.find(
+				(o) =>
+					o.code === "sign_offer" &&
+					!plan.withDpa.has(o.id) &&
+					signer(o) === signer(dpa),
+			);
+			if (!offer) return true;
+			plan.withDpa.add(offer.id);
+			return false;
+		});
+	plan.toDo = fold(plan.toDo);
+	plan.later = fold(plan.later);
+	const kept = new Set(fold(plan.waiting.map((w) => w.task)).map((t) => t.id));
+	plan.waiting = plan.waiting.filter((w) => kept.has(w.task.id));
 }
 
 /** Today as YYYY-MM-DD in the viewer's own calendar, to compare with due dates. */

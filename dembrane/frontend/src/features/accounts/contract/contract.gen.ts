@@ -100,6 +100,8 @@ export const Signer = z.object({
   email: z.string(),
   name: z.string().nullable(),
   role: z.string().nullable(),
+  /** When they were named: the task has waited on them since. */
+  named_at: IsoTime.nullable(),
 });
 
 export const DocumentSummary = z.object({
@@ -1001,6 +1003,13 @@ export const ROUTES = {
     path: `${C}/documents/:docId/signer`,
     permission: "account:sign",
     request: NameSignerRequest,
+    response: NameSignerResponse,
+  },
+  /** Emails the named signer their link again; the wait keeps counting from the naming. */
+  remindSigner: {
+    method: "POST",
+    path: `${C}/documents/:docId/signer/remind`,
+    permission: "account:sign",
     response: NameSignerResponse,
   },
   answerWhoSigns: {

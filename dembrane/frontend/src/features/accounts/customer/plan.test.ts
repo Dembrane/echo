@@ -39,7 +39,7 @@ describe("planAccount", () => {
 		expect(plan.toDo.map((t) => t.id)).toEqual(["c", "b", "a"]);
 	});
 
-	it("asks who signs first, and keeps the offer's and the DPA's signatures for after", () => {
+	it("asks who signs first, and keeps the offer's signature, with the DPA's, for after", () => {
 		const plan = planAccount(
 			[
 				task("a", { code: null, kind: "generic", status: "open" }),
@@ -61,7 +61,8 @@ describe("planAccount", () => {
 			"2026-10-12",
 		);
 		expect(plan.toDo.map((t) => t.id)).toEqual(["who", "a"]);
-		expect(plan.later.map((t) => t.id)).toEqual(["offer", "dpa"]);
+		expect(plan.later.map((t) => t.id)).toEqual(["offer"]);
+		expect(plan.withDpa).toEqual(new Set(["offer"]));
 		// Answered: both open.
 		const answered = planAccount(
 			[
@@ -116,7 +117,12 @@ describe("planAccount", () => {
 			id: "doc",
 			invoice: undefined,
 			kind: "offer",
-			signer: { email: "Taylor@Lake.example", name: "Taylor Lake", role: null },
+			signer: {
+				email: "Taylor@Lake.example",
+				name: "Taylor Lake",
+				named_at: null,
+				role: null,
+			},
 		} as DocumentSummaryT;
 		const tasks = [
 			task("sign", { document_id: "doc", kind: "sign", status: "open" }),
@@ -135,5 +141,47 @@ describe("planAccount", () => {
 		);
 		expect(theirs.toDo.map((t) => t.id)).toEqual(["sign", "other"]);
 		expect(theirs.waiting).toEqual([]);
+	});
+
+	it("lists the DPA with the offer while one person signs both, and apart once the form names two", () => {
+		const doc = (id: string, email: string | null): DocumentSummaryT => ({
+			...invoiceDoc,
+			id,
+			invoice: undefined,
+			kind: id === "p" ? "dpa" : "offer",
+			signer: email ? { email, name: email, named_at: null, role: null } : null,
+		});
+		const tasks = [
+			task("offer", { document_id: "o", kind: "sign", status: "open" }),
+			task("dpa", {
+				code: "sign_dpa",
+				document_id: "p",
+				kind: "sign",
+				status: "open",
+			}),
+		];
+		const one = planAccount(
+			tasks,
+			[doc("o", null), doc("p", null)],
+			"2026-10-12",
+		);
+		expect(one.toDo.map((t) => t.id)).toEqual(["offer"]);
+		expect(one.withDpa.has("offer")).toBe(true);
+		const same = planAccount(
+			tasks,
+			[doc("o", "taylor@x.example"), doc("p", "Taylor@x.example")],
+			"2026-10-12",
+			"me@x.example",
+		);
+		expect(same.waiting.map((w) => w.task.id)).toEqual(["offer"]);
+		expect(same.withDpa.has("offer")).toBe(true);
+		const two = planAccount(
+			tasks,
+			[doc("o", "taylor@x.example"), doc("p", "dpo@x.example")],
+			"2026-10-12",
+			"me@x.example",
+		);
+		expect(two.waiting.map((w) => w.task.id)).toEqual(["offer", "dpa"]);
+		expect(two.withDpa.size).toBe(0);
 	});
 });

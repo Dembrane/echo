@@ -1412,4 +1412,32 @@ run("accounts routes against Postgres", () => {
       .from(schema.account_signature);
     expect(rows[0]?.n).toBeGreaterThanOrEqual(4);
   });
+
+  test("reminding the named signer sends the same link again and keeps the wait", async () => {
+    const pushed = K.PushOfferResponse.parse(
+      (await call(w, "POST", `${S()}/offers`, "staff", offerBody())).data,
+    );
+    const id = pushed.document.id;
+    // Last in the file: an hour on, so the signer namings above no longer count to the limit.
+    w.clock.now = new Date(w.clock.now.getTime() + 3_700_000);
+    const remind = `${C()}/documents/${id}/signer/remind`;
+    // Nobody named yet: the admins sign it themselves, so there is no one to remind.
+    expect((await call(w, "POST", remind, "admin", {})).status).toBe(409);
+    const person = { name: "Taylor Lake", email: "taylor@example.test", role: null };
+    const named = K.NameSignerResponse.parse(
+      (await call(w, "POST", `${C()}/documents/${id}/signer`, "admin", person)).data,
+    );
+    const link = () =>
+      (w.jobs.of("account.send-email").at(-1) as { data: { sign_url: string } }).data.sign_url;
+    const first = link();
+    expect((await call(w, "POST", remind, "member", {})).status).toBe(403);
+    const r = await call(w, "POST", remind, "billing", {});
+    expect(r.status).toBe(200);
+    expect(K.NameSignerResponse.parse(r.data).signer).toEqual(named.signer);
+    expect(link()).toBe(first);
+    const types = (await store.events(w.db, w.orgId))
+      .filter((e) => e.subjectId === id)
+      .map((e) => e.type);
+    expect(types).toContain("document.signer_reminded");
+  });
 });

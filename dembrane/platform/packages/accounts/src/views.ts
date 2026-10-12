@@ -65,7 +65,12 @@ export function documentSummary(
     declined_at: iso(doc.declinedAt),
     voided_at: iso(doc.voidedAt),
     signer: doc.signerEmail
-      ? { email: doc.signerEmail, name: doc.signerName, role: doc.signerRole }
+      ? {
+          email: doc.signerEmail,
+          name: doc.signerName,
+          named_at: iso(doc.signerInvitedAt),
+          role: doc.signerRole,
+        }
       : null,
     file_url: doc.fileKey ? `${base}/documents/${doc.id}/file` : null,
     signed_pdf_url: sig ? `${base}/documents/${doc.id}/signed.pdf` : null,

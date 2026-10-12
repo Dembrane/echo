@@ -775,6 +775,7 @@ const eventLabel = (type: string): string =>
 		"document.sent": t`Document sent`,
 		"document.signed": t`Document signed`,
 		"document.signer_named": t`Signer named`,
+		"document.signer_reminded": t`Signer reminded`,
 		"document.signer_replaced": t`Signer replaced`,
 		"document.updated": t`Draft changed`,
 		"document.viewed": t`Document viewed`,

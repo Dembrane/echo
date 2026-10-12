@@ -246,6 +246,7 @@ const dpaSummary: Out<typeof DocumentSummary> = {
   signer: {
     email: "privacy@example-town.example",
     name: "Alex Example",
+    named_at: "2026-09-20T15:02:00.000Z",
     role: "Functionaris gegevensbescherming",
   },
   file_url: `${C}/documents/${DPA}/file`,

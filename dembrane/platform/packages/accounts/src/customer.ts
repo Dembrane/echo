@@ -10,7 +10,7 @@ import {
 import type { Signed } from "@dembrane/http";
 import { localeOfEmail, resolveLocale } from "@dembrane/i18n";
 import { customerOrg, documentFor } from "./access";
-import type { AccountsDeps } from "./deps";
+import type { AccountsDeps, Tx } from "./deps";
 import { billingPayload, emit, orgPayload, taskPayload, ticketPayload } from "./events";
 import { signerInviteUrl } from "./invite";
 import { requestInvoices, staffDocumentUrl } from "./invoice";
@@ -263,10 +263,6 @@ export async function nameSigner(
       ? { previous_email: doc.signerEmail, previous_name: doc.signerName }
       : null;
   const now = d.now();
-  const me = await store.identity(d.db, who.directusUserId);
-  // The signer's own language when they have an account, else the document's.
-  const language =
-    (await localeOfEmail(d.db, email).catch(() => null)) ?? resolveLocale(doc.language);
   await d.db.transaction(async (tx) => {
     await store.updateDocument(tx, doc.id, {
       signerEmail: email,
@@ -282,28 +278,7 @@ export async function nameSigner(
       invitedBy: who.appUserId ?? null,
       now,
     });
-    await d.jobs.enqueue(
-      sendEmail,
-      {
-        language,
-        to: email,
-        subject: `Please sign ${doc.title}`,
-        template: "account_signer_invite",
-        data: {
-          inviter_name: me?.name || me?.email || org.name,
-          org_name: org.name,
-          document_title: doc.title,
-          // Opens the invitation page for this person, not a bare sign-in.
-          sign_url: signerInviteUrl(d.settings.dashboardUrl, d.settings.inviteSecret, {
-            ...doc,
-            signerEmail: email,
-            signerInvitedAt: now,
-          }),
-        },
-        context: `account signer invite ${doc.id}`,
-      },
-      { tx },
-    );
+    await emailSigner(d, tx, who, org, { ...doc, signerEmail: email, signerInvitedAt: now });
     await emit(d, tx, {
       orgId: org.id,
       actor: { kind: "customer", userId: who.directusUserId },
@@ -312,7 +287,80 @@ export async function nameSigner(
       detail: { email, name: signer.name, ...replaced },
     });
   });
-  return { signer: { email, name: signer.name, role: signer.role } };
+  return {
+    signer: { email, name: signer.name, named_at: now.toISOString(), role: signer.role },
+  };
+}
+
+/**
+ * Sends the named signer their link again. The link stays the one they already have, and
+ * the wait keeps counting from when they were named.
+ */
+export async function remindSigner(d: AccountsDeps, who: Signed, orgId: string, docId: string) {
+  const org = await customerOrg(d, who, orgId, "account:sign");
+  const doc = await store.document(d.db, org.id, docId);
+  if (!doc || doc.status === "draft") throw new NotFoundError("document.not_found");
+  // Without a named signer there is no one to remind: the admins sign it themselves.
+  if (
+    !doc.requiresSignature ||
+    !["sent", "viewed"].includes(doc.status) ||
+    !doc.signerEmail ||
+    !doc.signerInvitedAt
+  )
+    throw new ConflictError("document.not_awaiting_signature");
+  await d.limiter.check(SIGNER_LIMIT, org.id);
+  const email = doc.signerEmail;
+  await d.db.transaction(async (tx) => {
+    await emailSigner(d, tx, who, org, doc);
+    await emit(d, tx, {
+      orgId: org.id,
+      actor: { kind: "customer", userId: who.directusUserId },
+      type: "document.signer_reminded",
+      subject: { type: "document", id: doc.id },
+      detail: { email },
+    });
+  });
+  return {
+    signer: {
+      email,
+      name: doc.signerName,
+      named_at: doc.signerInvitedAt.toISOString(),
+      role: doc.signerRole,
+    },
+  };
+}
+
+/** The invitation to sign, with the link for the person and naming the document carries. */
+async function emailSigner(
+  d: AccountsDeps,
+  tx: Tx,
+  who: Signed,
+  org: { name: string },
+  doc: DocumentRow,
+) {
+  const email = doc.signerEmail ?? "";
+  const me = await store.identity(d.db, who.directusUserId);
+  // The signer's own language when they have an account, else the document's.
+  const language =
+    (await localeOfEmail(d.db, email).catch(() => null)) ?? resolveLocale(doc.language);
+  await d.jobs.enqueue(
+    sendEmail,
+    {
+      language,
+      to: email,
+      subject: `Please sign ${doc.title}`,
+      template: "account_signer_invite",
+      data: {
+        inviter_name: me?.name || me?.email || org.name,
+        org_name: org.name,
+        document_title: doc.title,
+        // Opens the invitation page for this person, not a bare sign-in.
+        sign_url: signerInviteUrl(d.settings.dashboardUrl, d.settings.inviteSecret, doc),
+      },
+      context: `account signer invite ${doc.id}`,
+    },
+    { tx },
+  );
 }
 
 type Person = { name: string; email: string; role: string | null };
