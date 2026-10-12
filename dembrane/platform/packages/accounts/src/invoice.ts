@@ -1,6 +1,6 @@
 import type { AccountsDeps, Conn } from "./deps";
 import { billingPayload, documentPayload, emit, orgPayload, signaturePayload } from "./events";
-import { accountPageUrl } from "./jobs";
+import { accountPageUrl, dashboardBase } from "./jobs";
 import { type OrgRow, store } from "./storage";
 import { billingComplete } from "./tasks";
 import { staffBase } from "./views";
@@ -64,16 +64,9 @@ export async function requestInvoices(d: AccountsDeps, tx: Conn, org: OrgRow): P
   return out;
 }
 
-/** The dashboard address without the slashes it may end in. */
-function base(dashboardUrl: string): string {
-  let end = dashboardUrl.length;
-  while (end > 0 && dashboardUrl[end - 1] === "/") end--;
-  return dashboardUrl.slice(0, end);
-}
-
 /** The organisation's card in the staff console. */
 export const staffAccountUrl = (dashboardUrl: string, orgId: string) =>
-  `${base(dashboardUrl)}/admin/accounts/${orgId}`;
+  `${dashboardBase(dashboardUrl)}/admin/accounts/${orgId}`;
 
 /** One document as staff open it: the page where a draft offer is reviewed and sent. */
 export const staffDocumentUrl = (dashboardUrl: string, orgId: string, docId: string) =>

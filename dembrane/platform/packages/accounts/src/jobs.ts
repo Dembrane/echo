@@ -68,8 +68,15 @@ export const accountsApiJobs: readonly JobDefinition[] = [deliverEvent, notifySl
 
 const DAY_MS = 86_400_000;
 
+/** The dashboard address without the slashes it may end in. */
+export function dashboardBase(dashboardUrl: string): string {
+  let end = dashboardUrl.length;
+  while (end > 0 && dashboardUrl[end - 1] === "/") end--;
+  return dashboardUrl.slice(0, end);
+}
+
 export function accountPageUrl(dashboardUrl: string, orgId: string): string {
-  return `${dashboardUrl.replace(/\/+$/, "")}/o/${orgId}/account`;
+  return `${dashboardBase(dashboardUrl)}/o/${orgId}/account`;
 }
 
 /**
