@@ -55,7 +55,6 @@ const previews: Record<string, Preview> = {
       manager_name: "Anna de Vries",
     },
   }),
-  account_offer_sent_minimal: catalog({ template: "account_offer_sent", data: offer }),
   account_signer_invite: catalog({
     template: "account_signer_invite",
     data: { ...offer, inviter_name: "Bram Jansen" },

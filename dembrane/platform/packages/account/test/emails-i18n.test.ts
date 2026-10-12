@@ -84,12 +84,14 @@ test("the offer sent email names the organisation and the offer and links where 
       org_name: "Acme & Co",
       document_title: "Acme x dembrane",
       sign_url: "https://d/o/1/account/documents/2/sign",
+      total_cents: "100000",
+      currency: "EUR",
     },
   } as const;
   expect(subjectOf(sent)).toBe("Your offer from dembrane is ready to sign");
   const en = render(sent);
   expect(en.text).toBe(
-    "Your offer is ready to sign\n\nWe've prepared an offer for Acme & Co. Read it through, and sign it online when you're ready.\n\nOffer: Acme x dembrane\n\nSomeone else signs for Acme & Co? Open the offer and name them there; they get their own link.\n\nRead and sign the offer:\nhttps://d/o/1/account/documents/2/sign\n\nThe dembrane team\n",
+    "Your offer is ready to sign\n\nWe've prepared an offer for Acme & Co. Read it through, and sign it online when you're ready.\n\nOffer: Acme x dembrane\nTotal incl. VAT: €1,000.00\n\nSomeone else signs for Acme & Co? Open the offer and name them there; they get their own link.\n\nRead and sign the offer:\nhttps://d/o/1/account/documents/2/sign\n\nThe dembrane team\n",
   );
   expect(en.html).toContain("We've prepared an offer for Acme &amp; Co.");
   expect(en.html).toContain(">Acme x dembrane</td>");

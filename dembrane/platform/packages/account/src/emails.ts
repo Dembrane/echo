@@ -70,9 +70,9 @@ export interface OfferSentData {
   sign_url: string;
   /** The offer's reference, e.g. "OFF-2026-014". */
   reference?: string;
-  /** The total including VAT, in cents, with its currency code. */
-  total_cents?: string;
-  currency?: string;
+  /** The total including VAT, in cents, with its currency code. An offer always has one. */
+  total_cents: string;
+  currency: string;
   /** ISO date the offer is valid until. */
   valid_until?: string;
   /** Who at dembrane owns the account: signs the email and gets the replies. */
@@ -360,8 +360,7 @@ export function render(t: EmailTemplate, locale?: string | null): { html: string
       const d = t.data;
       const v = { org_name: d.org_name, document_title: d.document_title };
       const k = "email.account_offer_sent";
-      const total =
-        d.total_cents && d.currency ? e.money(Number(d.total_cents), d.currency, lang) : "";
+      const total = e.money(Number(d.total_cents), d.currency, lang);
       const facts = [
         { label: tr("email.facts.offer"), value: d.document_title },
         { label: tr("email.facts.reference"), value: d.reference ?? "" },
