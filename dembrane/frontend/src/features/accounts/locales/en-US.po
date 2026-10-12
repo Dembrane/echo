@@ -105,16 +105,21 @@ msgid "Account created"
 msgstr "Account created"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:598
+#: src/features/accounts/staff/AccountCardRoute.tsx:765
 msgid "Account enabled"
 msgstr "Account enabled"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:782
+#: src/features/accounts/staff/AccountCardRoute.tsx:789
 msgid "Account manager asked to check in"
 msgstr "Account manager asked to check in"
 
 #: src/features/accounts/customer/DocumentsTable.tsx:266
 msgid "Account name"
 msgstr "Account name"
+
+#: src/features/accounts/staff/AccountCardRoute.tsx:767
+msgid "Account updated"
+msgstr "Account updated"
 
 #: src/features/accounts/staff/NewDemoRoute.tsx:124
 #: src/features/accounts/staff/DemoRoute.tsx:118
@@ -216,7 +221,7 @@ msgstr "Billing details"
 msgid "Billing details saved"
 msgstr "Billing details saved"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:766
+#: src/features/accounts/staff/AccountCardRoute.tsx:768
 msgid "Billing details updated"
 msgstr "Billing details updated"
 
@@ -262,7 +267,7 @@ msgstr "Bullets"
 msgid "Call"
 msgstr "Call"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:767
+#: src/features/accounts/staff/AccountCardRoute.tsx:769
 msgid "Call booked"
 msgstr "Call booked"
 
@@ -375,7 +380,7 @@ msgid "Custom"
 msgstr "Custom"
 
 #: src/features/accounts/format.ts:107
-#: src/features/accounts/staff/AccountCardRoute.tsx:819
+#: src/features/accounts/staff/AccountCardRoute.tsx:830
 #: src/features/accounts/customer/Questions.tsx:169
 msgid "Customer"
 msgstr "Customer"
@@ -383,6 +388,10 @@ msgstr "Customer"
 #: src/features/accounts/staff/AccountsPanel.tsx:55
 #~ msgid "Customer accounts: what each one still has to do, and what waits on us."
 #~ msgstr "Customer accounts: what each one still has to do, and what waits on us."
+
+#: src/features/accounts/staff/AccountCardRoute.tsx:784
+msgid "Customer emailed"
+msgstr "Customer emailed"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:202
 msgid "Customer name in the title"
@@ -413,7 +422,11 @@ msgstr "Demo | dembrane"
 msgid "Demo language"
 msgstr "Demo language"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:768
+#: src/features/accounts/staff/AccountCardRoute.tsx:770
+msgid "Demo published"
+msgstr "Demo published"
+
+#: src/features/accounts/staff/AccountCardRoute.tsx:771
 msgid "Demo seeded"
 msgstr "Demo seeded"
 
@@ -432,27 +445,27 @@ msgstr "Description"
 msgid "Document"
 msgstr "Document"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:769
+#: src/features/accounts/staff/AccountCardRoute.tsx:772
 msgid "Document declined"
 msgstr "Document declined"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:770
+#: src/features/accounts/staff/AccountCardRoute.tsx:773
 msgid "Document drafted"
 msgstr "Document drafted"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:771
+#: src/features/accounts/staff/AccountCardRoute.tsx:775
 msgid "Document sent"
 msgstr "Document sent"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:772
+#: src/features/accounts/staff/AccountCardRoute.tsx:776
 msgid "Document signed"
 msgstr "Document signed"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:776
+#: src/features/accounts/staff/AccountCardRoute.tsx:780
 msgid "Document viewed"
 msgstr "Document viewed"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:777
+#: src/features/accounts/staff/AccountCardRoute.tsx:781
 msgid "Document withdrawn"
 msgstr "Document withdrawn"
 
@@ -476,7 +489,7 @@ msgstr "DPA"
 msgid "Draft"
 msgstr "Draft"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:775
+#: src/features/accounts/staff/AccountCardRoute.tsx:779
 msgid "Draft changed"
 msgstr "Draft changed"
 
@@ -636,6 +649,10 @@ msgstr "Invoice"
 #: src/features/accounts/format.ts:181
 msgid "Invoice {0}"
 msgstr "Invoice {0}"
+
+#: src/features/accounts/staff/AccountCardRoute.tsx:782
+msgid "Invoice added"
+msgstr "Invoice added"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:740
 #: src/features/accounts/customer/BillingForm.tsx:127
@@ -863,11 +880,11 @@ msgstr "Offer language"
 msgid "Offer sent. The customer sees it the next time they sign in."
 msgstr "Offer sent. The customer sees it the next time they sign in."
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:779
+#: src/features/accounts/staff/AccountCardRoute.tsx:785
 msgid "Onboarding tasks added"
 msgstr "Onboarding tasks added"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:780
+#: src/features/accounts/staff/AccountCardRoute.tsx:786
 msgid "Onboarding tasks withdrawn"
 msgstr "Onboarding tasks withdrawn"
 
@@ -1100,7 +1117,15 @@ msgstr "Push offer"
 msgid "Quantity"
 msgstr "Quantity"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:788
+#: src/features/accounts/staff/AccountCardRoute.tsx:799
+msgid "Question answered"
+msgstr "Question answered"
+
+#: src/features/accounts/staff/AccountCardRoute.tsx:797
+msgid "Question closed"
+msgstr "Question closed"
+
+#: src/features/accounts/staff/AccountCardRoute.tsx:798
 msgid "Question opened"
 msgstr "Question opened"
 
@@ -1118,7 +1143,7 @@ msgstr "Read the offer and sign it here. Someone else signs for your organisatio
 msgid "Reads \"{0} x dembrane\""
 msgstr "Reads \"{0} x dembrane\""
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:778
+#: src/features/accounts/staff/AccountCardRoute.tsx:783
 msgid "Ready to invoice"
 msgstr "Ready to invoice"
 
@@ -1323,12 +1348,12 @@ msgid "Set up a project of your own for your first real session."
 msgstr "Set up a project of your own for your first real session."
 
 #: src/features/accounts/staff/DemoRoute.tsx:301
-#: src/features/accounts/staff/AccountCardRoute.tsx:833
+#: src/features/accounts/staff/AccountCardRoute.tsx:844
 msgid "Show all"
 msgstr "Show all"
 
 #: src/features/accounts/staff/DemoRoute.tsx:302
-#: src/features/accounts/staff/AccountCardRoute.tsx:833
+#: src/features/accounts/staff/AccountCardRoute.tsx:844
 msgid "Show less"
 msgstr "Show less"
 
@@ -1357,6 +1382,10 @@ msgstr "Sign the data processing agreement"
 msgid "Signature"
 msgstr "Signature"
 
+#: src/features/accounts/staff/AccountCardRoute.tsx:774
+msgid "Signature fields placed"
+msgstr "Signature fields placed"
+
 #: src/features/accounts/format.ts:63
 #: src/features/accounts/signing/SignRoute.tsx:795
 msgid "Signed"
@@ -1367,11 +1396,11 @@ msgstr "Signed"
 msgid "Signed {0}"
 msgstr "Signed {0}"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:773
+#: src/features/accounts/staff/AccountCardRoute.tsx:777
 msgid "Signer named"
 msgstr "Signer named"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:774
+#: src/features/accounts/staff/AccountCardRoute.tsx:778
 msgid "Signer replaced"
 msgstr "Signer replaced"
 
@@ -1401,7 +1430,7 @@ msgstr "Someone else signs"
 msgid "Someone who may agree to data processing for your organisation signs it."
 msgstr "Someone who may agree to data processing for your organisation signs it."
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:821
+#: src/features/accounts/staff/AccountCardRoute.tsx:832
 msgid "Staff"
 msgstr "Staff"
 
@@ -1413,7 +1442,7 @@ msgid "Stage"
 msgstr "Stage"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:624
-#: src/features/accounts/staff/AccountCardRoute.tsx:765
+#: src/features/accounts/staff/AccountCardRoute.tsx:766
 msgid "Stage set"
 msgstr "Stage set"
 
@@ -1448,7 +1477,7 @@ msgstr "Submitted"
 msgid "Subscription"
 msgstr "Subscription"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:822
+#: src/features/accounts/staff/AccountCardRoute.tsx:833
 msgid "System"
 msgstr "System"
 
@@ -1456,28 +1485,31 @@ msgstr "System"
 msgid "Task"
 msgstr "Task"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:781
+#: src/features/accounts/staff/AccountCardRoute.tsx:787
+#: src/features/accounts/staff/AccountCardRoute.tsx:788
 msgid "Task approved"
 msgstr "Task approved"
 
 #: src/features/accounts/staff/TaskModals.tsx:100
-#: src/features/accounts/staff/AccountCardRoute.tsx:783
+#: src/features/accounts/staff/AccountCardRoute.tsx:790
 msgid "Task created"
 msgstr "Task created"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:784
+#: src/features/accounts/staff/AccountCardRoute.tsx:791
 msgid "Task done"
 msgstr "Task done"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:785
+#: src/features/accounts/staff/AccountCardRoute.tsx:792
+#: src/features/accounts/staff/AccountCardRoute.tsx:793
 msgid "Task sent back"
 msgstr "Task sent back"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:786
+#: src/features/accounts/staff/AccountCardRoute.tsx:794
 msgid "Task submitted"
 msgstr "Task submitted"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:787
+#: src/features/accounts/staff/AccountCardRoute.tsx:795
+#: src/features/accounts/staff/AccountCardRoute.tsx:796
 msgid "Task withdrawn"
 msgstr "Task withdrawn"
 
@@ -1591,7 +1623,7 @@ msgstr "This document was sent. Its fields are fixed; send a new version to chan
 msgid "This organisation has no account yet"
 msgstr "This organisation has no account yet"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:802
+#: src/features/accounts/staff/AccountCardRoute.tsx:813
 msgid "Timeline"
 msgstr "Timeline"
 
