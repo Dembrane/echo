@@ -6,7 +6,7 @@ import { walkOrder } from "../src/documents";
 import { runDeliverEvent, runNotifySlack } from "../src/jobs";
 import { legalSha256, parseLegalDump, parseLegalPage } from "../src/legal/parse";
 import { REFERENCE_DPA, REFERENCE_SLA, REFERENCE_TERMS } from "../src/legal/reference";
-import { fitsVatTreatment, priceLines, vatOf } from "../src/money";
+import { fitsVatTreatment, priceLines, requireAmounts, vatOf } from "../src/money";
 import { euro, layoutOffer, type OfferContent, offerText } from "../src/offer";
 import { ONBOARDING_CODES } from "../src/onboarding";
 import { offerPdf, signedPdf, textPdf } from "../src/pdf";
@@ -96,6 +96,17 @@ describe("money", () => {
         { description: "Scholarship", quantity: 1, unit_price_cents: -5000, vat_rate_bps: 2100 },
       ]).total_cents,
     ).toBe(6050);
+  });
+  test("an offer that is sent carries amounts", () => {
+    const line = (unit_price_cents: number) => ({
+      description: "x",
+      quantity: 1,
+      unit_price_cents,
+      vat_rate_bps: 2100,
+    });
+    expect(() => requireAmounts([line(10000), line(0)])).toThrow(/Line 2: give a price/);
+    expect(() => requireAmounts([line(10000), line(-10000)])).toThrow(/more than zero/);
+    expect(requireAmounts([line(10000), line(-2500)]).total_cents).toBe(9075);
   });
   test("amounts as the templates write them", () => {
     expect(euro(8600)).toBe("€86.00");

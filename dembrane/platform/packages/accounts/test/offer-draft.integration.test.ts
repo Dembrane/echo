@@ -381,13 +381,47 @@ run("an offer draft, and the invoice request after the signature", () => {
     expect(requested()).toHaveLength(before + 1);
     expect(requested().at(-1)).toMatchObject({ document: { reference: "OFFER-904" } });
 
-    const free = await draft(org, {
-      reference: "OFFER-905",
-      items: [{ description: "Pilot", quantity: 1, unit_price_cents: 0, vat_rate_bps: 2100 }],
-    });
-    await send(free.id, org);
-    expect((await sign(free.id, "outsider", org)).status).toBe(200);
+    // An offer without amounts is never drafted, so there is nothing to sign or invoice.
+    const free = await call(
+      w,
+      "POST",
+      `${S(org)}/offers`,
+      "staff",
+      offer({
+        send: false,
+        reference: "OFFER-905",
+        items: [{ description: "Pilot", quantity: 1, unit_price_cents: 0, vat_rate_bps: 2100 }],
+      }),
+    );
+    expect(free.status).toBe(422);
+    expect(JSON.stringify(free.data)).toContain("give a price");
     expect(requested()).toHaveLength(before + 1);
+  });
+
+  test("an offer is not drafted or changed without amounts", async () => {
+    const lines = (...prices: number[]) =>
+      prices.map((p, i) => ({
+        description: `Line ${i + 1}`,
+        quantity: 1,
+        unit_price_cents: p,
+        vat_rate_bps: 2100,
+      }));
+    const push = (items: unknown, reference: string) =>
+      call(w, "POST", `${S()}/offers`, "staff", offer({ send: true, reference, items }));
+    const unpriced = await push(lines(10000, 0), "OFFER-A1");
+    expect(unpriced.status).toBe(422);
+    expect(JSON.stringify(unpriced.data)).toContain("give a price");
+    const zero = await push(lines(10000, -10000), "OFFER-A2");
+    expect(zero.status).toBe(422);
+    expect(JSON.stringify(zero.data)).toContain("more than zero");
+    // A discount is still an amount.
+    expect((await push(lines(10000, -2500), "OFFER-A3")).status).toBe(201);
+    // A draft cannot be changed into one without amounts either.
+    const doc = await draft(w.orgId, { reference: "OFFER-A4" });
+    const changed = offer({ reference: null, external_ref: null, items: lines(0) });
+    const r = await call(w, "PUT", `${S()}/offers/${doc.id}`, "staff", changed);
+    expect(r.status).toBe(422);
+    expect(JSON.stringify(r.data)).toContain("give a price");
   });
 
   test("where sam does not take the offer flow's messages yet, none is made and no request is recorded", async () => {

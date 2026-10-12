@@ -16,7 +16,7 @@ import { fieldProblems, sha256Hex, storePdf, storeRendered, writeFields } from "
 import { documentPayload, emit, orgPayload } from "./events";
 import { customerSignUrl, staffDocumentUrl } from "./invoice";
 import { legalForPush } from "./legal/store";
-import { fitsVatTreatment, type VatTreatment } from "./money";
+import { fitsVatTreatment, requireAmounts, type VatTreatment } from "./money";
 import {
   type Language,
   type OfferContent,
@@ -302,6 +302,7 @@ function offerContent(
   > & { date: string; reference: string },
 ): OfferContent {
   const vatTreatment = o.vat_treatment ?? "standard";
+  requireAmounts(o.items);
   if (!fitsVatTreatment(vatTreatment, o.items)) throw new ValidationError("document.vat_treatment");
   return {
     vat_treatment: vatTreatment,
