@@ -571,7 +571,14 @@ export async function seedCallToCashGallery(
         { document: offerId, task: id(`task-sign-${a.key}`) },
       );
       if (a.offer.state !== "sent") await markViewed(d, customer, orgId, offerId);
-      if (a.offer.state === "signed") await sign(d, customer, orgId, offerId, a);
+      if (a.offer.state === "signed") {
+        await sign(d, customer, orgId, offerId, a);
+        // The DPA goes out as its own document; a customer who is done has signed it too.
+        const dpa = (await store.documents(d.db, orgId)).find(
+          (x) => x.kind === "dpa" && x.status !== "signed" && x.status !== "void",
+        );
+        if (dpa) await sign(d, customer, orgId, dpa.id, a);
+      }
       if (a.offer.state === "delegated" && a.offer.signer)
         await nameSigner(d, customer, orgId, offerId, a.offer.signer);
     }

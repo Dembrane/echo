@@ -529,7 +529,7 @@ export interface OfferLayout {
 }
 
 /**
- * There are two kinds of offer, an event and a yearly license, and the kind is what the
+ * An offer is an event, a yearly license or a custom offer, and the kind is what the
  * customer recognises it by: "Event offer" above the customer's name on the PDF, and
  * "Event offer 515" as the document's name in the app, where the customer is already
  * themselves and the number is what they pass on to whoever signs or pays.
@@ -537,6 +537,7 @@ export interface OfferLayout {
 const OFFER_KIND: Record<OfferTemplate, Record<Language, string>> = {
   event: { en: "Event offer", nl: "Offerte evenement" },
   subscription: { en: "Yearly license offer", nl: "Offerte jaarlicentie" },
+  custom: { en: "Offer", nl: "Offerte" },
 };
 
 export const offerKind = (template: OfferTemplate, language: Language): string =>

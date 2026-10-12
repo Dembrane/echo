@@ -532,7 +532,6 @@ async function sendOfferIn(
     createdBy: who.directusUserId,
   });
   await ensureBillingTask(d, tx, orgId, who.directusUserId);
-  const content = doc.content as OfferContent | null;
   // The DPA goes out with the offer as its own document, so whoever may agree to data
   // processing can sign it, whether or not that is who signs the offer.
   if (content?.dpa_separate) await openDpa(d, tx, orgId, doc, who.directusUserId);
