@@ -12,7 +12,8 @@ type Env = Readonly<Record<string, string | undefined>>;
  * The accounts demo with its URLs, bucket and company details read from the environment:
  * APP_ENV picks the environment's URLs unless DASHBOARD_URL, PORTAL_URL or API_PUBLIC_URL
  * name them, and FILES_S3_* the bucket (and key prefix) its PDFs and logo go to. Shared by
- * `bun run seed:accounts-demo` and the PR preview seed in the migrate job.
+ * `bun run seed:accounts-demo` and the PR preview seed in the migrate job, both of which
+ * also seed the call-to-cash gallery customers.
  */
 export async function seedAccountsDemoFromEnv(
   db: Db,
@@ -58,5 +59,7 @@ export async function seedAccountsDemoFromEnv(
     demosDir: o.demosDir,
     language: o.language,
     fetchText: httpFetchText,
+    gallery: true,
+    ...(e.INVITE_HASH_SECRET && { inviteSecret: e.INVITE_HASH_SECRET }),
   });
 }

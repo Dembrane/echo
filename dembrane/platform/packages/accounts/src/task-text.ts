@@ -8,6 +8,7 @@ import { type Locale, resolveLocale, translator } from "@dembrane/i18n";
  */
 
 export const TASK_CODES = [
+  "who_signs",
   "sign_offer",
   "billing_details",
   "sign_dpa",

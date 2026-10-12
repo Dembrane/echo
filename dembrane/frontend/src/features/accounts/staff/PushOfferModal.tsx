@@ -99,7 +99,7 @@ function OfferForm({
 }) {
 	const { i18n } = useLingui();
 	const from = draft?.content ?? null;
-	const [template, setTemplate] = useState<"subscription" | "event">(
+	const [template, setTemplate] = useState<"subscription" | "event" | "custom">(
 		from?.template ?? "subscription",
 	);
 	const [language, setLanguage] = useState<"en" | "nl">(from?.language ?? "nl");
@@ -129,6 +129,10 @@ function OfferForm({
 		offer_name: offerName,
 		person_name: personName,
 		template,
+		// Amendments and VAT treatment come from sam; editing a draft here keeps them.
+		...(template === "custom" &&
+			from?.amendments && { amendments: from.amendments }),
+		...(from?.vat_treatment && { vat_treatment: from.vat_treatment }),
 	};
 
 	const submit = (send: boolean) => {
@@ -150,7 +154,7 @@ function OfferForm({
 				onSuccess: (res) => {
 					toast.success(
 						send
-							? t`Offer sent. The customer sees it the next time they sign in.`
+							? t`Offer sent. The customer sees it the next time they log in.`
 							: t`Draft saved`,
 					);
 					setLines([emptyLine()]);
@@ -177,6 +181,7 @@ function OfferForm({
 						data={[
 							{ label: t`Subscription`, value: "subscription" },
 							{ label: t`Event`, value: "event" },
+							{ label: t`Custom`, value: "custom" },
 						]}
 					/>
 				</Stack>

@@ -6,6 +6,7 @@ import {
 	Warning,
 } from "@phosphor-icons/react";
 import { useParams } from "react-router";
+import { ENABLE_TRAINING } from "@/config";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { isAdminRole } from "@/lib/roles";
 import { BackButton } from "../../primitives/BackButton";
@@ -40,7 +41,7 @@ export const WorkspaceSettingsView = () => {
 				label={<Trans>Usage and billing</Trans>}
 				icon={CreditCard}
 			/>
-			{isAdmin && (
+			{isAdmin && ENABLE_TRAINING && (
 				<NavItem
 					to={`${base}/training`}
 					label={<Trans>Training</Trans>}

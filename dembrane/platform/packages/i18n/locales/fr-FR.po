@@ -12,7 +12,7 @@ msgstr "L'équipe dembrane"
 
 #. js-lingui-explicit-id
 msgid "email.common.fallback"
-msgstr "Ou collez ce lien dans votre navigateur :"
+msgstr "Ou ouvrez ce lien :"
 
 #. js-lingui-explicit-id
 msgid "email.common.ignore"
@@ -254,9 +254,6 @@ msgstr "Votre code de connexion est {code}."
 msgid "email.sign_in_code.heading"
 msgstr "Votre code de connexion."
 
-#. js-lingui-explicit-id
-msgid "email.sign_in_code.body"
-msgstr "Saisissez ce code pour continuer : {code}. Il expire dans 10 minutes."
 
 #. js-lingui-explicit-id
 msgid "email.sign_in_code.text_body"
@@ -268,23 +265,20 @@ msgstr "Si vous n'avez pas essayé de vous connecter, vous pouvez ignorer cet e-
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.subject"
-msgstr "Veuillez signer {document_title}"
+msgstr "{inviter_name} vous demande de signer {document_title}"
 
-#. js-lingui-explicit-id
-msgid "email.account_signer_invite.title"
-msgstr "{inviter_name} vous a demandé de signer pour {org_name}"
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.preview"
-msgstr "{inviter_name} vous a demandé de signer {document_title} sur dembrane."
+msgstr "{org_name} vous a désigné pour signer ce document. Lisez-le et signez-le en ligne."
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.heading"
-msgstr "Vous avez reçu une demande de signature."
+msgstr "On vous demande de signer pour {org_name}"
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.body"
-msgstr "{inviter_name} vous a désigné(e) comme signataire de {document_title} pour {org_name}. Connectez-vous avec le code envoyé à cette adresse pour le lire et le signer."
+msgstr "{inviter_name} vous a désigné comme la personne qui signe {document_title} pour {org_name}."
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.cta"
@@ -304,11 +298,11 @@ msgstr "Votre compte dembrane pour {org_name} est prêt."
 
 #. js-lingui-explicit-id
 msgid "email.account_invite.heading"
-msgstr "Votre compte est prêt."
+msgstr "Votre compte est prêt"
 
 #. js-lingui-explicit-id
 msgid "email.account_invite.body"
-msgstr "Nous avons configuré {org_name} sur dembrane pour vous. Connectez-vous avec le code envoyé à cette adresse : aucun mot de passe requis."
+msgstr "Nous avons créé {org_name} sur dembrane, avec une démo préparée pour votre organisation."
 
 #. js-lingui-explicit-id
 msgid "email.account_invite.cta"
@@ -324,11 +318,11 @@ msgstr "Votre offre dembrane est prête à être signée"
 
 #. js-lingui-explicit-id
 msgid "email.account_offer_sent.heading"
-msgstr "Votre offre dembrane est prête à être signée."
+msgstr "Votre offre est prête à être signée"
 
 #. js-lingui-explicit-id
 msgid "email.account_offer_sent.body"
-msgstr "Nous avons envoyé une offre à {org_name} : {document_title}. Lisez-la et signez-la dans dembrane."
+msgstr "Nous avons préparé une offre pour {org_name}. Prenez le temps de la lire, puis signez-la en ligne quand vous êtes prêt."
 
 #. js-lingui-explicit-id
 msgid "email.account_offer_sent.cta"
@@ -400,19 +394,19 @@ msgstr "{workspace_name} est passé de {from_tier} à {to_tier} le {date}."
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.frozen"
-msgstr "Ces fonctionnalités sont gelées. L'état actuel est conservé, sans nouvelle utilisation possible avant mise à niveau :"
+msgstr "Ces fonctionnalités sont en pause. Ce que vous avez créé avec elles reste, mais vous ne pourrez rien y ajouter avant une mise à niveau :"
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.frozen_text"
-msgstr "Gelées. L'état actuel est conservé, sans nouvelle utilisation possible avant mise à niveau :"
+msgstr "En pause jusqu'à une mise à niveau (ce que vous avez créé reste) :"
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.reverted"
-msgstr "Ces fonctionnalités ont été rétablies :"
+msgstr "Ces réglages ont repris leur valeur par défaut :"
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.reverted_text"
-msgstr "Rétablies :"
+msgstr "Valeurs par défaut rétablies :"
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.rest"
@@ -580,27 +574,24 @@ msgstr "Ouvrir l'espace de travail"
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.subject"
-msgstr "Action requise : mettez à jour votre moyen de paiement"
+msgstr "Votre paiement à dembrane n'a pas abouti"
 
-#. js-lingui-explicit-id
-msgid "email.payment_failed.title"
-msgstr "Mettez à jour votre moyen de paiement"
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.preview"
-msgstr "Un paiement récent n'a pas abouti. Mettez à jour votre moyen de paiement pour conserver votre forfait."
+msgstr "Votre formule reste active. Mettez à jour votre moyen de paiement pour régler le solde."
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.heading"
-msgstr "Nous n'avons pas pu débiter votre moyen de paiement."
+msgstr "Votre paiement n'a pas abouti"
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.body"
-msgstr "Un paiement récent pour votre forfait dembrane n'a pas abouti. Cela signifie généralement qu'une carte a expiré ou qu'une banque a refusé le débit."
+msgstr "Nous n'avons pas pu débiter le moyen de paiement de votre formule dembrane. En général, une carte a expiré ou la banque a refusé le paiement."
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.next"
-msgstr "Votre forfait reste pleinement actif pendant que vous réglez ce problème. Mettez à jour votre moyen de paiement pour régler le solde et assurer la continuité du service."
+msgstr "Votre formule reste active en attendant. Mettez à jour votre moyen de paiement pour régler le solde."
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.cta"
@@ -612,63 +603,57 @@ msgstr "Mettez à jour votre moyen de paiement :"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.subject"
-msgstr "{workspace_name} est passé au forfait Free"
+msgstr "{workspace_name} est maintenant en formule gratuite"
 
-#. js-lingui-explicit-id
-msgid "email.tier_expired.title"
-msgstr "Le forfait de {workspace_name} a expiré"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.preview"
-msgstr "{workspace_name} est passé au forfait Free. Certaines fonctionnalités sont limitées."
+msgstr "Votre formule {from_tier} a pris fin. Tout ce que vous avez créé est conservé."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.heading"
-msgstr "{workspace_name} est désormais sur le forfait Free."
+msgstr "{workspace_name} est maintenant en formule gratuite"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.body"
-msgstr "Votre forfait {from_tier} sur {workspace_name} a expiré. L'espace de travail est désormais sur le forfait Free."
+msgstr "Votre formule {from_tier} pour {workspace_name} a pris fin : l'espace de travail est passé à la formule gratuite."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.text_body"
-msgstr "{workspace_name} : votre forfait {from_tier} a expiré. L'espace de travail est désormais sur le forfait Free."
+msgstr "Votre formule {from_tier} pour {workspace_name} a pris fin : l'espace de travail est passé à la formule gratuite."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.rest"
-msgstr "Votre contenu existant reste accessible. Demandez une mise à niveau pour rétablir toutes les fonctionnalités."
+msgstr "Tout le reste fonctionne comme avant, et tous vos contenus restent accessibles. Demandez une mise à niveau pour retrouver toutes les fonctionnalités."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.cta"
-msgstr "Ouvrir l'espace de travail"
+msgstr "Demander une mise à niveau"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.subject"
-msgstr "Le forfait de {workspace_name} expire le {date}"
+msgstr "{workspace_name} passe à la formule gratuite le {date}"
 
-#. js-lingui-explicit-id
-msgid "email.tier_expiring.title"
-msgstr "Le forfait de {workspace_name} expire bientôt"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.preview"
-msgstr "{workspace_name} passe au forfait Free le {date}."
+msgstr "Votre formule {tier} prend fin le {date}. Tout ce que vous avez créé est conservé."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.heading"
-msgstr "Le forfait de {workspace_name} expire le {date}."
+msgstr "Votre formule {tier} prend fin le {date}"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.body"
-msgstr "Votre forfait {tier} sur {workspace_name} expire le {date}. Ensuite, l'espace de travail passera au forfait Free et certaines fonctionnalités seront limitées."
+msgstr "Le {date}, {workspace_name} passe de {tier} à la formule gratuite, et certaines fonctionnalités seront limitées."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.text_body"
-msgstr "{workspace_name} : votre forfait {tier} expire le {date}. Ensuite, l'espace de travail passera au forfait Free et certaines fonctionnalités seront limitées."
+msgstr "Le {date}, {workspace_name} passe de {tier} à la formule gratuite, et certaines fonctionnalités seront limitées."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.rest"
-msgstr "Votre contenu existant reste accessible. Demandez une mise à niveau pour conserver toutes les fonctionnalités."
+msgstr "Tout ce que vous avez créé est conservé. Pour garder {tier}, demandez une mise à niveau dans les paramètres de l'espace de travail."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.cta"
@@ -685,6 +670,14 @@ msgstr "Examiner et signer l'offre : {document_title}"
 #. js-lingui-explicit-id
 msgid "task.sign_offer.body"
 msgstr "Lisez l'offre et signez-la ici. Quelqu'un d'autre signe pour votre organisation ? Indiquez son nom sur l'offre et cette personne recevra son propre lien."
+
+#. js-lingui-explicit-id
+msgid "task.who_signs.title"
+msgstr "Indiquez-nous qui signe {document_title}"
+
+#. js-lingui-explicit-id
+msgid "task.who_signs.body"
+msgstr "Qui signe l'offre, qui signe l'accord de traitement des données, et si vous avez besoin de votre propre AIPD."
 
 #. js-lingui-explicit-id
 msgid "task.billing_details.title"
@@ -733,3 +726,103 @@ msgstr "Réservez un appel avec nous"
 #. js-lingui-explicit-id
 msgid "task.book_call.body"
 msgstr "Nous parcourons votre démo avec vous et planifions une première session."
+
+#. js-lingui-explicit-id
+msgid "email.common.reply_to"
+msgstr "Des questions ? Répondez à cet e-mail : votre message arrivera chez {name}."
+
+#. js-lingui-explicit-id
+msgid "email.facts.offer"
+msgstr "Offre"
+
+#. js-lingui-explicit-id
+msgid "email.facts.reference"
+msgstr "Référence"
+
+#. js-lingui-explicit-id
+msgid "email.facts.valid_until"
+msgstr "Valable jusqu'au"
+
+#. js-lingui-explicit-id
+msgid "email.facts.total"
+msgstr "Total TTC"
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.preview"
+msgstr "{document_title} : lisez l'offre et signez-la en ligne."
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.signer"
+msgstr "Quelqu'un d'autre signe pour {org_name} ? Ouvrez l'offre et indiquez son nom ; cette personne recevra son propre lien."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.how"
+msgstr "Le bouton vous connecte avec un code à usage unique envoyé à cette adresse : pas besoin de mot de passe. Vous ne verrez que ce document."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.wrong_person"
+msgstr "Vous n'êtes pas la bonne personne ? Prévenez {inviter_name} pour que quelqu'un d'autre soit désigné."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.footer"
+msgstr "Vous recevez cet e-mail parce que {inviter_name} a saisi cette adresse dans le compte de {org_name} sur dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.how"
+msgstr "Connectez-vous avec un code envoyé à cette adresse, sans mot de passe. Votre page de compte indique la suite."
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.footer"
+msgstr "Vous recevez cet e-mail parce que quelqu'un chez dembrane a créé un compte pour {org_name} avec cette adresse."
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.lead"
+msgstr "Saisissez ce code pour continuer :"
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.expires"
+msgstr "Il expire dans 10 minutes."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.text_cta"
+msgstr "Demander une mise à niveau :"
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.text_cta"
+msgstr "Demander une mise à niveau :"
+
+#. js-lingui-explicit-id
+msgid "email.common.footer_account"
+msgstr "Vous recevez cet e-mail parce que vous gérez le compte de {org_name} sur dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.common.cta_account"
+msgstr "Ouvrir votre page de compte"
+
+#. js-lingui-explicit-id
+msgid "email.common.text_cta_account"
+msgstr "Ouvrir votre page de compte :"
+
+#. js-lingui-explicit-id
+msgid "email.account_document_withdrawn.subject"
+msgstr "{document_title} a été retiré"
+
+#. js-lingui-explicit-id
+msgid "email.account_document_withdrawn.heading"
+msgstr "Nous avons retiré {document_title}"
+
+#. js-lingui-explicit-id
+msgid "email.account_document_withdrawn.body"
+msgstr "Nous avons retiré {document_title} pour {org_name} : il ne peut plus être signé."
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.subject"
+msgstr "Encore en attente pour {org_name} : {task_title}"
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.heading"
+msgstr "Une étape reste à faire"
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.body"
+msgstr "Une étape du compte de {org_name} vous attend encore :"

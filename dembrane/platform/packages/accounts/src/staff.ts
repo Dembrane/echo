@@ -13,15 +13,18 @@ import { staffOrg } from "./access";
 import { documentDetail, fileBytes, signedBytes, ticketOf } from "./customer";
 import { type AccountsDeps, type Conn, isStaffEmail, isUuid } from "./deps";
 import { fieldProblems, sha256Hex, storePdf, storeRendered, writeFields } from "./documents";
-import { documentPayload, emit, orgPayload } from "./events";
+import { accountManagerPayload, documentPayload, emit, orgPayload } from "./events";
 import { customerSignUrl, staffDocumentUrl } from "./invoice";
 import { legalForPush } from "./legal/store";
+import { fitsVatTreatment, requireAmounts, type VatTreatment } from "./money";
 import {
+  type Amendment,
   type Language,
   type OfferContent,
   type OfferItem,
   type OfferTemplate,
   offerText,
+  offerTitle,
   offerTotals,
   validUntil,
 } from "./offer";
@@ -34,6 +37,7 @@ import {
 import { offerPdf, type PlacedField, pageCountOf, textPdf } from "./pdf";
 import { releaseHeldContacts } from "./prospect";
 import { accountRecipients } from "./recipients";
+import { openDpa } from "./signing";
 import { type DocumentRow, type LegalRow, type OrgRow, store } from "./storage";
 import { createTask, ensureBillingTask, settleTask, type TaskKind } from "./tasks";
 import {
@@ -197,7 +201,11 @@ export async function updateAccount(
   d: AccountsDeps,
   who: Signed,
   orgId: string,
-  patch: { account_stage?: string | undefined; account_manager_id?: string | null | undefined },
+  patch: {
+    account_stage?: string | undefined;
+    account_manager_id?: string | null | undefined;
+    invoice_delivery?: "peppol" | "email" | null | undefined;
+  },
 ) {
   const org = await staffOrg(d, orgId);
   const now = d.now();
@@ -220,6 +228,14 @@ export async function updateAccount(
       if (!account) throw new ConflictError("billing.no_billing_account");
       await store.updateBilling(tx, account.id, {
         account_manager_id: patch.account_manager_id,
+        updated_at: now.toISOString(),
+      });
+    }
+    if (patch.invoice_delivery !== undefined) {
+      const account = await store.billing(tx, org.id);
+      if (!account) throw new ConflictError("billing.no_billing_account");
+      await store.updateBilling(tx, account.id, {
+        invoice_delivery: patch.invoice_delivery,
         updated_at: now.toISOString(),
       });
     }
@@ -246,6 +262,10 @@ export interface PushOfferInput {
   readonly currency: string;
   readonly date: string | null;
   readonly items: readonly OfferItem[];
+  /** Absent means Dutch VAT on the lines. */
+  readonly vat_treatment?: VatTreatment;
+  /** Custom offers only. */
+  readonly amendments?: readonly Amendment[];
   readonly external_ref: string | null;
   readonly supersedes_id: string | null;
   /** False keeps a draft; staff send it later. */
@@ -288,10 +308,29 @@ function offerContent(
   pinned: Awaited<ReturnType<typeof legalForPush>>,
   o: Pick<
     PushOfferInput,
-    "template" | "language" | "offer_name" | "person_name" | "attention" | "currency" | "items"
+    | "template"
+    | "language"
+    | "offer_name"
+    | "person_name"
+    | "attention"
+    | "currency"
+    | "items"
+    | "vat_treatment"
+    | "amendments"
   > & { date: string; reference: string },
 ): OfferContent {
+  const vatTreatment = o.vat_treatment ?? "standard";
+  requireAmounts(o.items);
+  if (!fitsVatTreatment(vatTreatment, o.items)) throw new ValidationError("document.vat_treatment");
+  // Amendments change the standard documents, so they make an offer custom: a subscription
+  // or event offer is the standard documents as they are.
+  const amendments = o.amendments ?? [];
+  if (amendments.length && o.template !== "custom")
+    throw new ValidationError("offer.amendments_custom_only");
   return {
+    vat_treatment: vatTreatment,
+    ...(amendments.length && { amendments }),
+    dpa_separate: true,
     template: o.template,
     language: o.language,
     offer_name: o.offer_name,
@@ -383,7 +422,7 @@ export async function pushOffer(
       id,
       orgId: org.id,
       kind: "offer",
-      title: input.title ?? `${input.offer_name} x dembrane`,
+      title: input.title ?? offerTitle(content.template, content.language, content.reference),
       version: prev ? prev.version + 1 : 1,
       supersedesId: prev?.id ?? null,
       ...offerColumns(content, pinned),
@@ -451,7 +490,7 @@ export async function updateOffer(
     if (locked?.status !== "draft") throw new ConflictError("document.already_sent");
     const file = await storeRendered(d, doc.orgId, doc.id, rendered);
     await store.updateDocument(tx, doc.id, {
-      title: input.title ?? `${input.offer_name} x dembrane`,
+      title: input.title ?? offerTitle(content.template, content.language, content.reference),
       ...offerColumns(content, pinned),
       ...file,
       externalRef: input.external_ref ?? doc.externalRef,
@@ -487,19 +526,40 @@ async function sendOfferIn(
   await store.updateDocument(tx, docId, { status: "sent", sentAt: now, updatedAt: now });
   // The customer must sign it, so a contact held by an unpublished demo is let in now.
   await releaseHeldContacts(tx, orgId, now);
+  const content = doc.content as OfferContent | null;
+  // The task is worded from the kind of offer and its number ("Review and sign event
+  // offer 515"); the title stays for older readers and the server's own wording.
+  const params = {
+    document_title: doc.title,
+    ...(content && { offer_template: content.template }),
+    ...(doc.reference && { offer_reference: doc.reference }),
+  };
+  // First who signs: the offer and the DPA may be signed by different people, and the
+  // answer says which signing tasks there are and whose they are.
+  await createTask(d, tx, {
+    orgId,
+    code: "who_signs",
+    params,
+    title: null,
+    kind: "generic",
+    documentId: docId,
+    createdBy: who.directusUserId,
+  });
   const task = await createTask(d, tx, {
     ...(taskId && { id: taskId }),
     orgId,
     code: "sign_offer",
-    params: { document_title: doc.title },
+    params,
     title: null,
     kind: "sign",
     documentId: docId,
     createdBy: who.directusUserId,
   });
   await ensureBillingTask(d, tx, orgId, who.directusUserId);
+  // The DPA goes out with the offer as its own document, so whoever may agree to data
+  // processing can sign it, whether or not that is who signs the offer.
+  if (content?.dpa_separate) await openDpa(d, tx, orgId, doc, who.directusUserId);
   await withdrawOnboarding(d, tx, orgId, actorOf(who));
-  const content = doc.content as OfferContent | null;
   await emit(d, tx, {
     orgId,
     actor: actorOf(who),
@@ -542,13 +602,23 @@ async function tellCustomerOfOffer(d: AccountsDeps, tx: Conn, orgId: string, doc
     d.logger.warn({ document_id: doc.id, org_id: orgId }, "offer sent email has nobody to go to");
     return;
   }
+  // An offer without an amount is never sent; the send refuses it before this point.
+  if (doc.totalCents == null || !doc.currency)
+    throw new Error(`offer ${doc.id} has no total; it cannot be sent`);
   const org = (await store.org(tx, orgId)) as OrgRow;
+  // The account's manager signs the email and gets the replies; without one, the team signs.
+  const manager = await accountManagerPayload(tx, orgId);
   const email = {
     template: "account_offer_sent",
     data: {
       org_name: org.name,
       document_title: doc.title,
       sign_url: customerSignUrl(d.settings.dashboardUrl, orgId, doc.id),
+      ...(doc.reference && { reference: doc.reference }),
+      total_cents: String(doc.totalCents),
+      currency: doc.currency,
+      ...(doc.validUntil && { valid_until: doc.validUntil }),
+      ...(manager?.name && { manager_name: manager.name }),
     },
   } satisfies EmailTemplate;
   for (const r of recipients)
@@ -560,6 +630,7 @@ async function tellCustomerOfOffer(d: AccountsDeps, tx: Conn, orgId: string, doc
         to: r.email,
         subject: OFFER_SENT_SUBJECT,
         context: `account offer sent ${doc.id}`,
+        ...(manager && { replyTo: manager }),
       },
       { tx, workflowId: `accounts.offer-sent:${doc.id}:${r.appUserId}` },
     );
@@ -586,8 +657,9 @@ async function sentPayload(d: AccountsDeps, tx: Conn, who: Signed, orgId: string
 
 /**
  * A draft offer carries the day it is sent and the texts in force that day: when the
- * draft is from an earlier day, or a text changed since, its PDF, text and fields are
- * rendered again before it freezes. A date set in the future stays.
+ * draft is from an earlier day, a text changed since, or it predates the DPA being its own
+ * document, its PDF, text and fields are rendered again before it freezes. A date set in
+ * the future stays.
  */
 async function freshenDraftOffer(d: AccountsDeps, doc: DocumentRow): Promise<void> {
   const pinned = await legalForPush({
@@ -600,6 +672,7 @@ async function freshenDraftOffer(d: AccountsDeps, doc: DocumentRow): Promise<voi
   const today = d.now().toISOString().slice(0, 10);
   const date = before.date < today ? today : before.date;
   if (
+    before.dpa_separate &&
     date === before.date &&
     doc.termsTextId === pinned.terms.id &&
     doc.slaTextId === pinned.sla.id &&
@@ -610,6 +683,8 @@ async function freshenDraftOffer(d: AccountsDeps, doc: DocumentRow): Promise<voi
     ...before,
     date,
     legal: { terms: pin(pinned.terms), sla: pin(pinned.sla), dpa: pin(pinned.dpa) },
+    // A draft from before the DPA was its own document is sent as one that names it so.
+    dpa_separate: true,
   };
   const rendered = await offerPdf(content);
   const file = await storeRendered(d, doc.orgId, doc.id, rendered);

@@ -8,17 +8,19 @@ import { createDb, schema } from "@dembrane/db";
 import {
   buildBundle,
   demoFromFixture,
+  demoIdentity,
   dict,
   type Json,
   popcornDemoRoutes,
 } from "@dembrane/popcorn";
 import { FilesystemStorage } from "@dembrane/storage";
-import { and, count, eq, ne } from "drizzle-orm";
+import { and, count, eq, inArray, ne } from "drizzle-orm";
 // The module that reads the server catalogs, so a test can stand in for their absence.
 import * as catalogs from "../../i18n/src/runtime";
 import { demoProspectHook } from "../src/demo-hook";
 import { accountsRoutes } from "../src/routes";
 import { CUSTOMER_EMAIL, DEMO_IDS, ORG_NAME, STAFF_EMAIL, seedAccountsDemo } from "../src/seed";
+import { GALLERY_SLUG } from "../src/seed-gallery";
 import { admin, dropDatabase, FakeWeb, freshDatabase, silent, type World, world } from "./helpers";
 
 // The prospect block of the demo seed route, and the accounts demo seed.
@@ -286,8 +288,8 @@ run("bun run seed:accounts-demo", () => {
     const first = await seedAccountsDemo(await options());
     expect(first.offer_created).toBe(true);
     const after = await counts();
-    expect(after.account_document).toBe(2); // the offer and the invoice
-    expect(after.account_task).toBe(4); // sign, billing (locked), PO, logo
+    expect(after.account_document).toBe(3); // the offer, its DPA and the invoice
+    expect(after.account_task).toBe(6); // who signs, sign, sign the DPA, billing (locked), PO, logo
     expect(after.account_ticket_message).toBe(2);
     expect(after.conversation).toBeGreaterThan(0);
     const second = await seedAccountsDemo(await options());
@@ -302,6 +304,8 @@ run("bun run seed:accounts-demo", () => {
     expect(tasks.map((t) => `${t.kind}:${t.status}`).sort()).toEqual([
       "billing_details:locked",
       "generic:open",
+      "generic:open",
+      "sign:open",
       "sign:open",
       "upload:submitted",
     ]);
@@ -433,7 +437,8 @@ run("bun run seed:accounts-demo", () => {
     expect(ORG_NAME).toEndWith("(sample)");
     const fresh = await live();
     expect(fresh?.id).toBe(again.offer_id);
-    expect(fresh?.title).toBe(`${ORG_NAME} x dembrane`);
+    expect(fresh?.title).toMatch(/^Yearly license offer 2026-5\d\d$/);
+    expect((fresh?.content as { offer_name: string } | undefined)?.offer_name).toBe(ORG_NAME);
     const [customer] = await database.db
       .select({ name: schema.auth_user.name })
       .from(schema.auth_user)
@@ -486,6 +491,87 @@ run("bun run seed:accounts-demo", () => {
         .from(schema.account_document)
         .where(eq(schema.account_document.id, seeded.offer_id));
       expect(offer?.status).toBe("sent");
+    } finally {
+      for (const spy of spies) spy.mockRestore();
+    }
+  });
+  test("the call-to-cash gallery: every offer and invoice state, once, without catalogs", async () => {
+    const absent = () => {
+      throw new Error("ENOENT: no such file or directory, open 'i18n/locales/en-US.po'");
+    };
+    const spies = [
+      spyOn(catalogs, "message").mockImplementation(absent),
+      spyOn(catalogs, "translator").mockImplementation(() => absent),
+    ];
+    try {
+      const first = await seedAccountsDemo({ ...(await options()), gallery: true });
+      expect(first.gallery.map((g) => g.name)).toEqual([
+        "Harbour City Council (sample)",
+        "Westhoek (sample)",
+        "Northfield Library (sample)",
+        "Riverside Region (sample)",
+        "Lakeview Water Board (sample)",
+        "Meridian Housing (sample)",
+      ]);
+      const after = await counts();
+      await seedAccountsDemo({ ...(await options()), gallery: true });
+      expect(await counts()).toEqual(after);
+      const docs = await database.db
+        .select()
+        .from(schema.account_document)
+        .where(
+          inArray(
+            schema.account_document.orgId,
+            first.gallery.map((g) => g.org_id),
+          ),
+        );
+      expect(
+        docs.map((x) => `${x.reference}:${x.status}:${x.invoiceStatus ?? "-"}`).sort(),
+      ).toEqual([
+        "2026-0398:sent:paid",
+        "2026-0402:sent:paid",
+        "2026-0410:sent:paid",
+        "2026-0455:sent:overdue",
+        "2026-0471:sent:open",
+        "2026-515-DPA:signed:-",
+        "2026-515:signed:-",
+        "2026-516-DPA:sent:-",
+        "2026-516:viewed:-",
+        "2026-517-DPA:sent:-",
+        "2026-517:sent:-",
+        "2026-518-DPA:signed:-",
+        "2026-518:signed:-",
+        "2026-519-DPA:sent:-",
+        "2026-519:viewed:-",
+        "2026-520-DPA:signed:-",
+        "2026-520:signed:-",
+      ]);
+      expect(docs.find((x) => x.reference === "2026-519")?.signerName).toBe("Taylor Lake");
+      // Every invoice has its stand-in for Exact's PDF.
+      for (const x of docs.filter((x) => x.kind === "invoice")) expect(x.fileKey).not.toBeNull();
+      expect(first.gallery[0]?.org_id).toBe(demoIdentity(GALLERY_SLUG, "org-harbour"));
+      // Meridian has colleagues and a workspace, so the overview shows Members and Workspaces.
+      const meridian = demoIdentity(GALLERY_SLUG, "org-meridian");
+      const members = await database.db
+        .select()
+        .from(schema.org_membership)
+        .where(eq(schema.org_membership.org_id, meridian));
+      expect(members.length).toBe(4);
+      const inWorkspace = await database.db
+        .select()
+        .from(schema.workspace_membership)
+        .where(
+          eq(
+            schema.workspace_membership.workspace_id,
+            demoIdentity(GALLERY_SLUG, "workspace-meridian"),
+          ),
+        );
+      expect(inWorkspace.map((m) => m.role).sort()).toEqual([
+        "member",
+        "member",
+        "member",
+        "owner",
+      ]);
     } finally {
       for (const spy of spies) spy.mockRestore();
     }

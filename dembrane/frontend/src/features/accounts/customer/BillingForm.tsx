@@ -1,6 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
+	Anchor,
 	Box,
 	Button,
 	Group,
@@ -9,23 +10,40 @@ import {
 	Text,
 	TextInput,
 } from "@mantine/core";
-import { CheckIcon } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { AccountsApiError } from "../api/client";
 import { useAccountsMutation } from "../api/hooks";
 import type { AccountPageT } from "../contract/contract.gen";
-import { Section } from "../ui";
+import {
+	type Delivery,
+	deliveryFor,
+	InvoiceDelivery,
+	usePeppolLookup,
+} from "./InvoiceDelivery";
+import { PageSection } from "./PageSection";
 
 type Billing = AccountPageT["billing"];
-type Key = keyof Billing;
+/** The fields typed into the form; delivery and the Peppol match are not text. */
+const FIELDS = [
+	"legal_name",
+	"billing_email",
+	"address_line1",
+	"address_line2",
+	"postal_code",
+	"city",
+	"country",
+	"vat_id",
+	"kvk_number",
+	"kbo_number",
+	"po_number",
+	"peppol_id",
+] as const;
+type Key = (typeof FIELDS)[number];
 
 const toForm = (b: Billing): Record<Key, string> =>
-	Object.fromEntries(Object.entries(b).map(([k, v]) => [k, v ?? ""])) as Record<
-		Key,
-		string
-	>;
+	Object.fromEntries(FIELDS.map((k) => [k, b[k] ?? ""])) as Record<Key, string>;
 
 /** What an invoice cannot do without. */
 const REQUIRED: Key[] = [
@@ -57,7 +75,16 @@ export function BillingForm({
 }) {
 	const [form, setForm] = useState(() => toForm(billing));
 	const [missing, setMissing] = useState<Key[]>([]);
-	useEffect(() => setForm(toForm(billing)), [billing]);
+	const [chosen, setChosen] = useState(billing.invoice_delivery);
+	useEffect(() => {
+		setForm(toForm(billing));
+		setChosen(billing.invoice_delivery);
+	}, [billing]);
+	const lookup = usePeppolLookup(orgId, {
+		kbo_number: form.kbo_number,
+		kvk_number: form.kvk_number,
+		vat_id: form.vat_id,
+	});
 	const mutation = useAccountsMutation("updateBilling", { orgId });
 	const serverFields =
 		mutation.error instanceof AccountsApiError ? mutation.error.fields : {};
@@ -68,10 +95,31 @@ export function BillingForm({
 			? t`Fill this in.`
 			: undefined);
 	const saved = toForm(billing);
-	const dirty = Object.entries(saved).some(([k, v]) => form[k as Key] !== v);
+	const dirty =
+		Object.entries(saved).some(([k, v]) => form[k as Key] !== v) ||
+		(chosen ?? null) !== (billing.invoice_delivery ?? null);
+	const savedDelivery = deliveryFor(
+		billing.peppol_match,
+		billing.invoice_delivery,
+	);
+	// Opting out of Peppol from the summary saves at once: the details are complete.
+	const switchDelivery = (next: Delivery) =>
+		mutation.mutate(
+			{ body: { ...saved, invoice_delivery: next } },
+			{
+				onSuccess: () =>
+					toast.success(
+						next === "email"
+							? t`Invoices will come by email`
+							: t`Invoices will come via Peppol`,
+					),
+			},
+		);
 	const complete =
 		REQUIRED.every((k) => saved[k].trim()) &&
 		NUMBERS.some((k) => saved[k].trim());
+	// Complete details read as what goes on the invoice; the form opens on "Edit".
+	const [editing, setEditing] = useState(() => pending || !complete);
 
 	const input = (
 		key: Key,
@@ -103,17 +151,53 @@ export function BillingForm({
 		setMissing(gaps);
 		if (gaps.length) return;
 		mutation.mutate(
-			{ body: form },
-			{ onSuccess: () => toast.success(t`Billing details saved`) },
+			// The choice only means something while the directory has them.
+			{ body: { ...form, invoice_delivery: lookup.match ? chosen : null } },
+			{
+				onSuccess: () => {
+					toast.success(t`Billing details saved`);
+					setEditing(false);
+				},
+			},
 		);
 	};
 
+	if (!editing) {
+		return (
+			<PageSection
+				title={<Trans>Billing details</Trans>}
+				testId="billing"
+				action={
+					<Anchor
+						component="button"
+						size="sm"
+						onClick={() => setEditing(true)}
+						data-testid="billing-edit"
+					>
+						<Trans>Edit</Trans>
+					</Anchor>
+				}
+			>
+				<Stack gap="md" maw={640}>
+					<InvoiceDelivery
+						match={billing.peppol_match}
+						delivery={savedDelivery}
+						email={billing.billing_email}
+						onChange={switchDelivery}
+						disabled={mutation.isPending}
+					/>
+					<BillingSummary billing={saved} />
+				</Stack>
+			</PageSection>
+		);
+	}
+
 	return (
-		<Section title={<Trans>Billing details</Trans>} testId="billing">
+		<PageSection title={<Trans>Billing details</Trans>} testId="billing">
 			<Box maw={640}>
 				<Stack gap="md">
-					<Text size="sm" c="dimmed">
-						<Trans>We put these on your invoice.</Trans>
+					<Text c="dimmed">
+						<Trans>What we put on your invoices.</Trans>
 					</Text>
 					<SimpleGrid
 						cols={{ base: 1, sm: 2 }}
@@ -151,7 +235,7 @@ export function BillingForm({
 						})}
 					</SimpleGrid>
 					<Stack
-						gap={6}
+						gap="xs"
 						role="group"
 						aria-labelledby="billing-numbers"
 						data-testid="billing-numbers"
@@ -159,7 +243,7 @@ export function BillingForm({
 						<Text
 							id="billing-numbers"
 							size="sm"
-							c={numberMissing ? "red" : undefined}
+							c={numberMissing ? "var(--app-danger)" : undefined}
 						>
 							<Trans>Registration number: fill in at least one</Trans>
 						</Text>
@@ -175,30 +259,46 @@ export function BillingForm({
 							})}
 						</SimpleGrid>
 					</Stack>
+					<InvoiceDelivery
+						match={lookup.match}
+						delivery={deliveryFor(lookup.match, chosen)}
+						email={form.billing_email.trim() || null}
+						onChange={setChosen}
+						checking={lookup.checking}
+						checked={lookup.checked}
+					/>
 					<SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
 						{input("po_number", t`PO number`, {
 							description: t`If your finance team uses one`,
 						})}
-						{input("peppol_id", t`Peppol ID`, {
-							description: t`Only if you get invoices through Peppol`,
-						})}
+						{/* Found in the directory, the Peppol ID is known; else it can be given. */}
+						{!lookup.match &&
+							input("peppol_id", t`Peppol ID`, {
+								description: t`Only if you get invoices through Peppol`,
+							})}
 					</SimpleGrid>
 					<Group gap="sm">
 						<Button
 							onClick={save}
 							loading={mutation.isPending}
+							variant="filled"
 							disabled={!dirty && !pending}
 							data-testid="billing-save"
 						>
 							<Trans>Save billing details</Trans>
 						</Button>
-						{!dirty && !pending && complete && (
-							<Group gap={4} wrap="nowrap" data-testid="billing-saved">
-								<CheckIcon size={14} color="var(--mantine-color-green-7)" />
-								<Text size="sm" c="dimmed">
-									<Trans>Saved</Trans>
-								</Text>
-							</Group>
+						{!pending && complete && (
+							<Button
+								variant="subtle"
+								onClick={() => {
+									setForm(saved);
+									setMissing([]);
+									setEditing(false);
+								}}
+								data-testid="billing-cancel"
+							>
+								<Trans>Cancel</Trans>
+							</Button>
 						)}
 						{mutation.error &&
 							!(
@@ -208,6 +308,50 @@ export function BillingForm({
 					</Group>
 				</Stack>
 			</Box>
-		</Section>
+		</PageSection>
+	);
+}
+
+/** The saved details as they will read on an invoice. */
+function BillingSummary({ billing }: { billing: Record<Key, string> }) {
+	const address = [
+		billing.address_line1,
+		billing.address_line2,
+		[billing.postal_code, billing.city].filter(Boolean).join(" "),
+		billing.country,
+	].filter((line) => line.trim());
+	const rows: [string, string[]][] = [
+		[t`Organisation`, [billing.legal_name]],
+		[t`Address`, address],
+		[t`Invoice email`, [billing.billing_email]],
+		[t`VAT number`, [billing.vat_id]],
+		[t`KvK number`, [billing.kvk_number]],
+		[t`KBO number`, [billing.kbo_number]],
+		[t`PO number`, [billing.po_number]],
+		[t`Peppol ID`, [billing.peppol_id]],
+	];
+	return (
+		<SimpleGrid
+			cols={{ base: 1, sm: 2 }}
+			spacing="lg"
+			verticalSpacing="sm"
+			maw={640}
+			data-testid="billing-summary"
+		>
+			{rows
+				.filter(([, lines]) => lines.some((line) => line.trim()))
+				.map(([label, lines]) => (
+					<Stack key={label} gap={0}>
+						<Text size="sm" c="dimmed">
+							{label}
+						</Text>
+						{lines.map((line) => (
+							<Text key={line} style={{ overflowWrap: "anywhere" }}>
+								{line}
+							</Text>
+						))}
+					</Stack>
+				))}
+		</SimpleGrid>
 	);
 }

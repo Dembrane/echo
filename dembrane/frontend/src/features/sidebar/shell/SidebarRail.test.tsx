@@ -67,7 +67,7 @@ vi.mock("@/components/organisation/CreateOrganisationModal", () => ({
 	CreateOrganisationModal: () => null,
 }));
 vi.mock("../hooks/useHelpModals", () => ({
-	useHelpModals: () => ({ openFeedback: vi.fn(), openReportIssue: vi.fn() }),
+	useHelpModals: () => ({ openFeedback: vi.fn() }),
 }));
 
 const { NavItem } = await import("../primitives/NavItem");
@@ -302,14 +302,12 @@ describe("help in the rail", () => {
 		renderIn(<HelpBlock />, { url: "/en-US/o" });
 		const help = screen.getByRole("button", { name: "Help" });
 		expect(help.getAttribute("aria-expanded")).toBe("false");
-		expect(screen.queryByRole("button", { name: "Feedback" })).toBeNull();
+		expect(screen.queryByRole("button", { name: "Give feedback" })).toBeNull();
 
 		fireEvent.click(help);
 		expect(help.getAttribute("aria-expanded")).toBe("true");
-		expect(screen.getByRole("button", { name: "Feedback" })).toBeTruthy();
-		expect(
-			screen.getByRole("button", { name: "Report an issue" }),
-		).toBeTruthy();
+		expect(screen.getByRole("button", { name: "Give feedback" })).toBeTruthy();
+		expect(screen.getByRole("button", { name: "Documentation" })).toBeTruthy();
 		// It opens in place: nothing navigates.
 		expect(screen.queryByRole("link")).toBeNull();
 		expect(location()).toBe("/en-US/o");
@@ -322,7 +320,7 @@ describe("help in the rail", () => {
 		fireEvent.click(help);
 		expect(help.getAttribute("aria-expanded")).toBe("false");
 		fireEvent.click(help);
-		fireEvent.keyDown(screen.getByRole("button", { name: "Feedback" }), {
+		fireEvent.keyDown(screen.getByRole("button", { name: "Give feedback" }), {
 			key: "Escape",
 		});
 		expect(help.getAttribute("aria-expanded")).toBe("false");

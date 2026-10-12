@@ -10,14 +10,15 @@ import {
 import type { Signed } from "@dembrane/http";
 import { localeOfEmail, resolveLocale } from "@dembrane/i18n";
 import { customerOrg, documentFor } from "./access";
-import type { AccountsDeps } from "./deps";
+import type { AccountsDeps, Tx } from "./deps";
 import { billingPayload, emit, orgPayload, taskPayload, ticketPayload } from "./events";
+import { signerInviteUrl } from "./invite";
 import { requestInvoices, staffDocumentUrl } from "./invoice";
-import { accountPageUrl } from "./jobs";
 import type { PricedLine } from "./money";
 import type { OfferContent } from "./offer";
 import { completeOnboarding, isOnboardingCode } from "./onboarding";
-import { type DocumentRow, store } from "./storage";
+import { lookupPeppol, type TaxIds } from "./peppol";
+import { type BillingRow, type DocumentRow, store } from "./storage";
 import { isTaskCode } from "./task-text";
 import { settleTask } from "./tasks";
 import {
@@ -37,12 +38,13 @@ import {
 /** The customer's account, as one page reads it: tasks, documents, billing, questions. */
 export async function accountPage(d: AccountsDeps, who: Signed, orgId: string) {
   const org = await customerOrg(d, who, orgId, "account:read");
-  const [docs, sigs, tasks, tickets, billing] = await Promise.all([
+  const [docs, sigs, tasks, tickets, billing, reminded] = await Promise.all([
     store.documents(d.db, org.id),
     store.signatures(d.db, org.id),
     store.tasks(d.db, org.id),
     store.tickets(d.db, org.id),
     store.billing(d.db, org.id),
+    store.lastReminders(d.db, org.id),
   ]);
   const messages = await store.messages(
     d.db,
@@ -66,6 +68,7 @@ export async function accountPage(d: AccountsDeps, who: Signed, orgId: string) {
           sigs.find((s) => s.documentId === x.id) ?? null,
           d.settings.company,
           customerBase(org.id),
+          reminded.get(x.id) ?? null,
         ),
       ),
     billing: billingView(billing),
@@ -91,16 +94,21 @@ export async function documentDetail(
   doc: DocumentRow,
   via: "member" | "signer" | "staff",
 ) {
-  const [sig, fields, terms, sla, dpa] = await Promise.all([
+  const [sig, fields, terms, sla, dpa, reminded] = await Promise.all([
     store.signatureOf(d.db, doc.id),
     store.fields(d.db, doc.id),
     store.legalById(d.db, doc.termsTextId),
     store.legalById(d.db, doc.slaTextId),
     store.legalById(d.db, doc.dpaTextId),
+    store.lastReminders(d.db, doc.orgId, doc.id),
   ]);
   // Placeholders for what the signer's fields provide; the organisation's own name when
   // the document has no organisation field, and no role when it has no role field.
-  const org = await store.org(d.db, doc.orgId);
+  const [org, billing] = await Promise.all([
+    store.org(d.db, doc.orgId),
+    store.billing(d.db, doc.orgId),
+  ]);
+  const isEvent = (doc.content as OfferContent | null)?.template === "event";
   const has = (pick: (f: (typeof fields)[number]) => boolean) => fields.some(pick);
   const placeholders = {
     name: "{name}",
@@ -115,6 +123,7 @@ export async function documentDetail(
       sig,
       d.settings.company,
       via === "staff" ? staffBase(doc.orgId) : customerBase(doc.orgId),
+      reminded.get(doc.id) ?? null,
     ),
     body: doc.body,
     content: (doc.content ?? null) as OfferContent | null,
@@ -122,8 +131,9 @@ export async function documentDetail(
     sha256: doc.sha256,
     page_count: doc.pageCount,
     fields: fields.map(fieldView),
+    // The texts the document incorporates; an event offer has no SLA.
     legal: [legalView("terms", terms), legalView("sla", sla), legalView("dpa", dpa)].filter(
-      Boolean,
+      (x) => x && (x.kind !== "sla" || !isEvent),
     ),
     signing_note: doc.requiresSignature ? signingNote(doc) : null,
     // The sentence the signer confirms; the page fills in the three values it asks for.
@@ -131,15 +141,31 @@ export async function documentDetail(
       ? {
           dpa_authorised: confirmationText(doc, { ...placeholders, dpa_authorised: true }),
           dpa_not_authorised:
-            doc.kind === "offer"
+            doc.kind === "offer" && !(doc.content as OfferContent | null)?.dpa_separate
               ? confirmationText(doc, { ...placeholders, dpa_authorised: false })
               : null,
         }
       : null,
     signature: sig ? signatureView(sig) : null,
+    prefill: signingPrefill(org?.name ?? null, billing),
     access: via,
     staff_url:
       via === "staff" ? staffDocumentUrl(d.settings.dashboardUrl, doc.orgId, doc.id) : null,
+  };
+}
+
+/**
+ * What the signer need not type: the organisation as it is billed (else its name) and the
+ * billing address, when we have them. The signer still sees and may change both.
+ */
+function signingPrefill(orgName: string | null, b: BillingRow | null) {
+  const place = [b?.billing_postal_code, b?.billing_city].filter(Boolean).join(" ");
+  const address = [b?.billing_address_line1, b?.billing_address_line2, place, b?.billing_country]
+    .filter(Boolean)
+    .join(", ");
+  return {
+    organisation: b?.billing_legal_name || orgName || null,
+    address: b?.billing_address_line1 ? address : null,
   };
 }
 
@@ -184,7 +210,7 @@ export async function declineDocument(
     });
     for (const t of await store.tasks(tx, a.org.id))
       if (
-        t.kind === "sign" &&
+        (t.kind === "sign" || t.code === "who_signs") &&
         t.documentId === a.doc.id &&
         !["done", "withdrawn"].includes(t.status)
       )
@@ -215,11 +241,15 @@ export async function declineDocument(
 
 /** Each naming sends an invitation, so ten an hour per organisation, like invite resends. */
 const SIGNER_LIMIT = { name: "account_signer", capacity: 10, windowSeconds: 3600 };
+/** A named signer is reminded at most once a day. */
+const REMIND_LIMIT = { name: "account_signer_remind", capacity: 1, windowSeconds: 86_400 };
 
 /**
  * Names someone else to sign. They get an email with a link; signing in with a code sent
- * to that address reaches this one document and nothing else of the organisation. Naming
- * a different person than the one already named goes on the timeline as a replacement.
+ * to that address reaches this one document and nothing else of the organisation. They
+ * also show among the members as invited, and the signing task waits on them: their
+ * signature completes it. Naming a different person than the one already named goes on
+ * the timeline as a replacement.
  */
 export async function nameSigner(
   d: AccountsDeps,
@@ -240,10 +270,6 @@ export async function nameSigner(
       ? { previous_email: doc.signerEmail, previous_name: doc.signerName }
       : null;
   const now = d.now();
-  const me = await store.identity(d.db, who.directusUserId);
-  // The signer's own language when they have an account, else the document's.
-  const language =
-    (await localeOfEmail(d.db, email).catch(() => null)) ?? resolveLocale(doc.language);
   await d.db.transaction(async (tx) => {
     await store.updateDocument(tx, doc.id, {
       signerEmail: email,
@@ -252,23 +278,14 @@ export async function nameSigner(
       signerInvitedAt: now,
       updatedAt: now,
     });
-    await d.jobs.enqueue(
-      sendEmail,
-      {
-        language,
-        to: email,
-        subject: `Please sign ${doc.title}`,
-        template: "account_signer_invite",
-        data: {
-          inviter_name: me?.name || me?.email || org.name,
-          org_name: org.name,
-          document_title: doc.title,
-          sign_url: `${accountPageUrl(d.settings.dashboardUrl, org.id)}/documents/${doc.id}/sign`,
-        },
-        context: `account signer invite ${doc.id}`,
-      },
-      { tx },
-    );
+    await store.inviteSigner(tx, {
+      id: newId(),
+      orgId: org.id,
+      email,
+      invitedBy: who.appUserId ?? null,
+      now,
+    });
+    await emailSigner(d, tx, who, org, { ...doc, signerEmail: email, signerInvitedAt: now });
     await emit(d, tx, {
       orgId: org.id,
       actor: { kind: "customer", userId: who.directusUserId },
@@ -277,7 +294,173 @@ export async function nameSigner(
       detail: { email, name: signer.name, ...replaced },
     });
   });
-  return { signer: { email, name: signer.name, role: signer.role } };
+  return {
+    signer: {
+      email,
+      name: signer.name,
+      named_at: now.toISOString(),
+      reminded_at: null,
+      role: signer.role,
+    },
+  };
+}
+
+/**
+ * Sends the named signer their link again. The link stays the one they already have, and
+ * the wait keeps counting from when they were named.
+ */
+export async function remindSigner(d: AccountsDeps, who: Signed, orgId: string, docId: string) {
+  const org = await customerOrg(d, who, orgId, "account:sign");
+  const doc = await store.document(d.db, org.id, docId);
+  if (!doc || doc.status === "draft") throw new NotFoundError("document.not_found");
+  // Without a named signer there is no one to remind: the admins sign it themselves.
+  if (
+    !doc.requiresSignature ||
+    !["sent", "viewed"].includes(doc.status) ||
+    !doc.signerEmail ||
+    !doc.signerInvitedAt
+  )
+    throw new ConflictError("document.not_awaiting_signature");
+  await d.limiter.check(REMIND_LIMIT, doc.id);
+  await d.limiter.check(SIGNER_LIMIT, org.id);
+  const email = doc.signerEmail;
+  await d.db.transaction(async (tx) => {
+    await emailSigner(d, tx, who, org, doc);
+    await emit(d, tx, {
+      orgId: org.id,
+      actor: { kind: "customer", userId: who.directusUserId },
+      type: "document.signer_reminded",
+      subject: { type: "document", id: doc.id },
+      detail: { email },
+    });
+  });
+  return {
+    signer: {
+      email,
+      name: doc.signerName,
+      named_at: doc.signerInvitedAt.toISOString(),
+      reminded_at: d.now().toISOString(),
+      role: doc.signerRole,
+    },
+  };
+}
+
+/** The invitation to sign, with the link for the person and naming the document carries. */
+async function emailSigner(
+  d: AccountsDeps,
+  tx: Tx,
+  who: Signed,
+  org: { name: string },
+  doc: DocumentRow,
+) {
+  const email = doc.signerEmail ?? "";
+  const me = await store.identity(d.db, who.directusUserId);
+  // The signer's own language when they have an account, else the document's.
+  const language =
+    (await localeOfEmail(d.db, email).catch(() => null)) ?? resolveLocale(doc.language);
+  await d.jobs.enqueue(
+    sendEmail,
+    {
+      language,
+      to: email,
+      subject: `Please sign ${doc.title}`,
+      template: "account_signer_invite",
+      data: {
+        inviter_name: me?.name || me?.email || org.name,
+        org_name: org.name,
+        document_title: doc.title,
+        // Opens the invitation page for this person, not a bare sign-in.
+        sign_url: signerInviteUrl(d.settings.dashboardUrl, d.settings.inviteSecret, doc),
+      },
+      context: `account signer invite ${doc.id}`,
+    },
+    { tx },
+  );
+}
+
+type Person = { name: string; email: string; role: string | null };
+
+/**
+ * The answers to "who signs": who signs the offer (null: the person answering), whether the
+ * same person signs the DPA, else who does (null: the person answering), and whether they
+ * want their own DPIA. The DPA is its own document, sent with the offer (openDpa); the
+ * answers only say whose each signature is. Asked once per offer, before signing; changing
+ * it later goes through a question to us.
+ */
+export async function answerWhoSigns(
+  d: AccountsDeps,
+  who: Signed,
+  orgId: string,
+  taskId: string,
+  input: {
+    offer_signer: Person | null;
+    dpa_same: boolean;
+    dpa_signer: Person | null;
+    dpia: boolean;
+  },
+) {
+  const org = await customerOrg(d, who, orgId, "account:sign");
+  const task = await store.task(d.db, org.id, taskId);
+  if (task?.code !== "who_signs") throw new NotFoundError("task.not_found");
+  if (!["open", "changes_requested"].includes(task.status))
+    throw new ConflictError("task.not_waiting");
+  const offer = task.documentId ? await store.document(d.db, org.id, task.documentId) : null;
+  if (!offer || !["sent", "viewed"].includes(offer.status))
+    throw new ConflictError("document.not_awaiting_signature");
+  const dpaSigner = input.dpa_same ? input.offer_signer : input.dpa_signer;
+  // The DPA the offer went out with, while it still waits on a signature.
+  const dpa = (await store.documents(d.db, org.id)).find(
+    (x) =>
+      x.kind === "dpa" && x.dpaTextId === offer.dpaTextId && ["sent", "viewed"].includes(x.status),
+  );
+  const me = await store.identity(d.db, who.directusUserId);
+  const self = me?.name ? `${me.name} (${me.email})` : (me?.email ?? "the person answering");
+  const person = (p: Person | null) =>
+    p ? `${p.name} (${p.email}${p.role ? `, ${p.role}` : ""})` : self;
+
+  // Each naming stands on its own, so answering again after a failure picks up where it
+  // stopped: naming the same signer again changes nothing.
+  if (input.offer_signer) await nameSigner(d, who, org.id, offer.id, input.offer_signer);
+  if (dpa && dpaSigner) await nameSigner(d, who, org.id, dpa.id, dpaSigner);
+
+  const summary = [
+    `Offer: signed by ${person(input.offer_signer)}.`,
+    `Data processing agreement: signed by ${
+      input.dpa_same ? "the same person" : person(input.dpa_signer)
+    }.`,
+    input.dpia
+      ? "They want their own data protection impact assessment (DPIA)."
+      : "No DPIA of their own.",
+  ].join("\n");
+  await d.db.transaction(async (tx) => {
+    await settleTask(d, tx, task.id, "done", {
+      params: {
+        ...((task.params ?? {}) as Record<string, string>),
+        dpa_same: input.dpa_same ? "true" : "false",
+        dpia: input.dpia ? "true" : "false",
+      },
+      responseText: summary,
+      submittedAt: d.now(),
+      submittedBy: who.directusUserId,
+    });
+    const fresh = (await store.task(tx, org.id, task.id)) as NonNullable<
+      Awaited<ReturnType<typeof store.task>>
+    >;
+    await emit(d, tx, {
+      orgId: org.id,
+      actor: { kind: "customer", userId: who.directusUserId },
+      type: "task.submitted",
+      subject: { type: "task", id: task.id },
+      // sam reads the answers, and follows up on a DPIA, from the task's response.
+      webhook: { event: "account.task.submitted", org: orgPayload(org), task: taskPayload(fresh) },
+    });
+  });
+  return taskView(
+    (await store.task(d.db, org.id, task.id)) as NonNullable<
+      Awaited<ReturnType<typeof store.task>>
+    >,
+    await store.documents(d.db, org.id),
+  );
 }
 
 /** Documents waiting for the caller's own signature, in any organisation. */
@@ -341,6 +524,13 @@ export interface BillingInput {
   readonly kbo_number: string | null;
   readonly po_number: string | null;
   readonly peppol_id: string | null;
+  readonly invoice_delivery?: "peppol" | "email" | null | undefined;
+}
+
+/** The Peppol directory entry for numbers the customer is typing, before they save. */
+export async function peppolLookup(d: AccountsDeps, who: Signed, orgId: string, ids: TaxIds) {
+  await customerOrg(d, who, orgId, "account:billing");
+  return { match: await lookupPeppol(d, ids) };
 }
 
 export async function readBilling(d: AccountsDeps, who: Signed, orgId: string) {
@@ -358,6 +548,9 @@ export async function updateBilling(d: AccountsDeps, who: Signed, orgId: string,
     throw new ValidationError("billing.tax_id_required");
   const now = d.now();
   const me = await store.identity(d.db, who.directusUserId);
+  // A Peppol id typed by the customer wins; otherwise the directory is asked, outside the
+  // transaction so a slow directory holds no lock.
+  const match = b.peppol_id ? null : await lookupPeppol(d, b);
   await d.db.transaction(async (tx) => {
     await store.lockOrg(tx, org.id);
     const patch = {
@@ -372,7 +565,9 @@ export async function updateBilling(d: AccountsDeps, who: Signed, orgId: string,
       kvk_number: b.kvk_number,
       kbo_number: b.kbo_number,
       po_number: b.po_number,
-      peppol_id: b.peppol_id,
+      peppol_id: b.peppol_id ?? match?.participant_id ?? null,
+      peppol_name: b.peppol_id ? null : (match?.name ?? null),
+      ...(b.invoice_delivery !== undefined ? { invoice_delivery: b.invoice_delivery } : {}),
       updated_at: now.toISOString(),
     };
     const account = await store.billing(tx, org.id);
@@ -442,6 +637,8 @@ export async function submitTask(
   // An onboarding step is done by taking it (opening the demo, creating a project), never
   // by a reply that staff would then have to review.
   if (isOnboardingCode(task.code)) throw new ConflictError("task.not_waiting");
+  // Who signs is answered in its own form, which names the signers.
+  if (task.code === "who_signs") throw new ConflictError("task.not_waiting");
   if (!["open", "changes_requested"].includes(task.status))
     throw new ConflictError(task.status === "locked" ? "task.not_open" : "task.not_waiting");
   if (task.kind === "upload" && !input.file) throw new ValidationError("task.file_required");

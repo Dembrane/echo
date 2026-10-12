@@ -29,6 +29,12 @@ export class SendGridMailer implements Mailer {
       body: JSON.stringify({
         personalizations: [{ to }],
         from: { email: this.opts.fromEmail, name: this.opts.fromName },
+        ...(msg.replyTo && {
+          reply_to: {
+            email: msg.replyTo.email,
+            ...(msg.replyTo.name && { name: msg.replyTo.name }),
+          },
+        }),
         subject: msg.subject,
         content: [
           ...(msg.text ? [{ type: "text/plain", value: msg.text }] : []),

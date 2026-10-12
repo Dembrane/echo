@@ -39,6 +39,7 @@ const DPA = "0199a1b2-c3d4-7e5f-8a6b-7c8d9e0f1a3c";
 const INVOICE = "0199a1b2-c3d4-7e5f-8a6b-7c8d9e0f1a4d";
 const SIGN_TASK = "0199a1b3-0000-7000-8000-000000000001";
 const BILLING_TASK = "0199a1b3-0000-7000-8000-000000000002";
+const WHO_SIGNS_TASK = "0199a1b3-0000-7000-8000-000000000009";
 const PO_TASK = "0199a1b3-0000-7000-8000-000000000003";
 const LOGO_TASK = "0199a1b3-0000-7000-8000-000000000004";
 const TICKET = "0199a1b4-0000-7000-8000-000000000001";
@@ -97,6 +98,8 @@ export const pushOfferRequest: Out<typeof PushOfferRequest> = {
   currency: "EUR",
   date: "2026-09-28",
   items,
+  vat_treatment: "standard",
+  amendments: [],
   external_ref: "attio-deal-8f2c",
   supersedes_id: null,
   send: true,
@@ -128,7 +131,7 @@ const offerFields = [
 const offerSummary: Out<typeof DocumentSummary> = {
   id: OFFER,
   kind: "offer",
-  title: "Example Town Council (sample) x dembrane",
+  title: "Offerte jaarlicentie DMB-DEMO-1",
   reference: "DMB-DEMO-1",
   language: "nl",
   version: 1,
@@ -151,7 +154,7 @@ const offerSummary: Out<typeof DocumentSummary> = {
 
 export const offerDetail: Out<typeof DocumentDetail> = {
   ...offerSummary,
-  body: "dembrane B.V.\nAddress: Sint Janssingel 88, ‘s-Hertogenbosch, NL\n...\n# Example Town Council (sample) x dembrane\n28-09-2026 | Offer ID: DMB-DEMO-1\n...",
+  body: "dembrane B.V.\nAddress: Sint Janssingel 88, ‘s-Hertogenbosch, NL\n...\n# Offerte jaarlicentie DMB-DEMO-1\n28-09-2026 | Offer ID: DMB-DEMO-1\n...",
   content: {
     template: "subscription",
     language: "nl",
@@ -211,11 +214,12 @@ export const offerDetail: Out<typeof DocumentDetail> = {
     "Met je handtekening is de overeenkomst compleet: wij kunnen factureren, en je voorwaarden, SLA en verwerkersovereenkomst gelden.",
   confirmation: {
     dpa_authorised:
-      'Ik, {name}, {role}, bevestig dat ik namens {organisation} mag tekenen, en ik onderteken "Example Town Council (sample) x dembrane" (DMB-DEMO-1) zoals aan mij getoond, SHA-256 9b4f3c1e2a7d8e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f. Ik ben ook bevoegd om namens deze organisatie verwerkingsafspraken aan te gaan.',
+      'Ik, {name}, {role}, bevestig dat ik namens {organisation} mag tekenen, en ik onderteken "Offerte jaarlicentie DMB-DEMO-1" (DMB-DEMO-1) zoals aan mij getoond, SHA-256 9b4f3c1e2a7d8e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f. Ik ben ook bevoegd om namens deze organisatie verwerkingsafspraken aan te gaan.',
     dpa_not_authorised:
-      'Ik, {name}, {role}, bevestig dat ik namens {organisation} mag tekenen, en ik onderteken "Example Town Council (sample) x dembrane" (DMB-DEMO-1) zoals aan mij getoond, SHA-256 9b4f3c1e2a7d8e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f. Ik ben niet bevoegd om namens deze organisatie verwerkingsafspraken aan te gaan; de verwerkersovereenkomst wordt apart ondertekend.',
+      'Ik, {name}, {role}, bevestig dat ik namens {organisation} mag tekenen, en ik onderteken "Offerte jaarlicentie DMB-DEMO-1" (DMB-DEMO-1) zoals aan mij getoond, SHA-256 9b4f3c1e2a7d8e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f. Ik ben niet bevoegd om namens deze organisatie verwerkingsafspraken aan te gaan; de verwerkersovereenkomst wordt apart ondertekend.',
   },
   signature: null,
+  prefill: { organisation: "Example Town Council (sample)", address: null },
   access: "member",
   staff_url: null,
 };
@@ -242,6 +246,8 @@ const dpaSummary: Out<typeof DocumentSummary> = {
   signer: {
     email: "privacy@example-town.example",
     name: "Alex Example",
+    named_at: "2026-09-20T15:02:00.000Z",
+    reminded_at: null,
     role: "Functionaris gegevensbescherming",
   },
   file_url: `${C}/documents/${DPA}/file`,
@@ -361,6 +367,7 @@ export const signedDpaDetail: Out<typeof DocumentDetail> = {
       "0199a1b9-0000-7000-8000-000000000004": "21-09-2026",
     },
   },
+  prefill: { organisation: "Example Town Council (sample)", address: null },
   access: "member",
   staff_url: null,
 };
@@ -402,7 +409,11 @@ const invoiceSummary: Out<typeof DocumentSummary> = {
 export const signTask: Out<typeof Task> = {
   id: SIGN_TASK,
   code: "sign_offer",
-  params: { document_title: "Example Town Council (sample) x dembrane" },
+  params: {
+    document_title: "Offerte jaarlicentie DMB-DEMO-1",
+    offer_template: "subscription",
+    offer_reference: "DMB-DEMO-1",
+  },
   title: null,
   body: null,
   kind: "sign",
@@ -423,6 +434,15 @@ export const signTask: Out<typeof Task> = {
   reminders_sent: 0,
 };
 
+/** Asked first: who signs the offer and the DPA, and whether a DPIA is needed. */
+export const whoSignsTask: Out<typeof Task> = {
+  ...signTask,
+  id: WHO_SIGNS_TASK,
+  code: "who_signs",
+  kind: "generic",
+  next_reminder_at: null,
+};
+
 export const billingTask: Out<typeof Task> = {
   ...signTask,
   id: BILLING_TASK,
@@ -434,7 +454,7 @@ export const billingTask: Out<typeof Task> = {
   status: "locked",
   locked: true,
   locked_until_document_id: OFFER,
-  locked_until_title: "Example Town Council (sample) x dembrane",
+  locked_until_title: "Offerte jaarlicentie DMB-DEMO-1",
   document_id: null,
   opened_at: null,
   next_reminder_at: null,
@@ -503,6 +523,8 @@ const emptyBilling = {
   billing_email: "robin@example-town.example",
   po_number: null,
   peppol_id: null,
+  peppol_match: null,
+  invoice_delivery: null,
   address_line1: null,
   address_line2: null,
   postal_code: null,
@@ -525,7 +547,7 @@ export const billingTaskDone: Out<typeof Task> = {
 /** GET /api/v2/orgs/:orgId/account */
 export const accountPage: Out<typeof AccountPage> = {
   organisation,
-  tasks: [signTask, poTask, billingTask, logoTask],
+  tasks: [whoSignsTask, signTask, poTask, billingTask, logoTask],
   documents: [offerSummary, invoiceSummary, dpaSummary],
   billing: emptyBilling,
   tickets: [ticket],
@@ -549,7 +571,7 @@ export const signRequest: Out<typeof SignRequest> = {
   initials: null,
   dpa_authorised: true,
   confirmation_text:
-    'Ik, Robin Example, Wethouder, bevestig dat ik namens Example Town Council (sample) mag tekenen, en ik onderteken "Example Town Council (sample) x dembrane" (DMB-DEMO-1) zoals aan mij getoond, SHA-256 9b4f3c1e2a7d8e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f. Ik ben ook bevoegd om namens deze organisatie verwerkingsafspraken aan te gaan.',
+    'Ik, Robin Example, Wethouder, bevestig dat ik namens Example Town Council (sample) mag tekenen, en ik onderteken "Offerte jaarlicentie DMB-DEMO-1" (DMB-DEMO-1) zoals aan mij getoond, SHA-256 9b4f3c1e2a7d8e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f. Ik ben ook bevoegd om namens deze organisatie verwerkingsafspraken aan te gaan.',
 };
 
 export const signResponse: Out<typeof SignResponse> = {
@@ -690,7 +712,11 @@ export const tasksSummary: Out<typeof TasksSummary> = [
     tasks_waiting: 2,
     next_task_title: null,
     next_task_code: "sign_offer",
-    next_task_params: { document_title: "Example Town Council (sample) x dembrane" },
+    next_task_params: {
+      document_title: "Offerte jaarlicentie DMB-DEMO-1",
+      offer_template: "subscription",
+      offer_reference: "DMB-DEMO-1",
+    },
   },
 ];
 

@@ -71,12 +71,13 @@ const USER_SETTINGS_LABELS: Record<string, string> = {
 };
 
 const ORG_SECTION_LABELS: Record<string, string> = {
-	account: "Tasks",
 	billing: "Billing",
+	documents: "Documents",
 	members: "Members",
 	overview: "Overview",
 	people: "Members",
 	"request-workspace": "Create workspace",
+	tasks: "Tasks",
 	usage: "Usage",
 };
 
