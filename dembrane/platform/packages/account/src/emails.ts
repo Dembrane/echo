@@ -1,116 +1,13 @@
 /**
- * Transactional emails of the account area, ported from the Jinja templates in the Python
- * API's email_templates with the same layout. Every sentence comes from the server catalog
- * (@dembrane/i18n, packages/i18n/locales) in the recipient's language; English renders
- * byte for byte as the old templates did. HTML values are escaped the way Jinja's
- * autoescape did; the text part is sent alongside every HTML part.
+ * Transactional emails of the account area, in the shared frame of @dembrane/mail
+ * (brand/CALL_TO_CASH.md). Every sentence comes from the server catalog (@dembrane/i18n,
+ * packages/i18n/locales) in the recipient's language. Values shown inside sentences are
+ * escaped here; the text part is sent alongside every HTML part.
  */
 import { resolveLocale, type Translate, translator } from "@dembrane/i18n";
+import { email as e, emailFrame, emailText, escapeHtml as esc } from "@dembrane/mail";
 
-export interface RenderedEmail {
-  readonly subject: string;
-  readonly html: string;
-  readonly text: string;
-}
-
-const esc = (v: string) =>
-  v
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&#34;")
-    .replace(/'/g, "&#39;");
-
-const P = (size: number, margin: string, body: string) =>
-  `<p style="font-size:${size}px; line-height:1.65; margin:${margin}; color:#2D2D2C; font-weight:400;">\n  ${body}\n</p>`;
-
-const em = (v: string) => `<em style="color:#4169E1; font-style:normal;">${esc(v)}</em>`;
-
-function cta(label: string, url: string): string {
-  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin:0 0 24px;">
-  <tr>
-    <td>
-      <a href="${esc(url)}"
-         style="display:inline-block; background-color:#4169E1; color:#FFFFFF; text-decoration:none; padding:14px 30px; border-radius:9999px; font-size:15px; font-weight:400; font-family:inherit; line-height:1;">
-        ${esc(label)}
-      </a>
-    </td>
-  </tr>
-</table>`;
-}
-
-function fallback(tr: Translate, url: string): string {
-  return `<p style="font-size:13px; line-height:1.65; margin:0 0 28px; color:#2D2D2C; font-weight: 400;">
-  ${tr("email.common.fallback")}<br>
-  <span style="color:#4169E1; word-break:break-all;">${esc(url)}</span>
-</p>`;
-}
-
-/** The shared frame: letter-style card, logo, heading, body, sign-off and banner. */
-function layout(
-  tr: Translate,
-  b: {
-    title: string;
-    preview: string;
-    heading: string;
-    body: string;
-    cta?: string;
-    fallback?: string;
-    disclaim?: string;
-  },
-): string {
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>${b.title}</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400&display=swap');
-  </style>
-</head>
-<body style="margin:0; padding:0; background-color:#F6F4F1; font-family:'DM Sans','DM Sans Variable',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; color:#2D2D2C; font-weight: 400;">
-  <div style="display:none; font-size:1px; color:#F6F4F1; line-height:1px; max-height:0px; max-width:0px; opacity:0; overflow:hidden;">
-    ${b.preview}
-  </div>
-  <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:#F6F4F1; padding:40px 20px;">
-    <tr>
-      <td align="center">
-        <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="max-width:600px; background-color:#FFFFFF; border:1px solid #EFEAE2;">
-          <tr>
-            <td style="padding:32px 48px 0;">
-              <img src="https://dashboard.dembrane.com/dembrane-logo-email.png" alt="dembrane" width="147" height="30" border="0" style="height:30px; width:auto; max-width:100%; display:block; border:0; outline:none; text-decoration:none; -ms-interpolation-mode:bicubic;">
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:28px 48px 0;">
-              <h1 style="margin:0 0 20px; font-family:inherit; font-size:32px; font-weight: 400; letter-spacing:-0.01em; line-height:1.15; color:#2D2D2C; text-wrap:balance;">
-                ${b.heading}
-              </h1>
-              <div style="font-size:17px; line-height:1.65; color:#2D2D2C; font-weight: 400;">
-                ${b.body}
-              </div>
-              ${b.cta ?? ""}
-              ${b.fallback ?? ""}
-              ${b.disclaim ?? ""}
-              <p style="font-size:17px; line-height:1.65; margin:0 0 32px; color:#2D2D2C; font-weight: 400;">
-                ${tr("email.common.signoff")}
-              </p>
-            </td>
-          </tr>
-          <tr>
-            <td style="background-color:#FFFFFF;">
-              <img src="https://directus.dembrane.com/assets/a75db1e0-4dd9-4660-a6fb-24e0dd4cd104" alt="" width="600" border="0" style="width:100%; max-width:600px; height:auto; display:block; border:0; outline:none; text-decoration:none; -ms-interpolation-mode:bicubic;">
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
-}
+export type { RenderedEmail } from "@dembrane/mail";
 
 export type EmailTemplate =
   | {
@@ -147,7 +44,7 @@ export type EmailTemplate =
     }
   | {
       readonly template: "account_offer_sent";
-      readonly data: { org_name: string; document_title: string; sign_url: string };
+      readonly data: OfferSentData;
     }
   | {
       readonly template: "report_published";
@@ -159,6 +56,25 @@ export type EmailTemplate =
       };
     }
   | { readonly template: "plain"; readonly data: { text: string } };
+
+/**
+ * The offer email's data. Everything past sign_url is optional: jobs queued before those
+ * fields existed render without the facts and signed by the team.
+ */
+export interface OfferSentData {
+  org_name: string;
+  document_title: string;
+  sign_url: string;
+  /** The offer's reference, e.g. "OFF-2026-014". */
+  reference?: string;
+  /** The total including VAT, in cents, with its currency code. */
+  total_cents?: string;
+  currency?: string;
+  /** ISO date the offer is valid until. */
+  valid_until?: string;
+  /** Who at dembrane owns the account: signs the email and gets the replies. */
+  manager_name?: string;
+}
 
 /** The subject line of a catalog email in `locale`; null for "plain", whose caller writes it. */
 export function subjectOf(t: EmailTemplate, locale?: string | null): string | null {
@@ -183,7 +99,7 @@ export function subjectOf(t: EmailTemplate, locale?: string | null): string | nu
     case "account_invite":
       return tr("email.account_invite.subject", t.data);
     case "account_offer_sent":
-      return tr("email.account_offer_sent.subject");
+      return tr("email.account_offer_sent.subject", { document_title: t.data.document_title });
     case "report_published":
       return tr("email.report_published.subject");
     case "plain":
@@ -192,8 +108,15 @@ export function subjectOf(t: EmailTemplate, locale?: string | null): string | nu
 }
 
 /** Escapes every value, for the parts of the HTML that show values as plain text. */
-const escAll = (d: Readonly<Record<string, string>>) =>
-  Object.fromEntries(Object.entries(d).map(([k, v]) => [k, esc(v)]));
+const escAll = (d: Readonly<Record<string, string | undefined>>) =>
+  Object.fromEntries(Object.entries(d).map(([k, v]) => [k, esc(v ?? "")]));
+
+/** What every frame in one language shares: the team signs, the link is written out. */
+const common = (tr: Translate, locale: string) => ({
+  lang: resolveLocale(locale),
+  signoff: { name: tr("email.common.signoff") },
+  fallback: tr("email.common.fallback"),
+});
 
 /**
  * Renders the body of an email in `locale` (any stored language value; English when
@@ -201,46 +124,47 @@ const escAll = (d: Readonly<Record<string, string>>) =>
  */
 export function render(t: EmailTemplate, locale?: string | null): { html: string; text: string } {
   const tr = translator(locale);
-  const signoff = tr("email.common.signoff");
-  const ignore = P(15, "0 0 28px", tr("email.common.ignore"));
+  const lang = resolveLocale(locale);
+  const c = common(tr, lang);
+  const signoff = c.signoff.name;
+  const ignore = e.note(tr("email.common.ignore"));
   const ignoreText = tr("email.common.ignore_text");
+  const act = (label: string, url: string) => ({ label, url, fallback: c.fallback });
   switch (t.template) {
     case "workspace_invite": {
       const d = t.data;
       const k = "email.workspace_invite";
       return {
-        html: layout(tr, {
+        html: emailFrame({
+          ...c,
           title: tr(`${k}.title`),
-          preview: tr(`${k}.preview`, escAll(d)),
+          preview: tr(`${k}.preview`, d),
           heading: tr(`${k}.heading`),
-          body: P(
-            17,
-            "0 0 28px",
-            tr(`${k}.body`, { ...escAll(d), workspace_name: em(d.workspace_name) }),
-          ),
-          cta: cta(tr(`${k}.cta`), d.invite_url),
-          fallback: fallback(tr, d.invite_url),
-          disclaim: ignore,
+          body: e.lead(tr(`${k}.body`, { ...escAll(d), workspace_name: e.em(d.workspace_name) })),
+          action: act(tr(`${k}.cta`), d.invite_url),
+          after: ignore,
         }),
-        text: `${tr(`${k}.body`, d)}\n\n${tr(`${k}.text_cta`)}\n${d.invite_url}\n\n${ignoreText}\n\n${signoff}`,
+        text: emailText([
+          tr(`${k}.body`, d),
+          `${tr(`${k}.text_cta`)}\n${d.invite_url}`,
+          ignoreText,
+          signoff,
+        ]),
       };
     }
     case "workspace_added": {
       const d = t.data;
       const k = "email.workspace_added";
       return {
-        html: layout(tr, {
-          title: tr(`${k}.subject`, escAll(d)),
-          preview: tr(`${k}.preview`, escAll(d)),
+        html: emailFrame({
+          ...c,
+          title: tr(`${k}.subject`, d),
+          preview: tr(`${k}.preview`, d),
           heading: tr(`${k}.heading`),
-          body: P(
-            17,
-            "0 0 28px",
-            tr(`${k}.body`, { ...escAll(d), workspace_name: em(d.workspace_name) }),
-          ),
-          cta: cta(tr(`${k}.cta`), d.invite_url),
+          body: e.lead(tr(`${k}.body`, { ...escAll(d), workspace_name: e.em(d.workspace_name) })),
+          action: act(tr(`${k}.cta`), d.invite_url),
         }),
-        text: `${tr(`${k}.body`, d)}\n\n${tr(`${k}.text_cta`)}\n${d.invite_url}\n\n${signoff}`,
+        text: emailText([tr(`${k}.body`, d), `${tr(`${k}.text_cta`)}\n${d.invite_url}`, signoff]),
       };
     }
     case "org_invite": {
@@ -249,79 +173,84 @@ export function render(t: EmailTemplate, locale?: string | null): { html: string
       const asRole = d.role && d.role !== "member";
       const bodyKey = asRole ? `${k}.body_role` : `${k}.body`;
       return {
-        html: layout(tr, {
-          title: tr(`${k}.subject`, escAll(d)),
-          preview: tr(`${k}.preview`, escAll(d)),
-          heading: tr(`${k}.heading`, escAll(d)),
-          body: `${P(17, "0 0 28px", tr(bodyKey, { ...escAll(d), org_name: em(d.org_name), role: em(d.role) }))}\n${P(15, "0 0 28px", tr(`${k}.next`))}`,
-          cta: cta(tr(`${k}.cta`), d.invite_url),
-          fallback: fallback(tr, d.invite_url),
-          disclaim: ignore,
+        html: emailFrame({
+          ...c,
+          title: tr(`${k}.subject`, d),
+          preview: tr(`${k}.preview`, d),
+          heading: tr(`${k}.heading`, d),
+          body: `${e.lead(tr(bodyKey, { ...escAll(d), org_name: e.em(d.org_name), role: e.em(d.role) }))}${e.p(tr(`${k}.next`))}`,
+          action: act(tr(`${k}.cta`), d.invite_url),
+          after: ignore,
         }),
-        text: `${tr(bodyKey, d)}\n\n${tr(`${k}.text_cta`)}\n${d.invite_url}\n\n${tr(`${k}.next`)}\n\n${ignoreText}\n\n${signoff}`,
+        text: emailText([
+          tr(bodyKey, d),
+          `${tr(`${k}.text_cta`)}\n${d.invite_url}`,
+          tr(`${k}.next`),
+          ignoreText,
+          signoff,
+        ]),
       };
     }
     case "registration_existing_account": {
       const d = t.data;
       const k = "email.registration_existing_account";
-      const link = `<a href="${esc(d.reset_url)}" style="color:#4169E1;">${tr(`${k}.reset_link`)}</a>`;
       return {
-        html: layout(tr, {
+        html: emailFrame({
+          ...c,
           title: tr(`${k}.subject`),
           preview: tr(`${k}.preview`),
           heading: tr(`${k}.heading`),
-          body: P(17, "0 0 28px", tr(`${k}.body`)),
-          cta: cta(tr(`${k}.cta`), d.login_url),
-          fallback: fallback(tr, d.login_url),
-          disclaim: `${P(15, "0 0 8px", tr(`${k}.reset`, { reset_link: link }))}\n${P(15, "0 0 28px", tr(`${k}.ignore`))}`,
+          body: e.lead(tr(`${k}.body`)),
+          action: act(tr(`${k}.cta`), d.login_url),
+          after: `${e.note(tr(`${k}.reset`, { reset_link: e.link(d.reset_url, tr(`${k}.reset_link`)) }))}${e.note(tr(`${k}.ignore`))}`,
         }),
-        text: `${tr(`${k}.heading`)}\n\n${tr(`${k}.body`)}\n\n${tr(`${k}.text_cta`)}\n${d.login_url}\n\n${tr(`${k}.reset_text`)}\n${d.reset_url}\n\n${tr(`${k}.ignore`)}\n\n${signoff}`,
+        text: emailText([
+          tr(`${k}.heading`),
+          tr(`${k}.body`),
+          `${tr(`${k}.text_cta`)}\n${d.login_url}`,
+          `${tr(`${k}.reset_text`)}\n${d.reset_url}`,
+          tr(`${k}.ignore`),
+          signoff,
+        ]),
       };
     }
-    case "verify_email": {
-      const d = t.data;
-      const k = "email.verify_email";
-      return {
-        html: layout(tr, {
-          title: tr(`${k}.subject`),
-          preview: tr(`${k}.preview`),
-          heading: tr(`${k}.heading`),
-          body: P(17, "0 0 28px", tr(`${k}.body`)),
-          cta: cta(tr(`${k}.cta`), d.verify_url),
-          fallback: fallback(tr, d.verify_url),
-          disclaim: P(15, "0 0 28px", tr(`${k}.ignore`)),
-        }),
-        text: `${tr(`${k}.heading`)}\n\n${tr(`${k}.text_cta`)}\n${d.verify_url}\n\n${tr(`${k}.ignore`)}\n\n${signoff}`,
-      };
-    }
+    case "verify_email":
     case "reset_password": {
       const d = t.data;
-      const k = "email.reset_password";
+      const k = `email.${t.template}`;
+      const url = "verify_url" in d ? d.verify_url : d.reset_url;
       return {
-        html: layout(tr, {
+        html: emailFrame({
+          ...c,
           title: tr(`${k}.subject`),
           preview: tr(`${k}.preview`),
           heading: tr(`${k}.heading`),
-          body: P(17, "0 0 28px", tr(`${k}.body`)),
-          cta: cta(tr(`${k}.cta`), d.reset_url),
-          fallback: fallback(tr, d.reset_url),
-          disclaim: P(15, "0 0 28px", tr(`${k}.ignore`)),
+          body: e.lead(tr(`${k}.body`)),
+          action: act(tr(`${k}.cta`), url),
+          after: e.note(tr(`${k}.ignore`)),
         }),
-        text: `${tr(`${k}.heading`)}\n\n${tr(`${k}.text_cta`)}\n${d.reset_url}\n\n${tr(`${k}.ignore`)}\n\n${signoff}`,
+        text: emailText([
+          tr(`${k}.heading`),
+          `${tr(`${k}.text_cta`)}\n${url}`,
+          tr(`${k}.ignore`),
+          signoff,
+        ]),
       };
     }
     case "sign_in_code": {
+      // Part of the offer flow too: a signer who has no account signs in with this code.
       const d = t.data;
       const k = "email.sign_in_code";
       return {
-        html: layout(tr, {
+        html: emailFrame({
+          ...c,
           title: tr(`${k}.subject`),
-          preview: tr(`${k}.preview`, escAll(d)),
+          preview: tr(`${k}.preview`, d),
           heading: tr(`${k}.heading`),
-          body: P(17, "0 0 28px", tr(`${k}.body`, { code: em(d.code) })),
-          disclaim: P(15, "0 0 28px", tr(`${k}.ignore`)),
+          body: `${e.p(tr(`${k}.lead`))}${e.code(d.code)}${e.p(tr(`${k}.expires`))}`,
+          after: e.note(tr(`${k}.ignore`)),
         }),
-        text: `${tr(`${k}.text_body`, d)}\n\n${tr(`${k}.ignore`)}\n\n${signoff}`,
+        text: emailText([tr(`${k}.text_body`, d), tr(`${k}.ignore`), signoff]),
       };
     }
     case "account_signer_invite": {
@@ -330,24 +259,25 @@ export function render(t: EmailTemplate, locale?: string | null): { html: string
       const d = t.data;
       const k = "email.account_signer_invite";
       return {
-        html: layout(tr, {
-          title: tr(`${k}.title`, escAll(d)),
-          preview: tr(`${k}.preview`, escAll(d)),
-          heading: tr(`${k}.heading`),
-          body: P(
-            17,
-            "0 0 28px",
-            tr(`${k}.body`, {
-              ...escAll(d),
-              document_title: em(d.document_title),
-              org_name: em(d.org_name),
-            }),
-          ),
-          cta: cta(tr(`${k}.cta`), d.sign_url),
-          fallback: fallback(tr, d.sign_url),
-          disclaim: ignore,
+        html: emailFrame({
+          ...c,
+          title: tr(`${k}.subject`, d),
+          preview: tr(`${k}.preview`, d),
+          heading: tr(`${k}.heading`, d),
+          body: `${e.lead(tr(`${k}.body`, { ...escAll(d), document_title: e.em(d.document_title) }))}${e.p(tr(`${k}.how`))}`,
+          action: act(tr(`${k}.cta`), d.sign_url),
+          after: `${e.note(tr(`${k}.wrong_person`, escAll(d)))}${ignore}`,
+          footer: tr(`${k}.footer`, escAll(d)),
         }),
-        text: `${tr(`${k}.body`, d)}\n\n${tr(`${k}.text_cta`)}\n${d.sign_url}\n\n${ignoreText}\n\n${signoff}`,
+        text: emailText([
+          tr(`${k}.heading`, d),
+          tr(`${k}.body`, d),
+          tr(`${k}.how`),
+          `${tr(`${k}.text_cta`)}\n${d.sign_url}`,
+          tr(`${k}.wrong_person`, d),
+          ignoreText,
+          signoff,
+        ]),
       };
     }
     case "account_invite": {
@@ -355,63 +285,101 @@ export function render(t: EmailTemplate, locale?: string | null): { html: string
       const d = t.data;
       const k = "email.account_invite";
       return {
-        html: layout(tr, {
-          title: tr(`${k}.subject`, escAll(d)),
-          preview: tr(`${k}.preview`, escAll(d)),
+        html: emailFrame({
+          ...c,
+          title: tr(`${k}.subject`, d),
+          preview: tr(`${k}.preview`, d),
           heading: tr(`${k}.heading`),
-          body: P(17, "0 0 28px", tr(`${k}.body`, { org_name: em(d.org_name) })),
-          cta: cta(tr(`${k}.cta`), d.sign_in_url),
-          fallback: fallback(tr, d.sign_in_url),
-          disclaim: ignore,
+          body: `${e.lead(tr(`${k}.body`, { org_name: e.em(d.org_name) }))}${e.p(tr(`${k}.how`))}`,
+          action: act(tr(`${k}.cta`), d.sign_in_url),
+          after: ignore,
+          footer: tr(`${k}.footer`, escAll(d)),
         }),
-        text: `${tr(`${k}.body`, d)}\n\n${tr(`${k}.text_cta`)}\n${d.sign_in_url}\n\n${ignoreText}\n\n${signoff}`,
+        text: emailText([
+          tr(`${k}.heading`),
+          tr(`${k}.body`, d),
+          tr(`${k}.how`),
+          `${tr(`${k}.text_cta`)}\n${d.sign_in_url}`,
+          ignoreText,
+          signoff,
+        ]),
       };
     }
     case "account_offer_sent": {
       // To the people who run the account, when staff send it an offer. The link opens the
-      // offer where it is read and signed; someone signed out signs in first.
+      // offer where it is read and signed; someone signed out signs in first. Signed by the
+      // account's manager when it has one, and replies reach them (see the job's replyTo).
       const d = t.data;
+      const v = { org_name: d.org_name, document_title: d.document_title };
       const k = "email.account_offer_sent";
+      const total =
+        d.total_cents && d.currency ? e.money(Number(d.total_cents), d.currency, lang) : "";
+      const facts = [
+        { label: tr("email.facts.offer"), value: d.document_title },
+        { label: tr("email.facts.reference"), value: d.reference ?? "" },
+        {
+          label: tr("email.facts.valid_until"),
+          value: d.valid_until ? e.day(d.valid_until, lang) : "",
+        },
+        { label: tr("email.facts.total"), value: total, strong: true },
+      ];
+      const manager = d.manager_name?.trim();
+      const questions = manager ? tr("email.common.reply_to", { name: manager }) : null;
       return {
-        html: layout(tr, {
-          title: tr(`${k}.subject`),
-          preview: tr(`${k}.body`, escAll(d)),
+        html: emailFrame({
+          ...c,
+          title: tr(`${k}.subject`, v),
+          preview: tr(`${k}.preview`, v),
           heading: tr(`${k}.heading`),
-          body: P(
-            17,
-            "0 0 28px",
-            tr(`${k}.body`, {
-              org_name: esc(d.org_name),
-              document_title: em(d.document_title),
-            }),
-          ),
-          cta: cta(tr(`${k}.cta`), d.sign_url),
-          fallback: fallback(tr, d.sign_url),
+          body: `${e.lead(tr(`${k}.body`, { org_name: esc(d.org_name) }))}${e.facts(facts)}${e.p(tr(`${k}.signer`, { org_name: esc(d.org_name) }))}`,
+          action: act(tr(`${k}.cta`), d.sign_url),
+          ...(questions && { after: e.note(esc(questions)) }),
+          signoff: manager ? { name: manager, role: "dembrane" } : c.signoff,
+          footer: tr(`${k}.footer`, escAll(v)),
         }),
-        text: `${tr(`${k}.body`, d)}\n\n${tr(`${k}.text_cta`)}\n${d.sign_url}\n\n${signoff}`,
+        text: emailText([
+          tr(`${k}.heading`),
+          tr(`${k}.body`, v),
+          facts
+            .filter((f) => f.value)
+            .map((f) => `${f.label}: ${f.value}`)
+            .join("\n"),
+          tr(`${k}.signer`, v),
+          `${tr(`${k}.text_cta`)}\n${d.sign_url}`,
+          questions,
+          manager ? `${manager}\ndembrane` : signoff,
+        ]),
       };
     }
     case "report_published": {
       // To participants who asked on the portal to hear when the report is published.
       const d = t.data;
       const k = "email.report_published";
-      const base = `${d.portal_url}/${resolveLocale(locale)}/${encodeURIComponent(d.project_id)}`;
+      const base = `${d.portal_url}/${lang}/${encodeURIComponent(d.project_id)}`;
       const reportUrl = `${base}/report`;
       const unsubscribeUrl = `${base}/unsubscribe?${new URLSearchParams({ token: d.token, project_id: d.project_id })}`;
-      const link = `<a href="${esc(unsubscribeUrl)}" style="color:#4169E1;">${tr(`${k}.unsubscribe_link`)}</a>`;
-      const heading = (name: string) =>
-        name ? tr(`${k}.heading_named`, { conversation_name: name }) : tr(`${k}.heading`);
+      const heading = d.conversation_name
+        ? tr(`${k}.heading_named`, { conversation_name: d.conversation_name })
+        : tr(`${k}.heading`);
       return {
-        html: layout(tr, {
+        html: emailFrame({
+          ...c,
           title: tr(`${k}.subject`),
           preview: tr(`${k}.preview`),
-          heading: heading(esc(d.conversation_name)),
-          body: P(17, "0 0 28px", tr(`${k}.body`)),
-          cta: cta(tr(`${k}.cta`), reportUrl),
-          fallback: fallback(tr, reportUrl),
-          disclaim: P(15, "0 0 28px", tr(`${k}.unsubscribe`, { unsubscribe_link: link })),
+          heading,
+          body: e.lead(tr(`${k}.body`)),
+          action: act(tr(`${k}.cta`), reportUrl),
+          footer: tr(`${k}.unsubscribe`, {
+            unsubscribe_link: e.link(unsubscribeUrl, tr(`${k}.unsubscribe_link`)),
+          }),
         }),
-        text: `${heading(d.conversation_name)}\n\n${tr(`${k}.body`)}\n\n${tr(`${k}.text_cta`)}\n${reportUrl}\n\n${tr(`${k}.unsubscribe_text`)}\n${unsubscribeUrl}\n\n${signoff}`,
+        text: emailText([
+          heading,
+          tr(`${k}.body`),
+          `${tr(`${k}.text_cta`)}\n${reportUrl}`,
+          `${tr(`${k}.unsubscribe_text`)}\n${unsubscribeUrl}`,
+          signoff,
+        ]),
       };
     }
     case "plain":

@@ -12,7 +12,7 @@ msgstr "Tým dembrane"
 
 #. js-lingui-explicit-id
 msgid "email.common.fallback"
-msgstr "Nebo vložte tento odkaz do prohlížeče:"
+msgstr "Nebo otevřete tento odkaz:"
 
 #. js-lingui-explicit-id
 msgid "email.common.ignore"
@@ -254,9 +254,6 @@ msgstr "Váš kód pro přihlášení je {code}."
 msgid "email.sign_in_code.heading"
 msgstr "Váš kód pro přihlášení."
 
-#. js-lingui-explicit-id
-msgid "email.sign_in_code.body"
-msgstr "Pro pokračování zadejte tento kód: {code}. Platí 10 minut."
 
 #. js-lingui-explicit-id
 msgid "email.sign_in_code.text_body"
@@ -268,23 +265,20 @@ msgstr "Pokud jste se nepokoušeli přihlásit, můžete tento e-mail bez obav i
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.subject"
-msgstr "Podepište prosím: {document_title}"
+msgstr "{inviter_name} vás žádá o podpis dokumentu {document_title}"
 
-#. js-lingui-explicit-id
-msgid "email.account_signer_invite.title"
-msgstr "{inviter_name} vás žádá o podpis za {org_name}"
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.preview"
-msgstr "{inviter_name} vás na platformě dembrane žádá o podpis: {document_title}."
+msgstr "Organizace {org_name} vás určila k podpisu tohoto dokumentu. Přečtěte si ho a podepište online."
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.heading"
-msgstr "Máte novou žádost o podpis."
+msgstr "Máte podepsat za organizaci {org_name}"
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.body"
-msgstr "{inviter_name} vás označil(a) jako osobu, která za organizaci {org_name} podepisuje {document_title}. Přihlaste se kódem zaslaným na tuto adresu, abyste si dokument přečetli a podepsali ho."
+msgstr "{inviter_name} vás určil(a) jako osobu, která za organizaci {org_name} podepisuje {document_title}."
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.cta"
@@ -304,11 +298,11 @@ msgstr "Váš dembrane účet pro organizaci {org_name} je připraven."
 
 #. js-lingui-explicit-id
 msgid "email.account_invite.heading"
-msgstr "Váš účet je připraven."
+msgstr "Váš účet je připraven"
 
 #. js-lingui-explicit-id
 msgid "email.account_invite.body"
-msgstr "Připravili jsme pro vás organizaci {org_name} v dembrane. Přihlaste se kódem, který vám pošleme na tuto adresu – heslo není potřeba."
+msgstr "Založili jsme organizaci {org_name} v dembrane, včetně ukázky připravené pro vaši organizaci."
 
 #. js-lingui-explicit-id
 msgid "email.account_invite.cta"
@@ -324,11 +318,11 @@ msgstr "Vaše nabídka od dembrane je připravena k podpisu"
 
 #. js-lingui-explicit-id
 msgid "email.account_offer_sent.heading"
-msgstr "Vaše nabídka od dembrane je připravena k podpisu."
+msgstr "Vaše nabídka je připravena k podpisu"
 
 #. js-lingui-explicit-id
 msgid "email.account_offer_sent.body"
-msgstr "Poslali jsme organizaci {org_name} nabídku: {document_title}. Přečtěte si ji a podepište ji v dembrane."
+msgstr "Připravili jsme nabídku pro organizaci {org_name}. Přečtěte si ji a podepište ji online, až budete připraveni."
 
 #. js-lingui-explicit-id
 msgid "email.account_offer_sent.cta"
@@ -400,19 +394,19 @@ msgstr "{workspace_name} přešel z tarifu {from_tier} na {to_tier} dne {date}."
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.frozen"
-msgstr "Tyto funkce jsou pozastaveny. Stávající stav zůstává zachován, nové použití je možné až po upgradu:"
+msgstr "Tyto funkce jsou pozastavené. Co jste s nimi vytvořili, zůstává, ale nic nového přidat nelze, dokud neprovedete upgrade:"
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.frozen_text"
-msgstr "Pozastaveno. Stávající stav zůstává zachován, nové použití je možné až po upgradu:"
+msgstr "Pozastaveno do upgradu (co jste vytvořili, zůstává):"
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.reverted"
-msgstr "Tyto funkce byly vráceny do původního stavu:"
+msgstr "Tato nastavení se vrátila na výchozí hodnoty:"
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.reverted_text"
-msgstr "Vráceno do původního stavu:"
+msgstr "Vráceno na výchozí:"
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.rest"
@@ -580,27 +574,24 @@ msgstr "Otevřít pracovní prostor"
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.subject"
-msgstr "Nutná akce: aktualizujte platební metodu"
+msgstr "Vaše platba pro dembrane neprošla"
 
-#. js-lingui-explicit-id
-msgid "email.payment_failed.title"
-msgstr "Aktualizujte platební metodu"
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.preview"
-msgstr "Nedávná platba neproběhla. Aktualizujte metodu, abyste si tarif udrželi."
+msgstr "Váš tarif zůstává aktivní. Aktualizujte platební metodu a uhraďte dlužnou částku."
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.heading"
-msgstr "Z vaší platební metody se nepodařilo strhnout platbu."
+msgstr "Vaše platba neprošla"
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.body"
-msgstr "Nedávná platba za váš tarif dembrane neproběhla. Obvykle to znamená, že vypršela platnost karty nebo banka platbu odmítla."
+msgstr "Nepodařilo se nám strhnout platbu z platební metody vašeho tarifu dembrane. Obvykle vypršela platnost karty nebo banka platbu zamítla."
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.next"
-msgstr "Během řešení zůstává váš tarif plně aktivní. Aktualizujte platební metodu pro doplacení částky, ať vše běží dál."
+msgstr "Mezitím váš tarif zůstává aktivní. Aktualizujte platební metodu a uhraďte dlužnou částku."
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.cta"
@@ -612,63 +603,57 @@ msgstr "Aktualizujte svoji platební metodu:"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.subject"
-msgstr "Pracovní prostor {workspace_name} přešel na verzi zdarma"
+msgstr "{workspace_name} je nyní na bezplatném tarifu"
 
-#. js-lingui-explicit-id
-msgid "email.tier_expired.title"
-msgstr "Platnost tarifu pro {workspace_name} vypršela"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.preview"
-msgstr "Pracovní prostor {workspace_name} přešel na verzi zdarma. Některé funkce jsou omezené."
+msgstr "Váš tarif {from_tier} skončil. Vše, co jste vytvořili, zůstává zachováno."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.heading"
-msgstr "{workspace_name} je nyní ve verzi zdarma."
+msgstr "{workspace_name} je nyní na bezplatném tarifu"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.body"
-msgstr "Platnost vašeho tarifu {from_tier} pro {workspace_name} vypršela. Pracovní prostor je nyní na bezplatném tarifu."
+msgstr "Váš tarif {from_tier} pro {workspace_name} skončil, takže pracovní prostor přešel na bezplatný tarif."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.text_body"
-msgstr "{workspace_name}: platnost vašeho tarifu {from_tier} vypršela. Pracovní prostor je nyní ve verzi zdarma."
+msgstr "Váš tarif {from_tier} pro {workspace_name} skončil, takže pracovní prostor přešel na bezplatný tarif."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.rest"
-msgstr "Váš stávající obsah zůstává přístupný. Požádejte o upgrade pro obnovení všech funkcí."
+msgstr "Vše ostatní funguje jako dřív a veškerý obsah zůstává dostupný. Požádejte o upgrade a získáte zpět všechny funkce."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.cta"
-msgstr "Otevřít pracovní prostor"
+msgstr "Požádat o upgrade"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.subject"
-msgstr "Tarif pro {workspace_name} vyprší {date}"
+msgstr "{workspace_name} přejde {date} na bezplatný tarif"
 
-#. js-lingui-explicit-id
-msgid "email.tier_expiring.title"
-msgstr "Platnost tarifu pro {workspace_name} brzy vyprší"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.preview"
-msgstr "{workspace_name} přejde {date} na verzi zdarma."
+msgstr "Váš tarif {tier} končí {date}. Vše, co jste vytvořili, zůstane zachováno."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.heading"
-msgstr "Tarif pro {workspace_name} vyprší {date}."
+msgstr "Váš tarif {tier} končí {date}"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.body"
-msgstr "Váš tarif {tier} pro {workspace_name} vyprší dne {date}. Poté pracovní prostor přejde na verzi zdarma a některé funkce budou omezeny."
+msgstr "{date} přejde {workspace_name} z tarifu {tier} na bezplatný tarif a některé funkce budou omezeny."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.text_body"
-msgstr "{workspace_name}: váš tarif {tier} vyprší dne {date}. Poté pracovní prostor přejde na verzi zdarma a některé funkce budou omezeny."
+msgstr "{date} přejde {workspace_name} z tarifu {tier} na bezplatný tarif a některé funkce budou omezeny."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.rest"
-msgstr "Váš stávající obsah zůstává přístupný. Požádejte o upgrade, abyste si zachovali všechny funkce."
+msgstr "Vše, co jste vytvořili, zůstane zachováno. Pokud si chcete {tier} ponechat, požádejte o upgrade v nastavení pracovního prostoru."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.cta"
@@ -733,3 +718,71 @@ msgstr "Rezervujte si s námi hovor"
 #. js-lingui-explicit-id
 msgid "task.book_call.body"
 msgstr "Projdeme s vámi vaši ukázku a naplánujeme první setkání."
+
+#. js-lingui-explicit-id
+msgid "email.common.reply_to"
+msgstr "Máte otázky? Odpovězte na tento e-mail a zpráva dorazí k {name}."
+
+#. js-lingui-explicit-id
+msgid "email.facts.offer"
+msgstr "Nabídka"
+
+#. js-lingui-explicit-id
+msgid "email.facts.reference"
+msgstr "Číslo"
+
+#. js-lingui-explicit-id
+msgid "email.facts.valid_until"
+msgstr "Platí do"
+
+#. js-lingui-explicit-id
+msgid "email.facts.total"
+msgstr "Celkem vč. DPH"
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.preview"
+msgstr "{document_title}: přečtěte si ji a podepište online."
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.signer"
+msgstr "Podepisuje za organizaci {org_name} někdo jiný? Otevřete nabídku a uveďte ho tam; dostane vlastní odkaz."
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.footer"
+msgstr "Tento e-mail dostáváte, protože spravujete účet organizace {org_name} v dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.how"
+msgstr "Tlačítko vás přihlásí jednorázovým kódem zaslaným na tuto adresu, takže heslo nepotřebujete. Uvidíte jen tento dokument."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.wrong_person"
+msgstr "Nejste ten správný člověk k podpisu? Dejte vědět {inviter_name}, aby mohl(a) určit někoho jiného."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.footer"
+msgstr "Tento e-mail dostáváte, protože {inviter_name} zadal(a) tuto adresu v účtu organizace {org_name} v dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.how"
+msgstr "Přihlaste se kódem, který pošleme na tuto adresu; heslo není potřeba. Na stránce účtu uvidíte další kroky."
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.footer"
+msgstr "Tento e-mail dostáváte, protože někdo z dembrane založil pro organizaci {org_name} účet s touto adresou."
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.lead"
+msgstr "Pro pokračování zadejte tento kód:"
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.expires"
+msgstr "Platnost kódu vyprší za 10 minut."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.text_cta"
+msgstr "Požádat o upgrade:"
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.text_cta"
+msgstr "Požádat o upgrade:"

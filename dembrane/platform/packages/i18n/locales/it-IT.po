@@ -12,7 +12,7 @@ msgstr "Il team di dembrane"
 
 #. js-lingui-explicit-id
 msgid "email.common.fallback"
-msgstr "Oppure incolla questo link nel browser:"
+msgstr "Oppure apri questo link:"
 
 #. js-lingui-explicit-id
 msgid "email.common.ignore"
@@ -254,9 +254,6 @@ msgstr "Il tuo codice di accesso è {code}."
 msgid "email.sign_in_code.heading"
 msgstr "Il tuo codice di accesso."
 
-#. js-lingui-explicit-id
-msgid "email.sign_in_code.body"
-msgstr "Inserisci questo codice per continuare: {code}. Scade tra 10 minuti."
 
 #. js-lingui-explicit-id
 msgid "email.sign_in_code.text_body"
@@ -268,23 +265,20 @@ msgstr "Se non hai provato ad accedere, puoi tranquillamente ignorare questa ema
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.subject"
-msgstr "Firma {document_title}"
+msgstr "{inviter_name} ti chiede di firmare {document_title}"
 
-#. js-lingui-explicit-id
-msgid "email.account_signer_invite.title"
-msgstr "{inviter_name} ti ha chiesto di firmare per {org_name}"
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.preview"
-msgstr "{inviter_name} ti ha chiesto di firmare {document_title} su dembrane."
+msgstr "{org_name} ti ha indicato per firmare questo documento. Leggilo e firmalo online."
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.heading"
-msgstr "Ti è stato chiesto di firmare."
+msgstr "Ti è stato chiesto di firmare per {org_name}"
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.body"
-msgstr "{inviter_name} ti ha indicato come persona incaricata di firmare {document_title} per {org_name}. Accedi con un codice inviato a questo indirizzo per leggerlo e firmarlo."
+msgstr "{inviter_name} ti ha indicato come la persona che firma {document_title} per {org_name}."
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.cta"
@@ -304,11 +298,11 @@ msgstr "Il tuo account dembrane per {org_name} è pronto."
 
 #. js-lingui-explicit-id
 msgid "email.account_invite.heading"
-msgstr "Il tuo account è pronto."
+msgstr "Il tuo account è pronto"
 
 #. js-lingui-explicit-id
 msgid "email.account_invite.body"
-msgstr "Abbiamo configurato {org_name} su dembrane per te. Accedi con il codice che inviamo a questo indirizzo: nessuna password necessaria."
+msgstr "Abbiamo configurato {org_name} su dembrane, con una demo preparata per la tua organizzazione."
 
 #. js-lingui-explicit-id
 msgid "email.account_invite.cta"
@@ -324,11 +318,11 @@ msgstr "La tua offerta di dembrane è pronta per la firma"
 
 #. js-lingui-explicit-id
 msgid "email.account_offer_sent.heading"
-msgstr "La tua offerta di dembrane è pronta per la firma."
+msgstr "La tua offerta è pronta da firmare"
 
 #. js-lingui-explicit-id
 msgid "email.account_offer_sent.body"
-msgstr "Abbiamo inviato un'offerta a {org_name}: {document_title}. Leggila e firmala in dembrane."
+msgstr "Abbiamo preparato un'offerta per {org_name}. Leggila con calma e firmala online quando sei pronto."
 
 #. js-lingui-explicit-id
 msgid "email.account_offer_sent.cta"
@@ -400,19 +394,19 @@ msgstr "{workspace_name} è passato da {from_tier} a {to_tier} in data {date}."
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.frozen"
-msgstr "Queste funzionalità sono bloccate. Lo stato attuale rimane invariato, senza nuovi utilizzi fino all'upgrade:"
+msgstr "Queste funzioni sono in pausa. Ciò che hai creato resta, ma non potrai aggiungere nulla fino a un upgrade:"
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.frozen_text"
-msgstr "Bloccate. Lo stato attuale rimane invariato, senza nuovi utilizzi fino all'upgrade:"
+msgstr "In pausa fino a un upgrade (ciò che hai creato resta):"
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.reverted"
-msgstr "Queste funzionalità sono state ripristinate:"
+msgstr "Queste impostazioni sono tornate ai valori predefiniti:"
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.reverted_text"
-msgstr "Ripristinate:"
+msgstr "Ripristinato:"
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.rest"
@@ -580,27 +574,24 @@ msgstr "Apri lo spazio di lavoro"
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.subject"
-msgstr "Azione richiesta: aggiorna il tuo metodo di pagamento"
+msgstr "Il tuo pagamento a dembrane non è andato a buon fine"
 
-#. js-lingui-explicit-id
-msgid "email.payment_failed.title"
-msgstr "Aggiorna il tuo metodo di pagamento"
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.preview"
-msgstr "Un pagamento recente non è andato a buon fine. Aggiorna il tuo metodo per mantenere il tuo piano."
+msgstr "Il tuo piano resta attivo. Aggiorna il metodo di pagamento per saldare l'importo dovuto."
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.heading"
-msgstr "Non siamo riusciti ad addebitare l'importo sul tuo metodo di pagamento."
+msgstr "Il pagamento non è andato a buon fine"
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.body"
-msgstr "Un pagamento recente per il tuo piano dembrane non è andato a buon fine. Di solito significa che una carta è scaduta o che una banca ha rifiutato l'addebito."
+msgstr "Non siamo riusciti ad addebitare il metodo di pagamento del tuo piano dembrane. Di solito una carta è scaduta o la banca ha rifiutato l'addebito."
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.next"
-msgstr "Il tuo piano rimane del tutto attivo mentre risolvi il problema. Aggiorna il metodo di pagamento per saldare il conto e continuare senza interruzioni."
+msgstr "Nel frattempo il tuo piano resta attivo. Aggiorna il metodo di pagamento per saldare l'importo dovuto."
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.cta"
@@ -612,67 +603,61 @@ msgstr "Aggiorna il tuo metodo di pagamento:"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.subject"
-msgstr "{workspace_name} è passato a Free"
+msgstr "{workspace_name} ora è sul piano gratuito"
 
-#. js-lingui-explicit-id
-msgid "email.tier_expired.title"
-msgstr "Il piano di {workspace_name} è scaduto"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.preview"
-msgstr "{workspace_name} è passato a Free. Alcune funzionalità sono limitate."
+msgstr "Il tuo piano {from_tier} è terminato. Tutto ciò che hai creato resta."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.heading"
-msgstr "{workspace_name} ora è sul piano Free."
+msgstr "{workspace_name} ora è sul piano gratuito"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.body"
-msgstr "Il tuo piano {from_tier} su {workspace_name} è scaduto. Lo spazio di lavoro è ora sul piano Free."
+msgstr "Il tuo piano {from_tier} per {workspace_name} è terminato, quindi lo spazio di lavoro è passato al piano gratuito."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.text_body"
-msgstr "{workspace_name}: il tuo piano {from_tier} è scaduto. Lo spazio di lavoro è ora su Free."
+msgstr "Il tuo piano {from_tier} per {workspace_name} è terminato, quindi lo spazio di lavoro è passato al piano gratuito."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.rest"
-msgstr "I tuoi contenuti esistenti rimangono accessibili. Richiedi un upgrade per ripristinare tutte le funzionalità."
+msgstr "Tutto il resto funziona come prima e tutti i tuoi contenuti restano accessibili. Richiedi un upgrade per riavere tutte le funzioni."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.cta"
-msgstr "Apri lo spazio di lavoro"
+msgstr "Richiedi un upgrade"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.subject"
-msgstr "Il piano di {workspace_name} scade il {date}"
+msgstr "{workspace_name} passa al piano gratuito il {date}"
 
-#. js-lingui-explicit-id
-msgid "email.tier_expiring.title"
-msgstr "Il piano di {workspace_name} scadrà a breve"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.preview"
-msgstr "{workspace_name} passa a Free il {date}."
+msgstr "Il tuo piano {tier} termina il {date}. Tutto ciò che hai creato resta."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.heading"
-msgstr "Il piano di {workspace_name} scade il {date}."
+msgstr "Il tuo piano {tier} termina il {date}"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.body"
-msgstr "Il tuo piano {tier} su {workspace_name} scade il {date}. Dopodiché, lo spazio di lavoro passerà a Free e alcune funzionalità saranno limitate."
+msgstr "Il {date} {workspace_name} passa da {tier} al piano gratuito e alcune funzioni saranno limitate."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.text_body"
-msgstr "{workspace_name}: il tuo piano {tier} scade il {date}. Dopodiché, lo spazio di lavoro passerà a Free e alcune funzionalità saranno limitate."
+msgstr "Il {date} {workspace_name} passa da {tier} al piano gratuito e alcune funzioni saranno limitate."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.rest"
-msgstr "I tuoi contenuti esistenti rimangono accessibili. Richiedi un upgrade per mantenere tutte le funzionalità."
+msgstr "Tutto ciò che hai creato resta. Per mantenere {tier}, richiedi un upgrade nelle impostazioni dello spazio di lavoro."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.cta"
-msgstr "Richiedi l'upgrade"
+msgstr "Richiedi un upgrade"
 
 #. js-lingui-explicit-id
 msgid "task.sign_offer.title"
@@ -733,3 +718,71 @@ msgstr "Prenota una chiamata con noi"
 #. js-lingui-explicit-id
 msgid "task.book_call.body"
 msgstr "Rivediamo insieme la tua demo e pianifichiamo una prima sessione."
+
+#. js-lingui-explicit-id
+msgid "email.common.reply_to"
+msgstr "Hai domande? Rispondi a questa email e il messaggio arriverà a {name}."
+
+#. js-lingui-explicit-id
+msgid "email.facts.offer"
+msgstr "Offerta"
+
+#. js-lingui-explicit-id
+msgid "email.facts.reference"
+msgstr "Riferimento"
+
+#. js-lingui-explicit-id
+msgid "email.facts.valid_until"
+msgstr "Valida fino al"
+
+#. js-lingui-explicit-id
+msgid "email.facts.total"
+msgstr "Totale IVA inclusa"
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.preview"
+msgstr "{document_title}: leggila e firmala online."
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.signer"
+msgstr "Firma qualcun altro per {org_name}? Apri l'offerta e indica lì la persona: riceverà un link tutto suo."
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.footer"
+msgstr "Ricevi questa email perché gestisci l'account di {org_name} su dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.how"
+msgstr "Il pulsante ti fa accedere con un codice monouso inviato a questo indirizzo, quindi non serve una password. Vedrai solo questo documento."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.wrong_person"
+msgstr "Non sei la persona giusta per firmare? Avvisa {inviter_name}, così potrà indicare qualcun altro."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.footer"
+msgstr "Ricevi questa email perché {inviter_name} ha inserito questo indirizzo nell'account di {org_name} su dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.how"
+msgstr "Accedi con un codice che inviamo a questo indirizzo, senza password. La pagina del tuo account mostra i prossimi passi."
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.footer"
+msgstr "Ricevi questa email perché qualcuno di dembrane ha creato un account per {org_name} con questo indirizzo."
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.lead"
+msgstr "Inserisci questo codice per continuare:"
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.expires"
+msgstr "Scade tra 10 minuti."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.text_cta"
+msgstr "Richiedi un upgrade:"
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.text_cta"
+msgstr "Richiedi un upgrade:"

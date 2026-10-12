@@ -12,7 +12,7 @@ msgstr "Команда dembrane"
 
 #. js-lingui-explicit-id
 msgid "email.common.fallback"
-msgstr "Або вставте це у свій браузер:"
+msgstr "Або відкрийте це посилання:"
 
 #. js-lingui-explicit-id
 msgid "email.common.ignore"
@@ -254,9 +254,6 @@ msgstr "Ваш код для входу: {code}."
 msgid "email.sign_in_code.heading"
 msgstr "Ваш код для входу."
 
-#. js-lingui-explicit-id
-msgid "email.sign_in_code.body"
-msgstr "Введіть цей код, щоб продовжити: {code}. Він діє протягом 10 хвилин."
 
 #. js-lingui-explicit-id
 msgid "email.sign_in_code.text_body"
@@ -268,23 +265,20 @@ msgstr "Якщо ви не намагалися увійти, просто пр�
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.subject"
-msgstr "Будь ласка, підпишіть {document_title}"
+msgstr "{inviter_name} просить вас підписати {document_title}"
 
-#. js-lingui-explicit-id
-msgid "email.account_signer_invite.title"
-msgstr "{inviter_name} просить вас підписати документ від імені {org_name}"
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.preview"
-msgstr "{inviter_name} просить вас підписати {document_title} на dembrane."
+msgstr "{org_name} обрала вас для підписання цього документа. Прочитайте й підпишіть його онлайн."
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.heading"
-msgstr "Вас попросили підписати документ."
+msgstr "Вас просять підписати від імені {org_name}"
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.body"
-msgstr "{inviter_name} вказав(-ла) вас як особу, що підписує {document_title} для {org_name}. Увійдіть за допомогою коду, надісланого на цю адресу, щоб переглянути й підписати його."
+msgstr "{inviter_name} вказав(-ла) вас як особу, яка підписує {document_title} від імені {org_name}."
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.cta"
@@ -304,11 +298,11 @@ msgstr "Ваш обліковий запис dembrane для {org_name} гото
 
 #. js-lingui-explicit-id
 msgid "email.account_invite.heading"
-msgstr "Ваш обліковий запис готовий."
+msgstr "Ваш обліковий запис готовий"
 
 #. js-lingui-explicit-id
 msgid "email.account_invite.body"
-msgstr "Ми налаштували {org_name} на dembrane для вас. Увійдіть за допомогою коду, який ми надішлемо на цю адресу: пароль не потрібен."
+msgstr "Ми налаштували {org_name} у dembrane і підготували демо спеціально для вашої організації."
 
 #. js-lingui-explicit-id
 msgid "email.account_invite.cta"
@@ -324,11 +318,11 @@ msgstr "Ваша пропозиція від dembrane готова до підп
 
 #. js-lingui-explicit-id
 msgid "email.account_offer_sent.heading"
-msgstr "Ваша пропозиція від dembrane готова до підписання."
+msgstr "Ваша пропозиція готова до підписання"
 
 #. js-lingui-explicit-id
 msgid "email.account_offer_sent.body"
-msgstr "Ми надіслали пропозицію для {org_name}: {document_title}. Ознайомтеся з нею та підпишіть її в dembrane."
+msgstr "Ми підготували пропозицію для {org_name}. Прочитайте її та підпишіть онлайн, коли будете готові."
 
 #. js-lingui-explicit-id
 msgid "email.account_offer_sent.cta"
@@ -400,19 +394,19 @@ msgstr "Робочий простір {workspace_name} переведено з {
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.frozen"
-msgstr "Ці функції заморожено. Поточний стан зберігається, але нові дії недоступні до оновлення тарифу:"
+msgstr "Ці функції призупинено. Те, що ви з ними створили, залишається, але додати нове можна буде лише після підвищення тарифу:"
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.frozen_text"
-msgstr "Заморожено. Поточний стан зберігається, без нових дій до оновлення тарифу:"
+msgstr "Призупинено до підвищення тарифу (створене залишається):"
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.reverted"
-msgstr "Ці функції було повернуто до попереднього стану:"
+msgstr "Ці налаштування повернуто до стандартних:"
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.reverted_text"
-msgstr "Повернуто:"
+msgstr "Повернуто до стандартних:"
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.rest"
@@ -580,27 +574,24 @@ msgstr "Відкрити робочий простір"
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.subject"
-msgstr "Потрібна дія: оновіть спосіб оплати"
+msgstr "Ваш платіж dembrane не пройшов"
 
-#. js-lingui-explicit-id
-msgid "email.payment_failed.title"
-msgstr "Оновіть спосіб оплати"
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.preview"
-msgstr "Нещодавній платіж не пройшов. Оновіть спосіб оплати, щоб зберегти свій тариф."
+msgstr "Ваш тариф залишається активним. Оновіть спосіб оплати, щоб погасити заборгованість."
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.heading"
-msgstr "Не вдалося списати кошти з вашого способу оплати."
+msgstr "Ваш платіж не пройшов"
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.body"
-msgstr "Нещодавній платіж за ваш тариф dembrane не пройшов. Зазвичай це означає, що термін дії картки закінчився або банк відхилив операцію."
+msgstr "Нам не вдалося списати кошти зі способу оплати вашого тарифу dembrane. Зазвичай це означає, що строк дії картки минув або банк відхилив платіж."
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.next"
-msgstr "Ваш тариф залишається повністю активним, поки ви вирішуєте це питання. Оновіть спосіб оплати, щоб погасити заборгованість і продовжити роботу."
+msgstr "Тим часом ваш тариф залишається активним. Оновіть спосіб оплати, щоб погасити заборгованість."
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.cta"
@@ -612,67 +603,61 @@ msgstr "Оновіть свій спосіб оплати:"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.subject"
-msgstr "{workspace_name} переведено на Free"
+msgstr "{workspace_name} тепер на безкоштовному тарифі"
 
-#. js-lingui-explicit-id
-msgid "email.tier_expired.title"
-msgstr "Термін дії тарифу для {workspace_name} закінчився"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.preview"
-msgstr "{workspace_name} переведено на Free. Деякі функції обмежено."
+msgstr "Ваш тариф {from_tier} завершився. Усе, що ви створили, збережено."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.heading"
-msgstr "{workspace_name} тепер на тарифі Free."
+msgstr "{workspace_name} тепер на безкоштовному тарифі"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.body"
-msgstr "Термін дії вашого тарифу {from_tier} для {workspace_name} закінчився. Робочий простір переведено на тариф Free."
+msgstr "Ваш тариф {from_tier} для {workspace_name} завершився, тому робочий простір перейшов на безкоштовний тариф."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.text_body"
-msgstr "{workspace_name}: термін дії вашого тарифу {from_tier} закінчився. Робочий простір тепер на тарифі Free."
+msgstr "Ваш тариф {from_tier} для {workspace_name} завершився, тому робочий простір перейшов на безкоштовний тариф."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.rest"
-msgstr "Ваш наявний вміст залишається доступним. Замовте перехід на вищий тариф, щоб відновити всі можливості."
+msgstr "Усе інше працює як раніше, і весь ваш вміст залишається доступним. Надішліть запит на підвищення тарифу, щоб повернути всі функції."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.cta"
-msgstr "Відкрити робочий простір"
+msgstr "Запросити підвищення тарифу"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.subject"
-msgstr "Тариф для {workspace_name} закінчується {date}"
+msgstr "{workspace_name} переходить на безкоштовний тариф {date}"
 
-#. js-lingui-explicit-id
-msgid "email.tier_expiring.title"
-msgstr "Термін дії тарифу для {workspace_name} незабаром закінчується"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.preview"
-msgstr "{workspace_name} переходить на Free {date}."
+msgstr "Ваш тариф {tier} завершується {date}. Усе, що ви створили, збережеться."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.heading"
-msgstr "Тариф для {workspace_name} закінчується {date}."
+msgstr "Ваш тариф {tier} завершується {date}"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.body"
-msgstr "Термін дії вашого тарифу {tier} для {workspace_name} закінчується {date}. Після цього робочий простір перейде на Free, а деякі функції буде обмежено."
+msgstr "{date} {workspace_name} перейде з тарифу {tier} на безкоштовний, і деякі функції стануть обмеженими."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.text_body"
-msgstr "{workspace_name}: ваш тариф {tier} закінчується {date}. Після цього робочий простір перейде на Free, а деякі функції буде обмежено."
+msgstr "{date} {workspace_name} перейде з тарифу {tier} на безкоштовний, і деякі функції стануть обмеженими."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.rest"
-msgstr "Ваш наявний вміст залишається доступним. Замовте перехід на вищий тариф, щоб зберегти всі можливості."
+msgstr "Усе, що ви створили, збережеться. Щоб залишитися на {tier}, надішліть запит на підвищення тарифу в налаштуваннях робочого простору."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.cta"
-msgstr "Змінити тариф"
+msgstr "Запросити підвищення тарифу"
 
 #. js-lingui-explicit-id
 msgid "task.sign_offer.title"
@@ -733,3 +718,71 @@ msgstr "Заплануйте дзвінок із нами"
 #. js-lingui-explicit-id
 msgid "task.book_call.body"
 msgstr "Ми разом із Вами переглянемо демо й сплануємо першу сесію."
+
+#. js-lingui-explicit-id
+msgid "email.common.reply_to"
+msgstr "Є запитання? Дайте відповідь на цей лист, і його отримає {name}."
+
+#. js-lingui-explicit-id
+msgid "email.facts.offer"
+msgstr "Пропозиція"
+
+#. js-lingui-explicit-id
+msgid "email.facts.reference"
+msgstr "Номер"
+
+#. js-lingui-explicit-id
+msgid "email.facts.valid_until"
+msgstr "Дійсна до"
+
+#. js-lingui-explicit-id
+msgid "email.facts.total"
+msgstr "Разом з ПДВ"
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.preview"
+msgstr "{document_title}: прочитайте й підпишіть онлайн."
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.signer"
+msgstr "Підписує хтось інший від імені {org_name}? Відкрийте пропозицію та вкажіть цю людину; вона отримає власне посилання."
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.footer"
+msgstr "Ви отримали цей лист, бо керуєте обліковим записом {org_name} у dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.how"
+msgstr "Кнопка дає змогу увійти з одноразовим кодом, надісланим на цю адресу, тож пароль не потрібен. Ви побачите лише цей документ."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.wrong_person"
+msgstr "Ви не та людина, яка має підписувати? Повідомте {inviter_name}, щоб можна було вказати когось іншого."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.footer"
+msgstr "Ви отримали цей лист, бо {inviter_name} вказав(-ла) цю адресу в обліковому записі {org_name} у dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.how"
+msgstr "Увійдіть за кодом, який ми надішлемо на цю адресу; пароль не потрібен. На сторінці облікового запису ви побачите наступні кроки."
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.footer"
+msgstr "Ви отримали цей лист, бо хтось із dembrane створив обліковий запис для {org_name} з цією адресою."
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.lead"
+msgstr "Введіть цей код, щоб продовжити:"
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.expires"
+msgstr "Код діє 10 хвилин."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.text_cta"
+msgstr "Запросити підвищення тарифу:"
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.text_cta"
+msgstr "Запросити підвищення тарифу:"
