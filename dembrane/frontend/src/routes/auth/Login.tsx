@@ -391,7 +391,7 @@ export const LoginRoute = () => {
 					)}
 
 					{codeMode ? (
-						<Stack gap="sm">
+						<Stack gap="md">
 							{error && <Alert color="red">{error}</Alert>}
 							{!codeSent ? (
 								<>
@@ -404,65 +404,52 @@ export const LoginRoute = () => {
 										onChange={(e) => setCodeEmail(e.currentTarget.value)}
 										{...testId("auth-login-code-email-input")}
 									/>
-									<Button
-										variant="filled"
-										size="md"
-										fullWidth
-										loading={codeSending}
-										disabled={!codeEmail.includes("@")}
-										onClick={requestCode}
-										{...testId("auth-login-code-send")}
-									>
-										<Trans>Email me a code</Trans>
-									</Button>
+									<div style={{ marginTop: 8 }}>
+										<Button
+											variant="filled"
+											size="md"
+											fullWidth
+											loading={codeSending}
+											disabled={!codeEmail.includes("@")}
+											onClick={requestCode}
+											{...testId("auth-login-code-send")}
+										>
+											<Trans>Email me a code</Trans>
+										</Button>
+									</div>
 								</>
 							) : (
-								<Stack gap="xs">
-									<Text size="sm">
-										<Trans>We sent a six-digit code to {codeEmail}.</Trans>
-									</Text>
-									<PinInput
-										length={6}
-										type="number"
-										size="md"
-										oneTimeCode
-										inputMode="numeric"
-										value={code}
-										onChange={setCode}
-										onComplete={submitCode}
-										{...testId("auth-login-code-input")}
-									/>
-									<Button
-										variant="filled"
-										size="md"
-										fullWidth
-										loading={loginMutation.isPending}
-										disabled={code.length < 6}
-										onClick={() => submitCode(code)}
-									>
-										<Trans>Log in</Trans>
-									</Button>
-									<Button
-										variant="subtle"
-										color="gray"
-										onClick={requestCode}
-										className="self-start"
-									>
-										<Trans>Send a new code</Trans>
-									</Button>
-								</Stack>
+								<>
+									<Stack gap="xs">
+										<Text size="sm">
+											<Trans>We sent a six-digit code to {codeEmail}.</Trans>
+										</Text>
+										<PinInput
+											length={6}
+											type="number"
+											size="md"
+											oneTimeCode
+											inputMode="numeric"
+											value={code}
+											onChange={setCode}
+											onComplete={submitCode}
+											{...testId("auth-login-code-input")}
+										/>
+									</Stack>
+									<div style={{ marginTop: 8 }}>
+										<Button
+											variant="filled"
+											size="md"
+											fullWidth
+											loading={loginMutation.isPending}
+											disabled={code.length < 6}
+											onClick={() => submitCode(code)}
+										>
+											<Trans>Log in</Trans>
+										</Button>
+									</div>
+								</>
 							)}
-							<Button
-								variant="subtle"
-								color="gray"
-								className="self-start"
-								onClick={() => {
-									setCodeMode(false);
-									setError("");
-								}}
-							>
-								<Trans>Use my password instead</Trans>
-							</Button>
 						</Stack>
 					) : (
 						<form onSubmit={onSubmit}>
@@ -564,35 +551,55 @@ export const LoginRoute = () => {
 							</Stack>
 						</form>
 					)}
-					{/* Tertiary ways in, centred under Log in. "Forgot your password?"
-					    appears only after a wrong password. */}
-					{!codeMode && !otpRequired && (
+					{/* Tertiary ways in, centred under the primary button. "Forgot your
+					    password?" appears only after a wrong password. */}
+					{codeMode ? (
 						<Stack gap="xs" align="center">
+							{codeSent && (
+								<Button variant="subtle" color="gray" onClick={requestCode}>
+									<Trans>Send a new code</Trans>
+								</Button>
+							)}
 							<Button
 								variant="subtle"
 								color="gray"
 								onClick={() => {
-									setCodeEmail(getValues("email") || lockedEmail || "");
-									setCodeMode(true);
-									setCodeSent(false);
+									setCodeMode(false);
 									setError("");
 								}}
-								{...testId("auth-login-code-mode")}
 							>
-								<Trans>Email me a sign-in code instead</Trans>
+								<Trans>Use my password instead</Trans>
 							</Button>
-							{passwordFailed && (
+						</Stack>
+					) : (
+						!otpRequired && (
+							<Stack gap="xs" align="center">
 								<Button
 									variant="subtle"
 									color="gray"
-									component={I18nLink}
-									to="/request-password-reset"
-									{...testId("auth-login-forgot-password-link")}
+									onClick={() => {
+										setCodeEmail(getValues("email") || lockedEmail || "");
+										setCodeMode(true);
+										setCodeSent(false);
+										setError("");
+									}}
+									{...testId("auth-login-code-mode")}
 								>
-									<Trans>Forgot your password?</Trans>
+									<Trans>Email me a sign-in code instead</Trans>
 								</Button>
-							)}
-						</Stack>
+								{passwordFailed && (
+									<Button
+										variant="subtle"
+										color="gray"
+										component={I18nLink}
+										to="/request-password-reset"
+										{...testId("auth-login-forgot-password-link")}
+									>
+										<Trans>Forgot your password?</Trans>
+									</Button>
+								)}
+							</Stack>
+						)
 					)}
 
 					<Divider variant="dashed" label={t`or`} labelPosition="center" />

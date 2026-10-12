@@ -222,7 +222,7 @@ msgstr "(geen)"
 msgid "(optional)"
 msgstr "(optioneel)"
 
-#: src/components/language/LanguagePicker.tsx:142
+#: src/components/language/LanguagePicker.tsx:144
 msgid "(Partial)"
 msgstr "(Gedeeltelijk)"
 
@@ -2623,7 +2623,7 @@ msgstr "Auditlogboeken geëxporteerd naar CSV"
 msgid "Audit logs exported to JSON"
 msgstr "Auditlogboeken geëxporteerd naar JSON"
 
-#: src/routes/auth/Login.tsx:479
+#: src/routes/auth/Login.tsx:466
 #: src/components/settings/TwoFactorSettingsCard.tsx:224
 #: src/components/settings/TwoFactorSettingsCard.tsx:349
 msgid "Authenticator code"
@@ -3202,7 +3202,7 @@ msgstr "Toch wijzigen"
 msgid "Change in workspace settings"
 msgstr "Wijzigen in werkruimte-instellingen"
 
-#: src/components/language/LanguagePicker.tsx:154
+#: src/components/language/LanguagePicker.tsx:156
 msgid "Change language"
 msgstr "Taal wijzigen"
 
@@ -3288,7 +3288,7 @@ msgstr "Wijzigingen verschijnen op het zaalscherm terwijl je ze maakt."
 #~ msgid "Changes will be saved automatically"
 #~ msgstr "Wijzigingen worden automatisch opgeslagen"
 
-#: src/components/language/LanguagePicker.tsx:156
+#: src/components/language/LanguagePicker.tsx:158
 msgid "Changing language during an active chat may lead to unexpected results. It's recommended to start a new chat after changing the language. Are you sure you want to continue?"
 msgstr "Wijziging van de taal tijdens een actief gesprek kan onverwachte resultaten opleveren. Het wordt aanbevolen om een nieuw gesprek te starten na het wijzigen van de taal. Weet je zeker dat je wilt doorgaan?"
 
@@ -3963,7 +3963,7 @@ msgstr "Contextuele suggesties"
 #: src/routes/auth/Register.tsx:207
 #: src/components/pricing/PricingConfigurator.tsx:844
 #: src/components/organisation/CreateOrganisationModal.tsx:210
-#: src/components/language/LanguagePicker.tsx:157
+#: src/components/language/LanguagePicker.tsx:159
 #: src/components/invite/InviteModal.tsx:787
 #: src/components/billing/BillingManager.tsx:1469
 msgid "Continue"
@@ -4543,7 +4543,7 @@ msgid "Create account"
 msgstr "Account aanmaken"
 
 #: src/routes/auth/Register.tsx:129
-#: src/routes/auth/Login.tsx:607
+#: src/routes/auth/Login.tsx:614
 msgid "Create an account"
 msgstr "Maak een account aan"
 
@@ -5632,8 +5632,8 @@ msgstr "Onderdeel van de editor"
 #: src/routes/auth/RequestPasswordReset.tsx:51
 #: src/routes/auth/RequestPasswordReset.tsx:54
 #: src/routes/auth/Login.tsx:399
-#: src/routes/auth/Login.tsx:516
-#: src/routes/auth/Login.tsx:520
+#: src/routes/auth/Login.tsx:503
+#: src/routes/auth/Login.tsx:507
 #: src/components/settings/AccountSettingsCard.tsx:182
 #: src/components/participant/ParticipantShareModal.tsx:135
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:351
@@ -5650,11 +5650,11 @@ msgstr "E-mail {name}"
 msgid "Email address"
 msgstr "E-mailadres"
 
-#: src/routes/auth/Login.tsx:416
+#: src/routes/auth/Login.tsx:417
 msgid "Email me a code"
 msgstr "Mail me een code"
 
-#: src/routes/auth/Login.tsx:582
+#: src/routes/auth/Login.tsx:588
 msgid "Email me a sign-in code instead"
 msgstr "Mail me liever een inlogcode"
 
@@ -6640,7 +6640,7 @@ msgstr "Prognose"
 msgid "Forgetting a saved memory"
 msgstr "Een opgeslagen herinnering vergeten"
 
-#: src/routes/auth/Login.tsx:592
+#: src/routes/auth/Login.tsx:598
 msgid "Forgot your password?"
 msgstr "Wachtwoord vergeten?"
 
@@ -8458,8 +8458,8 @@ msgstr "Vergrendeld om bij de uitnodiging te passen. Wil je een ander adres gebr
 
 #: src/routes/invite/AcceptInviteRoute.tsx:285
 #: src/routes/auth/VerifyEmail.tsx:161
-#: src/routes/auth/Login.tsx:443
-#: src/routes/auth/Login.tsx:560
+#: src/routes/auth/Login.tsx:448
+#: src/routes/auth/Login.tsx:547
 msgid "Log in"
 msgstr "Inloggen"
 
@@ -10358,7 +10358,7 @@ msgstr "Werkruimte openen"
 msgid "Open workspace actions"
 msgstr "Werkruimteacties openen"
 
-#: src/routes/auth/Login.tsx:507
+#: src/routes/auth/Login.tsx:494
 msgid "Open your authenticator app and enter the current six-digit code."
 msgstr "Open je authenticator-app en voer de huidige zescijferige code in."
 
@@ -10410,7 +10410,7 @@ msgid "Options"
 msgstr "Opties"
 
 #: src/routes/auth/Register.tsx:292
-#: src/routes/auth/Login.tsx:598
+#: src/routes/auth/Login.tsx:605
 msgid "or"
 msgstr "of"
 
@@ -10744,8 +10744,8 @@ msgid "Partner workspace, billed separately from the organisation."
 msgstr "Partnerwerkruimte, apart gefactureerd van de organisatie."
 
 #: src/routes/auth/Register.tsx:217
-#: src/routes/auth/Login.tsx:530
-#: src/routes/auth/Login.tsx:534
+#: src/routes/auth/Login.tsx:517
+#: src/routes/auth/Login.tsx:521
 msgid "Password"
 msgstr "Wachtwoord"
 
@@ -13583,7 +13583,7 @@ msgstr "Verzenden"
 msgid "Send {0} invites"
 msgstr "{0} uitnodigingen versturen"
 
-#: src/routes/auth/Login.tsx:451
+#: src/routes/auth/Login.tsx:560
 msgid "Send a new code"
 msgstr "Stuur een nieuwe code"
 
@@ -16954,7 +16954,7 @@ msgstr "Gebruik Italiaans voor chat, rapporten, transcriptie en introductiekaart
 msgid "Use latest results"
 msgstr "Nieuwste resultaten gebruiken"
 
-#: src/routes/auth/Login.tsx:464
+#: src/routes/auth/Login.tsx:571
 msgid "Use my password instead"
 msgstr "Liever met mijn wachtwoord"
 
@@ -17112,7 +17112,7 @@ msgstr "Verifiëren"
 msgid "participant.echo.verify"
 msgstr "Verifiëren"
 
-#: src/routes/auth/Login.tsx:558
+#: src/routes/auth/Login.tsx:545
 msgid "Verify code"
 msgstr "Code controleren"
 
@@ -17373,7 +17373,7 @@ msgstr "We hebben een nieuwe verificatielink verstuurd."
 msgid "We sent a new verification link. You can send another in {wait} seconds."
 msgstr "We hebben een nieuwe verificatielink verstuurd. Je kunt over {wait} seconden weer een nieuwe sturen."
 
-#: src/routes/auth/Login.tsx:422
+#: src/routes/auth/Login.tsx:425
 msgid "We sent a six-digit code to {codeEmail}."
 msgstr "We hebben een code van zes cijfers gestuurd naar {codeEmail}."
 
