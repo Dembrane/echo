@@ -127,7 +127,7 @@ export const flows: Record<string, Flow> = {
 	"/o": {},
 	"/o/:organisationId/*": {
 		params: {
-			"*": ["overview", "usage", "billing", "training", "agents", "members"],
+			"*": ["overview", "usage", "billing", "agents", "members"],
 			organisationId: "$org",
 		},
 	},
