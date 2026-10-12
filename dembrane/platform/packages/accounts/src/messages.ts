@@ -13,11 +13,11 @@ import { taskBody, taskTitle } from "./task-text";
 import { WAITING_ON_CUSTOMER } from "./tasks";
 
 /**
- * The messages sam writes to the people who run an account: an invoice issued, a document
- * withdrawn, a check-in on a task that waits on them. sam decides when; echo reads the
- * facts from its own tables, words them in each recipient's language and draws them in
- * the email frame, so every message looks and reads like the rest of dembrane. Signed by
- * the account's manager, replies reaching them.
+ * The messages sam writes to the people who run an account: a document withdrawn, a
+ * check-in on a task that waits on them. sam decides when; echo reads the facts from its
+ * own tables, words them in each recipient's language and draws them in the email frame,
+ * so every message looks and reads like the rest of dembrane. Signed by the account's
+ * manager, replies reaching them. Invoices are not among them: Exact sends those.
  */
 export async function sendMessage(
   d: AccountsDeps,
@@ -55,23 +55,9 @@ export async function sendMessage(
     const doc = m.document_id ? await store.document(d.db, org.id, m.document_id) : null;
     if (!doc) throw new NotFoundError("document.not_found");
     subjectId = { type: "document", id: doc.id };
-    if (m.kind === "invoice_issued") {
-      if (doc.kind !== "invoice") throw new ConflictError("document.not_an_invoice");
-      const data = {
-        ...base,
-        ...(doc.reference && { reference: doc.reference }),
-        ...(doc.totalCents != null &&
-          doc.currency && { total_cents: String(doc.totalCents), currency: doc.currency }),
-        ...(doc.issuedOn && { issued_on: doc.issuedOn }),
-        ...(doc.dueOn && { due_on: doc.dueOn }),
-        ...(doc.paymentUrl && { pay_url: doc.paymentUrl }),
-      };
-      build = () => ({ template: "account_invoice_issued", data });
-    } else {
-      if (doc.status !== "void") throw new ConflictError("document.not_withdrawn");
-      const data = { ...base, document_title: doc.title };
-      build = () => ({ template: "account_document_withdrawn", data });
-    }
+    if (doc.status !== "void") throw new ConflictError("document.not_withdrawn");
+    const data = { ...base, document_title: doc.title };
+    build = () => ({ template: "account_document_withdrawn", data });
   }
 
   const messages = recipients.map((r) => {
@@ -101,7 +87,7 @@ export async function sendMessage(
           context: `account message ${m.kind} ${subjectId.id}`,
           ...(manager && { replyTo: manager }),
         },
-        // One invoice or withdrawal reaches one person once; check-ins may repeat.
+        // One withdrawal reaches one person once; check-ins may repeat.
         m.kind === "task_reminder"
           ? { tx }
           : { tx, workflowId: `accounts.message:${m.kind}:${subjectId.id}:${r.appUserId}` },

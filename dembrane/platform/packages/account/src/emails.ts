@@ -46,7 +46,6 @@ export type EmailTemplate =
       readonly template: "account_offer_sent";
       readonly data: OfferSentData;
     }
-  | { readonly template: "account_invoice_issued"; readonly data: InvoiceIssuedData }
   | { readonly template: "account_document_withdrawn"; readonly data: DocumentWithdrawnData }
   | { readonly template: "account_task_reminder"; readonly data: TaskReminderData }
   | {
@@ -92,17 +91,6 @@ interface SamMessageData {
   note?: string;
 }
 
-export interface InvoiceIssuedData extends SamMessageData {
-  reference?: string;
-  total_cents?: string;
-  currency?: string;
-  /** ISO dates. */
-  issued_on?: string;
-  due_on?: string;
-  /** The payment link (Mollie), when the invoice can be paid online. */
-  pay_url?: string;
-}
-
 export interface DocumentWithdrawnData extends SamMessageData {
   document_title: string;
 }
@@ -137,8 +125,6 @@ export function subjectOf(t: EmailTemplate, locale?: string | null): string | nu
       return tr("email.account_invite.subject", t.data);
     case "account_offer_sent":
       return tr("email.account_offer_sent.subject", { document_title: t.data.document_title });
-    case "account_invoice_issued":
-      return tr("email.account_invoice_issued.subject", { org_name: t.data.org_name });
     case "account_document_withdrawn":
       return tr("email.account_document_withdrawn.subject", {
         document_title: t.data.document_title,
@@ -398,7 +384,6 @@ export function render(t: EmailTemplate, locale?: string | null): { html: string
         ]),
       };
     }
-    case "account_invoice_issued":
     case "account_document_withdrawn":
     case "account_task_reminder":
       return samMessage(t, tr, lang, c);
@@ -444,12 +429,12 @@ export function render(t: EmailTemplate, locale?: string | null): { html: string
 type SamTemplate = Extract<
   EmailTemplate,
   {
-    template: "account_invoice_issued" | "account_document_withdrawn" | "account_task_reminder";
+    template: "account_document_withdrawn" | "account_task_reminder";
   }
 >;
 
 /**
- * The messages sam asks for (see SamMessageData): one shape for all three. The manager
+ * The messages sam asks for (see SamMessageData): one shape for both. The manager
  * signs and gets the replies; sam's own line, when it wrote one, follows the opening.
  */
 function samMessage(
@@ -467,37 +452,13 @@ function samMessage(
   let leadText = "";
   let block = "";
   let blockText: string | null = null;
-  let action = {
+  const action = {
     label: tr("email.common.cta_account"),
     text: tr("email.common.text_cta_account"),
     url: d.account_url,
   };
   let heading = tr(`${k}.heading`);
   switch (t.template) {
-    case "account_invoice_issued": {
-      const i = t.data;
-      const facts = [
-        { label: tr("email.facts.invoice"), value: i.reference ?? "" },
-        { label: tr("email.facts.issued"), value: i.issued_on ? e.day(i.issued_on, lang) : "" },
-        { label: tr("email.facts.due"), value: i.due_on ? e.day(i.due_on, lang) : "" },
-        {
-          label: tr("email.facts.total"),
-          value:
-            i.total_cents && i.currency ? e.money(Number(i.total_cents), i.currency, lang) : "",
-          strong: true,
-        },
-      ];
-      lead = tr(`${k}.body`, { org_name: esc(i.org_name) });
-      leadText = tr(`${k}.body`, { org_name: i.org_name });
-      block = e.facts(facts);
-      blockText = facts
-        .filter((f) => f.value)
-        .map((f) => `${f.label}: ${f.value}`)
-        .join("\n");
-      if (i.pay_url)
-        action = { label: tr(`${k}.cta_pay`), text: tr(`${k}.text_cta_pay`), url: i.pay_url };
-      break;
-    }
     case "account_document_withdrawn": {
       const w = t.data;
       heading = tr(`${k}.heading`, { document_title: w.document_title });

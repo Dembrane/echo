@@ -59,20 +59,6 @@ const previews: Record<string, Preview> = {
     template: "account_signer_invite",
     data: { ...offer, inviter_name: "Bram Jansen" },
   }),
-  account_invoice_issued: catalog({
-    template: "account_invoice_issued",
-    data: {
-      org_name: offer.org_name,
-      account_url: `${D}/o/1/account`,
-      reference: "2026-0430",
-      total_cents: "1210000",
-      currency: "EUR",
-      issued_on: "2026-10-01",
-      due_on: "2026-10-31",
-      pay_url: "https://www.mollie.com/checkout/xyz",
-      manager_name: "Anna de Vries",
-    },
-  }),
   account_document_withdrawn: catalog({
     template: "account_document_withdrawn",
     data: {
