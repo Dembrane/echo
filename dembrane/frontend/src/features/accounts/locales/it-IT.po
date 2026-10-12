@@ -2114,6 +2114,46 @@ msgstr "La tua firma perfeziona l'accordo."
 msgid "Your VAT number is empty."
 msgstr "La partita IVA è vuota."
 
+#: src/features/accounts/customer/InvoiceDelivery.tsx:91
+msgid "Checking the Peppol directory…"
+msgstr "Verifica della directory Peppol…"
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:137
+msgid "Invoices arrive in your accounting software via Peppol ({id})."
+msgstr "Le fatture arrivano nel tuo software di contabilità tramite Peppol ({id})."
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:144
+msgid "Invoices go by email to {email}, not via Peppol ({id})."
+msgstr "Le fatture vanno via email a {email}, non tramite Peppol ({id})."
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:148
+msgid "Invoices go by email, not via Peppol ({id})."
+msgstr "Le fatture vanno via email, non tramite Peppol ({id})."
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:141
+msgid "Invoices go via Peppol ({id})."
+msgstr "Le fatture vanno tramite Peppol ({id})."
+
+#: src/features/accounts/customer/BillingForm.tsx:113
+msgid "Invoices will come by email"
+msgstr "Le fatture arriveranno via email"
+
+#: src/features/accounts/customer/BillingForm.tsx:114
+msgid "Invoices will come via Peppol"
+msgstr "Le fatture arriveranno tramite Peppol"
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:104
+msgid "Not in the Peppol directory: invoices go by email."
+msgstr "Non presente nella directory Peppol: le fatture vanno via email."
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:159
+msgid "Send by email instead"
+msgstr "Invia invece via email"
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:99
+msgid "Your numbers are not in the Peppol directory. Invoices come by email, unless you give a Peppol ID below."
+msgstr "I tuoi numeri non sono nella directory Peppol. Le fatture arrivano via email, a meno che tu non indichi un ID Peppol qui sotto."
+
 #~ msgid "{0, plural, one {{1} of # step done} other {{2} of # steps done}}"
 #~ msgstr ""
 

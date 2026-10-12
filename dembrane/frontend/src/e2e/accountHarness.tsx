@@ -12,6 +12,7 @@ import {
 	AccountDocumentsRoute,
 	AccountTasksRoute,
 } from "@/features/accounts/customer/AccountRoute";
+import { AccountCardRoute } from "@/features/accounts/staff/AccountCardRoute";
 import { cssVariablesResolver, theme } from "@/theme";
 
 // The customer account pages (Tasks, Documents) on the fixture backend (VITE_ACCOUNTS_FIXTURES=1), outside
@@ -22,6 +23,14 @@ const queryClient = new QueryClient({
 const path =
 	new URLSearchParams(window.location.search).get("path") ??
 	"/en-US/o/5f1a2b3c-0d4e-4f60-8a71-92b3c4d5e6f7/tasks";
+// The staff card asks who is looking; the harness answers "staff".
+if (path.includes("/admin/")) {
+	queryClient.setQueryData(["v2", "me"], {
+		display_name: "Staff",
+		email: "staff@dembrane.com",
+		is_staff: true,
+	});
+}
 const router = createMemoryRouter(
 	[
 		{
@@ -32,6 +41,7 @@ const router = createMemoryRouter(
 			element: <AccountDocumentsRoute />,
 			path: "/:language/o/:organisationId/documents",
 		},
+		{ element: <AccountCardRoute />, path: "/:language/admin/accounts/:orgId" },
 	],
 	{ initialEntries: [path] },
 );

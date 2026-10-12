@@ -2114,6 +2114,46 @@ msgstr "Met je handtekening is de overeenkomst compleet."
 msgid "Your VAT number is empty."
 msgstr "Je btw-nummer is leeg."
 
+#: src/features/accounts/customer/InvoiceDelivery.tsx:91
+msgid "Checking the Peppol directory…"
+msgstr "De Peppol-directory wordt gecontroleerd…"
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:137
+msgid "Invoices arrive in your accounting software via Peppol ({id})."
+msgstr "Facturen komen via Peppol binnen in je boekhoudsoftware ({id})."
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:144
+msgid "Invoices go by email to {email}, not via Peppol ({id})."
+msgstr "Facturen gaan per e-mail naar {email}, niet via Peppol ({id})."
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:148
+msgid "Invoices go by email, not via Peppol ({id})."
+msgstr "Facturen gaan per e-mail, niet via Peppol ({id})."
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:141
+msgid "Invoices go via Peppol ({id})."
+msgstr "Facturen gaan via Peppol ({id})."
+
+#: src/features/accounts/customer/BillingForm.tsx:113
+msgid "Invoices will come by email"
+msgstr "Facturen komen voortaan per e-mail"
+
+#: src/features/accounts/customer/BillingForm.tsx:114
+msgid "Invoices will come via Peppol"
+msgstr "Facturen komen voortaan via Peppol"
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:104
+msgid "Not in the Peppol directory: invoices go by email."
+msgstr "Niet in de Peppol-directory: facturen gaan per e-mail."
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:159
+msgid "Send by email instead"
+msgstr "Liever per e-mail"
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:99
+msgid "Your numbers are not in the Peppol directory. Invoices come by email, unless you give a Peppol ID below."
+msgstr "Je nummers staan niet in de Peppol-directory. Facturen komen per e-mail, tenzij je hieronder een Peppol-ID invult."
+
 #~ msgid "{0, plural, one {{1} of # step done} other {{2} of # steps done}}"
 #~ msgstr ""
 

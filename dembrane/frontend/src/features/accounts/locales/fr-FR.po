@@ -2114,6 +2114,46 @@ msgstr "Votre signature valide l'accord."
 msgid "Your VAT number is empty."
 msgstr "Votre numéro de TVA est vide."
 
+#: src/features/accounts/customer/InvoiceDelivery.tsx:91
+msgid "Checking the Peppol directory…"
+msgstr "Vérification de l’annuaire Peppol…"
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:137
+msgid "Invoices arrive in your accounting software via Peppol ({id})."
+msgstr "Les factures arrivent dans votre logiciel comptable via Peppol ({id})."
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:144
+msgid "Invoices go by email to {email}, not via Peppol ({id})."
+msgstr "Les factures sont envoyées par e-mail à {email}, pas via Peppol ({id})."
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:148
+msgid "Invoices go by email, not via Peppol ({id})."
+msgstr "Les factures sont envoyées par e-mail, pas via Peppol ({id})."
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:141
+msgid "Invoices go via Peppol ({id})."
+msgstr "Les factures passent par Peppol ({id})."
+
+#: src/features/accounts/customer/BillingForm.tsx:113
+msgid "Invoices will come by email"
+msgstr "Les factures arriveront par e-mail"
+
+#: src/features/accounts/customer/BillingForm.tsx:114
+msgid "Invoices will come via Peppol"
+msgstr "Les factures arriveront via Peppol"
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:104
+msgid "Not in the Peppol directory: invoices go by email."
+msgstr "Absent de l’annuaire Peppol : les factures partent par e-mail."
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:159
+msgid "Send by email instead"
+msgstr "Envoyer plutôt par e-mail"
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:99
+msgid "Your numbers are not in the Peppol directory. Invoices come by email, unless you give a Peppol ID below."
+msgstr "Vos numéros ne figurent pas dans l’annuaire Peppol. Les factures arrivent par e-mail, sauf si vous indiquez un identifiant Peppol ci-dessous."
+
 #~ msgid "{0, plural, one {{1} of # step done} other {{2} of # steps done}}"
 #~ msgstr ""
 

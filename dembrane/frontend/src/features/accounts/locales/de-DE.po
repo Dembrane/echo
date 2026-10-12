@@ -2114,6 +2114,46 @@ msgstr "Mit Ihrer Unterschrift wird die Vereinbarung abgeschlossen."
 msgid "Your VAT number is empty."
 msgstr "Ihre USt-IdNr. ist leer."
 
+#: src/features/accounts/customer/InvoiceDelivery.tsx:91
+msgid "Checking the Peppol directory…"
+msgstr "Peppol-Verzeichnis wird geprüft…"
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:137
+msgid "Invoices arrive in your accounting software via Peppol ({id})."
+msgstr "Rechnungen kommen über Peppol in Ihrer Buchhaltungssoftware an ({id})."
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:144
+msgid "Invoices go by email to {email}, not via Peppol ({id})."
+msgstr "Rechnungen gehen per E-Mail an {email}, nicht über Peppol ({id})."
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:148
+msgid "Invoices go by email, not via Peppol ({id})."
+msgstr "Rechnungen gehen per E-Mail, nicht über Peppol ({id})."
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:141
+msgid "Invoices go via Peppol ({id})."
+msgstr "Rechnungen gehen über Peppol ({id})."
+
+#: src/features/accounts/customer/BillingForm.tsx:113
+msgid "Invoices will come by email"
+msgstr "Rechnungen kommen ab jetzt per E-Mail"
+
+#: src/features/accounts/customer/BillingForm.tsx:114
+msgid "Invoices will come via Peppol"
+msgstr "Rechnungen kommen ab jetzt über Peppol"
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:104
+msgid "Not in the Peppol directory: invoices go by email."
+msgstr "Nicht im Peppol-Verzeichnis: Rechnungen gehen per E-Mail."
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:159
+msgid "Send by email instead"
+msgstr "Stattdessen per E-Mail senden"
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:99
+msgid "Your numbers are not in the Peppol directory. Invoices come by email, unless you give a Peppol ID below."
+msgstr "Ihre Nummern stehen nicht im Peppol-Verzeichnis. Rechnungen kommen per E-Mail, es sei denn, Sie geben unten eine Peppol-ID an."
+
 #~ msgid "{0, plural, one {{1} of # step done} other {{2} of # steps done}}"
 #~ msgstr ""
 

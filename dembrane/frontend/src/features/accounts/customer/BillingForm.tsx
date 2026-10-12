@@ -16,18 +16,34 @@ import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { AccountsApiError } from "../api/client";
 import { useAccountsMutation } from "../api/hooks";
 import type { AccountPageT } from "../contract/contract.gen";
+import {
+	type Delivery,
+	deliveryFor,
+	InvoiceDelivery,
+	usePeppolLookup,
+} from "./InvoiceDelivery";
 import { PageSection } from "./PageSection";
 
 type Billing = AccountPageT["billing"];
-/** The typed fields; the Peppol match and the delivery choice are not text. */
-type Key = Exclude<keyof Billing, "peppol_match" | "invoice_delivery">;
+/** The fields typed into the form; delivery and the Peppol match are not text. */
+const FIELDS = [
+	"legal_name",
+	"billing_email",
+	"address_line1",
+	"address_line2",
+	"postal_code",
+	"city",
+	"country",
+	"vat_id",
+	"kvk_number",
+	"kbo_number",
+	"po_number",
+	"peppol_id",
+] as const;
+type Key = (typeof FIELDS)[number];
 
 const toForm = (b: Billing): Record<Key, string> =>
-	Object.fromEntries(
-		Object.entries(b)
-			.filter(([k]) => k !== "peppol_match" && k !== "invoice_delivery")
-			.map(([k, v]) => [k, v ?? ""]),
-	) as Record<Key, string>;
+	Object.fromEntries(FIELDS.map((k) => [k, b[k] ?? ""])) as Record<Key, string>;
 
 /** What an invoice cannot do without. */
 const REQUIRED: Key[] = [
@@ -59,7 +75,16 @@ export function BillingForm({
 }) {
 	const [form, setForm] = useState(() => toForm(billing));
 	const [missing, setMissing] = useState<Key[]>([]);
-	useEffect(() => setForm(toForm(billing)), [billing]);
+	const [chosen, setChosen] = useState(billing.invoice_delivery);
+	useEffect(() => {
+		setForm(toForm(billing));
+		setChosen(billing.invoice_delivery);
+	}, [billing]);
+	const lookup = usePeppolLookup(orgId, {
+		kbo_number: form.kbo_number,
+		kvk_number: form.kvk_number,
+		vat_id: form.vat_id,
+	});
 	const mutation = useAccountsMutation("updateBilling", { orgId });
 	const serverFields =
 		mutation.error instanceof AccountsApiError ? mutation.error.fields : {};
@@ -70,7 +95,26 @@ export function BillingForm({
 			? t`Fill this in.`
 			: undefined);
 	const saved = toForm(billing);
-	const dirty = Object.entries(saved).some(([k, v]) => form[k as Key] !== v);
+	const dirty =
+		Object.entries(saved).some(([k, v]) => form[k as Key] !== v) ||
+		(chosen ?? null) !== (billing.invoice_delivery ?? null);
+	const savedDelivery = deliveryFor(
+		billing.peppol_match,
+		billing.invoice_delivery,
+	);
+	// Opting out of Peppol from the summary saves at once: the details are complete.
+	const switchDelivery = (next: Delivery) =>
+		mutation.mutate(
+			{ body: { ...saved, invoice_delivery: next } },
+			{
+				onSuccess: () =>
+					toast.success(
+						next === "email"
+							? t`Invoices will come by email`
+							: t`Invoices will come via Peppol`,
+					),
+			},
+		);
 	const complete =
 		REQUIRED.every((k) => saved[k].trim()) &&
 		NUMBERS.some((k) => saved[k].trim());
@@ -107,7 +151,8 @@ export function BillingForm({
 		setMissing(gaps);
 		if (gaps.length) return;
 		mutation.mutate(
-			{ body: form },
+			// The choice only means something while the directory has them.
+			{ body: { ...form, invoice_delivery: lookup.match ? chosen : null } },
 			{
 				onSuccess: () => {
 					toast.success(t`Billing details saved`);
@@ -133,7 +178,16 @@ export function BillingForm({
 					</Anchor>
 				}
 			>
-				<BillingSummary billing={saved} />
+				<Stack gap="md" maw={640}>
+					<InvoiceDelivery
+						match={billing.peppol_match}
+						delivery={savedDelivery}
+						email={billing.billing_email}
+						onChange={switchDelivery}
+						disabled={mutation.isPending}
+					/>
+					<BillingSummary billing={saved} />
+				</Stack>
 			</PageSection>
 		);
 	}
@@ -205,13 +259,23 @@ export function BillingForm({
 							})}
 						</SimpleGrid>
 					</Stack>
+					<InvoiceDelivery
+						match={lookup.match}
+						delivery={deliveryFor(lookup.match, chosen)}
+						email={form.billing_email.trim() || null}
+						onChange={setChosen}
+						checking={lookup.checking}
+						checked={lookup.checked}
+					/>
 					<SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
 						{input("po_number", t`PO number`, {
 							description: t`If your finance team uses one`,
 						})}
-						{input("peppol_id", t`Peppol ID`, {
-							description: t`Only if you get invoices through Peppol`,
-						})}
+						{/* Found in the directory, the Peppol ID is known; else it can be given. */}
+						{!lookup.match &&
+							input("peppol_id", t`Peppol ID`, {
+								description: t`Only if you get invoices through Peppol`,
+							})}
 					</SimpleGrid>
 					<Group gap="sm">
 						<Button
@@ -259,7 +323,7 @@ function BillingSummary({ billing }: { billing: Record<Key, string> }) {
 	const rows: [string, string[]][] = [
 		[t`Organisation`, [billing.legal_name]],
 		[t`Address`, address],
-		[t`Invoices go to`, [billing.billing_email]],
+		[t`Invoice email`, [billing.billing_email]],
 		[t`VAT number`, [billing.vat_id]],
 		[t`KvK number`, [billing.kvk_number]],
 		[t`KBO number`, [billing.kbo_number]],
