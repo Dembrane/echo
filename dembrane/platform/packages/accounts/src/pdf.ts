@@ -187,15 +187,25 @@ class Writer {
       width?: number;
       color?: typeof INK;
       gap?: number;
+      /** Drawn at `markerX` on the first line: a clause number or a bullet. */
+      marker?: string;
+      markerX?: number;
     } = {},
   ) {
     const size = opts.size ?? 10;
     const font = opts.bold ? this.bold : this.regular;
     const x = opts.x ?? MARGIN;
     const width = opts.width ?? A4[0] - MARGIN - x;
+    let marker = opts.marker;
     for (const line of this.wrap(text, size, font, width)) {
       this.ensure(size * 1.4);
-      this.page.drawText(line, { x, y: this.y - size, size, font, color: opts.color ?? INK });
+      const y = this.y - size;
+      if (marker) {
+        const m = this.clean(marker);
+        this.page.drawText(m, { x: opts.markerX ?? MARGIN, y, size, font, color: MUTED });
+        marker = undefined;
+      }
+      this.page.drawText(line, { x, y, size, font, color: opts.color ?? INK });
       this.y -= size * 1.4;
     }
     this.y -= opts.gap ?? 0;
@@ -214,6 +224,44 @@ class Writer {
       color: MUTED,
     });
     this.y -= 10;
+  }
+
+  /** Columns of wrapped cells; the header row is muted and repeats on a new page. */
+  table(header: string[], rows: string[][], size = 8.5) {
+    const n = header.length;
+    const total = A4[0] - 2 * MARGIN;
+    const pad = 6;
+    const colW = total / n;
+    const lead = size * 1.35;
+    const drawRow = (cells: string[], color: typeof INK) => {
+      const wrapped = cells.map((c) => this.wrap(c, size, this.regular, colW - pad));
+      const h = Math.max(...wrapped.map((w) => w.length)) * lead + pad;
+      if (this.y - h < MARGIN) {
+        this.newPage();
+        if (color === INK) drawRow(header, MUTED);
+      }
+      wrapped.forEach((lines, i) => {
+        lines.forEach((line, j) => {
+          this.page.drawText(line, {
+            x: MARGIN + i * colW,
+            y: this.y - size - j * lead,
+            size,
+            font: this.regular,
+            color,
+          });
+        });
+      });
+      this.y -= h;
+      this.page.drawLine({
+        start: { x: MARGIN, y: this.y + pad / 2 },
+        end: { x: A4[0] - MARGIN, y: this.y + pad / 2 },
+        thickness: 0.5,
+        color: FIELD_LINE,
+      });
+    };
+    drawRow(header, MUTED);
+    for (const r of rows) drawRow(r, INK);
+    this.y -= 6;
   }
 
   /**
@@ -313,6 +361,97 @@ const SIGNING_BLOCK: Record<Language, { title: string; fields: AcceptanceField[]
   },
 };
 
+const CLAUSE_INDENT = 28;
+
+type LegalBlock =
+  | { kind: "heading"; level: 1 | 2; text: string }
+  | { kind: "subheading" | "paragraph" | "item" | "note"; text: string }
+  | { kind: "clause"; number: string; text: string }
+  | { kind: "table"; header: string[]; rows: string[][] };
+
+/** A short line with no closing punctuation: a heading or a table cell, never prose. */
+const isLabel = (l: string) =>
+  l.length <= 60 && /^[A-Z]/.test(l) && !/[.:;,]$/.test(l) && l.split(" ").length <= 8;
+
+/** "Data Subject: the person…": one entry of a list of definitions. */
+const isDefinition = (l: string) => /^[A-Z][^:.]{0,40}: \S/.test(l);
+
+/**
+ * The structure a legal text lost when it became plain lines: markdown headings, "Article 3."
+ * and "Annex I." headings, numbered clauses, the list after a line ending in ":", and a
+ * table (three or more labels in a row, then rows of that many cells; a tab-separated line
+ * is a row of cells). A cell that ran into a link ("(EU)https://…") is split back in two.
+ */
+export function legalBlocks(body: string): LegalBlock[] {
+  const lines = body
+    .split("\n")
+    .map((l) => l.trimEnd())
+    .filter((l) => l.trim() !== "");
+  const out: LegalBlock[] = [];
+  let listOpen = false;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i] as string;
+    const md = /^(#{1,3})\s+(.*)$/.exec(line);
+    if (md) {
+      out.push({ kind: "heading", level: md[1] === "#" ? 1 : 2, text: md[2] as string });
+      listOpen = false;
+      continue;
+    }
+    if (/^(Article \d+|Annex [IVX]+)\.\s/.test(line)) {
+      out.push({ kind: "heading", level: 2, text: line });
+      listOpen = false;
+      continue;
+    }
+    if (line.includes("\t")) {
+      const rows: string[][] = [];
+      while (i < lines.length && (lines[i] as string).includes("\t"))
+        rows.push((lines[i++] as string).split("\t").map((c) => c.trim()));
+      i--;
+      const [header, ...rest] = rows;
+      if (header) out.push({ kind: "table", header, rows: rest });
+      listOpen = false;
+      continue;
+    }
+    let labels = 0;
+    while (i + labels < lines.length && isLabel(lines[i + labels] as string)) labels++;
+    if (labels >= 3) {
+      const run: string[] = [];
+      let j = i;
+      for (; j < lines.length; j++) {
+        const l = lines[j] as string;
+        if (j >= i + labels && /^(Article \d+|Annex [IVX]+)\.\s|^#/.test(l)) break;
+        const link = /^(.*\S)(https?:\/\/\S+)$/.exec(l);
+        if (link) run.push(link[1] as string, link[2] as string);
+        else run.push(l);
+      }
+      // The header is as many labels as make the cells after it fill whole rows; a short
+      // cell ("Participants") can follow the header and look like one more label.
+      let n = 3;
+      while (n < labels && (run.length - n) % n !== 0) n++;
+      const header = run.slice(0, n);
+      const rows: string[][] = [];
+      for (let k = n; k + n <= run.length; k += n) rows.push(run.slice(k, k + n));
+      out.push({ kind: "table", header, rows });
+      i = j - 1;
+      listOpen = false;
+      continue;
+    }
+    const clause = /^(\d+\.\d+\.?)\s+(.*)$/.exec(line);
+    if (listOpen && !clause && !isLabel(line)) {
+      out.push({ kind: "item", text: line });
+      listOpen = /;$/.test(line) || isDefinition(line);
+      continue;
+    }
+    if (clause)
+      out.push({ kind: "clause", number: clause[1] as string, text: clause[2] as string });
+    else if (line.startsWith("* ")) out.push({ kind: "note", text: line });
+    else if (isLabel(line)) out.push({ kind: "subheading", text: line });
+    else out.push({ kind: "paragraph", text: line });
+    listOpen = /:$/.test(line);
+  }
+  return out;
+}
+
 /**
  * A text document (a DPA, a plan) as a PDF. With `signing`, a signing block follows the
  * text and its blanks are the document's fields.
@@ -324,20 +463,44 @@ export async function textPdf(
 ): Promise<RenderedPdf> {
   const w = await start();
   w.text(title, { bold: true, size: brand.type.print.display, gap: 14 });
-  for (const raw of body.split("\n")) {
-    const line = raw.trimEnd();
-    if (!line) {
-      w.space(6);
-      continue;
+  for (const block of legalBlocks(body)) {
+    switch (block.kind) {
+      case "heading":
+        w.space(w.y < A4[1] - MARGIN - 60 ? 12 : 0);
+        w.ensure(60);
+        w.text(block.text, {
+          bold: true,
+          size: block.level === 1 ? brand.type.print.title : brand.type.print.lead,
+          gap: 6,
+        });
+        break;
+      case "subheading":
+        w.space(6);
+        w.ensure(40);
+        w.text(block.text, { bold: true, size: 11, gap: 3 });
+        break;
+      case "clause":
+        w.text(block.text, { size: 9.5, x: MARGIN + CLAUSE_INDENT, marker: block.number, gap: 5 });
+        break;
+      case "item":
+        w.text(block.text, {
+          size: 9.5,
+          x: MARGIN + CLAUSE_INDENT + 12,
+          marker: "–",
+          markerX: MARGIN + CLAUSE_INDENT,
+          gap: 3,
+        });
+        break;
+      case "note":
+        w.text(block.text, { size: brand.type.print.caption, color: MUTED, gap: 5 });
+        break;
+      case "table":
+        w.space(2);
+        w.table(block.header, block.rows);
+        break;
+      default:
+        w.text(block.text, { size: 9.5, gap: 5 });
     }
-    const heading = /^(#{1,3})\s+(.*)$/.exec(line);
-    if (heading)
-      w.text(heading[2] as string, {
-        bold: heading[1] === "#",
-        size: heading[1] === "#" ? brand.type.print.title : brand.type.print.lead,
-        gap: 3,
-      });
-    else w.text(line, { size: 9.5, gap: 1.5 });
   }
   if (opts.signing) {
     const block = SIGNING_BLOCK[opts.language];
