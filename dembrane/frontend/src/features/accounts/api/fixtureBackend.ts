@@ -1651,6 +1651,39 @@ export async function handle(
 				);
 				return withUrls(d, sBase, "staff");
 			}
+			case "sendMessage": {
+				// The demo draws a plain English stand-in; the API renders echo's templates.
+				const subjectId = String(body.document_id ?? body.task_id ?? "");
+				const title =
+					body.kind === "task_reminder"
+						? (s.tasks.find((x) => x.id === subjectId)?.title ?? null)
+						: (s.docs.find((x) => x.id === subjectId)?.title ?? null);
+				if (!title) throw notFound();
+				const [subject, lead] =
+					body.kind === "task_reminder"
+						? [
+								`Still open: ${title}`,
+								`A step is still waiting for you: ${title}`,
+							]
+						: [`${title} has been withdrawn`, `We withdrew ${title}.`];
+				const note = typeof body.note === "string" ? body.note : null;
+				const text = [lead, note].filter(Boolean).join("\n\n");
+				const messages = s.members
+					.filter((m) => m.email)
+					.map((m) => ({
+						html: `<p>${text}</p>`,
+						language: "en",
+						subject,
+						text,
+						to: m.email as string,
+					}));
+				if (!body.dry_run)
+					event(s, "message.sent", "staff", {
+						id: subjectId,
+						type: body.kind === "task_reminder" ? "task" : "document",
+					});
+				return { messages, queued: body.dry_run ? 0 : messages.length };
+			}
 			case "upsertInvoice":
 				throw new AccountsApiError(501, "Invoices come from sam in the demo.");
 			case "createTask": {

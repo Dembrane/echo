@@ -36,6 +36,11 @@ msgstr "{0, plural, one {# champ} other {# champs}}"
 msgid "{0, plural, one {You have # thing to do in {name}} other {You have # things to do in {name}}}"
 msgstr "{0, plural, one {Vous avez # chose à faire chez {name}} other {Vous avez # choses à faire chez {name}}}"
 
+#. placeholder {0}: r.queued
+#: src/features/accounts/staff/EmailCustomerModal.tsx:128
+msgid "{0} emails sent"
+msgstr "{0} e-mails envoyés"
+
 #. placeholder {0}: formatMoney(net, "EUR", i18n.locale)
 #. placeholder {1}: formatMoney(net + vat, "EUR", i18n.locale)
 #: src/features/accounts/staff/PushOfferModal.tsx:232
@@ -95,15 +100,15 @@ msgstr "Une réponse textuelle"
 #~ msgid "Account | dembrane"
 #~ msgstr ""
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:722
+#: src/features/accounts/staff/AccountCardRoute.tsx:764
 msgid "Account created"
 msgstr "Compte créé"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:556
+#: src/features/accounts/staff/AccountCardRoute.tsx:598
 msgid "Account enabled"
 msgstr "Compte activé"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:740
+#: src/features/accounts/staff/AccountCardRoute.tsx:782
 msgid "Account manager asked to check in"
 msgstr "Responsable de compte invité à relancer"
 
@@ -113,11 +118,11 @@ msgstr "Nom du compte"
 
 #: src/features/accounts/staff/NewDemoRoute.tsx:124
 #: src/features/accounts/staff/DemoRoute.tsx:118
-#: src/features/accounts/staff/AccountCardRoute.tsx:113
+#: src/features/accounts/staff/AccountCardRoute.tsx:114
 msgid "Accounts"
 msgstr "Comptes"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:89
+#: src/features/accounts/staff/AccountCardRoute.tsx:90
 msgid "Accounts | dembrane"
 msgstr "Comptes | dembrane"
 
@@ -125,7 +130,7 @@ msgstr "Comptes | dembrane"
 msgid "Accounts could not be loaded."
 msgstr "Impossible de charger les comptes."
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:167
+#: src/features/accounts/staff/AccountCardRoute.tsx:169
 msgid "Actions"
 msgstr "Actions"
 
@@ -146,7 +151,7 @@ msgid "Add your signature first."
 msgstr "Ajoutez d'abord votre signature."
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:407
-#: src/features/accounts/staff/AccountCardRoute.tsx:699
+#: src/features/accounts/staff/AccountCardRoute.tsx:741
 #: src/features/accounts/customer/BillingForm.tsx:133
 msgid "Address"
 msgstr "Adresse"
@@ -159,7 +164,7 @@ msgstr "Complément d'adresse"
 msgid "All"
 msgstr "Tous"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:277
+#: src/features/accounts/staff/AccountCardRoute.tsx:292
 #: src/features/accounts/customer/DocumentsTable.tsx:102
 #: src/features/accounts/customer/DocumentsTable.tsx:265
 msgid "Amount"
@@ -169,7 +174,7 @@ msgstr "Montant"
 msgid "Answered"
 msgstr "Répondu"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:464
+#: src/features/accounts/staff/AccountCardRoute.tsx:485
 msgid "Approve"
 msgstr "Approuver"
 
@@ -202,7 +207,7 @@ msgid "Back to the account"
 msgstr "Retour au compte"
 
 #: src/features/accounts/format.ts:135
-#: src/features/accounts/staff/AccountCardRoute.tsx:708
+#: src/features/accounts/staff/AccountCardRoute.tsx:750
 #: src/features/accounts/customer/BillingForm.tsx:112
 msgid "Billing details"
 msgstr "Coordonnées de facturation"
@@ -211,7 +216,7 @@ msgstr "Coordonnées de facturation"
 msgid "Billing details saved"
 msgstr "Coordonnées de facturation enregistrées"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:724
+#: src/features/accounts/staff/AccountCardRoute.tsx:766
 msgid "Billing details updated"
 msgstr "Coordonnées de facturation mises à jour"
 
@@ -253,14 +258,15 @@ msgstr "Puces"
 #~ msgid "by {due}"
 #~ msgstr ""
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:658
+#: src/features/accounts/staff/AccountCardRoute.tsx:700
 msgid "Call"
 msgstr "Appel"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:725
+#: src/features/accounts/staff/AccountCardRoute.tsx:767
 msgid "Call booked"
 msgstr "Appel réservé"
 
+#: src/features/accounts/staff/EmailCustomerModal.tsx:113
 #: src/features/accounts/customer/Questions.tsx:248
 msgid "Cancel"
 msgstr "Annuler"
@@ -283,7 +289,7 @@ msgid "Check out the demo we made for you"
 msgstr "Découvrez la démo que nous avons préparée pour vous"
 
 #. placeholder {0}: formatDate(task.next_reminder_at, i18n.locale)
-#: src/features/accounts/staff/AccountCardRoute.tsx:419
+#: src/features/accounts/staff/AccountCardRoute.tsx:440
 msgid "Check-in due {0}"
 msgstr "Relance prévue le {0}"
 
@@ -369,7 +375,7 @@ msgid "Custom"
 msgstr "Sur mesure"
 
 #: src/features/accounts/format.ts:107
-#: src/features/accounts/staff/AccountCardRoute.tsx:777
+#: src/features/accounts/staff/AccountCardRoute.tsx:819
 #: src/features/accounts/customer/Questions.tsx:169
 msgid "Customer"
 msgstr "Client"
@@ -395,7 +401,7 @@ msgid "Declined"
 msgstr "Refusé"
 
 #: src/features/accounts/staff/DemoRoute.tsx:80
-#: src/features/accounts/staff/AccountCardRoute.tsx:666
+#: src/features/accounts/staff/AccountCardRoute.tsx:708
 msgid "Demo"
 msgstr "Démo"
 
@@ -407,7 +413,7 @@ msgstr "Démo | dembrane"
 msgid "Demo language"
 msgstr "Langue de la démo"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:726
+#: src/features/accounts/staff/AccountCardRoute.tsx:768
 msgid "Demo seeded"
 msgstr "Démo initialisée"
 
@@ -421,36 +427,36 @@ msgstr "Description"
 
 #: src/features/accounts/format.ts:46
 #: src/features/accounts/staff/UploadPdfModal.tsx:138
-#: src/features/accounts/staff/AccountCardRoute.tsx:271
+#: src/features/accounts/staff/AccountCardRoute.tsx:286
 #: src/features/accounts/customer/DocumentsTable.tsx:96
 msgid "Document"
 msgstr "Document"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:727
+#: src/features/accounts/staff/AccountCardRoute.tsx:769
 msgid "Document declined"
 msgstr "Document refusé"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:728
+#: src/features/accounts/staff/AccountCardRoute.tsx:770
 msgid "Document drafted"
 msgstr "Document rédigé"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:729
+#: src/features/accounts/staff/AccountCardRoute.tsx:771
 msgid "Document sent"
 msgstr "Document envoyé"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:730
+#: src/features/accounts/staff/AccountCardRoute.tsx:772
 msgid "Document signed"
 msgstr "Document signé"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:734
+#: src/features/accounts/staff/AccountCardRoute.tsx:776
 msgid "Document viewed"
 msgstr "Document consulté"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:735
+#: src/features/accounts/staff/AccountCardRoute.tsx:777
 msgid "Document withdrawn"
 msgstr "Document retiré"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:238
+#: src/features/accounts/staff/AccountCardRoute.tsx:253
 #: src/features/accounts/customer/DocumentsTable.tsx:40
 msgid "Documents"
 msgstr "Documents"
@@ -466,11 +472,11 @@ msgstr "DPA"
 
 #: src/features/accounts/format.ts:61
 #: src/features/accounts/staff/FieldEditorRoute.tsx:268
-#: src/features/accounts/staff/AccountCardRoute.tsx:321
+#: src/features/accounts/staff/AccountCardRoute.tsx:336
 msgid "Draft"
 msgstr "Brouillon"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:733
+#: src/features/accounts/staff/AccountCardRoute.tsx:775
 msgid "Draft changed"
 msgstr "Brouillon modifié"
 
@@ -503,16 +509,25 @@ msgstr "Dessinez votre signature"
 msgid "Due"
 msgstr "Échéance"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:657
+#: src/features/accounts/staff/AccountCardRoute.tsx:699
 #: src/features/accounts/signing/SignRoute.tsx:873
 msgid "Email"
 msgstr "E-mail"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:561
+#: src/features/accounts/staff/EmailCustomerModal.tsx:127
+msgid "Email sent"
+msgstr "E-mail envoyé"
+
+#: src/features/accounts/staff/EmailCustomerModal.tsx:75
+#: src/features/accounts/staff/AccountCardRoute.tsx:244
+msgid "Email the customer"
+msgstr "Écrire au client"
+
+#: src/features/accounts/staff/AccountCardRoute.tsx:603
 msgid "Enable account"
 msgstr "Activer le compte"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:518
+#: src/features/accounts/staff/AccountCardRoute.tsx:560
 msgid "Enable it to push offers and tasks. They get an Account page with a billing details step."
 msgstr "Activez-le pour envoyer des offres et des tâches. Une page Compte avec une étape pour les informations de facturation leur sera attribuée."
 
@@ -622,12 +637,12 @@ msgstr "Facture"
 msgid "Invoice {0}"
 msgstr "Facture {0}"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:698
+#: src/features/accounts/staff/AccountCardRoute.tsx:740
 #: src/features/accounts/customer/BillingForm.tsx:127
 msgid "Invoice email"
 msgstr "E-mail de facturation"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:702
+#: src/features/accounts/staff/AccountCardRoute.tsx:744
 msgid "KBO number"
 msgstr "Numéro KBO"
 
@@ -640,7 +655,7 @@ msgstr "Numéro KBO (Belgique)"
 msgid "Kind"
 msgstr "Type"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:701
+#: src/features/accounts/staff/AccountCardRoute.tsx:743
 msgid "KvK number"
 msgstr "Numéro KvK"
 
@@ -654,7 +669,7 @@ msgstr "Libellé"
 
 #: src/features/accounts/staff/UploadPdfModal.tsx:145
 #: src/features/accounts/staff/PushOfferModal.tsx:190
-#: src/features/accounts/staff/AccountCardRoute.tsx:540
+#: src/features/accounts/staff/AccountCardRoute.tsx:582
 msgid "Language"
 msgstr "Langue"
 
@@ -662,7 +677,7 @@ msgstr "Langue"
 msgid "Later"
 msgstr "Plus tard"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:697
+#: src/features/accounts/staff/AccountCardRoute.tsx:739
 msgid "Legal name"
 msgstr "Nom légal"
 
@@ -711,7 +726,7 @@ msgstr "Nom dans la formule de salutation"
 msgid "Needs a signature"
 msgstr "Nécessite une signature"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:646
+#: src/features/accounts/staff/AccountCardRoute.tsx:688
 msgid "Needs form and demo"
 msgstr "Formulaire des besoins et démo requis"
 
@@ -733,7 +748,7 @@ msgid "New project"
 msgstr "Nouveau projet"
 
 #: src/features/accounts/staff/TaskModals.tsx:41
-#: src/features/accounts/staff/AccountCardRoute.tsx:380
+#: src/features/accounts/staff/AccountCardRoute.tsx:401
 msgid "New task"
 msgstr "Nouvelle tâche"
 
@@ -771,7 +786,7 @@ msgstr "Aucun compte"
 #~ msgid "No accounts in this stage."
 #~ msgstr ""
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:264
+#: src/features/accounts/staff/AccountCardRoute.tsx:279
 #: src/features/accounts/customer/DocumentsTable.tsx:43
 msgid "No documents yet."
 msgstr "Aucun document pour l'instant."
@@ -781,7 +796,7 @@ msgstr "Aucun document pour l'instant."
 msgid "No file chosen"
 msgstr "Aucun fichier choisi"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:649
+#: src/features/accounts/staff/AccountCardRoute.tsx:691
 msgid "No needs form or demo linked."
 msgstr "Aucun formulaire des besoins ou démo associé."
 
@@ -797,7 +812,7 @@ msgstr "Aucune question pour l'instant."
 #~ msgid "No stage"
 #~ msgstr ""
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:387
+#: src/features/accounts/staff/AccountCardRoute.tsx:408
 msgid "No tasks."
 msgstr "Aucune tâche."
 
@@ -805,11 +820,15 @@ msgstr "Aucune tâche."
 msgid "No, someone else signs it"
 msgstr "Non, quelqu'un d'autre signe"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:658
+#: src/features/accounts/staff/EmailCustomerModal.tsx:94
+msgid "Nobody on this account has an email address yet."
+msgstr "Personne sur ce compte n'a encore d'adresse e-mail."
+
+#: src/features/accounts/staff/AccountCardRoute.tsx:700
 msgid "Not booked"
 msgstr "Non réservé"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:711
+#: src/features/accounts/staff/AccountCardRoute.tsx:753
 msgid "Not given yet."
 msgstr "Pas encore indiqué."
 
@@ -817,7 +836,7 @@ msgstr "Pas encore indiqué."
 msgid "not live until you publish"
 msgstr "pas en ligne tant que vous n'avez pas publié"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:310
+#: src/features/accounts/staff/AccountCardRoute.tsx:325
 msgid "Not sent"
 msgstr "Non envoyé"
 
@@ -844,11 +863,11 @@ msgstr "Langue de l'offre"
 msgid "Offer sent. The customer sees it the next time they sign in."
 msgstr "Offre envoyée. Le client la verra lors de sa prochaine connexion."
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:737
+#: src/features/accounts/staff/AccountCardRoute.tsx:779
 msgid "Onboarding tasks added"
 msgstr "Tâches d'accueil ajoutées"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:738
+#: src/features/accounts/staff/AccountCardRoute.tsx:780
 msgid "Onboarding tasks withdrawn"
 msgstr "Tâches d'accueil retirées"
 
@@ -873,12 +892,12 @@ msgstr "Seuls les administrateurs et les contacts de facturation de l'organisati
 msgid "Open"
 msgstr "Ouvert"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:209
+#: src/features/accounts/staff/AccountCardRoute.tsx:211
 msgid "Open PDF"
 msgstr "Ouvrir le PDF"
 
 #: src/features/accounts/staff/DocumentRoute.tsx:182
-#: src/features/accounts/staff/AccountCardRoute.tsx:214
+#: src/features/accounts/staff/AccountCardRoute.tsx:216
 msgid "Open signed PDF"
 msgstr "Ouvrir le PDF signé"
 
@@ -983,7 +1002,7 @@ msgstr "Payer en ligne"
 msgid "Payment details"
 msgstr "Détails du paiement"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:704
+#: src/features/accounts/staff/AccountCardRoute.tsx:746
 #: src/features/accounts/customer/BillingForm.tsx:182
 msgid "Peppol ID"
 msgstr "Identifiant Peppol"
@@ -993,12 +1012,12 @@ msgid "Pick a time. {host} reads your account before the call."
 msgstr "Choisissez un créneau. {host} prend connaissance de votre compte avant l'appel."
 
 #: src/features/accounts/staff/DocumentRoute.tsx:174
-#: src/features/accounts/staff/AccountCardRoute.tsx:189
+#: src/features/accounts/staff/AccountCardRoute.tsx:191
 msgid "Place fields"
 msgstr "Placer les champs"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:409
-#: src/features/accounts/staff/AccountCardRoute.tsx:703
+#: src/features/accounts/staff/AccountCardRoute.tsx:745
 #: src/features/accounts/customer/BillingForm.tsx:179
 msgid "PO number"
 msgstr "Numéro de bon de commande"
@@ -1073,7 +1092,7 @@ msgstr "La publication leur envoie l'invitation à se connecter. Désactivé : a
 msgid "Push an offer"
 msgstr "Envoyer une offre"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:256
+#: src/features/accounts/staff/AccountCardRoute.tsx:271
 msgid "Push offer"
 msgstr "Envoyer l'offre"
 
@@ -1081,7 +1100,7 @@ msgstr "Envoyer l'offre"
 msgid "Quantity"
 msgstr "Quantité"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:746
+#: src/features/accounts/staff/AccountCardRoute.tsx:788
 msgid "Question opened"
 msgstr "Question ouverte"
 
@@ -1099,7 +1118,7 @@ msgstr "Lisez l'offre et signez-la ici. Quelqu'un d'autre signe pour votre organ
 msgid "Reads \"{0} x dembrane\""
 msgstr "Affiche « {0} x dembrane »"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:736
+#: src/features/accounts/staff/AccountCardRoute.tsx:778
 msgid "Ready to invoice"
 msgstr "Prêt à facturer"
 
@@ -1111,7 +1130,7 @@ msgstr "prêt à publier"
 #~ msgid "Record a test conversation"
 #~ msgstr "Enregistrez une conversation test"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:656
+#: src/features/accounts/staff/AccountCardRoute.tsx:698
 #: src/features/accounts/customer/DocumentsTable.tsx:270
 msgid "Reference"
 msgstr "Référence"
@@ -1123,6 +1142,10 @@ msgstr "Référence"
 #: src/features/accounts/customer/BillingForm.tsx:164
 msgid "Registration number: fill in at least one"
 msgstr "Numéro d'enregistrement : indiquez-en au moins un"
+
+#: src/features/accounts/staff/AccountCardRoute.tsx:502
+msgid "Remind"
+msgstr "Relancer"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:435
 msgid "Remove field"
@@ -1155,7 +1178,7 @@ msgstr "Recherche"
 msgid "Retry"
 msgstr "Réessayer"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:178
+#: src/features/accounts/staff/AccountCardRoute.tsx:180
 msgid "Review and send"
 msgstr "Relire et envoyer"
 
@@ -1221,7 +1244,8 @@ msgstr "Génération des données"
 msgid "Select a field to set its kind, label and whether it is required. Drag to move, pull the corner to resize."
 msgstr "Sélectionnez un champ pour définir son type, son libellé et s'il est obligatoire. Glissez pour déplacer, étirez le coin pour redimensionner."
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:204
+#: src/features/accounts/staff/EmailCustomerModal.tsx:136
+#: src/features/accounts/staff/AccountCardRoute.tsx:206
 #: src/features/accounts/customer/Questions.tsx:261
 #: src/features/accounts/customer/NextSteps.tsx:449
 msgid "Send"
@@ -1229,7 +1253,7 @@ msgstr "Envoyer"
 
 #: src/features/accounts/staff/TaskModals.tsx:135
 #: src/features/accounts/staff/TaskModals.tsx:167
-#: src/features/accounts/staff/AccountCardRoute.tsx:457
+#: src/features/accounts/staff/AccountCardRoute.tsx:478
 msgid "Send back"
 msgstr "Renvoyer"
 
@@ -1261,7 +1285,7 @@ msgstr "Envoyez-nous votre numéro de bon de commande"
 #: src/features/accounts/format.ts:62
 #: src/features/accounts/staff/UploadPdfModal.tsx:96
 #: src/features/accounts/staff/FieldEditorRoute.tsx:268
-#: src/features/accounts/staff/AccountCardRoute.tsx:199
+#: src/features/accounts/staff/AccountCardRoute.tsx:201
 msgid "Sent"
 msgstr "Envoyé"
 
@@ -1299,14 +1323,18 @@ msgid "Set up a project of your own for your first real session."
 msgstr "Configurez votre propre projet pour votre première vraie session."
 
 #: src/features/accounts/staff/DemoRoute.tsx:301
-#: src/features/accounts/staff/AccountCardRoute.tsx:791
+#: src/features/accounts/staff/AccountCardRoute.tsx:833
 msgid "Show all"
 msgstr "Tout afficher"
 
 #: src/features/accounts/staff/DemoRoute.tsx:302
-#: src/features/accounts/staff/AccountCardRoute.tsx:791
+#: src/features/accounts/staff/AccountCardRoute.tsx:833
 msgid "Show less"
 msgstr "Afficher moins"
+
+#: src/features/accounts/staff/EmailCustomerModal.tsx:83
+msgid "Shown as written, under the opening. Write it in the customer's language."
+msgstr "Affiché tel quel, sous l'introduction. Écrivez-le dans la langue du client."
 
 #: src/features/accounts/signing/SignRoute.tsx:519
 #: src/features/accounts/customer/DocumentsTable.tsx:197
@@ -1339,11 +1367,11 @@ msgstr "Signé"
 msgid "Signed {0}"
 msgstr "Signé le {0}"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:731
+#: src/features/accounts/staff/AccountCardRoute.tsx:773
 msgid "Signer named"
 msgstr "Signataire désigné"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:732
+#: src/features/accounts/staff/AccountCardRoute.tsx:774
 msgid "Signer replaced"
 msgstr "Signataire remplacé"
 
@@ -1373,19 +1401,19 @@ msgstr "Une autre personne signe"
 msgid "Someone who may agree to data processing for your organisation signs it."
 msgstr "Une personne autorisée à accepter le traitement des données pour votre organisation le signe."
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:779
+#: src/features/accounts/staff/AccountCardRoute.tsx:821
 msgid "Staff"
 msgstr "Équipe"
 
 #: src/features/accounts/staff/AccountsPanel.tsx:115
-#: src/features/accounts/staff/AccountCardRoute.tsx:527
-#: src/features/accounts/staff/AccountCardRoute.tsx:572
-#: src/features/accounts/staff/AccountCardRoute.tsx:574
+#: src/features/accounts/staff/AccountCardRoute.tsx:569
+#: src/features/accounts/staff/AccountCardRoute.tsx:614
+#: src/features/accounts/staff/AccountCardRoute.tsx:616
 msgid "Stage"
 msgstr "Étape"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:582
-#: src/features/accounts/staff/AccountCardRoute.tsx:723
+#: src/features/accounts/staff/AccountCardRoute.tsx:624
+#: src/features/accounts/staff/AccountCardRoute.tsx:765
 msgid "Stage set"
 msgstr "Étape définie"
 
@@ -1401,8 +1429,8 @@ msgstr "Commencer"
 #~ msgid "Start a project of your own and record a few minutes, with a colleague or on your own."
 #~ msgstr "Créez votre propre projet et enregistrez quelques minutes, avec un collègue ou seul."
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:274
-#: src/features/accounts/staff/AccountCardRoute.tsx:397
+#: src/features/accounts/staff/AccountCardRoute.tsx:289
+#: src/features/accounts/staff/AccountCardRoute.tsx:418
 #: src/features/accounts/customer/DocumentsTable.tsx:99
 msgid "Status"
 msgstr "Statut"
@@ -1411,7 +1439,7 @@ msgstr "Statut"
 msgid "Subject"
 msgstr "Objet"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:417
+#: src/features/accounts/staff/AccountCardRoute.tsx:438
 msgid "Submitted"
 msgstr "Envoyé"
 
@@ -1420,40 +1448,40 @@ msgstr "Envoyé"
 msgid "Subscription"
 msgstr "Abonnement"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:780
+#: src/features/accounts/staff/AccountCardRoute.tsx:822
 msgid "System"
 msgstr "Système"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:394
+#: src/features/accounts/staff/AccountCardRoute.tsx:415
 msgid "Task"
 msgstr "Tâche"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:739
+#: src/features/accounts/staff/AccountCardRoute.tsx:781
 msgid "Task approved"
 msgstr "Tâche approuvée"
 
 #: src/features/accounts/staff/TaskModals.tsx:100
-#: src/features/accounts/staff/AccountCardRoute.tsx:741
+#: src/features/accounts/staff/AccountCardRoute.tsx:783
 msgid "Task created"
 msgstr "Tâche créée"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:742
+#: src/features/accounts/staff/AccountCardRoute.tsx:784
 msgid "Task done"
 msgstr "Tâche terminée"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:743
+#: src/features/accounts/staff/AccountCardRoute.tsx:785
 msgid "Task sent back"
 msgstr "Tâche renvoyée"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:744
+#: src/features/accounts/staff/AccountCardRoute.tsx:786
 msgid "Task submitted"
 msgstr "Tâche soumise"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:745
+#: src/features/accounts/staff/AccountCardRoute.tsx:787
 msgid "Task withdrawn"
 msgstr "Tâche retirée"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:370
+#: src/features/accounts/staff/AccountCardRoute.tsx:391
 #: src/features/accounts/customer/AccountPickerRoute.tsx:44
 msgid "Tasks"
 msgstr "Tâches"
@@ -1520,11 +1548,11 @@ msgstr "Le fichier de ce document est manquant de notre côté, il ne peut donc 
 msgid "The signed copy is in your documents."
 msgstr "L'exemplaire signé se trouve dans vos documents."
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:96
+#: src/features/accounts/staff/AccountCardRoute.tsx:97
 msgid "This account could not be loaded."
 msgstr "Impossible de charger ce compte."
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:77
+#: src/features/accounts/staff/AccountCardRoute.tsx:78
 msgid "This area is for dembrane staff."
 msgstr "Cet espace est réservé à l'équipe dembrane."
 
@@ -1559,11 +1587,11 @@ msgstr "Ce document a été refusé. Posez-nous une question sur la page de votr
 msgid "This document was sent. Its fields are fixed; send a new version to change them."
 msgstr "Ce document a été envoyé. Ses champs sont verrouillés ; envoyez une nouvelle version pour les modifier."
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:515
+#: src/features/accounts/staff/AccountCardRoute.tsx:557
 msgid "This organisation has no account yet"
 msgstr "Cette organisation n'a pas encore de compte"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:760
+#: src/features/accounts/staff/AccountCardRoute.tsx:802
 msgid "Timeline"
 msgstr "Chronologie"
 
@@ -1592,6 +1620,11 @@ msgstr "Pour envoyer, ajoutez un champ signature."
 #: src/features/accounts/format.ts:64
 msgid "To sign"
 msgstr "À signer"
+
+#. placeholder {0}: preview.messages.map((m) => m.to).join(", ")
+#: src/features/accounts/staff/EmailCustomerModal.tsx:99
+msgid "To: {0}"
+msgstr "À : {0}"
 
 #: src/features/accounts/customer/DocumentsTable.tsx:247
 #~ msgid "Transfer {amount} to {0}, IBAN {1}, BIC {2}"
@@ -1631,7 +1664,7 @@ msgstr "Importer et placer les champs"
 msgid "Upload and send"
 msgstr "Importer et envoyer"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:249
+#: src/features/accounts/staff/AccountCardRoute.tsx:264
 msgid "Upload PDF"
 msgstr "Importer le PDF"
 
@@ -1654,7 +1687,7 @@ msgid "VAT %"
 msgstr "% VAT"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:408
-#: src/features/accounts/staff/AccountCardRoute.tsx:700
+#: src/features/accounts/staff/AccountCardRoute.tsx:742
 #: src/features/accounts/customer/BillingForm.tsx:167
 msgid "VAT number"
 msgstr "Numéro de VAT"
@@ -1731,14 +1764,14 @@ msgstr "À qui nous facturons : nom légal, adresse, numéro de VAT ou de KvK, e
 msgid "With dembrane"
 msgstr "Avec dembrane"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:229
-#: src/features/accounts/staff/AccountCardRoute.tsx:477
+#: src/features/accounts/staff/AccountCardRoute.tsx:231
+#: src/features/accounts/staff/AccountCardRoute.tsx:514
 msgid "Withdraw"
 msgstr "Retirer"
 
 #: src/features/accounts/format.ts:65
 #: src/features/accounts/format.ts:92
-#: src/features/accounts/staff/AccountCardRoute.tsx:225
+#: src/features/accounts/staff/AccountCardRoute.tsx:227
 msgid "Withdrawn"
 msgstr "Retiré"
 
@@ -1769,6 +1802,10 @@ msgstr "Vos initiales"
 #: src/features/accounts/signing/SignatureCapture.tsx:262
 msgid "Your name"
 msgstr "Votre nom"
+
+#: src/features/accounts/staff/EmailCustomerModal.tsx:82
+msgid "Your own line (optional)"
+msgstr "Votre propre ligne (facultatif)"
 
 #: src/features/accounts/customer/Questions.tsx:238
 msgid "Your question"

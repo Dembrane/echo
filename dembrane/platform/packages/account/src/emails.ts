@@ -79,23 +79,23 @@ export interface OfferSentData {
 }
 
 /**
- * What every message sam asks echo to send carries (POST .../messages): the account, where
- * its page is, who at dembrane signs, and an optional line of their own. sam decides when
- * to write; echo decides how it looks and words everything but `note`, which sam writes in
- * the recipient's language.
+ * What every message an account manager sends from the staff card carries (POST
+ * .../messages): the account, where its page is, who at dembrane signs, and an optional
+ * line of their own. The manager decides when to write; echo decides how it looks and
+ * words everything but `note`, which the manager writes in the recipient's language.
  */
-interface SamMessageData {
+interface ManagerMessageData {
   org_name: string;
   account_url: string;
   manager_name?: string;
   note?: string;
 }
 
-export interface DocumentWithdrawnData extends SamMessageData {
+export interface DocumentWithdrawnData extends ManagerMessageData {
   document_title: string;
 }
 
-export interface TaskReminderData extends SamMessageData {
+export interface TaskReminderData extends ManagerMessageData {
   /** The task's title and explanation, already worded in the recipient's language. */
   task_title: string;
   task_body?: string;
@@ -386,7 +386,7 @@ export function render(t: EmailTemplate, locale?: string | null): { html: string
     }
     case "account_document_withdrawn":
     case "account_task_reminder":
-      return samMessage(t, tr, lang, c);
+      return managerMessage(t, tr, lang, c);
     case "report_published": {
       // To participants who asked on the portal to hear when the report is published.
       const d = t.data;
@@ -426,7 +426,7 @@ export function render(t: EmailTemplate, locale?: string | null): { html: string
   }
 }
 
-type SamTemplate = Extract<
+type ManagerTemplate = Extract<
   EmailTemplate,
   {
     template: "account_document_withdrawn" | "account_task_reminder";
@@ -434,11 +434,11 @@ type SamTemplate = Extract<
 >;
 
 /**
- * The messages sam asks for (see SamMessageData): one shape for both. The manager
- * signs and gets the replies; sam's own line, when it wrote one, follows the opening.
+ * The messages a manager sends (see ManagerMessageData): one shape for both. The manager
+ * signs and gets the replies; their own line, when they wrote one, follows the opening.
  */
-function samMessage(
-  t: SamTemplate,
+function managerMessage(
+  t: ManagerTemplate,
   tr: Translate,
   lang: string,
   c: ReturnType<typeof common>,

@@ -7,13 +7,13 @@ import { accountsRoutes } from "../src/routes";
 import { store } from "../src/storage";
 import { admin, call, dropDatabase, type World, world } from "./helpers";
 
-// sam asks echo to write the people who run an account: a document withdrawn, a check-in
+// An account manager writes the people who run an account: a document withdrawn, a check-in
 // on a waiting task. echo reads the facts, words and draws the email in each person's
 // language, and queues one per person, replies going to the manager.
 const run = admin ? describe : describe.skip;
 const DB = `accounts_messages_${process.pid}`;
 
-run("messages sam asks echo to send", () => {
+run("messages an account manager sends", () => {
   setDefaultTimeout(60_000);
   let w: World;
   const S = (org = w.orgId) => `/api/v2/admin/accounts/${org}`;
