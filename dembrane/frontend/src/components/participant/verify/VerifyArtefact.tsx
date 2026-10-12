@@ -6,7 +6,6 @@ import {
 	Group,
 	Paper,
 	ScrollArea,
-	Skeleton,
 	Stack,
 	Text,
 } from "@mantine/core";
@@ -25,6 +24,7 @@ import { useCooldown } from "@/hooks/useCooldown";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { errorCode } from "@/lib/errors/read";
 import { testId } from "@/lib/testUtils";
+import { Logo } from "../../common/Logo";
 import { Markdown } from "../../common/Markdown";
 import { MarkdownWYSIWYG } from "../../form/MarkdownWYSIWYG/MarkdownWYSIWYG";
 import { useParticipantProjectById } from "../hooks";
@@ -303,15 +303,22 @@ export const VerifyArtefact = () => {
 			{...testId("portal-verify-artefact-container")}
 		>
 			<ScrollArea className="flex-grow">
-				<Paper p="xl" {...testId("portal-verify-artefact-content")}>
+				<Paper
+					p="xl"
+					withBorder={false}
+					{...testId("portal-verify-artefact-content")}
+				>
 					{isRevising ? (
 						<Stack
-							gap="md"
-							className="py-4"
+							gap="xl"
+							className="py-12"
 							{...testId("portal-verify-artefact-revising")}
 						>
-							<Stack gap="xs">
-								<Text size="md">
+							<div className="animate-spin self-start">
+								<Logo hideTitle hideEnvBadge alwaysDembrane h="48px" />
+							</div>
+							<Stack gap="sm">
+								<Text size="xl">
 									<Trans id="participant.regenerating.outcome">
 										Regenerating the outcome
 									</Trans>
@@ -322,9 +329,6 @@ export const VerifyArtefact = () => {
 									</Trans>
 								</Text>
 							</Stack>
-							<Skeleton height={16} />
-							<Skeleton height={16} />
-							<Skeleton height={16} width="70%" />
 						</Stack>
 					) : (
 						<Stack gap="md" className="py-4">
@@ -366,7 +370,7 @@ export const VerifyArtefact = () => {
 			<Group
 				gap="md"
 				bg="var(--app-background)"
-				className="w-full sticky bottom-[10%] p-4 mx-auto border-t"
+				className="w-full sticky bottom-[var(--portal-footer-height,0px)] p-4 mx-auto border-t"
 				style={{ borderColor: "var(--app-rule-color)" }}
 			>
 				{isEditing ? (

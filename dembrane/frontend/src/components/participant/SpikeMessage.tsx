@@ -1,4 +1,4 @@
-import { Group, Loader } from "@mantine/core";
+import { Group } from "@mantine/core";
 import clsx from "clsx";
 import { Logo } from "@/components/common/Logo";
 import SystemMessage from "./SystemMessage";
@@ -20,9 +20,7 @@ const SpikeMessage = ({
 				markdown={message.content_text ?? ""}
 				title={
 					<Group>
-						{loading ? (
-							<Loader size="sm" my="xs" />
-						) : (
+						<div className={loading ? "animate-spin" : ""}>
 							<Logo
 								className="min-w-[20px]"
 								hideTitle
@@ -31,7 +29,7 @@ const SpikeMessage = ({
 								h="20px"
 								my="xs"
 							/>
-						)}
+						</div>
 					</Group>
 				}
 				className={clsx("py-5 px-0 md:py-7", className)}
