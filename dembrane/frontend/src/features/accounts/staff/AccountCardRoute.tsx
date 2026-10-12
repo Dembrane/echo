@@ -37,6 +37,7 @@ import type {
 	DocumentSummaryT,
 	TaskT,
 } from "../contract/contract.gen";
+import { deliveryFor, InvoiceDelivery } from "../customer/InvoiceDelivery";
 import { Questions } from "../customer/Questions";
 import {
 	documentKindLabel,
@@ -684,6 +685,9 @@ function NeedsForm({ card }: { card: AccountCardT }) {
 
 function Billing({ card }: { card: AccountCardT }) {
 	const b = card.billing;
+	const update = useAccountsMutation("updateAccount", {
+		orgId: card.organisation.id,
+	});
 	const address = [
 		b.address_line1,
 		b.address_line2,
@@ -706,13 +710,26 @@ function Billing({ card }: { card: AccountCardT }) {
 	).filter((r): r is [string, string] => Boolean(r[1]));
 	return (
 		<Section title={<Trans>Billing details</Trans>} testId="staff-billing">
-			{rows.length === 0 ? (
-				<Text size="sm" c="dimmed">
-					<Trans>Not given yet.</Trans>
-				</Text>
-			) : (
-				<KeyValues rows={rows} />
-			)}
+			<Stack gap="sm">
+				{/* Staff can opt a customer out of Peppol too, or back in. */}
+				<InvoiceDelivery
+					side="staff"
+					match={b.peppol_match}
+					delivery={deliveryFor(b.peppol_match, b.invoice_delivery)}
+					email={b.billing_email}
+					onChange={(next) =>
+						update.mutate({ body: { invoice_delivery: next } })
+					}
+					disabled={update.isPending}
+				/>
+				{rows.length === 0 ? (
+					<Text size="sm" c="dimmed">
+						<Trans>Not given yet.</Trans>
+					</Text>
+				) : (
+					<KeyValues rows={rows} />
+				)}
+			</Stack>
 		</Section>
 	);
 }

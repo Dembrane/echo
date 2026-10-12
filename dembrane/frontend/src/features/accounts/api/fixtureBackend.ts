@@ -1171,6 +1171,12 @@ export async function handle(
 					throw invalid("vat_id", "Give a VAT, KvK or KBO number.");
 				}
 				s.billing = { ...s.billing, ...(body as Partial<Billing>) };
+				// Like the server: saving without a typed Peppol id looks the numbers up.
+				const kvk = String(body.kvk_number ?? "").replace(/\D/g, "");
+				s.billing.peppol_match =
+					!body.peppol_id && kvk.length === 8
+						? { name: s.billing.legal_name, participant_id: `0106:${kvk}` }
+						: null;
 				for (const t of s.tasks) {
 					if (
 						t.kind === "billing_details" &&
@@ -1191,7 +1197,7 @@ export async function handle(
 				return {
 					match:
 						kvk.length === 8
-							? { participant_id: `0106:${kvk}`, name: s.billing.legal_name }
+							? { name: s.billing.legal_name, participant_id: `0106:${kvk}` }
 							: null,
 				};
 			}
