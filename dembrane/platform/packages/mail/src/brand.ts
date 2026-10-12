@@ -18,7 +18,7 @@ export const color = {
   muted: "#5f646f",
   /** Faint rules: above and below anything to read. */
   quiet: "#e6e3df",
-  /** Rules around a place to write or type (3.28:1). */
+  /** Rules around a place to write or type, and a secondary button's box (3.28:1 on parchment). */
   control: "#878785",
   /** Links and the one primary action. AA as text (royal blue is not). */
   action: "#2957df",

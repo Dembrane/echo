@@ -42,7 +42,7 @@ The values live in code once, in `platform/packages/mail/src/brand.ts` (`brand` 
 | text | `#2d2d2c` | all text, never pure black |
 | muted | `#5f646f` | labels, captions, secondary facts |
 | quiet | `#e6e3df` | faint rules, around something to read |
-| control | `#878785` | rules around a place to write |
+| control | `#878785` | rules around a place to write, and the box of a secondary button (3.28:1 on parchment; quiet is 1.17:1, too faint for an edge) |
 | action | `#2957df` | links and the primary pill (royal blue `#4169e1` fails AA as text) |
 | action tint | `#e9f1ff` | a selected or highlighted row |
 | danger / warning / success | `#c0434e` / `#7a5200` / `#0e6e47` | status only |
