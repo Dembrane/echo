@@ -39,8 +39,11 @@ export const color = {
 export const font = {
   family: "'DM Sans','DM Sans Variable',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif",
   weight: 320,
-  /** Email loads no web font (privacy, and few clients honour it); where DM Sans is installed, 300 is the nearest static cut. */
-  emailWeight: 300,
+  /**
+   * Email loads no web font (privacy, and few clients honour it), so most readers see the
+   * system sans. Its 300 is a Light cut and reads far too thin; 400 is the regular cut.
+   */
+  emailWeight: 400,
   emphasis: 600,
   /**
    * The warm single-storey a, g, u, y, only where DM Sans itself is loaded (the app; the PDF

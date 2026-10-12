@@ -50,9 +50,10 @@ The values live in code once, in `platform/packages/mail/src/brand.ts` (`brand` 
 
 **Type.** DM Sans at 320, with stylistic sets ss01 to ss06 (the single-storey a, g, u,
 y) wherever DM Sans itself is loaded: the app, and the PDFs, whose cuts have the sets
-frozen in (`packages/accounts/assets/fonts/build.py`). Email names DM Sans at 300, loads
-no web font and turns no stylistic set on: most readers see a fallback, and in some
-fallbacks (Inter) ss01 to ss06 draw circled letters and digits.
+frozen in (`packages/accounts/assets/fonts/build.py`). Email names DM Sans at 400, loads
+no web font and turns no stylistic set on: most readers see a fallback, whose 300 is a
+Light cut and far too thin, and in some fallbacks (Inter) ss01 to ss06 draw circled
+letters and digits.
 
 | Step | Screen and email (px) | Print (pt) | Use |
 |---|---|---|---|
