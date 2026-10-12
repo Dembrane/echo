@@ -40,9 +40,8 @@ export const font = {
   family: "'DM Sans','DM Sans Variable',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif",
   weight: 320,
   /**
-   * Email loads no web font (privacy, and few clients honour it), so nearly every reader
-   * sees a fallback, and at 300 those (SF, Segoe UI, Roboto) draw their Light cut, far
-   * thinner than DM Sans at 320. Their regular is the nearest match.
+   * Email loads no web font (privacy, and few clients honour it), so most readers see the
+   * system sans. Its 300 is a Light cut and reads far too thin; 400 is the regular cut.
    */
   emailWeight: 400,
   emphasis: 600,

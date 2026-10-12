@@ -288,8 +288,8 @@ run("bun run seed:accounts-demo", () => {
     const first = await seedAccountsDemo(await options());
     expect(first.offer_created).toBe(true);
     const after = await counts();
-    expect(after.account_document).toBe(2); // the offer and the invoice
-    expect(after.account_task).toBe(4); // sign, billing (locked), PO, logo
+    expect(after.account_document).toBe(3); // the offer, its DPA and the invoice
+    expect(after.account_task).toBe(5); // sign, sign the DPA, billing (locked), PO, logo
     expect(after.account_ticket_message).toBe(2);
     expect(after.conversation).toBeGreaterThan(0);
     const second = await seedAccountsDemo(await options());
@@ -304,6 +304,7 @@ run("bun run seed:accounts-demo", () => {
     expect(tasks.map((t) => `${t.kind}:${t.status}`).sort()).toEqual([
       "billing_details:locked",
       "generic:open",
+      "sign:open",
       "sign:open",
       "upload:submitted",
     ]);

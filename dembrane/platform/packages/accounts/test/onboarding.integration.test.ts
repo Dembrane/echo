@@ -277,7 +277,7 @@ run("onboarding tasks", () => {
     const open = (await store.tasks(w.db, orgId))
       .filter((t) => !["done", "withdrawn"].includes(t.status))
       .map((t) => `${t.code}:${t.status}`);
-    expect(open.sort()).toEqual(["billing_details:locked", "sign_offer:open"]);
+    expect(open.sort()).toEqual(["billing_details:locked", "sign_dpa:open", "sign_offer:open"]);
     const events = (await store.events(w.db, orgId, 200)).filter(
       (e) => e.type === "onboarding.withdrawn",
     );

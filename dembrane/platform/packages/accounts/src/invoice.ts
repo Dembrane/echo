@@ -18,7 +18,8 @@ import { staffBase } from "./views";
  * invoice and its PDF back with PUT .../invoices/:exactId, so the customer finds it on the
  * account page. The
  * timeline row is the record that an offer was asked for, so saving the billing details
- * again asks nothing new. An offer of zero has nothing to invoice and is left out.
+ * again asks nothing new. An offer of zero (drafted before offers had to carry amounts) has
+ * nothing to invoice and is left out.
  *
  * The caller holds the organisation's row (store.lockOrg) from the start of its
  * transaction: without it a signature and a billing save that commit at the same moment

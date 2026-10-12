@@ -104,6 +104,7 @@ export async function documentDetail(
     store.org(d.db, doc.orgId),
     store.billing(d.db, doc.orgId),
   ]);
+  const isEvent = (doc.content as OfferContent | null)?.template === "event";
   const has = (pick: (f: (typeof fields)[number]) => boolean) => fields.some(pick);
   const placeholders = {
     name: "{name}",
@@ -125,8 +126,9 @@ export async function documentDetail(
     sha256: doc.sha256,
     page_count: doc.pageCount,
     fields: fields.map(fieldView),
+    // The texts the document incorporates; an event offer has no SLA.
     legal: [legalView("terms", terms), legalView("sla", sla), legalView("dpa", dpa)].filter(
-      Boolean,
+      (x) => x && (x.kind !== "sla" || !isEvent),
     ),
     signing_note: doc.requiresSignature ? signingNote(doc) : null,
     // The sentence the signer confirms; the page fills in the three values it asks for.
@@ -134,7 +136,7 @@ export async function documentDetail(
       ? {
           dpa_authorised: confirmationText(doc, { ...placeholders, dpa_authorised: true }),
           dpa_not_authorised:
-            doc.kind === "offer"
+            doc.kind === "offer" && !(doc.content as OfferContent | null)?.dpa_separate
               ? confirmationText(doc, { ...placeholders, dpa_authorised: false })
               : null,
         }
