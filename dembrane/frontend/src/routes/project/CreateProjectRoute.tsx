@@ -37,6 +37,7 @@ import { ApiRequestError } from "@/lib/errors/read";
 import { isFreeTierLimitError } from "@/lib/freeTier";
 import { openConfirm } from "@/lib/openConfirm";
 import { isOutsiderRole } from "@/lib/roles";
+import type { Tier } from "@/lib/tiers";
 
 type Access = "workspace" | "private";
 
@@ -457,9 +458,14 @@ export const CreateProjectRoute = () => {
 					opened={upgradeOpened}
 					onClose={upgradeHandlers.close}
 					workspaceId={workspaceId}
-					upgradeTier="changemaker"
+					currentTier={tier as Tier}
+					requiredTier="changemaker"
+					canRequestUpgrade={
+						workspace?.role === "admin" || workspace?.role === "owner"
+					}
+					wallKey="workspace_cap"
 				/>
 			)}
-			</Container>
-		);
-	};
+		</Container>
+	);
+};

@@ -117,22 +117,16 @@ export function allowsOverage(tier: string | null | undefined): boolean {
   return tier === "innovator" || tier === "changemaker" || tier === "guardian";
 }
 
-export function usageGates(
-  tier: string,
-  hoursLifetime: number,
-  conversationsThisMonth?: number,
-) {
+export function usageGates(tier: string, hoursLifetime: number, conversationsThisMonth?: number) {
   const cap = capacityOf(tier);
-  if (allowsOverage(tier) || !cap)
-    return { over_cap_active: false, uploads_locked: false };
+  if (allowsOverage(tier) || !cap) return { over_cap_active: false, uploads_locked: false };
   if (tier === "free") {
     const over =
       conversationsThisMonth !== undefined &&
       conversationsThisMonth >= (cap.includedConversationsMonthly ?? 5);
     return { over_cap_active: over, uploads_locked: over };
   }
-  if (cap.includedHours === null)
-    return { over_cap_active: false, uploads_locked: false };
+  if (cap.includedHours === null) return { over_cap_active: false, uploads_locked: false };
   const over = hoursLifetime >= cap.includedHours;
   return { over_cap_active: over, uploads_locked: over };
 }

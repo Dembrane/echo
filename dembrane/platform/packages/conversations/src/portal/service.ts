@@ -1,4 +1,4 @@
-import { ForbiddenError, NotFoundError, PaymentRequiredError, newId } from "@dembrane/core";
+import { ForbiddenError, NotFoundError, newId, PaymentRequiredError } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import { directusTime } from "@dembrane/http";
 import { pydanticIso } from "@dembrane/legacy-shape";
@@ -66,7 +66,9 @@ export async function initiate(d: PortalDeps, projectId: string, input: Initiate
 
   const tier = await resolveProjectTier(d.db, project.id);
   if (tier === "free" && project.workspace_id) {
-    const startOfMonthIso = new Date(Date.UTC(d.now().getUTCFullYear(), d.now().getUTCMonth(), 1)).toISOString();
+    const startOfMonthIso = new Date(
+      Date.UTC(d.now().getUTCFullYear(), d.now().getUTCMonth(), 1),
+    ).toISOString();
     const [countRow] = await d.db
       .select({ n: sql<number>`count(${conversation.id})::int` })
       .from(conversation)
@@ -83,7 +85,11 @@ export async function initiate(d: PortalDeps, projectId: string, input: Initiate
       throw new PaymentRequiredError("billing.tier_limit", {
         message: "free tier conversation limit reached",
         params: { limit: "conversations" },
-        details: { error: "FREE_TIER_LIMIT", limit: "conversations", upgrade_cta_tier: "changemaker" },
+        details: {
+          error: "FREE_TIER_LIMIT",
+          limit: "conversations",
+          upgrade_cta_tier: "changemaker",
+        },
       });
     }
   }

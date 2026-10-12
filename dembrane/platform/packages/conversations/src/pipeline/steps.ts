@@ -540,8 +540,12 @@ export async function stampOverCap(d: PipelineDeps, conversationId: string): Pro
   if (!row?.workspaceId) return;
 
   const convDate = row.createdAt ? new Date(row.createdAt) : d.now();
-  const startOfMonthIso = new Date(Date.UTC(convDate.getUTCFullYear(), convDate.getUTCMonth(), 1)).toISOString();
-  const endOfMonthIso = new Date(Date.UTC(convDate.getUTCFullYear(), convDate.getUTCMonth() + 1, 1)).toISOString();
+  const startOfMonthIso = new Date(
+    Date.UTC(convDate.getUTCFullYear(), convDate.getUTCMonth(), 1),
+  ).toISOString();
+  const endOfMonthIso = new Date(
+    Date.UTC(convDate.getUTCFullYear(), convDate.getUTCMonth() + 1, 1),
+  ).toISOString();
 
   const [prior] = await d.db
     .select({ n: sql<number>`count(${conversation.id})::int` })
@@ -557,11 +561,7 @@ export async function stampOverCap(d: PipelineDeps, conversationId: string): Pro
         ne(conversation.id, conversationId),
       ),
     );
-  const overCap = computeIsOverCap(
-    row.tier ?? "",
-    prior?.n ?? 0,
-    row.duration ?? 0,
-  );
+  const overCap = computeIsOverCap(row.tier ?? "", prior?.n ?? 0, row.duration ?? 0);
   await d.db
     .update(conversation)
     .set({ is_over_cap: overCap, updated_at: d.now().toISOString() })
