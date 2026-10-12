@@ -1,10 +1,11 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { ForbiddenError, NotFoundError } from "@dembrane/core";
+import { ForbiddenError, NotFoundError, newId } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
-import { and, desc, eq, inArray } from "drizzle-orm";
-import { type AccountsDeps, isUuid } from "./deps";
+import { and, desc, eq, gt, inArray, isNull, sql } from "drizzle-orm";
+import { type AccountsDeps, type Conn, isUuid } from "./deps";
 import { accountPageUrl } from "./jobs";
+import { ensureUser } from "./prospect";
 import { type DocumentRow, store } from "./storage";
 
 /**
@@ -123,4 +124,61 @@ export async function acceptSignerInvite(
     });
   }
   return { org_id: doc.orgId, document_id: doc.id };
+}
+
+/**
+ * Signing makes the invited person a member: the pending invitation naming them made when
+ * they were named (role billing) is taken up in the same transaction, with the app user a
+ * code sign-in does not make. Seats are not billed per person, so nothing else changes.
+ * Without such an invitation (it was revoked, or they were already a member) nothing happens.
+ */
+export async function joinOnSigning(
+  tx: Conn,
+  orgId: string,
+  signer: { directusUserId: string; email: string },
+  now: Date,
+): Promise<void> {
+  const email = signer.email.toLowerCase();
+  const nowIso = now.toISOString();
+  const [invite] = await tx
+    .select({ id: schema.org_invite.id, role: schema.org_invite.role })
+    .from(schema.org_invite)
+    .where(
+      and(
+        eq(schema.org_invite.org_id, orgId),
+        sql`lower(${schema.org_invite.email}) = ${email}`,
+        isNull(schema.org_invite.accepted_at),
+        isNull(schema.org_invite.deleted_at),
+        gt(schema.org_invite.expires_at, nowIso),
+      ),
+    )
+    .limit(1);
+  if (!invite) return;
+  const identity = await store.identity(tx, signer.directusUserId);
+  const { appUserId } = await ensureUser(tx, {
+    email,
+    name: identity?.name || null,
+    passwordHash: null,
+    nowIso,
+  });
+  const membership = await store.orgMembership(tx, orgId, appUserId);
+  const role = invite.role || "billing";
+  if (!membership)
+    await tx.insert(schema.org_membership).values({
+      id: newId(),
+      org_id: orgId,
+      user_id: appUserId,
+      role,
+      created_at: nowIso,
+      updated_at: nowIso,
+    });
+  else if (membership.deleted_at)
+    await tx
+      .update(schema.org_membership)
+      .set({ deleted_at: null, role, updated_at: nowIso })
+      .where(eq(schema.org_membership.id, membership.id));
+  await tx
+    .update(schema.org_invite)
+    .set({ accepted_at: nowIso })
+    .where(eq(schema.org_invite.id, invite.id));
 }
