@@ -20,7 +20,6 @@ import { emit } from "./events";
 import { seedLegalTexts } from "./legal/store";
 import { offerTitle } from "./offer";
 import { createAccount, ensureUser } from "./prospect";
-import { type GallerySummary, seedCallToCashGallery } from "./seed-gallery";
 import { sha256Hex } from "./signing";
 import { MemoryJobs } from "./sink";
 import { pushOffer } from "./staff";
@@ -33,9 +32,7 @@ import { createTask, settleTask } from "./tasks";
  * offer and its signing task, the locked billing task, a PO task (open), a logo task
  * (submitted, waiting for our review), an open invoice, a question answered once, and the
  * timeline all of that writes. Two people sign in with email and password: the customer's
- * admin and a staff Administrator. With `gallery`, seed-gallery.ts adds four more fictional
- * customers that show offers and invoices in their other states (signed, opened, paid,
- * overdue, reverse-charged), signing in with the same password. Every id is fixed, so a second run changes nothing;
+ * admin and a staff Administrator. Every id is fixed, so a second run changes nothing;
  * after someone signs, declines or voids the demo offer, the next run pushes a fresh one.
  */
 
@@ -80,8 +77,6 @@ export interface SeedOptions {
   readonly fetchText: (url: string) => Promise<string>;
   /** INVITE_HASH_SECRET: signs the invitation links of seeded signers as the API does. */
   readonly inviteSecret?: string;
-  /** Also seed the call-to-cash gallery customers (seed-gallery.ts). */
-  readonly gallery?: boolean;
 }
 
 /** Everything the demo writes in words, per language. */
@@ -162,7 +157,6 @@ export interface SeedSummary {
   readonly demo_links: Json;
   readonly customer_email: string;
   readonly staff_email: string;
-  readonly gallery: readonly GallerySummary[];
 }
 
 /** The staff role (Administrator), created with a fixed id on a database that has none. */
@@ -525,7 +519,6 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
         eq(schema.org_membership.user_id, customerApp.id),
       ),
     );
-  const gallery = o.gallery ? await seedCallToCashGallery(d, staff, o.password) : [];
   return {
     org_id: account.org_id,
     offer_id: offerId,
@@ -533,7 +526,6 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
     demo_links: seeded.result,
     customer_email: CUSTOMER_EMAIL,
     staff_email: STAFF_EMAIL,
-    gallery,
   };
 }
 
