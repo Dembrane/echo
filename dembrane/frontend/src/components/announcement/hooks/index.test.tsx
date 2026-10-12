@@ -3,12 +3,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import posthog from "posthog-js";
 import type { ReactNode } from "react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { useInfiniteAnnouncements, useWhatsNewAnnouncements } from "./index";
 
 vi.mock("@/components/auth/hooks", () => ({ useCurrentUser: vi.fn() }));
-vi.mock("@/components/common/Toaster", () => ({ toast: { error: vi.fn() } }));
 vi.mock("posthog-js", () => ({ default: { captureException: vi.fn() } }));
 
 function wrapper({ children }: { children: ReactNode }) {
@@ -32,16 +31,10 @@ const signedInAs = (id: string | null) =>
 			typeof useCurrentUser
 		>);
 
-beforeEach(() => {
-	vi.stubGlobal("fetch", fetchMock);
-	vi.spyOn(console, "error").mockImplementation(() => {});
-});
+vi.stubGlobal("fetch", fetchMock);
+vi.spyOn(console, "error").mockImplementation(() => {});
 
-afterEach(() => {
-	vi.unstubAllGlobals();
-	vi.restoreAllMocks();
-	vi.clearAllMocks();
-});
+afterEach(() => vi.clearAllMocks());
 
 describe("announcement error reporting", () => {
 	it.each([401, 403])(
