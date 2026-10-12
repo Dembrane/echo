@@ -23,6 +23,8 @@
     "check:grammar": "node scripts/check-grammar.mjs",
     "check:contrast": "node scripts/check-contrast.mjs",
     "test:grammar": "playwright test -c e2e/grammar.config.ts",
+    "videos": "node videos/render.ts",
+    "videos:measure": "node videos/measure.ts",
     "fix": "biome check --write .",
     "preview": "vite preview"
   },
