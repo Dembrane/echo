@@ -9,7 +9,7 @@ import { REFERENCE_DPA, REFERENCE_SLA, REFERENCE_TERMS } from "../src/legal/refe
 import { fitsVatTreatment, priceLines, requireAmounts, vatOf } from "../src/money";
 import { euro, layoutOffer, legalKinds, type OfferContent, offerText } from "../src/offer";
 import { ONBOARDING_CODES } from "../src/onboarding";
-import { offerPdf, signedPdf, textPdf } from "../src/pdf";
+import { legalBlocks, offerPdf, signedPdf, textPdf } from "../src/pdf";
 import { candidates, lookupPeppol } from "../src/peppol";
 import { checkValues, pngBytes, signerFacts } from "../src/signing";
 import type { FieldRow } from "../src/storage";
@@ -270,6 +270,49 @@ describe("the offer", () => {
     );
     expect(r.pageCount).toBe(3);
     expect(r.fields.every((f) => f.page === 3)).toBe(true);
+  });
+
+  test("a legal text gets back its headings, clauses, lists and tables", () => {
+    const body = [
+      "Article 2. Processing",
+      "2.4. Processor shall not be permitted to:",
+      "use the data for itself;",
+      "sell the data.",
+      "2.5. Workspaces and roles.",
+      "Annex III. Sub-processors",
+      "Sub-processor (location)",
+      "Website",
+      "Outsourced Processing",
+      "Retention Periods",
+      "DigitalOcean (EU)https://www.digitalocean.com/trust",
+      "Hosting",
+      "Duration of Agreement",
+    ].join("\n");
+    expect(legalBlocks(body)).toEqual([
+      { kind: "heading", level: 2, text: "Article 2. Processing" },
+      { kind: "clause", number: "2.4.", text: "Processor shall not be permitted to:" },
+      { kind: "item", text: "use the data for itself;" },
+      { kind: "item", text: "sell the data." },
+      { kind: "clause", number: "2.5.", text: "Workspaces and roles." },
+      { kind: "heading", level: 2, text: "Annex III. Sub-processors" },
+      {
+        kind: "table",
+        header: [
+          "Sub-processor (location)",
+          "Website",
+          "Outsourced Processing",
+          "Retention Periods",
+        ],
+        rows: [
+          [
+            "DigitalOcean (EU)",
+            "https://www.digitalocean.com/trust",
+            "Hosting",
+            "Duration of Agreement",
+          ],
+        ],
+      },
+    ]);
   });
 
   test("stamping values and the signature adds the audit page", async () => {
