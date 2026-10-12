@@ -16,7 +16,9 @@ import { fieldProblems, sha256Hex, storePdf, storeRendered, writeFields } from "
 import { accountManagerPayload, documentPayload, emit, orgPayload } from "./events";
 import { customerSignUrl, staffDocumentUrl } from "./invoice";
 import { legalForPush } from "./legal/store";
+import { fitsVatTreatment, requireAmounts, type VatTreatment } from "./money";
 import {
+  type Amendment,
   type Language,
   type OfferContent,
   type OfferItem,
@@ -34,6 +36,7 @@ import {
 import { offerPdf, type PlacedField, pageCountOf, textPdf } from "./pdf";
 import { releaseHeldContacts } from "./prospect";
 import { accountRecipients } from "./recipients";
+import { openDpa } from "./signing";
 import { type DocumentRow, type LegalRow, type OrgRow, store } from "./storage";
 import { createTask, ensureBillingTask, settleTask, type TaskKind } from "./tasks";
 import {
@@ -246,6 +249,10 @@ export interface PushOfferInput {
   readonly currency: string;
   readonly date: string | null;
   readonly items: readonly OfferItem[];
+  /** Absent means Dutch VAT on the lines. */
+  readonly vat_treatment?: VatTreatment;
+  /** Custom offers only. */
+  readonly amendments?: readonly Amendment[];
   readonly external_ref: string | null;
   readonly supersedes_id: string | null;
   /** False keeps a draft; staff send it later. */
@@ -288,10 +295,29 @@ function offerContent(
   pinned: Awaited<ReturnType<typeof legalForPush>>,
   o: Pick<
     PushOfferInput,
-    "template" | "language" | "offer_name" | "person_name" | "attention" | "currency" | "items"
+    | "template"
+    | "language"
+    | "offer_name"
+    | "person_name"
+    | "attention"
+    | "currency"
+    | "items"
+    | "vat_treatment"
+    | "amendments"
   > & { date: string; reference: string },
 ): OfferContent {
+  const vatTreatment = o.vat_treatment ?? "standard";
+  requireAmounts(o.items);
+  if (!fitsVatTreatment(vatTreatment, o.items)) throw new ValidationError("document.vat_treatment");
+  // Amendments change the standard documents, so they make an offer custom: a subscription
+  // or event offer is the standard documents as they are.
+  const amendments = o.amendments ?? [];
+  if (amendments.length && o.template !== "custom")
+    throw new ValidationError("offer.amendments_custom_only");
   return {
+    vat_treatment: vatTreatment,
+    ...(amendments.length && { amendments }),
+    dpa_separate: true,
     template: o.template,
     language: o.language,
     offer_name: o.offer_name,
@@ -498,8 +524,11 @@ async function sendOfferIn(
     createdBy: who.directusUserId,
   });
   await ensureBillingTask(d, tx, orgId, who.directusUserId);
-  await withdrawOnboarding(d, tx, orgId, actorOf(who));
   const content = doc.content as OfferContent | null;
+  // The DPA goes out with the offer as its own document, so whoever may agree to data
+  // processing can sign it, whether or not that is who signs the offer.
+  if (content?.dpa_separate) await openDpa(d, tx, orgId, doc, who.directusUserId);
+  await withdrawOnboarding(d, tx, orgId, actorOf(who));
   await emit(d, tx, {
     orgId,
     actor: actorOf(who),
@@ -597,8 +626,9 @@ async function sentPayload(d: AccountsDeps, tx: Conn, who: Signed, orgId: string
 
 /**
  * A draft offer carries the day it is sent and the texts in force that day: when the
- * draft is from an earlier day, or a text changed since, its PDF, text and fields are
- * rendered again before it freezes. A date set in the future stays.
+ * draft is from an earlier day, a text changed since, or it predates the DPA being its own
+ * document, its PDF, text and fields are rendered again before it freezes. A date set in
+ * the future stays.
  */
 async function freshenDraftOffer(d: AccountsDeps, doc: DocumentRow): Promise<void> {
   const pinned = await legalForPush({
@@ -611,6 +641,7 @@ async function freshenDraftOffer(d: AccountsDeps, doc: DocumentRow): Promise<voi
   const today = d.now().toISOString().slice(0, 10);
   const date = before.date < today ? today : before.date;
   if (
+    before.dpa_separate &&
     date === before.date &&
     doc.termsTextId === pinned.terms.id &&
     doc.slaTextId === pinned.sla.id &&
@@ -621,6 +652,8 @@ async function freshenDraftOffer(d: AccountsDeps, doc: DocumentRow): Promise<voi
     ...before,
     date,
     legal: { terms: pin(pinned.terms), sla: pin(pinned.sla), dpa: pin(pinned.dpa) },
+    // A draft from before the DPA was its own document is sent as one that names it so.
+    dpa_separate: true,
   };
   const rendered = await offerPdf(content);
   const file = await storeRendered(d, doc.orgId, doc.id, rendered);

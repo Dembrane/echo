@@ -160,6 +160,12 @@ export const document = {
     audience: "staff",
     description: "A document was created without a title.",
   },
+  "document.vat_treatment": {
+    action: "fix_input",
+    detail: "A reverse-charged or outside-EU offer has only 0% lines",
+    audience: "staff",
+    description: "An offer marked reverse charge or outside the EU had a line with VAT.",
+  },
   "document.content_required": {
     action: "fix_input",
     detail: "A document needs a body or a PDF",

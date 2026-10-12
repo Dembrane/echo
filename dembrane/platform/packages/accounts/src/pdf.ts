@@ -49,7 +49,8 @@ export interface AuditRecord {
   readonly organisation: string;
   readonly address: string | null;
   readonly vatNumber: string | null;
-  readonly dpaAuthorised: boolean;
+  /** Whether the signer said they may agree to data processing; null when not asked. */
+  readonly dpaAuthorised: boolean | null;
   readonly signedAt: string;
   readonly ip: string | null;
   readonly userAgent: string | null;
@@ -430,7 +431,14 @@ function drawAudit(w: Writer, a: AuditRecord) {
     ["Organisation", a.organisation],
     ...(a.address ? ([["Address", a.address]] as [string, string][]) : []),
     ...(a.vatNumber ? ([["VAT number", a.vatNumber]] as [string, string][]) : []),
-    ["May agree to data processing", a.dpaAuthorised ? "yes" : "no, the DPA is signed separately"],
+    ...(a.dpaAuthorised === null
+      ? []
+      : ([
+          [
+            "May agree to data processing",
+            a.dpaAuthorised ? "yes" : "no, the DPA is signed separately",
+          ],
+        ] as [string, string][])),
     ["Signature made", a.method],
     ["SHA-256 of the signature image", a.imageSha256],
     ["Signed at (UTC)", a.signedAt],

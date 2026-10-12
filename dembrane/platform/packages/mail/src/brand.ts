@@ -41,12 +41,14 @@ export const font = {
   weight: 320,
   /**
    * Email loads no web font (privacy, and few clients honour it), so most readers see the
-   * fallback: SF, Segoe UI or Roboto. Their 300 is a Light cut and reads far too thin; 400
-   * is the regular cut every one of them has.
+   * system sans. Its 300 is a Light cut and reads far too thin; 400 is the regular cut.
    */
   emailWeight: 400,
   emphasis: 600,
-  /** The warm single-storey a, g, u, y. The PDF cuts have them frozen in. */
+  /**
+   * The warm single-storey a, g, u, y, only where DM Sans itself is loaded (the app; the PDF
+   * cuts have them frozen in). Never in email: fallbacks such as Inter draw circled glyphs.
+   */
   features: '"ss01","ss02","ss03","ss04","ss05","ss06"',
 } as const;
 

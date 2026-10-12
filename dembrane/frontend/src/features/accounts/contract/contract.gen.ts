@@ -34,7 +34,8 @@ const Uuid = z.uuid();
 
 export const AccountStage = z.enum(["prospect", "customer", "churned"]);
 export const Language = z.enum(["en", "nl"]);
-export const OfferTemplate = z.enum(["subscription", "event"]);
+/** A yearly licence, a single event, or a custom offer (the only kind with amendments). */
+export const OfferTemplate = z.enum(["subscription", "event", "custom"]);
 export const DocumentKind = z.enum(["offer", "dpa", "invoice", "other"]);
 export const DocumentStatus = z.enum(["draft", "sent", "viewed", "signed", "declined", "void"]);
 export const InvoiceStatus = z.enum(["open", "paid", "overdue", "void"]);
@@ -160,6 +161,18 @@ export const PricedLine = OfferItem.extend({
   total_cents: z.number().int(),
 });
 
+/**
+ * A term agreed with one customer that takes precedence over the standard documents, such
+ * as a higher liability cap. Written by staff or sam in the offer's language, never by the
+ * customer, and only on a custom offer.
+ */
+export const OfferAmendment = z.object({
+  /** What it changes, in a few words: "Liability cap". */
+  title: text(120),
+  /** The term itself; a blank line separates paragraphs. */
+  body: text(4000),
+});
+
 /** The structured offer both the page and the PDF lay out. */
 export const OfferContent = z.object({
   template: OfferTemplate,
@@ -174,6 +187,11 @@ export const OfferContent = z.object({
   company: Company,
   legal: z.object({ terms: PinnedText, sla: PinnedText, dpa: PinnedText }),
   items: z.array(OfferItem),
+  vat_treatment: z.enum(["standard", "reverse_charge", "outside_eu"]).optional(),
+  /** Custom offers: numbered terms that take precedence over the standard documents. */
+  amendments: z.array(OfferAmendment).optional(),
+  /** True when the DPA is its own document; absent on offers made before that. */
+  dpa_separate: z.boolean().optional(),
 });
 
 export const LegalPin = z.object({
@@ -584,6 +602,16 @@ export const PushOfferRequest = z.object({
   /** The offer date; today when absent. Valid for 14 days from it. */
   date: nullish(IsoDate),
   items: z.array(OfferItem).min(1).max(50),
+  /**
+   * Dutch VAT on the lines (default), reverse-charged within the EU, or none outside it.
+   * The last two take only 0% lines, and the offer says why there is no VAT.
+   */
+  vat_treatment: z.enum(["standard", "reverse_charge", "outside_eu"]).default("standard"),
+  /**
+   * Custom offers only, at most 10: each is numbered, listed among the documents that form
+   * the agreement, and takes precedence over them where they differ.
+   */
+  amendments: z.array(OfferAmendment).max(10).default([]),
   /** The Attio deal id, echoed in every event about this offer. */
   external_ref: optText(255),
   /** An unsigned offer this one replaces; it is voided. */

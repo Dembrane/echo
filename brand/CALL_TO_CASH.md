@@ -27,9 +27,11 @@ The values live in code once, in `platform/packages/mail/src/brand.ts` (`brand` 
 6. **Accents are decoration.** Cyan, spring green, mauve and lime never mean success,
    warning or anything else. Status has its own colours and appears only when something
    is wrong, late or done.
-7. **Plain words.** Warm, direct, short sentences; the reader's language, Dutch or
-   English, never mixed on one page. "dembrane" is always lowercase. Legal text keeps its
-   words; only its setting changes.
+7. **Plain words.** Warm, direct, short sentences; the reader's language, never mixed on
+   one page. "dembrane" is always lowercase. Legal text keeps its words; only its setting
+   changes. Each language keeps the register the server catalogue already uses: informal
+   in Dutch (je, jullie), Spanish and Italian; formal in German (Sie) and French (vous).
+   Legal text keeps its own register (the Dutch clause says u).
 
 ## Tokens
 
@@ -47,9 +49,11 @@ The values live in code once, in `platform/packages/mail/src/brand.ts` (`brand` 
 | accents | cyan, spring green, mauve, lime | decorative only |
 
 **Type.** DM Sans at 320, with stylistic sets ss01 to ss06 (the single-storey a, g, u,
-y). Email names DM Sans at 300 and loads no web font, so most readers see the system
-sans. Print uses static cuts made from the app's variable font
-(`packages/accounts/assets/fonts/build.py`) with the sets frozen in.
+y) wherever DM Sans itself is loaded: the app, and the PDFs, whose cuts have the sets
+frozen in (`packages/accounts/assets/fonts/build.py`). Email names DM Sans at 400, loads
+no web font and turns no stylistic set on: most readers see a fallback, whose 300 is a
+Light cut and far too thin, and in some fallbacks (Inter) ss01 to ss06 draw circled
+letters and digits.
 
 | Step | Screen and email (px) | Print (pt) | Use |
 |---|---|---|---|
@@ -69,7 +73,11 @@ Running text at 1.55 line height, titles at 1.2. Space in steps of 4 (px or pt).
 - **Offer PDF.** The wordmark top left; dembrane's company details in the footer of every
   page with the page number. The title, then the facts in a ruled row (reference, date,
   valid until). The lines table ruled above and below, numbers right-aligned, then
-  subtotal, VAT and the total. Acceptance on its own page as labelled lines to write on.
+  subtotal, VAT and the total. A custom offer's amendments follow the total, each numbered
+  under its title, in body size: they change the standard documents, so they are read, not
+  buried. Acceptance on its own page as labelled lines to write on, with the e-signing
+  clause in its first lines, then the clause naming only the documents that apply (an event
+  has no SLA) and the amendments. The DPA is its own document, signed separately.
 - **Invoices.** Exact draws the PDF; its layout should follow the offer's (same wordmark,
   same footer, same table). On the account page an open invoice shows its amount, due date
   and how to pay before anything else.
