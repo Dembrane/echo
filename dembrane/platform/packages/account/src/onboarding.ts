@@ -1,5 +1,6 @@
 import { BadRequestError, NotFoundError } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
+import { seedBestPracticesJob } from "@dembrane/samples/jobs";
 import { type InviteCtx, notifyWorkspaceJoin, onboardedUser } from "./invites/accept";
 import { grantInviteProjectShare, isOutsider } from "./invites/membership";
 import { sendEmail } from "./jobs";
@@ -150,6 +151,7 @@ export async function completeOnboarding(ctx: InviteCtx, who: Signed, body: { or
         { orgId, name: "Default", isDefault: true, createdBy: userId, billingAccountId: accountId },
         now,
       );
+      await requestSample(ctx, personal);
     }
     // Repairs a user whose earlier attempt created the workspace but not their row.
     if (!(await store.workspaceMemberships(personal, userId, { activeOnly: true })).length)
@@ -165,6 +167,22 @@ export async function completeOnboarding(ctx: InviteCtx, who: Signed, body: { or
   }
 
   return { app_user_id: userId, org_id: orgId ?? "", workspace_id: workspaceId ?? "" };
+}
+
+/**
+ * Queues the new workspace's copy of the best-practices sample. Best effort: onboarding
+ * never waits on or fails with it, and the samples backfill seeds a workspace it missed.
+ */
+async function requestSample(ctx: InviteCtx, workspaceId: string) {
+  try {
+    await ctx.deps.jobs.enqueue(
+      seedBestPracticesJob,
+      { workspaceId },
+      { singletonKey: workspaceId },
+    );
+  } catch (err) {
+    ctx.deps.logger?.error({ err, workspaceId }, "sample seed could not be queued");
+  }
 }
 
 /**

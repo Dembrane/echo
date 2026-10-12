@@ -119,7 +119,9 @@ A PR preview's dashboard and portal have ingress `internal-and-cloud-load-balanc
 answer only through the load balancer. Its API keeps public ingress, because the web servers
 reach it from outside any VPC. Sign-in cookies stay host-only (`AUTH_COOKIE_DOMAIN` unset):
 all PR previews share `AUTH_SECRET`, and a cookie scoped to `preview.dembrane.com` would
-cross from one preview's database to another's.
+cross from one preview's database to another's. They also carry their own name
+(`auth.cookiePrefix` in the preview environment file), so a browser signed in to another
+environment under `dembrane.com` keeps that session beside the preview's.
 
 DNS is in Cloudflare. `terraform output pr_preview_dns` gives the two records, both DNS only
 (not proxied): the wildcard `A` record to the load balancer, and the `_acme-challenge` CNAME

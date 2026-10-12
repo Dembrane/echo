@@ -196,6 +196,17 @@ export const schema = defineSchema({
       description:
         "Parent domain shared by dashboard, portal and API, so one sign-in covers all three.",
     }),
+    cookiePrefix: key(
+      "AUTH_COOKIE_PREFIX",
+      z
+        .string()
+        .regex(/^[a-z][a-z0-9-]*$/)
+        .optional(),
+      {
+        description:
+          "First part of the sign-in cookies' names. Environments under one parent domain each take their own, so a browser keeps one session for each. Changing it signs everyone out.",
+      },
+    ),
     googleClientId: key("AUTH_GOOGLE_CLIENT_ID", z.string().optional(), {
       description: "Google sign-in. Unset hides the option.",
     }),
@@ -462,6 +473,10 @@ export const schema = defineSchema({
           "Where the QR on a demo made in echo leads: the participant portal of dembrane's own Product Feedback project on production, so feedback on a demo reaches dembrane and never another prospect's organisation.",
       },
     ),
+    offerMessages: key("ACCOUNTS_OFFER_MESSAGES", bool.default(false), {
+      description:
+        "sam's inbox takes the messages of the offer flow: echo_account_document_sent_v1, echo_account_document_voided_v1 and echo_account_invoice_requested_v1. Turn on once the sam that handles them runs for this environment; before that sam refuses the codes and each message stays in the queue as failed.",
+    }),
     eventsUrl: key("ACCOUNTS_EVENTS_URL", z.url().optional(), {
       description:
         "Where account events (document signed, billing details updated, ...) are posted for sam. Unset keeps them on the timeline only.",

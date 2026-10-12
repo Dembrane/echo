@@ -117,16 +117,12 @@ export function buildApp(deps: Deps) {
       slackEnabled: Boolean(deps.config.accounts.slackWebhookUrl),
       // The config check sets SAM_INBOX_* together, so the URL stands for all three.
       samInbox: Boolean(deps.config.samInbox.url),
+      offerMessages: deps.config.accounts.offerMessages,
       reminderIntervalDays: deps.config.accounts.reminderIntervalDays,
       inviteSecret: deps.config.account.inviteHashSecret,
       demo: {
         portalUrl: deps.config.http.portalUrl,
         apiUrl: deps.config.http.publicUrl,
-        ownUrls: [
-          deps.config.http.publicUrl,
-          deps.config.http.dashboardUrl,
-          deps.config.http.portalUrl,
-        ],
         workspaceId: deps.config.accounts.demoWorkspaceId ?? null,
       },
     },

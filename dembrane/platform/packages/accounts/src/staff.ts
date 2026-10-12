@@ -1,3 +1,4 @@
+import { type EmailTemplate, sendEmail } from "@dembrane/account";
 import {
   BadRequestError,
   ConflictError,
@@ -12,7 +13,8 @@ import { staffOrg } from "./access";
 import { documentDetail, fileBytes, signedBytes, ticketOf } from "./customer";
 import { type AccountsDeps, type Conn, isStaffEmail, isUuid } from "./deps";
 import { fieldProblems, sha256Hex, storePdf, storeRendered, writeFields } from "./documents";
-import { emit } from "./events";
+import { documentPayload, emit, orgPayload } from "./events";
+import { customerSignUrl, staffDocumentUrl } from "./invoice";
 import { legalForPush } from "./legal/store";
 import {
   type Language,
@@ -31,7 +33,8 @@ import {
 } from "./onboarding";
 import { offerPdf, type PlacedField, pageCountOf, textPdf } from "./pdf";
 import { releaseHeldContacts } from "./prospect";
-import { type DocumentRow, type LegalRow, store } from "./storage";
+import { accountRecipients } from "./recipients";
+import { type DocumentRow, type LegalRow, type OrgRow, store } from "./storage";
 import { createTask, ensureBillingTask, settleTask, type TaskKind } from "./tasks";
 import {
   billingView,
@@ -179,7 +182,7 @@ export async function enableAccount(
     // A prospect gets the billing details task with its first offer, not before.
     if (input.stage !== "prospect") await ensureBillingTask(d, tx, org.id, who.directusUserId);
     // Enabling is staff saying the customer may use their account now.
-    await releaseHeldContacts(tx, org.id);
+    await releaseHeldContacts(tx, org.id, d.now());
     await emit(d, tx, {
       orgId: org.id,
       actor: actorOf(who),
@@ -279,12 +282,74 @@ async function supersede(
   return prev;
 }
 
+/** What an offer says, from what staff or sam gave and the legal texts in force. */
+function offerContent(
+  d: AccountsDeps,
+  pinned: Awaited<ReturnType<typeof legalForPush>>,
+  o: Pick<
+    PushOfferInput,
+    "template" | "language" | "offer_name" | "person_name" | "attention" | "currency" | "items"
+  > & { date: string; reference: string },
+): OfferContent {
+  return {
+    template: o.template,
+    language: o.language,
+    offer_name: o.offer_name,
+    date: o.date,
+    reference: o.reference,
+    person_name: o.person_name,
+    attention: o.attention,
+    currency: o.currency,
+    valid_days: OFFER_VALID_DAYS,
+    company: {
+      name: d.settings.company.name,
+      address: d.settings.company.address,
+      vat: d.settings.company.vat,
+      kvk: d.settings.company.kvk,
+      iban: d.settings.company.iban,
+      bic: d.settings.company.bic,
+    },
+    legal: {
+      terms: pin(pinned.terms),
+      sla: pin(pinned.sla),
+      dpa: pin(pinned.dpa),
+    },
+    items: o.items,
+  };
+}
+
+const OFFER_VALID_DAYS = 14;
+
+/** The columns of an offer that follow from its content. */
+function offerColumns(content: OfferContent, pinned: Awaited<ReturnType<typeof legalForPush>>) {
+  const totals = offerTotals(content);
+  return {
+    language: content.language,
+    reference: content.reference,
+    template: content.template,
+    content,
+    body: offerText(content),
+    termsTextId: pinned.terms.id,
+    slaTextId: pinned.sla.id,
+    dpaTextId: pinned.dpa.id,
+    lines: totals.lines,
+    subtotalCents: totals.subtotal_cents,
+    vatCents: totals.vat_cents,
+    totalCents: totals.total_cents,
+    currency: content.currency,
+    validUntil: validUntil(content.date, content.valid_days),
+  };
+}
+
 /**
  * Pushes an offer from lines and a template: renders it, pins the newest terms, SLA and
  * DPA (refreshed first when the last check is over an hour old; a failed fetch falls back
  * to the stored texts), sends it, and creates "Review and sign the offer" plus the locked
  * billing details task. An offer already sent keeps what it pinned; to pick up newer
  * texts, supersede it with a new push.
+ *
+ * With `send: false` it stays a draft: only staff see it, and nothing is added to the
+ * customer's account until it is sent.
  */
 export async function pushOffer(
   d: AccountsDeps,
@@ -305,33 +370,7 @@ export async function pushOffer(
   const id = ids.document ?? newId();
   const date = input.date ?? now.toISOString().slice(0, 10);
   const reference = input.reference ?? offerReference(date, id);
-  const content: OfferContent = {
-    template: input.template,
-    language: input.language,
-    offer_name: input.offer_name,
-    date,
-    reference,
-    person_name: input.person_name,
-    attention: input.attention,
-    currency: input.currency,
-    valid_days: 14,
-    company: {
-      name: d.settings.company.name,
-      address: d.settings.company.address,
-      vat: d.settings.company.vat,
-      kvk: d.settings.company.kvk,
-      iban: d.settings.company.iban,
-      bic: d.settings.company.bic,
-    },
-    legal: {
-      terms: pin(pinned.terms),
-      sla: pin(pinned.sla),
-      dpa: pin(pinned.dpa),
-    },
-    items: input.items,
-  };
-  const totals = offerTotals(content);
-  const body = offerText(content);
+  const content = offerContent(d, pinned, { ...input, date, reference });
   // The PDF rendered now is what the customer sees and what a signature binds.
   const rendered = await offerPdf(content);
   const file = await storeRendered(d, org.id, id, rendered);
@@ -345,25 +384,12 @@ export async function pushOffer(
       orgId: org.id,
       kind: "offer",
       title: input.title ?? `${input.offer_name} x dembrane`,
-      language: input.language,
       version: prev ? prev.version + 1 : 1,
       supersedesId: prev?.id ?? null,
-      reference,
-      template: input.template,
-      content,
-      body,
+      ...offerColumns(content, pinned),
       ...file,
       requiresSignature: true,
       status: "draft",
-      termsTextId: pinned.terms.id,
-      slaTextId: pinned.sla.id,
-      dpaTextId: pinned.dpa.id,
-      lines: totals.lines,
-      subtotalCents: totals.subtotal_cents,
-      vatCents: totals.vat_cents,
-      totalCents: totals.total_cents,
-      currency: input.currency,
-      validUntil: validUntil(date, 14),
       externalRef: input.external_ref,
       createdBy: who.directusUserId,
       createdAt: now,
@@ -371,14 +397,13 @@ export async function pushOffer(
     });
     // Fields go in while it is a draft; sending freezes them with the PDF.
     await writeFields(tx, id, rendered.fields);
-    await ensureBillingTask(d, tx, org.id, who.directusUserId);
     if (input.send === false)
       await emit(d, tx, {
         orgId: org.id,
         actor: actorOf(who),
         type: "document.drafted",
         subject: { type: "document", id },
-        detail: { kind: "offer", total_cents: totals.total_cents },
+        detail: { kind: "offer", total_cents: offerTotals(content).total_cents },
       });
     else taskId = await sendOfferIn(d, tx, who, org.id, id, ids.task);
   });
@@ -390,10 +415,64 @@ export async function pushOffer(
   };
 }
 
+export type UpdateOfferInput = Omit<PushOfferInput, "supersedes_id" | "send">;
+
+/**
+ * Changes a draft offer in place: the same document, reference and staff link, a new PDF.
+ * What is not given (reference, date, the Attio deal) stays as the draft has it. A sent
+ * offer is fixed; to change one, push a new offer that supersedes it.
+ */
+export async function updateOffer(
+  d: AccountsDeps,
+  who: Signed,
+  orgId: string,
+  docId: string,
+  input: UpdateOfferInput,
+) {
+  const doc = await staffDocument(d, orgId, docId);
+  if (doc.kind !== "offer") throw new NotFoundError("document.not_found");
+  if (doc.status !== "draft") throw new ConflictError("document.already_sent");
+  const before = doc.content as OfferContent;
+  const pinned = await legalForPush({
+    db: d.db,
+    fetchText: d.fetchText,
+    logger: d.logger,
+    now: d.now,
+  });
+  const content = offerContent(d, pinned, {
+    ...input,
+    date: input.date ?? before.date,
+    reference: input.reference ?? before.reference,
+  });
+  const rendered = await offerPdf(content);
+  await d.db.transaction(async (tx) => {
+    // Held while the PDF is replaced, so a send at the same moment cannot freeze half of it.
+    const locked = await store.documentForUpdate(tx, doc.orgId, doc.id);
+    if (locked?.status !== "draft") throw new ConflictError("document.already_sent");
+    const file = await storeRendered(d, doc.orgId, doc.id, rendered);
+    await store.updateDocument(tx, doc.id, {
+      title: input.title ?? `${input.offer_name} x dembrane`,
+      ...offerColumns(content, pinned),
+      ...file,
+      externalRef: input.external_ref ?? doc.externalRef,
+      updatedAt: d.now(),
+    });
+    await writeFields(tx, doc.id, rendered.fields);
+    await emit(d, tx, {
+      orgId: doc.orgId,
+      actor: actorOf(who),
+      type: "document.updated",
+      subject: { type: "document", id: doc.id },
+      detail: { kind: "offer", total_cents: offerTotals(content).total_cents },
+    });
+  });
+  return documentDetail(d, (await store.document(d.db, doc.orgId, doc.id)) as DocumentRow, "staff");
+}
+
 /**
  * Sends an offer that is still a draft: its PDF and fields freeze, "Review and sign the
- * offer" opens, the onboarding steps not yet taken are withdrawn, and the timeline notes
- * the legal versions it carries.
+ * offer" opens, the onboarding steps not yet taken are withdrawn, the timeline notes the
+ * legal versions it carries, and the people who run the account are told by email.
  */
 async function sendOfferIn(
   d: AccountsDeps,
@@ -406,8 +485,8 @@ async function sendOfferIn(
   const now = d.now();
   const doc = (await store.document(tx, orgId, docId)) as DocumentRow;
   await store.updateDocument(tx, docId, { status: "sent", sentAt: now, updatedAt: now });
-  // The customer must sign it, so a contact held by an unpublished demo can now sign in.
-  await releaseHeldContacts(tx, orgId);
+  // The customer must sign it, so a contact held by an unpublished demo is let in now.
+  await releaseHeldContacts(tx, orgId, now);
   const task = await createTask(d, tx, {
     ...(taskId && { id: taskId }),
     orgId,
@@ -438,41 +517,106 @@ async function sendOfferIn(
           }
         : null,
     },
+    webhook: await sentPayload(d, tx, who, orgId, docId),
   });
+  await tellCustomerOfOffer(d, tx, orgId, doc);
   return task.id;
 }
 
+/** The subject the job is queued under; the worker words it in the recipient's language. */
+const OFFER_SENT_SUBJECT = "Your offer from dembrane is ready to sign";
+
 /**
- * A draft offer sent later pins the texts that are newest then: when any changed since it
- * was drafted, its PDF, text and fields are rendered again before it freezes.
+ * One email to each person who runs the account, in their language, with the link where
+ * the offer is read and signed. Queued in the transaction of the send, so it exists only
+ * if the offer was sent; the run id is the offer and the person, so one offer reaches one
+ * person once. A signer the customer names later gets their own invitation.
+ *
+ * The job carries the template, its data and the language, and the worker words it from
+ * the catalogs. Nothing here reads them: the preview seed sends an offer from the migrate
+ * binary, which does not carry them.
  */
-async function repinDraftOffer(d: AccountsDeps, doc: DocumentRow): Promise<void> {
+async function tellCustomerOfOffer(d: AccountsDeps, tx: Conn, orgId: string, doc: DocumentRow) {
+  const recipients = await accountRecipients(tx, orgId);
+  if (!recipients.length) {
+    d.logger.warn({ document_id: doc.id, org_id: orgId }, "offer sent email has nobody to go to");
+    return;
+  }
+  const org = (await store.org(tx, orgId)) as OrgRow;
+  const email = {
+    template: "account_offer_sent",
+    data: {
+      org_name: org.name,
+      document_title: doc.title,
+      sign_url: customerSignUrl(d.settings.dashboardUrl, orgId, doc.id),
+    },
+  } satisfies EmailTemplate;
+  for (const r of recipients)
+    await d.jobs.enqueue(
+      sendEmail,
+      {
+        ...email,
+        language: r.language,
+        to: r.email,
+        subject: OFFER_SENT_SUBJECT,
+        context: `account offer sent ${doc.id}`,
+      },
+      { tx, workflowId: `accounts.offer-sent:${doc.id}:${r.appUserId}` },
+    );
+}
+
+/** `account.document.sent`: what staff sent, to whom it is shown, and who sent it. */
+async function sentPayload(d: AccountsDeps, tx: Conn, who: Signed, orgId: string, docId: string) {
+  const sent = (await store.document(tx, orgId, docId)) as DocumentRow;
+  return {
+    event: "account.document.sent" as const,
+    org: orgPayload((await store.org(tx, orgId)) as OrgRow),
+    document: documentPayload(sent),
+    sent_by: (await store.identity(tx, who.directusUserId))?.email ?? null,
+    links: {
+      /** The document as staff see it. */
+      document: staffDocumentUrl(d.settings.dashboardUrl, orgId, docId),
+      /** Where the customer reads and signs it, after signing in. */
+      customer: sent.requiresSignature
+        ? customerSignUrl(d.settings.dashboardUrl, orgId, docId)
+        : null,
+    },
+  };
+}
+
+/**
+ * A draft offer carries the day it is sent and the texts in force that day: when the
+ * draft is from an earlier day, or a text changed since, its PDF, text and fields are
+ * rendered again before it freezes. A date set in the future stays.
+ */
+async function freshenDraftOffer(d: AccountsDeps, doc: DocumentRow): Promise<void> {
   const pinned = await legalForPush({
     db: d.db,
     fetchText: d.fetchText,
     logger: d.logger,
     now: d.now,
   });
+  const before = doc.content as OfferContent;
+  const today = d.now().toISOString().slice(0, 10);
+  const date = before.date < today ? today : before.date;
   if (
+    date === before.date &&
     doc.termsTextId === pinned.terms.id &&
     doc.slaTextId === pinned.sla.id &&
     doc.dpaTextId === pinned.dpa.id
   )
     return;
   const content: OfferContent = {
-    ...(doc.content as OfferContent),
+    ...before,
+    date,
     legal: { terms: pin(pinned.terms), sla: pin(pinned.sla), dpa: pin(pinned.dpa) },
   };
   const rendered = await offerPdf(content);
   const file = await storeRendered(d, doc.orgId, doc.id, rendered);
   await d.db.transaction(async (tx) => {
     await store.updateDocument(tx, doc.id, {
-      content,
-      body: offerText(content),
+      ...offerColumns(content, pinned),
       ...file,
-      termsTextId: pinned.terms.id,
-      slaTextId: pinned.sla.id,
-      dpaTextId: pinned.dpa.id,
       updatedAt: d.now(),
     });
     await writeFields(tx, doc.id, rendered.fields);
@@ -600,8 +744,8 @@ async function markSent(
   const now = d.now();
   const doc = (await store.document(tx, orgId, docId)) as DocumentRow;
   await store.updateDocument(tx, docId, { status: "sent", sentAt: now, updatedAt: now });
-  // A document to sign needs the customer to act, so a held contact can now sign in.
-  if (doc.requiresSignature) await releaseHeldContacts(tx, orgId);
+  // A document to sign needs the customer to act, so a held contact is let in now.
+  if (doc.requiresSignature) await releaseHeldContacts(tx, orgId, now);
   let taskId: string | null = null;
   if (task)
     taskId = (
@@ -620,6 +764,7 @@ async function markSent(
     type: "document.sent",
     subject: { type: "document", id: docId },
     detail: { kind: doc.kind, title: doc.title },
+    webhook: await sentPayload(d, tx, who, orgId, docId),
   });
   return taskId;
 }
@@ -669,7 +814,7 @@ export async function sendDocument(
   let doc = await staffDocument(d, orgId, docId);
   if (doc.status !== "draft") throw new ConflictError("document.already_sent");
   if (doc.kind === "offer") {
-    await repinDraftOffer(d, doc);
+    await freshenDraftOffer(d, doc);
     doc = await staffDocument(d, orgId, docId);
     await d.db.transaction((tx) => sendOfferIn(d, tx, who, doc.orgId, doc.id));
     return documentDetail(
@@ -705,6 +850,15 @@ export async function voidDocument(
       type: "document.voided",
       subject: { type: "document", id: doc.id },
       detail: { reason },
+      webhook: {
+        event: "account.document.voided",
+        org: orgPayload(org),
+        document: documentPayload(doc),
+        /** What it was when staff withdrew it: a draft the customer never saw, or sent. */
+        was: doc.status,
+        reason,
+        voided_by: (await store.identity(tx, who.directusUserId))?.email ?? null,
+      },
     });
   });
   return documentDetail(d, (await store.document(d.db, org.id, doc.id)) as DocumentRow, "staff");

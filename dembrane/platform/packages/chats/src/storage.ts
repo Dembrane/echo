@@ -1,7 +1,7 @@
 import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
 import { directusRow } from "@dembrane/legacy-shape";
-import { and, asc, count, eq } from "drizzle-orm";
+import { and, asc, count, eq, isNull } from "drizzle-orm";
 import type postgres from "postgres";
 
 const { project, project_chat, project_chat_message, project_chat_conversation, conversation } =
@@ -160,6 +160,22 @@ export function chatsStorage(db: Db) {
         .where(
           and(
             eq(project_chat_message.project_chat_id, chatId),
+            eq(project_chat_message.message_from, "user"),
+          ),
+        );
+      return Number(row?.n ?? 0);
+    },
+
+    /** User turns across a project's live chats, for a sample copy's free-tier allowance. */
+    async countProjectUserTurns(projectId: string): Promise<number> {
+      const [row] = await db
+        .select({ n: count() })
+        .from(project_chat_message)
+        .innerJoin(project_chat, eq(project_chat.id, project_chat_message.project_chat_id))
+        .where(
+          and(
+            eq(project_chat.project_id, projectId),
+            isNull(project_chat.deleted_at),
             eq(project_chat_message.message_from, "user"),
           ),
         );

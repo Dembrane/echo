@@ -2,10 +2,11 @@ import { dutchDate } from "./legal/parse";
 import { type OfferLine, type PricedLine, priceLines, type Totals } from "./money";
 
 /**
- * The offer as today's Google Doc templates lay it out (packages/accounts/reference: subscription
+ * The offer in the words of the Google Doc templates (packages/accounts/reference: subscription
  * and event, English and Dutch): letterhead, "<Name> x dembrane", date and offer id, a
  * greeting, the lines table, the total excluding VAT, the closing, the acceptance block and
  * the incorporation clause naming the pinned terms, SLA and DPA, then the validity line.
+ * The template and the language choose the words; every offer has the same look (offer-pdf.ts).
  * The same structure feeds the text the customer reads (and the sha256 binds) and the PDF.
  * Versions and dates of the legal texts always come from the pinned rows, never from here.
  */
@@ -87,12 +88,42 @@ interface Copy {
   readonly acceptanceTitle: string;
   readonly acceptanceIntro: string;
   readonly acceptance: Acceptance;
-  readonly clause: (l: OfferContent["legal"]) => string[];
+  readonly clause: (l: OfferContent["legal"]) => Clause;
   readonly validity: string;
 }
 
 const blank = "____________________";
 const ver = (t: PinnedText, sep: string) => `${t.version}${sep}${dutchDate(t.effective_on)}`;
+
+/**
+ * A piece of a clause line. The templates link the name of each legal text and underline a
+ * few words; plain text cannot, so there the address follows the version in words.
+ */
+export type ClausePart =
+  | string
+  | { readonly link: string; readonly url: string }
+  | { readonly underline: string }
+  | { readonly textOnly: string };
+export type ClauseLine = readonly ClausePart[];
+
+const linked = (name: string, t: PinnedText): ClausePart => ({ link: name, url: t.url });
+const address = (t: PinnedText): ClausePart => ({ textOnly: `, ${t.url}` });
+const u = (words: string): ClausePart => ({ underline: words });
+
+/** A clause line as plain text: links by their words, the address after the version. */
+export function clauseText(line: ClauseLine): string {
+  return line
+    .map((p) =>
+      typeof p === "string"
+        ? p
+        : "link" in p
+          ? p.link
+          : "underline" in p
+            ? p.underline
+            : p.textOnly,
+    )
+    .join("");
+}
 const f = (
   prefix: string,
   kind: FieldKind,
@@ -112,22 +143,75 @@ const NL_SIGNING = [
   f("Handtekening:", "signature", "Handtekening"),
 ];
 
-const DPA_EN_SUB =
-  "By signing this offer, you agree to the Data Processing Agreement. If the signatory of this offer is not authorised to enter into data processing arrangements on behalf of the organisation, the Data Processing Agreement must be signed separately by an authorised representative. A signing copy (PDF) is available via the link at Annex B. It is your responsibility to assess whether separate signing is required. The Agreement is only complete upon valid acceptance of the Data Processing Agreement (art. 3.6 of the General Terms and Conditions).";
-const DPA_EN_EVENT =
-  "If the signatory of this offer is not authorized to enter into data processing agreements on behalf of the organization, the Data Processing Agreement must be signed separately by an authorized representative. A signed copy (PDF) is available via the link at Appendix B. It is your responsibility to determine whether separate signing is required. The Agreement is only complete after valid acceptance of the Data Processing Agreement (art. 3.6 of the General Terms and Conditions).";
-const DPA_NL =
-  "Indien de ondertekenaar van deze offerte niet bevoegd is om namens de organisatie verwerkingsafspraken aan te gaan, dient de Verwerkersovereenkomst separaat te worden ondertekend door een daartoe bevoegd vertegenwoordiger. Een ondertekeningsexemplaar (PDF) is beschikbaar via de link bij Bijlage B. Het is uw verantwoordelijkheid om te beoordelen of een separate ondertekening vereist is. De Overeenkomst is pas volledig na geldige aanvaarding van de Verwerkersovereenkomst (art. 3.6 van de Algemene Voorwaarden).";
-
-const NL_CLAUSE = (l: OfferContent["legal"]) => [
-  "Met de ondertekening van deze offerte verklaart u tevens kennis te hebben genomen van en akkoord te gaan met de volgende documenten, die tezamen de Overeenkomst vormen:",
-  "1. Deze opdrachtbevestiging/offerte;",
-  `2. De Algemene Voorwaarden van dembrane B.V. (versie ${ver(l.terms, ", ")}, ${l.terms.url});`,
-  `3. Bijlage A: Service Level Agreement (versie ${ver(l.sla, ", ")}, ${l.sla.url}); Een SLA is niet van toepassing bij single events;`,
-  `4. Bijlage B: Verwerkersovereenkomst (versie ${ver(l.dpa, ", ")}, ${l.dpa.url}). ${DPA_NL}`,
-  "In geval van strijdigheid geldt de rangorde zoals bepaald in artikel 2.4 van de Algemene Voorwaarden.",
-  "Door ondertekening verklaart u bovengenoemde documenten te hebben ontvangen dan wel via de bovenstaande links te kunnen raadplegen.",
+// The words the templates underline in the DPA sentence stay underlined in the PDF.
+const DPA_EN_SUB: ClauseLine = [
+  " By signing this offer, you agree to the Data Processing Agreement. If the signatory of this offer is ",
+  u("not authorised"),
+  " to enter into data processing arrangements on behalf of the organisation, the Data Processing Agreement must be signed ",
+  u("separately"),
+  " by an authorised representative. A signing copy (PDF) is available via the link at Annex B. It is ",
+  u("your responsibility"),
+  " to assess whether separate signing is required. The Agreement is only complete upon valid acceptance of the Data Processing Agreement (art. 3.6 of the General Terms and Conditions).",
 ];
+const DPA_EN_EVENT: ClauseLine = [
+  " If the signatory of this offer is ",
+  u("not authorized"),
+  " to enter into data processing agreements on behalf of the organization, the Data Processing Agreement must be signed ",
+  u("separately"),
+  " by an authorized representative. A signed copy (PDF) is available via the link at Appendix B. It is ",
+  u("your responsibility"),
+  " to determine whether separate signing is required. The Agreement is only complete after valid acceptance of the Data Processing Agreement (art. 3.6 of the General Terms and Conditions).",
+];
+const DPA_NL: ClauseLine = [
+  " Indien de ondertekenaar van deze offerte ",
+  u("niet bevoegd"),
+  " is om namens de organisatie verwerkingsafspraken aan te gaan, dient de Verwerkersovereenkomst ",
+  u("separaat"),
+  " te worden ondertekend door een daartoe bevoegd vertegenwoordiger. Een ondertekeningsexemplaar (PDF) is beschikbaar via de link bij Bijlage B. Het is ",
+  u("uw verantwoordelijkheid"),
+  " om te beoordelen of een separate ondertekening vereist is. De Overeenkomst is pas volledig na geldige aanvaarding van de Verwerkersovereenkomst (art. 3.6 van de Algemene Voorwaarden).",
+];
+
+/** The incorporation clause: its opening, the four numbered documents, the two closing lines. */
+export interface Clause {
+  readonly opening: string;
+  readonly items: readonly ClauseLine[];
+  readonly closing: readonly string[];
+}
+
+const NL_CLAUSE = (l: OfferContent["legal"]): Clause => ({
+  opening:
+    "Met de ondertekening van deze offerte verklaart u tevens kennis te hebben genomen van en akkoord te gaan met de volgende documenten, die tezamen de Overeenkomst vormen:",
+  items: [
+    ["Deze opdrachtbevestiging/offerte;"],
+    [
+      "De ",
+      linked("Algemene Voorwaarden", l.terms),
+      ` van dembrane B.V. (versie ${ver(l.terms, ", ")}`,
+      address(l.terms),
+      ");",
+    ],
+    [
+      "Bijlage A: ",
+      linked("Service Level Agreement", l.sla),
+      ` (versie ${ver(l.sla, ", ")}`,
+      address(l.sla),
+      "); Een SLA is niet van toepassing bij single events;",
+    ],
+    [
+      "Bijlage B: ",
+      linked("Verwerkersovereenkomst", l.dpa),
+      ` (versie ${ver(l.dpa, ", ")}`,
+      address(l.dpa),
+      ").",
+      ...DPA_NL,
+    ],
+  ],
+  closing: [
+    "In geval van strijdigheid geldt de rangorde zoals bepaald in artikel 2.4 van de Algemene Voorwaarden.",
+    "Door ondertekening verklaart u bovengenoemde documenten te hebben ontvangen dan wel via de bovenstaande links te kunnen raadplegen.",
+  ],
+});
 
 const NL_ACCEPT = (withVat: boolean): Acceptance => ({
   fields: [
@@ -180,15 +264,39 @@ const COPY: Record<OfferTemplate, Record<Language, Copy>> = {
         statement: "agrees to the contents of this offer.",
         signing: EN_SIGNING,
       },
-      clause: (l) => [
-        "By signing this offer, you also declare that you have read and agree to the following documents, which together constitute the Agreement:",
-        "1. This order confirmation/offer;",
-        `2. The General Terms and Conditions of dembrane B.V. (version ${ver(l.terms, ", ")}, ${l.terms.url});`,
-        `3. Annex A: Service Level Agreement (version ${ver(l.sla, ", ")}, ${l.sla.url}). An SLA does not apply to single events;`,
-        `4. Annex B: Data Processing Agreement (version ${ver(l.dpa, ", ")}, ${l.dpa.url}). ${DPA_EN_SUB}`,
-        "In the event of any conflict, the order of precedence as set out in article 2.4 of the General Terms and Conditions shall apply.",
-        "By signing, you declare that you have received the above documents or are able to access them via the links provided.",
-      ],
+      clause: (l) => ({
+        opening:
+          "By signing this offer, you also declare that you have read and agree to the following documents, which together constitute the Agreement:",
+        items: [
+          ["This order confirmation/offer;"],
+          [
+            "The ",
+            linked("General Terms and Conditions", l.terms),
+            ` of dembrane B.V. (version ${ver(l.terms, ", ")}`,
+            address(l.terms),
+            ");",
+          ],
+          [
+            "Annex A: ",
+            linked("Service Level Agreement", l.sla),
+            ` (version ${ver(l.sla, ", ")}`,
+            address(l.sla),
+            "). An SLA does not apply to single events;",
+          ],
+          [
+            "Annex B: ",
+            linked("Data Processing Agreement", l.dpa),
+            ` (version ${ver(l.dpa, ", ")}`,
+            address(l.dpa),
+            ").",
+            ...DPA_EN_SUB,
+          ],
+        ],
+        closing: [
+          "In the event of any conflict, the order of precedence as set out in article 2.4 of the General Terms and Conditions shall apply.",
+          "By signing, you declare that you have received the above documents or are able to access them via the links provided.",
+        ],
+      }),
       validity: "\u{1F4C5} This offer is valid for 14 days starting from the date it was made",
     },
     nl: {
@@ -238,15 +346,39 @@ const COPY: Record<OfferTemplate, Record<Language, Copy>> = {
         statement: "agree with the content of the prepared offer.",
         signing: EN_SIGNING,
       },
-      clause: (l) => [
-        "By signing this offer, you declare that you have received knowledge of and agree with the following documents, which together form the Agreement:",
-        "1. This work order/offer;",
-        `2. The General Terms and Conditions of dembrane B.V. (version ${ver(l.terms, ", ")}, ${l.terms.url});`,
-        `3. Appendix A: Service Level Agreement (version ${ver(l.sla, ", ")}, ${l.sla.url}); An SLA does not apply to single events;`,
-        `4. Appendix B: Data Processing Agreement (version ${ver(l.dpa, ", ")}, ${l.dpa.url}). ${DPA_EN_EVENT}`,
-        "In case of conflict, the hierarchy as determined in article 2.4 of the General Terms and Conditions applies.",
-        "By signing, you declare that you have received the aforementioned documents or can consult them via the above links.",
-      ],
+      clause: (l) => ({
+        opening:
+          "By signing this offer, you declare that you have received knowledge of and agree with the following documents, which together form the Agreement:",
+        items: [
+          ["This work order/offer;"],
+          [
+            "The ",
+            linked("General Terms and Conditions", l.terms),
+            ` of dembrane B.V. (version ${ver(l.terms, ", ")}`,
+            address(l.terms),
+            ");",
+          ],
+          [
+            "Appendix A: ",
+            linked("Service Level Agreement", l.sla),
+            ` (version ${ver(l.sla, ", ")}`,
+            address(l.sla),
+            "); An SLA does not apply to single events;",
+          ],
+          [
+            "Appendix B: ",
+            linked("Data Processing Agreement", l.dpa),
+            ` (version ${ver(l.dpa, ", ")}`,
+            address(l.dpa),
+            ").",
+            ...DPA_EN_EVENT,
+          ],
+        ],
+        closing: [
+          "In case of conflict, the hierarchy as determined in article 2.4 of the General Terms and Conditions applies.",
+          "By signing, you declare that you have received the aforementioned documents or can consult them via the above links.",
+        ],
+      }),
       validity: "\u{1F4C5} This offer is valid for 14 days from the date of preparation.",
     },
     nl: {
@@ -307,7 +439,10 @@ export interface OfferLayout {
   readonly acceptanceTitle: string;
   readonly acceptanceIntro: string;
   readonly acceptance: Acceptance;
+  /** The clause as plain lines, numbered, for the text. */
   readonly clause: readonly string[];
+  /** The same clause in parts, for the PDF: linked names, underlined words. */
+  readonly clauseParts: Clause;
   readonly validity: string;
   readonly signOff: string;
 }
@@ -321,6 +456,7 @@ export function layoutOffer(content: OfferContent): OfferLayout {
   const totals = offerTotals(content);
   const c = content.company;
   const unitFirst = content.template === "subscription";
+  const clause = copy.clause(content.legal);
   const meta = [`${dutchDate(content.date)} | ${copy.metaId}: ${content.reference}`];
   if (content.attention) meta.push(`${copy.attention} ${content.attention}`);
   return {
@@ -357,7 +493,12 @@ export function layoutOffer(content: OfferContent): OfferLayout {
     acceptanceTitle: copy.acceptanceTitle,
     acceptanceIntro: copy.acceptanceIntro,
     acceptance: copy.acceptance,
-    clause: copy.clause(content.legal),
+    clause: [
+      clause.opening,
+      ...clause.items.map((line, i) => `${i + 1}. ${clauseText(line)}`),
+      ...clause.closing,
+    ],
+    clauseParts: clause,
     validity: copy.validity,
     signOff: SIGN_OFF,
   };

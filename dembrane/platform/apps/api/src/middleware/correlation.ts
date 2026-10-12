@@ -8,8 +8,14 @@ import {
   withCorrelation,
 } from "@dembrane/observability";
 import type { MiddlewareHandler } from "hono";
-import { routePath } from "hono/route";
+import { matchedRoutes, routePath } from "hono/route";
 import type { Deps, Env } from "../deps";
+
+/** The handler's route pattern, known before it runs: the last match that is not a middleware. */
+function operationOf(c: Parameters<MiddlewareHandler<Env>>[0]): string {
+  const handler = matchedRoutes(c).findLast((r) => !r.path.endsWith("*"));
+  return `${c.req.method} ${handler?.path ?? c.req.path}`;
+}
 
 /**
  * Opens the request span, continues an incoming W3C trace, and binds the request id so
@@ -33,8 +39,9 @@ export function correlation(deps: Deps): MiddlewareHandler<Env> {
     c.header("x-request-id", requestId);
     const started = performance.now();
     try {
-      await withCorrelation({ requestId, traceId: sc.traceId, spanId: sc.spanId }, () =>
-        context.with(trace.setSpan(parent, span), next),
+      await withCorrelation(
+        { requestId, traceId: sc.traceId, spanId: sc.spanId, operation: operationOf(c) },
+        () => context.with(trace.setSpan(parent, span), next),
       );
     } finally {
       const route = routePath(c);

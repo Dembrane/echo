@@ -35,6 +35,7 @@
         "@dembrane/llm": "workspace:*",
         "@dembrane/mail": "workspace:*",
         "@dembrane/map": "workspace:*",
+        "@dembrane/metering": "workspace:*",
         "@dembrane/notifications": "workspace:*",
         "@dembrane/observability": "workspace:*",
         "@dembrane/popcorn": "workspace:*",
@@ -45,6 +46,7 @@
         "@dembrane/ratelimit": "workspace:*",
         "@dembrane/realtime": "workspace:*",
         "@dembrane/reports": "workspace:*",
+        "@dembrane/samples": "workspace:*",
         "@dembrane/staff": "workspace:*",
         "@dembrane/stats": "workspace:*",
         "@dembrane/storage": "workspace:*",
@@ -118,6 +120,7 @@
         "@dembrane/llm": "workspace:*",
         "@dembrane/mail": "workspace:*",
         "@dembrane/map": "workspace:*",
+        "@dembrane/metering": "workspace:*",
         "@dembrane/notifications": "workspace:*",
         "@dembrane/observability": "workspace:*",
         "@dembrane/popcorn": "workspace:*",
@@ -129,6 +132,7 @@
         "@dembrane/ratelimit": "workspace:*",
         "@dembrane/realtime": "workspace:*",
         "@dembrane/reports": "workspace:*",
+        "@dembrane/samples": "workspace:*",
         "@dembrane/storage": "workspace:*",
         "@dembrane/tenancy": "workspace:*",
         "@dembrane/transcription": "workspace:*",
@@ -174,6 +178,7 @@
         "@dembrane/observability": "workspace:*",
         "@dembrane/queue": "workspace:*",
         "@dembrane/ratelimit": "workspace:*",
+        "@dembrane/samples": "workspace:*",
         "@dembrane/storage": "workspace:*",
         "drizzle-orm": "^0.45.3",
         "hono": "^4.9.0",
@@ -198,6 +203,7 @@
         "@dembrane/ratelimit": "workspace:*",
         "@dembrane/storage": "workspace:*",
         "@dembrane/webhooks": "workspace:*",
+        "@pdf-lib/fontkit": "1.1.1",
         "drizzle-orm": "^0.45.3",
         "hono": "^4.9.0",
         "pdf-lib": "^1.17.1",
@@ -489,6 +495,17 @@
         "zod": "^4.1.0",
       },
     },
+    "packages/metering": {
+      "name": "@dembrane/metering",
+      "dependencies": {
+        "@dembrane/db": "workspace:*",
+        "@dembrane/llm": "workspace:*",
+        "@dembrane/observability": "workspace:*",
+      },
+      "devDependencies": {
+        "postgres": "^3.4.9",
+      },
+    },
     "packages/notifications": {
       "name": "@dembrane/notifications",
       "dependencies": {
@@ -663,7 +680,10 @@
       "name": "@dembrane/samples",
       "dependencies": {
         "@dembrane/db": "workspace:*",
+        "@dembrane/observability": "workspace:*",
+        "@dembrane/queue": "workspace:*",
         "drizzle-orm": "^0.45.3",
+        "zod": "^4.1.0",
       },
       "devDependencies": {
         "@dembrane/config": "workspace:*",
@@ -721,6 +741,7 @@
         "@dembrane/mail": "workspace:*",
         "@dembrane/observability": "workspace:*",
         "@dembrane/queue": "workspace:*",
+        "@dembrane/samples": "workspace:*",
         "@dembrane/storage": "workspace:*",
         "drizzle-orm": "^0.45.3",
         "hono": "^4.9.0",
@@ -901,6 +922,8 @@
 
     "@dembrane/media": ["@dembrane/media@workspace:apps/media"],
 
+    "@dembrane/metering": ["@dembrane/metering@workspace:packages/metering"],
+
     "@dembrane/migrate": ["@dembrane/migrate@workspace:apps/migrate"],
 
     "@dembrane/notifications": ["@dembrane/notifications@workspace:packages/notifications"],
@@ -1050,6 +1073,8 @@
     "@opentelemetry/sdk-trace-base": ["@opentelemetry/sdk-trace-base@2.11.0", "", { "dependencies": { "@opentelemetry/core": "2.11.0", "@opentelemetry/resources": "2.11.0", "@opentelemetry/sdk-trace": "2.11.0", "@opentelemetry/semantic-conventions": "^1.29.0" }, "peerDependencies": { "@opentelemetry/api": ">=1.3.0 <1.10.0" } }, "sha512-H19x/TX/LZdqiYOjM7fqtSxwlplC5pgelavqbQdHbhdq0q/AI/TGkM2dfGuuynTXmJPeF2HoZVoPDu+TGoW78A=="],
 
     "@opentelemetry/semantic-conventions": ["@opentelemetry/semantic-conventions@1.43.0", "", {}, "sha512-eSYWTm620tTk45EKSedaUL8MFYI8hW164hIXsgIHyxu3VobUB3fFCu5t0hQby6OoWRPsG1KkKUG2M5UadiLiVg=="],
+
+    "@pdf-lib/fontkit": ["@pdf-lib/fontkit@1.1.1", "", { "dependencies": { "pako": "^1.0.6" } }, "sha512-KjMd7grNapIWS/Dm0gvfHEilSyAmeLvrEGVcqLGi0VYebuqqzTbgF29efCx7tvx+IEbG3zQciRSWl3GkUSvjZg=="],
 
     "@pdf-lib/standard-fonts": ["@pdf-lib/standard-fonts@1.0.0", "", { "dependencies": { "pako": "^1.0.6" } }, "sha512-hU30BK9IUN/su0Mn9VdlVKsWBS6GyhVfqjwl1FjZN4TxP6cCw0jP2w7V3Hf5uX7M0AZJ16vey9yE0ny7Sa59ZA=="],
 

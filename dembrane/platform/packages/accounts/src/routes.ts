@@ -45,6 +45,7 @@ import {
   staffOpenTicket,
   staffReply,
   updateAccount,
+  updateOffer,
   upsertInvoice,
   voidDocument,
 } from "./staff";
@@ -189,9 +190,8 @@ export function accountsRoutes(d: AccountsDeps) {
   };
 
   // Demos first: their paths would otherwise match /:orgId.
-  const demoSettings = () => {
+  const requireDemoSettings = () => {
     if (!d.settings.demo) throw new UnavailableError("demo.not_configured");
-    return d.settings.demo;
   };
   const demo = (c: Ctx) => ({ type: "demo", id: p(c, "demoId") });
   app.get(R.listDemos.path, async (c) => {
@@ -202,7 +202,8 @@ export function accountsRoutes(d: AccountsDeps) {
     const who = requireUser(c);
     await staffCan(d, who, "accounts.demo.create", undefined, c.get("requestId"));
     const b = await body(c, K.DemoCreateRequest);
-    return c.json(await createDemo(d, demoSettings(), who, b), 201);
+    requireDemoSettings();
+    return c.json(await createDemo(d, who, b), 201);
   });
   app.get(R.demoStatus.path, async (c) => {
     await staffCan(d, requireUser(c), "accounts.demo.read", demo(c), c.get("requestId"));
@@ -246,6 +247,11 @@ export function accountsRoutes(d: AccountsDeps) {
   app.post(R.pushOffer.path, async (c) => {
     const who = await staff(c, "accounts.offer.push");
     return c.json(await pushOffer(d, who, p(c, "orgId"), await body(c, K.PushOfferRequest)), 201);
+  });
+  app.put(R.updateOffer.path, async (c) => {
+    const who = await staff(c, "accounts.offer.update");
+    const b = await body(c, K.UpdateOfferRequest);
+    return c.json(await updateOffer(d, who, p(c, "orgId"), p(c, "docId"), b));
   });
   app.post(R.pushDocument.path, async (c) => {
     const who = await staff(c, "accounts.document.push");

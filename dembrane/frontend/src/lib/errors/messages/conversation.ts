@@ -21,6 +21,11 @@ export const conversation = {
 		message:
 			"Conversations can only move to workspaces with the same billing and data owner. Pick a project in another workspace.",
 	}),
+	"conversation.move_sample": msg({
+		id: "error.conversation.move_sample",
+		message:
+			"Conversations cannot move into or out of a sample project. Pick another project.",
+	}),
 	"conversation.no_content": msg({
 		id: "error.conversation.no_content",
 		message: "This conversation has no audio yet.",
