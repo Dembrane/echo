@@ -78,6 +78,8 @@ export interface SeedOptions {
   readonly language?: "en" | "nl";
   /** Offers pin texts from dembrane.com; the seed passes a fetcher that fails fast offline. */
   readonly fetchText: (url: string) => Promise<string>;
+  /** INVITE_HASH_SECRET: signs the invitation links of seeded signers as the API does. */
+  readonly inviteSecret?: string;
   /** Also seed the call-to-cash gallery customers (seed-gallery.ts). */
   readonly gallery?: boolean;
 }
@@ -206,7 +208,8 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
       samInbox: false,
       offerMessages: false,
       reminderIntervalDays: 7,
-      inviteSecret: "unused",
+      // The API's secret when given, so a seeded signer's invitation link opens.
+      inviteSecret: o.inviteSecret ?? "unused",
     },
   };
   const nowIso = o.now.toISOString();
@@ -353,7 +356,7 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
         offer_name: ORG_NAME,
         person_name: CONTACT_FIRST_NAME,
         attention: null,
-        reference: `DMB-DEMO-${generation}`,
+        reference: `2026-${500 + generation}`,
         title: null,
         currency: "EUR",
         date: nowIso.slice(0, 10),

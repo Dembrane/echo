@@ -437,8 +437,8 @@ run("bun run seed:accounts-demo", () => {
     expect(ORG_NAME).toEndWith("(sample)");
     const fresh = await live();
     expect(fresh?.id).toBe(again.offer_id);
-    expect(fresh?.title).toStartWith("Yearly license offer DMB-DEMO-");
-    expect((fresh?.content as { offer_name?: string } | null)?.offer_name).toBe(ORG_NAME);
+    expect(fresh?.title).toMatch(/^Yearly license offer 2026-5\d\d$/);
+    expect((fresh?.content as { offer_name: string } | undefined)?.offer_name).toBe(ORG_NAME);
     const [customer] = await database.db
       .select({ name: schema.auth_user.name })
       .from(schema.auth_user)
@@ -511,6 +511,7 @@ run("bun run seed:accounts-demo", () => {
         "Northfield Library (sample)",
         "Riverside Region (sample)",
         "Lakeview Water Board (sample)",
+        "Meridian Housing (sample)",
       ]);
       const after = await counts();
       await seedAccountsDemo({ ...(await options()), gallery: true });
@@ -529,25 +530,48 @@ run("bun run seed:accounts-demo", () => {
       ).toEqual([
         "2026-0398:sent:paid",
         "2026-0402:sent:paid",
+        "2026-0410:sent:paid",
         "2026-0455:sent:overdue",
         "2026-0471:sent:open",
-        "DMB-GALLERY-HARBOUR-DPA:sent:-",
-        "DMB-GALLERY-HARBOUR:signed:-",
-        "DMB-GALLERY-LAKEVIEW-DPA:sent:-",
-        "DMB-GALLERY-LAKEVIEW:viewed:-",
-        "DMB-GALLERY-NORTHFIELD-DPA:sent:-",
-        "DMB-GALLERY-NORTHFIELD:sent:-",
-        "DMB-GALLERY-RIVERSIDE-DPA:sent:-",
-        "DMB-GALLERY-RIVERSIDE:signed:-",
-        "DMB-GALLERY-WESTHOEK-DPA:sent:-",
-        "DMB-GALLERY-WESTHOEK:viewed:-",
+        "2026-515-DPA:sent:-",
+        "2026-515:signed:-",
+        "2026-516-DPA:sent:-",
+        "2026-516:viewed:-",
+        "2026-517-DPA:sent:-",
+        "2026-517:sent:-",
+        "2026-518-DPA:sent:-",
+        "2026-518:signed:-",
+        "2026-519-DPA:sent:-",
+        "2026-519:viewed:-",
+        "2026-520-DPA:sent:-",
+        "2026-520:signed:-",
       ]);
-      expect(docs.find((x) => x.reference === "DMB-GALLERY-LAKEVIEW")?.signerName).toBe(
-        "Taylor Lake",
-      );
+      expect(docs.find((x) => x.reference === "2026-519")?.signerName).toBe("Taylor Lake");
       // Every invoice has its stand-in for Exact's PDF.
       for (const x of docs.filter((x) => x.kind === "invoice")) expect(x.fileKey).not.toBeNull();
       expect(first.gallery[0]?.org_id).toBe(demoIdentity(GALLERY_SLUG, "org-harbour"));
+      // Meridian has colleagues and a workspace, so the overview shows Members and Workspaces.
+      const meridian = demoIdentity(GALLERY_SLUG, "org-meridian");
+      const members = await database.db
+        .select()
+        .from(schema.org_membership)
+        .where(eq(schema.org_membership.org_id, meridian));
+      expect(members.length).toBe(4);
+      const inWorkspace = await database.db
+        .select()
+        .from(schema.workspace_membership)
+        .where(
+          eq(
+            schema.workspace_membership.workspace_id,
+            demoIdentity(GALLERY_SLUG, "workspace-meridian"),
+          ),
+        );
+      expect(inWorkspace.map((m) => m.role).sort()).toEqual([
+        "member",
+        "member",
+        "member",
+        "owner",
+      ]);
     } finally {
       for (const spy of spies) spy.mockRestore();
     }

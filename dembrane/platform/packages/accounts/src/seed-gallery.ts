@@ -1,10 +1,12 @@
+import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import { demoIdentity } from "@dembrane/popcorn";
+import { and, eq } from "drizzle-orm";
 import { PDFDocument, StandardFonts } from "pdf-lib";
 import { documentDetail, markViewed, nameSigner } from "./customer";
 import type { AccountsDeps } from "./deps";
 import type { OfferItem } from "./offer";
-import { createAccount } from "./prospect";
+import { createAccount, ensureUser } from "./prospect";
 import { signDocument } from "./signing";
 import { type InvoiceInput, pushOffer, upsertInvoice } from "./staff";
 import { store } from "./storage";
@@ -20,6 +22,8 @@ import { store } from "./storage";
  * - Riverside Region (sample), English: offer signed and its invoice paid.
  * - Lakeview Water Board (sample), English: the contact passed the offer to a colleague who
  *   has no account yet, so it waits on them.
+ * - Meridian Housing (sample), English: a customer with colleagues and a workspace, so the
+ *   organisation overview shows its Members and Workspaces.
  *
  * Invoices go through upsertInvoice the way sam mirrors them from Exact Online, which renders
  * and sends the real invoice; their PDF here is a plain placeholder standing in for Exact's. Every id is fixed and every step checks for its own row first, so a
@@ -80,6 +84,11 @@ interface GalleryAccount {
   readonly billTo: BillTo;
   readonly offer: GalleryOffer;
   readonly invoices: readonly GalleryInvoice[];
+  /** Colleagues in the organisation and a workspace the contact owns. */
+  readonly team?: {
+    readonly workspace: string;
+    readonly members: readonly { readonly name: string; readonly email: string }[];
+  };
 }
 
 const licence = (lang: Lang, seats: number, vat: number): OfferItem => ({
@@ -140,7 +149,7 @@ function accounts(): GalleryAccount[] {
       },
       offer: {
         template: "subscription",
-        reference: "DMB-GALLERY-HARBOUR",
+        reference: "2026-515",
         items: [licence("nl", 10, 2100), workshop("nl", 2100)],
         state: "signed",
       },
@@ -185,7 +194,7 @@ function accounts(): GalleryAccount[] {
       },
       offer: {
         template: "event",
-        reference: "DMB-GALLERY-WESTHOEK",
+        reference: "2026-516",
         items: [eventDay("nl", 0)],
         vat_treatment: "reverse_charge",
         state: "viewed",
@@ -223,7 +232,7 @@ function accounts(): GalleryAccount[] {
       },
       offer: {
         template: "event",
-        reference: "DMB-GALLERY-NORTHFIELD",
+        reference: "2026-517",
         items: [eventDay("en", 2100)],
         state: "sent",
       },
@@ -251,7 +260,7 @@ function accounts(): GalleryAccount[] {
       },
       offer: {
         template: "subscription",
-        reference: "DMB-GALLERY-RIVERSIDE",
+        reference: "2026-518",
         items: [licence("en", 5, 2100)],
         state: "signed",
       },
@@ -288,7 +297,7 @@ function accounts(): GalleryAccount[] {
       },
       offer: {
         template: "subscription",
-        reference: "DMB-GALLERY-LAKEVIEW",
+        reference: "2026-519",
         items: [licence("en", 3, 2100)],
         state: "delegated",
         signer: {
@@ -298,6 +307,51 @@ function accounts(): GalleryAccount[] {
         },
       },
       invoices: [],
+    },
+    {
+      key: "meridian",
+      name: "Meridian Housing (sample)",
+      email: "sameer+c2c-meridian@dembrane.com",
+      contact: "Alex Meridian (customer demo)",
+      firstName: "Alex",
+      stage: "customer",
+      language: "en",
+      billTo: {
+        legal_name: "Meridian Housing (sample)",
+        attention: "Alex Meridian, Operations",
+        address_line1: "Havenstraat 40",
+        address_line2: null,
+        postal_code: "3456 MH",
+        city: "Meridian",
+        country: "Netherlands",
+        vat_id: "NL003334445B01",
+        kvk_number: "23456789",
+        kbo_number: null,
+      },
+      offer: {
+        template: "subscription",
+        reference: "2026-520",
+        items: [licence("en", 8, 2100)],
+        state: "signed",
+      },
+      invoices: [
+        {
+          exactId: "GALLERY-EXACT-MERIDIAN-1",
+          number: "2026-0410",
+          dueInDays: -12,
+          status: "paid",
+          reverseCharge: false,
+          items: [licence("en", 8, 2100)],
+        },
+      ],
+      team: {
+        workspace: "Tenant panels",
+        members: [
+          { name: "Robin Meridian", email: "sameer+c2c-meridian-robin@dembrane.com" },
+          { name: "Kim Meridian", email: "sameer+c2c-meridian-kim@dembrane.com" },
+          { name: "Noor Meridian", email: "sameer+c2c-meridian-noor@dembrane.com" },
+        ],
+      },
     },
   ];
 }
@@ -382,6 +436,76 @@ async function placeholderPdf(
   pdf.setCreationDate(new Date(0));
   pdf.setModificationDate(new Date(0));
   return pdf.save();
+}
+
+/**
+ * Colleagues as plain org members (no password: they never sign in here) and one workspace
+ * the contact owns and the colleagues belong to. The overview lists workspaces from the
+ * caller's own memberships, so the contact needs theirs.
+ */
+async function seedTeam(
+  d: AccountsDeps,
+  orgId: string,
+  ownerAppUserId: string,
+  key: string,
+  team: NonNullable<GalleryAccount["team"]>,
+) {
+  const nowIso = d.now().toISOString();
+  const people = [{ appUserId: ownerAppUserId, role: "owner", tag: "owner" }];
+  for (const m of team.members) {
+    const user = await d.db.transaction((tx) =>
+      ensureUser(tx, { email: m.email, name: m.name, passwordHash: null, nowIso }),
+    );
+    if (!(await store.orgMembership(d.db, orgId, user.appUserId)))
+      await d.db.insert(schema.org_membership).values({
+        id: id(`member-${key}-${m.email}`),
+        org_id: orgId,
+        user_id: user.appUserId,
+        role: "member",
+        created_at: nowIso,
+        updated_at: nowIso,
+      });
+    people.push({ appUserId: user.appUserId, role: "member", tag: m.email });
+  }
+
+  const billing = await store.billing(d.db, orgId);
+  if (!billing) throw new Error(`gallery organisation ${key} has no billing account`);
+  const workspaceId = id(`workspace-${key}`);
+  await d.db
+    .insert(schema.workspace)
+    .values({
+      id: workspaceId,
+      org_id: orgId,
+      name: team.workspace,
+      billing_account_id: billing.id,
+      visibility: "open_to_organisation",
+      is_default: true,
+      created_by: ownerAppUserId,
+      created_at: nowIso,
+      updated_at: nowIso,
+    })
+    .onConflictDoNothing();
+  for (const p of people) {
+    const [found] = await d.db
+      .select({ id: schema.workspace_membership.id })
+      .from(schema.workspace_membership)
+      .where(
+        and(
+          eq(schema.workspace_membership.workspace_id, workspaceId),
+          eq(schema.workspace_membership.user_id, p.appUserId),
+        ),
+      );
+    if (found) continue;
+    await d.db.insert(schema.workspace_membership).values({
+      id: id(`workspace-member-${key}-${p.tag}`),
+      workspace_id: workspaceId,
+      user_id: p.appUserId,
+      role: p.role,
+      source: "direct",
+      created_at: nowIso,
+      updated_at: nowIso,
+    });
+  }
 }
 
 export interface GallerySummary {
@@ -478,6 +602,7 @@ export async function seedCallToCashGallery(
         pdf: await placeholderPdf(a, inv, { issuedOn, dueOn, subtotal, vat }),
       });
     }
+    if (a.team) await seedTeam(d, orgId, app.id, a.key, a.team);
     out.push({ org_id: orgId, name: a.name, login: a.email });
   }
   return out;

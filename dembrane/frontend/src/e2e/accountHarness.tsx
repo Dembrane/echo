@@ -8,19 +8,31 @@ import { createRoot } from "react-dom/client";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { Toaster } from "@/components/common/Toaster";
 import { I18nProvider } from "@/components/layout/I18nProvider";
-import { AccountRoute } from "@/features/accounts/customer/AccountRoute";
+import {
+	AccountDocumentsRoute,
+	AccountTasksRoute,
+} from "@/features/accounts/customer/AccountRoute";
 import { cssVariablesResolver, theme } from "@/theme";
 
-// The customer account page on the fixture backend (VITE_ACCOUNTS_FIXTURES=1), outside
+// The customer account pages (Tasks, Documents) on the fixture backend (VITE_ACCOUNTS_FIXTURES=1), outside
 // the signed-in shell, for screenshots. ?path= picks the route.
 const queryClient = new QueryClient({
 	defaultOptions: { queries: { retry: false } },
 });
 const path =
 	new URLSearchParams(window.location.search).get("path") ??
-	"/en-US/o/5f1a2b3c-0d4e-4f60-8a71-92b3c4d5e6f7/account";
+	"/en-US/o/5f1a2b3c-0d4e-4f60-8a71-92b3c4d5e6f7/tasks";
 const router = createMemoryRouter(
-	[{ element: <AccountRoute />, path: "/:language/o/:organisationId/account" }],
+	[
+		{
+			element: <AccountTasksRoute />,
+			path: "/:language/o/:organisationId/tasks",
+		},
+		{
+			element: <AccountDocumentsRoute />,
+			path: "/:language/o/:organisationId/documents",
+		},
+	],
 	{ initialEntries: [path] },
 );
 

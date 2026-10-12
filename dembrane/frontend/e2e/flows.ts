@@ -135,6 +135,8 @@ export const flows: Record<string, Flow> = {
 	"/o/:organisationId/account/documents/:docId/sign": {
 		params: { docId: "$doc", organisationId: "$org" },
 	},
+	"/o/:organisationId/documents": { params: { organisationId: "$org" } },
+	"/o/:organisationId/tasks": { params: { organisationId: "$org" } },
 	"/onboarding": {
 		skip: "shown only before onboarding completes; the check's login has completed it",
 	},

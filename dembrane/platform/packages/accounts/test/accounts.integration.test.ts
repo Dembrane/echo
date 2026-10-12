@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { sendEmail } from "@dembrane/account";
+import { newId } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import { deliverSamMessage } from "@dembrane/webhooks";
 import { and, eq, sql } from "drizzle-orm";
@@ -554,8 +555,10 @@ run("accounts routes against Postgres", () => {
     expect(K.NameSignerResponse.parse(r.data).signer.email).toBe("signer@example.test");
     const [mail] = w.jobs.of("account.send-email");
     expect(mail).toMatchObject({ to: "signer@example.test", template: "account_signer_invite" });
-    expect((mail as { data: { sign_url: string } }).data.sign_url).toBe(
-      `https://dash.test/o/${w.orgId}/account/documents/${id}/sign`,
+    expect((mail as { data: { sign_url: string } }).data.sign_url).toMatch(
+      new RegExp(
+        `^https://dash\\.test/o/${w.orgId}/account/documents/${id}/sign\\?invite=[\\w-]{32}$`,
+      ),
     );
     expect(await store.mayReceiveCode(w.db, "signer@example.test", w.clock.now)).toBe(true);
     expect(await store.mayReceiveCode(w.db, "stranger@example.test", w.clock.now)).toBe(false);
@@ -600,6 +603,105 @@ run("accounts routes against Postgres", () => {
     ).toBe(200);
     expect((await store.signatureOf(w.db, id))?.email).toBe("signer@example.test");
     expect((await call(w, "GET", `${C()}/documents/${id}/signed.pdf`, "signer")).status).toBe(200);
+  });
+
+  test("the invitation link greets the person named before sign-in, and only they can take it up", async () => {
+    const pushed = K.PushOfferResponse.parse(
+      (await call(w, "POST", `${S()}/offers`, "staff", offerBody())).data,
+    );
+    const id = pushed.document.id;
+    // Someone new: an identity from the code sign-in, without the app user onboarding makes.
+    const freshId = newId();
+    await w.db.insert(schema.auth_user).values({
+      id: freshId,
+      name: "",
+      email: "fresh@example.test",
+      emailVerified: true,
+      createdAt: w.clock.now,
+      updatedAt: w.clock.now,
+    });
+    await w.db.insert(schema.directus_users).values({ id: freshId, email: "fresh@example.test" });
+    (w.people as Record<string, unknown>).fresh = {
+      appUserId: null,
+      directusUserId: freshId,
+      isStaff: false,
+      email: "fresh@example.test",
+    };
+    const fresh = "fresh" as keyof World["people"];
+    w.jobs.jobs.length = 0;
+    const named = { name: "Taylor van Lake", email: "Fresh@Example.test", role: "Griffier" };
+    expect((await call(w, "POST", `${C()}/documents/${id}/signer`, "admin", named)).status).toBe(
+      200,
+    );
+    const [mail] = w.jobs.of("account.send-email");
+    const link = new URL((mail as { data: { sign_url: string } }).data.sign_url);
+    const token = link.searchParams.get("invite") as string;
+    const invitePath = `${C()}/documents/${id}/invite`;
+
+    // No session: the token is the access, and a wrong one reads as a wrong id.
+    const seen = await call(w, "GET", `${invitePath}?invite=${token}`, null);
+    expect(K.SignerInvite.parse(seen.data)).toEqual({
+      organisation: { name: "Gemeente Testdorp" },
+      inviter: { name: "admin" },
+      document: {
+        title: pushed.document.title,
+        kind: "offer",
+        reference: pushed.document.reference,
+      },
+      signer: {
+        email: "fresh@example.test",
+        first_name: "Taylor",
+        last_name: "van Lake",
+        role: "Griffier",
+      },
+      status: "open",
+      has_account: false,
+    });
+    const wrong = `${token.slice(0, -1)}${token.endsWith("A") ? "B" : "A"}`;
+    expect((await call(w, "GET", `${invitePath}?invite=${wrong}`, null)).status).toBe(404);
+    expect((await call(w, "GET", invitePath, null)).status).toBe(422);
+    const signerSees = K.SignerInvite.parse(
+      (await call(w, "GET", `${invitePath}?invite=${token}`, "signer")).data,
+    );
+    expect(signerSees.signer.email).toBe("fresh@example.test");
+
+    // Taking it up needs the session of that address; the names land on someone new.
+    const accept = { invite: token, first_name: "Taylor", last_name: "Lake" };
+    expect((await call(w, "POST", `${invitePath}/accept`, null, accept)).status).toBe(401);
+    expect((await call(w, "POST", `${invitePath}/accept`, "admin", accept)).status).toBe(403);
+    const taken = await call(w, "POST", `${invitePath}/accept`, fresh, accept);
+    expect(K.AcceptSignerInviteResponse.parse(taken.data)).toEqual({
+      org_id: w.orgId,
+      document_id: id,
+    });
+    expect((await store.identity(w.db, freshId))?.name).toBe("Taylor Lake");
+    const [profile] = await w.db
+      .select({ first: schema.directus_users.first_name, last: schema.directus_users.last_name })
+      .from(schema.directus_users)
+      .where(eq(schema.directus_users.id, freshId));
+    expect(profile).toEqual({ first: "Taylor", last: "Lake" });
+    // An existing account keeps its own name.
+    expect(
+      (
+        await call(w, "POST", `${C()}/documents/${id}/signer`, "admin", {
+          ...named,
+          email: "signer@example.test",
+        })
+      ).status,
+    ).toBe(200);
+    expect((await call(w, "GET", `${invitePath}?invite=${token}`, null)).status).toBe(404);
+    const again = new URL(
+      (w.jobs.of("account.send-email").at(-1) as { data: { sign_url: string } }).data.sign_url,
+    ).searchParams.get("invite") as string;
+    expect(
+      K.SignerInvite.parse((await call(w, "GET", `${invitePath}?invite=${again}`, null)).data)
+        .has_account,
+    ).toBe(true);
+    expect(
+      (await call(w, "POST", `${invitePath}/accept`, "signer", { ...accept, invite: again }))
+        .status,
+    ).toBe(200);
+    expect((await store.identity(w.db, w.people.signer.directusUserId))?.name).toBe("signer");
   });
 
   test("naming a different signer is recorded as a replacement, and namings are limited per organisation", async () => {

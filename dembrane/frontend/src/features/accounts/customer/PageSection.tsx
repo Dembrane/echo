@@ -17,18 +17,22 @@ export const PageSection = ({
 	testId?: string;
 }) => (
 	<Box component="section" data-testid={testId}>
-		<Group
-			justify="space-between"
-			align="baseline"
-			mb="sm"
-			gap="xs"
-			wrap="nowrap"
-		>
-			<Title order={2} size="h3">
-				{title}
-			</Title>
-			{action}
-		</Group>
+		{(title || action) && (
+			<Group
+				justify="space-between"
+				align="baseline"
+				mb="sm"
+				gap="xs"
+				wrap="nowrap"
+			>
+				{title && (
+					<Title order={2} size="h3">
+						{title}
+					</Title>
+				)}
+				{action}
+			</Group>
+		)}
 		{children}
 	</Box>
 );
