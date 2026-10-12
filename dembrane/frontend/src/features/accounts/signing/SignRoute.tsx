@@ -31,6 +31,7 @@ import { presentError } from "@/lib/errors/present";
 import { AccountsApiError, call } from "../api/client";
 import { accountKeys, useDocument, usePdfData, usePdfHref } from "../api/hooks";
 import type { DocumentDetailT, DocumentFieldT } from "../contract/contract.gen";
+import { SendToSomeoneElse } from "../customer/SendToSomeoneElse";
 import { formatDateTime } from "../format";
 import { AccountsI18n } from "../i18n";
 import { type PageBox, PdfPages } from "../pdf/PdfPages";
@@ -173,9 +174,9 @@ function Signing({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 }
 
 /**
- * Once someone else is named to sign, a member opening the link sees who it waits on, not
- * a signing walk that would refuse them at the end. The named person signs in their own
- * name, from their own invitation.
+ * Once someone else is named to sign, a member opening the link sees whom it is assigned
+ * to, not a signing walk that would refuse them at the end, and can hand it to someone
+ * else instead. The named person signs in their own name, from their own invitation.
  */
 function MaybeWaiting({
 	doc,
@@ -187,6 +188,7 @@ function MaybeWaiting({
 	signer: NonNullable<DocumentDetailT["signer"]>;
 }) {
 	const { data: me, isLoading } = useV2Me();
+	const [reassigning, setReassigning] = useState(false);
 	if (isLoading)
 		return (
 			<Stack align="center" pt="20vh">
@@ -196,13 +198,20 @@ function MaybeWaiting({
 	if (me?.email && me.email.toLowerCase() === signer.email.toLowerCase())
 		return <Walk doc={doc} orgId={orgId} />;
 	const name = signer.name || signer.email;
+	const jobTitle = signer.role;
 	return (
 		<>
 			<Header doc={doc} orgId={orgId} />
 			<Container size="xs" pt="10vh">
 				<Stack gap="md" data-testid="sign-waiting">
-					<Title order={3}>
-						<Trans>Waiting on {name} to sign</Trans>
+					<Title order={3} data-testid="sign-assigned">
+						{jobTitle ? (
+							<Trans>
+								This document is assigned to {name}, {jobTitle}
+							</Trans>
+						) : (
+							<Trans>This document is assigned to {name}</Trans>
+						)}
 					</Title>
 					<Text>
 						<Trans>
@@ -219,9 +228,22 @@ function MaybeWaiting({
 						>
 							<Trans>Back to account</Trans>
 						</Button>
+						<Button
+							size="md"
+							onClick={() => setReassigning(true)}
+							data-testid="sign-reassign"
+						>
+							<Trans>Send to someone else</Trans>
+						</Button>
 					</Group>
 				</Stack>
 			</Container>
+			<SendToSomeoneElse
+				orgId={orgId}
+				docId={doc.id}
+				opened={reassigning}
+				onClose={() => setReassigning(false)}
+			/>
 		</>
 	);
 }

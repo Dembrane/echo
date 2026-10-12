@@ -64,11 +64,11 @@ msgstr "{0} von {1} erledigt"
 
 #. placeholder {0}: doc.signature.name
 #. placeholder {1}: formatDateTime(doc.signature.signed_at, i18n.locale)
-#: src/features/accounts/signing/SignRoute.tsx:1038
+#: src/features/accounts/signing/SignRoute.tsx:1060
 msgid "{0} signed on {1}. The signed copy is in your documents."
 msgstr "{0} hat am {1} unterschrieben. Die signierte Kopie befindet sich in Ihren Dokumenten."
 
-#: src/features/accounts/signing/SignRoute.tsx:414
+#: src/features/accounts/signing/SignRoute.tsx:436
 msgid "{done} of {total} filled"
 msgstr "{done} von {total} ausgefüllt"
 
@@ -76,7 +76,7 @@ msgstr "{done} von {total} ausgefüllt"
 msgid "{inviter} from {org} invited you to sign"
 msgstr "{inviter} von {org} hat Sie zum Unterschreiben eingeladen"
 
-#: src/features/accounts/signing/SignRoute.tsx:635
+#: src/features/accounts/signing/SignRoute.tsx:657
 msgid "{label} is empty."
 msgstr "{label} ist leer."
 
@@ -166,7 +166,7 @@ msgstr "Zeile hinzufügen"
 #~ msgid "add a signature field to send"
 #~ msgstr ""
 
-#: src/features/accounts/signing/SignRoute.tsx:355
+#: src/features/accounts/signing/SignRoute.tsx:377
 msgid "Add your signature first."
 msgstr "Fügen Sie zuerst Ihre Unterschrift hinzu."
 
@@ -190,7 +190,7 @@ msgstr "Alle"
 msgid "Amount"
 msgstr "Betrag"
 
-#: src/features/accounts/signing/SignRoute.tsx:918
+#: src/features/accounts/signing/SignRoute.tsx:940
 msgid "Answer the question"
 msgstr "Frage beantworten"
 
@@ -216,15 +216,15 @@ msgstr "Fragt nach"
 #~ msgstr "Mindestens eine der drei Optionen."
 
 #: src/features/accounts/signing/SignatureCapture.tsx:233
-#: src/features/accounts/signing/SignRoute.tsx:586
+#: src/features/accounts/signing/SignRoute.tsx:608
 #: src/features/accounts/customer/WhoSigns.tsx:364
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:220
 msgid "Back"
 msgstr "Zurück"
 
-#: src/features/accounts/signing/SignRoute.tsx:123
-#: src/features/accounts/signing/SignRoute.tsx:220
-#: src/features/accounts/signing/SignRoute.tsx:1064
+#: src/features/accounts/signing/SignRoute.tsx:124
+#: src/features/accounts/signing/SignRoute.tsx:229
+#: src/features/accounts/signing/SignRoute.tsx:1086
 msgid "Back to account"
 msgstr "Zurück zum Konto"
 
@@ -290,7 +290,7 @@ msgstr "Aufzählungspunkte"
 #~ msgid "by {due}"
 #~ msgstr ""
 
-#: src/features/accounts/signing/SignRoute.tsx:882
+#: src/features/accounts/signing/SignRoute.tsx:904
 msgid "By selecting Sign, you sign electronically. Your electronic signature is as binding as one made by hand."
 msgstr "Mit Klick auf Unterschreiben unterschreiben Sie elektronisch. Ihre elektronische Unterschrift ist so verbindlich wie eine handschriftliche."
 
@@ -314,7 +314,7 @@ msgid "Cancelled"
 msgstr "Abgebrochen"
 
 #: src/features/accounts/staff/DocumentRoute.tsx:145
-#: src/features/accounts/signing/SignRoute.tsx:740
+#: src/features/accounts/signing/SignRoute.tsx:762
 msgid "Change"
 msgstr "Ändern"
 
@@ -359,7 +359,7 @@ msgstr "Antwort wählen"
 msgid "Choose an image"
 msgstr "Bild auswählen"
 
-#: src/features/accounts/signing/SignRoute.tsx:857
+#: src/features/accounts/signing/SignRoute.tsx:879
 msgid "Choose one to continue."
 msgstr "Wählen Sie eine Option, um fortzufahren."
 
@@ -591,7 +591,7 @@ msgstr "Entwurf gespeichert"
 msgid "Draw"
 msgstr "Zeichnen"
 
-#: src/features/accounts/signing/SignRoute.tsx:738
+#: src/features/accounts/signing/SignRoute.tsx:760
 msgid "Draw initials instead"
 msgstr "Stattdessen Initialen zeichnen"
 
@@ -682,11 +682,11 @@ msgstr "Felder gespeichert"
 msgid "Fill in"
 msgstr "Ausfüllen"
 
-#: src/features/accounts/signing/SignRoute.tsx:635
+#: src/features/accounts/signing/SignRoute.tsx:657
 msgid "Fill in {label}"
 msgstr "{label} ausfüllen"
 
-#: src/features/accounts/signing/SignRoute.tsx:609
+#: src/features/accounts/signing/SignRoute.tsx:631
 msgid "Fill in the date"
 msgstr "Datum ausfüllen"
 
@@ -702,11 +702,11 @@ msgstr "E-Mail-Adresse ausfüllen"
 msgid "Fill in their name"
 msgstr "Namen ausfüllen"
 
-#: src/features/accounts/signing/SignRoute.tsx:903
+#: src/features/accounts/signing/SignRoute.tsx:925
 msgid "Fill in what is left"
 msgstr "Fehlendes ausfüllen"
 
-#: src/features/accounts/signing/SignRoute.tsx:620
+#: src/features/accounts/signing/SignRoute.tsx:642
 msgid "Fill in your address"
 msgstr "Adresse ausfüllen"
 
@@ -714,23 +714,23 @@ msgstr "Adresse ausfüllen"
 msgid "Fill in your first name."
 msgstr "Geben Sie Ihren Vornamen ein."
 
-#: src/features/accounts/signing/SignRoute.tsx:605
+#: src/features/accounts/signing/SignRoute.tsx:627
 msgid "Fill in your job title"
 msgstr "Berufsbezeichnung ausfüllen"
 
-#: src/features/accounts/signing/SignRoute.tsx:602
+#: src/features/accounts/signing/SignRoute.tsx:624
 msgid "Fill in your name"
 msgstr "Namen ausfüllen"
 
-#: src/features/accounts/signing/SignRoute.tsx:615
+#: src/features/accounts/signing/SignRoute.tsx:637
 msgid "Fill in your organisation"
 msgstr "Organisation ausfüllen"
 
-#: src/features/accounts/signing/SignRoute.tsx:630
+#: src/features/accounts/signing/SignRoute.tsx:652
 msgid "Fill in your PO number"
 msgstr "Bestellnummer ausfüllen"
 
-#: src/features/accounts/signing/SignRoute.tsx:625
+#: src/features/accounts/signing/SignRoute.tsx:647
 msgid "Fill in your VAT number"
 msgstr "USt-IdNr. ausfüllen"
 
@@ -754,7 +754,7 @@ msgstr "Zu Händen von"
 #~ msgid "Give a VAT, KvK or KBO number."
 #~ msgstr "Geben Sie eine VAT-, KvK- oder KBO-Nummer an."
 
-#: src/features/accounts/signing/SignRoute.tsx:1129
+#: src/features/accounts/signing/SignRoute.tsx:1151
 msgid "Go to the account page"
 msgstr "Zur Kontoseite gehen"
 
@@ -791,7 +791,7 @@ msgstr "Wie wir mit Ihren Daten umgehen"
 msgid "I do"
 msgstr "Ich"
 
-#: src/features/accounts/signing/SignRoute.tsx:856
+#: src/features/accounts/signing/SignRoute.tsx:878
 msgid "If not, the data processing agreement becomes a separate document for someone who may."
 msgstr "Falls nicht, wird die Auftragsverarbeitungsvereinbarung zu einem separaten Dokument für eine zeichnungsberechtigte Person."
 
@@ -812,7 +812,7 @@ msgstr "inkl. {0} MwSt."
 msgid "Initials"
 msgstr "Initialen"
 
-#: src/features/accounts/signing/SignRoute.tsx:746
+#: src/features/accounts/signing/SignRoute.tsx:768
 msgid "Initials fields use this signature unless you draw initials."
 msgstr "Initialen-Felder verwenden diese Unterschrift, sofern Sie keine Initialen zeichnen."
 
@@ -927,7 +927,7 @@ msgstr "Anmelden"
 msgid "Log in to download the signed copy."
 msgstr "Melden Sie sich an, um das unterschriebene Exemplar herunterzuladen."
 
-#: src/features/accounts/signing/SignRoute.tsx:855
+#: src/features/accounts/signing/SignRoute.tsx:877
 msgid "May you also agree to data processing for your organisation?"
 msgstr "Dürfen Sie der Datenverarbeitung für Ihre Organisation auch zustimmen?"
 
@@ -973,7 +973,7 @@ msgstr "Neues Projekt"
 msgid "New task"
 msgstr "Neue Aufgabe"
 
-#: src/features/accounts/signing/SignRoute.tsx:700
+#: src/features/accounts/signing/SignRoute.tsx:722
 msgid "Next"
 msgstr "Weiter"
 
@@ -1040,7 +1040,7 @@ msgstr "Noch keine Fragen."
 msgid "No tasks."
 msgstr "Keine Aufgaben."
 
-#: src/features/accounts/signing/SignRoute.tsx:863
+#: src/features/accounts/signing/SignRoute.tsx:885
 msgid "No, someone else signs it"
 msgstr "Nein, jemand anderes unterzeichnet"
 
@@ -1161,7 +1161,7 @@ msgstr "PDF öffnen"
 #~ msgid "Open the public demo"
 #~ msgstr ""
 
-#: src/features/accounts/signing/SignRoute.tsx:1056
+#: src/features/accounts/signing/SignRoute.tsx:1078
 msgid "Open the signed PDF"
 msgstr "Signiertes PDF öffnen"
 
@@ -1193,7 +1193,7 @@ msgstr "Öffnet sich, sobald Sie uns sagen, wer unterschreibt."
 #: src/features/accounts/staff/TaskModals.tsx:52
 #: src/features/accounts/staff/PushOfferModal.tsx:211
 #: src/features/accounts/staff/PushOfferModal.tsx:219
-#: src/features/accounts/signing/SignRoute.tsx:674
+#: src/features/accounts/signing/SignRoute.tsx:696
 #: src/features/accounts/customer/NextSteps.tsx:564
 msgid "Optional"
 msgstr "Optional"
@@ -1297,7 +1297,7 @@ msgstr "Postleitzahl"
 msgid "Prepare an offer"
 msgstr "Angebot vorbereiten"
 
-#: src/features/accounts/signing/SignRoute.tsx:406
+#: src/features/accounts/signing/SignRoute.tsx:428
 #: src/features/accounts/customer/AccountPickerRoute.tsx:82
 msgid "Progress"
 msgstr "Fortschritt"
@@ -1449,7 +1449,7 @@ msgstr "Erneut versuchen"
 msgid "Review and send"
 msgstr "Prüfen und senden"
 
-#: src/features/accounts/signing/SignRoute.tsx:844
+#: src/features/accounts/signing/SignRoute.tsx:866
 #: src/features/accounts/customer/WhoSigns.tsx:256
 #: src/features/accounts/customer/NextSteps.tsx:205
 msgid "Review and sign"
@@ -1553,6 +1553,7 @@ msgstr "Anmelde-Einladung senden"
 msgid "Send to sign"
 msgstr "Zum Unterschreiben senden"
 
+#: src/features/accounts/signing/SignRoute.tsx:236
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:124
 #: src/features/accounts/customer/NextSteps.tsx:197
 #: src/features/accounts/customer/NextSteps.tsx:334
@@ -1627,7 +1628,7 @@ msgstr "Erledigtes anzeigen ({0})"
 msgid "Show less"
 msgstr "Weniger anzeigen"
 
-#: src/features/accounts/signing/SignRoute.tsx:920
+#: src/features/accounts/signing/SignRoute.tsx:942
 msgid "Sign"
 msgstr "Unterschreiben"
 
@@ -1635,7 +1636,7 @@ msgstr "Unterschreiben"
 msgid "Sign {doc}"
 msgstr "{doc} unterschreiben"
 
-#: src/features/accounts/signing/SignRoute.tsx:71
+#: src/features/accounts/signing/SignRoute.tsx:72
 #: src/features/accounts/signing/SignGate.tsx:155
 msgid "Sign | dembrane"
 msgstr "Unterschreiben | dembrane"
@@ -1653,7 +1654,7 @@ msgid "Signature"
 msgstr "Unterschrift"
 
 #: src/features/accounts/format.ts:63
-#: src/features/accounts/signing/SignRoute.tsx:1034
+#: src/features/accounts/signing/SignRoute.tsx:1056
 msgid "Signed"
 msgstr "Unterzeichnet"
 
@@ -1683,7 +1684,7 @@ msgstr "Seit {0}"
 msgid "So the signature record can read it"
 msgstr "Damit der Unterschriftseintrag lesbar ist"
 
-#: src/features/accounts/signing/SignRoute.tsx:848
+#: src/features/accounts/signing/SignRoute.tsx:870
 msgid "Some required fields are still empty."
 msgstr "Einige Pflichtfelder sind noch leer."
 
@@ -1722,7 +1723,7 @@ msgstr "Phase"
 msgid "Stage set"
 msgstr "Phase festgelegt"
 
-#: src/features/accounts/signing/SignRoute.tsx:434
+#: src/features/accounts/signing/SignRoute.tsx:456
 #: src/features/accounts/customer/NextSteps.tsx:217
 msgid "Start"
 msgstr "Start"
@@ -1860,7 +1861,7 @@ msgstr "Das Konto"
 #~ msgid "The account could not be loaded. Try again in a moment."
 #~ msgstr "Das Konto konnte nicht geladen werden. Versuchen Sie es gleich noch einmal."
 
-#: src/features/accounts/signing/SignRoute.tsx:611
+#: src/features/accounts/signing/SignRoute.tsx:633
 msgid "The box is not ticked yet."
 msgstr "Das Kästchen ist noch nicht angekreuzt."
 
@@ -1876,11 +1877,11 @@ msgstr "Der Kunde antwortet mit"
 msgid "The customer gets no automatic reminder. After seven days the account manager is asked to check in."
 msgstr "Der Kunde erhält keine automatische Erinnerung. Nach sieben Tagen wird der Account-Manager gebeten nachzufassen."
 
-#: src/features/accounts/signing/SignRoute.tsx:609
+#: src/features/accounts/signing/SignRoute.tsx:631
 msgid "The date is empty."
 msgstr "Das Datum ist leer."
 
-#: src/features/accounts/signing/SignRoute.tsx:1106
+#: src/features/accounts/signing/SignRoute.tsx:1128
 msgid "The document could not be loaded. Check your connection and try again."
 msgstr "Das Dokument konnte nicht geladen werden. Prüfen Sie Ihre Verbindung und versuchen Sie es noch einmal."
 
@@ -1893,7 +1894,7 @@ msgstr "Der Entwurf ist fertig. Prüfen Sie ihn und veröffentlichen Sie ihn ans
 msgid "The email address is empty."
 msgstr "Die E-Mail-Adresse ist leer."
 
-#: src/features/accounts/signing/SignRoute.tsx:1100
+#: src/features/accounts/signing/SignRoute.tsx:1122
 msgid "The file for this document is missing on our side, so it cannot be signed yet. Tell us with a question on your account page and we will send it again."
 msgstr "Die Datei für dieses Dokument fehlt bei uns, daher kann es noch nicht unterschrieben werden. Senden Sie uns eine Frage über Ihre Kontoseite, damit wir es erneut bereitstellen können."
 
@@ -1910,7 +1911,7 @@ msgstr "Der Name ist leer."
 msgid "The same person who signs the offer"
 msgstr "Dieselbe Person, die das Angebot unterschreibt"
 
-#: src/features/accounts/signing/SignRoute.tsx:1044
+#: src/features/accounts/signing/SignRoute.tsx:1066
 msgid "The signed copy is in your documents."
 msgstr "Die unterschriebene Kopie befindet sich in Ihren Dokumenten."
 
@@ -1939,7 +1940,7 @@ msgstr "Dieser Bereich ist für das Team von dembrane."
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:133
 #: src/features/accounts/staff/DocumentRoute.tsx:70
-#: src/features/accounts/signing/SignRoute.tsx:89
+#: src/features/accounts/signing/SignRoute.tsx:90
 msgid "This document could not be loaded."
 msgstr "Dieses Dokument konnte nicht geladen werden."
 
@@ -1952,19 +1953,27 @@ msgstr "Dieses Dokument konnte nicht geladen werden."
 msgid "This document has no PDF."
 msgstr "Dieses Dokument hat kein PDF."
 
+#: src/features/accounts/signing/SignRoute.tsx:213
+msgid "This document is assigned to {name}"
+msgstr "Dieses Dokument ist {name} zugewiesen"
+
+#: src/features/accounts/signing/SignRoute.tsx:209
+msgid "This document is assigned to {name}, {jobTitle}"
+msgstr "Dieses Dokument ist {name}, {jobTitle} zugewiesen"
+
 #: src/features/accounts/signing/SignGate.tsx:197
 msgid "This document is no longer open for signing"
 msgstr "Dieses Dokument kann nicht mehr unterschrieben werden"
 
-#: src/features/accounts/signing/SignRoute.tsx:163
+#: src/features/accounts/signing/SignRoute.tsx:164
 msgid "This document is no longer open for signing."
 msgstr "Dieses Dokument kann nicht mehr unterzeichnet werden."
 
-#: src/features/accounts/signing/SignRoute.tsx:84
+#: src/features/accounts/signing/SignRoute.tsx:85
 msgid "This document is not shared with you. Sign in with the email address the link was sent to."
 msgstr "Dieses Dokument wurde nicht mit Ihnen geteilt. Melden Sie sich mit der E-Mail-Adresse an, an die der Link gesendet wurde."
 
-#: src/features/accounts/signing/SignRoute.tsx:158
+#: src/features/accounts/signing/SignRoute.tsx:159
 msgid "This document was declined. Ask us a question on your account page if that was a mistake."
 msgstr "Dieses Dokument wurde abgelehnt. Stellen Sie uns eine Frage auf Ihrer Kontoseite, falls dies ein Versehen war."
 
@@ -1997,7 +2006,7 @@ msgstr "Diese Organisation hat noch kein Konto"
 msgid "This page could not be loaded. Try again in a moment."
 msgstr "Diese Seite konnte nicht geladen werden. Versuche es gleich noch einmal."
 
-#: src/features/accounts/signing/SignRoute.tsx:611
+#: src/features/accounts/signing/SignRoute.tsx:633
 msgid "Tick the box"
 msgstr "Kästchen ankreuzen"
 
@@ -2048,7 +2057,7 @@ msgstr "Zu unterzeichnen"
 #~ msgid "Transfer {amount} to {0}, IBAN {1}, BIC {2}"
 #~ msgstr ""
 
-#: src/features/accounts/signing/SignRoute.tsx:1120
+#: src/features/accounts/signing/SignRoute.tsx:1142
 #: src/features/accounts/pdf/PdfPages.tsx:94
 msgid "Try again"
 msgstr "Erneut versuchen"
@@ -2140,8 +2149,8 @@ msgid "Viewed"
 msgstr "Angesehen"
 
 #: src/features/accounts/signing/SignRoute.tsx:205
-msgid "Waiting on {name} to sign"
-msgstr "Wartet auf die Unterschrift von {name}"
+#~ msgid "Waiting on {name} to sign"
+#~ msgstr "Wartet auf die Unterschrift von {name}"
 
 #: src/features/accounts/customer/NextSteps.tsx:301
 #~ msgid "Waiting on {who}, {0}. We emailed them a link to sign."
@@ -2233,7 +2242,7 @@ msgstr "Wir haben geantwortet"
 
 #. placeholder {0}: signer.email
 #. placeholder {1}: doc.title
-#: src/features/accounts/signing/SignRoute.tsx:208
+#: src/features/accounts/signing/SignRoute.tsx:217
 msgid "We sent {0} a link to sign {1}. You'll see it signed on your account page."
 msgstr "Wir haben {0} einen Link zum Unterschreiben von {1} gesendet. Sobald es unterschrieben ist, sehen Sie es auf Ihrer Kontoseite."
 
@@ -2309,7 +2318,7 @@ msgstr "Eine Antwort schreiben"
 msgid "Yes"
 msgstr "Ja"
 
-#: src/features/accounts/signing/SignRoute.tsx:860
+#: src/features/accounts/signing/SignRoute.tsx:882
 msgid "Yes, I may"
 msgstr "Ja, ich bin berechtigt"
 
@@ -2338,7 +2347,7 @@ msgstr "Sie unterschreiben elektronisch. Ihre elektronische Unterschrift ist gen
 msgid "You're signed in as {0}. Sign out to open it as {invitee}."
 msgstr "Sie sind als {0} angemeldet. Melden Sie sich ab, um sie als {invitee} zu öffnen."
 
-#: src/features/accounts/signing/SignRoute.tsx:621
+#: src/features/accounts/signing/SignRoute.tsx:643
 msgid "Your address is empty."
 msgstr "Ihre Adresse ist leer."
 
@@ -2354,7 +2363,7 @@ msgstr "Ihr Browser konnte dieses Dokument nicht anzeigen. Versuchen Sie es erne
 msgid "Your initials"
 msgstr "Ihre Initialen"
 
-#: src/features/accounts/signing/SignRoute.tsx:606
+#: src/features/accounts/signing/SignRoute.tsx:628
 msgid "Your job title is empty."
 msgstr "Ihre Berufsbezeichnung ist leer."
 
@@ -2362,15 +2371,15 @@ msgstr "Ihre Berufsbezeichnung ist leer."
 msgid "Your name"
 msgstr "Ihr Name"
 
-#: src/features/accounts/signing/SignRoute.tsx:602
+#: src/features/accounts/signing/SignRoute.tsx:624
 msgid "Your name is empty."
 msgstr "Ihr Name ist leer."
 
-#: src/features/accounts/signing/SignRoute.tsx:616
+#: src/features/accounts/signing/SignRoute.tsx:638
 msgid "Your organisation is empty."
 msgstr "Ihre Organisation ist leer."
 
-#: src/features/accounts/signing/SignRoute.tsx:631
+#: src/features/accounts/signing/SignRoute.tsx:653
 msgid "Your PO number is empty."
 msgstr "Ihre Bestellnummer ist leer."
 
@@ -2378,10 +2387,10 @@ msgstr "Ihre Bestellnummer ist leer."
 msgid "Your question"
 msgstr "Ihre Frage"
 
-#: src/features/accounts/signing/SignRoute.tsx:424
+#: src/features/accounts/signing/SignRoute.tsx:446
 msgid "Your signature completes the agreement."
 msgstr "Mit Ihrer Unterschrift wird die Vereinbarung abgeschlossen."
 
-#: src/features/accounts/signing/SignRoute.tsx:626
+#: src/features/accounts/signing/SignRoute.tsx:648
 msgid "Your VAT number is empty."
 msgstr "Ihre USt-IdNr. ist leer."
