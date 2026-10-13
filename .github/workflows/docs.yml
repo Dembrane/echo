@@ -15,9 +15,11 @@ name: docs
 # The MCP documentation tools read the published site of their own environment (llms.txt and
 # a markdown twin per page), so --base-url must be the address the site is served at.
 #
-# #alerts-ci gets one line per publish: updated with the site's link, or not updated with the
-# run. The github-pages environment accepts runs from main only; once PROD_DEPLOY_ON_TAG is
-# "true" the prod run's ref is the tag, and that environment must accept v*.*.* tags too.
+# #alerts-ci gets one message per publish, drawn like the deploy messages
+# (.github/scripts/release.sh): updated, with the site's link and the pull requests that changed
+# its pages, or not updated, with what stopped it. The github-pages environment accepts runs
+# from main only; once PROD_DEPLOY_ON_TAG is "true" the prod run's ref is the tag, and that
+# environment must accept v*.*.* tags too.
 on:
   push:
     branches: [main]
@@ -52,7 +54,6 @@ env:
   REF: ${{ inputs.target == 'prod' && inputs.ref || github.sha }}
   # Pinned to a commit: the builder runs in jobs that can write the published sites.
   BUILDER: github:spashii/folder2website#f20082056062d7c0fb825ce2529ccf07df33845f
-  ALERTS_CHANNEL: C0C4HBZNSNT # #alerts-ci
 
 jobs:
   staging:
@@ -66,6 +67,9 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      # The message lists the pull requests that changed the pages since the last publish.
+      actions: read
+      pull-requests: read
     env:
       SITE: https://docs.staging.dembrane.com
       BUCKET: gs://dembrane-web-staging-echo-staging-docs
@@ -83,8 +87,10 @@ jobs:
       - name: Set up Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
       - name: Build the site
+        id: build
         run: bunx "$BUILDER" docs --out _site --base-url "$SITE"
       - name: Authenticate to Google Cloud
+        id: auth
         uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2.1.13
         with:
           workload_identity_provider: projects/1089877593337/locations/global/workloadIdentityPools/echo-staging-github/providers/github
@@ -94,19 +100,23 @@ jobs:
         with: { skip_install: true }
       # no-cache: a browser asks again on every visit, so a publish shows at once.
       - name: Publish
+        id: publish
         run: gcloud storage rsync _site "$BUCKET" --recursive --checksums-only --delete-unmatched-destination-objects --cache-control=no-cache
-      - name: "Tell #alerts-ci"
-        if: ${{ always() }}
+      # The publish stands even when the message fails to send.
+      - name: Announce the publish
         continue-on-error: true
         env:
+          GH_TOKEN: ${{ github.token }}
           SLACK_TOKEN: ${{ secrets.SLACK_ALERTS_BOT_TOKEN }}
-          STATUS: ${{ job.status }}
-          NAME: Staging
-        run: |
-          . .github/scripts/slack.sh
-          if [ "$STATUS" = success ]; then text="$NAME documentation updated: $SITE"
-          else text="$NAME documentation not updated, $SITE still shows the earlier pages: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"; fi
-          slack_send "$ALERTS_CHANNEL" "$(jq -n --arg text "$text" '{text: $text}')"
+        run: .github/scripts/release.sh announce-docs staging "$REF"
+      - name: "Tell #alerts-ci the publish stopped"
+        if: ${{ failure() || cancelled() }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SLACK_TOKEN: ${{ secrets.SLACK_ALERTS_BOT_TOKEN }}
+          STOPPED: ${{ job.status == 'cancelled' && 'cancelled' || steps.build.outcome == 'failure' && 'Build the site' || steps.auth.outcome == 'failure' && 'Authenticate to Google Cloud' || steps.publish.outcome == 'failure' && 'Publish' || '' }}
+        run: .github/scripts/release.sh announce-docs-failed staging "$REF" "$STOPPED"
 
   prod:
     name: docs-prod
@@ -123,6 +133,8 @@ jobs:
       contents: read
       pages: write
       id-token: write
+      # The message lists the pull requests that changed the pages since the last release.
+      pull-requests: read
     env:
       SITE: https://docs.dembrane.com
     steps:
@@ -136,22 +148,35 @@ jobs:
       - name: Set up Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
       - name: Build the site
+        id: build
         run: bunx "$BUILDER" docs --out _site --base-url "$SITE"
       - name: Upload the site
+        id: upload
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with: { path: _site }
       - name: Publish
         id: deploy
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
-      - name: "Tell #alerts-ci"
+      # The scripts of the run's own commit: a release tag may carry older ones.
+      - name: Check out the scripts
         if: ${{ always() }}
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/scripts
+          path: _ci
+      # The publish stands even when the message fails to send.
+      - name: Announce the publish
         continue-on-error: true
         env:
+          GH_TOKEN: ${{ github.token }}
           SLACK_TOKEN: ${{ secrets.SLACK_ALERTS_BOT_TOKEN }}
-          STATUS: ${{ job.status }}
-          NAME: Production
-        run: |
-          . .github/scripts/slack.sh
-          if [ "$STATUS" = success ]; then text="$NAME documentation updated: $SITE"
-          else text="$NAME documentation not updated, $SITE still shows the earlier pages: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"; fi
-          slack_send "$ALERTS_CHANNEL" "$(jq -n --arg text "$text" '{text: $text}')"
+        run: _ci/.github/scripts/release.sh announce-docs prod "$REF"
+      - name: "Tell #alerts-ci the publish stopped"
+        if: ${{ failure() || cancelled() }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SLACK_TOKEN: ${{ secrets.SLACK_ALERTS_BOT_TOKEN }}
+          STOPPED: ${{ job.status == 'cancelled' && 'cancelled' || steps.build.outcome == 'failure' && 'Build the site' || steps.upload.outcome == 'failure' && 'Upload the site' || steps.deploy.outcome == 'failure' && 'Publish' || '' }}
+        run: _ci/.github/scripts/release.sh announce-docs-failed prod "$REF" "$STOPPED"
