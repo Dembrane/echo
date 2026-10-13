@@ -537,6 +537,70 @@ run("a staff demo where the deployment is production", () => {
     ]);
   });
 
+  test("staff unpublish: the link goes down, the demo is a draft again, and publishing again invites nobody twice", async () => {
+    const live = new URL(demo.links.public[0]?.url as string).pathname;
+    const post = (who: Person | null, id: string, action: string, body?: unknown) =>
+      app.request(`/api/v2/admin/accounts/demos/${id}/${action}`, {
+        method: "POST",
+        headers: as(who),
+        ...(body !== undefined && { body: JSON.stringify(body) }),
+      });
+    const status = async () =>
+      K.DemoStatus.parse((await get(people.staff, `/api/v2/admin/accounts/demos/${demo.id}`)).data);
+    const published = await status();
+    expect(published.status).toBe("published");
+    expect((await open(null, live)).status).toBe(200);
+
+    // Not the customer's to do, not the contact's, and not without a sign-in.
+    for (const who of [people.customer, contact])
+      expect((await post(who, demo.id, "unpublish")).status).toBe(403);
+    expect((await post(null, demo.id, "unpublish")).status).toBe(401);
+    expect((await status()).status).toBe("published");
+
+    const res = await post(people.staff, demo.id, "unpublish");
+    expect(res.status).toBe(200);
+    const draft = K.DemoStatus.parse(await res.json());
+    expect([draft.status, draft.published_at]).toEqual(["draft", null]);
+    expect(draft.links.public).toEqual(published.links.public.map((l) => ({ ...l, live: false })));
+    expect((await open(null, live)).status).toBe(404);
+    expect((await open(null, `${live}data/bundle.json`)).status).toBe(404);
+    // Staff read it as a draft again, and the contact keeps the sign-in they were given.
+    expect((await open(people.staff, `${deckOf(demo.id)}/`)).status).toBe(200);
+    expect(await members()).toEqual([{ user: contact.appUserId as string, role: "admin" }]);
+    expect(await signIn()).toBe("active");
+    // A second unpublish changes nothing, and is written once to the account's timeline.
+    expect((await post(people.staff, demo.id, "unpublish")).status).toBe(200);
+    const events = await db
+      .select({ actor: schema.account_event.actorUserId, detail: schema.account_event.detail })
+      .from(schema.account_event)
+      .where(eq(schema.account_event.type, "demo.unpublished"));
+    expect(events).toEqual([{ actor: people.staff.directusUserId, detail: { demo_id: demo.id } }]);
+
+    // Published again: the same link serves, and the first invitation stays the only one.
+    const again = await post(people.staff, demo.id, "publish", { sign_in: true });
+    expect(again.status).toBe(200);
+    const back = K.DemoStatus.parse(await again.json());
+    expect([back.status, back.invited_at]).toEqual(["published", published.invited_at]);
+    expect((await open(null, live)).status).toBe(200);
+    expect((deps.jobs as MemoryJobs).of("account.send-email")).toHaveLength(1);
+
+    // A demo that never became a draft has nothing to unpublish.
+    const unfinished = newId();
+    await db.insert(schema.account_demo).values({
+      id: unfinished,
+      status: "failed",
+      input: { organisation_name: "Millbrook Library (sample)", language: "en" },
+      steps: {},
+      createdBy: people.staff.directusUserId,
+    });
+    const refused = await post(people.staff, unfinished, "unpublish");
+    expect([refused.status, await refused.json()]).toEqual([
+      409,
+      { detail: "Only a published demo can be unpublished" },
+    ]);
+    await db.delete(schema.account_demo).where(eq(schema.account_demo.id, unfinished));
+  });
+
   test("every demo conversation is marked synthetic and can be found by that mark", async () => {
     const marked = (await db.execute(sql`
       select c.id, c.project_id, c.participant_name, c.summary, c.duration, p.name as project_name

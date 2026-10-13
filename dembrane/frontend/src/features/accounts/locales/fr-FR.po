@@ -18,7 +18,7 @@ msgstr ""
 #~ msgstr ""
 
 #. placeholder {0}: demo.conversations
-#: src/features/accounts/staff/DemoRoute.tsx:303
+#: src/features/accounts/staff/DemoRoute.tsx:314
 msgid "{0, plural, one {# fictional conversation authored.} other {# fictional conversations authored.}}"
 msgstr "{0, plural, one {# conversation fictive créée.} other {# conversations fictives créées.}}"
 
@@ -34,6 +34,11 @@ msgstr "{0, plural, one {# champ} other {# champs}}"
 #: src/features/accounts/help/TasksPrompt.tsx:61
 msgid "{0, plural, one {You have # thing to do in {name}} other {You have # things to do in {name}}}"
 msgstr "{0, plural, one {Vous avez # chose à faire chez {name}} other {Vous avez # choses à faire chez {name}}}"
+
+#. placeholder {0}: demo.contact_email
+#: src/features/accounts/staff/DemoRoute.tsx:370
+msgid "{0} already has the sign-in invitation. Publishing sends no new email."
+msgstr "{0} a déjà reçu l'invitation à se connecter. La publication n'envoie aucun nouvel e-mail."
 
 #. placeholder {0}: r.queued
 #: src/features/accounts/staff/EmailCustomerModal.tsx:125
@@ -129,7 +134,7 @@ msgstr "Une invitation plus récente l'a peut-être remplacée. Demandez à la p
 msgid "A photo or scan of your signature, PNG or JPEG."
 msgstr "Une photo ou un scan de votre signature, en PNG ou JPEG."
 
-#: src/features/accounts/staff/DemoRoute.tsx:134
+#: src/features/accounts/staff/DemoRoute.tsx:142
 msgid "A step failed. Retry it once the cause is fixed."
 msgstr "Une étape a échoué. Réessayez une fois la cause corrigée."
 
@@ -152,7 +157,7 @@ msgstr "Compte créé"
 msgid "Account enabled"
 msgstr "Compte activé"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:808
+#: src/features/accounts/staff/AccountCardRoute.tsx:809
 msgid "Account manager asked to check in"
 msgstr "Responsable de compte invité à relancer"
 
@@ -164,7 +169,7 @@ msgid "Account updated"
 msgstr "Compte mis à jour"
 
 #: src/features/accounts/staff/NewDemoRoute.tsx:124
-#: src/features/accounts/staff/DemoRoute.tsx:122
+#: src/features/accounts/staff/DemoRoute.tsx:130
 #: src/features/accounts/staff/AccountCardRoute.tsx:115
 msgid "Accounts"
 msgstr "Comptes"
@@ -312,7 +317,7 @@ msgstr "Générer la démo"
 msgid "building"
 msgstr "génération"
 
-#: src/features/accounts/staff/DemoRoute.tsx:136
+#: src/features/accounts/staff/DemoRoute.tsx:144
 msgid "Building the demo. This page follows along."
 msgstr "Création de la démo en cours. Cette page suit l'avancement."
 
@@ -477,7 +482,7 @@ msgstr "Copier {label}"
 #~ msgid "Copy IBAN"
 #~ msgstr ""
 
-#: src/features/accounts/staff/DemoRoute.tsx:54
+#: src/features/accounts/staff/DemoRoute.tsx:55
 msgid "Corpus"
 msgstr "Corpus"
 
@@ -498,7 +503,7 @@ msgid "Custom"
 msgstr "Sur mesure"
 
 #: src/features/accounts/format.ts:107
-#: src/features/accounts/staff/AccountCardRoute.tsx:849
+#: src/features/accounts/staff/AccountCardRoute.tsx:850
 #: src/features/accounts/customer/Questions.tsx:171
 msgid "Customer"
 msgstr "Client"
@@ -506,7 +511,7 @@ msgstr "Client"
 #~ msgid "Customer accounts: what each one still has to do, and what waits on us."
 #~ msgstr ""
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:803
+#: src/features/accounts/staff/AccountCardRoute.tsx:804
 msgid "Customer emailed"
 msgstr "E-mail envoyé au client"
 
@@ -526,13 +531,13 @@ msgstr "Date"
 msgid "Declined"
 msgstr "Refusé"
 
-#: src/features/accounts/staff/DemoRoute.tsx:84
+#: src/features/accounts/staff/DemoRoute.tsx:87
 #: src/features/accounts/staff/DemoDraftRoute.tsx:42
 #: src/features/accounts/staff/AccountCardRoute.tsx:709
 msgid "Demo"
 msgstr "Démo"
 
-#: src/features/accounts/staff/DemoRoute.tsx:84
+#: src/features/accounts/staff/DemoRoute.tsx:87
 #: src/features/accounts/staff/DemoDraftRoute.tsx:42
 msgid "Demo | dembrane"
 msgstr "Démo | dembrane"
@@ -557,6 +562,10 @@ msgstr "Démo publiée"
 msgid "Demo seeded"
 msgstr "Démo initialisée"
 
+#: src/features/accounts/staff/AccountCardRoute.tsx:790
+msgid "Demo unpublished"
+msgstr "Démo dépubliée"
+
 #: src/features/accounts/staff/AccountsPanel.tsx:199
 msgid "Demos"
 msgstr "Démos"
@@ -575,27 +584,27 @@ msgstr "Avez-vous besoin de votre propre analyse d’impact relative à la prote
 msgid "Document"
 msgstr "Document"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:790
+#: src/features/accounts/staff/AccountCardRoute.tsx:791
 msgid "Document declined"
 msgstr "Document refusé"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:791
+#: src/features/accounts/staff/AccountCardRoute.tsx:792
 msgid "Document drafted"
 msgstr "Document rédigé"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:793
+#: src/features/accounts/staff/AccountCardRoute.tsx:794
 msgid "Document sent"
 msgstr "Document envoyé"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:794
+#: src/features/accounts/staff/AccountCardRoute.tsx:795
 msgid "Document signed"
 msgstr "Document signé"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:799
+#: src/features/accounts/staff/AccountCardRoute.tsx:800
 msgid "Document viewed"
 msgstr "Document consulté"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:800
+#: src/features/accounts/staff/AccountCardRoute.tsx:801
 msgid "Document withdrawn"
 msgstr "Document retiré"
 
@@ -633,11 +642,11 @@ msgstr "DPA"
 msgid "Draft"
 msgstr "Brouillon"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:798
+#: src/features/accounts/staff/AccountCardRoute.tsx:799
 msgid "Draft changed"
 msgstr "Brouillon modifié"
 
-#: src/features/accounts/staff/DemoRoute.tsx:58
+#: src/features/accounts/staff/DemoRoute.tsx:59
 msgid "Draft ready"
 msgstr "Brouillon prêt"
 
@@ -724,7 +733,7 @@ msgstr "Exemple d'événement ou de client"
 #~ msgid "Explore your demo"
 #~ msgstr "Découvrez votre démo"
 
-#: src/features/accounts/staff/DemoRoute.tsx:55
+#: src/features/accounts/staff/DemoRoute.tsx:56
 msgid "Extraction"
 msgstr "Extraction"
 
@@ -913,7 +922,7 @@ msgstr "Facture"
 msgid "Invoice {0}"
 msgstr "Facture {0}"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:801
+#: src/features/accounts/staff/AccountCardRoute.tsx:802
 msgid "Invoice added"
 msgstr "Facture ajoutée"
 
@@ -1019,7 +1028,7 @@ msgstr "Total de la ligne"
 msgid "Lines"
 msgstr "Lignes"
 
-#: src/features/accounts/staff/DemoRoute.tsx:273
+#: src/features/accounts/staff/DemoRoute.tsx:284
 msgid "live"
 msgstr "en direct"
 
@@ -1168,7 +1177,7 @@ msgstr "Pas encore indiqué."
 msgid "Not in the Peppol directory: invoices go by email."
 msgstr "Absent de l’annuaire Peppol : les factures partent par e-mail."
 
-#: src/features/accounts/staff/DemoRoute.tsx:275
+#: src/features/accounts/staff/DemoRoute.tsx:286
 msgid "not live until you publish"
 msgstr "pas en ligne tant que vous n'avez pas publié"
 
@@ -1209,11 +1218,11 @@ msgstr "Offre envoyée. Le client la verra lors de sa prochaine connexion."
 msgid "Offers, agreements and invoices appear here once we send them."
 msgstr "Les offres, accords et factures apparaissent ici dès que nous les envoyons."
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:804
+#: src/features/accounts/staff/AccountCardRoute.tsx:805
 msgid "Onboarding tasks added"
 msgstr "Tâches d'accueil ajoutées"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:805
+#: src/features/accounts/staff/AccountCardRoute.tsx:806
 msgid "Onboarding tasks withdrawn"
 msgstr "Tâches d'accueil retirées"
 
@@ -1270,7 +1279,7 @@ msgid "Open the document"
 msgstr "Ouvrir le document"
 
 #. placeholder {0}: p.language.toUpperCase()
-#: src/features/accounts/staff/DemoRoute.tsx:257
+#: src/features/accounts/staff/DemoRoute.tsx:268
 msgid "Open the draft ({0})"
 msgstr "Ouvrir le brouillon ({0})"
 
@@ -1453,7 +1462,7 @@ msgid "Progress"
 msgstr "Progression"
 
 #. placeholder {0}: p.language.toUpperCase()
-#: src/features/accounts/staff/DemoRoute.tsx:289
+#: src/features/accounts/staff/DemoRoute.tsx:300
 msgid "Project in the dashboard ({0})"
 msgstr "Projet dans le tableau de bord ({0})"
 
@@ -1466,34 +1475,34 @@ msgid "Prospects"
 msgstr "Prospects"
 
 #. placeholder {0}: l.language.toUpperCase()
-#: src/features/accounts/staff/DemoRoute.tsx:269
+#: src/features/accounts/staff/DemoRoute.tsx:280
 msgid "Public demo ({0})"
 msgstr "Démo publique ({0})"
 
-#: src/features/accounts/staff/DemoRoute.tsx:359
+#: src/features/accounts/staff/DemoRoute.tsx:395
 msgid "Publish"
 msgstr "Publier"
 
 #. placeholder {0}: formatDateTime(demo.published_at, i18n.locale)
-#: src/features/accounts/staff/DemoRoute.tsx:128
+#: src/features/accounts/staff/DemoRoute.tsx:136
 msgid "Published {0}."
 msgstr "Publié le {0}."
 
 #. placeholder {0}: demo.contact_email
-#: src/features/accounts/staff/DemoRoute.tsx:330
+#: src/features/accounts/staff/DemoRoute.tsx:342
 msgid "Published. {0} has the sign-in invitation."
 msgstr "Publié. {0} a reçu l'invitation à se connecter."
 
-#: src/features/accounts/staff/DemoRoute.tsx:334
+#: src/features/accounts/staff/DemoRoute.tsx:346
 msgid "Published. No email went out; share the demo link yourself."
 msgstr "Publié. Aucun e-mail n'a été envoyé ; partagez le lien de la démo vous-même."
 
 #. placeholder {0}: demo.contact_email
-#: src/features/accounts/staff/DemoRoute.tsx:347
+#: src/features/accounts/staff/DemoRoute.tsx:382
 msgid "Publishing emails {0} a sign-in code."
 msgstr "La publication envoie par e-mail un code de connexion à {0}."
 
-#: src/features/accounts/staff/DemoRoute.tsx:348
+#: src/features/accounts/staff/DemoRoute.tsx:383
 msgid "Publishing makes the demo live. No email goes out."
 msgstr "La publication met la démo en ligne. Aucun e-mail n'est envoyé."
 
@@ -1520,15 +1529,15 @@ msgstr "Indiquez la référence sur le virement pour que nous puissions associer
 msgid "Quantity"
 msgstr "Quantité"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:818
+#: src/features/accounts/staff/AccountCardRoute.tsx:819
 msgid "Question answered"
 msgstr "Question répondue"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:816
+#: src/features/accounts/staff/AccountCardRoute.tsx:817
 msgid "Question closed"
 msgstr "Question close"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:817
+#: src/features/accounts/staff/AccountCardRoute.tsx:818
 msgid "Question opened"
 msgstr "Question ouverte"
 
@@ -1545,7 +1554,7 @@ msgstr "Questions"
 msgid "Reads \"{0} x dembrane\""
 msgstr "Affiche « {0} x dembrane »"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:802
+#: src/features/accounts/staff/AccountCardRoute.tsx:803
 msgid "Ready to invoice"
 msgstr "Prêt à facturer"
 
@@ -1602,12 +1611,12 @@ msgstr "Répondre et fermer"
 msgid "Required"
 msgstr "Obligatoire"
 
-#: src/features/accounts/staff/DemoRoute.tsx:57
-#: src/features/accounts/staff/DemoRoute.tsx:314
+#: src/features/accounts/staff/DemoRoute.tsx:58
+#: src/features/accounts/staff/DemoRoute.tsx:325
 msgid "Research"
 msgstr "Recherche"
 
-#: src/features/accounts/staff/DemoRoute.tsx:220
+#: src/features/accounts/staff/DemoRoute.tsx:229
 msgid "Retry"
 msgstr "Réessayer"
 
@@ -1675,7 +1684,7 @@ msgstr "Découvrez comment fonctionne dembrane, de la création d'un projet à l
 msgid "See popcorn, tensions and the map on sample conversations written for your organisation."
 msgstr "Découvrez popcorn, les tensions et la carte sur des conversations d'exemple écrites pour votre organisation."
 
-#: src/features/accounts/staff/DemoRoute.tsx:59
+#: src/features/accounts/staff/DemoRoute.tsx:60
 msgid "Seeding"
 msgstr "Génération des données"
 
@@ -1713,7 +1722,7 @@ msgstr "Envoyer l'offre"
 #~ msgid "Send the link"
 #~ msgstr "Envoyer le lien"
 
-#: src/features/accounts/staff/DemoRoute.tsx:344
+#: src/features/accounts/staff/DemoRoute.tsx:379
 msgid "Send the sign-in invitation"
 msgstr "Envoyer l'invitation de connexion"
 
@@ -1789,8 +1798,8 @@ msgstr "Envoyé. Le client a une tâche de signature."
 msgid "Set up a project of your own for your first real session."
 msgstr "Configurez votre propre projet pour votre première vraie session."
 
-#: src/features/accounts/staff/DemoRoute.tsx:318
-#: src/features/accounts/staff/AccountCardRoute.tsx:863
+#: src/features/accounts/staff/DemoRoute.tsx:329
+#: src/features/accounts/staff/AccountCardRoute.tsx:864
 msgid "Show all"
 msgstr "Tout afficher"
 
@@ -1799,8 +1808,8 @@ msgstr "Tout afficher"
 msgid "Show finished ({0})"
 msgstr "Afficher les tâches terminées ({0})"
 
-#: src/features/accounts/staff/DemoRoute.tsx:319
-#: src/features/accounts/staff/AccountCardRoute.tsx:863
+#: src/features/accounts/staff/DemoRoute.tsx:330
+#: src/features/accounts/staff/AccountCardRoute.tsx:864
 msgid "Show less"
 msgstr "Afficher moins"
 
@@ -1833,7 +1842,7 @@ msgstr "Signer l'accord de traitement des données"
 msgid "Signature"
 msgstr "Signature"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:792
+#: src/features/accounts/staff/AccountCardRoute.tsx:793
 msgid "Signature fields placed"
 msgstr "Champs de signature placés"
 
@@ -1847,15 +1856,15 @@ msgstr "Signé"
 msgid "Signed {0}"
 msgstr "Signé le {0}"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:795
+#: src/features/accounts/staff/AccountCardRoute.tsx:796
 msgid "Signer named"
 msgstr "Signataire désigné"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:796
+#: src/features/accounts/staff/AccountCardRoute.tsx:797
 msgid "Signer reminded"
 msgstr "Signataire relancé"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:797
+#: src/features/accounts/staff/AccountCardRoute.tsx:798
 msgid "Signer replaced"
 msgstr "Signataire remplacé"
 
@@ -1892,7 +1901,7 @@ msgstr "Une personne autorisée à accepter le traitement des données pour votr
 msgid "Something went wrong"
 msgstr "Une erreur s'est produite"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:851
+#: src/features/accounts/staff/AccountCardRoute.tsx:852
 msgid "Staff"
 msgstr "Équipe"
 
@@ -1946,9 +1955,13 @@ msgstr "Envoyé"
 msgid "Subscription"
 msgstr "Abonnement"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:852
+#: src/features/accounts/staff/AccountCardRoute.tsx:853
 msgid "System"
 msgstr "Système"
+
+#: src/features/accounts/staff/DemoRoute.tsx:362
+msgid "Takes the public link down until you publish again."
+msgstr "Met le lien public hors ligne jusqu'à la prochaine publication."
 
 #: src/features/accounts/customer/TalkToUs.tsx:40
 msgid "Talk to us"
@@ -1958,31 +1971,31 @@ msgstr "Nous contacter"
 msgid "Task"
 msgstr "Tâche"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:806
 #: src/features/accounts/staff/AccountCardRoute.tsx:807
+#: src/features/accounts/staff/AccountCardRoute.tsx:808
 msgid "Task approved"
 msgstr "Tâche approuvée"
 
 #: src/features/accounts/staff/TaskModals.tsx:100
-#: src/features/accounts/staff/AccountCardRoute.tsx:809
+#: src/features/accounts/staff/AccountCardRoute.tsx:810
 msgid "Task created"
 msgstr "Tâche créée"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:810
+#: src/features/accounts/staff/AccountCardRoute.tsx:811
 msgid "Task done"
 msgstr "Tâche terminée"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:811
 #: src/features/accounts/staff/AccountCardRoute.tsx:812
+#: src/features/accounts/staff/AccountCardRoute.tsx:813
 msgid "Task sent back"
 msgstr "Tâche renvoyée"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:813
+#: src/features/accounts/staff/AccountCardRoute.tsx:814
 msgid "Task submitted"
 msgstr "Tâche soumise"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:814
 #: src/features/accounts/staff/AccountCardRoute.tsx:815
+#: src/features/accounts/staff/AccountCardRoute.tsx:816
 msgid "Task withdrawn"
 msgstr "Tâche retirée"
 
@@ -2037,7 +2050,7 @@ msgstr "Cette image n'a pas pu être lue. Essayez avec un PNG ou un JPEG."
 msgid "That PDF is over 10 MB."
 msgstr "Ce PDF dépasse 10 Mo."
 
-#: src/features/accounts/staff/DemoRoute.tsx:298
+#: src/features/accounts/staff/DemoRoute.tsx:309
 msgid "The account"
 msgstr "Le compte"
 
@@ -2075,7 +2088,7 @@ msgstr "Le document n'a pas pu être chargé. Réessayez dans un instant."
 msgid "The draft is not ready yet."
 msgstr "Le brouillon n'est pas encore prêt."
 
-#: src/features/accounts/staff/DemoRoute.tsx:132
+#: src/features/accounts/staff/DemoRoute.tsx:140
 msgid "The draft is ready. Check it, then publish."
 msgstr "Le brouillon est prêt. Vérifiez-le, puis publiez."
 
@@ -2203,7 +2216,7 @@ msgstr "Cette page n'a pas pu être chargée. Réessayez dans un instant."
 msgid "Tick the box"
 msgstr "Cocher la case"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:832
+#: src/features/accounts/staff/AccountCardRoute.tsx:833
 msgid "Timeline"
 msgstr "Chronologie"
 
@@ -2273,6 +2286,10 @@ msgstr "Saisissez d'abord votre nom."
 #: src/features/accounts/staff/LinesEditor.tsx:119
 msgid "Unit price (EUR)"
 msgstr "Prix unitaire (EUR)"
+
+#: src/features/accounts/staff/DemoRoute.tsx:359
+msgid "Unpublish"
+msgstr "Dépublier"
 
 #: src/features/accounts/staff/AccountsPanel.tsx:124
 msgid "Unsigned"
@@ -2463,7 +2480,7 @@ msgid "We will get in touch about your DPIA."
 msgstr "Nous vous contacterons au sujet de votre AIPD."
 
 #: src/features/accounts/staff/NewDemoRoute.tsx:143
-#: src/features/accounts/staff/DemoRoute.tsx:56
+#: src/features/accounts/staff/DemoRoute.tsx:57
 msgid "Website"
 msgstr "Site web"
 

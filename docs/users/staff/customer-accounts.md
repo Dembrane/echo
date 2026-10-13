@@ -64,6 +64,9 @@ select "Open the draft (EN)" to look through the demo, then select "Publish".
 - "Publish" makes the public demo link live. With "Send the sign-in invitation" on, the contact
   gets the email "Your dembrane account for {org_name}" and signs in with a code. With it off, the
   page says "No email went out; share the demo link yourself."
+- "Unpublish" on a published demo takes the public link down and makes the demo a draft again.
+  When you publish again the same link is live, and a contact who already has the sign-in
+  invitation gets no second email.
 
 ## Send an offer
 

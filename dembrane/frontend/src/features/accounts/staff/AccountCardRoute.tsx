@@ -787,6 +787,7 @@ const eventLabel = (type: string): string =>
 		"demo.opened": t`Demo opened by staff`,
 		"demo.published": t`Demo published`,
 		"demo.seeded": t`Demo seeded`,
+		"demo.unpublished": t`Demo unpublished`,
 		"document.declined": t`Document declined`,
 		"document.drafted": t`Document drafted`,
 		"document.fields_set": t`Signature fields placed`,

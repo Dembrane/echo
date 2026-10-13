@@ -12,7 +12,7 @@ import type { Signed } from "@dembrane/http";
 import { localeOfEmail, resolveLocale } from "@dembrane/i18n";
 import { desc, eq } from "drizzle-orm";
 import { staffCan } from "../access";
-import type { AccountsDeps } from "../deps";
+import type { AccountsDeps, Tx } from "../deps";
 import { isUuid } from "../deps";
 import { emit } from "../events";
 import { releaseHeldContacts } from "../prospect";
@@ -162,17 +162,12 @@ export async function publishDemo(
   const input = row.input as DemoInput;
   const seed = row.seed as SeedOutput;
   const signIn = opts.sign_in ?? input.sign_in;
+  // The invitation goes out once: a demo published again after an unpublish sends none.
+  const invite = signIn && !row.invitedAt;
   const now = d.now();
   await d.db.transaction(async (tx) => {
     for (const p of seed.projects) {
-      const [config] = await tx
-        .select({ settings: schema.canvas_config_revision.popcorn_settings })
-        .from(schema.canvas_config_revision)
-        .where(eq(schema.canvas_config_revision.id, p.config_id));
-      await tx
-        .update(schema.canvas_config_revision)
-        .set({ popcorn_settings: { ...((config?.settings ?? {}) as object), public: true } })
-        .where(eq(schema.canvas_config_revision.id, p.config_id));
+      await setDeckPublic(tx, p.config_id, true);
       if (signIn) {
         const [loop] = await tx
           .select({ state: schema.agent_loop.popcorn_state })
@@ -190,8 +185,8 @@ export async function publishDemo(
           .where(eq(schema.agent_loop.id, p.loop_id));
       }
     }
-    if (signIn) {
-      if (row.orgId) await releaseHeldContacts(tx, row.orgId, now);
+    if (signIn && row.orgId) await releaseHeldContacts(tx, row.orgId, now);
+    if (invite) {
       // The contact's own language when they already had an account, else the demo's.
       const language =
         (await localeOfEmail(tx, input.contact_email)) ?? resolveLocale(input.language);
@@ -213,7 +208,7 @@ export async function publishDemo(
       .set({
         status: "published",
         publishedAt: now,
-        ...(signIn && { invitedAt: now }),
+        ...(invite && { invitedAt: now }),
         input: { ...input, sign_in: signIn },
         updatedAt: now,
       })
@@ -223,7 +218,47 @@ export async function publishDemo(
         orgId: row.orgId,
         actor: { kind: "staff", userId: who.directusUserId },
         type: "demo.published",
-        detail: { demo_id: id, invited: signIn },
+        detail: { demo_id: id, invited: invite },
+      });
+  });
+  return demoView(d, await load(d, id));
+}
+
+/** Whether a seeded deck answers on its public link. */
+async function setDeckPublic(tx: Tx, configId: string, isPublic: boolean): Promise<void> {
+  const [config] = await tx
+    .select({ settings: schema.canvas_config_revision.popcorn_settings })
+    .from(schema.canvas_config_revision)
+    .where(eq(schema.canvas_config_revision.id, configId));
+  await tx
+    .update(schema.canvas_config_revision)
+    .set({ popcorn_settings: { ...((config?.settings ?? {}) as object), public: isPublic } })
+    .where(eq(schema.canvas_config_revision.id, configId));
+}
+
+/**
+ * Takes a published demo back to a draft: its public link stops answering until staff
+ * publish again, and the same link comes back then. The contact keeps the sign-in they
+ * were given.
+ */
+export async function unpublishDemo(d: AccountsDeps, who: Signed, id: string) {
+  const row = await load(d, id);
+  if (row.status === "draft") return demoView(d, row);
+  if (row.status !== "published") throw new ConflictError("demo.unpublish_not_published");
+  const seed = row.seed as SeedOutput;
+  const now = d.now();
+  await d.db.transaction(async (tx) => {
+    for (const p of seed.projects) await setDeckPublic(tx, p.config_id, false);
+    await tx
+      .update(schema.account_demo)
+      .set({ status: "draft", publishedAt: null, updatedAt: now })
+      .where(eq(schema.account_demo.id, id));
+    if (row.orgId)
+      await emit(d, tx, {
+        orgId: row.orgId,
+        actor: { kind: "staff", userId: who.directusUserId },
+        type: "demo.unpublished",
+        detail: { demo_id: id },
       });
   });
   return demoView(d, await load(d, id));

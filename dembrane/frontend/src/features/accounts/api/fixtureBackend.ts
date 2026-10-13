@@ -921,7 +921,8 @@ export async function handle(
 			}
 			case "demoStatus":
 			case "retryDemo":
-			case "publishDemo": {
+			case "publishDemo":
+			case "unpublishDemo": {
 				const d = loadDemos()[params.demoId ?? ""];
 				if (!d) throw notFound();
 				if (name === "retryDemo") {
@@ -939,14 +940,23 @@ export async function handle(
 						throw new AccountsApiError(409, "The draft is not ready yet.");
 					const signIn =
 						typeof body.sign_in === "boolean" ? body.sign_in : d.sign_in;
+					// The invitation goes out once, as on the server.
+					const invite = signIn && !d.invited_at;
 					d.sign_in = signIn;
 					d.status = "published";
 					d.published_at = now();
-					d.invited_at = signIn ? now() : null;
+					if (invite) d.invited_at = now();
 					d.links.public = d.links.public.map((l) => ({ ...l, live: true }));
 					const target = load()[d.org_id ?? ""];
 					if (target)
-						event(target, "demo.published", "staff", {}, { invited: signIn });
+						event(target, "demo.published", "staff", {}, { invited: invite });
+				}
+				if (name === "unpublishDemo" && d.status === "published") {
+					d.status = "draft";
+					d.published_at = null;
+					d.links.public = d.links.public.map((l) => ({ ...l, live: false }));
+					const target = load()[d.org_id ?? ""];
+					if (target) event(target, "demo.unpublished", "staff");
 				}
 				d.updated_at = now();
 				return publicDemo(d);
