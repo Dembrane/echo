@@ -100,6 +100,14 @@ resource "google_storage_bucket_iam_member" "docs_deployer" {
   role   = "roles/storage.objectAdmin"
   member = google_service_account.deployer.member
 }
+# `gcloud storage rsync` reads the bucket itself before it lists the pages, and objectAdmin
+# covers objects only.
+resource "google_storage_bucket_iam_member" "docs_deployer_bucket" {
+  count  = local.docs
+  bucket = google_storage_bucket.docs[0].name
+  role   = "roles/storage.legacyBucketReader"
+  member = google_service_account.deployer.member
+}
 resource "google_compute_backend_bucket" "docs" {
   count       = local.docs
   name        = "${local.name}-docs"
