@@ -1,7 +1,13 @@
 import { expect, test } from "bun:test";
+import type { Json } from "../src/contracts";
 import { AnalysisValidationError } from "../src/contracts";
 import { contentHash } from "../src/hashing";
-import { validatePayload } from "../src/types";
+import {
+  getObjectType,
+  MAX_POPCORN_PHRASE_CHARS,
+  typeMetadata,
+  validatePayload,
+} from "../src/types";
 
 function err(type: string, payload: unknown): string {
   try {
@@ -38,8 +44,8 @@ test("payload errors read exactly like pydantic's", () => {
       weight: { stake: true, mentions: 2 },
     }),
   ).toBe("invalid stakeholder payload: weight.mentions: Input should be less than or equal to 1");
-  expect(err("popcorn", { phrase: "x".repeat(91) })).toBe(
-    "invalid popcorn payload: phrase: String should have at most 90 characters",
+  expect(err("popcorn", { phrase: "x".repeat(141) })).toBe(
+    "invalid popcorn payload: phrase: String should have at most 140 characters",
   );
   expect(
     err("tension", {
@@ -77,4 +83,13 @@ test("normalised payloads drop None, keep defaults and strip strings", () => {
   });
   // Python hashed weight.stake as 1.0 (a float), not 1.
   expect(contentHash(p)).toBe("dacdfde596e8a1bff122edf95eb211bb8c56e24a5ca5e63361f34c694a3fbbfb");
+});
+
+test("a popcorn phrase at the shared limit is a valid payload", () => {
+  expect(err("popcorn", { phrase: "x".repeat(MAX_POPCORN_PHRASE_CHARS) })).toBe("OK");
+});
+
+test("the Recipes tab shows the popcorn phrase limit the validator holds", () => {
+  const schema = typeMetadata(getObjectType("popcorn")).payloadSchema as Json;
+  expect((schema.properties as Json).phrase).toMatchObject({ maxLength: MAX_POPCORN_PHRASE_CHARS });
 });

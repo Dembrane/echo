@@ -77,8 +77,11 @@ const DeduplicatedArgumentPayload = payload("DeduplicatedArgumentPayload", [
   required("consolidation", s.model(Consolidation)),
 ]);
 
+/** The longest popcorn phrase, in characters; the live tick gates on the same number. */
+export const MAX_POPCORN_PHRASE_CHARS = 140;
+
 const PopcornPayload = payload("PopcornPayload", [
-  required("phrase", s.str({ min: 1, max: 90 })),
+  required("phrase", s.str({ min: 1, max: MAX_POPCORN_PHRASE_CHARS })),
   withDefault("question", s.bool(), false),
   withDefault("language", s.opt(s.str()), null),
   withDefault("evidence", s.list(s.model(Evidence)), list()),
