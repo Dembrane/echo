@@ -48,7 +48,7 @@ import {
   translatedBundle,
 } from "../translate";
 import { applyResults, enrichItem } from "./enrichment";
-import { gateItems, introducedNames, knownShingles } from "./flags";
+import { gateItems, introducedNames, type ShownText, shownIndex } from "./flags";
 import { islandFlags, nameFlags } from "./gates";
 import { groundItems } from "./grounding";
 import { POPCORN_PROMPT, type PopcornModel, promptText, VALIDATE_PROMPT } from "./model";
@@ -463,7 +463,7 @@ async function extractOne(
   transcript: Json,
   outcomes: string[],
   hostNote: string,
-  known: ReadonlySet<string>,
+  known: ShownText,
   publisher: Publisher | null,
   translator: IncrementalTranslator | null,
 ): Promise<void> {
@@ -1157,10 +1157,7 @@ export async function runPopcornTick(
       Object.assign(state, kept);
     }
     // What the room has been shown so far: a new phrase quoting it is the tool quoting itself.
-    const knownAll = knownShingles(state);
-    const knownBy = new Map(
-      Object.keys(dict(state.conversations)).map((cid) => [cid, knownShingles(state, 6, cid)]),
-    );
+    const shown = shownIndex(state);
     const config = await d.store.latestConfig(reportId);
     let settings = normalizeSettings(config?.popcorn_settings, orStr(currentLoop.name, "Popcorn"));
     const project = await d.store.project(projectId);
@@ -1342,7 +1339,7 @@ export async function runPopcornTick(
             t,
             outcomes,
             hostNote,
-            knownBy.get(String(t.id)) ?? knownAll,
+            shown.except(String(t.id)),
             publisher,
             translator,
           ),
