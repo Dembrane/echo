@@ -119,11 +119,33 @@ export const codedTaskText = (
 ): { title: string; body: string } => {
 	const doc = params?.document_title ?? "";
 	switch (code) {
-		case "sign_offer":
+		case "sign_offer": {
+			// Named by what it is for and its number, which is what people pass on.
+			const number = params?.offer_reference ?? "";
+			const title =
+				number && params?.offer_template === "event"
+					? t`Review and sign event offer ${number}`
+					: number && params?.offer_template === "subscription"
+						? t`Review and sign yearly license offer ${number}`
+						: doc
+							? t`Review and sign ${doc}`
+							: t`Review and sign the offer`;
+			// The two buttons on the task say what there is to do.
+			return { body: "", title };
+		}
+		case "who_signs": {
+			const number = params?.offer_reference ?? "";
+			const title =
+				number && params?.offer_template === "event"
+					? t`Tell us who signs event offer ${number}`
+					: number && params?.offer_template === "subscription"
+						? t`Tell us who signs yearly license offer ${number}`
+						: t`Tell us who signs the offer`;
 			return {
-				body: t`Read the offer and sign it here. Someone else signs for your organisation? Name them on the offer; they get their own link.`,
-				title: doc ? t`Review and sign ${doc}` : t`Review and sign the offer`,
+				body: t`Who signs the offer and the data processing agreement, and whether you need your own DPIA.`,
+				title,
 			};
+		}
 		case "sign_dpa":
 			return {
 				body: t`Someone who may agree to data processing for your organisation signs it.`,

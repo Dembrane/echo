@@ -859,8 +859,19 @@ export const AgenticChatPanel = ({
 	// Narrow fields on purpose: the panel needs one string, not the whole row.
 	const projectTranscriptHintsQuery = useProjectById({
 		projectId,
-		query: { fields: ["id", "default_conversation_transcript_prompt"] },
+		query: {
+			fields: ["id", "default_conversation_transcript_prompt", "is_sample"],
+		},
 	});
+	const isSample =
+		(
+			projectTranscriptHintsQuery.data as
+				| { is_sample?: boolean | null }
+				| undefined
+		)?.is_sample === true;
+	// A sample project's chats share their own allowance, which only the server
+	// counts; its 402 sets this.
+	const [sampleTurnsSpent, setSampleTurnsSpent] = useState(false);
 	const voiceHotwords =
 		(
 			projectTranscriptHintsQuery.data as
@@ -1164,7 +1175,10 @@ export const AgenticChatPanel = ({
 		[timeline],
 	);
 	const atTurnLimit = Boolean(
-		freeTier?.active && userTurnCount >= FREE_TIER_MAX_CHAT_USER_TURNS,
+		freeTier?.active &&
+			(isSample
+				? sampleTurnsSpent
+				: userTurnCount >= FREE_TIER_MAX_CHAT_USER_TURNS),
 	);
 
 	const historyMessages = useMemo(
@@ -1664,6 +1678,7 @@ export const AgenticChatPanel = ({
 			setInput((current) => (current.length === 0 ? message : current));
 			// Backend safety net: free-tier turn cap returns 402.
 			if (isFreeTierLimitError(submitError) === "chat_turns") {
+				if (isSample) setSampleTurnsSpent(true);
 				upgradeHandlers.open();
 			} else {
 				const nextError =

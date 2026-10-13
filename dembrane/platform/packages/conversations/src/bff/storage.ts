@@ -539,13 +539,16 @@ export function bffStore(db: Db) {
         .values({ conversation_id: conversationId, project_tag_id: tagId });
     },
 
-    /** Sum of every conversation's seconds in the workspace, deleted rows and projects included. */
+    /**
+     * Sum of every conversation's seconds in the workspace, deleted rows and projects
+     * included; a sample copy's invented conversations are left out.
+     */
     async workspaceSeconds(workspaceId: string): Promise<number> {
       const [row] = await db
         .select({ s: sql<number>`coalesce(sum(${conversation.duration}), 0)::float8` })
         .from(conversation)
         .innerJoin(project, eq(project.id, conversation.project_id))
-        .where(eq(project.workspace_id, workspaceId));
+        .where(and(eq(project.workspace_id, workspaceId), eq(project.is_sample, false)));
       return Number(row?.s ?? 0);
     },
   };

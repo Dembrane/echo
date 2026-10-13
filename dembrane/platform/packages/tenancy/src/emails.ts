@@ -1,4 +1,5 @@
-import { type MessageParams, type Translate, translator } from "@dembrane/i18n";
+import { type MessageParams, resolveLocale, type Translate, translator } from "@dembrane/i18n";
+import { email as e, emailFrame, emailText, escapeHtml, type RenderedEmail } from "@dembrane/mail";
 
 /**
  * The transactional emails this namespace sends, in the recipient's language: every
@@ -7,115 +8,38 @@ import { type MessageParams, type Translate, translator } from "@dembrane/i18n";
  * values are escaped; the text part is not, matching Jinja's autoescape rules.
  */
 
-export interface RenderedEmail {
-  readonly subject: string;
-  readonly html: string;
-  readonly text: string;
-}
+export type { RenderedEmail } from "@dembrane/mail";
 
-function esc(v: unknown): string {
-  return String(v ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&#34;")
-    .replace(/'/g, "&#39;");
-}
-
-const P = (size: number, margin: string, inner: string) =>
-  `<p style="font-size:${size}px; line-height:1.65; margin:${margin}; color:#2D2D2C; font-weight:400;">\n  ${inner}\n</p>`;
-const EM = (v: string) => `<em style="color:#4169E1; font-style:normal;">${esc(v)}</em>`;
-
-function cta(label: string, url: string): string {
-  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin:0 0 24px;">
-  <tr>
-    <td>
-      <a href="${esc(url)}"
-         style="display:inline-block; background-color:#4169E1; color:#FFFFFF; text-decoration:none; padding:14px 30px; border-radius:9999px; font-size:15px; font-weight:400; font-family:inherit; line-height:1;">
-        ${esc(label)}
-      </a>
-    </td>
-  </tr>
-</table>`;
-}
-
-function fallback(tr: Translate, url: string): string {
-  return `<p style="font-size:13px; line-height:1.65; margin:0 0 28px; color:#2D2D2C; font-weight: 400;">
-  ${tr("email.common.fallback")}<br>
-  <span style="color:#4169E1; word-break:break-all;">${esc(url)}</span>
-</p>`;
-}
-
-const disclaim = (tr: Translate) => P(15, "0 0 28px", tr("email.common.ignore"));
+const esc = (v: unknown) => escapeHtml(String(v ?? ""));
+const EM = e.em;
 
 /** Escapes every value, for the parts of the HTML that show values as plain text. */
 const escAll = (d: MessageParams) =>
   Object.fromEntries(Object.entries(d).map(([k, v]) => [k, esc(v)]));
 
-/** The shared letter-style frame (email_templates/_layout.html). */
+/** The shared frame of @dembrane/mail, worded in `tr`'s language. */
 function layout(
   tr: Translate,
+  locale: string | null | undefined,
   b: {
     title: string;
     preview: string;
     heading: string;
     body: string;
-    cta?: string;
-    fallback?: string;
-    disclaim?: string;
+    cta?: { label: string; url: string };
+    ignore?: boolean;
   },
 ): string {
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>${b.title}</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400&display=swap');
-  </style>
-</head>
-<body style="margin:0; padding:0; background-color:#F6F4F1; font-family:'DM Sans','DM Sans Variable',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; color:#2D2D2C; font-weight: 400;">
-  <div style="display:none; font-size:1px; color:#F6F4F1; line-height:1px; max-height:0px; max-width:0px; opacity:0; overflow:hidden;">
-    ${b.preview}
-  </div>
-  <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:#F6F4F1; padding:40px 20px;">
-    <tr>
-      <td align="center">
-        <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="max-width:600px; background-color:#FFFFFF; border:1px solid #EFEAE2;">
-          <tr>
-            <td style="padding:32px 48px 0;">
-              <img src="https://dashboard.echo-next.dembrane.com/dembrane-logo-email.png" alt="dembrane" width="147" height="30" border="0" style="height:30px; width:auto; max-width:100%; display:block; border:0; outline:none; text-decoration:none; -ms-interpolation-mode:bicubic;">
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:28px 48px 0;">
-              <h1 style="margin:0 0 20px; font-family:inherit; font-size:32px; font-weight: 400; letter-spacing:-0.01em; line-height:1.15; color:#2D2D2C; text-wrap:balance;">
-                ${b.heading}
-              </h1>
-              <div style="font-size:17px; line-height:1.65; color:#2D2D2C; font-weight: 400;">
-                ${b.body}
-              </div>
-              ${b.cta ?? ""}
-              ${b.fallback ?? ""}
-              ${b.disclaim ?? ""}
-              <p style="font-size:17px; line-height:1.65; margin:0 0 32px; color:#2D2D2C; font-weight: 400;">
-                ${tr("email.common.signoff")}
-              </p>
-            </td>
-          </tr>
-          <tr>
-            <td style="background-color:#FFFFFF;">
-              <img src="https://directus.dembrane.com/assets/a75db1e0-4dd9-4660-a6fb-24e0dd4cd104" alt="" width="600" border="0" style="width:100%; max-width:600px; height:auto; display:block; border:0; outline:none; text-decoration:none; -ms-interpolation-mode:bicubic;">
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
+  return emailFrame({
+    lang: resolveLocale(locale),
+    title: b.title,
+    preview: b.preview,
+    heading: b.heading,
+    body: b.body,
+    ...(b.cta && { action: { ...b.cta, fallback: tr("email.common.fallback") } }),
+    ...(b.ignore && { after: e.note(tr("email.common.ignore")) }),
+    signoff: { name: tr("email.common.signoff") },
+  });
 }
 
 /** org_invite: someone without an account is invited to an org. */
@@ -129,14 +53,13 @@ export function orgInviteEmail(
   const bodyKey = d.role && d.role !== "member" ? `${k}.body_role` : `${k}.body`;
   return {
     subject: tr(`${k}.subject`, p),
-    html: layout(tr, {
-      title: tr(`${k}.subject`, escAll(p)),
-      preview: tr(`${k}.preview`, escAll(p)),
-      heading: tr(`${k}.heading`, escAll(p)),
-      body: `${P(17, "0 0 28px", tr(bodyKey, { ...escAll(p), org_name: EM(d.orgName), role: EM(d.role) }))}\n${P(15, "0 0 28px", tr(`${k}.next`))}`,
-      cta: cta(tr(`${k}.cta`), d.inviteUrl),
-      fallback: fallback(tr, d.inviteUrl),
-      disclaim: disclaim(tr),
+    html: layout(tr, locale, {
+      title: tr(`${k}.subject`, p),
+      preview: tr(`${k}.preview`, p),
+      heading: tr(`${k}.heading`, p),
+      body: `${e.lead(tr(bodyKey, { ...escAll(p), org_name: EM(d.orgName), role: EM(d.role) }))}\n${e.p(tr(`${k}.next`))}`,
+      cta: { label: tr(`${k}.cta`), url: d.inviteUrl },
+      ignore: true,
     }),
     text: `${tr(bodyKey, p)}\n\n${tr(`${k}.text_cta`)}\n${d.inviteUrl}\n\n${tr(`${k}.next`)}\n\n${tr("email.common.ignore_text")}\n\n${tr("email.common.signoff")}`,
   };
@@ -152,18 +75,13 @@ export function workspaceInviteEmail(
   const p = { inviter_name: d.inviterName, workspace_name: d.workspaceName };
   return {
     subject: d.subject ?? tr("email.data_owner_invite.subject", p),
-    html: layout(tr, {
+    html: layout(tr, locale, {
       title: tr(`${k}.title`),
-      preview: tr(`${k}.preview`, escAll(p)),
+      preview: tr(`${k}.preview`, p),
       heading: tr(`${k}.heading`),
-      body: P(
-        17,
-        "0 0 28px",
-        tr(`${k}.body`, { ...escAll(p), workspace_name: EM(d.workspaceName) }),
-      ),
-      cta: cta(tr(`${k}.cta`), d.inviteUrl),
-      fallback: fallback(tr, d.inviteUrl),
-      disclaim: disclaim(tr),
+      body: e.lead(tr(`${k}.body`, { ...escAll(p), workspace_name: EM(d.workspaceName) })),
+      cta: { label: tr(`${k}.cta`), url: d.inviteUrl },
+      ignore: true,
     }),
     text: `${tr(`${k}.body`, p)}\n\n${tr(`${k}.text_cta`)}\n${d.inviteUrl}\n\n${tr("email.common.ignore_text")}\n\n${tr("email.common.signoff")}`,
   };
@@ -190,40 +108,32 @@ export function tierDowngradedEmail(
     to_tier: d.toTier,
     date: d.downgradedAtHuman,
   };
-  const list = (items: readonly string[]) =>
-    `<ul style="margin:0 0 20px; padding-left:20px; color:#2D2D2C; font-size:15px; line-height:1.7; font-weight:400;">\n  ${items.map((i) => `<li>${esc(i)}</li>`).join("")}\n</ul>`;
   const body = [
-    `<p style="font-size:17px; line-height:1.65; margin:0 0 20px; color:#2D2D2C; font-weight:400;">\n  ${tr(`${k}.body`, { ...escAll(p), workspace_name: EM(d.workspaceName) })}\n</p>`,
-    d.freezeItems.length
-      ? `<p style="font-size:15px; line-height:1.65; margin:0 0 8px; color:#2D2D2C; font-weight:400;">\n  ${tr(`${k}.frozen`)}\n</p>\n${list(d.freezeItems)}`
-      : "",
-    d.revertItems.length
-      ? `<p style="font-size:15px; line-height:1.65; margin:0 0 8px; color:#2D2D2C; font-weight:400;">\n  ${tr(`${k}.reverted`)}\n</p>\n${list(d.revertItems)}`
-      : "",
-    P(15, "0 0 24px", tr(`${k}.rest`)),
+    e.lead(tr(`${k}.body`, { ...escAll(p), workspace_name: EM(d.workspaceName) })),
+    d.freezeItems.length ? `${e.p(tr(`${k}.frozen`))}${e.list(d.freezeItems)}` : "",
+    d.revertItems.length ? `${e.p(tr(`${k}.reverted`))}${e.list(d.revertItems)}` : "",
+    e.p(tr(`${k}.rest`)),
   ]
     .filter(Boolean)
     .join("\n\n");
-  const textList = (items: readonly string[]) => items.map((i) => `- ${i}\n`).join("");
+  const textList = (items: readonly string[]) => items.map((i) => `- ${i}`).join("\n");
   return {
     subject: tr(`${k}.subject`, p).replace(/[\r\n]/g, " "),
-    html: layout(tr, {
-      title: tr(`${k}.subject`, escAll(p)),
-      preview: tr(`${k}.preview`, escAll(p)),
-      heading: tr(`${k}.heading`, escAll(p)),
+    html: layout(tr, locale, {
+      title: tr(`${k}.subject`, p),
+      preview: tr(`${k}.preview`, p),
+      heading: tr(`${k}.heading`, p),
       body,
-      cta: cta(tr(`${k}.cta`), d.workspaceUrl),
+      cta: { label: tr(`${k}.cta`), url: d.workspaceUrl },
     }),
-    text: `${tr(`${k}.text_body`, p)}
-
-${d.freezeItems.length ? `${tr(`${k}.frozen_text`)}\n${textList(d.freezeItems)}\n` : ""}
-${d.revertItems.length ? `${tr(`${k}.reverted_text`)}\n${textList(d.revertItems)}\n` : ""}
-${tr(`${k}.rest_text`)}
-
-${tr(`${k}.text_cta`)}
-${d.workspaceUrl}
-
-${tr("email.common.signoff")}`,
+    text: emailText([
+      tr(`${k}.text_body`, p),
+      d.freezeItems.length > 0 && `${tr(`${k}.frozen_text`)}\n${textList(d.freezeItems)}`,
+      d.revertItems.length > 0 && `${tr(`${k}.reverted_text`)}\n${textList(d.revertItems)}`,
+      tr(`${k}.rest_text`),
+      `${tr(`${k}.text_cta`)}\n${d.workspaceUrl}`,
+      tr("email.common.signoff"),
+    ]),
   };
 }
 
@@ -257,8 +167,8 @@ export function supportAccessEmail(
             ? "email.support_reminder"
             : `email.support_${t.decision}`;
   const head = {
-    title: tr(`${k}.subject`, html),
-    preview: tr(`${k}.preview`, html),
+    title: tr(`${k}.subject`, plain),
+    preview: tr(`${k}.preview`, plain),
     heading: tr(`${k}.heading`),
   };
   const subject = tr(`${k}.subject`, plain);
@@ -267,14 +177,12 @@ export function supportAccessEmail(
       return {
         subject,
         text: "",
-        html: layout(tr, {
+        html: layout(tr, locale, {
           ...head,
-          body: P(
-            17,
-            "0 0 28px",
+          body: e.lead(
             `${tr(`${k}.body`, inBody)}\n  ${t.note ? tr(`${k}.note`, { note: esc(t.note) }) : ""}\n  ${tr(`${k}.end`)}`,
           ),
-          cta: cta(tr(`${k}.cta`), t.settingsUrl),
+          cta: { label: tr(`${k}.cta`), url: t.settingsUrl },
         }),
       };
     case "joined":
@@ -283,24 +191,22 @@ export function supportAccessEmail(
       return {
         subject,
         text: "",
-        html: layout(tr, {
+        html: layout(tr, locale, {
           ...head,
-          body: P(17, "0 0 28px", `${tr(`${k}.body`, inBody)}\n  ${tr(`${k}.end`)}`),
-          cta: cta(tr(`${k}.cta`), t.settingsUrl),
+          body: e.lead(`${tr(`${k}.body`, inBody)}\n  ${tr(`${k}.end`)}`),
+          cta: { label: tr(`${k}.cta`), url: t.settingsUrl },
         }),
       };
     case "resolved":
       return {
         subject,
         text: "",
-        html: layout(tr, {
+        html: layout(tr, locale, {
           ...head,
-          body: P(
-            17,
-            "0 0 28px",
+          body: e.lead(
             `${tr(`${k}.body`, inBody)}\n  ${t.decision === "approved" ? tr(`${k}.end`) : ""}`,
           ),
-          ...(t.decision === "approved" && { cta: cta(tr(`${k}.cta`), t.workspaceUrl) }),
+          ...(t.decision === "approved" && { cta: { label: tr(`${k}.cta`), url: t.workspaceUrl } }),
         }),
       };
   }

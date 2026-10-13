@@ -26,9 +26,12 @@ const {
 
 /** Statuses in which a task still waits on the customer. */
 const OPEN = ["open", "changes_requested"] as const;
-/** A project whose popcorn session is a synthetic demo: its conversations are invented. */
-const NOT_SYNTHETIC = sql`not exists (select 1 from agent_loop l where l.project_id = p.id
-  and l.popcorn_state->'demo'->>'synthetic' = 'true')`;
+/**
+ * Not a synthetic demo (its popcorn session says so) and not a seeded sample copy: the
+ * conversations of both are invented, and neither is a project the customer made.
+ */
+const NOT_SYNTHETIC = sql`not p.is_sample and not exists (select 1 from agent_loop l
+  where l.project_id = p.id and l.popcorn_state->'demo'->>'synthetic' = 'true')`;
 
 export type OrgRow = typeof org.$inferSelect;
 export type BillingRow = typeof billing_account.$inferSelect;
@@ -52,6 +55,14 @@ export const store = {
     await c.insert(org).values(row);
   },
 
+  /**
+   * Holds the organisation's row until the transaction ends, so two writes that each
+   * decide from the other's result (a signature and the billing details) run one after
+   * the other. Take it first in the transaction: a later lock could deadlock.
+   */
+  async lockOrg(c: Conn, id: string): Promise<void> {
+    await c.select({ id: org.id }).from(org).where(eq(org.id, id)).for("update");
+  },
   async updateOrg(c: Conn, id: string, patch: Partial<typeof org.$inferInsert>) {
     await c.update(org).set(patch).where(eq(org.id, id));
   },
@@ -183,6 +194,58 @@ export const store = {
       .leftJoin(auth_user, eq(auth_user.id, app_user.directus_user_id))
       .where(and(eq(org_membership.org_id, orgId), isNull(org_membership.deleted_at)))
       .orderBy(asc(org_membership.created_at));
+  },
+
+  /**
+   * Someone named to sign shows among the organisation's members as invited, with the
+   * billing role (signing and paying is what it is for). Their invitation email is the
+   * signing email, so none goes out here. Nothing changes when they are a member already
+   * or have an invitation waiting; true when an invitation was made.
+   */
+  async inviteSigner(
+    c: Conn,
+    row: { id: string; orgId: string; email: string; invitedBy: string | null; now: Date },
+  ): Promise<boolean> {
+    const e = row.email.trim().toLowerCase();
+    const at = row.now.toISOString();
+    const [member] = await c
+      .select({ id: org_membership.id })
+      .from(org_membership)
+      .innerJoin(app_user, eq(app_user.id, org_membership.user_id))
+      .leftJoin(auth_user, eq(auth_user.id, app_user.directus_user_id))
+      .where(
+        and(
+          eq(org_membership.org_id, row.orgId),
+          isNull(org_membership.deleted_at),
+          sql`lower(coalesce(${auth_user.email}, ${app_user.email})) = ${e}`,
+        ),
+      )
+      .limit(1);
+    if (member) return false;
+    const [pending] = await c
+      .select({ id: org_invite.id })
+      .from(org_invite)
+      .where(
+        and(
+          eq(org_invite.org_id, row.orgId),
+          sql`lower(${org_invite.email}) = ${e}`,
+          isNull(org_invite.accepted_at),
+          isNull(org_invite.deleted_at),
+          gt(org_invite.expires_at, at),
+        ),
+      )
+      .limit(1);
+    if (pending) return false;
+    await c.insert(org_invite).values({
+      id: row.id,
+      org_id: row.orgId,
+      email: e,
+      role: "billing",
+      invited_by: row.invitedBy,
+      // As long as an offer stays open to sign.
+      expires_at: new Date(row.now.getTime() + 30 * 86_400_000).toISOString(),
+    });
+    return true;
   },
 
   async usage(c: Conn, orgId: string) {
@@ -380,7 +443,7 @@ export const store = {
       );
   },
 
-  /** Open tasks whose reminder is due, oldest first. Tasks waiting on us are not here. */
+  /** Open tasks whose check-in is due, oldest first. Tasks waiting on us are not here. */
   async dueReminders(c: Conn, now: Date, limit: number): Promise<TaskRow[]> {
     return c
       .select()
@@ -447,8 +510,32 @@ export const store = {
       .limit(limit);
   },
 
+  /** When each document's named signer was last reminded, by document id. */
+  async lastReminders(c: Conn, orgId: string, docId?: string): Promise<Map<string, Date>> {
+    const rows = await c
+      .select({ docId: event.subjectId, at: sql<Date>`max(${event.createdAt})` })
+      .from(event)
+      .where(
+        and(
+          eq(event.orgId, orgId),
+          eq(event.type, "document.signer_reminded"),
+          docId ? eq(event.subjectId, docId) : undefined,
+        ),
+      )
+      .groupBy(event.subjectId);
+    return new Map(rows.map((r) => [r.docId as string, new Date(r.at)]));
+  },
+
   async insertEvent(c: Conn, row: typeof event.$inferInsert) {
     await c.insert(event).values(row);
+  },
+  /** The subjects that already have an event of `type`: what was announced is never announced twice. */
+  async eventSubjects(c: Conn, orgId: string, type: string): Promise<Set<string>> {
+    const rows = await c
+      .select({ id: event.subjectId })
+      .from(event)
+      .where(and(eq(event.orgId, orgId), eq(event.type, type)));
+    return new Set(rows.flatMap((r) => (r.id ? [r.id] : [])));
   },
 
   // ── legal texts ───────────────────────────────────────────────────────
@@ -532,9 +619,9 @@ export const store = {
           ),
         )
         .groupBy(org.id)
-        // Only organisations with account content: a stage, a task, or a document.
+        // Only organisations with account content: a stage, a task, or a document that was sent.
         .having(
-          sql`${org.account_stage} is not null or count(${task.id}) > 0 or exists (select 1 from account_document d where d.org_id = ${org.id})`,
+          sql`${org.account_stage} is not null or count(${task.id}) > 0 or exists (select 1 from account_document d where d.org_id = ${org.id} and d.status <> 'draft')`,
         )
         .orderBy(asc(org.name))
     );

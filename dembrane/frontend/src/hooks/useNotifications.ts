@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { API_BASE_URL } from "@/config";
+import { API_BASE_URL, ENABLE_TRAINING } from "@/config";
 import { ApiRequestError } from "@/lib/errors/read";
 
 /**
@@ -196,7 +196,9 @@ export function resolveNotificationHref(
 			}
 			return null;
 		case "NAVIGATE_TRAINING":
-			return refs.org_id ? `/o/${refs.org_id}/training` : null;
+			return ENABLE_TRAINING && refs.org_id
+				? `/o/${refs.org_id}/training`
+				: null;
 		default:
 			return null;
 	}

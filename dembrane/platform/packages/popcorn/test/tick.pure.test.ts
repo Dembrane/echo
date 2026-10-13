@@ -17,6 +17,7 @@ import {
   nameHits,
   negated,
   scrubNames,
+  shownIndex,
 } from "../src/tick/flags";
 import { islandFlags, nameFlags, screenFlags } from "../src/tick/gates";
 import { groundItems } from "../src/tick/grounding";
@@ -88,6 +89,46 @@ describe("tick parts match the Python", () => {
         if (m) expect(known).toContain((m[1] as string).slice(1, -1).split(" ").join("\u0001"));
       }
     }
+  });
+
+  test("one index of shown text answers as each conversation's own set", () => {
+    const both = "people want the bus to run later at night";
+    const onSlide = "the slide says cars come first in this town";
+    const made: Json = {
+      conversations: {
+        a: {
+          items: [
+            { phrase: both },
+            { phrase: "the square needs more places to sit down" },
+            { phrase: both },
+          ],
+        },
+        b: { items: [{ phrase: both }, { phrase: "parking near the station costs far too much" }] },
+        c: { items: [{ phrase: onSlide }] },
+        d: { items: [] },
+      },
+      analysis: { tensions: { tensions: [{ id: "x1", poleA: onSlide }] } },
+    };
+    const states = [made, ...cases("known_shingles").map((c) => (c.in as [Json])[0])];
+    for (const state of states) {
+      const shown = shownIndex(state);
+      const all = knownShingles(state);
+      for (const cid of [...Object.keys(state.conversations as Json), "not-in-the-session"]) {
+        const got = shown.except(cid);
+        expect([...all].filter((run) => got.has(run)).sort()).toEqual(
+          [...knownShingles(state, 6, cid)].sort(),
+        );
+        expect(got.has("never\u0001shown\u0001to\u0001the\u0001room\u0001once")).toBe(false);
+      }
+    }
+    // A run only this conversation holds is its own; one another text holds too is known.
+    const own = "the\u0001square\u0001needs\u0001more\u0001places\u0001to";
+    expect(shownIndex(made).except("a").has(own)).toBe(false);
+    expect(shownIndex(made).except("b").has(own)).toBe(true);
+    expect(shownIndex(made).except("a").has(both.split(" ").slice(0, 6).join("\u0001"))).toBe(true);
+    expect(shownIndex(made).except("c").has(onSlide.split(" ").slice(0, 6).join("\u0001"))).toBe(
+      true,
+    );
   });
 
   test("the slide gates", () => {

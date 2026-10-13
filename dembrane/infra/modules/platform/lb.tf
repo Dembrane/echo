@@ -2,7 +2,8 @@
 # portal, with Google-managed certificates authorised by DNS, so they are issued before any
 # traffic moves. Optionally the old Directus hostname: /assets/* is served by the API's
 # /api/assets/* (old email images and stored avatar links), everything else redirects to the
-# dashboard's sign-in. Nothing here is used until DNS points the names at lb_ip.
+# dashboard's sign-in. Optionally the documentation site, static pages from a bucket. Nothing
+# here is used until DNS points the names at lb_ip.
 
 variable "domains" {
   type = object({
@@ -17,6 +18,12 @@ variable "domains" {
 variable "legacy_directus_host" {
   type        = string
   description = "The old Directus hostname, kept for old asset links. Null: not served."
+  default     = null
+}
+
+variable "docs_domain" {
+  type        = string
+  description = "Hostname of this environment's documentation site, served from the docs bucket. Null: not served."
   default     = null
 }
 
@@ -35,7 +42,8 @@ variable "monitor_domains" {
 locals {
   lb        = var.domains == null ? 0 : 1
   lb_roles  = var.domains == null ? {} : { api = var.domains.api, dashboard = var.domains.dashboard, portal = var.domains.portal }
-  lb_hosts  = var.domains == null ? [] : compact(concat(values(local.lb_roles), [var.legacy_directus_host]))
+  docs      = var.domains == null || var.docs_domain == null ? 0 : 1
+  lb_hosts  = var.domains == null ? [] : compact(concat(values(local.lb_roles), [var.legacy_directus_host, var.docs_domain]))
   lb_prefix = "${local.name}-lb"
   # What the certificate names, and the domains whose DNS authorises it.
   cert_names        = var.wildcard_domain == null ? local.lb_hosts : ["*.${var.wildcard_domain}"]
@@ -69,6 +77,45 @@ resource "google_compute_backend_service" "run" {
   }
 }
 
+# The documentation site: the pages .github/workflows/docs.yml builds from docs/, in a bucket
+# the deployer fills. objectViewer for everyone, not legacyObjectReader: without the right to
+# list, a page that does not exist answers 403 instead of 404.
+resource "google_storage_bucket" "docs" {
+  count                       = local.docs
+  name                        = "${var.project}-${local.name}-docs"
+  location                    = var.region
+  uniform_bucket_level_access = true
+  website { main_page_suffix = "index.html" }
+  depends_on = [google_project_service.apis]
+}
+resource "google_storage_bucket_iam_member" "docs_public" {
+  count  = local.docs
+  bucket = google_storage_bucket.docs[0].name
+  role   = "roles/storage.objectViewer"
+  member = "allUsers"
+}
+resource "google_storage_bucket_iam_member" "docs_deployer" {
+  count  = local.docs
+  bucket = google_storage_bucket.docs[0].name
+  role   = "roles/storage.objectAdmin"
+  member = google_service_account.deployer.member
+}
+# `gcloud storage rsync` reads the bucket itself before it lists the pages, and objectAdmin
+# covers objects only.
+resource "google_storage_bucket_iam_member" "docs_deployer_bucket" {
+  count  = local.docs
+  bucket = google_storage_bucket.docs[0].name
+  role   = "roles/storage.legacyBucketReader"
+  member = google_service_account.deployer.member
+}
+resource "google_compute_backend_bucket" "docs" {
+  count       = local.docs
+  name        = "${local.name}-docs"
+  bucket_name = google_storage_bucket.docs[0].name
+  # Search engines index production's documentation only.
+  custom_response_headers = var.env == "prod" ? [] : ["X-Robots-Tag: noindex"]
+}
+
 resource "google_compute_url_map" "lb" {
   count           = local.lb
   name            = local.lb_prefix
@@ -86,6 +133,21 @@ resource "google_compute_url_map" "lb" {
     content {
       name            = path_matcher.key
       default_service = google_compute_backend_service.run[path_matcher.key].id
+    }
+  }
+
+  dynamic "host_rule" {
+    for_each = local.docs == 1 ? [var.docs_domain] : []
+    content {
+      hosts        = [host_rule.value]
+      path_matcher = "docs"
+    }
+  }
+  dynamic "path_matcher" {
+    for_each = local.docs == 1 ? [var.docs_domain] : []
+    content {
+      name            = "docs"
+      default_service = google_compute_backend_bucket.docs[0].id
     }
   }
 
@@ -201,6 +263,7 @@ locals {
   domain_checks = var.monitor_domains ? merge(
     { for role, host in local.lb_roles : role => { host = host, path = role == "api" ? "/ready" : "/", class = "STATUS_CLASS_2XX" } },
     var.legacy_directus_host == null ? {} : { directus = { host = var.legacy_directus_host, path = "/assets/", class = "STATUS_CLASS_ANY" } },
+    local.docs == 0 ? {} : { docs = { host = var.docs_domain, path = "/", class = "STATUS_CLASS_2XX" } },
   ) : {}
 }
 
@@ -251,6 +314,9 @@ resource "google_monitoring_alert_policy" "domain" {
 
 output "lb_ip" {
   value = local.lb == 1 ? google_compute_global_address.lb[0].address : null
+}
+output "docs_bucket" {
+  value = local.docs == 1 ? google_storage_bucket.docs[0].name : null
 }
 output "dns_authorizations" {
   description = "CNAME records that authorise the certificates."

@@ -1,7 +1,7 @@
 import { NotFoundError, newId, ValidationError } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import type { AccountsDeps, Conn } from "./deps";
 import { emit } from "./events";
 import type { Language } from "./offer";
@@ -44,10 +44,12 @@ export async function createAccount(
   actor: Signed | null,
   input: CreateAccountInput,
   /**
-   * `holdSignIn`: a contact created here cannot sign in until released (a demo made in
-   * echo invites its contact when it is published, never before).
+   * `hold`: the contact gets nothing of the organisation until released (a demo made in
+   * echo gives its contact the organisation when staff publish it, never before). No
+   * membership is written here, and someone new cannot sign in either. The caller records
+   * the contact as held on its demo; releaseHeldContacts reads that.
    */
-  opts: { password?: string; holdSignIn?: boolean } = {},
+  opts: { password?: string; hold?: boolean } = {},
 ): Promise<CreateAccountResult> {
   const email = input.contact_email.trim().toLowerCase();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
@@ -113,23 +115,9 @@ export async function createAccount(
       name: input.contact_name,
       passwordHash,
       nowIso,
-      holdSignIn: opts.holdSignIn === true,
+      holdSignIn: opts.hold === true,
     });
-    const membership = await store.orgMembership(tx, orgId, contact.appUserId);
-    if (!membership)
-      await tx.insert(schema.org_membership).values({
-        id: newId(),
-        org_id: orgId,
-        user_id: contact.appUserId,
-        role: "admin",
-        created_at: nowIso,
-        updated_at: nowIso,
-      });
-    else if (membership.deleted_at)
-      await tx
-        .update(schema.org_membership)
-        .set({ deleted_at: null, role: "admin", updated_at: nowIso })
-        .where(eq(schema.org_membership.id, membership.id));
+    if (!opts.hold) await makeAdmin(tx, orgId, contact.appUserId, nowIso);
 
     // A customer is invoiced, so billing details wait from the start. A prospect is not
     // until an offer exists; pushing one adds the task then.
@@ -154,6 +142,25 @@ export async function createAccount(
       continue_url: continueUrl(d.settings.dashboardUrl, orgId),
     };
   });
+}
+
+/** The person as admin of the organisation: a new membership, or a removed one restored. */
+async function makeAdmin(tx: Conn, orgId: string, appUserId: string, nowIso: string) {
+  const membership = await store.orgMembership(tx, orgId, appUserId);
+  if (!membership)
+    await tx.insert(schema.org_membership).values({
+      id: newId(),
+      org_id: orgId,
+      user_id: appUserId,
+      role: "admin",
+      created_at: nowIso,
+      updated_at: nowIso,
+    });
+  else if (membership.deleted_at)
+    await tx
+      .update(schema.org_membership)
+      .set({ deleted_at: null, role: "admin", updated_at: nowIso })
+      .where(eq(schema.org_membership.id, membership.id));
 }
 
 /**
@@ -274,36 +281,44 @@ export function codeSignInGate(d: Pick<AccountsDeps, "db" | "now">) {
 }
 
 /**
- * Lets a contact created with `holdSignIn` sign in: their Directus row becomes active. A
- * user who was already active is left as they are. Returns whether anything changed.
+ * Gives the contacts held by this organisation's demos what they wait for: the admin
+ * membership and, for someone new, the sign-in. Called when staff publish a demo with
+ * sign-in, send something the customer must act on, or enable the account, so each of
+ * those leaves the contact able to open the organisation. Sends nothing: the invitation,
+ * the document or the staff who enabled the account is what tells them. A contact is let
+ * in once; a second call changes nothing.
  */
-export async function releaseSignIn(c: Conn, userId: string): Promise<boolean> {
-  const out = await c
-    .update(schema.directus_users)
-    .set({ status: "active" })
-    .where(and(eq(schema.directus_users.id, userId), eq(schema.directus_users.status, "draft")))
-    .returning({ id: schema.directus_users.id });
-  return out.length > 0;
-}
-
-/**
- * Releases every contact of the organisation still held by `holdSignIn` (a demo published
- * without sign-in). Called when staff send something the customer must act on, or enable
- * the account, so the contact can then ask for a sign-in code. Sends nothing: the document
- * or the staff who enabled the account is what tells them. Returns how many were released.
- */
-export async function releaseHeldContacts(c: Conn, orgId: string): Promise<number> {
+export async function releaseHeldContacts(c: Conn, orgId: string, now: Date): Promise<void> {
+  // Locked, so two releases at the same moment add one membership.
+  const demos = await c
+    .select({ id: schema.account_demo.id, seed: schema.account_demo.seed })
+    .from(schema.account_demo)
+    .where(
+      and(
+        eq(schema.account_demo.orgId, orgId),
+        sql`${schema.account_demo.seed}->>'contact_held' = 'true'`,
+      ),
+    )
+    .for("update");
+  for (const demo of demos) {
+    const seed = demo.seed as { contact_user_id: string };
+    const contact = await store.appUserByDirectusId(c, seed.contact_user_id);
+    if (contact) await makeAdmin(c, orgId, contact.id, now.toISOString());
+    await c
+      .update(schema.account_demo)
+      .set({ seed: { ...seed, contact_held: false }, updatedAt: now })
+      .where(eq(schema.account_demo.id, demo.id));
+  }
+  // Someone new was created unable to sign in; as a member they now can.
   const members = c
     .select({ id: schema.app_user.directus_user_id })
     .from(schema.org_membership)
     .innerJoin(schema.app_user, eq(schema.app_user.id, schema.org_membership.user_id))
     .where(and(eq(schema.org_membership.org_id, orgId), isNull(schema.org_membership.deleted_at)));
-  const out = await c
+  await c
     .update(schema.directus_users)
     .set({ status: "active" })
     .where(
       and(eq(schema.directus_users.status, "draft"), inArray(schema.directus_users.id, members)),
-    )
-    .returning({ id: schema.directus_users.id });
-  return out.length;
+    );
 }

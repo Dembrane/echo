@@ -25,6 +25,18 @@ export interface Totals {
   readonly total_cents: number;
 }
 
+/**
+ * How VAT applies to an offer or invoice: Dutch VAT on the lines, reverse-charged to a
+ * business elsewhere in the EU, or none for a service supplied outside the EU. The last two
+ * carry only 0% lines and say why on the document.
+ */
+export const VAT_TREATMENTS = ["standard", "reverse_charge", "outside_eu"] as const;
+export type VatTreatment = (typeof VAT_TREATMENTS)[number];
+
+/** Whether lines fit the treatment: reverse charge and outside the EU have no VAT. */
+export const fitsVatTreatment = (t: VatTreatment, lines: readonly OfferLine[]) =>
+  t === "standard" || lines.every((l) => l.vat_rate_bps === 0);
+
 /** Rates we invoice at: NL standard and reduced, and zero (reverse charge, outside the EU). */
 export const VAT_RATES_BPS = [0, 900, 2100] as const;
 
@@ -60,6 +72,22 @@ export function priceLines(lines: readonly OfferLine[]): Totals {
   // A discount line may be negative (a scholarship); the offer as a whole may not.
   if (subtotal + vat < 0) throw new ValidationError("offer.negative_total");
   return { lines: priced, subtotal_cents: subtotal, vat_cents: vat, total_cents: subtotal + vat };
+}
+
+/**
+ * An offer that goes to a customer asks for money: every line carries an amount (a discount
+ * may be negative) and the whole comes to more than zero. A missing price is a question for
+ * whoever drafts the offer, never a line that reads 0,00. Checked when an offer is drafted
+ * or changed, not when an old one is rendered.
+ */
+export function requireAmounts(lines: readonly OfferLine[]): Totals {
+  const totals = priceLines(lines);
+  totals.lines.forEach((l, i) => {
+    if (l.unit_price_cents === 0)
+      throw new ValidationError("offer.line_no_amount", { params: { line: i + 1 } });
+  });
+  if (totals.total_cents === 0) throw new ValidationError("offer.zero_total");
+  return totals;
 }
 
 /** 123456 cents as "1.234,56" for Dutch-reading documents, with the currency code before it. */

@@ -8,8 +8,6 @@ Production services do not run here: they run on DigitalOcean Kubernetes through
 Dembrane/echo-gitops (`helm/dembrane-web`), and the `platform` workflow's prod job only pushes
 images to `registry.digitalocean.com/dbr-cr` and bumps the image tag there. `prod/` still
 holds the `dembrane-web-prod` project (the Vertex AI project prod's models are billed to).
-Every push to main takes the same path to echo-next (the `dembrane-web-dummy` app on the
-DigitalOcean dev cluster), through its own values file, with no tag and no approval.
 
 | Environment | Project | Number | Root | State |
 |---|---|---|---|---|
@@ -33,7 +31,9 @@ SQL instance `echo-<env>`, the uploads bucket with its HMAC key, secrets replica
 europe-west4 only, the runtime and deployer service accounts, the GitHub trust, the EU log
 bucket with the `_Default` sink pointed at it, log metrics, alerts and the readiness check.
 staging and prod also have the load balancer (`api`, `dashboard` and `portal`; prod adds the old
-`directus` host). prod has, in `prod/cutover.tf`, what the cutover needs: the archive bucket
+`directus` host). staging's also serves `docs.staging.dembrane.com` (`docs_domain`) from a public
+bucket that `.github/workflows/docs.yml` fills from `docs/` on main; production's documentation
+is GitHub Pages. prod has, in `prod/cutover.tf`, what the cutover needs: the archive bucket
 and Storage Transfer.
 
 Alerts go to email (`alert_email`) and to Slack #alerts-ci. Monitoring publishes each
@@ -119,7 +119,9 @@ A PR preview's dashboard and portal have ingress `internal-and-cloud-load-balanc
 answer only through the load balancer. Its API keeps public ingress, because the web servers
 reach it from outside any VPC. Sign-in cookies stay host-only (`AUTH_COOKIE_DOMAIN` unset):
 all PR previews share `AUTH_SECRET`, and a cookie scoped to `preview.dembrane.com` would
-cross from one preview's database to another's.
+cross from one preview's database to another's. They also carry their own name
+(`auth.cookiePrefix` in the preview environment file), so a browser signed in to another
+environment under `dembrane.com` keeps that session beside the preview's.
 
 DNS is in Cloudflare. `terraform output pr_preview_dns` gives the two records, both DNS only
 (not proxied): the wildcard `A` record to the load balancer, and the `_acme-challenge` CNAME

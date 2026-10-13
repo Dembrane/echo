@@ -520,6 +520,7 @@ export async function claimFinish(d: PipelineDeps, conversationId: string): Prom
 /**
  * _stamp_over_cap: the soft-edge formula over the workspace's lifetime audio
  * hours, deleted conversations included, since deleting keeps billable duration.
+ * A sample copy's invented conversations are no one's audio and do not count.
  * Deterministic in the database's state, so a retry writes the same value.
  */
 export async function stampOverCap(d: PipelineDeps, conversationId: string): Promise<void> {
@@ -540,7 +541,7 @@ export async function stampOverCap(d: PipelineDeps, conversationId: string): Pro
     .select({ seconds: sql<number>`coalesce(sum(${conversation.duration}), 0)::float8` })
     .from(conversation)
     .innerJoin(project, eq(project.id, conversation.project_id))
-    .where(eq(project.workspace_id, row.workspaceId));
+    .where(and(eq(project.workspace_id, row.workspaceId), eq(project.is_sample, false)));
   const overCap = computeIsOverCap(
     row.tier ?? "",
     (total?.seconds ?? 0) / 3600,

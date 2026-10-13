@@ -130,8 +130,10 @@ export const LanguagePicker = () => {
 					comboboxProps={{ offset: 2 }}
 					maxDropdownHeight={360}
 					styles={{
+						dropdown: { minWidth: "max-content" },
 						option: {
 							paddingBlock: 4,
+							whiteSpace: "nowrap",
 						},
 					}}
 					renderOption={({ option }) => (

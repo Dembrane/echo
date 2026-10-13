@@ -1,7 +1,9 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { createHash } from "node:crypto";
+import { sendEmail } from "@dembrane/account";
+import { newId } from "@dembrane/core";
 import { schema } from "@dembrane/db";
-import { MemoryMailer } from "@dembrane/mail";
+import { deliverSamMessage } from "@dembrane/webhooks";
 import { and, eq, sql } from "drizzle-orm";
 import { PDFDocument } from "pdf-lib";
 import postgres from "postgres";
@@ -216,7 +218,12 @@ run("accounts routes against Postgres", () => {
       "signature",
     ]);
     expect(pushed.task?.code).toBe("sign_offer");
-    expect(pushed.task?.params).toEqual({ document_title: pushed.document.title });
+    expect(pushed.task?.params).toEqual({
+      document_title: pushed.document.title,
+      offer_template: "subscription",
+      offer_reference: pushed.document.reference as string,
+    });
+    expect(pushed.document.title).toBe(`Offerte jaarlicentie ${pushed.document.reference}`);
     expect([pushed.task?.title, pushed.task?.body]).toEqual([null, null]);
     expect(pushed.task?.status).toBe("open");
     expect(pushed.task?.next_reminder_at).toBe("2026-10-05T09:00:00.000Z");
@@ -231,7 +238,7 @@ run("accounts routes against Postgres", () => {
       const r = await call(w, "GET", C(), as);
       expect(r.status).toBe(200);
       const page = K.AccountPage.parse(r.data);
-      expect(page.tasks[0]?.code).toBe("sign_offer");
+      expect(page.tasks.map((t) => t.code).slice(0, 2)).toEqual(["who_signs", "sign_offer"]);
       expect(page.tasks.find((t) => t.kind === "billing_details")?.locked).toBe(true);
       expect(page.documents.find((d) => d.id === offerId)?.file_url).toBe(
         `${C()}/documents/${offerId}/file`,
@@ -415,7 +422,76 @@ run("accounts routes against Postgres", () => {
     );
   });
 
-  test("a signer who may not agree to data processing leaves a DPA to sign separately", async () => {
+  test("who signs: the answers name the signers of the offer and its DPA, and settle the task for sam", async () => {
+    const pushed = K.PushOfferResponse.parse(
+      (await call(w, "POST", `${S()}/offers`, "staff", offerBody())).data,
+    );
+    const id = pushed.document.id;
+    const asked = (await store.tasks(w.db, w.orgId)).find(
+      (t) => t.code === "who_signs" && t.documentId === id,
+    );
+    expect(asked?.status).toBe("open");
+    expect(asked?.params).toEqual({
+      document_title: pushed.document.title,
+      offer_template: "subscription",
+      offer_reference: pushed.document.reference as string,
+    });
+    const path = `${C()}/tasks/${asked?.id}/who-signs`;
+    const officer = { name: "Data Officer", email: "dpo@example.test", role: "FG" };
+    const answer = { offer_signer: officer, dpa_same: true, dpa_signer: null, dpia: true };
+    expect((await call(w, "POST", path, "member", answer)).status).toBe(403);
+    // Not answered by a reply: it has its own form.
+    expect(
+      (await call(w, "POST", `${C()}/tasks/${asked?.id}/submit`, "admin", { response_text: "x" }))
+        .status,
+    ).toBe(409);
+    w.jobs.jobs.length = 0;
+    const r = await call(w, "POST", path, "admin", answer);
+    expect(r.status).toBe(200);
+    const done = K.Task.parse(r.data);
+    expect(done.status).toBe("done");
+    expect(done.params).toMatchObject({ dpa_same: "true", dpia: "true" });
+    expect(done.response_text).toContain("Offer: signed by Data Officer (dpo@example.test, FG).");
+    expect(done.response_text).toContain("own data protection impact assessment");
+    expect(w.jobs.of("accounts.deliver-event").map((j) => j.payload)).toContainEqual(
+      expect.objectContaining({ event: "account.task.submitted" }),
+    );
+    expect((await call(w, "POST", path, "admin", answer)).status).toBe(409);
+    // The same person signs the offer and the DPA sent with it.
+    const dpa = (await store.documents(w.db, w.orgId)).find(
+      (x) => x.kind === "dpa" && ["sent", "viewed"].includes(x.status),
+    );
+    expect((await store.document(w.db, w.orgId, id))?.signerEmail).toBe("dpo@example.test");
+    expect(dpa?.signerEmail).toBe("dpo@example.test");
+    // Back to the admin, who signs the DPA in the next test.
+    expect(
+      (
+        await call(w, "POST", `${C()}/documents/${dpa?.id}/signer`, "admin", {
+          name: "Admin",
+          email: "admin@example.test",
+          role: null,
+        })
+      ).status,
+    ).toBe(200);
+
+    // An offer signed without answering first settles the question too.
+    const other = K.PushOfferResponse.parse(
+      (await call(w, "POST", `${S()}/offers`, "staff", offerBody())).data,
+    );
+    const signed = await signPayload(other.document.id, "admin");
+    expect(
+      (await call(w, "POST", `${C()}/documents/${other.document.id}/sign`, "admin", signed.body))
+        .status,
+    ).toBe(200);
+    expect(
+      (await store.tasks(w.db, w.orgId))
+        .filter((t) => t.documentId === other.document.id)
+        .map((t) => `${t.code}:${t.status}`)
+        .sort(),
+    ).toEqual(["sign_offer:done", "who_signs:done"]);
+  });
+
+  test("the DPA goes out with the offer as its own document; signing the offer asks nothing about it", async () => {
     const pushed = K.PushOfferResponse.parse(
       (
         await call(
@@ -427,10 +503,16 @@ run("accounts routes against Postgres", () => {
         )
       ).data,
     );
+    // An event has no SLA, so the DPA is the first appendix, and it is signed on its own.
     expect(pushed.document.body).toContain(
-      "Appendix B: Data Processing Agreement (version 3.0.1, 17-07-2026",
+      "Appendix A: Data Processing Agreement (version 3.0.1, 17-07-2026",
     );
-    const { body } = await signPayload(pushed.document.id, "admin", { dpa_authorised: false });
+    expect(pushed.document.body).not.toContain("Service Level Agreement");
+    expect(pushed.document.body).toContain("is signed separately");
+    expect(pushed.document.confirmation?.dpa_not_authorised).toBeNull();
+    expect(pushed.document.confirmation?.dpa_authorised).not.toContain("data processing");
+    expect(pushed.document.legal.map((l) => l.kind)).toEqual(["terms", "dpa"]);
+    const { body } = await signPayload(pushed.document.id, "admin");
     expect(
       (await call(w, "POST", `${C()}/documents/${pushed.document.id}/sign`, "admin", body)).status,
     ).toBe(200);
@@ -473,11 +555,33 @@ run("accounts routes against Postgres", () => {
     expect(K.NameSignerResponse.parse(r.data).signer.email).toBe("signer@example.test");
     const [mail] = w.jobs.of("account.send-email");
     expect(mail).toMatchObject({ to: "signer@example.test", template: "account_signer_invite" });
-    expect((mail as { data: { sign_url: string } }).data.sign_url).toBe(
-      `https://dash.test/o/${w.orgId}/account/documents/${id}/sign`,
+    expect((mail as { data: { sign_url: string } }).data.sign_url).toMatch(
+      new RegExp(
+        `^https://dash\\.test/o/${w.orgId}/account/documents/${id}/sign\\?invite=[\\w-]{32}$`,
+      ),
     );
     expect(await store.mayReceiveCode(w.db, "signer@example.test", w.clock.now)).toBe(true);
     expect(await store.mayReceiveCode(w.db, "stranger@example.test", w.clock.now)).toBe(false);
+    // They show among the members as invited, once however often they are named; a
+    // member named to sign gets no invitation.
+    expect((await call(w, "POST", `${C()}/documents/${id}/signer`, "admin", named)).status).toBe(
+      200,
+    );
+    const invites = async (email: string) =>
+      w.db
+        .select({ role: schema.org_invite.role })
+        .from(schema.org_invite)
+        .where(and(eq(schema.org_invite.org_id, w.orgId), eq(schema.org_invite.email, email)));
+    expect(await invites("signer@example.test")).toEqual([{ role: "billing" }]);
+    expect(
+      await store.inviteSigner(w.db, {
+        id: crypto.randomUUID(),
+        orgId: w.orgId,
+        email: "Admin@Example.test",
+        invitedBy: null,
+        now: w.clock.now,
+      }),
+    ).toBe(false);
     // The signer sees that document, and nothing else of the organisation.
     const seen = await call(w, "GET", `${C()}/documents/${id}`, "signer");
     expect(seen.status).toBe(200);
@@ -499,6 +603,118 @@ run("accounts routes against Postgres", () => {
     ).toBe(200);
     expect((await store.signatureOf(w.db, id))?.email).toBe("signer@example.test");
     expect((await call(w, "GET", `${C()}/documents/${id}/signed.pdf`, "signer")).status).toBe(200);
+    // Signing takes up the invitation the naming made: they are a billing member now.
+    const joined = await store.orgMembership(w.db, w.orgId, w.people.signer.appUserId as string);
+    expect(joined).toMatchObject({ role: "billing", deleted_at: null });
+    const [taken] = await w.db
+      .select({ accepted: schema.org_invite.accepted_at })
+      .from(schema.org_invite)
+      .where(
+        and(
+          eq(schema.org_invite.org_id, w.orgId),
+          eq(schema.org_invite.email, "signer@example.test"),
+        ),
+      );
+    expect(taken?.accepted).toBeTruthy();
+  });
+
+  test("the invitation link greets the person named before sign-in, and only they can take it up", async () => {
+    const pushed = K.PushOfferResponse.parse(
+      (await call(w, "POST", `${S()}/offers`, "staff", offerBody())).data,
+    );
+    const id = pushed.document.id;
+    // Someone new: an identity from the code sign-in, without the app user onboarding makes.
+    const freshId = newId();
+    await w.db.insert(schema.auth_user).values({
+      id: freshId,
+      name: "",
+      email: "fresh@example.test",
+      emailVerified: true,
+      createdAt: w.clock.now,
+      updatedAt: w.clock.now,
+    });
+    await w.db.insert(schema.directus_users).values({ id: freshId, email: "fresh@example.test" });
+    (w.people as Record<string, unknown>).fresh = {
+      appUserId: null,
+      directusUserId: freshId,
+      isStaff: false,
+      email: "fresh@example.test",
+    };
+    const fresh = "fresh" as keyof World["people"];
+    w.jobs.jobs.length = 0;
+    const named = { name: "Taylor van Lake", email: "Fresh@Example.test", role: "Griffier" };
+    expect((await call(w, "POST", `${C()}/documents/${id}/signer`, "admin", named)).status).toBe(
+      200,
+    );
+    const [mail] = w.jobs.of("account.send-email");
+    const link = new URL((mail as { data: { sign_url: string } }).data.sign_url);
+    const token = link.searchParams.get("invite") as string;
+    const invitePath = `${C()}/documents/${id}/invite`;
+
+    // No session: the token is the access, and a wrong one reads as a wrong id.
+    const seen = await call(w, "GET", `${invitePath}?invite=${token}`, null);
+    expect(K.SignerInvite.parse(seen.data)).toEqual({
+      organisation: { name: "Gemeente Testdorp" },
+      inviter: { name: "admin" },
+      document: {
+        title: pushed.document.title,
+        kind: "offer",
+        reference: pushed.document.reference,
+      },
+      signer: {
+        email: "fresh@example.test",
+        first_name: "Taylor",
+        last_name: "van Lake",
+        role: "Griffier",
+      },
+      status: "open",
+      has_account: false,
+    });
+    const wrong = `${token.slice(0, -1)}${token.endsWith("A") ? "B" : "A"}`;
+    expect((await call(w, "GET", `${invitePath}?invite=${wrong}`, null)).status).toBe(404);
+    expect((await call(w, "GET", invitePath, null)).status).toBe(422);
+    const signerSees = K.SignerInvite.parse(
+      (await call(w, "GET", `${invitePath}?invite=${token}`, "signer")).data,
+    );
+    expect(signerSees.signer.email).toBe("fresh@example.test");
+
+    // Taking it up needs the session of that address; the names land on someone new.
+    const accept = { invite: token, first_name: "Taylor", last_name: "Lake" };
+    expect((await call(w, "POST", `${invitePath}/accept`, null, accept)).status).toBe(401);
+    expect((await call(w, "POST", `${invitePath}/accept`, "admin", accept)).status).toBe(403);
+    const taken = await call(w, "POST", `${invitePath}/accept`, fresh, accept);
+    expect(K.AcceptSignerInviteResponse.parse(taken.data)).toEqual({
+      org_id: w.orgId,
+      document_id: id,
+    });
+    expect((await store.identity(w.db, freshId))?.name).toBe("Taylor Lake");
+    const [profile] = await w.db
+      .select({ first: schema.directus_users.first_name, last: schema.directus_users.last_name })
+      .from(schema.directus_users)
+      .where(eq(schema.directus_users.id, freshId));
+    expect(profile).toEqual({ first: "Taylor", last: "Lake" });
+    // An existing account keeps its own name.
+    expect(
+      (
+        await call(w, "POST", `${C()}/documents/${id}/signer`, "admin", {
+          ...named,
+          email: "signer@example.test",
+        })
+      ).status,
+    ).toBe(200);
+    expect((await call(w, "GET", `${invitePath}?invite=${token}`, null)).status).toBe(404);
+    const again = new URL(
+      (w.jobs.of("account.send-email").at(-1) as { data: { sign_url: string } }).data.sign_url,
+    ).searchParams.get("invite") as string;
+    expect(
+      K.SignerInvite.parse((await call(w, "GET", `${invitePath}?invite=${again}`, null)).data)
+        .has_account,
+    ).toBe(true);
+    expect(
+      (await call(w, "POST", `${invitePath}/accept`, "signer", { ...accept, invite: again }))
+        .status,
+    ).toBe(200);
+    expect((await store.identity(w.db, w.people.signer.directusUserId))?.name).toBe("signer");
   });
 
   test("naming a different signer is recorded as a replacement, and namings are limited per organisation", async () => {
@@ -645,6 +861,60 @@ run("accounts routes against Postgres", () => {
     expect(review.status).toBe(409);
   });
 
+  test("billing details: Peppol from the directory, delivery by email when chosen, by customer or staff", async () => {
+    const id = "iso6523-actorid-upis::0106:87654321";
+    w.web.pages.set(
+      `https://directory.peppol.eu/search/1.0/json?participant=${encodeURIComponent(id)}`,
+      JSON.stringify({
+        matches: [
+          {
+            participantID: { value: "0106:87654321" },
+            entities: [{ name: [{ name: "Gemeente Testdorp" }] }],
+          },
+        ],
+      }),
+    );
+    const looked = await call(w, "POST", `${C()}/peppol-lookup`, "billing", {
+      kvk_number: "87654321",
+    });
+    expect(K.PeppolLookupResponse.parse(looked.data).match).toEqual({
+      participant_id: "0106:87654321",
+      name: "Gemeente Testdorp",
+    });
+    const details = {
+      legal_name: "Gemeente Testdorp",
+      billing_email: "facturen@testdorp.example",
+      address_line1: "Dorpsstraat 1",
+      postal_code: "1234 AB",
+      city: "Testdorp",
+      country: "NL",
+      kvk_number: "87654321",
+    };
+    w.jobs.jobs.length = 0;
+    const saved = K.BillingDetails.parse(
+      (await call(w, "PUT", `${C()}/billing`, "billing", details)).data,
+    );
+    expect(saved).toMatchObject({
+      peppol_id: "0106:87654321",
+      peppol_match: { participant_id: "0106:87654321", name: "Gemeente Testdorp" },
+      invoice_delivery: null,
+    });
+    expect(w.jobs.of("accounts.deliver-event")[0]?.payload).toMatchObject({
+      billing: { peppol_id: "0106:87654321", invoice_delivery: "peppol" },
+    });
+    const byEmail = await call(w, "PUT", `${C()}/billing`, "billing", {
+      ...details,
+      invoice_delivery: "email",
+    });
+    expect(K.BillingDetails.parse(byEmail.data).invoice_delivery).toBe("email");
+    const staff = await call(w, "PATCH", S(), "staff", { invoice_delivery: "peppol" });
+    expect(staff.status).toBe(200);
+    expect(
+      K.BillingDetails.parse((await call(w, "GET", `${C()}/billing`, "admin")).data)
+        .invoice_delivery,
+    ).toBe("peppol");
+  });
+
   test("a repeat offer after complete billing details asks for none: no new task, signing leaves them done", async () => {
     const billingTasks = async () =>
       (await store.tasks(w.db, w.orgId)).filter((t) => t.kind === "billing_details");
@@ -765,11 +1035,10 @@ run("accounts routes against Postgres", () => {
     ).toBe("done");
   });
 
-  test("reminders: due tasks waiting on the customer email the account's people once per due time", async () => {
+  test("check-ins: a task that waits on the customer asks the account's owner once per due time, and writes the customer nothing", async () => {
     const t = K.Task.parse(
       (await call(w, "POST", `${S()}/tasks`, "staff", { title: "Stuur de deelnemerslijst" })).data,
     );
-    const mailer = new MemoryMailer();
     w.jobs.jobs.length = 0;
     const tick = (at: string) =>
       runRemindersTick({
@@ -791,30 +1060,93 @@ run("accounts routes against Postgres", () => {
     expect((await store.task(w.db, w.orgId, t.id))?.nextReminderAt?.toISOString()).toBe(
       "2026-10-12T09:00:00.000Z",
     );
-    // The same due time again does not queue a second email.
+    // The same due time again does not queue a second ask.
     await tick("2026-10-05T09:45:00.000Z");
     expect(
       w.jobs.jobs.filter((j) => (j.payload as { taskId?: string }).taskId === t.id),
     ).toHaveLength(1);
+    const run = queued[0]?.payload as { taskId: string; dueAt: string };
     const deps = {
       db: w.db,
-      mailer,
+      jobs: w.jobs,
       logger: w.deps.logger,
       dashboardUrl: "https://dash.test",
       now: () => new Date("2026-10-05T09:31:00Z"),
+      samInbox: true,
+      offerMessages: true,
     };
+    const asks = () =>
+      w.jobs
+        .of(deliverSamMessage.name)
+        .filter((m) => m.code === "echo_account_task_waiting_v1")
+        .map((m) => JSON.parse(m.body as string).json);
+    const asked = async () =>
+      (await store.events(w.db, w.orgId)).filter(
+        (e) => e.type === "task.check_in_asked" && e.subjectId === t.id,
+      );
+
+    // No inbox, or a sam that does not take the message yet: nobody is asked, and neither
+    // the count nor the timeline says someone was.
+    for (const off of [{ samInbox: false }, { offerMessages: false }])
+      expect(await runTaskReminder({ ...deps, ...off }, run)).toBe("skipped");
+    expect(asks()).toHaveLength(0);
+    expect(await asked()).toHaveLength(0);
+    expect((await store.task(w.db, w.orgId, t.id))?.remindersSent).toBe(0);
+
+    expect(await runTaskReminder(deps, run)).toBe("asked");
+    const [first] = asks();
+    expect(first).toMatchObject({
+      event: "account.task.waiting",
+      timestamp: "2026-10-05T09:31:00.000Z",
+      org: { id: w.orgId, name: "Gemeente Testdorp" },
+      task: {
+        id: t.id,
+        title: "Stuur de deelnemerslijst",
+        code: null,
+        kind: "generic",
+        document_id: null,
+        status: "open",
+        waiting_since: "2026-09-28T09:00:00.000Z",
+        days_waiting: 7,
+        times_asked: 1,
+      },
+      document: null,
+      links: {
+        account: `https://dash.test/admin/accounts/${w.orgId}`,
+        document: null,
+        customer: `https://dash.test/o/${w.orgId}/account`,
+      },
+    });
+    // The signer named earlier joined as billing when they signed.
+    expect(first.contacts).toEqual([
+      { name: "signer", email: "signer@example.test", role: "billing" },
+      { name: "admin", email: "admin@example.test", role: "admin" },
+      { name: "billing", email: "billing@example.test", role: "billing" },
+    ]);
+    expect("account_manager" in first).toBe(true);
+    expect((await asked()).map((e) => e.detail)).toEqual([
+      { due_at: "2026-10-05T09:00:00.000Z", days_waiting: 7, times_asked: 1 },
+    ]);
+    // The next due time asks again, and says it is the second time.
     expect(
-      await runTaskReminder(deps, queued[0]?.payload as { taskId: string; dueAt: string }),
-    ).toBe("sent");
-    expect(mailer.sent[0]?.to).toEqual(["admin@example.test", "billing@example.test"]);
-    expect(mailer.sent[0]?.text).toContain(`https://dash.test/o/${w.orgId}/account`);
-    // A task waiting on us, or done, does not remind.
+      await runTaskReminder(
+        { ...deps, now: () => new Date("2026-10-12T09:01:00Z") },
+        { taskId: t.id, dueAt: "2026-10-12T09:00:00.000Z" },
+      ),
+    ).toBe("asked");
+    expect(asks()[1]?.task).toMatchObject({ days_waiting: 14, times_asked: 2 });
+    expect((await store.task(w.db, w.orgId, t.id))?.remindersSent).toBe(2);
+    // Nothing in this flow is an email: the customer hears from a person, not from echo.
+    expect(w.jobs.of(sendEmail.name)).toHaveLength(0);
+
+    // A task waiting on us, or done, asks nobody.
     await call(w, "POST", `${C()}/tasks/${t.id}/submit`, "admin", {
       response_text: "lijst.xlsx volgt",
     });
-    expect(await runTaskReminder(deps, { taskId: t.id, dueAt: "2026-10-12T09:00:00.000Z" })).toBe(
+    expect(await runTaskReminder(deps, { taskId: t.id, dueAt: "2026-10-19T09:00:00.000Z" })).toBe(
       "skipped",
     );
+    expect(asks()).toHaveLength(2);
     const locked = (await store.dueReminders(w.db, new Date("2030-01-01"), 500)).filter(
       (x) => x.status === "locked" || x.status === "submitted",
     );
@@ -1133,5 +1465,42 @@ run("accounts routes against Postgres", () => {
       .select({ n: sql<number>`count(*)::int` })
       .from(schema.account_signature);
     expect(rows[0]?.n).toBeGreaterThanOrEqual(4);
+  });
+
+  test("reminding the named signer sends the same link again and keeps the wait", async () => {
+    const pushed = K.PushOfferResponse.parse(
+      (await call(w, "POST", `${S()}/offers`, "staff", offerBody())).data,
+    );
+    const id = pushed.document.id;
+    // Last in the file: an hour on, so the signer namings above no longer count to the limit.
+    w.clock.now = new Date(w.clock.now.getTime() + 3_700_000);
+    const remind = `${C()}/documents/${id}/signer/remind`;
+    // Nobody named yet: the admins sign it themselves, so there is no one to remind.
+    expect((await call(w, "POST", remind, "admin", {})).status).toBe(409);
+    const person = { name: "Taylor Lake", email: "taylor@example.test", role: null };
+    const named = K.NameSignerResponse.parse(
+      (await call(w, "POST", `${C()}/documents/${id}/signer`, "admin", person)).data,
+    );
+    const link = () =>
+      (w.jobs.of("account.send-email").at(-1) as { data: { sign_url: string } }).data.sign_url;
+    const first = link();
+    expect((await call(w, "POST", remind, "member", {})).status).toBe(403);
+    const r = await call(w, "POST", remind, "billing", {});
+    expect(r.status).toBe(200);
+    expect(K.NameSignerResponse.parse(r.data).signer).toEqual({
+      ...named.signer,
+      reminded_at: w.clock.now.toISOString(),
+    });
+    expect(link()).toBe(first);
+    // Once a day per document.
+    expect((await call(w, "POST", remind, "admin", {})).status).toBe(429);
+    const page = K.AccountPage.parse((await call(w, "GET", C(), "admin")).data);
+    expect(page.documents.find((x) => x.id === id)?.signer?.reminded_at).toBe(
+      w.clock.now.toISOString(),
+    );
+    const types = (await store.events(w.db, w.orgId))
+      .filter((e) => e.subjectId === id)
+      .map((e) => e.type);
+    expect(types).toContain("document.signer_reminded");
   });
 });

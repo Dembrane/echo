@@ -11,7 +11,7 @@ import {
 	Text,
 	TextInput,
 } from "@mantine/core";
-import { useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import SignaturePad from "signature_pad";
 import type { SignRequestT } from "../contract/contract.gen";
 
@@ -125,16 +125,20 @@ async function uploadedImage(file: File): Promise<HTMLCanvasElement> {
 
 /**
  * Draw, type or upload a signature. Draw is the default because most people sign on a
- * phone; typed uses a script face; an upload is scaled down and kept as a PNG.
+ * phone; typed uses a script face; an upload is scaled down and kept as a PNG. Its last
+ * row is the step's actions: Back on the left, the blue button on the right. While there
+ * is nothing to use yet the button says what to do, and pressing it says what is missing.
  */
 export function SignatureCapture({
 	suggestedText,
 	onCapture,
 	purpose,
+	onBack,
 }: {
 	suggestedText: string;
 	onCapture: (image: CapturedImage) => void;
 	purpose: "signature" | "initials";
+	onBack?: () => void;
 }) {
 	const [mode, setMode] = useState<"draw" | "type" | "upload">("draw");
 	const [typed, setTyped] = useState(
@@ -148,6 +152,7 @@ export function SignatureCapture({
 	);
 	const [drawn, setDrawn] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const [tried, setTried] = useState(false);
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const padRef = useRef<SignaturePad | null>(null);
 
@@ -172,7 +177,10 @@ export function SignatureCapture({
 		});
 		padRef.current = pad;
 		size();
-		const onEnd = () => setDrawn(!pad.isEmpty());
+		const onEnd = () => {
+			setDrawn(!pad.isEmpty());
+			setTried(false);
+		};
 		pad.addEventListener("endStroke", onEnd);
 		window.addEventListener("resize", size);
 		return () => {
@@ -185,12 +193,13 @@ export function SignatureCapture({
 
 	const applyDrawn = () => {
 		const canvas = canvasRef.current;
-		if (!canvas || !padRef.current || padRef.current.isEmpty()) return;
+		if (!canvas || !padRef.current || padRef.current.isEmpty())
+			return setTried(true);
 		onCapture(toCaptured(trimmed(canvas), "drawn"));
 	};
 
 	const applyTyped = async () => {
-		if (!typed.trim()) return;
+		if (!typed.trim()) return setTried(true);
 		onCapture(toCaptured(await typedImage(typed.trim()), "typed"));
 	};
 
@@ -203,6 +212,32 @@ export function SignatureCapture({
 			setError(t`That image could not be read. Try a PNG or JPEG.`);
 		}
 	};
+
+	const use =
+		purpose === "initials" ? (
+			<Trans>Use these initials</Trans>
+		) : (
+			<Trans>Use this signature</Trans>
+		);
+	const draw =
+		purpose === "initials" ? (
+			<Trans>Draw your initials</Trans>
+		) : (
+			<Trans>Draw your signature</Trans>
+		);
+	// Back on the left and the step's one blue button on the right, on one row.
+	const row = (primary: ReactNode) => (
+		<Group justify="space-between" wrap="nowrap" gap="sm" mt={4}>
+			{onBack ? (
+				<Button onClick={onBack} data-testid="sign-back">
+					<Trans>Back</Trans>
+				</Button>
+			) : (
+				<span />
+			)}
+			{primary}
+		</Group>
+	);
 
 	return (
 		<Stack gap="xs">
@@ -220,9 +255,10 @@ export function SignatureCapture({
 			{mode === "draw" && (
 				<>
 					<Box
+						pos="relative"
 						style={{
 							background: "white",
-							border: "1px dashed var(--app-muted)",
+							border: `1px dashed ${tried ? "var(--app-danger)" : "var(--app-muted)"}`,
 							borderRadius: 6,
 							touchAction: "none",
 						}}
@@ -237,23 +273,41 @@ export function SignatureCapture({
 							data-testid="signature-pad"
 							style={{ display: "block", height: 150, width: "100%" }}
 						/>
+						{drawn && (
+							<Button
+								variant="subtle"
+								size="xs"
+								pos="absolute"
+								top={4}
+								right={4}
+								onClick={() => {
+									padRef.current?.clear();
+									setDrawn(false);
+								}}
+							>
+								<Trans>Clear</Trans>
+							</Button>
+						)}
 					</Box>
-					<Group justify="space-between">
+					{tried && (
+						<Text size="sm" c="var(--app-danger)">
+							{purpose === "initials" ? (
+								<Trans>Draw your initials in the box first.</Trans>
+							) : (
+								<Trans>Draw your signature in the box first.</Trans>
+							)}
+						</Text>
+					)}
+					{row(
 						<Button
-							variant="subtle"
-							size="xs"
-							disabled={!drawn}
-							onClick={() => {
-								padRef.current?.clear();
-								setDrawn(false);
-							}}
+							variant="filled"
+							size="md"
+							onClick={applyDrawn}
+							data-testid="signature-use"
 						>
-							<Trans>Clear</Trans>
-						</Button>
-						<Button size="sm" disabled={!drawn} onClick={applyDrawn}>
-							<Trans>Use this</Trans>
-						</Button>
-					</Group>
+							{drawn ? use : draw}
+						</Button>,
+					)}
 				</>
 			)}
 			{mode === "type" && (
@@ -261,7 +315,17 @@ export function SignatureCapture({
 					<TextInput
 						label={purpose === "initials" ? t`Your initials` : t`Your name`}
 						value={typed}
-						onChange={(e) => setTyped(e.currentTarget.value)}
+						onChange={(e) => {
+							setTyped(e.currentTarget.value);
+							setTried(false);
+						}}
+						error={
+							tried && !typed.trim()
+								? purpose === "initials"
+									? t`Type your initials first.`
+									: t`Type your name first.`
+								: undefined
+						}
 					/>
 					<Box
 						px="sm"
@@ -280,11 +344,16 @@ export function SignatureCapture({
 					>
 						{typed}
 					</Box>
-					<Group justify="flex-end">
-						<Button size="sm" disabled={!typed.trim()} onClick={applyTyped}>
-							<Trans>Use this</Trans>
-						</Button>
-					</Group>
+					{row(
+						<Button
+							variant="filled"
+							size="md"
+							onClick={applyTyped}
+							data-testid="signature-use"
+						>
+							{use}
+						</Button>,
+					)}
 				</>
 			)}
 			{mode === "upload" && (
@@ -292,17 +361,19 @@ export function SignatureCapture({
 					<Text size="sm" c="dimmed">
 						<Trans>A photo or scan of your signature, PNG or JPEG.</Trans>
 					</Text>
-					<FileButton onChange={applyUpload} accept="image/png,image/jpeg">
-						{(props) => (
-							<Button variant="default" {...props}>
-								<Trans>Choose an image</Trans>
-							</Button>
-						)}
-					</FileButton>
 					{error && (
 						<Text size="sm" c="red">
 							{error}
 						</Text>
+					)}
+					{row(
+						<FileButton onChange={applyUpload} accept="image/png,image/jpeg">
+							{(props) => (
+								<Button variant="filled" size="md" {...props}>
+									<Trans>Choose an image</Trans>
+								</Button>
+							)}
+						</FileButton>,
 					)}
 				</Stack>
 			)}

@@ -1,10 +1,13 @@
 import { describe, expect, test } from "bun:test";
+import { mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import type { LanguageModelV4StreamPart } from "@ai-sdk/provider";
 import type { ModelMessage } from "ai";
 import { convertArrayToReadableStream, MockLanguageModelV4 } from "ai/test";
 import { createAgent, stepMessageId } from "../src/agent/agent";
 import type { AgentData, Json, TurnContext } from "../src/agent/data";
-import { NO_DOCS, safePattern } from "../src/agent/knowledge";
+import { createKnowledge, type Knowledge, NO_DOCS, safePattern } from "../src/agent/knowledge";
 import { systemPromptFor } from "../src/agent/prompt";
 import { REPEATED_CALL_MESSAGE, REPEATED_CALL_STOP_MESSAGE } from "../src/agent/text";
 import { CANVAS_TOOL_NAMES, TOOLS, toolsFor } from "../src/agent/tools";
@@ -157,13 +160,17 @@ function model(...turns: ReturnType<typeof turn>[]) {
   return new MockLanguageModelV4({ doStream: turns });
 }
 
+// The images carry no docs folder, and a step here must not read the repository's own.
+const withoutDocs = createKnowledge({ docsDir: join(tmpdir(), "no-docs-folder-here") });
+
 async function runStep(
   over: Partial<StepInput> & { model: MockLanguageModelV4 },
   data?: AgentData,
+  knowledge: Knowledge = withoutDocs,
 ) {
   const events: StepEvent[] = [];
   const calls: Calls = [];
-  const agent = createAgent({ now: () => new Date("2026-09-27T12:00:00.000Z") });
+  const agent = createAgent({ now: () => new Date("2026-09-27T12:00:00.000Z"), knowledge });
   const result = await agent.step(
     {
       ctx: ctx(),
@@ -869,6 +876,29 @@ describe("tool results", () => {
     const { events } = await runStep({
       model: model(turn(call("a", "readSkill", { path: "../../../etc/passwd" }))),
     });
+    const err = events.find((e) => e.type === "tool-error") as { error: string } | undefined;
+    expect(err?.error).toContain("escapes the knowledge root");
+  });
+
+  test("with a docs folder the docs tools read it, and a path that leaves it is refused", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "docs-"));
+    writeFileSync(join(dir, "index.md"), "# Home\n\nShare the portal link.\n");
+    const docs = createKnowledge({ docsDir: dir });
+    const run = (name: string, args: unknown) =>
+      runStep({ model: model(turn(call("a", name, args))) }, undefined, docs);
+
+    expect(outputOf((await run("listDocs", {})).events, "listDocs")).toEqual({
+      docs: ["index.md"],
+    });
+    expect(outputOf((await run("grepDocs", { patterns: ["portal"] })).events, "grepDocs")).toEqual({
+      results: [
+        {
+          pattern: "portal",
+          matches: [{ path: "index.md", line: 3, text: "Share the portal link." }],
+        },
+      ],
+    });
+    const { events } = await run("readDoc", { paths: ["../../etc/passwd"] });
     const err = events.find((e) => e.type === "tool-error") as { error: string } | undefined;
     expect(err?.error).toContain("escapes the knowledge root");
   });

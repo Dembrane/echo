@@ -38,4 +38,23 @@ export const offer = {
     audience: "staff",
     description: "The offer's lines add up to less than zero.",
   },
+  "offer.line_no_amount": {
+    action: "fix_input",
+    detail: "Line {line}: give a price; an offer is not sent without amounts",
+    audience: "staff",
+    description: "A line's unit price is zero. line counts from 1.",
+  },
+  "offer.zero_total": {
+    action: "fix_input",
+    detail: "An offer must total more than zero",
+    audience: "staff",
+    description: "The offer's lines add up to zero, so there is nothing to ask the customer for.",
+  },
+  "offer.amendments_custom_only": {
+    action: "fix_input",
+    detail: "Only a custom offer can carry amendments",
+    audience: "staff",
+    description:
+      "A subscription or event offer was given amendments; they change the standard documents, so the offer must be custom.",
+  },
 } as const satisfies Codes<"offer">;

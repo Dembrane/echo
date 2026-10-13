@@ -191,7 +191,7 @@ describe("webhook", () => {
     ]);
     expect(w.store.notifications[0]?.scope).toBe("Acme");
     expect(w.mailer.sent.map((m) => m.to)).toEqual(["admin@acme.test", "owner@acme.test"]);
-    expect(w.mailer.sent[0]?.subject).toBe("Action needed: update your payment method");
+    expect(w.mailer.sent[0]?.subject).toBe("Your payment to dembrane didn't go through");
     expect(w.mailer.sent[0]?.text).toContain(`https://dash.test/o/${ORG}/settings/billing`);
   });
 

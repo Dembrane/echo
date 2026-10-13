@@ -144,6 +144,21 @@ run("BFF conversation move", () => {
     expect(await stored(id)).toEqual({ project_id: alpha, move_history: null });
   });
 
+  test("nothing moves into or out of a sample project, whose conversations count toward no limit", async () => {
+    const sample = newId();
+    await sql`insert into project (id, name, workspace_id, is_conversation_allowed, is_sample)
+      values (${sample}, 'Best practices (sample)', ${wsA}, false, true)`;
+    const recorded = await conversationIn(alpha);
+    const into = await move(recorded, sample);
+    expect(into.status).toBe(400);
+    expect(((await into.json()) as { code: string }).code).toBe("conversation.move_sample");
+    expect(await stored(recorded)).toEqual({ project_id: alpha, move_history: null });
+    const seeded = await conversationIn(sample);
+    const out = await move(seeded, beta);
+    expect(out.status).toBe(400);
+    expect((await stored(seeded))?.project_id).toBe(sample);
+  });
+
   test("the detail says whether a conversation is typed text only, as the list does", async () => {
     const typed = await conversationIn(alpha);
     const recorded = await conversationIn(alpha);
