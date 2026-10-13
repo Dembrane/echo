@@ -14,6 +14,11 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:50
+#~ msgid "error.billing.tax_id_required"
+#~ msgstr "Voer minimaal één van je VAT-, KvK- of KBO-nummers in."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:5
 msgid "error.request.field_empty"
 msgstr "{field} kan niet leeg zijn. Vul het in of verwijder het."
@@ -177,11 +182,6 @@ msgstr "Voer een webadres in dat begint met http:// of https://."
 #: src/lib/errors/messages/field.ts:30
 msgid "error.field.invalid_url"
 msgstr "Voer een webadres in dat begint met http:// of https://."
-
-#. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:50
-msgid "error.billing.tax_id_required"
-msgstr "Voer minimaal één van je VAT-, KvK- of KBO-nummers in."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:40
@@ -839,7 +839,7 @@ msgid "error.workspace.logo_url_too_long"
 msgstr "Deze logolink is te lang. Gebruik een kortere link."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:63
+#: src/lib/errors/messages/billing.ts:59
 msgid "error.billing.tier_required"
 msgstr "Hiervoor is het {required}-abonnement nodig. Upgrade om het te gebruiken."
 
@@ -904,7 +904,7 @@ msgid "error.member.already_removed"
 msgstr "Deze persoon was al verwijderd."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:59
+#: src/lib/errors/messages/billing.ts:55
 msgid "error.billing.tier_not_purchasable"
 msgstr "Dit abonnement kan niet online worden aangeschaft. Neem contact met ons op om het af te sluiten."
 
@@ -1569,7 +1569,7 @@ msgid "error.verify.no_new_feedback"
 msgstr "Je hebt nog niets nieuws toegevoegd. Geef aan wat je zou veranderen en probeer het opnieuw."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:54
+#: src/lib/errors/messages/billing.ts:50
 msgid "error.billing.tier_limit"
 msgstr "Je hebt de limiet van het gratis abonnement bereikt. Upgrade om verder te gaan."
 

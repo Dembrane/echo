@@ -519,6 +519,7 @@ const organisation = {
 const emptyBilling = {
   legal_name: null,
   vat_id: null,
+  no_vat_number: null,
   kvk_number: null,
   kbo_number: null,
   billing_email: "robin@example-town.example",
@@ -526,11 +527,13 @@ const emptyBilling = {
   peppol_id: null,
   peppol_match: null,
   invoice_delivery: null,
+  invoice_portal: null,
   address_line1: null,
   address_line2: null,
   postal_code: null,
   city: null,
   country: null,
+  country_code: null,
 };
 
 /** The billing details task once the customer saved the details: done at once, no review. */

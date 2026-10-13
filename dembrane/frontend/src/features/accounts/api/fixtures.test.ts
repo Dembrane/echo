@@ -269,6 +269,88 @@ describe("the fixture backend, through the client", () => {
 		);
 	});
 
+	it("holds billing details to the API's own rules for the country", async () => {
+		const body = {
+			address_line1: "Rathausplatz 1",
+			billing_email: "rechnung@beispielstadt.example",
+			city: "Beispielstadt",
+			legal_name: "Beispielstadt Verwaltung (sample)",
+			postal_code: "12345",
+		};
+		const save = (extra: Record<string, unknown>) =>
+			client.call("updateBilling", {
+				body: { ...body, ...extra },
+				params: { orgId: org },
+			});
+		// Another EU country gives a VAT number in its own format, or says it has none.
+		await expect(save({ country_code: "DE" })).rejects.toMatchObject({
+			fields: { vat_id: expect.any(String) },
+			status: 422,
+		});
+		await expect(
+			save({ country_code: "DE", vat_id: "DE12" }),
+		).rejects.toMatchObject({ status: 422 });
+		// Another way than email or Peppol needs the customer's own words.
+		await expect(
+			save({
+				country_code: "DE",
+				invoice_delivery: "other",
+				no_vat_number: true,
+			}),
+		).rejects.toMatchObject({ fields: { invoice_portal: expect.any(String) } });
+		const questions = async () =>
+			(await client.call("accountPage", { params: { orgId: org } })).tickets;
+		const before = (await questions()).length;
+		const other = {
+			country_code: "DE",
+			invoice_delivery: "other",
+			invoice_portal: "We use the Example supplier portal (sample).",
+			no_vat_number: true,
+		};
+		const saved = await save(other);
+		expect(saved).toMatchObject({
+			country: "Germany",
+			country_code: "DE",
+			invoice_delivery: "other",
+			invoice_portal: "We use the Example supplier portal (sample).",
+			no_vat_number: true,
+			vat_id: null,
+		});
+		// What they wrote is their question to dembrane, once: saving again asks nothing new.
+		await save(other);
+		const asked = await questions();
+		expect(asked).toHaveLength(before + 1);
+		expect(asked[0]).toMatchObject({
+			messages: [{ body: other.invoice_portal, from: "customer" }],
+			status: "waiting_on_dembrane",
+		});
+		// Numbers are stored clean, and a country written as a name becomes its code.
+		const dutch = await save({
+			country: "Nederland",
+			invoice_delivery: "email",
+			no_vat_number: false,
+			vat_id: "nl 1234.56.789 b01",
+		});
+		expect(dutch).toMatchObject({
+			country_code: "NL",
+			invoice_portal: null,
+			no_vat_number: false,
+			vat_id: "NL123456789B01",
+		});
+		// The Netherlands follows the same pattern: a VAT number, or none and the KvK number.
+		await expect(
+			save({ country_code: "NL", no_vat_number: true }),
+		).rejects.toMatchObject({ fields: { kvk_number: expect.any(String) } });
+		// A caller from before the question sends a KvK number alone: that says the same.
+		expect(
+			await save({ country_code: "NL", kvk_number: "1234 5678" }),
+		).toMatchObject({
+			kvk_number: "12345678",
+			no_vat_number: true,
+			vat_id: null,
+		});
+	});
+
 	it("names the document a locked task waits for", async () => {
 		const page = await client.call("accountPage", { params: { orgId: org } });
 		const billing = page.tasks.find((t) => t.kind === "billing_details");
@@ -380,6 +462,19 @@ describe("the fixture backend, through the client", () => {
 		expect(published.status).toBe("published");
 		expect(published.invited_at).not.toBeNull();
 		expect(published.links.public.every((l) => l.live)).toBe(true);
+		// Back to a draft: the link is down, and publishing again invites nobody twice.
+		const unpublished = await client.call("unpublishDemo", {
+			params: { demoId: d.id },
+		});
+		expect(unpublished.status).toBe("draft");
+		expect(unpublished.published_at).toBeNull();
+		expect(unpublished.links.public.every((l) => !l.live)).toBe(true);
+		const again = await client.call("publishDemo", {
+			body: { sign_in: true },
+			params: { demoId: d.id },
+		});
+		expect(again.status).toBe("published");
+		expect(again.invited_at).toBe(published.invited_at);
 		const card = await client.call("accountCard", {
 			params: { orgId: d.org_id as string },
 		});

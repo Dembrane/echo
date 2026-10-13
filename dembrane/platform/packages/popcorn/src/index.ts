@@ -21,6 +21,7 @@ export {
 } from "./demo";
 export { demoFromFixture, type FixtureInputs } from "./demo-fixture";
 export { type DemoRoutesDeps, type ProspectHook, popcornDemoRoutes } from "./demo-routes";
+export { type DeckPart, type DraftDeckDeps, draftDeckRoutes } from "./draft-deck";
 export { publishNudge, updateStream } from "./events";
 export { FINISH_WINDOW_MS, finishReads, queueFinishRead } from "./finish";
 export { popcornApiJobs, popcornTick, queueDispatch } from "./jobs";

@@ -26,7 +26,14 @@ import {
   tasksSummary,
   updateBilling,
 } from "./customer";
-import { createDemo, demoStatus, listDemos, publishDemo, retryDemo } from "./demo/service";
+import {
+  createDemo,
+  demoStatus,
+  listDemos,
+  publishDemo,
+  retryDemo,
+  unpublishDemo,
+} from "./demo/service";
 import type { AccountsDeps } from "./deps";
 import { acceptSignerInvite, signerInvite } from "./invite";
 import { sendMessage } from "./messages";
@@ -242,6 +249,11 @@ export function accountsRoutes(d: AccountsDeps) {
     await staffCan(d, who, "accounts.demo.publish", demo(c), c.get("requestId"));
     const b = await body(c, K.DemoPublishRequest);
     return c.json(await publishDemo(d, who, p(c, "demoId"), { sign_in: b.sign_in ?? null }));
+  });
+  app.post(R.unpublishDemo.path, async (c) => {
+    const who = requireUser(c);
+    await staffCan(d, who, "accounts.demo.unpublish", demo(c), c.get("requestId"));
+    return c.json(await unpublishDemo(d, who, p(c, "demoId")));
   });
   app.post(R.retryDemo.path, async (c) => {
     await staffCan(d, requireUser(c), "accounts.demo.retry", demo(c), c.get("requestId"));

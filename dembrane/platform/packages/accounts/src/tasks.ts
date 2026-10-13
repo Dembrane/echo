@@ -1,4 +1,5 @@
 import { newId } from "@dembrane/core";
+import { identified } from "./billing-rules";
 import type { AccountsDeps, Conn } from "./deps";
 import { type BillingRow, store, type TaskRow } from "./storage";
 import type { TaskCode } from "./task-text";
@@ -94,7 +95,8 @@ export async function settleTask(
 
 /**
  * Whether the organisation's stored billing details hold everything the billing form asks
- * for, so Exact can invoice without asking again.
+ * for, so Exact can invoice without asking again. Who the customer is follows the country:
+ * a number, the statement that there is no VAT number, or nothing outside the EU.
  */
 export function billingComplete(b: BillingRow | null): boolean {
   if (!b) return false;
@@ -106,7 +108,14 @@ export function billingComplete(b: BillingRow | null): boolean {
     filled(b.billing_postal_code) &&
     filled(b.billing_city) &&
     filled(b.billing_country) &&
-    (filled(b.billing_vat_id) || filled(b.kvk_number) || filled(b.kbo_number))
+    identified({
+      country_code: b.billing_country_code,
+      country: b.billing_country,
+      vat_id: b.billing_vat_id,
+      no_vat_number: b.no_vat_number,
+      kvk_number: b.kvk_number,
+      kbo_number: b.kbo_number,
+    })
   );
 }
 
