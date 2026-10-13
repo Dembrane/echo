@@ -342,19 +342,6 @@ export const MicrophoneCheck: React.FC<MicrophoneCheckProps> = ({
 						{...testId("portal-settings-mic-level-progress")}
 					/>
 
-					{/* Show error or permission prompt */}
-					{!micAccessGranted && !isLoadingDevices && !micAccessDenied && (
-						<Alert
-							color="yellow"
-							className="w-full text-start"
-							{...testId("portal-settings-mic-permission-alert")}
-						>
-							<Trans id="participant.alert.microphone.access">
-								Please allow microphone access to start the test.
-							</Trans>
-						</Alert>
-					)}
-
 					{errorMessage && (
 						<Alert
 							color="red"
@@ -364,38 +351,48 @@ export const MicrophoneCheck: React.FC<MicrophoneCheckProps> = ({
 							{errorMessage}
 						</Alert>
 					)}
-					{isLoadingDevices && (
-						<Group
-							gap="xs"
-							wrap="nowrap"
-							className="w-full"
-							{...testId("portal-settings-mic-loading-alert")}
-						>
-							<Loader size="sm" />
-							<Text size="sm" c="dimmed">
-								<Trans id="participant.alert.microphone.access.loading">
-									Requesting microphone access to detect available devices...
-								</Trans>
-							</Text>
-						</Group>
-					)}
 
-					{/* Real-time feedback alerts - only show after mic access granted */}
-					{micAccessGranted &&
-						(isMicTestSuccessful ? (
+					{/* The loading line, the permission prompt and the feedback
+					    alerts share one cell, the others hidden, so the check is
+					    as tall as the tallest of them and doesn't jump as they swap. */}
+					{!micAccessDenied && (
+						<div className="grid w-full">
+							<Alert
+								color="yellow"
+								{...layer(!micAccessGranted && !isLoadingDevices)}
+								{...testId("portal-settings-mic-permission-alert")}
+							>
+								<Trans id="participant.alert.microphone.access">
+									Please allow microphone access to start the test.
+								</Trans>
+							</Alert>
+							<Group
+								gap="xs"
+								wrap="nowrap"
+								{...layer(isLoadingDevices)}
+								{...testId("portal-settings-mic-loading-alert")}
+							>
+								<Loader size="sm" />
+								<Text size="sm" c="dimmed">
+									<Trans id="participant.alert.microphone.access.loading">
+										Requesting microphone access to detect available devices...
+									</Trans>
+								</Text>
+							</Group>
+
+							{/* Real-time feedback alerts - only show after mic access granted */}
 							<Alert
 								color="green"
-								className="w-full text-start"
+								{...layer(micAccessGranted && isMicTestSuccessful)}
 								{...testId("portal-settings-mic-success-alert")}
 							>
 								<Trans id="participant.alert.microphone.access.success">
 									Everything looks good – you can continue.
 								</Trans>
 							</Alert>
-						) : (
 							<Alert
 								color="yellow"
-								className="w-full text-start"
+								{...layer(micAccessGranted && !isMicTestSuccessful)}
 								{...testId("portal-settings-mic-issue-alert")}
 							>
 								<Trans id="participant.alert.microphone.access.issue">
@@ -403,7 +400,8 @@ export const MicrophoneCheck: React.FC<MicrophoneCheckProps> = ({
 									a little closer to the device.
 								</Trans>
 							</Alert>
-						))}
+						</div>
+					)}
 
 					{/* Continue button for modal mode */}
 					{isInModal && (
@@ -456,3 +454,9 @@ export const MicrophoneCheck: React.FC<MicrophoneCheckProps> = ({
 		</Box>
 	);
 };
+
+/** One of the messages sharing a cell: shown, or holding its space. */
+const layer = (shown: boolean) => ({
+	"aria-hidden": !shown,
+	className: `w-full text-start [grid-area:1/1] ${shown ? "" : "invisible"}`,
+});
