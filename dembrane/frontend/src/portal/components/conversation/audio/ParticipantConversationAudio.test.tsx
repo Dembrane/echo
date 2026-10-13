@@ -554,12 +554,14 @@ describe("refine (ECHO) button", () => {
 		);
 	});
 
-	it("stays on the refine and verify screens", async () => {
+	it("stays on the refine and verify screens, disabled", async () => {
 		for (const screenPath of ["refine", "verify"]) {
 			const { unmount } = renderAudio(`/p1/conversation/c1/${screenPath}`);
 			await startRecording();
 
-			expect(screen.getByTestId("portal-audio-echo-button")).toBeTruthy();
+			act(() => recorder.setRecordingTime(61));
+			const echo = screen.getByTestId("portal-audio-echo-button");
+			expect((echo as HTMLButtonElement).disabled).toBe(true);
 			unmount();
 		}
 	});

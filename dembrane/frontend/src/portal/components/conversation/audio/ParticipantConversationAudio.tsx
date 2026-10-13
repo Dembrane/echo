@@ -674,7 +674,8 @@ export const ParticipantConversationAudio = () => {
 
 						{/* ECHO and Stop stay put while paused, behind a modal, and ECHO
 						    over the refine and verify screens too, so the bar doesn't
-						    rearrange. Stop does nothing until recording resumes. */}
+						    rearrange. Stop does nothing until recording resumes; ECHO is
+						    disabled on refine and verify, where it would only lead back. */}
 						{inRecording && (
 							<Group gap="lg">
 								{(projectQuery.data?.is_verify_enabled ||
@@ -682,7 +683,12 @@ export const ParticipantConversationAudio = () => {
 									<Button
 										size="lg"
 										onClick={handleRefineClick}
-										disabled={isStopping || isRefineDisabled}
+										disabled={
+											isStopping ||
+											isRefineDisabled ||
+											isOnRefineRoute ||
+											isOnVerifyRoute
+										}
 										className="relative overflow-hidden"
 										variant={
 											effectiveRecordingTime < REFINE_BUTTON_THRESHOLD_SECONDS
