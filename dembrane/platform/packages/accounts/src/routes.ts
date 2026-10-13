@@ -26,7 +26,14 @@ import {
   tasksSummary,
   updateBilling,
 } from "./customer";
-import { createDemo, demoStatus, listDemos, publishDemo, retryDemo } from "./demo/service";
+import {
+  createDemo,
+  demoStatus,
+  listDemos,
+  publishDemo,
+  retryDemo,
+  unpublishDemo,
+} from "./demo/service";
 import type { AccountsDeps } from "./deps";
 import { acceptSignerInvite, signerInvite } from "./invite";
 import { sendMessage } from "./messages";
@@ -243,6 +250,11 @@ export function accountsRoutes(d: AccountsDeps) {
     const b = await body(c, K.DemoPublishRequest);
     return c.json(await publishDemo(d, who, p(c, "demoId"), { sign_in: b.sign_in ?? null }));
   });
+  app.post(R.unpublishDemo.path, async (c) => {
+    const who = requireUser(c);
+    await staffCan(d, who, "accounts.demo.unpublish", demo(c), c.get("requestId"));
+    return c.json(await unpublishDemo(d, who, p(c, "demoId")));
+  });
   app.post(R.retryDemo.path, async (c) => {
     await staffCan(d, requireUser(c), "accounts.demo.retry", demo(c), c.get("requestId"));
     return c.json(await retryDemo(d, p(c, "demoId")));
@@ -321,7 +333,7 @@ export function accountsRoutes(d: AccountsDeps) {
   app.post(R.sendDocument.path, async (c) => {
     const who = await staff(c, "accounts.document.send");
     const b = await body(c, K.SendDocumentRequest);
-    return c.json(await sendDocument(d, who, p(c, "orgId"), p(c, "docId"), b.task));
+    return c.json(await sendDocument(d, who, p(c, "orgId"), p(c, "docId"), b.task, b.notify));
   });
   app.post(R.voidDocument.path, async (c) => {
     const who = await staff(c, "accounts.document.void");

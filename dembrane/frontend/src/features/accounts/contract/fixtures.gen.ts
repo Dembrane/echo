@@ -103,6 +103,7 @@ export const pushOfferRequest: Out<typeof PushOfferRequest> = {
   external_ref: "attio-deal-8f2c",
   supersedes_id: null,
   send: true,
+  notify: false,
 };
 
 const offerFields = [
@@ -222,6 +223,7 @@ export const offerDetail: Out<typeof DocumentDetail> = {
   prefill: { organisation: "Example Town Council (sample)", address: null },
   access: "member",
   staff_url: null,
+  customer_links: null,
 };
 
 const dpaSummary: Out<typeof DocumentSummary> = {
@@ -370,6 +372,7 @@ export const signedDpaDetail: Out<typeof DocumentDetail> = {
   prefill: { organisation: "Example Town Council (sample)", address: null },
   access: "member",
   staff_url: null,
+  customer_links: null,
 };
 
 const invoiceSummary: Out<typeof DocumentSummary> = {
@@ -518,6 +521,7 @@ const organisation = {
 const emptyBilling = {
   legal_name: null,
   vat_id: null,
+  no_vat_number: null,
   kvk_number: null,
   kbo_number: null,
   billing_email: "robin@example-town.example",
@@ -525,11 +529,13 @@ const emptyBilling = {
   peppol_id: null,
   peppol_match: null,
   invoice_delivery: null,
+  invoice_portal: null,
   address_line1: null,
   address_line2: null,
   postal_code: null,
   city: null,
   country: null,
+  country_code: null,
 };
 
 /** The billing details task once the customer saved the details: done at once, no review. */
@@ -591,6 +597,7 @@ export const accountList: Out<typeof AccountList> = {
       id: ORG,
       name: "Example Town Council (sample)",
       stage: "customer",
+      deal_stage: "offer_sent",
       created_at: "2026-09-28T08:55:00.000Z",
       open_tasks: 2,
       waiting_on_us: 1,
@@ -605,7 +612,11 @@ export const accountList: Out<typeof AccountList> = {
 
 /** GET /api/v2/admin/accounts/:orgId */
 export const accountCard: Out<typeof AccountCard> = {
-  organisation: { ...organisation, created_at: "2026-09-28T08:55:00.000Z" },
+  organisation: {
+    ...organisation,
+    created_at: "2026-09-28T08:55:00.000Z",
+    deal_stage: "offer_sent" as const,
+  },
   account_manager: null,
   billing: emptyBilling,
   needs_form: {
@@ -638,6 +649,7 @@ export const accountCard: Out<typeof AccountCard> = {
     file_url: x.file_url?.replace(C, `/api/v2/admin/accounts/${ORG}`) ?? null,
     signed_pdf_url: x.signed_pdf_url?.replace(C, `/api/v2/admin/accounts/${ORG}`) ?? null,
   })),
+  invoice_waits: [],
   tasks: [signTask, billingTask, poTask, logoTask],
   tickets: [ticket],
   timeline: [

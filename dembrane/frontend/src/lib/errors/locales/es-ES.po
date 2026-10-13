@@ -14,6 +14,11 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:50
+#~ msgid "error.billing.tax_id_required"
+#~ msgstr "Introduce al menos uno de tus números de VAT, KvK o KBO."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:5
 msgid "error.request.field_empty"
 msgstr "{field} no puede estar vacío. Rellénalo o elimínalo."
@@ -177,11 +182,6 @@ msgstr "Introduce una dirección web que empiece por http:// o https://."
 #: src/lib/errors/messages/field.ts:30
 msgid "error.field.invalid_url"
 msgstr "Introduce una dirección web que empiece por http:// o https://."
-
-#. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:50
-msgid "error.billing.tax_id_required"
-msgstr "Introduce al menos uno de tus números de VAT, KvK o KBO."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:40
@@ -839,7 +839,7 @@ msgid "error.workspace.logo_url_too_long"
 msgstr "El enlace de este logo es demasiado largo. Usa un enlace más corto."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:63
+#: src/lib/errors/messages/billing.ts:59
 msgid "error.billing.tier_required"
 msgstr "Para esto se necesita el plan {required}. Mejora tu plan para usarlo."
 
@@ -904,7 +904,7 @@ msgid "error.member.already_removed"
 msgstr "Esta persona ya fue eliminada."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:59
+#: src/lib/errors/messages/billing.ts:55
 msgid "error.billing.tier_not_purchasable"
 msgstr "Este plan no se puede comprar por internet. Contáctanos para conseguirlo."
 
@@ -1569,7 +1569,7 @@ msgid "error.verify.no_new_feedback"
 msgstr "Aún no has añadido nada nuevo. Indica qué cambiarías e inténtalo de nuevo."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:54
+#: src/lib/errors/messages/billing.ts:50
 msgid "error.billing.tier_limit"
 msgstr "Has alcanzado el límite del plan gratuito. Actualiza tu plan para continuar."
 

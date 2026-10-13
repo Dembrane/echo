@@ -440,7 +440,7 @@ run("demos made in echo", () => {
     expect(await store.mayReceiveCode(w.db, "joop@voorbeeldstad.example", w.clock.now)).toBe(false);
   });
 
-  test("sending the demo's offer releases the held contact and emails them the offer", async () => {
+  test("sending the demo's offer releases the held contact; with notify it emails them the offer", async () => {
     const { published } = await publishHeld("lotte@voorbeeldstad.example");
     w.jobs.jobs.length = 0;
     const sent = await call(
@@ -448,7 +448,7 @@ run("demos made in echo", () => {
       "POST",
       `/api/v2/admin/accounts/${published.org_id}/documents/${published.offer_document_id}/send`,
       "staff",
-      {},
+      { notify: true },
     );
     expect(sent.status).toBe(200);
     expect(await store.mayReceiveCode(w.db, "lotte@voorbeeldstad.example", w.clock.now)).toBe(true);

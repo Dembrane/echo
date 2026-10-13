@@ -1,5 +1,11 @@
 import type { z } from "zod4";
 import { API_BASE_URL } from "@/config";
+import {
+	type BillingAnswers,
+	checkBilling,
+	countryCodeOf,
+	countryName,
+} from "../contract/billing-rules.gen";
 import type {
 	AccountCard,
 	AccountListItem,
@@ -80,6 +86,7 @@ function demoStore(): Store {
 		body: null,
 		confirmation: null,
 		content: null,
+		customer_links: null,
 		fields: [],
 		legal: [],
 		lines: null,
@@ -373,6 +380,13 @@ function withUrls(
 	return {
 		...doc,
 		access,
+		customer_links:
+			access === "staff" && doc.status === "sent" && doc.requires_signature
+				? {
+						document: `/o/${base.split("/").pop()}/account/documents/${doc.id}/sign`,
+						sign_in: `/login?next=${encodeURIComponent(`/o/${base.split("/").pop()}/account`)}`,
+					}
+				: null,
 		file_url: `${base}/documents/${doc.id}/file`,
 		signed_pdf_url:
 			doc.status === "signed" ? `${base}/documents/${doc.id}/signed.pdf` : null,
@@ -397,6 +411,7 @@ function summary(doc: DocumentDetailT): DocumentSummaryT {
 		signature: _sg,
 		access: _a,
 		staff_url: _su,
+		customer_links: _cl,
 		...rest
 	} = doc;
 	return rest;
@@ -477,9 +492,28 @@ const event = (
 	});
 };
 
+/** The demo's reading of the deal stage, as the backend derives it from the same facts. */
+function dealStageOf(s: Store): Out<typeof AccountListItem>["deal_stage"] {
+	const offer = s.docs.find((d) => d.kind === "offer" && d.status !== "void");
+	if (!offer) return s.stage === null ? null : "in_progress";
+	if (offer.status === "draft") return "offer_drafted";
+	if (offer.status === "declined") return "lost";
+	const waiting = s.docs.some(
+		(d) => d.kind === "dpa" && (d.status === "sent" || d.status === "viewed"),
+	);
+	if (offer.status !== "signed" || !s.billing.billing_email || waiting)
+		return "offer_sent";
+	const invoices = s.docs.filter((d) => d.kind === "invoice" && d.invoice);
+	if (!invoices.length) return "offer_accepted";
+	return invoices.every((d) => d.invoice?.status === "paid")
+		? "paid"
+		: "invoice_sent";
+}
+
 function listItem(s: Store): Out<typeof AccountListItem> {
 	return {
 		created_at: s.created_at,
+		deal_stage: dealStageOf(s),
 		id: s.id,
 		name: s.name,
 		open_tasks: s.tasks.filter(
@@ -504,11 +538,14 @@ function card(s: Store) {
 		billing: s.billing,
 		demo: s.demo,
 		documents: s.docs.map((d) => summary(withUrls(d, base, "staff"))),
+		// The fixture account asks for no invoice, so nothing waits.
+		invoice_waits: [],
 		members: s.members,
 		needs_form: s.needs_form,
 		organisation: {
 			account_stage: s.stage,
 			created_at: s.created_at,
+			deal_stage: dealStageOf(s),
 			id: s.id,
 			name: s.name,
 		},
@@ -921,7 +958,8 @@ export async function handle(
 			}
 			case "demoStatus":
 			case "retryDemo":
-			case "publishDemo": {
+			case "publishDemo":
+			case "unpublishDemo": {
 				const d = loadDemos()[params.demoId ?? ""];
 				if (!d) throw notFound();
 				if (name === "retryDemo") {
@@ -939,14 +977,23 @@ export async function handle(
 						throw new AccountsApiError(409, "The draft is not ready yet.");
 					const signIn =
 						typeof body.sign_in === "boolean" ? body.sign_in : d.sign_in;
+					// The invitation goes out once, as on the server.
+					const invite = signIn && !d.invited_at;
 					d.sign_in = signIn;
 					d.status = "published";
 					d.published_at = now();
-					d.invited_at = signIn ? now() : null;
+					if (invite) d.invited_at = now();
 					d.links.public = d.links.public.map((l) => ({ ...l, live: true }));
 					const target = load()[d.org_id ?? ""];
 					if (target)
-						event(target, "demo.published", "staff", {}, { invited: signIn });
+						event(target, "demo.published", "staff", {}, { invited: invite });
+				}
+				if (name === "unpublishDemo" && d.status === "published") {
+					d.status = "draft";
+					d.published_at = null;
+					d.links.public = d.links.public.map((l) => ({ ...l, live: false }));
+					const target = load()[d.org_id ?? ""];
+					if (target) event(target, "demo.unpublished", "staff");
 				}
 				d.updated_at = now();
 				return publicDemo(d);
@@ -1240,10 +1287,47 @@ export async function handle(
 			case "readBilling":
 				return s.billing;
 			case "updateBilling": {
-				if (!body.vat_id && !body.kvk_number && !body.kbo_number) {
-					throw invalid("vat_id", "Give a VAT, KvK or KBO number.");
+				// The server's own rules, so a fixture run refuses what the API would.
+				const country = countryCodeOf(
+					(body.country_code ?? body.country) as string | null,
+				);
+				const { problems, clean } = checkBilling({
+					...(body as BillingAnswers),
+					country_code: country,
+				});
+				const first = problems[0];
+				if (first) throw invalid(first.field, "Check this field.");
+				// Like the server: another way, newly written, opens the customer's question.
+				const wrote =
+					body.invoice_delivery === "other" ? clean.invoice_portal : null;
+				if (
+					wrote &&
+					!(
+						s.billing.invoice_delivery === "other" &&
+						s.billing.invoice_portal === wrote
+					)
+				) {
+					const t: TicketT = {
+						closed_at: null,
+						created_at: now(),
+						id: uuid(),
+						messages: [
+							{ body: wrote, created_at: now(), from: "customer", id: uuid() },
+						],
+						status: "waiting_on_dembrane",
+						subject: "How we receive invoices",
+						updated_at: now(),
+					};
+					s.tickets.unshift(t);
+					event(s, "ticket.opened", "customer", { id: t.id, type: "ticket" });
 				}
-				s.billing = { ...s.billing, ...(body as Partial<Billing>) };
+				s.billing = {
+					...s.billing,
+					...(body as Partial<Billing>),
+					...clean,
+					country: country ? countryName(country) : null,
+					country_code: country,
+				};
 				// Like the server: saving without a typed Peppol id looks the numbers up.
 				const kvk = String(body.kvk_number ?? "").replace(/\D/g, "");
 				s.billing.peppol_match =
@@ -1452,6 +1536,7 @@ export async function handle(
 				if (body.invoice_delivery !== undefined) {
 					s.billing.invoice_delivery =
 						body.invoice_delivery as Billing["invoice_delivery"];
+					s.billing.invoice_portal = null;
 				}
 				if (body.account_stage) {
 					s.stage = body.account_stage as Store["stage"];
@@ -1622,6 +1707,7 @@ export async function handle(
 					confirmation: null,
 					content: null,
 					currency: null,
+					customer_links: null,
 					declined_at: null,
 					fields: [],
 					file_url: null,
