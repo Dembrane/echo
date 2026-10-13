@@ -53,14 +53,20 @@ Their answers show under "Needs form and demo". There is no upgrade request for 
 
 The build runs through "Website", "Research", "Corpus", "Seeding", "Extraction" and "Draft ready".
 If a step fails, select "Retry". When the page says "The draft is ready. Check it, then publish.",
-look through the demo and select "Publish".
+select "Open the draft (EN)" to look through the demo, then select "Publish".
 
 - The conversations in a demo are fictional.
+- "Open the draft" shows the deck as the public link will show it, under a bar that says it is a
+  draft and not public yet. Only staff can open it, and each time is written to the account's
+  timeline.
 - The build creates the prospect's organisation, with your contact as its admin. Nothing reaches
   them until you publish.
 - "Publish" makes the public demo link live. With "Send the sign-in invitation" on, the contact
   gets the email "Your dembrane account for {org_name}" and signs in with a code. With it off, the
   page says "No email went out; share the demo link yourself."
+- "Unpublish" on a published demo takes the public link down and makes the demo a draft again.
+  When you publish again the same link is live, and a contact who already has the sign-in
+  invitation gets no second email.
 
 ## Send an offer
 

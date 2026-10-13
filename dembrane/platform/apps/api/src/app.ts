@@ -2,6 +2,7 @@ import { DrizzleAccessStore } from "@dembrane/access";
 import { accountRoutes } from "@dembrane/account";
 import {
   accountsRoutes,
+  demoDeckHook,
   demoProspectHook,
   httpFetchText,
   onboardingSignals,
@@ -28,6 +29,7 @@ import { MapStore, mapRoutes } from "@dembrane/map";
 import { notificationRoutes } from "@dembrane/notifications";
 import {
   analysisDeck,
+  draftDeckRoutes,
   popcornDemoRoutes,
   popcornDeps,
   popcornFlags,
@@ -306,6 +308,8 @@ export function buildApp(deps: Deps) {
   const presentDeps = { ...popcorn, access: deps.access, hub, map };
   app.route("/", presentRoutes(presentDeps));
   app.route("/", publicRoutes({ ...popcorn, hub, audienceMap: publicAudienceMap(presentDeps) }));
+  // Before the accounts routes: a demo's draft deck sits under their demo paths.
+  app.route("/", draftDeckRoutes({ ...popcorn, hub, open: demoDeckHook(accounts) }));
   app.route("/", accountsRoutes(accounts));
   app.route(
     "/",

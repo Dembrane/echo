@@ -971,7 +971,10 @@ export const DemoStatus = z.object({
 
 export const DemoList = z.object({ demos: z.array(DemoStatus) });
 
-/** Publishing makes the public link live; `sign_in` overrides the choice made at the start. */
+/**
+ * Publishing makes the public link live; `sign_in` overrides the choice made at the start.
+ * The invitation goes out once: publishing again after an unpublish sends no second one.
+ */
 export const DemoPublishRequest = z.object({ sign_in: z.boolean().nullish() });
 
 // ── events out (POSTed to ACCOUNTS_EVENTS_URL, signed like project webhooks) ──
@@ -1346,6 +1349,12 @@ export const ROUTES = {
     path: `${S}/demos/:demoId/publish`,
     permission: "staff:accounts",
     request: DemoPublishRequest,
+    response: DemoStatus,
+  },
+  unpublishDemo: {
+    method: "POST",
+    path: `${S}/demos/:demoId/unpublish`,
+    permission: "staff:accounts",
     response: DemoStatus,
   },
   retryDemo: {

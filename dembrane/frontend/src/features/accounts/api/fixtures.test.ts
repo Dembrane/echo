@@ -462,6 +462,19 @@ describe("the fixture backend, through the client", () => {
 		expect(published.status).toBe("published");
 		expect(published.invited_at).not.toBeNull();
 		expect(published.links.public.every((l) => l.live)).toBe(true);
+		// Back to a draft: the link is down, and publishing again invites nobody twice.
+		const unpublished = await client.call("unpublishDemo", {
+			params: { demoId: d.id },
+		});
+		expect(unpublished.status).toBe("draft");
+		expect(unpublished.published_at).toBeNull();
+		expect(unpublished.links.public.every((l) => !l.live)).toBe(true);
+		const again = await client.call("publishDemo", {
+			body: { sign_in: true },
+			params: { demoId: d.id },
+		});
+		expect(again.status).toBe("published");
+		expect(again.invited_at).toBe(published.invited_at);
 		const card = await client.call("accountCard", {
 			params: { orgId: d.org_id as string },
 		});
