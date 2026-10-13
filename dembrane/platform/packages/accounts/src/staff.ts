@@ -9,7 +9,7 @@ import {
 import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import { and, eq, gt, isNull } from "drizzle-orm";
-import { staffOrg } from "./access";
+import { assertPersonSends, staffOrg } from "./access";
 import { documentDetail, fileBytes, signedBytes, ticketOf } from "./customer";
 import { type AccountsDeps, type Conn, isStaffEmail, isUuid } from "./deps";
 import { fieldProblems, sha256Hex, storePdf, storeRendered, writeFields } from "./documents";
@@ -398,6 +398,8 @@ export async function pushOffer(
   /** Fixed ids for the demo seed; the API never passes them. */
   ids: { document?: string; task?: string } = {},
 ) {
+  // Sending emails the customer; a draft (`send: false`) does not.
+  if (input.send !== false) assertPersonSends(who);
   const org = await staffOrg(d, orgId);
   const pinned = await legalForPush({
     db: d.db,
@@ -521,6 +523,7 @@ async function sendOfferIn(
   docId: string,
   taskId?: string,
 ): Promise<string> {
+  assertPersonSends(who);
   const now = d.now();
   const doc = (await store.document(tx, orgId, docId)) as DocumentRow;
   await store.updateDocument(tx, docId, { status: "sent", sentAt: now, updatedAt: now });
@@ -889,6 +892,8 @@ export async function sendDocument(
   let doc = await staffDocument(d, orgId, docId);
   if (doc.status !== "draft") throw new ConflictError("document.already_sent");
   if (doc.kind === "offer") {
+    // Before the draft is drawn again: a refused send changes nothing.
+    assertPersonSends(who);
     await freshenDraftOffer(d, doc);
     doc = await staffDocument(d, orgId, docId);
     await d.db.transaction((tx) => sendOfferIn(d, tx, who, doc.orgId, doc.id));

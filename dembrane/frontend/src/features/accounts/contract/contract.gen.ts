@@ -698,6 +698,8 @@ export const PushOfferRequest = z.object({
    * Send now (default), or keep a draft that staff send later with POST .../send. A draft
    * is seen by staff only and adds nothing to the customer's account. When it is sent it
    * gets that day's date (a date in the future stays) and the legal texts in force then.
+   * Sending emails the customer, so a staff key must ask for the draft: with `send` on it
+   * answers 403 `staff.key_cannot_email`, as POST .../send does for an offer.
    */
   send: z.boolean().default(true),
 });
@@ -743,7 +745,8 @@ export const VoidRequest = z.object({ reason: optText(2000) });
  * these; it tells the manager in Slack and the manager decides. echo renders the email in
  * each recipient's language, signed by the account's manager, replies reaching them.
  * `note` is the manager's own line, shown as written. `dry_run` renders without sending,
- * for the preview. Invoices are not among them: Exact sends the invoice itself.
+ * for the preview, and is all a staff key gets: a key that sends answers 403
+ * `staff.key_cannot_email`. Invoices are not among them: Exact sends the invoice itself.
  */
 export const MessageKind = z.enum(["document_withdrawn", "task_reminder"]);
 export const SendMessageRequest = z
@@ -940,7 +943,11 @@ export const DemoStatus = z.object({
 
 export const DemoList = z.object({ demos: z.array(DemoStatus) });
 
-/** Publishing makes the public link live; `sign_in` overrides the choice made at the start. */
+/**
+ * Publishing makes the public link live; `sign_in` overrides the choice made at the start.
+ * With `sign_in` on it emails the invitation, which only a signed-in person may cause: a
+ * staff key publishes with `sign_in: false`, else it answers 403 `staff.key_cannot_email`.
+ */
 export const DemoPublishRequest = z.object({ sign_in: z.boolean().nullish() });
 
 // ── events out (POSTed to ACCOUNTS_EVENTS_URL, signed like project webhooks) ──

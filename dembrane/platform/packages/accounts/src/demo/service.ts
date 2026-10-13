@@ -4,6 +4,7 @@ import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import { localeOfEmail, resolveLocale } from "@dembrane/i18n";
 import { desc, eq } from "drizzle-orm";
+import { assertPersonSends } from "../access";
 import type { AccountsDeps } from "../deps";
 import { isUuid } from "../deps";
 import { emit } from "../events";
@@ -154,6 +155,8 @@ export async function publishDemo(
   const input = row.input as DemoInput;
   const seed = row.seed as SeedOutput;
   const signIn = opts.sign_in ?? input.sign_in;
+  // With sign-in on, publishing emails the invitation.
+  if (signIn) assertPersonSends(who);
   const now = d.now();
   await d.db.transaction(async (tx) => {
     for (const p of seed.projects) {

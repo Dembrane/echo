@@ -4,6 +4,14 @@ import type { Codes } from "./types.gen";
 
 /** The staff console: support access, managed billing and workspace fixes by dembrane staff. */
 export const staff = {
+  "staff.key_cannot_email": {
+    action: "none",
+    detail:
+      "A staff key cannot send this: it would email the customer. A signed-in person sends it from the staff pages.",
+    audience: "developer",
+    description:
+      "A staff API key called a staff route in a way that emails a customer (an offer send, a message, a demo invitation). Only a signed-in staff member's own action sends.",
+  },
   "staff.outsider_cannot_be_admin": {
     action: "fix_input",
     detail: "Cannot promote an outside collaborator to admin. Add them to the org first.",

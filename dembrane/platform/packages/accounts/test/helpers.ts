@@ -116,7 +116,7 @@ export interface World {
   files: FilesystemStorage;
   clock: { now: Date };
   people: Record<
-    "admin" | "billing" | "member" | "outsider" | "staff" | "signer",
+    "admin" | "billing" | "member" | "outsider" | "staff" | "signer" | "key",
     Signed & { email: string }
   >;
   orgId: string;
@@ -126,7 +126,8 @@ export interface World {
 
 /**
  * One organisation with an admin, a billing member and a plain member, an outsider, a
- * staff member, and someone who will be named to sign; another organisation beside it.
+ * staff member, that staff member's API key, and someone who will be named to sign;
+ * another organisation beside it.
  */
 export async function world(name: string, routes: (d: AccountsDeps) => Hono<Env>): Promise<World> {
   const url = await freshDatabase(name);
@@ -202,6 +203,9 @@ export async function world(name: string, routes: (d: AccountsDeps) => Hono<Env>
       email,
     };
   }
+  // A staff API key held by the staff member, as apps/api's session middleware presents
+  // one: never the blanket staff flag, only the permissions the key was minted with.
+  people.key = { ...people.staff, isStaff: false, staffPolicies: ["staff:accounts"] };
   const orgId = newId();
   const otherOrgId = newId();
   for (const [id, n] of [
