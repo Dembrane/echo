@@ -546,7 +546,7 @@ export const ParticipantConversationAudio = () => {
 					ref={setFooter}
 					bg="var(--app-background)"
 					gap="lg"
-					className="sticky bottom-0 z-10 w-full min-h-[84px] border-t p-4"
+					className="sticky bottom-0 z-10 w-full border-t p-4"
 					style={{ borderColor: "var(--app-rule-color)" }}
 				>
 					<Group
