@@ -309,6 +309,16 @@ describe("recording", () => {
 		expect(screen.getByTestId("meter").dataset.paused).toBe("true");
 	});
 
+	it("keeps Stop in the bar behind the stop modal", async () => {
+		renderAudio();
+		await startRecording();
+
+		fireEvent.click(screen.getByTestId("portal-audio-stop-button"));
+
+		await screen.findByTestId("portal-audio-stop-modal");
+		expect(screen.getByTestId("portal-audio-stop-button")).toBeTruthy();
+	});
+
 	it("resuming continues from the paused time", async () => {
 		renderAudio();
 		await startRecording();

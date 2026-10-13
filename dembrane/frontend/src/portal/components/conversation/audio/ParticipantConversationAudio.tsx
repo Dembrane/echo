@@ -669,8 +669,9 @@ export const ParticipantConversationAudio = () => {
 								</Group>
 							)}
 
-						{/* ECHO stays put while paused, behind a modal, and over the
-						    refine and verify screens, so the bar doesn't rearrange. */}
+						{/* ECHO and Stop stay put while paused, behind a modal, and ECHO
+						    over the refine and verify screens too, so the bar doesn't
+						    rearrange. Stop does nothing until recording resumes. */}
 						{inRecording && (
 							<Group gap="lg">
 								{(projectQuery.data?.is_verify_enabled ||
@@ -699,27 +700,25 @@ export const ParticipantConversationAudio = () => {
 										</span>
 									</Button>
 								)}
-								{isRecording && (
-									<Button
-										size="lg"
-										color="red"
-										onClick={handleStopRecording}
-										disabled={isStopping}
-										className={
-											!chunks?.data ||
-											chunks.data.length === 0 ||
-											!projectQuery.data?.is_get_reply_enabled
-												? "px-7 md:px-10"
-												: ""
-										}
-										leftSection={
-											<StopIcon size={20} className="hidden md:block" />
-										}
-										{...testId("portal-audio-stop-button")}
-									>
-										<Trans id="participant.button.stop">Stop</Trans>
-									</Button>
-								)}
+								<Button
+									size="lg"
+									color="red"
+									onClick={handleStopRecording}
+									disabled={isStopping}
+									className={
+										!chunks?.data ||
+										chunks.data.length === 0 ||
+										!projectQuery.data?.is_get_reply_enabled
+											? "px-7 md:px-10"
+											: ""
+									}
+									leftSection={
+										<StopIcon size={20} className="hidden md:block" />
+									}
+									{...testId("portal-audio-stop-button")}
+								>
+									<Trans id="participant.button.stop">Stop</Trans>
+								</Button>
 							</Group>
 						)}
 					</Group>
