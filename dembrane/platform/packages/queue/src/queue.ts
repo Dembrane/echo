@@ -276,9 +276,19 @@ export class Queue {
     return this.heartbeat.queueHealth([...this.defs.keys()]);
   }
 
-  async stop(): Promise<void> {
-    await this.heartbeat?.stop();
-    if (this.running) await DBOS.shutdown();
+  /**
+   * Stops executing and hands the workflows still running here to the other workers.
+   * DBOS.shutdown() takes no more work and writes no more checkpoints, but a step already
+   * running goes on until the process exits. So `beforeLeaving` is the caller's own
+   * teardown, and the hand-over comes after it, as the last thing: exit right after stop().
+   */
+  async stop(beforeLeaving: () => Promise<void> = async () => {}): Promise<void> {
+    const quiesce = async () => {
+      if (this.running) await DBOS.shutdown();
+      await beforeLeaving();
+    };
+    if (this.heartbeat) await this.heartbeat.stop(quiesce);
+    else await quiesce();
     await this.client?.destroy();
   }
 
