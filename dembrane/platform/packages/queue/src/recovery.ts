@@ -76,13 +76,16 @@ export class ExecutorHeartbeat {
       const [lock] = await tx`select pg_try_advisory_xact_lock(${SWEEP_LOCK}) as ok`;
       if (!lock?.ok) return 0;
       await this.forgetSettled(tx);
-      const dead = await tx<{ executor_id: string }[]>`
-        select executor_id from dbos_executor_heartbeat
+      const dead = await tx<{ executor_id: string; handed_over: boolean }[]>`
+        select executor_id, last_seen = to_timestamp(0) as handed_over
+        from dbos_executor_heartbeat
         where last_seen < now() - make_interval(secs => ${this.timing.deadAfterS})`;
       let resumed = 0;
-      for (const { executor_id } of dead) {
+      for (const { executor_id, handed_over } of dead) {
         const pending = await DBOS.listWorkflows({ status: "PENDING", executorId: executor_id });
-        const lost = await this.countLosses(tx, pending);
+        // A last_seen at the epoch is an executor that stopped on purpose and handed its
+        // workflows over. None of them lost a worker, so none is counted or set aside.
+        const lost = handed_over ? new Map<string, number>() : await this.countLosses(tx, pending);
         const aside = this.pastLimit(pending, lost);
         let resumedHere = 0;
         for (const wf of pending) {

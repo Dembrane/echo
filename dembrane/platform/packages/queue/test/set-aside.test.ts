@@ -66,12 +66,19 @@ run("a job that keeps losing its worker", () => {
    * executor whose heartbeat is stale. Returns once the sweep has dealt with that executor.
    */
   async function loseWorker(...ids: string[]) {
+    return leaveRunning(new Date(Date.now() - 3_600_000), ids);
+  }
+  /** The same, but the worker stopped on purpose: it marked its heartbeat with the epoch. */
+  async function workerStops(...ids: string[]) {
+    return leaveRunning(new Date(0), ids);
+  }
+  async function leaveRunning(lastSeen: Date, ids: string[]) {
     const executor = `stopped-${++workers}`;
     await sql.begin(async (tx) => {
       await tx`update dbos.workflow_status set status = 'PENDING', executor_id = ${executor}
                where workflow_uuid = any(${ids}) and status = 'ENQUEUED'`;
       await tx`insert into dbos_executor_heartbeat (executor_id, last_seen)
-               values (${executor}, now() - interval '1 hour')`;
+               values (${executor}, ${lastSeen})`;
     });
     await until(
       async () =>
@@ -201,6 +208,17 @@ run("a job that keeps losing its worker", () => {
 
     expect(await job(a)).toEqual(setAside("test.analysis", 4));
     expect(await job(b)).toEqual(setAside("test.analysis", 4));
+  });
+
+  test("a job handed over by a worker that stopped on purpose is resumed and not counted", async () => {
+    const id = await enqueue(analysis);
+    await loseWorkerTimes(3, id);
+
+    for (let i = 0; i < 3; i++) await workerStops(id);
+    expect(await job(id)).toEqual(resumed("test.analysis", 3));
+
+    await loseWorker(id);
+    expect(await job(id)).toEqual(setAside("test.analysis", 4));
   });
 
   test("a finished job's count is forgotten", async () => {
