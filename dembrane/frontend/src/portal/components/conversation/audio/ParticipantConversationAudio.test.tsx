@@ -167,13 +167,14 @@ let conversationQuery: {
 };
 let project: Record<string, unknown>;
 let chunks: { id: string }[];
+let uploadPending: boolean;
 
 vi.mock("../../../hooks", () => ({
 	useConversationChunksQuery: () => ({ data: chunks }),
 	useConversationQuery: () => conversationQuery,
 	useParticipantProjectById: () => ({ data: project, isLoading: false }),
 	useUploadConversationChunk: () => ({
-		isPending: false,
+		isPending: uploadPending,
 		mutateAsync: (...args: unknown[]) => uploadChunk(...args),
 	}),
 }));
@@ -211,6 +212,7 @@ beforeEach(() => {
 	};
 	project = { id: "p1" };
 	chunks = [];
+	uploadPending = false;
 	recorder.hadInterruption = false;
 	finish.mockResolvedValue({});
 	ping.mockResolvedValue(true);
@@ -390,6 +392,48 @@ describe("finishing", () => {
 			"portal_uploads_incomplete_on_finish",
 			expect.objectContaining({ context: "finish", pending_uploads: 1 }),
 		);
+	});
+
+	it("shows the modal's Finish as loading until the conversation is finished", async () => {
+		let resolveFinish: () => void = () => {};
+		finish.mockReturnValue(
+			new Promise<void>((resolve) => {
+				resolveFinish = resolve;
+			}),
+		);
+		renderAudio();
+		await startRecording();
+		await stopAndFinish();
+
+		const finishButton = screen.getByTestId("portal-audio-stop-finish-button");
+		await waitFor(() =>
+			expect(finishButton.hasAttribute("data-loading")).toBe(true),
+		);
+		expect(navigate).not.toHaveBeenCalled();
+
+		resolveFinish();
+		await waitFor(() =>
+			expect(navigate).toHaveBeenCalledWith("/p1/conversation/c1/finish"),
+		);
+	});
+
+	it("holds the modal's Finish while a chunk is still uploading", async () => {
+		const { rerender } = renderAudio();
+		await startRecording();
+		fireEvent.click(screen.getByTestId("portal-audio-stop-button"));
+		const finishButton = await screen.findByTestId(
+			"portal-audio-stop-finish-button",
+		);
+
+		uploadPending = true;
+		rerender(tree());
+		expect(screen.getByText("Uploading audio...")).toBeTruthy();
+		expect(finishButton.hasAttribute("disabled")).toBe(true);
+
+		uploadPending = false;
+		rerender(tree());
+		expect(screen.queryByText("Uploading audio...")).toBeNull();
+		expect(finishButton.hasAttribute("disabled")).toBe(false);
 	});
 
 	it("stays on the page and shows an error when finish fails", async () => {

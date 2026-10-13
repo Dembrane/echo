@@ -61,7 +61,7 @@ const REFINE_BUTTON_THRESHOLD_SECONDS = 60;
 export const ParticipantConversationAudio = () => {
 	const { projectId, conversationId } = useParams();
 	const location = useLocation();
-	const [isRefineDisabled, _setIsRefineDisabled] = useLocalStorage({
+	const [isRefineDisabled] = useLocalStorage({
 		defaultValue: false,
 		key: `refine_disabled_${conversationId}`,
 	});
@@ -119,7 +119,6 @@ export const ParticipantConversationAudio = () => {
 		setConversationDeletedDuringRecording,
 	] = useState(false);
 
-	const [isFinishing, _setIsFinishing] = useState(false);
 	const [isStopping, setIsStopping] = useState(false);
 	const [stoppedRecordingTime, setStoppedRecordingTime] = useState<
 		number | null
@@ -662,8 +661,6 @@ export const ParticipantConversationAudio = () => {
 												<CheckIcon size={20} className="hidden sm:block" />
 											}
 											className="w-auto"
-											loading={isFinishing}
-											disabled={isFinishing}
 											{...testId("portal-audio-finish-button")}
 										>
 											<Trans id="participant.button.finish">Finish</Trans>
