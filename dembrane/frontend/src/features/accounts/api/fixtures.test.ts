@@ -269,6 +269,65 @@ describe("the fixture backend, through the client", () => {
 		);
 	});
 
+	it("holds billing details to the API's own rules for the country", async () => {
+		const body = {
+			address_line1: "Rathausplatz 1",
+			billing_email: "rechnung@beispielstadt.example",
+			city: "Beispielstadt",
+			legal_name: "Beispielstadt Verwaltung (sample)",
+			postal_code: "12345",
+		};
+		const save = (extra: Record<string, unknown>) =>
+			client.call("updateBilling", {
+				body: { ...body, ...extra },
+				params: { orgId: org },
+			});
+		// Another EU country gives a VAT number in its own format, or says it has none.
+		await expect(save({ country_code: "DE" })).rejects.toMatchObject({
+			fields: { vat_id: expect.any(String) },
+			status: 422,
+		});
+		await expect(
+			save({ country_code: "DE", vat_id: "DE12" }),
+		).rejects.toMatchObject({ status: 422 });
+		// A portal has to be named.
+		await expect(
+			save({
+				country_code: "DE",
+				invoice_delivery: "portal",
+				no_vat_number: true,
+			}),
+		).rejects.toMatchObject({ fields: { invoice_portal: expect.any(String) } });
+		const saved = await save({
+			country_code: "DE",
+			invoice_delivery: "portal",
+			invoice_portal: "Example supplier portal (sample)",
+			no_vat_number: true,
+		});
+		expect(saved).toMatchObject({
+			country: "Germany",
+			country_code: "DE",
+			invoice_delivery: "portal",
+			invoice_portal: "Example supplier portal (sample)",
+			no_vat_number: true,
+			vat_id: null,
+		});
+		// Numbers are stored clean, and a country written as a name becomes its code.
+		const dutch = await save({
+			country: "Nederland",
+			invoice_delivery: "email",
+			kvk_number: "1234 5678",
+			vat_id: "nl 1234.56.789 b01",
+		});
+		expect(dutch).toMatchObject({
+			country_code: "NL",
+			invoice_portal: null,
+			kvk_number: "12345678",
+			no_vat_number: null,
+			vat_id: "NL123456789B01",
+		});
+	});
+
 	it("names the document a locked task waits for", async () => {
 		const page = await client.call("accountPage", { params: { orgId: org } });
 		const billing = page.tasks.find((t) => t.kind === "billing_details");

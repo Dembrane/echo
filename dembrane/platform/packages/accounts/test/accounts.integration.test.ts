@@ -11,6 +11,7 @@ import * as K from "../src/contract";
 import { runRemindersTick, runTaskReminder } from "../src/jobs";
 import { accountsRoutes } from "../src/routes";
 import { store } from "../src/storage";
+import { billingComplete } from "../src/tasks";
 import { admin, call, dropDatabase, png, pngB64, type World, world } from "./helpers";
 
 // Every route against Postgres: success, the refusal of each role that must not pass, and
@@ -842,6 +843,12 @@ run("accounts routes against Postgres", () => {
     expect(K.BillingDetails.parse(r.data)).toMatchObject({
       billing_email: "facturen@testdorp.example",
       po_number: "PO-2026-77",
+      // The code decides what is asked; the name is what reads on the invoice.
+      country: "Netherlands",
+      country_code: "NL",
+      // The Netherlands is not asked whether it has a VAT number.
+      no_vat_number: null,
+      invoice_portal: null,
     });
     expect(
       K.BillingDetails.parse((await call(w, "GET", `${C()}/billing`, "admin")).data).kvk_number,
@@ -852,7 +859,14 @@ run("accounts routes against Postgres", () => {
     expect(task?.nextReminderAt).toBeNull();
     expect(w.jobs.of("accounts.deliver-event")[0]?.payload).toMatchObject({
       event: "account.billing_details.updated",
-      billing: { legal_name: "Gemeente Testdorp", kvk_number: "12345678", po_number: "PO-2026-77" },
+      billing: {
+        legal_name: "Gemeente Testdorp",
+        kvk_number: "12345678",
+        po_number: "PO-2026-77",
+        no_vat_number: null,
+        invoice_portal: null,
+        address: { country: "Netherlands", country_code: "NL" },
+      },
     });
     expect(w.jobs.of("accounts.notify-slack")[0]?.text).toContain("PO-2026-77");
     const review = await call(w, "POST", `${S()}/tasks/${task?.id}/review`, "staff", {
@@ -913,6 +927,126 @@ run("accounts routes against Postgres", () => {
       K.BillingDetails.parse((await call(w, "GET", `${C()}/billing`, "admin")).data)
         .invoice_delivery,
     ).toBe("peppol");
+  });
+
+  test("billing details by country: the numbers asked, no VAT number said plainly, an invoice portal named", async () => {
+    const details = {
+      legal_name: "Beispielstadt Verwaltung",
+      billing_email: "rechnung@beispielstadt.example",
+      address_line1: "Rathausplatz 1",
+      postal_code: "12345",
+      city: "Beispielstadt",
+    };
+    const put = (over: Record<string, unknown>) =>
+      call(w, "PUT", `${C()}/billing`, "billing", { ...details, ...over });
+    const fields = (r: { data: unknown }) =>
+      (r.data as { detail: { loc: string[]; type: string }[] }).detail.map(
+        (d) => `${d.loc[1]}: ${d.type}`,
+      );
+
+    // Each refusal names the field to fix, with the code the form words.
+    const refusals: [Record<string, unknown>, string[]][] = [
+      [{}, ["country_code: field.required"]],
+      [{ country: "Atlantis" }, ["country_code: field.required"]],
+      [{ country_code: "DE" }, ["vat_id: field.required"]],
+      [{ country_code: "DE", vat_id: "DE12" }, ["vat_id: field.invalid"]],
+      [{ country_code: "DE", vat_id: "NL001234567B01" }, ["vat_id: field.invalid"]],
+      [{ country_code: "BE", no_vat_number: true }, ["kbo_number: field.required"]],
+      [{ country_code: "NL", kvk_number: "1234" }, ["kvk_number: field.invalid"]],
+      [
+        { country_code: "NL", kvk_number: "12345678", invoice_delivery: "portal" },
+        ["invoice_portal: field.required"],
+      ],
+      [
+        { country_code: "NL", kvk_number: "12345678", peppol_id: "12345678" },
+        ["peppol_id: field.invalid"],
+      ],
+    ];
+    for (const [over, expected] of refusals) {
+      const r = await put(over);
+      expect([r.status, fields(r)]).toEqual([422, expected]);
+    }
+
+    // Another EU country with no VAT number: complete without any number, by its own word.
+    w.jobs.jobs.length = 0;
+    const german = K.BillingDetails.parse(
+      (
+        await put({
+          country_code: "de",
+          no_vat_number: true,
+          invoice_delivery: "portal",
+          invoice_portal: " Example supplier portal ",
+        })
+      ).data,
+    );
+    expect(german).toMatchObject({
+      country: "Germany",
+      country_code: "DE",
+      vat_id: null,
+      no_vat_number: true,
+      kvk_number: null,
+      invoice_delivery: "portal",
+      invoice_portal: "Example supplier portal",
+    });
+    expect(billingComplete(await store.billing(w.db, w.orgId))).toBe(true);
+    expect(w.jobs.of("accounts.deliver-event")[0]?.payload).toMatchObject({
+      billing: {
+        vat_id: null,
+        no_vat_number: true,
+        invoice_delivery: "portal",
+        invoice_portal: "Example supplier portal",
+        address: { country: "Germany", country_code: "DE" },
+      },
+    });
+
+    // Staff switch between what Exact sends itself; that ends the portal. A portal is the customer's to name.
+    expect((await call(w, "PATCH", S(), "staff", { invoice_delivery: "portal" })).status).toBe(422);
+    expect((await call(w, "PATCH", S(), "staff", { invoice_delivery: "email" })).status).toBe(200);
+    expect(
+      K.BillingDetails.parse((await call(w, "GET", `${C()}/billing`, "admin")).data),
+    ).toMatchObject({ invoice_delivery: "email", invoice_portal: null });
+
+    // Belgium: a VAT number typed the Belgian way is stored clean; without one, the KBO number.
+    expect(
+      K.BillingDetails.parse((await put({ country_code: "BE", vat_id: "be 0123.456.789" })).data),
+    ).toMatchObject({ country: "Belgium", vat_id: "BE0123456789", no_vat_number: false });
+    expect(
+      K.BillingDetails.parse(
+        (await put({ country_code: "BE", no_vat_number: true, kbo_number: "0123456789" })).data,
+      ),
+    ).toMatchObject({ vat_id: null, no_vat_number: true, kbo_number: "0123.456.789" });
+
+    // Outside the EU nothing more is asked.
+    expect(K.BillingDetails.parse((await put({ country: "United States" })).data)).toMatchObject({
+      country: "United States",
+      country_code: "US",
+      no_vat_number: null,
+    });
+    expect(billingComplete(await store.billing(w.db, w.orgId))).toBe(true);
+
+    // A caller from before sends the country as a name; the Dutch council is back for what follows.
+    const dutch = K.BillingDetails.parse(
+      (
+        await call(w, "PUT", `${C()}/billing`, "billing", {
+          legal_name: "Gemeente Testdorp",
+          billing_email: "facturen@testdorp.example",
+          address_line1: "Dorpsstraat 1",
+          postal_code: "1234 AB",
+          city: "Testdorp",
+          country: "Nederland",
+          kvk_number: "1234 5678",
+          vat_id: "nl 0012.34.567 b01",
+        })
+      ).data,
+    );
+    expect(dutch).toMatchObject({
+      country: "Netherlands",
+      country_code: "NL",
+      kvk_number: "12345678",
+      vat_id: "NL001234567B01",
+      kbo_number: null,
+      no_vat_number: null,
+    });
   });
 
   test("a repeat offer after complete billing details asks for none: no new task, signing leaves them done", async () => {

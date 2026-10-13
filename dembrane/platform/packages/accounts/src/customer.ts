@@ -10,6 +10,7 @@ import {
 import type { Signed } from "@dembrane/http";
 import { localeOfEmail, resolveLocale } from "@dembrane/i18n";
 import { customerOrg, documentFor } from "./access";
+import { checkBilling, countryCodeOf, countryName, type Delivery } from "./billing-rules";
 import type { AccountsDeps, Tx } from "./deps";
 import { billingPayload, emit, orgPayload, taskPayload, ticketPayload } from "./events";
 import { signerInviteUrl } from "./invite";
@@ -21,6 +22,7 @@ import { lookupPeppol, type TaxIds } from "./peppol";
 import { type BillingRow, type DocumentRow, store } from "./storage";
 import { isTaskCode } from "./task-text";
 import { settleTask } from "./tasks";
+import { fieldErrors } from "./validate";
 import {
   billingView,
   confirmationText,
@@ -518,13 +520,16 @@ export interface BillingInput {
   readonly address_line2: string | null;
   readonly postal_code: string;
   readonly city: string;
-  readonly country: string;
+  readonly country_code: string | null;
+  readonly country: string | null;
   readonly vat_id: string | null;
+  readonly no_vat_number?: boolean | null | undefined;
   readonly kvk_number: string | null;
   readonly kbo_number: string | null;
   readonly po_number: string | null;
   readonly peppol_id: string | null;
-  readonly invoice_delivery?: "peppol" | "email" | null | undefined;
+  readonly invoice_delivery?: Delivery | null | undefined;
+  readonly invoice_portal: string | null;
 }
 
 /** The Peppol directory entry for numbers the customer is typing, before they save. */
@@ -540,17 +545,30 @@ export async function readBilling(d: AccountsDeps, who: Signed, orgId: string) {
 
 /**
  * Saves what Exact needs to invoice, on the organisation's own billing account (made if it
- * has none yet), and completes the billing details task: no review by us.
+ * has none yet), and completes the billing details task: no review by us. The country
+ * decides which numbers are asked and how they must look (billing-rules.ts, the rules the
+ * form checks too); numbers are stored cleaned. Formats only: nothing is looked up to
+ * confirm a number is real, and no tax is decided here.
  */
 export async function updateBilling(d: AccountsDeps, who: Signed, orgId: string, b: BillingInput) {
   const org = await customerOrg(d, who, orgId, "account:billing");
-  if (!b.vat_id && !b.kvk_number && !b.kbo_number)
+  const country = countryCodeOf(b.country_code ?? b.country);
+  const { problems, clean } = checkBilling({ ...b, country_code: country });
+  // The Netherlands asks for one of two numbers, so neither field alone is the one to fix.
+  if (country === "NL" && !clean.vat_id && !clean.kvk_number)
     throw new ValidationError("billing.tax_id_required");
+  if (!country || problems.length)
+    throw fieldErrors(
+      problems.map((p) => ({
+        field: p.field,
+        code: p.kind === "missing" ? "field.required" : "field.invalid",
+      })),
+    );
   const now = d.now();
   const me = await store.identity(d.db, who.directusUserId);
   // A Peppol id typed by the customer wins; otherwise the directory is asked, outside the
   // transaction so a slow directory holds no lock.
-  const match = b.peppol_id ? null : await lookupPeppol(d, b);
+  const match = clean.peppol_id ? null : await lookupPeppol(d, clean);
   await d.db.transaction(async (tx) => {
     await store.lockOrg(tx, org.id);
     const patch = {
@@ -560,14 +578,19 @@ export async function updateBilling(d: AccountsDeps, who: Signed, orgId: string,
       billing_address_line2: b.address_line2,
       billing_postal_code: b.postal_code,
       billing_city: b.city,
-      billing_country: b.country,
-      billing_vat_id: b.vat_id,
-      kvk_number: b.kvk_number,
-      kbo_number: b.kbo_number,
+      // The name is what reads on an invoice; the code is what a program should read.
+      billing_country: countryName(country),
+      billing_country_code: country,
+      billing_vat_id: clean.vat_id,
+      no_vat_number: clean.no_vat_number,
+      kvk_number: clean.kvk_number,
+      kbo_number: clean.kbo_number,
       po_number: b.po_number,
-      peppol_id: b.peppol_id ?? match?.participant_id ?? null,
-      peppol_name: b.peppol_id ? null : (match?.name ?? null),
-      ...(b.invoice_delivery !== undefined ? { invoice_delivery: b.invoice_delivery } : {}),
+      peppol_id: clean.peppol_id ?? match?.participant_id ?? null,
+      peppol_name: clean.peppol_id ? null : (match?.name ?? null),
+      ...(b.invoice_delivery !== undefined
+        ? { invoice_delivery: b.invoice_delivery, invoice_portal: clean.invoice_portal }
+        : {}),
       updated_at: now.toISOString(),
     };
     const account = await store.billing(tx, org.id);

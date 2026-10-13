@@ -357,7 +357,17 @@ run("an offer draft, and the invoice request after the signature", () => {
         billing_email: "finance@testdorp.example",
         vat_id: "NL001234567B01",
         po_number: "PO-77",
-        address: { line1: "Dorpsstraat 1", postal_code: "1234 AB", city: "Testdorp" },
+        // What the invoice's tax and delivery are decided from, beside the fields sam knew.
+        no_vat_number: null,
+        invoice_delivery: "email",
+        invoice_portal: null,
+        address: {
+          line1: "Dorpsstraat 1",
+          postal_code: "1234 AB",
+          city: "Testdorp",
+          country: "Netherlands",
+          country_code: "NL",
+        },
       },
       invoice: { vat_treatment: "standard", po_number: "PO-77" },
       links: {

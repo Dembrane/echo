@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DELIVERIES } from "./billing-rules";
 
 /**
  * The accounts API contract: every request and response body of the customer routes
@@ -368,12 +369,23 @@ export const Ticket = z.object({
   messages: z.array(TicketMessage),
 });
 
-export const InvoiceDelivery = z.enum(["peppol", "email"]);
+/**
+ * How a customer gets invoices. `portal`: their own invoice portal, named in
+ * `invoice_portal`; a person at dembrane adds each invoice there by hand.
+ */
+export const InvoiceDelivery = z.enum(DELIVERIES);
+/** What Exact can send by itself, and so what staff may switch between. */
+export const SentDelivery = z.enum(["peppol", "email"]);
 export const PeppolMatch = z.object({ participant_id: z.string(), name: z.string().nullable() });
 
 export const BillingDetails = z.object({
   legal_name: z.string().nullable(),
   vat_id: z.string().nullable(),
+  /**
+   * true: the organisation said it has no VAT number. false: it was asked and gave one.
+   * null: not asked (the Netherlands, a country outside the EU, details from before).
+   */
+  no_vat_number: z.boolean().nullable(),
   kvk_number: z.string().nullable(),
   kbo_number: z.string().nullable(),
   billing_email: z.string().nullable(),
@@ -383,11 +395,16 @@ export const BillingDetails = z.object({
   peppol_match: PeppolMatch.nullable(),
   /** null: not chosen yet, so Peppol when there is a match and email otherwise. */
   invoice_delivery: InvoiceDelivery.nullable(),
+  /** The name or address of the customer's own invoice portal, when that is how invoices arrive. */
+  invoice_portal: z.string().nullable(),
   address_line1: z.string().nullable(),
   address_line2: z.string().nullable(),
   postal_code: z.string().nullable(),
   city: z.string().nullable(),
+  /** The country's English name, as it reads on an invoice. */
   country: z.string().nullable(),
+  /** ISO 3166-1 alpha-2; null for details saved before the form had a list of countries. */
+  country_code: z.string().nullable(),
 });
 
 export const OrganisationRef = z.object({
@@ -510,15 +527,21 @@ export const BillingUpdateRequest = z.object({
   address_line2: optText(255),
   postal_code: text(32),
   city: text(255),
-  country: text(64),
-  /** At least one of vat_id, kvk_number, kbo_number. */
+  /** ISO 3166-1 alpha-2. It decides which numbers below are asked: see billing-rules.ts. */
+  country_code: optText(2),
+  /** For callers from before `country_code`: a code or a country's name. One of the two. */
+  country: optText(64),
   vat_id: optText(64),
+  /** The organisation says it has no VAT number; asked in Belgium and the rest of the EU. */
+  no_vat_number: z.boolean().nullish(),
   kvk_number: optText(32),
   kbo_number: optText(32),
   po_number: optText(128),
   peppol_id: optText(128),
   /** Left out: unchanged. */
   invoice_delivery: InvoiceDelivery.nullable().optional(),
+  /** Required with `invoice_delivery: "portal"`, and kept only then. */
+  invoice_portal: optText(255),
 });
 
 /** The Peppol directory entry for these numbers, before saving them. */
@@ -656,7 +679,7 @@ export const UpdateAccountRequest = z.object({
   /** An @dembrane.com app user, or null to clear. */
   account_manager_id: Uuid.nullable().optional(),
   /** How Exact delivers this customer's invoices; null: Peppol when found, else email. */
-  invoice_delivery: InvoiceDelivery.nullable().optional(),
+  invoice_delivery: SentDelivery.nullable().optional(),
 });
 
 export const PushOfferRequest = z.object({
