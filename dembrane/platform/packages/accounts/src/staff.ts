@@ -14,7 +14,7 @@ import { documentDetail, fileBytes, signedBytes, ticketOf } from "./customer";
 import { type AccountsDeps, type Conn, isStaffEmail, isUuid } from "./deps";
 import { fieldProblems, sha256Hex, storePdf, storeRendered, writeFields } from "./documents";
 import { accountManagerPayload, documentPayload, emit, orgPayload } from "./events";
-import { customerSignUrl, staffDocumentUrl } from "./invoice";
+import { customerSignUrl, invoiceWaits, staffDocumentUrl, uninvoicedOffers } from "./invoice";
 import { legalForPush } from "./legal/store";
 import { fitsVatTreatment, requireAmounts, type VatTreatment } from "./money";
 import {
@@ -82,6 +82,7 @@ export async function accountCard(d: AccountsDeps, orgId: string) {
     store.usage(d.db, org.id),
     store.events(d.db, org.id, 200),
   ]);
+  const asked = await store.eventSubjects(d.db, org.id, "invoice.requested");
   const messages = await store.messages(
     d.db,
     tickets.map((t) => t.id),
@@ -152,6 +153,14 @@ export async function accountCard(d: AccountsDeps, orgId: string) {
         staffBase(org.id),
       ),
     ),
+    // Nothing waits where nobody is asked: without sam taking the messages no request goes.
+    invoice_waits: d.settings.offerMessages
+      ? uninvoicedOffers(docs, asked).flatMap((x) => {
+          const sig = sigs.find((s) => s.documentId === x.id);
+          const waits = sig ? invoiceWaits(x, sig, billing, docs) : [];
+          return waits.length ? [{ document_id: x.id, waits_for: waits }] : [];
+        })
+      : [],
     tasks: tasks.map((t) => taskView(t, docs)),
     tickets: tickets.map((t) => ticketView(t, messages)),
     timeline: events.map(eventView),

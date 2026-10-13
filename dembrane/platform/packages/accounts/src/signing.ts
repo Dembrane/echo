@@ -278,8 +278,9 @@ export async function signDocument(
         },
         slack: `:black_nib: ${name} (${access.email}) signed "${doc.title}" for ${org.name}${doc.totalCents !== null ? `, ${(doc.totalCents / 100).toFixed(2)} ${doc.currency ?? ""} incl. VAT` : ""}.`,
       });
-      // A returning customer's billing details are on file: the invoice can go out now.
-      if (doc.kind === "offer") await requestInvoices(d, tx, signedFor);
+      // An offer or a DPA can be the last thing the invoice waited for: a returning
+      // customer's billing details are on file, and a DPA is often signed after the offer.
+      if (doc.kind === "offer" || doc.kind === "dpa") await requestInvoices(d, tx, signedFor);
     });
   } catch (err) {
     // Two signatures racing: the unique document id lets exactly one row in.

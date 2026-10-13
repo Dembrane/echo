@@ -642,6 +642,7 @@ export const accountCard: Out<typeof AccountCard> = {
     file_url: x.file_url?.replace(C, `/api/v2/admin/accounts/${ORG}`) ?? null,
     signed_pdf_url: x.signed_pdf_url?.replace(C, `/api/v2/admin/accounts/${ORG}`) ?? null,
   })),
+  invoice_waits: [],
   tasks: [signTask, billingTask, poTask, logoTask],
   tickets: [ticket],
   timeline: [

@@ -141,9 +141,13 @@ reminder. After seven days the account manager is asked to check in."
 
 ## The invoice
 
-When an offer with an amount is signed and the billing details are complete, dembrane is asked
-once to send the invoice. The order of the two does not matter. The "Timeline" shows "Ready to
-invoice".
+When an offer with an amount is signed, the billing details are complete and, where the DPA is a
+document of its own, that DPA is signed too, dembrane is asked once to send the invoice. The order
+of the three does not matter. An offer whose signer agreed to the DPA together with the offer waits
+for no second signature. The "Timeline" shows "Ready to invoice".
+
+Until then "Documents" says what the offer still waits for, for example "Invoice waits for the DPA
+signature", and the "Timeline" says the same each time the answer changes.
 
 dembrane's accounting system makes and sends the invoice. A copy with its PDF then appears under
 "Documents", for you and for the customer.

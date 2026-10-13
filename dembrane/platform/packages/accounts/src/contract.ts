@@ -635,6 +635,9 @@ export const CreateAccountResponse = z.object({
   continue_url: z.string(),
 });
 
+/** What a signed offer's invoice request still waits for (packages/accounts/src/invoice.ts). */
+export const InvoiceWait = z.enum(["billing_details", "dpa"]);
+
 export const AccountCard = z.object({
   organisation: OrganisationRef.extend({ created_at: IsoTime.nullable() }),
   account_manager: z
@@ -667,6 +670,8 @@ export const AccountCard = z.object({
   pending_invites: z.array(z.object({ email: z.string(), role: z.string(), expires_at: IsoTime })),
   usage: z.object({ workspaces: z.number().int(), projects: z.number().int() }),
   documents: z.array(DocumentSummary),
+  /** Signed offers whose invoice is not asked for yet, and what each still waits for. */
+  invoice_waits: z.array(z.object({ document_id: Uuid, waits_for: z.array(InvoiceWait) })),
   tasks: z.array(Task),
   tickets: z.array(Ticket),
   timeline: z.array(TimelineEvent),

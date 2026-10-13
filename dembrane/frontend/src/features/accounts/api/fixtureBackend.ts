@@ -519,6 +519,8 @@ function card(s: Store) {
 		billing: s.billing,
 		demo: s.demo,
 		documents: s.docs.map((d) => summary(withUrls(d, base, "staff"))),
+		// The fixture account asks for no invoice, so nothing waits.
+		invoice_waits: [],
 		members: s.members,
 		needs_form: s.needs_form,
 		organisation: {
