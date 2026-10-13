@@ -123,6 +123,8 @@ export function docsCorpus(opts: {
   docsBaseUrl: string;
   logger: Logger;
   fetchFn?: typeof fetch;
+  /** Replaces the repository's docs/ as the folder read from source; tests pass their own. */
+  docsDir?: string;
 }): DocsCorpus {
   let cached: { at: number; data: Map<string, string> } | null = null;
   let loading: Promise<Map<string, string>> | null = null;
@@ -130,7 +132,7 @@ export function docsCorpus(opts: {
 
   async function load(): Promise<Map<string, string>> {
     if (!base) {
-      const root = assetPath("docs");
+      const root = opts.docsDir ?? assetPath("docs");
       return existsSync(root) && statSync(root).isDirectory() ? diskCorpus(root) : new Map();
     }
     try {
