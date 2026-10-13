@@ -28,19 +28,26 @@ const MONTHS = [
   "December",
 ];
 
+/** A base address without its trailing slashes. */
+function withoutTrailingSlashes(url: string): string {
+  let end = url.length;
+  while (end > 0 && url[end - 1] === "/") end--;
+  return url.slice(0, end);
+}
+
 /** The portal start link, tagged so PostHog can tell a popcorn scan apart. */
 export function participantUrl(project: Json, participantBaseUrl: string): string | null {
   const projectId = asId(project.id);
   if (!projectId || !truthy(project.is_conversation_allowed)) return null;
   const language = orStr(project.language, "en");
   const code = PARTICIPANT_LANGUAGE_CODES[language.split("-")[0] ?? ""] ?? "en-US";
-  return `${participantBaseUrl.replace(/\/+$/, "")}/${code}/${projectId}/start?utm_source=popcorn_qr`;
+  return `${withoutTrailingSlashes(participantBaseUrl)}/${code}/${projectId}/start?utm_source=popcorn_qr`;
 }
 
 export function conversationUrl(project: Json, conversationId: string, adminBaseUrl: string) {
   const workspaceId = asId(project.workspace_id) ?? "";
   const projectId = asId(project.id) ?? "";
-  return `${adminBaseUrl.replace(/\/+$/, "")}/en-US/w/${workspaceId}/projects/${projectId}/conversations/${conversationId}`;
+  return `${withoutTrailingSlashes(adminBaseUrl)}/en-US/w/${workspaceId}/projects/${projectId}/conversations/${conversationId}`;
 }
 
 /** `_session_day`: the report's date in its own zone, ISO. */

@@ -118,6 +118,10 @@ export const flows: Record<string, Flow> = {
 		params: { demoId: "$demo" },
 		roles: ["staff"],
 	},
+	"/admin/accounts/demos/:demoId/draft/:deckLanguage": {
+		params: { deckLanguage: "en", demoId: "$demo" },
+		roles: ["staff"],
+	},
 	"/admin/accounts/new-demo": { roles: ["staff"] },
 	"/check-your-email": { auth: false },
 	"/connect-agent": {},

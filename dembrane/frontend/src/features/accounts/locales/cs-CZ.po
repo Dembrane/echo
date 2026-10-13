@@ -18,7 +18,7 @@ msgstr ""
 #~ msgstr ""
 
 #. placeholder {0}: demo.conversations
-#: src/features/accounts/staff/DemoRoute.tsx:286
+#: src/features/accounts/staff/DemoRoute.tsx:314
 msgid "{0, plural, one {# fictional conversation authored.} other {# fictional conversations authored.}}"
 msgstr "{0, plural, one {# vytvořený fiktivní rozhovor.} few {# vytvořené fiktivní rozhovory.} other {# vytvořených fiktivních rozhovorů.}}"
 
@@ -35,6 +35,11 @@ msgstr "{0, plural, one {# pole} few {# pole} other {# polí}}"
 msgid "{0, plural, one {You have # thing to do in {name}} other {You have # things to do in {name}}}"
 msgstr "{0, plural, one {V {name} na vás čeká # úkol} few {V {name} na vás čekají # úkoly} many {V {name} na vás čeká # úkolu} other {V {name} na vás čeká # úkolů}}"
 
+#. placeholder {0}: demo.contact_email
+#: src/features/accounts/staff/DemoRoute.tsx:370
+msgid "{0} already has the sign-in invitation. Publishing sends no new email."
+msgstr "{0} už pozvánku k přihlášení má. Zveřejněním se neodešle žádný nový e-mail."
+
 #. placeholder {0}: r.queued
 #: src/features/accounts/staff/EmailCustomerModal.tsx:125
 msgid "{0} emails sent"
@@ -50,7 +55,7 @@ msgstr "{0} bez VAT, {1} vč."
 #~ msgstr "Vytvořeno {0} fiktivních rozhovorů."
 
 #. placeholder {0}: formatMoney(d.total_cents, d.currency, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:83
+#: src/features/accounts/staff/DocumentRoute.tsx:84
 msgid "{0} incl. VAT"
 msgstr "{0} vč. DPH"
 
@@ -70,6 +75,16 @@ msgstr "{0} z {1} hotovo"
 #: src/features/accounts/signing/SignRoute.tsx:1089
 msgid "{0} signed on {1}. The signed copy is in your documents."
 msgstr "{0} podepsáno dne {1}. Podepsaná kopie je ve vašich dokumentech."
+
+#. placeholder {0}: demo.organisation_name
+#: src/features/accounts/staff/DemoDraftRoute.tsx:63
+msgid "{0}: this demo is public. This is what the public link shows."
+msgstr "{0}: toto demo je veřejné. Tohle ukazuje veřejný odkaz."
+
+#. placeholder {0}: demo.organisation_name
+#: src/features/accounts/staff/DemoDraftRoute.tsx:68
+msgid "{0}: this is a draft. It is not public yet."
+msgstr "{0}: toto je koncept. Zatím není veřejný."
 
 #: src/features/accounts/customer/Pay.tsx:56
 msgid "{days, plural, one {# day overdue} other {# days overdue}}"
@@ -103,6 +118,10 @@ msgstr "{org} vás zve k podpisu"
 msgid "3 questions"
 msgstr "3 otázky"
 
+#: src/features/accounts/customer/BillingForm.tsx:430
+msgid "8 digits"
+msgstr "8 číslic"
+
 #: src/features/accounts/staff/NewDemoRoute.tsx:214
 msgid "A draft on their account, for you to send after the demo."
 msgstr "Koncept na jejich účtu, který můžete odeslat po ukázce."
@@ -110,6 +129,10 @@ msgstr "Koncept na jejich účtu, který můžete odeslat po ukázce."
 #: src/features/accounts/staff/TaskModals.tsx:64
 msgid "A file"
 msgstr "Soubor"
+
+#: src/features/accounts/customer/BillingForm.tsx:183
+msgid "A KvK number has 8 digits."
+msgstr "Číslo KvK má 8 číslic."
 
 #: src/features/accounts/signing/SignGate.tsx:176
 msgid "A newer invitation may have replaced it. Ask the person who invited you to send it again."
@@ -119,7 +142,7 @@ msgstr "Mohla ji nahradit novější pozvánka. Požádejte toho, kdo vás pozva
 msgid "A photo or scan of your signature, PNG or JPEG."
 msgstr "Fotka nebo sken vašeho podpisu, PNG nebo JPEG."
 
-#: src/features/accounts/staff/DemoRoute.tsx:130
+#: src/features/accounts/staff/DemoRoute.tsx:142
 msgid "A step failed. Retry it once the cause is fixed."
 msgstr "Krok se nezdařil. Po odstranění příčiny to zkuste znovu."
 
@@ -133,28 +156,28 @@ msgstr "Textová odpověď"
 #~ msgid "Account | dembrane"
 #~ msgstr "Účet | dembrane"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:794
+#: src/features/accounts/staff/AccountCardRoute.tsx:814
 msgid "Account created"
 msgstr "Účet byl vytvořen"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:612
-#: src/features/accounts/staff/AccountCardRoute.tsx:795
+#: src/features/accounts/staff/AccountCardRoute.tsx:621
+#: src/features/accounts/staff/AccountCardRoute.tsx:815
 msgid "Account enabled"
 msgstr "Účet aktivován"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:820
+#: src/features/accounts/staff/AccountCardRoute.tsx:842
 msgid "Account manager asked to check in"
 msgstr "Account manažer byl požádán, aby se ozval"
 
 #~ msgid "Account name"
 #~ msgstr "Název účtu"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:797
+#: src/features/accounts/staff/AccountCardRoute.tsx:817
 msgid "Account updated"
 msgstr "Účet aktualizován"
 
 #: src/features/accounts/staff/NewDemoRoute.tsx:124
-#: src/features/accounts/staff/DemoRoute.tsx:118
+#: src/features/accounts/staff/DemoRoute.tsx:130
 #: src/features/accounts/staff/AccountCardRoute.tsx:116
 msgid "Accounts"
 msgstr "Účty"
@@ -187,13 +210,13 @@ msgid "Add your signature first."
 msgstr "Nejprve přidejte svůj podpis."
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:407
-#: src/features/accounts/staff/AccountCardRoute.tsx:758
-#: src/features/accounts/customer/BillingForm.tsx:217
-#: src/features/accounts/customer/BillingForm.tsx:325
+#: src/features/accounts/staff/AccountCardRoute.tsx:767
+#: src/features/accounts/customer/BillingForm.tsx:391
+#: src/features/accounts/customer/BillingForm.tsx:584
 msgid "Address"
 msgstr "Adresa"
 
-#: src/features/accounts/customer/BillingForm.tsx:221
+#: src/features/accounts/customer/BillingForm.tsx:395
 msgid "Address line 2"
 msgstr "2. řádek adresy"
 
@@ -201,10 +224,14 @@ msgstr "2. řádek adresy"
 msgid "All"
 msgstr "Vše"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:306
+#: src/features/accounts/staff/AccountCardRoute.tsx:315
 #: src/features/accounts/customer/Pay.tsx:211
 msgid "Amount"
 msgstr "Částka"
+
+#: src/features/accounts/customer/BillingForm.tsx:481
+msgid "Another way"
+msgstr "Jiným způsobem"
 
 #: src/features/accounts/signing/SignRoute.tsx:968
 msgid "Answer the question"
@@ -214,7 +241,7 @@ msgstr "Odpovězte na otázku"
 msgid "Answered"
 msgstr "Zodpovězeno"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:499
+#: src/features/accounts/staff/AccountCardRoute.tsx:508
 msgid "Approve"
 msgstr "Schválit"
 
@@ -247,9 +274,13 @@ msgid "Back to account"
 msgstr "Zpět na účet"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:258
-#: src/features/accounts/staff/DocumentRoute.tsx:118
+#: src/features/accounts/staff/DocumentRoute.tsx:119
 msgid "Back to the account"
 msgstr "Zpět na účet"
+
+#: src/features/accounts/staff/DemoDraftRoute.tsx:81
+msgid "Back to the demo"
+msgstr "Zpět na demo"
 
 #~ msgid "Before {date}"
 #~ msgstr "Do {date}"
@@ -259,17 +290,17 @@ msgid "Before {due}"
 msgstr "Do {due}"
 
 #: src/features/accounts/format.ts:170
-#: src/features/accounts/staff/AccountCardRoute.tsx:767
-#: src/features/accounts/customer/BillingForm.tsx:168
-#: src/features/accounts/customer/BillingForm.tsx:196
+#: src/features/accounts/staff/AccountCardRoute.tsx:779
+#: src/features/accounts/customer/BillingForm.tsx:299
+#: src/features/accounts/customer/BillingForm.tsx:338
 msgid "Billing details"
 msgstr "Fakturační údaje"
 
-#: src/features/accounts/customer/BillingForm.tsx:158
+#: src/features/accounts/customer/BillingForm.tsx:289
 msgid "Billing details saved"
 msgstr "Fakturační údaje uloženy"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:798
+#: src/features/accounts/staff/AccountCardRoute.tsx:818
 msgid "Billing details updated"
 msgstr "Fakturační údaje aktualizovány"
 
@@ -298,7 +329,7 @@ msgstr "Vytvořit ukázku"
 msgid "building"
 msgstr "vytváří se"
 
-#: src/features/accounts/staff/DemoRoute.tsx:132
+#: src/features/accounts/staff/DemoRoute.tsx:144
 msgid "Building the demo. This page follows along."
 msgstr "Vytváří se demo. Tato stránka sleduje průběh."
 
@@ -313,15 +344,19 @@ msgstr "Odrážky"
 msgid "By bank transfer"
 msgstr "Bankovním převodem"
 
+#: src/features/accounts/customer/BillingForm.tsx:469
+msgid "By email"
+msgstr "E-mailem"
+
 #: src/features/accounts/signing/SignRoute.tsx:927
 msgid "By selecting Sign, you sign electronically. Your electronic signature is as binding as one made by hand."
 msgstr "Výběrem Podepsat podepisujete elektronicky. Váš elektronický podpis je stejně závazný jako vlastnoruční."
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:714
+#: src/features/accounts/staff/AccountCardRoute.tsx:723
 msgid "Call"
 msgstr "Hovor"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:799
+#: src/features/accounts/staff/AccountCardRoute.tsx:819
 msgid "Call booked"
 msgstr "Hovor domluven"
 
@@ -329,7 +364,7 @@ msgstr "Hovor domluven"
 #: src/features/accounts/customer/WhoSigns.tsx:369
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:228
 #: src/features/accounts/customer/Questions.tsx:250
-#: src/features/accounts/customer/BillingForm.tsx:300
+#: src/features/accounts/customer/BillingForm.tsx:551
 msgid "Cancel"
 msgstr "Zrušit"
 
@@ -337,7 +372,7 @@ msgstr "Zrušit"
 msgid "Cancelled"
 msgstr "Zrušeno"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:145
+#: src/features/accounts/staff/DocumentRoute.tsx:146
 #: src/features/accounts/signing/SignRoute.tsx:785
 msgid "Change"
 msgstr "Změnit"
@@ -350,6 +385,10 @@ msgstr "Upravit koncept"
 msgid "Check out the demo we made for you"
 msgstr "Prohlédněte si ukázku, kterou jsme pro vás připravili"
 
+#: src/features/accounts/customer/BillingForm.tsx:186
+msgid "Check this. It should look like {example}."
+msgstr "Zkontrolujte toto pole. Mělo by vypadat takto: {example}."
+
 #: src/features/accounts/signing/SignGate.tsx:181
 msgid "Check your connection and try again."
 msgstr "Zkontrolujte připojení a zkuste to znovu."
@@ -359,7 +398,7 @@ msgid "Check your name, and we'll email you a code to open the document. You don
 msgstr "Zkontrolujte své jméno a pošleme vám e-mailem kód k otevření dokumentu. Heslo nepotřebujete."
 
 #. placeholder {0}: formatDate(task.next_reminder_at, i18n.locale)
-#: src/features/accounts/staff/AccountCardRoute.tsx:454
+#: src/features/accounts/staff/AccountCardRoute.tsx:463
 msgid "Check-in due {0}"
 msgstr "Ozvat se zákazníkovi: {0}"
 
@@ -367,9 +406,13 @@ msgstr "Ozvat se zákazníkovi: {0}"
 msgid "Checkbox"
 msgstr "Zaškrtávací políčko"
 
-#: src/features/accounts/customer/InvoiceDelivery.tsx:91
+#: src/features/accounts/customer/BillingForm.tsx:494
 msgid "Checking the Peppol directory…"
 msgstr "Kontrolujeme adresář Peppol…"
+
+#: src/features/accounts/customer/BillingForm.tsx:351
+msgid "Choose a country"
+msgstr "Vyberte zemi"
 
 #: src/features/accounts/customer/NextSteps.tsx:647
 msgid "Choose a file"
@@ -394,6 +437,7 @@ msgstr "Pro pokračování vyberte jednu možnost."
 #: src/features/accounts/customer/WhoSigns.tsx:277
 #: src/features/accounts/customer/WhoSigns.tsx:309
 #: src/features/accounts/customer/WhoSigns.tsx:346
+#: src/features/accounts/customer/BillingForm.tsx:181
 msgid "Choose one."
 msgstr "Vyberte jednu možnost."
 
@@ -408,7 +452,7 @@ msgstr "Vyberte, kdo podepisuje"
 msgid "Churned"
 msgstr "Ztraceno"
 
-#: src/features/accounts/customer/BillingForm.tsx:228
+#: src/features/accounts/customer/BillingForm.tsx:402
 msgid "City"
 msgstr "Město"
 
@@ -448,14 +492,17 @@ msgstr "Jméno kontaktu"
 #~ msgid "Continue"
 #~ msgstr "Pokračovat"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:224
 #: src/features/accounts/customer/Pay.tsx:237
 msgid "Copied"
 msgstr "Zkopírováno"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:224
 #: src/features/accounts/customer/Pay.tsx:237
 msgid "Copy"
 msgstr "Kopírovat"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:222
 #: src/features/accounts/customer/Pay.tsx:235
 msgid "Copy {label}"
 msgstr "Kopírovat {label}"
@@ -463,11 +510,11 @@ msgstr "Kopírovat {label}"
 #~ msgid "Copy IBAN"
 #~ msgstr ""
 
-#: src/features/accounts/staff/DemoRoute.tsx:54
+#: src/features/accounts/staff/DemoRoute.tsx:55
 msgid "Corpus"
 msgstr "Korpus"
 
-#: src/features/accounts/customer/BillingForm.tsx:232
+#: src/features/accounts/customer/BillingForm.tsx:350
 msgid "Country"
 msgstr "Země"
 
@@ -484,7 +531,7 @@ msgid "Custom"
 msgstr "Na míru"
 
 #: src/features/accounts/format.ts:120
-#: src/features/accounts/staff/AccountCardRoute.tsx:861
+#: src/features/accounts/staff/AccountCardRoute.tsx:888
 #: src/features/accounts/customer/Questions.tsx:171
 msgid "Customer"
 msgstr "Zákazník"
@@ -492,7 +539,7 @@ msgstr "Zákazník"
 #~ msgid "Customer accounts: what each one still has to do, and what waits on us."
 #~ msgstr ""
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:815
+#: src/features/accounts/staff/AccountCardRoute.tsx:837
 msgid "Customer emailed"
 msgstr "Zákazníkovi odeslán e-mail"
 
@@ -512,26 +559,40 @@ msgstr "Datum"
 msgid "Declined"
 msgstr "Odmítnuto"
 
-#: src/features/accounts/staff/DemoRoute.tsx:80
-#: src/features/accounts/staff/AccountCardRoute.tsx:722
+#: src/features/accounts/staff/DemoRoute.tsx:87
+#: src/features/accounts/staff/DemoDraftRoute.tsx:42
+#: src/features/accounts/staff/AccountCardRoute.tsx:731
 msgid "Demo"
 msgstr "Demo"
 
-#: src/features/accounts/staff/DemoRoute.tsx:80
+#: src/features/accounts/staff/DemoRoute.tsx:87
+#: src/features/accounts/staff/DemoDraftRoute.tsx:42
 msgid "Demo | dembrane"
 msgstr "Demo | dembrane"
+
+#: src/features/accounts/staff/DemoDraftRoute.tsx:89
+msgid "Demo draft"
+msgstr "Koncept dema"
 
 #: src/features/accounts/staff/NewDemoRoute.tsx:176
 msgid "Demo language"
 msgstr "Jazyk dema"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:800
+#: src/features/accounts/staff/AccountCardRoute.tsx:820
+msgid "Demo opened by staff"
+msgstr "Demo otevřel zaměstnanec"
+
+#: src/features/accounts/staff/AccountCardRoute.tsx:821
 msgid "Demo published"
 msgstr "Ukázka zveřejněna"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:801
+#: src/features/accounts/staff/AccountCardRoute.tsx:822
 msgid "Demo seeded"
 msgstr "Demo naplněno daty"
+
+#: src/features/accounts/staff/AccountCardRoute.tsx:823
+msgid "Demo unpublished"
+msgstr "Zveřejnění dema zrušeno"
 
 #: src/features/accounts/staff/AccountsPanel.tsx:209
 msgid "Demos"
@@ -547,31 +608,31 @@ msgstr "Potřebujete vlastní posouzení vlivu na ochranu osobních údajů (DPI
 
 #: src/features/accounts/format.ts:46
 #: src/features/accounts/staff/UploadPdfModal.tsx:138
-#: src/features/accounts/staff/AccountCardRoute.tsx:300
+#: src/features/accounts/staff/AccountCardRoute.tsx:309
 msgid "Document"
 msgstr "Dokument"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:802
+#: src/features/accounts/staff/AccountCardRoute.tsx:824
 msgid "Document declined"
 msgstr "Dokument odmítnut"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:803
+#: src/features/accounts/staff/AccountCardRoute.tsx:825
 msgid "Document drafted"
 msgstr "Dokument rozpracován"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:805
+#: src/features/accounts/staff/AccountCardRoute.tsx:827
 msgid "Document sent"
 msgstr "Dokument odeslán"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:806
+#: src/features/accounts/staff/AccountCardRoute.tsx:828
 msgid "Document signed"
 msgstr "Dokument podepsán"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:811
+#: src/features/accounts/staff/AccountCardRoute.tsx:833
 msgid "Document viewed"
 msgstr "Dokument zobrazen"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:812
+#: src/features/accounts/staff/AccountCardRoute.tsx:834
 msgid "Document withdrawn"
 msgstr "Dokument stažen zpět"
 
@@ -605,15 +666,15 @@ msgstr "DPA"
 
 #: src/features/accounts/format.ts:61
 #: src/features/accounts/staff/FieldEditorRoute.tsx:268
-#: src/features/accounts/staff/AccountCardRoute.tsx:350
+#: src/features/accounts/staff/AccountCardRoute.tsx:359
 msgid "Draft"
 msgstr "Koncept"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:810
+#: src/features/accounts/staff/AccountCardRoute.tsx:832
 msgid "Draft changed"
 msgstr "Koncept upraven"
 
-#: src/features/accounts/staff/DemoRoute.tsx:58
+#: src/features/accounts/staff/DemoRoute.tsx:59
 msgid "Draft ready"
 msgstr "Koncept připraven"
 
@@ -655,11 +716,11 @@ msgstr "Nejprve nakreslete do pole svůj podpis."
 msgid "Due {due}"
 msgstr "Splatné {due}"
 
-#: src/features/accounts/customer/BillingForm.tsx:177
+#: src/features/accounts/customer/BillingForm.tsx:308
 msgid "Edit"
 msgstr "Upravit"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:713
+#: src/features/accounts/staff/AccountCardRoute.tsx:722
 msgid "Email"
 msgstr "E-mail"
 
@@ -676,11 +737,11 @@ msgstr "E-mail odeslán"
 msgid "Email the customer"
 msgstr "Napsat zákazníkovi"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:617
+#: src/features/accounts/staff/AccountCardRoute.tsx:626
 msgid "Enable account"
 msgstr "Aktivovat účet"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:574
+#: src/features/accounts/staff/AccountCardRoute.tsx:583
 msgid "Enable it to push offers and tasks. They get an Account page with a billing details step."
 msgstr "Aktivujte pro odesílání nabídek a úkolů. Získají stránku Účet s krokem pro fakturační údaje."
 
@@ -700,7 +761,7 @@ msgstr "Příklad události nebo zákazníka"
 #~ msgid "Explore your demo"
 #~ msgstr "Prohlédněte si svou ukázku"
 
-#: src/features/accounts/staff/DemoRoute.tsx:55
+#: src/features/accounts/staff/DemoRoute.tsx:56
 msgid "Extraction"
 msgstr "Extrakce"
 
@@ -779,7 +840,8 @@ msgstr "Vyplňte číslo objednávky"
 msgid "Fill in your VAT number"
 msgstr "Vyplňte DIČ"
 
-#: src/features/accounts/customer/BillingForm.tsx:95
+#: src/features/accounts/customer/BillingForm.tsx:181
+#: src/features/accounts/customer/BillingForm.tsx:187
 msgid "Fill this in."
 msgstr "Vyplňte toto pole."
 
@@ -789,6 +851,14 @@ msgstr "Jméno"
 
 #~ msgid "For e-invoicing"
 #~ msgstr "Pro elektronickou fakturaci"
+
+#: src/features/accounts/customer/BillingForm.tsx:177
+msgid "For example {example}"
+msgstr "Například {example}"
+
+#: src/features/accounts/customer/BillingForm.tsx:482
+msgid "For example an invoice portal"
+msgstr "Například fakturační portál"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:218
 msgid "For the attention of"
@@ -829,6 +899,10 @@ msgstr "Přejít na úkoly"
 msgid "Hide finished"
 msgstr "Skrýt dokončené"
 
+#: src/features/accounts/customer/BillingForm.tsx:458
+msgid "How do you want to get invoices?"
+msgstr "Jak chcete dostávat faktury?"
+
 #: src/features/accounts/signing/SignGate.tsx:432
 msgid "How we handle your details"
 msgstr "Jak nakládáme s vašimi údaji"
@@ -846,7 +920,11 @@ msgstr "Pokud ne, smlouva o zpracování osobních údajů se stane samostatným
 msgid "If you do, we get in touch to work on it with you."
 msgstr "Pokud ano, ozveme se a připravíme ho společně s vámi."
 
-#: src/features/accounts/customer/BillingForm.tsx:272
+#: src/features/accounts/customer/BillingForm.tsx:453
+msgid "If you have one"
+msgstr "Pokud nějaké máte"
+
+#: src/features/accounts/customer/BillingForm.tsx:525
 msgid "If your finance team uses one"
 msgstr "Pokud jej vaše finanční oddělení používá"
 
@@ -893,13 +971,13 @@ msgstr "Faktura"
 msgid "Invoice {0}"
 msgstr "Faktura {0}"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:813
+#: src/features/accounts/staff/AccountCardRoute.tsx:835
 msgid "Invoice added"
 msgstr "Faktura přidána"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:757
-#: src/features/accounts/customer/BillingForm.tsx:211
-#: src/features/accounts/customer/BillingForm.tsx:326
+#: src/features/accounts/staff/AccountCardRoute.tsx:766
+#: src/features/accounts/customer/BillingForm.tsx:385
+#: src/features/accounts/customer/BillingForm.tsx:585
 msgid "Invoice email"
 msgstr "Fakturační e-mail"
 
@@ -907,15 +985,31 @@ msgstr "Fakturační e-mail"
 msgid "Invoice sent"
 msgstr "Faktura odeslána"
 
-#: src/features/accounts/customer/InvoiceDelivery.tsx:137
+#: src/features/accounts/staff/AccountCardRoute.tsx:810
+msgid "Invoice waits for the billing details"
+msgstr "Faktura čeká na fakturační údaje"
+
+#: src/features/accounts/staff/AccountCardRoute.tsx:807
+msgid "Invoice waits for the billing details and the DPA signature"
+msgstr "Faktura čeká na fakturační údaje a na podpis smlouvy o zpracování osobních údajů"
+
+#: src/features/accounts/staff/AccountCardRoute.tsx:809
+msgid "Invoice waits for the DPA signature"
+msgstr "Faktura čeká na podpis smlouvy o zpracování osobních údajů"
+
+#: src/features/accounts/customer/BillingForm.tsx:476
+msgid "Invoices arrive in your accounting software"
+msgstr "Faktury přicházejí do vašeho účetního softwaru"
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:133
 msgid "Invoices arrive in your accounting software via Peppol ({id})."
 msgstr "Faktury přicházejí do vašeho účetního softwaru přes Peppol ({id})."
 
-#: src/features/accounts/customer/InvoiceDelivery.tsx:144
+#: src/features/accounts/customer/InvoiceDelivery.tsx:140
 msgid "Invoices go by email to {email}, not via Peppol ({id})."
 msgstr "Faktury chodí e-mailem na {email}, ne přes Peppol ({id})."
 
-#: src/features/accounts/customer/InvoiceDelivery.tsx:148
+#: src/features/accounts/customer/InvoiceDelivery.tsx:144
 msgid "Invoices go by email, not via Peppol ({id})."
 msgstr "Faktury chodí e-mailem, ne přes Peppol ({id})."
 
@@ -923,15 +1017,23 @@ msgstr "Faktury chodí e-mailem, ne přes Peppol ({id})."
 #~ msgid "Invoices go to"
 #~ msgstr "Faktury se posílají na"
 
-#: src/features/accounts/customer/InvoiceDelivery.tsx:141
+#: src/features/accounts/customer/InvoiceDelivery.tsx:128
+#~ msgid "Invoices go to the customer's invoice portal: {portal}. Add each one there by hand."
+#~ msgstr "Faktury jdou na fakturační portál zákazníka: {portal}. Každou tam přidejte ručně."
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:123
+#~ msgid "Invoices go to your invoice portal: {portal}. Someone at dembrane adds each one by hand."
+#~ msgstr "Faktury jdou na váš fakturační portál: {portal}. Někdo z dembrane každou přidá ručně."
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:137
 msgid "Invoices go via Peppol ({id})."
 msgstr "Faktury chodí přes Peppol ({id})."
 
-#: src/features/accounts/customer/BillingForm.tsx:113
+#: src/features/accounts/customer/BillingForm.tsx:224
 msgid "Invoices will come by email"
 msgstr "Faktury budou chodit e-mailem"
 
-#: src/features/accounts/customer/BillingForm.tsx:114
+#: src/features/accounts/customer/BillingForm.tsx:225
 msgid "Invoices will come via Peppol"
 msgstr "Faktury budou chodit přes Peppol"
 
@@ -939,28 +1041,34 @@ msgstr "Faktury budou chodit přes Peppol"
 msgid "It is a separate document. Some organisations have it signed by someone else, such as their data protection officer."
 msgstr "Je to samostatný dokument. Některé organizace ho nechávají podepsat někým jiným, například pověřencem pro ochranu osobních údajů."
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:761
-#: src/features/accounts/customer/BillingForm.tsx:329
+#: src/features/accounts/staff/AccountCardRoute.tsx:773
+#: src/features/accounts/customer/BillingForm.tsx:438
+#: src/features/accounts/customer/BillingForm.tsx:588
 msgid "KBO number"
 msgstr "Číslo KBO"
 
 #: src/features/accounts/customer/BillingForm.tsx:257
-msgid "KBO number (Belgium)"
-msgstr "Číslo KBO (Belgie)"
+#~ msgid "KBO number (Belgium)"
+#~ msgstr "Číslo KBO (Belgie)"
 
 #: src/features/accounts/staff/UploadPdfModal.tsx:131
 #: src/features/accounts/staff/FieldEditorRoute.tsx:376
 msgid "Kind"
 msgstr "Typ"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:760
-#: src/features/accounts/customer/BillingForm.tsx:328
+#: src/features/accounts/staff/AccountCardRoute.tsx:772
+#: src/features/accounts/customer/BillingForm.tsx:429
+#: src/features/accounts/customer/BillingForm.tsx:587
 msgid "KvK number"
 msgstr "Číslo KvK"
 
 #: src/features/accounts/customer/BillingForm.tsx:254
-msgid "KvK number (Netherlands)"
-msgstr "Číslo KvK (Nizozemsko)"
+#~ msgid "KvK number (Netherlands)"
+#~ msgstr "Číslo KvK (Nizozemsko)"
+
+#: src/features/accounts/customer/BillingForm.tsx:406
+#~ msgid "KvK number or VAT number: fill in at least one"
+#~ msgstr "Číslo KvK nebo DIČ: vyplňte alespoň jedno"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:389
 msgid "Label"
@@ -968,7 +1076,7 @@ msgstr "Štítek"
 
 #: src/features/accounts/staff/UploadPdfModal.tsx:145
 #: src/features/accounts/staff/PushOfferModal.tsx:190
-#: src/features/accounts/staff/AccountCardRoute.tsx:596
+#: src/features/accounts/staff/AccountCardRoute.tsx:605
 msgid "Language"
 msgstr "Jazyk"
 
@@ -983,11 +1091,11 @@ msgstr "Později"
 #~ msgid "Leave feedback"
 #~ msgstr "Zanechat zpětnou vazbu"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:756
+#: src/features/accounts/staff/AccountCardRoute.tsx:765
 msgid "Legal name"
 msgstr "Právní název"
 
-#: src/features/accounts/customer/BillingForm.tsx:207
+#: src/features/accounts/customer/BillingForm.tsx:381
 msgid "Legal name of your organisation"
 msgstr "Právní název vaší organizace"
 
@@ -1003,7 +1111,7 @@ msgstr "Celkem za položku"
 msgid "Lines"
 msgstr "Položky"
 
-#: src/features/accounts/staff/DemoRoute.tsx:256
+#: src/features/accounts/staff/DemoRoute.tsx:284
 msgid "live"
 msgstr "aktivní"
 
@@ -1039,11 +1147,15 @@ msgstr "Název"
 msgid "Name in the greeting"
 msgstr "Jméno v oslovení"
 
+#: src/features/accounts/customer/BillingForm.tsx:511
+#~ msgid "Name or link of the portal"
+#~ msgstr "Název portálu nebo odkaz na něj"
+
 #: src/features/accounts/staff/UploadPdfModal.tsx:159
 msgid "Needs a signature"
 msgstr "Vyžaduje podpis"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:702
+#: src/features/accounts/staff/AccountCardRoute.tsx:711
 msgid "Needs form and demo"
 msgstr "Vyžaduje formulář potřeb a demo"
 
@@ -1065,7 +1177,7 @@ msgid "New project"
 msgstr "Nový projekt"
 
 #: src/features/accounts/staff/TaskModals.tsx:41
-#: src/features/accounts/staff/AccountCardRoute.tsx:415
+#: src/features/accounts/staff/AccountCardRoute.tsx:424
 msgid "New task"
 msgstr "Nový úkol"
 
@@ -1108,16 +1220,24 @@ msgstr "Žádný účet"
 #~ msgid "No accounts in this stage."
 #~ msgstr ""
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:293
+#: src/features/accounts/customer/BillingForm.tsx:370
+msgid "No country found"
+msgstr "Žádná země nenalezena"
+
+#: src/features/accounts/staff/AccountCardRoute.tsx:302
 msgid "No documents yet."
 msgstr "Zatím žádné dokumenty."
+
+#: src/features/accounts/staff/DocumentRoute.tsx:199
+msgid "No email went to the customer. Send them these links in your own email."
+msgstr "Zákazníkovi neodešel žádný e-mail. Pošlete mu tyto odkazy ve vlastním e-mailu."
 
 #: src/features/accounts/staff/UploadPdfModal.tsx:114
 #: src/features/accounts/customer/NextSteps.tsx:652
 msgid "No file chosen"
 msgstr "Není vybrán žádný soubor"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:705
+#: src/features/accounts/staff/AccountCardRoute.tsx:714
 msgid "No needs form or demo linked."
 msgstr "Není propojen žádný formulář potřeb ani demo."
 
@@ -1132,7 +1252,7 @@ msgstr "Zatím žádné otázky."
 #~ msgid "No stage"
 #~ msgstr ""
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:422
+#: src/features/accounts/staff/AccountCardRoute.tsx:431
 msgid "No tasks."
 msgstr "Žádné úkoly."
 
@@ -1144,23 +1264,23 @@ msgstr "Ne, podepíše to někdo jiný"
 msgid "Nobody on this account has an email address yet."
 msgstr "Nikdo na tomto účtu zatím nemá e-mailovou adresu."
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:714
+#: src/features/accounts/staff/AccountCardRoute.tsx:723
 msgid "Not booked"
 msgstr "Nerezervováno"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:782
+#: src/features/accounts/staff/AccountCardRoute.tsx:794
 msgid "Not given yet."
 msgstr "Zatím nezadáno."
 
 #: src/features/accounts/customer/InvoiceDelivery.tsx:104
-msgid "Not in the Peppol directory: invoices go by email."
-msgstr "Není v adresáři Peppol: faktury chodí e-mailem."
+#~ msgid "Not in the Peppol directory: invoices go by email."
+#~ msgstr "Není v adresáři Peppol: faktury chodí e-mailem."
 
-#: src/features/accounts/staff/DemoRoute.tsx:258
+#: src/features/accounts/staff/DemoRoute.tsx:286
 msgid "not live until you publish"
 msgstr "není aktivní, dokud nezveřejníte"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:339
+#: src/features/accounts/staff/AccountCardRoute.tsx:348
 msgid "Not sent"
 msgstr "Neodesláno"
 
@@ -1193,12 +1313,19 @@ msgstr "Nabídka v konceptu"
 msgid "Offer language"
 msgstr "Jazyk nabídky"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:206
+msgid "Offer link"
+msgstr "Odkaz na nabídku"
+
 #: src/features/accounts/format.ts:111
 msgid "Offer sent"
 msgstr "Nabídka odeslána"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:158
+msgid "Offer sent. It is in the customer's account; no email went out."
+msgstr "Nabídka odeslána. Je v účtu zákazníka; žádný e-mail neodešel."
+
 #: src/features/accounts/staff/PushOfferModal.tsx:157
-#: src/features/accounts/staff/DocumentRoute.tsx:157
 msgid "Offer sent. The customer sees it the next time they log in."
 msgstr "Nabídka odeslána. Zákazník ji uvidí, jakmile se příště přihlásí."
 
@@ -1209,11 +1336,11 @@ msgstr "Nabídka odeslána. Zákazník ji uvidí, jakmile se příště přihlá
 msgid "Offers, agreements and invoices appear here once we send them."
 msgstr "Nabídky, smlouvy a faktury se zde zobrazí, jakmile je odešleme."
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:816
+#: src/features/accounts/staff/AccountCardRoute.tsx:838
 msgid "Onboarding tasks added"
 msgstr "Přidány úvodní úkoly"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:817
+#: src/features/accounts/staff/AccountCardRoute.tsx:839
 msgid "Onboarding tasks withdrawn"
 msgstr "Úvodní úkoly staženy"
 
@@ -1226,10 +1353,10 @@ msgid "Online"
 msgstr "Online"
 
 #: src/features/accounts/customer/BillingForm.tsx:277
-msgid "Only if you get invoices through Peppol"
-msgstr "Jen pokud dostáváte faktury přes Peppol"
+#~ msgid "Only if you get invoices through Peppol"
+#~ msgstr "Jen pokud dostáváte faktury přes Peppol"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:189
+#: src/features/accounts/staff/DocumentRoute.tsx:190
 msgid "Only staff see this draft. When you send it, it gets that day's date and is valid for 14 days."
 msgstr "Tento koncept vidí jen zaměstnanci. Po odeslání dostane datum toho dne a platí 14 dní."
 
@@ -1249,7 +1376,7 @@ msgstr "Otevřeno"
 msgid "Open PDF"
 msgstr "Otevřít PDF"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:182
+#: src/features/accounts/staff/DocumentRoute.tsx:183
 #: src/features/accounts/staff/AccountCardRoute.tsx:230
 msgid "Open signed PDF"
 msgstr "Otevřít podepsané PDF"
@@ -1268,6 +1395,11 @@ msgstr "Otevřít ukázku"
 #: src/features/accounts/signing/SignGate.tsx:411
 msgid "Open the document"
 msgstr "Otevřít dokument"
+
+#. placeholder {0}: p.language.toUpperCase()
+#: src/features/accounts/staff/DemoRoute.tsx:268
+msgid "Open the draft ({0})"
+msgstr "Otevřít koncept ({0})"
 
 #: src/features/accounts/pdf/PdfPages.tsx:105
 msgid "Open the PDF"
@@ -1343,7 +1475,7 @@ msgstr "Nepovinné. Úkol zůstane zašedlý, dokud nebude tento dokument podeps
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:406
 #: src/features/accounts/staff/AccountsPanel.tsx:112
-#: src/features/accounts/customer/BillingForm.tsx:324
+#: src/features/accounts/customer/BillingForm.tsx:583
 msgid "Organisation"
 msgstr "Organizace"
 
@@ -1413,9 +1545,9 @@ msgstr "Zaplatit online"
 #~ msgid "Payment details"
 #~ msgstr "Platební údaje"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:763
-#: src/features/accounts/customer/BillingForm.tsx:276
-#: src/features/accounts/customer/BillingForm.tsx:331
+#: src/features/accounts/staff/AccountCardRoute.tsx:775
+#: src/features/accounts/customer/BillingForm.tsx:498
+#: src/features/accounts/customer/BillingForm.tsx:590
 msgid "Peppol ID"
 msgstr "Peppol ID"
 
@@ -1427,19 +1559,19 @@ msgstr "Vyberte si čas, který vám vyhovuje."
 msgid "Pick a time. {host} reads your account before the call."
 msgstr "Vyberte si čas. {host} se před hovorem podívá na váš účet."
 
-#: src/features/accounts/staff/DocumentRoute.tsx:174
+#: src/features/accounts/staff/DocumentRoute.tsx:175
 #: src/features/accounts/staff/AccountCardRoute.tsx:205
 msgid "Place fields"
 msgstr "Umístit pole"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:409
-#: src/features/accounts/staff/AccountCardRoute.tsx:762
-#: src/features/accounts/customer/BillingForm.tsx:271
-#: src/features/accounts/customer/BillingForm.tsx:330
+#: src/features/accounts/staff/AccountCardRoute.tsx:774
+#: src/features/accounts/customer/BillingForm.tsx:524
+#: src/features/accounts/customer/BillingForm.tsx:589
 msgid "PO number"
 msgstr "Číslo objednávky"
 
-#: src/features/accounts/customer/BillingForm.tsx:224
+#: src/features/accounts/customer/BillingForm.tsx:398
 msgid "Postal code"
 msgstr "PSČ"
 
@@ -1453,7 +1585,7 @@ msgid "Progress"
 msgstr "Průběh"
 
 #. placeholder {0}: p.language.toUpperCase()
-#: src/features/accounts/staff/DemoRoute.tsx:272
+#: src/features/accounts/staff/DemoRoute.tsx:300
 msgid "Project in the dashboard ({0})"
 msgstr "Projekt na přehledu ({0})"
 
@@ -1466,34 +1598,34 @@ msgid "Prospects"
 msgstr "Potenciální zákazníci"
 
 #. placeholder {0}: l.language.toUpperCase()
-#: src/features/accounts/staff/DemoRoute.tsx:252
+#: src/features/accounts/staff/DemoRoute.tsx:280
 msgid "Public demo ({0})"
 msgstr "Veřejné demo ({0})"
 
-#: src/features/accounts/staff/DemoRoute.tsx:342
+#: src/features/accounts/staff/DemoRoute.tsx:395
 msgid "Publish"
 msgstr "Publikovat"
 
 #. placeholder {0}: formatDateTime(demo.published_at, i18n.locale)
-#: src/features/accounts/staff/DemoRoute.tsx:124
+#: src/features/accounts/staff/DemoRoute.tsx:136
 msgid "Published {0}."
 msgstr "Publikováno {0}."
 
 #. placeholder {0}: demo.contact_email
-#: src/features/accounts/staff/DemoRoute.tsx:313
+#: src/features/accounts/staff/DemoRoute.tsx:342
 msgid "Published. {0} has the sign-in invitation."
 msgstr "Publikováno. Pozvánka k přihlášení byla odeslána na {0}."
 
-#: src/features/accounts/staff/DemoRoute.tsx:317
+#: src/features/accounts/staff/DemoRoute.tsx:346
 msgid "Published. No email went out; share the demo link yourself."
 msgstr "Publikováno. Žádný e-mail neodešel; odkaz na demo sdílejte sami."
 
 #. placeholder {0}: demo.contact_email
-#: src/features/accounts/staff/DemoRoute.tsx:330
+#: src/features/accounts/staff/DemoRoute.tsx:382
 msgid "Publishing emails {0} a sign-in code."
 msgstr "Při publikování se na {0} odešle přihlašovací kód."
 
-#: src/features/accounts/staff/DemoRoute.tsx:331
+#: src/features/accounts/staff/DemoRoute.tsx:383
 msgid "Publishing makes the demo live. No email goes out."
 msgstr "Publikováním se demo aktivuje. Žádný e-mail neodejde."
 
@@ -1520,15 +1652,15 @@ msgstr "Uveďte referenci u převodu, abychom mohli vaši platbu spárovat."
 msgid "Quantity"
 msgstr "Množství"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:830
+#: src/features/accounts/staff/AccountCardRoute.tsx:852
 msgid "Question answered"
 msgstr "Dotaz zodpovězen"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:828
+#: src/features/accounts/staff/AccountCardRoute.tsx:850
 msgid "Question closed"
 msgstr "Dotaz uzavřen"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:829
+#: src/features/accounts/staff/AccountCardRoute.tsx:851
 msgid "Question opened"
 msgstr "Dotaz otevřen"
 
@@ -1545,7 +1677,7 @@ msgstr "Dotazy"
 msgid "Reads \"{0} x dembrane\""
 msgstr "Znění: „{0} x dembrane“"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:814
+#: src/features/accounts/staff/AccountCardRoute.tsx:836
 msgid "Ready to invoice"
 msgstr "Připraveno k fakturaci"
 
@@ -1556,7 +1688,7 @@ msgstr "připraveno ke zveřejnění"
 #~ msgid "Record a test conversation"
 #~ msgstr "Nahrajte zkušební rozhovor"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:712
+#: src/features/accounts/staff/AccountCardRoute.tsx:721
 #: src/features/accounts/customer/Pay.tsx:217
 msgid "Reference"
 msgstr "Reference"
@@ -1565,10 +1697,10 @@ msgstr "Reference"
 #~ msgstr ""
 
 #: src/features/accounts/customer/BillingForm.tsx:248
-msgid "Registration number: fill in at least one"
-msgstr "Registrační číslo: vyplňte alespoň jedno"
+#~ msgid "Registration number: fill in at least one"
+#~ msgstr "Registrační číslo: vyplňte alespoň jedno"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:516
+#: src/features/accounts/staff/AccountCardRoute.tsx:525
 msgid "Remind"
 msgstr "Připomenout"
 
@@ -1602,12 +1734,12 @@ msgstr "Odpovědět a uzavřít"
 msgid "Required"
 msgstr "Povinné"
 
-#: src/features/accounts/staff/DemoRoute.tsx:57
-#: src/features/accounts/staff/DemoRoute.tsx:297
+#: src/features/accounts/staff/DemoRoute.tsx:58
+#: src/features/accounts/staff/DemoRoute.tsx:325
 msgid "Research"
 msgstr "Výzkum"
 
-#: src/features/accounts/staff/DemoRoute.tsx:216
+#: src/features/accounts/staff/DemoRoute.tsx:229
 msgid "Retry"
 msgstr "Zkusit znovu"
 
@@ -1645,7 +1777,7 @@ msgstr "Role"
 msgid "Save"
 msgstr "Uložit"
 
-#: src/features/accounts/customer/BillingForm.tsx:288
+#: src/features/accounts/customer/BillingForm.tsx:536
 msgid "Save billing details"
 msgstr "Uložit fakturační údaje"
 
@@ -1675,7 +1807,7 @@ msgstr "Podívejte se, jak dembrane funguje, od založení projektu po čtení t
 msgid "See popcorn, tensions and the map on sample conversations written for your organisation."
 msgstr "Podívejte se na popcorn, napětí a mapu u ukázkových rozhovorů připravených pro vaši organizaci."
 
-#: src/features/accounts/staff/DemoRoute.tsx:59
+#: src/features/accounts/staff/DemoRoute.tsx:60
 msgid "Seeding"
 msgstr "Příprava dat"
 
@@ -1697,23 +1829,23 @@ msgstr "Poslat nový kód"
 
 #: src/features/accounts/staff/TaskModals.tsx:135
 #: src/features/accounts/staff/TaskModals.tsx:167
-#: src/features/accounts/staff/AccountCardRoute.tsx:492
+#: src/features/accounts/staff/AccountCardRoute.tsx:501
 msgid "Send back"
 msgstr "Vrátit zpět"
 
-#: src/features/accounts/customer/InvoiceDelivery.tsx:159
+#: src/features/accounts/customer/InvoiceDelivery.tsx:155
 msgid "Send by email instead"
 msgstr "Posílat raději e-mailem"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:262
-#: src/features/accounts/staff/DocumentRoute.tsx:164
+#: src/features/accounts/staff/DocumentRoute.tsx:165
 msgid "Send offer"
 msgstr "Odeslat nabídku"
 
 #~ msgid "Send the link"
 #~ msgstr "Odeslat odkaz"
 
-#: src/features/accounts/staff/DemoRoute.tsx:327
+#: src/features/accounts/staff/DemoRoute.tsx:379
 msgid "Send the sign-in invitation"
 msgstr "Odeslat pozvánku k přihlášení"
 
@@ -1744,7 +1876,7 @@ msgid "Sent"
 msgstr "Odesláno"
 
 #. placeholder {0}: formatDate(d.sent_at, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:89
+#: src/features/accounts/staff/DocumentRoute.tsx:90
 msgid "Sent {0}"
 msgstr "Odesláno {0}"
 
@@ -1789,8 +1921,8 @@ msgstr "Odesláno. Zákazník má úkol k podpisu."
 msgid "Set up a project of your own for your first real session."
 msgstr "Založte si vlastní projekt pro své první skutečné setkání."
 
-#: src/features/accounts/staff/DemoRoute.tsx:301
-#: src/features/accounts/staff/AccountCardRoute.tsx:875
+#: src/features/accounts/staff/DemoRoute.tsx:329
+#: src/features/accounts/staff/AccountCardRoute.tsx:902
 msgid "Show all"
 msgstr "Zobrazit vše"
 
@@ -1799,8 +1931,8 @@ msgstr "Zobrazit vše"
 msgid "Show finished ({0})"
 msgstr "Zobrazit dokončené ({0})"
 
-#: src/features/accounts/staff/DemoRoute.tsx:302
-#: src/features/accounts/staff/AccountCardRoute.tsx:875
+#: src/features/accounts/staff/DemoRoute.tsx:330
+#: src/features/accounts/staff/AccountCardRoute.tsx:902
 msgid "Show less"
 msgstr "Zobrazit méně"
 
@@ -1829,11 +1961,15 @@ msgstr "Odhlásit se a pokračovat"
 msgid "Sign the data processing agreement"
 msgstr "Podepsat smlouvu o zpracování osobních údajů"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:205
+msgid "Sign-in link"
+msgstr "Odkaz pro přihlášení"
+
 #: src/features/accounts/staff/FieldEditorRoute.tsx:68
 msgid "Signature"
 msgstr "Podpis"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:804
+#: src/features/accounts/staff/AccountCardRoute.tsx:826
 msgid "Signature fields placed"
 msgstr "Pole pro podpis umístěna"
 
@@ -1843,19 +1979,19 @@ msgid "Signed"
 msgstr "Podepsáno"
 
 #. placeholder {0}: formatDate(d.signed_at, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:87
+#: src/features/accounts/staff/DocumentRoute.tsx:88
 msgid "Signed {0}"
 msgstr "Podepsáno {0}"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:807
+#: src/features/accounts/staff/AccountCardRoute.tsx:829
 msgid "Signer named"
 msgstr "Jméno podepisujícího uvedeno"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:808
+#: src/features/accounts/staff/AccountCardRoute.tsx:830
 msgid "Signer reminded"
 msgstr "Podepisující upozorněn"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:809
+#: src/features/accounts/staff/AccountCardRoute.tsx:831
 msgid "Signer replaced"
 msgstr "Podepisující nahrazen"
 
@@ -1875,6 +2011,10 @@ msgstr "Aby byl záznam o podpisu čitelný"
 msgid "Some required fields are still empty."
 msgstr "Některá povinná pole jsou stále prázdná."
 
+#: src/features/accounts/customer/BillingForm.tsx:487
+#~ msgid "Someone at dembrane adds each invoice there by hand"
+#~ msgstr "Někdo z dembrane tam každou fakturu přidá ručně"
+
 #: src/features/accounts/customer/WhoSigns.tsx:283
 #: src/features/accounts/customer/WhoSigns.tsx:322
 msgid "Someone else"
@@ -1892,19 +2032,19 @@ msgstr "Podepisuje osoba oprávněná odsouhlasit zpracování údajů za vaši 
 msgid "Something went wrong"
 msgstr "Něco se pokazilo"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:863
+#: src/features/accounts/staff/AccountCardRoute.tsx:890
 msgid "Staff"
 msgstr "Personál"
 
 #: src/features/accounts/staff/AccountsPanel.tsx:115
-#: src/features/accounts/staff/AccountCardRoute.tsx:583
-#: src/features/accounts/staff/AccountCardRoute.tsx:628
-#: src/features/accounts/staff/AccountCardRoute.tsx:630
+#: src/features/accounts/staff/AccountCardRoute.tsx:592
+#: src/features/accounts/staff/AccountCardRoute.tsx:637
+#: src/features/accounts/staff/AccountCardRoute.tsx:639
 msgid "Stage"
 msgstr "Fáze"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:638
-#: src/features/accounts/staff/AccountCardRoute.tsx:796
+#: src/features/accounts/staff/AccountCardRoute.tsx:647
+#: src/features/accounts/staff/AccountCardRoute.tsx:816
 msgid "Stage set"
 msgstr "Fáze nastavena"
 
@@ -1918,8 +2058,8 @@ msgstr "Začít"
 #~ msgid "Start a project of your own and record a few minutes, with a colleague or on your own."
 #~ msgstr "Založte si vlastní projekt a nahrajte pár minut, s kolegou nebo sami."
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:303
-#: src/features/accounts/staff/AccountCardRoute.tsx:432
+#: src/features/accounts/staff/AccountCardRoute.tsx:312
+#: src/features/accounts/staff/AccountCardRoute.tsx:441
 msgid "Status"
 msgstr "Stav"
 
@@ -1937,7 +2077,7 @@ msgstr "Krok {count} ze 3"
 msgid "Subject"
 msgstr "Předmět"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:452
+#: src/features/accounts/staff/AccountCardRoute.tsx:461
 msgid "Submitted"
 msgstr "Odesláno"
 
@@ -1946,47 +2086,51 @@ msgstr "Odesláno"
 msgid "Subscription"
 msgstr "Předplatné"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:864
+#: src/features/accounts/staff/AccountCardRoute.tsx:891
 msgid "System"
 msgstr "Systém"
+
+#: src/features/accounts/staff/DemoRoute.tsx:362
+msgid "Takes the public link down until you publish again."
+msgstr "Veřejný odkaz přestane fungovat, dokud znovu nezveřejníte."
 
 #: src/features/accounts/customer/TalkToUs.tsx:40
 msgid "Talk to us"
 msgstr "Napište nám"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:429
+#: src/features/accounts/staff/AccountCardRoute.tsx:438
 msgid "Task"
 msgstr "Úkol"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:818
-#: src/features/accounts/staff/AccountCardRoute.tsx:819
+#: src/features/accounts/staff/AccountCardRoute.tsx:840
+#: src/features/accounts/staff/AccountCardRoute.tsx:841
 msgid "Task approved"
 msgstr "Úkol schválen"
 
 #: src/features/accounts/staff/TaskModals.tsx:100
-#: src/features/accounts/staff/AccountCardRoute.tsx:821
+#: src/features/accounts/staff/AccountCardRoute.tsx:843
 msgid "Task created"
 msgstr "Úkol vytvořen"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:822
+#: src/features/accounts/staff/AccountCardRoute.tsx:844
 msgid "Task done"
 msgstr "Úkol splněn"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:823
-#: src/features/accounts/staff/AccountCardRoute.tsx:824
+#: src/features/accounts/staff/AccountCardRoute.tsx:845
+#: src/features/accounts/staff/AccountCardRoute.tsx:846
 msgid "Task sent back"
 msgstr "Úkol vrácen"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:825
+#: src/features/accounts/staff/AccountCardRoute.tsx:847
 msgid "Task submitted"
 msgstr "Úkol odeslán"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:826
-#: src/features/accounts/staff/AccountCardRoute.tsx:827
+#: src/features/accounts/staff/AccountCardRoute.tsx:848
+#: src/features/accounts/staff/AccountCardRoute.tsx:849
 msgid "Task withdrawn"
 msgstr "Úkol stažen"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:405
+#: src/features/accounts/staff/AccountCardRoute.tsx:414
 #: src/features/accounts/customer/AccountRoute.tsx:93
 #: src/features/accounts/customer/AccountRoute.tsx:93
 #: src/features/accounts/customer/AccountPickerRoute.tsx:44
@@ -1996,6 +2140,10 @@ msgstr "Úkoly"
 #: src/features/accounts/customer/AccountPickerRoute.tsx:34
 msgid "Tasks | dembrane"
 msgstr "Úkoly | dembrane"
+
+#: src/features/accounts/customer/BillingForm.tsx:507
+msgid "Tell us how your organisation receives invoices"
+msgstr "Napište nám, jak vaše organizace přijímá faktury"
 
 #: src/features/accounts/customer/TalkToUs.tsx:53
 msgid "Tell us what works and what does not."
@@ -2037,7 +2185,7 @@ msgstr "Obrázek se nepodařilo načíst. Zkuste formát PNG nebo JPEG."
 msgid "That PDF is over 10 MB."
 msgstr "Toto PDF má více než 10 MB."
 
-#: src/features/accounts/staff/DemoRoute.tsx:281
+#: src/features/accounts/staff/DemoRoute.tsx:309
 msgid "The account"
 msgstr "Účet"
 
@@ -2055,9 +2203,17 @@ msgstr "Zákazník odpoví pomocí"
 #~ msgid "The customer gets a reminder every seven days until it is done."
 #~ msgstr "Zákazník obdrží připomínku každých sedm dní, dokud úkol nedokončí."
 
+#: src/features/accounts/customer/InvoiceDelivery.tsx:126
+msgid "The customer gets invoices another way. What they wrote is under Questions. Send each invoice by hand."
+msgstr "Zákazník dostává faktury jiným způsobem. Co napsal, najdete v části Dotazy. Každou fakturu odešlete ručně."
+
 #: src/features/accounts/staff/TaskModals.tsx:79
 msgid "The customer gets no automatic reminder. After seven days the account manager is asked to check in."
 msgstr "Zákazník nedostává žádnou automatickou připomínku. Po sedmi dnech je account manažer požádán, aby se ozval."
+
+#: src/features/accounts/staff/AccountCardRoute.tsx:770
+msgid "The customer has no VAT number"
+msgstr "Zákazník nemá DIČ"
 
 #: src/features/accounts/signing/SignRoute.tsx:653
 msgid "The date is empty."
@@ -2071,7 +2227,11 @@ msgstr "Dokument se nepodařilo načíst. Zkontrolujte připojení a zkuste to z
 msgid "The document could not be loaded. Try again in a moment."
 msgstr "Dokument se nepodařilo načíst. Zkuste to za chvíli znovu."
 
-#: src/features/accounts/staff/DemoRoute.tsx:128
+#: src/features/accounts/staff/DemoDraftRoute.tsx:95
+msgid "The draft is not ready yet."
+msgstr "Koncept ještě není připraven."
+
+#: src/features/accounts/staff/DemoRoute.tsx:140
 msgid "The draft is ready. Check it, then publish."
 msgstr "Koncept je připraven. Zkontrolujte jej a poté publikujte."
 
@@ -2132,7 +2292,7 @@ msgid "This area is for dembrane staff."
 msgstr "Tato část je určena pro tým dembrane."
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:133
-#: src/features/accounts/staff/DocumentRoute.tsx:70
+#: src/features/accounts/staff/DocumentRoute.tsx:71
 #: src/features/accounts/signing/SignRoute.tsx:94
 msgid "This document could not be loaded."
 msgstr "Tento dokument se nepodařilo načíst."
@@ -2140,7 +2300,7 @@ msgstr "Tento dokument se nepodařilo načíst."
 #~ msgid "This document could not be shown. Reload the page to try again."
 #~ msgstr ""
 
-#: src/features/accounts/staff/DocumentRoute.tsx:199
+#: src/features/accounts/staff/DocumentRoute.tsx:237
 msgid "This document has no PDF."
 msgstr "Tento dokument nemá PDF."
 
@@ -2187,7 +2347,7 @@ msgstr "Toto není e-mailová adresa."
 msgid "This link no longer works"
 msgstr "Tento odkaz už nefunguje"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:571
+#: src/features/accounts/staff/AccountCardRoute.tsx:580
 msgid "This organisation has no account yet"
 msgstr "Tato organizace zatím nemá účet"
 
@@ -2195,11 +2355,19 @@ msgstr "Tato organizace zatím nemá účet"
 msgid "This page could not be loaded. Try again in a moment."
 msgstr "Stránku se nepodařilo načíst. Zkuste to za chvíli znovu."
 
+#: src/features/accounts/customer/BillingForm.tsx:486
+#~ msgid "Through an invoice portal"
+#~ msgstr "Přes fakturační portál"
+
+#: src/features/accounts/customer/BillingForm.tsx:475
+msgid "Through Peppol"
+msgstr "Přes Peppol"
+
 #: src/features/accounts/signing/SignRoute.tsx:655
 msgid "Tick the box"
 msgstr "Zaškrtněte políčko"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:844
+#: src/features/accounts/staff/AccountCardRoute.tsx:866
 msgid "Timeline"
 msgstr "Časová osa"
 
@@ -2241,6 +2409,10 @@ msgstr "Pro odeslání přidejte pole pro podpis."
 msgid "To sign"
 msgstr "K podpisu"
 
+#: src/features/accounts/customer/BillingForm.tsx:470
+msgid "To your invoice email"
+msgstr "Na váš fakturační e-mail"
+
 #. placeholder {0}: preview.messages.map((m) => m.to).join(", ")
 #: src/features/accounts/staff/EmailCustomerModal.tsx:99
 msgid "To: {0}"
@@ -2269,6 +2441,10 @@ msgstr "Nejprve napište své jméno."
 #: src/features/accounts/staff/LinesEditor.tsx:119
 msgid "Unit price (EUR)"
 msgstr "Jednotková cena (EUR)"
+
+#: src/features/accounts/staff/DemoRoute.tsx:359
+msgid "Unpublish"
+msgstr "Zrušit zveřejnění"
 
 #: src/features/accounts/staff/AccountsPanel.tsx:124
 msgid "Unsigned"
@@ -2311,7 +2487,7 @@ msgid "Valid 14 days. The terms, SLA and DPA versions in force today are pinned.
 msgstr "Platnost 14 dní. Zahrnuty jsou aktuálně platné verze podmínek, SLA a DPA."
 
 #. placeholder {0}: formatDate(d.valid_until, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:92
+#: src/features/accounts/staff/DocumentRoute.tsx:93
 msgid "Valid until {0}"
 msgstr "Platí do {0}"
 
@@ -2324,11 +2500,15 @@ msgid "VAT %"
 msgstr "VAT %"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:408
-#: src/features/accounts/staff/AccountCardRoute.tsx:759
-#: src/features/accounts/customer/BillingForm.tsx:251
-#: src/features/accounts/customer/BillingForm.tsx:327
+#: src/features/accounts/staff/AccountCardRoute.tsx:769
+#: src/features/accounts/customer/BillingForm.tsx:411
+#: src/features/accounts/customer/BillingForm.tsx:586
 msgid "VAT number"
 msgstr "DIČ (VAT)"
+
+#: src/features/accounts/customer/BillingForm.tsx:452
+msgid "VAT or tax number"
+msgstr "DIČ (VAT) nebo jiné daňové číslo"
 
 #~ msgid "View"
 #~ msgstr "Zobrazit"
@@ -2437,6 +2617,15 @@ msgstr "Poslali jsme {offerName} na {offerEmail} odkaz k podpisu nabídky."
 msgid "We emailed {theirName} at {theirEmail} with a link to sign. The task now waits on {first}, and their signature completes it."
 msgstr "Poslali jsme {theirName} ({theirEmail}) odkaz k podpisu. Úkol teď čeká na {first} a jejich podpis ho dokončí."
 
+#: src/features/accounts/customer/BillingForm.tsx:490
+msgid "We found you in the Peppol directory ({id})."
+msgstr "Našli jsme vás v adresáři Peppol ({id})."
+
+#: src/features/accounts/customer/BillingForm.tsx:419
+#: src/features/accounts/customer/BillingForm.tsx:586
+msgid "We have no VAT number"
+msgstr "Nemáme DIČ"
+
 #~ msgid "We put these on your invoice."
 #~ msgstr "Tyto údaje uvedeme na vaší faktuře."
 
@@ -2458,8 +2647,16 @@ msgstr "Projdeme s vámi vaši ukázku a naplánujeme první setkání."
 msgid "We will get in touch about your DPIA."
 msgstr "Ozveme se vám ohledně vašeho DPIA."
 
+#: src/features/accounts/customer/BillingForm.tsx:508
+msgid "We will set it up with you."
+msgstr "Nastavíme to společně s vámi."
+
+#: src/features/accounts/customer/InvoiceDelivery.tsx:121
+msgid "We will set up with you how you get invoices. Our answer appears under Talk to us, on the Overview page."
+msgstr "Společně s vámi nastavíme, jak budete dostávat faktury. Naše odpověď se zobrazí v části Napište nám na stránce Overview."
+
 #: src/features/accounts/staff/NewDemoRoute.tsx:143
-#: src/features/accounts/staff/DemoRoute.tsx:56
+#: src/features/accounts/staff/DemoRoute.tsx:57
 msgid "Website"
 msgstr "Webové stránky"
 
@@ -2479,7 +2676,7 @@ msgstr "Co změnit"
 msgid "What we ask"
 msgstr "Náš požadavek"
 
-#: src/features/accounts/customer/BillingForm.tsx:200
+#: src/features/accounts/customer/BillingForm.tsx:342
 msgid "What we put on your invoices."
 msgstr "Co uvádíme na vašich fakturách."
 
@@ -2503,7 +2700,7 @@ msgstr "Fakturační údaje: obchodní název, adresa, DIČ (VAT) nebo číslo K
 #~ msgstr "S dembrane"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:245
-#: src/features/accounts/staff/AccountCardRoute.tsx:528
+#: src/features/accounts/staff/AccountCardRoute.tsx:537
 msgid "Withdraw"
 msgstr "Vzít zpět"
 
@@ -2578,8 +2775,8 @@ msgid "Your name is empty."
 msgstr "Jméno je prázdné."
 
 #: src/features/accounts/customer/InvoiceDelivery.tsx:99
-msgid "Your numbers are not in the Peppol directory. Invoices come by email, unless you give a Peppol ID below."
-msgstr "Vaše čísla nejsou v adresáři Peppol. Faktury chodí e-mailem, pokud níže nevyplníte Peppol ID."
+#~ msgid "Your numbers are not in the Peppol directory. Invoices come by email, unless you give a Peppol ID below."
+#~ msgstr "Vaše čísla nejsou v adresáři Peppol. Faktury chodí e-mailem, pokud níže nevyplníte Peppol ID."
 
 #: src/features/accounts/signing/SignRoute.tsx:660
 msgid "Your organisation is empty."

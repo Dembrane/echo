@@ -559,6 +559,16 @@ export const store = {
     await c.insert(event).values(row);
   },
   /** The subjects that already have an event of `type`: what was announced is never announced twice. */
+  /** The detail of the latest event of one type for each subject, by subject id. */
+  async latestDetails(c: Conn, orgId: string, type: string): Promise<Map<string, unknown>> {
+    const rows = await c
+      .select({ id: event.subjectId, detail: event.detail })
+      .from(event)
+      .where(and(eq(event.orgId, orgId), eq(event.type, type)))
+      .orderBy(asc(event.createdAt), asc(event.id));
+    return new Map(rows.flatMap((r) => (r.id ? [[r.id, r.detail] as const] : [])));
+  },
+
   async eventSubjects(c: Conn, orgId: string, type: string): Promise<Set<string>> {
     const rows = await c
       .select({ id: event.subjectId })

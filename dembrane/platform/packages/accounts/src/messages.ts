@@ -2,7 +2,7 @@ import { type EmailTemplate, render, sendEmail, subjectOf } from "@dembrane/acco
 import { ConflictError, NotFoundError } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import type { z } from "zod";
-import { staffOrg } from "./access";
+import { assertPersonSends, staffOrg } from "./access";
 import type { SendMessageRequest, SendMessageResponse } from "./contract";
 import type { AccountsDeps } from "./deps";
 import { accountManagerPayload, emit } from "./events";
@@ -26,6 +26,8 @@ export async function sendMessage(
   orgId: string,
   m: z.output<typeof SendMessageRequest>,
 ): Promise<z.output<typeof SendMessageResponse>> {
+  // A dry run shows the emails and sends none.
+  if (!m.dry_run) assertPersonSends(who);
   const org = await staffOrg(d, orgId);
   const manager = await accountManagerPayload(d.db, org.id);
   const recipients = await accountRecipients(d.db, org.id);
