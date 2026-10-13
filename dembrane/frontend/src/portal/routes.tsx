@@ -1,6 +1,6 @@
 import { Navigate, type RouteObject } from "react-router";
 import { createLazyNamedRoute } from "@/components/common/LazyRoute";
-import { ErrorPage } from "@/components/error/ErrorPage";
+import { ParticipantErrorPage } from "./layout/ParticipantErrorPage";
 import { ParticipantConversationAudio } from "./components/conversation/audio/ParticipantConversationAudio";
 import { ParticipantConversationAudioContent } from "./components/conversation/audio/ParticipantConversationAudioContent";
 import { ParticipantConversationText } from "./components/conversation/text/ParticipantConversationText";
@@ -82,12 +82,12 @@ export const participantRoutes: RouteObject[] = [
 				path: "unsubscribe",
 			},
 			{
-				element: <ErrorPage />,
+				element: <ParticipantErrorPage />,
 				path: "*",
 			},
 		],
 		element: <ParticipantLayout />,
-		errorElement: <ErrorPage />,
+		errorElement: <ParticipantErrorPage />,
 		path: "/:language?/:projectId",
 	},
 ];
