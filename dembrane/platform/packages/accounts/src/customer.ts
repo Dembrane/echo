@@ -11,6 +11,7 @@ import type { Signed } from "@dembrane/http";
 import { localeOfEmail, resolveLocale, translator } from "@dembrane/i18n";
 import { customerOrg, documentFor } from "./access";
 import { checkBilling, countryCodeOf, countryName, type Delivery } from "./billing-rules";
+import { customerEmailFor } from "./customer-email";
 import type { AccountsDeps, Tx } from "./deps";
 import { billingPayload, emit, orgPayload, taskPayload, ticketPayload } from "./events";
 import { signerInviteUrl } from "./invite";
@@ -89,13 +90,17 @@ const taskOrder = (s: string) => {
 /** One document with everything the signing screen shows. */
 export async function readDocument(d: AccountsDeps, who: Signed, orgId: string, docId: string) {
   const a = await documentFor(d, who, orgId, docId, "account:read");
-  return documentDetail(d, a.doc, a.via);
+  return documentDetail(d, a.doc, a.via, who);
 }
 
 export async function documentDetail(
   d: AccountsDeps,
   doc: DocumentRow,
   via: "member" | "signer" | "staff",
+  /** The staff member asking; signs the email in `customer_email`. */
+  viewer: Signed | null = null,
+  /** False leaves `customer_email` out: the preview seed runs without the server catalogs. */
+  withEmail = true,
 ) {
   const [sig, fields, terms, sla, dpa, reminded] = await Promise.all([
     store.signatureOf(d.db, doc.id),
@@ -111,6 +116,7 @@ export async function documentDetail(
     store.org(d.db, doc.orgId),
     store.billing(d.db, doc.orgId),
   ]);
+  const toTheCustomer = via === "staff" && doc.status === "sent" && doc.requiresSignature;
   const isEvent = (doc.content as OfferContent | null)?.template === "event";
   const has = (pick: (f: (typeof fields)[number]) => boolean) => fields.some(pick);
   const placeholders = {
@@ -154,13 +160,13 @@ export async function documentDetail(
     access: via,
     staff_url:
       via === "staff" ? staffDocumentUrl(d.settings.dashboardUrl, doc.orgId, doc.id) : null,
-    customer_links:
-      via === "staff" && doc.status === "sent" && doc.requiresSignature
-        ? {
-            sign_in: continueUrl(d.settings.dashboardUrl, doc.orgId),
-            document: customerSignUrl(d.settings.dashboardUrl, doc.orgId, doc.id),
-          }
-        : null,
+    customer_links: toTheCustomer
+      ? {
+          sign_in: continueUrl(d.settings.dashboardUrl, doc.orgId),
+          document: customerSignUrl(d.settings.dashboardUrl, doc.orgId, doc.id),
+        }
+      : null,
+    customer_email: toTheCustomer && withEmail ? await customerEmailFor(d, doc, viewer) : null,
   };
 }
 

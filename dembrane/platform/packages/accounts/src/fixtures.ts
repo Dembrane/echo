@@ -222,6 +222,7 @@ export const offerDetail: Out<typeof DocumentDetail> = {
   access: "member",
   staff_url: null,
   customer_links: null,
+  customer_email: null,
 };
 
 const dpaSummary: Out<typeof DocumentSummary> = {
@@ -371,6 +372,7 @@ export const signedDpaDetail: Out<typeof DocumentDetail> = {
   access: "member",
   staff_url: null,
   customer_links: null,
+  customer_email: null,
 };
 
 const invoiceSummary: Out<typeof DocumentSummary> = {
