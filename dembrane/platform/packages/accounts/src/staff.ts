@@ -424,8 +424,11 @@ export async function pushOffer(
   who: Signed,
   orgId: string,
   input: PushOfferInput,
-  /** Fixed ids for the demo seed; the API never passes them. */
-  ids: { document?: string; task?: string } = {},
+  /**
+   * For the demo seed; the API never passes them: fixed ids, and `email: false` to leave
+   * `customer_email` out of the answer, as the seed runs without the server catalogs.
+   */
+  ids: { document?: string; task?: string; email?: boolean } = {},
 ) {
   // Before anything is written: a refused push changes nothing.
   if (input.send !== false && input.notify) assertPersonSends(who);
@@ -480,7 +483,7 @@ export async function pushOffer(
   const doc = (await store.document(d.db, org.id, id)) as DocumentRow;
   const task = taskId ? await store.task(d.db, org.id, taskId) : null;
   return {
-    document: await documentDetail(d, doc, "staff"),
+    document: await documentDetail(d, doc, "staff", who, ids.email !== false),
     task: task ? taskView(task, await store.documents(d.db, org.id)) : null,
   };
 }
@@ -536,7 +539,12 @@ export async function updateOffer(
       detail: { kind: "offer", total_cents: offerTotals(content).total_cents },
     });
   });
-  return documentDetail(d, (await store.document(d.db, doc.orgId, doc.id)) as DocumentRow, "staff");
+  return documentDetail(
+    d,
+    (await store.document(d.db, doc.orgId, doc.id)) as DocumentRow,
+    "staff",
+    who,
+  );
 }
 
 /**
@@ -836,7 +844,7 @@ export async function pushDocument(
   const doc = (await store.document(d.db, org.id, id)) as DocumentRow;
   const task = taskId ? await store.task(d.db, org.id, taskId) : null;
   return {
-    document: await documentDetail(d, doc, "staff"),
+    document: await documentDetail(d, doc, "staff", who),
     task: task ? taskView(task, await store.documents(d.db, org.id)) : null,
   };
 }
@@ -933,13 +941,19 @@ export async function sendDocument(
       d,
       (await store.document(d.db, doc.orgId, doc.id)) as DocumentRow,
       "staff",
+      who,
     );
   }
   const fields = await store.fields(d.db, doc.id);
   const problem = fieldProblems(fields, doc.pageCount, doc.requiresSignature);
   if (problem) throw new ValidationError("document.fields_invalid", { params: { problem } });
   await d.db.transaction((tx) => markSent(d, tx, who, doc.orgId, doc.id, task));
-  return documentDetail(d, (await store.document(d.db, doc.orgId, doc.id)) as DocumentRow, "staff");
+  return documentDetail(
+    d,
+    (await store.document(d.db, doc.orgId, doc.id)) as DocumentRow,
+    "staff",
+    who,
+  );
 }
 
 export async function voidDocument(
@@ -953,7 +967,7 @@ export async function voidDocument(
   const doc = isUuid(docId) ? await store.document(d.db, org.id, docId) : null;
   if (!doc) throw new NotFoundError("document.not_found");
   if (doc.status === "signed") throw new ConflictError("document.signed_cannot_void");
-  if (doc.status === "void") return documentDetail(d, doc, "staff");
+  if (doc.status === "void") return documentDetail(d, doc, "staff", who);
   await d.db.transaction(async (tx) => {
     await supersede(d, tx, org.id, doc.id, doc.kind);
     await emit(d, tx, {
@@ -973,7 +987,12 @@ export async function voidDocument(
       },
     });
   });
-  return documentDetail(d, (await store.document(d.db, org.id, doc.id)) as DocumentRow, "staff");
+  return documentDetail(
+    d,
+    (await store.document(d.db, org.id, doc.id)) as DocumentRow,
+    "staff",
+    who,
+  );
 }
 
 export async function staffDocument(d: AccountsDeps, orgId: string, docId: string) {
@@ -1092,7 +1111,7 @@ export async function upsertInvoice(
       detail: { number: input.number, status: input.status, total_cents: input.total_cents },
     });
   });
-  return documentDetail(d, (await store.document(d.db, org.id, id)) as DocumentRow, "staff");
+  return documentDetail(d, (await store.document(d.db, org.id, id)) as DocumentRow, "staff", who);
 }
 
 // ── tasks ───────────────────────────────────────────────────────────────

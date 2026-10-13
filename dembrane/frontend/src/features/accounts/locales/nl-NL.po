@@ -55,7 +55,7 @@ msgstr "{0} excl. btw, {1} incl."
 #~ msgstr "{0} fictieve gesprekken geschreven."
 
 #. placeholder {0}: formatMoney(d.total_cents, d.currency, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:84
+#: src/features/accounts/staff/DocumentRoute.tsx:87
 msgid "{0} incl. VAT"
 msgstr "{0} incl. btw"
 
@@ -245,6 +245,10 @@ msgstr "Beantwoord"
 msgid "Approve"
 msgstr "Goedkeuren"
 
+#: src/features/accounts/staff/SendOfferModals.tsx:63
+msgid "Approve and place the offer"
+msgstr "Goedkeuren en offerte plaatsen"
+
 #: src/features/accounts/customer/TalkToUs.tsx:59
 #: src/features/accounts/customer/Questions.tsx:55
 msgid "Ask a question"
@@ -274,7 +278,7 @@ msgid "Back to account"
 msgstr "Terug naar account"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:258
-#: src/features/accounts/staff/DocumentRoute.tsx:119
+#: src/features/accounts/staff/DocumentRoute.tsx:122
 msgid "Back to the account"
 msgstr "Terug naar het account"
 
@@ -303,6 +307,10 @@ msgstr "Factuurgegevens opgeslagen"
 #: src/features/accounts/staff/AccountCardRoute.tsx:818
 msgid "Billing details updated"
 msgstr "Factuurgegevens bijgewerkt"
+
+#: src/features/accounts/staff/SendOfferModals.tsx:157
+msgid "Body"
+msgstr "Tekst"
 
 #: src/features/accounts/customer/TalkToUs.tsx:67
 #: src/features/accounts/customer/NextSteps.tsx:566
@@ -360,6 +368,7 @@ msgstr "Gesprek"
 msgid "Call booked"
 msgstr "Gesprek gepland"
 
+#: src/features/accounts/staff/SendOfferModals.tsx:71
 #: src/features/accounts/staff/EmailCustomerModal.tsx:136
 #: src/features/accounts/customer/WhoSigns.tsx:369
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:228
@@ -372,7 +381,7 @@ msgstr "Annuleren"
 msgid "Cancelled"
 msgstr "Geannuleerd"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:146
+#: src/features/accounts/staff/DocumentRoute.tsx:149
 #: src/features/accounts/signing/SignRoute.tsx:785
 msgid "Change"
 msgstr "Wijzigen"
@@ -492,16 +501,20 @@ msgstr "Naam contactpersoon"
 #~ msgid "Continue"
 #~ msgstr "Doorgaan"
 
+#: src/features/accounts/staff/SendOfferModals.tsx:106
+#: src/features/accounts/staff/SendOfferModals.tsx:167
 #: src/features/accounts/staff/DocumentRoute.tsx:224
 #: src/features/accounts/customer/Pay.tsx:237
 msgid "Copied"
 msgstr "Gekopieerd"
 
+#: src/features/accounts/staff/SendOfferModals.tsx:106
 #: src/features/accounts/staff/DocumentRoute.tsx:224
 #: src/features/accounts/customer/Pay.tsx:237
 msgid "Copy"
 msgstr "Kopieren"
 
+#: src/features/accounts/staff/SendOfferModals.tsx:104
 #: src/features/accounts/staff/DocumentRoute.tsx:222
 #: src/features/accounts/customer/Pay.tsx:235
 msgid "Copy {label}"
@@ -509,6 +522,10 @@ msgstr "{label} kopieren"
 
 #~ msgid "Copy IBAN"
 #~ msgstr "IBAN kopieren"
+
+#: src/features/accounts/staff/SendOfferModals.tsx:169
+msgid "Copy the whole email"
+msgstr "Hele e-mail kopiëren"
 
 #: src/features/accounts/staff/DemoRoute.tsx:55
 msgid "Corpus"
@@ -558,6 +575,10 @@ msgstr "Datum"
 #: src/features/accounts/format.ts:60
 msgid "Declined"
 msgstr "Geweigerd"
+
+#: src/features/accounts/staff/SendOfferModals.tsx:53
+msgid "dembrane sends no email. You send the email yourself."
+msgstr "dembrane stuurt geen e-mail. Die stuur je zelf."
 
 #: src/features/accounts/staff/DemoRoute.tsx:87
 #: src/features/accounts/staff/DemoDraftRoute.tsx:42
@@ -644,6 +665,7 @@ msgid "Documents"
 msgstr "Documenten"
 
 #: src/features/accounts/format.ts:88
+#: src/features/accounts/staff/SendOfferModals.tsx:191
 #: src/features/accounts/customer/WhoSigns.tsx:248
 #: src/features/accounts/customer/SendToSomeoneElse.tsx:156
 #: src/features/accounts/customer/NextSteps.tsx:132
@@ -723,6 +745,10 @@ msgstr "Bewerken"
 #: src/features/accounts/staff/AccountCardRoute.tsx:722
 msgid "Email"
 msgstr "E-mail"
+
+#: src/features/accounts/staff/SendOfferModals.tsx:149
+msgid "Email for {who}"
+msgstr "E-mail voor {who}"
 
 #: src/features/accounts/signing/SignGate.tsx:383
 msgid "Email me a code"
@@ -1228,7 +1254,7 @@ msgstr "Geen land gevonden"
 msgid "No documents yet."
 msgstr "Nog geen documenten."
 
-#: src/features/accounts/staff/DocumentRoute.tsx:199
+#: src/features/accounts/staff/DocumentRoute.tsx:190
 msgid "No email went to the customer. Send them these links in your own email."
 msgstr "Er is geen e-mail naar de klant gegaan. Stuur deze links in je eigen e-mail."
 
@@ -1313,7 +1339,7 @@ msgstr "Offerte in concept"
 msgid "Offer language"
 msgstr "Taal van de offerte"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:206
+#: src/features/accounts/staff/DocumentRoute.tsx:209
 msgid "Offer link"
 msgstr "Link naar de offerte"
 
@@ -1321,7 +1347,7 @@ msgstr "Link naar de offerte"
 msgid "Offer sent"
 msgstr "Offerte verzonden"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:158
+#: src/features/accounts/staff/DocumentRoute.tsx:262
 msgid "Offer sent. It is in the customer's account; no email went out."
 msgstr "Offerte verzonden. Ze staat in het account van de klant; er is geen e-mail verstuurd."
 
@@ -1356,7 +1382,7 @@ msgstr "Online"
 #~ msgid "Only if you get invoices through Peppol"
 #~ msgstr "Alleen als je facturen via Peppol ontvangt"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:190
+#: src/features/accounts/staff/DocumentRoute.tsx:181
 msgid "Only staff see this draft. When you send it, it gets that day's date and is valid for 14 days."
 msgstr "Alleen medewerkers zien dit concept. Als je het verstuurt, krijgt het de datum van die dag en is het 14 dagen geldig."
 
@@ -1372,11 +1398,15 @@ msgstr "Alleen de beheerders en factuurcontacten van de organisatie zien deze pa
 msgid "Open"
 msgstr "Open"
 
+#: src/features/accounts/staff/SendOfferModals.tsx:180
+msgid "Open in your mail app"
+msgstr "Openen in je mailprogramma"
+
 #: src/features/accounts/staff/AccountCardRoute.tsx:225
 msgid "Open PDF"
 msgstr "Pdf openen"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:183
+#: src/features/accounts/staff/DocumentRoute.tsx:174
 #: src/features/accounts/staff/AccountCardRoute.tsx:230
 msgid "Open signed PDF"
 msgstr "Ondertekende pdf openen"
@@ -1559,7 +1589,7 @@ msgstr "Kies een moment dat jou uitkomt."
 msgid "Pick a time. {host} reads your account before the call."
 msgstr "Kies een tijd. {host} leest je account voor het gesprek."
 
-#: src/features/accounts/staff/DocumentRoute.tsx:175
+#: src/features/accounts/staff/DocumentRoute.tsx:166
 #: src/features/accounts/staff/AccountCardRoute.tsx:205
 msgid "Place fields"
 msgstr "Velden plaatsen"
@@ -1838,9 +1868,13 @@ msgid "Send by email instead"
 msgstr "Liever per e-mail"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:262
-#: src/features/accounts/staff/DocumentRoute.tsx:165
+#: src/features/accounts/staff/DocumentRoute.tsx:156
 msgid "Send offer"
 msgstr "Offerte versturen"
+
+#: src/features/accounts/staff/SendOfferModals.tsx:39
+msgid "Send offer to {org}"
+msgstr "Offerte versturen naar {org}"
 
 #~ msgid "Send the link"
 #~ msgstr "Link versturen"
@@ -1876,7 +1910,7 @@ msgid "Sent"
 msgstr "Verstuurd"
 
 #. placeholder {0}: formatDate(d.sent_at, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:90
+#: src/features/accounts/staff/DocumentRoute.tsx:93
 msgid "Sent {0}"
 msgstr "Verstuurd op {0}"
 
@@ -1936,6 +1970,10 @@ msgstr "Afgerond tonen ({0})"
 msgid "Show less"
 msgstr "Minder tonen"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:203
+msgid "Show the email again"
+msgstr "E-mail opnieuw tonen"
+
 #: src/features/accounts/staff/EmailCustomerModal.tsx:83
 msgid "Shown as written, under the opening. Write it in the customer's language."
 msgstr "Komt letterlijk onder de opening. Schrijf het in de taal van de klant."
@@ -1961,7 +1999,7 @@ msgstr "Uitloggen en doorgaan"
 msgid "Sign the data processing agreement"
 msgstr "Verwerkersovereenkomst ondertekenen"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:205
+#: src/features/accounts/staff/DocumentRoute.tsx:208
 msgid "Sign-in link"
 msgstr "Inloglink"
 
@@ -1979,7 +2017,7 @@ msgid "Signed"
 msgstr "Ondertekend"
 
 #. placeholder {0}: formatDate(d.signed_at, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:88
+#: src/features/accounts/staff/DocumentRoute.tsx:91
 msgid "Signed {0}"
 msgstr "Ondertekend op {0}"
 
@@ -2073,6 +2111,8 @@ msgstr "Ingelogd blijven als {0}"
 msgid "Step {count} of 3"
 msgstr "Stap {count} van 3"
 
+#: src/features/accounts/staff/SendOfferModals.tsx:144
+#: src/features/accounts/staff/SendOfferModals.tsx:156
 #: src/features/accounts/customer/Questions.tsx:234
 msgid "Subject"
 msgstr "Onderwerp"
@@ -2196,6 +2236,10 @@ msgstr "Het account"
 msgid "The box is not ticked yet."
 msgstr "Het vakje is nog niet aangevinkt."
 
+#: src/features/accounts/staff/SendOfferModals.tsx:34
+msgid "the customer"
+msgstr "de klant"
+
 #: src/features/accounts/staff/TaskModals.tsx:59
 msgid "The customer answers with"
 msgstr "De klant antwoordt met"
@@ -2256,6 +2300,10 @@ msgstr "De uitnodiging is verstuurd naar"
 msgid "The name is empty."
 msgstr "De naam is leeg."
 
+#: src/features/accounts/staff/SendOfferModals.tsx:48
+msgid "The offer and its documents appear in {org}'s dembrane space."
+msgstr "De offerte en de bijbehorende documenten staan in de dembrane-ruimte van {org}."
+
 #: src/features/accounts/customer/RemindSigner.tsx:52
 msgid "The reminder did not go out. Try again in a moment."
 msgstr "De herinnering is niet verstuurd. Probeer het zo opnieuw."
@@ -2292,7 +2340,7 @@ msgid "This area is for dembrane staff."
 msgstr "Dit deel is voor medewerkers van dembrane."
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:133
-#: src/features/accounts/staff/DocumentRoute.tsx:71
+#: src/features/accounts/staff/DocumentRoute.tsx:74
 #: src/features/accounts/signing/SignRoute.tsx:94
 msgid "This document could not be loaded."
 msgstr "Dit document kon niet worden geladen."
@@ -2300,7 +2348,7 @@ msgstr "Dit document kon niet worden geladen."
 #~ msgid "This document could not be shown. Reload the page to try again."
 #~ msgstr "Dit document kon niet worden getoond. Laad de pagina opnieuw."
 
-#: src/features/accounts/staff/DocumentRoute.tsx:237
+#: src/features/accounts/staff/DocumentRoute.tsx:240
 msgid "This document has no PDF."
 msgstr "Dit document heeft geen pdf."
 
@@ -2376,6 +2424,8 @@ msgstr "Tijdlijn"
 msgid "Title"
 msgstr "Titel"
 
+#: src/features/accounts/staff/SendOfferModals.tsx:144
+#: src/features/accounts/staff/SendOfferModals.tsx:155
 #: src/features/accounts/customer/Pay.tsx:214
 msgid "To"
 msgstr "Aan"
@@ -2487,7 +2537,7 @@ msgid "Valid 14 days. The terms, SLA and DPA versions in force today are pinned.
 msgstr "14 dagen geldig. De versies van voorwaarden, SLA en verwerkersovereenkomst van vandaag worden vastgelegd."
 
 #. placeholder {0}: formatDate(d.valid_until, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:93
+#: src/features/accounts/staff/DocumentRoute.tsx:96
 msgid "Valid until {0}"
 msgstr "Geldig tot {0}"
 
@@ -2679,6 +2729,10 @@ msgstr "Wat we vragen"
 #: src/features/accounts/customer/BillingForm.tsx:342
 msgid "What we put on your invoices."
 msgstr "Wat we op je facturen zetten."
+
+#: src/features/accounts/staff/SendOfferModals.tsx:184
+msgid "When you have sent it, reply sent in the offer's thread in Slack so sam marks the offer as sent."
+msgstr "Als je de e-mail hebt verstuurd, antwoord dan \"sent\" in de thread van de offerte in Slack, zodat sam de offerte als verstuurd markeert."
 
 #: src/features/accounts/customer/WhoSigns.tsx:307
 msgid "Who signs the data processing agreement?"
