@@ -101,32 +101,47 @@ describe("the billing details form", () => {
 		expect(screen.getByText("Choose one.")).toBeTruthy();
 	});
 
-	it("asks the Netherlands for a KvK or VAT number and says how each looks", () => {
+	it("asks the Netherlands for a VAT number, or none and then its KvK number", () => {
 		show();
 		choose("Netherlands");
 		fillAddress();
+		expect(screen.queryByTestId("billing-kvk_number")).toBeNull();
 		expect(screen.queryByTestId("billing-kbo_number")).toBeNull();
-		expect(screen.queryByTestId("billing-no-vat")).toBeNull();
+		expect(screen.queryByText(/at least one/i)).toBeNull();
 		save();
 		expect(saved).not.toHaveBeenCalled();
-		type("kvk_number", "1234");
 		type("vat_id", "NL12");
 		save();
-		expect(screen.getByText("A KvK number has 8 digits.")).toBeTruthy();
 		expect(
 			screen.getByText("Check this. It should look like NL123456789B01."),
 		).toBeTruthy();
-		expect(saved).not.toHaveBeenCalled();
-		type("kvk_number", "1234 5678");
 		type("vat_id", "nl 1234.56.789 b01");
 		save();
 		expect(body()).toMatchObject({
 			country_code: "NL",
 			invoice_delivery: "email",
 			kbo_number: "",
-			kvk_number: "12345678",
-			no_vat_number: null,
+			kvk_number: "",
+			no_vat_number: false,
 			vat_id: "NL123456789B01",
+		});
+
+		saved.mockClear();
+		fireEvent.click(screen.getByTestId("billing-no-vat"));
+		expect(field("vat_id").disabled).toBe(true);
+		save();
+		expect(saved).not.toHaveBeenCalled();
+		type("kvk_number", "1234");
+		save();
+		expect(screen.getByText("A KvK number has 8 digits.")).toBeTruthy();
+		expect(saved).not.toHaveBeenCalled();
+		type("kvk_number", "1234 5678");
+		save();
+		expect(body()).toMatchObject({
+			country_code: "NL",
+			kvk_number: "12345678",
+			no_vat_number: true,
+			vat_id: "",
 		});
 	});
 
@@ -178,24 +193,28 @@ describe("the billing details form", () => {
 		});
 	});
 
-	it("takes an invoice portal only with its name, and a Peppol choice only with an ID", () => {
+	it("takes another way only with the customer's own words, and a Peppol choice only with an ID", () => {
 		show();
 		choose("Netherlands");
 		fillAddress();
-		type("kvk_number", "12345678");
-		fireEvent.click(screen.getByTestId("delivery-portal"));
+		type("vat_id", "NL123456789B01");
+		fireEvent.click(screen.getByTestId("delivery-other"));
+		expect(
+			screen.getByText("Tell us how your organisation receives invoices"),
+		).toBeTruthy();
 		save();
 		expect(saved).not.toHaveBeenCalled();
-		type("invoice_portal", "Example supplier portal (sample)");
+		type("invoice_portal", " We use the Example supplier portal (sample). ");
 		save();
 		expect(body()).toMatchObject({
-			invoice_delivery: "portal",
-			invoice_portal: "Example supplier portal (sample)",
+			invoice_delivery: "other",
+			invoice_portal: "We use the Example supplier portal (sample).",
 			peppol_id: "",
 		});
 
 		saved.mockClear();
 		fireEvent.click(screen.getByTestId("delivery-peppol"));
+		expect(screen.queryByTestId("billing-invoice_portal")).toBeNull();
 		save();
 		expect(saved).not.toHaveBeenCalled();
 		type("peppol_id", "0190:00000000000000000000");
@@ -207,14 +226,52 @@ describe("the billing details form", () => {
 		});
 	});
 
-	it("reads a country saved as text before the list existed", () => {
+	it("reads details from before: a country saved as text, and a KvK number alone as no VAT number", () => {
 		show({
 			...empty,
+			address_line1: "Stadhuisplein 1",
+			city: "Example Town",
 			country: "Nederland",
 			kvk_number: "12345678",
 			legal_name: "Example Town Council (sample)",
+			postal_code: "1234 AB",
 		});
 		expect(field("country").value).toBe("Netherlands");
+		expect(
+			(screen.getByTestId("billing-no-vat") as HTMLInputElement).checked,
+		).toBe(true);
 		expect(field("kvk_number").value).toBe("12345678");
+		save();
+		expect(body()).toMatchObject({
+			country_code: "NL",
+			kvk_number: "12345678",
+			no_vat_number: true,
+			vat_id: "",
+		});
+	});
+
+	it("keeps a KvK number it already holds when a Dutch organisation gives its VAT number", () => {
+		show({
+			...empty,
+			address_line1: "Stadhuisplein 1",
+			city: "Example Town",
+			country: "Netherlands",
+			country_code: "NL",
+			kvk_number: "12345678",
+			legal_name: "Example Town Council (sample)",
+			postal_code: "1234 AB",
+			vat_id: "NL123456789B01",
+		});
+		expect(
+			(screen.getByTestId("billing-no-vat") as HTMLInputElement).checked,
+		).toBe(false);
+		expect(screen.queryByTestId("billing-kvk_number")).toBeNull();
+		type("po_number", "PO-0001 (sample)");
+		save();
+		expect(body()).toMatchObject({
+			kvk_number: "12345678",
+			no_vat_number: false,
+			vat_id: "NL123456789B01",
+		});
 	});
 });

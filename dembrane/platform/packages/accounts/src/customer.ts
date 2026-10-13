@@ -8,7 +8,7 @@ import {
   ValidationError,
 } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
-import { localeOfEmail, resolveLocale } from "@dembrane/i18n";
+import { localeOfEmail, resolveLocale, translator } from "@dembrane/i18n";
 import { customerOrg, documentFor } from "./access";
 import { checkBilling, countryCodeOf, countryName, type Delivery } from "./billing-rules";
 import type { AccountsDeps, Tx } from "./deps";
@@ -552,15 +552,13 @@ export async function readBilling(d: AccountsDeps, who: Signed, orgId: string) {
  * has none yet), and completes the billing details task: no review by us. The country
  * decides which numbers are asked and how they must look (billing-rules.ts, the rules the
  * form checks too); numbers are stored cleaned. Formats only: nothing is looked up to
- * confirm a number is real, and no tax is decided here.
+ * confirm a number is real, and no tax is decided here. A customer that gets invoices
+ * neither by email nor through Peppol writes how instead, and that opens a question.
  */
 export async function updateBilling(d: AccountsDeps, who: Signed, orgId: string, b: BillingInput) {
   const org = await customerOrg(d, who, orgId, "account:billing");
   const country = countryCodeOf(b.country_code ?? b.country);
   const { problems, clean } = checkBilling({ ...b, country_code: country });
-  // The Netherlands asks for one of two numbers, so neither field alone is the one to fix.
-  if (country === "NL" && !clean.vat_id && !clean.kvk_number)
-    throw new ValidationError("billing.tax_id_required");
   if (!country || problems.length)
     throw fieldErrors(
       problems.map((p) => ({
@@ -573,6 +571,7 @@ export async function updateBilling(d: AccountsDeps, who: Signed, orgId: string,
   // A Peppol id typed by the customer wins; otherwise the directory is asked, outside the
   // transaction so a slow directory holds no lock.
   const match = clean.peppol_id ? null : await lookupPeppol(d, clean);
+  const locale = me?.email ? await localeOfEmail(d.db, me.email).catch(() => null) : null;
   await d.db.transaction(async (tx) => {
     await store.lockOrg(tx, org.id);
     const patch = {
@@ -632,6 +631,14 @@ export async function updateBilling(d: AccountsDeps, who: Signed, orgId: string,
       },
       slack: `:receipt: Billing details for ${org.name} submitted by ${me?.email ?? "a member"}: ${b.legal_name}${b.po_number ? `, PO ${b.po_number}` : ""}.`,
     });
+    // Another way than email or Peppol is agreed between people: what the customer wrote
+    // goes to dembrane as a question of theirs. Once per text, so saving again asks nothing new.
+    const wrote = b.invoice_delivery === "other" ? clean.invoice_portal : null;
+    if (wrote && !(account?.invoice_delivery === "other" && account.invoice_portal === wrote))
+      await insertQuestion(d, tx, org, who, me?.email ?? null, {
+        subject: translator(locale)("ticket.invoice_delivery.subject"),
+        body: wrote,
+      });
     // With an offer already signed, these details are the last thing the invoice waited for.
     await requestInvoices(d, tx, org);
   });
@@ -714,45 +721,61 @@ export async function openTicket(
   input: { subject: string; body: string },
 ) {
   const org = await customerOrg(d, who, orgId, "account:support");
+  const me = await store.identity(d.db, who.directusUserId);
+  const id = await d.db.transaction((tx) =>
+    insertQuestion(d, tx, org, who, me?.email ?? null, input),
+  );
+  return ticketOf(d, org.id, id);
+}
+
+/**
+ * A customer's question to dembrane with its first message, told to sam and Slack. The one
+ * way a question starts, whichever screen it was written on.
+ */
+async function insertQuestion(
+  d: AccountsDeps,
+  tx: Tx,
+  org: Awaited<ReturnType<typeof customerOrg>>,
+  who: Signed,
+  email: string | null,
+  input: { subject: string; body: string },
+): Promise<string> {
   const now = d.now();
   const id = newId();
-  const me = await store.identity(d.db, who.directusUserId);
-  await d.db.transaction(async (tx) => {
-    await store.insertTicket(tx, {
-      id,
-      orgId: org.id,
-      subject: input.subject,
-      status: "waiting_on_dembrane",
-      openedBy: who.directusUserId,
-      createdAt: now,
-      updatedAt: now,
-    });
-    await store.insertMessage(tx, {
-      id: newId(),
-      ticketId: id,
-      authorUserId: who.directusUserId,
-      fromStaff: false,
-      body: input.body,
-      createdAt: now,
-    });
-    const ticket = (await store.ticket(tx, org.id, id)) as NonNullable<
-      Awaited<ReturnType<typeof store.ticket>>
-    >;
-    await emit(d, tx, {
-      orgId: org.id,
-      actor: { kind: "customer", userId: who.directusUserId },
-      type: "ticket.opened",
-      subject: { type: "ticket", id },
-      webhook: {
-        event: "account.ticket.opened",
-        org: orgPayload(org),
-        ticket: ticketPayload(ticket, input.body),
-        opened_by: me?.email ?? null,
-      },
-      slack: `:speech_balloon: New question from ${org.name} (${me?.email ?? "a member"}): ${input.subject}`,
-    });
+  await store.insertTicket(tx, {
+    id,
+    orgId: org.id,
+    subject: input.subject,
+    status: "waiting_on_dembrane",
+    openedBy: who.directusUserId,
+    createdAt: now,
+    updatedAt: now,
   });
-  return ticketOf(d, org.id, id);
+  await store.insertMessage(tx, {
+    id: newId(),
+    ticketId: id,
+    authorUserId: who.directusUserId,
+    fromStaff: false,
+    body: input.body,
+    createdAt: now,
+  });
+  const ticket = (await store.ticket(tx, org.id, id)) as NonNullable<
+    Awaited<ReturnType<typeof store.ticket>>
+  >;
+  await emit(d, tx, {
+    orgId: org.id,
+    actor: { kind: "customer", userId: who.directusUserId },
+    type: "ticket.opened",
+    subject: { type: "ticket", id },
+    webhook: {
+      event: "account.ticket.opened",
+      org: orgPayload(org),
+      ticket: ticketPayload(ticket, input.body),
+      opened_by: email,
+    },
+    slack: `:speech_balloon: New question from ${org.name} (${email ?? "a member"}): ${input.subject}`,
+  });
+  return id;
 }
 
 export async function customerReply(

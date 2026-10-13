@@ -14,6 +14,7 @@ import {
 	SimpleGrid,
 	Stack,
 	Text,
+	Textarea,
 	TextInput,
 } from "@mantine/core";
 import { useEffect, useMemo, useState } from "react";
@@ -33,6 +34,8 @@ import {
 	countryName,
 	EU_VAT,
 	identified,
+	kvkFits,
+	saysNoVat,
 } from "../contract/billing-rules.gen";
 import type { AccountPageT } from "../contract/contract.gen";
 import {
@@ -69,6 +72,8 @@ const toForm = (b: Billing): Record<Key, string> =>
 	Object.fromEntries(FIELDS.map((k) => [k, b[k] ?? ""])) as Record<Key, string>;
 /** Details from before the form had a list carry the country as text. */
 const countryOf = (b: Billing) => b.country_code ?? countryCodeOf(b.country);
+/** Details from before the question was asked say it by a KvK or KBO number given alone. */
+const noVatOf = (b: Billing) => saysNoVat({ ...b, country_code: countryOf(b) });
 
 /** What an invoice cannot do without, whatever the country. */
 const REQUIRED: Key[] = [
@@ -95,11 +100,13 @@ const PEPPOL_EXAMPLE = "0106:12345678";
 
 /**
  * The details Exact needs to invoice. The country comes first, because it decides which
- * numbers we ask for (the rules are the API's own, billing-rules.gen.ts): a KvK or VAT
- * number in the Netherlands, a VAT number or "we have none" in the rest of the EU, nothing
- * more outside it. Then who and where, and how invoices should arrive. The form decides
- * no tax and gives no tax advice. Written for someone who does not do this often: every
- * problem shows at once, next to its field, and the page says when the details are in.
+ * numbers we ask for (the rules are the API's own, billing-rules.gen.ts): in the EU a VAT
+ * number or "we have none" (the Netherlands then gives its KvK number, Belgium its KBO
+ * number), nothing more outside it. Then who and where, and how invoices should arrive:
+ * by email, through Peppol, or another way, which the customer writes to us as a question.
+ * The form decides no tax and gives no tax advice. Written for someone who does not do
+ * this often: every problem shows at once, next to its field, and the page says when the
+ * details are in.
  */
 export function BillingForm({
 	orgId,
@@ -114,24 +121,35 @@ export function BillingForm({
 	const { i18n } = useLingui();
 	const [form, setForm] = useState(() => toForm(billing));
 	const [country, setCountry] = useState(() => countryOf(billing));
-	const [noVat, setNoVat] = useState(billing.no_vat_number === true);
+	const [noVat, setNoVat] = useState(() => noVatOf(billing));
 	const [chosen, setChosen] = useState(billing.invoice_delivery);
 	const [problems, setProblems] = useState<Problems>({});
 	useEffect(() => {
 		setForm(toForm(billing));
 		setCountry(countryOf(billing));
-		setNoVat(billing.no_vat_number === true);
+		setNoVat(noVatOf(billing));
 		setChosen(billing.invoice_delivery);
 	}, [billing]);
 
 	const group = countryGroup(country);
-	// "We have no VAT number" is asked where the answer changes the invoice: the EU outside the Netherlands.
-	const asksNoVat = group === "be" || group === "eu";
+	// Every EU country is asked for a VAT number, or the plain answer that there is none.
+	const asksNoVat = group !== null && group !== "other";
 	const said = asksNoVat && noVat;
+	// A Dutch organisation that gives its VAT number is not asked for its KvK number. One
+	// we already hold stays, because the Peppol lookup tries it first.
+	const heldKvk =
+		country === countryOf(billing) ? cleanKvk(billing.kvk_number) : "";
 	// Only what the country asks for is sent; a number typed for another country is dropped.
 	const numbers = {
 		kbo_number: group === "be" && said ? cleanKbo(form.kbo_number) : "",
-		kvk_number: group === "nl" ? cleanKvk(form.kvk_number) : "",
+		kvk_number:
+			group !== "nl"
+				? ""
+				: said
+					? cleanKvk(form.kvk_number)
+					: kvkFits(heldKvk)
+						? heldKvk
+						: "",
 		vat_id: said ? "" : cleanVat(country, form.vat_id),
 	};
 	const lookup = usePeppolLookup(orgId, numbers);
@@ -180,7 +198,7 @@ export function BillingForm({
 	const dirty =
 		Object.entries(saved).some(([k, v]) => form[k as Key] !== v) ||
 		country !== savedCountry ||
-		noVat !== (billing.no_vat_number === true) ||
+		noVat !== noVatOf(billing) ||
 		(chosen ?? null) !== (billing.invoice_delivery ?? null);
 	const savedDelivery = deliveryFor(
 		billing.peppol_match,
@@ -226,10 +244,7 @@ export function BillingForm({
 			onChange={(e) => {
 				const value = e.currentTarget.value;
 				setForm((f) => ({ ...f, [key]: value }));
-				// The Netherlands asks for one of two numbers: typing either answers both.
-				if (key === "kvk_number" || key === "vat_id")
-					clear("kvk_number", "vat_id");
-				else clear(key);
+				clear(key);
 			}}
 			error={errorOf(key)}
 			data-testid={`billing-${key}`}
@@ -242,7 +257,8 @@ export function BillingForm({
 			...numbers,
 			country_code: country,
 			invoice_delivery: delivery,
-			invoice_portal: delivery === "portal" ? form.invoice_portal.trim() : "",
+			// Another way: what they write here reaches dembrane as their question.
+			invoice_portal: delivery === "other" ? form.invoice_portal.trim() : "",
 			no_vat_number: asksNoVat ? noVat : null,
 			// Found in the directory, the Peppol ID is known; else it is the one typed.
 			peppol_id: delivery === "peppol" && !lookup.match ? typedPeppol : "",
@@ -298,7 +314,6 @@ export function BillingForm({
 						match={billing.peppol_match}
 						delivery={savedDelivery}
 						email={billing.billing_email}
-						portal={billing.invoice_portal}
 						onChange={switchDelivery}
 						disabled={mutation.isPending}
 					/>
@@ -316,8 +331,6 @@ export function BillingForm({
 		);
 	}
 
-	const bothMissing =
-		problems.kvk_number === "missing" && problems.vat_id === "missing";
 	const id = lookup.match?.participant_id;
 	const vatHint = vatExample ? forExample(vatExample) : undefined;
 
@@ -391,35 +404,8 @@ export function BillingForm({
 							required: true,
 						})}
 					</SimpleGrid>
-					{group === "nl" && (
-						<Stack
-							gap="xs"
-							role="group"
-							aria-labelledby="billing-numbers"
-							data-testid="billing-numbers"
-						>
-							<Text
-								id="billing-numbers"
-								size="sm"
-								c={bothMissing ? "var(--app-danger)" : undefined}
-							>
-								<Trans>KvK number or VAT number: fill in at least one</Trans>
-							</Text>
-							<SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
-								{input("kvk_number", t`KvK number`, {
-									description: t`8 digits`,
-									error: bothMissing || errorOf("kvk_number"),
-									inputMode: "numeric",
-								})}
-								{input("vat_id", t`VAT number`, {
-									description: vatHint,
-									error: bothMissing || errorOf("vat_id"),
-								})}
-							</SimpleGrid>
-						</Stack>
-					)}
 					{asksNoVat && (
-						// Top to bottom: the number, the way to say there is none, then what Belgium gives instead.
+						// Top to bottom: the number, the way to say there is none, then the number the country gives instead.
 						<Stack gap="xs" data-testid="billing-numbers">
 							<SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
 								{input("vat_id", t`VAT number`, {
@@ -434,10 +420,19 @@ export function BillingForm({
 								checked={noVat}
 								onChange={(e) => {
 									setNoVat(e.currentTarget.checked);
-									clear("vat_id", "kbo_number", "no_vat_number");
+									clear("vat_id", "kvk_number", "kbo_number", "no_vat_number");
 								}}
 								data-testid="billing-no-vat"
 							/>
+							{group === "nl" && noVat && (
+								<SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
+									{input("kvk_number", t`KvK number`, {
+										description: t`8 digits`,
+										inputMode: "numeric",
+										required: true,
+									})}
+								</SimpleGrid>
+							)}
 							{group === "be" && noVat && (
 								<SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
 									{input("kbo_number", t`KBO number`, {
@@ -482,10 +477,10 @@ export function BillingForm({
 								data-testid="delivery-peppol"
 							/>
 							<Radio
-								value="portal"
-								label={t`Through an invoice portal`}
-								description={t`Someone at dembrane adds each invoice there by hand`}
-								data-testid="delivery-portal"
+								value="other"
+								label={t`Another way`}
+								description={t`For example an invoice portal`}
+								data-testid="delivery-other"
 							/>
 						</Stack>
 					</Radio.Group>
@@ -506,12 +501,24 @@ export function BillingForm({
 								})}
 							</SimpleGrid>
 						))}
-					{delivery === "portal" && (
-						<SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
-							{input("invoice_portal", t`Name or link of the portal`, {
-								required: true,
-							})}
-						</SimpleGrid>
+					{delivery === "other" && (
+						// The same question a customer can ask under "Talk to us": saving sends it.
+						<Textarea
+							label={t`Tell us how your organisation receives invoices`}
+							description={t`We will set it up with you.`}
+							value={form.invoice_portal}
+							onChange={(e) => {
+								const value = e.currentTarget.value;
+								setForm((f) => ({ ...f, invoice_portal: value }));
+								clear("invoice_portal");
+							}}
+							error={errorOf("invoice_portal")}
+							autosize
+							minRows={3}
+							maxLength={2000}
+							required
+							data-testid="billing-invoice_portal"
+						/>
 					)}
 					<SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
 						{input("po_number", t`PO number`, {
@@ -534,7 +541,7 @@ export function BillingForm({
 								onClick={() => {
 									setForm(saved);
 									setCountry(savedCountry);
-									setNoVat(billing.no_vat_number === true);
+									setNoVat(noVatOf(billing));
 									setChosen(billing.invoice_delivery);
 									setProblems({});
 									setEditing(false);

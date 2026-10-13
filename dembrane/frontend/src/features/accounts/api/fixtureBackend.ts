@@ -1256,6 +1256,30 @@ export async function handle(
 				});
 				const first = problems[0];
 				if (first) throw invalid(first.field, "Check this field.");
+				// Like the server: another way, newly written, opens the customer's question.
+				const wrote =
+					body.invoice_delivery === "other" ? clean.invoice_portal : null;
+				if (
+					wrote &&
+					!(
+						s.billing.invoice_delivery === "other" &&
+						s.billing.invoice_portal === wrote
+					)
+				) {
+					const t: TicketT = {
+						closed_at: null,
+						created_at: now(),
+						id: uuid(),
+						messages: [
+							{ body: wrote, created_at: now(), from: "customer", id: uuid() },
+						],
+						status: "waiting_on_dembrane",
+						subject: "How we receive invoices",
+						updated_at: now(),
+					};
+					s.tickets.unshift(t);
+					event(s, "ticket.opened", "customer", { id: t.id, type: "ticket" });
+				}
 				s.billing = {
 					...s.billing,
 					...(body as Partial<Billing>),

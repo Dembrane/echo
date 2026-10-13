@@ -358,7 +358,7 @@ run("an offer draft, and the invoice request after the signature", () => {
         vat_id: "NL001234567B01",
         po_number: "PO-77",
         // What the invoice's tax and delivery are decided from, beside the fields sam knew.
-        no_vat_number: null,
+        no_vat_number: false,
         invoice_delivery: "email",
         invoice_portal: null,
         address: {

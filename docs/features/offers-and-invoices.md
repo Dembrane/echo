@@ -103,15 +103,10 @@ numbers the form asks for. Then fill in:
 
 - "Legal name of your organisation" and "Invoice email"
 - Your address, "Postal code" and "City"
-- The numbers for your country:
-  - Netherlands: "KvK number" or "VAT number" ("KvK number or VAT number: fill in at least
-    one")
-  - Belgium: "VAT number". If you have none, tick "We have no VAT number" and give your
-    "KBO number".
-  - Another EU country: "VAT number", or tick "We have no VAT number"
-  - Outside the EU: "VAT or tax number" ("If you have one")
-- "How do you want to get invoices?": "By email", "Through Peppol" or "Through an invoice
-  portal"
+- In an EU country: your "VAT number". If you have none, tick "We have no VAT number".
+  The Netherlands then asks for your "KvK number" and Belgium for your "KBO number".
+- Outside the EU: "VAT or tax number" ("If you have one")
+- "How do you want to get invoices?": "By email", "Through Peppol" or "Another way"
 - "PO number" ("If your finance team uses one")
 
 Under each number the form shows how it should look, such as "For example NL123456789B01".
@@ -121,9 +116,13 @@ Saving the form finishes the task at once. Nobody at dembrane has to approve it.
 
 "Through Peppol" is chosen for you when your organisation is found in the Peppol directory
 by its VAT, KvK or KBO number: invoices then arrive in your accounting software. If you are
-not found, choose it yourself and give your "Peppol ID". With "Through an invoice portal"
-you give the "Name or link of the portal", and someone at dembrane adds each invoice there
-by hand. Once saved, a Peppol customer can still switch with "Send by email instead".
+not found, choose it yourself and give your "Peppol ID". Once saved, a Peppol customer can
+still switch with "Send by email instead".
+
+Do you get invoices some other way, such as through an invoice portal? Choose "Another
+way" and "Tell us how your organisation receives invoices". Saving sends this to dembrane
+as a question, and "We will set it up with you." Our answer appears under
+"[Talk to us](#talk-to-us)" on the "Overview" page.
 
 ## The invoice
 

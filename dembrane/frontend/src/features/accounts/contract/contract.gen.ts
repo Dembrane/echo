@@ -372,8 +372,9 @@ export const Ticket = z.object({
 });
 
 /**
- * How a customer gets invoices. `portal`: their own invoice portal, named in
- * `invoice_portal`; a person at dembrane adds each invoice there by hand.
+ * How a customer gets invoices. `other`: neither email nor Peppol. What they wrote about it
+ * is in `invoice_portal` and reached dembrane as a question; a person sends each invoice
+ * by hand.
  */
 export const InvoiceDelivery = z.enum(DELIVERIES);
 /** What Exact can send by itself, and so what staff may switch between. */
@@ -385,7 +386,7 @@ export const BillingDetails = z.object({
   vat_id: z.string().nullable(),
   /**
    * true: the organisation said it has no VAT number. false: it was asked and gave one.
-   * null: not asked (the Netherlands, a country outside the EU, details from before).
+   * null: not asked (a country outside the EU, details from before).
    */
   no_vat_number: z.boolean().nullable(),
   kvk_number: z.string().nullable(),
@@ -397,7 +398,10 @@ export const BillingDetails = z.object({
   peppol_match: PeppolMatch.nullable(),
   /** null: not chosen yet, so Peppol when there is a match and email otherwise. */
   invoice_delivery: InvoiceDelivery.nullable(),
-  /** The name or address of the customer's own invoice portal, when that is how invoices arrive. */
+  /**
+   * What the customer wrote about how they receive invoices, when `invoice_delivery` is
+   * `other`. Often the name of their invoice portal.
+   */
   invoice_portal: z.string().nullable(),
   address_line1: z.string().nullable(),
   address_line2: z.string().nullable(),
@@ -534,7 +538,10 @@ export const BillingUpdateRequest = z.object({
   /** For callers from before `country_code`: a code or a country's name. One of the two. */
   country: optText(64),
   vat_id: optText(64),
-  /** The organisation says it has no VAT number; asked in Belgium and the rest of the EU. */
+  /**
+   * The organisation says it has no VAT number; asked in the EU. Left out, a KvK or KBO
+   * number without a VAT number says the same.
+   */
   no_vat_number: z.boolean().nullish(),
   kvk_number: optText(32),
   kbo_number: optText(32),
@@ -542,8 +549,11 @@ export const BillingUpdateRequest = z.object({
   peppol_id: optText(128),
   /** Left out: unchanged. */
   invoice_delivery: InvoiceDelivery.nullable().optional(),
-  /** Required with `invoice_delivery: "portal"`, and kept only then. */
-  invoice_portal: optText(255),
+  /**
+   * Required with `invoice_delivery: "other"`, and kept only then: how the organisation
+   * receives invoices, in its own words. New or changed text opens a question to dembrane.
+   */
+  invoice_portal: optText(2000),
 });
 
 /** The Peppol directory entry for these numbers, before saving them. */

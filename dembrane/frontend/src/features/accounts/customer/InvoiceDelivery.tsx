@@ -3,9 +3,9 @@ import { Trans } from "@lingui/react/macro";
 import { Group, Stack, Switch, Text } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 import {
+	ChatTextIcon,
 	PaperPlaneTiltIcon,
 	PlugsConnectedIcon,
-	TrayArrowUpIcon,
 } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { call } from "../api/client";
@@ -13,12 +13,12 @@ import type { AccountPageT } from "../contract/contract.gen";
 
 type Billing = AccountPageT["billing"];
 export type Delivery = NonNullable<Billing["invoice_delivery"]>;
-/** What Exact sends by itself; a portal is a person's work, so nothing switches to it. */
-export type SentDelivery = Exclude<Delivery, "portal">;
+/** What Exact sends by itself; another way is agreed between people, so nothing switches to it. */
+export type SentDelivery = Exclude<Delivery, "other">;
 export type PeppolMatch = NonNullable<Billing["peppol_match"]>;
 
 /**
- * Their own portal when they chose it. Else Peppol first: when the directory knows the
+ * Another way when they chose it. Else Peppol first: when the directory knows the
  * customer, invoices go there unless they chose email. Without a match invoices go by
  * email.
  */
@@ -26,7 +26,7 @@ export const deliveryFor = (
 	match: PeppolMatch | null,
 	chosen: Delivery | null | undefined,
 ): Delivery =>
-	chosen === "portal" ? "portal" : match ? (chosen ?? "peppol") : "email";
+	chosen === "other" ? "other" : match ? (chosen ?? "peppol") : "email";
 
 type Numbers = Pick<Billing, "vat_id" | "kvk_number" | "kbo_number">;
 
@@ -67,15 +67,14 @@ export function usePeppolLookup(orgId: string, numbers: Numbers) {
 
 /**
  * How invoices arrive, said plainly, for saved details. On Peppol there is one choice to
- * make here: send by email instead. A portal has none: we add each invoice there by hand,
- * and the line says so. Shared by the billing summary and the staff card (`side` words it
- * for whoever is reading).
+ * make here: send by email instead. Another way has none: the customer wrote to us how,
+ * and the line says where that conversation is. Shared by the billing summary and the
+ * staff card (`side` words it for whoever is reading).
  */
 export function InvoiceDelivery({
 	match,
 	delivery,
 	email,
-	portal = null,
 	onChange,
 	disabled = false,
 	side = "customer",
@@ -83,13 +82,12 @@ export function InvoiceDelivery({
 	match: PeppolMatch | null;
 	delivery: Delivery;
 	email: string | null;
-	portal?: string | null;
 	/** Absent: the line is read-only. */
 	onChange?: (next: SentDelivery) => void;
 	disabled?: boolean;
 	side?: "customer" | "staff";
 }) {
-	if (delivery !== "portal" && !match) return null;
+	if (delivery !== "other" && !match) return null;
 	const peppol = delivery === "peppol";
 	const id = match?.participant_id;
 	return (
@@ -109,8 +107,8 @@ export function InvoiceDelivery({
 					pt="xs"
 					style={{ flexShrink: 0, lineHeight: 0 }}
 				>
-					{delivery === "portal" ? (
-						<TrayArrowUpIcon size={20} aria-hidden />
+					{delivery === "other" ? (
+						<ChatTextIcon size={20} aria-hidden />
 					) : peppol ? (
 						<PlugsConnectedIcon size={20} aria-hidden />
 					) : (
@@ -118,16 +116,16 @@ export function InvoiceDelivery({
 					)}
 				</Text>
 				<Text style={{ overflowWrap: "anywhere" }}>
-					{delivery === "portal" ? (
+					{delivery === "other" ? (
 						side === "customer" ? (
 							<Trans>
-								Invoices go to your invoice portal: {portal}. Someone at
-								dembrane adds each one by hand.
+								We will set up with you how you get invoices. Our answer appears
+								under Talk to us, on the Overview page.
 							</Trans>
 						) : (
 							<Trans>
-								Invoices go to the customer's invoice portal: {portal}. Add each
-								one there by hand.
+								The customer gets invoices another way. What they wrote is under
+								Questions. Send each invoice by hand.
 							</Trans>
 						)
 					) : peppol ? (
@@ -147,7 +145,7 @@ export function InvoiceDelivery({
 					)}
 				</Text>
 			</Group>
-			{onChange && delivery !== "portal" && (
+			{onChange && delivery !== "other" && (
 				<Switch
 					checked={!peppol}
 					disabled={disabled}

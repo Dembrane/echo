@@ -3,11 +3,11 @@
  * for the form and the API: scripts/sync-accounts-contract.mjs copies this file into the
  * frontend, so a number the form accepts is a number the API accepts.
  *
- * The country comes first because it decides the rest: the Netherlands asks for a KvK or
- * VAT number, Belgium and the other EU countries for a VAT number or the plain statement
- * that there is none (Belgium then gives its KBO number), and a country outside the EU
- * for nothing more. Formats only: no number is looked up anywhere, and nothing here says
- * what tax applies. That is decided by whoever sends the invoice.
+ * The country comes first because it decides the rest: an EU country is asked for its VAT
+ * number or the plain statement that there is none (the Netherlands then gives its KvK
+ * number, Belgium its KBO number), and a country outside the EU for nothing more. Formats
+ * only: no number is looked up anywhere, and nothing here says what tax applies. That is
+ * decided by whoever sends the invoice.
  */
 
 /** ISO 3166-1 alpha-2, every officially assigned code. */
@@ -168,7 +168,12 @@ export const kboFits = (cleaned: string) => /^[01]\d{9}$/.test(cleaned.replace(/
 export const cleanPeppol = (raw: string | null | undefined) => (raw ?? "").replace(/\s+/g, "");
 export const peppolFits = (cleaned: string) => /^\d{4}:[A-Za-z0-9._~-]+$/.test(cleaned);
 
-export const DELIVERIES = ["peppol", "email", "portal"] as const;
+/**
+ * How invoices arrive. `other`: neither of the two Exact sends by itself. The customer
+ * writes how they receive invoices (`invoice_portal`), which goes to dembrane as a
+ * question, and a person sends each invoice by hand.
+ */
+export const DELIVERIES = ["peppol", "email", "other"] as const;
 export type Delivery = (typeof DELIVERIES)[number];
 
 /** The answers the rules read. Text is as typed; empty and null both mean not given. */
@@ -191,6 +196,21 @@ export type BillingField =
   | "kbo_number"
   | "peppol_id"
   | "invoice_portal";
+
+const given = (v: string | null | undefined) => (v ?? "").trim() !== "";
+
+/**
+ * Whether the answers say the organisation has no VAT number. Said outright, or read from
+ * a KvK or KBO number given alone where the question was never put: details saved before
+ * the form asked it, and callers that do not send the answer.
+ */
+export function saysNoVat(a: BillingAnswers): boolean {
+  const group = countryGroup(a.country_code);
+  if (group === null || group === "other") return false;
+  if (a.no_vat_number != null) return a.no_vat_number;
+  if (given(a.vat_id)) return false;
+  return group === "nl" ? given(a.kvk_number) : group === "be" && given(a.kbo_number);
+}
 
 /** `missing`: nothing was given where something is needed. `format`: it does not look right. */
 export interface BillingProblem {
@@ -222,7 +242,8 @@ export function checkBilling(a: BillingAnswers): {
   const group = countryGroup(a.country_code);
   if (!group) problems.push({ field: "country_code", kind: "missing" });
 
-  const said = (group === "be" || group === "eu") && a.no_vat_number === true;
+  const asked = group !== null && group !== "other";
+  const said = saysNoVat(a);
   const vat = cleanVat(a.country_code, a.vat_id);
   const kvk = cleanKvk(a.kvk_number);
   const kbo = cleanKbo(a.kbo_number);
@@ -234,25 +255,23 @@ export function checkBilling(a: BillingAnswers): {
   if (kvk && !kvkFits(kvk)) problems.push({ field: "kvk_number", kind: "format" });
   if (kbo && !kboFits(kbo)) problems.push({ field: "kbo_number", kind: "format" });
 
-  if (group === "nl" && !vat && !kvk)
-    problems.push({ field: "kvk_number", kind: "missing" }, { field: "vat_id", kind: "missing" });
-  if ((group === "be" || group === "eu") && !vat && !said)
-    problems.push({ field: "vat_id", kind: "missing" });
+  if (asked && !vat && !said) problems.push({ field: "vat_id", kind: "missing" });
+  if (group === "nl" && said && !kvk) problems.push({ field: "kvk_number", kind: "missing" });
   if (group === "be" && said && !kbo) problems.push({ field: "kbo_number", kind: "missing" });
 
   if (peppol && !peppolFits(peppol)) problems.push({ field: "peppol_id", kind: "format" });
-  if (a.invoice_delivery === "portal" && !portal)
+  if (a.invoice_delivery === "other" && !portal)
     problems.push({ field: "invoice_portal", kind: "missing" });
 
   return {
     problems,
     clean: {
       vat_id: vat || null,
-      no_vat_number: group === "be" || group === "eu" ? said : null,
+      no_vat_number: asked ? said : null,
       kvk_number: kvk || null,
       kbo_number: kbo || null,
       peppol_id: peppol || null,
-      invoice_portal: a.invoice_delivery === "portal" ? portal || null : null,
+      invoice_portal: a.invoice_delivery === "other" ? portal || null : null,
     },
   };
 }
@@ -270,8 +289,7 @@ export function identified(b: {
   readonly kvk_number: string | null;
   readonly kbo_number: string | null;
 }): boolean {
-  const filled = (v: string | null) => v !== null && v.trim() !== "";
-  if (filled(b.vat_id) || filled(b.kvk_number) || filled(b.kbo_number)) return true;
+  if (given(b.vat_id) || given(b.kvk_number) || given(b.kbo_number)) return true;
   if (b.no_vat_number === true) return true;
   return countryGroup(b.country_code ?? countryCodeOf(b.country)) === "other";
 }

@@ -172,8 +172,7 @@ export function orgPayload(o: OrgRow) {
 
 /**
  * How the invoice reaches the customer: the choice made, else Peppol when the customer is
- * on it. `portal` is the customer's own invoice portal, which Exact cannot send to: a
- * person adds the invoice there.
+ * on it. `other` is a way Exact cannot send by itself: a person sends the invoice.
  */
 export function invoiceDelivery(b: BillingRow | null): Delivery {
   const chosen = DELIVERIES.find((way) => way === b?.invoice_delivery);
@@ -192,7 +191,7 @@ export function billingPayload(b: BillingRow | null) {
     po_number: b?.po_number ?? null,
     peppol_id: b?.peppol_id ?? null,
     invoice_delivery: invoiceDelivery(b),
-    // The customer's own invoice portal, as they named it; set only with delivery "portal".
+    // How the customer receives invoices, in their words; set only with delivery "other".
     invoice_portal: b?.invoice_portal ?? null,
     address: {
       line1: b?.billing_address_line1 ?? null,

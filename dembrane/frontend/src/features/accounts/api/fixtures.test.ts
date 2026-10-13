@@ -290,41 +290,64 @@ describe("the fixture backend, through the client", () => {
 		await expect(
 			save({ country_code: "DE", vat_id: "DE12" }),
 		).rejects.toMatchObject({ status: 422 });
-		// A portal has to be named.
+		// Another way than email or Peppol needs the customer's own words.
 		await expect(
 			save({
 				country_code: "DE",
-				invoice_delivery: "portal",
+				invoice_delivery: "other",
 				no_vat_number: true,
 			}),
 		).rejects.toMatchObject({ fields: { invoice_portal: expect.any(String) } });
-		const saved = await save({
+		const questions = async () =>
+			(await client.call("accountPage", { params: { orgId: org } })).tickets;
+		const before = (await questions()).length;
+		const other = {
 			country_code: "DE",
-			invoice_delivery: "portal",
-			invoice_portal: "Example supplier portal (sample)",
+			invoice_delivery: "other",
+			invoice_portal: "We use the Example supplier portal (sample).",
 			no_vat_number: true,
-		});
+		};
+		const saved = await save(other);
 		expect(saved).toMatchObject({
 			country: "Germany",
 			country_code: "DE",
-			invoice_delivery: "portal",
-			invoice_portal: "Example supplier portal (sample)",
+			invoice_delivery: "other",
+			invoice_portal: "We use the Example supplier portal (sample).",
 			no_vat_number: true,
 			vat_id: null,
+		});
+		// What they wrote is their question to dembrane, once: saving again asks nothing new.
+		await save(other);
+		const asked = await questions();
+		expect(asked).toHaveLength(before + 1);
+		expect(asked[0]).toMatchObject({
+			messages: [{ body: other.invoice_portal, from: "customer" }],
+			status: "waiting_on_dembrane",
 		});
 		// Numbers are stored clean, and a country written as a name becomes its code.
 		const dutch = await save({
 			country: "Nederland",
 			invoice_delivery: "email",
-			kvk_number: "1234 5678",
+			no_vat_number: false,
 			vat_id: "nl 1234.56.789 b01",
 		});
 		expect(dutch).toMatchObject({
 			country_code: "NL",
 			invoice_portal: null,
-			kvk_number: "12345678",
-			no_vat_number: null,
+			no_vat_number: false,
 			vat_id: "NL123456789B01",
+		});
+		// The Netherlands follows the same pattern: a VAT number, or none and the KvK number.
+		await expect(
+			save({ country_code: "NL", no_vat_number: true }),
+		).rejects.toMatchObject({ fields: { kvk_number: expect.any(String) } });
+		// A caller from before the question sends a KvK number alone: that says the same.
+		expect(
+			await save({ country_code: "NL", kvk_number: "1234 5678" }),
+		).toMatchObject({
+			kvk_number: "12345678",
+			no_vat_number: true,
+			vat_id: null,
 		});
 	});
 

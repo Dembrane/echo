@@ -756,13 +756,12 @@ function Billing({ card }: { card: AccountCardT }) {
 	return (
 		<Section title={<Trans>Billing details</Trans>} testId="staff-billing">
 			<Stack gap="sm">
-				{/* Staff can opt a customer out of Peppol too, or back in; a portal is the customer's to change. */}
+				{/* Staff can opt a customer out of Peppol too, or back in; another way is the customer's to change. */}
 				<InvoiceDelivery
 					side="staff"
 					match={b.peppol_match}
 					delivery={deliveryFor(b.peppol_match, b.invoice_delivery)}
 					email={b.billing_email}
-					portal={b.invoice_portal}
 					onChange={(next) =>
 						update.mutate({ body: { invoice_delivery: next } })
 					}

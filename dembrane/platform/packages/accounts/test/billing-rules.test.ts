@@ -13,6 +13,7 @@ import {
   kboFits,
   kvkFits,
   peppolFits,
+  saysNoVat,
   vatFits,
 } from "../src/billing-rules";
 
@@ -110,21 +111,46 @@ describe("what each country is asked", () => {
     expect(problems({ country_code: "Atlantis" })).toEqual(["country_code: missing"]);
   });
 
-  test("the Netherlands: a KvK number or a VAT number, either is enough", () => {
-    expect(problems({ country_code: "NL" })).toEqual(["kvk_number: missing", "vat_id: missing"]);
-    expect(problems({ country_code: "NL", kvk_number: "12345678" })).toEqual([]);
+  test("the Netherlands: a VAT number, or the statement that there is none and the KvK number", () => {
+    expect(problems({ country_code: "NL" })).toEqual(["vat_id: missing"]);
     expect(problems({ country_code: "NL", vat_id: "nl123456789b01" })).toEqual([]);
-    expect(problems({ country_code: "NL", kvk_number: "1234", vat_id: "NL12" })).toEqual([
-      "vat_id: format",
+    expect(problems({ country_code: "NL", no_vat_number: true })).toEqual(["kvk_number: missing"]);
+    expect(problems({ country_code: "NL", no_vat_number: true, kvk_number: "1234" })).toEqual([
       "kvk_number: format",
     ]);
-    // The VAT question is not asked there, so nothing is recorded about it.
-    const { clean } = checkBilling({
+    const { problems: none, clean } = checkBilling({
       country_code: "NL",
-      kvk_number: "12345678",
       no_vat_number: true,
+      kvk_number: "1234 5678",
     });
-    expect(clean).toMatchObject({ kvk_number: "12345678", vat_id: null, no_vat_number: null });
+    expect(none).toEqual([]);
+    expect(clean).toMatchObject({ kvk_number: "12345678", vat_id: null, no_vat_number: true });
+    // A KvK number we already hold may travel with the VAT number.
+    expect(
+      checkBilling({ country_code: "NL", vat_id: "NL123456789B01", kvk_number: "12345678" }).clean,
+    ).toMatchObject({ kvk_number: "12345678", vat_id: "NL123456789B01", no_vat_number: false });
+  });
+
+  test("a KvK or KBO number alone, with the question never put, says there is no VAT number", () => {
+    expect(saysNoVat({ country_code: "NL", kvk_number: "12345678" })).toBe(true);
+    expect(saysNoVat({ country_code: "BE", kbo_number: "0123.456.789" })).toBe(true);
+    expect(problems({ country_code: "NL", kvk_number: "12345678" })).toEqual([]);
+    expect(checkBilling({ country_code: "NL", kvk_number: "12345678" }).clean.no_vat_number).toBe(
+      true,
+    );
+    // An answer given outright wins, and a VAT number is never read as "none".
+    expect(saysNoVat({ country_code: "NL", kvk_number: "12345678", no_vat_number: false })).toBe(
+      false,
+    );
+    expect(problems({ country_code: "NL", kvk_number: "12345678", no_vat_number: false })).toEqual([
+      "vat_id: missing",
+    ]);
+    expect(
+      saysNoVat({ country_code: "NL", kvk_number: "12345678", vat_id: "NL123456789B01" }),
+    ).toBe(false);
+    // Another EU country has no number of its own to read it from, and outside the EU nobody asks.
+    expect(saysNoVat({ country_code: "DE" })).toBe(false);
+    expect(saysNoVat({ country_code: "US", no_vat_number: true })).toBe(false);
   });
 
   test("Belgium: a VAT number, or the statement that there is none and the KBO number", () => {
@@ -164,15 +190,15 @@ describe("what each country is asked", () => {
     expect(clean).toMatchObject({ vat_id: "GB 123 4567 89", no_vat_number: null });
   });
 
-  test("a portal needs its name, and the name is kept only for a portal", () => {
-    const nl = { country_code: "NL", kvk_number: "12345678" };
-    expect(problems({ ...nl, invoice_delivery: "portal" })).toEqual(["invoice_portal: missing"]);
+  test("another way needs the customer's own words, and they are kept only for that choice", () => {
+    const nl = { country_code: "NL", vat_id: "NL123456789B01" };
+    expect(problems({ ...nl, invoice_delivery: "other" })).toEqual(["invoice_portal: missing"]);
     expect(
-      checkBilling({ ...nl, invoice_delivery: "portal", invoice_portal: " Example portal " }).clean
+      checkBilling({ ...nl, invoice_delivery: "other", invoice_portal: " We use a portal. " }).clean
         .invoice_portal,
-    ).toBe("Example portal");
+    ).toBe("We use a portal.");
     expect(
-      checkBilling({ ...nl, invoice_delivery: "email", invoice_portal: "Example portal" }).clean
+      checkBilling({ ...nl, invoice_delivery: "email", invoice_portal: "We use a portal." }).clean
         .invoice_portal,
     ).toBeNull();
     expect(problems({ ...nl, peppol_id: "12345678" })).toEqual(["peppol_id: format"]);
