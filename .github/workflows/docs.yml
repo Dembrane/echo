@@ -1,0 +1,157 @@
+name: docs
+
+# Publishes the documentation in docs/ as one site per environment, so each site describes
+# the product that environment runs.
+#
+# staging: every push to main that changes docs/ goes to https://docs.staging.dembrane.com, a
+# bucket behind staging's load balancer (dembrane/infra, docs_domain), written through staging's
+# keyless GitHub trust.
+#
+# prod: https://docs.dembrane.com is GitHub Pages. platform.yml calls this workflow after
+# 70-deploy-prod with the release tag, so the pages change with the release they describe. A
+# run by hand publishes a ref without a release, for a fix to the pages alone: it publishes
+# everything docs/ says at that ref, features not yet released included.
+#
+# The MCP documentation tools read the published site of their own environment (llms.txt and
+# a markdown twin per page), so --base-url must be the address the site is served at.
+#
+# #alerts-ci gets one line per publish: updated with the site's link, or not updated with the
+# run. The github-pages environment accepts runs from main only; once PROD_DEPLOY_ON_TAG is
+# "true" the prod run's ref is the tag, and that environment must accept v*.*.* tags too.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - ".github/workflows/docs.yml"
+  workflow_call:
+    inputs:
+      target:
+        type: string
+        required: true
+      ref:
+        type: string
+        required: true
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Which site to publish
+        type: choice
+        options: [staging, prod]
+        default: staging
+      ref:
+        description: "prod: the tag or commit on main whose docs/ to publish (empty: main)"
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+env:
+  # staging publishes main; only prod takes a ref.
+  REF: ${{ inputs.target == 'prod' && inputs.ref || github.sha }}
+  # Pinned to a commit: the builder runs in jobs that can write the published sites.
+  BUILDER: github:spashii/folder2website#f20082056062d7c0fb825ce2529ccf07df33845f
+  ALERTS_CHANNEL: C0C4HBZNSNT # #alerts-ci
+
+jobs:
+  staging:
+    name: docs-staging
+    if: ${{ (inputs.target || 'staging') == 'staging' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: docs-staging
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      SITE: https://docs.staging.dembrane.com
+      BUCKET: gs://dembrane-web-staging-echo-staging-docs
+    steps:
+      # The GCP trust enforces the same ref; failing here says why before the build.
+      - name: Check the ref
+        run: '[ "$GITHUB_REF" = refs/heads/main ] || { echo "::error::staging publishes main, not $GITHUB_REF"; exit 1; }'
+      - name: Check out code
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          ref: ${{ env.REF }}
+          persist-credentials: false
+          # folder2website reads each page's history for its dates.
+          fetch-depth: 0
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - name: Build the site
+        run: bunx "$BUILDER" docs --out _site --base-url "$SITE"
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2.1.13
+        with:
+          workload_identity_provider: projects/1089877593337/locations/global/workloadIdentityPools/echo-staging-github/providers/github
+          service_account: echo-staging-deployer@dembrane-web-staging.iam.gserviceaccount.com
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@e427ad8a34f8676edf47cf7d7925499adf3eb74f # v2.2.1
+        with: { skip_install: true }
+      # no-cache: a browser asks again on every visit, so a publish shows at once.
+      - name: Publish
+        run: gcloud storage rsync _site "$BUCKET" --recursive --checksums-only --delete-unmatched-destination-objects --cache-control=no-cache
+      - name: "Tell #alerts-ci"
+        if: ${{ always() }}
+        continue-on-error: true
+        env:
+          SLACK_TOKEN: ${{ secrets.SLACK_ALERTS_BOT_TOKEN }}
+          STATUS: ${{ job.status }}
+          NAME: Staging
+        run: |
+          . .github/scripts/slack.sh
+          if [ "$STATUS" = success ]; then text="$NAME documentation updated: $SITE"
+          else text="$NAME documentation not updated, $SITE still shows the earlier pages: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"; fi
+          slack_send "$ALERTS_CHANNEL" "$(jq -n --arg text "$text" '{text: $text}')"
+
+  prod:
+    name: docs-prod
+    if: ${{ inputs.target == 'prod' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: docs-prod
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    env:
+      SITE: https://docs.dembrane.com
+    steps:
+      - name: Check out code
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          ref: ${{ env.REF }}
+          persist-credentials: false
+          # folder2website reads each page's history for its dates.
+          fetch-depth: 0
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - name: Build the site
+        run: bunx "$BUILDER" docs --out _site --base-url "$SITE"
+      - name: Upload the site
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with: { path: _site }
+      - name: Publish
+        id: deploy
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+      - name: "Tell #alerts-ci"
+        if: ${{ always() }}
+        continue-on-error: true
+        env:
+          SLACK_TOKEN: ${{ secrets.SLACK_ALERTS_BOT_TOKEN }}
+          STATUS: ${{ job.status }}
+          NAME: Production
+        run: |
+          . .github/scripts/slack.sh
+          if [ "$STATUS" = success ]; then text="$NAME documentation updated: $SITE"
+          else text="$NAME documentation not updated, $SITE still shows the earlier pages: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"; fi
+          slack_send "$ALERTS_CHANNEL" "$(jq -n --arg text "$text" '{text: $text}')"

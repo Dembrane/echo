@@ -62,6 +62,7 @@ module "platform" {
     dashboard = "dashboard.staging.dembrane.com"
     portal    = "portal.staging.dembrane.com"
   }
+  docs_domain     = "docs.staging.dembrane.com"
   wildcard_domain = "staging.dembrane.com"
   monitor_domains = false # until DNS points the names here and the first deploy is up
 }
@@ -83,6 +84,7 @@ output "platform" {
     secrets                    = module.platform.secrets
     log_bucket                 = module.platform.log_bucket
     lb_ip                      = module.platform.lb_ip
+    docs_bucket                = module.platform.docs_bucket
     dns_authorizations         = module.platform.dns_authorizations
   }
 }

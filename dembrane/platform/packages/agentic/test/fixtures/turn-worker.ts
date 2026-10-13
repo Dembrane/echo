@@ -35,6 +35,7 @@ const reg = agenticWorker({
       publicUrl: "http://localhost:8080",
       dashboardUrl: "http://localhost:5173",
       portalUrl: "http://localhost:5174",
+      docsUrl: undefined,
       trustedProxies: [],
       proxySecret: undefined,
     },

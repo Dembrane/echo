@@ -31,7 +31,9 @@ SQL instance `echo-<env>`, the uploads bucket with its HMAC key, secrets replica
 europe-west4 only, the runtime and deployer service accounts, the GitHub trust, the EU log
 bucket with the `_Default` sink pointed at it, log metrics, alerts and the readiness check.
 staging and prod also have the load balancer (`api`, `dashboard` and `portal`; prod adds the old
-`directus` host). prod has, in `prod/cutover.tf`, what the cutover needs: the archive bucket
+`directus` host). staging's also serves `docs.staging.dembrane.com` (`docs_domain`) from a public
+bucket that `.github/workflows/docs.yml` fills from `docs/` on main; production's documentation
+is GitHub Pages. prod has, in `prod/cutover.tf`, what the cutover needs: the archive bucket
 and Storage Transfer.
 
 Alerts go to email (`alert_email`) and to Slack #alerts-ci. Monitoring publishes each
