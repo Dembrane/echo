@@ -4,6 +4,7 @@ import {
 	ActionIcon,
 	Button,
 	Group,
+	Loader,
 	Paper,
 	ScrollArea,
 	Stack,
@@ -16,7 +17,7 @@ import {
 } from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
-import { memo, useEffect, useRef, useState } from "react";
+import { lazy, memo, Suspense, useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
@@ -26,7 +27,6 @@ import { errorCode } from "@/lib/errors/read";
 import { testId } from "@/lib/testUtils";
 import { Logo } from "../../../components/common/Logo";
 import { Markdown } from "../../../components/common/Markdown";
-import { MarkdownWYSIWYG } from "../../../components/form/MarkdownWYSIWYG/MarkdownWYSIWYG";
 import { useParticipantProjectById } from "../../hooks";
 import {
 	useUpdateVerificationArtefact,
@@ -36,7 +36,15 @@ import {
 import { VerifyArtefactError } from "./VerifyArtefactError";
 import { VerifyArtefactLoading } from "./VerifyArtefactLoading";
 
-const MemoizedMarkdownWYSIWYG = memo(MarkdownWYSIWYG);
+// The editor (MDXEditor and Lexical, ~400 KB) only shows after "edit", so it
+// stays out of the portal's first load; opening this screen starts fetching it.
+const loadMarkdownWYSIWYG = () =>
+	import("../../../components/form/MarkdownWYSIWYG/MarkdownWYSIWYG");
+const MemoizedMarkdownWYSIWYG = memo(
+	lazy(() =>
+		loadMarkdownWYSIWYG().then((m) => ({ default: m.MarkdownWYSIWYG })),
+	),
+);
 
 export const VerifyArtefact = () => {
 	const { projectId, conversationId } = useParams();
@@ -65,6 +73,11 @@ export const VerifyArtefact = () => {
 	>(null);
 
 	const audioRef = useRef<HTMLAudioElement | null>(null);
+
+	useEffect(() => {
+		// A failed prefetch is retried when the editor actually renders.
+		loadMarkdownWYSIWYG().catch(() => {});
+	}, []);
 	const reviseCooldown = useCooldown(30 * 1000); // 30 second cooldown
 
 	const artefactContent =
@@ -352,10 +365,12 @@ export const VerifyArtefact = () => {
 
 							{isEditing ? (
 								<div {...testId("portal-verify-artefact-editor")}>
-									<MemoizedMarkdownWYSIWYG
-										markdown={editedContent}
-										onChange={setEditedContent}
-									/>
+									<Suspense fallback={<Loader size="sm" />}>
+										<MemoizedMarkdownWYSIWYG
+											markdown={editedContent}
+											onChange={setEditedContent}
+										/>
+									</Suspense>
 								</div>
 							) : (
 								<div {...testId("portal-verify-artefact-markdown")}>
