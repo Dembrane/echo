@@ -1,17 +1,30 @@
 import { Navigate, type RouteObject } from "react-router";
 import { createLazyNamedRoute } from "@/components/common/LazyRoute";
-import { ParticipantErrorPage } from "./layout/ParticipantErrorPage";
 import { ParticipantConversationAudio } from "./components/conversation/audio/ParticipantConversationAudio";
 import { ParticipantConversationAudioContent } from "./components/conversation/audio/ParticipantConversationAudioContent";
 import { ParticipantConversationText } from "./components/conversation/text/ParticipantConversationText";
-import { RefineSelection } from "./components/refine/RefineSelection";
-import { Verify } from "./components/verify/Verify";
-import { VerifyArtefact } from "./components/verify/VerifyArtefact";
-import { VerifySelection } from "./components/verify/VerifySelection";
+import { laterScreens } from "./laterScreens";
+import { ParticipantErrorPage } from "./layout/ParticipantErrorPage";
 import { ParticipantLayout } from "./layout/ParticipantLayout";
-import { ParticipantPostConversation } from "./routes/ParticipantPostConversation";
 import { ParticipantStartRoute } from "./routes/ParticipantStart";
 
+const RefineSelection = createLazyNamedRoute(
+	laterScreens.refine,
+	"RefineSelection",
+);
+const Verify = createLazyNamedRoute(laterScreens.verify, "Verify");
+const VerifySelection = createLazyNamedRoute(
+	laterScreens.verifySelection,
+	"VerifySelection",
+);
+const VerifyArtefact = createLazyNamedRoute(
+	laterScreens.verifyArtefact,
+	"VerifyArtefact",
+);
+const ParticipantPostConversation = createLazyNamedRoute(
+	laterScreens.finish,
+	"ParticipantPostConversation",
+);
 const ParticipantReport = createLazyNamedRoute(
 	() => import("./routes/ParticipantReport"),
 	"ParticipantReport",
@@ -24,7 +37,8 @@ const ProjectUnsubscribe = createLazyNamedRoute(
 /**
  * The participant portal's routes. The start screen and conversation are
  * imported eagerly so they land in the first load (scripts/check-portal-bundle
- * keeps that load small); the rest are lazy.
+ * keeps that load small); the rest are lazy, and the screens of a conversation
+ * under way are prefetched once the portal is idle (laterScreens.ts).
  */
 export const participantRoutes: RouteObject[] = [
 	{

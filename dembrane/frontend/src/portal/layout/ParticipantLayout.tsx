@@ -5,6 +5,7 @@ import { logoUrl } from "@/lib/avatar";
 import { Toaster } from "../../components/common/Toaster";
 import { I18nProvider } from "../../components/layout/I18nProvider";
 import { useParticipantProjectById } from "../hooks";
+import { prefetchLaterScreens } from "../laterScreens";
 import { ParticipantHeader } from "./ParticipantHeader";
 
 export const ParticipantLayout = () => {
@@ -16,6 +17,8 @@ export const ParticipantLayout = () => {
 	// page renders without the header and Logo spins until the context resolves.
 	const { setLogoUrl } = useWhitelabelLogo();
 	const projectQuery = useParticipantProjectById(projectId ?? "");
+
+	useEffect(() => prefetchLaterScreens(), []);
 
 	useEffect(() => {
 		// A file id, or an absolute URL on older workspace rows.
