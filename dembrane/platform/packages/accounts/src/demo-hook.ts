@@ -1,6 +1,7 @@
-import type { Json, ProspectHook } from "@dembrane/popcorn";
+import type { DraftDeckDeps, Json, ProspectHook } from "@dembrane/popcorn";
 import { demoIdentity } from "@dembrane/popcorn";
 import { ProspectBlock } from "./contract";
+import { demoDeck } from "./demo/service";
 import type { AccountsDeps } from "./deps";
 import { emit } from "./events";
 import { createAccount } from "./prospect";
@@ -50,4 +51,13 @@ export function demoProspectHook(d: AccountsDeps): ProspectHook {
       },
     };
   };
+}
+
+/**
+ * Who may open a demo's deck before it is public (the `open` of popcorn's draft deck
+ * routes): the decision and its trail are the accounts package's, the serving is popcorn's.
+ */
+export function demoDeckHook(d: AccountsDeps): DraftDeckDeps["open"] {
+  return (who, demoId, language, part, requestId) =>
+    demoDeck(d, who, demoId, language, part, requestId);
 }

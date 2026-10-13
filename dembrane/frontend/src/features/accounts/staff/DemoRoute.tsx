@@ -61,6 +61,10 @@ const stepLabel = (name: Step["name"]): string =>
 
 export const demoKey = (id: string) => ["accounts", "demo", id] as const;
 
+/** The dashboard page that shows a demo's deck to staff before it is public. */
+export const demoDraftPath = (demoId: string, language: string) =>
+	`/admin/accounts/demos/${demoId}/draft/${language}`;
+
 function Demo() {
 	const { demoId } = useParams<{ demoId: string }>();
 	const queryClient = useQueryClient();
@@ -240,6 +244,19 @@ function Draft({
 	return (
 		<Stack gap="md" data-testid="demo-draft">
 			<Stack gap={6}>
+				{!published &&
+					demo.links.projects.map((p) => (
+						<Anchor
+							key={p.language}
+							component={I18nLink}
+							to={demoDraftPath(demo.id, p.language)}
+							target="_blank"
+							size="sm"
+							data-testid="demo-open-draft"
+						>
+							<Trans>Open the draft ({p.language.toUpperCase()})</Trans>
+						</Anchor>
+					))}
 				{demo.links.public.map((l) => (
 					<Group key={l.url} gap="xs">
 						<Anchor

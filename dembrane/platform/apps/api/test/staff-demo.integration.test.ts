@@ -10,6 +10,7 @@ import {
   buildDemo,
   type DemoBuildDeps,
   demoBuildAccess,
+  demoDeckHook,
   ensureUser,
   contract as K,
   MemoryJobs,
@@ -19,6 +20,13 @@ import { createDb, migrate, schema } from "@dembrane/db";
 import type { Env, Signed } from "@dembrane/http";
 import { FakeCompleter } from "@dembrane/llm";
 import { createLogger } from "@dembrane/observability";
+import {
+  draftDeckRoutes,
+  type PopcornDeps,
+  popcornDeps,
+  popcornRoutes,
+  publicRoutes,
+} from "@dembrane/popcorn";
 import { projectRoutes } from "@dembrane/projects";
 import { MemoryRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { backfillBestPractices, seedBestPractices } from "@dembrane/samples";
@@ -89,6 +97,7 @@ run("a staff demo where the deployment is production", () => {
   let demo: K.DemoStatusT;
   let demoWorkspace = "";
   let demoProject = "";
+  let demoReport = "";
   let ownProject = "";
   let contact: Person;
   let statsBefore: Awaited<ReturnType<typeof computeStats>>;
@@ -97,6 +106,13 @@ run("a staff demo where the deployment is production", () => {
     ...(who && { "x-as": who.directusUserId }),
     "content-type": "application/json",
   });
+  /** A person, a staff key by its name in this test, or nobody. */
+  const open = (who: Person | string | null, path: string) =>
+    app.request(path, {
+      headers: who ? { "x-as": typeof who === "string" ? who : who.directusUserId } : {},
+    });
+  const deckOf = (demoId: string, language = "en") =>
+    `/api/v2/admin/accounts/demos/${demoId}/deck/${language}`;
   const get = async (who: Person | null, path: string) => {
     const res = await app.request(path, { headers: as(who) });
     return { status: res.status, data: (await res.json()) as Record<string, unknown> };
@@ -166,6 +182,13 @@ run("a staff demo where the deployment is production", () => {
     };
     people.staff = await person("staff@dembrane.example", "Staff", role);
     people.customer = await person("pat@riverbend.example", "Pat Rivers");
+    // Staff API keys as the API's session reads them: the key's own list of permissions.
+    for (const permission of ["staff:accounts", "staff:webhooks"] as const)
+      byId.set(`key ${permission}`, {
+        ...people.staff,
+        isStaff: false,
+        staffPolicies: [permission],
+      });
 
     // A customer on the free plan with half an hour recorded.
     await db.insert(schema.org).values({ id: customer.org, name: "Riverbend Housing (sample)" });
@@ -250,6 +273,28 @@ run("a staff demo where the deployment is production", () => {
       c.set("principal", byId.get(c.req.header("x-as") ?? "") ?? null);
       await next();
     });
+    // The decks: the staff door to a demo's draft, the public link and the host's routes.
+    const popcorn = popcornDeps({
+      db,
+      deck: {
+        deckObjects: async () => ({}),
+        excludedObjectIds: async () => new Set<string>(),
+        currentDeck: async () => null,
+        assembleDeck: async () => null,
+        owns: async () => true,
+      } as unknown as PopcornDeps["deck"],
+      flags: { present: true, canvas: false },
+      participantBaseUrl: demoSettings.portalUrl,
+      adminBaseUrl: deps.settings.dashboardUrl,
+      showFlow: false,
+      dispatchTick: async () => {},
+      limiter: deps.limiter,
+      logger,
+    });
+    const hub = async () => ({}) as never;
+    app.route("/", draftDeckRoutes({ ...popcorn, hub, open: demoDeckHook(deps) }));
+    app.route("/", publicRoutes({ ...popcorn, hub, audienceMap: async () => ({}) }));
+    app.route("/", popcornRoutes({ ...popcorn, access, hub, capture: async () => {} }));
     app.route("/", accountsRoutes(deps));
     app.route(
       "/",
@@ -292,7 +337,11 @@ run("a staff demo where the deployment is production", () => {
       .select()
       .from(schema.account_demo)
       .where(eq(schema.account_demo.id, started.id));
-    demoWorkspace = (row?.seed as { workspace_id: string } | undefined)?.workspace_id ?? "";
+    const seed = row?.seed as
+      | { workspace_id: string; projects: { report_id: string }[] }
+      | undefined;
+    demoWorkspace = seed?.workspace_id ?? "";
+    demoReport = seed?.projects[0]?.report_id ?? "";
     demoProject = demo.links.projects[0]?.project_id as string;
     const [user] = await db
       .select()
@@ -359,6 +408,119 @@ run("a staff demo where the deployment is production", () => {
     expect(
       await resolveProject(new DrizzleAccessStore(db), demoProject, who, new Date()),
     ).toBeNull();
+  });
+
+  test("staff open the draft's deck before it is public, and nobody else does", async () => {
+    const deck = deckOf(demo.id);
+    const live = new URL(demo.links.public[0]?.url as string).pathname;
+    // Not public yet: the link answers "not live" to everyone, staff included.
+    for (const who of [null, people.staff]) {
+      expect((await open(who, live)).status).toBe(404);
+      expect((await open(who, `${live}data/bundle.json`)).status).toBe(404);
+    }
+
+    // Staff get the room's page and what fills it, by the demo's id.
+    for (const path of [deck, `${deck}/`]) {
+      const page = await open(people.staff, path);
+      expect(page.status).toBe(200);
+      expect(page.headers.get("content-type")).toContain("text/html");
+      expect(await page.text()).toContain('window.POPCORN_EMBED = {"mode": "public"};');
+    }
+    const data = await open(people.staff, `${deck}/data/bundle.json`);
+    expect(data.status).toBe(200);
+    expect(data.headers.get("cache-control")).toBe("no-store");
+    expect(JSON.stringify(await data.json())).toContain(AUTHORED.title);
+    const logo = await open(people.staff, `${deck}/logo.png`);
+    expect([logo.status, logo.headers.get("content-type")]).toEqual([200, "image/png"]);
+    expect((await open(people.staff, `${deck}/illustrations/nothing.webp`)).status).toBe(404);
+
+    // A staff key reads it with the accounts permission, and not without.
+    expect((await open("key staff:accounts", `${deck}/data/bundle.json`)).status).toBe(200);
+    for (const part of ["/", "/data/bundle.json", "/logo.png", "/events"])
+      expect((await open("key staff:webhooks", `${deck}${part}`)).status).toBe(403);
+
+    // No customer, not the demo's own contact before publishing, nobody signed out.
+    for (const part of ["/", "/data/bundle.json", "/logo.png", "/events"]) {
+      for (const who of [people.customer, contact])
+        expect((await open(who, `${deck}${part}`)).status).toBe(403);
+      expect((await open(null, `${deck}${part}`)).status).toBe(401);
+    }
+
+    // Only a language the build seeded, and only a demo: a project or a session is no id here.
+    expect((await open(people.staff, `${deckOf(demo.id, "nl")}/`)).status).toBe(404);
+    for (const id of [newId(), demoProject, demoReport, "x"])
+      expect((await open(people.staff, `${deckOf(id)}/data/bundle.json`)).status).toBe(404);
+
+    // The page is on the staff audit trail and on the account's timeline. The data is on
+    // the trail once a minute for each reader: two reads above and one more, one row.
+    await open(people.staff, `${deck}/data/bundle.json`);
+    const audit = (await db.execute(sql`
+      select action, count(*)::int as n from staff_audit_event
+      where target_type = 'demo' and target_id = ${demo.id} and action like 'accounts.demo.deck.%'
+      group by action order by action`)) as unknown as { action: string; n: number }[];
+    expect([...audit]).toEqual([
+      { action: "accounts.demo.deck.data", n: 1 },
+      { action: "accounts.demo.deck.page", n: 3 },
+    ]);
+    const opened = await db
+      .select({ actor: schema.account_event.actorUserId, detail: schema.account_event.detail })
+      .from(schema.account_event)
+      .where(eq(schema.account_event.type, "demo.opened"));
+    expect(opened).toEqual([
+      {
+        actor: people.staff.directusUserId,
+        detail: { demo_id: demo.id, language: "en", status: "draft" },
+      },
+      {
+        actor: people.staff.directusUserId,
+        detail: { demo_id: demo.id, language: "en", status: "draft" },
+      },
+    ]);
+  });
+
+  test("a demo that is still being made, or that failed, has no draft to open", async () => {
+    for (const status of ["queued", "running", "failed"]) {
+      const id = newId();
+      await db.insert(schema.account_demo).values({
+        id,
+        status,
+        input: { organisation_name: "Millbrook Library (sample)", language: "en" },
+        steps: {},
+        createdBy: people.staff.directusUserId,
+      });
+      for (const part of ["/", "/data/bundle.json"]) {
+        const res = await open(people.staff, `${deckOf(id)}${part}`);
+        expect([res.status, await res.json()]).toEqual([
+          409,
+          { detail: "The demo has no draft to open yet" },
+        ]);
+      }
+      await db.delete(schema.account_demo).where(eq(schema.account_demo.id, id));
+    }
+  });
+
+  test("staff rights still open no customer's project, by the demo's door or the host's", async () => {
+    // A session of the customer's own, on their real project.
+    const token = "c".repeat(24);
+    const [made] = (await db.execute(sql`
+      insert into project_report (project_id, kind, status, content, public_token, user_created)
+      values (${customer.project}, 'popcorn', 'published', '', ${token},
+        ${people.customer.directusUserId}) returning id`)) as unknown as { id: string }[];
+    const session = String(made?.id);
+    const host = (id: string) => `/api/v2/bff/popcorn/${id}/view/`;
+    expect((await open(people.customer, host(session))).status).toBe(200);
+    for (const who of [people.staff, "key staff:accounts"]) {
+      expect((await open(who, host(session))).status).toBe(404);
+      expect((await open(who, `${host(session)}data/bundle.json`)).status).toBe(404);
+      // The demo's door takes a demo's id and nothing else.
+      for (const id of [session, customer.project])
+        expect((await open(who, `${deckOf(id)}/data/bundle.json`)).status).toBe(404);
+    }
+    expect((await open(people.staff, `/api/v2/popcorn/public/${token}/`)).status).toBe(404);
+    await expect(access.project(people.staff, customer.project, "project:read")).rejects.toThrow();
+    // The demo's own project is no exception to membership: the host's door stays shut.
+    expect((await open(people.staff, host(demoReport))).status).toBe(404);
+    await db.execute(sql`delete from project_report where id = ${session}`);
   });
 
   test("staff publish with sign-in: the contact is the organisation's only member and is invited", async () => {

@@ -1,9 +1,17 @@
+import { hasStaffPolicy } from "@dembrane/access";
 import { sendEmail } from "@dembrane/account";
-import { ConflictError, NotFoundError, newId, ValidationError } from "@dembrane/core";
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  newId,
+  ValidationError,
+} from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import { localeOfEmail, resolveLocale } from "@dembrane/i18n";
 import { desc, eq } from "drizzle-orm";
+import { staffCan } from "../access";
 import type { AccountsDeps } from "../deps";
 import { isUuid } from "../deps";
 import { emit } from "../events";
@@ -219,4 +227,56 @@ export async function publishDemo(
       });
   });
   return demoView(d, await load(d, id));
+}
+
+// The deck asks for its data again every few seconds, and faster while its stage is empty.
+const DECK_DATA_AUDIT_MS = 60_000;
+const deckDataAudited = new Map<string, number>();
+
+/**
+ * The session of a demo's deck that staff open before it is public, so a draft is read
+ * before it is published. Staff rights do not open customers' projects; this opens one
+ * thing only: the session the demo build seeded for that language, while the demo is a
+ * finished draft or published. What is served from it is the room's deck, the same the
+ * public link shows once the demo is published.
+ *
+ * Opening the page is a staff action on the audit trail and on the account's timeline.
+ * Reading its data is on the audit trail once a minute per staff member, demo and
+ * language, so an open page does not write a row per poll. The drawings and the stream
+ * carry nothing of the demo and are only checked.
+ */
+export async function demoDeck(
+  d: AccountsDeps,
+  who: Signed,
+  id: string,
+  language: string,
+  part: "page" | "data" | "asset",
+  requestId?: string,
+): Promise<{ reportId: string }> {
+  const target = { type: "demo", id };
+  const read = `${who.directusUserId}:${id}:${language}`;
+  const now = d.now().getTime();
+  const due = now - (deckDataAudited.get(read) ?? 0) >= DECK_DATA_AUDIT_MS;
+  if (part === "page" || (part === "data" && due)) {
+    await staffCan(d, who, `accounts.demo.deck.${part}`, target, requestId, { language });
+    if (part === "data") {
+      if (deckDataAudited.size > 10_000) deckDataAudited.clear();
+      deckDataAudited.set(read, now);
+    }
+  } else if (!hasStaffPolicy(who, "staff:accounts")) {
+    throw new ForbiddenError("access.staff_only");
+  }
+  const row = await load(d, id);
+  if (row.status !== "draft" && row.status !== "published")
+    throw new ConflictError("demo.deck_not_ready");
+  const project = (row.seed as SeedOutput | null)?.projects.find((p) => p.language === language);
+  if (!project) throw new NotFoundError("demo.not_found");
+  if (part === "page" && row.orgId)
+    await emit(d, d.db, {
+      orgId: row.orgId,
+      actor: { kind: "staff", userId: who.directusUserId },
+      type: "demo.opened",
+      detail: { demo_id: id, language, status: row.status },
+    });
+  return { reportId: project.report_id };
 }

@@ -116,6 +116,7 @@ Staff permissions are named, and every use is written to `staff_audit_event` bef
 - A person with the `Administrator` role holds all of them. Nobody else holds any.
 - No route can make someone staff. It is done from the command line with database access: `bun run staff:access list`, `grant <email> --by <staff-email>` or `revoke <email> --by <staff-email>`.
 - Staff permissions never read customer project data. Staff reach it only through a support session, which is a workspace membership resolved like any other. A session the customer opened with the standing switch is read-only (`SUPPORT_READ_ONLY`). One approved through a request may act as an admin, but never on members, settings or deletion (`SUPPORT_APPROVED`).
+- A demo staff built is not customer project data. With `staff:accounts`, staff open its deck by the demo's id while it is a draft or published (`demoDeck` in the accounts package). The route takes no project or session id and serves only the session the demo build seeded.
 
 [Staff support access](../../features/staff-support-access.md) describes this from the customer's side.
 

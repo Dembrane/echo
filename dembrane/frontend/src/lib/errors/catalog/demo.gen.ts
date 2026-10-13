@@ -28,6 +28,12 @@ export const demo = {
     audience: "staff",
     description: "Publish was asked for a demo that is not a finished draft.",
   },
+  "demo.deck_not_ready": {
+    action: "none",
+    detail: "The demo has no draft to open yet",
+    audience: "staff",
+    description: "The demo's deck was asked for while the demo is still building or has failed.",
+  },
   "demo.contact_not_created": {
     action: "retry",
     detail: "The contact was not created",

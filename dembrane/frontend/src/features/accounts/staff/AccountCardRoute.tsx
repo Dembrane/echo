@@ -784,6 +784,7 @@ const eventLabel = (type: string): string =>
 		"account.updated": t`Account updated`,
 		"billing_details.updated": t`Billing details updated`,
 		"booking.recorded": t`Call booked`,
+		"demo.opened": t`Demo opened by staff`,
 		"demo.published": t`Demo published`,
 		"demo.seeded": t`Demo seeded`,
 		"document.declined": t`Document declined`,
