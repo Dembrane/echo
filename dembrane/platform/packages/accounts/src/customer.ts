@@ -149,7 +149,7 @@ export async function documentDetail(
         }
       : null,
     signature: sig ? signatureView(sig) : null,
-    prefill: signingPrefill(org?.name ?? null, billing),
+    prefill: signingPrefill(org?.name ?? null, billing, doc.language),
     access: via,
     staff_url:
       via === "staff" ? staffDocumentUrl(d.settings.dashboardUrl, doc.orgId, doc.id) : null,
@@ -160,9 +160,13 @@ export async function documentDetail(
  * What the signer need not type: the organisation as it is billed (else its name) and the
  * billing address, when we have them. The signer still sees and may change both.
  */
-function signingPrefill(orgName: string | null, b: BillingRow | null) {
+function signingPrefill(orgName: string | null, b: BillingRow | null, language: string) {
   const place = [b?.billing_postal_code, b?.billing_city].filter(Boolean).join(" ");
-  const address = [b?.billing_address_line1, b?.billing_address_line2, place, b?.billing_country]
+  // The country reads in the document's language; details without a code keep what was typed.
+  const country = b?.billing_country_code
+    ? countryName(b.billing_country_code, language)
+    : b?.billing_country;
+  const address = [b?.billing_address_line1, b?.billing_address_line2, place, country]
     .filter(Boolean)
     .join(", ");
   return {

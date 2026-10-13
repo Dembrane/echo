@@ -1047,6 +1047,14 @@ run("accounts routes against Postgres", () => {
       kbo_number: null,
       no_vat_number: null,
     });
+    // What a signer need not type names the country in the document's language: this offer is Dutch.
+    expect(
+      K.DocumentDetail.parse((await call(w, "GET", `${C()}/documents/${offerId}`, "admin")).data)
+        .prefill,
+    ).toEqual({
+      organisation: "Gemeente Testdorp",
+      address: "Dorpsstraat 1, 1234 AB Testdorp, Nederland",
+    });
   });
 
   test("a repeat offer after complete billing details asks for none: no new task, signing leaves them done", async () => {
