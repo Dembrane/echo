@@ -15,6 +15,8 @@ export const {
   buildCorpus,
   MAX_ANALYSIS_CHARS,
   MAX_ASPECTS,
+  // The popcorn recipe validates the same number, so a phrase the gate keeps publishes.
+  MAX_POPCORN_PHRASE_CHARS: MAX_PHRASE_CHARS,
   MAX_QUOTES,
   MAX_RELATIONS,
   MAX_STAKEHOLDERS,
@@ -27,13 +29,13 @@ export const POPCORN_SCHEMA: Json = {
   required: ["items"],
   properties: {
     items: {
+      // No cap: every idea that earns a place gets its popcorn.
       type: "array",
-      maxItems: 8,
       items: {
         type: "object",
         additionalProperties: false,
         required: ["phrase"],
-        properties: { phrase: { type: "string", minLength: 1, maxLength: 90 } },
+        properties: { phrase: { type: "string", minLength: 1, maxLength: MAX_PHRASE_CHARS } },
       },
     },
   },
@@ -41,9 +43,8 @@ export const POPCORN_SCHEMA: Json = {
 
 // Vertex rejects maxItems at these depths; the caps are enforced in shapeStakeholders.
 
-// The prompt asks for twelve words; the gate tolerates thirteen (bloat begins at fourteen).
-const MAX_PHRASE_WORDS = 13;
-const MAX_PHRASE_CHARS = 90;
+// The prompt allows twenty words, enough for a point and its detail; the gate tolerates one more.
+export const MAX_PHRASE_WORDS = 21;
 
 /** The characters Python's str whitespace covers, which JS's own class does not quite. */
 const PY_WS =
@@ -92,8 +93,9 @@ export function allocateChars(
 
 /**
  * The deterministic first-run gates on one extractor answer: unique phrases, at most
- * thirteen words, no quotation marks or terminal punctuation. A question mark survives
- * as `question`. The id follows the phrase text, so a later re-read keeps it.
+ * twenty-one words, no quotation marks or terminal punctuation, and as many as the model
+ * found. A question mark survives as `question`. The id follows the phrase text, so a
+ * later re-read keeps it.
  */
 export function shapePopcornItems(raw: unknown, transcriptId: string): Json[] {
   const items = isRecord(raw) ? raw.items : null;
@@ -118,7 +120,6 @@ export function shapePopcornItems(raw: unknown, transcriptId: string): Json[] {
     const entry: Json = { id: `p-${transcriptId}-${sha1Hex(key).slice(0, 8)}`, phrase };
     if (question) entry.question = true;
     out.push(entry);
-    if (out.length >= 8) break;
   }
   return out;
 }

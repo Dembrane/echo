@@ -97,7 +97,7 @@ describe("tier expiry", () => {
       "owner@acme.test",
     ]);
     const mail = w.mailer.sent[0];
-    expect(mail?.subject).toBe("Main moved to free");
+    expect(mail?.subject).toBe("Main is now on the free plan");
     expect(mail?.text).toContain("- Remove your custom logo (revert to dembrane logo)");
     expect(mail?.text).toContain(`https://dash.test/w/${WS1}/settings/billing`);
 
@@ -132,8 +132,8 @@ describe("pre-warning", () => {
     await runTierPrewarning(deps(w));
     expect(w.acc().pre_warning_sent).toBe(true);
     expect(w.mailer.sent.map((m) => m.subject)).toEqual([
-      "Main tier expires 29 September 2026",
-      "Main tier expires 29 September 2026",
+      "Main moves to the free plan on 29 September 2026",
+      "Main moves to the free plan on 29 September 2026",
     ]);
     expect(w.mailer.sent.map((m) => m.to)).toEqual(["admin@acme.test", "owner@acme.test"]);
     expect(w.store.notifications[0]).toMatchObject({

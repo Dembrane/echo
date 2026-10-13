@@ -3,7 +3,6 @@ import { Trans } from "@lingui/react/macro";
 import {
 	Button,
 	Group,
-	Skeleton,
 	Stack,
 	Text,
 	Title,
@@ -13,10 +12,12 @@ import { ArrowRightIcon } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 
+import { Logo } from "@/components/common/Logo";
 import { toast } from "@/components/common/Toaster";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
 import { testId } from "@/lib/testUtils";
+import { TOPIC_ICON_MAP } from "@/lib/verifyTopics";
 import { useParticipantProjectById } from "../../hooks";
 import { startCooldown } from "../refine/hooks/useRefineSelectionCooldown";
 import {
@@ -80,7 +81,13 @@ export const VerifySelection = () => {
 				translations["en-US"]?.label ??
 				topic.key;
 
+			const icon =
+				TOPIC_ICON_MAP[topic.key] ??
+				(topic.icon && !topic.icon.startsWith(":") ? topic.icon : undefined) ??
+				(topic.is_custom ? undefined : "•");
+
 			return {
+				icon,
 				key: topic.key,
 				label: localizedLabel,
 			};
@@ -200,13 +207,10 @@ export const VerifySelection = () => {
 		(singleTopicKey && !showInstructions && !hasAutoTriedSingle)
 	) {
 		return (
-			<Stack gap="md" className="h-full pt-10">
-				<Skeleton height={32} width="60%" />
-				<Group gap="sm">
-					<Skeleton height={48} width={120} />
-					<Skeleton height={48} width={120} />
-					<Skeleton height={48} width={120} />
-				</Group>
+			<Stack justify="center" className="h-full">
+				<div className="animate-spin self-start">
+					<Logo hideTitle hideEnvBadge alwaysDembrane h="48px" />
+				</div>
 			</Stack>
 		);
 	}
@@ -257,7 +261,12 @@ export const VerifySelection = () => {
 							aria-pressed={selectedOption === option.key}
 							{...testId(`portal-verify-topic-${option.key}`)}
 						>
-							<Text size="sm">{option.label}</Text>
+							<Group gap="sm" wrap="nowrap">
+								{option.icon ? (
+									<span className="text-xl">{option.icon}</span>
+								) : null}
+								<Text size="sm">{option.label}</Text>
+							</Group>
 						</UnstyledButton>
 					))}
 				</Group>

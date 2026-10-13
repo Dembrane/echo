@@ -49,6 +49,7 @@ import type {
 import { isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 import type { Tier } from "@/lib/tiers";
+import { TOPIC_ICON_MAP } from "@/lib/verifyTopics";
 import { toast } from "../common/Toaster";
 import { FormLabel } from "../form/FormLabel";
 import { MarkdownWYSIWYG } from "../form/MarkdownWYSIWYG/MarkdownWYSIWYG";
@@ -180,6 +181,9 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 	const availableVerifyTopics = useMemo(
 		() =>
 			(verificationTopics?.available_topics ?? []).map((topic) => ({
+				icon:
+					TOPIC_ICON_MAP[topic.key] ??
+					(topic.icon && !topic.icon.startsWith(":") ? topic.icon : undefined),
 				is_custom: !!topic.is_custom,
 				key: topic.key,
 				label:
@@ -1003,7 +1007,11 @@ const ProjectPortalEditorComponent: React.FC<ProjectPortalEditorProps> = ({
 																					>
 																						<Checkbox
 																							value={topic.key}
-																							label={topic.label}
+																							label={
+																								topic.icon
+																									? `${topic.icon} ${topic.label}`
+																									: topic.label
+																							}
 																						/>
 																						{topic.is_custom && (
 																							<Group gap={0} wrap="nowrap">

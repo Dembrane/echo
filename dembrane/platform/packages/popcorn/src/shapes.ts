@@ -211,7 +211,11 @@ export const createBody = model({
   expires_at: optional(nullable(datetime()), null),
 });
 
-export const liveBody = model({ hours: required(int()) });
+export const liveBody = model({
+  hours: required(int()),
+  // "Ready by": the first read is booked a fixed lead before this time, not now.
+  ready_by: optional(nullable(datetime()), null),
+});
 
 export const loopSettingsBody = model({
   cadence_minutes: optional(nullable(int()), null),

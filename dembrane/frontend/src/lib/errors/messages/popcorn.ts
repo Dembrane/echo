@@ -20,6 +20,10 @@ export const popcorn = {
 		id: "error.popcorn.invalid_live_hours",
 		message: "Pick one of the offered durations: {hours} hours.",
 	}),
+	"popcorn.invalid_ready_by": msg({
+		id: "error.popcorn.invalid_ready_by",
+		message: "Pick a time later than now and within the next 7 days.",
+	}),
 	"popcorn.just_refreshed": msg({
 		id: "error.popcorn.just_refreshed",
 		message: "This was just updated. Wait a few seconds before you try again.",

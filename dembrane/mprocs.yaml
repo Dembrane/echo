@@ -1,0 +1,19 @@
+# Local dev without docker: Postgres runs natively (e.g. Postgres.app on :5432).
+# Setup and usage: "Run it without docker" in platform/README.md. Run `mprocs` from dembrane/.
+procs:
+  api:
+    cwd: "<CONFIG_DIR>/platform"
+    shell: "bun --env-file=.env.local --watch apps/api/src/main.ts"
+  worker:
+    cwd: "<CONFIG_DIR>/platform"
+    shell: "bun --env-file=.env.local apps/worker/src/main.ts"
+  dashboard:
+    cwd: "<CONFIG_DIR>/frontend"
+    shell: "pnpm dev"
+  portal:
+    cwd: "<CONFIG_DIR>/frontend"
+    shell: "pnpm participant:dev"
+  migrate:
+    cwd: "<CONFIG_DIR>/platform"
+    shell: "bun run db:migrate && bun run seed:verification-topics"
+    autostart: false

@@ -106,6 +106,10 @@ export const flows: Record<string, Flow> = {
 		roles: ["staff"],
 	},
 	"/admin/accounts/:orgId": { params: { orgId: "$org" }, roles: ["staff"] },
+	"/admin/accounts/:orgId/documents/:docId": {
+		params: { docId: "$doc", orgId: "$org" },
+		roles: ["staff"],
+	},
 	"/admin/accounts/:orgId/documents/:docId/fields": {
 		params: { docId: "$doc", orgId: "$org" },
 		roles: ["staff"],
@@ -123,7 +127,7 @@ export const flows: Record<string, Flow> = {
 	"/o": {},
 	"/o/:organisationId/*": {
 		params: {
-			"*": ["overview", "usage", "billing", "training", "agents", "members"],
+			"*": ["overview", "usage", "billing", "agents", "members"],
 			organisationId: "$org",
 		},
 	},
@@ -131,6 +135,8 @@ export const flows: Record<string, Flow> = {
 	"/o/:organisationId/account/documents/:docId/sign": {
 		params: { docId: "$doc", organisationId: "$org" },
 	},
+	"/o/:organisationId/documents": { params: { organisationId: "$org" } },
+	"/o/:organisationId/tasks": { params: { organisationId: "$org" } },
 	"/onboarding": {
 		skip: "shown only before onboarding completes; the check's login has completed it",
 	},

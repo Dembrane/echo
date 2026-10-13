@@ -53,20 +53,35 @@ export function reportStatusLabel(status: string) {
 	}
 }
 
+/** A booked start in two parts: "Popcorn ready by 14:30", "starts 14:15". */
+export function bookingParts(
+	booking: { readyBy: string; startsAt: string } | null | undefined,
+	locale: string,
+): string[] {
+	const readyBy = validDate(booking?.readyBy);
+	const startsAt = validDate(booking?.startsAt);
+	if (!readyBy || !startsAt) return [];
+	const ready = formatWhen(readyBy, locale);
+	const starts = formatWhen(startsAt, locale);
+	return [t`Popcorn ready by ${ready}`, t`starts ${starts}`];
+}
+
 /**
  * The share panel read aloud, under an outcome's title: live or once first,
- * then who can see it, then anything the outcome adds.
+ * then who can see it, then a booked start, then anything the outcome adds.
  */
 export function StatusLine({
 	live,
 	liveUntil,
 	onceAt,
+	booking,
 	isPublic,
 	extra = [],
 }: {
 	live?: boolean;
 	liveUntil?: string | null;
 	onceAt?: string | null;
+	booking?: { readyBy: string; startsAt: string } | null;
 	isPublic: boolean;
 	extra?: string[];
 }) {
@@ -76,6 +91,7 @@ export function StatusLine({
 	const parts = [
 		once && t`Updates once at ${formatWhen(once, i18n.locale)}`,
 		isPublic ? t`Public page` : t`Private`,
+		...(live ? [] : bookingParts(booking, i18n.locale)),
 		...extra,
 	].filter((part): part is string => !!part);
 	return (

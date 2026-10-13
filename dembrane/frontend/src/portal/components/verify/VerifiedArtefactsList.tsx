@@ -3,6 +3,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { useState } from "react";
 import type { VerificationArtifact } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
+import { TOPIC_ICON_MAP } from "@/lib/verifyTopics";
 import { ArtefactModal } from "./ArtefactModal";
 import { useConversationArtefacts, useVerificationTopics } from "./hooks";
 import { VerifiedArtefactItem } from "./VerifiedArtefactItem";
@@ -45,6 +46,9 @@ export const VerifiedArtefactsList = ({
 		availableTopics.map((topic) => [
 			topic.key,
 			{
+				icon:
+					TOPIC_ICON_MAP[topic.key] ??
+					(topic.icon && !topic.icon.startsWith(":") ? topic.icon : undefined),
 				label:
 					topic.translations?.[locale]?.label ??
 					topic.translations?.["en-US"]?.label ??
@@ -96,6 +100,7 @@ export const VerifiedArtefactsList = ({
 							artefact.topic_label ??
 							artefact.key
 						}
+						icon={topicMetadataMap.get(artefact.key)?.icon}
 						onViewArtefact={handleViewArtefact}
 						dataTestId={`portal-verified-artefact-item-${index}`}
 					/>

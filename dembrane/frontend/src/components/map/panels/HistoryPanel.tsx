@@ -100,20 +100,21 @@ export const HistoryRows = memo(function HistoryRows({
 	nodesById,
 	onSelect,
 	onRetry,
-	titles = true,
+	canGroup = true,
 }: {
 	items: ReadonlyArray<HistoryItem>;
 	/** Nodes on the current map, by id. */
 	nodesById: ReadonlyMap<string, MapGraphNode>;
 	onSelect: (item: HistoryItem) => void;
-	onRetry: (distillationId: string) => void;
-	/** False where clusters are never distilled (a public room). */
-	titles?: boolean;
+	/** None where groups are only shown (the room): no failed group offers a retry. */
+	onRetry?: (distillationId: string) => void;
+	/** False where resting the cursor makes no group (the room). */
+	canGroup?: boolean;
 }) {
 	if (items.length === 0) {
 		return (
 			<CaptionText>
-				{titles ? (
+				{canGroup ? (
 					<Trans>
 						What you spotlight is kept here: click an argument, or rest the
 						cursor on a cluster until the circle closes.
@@ -152,7 +153,8 @@ export const HistoryRows = memo(function HistoryRows({
 								/>
 							)}
 						</UnstyledButton>
-						{item.kind === "cluster" &&
+						{onRetry &&
+							item.kind === "cluster" &&
 							item.distillation.status === "failed" && (
 								<div className="px-2 pb-2">
 									<Button

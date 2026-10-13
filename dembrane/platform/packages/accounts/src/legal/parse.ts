@@ -128,7 +128,10 @@ export function parseLegalDump(dump: string): ParsedLegal {
     const prev = joined[joined.length - 1];
     const glue =
       prev !== undefined &&
-      (/[\s("]$/.test(prev) || /^[\s,.;:)"]/.test(line) || /^[a-z]/.test(line));
+      (/[\s("]$/.test(prev) ||
+        /^[\s,.;:)"]/.test(line) ||
+        // A list item after "…to:" or "…;" starts lowercase too, and stays its own line.
+        (/^[a-z]/.test(line) && !/[:;]$/.test(prev)));
     if (glue) joined[joined.length - 1] = `${prev}${line}`;
     else joined.push(line);
   }

@@ -11,6 +11,12 @@ export interface Correlation {
   readonly spanId?: string;
   /** The request that enqueued the job this work belongs to. */
   readonly causedByRequestId?: string;
+  /**
+   * The route ("POST /api/v2/bff/chats/:chat_id/reply") or job ("conversations.chunk")
+   * this work runs under, so metering can file a model call under the feature that made it
+   * without every call site naming itself.
+   */
+  readonly operation?: string;
 }
 
 const storage = new AsyncLocalStorage<Correlation>();

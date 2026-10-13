@@ -66,6 +66,12 @@ export interface DemoInput {
    * feedback along.
    */
   readonly feedbackUrl?: string;
+  /**
+   * Marks each demo project a sample (project.is_sample): its invented conversations then
+   * count toward no usage, limit or number, and it takes no recording. The sales portal
+   * project is never one: it takes real conversations.
+   */
+  readonly sample?: boolean;
 }
 
 /** The seed's identity(): the namespace the local helper shares, so sales portals converge. */
@@ -304,6 +310,7 @@ export async function seedDemo(db: Db, input: DemoInput, now: Date): Promise<Dem
           is_conversation_allowed: false,
           anonymize_transcripts: true,
           context: input.research,
+          ...(input.sample && { is_sample: true }),
         });
         const summaries = dict(session.summary);
         const summary = pyStr(summaries[language] || SUMMARY[language] || SUMMARY.en);

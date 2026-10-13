@@ -7,6 +7,7 @@ import { catchUpSummaries, finishConversation } from "../src/pipeline/defs";
 import {
   idleConversations,
   measureDuration,
+  type PipelineDeps,
   pieceId,
   unsummarizedConversations,
 } from "../src/pipeline/steps";
@@ -14,6 +15,7 @@ import {
   admin,
   freshDatabase,
   type Harness,
+  PROJECT,
   seed,
   startWorker,
   tone,
@@ -314,6 +316,32 @@ run("conversation pipeline", () => {
       where conversation_id = ${cid} and event = 'task_summarize_conversation.completed'`;
     expect(summaries[0]?.n).toBe(1);
   });
+  test("a finished conversation tells onTranscribed once, inside the claim", async () => {
+    const cid = newId();
+    await seed(h.sql, cid);
+    await h.sql`insert into conversation_chunk (id, conversation_id, timestamp, transcript, source)
+      values (${newId()}, ${cid}, now(), 'typed words', 'PORTAL_TEXT')`;
+    const calls: [string, string, boolean][] = [];
+    const deps = h.deps as { onTranscribed?: PipelineDeps["onTranscribed"] };
+    deps.onTranscribed = async (tx, projectId, conversationId) => {
+      // The claim's own write is visible: this runs in its transaction.
+      const [row] =
+        await tx`select is_all_chunks_transcribed from conversation where id = ${conversationId}`;
+      calls.push([projectId, conversationId, Boolean(row?.is_all_chunks_transcribed)]);
+    };
+    try {
+      await Promise.all([
+        h.queue.enqueue(finishConversation, { conversationId: cid }),
+        h.queue.enqueue(finishConversation, { conversationId: cid }),
+      ]);
+      await until(async () => (await conversation(cid)).summary);
+      await Bun.sleep(1000);
+      expect(calls).toEqual([[PROJECT, cid, true]]);
+    } finally {
+      deps.onTranscribed = undefined;
+    }
+  });
+
   // Replaces h.deps.media[op] for the length of fn.
   async function withMedia<K extends "merge" | "probe">(
     op: K,

@@ -1,5 +1,6 @@
 import { BadRequestError, NotFoundError } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
+import { seedBestPracticesJob } from "@dembrane/samples/jobs";
 import { type InviteCtx, notifyWorkspaceJoin, onboardedUser } from "./invites/accept";
 import { grantInviteProjectShare, isOutsider } from "./invites/membership";
 import { sendEmail } from "./jobs";
@@ -13,7 +14,7 @@ const ANSWERS_LIMIT = { name: "onboarding_answers", capacity: 10, windowSeconds:
  * One-time onboarding, safe to repeat. Creates the app_user row, accepts every pending
  * invite for the user's verified email, and creates a personal org with a default
  * workspace only when the user has legacy projects to move or no invite of any kind (an
- * invited user belongs to the inviter's org, not a stray one of their own).
+ * invited user belongs to the inviter's org, not a stray one of their own, on a repeat too).
  */
 export async function completeOnboarding(ctx: InviteCtx, who: Signed, body: { org_name: string }) {
   const { store, now, deps } = ctx;
@@ -131,8 +132,15 @@ export async function completeOnboarding(ctx: InviteCtx, who: Signed, body: { or
   let orgId: string | null = null;
   let workspaceId = firstWorkspaceId;
 
-  if (hasOwnProjects || (!joinedAnOrg && !joinedAnyWorkspace && !hadPendingInvite)) {
-    orgId = await store.ownedOrgId(userId);
+  const invited = joinedAnOrg || joinedAnyWorkspace || hadPendingInvite;
+  const owned = await store.ownedOrgId(userId);
+  // A repeat has no invite left to accept: someone who joined on an earlier call still
+  // belongs to the inviter's org, and only an owner goes back to an org of their own.
+  const belongs = invited || owned ? null : await store.belonging(userId);
+  if (belongs) workspaceId = belongs.workspaceId;
+
+  if (hasOwnProjects || (!invited && !belongs)) {
+    orgId = owned;
     if (!orgId) {
       orgId = await store.createOrg({ name: orgName, createdBy: userId }, now);
       await store.createMembership("org", { orgId, userId, role: "owner" }, now);
@@ -150,6 +158,7 @@ export async function completeOnboarding(ctx: InviteCtx, who: Signed, body: { or
         { orgId, name: "Default", isDefault: true, createdBy: userId, billingAccountId: accountId },
         now,
       );
+      await requestSample(ctx, personal);
     }
     // Repairs a user whose earlier attempt created the workspace but not their row.
     if (!(await store.workspaceMemberships(personal, userId, { activeOnly: true })).length)
@@ -165,6 +174,22 @@ export async function completeOnboarding(ctx: InviteCtx, who: Signed, body: { or
   }
 
   return { app_user_id: userId, org_id: orgId ?? "", workspace_id: workspaceId ?? "" };
+}
+
+/**
+ * Queues the new workspace's copy of the best-practices sample. Best effort: onboarding
+ * never waits on or fails with it, and the samples backfill seeds a workspace it missed.
+ */
+async function requestSample(ctx: InviteCtx, workspaceId: string) {
+  try {
+    await ctx.deps.jobs.enqueue(
+      seedBestPracticesJob,
+      { workspaceId },
+      { singletonKey: workspaceId },
+    );
+  } catch (err) {
+    ctx.deps.logger?.error({ err, workspaceId }, "sample seed could not be queued");
+  }
 }
 
 /**

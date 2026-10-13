@@ -1,6 +1,6 @@
 # Popcorn question form
 
-Version: `popcorn-question-v1`
+Version: `popcorn-question-v2`
 
 A popcorn phrase stands for an open question somebody asked in the
 conversation, but the phrase was written as a statement ("Knowing at what
@@ -14,7 +14,7 @@ Rules:
   the optimal introduction point for such tools?" is nobody's.
 - A question, in question form, ending with a question mark. Not a statement
   about a question.
-- At most 12 words and 90 characters. Standalone: no dangling pronouns, no
+- At most 20 words and 140 characters. Standalone: no dangling pronouns, no
   reference to something said earlier.
 - Keep the meaning and the openness. Do not answer it, narrow it, or turn it
   into a proposal.

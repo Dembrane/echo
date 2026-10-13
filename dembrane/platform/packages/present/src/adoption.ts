@@ -26,9 +26,9 @@ export interface AdoptionDeps {
 }
 
 /**
- * The adoption a popcorn read ends with (ticks.py calling adopt_results with
- * initial_only): the presentation takes the first deck, saved run and map it can show,
- * and never replaces a binding the host already chose. Composed in the worker, since the
+ * The adoption a popcorn read ends with (ticks.py calling adopt_results): the presentation
+ * takes the first deck, saved run and map it can show and keeps a binding the host already
+ * chose, or while the session is live takes the newest of each. The read also asks for the map. Composed in the worker, since the
  * tick lives in @dembrane/popcorn and adoption reads the map through Present.
  */
 export function presentAdoption(o: AdoptionDeps): Adoption {
@@ -44,5 +44,8 @@ export function presentAdoption(o: AdoptionDeps): Adoption {
     logger: o.logger,
   });
   const map = analysisMapStore(o.rt, new MapStore(clientOf(o.db)), o.ceilings);
-  return (report, projectId) => adoptResults(d, map, report, projectId, true);
+  return {
+    adopt: (report, projectId, newest) => adoptResults(d, map, report, projectId, !newest),
+    requestMap: (projectId, actorId) => map.requestGeneration(projectId, actorId),
+  };
 }

@@ -24,7 +24,7 @@ import type { TasksSummaryT } from "../contract/contract.gen";
 import { TASKS_PROMPT_SEEN_KEY } from "./tasksPromptState";
 import { summarise } from "./tasksSummary";
 
-// The sidebar's Tasks entry and the popup after sign-in read one summary, here a small
+// The organisation menu's Tasks entry and the popup after sign-in read one summary, here a small
 // store the test sets like react-query would answer; What's new is stood in for by a
 // marker that shows whether it is being held back.
 const store = vi.hoisted(() => {
@@ -63,7 +63,7 @@ vi.mock("@/components/release/ReleaseVideoModal", () => ({
 	),
 }));
 vi.mock("@/features/sidebar/hooks/useHelpModals", () => ({
-	useHelpModals: () => ({ openFeedback: vi.fn(), openReportIssue: vi.fn() }),
+	useHelpModals: () => ({ openFeedback: vi.fn() }),
 }));
 // The organisation menu's own reads, stood in for: no workspaces, no profile yet.
 vi.mock("@/hooks/useWorkspace", () => ({
@@ -137,7 +137,7 @@ const renderOrgSidebar = (orgId: string) =>
 		</I18nProvider>,
 	);
 
-const accountLink = () => screen.queryByRole("link", { name: /^Account$/ });
+const link = (name: RegExp) => screen.queryByRole("link", { name });
 
 const held = () => screen.getByTestId("whats-new").getAttribute("data-held");
 
@@ -171,7 +171,7 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 });
 
-describe("the Tasks entry", () => {
+describe("summarise", () => {
 	it("counts only organisations with a task waiting on the caller", () => {
 		const out = summarise([
 			row({ name: "A", tasks_done: 1, tasks_total: 4, tasks_waiting: 3 }),
@@ -182,28 +182,9 @@ describe("the Tasks entry", () => {
 		expect(out.orgs.map((o) => o.name)).toEqual(["A"]);
 		expect([out.done, out.total]).toEqual([1, 4]);
 	});
-
-	it("shows while something waits and is gone once everything is done", async () => {
-		store.set({
-			data: [row({ tasks_done: 3, tasks_waiting: 1 })],
-			status: "success",
-		});
-		const { unmount } = renderSidebar();
-		expect(await screen.findByTestId("help-tasks")).toBeTruthy();
-		expect(screen.getByText("3/4")).toBeTruthy();
-		unmount();
-		sessionStorage.setItem(TASKS_PROMPT_SEEN_KEY, "1");
-		store.set({
-			data: [row({ tasks_done: 4, tasks_waiting: 0 })],
-			status: "success",
-		});
-		renderSidebar();
-		await waitFor(() => expect(held()).toBe("false"));
-		expect(screen.queryByTestId("help-tasks")).toBeNull();
-	});
 });
 
-describe("the organisation menu's Account entry and Tasks under Help", () => {
+describe("the organisation menu's Tasks and Documents", () => {
 	const ORG = row({}).org_id;
 
 	beforeEach(() => {
@@ -215,32 +196,31 @@ describe("the organisation menu's Account entry and Tasks under Help", () => {
 		);
 	});
 
-	it("something pending: Account without a count, and Tasks n/m under Help", async () => {
+	it("something pending: Tasks counts what waits, Documents beside it", async () => {
 		store.set({
 			data: [row({ tasks_done: 1, tasks_waiting: 3 })],
 			status: "success",
 		});
 		renderOrgSidebar(ORG);
-		expect(await screen.findByTestId("help-tasks")).toBeTruthy();
-		expect(screen.getByText("1/4")).toBeTruthy();
-		const account = accountLink();
-		expect(account?.getAttribute("href")).toBe(`/en-US/o/${ORG}/account`);
-		expect(account?.textContent).toBe("Account");
-		// One Tasks entry, under Help: the organisation menu has none.
+		await waitFor(() => expect(link(/^Tasks/)).toBeTruthy());
+		expect(link(/^Tasks/)?.getAttribute("href")).toBe(`/en-US/o/${ORG}/tasks`);
+		expect(link(/^Tasks/)?.textContent).toContain("3");
+		expect(link(/^Documents$/)?.getAttribute("href")).toBe(
+			`/en-US/o/${ORG}/documents`,
+		);
+		// Help no longer lists tasks: they live under the organisation.
 		expect(screen.getAllByText("Tasks")).toHaveLength(1);
 	});
 
-	it("nothing pending: only Account, so the documents and invoices stay one click away", async () => {
+	it("nothing pending: both stay, so the documents and invoices are one click away", async () => {
 		store.set({
 			data: [row({ tasks_done: 4, tasks_waiting: 0 })],
 			status: "success",
 		});
 		renderOrgSidebar(ORG);
 		await waitFor(() => expect(held()).toBe("false"));
-		expect(accountLink()).toBeTruthy();
-		expect(screen.queryByTestId("help-tasks")).toBeNull();
-		expect(screen.queryByText("Tasks")).toBeNull();
-		expect(screen.queryByText("4/4")).toBeNull();
+		expect(link(/^Tasks$/)).toBeTruthy();
+		expect(link(/^Documents$/)).toBeTruthy();
 	});
 
 	it("a self-serve signup with no account content sees neither", async () => {
@@ -248,20 +228,17 @@ describe("the organisation menu's Account entry and Tasks under Help", () => {
 		renderOrgSidebar(ORG);
 		await waitFor(() => expect(held()).toBe("false"));
 		expect(screen.getByText("Members")).toBeTruthy();
-		expect(accountLink()).toBeNull();
-		expect(screen.queryByTestId("help-tasks")).toBeNull();
-		expect(screen.queryByText("Tasks")).toBeNull();
+		expect(link(/^Tasks/)).toBeNull();
+		expect(link(/^Documents$/)).toBeNull();
 	});
 });
 
 describe("the popup after sign-in", () => {
-	it("a plain signup sees no Tasks entry and no popup, and What's new is not held", async () => {
+	it("a plain signup sees no popup, and What's new is not held", async () => {
 		store.set({ data: [], status: "success" });
 		renderSidebar();
 		await waitFor(() => expect(held()).toBe("false"));
 		expect(screen.queryByRole("dialog")).toBeNull();
-		expect(screen.queryByTestId("help-tasks")).toBeNull();
-		expect(screen.queryByText("Tasks")).toBeNull();
 	});
 
 	it("comes first: What's new waits until it is closed with Later", async () => {
@@ -300,7 +277,7 @@ describe("the popup after sign-in", () => {
 			await screen.findByText("You have 3 things to do in Groot BV"),
 		).toBeTruthy();
 		fireEvent.click(screen.getByRole("button", { name: "Go to your tasks" }));
-		expect(navigate).toHaveBeenCalledWith("/o/o-big/account");
+		expect(navigate).toHaveBeenCalledWith("/o/o-big/overview");
 		await waitFor(() => expect(held()).toBe("false"));
 	});
 
@@ -316,10 +293,13 @@ describe("the popup after sign-in", () => {
 		expect(screen.queryByRole("dialog")).toBeNull();
 	});
 
-	it("stays away on that organisation's tasks page", async () => {
-		store.set({ data: [row({})], status: "success" });
-		renderSidebar(`/en-US/o/${row({}).org_id}/account`);
-		await waitFor(() => expect(held()).toBe("false"));
-		expect(screen.queryByRole("dialog")).toBeNull();
-	});
+	it.each(["overview", "tasks"])(
+		"stays away on that organisation's %s page",
+		async (page) => {
+			store.set({ data: [row({})], status: "success" });
+			renderSidebar(`/en-US/o/${row({}).org_id}/${page}`);
+			await waitFor(() => expect(held()).toBe("false"));
+			expect(screen.queryByRole("dialog")).toBeNull();
+		},
+	);
 });

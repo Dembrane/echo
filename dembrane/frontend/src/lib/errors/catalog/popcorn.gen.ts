@@ -48,6 +48,11 @@ export const popcorn = {
     detail: "hours must be one of ({hours})",
     description: "Going live was asked for a duration outside the allowed choices.",
   },
+  "popcorn.invalid_ready_by": {
+    action: "fix_input",
+    detail: "ready_by must be in the future and at most 7 days out",
+    description: "A live start was booked for a time that has passed or is more than 7 days away.",
+  },
   "popcorn.settings_busy": {
     action: "retry",
     detail: "Settings are busy; try again",

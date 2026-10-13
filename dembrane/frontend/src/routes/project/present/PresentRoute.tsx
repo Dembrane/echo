@@ -32,7 +32,9 @@ import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { SaveStatus } from "@/components/form/SaveStatus";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { readAfterFinish } from "@/components/popcorn/finishedRead";
 import {
+	liveBooking,
 	usePopcornLiveMutation,
 	usePopcornSettingsMutation,
 	usePopcornStopLiveMutation,
@@ -76,7 +78,7 @@ import {
 import { useRoomScreenOpen } from "@/components/present/hooks/useRoomScreen";
 import { TranslationStatus } from "@/components/present/TranslationStatus";
 import { HostGuideSettings } from "@/components/sharing/HostGuideSettings";
-import { LiveButton } from "@/components/sharing/LiveButton";
+import { PresentButton } from "@/components/sharing/PresentButton";
 import { EventPrintoutsItem, ShareButton } from "@/components/sharing/Share";
 import { StatusLine } from "@/components/sharing/StatusLine";
 import { API_BASE_URL } from "@/config";
@@ -84,6 +86,7 @@ import { useAutoSave } from "@/hooks/useAutoSave";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useServerEvents } from "@/hooks/useServerEvents";
 import { bff } from "@/lib/bff";
+import { errorCode } from "@/lib/errors/read";
 import { testId } from "@/lib/testUtils";
 import { blockLabel } from "./blockLabel";
 import { PresentResultsPanel } from "./PresentResultsPanel";
@@ -484,12 +487,11 @@ function Session({
 			});
 		},
 	});
-	const blocks = orderedBlocks(
-		presentation.settings.presentation?.blocks ?? ["popcorn"],
-	);
 	const live = usePopcornLiveMutation(projectId, presentation.id);
 	const stop = usePopcornStopLiveMutation(projectId, presentation.id);
 	const isLive = presentation.loop?.mode === "live";
+	const booking = liveBooking(presentation.loop);
+	const readAfter = readAfterFinish(presentation.loop);
 	const [eventTick, setEventTick] = useState(0);
 	useServerEvents(
 		`${API_BASE_URL}/v2/bff/popcorn/${encodeURIComponent(presentation.id)}/events`,
@@ -601,6 +603,13 @@ function Session({
 		canEdit &&
 		!!draft.query.data?.has_changes &&
 		(!!watchedBy || !settling || draft.publish.isError);
+	const refused = draft.publish.error ?? publishError;
+	// The one change a plan may refuse is a public link: say so, since it holds
+	// every other waiting change back with it.
+	const publicRefused =
+		errorCode(refused) === "billing.tier_required" &&
+		!!draft.query.data?.presentation.settings.public &&
+		!presentation.settings.public;
 	const publishChanges = async () => {
 		setPublishing(true);
 		setPublishError(null);
@@ -638,9 +647,10 @@ function Session({
 							<StatusLine
 								live={isLive}
 								liveUntil={presentation.loop?.expires_at}
+								booking={booking}
 								isPublic={isPublic}
-								extra={
-									waiting
+								extra={[
+									...(waiting
 										? [
 												changes
 													? plural(changes, {
@@ -649,8 +659,9 @@ function Session({
 														})
 													: t`Changes not shown yet`,
 											]
-										: []
-								}
+										: []),
+									...(readAfter ? [readAfter] : []),
+								]}
 							/>
 							{waiting && (
 								<>
@@ -676,14 +687,31 @@ function Session({
 						className="shrink-0"
 						aria-label={t`Presentation controls`}
 					>
-						<Button
-							variant="filled"
-							onClick={open}
-							loading={opening}
-							leftSection={<ArrowSquareOutIcon size={20} />}
-						>
-							<Trans>Present</Trans>
-						</Button>
+						{canEdit ? (
+							<PresentButton
+								live={isLive}
+								booking={booking}
+								opening={opening}
+								pending={live.isPending || stop.isPending}
+								onPresent={(hours) => {
+									// The room screen opens in the click, or it is blocked.
+									open();
+									if (!isLive && !booking) live.mutate({ hours });
+								}}
+								onGoLive={(hours) => live.mutate({ hours })}
+								onReadyBy={(hours, readyBy) => live.mutate({ hours, readyBy })}
+								onStop={() => stop.mutate()}
+							/>
+						) : (
+							<Button
+								variant="filled"
+								onClick={open}
+								loading={opening}
+								leftSection={<ArrowSquareOutIcon size={20} />}
+							>
+								<Trans>Present</Trans>
+							</Button>
+						)}
 						{canEdit && (
 							<ShareButton>
 								{draft.query.data ? (
@@ -732,16 +760,20 @@ function Session({
 								)}
 							</ShareButton>
 						)}
-						{canEdit && (blocks.includes("popcorn") || isLive) && (
-							<LiveButton
-								live={isLive}
-								pending={isLive ? stop.isPending : live.isPending}
-								onGoLive={(hours) => live.mutate(hours)}
-								onStop={() => stop.mutate()}
-							/>
-						)}
 					</Group>
 				</Group>
+				{/* Read where Show them was pressed. */}
+				{canEdit && (
+					<ErrorNotice
+						error={refused}
+						onRetry={() => void publishChanges()}
+						title={
+							publicRefused
+								? t`A public page needs a higher plan. Switch Public page off under Share to show the other changes.`
+								: t`Changes could not be shown on the room screen`
+						}
+					/>
+				)}
 				{drafting ? (
 					draft.query.isError ? (
 						<Box {...testId("present-draft-error-panel")}>
@@ -820,13 +852,6 @@ function Session({
 					)
 				) : (
 					<Preview presentation={presentation} />
-				)}
-				{canEdit && (
-					<ErrorNotice
-						error={draft.publish.error ?? publishError}
-						onRetry={() => void publishChanges()}
-						title={t`Changes could not be shown on the room screen`}
-					/>
 				)}
 				<Group justify="flex-start" gap="sm">
 					<Text size="sm" c="dimmed">

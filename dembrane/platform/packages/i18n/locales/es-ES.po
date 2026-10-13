@@ -12,7 +12,7 @@ msgstr "El equipo de dembrane"
 
 #. js-lingui-explicit-id
 msgid "email.common.fallback"
-msgstr "O pega esto en tu navegador:"
+msgstr "O abre este enlace:"
 
 #. js-lingui-explicit-id
 msgid "email.common.ignore"
@@ -254,9 +254,6 @@ msgstr "Tu código de acceso es {code}."
 msgid "email.sign_in_code.heading"
 msgstr "Tu código de acceso."
 
-#. js-lingui-explicit-id
-msgid "email.sign_in_code.body"
-msgstr "Introduce este código para continuar: {code}. Caduca en 10 minutos."
 
 #. js-lingui-explicit-id
 msgid "email.sign_in_code.text_body"
@@ -268,23 +265,20 @@ msgstr "Si no intentaste iniciar sesión, puedes ignorar este correo tranquilame
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.subject"
-msgstr "Por favor, firma {document_title}"
+msgstr "{inviter_name} te pide que firmes {document_title}"
 
-#. js-lingui-explicit-id
-msgid "email.account_signer_invite.title"
-msgstr "{inviter_name} te ha pedido que firmes en nombre de {org_name}"
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.preview"
-msgstr "{inviter_name} te ha pedido firmar {document_title} en dembrane."
+msgstr "{org_name} te ha elegido para firmar este documento. Léelo y fírmalo en línea."
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.heading"
-msgstr "Te han pedido que firmes."
+msgstr "Te han pedido que firmes por {org_name}"
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.body"
-msgstr "{inviter_name} te ha indicado como la persona encargada de firmar {document_title} para {org_name}. Inicia sesión con el código enviado a esta dirección para leerlo y firmarlo."
+msgstr "{inviter_name} te ha designado como la persona que firma {document_title} en nombre de {org_name}."
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.cta"
@@ -293,34 +287,6 @@ msgstr "Leer y firmar"
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.text_cta"
 msgstr "Leer y firmar:"
-
-#. js-lingui-explicit-id
-msgid "email.account_task_reminder.subject"
-msgstr "Aún pendiente: {task_title}"
-
-#. js-lingui-explicit-id
-msgid "email.account_task_reminder.title"
-msgstr "Hay un paso pendiente para {org_name}"
-
-#. js-lingui-explicit-id
-msgid "email.account_task_reminder.preview"
-msgstr "{task_title} sigue pendiente en dembrane."
-
-#. js-lingui-explicit-id
-msgid "email.account_task_reminder.heading"
-msgstr "Aún queda un paso pendiente."
-
-#. js-lingui-explicit-id
-msgid "email.account_task_reminder.body"
-msgstr "{task_title} sigue pendiente para {org_name} en dembrane. Solo te llevará un minuto y nos permite seguir avanzando."
-
-#. js-lingui-explicit-id
-msgid "email.account_task_reminder.cta"
-msgstr "Abrir el paso"
-
-#. js-lingui-explicit-id
-msgid "email.account_task_reminder.text_cta"
-msgstr "Abrir el paso:"
 
 #. js-lingui-explicit-id
 msgid "email.account_invite.subject"
@@ -332,11 +298,11 @@ msgstr "Tu cuenta de dembrane para {org_name} ya está lista."
 
 #. js-lingui-explicit-id
 msgid "email.account_invite.heading"
-msgstr "Tu cuenta está lista."
+msgstr "Tu cuenta está lista"
 
 #. js-lingui-explicit-id
 msgid "email.account_invite.body"
-msgstr "Hemos configurado {org_name} en dembrane para ti. Inicia sesión con el código que te enviamos a esta dirección: sin necesidad de contraseña."
+msgstr "Hemos configurado {org_name} en dembrane, con una demo hecha para tu organización."
 
 #. js-lingui-explicit-id
 msgid "email.account_invite.cta"
@@ -345,6 +311,26 @@ msgstr "Iniciar sesión"
 #. js-lingui-explicit-id
 msgid "email.account_invite.text_cta"
 msgstr "Inicia sesión:"
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.subject"
+msgstr "Tu oferta de dembrane está lista para firmar"
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.heading"
+msgstr "Tu oferta está lista para firmar"
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.body"
+msgstr "Hemos preparado una oferta para {org_name}. Léela con calma y fírmala en línea cuando quieras."
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.cta"
+msgstr "Leer y firmar la oferta"
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.text_cta"
+msgstr "Leer y firmar la oferta:"
 
 #. js-lingui-explicit-id
 msgid "email.report_published.subject"
@@ -408,19 +394,19 @@ msgstr "{workspace_name} pasó de {from_tier} a {to_tier} el {date}."
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.frozen"
-msgstr "Estas funciones se han congelado. Se mantiene lo que ya hay, pero no se podrán usar hasta que mejores de plan:"
+msgstr "Estas funciones están en pausa. Lo que hiciste con ellas se conserva, pero no podrás añadir nada hasta que mejores tu plan:"
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.frozen_text"
-msgstr "Congeladas. Se mantiene lo que ya hay, pero no se podrán usar hasta que mejores de plan:"
+msgstr "En pausa hasta que mejores tu plan (lo que hiciste se conserva):"
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.reverted"
-msgstr "Se restablecieron estas funciones:"
+msgstr "Estos ajustes han vuelto a sus valores predeterminados:"
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.reverted_text"
-msgstr "Restablecidas:"
+msgstr "Restablecido:"
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.rest"
@@ -588,27 +574,24 @@ msgstr "Abrir espacio de trabajo"
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.subject"
-msgstr "Acción requerida: actualiza tu método de pago"
+msgstr "Tu pago a dembrane no se ha completado"
 
-#. js-lingui-explicit-id
-msgid "email.payment_failed.title"
-msgstr "Actualiza tu método de pago"
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.preview"
-msgstr "Un pago reciente no se pudo procesar. Actualiza tu método para mantener tu plan."
+msgstr "Tu plan sigue activo. Actualiza tu método de pago para saldar el importe pendiente."
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.heading"
-msgstr "No pudimos cobrar a tu método de pago."
+msgstr "Tu pago no se ha completado"
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.body"
-msgstr "Un pago reciente para tu plan de dembrane no se pudo procesar. Por lo general, esto significa que una tarjeta venció o que el banco rechazó el cargo."
+msgstr "No hemos podido cobrar con el método de pago de tu plan de dembrane. Normalmente es porque una tarjeta ha caducado o el banco ha rechazado el cargo."
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.next"
-msgstr "Tu plan sigue totalmente activo mientras lo solucionas. Actualiza tu método de pago para saldar el importe pendiente y continuar sin interrupciones."
+msgstr "Mientras tanto, tu plan sigue activo. Actualiza tu método de pago para saldar el importe pendiente."
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.cta"
@@ -620,67 +603,61 @@ msgstr "Actualiza tu método de pago:"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.subject"
-msgstr "{workspace_name} pasó a Free"
+msgstr "{workspace_name} está ahora en el plan gratuito"
 
-#. js-lingui-explicit-id
-msgid "email.tier_expired.title"
-msgstr "El plan de {workspace_name} ha vencido"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.preview"
-msgstr "{workspace_name} pasó a Free. Algunas funciones están limitadas."
+msgstr "Tu plan {from_tier} ha terminado. Todo lo que has creado se conserva."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.heading"
-msgstr "{workspace_name} ahora está en Free."
+msgstr "{workspace_name} está ahora en el plan gratuito"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.body"
-msgstr "Tu plan {from_tier} en {workspace_name} ha vencido. El espacio de trabajo ahora está en el plan Free."
+msgstr "Tu plan {from_tier} para {workspace_name} ha terminado, así que el espacio de trabajo ha pasado al plan gratuito."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.text_body"
-msgstr "{workspace_name}: tu plan {from_tier} ha vencido. El espacio de trabajo ahora está en Free."
+msgstr "Tu plan {from_tier} para {workspace_name} ha terminado, así que el espacio de trabajo ha pasado al plan gratuito."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.rest"
-msgstr "Tu contenido existente sigue accesible. Solicita una mejora para recuperar todas las funciones."
+msgstr "Todo lo demás funciona como antes y todo tu contenido sigue accesible. Solicita una mejora para recuperar todas las funciones."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.cta"
-msgstr "Abrir espacio de trabajo"
+msgstr "Solicitar una mejora"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.subject"
-msgstr "El plan de {workspace_name} vence el {date}"
+msgstr "{workspace_name} pasa al plan gratuito el {date}"
 
-#. js-lingui-explicit-id
-msgid "email.tier_expiring.title"
-msgstr "El plan de {workspace_name} vence pronto"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.preview"
-msgstr "{workspace_name} pasa a Free el {date}."
+msgstr "Tu plan {tier} termina el {date}. Todo lo que has creado se conserva."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.heading"
-msgstr "El plan de {workspace_name} vence el {date}."
+msgstr "Tu plan {tier} termina el {date}"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.body"
-msgstr "Tu plan {tier} en {workspace_name} vence el {date}. Después de eso, el espacio de trabajo pasará a Free y algunas funciones estarán limitadas."
+msgstr "El {date}, {workspace_name} pasa de {tier} al plan gratuito y algunas funciones quedarán limitadas."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.text_body"
-msgstr "{workspace_name}: tu plan {tier} vence el {date}. Después de eso, el espacio de trabajo pasará a Free y algunas funciones estarán limitadas."
+msgstr "El {date}, {workspace_name} pasa de {tier} al plan gratuito y algunas funciones quedarán limitadas."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.rest"
-msgstr "Tu contenido existente sigue accesible. Solicita una mejora para mantener todas las funciones."
+msgstr "Todo lo que has creado se conserva. Para mantener {tier}, solicita una mejora en la configuración del espacio de trabajo."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.cta"
-msgstr "Solicitar mejora"
+msgstr "Solicitar una mejora"
 
 #. js-lingui-explicit-id
 msgid "task.sign_offer.title"
@@ -693,6 +670,14 @@ msgstr "Revisar y firmar la oferta: {document_title}"
 #. js-lingui-explicit-id
 msgid "task.sign_offer.body"
 msgstr "Lee la oferta y fírmala aquí. ¿Firma otra persona en nombre de tu organización? Indícala en la oferta y recibirá su propio enlace."
+
+#. js-lingui-explicit-id
+msgid "task.who_signs.title"
+msgstr "Dinos quién firma {document_title}"
+
+#. js-lingui-explicit-id
+msgid "task.who_signs.body"
+msgstr "Quién firma la oferta, quién firma el acuerdo de tratamiento de datos y si necesitas una EIPD propia."
 
 #. js-lingui-explicit-id
 msgid "task.billing_details.title"
@@ -741,3 +726,103 @@ msgstr "Reserva una llamada con nosotros"
 #. js-lingui-explicit-id
 msgid "task.book_call.body"
 msgstr "Repasamos tu demo contigo y planificamos una primera sesión."
+
+#. js-lingui-explicit-id
+msgid "email.common.reply_to"
+msgstr "¿Tienes preguntas? Responde a este correo y le llegará a {name}."
+
+#. js-lingui-explicit-id
+msgid "email.facts.offer"
+msgstr "Oferta"
+
+#. js-lingui-explicit-id
+msgid "email.facts.reference"
+msgstr "Referencia"
+
+#. js-lingui-explicit-id
+msgid "email.facts.valid_until"
+msgstr "Válida hasta"
+
+#. js-lingui-explicit-id
+msgid "email.facts.total"
+msgstr "Total con IVA"
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.preview"
+msgstr "{document_title}: léela y fírmala en línea."
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.signer"
+msgstr "¿Firma otra persona por {org_name}? Abre la oferta e indícala allí; recibirá su propio enlace."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.how"
+msgstr "El botón te da acceso con un código de un solo uso enviado a esta dirección, así que no necesitas contraseña. Solo verás este documento."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.wrong_person"
+msgstr "¿No eres la persona adecuada para firmar? Avísale a {inviter_name} para que designe a otra persona."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.footer"
+msgstr "Recibes este correo porque {inviter_name} introdujo esta dirección en la cuenta de {org_name} en dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.how"
+msgstr "Inicia sesión con un código que enviamos a esta dirección; no necesitas contraseña. Tu página de cuenta muestra los siguientes pasos."
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.footer"
+msgstr "Recibes este correo porque alguien de dembrane creó una cuenta para {org_name} con esta dirección."
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.lead"
+msgstr "Introduce este código para continuar:"
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.expires"
+msgstr "Caduca en 10 minutos."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.text_cta"
+msgstr "Solicitar una mejora:"
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.text_cta"
+msgstr "Solicitar una mejora:"
+
+#. js-lingui-explicit-id
+msgid "email.common.footer_account"
+msgstr "Recibes este correo porque gestionas la cuenta de {org_name} en dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.common.cta_account"
+msgstr "Abrir tu página de cuenta"
+
+#. js-lingui-explicit-id
+msgid "email.common.text_cta_account"
+msgstr "Abrir tu página de cuenta:"
+
+#. js-lingui-explicit-id
+msgid "email.account_document_withdrawn.subject"
+msgstr "{document_title} se ha retirado"
+
+#. js-lingui-explicit-id
+msgid "email.account_document_withdrawn.heading"
+msgstr "Hemos retirado {document_title}"
+
+#. js-lingui-explicit-id
+msgid "email.account_document_withdrawn.body"
+msgstr "Hemos retirado {document_title} para {org_name}, así que ya no se puede firmar."
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.subject"
+msgstr "Pendiente para {org_name}: {task_title}"
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.heading"
+msgstr "Queda un paso pendiente"
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.body"
+msgstr "Un paso de la cuenta de {org_name} todavía te está esperando:"

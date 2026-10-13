@@ -1,9 +1,17 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
+import { newId } from "@dembrane/core";
 import { createDb, migrate } from "@dembrane/db";
 import { type CompletionRequest, FakeCompleter } from "@dembrane/llm";
 import postgres from "postgres";
-import type { Json } from "../src/py";
-import { reconcileMissingTicks, runPopcornTick, type TickDeps } from "../src/tick/run";
+import { type Json, pyIso } from "../src/py";
+import { goLive, type PopcornDeps, popcornPayload, stopLive } from "../src/service";
+import { popcornStore, type Row } from "../src/storage";
+import {
+  enqueueNextIfDue,
+  reconcileMissingTicks,
+  runPopcornTick,
+  type TickDeps,
+} from "../src/tick/run";
 import { tickDeps, tickWorkflowId } from "../src/worker";
 import { NO_ANALYSIS } from "./fixtures/tick/analysis";
 import {
@@ -242,5 +250,169 @@ run("popcorn tick against Postgres", () => {
     expect(await reconcileMissingTicks(d)).toBe(0);
     const [task] = await raw`select payload from scheduled_task where status = 'scheduled'`;
     expect(task?.payload).toEqual({ loop_id: ids.loop, tick_kind: "scheduled" });
+  });
+
+  // goLive needs only the database, the clock and the dispatcher.
+  function liveDeps(now: Date, dispatched: unknown[]): PopcornDeps {
+    return {
+      db: database.db,
+      now: () => now,
+      dispatchTick: async (_tx: unknown, request: unknown) => {
+        dispatched.push(request);
+      },
+    } as unknown as PopcornDeps;
+  }
+  // A time as the driver hands it back (a Date) or as the payload prints it (text).
+  const ms = (v: unknown) => new Date(v as string).getTime();
+  const loopRow = async () =>
+    (await raw`select * from agent_loop where id = ${ids.loop}`)[0] as Row;
+  const pending = async () =>
+    raw`select payload, scheduled_at from scheduled_task
+      where task_type = 'popcorn_tick' and status = 'scheduled' order by scheduled_at`;
+
+  test("Ready by books the first read 15 minutes early, and a read before it keeps the booking", async () => {
+    const now = new Date();
+    const readyBy = new Date(now.getTime() + 2 * 3_600_000);
+    const startsAt = new Date(readyBy.getTime() - 15 * 60_000);
+    const dispatched: unknown[] = [];
+    await goLive(liveDeps(now, dispatched), await loopRow(), 8, readyBy);
+    expect(dispatched).toEqual([]);
+    const loop = await loopRow();
+    expect(loop.status).toBe("paused");
+    expect(ms(loop.expires_at)).toBe(startsAt.getTime() + 8 * 3_600_000);
+    expect(loop.caps).toEqual({
+      kind: "popcorn",
+      ready_by: pyIso(readyBy),
+      starts_at: pyIso(startsAt),
+    });
+    const booked = await pending();
+    expect(booked.map((t) => t.payload)).toEqual([{ loop_id: ids.loop, tick_kind: "start" }]);
+    expect(ms(booked[0]?.scheduled_at)).toBe(startsAt.getTime());
+
+    // The dashboard reads it as manual, with the booking.
+    const [report] = await raw`select * from project_report where id = ${loop.report_id as number}`;
+    const shown = (await popcornPayload(popcornStore(raw), report as Row)).loop as Json;
+    expect(shown.mode).toBe("manual");
+    expect(ms(shown.ready_by)).toBe(readyBy.getTime());
+    expect(ms(shown.starts_at)).toBe(startsAt.getTime());
+
+    // A refresh finishing before the start, and the reconciler, leave the start booked.
+    const d = deps(recorded(fixture.ticks), "w-booked");
+    await enqueueNextIfDue(d, loop);
+    expect(await reconcileMissingTicks(d)).toBe(0);
+    expect((await pending()).map((t) => t.payload)).toEqual([
+      { loop_id: ids.loop, tick_kind: "start" },
+    ]);
+
+    // When it comes, the start turns live on and the chain books the next read.
+    await raw`update scheduled_task set status = 'completed' where task_type = 'popcorn_tick'`;
+    await runPopcornTick(deps(recorded(fixture.ticks), "w-start"), ids.loop, "start");
+    const live = await loopRow();
+    expect(live.status).toBe("active");
+    expect(live.caps).toEqual({ kind: "popcorn" });
+    expect((await pending()).map((t) => t.payload)).toEqual([
+      { loop_id: ids.loop, tick_kind: "scheduled" },
+    ]);
+    await stopLive(liveDeps(new Date(), []), live);
+  });
+
+  test("Cancel removes the booked start and the booking", async () => {
+    const now = new Date();
+    await goLive(liveDeps(now, []), await loopRow(), 1, new Date(now.getTime() + 3_600_000));
+    expect((await pending()).length).toBe(1);
+    await stopLive(liveDeps(now, []), await loopRow());
+    expect((await pending()).length).toBe(0);
+    const loop = await loopRow();
+    expect(loop.status).toBe("paused");
+    expect(loop.caps).toEqual({ kind: "popcorn" });
+    const [report] = await raw`select * from project_report where id = ${loop.report_id as number}`;
+    const shown = (await popcornPayload(popcornStore(raw), report as Row)).loop as Json;
+    expect(shown.ready_by).toBeNull();
+    expect(shown.starts_at).toBeNull();
+  });
+
+  test("Start now while booked replaces the booking, and going live again restarts the hours", async () => {
+    const now = new Date();
+    await goLive(liveDeps(now, []), await loopRow(), 8, new Date(now.getTime() + 3 * 3_600_000));
+    expect((await pending()).map((t) => t.payload)).toEqual([
+      { loop_id: ids.loop, tick_kind: "start" },
+    ]);
+
+    const dispatched: { tickKind: string }[] = [];
+    await goLive(liveDeps(now, dispatched), await loopRow(), 8);
+    const loop = await loopRow();
+    expect(loop.status).toBe("active");
+    expect(loop.caps).toEqual({ kind: "popcorn" });
+    expect(ms(loop.expires_at)).toBe(now.getTime() + 8 * 3_600_000);
+    expect(dispatched.map((r) => r.tickKind)).toEqual(["manual"]);
+    const kinds = (await pending()).map((t) => (t.payload as Json).tick_kind);
+    expect(kinds).not.toContain("start");
+    const [report] = await raw`select * from project_report where id = ${loop.report_id as number}`;
+    const shown = (await popcornPayload(popcornStore(raw), report as Row)).loop as Json;
+    expect(shown.mode).toBe("live");
+    expect(shown.ready_by).toBeNull();
+    expect(shown.starts_at).toBeNull();
+
+    // Live already: the hours run again from now.
+    const later = new Date(now.getTime() + 30 * 60_000);
+    await goLive(liveDeps(later, []), await loopRow(), 1);
+    const again = await loopRow();
+    expect(again.status).toBe("active");
+    expect(ms(again.expires_at)).toBe(later.getTime() + 3_600_000);
+
+    await stopLive(liveDeps(new Date(), []), again);
+    expect((await pending()).length).toBe(0);
+  });
+
+  test("a booked start tells the project's people once its first read is in", async () => {
+    const now = new Date();
+    await goLive(liveDeps(now, []), await loopRow(), 8, new Date(now.getTime() + 3_600_000));
+    await raw`update scheduled_task set status = 'completed' where task_type = 'popcorn_tick'`;
+    const told: unknown[] = [];
+    const loop = await loopRow();
+    await runPopcornTick(
+      {
+        ...deps(recorded(fixture.ticks), "w-start-notice"),
+        notifyReady: async (o) => {
+          told.push(o);
+        },
+      },
+      ids.loop,
+      "start",
+    );
+    expect(told).toEqual([{ projectId: loop.project_id, reportId: String(loop.report_id) }]);
+    // A later read of the live session is not a booked start: nobody is told again.
+    await runPopcornTick(
+      {
+        ...deps(recorded(fixture.ticks), "w-after-notice"),
+        notifyReady: async (o) => {
+          told.push(o);
+        },
+      },
+      ids.loop,
+      "manual",
+    );
+    expect(told.length).toBe(1);
+    await stopLive(liveDeps(new Date(), []), await loopRow());
+  });
+
+  test("a read that ends leaves the read a finished conversation booked", async () => {
+    const d = deps(recorded(fixture.ticks), "w-keeps-finish");
+    const now = new Date();
+    await d.store.scheduleTick({
+      id: newId(),
+      payload: { loop_id: ids.loop, tick_kind: "finish", conversation_ids: [] },
+      scheduledAt: pyIso(new Date(now.getTime() + 60_000)),
+      now: pyIso(now),
+    });
+    await enqueueNextIfDue(d, await loopRow());
+    expect((await pending()).map((t) => (t.payload as Json).tick_kind)).toEqual(["finish"]);
+    await raw`update scheduled_task set status = 'cancelled' where task_type = 'popcorn_tick'`;
+  });
+
+  test("a booked start that was cancelled reads nothing", async () => {
+    const got = await runPopcornTick(deps(recorded(fixture.ticks), "w-late"), ids.loop, "start");
+    expect(got.status).toBe("no_op");
+    expect(got.run.detail).toBe("No start booked");
   });
 });

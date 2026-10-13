@@ -20,8 +20,16 @@ import {
   truthy,
   utcNowIso,
 } from "../py";
-import { forgetBundle, isPopcornLoop, type PopcornFlags, projectJson } from "../service";
 import {
+  forgetBundle,
+  isPopcornLoop,
+  liveBooking,
+  type PopcornFlags,
+  projectJson,
+  withoutBooking,
+} from "../service";
+import {
+  audienceManifest,
   DEFAULT_CADENCE_MINUTES,
   MIN_CADENCE_MINUTES,
   normalizeSettings,
@@ -30,7 +38,7 @@ import {
   voiceHostNote,
 } from "../settings";
 import { freshState, normalizeState, referencedQuoteIds } from "../state";
-import type { PopcornStore, Row } from "../storage";
+import { FINISH_TICK, type PopcornStore, type Row, START_TICK } from "../storage";
 import { norm as normText } from "../text";
 import {
   cacheKey,
@@ -40,7 +48,7 @@ import {
   translatedBundle,
 } from "../translate";
 import { applyResults, enrichItem } from "./enrichment";
-import { gateItems, introducedNames, knownShingles } from "./flags";
+import { gateItems, introducedNames, type ShownText, shownIndex } from "./flags";
 import { islandFlags, nameFlags } from "./gates";
 import { groundItems } from "./grounding";
 import { POPCORN_PROMPT, type PopcornModel, promptText, VALIDATE_PROMPT } from "./model";
@@ -78,9 +86,13 @@ export const STAKEHOLDERS_TIMEOUT_MS = 300_000;
 // what is fingerprinted or quoted.
 export const MAX_CHARS_PER_CONVERSATION = 150_000;
 export const ANALYSIS_VIEWS = ["tensions", "stakeholders"] as const;
-/** Reads a host asked for, as opposed to the live chain's scheduled ticks. */
+/**
+ * Reads outside the live chain, in any mode: the ones a host asked for, and the read a
+ * finished conversation booked. They never change the mode or the live window.
+ */
 export const ON_REQUEST = new Set([
   "manual",
+  FINISH_TICK,
   "rerun",
   "translation",
   "prepare:popcorn",
@@ -101,8 +113,17 @@ export interface TickDeps {
   readonly deck: DeckAnalysis;
   /** The analysis executor the tick publishes through; null runs the tick on its state alone. */
   readonly analysis: ExecutorDeps | null;
-  /** Present's adopt_results with initial_only: a presentation's first bindings after a read. */
-  readonly adoptInitialResults?: ((report: Row, projectId: string) => Promise<void>) | null;
+  /**
+   * Present's adopt_results after a read: the presentation's first bindings, or the newest
+   * result of every outcome when `newest` (the session is live).
+   */
+  readonly adoptResults?:
+    | ((report: Row, projectId: string, newest: boolean) => Promise<void>)
+    | null;
+  /** Asks for a new argument map. Its run is its own workflow, beside the read. */
+  readonly requestMap?: ((projectId: string, actorId: string | null) => Promise<void>) | null;
+  /** Tells the project's people that the read of a booked start is ready to review. */
+  readonly notifyReady?: ((o: { projectId: string; reportId: string }) => Promise<void>) | null;
   readonly flags: PopcornFlags;
   readonly participantBaseUrl: string;
   readonly adminBaseUrl: string;
@@ -247,7 +268,8 @@ async function nudgeLoop(d: TickDeps, loop: Row) {
 export async function enqueueNextIfDue(d: TickDeps, loop: Row, when?: Date): Promise<void> {
   const loopId = String(loop.id);
   const now = d.now();
-  await d.store.cancelPendingTicks(loopId, utcNowIso(now));
+  // A read a finished conversation booked stays: this read may have gathered before it ended.
+  await d.store.cancelPendingTicks(loopId, utcNowIso(now), { keepFinish: true });
   const fresh = await d.store.loop(loopId);
   if (fresh?.status !== "active") return;
   const expiresAt = parseDt(fresh.expires_at);
@@ -441,7 +463,7 @@ async function extractOne(
   transcript: Json,
   outcomes: string[],
   hostNote: string,
-  known: ReadonlySet<string>,
+  known: ShownText,
   publisher: Publisher | null,
   translator: IncrementalTranslator | null,
 ): Promise<void> {
@@ -994,6 +1016,39 @@ export async function runPopcornTick(
     return { status: "disabled", run };
   }
 
+  // A booked start ("Ready by"): live from now until the expiry booked with it, then this
+  // read runs as a manual one and the chain books the next.
+  if (tickKind === START_TICK) {
+    if (!liveBooking(loop)) {
+      const run = await createRun(d, {
+        loopId,
+        status: "no_op",
+        detail: "No start booked",
+        startedAt,
+      });
+      return { status: "no_op", run };
+    }
+    await d.store.updateLoop(
+      loopId,
+      { status: "active", failure_count: 0, caps: withoutBooking(loop.caps) },
+      utcNowIso(d.now()),
+    );
+    // Pages showing "Ready by" turn live now, whatever the read finds.
+    await nudgeLoop(d, loop);
+    const first = await runPopcornTick(d, loopId, "manual", requestId);
+    const bookedReport = asIdTruthy(loop.report_id);
+    // A read that found nothing new is as ready as one that did.
+    if ((first.status === "ok" || first.status === "no_op") && bookedReport && d.notifyReady) {
+      try {
+        await d.notifyReady({ projectId: orStr(loop.project_id), reportId: bookedReport });
+      } catch (exc) {
+        // The results are there either way; the inbox message is a courtesy.
+        d.logger.warn({ err: errText(exc), loop_id: loopId }, "ready notice not sent");
+      }
+    }
+    return first;
+  }
+
   // Only the scheduled chain answers to the mode and the expiry.
   if (!ON_REQUEST.has(tickKind)) {
     if (loop.status !== "active") {
@@ -1102,10 +1157,7 @@ export async function runPopcornTick(
       Object.assign(state, kept);
     }
     // What the room has been shown so far: a new phrase quoting it is the tool quoting itself.
-    const knownAll = knownShingles(state);
-    const knownBy = new Map(
-      Object.keys(dict(state.conversations)).map((cid) => [cid, knownShingles(state, 6, cid)]),
-    );
+    const shown = shownIndex(state);
     const config = await d.store.latestConfig(reportId);
     let settings = normalizeSettings(config?.popcorn_settings, orStr(currentLoop.name, "Popcorn"));
     const project = await d.store.project(projectId);
@@ -1261,6 +1313,21 @@ export async function runPopcornTick(
           hostNote,
         )
       : null;
+    // The argument map is part of the same run: asked for here, it works as its own
+    // workflow while this read extracts. One already running is left to finish.
+    if (
+      d.requestMap &&
+      transcripts.length &&
+      (extractionWork.length || tickKind === "rerun") &&
+      list(audienceManifest(settings).blocks).includes("map")
+    ) {
+      try {
+        await d.requestMap(projectId, actingUser || null);
+      } catch (exc) {
+        // The read goes on without a new map.
+        d.logger.warn({ err: errText(exc), project_id: projectId }, "map not requested");
+      }
+    }
     if (extractionWork.length) {
       const slots = new Semaphore(MAX_PARALLEL_EXTRACTORS);
       await Promise.all(
@@ -1272,7 +1339,7 @@ export async function runPopcornTick(
             t,
             outcomes,
             hostNote,
-            knownBy.get(String(t.id)) ?? knownAll,
+            shown.except(String(t.id)),
             publisher,
             translator,
           ),
@@ -1352,10 +1419,12 @@ export async function runPopcornTick(
       // A failed snapshot must not fail the tick.
       d.logger.warn({ err: errText(exc), report_id: reportId }, "popcorn version snapshot failed");
     }
-    if (snapshotted && isRecord(settings.presentation) && d.adoptInitialResults) {
+    if (snapshotted && isRecord(settings.presentation) && d.adoptResults) {
       try {
         const report = await d.store.report(reportId);
-        if (report) await d.adoptInitialResults(report, projectId);
+        // Live, the room follows every outcome; otherwise a binding the host chose stays.
+        const live = (await d.store.loop(loopId))?.status === "active";
+        if (report) await d.adoptResults(report, projectId, live);
       } catch (exc) {
         // The audience keeps its existing bindings.
         d.logger.warn({ err: errText(exc) }, "initial presentation result adoption failed");

@@ -6,6 +6,8 @@ export interface MailMessage {
   readonly text: string;
   /** Free-form labels for delivery analytics (SendGrid categories). */
   readonly tags?: readonly string[];
+  /** Where a reply goes, when not to the sender: the person at dembrane who owns the account. */
+  readonly replyTo?: { readonly email: string; readonly name?: string | null };
 }
 
 /**

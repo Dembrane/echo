@@ -2,7 +2,6 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	Avatar,
-	Container,
 	Group,
 	Loader,
 	Paper,
@@ -14,15 +13,16 @@ import {
 	UnstyledButton,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
+import { PageContainer } from "@/components/layout/PageContainer";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { nextTaskText } from "../format";
 import { summarise, useTasksSummary } from "../help/tasksSummary";
 import { AccountsI18n } from "../i18n";
 
 /**
- * Where "Tasks" in the Help menu leads when the caller has tasks in more than one
+ * /account, for the caller with tasks in more than one
  * organisation: one card per org with its progress and next task, each opening that
- * org's account page.
+ * org's overview.
  */
 export const AccountPickerRoute = () => (
 	<AccountsI18n>
@@ -37,7 +37,7 @@ function Picker() {
 	const { orgs } = summarise(data);
 	if (isLoading) return <Loader m="xl" size="sm" />;
 	return (
-		<Container size="md" px={{ base: "md", sm: "lg" }} py="xl">
+		<PageContainer>
 			<Stack gap="lg">
 				<Stack gap={2}>
 					<Title order={3}>
@@ -58,7 +58,7 @@ function Picker() {
 					{orgs.map((org) => (
 						<UnstyledButton
 							key={org.org_id}
-							onClick={() => navigate(`/o/${org.org_id}/account`)}
+							onClick={() => navigate(`/o/${org.org_id}/overview`)}
 							data-testid="picker-org"
 						>
 							<Paper withBorder radius="md" p="md" h="100%">
@@ -98,6 +98,6 @@ function Picker() {
 					))}
 				</SimpleGrid>
 			</Stack>
-		</Container>
+		</PageContainer>
 	);
 }

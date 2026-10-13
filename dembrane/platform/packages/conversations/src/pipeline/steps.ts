@@ -21,7 +21,7 @@ import { type ChunkRow, conversationStore, type Tx, transaction } from "../stora
 import { computeIsOverCap } from "../tiers";
 import { NO_TRANSCRIPT_SUMMARY, summarizeAndStore } from "../v1/summary";
 import { computeTokenCount } from "../v1/token-count";
-import { finalizeConversation } from "./defs";
+import { finalizeConversation, processChunk } from "./defs";
 
 const { conversation, conversation_chunk, processing_status, project, workspace, billing_account } =
   schema;
@@ -38,6 +38,15 @@ export interface PipelineDeps {
   readonly logger: Logger;
   readonly now: () => Date;
   readonly webhooks: { readonly enabled: boolean; readonly dashboardUrl: string };
+  /**
+   * Told once per finished conversation whose every chunk is transcribed, inside the
+   * transaction that marks it so. The worker books the project's popcorn read here.
+   */
+  readonly onTranscribed?: (
+    tx: Tx["sql"],
+    projectId: string,
+    conversationId: string,
+  ) => Promise<void>;
   /** Files above this are split before transcription; tests lower it to split small files. */
   readonly maxChunkBytes?: number;
 }
@@ -511,6 +520,7 @@ export async function claimFinish(d: PipelineDeps, conversationId: string): Prom
 /**
  * _stamp_over_cap: the soft-edge formula over the workspace's lifetime audio
  * hours, deleted conversations included, since deleting keeps billable duration.
+ * A sample copy's invented conversations are no one's audio and do not count.
  * Deterministic in the database's state, so a retry writes the same value.
  */
 export async function stampOverCap(d: PipelineDeps, conversationId: string): Promise<void> {
@@ -531,7 +541,7 @@ export async function stampOverCap(d: PipelineDeps, conversationId: string): Pro
     .select({ seconds: sql<number>`coalesce(sum(${conversation.duration}), 0)::float8` })
     .from(conversation)
     .innerJoin(project, eq(project.id, conversation.project_id))
-    .where(eq(project.workspace_id, row.workspaceId));
+    .where(and(eq(project.workspace_id, row.workspaceId), eq(project.is_sample, false)));
   const overCap = computeIsOverCap(
     row.tier ?? "",
     (total?.seconds ?? 0) / 3600,
@@ -571,6 +581,7 @@ export async function claimFinalize(
       .set({ is_all_chunks_transcribed: true, updated_at: d.now().toISOString() })
       .where(eq(conversation.id, conversationId));
     await webhook(d, tx, row.project_id, conversationId, "conversation.transcribed");
+    await d.onTranscribed?.(tx.sql, row.project_id, conversationId);
     return row.project_id;
   });
 }
@@ -792,6 +803,92 @@ export async function unsummarizedConversations(db: Db, now: Date, limit = 50): 
     order by c.created_at, c.id
     limit ${limit}`);
   return [...rows].map((r) => r.id);
+}
+
+export const CHUNK_GAVE_UP = "Transcription did not finish";
+const STRANDED_WINDOW_MS = 14 * 24 * 3600_000;
+
+export interface Rerunner {
+  rerun(def: typeof processChunk, workflowId: string, newWorkflowId: string): Promise<boolean>;
+}
+
+/**
+ * Chunk runs that ended unfinished (cancelled, set aside, errored) and still hold up a recording.
+ * A split chunk has no row of its own; the caller checks its pieces.
+ */
+export async function strandedChunkRuns(
+  db: Db,
+  now: Date,
+  limit = 50,
+): Promise<{ id: string; again: string | null; setAside: boolean }[]> {
+  const since = now.getTime() - STRANDED_WINDOW_MS;
+  const prefix = `${processChunk.name}:`;
+  const rows = await db.execute<{ id: string; again: string | null; set_aside: boolean }>(sql`
+    select w.workflow_uuid as id, a.status as again, (lw.set_aside_at is not null) as set_aside
+    from dbos.workflow_status w
+    left join dbos.workflow_status a on a.workflow_uuid = w.workflow_uuid || ':again'
+    left join dbos_workflow_lost_worker lw on lw.workflow_id = w.workflow_uuid
+    left join conversation_chunk ch on ch.id = (case when length(w.workflow_uuid) = ${prefix.length + 36}
+      then substr(w.workflow_uuid, ${prefix.length + 1})::uuid end)
+    left join conversation c on c.id = ch.conversation_id
+    where w.name = ${processChunk.name} and w.created_at > ${since}
+      and w.status in ('CANCELLED', 'ERROR', 'MAX_RECOVERY_ATTEMPTS_EXCEEDED')
+      and w.workflow_uuid not like '%:again'
+      and (a.status is null or a.status in ('CANCELLED', 'ERROR', 'MAX_RECOVERY_ATTEMPTS_EXCEEDED'))
+      and (ch.id is null or (c.deleted_at is null and (
+        (ch.transcript is null and ch.error is null)
+        or (c.is_finished and c.is_all_chunks_transcribed is not true))))
+    order by w.created_at
+    limit ${limit}`);
+  return [...rows].map((r) => ({ id: r.id, again: r.again, setAside: r.set_aside }));
+}
+
+/**
+ * A stranded chunk run goes again once, from the step it did not finish; set aside or failed
+ * twice, its chunks get an error. Either way the conversation is handed over to finalize.
+ */
+export async function releaseStrandedChunks(d: PipelineDeps, jobs: Rerunner): Promise<void> {
+  for (const runInfo of await strandedChunkRuns(d.db, d.now())) {
+    const chunkId = runInfo.id.slice(`${processChunk.name}:`.length);
+    // A split chunk's row is gone; its pieces remain.
+    const ids = [chunkId, ...Array.from({ length: MAX_PIECES }, (_, i) => pieceId(chunkId, i))];
+    const chunks = await d.db
+      .select({
+        id: conversation_chunk.id,
+        conversationId: conversation_chunk.conversation_id,
+        pending: sql<boolean>`${conversation_chunk.transcript} is null and ${conversation_chunk.error} is null`,
+      })
+      .from(conversation_chunk)
+      .innerJoin(
+        conversation,
+        and(
+          eq(conversation.id, conversation_chunk.conversation_id),
+          isNull(conversation.deleted_at),
+        ),
+      )
+      .where(inArray(conversation_chunk.id, ids));
+    const conversationId = chunks[0]?.conversationId;
+    if (!conversationId) continue;
+    const pending = chunks.filter((c) => c.pending).map((c) => c.id);
+    const log = { chunkId, conversationId, workflowId: runInfo.id, pending: pending.length };
+    if (pending.length && runInfo.again === null && !runInfo.setAside) {
+      if (await jobs.rerun(processChunk, runInfo.id, `${runInfo.id}:again`))
+        d.logger.warn(
+          { ...log, signal: "chunk.run_again" },
+          "chunk run ended unfinished; running it again",
+        );
+      continue;
+    }
+    for (const id of pending)
+      await updateChunk(d, id, conversationId, { error: CHUNK_GAVE_UP }, false);
+    if (pending.length)
+      d.logger.error(
+        { ...log, signal: "chunk.gave_up" },
+        "chunk run ended unfinished; chunk given up",
+      );
+    // Also with nothing pending: a run that failed at its hand-over never handed over.
+    await handOver(d, conversationId);
+  }
 }
 
 export type { Models };

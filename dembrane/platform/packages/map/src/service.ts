@@ -550,8 +550,27 @@ export interface GroupJob {
   readonly attempt: number;
 }
 
-export interface GroupDeps extends MapDeps {
+/** What tells the pages showing a project's groups that one was made, titled or failed. */
+export interface GroupAnnounce extends MapDeps {
+  /**
+   * The screens outside the Map page that show the groups (the room, the public page, the
+   * Present preview) follow their own channel; this wakes them. Best effort, never throws.
+   */
+  readonly onGroupChanged?: ((projectId: string) => Promise<void>) | undefined;
+}
+
+export interface GroupDeps extends GroupAnnounce {
   readonly dispatchGroup: (job: GroupJob) => Promise<unknown>;
+}
+
+/** A group was made, titled or failed: the Map page hears it on its channel, the room on its own. */
+export async function announceGroup(
+  d: GroupAnnounce,
+  projectId: string,
+  groupId: string,
+): Promise<void> {
+  await d.rt.publishMap(projectId, { type: "group", group_id: groupId });
+  await d.onGroupChanged?.(projectId);
 }
 
 /** A stored group as the page reads it. */
@@ -599,7 +618,7 @@ export async function requestGroup(
       );
       throw err;
     }
-    await d.rt.publishMap(snapshot.projectId, { type: "group", group_id: String(row.id) });
+    await announceGroup(d, snapshot.projectId, String(row.id));
   }
   return groupDoc(row);
 }

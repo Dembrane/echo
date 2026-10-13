@@ -207,7 +207,7 @@ flowchart TD
 <pre class="mermaid">
 %%{init: {'theme':'neutral', 'flowchart': {'curve':'basis', 'nodeSpacing': 26, 'rankSpacing': 30}}}%%
 flowchart LR
-  T[Transcript<br/>+ host voice note] --> M[popcorn-v1.7<br/>thinking off, at most 8 items]:::model
+  T[Transcript<br/>+ host voice note] --> M[popcorn-v1.10<br/>thinking off, no limit on items]:::model
   M --> S[Shaper:<br/>contract checks]:::gate
   S --> G[Gates:<br/>names, known text, twins]:::gate
   G --> R[Grounding:<br/>verbatim flag, closest passage]:::code
@@ -427,7 +427,7 @@ flowchart TD
     </div>
     <div class="table-wrap"><table>
       <tr><th>Call</th><th>Prompt</th><th>Thinking</th><th>Output cap</th></tr>
-      <tr><td>fast pass</td><td><code>popcorn-v1.7</code></td><td>off</td><td class="num">2,000 tokens</td></tr>
+      <tr><td>fast pass</td><td><code>popcorn-v1.10</code></td><td>off</td><td class="num">2,000 tokens</td></tr>
       <tr><td>evidence, kind, question rewrite</td><td><code>popcorn-validate</code>, <code>popcorn-kind</code>, <code>popcorn-question</code></td><td>on</td><td class="num">8,000</td></tr>
       <tr><td>stakeholders</td><td><code>stakeholders-v0.9</code></td><td>on</td><td class="num">32,000</td></tr>
       <tr><td>handed, positions, collisions, verify, write</td><td>the five pipeline prompts</td><td>on</td><td class="num">32,000</td></tr>

@@ -1,5 +1,5 @@
 import { Plural, Trans } from "@lingui/react/macro";
-import { Group, Stack, Text } from "@mantine/core";
+import { Stack, Text } from "@mantine/core";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { CSSProperties, ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -11,30 +11,32 @@ import {
 	maximumAdmittedNodes,
 } from "@/components/map/budgets";
 import { buildMapGraph } from "@/components/map/data/adapter";
-import type { FactCheckStates, MapGraphResponse } from "@/components/map/hooks";
+import type {
+	FactCheckStates,
+	MapGraphResponse,
+	MapGroupDoc,
+} from "@/components/map/hooks";
 import {
 	MAP_LIGHT_VARS,
 	MapExperience,
 	MapSurface,
 } from "@/components/map/MapExperience";
 import { OverBudgetState } from "@/components/map/panels/BudgetStates";
-import {
-	type MapSettingsControl,
-	MapSettingsMenu,
-} from "@/components/map/panels/MapSettingsMenu";
+import type { MapSettingsControl } from "@/components/map/panels/MapSettingsMenu";
 import {
 	createMapInteractionStore,
 	MapInteractionProvider,
 } from "@/components/map/state/interactionStore";
 import {
-	DEFAULT_MAP_SETTINGS,
 	type MapSettings,
+	readMapSettings,
 } from "@/components/map/state/settings";
 import type {
 	ColorBy,
 	FactCheckState,
 	FactCheckVerdict,
 } from "@/components/map/types";
+import { RoomMapRail } from "./RoomMapRail";
 
 type AudienceMapAdapterProps = {
 	active: boolean;
@@ -47,9 +49,9 @@ type AudienceMapAdapterProps = {
 	 */
 	theme?: "light" | "dark";
 	/**
-	 * Whether the viewer is signed in. Only then may a settled highlight be
-	 * titled: that request runs a model behind the host's session, and a
-	 * public link has no session to send. Off, no such request is made.
+	 * Whether the viewer is signed in. Off, the Explore panel that lists
+	 * titles stays out of the settings. Either way the room asks for no title:
+	 * the groups it shows come with its map.
 	 */
 	titles?: boolean;
 };
@@ -94,7 +96,32 @@ const DARK_MAP_VARS = {
 
 type AudienceMapResponse = MapGraphResponse & {
 	fact_checks?: Record<string, unknown>;
+	/** The project's groups, as the host's History lists them. */
+	groups?: MapGroupDoc[];
 };
+
+const EMPTY_GROUPS: MapGroupDoc[] = [];
+
+/** The groups the payload carries; anything that is not a list is none. */
+const readGroups = (payload: MapGraphResponse): MapGroupDoc[] => {
+	const groups = (payload as AudienceMapResponse).groups;
+	return Array.isArray(groups) ? groups : EMPTY_GROUPS;
+};
+
+/**
+ * Where the room starts: the host's own saved Map settings, so the host's
+ * screen and the Present preview open as the host's Map page does (clusters
+ * first, the same density and colours); any other device opens on the Map
+ * page's defaults. The room always opens with Spotlight, where History lives,
+ * and never with the force panels; of the toolbar it keeps only the density
+ * dial and the view, in its rail, which change this screen's drawing and
+ * nothing else.
+ */
+const roomStartSettings = (): MapSettings => ({
+	...readMapSettings(),
+	showForceSettings: false,
+	showSpotlight: true,
+});
 
 /**
  * The room's map lives outside the bff prefix (a public token, or a preview
@@ -157,12 +184,15 @@ const EMPTY_STATES: FactCheckStates = {};
 const noFactCheck = () => {};
 
 /**
- * The room's dark switch is the shell's, the budget is the server's, and the
- * projection carries no relations to draw.
+ * The room's dark switch is the shell's, the budget is the server's, the
+ * projection carries no relations to draw, the map's forces are the host's
+ * to set, and clusters or tree is the rail's.
  */
 const ROOM_HIDDEN_CONTROLS: MapSettingsControl[] = [
 	"darkMode",
+	"layout",
 	"showRelationships",
+	"showForceSettings",
 ];
 const ROOM_HIDDEN_CONTROLS_WITHOUT_TITLES: MapSettingsControl[] = [
 	...ROOM_HIDDEN_CONTROLS,
@@ -236,9 +266,15 @@ const AudienceMap = ({
 		store.setSelectedNodeId(nodes[0]?.id ?? null);
 	}, [nodes, store]);
 	const roomSettings = useMemo(
-		() => ({ ...settings, darkMode: dark, showRelationships: false }),
+		() => ({
+			...settings,
+			darkMode: dark,
+			showForceSettings: false,
+			showRelationships: false,
+		}),
 		[dark, settings],
 	);
+	const groups = useMemo(() => readGroups(payload), [payload]);
 	const handleColorByChange = useCallback(
 		(colorBy: ColorBy) => onSettingsChange({ colorBy }),
 		[onSettingsChange],
@@ -274,51 +310,56 @@ const AudienceMap = ({
 
 	return (
 		<div
-			className="flex h-full min-h-0 flex-col"
+			// The map takes the height and everything left of the rail; on a
+			// phone the rail drops to a row under it.
+			className="flex h-full min-h-0 flex-col sm:flex-row"
 			// Dark is relit on the themed root; light is the host page's own.
 			style={dark ? undefined : MAP_LIGHT_VARS}
 		>
-			{/* The room's pane already keeps the screen's edge, so this row and
-			    the surface under it add none of their own. */}
-			<Group justify="space-between" gap="xs" wrap="nowrap" px={0} pt="xs">
-				<Text size="sm">
+			{/* The room's pane already keeps the screen's edge, so the surface
+			    and the rail add none of their own. */}
+			<div className="flex min-h-0 min-w-0 flex-1 flex-col">
+				<MapSurface darkMode={false} inset={false}>
+					<MapInteractionProvider store={store}>
+						<MapExperience
+							graph={roomGraph}
+							placedNodes={nodes}
+							visibleIds={visibleIds}
+							budgets={budgets}
+							colorBy={settings.colorBy}
+							onColorByChange={handleColorByChange}
+							settings={roomSettings}
+							factCheckStates={factCheckStates}
+							onFactCheck={noFactCheck}
+							onCancelFactCheck={noFactCheck}
+							canFactCheck={false}
+							offline={false}
+							titles={titles}
+							// The projection carries the evidence but never its sources,
+							// so the panels must not state a provenance they were not
+							// given, and no quote links back into the workspace.
+							provenance={false}
+							// The project's groups come with the map: History lists
+							// them, and the room makes, retries and renames none.
+							groups={groups}
+							// A room needs no count; the host finds it in the settings.
+							counts={false}
+						/>
+					</MapInteractionProvider>
+				</MapSurface>
+			</div>
+			<RoomMapRail
+				settings={settings}
+				menuSettings={roomSettings}
+				onSettingsChange={onSettingsChange}
+				onColorByChange={handleColorByChange}
+				hide={
+					titles ? ROOM_HIDDEN_CONTROLS : ROOM_HIDDEN_CONTROLS_WITHOUT_TITLES
+				}
+				count={
 					<Plural value={nodes.length} one="# argument" other="# arguments" />
-				</Text>
-				<MapSettingsMenu
-					settings={roomSettings}
-					onChange={onSettingsChange}
-					colorBy={settings.colorBy}
-					onColorByChange={handleColorByChange}
-					canFactCheck={false}
-					hide={
-						titles ? ROOM_HIDDEN_CONTROLS : ROOM_HIDDEN_CONTROLS_WITHOUT_TITLES
-					}
-					withinPortal={false}
-				/>
-			</Group>
-			<MapSurface darkMode={false} inset={false}>
-				<MapInteractionProvider store={store}>
-					<MapExperience
-						graph={roomGraph}
-						placedNodes={nodes}
-						visibleIds={visibleIds}
-						budgets={budgets}
-						colorBy={settings.colorBy}
-						onColorByChange={handleColorByChange}
-						settings={roomSettings}
-						factCheckStates={factCheckStates}
-						onFactCheck={noFactCheck}
-						onCancelFactCheck={noFactCheck}
-						canFactCheck={false}
-						offline={false}
-						titles={titles}
-						// The projection carries the evidence but never its sources,
-						// so the panels must not state a provenance they were not
-						// given, and no quote links back into the workspace.
-						provenance={false}
-					/>
-				</MapInteractionProvider>
-			</MapSurface>
+				}
+			/>
 		</div>
 	);
 };
@@ -328,8 +369,8 @@ const AudienceMap = ({
  * panels over a pre-sanitized projection: the quotes behind every finding,
  * under the conversation's colour and never its name unless the presentation
  * says so, no links back into the workspace, and never the host hooks for
- * generation or fact checking.
- * Selection titles are the one host request, and only for a signed-in viewer.
+ * generation, fact checking or grouping. The project's groups come with the
+ * map and are shown, never made.
  * The renderer is unmounted while hidden so its simulation, its worker and
  * the Showcase's walk stop doing background work.
  */
@@ -351,7 +392,7 @@ export const AudienceMapAdapter = ({
 	// the wall, and the room comes back to the panels and the Showcase the host
 	// left running. Kept in memory only: rooms share an origin with each other
 	// and with the host's own saved Map settings.
-	const [settings, setSettings] = useState<MapSettings>(DEFAULT_MAP_SETTINGS);
+	const [settings, setSettings] = useState<MapSettings>(roomStartSettings);
 	const updateSettings = useCallback(
 		(patch: Partial<MapSettings>) =>
 			setSettings((current) => ({ ...current, ...patch })),

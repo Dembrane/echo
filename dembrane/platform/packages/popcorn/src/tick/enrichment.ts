@@ -1,6 +1,7 @@
 import { dict, type Json, list, orStr, truthy } from "../py";
 import { norm, pySplit, pyStrip } from "../text";
 import { nameHits, scrubNames } from "./flags";
+import { MAX_PHRASE_CHARS, MAX_PHRASE_WORDS } from "./shapes";
 import { errText, pyRepr, settle, WB_END, WB_START } from "./util";
 
 /**
@@ -48,12 +49,10 @@ export const QUESTION_SCHEMA: Json = {
   type: "object",
   additionalProperties: false,
   required: ["phrase"],
-  properties: { phrase: { type: "string", maxLength: 90 } },
+  properties: { phrase: { type: "string", maxLength: MAX_PHRASE_CHARS } },
 };
 
 const MIN_QUOTE_CHARS = 12;
-const MAX_PHRASE_CHARS = 90;
-const MAX_PHRASE_WORDS = 13;
 
 // A modal the phrase carries that its source passage does not is a change of status.
 const HEDGE = new RegExp(

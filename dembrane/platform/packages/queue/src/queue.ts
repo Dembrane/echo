@@ -9,8 +9,8 @@ import {
   withCorrelation,
 } from "@dembrane/observability";
 import type postgres from "postgres";
-import type { JobDefinition, Parsed, Payload } from "./define";
-import { ExecutorHeartbeat, executorIdFor } from "./recovery";
+import { DEFAULT_LOST_WORKER_LIMIT, type JobDefinition, type Parsed, type Payload } from "./define";
+import { ExecutorHeartbeat, executorIdFor, type LostWorkflow } from "./recovery";
 
 /**
  * Bumped by hand when a workflow's sequence of steps changes. DBOS resumes a crashed
@@ -52,6 +52,8 @@ export interface QueueHealth {
   readonly active: number;
   readonly failed: number;
   readonly deferred: number;
+  /** Jobs set aside in the last day after losing their worker repeatedly; each waits for a person. */
+  readonly setAside: number;
   /** Seconds the oldest ready job has waited; null when none is ready. Alerts read it. */
   readonly oldestReadyS: number | null;
 }
@@ -134,7 +136,7 @@ export class Queue {
       queueName: def.name,
       workflowName: def.name,
       appVersion: WORKFLOW_VERSION,
-      workflowTimeoutMS: def.expireInSeconds * 1000 * (def.retryLimit + 1),
+      workflowTimeoutMS: timeoutOf(def),
       ...(opts.singletonKey && {
         deduplicationID: `${def.name}:${opts.singletonKey}`,
         duplicationPolicy: "return-existing" as const,
@@ -147,6 +149,29 @@ export class Queue {
       ? await this.client.enqueueInTransaction(adaptTx(opts.tx) as never, options, envelope)
       : await this.client.enqueue(options, envelope);
     return handle.workflowID;
+  }
+
+  /**
+   * Runs a job again under a new id from the first step its run did not finish; a plain
+   * enqueue cannot, the old id stays taken. False when the new id already exists.
+   */
+  async rerun(def: JobDefinition, workflowId: string, newWorkflowId: string): Promise<boolean> {
+    if (!this.client) throw new Error("queue not started");
+    if (await this.client.getWorkflow(newWorkflowId)) return false;
+    const steps = (await this.client.listWorkflowSteps(workflowId)) ?? [];
+    const next = steps.reduce((n, s) => Math.max(n, s.functionID + 1), 0);
+    try {
+      await this.client.forkWorkflow(workflowId, next, {
+        newWorkflowID: newWorkflowId,
+        queueName: def.name,
+        timeoutMS: timeoutOf(def),
+      });
+    } catch (err) {
+      // Lost the race to another sweep.
+      if ((err as { code?: string }).code === "23505") return false;
+      throw err;
+    }
+    return true;
   }
 
   /** Registers a handler; must be called before run(). */
@@ -263,6 +288,7 @@ export class Queue {
       executorId,
       this.logger,
       this.opts.recovery,
+      (wf) => this.lostWorkerLimit(wf),
     );
     await this.heartbeat.start();
     this.logger.info(
@@ -271,14 +297,33 @@ export class Queue {
     );
   }
 
+  /**
+   * The limit of the job a workflow belongs to, found by its queue, which carries the job's
+   * name. A schedule's runs sit on DBOS's own queue and get the default: the next tick
+   * replaces a run that was set aside.
+   */
+  private lostWorkerLimit(wf: LostWorkflow): number {
+    return this.defs.get(wf.queueName ?? "")?.lostWorkerLimit ?? DEFAULT_LOST_WORKER_LIMIT;
+  }
+
   async health(): Promise<QueueHealth[]> {
     if (!this.heartbeat) return [];
     return this.heartbeat.queueHealth([...this.defs.keys()]);
   }
 
-  async stop(): Promise<void> {
-    await this.heartbeat?.stop();
-    if (this.running) await DBOS.shutdown();
+  /**
+   * Stops executing and hands the workflows still running here to the other workers.
+   * DBOS.shutdown() takes no more work and writes no more checkpoints, but a step already
+   * running goes on until the process exits. So `beforeLeaving` is the caller's own
+   * teardown, and the hand-over comes after it, as the last thing: exit right after stop().
+   */
+  async stop(beforeLeaving: () => Promise<void> = async () => {}): Promise<void> {
+    const quiesce = async () => {
+      if (this.running) await DBOS.shutdown();
+      await beforeLeaving();
+    };
+    if (this.heartbeat) await this.heartbeat.stop(quiesce);
+    else await quiesce();
     await this.client?.destroy();
   }
 
@@ -307,6 +352,7 @@ export class Queue {
                 requestId: jobId,
                 traceId: sc.traceId,
                 spanId: sc.spanId,
+                operation: def.name,
                 ...(envelope.meta?.causedByRequestId && {
                   causedByRequestId: envelope.meta.causedByRequestId,
                 }),
@@ -334,6 +380,10 @@ export class Queue {
       );
     };
   }
+}
+
+function timeoutOf(def: JobDefinition): number {
+  return def.expireInSeconds * 1000 * (def.retryLimit + 1);
 }
 
 /** A node-postgres-shaped client over a postgres.js connection or transaction, for enqueueInTransaction. */

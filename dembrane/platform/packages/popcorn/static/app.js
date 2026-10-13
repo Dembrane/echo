@@ -128,11 +128,16 @@
   const POP_FLIP_SWAP = 0.36;
   const POP_FADE = 400;
   const POP_GAP = 2400;      // stagger between spawns once the stage is warm
-  const POP_MAX = 3;         // phrases the automatic flow keeps up at once (one per band)
+  const POP_MAX = 3;         // bands the automatic flow fills at once, one phrase per band
+  const POP_LONG_WORDS = 12; // a phrase longer than this keeps its size and takes two bands
   const POP_CAP = 5;         // phrases on stage at once, all told; a keyed pop past this sends the oldest away
   const POP_HOLD_PINNED = 30000;  // a phrase the facilitator popped from the keys lingers
   const POP_EDGE_PX = 18;    // no phrase comes closer than this to the edge of the stage
-  const COUNTDOWN_MS = 3000; // 3, 2, 1 to the first popcorn; the first phrase is held until the count ends
+  const COUNTDOWN_MS = 3000; // 3, 2, 1 to the first popcorn; it starts once that phrase is there, which it then holds
+  const SLOW_READ_MS = 45000; // a first read still empty after this says it is taking longer
+  // Conversations starting and finishing send the deck no event, so while the
+  // stage waits for its first phrase a live deck reads this often.
+  const WAITING_READ_MS = 10000;
 
   /* The page's own words, in the session's language (session.language). A
      language is one more object with these keys; a missing key falls back to
@@ -310,6 +315,12 @@
       "evidence.namedBy": "Named by others, spoken for by {name}.",
       "demo.next": "This is what you can expect after recording a few conversations. For the full analysis experience, {signIn}",
       "demo.signIn": "sign in →",
+      "wait.checking": "checking for conversations…",
+      "wait.recording.one": "conversation recording",
+      "wait.recording.other": "conversations recording",
+      "wait.beingRead.one": "{n} finished, being read",
+      "wait.beingRead.other": "{n} finished, being read",
+      "wait.analyseNow": "Analyse now",
     },
     nl: {
       "chrome.slides": "dia's",
@@ -479,6 +490,12 @@
       "evidence.namedBy": "Genoemd door anderen; {name} sprak namens hen.",
       "demo.next": "Dit kun je verwachten zodra je een paar gesprekken hebt opgenomen. Voor de volledige analyse kun je {signIn}",
       "demo.signIn": "inloggen →",
+      "wait.checking": "gesprekken worden opgezocht…",
+      "wait.recording.one": "gesprek wordt opgenomen",
+      "wait.recording.other": "gesprekken worden opgenomen",
+      "wait.beingRead.one": "{n} klaar, wordt gelezen",
+      "wait.beingRead.other": "{n} klaar, worden gelezen",
+      "wait.analyseNow": "Nu analyseren",
     },
   };
   // Audience languages are kept separate so upstream app.js merges stay
@@ -560,7 +577,10 @@
       hidden: new Set(),    // transcript ids and popcorn keys the facilitator has hidden
       kindFilter: null,     // null = every kind; { kind, mode: "only" | "except" } from the legend
       cursor: 0,            // position in the time-ordered sequence
-      countdown: null,      // { startedAt, beaconed } while the first read is in flight and nothing has landed
+      countdown: null,      // { startedAt } while 3, 2, 1 runs to a phrase that is already there
+      awaitingFirst: false, // the stage was empty and waiting on the room's conversations
+      readingSince: 0,      // when the read the empty stage waits on began
+      waitingStage: false,  // the stage is showing what the room waits on
       tailStamp: "",        // the popcorn files as last drawn; a change redraws the list and the stage
       bilingualNext: new Map(), // late translations owed their next fair slot
       shownOriginal: new Map(), // item identity -> exact source wording already given a full appearance
@@ -1411,7 +1431,7 @@
   function finishOpening() {
     introDone = true;
     closeIntroduction();
-    state.pop.countdown = { startedAt: Date.now(), beaconed: false };
+    state.pop.countdown = { startedAt: Date.now() };
     showSlide("popcorn", null, { replace: true });
     stage.focus();
   }
@@ -2550,39 +2570,68 @@
 
   // three horizontal bands, one phrase each — overlap-free by construction
   const SLOTS = [{ y: 18 }, { y: 45 }, { y: 71 }];   // the keys strip docks over the bottom of the fold
+  // The bands a live phrase holds: none when pinned, two for a long one.
+  const bandsOf = (l) => l.slots || (l.slot == null ? [] : [l.slot]);
 
-  // The empty stage: a message, or the count to the first popcorn. Past the
-  // count with nothing landed: a spinner, and one note of the latency to the
-  // server (the host's view only; the public page sends nothing).
-  function renderWaiting(stageEl, msg) {
+  // The waiting stage's Analyse now: the server gives the host who may run a
+  // read where to post it; the public page never has one.
+  const ANALYSE_NOW = EMBED && typeof EMBED.analyseNow === "string" && !EMBED.version ? EMBED.analyseNow : null;
+  let analysing = false;
+  async function analyseNow() {
+    if (!ANALYSE_NOW || analysing) return;
+    analysing = true;
+    popTick();
+    try {
+      // A refused or rate-limited read changes nothing on the stage.
+      await fetch(ANALYSE_NOW, { method: "POST", credentials: "include" });
+    } catch {
+      // The next read of the bundle shows whatever did happen.
+    } finally {
+      analysing = false;
+      popTick();
+    }
+  }
+  if (ANALYSE_NOW && typeof document !== "undefined" && document.addEventListener) {
+    document.addEventListener("click", (ev) => {
+      if (ev.target?.closest?.(".analyse-now")) analyseNow();
+    });
+  }
+  const analyseNowButton = () => ANALYSE_NOW
+    ? `<button type="button" class="analyse-now"${analysing ? " disabled" : ""}>${esc(tr("wait.analyseNow"))}</button>`
+    : "";
+
+  // The empty stage: a message, the count of what the room is waiting on, or
+  // the count to the first popcorn. `busy` turns the live dot into a spinner,
+  // for a stage still finding out; `count` is { recording, sub } for the
+  // conversations recording and the line beneath them.
+  function renderWaiting(stageEl, msg, busy = false, count = null, analyse = false) {
     let waiting = stageEl.querySelector(".popcorn-waiting");
     if (!waiting) {
-      waiting = document.createElement("p");
+      waiting = document.createElement("div");
       waiting.className = "popcorn-waiting";
       stageEl.innerHTML = "";
       stageEl.appendChild(waiting);
     }
     const cd = state.pop.countdown;
     if (cd) {
-      const elapsed = Date.now() - cd.startedAt;
-      if (elapsed < COUNTDOWN_MS) {
-        const n = 3 - Math.floor(elapsed / 1000);
-        const html = `<span class="countdown" aria-live="polite">${n}</span>`;
-        if (waiting.innerHTML !== html) waiting.innerHTML = html;
-        return;
-      }
-      if (!cd.beaconed) {
-        cd.beaconed = true;
-        if (HOST && navigator.sendBeacon) {
-          navigator.sendBeacon("data/latency", new Blob([JSON.stringify({ ms: elapsed })], { type: "application/json" }));
-        }
-      }
-      const html = `<span class="spinner" aria-hidden="true"></span>&nbsp; ${esc(tr("wait.slow"))}`;
+      const n = 3 - Math.floor((Date.now() - cd.startedAt) / 1000);
+      const html = `<span class="countdown" aria-live="polite">${Math.max(1, n)}</span>`;
       if (waiting.innerHTML !== html) waiting.innerHTML = html;
       return;
     }
-    const html = `<span class="live-dot"></span>&nbsp; ${esc(msg)}`;
-    if (!waiting.textContent.includes(msg.slice(0, 8))) waiting.innerHTML = html;
+    const button = analyse ? analyseNowButton() : "";
+    let html;
+    if (count) {
+      const dot = count.recording ? `<span class="recording-dot" aria-hidden="true"></span>` : "";
+      html = `<p class="waiting-count">${count.recording}</p>`
+        + `<p class="waiting-line">${dot}${esc(trn("wait.recording", count.recording))}</p>`
+        + (count.sub ? `<p class="waiting-sub">${esc(count.sub)}</p>` : "")
+        + button;
+    } else {
+      const mark = busy ? `<span class="spinner" aria-hidden="true"></span>` : `<span class="live-dot"></span>`;
+      html = `<p class="waiting-line">${mark}${esc(msg)}</p>${button}`;
+    }
+    if (waiting.innerHTML !== html) waiting.innerHTML = html;
   }
 
   function popTick() {
@@ -2598,23 +2647,57 @@
     // microphone is open.
     const transcripts = (state.session?.transcripts || []).length;
     const read = [...state.popcorn.values()].filter((p) => p.done).length;
-    const inFlight = EMBED && transcripts > 0 && read < transcripts;
+    // A live deck learns from the server what the room is waiting on: the
+    // conversations recording and the finished ones still being read. Until
+    // it knows, it checks; a replay or the standalone deck has nothing to check.
+    const waitingOn = state.session?.waiting || null;
+    const checking = EMBED && (!state.session || (LIVE && !waitingOn));
+    const recording = waitingOn?.recording || 0;
+    const beingRead = waitingOn?.being_read || 0;
+    const inFlight = EMBED && ((transcripts > 0 && read < transcripts) || beingRead > 0);
     if (!total) {
-      // The first read of a session: count 3, 2, 1 to the first popcorn.
-      if (inFlight && !state.pop.countdown) state.pop.countdown = { startedAt: Date.now(), beaconed: false };
-      if (!inFlight) state.pop.countdown = null;
+      // 3, 2, 1 waits for a phrase that is really there: here the stage only
+      // notes that a first popcorn is awaited, and when the reading began.
+      state.pop.countdown = null;
+      state.pop.awaitingFirst = EMBED && !checking && (inFlight || recording > 0);
+      if (inFlight) state.pop.readingSince ||= Date.now();
+      else state.pop.readingSince = 0;
+      const slow = inFlight && Date.now() - state.pop.readingSince > SLOW_READ_MS;
       // A finished read that found nothing must say so, or a host takes an
       // empty stage for a broken one. Without a session there is no language
       // to speak, and the drop hint is for the standalone deck.
-      const msg = !state.session ? "drop your session's JSON files anywhere on this page"
-        : EMBED && !transcripts ? tr("wait.first")
-        : EMBED && read >= transcripts ? trn("wait.empty", transcripts)
+      state.pop.waitingStage = true;
+      const msg = checking ? tr("wait.checking")
+        : !state.session ? "drop your session's JSON files anywhere on this page"
+        : EMBED && !transcripts && !recording && !beingRead ? tr("wait.first")
+        : slow ? tr("wait.slow")
+        : beingRead ? trn("wait.beingRead", beingRead)
+        : EMBED && !inFlight && !recording ? trn("wait.empty", transcripts)
         : EMBED ? tr("wait.reading")
         : tr("wait.listening");
-      renderWaiting(stageEl, msg);
+      // Something is recording: the count, as the room sees it. With nothing
+      // recording the line above says what is being read.
+      const count = !checking && recording > 0
+        ? { recording, sub: slow ? tr("wait.slow") : beingRead ? trn("wait.beingRead", beingRead) : "" }
+        : null;
+      const analyse = !checking && (!!count || transcripts > 0);
+      renderWaiting(stageEl, msg, checking || slow, count, analyse);
       return;
     }
-    // The first phrase waits for the count to end, so 3, 2, 1 is honest.
+    state.pop.waitingStage = false;
+    // The first phrase is in: count 3, 2, 1 to it, holding it until the count
+    // ends. A deck opened on a stage that already has phrases does not count.
+    if (state.pop.awaitingFirst) {
+      state.pop.awaitingFirst = false;
+      state.pop.countdown = { startedAt: Date.now() };
+      // One note of the latency to the server when the first phrase came late
+      // (the host's view only; the public page sends nothing).
+      const elapsed = state.pop.readingSince ? Date.now() - state.pop.readingSince : 0;
+      state.pop.readingSince = 0;
+      if (elapsed > COUNTDOWN_MS && HOST && navigator.sendBeacon) {
+        navigator.sendBeacon("data/latency", new Blob([JSON.stringify({ ms: elapsed })], { type: "application/json" }));
+      }
+    }
     if (state.pop.countdown && Date.now() - state.pop.countdown.startedAt < COUNTDOWN_MS) {
       renderWaiting(stageEl, "");
       return;
@@ -2623,7 +2706,8 @@
     stageEl.querySelector(".popcorn-waiting")?.remove();
 
     const staying = state.pop.live.filter((l) => !l.el.classList.contains("pop-out"));
-    if (staying.length >= POP_CAP || staying.filter((l) => !l.pinned).length >= POP_MAX) return;
+    const bandsUp = staying.filter((l) => !l.pinned).reduce((n, l) => n + bandsOf(l).length, 0);
+    if (staying.length >= POP_CAP || bandsUp >= POP_MAX) return;
     const gap = state.pop.live.length ? POP_GAP : 0; // an empty stage never waits
     if (Date.now() - state.pop.lastSpawn < gap) return;
 
@@ -2734,14 +2818,25 @@
     // facilitator asked for by name
     const centerStage = !pinned && (center || !state.pop.live.length);
     let slotIdx = null;
+    let slots = [];
     if (!pinned) {
-      const used = new Set(state.pop.live.map((l) => l.slot));
+      const used = new Set(state.pop.live.flatMap(bandsOf));
+      // A long phrase keeps its size and gets the room of two bands; it waits
+      // for two to be free rather than shrinking beside its neighbours.
+      const long = phraseWords(item.phrase) > POP_LONG_WORDS;
       if (centerStage) {
         slotIdx = 1; // middle band
+        slots = long ? [0, 1] : [1];
+      } else if (long) {
+        const pairs = [[0, 1], [1, 2]].filter((pair) => pair.every((i) => !used.has(i)));
+        if (!pairs.length) return false;
+        slots = pairs[Math.floor(Math.random() * pairs.length)];
+        slotIdx = slots[0];
       } else {
         const free = [0, 1, 2].filter((i) => !used.has(i));
         if (!free.length) return false;
         slotIdx = free[Math.floor(Math.random() * free.length)];
+        slots = [slotIdx];
       }
     }
     const jx = centerStage ? 0 : Math.random() * 24 - 12;
@@ -2809,7 +2904,11 @@
       }
     } else {
       el.style.setProperty("--x", `${50 + jx}%`);
-      el.style.setProperty("--y", `${SLOTS[slotIdx].y + jy}%`);
+      // a phrase with two bands sits between them; the opening phrase stays central
+      const bandY = !centerStage && slots.length === 2
+        ? (SLOTS[slots[0]].y + SLOTS[slots[1]].y) / 2
+        : SLOTS[slotIdx].y;
+      el.style.setProperty("--y", `${bandY + jy}%`);
       while (overflows() && w > 1) el.dataset.weight = --w;
       clamp();
     }
@@ -2836,7 +2935,7 @@
 
     const lead = reduceMotion ? 0 : POP_ENTER_LEAD_MS;
     const rec = {
-      tid, idx, itemId: item.id, slot: slotIdx, el, pinned,
+      tid, idx, itemId: item.id, slot: slotIdx, slots, el, pinned,
       startedAt: Date.now(),
       // The words cannot be read while the kernel is still jiggling: the first
       // read interval starts when it has popped.
@@ -3020,7 +3119,11 @@
   // every custom slide is a deck tab too, so the set is a question, not a list
   const isDeckTab = (id) => DECK_TABS.includes(id) || !!SLIDES.find((s) => s.id === id)?.custom;
   const sizeOf = (s) => (s.length <= 60 ? "xl" : s.length <= 120 ? "lg" : "md");
-  const emptyNote = (q) => `<p class="empty-note" style="margin-top:1em">${esc(tr("list.noMatch", { q }))}</p>`;
+  // Only a search can match nothing: an empty list with no search says so in its count line.
+  const emptyNote = (q) => {
+    const words = (q || "").trim();
+    return words ? `<p class="empty-note" style="margin-top:1em">${esc(tr("list.noMatch", { q: words }))}</p>` : "";
+  };
 
   // placeholder and countText are plain text: a custom slide's label is in them
   function searchTools(tab, placeholder, countText, extraClass = "") {
@@ -4979,6 +5082,10 @@
     // is open the deck also reads once a minute. A safety net, not a poll.
     setInterval(() => { if (open) scheduleEventRefresh(); }, SAFETY_READ_MS);
   }
+
+  // While the stage waits for its first phrase, a live deck reads the bundle
+  // now and then: the count of conversations recording changes without events.
+  if (LIVE) setInterval(() => { if (state.pop.waitingStage && !document.hidden) scheduleEventRefresh(); }, WAITING_READ_MS);
 
   if (!EMBED) restoreLocal();
   // A hidden audience renderer performs no playback work. This is also the

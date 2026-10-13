@@ -32,7 +32,8 @@ const Uuid = z.uuid();
 
 export const AccountStage = z.enum(["prospect", "customer", "churned"]);
 export const Language = z.enum(["en", "nl"]);
-export const OfferTemplate = z.enum(["subscription", "event"]);
+/** A yearly licence, a single event, or a custom offer (the only kind with amendments). */
+export const OfferTemplate = z.enum(["subscription", "event", "custom"]);
 export const DocumentKind = z.enum(["offer", "dpa", "invoice", "other"]);
 export const DocumentStatus = z.enum(["draft", "sent", "viewed", "signed", "declined", "void"]);
 export const InvoiceStatus = z.enum(["open", "paid", "overdue", "void"]);
@@ -97,6 +98,10 @@ export const Signer = z.object({
   email: z.string(),
   name: z.string().nullable(),
   role: z.string().nullable(),
+  /** When they were named: the task has waited on them since. */
+  named_at: IsoTime.nullable(),
+  /** When they were last reminded: Remind waits a day after naming and after each reminder. */
+  reminded_at: IsoTime.nullable(),
 });
 
 export const DocumentSummary = z.object({
@@ -158,6 +163,18 @@ export const PricedLine = OfferItem.extend({
   total_cents: z.number().int(),
 });
 
+/**
+ * A term agreed with one customer that takes precedence over the standard documents, such
+ * as a higher liability cap. Written by staff or sam in the offer's language, never by the
+ * customer, and only on a custom offer.
+ */
+export const OfferAmendment = z.object({
+  /** What it changes, in a few words: "Liability cap". */
+  title: text(120),
+  /** The term itself; a blank line separates paragraphs. */
+  body: text(4000),
+});
+
 /** The structured offer both the page and the PDF lay out. */
 export const OfferContent = z.object({
   template: OfferTemplate,
@@ -172,6 +189,11 @@ export const OfferContent = z.object({
   company: Company,
   legal: z.object({ terms: PinnedText, sla: PinnedText, dpa: PinnedText }),
   items: z.array(OfferItem),
+  vat_treatment: z.enum(["standard", "reverse_charge", "outside_eu"]).optional(),
+  /** Custom offers: numbered terms that take precedence over the standard documents. */
+  amendments: z.array(OfferAmendment).optional(),
+  /** True when the DPA is its own document; absent on offers made before that. */
+  dpa_separate: z.boolean().optional(),
 });
 
 export const LegalPin = z.object({
@@ -251,17 +273,31 @@ export const DocumentDetail = DocumentSummary.extend({
     .object({ dpa_authorised: z.string(), dpa_not_authorised: z.string().nullable() })
     .nullable(),
   signature: Signature.nullable(),
+  /**
+   * What the signing screen fills in for the `organisation` and `address` text fields: the
+   * billed name (else the organisation's) and the billing address, null when unknown.
+   */
+  prefill: z.object({ organisation: z.string().nullable(), address: z.string().nullable() }),
   /** How the caller reaches it: as a member, as the named signer, or as staff. */
   access: z.enum(["member", "signer", "staff"]),
+  /**
+   * Staff only, else null: the dashboard page where staff read this document, and change
+   * and send it while it is a draft. The link sam gives the deal owner.
+   */
+  staff_url: z.string().nullable(),
 });
 
 /**
  * Tasks echo creates itself carry a code and its params, never text: the UI words them in
- * the viewer's language. `sign_offer` and `sign_dpa` have `document_title`; `billing_details`
- * has none. Tasks staff or sam write have no code and carry their own title and body.
+ * the viewer's language. `sign_offer` and `sign_dpa` have `document_title`, and `sign_offer`
+ * also `offer_template` (`event`, `subscription`) and `offer_reference` when the offer has
+ * them; `billing_details` has none. `who_signs` (the offer's params and, once answered,
+ * `dpa_same` and `dpia` as "true"/"false") asks who signs the offer and the DPA sent with
+ * it, and is done by its own form (answerWhoSigns), never by a reply. Tasks staff or sam
+ * write have no code and carry their own title and body.
  *
- * The four onboarding codes are done by the step itself, never by a reply, and send no
- * reminders: `explore_demo` (params `project_id`, `workspace_id`: the demo project) is
+ * The four onboarding codes are done by the step itself, never by a reply, and ask for no
+ * check-in: `explore_demo` (params `project_id`, `workspace_id`: the demo project) is
  * done when a member opens it, `watch_tutorial` when the tutorial link is clicked from the
  * task (no one can tell a video was watched), `create_project` (`workspace_id` where a
  * first project goes, when there is one) when a project that is not a synthetic demo is
@@ -269,6 +305,7 @@ export const DocumentDetail = DocumentSummary.extend({
  * withdraws the ones not yet done, so the offer's tasks stand alone.
  */
 export const TaskCode = z.enum([
+  "who_signs",
   "sign_offer",
   "billing_details",
   "sign_dpa",
@@ -304,6 +341,11 @@ export const Task = z.object({
   submitted_at: IsoTime.nullable(),
   review_note: z.string().nullable(),
   reviewed_at: IsoTime.nullable(),
+  /**
+   * A task that waits on the customer never emails them. When it has waited its interval
+   * the account's owner at dembrane is asked to check in: next at this time, every
+   * `reminder_interval_days`, `reminders_sent` times so far.
+   */
   next_reminder_at: IsoTime.nullable(),
   reminder_interval_days: z.number().int().nullable(),
   reminders_sent: z.number().int(),
@@ -326,6 +368,9 @@ export const Ticket = z.object({
   messages: z.array(TicketMessage),
 });
 
+export const InvoiceDelivery = z.enum(["peppol", "email"]);
+export const PeppolMatch = z.object({ participant_id: z.string(), name: z.string().nullable() });
+
 export const BillingDetails = z.object({
   legal_name: z.string().nullable(),
   vat_id: z.string().nullable(),
@@ -334,6 +379,10 @@ export const BillingDetails = z.object({
   billing_email: z.string().nullable(),
   po_number: z.string().nullable(),
   peppol_id: z.string().nullable(),
+  /** The Peppol directory's entry for the saved VAT, KvK or KBO number. */
+  peppol_match: PeppolMatch.nullable(),
+  /** null: not chosen yet, so Peppol when there is a match and email otherwise. */
+  invoice_delivery: InvoiceDelivery.nullable(),
   address_line1: z.string().nullable(),
   address_line2: z.string().nullable(),
   postal_code: z.string().nullable(),
@@ -408,6 +457,48 @@ export const NameSignerRequest = z.object({
 });
 export const NameSignerResponse = z.object({ signer: Signer });
 
+/** The token from the invitation link (`?invite=`), which nameSigner puts in the email. */
+const InviteToken = z.string().trim().min(16).max(64);
+export const SignerInviteQuery = z.object({ invite: InviteToken });
+/**
+ * The invitation page, before sign-in: who asked, for which document, and the person named,
+ * split into the names the page fills in. `has_account`: the address already has a dembrane
+ * account, so the page asks only for the code. `status`: `open` while it waits for them.
+ */
+export const SignerInvite = z.object({
+  organisation: z.object({ name: z.string() }),
+  inviter: z.object({ name: z.string() }).nullable(),
+  document: z.object({ title: z.string(), kind: DocumentKind, reference: z.string().nullable() }),
+  signer: z.object({
+    email: z.string(),
+    first_name: z.string(),
+    last_name: z.string(),
+    role: z.string().nullable(),
+  }),
+  status: z.enum(["open", "signed", "closed"]),
+  has_account: z.boolean(),
+});
+/** After the code sign-in: the names someone new confirmed; an existing account keeps its own. */
+export const AcceptSignerInviteRequest = z.object({
+  invite: InviteToken,
+  first_name: text(100),
+  last_name: optText(100),
+});
+export const AcceptSignerInviteResponse = z.object({ org_id: Uuid, document_id: Uuid });
+
+/**
+ * Who signs an offer, asked once before it is signed. `offer_signer` null: the person
+ * answering. `dpa_same`: whoever signs the offer also signs the DPA sent with it; else
+ * `dpa_signer` does (null: the person answering). `dpia`: they want their own data
+ * protection impact assessment, which sam follows up from the task's response.
+ */
+export const WhoSignsRequest = z.object({
+  offer_signer: NameSignerRequest.nullable(),
+  dpa_same: z.boolean(),
+  dpa_signer: NameSignerRequest.nullable(),
+  dpia: z.boolean(),
+});
+
 /**
  * Saving the billing details completes the billing details task at once (status `done`, no
  * review by us); we hear about it through the event and the Slack post.
@@ -426,7 +517,17 @@ export const BillingUpdateRequest = z.object({
   kbo_number: optText(32),
   po_number: optText(128),
   peppol_id: optText(128),
+  /** Left out: unchanged. */
+  invoice_delivery: InvoiceDelivery.nullable().optional(),
 });
+
+/** The Peppol directory entry for these numbers, before saving them. */
+export const PeppolLookupRequest = z.object({
+  vat_id: optText(64),
+  kvk_number: optText(32),
+  kbo_number: optText(32),
+});
+export const PeppolLookupResponse = z.object({ match: PeppolMatch.nullable() });
 
 /** JSON form; the multipart form sends `response_text` and `file` (max 20 MB). */
 export const TaskSubmitRequest = z.object({ response_text: optText(8000) });
@@ -554,12 +655,17 @@ export const UpdateAccountRequest = z.object({
   account_stage: AccountStage.optional(),
   /** An @dembrane.com app user, or null to clear. */
   account_manager_id: Uuid.nullable().optional(),
+  /** How Exact delivers this customer's invoices; null: Peppol when found, else email. */
+  invoice_delivery: InvoiceDelivery.nullable().optional(),
 });
 
 export const PushOfferRequest = z.object({
   template: OfferTemplate,
   language: Language,
-  /** The customer's name in the title, "<offer_name> x dembrane". */
+  /**
+   * Who the offer is for, under its kind on the PDF ("Event offer", "Yearly license
+   * offer"). The document's name is the kind and the reference ("Event offer 515").
+   */
   offer_name: text(200),
   /** Who the greeting names. */
   person_name: optText(200),
@@ -572,18 +678,36 @@ export const PushOfferRequest = z.object({
   /** The offer date; today when absent. Valid for 14 days from it. */
   date: nullish(IsoDate),
   items: z.array(OfferItem).min(1).max(50),
+  /**
+   * Dutch VAT on the lines (default), reverse-charged within the EU, or none outside it.
+   * The last two take only 0% lines, and the offer says why there is no VAT.
+   */
+  vat_treatment: z.enum(["standard", "reverse_charge", "outside_eu"]).default("standard"),
+  /**
+   * Custom offers only, at most 10: each is numbered, listed among the documents that form
+   * the agreement, and takes precedence over them where they differ.
+   */
+  amendments: z.array(OfferAmendment).max(10).default([]),
   /** The Attio deal id, echoed in every event about this offer. */
   external_ref: optText(255),
   /** An unsigned offer this one replaces; it is voided. */
   supersedes_id: nullish(Uuid),
   /**
    * Send now (default), or keep a draft that staff send later with POST .../send. A draft
-   * re-pins the newest legal texts when it is sent.
+   * is seen by staff only and adds nothing to the customer's account. When it is sent it
+   * gets that day's date (a date in the future stays) and the legal texts in force then.
    */
   send: z.boolean().default(true),
 });
 /** `task` is null for a draft: "Review and sign the offer" is created when it is sent. */
 export const PushOfferResponse = z.object({ document: DocumentDetail, task: Task.nullable() });
+
+/**
+ * PUT .../offers/:docId replaces what a draft offer says, in place: the document id, its
+ * reference and its staff page stay. `reference`, `date` and `external_ref` keep the
+ * draft's value when absent. A sent offer answers 409.
+ */
+export const UpdateOfferRequest = PushOfferRequest.omit({ send: true, supersedes_id: true });
 
 export const PushDocumentRequest = z.object({
   kind: z.enum(["dpa", "other"]),
@@ -610,6 +734,41 @@ export const PushDocumentRequest = z.object({
 export const PushDocumentResponse = z.object({ document: DocumentDetail, task: Task.nullable() });
 
 export const VoidRequest = z.object({ reason: optText(2000) });
+
+/**
+ * A message to the people who run an account, sent by its account manager from the staff
+ * card: a withdrawn document, a check-in on a task that waits on them. sam does not send
+ * these; it tells the manager in Slack and the manager decides. echo renders the email in
+ * each recipient's language, signed by the account's manager, replies reaching them.
+ * `note` is the manager's own line, shown as written. `dry_run` renders without sending,
+ * for the preview. Invoices are not among them: Exact sends the invoice itself.
+ */
+export const MessageKind = z.enum(["document_withdrawn", "task_reminder"]);
+export const SendMessageRequest = z
+  .object({
+    kind: MessageKind,
+    /** The withdrawn document. */
+    document_id: nullish(Uuid),
+    /** The task to check in on. */
+    task_id: nullish(Uuid),
+    note: optText(1000),
+    dry_run: z.boolean().default(false),
+  })
+  .refine((m) => (m.kind === "task_reminder" ? Boolean(m.task_id) : Boolean(m.document_id)), {
+    message: "task_reminder takes task_id; document_withdrawn takes document_id",
+  });
+export const RenderedMessage = z.object({
+  to: z.string(),
+  language: z.string(),
+  subject: z.string(),
+  html: z.string(),
+  text: z.string(),
+});
+export const SendMessageResponse = z.object({
+  /** How many emails were queued; 0 on a dry run. */
+  queued: z.number().int(),
+  messages: z.array(RenderedMessage),
+});
 
 export const DocumentFields = z.object({
   document_id: Uuid,
@@ -652,7 +811,7 @@ export const CreateTaskRequest = z.object({
   due_on: nullish(IsoDate),
   /** Locked (greyed out) until this document is signed. */
   locked_until_document_id: nullish(Uuid),
-  /** Days between reminders; the configured default (7) when absent. */
+  /** Days between check-ins asked of the account's owner; the configured default (7) when absent. */
   reminder_interval_days: nullish(z.number().int().min(1).max(365)),
 });
 
@@ -801,6 +960,7 @@ export type Permission =
   | "account:tasks"
   | "account:support"
   | "signed-in"
+  | "invite-link"
   | "staff:accounts"
   | "staff:workspaces";
 
@@ -809,7 +969,8 @@ export interface RouteSpec {
   readonly path: string;
   /**
    * Org account policy (org owners, admins, billing), `staff:accounts` (staff and sam's
-   * staff key, audited), or `signed-in`. `+signer` routes also admit the person named to
+   * staff key, audited), `signed-in`, or `invite-link` (no session; the link's token).
+   * `+signer` routes also admit the person named to
    * sign that one document.
    */
   readonly permission: Permission;
@@ -863,6 +1024,20 @@ export const ROUTES = {
     request: NameSignerRequest,
     response: NameSignerResponse,
   },
+  /** Emails the named signer their link again; the wait keeps counting from the naming. */
+  remindSigner: {
+    method: "POST",
+    path: `${C}/documents/:docId/signer/remind`,
+    permission: "account:sign",
+    response: NameSignerResponse,
+  },
+  answerWhoSigns: {
+    method: "POST",
+    path: `${C}/tasks/:taskId/who-signs`,
+    permission: "account:sign",
+    request: WhoSignsRequest,
+    response: Task,
+  },
   /** The unsigned PDF (file_url): what the viewer renders under the fields. */
   documentFile: {
     method: "GET",
@@ -889,6 +1064,13 @@ export const ROUTES = {
     permission: "account:billing",
     request: BillingUpdateRequest,
     response: BillingDetails,
+  },
+  lookupPeppol: {
+    method: "POST",
+    path: `${C}/peppol-lookup`,
+    permission: "account:billing",
+    request: PeppolLookupRequest,
+    response: PeppolLookupResponse,
   },
   submitTask: {
     method: "POST",
@@ -925,6 +1107,21 @@ export const ROUTES = {
     path: `${C}/tutorial-opened`,
     permission: "account:tasks",
     response: TutorialOpenedResponse,
+  },
+  /** No session: the token in the invitation link is the access. */
+  signerInvite: {
+    method: "GET",
+    path: `${C}/documents/:docId/invite`,
+    permission: "invite-link",
+    query: SignerInviteQuery,
+    response: SignerInvite,
+  },
+  acceptSignerInvite: {
+    method: "POST",
+    path: `${C}/documents/:docId/invite/accept`,
+    permission: "signed-in",
+    request: AcceptSignerInviteRequest,
+    response: AcceptSignerInviteResponse,
   },
   signingRequests: {
     method: "GET",
@@ -968,6 +1165,13 @@ export const ROUTES = {
     request: PushOfferRequest,
     response: PushOfferResponse,
     status: 201,
+  },
+  updateOffer: {
+    method: "PUT",
+    path: `${S}/:orgId/offers/:docId`,
+    permission: "staff:accounts",
+    request: UpdateOfferRequest,
+    response: DocumentDetail,
   },
   pushDocument: {
     method: "POST",
@@ -1019,6 +1223,14 @@ export const ROUTES = {
     permission: "staff:accounts",
     request: VoidRequest,
     response: DocumentDetail,
+  },
+  /** The account manager emails the account's people: see SendMessageRequest. */
+  sendMessage: {
+    method: "POST",
+    path: `${S}/:orgId/messages`,
+    permission: "staff:accounts",
+    request: SendMessageRequest,
+    response: SendMessageResponse,
   },
   upsertInvoice: {
     method: "PUT",

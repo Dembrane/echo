@@ -41,6 +41,34 @@ run("auth on Directus-created users", () => {
     await sql.end();
   });
 
+  test("a user of any status gets an identity: suspended stays out, unverified proves its email first", async () => {
+    const sql = connect(url as string, { max: 1, onnotice: () => {} });
+    const stamp = Date.now();
+    const email = (status: string) => `${status}-${stamp}@example.com`;
+    const statuses = ["suspended", "archived", "unverified", "invited"];
+    // Each takes alice's hash, so the password is one Directus made.
+    for (const status of statuses)
+      await sql`
+        insert into directus_users (id, email, status, password, provider)
+        select gen_random_uuid(), ${email(status)}, ${status}, password, 'default'
+        from directus_users where email = 'alice.parity@example.com'`;
+    expect((await syncIdentitiesFromDirectus(sql)).users).toBe(statuses.length);
+    const rows = await sql<{ email: string; email_verified: boolean }[]>`
+      select email, email_verified from auth_user where email like ${`%-${stamp}@example.com`}`;
+    await sql.end();
+    const verified = Object.fromEntries(rows.map((r) => [r.email, r.email_verified]));
+    expect(verified).toEqual({
+      [email("suspended")]: true,
+      [email("archived")]: true,
+      [email("unverified")]: false,
+      [email("invited")]: false,
+    });
+    for (const status of ["suspended", "archived"])
+      await expect(
+        auth.api.signInEmail({ body: { email: email(status), password: password as string } }),
+      ).rejects.toThrow("This account is not active");
+  });
+
   test("a password Directus hashed signs in, and the session belongs to the same user id", async () => {
     const res = await auth.api.signInEmail({
       body: { email: "alice.parity@example.com", password: password as string },

@@ -12,7 +12,7 @@ import {
 import clsx from "clsx";
 import Cookies from "js-cookie";
 import posthog from "posthog-js";
-import { useEffect, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useRef, useState } from "react";
 import { Outlet, useLocation, useParams } from "react-router";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
@@ -436,6 +436,21 @@ export const ParticipantConversationAudio = () => {
 		navigate(`/${projectId}/conversation/${conversationId}/refine`);
 	};
 
+	// Sticky bars in the outlet sit above the footer, which grows while recording.
+	const [footer, setFooter] = useState<HTMLDivElement | null>(null);
+	const [footerHeight, setFooterHeight] = useState(0);
+	useEffect(() => {
+		if (!footer || typeof ResizeObserver === "undefined") {
+			setFooterHeight(0);
+			return;
+		}
+		const observer = new ResizeObserver(() =>
+			setFooterHeight(footer.offsetHeight),
+		);
+		observer.observe(footer);
+		return () => observer.disconnect();
+	}, [footer]);
+
 	if (conversationQuery.isLoading || projectQuery.isLoading) {
 		return <BeautifulLoading quiet className="min-h-dvh" />;
 	}
@@ -465,7 +480,10 @@ export const ParticipantConversationAudio = () => {
 	);
 
 	return (
-		<Box className="container mx-auto flex h-full max-w-2xl flex-col justify-end">
+		<Box
+			className="container mx-auto flex h-full max-w-2xl flex-col justify-end"
+			style={{ "--portal-footer-height": `${footerHeight}px` } as CSSProperties}
+		>
 			{/* modal for permissions error */}
 			<PermissionErrorModal permissionError={permissionError} />
 
@@ -518,6 +536,7 @@ export const ParticipantConversationAudio = () => {
 
 			{!errored && (
 				<Stack
+					ref={setFooter}
 					bg="var(--app-background)"
 					gap="lg"
 					className="sticky bottom-0 z-10 w-full min-h-[84px] border-t p-4"

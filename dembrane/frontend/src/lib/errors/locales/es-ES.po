@@ -139,6 +139,11 @@ msgid "error.conversation.move_context_mismatch"
 msgstr "Las conversaciones solo pueden moverse a espacios de trabajo con el mismo titular de datos y facturación. Elige un proyecto de otro espacio de trabajo."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/conversation.ts:24
+msgid "error.conversation.move_sample"
+msgstr "Las conversaciones no pueden moverse a un proyecto de ejemplo ni sacarse de él. Elige otro proyecto."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/internal.ts:5
 msgid "error.internal.busy"
 msgstr "dembrane está ocupado con esto ahora mismo. Inténtalo de nuevo en un segundo."
@@ -224,7 +229,7 @@ msgid "error.workspace.visibility_requires_tier"
 msgstr "Los espacios de trabajo privados o solo por invitación requieren el plan Innovator o superior. Créalo como abierto por ahora o mejora tu plan primero."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:28
+#: src/lib/errors/messages/conversation.ts:33
 msgid "error.conversation.no_summary"
 msgstr "Crea primero un resumen de esta conversación y luego inténtalo de nuevo."
 
@@ -374,6 +379,11 @@ msgid "error.report.schedule_too_soon"
 msgstr "Elige una hora al menos 10 minutos más tarde que la actual."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/popcorn.ts:23
+msgid "error.popcorn.invalid_ready_by"
+msgstr "Elige una hora posterior a ahora y dentro de los próximos 7 días."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/canvas.ts:5
 msgid "error.canvas.expiry_in_past"
 msgstr "Elige una fecha de finalización en el futuro."
@@ -484,7 +494,7 @@ msgid "error.analysis.revision_conflict"
 msgstr "Alguien ha cambiado este resultado mientras lo mirabas. Recarga para ver su versión y vuelve a hacer tu cambio."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/popcorn.ts:40
+#: src/lib/errors/messages/popcorn.ts:44
 msgid "error.popcorn.settings_busy"
 msgstr "Alguien está guardando estos ajustes ahora mismo. Inténtalo de nuevo en un momento."
 
@@ -549,7 +559,7 @@ msgid "error.project.methodology_read_only"
 msgstr "La metodología de dembrane no se puede cambiar. Haz una copia para editarla."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/popcorn.ts:45
+#: src/lib/errors/messages/popcorn.ts:49
 msgid "error.popcorn.synthetic_frame_locked"
 msgstr "El marco de una presentación de demostración se define con la demo y no se puede cambiar aquí."
 
@@ -669,7 +679,7 @@ msgid "error.agent_access.request_expired"
 msgstr "Esta solicitud de conexión ha caducado. Vuelve a empezar desde tu agente."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:24
+#: src/lib/errors/messages/conversation.ts:29
 msgid "error.conversation.no_content"
 msgstr "Esta conversación aún no tiene audio."
 
@@ -689,7 +699,7 @@ msgid "error.chat.conversation_not_in_chat"
 msgstr "Esta conversación ya no está en el chat."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:36
+#: src/lib/errors/messages/conversation.ts:41
 msgid "error.conversation.not_open"
 msgstr "Esta conversación no está abierta ahora mismo. Pide un nuevo enlace a la persona que organiza."
 
@@ -904,12 +914,12 @@ msgid "error.present.map_not_in_presentation"
 msgstr "Esta presentación no muestra ningún mapa."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/popcorn.ts:27
+#: src/lib/errors/messages/popcorn.ts:31
 msgid "error.popcorn.loop_not_found"
 msgstr "Esta presentación no está en curso. Iníciala de nuevo para continuar."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/popcorn.ts:35
+#: src/lib/errors/messages/popcorn.ts:39
 msgid "error.popcorn.public_not_found"
 msgstr "Este enlace a la presentación ya no funciona. Pide al anfitrión un nuevo enlace."
 
@@ -1034,7 +1044,7 @@ msgid "error.analysis.revision_not_found"
 msgstr "Esta versión del resultado ya no existe. Recarga la página para ver la más reciente."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/popcorn.ts:23
+#: src/lib/errors/messages/popcorn.ts:27
 msgid "error.popcorn.just_refreshed"
 msgstr "Esto se acaba de actualizar. Espera unos segundos antes de intentarlo de nuevo."
 
@@ -1204,7 +1214,7 @@ msgid "error.chat.not_found"
 msgstr "No pudimos encontrar este chat. Puede que haya sido eliminado."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:32
+#: src/lib/errors/messages/conversation.ts:37
 msgid "error.conversation.not_found"
 msgstr "No pudimos encontrar esta conversación. Puede que haya sido eliminada."
 
@@ -1264,7 +1274,7 @@ msgid "error.organisation.not_found"
 msgstr "No pudimos encontrar esta organización."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/popcorn.ts:31
+#: src/lib/errors/messages/popcorn.ts:35
 msgid "error.popcorn.not_found"
 msgstr "No pudimos encontrar esta presentación."
 
@@ -1329,7 +1339,7 @@ msgid "error.training.not_found"
 msgstr "No pudimos encontrar esta formación."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/popcorn.ts:50
+#: src/lib/errors/messages/popcorn.ts:54
 msgid "error.popcorn.version_not_found"
 msgstr "No pudimos encontrar esta versión de la presentación."
 

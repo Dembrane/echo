@@ -31,6 +31,7 @@ import {
   popcornDemoRoutes,
   popcornDeps,
   popcornFlags,
+  popcornProjectNudge,
   popcornRoutes,
   publicRoutes,
   queueDispatch,
@@ -62,7 +63,18 @@ export function buildApp(deps: Deps) {
   const app = new Hono<Env>();
   app.use(correlation(deps));
   app.use(clientAddress(deps));
-  app.use(secureHeaders());
+  // The local file routes stand in for the buckets, whose URLs the dashboard and portal load
+  // from their own origin (an <audio src>), so those may be read by the rest of the site.
+  const localStorePaths = [deps.files, deps.audio].flatMap((s) =>
+    s instanceof FilesystemStorage ? [s.routePath] : [],
+  );
+  const headers = secureHeaders();
+  const localStoreHeaders = secureHeaders({ crossOriginResourcePolicy: "same-site" });
+  app.use((c, next) =>
+    localStorePaths.some((p) => c.req.path === p || c.req.path.startsWith(`${p}/`))
+      ? localStoreHeaders(c, next)
+      : headers(c, next),
+  );
   app.use(
     "/api/*",
     cors({
@@ -105,16 +117,12 @@ export function buildApp(deps: Deps) {
       slackEnabled: Boolean(deps.config.accounts.slackWebhookUrl),
       // The config check sets SAM_INBOX_* together, so the URL stands for all three.
       samInbox: Boolean(deps.config.samInbox.url),
+      offerMessages: deps.config.accounts.offerMessages,
       reminderIntervalDays: deps.config.accounts.reminderIntervalDays,
       inviteSecret: deps.config.account.inviteHashSecret,
       demo: {
         portalUrl: deps.config.http.portalUrl,
         apiUrl: deps.config.http.publicUrl,
-        ownUrls: [
-          deps.config.http.publicUrl,
-          deps.config.http.dashboardUrl,
-          deps.config.http.portalUrl,
-        ],
         workspaceId: deps.config.accounts.demoWorkspaceId ?? null,
       },
     },
@@ -179,6 +187,8 @@ export function buildApp(deps: Deps) {
       embeddingLocation: deps.config.llm.embeddingLocation,
       nodeLimitCeiling: deps.config.analysis.nodeLimitCeiling ?? null,
       edgeLimitCeiling: deps.config.analysis.edgeLimitCeiling ?? null,
+      // The room shows the project's groups and follows its popcorn session's channel.
+      onGroupChanged: popcornProjectNudge(deps.db, deps.logger),
     }),
   );
   app.route(
@@ -318,6 +328,7 @@ export function buildApp(deps: Deps) {
       capture,
       publicUrl: deps.config.http.publicUrl,
       dashboardUrl: deps.config.http.dashboardUrl,
+      docsUrl: deps.config.http.docsUrl,
       buildVersion: deps.config.app.release,
       clientSecretKey:
         deps.config.agentAccess.clientSecretKey ?? deps.config.account.inviteHashSecret,

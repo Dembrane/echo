@@ -503,10 +503,13 @@ export const AudienceScreen = ({
 		},
 		[reloadAudience, scheduleEventRefresh],
 	);
+	// Every room screen of this presentation in this browser shares one
+	// stream, so a second projector or a check on a laptop still loads.
 	useServerEvents(
 		error === "gone" || eventTick !== undefined ? null : (urls?.events ?? null),
 		["update", "disconnected"],
 		handleStreamEvent,
+		{ shared: true },
 	);
 	const seenEventTick = useRef(eventTick);
 	useEffect(() => {

@@ -50,6 +50,11 @@ run("map groups", () => {
   let store: MapStore;
   const published: Json[] = [];
   const dispatched: service.GroupJob[] = [];
+  // The room's wake-up: every group made, titled or failed reaches it with its project.
+  const woken: string[] = [];
+  const onGroupChanged = async (projectId: string) => {
+    woken.push(projectId);
+  };
   const rt = {
     store: {
       getSnapshot: async (id: string) => (id === snapshot.id ? snapshot : null),
@@ -91,8 +96,10 @@ run("map groups", () => {
       store,
       rt,
       dispatchGroup: async (job) => dispatched.push(job),
+      onGroupChanged,
     };
     const first = await service.requestGroup(d, target, ["r3", "r1", "r2"], "host");
+    expect(woken).toEqual([project]);
     expect(first).toMatchObject({ status: "pending", title: null, snapshotId: snapshot.id });
     expect(first.members).toEqual([
       { revisionId: "r3", objectId: "o3", type: "argument" },
@@ -109,21 +116,27 @@ run("map groups", () => {
     // The model fails: the group is failed for this attempt, and the page is told.
     const broken = new FakeCompleter();
     expect(
-      await runGroup({ store, rt, completer: broken }, dispatched[0] as service.GroupJob),
+      await runGroup(
+        { store, rt, completer: broken, onGroupChanged },
+        dispatched[0] as service.GroupJob,
+      ),
     ).toBe("failed");
     expect((await store.getGroup(String(first.id)))?.status).toBe("failed");
     expect(published.at(-1)).toEqual({ type: "group", group_id: first.id });
+    expect(woken).toEqual([project, project]);
 
     // Committing it again starts attempt 2; attempt 1 arriving late changes nothing.
     await service.requestGroup(d, target, ["r3", "r1", "r2"], "host");
     expect(dispatched[1] as service.GroupJob).toEqual({ groupId: String(first.id), attempt: 2 });
+    expect(woken).toEqual([project, project, project]);
     const completer = new FakeCompleter().on("Arguments in cluster", "  Ferry timetables  ");
-    expect(await runGroup({ store, rt, completer }, dispatched[0] as service.GroupJob)).toBe(
-      "stale",
-    );
-    expect(await runGroup({ store, rt, completer }, dispatched[1] as service.GroupJob)).toBe(
-      "ready",
-    );
+    const worker = { store, rt, completer, onGroupChanged };
+    expect(await runGroup(worker, dispatched[0] as service.GroupJob)).toBe("stale");
+    expect(woken).toHaveLength(3);
+    // The title lands: the Map page and the room are both told.
+    expect(await runGroup(worker, dispatched[1] as service.GroupJob)).toBe("ready");
+    expect(published.at(-1)).toEqual({ type: "group", group_id: first.id });
+    expect(woken).toEqual([project, project, project, project]);
     const user = String(completer.calls[0]?.user);
     expect(user).toContain("1. [argument] Statement 3");
     expect(user).toContain("2. [argument, is derived from 3] Statement 1");

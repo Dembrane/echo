@@ -53,13 +53,18 @@ export interface ForceLink<N extends SimulationNodeDatum, L> extends Force<N> {
 }
 
 export interface ForceManyBody<N extends SimulationNodeDatum> extends Force<N> {
-	strength(strength: number): this;
+	strength(strength: number | ((node: N) => number)): this;
 	distanceMax(distance: number): this;
 }
 
 export interface ForceCenter<N extends SimulationNodeDatum> extends Force<N> {
 	x(x: number): this;
 	y(y: number): this;
+	strength(strength: number): this;
+}
+
+/** Pulls every node toward one coordinate on its axis. */
+export interface ForcePosition<N extends SimulationNodeDatum> extends Force<N> {
 	strength(strength: number): this;
 }
 
@@ -137,6 +142,8 @@ interface D3Subset {
 		y?: number,
 	): ForceCenter<N>;
 	forceCollide<N extends SimulationNodeDatum>(): ForceCollide<N>;
+	forceX<N extends SimulationNodeDatum>(x?: number): ForcePosition<N>;
+	forceY<N extends SimulationNodeDatum>(y?: number): ForcePosition<N>;
 	drag<E extends Element, D>(): DragBehavior<E, D>;
 	arc(): Arc;
 	easeCubicOut(normalizedTime: number): number;
