@@ -98,20 +98,32 @@ their job title.
 
 ## Billing details
 
-"Billing details" is "What we put on your invoices." Fill in:
+"Billing details" is "What we put on your invoices." Start with "Country": it decides which
+numbers the form asks for. Then fill in:
 
-- "Legal name of your organisation", your address, "Postal code", "City" and "Country"
-- "Invoice email"
-- "VAT number", "KvK number (Netherlands)" or "KBO number (Belgium)": "Registration number:
-  fill in at least one"
+- "Legal name of your organisation" and "Invoice email"
+- Your address, "Postal code" and "City"
+- The numbers for your country:
+  - Netherlands: "KvK number" or "VAT number" ("KvK number or VAT number: fill in at least
+    one")
+  - Belgium: "VAT number". If you have none, tick "We have no VAT number" and give your
+    "KBO number".
+  - Another EU country: "VAT number", or tick "We have no VAT number"
+  - Outside the EU: "VAT or tax number" ("If you have one")
+- "How do you want to get invoices?": "By email", "Through Peppol" or "Through an invoice
+  portal"
 - "PO number" ("If your finance team uses one")
-- "Peppol ID" ("Only if you get invoices through Peppol")
+
+Under each number the form shows how it should look, such as "For example NL123456789B01".
+It checks the shape of the number when you save. It does not check that the number exists.
 
 Saving the form finishes the task at once. Nobody at dembrane has to approve it.
 
-Your invoice goes out through Peppol when your organisation is found in the Peppol
-directory by its VAT, KvK or KBO number. Otherwise it goes by email. You can also choose
-"Send by email instead".
+"Through Peppol" is chosen for you when your organisation is found in the Peppol directory
+by its VAT, KvK or KBO number: invoices then arrive in your accounting software. If you are
+not found, choose it yourself and give your "Peppol ID". With "Through an invoice portal"
+you give the "Name or link of the portal", and someone at dembrane adds each invoice there
+by hand. Once saved, a Peppol customer can still switch with "Send by email instead".
 
 ## The invoice
 

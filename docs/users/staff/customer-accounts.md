@@ -142,6 +142,10 @@ invoice".
 dembrane's accounting system makes and sends the invoice. A copy with its PDF then appears under
 "Documents", for you and for the customer.
 
+A customer who chose "Through an invoice portal" gets no invoice by email or Peppol. Their
+"Billing details" name the portal: add each invoice there by hand. The same card says when a
+customer in another EU country has no VAT number.
+
 Signing an offer does not change the customer's tier. Set it under
 [tiers and discounts](./discounts-trials-and-tiers.md).
 
