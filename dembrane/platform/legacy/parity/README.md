@@ -24,6 +24,18 @@ OLD_ECHO_DIR=~/orca/workspaces/echo-parity-main ./run-old-api.sh
   like the old one (public URL, storage, Vertex, secrets from `.env.parity`). Point the runner at it
   with `PARITY_NEW_URL`.
 
+## Fixture
+
+`fixture/parity_template.sql` is a dump of `parity_template`, so the suites that copy the template
+run without the old stack. `fixture/load.sh` builds `parity_template`, `parity_template_platform`
+and `parity_auth` from it on an empty server; the server checks do that on every change.
+
+After a bootstrap that changes the seed, `fixture/dump.sh` rewrites the file. It applies
+`fixture/scrub.sql` first: of Directus's own tables only users, roles, policies, access, folders
+and settings keep their rows, the ones the platform reads. Tokens and secrets are cleared, every
+address is on example.com, and every user has the password `parity-fixture-password`
+(`TEST_PARITY_USER_PASSWORD` for the auth suite).
+
 Known gaps:
 - No object store: audio upload, download and transcription paths fail.
 - LLM groups point at Vertex (gemini-3.8-flash, eu) with this box's gcloud credentials, copied from
