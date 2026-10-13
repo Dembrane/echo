@@ -23,8 +23,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 
-/** Measured on feat/bun-migration at 53e53cf6 (2026-09-29). */
-const BASELINE_GZIP_BYTES = 1_090_272;
+/** Measured on perf/portal-first-load at 20b34fd2 (2026-10-13). */
+const BASELINE_GZIP_BYTES = 563_552;
 /** Room for ordinary drift (a few strings, a small fix) before the check objects. */
 const MARGIN_BYTES = 8 * 1024;
 const START_ROUTE = "src/portal/routes/ParticipantStart.tsx";
