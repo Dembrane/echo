@@ -7,33 +7,38 @@ import { z } from "zod";
  * steps and why each is safe to run twice.
  */
 
+// A participant's recording waits on these runs, so recovery resumes them far more often
+// than the default before it sets one aside. The cost: a run that cannot finish is resumed
+// that many times, each on another worker, before it is left for a person.
+const LOST_WORKER_LIMIT = 10;
+
 /** One uploaded chunk: convert, split, transcribe each piece, hand over to finalize. */
 export const processChunk = defineJob(
   "conversations.chunk",
   z.object({ chunkId: z.string(), usePiiRedaction: z.boolean().default(false) }),
   // Retries live on the steps; this bounds one run (Vertex outages back off for minutes).
-  { retryLimit: 0, expireInSeconds: 6 * 3600 },
+  { retryLimit: 0, expireInSeconds: 6 * 3600, lostWorkerLimit: LOST_WORKER_LIMIT },
 );
 
 /** The participant (or the idle sweep) finished: mark it, stamp the cap, maybe finalize. */
 export const finishConversation = defineJob(
   "conversations.finish",
   z.object({ conversationId: z.string() }),
-  { retryLimit: 0, expireInSeconds: 3600 },
+  { retryLimit: 0, expireInSeconds: 3600, lostWorkerLimit: LOST_WORKER_LIMIT },
 );
 
 /** Every chunk is transcribed and the conversation is finished: flag, merge, summarise, count. */
 export const finalizeConversation = defineJob(
   "conversations.finalize",
   z.object({ conversationId: z.string() }),
-  { retryLimit: 0, expireInSeconds: 6 * 3600 },
+  { retryLimit: 0, expireInSeconds: 6 * 3600, lostWorkerLimit: LOST_WORKER_LIMIT },
 );
 
 /** A summary on its own: the catch-up for conversations unlocked by an upgrade. */
 export const summarizeConversation = defineJob(
   "conversations.summarize",
   z.object({ conversationId: z.string() }),
-  { retryLimit: 0, expireInSeconds: 3600 },
+  { retryLimit: 0, expireInSeconds: 3600, lostWorkerLimit: LOST_WORKER_LIMIT },
 );
 
 /** Every two minutes: finish conversations nobody has added to for five minutes. */
