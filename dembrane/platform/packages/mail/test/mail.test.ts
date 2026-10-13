@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { escapeHtml, MemoryMailer, SendGridMailer } from "../src";
+import { escapeHtml, LogMailer, MemoryMailer, SendGridMailer } from "../src";
 
 test("sendgrid posts one multipart message to the regional host", async () => {
   const calls: { url: string; body: Record<string, unknown> }[] = [];
@@ -47,4 +47,11 @@ test("html escaping matches Jinja autoescape", () => {
   expect(escapeHtml(`<a href="x">'&'</a>`)).toBe(
     "&lt;a href=&#34;x&#34;&gt;&#39;&amp;&#39;&lt;/a&gt;",
   );
+});
+
+test("the log mailer writes the text part, where local sign-in codes and links are", async () => {
+  const logged: Record<string, unknown>[] = [];
+  const mailer = new LogMailer((fields) => logged.push(fields));
+  await mailer.send({ to: "a@x.nl", subject: "s", html: "h", text: "code 123456", tags: ["t"] });
+  expect(logged).toEqual([{ to: "a@x.nl", subject: "s", tags: ["t"], text: "code 123456" }]);
 });

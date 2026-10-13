@@ -19,7 +19,7 @@ import { bootAssets } from "@dembrane/core";
 import { connect, createDb, withDatabase } from "@dembrane/db";
 import { localeOfEmail } from "@dembrane/i18n";
 import { createModels } from "@dembrane/llm";
-import { type Mailer, MemoryMailer, SendGridMailer } from "@dembrane/mail";
+import { LogMailer, type Mailer, MemoryMailer, SendGridMailer } from "@dembrane/mail";
 import { mapJobs } from "@dembrane/map";
 import { modelCallRecorder, modelCallTable } from "@dembrane/metering";
 import { Notifier } from "@dembrane/notifications";
@@ -64,6 +64,8 @@ const databaseUrl = withDatabase(config.database.url, config.database.name);
 const database = createDb({ url: databaseUrl, poolMax: config.database.poolMax });
 
 // Auth emails go out inside the request: the person is waiting for the code or the link.
+// Without a SendGrid key, local development logs them, codes and links included, so a
+// developer can sign in; anywhere else they are kept in memory.
 const mailer: Mailer = config.mail.sendgridApiKey
   ? new SendGridMailer({
       apiKey: config.mail.sendgridApiKey,
@@ -71,9 +73,15 @@ const mailer: Mailer = config.mail.sendgridApiKey
       fromName: config.mail.fromName,
       region: config.mail.sendgridRegion,
     })
-  : new MemoryMailer();
+  : config.app.env === "local"
+    ? new LogMailer((fields, message) => logger.info(fields, message))
+    : new MemoryMailer();
 if (!config.mail.sendgridApiKey)
-  logger.warn("no SENDGRID_API_KEY: emails are kept in memory, not sent");
+  logger.warn(
+    config.app.env === "local"
+      ? "no SENDGRID_API_KEY: emails are logged, not sent"
+      : "no SENDGRID_API_KEY: emails are kept in memory, not sent",
+  );
 
 const auth = createAuth({
   db: database.db,
