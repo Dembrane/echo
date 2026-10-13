@@ -868,10 +868,13 @@ jobs:
     name: 71-publish-docs
     if: ${{ !cancelled() && needs.deploy-prod.result == 'success' }}
     needs: [plan, deploy-prod]
+    # What the jobs of docs.yml ask for: a called workflow cannot hold more than its caller.
     permissions:
       contents: read
       pages: write
       id-token: write
+      actions: read
+      pull-requests: read
     uses: ./.github/workflows/docs.yml
     with:
       target: prod
