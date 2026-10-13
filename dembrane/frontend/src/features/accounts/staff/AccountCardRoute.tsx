@@ -275,6 +275,15 @@ function Documents({ orgId, card }: { orgId: string; card: AccountCardT }) {
 				)
 			}
 		>
+			{card.invoice_waits.map((w) => (
+				<Text key={w.document_id} size="sm" mb="xs" data-testid="invoice-waits">
+					{invoiceWaitText(w.waits_for)}
+					<Text span c="dimmed" size="sm">
+						{" "}
+						· {card.documents.find((d) => d.id === w.document_id)?.title}
+					</Text>
+				</Text>
+			))}
 			{card.documents.length === 0 ? (
 				<Text size="sm" c="dimmed">
 					<Trans>No documents yet.</Trans>
@@ -776,6 +785,14 @@ function Billing({ card }: { card: AccountCardT }) {
 	);
 }
 
+/** What an accepted offer's invoice still waits for, as one sentence. */
+const invoiceWaitText = (waits: readonly string[]): string =>
+	waits.includes("billing_details") && waits.includes("dpa")
+		? t`Invoice waits for the billing details and the DPA signature`
+		: waits.includes("dpa")
+			? t`Invoice waits for the DPA signature`
+			: t`Invoice waits for the billing details`;
+
 const eventLabel = (type: string): string =>
 	({
 		"account.created": t`Account created`,
@@ -834,7 +851,12 @@ function Timeline({ card }: { card: AccountCardT }) {
 					{events.map((e) => (
 						<Stack key={e.id} gap={0}>
 							<Text size="sm">
-								{eventLabel(e.type)}
+								{e.type === "invoice.waiting"
+									? invoiceWaitText(
+											(e.detail as { waits_for?: string[] } | null)
+												?.waits_for ?? [],
+										)
+									: eventLabel(e.type)}
 								{title(e.subject_id) ? (
 									<Text span c="dimmed" size="sm">
 										{" "}

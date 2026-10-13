@@ -1,9 +1,10 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { emailHandler, sendEmail } from "@dembrane/account";
+import { newId } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import { MemoryMailer } from "@dembrane/mail";
 import { deliverSamMessage } from "@dembrane/webhooks";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import * as K from "../src/contract";
 import type { AccountsDeps } from "../src/deps";
 import { accountsRoutes } from "../src/routes";
@@ -12,8 +13,8 @@ import { admin, call, dropDatabase, pngB64, silent, type World, world } from "./
 
 // An offer as a draft: staff make it, read it, change it and send it; the customer's
 // account shows nothing of it until it is sent, and then the people who run the account
-// get one email. Then the invoice request: one message when a signed offer and complete
-// billing details both exist.
+// get one email. Then the invoice request: one message when the signed offer, complete
+// billing details and, where it is a document of its own, the signed DPA all exist.
 const run = admin ? describe : describe.skip;
 const DB = `accounts_draft_${process.pid}`;
 
@@ -56,7 +57,12 @@ run("an offer draft, and the invoice request after the signature", () => {
     );
 
   /** Signs as the organisation's admin, filling every field. */
-  async function sign(docId: string, as: keyof World["people"] = "admin", org = w.orgId) {
+  async function sign(
+    docId: string,
+    as: keyof World["people"] = "admin",
+    org = w.orgId,
+    dpaAuthorised = true,
+  ) {
     const detail = K.DocumentDetail.parse(
       (await call(w, "GET", `${C(org)}/documents/${docId}`, as)).data,
     );
@@ -68,7 +74,11 @@ run("an offer draft, and the invoice request after the signature", () => {
       else if (f.kind === "checkbox") values[f.id] = true;
       else if (f.kind === "text") values[f.id] = f.key === "organisation" ? "Testdorp" : "n/a";
     }
-    const confirmation_text = (detail.confirmation?.dpa_authorised ?? "")
+    const confirmation_text = (
+      (dpaAuthorised
+        ? detail.confirmation?.dpa_authorised
+        : detail.confirmation?.dpa_not_authorised) ?? ""
+    )
       .replace("{name}", "Anna de Vries")
       .replace("{role}", "Wethouder")
       .replace("{organisation}", "Testdorp");
@@ -77,7 +87,7 @@ run("an offer draft, and the invoice request after the signature", () => {
       values,
       signature: { png_base64: pngB64(), method: "drawn" },
       initials: null,
-      dpa_authorised: true,
+      dpa_authorised: dpaAuthorised,
       confirmation_text,
     });
   }
@@ -319,7 +329,7 @@ run("an offer draft, and the invoice request after the signature", () => {
     });
   });
 
-  test("the invoice is requested once, when the signed offer and the billing details both exist", async () => {
+  test("the invoice is requested once, when the signed offer, its DPA and the billing details all exist", async () => {
     const org = w.otherOrgId;
     const requested = () => inbox("echo_account_invoice_requested_v1");
     const before = requested().length;
@@ -333,6 +343,10 @@ run("an offer draft, and the invoice request after the signature", () => {
     expect(requested()).toHaveLength(before);
 
     expect((await call(w, "PUT", `${C(org)}/billing`, "outsider", billing)).status).toBe(200);
+    // The DPA went out with the offer as a document of its own, and is not signed yet.
+    expect(requested()).toHaveLength(before);
+    const dpa = (await store.documents(w.db, org)).find((d) => d.kind === "dpa");
+    expect((await sign(dpa?.id as string, "outsider", org)).status).toBe(200);
     expect(requested()).toHaveLength(before + 1);
     const message = requested().at(-1) as Record<string, unknown>;
     expect(message).toMatchObject({
@@ -655,5 +669,156 @@ run("an offer draft, and the invoice request after the signature", () => {
     const doc = await draft(empty, { reference: "OFFER-913" });
     expect((await send(doc.id, empty)).status).toBe("sent");
     expect(w.jobs.of(sendEmail.name)).toHaveLength(before);
+  });
+
+  /** A new organisation that the outsider runs, with nothing on it yet. */
+  const freshOrg = async (name: string) => {
+    const id = newId();
+    await w.db.insert(schema.org).values({ id, name, account_stage: "prospect" });
+    await w.db.insert(schema.org_membership).values({
+      id: newId(),
+      org_id: id,
+      user_id: w.people.outsider.appUserId as string,
+      role: "admin",
+    });
+    return id;
+  };
+  const requestedFor = (org: string) =>
+    inbox("echo_account_invoice_requested_v1").filter((m) => (m.org as { id: string }).id === org);
+  /** What the timeline said the offer waited for, oldest first. */
+  const waited = async (org: string) =>
+    (await store.events(w.db, org))
+      .filter((e) => e.type === "invoice.waiting")
+      .reverse()
+      .map((e) => (e.detail as { waits_for: string[] }).waits_for.join(" and "));
+  const cardWaits = async (org: string) =>
+    K.AccountCard.parse((await call(w, "GET", S(org), "staff")).data).invoice_waits;
+
+  test("the offer's signature, the DPA's and the billing details in every order: the request goes with the last, once", async () => {
+    // O the offer is signed, D its DPA is signed, B the billing details are saved.
+    const said: Record<string, string[]> = {
+      OBD: ["billing_details and dpa", "dpa"],
+      ODB: ["billing_details and dpa", "billing_details"],
+      BOD: ["dpa"],
+      DOB: ["billing_details"],
+      BDO: [],
+      DBO: [],
+    };
+    for (const [order, timeline] of Object.entries(said)) {
+      const org = await freshOrg(`Voorbeeld ${order} BV`);
+      const doc = await draft(org, { reference: `OFFER-${order}`, external_ref: null });
+      await send(doc.id, org);
+      const dpa = (await store.documents(w.db, org)).find((d) => d.kind === "dpa");
+      const step = {
+        O: () => sign(doc.id, "outsider", org),
+        D: () => sign(dpa?.id as string, "outsider", org),
+        B: () => call(w, "PUT", `${C(org)}/billing`, "outsider", billing),
+      };
+      for (const [i, s] of [...order].entries()) {
+        expect((await step[s as "O" | "D" | "B"]()).status).toBe(200);
+        expect(requestedFor(org)).toHaveLength(i === 2 ? 1 : 0);
+        // The staff card names what a signed offer still waits for, and nothing else.
+        const done = order.slice(0, i + 1);
+        const waits: K.AccountCardT["invoice_waits"][number]["waits_for"] = [
+          ...(done.includes("B") ? [] : (["billing_details"] as const)),
+          ...(done.includes("D") ? [] : (["dpa"] as const)),
+        ];
+        expect(await cardWaits(org)).toEqual(
+          done.includes("O") && waits.length ? [{ document_id: doc.id, waits_for: waits }] : [],
+        );
+      }
+      expect(requestedFor(org)[0]).toMatchObject({ document: { reference: `OFFER-${order}` } });
+      expect(await waited(org)).toEqual(timeline);
+      // Nothing asks a second time: not the details saved again, not another look.
+      expect((await step.B()).status).toBe(200);
+      expect(requestedFor(org)).toHaveLength(1);
+      expect(await waited(org)).toEqual(timeline);
+    }
+  });
+
+  test("an offer signed together with its DPA waits for the billing details only; a signer who may not agree to it makes the DPA its own document", async () => {
+    /**
+     * An offer from before the DPA was its own document: none went out with it. Such
+     * offers exist only as sent, so this one is written past the freeze on sent documents.
+     */
+    const withDpa = async (org: string, reference: string) => {
+      const doc = await draft(org, { reference, external_ref: null });
+      await send(doc.id, org);
+      const [row] = await w.db
+        .select({ content: schema.account_document.content })
+        .from(schema.account_document)
+        .where(eq(schema.account_document.id, doc.id));
+      const content = Object.fromEntries(
+        Object.entries((row as { content: Record<string, unknown> }).content).filter(
+          ([key]) => key !== "dpa_separate",
+        ),
+      );
+      await w.db.transaction(async (tx) => {
+        await tx.execute(sql`set local session_replication_role = replica`);
+        await tx
+          .update(schema.account_document)
+          .set({ content })
+          .where(eq(schema.account_document.id, doc.id));
+      });
+      for (const d of (await store.documents(w.db, org)).filter((x) => x.kind === "dpa")) {
+        await w.db.delete(schema.account_task).where(eq(schema.account_task.documentId, d.id));
+        await w.db.delete(schema.account_document).where(eq(schema.account_document.id, d.id));
+      }
+      return doc.id;
+    };
+
+    // The signer agrees to the DPA with the offer: two things, as before.
+    const together = await freshOrg("Voorbeeld Samen BV");
+    const first = await withDpa(together, "OFFER-SAMEN");
+    expect((await sign(first, "outsider", together)).status).toBe(200);
+    expect(await cardWaits(together)).toEqual([
+      { document_id: first, waits_for: ["billing_details"] },
+    ]);
+    expect((await call(w, "PUT", `${C(together)}/billing`, "outsider", billing)).status).toBe(200);
+    expect(requestedFor(together)).toHaveLength(1);
+    expect((await store.documents(w.db, together)).filter((d) => d.kind === "dpa")).toEqual([]);
+    expect(await waited(together)).toEqual(["billing_details"]);
+
+    // The signer may not agree to it: the DPA goes out on its own, and the invoice waits for it.
+    const apart = await freshOrg("Voorbeeld Apart BV");
+    const second = await withDpa(apart, "OFFER-APART");
+    expect((await call(w, "PUT", `${C(apart)}/billing`, "outsider", billing)).status).toBe(200);
+    expect((await sign(second, "outsider", apart, false)).status).toBe(200);
+    expect(requestedFor(apart)).toHaveLength(0);
+    expect(await cardWaits(apart)).toEqual([{ document_id: second, waits_for: ["dpa"] }]);
+    const dpa = (await store.documents(w.db, apart)).find((d) => d.kind === "dpa");
+    expect((await sign(dpa?.id as string, "outsider", apart)).status).toBe(200);
+    expect(requestedFor(apart)).toHaveLength(1);
+    expect(await cardWaits(apart)).toEqual([]);
+    expect(await waited(apart)).toEqual(["dpa"]);
+  });
+
+  test("a DPA written for the customer stands in for ours once it is signed", async () => {
+    const org = await freshOrg("Voorbeeld Eigen BV");
+    const doc = await draft(org, { reference: "OFFER-EIGEN", external_ref: null });
+    await send(doc.id, org);
+    expect((await call(w, "PUT", `${C(org)}/billing`, "outsider", billing)).status).toBe(200);
+    expect((await sign(doc.id, "outsider", org)).status).toBe(200);
+    expect(await cardWaits(org)).toEqual([{ document_id: doc.id, waits_for: ["dpa"] }]);
+    // Ours is withdrawn and their own text is sent in its place.
+    const ours = (await store.documents(w.db, org)).find((d) => d.kind === "dpa");
+    expect(
+      (await call(w, "POST", `${S(org)}/documents/${ours?.id}/void`, "staff", {})).status,
+    ).toBe(200);
+    const own = await call(w, "POST", `${S(org)}/documents`, "staff", {
+      kind: "dpa",
+      title: "Verwerkersovereenkomst Voorbeeld Eigen BV",
+      language: "nl",
+      body: "Artikel 1. Deze tekst is van de klant zelf.",
+      requires_signature: true,
+    });
+    expect(own.status).toBe(201);
+    expect(requestedFor(org)).toHaveLength(0);
+    const theirs = (await store.documents(w.db, org)).find(
+      (d) => d.kind === "dpa" && d.status === "sent",
+    );
+    expect((await sign(theirs?.id as string, "outsider", org)).status).toBe(200);
+    expect(requestedFor(org)).toHaveLength(1);
+    expect(await cardWaits(org)).toEqual([]);
   });
 });
