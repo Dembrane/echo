@@ -492,9 +492,28 @@ const event = (
 	});
 };
 
+/** The demo's reading of the deal stage, as the backend derives it from the same facts. */
+function dealStageOf(s: Store): Out<typeof AccountListItem>["deal_stage"] {
+	const offer = s.docs.find((d) => d.kind === "offer" && d.status !== "void");
+	if (!offer) return s.stage === null ? null : "in_progress";
+	if (offer.status === "draft") return "offer_drafted";
+	if (offer.status === "declined") return "lost";
+	const waiting = s.docs.some(
+		(d) => d.kind === "dpa" && (d.status === "sent" || d.status === "viewed"),
+	);
+	if (offer.status !== "signed" || !s.billing.billing_email || waiting)
+		return "offer_sent";
+	const invoices = s.docs.filter((d) => d.kind === "invoice" && d.invoice);
+	if (!invoices.length) return "offer_accepted";
+	return invoices.every((d) => d.invoice?.status === "paid")
+		? "paid"
+		: "invoice_sent";
+}
+
 function listItem(s: Store): Out<typeof AccountListItem> {
 	return {
 		created_at: s.created_at,
+		deal_stage: dealStageOf(s),
 		id: s.id,
 		name: s.name,
 		open_tasks: s.tasks.filter(
@@ -526,6 +545,7 @@ function card(s: Store) {
 		organisation: {
 			account_stage: s.stage,
 			created_at: s.created_at,
+			deal_stage: dealStageOf(s),
 			id: s.id,
 			name: s.name,
 		},
