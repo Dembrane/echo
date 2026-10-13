@@ -14,11 +14,12 @@ import { checkBilling, countryCodeOf, countryName, type Delivery } from "./billi
 import type { AccountsDeps, Tx } from "./deps";
 import { billingPayload, emit, orgPayload, taskPayload, ticketPayload } from "./events";
 import { signerInviteUrl } from "./invite";
-import { requestInvoices, staffDocumentUrl } from "./invoice";
+import { customerSignUrl, requestInvoices, staffDocumentUrl } from "./invoice";
 import type { PricedLine } from "./money";
 import type { OfferContent } from "./offer";
 import { completeOnboarding, isOnboardingCode } from "./onboarding";
 import { lookupPeppol, type TaxIds } from "./peppol";
+import { continueUrl } from "./prospect";
 import { type BillingRow, type DocumentRow, store } from "./storage";
 import { isTaskCode } from "./task-text";
 import { settleTask } from "./tasks";
@@ -153,6 +154,13 @@ export async function documentDetail(
     access: via,
     staff_url:
       via === "staff" ? staffDocumentUrl(d.settings.dashboardUrl, doc.orgId, doc.id) : null,
+    customer_links:
+      via === "staff" && doc.status === "sent" && doc.requiresSignature
+        ? {
+            sign_in: continueUrl(d.settings.dashboardUrl, doc.orgId),
+            document: customerSignUrl(d.settings.dashboardUrl, doc.orgId, doc.id),
+          }
+        : null,
   };
 }
 

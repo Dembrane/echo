@@ -55,7 +55,7 @@ msgstr "{0} excl. btw, {1} incl."
 #~ msgstr "{0} fictieve gesprekken geschreven."
 
 #. placeholder {0}: formatMoney(d.total_cents, d.currency, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:83
+#: src/features/accounts/staff/DocumentRoute.tsx:84
 msgid "{0} incl. VAT"
 msgstr "{0} incl. btw"
 
@@ -274,7 +274,7 @@ msgid "Back to account"
 msgstr "Terug naar account"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:258
-#: src/features/accounts/staff/DocumentRoute.tsx:118
+#: src/features/accounts/staff/DocumentRoute.tsx:119
 msgid "Back to the account"
 msgstr "Terug naar het account"
 
@@ -372,7 +372,7 @@ msgstr "Annuleren"
 msgid "Cancelled"
 msgstr "Geannuleerd"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:145
+#: src/features/accounts/staff/DocumentRoute.tsx:146
 #: src/features/accounts/signing/SignRoute.tsx:785
 msgid "Change"
 msgstr "Wijzigen"
@@ -492,14 +492,17 @@ msgstr "Naam contactpersoon"
 #~ msgid "Continue"
 #~ msgstr "Doorgaan"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:224
 #: src/features/accounts/customer/Pay.tsx:237
 msgid "Copied"
 msgstr "Gekopieerd"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:224
 #: src/features/accounts/customer/Pay.tsx:237
 msgid "Copy"
 msgstr "Kopieren"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:222
 #: src/features/accounts/customer/Pay.tsx:235
 msgid "Copy {label}"
 msgstr "{label} kopieren"
@@ -1201,6 +1204,10 @@ msgstr "Geen land gevonden"
 msgid "No documents yet."
 msgstr "Nog geen documenten."
 
+#: src/features/accounts/staff/DocumentRoute.tsx:199
+msgid "No email went to the customer. Send them these links in your own email."
+msgstr "Er is geen e-mail naar de klant gegaan. Stuur deze links in je eigen e-mail."
+
 #: src/features/accounts/staff/UploadPdfModal.tsx:114
 #: src/features/accounts/customer/NextSteps.tsx:652
 msgid "No file chosen"
@@ -1274,8 +1281,15 @@ msgstr "Offerte"
 msgid "Offer language"
 msgstr "Taal van de offerte"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:206
+msgid "Offer link"
+msgstr "Link naar de offerte"
+
+#: src/features/accounts/staff/DocumentRoute.tsx:158
+msgid "Offer sent. It is in the customer's account; no email went out."
+msgstr "Offerte verzonden. Ze staat in het account van de klant; er is geen e-mail verstuurd."
+
 #: src/features/accounts/staff/PushOfferModal.tsx:157
-#: src/features/accounts/staff/DocumentRoute.tsx:157
 msgid "Offer sent. The customer sees it the next time they log in."
 msgstr "Offerte verstuurd. De klant ziet hem bij de volgende keer inloggen."
 
@@ -1306,7 +1320,7 @@ msgstr "Online"
 #~ msgid "Only if you get invoices through Peppol"
 #~ msgstr "Alleen als je facturen via Peppol ontvangt"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:189
+#: src/features/accounts/staff/DocumentRoute.tsx:190
 msgid "Only staff see this draft. When you send it, it gets that day's date and is valid for 14 days."
 msgstr "Alleen medewerkers zien dit concept. Als je het verstuurt, krijgt het de datum van die dag en is het 14 dagen geldig."
 
@@ -1326,7 +1340,7 @@ msgstr "Open"
 msgid "Open PDF"
 msgstr "Pdf openen"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:182
+#: src/features/accounts/staff/DocumentRoute.tsx:183
 #: src/features/accounts/staff/AccountCardRoute.tsx:217
 msgid "Open signed PDF"
 msgstr "Ondertekende pdf openen"
@@ -1504,7 +1518,7 @@ msgstr "Kies een moment dat jou uitkomt."
 msgid "Pick a time. {host} reads your account before the call."
 msgstr "Kies een tijd. {host} leest je account voor het gesprek."
 
-#: src/features/accounts/staff/DocumentRoute.tsx:174
+#: src/features/accounts/staff/DocumentRoute.tsx:175
 #: src/features/accounts/staff/AccountCardRoute.tsx:192
 msgid "Place fields"
 msgstr "Velden plaatsen"
@@ -1783,7 +1797,7 @@ msgid "Send by email instead"
 msgstr "Liever per e-mail"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:262
-#: src/features/accounts/staff/DocumentRoute.tsx:164
+#: src/features/accounts/staff/DocumentRoute.tsx:165
 msgid "Send offer"
 msgstr "Offerte versturen"
 
@@ -1821,7 +1835,7 @@ msgid "Sent"
 msgstr "Verstuurd"
 
 #. placeholder {0}: formatDate(d.sent_at, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:89
+#: src/features/accounts/staff/DocumentRoute.tsx:90
 msgid "Sent {0}"
 msgstr "Verstuurd op {0}"
 
@@ -1906,6 +1920,10 @@ msgstr "Uitloggen en doorgaan"
 msgid "Sign the data processing agreement"
 msgstr "Verwerkersovereenkomst ondertekenen"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:205
+msgid "Sign-in link"
+msgstr "Inloglink"
+
 #: src/features/accounts/staff/FieldEditorRoute.tsx:68
 msgid "Signature"
 msgstr "Handtekening"
@@ -1920,7 +1938,7 @@ msgid "Signed"
 msgstr "Ondertekend"
 
 #. placeholder {0}: formatDate(d.signed_at, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:87
+#: src/features/accounts/staff/DocumentRoute.tsx:88
 msgid "Signed {0}"
 msgstr "Ondertekend op {0}"
 
@@ -2233,7 +2251,7 @@ msgid "This area is for dembrane staff."
 msgstr "Dit deel is voor medewerkers van dembrane."
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:133
-#: src/features/accounts/staff/DocumentRoute.tsx:70
+#: src/features/accounts/staff/DocumentRoute.tsx:71
 #: src/features/accounts/signing/SignRoute.tsx:94
 msgid "This document could not be loaded."
 msgstr "Dit document kon niet worden geladen."
@@ -2241,7 +2259,7 @@ msgstr "Dit document kon niet worden geladen."
 #~ msgid "This document could not be shown. Reload the page to try again."
 #~ msgstr "Dit document kon niet worden getoond. Laad de pagina opnieuw."
 
-#: src/features/accounts/staff/DocumentRoute.tsx:199
+#: src/features/accounts/staff/DocumentRoute.tsx:237
 msgid "This document has no PDF."
 msgstr "Dit document heeft geen pdf."
 
@@ -2428,7 +2446,7 @@ msgid "Valid 14 days. The terms, SLA and DPA versions in force today are pinned.
 msgstr "14 dagen geldig. De versies van voorwaarden, SLA en verwerkersovereenkomst van vandaag worden vastgelegd."
 
 #. placeholder {0}: formatDate(d.valid_until, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:92
+#: src/features/accounts/staff/DocumentRoute.tsx:93
 msgid "Valid until {0}"
 msgstr "Geldig tot {0}"
 

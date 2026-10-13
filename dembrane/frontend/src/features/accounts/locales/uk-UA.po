@@ -55,7 +55,7 @@ msgstr "{0} без ПДВ, {1} з ПДВ"
 #~ msgstr "Створено {0} вигаданих розмов."
 
 #. placeholder {0}: formatMoney(d.total_cents, d.currency, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:83
+#: src/features/accounts/staff/DocumentRoute.tsx:84
 msgid "{0} incl. VAT"
 msgstr "{0} з ПДВ"
 
@@ -274,7 +274,7 @@ msgid "Back to account"
 msgstr "Назад до облікового запису"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:258
-#: src/features/accounts/staff/DocumentRoute.tsx:118
+#: src/features/accounts/staff/DocumentRoute.tsx:119
 msgid "Back to the account"
 msgstr "Назад до облікового запису"
 
@@ -372,7 +372,7 @@ msgstr "Скасувати"
 msgid "Cancelled"
 msgstr "Скасовано"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:145
+#: src/features/accounts/staff/DocumentRoute.tsx:146
 #: src/features/accounts/signing/SignRoute.tsx:785
 msgid "Change"
 msgstr "Змінити"
@@ -492,14 +492,17 @@ msgstr "Ім'я контакту"
 #~ msgid "Continue"
 #~ msgstr "Продовжити"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:224
 #: src/features/accounts/customer/Pay.tsx:237
 msgid "Copied"
 msgstr "Скопійовано"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:224
 #: src/features/accounts/customer/Pay.tsx:237
 msgid "Copy"
 msgstr "Копіювати"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:222
 #: src/features/accounts/customer/Pay.tsx:235
 msgid "Copy {label}"
 msgstr "Копіювати {label}"
@@ -1201,6 +1204,10 @@ msgstr "Країну не знайдено"
 msgid "No documents yet."
 msgstr "Документів ще немає."
 
+#: src/features/accounts/staff/DocumentRoute.tsx:199
+msgid "No email went to the customer. Send them these links in your own email."
+msgstr "Клієнту не надіслано жодного листа. Надішліть ці посилання у власному листі."
+
 #: src/features/accounts/staff/UploadPdfModal.tsx:114
 #: src/features/accounts/customer/NextSteps.tsx:652
 msgid "No file chosen"
@@ -1274,8 +1281,15 @@ msgstr "Пропозиція"
 msgid "Offer language"
 msgstr "Мова пропозиції"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:206
+msgid "Offer link"
+msgstr "Посилання на пропозицію"
+
+#: src/features/accounts/staff/DocumentRoute.tsx:158
+msgid "Offer sent. It is in the customer's account; no email went out."
+msgstr "Пропозицію надіслано. Вона в обліковому записі клієнта; лист не надсилався."
+
 #: src/features/accounts/staff/PushOfferModal.tsx:157
-#: src/features/accounts/staff/DocumentRoute.tsx:157
 msgid "Offer sent. The customer sees it the next time they log in."
 msgstr "Пропозицію надіслано. Клієнт побачить її під час наступного входу."
 
@@ -1306,7 +1320,7 @@ msgstr "Онлайн"
 #~ msgid "Only if you get invoices through Peppol"
 #~ msgstr "Лише якщо ви отримуєте рахунки через Peppol"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:189
+#: src/features/accounts/staff/DocumentRoute.tsx:190
 msgid "Only staff see this draft. When you send it, it gets that day's date and is valid for 14 days."
 msgstr "Цю чернетку бачать лише працівники. Коли ви її надішлете, вона отримає дату того дня і буде дійсна 14 днів."
 
@@ -1326,7 +1340,7 @@ msgstr "Відкрито"
 msgid "Open PDF"
 msgstr "Відкрити PDF"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:182
+#: src/features/accounts/staff/DocumentRoute.tsx:183
 #: src/features/accounts/staff/AccountCardRoute.tsx:217
 msgid "Open signed PDF"
 msgstr "Відкрити підписаний PDF"
@@ -1504,7 +1518,7 @@ msgstr "Оберіть зручний для вас час."
 msgid "Pick a time. {host} reads your account before the call."
 msgstr "Оберіть час. {host} ознайомиться з вашим акаунтом перед дзвінком."
 
-#: src/features/accounts/staff/DocumentRoute.tsx:174
+#: src/features/accounts/staff/DocumentRoute.tsx:175
 #: src/features/accounts/staff/AccountCardRoute.tsx:192
 msgid "Place fields"
 msgstr "Розмістити поля"
@@ -1783,7 +1797,7 @@ msgid "Send by email instead"
 msgstr "Надсилати електронною поштою"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:262
-#: src/features/accounts/staff/DocumentRoute.tsx:164
+#: src/features/accounts/staff/DocumentRoute.tsx:165
 msgid "Send offer"
 msgstr "Надіслати пропозицію"
 
@@ -1821,7 +1835,7 @@ msgid "Sent"
 msgstr "Надіслано"
 
 #. placeholder {0}: formatDate(d.sent_at, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:89
+#: src/features/accounts/staff/DocumentRoute.tsx:90
 msgid "Sent {0}"
 msgstr "Надіслано {0}"
 
@@ -1906,6 +1920,10 @@ msgstr "Вийти і продовжити"
 msgid "Sign the data processing agreement"
 msgstr "Підписати договір про обробку даних"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:205
+msgid "Sign-in link"
+msgstr "Посилання для входу"
+
 #: src/features/accounts/staff/FieldEditorRoute.tsx:68
 msgid "Signature"
 msgstr "Підпис"
@@ -1920,7 +1938,7 @@ msgid "Signed"
 msgstr "Підписано"
 
 #. placeholder {0}: formatDate(d.signed_at, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:87
+#: src/features/accounts/staff/DocumentRoute.tsx:88
 msgid "Signed {0}"
 msgstr "Підписано {0}"
 
@@ -2233,7 +2251,7 @@ msgid "This area is for dembrane staff."
 msgstr "Цей розділ лише для команди dembrane."
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:133
-#: src/features/accounts/staff/DocumentRoute.tsx:70
+#: src/features/accounts/staff/DocumentRoute.tsx:71
 #: src/features/accounts/signing/SignRoute.tsx:94
 msgid "This document could not be loaded."
 msgstr "Не вдалося завантажити цей документ."
@@ -2241,7 +2259,7 @@ msgstr "Не вдалося завантажити цей документ."
 #~ msgid "This document could not be shown. Reload the page to try again."
 #~ msgstr ""
 
-#: src/features/accounts/staff/DocumentRoute.tsx:199
+#: src/features/accounts/staff/DocumentRoute.tsx:237
 msgid "This document has no PDF."
 msgstr "Цей документ не має PDF."
 
@@ -2428,7 +2446,7 @@ msgid "Valid 14 days. The terms, SLA and DPA versions in force today are pinned.
 msgstr "Діє 14 днів. Закріплено версії умов, SLA та DPA, чинні сьогодні."
 
 #. placeholder {0}: formatDate(d.valid_until, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:92
+#: src/features/accounts/staff/DocumentRoute.tsx:93
 msgid "Valid until {0}"
 msgstr "Дійсна до {0}"
 

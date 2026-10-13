@@ -55,7 +55,7 @@ msgstr "{0} hors VAT, {1} avec."
 #~ msgstr "{0} conversations fictives créées."
 
 #. placeholder {0}: formatMoney(d.total_cents, d.currency, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:83
+#: src/features/accounts/staff/DocumentRoute.tsx:84
 msgid "{0} incl. VAT"
 msgstr "{0} TVA incluse"
 
@@ -274,7 +274,7 @@ msgid "Back to account"
 msgstr "Retour au compte"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:258
-#: src/features/accounts/staff/DocumentRoute.tsx:118
+#: src/features/accounts/staff/DocumentRoute.tsx:119
 msgid "Back to the account"
 msgstr "Retour au compte"
 
@@ -372,7 +372,7 @@ msgstr "Annuler"
 msgid "Cancelled"
 msgstr "Annulé"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:145
+#: src/features/accounts/staff/DocumentRoute.tsx:146
 #: src/features/accounts/signing/SignRoute.tsx:785
 msgid "Change"
 msgstr "Modifier"
@@ -492,14 +492,17 @@ msgstr "Nom du contact"
 #~ msgid "Continue"
 #~ msgstr "Continuer"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:224
 #: src/features/accounts/customer/Pay.tsx:237
 msgid "Copied"
 msgstr "Copié"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:224
 #: src/features/accounts/customer/Pay.tsx:237
 msgid "Copy"
 msgstr "Copier"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:222
 #: src/features/accounts/customer/Pay.tsx:235
 msgid "Copy {label}"
 msgstr "Copier {label}"
@@ -1201,6 +1204,10 @@ msgstr "Aucun pays trouvé"
 msgid "No documents yet."
 msgstr "Aucun document pour l'instant."
 
+#: src/features/accounts/staff/DocumentRoute.tsx:199
+msgid "No email went to the customer. Send them these links in your own email."
+msgstr "Aucun e-mail n'a été envoyé au client. Envoyez-lui ces liens dans votre propre e-mail."
+
 #: src/features/accounts/staff/UploadPdfModal.tsx:114
 #: src/features/accounts/customer/NextSteps.tsx:652
 msgid "No file chosen"
@@ -1274,8 +1281,15 @@ msgstr "Offre"
 msgid "Offer language"
 msgstr "Langue de l'offre"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:206
+msgid "Offer link"
+msgstr "Lien vers l'offre"
+
+#: src/features/accounts/staff/DocumentRoute.tsx:158
+msgid "Offer sent. It is in the customer's account; no email went out."
+msgstr "Offre envoyée. Elle se trouve dans le compte du client ; aucun e-mail n'a été envoyé."
+
 #: src/features/accounts/staff/PushOfferModal.tsx:157
-#: src/features/accounts/staff/DocumentRoute.tsx:157
 msgid "Offer sent. The customer sees it the next time they log in."
 msgstr "Offre envoyée. Le client la verra lors de sa prochaine connexion."
 
@@ -1306,7 +1320,7 @@ msgstr "En ligne"
 #~ msgid "Only if you get invoices through Peppol"
 #~ msgstr "Seulement si vous recevez vos factures via Peppol"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:189
+#: src/features/accounts/staff/DocumentRoute.tsx:190
 msgid "Only staff see this draft. When you send it, it gets that day's date and is valid for 14 days."
 msgstr "Seule l'équipe voit ce brouillon. À l'envoi, il prend la date du jour et reste valable 14 jours."
 
@@ -1326,7 +1340,7 @@ msgstr "Ouvert"
 msgid "Open PDF"
 msgstr "Ouvrir le PDF"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:182
+#: src/features/accounts/staff/DocumentRoute.tsx:183
 #: src/features/accounts/staff/AccountCardRoute.tsx:217
 msgid "Open signed PDF"
 msgstr "Ouvrir le PDF signé"
@@ -1504,7 +1518,7 @@ msgstr "Choisissez un moment qui vous convient."
 msgid "Pick a time. {host} reads your account before the call."
 msgstr "Choisissez un créneau. {host} prend connaissance de votre compte avant l'appel."
 
-#: src/features/accounts/staff/DocumentRoute.tsx:174
+#: src/features/accounts/staff/DocumentRoute.tsx:175
 #: src/features/accounts/staff/AccountCardRoute.tsx:192
 msgid "Place fields"
 msgstr "Placer les champs"
@@ -1783,7 +1797,7 @@ msgid "Send by email instead"
 msgstr "Envoyer plutôt par e-mail"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:262
-#: src/features/accounts/staff/DocumentRoute.tsx:164
+#: src/features/accounts/staff/DocumentRoute.tsx:165
 msgid "Send offer"
 msgstr "Envoyer l'offre"
 
@@ -1821,7 +1835,7 @@ msgid "Sent"
 msgstr "Envoyé"
 
 #. placeholder {0}: formatDate(d.sent_at, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:89
+#: src/features/accounts/staff/DocumentRoute.tsx:90
 msgid "Sent {0}"
 msgstr "Envoyé le {0}"
 
@@ -1906,6 +1920,10 @@ msgstr "Se déconnecter et continuer"
 msgid "Sign the data processing agreement"
 msgstr "Signer l'accord de traitement des données"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:205
+msgid "Sign-in link"
+msgstr "Lien de connexion"
+
 #: src/features/accounts/staff/FieldEditorRoute.tsx:68
 msgid "Signature"
 msgstr "Signature"
@@ -1920,7 +1938,7 @@ msgid "Signed"
 msgstr "Signé"
 
 #. placeholder {0}: formatDate(d.signed_at, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:87
+#: src/features/accounts/staff/DocumentRoute.tsx:88
 msgid "Signed {0}"
 msgstr "Signé le {0}"
 
@@ -2233,7 +2251,7 @@ msgid "This area is for dembrane staff."
 msgstr "Cet espace est réservé à l'équipe dembrane."
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:133
-#: src/features/accounts/staff/DocumentRoute.tsx:70
+#: src/features/accounts/staff/DocumentRoute.tsx:71
 #: src/features/accounts/signing/SignRoute.tsx:94
 msgid "This document could not be loaded."
 msgstr "Impossible de charger ce document."
@@ -2241,7 +2259,7 @@ msgstr "Impossible de charger ce document."
 #~ msgid "This document could not be shown. Reload the page to try again."
 #~ msgstr ""
 
-#: src/features/accounts/staff/DocumentRoute.tsx:199
+#: src/features/accounts/staff/DocumentRoute.tsx:237
 msgid "This document has no PDF."
 msgstr "Ce document n'a pas de PDF."
 
@@ -2428,7 +2446,7 @@ msgid "Valid 14 days. The terms, SLA and DPA versions in force today are pinned.
 msgstr "Valable 14 jours. Les versions actuelles des conditions générales, du SLA et du DPA sont associées."
 
 #. placeholder {0}: formatDate(d.valid_until, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:92
+#: src/features/accounts/staff/DocumentRoute.tsx:93
 msgid "Valid until {0}"
 msgstr "Valable jusqu'au {0}"
 

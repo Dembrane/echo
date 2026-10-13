@@ -55,7 +55,7 @@ msgstr "{0} IVA esclusa, {1} IVA inclusa"
 #~ msgstr "{0} conversazioni fittizie create."
 
 #. placeholder {0}: formatMoney(d.total_cents, d.currency, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:83
+#: src/features/accounts/staff/DocumentRoute.tsx:84
 msgid "{0} incl. VAT"
 msgstr "{0} IVA inclusa"
 
@@ -274,7 +274,7 @@ msgid "Back to account"
 msgstr "Torna all'account"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:258
-#: src/features/accounts/staff/DocumentRoute.tsx:118
+#: src/features/accounts/staff/DocumentRoute.tsx:119
 msgid "Back to the account"
 msgstr "Torna all'account"
 
@@ -372,7 +372,7 @@ msgstr "Annulla"
 msgid "Cancelled"
 msgstr "Annullato"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:145
+#: src/features/accounts/staff/DocumentRoute.tsx:146
 #: src/features/accounts/signing/SignRoute.tsx:785
 msgid "Change"
 msgstr "Modifica"
@@ -492,14 +492,17 @@ msgstr "Nome del contatto"
 #~ msgid "Continue"
 #~ msgstr "Continua"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:224
 #: src/features/accounts/customer/Pay.tsx:237
 msgid "Copied"
 msgstr "Copiato"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:224
 #: src/features/accounts/customer/Pay.tsx:237
 msgid "Copy"
 msgstr "Copia"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:222
 #: src/features/accounts/customer/Pay.tsx:235
 msgid "Copy {label}"
 msgstr "Copia {label}"
@@ -1201,6 +1204,10 @@ msgstr "Nessun paese trovato"
 msgid "No documents yet."
 msgstr "Nessun documento finora."
 
+#: src/features/accounts/staff/DocumentRoute.tsx:199
+msgid "No email went to the customer. Send them these links in your own email."
+msgstr "Nessuna e-mail è stata inviata al cliente. Invia questi link nella tua e-mail."
+
 #: src/features/accounts/staff/UploadPdfModal.tsx:114
 #: src/features/accounts/customer/NextSteps.tsx:652
 msgid "No file chosen"
@@ -1274,8 +1281,15 @@ msgstr "Offerta"
 msgid "Offer language"
 msgstr "Lingua dell'offerta"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:206
+msgid "Offer link"
+msgstr "Link all'offerta"
+
+#: src/features/accounts/staff/DocumentRoute.tsx:158
+msgid "Offer sent. It is in the customer's account; no email went out."
+msgstr "Offerta inviata. Si trova nell'account del cliente; non è stata inviata alcuna e-mail."
+
 #: src/features/accounts/staff/PushOfferModal.tsx:157
-#: src/features/accounts/staff/DocumentRoute.tsx:157
 msgid "Offer sent. The customer sees it the next time they log in."
 msgstr "Offerta inviata. Il cliente la vedrà al prossimo accesso."
 
@@ -1306,7 +1320,7 @@ msgstr "Online"
 #~ msgid "Only if you get invoices through Peppol"
 #~ msgstr "Solo se ricevi le fatture tramite Peppol"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:189
+#: src/features/accounts/staff/DocumentRoute.tsx:190
 msgid "Only staff see this draft. When you send it, it gets that day's date and is valid for 14 days."
 msgstr "Solo lo staff vede questa bozza. Quando la invii, prende la data di quel giorno ed è valida per 14 giorni."
 
@@ -1326,7 +1340,7 @@ msgstr "Aperto"
 msgid "Open PDF"
 msgstr "Apri PDF"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:182
+#: src/features/accounts/staff/DocumentRoute.tsx:183
 #: src/features/accounts/staff/AccountCardRoute.tsx:217
 msgid "Open signed PDF"
 msgstr "Apri PDF firmato"
@@ -1504,7 +1518,7 @@ msgstr "Scegli un orario che ti va bene."
 msgid "Pick a time. {host} reads your account before the call."
 msgstr "Scegli un orario. {host} esaminerà il tuo account prima della chiamata."
 
-#: src/features/accounts/staff/DocumentRoute.tsx:174
+#: src/features/accounts/staff/DocumentRoute.tsx:175
 #: src/features/accounts/staff/AccountCardRoute.tsx:192
 msgid "Place fields"
 msgstr "Posiziona campi"
@@ -1783,7 +1797,7 @@ msgid "Send by email instead"
 msgstr "Invia invece via email"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:262
-#: src/features/accounts/staff/DocumentRoute.tsx:164
+#: src/features/accounts/staff/DocumentRoute.tsx:165
 msgid "Send offer"
 msgstr "Invia offerta"
 
@@ -1821,7 +1835,7 @@ msgid "Sent"
 msgstr "Inviato"
 
 #. placeholder {0}: formatDate(d.sent_at, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:89
+#: src/features/accounts/staff/DocumentRoute.tsx:90
 msgid "Sent {0}"
 msgstr "Inviato il {0}"
 
@@ -1906,6 +1920,10 @@ msgstr "Esci e continua"
 msgid "Sign the data processing agreement"
 msgstr "Firma l'accordo sul trattamento dei dati"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:205
+msgid "Sign-in link"
+msgstr "Link di accesso"
+
 #: src/features/accounts/staff/FieldEditorRoute.tsx:68
 msgid "Signature"
 msgstr "Firma"
@@ -1920,7 +1938,7 @@ msgid "Signed"
 msgstr "Firmato"
 
 #. placeholder {0}: formatDate(d.signed_at, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:87
+#: src/features/accounts/staff/DocumentRoute.tsx:88
 msgid "Signed {0}"
 msgstr "Firmato il {0}"
 
@@ -2233,7 +2251,7 @@ msgid "This area is for dembrane staff."
 msgstr "Quest'area è riservata allo staff di dembrane."
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:133
-#: src/features/accounts/staff/DocumentRoute.tsx:70
+#: src/features/accounts/staff/DocumentRoute.tsx:71
 #: src/features/accounts/signing/SignRoute.tsx:94
 msgid "This document could not be loaded."
 msgstr "Impossibile caricare questo documento."
@@ -2241,7 +2259,7 @@ msgstr "Impossibile caricare questo documento."
 #~ msgid "This document could not be shown. Reload the page to try again."
 #~ msgstr ""
 
-#: src/features/accounts/staff/DocumentRoute.tsx:199
+#: src/features/accounts/staff/DocumentRoute.tsx:237
 msgid "This document has no PDF."
 msgstr "Questo documento non ha un PDF."
 
@@ -2428,7 +2446,7 @@ msgid "Valid 14 days. The terms, SLA and DPA versions in force today are pinned.
 msgstr "Valido per 14 giorni. Si applicano le versioni odierne dei termini, dello SLA e del DPA."
 
 #. placeholder {0}: formatDate(d.valid_until, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:92
+#: src/features/accounts/staff/DocumentRoute.tsx:93
 msgid "Valid until {0}"
 msgstr "Valido fino al {0}"
 

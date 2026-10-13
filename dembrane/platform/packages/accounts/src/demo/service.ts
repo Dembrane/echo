@@ -11,7 +11,7 @@ import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import { localeOfEmail, resolveLocale } from "@dembrane/i18n";
 import { desc, eq } from "drizzle-orm";
-import { staffCan } from "../access";
+import { assertPersonSends, staffCan } from "../access";
 import type { AccountsDeps, Tx } from "../deps";
 import { isUuid } from "../deps";
 import { emit } from "../events";
@@ -162,8 +162,10 @@ export async function publishDemo(
   const input = row.input as DemoInput;
   const seed = row.seed as SeedOutput;
   const signIn = opts.sign_in ?? input.sign_in;
-  // The invitation goes out once: a demo published again after an unpublish sends none.
+  // The invitation goes out once: a demo published again after an unpublish sends none. Only
+  // a signed-in person may cause the email.
   const invite = signIn && !row.invitedAt;
+  if (invite) assertPersonSends(who);
   const now = d.now();
   await d.db.transaction(async (tx) => {
     for (const p of seed.projects) {

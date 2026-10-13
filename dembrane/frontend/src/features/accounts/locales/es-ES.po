@@ -55,7 +55,7 @@ msgstr "{0} sin VAT, {1} con VAT"
 #~ msgstr "{0} conversaciones ficticias creadas."
 
 #. placeholder {0}: formatMoney(d.total_cents, d.currency, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:83
+#: src/features/accounts/staff/DocumentRoute.tsx:84
 msgid "{0} incl. VAT"
 msgstr "{0} IVA incluido"
 
@@ -274,7 +274,7 @@ msgid "Back to account"
 msgstr "Volver a la cuenta"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:258
-#: src/features/accounts/staff/DocumentRoute.tsx:118
+#: src/features/accounts/staff/DocumentRoute.tsx:119
 msgid "Back to the account"
 msgstr "Volver a la cuenta"
 
@@ -372,7 +372,7 @@ msgstr "Cancelar"
 msgid "Cancelled"
 msgstr "Cancelado"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:145
+#: src/features/accounts/staff/DocumentRoute.tsx:146
 #: src/features/accounts/signing/SignRoute.tsx:785
 msgid "Change"
 msgstr "Cambiar"
@@ -492,14 +492,17 @@ msgstr "Nombre del contacto"
 #~ msgid "Continue"
 #~ msgstr "Continuar"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:224
 #: src/features/accounts/customer/Pay.tsx:237
 msgid "Copied"
 msgstr "Copiado"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:224
 #: src/features/accounts/customer/Pay.tsx:237
 msgid "Copy"
 msgstr "Copiar"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:222
 #: src/features/accounts/customer/Pay.tsx:235
 msgid "Copy {label}"
 msgstr "Copiar {label}"
@@ -1201,6 +1204,10 @@ msgstr "No se ha encontrado ningún país"
 msgid "No documents yet."
 msgstr "Aún no hay documentos."
 
+#: src/features/accounts/staff/DocumentRoute.tsx:199
+msgid "No email went to the customer. Send them these links in your own email."
+msgstr "No se envió ningún correo al cliente. Envíale estos enlaces en tu propio correo."
+
 #: src/features/accounts/staff/UploadPdfModal.tsx:114
 #: src/features/accounts/customer/NextSteps.tsx:652
 msgid "No file chosen"
@@ -1274,8 +1281,15 @@ msgstr "Oferta"
 msgid "Offer language"
 msgstr "Idioma de la oferta"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:206
+msgid "Offer link"
+msgstr "Enlace a la oferta"
+
+#: src/features/accounts/staff/DocumentRoute.tsx:158
+msgid "Offer sent. It is in the customer's account; no email went out."
+msgstr "Oferta enviada. Está en la cuenta del cliente; no se envió ningún correo."
+
 #: src/features/accounts/staff/PushOfferModal.tsx:157
-#: src/features/accounts/staff/DocumentRoute.tsx:157
 msgid "Offer sent. The customer sees it the next time they log in."
 msgstr "Oferta enviada. El cliente la verá la próxima vez que inicie sesión."
 
@@ -1306,7 +1320,7 @@ msgstr "En línea"
 #~ msgid "Only if you get invoices through Peppol"
 #~ msgstr "Solo si recibes facturas a través de Peppol"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:189
+#: src/features/accounts/staff/DocumentRoute.tsx:190
 msgid "Only staff see this draft. When you send it, it gets that day's date and is valid for 14 days."
 msgstr "Solo el equipo ve este borrador. Al enviarlo, lleva la fecha de ese día y es válido durante 14 días."
 
@@ -1326,7 +1340,7 @@ msgstr "Abierta"
 msgid "Open PDF"
 msgstr "Abrir PDF"
 
-#: src/features/accounts/staff/DocumentRoute.tsx:182
+#: src/features/accounts/staff/DocumentRoute.tsx:183
 #: src/features/accounts/staff/AccountCardRoute.tsx:217
 msgid "Open signed PDF"
 msgstr "Abrir PDF firmado"
@@ -1504,7 +1518,7 @@ msgstr "Elige el momento que te venga bien."
 msgid "Pick a time. {host} reads your account before the call."
 msgstr "Elige una hora. {host} revisará tu cuenta antes de la llamada."
 
-#: src/features/accounts/staff/DocumentRoute.tsx:174
+#: src/features/accounts/staff/DocumentRoute.tsx:175
 #: src/features/accounts/staff/AccountCardRoute.tsx:192
 msgid "Place fields"
 msgstr "Colocar campos"
@@ -1783,7 +1797,7 @@ msgid "Send by email instead"
 msgstr "Enviar por correo en su lugar"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:262
-#: src/features/accounts/staff/DocumentRoute.tsx:164
+#: src/features/accounts/staff/DocumentRoute.tsx:165
 msgid "Send offer"
 msgstr "Enviar oferta"
 
@@ -1821,7 +1835,7 @@ msgid "Sent"
 msgstr "Enviado"
 
 #. placeholder {0}: formatDate(d.sent_at, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:89
+#: src/features/accounts/staff/DocumentRoute.tsx:90
 msgid "Sent {0}"
 msgstr "Enviado el {0}"
 
@@ -1906,6 +1920,10 @@ msgstr "Cerrar sesión y continuar"
 msgid "Sign the data processing agreement"
 msgstr "Firmar el acuerdo de tratamiento de datos"
 
+#: src/features/accounts/staff/DocumentRoute.tsx:205
+msgid "Sign-in link"
+msgstr "Enlace de inicio de sesión"
+
 #: src/features/accounts/staff/FieldEditorRoute.tsx:68
 msgid "Signature"
 msgstr "Firma"
@@ -1920,7 +1938,7 @@ msgid "Signed"
 msgstr "Firmado"
 
 #. placeholder {0}: formatDate(d.signed_at, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:87
+#: src/features/accounts/staff/DocumentRoute.tsx:88
 msgid "Signed {0}"
 msgstr "Firmado el {0}"
 
@@ -2233,7 +2251,7 @@ msgid "This area is for dembrane staff."
 msgstr "Esta zona es para el equipo de dembrane."
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:133
-#: src/features/accounts/staff/DocumentRoute.tsx:70
+#: src/features/accounts/staff/DocumentRoute.tsx:71
 #: src/features/accounts/signing/SignRoute.tsx:94
 msgid "This document could not be loaded."
 msgstr "No se pudo cargar este documento."
@@ -2241,7 +2259,7 @@ msgstr "No se pudo cargar este documento."
 #~ msgid "This document could not be shown. Reload the page to try again."
 #~ msgstr ""
 
-#: src/features/accounts/staff/DocumentRoute.tsx:199
+#: src/features/accounts/staff/DocumentRoute.tsx:237
 msgid "This document has no PDF."
 msgstr "Este documento no tiene PDF."
 
@@ -2428,7 +2446,7 @@ msgid "Valid 14 days. The terms, SLA and DPA versions in force today are pinned.
 msgstr "Válido 14 días. Se fijan las versiones vigentes hoy de los términos, SLA y DPA."
 
 #. placeholder {0}: formatDate(d.valid_until, i18n.locale)
-#: src/features/accounts/staff/DocumentRoute.tsx:92
+#: src/features/accounts/staff/DocumentRoute.tsx:93
 msgid "Valid until {0}"
 msgstr "Válido hasta el {0}"
 

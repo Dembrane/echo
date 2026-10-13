@@ -288,6 +288,13 @@ export const DocumentDetail = DocumentSummary.extend({
    * and send it while it is a draft. The link sam gives the deal owner.
    */
   staff_url: z.string().nullable(),
+  /**
+   * Staff only, and only for a sent document the customer acts on, else null: the two
+   * links the deal owner gives the customer in their own email. `sign_in` is the sign-in
+   * that leads to the organisation's account, `document` where this document is read and
+   * signed.
+   */
+  customer_links: z.object({ sign_in: z.string(), document: z.string() }).nullable(),
 });
 
 /**
@@ -733,6 +740,13 @@ export const PushOfferRequest = z.object({
    * gets that day's date (a date in the future stays) and the legal texts in force then.
    */
   send: z.boolean().default(true),
+  /**
+   * With `send`: also email the people who run the account that the offer is ready. Off
+   * unless asked for: the offer appears in the customer's account and the deal owner sends
+   * their own email with `customer_links`. Only a signed-in person may ask for it; a staff
+   * key that does answers 403 `staff.key_cannot_email`.
+   */
+  notify: z.boolean().default(false),
 });
 /** `task` is null for a draft: "Review and sign the offer" is created when it is sent. */
 export const PushOfferResponse = z.object({ document: DocumentDetail, task: Task.nullable() });
@@ -776,7 +790,8 @@ export const VoidRequest = z.object({ reason: optText(2000) });
  * these; it tells the manager in Slack and the manager decides. echo renders the email in
  * each recipient's language, signed by the account's manager, replies reaching them.
  * `note` is the manager's own line, shown as written. `dry_run` renders without sending,
- * for the preview. Invoices are not among them: Exact sends the invoice itself.
+ * for the preview, and is all a staff key gets: a key that sends answers 403
+ * `staff.key_cannot_email`. Invoices are not among them: Exact sends the invoice itself.
  */
 export const MessageKind = z.enum(["document_withdrawn", "task_reminder"]);
 export const SendMessageRequest = z
@@ -813,9 +828,16 @@ export const DocumentFields = z.object({
 });
 /** Replaces all fields of a draft document; a sent document's fields are fixed. */
 export const SetFieldsRequest = z.object({ fields: z.array(DocumentFieldInput).max(100) });
-/** Sends a draft; `task` also creates its task (a signing task when it needs a signature). */
+/**
+ * Sends a draft; `task` also creates its task (a signing task when it needs a signature).
+ * A sent offer appears in the customer's account and no email leaves: the answer's
+ * `customer_links` are what the deal owner sends themselves. `notify` also emails the
+ * people who run the account; only a signed-in person may ask for it, a staff key that
+ * does answers 403 `staff.key_cannot_email`.
+ */
 export const SendDocumentRequest = z.object({
   task: nullish(z.object({ title: text(255), body: optText(4000) })),
+  notify: z.boolean().default(false),
 });
 
 /** The Exact invoice id in the path of PUT .../invoices/:exactId. */
@@ -975,6 +997,8 @@ export const DemoList = z.object({ demos: z.array(DemoStatus) });
 
 /**
  * Publishing makes the public link live; `sign_in` overrides the choice made at the start.
+ * With `sign_in` on it emails the invitation, which only a signed-in person may cause: a
+ * staff key publishes with `sign_in: false`, else it answers 403 `staff.key_cannot_email`.
  * The invitation goes out once: publishing again after an unpublish sends no second one.
  */
 export const DemoPublishRequest = z.object({ sign_in: z.boolean().nullish() });

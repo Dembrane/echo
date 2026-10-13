@@ -7,6 +7,7 @@ import {
 	Badge,
 	Box,
 	Button,
+	CopyButton,
 	Group,
 	Loader,
 	Stack,
@@ -154,7 +155,7 @@ function DocumentPage() {
 												onError: (e) => void notifyError(e),
 												onSuccess: () =>
 													toast.success(
-														t`Offer sent. The customer sees it the next time they log in.`,
+														t`Offer sent. It is in the customer's account; no email went out.`,
 													),
 											},
 										)
@@ -191,6 +192,43 @@ function DocumentPage() {
 							date and is valid for 14 days.
 						</Trans>
 					</Text>
+				)}
+				{d.customer_links && !d.signed_at && (
+					<Stack gap="xs" data-testid="customer-links">
+						<Text size="sm" c="dimmed">
+							<Trans>
+								No email went to the customer. Send them these links in your own
+								email.
+							</Trans>
+						</Text>
+						{[
+							{ label: t`Sign-in link`, value: d.customer_links.sign_in },
+							{ label: t`Offer link`, value: d.customer_links.document },
+						].map(({ label, value }) => (
+							<Stack key={label} gap={0} style={{ minWidth: 0 }}>
+								<Text size="sm" c="dimmed">
+									{label}
+								</Text>
+								<Group gap="xs" wrap="nowrap" align="baseline">
+									<Text size="sm" style={{ overflowWrap: "anywhere" }}>
+										{value}
+									</Text>
+									<CopyButton value={value}>
+										{({ copied, copy }) => (
+											<Button
+												size="compact-sm"
+												variant="subtle"
+												onClick={copy}
+												aria-label={t`Copy ${label}`}
+											>
+												{copied ? <Trans>Copied</Trans> : <Trans>Copy</Trans>}
+											</Button>
+										)}
+									</CopyButton>
+								</Group>
+							</Stack>
+						))}
+					</Stack>
 				)}
 				{pdf.data ? (
 					<PdfPages data={pdf.data} fileHref={fileHref} />
