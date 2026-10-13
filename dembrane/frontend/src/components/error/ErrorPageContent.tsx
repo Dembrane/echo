@@ -6,8 +6,9 @@ import { DEBUG_MODE } from "@/config";
 /**
  * The route error (or 404) message on its own, with no layout around it, so the
  * participant portal can show it without the dashboard's shell and sidebar.
+ * `homeHref` is where "Return home" goes: the app's root by default.
  */
-export const ErrorPageContent = () => {
+export const ErrorPageContent = ({ homeHref = "/" }: { homeHref?: string }) => {
 	const error = useRouteError();
 
 	// An unmatched URL (catch-all route) carries no route error: treat as 404.
@@ -53,10 +54,9 @@ export const ErrorPageContent = () => {
 						</Button>
 					)}
 					<Button
+						component="a"
+						href={homeHref}
 						variant={isNotFound ? "filled" : undefined}
-						onClick={() => {
-							window.location.href = "/";
-						}}
 					>
 						<Trans>Return home</Trans>
 					</Button>

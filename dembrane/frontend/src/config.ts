@@ -160,6 +160,10 @@ export const SUPPORTED_LANGUAGES = [
 export const PRIVACY_POLICY_URL =
 	"https://dembrane.notion.site/Privacy-statements-all-languages-fa97a183f9d841f7a1089079e77ffb52" as const;
 
+// The marketing site, where a participant lands when the portal has nowhere
+// sensible to send them (its error page).
+export const DEMBRANE_HOME_URL = "https://www.dembrane.com" as const;
+
 // Legal pages (ISSUE-016). Absolute www.dembrane.com/legal/* links so they
 // render even if the pages 404 for now (Founder decision D4). Wire now,
 // resolve later.
