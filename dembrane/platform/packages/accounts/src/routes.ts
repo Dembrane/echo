@@ -306,9 +306,9 @@ export function accountsRoutes(d: AccountsDeps) {
     );
   });
   app.get(R.staffReadDocument.path, async (c) => {
-    await staff(c, "accounts.document.read");
+    const who = await staff(c, "accounts.document.read");
     return c.json(
-      await documentDetail(d, await staffDocument(d, p(c, "orgId"), p(c, "docId")), "staff"),
+      await documentDetail(d, await staffDocument(d, p(c, "orgId"), p(c, "docId")), "staff", who),
     );
   });
   app.get(R.staffDocumentFile.path, async (c) => {

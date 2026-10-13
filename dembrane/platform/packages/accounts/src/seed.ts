@@ -373,7 +373,7 @@ export async function seedAccountsDemo(o: SeedOptions): Promise<SeedSummary> {
         external_ref: null,
         supersedes_id: null,
       },
-      { document: id(`offer-${generation}`), task: id(`task-sign-${generation}`) },
+      { document: id(`offer-${generation}`), task: id(`task-sign-${generation}`), email: false },
     );
     offerId = pushed.document.id;
     offerCreated = true;

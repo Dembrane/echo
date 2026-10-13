@@ -86,6 +86,7 @@ function demoStore(): Store {
 		body: null,
 		confirmation: null,
 		content: null,
+		customer_email: null,
 		customer_links: null,
 		fields: [],
 		legal: [],
@@ -377,16 +378,19 @@ function withUrls(
 	base: string,
 	access: DocumentDetailT["access"],
 ): DocumentDetailT {
+	const orgId = base.split("/").pop() as string;
+	const toTheCustomer =
+		access === "staff" && doc.status === "sent" && doc.requires_signature;
+	const origin = window.location.origin;
+	const links = {
+		document: `${origin}/o/${orgId}/account/documents/${doc.id}/sign`,
+		sign_in: `${origin}/login?next=${encodeURIComponent(`/o/${orgId}/account`)}`,
+	};
 	return {
 		...doc,
 		access,
-		customer_links:
-			access === "staff" && doc.status === "sent" && doc.requires_signature
-				? {
-						document: `/o/${base.split("/").pop()}/account/documents/${doc.id}/sign`,
-						sign_in: `/login?next=${encodeURIComponent(`/o/${base.split("/").pop()}/account`)}`,
-					}
-				: null,
+		customer_email: toTheCustomer ? customerEmail(orgId, doc, links) : null,
+		customer_links: toTheCustomer ? links : null,
 		file_url: `${base}/documents/${doc.id}/file`,
 		signed_pdf_url:
 			doc.status === "signed" ? `${base}/documents/${doc.id}/signed.pdf` : null,
@@ -394,6 +398,48 @@ function withUrls(
 			access === "staff"
 				? `${base.replace(/^\/api\/v2/, "")}/documents/${doc.id}`
 				: null,
+	};
+}
+
+/** The email the platform words for a sent offer, in the two languages the fixtures speak. */
+function customerEmail(
+	orgId: string,
+	doc: DocumentDetailT,
+	links: { document: string; sign_in: string },
+): DocumentDetailT["customer_email"] {
+	const contact = storeFor(orgId).members.find((m) => m.email);
+	if (!contact?.email) return null;
+	const nl = doc.language === "nl";
+	const offer = doc.reference
+		? `"${doc.title}" (${doc.reference})`
+		: `"${doc.title}"`;
+	const until = doc.valid_until
+		? new Intl.DateTimeFormat(nl ? "nl-NL" : "en-GB", {
+				dateStyle: "long",
+				timeZone: "UTC",
+			}).format(new Date(`${doc.valid_until.slice(0, 10)}T12:00:00Z`))
+		: null;
+	const paragraphs = nl
+		? [
+				contact.name ? `Hallo ${contact.name},` : "Hallo,",
+				`De offerte ${offer} staat klaar om te lezen en te ondertekenen:\n${links.document}`,
+				`Je logt in met je e-mailadres en een eenmalige code. Log hier in:\n${links.sign_in}`,
+				until ? `De offerte is geldig tot ${until}.` : null,
+				"Met vriendelijke groet,\nSam",
+			]
+		: [
+				contact.name ? `Hello ${contact.name},` : "Hello,",
+				`The offer ${offer} is ready to review and sign:\n${links.document}`,
+				`You sign in with your email address and a one-time code. Sign in here:\n${links.sign_in}`,
+				until ? `The offer is valid until ${until}.` : null,
+				"Kind regards,\nSam",
+			];
+	return {
+		body: paragraphs.filter((p) => p !== null).join("\n\n"),
+		subject: nl
+			? `Je offerte van dembrane: ${doc.title}`
+			: `Your offer from dembrane: ${doc.title}`,
+		to: contact.email,
 	};
 }
 
@@ -411,6 +457,7 @@ function summary(doc: DocumentDetailT): DocumentSummaryT {
 		signature: _sg,
 		access: _a,
 		staff_url: _su,
+		customer_email: _ce,
 		customer_links: _cl,
 		...rest
 	} = doc;
@@ -1707,6 +1754,7 @@ export async function handle(
 					confirmation: null,
 					content: null,
 					currency: null,
+					customer_email: null,
 					customer_links: null,
 					declined_at: null,
 					fields: [],

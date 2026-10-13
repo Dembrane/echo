@@ -312,6 +312,15 @@ export const DocumentDetail = DocumentSummary.extend({
    * signed.
    */
   customer_links: z.object({ sign_in: z.string(), document: z.string() }).nullable(),
+  /**
+   * Staff only, null exactly when `customer_links` is, or when the account has no contact
+   * with an address: the email the deal owner sends the customer, ready to copy. `to` is the
+   * account's contact, `subject` and `body` are plain text in the offer's language (the
+   * body greets the contact, names the offer, carries both links and the date it is valid
+   * until, and is signed with the first name of the staff member asking). dembrane sends
+   * nothing; the deal owner sends it and tells sam in the offer's thread.
+   */
+  customer_email: z.object({ to: z.string(), subject: z.string(), body: z.string() }).nullable(),
 });
 
 /**
