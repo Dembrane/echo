@@ -38,8 +38,9 @@ import { StaffOnly } from "./AccountCardRoute";
 type Step = DemoStatusT["steps"][number];
 
 /**
- * Staff: a demo being built, then its draft and the one decision left, Publish. Polls
- * while it is queued or running; a failed step shows why and retries from itself.
+ * Staff: a demo being built, then its draft and the one decision left, Publish. A
+ * published demo can go back to a draft. Polls while it is queued or running; a failed
+ * step shows why and retries from itself.
  */
 export const DemoRoute = () => (
 	<AccountsI18n>
@@ -61,11 +62,17 @@ const stepLabel = (name: Step["name"]): string =>
 
 export const demoKey = (id: string) => ["accounts", "demo", id] as const;
 
+/** The dashboard page that shows a demo's deck to staff before it is public. */
+export const demoDraftPath = (demoId: string, language: string) =>
+	`/admin/accounts/demos/${demoId}/draft/${language}`;
+
 function Demo() {
 	const { demoId } = useParams<{ demoId: string }>();
 	const queryClient = useQueryClient();
 	const { i18n } = useLingui();
-	const [busy, setBusy] = useState<"retry" | "publish" | null>(null);
+	const [busy, setBusy] = useState<"retry" | "publish" | "unpublish" | null>(
+		null,
+	);
 	const [error, setError] = useState<string | null>(null);
 	const { data: demo, isLoading } = useQuery({
 		enabled: Boolean(demoId),
@@ -80,16 +87,21 @@ function Demo() {
 		demo ? `${demo.organisation_name} | ${t`Demo`}` : t`Demo | dembrane`,
 	);
 
-	const act = async (what: "retry" | "publish", signIn?: boolean) => {
+	const act = async (
+		what: "retry" | "publish" | "unpublish",
+		signIn?: boolean,
+	) => {
 		if (!demoId) return;
 		setBusy(what);
 		setError(null);
 		try {
 			const next =
-				what === "retry"
-					? await call("retryDemo", { params: { demoId } })
-					: await call("publishDemo", {
+				what === "publish"
+					? await call("publishDemo", {
 							body: { sign_in: signIn },
+							params: { demoId },
+						})
+					: await call(what === "retry" ? "retryDemo" : "unpublishDemo", {
 							params: { demoId },
 						});
 			queryClient.setQueryData(demoKey(demoId), next);
@@ -150,8 +162,9 @@ function Demo() {
 				{(demo.status === "draft" || demo.status === "published") && (
 					<Draft
 						demo={demo}
-						busy={busy === "publish"}
+						busy={busy === "retry" ? null : busy}
 						onPublish={(signIn) => act("publish", signIn)}
+						onUnpublish={() => act("unpublish")}
 					/>
 				)}
 				{error && (
@@ -230,16 +243,31 @@ function Draft({
 	demo,
 	busy,
 	onPublish,
+	onUnpublish,
 }: {
 	demo: DemoStatusT;
-	busy: boolean;
+	busy: "publish" | "unpublish" | null;
 	onPublish: (signIn: boolean) => void;
+	onUnpublish: () => void;
 }) {
 	const [signIn, setSignIn] = useState(demo.sign_in);
 	const published = demo.status === "published";
 	return (
 		<Stack gap="md" data-testid="demo-draft">
 			<Stack gap={6}>
+				{!published &&
+					demo.links.projects.map((p) => (
+						<Anchor
+							key={p.language}
+							component={I18nLink}
+							to={demoDraftPath(demo.id, p.language)}
+							target="_blank"
+							size="sm"
+							data-testid="demo-open-draft"
+						>
+							<Trans>Open the draft ({p.language.toUpperCase()})</Trans>
+						</Anchor>
+					))}
 				{demo.links.public.map((l) => (
 					<Group key={l.url} gap="xs">
 						<Anchor
@@ -308,35 +336,60 @@ function Draft({
 				</Paper>
 			)}
 			{published ? (
-				<Alert color="green" variant="light" data-testid="demo-published">
-					{demo.invited_at ? (
-						<Trans>
-							Published. {demo.contact_email} has the sign-in invitation.
-						</Trans>
-					) : (
-						<Trans>
-							Published. No email went out; share the demo link yourself.
-						</Trans>
-					)}
-				</Alert>
+				<Stack gap="xs">
+					<Alert color="green" variant="light" data-testid="demo-published">
+						{demo.invited_at ? (
+							<Trans>
+								Published. {demo.contact_email} has the sign-in invitation.
+							</Trans>
+						) : (
+							<Trans>
+								Published. No email went out; share the demo link yourself.
+							</Trans>
+						)}
+					</Alert>
+					<Group gap="xs">
+						<Button
+							variant="subtle"
+							size="compact-sm"
+							onClick={onUnpublish}
+							loading={busy === "unpublish"}
+							data-testid="demo-unpublish"
+						>
+							<Trans>Unpublish</Trans>
+						</Button>
+						<Text size="xs" c="dimmed">
+							<Trans>Takes the public link down until you publish again.</Trans>
+						</Text>
+					</Group>
+				</Stack>
 			) : (
 				<Stack gap="sm">
-					<Switch
-						checked={signIn}
-						onChange={(e) => setSignIn(e.currentTarget.checked)}
-						label={t`Send the sign-in invitation`}
-						description={
-							signIn
-								? t`Publishing emails ${demo.contact_email} a sign-in code.`
-								: t`Publishing makes the demo live. No email goes out.`
-						}
-						data-testid="demo-publish-sign-in"
-					/>
+					{demo.invited_at ? (
+						<Text size="sm" data-testid="demo-already-invited">
+							<Trans>
+								{demo.contact_email} already has the sign-in invitation.
+								Publishing sends no new email.
+							</Trans>
+						</Text>
+					) : (
+						<Switch
+							checked={signIn}
+							onChange={(e) => setSignIn(e.currentTarget.checked)}
+							label={t`Send the sign-in invitation`}
+							description={
+								signIn
+									? t`Publishing emails ${demo.contact_email} a sign-in code.`
+									: t`Publishing makes the demo live. No email goes out.`
+							}
+							data-testid="demo-publish-sign-in"
+						/>
+					)}
 					<Group>
 						<Button
 							size="md"
 							onClick={() => onPublish(signIn)}
-							loading={busy}
+							loading={busy === "publish"}
 							data-testid="demo-publish"
 						>
 							<Trans>Publish</Trans>

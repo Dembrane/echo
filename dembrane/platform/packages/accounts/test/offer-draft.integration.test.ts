@@ -51,9 +51,9 @@ run("an offer draft, and the invoice request after the signature", () => {
       (await call(w, "POST", `${S(org)}/offers`, "staff", offer({ send: false, ...over }))).data,
     ).document;
 
-  const send = async (docId: string, org = w.orgId) =>
+  const send = async (docId: string, org = w.orgId, body: Record<string, unknown> = {}) =>
     K.DocumentDetail.parse(
-      (await call(w, "POST", `${S(org)}/documents/${docId}/send`, "staff", {})).data,
+      (await call(w, "POST", `${S(org)}/documents/${docId}/send`, "staff", body)).data,
     );
 
   /** Signs as the organisation's admin, filling every field. */
@@ -301,10 +301,18 @@ run("an offer draft, and the invoice request after the signature", () => {
         customer: `https://dash.test/o/${org}/account/documents/${doc.id}/sign`,
       },
     });
-    // The person who runs the account is told by email, with the link sam is given.
-    expect(offerEmails(doc.id, org)).toMatchObject([
-      { to: "outsider@example.test", data: { org_name: "Elders BV" } },
-    ]);
+    // No email leaves: the answer carries the two links the deal owner sends themselves.
+    expect(offerEmails(doc.id, org)).toEqual([]);
+    expect(doc.customer_links).toBeNull();
+    expect(sent.customer_links).toEqual({
+      sign_in: `https://dash.test/login?next=${encodeURIComponent(`/o/${org}/account`)}`,
+      document: `https://dash.test/o/${org}/account/documents/${doc.id}/sign`,
+    });
+    // The customer's own read of it carries neither staff link.
+    const mine = K.DocumentDetail.parse(
+      (await call(w, "GET", `${C(org)}/documents/${doc.id}`, "outsider")).data,
+    );
+    expect(mine.customer_links).toBeNull();
 
     // A date set in the future stays.
     const later = await draft(org, { reference: "OFFER-902", date: "2026-11-01" });
@@ -371,7 +379,17 @@ run("an offer draft, and the invoice request after the signature", () => {
         billing_email: "finance@testdorp.example",
         vat_id: "NL001234567B01",
         po_number: "PO-77",
-        address: { line1: "Dorpsstraat 1", postal_code: "1234 AB", city: "Testdorp" },
+        // What the invoice's tax and delivery are decided from, beside the fields sam knew.
+        no_vat_number: false,
+        invoice_delivery: "email",
+        invoice_portal: null,
+        address: {
+          line1: "Dorpsstraat 1",
+          postal_code: "1234 AB",
+          city: "Testdorp",
+          country: "Netherlands",
+          country_code: "NL",
+        },
       },
       invoice: { vat_treatment: "standard", po_number: "PO-77" },
       links: {
@@ -522,10 +540,18 @@ run("an offer draft, and the invoice request after the signature", () => {
     expect(row?.account_stage ?? null).toBeNull();
   });
 
-  test("sending an offer queues one email to each person who runs the account, with the link where it is signed", async () => {
+  test("sending an offer with notify queues one email to each person who runs the account, with the link where it is signed", async () => {
     w.clock.now = new Date("2026-10-02T09:00:00.000Z");
     const pushed = K.PushOfferResponse.parse(
-      (await call(w, "POST", `${S()}/offers`, "staff", offer({ reference: "OFFER-910" }))).data,
+      (
+        await call(
+          w,
+          "POST",
+          `${S()}/offers`,
+          "staff",
+          offer({ reference: "OFFER-910", notify: true }),
+        )
+      ).data,
     ).document;
     expect(pushed.status).toBe("sent");
     const link = `https://dash.test/o/${w.orgId}/account/documents/${pushed.id}/sign`;
@@ -576,7 +602,7 @@ run("an offer draft, and the invoice request after the signature", () => {
             "POST",
             `${S()}/offers`,
             "staff",
-            offer({ reference: "OFFER-911", language: "nl" }),
+            offer({ reference: "OFFER-911", language: "nl", notify: true }),
           )
         ).data,
       ).document;
@@ -600,12 +626,16 @@ run("an offer draft, and the invoice request after the signature", () => {
     }
   });
 
-  test("a draft queues no email; sending it later queues one for each person, once", async () => {
+  test("a draft queues no email, nor does sending it; with notify the send queues one for each person, once", async () => {
     const before = w.jobs.of(sendEmail.name).length;
     const doc = await draft(w.orgId, { reference: "OFFER-912" });
     expect(w.jobs.of(sendEmail.name)).toHaveLength(before);
 
-    await send(doc.id);
+    const quiet = await draft(w.orgId, { reference: "OFFER-913" });
+    await send(quiet.id);
+    expect(w.jobs.of(sendEmail.name)).toHaveLength(before);
+
+    await send(doc.id, w.orgId, { notify: true });
     expect(offerEmails(doc.id).map((m) => m.to)).toEqual([
       "admin@example.test",
       "billing@example.test",

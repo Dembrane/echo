@@ -1,10 +1,18 @@
+import { hasStaffPolicy } from "@dembrane/access";
 import { sendEmail } from "@dembrane/account";
-import { ConflictError, NotFoundError, newId, ValidationError } from "@dembrane/core";
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  newId,
+  ValidationError,
+} from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import { localeOfEmail, resolveLocale } from "@dembrane/i18n";
 import { desc, eq } from "drizzle-orm";
-import type { AccountsDeps } from "../deps";
+import { assertPersonSends, staffCan } from "../access";
+import type { AccountsDeps, Tx } from "../deps";
 import { isUuid } from "../deps";
 import { emit } from "../events";
 import { releaseHeldContacts } from "../prospect";
@@ -154,17 +162,14 @@ export async function publishDemo(
   const input = row.input as DemoInput;
   const seed = row.seed as SeedOutput;
   const signIn = opts.sign_in ?? input.sign_in;
+  // The invitation goes out once: a demo published again after an unpublish sends none. Only
+  // a signed-in person may cause the email.
+  const invite = signIn && !row.invitedAt;
+  if (invite) assertPersonSends(who);
   const now = d.now();
   await d.db.transaction(async (tx) => {
     for (const p of seed.projects) {
-      const [config] = await tx
-        .select({ settings: schema.canvas_config_revision.popcorn_settings })
-        .from(schema.canvas_config_revision)
-        .where(eq(schema.canvas_config_revision.id, p.config_id));
-      await tx
-        .update(schema.canvas_config_revision)
-        .set({ popcorn_settings: { ...((config?.settings ?? {}) as object), public: true } })
-        .where(eq(schema.canvas_config_revision.id, p.config_id));
+      await setDeckPublic(tx, p.config_id, true);
       if (signIn) {
         const [loop] = await tx
           .select({ state: schema.agent_loop.popcorn_state })
@@ -182,8 +187,8 @@ export async function publishDemo(
           .where(eq(schema.agent_loop.id, p.loop_id));
       }
     }
-    if (signIn) {
-      if (row.orgId) await releaseHeldContacts(tx, row.orgId, now);
+    if (signIn && row.orgId) await releaseHeldContacts(tx, row.orgId, now);
+    if (invite) {
       // The contact's own language when they already had an account, else the demo's.
       const language =
         (await localeOfEmail(tx, input.contact_email)) ?? resolveLocale(input.language);
@@ -205,7 +210,7 @@ export async function publishDemo(
       .set({
         status: "published",
         publishedAt: now,
-        ...(signIn && { invitedAt: now }),
+        ...(invite && { invitedAt: now }),
         input: { ...input, sign_in: signIn },
         updatedAt: now,
       })
@@ -215,8 +220,100 @@ export async function publishDemo(
         orgId: row.orgId,
         actor: { kind: "staff", userId: who.directusUserId },
         type: "demo.published",
-        detail: { demo_id: id, invited: signIn },
+        detail: { demo_id: id, invited: invite },
       });
   });
   return demoView(d, await load(d, id));
+}
+
+/** Whether a seeded deck answers on its public link. */
+async function setDeckPublic(tx: Tx, configId: string, isPublic: boolean): Promise<void> {
+  const [config] = await tx
+    .select({ settings: schema.canvas_config_revision.popcorn_settings })
+    .from(schema.canvas_config_revision)
+    .where(eq(schema.canvas_config_revision.id, configId));
+  await tx
+    .update(schema.canvas_config_revision)
+    .set({ popcorn_settings: { ...((config?.settings ?? {}) as object), public: isPublic } })
+    .where(eq(schema.canvas_config_revision.id, configId));
+}
+
+/**
+ * Takes a published demo back to a draft: its public link stops answering until staff
+ * publish again, and the same link comes back then. The contact keeps the sign-in they
+ * were given.
+ */
+export async function unpublishDemo(d: AccountsDeps, who: Signed, id: string) {
+  const row = await load(d, id);
+  if (row.status === "draft") return demoView(d, row);
+  if (row.status !== "published") throw new ConflictError("demo.unpublish_not_published");
+  const seed = row.seed as SeedOutput;
+  const now = d.now();
+  await d.db.transaction(async (tx) => {
+    for (const p of seed.projects) await setDeckPublic(tx, p.config_id, false);
+    await tx
+      .update(schema.account_demo)
+      .set({ status: "draft", publishedAt: null, updatedAt: now })
+      .where(eq(schema.account_demo.id, id));
+    if (row.orgId)
+      await emit(d, tx, {
+        orgId: row.orgId,
+        actor: { kind: "staff", userId: who.directusUserId },
+        type: "demo.unpublished",
+        detail: { demo_id: id },
+      });
+  });
+  return demoView(d, await load(d, id));
+}
+
+// The deck asks for its data again every few seconds, and faster while its stage is empty.
+const DECK_DATA_AUDIT_MS = 60_000;
+const deckDataAudited = new Map<string, number>();
+
+/**
+ * The session of a demo's deck that staff open before it is public, so a draft is read
+ * before it is published. Staff rights do not open customers' projects; this opens one
+ * thing only: the session the demo build seeded for that language, while the demo is a
+ * finished draft or published. What is served from it is the room's deck, the same the
+ * public link shows once the demo is published.
+ *
+ * Opening the page is a staff action on the audit trail and on the account's timeline.
+ * Reading its data is on the audit trail once a minute per staff member, demo and
+ * language, so an open page does not write a row per poll. The drawings and the stream
+ * carry nothing of the demo and are only checked.
+ */
+export async function demoDeck(
+  d: AccountsDeps,
+  who: Signed,
+  id: string,
+  language: string,
+  part: "page" | "data" | "asset",
+  requestId?: string,
+): Promise<{ reportId: string }> {
+  const target = { type: "demo", id };
+  const read = `${who.directusUserId}:${id}:${language}`;
+  const now = d.now().getTime();
+  const due = now - (deckDataAudited.get(read) ?? 0) >= DECK_DATA_AUDIT_MS;
+  if (part === "page" || (part === "data" && due)) {
+    await staffCan(d, who, `accounts.demo.deck.${part}`, target, requestId, { language });
+    if (part === "data") {
+      if (deckDataAudited.size > 10_000) deckDataAudited.clear();
+      deckDataAudited.set(read, now);
+    }
+  } else if (!hasStaffPolicy(who, "staff:accounts")) {
+    throw new ForbiddenError("access.staff_only");
+  }
+  const row = await load(d, id);
+  if (row.status !== "draft" && row.status !== "published")
+    throw new ConflictError("demo.deck_not_ready");
+  const project = (row.seed as SeedOutput | null)?.projects.find((p) => p.language === language);
+  if (!project) throw new NotFoundError("demo.not_found");
+  if (part === "page" && row.orgId)
+    await emit(d, d.db, {
+      orgId: row.orgId,
+      actor: { kind: "staff", userId: who.directusUserId },
+      type: "demo.opened",
+      detail: { demo_id: id, language, status: row.status },
+    });
+  return { reportId: project.report_id };
 }

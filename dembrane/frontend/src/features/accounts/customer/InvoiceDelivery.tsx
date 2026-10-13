@@ -2,23 +2,31 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Group, Stack, Switch, Text } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
-import { PaperPlaneTiltIcon, PlugsConnectedIcon } from "@phosphor-icons/react";
+import {
+	ChatTextIcon,
+	PaperPlaneTiltIcon,
+	PlugsConnectedIcon,
+} from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { call } from "../api/client";
 import type { AccountPageT } from "../contract/contract.gen";
 
 type Billing = AccountPageT["billing"];
 export type Delivery = NonNullable<Billing["invoice_delivery"]>;
+/** What Exact sends by itself; another way is agreed between people, so nothing switches to it. */
+export type SentDelivery = Exclude<Delivery, "other">;
 export type PeppolMatch = NonNullable<Billing["peppol_match"]>;
 
 /**
- * Peppol first: when the directory knows the customer, invoices go there unless they
- * chose email. Without a match there is nothing to choose and invoices go by email.
+ * Another way when they chose it. Else Peppol first: when the directory knows the
+ * customer, invoices go there unless they chose email. Without a match invoices go by
+ * email.
  */
 export const deliveryFor = (
 	match: PeppolMatch | null,
 	chosen: Delivery | null | undefined,
-): Delivery => (match ? (chosen ?? "peppol") : "email");
+): Delivery =>
+	chosen === "other" ? "other" : match ? (chosen ?? "peppol") : "email";
 
 type Numbers = Pick<Billing, "vat_id" | "kvk_number" | "kbo_number">;
 
@@ -52,15 +60,15 @@ export function usePeppolLookup(orgId: string, numbers: Numbers) {
 		numbers.kvk_number !== settled.kvk_number ||
 		numbers.kbo_number !== settled.kbo_number;
 	return {
-		checked: any && !typing && query.isSuccess,
 		checking: any && (typing || query.isFetching),
 		match: any ? (query.data ?? null) : null,
 	};
 }
 
 /**
- * How invoices arrive, said plainly, with the one choice there is: when the organisation
- * is on Peppol, send by email instead. Shared by the billing form, its summary and the
+ * How invoices arrive, said plainly, for saved details. On Peppol there is one choice to
+ * make here: send by email instead. Another way has none: the customer wrote to us how,
+ * and the line says where that conversation is. Shared by the billing summary and the
  * staff card (`side` words it for whoever is reading).
  */
 export function InvoiceDelivery({
@@ -68,8 +76,6 @@ export function InvoiceDelivery({
 	delivery,
 	email,
 	onChange,
-	checking = false,
-	checked = false,
 	disabled = false,
 	side = "customer",
 }: {
@@ -77,37 +83,13 @@ export function InvoiceDelivery({
 	delivery: Delivery;
 	email: string | null;
 	/** Absent: the line is read-only. */
-	onChange?: (next: Delivery) => void;
-	checking?: boolean;
-	/** The numbers were looked up and the directory has no entry. */
-	checked?: boolean;
+	onChange?: (next: SentDelivery) => void;
 	disabled?: boolean;
 	side?: "customer" | "staff";
 }) {
-	if (!match) {
-		if (checking) {
-			return (
-				<Text size="sm" c="dimmed" data-testid="peppol-checking">
-					<Trans>Checking the Peppol directory…</Trans>
-				</Text>
-			);
-		}
-		if (!checked) return null;
-		return (
-			<Text size="sm" c="dimmed" data-testid="peppol-none">
-				{side === "customer" ? (
-					<Trans>
-						Your numbers are not in the Peppol directory. Invoices come by
-						email, unless you give a Peppol ID below.
-					</Trans>
-				) : (
-					<Trans>Not in the Peppol directory: invoices go by email.</Trans>
-				)}
-			</Text>
-		);
-	}
+	if (delivery !== "other" && !match) return null;
 	const peppol = delivery === "peppol";
-	const id = match.participant_id;
+	const id = match?.participant_id;
 	return (
 		<Stack
 			gap="sm"
@@ -125,14 +107,28 @@ export function InvoiceDelivery({
 					pt="xs"
 					style={{ flexShrink: 0, lineHeight: 0 }}
 				>
-					{peppol ? (
+					{delivery === "other" ? (
+						<ChatTextIcon size={20} aria-hidden />
+					) : peppol ? (
 						<PlugsConnectedIcon size={20} aria-hidden />
 					) : (
 						<PaperPlaneTiltIcon size={20} aria-hidden />
 					)}
 				</Text>
 				<Text style={{ overflowWrap: "anywhere" }}>
-					{peppol ? (
+					{delivery === "other" ? (
+						side === "customer" ? (
+							<Trans>
+								We will set up with you how you get invoices. Our answer appears
+								under Talk to us, on the Overview page.
+							</Trans>
+						) : (
+							<Trans>
+								The customer gets invoices another way. What they wrote is under
+								Questions. Send each invoice by hand.
+							</Trans>
+						)
+					) : peppol ? (
 						side === "customer" ? (
 							<Trans>
 								Invoices arrive in your accounting software via Peppol ({id}).
@@ -149,7 +145,7 @@ export function InvoiceDelivery({
 					)}
 				</Text>
 			</Group>
-			{onChange && (
+			{onChange && delivery !== "other" && (
 				<Switch
 					checked={!peppol}
 					disabled={disabled}

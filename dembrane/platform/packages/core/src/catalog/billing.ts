@@ -23,11 +23,6 @@ export const billing = {
     audience: "developer",
     description: "The Mollie webhook could not be processed; the 500 makes Mollie retry.",
   },
-  "billing.tax_id_required": {
-    action: "fix_input",
-    detail: "Give at least one of the VAT, KvK or KBO number",
-    description: "Billing details were saved without any company registration or VAT number.",
-  },
   "billing.request_failed": {
     action: "contact_support",
     detail: "{reason}",

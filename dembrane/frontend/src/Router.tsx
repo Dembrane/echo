@@ -216,6 +216,10 @@ const DemoRoute = createLazyNamedRoute(
 	() => import("./features/accounts/staff/DemoRoute"),
 	"DemoRoute",
 );
+const DemoDraftRoute = createLazyNamedRoute(
+	() => import("./features/accounts/staff/DemoDraftRoute"),
+	"DemoDraftRoute",
+);
 const AccountPickerRoute = createLazyNamedRoute(
 	() => import("./features/accounts/customer/AccountPickerRoute"),
 	"AccountPickerRoute",
@@ -683,6 +687,10 @@ export const mainRouter = createBrowserRouter([
 					{ element: <AdminSettingsRoute />, path: ":tab" },
 					{ element: <NewDemoRoute />, path: "accounts/new-demo" },
 					{ element: <DemoRoute />, path: "accounts/demos/:demoId" },
+					{
+						element: <DemoDraftRoute />,
+						path: "accounts/demos/:demoId/draft/:deckLanguage",
+					},
 					{ element: <AccountCardRoute />, path: "accounts/:orgId" },
 					{
 						element: <StaffDocumentRoute />,
