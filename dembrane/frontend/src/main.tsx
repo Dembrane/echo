@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { App } from "./App";
+import { App, type AppRouter } from "./App";
 import "./index.css";
 import "./lib/tamper";
 
@@ -14,6 +14,7 @@ import {
 	USE_PARTICIPANT_ROUTER,
 } from "./config";
 import { recoverFromChunkFailure } from "./lib/appVersion";
+import { loadMainRouter, participantRouter } from "./Router";
 
 posthog.init(POSTHOG_TOKEN, {
 	api_host: POSTHOG_HOST,
@@ -62,10 +63,17 @@ if (root === null) {
 	throw new Error("Root element not found");
 }
 
-ReactDOM.createRoot(root).render(
-	<React.StrictMode>
-		<PostHogProvider client={posthog}>
-			<App />
-		</PostHogProvider>
-	</React.StrictMode>,
-);
+const render = (router: AppRouter) =>
+	ReactDOM.createRoot(root).render(
+		<React.StrictMode>
+			<PostHogProvider client={posthog}>
+				<App router={router} />
+			</PostHogProvider>
+		</React.StrictMode>,
+	);
+
+if (USE_PARTICIPANT_ROUTER) {
+	render(participantRouter);
+} else {
+	void loadMainRouter().then(render);
+}

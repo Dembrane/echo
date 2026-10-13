@@ -3,10 +3,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
-// Every page the app can route to, read from src/Router.tsx with the TypeScript
-// AST, so a route added there shows up here without anyone listing it. The
-// portal's routes live in src/portal/routes.tsx, which is read alongside it for
-// the route lists Router.tsx imports. A page is
+// Every page the app can route to, read with the TypeScript AST from the files
+// that create the routers (src/Router.tsx for the portal, src/DashboardRouter.tsx
+// for the dashboard), so a route added there shows up here without anyone listing
+// it. The portal's routes live in src/portal/routes.tsx, which is read alongside
+// them for the route lists Router.tsx imports. A page is
 // a route with an element and no children (or an index route); layouts are
 // walked through. Feature-flagged spreads (`...(FLAG ? [...] : [])`) count as on.
 // The leading "/:language?" (dashboard) and "/:language?/:projectId" (portal)
@@ -24,7 +25,10 @@ export type RouterPath = {
 };
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const ROUTER_FILE = path.resolve(here, "../src/Router.tsx");
+const ROUTER_FILES = [
+	path.resolve(here, "../src/Router.tsx"),
+	path.resolve(here, "../src/DashboardRouter.tsx"),
+];
 const PORTAL_ROUTES_FILE = path.resolve(here, "../src/portal/routes.tsx");
 
 const parse = (file: string) =>
@@ -37,14 +41,14 @@ const parse = (file: string) =>
 	);
 
 export function routerPaths(
-	file = ROUTER_FILE,
+	files = ROUTER_FILES,
 	routeFiles = [PORTAL_ROUTES_FILE],
 ): RouterPath[] {
-	const sf = parse(file);
+	const routerSources = files.map(parse);
 	const consts = new Map<string, ts.Expression>();
 	const routers: [Router, ts.Expression][] = [];
-	// Top-level consts from the route files first, so Router.tsx's own win.
-	for (const source of [...routeFiles.map(parse), sf]) {
+	// Top-level consts from the route files first, so the router files' own win.
+	for (const source of [...routeFiles.map(parse), ...routerSources]) {
 		for (const st of source.statements) {
 			if (!ts.isVariableStatement(st)) continue;
 			for (const d of st.declarationList.declarations) {
@@ -52,7 +56,7 @@ export function routerPaths(
 				consts.set(d.name.text, d.initializer);
 				const init = d.initializer;
 				if (
-					source === sf &&
+					routerSources.includes(source) &&
 					ts.isCallExpression(init) &&
 					init.expression.getText() === "createBrowserRouter"
 				)
