@@ -469,6 +469,14 @@ export const ParticipantConversationAudio = () => {
 		);
 	}
 
+	// Recording, or paused partway: behind the stop or interruption modal, or
+	// resuming. The timer and the meter show for all of it.
+	const inRecording =
+		isRecording ||
+		opened ||
+		interruptionModalOpened ||
+		stoppedRecordingTime !== null;
+
 	const refineProgress = Math.min(
 		(recordingTime / REFINE_BUTTON_THRESHOLD_SECONDS) * 100,
 		100,
@@ -556,20 +564,19 @@ export const ParticipantConversationAudio = () => {
 						/>
 					</Group>
 
-					{isRecording && (
+					{/* Paused, the meter stays where it was, still. */}
+					{inRecording && (
 						<ParticipantRecordingWaveform
 							onSilence={openForcedSettings}
 							peekAudioLevel={audioRecorder.peekAudioLevel}
 							status={meterStatus}
+							paused={!isRecording}
 						/>
 					)}
 
 					<Group justify="space-between">
 						{/* Recording time indicator - show when recording OR when stop modal is open OR when interruption modal is open OR resuming */}
-						{(isRecording ||
-							opened ||
-							interruptionModalOpened ||
-							stoppedRecordingTime !== null) && (
+						{inRecording && (
 							<div {...testId("portal-audio-recording-timer")}>
 								<Group justify="center" align="center" gap="xs" mih={50}>
 									{opened ||

@@ -43,6 +43,7 @@ export const ParticipantRecordingWaveform = ({
 	onSilence,
 	peekAudioLevel,
 	status = "healthy",
+	paused = false,
 }: {
 	/** Called once when the microphone goes quiet and stays quiet. Fires again
 	 * only after sound has returned, so it cannot pester somebody who has
@@ -50,6 +51,9 @@ export const ParticipantRecordingWaveform = ({
 	onSilence?: () => void;
 	peekAudioLevel?: () => number;
 	status?: RecordingMeterStatus;
+	/** Stops sampling and leaves the bars where they are, so the meter stays
+	 * on screen, still, while the recording is paused. */
+	paused?: boolean;
 }) => {
 	const [levels, setLevels] = useState<number[]>([]);
 	const [isSilent, setIsSilent] = useState(false);
@@ -61,6 +65,10 @@ export const ParticipantRecordingWaveform = ({
 
 	useEffect(() => {
 		if (!peekAudioLevel) return;
+		// A pause is not silence: counting it would report a dead microphone the
+		// moment recording resumed.
+		silentSinceRef.current = null;
+		if (paused) return;
 
 		const id = setInterval(() => {
 			const level = peekAudioLevel();
@@ -83,7 +91,7 @@ export const ParticipantRecordingWaveform = ({
 		}, VOICE_LEVEL_SAMPLE_MS);
 
 		return () => clearInterval(id);
-	}, [peekAudioLevel]);
+	}, [peekAudioLevel, paused]);
 
 	if (!peekAudioLevel) return null;
 

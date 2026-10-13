@@ -33,6 +33,7 @@ const renderWaveform = (
 	peekAudioLevel?: () => number,
 	props: {
 		onSilence?: () => void;
+		paused?: boolean;
 		status?: RecordingMeterStatus;
 	} = {},
 ) =>
@@ -145,4 +146,55 @@ it("keeps a red recording problem even while the connection is only unhealthy", 
 	});
 
 	expect(barColor()).toContain("--app-danger");
+});
+
+it("stays on screen, still, while paused", () => {
+	const peek = vi.fn(() => 0.5);
+	const { rerender } = renderWaveform(peek);
+	act(() => {
+		vi.advanceTimersByTime(1000);
+	});
+	const bars = screen.getByTestId("chat-voice-waveform").innerHTML;
+
+	rerender(
+		<MantineProvider>
+			<ParticipantRecordingWaveform peekAudioLevel={peek} paused />
+		</MantineProvider>,
+	);
+	peek.mockClear();
+	act(() => {
+		vi.advanceTimersByTime(5000);
+	});
+
+	expect(peek).not.toHaveBeenCalled();
+	expect(screen.getByTestId("chat-voice-waveform").innerHTML).toBe(bars);
+});
+
+it("doesn't count a pause as silence", () => {
+	const onSilence = vi.fn();
+	const peek = () => 0;
+	const { rerender } = renderWaveform(peek, { onSilence });
+	act(() => {
+		vi.advanceTimersByTime(4000);
+	});
+
+	const meter = (paused: boolean) => (
+		<MantineProvider>
+			<ParticipantRecordingWaveform
+				onSilence={onSilence}
+				paused={paused}
+				peekAudioLevel={peek}
+			/>
+		</MantineProvider>
+	);
+	rerender(meter(true));
+	act(() => {
+		vi.advanceTimersByTime(60000);
+	});
+	rerender(meter(false));
+	act(() => {
+		vi.advanceTimersByTime(4000);
+	});
+
+	expect(onSilence).not.toHaveBeenCalled();
 });

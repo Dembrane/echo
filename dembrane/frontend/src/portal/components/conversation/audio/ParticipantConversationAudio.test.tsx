@@ -141,7 +141,9 @@ vi.mock("./hooks/usePingConnectionHealth", () => ({
 }));
 
 vi.mock("./ParticipantRecordingWaveform", () => ({
-	ParticipantRecordingWaveform: () => null,
+	ParticipantRecordingWaveform: ({ paused }: { paused?: boolean }) => (
+		<div data-testid="meter" data-paused={String(!!paused)} />
+	),
 }));
 vi.mock("../../settings/ParticipantSettingsModal", () => ({
 	ParticipantSettingsModal: () => null,
@@ -294,6 +296,17 @@ describe("recording", () => {
 		).toContain("01:15");
 		expect(wakeLock.releaseWakeLock).toHaveBeenCalled();
 		expect(wakeLock.disableAutoReacquire).toHaveBeenCalled();
+	});
+
+	it("keeps the meter, still, behind the stop modal", async () => {
+		renderAudio();
+		await startRecording();
+		expect(screen.getByTestId("meter").dataset.paused).toBe("false");
+
+		fireEvent.click(screen.getByTestId("portal-audio-stop-button"));
+
+		await screen.findByTestId("portal-audio-stop-modal");
+		expect(screen.getByTestId("meter").dataset.paused).toBe("true");
 	});
 
 	it("resuming continues from the paused time", async () => {
