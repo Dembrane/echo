@@ -392,6 +392,33 @@ export function inviteStorage(db: Db) {
         .orderBy(asc(workspace_membership.id));
     },
 
+    /**
+     * Where the user already belongs: their first live workspace, a null workspace when they
+     * are in an org only, or null when they belong nowhere.
+     */
+    async belonging(userId: string): Promise<{ workspaceId: string | null } | null> {
+      const [ws] = await db
+        .select({ id: workspace_membership.workspace_id })
+        .from(workspace_membership)
+        .innerJoin(workspace, eq(workspace.id, workspace_membership.workspace_id))
+        .where(
+          and(
+            eq(workspace_membership.user_id, userId),
+            isNull(workspace_membership.deleted_at),
+            isNull(workspace.deleted_at),
+          ),
+        )
+        .orderBy(asc(workspace_membership.id))
+        .limit(1);
+      if (ws) return { workspaceId: ws.id };
+      const [org] = await db
+        .select({ id: org_membership.id })
+        .from(org_membership)
+        .where(and(eq(org_membership.user_id, userId), isNull(org_membership.deleted_at)))
+        .limit(1);
+      return org ? { workspaceId: null } : null;
+    },
+
     /** Roles of the user's active memberships across the org's live workspaces. */
     async workspaceRolesInOrg(orgId: string, userId: string) {
       const rows = await db
