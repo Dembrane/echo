@@ -234,8 +234,10 @@ export async function updateAccount(
     if (patch.invoice_delivery !== undefined) {
       const account = await store.billing(tx, org.id);
       if (!account) throw new ConflictError("billing.no_billing_account");
+      // Email and Peppol are what Exact sends itself, so another way written earlier no longer applies.
       await store.updateBilling(tx, account.id, {
         invoice_delivery: patch.invoice_delivery,
+        invoice_portal: null,
         updated_at: now.toISOString(),
       });
     }

@@ -743,7 +743,10 @@ function Billing({ card }: { card: AccountCardT }) {
 			[t`Legal name`, b.legal_name],
 			[t`Invoice email`, b.billing_email],
 			[t`Address`, address],
-			[t`VAT number`, b.vat_id],
+			[
+				t`VAT number`,
+				b.no_vat_number ? t`The customer has no VAT number` : b.vat_id,
+			],
 			[t`KvK number`, b.kvk_number],
 			[t`KBO number`, b.kbo_number],
 			[t`PO number`, b.po_number],
@@ -753,7 +756,7 @@ function Billing({ card }: { card: AccountCardT }) {
 	return (
 		<Section title={<Trans>Billing details</Trans>} testId="staff-billing">
 			<Stack gap="sm">
-				{/* Staff can opt a customer out of Peppol too, or back in. */}
+				{/* Staff can opt a customer out of Peppol too, or back in; another way is the customer's to change. */}
 				<InvoiceDelivery
 					side="staff"
 					match={b.peppol_match}

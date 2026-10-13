@@ -14,6 +14,11 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:50
+#~ msgid "error.billing.tax_id_required"
+#~ msgstr "Inserisci almeno uno tra i numeri di VAT, KvK o KBO."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:5
 msgid "error.request.field_empty"
 msgstr "{field} non può essere vuoto. Compilalo o rimuovilo."
@@ -177,11 +182,6 @@ msgstr "Inserisci un indirizzo web che inizi con http:// o https://."
 #: src/lib/errors/messages/field.ts:30
 msgid "error.field.invalid_url"
 msgstr "Inserisci un indirizzo web che inizi con http:// o https://."
-
-#. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:50
-msgid "error.billing.tax_id_required"
-msgstr "Inserisci almeno uno tra i numeri di VAT, KvK o KBO."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:40
@@ -839,7 +839,7 @@ msgid "error.workspace.logo_url_too_long"
 msgstr "Il link del logo è troppo lungo. Usa un link più corto."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:63
+#: src/lib/errors/messages/billing.ts:59
 msgid "error.billing.tier_required"
 msgstr "È richiesto il piano {required}. Fai l'upgrade per usarlo."
 
@@ -904,7 +904,7 @@ msgid "error.member.already_removed"
 msgstr "Questa persona è già stata rimossa."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:59
+#: src/lib/errors/messages/billing.ts:55
 msgid "error.billing.tier_not_purchasable"
 msgstr "Questo piano non può essere acquistato online. Contattaci per ottenerlo."
 
@@ -1569,7 +1569,7 @@ msgid "error.verify.no_new_feedback"
 msgstr "Non hai ancora aggiunto nulla di nuovo. Indica cosa cambieresti, poi riprova."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:54
+#: src/lib/errors/messages/billing.ts:50
 msgid "error.billing.tier_limit"
 msgstr "Hai raggiunto il limite del piano Free. Effettua l'upgrade per continuare."
 

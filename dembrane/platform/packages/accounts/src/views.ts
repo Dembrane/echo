@@ -1,3 +1,4 @@
+import type { Delivery } from "./billing-rules";
 import type { Company } from "./deps";
 import type { Language, OfferContent } from "./offer";
 import type {
@@ -257,6 +258,7 @@ export function billingView(b: BillingRow | null) {
   return {
     legal_name: b?.billing_legal_name ?? null,
     vat_id: b?.billing_vat_id ?? null,
+    no_vat_number: b?.no_vat_number ?? null,
     kvk_number: b?.kvk_number ?? null,
     kbo_number: b?.kbo_number ?? null,
     billing_email: b?.billing_email ?? null,
@@ -265,12 +267,14 @@ export function billingView(b: BillingRow | null) {
     peppol_match: b?.peppol_id
       ? { participant_id: b.peppol_id, name: b.peppol_name ?? null }
       : null,
-    invoice_delivery: (b?.invoice_delivery as "peppol" | "email" | null | undefined) ?? null,
+    invoice_delivery: (b?.invoice_delivery as Delivery | null | undefined) ?? null,
+    invoice_portal: b?.invoice_portal ?? null,
     address_line1: b?.billing_address_line1 ?? null,
     address_line2: b?.billing_address_line2 ?? null,
     postal_code: b?.billing_postal_code ?? null,
     city: b?.billing_city ?? null,
     country: b?.billing_country ?? null,
+    country_code: b?.billing_country_code ?? null,
   };
 }
 
