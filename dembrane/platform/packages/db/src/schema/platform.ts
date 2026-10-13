@@ -16,6 +16,19 @@ export const dbos_executor_heartbeat = pgTable("dbos_executor_heartbeat", {
   last_seen: timestamp("last_seen", { withTimezone: true }).notNull().defaultNow(),
 });
 
+/**
+ * One row per unfinished workflow that was running on a worker that stopped: how often, and
+ * when recovery set it aside instead of resuming it. The recovery sweep deletes the row once
+ * the workflow finishes or a person resumes it.
+ */
+export const dbos_workflow_lost_worker = pgTable("dbos_workflow_lost_worker", {
+  workflow_id: text("workflow_id").primaryKey(),
+  /** The queue it ran on. DBOS clears its own copy on a cancelled workflow; a resume reads this one. */
+  queue_name: text("queue_name"),
+  lost: integer("lost").notNull(),
+  set_aside_at: timestamp("set_aside_at", { withTimezone: true }),
+});
+
 // Fixed-window counters for rate limits (per user or per IP). Unlogged: a crash may
 // forget recent counts, which only ever loosens a limit for one window.
 export const platform_rate_limit = pgTable("platform_rate_limit", {

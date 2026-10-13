@@ -9,8 +9,8 @@ import {
   withCorrelation,
 } from "@dembrane/observability";
 import type postgres from "postgres";
-import type { JobDefinition, Parsed, Payload } from "./define";
-import { ExecutorHeartbeat, executorIdFor } from "./recovery";
+import { DEFAULT_LOST_WORKER_LIMIT, type JobDefinition, type Parsed, type Payload } from "./define";
+import { ExecutorHeartbeat, executorIdFor, type LostWorkflow } from "./recovery";
 
 /**
  * Bumped by hand when a workflow's sequence of steps changes. DBOS resumes a crashed
@@ -52,6 +52,8 @@ export interface QueueHealth {
   readonly active: number;
   readonly failed: number;
   readonly deferred: number;
+  /** Jobs set aside in the last day after losing their worker repeatedly; each waits for a person. */
+  readonly setAside: number;
   /** Seconds the oldest ready job has waited; null when none is ready. Alerts read it. */
   readonly oldestReadyS: number | null;
 }
@@ -263,12 +265,22 @@ export class Queue {
       executorId,
       this.logger,
       this.opts.recovery,
+      (wf) => this.lostWorkerLimit(wf),
     );
     await this.heartbeat.start();
     this.logger.info(
       { executorId, jobs: [...this.concurrency.keys()], schedules: this.schedules.length },
       "queue running",
     );
+  }
+
+  /**
+   * The limit of the job a workflow belongs to, found by its queue, which carries the job's
+   * name. A schedule's runs sit on DBOS's own queue and get the default: the next tick
+   * replaces a run that was set aside.
+   */
+  private lostWorkerLimit(wf: LostWorkflow): number {
+    return this.defs.get(wf.queueName ?? "")?.lostWorkerLimit ?? DEFAULT_LOST_WORKER_LIMIT;
   }
 
   async health(): Promise<QueueHealth[]> {
