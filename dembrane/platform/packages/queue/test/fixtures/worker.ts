@@ -27,7 +27,7 @@ const pipeline = workflow("test.pipeline", async (id: string) => {
 
 const queue = new Queue(url, logger, tracer, {
   executorId: process.env.EXECUTOR as string,
-  recovery: { beatMs: 200, deadAfterS: 1 },
+  recovery: { beatMs: 200, deadAfterS: Number(process.env.DEAD_AFTER_S ?? 1) },
   pollingIntervalMs: 50,
 });
 await queue.start([defineJob("test.pipeline", z.any())]);
@@ -38,4 +38,9 @@ await DBOS.registerQueue("pipelines", { workerConcurrency: 2 });
 if (process.env.START === "1") {
   await DBOS.startWorkflow(pipeline, { workflowID: "pipe-1", queueName: "pipelines" })("pipe-1");
 }
+// Stops the way the worker app does when a rollout ends it.
+process.on("SIGTERM", async () => {
+  await queue.stop();
+  process.exit(0);
+});
 log("ready");
