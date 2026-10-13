@@ -34,3 +34,4 @@ export {
   WB_START,
   WRITE_SCHEMA as TENSION_WRITE_SCHEMA,
 } from "./recipes/tensions-stages";
+export { MAX_POPCORN_PHRASE_CHARS } from "./types";

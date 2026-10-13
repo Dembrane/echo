@@ -232,9 +232,12 @@ async function shutdown(signal: string) {
   stopping = true;
   logger.info({ signal }, "worker stopping");
   clearInterval(signals);
-  await queue.stop();
-  await metering.flush();
-  await Promise.allSettled([database.close(), tracing.shutdown()]);
+  // The queue hands this worker's running jobs to the others only after everything here is
+  // closed, and the exit follows at once: a step still in flight ends with the process.
+  await queue.stop(async () => {
+    await metering.flush();
+    await Promise.allSettled([database.close(), tracing.shutdown()]);
+  });
   process.exit(0);
 }
 process.on("SIGTERM", () => void shutdown("SIGTERM"));

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { validatePayload } from "@dembrane/analysis";
 import type { Json } from "../src/py";
 import {
   applyResults,
@@ -30,7 +31,13 @@ import {
   selectedAnalysisViews,
   staleViews,
 } from "../src/tick/run";
-import { allocateChars, QuoteBook, shapePopcornItems, shapeStakeholders } from "../src/tick/shapes";
+import {
+  allocateChars,
+  MAX_PHRASE_CHARS,
+  QuoteBook,
+  shapePopcornItems,
+  shapeStakeholders,
+} from "../src/tick/shapes";
 
 // Every case was produced by the Python functions the tick ports (fixtures/tick/gen/
 // tick_pure.py, run with echo main's server); each must come out the same here.
@@ -137,6 +144,14 @@ describe("tick parts match the Python", () => {
       expect(islandFlags(c.in as Json)).toEqual(c.out as string[]);
     for (const c of cases("screen_flags"))
       expect(screenFlags(c.in as Json)).toEqual(c.out as string[]);
+  });
+
+  test("a phrase the tick keeps is one the popcorn recipe accepts", () => {
+    // Twenty words, exactly the character limit.
+    const phrase = `${"abcdef ".repeat(20).trimEnd()}g`;
+    const [item] = shapePopcornItems({ items: [{ phrase }] }, "t1");
+    expect([...String(item?.phrase)].length).toBe(MAX_PHRASE_CHARS);
+    expect(() => validatePayload("popcorn", { phrase: item?.phrase })).not.toThrow();
   });
 
   test("shaping, grounding and the quote registry", () => {

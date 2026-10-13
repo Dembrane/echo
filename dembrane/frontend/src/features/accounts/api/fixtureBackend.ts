@@ -1,5 +1,11 @@
 import type { z } from "zod4";
 import { API_BASE_URL } from "@/config";
+import {
+	type BillingAnswers,
+	checkBilling,
+	countryCodeOf,
+	countryName,
+} from "../contract/billing-rules.gen";
 import type {
 	AccountCard,
 	AccountListItem,
@@ -1250,10 +1256,47 @@ export async function handle(
 			case "readBilling":
 				return s.billing;
 			case "updateBilling": {
-				if (!body.vat_id && !body.kvk_number && !body.kbo_number) {
-					throw invalid("vat_id", "Give a VAT, KvK or KBO number.");
+				// The server's own rules, so a fixture run refuses what the API would.
+				const country = countryCodeOf(
+					(body.country_code ?? body.country) as string | null,
+				);
+				const { problems, clean } = checkBilling({
+					...(body as BillingAnswers),
+					country_code: country,
+				});
+				const first = problems[0];
+				if (first) throw invalid(first.field, "Check this field.");
+				// Like the server: another way, newly written, opens the customer's question.
+				const wrote =
+					body.invoice_delivery === "other" ? clean.invoice_portal : null;
+				if (
+					wrote &&
+					!(
+						s.billing.invoice_delivery === "other" &&
+						s.billing.invoice_portal === wrote
+					)
+				) {
+					const t: TicketT = {
+						closed_at: null,
+						created_at: now(),
+						id: uuid(),
+						messages: [
+							{ body: wrote, created_at: now(), from: "customer", id: uuid() },
+						],
+						status: "waiting_on_dembrane",
+						subject: "How we receive invoices",
+						updated_at: now(),
+					};
+					s.tickets.unshift(t);
+					event(s, "ticket.opened", "customer", { id: t.id, type: "ticket" });
 				}
-				s.billing = { ...s.billing, ...(body as Partial<Billing>) };
+				s.billing = {
+					...s.billing,
+					...(body as Partial<Billing>),
+					...clean,
+					country: country ? countryName(country) : null,
+					country_code: country,
+				};
 				// Like the server: saving without a typed Peppol id looks the numbers up.
 				const kvk = String(body.kvk_number ?? "").replace(/\D/g, "");
 				s.billing.peppol_match =
@@ -1462,6 +1505,7 @@ export async function handle(
 				if (body.invoice_delivery !== undefined) {
 					s.billing.invoice_delivery =
 						body.invoice_delivery as Billing["invoice_delivery"];
+					s.billing.invoice_portal = null;
 				}
 				if (body.account_stage) {
 					s.stage = body.account_stage as Store["stage"];

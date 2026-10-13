@@ -1,6 +1,8 @@
 import type { z } from "zod";
 import type { EnqueueOptions } from "./queue";
 
+export const DEFAULT_LOST_WORKER_LIMIT = 3;
+
 /**
  * A job type: its queue name, the payload schema checked on enqueue and on receipt, and
  * the retry behaviour. Namespaces define their jobs next to their handlers; the worker
@@ -16,6 +18,12 @@ export interface JobDefinition<S extends z.ZodType = z.ZodType> {
   readonly expireInSeconds: number;
   /** `singleton` keeps at most one queued or active job per singleton key. */
   readonly policy: "standard" | "singleton" | "stately";
+  /**
+   * How often a run may be on a worker that stops before recovery sets it aside instead of
+   * resuming it once more. A run that cannot finish then waits for a person, and the jobs
+   * that shared its workers keep running. Raise it for jobs that must not wait.
+   */
+  readonly lostWorkerLimit: number;
 }
 
 export function defineJob<S extends z.ZodType>(
@@ -33,6 +41,7 @@ export function defineJob<S extends z.ZodType>(
     retryBackoff: opts.retryBackoff ?? true,
     expireInSeconds: opts.expireInSeconds ?? 15 * 60,
     policy: opts.policy ?? "standard",
+    lostWorkerLimit: opts.lostWorkerLimit ?? DEFAULT_LOST_WORKER_LIMIT,
   };
 }
 
