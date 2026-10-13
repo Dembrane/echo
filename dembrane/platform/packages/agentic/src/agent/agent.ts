@@ -50,6 +50,7 @@ import type { Agent, StepEvent, StepInput, StepResult } from "./types";
 export interface AgentOptions {
   readonly now?: () => Date;
   readonly logger?: { warn(obj: unknown, msg?: string): void };
+  readonly knowledge?: Knowledge;
 }
 
 /**
@@ -236,7 +237,7 @@ interface ModelCall {
 }
 
 export function createAgent(opts: AgentOptions = {}): Agent {
-  const knowledge: Knowledge = createKnowledge();
+  const knowledge: Knowledge = opts.knowledge ?? createKnowledge();
   const now = opts.now ?? (() => new Date());
   // Memory and canvas activity load once per turn; a replayed step reloads them.
   const sections = new Map<string, Promise<string>>();

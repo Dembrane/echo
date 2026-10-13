@@ -1,5 +1,5 @@
 {
-  "id": "23c6c621-2339-4e74-a4b6-ec8155f05eb8",
+  "id": "f0240124-4d87-4c17-992c-5bced92bc5c4",
   "prevId": "0cedfefc-f2fe-44de-96f6-abd0feda5229",
   "version": "7",
   "dialect": "postgresql",
@@ -4134,24 +4134,6 @@
         "invoice_delivery": {
           "name": "invoice_delivery",
           "type": "varchar(16)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "billing_country_code": {
-          "name": "billing_country_code",
-          "type": "varchar(2)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "no_vat_number": {
-          "name": "no_vat_number",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "invoice_portal": {
-          "name": "invoice_portal",
-          "type": "text",
           "primaryKey": false,
           "notNull": false
         }
@@ -15861,6 +15843,43 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.dbos_workflow_lost_worker": {
+      "name": "dbos_workflow_lost_worker",
+      "schema": "",
+      "columns": {
+        "workflow_id": {
+          "name": "workflow_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "queue_name": {
+          "name": "queue_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lost": {
+          "name": "lost",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "set_aside_at": {
+          "name": "set_aside_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},

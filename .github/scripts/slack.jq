@@ -1,8 +1,8 @@
 # The Slack messages ci-notify.sh and release.sh post to #alerts-ci, as chat.postMessage
 # payloads: blocks for the channel, and a plain text that reads well alone in a notification.
 #
-# Every message opens with the same few words (PR preview, Staging or Production environment,
-# then what happened to it) and one fixed emoji per kind. A message is posted when the work
+# Every message opens with the same few words (PR preview, Staging or Production environment
+# or documentation, then what happened to it) and one fixed emoji per kind. A message is posted when the work
 # starts and edited in place when it ends, so it always shows the current state. Links are full
 # URLs. A pull request is its title, the first paragraph of its description, and a small line
 # with the author and the link.
@@ -68,8 +68,8 @@ def reply($emoji; $head; $detail; $run):
 
 # What stopped a run, the way a person would say it, from its failed jobs ({name, step}; a
 # job is named by its id or its numbered name). This table is the one place that turns a
-# workflow step into words: add a line when platform.yml gains a step that can fail. A step
-# without a line is named as it is: "frontend checks failed at "Check path case"".
+# workflow step into words: add a line when platform.yml or docs.yml gains a step that can
+# fail. A step without a line is named as it is: "frontend checks failed at "Check path case"".
 def reasons:
   def job: sub("^[0-9]+-"; "") | {"images": "build-images", "deploy-pr": "deploy", "deploy-pr-preview": "deploy",
     "deploy-staging": "deploy", "deploy-prod": "deploy", "teardown-pr-preview": "teardown-pr"}[.] // .;
@@ -98,10 +98,16 @@ def reasons:
     "deploy/Update the image tag in echo-gitops": "the new image tag could not be written to echo-gitops",
     "deploy/Wait for the rollout": "the cluster did not serve the new commit within 15 minutes",
     "deploy/Deploy and verify": "the deploy did not pass its checks",
-    "deploy/cancelled": "the deploy was cancelled"};
+    "deploy/cancelled": "the deploy was cancelled",
+    "docs/Build the site": "the documentation site did not build",
+    "docs/Authenticate to Google Cloud": "the publish could not sign in to Google Cloud",
+    "docs/Publish": "the pages could not be published",
+    "docs/Upload the site": "the pages could not be uploaded",
+    "docs/cancelled": "the publish was cancelled"};
   def jobs: {"plan": "planning the run failed", "check-server": "server checks failed",
     "check-frontend": "frontend checks failed", "test-frontend": "frontend tests failed",
-    "build-images": "the build failed", "deploy": "the deploy failed", "teardown-pr": "the removal failed"};
+    "build-images": "the build failed", "deploy": "the deploy failed", "teardown-pr": "the removal failed",
+    "docs": "the documentation publish failed"};
   if length == 0 then "The run failed"
   else [.[] | (.name | job) as $j
       | steps["\($j)/\(.step)"]
