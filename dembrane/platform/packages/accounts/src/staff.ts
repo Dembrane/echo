@@ -11,6 +11,7 @@ import type { Signed } from "@dembrane/http";
 import { and, eq, gt, isNull } from "drizzle-orm";
 import { staffOrg } from "./access";
 import { documentDetail, fileBytes, signedBytes, ticketOf } from "./customer";
+import { dealStage } from "./deal-stage";
 import { type AccountsDeps, type Conn, isStaffEmail, isUuid } from "./deps";
 import { fieldProblems, sha256Hex, storePdf, storeRendered, writeFields } from "./documents";
 import { accountManagerPayload, documentPayload, emit, orgPayload } from "./events";
@@ -39,7 +40,7 @@ import { releaseHeldContacts } from "./prospect";
 import { accountRecipients } from "./recipients";
 import { openDpa } from "./signing";
 import { type DocumentRow, type LegalRow, type OrgRow, store } from "./storage";
-import { createTask, ensureBillingTask, settleTask, type TaskKind } from "./tasks";
+import { billingComplete, createTask, ensureBillingTask, settleTask, type TaskKind } from "./tasks";
 import {
   billingView,
   documentSummary,
@@ -58,10 +59,20 @@ export async function listAccounts(
   q: { stage: string | null; q: string | null; limit: number; offset: number },
 ) {
   const rows = await store.accountList(d.db, q);
+  const facts = await store.stageFacts(
+    d.db,
+    rows.map((r) => r.id),
+  );
   return {
     accounts: rows.map((r) => ({
       ...r,
       stage: r.stage as "prospect" | "customer" | "churned" | null,
+      deal_stage: dealStage({
+        isAccount: r.stage !== null,
+        documents: facts.documents.filter((x) => x.orgId === r.id),
+        // The first billing account is the organisation's, as store.billing reads it.
+        billingComplete: billingComplete(facts.billing.find((b) => b.org_id === r.id) ?? null),
+      }),
       created_at: r.created_at ? new Date(r.created_at).toISOString() : null,
     })),
     limit: q.limit,
@@ -113,6 +124,11 @@ export async function accountCard(d: AccountsDeps, orgId: string) {
       id: org.id,
       name: org.name,
       account_stage: org.account_stage as "prospect" | "customer" | "churned" | null,
+      deal_stage: dealStage({
+        isAccount: org.account_stage !== null,
+        documents: docs,
+        billingComplete: billingComplete(billing),
+      }),
       created_at: org.created_at ? new Date(org.created_at).toISOString() : null,
     },
     account_manager: manager

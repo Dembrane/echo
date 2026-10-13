@@ -33,6 +33,23 @@ const Currency = z.string().regex(/^[A-Z]{3}$/, "Use an ISO 4217 code like EUR")
 const Uuid = z.uuid();
 
 export const AccountStage = z.enum(["prospect", "customer", "churned"]);
+/**
+ * Where the account's deal stands, under the names the team uses in Attio and in sam's
+ * notices: In progress (call booked), Offer drafted, Offer sent, Offer accepted (signed,
+ * billing and invoice details saved, every required document in), Invoice sent, Paid,
+ * Lost, Parked. Read from the account's own documents, billing details and invoices on
+ * every answer; nothing sets it. `parked` is never derived. Null: not an account yet.
+ */
+export const DealStage = z.enum([
+  "in_progress",
+  "offer_drafted",
+  "offer_sent",
+  "offer_accepted",
+  "invoice_sent",
+  "paid",
+  "lost",
+  "parked",
+]);
 export const Language = z.enum(["en", "nl"]);
 /** A yearly licence, a single event, or a custom offer (the only kind with amendments). */
 export const OfferTemplate = z.enum(["subscription", "event", "custom"]);
@@ -564,6 +581,7 @@ export const AccountListItem = z.object({
   id: Uuid,
   name: z.string(),
   stage: AccountStage.nullable(),
+  deal_stage: DealStage.nullable(),
   created_at: IsoTime.nullable(),
   /** Waiting on the customer. */
   open_tasks: z.number().int(),
@@ -598,7 +616,10 @@ export const CreateAccountResponse = z.object({
 });
 
 export const AccountCard = z.object({
-  organisation: OrganisationRef.extend({ created_at: IsoTime.nullable() }),
+  organisation: OrganisationRef.extend({
+    created_at: IsoTime.nullable(),
+    deal_stage: DealStage.nullable(),
+  }),
   account_manager: z
     .object({ id: Uuid, email: z.string().nullable(), name: z.string().nullable() })
     .nullable(),

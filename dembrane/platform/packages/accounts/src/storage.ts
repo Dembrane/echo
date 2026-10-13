@@ -333,6 +333,35 @@ export const store = {
       .orderBy(desc(doc.createdAt), desc(doc.id));
   },
 
+  /** What the deal stage is read from, for many organisations in two reads. */
+  async stageFacts(c: Conn, orgIds: readonly string[]) {
+    if (!orgIds.length) return { documents: [], billing: [] };
+    const [documents, billing] = await Promise.all([
+      c
+        .select({
+          orgId: doc.orgId,
+          kind: doc.kind,
+          status: doc.status,
+          createdAt: doc.createdAt,
+          signedAt: doc.signedAt,
+          dpaTextId: doc.dpaTextId,
+          invoiceStatus: doc.invoiceStatus,
+        })
+        .from(doc)
+        .where(
+          and(inArray(doc.orgId, [...orgIds]), inArray(doc.kind, ["offer", "dpa", "invoice"])),
+        ),
+      c
+        .select()
+        .from(billing_account)
+        .where(
+          and(inArray(billing_account.org_id, [...orgIds]), isNull(billing_account.deleted_at)),
+        )
+        .orderBy(asc(billing_account.created_at)),
+    ]);
+    return { documents, billing };
+  },
+
   async document(c: Conn, orgId: string, id: string): Promise<DocumentRow | null> {
     const [row] = await c
       .select()

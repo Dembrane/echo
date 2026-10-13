@@ -589,6 +589,7 @@ export const accountList: Out<typeof AccountList> = {
       id: ORG,
       name: "Example Town Council (sample)",
       stage: "customer",
+      deal_stage: "offer_sent",
       created_at: "2026-09-28T08:55:00.000Z",
       open_tasks: 2,
       waiting_on_us: 1,
@@ -603,7 +604,11 @@ export const accountList: Out<typeof AccountList> = {
 
 /** GET /api/v2/admin/accounts/:orgId */
 export const accountCard: Out<typeof AccountCard> = {
-  organisation: { ...organisation, created_at: "2026-09-28T08:55:00.000Z" },
+  organisation: {
+    ...organisation,
+    created_at: "2026-09-28T08:55:00.000Z",
+    deal_stage: "offer_sent" as const,
+  },
   account_manager: null,
   billing: emptyBilling,
   needs_form: {

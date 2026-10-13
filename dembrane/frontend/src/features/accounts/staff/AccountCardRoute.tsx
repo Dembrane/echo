@@ -40,6 +40,7 @@ import type {
 import { deliveryFor, InvoiceDelivery } from "../customer/InvoiceDelivery";
 import { Questions } from "../customer/Questions";
 import {
+	dealStageLabel,
 	documentKindLabel,
 	documentStatusColor,
 	documentStatusLabel,
@@ -115,7 +116,19 @@ function Card() {
 							<Trans>Accounts</Trans>
 						</Group>
 					</Anchor>
-					<Title order={3}>{data.organisation.name}</Title>
+					<Group gap="xs">
+						<Title order={3}>{data.organisation.name}</Title>
+						{data.organisation.deal_stage && (
+							<Badge
+								size="sm"
+								variant="light"
+								color="gray"
+								data-testid="account-deal-stage"
+							>
+								{dealStageLabel(data.organisation.deal_stage)}
+							</Badge>
+						)}
+					</Group>
 				</Stack>
 				{data.organisation.account_stage === null && (
 					<EnableAccount orgId={orgId} />

@@ -100,6 +100,19 @@ export const ticketStatusLabel = (status: TicketT["status"]): string =>
 		waiting_on_dembrane: t`Waiting on dembrane`,
 	})[status];
 
+/** The deal stage under the names the team uses in Attio and in sam's notices. */
+export const dealStageLabel = (stage: string): string =>
+	({
+		in_progress: t`In progress (call booked)`,
+		invoice_sent: t`Invoice sent`,
+		lost: t`Lost`,
+		offer_accepted: t`Offer accepted`,
+		offer_drafted: t`Offer drafted`,
+		offer_sent: t`Offer sent`,
+		paid: t`Paid`,
+		parked: t`Parked`,
+	})[stage] ?? stage;
+
 export const stageLabel = (stage: string | null): string =>
 	stage === "prospect"
 		? t`Prospect`
