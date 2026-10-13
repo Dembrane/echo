@@ -72,7 +72,11 @@ export interface TurnDeps {
       readonly runTimeoutSeconds: number;
     };
     readonly canvas: { readonly enabled: boolean };
-    readonly http: { readonly dashboardUrl: string; readonly portalUrl: string };
+    readonly http: {
+      readonly dashboardUrl: string;
+      readonly portalUrl: string;
+      readonly docsUrl?: string | undefined;
+    };
   };
   readonly agent: Agent;
   readonly bindData: (who: Signed, ctx: TurnContext) => AgentData;
@@ -260,7 +264,7 @@ async function agentStep(
     appUserId: begin.appUserId,
     messageId: begin.triggeringMessageId,
     canvasEnabled: begin.canvasEnabled,
-    docsBaseUrl: docsBaseUrl(d.config.http.dashboardUrl),
+    docsBaseUrl: d.config.http.docsUrl ?? "",
     portalUrl: d.config.http.portalUrl,
   };
   const data = d.bindData(who, ctx);
@@ -348,17 +352,6 @@ async function agentStep(
 }
 
 const timeoutEnd = (): End => ({ kind: "timeout", message: "Agent request timed out" });
-
-/** Where docs citations link: the published docs site for dembrane hosts, bare paths elsewhere. */
-export function docsBaseUrl(dashboardUrl: string): string {
-  try {
-    return new URL(dashboardUrl).hostname.endsWith("dembrane.com")
-      ? "https://docs.dembrane.com"
-      : "";
-  } catch {
-    return "";
-  }
-}
 
 /**
  * The worker's per-event rules for one step: what is stored, what is streamed, what the

@@ -7,6 +7,7 @@ export default {
     publicUrl: "https://api.staging.dembrane.com",
     dashboardUrl: "https://dashboard.staging.dembrane.com",
     portalUrl: "https://portal.staging.dembrane.com",
+    docsUrl: "https://docs.staging.dembrane.com",
   },
   database: { poolMax: 5, queuePoolMax: 3 },
   observability: { gcpProject: "dembrane-web-staging", traceSampleRatio: 0 },

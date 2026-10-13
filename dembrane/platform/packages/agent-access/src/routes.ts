@@ -8,7 +8,7 @@ import type { RateLimiter } from "@dembrane/ratelimit";
 import { Hono } from "hono";
 import { MCP_PATH, SCOPE_READ } from "./constants";
 import { type AgentContext, auditStatus, contextForGrant, type SamInboxDeps } from "./context";
-import { docsBaseUrlFor, docsCorpus } from "./knowledge";
+import { docsCorpus } from "./knowledge";
 import { manageRoutes } from "./manage";
 import { handleMcpDelete, handleMcpGet, handleMcpPost, json } from "./mcp";
 import {
@@ -38,6 +38,8 @@ export interface AgentAccessRoutesDeps {
   readonly capture: Capture;
   readonly publicUrl: string;
   readonly dashboardUrl: string;
+  /** The environment's published documentation site; unset reads the repository's docs/. */
+  readonly docsUrl?: string | undefined;
   readonly buildVersion: string;
   /** Directus's SECRET: the key stored client secrets are encrypted under. */
   readonly clientSecretKey: string;
@@ -76,7 +78,7 @@ export function agentAccessRoutes(api: AgentAccessRoutesDeps) {
     samInbox: api.samInbox ?? null,
     secrets: new ClientSecretBox(api.clientSecretKey),
     docs: docsCorpus({
-      docsBaseUrl: docsBaseUrlFor(api.dashboardUrl),
+      docsBaseUrl: api.docsUrl ?? "",
       logger: api.logger,
     }),
   };

@@ -5,9 +5,9 @@ import type { Logger } from "@dembrane/observability";
 
 /**
  * The product documentation as a small read-only file system for agents: list, a
- * line-numbered read and a regex grep. Deployed environments on dembrane.com read the
- * published site (docs.dembrane.com lists every page in llms.txt and serves a markdown twin
- * per page); others read the repository's docs/ when run from source. Images ship no docs,
+ * line-numbered read and a regex grep. An environment with a documentation site (DOCS_URL)
+ * reads that site, which lists every page in llms.txt and serves a markdown twin per page;
+ * others read the repository's docs/ when run from source. Images ship no docs,
  * and with no corpus every docs tool answers empty with NO_DOCS. The corpus is kept for an
  * hour per instance; the Python API also shared it through Redis, which only saved cold
  * fetches.
@@ -188,15 +188,4 @@ export function docsCorpus(opts: {
       return results;
     },
   };
-}
-
-/** The published docs site for dembrane.com dashboards; empty (the local folder) elsewhere. */
-export function docsBaseUrlFor(dashboardUrl: string): string {
-  try {
-    return new URL(dashboardUrl).hostname.endsWith("dembrane.com")
-      ? "https://docs.dembrane.com"
-      : "";
-  } catch {
-    return "";
-  }
 }
