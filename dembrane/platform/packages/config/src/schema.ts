@@ -50,6 +50,11 @@ export const schema = defineSchema({
       description: "Participant portal origin.",
       public: true,
     }),
+    docsUrl: key("DOCS_URL", z.url().optional(), {
+      description:
+        "The published documentation site that describes this environment. Agents read its pages and the assistant links its citations there. Unset: the repository's docs/ when run from source.",
+      public: true,
+    }),
     trustedProxies: key("HTTP_TRUSTED_PROXIES", list.default([]), {
       description:
         "Addresses or CIDR ranges of our own proxies that append to X-Forwarded-For (the load balancer). Skipped when reading the caller's address.",

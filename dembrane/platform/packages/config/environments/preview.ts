@@ -9,6 +9,9 @@ export default {
     publicUrl: "https://echo-preview-api-218237812097.europe-west4.run.app",
     dashboardUrl: "https://echo-preview-dashboard-218237812097.europe-west4.run.app",
     portalUrl: "https://echo-preview-portal-218237812097.europe-west4.run.app",
+    // A preview has no documentation site of its own. staging's is built from main, the
+    // branch a pull request starts from.
+    docsUrl: "https://docs.staging.dembrane.com",
   },
   database: { poolMax: 3, queuePoolMax: 2 },
   observability: { gcpProject: "dembrane-web-previews", traceSampleRatio: 0 },

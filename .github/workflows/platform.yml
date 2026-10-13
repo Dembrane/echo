@@ -34,7 +34,8 @@ name: platform
 # then main). Once PROD_WAIT_FOR_ROLLOUT is "true" the prod job waits for api.dembrane.com to
 # serve the release. Then it publishes the GitHub Release, tells #team-engineering, #alerts-ci
 # and each PR, and sends release.published to sam, which drafts the in-app release notes for
-# review.
+# review. 71-publish-docs then publishes the release's docs/ to docs.dembrane.com
+# (.github/workflows/docs.yml, which also publishes main's docs/ to docs.staging.dembrane.com).
 #
 # #alerts-ci says when an environment is being created or updated, in a message that is edited
 # when the deploy ends: created, updated, removed, or not updated and why. Checks on PRs
@@ -861,6 +862,21 @@ jobs:
           SLACK_TS: ${{ steps.start.outputs.slack_ts }}
           STOPPED: ${{ job.status == 'cancelled' && 'cancelled' || steps.login.outcome == 'failure' && 'Log in to the DigitalOcean registry' || steps.images.outcome == 'failure' && 'Push images' || steps.bump.outcome == 'failure' && 'Update the image tag in echo-gitops' || steps.wait.outcome == 'failure' && 'Wait for the rollout' || '' }}
         run: $GITHUB_WORKSPACE/.github/scripts/release.sh announce-failed prod "$RELEASE_TAG" "$STOPPED"
+
+  # docs.dembrane.com changes with the release: the pages in docs/ at the release tag.
+  docs-prod:
+    name: 71-publish-docs
+    if: ${{ !cancelled() && needs.deploy-prod.result == 'success' }}
+    needs: [plan, deploy-prod]
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/docs.yml
+    with:
+      target: prod
+      ref: ${{ needs.plan.outputs.release_tag }}
+    secrets: inherit
 
   # A failed run tells #alerts-ci which environment was not updated and what stopped it, except
   # checks on a PR without a preview (they stay in the PR) and a staging, prod or preview deploy

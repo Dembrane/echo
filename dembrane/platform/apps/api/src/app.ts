@@ -328,6 +328,7 @@ export function buildApp(deps: Deps) {
       capture,
       publicUrl: deps.config.http.publicUrl,
       dashboardUrl: deps.config.http.dashboardUrl,
+      docsUrl: deps.config.http.docsUrl,
       buildVersion: deps.config.app.release,
       clientSecretKey:
         deps.config.agentAccess.clientSecretKey ?? deps.config.account.inviteHashSecret,
