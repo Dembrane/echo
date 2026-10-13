@@ -367,7 +367,7 @@ export const MicrophoneCheck: React.FC<MicrophoneCheckProps> = ({
 								</Trans>
 							</Alert>
 							<Group
-								gap="xs"
+								gap="md" // as an alert spaces its icon
 								wrap="nowrap"
 								{...layer(isLoadingDevices)}
 								{...testId("portal-settings-mic-loading-alert")}
