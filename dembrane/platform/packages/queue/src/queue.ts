@@ -136,7 +136,7 @@ export class Queue {
       queueName: def.name,
       workflowName: def.name,
       appVersion: WORKFLOW_VERSION,
-      workflowTimeoutMS: def.expireInSeconds * 1000 * (def.retryLimit + 1),
+      workflowTimeoutMS: timeoutOf(def),
       ...(opts.singletonKey && {
         deduplicationID: `${def.name}:${opts.singletonKey}`,
         duplicationPolicy: "return-existing" as const,
@@ -149,6 +149,29 @@ export class Queue {
       ? await this.client.enqueueInTransaction(adaptTx(opts.tx) as never, options, envelope)
       : await this.client.enqueue(options, envelope);
     return handle.workflowID;
+  }
+
+  /**
+   * Runs a job again under a new id from the first step its run did not finish; a plain
+   * enqueue cannot, the old id stays taken. False when the new id already exists.
+   */
+  async rerun(def: JobDefinition, workflowId: string, newWorkflowId: string): Promise<boolean> {
+    if (!this.client) throw new Error("queue not started");
+    if (await this.client.getWorkflow(newWorkflowId)) return false;
+    const steps = (await this.client.listWorkflowSteps(workflowId)) ?? [];
+    const next = steps.reduce((n, s) => Math.max(n, s.functionID + 1), 0);
+    try {
+      await this.client.forkWorkflow(workflowId, next, {
+        newWorkflowID: newWorkflowId,
+        queueName: def.name,
+        timeoutMS: timeoutOf(def),
+      });
+    } catch (err) {
+      // Lost the race to another sweep.
+      if ((err as { code?: string }).code === "23505") return false;
+      throw err;
+    }
+    return true;
   }
 
   /** Registers a handler; must be called before run(). */
@@ -357,6 +380,10 @@ export class Queue {
       );
     };
   }
+}
+
+function timeoutOf(def: JobDefinition): number {
+  return def.expireInSeconds * 1000 * (def.retryLimit + 1);
 }
 
 /** A node-postgres-shaped client over a postgres.js connection or transaction, for enqueueInTransaction. */

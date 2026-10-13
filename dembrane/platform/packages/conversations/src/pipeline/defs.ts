@@ -54,3 +54,10 @@ export const catchUpSummaries = defineJob("conversations.summary-catch-up", z.ob
   retryLimit: 0,
   expireInSeconds: 300,
 });
+
+/** Every five minutes: rerun, or give up, chunk runs that ended without a result. */
+export const releaseStrandedChunkRuns = defineJob("conversations.stranded-chunks", z.object({}), {
+  policy: "singleton",
+  retryLimit: 0,
+  expireInSeconds: 300,
+});
