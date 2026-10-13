@@ -5,7 +5,7 @@ import { createDb, migrate } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import postgres from "postgres";
 import type { ProjectDeps } from "../src/projects";
-import { createReport, updateReport } from "../src/reports";
+import { cancelSchedule, createReport, updateReport } from "../src/reports";
 import { projectsStorage } from "../src/storage";
 
 // Publishing a report emails its subscribers; the job must commit with the publish, once.
@@ -106,5 +106,23 @@ run("report publish", () => {
       where task_type = 'generate_report' and status = 'scheduled'
         and payload->>'report_id' = ${String(rid)}`;
     expect(live.map((t) => new Date(t.scheduled_at).toISOString())).toEqual([later]);
+  });
+
+  test("a free workspace can still make its report after cancelling a scheduled one", async () => {
+    const [org, ws, billing, p] = [newId(), newId(), newId(), newId()];
+    await sql`insert into org (id, name) values (${org}, 'Org 3')`;
+    await sql`insert into billing_account (id, org_id) values (${billing}, ${org})`;
+    await sql`insert into workspace (id, name, org_id, billing_account_id) values (${ws}, 'W3', ${org}, ${billing})`;
+    await sql`insert into workspace_membership (id, workspace_id, user_id, role) values (${newId()}, ${ws}, ${owner.appUserId}, 'owner')`;
+    await sql`insert into project (id, name, workspace_id, is_conversation_allowed) values (${p}, 'P3', ${ws}, true)`;
+
+    const at = new Date(Date.now() + 60 * 60_000).toISOString();
+    const body = { language: "en", user_instructions: null, scheduled_at: at };
+    const scheduled = await createReport(d, owner, p, body);
+    await expect(createReport(d, owner, p, body)).rejects.toMatchObject({
+      code: "billing.tier_limit",
+    });
+    await cancelSchedule(d, owner, p, Number(scheduled.id));
+    expect((await createReport(d, owner, p, body)).status).toBe("scheduled");
   });
 });
