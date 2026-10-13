@@ -535,7 +535,6 @@ export const ParticipantConversationAudio = () => {
 				<Outlet
 					context={{
 						connectionHealthy,
-						isRecording,
 						recordingTime,
 					}}
 				/>

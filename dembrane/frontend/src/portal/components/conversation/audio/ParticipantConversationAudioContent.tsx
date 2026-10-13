@@ -28,7 +28,6 @@ const VERIFICATION_BANNER_THRESHOLD_SECONDS = 60;
 type OutletContextType = {
 	/** From the recording screen's liveness ping. */
 	connectionHealthy?: boolean;
-	isRecording: boolean;
 	recordingTime: number;
 };
 
@@ -39,7 +38,7 @@ export const ParticipantConversationAudioContent = () => {
 
 	const { projectId, conversationId } = useParams();
 	const [searchParams, setSearchParams] = useSearchParams();
-	const { connectionHealthy, isRecording, recordingTime } =
+	const { connectionHealthy, recordingTime } =
 		useOutletContext<OutletContextType>();
 	const projectQuery = useParticipantProjectById(projectId ?? "");
 	const conversationQuery = useConversationQuery(projectId, conversationId);
@@ -140,7 +139,6 @@ export const ParticipantConversationAudioContent = () => {
 					interleaveMessages={false}
 					projectId={projectId ?? ""}
 					conversationId={conversationId ?? ""}
-					isRecording={isRecording}
 					isAnonymized={conversationQuery.data?.is_anonymized ?? false}
 					connectionHealthy={connectionHealthy}
 				/>

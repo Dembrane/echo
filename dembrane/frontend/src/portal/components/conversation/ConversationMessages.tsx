@@ -26,7 +26,6 @@ export const ConversationMessages = ({
 	viewResponses = false,
 	children,
 	interleaveMessages = true,
-	isRecording = false,
 	isAnonymized = false,
 	connectionHealthy = true,
 	mode = "audio",
@@ -35,7 +34,6 @@ export const ConversationMessages = ({
 	conversationId: string;
 	viewResponses?: boolean;
 	interleaveMessages?: boolean;
-	isRecording?: boolean;
 	isAnonymized?: boolean;
 	/** From the recording screen's liveness ping. */
 	connectionHealthy?: boolean;
@@ -109,11 +107,11 @@ export const ConversationMessages = ({
 
 	return (
 		<Stack ref={ref} className="max-h-full">
-			{!isRecording && (
-				<Title order={2} mt="sm" {...testId("portal-welcome-heading")}>
-					<Trans>Welcome</Trans>
-				</Title>
-			)}
+			{/* Always, so nothing above the conversation moves as recording
+			    starts, pauses or resumes. */}
+			<Title order={2} mt="sm" {...testId("portal-welcome-heading")}>
+				<Trans>Welcome</Trans>
+			</Title>
 
 			{!isOnline && (
 				<TipBanner
