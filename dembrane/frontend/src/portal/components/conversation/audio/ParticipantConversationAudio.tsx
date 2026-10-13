@@ -578,17 +578,21 @@ export const ParticipantConversationAudio = () => {
 						{inRecording && (
 							<div {...testId("portal-audio-recording-timer")}>
 								<Group justify="center" align="center" gap="xs" mih={50}>
-									{opened ||
-									interruptionModalOpened ||
-									stoppedRecordingTime !== null ? (
-										<PauseIcon size={20} />
-									) : (
-										<div
-											className="h-4 w-4 animate-pulse rounded-full"
-											style={{ background: "var(--app-danger)" }}
-										/>
-									)}
-									<Text size="lg">
+									{/* One slot for either icon, and even digits, so the
+									    time holds still as they swap and as it counts. */}
+									<span className="flex h-5 w-5 items-center justify-center">
+										{opened ||
+										interruptionModalOpened ||
+										stoppedRecordingTime !== null ? (
+											<PauseIcon size={20} />
+										) : (
+											<div
+												className="h-4 w-4 animate-pulse rounded-full"
+												style={{ background: "var(--app-danger)" }}
+											/>
+										)}
+									</span>
+									<Text size="lg" className="tabular-nums">
 										{(() => {
 											const displayTime = interruptionModalOpened
 												? interruptionRecordingTimeRef.current
