@@ -5,17 +5,19 @@
  * cut off by an interruption, or left with a deleted conversation.
  *
  * `live` means nothing is layered on: the recorder alone decides whether the
- * screen is idle or recording.
+ * screen is idle or recording. `at` is null when finishing without having
+ * stopped here first, from the bar's Finish after a reload.
  */
 export type RecordingSession =
 	| { phase: "live" }
-	| { phase: "paused"; at: number; confirming: boolean }
-	| { phase: "finishing"; at: number; confirming: boolean }
+	| { phase: "paused"; at: number | null; confirming: boolean }
+	| { phase: "finishing"; at: number | null; confirming: boolean }
 	| { phase: "interrupted"; at: number; reconnecting: boolean }
 	| { phase: "deleted" };
 
 export type RecordingSessionEvent =
 	| { type: "stop"; at: number }
+	| { type: "confirmFinish" }
 	| { type: "resume" }
 	| { type: "recordingStarted" }
 	| { type: "switchToText" }
@@ -35,6 +37,17 @@ export const recordingSessionReducer = (
 	session: RecordingSession,
 	event: RecordingSessionEvent,
 ): RecordingSession => {
+	const next = transition(session, event);
+	// Paused with no time and no modal holds nothing.
+	return next.phase === "paused" && next.at === null && !next.confirming
+		? initialRecordingSession
+		: next;
+};
+
+const transition = (
+	session: RecordingSession,
+	event: RecordingSessionEvent,
+): RecordingSession => {
 	if (session.phase === "deleted") return session;
 
 	switch (event.type) {
@@ -47,6 +60,11 @@ export const recordingSessionReducer = (
 		case "stop":
 			return session.phase === "live"
 				? { at: event.at, confirming: true, phase: "paused" }
+				: session;
+
+		case "confirmFinish":
+			return session.phase === "live"
+				? { at: null, confirming: true, phase: "paused" }
 				: session;
 
 		// The paused time stays until the recorder has actually started again,
@@ -106,14 +124,13 @@ export const isConfirmOpen = (session: RecordingSession): boolean =>
 	session.confirming;
 
 /**
- * Partway through a recording: running, or held by a stop, a finish or an
- * interruption. The timer and the meter show for all of it.
+ * Held partway through a recording, by a stop, the confirm modal or an
+ * interruption. The timer shows paused, and the start buttons stay away.
  */
-export const isMidRecording = (
-	session: RecordingSession,
-	isRecording: boolean,
-): boolean =>
-	isRecording || (session.phase !== "live" && session.phase !== "deleted");
+export const isHeld = (session: RecordingSession): boolean =>
+	session.phase === "interrupted" ||
+	isConfirmOpen(session) ||
+	pausedAt(session) !== null;
 
 /** The time the timer shows: frozen while held, the recorder's otherwise. */
 export const displayTime = (

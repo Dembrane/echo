@@ -447,6 +447,22 @@ describe("finishing", () => {
 		expect(navigate).not.toHaveBeenCalled();
 	});
 
+	it("finishes from the bar's Finish without recording first", async () => {
+		chunks = [{ id: "chunk1" }];
+		renderAudio();
+
+		fireEvent.click(screen.getByTestId("portal-audio-finish-button"));
+		expect(screen.getByTestId("portal-audio-recording-timer")).toBeTruthy();
+		expect(screen.queryByTestId("portal-audio-record-button")).toBeNull();
+
+		fireEvent.click(
+			await screen.findByTestId("portal-audio-stop-finish-button"),
+		);
+		await waitFor(() =>
+			expect(navigate).toHaveBeenCalledWith("/p1/conversation/c1/finish"),
+		);
+	});
+
 	it("shows Finish only once the conversation has chunks", async () => {
 		const { rerender } = renderAudio();
 		expect(screen.queryByTestId("portal-audio-finish-button")).toBeNull();

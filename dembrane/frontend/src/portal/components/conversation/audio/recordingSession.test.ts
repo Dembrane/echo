@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	displayTime,
 	isConfirmOpen,
-	isMidRecording,
+	isHeld,
 	initialRecordingSession as live,
 	pausedAt,
 	type RecordingSession,
@@ -55,6 +55,24 @@ describe("recordingSessionReducer", () => {
 		expect(reduce(skipped, { type: "finishFailed" })).toEqual(resuming);
 	});
 
+	it("confirms a finish from the bar with no stopped time", () => {
+		const confirming = reduce(live, { type: "confirmFinish" });
+		expect(confirming).toEqual({ at: null, confirming: true, phase: "paused" });
+		expect(reduce(confirming, { type: "finishStarted" })).toEqual({
+			at: null,
+			confirming: true,
+			phase: "finishing",
+		});
+	});
+
+	it("drops back to live when a pause has no time and no modal", () => {
+		const confirming = reduce(live, { type: "confirmFinish" });
+		expect(reduce(confirming, { type: "resume" })).toEqual(live);
+		expect(
+			run(confirming, { type: "skipVerification" }, { type: "finishFailed" }),
+		).toEqual(live);
+	});
+
 	it("holds an interruption at its time while reconnecting", () => {
 		const cutOff = reduce(live, { at: 42, type: "interrupted" });
 		expect(cutOff).toEqual(interrupted);
@@ -82,6 +100,7 @@ describe("recordingSessionReducer", () => {
 			[live, { type: "finishStarted" }],
 			[live, { type: "reconnectStarted" }],
 			[paused, { at: 90, type: "stop" }],
+			[paused, { type: "confirmFinish" }],
 			[paused, { type: "finishSucceeded" }],
 			[finishing, { type: "resume" }],
 			[finishing, { type: "finishStarted" }],
@@ -111,13 +130,16 @@ describe("selectors", () => {
 		expect(isConfirmOpen(interrupted)).toBe(false);
 	});
 
-	it("is mid-recording while running or held", () => {
-		expect(isMidRecording(live, false)).toBe(false);
-		expect(isMidRecording(live, true)).toBe(true);
+	it("is held by a stopped time, the confirm modal or an interruption", () => {
 		for (const held of [paused, resuming, finishing, interrupted]) {
-			expect(isMidRecording(held, false)).toBe(true);
+			expect(isHeld(held)).toBe(true);
 		}
-		expect(isMidRecording(deleted, false)).toBe(false);
+		expect(isHeld(reduce(live, { type: "confirmFinish" }))).toBe(true);
+		expect(isHeld({ at: null, confirming: false, phase: "finishing" })).toBe(
+			false,
+		);
+		expect(isHeld(live)).toBe(false);
+		expect(isHeld(deleted)).toBe(false);
 	});
 
 	it("shows the held time, or the recorder's while live", () => {
