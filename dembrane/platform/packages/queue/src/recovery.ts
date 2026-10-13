@@ -8,6 +8,11 @@ const BEAT_MS = 10_000;
 const DEAD_AFTER_S = 60;
 // Any fixed number; every worker must use the same one.
 const SWEEP_LOCK = 72_1405_2027;
+/**
+ * The last_seen of an executor that stopped with workflows unfinished: older than any
+ * staleness threshold, so the next sweep resumes them without waiting for the row to age.
+ */
+const LEFT_AT = new Date(0);
 
 /**
  * Open-source DBOS resumes a workflow only in a process with the executor id that started
@@ -19,6 +24,9 @@ const SWEEP_LOCK = 72_1405_2027;
 export class ExecutorHeartbeat {
   private readonly sql: postgres.Sql;
   private timer: ReturnType<typeof setInterval> | null = null;
+  /** Beats and sweeps in flight, so stop() can wait for them. */
+  private readonly ticks = new Set<Promise<void>>();
+  private leaving = false;
 
   constructor(
     url: string,
@@ -37,9 +45,15 @@ export class ExecutorHeartbeat {
   async start(): Promise<void> {
     await this.beat();
     this.timer = setInterval(() => {
-      void this.beat()
-        .then(() => this.sweep())
-        .catch((err) => this.logger.warn({ err }, "executor heartbeat failed"));
+      const tick: Promise<void> = this.beat()
+        // A leaving executor only beats: the sweep needs DBOS, which is shutting down.
+        .then(() => (this.leaving ? 0 : this.sweep()))
+        .then(
+          () => {},
+          (err) => this.logger.warn({ err }, "executor heartbeat failed"),
+        )
+        .finally(() => this.ticks.delete(tick));
+      this.ticks.add(tick);
     }, this.timing.beatMs);
   }
 
@@ -104,13 +118,40 @@ export class ExecutorHeartbeat {
     });
   }
 
-  async stop(): Promise<void> {
-    if (this.timer) clearInterval(this.timer);
-    await this
-      .sql`delete from dbos_executor_heartbeat where executor_id = ${this.executorId}`.catch(
-      () => {},
-    );
-    await this.sql.end();
+  /**
+   * Stops for good. `quiesce` is where the caller stops executing; the heartbeat keeps
+   * beating until it returns, because a row that looks dead while this process still runs a
+   * step lets another worker run the same step. Then the executor leaves: with nothing
+   * unfinished its row is deleted, otherwise the row is marked LEFT_AT and the next sweep
+   * resumes those workflows and deletes it. A process killed before that, or a `quiesce`
+   * that fails, leaves an ordinary row, which goes stale and is swept like any other.
+   */
+  async stop(quiesce: () => Promise<void> = async () => {}): Promise<void> {
+    this.leaving = true;
+    try {
+      // A sweep in flight ends before the caller shuts DBOS down under it.
+      await Promise.all(this.ticks);
+      await quiesce();
+      if (this.timer) clearInterval(this.timer);
+      // No beat may land after the mark and make the row look alive again.
+      await Promise.all(this.ticks);
+      await this.leave().catch(() => {});
+    } finally {
+      if (this.timer) clearInterval(this.timer);
+      await this.sql.end();
+    }
+  }
+
+  private async leave() {
+    const [unfinished] = await this.sql`
+      select 1 from dbos.workflow_status
+      where executor_id = ${this.executorId} and status = 'PENDING' limit 1`;
+    if (unfinished)
+      await this.sql`
+        insert into dbos_executor_heartbeat (executor_id, last_seen)
+        values (${this.executorId}, ${LEFT_AT})
+        on conflict (executor_id) do update set last_seen = excluded.last_seen`;
+    else await this.sql`delete from dbos_executor_heartbeat where executor_id = ${this.executorId}`;
   }
 }
 
