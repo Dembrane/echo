@@ -428,7 +428,7 @@ export const ParticipantConversationAudio = () => {
 	const showEcho = projectQuery.data?.is_get_reply_enabled;
 
 	const handleRefineClick = () => {
-		if (recordingTime < REFINE_BUTTON_THRESHOLD_SECONDS) {
+		if (effectiveRecordingTime < REFINE_BUTTON_THRESHOLD_SECONDS) {
 			openRefineInfoModal();
 			return;
 		}
@@ -478,13 +478,13 @@ export const ParticipantConversationAudio = () => {
 		stoppedRecordingTime !== null;
 
 	const refineProgress = Math.min(
-		(recordingTime / REFINE_BUTTON_THRESHOLD_SECONDS) * 100,
+		(effectiveRecordingTime / REFINE_BUTTON_THRESHOLD_SECONDS) * 100,
 		100,
 	);
 
 	const remainingTime = Math.max(
 		0,
-		REFINE_BUTTON_THRESHOLD_SECONDS - Math.floor(recordingTime),
+		REFINE_BUTTON_THRESHOLD_SECONDS - Math.floor(effectiveRecordingTime),
 	);
 
 	return (
@@ -669,54 +669,57 @@ export const ParticipantConversationAudio = () => {
 								</Group>
 							)}
 
-						{isRecording && (
+						{/* ECHO stays put while paused, behind a modal, and over the
+						    refine and verify screens, so the bar doesn't rearrange. */}
+						{inRecording && (
 							<Group gap="lg">
-								{!isOnVerifyRoute &&
-									!isOnRefineRoute &&
-									(projectQuery.data?.is_verify_enabled ||
-										projectQuery.data?.is_get_reply_enabled) && (
-										<Button
-											size="lg"
-											onClick={handleRefineClick}
-											disabled={isStopping || isRefineDisabled}
-											className="relative overflow-hidden"
-											variant={
-												recordingTime < REFINE_BUTTON_THRESHOLD_SECONDS
-													? undefined
-													: "filled"
-											}
-											{...testId("portal-audio-echo-button")}
-										>
-											{recordingTime < REFINE_BUTTON_THRESHOLD_SECONDS && (
-												<div
-													className="absolute bottom-0 left-0 top-0 bg-primary-600/20 transition-all duration-1000 ease-linear"
-													style={{ width: `${refineProgress}%` }}
-												/>
-											)}
-											<span className="relative z-10">
-												<Trans id="participant.button.echo">ECHO</Trans>
-											</span>
-										</Button>
-									)}
-								<Button
-									size="lg"
-									color="red"
-									onClick={handleStopRecording}
-									disabled={isStopping}
-									className={
-										!chunks?.data ||
-										chunks.data.length === 0 ||
-										!projectQuery.data?.is_get_reply_enabled
-											? "px-7 md:px-10"
-											: ""
-									}
-									leftSection={
-										<StopIcon size={20} className="hidden md:block" />
-									}
-									{...testId("portal-audio-stop-button")}
-								>
-									<Trans id="participant.button.stop">Stop</Trans>
-								</Button>
+								{(projectQuery.data?.is_verify_enabled ||
+									projectQuery.data?.is_get_reply_enabled) && (
+									<Button
+										size="lg"
+										onClick={handleRefineClick}
+										disabled={isStopping || isRefineDisabled}
+										className="relative overflow-hidden"
+										variant={
+											effectiveRecordingTime < REFINE_BUTTON_THRESHOLD_SECONDS
+												? undefined
+												: "filled"
+										}
+										{...testId("portal-audio-echo-button")}
+									>
+										{effectiveRecordingTime <
+											REFINE_BUTTON_THRESHOLD_SECONDS && (
+											<div
+												className="absolute bottom-0 left-0 top-0 bg-primary-600/20 transition-all duration-1000 ease-linear"
+												style={{ width: `${refineProgress}%` }}
+											/>
+										)}
+										<span className="relative z-10">
+											<Trans id="participant.button.echo">ECHO</Trans>
+										</span>
+									</Button>
+								)}
+								{isRecording && (
+									<Button
+										size="lg"
+										color="red"
+										onClick={handleStopRecording}
+										disabled={isStopping}
+										className={
+											!chunks?.data ||
+											chunks.data.length === 0 ||
+											!projectQuery.data?.is_get_reply_enabled
+												? "px-7 md:px-10"
+												: ""
+										}
+										leftSection={
+											<StopIcon size={20} className="hidden md:block" />
+										}
+										{...testId("portal-audio-stop-button")}
+									>
+										<Trans id="participant.button.stop">Stop</Trans>
+									</Button>
+								)}
 							</Group>
 						)}
 					</Group>

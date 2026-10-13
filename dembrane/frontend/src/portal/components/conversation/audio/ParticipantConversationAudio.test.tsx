@@ -223,10 +223,10 @@ afterEach(() => {
 	vi.useRealTimers();
 });
 
-const tree = () => (
+const tree = (path = "/p1/conversation/c1") => (
 	<I18nProvider i18n={i18n}>
 		<MantineProvider>
-			<MemoryRouter initialEntries={["/p1/conversation/c1"]}>
+			<MemoryRouter initialEntries={[path]}>
 				<Routes>
 					<Route
 						path="/:projectId/conversation/:conversationId/*"
@@ -238,7 +238,7 @@ const tree = () => (
 	</I18nProvider>
 );
 
-const renderAudio = () => render(tree());
+const renderAudio = (path?: string) => render(tree(path));
 
 const startRecording = async () => {
 	fireEvent.click(screen.getByTestId("portal-audio-record-button"));
@@ -529,6 +529,29 @@ describe("refine (ECHO) button", () => {
 		fireEvent.click(screen.getByTestId("portal-audio-echo-button"));
 
 		expect(navigate).toHaveBeenCalledWith("/p1/conversation/c1/refine");
+	});
+
+	it("stays behind the stop modal, as full as the paused time", async () => {
+		renderAudio();
+		await startRecording();
+		act(() => recorder.setRecordingTime(75));
+
+		fireEvent.click(screen.getByTestId("portal-audio-stop-button"));
+
+		await screen.findByTestId("portal-audio-stop-modal");
+		expect(screen.getByTestId("portal-audio-echo-button").dataset.variant).toBe(
+			"filled",
+		);
+	});
+
+	it("stays on the refine and verify screens", async () => {
+		for (const screenPath of ["refine", "verify"]) {
+			const { unmount } = renderAudio(`/p1/conversation/c1/${screenPath}`);
+			await startRecording();
+
+			expect(screen.getByTestId("portal-audio-echo-button")).toBeTruthy();
+			unmount();
+		}
 	});
 
 	it("is hidden when neither reply nor verify is on", async () => {
