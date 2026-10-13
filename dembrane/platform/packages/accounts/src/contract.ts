@@ -285,6 +285,13 @@ export const DocumentDetail = DocumentSummary.extend({
    * and send it while it is a draft. The link sam gives the deal owner.
    */
   staff_url: z.string().nullable(),
+  /**
+   * Staff only, and only for a sent document the customer acts on, else null: the two
+   * links the deal owner gives the customer in their own email. `sign_in` is the sign-in
+   * that leads to the organisation's account, `document` where this document is read and
+   * signed.
+   */
+  customer_links: z.object({ sign_in: z.string(), document: z.string() }).nullable(),
 });
 
 /**
@@ -696,10 +703,15 @@ export const PushOfferRequest = z.object({
    * Send now (default), or keep a draft that staff send later with POST .../send. A draft
    * is seen by staff only and adds nothing to the customer's account. When it is sent it
    * gets that day's date (a date in the future stays) and the legal texts in force then.
-   * Sending emails the customer, so a staff key must ask for the draft: with `send` on it
-   * answers 403 `staff.key_cannot_email`, as POST .../send does for an offer.
    */
   send: z.boolean().default(true),
+  /**
+   * With `send`: also email the people who run the account that the offer is ready. Off
+   * unless asked for: the offer appears in the customer's account and the deal owner sends
+   * their own email with `customer_links`. Only a signed-in person may ask for it; a staff
+   * key that does answers 403 `staff.key_cannot_email`.
+   */
+  notify: z.boolean().default(false),
 });
 /** `task` is null for a draft: "Review and sign the offer" is created when it is sent. */
 export const PushOfferResponse = z.object({ document: DocumentDetail, task: Task.nullable() });
@@ -781,9 +793,16 @@ export const DocumentFields = z.object({
 });
 /** Replaces all fields of a draft document; a sent document's fields are fixed. */
 export const SetFieldsRequest = z.object({ fields: z.array(DocumentFieldInput).max(100) });
-/** Sends a draft; `task` also creates its task (a signing task when it needs a signature). */
+/**
+ * Sends a draft; `task` also creates its task (a signing task when it needs a signature).
+ * A sent offer appears in the customer's account and no email leaves: the answer's
+ * `customer_links` are what the deal owner sends themselves. `notify` also emails the
+ * people who run the account; only a signed-in person may ask for it, a staff key that
+ * does answers 403 `staff.key_cannot_email`.
+ */
 export const SendDocumentRequest = z.object({
   task: nullish(z.object({ title: text(255), body: optText(4000) })),
+  notify: z.boolean().default(false),
 });
 
 /** The Exact invoice id in the path of PUT .../invoices/:exactId. */

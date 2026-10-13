@@ -101,6 +101,7 @@ export const pushOfferRequest: Out<typeof PushOfferRequest> = {
   external_ref: "attio-deal-8f2c",
   supersedes_id: null,
   send: true,
+  notify: false,
 };
 
 const offerFields = [
@@ -220,6 +221,7 @@ export const offerDetail: Out<typeof DocumentDetail> = {
   prefill: { organisation: "Example Town Council (sample)", address: null },
   access: "member",
   staff_url: null,
+  customer_links: null,
 };
 
 const dpaSummary: Out<typeof DocumentSummary> = {
@@ -368,6 +370,7 @@ export const signedDpaDetail: Out<typeof DocumentDetail> = {
   prefill: { organisation: "Example Town Council (sample)", address: null },
   access: "member",
   staff_url: null,
+  customer_links: null,
 };
 
 const invoiceSummary: Out<typeof DocumentSummary> = {

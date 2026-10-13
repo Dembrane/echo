@@ -8,7 +8,7 @@ export const staff = {
       "A staff key cannot send this: it would email the customer. A signed-in person sends it from the staff pages.",
     audience: "developer",
     description:
-      "A staff API key called a staff route in a way that emails a customer (an offer send, a message, a demo invitation). Only a signed-in staff member's own action sends.",
+      "A staff API key called a staff route in a way that emails a customer (an offer send with notify, a message, a demo invitation). Only a signed-in staff member's own action sends.",
   },
   "staff.outsider_cannot_be_admin": {
     action: "fix_input",

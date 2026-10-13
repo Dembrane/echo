@@ -270,6 +270,8 @@ export interface PushOfferInput {
   readonly supersedes_id: string | null;
   /** False keeps a draft; staff send it later. */
   readonly send?: boolean;
+  /** With a send: also email the people who run the account. */
+  readonly notify?: boolean;
 }
 
 const pin = (row: LegalRow) => ({
@@ -398,8 +400,8 @@ export async function pushOffer(
   /** Fixed ids for the demo seed; the API never passes them. */
   ids: { document?: string; task?: string } = {},
 ) {
-  // Sending emails the customer; a draft (`send: false`) does not.
-  if (input.send !== false) assertPersonSends(who);
+  // Before anything is written: a refused push changes nothing.
+  if (input.send !== false && input.notify) assertPersonSends(who);
   const org = await staffOrg(d, orgId);
   const pinned = await legalForPush({
     db: d.db,
@@ -446,7 +448,7 @@ export async function pushOffer(
         subject: { type: "document", id },
         detail: { kind: "offer", total_cents: offerTotals(content).total_cents },
       });
-    else taskId = await sendOfferIn(d, tx, who, org.id, id, ids.task);
+    else taskId = await sendOfferIn(d, tx, who, org.id, id, input.notify === true, ids.task);
   });
   const doc = (await store.document(d.db, org.id, id)) as DocumentRow;
   const task = taskId ? await store.task(d.db, org.id, taskId) : null;
@@ -513,7 +515,7 @@ export async function updateOffer(
 /**
  * Sends an offer that is still a draft: its PDF and fields freeze, "Review and sign the
  * offer" opens, the onboarding steps not yet taken are withdrawn, the timeline notes the
- * legal versions it carries, and the people who run the account are told by email.
+ * legal versions it carries. With `notify` the people who run the account are told by email.
  */
 async function sendOfferIn(
   d: AccountsDeps,
@@ -521,9 +523,11 @@ async function sendOfferIn(
   who: Signed,
   orgId: string,
   docId: string,
+  /** Also email the people who run the account; without it the deal owner writes to them. */
+  notify: boolean,
   taskId?: string,
 ): Promise<string> {
-  assertPersonSends(who);
+  if (notify) assertPersonSends(who);
   const now = d.now();
   const doc = (await store.document(tx, orgId, docId)) as DocumentRow;
   await store.updateDocument(tx, docId, { status: "sent", sentAt: now, updatedAt: now });
@@ -582,7 +586,7 @@ async function sendOfferIn(
     },
     webhook: await sentPayload(d, tx, who, orgId, docId),
   });
-  await tellCustomerOfOffer(d, tx, orgId, doc);
+  if (notify) await tellCustomerOfOffer(d, tx, orgId, doc);
   return task.id;
 }
 
@@ -888,15 +892,16 @@ export async function sendDocument(
   orgId: string,
   docId: string,
   task: { title: string; body: string | null } | null,
+  notify = false,
 ) {
   let doc = await staffDocument(d, orgId, docId);
   if (doc.status !== "draft") throw new ConflictError("document.already_sent");
   if (doc.kind === "offer") {
     // Before the draft is drawn again: a refused send changes nothing.
-    assertPersonSends(who);
+    if (notify) assertPersonSends(who);
     await freshenDraftOffer(d, doc);
     doc = await staffDocument(d, orgId, docId);
-    await d.db.transaction((tx) => sendOfferIn(d, tx, who, doc.orgId, doc.id));
+    await d.db.transaction((tx) => sendOfferIn(d, tx, who, doc.orgId, doc.id, notify));
     return documentDetail(
       d,
       (await store.document(d.db, doc.orgId, doc.id)) as DocumentRow,

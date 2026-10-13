@@ -43,10 +43,9 @@ run("a staff key never causes an email", () => {
     await dropDatabase(DB);
   });
 
-  test("an offer: the key drafts and changes it, only a person sends it", async () => {
+  test("an offer: the key drafts, changes and sends it; only a person has it emailed", async () => {
     const before = await documentCount();
-    // Sending is the default of a push, so the key has to ask for a draft.
-    refused(await offer("key"));
+    refused(await offer("key", { notify: true }));
     expect(await documentCount()).toBe(before);
 
     const drafted = await offer("key", { send: false });
@@ -54,16 +53,25 @@ run("a staff key never causes an email", () => {
     const doc = K.PushOfferResponse.parse(drafted.data).document;
     expect(doc.status).toBe("draft");
 
-    refused(await call(w, "POST", `${S()}/documents/${doc.id}/send`, "key", {}));
+    refused(await call(w, "POST", `${S()}/documents/${doc.id}/send`, "key", { notify: true }));
     const still = await store.document(w.db, w.orgId, doc.id);
     expect(still?.status).toBe("draft");
     expect(still?.sentAt).toBeNull();
     expect((await store.tasks(w.db, w.orgId)).some((t) => t.documentId === doc.id)).toBe(false);
     expect(emails()).toBe(0);
 
-    const sent = await call(w, "POST", `${S()}/documents/${doc.id}/send`, "staff", {});
+    // Without the email the key sends: the offer is in the customer's account, with the links.
+    const sent = await call(w, "POST", `${S()}/documents/${doc.id}/send`, "key", {});
     expect(sent.status).toBe(200);
     expect((await store.document(w.db, w.orgId, doc.id))?.status).toBe("sent");
+    expect(K.DocumentDetail.parse(sent.data).customer_links?.document).toContain(doc.id);
+    expect(emails()).toBe(0);
+
+    const second = K.PushOfferResponse.parse((await offer("staff", { send: false })).data).document;
+    const told = await call(w, "POST", `${S()}/documents/${second.id}/send`, "staff", {
+      notify: true,
+    });
+    expect(told.status).toBe(200);
     expect(emails()).toBeGreaterThan(0);
   });
 

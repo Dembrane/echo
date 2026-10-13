@@ -80,6 +80,7 @@ function demoStore(): Store {
 		body: null,
 		confirmation: null,
 		content: null,
+		customer_links: null,
 		fields: [],
 		legal: [],
 		lines: null,
@@ -373,6 +374,13 @@ function withUrls(
 	return {
 		...doc,
 		access,
+		customer_links:
+			access === "staff" && doc.status === "sent" && doc.requires_signature
+				? {
+						document: `/o/${base.split("/").pop()}/account/documents/${doc.id}/sign`,
+						sign_in: `/login?next=${encodeURIComponent(`/o/${base.split("/").pop()}/account`)}`,
+					}
+				: null,
 		file_url: `${base}/documents/${doc.id}/file`,
 		signed_pdf_url:
 			doc.status === "signed" ? `${base}/documents/${doc.id}/signed.pdf` : null,
@@ -397,6 +405,7 @@ function summary(doc: DocumentDetailT): DocumentSummaryT {
 		signature: _sg,
 		access: _a,
 		staff_url: _su,
+		customer_links: _cl,
 		...rest
 	} = doc;
 	return rest;
@@ -1622,6 +1631,7 @@ export async function handle(
 					confirmation: null,
 					content: null,
 					currency: null,
+					customer_links: null,
 					declined_at: null,
 					fields: [],
 					file_url: null,

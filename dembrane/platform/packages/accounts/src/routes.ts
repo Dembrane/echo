@@ -321,7 +321,7 @@ export function accountsRoutes(d: AccountsDeps) {
   app.post(R.sendDocument.path, async (c) => {
     const who = await staff(c, "accounts.document.send");
     const b = await body(c, K.SendDocumentRequest);
-    return c.json(await sendDocument(d, who, p(c, "orgId"), p(c, "docId"), b.task));
+    return c.json(await sendDocument(d, who, p(c, "orgId"), p(c, "docId"), b.task, b.notify));
   });
   app.post(R.voidDocument.path, async (c) => {
     const who = await staff(c, "accounts.document.void");
