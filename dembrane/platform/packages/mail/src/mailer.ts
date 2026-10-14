@@ -26,6 +26,18 @@ export class MemoryMailer implements Mailer {
   }
 }
 
+/**
+ * Writes each message, text part included, to the log instead of sending it: local
+ * development, where the sign-in codes and links in it are the only way in. Never for an
+ * environment whose logs are shared, since those codes sign a person in.
+ */
+export class LogMailer implements Mailer {
+  constructor(private readonly log: (fields: Record<string, unknown>, message: string) => void) {}
+  async send(msg: MailMessage): Promise<void> {
+    this.log({ to: msg.to, subject: msg.subject, tags: msg.tags, text: msg.text }, "mail not sent");
+  }
+}
+
 /** Escapes text for HTML bodies, the way the old Jinja templates autoescaped every value. */
 export function escapeHtml(s: string): string {
   return s

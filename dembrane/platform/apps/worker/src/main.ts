@@ -6,7 +6,7 @@ import { AudioUrls } from "@dembrane/conversations";
 import { bootAssets } from "@dembrane/core";
 import { createDb, describeDbFailure, withDatabase } from "@dembrane/db";
 import { createModels, vertexCompleter, vertexEmbedder } from "@dembrane/llm";
-import { type Mailer, SendGridMailer } from "@dembrane/mail";
+import { LogMailer, type Mailer, SendGridMailer } from "@dembrane/mail";
 import { modelCallRecorder, modelCallTable } from "@dembrane/metering";
 import { createLogger, initTracing } from "@dembrane/observability";
 import { Queue } from "@dembrane/queue";
@@ -67,7 +67,8 @@ const queue = new Queue(databaseUrl, logger, tracing.tracer, {
   release: config.app.release,
 });
 const database = createDb({ url: databaseUrl, poolMax: config.database.poolMax });
-// Without a SendGrid key (local, preview) mail is logged, never sent.
+// Without a SendGrid key (local, preview) mail is logged, never sent. Local logs the text
+// too, links included; a preview's logs are shared, so it gets the subject only.
 const mailer: Mailer = config.mail.sendgridApiKey
   ? new SendGridMailer({
       apiKey: config.mail.sendgridApiKey,
@@ -75,10 +76,12 @@ const mailer: Mailer = config.mail.sendgridApiKey
       fromName: config.mail.fromName,
       region: config.mail.sendgridRegion,
     })
-  : {
-      send: async (msg) =>
-        logger.warn({ subject: msg.subject, tags: msg.tags }, "mail not sent: no SendGrid key"),
-    };
+  : config.app.env === "local"
+    ? new LogMailer((fields, message) => logger.info(fields, message))
+    : {
+        send: async (msg) =>
+          logger.warn({ subject: msg.subject, tags: msg.tags }, "mail not sent: no SendGrid key"),
+      };
 const billing = createBilling({
   db: database.db,
   mollie: config.billing.mollieApiKey
