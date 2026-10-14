@@ -316,7 +316,7 @@ export const ProjectConversationRoute = () => {
 										)}
 										{conversation?.summary && canGenerateSummary && (
 											<Tooltip label={t`Regenerate summary`}>
-												<ActionIcon
+												<ActionIcon aria-label={t`Regenerate summary`}
 													variant="subtle"
 													color="gray"
 													loading={isMutationPending}

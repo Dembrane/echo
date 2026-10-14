@@ -295,7 +295,12 @@ export const theme = createTheme({
       },
     }),
     InputWrapper: {
-      styles: { error: { color: roles.danger }, label: { marginBottom: 4 } },
+      // A description is 14 at every field size; Mantine's md made it 16.66.
+      styles: {
+        description: { fontSize: "var(--app-font-size-xs)" },
+        error: { color: roles.danger },
+        label: { marginBottom: 4 },
+      },
     },
     // Loading covers the page in its own parchment, not a white flash.
     LoadingOverlay: {

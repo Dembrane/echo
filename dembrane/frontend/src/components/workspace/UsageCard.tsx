@@ -179,7 +179,12 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 						</Text>
 					</Group>
 					{hoursPct !== null && (
-						<Progress value={hoursPct} size="xs" color={audioColor} />
+						<Progress
+							aria-label={t`Audio`}
+							value={hoursPct}
+							size="xs"
+							color={audioColor}
+						/>
 					)}
 				</Stack>
 
@@ -202,7 +207,12 @@ export const UsageCard = ({ workspaceId }: { workspaceId: string }) => {
 						</Text>
 					</Group>
 					{seatsPct !== null && (
-						<Progress value={seatsPct} size="xs" color={seatsColor} />
+						<Progress
+							aria-label={t`Seats`}
+							value={seatsPct}
+							size="xs"
+							color={seatsColor}
+						/>
 					)}
 					{data.member_count > 0 && (
 						<Group justify="space-between">

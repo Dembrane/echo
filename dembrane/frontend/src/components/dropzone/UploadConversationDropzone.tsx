@@ -639,6 +639,7 @@ export const UploadConversationDropzone = (
 																	placeholder={t`Enter filename (without extension)`}
 																	rightSection={
 																		<ActionIcon
+																			aria-label={t`Save`}
 																			onClick={fileEditor.saveEdit}
 																			color="green"
 																			variant="subtle"
@@ -680,7 +681,7 @@ export const UploadConversationDropzone = (
 														<Group gap="xs">
 															{fileEditor.editingIndex !== index && (
 																<Tooltip label={t`Edit file name`}>
-																	<ActionIcon
+																	<ActionIcon aria-label={t`Edit file name`}
 																		color="primary"
 																		variant="subtle"
 																		onClick={() =>
@@ -696,7 +697,7 @@ export const UploadConversationDropzone = (
 																</Tooltip>
 															)}
 															<Tooltip label={t`Remove file`}>
-																<ActionIcon
+																<ActionIcon aria-label={t`Remove file`}
 																	color="red"
 																	variant="subtle"
 																	onClick={() => handleRemoveFile(index)}

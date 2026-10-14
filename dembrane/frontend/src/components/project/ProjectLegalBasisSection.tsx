@@ -262,7 +262,10 @@ export const ProjectLegalBasisSection = ({
 										>
 											<Group gap="xs" wrap="nowrap">
 												<Trans>Workspace settings</Trans>
-												<ArrowSquareOutIcon size={16} />
+												<ArrowSquareOutIcon
+													size={16}
+													style={{ flex: "none" }}
+												/>
 											</Group>
 										</Anchor>
 									</Group>

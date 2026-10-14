@@ -36,7 +36,10 @@ export const TrainingRoster = ({
 	}
 
 	return (
-		<Table.ScrollContainer minWidth={420}>
+		<Table.ScrollContainer
+			minWidth={420}
+			scrollAreaProps={{ viewportProps: { tabIndex: 0 } }}
+		>
 			<Table verticalSpacing="sm" highlightOnHover>
 				<Table.Thead>
 					<Table.Tr>

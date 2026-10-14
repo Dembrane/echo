@@ -150,7 +150,9 @@ function UsageBar({
 	cap,
 	unit = "",
 	block,
+	label,
 }: {
+	label: string;
 	used: number;
 	cap: number | null;
 	unit?: string;
@@ -180,7 +182,13 @@ function UsageBar({
 				{used.toFixed(unit === "h" ? 1 : 0)} / {cap}
 				{unit ? ` ${unit}` : ""}
 			</Text>
-			<Progress value={pct} color={color} size="xs" radius="xs" />
+			<Progress
+				aria-label={label}
+				value={pct}
+				color={color}
+				size="xs"
+				radius="xs"
+			/>
 		</Stack>
 	);
 }
@@ -364,6 +372,7 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 				accessorKey: "audio_hours",
 				cell: ({ row }) => (
 					<UsageBar
+						label={t`Hours`}
 						used={row.original.audio_hours}
 						cap={row.original.hours_included}
 						unit="h"
@@ -377,6 +386,7 @@ export const OrganisationUsageRollup = ({ orgId }: { orgId: string }) => {
 				accessorKey: "seat_count",
 				cell: ({ row }) => (
 					<UsageBar
+						label={t`Seats`}
 						used={row.original.seat_count}
 						cap={row.original.seats_included}
 						block={row.original.seat_cap_hit}

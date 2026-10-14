@@ -160,7 +160,7 @@ export const PinnedProjectCard = ({
 							)}
 							{onUnpin ? (
 								<Tooltip label={t`Unpin project`}>
-									<ActionIcon
+									<ActionIcon aria-label={t`Unpin project`}
 										variant="subtle"
 										color="primary"
 										loading={isUnpinning}

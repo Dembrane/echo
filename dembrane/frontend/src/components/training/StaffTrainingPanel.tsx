@@ -138,7 +138,10 @@ export const StaffTrainingPanel = () => {
 					)}
 				</Text>
 			) : (
-				<Table.ScrollContainer minWidth={980}>
+				<Table.ScrollContainer
+					minWidth={980}
+					scrollAreaProps={{ viewportProps: { tabIndex: 0 } }}
+				>
 					<Table verticalSpacing="sm" highlightOnHover>
 						<Table.Thead>
 							<Table.Tr>

@@ -410,7 +410,7 @@ export const ChatHistoryMessage = ({
 									)}
 									{message.role === "user" && onSaveAsTemplate && (
 										<Tooltip label={t`Save as template`}>
-											<ActionIcon
+											<ActionIcon aria-label={t`Save as template`}
 												variant="subtle"
 												color="gray"
 												onClick={() => onSaveAsTemplate(message.content)}

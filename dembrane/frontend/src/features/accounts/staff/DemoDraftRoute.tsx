@@ -77,7 +77,7 @@ function DemoDraft() {
 					style={{ whiteSpace: "nowrap" }}
 				>
 					<Group gap={4} wrap="nowrap">
-						<ArrowLeftIcon size={14} />
+						<ArrowLeftIcon size={16} />
 						<Trans>Back to the demo</Trans>
 					</Group>
 				</Anchor>

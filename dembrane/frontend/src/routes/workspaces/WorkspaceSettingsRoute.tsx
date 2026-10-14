@@ -1041,6 +1041,7 @@ export const WorkspaceSettingsRoute = () => {
 																	</Tooltip>
 																) : canManage ? (
 																	<Select
+																		aria-label={t`Role`}
 																		// Matrix §5 retires "Owner" as a user-facing role
 																		// — only Admin / Billing / Member exposed here.
 																		// "External" is never an option for a non-external
@@ -1859,6 +1860,7 @@ function PrivacyAndDefaultsSection({
 				requiredTier="innovator"
 				wallKey="private_workspace"
 				workspaceId={workspaceId}
+				withRoles={false}
 			>
 				{({ onClick }) => (
 					<Box

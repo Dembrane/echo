@@ -86,7 +86,12 @@ const UserChunkMessage = ({
 			<div>
 				<Menu shadow="md" width={200}>
 					<Menu.Target>
-						<ActionIcon variant="transparent" c="dimmed" className="h-full">
+						<ActionIcon
+							aria-label={t`More actions`}
+							variant="transparent"
+							c="dimmed"
+							className="h-full"
+						>
 							<DotsThreeVerticalIcon size={20} />
 						</ActionIcon>
 					</Menu.Target>

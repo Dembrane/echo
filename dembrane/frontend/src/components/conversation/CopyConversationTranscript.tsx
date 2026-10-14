@@ -46,6 +46,7 @@ export const CopyConversationTranscriptActionIcon = (props: {
 			}
 		>
 			<ActionIcon
+				aria-label={t`Copy to clipboard`}
 				variant="subtle"
 				color={copied ? "blue" : "gray"}
 				onClick={(e) => {

@@ -39,6 +39,9 @@ type FeatureGatePopoverProps = {
 	onStart: () => void;
 	/** The blocked control. It gets the click that opens the popover. */
 	children: (trigger: { onClick: () => void }) => ReactElement;
+	/** Off when the trigger is a wrapper around a control, not a control: a
+	 * plain element may not carry `aria-haspopup` or `aria-expanded`. */
+	withRoles?: boolean;
 };
 
 export function FeatureGatePopover({
@@ -48,6 +51,7 @@ export function FeatureGatePopover({
 	requiredTier,
 	wallKey,
 	workspaceId,
+	withRoles = true,
 }: FeatureGatePopoverProps) {
 	const [opened, setOpened] = useState(false);
 	const gateViewed = useGateViewed(workspaceId);
@@ -97,6 +101,7 @@ export function FeatureGatePopover({
 			width={330}
 			withArrow
 			withinPortal
+			withRoles={withRoles}
 		>
 			<Popover.Target>{children({ onClick: toggle })}</Popover.Target>
 			<Popover.Dropdown {...testId("feature-gate-popover")}>

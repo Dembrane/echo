@@ -186,7 +186,7 @@ export function CustomerEmailModal({
 						sam marks the offer as sent.
 					</Trans>
 				</Text>
-				<Group justify="flex-end">
+				<Group>
 					<Button variant="subtle" color="gray" onClick={onClose}>
 						<Trans>Done</Trans>
 					</Button>

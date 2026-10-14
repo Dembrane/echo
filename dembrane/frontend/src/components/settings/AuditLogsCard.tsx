@@ -478,7 +478,7 @@ export const AuditLogsCard = () => {
 
 				{isError ? <ErrorNotice error={error} /> : null}
 
-				<ScrollArea>
+				<ScrollArea viewportProps={{ tabIndex: 0 }}>
 					<Table striped highlightOnHover>
 						<Table.Thead>
 							{table.getHeaderGroups().map((headerGroup) => (
@@ -488,12 +488,13 @@ export const AuditLogsCard = () => {
 										const sortState = header.column.getIsSorted();
 										const sortIcon =
 											sortState === "desc" ? (
-												<ArrowDownIcon size={16} />
+												<ArrowDownIcon size={16} style={{ flex: "none" }} />
 											) : sortState === "asc" ? (
-												<ArrowUpIcon size={16} />
+												<ArrowUpIcon size={16} style={{ flex: "none" }} />
 											) : canSort ? (
 												<ArrowsDownUpIcon
 													size={16}
+													style={{ flex: "none" }}
 													color="var(--mantine-color-dimmed)"
 												/>
 											) : null;

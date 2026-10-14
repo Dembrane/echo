@@ -76,7 +76,9 @@ export const NavButton = ({
 			style={{ color: destructive ? roles.danger : roles.text }}
 		>
 			<span className="relative flex flex-1 items-center gap-2 truncate">
-				{Icon ? <Icon size={16} color={iconColor} /> : null}
+				{Icon ? (
+					<Icon size={16} color={iconColor} className="shrink-0" />
+				) : null}
 				<span
 					className="truncate"
 					style={labelColor ? { color: labelColor } : undefined}

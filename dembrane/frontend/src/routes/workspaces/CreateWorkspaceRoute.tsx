@@ -748,7 +748,7 @@ export const CreateWorkspaceRoute = () => {
 					</Stepper.Step>
 				</Stepper>
 
-				<Group mt="sm">
+				<Group>
 					{step < 3 ? (
 						<Button
 							variant="filled"

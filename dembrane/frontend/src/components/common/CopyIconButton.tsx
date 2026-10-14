@@ -15,7 +15,7 @@ export const CopyIconButton = ({
 } & ActionIconProps) => {
 	return (
 		<Tooltip label={copied ? t`Copied` : copyTooltip} position="bottom">
-			<ActionIcon
+			<ActionIcon aria-label={copied ? t`Copied` : (copyTooltip ?? t`Copy`)}
 				p="xs"
 				color={copied ? "teal" : "gray"}
 				variant="subtle"

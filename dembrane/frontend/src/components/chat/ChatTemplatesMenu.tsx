@@ -444,7 +444,7 @@ export const ChatTemplatesMenu = ({
 				)}
 
 				<Tooltip label={t`Manage templates`}>
-					<ActionIcon
+					<ActionIcon aria-label={t`Manage templates`}
 						variant="subtle"
 						color="gray"
 						onClick={open}

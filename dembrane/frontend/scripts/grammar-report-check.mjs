@@ -40,9 +40,11 @@ const fixFor = (rule) =>
 const report = JSON.parse(readFileSync(REPORT, "utf8"));
 const now = {};
 const example = {};
+const visited = new Set();
 for (const row of report.rows) {
 	if (row.skipped) continue;
 	const key = `${row.project.replace("grammar-", "")} · ${row.visit} · ${row.state}`;
+	visited.add(key);
 	for (const f of row.hard) {
 		now[key] ??= {};
 		now[key][f.rule] = (now[key][f.rule] ?? 0) + 1;
@@ -67,8 +69,9 @@ if (args.includes("--write") || args.includes("--update")) {
 			...Object.keys(baseline[key] ?? {}),
 			...Object.keys(now[key] ?? {}),
 		])) {
-			const n = now[key]?.[rule] ?? 0;
 			const b = baseline[key]?.[rule];
+			// A page this run skipped or never reached keeps its baseline.
+			const n = visited.has(key) ? (now[key]?.[rule] ?? 0) : b;
 			const v = args.includes("--write") ? n : Math.min(n, b ?? n);
 			if (v > 0) next[key] = { ...next[key], [rule]: v };
 		}

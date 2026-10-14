@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Group } from "@mantine/core";
 import {
 	type FileRejection,
@@ -25,7 +26,11 @@ export const CommonDropzone = ({
 	...props
 }: PropsWithChildren<CommonDropzoneProps>) => {
 	return (
-		<MantineDropzone p="sm" {...props}>
+		<MantineDropzone
+			p="sm"
+			inputProps={{ "aria-label": t`Upload files` }}
+			{...props}
+		>
 			<Group justify="center" gap="xl" style={{ pointerEvents: "none" }}>
 				<MantineDropzone.Accept>
 					{accept || <UploadSimpleIcon size={20} color="var(--app-action)" />}

@@ -49,7 +49,7 @@ const EmailItem = ({ email }: { email: string }) => {
 		<Group gap="xs">
 			<Text size="sm">{email}</Text>
 			<Tooltip label={clipboard.copied ? t`Copied` : t`Copy`}>
-				<ActionIcon
+				<ActionIcon aria-label={clipboard.copied ? t`Copied` : t`Copy`}
 					variant="subtle"
 					color={clipboard.copied ? "green" : "gray"}
 					onClick={() => clipboard.copy(email)}

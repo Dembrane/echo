@@ -146,7 +146,7 @@ export const ResponseFeedbackControls = ({
 		<>
 			<Group gap="xs">
 				<Tooltip label={t`Good response`}>
-					<ActionIcon
+					<ActionIcon aria-label={t`Good response`}
 						variant="subtle"
 						color={shownRating === "up" ? "primary" : "gray"}
 						disabled={disabled || busy}
@@ -158,7 +158,7 @@ export const ResponseFeedbackControls = ({
 					</ActionIcon>
 				</Tooltip>
 				<Tooltip label={t`Poor response`}>
-					<ActionIcon
+					<ActionIcon aria-label={t`Poor response`}
 						variant="subtle"
 						color={shownRating === "down" ? "primary" : "gray"}
 						disabled={disabled || busy}

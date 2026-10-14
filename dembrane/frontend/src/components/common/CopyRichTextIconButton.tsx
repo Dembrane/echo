@@ -37,6 +37,7 @@ export const CopyRichTextIconButton = ({
 			label={isLoading ? t`Copying…` : copied ? t`Copied` : t`Copy`}
 		>
 			<ActionIcon
+				aria-label={t`Copy`}
 				size={size}
 				color={copied ? "teal" : "gray"}
 				variant="subtle"

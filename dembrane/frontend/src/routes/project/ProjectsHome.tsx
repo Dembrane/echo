@@ -41,6 +41,7 @@ import { useTogglePinMutation } from "@/components/project/hooks";
 import { PinnedProjectCard } from "@/components/project/PinnedProjectCard";
 import { ProjectListItem } from "@/components/project/ProjectListItem";
 import { ProjectListSkeleton } from "@/components/project/ProjectListSkeleton";
+import { tierName } from "@/components/workspace/TierBadge";
 import { API_BASE_URL } from "@/config";
 import { useBulkSelection } from "@/hooks/useBulkSelection";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -258,9 +259,7 @@ export const ProjectsHomeRoute = () => {
 								other="# members"
 							/>
 							{" · "}
-							<span style={{ textTransform: "capitalize" }}>
-								{workspace.tier}
-							</span>
+							<span>{tierName(workspace.tier)}</span>
 							{/* Pilot is the only tier with a hard hour block,
 							    so spell out the hour count inline — audit §1. */}
 							{isPilot && pilotHours && (
