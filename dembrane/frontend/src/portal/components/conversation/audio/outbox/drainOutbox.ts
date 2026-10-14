@@ -1,9 +1,20 @@
 import axios from "axios";
-import type { ChunkItem, OutboxItem, OutboxStore } from "./outboxStore";
+import type {
+	ChunkItem,
+	OutboxItem,
+	OutboxStore,
+	SliceGroup,
+} from "./outboxStore";
 
 const FIRST_BACKOFF_MS = 2_000;
 const MAX_BACKOFF_MS = 60_000;
 const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * A recording cut off under this holds no audio worth sending: an MP4's first
+ * slice is only its ~600-byte header. Matches the recorder's own floor.
+ */
+const MIN_RECOVERED_BYTES = 1024;
 
 /** The server says the conversation is gone or closed to us: sending again won't help. */
 const GONE_STATUSES = [403, 404, 410];
@@ -26,10 +37,15 @@ export type OutboxEvent =
 			attempts: number;
 			retryInMs: number;
 			error: unknown;
-	  };
+	  }
+	| { type: "recovered"; group: SliceGroup; item: ChunkItem }
+	| { type: "discarded"; group: SliceGroup; reason: "empty" | "expired" };
 
 export type Drainer = {
-	/** Housekeeping before the first drain: drops items too old to send. */
+	/**
+	 * Housekeeping before the first drain: seals recordings a dead tab left
+	 * mid-chunk, and drops items too old to send.
+	 */
 	start: () => Promise<void>;
 	/**
 	 * Sends everything it can. Resolves with how long until the next item is
@@ -40,6 +56,15 @@ export type Drainer = {
 
 const httpStatus = (error: unknown) =>
 	axios.isAxiosError(error) ? error.response?.status : undefined;
+
+/** Held by a tab for as long as it records into a slice group. */
+export const recordingLockName = (groupId: string) => `recording:${groupId}`;
+
+const heldWebLocks = async () => {
+	if (!navigator.locks?.query) return null;
+	const { held = [] } = await navigator.locks.query();
+	return new Set(held.flatMap((lock) => (lock.name ? [lock.name] : [])));
+};
 
 /**
  * Sends the outbox one item at a time. Order is kept within a conversation
@@ -52,11 +77,14 @@ export const createDrainer = ({
 	api,
 	now = Date.now,
 	onEvent = () => {},
+	heldLocks = heldWebLocks,
 }: {
 	store: OutboxStore;
 	api: OutboxApi;
 	now?: () => number;
 	onEvent?: (event: OutboxEvent) => void;
+	/** Names of the Web Locks held in any tab, or null if the browser can't say. */
+	heldLocks?: () => Promise<Set<string> | null>;
 }): Drainer => {
 	// In memory only: after a reload, everything is tried straight away.
 	const backoff = new Map<string, { failures: number; retryAt: number }>();
@@ -159,7 +187,31 @@ export const createDrainer = ({
 		return running;
 	};
 
+	/** Seals the slice groups of recordings that died mid-chunk, so they get sent. */
+	const recoverOrphans = async () => {
+		const held = await heldLocks();
+		// Without the lock list, a live recording looks the same as a dead one.
+		if (!held) return;
+		for (const group of await store.listSliceGroups()) {
+			if (held.has(recordingLockName(group.groupId))) continue;
+			const reason =
+				Date.parse(group.startedAt) < now() - MAX_AGE_MS
+					? "expired"
+					: group.bytes < MIN_RECOVERED_BYTES
+						? "empty"
+						: null;
+			if (reason) {
+				await store.discardGroup(group.groupId);
+				onEvent({ group, reason, type: "discarded" });
+				continue;
+			}
+			const item = await store.sealGroup(group.groupId, { recovered: true });
+			if (item) onEvent({ group, item, type: "recovered" });
+		}
+	};
+
 	const start = async () => {
+		await recoverOrphans();
 		const expired = await store.purgeOlderThan(now() - MAX_AGE_MS);
 		for (const item of expired)
 			onEvent({ item, reason: "expired", type: "dropped" });
