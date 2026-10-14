@@ -3,10 +3,12 @@ import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
 import type { BetterAuthPlugin } from "better-auth";
 import { APIError, createAuthEndpoint, getSessionFromCtx } from "better-auth/api";
-import { and, desc, eq, gt, isNull, ne, notLike, or } from "drizzle-orm";
+import { and, eq, gt, isNull, ne, notLike, or } from "drizzle-orm";
+import { z } from "zod";
+import { browserDetails } from "./device";
 
 // Two browsers per account. A sign-in from a third browser gets a held session, which signs
-// nobody in until the person chooses to replace the sessions on their other browsers. Every
+// nobody in until the person chooses one other browser to sign out. Every
 // such sign-in is kept in auth_sign_in_overlap and reported to onOverlap.
 
 /** The dashboard names its browser in this header on every auth call. */
@@ -41,6 +43,8 @@ interface Other {
   readonly id: string;
   readonly deviceId: string | null;
   readonly seenAt: Date;
+  readonly createdAt: Date;
+  readonly userAgent: string | null;
 }
 
 /**
@@ -60,6 +64,8 @@ async function othersOf(
       deviceId: s.deviceId,
       lastSeenAt: s.lastSeenAt,
       updatedAt: s.updatedAt,
+      createdAt: s.createdAt,
+      userAgent: s.userAgent,
     })
     .from(s)
     .where(
@@ -76,7 +82,26 @@ async function othersOf(
     id: r.id,
     deviceId: r.deviceId,
     seenAt: r.lastSeenAt ?? r.updatedAt,
+    createdAt: r.createdAt,
+    userAgent: r.userAgent,
   }));
+}
+
+/** One selector per device; the session id is not its secret bearer token. */
+function devicesOf(others: readonly Other[]) {
+  const devices = new Map<string, Other>();
+  for (const other of others) {
+    const key = other.deviceId ?? "";
+    const previous = devices.get(key);
+    if (!previous || other.seenAt > previous.seenAt) devices.set(key, other);
+  }
+  return [...devices.values()]
+    .sort((a, b) => b.seenAt.getTime() - a.seenAt.getTime() || a.id.localeCompare(b.id))
+    .map((other) => ({
+      id: other.id,
+      ...browserDetails(other.deviceId ? other.userAgent : null),
+      lastActiveAt: other.seenAt.toISOString(),
+    }));
 }
 
 function summary(others: readonly Other[]) {
@@ -132,9 +157,9 @@ export async function recordHeld(
 
 /**
  * The two calls the login page makes after a sign-in:
- * GET /other-sessions says whether the session is held and since when the account has
- * been signed in elsewhere (a time only: never an address, place or browser);
- * POST /other-sessions/replace signs the other browsers out and releases the hold.
+ * GET /other-sessions lists the active devices while a sign-in is held. Only recognisable
+ * browser/platform names and last-active times are returned, never tokens, addresses or IPs.
+ * POST /other-sessions/replace-device signs out the selected device and releases the hold.
  */
 export function oneBrowser(opts: { db: Db; onOverlap?: OnOverlap | undefined }) {
   const { db } = opts;
@@ -145,72 +170,107 @@ export function oneBrowser(opts: { db: Db; onOverlap?: OnOverlap | undefined }) 
       otherSessions: createAuthEndpoint("/other-sessions", { method: "GET" }, async (ctx) => {
         const found = await getSessionFromCtx(ctx);
         if (!found) throw new APIError("UNAUTHORIZED");
-        const [row] = await db
-          .select({ held: s.held, deviceId: s.deviceId })
-          .from(s)
-          .where(eq(s.id, found.session.id))
-          .limit(1);
-        if (!row?.held) return ctx.json({ held: false, since: null });
-        const [oldest] = await db
-          .select({ createdAt: s.createdAt })
-          .from(s)
-          .where(
-            and(
-              eq(s.userId, found.user.id),
-              eq(s.held, false),
-              gt(s.expiresAt, new Date()),
-              ne(s.id, found.session.id),
-              or(isNull(s.userAgent), notLike(s.userAgent, STAFF_KEY_AGENT)),
-            ),
-          )
-          .orderBy(desc(s.createdAt))
-          .limit(1);
-        return ctx.json({ held: true, since: oldest?.createdAt.toISOString() ?? null });
+        const state = await db.transaction(async (tx) => {
+          // The same account lock as session creation and replacement: a session can
+          // expire or sign out while this person is looking at the choice.
+          await tx
+            .select({ id: schema.auth_user.id })
+            .from(schema.auth_user)
+            .where(eq(schema.auth_user.id, found.user.id))
+            .for("update");
+          const [row] = await tx
+            .select({ held: s.held, deviceId: s.deviceId })
+            .from(s)
+            .where(and(eq(s.id, found.session.id), eq(s.userId, found.user.id)))
+            .limit(1);
+          if (!row) throw new APIError("UNAUTHORIZED");
+          if (!row.held) return { held: false, since: null, devices: [] };
+          const others = await othersOf(tx, found.user.id, row.deviceId ?? "", found.session.id);
+          // A slot is already free. No other device needs to be signed out.
+          if (summary(others).otherDevices < MAX_DEVICES) {
+            await tx
+              .update(s)
+              .set({ held: false, lastSeenAt: new Date() })
+              .where(eq(s.id, found.session.id));
+            return { held: false, since: null, devices: [] };
+          }
+          const latest = others.reduce<Date | null>(
+            (max, other) => (!max || other.createdAt > max ? other.createdAt : max),
+            null,
+          );
+          return { held: true, since: latest?.toISOString() ?? null, devices: devicesOf(others) };
+        });
+        return ctx.json(state);
       }),
-      replaceOtherSessions: createAuthEndpoint(
-        "/other-sessions/replace",
-        { method: "POST" },
+      replaceOtherDevice: createAuthEndpoint(
+        "/other-sessions/replace-device",
+        { method: "POST", body: z.object({ sessionId: z.string().min(1).max(128).optional() }) },
         async (ctx) => {
           const found = await getSessionFromCtx(ctx);
           if (!found) throw new APIError("UNAUTHORIZED");
           const sessionId = found.session.id;
           const userId = found.user.id;
-          const [row] = await db
-            .select({ held: s.held, deviceId: s.deviceId })
-            .from(s)
-            .where(eq(s.id, sessionId))
-            .limit(1);
-          if (!row?.held) return ctx.json({ replaced: 0 });
-          const others = await othersOf(db, userId, row.deviceId ?? "", sessionId);
           const now = new Date();
-          const gone = await db.transaction(async (tx) => {
-            // Every other session of the person goes, held ones and this browser's stale
-            // ones included; staff API keys stay.
-            const deleted = await tx
-              .delete(s)
-              .where(
-                and(
-                  eq(s.userId, userId),
-                  ne(s.id, sessionId),
-                  or(isNull(s.userAgent), notLike(s.userAgent, STAFF_KEY_AGENT)),
-                ),
-              )
-              .returning({ id: s.id });
+          const result = await db.transaction(async (tx) => {
+            await tx
+              .select({ id: schema.auth_user.id })
+              .from(schema.auth_user)
+              .where(eq(schema.auth_user.id, userId))
+              .for("update");
+            const [row] = await tx
+              .select({ held: s.held, deviceId: s.deviceId })
+              .from(s)
+              .where(and(eq(s.id, sessionId), eq(s.userId, userId)))
+              .limit(1);
+            if (!row) throw new APIError("UNAUTHORIZED");
+            if (!row.held) return null;
+            const others = await othersOf(tx, userId, row.deviceId ?? "", sessionId);
+            let replaced = 0;
+            if (summary(others).otherDevices >= MAX_DEVICES) {
+              if (!ctx.body.sessionId)
+                throw new APIError("BAD_REQUEST", { message: "Choose a device to sign out" });
+              const chosen = others.find((other) => other.id === ctx.body.sessionId);
+              // Never accept another person's session, a staff key or a held session.
+              if (!chosen)
+                throw new APIError("CONFLICT", {
+                  message: "This device is no longer available. Choose again.",
+                });
+              const remaining = others.filter((other) => other.deviceId !== chosen.deviceId);
+              if (summary(remaining).otherDevices >= MAX_DEVICES)
+                throw new APIError("CONFLICT", {
+                  message: "The active devices changed. Choose again.",
+                });
+              // A browser may have several sessions. Revoke that whole device only,
+              // preserving every other browser and all staff API keys.
+              const deleted = await tx
+                .delete(s)
+                .where(
+                  and(
+                    eq(s.userId, userId),
+                    ne(s.id, sessionId),
+                    chosen.deviceId === null ? isNull(s.deviceId) : eq(s.deviceId, chosen.deviceId),
+                    or(isNull(s.userAgent), notLike(s.userAgent, STAFF_KEY_AGENT)),
+                  ),
+                )
+                .returning({ id: s.id });
+              replaced = deleted.length;
+            }
             await tx.update(s).set({ held: false, lastSeenAt: now }).where(eq(s.id, sessionId));
             await tx
               .update(schema.auth_sign_in_overlap)
               .set({ replacedAt: now })
               .where(eq(schema.auth_sign_in_overlap.sessionId, sessionId));
-            return deleted.length;
+            return { replaced, deviceId: row.deviceId, counts: summary(others) };
           });
-          opts.onOverlap?.({
-            userId,
-            sessionId,
-            deviceId: row.deviceId,
-            outcome: "replaced",
-            ...summary(others),
-          });
-          return ctx.json({ replaced: gone });
+          if (result)
+            opts.onOverlap?.({
+              userId,
+              sessionId,
+              deviceId: result.deviceId,
+              outcome: "replaced",
+              ...result.counts,
+            });
+          return ctx.json({ replaced: result?.replaced ?? 0 });
         },
       ),
     },

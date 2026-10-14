@@ -1,38 +1,36 @@
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Button, Stack, Text, Title } from "@mantine/core";
+import { Button, Radio, Stack, Text, Title } from "@mantine/core";
 import { useEffect, useState } from "react";
+import type { OtherDevice } from "@/lib/auth";
 import { testId } from "@/lib/testUtils";
 
 /**
  * The page a sign-in lands on when the account has reached its two-device limit: one
- * decision, to log those devices out or to go back. It covers the login page it is rendered
+ * decision, to sign out one selected device or to go back. It covers the login page it is rendered
  * from, in the look of onboarding, and sits under the transition curtain so the curtain
  * opens onto it.
  */
 export const SignedInElsewhere = ({
-	since,
+	devices,
 	loading,
+	error,
 	onConfirm,
 	onCancel,
 }: {
-	/** When the other browser logged in, as an ISO time; null when unknown. */
-	since: string | null;
+	devices: OtherDevice[];
 	loading: boolean;
-	onConfirm: () => void;
+	error?: string;
+	onConfirm: (sessionId: string) => void;
 	onCancel: () => void;
 }) => {
 	const [ready, setReady] = useState(false);
+	const [choice, setChoice] = useState("");
+	const selected = devices.some((device) => device.id === choice) ? choice : "";
 	useEffect(() => {
 		const frame = requestAnimationFrame(() => setReady(true));
 		return () => cancelAnimationFrame(frame);
 	}, []);
-
-	const elsewhereSince = since
-		? new Date(since).toLocaleString(undefined, {
-				dateStyle: "medium",
-				timeStyle: "short",
-			})
-		: null;
 
 	return (
 		<div
@@ -70,36 +68,82 @@ export const SignedInElsewhere = ({
 					<Stack gap="lg">
 						<Stack gap="xs">
 							<Title order={2}>
-								<Trans>This account is logged in on two other devices</Trans>
+								<Trans>Choose a device to sign out</Trans>
 							</Title>
 							<Text size="sm" lh={1.6}>
-								{elsewhereSince ? (
-									<Trans>
-										It has been logged in on other devices since{" "}
-										{elsewhereSince}. For security, an account can be logged in
-										on up to two devices at a time.
-									</Trans>
-								) : (
-									<Trans>
-										It is logged in on two other devices. For security, an
-										account can be logged in on up to two devices at a time.
-									</Trans>
-								)}
+								<Trans>
+									Your account can be signed in on up to two devices. Choose one
+									to sign out so you can continue here.
+								</Trans>
 							</Text>
 						</Stack>
 						<Stack gap="sm">
+							<Radio.Group
+								value={selected}
+								onChange={setChoice}
+								aria-label={t`Choose a device to sign out`}
+							>
+								<Stack gap="sm">
+									{devices.map((device) => {
+										const { browser, platform } = device;
+										const label =
+											browser && platform
+												? t`${browser} on ${platform}`
+												: browser || platform || t`Unknown device`;
+										const lastActiveAt = new Date(
+											device.lastActiveAt,
+										).toLocaleString(undefined, {
+											dateStyle: "medium",
+											timeStyle: "short",
+										});
+										return (
+											<Radio
+												key={device.id}
+												value={device.id}
+												disabled={loading}
+												label={
+													<Stack gap={2}>
+														<Text size="sm" fw={500}>
+															{label}
+														</Text>
+														<Text size="xs" c="dimmed">
+															<Trans>Last active {lastActiveAt}</Trans>
+														</Text>
+													</Stack>
+												}
+												styles={{
+													root: {
+														border:
+															"1px solid var(--mantine-color-default-border)",
+														borderRadius: 8,
+														padding: 14,
+													},
+												}}
+											/>
+										);
+									})}
+								</Stack>
+							</Radio.Group>
+							{error && (
+								<Text role="alert" c="red" size="sm">
+									{error}
+								</Text>
+							)}
 							<Button
 								variant="filled"
 								fullWidth
 								size="md"
 								loading={loading}
-								onClick={onConfirm}
+								disabled={!selected}
+								onClick={() => {
+									if (selected) onConfirm(selected);
+								}}
 								{...testId("auth-login-elsewhere-confirm")}
 							>
-								<Trans>Log in anyway</Trans>
+								<Trans>Sign out selected device and continue</Trans>
 							</Button>
 							<Text size="xs" c="dimmed">
-								<Trans>Logging in here logs the other devices out.</Trans>
+								<Trans>The other device will stay signed in.</Trans>
 							</Text>
 							<Button
 								fullWidth

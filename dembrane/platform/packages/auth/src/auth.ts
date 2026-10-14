@@ -47,7 +47,7 @@ export interface AuthOptions {
   readonly defaultDirectusRoleId: string | null;
   /**
    * Told each time someone signs in while the account is signed in on another browser, and
-   * again when they go ahead and replace those sessions. For analytics; never awaited.
+   * again when they choose another device to sign out. For analytics; never awaited.
    */
   readonly onOverlap?: OnOverlap;
 }
@@ -158,7 +158,7 @@ export function createAuth(opts: AuthOptions) {
       expiresIn: 7 * 24 * 3600,
       updateAge: 24 * 3600,
       // Set by the server only (overlap.ts): the browser, whether the session is still
-      // waiting for the person to replace their other sessions, and when it was last used.
+      // waiting for the person to sign out another device, and when it was last used.
       additionalFields: {
         deviceId: { type: "string", required: false, input: false },
         held: { type: "boolean", required: false, defaultValue: false, input: false },
@@ -222,7 +222,7 @@ export function createAuth(opts: AuthOptions) {
           // session. Unverified is left to Better Auth, which refuses password sign-in until
           // the email is verified and verifies it on a code sign-in.
           // A sign-in from the dashboard while the account is signed in on two other browsers
-          // is created held: it signs nobody in until the person replaces the other sessions.
+          // is created held: it signs nobody in until the person signs out a selected device.
           before: async (session, ctx) => {
             const [row] = await opts.db
               .select({ status: schema.directus_users.status })
