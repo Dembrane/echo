@@ -14,6 +14,7 @@ import Cookies from "js-cookie";
 import posthog from "posthog-js";
 import {
 	type CSSProperties,
+	useCallback,
 	useEffect,
 	useReducer,
 	useRef,
@@ -30,14 +31,12 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useVideoWakeLockFallback } from "@/hooks/useVideoWakeLockFallback";
 import { testId } from "@/lib/testUtils";
-import { useUploadConversationChunk } from "@/portal/components/conversation/audio/hooks/useUploadConversationChunk";
 import { ParticipantSettingsModal } from "../../settings/ParticipantSettingsModal";
 import { useConversationArtefacts } from "../../verify/hooks";
 import { ConversationErrorView } from "../ConversationErrorView";
 import { useParticipantConversation } from "../useParticipantConversation";
 import useChunkedAudioRecorder from "./hooks/useChunkedAudioRecorder";
 import { useMonitorBeacon } from "./hooks/useMonitorBeacon";
-import { usePendingUploads } from "./hooks/usePendingUploads";
 import { usePingConnectionHealth } from "./hooks/usePingConnectionHealth";
 import {
 	captureInterruptionError,
@@ -46,6 +45,7 @@ import {
 } from "./hooks/useRecordingTelemetry";
 import { useRecordingWakeLock } from "./hooks/useRecordingWakeLock";
 import { useS3ConnectivityCheck } from "./hooks/useS3ConnectivityCheck";
+import { useOutbox } from "./outbox/OutboxProvider";
 import type { RecordingMeterStatus } from "./ParticipantRecordingWaveform";
 import { ParticipantRecordingWaveform } from "./ParticipantRecordingWaveform";
 import { PermissionErrorModal } from "./PermissionErrorModal";
@@ -65,6 +65,9 @@ import { StopRecordingConfirmationModal } from "./StopRecordingConfirmationModal
 
 const CONVERSATION_DELETION_STATUS_CODES = [404, 403, 410];
 const REFINE_BUTTON_THRESHOLD_SECONDS = 60;
+// Finish waits for the audio with no time limit; past this, say so in
+// telemetry. The old upload wait gave up here, so the numbers line up.
+const SLOW_FINISH_MS = 30_000;
 
 export const ParticipantConversationAudio = () => {
 	const { projectId, conversationId } = useParams();
@@ -92,34 +95,30 @@ export const ParticipantConversationAudio = () => {
 		newConversationLink,
 		projectQuery,
 	} = useParticipantConversation(projectId, conversationId);
-	const uploadChunkMutation = useUploadConversationChunk();
 	const artefactsQuery = useConversationArtefacts(conversationId);
-	const pendingUploads = usePendingUploads();
+	const outbox = useOutbox();
+	const { queuedCount } = outbox;
+	const pendingUploadCount = useCallback(
+		() => queuedCount(conversationId ?? ""),
+		[queuedCount, conversationId],
+	);
+	const uploadProgress = outbox.progress(conversationId ?? "");
 
+	// The outbox keeps the chunk on the device until the server has it.
 	const onChunk = (chunk: Blob) => {
-		pendingUploads.track(
-			uploadChunkMutation.mutateAsync({
-				chunk,
-				conversationId: conversationId ?? "",
-				runFinishHook: false,
-				source: "PORTAL_AUDIO",
-				timestamp: new Date(),
-			}),
-		);
-	};
-
-	// Before leaving the screen. Gives up after 30s rather than strand the
-	// participant, and records that some audio may not have landed.
-	const waitForPendingUploads = async (context: "finish" | "reconnect") => {
-		if ((await pendingUploads.waitForAll()) === "done") return;
-		console.warn("Upload wait timeout reached, proceeding anyway");
-		posthog.capture("portal_uploads_incomplete_on_finish", {
-			context,
-			conversation_id: conversationId,
-			pending_uploads: pendingUploads.count(),
-			project_id: projectId,
+		void outbox.enqueueChunk(chunk, {
+			conversationId: conversationId ?? "",
+			source: "PORTAL_AUDIO",
+			timestamp: new Date(),
 		});
 	};
+
+	// The finish in progress, so Resume can call it off while it still waits
+	// on the audio.
+	const finishAttemptRef = useRef<{
+		pendingAtStart: number;
+		startedAt: number;
+	} | null>(null);
 
 	const [scrollTargetRef, isVisible] = useElementOnScreen({
 		root: null,
@@ -255,7 +254,7 @@ export const ParticipantConversationAudio = () => {
 		documentHidden,
 		isRecording,
 		participantState,
-		pendingUploadCount: pendingUploads.count,
+		pendingUploadCount,
 		projectId,
 		recordingTime,
 	});
@@ -334,22 +333,48 @@ export const ParticipantConversationAudio = () => {
 		}
 	};
 
+	// Waits for every chunk to reach the server, however long that takes,
+	// then finishes. If the tab closes first, the queued audio still sends
+	// later and the backend's idle sweep finishes the conversation.
 	const handleConfirmFinish = async () => {
 		dispatch({ type: "finishStarted" });
+		const attempt = {
+			pendingAtStart: pendingUploadCount(),
+			startedAt: Date.now(),
+		};
+		finishAttemptRef.current = attempt;
+		const slow = setTimeout(() => {
+			posthog.capture("portal_finish_slow", {
+				conversation_id: conversationId,
+				online: navigator.onLine,
+				pending_uploads: pendingUploadCount(),
+				pending_uploads_at_start: attempt.pendingAtStart,
+				project_id: projectId,
+			});
+		}, SLOW_FINISH_MS);
 		try {
-			stopRecording();
-			// Release wakelock when finishing
 			wakeLock.release();
-
-			await waitForPendingUploads("finish");
-
-			await finish();
+			// The last chunk reaches the outbox as the recorder stops.
+			await stopRecording();
+			await outbox.settled(conversationId ?? "");
+			// Resumed while waiting.
+			if (finishAttemptRef.current !== attempt) return;
+			await finish({
+				finish_wait_ms: Date.now() - attempt.startedAt,
+				pending_uploads_at_start: attempt.pendingAtStart,
+			});
+			// Resumed while it was sending: stay. New audio reopens the
+			// conversation on the server.
+			if (finishAttemptRef.current !== attempt) return;
 			dispatch({ type: "finishSucceeded" });
 			navigate(finishUrl);
 		} catch (error) {
 			console.error("Error finishing conversation:", error);
 			toast.error(t`Failed to finish conversation. Please try again.`);
 			dispatch({ type: "finishFailed" });
+		} finally {
+			clearTimeout(slow);
+			if (finishAttemptRef.current === attempt) finishAttemptRef.current = null;
 		}
 	};
 
@@ -359,6 +384,18 @@ export const ParticipantConversationAudio = () => {
 	};
 
 	const handleResumeRecording = async () => {
+		const attempt = finishAttemptRef.current;
+		if (attempt) {
+			finishAttemptRef.current = null;
+			posthog.capture("portal_finish_cancelled", {
+				conversation_id: conversationId,
+				online: navigator.onLine,
+				pending_uploads: pendingUploadCount(),
+				pending_uploads_at_start: attempt.pendingAtStart,
+				project_id: projectId,
+				waited_ms: Date.now() - attempt.startedAt,
+			});
+		}
 		// The pause holds until the recorder has started, so the timer doesn't
 		// flash back to zero in between.
 		const started = await startRecording(stoppedRecordingTime ?? 0);
@@ -374,26 +411,19 @@ export const ParticipantConversationAudio = () => {
 		navigate(`/${projectId}/conversation/${conversationId}/verify`);
 	};
 
-	// Handler for reconnect button - waits for uploads, reports error, then reloads
-	const handleReconnect = async () => {
+	// Reports the interruption, then reloads. Queued audio is safe on the
+	// device and sends after the reload.
+	const handleReconnect = () => {
 		dispatch({ type: "reconnectStarted" });
-		try {
-			await waitForPendingUploads("reconnect");
-
-			if (audioRecorder.hadInterruption) {
-				captureInterruptionError({
-					chunkHistory: audioRecorder.getChunkHistory(),
-					conversationId,
-					projectId,
-					recordingTime: interruptedAt ?? 0,
-				});
-			}
-
-			window.location.reload();
-		} catch (_error) {
-			toast.error(t`Failed to reconnect. Please try reloading the page.`);
-			dispatch({ type: "reconnectFailed" });
+		if (audioRecorder.hadInterruption) {
+			captureInterruptionError({
+				chunkHistory: audioRecorder.getChunkHistory(),
+				conversationId,
+				projectId,
+				recordingTime: interruptedAt ?? 0,
+			});
 		}
+		window.location.reload();
 	};
 
 	const handleStartRecording = async () => {
@@ -486,7 +516,8 @@ export const ParticipantConversationAudio = () => {
 				opened={isConfirmOpen(session)}
 				close={() => dispatch({ type: "resume" })}
 				isStopping={isStopping}
-				isUploading={uploadChunkMutation.isPending}
+				isOnline={isOnline}
+				uploadProgress={uploadProgress}
 				handleConfirmFinish={handleConfirmFinish}
 				handleResume={handleResumeRecording}
 				handleSwitchToText={handleSwitchToText}
@@ -505,7 +536,6 @@ export const ParticipantConversationAudio = () => {
 
 			<RecordingInterruptedModal
 				opened={session.phase === "interrupted"}
-				isUploading={uploadChunkMutation.isPending}
 				isReconnecting={session.phase === "interrupted" && session.reconnecting}
 				onReconnect={handleReconnect}
 			/>

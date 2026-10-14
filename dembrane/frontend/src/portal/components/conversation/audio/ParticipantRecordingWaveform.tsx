@@ -15,7 +15,7 @@ export type RecordingMeterStatus = "healthy" | "unhealthy" | "problem";
 const METER_COLORS: Record<RecordingMeterStatus, string> = {
 	healthy: "var(--app-action)",
 	problem: "var(--app-danger)",
-	unhealthy: "var(--app-warning)",
+	unhealthy: "var(--app-warning-mark)",
 };
 
 /** Below this the microphone is producing nothing at all.
