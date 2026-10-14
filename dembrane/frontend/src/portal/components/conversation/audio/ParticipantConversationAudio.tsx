@@ -309,7 +309,9 @@ export const ParticipantConversationAudio = () => {
 		projectId,
 	]);
 
-	// Auto-close refine info modal when threshold is reached
+	// Auto-close refine info modal when threshold is reached. An effect, not a
+	// derived `opened`: the recorder's time drops to 0 on stop, which would
+	// bring the modal back.
 	useEffect(() => {
 		if (
 			refineInfoModalOpened &&
@@ -371,10 +373,11 @@ export const ParticipantConversationAudio = () => {
 	};
 
 	const handleResumeRecording = async () => {
-		const timeToResume = stoppedRecordingTime ?? 0;
-		// Don't clear stoppedRecordingTime here - let the useEffect do it when recording starts
-		const started = await startRecording(timeToResume);
+		// The pause holds until the recorder has started, so the timer doesn't
+		// flash back to zero in between.
+		const started = await startRecording(stoppedRecordingTime ?? 0);
 		if (!started) return;
+		dispatch({ type: "recordingStarted" });
 		// Obtain wakelock on user interaction
 		wakeLock.hold();
 	};
@@ -384,11 +387,6 @@ export const ParticipantConversationAudio = () => {
 		handleResumeRecording();
 		navigate(`/${projectId}/conversation/${conversationId}/verify`);
 	};
-
-	// Clear the pause when recording actually starts (avoids UI flash)
-	useEffect(() => {
-		if (isRecording) dispatch({ type: "recordingStarted" });
-	}, [isRecording]);
 
 	// Handler for reconnect button - waits for uploads, reports error, then reloads
 	const handleReconnect = async () => {

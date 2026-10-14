@@ -336,6 +336,28 @@ describe("recording", () => {
 			screen.getByTestId("portal-audio-recording-timer").textContent,
 		).toContain("01:15");
 	});
+
+	it("runs the timer live again once resumed, and can stop again", async () => {
+		renderAudio();
+		await startRecording();
+		act(() => recorder.setRecordingTime(75));
+		fireEvent.click(screen.getByTestId("portal-audio-stop-button"));
+		fireEvent.click(
+			await screen.findByTestId("portal-audio-stop-resume-button"),
+		);
+
+		act(() => recorder.setRecordingTime(80));
+		await waitFor(() =>
+			expect(
+				screen.getByTestId("portal-audio-recording-timer").textContent,
+			).toContain("01:20"),
+		);
+
+		fireEvent.click(screen.getByTestId("portal-audio-stop-button"));
+		expect(
+			await screen.findByTestId("portal-audio-stop-finish-button"),
+		).toBeTruthy();
+	});
 });
 
 describe("finishing", () => {
