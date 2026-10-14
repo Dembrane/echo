@@ -169,6 +169,16 @@ msgstr "Welkom terug"
 #~ msgid "participant.button.finish.yes.text.mode"
 #~ msgstr "Ja<<<<<<< HEAD"
 
+#. js-lingui-explicit-id
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:129
+#~ msgid "participant.modal.uploading"
+#~ msgstr "Audio uploaden..."
+
+#. js-lingui-explicit-id
+#: src/portal/components/conversation/audio/RecordingInterruptedModal.tsx:55
+#~ msgid "participant.modal.interruption.uploading"
+#~ msgstr "Audio uploaden..."
+
 #: src/components/popcorn/PopcornStatus.tsx:49
 msgid " · {heldBack} held back"
 msgstr "· {heldBack} tegengehouden"
@@ -2558,7 +2568,7 @@ msgid "Attach verified artifacts"
 msgstr "Geverifieerde artefacten toevoegen"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/RecordingInterruptedModal.tsx:44
+#: src/portal/components/conversation/audio/RecordingInterruptedModal.tsx:42
 msgid "participant.modal.interruption.issue.message"
 msgstr "Let op! We hebben de laatste 60 seconden van je opname verloren door een onderbreking. Druk op de knop hieronder om opnieuw verbinding te maken."
 
@@ -3005,6 +3015,11 @@ msgstr "C_Med: {0}"
 #: src/components/pricing/PricingConfigurator.tsx:708
 msgid "Can you tell us more?"
 msgstr "Kun je ons meer vertellen?"
+
+#. js-lingui-explicit-id
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:170
+msgid "participant.button.stop.cancel_finish"
+msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1094
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1142
@@ -5497,7 +5512,7 @@ msgid "Early features you can try on this project before they are ready for ever
 msgstr "Nieuwe functies die je in dit project kunt proberen voordat ze klaar zijn voor iedereen."
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:676
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:703
 msgid "participant.button.echo"
 msgstr "ECHO"
 
@@ -6230,7 +6245,7 @@ msgstr "Fout bij het verwijderen van de reactie"
 #~ msgstr "Verwijderen van tag mislukt"
 
 #: src/portal/components/conversation/text/ParticipantConversationText.tsx:97
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:351
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:377
 msgid "Failed to finish conversation. Please try again."
 msgstr "Fout bij het voltooien van het gesprek. Probeer het opnieuw."
 
@@ -6276,8 +6291,8 @@ msgstr "Aankondiging als ongelezen markeren mislukt"
 #~ msgstr "Verplaatsen van projecten mislukt"
 
 #: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:394
-msgid "Failed to reconnect. Please try reloading the page."
-msgstr "Opnieuw verbinden mislukt. Probeer de pagina opnieuw te laden."
+#~ msgid "Failed to reconnect. Please try reloading the page."
+#~ msgstr "Opnieuw verbinden mislukt. Probeer de pagina opnieuw te laden."
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:132
 msgid "Failed to regenerate the summary. Please try again later."
@@ -6315,7 +6330,7 @@ msgstr "Fout bij het hertranscriptie van het gesprek. Probeer het opnieuw."
 #~ msgid "Failed to revise outcome. Please try again."
 #~ msgstr "Fout bij het herzien van het resultaat. Probeer het opnieuw."
 
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:223
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:218
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Fout bij het stoppen van de opname bij wijziging van het apparaat. Probeer het opnieuw."
 
@@ -6490,12 +6505,12 @@ msgid "participant.button.finish.text.mode"
 msgstr "Voltooien"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:158
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:196
 msgid "participant.button.stop.finish"
 msgstr "Afronden"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:637
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:664
 msgid "participant.button.finish"
 msgstr "Voltooien"
 
@@ -11970,7 +11985,7 @@ msgid "participant.button.s3check.reconnect"
 msgstr "Opnieuw verbinden"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/RecordingInterruptedModal.tsx:71
+#: src/portal/components/conversation/audio/RecordingInterruptedModal.tsx:57
 msgid "participant.button.interruption.reconnect"
 msgstr "Opnieuw verbinden"
 
@@ -11979,7 +11994,7 @@ msgid "Reconnecting"
 msgstr "Opnieuw verbinden"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:613
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:640
 msgid "participant.button.record"
 msgstr "Opname starten"
 
@@ -12024,7 +12039,7 @@ msgid "Recording duration stays accurate after pausing and resuming."
 msgstr "De opnameduur blijft correct na pauzeren en hervatten."
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/RecordingInterruptedModal.tsx:32
+#: src/portal/components/conversation/audio/RecordingInterruptedModal.tsx:30
 msgid "participant.modal.interruption.title"
 msgstr "Opname onderbroken"
 
@@ -12041,7 +12056,7 @@ msgid "Recording page"
 msgstr "Opnamepagina"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:76
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:83
 msgid "participant.modal.pause.title"
 msgstr "Opname gepauzeerd"
 
@@ -12731,7 +12746,7 @@ msgid "Results show in the language people spoke. Choose a language to translate
 msgstr "Resultaten staan in de taal die mensen spraken. Kies een taal om elke popcorn, elk citaat, elke spanning en elke stakeholder voor deze presentatie te vertalen; de originelen blijven bewaard."
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:145
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:182
 msgid "participant.button.stop.resume"
 msgstr "Hervatten"
 
@@ -14155,7 +14170,7 @@ msgid "Skip"
 msgstr "Overslaan"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:119
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:126
 msgid "participant.button.verify_prompt.skip"
 msgstr "Overslaan"
 
@@ -14574,7 +14589,7 @@ msgid "Stop"
 msgstr "Stop"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:697
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:724
 msgid "participant.button.stop"
 msgstr "Stop"
 
@@ -14806,12 +14821,12 @@ msgstr "Overzetten naar self-serve"
 msgid "Switch to self-serve billing"
 msgstr "Overzetten naar self-serve facturering"
 
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:620
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:647
 msgid "Switch to text"
 msgstr "Overschakelen naar tekst"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:170
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:208
 msgid "participant.link.switch.text"
 msgstr "Overschakelen naar tekstinvoer"
 
@@ -16908,14 +16923,11 @@ msgstr "Audiobestanden uploaden"
 #~ msgstr "Audio bestanden uploaden..."
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:129
-msgid "participant.modal.uploading"
-msgstr "Audio uploaden..."
-
-#. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/RecordingInterruptedModal.tsx:55
-msgid "participant.modal.interruption.uploading"
-msgstr "Audio uploaden..."
+#. placeholder {0}: uploadProgress.sent
+#. placeholder {1}: uploadProgress.total
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:153
+msgid "participant.modal.uploading_progress"
+msgstr ""
 
 #: src/components/workspace/gateWalls.ts:93
 msgid "Uploading recordings comes with a paid plan."
@@ -17081,7 +17093,7 @@ msgid "Verification prompts allow 10,000 characters, and verified outcomes have 
 msgstr "Verificatieprompts mogen 10.000 tekens bevatten en geverifieerde uitkomsten hebben een kopieerknop."
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:72
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:79
 msgid "participant.modal.verify_prompt.title"
 msgstr "Herinnering om te verifiëren"
 
@@ -17130,7 +17142,7 @@ msgid "participant.echo.verify"
 msgstr "Verifiëren"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:104
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:111
 msgid "participant.button.verify_prompt.verify"
 msgstr "Verifiëren"
 
@@ -17280,6 +17292,11 @@ msgstr "Spraakinvoer houdt rekening met de opnamelimiet van het gratis abonnemen
 #: src/components/map/panels/shared.tsx:113
 msgid "Voiced in a conversation"
 msgstr "Genoemd in een gesprek"
+
+#. js-lingui-explicit-id
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:136
+msgid "participant.modal.offline_waiting"
+msgstr ""
 
 #: src/components/report/CreateReportForm.tsx:226
 msgid "Waiting for conversations to finish before generating a report."
@@ -18172,7 +18189,7 @@ msgid "You haven't joined any workspace in this organisation yet."
 msgstr "Je bent nog geen lid van een werkruimte in deze organisatie."
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:87
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:94
 msgid "participant.modal.verify_prompt.description"
 msgstr "Je hebt nog geen resultaten geverifieerd. Wil je verifiëren voordat je afsluit?"
 

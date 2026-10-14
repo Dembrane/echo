@@ -8,16 +8,21 @@ import {
 	Stack,
 	Text,
 } from "@mantine/core";
-import { SealCheckIcon } from "@phosphor-icons/react";
+import { SealCheckIcon, WifiSlashIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { testId } from "@/lib/testUtils";
 
 type StopRecordingConfirmationModalProps = {
 	opened: boolean;
 	close: () => void;
+	/** Finishing: waiting for the audio and the finish to reach the server. */
 	isStopping: boolean;
-	isUploading?: boolean;
+	isOnline?: boolean;
+	/** This conversation's queued chunks: `sent` of `total`. */
+	uploadProgress?: { sent: number; total: number };
 	handleConfirmFinish: () => void;
+	/** Stops waiting on a finish and returns to the choice. */
+	handleCancelFinish?: () => void;
 	handleResume: () => void;
 	handleSwitchToText: () => void;
 	showVerifyOnFinish?: boolean;
@@ -29,15 +34,17 @@ export const StopRecordingConfirmationModal = ({
 	opened,
 	close,
 	isStopping,
-	isUploading = false,
+	isOnline = true,
+	uploadProgress = { sent: 0, total: 0 },
 	handleConfirmFinish,
+	handleCancelFinish,
 	handleResume,
 	handleSwitchToText,
 	showVerifyOnFinish = false,
 	handleSkipVerification,
 	handleVerify,
 }: StopRecordingConfirmationModalProps) => {
-	const isFinishDisabled = isStopping || isUploading;
+	const isUploading = uploadProgress.total > 0;
 	const [showVerifyPrompt, setShowVerifyPrompt] = useState(false);
 
 	const handleClose = () => {
@@ -122,32 +129,63 @@ export const StopRecordingConfirmationModal = ({
 					</>
 				) : (
 					<>
+						{!isOnline && (isStopping || isUploading) && (
+							<Group gap="xs" justify="flex-start" wrap="nowrap">
+								<WifiSlashIcon size={20} />
+								<Text size="sm" c="dimmed">
+									<Trans id="participant.modal.offline_waiting">
+										Waiting for a connection. Your audio is saved on this
+										device.
+									</Trans>
+								</Text>
+							</Group>
+						)}
+
 						{isUploading && (
-							<Group gap="xs" justify="flex-start" py="xs">
+							<Group
+								gap="xs"
+								justify="flex-start"
+								py="xs"
+								{...testId("portal-audio-upload-progress")}
+							>
 								<Loader size="sm" />
 								<Text size="sm" c="dimmed">
-									<Trans id="participant.modal.uploading">
-										Uploading audio...
+									<Trans id="participant.modal.uploading_progress">
+										Uploading audio: {uploadProgress.sent} of{" "}
+										{uploadProgress.total} parts sent
 									</Trans>
 								</Text>
 							</Group>
 						)}
 
 						<Group gap="sm" py="sm">
-							<Button
-								variant="filled"
-								onClick={handleClose}
-								disabled={isStopping}
-								miw={100}
-								size="md"
-								{...testId("portal-audio-stop-resume-button")}
-							>
-								<Trans id="participant.button.stop.resume">Resume</Trans>
-							</Button>
+							{isStopping ? (
+								<Button
+									variant="default"
+									onClick={handleCancelFinish}
+									miw={100}
+									size="md"
+									{...testId("portal-audio-stop-cancel-button")}
+								>
+									<Trans id="participant.button.stop.cancel_finish">
+										Cancel
+									</Trans>
+								</Button>
+							) : (
+								<Button
+									variant="filled"
+									onClick={handleClose}
+									miw={100}
+									size="md"
+									{...testId("portal-audio-stop-resume-button")}
+								>
+									<Trans id="participant.button.stop.resume">Resume</Trans>
+								</Button>
+							)}
 							<Button
 								onClick={handleFinishClick}
 								loading={isStopping}
-								disabled={isFinishDisabled}
+								disabled={isStopping}
 								miw={100}
 								size="md"
 								leftSection={

@@ -23,10 +23,10 @@ export type RecordingSessionEvent =
 	| { type: "switchToText" }
 	| { type: "finishStarted" }
 	| { type: "finishFailed" }
+	| { type: "finishCancelled" }
 	| { type: "finishSucceeded" }
 	| { type: "interrupted"; at: number }
 	| { type: "reconnectStarted" }
-	| { type: "reconnectFailed" }
 	| { type: "conversationDeleted" };
 
 export const initialRecordingSession: RecordingSession = { phase: "live" };
@@ -84,7 +84,9 @@ const transition = (
 				? { ...session, phase: "finishing" }
 				: session;
 
+		// Back to the confirm modal, to resume or try again.
 		case "finishFailed":
+		case "finishCancelled":
 			return session.phase === "finishing"
 				? { ...session, phase: "paused" }
 				: session;
@@ -97,11 +99,6 @@ const transition = (
 		case "reconnectStarted":
 			return session.phase === "interrupted"
 				? { ...session, reconnecting: true }
-				: session;
-
-		case "reconnectFailed":
-			return session.phase === "interrupted"
-				? { ...session, reconnecting: false }
 				: session;
 	}
 };

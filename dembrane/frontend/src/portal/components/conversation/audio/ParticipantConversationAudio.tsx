@@ -46,6 +46,7 @@ import {
 import { useRecordingWakeLock } from "./hooks/useRecordingWakeLock";
 import { useS3ConnectivityCheck } from "./hooks/useS3ConnectivityCheck";
 import { useOutbox } from "./outbox/OutboxProvider";
+import { useOutboxProgress } from "./outbox/useOutboxProgress";
 import type { RecordingMeterStatus } from "./ParticipantRecordingWaveform";
 import { ParticipantRecordingWaveform } from "./ParticipantRecordingWaveform";
 import { PermissionErrorModal } from "./PermissionErrorModal";
@@ -65,10 +66,9 @@ import { StopRecordingConfirmationModal } from "./StopRecordingConfirmationModal
 
 const CONVERSATION_DELETION_STATUS_CODES = [404, 403, 410];
 const REFINE_BUTTON_THRESHOLD_SECONDS = 60;
-const UPLOAD_WAIT_TIMEOUT_MS = 30_000;
-// The recorder hands over its last chunk as it stops, so give it a moment to
-// reach the outbox before waiting on it.
-const FINAL_CHUNK_GRACE_MS = 100;
+// Finish waits for the audio with no time limit; past this, say so in
+// telemetry. The old upload wait gave up here, so the numbers line up.
+const SLOW_FINISH_MS = 30_000;
 
 export const ParticipantConversationAudio = () => {
 	const { projectId, conversationId } = useParams();
@@ -91,7 +91,6 @@ export const ParticipantConversationAudio = () => {
 	const {
 		chunksQuery: chunks,
 		conversationQuery,
-		finish,
 		loadState,
 		newConversationLink,
 		projectQuery,
@@ -103,7 +102,7 @@ export const ParticipantConversationAudio = () => {
 		() => queuedCount(conversationId ?? ""),
 		[queuedCount, conversationId],
 	);
-	const isUploading = pendingUploadCount() > 0;
+	const uploadProgress = useOutboxProgress(conversationId ?? "");
 
 	// The outbox keeps the chunk on the device until the server has it.
 	const onChunk = (chunk: Blob) => {
@@ -114,25 +113,8 @@ export const ParticipantConversationAudio = () => {
 		});
 	};
 
-	// Before leaving the screen. Gives up after 30s rather than strand the
-	// participant, and records that some audio may not have landed.
-	const waitForPendingUploads = async (context: "finish" | "reconnect") => {
-		await new Promise((resolve) => setTimeout(resolve, FINAL_CHUNK_GRACE_MS));
-		const settled = await Promise.race([
-			outbox.settled(conversationId ?? "").then(() => true),
-			new Promise<false>((resolve) =>
-				setTimeout(() => resolve(false), UPLOAD_WAIT_TIMEOUT_MS),
-			),
-		]);
-		if (settled) return;
-		console.warn("Upload wait timeout reached, proceeding anyway");
-		posthog.capture("portal_uploads_incomplete_on_finish", {
-			context,
-			conversation_id: conversationId,
-			pending_uploads: pendingUploadCount(),
-			project_id: projectId,
-		});
-	};
+	// Lets Cancel stop a finish that's waiting on the audio.
+	const finishAbortRef = useRef<AbortController | null>(null);
 
 	const [scrollTargetRef, isVisible] = useElementOnScreen({
 		root: null,
@@ -347,23 +329,61 @@ export const ParticipantConversationAudio = () => {
 		}
 	};
 
+	// The finish queues behind the audio and the screen waits for it, however
+	// long that takes: leaving earlier would let the participant walk away
+	// from audio that never landed.
 	const handleConfirmFinish = async () => {
 		dispatch({ type: "finishStarted" });
+		const abort = new AbortController();
+		const startedAt = Date.now();
+		const pendingAtStart = pendingUploadCount();
+		finishAbortRef.current = abort;
+		const slow = setTimeout(() => {
+			posthog.capture("portal_finish_slow", {
+				conversation_id: conversationId,
+				online: navigator.onLine,
+				pending_uploads: pendingUploadCount(),
+				pending_uploads_at_start: pendingAtStart,
+				project_id: projectId,
+			});
+		}, SLOW_FINISH_MS);
 		try {
-			stopRecording();
-			// Release wakelock when finishing
 			wakeLock.release();
-
-			await waitForPendingUploads("finish");
-
-			await finish();
+			// The last chunk reaches the outbox as the recorder stops, so the
+			// finish queues behind it.
+			await stopRecording();
+			await outbox.finish(conversationId ?? "", { signal: abort.signal });
+			posthog.capture("conversation_finished", {
+				conversation_id: conversationId,
+				finish_wait_ms: Date.now() - startedAt,
+				pending_uploads_at_start: pendingAtStart,
+				project_id: projectId,
+			});
 			dispatch({ type: "finishSucceeded" });
 			navigate(finishUrl);
 		} catch (error) {
+			if (abort.signal.aborted) {
+				posthog.capture("portal_finish_cancelled", {
+					conversation_id: conversationId,
+					online: navigator.onLine,
+					pending_uploads: pendingUploadCount(),
+					pending_uploads_at_start: pendingAtStart,
+					project_id: projectId,
+					waited_ms: Date.now() - startedAt,
+				});
+				return;
+			}
 			console.error("Error finishing conversation:", error);
 			toast.error(t`Failed to finish conversation. Please try again.`);
 			dispatch({ type: "finishFailed" });
+		} finally {
+			clearTimeout(slow);
 		}
+	};
+
+	const handleCancelFinish = () => {
+		finishAbortRef.current?.abort();
+		dispatch({ type: "finishCancelled" });
 	};
 
 	const handleSwitchToText = () => {
@@ -387,26 +407,19 @@ export const ParticipantConversationAudio = () => {
 		navigate(`/${projectId}/conversation/${conversationId}/verify`);
 	};
 
-	// Handler for reconnect button - waits for uploads, reports error, then reloads
-	const handleReconnect = async () => {
+	// Reports the interruption, then reloads. Queued audio is safe on the
+	// device and sends after the reload.
+	const handleReconnect = () => {
 		dispatch({ type: "reconnectStarted" });
-		try {
-			await waitForPendingUploads("reconnect");
-
-			if (audioRecorder.hadInterruption) {
-				captureInterruptionError({
-					chunkHistory: audioRecorder.getChunkHistory(),
-					conversationId,
-					projectId,
-					recordingTime: interruptedAt ?? 0,
-				});
-			}
-
-			window.location.reload();
-		} catch (_error) {
-			toast.error(t`Failed to reconnect. Please try reloading the page.`);
-			dispatch({ type: "reconnectFailed" });
+		if (audioRecorder.hadInterruption) {
+			captureInterruptionError({
+				chunkHistory: audioRecorder.getChunkHistory(),
+				conversationId,
+				projectId,
+				recordingTime: interruptedAt ?? 0,
+			});
 		}
+		window.location.reload();
 	};
 
 	const handleStartRecording = async () => {
@@ -499,8 +512,10 @@ export const ParticipantConversationAudio = () => {
 				opened={isConfirmOpen(session)}
 				close={() => dispatch({ type: "resume" })}
 				isStopping={isStopping}
-				isUploading={isUploading}
+				isOnline={isOnline}
+				uploadProgress={uploadProgress}
 				handleConfirmFinish={handleConfirmFinish}
+				handleCancelFinish={handleCancelFinish}
 				handleResume={handleResumeRecording}
 				handleSwitchToText={handleSwitchToText}
 				showVerifyOnFinish={shouldVerifyOnFinish}
@@ -518,7 +533,6 @@ export const ParticipantConversationAudio = () => {
 
 			<RecordingInterruptedModal
 				opened={session.phase === "interrupted"}
-				isUploading={isUploading}
 				isReconnecting={session.phase === "interrupted" && session.reconnecting}
 				onReconnect={handleReconnect}
 			/>

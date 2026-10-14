@@ -20,9 +20,6 @@ const interrupted: RecordingSession = {
 };
 const deleted: RecordingSession = { phase: "deleted" };
 
-const run = (session: RecordingSession, ...events: RecordingSessionEvent[]) =>
-	events.reduce(reduce, session);
-
 describe("recordingSessionReducer", () => {
 	it("pauses at the stopped time with the confirm modal open", () => {
 		expect(reduce(live, { at: 75, type: "stop" })).toEqual(paused);
@@ -37,9 +34,10 @@ describe("recordingSessionReducer", () => {
 		expect(reduce(paused, { type: "switchToText" })).toEqual(live);
 	});
 
-	it("finishes from the confirm modal, and lands back in it on failure", () => {
+	it("finishes from the confirm modal, and lands back in it on failure or cancel", () => {
 		expect(reduce(paused, { type: "finishStarted" })).toEqual(finishing);
 		expect(reduce(finishing, { type: "finishFailed" })).toEqual(paused);
+		expect(reduce(finishing, { type: "finishCancelled" })).toEqual(paused);
 	});
 
 	it("closes the confirm modal once finished", () => {
@@ -71,9 +69,6 @@ describe("recordingSessionReducer", () => {
 			...interrupted,
 			reconnecting: true,
 		});
-		expect(
-			run(cutOff, { type: "reconnectStarted" }, { type: "reconnectFailed" }),
-		).toEqual(interrupted);
 	});
 
 	it("ends in deleted, from anywhere, for good", () => {
@@ -93,6 +88,7 @@ describe("recordingSessionReducer", () => {
 			[paused, { at: 90, type: "stop" }],
 			[paused, { type: "confirmFinish" }],
 			[paused, { type: "finishSucceeded" }],
+			[paused, { type: "finishCancelled" }],
 			[finishing, { type: "resume" }],
 			[finishing, { type: "finishStarted" }],
 			[finishing, { type: "switchToText" }],

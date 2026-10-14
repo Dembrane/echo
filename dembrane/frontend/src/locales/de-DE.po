@@ -169,6 +169,16 @@ msgstr "Welcome back"
 #~ msgid "participant.button.finish.yes.text.mode"
 #~ msgstr "Ja<<<<<<< HEAD"
 
+#. js-lingui-explicit-id
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:129
+#~ msgid "participant.modal.uploading"
+#~ msgstr "Audio wird hochgeladen..."
+
+#. js-lingui-explicit-id
+#: src/portal/components/conversation/audio/RecordingInterruptedModal.tsx:55
+#~ msgid "participant.modal.interruption.uploading"
+#~ msgstr "Audio wird hochgeladen..."
+
 #: src/components/popcorn/PopcornStatus.tsx:49
 msgid " · {heldBack} held back"
 msgstr "· {heldBack} zurückgehalten"
@@ -2561,7 +2571,7 @@ msgid "Attach verified artifacts"
 msgstr "Verifizierte Artefakte anhängen"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/RecordingInterruptedModal.tsx:44
+#: src/portal/components/conversation/audio/RecordingInterruptedModal.tsx:42
 msgid "participant.modal.interruption.issue.message"
 msgstr "Achtung! Wir haben die letzten 60 Sekunden Ihrer Aufnahme aufgrund einer Unterbrechung verloren. Bitte drücken Sie die Schaltfläche unten, um die Verbindung wiederherzustellen."
 
@@ -3008,6 +3018,11 @@ msgstr "C_Med: {0}"
 #: src/components/pricing/PricingConfigurator.tsx:708
 msgid "Can you tell us more?"
 msgstr "Können Sie uns mehr darüber erzählen?"
+
+#. js-lingui-explicit-id
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:170
+msgid "participant.button.stop.cancel_finish"
+msgstr ""
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1094
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1142
@@ -5500,7 +5515,7 @@ msgid "Early features you can try on this project before they are ready for ever
 msgstr "Vorab-Funktionen, die Sie in diesem Projekt ausprobieren können, bevor sie für alle verfügbar sind."
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:676
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:703
 msgid "participant.button.echo"
 msgstr "ECHO"
 
@@ -6233,7 +6248,7 @@ msgstr "Fehler beim Löschen der Antwort"
 #~ msgstr ""
 
 #: src/portal/components/conversation/text/ParticipantConversationText.tsx:97
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:351
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:377
 msgid "Failed to finish conversation. Please try again."
 msgstr "Fehler beim Beenden des Gesprächs. Bitte versuchen Sie es erneut."
 
@@ -6279,8 +6294,8 @@ msgstr "Ankündigung konnte nicht als ungelesen markiert werden"
 #~ msgstr ""
 
 #: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:394
-msgid "Failed to reconnect. Please try reloading the page."
-msgstr "Verbindung fehlgeschlagen. Bitte versuche, die Seite neu zu laden."
+#~ msgid "Failed to reconnect. Please try reloading the page."
+#~ msgstr "Verbindung fehlgeschlagen. Bitte versuche, die Seite neu zu laden."
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:132
 msgid "Failed to regenerate the summary. Please try again later."
@@ -6318,7 +6333,7 @@ msgstr "Fehler beim Hertranskribieren des Gesprächs. Bitte versuchen Sie es ern
 #~ msgid "Failed to revise outcome. Please try again."
 #~ msgstr "Ergebnis konnte nicht überarbeitet werden. Bitte versuchen Sie es erneut."
 
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:223
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:218
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Fehler beim Beenden der Aufnahme bei Änderung des Mikrofons. Bitte versuchen Sie es erneut."
 
@@ -6493,12 +6508,12 @@ msgid "participant.button.finish.text.mode"
 msgstr "Beenden"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:158
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:196
 msgid "participant.button.stop.finish"
 msgstr "Beenden"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:637
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:664
 msgid "participant.button.finish"
 msgstr "Beenden"
 
@@ -11973,7 +11988,7 @@ msgid "participant.button.s3check.reconnect"
 msgstr "Erneut verbinden"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/RecordingInterruptedModal.tsx:71
+#: src/portal/components/conversation/audio/RecordingInterruptedModal.tsx:57
 msgid "participant.button.interruption.reconnect"
 msgstr "Erneut verbinden"
 
@@ -11982,7 +11997,7 @@ msgid "Reconnecting"
 msgstr "Verbindung wird wiederhergestellt"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:613
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:640
 msgid "participant.button.record"
 msgstr "Aufnehmen"
 
@@ -12027,7 +12042,7 @@ msgid "Recording duration stays accurate after pausing and resuming."
 msgstr "Die Aufnahmedauer bleibt nach Pausieren und Fortsetzen korrekt."
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/RecordingInterruptedModal.tsx:32
+#: src/portal/components/conversation/audio/RecordingInterruptedModal.tsx:30
 msgid "participant.modal.interruption.title"
 msgstr "Aufnahme unterbrochen"
 
@@ -12044,7 +12059,7 @@ msgid "Recording page"
 msgstr "Aufnahmeseite"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:76
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:83
 msgid "participant.modal.pause.title"
 msgstr "Aufnahme pausiert"
 
@@ -12734,7 +12749,7 @@ msgid "Results show in the language people spoke. Choose a language to translate
 msgstr "Ergebnisse werden in der gesprochenen Sprache angezeigt. Wählen Sie eine Sprache, um alle Popcorns, Zitate, Spannungsfelder und Stakeholder für diese Präsentation zu übersetzen; die Originale bleiben erhalten."
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:145
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:182
 msgid "participant.button.stop.resume"
 msgstr "Fortsetzen"
 
@@ -14158,7 +14173,7 @@ msgid "Skip"
 msgstr "Überspringen"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:119
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:126
 msgid "participant.button.verify_prompt.skip"
 msgstr "Überspringen"
 
@@ -14577,7 +14592,7 @@ msgid "Stop"
 msgstr "Stopp"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:697
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:724
 msgid "participant.button.stop"
 msgstr "Beenden"
 
@@ -14809,12 +14824,12 @@ msgstr "Zu Self-Service wechseln"
 msgid "Switch to self-serve billing"
 msgstr "Zu Self-Service-Abrechnung wechseln"
 
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:620
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:647
 msgid "Switch to text"
 msgstr "Zu Text wechseln"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:170
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:208
 msgid "participant.link.switch.text"
 msgstr "Zur Texteingabe wechseln"
 
@@ -16912,14 +16927,11 @@ msgstr "Audiodateien werden hochgeladen"
 #~ msgstr "Audio-Dateien werden hochgeladen..."
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:129
-msgid "participant.modal.uploading"
-msgstr "Audio wird hochgeladen..."
-
-#. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/RecordingInterruptedModal.tsx:55
-msgid "participant.modal.interruption.uploading"
-msgstr "Audio wird hochgeladen..."
+#. placeholder {0}: uploadProgress.sent
+#. placeholder {1}: uploadProgress.total
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:153
+msgid "participant.modal.uploading_progress"
+msgstr ""
 
 #: src/components/workspace/gateWalls.ts:93
 msgid "Uploading recordings comes with a paid plan."
@@ -17085,7 +17097,7 @@ msgid "Verification prompts allow 10,000 characters, and verified outcomes have 
 msgstr "Verifizierungs-Prompts erlauben 10.000 Zeichen, und verifizierte Ergebnisse haben einen Kopier-Button."
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:72
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:79
 msgid "participant.modal.verify_prompt.title"
 msgstr "Erinnerung zur Verifizierung"
 
@@ -17134,7 +17146,7 @@ msgid "participant.echo.verify"
 msgstr "Verifizieren"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:104
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:111
 msgid "participant.button.verify_prompt.verify"
 msgstr "Verifizieren"
 
@@ -17284,6 +17296,11 @@ msgstr "Die Spracheingabe berücksichtigt das Aufnahmelimit des Free-Tarifs."
 #: src/components/map/panels/shared.tsx:113
 msgid "Voiced in a conversation"
 msgstr "In einem Gespräch geäußert"
+
+#. js-lingui-explicit-id
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:136
+msgid "participant.modal.offline_waiting"
+msgstr ""
 
 #: src/components/report/CreateReportForm.tsx:226
 msgid "Waiting for conversations to finish before generating a report."
@@ -18177,7 +18194,7 @@ msgid "You haven't joined any workspace in this organisation yet."
 msgstr "Sie sind bisher keinem Arbeitsbereich in dieser Organisation beigetreten."
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:87
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:94
 msgid "participant.modal.verify_prompt.description"
 msgstr "Sie haben noch keine Ergebnisse verifiziert. Möchten Sie vor dem Abschluss verifizieren?"
 
