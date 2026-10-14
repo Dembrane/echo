@@ -168,6 +168,7 @@ let conversationQuery: {
 let project: Record<string, unknown>;
 let chunks: { id: string }[];
 let uploadPending: boolean;
+let uploadOptions: { onConversationGone?: () => void };
 
 vi.mock("@/portal/components/conversation/queries", () => ({
 	useConversationChunksQuery: () => ({ data: chunks }),
@@ -177,10 +178,14 @@ vi.mock("@/portal/hooks/useParticipantProjectById", () => ({
 	useParticipantProjectById: () => ({ data: project, isLoading: false }),
 }));
 vi.mock("./hooks/useUploadConversationChunk", () => ({
-	useUploadConversationChunk: () => ({
-		isPending: uploadPending,
-		mutateAsync: (...args: unknown[]) => uploadChunk(...args),
-	}),
+	CONVERSATION_DELETION_STATUS_CODES: [404, 403, 410],
+	useUploadConversationChunk: (options: typeof uploadOptions = {}) => {
+		uploadOptions = options;
+		return {
+			isPending: uploadPending,
+			mutateAsync: (...args: unknown[]) => uploadChunk(...args),
+		};
+	},
 }));
 
 beforeAll(() => {
@@ -554,10 +559,48 @@ describe("conversation removed mid-recording", () => {
 			expect(await screen.findByText("Conversation ended")).toBeTruthy();
 			expect(capture).toHaveBeenCalledWith(
 				"portal_conversation_deleted_during_recording",
-				{ conversation_id: "c1", project_id: "p1" },
+				{
+					conversation_id: "c1",
+					detected_by: "conversation_query",
+					project_id: "p1",
+				},
 			);
 		},
 	);
+
+	it("stops recording and says the conversation ended when an upload finds it gone", async () => {
+		renderAudio();
+		await startRecording();
+
+		act(() => uploadOptions.onConversationGone?.());
+
+		expect(await screen.findByText("Conversation ended")).toBeTruthy();
+		expect(screen.queryByTestId("portal-audio-stop-button")).toBeNull();
+		expect(wakeLock.releaseWakeLock).toHaveBeenCalled();
+		expect(capture).toHaveBeenCalledWith(
+			"portal_conversation_deleted_during_recording",
+			{
+				conversation_id: "c1",
+				detected_by: "chunk_upload",
+				project_id: "p1",
+			},
+		);
+	});
+
+	it("reports the deletion once when several uploads find it gone", async () => {
+		renderAudio();
+		await startRecording();
+
+		act(() => uploadOptions.onConversationGone?.());
+		await screen.findByText("Conversation ended");
+		act(() => uploadOptions.onConversationGone?.());
+
+		expect(
+			capture.mock.calls.filter(
+				([event]) => event === "portal_conversation_deleted_during_recording",
+			),
+		).toHaveLength(1);
+	});
 
 	it("treats other errors as a failed load, not a deletion", async () => {
 		vi.spyOn(console, "warn").mockImplementation(() => {});

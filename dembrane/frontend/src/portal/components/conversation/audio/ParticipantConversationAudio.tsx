@@ -30,7 +30,10 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useVideoWakeLockFallback } from "@/hooks/useVideoWakeLockFallback";
 import { testId } from "@/lib/testUtils";
-import { useUploadConversationChunk } from "@/portal/components/conversation/audio/hooks/useUploadConversationChunk";
+import {
+	CONVERSATION_DELETION_STATUS_CODES,
+	useUploadConversationChunk,
+} from "@/portal/components/conversation/audio/hooks/useUploadConversationChunk";
 import { ParticipantSettingsModal } from "../../settings/ParticipantSettingsModal";
 import { useConversationArtefacts } from "../../verify/hooks";
 import { ConversationErrorView } from "../ConversationErrorView";
@@ -63,7 +66,6 @@ import {
 import { S3CheckModal } from "./S3CheckModal";
 import { StopRecordingConfirmationModal } from "./StopRecordingConfirmationModal";
 
-const CONVERSATION_DELETION_STATUS_CODES = [404, 403, 410];
 const REFINE_BUTTON_THRESHOLD_SECONDS = 60;
 
 export const ParticipantConversationAudio = () => {
@@ -92,7 +94,14 @@ export const ParticipantConversationAudio = () => {
 		newConversationLink,
 		projectQuery,
 	} = useParticipantConversation(projectId, conversationId);
-	const uploadChunkMutation = useUploadConversationChunk();
+	// Set once the recorder exists, below.
+	const onConversationDeletedRef = useRef<
+		((detectedBy: "conversation_query" | "chunk_upload") => void) | null
+	>(null);
+	const uploadChunkMutation = useUploadConversationChunk({
+		onConversationGone: () =>
+			onConversationDeletedRef.current?.("chunk_upload"),
+	});
 	const artefactsQuery = useConversationArtefacts(conversationId);
 	const pendingUploads = usePendingUploads();
 
@@ -190,6 +199,18 @@ export const ParticipantConversationAudio = () => {
 		dispatch({ at, type: "interrupted" });
 	};
 
+	onConversationDeletedRef.current = (detectedBy) => {
+		if (conversationDeletedDuringRecording) return;
+		audioRecorder.stopRecording();
+		wakeLock.release();
+		posthog.capture("portal_conversation_deleted_during_recording", {
+			conversation_id: conversationId,
+			detected_by: detectedBy,
+			project_id: projectId,
+		});
+		dispatch({ type: "conversationDeleted" });
+	};
+
 	const {
 		startRecording,
 		stopRecording,
@@ -280,12 +301,7 @@ export const ParticipantConversationAudio = () => {
 					"Conversation was deleted or is no longer accessible during recording",
 					{ message: error?.message, status: httpStatus },
 				);
-				stopRecording();
-				posthog.capture("portal_conversation_deleted_during_recording", {
-					conversation_id: conversationId,
-					project_id: projectId,
-				});
-				dispatch({ type: "conversationDeleted" });
+				onConversationDeletedRef.current?.("conversation_query");
 			} else {
 				console.warn(
 					"Error fetching conversation during recording - continuing",
@@ -299,9 +315,6 @@ export const ParticipantConversationAudio = () => {
 		conversationQuery.isLoading,
 		conversationQuery.isFetching,
 		conversationQuery.error,
-		stopRecording,
-		conversationId,
-		projectId,
 	]);
 
 	// Auto-close refine info modal when threshold is reached. An effect, not a
