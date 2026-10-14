@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
 import {
 	Anchor,
@@ -14,6 +15,7 @@ import {
 	WifiSlashIcon,
 } from "@phosphor-icons/react";
 import { useState } from "react";
+import { TipBanner } from "@/components/common/TipBanner";
 import { testId } from "@/lib/testUtils";
 
 type StopRecordingConfirmationModalProps = {
@@ -136,6 +138,15 @@ export const StopRecordingConfirmationModal = ({
 					</>
 				) : (
 					<>
+						{/* Also why Finish is greyed out, so it shows even with nothing queued. */}
+						{!isOnline && (
+							<TipBanner
+								icon={WifiSlashIcon}
+								message={t`Connection lost. Your audio will continue to be saved on device.`}
+								color="yellow"
+							/>
+						)}
+
 						{/* Stays once everything is sent, so it doesn't flash by. */}
 						{total > 0 && (
 							<Group
@@ -147,10 +158,9 @@ export const StopRecordingConfirmationModal = ({
 							>
 								{isComplete ? (
 									<CheckCircleIcon size={20} color="var(--app-success)" />
-								) : isOnline ? (
-									<Loader size="sm" />
 								) : (
-									<WifiSlashIcon size={20} />
+									// The size of the check's drawn circle, not its 20px box.
+									<Loader size={16} />
 								)}
 								<Text size="sm" c="dimmed">
 									{isComplete ? (

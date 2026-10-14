@@ -479,6 +479,9 @@ describe("finishing", () => {
 		expect(screen.getByTestId("portal-audio-upload-progress").textContent).toBe(
 			"Awaiting connection: 0 of 1 part sent",
 		);
+		expect(
+			screen.getByText("Connection lost. Your audio will continue to be saved on device."),
+		).toBeTruthy();
 		// Resume still works.
 		expect(
 			screen
