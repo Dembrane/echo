@@ -1478,7 +1478,7 @@ msgstr "Aktivität"
 #: src/routes/organisation/OrganisationRoute.tsx:2088
 #: src/routes/organisation/OrganisationRoute.tsx:2101
 #: src/routes/organisation/OrganisationRoute.tsx:2124
-#: src/portal/routes/ParticipantPostConversation.tsx:201
+#: src/portal/routes/ParticipantPostConversation.tsx:199
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:185
 #: src/components/billing/BillingManager.tsx:1393
 msgid "Add"
@@ -1696,7 +1696,7 @@ msgstr "{granted} Personen hinzugefügt"
 msgid "Added by a host"
 msgstr "Von einem Host hinzugefügt"
 
-#: src/portal/routes/ParticipantPostConversation.tsx:210
+#: src/portal/routes/ParticipantPostConversation.tsx:208
 msgid "Added emails"
 msgstr "Hinzugefügte E-Mails"
 
@@ -2362,7 +2362,7 @@ msgid "Are you sure you want to delete this template? This cannot be undone."
 msgstr "Möchten Sie diese Vorlage wirklich löschen? Dies kann nicht rückgängig gemacht werden."
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/text/ParticipantConversationText.tsx:144
+#: src/portal/components/conversation/text/ParticipantConversationText.tsx:133
 msgid "participant.modal.finish.message.text.mode"
 msgstr "Sind Sie sicher, dass Sie das Gespräch beenden möchten?"
 
@@ -3080,7 +3080,7 @@ msgid "participant.mic.settings.modal.second.confirm.cancel"
 msgstr "Abbrechen"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/text/ParticipantConversationText.tsx:170
+#: src/portal/components/conversation/text/ParticipantConversationText.tsx:159
 msgid "participant.button.finish.cancel.text.mode"
 msgstr "Abbrechen"
 
@@ -5265,7 +5265,7 @@ msgstr "Benötige ich dies?"
 msgid "Do you plan to use dembrane in health, education, recruitment, critical infrastructure management, law enforcement or justice contexts?"
 msgstr "Planen Sie, dembrane im Gesundheitswesen, in der Bildung, Personalbeschaffung, bei kritischen Infrastrukturen, bei Strafverfolgung oder Justiz einzusetzen?"
 
-#: src/portal/routes/ParticipantPostConversation.tsx:176
+#: src/portal/routes/ParticipantPostConversation.tsx:174
 msgid "Do you want to stay in the loop?"
 msgstr "Möchten Sie auf dem Laufenden bleiben?"
 
@@ -5500,7 +5500,7 @@ msgid "Early features you can try on this project before they are ready for ever
 msgstr "Vorab-Funktionen, die Sie in diesem Projekt ausprobieren können, bevor sie für alle verfügbar sind."
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:708
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:676
 msgid "participant.button.echo"
 msgstr "ECHO"
 
@@ -5690,7 +5690,7 @@ msgstr "E-Mail-Bestätigung | dembrane"
 msgid "error.action.contact_admin"
 msgstr "E-Mail an Ihren Administrator"
 
-#: src/portal/routes/ParticipantPostConversation.tsx:185
+#: src/portal/routes/ParticipantPostConversation.tsx:183
 msgid "email@work.com"
 msgstr "email@work.com"
 
@@ -6232,8 +6232,8 @@ msgstr "Fehler beim Löschen der Antwort"
 #~ msgid "Failed to delete tag"
 #~ msgstr ""
 
-#: src/portal/components/conversation/text/ParticipantConversationText.tsx:107
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:352
+#: src/portal/components/conversation/text/ParticipantConversationText.tsx:97
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:351
 msgid "Failed to finish conversation. Please try again."
 msgstr "Fehler beim Beenden des Gesprächs. Bitte versuchen Sie es erneut."
 
@@ -6278,7 +6278,7 @@ msgstr "Ankündigung konnte nicht als ungelesen markiert werden"
 #~ msgid "Failed to move projects"
 #~ msgstr ""
 
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:407
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:394
 msgid "Failed to reconnect. Please try reloading the page."
 msgstr "Verbindung fehlgeschlagen. Bitte versuche, die Seite neu zu laden."
 
@@ -6318,7 +6318,7 @@ msgstr "Fehler beim Hertranskribieren des Gesprächs. Bitte versuchen Sie es ern
 #~ msgid "Failed to revise outcome. Please try again."
 #~ msgstr "Ergebnis konnte nicht überarbeitet werden. Bitte versuchen Sie es erneut."
 
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:221
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:223
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Fehler beim Beenden der Aufnahme bei Änderung des Mikrofons. Bitte versuchen Sie es erneut."
 
@@ -6483,12 +6483,12 @@ msgid "Find your place in chat"
 msgstr "Im Chat den Überblick behalten"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/text/ParticipantConversationText.tsx:157
+#: src/portal/components/conversation/text/ParticipantConversationText.tsx:146
 msgid "participant.button.finish.confirm.text.mode"
 msgstr "Beenden"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/text/ParticipantConversationText.tsx:247
+#: src/portal/components/conversation/text/ParticipantConversationText.tsx:238
 msgid "participant.button.finish.text.mode"
 msgstr "Beenden"
 
@@ -6498,12 +6498,12 @@ msgid "participant.button.stop.finish"
 msgstr "Beenden"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:669
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:637
 msgid "participant.button.finish"
 msgstr "Beenden"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/text/ParticipantConversationText.tsx:134
+#: src/portal/components/conversation/text/ParticipantConversationText.tsx:123
 msgid "participant.modal.finish.title.text.mode"
 msgstr "Gespräch beenden"
 
@@ -7539,7 +7539,7 @@ msgstr "Ungültige E-Mail"
 msgid "Invalid invite link"
 msgstr "Ungültiger Einladungslink"
 
-#: src/portal/hooks/index.ts:294
+#: src/portal/components/start/useInitiateConversationMutation.ts:10
 msgid "Invalid PIN or email. Please try again."
 msgstr "Ungültige PIN oder E-Mail. Bitte versuche es erneut."
 
@@ -11076,7 +11076,7 @@ msgstr "Bitte überprüfen Sie Ihre Eingaben auf Fehler."
 msgid "Please enable participation to enable sharing"
 msgstr "Bitte aktivieren Sie die Teilnahme, um das Teilen zu ermöglichen"
 
-#: src/portal/routes/ParticipantPostConversation.tsx:94
+#: src/portal/routes/ParticipantPostConversation.tsx:92
 msgid "Please enter a valid email."
 msgstr "Bitte geben Sie eine gültige E-Mail-Adresse ein."
 
@@ -11106,7 +11106,7 @@ msgstr "Bitte melden Sie sich an, um fortzufahren."
 #~ "(schwarzer Bildschirm = keine Aufnahme).\n"
 #~ "Ihre Transkription wird anonymisiert und Ihr Host kann Ihre Aufnahme nicht anhören."
 
-#: src/portal/components/conversation/ConversationMessages.tsx:163
+#: src/portal/components/conversation/ConversationMessages.tsx:162
 msgid ""
 "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
 "**Please keep this screen lit up**\n"
@@ -11116,7 +11116,7 @@ msgstr ""
 "**Bitte lassen Sie diesen Bildschirm eingeschaltet**\n"
 "(gesperrter Bildschirm = keine Aufnahme)"
 
-#: src/portal/components/conversation/ConversationMessages.tsx:159
+#: src/portal/components/conversation/ConversationMessages.tsx:158
 msgid ""
 "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
 "**Please keep this screen lit up**\n"
@@ -11128,11 +11128,11 @@ msgstr ""
 "(gesperrter Bildschirm = keine Aufnahme).\n"
 "Ihre Transkription wird anonymisiert und Ihr Host kann Ihre Aufnahme nicht anhören."
 
-#: src/portal/components/conversation/ConversationMessages.tsx:157
+#: src/portal/components/conversation/ConversationMessages.tsx:156
 msgid "Please type your response in the box below. You may also choose to record your response by clicking the microphone icon."
 msgstr "Bitte geben Sie Ihre Antwort in das Feld unten ein. Sie können Ihre Antwort auch aufnehmen, indem Sie auf das Mikrofonsymbol klicken."
 
-#: src/portal/components/conversation/ConversationMessages.tsx:155
+#: src/portal/components/conversation/ConversationMessages.tsx:154
 msgid ""
 "Please type your response in the box below. You may also choose to record your response by clicking the microphone icon.\n"
 "This transcript will be anonymized."
@@ -11982,7 +11982,7 @@ msgid "Reconnecting"
 msgstr "Verbindung wird wiederhergestellt"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:643
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:613
 msgid "participant.button.record"
 msgstr "Aufnehmen"
 
@@ -11992,7 +11992,7 @@ msgstr "Aufnehmen"
 msgid "Record a voice message"
 msgstr "Sprachnachricht aufnehmen"
 
-#: src/portal/routes/ParticipantPostConversation.tsx:163
+#: src/portal/routes/ParticipantPostConversation.tsx:161
 msgid "Record another conversation"
 msgstr "Ein weiteres Gespräch aufnehmen"
 
@@ -12247,7 +12247,7 @@ msgstr "Zugriff entfernen"
 msgid "Remove avatar"
 msgstr "Profilbild entfernen"
 
-#: src/portal/routes/ParticipantPostConversation.tsx:216
+#: src/portal/routes/ParticipantPostConversation.tsx:214
 msgid "Remove email"
 msgstr "E-Mail entfernen"
 
@@ -13854,7 +13854,7 @@ msgstr "Mit gesamtem Workspace teilen"
 msgid "Share with workspace"
 msgstr "Für Arbeitsbereich freigeben"
 
-#: src/portal/routes/ParticipantPostConversation.tsx:179
+#: src/portal/routes/ParticipantPostConversation.tsx:177
 msgid "Share your details here"
 msgstr "Teilen Sie hier Ihre Daten"
 
@@ -14020,7 +14020,7 @@ msgstr "Vorschau anzeigen"
 msgid "Show projects"
 msgstr "Projekte anzeigen"
 
-#: src/portal/routes/ParticipantPostConversation.tsx:154
+#: src/portal/routes/ParticipantPostConversation.tsx:152
 msgid "Show QR code"
 msgstr "QR-Code anzeigen"
 
@@ -14288,7 +14288,7 @@ msgstr "Es ist ein Fehler aufgetreten, den wir beheben müssen. Kontaktieren Sie
 msgid "Something went wrong while transcribing. Try again."
 msgstr "Beim Transkribieren ist etwas schiefgelaufen. Bitte versuchen Sie es erneut."
 
-#: src/portal/components/conversation/ConversationMessages.tsx:128
+#: src/portal/components/conversation/ConversationMessages.tsx:127
 msgid "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 msgstr "Beim Gespräch ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut oder wenden Sie sich an den Support, wenn das Problem weiterhin besteht"
 
@@ -14577,7 +14577,7 @@ msgid "Stop"
 msgstr "Stopp"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:729
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:697
 msgid "participant.button.stop"
 msgstr "Beenden"
 
@@ -14650,12 +14650,12 @@ msgstr "Strategische Planung"
 msgid "Strong password"
 msgstr "Sicheres Passwort"
 
-#: src/portal/routes/ParticipantPostConversation.tsx:249
+#: src/portal/routes/ParticipantPostConversation.tsx:247
 msgid "Submit"
 msgstr "Absenden"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/text/ParticipantConversationText.tsx:227
+#: src/portal/components/conversation/text/ParticipantConversationText.tsx:216
 msgid "participant.button.submit.text.mode"
 msgstr "Absenden"
 
@@ -14796,7 +14796,7 @@ msgstr "Unterstützt Pol A"
 msgid "Supports pole B"
 msgstr "Unterstützt Pol B"
 
-#: src/portal/components/conversation/text/ParticipantConversationText.tsx:234
+#: src/portal/components/conversation/text/ParticipantConversationText.tsx:223
 msgid "Switch to audio"
 msgstr "Zu Audio wechseln"
 
@@ -14809,7 +14809,7 @@ msgstr "Zu Self-Service wechseln"
 msgid "Switch to self-serve billing"
 msgstr "Zu Self-Service-Abrechnung wechseln"
 
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:650
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:620
 msgid "Switch to text"
 msgstr "Zu Text wechseln"
 
@@ -15004,7 +15004,7 @@ msgstr "Text"
 msgid "Text contributions and follow-up forms."
 msgstr "Textbeiträge und Formulare zur Nachbereitung."
 
-#: src/portal/routes/ParticipantPostConversation.tsx:135
+#: src/portal/routes/ParticipantPostConversation.tsx:133
 msgid "Thank you for participating!"
 msgstr "Vielen Dank für Ihre Teilnahme!"
 
@@ -15016,7 +15016,7 @@ msgstr "Inhalt der Dankesseite"
 #~ msgid "Thank You Page Content"
 #~ msgstr "Danke-Seite Inhalt"
 
-#: src/portal/routes/ParticipantPostConversation.tsx:258
+#: src/portal/routes/ParticipantPostConversation.tsx:256
 msgid "Thank you!"
 msgstr "Vielen Dank!"
 
@@ -15625,7 +15625,7 @@ msgstr "Diese Bereitstellung zeigt bis zu {applied} Kanten."
 msgid "This deployment shows up to {applied} nodes."
 msgstr "Diese Bereitstellung zeigt bis zu {applied} Knoten."
 
-#: src/portal/routes/ParticipantPostConversation.tsx:90
+#: src/portal/routes/ParticipantPostConversation.tsx:88
 msgid "This email is already in the list."
 msgstr "Diese E-Mail ist bereits in der Liste."
 
@@ -16056,7 +16056,7 @@ msgstr "Zeitstempel"
 msgid "Timestamps and duration"
 msgstr "Zeitstempel und Dauer"
 
-#: src/portal/components/conversation/ConversationMessages.tsx:120
+#: src/portal/components/conversation/ConversationMessages.tsx:119
 msgid "Tip"
 msgstr "Tipp"
 
@@ -16535,7 +16535,7 @@ msgstr "Geben Sie <0>{0}</0> ein, um zu bestätigen."
 msgid "Type a message or press / for templates..."
 msgstr "Nachricht eingeben oder / für Vorlagen drücken..."
 
-#: src/portal/components/conversation/text/ParticipantConversationText.tsx:212
+#: src/portal/components/conversation/text/ParticipantConversationText.tsx:201
 msgid "Type your response here"
 msgstr "Geben Sie hier Ihre Antwort ein"
 
@@ -17213,7 +17213,7 @@ msgstr "Rezepte ansehen"
 msgid "View results"
 msgstr "Ergebnisse anzeigen"
 
-#: src/portal/components/conversation/ConversationMessages.tsx:220
+#: src/portal/components/conversation/ConversationMessages.tsx:219
 msgid "View your responses"
 msgstr "Ihre Antworten anzeigen"
 
@@ -17429,7 +17429,7 @@ msgstr "Wir richten das Projekt ein, stehen Ihnen am Tag der Veranstaltung zur S
 msgid "We still couldn't charge your method. Update it and try again."
 msgstr "Ihre Zahlungsmethode konnte noch immer nicht belastet werden. Bitte aktualisieren Sie sie und versuchen Sie es erneut."
 
-#: src/portal/routes/ParticipantPostConversation.tsx:269
+#: src/portal/routes/ParticipantPostConversation.tsx:267
 msgid "We will only send you a message if your host generates a report, we never share your details with anyone. You can opt out at any time."
 msgstr "Wir werden Ihnen nur eine Nachricht senden, wenn Ihr Gastgeber einen Bericht erstellt. Wir geben Ihre Daten niemals an Dritte weiter. Sie können sich jederzeit abmelden."
 
@@ -17495,7 +17495,7 @@ msgstr "Webhooks sind in kostenpflichtigen Tarifen enthalten."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:129
 #: src/routes/auth/Login.tsx:398
-#: src/portal/components/conversation/ConversationMessages.tsx:113
+#: src/portal/components/conversation/ConversationMessages.tsx:112
 msgid "Welcome"
 msgstr "Willkommen"
 
@@ -18193,7 +18193,7 @@ msgstr "Sie müssen sich mit demselben Anbieter anmelden, mit dem Sie sich regis
 msgid "You need an invitation from a colleague"
 msgstr "Sie benötigen eine Einladung von Kollegen"
 
-#: src/portal/components/conversation/ConversationMessages.tsx:119
+#: src/portal/components/conversation/ConversationMessages.tsx:118
 msgid "You seem to be offline, please check your internet connection"
 msgstr "Sie scheinen offline zu sein. Bitte überprüfen Sie Ihre Internetverbindung"
 
@@ -18534,11 +18534,11 @@ msgstr "Ihre Aufnahme, {0}"
 msgid "Your request is in."
 msgstr "Ihre Anfrage ist eingegangen."
 
-#: src/portal/routes/ParticipantPostConversation.tsx:139
+#: src/portal/routes/ParticipantPostConversation.tsx:137
 msgid "Your response has been recorded. You may now close this tab. You may also share the QR code so others can contribute, or record another conversation."
 msgstr "Ihre Antwort wurde aufgezeichnet. Sie können diesen Tab jetzt schließen. Sie können auch den QR-Code teilen, damit andere beitragen können, oder ein weiteres Gespräch aufnehmen."
 
-#: src/portal/components/conversation/ConversationMessages.tsx:229
+#: src/portal/components/conversation/ConversationMessages.tsx:228
 msgid "Your responses"
 msgstr "Ihre Antworten"
 
