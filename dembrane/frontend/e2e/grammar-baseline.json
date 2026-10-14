@@ -119,5 +119,55 @@
 	},
 	"phone · /w/$workspace/settings/members · page": {
 		"rule05": 1
+	},
+	"desktop · /admin/usage-and-billing as staff · page": {
+		"type.transform": 5
+	},
+	"desktop · /admin/accounts as staff · page": {
+		"icon.size": 1
+	},
+	"desktop · /admin/accounts/$org as staff · page": {
+		"type.transform": 3,
+		"icon.size": 4
+	},
+	"desktop · /admin/accounts/new-demo as staff · page": {
+		"icon.size": 1
+	},
+	"desktop · /w/$workspace/projects/$project/report as member · page": {
+		"rule05": 2
+	},
+	"desktop · /w/$workspace/settings/training · page": {
+		"rule05": 1,
+		"flow.one-primary": 1,
+		"flow.primary-first": 2
+	},
+	"phone · /admin/usage-and-billing as staff · page": {
+		"type.transform": 5,
+		"rule05": 1
+	},
+	"phone · /admin/accounts as staff · page": {
+		"icon.size": 1
+	},
+	"phone · /admin/response-feedback as staff · page": {
+		"axe.scrollable-region-focusable": 1,
+		"rule05": 3
+	},
+	"phone · /admin/accounts/$org as staff · page": {
+		"type.transform": 3,
+		"icon.size": 4
+	},
+	"phone · /admin/accounts/new-demo as staff · page": {
+		"icon.size": 1
+	},
+	"phone · /w/$workspace/projects/$project/conversations as member · page": {
+		"rule05": 2
+	},
+	"phone · /w/$workspace/projects/$project/report as member · page": {
+		"rule05": 2
+	},
+	"phone · /w/$workspace/settings/training · page": {
+		"rule05": 1,
+		"flow.one-primary": 1,
+		"flow.primary-first": 2
 	}
 }
