@@ -5,6 +5,7 @@ export { revisionDoc, runDoc } from "./bff";
 export * from "./budgets";
 export * from "./contracts";
 export { clientOf, isUuid, micros, pyIso } from "./db";
+export { EmbeddingService, inputHash as embeddingInputHash } from "./embeddings";
 export * from "./executor";
 export { type AnalysisWorker, analysisSweep, analysisWorker } from "./jobs";
 export {

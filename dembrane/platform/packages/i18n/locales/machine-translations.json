@@ -187,6 +187,13 @@
     "email.workspace_invite.subject": "{inviter_name} vás zve ke spolupráci na dembrane",
     "email.workspace_invite.text_cta": "Přijměte pozvánku:",
     "email.workspace_invite.title": "Máte pozvánku ke spolupráci na dembrane",
+    "offer_email.closing": "S pozdravem",
+    "offer_email.greeting": "Dobrý den, {name},",
+    "offer_email.greeting_plain": "Dobrý den,",
+    "offer_email.ready": "Nabídka {offer} je připravena k přečtení a podpisu:",
+    "offer_email.sign_in": "Přihlásíte se svou e-mailovou adresou a jednorázovým kódem. Přihlaste se zde:",
+    "offer_email.subject": "Vaše nabídka od dembrane: {document_title}",
+    "offer_email.valid_until": "Nabídka platí do {date}.",
     "task.billing_details.body": "Komu fakturujeme: oficiální název, adresa, DIČ (VAT) nebo číslo KvK, fakturační e-mail a případně číslo objednávky. Zpřístupní se po podpisu nabídky.",
     "task.billing_details.title": "Fakturační údaje",
     "task.book_call.body": "Projdeme s vámi vaši ukázku a naplánujeme první setkání.",
@@ -203,7 +210,8 @@
     "task.watch_tutorial.body": "Podívejte se, jak dembrane funguje, od založení projektu po čtení toho, co lidé řekli.",
     "task.watch_tutorial.title": "Podívejte se na návod",
     "task.who_signs.body": "Kdo podepíše nabídku, kdo podepíše smlouvu o zpracování osobních údajů a zda potřebujete vlastní DPIA.",
-    "task.who_signs.title": "Sdělte nám, kdo podepíše {document_title}"
+    "task.who_signs.title": "Sdělte nám, kdo podepíše {document_title}",
+    "ticket.invoice_delivery.subject": "Jak přijímáme faktury"
   },
   "de-DE": {
     "email.account_document_withdrawn.body": "Wir haben {document_title} für {org_name} zurückgezogen, es kann also nicht mehr unterschrieben werden.",
@@ -393,6 +401,13 @@
     "email.workspace_invite.subject": "{inviter_name} hat Sie zur Zusammenarbeit auf dembrane eingeladen",
     "email.workspace_invite.text_cta": "Einladung annehmen:",
     "email.workspace_invite.title": "Sie sind zur Zusammenarbeit auf dembrane eingeladen",
+    "offer_email.closing": "Freundliche Grüße",
+    "offer_email.greeting": "Guten Tag {name},",
+    "offer_email.greeting_plain": "Guten Tag,",
+    "offer_email.ready": "Das Angebot {offer} liegt zur Durchsicht und Unterschrift bereit:",
+    "offer_email.sign_in": "Sie melden sich mit Ihrer E-Mail-Adresse und einem Einmalcode an. Hier anmelden:",
+    "offer_email.subject": "Ihr Angebot von dembrane: {document_title}",
+    "offer_email.valid_until": "Das Angebot ist gültig bis {date}.",
     "task.billing_details.body": "An wen die Rechnung geht: Offizieller Name, Adresse, VAT- oder KvK-Nummer, E-Mail-Adresse für Rechnungen und, falls vorhanden, Ihre PO-Nummer. Dieses Feld wird freigeschaltet, sobald das Angebot unterzeichnet ist.",
     "task.billing_details.title": "Rechnungsdetails",
     "task.book_call.body": "Wir gehen Ihre Demo mit Ihnen durch und planen eine erste Sitzung.",
@@ -409,7 +424,8 @@
     "task.watch_tutorial.body": "Sehen Sie, wie dembrane funktioniert: vom Einrichten eines Projekts bis zum Lesen dessen, was Menschen gesagt haben.",
     "task.watch_tutorial.title": "Das Tutorial ansehen",
     "task.who_signs.body": "Wer das Angebot unterschreibt, wer den Auftragsverarbeitungsvertrag unterschreibt und ob Sie eine eigene DSFA benötigen.",
-    "task.who_signs.title": "Teilen Sie uns mit, wer {document_title} unterschreibt"
+    "task.who_signs.title": "Teilen Sie uns mit, wer {document_title} unterschreibt",
+    "ticket.invoice_delivery.subject": "Wie wir Rechnungen erhalten"
   },
   "es-ES": {
     "email.account_document_withdrawn.body": "Hemos retirado {document_title} para {org_name}, así que ya no se puede firmar.",
@@ -599,6 +615,13 @@
     "email.workspace_invite.subject": "{inviter_name} te ha invitado a colaborar en dembrane",
     "email.workspace_invite.text_cta": "Acepta la invitación:",
     "email.workspace_invite.title": "Te han invitado a colaborar en dembrane",
+    "offer_email.closing": "Un saludo,",
+    "offer_email.greeting": "Hola {name}:",
+    "offer_email.greeting_plain": "Hola:",
+    "offer_email.ready": "La oferta {offer} está lista para revisar y firmar:",
+    "offer_email.sign_in": "Inicia sesión con tu correo electrónico y un código de un solo uso. Inicia sesión aquí:",
+    "offer_email.subject": "Su oferta de dembrane: {document_title}",
+    "offer_email.valid_until": "La oferta es válida hasta el {date}.",
     "task.billing_details.body": "A quién facturamos: razón social, dirección, número de VAT o KvK, correo de facturación y, si usas uno, tu número de orden de compra (PO). Se abrirá una vez firmada la oferta.",
     "task.billing_details.title": "Datos de facturación",
     "task.book_call.body": "Repasamos tu demo contigo y planificamos una primera sesión.",
@@ -615,7 +638,8 @@
     "task.watch_tutorial.body": "Descubre cómo funciona dembrane, desde crear un proyecto hasta leer lo que dijo la gente.",
     "task.watch_tutorial.title": "Mira el tutorial",
     "task.who_signs.body": "Quién firma la oferta, quién firma el acuerdo de tratamiento de datos y si necesitas una EIPD propia.",
-    "task.who_signs.title": "Dinos quién firma {document_title}"
+    "task.who_signs.title": "Dinos quién firma {document_title}",
+    "ticket.invoice_delivery.subject": "Cómo recibimos las facturas"
   },
   "fr-FR": {
     "email.account_document_withdrawn.body": "Nous avons retiré {document_title} pour {org_name} : il ne peut plus être signé.",
@@ -805,6 +829,13 @@
     "email.workspace_invite.subject": "{inviter_name} vous a invité à collaborer sur dembrane",
     "email.workspace_invite.text_cta": "Accepter l'invitation :",
     "email.workspace_invite.title": "Vous êtes invité à collaborer sur dembrane",
+    "offer_email.closing": "Cordialement,",
+    "offer_email.greeting": "Bonjour {name},",
+    "offer_email.greeting_plain": "Bonjour,",
+    "offer_email.ready": "L'offre {offer} est prête à être lue et signée :",
+    "offer_email.sign_in": "Vous vous connectez avec votre adresse e-mail et un code à usage unique. Connectez-vous ici :",
+    "offer_email.subject": "Votre offre de dembrane : {document_title}",
+    "offer_email.valid_until": "L'offre est valable jusqu'au {date}.",
     "task.billing_details.body": "À qui adresser la facture : raison sociale, adresse, numéro de VAT ou de KvK, e-mail de facturation et, si vous en utilisez un, votre numéro de bon de commande. Cette section s'ouvre une fois l'offre signée.",
     "task.billing_details.title": "Coordonnées de facturation",
     "task.book_call.body": "Nous parcourons votre démo avec vous et planifions une première session.",
@@ -821,7 +852,8 @@
     "task.watch_tutorial.body": "Découvrez comment fonctionne dembrane, de la création d'un projet à la lecture de ce que les gens ont dit.",
     "task.watch_tutorial.title": "Regardez le tutoriel",
     "task.who_signs.body": "Qui signe l'offre, qui signe l'accord de traitement des données, et si vous avez besoin de votre propre AIPD.",
-    "task.who_signs.title": "Indiquez-nous qui signe {document_title}"
+    "task.who_signs.title": "Indiquez-nous qui signe {document_title}",
+    "ticket.invoice_delivery.subject": "Comment nous recevons les factures"
   },
   "it-IT": {
     "email.account_document_withdrawn.body": "Abbiamo ritirato {document_title} per {org_name}, quindi non può più essere firmato.",
@@ -1011,6 +1043,13 @@
     "email.workspace_invite.subject": "{inviter_name} ti ha invitato a collaborare su dembrane",
     "email.workspace_invite.text_cta": "Accetta l'invito:",
     "email.workspace_invite.title": "Hai un invito a collaborare su dembrane",
+    "offer_email.closing": "Cordiali saluti,",
+    "offer_email.greeting": "Ciao {name},",
+    "offer_email.greeting_plain": "Ciao,",
+    "offer_email.ready": "L'offerta {offer} è pronta da leggere e firmare:",
+    "offer_email.sign_in": "Accedi con il tuo indirizzo email e un codice monouso. Accedi qui:",
+    "offer_email.subject": "La tua offerta di dembrane: {document_title}",
+    "offer_email.valid_until": "L'offerta è valida fino al {date}.",
     "task.billing_details.body": "A chi intestare la fattura: ragione sociale, indirizzo, partita VAT o numero KvK, email di fatturazione e, se lo usi, il numero d'ordine (PO). Si aprirà dopo la firma dell'offerta.",
     "task.billing_details.title": "Dati di fatturazione",
     "task.book_call.body": "Rivediamo insieme la tua demo e pianifichiamo una prima sessione.",
@@ -1027,7 +1066,8 @@
     "task.watch_tutorial.body": "Scopri come funziona dembrane, dalla creazione di un progetto alla lettura di ciò che le persone hanno detto.",
     "task.watch_tutorial.title": "Guarda il tutorial",
     "task.who_signs.body": "Chi firma l'offerta, chi firma l'accordo sul trattamento dei dati e se ti serve una DPIA tua.",
-    "task.who_signs.title": "Dicci chi firma {document_title}"
+    "task.who_signs.title": "Dicci chi firma {document_title}",
+    "ticket.invoice_delivery.subject": "Come riceviamo le fatture"
   },
   "nl-NL": {
     "email.account_document_withdrawn.body": "We hebben {document_title} voor {org_name} ingetrokken, dus het kan niet meer worden ondertekend.",
@@ -1206,13 +1246,21 @@
     "email.workspace_invite.subject": "{inviter_name} heeft je uitgenodigd om samen te werken op dembrane",
     "email.workspace_invite.text_cta": "Accepteer de uitnodiging:",
     "email.workspace_invite.title": "Je bent uitgenodigd om samen te werken op dembrane",
+    "offer_email.closing": "Met vriendelijke groet,",
+    "offer_email.greeting": "Hallo {name},",
+    "offer_email.greeting_plain": "Hallo,",
+    "offer_email.ready": "De offerte {offer} staat klaar om te lezen en te ondertekenen:",
+    "offer_email.sign_in": "Je logt in met je e-mailadres en een eenmalige code. Log hier in:",
+    "offer_email.subject": "Je offerte van dembrane: {document_title}",
+    "offer_email.valid_until": "De offerte is geldig tot {date}.",
     "task.create_project.body": "Zet een eigen project op voor je eerste echte sessie.",
     "task.create_project.title": "Maak een project",
     "task.explore_demo.title": "Bekijk de demo die we voor je hebben gemaakt",
     "task.watch_tutorial.body": "Zie hoe dembrane werkt, van een project opzetten tot teruglezen wat mensen zeiden.",
     "task.watch_tutorial.title": "Bekijk de tutorial",
     "task.who_signs.body": "Wie de offerte ondertekent, wie de verwerkersovereenkomst ondertekent, en of je een eigen DPIA nodig hebt.",
-    "task.who_signs.title": "Laat weten wie {document_title} ondertekent"
+    "task.who_signs.title": "Laat weten wie {document_title} ondertekent",
+    "ticket.invoice_delivery.subject": "Hoe wij facturen ontvangen"
   },
   "uk-UA": {
     "email.account_document_withdrawn.body": "Ми відкликали {document_title} для {org_name}, тож його більше не можна підписати.",
@@ -1402,6 +1450,13 @@
     "email.workspace_invite.subject": "{inviter_name} запрошує вас до співпраці в dembrane",
     "email.workspace_invite.text_cta": "Прийняти запрошення:",
     "email.workspace_invite.title": "Вас запрошено до співпраці в dembrane",
+    "offer_email.closing": "З повагою,",
+    "offer_email.greeting": "Вітаю, {name}!",
+    "offer_email.greeting_plain": "Вітаю!",
+    "offer_email.ready": "Пропозиція {offer} готова до перегляду та підписання:",
+    "offer_email.sign_in": "Ви входите за допомогою адреси електронної пошти та одноразового коду. Увійдіть тут:",
+    "offer_email.subject": "Ваша пропозиція від dembrane: {document_title}",
+    "offer_email.valid_until": "Пропозиція дійсна до {date}.",
     "task.billing_details.body": "Кому виставляється рахунок: юридична назва, адреса, номер VAT або KvK, електронна пошта для рахунків і, якщо використовується, номер замовлення (PO). Відкриється після підписання пропозиції.",
     "task.billing_details.title": "Платіжні дані",
     "task.book_call.body": "Ми разом із Вами переглянемо демо й сплануємо першу сесію.",
@@ -1418,6 +1473,7 @@
     "task.watch_tutorial.body": "Дізнайтеся, як працює dembrane: від створення проєкту до читання того, що сказали люди.",
     "task.watch_tutorial.title": "Перегляньте посібник",
     "task.who_signs.body": "Хто підписує пропозицію, хто підписує угоду про обробку даних і чи потрібна вам власна ОВЗД.",
-    "task.who_signs.title": "Повідомте, хто підписує {document_title}"
+    "task.who_signs.title": "Повідомте, хто підписує {document_title}",
+    "ticket.invoice_delivery.subject": "Як ми отримуємо рахунки"
   }
 }

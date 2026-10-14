@@ -162,6 +162,23 @@ export function popcornStore(sql: Sql) {
       return r as Row;
     },
 
+    /** What a large session's tensions kept between reads, or null. */
+    async tensionsCache(loopId: string): Promise<Json | null> {
+      const [r] = await sql`select cache from popcorn_tensions_cache where loop_id = ${loopId}`;
+      return (r?.cache as Json | undefined) ?? null;
+    },
+
+    /** Keeps the tensions cache; null forgets it. */
+    async saveTensionsCache(loopId: string, cache: Json | null, now: string): Promise<void> {
+      if (cache === null) {
+        await sql`delete from popcorn_tensions_cache where loop_id = ${loopId}`;
+        return;
+      }
+      await sql`insert into popcorn_tensions_cache (loop_id, cache, updated_at)
+        values (${loopId}, ${j(cache)}, ${now})
+        on conflict (loop_id) do update set cache = excluded.cache, updated_at = excluded.updated_at`;
+    },
+
     /** Patches a loop; Directus stamped updated_at on every update. */
     async updateLoop(id: string, patch: Json, now: string): Promise<Row | null> {
       const cols = Object.keys(patch);
@@ -226,12 +243,12 @@ export function popcornStore(sql: Sql) {
       });
     },
 
-    /** A read booked by a finished conversation that has not started yet. */
+    /** A read booked by a finished conversation that has not started yet, locked against the worker's claim until the caller's transaction ends. */
     async pendingFinishRead(loopId: string): Promise<Row | null> {
       const [r] = await sql`select id, payload from scheduled_task
         where task_type = ${TASK_POPCORN_TICK} and status = 'scheduled'
           and payload->>'loop_id' = ${loopId} and payload->>'tick_kind' = ${FINISH_TICK}
-        order by scheduled_at limit 1`;
+        order by scheduled_at limit 1 for update`;
       return r ?? null;
     },
 

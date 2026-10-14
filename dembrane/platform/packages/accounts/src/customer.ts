@@ -8,19 +8,23 @@ import {
   ValidationError,
 } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
-import { localeOfEmail, resolveLocale } from "@dembrane/i18n";
+import { localeOfEmail, resolveLocale, translator } from "@dembrane/i18n";
 import { customerOrg, documentFor } from "./access";
+import { checkBilling, countryCodeOf, countryName, type Delivery } from "./billing-rules";
+import { customerEmailFor } from "./customer-email";
 import type { AccountsDeps, Tx } from "./deps";
 import { billingPayload, emit, orgPayload, taskPayload, ticketPayload } from "./events";
 import { signerInviteUrl } from "./invite";
-import { requestInvoices, staffDocumentUrl } from "./invoice";
+import { customerSignUrl, requestInvoices, staffDocumentUrl } from "./invoice";
 import type { PricedLine } from "./money";
 import type { OfferContent } from "./offer";
 import { completeOnboarding, isOnboardingCode } from "./onboarding";
 import { lookupPeppol, type TaxIds } from "./peppol";
+import { continueUrl } from "./prospect";
 import { type BillingRow, type DocumentRow, store } from "./storage";
 import { isTaskCode } from "./task-text";
 import { settleTask } from "./tasks";
+import { fieldErrors } from "./validate";
 import {
   billingView,
   confirmationText,
@@ -86,13 +90,17 @@ const taskOrder = (s: string) => {
 /** One document with everything the signing screen shows. */
 export async function readDocument(d: AccountsDeps, who: Signed, orgId: string, docId: string) {
   const a = await documentFor(d, who, orgId, docId, "account:read");
-  return documentDetail(d, a.doc, a.via);
+  return documentDetail(d, a.doc, a.via, who);
 }
 
 export async function documentDetail(
   d: AccountsDeps,
   doc: DocumentRow,
   via: "member" | "signer" | "staff",
+  /** The staff member asking; signs the email in `customer_email`. */
+  viewer: Signed | null = null,
+  /** False leaves `customer_email` out: the preview seed runs without the server catalogs. */
+  withEmail = true,
 ) {
   const [sig, fields, terms, sla, dpa, reminded] = await Promise.all([
     store.signatureOf(d.db, doc.id),
@@ -108,6 +116,7 @@ export async function documentDetail(
     store.org(d.db, doc.orgId),
     store.billing(d.db, doc.orgId),
   ]);
+  const toTheCustomer = via === "staff" && doc.status === "sent" && doc.requiresSignature;
   const isEvent = (doc.content as OfferContent | null)?.template === "event";
   const has = (pick: (f: (typeof fields)[number]) => boolean) => fields.some(pick);
   const placeholders = {
@@ -147,10 +156,17 @@ export async function documentDetail(
         }
       : null,
     signature: sig ? signatureView(sig) : null,
-    prefill: signingPrefill(org?.name ?? null, billing),
+    prefill: signingPrefill(org?.name ?? null, billing, doc.language),
     access: via,
     staff_url:
       via === "staff" ? staffDocumentUrl(d.settings.dashboardUrl, doc.orgId, doc.id) : null,
+    customer_links: toTheCustomer
+      ? {
+          sign_in: continueUrl(d.settings.dashboardUrl, doc.orgId),
+          document: customerSignUrl(d.settings.dashboardUrl, doc.orgId, doc.id),
+        }
+      : null,
+    customer_email: toTheCustomer && withEmail ? await customerEmailFor(d, doc, viewer) : null,
   };
 }
 
@@ -158,9 +174,13 @@ export async function documentDetail(
  * What the signer need not type: the organisation as it is billed (else its name) and the
  * billing address, when we have them. The signer still sees and may change both.
  */
-function signingPrefill(orgName: string | null, b: BillingRow | null) {
+function signingPrefill(orgName: string | null, b: BillingRow | null, language: string) {
   const place = [b?.billing_postal_code, b?.billing_city].filter(Boolean).join(" ");
-  const address = [b?.billing_address_line1, b?.billing_address_line2, place, b?.billing_country]
+  // The country reads in the document's language; details without a code keep what was typed.
+  const country = b?.billing_country_code
+    ? countryName(b.billing_country_code, language)
+    : b?.billing_country;
+  const address = [b?.billing_address_line1, b?.billing_address_line2, place, country]
     .filter(Boolean)
     .join(", ");
   return {
@@ -518,13 +538,16 @@ export interface BillingInput {
   readonly address_line2: string | null;
   readonly postal_code: string;
   readonly city: string;
-  readonly country: string;
+  readonly country_code: string | null;
+  readonly country: string | null;
   readonly vat_id: string | null;
+  readonly no_vat_number?: boolean | null | undefined;
   readonly kvk_number: string | null;
   readonly kbo_number: string | null;
   readonly po_number: string | null;
   readonly peppol_id: string | null;
-  readonly invoice_delivery?: "peppol" | "email" | null | undefined;
+  readonly invoice_delivery?: Delivery | null | undefined;
+  readonly invoice_portal: string | null;
 }
 
 /** The Peppol directory entry for numbers the customer is typing, before they save. */
@@ -540,17 +563,29 @@ export async function readBilling(d: AccountsDeps, who: Signed, orgId: string) {
 
 /**
  * Saves what Exact needs to invoice, on the organisation's own billing account (made if it
- * has none yet), and completes the billing details task: no review by us.
+ * has none yet), and completes the billing details task: no review by us. The country
+ * decides which numbers are asked and how they must look (billing-rules.ts, the rules the
+ * form checks too); numbers are stored cleaned. Formats only: nothing is looked up to
+ * confirm a number is real, and no tax is decided here. A customer that gets invoices
+ * neither by email nor through Peppol writes how instead, and that opens a question.
  */
 export async function updateBilling(d: AccountsDeps, who: Signed, orgId: string, b: BillingInput) {
   const org = await customerOrg(d, who, orgId, "account:billing");
-  if (!b.vat_id && !b.kvk_number && !b.kbo_number)
-    throw new ValidationError("billing.tax_id_required");
+  const country = countryCodeOf(b.country_code ?? b.country);
+  const { problems, clean } = checkBilling({ ...b, country_code: country });
+  if (!country || problems.length)
+    throw fieldErrors(
+      problems.map((p) => ({
+        field: p.field,
+        code: p.kind === "missing" ? "field.required" : "field.invalid",
+      })),
+    );
   const now = d.now();
   const me = await store.identity(d.db, who.directusUserId);
   // A Peppol id typed by the customer wins; otherwise the directory is asked, outside the
   // transaction so a slow directory holds no lock.
-  const match = b.peppol_id ? null : await lookupPeppol(d, b);
+  const match = clean.peppol_id ? null : await lookupPeppol(d, clean);
+  const locale = me?.email ? await localeOfEmail(d.db, me.email).catch(() => null) : null;
   await d.db.transaction(async (tx) => {
     await store.lockOrg(tx, org.id);
     const patch = {
@@ -560,14 +595,19 @@ export async function updateBilling(d: AccountsDeps, who: Signed, orgId: string,
       billing_address_line2: b.address_line2,
       billing_postal_code: b.postal_code,
       billing_city: b.city,
-      billing_country: b.country,
-      billing_vat_id: b.vat_id,
-      kvk_number: b.kvk_number,
-      kbo_number: b.kbo_number,
+      // The name is what reads on an invoice; the code is what a program should read.
+      billing_country: countryName(country),
+      billing_country_code: country,
+      billing_vat_id: clean.vat_id,
+      no_vat_number: clean.no_vat_number,
+      kvk_number: clean.kvk_number,
+      kbo_number: clean.kbo_number,
       po_number: b.po_number,
-      peppol_id: b.peppol_id ?? match?.participant_id ?? null,
-      peppol_name: b.peppol_id ? null : (match?.name ?? null),
-      ...(b.invoice_delivery !== undefined ? { invoice_delivery: b.invoice_delivery } : {}),
+      peppol_id: clean.peppol_id ?? match?.participant_id ?? null,
+      peppol_name: clean.peppol_id ? null : (match?.name ?? null),
+      ...(b.invoice_delivery !== undefined
+        ? { invoice_delivery: b.invoice_delivery, invoice_portal: clean.invoice_portal }
+        : {}),
       updated_at: now.toISOString(),
     };
     const account = await store.billing(tx, org.id);
@@ -605,6 +645,14 @@ export async function updateBilling(d: AccountsDeps, who: Signed, orgId: string,
       },
       slack: `:receipt: Billing details for ${org.name} submitted by ${me?.email ?? "a member"}: ${b.legal_name}${b.po_number ? `, PO ${b.po_number}` : ""}.`,
     });
+    // Another way than email or Peppol is agreed between people: what the customer wrote
+    // goes to dembrane as a question of theirs. Once per text, so saving again asks nothing new.
+    const wrote = b.invoice_delivery === "other" ? clean.invoice_portal : null;
+    if (wrote && !(account?.invoice_delivery === "other" && account.invoice_portal === wrote))
+      await insertQuestion(d, tx, org, who, me?.email ?? null, {
+        subject: translator(locale)("ticket.invoice_delivery.subject"),
+        body: wrote,
+      });
     // With an offer already signed, these details are the last thing the invoice waited for.
     await requestInvoices(d, tx, org);
   });
@@ -687,45 +735,61 @@ export async function openTicket(
   input: { subject: string; body: string },
 ) {
   const org = await customerOrg(d, who, orgId, "account:support");
+  const me = await store.identity(d.db, who.directusUserId);
+  const id = await d.db.transaction((tx) =>
+    insertQuestion(d, tx, org, who, me?.email ?? null, input),
+  );
+  return ticketOf(d, org.id, id);
+}
+
+/**
+ * A customer's question to dembrane with its first message, told to sam and Slack. The one
+ * way a question starts, whichever screen it was written on.
+ */
+async function insertQuestion(
+  d: AccountsDeps,
+  tx: Tx,
+  org: Awaited<ReturnType<typeof customerOrg>>,
+  who: Signed,
+  email: string | null,
+  input: { subject: string; body: string },
+): Promise<string> {
   const now = d.now();
   const id = newId();
-  const me = await store.identity(d.db, who.directusUserId);
-  await d.db.transaction(async (tx) => {
-    await store.insertTicket(tx, {
-      id,
-      orgId: org.id,
-      subject: input.subject,
-      status: "waiting_on_dembrane",
-      openedBy: who.directusUserId,
-      createdAt: now,
-      updatedAt: now,
-    });
-    await store.insertMessage(tx, {
-      id: newId(),
-      ticketId: id,
-      authorUserId: who.directusUserId,
-      fromStaff: false,
-      body: input.body,
-      createdAt: now,
-    });
-    const ticket = (await store.ticket(tx, org.id, id)) as NonNullable<
-      Awaited<ReturnType<typeof store.ticket>>
-    >;
-    await emit(d, tx, {
-      orgId: org.id,
-      actor: { kind: "customer", userId: who.directusUserId },
-      type: "ticket.opened",
-      subject: { type: "ticket", id },
-      webhook: {
-        event: "account.ticket.opened",
-        org: orgPayload(org),
-        ticket: ticketPayload(ticket, input.body),
-        opened_by: me?.email ?? null,
-      },
-      slack: `:speech_balloon: New question from ${org.name} (${me?.email ?? "a member"}): ${input.subject}`,
-    });
+  await store.insertTicket(tx, {
+    id,
+    orgId: org.id,
+    subject: input.subject,
+    status: "waiting_on_dembrane",
+    openedBy: who.directusUserId,
+    createdAt: now,
+    updatedAt: now,
   });
-  return ticketOf(d, org.id, id);
+  await store.insertMessage(tx, {
+    id: newId(),
+    ticketId: id,
+    authorUserId: who.directusUserId,
+    fromStaff: false,
+    body: input.body,
+    createdAt: now,
+  });
+  const ticket = (await store.ticket(tx, org.id, id)) as NonNullable<
+    Awaited<ReturnType<typeof store.ticket>>
+  >;
+  await emit(d, tx, {
+    orgId: org.id,
+    actor: { kind: "customer", userId: who.directusUserId },
+    type: "ticket.opened",
+    subject: { type: "ticket", id },
+    webhook: {
+      event: "account.ticket.opened",
+      org: orgPayload(org),
+      ticket: ticketPayload(ticket, input.body),
+      opened_by: email,
+    },
+    slack: `:speech_balloon: New question from ${org.name} (${email ?? "a member"}): ${input.subject}`,
+  });
+  return id;
 }
 
 export async function customerReply(

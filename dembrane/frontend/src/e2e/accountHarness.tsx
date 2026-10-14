@@ -13,6 +13,7 @@ import {
 	AccountTasksRoute,
 } from "@/features/accounts/customer/AccountRoute";
 import { AccountCardRoute } from "@/features/accounts/staff/AccountCardRoute";
+import { DocumentRoute } from "@/features/accounts/staff/DocumentRoute";
 import { cssVariablesResolver, theme } from "@/theme";
 
 // The customer account pages (Tasks, Documents) on the fixture backend (VITE_ACCOUNTS_FIXTURES=1), outside
@@ -42,6 +43,10 @@ const router = createMemoryRouter(
 			path: "/:language/o/:organisationId/documents",
 		},
 		{ element: <AccountCardRoute />, path: "/:language/admin/accounts/:orgId" },
+		{
+			element: <DocumentRoute />,
+			path: "/:language/admin/accounts/:orgId/documents/:docId",
+		},
 	],
 	{ initialEntries: [path] },
 );

@@ -3,6 +3,7 @@ export {
   isVertexInvalidArgument,
   TranscriptionError,
   TranscriptParseError,
+  TranscriptRefusedError,
   transcriptionFailureReason,
 } from "./errors";
 export { FakeTranscriber } from "./fake";
