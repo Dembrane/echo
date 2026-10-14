@@ -183,6 +183,16 @@ msgstr "Welcome back"
 #~ msgid "participant.button.stop.cancel_finish"
 #~ msgstr ""
 
+#. js-lingui-explicit-id
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:151
+#~ msgid "participant.modal.uploading_progress"
+#~ msgstr ""
+
+#. js-lingui-explicit-id
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:134
+#~ msgid "participant.modal.offline_waiting"
+#~ msgstr ""
+
 #: src/components/popcorn/PopcornStatus.tsx:49
 msgid " · {heldBack} held back"
 msgstr "· {heldBack} затримано"
@@ -2728,6 +2738,11 @@ msgstr "Avatar updated"
 #: src/components/map/renderers/LocalMapGraph.tsx:1289
 msgid "Avg low-dim distance (default: 10)"
 msgstr "Сер. низьковимірна відстань (за замовчуванням: 10)"
+
+#. js-lingui-explicit-id
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:167
+msgid "participant.modal.upload_awaiting_connection"
+msgstr ""
 
 #: src/components/conversation/StatePill.tsx:47
 #: src/components/conversation/LiveMonitorSection.tsx:269
@@ -5514,7 +5529,7 @@ msgid "Early features you can try on this project before they are ready for ever
 msgstr "Експериментальні функції, які можна випробувати в цьому проєкті до офіційного релізу."
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:707
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:706
 msgid "participant.button.echo"
 msgstr "ECHO"
 
@@ -6247,7 +6262,7 @@ msgstr "Failed to delete response"
 #~ msgstr ""
 
 #: src/portal/components/conversation/text/ParticipantConversationText.tsx:97
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:374
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:373
 msgid "Failed to finish conversation. Please try again."
 msgstr "Failed to finish conversation. Please try again."
 
@@ -6332,7 +6347,7 @@ msgstr "Failed to retranscribe conversation. Please try again."
 #~ msgid "Failed to revise outcome. Please try again."
 #~ msgstr "Failed to revise outcome. Please try again."
 
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:223
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:222
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Failed to stop recording on device change. Please try again."
 
@@ -6507,12 +6522,12 @@ msgid "participant.button.finish.text.mode"
 msgstr "Finish"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:180
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:197
 msgid "participant.button.stop.finish"
 msgstr "Finish"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:668
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:667
 msgid "participant.button.finish"
 msgstr "Finish"
 
@@ -11996,7 +12011,7 @@ msgid "Reconnecting"
 msgstr "Повторне підключення"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:644
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:643
 msgid "participant.button.record"
 msgstr "Record"
 
@@ -12058,7 +12073,7 @@ msgid "Recording page"
 msgstr "Сторінка запису"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:81
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:89
 msgid "participant.modal.pause.title"
 msgstr "Запис призупинено"
 
@@ -12748,7 +12763,7 @@ msgid "Results show in the language people spoke. Choose a language to translate
 msgstr "Результати відображаються мовою, якою говорили учасники. Оберіть мову для перекладу кожного Popcorn, цитати, напруги та зацікавленої сторони для цієї презентації; оригінали зберігаються."
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:167
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:184
 msgid "participant.button.stop.resume"
 msgstr "Resume"
 
@@ -14172,7 +14187,7 @@ msgid "Skip"
 msgstr "Skip"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:124
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:133
 msgid "participant.button.verify_prompt.skip"
 msgstr "Skip"
 
@@ -14591,7 +14606,7 @@ msgid "Stop"
 msgstr "Stop"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:728
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:727
 msgid "participant.button.stop"
 msgstr "Stop"
 
@@ -14823,12 +14838,12 @@ msgstr "Перейти на самообслуговування"
 msgid "Switch to self-serve billing"
 msgstr "Перейти на оплату в режимі самообслуговування"
 
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:651
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:650
 msgid "Switch to text"
 msgstr "Перейти на текст"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:192
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:209
 msgid "participant.link.switch.text"
 msgstr "Switch to text input"
 
@@ -16884,6 +16899,11 @@ msgstr "Завантаження завершено"
 #~ msgid "Upload Complete"
 #~ msgstr "Upload Complete"
 
+#. js-lingui-explicit-id
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:157
+msgid "participant.modal.upload_complete"
+msgstr ""
+
 #: src/components/dropzone/UploadConversationDropzone.tsx:539
 msgid "Upload conversations"
 msgstr "Upload conversations"
@@ -16928,10 +16948,8 @@ msgstr "Завантаження аудіофайлів"
 #~ msgstr "Uploading Audio Files..."
 
 #. js-lingui-explicit-id
-#. placeholder {0}: uploadProgress.sent
-#. placeholder {1}: uploadProgress.total
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:151
-msgid "participant.modal.uploading_progress"
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:162
+msgid "participant.modal.upload_in_progress"
 msgstr ""
 
 #: src/components/workspace/gateWalls.ts:93
@@ -17098,7 +17116,7 @@ msgid "Verification prompts allow 10,000 characters, and verified outcomes have 
 msgstr "Підказки для перевірки можуть містити до 10 000 символів, а перевірені результати мають кнопку копіювання."
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:77
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:85
 msgid "participant.modal.verify_prompt.title"
 msgstr "Verification reminder"
 
@@ -17147,7 +17165,7 @@ msgid "participant.echo.verify"
 msgstr "Verify"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:109
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:117
 msgid "participant.button.verify_prompt.verify"
 msgstr "Verify"
 
@@ -17297,11 +17315,6 @@ msgstr "Голосове введення враховує ліміт запис
 #: src/components/map/panels/shared.tsx:113
 msgid "Voiced in a conversation"
 msgstr "Озвучено в розмові"
-
-#. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:134
-msgid "participant.modal.offline_waiting"
-msgstr ""
 
 #: src/components/report/CreateReportForm.tsx:226
 msgid "Waiting for conversations to finish before generating a report."
@@ -18199,7 +18212,7 @@ msgid "You haven't joined any workspace in this organisation yet."
 msgstr "Ви ще не приєдналися до жодного робочого простору в цій організації."
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:92
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:100
 msgid "participant.modal.verify_prompt.description"
 msgstr "You haven't verified any outcomes yet. Would you like to verify before finishing?"
 

@@ -173,6 +173,7 @@ let chunks: { id: string }[];
 // The outbox the screen sees: a chunk counts as queued until the promise
 // `uploadChunk` returned for it settles.
 let queued = 0;
+let sent = 0;
 let queueWaiters: (() => void)[] = [];
 let online = true;
 
@@ -196,9 +197,11 @@ vi.mock("./outbox/OutboxProvider", async () => {
 						await uploadChunk({ chunk, ...meta });
 					} catch {}
 					queued -= 1;
+					sent += 1;
 					rerender();
 					if (queued === 0) for (const done of queueWaiters.splice(0)) done();
 				},
+				progress: () => ({ queued, sent, total: queued + sent }),
 				queuedCount: () => queued,
 				settled: async () => {
 					if (queued > 0)
@@ -243,6 +246,7 @@ beforeEach(() => {
 	project = { id: "p1" };
 	chunks = [];
 	queued = 0;
+	sent = 0;
 	queueWaiters = [];
 	online = true;
 	recorder.hadInterruption = false;
@@ -460,21 +464,27 @@ describe("finishing", () => {
 		);
 	});
 
-	it("says it's waiting for a connection when finishing offline", async () => {
+	it("can't finish while offline, and says what it's waiting for", async () => {
 		online = false;
 		uploadChunk.mockReturnValue(new Promise(() => {}));
 		renderAudio();
 		await startRecording();
 		act(() => recorder.options?.onChunk(new Blob(["audio"])));
+		fireEvent.click(screen.getByTestId("portal-audio-stop-button"));
 
-		await stopAndFinish();
-
+		const finishButton = await screen.findByTestId(
+			"portal-audio-stop-finish-button",
+		);
+		expect(finishButton.hasAttribute("disabled")).toBe(true);
+		expect(screen.getByTestId("portal-audio-upload-progress").textContent).toBe(
+			"Awaiting connection: 0 of 1 part sent",
+		);
+		// Resume still works.
 		expect(
-			await screen.findByText(
-				"Waiting for a connection. Your audio is saved on this device.",
-			),
-		).toBeTruthy();
-		expect(navigate).not.toHaveBeenCalled();
+			screen
+				.getByTestId("portal-audio-stop-resume-button")
+				.hasAttribute("disabled"),
+		).toBe(false);
 	});
 
 	it("calls off a finish still waiting on the audio when you resume", async () => {
@@ -523,7 +533,7 @@ describe("finishing", () => {
 		);
 	});
 
-	it("shows how many queued chunks have gone, and still lets you Finish", async () => {
+	it("shows how many of the session's chunks have gone, and still lets you Finish", async () => {
 		const first = deferred();
 		const second = deferred();
 		uploadChunk
@@ -541,14 +551,15 @@ describe("finishing", () => {
 		);
 
 		const progress = screen.getByTestId("portal-audio-upload-progress");
-		expect(progress.textContent).toContain("0 of 2");
+		expect(progress.textContent).toBe("Uploading audio: 0 of 2 parts sent");
 		expect(finishButton.hasAttribute("disabled")).toBe(false);
 
 		await act(async () => first.resolve({}));
-		expect(progress.textContent).toContain("1 of 2");
+		expect(progress.textContent).toBe("Uploading audio: 1 of 2 parts sent");
 
+		// Stays, ticked, once everything is sent.
 		await act(async () => second.resolve({}));
-		expect(screen.queryByTestId("portal-audio-upload-progress")).toBeNull();
+		expect(progress.textContent).toBe("Upload complete: 2 of 2 parts sent");
 	});
 
 	it("stays on the page and shows an error when finish fails", async () => {

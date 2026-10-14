@@ -1,4 +1,4 @@
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import {
 	Anchor,
 	Button,
@@ -8,7 +8,11 @@ import {
 	Stack,
 	Text,
 } from "@mantine/core";
-import { SealCheckIcon, WifiSlashIcon } from "@phosphor-icons/react";
+import {
+	CheckCircleIcon,
+	SealCheckIcon,
+	WifiSlashIcon,
+} from "@phosphor-icons/react";
 import { useState } from "react";
 import { testId } from "@/lib/testUtils";
 
@@ -18,7 +22,7 @@ type StopRecordingConfirmationModalProps = {
 	/** Finishing: waiting for the audio and the finish to reach the server. */
 	isStopping: boolean;
 	isOnline?: boolean;
-	/** This conversation's queued chunks: `sent` of `total`. */
+	/** This conversation's chunks since the page loaded: `sent` of `total`. */
 	uploadProgress?: { sent: number; total: number };
 	handleConfirmFinish: () => void;
 	/** Also calls off a finish still waiting on the audio. */
@@ -42,7 +46,11 @@ export const StopRecordingConfirmationModal = ({
 	handleSkipVerification,
 	handleVerify,
 }: StopRecordingConfirmationModalProps) => {
-	const isUploading = uploadProgress.total > 0;
+	const { sent, total } = uploadProgress;
+	const isComplete = sent === total;
+	// Offline the audio can't be sent, so finishing can't be either. Once
+	// started, a finish waits out a lost connection.
+	const canFinish = isOnline && !isStopping;
 	const [showVerifyPrompt, setShowVerifyPrompt] = useState(false);
 
 	const handleClose = () => {
@@ -117,6 +125,7 @@ export const StopRecordingConfirmationModal = ({
 									setShowVerifyPrompt(false);
 									handleSkipVerification?.();
 								}}
+								disabled={!isOnline}
 								miw={100}
 								size="md"
 								{...testId("portal-audio-verify-skip-button")}
@@ -127,31 +136,39 @@ export const StopRecordingConfirmationModal = ({
 					</>
 				) : (
 					<>
-						{!isOnline && (isStopping || isUploading) && (
-							<Group gap="xs" justify="flex-start" wrap="nowrap">
-								<WifiSlashIcon size={20} />
-								<Text size="sm" c="dimmed">
-									<Trans id="participant.modal.offline_waiting">
-										Waiting for a connection. Your audio is saved on this
-										device.
-									</Trans>
-								</Text>
-							</Group>
-						)}
-
-						{isUploading && (
+						{/* Stays once everything is sent, so it doesn't flash by. */}
+						{total > 0 && (
 							<Group
 								gap="xs"
 								justify="flex-start"
 								py="xs"
+								wrap="nowrap"
 								{...testId("portal-audio-upload-progress")}
 							>
-								<Loader size="sm" />
+								{isComplete ? (
+									<CheckCircleIcon size={20} color="var(--app-success)" />
+								) : isOnline ? (
+									<Loader size="sm" />
+								) : (
+									<WifiSlashIcon size={20} />
+								)}
 								<Text size="sm" c="dimmed">
-									<Trans id="participant.modal.uploading_progress">
-										Uploading audio: {uploadProgress.sent} of{" "}
-										{uploadProgress.total} parts sent
-									</Trans>
+									{isComplete ? (
+										<Trans id="participant.modal.upload_complete">
+											Upload complete: {sent} of{" "}
+											<Plural value={total} one="# part" other="# parts" /> sent
+										</Trans>
+									) : isOnline ? (
+										<Trans id="participant.modal.upload_in_progress">
+											Uploading audio: {sent} of{" "}
+											<Plural value={total} one="# part" other="# parts" /> sent
+										</Trans>
+									) : (
+										<Trans id="participant.modal.upload_awaiting_connection">
+											Awaiting connection: {sent} of{" "}
+											<Plural value={total} one="# part" other="# parts" /> sent
+										</Trans>
+									)}
 								</Text>
 							</Group>
 						)}
@@ -169,7 +186,7 @@ export const StopRecordingConfirmationModal = ({
 							<Button
 								onClick={handleFinishClick}
 								loading={isStopping}
-								disabled={isStopping}
+								disabled={!canFinish}
 								miw={100}
 								size="md"
 								leftSection={

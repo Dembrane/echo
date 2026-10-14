@@ -46,7 +46,6 @@ import {
 import { useRecordingWakeLock } from "./hooks/useRecordingWakeLock";
 import { useS3ConnectivityCheck } from "./hooks/useS3ConnectivityCheck";
 import { useOutbox } from "./outbox/OutboxProvider";
-import { useOutboxProgress } from "./outbox/useOutboxProgress";
 import type { RecordingMeterStatus } from "./ParticipantRecordingWaveform";
 import { ParticipantRecordingWaveform } from "./ParticipantRecordingWaveform";
 import { PermissionErrorModal } from "./PermissionErrorModal";
@@ -103,7 +102,7 @@ export const ParticipantConversationAudio = () => {
 		() => queuedCount(conversationId ?? ""),
 		[queuedCount, conversationId],
 	);
-	const uploadProgress = useOutboxProgress(conversationId ?? "");
+	const uploadProgress = outbox.progress(conversationId ?? "");
 
 	// The outbox keeps the chunk on the device until the server has it.
 	const onChunk = (chunk: Blob) => {

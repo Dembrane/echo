@@ -182,3 +182,27 @@ it("counts a chunk from the moment it's handed over, before it's stored", async 
 	expect(outbox.queuedCount("conv-1")).toBe(1);
 	await act(() => enqueued);
 });
+
+it("counts the whole session, not just what's queued now", async () => {
+	render(tree());
+	await act(() => outbox.enqueueChunk(chunk(), meta));
+	await act(() => outbox.settled("conv-1"));
+	await act(() => outbox.enqueueChunk(chunk(), meta));
+	await act(() => outbox.settled("conv-1"));
+	expect(outbox.progress("conv-1")).toEqual({ queued: 0, sent: 2, total: 2 });
+
+	api.upload.mockImplementation(neverSettles);
+	await act(() => outbox.enqueueChunk(chunk(), meta));
+	await waitFor(() =>
+		expect(outbox.progress("conv-1")).toEqual({ queued: 1, sent: 2, total: 3 }),
+	);
+});
+
+it("counts a direct upload that landed as sent", async () => {
+	render(tree(() => Promise.reject(new Error("IndexedDB unavailable"))));
+
+	await act(() => outbox.enqueueChunk(chunk(), meta));
+	await act(() => outbox.settled("conv-1"));
+
+	expect(outbox.progress("conv-1")).toEqual({ queued: 0, sent: 1, total: 1 });
+});
