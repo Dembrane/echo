@@ -159,8 +159,9 @@ export const StopRecordingConfirmationModal = ({
 								{isComplete ? (
 									<CheckCircleIcon size={20} color="var(--app-success)" />
 								) : (
-									// The size of the check's drawn circle, not its 20px box.
-									<Loader size={16} />
+									// The check's drawn circle, padded out to its 20px box so the
+									// text starts in the same place.
+									<Loader size={16} mx={2} />
 								)}
 								<Text size="sm" c="dimmed">
 									{isComplete ? (
