@@ -106,6 +106,18 @@ export async function staffCan(
   });
 }
 
+/**
+ * An email to a customer leaves on a person's own action. A staff API key (sam's) prepares
+ * and reads; where a staff call would queue an email (an offer sent with `notify`, a
+ * message, a demo's sign-in invitation) it is refused here, and a signed-in staff member
+ * sends from the staff pages. Every staff route that can email calls this before it writes
+ * anything.
+ */
+export function assertPersonSends(who: Signed): void {
+  // Only a staff API key carries its own list of staff permissions (apps/api session).
+  if (who.staffPolicies) throw new ForbiddenError("staff.key_cannot_email");
+}
+
 /** An organisation staff may manage: any live one. */
 export async function staffOrg(d: AccountsDeps, orgId: string): Promise<OrgRow> {
   const org = isUuid(orgId) ? await store.org(d.db, orgId) : null;

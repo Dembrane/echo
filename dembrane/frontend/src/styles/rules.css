@@ -55,9 +55,10 @@
 	 * active, red on error). */
   --app-rule-color: var(--app-quiet);
   /* Fields and what belongs to them (open lists, popovers, menus, tooltips,
-	 * filters, switches) draw a darker grey: 3.28:1, the contrast WCAG asks
-	 * of a control's edge. Everything else (cards, alerts, tables, tabs,
-	 * dialogs, toasts, button boxes) stays faint. */
+	 * filters, switches) and the box of a secondary button draw a darker grey:
+	 * 3.28:1 against parchment, the contrast WCAG asks of a control's edge.
+	 * Everything else (cards, alerts, tables, tabs, dialogs, toasts) stays
+	 * faint. */
   --app-control-rule: #878785;
   --app-float: 0 12px 40px rgba(45, 45, 44, 0.12);
 }
@@ -104,9 +105,12 @@
   box-shadow: none;
 }
 
-/* Do: the full box. */
+/* Do: the full box. A secondary button's box is its only edge, so it takes
+ * the control grey: the faint grey is 1.17:1 on parchment and the button
+ * disappears beside the primary pill. */
 :root .mantine-Button-root[data-variant="outline"],
 :root .mantine-Button-root[data-variant="default"] {
+  --app-rule-color: var(--app-control-rule);
   border-color: var(--app-rule-color);
   border-radius: 0;
   border-style: solid;
@@ -798,11 +802,15 @@
     .mantine-Popover-dropdown,
     .mantine-Menu-dropdown,
     .mantine-Combobox-dropdown,
-    .mantine-Modal-content,
     .mantine-Drawer-content,
     .mantine-HoverCard-dropdown
   ) {
   background-color: var(--app-surface);
+}
+/* A dialog is a sheet of the page: parchment, so the white fields in it read as
+ * fields (on white, a white input has only its side rules to show it). */
+:root .mantine-Modal-content {
+  background-color: var(--app-background);
 }
 
 /* The app still uses icon sizes beyond the system's 16 and 20 until the icon

@@ -14,6 +14,11 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:50
+#~ msgid "error.billing.tax_id_required"
+#~ msgstr "Saisissez au moins l'un de vos numéros de TVA, KvK ou KBO."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:5
 msgid "error.request.field_empty"
 msgstr "{field} ne peut pas être vide. Remplissez-le ou supprimez-le."
@@ -139,6 +144,11 @@ msgid "error.conversation.move_context_mismatch"
 msgstr "Les conversations ne peuvent être déplacées que vers des espaces de travail ayant le même responsable des données et de la facturation. Choisissez un projet dans un autre espace de travail."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/conversation.ts:24
+msgid "error.conversation.move_sample"
+msgstr "Les conversations ne peuvent pas être déplacées vers ou depuis un projet d'exemple. Choisissez un autre projet."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/internal.ts:5
 msgid "error.internal.busy"
 msgstr "dembrane est occupé pour le moment. Réessayez dans un instant."
@@ -172,11 +182,6 @@ msgstr "Saisissez une adresse web commençant par http:// ou https://."
 #: src/lib/errors/messages/field.ts:30
 msgid "error.field.invalid_url"
 msgstr "Saisissez une adresse web commençant par http:// ou https://."
-
-#. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:50
-msgid "error.billing.tax_id_required"
-msgstr "Saisissez au moins l'un de vos numéros de TVA, KvK ou KBO."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:40
@@ -224,7 +229,7 @@ msgid "error.workspace.visibility_requires_tier"
 msgstr "Les espaces de travail privés et sur invitation nécessitent le forfait Innovator ou supérieur. Créez-le en accès libre pour l'instant, ou passez au forfait supérieur."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:28
+#: src/lib/errors/messages/conversation.ts:33
 msgid "error.conversation.no_summary"
 msgstr "Créez d'abord un résumé de cette conversation, puis réessayez."
 
@@ -674,7 +679,7 @@ msgid "error.agent_access.request_expired"
 msgstr "Cette demande de connexion a expiré. Recommencez depuis votre agent."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:24
+#: src/lib/errors/messages/conversation.ts:29
 msgid "error.conversation.no_content"
 msgstr "Cette conversation ne contient pas encore d'audio."
 
@@ -694,7 +699,7 @@ msgid "error.chat.conversation_not_in_chat"
 msgstr "Cette conversation n'est plus dans le chat."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:36
+#: src/lib/errors/messages/conversation.ts:41
 msgid "error.conversation.not_open"
 msgstr "Cette conversation n'est pas ouverte pour le moment. Demandez un nouveau lien à l'organisateur."
 
@@ -834,7 +839,7 @@ msgid "error.workspace.logo_url_too_long"
 msgstr "Le lien vers ce logo est trop long. Utilisez un lien plus court."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:63
+#: src/lib/errors/messages/billing.ts:59
 msgid "error.billing.tier_required"
 msgstr "Cette action nécessite le forfait {required}. Passez à une offre supérieure pour l'utiliser."
 
@@ -899,7 +904,7 @@ msgid "error.member.already_removed"
 msgstr "Cette personne a déjà été retirée."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:59
+#: src/lib/errors/messages/billing.ts:55
 msgid "error.billing.tier_not_purchasable"
 msgstr "Ce forfait ne peut pas être acheté en ligne. Contactez-nous pour y souscrire."
 
@@ -1209,7 +1214,7 @@ msgid "error.chat.not_found"
 msgstr "Chat introuvable. Il a peut-être été supprimé."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:32
+#: src/lib/errors/messages/conversation.ts:37
 msgid "error.conversation.not_found"
 msgstr "Conversation introuvable. Elle a peut-être été supprimée."
 
@@ -1564,7 +1569,7 @@ msgid "error.verify.no_new_feedback"
 msgstr "Vous n'avez encore rien ajouté de nouveau. Indiquez ce que vous aimeriez changer, puis réessayez."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:54
+#: src/lib/errors/messages/billing.ts:50
 msgid "error.billing.tier_limit"
 msgstr "Vous avez atteint la limite du forfait Free. Passez au forfait supérieur pour continuer."
 

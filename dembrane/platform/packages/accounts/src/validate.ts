@@ -58,6 +58,26 @@ function zodFieldParams(i: Issue): Record<string, string | number> {
   return {};
 }
 
+/**
+ * A 422 for problems a handler finds after the schema passed (a rule that spans fields),
+ * in the shape a schema failure has, so the form shows each one beside its field.
+ */
+export function fieldErrors(
+  problems: readonly { readonly field: string; readonly code: FieldErrorCode }[],
+): ValidationError {
+  const fields: v.FieldProblem[] = problems.map((p) => ({
+    field: p.field,
+    loc: ["body", p.field],
+    code: p.code,
+    params: {},
+  }));
+  return new ValidationError("validation.invalid_input", {
+    message: "Invalid request",
+    details: fields.map((f) => ({ type: f.code, loc: f.loc, msg: f.code, input: undefined })),
+    params: { fields },
+  });
+}
+
 export function parse<S extends z.ZodType>(schema: S, raw: unknown): z.output<S> {
   const r = schema.safeParse(raw);
   if (r.success) return r.data;

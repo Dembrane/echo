@@ -22,7 +22,7 @@ import { I18nLink } from "@/components/common/i18nLink";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { call } from "../api/client";
 import { useAccountList } from "../api/hooks";
-import { formatDate, stageLabel } from "../format";
+import { dealStageLabel, formatDate, stageLabel } from "../format";
 import { AccountsI18n } from "../i18n";
 
 /**
@@ -111,7 +111,7 @@ function AccountsTable() {
 								<Table.Th>
 									<Trans>Organisation</Trans>
 								</Table.Th>
-								<Table.Th w={110}>
+								<Table.Th w={190}>
 									<Trans>Stage</Trans>
 								</Table.Th>
 								<Table.Th w={100} ta="center">
@@ -156,6 +156,16 @@ function AccountsTable() {
 									</Table.Td>
 									<Table.Td>
 										<Text size="sm">{stageLabel(a.stage)}</Text>
+										{a.deal_stage && (
+											<Badge
+												size="sm"
+												variant="light"
+												color="gray"
+												data-testid="account-deal-stage"
+											>
+												{dealStageLabel(a.deal_stage)}
+											</Badge>
+										)}
 									</Table.Td>
 									<Table.Td ta="center">
 										<Count n={a.open_tasks} />

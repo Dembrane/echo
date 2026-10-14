@@ -59,7 +59,7 @@ import { TierBadge } from "@/components/workspace/TierBadge";
 import { UsageCard } from "@/components/workspace/UsageCard";
 import { WorkspaceDataOwnershipSection } from "@/components/workspace/WorkspaceDataOwnershipSection";
 import { WorkspaceLegalBasisSection } from "@/components/workspace/WorkspaceLegalBasisSection";
-import { API_BASE_URL } from "@/config";
+import { API_BASE_URL, ENABLE_TRAINING } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useUrlSearch } from "@/hooks/useUrlSearch";
 import { useV2Me } from "@/hooks/useV2Me";
@@ -279,7 +279,7 @@ export const WorkspaceSettingsRoute = () => {
 	const allowedTabs = [
 		"general",
 		"members",
-		"training",
+		...(ENABLE_TRAINING ? (["training"] as const) : []),
 		"billing",
 		"danger",
 	] as const;
@@ -726,11 +726,13 @@ export const WorkspaceSettingsRoute = () => {
 								</Stack>
 							</Tabs.Panel>
 
-							<Tabs.Panel value="training" pt="md">
-								{settings.org_id && (
-									<WorkspaceTrainingPanel orgId={settings.org_id} />
-								)}
-							</Tabs.Panel>
+							{ENABLE_TRAINING && (
+								<Tabs.Panel value="training" pt="md">
+									{settings.org_id && (
+										<WorkspaceTrainingPanel orgId={settings.org_id} />
+									)}
+								</Tabs.Panel>
+							)}
 
 							<Tabs.Panel value="general" pt="md">
 								<Stack gap={24}>

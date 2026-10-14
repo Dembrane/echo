@@ -557,7 +557,8 @@ export async function gatherProjectMonitor(
 
 /**
  * workspace_over_cap_active: whether a free workspace is past its lifetime hour cap now.
- * Counts every conversation, deleted ones included, since delete keeps billable hours.
+ * Counts every conversation, deleted ones included, since delete keeps billable hours; a
+ * sample copy's invented ones are no one's audio and are left out.
  */
 export async function workspaceOverCapActive(
   db: Db,
@@ -571,7 +572,7 @@ export async function workspaceOverCapActive(
   const [row] = await sql<{ s: number | null }[]>`
     select coalesce(sum(c.duration), 0)::float8 as s
     from conversation c join project p on p.id = c.project_id
-    where p.workspace_id = ${workspaceId}`;
+    where p.workspace_id = ${workspaceId} and not p.is_sample`;
   return (row?.s ?? 0) / 3600 >= included;
 }
 

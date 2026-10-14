@@ -315,6 +315,23 @@ run("workspace invites and consent", () => {
     ]);
   });
 
+  test("onboarding a second time leaves an invited person in the inviter's organisation only", async () => {
+    const complete = async () => {
+      const res = await call(NEW.nina, "POST", "/api/v2/onboarding/complete", { org_name: "Mine" });
+      expect(res.status).toBe(200);
+      return (await res.json()) as { org_id: string; workspace_id: string };
+    };
+    expect(await complete()).toMatchObject({ org_id: "", workspace_id: WS });
+    expect(await complete()).toMatchObject({ org_id: "", workspace_id: WS });
+    const orgs = await sql`select m.org_id, m.role from org_membership m
+      join app_user u on u.id = m.user_id
+      where u.directus_user_id = ${NEW.nina.directus} and m.deleted_at is null order by m.org_id`;
+    expect(orgs.map((o) => [o.org_id, o.role])).toEqual([
+      [ORG_A, "member"],
+      [ORG_B, "member"],
+    ]);
+  });
+
   test("an unverified email sees no invites", async () => {
     expect((await invite(NEW.uma.email)).status).toBe("invited");
     const res = await call(NEW.uma, "GET", "/api/v2/me/invites");

@@ -64,9 +64,6 @@
 		"src/components/conversation/VerifiedArtefactsSection.tsx": {
 			"space.off-scale": 1
 		},
-		"src/components/feedback/AdminResponseFeedbackPanel.tsx": {
-			"words.denylist": 1
-		},
 		"src/components/form/MarkdownWYSIWYG/styles.css": {
 			"css.font-weight": 4
 		},
@@ -108,9 +105,6 @@
 		"src/components/project/ProjectListItem.tsx": {
 			"color.blue-prop": 1
 		},
-		"src/components/release/ReleaseTimeline.tsx": {
-			"words.denylist": 1
-		},
 		"src/components/release/releaseHistory.ts": {
 			"words.denylist": 1
 		},
@@ -135,45 +129,39 @@
 			"space.off-scale": 1,
 			"type.title-order": 1
 		},
-		"src/features/accounts/customer/AccountRoute.tsx": {
-			"space.off-scale": 1,
-			"type.title-order": 1
-		},
-		"src/features/accounts/customer/DocumentsTable.tsx": {
-			"color.button-light": 2,
-			"space.off-scale": 5
-		},
 		"src/features/accounts/customer/NextSteps.tsx": {
-			"action.right-aligned": 1,
-			"space.off-scale": 2,
-			"type.fw-prop": 1
+			"action.right-aligned": 1
+		},
+		"src/features/accounts/customer/PageSection.tsx": {
+			"space.off-scale": 1
 		},
 		"src/features/accounts/customer/Questions.tsx": {
 			"action.right-aligned": 2,
 			"color.button-light": 1,
 			"space.off-scale": 2
 		},
+		"src/features/accounts/customer/SendToSomeoneElse.tsx": {
+			"action.right-aligned": 1
+		},
 		"src/features/accounts/pdf/PdfPages.tsx": {
 			"color.button-light": 1,
 			"shape.rounded": 1
 		},
 		"src/features/accounts/signing/SignatureCapture.tsx": {
-			"action.right-aligned": 2,
 			"color.hex-literal": 3,
 			"shape.rounded": 2,
 			"space.off-scale": 1,
 			"type.px-size": 1
 		},
 		"src/features/accounts/signing/SignRoute.tsx": {
-			"action.right-aligned": 3,
-			"color.button-light": 2,
+			"color.button-light": 1,
 			"color.hex-literal": 2,
 			"icon.size": 2,
 			"shape.rounded": 1,
 			"shape.shadow": 1,
-			"space.off-scale": 7,
+			"space.off-scale": 5,
 			"type.title-order": 1,
-			"words.denylist": 2
+			"words.denylist": 1
 		},
 		"src/features/accounts/staff/AccountCardRoute.tsx": {
 			"action.right-aligned": 1,
@@ -208,9 +196,6 @@
 		"src/features/accounts/staff/NewDemoRoute.tsx": {
 			"icon.size": 1,
 			"type.title-order": 1,
-			"words.denylist": 1
-		},
-		"src/features/accounts/staff/PushOfferModal.tsx": {
 			"words.denylist": 1
 		},
 		"src/features/accounts/staff/TaskModals.tsx": {

@@ -118,13 +118,19 @@ export function usePdfHref(url: string | null | undefined): string | null {
 	return blobHref;
 }
 
-/** The bytes of a document's PDF for pdf.js. A document's file never changes once sent. */
-export const usePdfData = (url: string | null | undefined) =>
+/**
+ * The bytes of a document's PDF for pdf.js. A document's file never changes once sent;
+ * a draft's does when staff change it, so its sha256 goes in as `version`.
+ */
+export const usePdfData = (
+	url: string | null | undefined,
+	version: string | null = null,
+) =>
 	useQuery({
 		enabled: Boolean(url),
 		queryFn: () => fetchPdf(url as string),
 		// Outside the ["accounts"] prefix, so a write does not refetch and re-render the pages.
-		queryKey: ["accounts-pdf", url ?? ""],
+		queryKey: ["accounts-pdf", url ?? "", version ?? ""],
 		// A missing file (404) will not appear by asking again; other failures get one retry.
 		retry: (count, error) =>
 			!(error instanceof AccountsApiError && error.status === 404) && count < 1,

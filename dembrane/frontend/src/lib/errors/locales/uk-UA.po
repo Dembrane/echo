@@ -14,6 +14,11 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:50
+#~ msgid "error.billing.tax_id_required"
+#~ msgstr "Введіть принаймні один із номерів: VAT, KvK або KBO."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:5
 msgid "error.request.field_empty"
 msgstr "Поле «{field}» не може бути порожнім. Заповніть його або видаліть."
@@ -139,6 +144,11 @@ msgid "error.conversation.move_context_mismatch"
 msgstr "Розмови можна переміщувати лише до робочих просторів з тим самим власником даних і платником. Виберіть проєкт в іншому робочому просторі."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/conversation.ts:24
+msgid "error.conversation.move_sample"
+msgstr "Розмови не можна переміщувати до зразкового проєкту або з нього. Виберіть інший проєкт."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/internal.ts:5
 msgid "error.internal.busy"
 msgstr "dembrane зараз цим зайнятий. Спробуйте ще раз за секунду."
@@ -172,11 +182,6 @@ msgstr "Введіть веб-адресу, що починається з http:
 #: src/lib/errors/messages/field.ts:30
 msgid "error.field.invalid_url"
 msgstr "Введіть веб-адресу, що починається з http:// або https://."
-
-#. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:50
-msgid "error.billing.tax_id_required"
-msgstr "Введіть принаймні один із номерів: VAT, KvK або KBO."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:40
@@ -224,7 +229,7 @@ msgid "error.workspace.visibility_requires_tier"
 msgstr "Робочі простори з доступом за запрошенням і приватні простори потребують тарифу Innovator або вище. Створіть його поки відкритим або спочатку оновіть тариф."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:28
+#: src/lib/errors/messages/conversation.ts:33
 msgid "error.conversation.no_summary"
 msgstr "Спочатку створіть підсумок цієї розмови, а потім спробуйте знову."
 
@@ -674,7 +679,7 @@ msgid "error.agent_access.request_expired"
 msgstr "Термін дії запиту на підключення минув. Почніть знову зі свого агента."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:24
+#: src/lib/errors/messages/conversation.ts:29
 msgid "error.conversation.no_content"
 msgstr "У цій розмові ще немає аудіо."
 
@@ -694,7 +699,7 @@ msgid "error.chat.conversation_not_in_chat"
 msgstr "Цієї розмови більше немає в чаті."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:36
+#: src/lib/errors/messages/conversation.ts:41
 msgid "error.conversation.not_open"
 msgstr "Ця розмова зараз закрита. Попросіть організатора надіслати нове посилання."
 
@@ -834,7 +839,7 @@ msgid "error.workspace.logo_url_too_long"
 msgstr "Це посилання на логотип задовге. Скористайтеся коротшим посиланням."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:63
+#: src/lib/errors/messages/billing.ts:59
 msgid "error.billing.tier_required"
 msgstr "Для цього потрібен тариф {required}. Оновіть тариф, щоб скористатися цією можливістю."
 
@@ -899,7 +904,7 @@ msgid "error.member.already_removed"
 msgstr "Цю людину вже вилучено."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:59
+#: src/lib/errors/messages/billing.ts:55
 msgid "error.billing.tier_not_purchasable"
 msgstr "Цей тариф не можна придбати онлайн. Зв’яжіться з нами, щоб отримати його."
 
@@ -1209,7 +1214,7 @@ msgid "error.chat.not_found"
 msgstr "Не вдалося знайти цей чат. Можливо, його було видалено."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:32
+#: src/lib/errors/messages/conversation.ts:37
 msgid "error.conversation.not_found"
 msgstr "Не вдалося знайти цю розмову. Можливо, її було видалено."
 
@@ -1564,7 +1569,7 @@ msgid "error.verify.no_new_feedback"
 msgstr "Ви ще не додали нічого нового. Вкажіть, що ви б змінили, і спробуйте знову."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:54
+#: src/lib/errors/messages/billing.ts:50
 msgid "error.billing.tier_limit"
 msgstr "Ви досягли ліміту тарифу Free. Оновіть тариф, щоб продовжити."
 

@@ -2,20 +2,18 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
 	AppWindowIcon,
+	FileTextIcon,
 	Folders,
 	GearIcon,
 	GraduationCapIcon,
-	ReceiptIcon,
+	ListChecksIcon,
 	UsersIcon,
 } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useParams } from "react-router";
-import { API_BASE_URL } from "@/config";
-import {
-	hasAccount,
-	useTasksSummary,
-} from "@/features/accounts/help/tasksSummary";
+import { API_BASE_URL, ENABLE_TRAINING } from "@/config";
+import { useTasksSummary } from "@/features/accounts/help/tasksSummary";
 import { useV2Me } from "@/hooks/useV2Me";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { isOutsiderRole } from "@/lib/roles";
@@ -102,13 +100,13 @@ export const OrgHomeView = () => {
 	// managers that is the full org list, for everyone else their direct rows.
 	const showWorkspaces = displayList.length > 0;
 
-	// "Account" shows for orgs in the tasks summary: the backend lists an org there when it
-	// has account content (a stage, a task or a document) and the caller is an owner, admin
-	// or billing member. It carries no count and stays when nothing is pending, so the
-	// documents, billing details and invoices are always one click away; the count lives
-	// on Tasks under Help, which shows only while something waits.
+	// Tasks and Documents show for orgs in the tasks summary: the backend lists an org
+	// there when it has account content (a stage, a task or a document) and the caller is
+	// an owner, admin or billing member. They stay when nothing is pending, so the
+	// documents, billing details and invoices are always one click away; Tasks counts what
+	// waits on the caller.
 	const { data: tasksSummary } = useTasksSummary();
-	const seesAccount = orgId ? hasAccount(tasksSummary, orgId) : false;
+	const account = tasksSummary?.find((o) => o.org_id === orgId);
 
 	if (!orgId) return null;
 	const base = `/o/${orgId}`;
@@ -127,21 +125,36 @@ export const OrgHomeView = () => {
 						icon={AppWindowIcon}
 						end
 					/>
+					{account && (
+						<>
+							<NavItem
+								to={`${base}/tasks`}
+								label={<Trans>Tasks</Trans>}
+								icon={ListChecksIcon}
+								badge={
+									account.tasks_waiting > 0
+										? String(account.tasks_waiting)
+										: undefined
+								}
+								badgeTone="notification"
+							/>
+							<NavItem
+								to={`${base}/documents`}
+								label={<Trans>Documents</Trans>}
+								icon={FileTextIcon}
+							/>
+						</>
+					)}
 					<NavItem
 						to={`${base}/members`}
 						label={<Trans>Members</Trans>}
 						icon={UsersIcon}
 					/>
-					<NavItem
-						to={`${base}/training`}
-						label={<Trans>Training</Trans>}
-						icon={GraduationCapIcon}
-					/>
-					{seesAccount && (
+					{ENABLE_TRAINING && (
 						<NavItem
-							to={`${base}/account`}
-							label={<Trans>Account</Trans>}
-							icon={ReceiptIcon}
+							to={`${base}/training`}
+							label={<Trans>Training</Trans>}
+							icon={GraduationCapIcon}
 						/>
 					)}
 					{/* Settings is the last clickable item under the org title,

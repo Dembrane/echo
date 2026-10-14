@@ -1,4 +1,5 @@
 import { newId } from "@dembrane/core";
+import { identified } from "./billing-rules";
 import type { AccountsDeps, Conn } from "./deps";
 import { type BillingRow, store, type TaskRow } from "./storage";
 import type { TaskCode } from "./task-text";
@@ -8,7 +9,7 @@ const DAY_MS = 86_400_000;
 export const TASK_KINDS = ["sign", "billing_details", "upload", "generic"] as const;
 export type TaskKind = (typeof TASK_KINDS)[number];
 
-/** Statuses in which a task waits on the customer, and so reminds them. */
+/** Statuses in which a task waits on the customer, and so has the account's owner check in. */
 export const WAITING_ON_CUSTOMER = ["open", "changes_requested"] as const;
 
 export interface NewTask {
@@ -26,14 +27,14 @@ export interface NewTask {
   readonly locked?: boolean;
   readonly unlockOnDocumentId?: string | null;
   readonly reminderIntervalDays?: number | null;
-  /** False for a nudge that is no obligation: it never sends a reminder email. */
+  /** False for a nudge that is no obligation: nobody is asked to check in on it. */
   readonly remind?: boolean;
   readonly createdBy?: string | null;
   /** Orders tasks made in one go; the page and the summary list by creation time. */
   readonly createdAt?: Date;
 }
 
-/** The first reminder of a task that opens now. */
+/** When the account's owner is first asked to check in on a task that opens now. */
 export function firstReminder(d: AccountsDeps, now: Date, interval: number | null | undefined) {
   return new Date(now.getTime() + (interval ?? d.settings.reminderIntervalDays) * DAY_MS);
 }
@@ -65,7 +66,7 @@ export async function createTask(d: AccountsDeps, tx: Conn, t: NewTask): Promise
   return (await store.taskById(tx, id)) as TaskRow;
 }
 
-/** Opens a locked task: it starts reminding from now. */
+/** Opens a locked task: its check-in interval starts now. */
 export async function unlockTask(d: AccountsDeps, tx: Conn, t: TaskRow): Promise<void> {
   const now = d.now();
   await store.updateTask(tx, t.id, {
@@ -76,7 +77,7 @@ export async function unlockTask(d: AccountsDeps, tx: Conn, t: TaskRow): Promise
   });
 }
 
-/** Ends a task's reminders: done, withdrawn, or waiting on us. */
+/** Ends a task's check-ins: done, withdrawn, or waiting on us. */
 export async function settleTask(
   d: AccountsDeps,
   tx: Conn,
@@ -94,7 +95,8 @@ export async function settleTask(
 
 /**
  * Whether the organisation's stored billing details hold everything the billing form asks
- * for, so Exact can invoice without asking again.
+ * for, so Exact can invoice without asking again. Who the customer is follows the country:
+ * a number, the statement that there is no VAT number, or nothing outside the EU.
  */
 export function billingComplete(b: BillingRow | null): boolean {
   if (!b) return false;
@@ -106,7 +108,14 @@ export function billingComplete(b: BillingRow | null): boolean {
     filled(b.billing_postal_code) &&
     filled(b.billing_city) &&
     filled(b.billing_country) &&
-    (filled(b.billing_vat_id) || filled(b.kvk_number) || filled(b.kbo_number))
+    identified({
+      country_code: b.billing_country_code,
+      country: b.billing_country,
+      vat_id: b.billing_vat_id,
+      no_vat_number: b.no_vat_number,
+      kvk_number: b.kvk_number,
+      kbo_number: b.kbo_number,
+    })
   );
 }
 

@@ -14,6 +14,11 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:50
+#~ msgid "error.billing.tax_id_required"
+#~ msgstr "Enter at least one of your VAT, KvK or KBO numbers."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:5
 msgid "error.request.field_empty"
 msgstr "{field} cannot be empty. Fill it in or remove it."
@@ -139,6 +144,11 @@ msgid "error.conversation.move_context_mismatch"
 msgstr "Conversations can only move to workspaces with the same billing and data owner. Pick a project in another workspace."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/conversation.ts:24
+msgid "error.conversation.move_sample"
+msgstr "Conversations cannot move into or out of a sample project. Pick another project."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/internal.ts:5
 msgid "error.internal.busy"
 msgstr "dembrane is busy with this right now. Try again in a second."
@@ -172,11 +182,6 @@ msgstr "Enter a web address that starts with http:// or https://."
 #: src/lib/errors/messages/field.ts:30
 msgid "error.field.invalid_url"
 msgstr "Enter a web address that starts with http:// or https://."
-
-#. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:50
-msgid "error.billing.tax_id_required"
-msgstr "Enter at least one of your VAT, KvK or KBO numbers."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:40
@@ -224,7 +229,7 @@ msgid "error.workspace.visibility_requires_tier"
 msgstr "Invite-only and private workspaces need the Innovator plan or higher. Create it as open for now, or upgrade first."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:28
+#: src/lib/errors/messages/conversation.ts:33
 msgid "error.conversation.no_summary"
 msgstr "Make a summary of this conversation first, then try again."
 
@@ -674,7 +679,7 @@ msgid "error.agent_access.request_expired"
 msgstr "This connection request has expired. Start again from your agent."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:24
+#: src/lib/errors/messages/conversation.ts:29
 msgid "error.conversation.no_content"
 msgstr "This conversation has no audio yet."
 
@@ -694,7 +699,7 @@ msgid "error.chat.conversation_not_in_chat"
 msgstr "This conversation is no longer in the chat."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:36
+#: src/lib/errors/messages/conversation.ts:41
 msgid "error.conversation.not_open"
 msgstr "This conversation is not open right now. Ask the organiser for a new link."
 
@@ -834,7 +839,7 @@ msgid "error.workspace.logo_url_too_long"
 msgstr "This logo link is too long. Use a shorter link."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:63
+#: src/lib/errors/messages/billing.ts:59
 msgid "error.billing.tier_required"
 msgstr "This needs the {required} plan. Upgrade to use it."
 
@@ -899,7 +904,7 @@ msgid "error.member.already_removed"
 msgstr "This person was already removed."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:59
+#: src/lib/errors/messages/billing.ts:55
 msgid "error.billing.tier_not_purchasable"
 msgstr "This plan cannot be bought online. Contact us to get it."
 
@@ -1209,7 +1214,7 @@ msgid "error.chat.not_found"
 msgstr "We could not find this chat. It may have been deleted."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:32
+#: src/lib/errors/messages/conversation.ts:37
 msgid "error.conversation.not_found"
 msgstr "We could not find this conversation. It may have been deleted."
 
@@ -1564,7 +1569,7 @@ msgid "error.verify.no_new_feedback"
 msgstr "You have not added anything new yet. Say what you would change, then try again."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:54
+#: src/lib/errors/messages/billing.ts:50
 msgid "error.billing.tier_limit"
 msgstr "You have reached the limit of the free plan. Upgrade to keep going."
 

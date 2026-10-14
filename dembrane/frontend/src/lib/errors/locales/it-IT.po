@@ -14,6 +14,11 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:50
+#~ msgid "error.billing.tax_id_required"
+#~ msgstr "Inserisci almeno uno tra i numeri di VAT, KvK o KBO."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:5
 msgid "error.request.field_empty"
 msgstr "{field} non può essere vuoto. Compilalo o rimuovilo."
@@ -139,6 +144,11 @@ msgid "error.conversation.move_context_mismatch"
 msgstr "Le conversazioni possono essere spostate solo in spazi di lavoro con lo stesso intestatario di fatturazione e dati. Scegli un progetto in un altro spazio di lavoro."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/conversation.ts:24
+msgid "error.conversation.move_sample"
+msgstr "Le conversazioni non possono essere spostate in un progetto di esempio o da esso. Scegli un altro progetto."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/internal.ts:5
 msgid "error.internal.busy"
 msgstr "dembrane è occupata con questa operazione in questo momento. Riprova tra un secondo."
@@ -172,11 +182,6 @@ msgstr "Inserisci un indirizzo web che inizi con http:// o https://."
 #: src/lib/errors/messages/field.ts:30
 msgid "error.field.invalid_url"
 msgstr "Inserisci un indirizzo web che inizi con http:// o https://."
-
-#. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:50
-msgid "error.billing.tax_id_required"
-msgstr "Inserisci almeno uno tra i numeri di VAT, KvK o KBO."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:40
@@ -224,7 +229,7 @@ msgid "error.workspace.visibility_requires_tier"
 msgstr "Gli spazi di lavoro privati o su invito richiedono il piano Innovator o superiore. Per ora crealo come aperto, oppure effettua prima l'upgrade."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:28
+#: src/lib/errors/messages/conversation.ts:33
 msgid "error.conversation.no_summary"
 msgstr "Crea prima un riassunto di questa conversazione, poi riprova."
 
@@ -674,7 +679,7 @@ msgid "error.agent_access.request_expired"
 msgstr "Questa richiesta di connessione è scaduta. Ricomincia dal tuo agente."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:24
+#: src/lib/errors/messages/conversation.ts:29
 msgid "error.conversation.no_content"
 msgstr "Questa conversazione non ha ancora audio."
 
@@ -694,7 +699,7 @@ msgid "error.chat.conversation_not_in_chat"
 msgstr "Questa conversazione non è più nella chat."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:36
+#: src/lib/errors/messages/conversation.ts:41
 msgid "error.conversation.not_open"
 msgstr "Questa conversazione non è aperta al momento. Chiedi un nuovo link all'organizzatore."
 
@@ -834,7 +839,7 @@ msgid "error.workspace.logo_url_too_long"
 msgstr "Il link del logo è troppo lungo. Usa un link più corto."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:63
+#: src/lib/errors/messages/billing.ts:59
 msgid "error.billing.tier_required"
 msgstr "È richiesto il piano {required}. Fai l'upgrade per usarlo."
 
@@ -899,7 +904,7 @@ msgid "error.member.already_removed"
 msgstr "Questa persona è già stata rimossa."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:59
+#: src/lib/errors/messages/billing.ts:55
 msgid "error.billing.tier_not_purchasable"
 msgstr "Questo piano non può essere acquistato online. Contattaci per ottenerlo."
 
@@ -1209,7 +1214,7 @@ msgid "error.chat.not_found"
 msgstr "Non siamo riusciti a trovare questa chat. Potrebbe essere stata eliminata."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:32
+#: src/lib/errors/messages/conversation.ts:37
 msgid "error.conversation.not_found"
 msgstr "Non siamo riusciti a trovare questa conversazione. Potrebbe essere stata eliminata."
 
@@ -1564,7 +1569,7 @@ msgid "error.verify.no_new_feedback"
 msgstr "Non hai ancora aggiunto nulla di nuovo. Indica cosa cambieresti, poi riprova."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:54
+#: src/lib/errors/messages/billing.ts:50
 msgid "error.billing.tier_limit"
 msgstr "Hai raggiunto il limite del piano Free. Effettua l'upgrade per continuare."
 

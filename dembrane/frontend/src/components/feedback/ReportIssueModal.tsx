@@ -147,16 +147,18 @@ export const ReportIssueModal = ({
 				onError: (error) => {
 					const status = error instanceof IssueReportError ? error.status : 0;
 					if (status === 429) {
-						toast.error(t`Too many reports. Wait a few minutes and try again`);
+						toast.error(
+							t`Too much feedback at once. Wait a few minutes and try again`,
+						);
 					} else if (status === 400) {
 						toast.error(t`Check the text and images, then try again`);
 					} else {
-						toast.error(t`Could not send the report. Try again`);
+						toast.error(t`Could not send your feedback. Try again`);
 					}
 				},
 				onSuccess: (result) => {
 					const attachmentCount = files.length;
-					toast.success(t`Report sent. Thank you`);
+					toast.success(t`Feedback sent. Thank you`);
 					handleClose();
 					try {
 						posthog.capture("issue_report_submitted", {
@@ -177,7 +179,7 @@ export const ReportIssueModal = ({
 			opened={opened}
 			onClose={handleClose}
 			onExitTransitionEnd={resetForm}
-			title={<Trans>Report an issue</Trans>}
+			title={<Trans>Give feedback</Trans>}
 			size="lg"
 			data-testid="report-issue-modal"
 		>
@@ -202,8 +204,8 @@ export const ReportIssueModal = ({
 						onChange={(event) => setMessage(event.currentTarget.value)}
 						onPaste={handlePaste}
 						readOnly={isVoiceActive}
-						aria-label={t`Describe the issue`}
-						placeholder={t`What happened? Paste a screenshot here to attach it`}
+						aria-label={t`Your feedback`}
+						placeholder={t`What should we know? Paste a screenshot here to attach it`}
 						maxLength={MAX_MESSAGE_CHARS}
 						minRows={6}
 						maxRows={MAX_MESSAGE_ROWS}
@@ -288,7 +290,7 @@ export const ReportIssueModal = ({
 						disabled={message.trim().length === 0 || isVoiceActive}
 						data-testid="report-issue-submit"
 					>
-						<Trans>Send report</Trans>
+						<Trans>Send feedback</Trans>
 					</Button>
 					<FileButton
 						onChange={(picked) => addFiles(picked)}

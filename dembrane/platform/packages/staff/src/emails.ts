@@ -1,6 +1,5 @@
-import { emailLayout, emailStyles, type RenderedEmail } from "@dembrane/billing";
-import { translator } from "@dembrane/i18n";
-import { escapeHtml } from "@dembrane/mail";
+import { resolveLocale, translator } from "@dembrane/i18n";
+import { email as e, emailFrame, escapeHtml, type RenderedEmail } from "@dembrane/mail";
 
 type Kind =
   | "support_access_request"
@@ -9,9 +8,7 @@ type Kind =
   | "support_access_reminder"
   | "support_access_request_resolved";
 
-const P =
-  'style="font-size:17px; line-height:1.65; margin:0 0 28px; color:#2D2D2C; font-weight:400;"';
-const em = (s: string) => `<em ${emailStyles.EM}>${escapeHtml(s)}</em>`;
+const em = e.em;
 
 /**
  * The support access emails (old support_access_*.html), worded from the server catalog
@@ -31,10 +28,16 @@ export function supportEmail(
   const plain = { workspace_name: ws, staff_name: staff };
   const html = { workspace_name: em(ws), staff_name: escapeHtml(staff) };
   const head = (k: string) => ({
+    lang: resolveLocale(locale),
     title: tr(`${k}.subject`, plain),
     preview: tr(`${k}.preview`, plain),
     heading: tr(`${k}.heading`),
-    signoff,
+    signoff: { name: signoff },
+  });
+  const act = (label: string, url: string) => ({
+    label,
+    url,
+    fallback: tr("email.common.fallback"),
   });
   switch (kind) {
     case "support_access_request": {
@@ -43,10 +46,12 @@ export function supportEmail(
       const body = `${tr(`${k}.body`, plain)} ${note} ${tr(`${k}.end`)}`;
       return {
         subject: tr(`${k}.subject`, plain),
-        html: emailLayout({
+        html: emailFrame({
           ...head(k),
-          bodyHtml: `<p ${P}>${tr(`${k}.body`, html)} ${d.note ? tr(`${k}.note`, { note: escapeHtml(d.note) }) : ""} ${tr(`${k}.end`)}</p>`,
-          cta: { label: tr(`${k}.cta`), url: d.settings_url ?? "" },
+          body: e.lead(
+            `${tr(`${k}.body`, html)} ${d.note ? tr(`${k}.note`, { note: escapeHtml(d.note) }) : ""} ${tr(`${k}.end`)}`,
+          ),
+          action: act(tr(`${k}.cta`), d.settings_url ?? ""),
         }),
         text: `${body.replace(/\s+/g, " ")}\n\n${d.settings_url}\n\n${signoff}\n`,
       };
@@ -63,10 +68,10 @@ export function supportEmail(
       const endText = kind === "support_access_ended" ? `${k}.end` : `${k}.end_text`;
       return {
         subject: tr(`${k}.subject`, plain),
-        html: emailLayout({
+        html: emailFrame({
           ...head(k),
-          bodyHtml: `<p ${P}>${tr(`${k}.body`, html)} ${tr(`${k}.end`)}</p>`,
-          cta: { label: tr(`${k}.cta`), url: d.settings_url ?? "" },
+          body: e.lead(`${tr(`${k}.body`, html)} ${tr(`${k}.end`)}`),
+          action: act(tr(`${k}.cta`), d.settings_url ?? ""),
         }),
         text: `${tr(`${k}.body`, plain)} ${tr(endText)}\n\n${d.settings_url}\n\n${signoff}\n`,
       };
@@ -76,10 +81,10 @@ export function supportEmail(
       const k = approved ? "email.support_approved" : "email.support_denied";
       return {
         subject: tr(`${k}.subject`, plain),
-        html: emailLayout({
+        html: emailFrame({
           ...head(k),
-          bodyHtml: `<p ${P}>${tr(`${k}.body`, html)} ${approved ? tr(`${k}.end`) : ""}</p>`,
-          ...(approved && { cta: { label: tr(`${k}.cta`), url: d.workspace_url ?? "" } }),
+          body: e.lead(`${tr(`${k}.body`, html)} ${approved ? tr(`${k}.end`) : ""}`),
+          ...(approved && { action: act(tr(`${k}.cta`), d.workspace_url ?? "") }),
         }),
         text: `${tr(`${k}.body`, plain)}${approved ? ` ${tr(`${k}.end`)}\n\n${d.workspace_url}` : ""}\n\n${signoff}\n`,
       };

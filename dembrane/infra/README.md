@@ -4,6 +4,11 @@ Each environment is its own GCP project, directly under the dembrane.com organiz
 its own Terraform root, state and identities. No identity of one environment holds a role
 in another's project, so a preview (which any PR branch can deploy) cannot reach staging or prod.
 
+Production services do not run here: they run on DigitalOcean Kubernetes through
+Dembrane/echo-gitops (`helm/dembrane-web`), and the `platform` workflow's prod job only pushes
+images to `registry.digitalocean.com/dbr-cr` and bumps the image tag there. `prod/` still
+holds the `dembrane-web-prod` project (the Vertex AI project prod's models are billed to).
+
 | Environment | Project | Number | Root | State |
 |---|---|---|---|---|
 | preview | `dembrane-web-previews` | 218237812097 | `preview/` | `gs://dembrane-web-previews-tf-state` |
@@ -26,7 +31,9 @@ SQL instance `echo-<env>`, the uploads bucket with its HMAC key, secrets replica
 europe-west4 only, the runtime and deployer service accounts, the GitHub trust, the EU log
 bucket with the `_Default` sink pointed at it, log metrics, alerts and the readiness check.
 staging and prod also have the load balancer (`api`, `dashboard` and `portal`; prod adds the old
-`directus` host). prod has, in `prod/cutover.tf`, what the cutover needs: the archive bucket
+`directus` host). staging's also serves `docs.staging.dembrane.com` (`docs_domain`) from a public
+bucket that `.github/workflows/docs.yml` fills from `docs/` on main; production's documentation
+is GitHub Pages. prod has, in `prod/cutover.tf`, what the cutover needs: the archive bucket
 and Storage Transfer.
 
 Alerts go to email (`alert_email`) and to Slack #alerts-ci. Monitoring publishes each
@@ -112,7 +119,9 @@ A PR preview's dashboard and portal have ingress `internal-and-cloud-load-balanc
 answer only through the load balancer. Its API keeps public ingress, because the web servers
 reach it from outside any VPC. Sign-in cookies stay host-only (`AUTH_COOKIE_DOMAIN` unset):
 all PR previews share `AUTH_SECRET`, and a cookie scoped to `preview.dembrane.com` would
-cross from one preview's database to another's.
+cross from one preview's database to another's. They also carry their own name
+(`auth.cookiePrefix` in the preview environment file), so a browser signed in to another
+environment under `dembrane.com` keeps that session beside the preview's.
 
 DNS is in Cloudflare. `terraform output pr_preview_dns` gives the two records, both DNS only
 (not proxied): the wildcard `A` record to the load balancer, and the `_acme-challenge` CNAME
@@ -183,7 +192,7 @@ and needs an organization admin; an organization policy on `gcp.resourceLocation
 ## First deploy of staging and prod
 
 Terraform has made everything around the services; the services themselves come from the
-first `platform` workflow run with target staging or prod. Before it:
+first `platform` workflow run with target staging. Before it:
 
 - Add a value to each empty secret with `gcloud secrets versions add echo-<env>-<name>
   --data-file=-`. `invite-hash-secret` must hold Directus's SECRET while Directus-era invite
@@ -197,7 +206,7 @@ first `platform` workflow run with target staging or prod. Before it:
   (`dns_authorizations`) in Cloudflare, so the certificates are ACTIVE before the switch.
   staging: add its one `_acme-challenge` CNAME and the `*.staging` A record (`lb_ip`) the
   same way; its certificate is a wildcard, authorised once.
-- Run the workflow with target staging or prod. `hold_data` (on by default) deploys the migrate
+- Run the workflow with target staging. `hold_data` (on by default) deploys the migrate
   job without running it and keeps the worker pool at 0, for a database that a restore fills
   first; run with it off once the data is in.
 - After the first deploy set `monitor_api_ready` and `monitor_worker_ready` to true in the

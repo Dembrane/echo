@@ -30,7 +30,7 @@ export function conversationLocked(
 /**
  * Whether the workspace is past its lifetime hour cap now. Counts every conversation of
  * every project the workspace ever held, deleted ones too: deleting audio keeps its
- * billable duration.
+ * billable duration. A sample copy (project.is_sample) holds no one's audio and is left out.
  */
 export async function workspaceOverCapActive(
   d: DataDeps,
@@ -43,6 +43,6 @@ export async function workspaceOverCapActive(
   const [r] = await sqlOf(d)`
     select coalesce(sum(c.duration), 0)::float8 as seconds
     from conversation c join project p on p.id = c.project_id
-    where p.workspace_id = ${workspaceId}`;
+    where p.workspace_id = ${workspaceId} and not p.is_sample`;
   return Number(r?.seconds ?? 0) / 3600 >= included;
 }

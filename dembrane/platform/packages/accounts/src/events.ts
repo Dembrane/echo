@@ -1,6 +1,7 @@
 import { newId } from "@dembrane/core";
 import { enqueueSamMessage } from "@dembrane/webhooks";
-import type { AccountsDeps, Conn } from "./deps";
+import { DELIVERIES, type Delivery } from "./billing-rules";
+import type { AccountsDeps, AccountsSettings, Conn } from "./deps";
 import { deliverEvent, notifySlack } from "./jobs";
 import type { BillingRow, DocumentRow, OrgRow, SignatureRow, TaskRow, TicketRow } from "./storage";
 import { store } from "./storage";
@@ -27,12 +28,41 @@ export type AccountEvent = (typeof ACCOUNT_EVENTS)[number];
 /**
  * Events only sam's inbox carries. ACCOUNTS_EVENTS_URL never received them, so without the
  * inbox they stay on the timeline, as before.
+ *
+ * `account.document.sent` and `account.document.voided` tell sam what staff did with a
+ * document, so it can close its review step and move the deal. `account.invoice.requested`
+ * is the one message a person needs to send an invoice: see invoice.ts.
+ * `account.task.waiting` says a task has waited on the customer for its interval, so the
+ * account's owner at dembrane checks in; echo itself writes the customer nothing: see
+ * runTaskReminder in jobs.ts.
  */
-export const INBOX_ONLY_EVENTS = ["account.call.booked"] as const;
+export const INBOX_ONLY_EVENTS = [
+  "account.call.booked",
+  "account.document.sent",
+  "account.document.voided",
+  "account.invoice.requested",
+  "account.task.waiting",
+] as const;
 export type InboxEvent = AccountEvent | (typeof INBOX_ONLY_EVENTS)[number];
 
 const isAccountEvent = (e: InboxEvent): e is AccountEvent =>
   (ACCOUNT_EVENTS as readonly string[]).includes(e);
+
+/** The offer flow's messages: made only where sam is known to take them (offerMessages). */
+const OFFER_FLOW: readonly InboxEvent[] = [
+  "account.document.sent",
+  "account.document.voided",
+  "account.invoice.requested",
+  "account.task.waiting",
+];
+
+/** Whether a message for this event leaves for sam's inbox under these settings. */
+export function inboxTakes(
+  s: Pick<AccountsSettings, "samInbox" | "offerMessages">,
+  event: InboxEvent,
+): boolean {
+  return s.samInbox && (s.offerMessages || !OFFER_FLOW.includes(event));
+}
 
 /**
  * The inbox code of each event. Named one by one, never derived from the dotted name, so
@@ -40,6 +70,10 @@ const isAccountEvent = (e: InboxEvent): e is AccountEvent =>
  */
 export const ACCOUNT_EVENT_CODES: Record<InboxEvent, string> = {
   "account.call.booked": "echo_account_call_booked_v1",
+  "account.document.sent": "echo_account_document_sent_v1",
+  "account.document.voided": "echo_account_document_voided_v1",
+  "account.invoice.requested": "echo_account_invoice_requested_v1",
+  "account.task.waiting": "echo_account_task_waiting_v1",
   "account.document.signed": "echo_account_document_signed_v1",
   "account.document.declined": "echo_account_document_declined_v1",
   "account.billing_details.updated": "echo_account_billing_details_updated_v1",
@@ -48,6 +82,14 @@ export const ACCOUNT_EVENT_CODES: Record<InboxEvent, string> = {
 };
 
 export type Actor = { kind: "customer" | "staff" | "system"; userId: string | null };
+
+/** What `emit` reads: the API passes its dependencies, a worker job the few it has. */
+export type EmitDeps = Pick<AccountsDeps, "jobs" | "now"> & {
+  readonly settings: Pick<
+    AccountsSettings,
+    "samInbox" | "offerMessages" | "eventsEnabled" | "slackEnabled"
+  >;
+};
 
 export interface Emit {
   readonly orgId: string;
@@ -60,7 +102,7 @@ export interface Emit {
   readonly slack?: string;
 }
 
-export async function emit(d: AccountsDeps, tx: Conn, e: Emit): Promise<void> {
+export async function emit(d: EmitDeps, tx: Conn, e: Emit): Promise<void> {
   const id = newId();
   await store.insertEvent(tx, {
     id,
@@ -73,8 +115,9 @@ export async function emit(d: AccountsDeps, tx: Conn, e: Emit): Promise<void> {
     detail: e.detail ?? null,
     createdAt: d.now(),
   });
-  const toInbox = Boolean(e.webhook && d.settings.samInbox);
-  if (e.webhook) {
+  const held = e.webhook && OFFER_FLOW.includes(e.webhook.event) && !d.settings.offerMessages;
+  const toInbox = Boolean(e.webhook && d.settings.samInbox && !held);
+  if (e.webhook && !held) {
     // The manager is read here, in the cause's transaction, and frozen into the stored
     // payload: a message already queued keeps the manager it was written with, so a retry
     // or a late drain never re-addresses it to someone who took the account over since.
@@ -127,21 +170,37 @@ export function orgPayload(o: OrgRow) {
   return { id: o.id, name: o.name, account_stage: o.account_stage };
 }
 
+/**
+ * How the invoice reaches the customer: the choice made, else Peppol when the customer is
+ * on it. `other` is a way Exact cannot send by itself: a person sends the invoice.
+ */
+export function invoiceDelivery(b: BillingRow | null): Delivery {
+  const chosen = DELIVERIES.find((way) => way === b?.invoice_delivery);
+  return chosen ?? (b?.peppol_id ? "peppol" : "email");
+}
+
 export function billingPayload(b: BillingRow | null) {
   return {
     legal_name: b?.billing_legal_name ?? null,
     vat_id: b?.billing_vat_id ?? null,
+    // true: the customer said it has no VAT number. false: asked, and it gave one. null: not asked.
+    no_vat_number: b?.no_vat_number ?? null,
     kvk_number: b?.kvk_number ?? null,
     kbo_number: b?.kbo_number ?? null,
     billing_email: b?.billing_email ?? null,
     po_number: b?.po_number ?? null,
     peppol_id: b?.peppol_id ?? null,
+    invoice_delivery: invoiceDelivery(b),
+    // How the customer receives invoices, in their words; set only with delivery "other".
+    invoice_portal: b?.invoice_portal ?? null,
     address: {
       line1: b?.billing_address_line1 ?? null,
       line2: b?.billing_address_line2 ?? null,
       postal_code: b?.billing_postal_code ?? null,
       city: b?.billing_city ?? null,
       country: b?.billing_country ?? null,
+      // ISO 3166-1 alpha-2; null for details saved before the form had a list of countries.
+      country_code: b?.billing_country_code ?? null,
     },
   };
 }
@@ -195,6 +254,29 @@ export function taskPayload(t: TaskRow) {
     document_id: t.documentId,
     response_text: t.responseText,
     has_file: Boolean(t.responseFileKey),
+  };
+}
+
+const DAY_MS = 86_400_000;
+
+/** Since when a task waits on the customer: its opening, or the day it was sent back. */
+function waitingSince(t: TaskRow): Date {
+  const opened = t.openedAt ?? t.createdAt;
+  return t.status === "changes_requested" ? (t.reviewedAt ?? opened) : opened;
+}
+
+/**
+ * `account.task.waiting`: the task, since when it waits on the customer, and how often
+ * the account's owner has been asked to check in, this time included.
+ */
+export function waitingTaskPayload(t: TaskRow, now: Date, timesAsked: number) {
+  const since = waitingSince(t);
+  return {
+    ...taskPayload(t),
+    status: t.status,
+    waiting_since: since.toISOString(),
+    days_waiting: Math.max(0, Math.floor((now.getTime() - since.getTime()) / DAY_MS)),
+    times_asked: timesAsked,
   };
 }
 

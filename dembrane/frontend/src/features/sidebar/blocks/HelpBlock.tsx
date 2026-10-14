@@ -1,10 +1,8 @@
 import { Trans } from "@lingui/react/macro";
 import { useDisclosure } from "@mantine/hooks";
 import {
-	Bug,
 	ChatCircle,
 	Note,
-	PlugsConnected,
 	Pulse,
 	Question,
 	Sparkle,
@@ -23,22 +21,19 @@ import { useParams } from "react-router";
 import { roles } from "@/colors";
 import { ReleaseVideoModal } from "@/components/release/ReleaseVideoModal";
 import { getDocumentationUrl } from "@/config";
-import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { cn } from "@/lib/utils";
 import { useHelpModals } from "../hooks/useHelpModals";
 import { NavButton } from "../primitives/NavButton";
 import { SectionLabel } from "../primitives/SectionLabel";
 import { RAIL_ITEM_CLASS, RailTip, useInRail } from "../shell/rail";
 
-// Its own chunk: it fetches the account tasks summary, which the portal never needs.
-const HelpTasksItem = lazy(() => import("./HelpTasksItem"));
-// The popup after sign-in for someone with tasks waiting; in its own chunk for the same reason.
+// The popup after sign-in for someone with tasks waiting. Its own chunk: it fetches the
+// account tasks summary, which the portal never needs.
 const TasksPrompt = lazy(() => import("@/features/accounts/help/TasksPrompt"));
 
 export const HelpBlock = () => {
 	const { language } = useParams();
-	const { openFeedback, openReportIssue } = useHelpModals();
-	const navigate = useI18nNavigate();
+	const { openFeedback } = useHelpModals();
 	// The release modal lives here so the button that reopens it can hold its
 	// own state. It also shows itself once per release without being asked.
 	const [releaseRequested, release] = useDisclosure(false);
@@ -47,9 +42,6 @@ export const HelpBlock = () => {
 	const [bubbled, setBubbled] = useState(false);
 	const reduced = useReducedMotion();
 	const helpButton = useRef<HTMLButtonElement>(null);
-	// The Tasks entry joins the list only when the caller has account tasks, so the
-	// rail's bubble layout never holds an empty row.
-	const [hasTasks, setHasTasks] = useState(false);
 	// What's new shows itself only once the tasks popup has decided not to show, or closed.
 	const [promptSettled, setPromptSettled] = useState(false);
 	const settlePrompt = useCallback(() => setPromptSettled(true), []);
@@ -67,51 +59,18 @@ export const HelpBlock = () => {
 		</>
 	);
 
+	// Tasks live under their organisation and connecting an agent under its settings
+	// (MCP access); Help keeps the ways to learn and the one way to tell us something.
 	const items: { key: string; node: ReactNode }[] = [
-		...(hasTasks
-			? [
-					{
-						key: "tasks",
-						node: (
-							<Suspense fallback={null}>
-								<HelpTasksItem />
-							</Suspense>
-						),
-					},
-				]
-			: []),
-		{
-			key: "report",
-			node: (
-				<NavButton
-					label={<Trans>Report an issue</Trans>}
-					icon={Bug}
-					iconColor={roles.action}
-					labelColor={roles.action}
-					onClick={openReportIssue}
-				/>
-			),
-		},
 		{
 			key: "feedback",
 			node: (
 				<NavButton
-					label={<Trans>Feedback</Trans>}
+					label={<Trans>Give feedback</Trans>}
 					icon={ChatCircle}
 					iconColor={roles.action}
 					labelColor={roles.action}
 					onClick={openFeedback}
-				/>
-			),
-		},
-		{
-			key: "agent",
-			node: (
-				<NavButton
-					label={<Trans>Connect your agent</Trans>}
-					icon={PlugsConnected}
-					badge={<Trans>Beta</Trans>}
-					onClick={() => navigate("/connect-agent")}
 				/>
 			),
 		},
@@ -150,7 +109,7 @@ export const HelpBlock = () => {
 		},
 	];
 
-	// Seven icons would crowd the rail, and swapping the menu for a Help view
+	// Four icons would crowd the rail, and swapping the menu for a Help view
 	// would feel like a change of place. So the question mark holds them: a
 	// click bubbles them up out of it, nearest first, and a second click or
 	// Escape tucks them back in. The release modal stays mounted so it still
@@ -226,9 +185,6 @@ export const HelpBlock = () => {
 					</RailTip>
 				</div>
 				{releaseModal}
-				<Suspense fallback={null}>
-					<HelpTasksItem onPresence={setHasTasks} />
-				</Suspense>
 			</>
 		);
 	}
@@ -244,9 +200,6 @@ export const HelpBlock = () => {
 				))}
 			</div>
 			{releaseModal}
-			<Suspense fallback={null}>
-				<HelpTasksItem onPresence={setHasTasks} />
-			</Suspense>
 		</>
 	);
 };

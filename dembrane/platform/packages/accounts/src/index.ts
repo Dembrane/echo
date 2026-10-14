@@ -1,9 +1,10 @@
 export { customerOrg, documentFor } from "./access";
 export * as contract from "./contract";
+export { demoBuildAccess } from "./demo/access";
 export { buildDemo, type DemoBuildDeps } from "./demo/build";
 export { httpGet as demoHttpGet } from "./demo/fetch";
 export { demoBuild } from "./demo/job";
-export { demoProspectHook } from "./demo-hook";
+export { demoDeckHook, demoProspectHook } from "./demo-hook";
 export { type AccountsDeps, type AccountsSettings, type Company, httpFetchText } from "./deps";
 export { ACCOUNT_EVENTS, type AccountEvent } from "./events";
 export * as fixtures from "./fixtures";

@@ -50,8 +50,8 @@ test("the shipped catalogs: every locale has a file, and every id has English", 
     for (const id of catalogEntries(text).keys()) expect(en.has(id)).toBe(true);
     expect(text).not.toContain(String.fromCharCode(0x2014));
   }
-  expect(message("nl-NL", "email.account_task_reminder.subject", { task_title: "X" })).toBe(
-    "Nog open: X",
+  expect(message("nl-NL", "email.account_invite.subject", { org_name: "X" })).toBe(
+    "Je dembrane-account voor X",
   );
   expect(translator("nl")("task.billing_details.title")).toBe("Factuurgegevens");
 });

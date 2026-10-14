@@ -289,6 +289,9 @@ export async function moveConversation(
   if (targetProjectId === src.conversation.project_id)
     throw new BadRequestError("conversation.move_same_project");
   const dst = await projectFor(d.access, who, targetProjectId, "project:update");
+  // A sample's conversations count toward no limit, so none moves in or out of one.
+  if (src.project.project.isSample || dst.project.isSample)
+    throw new BadRequestError("conversation.move_sample");
   const from = src.project.project.workspaceId;
   if (!(await sameMoveContext(projectsStorage(d.db), from, dst.project.workspaceId)))
     throw new ForbiddenError("conversation.move_context_mismatch");

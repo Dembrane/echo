@@ -133,9 +133,10 @@ export function safePattern(pattern: string): RegExp {
   return new RegExp(escapeRegex(pattern.slice(0, MAX_PATTERN_LENGTH)), "i");
 }
 
-export function createKnowledge(): Knowledge {
+/** `docsDir` replaces the docs corpus the assets would give; tests pass a folder of their own. */
+export function createKnowledge(opts: { docsDir?: string } = {}): Knowledge {
   const docsRoot = (): string | null => {
-    const dir = assetPath("docs");
+    const dir = opts.docsDir ?? assetPath("docs");
     return isDir(dir) ? dir : null;
   };
   const skillsRoot = (): string | null => {

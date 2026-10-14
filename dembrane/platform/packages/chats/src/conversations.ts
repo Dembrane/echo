@@ -234,6 +234,7 @@ export function chatReads(db: Db) {
     /**
      * Chats that used the free tier's allowance: live chats in the workspace's projects
      * (deleted projects included, as the old count did) with at least one user message.
+     * Chats on a sample copy, the seeded one included, spend none of it.
      */
     async workspaceChatsWithUserMessages(workspaceId: string | null): Promise<number> {
       if (!workspaceId) return 0;
@@ -242,7 +243,8 @@ export function chatReads(db: Db) {
         from project_chat_message m
         join project_chat c on c.id = m.project_chat_id
         join project p on p.id = c.project_id
-        where p.workspace_id = ${workspaceId} and c.deleted_at is null and m.message_from = 'user'`;
+        where p.workspace_id = ${workspaceId} and not p.is_sample and c.deleted_at is null
+          and m.message_from = 'user'`;
       return Number(row?.n ?? 0);
     },
 

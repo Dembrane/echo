@@ -1,21 +1,21 @@
-import { PDFDocument, type PDFFont, type PDFPage, rgb, StandardFonts } from "pdf-lib";
-import {
-  type AcceptanceField,
-  type FieldKind,
-  type Language,
-  layoutOffer,
-  type OfferContent,
-} from "./offer";
+import { brand } from "@dembrane/mail";
+import fontkit from "@pdf-lib/fontkit";
+import { PDFDocument, type PDFFont, type PDFPage, rgb } from "pdf-lib";
+import displayTtf from "../assets/fonts/DMSans-Display.ttf" with { type: "file" };
+import textTtf from "../assets/fonts/DMSans-Text.ttf" with { type: "file" };
+import type { AcceptanceField, FieldKind, Language } from "./offer";
+
+export { offerPdf } from "./offer-pdf";
 
 /**
  * PDFs of account documents, with pdf-lib (pure JavaScript, so it runs under Bun and in the
- * compiled API binary). echo renders the offer and text documents itself and knows where
- * it drew each blank, so their fields are placed automatically; an uploaded PDF gets its
- * fields from staff. Signing stamps the values and the signature image onto the unsigned
- * PDF at the field positions and appends an audit page. The standard fonts encode
- * Windows-1252 only; other characters (emoji, most non-Latin scripts) are left out of the
- * PDF, never out of the stored values. Embedding a Unicode font is the next step if a
- * customer's name needs it.
+ * compiled API binary). echo renders the offer (offer-pdf.ts) and text documents itself and
+ * knows where it drew each blank, so their fields are placed automatically; an uploaded PDF
+ * gets its fields from staff. Signing stamps the values and the signature image onto the
+ * unsigned PDF at the field positions and appends an audit page. Text documents, stamped
+ * values and the audit page are set in the offer's DM Sans (one weight; size and the muted
+ * colour make the hierarchy). Characters it has no glyph for (emoji, most non-Latin
+ * scripts) are left out of the PDF, never out of the stored values.
  */
 
 /** A field as placed: fractions of the page from its top-left corner, pages from 1. */
@@ -49,7 +49,8 @@ export interface AuditRecord {
   readonly organisation: string;
   readonly address: string | null;
   readonly vatNumber: string | null;
-  readonly dpaAuthorised: boolean;
+  /** Whether the signer said they may agree to data processing; null when not asked. */
+  readonly dpaAuthorised: boolean | null;
   readonly signedAt: string;
   readonly ip: string | null;
   readonly userAgent: string | null;
@@ -67,9 +68,39 @@ export interface AuditRecord {
 
 const A4: [number, number] = [595.28, 841.89];
 const MARGIN = 56;
-const INK = rgb(0.176, 0.176, 0.173);
-const MUTED = rgb(0.45, 0.45, 0.45);
-const FIELD_LINE = rgb(0.72, 0.72, 0.72);
+const hex = (h: string) =>
+  rgb(
+    Number.parseInt(h.slice(1, 3), 16) / 255,
+    Number.parseInt(h.slice(3, 5), 16) / 255,
+    Number.parseInt(h.slice(5, 7), 16) / 255,
+  );
+const INK = hex(brand.color.text);
+const MUTED = hex(brand.color.muted);
+const FIELD_LINE = hex(brand.color.control);
+
+/** The DM Sans cuts, read once: the bytes to embed and the characters they can draw. */
+let cuts: Promise<{ text: Uint8Array; display: Uint8Array; chars: Set<number> }> | null = null;
+function fonts() {
+  cuts ??= (async () => {
+    const text = await Bun.file(textTtf).bytes();
+    const display = await Bun.file(displayTtf).bytes();
+    const chars = new Set(
+      (fontkit.create(text) as unknown as { characterSet: number[] }).characterSet,
+    );
+    return { text, display, chars };
+  })();
+  return cuts;
+}
+
+/** Embeds the text cut as `regular` and the display cut (for titles) as `bold`. */
+async function embedFonts(doc: PDFDocument) {
+  const f = await fonts();
+  doc.registerFontkit(fontkit);
+  // A fixed name keeps the bytes of the same render the same.
+  const regular = await doc.embedFont(f.text, { subset: true, customName: "DMSans-Text" });
+  const bold = await doc.embedFont(f.display, { subset: true, customName: "DMSans-Display" });
+  return { regular, bold, chars: f.chars };
+}
 /** A date's and a PDF's metadata must not change the bytes of the same render. */
 const EPOCH = new Date("2026-01-01T00:00:00Z");
 
@@ -81,24 +112,21 @@ class Writer {
   constructor(
     readonly doc: PDFDocument,
     readonly regular: PDFFont,
+    /** The display cut: same weight, for titles. Hierarchy is size, never weight. */
     readonly bold: PDFFont,
+    private readonly chars: Set<number>,
   ) {
     this.page = doc.addPage(A4);
     this.y = A4[1] - MARGIN;
   }
 
-  /** Drops characters the font cannot encode, so drawing never throws. */
-  clean(text: string, font: PDFFont = this.regular): string {
+  /** Drops characters the font has no glyph for. */
+  clean(text: string, _font: PDFFont = this.regular): string {
     let out = "";
     for (const ch of text.replace(/\t/g, "    ")) {
       let ok = this.cache.get(ch);
       if (ok === undefined) {
-        try {
-          font.encodeText(ch);
-          ok = true;
-        } catch {
-          ok = false;
-        }
+        ok = this.chars.has(ch.codePointAt(0) as number);
         this.cache.set(ch, ok);
       }
       if (ok) out += ch;
@@ -127,7 +155,17 @@ class Writer {
     const lines: string[] = [];
     for (const para of this.clean(text, font).split("\n")) {
       let line = "";
-      for (const word of para.split(/ +/)) {
+      for (const whole of para.split(/ +/)) {
+        // A word wider than the line (a hash, a long address) breaks between characters.
+        let word = whole;
+        while (this.width(word, size, font) > maxWidth && word.length > 1) {
+          let n = word.length - 1;
+          while (n > 1 && this.width(word.slice(0, n), size, font) > maxWidth) n--;
+          if (line) lines.push(line);
+          lines.push(word.slice(0, n));
+          line = "";
+          word = word.slice(n);
+        }
         const next = line ? `${line} ${word}` : word;
         if (this.width(next, size, font) <= maxWidth || !line) line = next;
         else {
@@ -149,15 +187,25 @@ class Writer {
       width?: number;
       color?: typeof INK;
       gap?: number;
+      /** Drawn at `markerX` on the first line: a clause number or a bullet. */
+      marker?: string;
+      markerX?: number;
     } = {},
   ) {
     const size = opts.size ?? 10;
     const font = opts.bold ? this.bold : this.regular;
     const x = opts.x ?? MARGIN;
     const width = opts.width ?? A4[0] - MARGIN - x;
+    let marker = opts.marker;
     for (const line of this.wrap(text, size, font, width)) {
       this.ensure(size * 1.4);
-      this.page.drawText(line, { x, y: this.y - size, size, font, color: opts.color ?? INK });
+      const y = this.y - size;
+      if (marker) {
+        const m = this.clean(marker);
+        this.page.drawText(m, { x: opts.markerX ?? MARGIN, y, size, font, color: MUTED });
+        marker = undefined;
+      }
+      this.page.drawText(line, { x, y, size, font, color: opts.color ?? INK });
       this.y -= size * 1.4;
     }
     this.y -= opts.gap ?? 0;
@@ -176,6 +224,44 @@ class Writer {
       color: MUTED,
     });
     this.y -= 10;
+  }
+
+  /** Columns of wrapped cells; the header row is muted and repeats on a new page. */
+  table(header: string[], rows: string[][], size = 8.5) {
+    const n = header.length;
+    const total = A4[0] - 2 * MARGIN;
+    const pad = 6;
+    const colW = total / n;
+    const lead = size * 1.35;
+    const drawRow = (cells: string[], color: typeof INK) => {
+      const wrapped = cells.map((c) => this.wrap(c, size, this.regular, colW - pad));
+      const h = Math.max(...wrapped.map((w) => w.length)) * lead + pad;
+      if (this.y - h < MARGIN) {
+        this.newPage();
+        if (color === INK) drawRow(header, MUTED);
+      }
+      wrapped.forEach((lines, i) => {
+        lines.forEach((line, j) => {
+          this.page.drawText(line, {
+            x: MARGIN + i * colW,
+            y: this.y - size - j * lead,
+            size,
+            font: this.regular,
+            color,
+          });
+        });
+      });
+      this.y -= h;
+      this.page.drawLine({
+        start: { x: MARGIN, y: this.y + pad / 2 },
+        end: { x: A4[0] - MARGIN, y: this.y + pad / 2 },
+        thickness: 0.5,
+        color: FIELD_LINE,
+      });
+    };
+    drawRow(header, MUTED);
+    for (const r of rows) drawRow(r, INK);
+    this.y -= 6;
   }
 
   /**
@@ -219,9 +305,8 @@ class Writer {
 
 async function start() {
   const doc = await PDFDocument.create();
-  const regular = await doc.embedFont(StandardFonts.Helvetica);
-  const bold = await doc.embedFont(StandardFonts.HelveticaBold);
-  return new Writer(doc, regular, bold);
+  const { regular, bold, chars } = await embedFonts(doc);
+  return new Writer(doc, regular, bold, chars);
 }
 
 async function finish(w: Writer, title: string): Promise<RenderedPdf> {
@@ -233,88 +318,6 @@ async function finish(w: Writer, title: string): Promise<RenderedPdf> {
   w.doc.setModificationDate(EPOCH);
   const bytes = await w.doc.save({ useObjectStreams: false });
   return { bytes, pageCount: w.doc.getPageCount(), fields: w.fields };
-}
-
-/** The offer as the Google Doc templates lay it out, with its acceptance blanks as fields. */
-export async function offerPdf(content: OfferContent): Promise<RenderedPdf> {
-  const w = await start();
-  const l = layoutOffer(content);
-  w.text(l.letterhead.name, { bold: true, size: 12 });
-  for (const [k, value] of l.letterhead.rows) w.text(`${k} ${value}`, { size: 8.5, color: MUTED });
-  w.space(18);
-  w.text(l.title, { bold: true, size: 18, gap: 2 });
-  w.text(l.meta, { size: 9, color: MUTED, gap: 14 });
-  w.text(l.greeting, { gap: 6 });
-  for (const p of l.intro) w.text(p, { gap: 6 });
-  w.space(8);
-
-  const tableWidth = A4[0] - 2 * MARGIN;
-  const cols = [tableWidth * 0.46, tableWidth * 0.18, tableWidth * 0.14, tableWidth * 0.22];
-  const xs = [MARGIN];
-  for (let i = 1; i < cols.length; i++) xs.push((xs[i - 1] as number) + (cols[i - 1] as number));
-  const header = l.columns.map((h, i) => w.wrap(h, 8.5, w.bold, (cols[i] as number) - 8));
-  const headerHeight = Math.max(...header.map((h) => h.length)) * 12 + 6;
-  w.ensure(headerHeight + 20);
-  header.forEach((lines, i) => {
-    lines.forEach((line, j) => {
-      w.page.drawText(line, {
-        x: xs[i] as number,
-        y: w.y - 9 - j * 12,
-        size: 8.5,
-        font: w.bold,
-        color: INK,
-      });
-    });
-  });
-  w.y -= headerHeight;
-  w.rule();
-  for (const row of l.rows) {
-    const desc = [row.description, ...row.bullets.map((b) => `• ${b}`)].flatMap((t, k) =>
-      w
-        .wrap(t, 9.5, k === 0 ? w.bold : w.regular, (cols[0] as number) - 10)
-        .map((line) => ({ line, bold: k === 0 })),
-    );
-    const height = desc.length * 13 + 6;
-    w.ensure(height);
-    desc.forEach((d, j) => {
-      w.page.drawText(d.line, {
-        x: xs[0] as number,
-        y: w.y - 10 - j * 13,
-        size: 9.5,
-        font: d.bold ? w.bold : w.regular,
-        color: INK,
-      });
-    });
-    row.cells.forEach((cell, i) => {
-      const text = w.clean(cell);
-      const right = (xs[i + 1] as number) + (cols[i + 1] as number) - 6;
-      w.page.drawText(text, {
-        x: right - w.width(text, 9.5, w.regular),
-        y: w.y - 10,
-        size: 9.5,
-        font: w.regular,
-        color: INK,
-      });
-    });
-    w.y -= height;
-    w.rule();
-  }
-  w.space(4);
-  w.text(l.total, { bold: true, size: 11, gap: 14 });
-  for (const line of l.closing) w.text(line, { gap: 4 });
-  w.space(16);
-  w.ensure(260);
-  w.text(l.acceptanceTitle, { bold: true, size: 13, gap: 4 });
-  w.text(l.acceptanceIntro, { gap: 8 });
-  for (const a of l.acceptance.fields) w.blank(a);
-  w.text(l.acceptance.statement, { gap: 6 });
-  for (const a of l.acceptance.signing) w.blank(a);
-  w.space(10);
-  for (const p of l.clause) w.text(p, { size: 8.5, gap: 3 });
-  w.space(8);
-  w.text(l.validity, { size: 9 });
-  w.text(l.signOff, { size: 9, color: MUTED });
-  return finish(w, l.title);
 }
 
 const SIGNING_BLOCK: Record<Language, { title: string; fields: AcceptanceField[] }> = {
@@ -358,6 +361,97 @@ const SIGNING_BLOCK: Record<Language, { title: string; fields: AcceptanceField[]
   },
 };
 
+const CLAUSE_INDENT = 28;
+
+type LegalBlock =
+  | { kind: "heading"; level: 1 | 2; text: string }
+  | { kind: "subheading" | "paragraph" | "item" | "note"; text: string }
+  | { kind: "clause"; number: string; text: string }
+  | { kind: "table"; header: string[]; rows: string[][] };
+
+/** A short line with no closing punctuation: a heading or a table cell, never prose. */
+const isLabel = (l: string) =>
+  l.length <= 60 && /^[A-Z]/.test(l) && !/[.:;,]$/.test(l) && l.split(" ").length <= 8;
+
+/** "Data Subject: the person…": one entry of a list of definitions. */
+const isDefinition = (l: string) => /^[A-Z][^:.]{0,40}: \S/.test(l);
+
+/**
+ * The structure a legal text lost when it became plain lines: markdown headings, "Article 3."
+ * and "Annex I." headings, numbered clauses, the list after a line ending in ":", and a
+ * table (three or more labels in a row, then rows of that many cells; a tab-separated line
+ * is a row of cells). A cell that ran into a link ("(EU)https://…") is split back in two.
+ */
+export function legalBlocks(body: string): LegalBlock[] {
+  const lines = body
+    .split("\n")
+    .map((l) => l.trimEnd())
+    .filter((l) => l.trim() !== "");
+  const out: LegalBlock[] = [];
+  let listOpen = false;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i] as string;
+    const md = /^(#{1,3})\s+(.*)$/.exec(line);
+    if (md) {
+      out.push({ kind: "heading", level: md[1] === "#" ? 1 : 2, text: md[2] as string });
+      listOpen = false;
+      continue;
+    }
+    if (/^(Article \d+|Annex [IVX]+)\.\s/.test(line)) {
+      out.push({ kind: "heading", level: 2, text: line });
+      listOpen = false;
+      continue;
+    }
+    if (line.includes("\t")) {
+      const rows: string[][] = [];
+      while (i < lines.length && (lines[i] as string).includes("\t"))
+        rows.push((lines[i++] as string).split("\t").map((c) => c.trim()));
+      i--;
+      const [header, ...rest] = rows;
+      if (header) out.push({ kind: "table", header, rows: rest });
+      listOpen = false;
+      continue;
+    }
+    let labels = 0;
+    while (i + labels < lines.length && isLabel(lines[i + labels] as string)) labels++;
+    if (labels >= 3) {
+      const run: string[] = [];
+      let j = i;
+      for (; j < lines.length; j++) {
+        const l = lines[j] as string;
+        if (j >= i + labels && /^(Article \d+|Annex [IVX]+)\.\s|^#/.test(l)) break;
+        const link = /^(.*\S)(https?:\/\/\S+)$/.exec(l);
+        if (link) run.push(link[1] as string, link[2] as string);
+        else run.push(l);
+      }
+      // The header is as many labels as make the cells after it fill whole rows; a short
+      // cell ("Participants") can follow the header and look like one more label.
+      let n = 3;
+      while (n < labels && (run.length - n) % n !== 0) n++;
+      const header = run.slice(0, n);
+      const rows: string[][] = [];
+      for (let k = n; k + n <= run.length; k += n) rows.push(run.slice(k, k + n));
+      out.push({ kind: "table", header, rows });
+      i = j - 1;
+      listOpen = false;
+      continue;
+    }
+    const clause = /^(\d+\.\d+\.?)\s+(.*)$/.exec(line);
+    if (listOpen && !clause && !isLabel(line)) {
+      out.push({ kind: "item", text: line });
+      listOpen = /;$/.test(line) || isDefinition(line);
+      continue;
+    }
+    if (clause)
+      out.push({ kind: "clause", number: clause[1] as string, text: clause[2] as string });
+    else if (line.startsWith("* ")) out.push({ kind: "note", text: line });
+    else if (isLabel(line)) out.push({ kind: "subheading", text: line });
+    else out.push({ kind: "paragraph", text: line });
+    listOpen = /:$/.test(line);
+  }
+  return out;
+}
+
 /**
  * A text document (a DPA, a plan) as a PDF. With `signing`, a signing block follows the
  * text and its blanks are the document's fields.
@@ -368,23 +462,51 @@ export async function textPdf(
   opts: { signing: boolean; language: Language },
 ): Promise<RenderedPdf> {
   const w = await start();
-  w.text(title, { bold: true, size: 16, gap: 10 });
-  for (const raw of body.split("\n")) {
-    const line = raw.trimEnd();
-    if (!line) {
-      w.space(6);
-      continue;
+  w.text(title, { bold: true, size: brand.type.print.display, gap: 14 });
+  for (const block of legalBlocks(body)) {
+    switch (block.kind) {
+      case "heading":
+        w.space(w.y < A4[1] - MARGIN - 60 ? 12 : 0);
+        w.ensure(60);
+        w.text(block.text, {
+          bold: true,
+          size: block.level === 1 ? brand.type.print.title : brand.type.print.lead,
+          gap: 6,
+        });
+        break;
+      case "subheading":
+        w.space(6);
+        w.ensure(40);
+        w.text(block.text, { bold: true, size: 11, gap: 3 });
+        break;
+      case "clause":
+        w.text(block.text, { size: 9.5, x: MARGIN + CLAUSE_INDENT, marker: block.number, gap: 5 });
+        break;
+      case "item":
+        w.text(block.text, {
+          size: 9.5,
+          x: MARGIN + CLAUSE_INDENT + 12,
+          marker: "–",
+          markerX: MARGIN + CLAUSE_INDENT,
+          gap: 3,
+        });
+        break;
+      case "note":
+        w.text(block.text, { size: brand.type.print.caption, color: MUTED, gap: 5 });
+        break;
+      case "table":
+        w.space(2);
+        w.table(block.header, block.rows);
+        break;
+      default:
+        w.text(block.text, { size: 9.5, gap: 5 });
     }
-    const heading = /^(#{1,3})\s+(.*)$/.exec(line);
-    if (heading)
-      w.text(heading[2] as string, { bold: true, size: heading[1] === "#" ? 13 : 11, gap: 2 });
-    else w.text(line, { size: 9.5, gap: 1 });
   }
   if (opts.signing) {
     const block = SIGNING_BLOCK[opts.language];
     w.space(16);
     w.ensure(230);
-    w.text(block.title, { bold: true, size: 13, gap: 8 });
+    w.text(block.title, { bold: true, size: brand.type.print.title, gap: 10 });
     for (const a of block.fields) w.blank(a);
   }
   return finish(w, title);
@@ -410,12 +532,11 @@ export async function signedPdf(
   audit: AuditRecord,
 ): Promise<Uint8Array> {
   const doc = await PDFDocument.load(unsigned, { updateMetadata: false });
-  const regular = await doc.embedFont(StandardFonts.Helvetica);
-  const bold = await doc.embedFont(StandardFonts.HelveticaBold);
+  const { regular, bold, chars } = await embedFonts(doc);
   const signature = await doc.embedPng(images.signature);
   const initials = images.initials ? await doc.embedPng(images.initials) : signature;
   const pages = doc.getPages();
-  const w = new Writer(doc, regular, bold);
+  const w = new Writer(doc, regular, bold, chars);
   // Writer adds a page for itself; it becomes the audit page, after the document's pages.
   for (const f of fields) {
     const page = pages[f.page - 1];
@@ -455,7 +576,7 @@ export async function signedPdf(
 }
 
 function drawAudit(w: Writer, a: AuditRecord) {
-  w.text("Signature record", { bold: true, size: 16, gap: 4 });
+  w.text("Signature record", { bold: true, size: brand.type.print.title, gap: 6 });
   w.text("Simple electronic signature (eIDAS art. 3(10)), recorded by dembrane.", {
     size: 9,
     color: MUTED,
@@ -473,7 +594,14 @@ function drawAudit(w: Writer, a: AuditRecord) {
     ["Organisation", a.organisation],
     ...(a.address ? ([["Address", a.address]] as [string, string][]) : []),
     ...(a.vatNumber ? ([["VAT number", a.vatNumber]] as [string, string][]) : []),
-    ["May agree to data processing", a.dpaAuthorised ? "yes" : "no, the DPA is signed separately"],
+    ...(a.dpaAuthorised === null
+      ? []
+      : ([
+          [
+            "May agree to data processing",
+            a.dpaAuthorised ? "yes" : "no, the DPA is signed separately",
+          ],
+        ] as [string, string][])),
     ["Signature made", a.method],
     ["SHA-256 of the signature image", a.imageSha256],
     ["Signed at (UTC)", a.signedAt],
@@ -489,13 +617,13 @@ function drawAudit(w: Writer, a: AuditRecord) {
   for (const [k, value] of rows) {
     const before = w.y;
     const page = w.page;
-    w.text(k, { bold: true, size: 9, width: 150 });
+    w.text(k, { size: 9, width: 150, color: MUTED });
     const after = w.y;
     if (w.page === page) w.y = before;
     w.text(value, { size: 9, x: MARGIN + 160 });
     w.y = Math.min(after, w.y) - 3;
   }
   w.space(10);
-  w.text("Confirmation shown and accepted", { bold: true, size: 10, gap: 2 });
+  w.text("Confirmation shown and accepted", { size: brand.type.print.lead, gap: 4 });
   w.text(a.confirmationText, { size: 9.5 });
 }

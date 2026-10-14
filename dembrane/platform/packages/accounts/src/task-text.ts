@@ -1,13 +1,14 @@
 import { type Locale, resolveLocale, translator } from "@dembrane/i18n";
 
 /**
- * The words of the tasks echo creates, for the places the server itself writes to a
- * person: reminder emails and Slack. The API returns these tasks as a code and params and
+ * The words of the tasks echo creates, for the places the server itself writes them out:
+ * the messages to sam and Slack. The API returns these tasks as a code and params and
  * the UI words them the same way in the viewer's language; here they come from the
  * server catalog (packages/i18n/locales, ids task.<code>.title and task.<code>.body).
  */
 
 export const TASK_CODES = [
+  "who_signs",
   "sign_offer",
   "billing_details",
   "sign_dpa",

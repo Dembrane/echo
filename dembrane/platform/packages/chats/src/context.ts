@@ -117,7 +117,7 @@ export async function chatContext(d: ChatDeps, who: Signed, chat: ChatRow): Prom
   const meta: [string, string, boolean][] = [];
   for (const link of chat.used_conversations ?? []) {
     const ref = link.conversation_id;
-    if (!ref?.id) continue;
+    if (!ref?.id || ref.deleted_at) continue;
     meta.push([ref.id, String(ref.participant_name ?? ""), locked.has(ref.id)]);
   }
   let counts = new Map<string, number>();
