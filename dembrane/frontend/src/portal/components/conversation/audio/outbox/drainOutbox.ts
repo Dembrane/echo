@@ -52,6 +52,8 @@ export type Drainer = {
 	 * due a retry, or null once the outbox is empty.
 	 */
 	drain: () => Promise<number | null>;
+	/** Forgets every backoff, e.g. on coming back online, so the next drain tries all. */
+	retryNow: () => void;
 };
 
 const httpStatus = (error: unknown) =>
@@ -217,5 +219,5 @@ export const createDrainer = ({
 			onEvent({ item, reason: "expired", type: "dropped" });
 	};
 
-	return { drain, start };
+	return { drain, retryNow: () => backoff.clear(), start };
 };

@@ -402,3 +402,14 @@ describe("slices left behind by a tab that died mid-chunk", () => {
 		expect(await store.list()).toEqual([]);
 	});
 });
+
+it("retries straight away once told to, backoff or not", async () => {
+	await enqueueChunk("conv-1");
+	api.upload.mockRejectedValueOnce(new Error("Network Error"));
+	await drainer.drain();
+
+	drainer.retryNow();
+
+	expect(await drainer.drain()).toBeNull();
+	expect(api.upload).toHaveBeenCalledTimes(2);
+});

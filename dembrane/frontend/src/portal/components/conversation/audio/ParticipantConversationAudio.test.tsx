@@ -167,7 +167,10 @@ let conversationQuery: {
 };
 let project: Record<string, unknown>;
 let chunks: { id: string }[];
-let uploadPending: boolean;
+// The outbox the screen sees: a chunk counts as queued until the promise
+// `uploadChunk` returned for it settles.
+let queued = 0;
+let queueWaiters: (() => void)[] = [];
 
 vi.mock("@/portal/components/conversation/queries", () => ({
 	useConversationChunksQuery: () => ({ data: chunks }),
@@ -176,12 +179,31 @@ vi.mock("@/portal/components/conversation/queries", () => ({
 vi.mock("@/portal/hooks/useParticipantProjectById", () => ({
 	useParticipantProjectById: () => ({ data: project, isLoading: false }),
 }));
-vi.mock("./hooks/useUploadConversationChunk", () => ({
-	useUploadConversationChunk: () => ({
-		isPending: uploadPending,
-		mutateAsync: (...args: unknown[]) => uploadChunk(...args),
-	}),
-}));
+vi.mock("./outbox/OutboxProvider", async () => {
+	const { useReducer } = await import("react");
+	return {
+		useOutbox: () => {
+			const [, rerender] = useReducer((n: number) => n + 1, 0);
+			return {
+				enqueueChunk: async (chunk: Blob, meta: object) => {
+					queued += 1;
+					rerender();
+					try {
+						await uploadChunk({ chunk, ...meta });
+					} catch {}
+					queued -= 1;
+					rerender();
+					if (queued === 0) for (const done of queueWaiters.splice(0)) done();
+				},
+				queuedCount: () => queued,
+				settled: () =>
+					queued === 0
+						? Promise.resolve()
+						: new Promise<void>((done) => queueWaiters.push(done)),
+			};
+		},
+	};
+});
 
 beforeAll(() => {
 	i18n.load("en", {});
@@ -216,7 +238,8 @@ beforeEach(() => {
 	};
 	project = { id: "p1" };
 	chunks = [];
-	uploadPending = false;
+	queued = 0;
+	queueWaiters = [];
 	recorder.hadInterruption = false;
 	finish.mockResolvedValue({});
 	ping.mockResolvedValue(true);
@@ -272,7 +295,7 @@ describe("recording", () => {
 		expect(wakeLock.enableAutoReacquire).toHaveBeenCalled();
 	});
 
-	it("uploads each chunk the recorder hands over", async () => {
+	it("hands each chunk the recorder produces to the outbox", async () => {
 		renderAudio();
 		await startRecording();
 
@@ -283,8 +306,8 @@ describe("recording", () => {
 			expect.objectContaining({
 				chunk,
 				conversationId: "c1",
-				runFinishHook: false,
 				source: "PORTAL_AUDIO",
+				timestamp: expect.any(Date),
 			}),
 		);
 	});
@@ -387,14 +410,14 @@ describe("finishing", () => {
 		});
 	});
 
-	it("waits for chunk uploads still in flight before finishing", async () => {
+	it("waits for the final chunk, handed over as Finish stops the recorder", async () => {
 		const upload = deferred();
 		uploadChunk.mockReturnValue(upload.promise);
 		renderAudio();
 		await startRecording();
-		act(() => recorder.options?.onChunk(new Blob(["audio"])));
 
 		await stopAndFinish();
+		act(() => recorder.options?.onChunk(new Blob(["audio"])));
 		await new Promise((r) => setTimeout(r, 200));
 		expect(finish).not.toHaveBeenCalled();
 
@@ -408,9 +431,9 @@ describe("finishing", () => {
 		vi.spyOn(console, "warn").mockImplementation(() => {});
 		renderAudio();
 		await startRecording();
-		act(() => recorder.options?.onChunk(new Blob(["audio"])));
 
 		await stopAndFinish();
+		act(() => recorder.options?.onChunk(new Blob(["audio"])));
 		await act(() => vi.advanceTimersByTimeAsync(30_100));
 
 		await waitFor(() => expect(finish).toHaveBeenCalledWith("c1"));
@@ -444,20 +467,20 @@ describe("finishing", () => {
 	});
 
 	it("holds the modal's Finish while a chunk is still uploading", async () => {
-		const { rerender } = renderAudio();
+		const upload = deferred();
+		uploadChunk.mockReturnValue(upload.promise);
+		renderAudio();
 		await startRecording();
+		act(() => recorder.options?.onChunk(new Blob(["audio"])));
 		fireEvent.click(screen.getByTestId("portal-audio-stop-button"));
 		const finishButton = await screen.findByTestId(
 			"portal-audio-stop-finish-button",
 		);
 
-		uploadPending = true;
-		rerender(tree());
 		expect(screen.getByText("Uploading audio...")).toBeTruthy();
 		expect(finishButton.hasAttribute("disabled")).toBe(true);
 
-		uploadPending = false;
-		rerender(tree());
+		await act(async () => upload.resolve({}));
 		expect(screen.queryByText("Uploading audio...")).toBeNull();
 		expect(finishButton.hasAttribute("disabled")).toBe(false);
 	});
@@ -609,7 +632,7 @@ describe("interruption", () => {
 		).toContain("00:42");
 	});
 
-	it("reconnect waits for uploads, then reports the interruption", async () => {
+	it("holds reconnect while a chunk uploads, then reports the interruption", async () => {
 		const upload = deferred();
 		uploadChunk.mockReturnValue(upload.promise);
 		renderAudio();
@@ -617,13 +640,14 @@ describe("interruption", () => {
 		act(() => recorder.options?.onChunk(new Blob(["audio"])));
 		interrupt();
 
-		fireEvent.click(
-			await screen.findByTestId("portal-audio-interruption-reconnect-button"),
+		const reconnect = await screen.findByTestId(
+			"portal-audio-interruption-reconnect-button",
 		);
-		await new Promise((r) => setTimeout(r, 200));
-		expect(captureException).not.toHaveBeenCalled();
+		expect(reconnect.hasAttribute("disabled")).toBe(true);
 
-		upload.resolve({});
+		await act(async () => upload.resolve({}));
+		expect(reconnect.hasAttribute("disabled")).toBe(false);
+		fireEvent.click(reconnect);
 		await waitFor(() => expect(captureException).toHaveBeenCalled());
 		expect(capture).toHaveBeenCalledWith(
 			"portal_recording_error",
