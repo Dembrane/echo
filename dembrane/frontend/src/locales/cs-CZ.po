@@ -11120,7 +11120,7 @@ msgstr "Please log in to continue."
 #~ "(black screen = not recording).\n"
 #~ "This transcript will be anonymized and your host will not be able to listen to your recording."
 
-#: src/portal/components/conversation/ConversationMessages.tsx:162
+#: src/portal/components/conversation/ConversationMessages.tsx:174
 msgid ""
 "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
 "**Please keep this screen lit up**\n"
@@ -11130,7 +11130,7 @@ msgstr ""
 "**Please keep this screen lit up**\n"
 "(zamčená obrazovka = nenahrává se)"
 
-#: src/portal/components/conversation/ConversationMessages.tsx:158
+#: src/portal/components/conversation/ConversationMessages.tsx:170
 msgid ""
 "Please record your response by clicking the \"Record\" button below. You may also choose to respond in text by clicking the text icon.\n"
 "**Please keep this screen lit up**\n"
@@ -11142,11 +11142,11 @@ msgstr ""
 "(zamčená obrazovka = nenahrává se).\n"
 "This transcript will be anonymized and your host will not be able to listen to your recording."
 
-#: src/portal/components/conversation/ConversationMessages.tsx:156
+#: src/portal/components/conversation/ConversationMessages.tsx:168
 msgid "Please type your response in the box below. You may also choose to record your response by clicking the microphone icon."
 msgstr "Napište prosím svou odpověď do pole níže. Můžete ji také nahrát kliknutím na ikonu mikrofonu."
 
-#: src/portal/components/conversation/ConversationMessages.tsx:154
+#: src/portal/components/conversation/ConversationMessages.tsx:166
 msgid ""
 "Please type your response in the box below. You may also choose to record your response by clicking the microphone icon.\n"
 "This transcript will be anonymized."
@@ -14303,8 +14303,8 @@ msgid "Something went wrong while transcribing. Try again."
 msgstr "Při přepisu došlo k chybě. Zkuste to znovu."
 
 #: src/portal/components/conversation/ConversationMessages.tsx:127
-msgid "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
-msgstr "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
+#~ msgid "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
+#~ msgstr "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 
 #: src/routes/auth/VerifyEmail.tsx:78
 msgid "Something went wrong. Please open the link from your email again, or <0>start over</0>."
@@ -16069,7 +16069,7 @@ msgstr "Timestamp"
 msgid "Timestamps and duration"
 msgstr "Timestamps and duration"
 
-#: src/portal/components/conversation/ConversationMessages.tsx:119
+#: src/portal/components/conversation/ConversationMessages.tsx:130
 msgid "Tip"
 msgstr "Tip"
 
@@ -17225,7 +17225,7 @@ msgstr "Zobrazit postupy"
 msgid "View results"
 msgstr "Zobrazit výsledky"
 
-#: src/portal/components/conversation/ConversationMessages.tsx:219
+#: src/portal/components/conversation/ConversationMessages.tsx:231
 msgid "View your responses"
 msgstr "View your responses"
 
@@ -17457,6 +17457,10 @@ msgstr "Rádi si od vás poslechneme. Ať už máte nápad na něco nového, vš
 #: src/portal/components/settings/MicrophoneCheck.tsx:300
 msgid "participant.test.microphone.description"
 msgstr "We'll test your microphone to ensure the best experience for everyone in the session."
+
+#: src/portal/components/conversation/ConversationMessages.tsx:138
+msgid "We're having trouble reaching our server, but keep going: your audio is saved on this device and will send once we reconnect."
+msgstr ""
 
 #: src/components/participant/hooks/useConversationIssueBanner.ts:10
 #~ msgid "We’re picking up some silence. Try speaking up so your voice comes through clearly."
@@ -18209,7 +18213,11 @@ msgstr "You must login with the same provider you used to sign up. If you face a
 msgid "You need an invitation from a colleague"
 msgstr "You need an invitation from a colleague"
 
-#: src/portal/components/conversation/ConversationMessages.tsx:118
+#: src/portal/components/conversation/ConversationMessages.tsx:123
+msgid "You seem to be offline, but keep going: your audio is saved on this device and will send once you're back online."
+msgstr ""
+
+#: src/portal/components/conversation/ConversationMessages.tsx:129
 msgid "You seem to be offline, please check your internet connection"
 msgstr "You seem to be offline, please check your internet connection"
 
@@ -18554,7 +18562,7 @@ msgstr "Vaše žádost byla přijata."
 msgid "Your response has been recorded. You may now close this tab. You may also share the QR code so others can contribute, or record another conversation."
 msgstr "Vaše odpověď byla zaznamenána. Tuto kartu můžete zavřít. Můžete také sdílet QR kód, aby mohli přispět i ostatní, nebo nahrát další rozhovor."
 
-#: src/portal/components/conversation/ConversationMessages.tsx:228
+#: src/portal/components/conversation/ConversationMessages.tsx:240
 msgid "Your responses"
 msgstr "Your responses"
 
