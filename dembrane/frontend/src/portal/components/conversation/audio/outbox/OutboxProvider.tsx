@@ -33,9 +33,16 @@ export type Outbox = {
 	enqueueChunk: (chunk: Blob, meta: ChunkMeta) => Promise<void>;
 	/** Items for this conversation still waiting to send. Re-renders on change. */
 	queuedCount: (conversationId: string) => number;
+	/**
+	 * This conversation's chunks since the page loaded: `sent` of `total`,
+	 * with `queued` still waiting. Re-renders on change.
+	 */
+	progress: (conversationId: string) => OutboxProgress;
 	/** Resolves once nothing for this conversation is waiting to send. */
 	settled: (conversationId: string) => Promise<void>;
 };
+
+export type OutboxProgress = { queued: number; sent: number; total: number };
 
 const OutboxContext = createContext<Outbox | null>(null);
 
@@ -114,13 +121,19 @@ export const OutboxProvider = ({
 	const kickRef = useRef<() => void>(() => {});
 	const retryNowRef = useRef<() => void>(() => {});
 	const channelRef = useRef<BroadcastChannel | null>(null);
-	const refreshRef = useRef<() => Promise<void>>(async () => {});
+	const refreshRef = useRef<(alongside?: () => void) => Promise<void>>(
+		async () => {},
+	);
 
 	// Counts live in a ref so waiters resolve the moment they change, not after
 	// a render; the version only makes readers of queuedCount re-render.
 	const counts = useRef({
+		/** Direct uploads that landed: the session total keeps them. */
+		directSent: {} as Record<string, number>,
 		/** Handed over but not (or never to be) in the store: enqueuing, or direct uploads. */
 		inMemory: {} as Record<string, number>,
+		/** Every stored item seen since the page loaded, by seq: the session total. */
+		seen: {} as Record<string, Set<number>>,
 		stored: {} as Record<string, number>,
 	});
 	const [version, setVersion] = useState(0);
@@ -160,15 +173,22 @@ export const OutboxProvider = ({
 		});
 		storeRef.current = storePromise;
 
-		const refresh = async () => {
+		// `alongside` changes the counts in the same update as the recount, so
+		// no reader sees the queue in between.
+		const refresh = async (alongside?: () => void) => {
 			const store = await storePromise;
 			if (!store || cancelled) return;
-			const next: Record<string, number> = {};
-			for (const item of await store.list()) {
-				next[item.conversationId] = (next[item.conversationId] ?? 0) + 1;
-			}
+			const items = await store.list();
 			if (cancelled) return;
+			const next: Record<string, number> = {};
+			const { seen } = counts.current;
+			for (const item of items) {
+				next[item.conversationId] = (next[item.conversationId] ?? 0) + 1;
+				seen[item.conversationId] ??= new Set();
+				seen[item.conversationId].add(item.seq);
+			}
 			counts.current.stored = next;
+			alongside?.();
 			countsChanged();
 		};
 		refreshRef.current = refresh;
@@ -277,9 +297,9 @@ export const OutboxProvider = ({
 				const { inMemory } = counts.current;
 				inMemory[meta.conversationId] =
 					(inMemory[meta.conversationId] ?? 0) + by;
-				countsChanged();
 			};
 			held(1);
+			countsChanged();
 			const store = await storeRef.current;
 			if (store) {
 				try {
@@ -294,9 +314,8 @@ export const OutboxProvider = ({
 						bytes: chunk.size,
 						conversation_id: meta.conversationId,
 					});
-					// Recount first, so the store's count takes over before ours drops.
-					await refreshRef.current();
-					held(-1);
+					// The store's count takes over in the same update ours drops.
+					await refreshRef.current(() => held(-1));
 					channelRef.current?.postMessage("changed");
 					kickRef.current();
 					return;
@@ -316,8 +335,16 @@ export const OutboxProvider = ({
 					source: meta.source,
 					timestamp: meta.timestamp,
 				})
+				.then(() => {
+					const { directSent } = counts.current;
+					directSent[meta.conversationId] =
+						(directSent[meta.conversationId] ?? 0) + 1;
+				})
 				.catch(() => {}) // the mutation reports its own failure
-				.finally(() => held(-1));
+				.finally(() => {
+					held(-1);
+					countsChanged();
+				});
 		},
 		[directUpload, countsChanged],
 	);
@@ -333,11 +360,24 @@ export const OutboxProvider = ({
 		[queued],
 	);
 
+	const progress = useCallback(
+		(conversationId: string): OutboxProgress => {
+			const { directSent, inMemory, seen } = counts.current;
+			const waiting = queued(conversationId);
+			const total =
+				(seen[conversationId]?.size ?? 0) +
+				(inMemory[conversationId] ?? 0) +
+				(directSent[conversationId] ?? 0);
+			return { queued: waiting, sent: total - waiting, total };
+		},
+		[queued],
+	);
+
 	// A new value per version, so readers of queuedCount re-render.
 	// biome-ignore lint/correctness/useExhaustiveDependencies: version is the point
 	const value = useMemo<Outbox>(
-		() => ({ enqueueChunk, queuedCount: queued, settled }),
-		[enqueueChunk, queued, settled, version],
+		() => ({ enqueueChunk, progress, queuedCount: queued, settled }),
+		[enqueueChunk, progress, queued, settled, version],
 	);
 
 	return (
