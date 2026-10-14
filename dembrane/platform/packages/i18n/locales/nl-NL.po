@@ -12,7 +12,7 @@ msgstr "Het dembrane-team"
 
 #. js-lingui-explicit-id
 msgid "email.common.fallback"
-msgstr "Of plak dit in je browser:"
+msgstr "Of open deze link:"
 
 #. js-lingui-explicit-id
 msgid "email.common.ignore"
@@ -254,9 +254,6 @@ msgstr "Je inlogcode is {code}."
 msgid "email.sign_in_code.heading"
 msgstr "Je inlogcode."
 
-#. js-lingui-explicit-id
-msgid "email.sign_in_code.body"
-msgstr "Voer deze code in om door te gaan: {code}. De code verloopt over 10 minuten."
 
 #. js-lingui-explicit-id
 msgid "email.sign_in_code.text_body"
@@ -268,23 +265,20 @@ msgstr "Als je niet hebt geprobeerd in te loggen, kun je deze e-mail gerust nege
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.subject"
-msgstr "Onderteken {document_title}"
+msgstr "{inviter_name} vraagt je {document_title} te ondertekenen"
 
-#. js-lingui-explicit-id
-msgid "email.account_signer_invite.title"
-msgstr "{inviter_name} heeft je gevraagd te ondertekenen voor {org_name}"
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.preview"
-msgstr "{inviter_name} heeft je gevraagd om {document_title} te ondertekenen op dembrane."
+msgstr "{org_name} heeft jou gekozen om dit document te ondertekenen. Lees het en onderteken het online."
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.heading"
-msgstr "Je bent gevraagd te ondertekenen."
+msgstr "Je bent gevraagd te tekenen voor {org_name}"
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.body"
-msgstr "{inviter_name} heeft je aangewezen als degene die {document_title} ondertekent voor {org_name}. Log in met de code die naar dit e-mailadres is gestuurd om het te lezen en te ondertekenen."
+msgstr "{inviter_name} heeft jou aangewezen als degene die {document_title} ondertekent voor {org_name}."
 
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.cta"
@@ -293,34 +287,6 @@ msgstr "Lezen en ondertekenen"
 #. js-lingui-explicit-id
 msgid "email.account_signer_invite.text_cta"
 msgstr "Lezen en ondertekenen:"
-
-#. js-lingui-explicit-id
-msgid "email.account_task_reminder.subject"
-msgstr "Nog open: {task_title}"
-
-#. js-lingui-explicit-id
-msgid "email.account_task_reminder.title"
-msgstr "Een stap wacht op {org_name}"
-
-#. js-lingui-explicit-id
-msgid "email.account_task_reminder.preview"
-msgstr "{task_title} staat nog open."
-
-#. js-lingui-explicit-id
-msgid "email.account_task_reminder.heading"
-msgstr "Er staat nog een stap open."
-
-#. js-lingui-explicit-id
-msgid "email.account_task_reminder.body"
-msgstr "{task_title} staat nog open voor {org_name} op dembrane. Het kost een minuut, en het houdt de zaken bij ons in beweging."
-
-#. js-lingui-explicit-id
-msgid "email.account_task_reminder.cta"
-msgstr "Open de stap"
-
-#. js-lingui-explicit-id
-msgid "email.account_task_reminder.text_cta"
-msgstr "Open de stap:"
 
 #. js-lingui-explicit-id
 msgid "email.account_invite.subject"
@@ -332,11 +298,11 @@ msgstr "Je dembrane-account voor {org_name} staat klaar."
 
 #. js-lingui-explicit-id
 msgid "email.account_invite.heading"
-msgstr "Je account staat klaar."
+msgstr "Je account staat klaar"
 
 #. js-lingui-explicit-id
 msgid "email.account_invite.body"
-msgstr "We hebben {org_name} op dembrane voor je klaargezet. Log in met de code die we naar dit e-mailadres sturen: geen wachtwoord nodig."
+msgstr "We hebben {org_name} op dembrane gezet, met een demo die we voor jullie organisatie hebben gemaakt."
 
 #. js-lingui-explicit-id
 msgid "email.account_invite.cta"
@@ -345,6 +311,26 @@ msgstr "Inloggen"
 #. js-lingui-explicit-id
 msgid "email.account_invite.text_cta"
 msgstr "Inloggen:"
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.subject"
+msgstr "Je offerte van dembrane staat klaar om te ondertekenen"
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.heading"
+msgstr "Je offerte staat klaar om te ondertekenen"
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.body"
+msgstr "We hebben een offerte voor {org_name} klaargezet. Lees hem rustig door en onderteken hem online als je zover bent."
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.cta"
+msgstr "Offerte lezen en ondertekenen"
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.text_cta"
+msgstr "Offerte lezen en ondertekenen:"
 
 #. js-lingui-explicit-id
 msgid "email.report_published.subject"
@@ -408,19 +394,19 @@ msgstr "{workspace_name} is op {date} overgezet van {from_tier} naar {to_tier}."
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.frozen"
-msgstr "Deze functies zijn bevroren. Bestaande gegevens blijven behouden, maar kunnen niet opnieuw worden gebruikt tot een upgrade:"
+msgstr "Deze functies staan op pauze. Wat je ermee hebt gemaakt blijft bestaan, maar je kunt er pas weer iets aan toevoegen na een upgrade:"
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.frozen_text"
-msgstr "Bevroren. Bestaande gegevens blijven behouden, maar kunnen niet opnieuw worden gebruikt tot een upgrade:"
+msgstr "Op pauze tot een upgrade (wat je hebt gemaakt blijft bestaan):"
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.reverted"
-msgstr "Deze functies zijn teruggedraaid:"
+msgstr "Deze instellingen staan weer op de standaardwaarde:"
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.reverted_text"
-msgstr "Teruggedraaid:"
+msgstr "Terug naar standaard:"
 
 #. js-lingui-explicit-id
 msgid "email.tier_downgraded.rest"
@@ -588,27 +574,24 @@ msgstr "Werkruimte openen"
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.subject"
-msgstr "Actie vereist: werk je betaalmethode bij"
+msgstr "Je betaling aan dembrane is niet gelukt"
 
-#. js-lingui-explicit-id
-msgid "email.payment_failed.title"
-msgstr "Werk je betaalmethode bij"
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.preview"
-msgstr "Een recente betaling is niet gelukt. Werk je betaalmethode bij om je abonnement te behouden."
+msgstr "Je abonnement blijft actief. Werk je betaalmethode bij om het openstaande bedrag te voldoen."
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.heading"
-msgstr "We konden je betaalmethode niet afschrijven."
+msgstr "Je betaling is niet gelukt"
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.body"
-msgstr "Een recente betaling voor je dembrane-abonnement is niet gelukt. Meestal betekent dit dat een kaart is verlopen of dat de bank de afschrijving heeft geweigerd."
+msgstr "We konden de betaalmethode van je dembrane-abonnement niet belasten. Meestal is een kaart verlopen of heeft de bank de betaling geweigerd."
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.next"
-msgstr "Je abonnement blijft gewoon actief terwijl je dit regelt. Werk je betaalmethode bij om het openstaande bedrag te voldoen en alles soepel te laten verlopen."
+msgstr "Je abonnement blijft intussen gewoon actief. Werk je betaalmethode bij om het openstaande bedrag te voldoen."
 
 #. js-lingui-explicit-id
 msgid "email.payment_failed.cta"
@@ -620,63 +603,57 @@ msgstr "Werk je betaalmethode bij:"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.subject"
-msgstr "{workspace_name} overgezet naar Free"
+msgstr "{workspace_name} zit nu op het gratis abonnement"
 
-#. js-lingui-explicit-id
-msgid "email.tier_expired.title"
-msgstr "Abonnement voor {workspace_name} verlopen"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.preview"
-msgstr "{workspace_name} overgezet naar Free. Sommige functies zijn beperkt."
+msgstr "Je {from_tier}-abonnement is gestopt. Alles wat je hebt gemaakt blijft bewaard."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.heading"
-msgstr "{workspace_name} gebruikt nu Free."
+msgstr "{workspace_name} zit nu op het gratis abonnement"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.body"
-msgstr "Je {from_tier}-abonnement voor {workspace_name} is verlopen. De werkruimte gebruikt nu het Free-abonnement."
+msgstr "Je {from_tier}-abonnement voor {workspace_name} is gestopt, dus de werkruimte zit nu op het gratis abonnement."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.text_body"
-msgstr "{workspace_name}: je {from_tier}-abonnement is verlopen. De werkruimte gebruikt nu Free."
+msgstr "Je {from_tier}-abonnement voor {workspace_name} is gestopt, dus de werkruimte zit nu op het gratis abonnement."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.rest"
-msgstr "Je bestaande content blijft toegankelijk. Vraag een upgrade aan om weer alle functies te gebruiken."
+msgstr "Al het andere werkt zoals eerst, en al je content blijft beschikbaar. Vraag een upgrade aan om alle functies terug te krijgen."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expired.cta"
-msgstr "Werkruimte openen"
+msgstr "Upgrade aanvragen"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.subject"
-msgstr "Abonnement voor {workspace_name} verloopt op {date}"
+msgstr "{workspace_name} gaat op {date} over naar het gratis abonnement"
 
-#. js-lingui-explicit-id
-msgid "email.tier_expiring.title"
-msgstr "Abonnement voor {workspace_name} verloopt binnenkort"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.preview"
-msgstr "{workspace_name} gaat op {date} over naar Free."
+msgstr "Je {tier}-abonnement stopt op {date}. Alles wat je hebt gemaakt blijft bewaard."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.heading"
-msgstr "Abonnement voor {workspace_name} verloopt op {date}."
+msgstr "Je {tier}-abonnement stopt op {date}"
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.body"
-msgstr "Je {tier}-abonnement voor {workspace_name} verloopt op {date}. Daarna gaat de werkruimte over naar Free en zijn sommige functies beperkt."
+msgstr "Op {date} gaat {workspace_name} van {tier} naar het gratis abonnement, en worden sommige functies beperkt."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.text_body"
-msgstr "{workspace_name}: je {tier}-abonnement verloopt op {date}. Daarna gaat de werkruimte over naar Free en zijn sommige functies beperkt."
+msgstr "Op {date} gaat {workspace_name} van {tier} naar het gratis abonnement, en worden sommige functies beperkt."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.rest"
-msgstr "Je bestaande content blijft toegankelijk. Vraag een upgrade aan om alle functies te behouden."
+msgstr "Alles wat je hebt gemaakt blijft bewaard. Wil je {tier} houden? Vraag dan een upgrade aan in de instellingen van de werkruimte."
 
 #. js-lingui-explicit-id
 msgid "email.tier_expiring.cta"
@@ -693,6 +670,14 @@ msgstr "Offerte bekijken en ondertekenen: {document_title}"
 #. js-lingui-explicit-id
 msgid "task.sign_offer.body"
 msgstr "Lees de offerte en onderteken hem hier. Tekent iemand anders voor jullie organisatie? Wijs diegene aan op de offerte; die krijgt een eigen link."
+
+#. js-lingui-explicit-id
+msgid "task.who_signs.title"
+msgstr "Laat weten wie {document_title} ondertekent"
+
+#. js-lingui-explicit-id
+msgid "task.who_signs.body"
+msgstr "Wie de offerte ondertekent, wie de verwerkersovereenkomst ondertekent, en of je een eigen DPIA nodig hebt."
 
 #. js-lingui-explicit-id
 msgid "task.billing_details.title"
@@ -741,3 +726,135 @@ msgstr "Plan een gesprek met ons"
 #. js-lingui-explicit-id
 msgid "task.book_call.body"
 msgstr "We lopen je demo samen door en plannen een eerste sessie."
+
+#. js-lingui-explicit-id
+msgid "email.common.reply_to"
+msgstr "Vragen? Beantwoord deze e-mail, dan komt je bericht bij {name}."
+
+#. js-lingui-explicit-id
+msgid "email.facts.offer"
+msgstr "Offerte"
+
+#. js-lingui-explicit-id
+msgid "email.facts.reference"
+msgstr "Kenmerk"
+
+#. js-lingui-explicit-id
+msgid "email.facts.valid_until"
+msgstr "Geldig tot"
+
+#. js-lingui-explicit-id
+msgid "email.facts.total"
+msgstr "Totaal incl. btw"
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.preview"
+msgstr "{document_title}: lees de offerte en onderteken hem online."
+
+#. js-lingui-explicit-id
+msgid "email.account_offer_sent.signer"
+msgstr "Tekent iemand anders voor {org_name}? Open de offerte en vul daar zijn of haar naam in; diegene krijgt een eigen link."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.how"
+msgstr "Via de knop log je in met een eenmalige code die we naar dit adres sturen, dus je hebt geen wachtwoord nodig. Je ziet alleen dit document."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.wrong_person"
+msgstr "Ben jij niet de juiste persoon om te tekenen? Laat het {inviter_name} weten, dan kan die iemand anders aanwijzen."
+
+#. js-lingui-explicit-id
+msgid "email.account_signer_invite.footer"
+msgstr "Je krijgt deze e-mail omdat {inviter_name} dit adres heeft ingevuld bij het account van {org_name} op dembrane."
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.how"
+msgstr "Log in met een code die we naar dit adres sturen; een wachtwoord is niet nodig. Op je accountpagina zie je wat de volgende stap is."
+
+#. js-lingui-explicit-id
+msgid "email.account_invite.footer"
+msgstr "Je krijgt deze e-mail omdat iemand van dembrane met dit adres een account voor {org_name} heeft aangemaakt."
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.lead"
+msgstr "Vul deze code in om verder te gaan:"
+
+#. js-lingui-explicit-id
+msgid "email.sign_in_code.expires"
+msgstr "De code verloopt over 10 minuten."
+
+#. js-lingui-explicit-id
+msgid "email.tier_expiring.text_cta"
+msgstr "Upgrade aanvragen:"
+
+#. js-lingui-explicit-id
+msgid "email.tier_expired.text_cta"
+msgstr "Upgrade aanvragen:"
+
+#. js-lingui-explicit-id
+msgid "email.common.footer_account"
+msgstr "Je krijgt deze e-mail omdat je het account van {org_name} op dembrane beheert."
+
+#. js-lingui-explicit-id
+msgid "email.common.cta_account"
+msgstr "Open je accountpagina"
+
+#. js-lingui-explicit-id
+msgid "email.common.text_cta_account"
+msgstr "Open je accountpagina:"
+
+#. js-lingui-explicit-id
+msgid "email.account_document_withdrawn.subject"
+msgstr "{document_title} is ingetrokken"
+
+#. js-lingui-explicit-id
+msgid "email.account_document_withdrawn.heading"
+msgstr "We hebben {document_title} ingetrokken"
+
+#. js-lingui-explicit-id
+msgid "email.account_document_withdrawn.body"
+msgstr "We hebben {document_title} voor {org_name} ingetrokken, dus het kan niet meer worden ondertekend."
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.subject"
+msgstr "Nog open voor {org_name}: {task_title}"
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.heading"
+msgstr "Er staat nog een stap open"
+
+#. js-lingui-explicit-id
+msgid "email.account_task_reminder.body"
+msgstr "Er wacht nog een stap op je bij het account van {org_name}:"
+
+#. js-lingui-explicit-id
+msgid "ticket.invoice_delivery.subject"
+msgstr "Hoe wij facturen ontvangen"
+
+#. js-lingui-explicit-id
+msgid "offer_email.subject"
+msgstr "Je offerte van dembrane: {document_title}"
+
+#. js-lingui-explicit-id
+msgid "offer_email.greeting"
+msgstr "Hallo {name},"
+
+#. js-lingui-explicit-id
+msgid "offer_email.greeting_plain"
+msgstr "Hallo,"
+
+#. js-lingui-explicit-id
+msgid "offer_email.ready"
+msgstr "De offerte {offer} staat klaar om te lezen en te ondertekenen:"
+
+#. js-lingui-explicit-id
+msgid "offer_email.sign_in"
+msgstr "Je logt in met je e-mailadres en een eenmalige code. Log hier in:"
+
+#. js-lingui-explicit-id
+msgid "offer_email.valid_until"
+msgstr "De offerte is geldig tot {date}."
+
+#. js-lingui-explicit-id
+msgid "offer_email.closing"
+msgstr "Met vriendelijke groet,"

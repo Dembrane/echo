@@ -15,6 +15,8 @@ export const {
   buildCorpus,
   MAX_ANALYSIS_CHARS,
   MAX_ASPECTS,
+  // The popcorn recipe validates the same number, so a phrase the gate keeps publishes.
+  MAX_POPCORN_PHRASE_CHARS: MAX_PHRASE_CHARS,
   MAX_QUOTES,
   MAX_RELATIONS,
   MAX_STAKEHOLDERS,
@@ -33,7 +35,7 @@ export const POPCORN_SCHEMA: Json = {
         type: "object",
         additionalProperties: false,
         required: ["phrase"],
-        properties: { phrase: { type: "string", minLength: 1, maxLength: 140 } },
+        properties: { phrase: { type: "string", minLength: 1, maxLength: MAX_PHRASE_CHARS } },
       },
     },
   },
@@ -43,7 +45,6 @@ export const POPCORN_SCHEMA: Json = {
 
 // The prompt allows twenty words, enough for a point and its detail; the gate tolerates one more.
 export const MAX_PHRASE_WORDS = 21;
-export const MAX_PHRASE_CHARS = 140;
 
 /** The characters Python's str whitespace covers, which JS's own class does not quite. */
 const PY_WS =

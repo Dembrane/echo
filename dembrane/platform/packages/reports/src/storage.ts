@@ -1,4 +1,5 @@
 import type { Db } from "@dembrane/db";
+import { type ScheduledTask, scheduledTasks } from "@dembrane/queue";
 import type postgres from "postgres";
 
 export type Row = Record<string, unknown>;
@@ -25,7 +26,11 @@ export function reportsStorage(db: Db) {
 export type ReportsStorage = ReturnType<typeof reportsStorage>;
 export type Queries = ReturnType<typeof queries>;
 
+/** The task type of a report booked for a time. */
+export const TASK_GENERATE_REPORT = "generate_report";
+
 function queries(sql: Sql) {
+  const tasks = scheduledTasks(sql);
   const self = {
     sql,
 
@@ -159,23 +164,23 @@ function queries(sql: Sql) {
     // ── scheduled_task rows of type generate_report ───────────────────
 
     async resetStaleClaims(nowIso: string, staleBefore: string) {
-      await sql`update scheduled_task set status = 'scheduled', claimed_at = null, updated_at = ${nowIso}
-        where task_type = 'generate_report' and status = 'processing' and claimed_at < ${staleBefore}`;
+      await tasks.resetStaleClaims([TASK_GENERATE_REPORT], nowIso, staleBefore);
     },
 
     async claimDueTasks(nowIso: string, limit: number) {
-      return sql`update scheduled_task set status = 'processing', claimed_at = ${nowIso},
-          attempts = coalesce(attempts, 0) + 1, updated_at = ${nowIso}
-        where id in (select id from scheduled_task
-          where task_type = 'generate_report' and status = 'scheduled' and scheduled_at <= ${nowIso}
-          order by scheduled_at limit ${limit} for update skip locked)
-        returning id, payload` as Promise<{ id: string; payload: unknown }[]>;
+      return tasks.claimDue([TASK_GENERATE_REPORT], nowIso, limit);
     },
 
     async settleTask(id: string, nowIso: string, error: string | null) {
-      await sql`update scheduled_task set status = ${error === null ? "completed" : "failed"},
-          error = ${error === null ? null : error.slice(0, 5000)}, updated_at = ${nowIso}
-        where id = ${id}`;
+      await tasks.settle(id, nowIso, error);
+    },
+
+    async pendingTasks(): Promise<ScheduledTask[]> {
+      return tasks.pending(TASK_GENERATE_REPORT);
+    },
+
+    async bookTask(payload: Record<string, unknown>, at: string, nowIso: string) {
+      await tasks.book({ taskType: TASK_GENERATE_REPORT, payload, at, now: nowIso });
     },
   };
   return self;

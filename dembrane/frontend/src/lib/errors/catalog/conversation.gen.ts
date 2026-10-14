@@ -84,6 +84,12 @@ export const conversation = {
     description:
       "A move named the conversation's own project as the target; the move dialog never offers it.",
   },
+  "conversation.move_sample": {
+    action: "none",
+    detail: "Conversations cannot be moved into or out of a sample project.",
+    description:
+      "A conversation move whose source or target is a sample project (project.is_sample), whose conversations count toward no usage limit.",
+  },
   "conversation.move_context_mismatch": {
     action: "none",
     detail:

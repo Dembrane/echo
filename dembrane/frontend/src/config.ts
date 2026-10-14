@@ -168,29 +168,29 @@ export const LEGAL_PRIVACY_URL =
 	"https://www.dembrane.com/legal/privacy" as const;
 export const LEGAL_DPA_URL = "https://www.dembrane.com/legal/DPA" as const;
 
-// docs.dembrane.com is the one published corpus now, same site in every
-// environment, so the "What can Ask do?" link no longer needs to hide outside
-// echo-next.
-export const ASK_DOCS_URL =
-	"https://docs.dembrane.com/users/host/chat-and-ask.html" as const;
+// Each environment's documentation describes the product that environment runs:
+// docs.dembrane.com is published with a release, docs.staging.dembrane.com from
+// main. A PR preview has no site of its own and reads staging's.
+const DOCS_BASE_URL = byEnv(
+	{
+		staging: "https://docs.staging.dembrane.com",
+		testing: "https://docs.staging.dembrane.com",
+	},
+	"https://docs.dembrane.com",
+);
+
+export const ASK_DOCS_URL = `${DOCS_BASE_URL}/users/host/chat-and-ask.html`;
 
 // Linked from the retranscribe and regenerate-summary modals, where hosts hit
 // the problems it covers.
-export const TRANSCRIPT_TROUBLESHOOTING_DOCS_URL =
-	"https://docs.dembrane.com/users/host/troubleshooting-transcripts-and-summaries.html" as const;
+export const TRANSCRIPT_TROUBLESHOOTING_DOCS_URL = `${DOCS_BASE_URL}/users/host/troubleshooting-transcripts-and-summaries.html`;
 
 export const COMMUNITY_SLACK_URL =
 	"https://join.slack.com/t/dembranecommunity/shared_invite/zt-3qzvryh8l-M6w3u5BvuM8LssOhMbJGgQ";
 
-// Documentation, locale-aware. Points at docs.dembrane.com, the one published
-// corpus since #907 cut it over to docs/ on GitHub Pages. The Notion Info Hub
-// these used to point at is the old home; the deep links above (ASK_DOCS_URL,
-// TRANSCRIPT_TROUBLESHOOTING_DOCS_URL) already moved and this one did not, so
-// the sidebar sent people somewhere the rest of the app had left.
-// Dutch lives at index.nl-NL.html, not README.nl-NL.html; both verified live.
-export const DOCS_URL_EN = "https://docs.dembrane.com/" as const;
-export const DOCS_URL_NL =
-	"https://docs.dembrane.com/index.nl-NL.html" as const;
+// Documentation, locale-aware. Dutch lives at index.nl-NL.html.
+export const DOCS_URL_EN = `${DOCS_BASE_URL}/`;
+export const DOCS_URL_NL = `${DOCS_BASE_URL}/index.nl-NL.html`;
 
 export const getDocumentationUrl = (locale = "en-US") =>
 	locale === "nl-NL" ? DOCS_URL_NL : DOCS_URL_EN;
@@ -228,6 +228,10 @@ export const ENABLE_PRESENT = true;
 // Map fixture mode: `?fixture=50|150|200` on the Map page renders synthetic
 // data with no network requests, for performance checks. Local only.
 export const ENABLE_MAP_FIXTURES = byEnv({ local: true }, false);
+// Trainings (booking, the roster, the high-risk nudge) are off while the flow is
+// reworked: an open or half-booked training will live on the organisation's
+// overview. Staff still manage trainings in the admin console.
+export const ENABLE_TRAINING = false;
 
 export const getProductFeedbackUrl = (locale = "en-US") =>
 	`https://portal.dembrane.com/${locale}/a2b7fbeb-af8d-41c8-b70b-9ff1f3c6d51a/start?theme=dm-sans`;

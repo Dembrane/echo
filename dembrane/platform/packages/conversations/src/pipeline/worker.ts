@@ -5,13 +5,19 @@ import {
   finishConversation,
   finishIdleConversations,
   processChunk,
+  releaseStrandedChunkRuns,
   summarizeConversation,
 } from "./defs";
-import { idleConversations, type PipelineDeps, unsummarizedConversations } from "./steps";
+import {
+  idleConversations,
+  type PipelineDeps,
+  releaseStrandedChunks,
+  unsummarizedConversations,
+} from "./steps";
 import { pipelineWorkflows, RETRIES, type RetryPolicy } from "./workflows";
 
 /**
- * The worker's side of the pipeline: the four workflows on their queues and the two
+ * The worker's side of the pipeline: the four workflows on their queues and the three
  * schedules that start them. Chunk runs wait on Gemini, so many run at once; the ffmpeg
  * work they hand the media service scales there, not here.
  */
@@ -29,6 +35,7 @@ export function conversationWorker(
       summarizeConversation,
       finishIdleConversations,
       catchUpSummaries,
+      releaseStrandedChunkRuns,
     ],
     async register(queue) {
       await queue.workflow(processChunk, { concurrency: conc("chunk", 20) }, (p) => wf.chunk(p));
@@ -62,6 +69,10 @@ export function conversationWorker(
           );
       });
       await queue.schedule(catchUpSummaries, "*/5 * * * *", {});
+      await queue.work(releaseStrandedChunkRuns, { concurrency: 1 }, () =>
+        releaseStrandedChunks(d, queue),
+      );
+      await queue.schedule(releaseStrandedChunkRuns, "*/5 * * * *", {});
     },
   };
 }

@@ -299,7 +299,10 @@ export const account_task = pgTable(
     reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
     reviewedBy: uuid("reviewed_by"),
     reviewNote: text("review_note"),
-    /** Days between reminders for this task; null uses accounts.reminderIntervalDays. */
+    /**
+     * Days this task may wait on the customer before the account's owner is asked to check
+     * in, and between later asks; null uses accounts.reminderIntervalDays.
+     */
     reminderIntervalDays: integer("reminder_interval_days"),
     nextReminderAt: timestamp("next_reminder_at", { withTimezone: true }),
     remindersSent: integer("reminders_sent").notNull().default(0),

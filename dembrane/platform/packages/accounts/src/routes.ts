@@ -5,6 +5,7 @@ import { staffCan } from "./access";
 import * as K from "./contract";
 import {
   accountPage,
+  answerWhoSigns,
   customerFile,
   customerReply,
   declineDocument,
@@ -14,17 +15,28 @@ import {
   mySigningRequests,
   nameSigner,
   openTicket,
+  peppolLookup,
   readBilling,
   readDocument,
   recordBooking,
   recordTutorialOpened,
+  remindSigner,
   submitTask,
   type TaskFile,
   tasksSummary,
   updateBilling,
 } from "./customer";
-import { createDemo, demoStatus, listDemos, publishDemo, retryDemo } from "./demo/service";
+import {
+  createDemo,
+  demoStatus,
+  listDemos,
+  publishDemo,
+  retryDemo,
+  unpublishDemo,
+} from "./demo/service";
 import type { AccountsDeps } from "./deps";
+import { acceptSignerInvite, signerInvite } from "./invite";
+import { sendMessage } from "./messages";
 import { createAccount } from "./prospect";
 import { signDocument } from "./signing";
 import {
@@ -45,6 +57,7 @@ import {
   staffOpenTicket,
   staffReply,
   updateAccount,
+  updateOffer,
   upsertInvoice,
   voidDocument,
 } from "./staff";
@@ -138,6 +151,15 @@ export function accountsRoutes(d: AccountsDeps) {
     const b = await body(c, K.NameSignerRequest);
     return c.json(await nameSigner(d, who, p(c, "orgId"), p(c, "docId"), b));
   });
+  app.post(R.remindSigner.path, async (c) => {
+    const who = requireUser(c);
+    return c.json(await remindSigner(d, who, p(c, "orgId"), p(c, "docId")));
+  });
+  app.post(R.answerWhoSigns.path, async (c) => {
+    const who = requireUser(c);
+    const b = await body(c, K.WhoSignsRequest);
+    return c.json(await answerWhoSigns(d, who, p(c, "orgId"), p(c, "taskId"), b));
+  });
   app.get(R.documentFile.path, async (c) => {
     const r = await customerFile(d, requireUser(c), p(c, "orgId"), p(c, "docId"), "file");
     return pdfResponse(c, r.bytes, r.doc.title);
@@ -155,6 +177,11 @@ export function accountsRoutes(d: AccountsDeps) {
       await updateBilling(d, who, p(c, "orgId"), await body(c, K.BillingUpdateRequest)),
     );
   });
+  app.post(R.lookupPeppol.path, async (c) =>
+    c.json(
+      await peppolLookup(d, requireUser(c), p(c, "orgId"), await body(c, K.PeppolLookupRequest)),
+    ),
+  );
   app.post(R.submitTask.path, async (c) => {
     const who = requireUser(c);
     const input = await taskSubmission(c);
@@ -176,6 +203,15 @@ export function accountsRoutes(d: AccountsDeps) {
   app.post(R.tutorialOpened.path, async (c) =>
     c.json(await recordTutorialOpened(d, requireUser(c), p(c, "orgId"))),
   );
+  app.get(R.signerInvite.path, async (c) => {
+    const q = parse(K.SignerInviteQuery, { invite: c.req.query("invite") });
+    return c.json(await signerInvite(d, p(c, "orgId"), p(c, "docId"), q.invite));
+  });
+  app.post(R.acceptSignerInvite.path, async (c) => {
+    const who = requireUser(c);
+    const b = await body(c, K.AcceptSignerInviteRequest);
+    return c.json(await acceptSignerInvite(d, who, p(c, "orgId"), p(c, "docId"), b));
+  });
   app.get(R.signingRequests.path, async (c) => c.json(await mySigningRequests(d, requireUser(c))));
   app.get(R.tasksSummary.path, async (c) => c.json(await tasksSummary(d, requireUser(c))));
 
@@ -189,9 +225,8 @@ export function accountsRoutes(d: AccountsDeps) {
   };
 
   // Demos first: their paths would otherwise match /:orgId.
-  const demoSettings = () => {
+  const requireDemoSettings = () => {
     if (!d.settings.demo) throw new UnavailableError("demo.not_configured");
-    return d.settings.demo;
   };
   const demo = (c: Ctx) => ({ type: "demo", id: p(c, "demoId") });
   app.get(R.listDemos.path, async (c) => {
@@ -202,7 +237,8 @@ export function accountsRoutes(d: AccountsDeps) {
     const who = requireUser(c);
     await staffCan(d, who, "accounts.demo.create", undefined, c.get("requestId"));
     const b = await body(c, K.DemoCreateRequest);
-    return c.json(await createDemo(d, demoSettings(), who, b), 201);
+    requireDemoSettings();
+    return c.json(await createDemo(d, who, b), 201);
   });
   app.get(R.demoStatus.path, async (c) => {
     await staffCan(d, requireUser(c), "accounts.demo.read", demo(c), c.get("requestId"));
@@ -213,6 +249,11 @@ export function accountsRoutes(d: AccountsDeps) {
     await staffCan(d, who, "accounts.demo.publish", demo(c), c.get("requestId"));
     const b = await body(c, K.DemoPublishRequest);
     return c.json(await publishDemo(d, who, p(c, "demoId"), { sign_in: b.sign_in ?? null }));
+  });
+  app.post(R.unpublishDemo.path, async (c) => {
+    const who = requireUser(c);
+    await staffCan(d, who, "accounts.demo.unpublish", demo(c), c.get("requestId"));
+    return c.json(await unpublishDemo(d, who, p(c, "demoId")));
   });
   app.post(R.retryDemo.path, async (c) => {
     await staffCan(d, requireUser(c), "accounts.demo.retry", demo(c), c.get("requestId"));
@@ -247,6 +288,11 @@ export function accountsRoutes(d: AccountsDeps) {
     const who = await staff(c, "accounts.offer.push");
     return c.json(await pushOffer(d, who, p(c, "orgId"), await body(c, K.PushOfferRequest)), 201);
   });
+  app.put(R.updateOffer.path, async (c) => {
+    const who = await staff(c, "accounts.offer.update");
+    const b = await body(c, K.UpdateOfferRequest);
+    return c.json(await updateOffer(d, who, p(c, "orgId"), p(c, "docId"), b));
+  });
   app.post(R.pushDocument.path, async (c) => {
     const who = await staff(c, "accounts.document.push");
     const b = await body(c, K.PushDocumentRequest);
@@ -260,9 +306,9 @@ export function accountsRoutes(d: AccountsDeps) {
     );
   });
   app.get(R.staffReadDocument.path, async (c) => {
-    await staff(c, "accounts.document.read");
+    const who = await staff(c, "accounts.document.read");
     return c.json(
-      await documentDetail(d, await staffDocument(d, p(c, "orgId"), p(c, "docId")), "staff"),
+      await documentDetail(d, await staffDocument(d, p(c, "orgId"), p(c, "docId")), "staff", who),
     );
   });
   app.get(R.staffDocumentFile.path, async (c) => {
@@ -287,12 +333,17 @@ export function accountsRoutes(d: AccountsDeps) {
   app.post(R.sendDocument.path, async (c) => {
     const who = await staff(c, "accounts.document.send");
     const b = await body(c, K.SendDocumentRequest);
-    return c.json(await sendDocument(d, who, p(c, "orgId"), p(c, "docId"), b.task));
+    return c.json(await sendDocument(d, who, p(c, "orgId"), p(c, "docId"), b.task, b.notify));
   });
   app.post(R.voidDocument.path, async (c) => {
     const who = await staff(c, "accounts.document.void");
     const b = await body(c, K.VoidRequest);
     return c.json(await voidDocument(d, who, p(c, "orgId"), p(c, "docId"), b.reason));
+  });
+  app.post(R.sendMessage.path, async (c) => {
+    const who = await staff(c, "accounts.message.send");
+    const b = await body(c, K.SendMessageRequest);
+    return c.json(await sendMessage(d, who, p(c, "orgId"), b));
   });
   app.put(R.upsertInvoice.path, async (c) => {
     const who = await staff(c, "accounts.invoice.upsert");

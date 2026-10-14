@@ -1,0 +1,321 @@
+[
+  {
+    "title": "Overview",
+    "items": [
+      {
+        "path": "features/five-ways-to-use-dembrane.md"
+      },
+      {
+        "path": "features/index.md"
+      },
+      {
+        "path": "users/index.md",
+        "title": "Guides by who you are"
+      },
+      {
+        "path": "map.md"
+      }
+    ]
+  },
+  {
+    "title": "Guides",
+    "items": [
+      {
+        "path": "users/host/index.md",
+        "title": "Hosts",
+        "children": [
+          {
+            "path": "users/host/getting-started.md",
+            "title": "Getting started"
+          },
+          {
+            "path": "users/host/creating-a-project.md"
+          },
+          {
+            "path": "users/host/portal-editor.md"
+          },
+          {
+            "path": "users/host/collecting-conversations.md"
+          },
+          {
+            "path": "users/host/transcripts-and-conversations.md"
+          },
+          {
+            "path": "users/host/troubleshooting-transcripts-and-summaries.md"
+          },
+          {
+            "path": "users/host/chat-and-ask.md",
+            "title": "Chat & Ask"
+          },
+          {
+            "path": "users/host/present-and-map.md",
+            "title": "Present & Map"
+          },
+          {
+            "path": "users/host/reports.md",
+            "title": "Reports"
+          },
+          {
+            "path": "users/host/managing-your-workspace.md"
+          },
+          {
+            "path": "users/host/tiers-billing-and-usage.md"
+          },
+          {
+            "path": "users/host/account-and-settings.md"
+          },
+          {
+            "path": "users/host/getting-help.md"
+          },
+          {
+            "path": "users/host/using-dembrane-go-mobile.md"
+          }
+        ]
+      },
+      {
+        "path": "users/participant/index.md",
+        "title": "Participants",
+        "children": [
+          {
+            "path": "users/participant/what-to-expect.md"
+          },
+          {
+            "path": "users/participant/recording-your-conversation.md"
+          },
+          {
+            "path": "users/participant/refining-and-verifying.md"
+          },
+          {
+            "path": "users/participant/your-privacy-and-data.md"
+          },
+          {
+            "path": "users/participant/your-report.md"
+          }
+        ]
+      },
+      {
+        "path": "users/host-partner/index.md",
+        "title": "Partners",
+        "children": [
+          {
+            "path": "users/host-partner/external-client-workspaces.md"
+          },
+          {
+            "path": "users/host-partner/observer-and-external-collaborators.md"
+          },
+          {
+            "path": "users/host-partner/data-ownership-and-handoff.md"
+          }
+        ]
+      },
+      {
+        "path": "users/developer-external/index.md",
+        "title": "External developers",
+        "children": [
+          {
+            "path": "users/developer-external/authentication.md"
+          },
+          {
+            "path": "users/developer-external/webhooks.md"
+          },
+          {
+            "path": "users/developer-external/mcp-and-byo-llm.md"
+          },
+          {
+            "path": "users/developer-external/export-and-integrations.md"
+          },
+          {
+            "path": "users/developer-external/participant-api.md"
+          },
+          {
+            "path": "users/developer-external/self-hosting.md"
+          },
+          {
+            "path": "users/developer-external/configuration-and-llm-providers.md"
+          },
+          {
+            "path": "users/developer-external/licensing.md"
+          },
+          {
+            "path": "users/developer-external/contributing.md"
+          }
+        ]
+      },
+      {
+        "path": "users/developer-internal/index.md",
+        "title": "Internal developers",
+        "children": [
+          {
+            "path": "users/developer-internal/local-development.md"
+          },
+          {
+            "path": "users/developer-internal/architecture.md"
+          },
+          {
+            "path": "users/developer-internal/data-model.md"
+          },
+          {
+            "path": "users/developer-internal/processing-pipeline.md"
+          },
+          {
+            "path": "users/developer-internal/background-jobs-and-scheduler.md"
+          },
+          {
+            "path": "users/developer-internal/chat-and-agent.md"
+          },
+          {
+            "path": "users/developer-internal/roles-and-policies.md"
+          },
+          {
+            "path": "users/developer-internal/deployment-and-releases.md"
+          },
+          {
+            "path": "users/developer-internal/maintaining-docs.md"
+          }
+        ]
+      },
+      {
+        "path": "users/staff/index.md",
+        "title": "dembrane staff",
+        "children": [
+          {
+            "path": "users/staff/admin-panel-overview.md"
+          },
+          {
+            "path": "users/staff/customer-accounts.md"
+          },
+          {
+            "path": "users/staff/discounts-trials-and-tiers.md"
+          },
+          {
+            "path": "users/staff/managed-and-offline-billing.md"
+          },
+          {
+            "path": "users/staff/usage-and-billing-rollup.md"
+          },
+          {
+            "path": "users/staff/support-access.md"
+          },
+          {
+            "path": "users/staff/trainings-and-licences.md"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Foundations",
+    "items": [
+      {
+        "path": "features/organisations-and-workspaces.md"
+      },
+      {
+        "path": "features/roles-and-permissions.md"
+      },
+      {
+        "path": "features/tiers-and-billing.md"
+      },
+      {
+        "path": "features/offers-and-invoices.md"
+      },
+      {
+        "path": "features/invites-and-access.md"
+      },
+      {
+        "path": "features/visibility-and-discovery.md"
+      },
+      {
+        "path": "features/account-and-security.md"
+      },
+      {
+        "path": "features/staff-support-access.md"
+      }
+    ]
+  },
+  {
+    "title": "Collecting conversations",
+    "items": [
+      {
+        "path": "features/projects.md"
+      },
+      {
+        "path": "features/recording.md"
+      },
+      {
+        "path": "features/transcription.md"
+      },
+      {
+        "path": "features/live-monitor.md"
+      },
+      {
+        "path": "features/portal-and-participant-experience.md"
+      },
+      {
+        "path": "features/portal-editor.md"
+      },
+      {
+        "path": "features/mobile-app-dembrane-go.md"
+      }
+    ]
+  },
+  {
+    "title": "Making sense of it",
+    "items": [
+      {
+        "path": "features/conversations-and-transcripts.md"
+      },
+      {
+        "path": "features/chat-and-ask.md"
+      },
+      {
+        "path": "features/present.md"
+      },
+      {
+        "path": "features/argument-map.md"
+      },
+      {
+        "path": "features/analysis.md"
+      },
+      {
+        "path": "features/canvas.md"
+      },
+      {
+        "path": "features/reports.md"
+      },
+      {
+        "path": "features/library-and-analysis.md"
+      }
+    ]
+  },
+  {
+    "title": "Working with others",
+    "items": [
+      {
+        "path": "features/partner-program.md"
+      },
+      {
+        "path": "features/data-ownership-and-compliance.md"
+      },
+      {
+        "path": "features/trainings.md"
+      },
+      {
+        "path": "features/notifications.md"
+      }
+    ]
+  },
+  {
+    "title": "Getting data out",
+    "items": [
+      {
+        "path": "features/export-and-data-portability.md"
+      },
+      {
+        "path": "features/webhooks-and-integrations.md"
+      },
+      {
+        "path": "features/mcp-and-bring-your-own-llm.md"
+      }
+    ]
+  }
+]

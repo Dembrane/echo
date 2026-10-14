@@ -47,6 +47,43 @@ run("worker freshness", () => {
     }
   });
 
+  test("a stopping executor reads as fresh until it has stopped executing, then marks its row for the next sweep", async () => {
+    await sql`delete from dbos_executor_heartbeat`;
+    const beat = new ExecutorHeartbeat(url, "new/host-2", logger, { beatMs: 50, deadAfterS: 60 });
+    await beat.start();
+    await sql`insert into dbos.workflow_status (workflow_uuid, status, name, executor_id)
+              values ('wf-running', 'PENDING', 'job', 'new/host-2')`;
+    try {
+      let ageWhileStopping: number | null = null;
+      await beat.stop(async () => {
+        // Aged by hand: only a beat during the stop makes it fresh again.
+        await sql`update dbos_executor_heartbeat set last_seen = now() - interval '30 seconds'`;
+        await Bun.sleep(300);
+        ageWhileStopping = (await workerFreshness(sql, "new")).ageS;
+      });
+
+      expect(ageWhileStopping as unknown as number).toBeLessThan(5);
+      const rows = await sql`select executor_id, last_seen from dbos_executor_heartbeat`;
+      expect([...rows]).toEqual([{ executor_id: "new/host-2", last_seen: new Date(0) }]);
+    } finally {
+      await sql`delete from dbos.workflow_status where workflow_uuid = 'wf-running'`;
+    }
+  });
+
+  test("an executor whose stop fails keeps an ordinary row, which goes stale like any other", async () => {
+    await sql`delete from dbos_executor_heartbeat`;
+    const beat = new ExecutorHeartbeat(url, "new/host-3", logger);
+    await beat.start();
+
+    await expect(
+      beat.stop(async () => {
+        throw new Error("still executing");
+      }),
+    ).rejects.toThrow("still executing");
+
+    expect((await workerFreshness(sql, "new")).ageS as number).toBeLessThan(5);
+  });
+
   test("stale: the newest heartbeat's age grows past the threshold", async () => {
     await sql`delete from dbos_executor_heartbeat`;
     await sql`insert into dbos_executor_heartbeat (executor_id, last_seen)

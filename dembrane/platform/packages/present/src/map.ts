@@ -48,7 +48,7 @@ export interface MapStore {
   /** A legacy result's graph with its fact-check states; null when the row is gone. */
   legacyGraph(resultId: string, budgets: ResolvedBudgets): Promise<GraphAndChecks | null>;
   /** Starts a map generation for the project, as the host's Generate does. */
-  requestGeneration(projectId: string, actorId: string): Promise<void>;
+  requestGeneration(projectId: string, actorId: string | null): Promise<void>;
   /** The project's groups as stored, newest first: the host map's History. */
   groups(projectId: string): Promise<Row[]>;
   /** The deployment's budget ceilings (ANALYSIS_NODE_LIMIT_CEILING and the edge one). */

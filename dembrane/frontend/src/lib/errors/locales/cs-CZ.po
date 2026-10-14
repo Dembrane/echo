@@ -14,6 +14,11 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/billing.ts:50
+#~ msgid "error.billing.tax_id_required"
+#~ msgstr "Zadejte alespoň jedno z čísel VAT, KvK nebo KBO."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:5
 msgid "error.request.field_empty"
 msgstr "Pole {field} nesmí být prázdné. Vyplňte ho nebo smažte."
@@ -139,6 +144,11 @@ msgid "error.conversation.move_context_mismatch"
 msgstr "Rozhovory lze přesouvat pouze do pracovních prostorů se stejným vlastníkem fakturace a dat. Vyberte projekt v jiném pracovním prostoru."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/conversation.ts:24
+msgid "error.conversation.move_sample"
+msgstr "Rozhovory nelze přesouvat do ukázkového projektu ani z něj. Vyberte jiný projekt."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/internal.ts:5
 msgid "error.internal.busy"
 msgstr "dembrane právě zpracovává jiný požadavek. Zkuste to za sekundu znovu."
@@ -172,11 +182,6 @@ msgstr "Zadejte webovou adresu začínající na http:// nebo https://."
 #: src/lib/errors/messages/field.ts:30
 msgid "error.field.invalid_url"
 msgstr "Zadejte webovou adresu začínající na http:// nebo https://."
-
-#. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:50
-msgid "error.billing.tax_id_required"
-msgstr "Zadejte alespoň jedno z čísel VAT, KvK nebo KBO."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/document.ts:40
@@ -224,7 +229,7 @@ msgid "error.workspace.visibility_requires_tier"
 msgstr "Pracovní prostory na pozvánku a soukromé prostory vyžadují tarif Innovator nebo vyšší. Vytvořte ho zatím jako otevřený, nebo nejprve přejděte na vyšší tarif."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:28
+#: src/lib/errors/messages/conversation.ts:33
 msgid "error.conversation.no_summary"
 msgstr "Nejprve vytvořte shrnutí tohoto rozhovoru a pak to zkuste znovu."
 
@@ -674,7 +679,7 @@ msgid "error.agent_access.request_expired"
 msgstr "Platnost této žádosti o připojení vypršela. Začněte znovu ze svého agenta."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:24
+#: src/lib/errors/messages/conversation.ts:29
 msgid "error.conversation.no_content"
 msgstr "Tento rozhovor zatím nemá žádný zvukový záznam."
 
@@ -694,7 +699,7 @@ msgid "error.chat.conversation_not_in_chat"
 msgstr "Tento rozhovor už v chatu není."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:36
+#: src/lib/errors/messages/conversation.ts:41
 msgid "error.conversation.not_open"
 msgstr "Tento rozhovor právě není otevřený. Požádejte organizátora o nový odkaz."
 
@@ -834,7 +839,7 @@ msgid "error.workspace.logo_url_too_long"
 msgstr "Tento odkaz na logo je příliš dlouhý. Použijte kratší odkaz."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:63
+#: src/lib/errors/messages/billing.ts:59
 msgid "error.billing.tier_required"
 msgstr "Tato funkce vyžaduje tarif {required}. Chcete-li ji využívat, přejděte na vyšší tarif."
 
@@ -899,7 +904,7 @@ msgid "error.member.already_removed"
 msgstr "Tato osoba už byla odebrána."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:59
+#: src/lib/errors/messages/billing.ts:55
 msgid "error.billing.tier_not_purchasable"
 msgstr "Tento tarif nelze zakoupit online. Kontaktujte nás a domluvíme se."
 
@@ -1209,7 +1214,7 @@ msgid "error.chat.not_found"
 msgstr "Tento chat se nepodařilo najít. Možná byl smazán."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/conversation.ts:32
+#: src/lib/errors/messages/conversation.ts:37
 msgid "error.conversation.not_found"
 msgstr "Tento rozhovor se nepodařilo najít. Možná byl smazán."
 
@@ -1564,7 +1569,7 @@ msgid "error.verify.no_new_feedback"
 msgstr "Zatím jste nepřidali nic nového. Popište, co byste změnili, a zkuste to znovu."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/billing.ts:54
+#: src/lib/errors/messages/billing.ts:50
 msgid "error.billing.tier_limit"
 msgstr "Dosáhli jste limitu tarifu Free. Chcete-li pokračovat, přejděte na vyšší tarif."
 

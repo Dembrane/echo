@@ -1,4 +1,4 @@
-import { Group, LoadingOverlay, Paper } from "@mantine/core";
+import { Box, Group, LoadingOverlay, Paper } from "@mantine/core";
 import { type PropsWithChildren, useEffect } from "react";
 import { Outlet, useLocation, useSearchParams } from "react-router";
 import { useAuthenticated } from "@/components/auth/hooks";
@@ -20,11 +20,21 @@ const AuthHeader = () => (
 		className="z-30 w-full"
 		style={{ backgroundColor: "var(--app-background)" }}
 	>
-		<Group justify="space-between" align="center" h={60} px="md">
-			<Group align="center">
+		<Group
+			justify="space-between"
+			align="center"
+			wrap="nowrap"
+			gap="sm"
+			h={60}
+			px="md"
+		>
+			<Group align="center" wrap="nowrap">
 				<Logo hideTitle={false} alwaysDembrane to="/" />
 			</Group>
-			<LanguagePicker />
+			{/* Widest option measured: 189px (nl-NL). */}
+			<Box w={190} className="shrink-0">
+				<LanguagePicker />
+			</Box>
 		</Group>
 	</Paper>
 );

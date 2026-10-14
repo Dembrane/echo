@@ -14,5 +14,10 @@ export {
   isUuid,
   type Row,
 } from "./storage";
-export { FREE_TIER_MAX_CHAT_USER_TURNS, freeTierLimit, isFreeTier } from "./tiers";
+export {
+  FREE_TIER_MAX_CHAT_USER_TURNS,
+  FREE_TIER_MAX_SAMPLE_USER_TURNS,
+  freeTierLimit,
+  isFreeTier,
+} from "./tiers";
 export { countMessageTokens, MAX_CHAT_CONTEXT_LENGTH } from "./tokens";

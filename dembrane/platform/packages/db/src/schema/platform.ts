@@ -1,9 +1,32 @@
-import { index, integer, jsonb, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  bigserial,
+  boolean,
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 
 /** One row per live worker process; a stale row marks a dead worker whose workflows get resumed. */
 export const dbos_executor_heartbeat = pgTable("dbos_executor_heartbeat", {
   executor_id: text("executor_id").primaryKey(),
   last_seen: timestamp("last_seen", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * One row per unfinished workflow that was running on a worker that stopped: how often, and
+ * when recovery set it aside instead of resuming it. The recovery sweep deletes the row once
+ * the workflow finishes or a person resumes it.
+ */
+export const dbos_workflow_lost_worker = pgTable("dbos_workflow_lost_worker", {
+  workflow_id: text("workflow_id").primaryKey(),
+  /** The queue it ran on. DBOS clears its own copy on a cancelled workflow; a resume reads this one. */
+  queue_name: text("queue_name"),
+  lost: integer("lost").notNull(),
+  set_aside_at: timestamp("set_aside_at", { withTimezone: true }),
 });
 
 // Fixed-window counters for rate limits (per user or per IP). Unlogged: a crash may
@@ -35,4 +58,31 @@ export const platform_presence = pgTable(
     index("platform_presence_scope_idx").on(t.kind, t.scope, t.seenAt),
     index("platform_presence_expires_idx").on(t.expiresAt),
   ],
+);
+
+// One row per attempt at a model deployment, written by metering from the llm observer:
+// names and numbers only, never a prompt or an answer. The obs views aggregate it per day
+// and per operation; Grafana reads those views, never this table.
+export const model_call = pgTable(
+  "model_call",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    started_at: timestamp("started_at", { withTimezone: true }).notNull(),
+    service: text("service").notNull(),
+    /** The route or job the call ran under; null outside a request or a job. */
+    operation: text("operation"),
+    request_id: text("request_id"),
+    model_group: text("model_group").notNull(),
+    model: text("model").notNull(),
+    kind: text("kind").notNull(),
+    status: text("status").notNull(),
+    error: text("error"),
+    finish_reason: text("finish_reason"),
+    attempt: integer("attempt").notNull(),
+    fallback: boolean("fallback").notNull().default(false),
+    ms: integer("ms").notNull(),
+    input_tokens: integer("input_tokens"),
+    output_tokens: integer("output_tokens"),
+  },
+  (t) => [index("model_call_started_at_idx").on(t.started_at)],
 );

@@ -98,8 +98,14 @@ export function jaccard(a: string, b: string): number {
   return inter / new Set([...ta, ...tb]).size;
 }
 
+/** The runs of words a phrase is checked against. A set of them is one. */
+export interface ShownText {
+  readonly size: number;
+  has(run: string): boolean;
+}
+
 /** The first run of `n` words the text shares with the known text, or null. */
-export function knownRun(text: string, known: ReadonlySet<string>, n = KNOWN_RUN): string | null {
+export function knownRun(text: string, known: ShownText, n = KNOWN_RUN): string | null {
   if (!known.size) return null;
   for (const s of shingles(tokens(text), n)) if (known.has(s)) return s.split("\u0001").join(" ");
   return null;
@@ -146,11 +152,41 @@ export function knownShingles(state: Json, n = KNOWN_RUN, exclude?: string): Set
   return new Set(shingles(words, n).filter((s) => !s.includes("\u0000")));
 }
 
+/**
+ * knownShingles for every conversation of a session at once. Each run is held once, with
+ * the conversation whose phrases carry it, so a read's memory follows the size of the deck
+ * and not the deck times its conversations. `except(cid)` answers as
+ * knownShingles(state, n, cid) does.
+ */
+export function shownIndex(state: Json, n = KNOWN_RUN): { except(cid: string): ShownText } {
+  // The one conversation holding the run, or null once any other text holds it too.
+  const holder = new Map<string, string | null>();
+  const add = (text: string, cid: string | null) => {
+    for (const run of shingles(tokens(text), n)) {
+      const held = holder.get(run);
+      if (held === undefined) holder.set(run, cid);
+      else if (held !== cid) holder.set(run, null);
+    }
+  };
+  for (const [cid, conv] of Object.entries(dict(state.conversations)))
+    for (const item of list(dict(conv).items)) add(orStr(dict(item).phrase), cid);
+  for (const text of strings(dict(state.analysis))) add(text, null);
+  return {
+    except: (cid) => ({
+      size: holder.size,
+      has: (run) => {
+        const held = holder.get(run);
+        return held !== undefined && held !== cid;
+      },
+    }),
+  };
+}
+
 /** Split a shaped response into what the room may see and what it may not. */
 export function gateItems(
   items: readonly Json[],
   names: ReadonlySet<string>,
-  known: ReadonlySet<string>,
+  known: ShownText,
 ): [Json[], Json[]] {
   const kept: Json[] = [];
   const suppressed: Json[] = [];

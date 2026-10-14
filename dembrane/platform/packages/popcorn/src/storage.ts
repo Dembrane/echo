@@ -1,5 +1,6 @@
 import { newId } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
+import { scheduledTasks } from "@dembrane/queue";
 import type postgres from "postgres";
 import { directusTime, type Json } from "./py";
 
@@ -35,6 +36,7 @@ export const START_TICK = "start";
 export const FINISH_TICK = "finish";
 
 export function popcornStore(sql: Sql) {
+  const tasks = scheduledTasks(sql);
   return {
     sql,
 
@@ -195,10 +197,13 @@ export function popcornStore(sql: Sql) {
       scheduledAt: string;
       now: string;
     }): Promise<void> {
-      await sql`insert into scheduled_task
-        (id, task_type, payload, scheduled_at, status, attempts, created_at, updated_at)
-        values (${v.id}, ${TASK_POPCORN_TICK}, ${j(v.payload)}, ${v.scheduledAt}, 'scheduled', 0,
-          ${v.now}, ${v.now})`;
+      await tasks.book({
+        id: v.id,
+        taskType: TASK_POPCORN_TICK,
+        payload: v.payload,
+        at: v.scheduledAt,
+        now: v.now,
+      });
     },
 
     /**
@@ -215,12 +220,10 @@ export function popcornStore(sql: Sql) {
         ...(opts.withStart ? [] : [START_TICK]),
         ...(opts.keepFinish ? [FINISH_TICK] : []),
       ];
-      const rows = await sql`update scheduled_task set status = 'cancelled', updated_at = ${now}
-        where task_type = ${TASK_POPCORN_TICK} and status = 'scheduled'
-          and payload->>'loop_id' = ${loopId}
-          and coalesce(payload->>'tick_kind', '') <> all(${sql.array(kept)})
-        returning id`;
-      return rows.length;
+      return tasks.cancel(TASK_POPCORN_TICK, now, {
+        match: { loop_id: loopId },
+        keep: { key: "tick_kind", values: kept },
+      });
     },
 
     /** A read booked by a finished conversation that has not started yet. */

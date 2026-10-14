@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { API_BASE_URL } from "@/config";
+import { API_BASE_URL, ENABLE_TRAINING } from "@/config";
 import { ApiRequestError } from "@/lib/errors/read";
 
 /**
@@ -30,6 +30,7 @@ export type NotificationAction =
 	| "NAVIGATE_WS"
 	| "NAVIGATE_PROJECT"
 	| "NAVIGATE_REPORT"
+	| "NAVIGATE_PRESENT"
 	| "NAVIGATE_CHAT"
 	| "NAVIGATE_INVITE"
 	| "NAVIGATE_ORGANISATION_SETTINGS"
@@ -157,6 +158,10 @@ export function resolveNotificationHref(
 			return refs.project_id && refs.workspace_id
 				? `/w/${refs.workspace_id}/projects/${refs.project_id}/report`
 				: null;
+		case "NAVIGATE_PRESENT":
+			return refs.project_id && refs.workspace_id
+				? `/w/${refs.workspace_id}/projects/${refs.project_id}/present`
+				: null;
 		case "NAVIGATE_CHAT":
 			return refs.project_id && refs.chat_id && refs.workspace_id
 				? `/w/${refs.workspace_id}/projects/${refs.project_id}/chats/${refs.chat_id}`
@@ -191,7 +196,9 @@ export function resolveNotificationHref(
 			}
 			return null;
 		case "NAVIGATE_TRAINING":
-			return refs.org_id ? `/o/${refs.org_id}/training` : null;
+			return ENABLE_TRAINING && refs.org_id
+				? `/o/${refs.org_id}/training`
+				: null;
 		default:
 			return null;
 	}
