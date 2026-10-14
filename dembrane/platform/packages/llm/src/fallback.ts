@@ -35,6 +35,27 @@ export interface FallbackOptions {
   readonly onObserverFault?: (err: unknown) => void;
 }
 
+/** Per-call providerOptions: a refused answer moves on to the next deployment. */
+export const FALL_BACK_ON_REFUSAL = { fallback: { onRefusal: true } };
+
+/** Every deployment declined to answer (a content filter or safety stop). */
+export class ModelRefusalError extends Error {
+  override name = "ModelRefusalError";
+  readonly isRetryable = false;
+  constructor(
+    readonly group: string,
+    readonly finishReason: string | null,
+  ) {
+    super(`Every ${group} deployment refused to answer (finish_reason=${finishReason})`);
+  }
+}
+
+class Refused extends Error {
+  constructor(readonly finishReason: string | null) {
+    super(`refused (finish_reason=${finishReason})`);
+  }
+}
+
 const DEFAULTS: FallbackOptions = {
   attemptsPerDeployment: 2,
   allowedFails: 3,
@@ -74,6 +95,7 @@ export class FallbackModel implements LanguageModelV4 {
     observeSafely(this.opts.observe, this.opts.onObserverFault, make);
 
   doGenerate(options: LanguageModelV4CallOptions): Promise<LanguageModelV4GenerateResult> {
+    const onRefusal = options.providerOptions?.fallback?.onRefusal === true;
     return this.run(async (d, meta) => {
       const startedAt = new Date();
       const t0 = performance.now();
@@ -85,6 +107,10 @@ export class FallbackModel implements LanguageModelV4 {
         throw err;
       }
       this.report(() => generateCall(meta, startedAt, t0, result));
+      if (onRefusal && result.finishReason.unified === "content-filter") {
+        const raw = result.finishReason.raw ?? result.finishReason.unified;
+        throw new Refused(String(raw).toLowerCase());
+      }
       return result;
     }, options.abortSignal);
   }
@@ -125,6 +151,8 @@ export class FallbackModel implements LanguageModelV4 {
           });
         } catch (err) {
           last = err;
+          // The same prompt is refused the same way: no retry here, the next deployment gets it.
+          if (err instanceof Refused) break;
           if (!isRetryable(err)) throw err;
           this.recordFailure(d.label);
           if (attempt + 1 < this.opts.attemptsPerDeployment)
@@ -133,6 +161,7 @@ export class FallbackModel implements LanguageModelV4 {
       }
       this.opts.onFallback?.({ from: d.label, to: order[i + 1]?.label ?? null, error: last });
     }
+    if (last instanceof Refused) throw new ModelRefusalError(this.group, last.finishReason);
     throw last;
   }
 
