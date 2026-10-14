@@ -7680,8 +7680,12 @@ msgid "Issue payment link"
 msgstr "Genera link di pagamento"
 
 #: src/components/auth/SignedInElsewhere.tsx:77
-msgid "It has been logged in on another device since {elsewhereSince}. For security, an account can be logged in on one device at a time."
-msgstr "È connesso su un altro dispositivo dal {elsewhereSince}. Per sicurezza, un account può essere connesso su un solo dispositivo alla volta."
+#~ msgid "It has been logged in on another device since {elsewhereSince}. For security, an account can be logged in on one device at a time."
+#~ msgstr "È connesso su un altro dispositivo dal {elsewhereSince}. Per sicurezza, un account può essere connesso su un solo dispositivo alla volta."
+
+#: src/components/auth/SignedInElsewhere.tsx:77
+msgid "It has been logged in on other devices since {elsewhereSince}. For security, an account can be logged in on up to two devices at a time."
+msgstr "È connesso su altri dispositivi dal {elsewhereSince}. Per sicurezza, un account può essere connesso su un massimo di due dispositivi alla volta."
 
 #. placeholder {0}: settings.org_name
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:706
@@ -7693,8 +7697,12 @@ msgid "It is asking to"
 msgstr "Richiede di"
 
 #: src/components/auth/SignedInElsewhere.tsx:83
-msgid "It is logged in on another device. For security, an account can be logged in on one device at a time."
-msgstr "È connesso su un altro dispositivo. Per sicurezza, un account può essere connesso su un solo dispositivo alla volta."
+#~ msgid "It is logged in on another device. For security, an account can be logged in on one device at a time."
+#~ msgstr "È connesso su un altro dispositivo. Per sicurezza, un account può essere connesso su un solo dispositivo alla volta."
+
+#: src/components/auth/SignedInElsewhere.tsx:83
+msgid "It is logged in on two other devices. For security, an account can be logged in on up to two devices at a time."
+msgstr "È connesso su altri due dispositivi. Per sicurezza, un account può essere connesso su un massimo di due dispositivi alla volta."
 
 #. js-lingui-explicit-id
 #: src/components/participant/ConversationErrorView.tsx:41
@@ -8517,8 +8525,12 @@ msgid "Log out and use the invited email"
 msgstr "Esci e usa l'email invitata"
 
 #: src/components/auth/SignedInElsewhere.tsx:102
-msgid "Logging in here logs the other device out."
-msgstr "Accedendo qui, l'altro dispositivo viene disconnesso."
+#~ msgid "Logging in here logs the other device out."
+#~ msgstr "Accedendo qui, l'altro dispositivo viene disconnesso."
+
+#: src/components/auth/SignedInElsewhere.tsx:102
+msgid "Logging in here logs the other devices out."
+msgstr "Accedere qui disconnette gli altri dispositivi."
 
 #: src/components/chat/agenticToolActivity.ts:171
 msgid "Logging this with the dembrane team"
@@ -15554,8 +15566,12 @@ msgid "This account has an active subscription. Ask the customer to cancel it fr
 msgstr "Questo account ha un abbonamento attivo. Chiedi al cliente di cancellarlo dalla pagina di fatturazione prima di modificare il livello."
 
 #: src/components/auth/SignedInElsewhere.tsx:73
-msgid "This account is logged in somewhere else"
-msgstr "Questo account è connesso altrove"
+msgid "This account is logged in on two other devices"
+msgstr "Questo account è connesso su altri due dispositivi"
+
+#: src/components/auth/SignedInElsewhere.tsx:73
+#~ msgid "This account is logged in somewhere else"
+#~ msgstr "Questo account è connesso altrove"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:3135
 msgid "This area is for dembrane staff. If you think you should have access, email support@dembrane.com."

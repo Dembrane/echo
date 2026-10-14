@@ -5,7 +5,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError } from "better-auth/api";
 import { bearer, emailOTP, twoFactor } from "better-auth/plugins";
 import { and, eq } from "drizzle-orm";
-import { holdFor, type OnOverlap, oneBrowser, recordHeld } from "./overlap";
+import { DEVICE_ID_HEADER, holdFor, type OnOverlap, oneBrowser, recordHeld } from "./overlap";
 
 export interface AuthOptions {
   readonly db: Db;
@@ -221,7 +221,7 @@ export function createAuth(opts: AuthOptions) {
           // A suspended or archived user (account deletion requested, staff action) gets no
           // session. Unverified is left to Better Auth, which refuses password sign-in until
           // the email is verified and verifies it on a code sign-in.
-          // A sign-in from the dashboard while the account is signed in on another browser
+          // A sign-in from the dashboard while the account is signed in on two other browsers
           // is created held: it signs nobody in until the person replaces the other sessions.
           before: async (session, ctx) => {
             const [row] = await opts.db
@@ -239,7 +239,30 @@ export function createAuth(opts: AuthOptions) {
             return { data: { ...session, ...hold, lastSeenAt: new Date() } };
           },
           after: async (session) => {
-            if (session.held !== true || typeof session.deviceId !== "string") return;
+            if (typeof session.deviceId !== "string") return;
+            // Sign-ins can create sessions concurrently. Serialize the final capacity
+            // check per account before returning a usable sign-in to the browser.
+            const deviceId = session.deviceId;
+            const held = await opts.db.transaction(async (tx) => {
+              await tx
+                .select({ id: schema.auth_user.id })
+                .from(schema.auth_user)
+                .where(eq(schema.auth_user.id, session.userId))
+                .for("update");
+              if (session.held === true) return true;
+              const hold = await holdFor(
+                tx,
+                session.userId,
+                new Headers({ [DEVICE_ID_HEADER]: deviceId }),
+              );
+              if (hold.held)
+                await tx
+                  .update(schema.auth_session)
+                  .set({ held: true })
+                  .where(eq(schema.auth_session.id, session.id));
+              return hold.held;
+            });
+            if (!held) return;
             await recordHeld(
               opts.db,
               { id: session.id, userId: session.userId, deviceId: session.deviceId },

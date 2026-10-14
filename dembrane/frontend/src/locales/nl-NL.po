@@ -7678,8 +7678,12 @@ msgid "Issue payment link"
 msgstr "Betaallink uitgeven"
 
 #: src/components/auth/SignedInElsewhere.tsx:77
-msgid "It has been logged in on another device since {elsewhereSince}. For security, an account can be logged in on one device at a time."
-msgstr "Het is sinds {elsewhereSince} ingelogd op een ander apparaat. Uit veiligheidsoverwegingen kan een account op één apparaat tegelijk ingelogd zijn."
+#~ msgid "It has been logged in on another device since {elsewhereSince}. For security, an account can be logged in on one device at a time."
+#~ msgstr "Het is sinds {elsewhereSince} ingelogd op een ander apparaat. Uit veiligheidsoverwegingen kan een account op één apparaat tegelijk ingelogd zijn."
+
+#: src/components/auth/SignedInElsewhere.tsx:77
+msgid "It has been logged in on other devices since {elsewhereSince}. For security, an account can be logged in on up to two devices at a time."
+msgstr "Het is sinds {elsewhereSince} ingelogd op andere apparaten. Uit veiligheidsoverwegingen kan een account op maximaal twee apparaten tegelijk ingelogd zijn."
 
 #. placeholder {0}: settings.org_name
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:706
@@ -7691,8 +7695,12 @@ msgid "It is asking to"
 msgstr "Het vraagt om"
 
 #: src/components/auth/SignedInElsewhere.tsx:83
-msgid "It is logged in on another device. For security, an account can be logged in on one device at a time."
-msgstr "Het is ingelogd op een ander apparaat. Uit veiligheidsoverwegingen kan een account op één apparaat tegelijk ingelogd zijn."
+#~ msgid "It is logged in on another device. For security, an account can be logged in on one device at a time."
+#~ msgstr "Het is ingelogd op een ander apparaat. Uit veiligheidsoverwegingen kan een account op één apparaat tegelijk ingelogd zijn."
+
+#: src/components/auth/SignedInElsewhere.tsx:83
+msgid "It is logged in on two other devices. For security, an account can be logged in on up to two devices at a time."
+msgstr "Het is ingelogd op twee andere apparaten. Uit veiligheidsoverwegingen kan een account op maximaal twee apparaten tegelijk ingelogd zijn."
 
 #. js-lingui-explicit-id
 #: src/components/participant/ConversationErrorView.tsx:41
@@ -8515,8 +8523,12 @@ msgid "Log out and use the invited email"
 msgstr "Uitloggen en het uitgenodigde e-mailadres gebruiken"
 
 #: src/components/auth/SignedInElsewhere.tsx:102
-msgid "Logging in here logs the other device out."
-msgstr "Als je hier inlogt, wordt het andere apparaat uitgelogd."
+#~ msgid "Logging in here logs the other device out."
+#~ msgstr "Als je hier inlogt, wordt het andere apparaat uitgelogd."
+
+#: src/components/auth/SignedInElsewhere.tsx:102
+msgid "Logging in here logs the other devices out."
+msgstr "Als je hier inlogt, worden de andere apparaten uitgelogd."
 
 #: src/components/chat/agenticToolActivity.ts:171
 msgid "Logging this with the dembrane team"
@@ -15551,8 +15563,12 @@ msgid "This account has an active subscription. Ask the customer to cancel it fr
 msgstr "Dit account heeft een actief abonnement. Vraag de klant om het op te zeggen via de factureringspagina voordat je het niveau aanpast."
 
 #: src/components/auth/SignedInElsewhere.tsx:73
-msgid "This account is logged in somewhere else"
-msgstr "Dit account is ergens anders ingelogd"
+msgid "This account is logged in on two other devices"
+msgstr "Dit account is ingelogd op twee andere apparaten"
+
+#: src/components/auth/SignedInElsewhere.tsx:73
+#~ msgid "This account is logged in somewhere else"
+#~ msgstr "Dit account is ergens anders ingelogd"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:3135
 msgid "This area is for dembrane staff. If you think you should have access, email support@dembrane.com."

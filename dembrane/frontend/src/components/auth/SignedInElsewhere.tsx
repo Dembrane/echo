@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { testId } from "@/lib/testUtils";
 
 /**
- * The page a sign-in lands on when the account is logged in on another browser: one
- * decision, to log that browser out or to go back. It covers the login page it is rendered
+ * The page a sign-in lands on when the account has reached its two-device limit: one
+ * decision, to log those devices out or to go back. It covers the login page it is rendered
  * from, in the look of onboarding, and sits under the transition curtain so the curtain
  * opens onto it.
  */
@@ -70,19 +70,19 @@ export const SignedInElsewhere = ({
 					<Stack gap="lg">
 						<Stack gap="xs">
 							<Title order={2}>
-								<Trans>This account is logged in somewhere else</Trans>
+								<Trans>This account is logged in on two other devices</Trans>
 							</Title>
 							<Text size="sm" lh={1.6}>
 								{elsewhereSince ? (
 									<Trans>
-										It has been logged in on another device since{" "}
+										It has been logged in on other devices since{" "}
 										{elsewhereSince}. For security, an account can be logged in
-										on one device at a time.
+										on up to two devices at a time.
 									</Trans>
 								) : (
 									<Trans>
-										It is logged in on another device. For security, an account
-										can be logged in on one device at a time.
+										It is logged in on two other devices. For security, an
+										account can be logged in on up to two devices at a time.
 									</Trans>
 								)}
 							</Text>
@@ -99,7 +99,7 @@ export const SignedInElsewhere = ({
 								<Trans>Log in anyway</Trans>
 							</Button>
 							<Text size="xs" c="dimmed">
-								<Trans>Logging in here logs the other device out.</Trans>
+								<Trans>Logging in here logs the other devices out.</Trans>
 							</Text>
 							<Button
 								fullWidth
