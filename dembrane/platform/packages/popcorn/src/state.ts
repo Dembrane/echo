@@ -68,6 +68,8 @@ export function normalizeState(raw: unknown): Json {
     }
     state.translations = tables;
   }
+  // The transcripts the last map request covered.
+  if (typeof raw.map_fingerprint === "string") state.map_fingerprint = raw.map_fingerprint;
   return state;
 }
 

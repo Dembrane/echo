@@ -4,7 +4,7 @@ import { join } from "node:path";
 import type { Json } from "../src/py";
 import { promptText } from "../src/tick/model";
 import { QuoteBook } from "../src/tick/shapes";
-import { PROMPT_NAMES, runPipeline } from "../src/tick/tensions";
+import { Judge, PROMPT_NAMES, runPipeline } from "../src/tick/tensions";
 
 // The Python pipeline's recorded judgements (fixtures/tick/gen/tick_tensions.py), replayed
 // by the words of each request: same requests, same tensions, same quotes, same counts.
@@ -39,4 +39,31 @@ test("the tensions pipeline asks and answers what the Python did", async () => {
   expect(JSON.parse(JSON.stringify(result))).toEqual(fixture.result);
   expect(book.quotes).toEqual(fixture.quotes);
   expect(asked.sort()).toEqual(fixture.calls.map((c) => c.user).sort());
+});
+
+test("a judge builds a prompt only when its call starts", async () => {
+  let built = 0;
+  let finished = 0;
+  let peak = 0;
+  const judge = new Judge(async () => {
+    peak = Math.max(peak, built - finished);
+    await Bun.sleep(5);
+    finished++;
+    return {};
+  }, 3);
+  await Promise.all(
+    Array.from({ length: 30 }, () =>
+      judge.call(
+        "s",
+        () => {
+          built++;
+          return "u";
+        },
+        {},
+      ),
+    ),
+  );
+  expect(built).toBe(30);
+  // Never more prompts alive than slots.
+  expect(peak).toBeLessThanOrEqual(3);
 });

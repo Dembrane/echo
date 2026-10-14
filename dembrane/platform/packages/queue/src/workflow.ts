@@ -1,4 +1,5 @@
 import { DBOS, type StepConfig } from "@dbos-inc/dbos-sdk";
+import { correlation, withCorrelation } from "@dembrane/observability";
 
 /**
  * A durable multi-step flow: each step's result is checkpointed in Postgres, and after a
@@ -10,7 +11,13 @@ export function workflow<Args extends unknown[], R>(
   name: string,
   fn: (...args: Args) => Promise<R>,
 ) {
-  return DBOS.registerWorkflow(fn, { name });
+  // A workflow the DBOS queue starts has no caller context: its model calls are metered
+  // under the workflow's name.
+  const run = (...args: Args) =>
+    correlation()
+      ? fn(...args)
+      : withCorrelation({ requestId: DBOS.workflowID ?? name, operation: name }, () => fn(...args));
+  return DBOS.registerWorkflow(run, { name });
 }
 
 export function step<R>(

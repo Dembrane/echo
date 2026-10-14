@@ -11,7 +11,7 @@ import {
 } from "@dembrane/analysis";
 import type { Db } from "@dembrane/db";
 import type { Completer } from "@dembrane/llm";
-import type { Logger } from "@dembrane/observability";
+import { correlation, type Logger, withCorrelation } from "@dembrane/observability";
 import {
   defineJob,
   type JobDefinition,
@@ -24,7 +24,7 @@ import { z } from "zod";
 import { analysisDeck, type DeckAnalysis, deckViewHook } from "./deck";
 import { publishNudge } from "./events";
 import { popcornTick } from "./jobs";
-import { dict, orStr, pyIso } from "./py";
+import { dict, list, orStr, pyIso } from "./py";
 import type { PopcornFlags } from "./service";
 import { client, popcornStore, type Row } from "./storage";
 import { PopcornModel } from "./tick/model";
@@ -138,6 +138,8 @@ export interface TickArgs {
   readonly loopId: string;
   readonly tickKind: string;
   readonly requestId: string | null;
+  /** The conversations whose finish booked the read. */
+  readonly conversationIds?: readonly string[] | null;
 }
 
 /** One id per request, so both deliveries of an on-request tick are one run. */
@@ -199,11 +201,13 @@ export async function dispatchDueTicks(
     try {
       if (!loopId) throw new Error("popcorn_tick payload missing loop_id");
       const requestId = orStr(payload.request_id) || null;
+      const conversationIds = list(payload.conversation_ids).map(String);
       await start({
         workflowId: tickWorkflowId(requestId, String(row.id)),
         loopId,
         tickKind: orStr(payload.tick_kind, "scheduled"),
         requestId,
+        ...(conversationIds.length && { conversationIds }),
       });
     } catch (e) {
       error = e instanceof Error ? e.message : String(e);
@@ -242,15 +246,26 @@ export function popcornWorker(deps: PopcornWorkerDeps): {
       // A resumed workflow reruns its one step: the tick is written to be re-read from the
       // state it left, and the lease token it holds is its own.
       workflow(TICK_WORKFLOW, async (args: TickArgs) => {
-        const outcome = await step("tick", async () => {
-          const result = await runPopcornTick(
-            tickDeps(deps, args.workflowId, analysis),
-            args.loopId,
-            args.tickKind,
-            args.requestId,
-          );
-          return result.status;
-        });
+        // Model calls are metered under the kind of read, e.g. popcorn.tick.finish.
+        const c = correlation();
+        const outcome = await withCorrelation(
+          {
+            ...c,
+            requestId: c?.requestId ?? args.workflowId,
+            operation: `popcorn.tick.${args.tickKind}`,
+          },
+          () =>
+            step("tick", async () => {
+              const result = await runPopcornTick(
+                tickDeps(deps, args.workflowId, analysis),
+                args.loopId,
+                args.tickKind,
+                args.requestId,
+                args.conversationIds ?? null,
+              );
+              return result.status;
+            }),
+        );
         deps.logger.info({ loop_id: args.loopId, outcome }, "popcorn tick finished");
       });
       await queue.work(popcornTick, { concurrency: 8 }, async (p, job) => {

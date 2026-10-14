@@ -226,12 +226,12 @@ export function popcornStore(sql: Sql) {
       });
     },
 
-    /** A read booked by a finished conversation that has not started yet. */
+    /** A read booked by a finished conversation that has not started yet, locked against the worker's claim until the caller's transaction ends. */
     async pendingFinishRead(loopId: string): Promise<Row | null> {
       const [r] = await sql`select id, payload from scheduled_task
         where task_type = ${TASK_POPCORN_TICK} and status = 'scheduled'
           and payload->>'loop_id' = ${loopId} and payload->>'tick_kind' = ${FINISH_TICK}
-        order by scheduled_at limit 1`;
+        order by scheduled_at limit 1 for update`;
       return r ?? null;
     },
 
