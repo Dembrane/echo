@@ -25,22 +25,16 @@ import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useVideoWakeLockFallback } from "@/hooks/useVideoWakeLockFallback";
-import { finishConversation } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 import { I18nLink } from "../../../../components/common/i18nLink";
 import { ScrollToBottomButton } from "../../../../components/common/ScrollToBottom";
 import { toast } from "../../../../components/common/Toaster";
-import { useProjectSharingLink } from "../../../../components/project/ProjectQRCode";
 import { useDocumentHidden } from "../../../../hooks/useDocumentHidden";
-import {
-	useConversationChunksQuery,
-	useConversationQuery,
-	useParticipantProjectById,
-	useUploadConversationChunk,
-} from "../../../hooks";
+import { useUploadConversationChunk } from "../../../hooks";
 import { ParticipantSettingsModal } from "../../settings/ParticipantSettingsModal";
 import { useConversationArtefacts } from "../../verify/hooks";
 import { ConversationErrorView } from "../ConversationErrorView";
+import { useParticipantConversation } from "../useParticipantConversation";
 import useChunkedAudioRecorder from "./hooks/useChunkedAudioRecorder";
 import { useMonitorBeacon } from "./hooks/useMonitorBeacon";
 import { usePendingUploads } from "./hooks/usePendingUploads";
@@ -90,9 +84,14 @@ export const ParticipantConversationAudio = () => {
 	const savedDeviceId = Cookies.get("micDeviceId");
 	const deviceId = savedDeviceId || "";
 
-	const projectQuery = useParticipantProjectById(projectId ?? "");
-	const conversationQuery = useConversationQuery(projectId, conversationId);
-	const chunks = useConversationChunksQuery(projectId, conversationId);
+	const {
+		chunksQuery: chunks,
+		conversationQuery,
+		finish,
+		loadState,
+		newConversationLink,
+		projectQuery,
+	} = useParticipantConversation(projectId, conversationId);
 	const uploadChunkMutation = useUploadConversationChunk();
 	const artefactsQuery = useConversationArtefacts(conversationId);
 	const pendingUploads = usePendingUploads();
@@ -155,15 +154,11 @@ export const ParticipantConversationAudio = () => {
 
 	const { s3Status, retry: handleS3Reconnect } = useS3ConnectivityCheck(
 		conversationId,
-		{ queriesLoading: conversationQuery.isLoading || projectQuery.isLoading },
+		{ queriesLoading: loadState === "loading" },
 	);
 
 	// Navigation and language
 	const navigate = useI18nNavigate();
-	const newConversationLink = useProjectSharingLink(
-		projectQuery.data,
-		"portal",
-	);
 	const wakeLock = useRecordingWakeLock();
 
 	// Ref to store callback that will be set after audioRecorder is created
@@ -348,11 +343,7 @@ export const ParticipantConversationAudio = () => {
 
 			await waitForPendingUploads("finish");
 
-			await finishConversation(conversationId ?? "");
-			posthog.capture("conversation_finished", {
-				conversation_id: conversationId,
-				project_id: projectId,
-			});
+			await finish();
 			dispatch({ type: "finishSucceeded" });
 			navigate(finishUrl);
 		} catch (error) {
@@ -447,16 +438,12 @@ export const ParticipantConversationAudio = () => {
 		return () => observer.disconnect();
 	}, [footer]);
 
-	if (conversationQuery.isLoading || projectQuery.isLoading) {
+	if (loadState === "loading") {
 		return <BeautifulLoading quiet className="min-h-dvh" />;
 	}
 
 	// Check if conversation is not present or failed to load
-	if (
-		conversationQuery.isError ||
-		!conversationQuery.data ||
-		conversationDeletedDuringRecording
-	) {
+	if (loadState === "failed" || conversationDeletedDuringRecording) {
 		return (
 			<ConversationErrorView
 				conversationDeletedDuringRecording={conversationDeletedDuringRecording}
