@@ -97,6 +97,26 @@
 					}
 				}
 			}
+		},
+		{
+			"includes": ["src/portal/**"],
+			"linter": {
+				"rules": {
+					"style": {
+						"noRestrictedImports": {
+							"level": "error",
+							"options": {
+								"patterns": [
+									{
+										"group": ["../../../*", "../../../**"],
+										"message": "Import with an @/ alias instead of climbing three or more folders: @/portal/... inside the portal, @/components/..., @/hooks/... or @/lib/... outside it. Deep relative paths break silently when files move."
+									}
+								]
+							}
+						}
+					}
+				}
+			}
 		}
 	],
 	"vcs": {

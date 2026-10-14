@@ -167,13 +167,18 @@ let conversationQuery: {
 };
 let project: Record<string, unknown>;
 let chunks: { id: string }[];
+let uploadPending: boolean;
 
-vi.mock("../../../hooks", () => ({
+vi.mock("@/portal/components/conversation/queries", () => ({
 	useConversationChunksQuery: () => ({ data: chunks }),
 	useConversationQuery: () => conversationQuery,
+}));
+vi.mock("@/portal/hooks/useParticipantProjectById", () => ({
 	useParticipantProjectById: () => ({ data: project, isLoading: false }),
+}));
+vi.mock("./hooks/useUploadConversationChunk", () => ({
 	useUploadConversationChunk: () => ({
-		isPending: false,
+		isPending: uploadPending,
 		mutateAsync: (...args: unknown[]) => uploadChunk(...args),
 	}),
 }));
@@ -211,6 +216,7 @@ beforeEach(() => {
 	};
 	project = { id: "p1" };
 	chunks = [];
+	uploadPending = false;
 	recorder.hadInterruption = false;
 	finish.mockResolvedValue({});
 	ping.mockResolvedValue(true);
@@ -334,6 +340,28 @@ describe("recording", () => {
 			screen.getByTestId("portal-audio-recording-timer").textContent,
 		).toContain("01:15");
 	});
+
+	it("runs the timer live again once resumed, and can stop again", async () => {
+		renderAudio();
+		await startRecording();
+		act(() => recorder.setRecordingTime(75));
+		fireEvent.click(screen.getByTestId("portal-audio-stop-button"));
+		fireEvent.click(
+			await screen.findByTestId("portal-audio-stop-resume-button"),
+		);
+
+		act(() => recorder.setRecordingTime(80));
+		await waitFor(() =>
+			expect(
+				screen.getByTestId("portal-audio-recording-timer").textContent,
+			).toContain("01:20"),
+		);
+
+		fireEvent.click(screen.getByTestId("portal-audio-stop-button"));
+		expect(
+			await screen.findByTestId("portal-audio-stop-finish-button"),
+		).toBeTruthy();
+	});
 });
 
 describe("finishing", () => {
@@ -392,6 +420,48 @@ describe("finishing", () => {
 		);
 	});
 
+	it("shows the modal's Finish as loading until the conversation is finished", async () => {
+		let resolveFinish: () => void = () => {};
+		finish.mockReturnValue(
+			new Promise<void>((resolve) => {
+				resolveFinish = resolve;
+			}),
+		);
+		renderAudio();
+		await startRecording();
+		await stopAndFinish();
+
+		const finishButton = screen.getByTestId("portal-audio-stop-finish-button");
+		await waitFor(() =>
+			expect(finishButton.hasAttribute("data-loading")).toBe(true),
+		);
+		expect(navigate).not.toHaveBeenCalled();
+
+		resolveFinish();
+		await waitFor(() =>
+			expect(navigate).toHaveBeenCalledWith("/p1/conversation/c1/finish"),
+		);
+	});
+
+	it("holds the modal's Finish while a chunk is still uploading", async () => {
+		const { rerender } = renderAudio();
+		await startRecording();
+		fireEvent.click(screen.getByTestId("portal-audio-stop-button"));
+		const finishButton = await screen.findByTestId(
+			"portal-audio-stop-finish-button",
+		);
+
+		uploadPending = true;
+		rerender(tree());
+		expect(screen.getByText("Uploading audio...")).toBeTruthy();
+		expect(finishButton.hasAttribute("disabled")).toBe(true);
+
+		uploadPending = false;
+		rerender(tree());
+		expect(screen.queryByText("Uploading audio...")).toBeNull();
+		expect(finishButton.hasAttribute("disabled")).toBe(false);
+	});
+
 	it("stays on the page and shows an error when finish fails", async () => {
 		finish.mockRejectedValue(new Error("boom"));
 		vi.spyOn(console, "error").mockImplementation(() => {});
@@ -401,6 +471,58 @@ describe("finishing", () => {
 
 		await waitFor(() => expect(toastError).toHaveBeenCalled());
 		expect(navigate).not.toHaveBeenCalled();
+	});
+
+	it("shows the modal's Finish as loading after skipping verification", async () => {
+		project = {
+			id: "p1",
+			is_verify_enabled: true,
+			is_verify_on_finish_enabled: true,
+		};
+		let resolveFinish: () => void = () => {};
+		finish.mockReturnValue(
+			new Promise<void>((resolve) => {
+				resolveFinish = resolve;
+			}),
+		);
+		renderAudio();
+		await startRecording();
+		act(() => recorder.setRecordingTime(75));
+		await stopAndFinish();
+		fireEvent.click(
+			await screen.findByTestId("portal-audio-verify-skip-button"),
+		);
+
+		// Past the modal's close transition: a closing modal keeps its content
+		// mounted for ~200ms, spinner and all.
+		await act(() => new Promise((resolve) => setTimeout(resolve, 300)));
+		expect(
+			screen
+				.getByTestId("portal-audio-stop-finish-button")
+				.hasAttribute("data-loading"),
+		).toBe(true);
+		expect(navigate).not.toHaveBeenCalled();
+
+		resolveFinish();
+		await waitFor(() =>
+			expect(navigate).toHaveBeenCalledWith("/p1/conversation/c1/finish"),
+		);
+	});
+
+	it("finishes from the bar's Finish without recording first", async () => {
+		chunks = [{ id: "chunk1" }];
+		renderAudio();
+
+		fireEvent.click(screen.getByTestId("portal-audio-finish-button"));
+		expect(screen.getByTestId("portal-audio-recording-timer")).toBeTruthy();
+		expect(screen.queryByTestId("portal-audio-record-button")).toBeNull();
+
+		fireEvent.click(
+			await screen.findByTestId("portal-audio-stop-finish-button"),
+		);
+		await waitFor(() =>
+			expect(navigate).toHaveBeenCalledWith("/p1/conversation/c1/finish"),
+		);
 	});
 
 	it("shows Finish only once the conversation has chunks", async () => {

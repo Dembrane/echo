@@ -16,37 +16,31 @@ import {
 	UploadSimpleIcon,
 } from "@phosphor-icons/react";
 import clsx from "clsx";
-import posthog from "posthog-js";
 import { useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { I18nLink } from "@/components/common/i18nLink";
 import { toast } from "@/components/common/Toaster";
-import { useProjectSharingLink } from "@/components/project/ProjectQRCode";
 import { useElementOnScreen } from "@/hooks/useElementOnScreen";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { finishConversation } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 import { ConversationErrorView } from "@/portal/components/conversation/ConversationErrorView";
 import { ConversationMessages } from "@/portal/components/conversation/ConversationMessages";
-import {
-	useConversationChunksQuery,
-	useConversationQuery,
-	useParticipantProjectById,
-	useUploadConversationTextChunk,
-} from "@/portal/hooks";
+import { useUploadConversationTextChunk } from "@/portal/components/conversation/text/useUploadConversationTextChunk";
+import { useParticipantConversation } from "@/portal/components/conversation/useParticipantConversation";
 
 export const ParticipantConversationText = () => {
 	const { projectId, conversationId } = useParams();
 	const [searchParams] = useSearchParams();
-	const projectQuery = useParticipantProjectById(projectId ?? "");
-	const conversationQuery = useConversationQuery(projectId, conversationId);
-	const chunks = useConversationChunksQuery(projectId, conversationId);
+	const {
+		chunksQuery,
+		conversationQuery,
+		finish,
+		loadState,
+		newConversationLink,
+		projectQuery,
+	} = useParticipantConversation(projectId, conversationId);
 	const uploadChunkMutation = useUploadConversationTextChunk();
-	const newConversationLink = useProjectSharingLink(
-		projectQuery.data,
-		"portal",
-	);
 
 	const [text, setText] = useState(() => {
 		return (
@@ -95,11 +89,7 @@ export const ParticipantConversationText = () => {
 	const handleConfirmFinishButton = async () => {
 		setIsStopping(true);
 		try {
-			await finishConversation(conversationId ?? "");
-			posthog.capture("conversation_finished", {
-				conversation_id: conversationId,
-				project_id: projectId,
-			});
+			await finish();
 			closeFinishModal();
 			navigate(finishUrl);
 		} catch (error) {
@@ -109,12 +99,11 @@ export const ParticipantConversationText = () => {
 		}
 	};
 
-	if (conversationQuery.isLoading || projectQuery.isLoading) {
+	if (loadState === "loading") {
 		return <BeautifulLoading quiet className="min-h-dvh" />;
 	}
 
-	// Check if conversation is not present or failed to load
-	if (conversationQuery.isError || !conversationQuery.data) {
+	if (loadState === "failed") {
 		return (
 			<ConversationErrorView
 				conversationDeletedDuringRecording={false}
@@ -237,16 +226,18 @@ export const ParticipantConversationText = () => {
 							<MicrophoneIcon size={20} />
 						</Button>
 					</I18nLink>
-					{text.trim() === "" && chunks.data && chunks.data.length > 0 && (
-						<Button
-							size="lg"
-							onClick={openFinishModal}
-							leftSection={<CheckIcon size={20} />}
-							{...testId("portal-text-finish-button")}
-						>
-							<Trans id="participant.button.finish.text.mode">Finish</Trans>
-						</Button>
-					)}
+					{text.trim() === "" &&
+						chunksQuery.data &&
+						chunksQuery.data.length > 0 && (
+							<Button
+								size="lg"
+								onClick={openFinishModal}
+								leftSection={<CheckIcon size={20} />}
+								{...testId("portal-text-finish-button")}
+							>
+								<Trans id="participant.button.finish.text.mode">Finish</Trans>
+							</Button>
+						)}
 				</Group>
 			</Stack>
 		</div>

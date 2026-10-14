@@ -10,7 +10,7 @@ import {
 	waitFor,
 } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
-import { afterEach, beforeAll, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, expect, it, vi } from "vitest";
 import { ParticipantConversationText } from "./ParticipantConversationText";
 
 const navigate = vi.fn();
@@ -46,17 +46,22 @@ vi.mock("@/components/project/ProjectQRCode", () => ({
 	useProjectSharingLink: () => null,
 }));
 
-vi.mock("@/portal/hooks", () => ({
-	useConversationChunksQuery: () => ({ data: [{ id: "chunk1" }] }),
-	useConversationQuery: () => ({
-		data: { id: "c1" },
-		isError: false,
-		isLoading: false,
-	}),
+// What the queries return. Tests change these before rendering.
+let conversationQuery: { data?: unknown; isError: boolean; isLoading: boolean };
+let projectLoading: boolean;
+let chunks: { id: string }[];
+
+vi.mock("@/portal/components/conversation/queries", () => ({
+	useConversationChunksQuery: () => ({ data: chunks }),
+	useConversationQuery: () => conversationQuery,
+}));
+vi.mock("@/portal/hooks/useParticipantProjectById", () => ({
 	useParticipantProjectById: () => ({
 		data: { id: "p1" },
-		isLoading: false,
+		isLoading: projectLoading,
 	}),
+}));
+vi.mock("./useUploadConversationTextChunk", () => ({
 	useUploadConversationTextChunk: () => ({
 		isPending: false,
 		mutate: () => {},
@@ -85,6 +90,12 @@ beforeAll(() => {
 			unobserve() {}
 		};
 	}
+});
+
+beforeEach(() => {
+	conversationQuery = { data: { id: "c1" }, isError: false, isLoading: false };
+	projectLoading = false;
+	chunks = [{ id: "chunk1" }];
 });
 
 afterEach(() => {
@@ -148,4 +159,42 @@ it("stays on the page and shows an error when finish fails", async () => {
 		"conversation_finished",
 		expect.anything(),
 	);
+});
+
+it("shows the loading screen while the conversation or project loads", () => {
+	conversationQuery = { isError: false, isLoading: true };
+	renderText();
+	expect(screen.queryByTestId("portal-text-input-textarea")).toBeNull();
+	cleanup();
+
+	conversationQuery = { data: { id: "c1" }, isError: false, isLoading: false };
+	projectLoading = true;
+	renderText();
+	expect(screen.queryByTestId("portal-text-input-textarea")).toBeNull();
+});
+
+it("shows the error view when the conversation fails to load or is missing", () => {
+	conversationQuery = { isError: true, isLoading: false };
+	renderText();
+	expect(screen.getByText("Something went wrong")).toBeTruthy();
+	cleanup();
+
+	conversationQuery = { isError: false, isLoading: false };
+	renderText();
+	expect(screen.getByText("Something went wrong")).toBeTruthy();
+});
+
+it("shows Finish only with chunks and nothing typed", () => {
+	chunks = [];
+	renderText();
+	expect(screen.queryByTestId("portal-text-finish-button")).toBeNull();
+	cleanup();
+
+	chunks = [{ id: "chunk1" }];
+	renderText();
+	expect(screen.getByTestId("portal-text-finish-button")).toBeTruthy();
+	fireEvent.change(screen.getByTestId("portal-text-input-textarea"), {
+		target: { value: "hello" },
+	});
+	expect(screen.queryByTestId("portal-text-finish-button")).toBeNull();
 });
