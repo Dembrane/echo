@@ -166,8 +166,7 @@ export const schema = defineSchema({
       "LLM_MULTI_MODAL_PRO",
       list.default(["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.5-flash"]),
       {
-        description:
-          "multi_modal_pro group, in fallback order. A transcription the model refuses moves down this list; gemini-3.5-flash is the one that answered refused chunks in the ECHO-980 replay, so keep it last.",
+        description: "multi_modal_pro group, in fallback order.",
       },
     ),
     embeddingModel: key("EMBEDDING_MODEL", z.string().default("text-embedding-004"), {

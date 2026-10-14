@@ -18,14 +18,6 @@ export class TranscriptParseError extends TranscriptionError {
   }
 }
 
-/** Every deployment refused the audio even with the safety filters off. */
-export class TranscriptRefusedError extends TranscriptionError {
-  override name = "TranscriptRefusedError";
-  constructor(readonly finishReason: string | null) {
-    super(`The model refused to transcribe this audio (finish_reason=${finishReason})`);
-  }
-}
-
 /** Errors that mean the chunk has no usable audio: marked failed, never retried. */
 const RECOVERABLE = [
   "no spoken audio",
@@ -53,7 +45,6 @@ export function isVertexInvalidArgument(err: unknown): boolean {
 /** _is_recoverable_error: the chunk is done (with an error) and must not be retried. */
 export function isRecoverableTranscriptionError(err: unknown): boolean {
   if (isVertexInvalidArgument(err)) return true;
-  if (err instanceof TranscriptRefusedError) return true;
   if (err instanceof TranscriptParseError && err.isTruncated) return true;
   const text = String((err as Error)?.message ?? err).toLowerCase();
   return RECOVERABLE.some((p) => text.includes(p));
@@ -62,7 +53,6 @@ export function isRecoverableTranscriptionError(err: unknown): boolean {
 /** A short label for why transcription failed, for logs and metrics. */
 export function transcriptionFailureReason(err: unknown): string {
   if (isVertexInvalidArgument(err)) return "bad_request";
-  if (err instanceof TranscriptRefusedError) return "refused";
   if (err instanceof TranscriptParseError && err.isTruncated) return "truncated_output";
   const text = String((err as Error)?.message ?? err).toLowerCase();
   return RECOVERABLE.find((p) => text.includes(p)) ?? "other";

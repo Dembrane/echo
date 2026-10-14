@@ -1,10 +1,7 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { join } from "node:path";
-import type { LanguageModelV4 } from "@ai-sdk/provider";
 import { AudioError } from "@dembrane/audio";
 import { newId } from "@dembrane/core";
-import { FallbackModel } from "@dembrane/llm";
-import { GeminiTranscriber } from "@dembrane/transcription";
 import { createChunk } from "../src/chunks";
 import { catchUpSummaries, finishConversation } from "../src/pipeline/defs";
 import {
@@ -206,105 +203,6 @@ run("conversation pipeline", () => {
     const [row] = await chunks(cid);
     expect(row?.transcript).toBeNull();
     expect(String(row?.error)).toContain("vertex 503");
-  });
-
-  /** Deployments that answer like prod's refusals (SAFETY, no text) until told otherwise. */
-  function refusingGroup(answers: Record<string, string[]>, calls: string[]) {
-    const deployment = (id: string): LanguageModelV4 => ({
-      specificationVersion: "v4",
-      provider: "fake",
-      modelId: id,
-      supportedUrls: {},
-      async doGenerate() {
-        const text = answers[id]?.shift();
-        calls.push(`${id}:${text ? "answer" : "safety"}`);
-        const usage = {
-          inputTokens: { total: 1, noCache: 1, cacheRead: 0, cacheWrite: 0 },
-          outputTokens: { total: 0, text: 0, reasoning: 0 },
-        };
-        return text
-          ? ({
-              content: [{ type: "text", text }],
-              finishReason: { unified: "stop", raw: "STOP" },
-              usage,
-              warnings: [],
-            } as never)
-          : ({
-              content: [],
-              finishReason: { unified: "content-filter", raw: "SAFETY" },
-              usage,
-              warnings: [],
-            } as never);
-      },
-      async doStream() {
-        throw new Error("not used");
-      },
-    });
-    const group = (name: string) =>
-      new FallbackModel(
-        name,
-        [
-          { label: "a", model: deployment("gemini-a") },
-          { label: "b", model: deployment("gemini-b") },
-        ],
-        { backoffMs: 0, sleep: async () => {} },
-      );
-    const pro = group("multi_modal_pro");
-    const fast = group("multi_modal_fast");
-    return new GeminiTranscriber(
-      { model: (g) => (g === "multi_modal_fast" ? fast : pro), embedding: () => ({}) as never },
-      h.deps.logger,
-    );
-  }
-
-  test("a chunk the first model refuses is transcribed by the next one", async () => {
-    const cid = newId();
-    await seed(h.sql, cid);
-    const calls: string[] = [];
-    const gemini = refusingGroup(
-      { "gemini-b": ['{"corrected_transcript": "hallo van b", "note": ""}'] },
-      calls,
-    );
-    const original = h.transcriber.transcribe.bind(h.transcriber);
-    h.transcriber.transcribe = (i) => gemini.transcribe(i);
-    try {
-      await upload(cid, await tone(join(h.bucket.root, "r1.webm"), 2), "r1.webm");
-      const [row] = await until(async () => {
-        const rows = await chunks(cid);
-        return rows[0]?.transcript || rows[0]?.error ? rows : null;
-      });
-      expect(row?.transcript).toBe("hallo van b");
-      expect(row?.error).toBeNull();
-    } finally {
-      h.transcriber.transcribe = original;
-    }
-  });
-
-  test("a chunk every model refuses ends at once with a refusal error", async () => {
-    const cid = newId();
-    await seed(h.sql, cid);
-    const calls: string[] = [];
-    const gemini = refusingGroup({}, calls);
-    const original = h.transcriber.transcribe.bind(h.transcriber);
-    h.transcriber.transcribe = (i) => gemini.transcribe(i);
-    try {
-      await upload(cid, await tone(join(h.bucket.root, "r2.webm"), 2), "r2.webm");
-      await h.queue.enqueue(finishConversation, { conversationId: cid }, { singletonKey: cid });
-      const c = await until(async () => {
-        const x = await conversation(cid);
-        return x.is_all_chunks_transcribed ? x : null;
-      });
-      const [row] = await chunks(cid);
-      expect(c.is_finished).toBe(true);
-      expect(row?.transcript).toBeNull();
-      expect(String(row?.error)).toContain(
-        "refused to transcribe this audio (finish_reason=safety)",
-      );
-      // One call per deployment, then done: no same-model retry, no step retries.
-      expect(calls).toEqual(["gemini-a:safety", "gemini-b:safety"]);
-    } finally {
-      h.transcriber.transcribe = original;
-    }
   });
 
   test("finishing before the last chunk is transcribed finalizes once the chunk lands", async () => {
