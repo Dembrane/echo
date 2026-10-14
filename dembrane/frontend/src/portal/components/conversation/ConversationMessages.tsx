@@ -4,7 +4,7 @@ import { Trans } from "@lingui/react/macro";
 import { Button, Modal, Stack, Title } from "@mantine/core";
 
 import { useDisclosure } from "@mantine/hooks";
-import { WarningCircleIcon, WifiSlashIcon } from "@phosphor-icons/react";
+import { CloudWarningIcon, WifiSlashIcon } from "@phosphor-icons/react";
 import { type PropsWithChildren, useEffect, useMemo, useRef } from "react";
 import { TipBanner } from "@/components/common/TipBanner";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
@@ -112,21 +112,33 @@ export const ConversationMessages = ({
 				<Trans>Welcome</Trans>
 			</Title>
 
-			{!isOnline && (
-				<TipBanner
-					icon={WifiSlashIcon}
-					message={t`You seem to be offline, please check your internet connection`}
-					tipLabel={t`Tip`}
-					color="yellow"
-				/>
-			)}
-
-			{!connectionHealthy && (
-				<TipBanner
-					icon={WarningCircleIcon}
-					message={t`Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists`}
-					color="yellow"
-				/>
+			{/* Audio waits on this device until the server has it, so neither
+			    being offline nor a server that stops answering is a reason to stop
+			    or reload. Typed text isn't kept. Offline says it all; the server
+			    line is only for when the device is online. */}
+			{!isOnline ? (
+				mode === "audio" ? (
+					<TipBanner
+						icon={WifiSlashIcon}
+						message={t`You seem to be offline, but keep going: your audio is saved on this device and will send once you're back online.`}
+						color="yellow"
+					/>
+				) : (
+					<TipBanner
+						icon={WifiSlashIcon}
+						message={t`You seem to be offline, please check your internet connection`}
+						tipLabel={t`Tip`}
+						color="yellow"
+					/>
+				)
+			) : (
+				!connectionHealthy && (
+					<TipBanner
+						icon={CloudWarningIcon}
+						message={t`We're having trouble reaching our server, but keep going: your audio is saved on this device and will send once we reconnect.`}
+						color="yellow"
+					/>
+				)
 			)}
 
 			{projectQuery.data && (
