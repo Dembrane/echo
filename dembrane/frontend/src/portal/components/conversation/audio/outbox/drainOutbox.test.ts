@@ -1,10 +1,19 @@
 import "fake-indexeddb/auto";
-import { afterEach, beforeEach, expect, it, type Mock, vi } from "vitest";
+import {
+	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	type Mock,
+	vi,
+} from "vitest";
 import {
 	createDrainer,
 	type Drainer,
 	type OutboxApi,
 	type OutboxEvent,
+	recordingLockName,
 } from "./drainOutbox";
 import { type OutboxStore, openOutboxStore } from "./outboxStore";
 
@@ -290,4 +299,106 @@ it("picks up an item enqueued while a pass is running", async () => {
 
 	expect(await store.list()).toEqual([]);
 	expect(calls()).toContain("confirm conv-2#2");
+});
+
+describe("slices left behind by a tab that died mid-chunk", () => {
+	const appendSlices = async (
+		groupId: string,
+		sizes: number[],
+		startedAt = now,
+	) => {
+		for (const [index, size] of sizes.entries()) {
+			await store.appendSlice({
+				audio: new Uint8Array(size).fill(index + 1).buffer,
+				conversationId: "conv-1",
+				groupId,
+				index,
+				mimeType: "audio/webm",
+				source: "PORTAL_AUDIO",
+				startedAt: new Date(startedAt).toISOString(),
+			});
+		}
+	};
+
+	const startWithLocksHeld = (...groupIds: string[]) =>
+		createDrainer({
+			api,
+			heldLocks: async () => new Set(groupIds.map(recordingLockName)),
+			now: () => now,
+			onEvent: (e) => events.push(e),
+			store,
+		}).start();
+
+	it("seals a group nobody is recording any more as a recovered chunk", async () => {
+		await appendSlices("dead", [800, 800]);
+
+		await startWithLocksHeld();
+
+		expect(await store.listSliceGroups()).toEqual([]);
+		const [item] = await store.list();
+		expect(item).toMatchObject({ conversationId: "conv-1", recovered: true });
+		expect(item.kind === "chunk" && item.audio.byteLength).toBe(1_600);
+		expect(events).toEqual([
+			expect.objectContaining({
+				group: expect.objectContaining({ groupId: "dead", sliceCount: 2 }),
+				type: "recovered",
+			}),
+		]);
+	});
+
+	it("leaves a group alone while a tab still holds its recording lock", async () => {
+		await appendSlices("live", [800, 800]);
+
+		await startWithLocksHeld("live");
+
+		expect((await store.listSliceGroups()).map((g) => g.groupId)).toEqual([
+			"live",
+		]);
+		expect(await store.list()).toEqual([]);
+	});
+
+	it("discards a dead group too small to hold any audio", async () => {
+		// An MP4 recording's first slice is only its header, about 600 bytes.
+		await appendSlices("header-only", [641]);
+
+		await startWithLocksHeld();
+
+		expect(await store.listSliceGroups()).toEqual([]);
+		expect(await store.list()).toEqual([]);
+		expect(events).toEqual([
+			expect.objectContaining({ reason: "empty", type: "discarded" }),
+		]);
+	});
+
+	it("discards a dead group that started over 7 days ago", async () => {
+		await appendSlices("ancient", [800, 800], now - 7 * DAY_MS - 1);
+
+		await startWithLocksHeld();
+
+		expect(await store.listSliceGroups()).toEqual([]);
+		expect(await store.list()).toEqual([]);
+		expect(events).toEqual([
+			expect.objectContaining({ reason: "expired", type: "discarded" }),
+		]);
+	});
+
+	it("leaves every group alone when the browser can't say which locks are held", async () => {
+		await appendSlices("unknown", [800, 800]);
+
+		await createDrainer({ api, heldLocks: async () => null, store }).start();
+
+		expect((await store.listSliceGroups()).map((g) => g.groupId)).toEqual([
+			"unknown",
+		]);
+	});
+
+	it("sends the recovered chunk like any other", async () => {
+		await appendSlices("dead", [800, 800]);
+
+		await startWithLocksHeld();
+		await drainer.drain();
+
+		expect(api.upload).toHaveBeenCalledTimes(1);
+		expect(await store.list()).toEqual([]);
+	});
 });
