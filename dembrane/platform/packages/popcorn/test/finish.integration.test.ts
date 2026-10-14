@@ -118,6 +118,8 @@ run("popcorn read when a conversation finishes", () => {
     let requestId = "";
     await dispatchDueTicks(workerDeps(later), async (args) => {
       requestId = args.requestId as string;
+      // The read is told which conversations finished.
+      expect(args.conversationIds).toEqual([one, two] as string[]);
     });
     // Started, no run yet: the dashboard shows it working, the last read is not it.
     expect(await finishReadState(store, ids.loop, null, later)).toEqual({
@@ -135,6 +137,22 @@ run("popcorn read when a conversation finishes", () => {
     // A later read a host asked for is not one.
     const other = { ...run, id: newId() };
     expect((await finishReadState(store, ids.loop, other, later)).after).toBeNull();
+  });
+
+  // A read the worker claims while a finish is being added to it must not lose that finish.
+  test("a waiting read being added to is not claimed until the addition is in", async () => {
+    await clear();
+    const now = new Date();
+    expect(await finish(ids.project, now, newId())).toBe(true);
+    const later = new Date(now.getTime() + FINISH_WINDOW_MS + 1);
+    let claimed = -1;
+    await client(database.db).begin(async (tx) => {
+      // The booking transaction has read the waiting row and is about to add to it.
+      expect(await popcornStore(tx).pendingFinishRead(ids.loop)).not.toBeNull();
+      claimed = await dispatchDueTicks(workerDeps(later), async () => {});
+    });
+    expect(claimed).toBe(0);
+    expect(await dispatchDueTicks(workerDeps(later), async () => {})).toBe(1);
   });
 
   test("a project without popcorn books nothing", async () => {

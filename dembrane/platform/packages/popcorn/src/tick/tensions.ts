@@ -149,7 +149,7 @@ export class Judge {
 
   call(
     system: string,
-    user: string,
+    user: string | (() => string),
     schema: Json,
     thinking = true,
     label = "model",
@@ -159,8 +159,10 @@ export class Judge {
         this.calls++;
         this.byLabel[label] = (this.byLabel[label] ?? 0) + 1;
         try {
+          // Built in the slot: a prompt waiting its turn holds no memory.
+          const text = typeof user === "function" ? user() : user;
           return await withTimeout(
-            () => this.generate({ system, user, schema, thinking }),
+            () => this.generate({ system, user: text, schema, thinking }),
             this.timeoutMs,
           );
         } catch (err) {
@@ -241,7 +243,7 @@ async function findCollisions(
   const collisionsFor = async (p: Json): Promise<[string, Json[]]> => {
     const out = await judge.call(
       prompt,
-      `ALL POSITIONS:\n${listing}\n\nFOCAL POSITION: ${p.id}`,
+      () => `ALL POSITIONS:\n${listing}\n\nFOCAL POSITION: ${p.id}`,
       COLLISIONS_SCHEMA,
       true,
       "collisions",

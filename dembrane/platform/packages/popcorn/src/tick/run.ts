@@ -255,6 +255,12 @@ async function updateLoopAfterTick(d: TickDeps, loop: Row, status: string) {
   }
 }
 
+/** Whether the session is live at `at`: on, and its window not yet over. */
+function liveAt(loop: Row, at: Date): boolean {
+  const expiresAt = parseDt(loop.expires_at);
+  return loop.status === "active" && !(expiresAt && at >= expiresAt);
+}
+
 /** A read finished and the next is booked: pages showing its status follow without polling. */
 async function nudgeLoop(d: TickDeps, loop: Row) {
   const reportId = asIdTruthy(loop.report_id);
@@ -1000,6 +1006,7 @@ export async function runPopcornTick(
   loopId: string,
   tickKind = "scheduled",
   requestId: string | null = null,
+  finished: readonly string[] | null = null,
 ): Promise<TickOutcome> {
   const startedAt = d.now();
   const sleep = d.sleep ?? ((ms: number) => Bun.sleep(ms));
@@ -1060,8 +1067,7 @@ export async function runPopcornTick(
       });
       return { status: "no_op", run };
     }
-    const expiresAt = parseDt(loop.expires_at);
-    if (expiresAt && startedAt >= expiresAt) {
+    if (!liveAt(loop, startedAt)) {
       // Live ended: back to manual. The deck stays; refresh still works.
       await d.store.updateLoop(
         loopId,
@@ -1216,12 +1222,19 @@ export async function runPopcornTick(
       t.window = modelWindow(String(t.text));
     }
 
+    // Outside a live session a finish read reads the conversations that finished and nothing
+    // session-wide; the host's Analyse catches the views and the map up.
+    const cut = tickKind === FINISH_TICK && !liveAt(currentLoop, startedAt);
+    const named = cut && finished?.length ? new Set(finished) : null;
+    const inScope = (t: Json) => !named || named.has(String(t.id));
     const conversations = state.conversations as Json;
     const order = state.order as string[];
     const changed: Json[] = [];
     for (const t of transcripts) {
       const cid = String(t.id);
       let entry = conversations[cid] as Json | undefined;
+      // A conversation this read does not read is not listed as being read.
+      if (entry === undefined && !inScope(t)) continue;
       if (entry === undefined) {
         entry = { id: cid, revision: 0, done: false, items: [] };
         conversations[cid] = entry;
@@ -1252,11 +1265,35 @@ export async function runPopcornTick(
     const analysisStale =
       transcripts.length > 0 && staleViews(state, analysisFingerprint, analysisViews).length > 0;
     const preparesPopcorn = prepareKind === null || prepareKind === "popcorn";
-    const extractionWork = preparesPopcorn ? changed : [];
-    const owed = preparesPopcorn ? pendingEnrichment(state, transcripts) : [];
+    const extractionWork = preparesPopcorn ? changed.filter(inScope) : [];
+    const owed = preparesPopcorn ? pendingEnrichment(state, transcripts).filter(inScope) : [];
+    const analysisOwed = analysisStale && !cut;
+    // A session saved before the map fingerprint: its map is as current as its last full read.
+    if (d.requestMap && state.map_fingerprint === undefined) {
+      const held = Object.values(dict(dict(state.analysis).fingerprints)).find(
+        (v) => typeof v === "string",
+      );
+      if (held) state.map_fingerprint = held;
+    }
+    const mapOwed =
+      Boolean(d.requestMap) &&
+      !cut &&
+      transcripts.length > 0 &&
+      list(audienceManifest(settings).blocks).includes("map") &&
+      (extractionWork.length > 0 ||
+        tickKind === "rerun" ||
+        (prepareKind === null &&
+          state.map_fingerprint !== undefined &&
+          state.map_fingerprint !== analysisFingerprint));
 
     // Nothing new, nothing owed, no view stale: nothing to do, unless a rerun wiped it.
-    if (!extractionWork.length && !analysisStale && !owed.length && tickKind !== "rerun") {
+    if (
+      !extractionWork.length &&
+      !analysisOwed &&
+      !mapOwed &&
+      !owed.length &&
+      tickKind !== "rerun"
+    ) {
       const translationWriter = new TickWriter(d, loopId, reportId, state);
       let translated: string | null;
       try {
@@ -1315,17 +1352,14 @@ export async function runPopcornTick(
       : null;
     // The argument map is part of the same run: asked for here, it works as its own
     // workflow while this read extracts. One already running is left to finish.
-    if (
-      d.requestMap &&
-      transcripts.length &&
-      (extractionWork.length || tickKind === "rerun") &&
-      list(audienceManifest(settings).blocks).includes("map")
-    ) {
+    if (d.requestMap && mapOwed) {
       try {
         await d.requestMap(projectId, actingUser || null);
       } catch (exc) {
-        // The read goes on without a new map.
+        // The read goes on without a new map; the next change asks again.
         d.logger.warn({ err: errText(exc), project_id: projectId }, "map not requested");
+      } finally {
+        state.map_fingerprint = analysisFingerprint;
       }
     }
     if (extractionWork.length) {
@@ -1358,7 +1392,7 @@ export async function runPopcornTick(
 
     // Now that every first phrase is on the stage: the second pass and the analysis at once.
     const secondPass = async () => {
-      const pending = preparesPopcorn ? pendingEnrichment(state, transcripts) : [];
+      const pending = preparesPopcorn ? pendingEnrichment(state, transcripts).filter(inScope) : [];
       if (pending.length) {
         const slots = new Semaphore(MAX_PARALLEL_ENRICHMENT);
         await Promise.all(
@@ -1367,7 +1401,11 @@ export async function runPopcornTick(
       }
     };
     const analysisPass = async () => {
-      if (!transcripts.length || !(analysisStale || extractionWork.length || tickKind === "rerun"))
+      if (
+        cut ||
+        !transcripts.length ||
+        !(analysisStale || extractionWork.length || tickKind === "rerun")
+      )
         return;
       // A changed session is analysed whole; one with only a view left stale redoes that view.
       const views =
