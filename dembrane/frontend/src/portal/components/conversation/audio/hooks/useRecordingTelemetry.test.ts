@@ -179,7 +179,24 @@ describe("abandoning", () => {
 		});
 	});
 
-	it("says nothing when the tab closes while not recording", () => {
+	it("reports closing the tab while Finish waits on the audio", () => {
+		renderTelemetry({
+			participantState: "finishing",
+			pendingUploadCount: () => 1,
+		});
+
+		fire(window, "pagehide");
+
+		expect(capture).toHaveBeenCalledWith(
+			"portal_abandoned",
+			expect.objectContaining({
+				participant_state: "finishing",
+				pending_uploads: 1,
+			}),
+		);
+	});
+
+	it("says nothing when the tab closes while paused", () => {
 		renderTelemetry({ participantState: "paused" });
 
 		fire(window, "pagehide");

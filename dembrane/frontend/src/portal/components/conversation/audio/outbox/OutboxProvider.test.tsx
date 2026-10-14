@@ -182,3 +182,110 @@ it("counts a chunk from the moment it's handed over, before it's stored", async 
 	expect(outbox.queuedCount("conv-1")).toBe(1);
 	await act(() => enqueued);
 });
+
+it("finishes behind the conversation's chunks, and resolves once it's delivered", async () => {
+	const order: string[] = [];
+	api.confirm.mockImplementation(async () => {
+		order.push("confirm");
+	});
+	api.finish.mockImplementation(async () => {
+		order.push("finish");
+	});
+	render(tree());
+
+	let enqueued: Promise<void> = Promise.resolve();
+	act(() => {
+		enqueued = outbox.enqueueChunk(chunk(), meta);
+	});
+	await act(() => outbox.finish("conv-1"));
+	await act(() => enqueued);
+
+	expect(order).toEqual(["confirm", "finish"]);
+	expect(capture).toHaveBeenCalledWith(
+		"portal_outbox_delivered",
+		expect.objectContaining({ conversation_id: "conv-1", kind: "finish" }),
+	);
+});
+
+it("counts chunks, not the finish, as queued", async () => {
+	api.upload.mockImplementation(neverSettles);
+	const { getByTestId } = render(tree());
+
+	await act(() => outbox.enqueueChunk(chunk(), meta));
+	let finished: Promise<void> = Promise.resolve();
+	act(() => {
+		finished = outbox.finish("conv-1");
+	});
+	// Still waiting when the test ends, and the store closes under it.
+	finished.catch(() => {});
+
+	await waitFor(() => expect(outbox.queuedCount("conv-1")).toBe(1));
+	await waitFor(async () => {
+		const store = await openOutboxStore({ dbName });
+		const kinds = (await store.list()).map((item) => item.kind);
+		store.close();
+		expect(kinds).toEqual(["chunk", "finish"]);
+	});
+	expect(getByTestId("count").textContent).toBe("1");
+});
+
+it("sends one finish when Finish is pressed twice", async () => {
+	render(tree());
+
+	await act(() =>
+		Promise.all([outbox.finish("conv-1"), outbox.finish("conv-1")]),
+	);
+
+	expect(api.finish).toHaveBeenCalledTimes(1);
+});
+
+it("takes a waiting finish back out when it's aborted", async () => {
+	api.upload.mockImplementation(neverSettles);
+	render(tree());
+	await act(() => outbox.enqueueChunk(chunk(), meta));
+
+	const abort = new AbortController();
+	let finished: Promise<void> = Promise.resolve();
+	act(() => {
+		finished = outbox.finish("conv-1", { signal: abort.signal });
+	});
+	await waitFor(async () => {
+		const store = await openOutboxStore({ dbName });
+		const kinds = (await store.list()).map((item) => item.kind);
+		store.close();
+		expect(kinds).toEqual(["chunk", "finish"]);
+	});
+
+	act(() => abort.abort());
+	await expect(finished).rejects.toThrow();
+
+	await waitFor(async () => {
+		const store = await openOutboxStore({ dbName });
+		const kinds = (await store.list()).map((item) => item.kind);
+		store.close();
+		expect(kinds).toEqual(["chunk"]);
+	});
+	expect(api.finish).not.toHaveBeenCalled();
+});
+
+it("finishes directly, after its direct uploads, when the store can't be opened", async () => {
+	let finishUpload = () => {};
+	fallbackUpload.mockReturnValue(
+		new Promise<void>((resolve) => {
+			finishUpload = resolve;
+		}),
+	);
+	render(tree(() => Promise.reject(new Error("IndexedDB unavailable"))));
+	await act(() => outbox.enqueueChunk(chunk(), meta));
+
+	let finished: Promise<void> = Promise.resolve();
+	act(() => {
+		finished = outbox.finish("conv-1");
+	});
+	await act(() => new Promise((resolve) => setTimeout(resolve, 50)));
+	expect(api.finish).not.toHaveBeenCalled();
+
+	await act(async () => finishUpload());
+	await act(() => finished);
+	expect(api.finish).toHaveBeenCalledWith("conv-1");
+});

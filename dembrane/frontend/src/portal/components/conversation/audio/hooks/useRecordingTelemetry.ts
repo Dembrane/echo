@@ -88,12 +88,12 @@ export const useRecordingTelemetry = ({
 		};
 	}, [conversationId, projectId]);
 
-	// The tab closed while still recording.
+	// The tab closed while still recording, or while Finish waited on the audio.
 	useEffect(() => {
 		if (!conversationId) return;
 		const onPageHide = () => {
 			const live = liveRef.current;
-			if (!live.isRecording) return;
+			if (!live.isRecording && live.participantState !== "finishing") return;
 			posthog.capture("portal_abandoned", {
 				conversation_id: conversationId,
 				participant_state: live.participantState,
