@@ -8,6 +8,7 @@ import {
   primaryKey,
   text,
   timestamp,
+  uuid,
 } from "drizzle-orm/pg-core";
 
 /** One row per live worker process; a stale row marks a dead worker whose workflows get resumed. */
@@ -27,6 +28,17 @@ export const dbos_workflow_lost_worker = pgTable("dbos_workflow_lost_worker", {
   queue_name: text("queue_name"),
   lost: integer("lost").notNull(),
   set_aside_at: timestamp("set_aside_at", { withTimezone: true }),
+});
+
+/**
+ * What a large popcorn session's tensions keep between reads (popcorn tick/scale.ts): positions
+ * per conversation, the pairs found and their verdicts. Kept apart from agent_loop so the
+ * deck's frequent reads and writes never carry it. Written only by the popcorn tick.
+ */
+export const popcorn_tensions_cache = pgTable("popcorn_tensions_cache", {
+  loop_id: uuid("loop_id").primaryKey(),
+  cache: jsonb("cache").notNull(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 // Fixed-window counters for rate limits (per user or per IP). Unlogged: a crash may

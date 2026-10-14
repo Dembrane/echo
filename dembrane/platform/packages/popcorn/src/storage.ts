@@ -162,6 +162,23 @@ export function popcornStore(sql: Sql) {
       return r as Row;
     },
 
+    /** What a large session's tensions kept between reads, or null. */
+    async tensionsCache(loopId: string): Promise<Json | null> {
+      const [r] = await sql`select cache from popcorn_tensions_cache where loop_id = ${loopId}`;
+      return (r?.cache as Json | undefined) ?? null;
+    },
+
+    /** Keeps the tensions cache; null forgets it. */
+    async saveTensionsCache(loopId: string, cache: Json | null, now: string): Promise<void> {
+      if (cache === null) {
+        await sql`delete from popcorn_tensions_cache where loop_id = ${loopId}`;
+        return;
+      }
+      await sql`insert into popcorn_tensions_cache (loop_id, cache, updated_at)
+        values (${loopId}, ${j(cache)}, ${now})
+        on conflict (loop_id) do update set cache = excluded.cache, updated_at = excluded.updated_at`;
+    },
+
     /** Patches a loop; Directus stamped updated_at on every update. */
     async updateLoop(id: string, patch: Json, now: string): Promise<Row | null> {
       const cols = Object.keys(patch);
