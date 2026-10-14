@@ -18,8 +18,9 @@ const API = "http://localhost:8080/api/auth";
 const PASSWORD = "a-long-enough-password";
 const LAPTOP = "browser-laptop-0001";
 const PHONE = "browser-phone-0002";
+const TABLET = "browser-tablet-0003";
 
-run("one browser per account", () => {
+run("two browsers per account", () => {
   setDefaultTimeout(60_000);
   let database: ReturnType<typeof createDb>;
   let auth: ReturnType<typeof createAuth>;
@@ -119,15 +120,33 @@ run("one browser per account", () => {
     expect(overlaps).toHaveLength(0);
   });
 
-  test("a second browser is held: it is nobody until the person goes ahead", async () => {
+  test("a second browser signs in without interrupting the first", async () => {
+    const userId = await person("two@example.com");
+    const laptop = await signIn("two@example.com", LAPTOP);
+    const phone = await signIn("two@example.com", PHONE);
+    expect(await others(phone)).toEqual({ held: false, since: null });
+    expect(await signedIn(phone)).toBe(true);
+    expect(await signedIn(laptop)).toBe(true);
+    expect(await replace(phone)).toEqual({ replaced: 0 });
+    expect(
+      await database.db
+        .select()
+        .from(schema.auth_sign_in_overlap)
+        .where(eq(schema.auth_sign_in_overlap.userId, userId)),
+    ).toHaveLength(0);
+  });
+
+  test("a third browser is held: it is nobody until the person goes ahead", async () => {
     const userId = await person("second@example.com");
     const laptop = await signIn("second@example.com", LAPTOP);
     const phone = await signIn("second@example.com", PHONE);
+    const tablet = await signIn("second@example.com", TABLET);
 
-    const state = await others(phone);
+    const state = await others(tablet);
     expect(state.held).toBe(true);
     expect(Number.isNaN(Date.parse(state.since as string))).toBe(false);
-    expect(await signedIn(phone)).toBe(false);
+    expect(await signedIn(tablet)).toBe(false);
+    expect(await signedIn(phone)).toBe(true);
     expect(await signedIn(laptop)).toBe(true);
 
     const [row] = await database.db
@@ -135,15 +154,15 @@ run("one browser per account", () => {
       .from(schema.auth_sign_in_overlap)
       .where(eq(schema.auth_sign_in_overlap.userId, userId));
     expect(row).toMatchObject({
-      deviceId: PHONE,
-      otherSessions: 1,
-      otherDevices: 1,
+      deviceId: TABLET,
+      otherSessions: 2,
+      otherDevices: 2,
       replacedAt: null,
     });
-    expect(overlaps.at(-1)).toMatchObject({ userId, outcome: "held", otherSessions: 1 });
+    expect(overlaps.at(-1)).toMatchObject({ userId, outcome: "held", otherSessions: 2 });
   });
 
-  test("going ahead signs the other browser out and keeps a staff API key", async () => {
+  test("going ahead signs the other browsers out and keeps a staff API key", async () => {
     const userId = await person("replace@example.com");
     const laptop = await signIn("replace@example.com", LAPTOP);
     await database.db.insert(schema.auth_session).values({
@@ -154,12 +173,15 @@ run("one browser per account", () => {
       userAgent: "staff-api-key:sam|until=4102444800|scope=staff:accounts",
     });
     const phone = await signIn("replace@example.com", PHONE);
-    expect((await others(phone)).held).toBe(true);
-
-    expect(await replace(phone)).toEqual({ replaced: 1 });
-    expect(await signedIn(phone)).toBe(true);
-    expect(await signedIn(laptop)).toBe(false);
     expect((await others(phone)).held).toBe(false);
+    const tablet = await signIn("replace@example.com", TABLET);
+    expect((await others(tablet)).held).toBe(true);
+
+    expect(await replace(tablet)).toEqual({ replaced: 2 });
+    expect(await signedIn(tablet)).toBe(true);
+    expect(await signedIn(phone)).toBe(false);
+    expect(await signedIn(laptop)).toBe(false);
+    expect((await others(tablet)).held).toBe(false);
 
     const left = await database.db
       .select({ userAgent: schema.auth_session.userAgent, held: schema.auth_session.held })
@@ -174,17 +196,41 @@ run("one browser per account", () => {
       .from(schema.auth_sign_in_overlap)
       .where(eq(schema.auth_sign_in_overlap.userId, userId));
     expect(row?.replacedAt).toBeInstanceOf(Date);
-    expect(overlaps.at(-1)).toMatchObject({ userId, outcome: "replaced", otherSessions: 1 });
+    expect(overlaps.at(-1)).toMatchObject({ userId, outcome: "replaced", otherSessions: 2 });
     // A second call has nothing left to replace.
-    expect(await replace(phone)).toEqual({ replaced: 0 });
+    expect(await replace(tablet)).toEqual({ replaced: 0 });
   });
 
   test("the same browser signing in again is not held", async () => {
     await person("again@example.com");
     await signIn("again@example.com", LAPTOP);
+    await signIn("again@example.com", PHONE);
     const again = await signIn("again@example.com", LAPTOP);
     expect((await others(again)).held).toBe(false);
     expect(await signedIn(again)).toBe(true);
+  });
+
+  test("multiple sessions on one device occupy only one slot", async () => {
+    await person("sessions@example.com");
+    await signIn("sessions@example.com", LAPTOP);
+    await signIn("sessions@example.com", LAPTOP);
+    const phone = await signIn("sessions@example.com", PHONE);
+    expect((await others(phone)).held).toBe(false);
+    expect(await signedIn(phone)).toBe(true);
+    const tablet = await signIn("sessions@example.com", TABLET);
+    expect((await others(tablet)).held).toBe(true);
+    expect(await signedIn(tablet)).toBe(false);
+  });
+
+  test("concurrent sign-ins cannot activate more than two devices", async () => {
+    await person("concurrent@example.com");
+    const browsers = await Promise.all(
+      [LAPTOP, PHONE, TABLET].map((device) => signIn("concurrent@example.com", device)),
+    );
+    const active = await Promise.all(browsers.map(signedIn));
+    expect(active.filter(Boolean)).toHaveLength(2);
+    const states = await Promise.all(browsers.map(others));
+    expect(states.filter((state) => state.held)).toHaveLength(1);
   });
 
   test("a client that names no browser is never held", async () => {
@@ -194,15 +240,19 @@ run("one browser per account", () => {
     expect(await signedIn(script)).toBe(true);
   });
 
-  test("a sign-in by emailed code from a second browser is held too", async () => {
+  test("a sign-in by emailed code allows two browsers and holds the third", async () => {
     await person("code@example.com");
     await signIn("code@example.com", LAPTOP);
     await auth.api.sendVerificationOTP({ body: { email: "code@example.com", type: "sign-in" } });
     const phone = await signIn("code@example.com", PHONE, codes.get("code@example.com"));
-    expect((await others(phone)).held).toBe(true);
-    expect(await signedIn(phone)).toBe(false);
-    await replace(phone);
+    expect((await others(phone)).held).toBe(false);
     expect(await signedIn(phone)).toBe(true);
+    await auth.api.sendVerificationOTP({ body: { email: "code@example.com", type: "sign-in" } });
+    const tablet = await signIn("code@example.com", TABLET, codes.get("code@example.com"));
+    expect((await others(tablet)).held).toBe(true);
+    expect(await signedIn(tablet)).toBe(false);
+    await replace(tablet);
+    expect(await signedIn(tablet)).toBe(true);
   });
 
   test("without a session there is nothing to ask or replace", async () => {

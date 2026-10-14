@@ -7680,8 +7680,12 @@ msgid "Issue payment link"
 msgstr "Vytvořit platební odkaz"
 
 #: src/components/auth/SignedInElsewhere.tsx:77
-msgid "It has been logged in on another device since {elsewhereSince}. For security, an account can be logged in on one device at a time."
-msgstr "Od {elsewhereSince} je přihlášen na jiném zařízení. Z bezpečnostních důvodů může být účet přihlášen vždy jen na jednom zařízení."
+#~ msgid "It has been logged in on another device since {elsewhereSince}. For security, an account can be logged in on one device at a time."
+#~ msgstr "Od {elsewhereSince} je přihlášen na jiném zařízení. Z bezpečnostních důvodů může být účet přihlášen vždy jen na jednom zařízení."
+
+#: src/components/auth/SignedInElsewhere.tsx:77
+msgid "It has been logged in on other devices since {elsewhereSince}. For security, an account can be logged in on up to two devices at a time."
+msgstr "Od {elsewhereSince} je přihlášen na dalších zařízeních. Z bezpečnostních důvodů může být účet přihlášen nejvýše na dvou zařízeních současně."
 
 #. placeholder {0}: settings.org_name
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:706
@@ -7693,8 +7697,12 @@ msgid "It is asking to"
 msgstr "Žádá o oprávnění"
 
 #: src/components/auth/SignedInElsewhere.tsx:83
-msgid "It is logged in on another device. For security, an account can be logged in on one device at a time."
-msgstr "Je přihlášen na jiném zařízení. Z bezpečnostních důvodů může být účet přihlášen vždy jen na jednom zařízení."
+#~ msgid "It is logged in on another device. For security, an account can be logged in on one device at a time."
+#~ msgstr "Je přihlášen na jiném zařízení. Z bezpečnostních důvodů může být účet přihlášen vždy jen na jednom zařízení."
+
+#: src/components/auth/SignedInElsewhere.tsx:83
+msgid "It is logged in on two other devices. For security, an account can be logged in on up to two devices at a time."
+msgstr "Je přihlášen na dvou dalších zařízeních. Z bezpečnostních důvodů může být účet přihlášen nejvýše na dvou zařízeních současně."
 
 #. js-lingui-explicit-id
 #: src/components/participant/ConversationErrorView.tsx:41
@@ -8517,8 +8525,12 @@ msgid "Log out and use the invited email"
 msgstr "Log out and use the invited email"
 
 #: src/components/auth/SignedInElsewhere.tsx:102
-msgid "Logging in here logs the other device out."
-msgstr "Přihlášením zde odhlásíte druhé zařízení."
+#~ msgid "Logging in here logs the other device out."
+#~ msgstr "Přihlášením zde odhlásíte druhé zařízení."
+
+#: src/components/auth/SignedInElsewhere.tsx:102
+msgid "Logging in here logs the other devices out."
+msgstr "Přihlášením zde se odhlásí ostatní zařízení."
 
 #: src/components/chat/agenticToolActivity.ts:171
 msgid "Logging this with the dembrane team"
@@ -15553,8 +15565,12 @@ msgid "This account has an active subscription. Ask the customer to cancel it fr
 msgstr "Tento účet má aktivní předplatné. Než změníte úroveň, požádejte zákazníka, aby předplatné zrušil na své fakturační stránce."
 
 #: src/components/auth/SignedInElsewhere.tsx:73
-msgid "This account is logged in somewhere else"
-msgstr "Tento účet je přihlášen jinde"
+msgid "This account is logged in on two other devices"
+msgstr "Tento účet je přihlášen na dvou dalších zařízeních"
+
+#: src/components/auth/SignedInElsewhere.tsx:73
+#~ msgid "This account is logged in somewhere else"
+#~ msgstr "Tento účet je přihlášen jinde"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:3135
 msgid "This area is for dembrane staff. If you think you should have access, email support@dembrane.com."

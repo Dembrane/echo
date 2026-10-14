@@ -5,7 +5,7 @@ import type { BetterAuthPlugin } from "better-auth";
 import { APIError, createAuthEndpoint, getSessionFromCtx } from "better-auth/api";
 import { and, desc, eq, gt, isNull, ne, notLike, or } from "drizzle-orm";
 
-// One browser per account. A sign-in from a second browser gets a held session, which signs
+// Two browsers per account. A sign-in from a third browser gets a held session, which signs
 // nobody in until the person chooses to replace the sessions on their other browsers. Every
 // such sign-in is kept in auth_sign_in_overlap and reported to onOverlap.
 
@@ -15,6 +15,7 @@ export const DEVICE_ID_HEADER = "x-device-id";
 // Staff API keys are sessions too (accounts/staff-key.ts). They are never another browser
 // and are never replaced.
 const STAFF_KEY_AGENT = "staff-api-key:%";
+const MAX_DEVICES = 2;
 
 export interface Overlap {
   readonly userId: string;
@@ -47,7 +48,7 @@ interface Other {
  * before this existed, or by a client that is not the dashboard) counts as another browser.
  */
 async function othersOf(
-  db: Db,
+  db: Pick<Db, "select">,
   userId: string,
   deviceId: string,
   exceptSessionId?: string,
@@ -93,17 +94,17 @@ function summary(others: readonly Other[]) {
 
 /**
  * What a new session carries: its device id, and held when the user is signed in on
- * another browser. Callers that send no device id (API clients, scripts) are never held.
+ * two other browsers. Callers that send no device id (API clients, scripts) are never held.
  */
 export async function holdFor(
-  db: Db,
+  db: Pick<Db, "select">,
   userId: string,
   headers: Headers | null | undefined,
 ): Promise<{ deviceId: string | null; held: boolean }> {
   const deviceId = deviceIdFrom(headers);
   if (!deviceId) return { deviceId: null, held: false };
   const others = await othersOf(db, userId, deviceId);
-  return { deviceId, held: others.length > 0 };
+  return { deviceId, held: summary(others).otherDevices >= MAX_DEVICES };
 }
 
 /** Keeps the overlap a held session was created with, and reports it. */
