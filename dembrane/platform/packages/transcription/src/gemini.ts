@@ -1,8 +1,12 @@
-import type { LanguageModelV4, LanguageModelV4Prompt } from "@ai-sdk/provider";
-import { isRetryable, type Models } from "@dembrane/llm";
+import type {
+  LanguageModelV4,
+  LanguageModelV4GenerateResult,
+  LanguageModelV4Prompt,
+} from "@ai-sdk/provider";
+import { FALL_BACK_ON_REFUSAL, isRetryable, ModelRefusalError, type Models } from "@dembrane/llm";
 import type { Logger } from "@dembrane/observability";
 import { renderPrompt } from "@dembrane/prompts";
-import { TranscriptParseError } from "./errors";
+import { TranscriptParseError, TranscriptRefusedError } from "./errors";
 import { regexRedactPii } from "./pii";
 import type { TranscribeInput, TranscribeResult, Transcriber } from "./transcriber";
 
@@ -14,6 +18,9 @@ const SCHEMA = {
   },
   required: ["corrected_transcript", "note"],
 } as const;
+
+// Filters off did not lower 3.8-flash refusals in replay; the fallback is what recovers them (ECHO-980).
+const PROVIDER_OPTIONS = { ...FALL_BACK_ON_REFUSAL, vertex: { threshold: "OFF" } };
 
 // Gemini sometimes emits a literal backslash-u that is not a \uXXXX escape. The
 // lookbehind and the even-backslash group keep already-escaped backslashes intact.
@@ -141,10 +148,17 @@ export class GeminiTranscriber implements Transcriber {
 
   private async call(prompt: LanguageModelV4Prompt) {
     const run = async (m: LanguageModelV4) => {
-      const r = await m.doGenerate({
-        prompt,
-        responseFormat: { type: "json", schema: SCHEMA as never },
-      });
+      let r: LanguageModelV4GenerateResult;
+      try {
+        r = await m.doGenerate({
+          prompt,
+          responseFormat: { type: "json", schema: SCHEMA as never },
+          providerOptions: PROVIDER_OPTIONS,
+        });
+      } catch (err) {
+        if (err instanceof ModelRefusalError) throw new TranscriptRefusedError(err.finishReason);
+        throw err;
+      }
       const text = r.content
         .filter((c): c is { type: "text"; text: string } => c.type === "text")
         .map((c) => c.text)

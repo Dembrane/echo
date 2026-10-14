@@ -9,7 +9,14 @@ export {
   vertexName,
 } from "./complete";
 export { type FakeAnswer, FakeCompleter, FakeEmbedder } from "./fake";
-export { type Deployment, FallbackModel, type FallbackOptions, isRetryable } from "./fallback";
+export {
+  type Deployment,
+  FALL_BACK_ON_REFUSAL,
+  FallbackModel,
+  type FallbackOptions,
+  isRetryable,
+  ModelRefusalError,
+} from "./fallback";
 export { createModels, type ModelGroup, type Models, type ModelsConfig } from "./models";
 export {
   errorLabel,
