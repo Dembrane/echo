@@ -6,6 +6,19 @@ import {
 	uploadConversationChunk,
 } from "@/lib/api";
 
+/** The server no longer has the conversation, or no longer lets us at it. */
+export const CONVERSATION_DELETION_STATUS_CODES = [404, 403, 410];
+
+export const isConversationGone = (error: unknown): boolean => {
+	const status = (error as AxiosError | null)?.response?.status;
+	return !!status && CONVERSATION_DELETION_STATUS_CODES.includes(status);
+};
+
+type UploadOptions = {
+	/** An upload or its confirm found the conversation gone. */
+	onConversationGone?: () => void;
+};
+
 const uploadFailureStage = (
 	message: string,
 ): "presigned_url" | "s3_put" | "confirm" => {
@@ -14,7 +27,9 @@ const uploadFailureStage = (
 	return "confirm";
 };
 
-const useConfirmConversationChunkUpload = () => {
+const useConfirmConversationChunkUpload = ({
+	onConversationGone,
+}: UploadOptions) => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
@@ -30,6 +45,7 @@ const useConfirmConversationChunkUpload = () => {
 				conversation_id: variables.conversationId,
 				stage: "confirm",
 			});
+			if (isConversationGone(error)) onConversationGone?.();
 		},
 		onSuccess: (_data, variables) => {
 			console.log(
@@ -47,13 +63,8 @@ const useConfirmConversationChunkUpload = () => {
 				],
 			});
 		},
-		retry: (failureCount, error: Error) => {
-			const status = (error as AxiosError)?.response?.status;
-			if (status && [404, 403, 410].includes(status as number)) {
-				return false;
-			}
-			return failureCount < 5;
-		},
+		retry: (failureCount, error: Error) =>
+			!isConversationGone(error) && failureCount < 5,
 		retryDelay: (attemptIndex) => {
 			// Exponential backoff: 2s, 4s, 8s, 16s, 32s (capped at 30s)
 			return Math.min(2000 * 2 ** attemptIndex, 30000);
@@ -61,9 +72,9 @@ const useConfirmConversationChunkUpload = () => {
 	});
 };
 
-export const useUploadConversationChunk = () => {
+export const useUploadConversationChunk = (options: UploadOptions = {}) => {
 	const queryClient = useQueryClient();
-	const confirmUpload = useConfirmConversationChunkUpload();
+	const confirmUpload = useConfirmConversationChunkUpload(options);
 
 	return useMutation({
 		mutationFn: uploadConversationChunk,
@@ -79,6 +90,7 @@ export const useUploadConversationChunk = () => {
 				conversation_id: variables.conversationId,
 				stage: uploadFailureStage((err as Error)?.message ?? ""),
 			});
+			if (isConversationGone(err)) options.onConversationGone?.();
 		},
 		// When mutate is called:
 		onMutate: async (variables) => {
@@ -172,12 +184,7 @@ export const useUploadConversationChunk = () => {
 				onProgress: variables.onProgress,
 			});
 		},
-		retry: (failureCount, error: Error) => {
-			const status = (error as AxiosError)?.response?.status;
-			if (status && [404, 403, 410].includes(status as number)) {
-				return false;
-			}
-			return failureCount < 20;
-		},
+		retry: (failureCount, error: Error) =>
+			!isConversationGone(error) && failureCount < 20,
 	});
 };
