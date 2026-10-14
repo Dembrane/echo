@@ -22,7 +22,6 @@ export type RecordingSessionEvent =
 	| { type: "recordingStarted" }
 	| { type: "switchToText" }
 	| { type: "finishStarted" }
-	| { type: "skipVerification" }
 	| { type: "finishFailed" }
 	| { type: "finishSucceeded" }
 	| { type: "interrupted"; at: number }
@@ -83,12 +82,6 @@ const transition = (
 		case "finishStarted":
 			return session.phase === "paused"
 				? { ...session, phase: "finishing" }
-				: session;
-
-		// From the verify prompt: the confirm modal closes, then finishing starts.
-		case "skipVerification":
-			return session.phase === "paused"
-				? { at: session.at, confirming: false, phase: "finishing" }
 				: session;
 
 		case "finishFailed":

@@ -49,12 +49,6 @@ describe("recordingSessionReducer", () => {
 		});
 	});
 
-	it("closes the confirm modal before finishing when verification is skipped", () => {
-		const skipped = reduce(paused, { type: "skipVerification" });
-		expect(skipped).toEqual({ ...finishing, confirming: false });
-		expect(reduce(skipped, { type: "finishFailed" })).toEqual(resuming);
-	});
-
 	it("confirms a finish from the bar with no stopped time", () => {
 		const confirming = reduce(live, { type: "confirmFinish" });
 		expect(confirming).toEqual({ at: null, confirming: true, phase: "paused" });
@@ -68,9 +62,6 @@ describe("recordingSessionReducer", () => {
 	it("drops back to live when a pause has no time and no modal", () => {
 		const confirming = reduce(live, { type: "confirmFinish" });
 		expect(reduce(confirming, { type: "resume" })).toEqual(live);
-		expect(
-			run(confirming, { type: "skipVerification" }, { type: "finishFailed" }),
-		).toEqual(live);
 	});
 
 	it("holds an interruption at its time while reconnecting", () => {

@@ -362,11 +362,6 @@ export const ParticipantConversationAudio = () => {
 		}
 	};
 
-	const handleSkipVerification = async () => {
-		dispatch({ type: "skipVerification" });
-		await handleConfirmFinish();
-	};
-
 	const handleSwitchToText = () => {
 		dispatch({ type: "switchToText" });
 		navigate(textModeUrl);
@@ -509,7 +504,7 @@ export const ParticipantConversationAudio = () => {
 				handleResume={handleResumeRecording}
 				handleSwitchToText={handleSwitchToText}
 				showVerifyOnFinish={shouldVerifyOnFinish}
-				handleSkipVerification={handleSkipVerification}
+				handleSkipVerification={handleConfirmFinish}
 				handleVerify={handleVerify}
 			/>
 

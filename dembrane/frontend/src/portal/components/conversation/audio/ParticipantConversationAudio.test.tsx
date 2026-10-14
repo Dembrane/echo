@@ -469,6 +469,42 @@ describe("finishing", () => {
 		expect(navigate).not.toHaveBeenCalled();
 	});
 
+	it("shows the modal's Finish as loading after skipping verification", async () => {
+		project = {
+			id: "p1",
+			is_verify_enabled: true,
+			is_verify_on_finish_enabled: true,
+		};
+		let resolveFinish: () => void = () => {};
+		finish.mockReturnValue(
+			new Promise<void>((resolve) => {
+				resolveFinish = resolve;
+			}),
+		);
+		renderAudio();
+		await startRecording();
+		act(() => recorder.setRecordingTime(75));
+		await stopAndFinish();
+		fireEvent.click(
+			await screen.findByTestId("portal-audio-verify-skip-button"),
+		);
+
+		// Past the modal's close transition: a closing modal keeps its content
+		// mounted for ~200ms, spinner and all.
+		await act(() => new Promise((resolve) => setTimeout(resolve, 300)));
+		expect(
+			screen
+				.getByTestId("portal-audio-stop-finish-button")
+				.hasAttribute("data-loading"),
+		).toBe(true);
+		expect(navigate).not.toHaveBeenCalled();
+
+		resolveFinish();
+		await waitFor(() =>
+			expect(navigate).toHaveBeenCalledWith("/p1/conversation/c1/finish"),
+		);
+	});
+
 	it("finishes from the bar's Finish without recording first", async () => {
 		chunks = [{ id: "chunk1" }];
 		renderAudio();
