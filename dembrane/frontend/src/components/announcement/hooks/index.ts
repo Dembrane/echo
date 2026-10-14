@@ -11,6 +11,7 @@ import useSessionStorageState from "use-session-storage-state";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
+import { ApiRequestError, ensureOk } from "@/lib/errors/read";
 import type { ListQuery } from "@/lib/listQuery";
 import { isUnreadByMe } from "../announcementFilters";
 
@@ -35,18 +36,28 @@ async function fetchAnnouncements(params: {
 	);
 	for (const [k, v] of Object.entries(params))
 		if (v !== undefined) url.searchParams.set(k, String(v));
-	const res = await fetch(url, { credentials: "include" });
-	if (!res.ok) throw new Error(`Announcements request failed: ${res.status}`);
+	const res = await ensureOk(await fetch(url, { credentials: "include" }));
 	return res.json();
 }
 
 async function postAnnouncements(path: string) {
-	const res = await fetch(`${API_BASE_URL}/v2/me/announcements${path}`, {
-		credentials: "include",
-		method: "POST",
-	});
-	if (!res.ok) throw new Error(`Announcements update failed: ${res.status}`);
+	const res = await ensureOk(
+		await fetch(`${API_BASE_URL}/v2/me/announcements${path}`, {
+			credentials: "include",
+			method: "POST",
+		}),
+	);
 	return res.json();
+}
+
+// A 401 or 403 here means the session ended, which is a sign-out and not a fault.
+function captureUnlessSignedOut(error: unknown) {
+	if (
+		error instanceof ApiRequestError &&
+		(error.status === 401 || error.status === 403)
+	)
+		return;
+	posthog.captureException(error);
 }
 
 export const useLatestAnnouncement = () => {
@@ -61,7 +72,7 @@ export const useLatestAnnouncement = () => {
 
 				return response.length > 0 ? response[0] : null;
 			} catch (error) {
-				posthog.captureException(error);
+				captureUnlessSignedOut(error);
 				console.error("Error fetching latest announcement:", error);
 				throw error;
 			}
@@ -110,7 +121,7 @@ export const useInfiniteAnnouncements = ({
 						response.length === initialLimit ? pageParam + 1 : undefined,
 				};
 			} catch (error) {
-				posthog.captureException(error);
+				captureUnlessSignedOut(error);
 				console.error("Error fetching announcements:", error);
 				throw error;
 			}
@@ -139,7 +150,7 @@ export const useMarkAsReadMutation = () => {
 				return await postAnnouncements(`/${announcementId}/read`);
 			} catch (error) {
 				toast.error(t`Failed to mark announcement as read`);
-				posthog.captureException(error);
+				captureUnlessSignedOut(error);
 				console.error("Error in mutationFn:", error);
 				throw error;
 			}
@@ -255,7 +266,7 @@ export const useMarkAsUnreadMutation = () => {
 				return await postAnnouncements(`/${announcementId}/unread`);
 			} catch (error) {
 				toast.error(t`Failed to mark announcement as unread`);
-				posthog.captureException(error);
+				captureUnlessSignedOut(error);
 				console.error("Error in markAsUnread mutationFn:", error);
 				throw error;
 			}
@@ -353,7 +364,7 @@ export const useMarkAllAsReadMutation = () => {
 				return await postAnnouncements("/read-all");
 			} catch (error) {
 				toast.error(t`Failed to mark all announcements as read`);
-				posthog.captureException(error);
+				captureUnlessSignedOut(error);
 				console.error("Error in markAllAsRead mutationFn:", error);
 				throw error;
 			}
@@ -461,7 +472,7 @@ const useAnnouncementSummary = <T>(select: (rows: SummaryRow[]) => T) => {
 
 				return (await fetchAnnouncements({})) as SummaryRow[];
 			} catch (error) {
-				posthog.captureException(error);
+				captureUnlessSignedOut(error);
 				console.error("Error fetching announcement summary:", error);
 				throw error;
 			}
@@ -493,8 +504,10 @@ export const useWhatsNewAnnouncements = ({
 }: {
 	enabled?: boolean;
 } = {}) => {
+	const { data: currentUser } = useCurrentUser();
+
 	return useQuery({
-		enabled,
+		enabled: enabled && !!currentUser?.id,
 		queryFn: async () => {
 			try {
 				// Directus let admins see expired announcements here and scoped everyone
@@ -506,7 +519,7 @@ export const useWhatsNewAnnouncements = ({
 
 				return response;
 			} catch (error) {
-				posthog.captureException(error);
+				captureUnlessSignedOut(error);
 				console.error("Error fetching what's new announcements:", error);
 				throw error;
 			}
