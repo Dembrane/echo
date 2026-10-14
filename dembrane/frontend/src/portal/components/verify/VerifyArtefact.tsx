@@ -27,7 +27,7 @@ import { useCooldown } from "@/hooks/useCooldown";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { errorCode } from "@/lib/errors/read";
 import { testId } from "@/lib/testUtils";
-import { useParticipantProjectById } from "../../hooks";
+import { useParticipantProjectById } from "@/portal/hooks/useParticipantProjectById";
 import {
 	useUpdateVerificationArtefact,
 	useVerificationArtefactById,

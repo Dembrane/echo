@@ -13,8 +13,8 @@ import {
 	combineUserChunks,
 	useConversationChunksQuery,
 	useConversationRepliesQuery,
-	useParticipantProjectById,
-} from "@/portal/hooks";
+} from "@/portal/components/conversation/queries";
+import { useParticipantProjectById } from "@/portal/hooks/useParticipantProjectById";
 import { EchoReplyMessage } from "./EchoReplyMessage";
 import SystemMessage from "./SystemMessage";
 import UserChunkMessage from "./UserChunkMessage";

@@ -169,10 +169,14 @@ let project: Record<string, unknown>;
 let chunks: { id: string }[];
 let uploadPending: boolean;
 
-vi.mock("../../../hooks", () => ({
+vi.mock("@/portal/components/conversation/queries", () => ({
 	useConversationChunksQuery: () => ({ data: chunks }),
 	useConversationQuery: () => conversationQuery,
+}));
+vi.mock("@/portal/hooks/useParticipantProjectById", () => ({
 	useParticipantProjectById: () => ({ data: project, isLoading: false }),
+}));
+vi.mock("./hooks/useUploadConversationChunk", () => ({
 	useUploadConversationChunk: () => ({
 		isPending: uploadPending,
 		mutateAsync: (...args: unknown[]) => uploadChunk(...args),

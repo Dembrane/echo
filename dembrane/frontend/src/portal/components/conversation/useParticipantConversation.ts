@@ -4,8 +4,8 @@ import { finishConversation } from "@/lib/api";
 import {
 	useConversationChunksQuery,
 	useConversationQuery,
-	useParticipantProjectById,
-} from "@/portal/hooks";
+} from "@/portal/components/conversation/queries";
+import { useParticipantProjectById } from "@/portal/hooks/useParticipantProjectById";
 
 /**
  * What the audio and text screens both stand on: the project, the

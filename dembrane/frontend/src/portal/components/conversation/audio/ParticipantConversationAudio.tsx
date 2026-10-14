@@ -30,7 +30,7 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useVideoWakeLockFallback } from "@/hooks/useVideoWakeLockFallback";
 import { testId } from "@/lib/testUtils";
-import { useUploadConversationChunk } from "@/portal/hooks";
+import { useUploadConversationChunk } from "@/portal/components/conversation/audio/hooks/useUploadConversationChunk";
 import { ParticipantSettingsModal } from "../../settings/ParticipantSettingsModal";
 import { useConversationArtefacts } from "../../verify/hooks";
 import { ConversationErrorView } from "../ConversationErrorView";

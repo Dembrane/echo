@@ -26,8 +26,8 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { testId } from "@/lib/testUtils";
 import { ConversationErrorView } from "@/portal/components/conversation/ConversationErrorView";
 import { ConversationMessages } from "@/portal/components/conversation/ConversationMessages";
+import { useUploadConversationTextChunk } from "@/portal/components/conversation/text/useUploadConversationTextChunk";
 import { useParticipantConversation } from "@/portal/components/conversation/useParticipantConversation";
-import { useUploadConversationTextChunk } from "@/portal/hooks";
 
 export const ParticipantConversationText = () => {
 	const { projectId, conversationId } = useParams();

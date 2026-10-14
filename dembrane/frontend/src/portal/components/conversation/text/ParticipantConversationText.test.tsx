@@ -51,13 +51,17 @@ let conversationQuery: { data?: unknown; isError: boolean; isLoading: boolean };
 let projectLoading: boolean;
 let chunks: { id: string }[];
 
-vi.mock("@/portal/hooks", () => ({
+vi.mock("@/portal/components/conversation/queries", () => ({
 	useConversationChunksQuery: () => ({ data: chunks }),
 	useConversationQuery: () => conversationQuery,
+}));
+vi.mock("@/portal/hooks/useParticipantProjectById", () => ({
 	useParticipantProjectById: () => ({
 		data: { id: "p1" },
 		isLoading: projectLoading,
 	}),
+}));
+vi.mock("./useUploadConversationTextChunk", () => ({
 	useUploadConversationTextChunk: () => ({
 		isPending: false,
 		mutate: () => {},

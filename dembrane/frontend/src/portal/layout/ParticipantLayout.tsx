@@ -2,9 +2,9 @@ import { useEffect } from "react";
 import { Outlet, useLocation, useParams } from "react-router";
 import { useWhitelabelLogo } from "@/hooks/useWhitelabelLogo";
 import { logoUrl } from "@/lib/avatar";
+import { useParticipantProjectById } from "@/portal/hooks/useParticipantProjectById";
 import { Toaster } from "../../components/common/Toaster";
 import { I18nProvider } from "../../components/layout/I18nProvider";
-import { useParticipantProjectById } from "../hooks";
 import { prefetchLaterScreens } from "../laterScreens";
 import { ParticipantHeader } from "./ParticipantHeader";
 
