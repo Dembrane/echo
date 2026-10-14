@@ -53,6 +53,7 @@ import { islandFlags, nameFlags } from "./gates";
 import { groundItems } from "./grounding";
 import { POPCORN_PROMPT, type PopcornModel, promptText, VALIDATE_PROMPT } from "./model";
 import { Publisher } from "./publish";
+import { cacheFrom, cacheVersion, forget, isLarge, type TensionsCache } from "./scale";
 import {
   allocateChars,
   buildCorpus,
@@ -62,7 +63,12 @@ import {
   shapeStakeholders,
 } from "./shapes";
 import { STALE_TICK_SECONDS, type TickStore } from "./storage";
-import { runPipeline, PROMPT_NAMES as TENSION_PROMPTS } from "./tensions";
+import {
+  type LargeSession,
+  preparePositions,
+  runPipeline,
+  PROMPT_NAMES as TENSION_PROMPTS,
+} from "./tensions";
 import { errText, f, failureText, Mutex, Semaphore, settle, sha1Hex, withTimeout } from "./util";
 
 /**
@@ -104,6 +110,11 @@ export const MANUAL_LOCK_WAIT_SECONDS = 180;
 // worker is noticed within one cadence and a slow second pass is not.
 export const HEARTBEAT_MS = 30_000;
 
+export type SimilarFor = (
+  projectId: string,
+  texts: readonly string[],
+) => Promise<Map<string, number[]>>;
+
 export interface TickDeps {
   readonly sql: postgres.Sql;
   readonly store: PopcornStore;
@@ -120,6 +131,10 @@ export interface TickDeps {
   readonly adoptResults?:
     | ((report: Row, projectId: string, newest: boolean) => Promise<void>)
     | null;
+  /** The most collisions calls a large session's read makes; tests lower it. */
+  readonly collisionCalls?: number;
+  /** Vectors for texts, kept per project; null leaves large sessions on the full listing. */
+  readonly similar?: SimilarFor | null;
   /** Asks for a new argument map. Its run is its own workflow, beside the read. */
   readonly requestMap?: ((projectId: string, actorId: string | null) => Promise<void>) | null;
   /** Tells the project's people that the read of a booked start is ready to review. */
@@ -704,6 +719,7 @@ async function runAnalysisPass(
   book: QuoteBook,
   views: readonly string[],
   publisher: Publisher | null,
+  large: LargeSession | null = null,
 ): Promise<Record<string, Json | null>> {
   const lengths = new Map(transcripts.map((t) => [String(t.id), [...String(t.text)].length]));
   const quota = allocateChars(lengths, MAX_ANALYSIS_CHARS);
@@ -763,8 +779,10 @@ async function runAnalysisPass(
       prompts: Object.fromEntries(TENSION_PROMPTS.map((n) => [n, promptText(n)])),
       concurrency: MAX_PARALLEL_ANALYSIS,
       ...(d.callTimeoutMs !== undefined && { callTimeoutMs: d.callTimeoutMs }),
+      ...(large && { large }),
     });
     shaped.tensions = result.tensions;
+    outcomes.push(...(result.notes ?? []));
     const c = result.counts;
     const ms = Math.trunc(performance.now() - started);
     outcomes.push(
@@ -792,6 +810,88 @@ async function runAnalysisPass(
       (book.reattributed ? `, ${book.reattributed} credited to the table that said them` : ""),
   );
   return shaped;
+}
+
+/**
+ * What a large session's tensions keep between reads: loaded the first time a read needs
+ * it, saved once at the end if its contents changed, and never able to fail the read.
+ */
+class KeptTensions {
+  private cache: TensionsCache | null = null;
+  /** The row as loaded: null when there was none, undefined while not loaded. */
+  private loaded: string | null | undefined;
+  private drop = false;
+
+  constructor(
+    private readonly d: TickDeps,
+    private readonly loopId: string,
+    private readonly version: string,
+    /** A rerun: start over whatever was kept. */
+    private readonly fresh: boolean,
+  ) {}
+
+  async get(): Promise<TensionsCache> {
+    if (!this.cache) {
+      const raw = this.fresh ? null : await this.d.store.tensionsCache(this.loopId);
+      this.loaded = raw === null ? (this.fresh ? undefined : null) : JSON.stringify(raw);
+      this.cache = cacheFrom(raw, this.version);
+    }
+    this.drop = false;
+    return this.cache;
+  }
+
+  /** Nothing is kept: the session is not large any more, or has no conversations. */
+  forget(): void {
+    this.drop = true;
+  }
+
+  async save(): Promise<void> {
+    try {
+      const now = utcNowIso(this.d.now());
+      // Nothing kept is no row: an empty cache deletes one that was there, or writes nothing.
+      const empty =
+        this.cache !== null &&
+        !Object.keys(this.cache.positions).length &&
+        !Object.keys(this.cache.pairs).length &&
+        !this.cache.checked.length;
+      if (this.drop || empty || (this.fresh && !this.cache)) {
+        if (this.loaded !== null) await this.d.store.saveTensionsCache(this.loopId, null, now);
+        this.loaded = null;
+        return;
+      }
+      if (!this.cache) return;
+      const value = JSON.stringify(this.cache);
+      if (value === this.loaded) return;
+      await this.d.store.saveTensionsCache(this.loopId, this.cache as unknown as Json, now);
+      this.loaded = value;
+    } catch (exc) {
+      // Only an optimisation: the next read asks again what this one could not keep.
+      this.d.logger.warn(
+        { err: errText(exc), loop_id: this.loopId },
+        "popcorn tensions cache not saved",
+      );
+    }
+  }
+}
+
+/** A large session's tensions context; a session at or under the cap keeps no cache. */
+async function largeSession(
+  d: TickDeps,
+  kept: KeptTensions,
+  projectId: string,
+  transcripts: readonly Json[],
+): Promise<LargeSession | null> {
+  if (!isLarge(transcripts.length)) {
+    kept.forget();
+    return null;
+  }
+  const similar = d.similar ?? null;
+  return {
+    cache: await kept.get(),
+    texts: new Map(transcripts.map((t) => [String(t.id), String(t.text)])),
+    similar: similar ? (texts) => similar(projectId, texts) : null,
+    ...(d.collisionCalls !== undefined && { maxCalls: d.collisionCalls }),
+  };
 }
 
 /** The analysis views not yet computed over this session's transcripts. */
@@ -1133,6 +1233,13 @@ export async function runPopcornTick(
     }
   })();
   const currentLoop = loop;
+  // What a large session's tensions kept from earlier reads; a rerun starts them over.
+  const kept = new KeptTensions(
+    d,
+    loopId,
+    cacheVersion(promptText("collisions-batch"), promptText("tension-verify")),
+    tickKind === "rerun",
+  );
   try {
     if (!reportId || !projectId || !actingUser)
       throw new Error("Popcorn loop is missing required ids");
@@ -1251,10 +1358,16 @@ export async function runPopcornTick(
     const vanished = Object.keys(conversations).filter((cid) => !present.has(cid));
     for (const cid of vanished) delete conversations[cid];
     state.order = order.filter((cid) => present.has(cid));
+    // What a large session kept of a conversation leaves with it.
+    if (vanished.length) {
+      const cache = await kept.get();
+      for (const tid of Object.keys(cache.positions)) if (!present.has(tid)) forget(cache, tid);
+    }
     if (vanished.length && !transcripts.length) {
       // The last conversation is gone: nothing derived from it may stay on the deck.
       state.analysis = null;
       state.quotes = [];
+      kept.forget();
       await d.store.updateLoop(loopId, { popcorn_state: state }, utcNowIso(d.now()));
       await publishNudge(d.sql, reportId, d.logger);
     }
@@ -1306,6 +1419,7 @@ export async function runPopcornTick(
         d.logger.warn({ err: errText(exc) }, "popcorn translation failed");
         translated = null;
       }
+      await kept.save();
       if (translated) {
         const run = await createRun(d, {
           loopId,
@@ -1412,7 +1526,8 @@ export async function runPopcornTick(
         extractionWork.length || tickKind === "rerun"
           ? analysisViews
           : staleViews(state, analysisFingerprint, analysisViews);
-      const fresh = await runAnalysisPass(d, transcripts, outcomes, book, views, publisher);
+      const large = await largeSession(d, kept, projectId, transcripts);
+      const fresh = await runAnalysisPass(d, transcripts, outcomes, book, views, publisher, large);
       commitViews(
         state,
         fresh,
@@ -1421,8 +1536,35 @@ export async function runPopcornTick(
         outcomes,
         utcNowIso(d.now()),
       );
+      // Positions left past the ceiling keep the slide stale, so the next read asks them.
+      const fingerprints = dict(dict(state.analysis).fingerprints);
+      if (large?.left && fingerprints.tensions) delete fingerprints.tensions;
     };
-    await Promise.all([secondPass(), analysisPass()]);
+    // A finish read outside a live session: the finished conversations' positions are made
+    // now, so the host's Analyse of a large session does not wait for them.
+    const preparePass = async () => {
+      if (!cut || !analysisViews.includes("tensions")) return;
+      const large = await largeSession(d, kept, projectId, transcripts);
+      if (!large) return;
+      try {
+        const asked = await preparePositions(
+          (o) => d.model.analysis(o),
+          promptText("positions"),
+          large,
+          extractionWork.map((t) => String(t.id)),
+          {
+            concurrency: MAX_PARALLEL_ANALYSIS,
+            ...(d.callTimeoutMs !== undefined && { callTimeoutMs: d.callTimeoutMs }),
+          },
+        );
+        if (asked)
+          outcomes.push(`tensions: positions of ${asked} conversation(s) kept for Analyse`);
+      } catch (exc) {
+        // The next Analyse makes them instead.
+        d.logger.warn({ err: errText(exc) }, "popcorn positions not prepared");
+      }
+    };
+    await Promise.all([secondPass(), analysisPass(), preparePass()]);
     if (transcripts.length) {
       state.quotes = referencedQuotes(state, book.quotes);
       await writer.flush();
@@ -1440,6 +1582,7 @@ export async function runPopcornTick(
         (tickKind === "rerun" ? " (rerun: the previous state wiped)" : ""),
       ...outcomes,
     ].join("; ");
+    await kept.save();
     const run = await createRun(d, { loopId, status: "ok", detail, startedAt, requestId });
     let snapshotted = false;
     try {
@@ -1471,6 +1614,8 @@ export async function runPopcornTick(
     await finish("ok");
     return { status: "ok", run, state };
   } catch (exc) {
+    // What the read already worked out is kept for the next one.
+    await kept.save();
     const detail = exc instanceof Error ? exc.message : String(exc);
     const run = await createRun(d, { loopId, status: "error", detail, startedAt });
     await updateLoopAfterTick(d, currentLoop, "error");

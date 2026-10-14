@@ -2,8 +2,19 @@ import { popcornShared } from "@dembrane/analysis";
 import { isRecord, type Json, list, orStr, pyStr, truthy } from "../py";
 import { norm, pyStrip } from "../text";
 import { screenFlags } from "./gates";
+import {
+  FOCAL_BATCH,
+  MAX_COLLISION_CALLS,
+  neighbours,
+  pairKey,
+  positionKey,
+  positionsInput,
+  positionsKey,
+  prune,
+  type TensionsCache,
+} from "./scale";
 import type { QuoteBook } from "./shapes";
-import { all, Semaphore, TickTimeout, withTimeout } from "./util";
+import { all, failureText, Semaphore, TickTimeout, withTimeout } from "./util";
 
 /**
  * Tensions as a pipeline of single judgements (popcorn tensions.py): handed, positions,
@@ -19,6 +30,7 @@ export const PROMPT_NAMES = [
   "tension-verify",
   "tension-write",
   "tensions-handed",
+  "collisions-batch",
 ] as const;
 const MAX_POSITIONS_PER_TRANSCRIPT = 30;
 const MAX_CANDIDATES = 40;
@@ -222,6 +234,18 @@ const byRank = (a: Json, b: Json) => {
   return x[0] - y[0] || x[1] - y[1] || x[2] - y[2];
 };
 
+/** One line per position: its id, table, holder, kind and words. */
+function listingLines(positions: readonly Json[], tables: readonly string[]): string[] {
+  const order = [...tables];
+  for (const p of positions)
+    for (const tid of tablesOf(p)) if (!order.includes(tid)) order.push(tid);
+  const key = new Map(order.map((t, i) => [t, `T${i + 1}`]));
+  return positions.map(
+    (p) =>
+      `${p.id} [${key.get(pyStr(p.transcript))} · ${pyStr(p.holder)} · ${pyStr(p.kind)}${truthy(p.hedged) ? " · hedged" : ""}] ${pyStr(p.position)}`,
+  );
+}
+
 /** One call per focal position against the listing of all of them, ranked and capped. */
 async function findCollisions(
   judge: Judge,
@@ -230,16 +254,7 @@ async function findCollisions(
   tables: readonly string[],
 ): Promise<[Json[], number]> {
   const byId = new Map(positions.map((p) => [String(p.id), p]));
-  const order = [...tables];
-  for (const p of positions)
-    for (const tid of tablesOf(p)) if (!order.includes(tid)) order.push(tid);
-  const key = new Map(order.map((t, i) => [t, `T${i + 1}`]));
-  const listing = positions
-    .map(
-      (p) =>
-        `${p.id} [${key.get(pyStr(p.transcript))} · ${pyStr(p.holder)} · ${pyStr(p.kind)}${truthy(p.hedged) ? " · hedged" : ""}] ${pyStr(p.position)}`,
-    )
-    .join("\n");
+  const listing = listingLines(positions, tables).join("\n");
   const collisionsFor = async (p: Json): Promise<[string, Json[]]> => {
     const out = await judge.call(
       prompt,
@@ -273,8 +288,20 @@ async function findCollisions(
       } else (prev.named_by as string[]).push(pid);
     }
   }
-  let candidates = [...pair.values()].sort(byRank);
-  const foundPairs = candidates.length;
+  const found = [...pair.values()];
+  return [rankAndCap(found, byId), found.length];
+}
+
+/** The pairs to verify: every table's best pair first, then by rank, up to the cap. */
+export function rankAndCap(
+  pairs: readonly Json[],
+  byId: ReadonlyMap<string, Json>,
+  cap = MAX_CANDIDATES,
+  reserveAll = true,
+): Json[] {
+  let candidates = [...pairs].sort(byRank);
+  // A large session verifies its strongest pairs; a small one every table's best as well.
+  if (!reserveAll) return candidates.slice(0, cap);
   // The best pair of every transcript is verified whatever its rank.
   const reserved: Json[] = [];
   const seenTids = new Set<string>();
@@ -288,9 +315,146 @@ async function findCollisions(
         if (!reserved.includes(c)) reserved.push(c);
       }
   const rest = candidates.filter((c) => !reserved.includes(c));
-  candidates = [...reserved, ...rest].slice(0, Math.max(MAX_CANDIDATES, reserved.length));
+  // A large session verifies at most `cap` pairs, however many tables it has.
+  candidates = [...reserved, ...rest].slice(0, Math.max(cap, reserved.length));
   candidates.sort(byRank);
-  return [candidates, foundPairs];
+  return candidates;
+}
+
+const BATCH_SCHEMA: Json = {
+  type: "object",
+  additionalProperties: false,
+  required: ["collisions"],
+  properties: {
+    collisions: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["focal", "other", "why", "zero_sum"],
+        properties: {
+          focal: { type: "string", maxLength: 12 },
+          other: { type: "string", maxLength: 12 },
+          why: { type: "string", maxLength: 240 },
+          zero_sum: { type: "number", minimum: 0, maximum: 1 },
+        },
+      },
+    },
+  },
+};
+
+/**
+ * Large sessions: ten focal positions a call, each batch listing them and their nearest,
+ * the pairs kept between reads so a read asks only about positions it has not asked about.
+ */
+export async function findCollisionsLarge(
+  judge: Judge,
+  positions: readonly Json[],
+  o: {
+    prompt: string;
+    tables: readonly string[];
+    large: LargeSession;
+    /** Every position the session holds, trimmed or not: what is kept about them stays. */
+    known?: ReadonlySet<string>;
+  },
+): Promise<[Json[], number, string]> {
+  const { cache } = o.large;
+  const keyOf = new Map(positions.map((p) => [String(p.id), positionKey(pyStr(p.transcript), p)]));
+  const idOf = new Map([...keyOf].map(([id, k]) => [k, id]));
+  prune(cache, new Set([...keyOf.values(), ...(o.known ?? [])]));
+  const byId = new Map(positions.map((p) => [String(p.id), p]));
+  const ids = positions.map((p) => String(p.id));
+  const checked = new Set(cache.checked);
+  const unchecked = ids.filter((id) => !checked.has(keyOf.get(id) as string));
+  const focal = unchecked.slice(0, (o.large.maxCalls ?? MAX_COLLISION_CALLS) * FOCAL_BATCH);
+  let vectors = new Map<string, number[]>();
+  let unembedded = "";
+  if (focal.length && o.large.similar) {
+    try {
+      const byText = await o.large.similar(positions.map((p) => pyStr(p.position)));
+      for (const id of ids) {
+        const v = byText.get(pyStr(byId.get(id)?.position));
+        if (v) vectors.set(id, v);
+      }
+    } catch (exc) {
+      // Without vectors every batch lists the whole session; the outcome says why.
+      vectors = new Map();
+      unembedded = failureText(exc);
+    }
+  }
+  const listed = listingLines(positions, o.tables);
+  const lines = new Map(ids.map((id, i) => [id, listed[i] as string]));
+  const batches: string[][] = [];
+  for (let i = 0; i < focal.length; i += FOCAL_BATCH) batches.push(focal.slice(i, i + FOCAL_BATCH));
+  const ask = async (batch: string[]) => {
+    const out = await judge.call(
+      o.prompt,
+      // Worked out when the call starts: one batch's nearest at a time, never all at once.
+      () => {
+        const shown = vectors.size ? neighbours(batch, vectors, ids, o.large.neighbours) : ids;
+        return `ALL POSITIONS:\n${shown.map((id) => lines.get(id)).join("\n")}\n\nFOCAL POSITIONS: ${batch.join(", ")}`;
+      },
+      BATCH_SCHEMA,
+      true,
+      "collisions",
+    );
+    for (const c of list(out.collisions)) {
+      if (!isRecord(c)) continue;
+      const pid = pyStrip(orStr(c.focal));
+      const other = pyStrip(orStr(c.other));
+      const score = Number(c.zero_sum);
+      if (!batch.includes(pid) || !byId.has(other) || other === pid) continue;
+      if (Number.isNaN(score) || score < MIN_ZERO_SUM) continue;
+      const [ka, kb] = [keyOf.get(pid) as string, keyOf.get(other) as string];
+      // Two positions said word for word alike are one position.
+      if (ka === kb) continue;
+      const k = pairKey(ka, kb);
+      const prev = cache.pairs[k];
+      if (!prev || score > prev.zero_sum)
+        cache.pairs[k] = {
+          a: ka < kb ? ka : kb,
+          b: ka < kb ? kb : ka,
+          zero_sum: score,
+          why: orStr(c.why),
+          named_by: [...new Set([...(prev?.named_by ?? []), ka])],
+          // A stronger naming is the same pair: its verdict stands.
+          ...(prev?.verdict && { verdict: prev.verdict }),
+        };
+      else if (!prev.named_by.includes(ka)) prev.named_by.push(ka);
+    }
+    for (const id of batch) cache.checked.push(keyOf.get(id) as string);
+  };
+  await all(batches.map(ask));
+  // A pair verified false, or true without quotes to show, stays out: the cap fills with
+  // pairs not yet asked. Only pairs whose positions are both in this read are candidates.
+  const held = Object.entries(cache.pairs).filter(
+    ([, p]) =>
+      idOf.has(p.a) &&
+      idOf.has(p.b) &&
+      (!p.verdict || supported([p.verdict as Json])[0].length > 0),
+  );
+  const pairs = held.map(([key, p]): Json => {
+    const a = idOf.get(p.a) as string;
+    const b = idOf.get(p.b) as string;
+    return {
+      pair_key: key,
+      a,
+      b,
+      zero_sum: p.zero_sum,
+      why: p.why,
+      cross_table: !sameSet(tablesOf(byId.get(a) as Json), tablesOf(byId.get(b) as Json)),
+      named_by: p.named_by.map((k) => idOf.get(k)).filter(Boolean),
+    };
+  });
+  const left = unchecked.length - focal.length;
+  o.large.left = left;
+  const note =
+    `collisions: ${focal.length} new of ${ids.length} positions in ${batches.length} call(s)` +
+    (focal.length && !vectors.size
+      ? `, full listing${unembedded ? ` (embeddings failed: ${unembedded})` : ""}`
+      : "") +
+    (left ? `, ${left} left for the next read` : "");
+  return [rankAndCap(pairs, byId, MAX_CANDIDATES, false), pairs.length, note];
 }
 
 function sameSet(a: readonly string[], b: readonly string[]): boolean {
@@ -337,6 +501,14 @@ async function verifyCandidates(
     };
   };
   return all(candidates.map(verify));
+}
+
+/** What a verification decided, as kept with its pair. */
+function verdictOf(v: Json): Json {
+  const out: Json = {};
+  for (const k of ["valid", "verify_why", "poleA", "poleB", "quotesA", "quotesB", "transcripts"])
+    out[k] = v[k] as Json[string];
+  return out;
 }
 
 /** A verified yes without a quote on a pole is unsupported. */
@@ -475,6 +647,76 @@ export interface PipelineResult {
   readonly tensions: Json;
   readonly gate_flags: string[];
   readonly counts: Record<string, number>;
+  /** What a large session's read did beyond the counts. */
+  readonly notes?: string[];
+}
+
+export type Similar = (texts: readonly string[]) => Promise<Map<string, number[]>>;
+/** A large session's tensions: what they keep between reads, and how positions are listed. */
+export interface LargeSession {
+  readonly cache: TensionsCache;
+  /** Every conversation's full text; positions read a fixed slice of it. */
+  readonly texts: ReadonlyMap<string, string>;
+  readonly similar: Similar | null;
+  /** How many nearest positions each focal one lists; NEIGHBOURS unless measured otherwise. */
+  readonly neighbours?: number;
+  /** The most collisions calls a read makes; MAX_COLLISION_CALLS unless a test lowers it. */
+  readonly maxCalls?: number;
+  /** Set by the read: positions it left for the next one. */
+  left?: number;
+}
+
+/** One conversation's positions, asked of the given text. */
+async function askPositions(judge: Judge, prompt: string, tid: string, text: string) {
+  const out = await judge.call(
+    prompt,
+    `TRANSCRIPT id: ${tid}\n${text}\nEND TRANSCRIPT`,
+    POSITIONS_SCHEMA,
+    true,
+    "positions",
+  );
+  const found: Json[] = [];
+  for (const p of list(out.positions).slice(0, MAX_POSITIONS_PER_TRANSCRIPT)) {
+    if (!isRecord(p) || !truthy(p.position)) continue;
+    const quote = pyStrip(orStr(p.quote));
+    found.push({
+      ...p,
+      transcript: tid,
+      verbatim: Boolean(quote) && norm(text).includes(norm(quote)),
+    });
+  }
+  return found;
+}
+
+/** A conversation's positions: in a large session from a fixed slice, kept until it changes. */
+async function positionsOf(
+  judge: Judge,
+  prompt: string,
+  large: LargeSession | null,
+  transcripts: ReadonlyMap<string, string>,
+  tid: string,
+): Promise<Json[]> {
+  if (!large) return askPositions(judge, prompt, tid, transcripts.get(tid) ?? "");
+  const input = positionsInput(large.texts.get(tid) ?? transcripts.get(tid) ?? "");
+  const key = positionsKey(prompt, input);
+  const held = large.cache.positions[tid];
+  if (held?.key === key) return held.found.map((p) => ({ ...p }));
+  const found = await askPositions(judge, prompt, tid, input);
+  large.cache.positions[tid] = { key, found };
+  return found.map((p) => ({ ...p }));
+}
+
+/** Positions of the given conversations, made and kept for the next analysis; returns how many were asked. */
+export async function preparePositions(
+  generate: Generate,
+  prompt: string,
+  large: LargeSession,
+  tids: readonly string[],
+  o: { concurrency?: number; callTimeoutMs?: number } = {},
+): Promise<number> {
+  const judge = new Judge(generate, o.concurrency ?? 8, o.callTimeoutMs);
+  await all(tids.map((tid) => positionsOf(judge, prompt, large, large.texts, tid)));
+  return judge.byLabel.positions ?? 0;
 }
 
 /** The pipeline over the session, into the tick's shared quote registry. */
@@ -487,59 +729,88 @@ export async function runPipeline(
     concurrency?: number;
     maxTensions?: number;
     callTimeoutMs?: number;
+    large?: LargeSession;
   },
 ): Promise<PipelineResult> {
   const tids = [...transcripts.keys()];
   const judge = new Judge(o.generate, o.concurrency ?? 8, o.callTimeoutMs);
   const prompts = o.prompts;
-  const positionsFor = async (tid: string): Promise<Json[]> => {
-    const out = await judge.call(
-      prompts.positions as string,
-      `TRANSCRIPT id: ${tid}\n${transcripts.get(tid)}\nEND TRANSCRIPT`,
-      POSITIONS_SCHEMA,
-      true,
-      "positions",
-    );
-    const found: Json[] = [];
-    for (const p of list(out.positions).slice(0, MAX_POSITIONS_PER_TRANSCRIPT)) {
-      if (!isRecord(p) || !truthy(p.position)) continue;
-      const quote = pyStrip(orStr(p.quote));
-      found.push({
-        ...p,
-        transcript: tid,
-        verbatim: Boolean(quote) && norm(transcripts.get(tid) ?? "").includes(norm(quote)),
-      });
-    }
-    return found;
-  };
+  const large = o.large ?? null;
+  const positionsFor = (tid: string) =>
+    positionsOf(judge, prompts.positions as string, large, transcripts, tid);
   const [first, ...rest] = (await all<unknown>([
     findHanded(judge, transcripts, prompts["tensions-handed"] as string),
     ...tids.map(positionsFor),
   ])) as [Json[], ...Json[][]];
   const handed = first;
+  // A conversation gone from the session leaves the cache with it.
+  if (large)
+    for (const tid of Object.keys(large.cache.positions))
+      if (!transcripts.has(tid)) delete large.cache.positions[tid];
   const handedText = handedListing(handed);
   let foundByTid = new Map(tids.map((t, i) => [t, rest[i] as Json[]]));
   const foundTotal = [...foundByTid.values()].reduce((n, v) => n + v.length, 0);
+  // Every position found, before the trim: what is kept about a trimmed one stays.
+  const known = large
+    ? new Set([...foundByTid].flatMap(([tid, ps]) => ps.map((p) => positionKey(tid, p))))
+    : undefined;
   foundByTid = trimPositions(foundByTid);
   const positions: Json[] = [];
   for (const tid of tids)
     for (const p of foundByTid.get(tid) ?? [])
       positions.push({ id: `P${positions.length + 1}`, ...p });
   const byId = new Map(positions.map((p) => [String(p.id), p]));
-  const [candidates, foundPairs] = await findCollisions(
+  const notes: string[] = [];
+  let candidates: Json[];
+  let foundPairs: number;
+  if (large) {
+    let note: string;
+    [candidates, foundPairs, note] = await findCollisionsLarge(judge, positions, {
+      prompt: prompts["collisions-batch"] as string,
+      tables: tids,
+      large,
+      ...(known && { known }),
+    });
+    notes.push(note);
+  } else
+    [candidates, foundPairs] = await findCollisions(
+      judge,
+      positions,
+      prompts.collisions as string,
+      tids,
+    );
+  // A large session verifies a pair once; its verdict is kept with the pair.
+  const asked = large
+    ? candidates.filter((c) => !large.cache.pairs[String(c.pair_key)]?.verdict)
+    : candidates;
+  const answered = await verifyCandidates(
     judge,
-    positions,
-    prompts.collisions as string,
-    tids,
-  );
-  const verified = await verifyCandidates(
-    judge,
-    candidates,
+    asked,
     byId,
     prompts["tension-verify"] as string,
-    transcripts,
+    // A large session's positions come from a fixed slice; their pairs are checked against it.
+    large
+      ? new Map(
+          [
+            ...new Set(
+              asked.flatMap((c) => [
+                ...tablesOf(byId.get(String(c.a)) as Json),
+                ...tablesOf(byId.get(String(c.b)) as Json),
+              ]),
+            ),
+          ].map((t) => [t, positionsInput(large.texts.get(t) ?? transcripts.get(t) ?? "")]),
+        )
+      : transcripts,
     handedText,
   );
+  const verified = large
+    ? candidates.map((c) => {
+        const pair = large.cache.pairs[String(c.pair_key)];
+        const fresh = answered.find((v) => v.pair_key === c.pair_key);
+        if (fresh && pair) pair.verdict = verdictOf(fresh);
+        return fresh ?? { ...c, ...(pair?.verdict ?? {}) };
+      })
+    : answered;
   const [valid, unsupported] = supported(verified);
   const kept = await dedupeTensions(judge, valid, o.maxTensions ?? MAX_TENSIONS);
   const tensions: Json[] = [];
@@ -555,6 +826,7 @@ export async function runPipeline(
   return {
     tensions: { tensions },
     gate_flags: gateFlags,
+    ...(notes.length && { notes }),
     counts: {
       handed: handed.length,
       handed_verified: handed.filter((h) => h.verified).length,

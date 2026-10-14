@@ -199,4 +199,19 @@ run("a finish read outside a live session", () => {
     const none = { ...deps(), requestMap: null };
     expect((await runPopcornTick(none, ids.loop, "manual", newId())).status).toBe("no_op");
   });
+
+  test("a small session that loses a conversation keeps no tensions cache", async () => {
+    await raw`update agent_loop set status = 'paused' where id = ${ids.loop}`;
+    const gone = newId();
+    await raw`insert into conversation (id, project_id, participant_name, created_at, duration)
+      values (${gone}, ${ids.project}, 'Short table', now(), 60)`;
+    await raw`insert into conversation_chunk (id, conversation_id, transcript, timestamp, created_at)
+      values (${newId()}, ${gone}, 'We want more benches in the park.', now(), now())`;
+    await runPopcornTick(deps(), ids.loop, "finish", newId(), [gone]);
+    expect(Object.keys(dict(dict((await loop()).popcorn_state).conversations))).toContain(gone);
+    await raw`update conversation set deleted_at = now() where id = ${gone}`;
+    await runPopcornTick(deps(), ids.loop, "finish", newId(), [first as string]);
+    const rows = await raw`select 1 from popcorn_tensions_cache where loop_id = ${ids.loop}`;
+    expect(rows.length).toBe(0);
+  });
 });

@@ -4,8 +4,12 @@ import { DrizzleAccessStore } from "@dembrane/access";
 import {
   type AnalysisRuntime,
   analysisRuntime,
+  EmbeddingService,
   type ExecutorDeps,
+  embeddingInputHash,
   type JobSink,
+  PRODUCERS_KEY,
+  type ProducerServices,
   type RuntimeDeps,
   type SnapshotHook,
 } from "@dembrane/analysis";
@@ -28,7 +32,7 @@ import { dict, list, orStr, pyIso } from "./py";
 import type { PopcornFlags } from "./service";
 import { client, popcornStore, type Row } from "./storage";
 import { PopcornModel } from "./tick/model";
-import { reconcileMissingTicks, runPopcornTick, type TickDeps } from "./tick/run";
+import { reconcileMissingTicks, runPopcornTick, type SimilarFor, type TickDeps } from "./tick/run";
 import { tickStore } from "./tick/storage";
 
 /**
@@ -152,6 +156,34 @@ export function leaseToken(workflowId: string): number {
   return createHash("sha1").update(workflowId).digest().readInt32BE(0) & 0x7fffffff;
 }
 
+// One per executor, so the embedding deployment is probed once per worker, not once per read.
+const similarByExecutor = new WeakMap<ExecutorDeps, SimilarFor>();
+
+/** Vectors for position texts through the analysis embeddings, stored per project. */
+function similarFrom(executor: ExecutorDeps): SimilarFor {
+  const held = similarByExecutor.get(executor);
+  if (held) return held;
+  // A failed probe is tried again by the next read.
+  let identity: ReturnType<ProducerServices["probe"]> | null = null;
+  const similar: SimilarFor = async (projectId, texts) => {
+    const services = executor.services[PRODUCERS_KEY] as ProducerServices;
+    identity ??= services.probe().catch((err) => {
+      identity = null;
+      throw err;
+    });
+    const service = new EmbeddingService(executor.store, await identity, services.embed);
+    const batch = await service.ensure(projectId, texts);
+    const out = new Map<string, number[]>();
+    for (const t of texts) {
+      const v = batch.vectors.get(embeddingInputHash(t));
+      if (v) out.set(t, v);
+    }
+    return out;
+  };
+  similarByExecutor.set(executor, similar);
+  return similar;
+}
+
 export function tickDeps(
   deps: PopcornWorkerDeps,
   workflowId: string,
@@ -173,6 +205,7 @@ export function tickDeps(
       ? (p, a) => analysis.adopt?.requestMap(p, a) ?? Promise.resolve()
       : null,
     notifyReady: deps.notifyReady ?? null,
+    similar: analysis.executor ? similarFrom(analysis.executor) : null,
     flags: deps.flags,
     participantBaseUrl: deps.participantBaseUrl,
     adminBaseUrl: deps.adminBaseUrl,
