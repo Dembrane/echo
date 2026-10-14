@@ -34,10 +34,16 @@ describe("recordingSessionReducer", () => {
 		expect(reduce(paused, { type: "switchToText" })).toEqual(live);
 	});
 
-	it("finishes from the confirm modal, and lands back in it on failure or cancel", () => {
+	it("finishes from the confirm modal, and lands back in it on failure", () => {
 		expect(reduce(paused, { type: "finishStarted" })).toEqual(finishing);
 		expect(reduce(finishing, { type: "finishFailed" })).toEqual(paused);
-		expect(reduce(finishing, { type: "finishCancelled" })).toEqual(paused);
+	});
+
+	it("calls a finish off on resume, holding the paused time", () => {
+		expect(reduce(finishing, { type: "resume" })).toEqual({
+			...paused,
+			confirming: false,
+		});
 	});
 
 	it("closes the confirm modal once finished", () => {
@@ -88,8 +94,6 @@ describe("recordingSessionReducer", () => {
 			[paused, { at: 90, type: "stop" }],
 			[paused, { type: "confirmFinish" }],
 			[paused, { type: "finishSucceeded" }],
-			[paused, { type: "finishCancelled" }],
-			[finishing, { type: "resume" }],
 			[finishing, { type: "finishStarted" }],
 			[finishing, { type: "switchToText" }],
 			[interrupted, { at: 90, type: "stop" }],

@@ -21,8 +21,7 @@ type StopRecordingConfirmationModalProps = {
 	/** This conversation's queued chunks: `sent` of `total`. */
 	uploadProgress?: { sent: number; total: number };
 	handleConfirmFinish: () => void;
-	/** Stops waiting on a finish and returns to the choice. */
-	handleCancelFinish?: () => void;
+	/** Also calls off a finish still waiting on the audio. */
 	handleResume: () => void;
 	handleSwitchToText: () => void;
 	showVerifyOnFinish?: boolean;
@@ -37,7 +36,6 @@ export const StopRecordingConfirmationModal = ({
 	isOnline = true,
 	uploadProgress = { sent: 0, total: 0 },
 	handleConfirmFinish,
-	handleCancelFinish,
 	handleResume,
 	handleSwitchToText,
 	showVerifyOnFinish = false,
@@ -159,29 +157,15 @@ export const StopRecordingConfirmationModal = ({
 						)}
 
 						<Group gap="sm" py="sm">
-							{isStopping ? (
-								<Button
-									variant="default"
-									onClick={handleCancelFinish}
-									miw={100}
-									size="md"
-									{...testId("portal-audio-stop-cancel-button")}
-								>
-									<Trans id="participant.button.stop.cancel_finish">
-										Cancel
-									</Trans>
-								</Button>
-							) : (
-								<Button
-									variant="filled"
-									onClick={handleClose}
-									miw={100}
-									size="md"
-									{...testId("portal-audio-stop-resume-button")}
-								>
-									<Trans id="participant.button.stop.resume">Resume</Trans>
-								</Button>
-							)}
+							<Button
+								variant="filled"
+								onClick={handleClose}
+								miw={100}
+								size="md"
+								{...testId("portal-audio-stop-resume-button")}
+							>
+								<Trans id="participant.button.stop.resume">Resume</Trans>
+							</Button>
 							<Button
 								onClick={handleFinishClick}
 								loading={isStopping}

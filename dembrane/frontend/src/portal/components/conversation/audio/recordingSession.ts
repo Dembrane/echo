@@ -23,7 +23,6 @@ export type RecordingSessionEvent =
 	| { type: "switchToText" }
 	| { type: "finishStarted" }
 	| { type: "finishFailed" }
-	| { type: "finishCancelled" }
 	| { type: "finishSucceeded" }
 	| { type: "interrupted"; at: number }
 	| { type: "reconnectStarted" }
@@ -67,10 +66,11 @@ const transition = (
 				: session;
 
 		// The paused time stays until the recorder has actually started again,
-		// so the timer doesn't flash back to zero in between.
+		// so the timer doesn't flash back to zero in between. Resuming while
+		// finishing calls the finish off.
 		case "resume":
-			return session.phase === "paused"
-				? { ...session, confirming: false }
+			return session.phase === "paused" || session.phase === "finishing"
+				? { ...session, confirming: false, phase: "paused" }
 				: session;
 
 		case "recordingStarted":
@@ -86,7 +86,6 @@ const transition = (
 
 		// Back to the confirm modal, to resume or try again.
 		case "finishFailed":
-		case "finishCancelled":
 			return session.phase === "finishing"
 				? { ...session, phase: "paused" }
 				: session;

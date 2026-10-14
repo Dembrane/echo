@@ -199,22 +199,11 @@ vi.mock("./outbox/OutboxProvider", async () => {
 					rerender();
 					if (queued === 0) for (const done of queueWaiters.splice(0)) done();
 				},
-				// Behind the queued chunks, then `finish` stands in for the server.
-				finish: async (
-					conversationId: string,
-					{ signal }: { signal?: AbortSignal } = {},
-				) => {
+				queuedCount: () => queued,
+				settled: async () => {
 					if (queued > 0)
 						await new Promise<void>((done) => queueWaiters.push(done));
-					// Aborting stops the wait at once, as the real outbox does.
-					await Promise.race([
-						finish(conversationId),
-						new Promise((_, reject) =>
-							signal?.addEventListener("abort", () => reject(signal.reason)),
-						),
-					]);
 				},
-				queuedCount: () => queued,
 			};
 		},
 	};
@@ -488,31 +477,25 @@ describe("finishing", () => {
 		expect(navigate).not.toHaveBeenCalled();
 	});
 
-	it("cancels a waiting finish back to the paused choice", async () => {
-		const server = deferred();
-		finish.mockReturnValue(server.promise);
+	it("calls off a finish still waiting on the audio when you resume", async () => {
+		const upload = deferred();
+		uploadChunk.mockReturnValue(upload.promise);
 		renderAudio();
 		await startRecording();
+		act(() => recorder.options?.onChunk(new Blob(["audio"])));
 		await stopAndFinish();
 
 		fireEvent.click(
-			await screen.findByTestId("portal-audio-stop-cancel-button"),
-		);
-		expect(
 			await screen.findByTestId("portal-audio-stop-resume-button"),
-		).toBeTruthy();
-		expect(
-			screen
-				.getByTestId("portal-audio-stop-finish-button")
-				.hasAttribute("data-loading"),
-		).toBe(false);
-
+		);
+		await screen.findByTestId("portal-audio-stop-button");
 		expect(capture).toHaveBeenCalledWith(
 			"portal_finish_cancelled",
-			expect.objectContaining({ conversation_id: "c1", pending_uploads: 0 }),
+			expect.objectContaining({ conversation_id: "c1", pending_uploads: 1 }),
 		);
 
-		await act(async () => server.resolve({}));
+		await act(async () => upload.resolve({}));
+		expect(finish).not.toHaveBeenCalled();
 		expect(navigate).not.toHaveBeenCalled();
 		expect(toastError).not.toHaveBeenCalled();
 	});

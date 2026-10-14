@@ -31,16 +31,7 @@ export type ChunkMeta = {
 export type Outbox = {
 	/** Keeps the chunk on this device and sends it when it can. */
 	enqueueChunk: (chunk: Blob, meta: ChunkMeta) => Promise<void>;
-	/**
-	 * Queues finishing the conversation behind its chunks, and resolves once
-	 * the server has it, however long that takes. Aborting stops the wait and
-	 * takes the finish back out of the queue, unless it's already being sent.
-	 */
-	finish: (
-		conversationId: string,
-		options?: { signal?: AbortSignal },
-	) => Promise<void>;
-	/** Chunks for this conversation still waiting to send. Re-renders on change. */
+	/** Items for this conversation still waiting to send. Re-renders on change. */
 	queuedCount: (conversationId: string) => number;
 	/** Resolves once nothing for this conversation is waiting to send. */
 	settled: (conversationId: string) => Promise<void>;
@@ -53,9 +44,6 @@ export const useOutbox = () => {
 	if (!outbox) throw new Error("useOutbox needs an OutboxProvider");
 	return outbox;
 };
-
-const aborted = (signal?: AbortSignal) =>
-	signal?.reason ?? new DOMException("Aborted", "AbortError");
 
 const errorMessage = (error: unknown) =>
 	error instanceof Error ? error.message : String(error);
@@ -131,15 +119,14 @@ export const OutboxProvider = ({
 	// Counts live in a ref so waiters resolve the moment they change, not after
 	// a render; the version only makes readers of queuedCount re-render.
 	const counts = useRef({
-		/** Finishes in the store. */
-		finishes: {} as Record<string, number>,
 		/** Handed over but not (or never to be) in the store: enqueuing, or direct uploads. */
 		inMemory: {} as Record<string, number>,
-		/** Chunks in the store. */
 		stored: {} as Record<string, number>,
 	});
 	const [version, setVersion] = useState(0);
-	const waiters = useRef(new Set<{ ready: () => boolean; done: () => void }>());
+	const waiters = useRef(
+		new Set<{ conversationId: string; done: () => void }>(),
+	);
 
 	const queued = useCallback(
 		(conversationId: string) =>
@@ -151,32 +138,12 @@ export const OutboxProvider = ({
 	const countsChanged = useCallback(() => {
 		setVersion((v) => v + 1);
 		for (const waiter of waiters.current) {
-			if (waiter.ready()) {
+			if (queued(waiter.conversationId) === 0) {
 				waiters.current.delete(waiter);
 				waiter.done();
 			}
 		}
-	}, []);
-
-	/** Resolves once `ready` holds, checked whenever the counts change. */
-	const until = useCallback(
-		(ready: () => boolean, signal?: AbortSignal) =>
-			new Promise<void>((resolve, reject) => {
-				if (signal?.aborted) return reject(aborted(signal));
-				if (ready()) return resolve();
-				const waiter = { done: resolve, ready };
-				waiters.current.add(waiter);
-				signal?.addEventListener(
-					"abort",
-					() => {
-						waiters.current.delete(waiter);
-						reject(aborted(signal));
-					},
-					{ once: true },
-				);
-			}),
-		[],
-	);
+	}, [queued]);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -196,15 +163,12 @@ export const OutboxProvider = ({
 		const refresh = async () => {
 			const store = await storePromise;
 			if (!store || cancelled) return;
-			const stored: Record<string, number> = {};
-			const finishes: Record<string, number> = {};
+			const next: Record<string, number> = {};
 			for (const item of await store.list()) {
-				const tally = item.kind === "finish" ? finishes : stored;
-				tally[item.conversationId] = (tally[item.conversationId] ?? 0) + 1;
+				next[item.conversationId] = (next[item.conversationId] ?? 0) + 1;
 			}
 			if (cancelled) return;
-			counts.current.stored = stored;
-			counts.current.finishes = finishes;
+			counts.current.stored = next;
 			countsChanged();
 		};
 		refreshRef.current = refresh;
@@ -358,85 +322,22 @@ export const OutboxProvider = ({
 		[directUpload, countsChanged],
 	);
 
-	const finishWrites = useRef<Promise<void>>(Promise.resolve());
-
-	const finishing = useCallback(
-		(conversationId: string) =>
-			(counts.current.finishes[conversationId] ?? 0) > 0,
-		[],
-	);
-
 	const settled = useCallback(
 		async (conversationId: string) => {
 			await refreshRef.current();
-			await until(
-				() => queued(conversationId) === 0 && !finishing(conversationId),
-			);
-		},
-		[queued, finishing, until],
-	);
-
-	const finish = useCallback(
-		async (
-			conversationId: string,
-			{ signal }: { signal?: AbortSignal } = {},
-		) => {
-			// Chunks still on their way into the store, or uploading directly,
-			// go first: the finish must queue behind every one of them.
-			await until(
-				() => (counts.current.inMemory[conversationId] ?? 0) === 0,
-				signal,
-			);
-			const store = await storeRef.current;
-			if (signal?.aborted) throw aborted(signal);
-
-			if (!store) {
-				// Nothing to queue it in: finish now, as before the outbox.
-				await api.finish(conversationId);
-				return;
-			}
-
-			// One finish per conversation: a second Finish joins the first. The
-			// check and the write go one at a time, or two would both find none.
-			const queueing = finishWrites.current.then(async () => {
-				const items = await store.list();
-				const queued = items.some(
-					(item) =>
-						item.kind === "finish" && item.conversationId === conversationId,
-				);
-				if (!queued) await store.enqueueFinish(conversationId);
+			if (queued(conversationId) === 0) return;
+			await new Promise<void>((done) => {
+				waiters.current.add({ conversationId, done });
 			});
-			finishWrites.current = queueing.catch(() => {});
-			await queueing;
-			await refreshRef.current();
-			channelRef.current?.postMessage("changed");
-			kickRef.current();
-
-			// Taken back out unless the drainer has already sent it.
-			const takeBack = async () => {
-				for (const item of await store.list()) {
-					if (item.kind === "finish" && item.conversationId === conversationId)
-						await store.remove(item.seq);
-				}
-				await refreshRef.current();
-				channelRef.current?.postMessage("changed");
-			};
-			if (signal?.aborted) {
-				await takeBack();
-				throw aborted(signal);
-			}
-			signal?.addEventListener("abort", () => void takeBack(), { once: true });
-			// Gone from the queue: delivered, or dropped as the conversation is gone.
-			await until(() => !finishing(conversationId), signal);
 		},
-		[api, finishing, until],
+		[queued],
 	);
 
 	// A new value per version, so readers of queuedCount re-render.
 	// biome-ignore lint/correctness/useExhaustiveDependencies: version is the point
 	const value = useMemo<Outbox>(
-		() => ({ enqueueChunk, finish, queuedCount: queued, settled }),
-		[enqueueChunk, finish, queued, settled, version],
+		() => ({ enqueueChunk, queuedCount: queued, settled }),
+		[enqueueChunk, queued, settled, version],
 	);
 
 	return (

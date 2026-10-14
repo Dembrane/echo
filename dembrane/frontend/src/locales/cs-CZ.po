@@ -178,6 +178,11 @@ msgstr "Welcome back"
 #~ msgid "participant.modal.interruption.uploading"
 #~ msgstr "Uploading audio..."
 
+#. js-lingui-explicit-id
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:170
+#~ msgid "participant.button.stop.cancel_finish"
+#~ msgstr ""
+
 #: src/components/popcorn/PopcornStatus.tsx:49
 msgid " · {heldBack} held back"
 msgstr "· {heldBack} pozastaveno"
@@ -3018,11 +3023,6 @@ msgstr "C_Med: {0}"
 msgid "Can you tell us more?"
 msgstr "Můžete nám říct víc?"
 
-#. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:170
-msgid "participant.button.stop.cancel_finish"
-msgstr ""
-
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1094
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1142
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1176
@@ -5514,7 +5514,7 @@ msgid "Early features you can try on this project before they are ready for ever
 msgstr "Předběžné funkce, které si můžete v tomto projektu vyzkoušet dříve, než budou připravené pro všechny."
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:703
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:707
 msgid "participant.button.echo"
 msgstr "ECHO"
 
@@ -6247,7 +6247,7 @@ msgstr "Failed to delete response"
 #~ msgstr "Failed to delete tag"
 
 #: src/portal/components/conversation/text/ParticipantConversationText.tsx:97
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:377
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:374
 msgid "Failed to finish conversation. Please try again."
 msgstr "Failed to finish conversation. Please try again."
 
@@ -6332,7 +6332,7 @@ msgstr "Failed to retranscribe conversation. Please try again."
 #~ msgid "Failed to revise outcome. Please try again."
 #~ msgstr "Failed to revise outcome. Please try again."
 
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:218
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:223
 msgid "Failed to stop recording on device change. Please try again."
 msgstr "Failed to stop recording on device change. Please try again."
 
@@ -6507,12 +6507,12 @@ msgid "participant.button.finish.text.mode"
 msgstr "Finish"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:196
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:180
 msgid "participant.button.stop.finish"
 msgstr "Finish"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:664
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:668
 msgid "participant.button.finish"
 msgstr "Finish"
 
@@ -11996,7 +11996,7 @@ msgid "Reconnecting"
 msgstr "Znovu se připojuje"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:640
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:644
 msgid "participant.button.record"
 msgstr "Record"
 
@@ -12058,7 +12058,7 @@ msgid "Recording page"
 msgstr "Stránka nahrávání"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:83
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:81
 msgid "participant.modal.pause.title"
 msgstr "Nahrávání pozastaveno"
 
@@ -12748,7 +12748,7 @@ msgid "Results show in the language people spoke. Choose a language to translate
 msgstr "Výsledky se zobrazují v jazyce, kterým lidé mluvili. Zvolte jazyk pro překlad všech popcornů, citací, témat a zúčastněných stran pro tuto prezentaci; originály zůstanou zachovány."
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:182
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:167
 msgid "participant.button.stop.resume"
 msgstr "Resume"
 
@@ -14172,7 +14172,7 @@ msgid "Skip"
 msgstr "Skip"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:126
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:124
 msgid "participant.button.verify_prompt.skip"
 msgstr "Skip"
 
@@ -14591,7 +14591,7 @@ msgid "Stop"
 msgstr "Stop"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:724
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:728
 msgid "participant.button.stop"
 msgstr "Stop"
 
@@ -14823,12 +14823,12 @@ msgstr "Přepnout na samoobsluhu"
 msgid "Switch to self-serve billing"
 msgstr "Přepnout na samoobslužnou fakturaci"
 
-#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:647
+#: src/portal/components/conversation/audio/ParticipantConversationAudio.tsx:651
 msgid "Switch to text"
 msgstr "Přepnout na text"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:208
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:192
 msgid "participant.link.switch.text"
 msgstr "Switch to text input"
 
@@ -16929,7 +16929,7 @@ msgstr "Nahrávání zvukových souborů"
 #. js-lingui-explicit-id
 #. placeholder {0}: uploadProgress.sent
 #. placeholder {1}: uploadProgress.total
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:153
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:151
 msgid "participant.modal.uploading_progress"
 msgstr ""
 
@@ -17097,7 +17097,7 @@ msgid "Verification prompts allow 10,000 characters, and verified outcomes have 
 msgstr "Výzvy k ověření umožňují až 10 000 znaků a ověřené výstupy mají tlačítko pro kopírování."
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:79
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:77
 msgid "participant.modal.verify_prompt.title"
 msgstr "Verification reminder"
 
@@ -17146,7 +17146,7 @@ msgid "participant.echo.verify"
 msgstr "Verify"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:111
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:109
 msgid "participant.button.verify_prompt.verify"
 msgstr "Verify"
 
@@ -17298,7 +17298,7 @@ msgid "Voiced in a conversation"
 msgstr "Zaznělo v rozhovoru"
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:136
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:134
 msgid "participant.modal.offline_waiting"
 msgstr ""
 
@@ -18193,7 +18193,7 @@ msgid "You haven't joined any workspace in this organisation yet."
 msgstr "You haven't joined any workspace in this organisation yet."
 
 #. js-lingui-explicit-id
-#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:94
+#: src/portal/components/conversation/audio/StopRecordingConfirmationModal.tsx:92
 msgid "participant.modal.verify_prompt.description"
 msgstr "You haven't verified any outcomes yet. Would you like to verify before finishing?"
 

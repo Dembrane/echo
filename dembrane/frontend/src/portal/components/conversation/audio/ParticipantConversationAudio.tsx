@@ -91,6 +91,7 @@ export const ParticipantConversationAudio = () => {
 	const {
 		chunksQuery: chunks,
 		conversationQuery,
+		finish,
 		loadState,
 		newConversationLink,
 		projectQuery,
@@ -113,8 +114,12 @@ export const ParticipantConversationAudio = () => {
 		});
 	};
 
-	// Lets Cancel stop a finish that's waiting on the audio.
-	const finishAbortRef = useRef<AbortController | null>(null);
+	// The finish in progress, so Resume can call it off while it still waits
+	// on the audio.
+	const finishAttemptRef = useRef<{
+		pendingAtStart: number;
+		startedAt: number;
+	} | null>(null);
 
 	const [scrollTargetRef, isVisible] = useElementOnScreen({
 		root: null,
@@ -329,61 +334,49 @@ export const ParticipantConversationAudio = () => {
 		}
 	};
 
-	// The finish queues behind the audio and the screen waits for it, however
-	// long that takes: leaving earlier would let the participant walk away
-	// from audio that never landed.
+	// Waits for every chunk to reach the server, however long that takes,
+	// then finishes. If the tab closes first, the queued audio still sends
+	// later and the backend's idle sweep finishes the conversation.
 	const handleConfirmFinish = async () => {
 		dispatch({ type: "finishStarted" });
-		const abort = new AbortController();
-		const startedAt = Date.now();
-		const pendingAtStart = pendingUploadCount();
-		finishAbortRef.current = abort;
+		const attempt = {
+			pendingAtStart: pendingUploadCount(),
+			startedAt: Date.now(),
+		};
+		finishAttemptRef.current = attempt;
 		const slow = setTimeout(() => {
 			posthog.capture("portal_finish_slow", {
 				conversation_id: conversationId,
 				online: navigator.onLine,
 				pending_uploads: pendingUploadCount(),
-				pending_uploads_at_start: pendingAtStart,
+				pending_uploads_at_start: attempt.pendingAtStart,
 				project_id: projectId,
 			});
 		}, SLOW_FINISH_MS);
 		try {
 			wakeLock.release();
-			// The last chunk reaches the outbox as the recorder stops, so the
-			// finish queues behind it.
+			// The last chunk reaches the outbox as the recorder stops.
 			await stopRecording();
-			await outbox.finish(conversationId ?? "", { signal: abort.signal });
-			posthog.capture("conversation_finished", {
-				conversation_id: conversationId,
-				finish_wait_ms: Date.now() - startedAt,
-				pending_uploads_at_start: pendingAtStart,
-				project_id: projectId,
+			await outbox.settled(conversationId ?? "");
+			// Resumed while waiting.
+			if (finishAttemptRef.current !== attempt) return;
+			await finish({
+				finish_wait_ms: Date.now() - attempt.startedAt,
+				pending_uploads_at_start: attempt.pendingAtStart,
 			});
+			// Resumed while it was sending: stay. New audio reopens the
+			// conversation on the server.
+			if (finishAttemptRef.current !== attempt) return;
 			dispatch({ type: "finishSucceeded" });
 			navigate(finishUrl);
 		} catch (error) {
-			if (abort.signal.aborted) {
-				posthog.capture("portal_finish_cancelled", {
-					conversation_id: conversationId,
-					online: navigator.onLine,
-					pending_uploads: pendingUploadCount(),
-					pending_uploads_at_start: pendingAtStart,
-					project_id: projectId,
-					waited_ms: Date.now() - startedAt,
-				});
-				return;
-			}
 			console.error("Error finishing conversation:", error);
 			toast.error(t`Failed to finish conversation. Please try again.`);
 			dispatch({ type: "finishFailed" });
 		} finally {
 			clearTimeout(slow);
+			if (finishAttemptRef.current === attempt) finishAttemptRef.current = null;
 		}
-	};
-
-	const handleCancelFinish = () => {
-		finishAbortRef.current?.abort();
-		dispatch({ type: "finishCancelled" });
 	};
 
 	const handleSwitchToText = () => {
@@ -392,6 +385,18 @@ export const ParticipantConversationAudio = () => {
 	};
 
 	const handleResumeRecording = async () => {
+		const attempt = finishAttemptRef.current;
+		if (attempt) {
+			finishAttemptRef.current = null;
+			posthog.capture("portal_finish_cancelled", {
+				conversation_id: conversationId,
+				online: navigator.onLine,
+				pending_uploads: pendingUploadCount(),
+				pending_uploads_at_start: attempt.pendingAtStart,
+				project_id: projectId,
+				waited_ms: Date.now() - attempt.startedAt,
+			});
+		}
 		// The pause holds until the recorder has started, so the timer doesn't
 		// flash back to zero in between.
 		const started = await startRecording(stoppedRecordingTime ?? 0);
@@ -515,7 +520,6 @@ export const ParticipantConversationAudio = () => {
 				isOnline={isOnline}
 				uploadProgress={uploadProgress}
 				handleConfirmFinish={handleConfirmFinish}
-				handleCancelFinish={handleCancelFinish}
 				handleResume={handleResumeRecording}
 				handleSwitchToText={handleSwitchToText}
 				showVerifyOnFinish={shouldVerifyOnFinish}
