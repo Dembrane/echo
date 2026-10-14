@@ -17,7 +17,7 @@ import {
 	useConversationQuery,
 	useConversationRepliesQuery,
 	useParticipantProjectById,
-} from "../../../hooks";
+} from "@/portal/hooks";
 import { useConversationArtefacts } from "../../verify/hooks";
 import { VerifiedArtefactsList } from "../../verify/VerifiedArtefactsList";
 import { ConversationMessages } from "../ConversationMessages";
