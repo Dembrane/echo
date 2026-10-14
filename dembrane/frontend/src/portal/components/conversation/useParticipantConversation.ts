@@ -31,9 +31,10 @@ export const useParticipantConversation = (
 				: "ready";
 
 	// Finishing and its analytics event go together, whichever screen it is.
-	const finish = async () => {
+	const finish = async (properties?: Record<string, unknown>) => {
 		await finishConversation(conversationId ?? "");
 		posthog.capture("conversation_finished", {
+			...properties,
 			conversation_id: conversationId,
 			project_id: projectId,
 		});
