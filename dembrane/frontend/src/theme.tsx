@@ -125,7 +125,9 @@ const tintFor = (color?: string) => {
 // Every variant resolves to a role: status text for anything that reads as
 // text, a tint for anything that reads as a surface. On a tint (light, and
 // outline or subtle on hover) the text takes the on-tint colour: danger
-// #c0434e is 3.9:1 on its tint, #a8323c passes.
+// #c0434e is 3.9:1 on its tint, #a8323c passes. Every variant keeps
+// outline's 1px border, transparent where there's no line, so a button that
+// changes variant (ECHO filling) doesn't change size.
 const variantColorResolver: VariantColorsResolver = (input) => {
   const { fill, onTint, text, tint } = statusFor(input.color);
   const isNeutral = text === roles.text;
@@ -135,7 +137,7 @@ const variantColorResolver: VariantColorsResolver = (input) => {
     case "filled":
       return {
         background: fill,
-        border: "transparent",
+        border: "1px solid transparent",
         color: isNeutral ? roles.onFillHover : roles.onFill,
         hover: roles.fillHover,
         hoverColor: roles.onFillHover,
@@ -143,7 +145,7 @@ const variantColorResolver: VariantColorsResolver = (input) => {
     case "light":
       return {
         background: tint,
-        border: "transparent",
+        border: "1px solid transparent",
         color: onTint,
         hover: tint,
         hoverColor: onTint,
@@ -161,7 +163,7 @@ const variantColorResolver: VariantColorsResolver = (input) => {
     case "transparent":
       return {
         background: "transparent",
-        border: "transparent",
+        border: "1px solid transparent",
         color: text,
         hover: tint,
         hoverColor: onTint,

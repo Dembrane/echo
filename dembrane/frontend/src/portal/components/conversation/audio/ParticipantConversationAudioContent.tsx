@@ -1,0 +1,184 @@
+import { useChat } from "@ai-sdk/react";
+import { Trans } from "@lingui/react/macro";
+import { Box, Group, Paper, Text } from "@mantine/core";
+import { useLocalStorage } from "@mantine/hooks";
+import { SealCheckIcon } from "@phosphor-icons/react";
+import { useEffect, useRef } from "react";
+import {
+	Link,
+	useOutletContext,
+	useParams,
+	useSearchParams,
+} from "react-router";
+import { API_BASE_URL } from "@/config";
+import { useLanguage } from "@/hooks/useLanguage";
+import { useLoadNotification } from "@/hooks/useLoadNotification";
+import {
+	useConversationQuery,
+	useConversationRepliesQuery,
+	useParticipantProjectById,
+} from "../../../hooks";
+import { useConversationArtefacts } from "../../verify/hooks";
+import { VerifiedArtefactsList } from "../../verify/VerifiedArtefactsList";
+import { ConversationMessages } from "../ConversationMessages";
+import { ParticipantEchoMessages } from "./ParticipantEchoMessages";
+
+const VERIFICATION_BANNER_THRESHOLD_SECONDS = 60;
+
+type OutletContextType = {
+	/** From the recording screen's liveness ping. */
+	connectionHealthy?: boolean;
+	recordingTime: number;
+};
+
+export const ParticipantConversationAudioContent = () => {
+	const echoRef = useRef(false);
+	const scrollTargetRef = useRef<HTMLDivElement>(null);
+	const { iso639_1 } = useLanguage();
+
+	const { projectId, conversationId } = useParams();
+	const [searchParams, setSearchParams] = useSearchParams();
+	const { connectionHealthy, recordingTime } =
+		useOutletContext<OutletContextType>();
+	const projectQuery = useParticipantProjectById(projectId ?? "");
+	const conversationQuery = useConversationQuery(projectId, conversationId);
+	const [_isRefineDisabled, _setIsRefineDisabled, removeValue] =
+		useLocalStorage({
+			defaultValue: false,
+			key: `refine_disabled_${conversationId}`,
+		});
+
+	const artefactsQuery = useConversationArtefacts(conversationId);
+	const hasApprovedArtefacts = (artefactsQuery.data?.length ?? 0) > 0;
+	const showVerificationBanner =
+		!!projectQuery.data?.is_verify_on_finish_enabled &&
+		!!projectQuery.data?.is_verify_enabled &&
+		!hasApprovedArtefacts &&
+		recordingTime >= VERIFICATION_BANNER_THRESHOLD_SECONDS;
+
+	const hasEchoParam = searchParams.get("echo") === "1";
+
+	const repliesQuery = useConversationRepliesQuery(projectId, conversationId);
+
+	const {
+		messages: echoMessages,
+		isLoading: echoIsLoading,
+		status: echoStatus,
+		error: echoError,
+		handleSubmit,
+		data: echoData,
+	} = useChat({
+		api: `${API_BASE_URL}/conversations/${conversationId}/get-reply`,
+		body: { language: iso639_1 },
+		experimental_prepareRequestBody() {
+			return {
+				language: iso639_1,
+			};
+		},
+		initialMessages:
+			repliesQuery.data?.map((msg) => ({
+				content: msg.content_text ?? "",
+				id: String(msg.id),
+				role: msg.type === "assistant_reply" ? "assistant" : "user",
+			})) ?? [],
+		onError: (error) => {
+			console.error("onError", error);
+			removeValue();
+		},
+		onFinish: () => {
+			removeValue();
+		},
+	});
+
+	// Handle load status notifications (shows toast when backend reports high load)
+	const hasEchoContent =
+		echoMessages.length > 0 &&
+		echoMessages[echoMessages.length - 1]?.content?.length > 0;
+	useLoadNotification({
+		data: echoData,
+		hasContent: hasEchoContent,
+		isLoading: echoIsLoading,
+	});
+
+	const handleReply = async (e: React.MouseEvent<HTMLButtonElement>) => {
+		try {
+			setTimeout(() => {
+				if (scrollTargetRef.current) {
+					scrollTargetRef.current.scrollIntoView({ behavior: "smooth" });
+				}
+			}, 0);
+			handleSubmit(e, { allowEmptySubmit: true });
+		} catch (error) {
+			console.error("Error during echo:", error);
+		}
+	};
+	// end
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: just need to run it once on page landing
+	useEffect(() => {
+		if (hasEchoParam && !echoRef.current) {
+			echoRef.current = true;
+			setTimeout(() => {
+				const syntheticEvent = new MouseEvent(
+					"click",
+				) as unknown as React.MouseEvent<HTMLButtonElement>;
+
+				handleReply(syntheticEvent);
+			}, 100);
+			// Remove the echo parameter from URL
+			const newSearchParams = new URLSearchParams(searchParams);
+			newSearchParams.delete("echo");
+			setSearchParams(newSearchParams, { replace: true });
+		}
+	}, []);
+
+	return (
+		<>
+			{projectQuery.data && conversationQuery.data && (
+				<ConversationMessages
+					interleaveMessages={false}
+					projectId={projectId ?? ""}
+					conversationId={conversationId ?? ""}
+					isAnonymized={conversationQuery.data?.is_anonymized ?? false}
+					connectionHealthy={connectionHealthy}
+				/>
+			)}
+
+			<VerifiedArtefactsList
+				conversationId={conversationId ?? ""}
+				projectId={projectId ?? ""}
+				projectLanguage={projectQuery.data?.language}
+			/>
+
+			{showVerificationBanner && (
+				<Box className="flex justify-end">
+					<Paper
+						component={Link}
+						to="verify"
+						p="md"
+						my="md"
+						style={{ textDecoration: "none" }}
+					>
+						<Group gap="sm" wrap="nowrap">
+							<Text size="md">
+								<Trans id="participant.banner.verification_required">
+									Verification required
+								</Trans>
+							</Text>
+							<SealCheckIcon size={16} />
+						</Group>
+					</Paper>
+				</Box>
+			)}
+
+			<ParticipantEchoMessages
+				echoMessages={echoMessages}
+				isLoading={echoIsLoading}
+				status={echoStatus}
+				error={echoError}
+			/>
+
+			<div ref={scrollTargetRef} />
+		</>
+	);
+};

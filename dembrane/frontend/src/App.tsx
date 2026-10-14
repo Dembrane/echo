@@ -14,6 +14,7 @@ import {
 	QueryClientProvider,
 } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect } from "react";
+import type { createBrowserRouter } from "react-router";
 import { RouterProvider } from "react-router/dom";
 import { LoadingStage } from "./components/common/BeautifulLoading";
 import { notifyError } from "./components/error/notifyError";
@@ -44,9 +45,8 @@ function WorkspaceProvider({ children }: PropsWithChildren) {
 	);
 }
 
-import { mainRouter, participantRouter } from "./Router";
-import { cssVariablesResolver, theme } from "./theme";
 import { roomColorSchemeManager } from "./components/present/hooks/useAudienceTheme";
+import { cssVariablesResolver, theme } from "./theme";
 
 // Pilot hard-block (matrix §8): intercept 402 + copy-locked body from
 // host-side mutations and fan out a level-3 modal. Detection is
@@ -90,19 +90,21 @@ const queryClient = new QueryClient({
 	}),
 });
 
-const router = USE_PARTICIPANT_ROUTER ? participantRouter : mainRouter;
+export type AppRouter = ReturnType<typeof createBrowserRouter>;
+
 const audienceEntry = /^\/present\/(screen|public)\//.test(
 	window.location.pathname,
 );
 
-export const App = () => {
+export const App = ({ router }: { router: AppRouter }) => {
 	// Pageviews (including SPA history changes) are captured by PostHog via
 	// the `defaults` option in posthog.init (src/main.tsx).
 
-	useEffect(() => watchForNewVersion(router), []);
+	useEffect(() => watchForNewVersion(router), [router]);
 
 	useEffect(() => {
-		if (audienceEntry) return;
+		// Warms the dashboard's routes; a participant never visits them.
+		if (audienceEntry || USE_PARTICIPANT_ROUTER) return;
 		const preloadRoutes = () => {
 			const loaders = [
 				() => import("./routes/project/ProjectsHome"),
