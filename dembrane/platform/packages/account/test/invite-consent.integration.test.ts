@@ -47,7 +47,13 @@ const P = {
   tess: person(10, "tess"),
 };
 // Signed up but not onboarded yet: no app_user row. nina verified her email, uma did not.
-const NEW = { nina: person(8, "nina"), uma: person(9, "uma") };
+// olga and pete came in through an emailed code, so onboarding has no name for an org.
+const NEW = {
+  nina: person(8, "nina"),
+  uma: person(9, "uma"),
+  olga: person(11, "olga"),
+  pete: person(12, "pete"),
+};
 
 run("workspace invites and consent", () => {
   setDefaultTimeout(60_000);
@@ -78,7 +84,7 @@ run("workspace invites and consent", () => {
     }
     for (const p of Object.values(NEW)) {
       await sql`insert into directus_users (id, email) values (${p.directus}, ${p.email})`;
-      await sql`insert into auth_user (id, email, email_verified, name) values (${p.directus}, ${p.email}, ${p === NEW.nina}, ${p.email})`;
+      await sql`insert into auth_user (id, email, email_verified, name) values (${p.directus}, ${p.email}, ${p !== NEW.uma}, ${p.email})`;
     }
     let m = 0;
     const orgMember = (p: Person, org: string, role: string, deleted = false) =>
@@ -330,6 +336,21 @@ run("workspace invites and consent", () => {
       [ORG_A, "member"],
       [ORG_B, "member"],
     ]);
+  });
+
+  test("an invitee who signed in with a code joins without naming an organisation", async () => {
+    expect((await invite(NEW.olga.email)).status).toBe("invited");
+    const res = await call(NEW.olga, "POST", "/api/v2/onboarding/complete", { org_name: "" });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ org_id: "", workspace_id: WS });
+  });
+
+  test("someone with no invite and no organisation name gets one named after their email", async () => {
+    const res = await call(NEW.pete, "POST", "/api/v2/onboarding/complete", {});
+    expect(res.status).toBe(200);
+    const { org_id } = (await res.json()) as { org_id: string };
+    const [org] = await sql`select name from org where id = ${org_id}`;
+    expect(org?.name).toBe("pete's Organisation");
   });
 
   test("an unverified email sees no invites", async () => {

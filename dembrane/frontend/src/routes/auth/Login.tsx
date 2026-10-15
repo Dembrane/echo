@@ -21,6 +21,7 @@ import { useSearchParams } from "react-router";
 import { useLoginMutation } from "@/components/auth/hooks";
 import { ResendVerificationEmail } from "@/components/auth/ResendVerificationEmail";
 import { SignedInElsewhere } from "@/components/auth/SignedInElsewhere";
+import { useResendCooldown } from "@/components/auth/useResendCooldown";
 import { isAuthPath } from "@/components/auth/utils/authPaths";
 import {
 	authErrorCode,
@@ -32,6 +33,7 @@ import {
 	resolveNextPath,
 } from "@/components/auth/utils/nextPath";
 import { I18nLink } from "@/components/common/i18nLink";
+import { toast } from "@/components/common/Toaster";
 import { useTransitionCurtain } from "@/components/layout/TransitionCurtainProvider";
 import { API_BASE_URL } from "@/config";
 import { promptFor } from "@/features/accounts/help/tasksPromptState";
@@ -116,6 +118,7 @@ export const LoginRoute = () => {
 	const [codeSent, setCodeSent] = useState(false);
 	const [code, setCode] = useState("");
 	const [codeSending, setCodeSending] = useState(false);
+	const resendCooldown = useResendCooldown();
 	const [formParent] = useAutoAnimate();
 	const pinInputRef = useRef<HTMLDivElement | null>(null);
 	const loginMutation = useLoginMutation();
@@ -344,12 +347,16 @@ export const LoginRoute = () => {
 	const onSubmit = handleSubmit((formData) => submitLogin(formData));
 
 	const requestCode = async () => {
+		if (codeSending || (codeSent && resendCooldown.wait > 0)) return;
+		const resend = codeSent;
 		setError("");
 		setCodeSending(true);
 		try {
 			await sendSignInCode(codeEmail.trim());
 			setCodeSent(true);
 			setCode("");
+			resendCooldown.start();
+			if (resend) toast.success(t`We sent a new code to ${codeEmail}.`);
 		} catch (e) {
 			setError(describeAuthError(e));
 		} finally {
@@ -586,8 +593,19 @@ export const LoginRoute = () => {
 					{codeMode ? (
 						<Stack gap="xs" align="center">
 							{codeSent && (
-								<Button variant="subtle" color="gray" onClick={requestCode}>
-									<Trans>Send a new code</Trans>
+								<Button
+									variant="subtle"
+									color="gray"
+									loading={codeSending}
+									disabled={resendCooldown.wait > 0}
+									onClick={requestCode}
+									{...testId("auth-login-code-resend")}
+								>
+									{resendCooldown.wait > 0 ? (
+										<Trans>Send a new code in {resendCooldown.wait}s</Trans>
+									) : (
+										<Trans>Send a new code</Trans>
+									)}
 								</Button>
 							)}
 							<Button

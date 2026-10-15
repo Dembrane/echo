@@ -60,6 +60,8 @@ import { notFound, onError } from "./middleware/errors";
 import { session } from "./middleware/session";
 import { systemRoutes } from "./routes/system";
 
+const EMAIL_CODE_LIMIT = { name: "email_code", capacity: 1, windowSeconds: 60 };
+
 /** Pure composition: no I/O at build time, so tests call app.request() with fake deps. */
 export function buildApp(deps: Deps) {
   const app = new Hono<Env>();
@@ -86,6 +88,17 @@ export function buildApp(deps: Deps) {
       exposeHeaders: ["x-request-id", PARTICIPANT_TOKEN_HEADER],
     }),
   );
+  // One emailed code per address a minute, checked here: Better Auth replaces the stored code
+  // before its send hook runs, so a refusal there would void the code already in the inbox.
+  app.post("/api/auth/email-otp/send-verification-otp", async (c, next) => {
+    const body = (await c.req.raw
+      .clone()
+      .json()
+      .catch(() => ({}))) as { email?: unknown };
+    const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+    await deps.limiter.check(EMAIL_CODE_LIMIT, email);
+    await next();
+  });
   // Sign-in keys its rate limits on the address the API resolved, never on a header the
   // caller sent.
   app.on(["GET", "POST"], "/api/auth/*", (c) => {
