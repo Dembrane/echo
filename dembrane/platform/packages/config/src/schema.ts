@@ -209,7 +209,7 @@ export const schema = defineSchema({
           z.array(z.string()),
           z.string().transform((v) =>
             v
-              .split(",")
+              .split(/[,+\s]+/)
               .map((x) => x.trim().toLowerCase())
               .filter((x) => x && x !== "off"),
           ),
@@ -218,7 +218,7 @@ export const schema = defineSchema({
         .default([]),
       {
         description:
-          "Who transcribes a whole recording again when its conversation is finished: gemini, whisper, or both separated by a comma (the first is the transcript people read, the second is kept beside it). Empty or off keeps the live 30 second text. whisper needs LLM_BASE_URL and LLM_API_KEY, whatever LLM_PROVIDER is.",
+          "Who transcribes a whole recording again when its conversation is finished: gemini, whisper, or both separated by a comma or a plus (the first is the transcript people read, the second is kept beside it). Empty or off keeps the live 30 second text. whisper needs LLM_BASE_URL and LLM_API_KEY, whatever LLM_PROVIDER is.",
       },
     ),
     searchGrounding: key("LLM_SEARCH_GROUNDING", bool.default(true), {
