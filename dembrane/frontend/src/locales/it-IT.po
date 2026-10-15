@@ -471,7 +471,7 @@ msgstr "{0, plural, one {Uso di # conversazione:} other {Uso di # conversazioni:
 #. placeholder {0}: formatDistanceToNowStrict(date, { addSuffix: true, })
 #. placeholder {0}: citation.reference_text
 #: src/routes/project/chat/ProjectChatRoute.tsx:799
-#: src/components/conversation/useConversationList.ts:48
+#: src/components/conversation/useConversationList.ts:47
 #: src/components/chat/References.tsx:41
 msgid "{0}"
 msgstr "{0}"
@@ -807,7 +807,7 @@ msgstr "{conversationCount, plural, one {# conversazione} other {# conversazioni
 #~ msgid "{conversationCount} Conversations • Edited {0}"
 #~ msgstr "{conversationCount} Conversations • Edited {0}"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:778
+#: src/components/conversation/ProjectConversationsPanel.tsx:776
 msgid "{conversationCount} selected"
 msgstr "{conversationCount} selected"
 
@@ -1957,7 +1957,7 @@ msgstr "Tutti i modelli"
 msgid "All tiers"
 msgstr "Tutti i piani"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:762
+#: src/components/conversation/ProjectConversationsPanel.tsx:760
 msgid "All visible conversations selected"
 msgstr "Tutte le conversazioni visibili selezionate"
 
@@ -2200,8 +2200,8 @@ msgstr "anonymized conversation"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:238
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:243
-#: src/components/conversation/ProjectConversationsPanel.tsx:305
-#: src/components/conversation/ProjectConversationsPanel.tsx:310
+#: src/components/conversation/ProjectConversationsPanel.tsx:306
+#: src/components/conversation/ProjectConversationsPanel.tsx:311
 #: src/components/conversation/ConversationAccordion.tsx:589
 msgid "Anonymized conversation"
 msgstr "Anonymized conversation"
@@ -2226,7 +2226,7 @@ msgstr "Un altro amministratore o proprietario dovrà ripristinarti."
 msgid "another reason"
 msgstr "un altro motivo"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:714
+#: src/components/conversation/ProjectConversationsPanel.tsx:712
 #: src/components/conversation/ConversationsMiniList.tsx:190
 msgid "Any tag"
 msgstr "Qualsiasi tag"
@@ -2457,7 +2457,7 @@ msgstr "Chiedi a un admin del workspace di invitare questa persona."
 msgid "Ask about the app."
 msgstr "Fai domande sull'app."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:787
+#: src/components/conversation/ProjectConversationsPanel.tsx:785
 msgid "Ask about these"
 msgstr "Chiedi informazioni su queste"
 
@@ -3122,7 +3122,7 @@ msgstr "Annulla richiesta"
 msgid "Cancel schedule"
 msgstr "Cancel schedule"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:808
+#: src/components/conversation/ProjectConversationsPanel.tsx:806
 msgid "Cancel selection"
 msgstr "Annulla selezione"
 
@@ -3536,7 +3536,7 @@ msgstr "Città"
 #~ msgstr ""
 
 #: src/components/results/curate/CurateTable.tsx:114
-#: src/components/conversation/ProjectConversationsPanel.tsx:796
+#: src/components/conversation/ProjectConversationsPanel.tsx:794
 #: src/components/conversation/ConversationsMiniList.tsx:251
 msgid "Clear"
 msgstr "Cancella"
@@ -3545,7 +3545,7 @@ msgstr "Cancella"
 msgid "Clear all"
 msgstr "Cancella tutto"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:837
+#: src/components/conversation/ProjectConversationsPanel.tsx:835
 #: src/components/conversation/ConversationsMiniList.tsx:274
 msgid "Clear filters"
 msgstr "Cancella filtri"
@@ -3555,7 +3555,7 @@ msgstr "Cancella filtri"
 #: src/routes/project/chat/NewChatRoute.tsx:171
 #: src/features/sidebar/blocks/SearchBlock.tsx:168
 #: src/components/invite/WorkspaceSelectList.tsx:98
-#: src/components/conversation/ProjectConversationsPanel.tsx:690
+#: src/components/conversation/ProjectConversationsPanel.tsx:688
 #: src/components/chat/TemplatesModal.tsx:721
 msgid "Clear search"
 msgstr "Cancella ricerca"
@@ -4127,7 +4127,7 @@ msgstr "conversations"
 #: src/components/project/ProjectUsageAndSharing.tsx:471
 #: src/components/map/panels/MapSettingsMenu.tsx:308
 #: src/components/map/panels/ClusterSummary.tsx:155
-#: src/components/conversation/ProjectConversationsPanel.tsx:630
+#: src/components/conversation/ProjectConversationsPanel.tsx:628
 #: src/components/conversation/ConversationsMiniList.tsx:151
 #: src/components/conversation/ConversationAccordion.tsx:1100
 msgid "Conversations"
@@ -5341,8 +5341,8 @@ msgstr "Download as"
 msgid "Download as PDF"
 msgstr "Scarica come PDF"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:357
-#: src/components/conversation/ProjectConversationsPanel.tsx:361
+#: src/components/conversation/ProjectConversationsPanel.tsx:355
+#: src/components/conversation/ProjectConversationsPanel.tsx:359
 #: src/components/conversation/ConversationDangerZone.tsx:79
 msgid "Download audio"
 msgstr "Download audio"
@@ -6189,7 +6189,7 @@ msgstr "Failed"
 #~ msgid "Failed to add conversation to chat{0}"
 #~ msgstr "Failed to add conversation to chat{0}"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:616
+#: src/components/conversation/ProjectConversationsPanel.tsx:614
 #: src/components/conversation/ConversationAccordion.tsx:977
 #: src/components/conversation/ConversationAccordion.tsx:997
 msgid "Failed to add conversations to context"
@@ -7037,7 +7037,7 @@ msgid "Guided"
 msgstr "Guidato"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:226
-#: src/components/conversation/ProjectConversationsPanel.tsx:293
+#: src/components/conversation/ProjectConversationsPanel.tsx:294
 #: src/components/conversation/ConversationAccordion.tsx:575
 msgid "Has verified artifacts"
 msgstr "Has verified artifacts"
@@ -8495,7 +8495,7 @@ msgstr "Parametri dell'articolo LocalMAP"
 msgid "Locked"
 msgstr "Bloccato"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:448
+#: src/components/conversation/ProjectConversationsPanel.tsx:446
 #: src/components/conversation/LiveMonitorSection.tsx:323
 #: src/components/conversation/ConversationsMiniList.tsx:419
 msgid "Locked conversation, upgrade to view"
@@ -8614,8 +8614,8 @@ msgstr "Rendi privato"
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:174
 #: src/components/training/StaffTrainingPanel.tsx:175
 #: src/components/project/ProjectSharingStrip.tsx:98
-#: src/components/conversation/ProjectConversationsPanel.tsx:376
-#: src/components/conversation/ProjectConversationsPanel.tsx:380
+#: src/components/conversation/ProjectConversationsPanel.tsx:374
+#: src/components/conversation/ProjectConversationsPanel.tsx:378
 #: src/components/billing/BillingManager.tsx:1555
 #: src/components/agent-access/YourOrganisations.tsx:85
 msgid "Manage"
@@ -9431,7 +9431,7 @@ msgstr "No conversations found."
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:830
+#: src/components/conversation/ProjectConversationsPanel.tsx:828
 #: src/components/conversation/ConversationsMiniList.tsx:267
 msgid "No conversations match these filters."
 msgstr "Nessuna conversazione corrisponde a questi filtri."
@@ -9441,7 +9441,7 @@ msgstr "Nessuna conversazione corrisponde a questi filtri."
 msgid "select.all.modal.no.conversations"
 msgstr "No conversations were processed. This may happen if all conversations are already in context or don't match the selected filters."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:832
+#: src/components/conversation/ProjectConversationsPanel.tsx:830
 #: src/components/conversation/ConversationsMiniList.tsx:269
 msgid "No conversations yet."
 msgstr "Nessuna conversazione per ora."
@@ -9716,7 +9716,7 @@ msgstr "No results"
 msgid "No runs yet. Preparation and updates will appear here."
 msgstr "Ancora nessuna esecuzione. La preparazione e gli aggiornamenti appariranno qui."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:764
+#: src/components/conversation/ProjectConversationsPanel.tsx:762
 msgid "No selectable conversations"
 msgstr "Nessuna conversazione selezionabile"
 
@@ -9732,7 +9732,7 @@ msgstr "Nessuno stakeholder ancora salvato."
 msgid "No stakeholders yet. They appear after the first analysis."
 msgstr "Ancora nessuno stakeholder. Appariranno dopo la prima analisi."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:420
+#: src/components/conversation/ProjectConversationsPanel.tsx:418
 msgid "No summary yet"
 msgstr "Ancora nessun riepilogo"
 
@@ -10171,7 +10171,7 @@ msgstr "Una lettera maiuscola"
 msgid "One-off"
 msgstr "Una tantum"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:339
+#: src/components/conversation/ProjectConversationsPanel.tsx:337
 msgid "Ongoing"
 msgstr "Ongoing"
 
@@ -10263,8 +10263,8 @@ msgstr "Apri chat"
 msgid "Open chat documentation"
 msgstr "Apri documentazione della chat"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:391
-#: src/components/conversation/ProjectConversationsPanel.tsx:395
+#: src/components/conversation/ProjectConversationsPanel.tsx:389
+#: src/components/conversation/ProjectConversationsPanel.tsx:393
 #: src/components/conversation/ConversationDrilldownModal.tsx:238
 #: src/components/chat/ChatHistoryMessage.tsx:190
 msgid "Open conversation"
@@ -12652,8 +12652,8 @@ msgstr "Reinvia l'email di verifica"
 msgid "Reset"
 msgstr "Reset"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:731
-#: src/components/conversation/ProjectConversationsPanel.tsx:735
+#: src/components/conversation/ProjectConversationsPanel.tsx:729
+#: src/components/conversation/ProjectConversationsPanel.tsx:733
 #: src/components/conversation/ConversationsMiniList.tsx:212
 msgid "Reset filters"
 msgstr "Reimposta filtri"
@@ -12883,7 +12883,7 @@ msgstr "Rivedi i risultati"
 #~ msgid "Review visible results"
 #~ msgstr ""
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:644
+#: src/components/conversation/ProjectConversationsPanel.tsx:642
 msgid "Review, edit, and open every conversation in this project."
 msgstr "Rivedi, modifica e apri ogni conversazione in questo progetto."
 
@@ -13214,7 +13214,7 @@ msgstr "Scroll to bottom"
 #: src/features/sidebar/blocks/SearchBlock.tsx:116
 #: src/features/sidebar/blocks/SearchBlock.tsx:120
 #: src/components/results/ResultsList.tsx:288
-#: src/components/conversation/ProjectConversationsPanel.tsx:683
+#: src/components/conversation/ProjectConversationsPanel.tsx:681
 #: src/components/conversation/MoveConversationButton.tsx:155
 #: src/components/conversation/ConversationsMiniList.tsx:172
 msgid "Search"
@@ -13233,7 +13233,7 @@ msgstr "Cerca account, stato, descrizione"
 msgid "Search account, workspace, organisation, email, tier"
 msgstr "Cerca account, spazio di lavoro, organizzazione, email, piano"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:640
+#: src/components/conversation/ProjectConversationsPanel.tsx:638
 msgid "Search and select the conversations for this chat."
 msgstr "Cerca e seleziona le conversazioni per questa chat."
 
@@ -13489,7 +13489,7 @@ msgstr "Seleziona tutto è disponibile in Chiedi e nelle nuove chat Dettagli spe
 msgid "select.all.modal.title.results"
 msgstr "Seleziona tutti i risultati"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:760
+#: src/components/conversation/ProjectConversationsPanel.tsx:758
 msgid "Select all visible ({remainingCount})"
 msgstr "Seleziona tutti i visibili ({remainingCount})"
 
@@ -13509,7 +13509,7 @@ msgstr "Seleziona file audio"
 #~ msgid "Select Audio Files to Upload"
 #~ msgstr "Select Audio Files to Upload"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:244
+#: src/components/conversation/ProjectConversationsPanel.tsx:245
 msgid "Select conversation"
 msgstr "Seleziona conversazione"
 
@@ -13520,7 +13520,7 @@ msgstr "Seleziona conversazione"
 #: src/routes/project/chat/NewChatRoute.tsx:624
 #: src/routes/project/chat/NewChatRoute.tsx:626
 #: src/routes/project/chat/NewChatRoute.tsx:733
-#: src/components/conversation/ProjectConversationsPanel.tsx:810
+#: src/components/conversation/ProjectConversationsPanel.tsx:808
 msgid "Select conversations"
 msgstr "Seleziona conversazioni"
 
@@ -14351,7 +14351,7 @@ msgstr "Qualcosa è andato storto. Riprova e contatta il supporto se il problema
 msgid "participant.go.deeper.content.policy.violation.error.message"
 msgstr "Sorry, we cannot process this request due to an LLM provider's content policy."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:703
+#: src/components/conversation/ProjectConversationsPanel.tsx:701
 #: src/components/conversation/ConversationsMiniList.tsx:179
 #: src/components/conversation/ConversationAccordion.tsx:1206
 #: src/components/conversation/ConversationAccordion.tsx:1213
@@ -14897,7 +14897,7 @@ msgstr "Tag eliminato"
 #: src/components/project/ProjectTagsInput.tsx:255
 #: src/components/participant/ParticipantInitiateForm.tsx:281
 #: src/components/map/panels/MapSettingsMenu.tsx:267
-#: src/components/conversation/ProjectConversationsPanel.tsx:713
+#: src/components/conversation/ProjectConversationsPanel.tsx:711
 #: src/components/conversation/ConversationsMiniList.tsx:189
 #: src/components/conversation/ConversationEdit.tsx:424
 #: src/components/conversation/ConversationDrilldownModal.tsx:200
@@ -16117,7 +16117,7 @@ msgstr "Title"
 msgid "Title auto-generated"
 msgstr "Title auto-generated"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:282
+#: src/components/conversation/ProjectConversationsPanel.tsx:283
 msgid "Title generated from the conversation"
 msgstr "Titolo generato dalla conversazione"
 
@@ -16125,7 +16125,7 @@ msgstr "Titolo generato dalla conversazione"
 msgid "Title guidance"
 msgstr "Guida per il titolo"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:684
+#: src/components/conversation/ProjectConversationsPanel.tsx:682
 #: src/components/conversation/ConversationsMiniList.tsx:173
 msgid "Title or participant"
 msgstr "Titolo o partecipante"
@@ -16888,7 +16888,7 @@ msgstr "Fai l'upgrade del tuo spazio di lavoro per visualizzare le trascrizioni 
 #: src/components/project/ProjectUploadSection.tsx:47
 #: src/components/dropzone/UploadConversationDropzone.tsx:531
 #: src/components/dropzone/UploadConversationDropzone.tsx:545
-#: src/components/conversation/ProjectConversationsPanel.tsx:658
+#: src/components/conversation/ProjectConversationsPanel.tsx:656
 #: src/components/conversation/ConversationAccordion.tsx:405
 #: src/components/conversation/ConversationAccordion.tsx:1113
 msgid "Upload"
@@ -16935,7 +16935,7 @@ msgstr "Carica file"
 msgid "Upload limit reached"
 msgstr "Limite di caricamento raggiunto"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:655
+#: src/components/conversation/ProjectConversationsPanel.tsx:653
 #: src/components/conversation/ConversationAccordion.tsx:1107
 msgid "Upload limit reached. Upgrade your workspace."
 msgstr "Limite di caricamento raggiunto. Fai l'upgrade del tuo spazio di lavoro."
@@ -17154,7 +17154,7 @@ msgstr "Verified"
 msgid "select.all.modal.loading.verified"
 msgstr "Verified"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:724
+#: src/components/conversation/ProjectConversationsPanel.tsx:722
 #: src/components/conversation/ConversationsMiniList.tsx:102
 #: src/components/conversation/ConversationsMiniList.tsx:199
 msgid "Verified"
@@ -17170,7 +17170,7 @@ msgid "verified artifacts"
 msgstr "verified artifacts"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:231
-#: src/components/conversation/ProjectConversationsPanel.tsx:298
+#: src/components/conversation/ProjectConversationsPanel.tsx:299
 msgid "Verified artifacts"
 msgstr "Elementi verificati"
 
