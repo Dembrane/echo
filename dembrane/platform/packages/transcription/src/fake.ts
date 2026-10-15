@@ -1,4 +1,10 @@
-import type { TranscribeInput, TranscribeResult, Transcriber } from "./transcriber";
+import { regexRedactPii } from "./pii";
+import type {
+  RedactTextInput,
+  TranscribeInput,
+  TranscribeResult,
+  Transcriber,
+} from "./transcriber";
 
 /**
  * A transcriber for tests: answers from a function of the input, records every call,
@@ -6,6 +12,8 @@ import type { TranscribeInput, TranscribeResult, Transcriber } from "./transcrib
  */
 export class FakeTranscriber implements Transcriber {
   readonly calls: TranscribeInput[] = [];
+  /** Every redactText call; the model pass counts as made when a flag was on. */
+  readonly redactCalls: RedactTextInput[] = [];
   private failures: Error[] = [];
 
   constructor(
@@ -27,5 +35,13 @@ export class FakeTranscriber implements Transcriber {
       note: "",
       models: ["fake"],
     };
+  }
+
+  async redactText(input: RedactTextInput): Promise<TranscribeResult> {
+    this.redactCalls.push(input);
+    const fail = this.failures.shift();
+    if (fail) throw fail;
+    const text = input.anonymizeTranscripts ? regexRedactPii(input.text) : input.text;
+    return { transcript: text, note: "", models: ["fake"] };
   }
 }

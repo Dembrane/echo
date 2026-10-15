@@ -51,6 +51,11 @@ export async function createChunk(
   const hasTranscript = Boolean(input.transcript?.trim());
   if (!hasFile && !hasTranscript) throw new ChunkError("conversation.chunk_empty");
 
+  // Typed text of an anonymised conversation is not stored as typed: the chunk run redacts it
+  // first, as it does a transcript of audio, and the row stays pending until it has.
+  const anonymize = Boolean(conv.is_anonymized || project.anonymize_transcripts);
+  const redactTyped = hasTranscript && !hasFile && (anonymize || opts.usePiiRedaction === true);
+
   return transaction(d.db, async (tx) => {
     // A finished conversation that was finalized or merged gets more audio (the idle sweep
     // finished it during a pause, or before the first chunk): reset it so finishing again
@@ -85,7 +90,8 @@ export async function createChunk(
         timestamp: input.timestamp.toISOString(),
         path: fileUrl,
         source: input.source,
-        transcript: input.transcript ?? null,
+        transcript: redactTyped ? null : (input.transcript ?? null),
+        pending_text: redactTyped ? (input.transcript as string) : null,
         error: input.error ?? null,
         created_at: now.toISOString(),
         updated_at: now.toISOString(),
@@ -99,13 +105,17 @@ export async function createChunk(
         .update(conversation)
         .set({ token_count: null, updated_at: now.toISOString() })
         .where(eq(conversation.id, conv.id));
-    if (hasFile)
+    if (hasFile || redactTyped)
       await d.jobs.enqueue(
         processChunk,
-        { chunkId: opts.chunkId, usePiiRedaction: opts.usePiiRedaction ?? false },
+        {
+          chunkId: opts.chunkId,
+          usePiiRedaction: opts.usePiiRedaction ?? false,
+          ...(redactTyped && { typed: true }),
+        },
         { tx: tx.sql, workflowId: `conversations.chunk:${opts.chunkId}` },
       );
-    return row as ChunkRow;
+    return { ...row, pending_text: null } as ChunkRow;
   });
 }
 

@@ -14,7 +14,12 @@ import type { Logger } from "@dembrane/observability";
 import { renderPrompt } from "@dembrane/prompts";
 import { TranscriptParseError, TranscriptRefusedError } from "./errors";
 import { regexRedactPii } from "./pii";
-import type { TranscribeInput, TranscribeResult, Transcriber } from "./transcriber";
+import type {
+  RedactTextInput,
+  TranscribeInput,
+  TranscribeResult,
+  Transcriber,
+} from "./transcriber";
 
 const SCHEMA = {
   type: "object",
@@ -148,12 +153,36 @@ export class GeminiTranscriber implements Transcriber {
     hotwordsStr: string,
   ): Promise<TranscribeResult> {
     const stt = this.models.speechToText as NonNullable<Models["speechToText"]>;
-    let transcript = await stt.transcribe(input.audio, {
+    const transcript = await stt.transcribe(input.audio, {
       language: input.language ?? null,
       ...(hotwordsStr && { prompt: hotwordsStr }),
     });
+    const redacted = await this.redactText({
+      text: transcript,
+      language: input.language ?? null,
+      usePiiRedaction: piiOn,
+      anonymizeTranscripts: input.anonymizeTranscripts ?? false,
+      customGuidancePrompt: input.customGuidancePrompt ?? null,
+      hotwords: input.hotwords ?? null,
+    });
+    return {
+      transcript: redacted.transcript,
+      note: redacted.note,
+      models: [stt.model, ...redacted.models],
+    };
+  }
+
+  /**
+   * The redaction of text alone, shared by the speech-model path and by typed contributions:
+   * the regex pass when anonymising, then the model pass with reasoning off. An allow-list
+   * of hotwords is never passed, so names are redacted too.
+   */
+  async redactText(input: RedactTextInput): Promise<TranscribeResult> {
+    const piiOn = Boolean(input.usePiiRedaction || input.anonymizeTranscripts);
+    const hotwordsStr = input.hotwords?.length ? input.hotwords.join(", ") : "";
+    let transcript = input.text;
     let note = "";
-    const models: (string | null)[] = [stt.model];
+    const models: (string | null)[] = [];
     if (input.anonymizeTranscripts) transcript = regexRedactPii(transcript);
     if (piiOn && transcript !== "") {
       const correction = renderPrompt("transcript_correction_workflow", "en", {

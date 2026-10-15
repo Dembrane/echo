@@ -137,13 +137,17 @@ export interface LoadedChunk {
  * already carries a transcript or an error (a typed chunk, an unplayable upload) has
  * nothing to process; the run still hands over so a finished conversation finalizes.
  */
-export async function loadChunk(d: PipelineDeps, chunkId: string): Promise<LoadedChunk> {
+export async function loadChunk(
+  d: PipelineDeps,
+  chunkId: string,
+  typed = false,
+): Promise<LoadedChunk> {
   const store = conversationStore(d.db);
   const chunk = await store.chunk(chunkId);
   if (!chunk) return { skip: true, conversationId: null, anonymize: false };
   const conv = await store.conversation(chunk.conversation_id);
   if (!conv) return { skip: true, conversationId: null, anonymize: false };
-  const done = chunk.error !== null || chunk.transcript !== null || !chunk.path;
+  const done = chunk.error !== null || chunk.transcript !== null || (!chunk.path && !typed);
   return { skip: done, conversationId: conv.id, anonymize: Boolean(conv.is_anonymized) };
 }
 
@@ -320,7 +324,7 @@ export async function updateChunk(
   d: Pick<PipelineDeps, "db" | "now">,
   chunkId: string,
   conversationId: string,
-  patch: Partial<Pick<ChunkRow, "path" | "transcript" | "error" | "diarization">>,
+  patch: Partial<Pick<ChunkRow, "path" | "transcript" | "error" | "diarization" | "pending_text">>,
   bumpConversation = "transcript" in patch,
 ): Promise<void> {
   const now = d.now().toISOString();
@@ -406,36 +410,104 @@ export async function transcribePiece(
         });
         return { ok: true };
       } catch (err) {
-        const message = (err as Error).message ?? String(err);
-        // This write is what marks the chunk done; lost, the chunk stays pending for good.
-        if (isRecoverableTranscriptionError(err) || isFinalAttempt()) {
-          const failure = await retryWrite(() =>
-            updateChunk(d, chunkId, chunk.conversation_id, { error: message }, false),
-          );
-          if (failure)
-            d.logger.error(
-              {
-                chunkId,
-                conversationId: chunk.conversation_id,
-                err: failure,
-                signal: "chunk.error_not_saved",
-              },
-              "chunk error could not be saved; the chunk stays pending",
-            );
-        }
-        d.logger.warn(
-          {
-            chunkId,
-            conversationId: chunk.conversation_id,
-            recoverable: isRecoverableTranscriptionError(err),
-            reason: transcriptionFailureReason(err),
-            signal: "chunk.transcription_failed",
-          },
-          "chunk transcription failed",
-        );
-        if (isRecoverableTranscriptionError(err))
-          return { ok: false, reason: transcriptionFailureReason(err) };
-        throw err;
+        return failChunk(d, chunkId, chunk.conversation_id, err);
+      }
+    },
+  );
+}
+
+/**
+ * What a failed attempt does to its chunk, for audio and typed text alike: a recoverable
+ * failure, or the last attempt of any, saves the error (which marks the chunk done) and a
+ * recoverable one returns; anything else throws so the step retries.
+ */
+async function failChunk(
+  d: PipelineDeps,
+  chunkId: string,
+  conversationId: string,
+  err: unknown,
+): Promise<TranscribeOutcome> {
+  const message = (err as Error).message ?? String(err);
+  // This write is what marks the chunk done; lost, the chunk stays pending for good.
+  if (isRecoverableTranscriptionError(err) || isFinalAttempt()) {
+    const failure = await retryWrite(() =>
+      // The raw typed text goes with a failed redaction: lost is the safe side of it.
+      updateChunk(d, chunkId, conversationId, { error: message, pending_text: null }, false),
+    );
+    if (failure)
+      d.logger.error(
+        { chunkId, conversationId, err: failure, signal: "chunk.error_not_saved" },
+        "chunk error could not be saved; the chunk stays pending",
+      );
+  }
+  d.logger.warn(
+    {
+      chunkId,
+      conversationId,
+      recoverable: isRecoverableTranscriptionError(err),
+      reason: transcriptionFailureReason(err),
+      signal: "chunk.transcription_failed",
+    },
+    "chunk transcription failed",
+  );
+  if (isRecoverableTranscriptionError(err))
+    return { ok: false, reason: transcriptionFailureReason(err) };
+  throw err;
+}
+
+/**
+ * The redaction of one typed chunk of an anonymised conversation: the same regex and model
+ * passes a transcript of audio gets, then the redacted text becomes the chunk's transcript.
+ * Until then the row has no transcript, so nothing reads the raw text and the conversation
+ * is not finalized or summarised without it. A failure ends as it does for audio.
+ *
+ * Idempotent: the transcript is an update of one row; a retry writes a fresh redaction of
+ * the same text.
+ */
+export async function redactTypedChunk(
+  d: PipelineDeps,
+  chunkId: string,
+  opts: { usePiiRedaction: boolean; anonymize: boolean },
+): Promise<TranscribeOutcome> {
+  const store = conversationStore(d.db);
+  const chunk = await store.chunk(chunkId);
+  if (!chunk) return { ok: false, reason: "gone" };
+  const text = chunk.pending_text;
+  if (chunk.transcript !== null || chunk.error !== null || text === null) return { ok: true };
+  return withStatus(
+    d,
+    { conversationId: chunk.conversation_id },
+    "task_transcribe_chunk",
+    `for chunk ${chunkId}`,
+    async () => {
+      try {
+        const [conv] = await d.db
+          .select({
+            language: project.language,
+            prompt: project.default_conversation_transcript_prompt,
+            anonymize: project.anonymize_transcripts,
+          })
+          .from(conversation)
+          .innerJoin(project, eq(project.id, conversation.project_id))
+          .where(eq(conversation.id, chunk.conversation_id))
+          .limit(1);
+        if (!conv) throw new Error("Conversation not found");
+        const result = await d.transcriber.redactText({
+          text,
+          language: conv.language || "en",
+          hotwords: conv.prompt ? conv.prompt.split(",").map((w) => w.trim()) : null,
+          usePiiRedaction: opts.usePiiRedaction,
+          anonymizeTranscripts: opts.anonymize || Boolean(conv.anonymize),
+          customGuidancePrompt: conv.prompt,
+        });
+        // One write: the redacted text arrives as the raw text goes.
+        await updateChunk(d, chunkId, chunk.conversation_id, {
+          transcript: result.transcript,
+          pending_text: null,
+        });
+        return { ok: true };
+      } catch (err) {
+        return failChunk(d, chunkId, chunk.conversation_id, err);
       }
     },
   );
