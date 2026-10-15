@@ -103,15 +103,20 @@ export function localStorageHandler(storage: ObjectStorage, routePath = LOCAL_ST
               status: 416,
               headers: { "content-range": `bytes */${blob.size}` },
             });
-          return new Response(req.method === "HEAD" ? null : blob.slice(start, end + 1), {
-            status: 206,
-            headers: {
-              "accept-ranges": "bytes",
-              "content-length": String(end - start + 1),
-              "content-range": `bytes ${start}-${end}/${blob.size}`,
-              "content-type": blob.type,
+          return new Response(
+            req.method === "HEAD"
+              ? null
+              : new Uint8Array(await blob.arrayBuffer()).subarray(start, end + 1),
+            {
+              status: 206,
+              headers: {
+                "accept-ranges": "bytes",
+                "content-length": String(end - start + 1),
+                "content-range": `bytes ${start}-${end}/${blob.size}`,
+                "content-type": blob.type,
+              },
             },
-          });
+          );
         }
         return new Response(req.method === "HEAD" ? null : blob, {
           headers: { "accept-ranges": "bytes", "content-length": String(blob.size) },
