@@ -306,6 +306,7 @@ test("typed text with both redaction flags off is returned as typed and calls no
   const out = await t.redactText({ text: "mail jan@example.nl" });
   expect(out.transcript).toBe("mail jan@example.nl");
   expect(seen).toHaveLength(0);
+});
 
 test("a piece whose last sentence ends after the audio is pulled back to its length", () => {
   const out = rescaleToPiece(
