@@ -16,7 +16,12 @@ import { canvasWorker } from "@dembrane/canvas";
 import type { Config } from "@dembrane/config";
 import { conversationWorker, liveRecordings, type PipelineDeps } from "@dembrane/conversations";
 import type { Db } from "@dembrane/db";
-import { supportForwardRegistration, supportInboxMessage, supportOutbox } from "@dembrane/feedback";
+import {
+  supportContent,
+  supportForwardRegistration,
+  supportInboxMessage,
+  supportOutbox,
+} from "@dembrane/feedback";
 import {
   type Completer,
   type Embedder,
@@ -269,6 +274,7 @@ export function registrations(deps: {
       forwarder: toSam(supportInboxMessage),
       environment: environmentName(deps.dashboardUrl),
       dashboardUrl: deps.dashboardUrl,
+      content: supportContent(config.support.forwardContent, config.support.readUrl),
       logger,
     }),
     pricingRegistration({
