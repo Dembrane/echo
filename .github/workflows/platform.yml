@@ -802,7 +802,8 @@ jobs:
       deployments: read
     env:
       TAG: ${{ needs.plan.outputs.sha }}
-      GITOPS_BRANCH: main
+      # The EU values sit beside production's, on the branch v3 deploys from.
+      GITOPS_BRANCH: ${{ vars.GITOPS_PROD_BRANCH || 'prod-v3' }}
       EU_API: https://api.eu.dembrane.com
     steps:
       - name: Check out code
@@ -827,7 +828,7 @@ jobs:
         id: bump
         working-directory: .
         run: .github/scripts/gitops-bump.sh gitops "$GITOPS_BRANCH" eu "$TAG"
-      # Argo CD on the EU cluster syncs echo-gitops main by itself; the deploy is done when
+      # Argo CD on the EU cluster syncs that branch by itself; the deploy is done when
       # api.eu.dembrane.com serves the commit and a worker of it is running.
       - name: Wait for the rollout
         id: wait
