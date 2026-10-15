@@ -345,7 +345,7 @@ export async function updateChunk(
   });
 }
 
-function stripNul(v: unknown): unknown {
+export function stripNul(v: unknown): unknown {
   if (typeof v === "string") return v.replaceAll("\u0000", "");
   if (Array.isArray(v)) return v.map(stripNul);
   if (v && typeof v === "object")

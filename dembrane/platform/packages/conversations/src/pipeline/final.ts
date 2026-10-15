@@ -10,7 +10,7 @@ import { and, count, eq, isNotNull, sql } from "drizzle-orm";
 import { mergeConversationAudio, NoContent, NoMergeableChunks } from "../merge";
 import { conversationStore } from "../storage";
 import type { PipelineDeps } from "./steps";
-import { recordStatus } from "./steps";
+import { recordStatus, stripNul } from "./steps";
 
 const { conversation, conversation_chunk, conversation_final_transcript, project } = schema;
 
@@ -225,8 +225,9 @@ export async function storeFinal(
   plan: FinalPlan,
   parts: readonly FinalPart[],
 ): Promise<boolean> {
-  const text = parts
-    .map((p) => p.text.trim())
+  // Postgres text cannot hold a NUL byte, which Gemini now and then emits.
+  const text = (stripNul(parts.map((p) => p.text)) as string[])
+    .map((t) => t.trim())
     .filter(Boolean)
     .join(parts.some((p) => p.sentences.length === 0) ? "\n" : " ")
     .trim();
@@ -235,7 +236,7 @@ export async function storeFinal(
     return false;
   }
   if ((await currentChunkHash(d, conversationId)) !== hash) return false;
-  const sentences = parts.flatMap((p) => p.sentences);
+  const sentences = stripNul(parts.flatMap((p) => p.sentences)) as Sentence[];
   const usage = parts.reduce(
     (t, p) => ({
       seconds: t.seconds + p.usage.seconds,

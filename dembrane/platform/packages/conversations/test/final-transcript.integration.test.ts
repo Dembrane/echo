@@ -163,6 +163,23 @@ run("final transcript", () => {
     expect(conv.merged_audio_path).toContain(`merged-${cid}-`);
   });
 
+  test("a NUL byte in a provider's text is dropped, not fatal", async () => {
+    const cid = newId();
+    const real = gemini.transcribe;
+    gemini.transcribe = async (input) => {
+      const out = await real(input);
+      return { ...out, sentences: out.sentences.map((s) => ({ ...s, text: `${s.text}\u0000x` })) };
+    };
+    await finished(cid, 2);
+    const rows = await until(async () => {
+      const r = await finals(cid);
+      return r.length === 2 ? r : null;
+    });
+    gemini.transcribe = real;
+    expect(rows.every((r) => !String(r.text).includes("\u0000"))).toBe(true);
+    expect(String(rows.find((r) => r.provider === "gemini")?.text)).toContain("x");
+  });
+
   test("the summary is made again from the final text", async () => {
     const cid = newId();
     await finished(cid, 2);
