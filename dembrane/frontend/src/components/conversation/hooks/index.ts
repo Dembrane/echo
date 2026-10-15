@@ -24,7 +24,7 @@ import {
 import { bff } from "@/lib/bff";
 import type { ListQuery } from "@/lib/listQuery";
 import { invalidateConversationCounts } from "@/lib/orgQueryKeys";
-import type { FinalTranscriptData } from "../finalTranscript";
+import type { FinalTranscriptData } from "../sentences";
 
 type ConversationBffListParams = {
 	search_text?: string;

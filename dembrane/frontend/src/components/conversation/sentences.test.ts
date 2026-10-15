@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { activeSentenceIndex } from "./finalTranscript";
+import { activeSentenceIndex } from "./sentences";
 
 const sentences = [
 	{ start: 0, end: 2, text: "a" },

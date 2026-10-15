@@ -3,7 +3,7 @@ import { Stack, Text } from "@mantine/core";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { RedactedText } from "../common/RedactedText";
-import { activeSentenceIndex, type FinalSentence } from "./finalTranscript";
+import { activeSentenceIndex, type FinalSentence } from "./sentences";
 
 /**
  * The final transcript as running text. With timed sentences and the merged audio the
