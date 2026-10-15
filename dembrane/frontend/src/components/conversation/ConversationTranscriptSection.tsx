@@ -18,7 +18,11 @@ import { testId } from "@/lib/testUtils";
 import { ConversationChunkAudioTranscript } from "./ConversationChunkAudioTranscript";
 import { CopyConversationTranscriptActionIcon } from "./CopyConversationTranscript";
 import { DownloadConversationTranscriptModalActionIcon } from "./DownloadConversationTranscript";
-import { useInfiniteConversationChunks } from "./hooks";
+import { FinalTranscript } from "./FinalTranscript";
+import {
+	useConversationFinalTranscript,
+	useInfiniteConversationChunks,
+} from "./hooks";
 import { LockedTranscriptOverlay } from "./LockedTranscriptOverlay";
 import { RetranscribeConversationModalActionIcon } from "./RetranscribeConversation";
 import { useChunkAnchorScroll } from "./useChunkAnchorScroll";
@@ -71,6 +75,18 @@ export const ConversationTranscriptSection = ({
 			defaultValue: false,
 		},
 	);
+
+	const finalQuery = useConversationFinalTranscript(conversationId, isFinished);
+	const finalTranscript =
+		finalQuery.data?.available && !finalQuery.data.locked
+			? finalQuery.data
+			: null;
+	// The 30 second preview text stays one switch away once the final transcript exists.
+	const [showLive, setShowLive] = useSessionStorageState<boolean>(
+		"conversation-transcript-show-live",
+		{ defaultValue: false },
+	);
+	const showFinal = finalTranscript !== null && !showLive;
 
 	const allChunks = (chunksData?.pages ?? []).flatMap((page) => page.chunks);
 	const highlightedChunkId = useChunkAnchorScroll({
@@ -134,26 +150,47 @@ export const ConversationTranscriptSection = ({
 				</Group>
 
 				<Group>
-					<Tooltip
-						label={t`Audio playback not available for anonymized conversations`}
-						disabled={!isAnonymized}
-						refProp="rootRef"
-					>
+					{finalTranscript && (
 						<Switch
-							checked={isAnonymized ? false : showAudioPlayer}
-							onChange={(event) =>
-								setShowAudioPlayer(event.currentTarget.checked)
-							}
-							disabled={isAnonymized}
-							label={t`Show audio player`}
-							{...testId("transcript-show-audio-player-toggle")}
+							checked={showLive}
+							onChange={(event) => setShowLive(event.currentTarget.checked)}
+							label={t`Show live preview text`}
+							{...testId("transcript-show-live-toggle")}
 						/>
-					</Tooltip>
+					)}
+					{!showFinal && (
+						<Tooltip
+							label={t`Audio playback not available for anonymized conversations`}
+							disabled={!isAnonymized}
+							refProp="rootRef"
+						>
+							<Switch
+								checked={isAnonymized ? false : showAudioPlayer}
+								onChange={(event) =>
+									setShowAudioPlayer(event.currentTarget.checked)
+								}
+								disabled={isAnonymized}
+								label={t`Show audio player`}
+								{...testId("transcript-show-audio-player-toggle")}
+							/>
+						</Tooltip>
+					)}
 				</Group>
 			</Group>
 
 			{isLocked ? (
 				<LockedTranscriptOverlay />
+			) : showFinal ? (
+				<Stack gap="xs" {...testId("transcript-final")}>
+					<Text size="xs" c="dimmed">
+						<Trans>Transcribed again from the whole recording.</Trans>
+					</Text>
+					<FinalTranscript
+						text={finalTranscript.text}
+						sentences={finalTranscript.sentences}
+						audioUrl={isAnonymized ? null : finalTranscript.audio_url}
+					/>
+				</Stack>
 			) : (
 				<Stack className="relative">
 					{allChunks.length === 0 ? (
