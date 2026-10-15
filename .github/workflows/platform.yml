@@ -25,6 +25,11 @@ name: platform
 # repository variable STAGING_DEPLOY_ON_MAIN is "true". Each deploy lists the PRs it carried in
 # #alerts-ci, under the dashboard's link, and comments on each PR.
 #
+# EU (Scaleway, Argo CD app dembrane-web-eu-prod) deploys on every push to main, with staging: it
+# runs the same images, pushed to Scaleway's registry by 40-build-images with staging's digests, and the job sets
+# global.imageTag in helm/dembrane-web/values-eu-prod.yaml of Dembrane/echo-gitops; Argo CD on
+# the Scaleway cluster rolls it out.
+#
 # prod runs on DigitalOcean Kubernetes through GitOps. A release tag vX.Y.Z on main, after the
 # prod environment's approval (by hand with the tag, and on pushing the tag once
 # PROD_DEPLOY_ON_TAG is "true"), pushes the images to registry.digitalocean.com/dbr-cr as
@@ -510,6 +515,21 @@ jobs:
           if [ -n "$PUSH" ]; then BUILT_FILE=$built $GITHUB_WORKSPACE/.github/scripts/build-images.sh --push
           else BUILT_FILE=$built $GITHUB_WORKSPACE/.github/scripts/build-images.sh --load $IMAGES; fi
           echo "built=$(tr '\n' ' ' < "$built")" >> "$GITHUB_OUTPUT"
+      # One build, pushed to both registries with the same digest: EU runs exactly what staging
+      # runs. The key is a repository secret because this job has no environment on staging.
+      - name: Log in to the EU registry
+        if: env.PUSH == 'staging'
+        uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
+        with:
+          registry: rg.nl-ams.scw.cloud
+          username: nologin
+          password: ${{ secrets.SCW_EU_REGISTRY_KEY }}
+      - name: Push the same images to the EU registry
+        if: env.PUSH == 'staging'
+        run: |
+          for app in api worker media web migrate; do
+            docker buildx imagetools create --tag "rg.nl-ams.scw.cloud/dembrane-eu-prod/dembrane-web-$app:$TAG" "$REGISTRY/$app:$TAG"
+          done
       - name: Smoke test containers
         if: steps.build.outputs.built != ''
         env:
@@ -761,6 +781,86 @@ jobs:
           SLACK_TS: ${{ steps.start.outputs.slack_ts }}
           STOPPED: ${{ job.status == 'cancelled' && 'cancelled' || steps.auth.outcome == 'failure' && 'Authenticate to Google Cloud' || steps.deploy.outcome == 'failure' && 'Deploy and verify' || '' }}
         run: $GITHUB_WORKSPACE/.github/scripts/release.sh announce-failed staging "$TAG" "$STOPPED"
+
+  # EU runs the exact image digests staging runs: 40-build-images pushed them to Scaleway's
+  # registry too, so this job only points Dembrane/echo-gitops at them. Argo CD on the Scaleway
+  # cluster does the rollout, so this job never touches the cluster.
+  deploy-eu:
+    name: 61-deploy-dembrane-eu
+    if: ${{ !cancelled() && !failure() && needs.plan.outputs.deploy_env == 'staging' }}
+    needs: [plan, check-server, check-frontend, test-frontend, images]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Records each deploy as a GitHub Deployment, where the next deploy's list of PRs starts. No
+    # reviewers, so it deploys with staging.
+    environment: eu
+    concurrency:
+      group: deploy-eu
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      deployments: read
+    env:
+      TAG: ${{ needs.plan.outputs.sha }}
+      GITOPS_BRANCH: main
+      EU_API: https://api.eu.dembrane.com
+    steps:
+      - name: Check out code
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with: { ref: "${{ env.REF }}", persist-credentials: false }
+      # One message in #alerts-ci per deploy: posted here, edited by the step that ends the job.
+      - name: Tell #alerts-ci the deploy is starting
+        id: start
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SLACK_TOKEN: ${{ secrets.SLACK_ALERTS_BOT_TOKEN }}
+        run: $GITHUB_WORKSPACE/.github/scripts/release.sh announce-start eu "$TAG"
+      - name: Check out Dembrane/echo-gitops
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          repository: Dembrane/echo-gitops
+          ref: ${{ env.GITOPS_BRANCH }}
+          token: ${{ secrets.GITOPS_REPO_TOKEN }}
+          path: gitops
+      - name: Update the image tag in echo-gitops
+        id: bump
+        working-directory: .
+        run: .github/scripts/gitops-bump.sh gitops "$GITOPS_BRANCH" eu "$TAG"
+      # Argo CD on the EU cluster syncs echo-gitops main by itself; the deploy is done when
+      # api.eu.dembrane.com serves the commit and a worker of it is running.
+      - name: Wait for the rollout
+        id: wait
+        working-directory: .
+        run: |
+          api=$EU_API
+          end=$((SECONDS + 900))
+          until [ "$(curl -sf "$api/api/health" | jq -r .release 2>/dev/null)" = "$TAG" ]; do
+            [ "$SECONDS" -lt "$end" ] || { echo "::error::$api did not serve $TAG within 15 minutes; check the dembrane-web-eu-prod sync in Argo CD"; exit 1; }
+            sleep 10
+          done
+          until curl -sf "$api/ready/worker?release=$TAG" >/dev/null; do
+            [ "$SECONDS" -lt "$end" ] || { echo "::error::no worker of $TAG heartbeat within 15 minutes; check the dembrane-web-eu-prod sync in Argo CD"; exit 1; }
+            sleep 5
+          done
+          echo "$api serves $TAG and a worker of $TAG is running"
+      # The deploy stands even when a message fails to send.
+      - name: Announce deploy
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SLACK_TOKEN: ${{ secrets.SLACK_ALERTS_BOT_TOKEN }}
+          SLACK_TS: ${{ steps.start.outputs.slack_ts }}
+        run: $GITHUB_WORKSPACE/.github/scripts/release.sh announce-eu "$TAG"
+      - name: Tell #alerts-ci the deploy stopped
+        if: ${{ failure() || cancelled() }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SLACK_TOKEN: ${{ secrets.SLACK_ALERTS_BOT_TOKEN }}
+          SLACK_TS: ${{ steps.start.outputs.slack_ts }}
+          STOPPED: ${{ job.status == 'cancelled' && 'cancelled' || steps.bump.outcome == 'failure' && 'Update the image tag in echo-gitops' || steps.wait.outcome == 'failure' && 'Wait for the rollout' || '' }}
+        run: $GITHUB_WORKSPACE/.github/scripts/release.sh announce-failed eu "$TAG" "$STOPPED"
 
   # Pushes the release's images to the DigitalOcean registry and points Dembrane/echo-gitops at
   # them. Argo CD does the rollout (migrate hook, rollout, smoke hook), so this job never touches
