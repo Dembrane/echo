@@ -91,8 +91,30 @@ export function localStorageHandler(storage: ObjectStorage, routePath = LOCAL_ST
       if (req.method === "GET" || req.method === "HEAD") {
         const blob = await storage.get(rest);
         if (!blob) return new Response("not found", { status: 404 });
+        // A browser seeks in an audio file with byte ranges; a bucket answers them, so the
+        // local store does too, or seeking in a local player downloads the whole file.
+        const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.get("range") ?? "");
+        if (range && (range[1] || range[2])) {
+          const last = blob.size - 1;
+          const start = range[1] ? Number(range[1]) : Math.max(0, blob.size - Number(range[2]));
+          const end = range[1] && range[2] ? Math.min(Number(range[2]), last) : last;
+          if (start > end || start > last)
+            return new Response(null, {
+              status: 416,
+              headers: { "content-range": `bytes */${blob.size}` },
+            });
+          return new Response(req.method === "HEAD" ? null : blob.slice(start, end + 1), {
+            status: 206,
+            headers: {
+              "accept-ranges": "bytes",
+              "content-length": String(end - start + 1),
+              "content-range": `bytes ${start}-${end}/${blob.size}`,
+              "content-type": blob.type,
+            },
+          });
+        }
         return new Response(req.method === "HEAD" ? null : blob, {
-          headers: { "content-length": String(blob.size) },
+          headers: { "accept-ranges": "bytes", "content-length": String(blob.size) },
         });
       }
     } catch (err) {
