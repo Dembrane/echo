@@ -443,77 +443,85 @@ export const TemplatesModal = ({
 		return (
 			<>
 				<Modal {...modalProps}>
-					<div className="flex h-full flex-col">
+					<div className="flex h-full flex-col min-h-0">
 						<Button
 							variant="subtle"
 							color="gray"
 							size="compact-sm"
 							leftSection={<ArrowLeftIcon size={20} />}
 							onClick={handleBack}
-							mb="md"
+							mb="sm"
 							className="self-start"
 						>
 							<Trans>Back</Trans>
 						</Button>
-						<Stack gap="md" className="flex-1">
-							<TextInput
-								label={t`Template name`}
-								withAsterisk
-								value={formTitle}
-								onChange={(e) => setFormTitle(e.currentTarget.value)}
-								placeholder={t`e.g. Weekly stakeholder digest`}
-								maxLength={80}
-							/>
-							<Textarea
-								label={t`Prompt`}
-								withAsterisk
-								value={formContent}
-								onChange={(e) => setFormContent(e.currentTarget.value)}
-								placeholder={t`What should ECHO analyse or generate from the conversations?`}
-								minRows={6}
-								maxRows={14}
-								autosize
-							/>
-							{view === "create" && canCreateWorkspaceTemplate && (
-								<Switch
-									label={t`Share with workspace`}
-									description={t`Visible to everyone in this workspace. Leave off to keep it personal.`}
-									checked={formScope === "workspace"}
-									onChange={(e) =>
-										setFormScope(e.currentTarget.checked ? "workspace" : "user")
-									}
+						<ScrollArea
+							className="flex-1"
+							type="auto"
+							scrollbarSize={10}
+							offsetScrollbars
+						>
+							<Stack gap="md" pb="xs">
+								<TextInput
+									label={t`Template name`}
+									withAsterisk
+									value={formTitle}
+									onChange={(e) => setFormTitle(e.currentTarget.value)}
+									placeholder={t`e.g. Weekly stakeholder digest`}
+									maxLength={80}
 								/>
-							)}
-							{view === "create" && (
-								<Text size="xs" c="dimmed">
-									<Trans>
-										Tip: You can also create a template from any chat message
-										you send, or duplicate an existing template.
-									</Trans>
-								</Text>
-							)}
-							<Group justify="flex-start" gap="sm">
-								<Button
-									variant="filled"
-									onClick={
-										view === "create" ? handleSaveCreate : handleSaveEdit
-									}
-									loading={view === "create" ? isCreating : isUpdating}
-									disabled={!formTitle.trim() || !formContent.trim()}
-								>
-									<Trans>Save template</Trans>
-								</Button>
-								{view === "edit" && editingId && (
-									<Button
-										variant="subtle"
-										color="red"
-										onClick={() => setDeletingTemplateId(editingId)}
-									>
-										<Trans>Delete</Trans>
-									</Button>
+								<Textarea
+									label={t`Prompt`}
+									withAsterisk
+									value={formContent}
+									onChange={(e) => setFormContent(e.currentTarget.value)}
+									placeholder={t`What should ECHO analyse or generate from the conversations?`}
+									minRows={6}
+									maxRows={12}
+									autosize
+								/>
+								{view === "create" && canCreateWorkspaceTemplate && (
+									<Switch
+										label={t`Share with workspace`}
+										description={t`Visible to everyone in this workspace. Leave off to keep it personal.`}
+										checked={formScope === "workspace"}
+										onChange={(e) =>
+											setFormScope(e.currentTarget.checked ? "workspace" : "user")
+										}
+									/>
 								)}
-							</Group>
-						</Stack>
+								{view === "create" && (
+									<Text size="xs" c="dimmed">
+										<Trans>
+											Tip: You can also create a template from any chat message
+											you send, or duplicate an existing template.
+										</Trans>
+									</Text>
+								)}
+							</Stack>
+						</ScrollArea>
+						<Divider my="sm" />
+						<Group justify="flex-start" gap="sm">
+							<Button
+								variant="filled"
+								onClick={
+									view === "create" ? handleSaveCreate : handleSaveEdit
+								}
+								loading={view === "create" ? isCreating : isUpdating}
+								disabled={!formTitle.trim() || !formContent.trim()}
+							>
+								<Trans>Save template</Trans>
+							</Button>
+							{view === "edit" && editingId && (
+								<Button
+									variant="subtle"
+									color="red"
+									onClick={() => setDeletingTemplateId(editingId)}
+								>
+									<Trans>Delete</Trans>
+								</Button>
+							)}
+						</Group>
 					</div>
 				</Modal>
 				{deleteConfirmationModal}
