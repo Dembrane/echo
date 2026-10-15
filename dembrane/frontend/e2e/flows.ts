@@ -149,6 +149,8 @@ export const flows: Record<string, Flow> = {
 	"/present/screen/:presentationId": {
 		params: { presentationId: "$presentation" },
 	},
+	"/projects": REDIRECT,
+	"/projects/:projectId/*": REDIRECT,
 	"/register": { auth: false },
 	"/release-notes": {},
 	"/request-password-reset": { auth: false },

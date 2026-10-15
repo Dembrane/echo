@@ -1,3 +1,4 @@
+import { i18n } from "@lingui/core";
 import { t } from "@lingui/core/macro";
 import { useDebouncedValue } from "@mantine/hooks";
 import { formatDistanceToNowStrict } from "date-fns";
@@ -37,11 +38,28 @@ export const hasVerifiedArtifacts = (conversation: Conversation) =>
 		(artifact) => (artifact as ConversationArtifact).approved_at,
 	) ?? false;
 
-export const formatStartedAt = (startedAt: string | null) => {
-	if (!startedAt) return t`Unknown date`;
-	return t`${formatDistanceToNowStrict(new Date(startedAt), {
-		addSuffix: true,
-	})}`;
+const RELATIVE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+
+export const formatStartedAt = (startedAt: string | null, now = Date.now()) => {
+	const date = new Date(startedAt ?? Number.NaN);
+	if (Number.isNaN(date.getTime())) return t`Unknown date`;
+	if (now - date.getTime() < RELATIVE_WINDOW_MS) {
+		return t`${formatDistanceToNowStrict(date, {
+			addSuffix: true,
+		})}`;
+	}
+	return new Intl.DateTimeFormat(i18n.locale, { dateStyle: "medium" }).format(
+		date,
+	);
+};
+
+export const formatStartedAtFull = (startedAt: string | null) => {
+	const date = new Date(startedAt ?? Number.NaN);
+	if (Number.isNaN(date.getTime())) return null;
+	return new Intl.DateTimeFormat(i18n.locale, {
+		dateStyle: "long",
+		timeStyle: "short",
+	}).format(date);
 };
 
 /** A project's conversations with search, sort, tag and verified filters,
