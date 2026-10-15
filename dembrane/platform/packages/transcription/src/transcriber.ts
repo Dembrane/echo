@@ -18,6 +18,22 @@ export interface TranscribeResult {
   readonly models: readonly (string | null)[];
 }
 
+/** Typed text in, the same redaction audio gets out. */
+export interface RedactTextInput {
+  readonly text: string;
+  readonly language?: string | null;
+  readonly hotwords?: readonly string[] | null;
+  readonly usePiiRedaction?: boolean;
+  readonly anonymizeTranscripts?: boolean;
+  readonly customGuidancePrompt?: string | null;
+}
+
 export interface Transcriber {
   transcribe(input: TranscribeInput): Promise<TranscribeResult>;
+  /**
+   * Redacts text a participant typed: the regex pass when anonymising, then the model pass
+   * when either flag is on, exactly the steps a transcript of audio goes through. With both
+   * flags off the text comes back unchanged and no model is called.
+   */
+  redactText(input: RedactTextInput): Promise<TranscribeResult>;
 }

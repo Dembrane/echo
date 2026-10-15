@@ -1178,6 +1178,7 @@ export const conversation_chunk = pgTable(
     id: uuid().primaryKey().notNull(),
     noise_ratio: real().default(sql`'0'`),
     path: varchar({ length: 255 }).default(sql`NULL`),
+    pending_text: text(),
     raw_transcript: text(),
     runpod_job_status_link: text(),
     runpod_request_count: integer().default(0),

@@ -419,11 +419,13 @@ export function bffStore(db: Db) {
 
     /** Chunks of one conversation with every column plus the `*` aliases. */
     async allChunks(conversationId: string): Promise<Row[]> {
-      const rows = await db
-        .select()
-        .from(conversation_chunk)
-        .where(eq(conversation_chunk.conversation_id, conversationId))
-        .orderBy(asc(conversation_chunk.timestamp), asc(conversation_chunk.id));
+      const rows = (
+        await db
+          .select()
+          .from(conversation_chunk)
+          .where(eq(conversation_chunk.conversation_id, conversationId))
+          .orderBy(asc(conversation_chunk.timestamp), asc(conversation_chunk.id))
+      ).map(withoutPendingText);
       const aliases = await chunkAliases(rows.map((r) => r.id));
       return rows.map((r) => ({ ...directusRow(r), ...(aliases.get(r.id) ?? {}) }));
     },
@@ -437,18 +439,20 @@ export function bffStore(db: Db) {
         fields: readonly string[];
       },
     ): Promise<Row[]> {
-      const rows = await db
-        .select()
-        .from(conversation_chunk)
-        .where(eq(conversation_chunk.conversation_id, conversationId))
-        .orderBy(
-          opts.sort === "timestamp"
-            ? asc(conversation_chunk.timestamp)
-            : desc(conversation_chunk.timestamp),
-          asc(conversation_chunk.id),
-        )
-        .limit(opts.limit)
-        .offset(opts.offset);
+      const rows = (
+        await db
+          .select()
+          .from(conversation_chunk)
+          .where(eq(conversation_chunk.conversation_id, conversationId))
+          .orderBy(
+            opts.sort === "timestamp"
+              ? asc(conversation_chunk.timestamp)
+              : desc(conversation_chunk.timestamp),
+            asc(conversation_chunk.id),
+          )
+          .limit(opts.limit)
+          .offset(opts.offset)
+      ).map(withoutPendingText);
       const star = opts.fields.includes("*");
       const wanted = star
         ? [...CHUNK_ALIASES]
@@ -555,3 +559,9 @@ export function bffStore(db: Db) {
 }
 
 export type BffStore = ReturnType<typeof bffStore>;
+
+/** A chunk row for a reader: typed text still waiting to be redacted is never sent out. */
+function withoutPendingText<T extends { pending_text?: unknown }>(row: T): Omit<T, "pending_text"> {
+  const { pending_text: _pending, ...rest } = row;
+  return rest;
+}

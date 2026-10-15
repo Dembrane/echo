@@ -261,3 +261,40 @@ test("a refusal on the multi_modal_fast detour is a refusal too", async () => {
   const err = await t.transcribe({ audio: new Uint8Array([1]) }).catch((e) => e);
   expect(err).toBeInstanceOf(TranscriptRefusedError);
 });
+
+test("typed text is redacted like a transcript: regex first, then one text-only model pass", async () => {
+  const seen: LanguageModelV4CallOptions[] = [];
+  const t = new GeminiTranscriber(
+    {
+      model: () =>
+        model(
+          ['{"corrected_transcript": "Ik ben <redacted_name>, <redacted_email>", "note": "n"}'],
+          seen,
+        ),
+      embedding: () => ({}) as never,
+    },
+    logger,
+  );
+  const out = await t.redactText({
+    text: "Ik ben Jan, jan@example.nl",
+    anonymizeTranscripts: true,
+  });
+  expect(out.transcript).toBe("Ik ben <redacted_name>, <redacted_email>");
+  expect(seen).toHaveLength(1);
+  const user = seen[0]?.prompt[1] as { content: { type: string; text?: string }[] };
+  expect(user.content).toEqual([{ type: "text", text: "Ik ben Jan, <redacted_email>" }]);
+});
+
+test("typed text with both redaction flags off is returned as typed and calls no model", async () => {
+  const seen: LanguageModelV4CallOptions[] = [];
+  const t = new GeminiTranscriber(
+    {
+      model: () => model(['{"corrected_transcript": "x", "note": ""}'], seen),
+      embedding: () => ({}) as never,
+    },
+    logger,
+  );
+  const out = await t.redactText({ text: "mail jan@example.nl" });
+  expect(out.transcript).toBe("mail jan@example.nl");
+  expect(seen).toHaveLength(0);
+});

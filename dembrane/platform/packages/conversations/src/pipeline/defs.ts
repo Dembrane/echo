@@ -12,10 +12,18 @@ import { z } from "zod";
 // that many times, each on another worker, before it is left for a person.
 const LOST_WORKER_LIMIT = 10;
 
-/** One uploaded chunk: convert, split, transcribe each piece, hand over to finalize. */
+/**
+ * One uploaded chunk: convert, split, transcribe each piece, hand over to finalize. A typed
+ * chunk of an anonymised conversation is marked here; its raw text waits in the row's
+ * pending_text, never in a job input or step output, which the queue keeps.
+ */
 export const processChunk = defineJob(
   "conversations.chunk",
-  z.object({ chunkId: z.string(), usePiiRedaction: z.boolean().default(false) }),
+  z.object({
+    chunkId: z.string(),
+    usePiiRedaction: z.boolean().default(false),
+    typed: z.boolean().optional(),
+  }),
   // Retries live on the steps; this bounds one run (Vertex outages back off for minutes).
   { retryLimit: 0, expireInSeconds: 6 * 3600, lostWorkerLimit: LOST_WORKER_LIMIT },
 );
