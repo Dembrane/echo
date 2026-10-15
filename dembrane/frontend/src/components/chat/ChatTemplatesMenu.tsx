@@ -110,15 +110,20 @@ const TemplatePill = ({
 	label,
 	icon: IconComponent,
 	isSelected,
+	isSuggestion = false,
 	onClick,
 	testIdSuffix,
 }: {
 	label: string;
 	icon?: Icon;
 	isSelected: boolean;
+	isSuggestion?: boolean;
 	onClick: () => void;
 	testIdSuffix: string;
 }) => {
+	// Suggestions read in the action blue, so they stand apart from templates.
+	const color = isSuggestion ? "var(--app-action)" : undefined;
+
 	return (
 		<Tooltip label={label} openDelay={500} disabled={label.length < 25}>
 			<UnstyledButton
@@ -132,9 +137,9 @@ const TemplatePill = ({
 			>
 				<Group gap={4} wrap="nowrap" style={{ minWidth: 0 }}>
 					{IconComponent && (
-						<IconComponent size={16} style={{ flexShrink: 0 }} />
+						<IconComponent size={16} color={color} style={{ flexShrink: 0 }} />
 					)}
-					<Text size="xs" truncate style={{ minWidth: 0 }}>
+					<Text size="xs" c={color} truncate style={{ minWidth: 0 }}>
 						{label}
 					</Text>
 				</Group>
@@ -318,6 +323,7 @@ export const ChatTemplatesMenu = ({
 					label={suggestion.label}
 					icon={SUGGESTION_ICONS[suggestion.icon] || Sparkle}
 					isSelected={selectedTemplateKey === suggestion.label}
+					isSuggestion
 					onClick={() =>
 						handleTemplateSelect(
 							{
