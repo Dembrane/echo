@@ -495,6 +495,21 @@ export const schema = defineSchema({
       description:
         "Where support requests and pricing bookings are forwarded to reach the team. Unset turns forwarding off.",
     }),
+    forwardContent: key("SUPPORT_FORWARD_CONTENT", z.enum(["full", "pointer"]).default("full"), {
+      description:
+        "What sam is told about a support request. full sends the message and page context. pointer sends only the id, environment, source, time and a link where the request is read, never the message or page context, so customer text stays in this deployment.",
+    }),
+    readUrl: key(
+      "SUPPORT_READ_URL",
+      z
+        .url()
+        .refine((u) => u.includes("{id}"), "a URL containing {id}")
+        .optional(),
+      {
+        description:
+          "Where a support request is read, with {id} standing for the request id, e.g. https://grafana.eu.dembrane.com/d/eu-support/support?var-id={id}. Required when SUPPORT_FORWARD_CONTENT is pointer; unused otherwise.",
+      },
+    ),
     forwardWebhookToken: key("ECHO_SUPPORT_WEBHOOK_TOKEN", z.string().optional(), {
       description: "Shared token sent as X-Echo-Support-Token with every forward.",
       secret: true,
