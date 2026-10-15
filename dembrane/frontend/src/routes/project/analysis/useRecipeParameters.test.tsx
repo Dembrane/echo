@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import type { AnalysisRun } from "@/components/analysis/hooks";
-import { useRecipeParameters } from "./useRecipeParameters";
+import type { AnalysisRecipe, AnalysisRun } from "@/components/analysis/hooks";
+import { recipeDefaults, useRecipeParameters } from "./useRecipeParameters";
 
 // A refetch of the runs query hands back equal-but-new objects, which is what
 // used to wipe the host's typing while a run was in progress.
@@ -91,5 +91,31 @@ describe("recipe parameters a host is typing", () => {
 		});
 
 		expect(result.current.parameters.max_phrases).toBe(12);
+	});
+});
+
+describe("recipe defaults", () => {
+	const tensions = {
+		id: "tensions",
+		parametersSchema: {
+			properties: {
+				input_set: { enum: ["arguments", "deduplicated_arguments"] },
+			},
+			required: ["input_set"],
+		},
+	} as unknown as AnalysisRecipe;
+	const dedup = (status: string) =>
+		({ recipeId: "deduplicated_arguments", status }) as AnalysisRun;
+
+	it("preselects the first input set when no deduplicated output is ready", () => {
+		expect(recipeDefaults(tensions, [dedup("running")])).toEqual({
+			input_set: "arguments",
+		});
+	});
+
+	it("prefers the deduplicated set once it is ready", () => {
+		expect(recipeDefaults(tensions, [dedup("ready")])).toEqual({
+			input_set: "deduplicated_arguments",
+		});
 	});
 });
