@@ -567,8 +567,8 @@ msgstr "před {0} d"
 msgid "{0} deleted"
 msgstr "{0} deleted"
 
-#. placeholder {0}: failures.length
-#: src/lib/api.ts:733
+#. placeholder {0}: failed.length
+#: src/lib/api.ts:622
 msgid "{0} file(s) failed to upload. Try those again."
 msgstr "{0} souborů se nepodařilo nahrát. Zkuste to znovu."
 
@@ -1879,7 +1879,7 @@ msgid "All"
 msgstr "All"
 
 #. placeholder {0}: payload.chunks.length
-#: src/lib/api.ts:737
+#: src/lib/api.ts:752
 msgid "All {0} file(s) uploaded successfully"
 msgstr "Všech {0} souborů bylo úspěšně nahráno"
 
