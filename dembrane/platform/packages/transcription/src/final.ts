@@ -52,12 +52,15 @@ export interface FinalTranscriber {
   transcribe(input: FinalInput): Promise<FinalPiece>;
 }
 
-// Scaleway takes 25 MB a request; keep a margin and keep one request well inside its
-// 180 s timeout. Gemini takes 20 MB inline; 8 hours of audio tokens would fit but the
-// answer (every word, with times) is the limit: about 35 minutes of speech stays far under
-// 65k output tokens.
+// Scaleway takes 25 MB a request; keep a margin and keep one request well inside its 180 s
+// timeout. Whisper times its own segments, so it takes ten minutes at a time.
 export const WHISPER_LIMITS = { maxBytes: 20 * 1024 * 1024, maxSeconds: 10 * 60 } as const;
-export const GEMINI_LIMITS = { maxBytes: 18 * 1024 * 1024, maxSeconds: 35 * 60 } as const;
+// Gemini takes 20 MB inline, but its clock is the limit: over a five minute file its
+// timestamps ran 10 to 50 percent fast with errors of 7 to 12 seconds, over one minute they
+// stay within 2 seconds after the piece's times are pulled back to its length. Pieces are cut
+// where nobody speaks, so no word is split and the text is as good as one call on the whole
+// file.
+export const GEMINI_LIMITS = { maxBytes: 18 * 1024 * 1024, maxSeconds: 60 } as const;
 
 /** Whisper: its segments are the sentences, timed by the model itself. */
 export class WhisperFinal implements FinalTranscriber {
@@ -88,37 +91,45 @@ export class WhisperFinal implements FinalTranscriber {
   }
 }
 
-const SEGMENTS_SCHEMA = {
-  type: "object",
-  properties: {
-    segments: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          start: { type: "number" },
-          end: { type: "number" },
-          text: { type: "string" },
+const segmentsSchema = (time: "number" | "string") =>
+  ({
+    type: "object",
+    properties: {
+      segments: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: { start: { type: time }, end: { type: time }, text: { type: "string" } },
+          required: ["start", "end", "text"],
         },
-        required: ["start", "end", "text"],
       },
     },
-  },
-  required: ["segments"],
-} as const;
+    required: ["segments"],
+  }) as const;
+
+/** How the model is asked to write times: seconds as numbers, or a clock reading. */
+export type TimeFormat = "seconds" | "clock";
 
 const PROVIDER_OPTIONS = { ...FALL_BACK_ON_REFUSAL, vertex: { threshold: "OFF" } };
 
 /** The instruction for a timed, word for word transcript; exported so a measurement can print it. */
-export function segmentsPrompt(opts: { language?: string | null; hotwords?: string }): string {
+export function segmentsPrompt(opts: {
+  language?: string | null;
+  hotwords?: string;
+  timeFormat?: TimeFormat;
+}): string {
+  const times =
+    opts.timeFormat === "clock"
+      ? "as a clock reading MM:SS.s from the very start of the recording, for example 01:23.4"
+      : "as seconds from the very start of the recording, numbers with one decimal";
   return [
     "Transcribe this recording word for word, in the language that is spoken.",
     "Do not summarise, translate, paraphrase or correct grammar. Keep filler words and repetitions.",
-    "Split the transcript into sentences. For each sentence give `start` and `end`: the seconds from the very start of the recording at which the first and the last word of that sentence are spoken, as numbers with one decimal.",
+    `Split the transcript into sentences. For each sentence give \`start\` and \`end\`: the moments at which the first and the last word of that sentence are spoken, ${times}.`,
     "Sentences are in order and do not overlap. Use no speaker labels and no markup.",
     opts.language ? `The spoken language is expected to be: ${opts.language}.` : "",
     opts.hotwords ? `Names and terms that may occur, spelled this way: ${opts.hotwords}.` : "",
-    'Answer as JSON: {"segments": [{"start": 0.0, "end": 4.2, "text": "..."}]}. If nobody speaks, answer {"segments": []}.',
+    'Answer as JSON: {"segments": [{"start": ..., "end": ..., "text": "..."}]}. If nobody speaks, answer {"segments": []}.',
   ]
     .filter(Boolean)
     .join("\n");
@@ -127,25 +138,44 @@ export function segmentsPrompt(opts: { language?: string | null; hotwords?: stri
 /** Gemini: one call on the audio asking for timed sentences. */
 export class GeminiFinal implements FinalTranscriber {
   readonly provider = "gemini" as const;
-  readonly limits = GEMINI_LIMITS;
+  readonly limits: FinalTranscriber["limits"];
   model = "gemini";
 
   constructor(
     private readonly models: Models,
     private readonly logger: Logger,
-  ) {}
+    private readonly opts: {
+      timeFormat?: TimeFormat;
+      /** Longest piece in seconds; the model's clock drifts over a long file, so shorter is truer. */
+      maxSeconds?: number;
+      /** Pull a piece's times back when the model's last sentence ends after the audio does (default on). */
+      rescale?: boolean;
+      /** Vertex's switch that makes the model read audio with a clock; off leaves its default. */
+      audioTimestamp?: boolean;
+    } = {},
+  ) {
+    this.limits = {
+      maxBytes: GEMINI_LIMITS.maxBytes,
+      maxSeconds: opts.maxSeconds ?? GEMINI_LIMITS.maxSeconds,
+    };
+  }
 
   async transcribe(input: FinalInput): Promise<FinalPiece> {
     const prompt = segmentsPrompt({
       language: input.language ?? null,
       hotwords: input.hotwords?.length ? input.hotwords.join(", ") : "",
+      ...(this.opts.timeFormat && { timeFormat: this.opts.timeFormat }),
     });
     // A bad payload is retried once; a truncated one is not, it would truncate again.
     let last: TranscriptParseError | null = null;
     for (let attempt = 0; attempt < 2; attempt++) {
       const r = await this.call(prompt, input);
       try {
-        const segments = parseSegments(r.text, r.finishReason);
+        const segments = rescaleToPiece(
+          parseSegments(r.text, r.finishReason),
+          input.seconds,
+          this.opts.rescale ?? true,
+        );
         this.model = r.model ?? this.model;
         return {
           sentences: tidy(segments, input.seconds),
@@ -187,8 +217,17 @@ export class GeminiFinal implements FinalTranscriber {
               ],
             },
           ],
-          responseFormat: { type: "json", schema: SEGMENTS_SCHEMA as never },
-          providerOptions: { ...PROVIDER_OPTIONS, ...speechHint(this.models, input.language) },
+          responseFormat: {
+            type: "json",
+            schema: segmentsSchema(this.opts.timeFormat === "clock" ? "string" : "number") as never,
+          },
+          providerOptions: {
+            ...PROVIDER_OPTIONS,
+            ...(this.opts.audioTimestamp && {
+              vertex: { ...PROVIDER_OPTIONS.vertex, audioTimestamp: true },
+            }),
+            ...speechHint(this.models, input.language),
+          },
           ...(input.signal && { abortSignal: input.signal }),
         });
       } catch (err) {
@@ -225,6 +264,22 @@ export class GeminiFinal implements FinalTranscriber {
       return run(this.models.model("multi_modal_fast"));
     }
   }
+}
+
+/**
+ * The model's clock runs fast over a long recording, so its last sentence can end after the
+ * audio does. Times are compressed by the same factor so the last sentence ends with the
+ * piece; a piece whose last sentence ends inside the audio is left as the model gave it.
+ */
+export function rescaleToPiece(
+  sentences: readonly Sentence[],
+  seconds: number,
+  on: boolean,
+): Sentence[] {
+  const last = sentences.reduce((m, s) => Math.max(m, s.end), 0);
+  if (!on || last <= seconds || seconds <= 0) return [...sentences];
+  const k = seconds / last;
+  return sentences.map((s) => ({ start: s.start * k, end: s.end * k, text: s.text }));
 }
 
 /** Seconds from a number, "83.5", or a clock reading such as "01:23.5". */

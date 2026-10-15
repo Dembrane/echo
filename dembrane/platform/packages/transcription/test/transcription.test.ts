@@ -6,10 +6,14 @@ import { createLogger } from "@dembrane/observability";
 import {
   GeminiTranscriber,
   isRecoverableTranscriptionError,
+  parseSegments,
   parseTranscriptJson,
   regexRedactPii,
+  rescaleToPiece,
   TranscriptParseError,
   TranscriptRefusedError,
+  tidy,
+  toSeconds,
   transcriptionFailureReason,
 } from "../src";
 
@@ -302,4 +306,43 @@ test("typed text with both redaction flags off is returned as typed and calls no
   const out = await t.redactText({ text: "mail jan@example.nl" });
   expect(out.transcript).toBe("mail jan@example.nl");
   expect(seen).toHaveLength(0);
+
+test("a piece whose last sentence ends after the audio is pulled back to its length", () => {
+  const out = rescaleToPiece(
+    [
+      { start: 0, end: 30, text: "a" },
+      { start: 30, end: 72, text: "b" },
+    ],
+    60,
+    true,
+  );
+  expect(out[1]?.end).toBeCloseTo(60);
+  expect(out[0]?.end).toBeCloseTo(25);
+  // Inside the audio, or switched off: untouched.
+  const early = [{ start: 0, end: 50, text: "a" }];
+  expect(rescaleToPiece(early, 60, true)).toEqual(early);
+  expect(rescaleToPiece([{ start: 0, end: 80, text: "a" }], 60, false)[0]?.end).toBe(80);
+});
+
+test("timed sentences are parsed from seconds or a clock and tidied into the piece", () => {
+  const parsed = parseSegments(
+    JSON.stringify({
+      segments: [
+        { start: "00:02.5", end: "00:04", text: " Hallo. " },
+        { start: 1, end: 3, text: "Tweede" },
+        { start: 3, end: 99, text: "" },
+      ],
+    }),
+    "stop",
+  );
+  expect(parsed.map((s) => [s.start, s.end, s.text])).toEqual([
+    [2.5, 4, "Hallo."],
+    [1, 3, "Tweede"],
+  ]);
+  expect(tidy(parsed, 3.5).map((s) => [s.start, s.end])).toEqual([
+    [1, 3],
+    [3, 3.5],
+  ]);
+  expect(toSeconds("1:02:03")).toBe(3723);
+  expect(toSeconds("abc")).toBeNull();
 });
