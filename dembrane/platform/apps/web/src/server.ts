@@ -13,6 +13,24 @@ export interface WebOptions {
   /** Shared with the API, which then takes the caller's address from this server. */
   readonly proxySecret?: string | undefined;
   readonly release: string;
+  /** False removes the Tally script from the page. Defaults to true. */
+  readonly analytics?: boolean | undefined;
+}
+
+/** index.html without the Tally embed script, for deployments that switch analytics off. */
+export function withoutTally(html: string): string {
+  // Line by line, not a regex: the page is ours and puts the embed on a line of its own.
+  return html
+    .split("\n")
+    .filter((line) => {
+      const t = line.trim();
+      return !(
+        t.startsWith("<script") &&
+        t.endsWith("</script>") &&
+        t.includes('src="https://tally.so/')
+      );
+    })
+    .join("\n");
 }
 
 /**
@@ -85,9 +103,16 @@ export function createHandler(opts: WebOptions) {
       if (safe.startsWith("/assets/"))
         return withHeaders(new Response("Not found", { status: 404 }));
     }
-    return withHeaders(await serveFile(req, indexPath, "text/html; charset=utf-8"), {
-      "Cache-Control": "no-cache",
-    });
+    // Without analytics the page is rewritten, so the precompressed copies (which still carry
+    // the Tally script) are not used for it.
+    return withHeaders(
+      opts.analytics === false
+        ? new Response(withoutTally(await Bun.file(indexPath).text()), {
+            headers: { "content-type": "text/html; charset=utf-8" },
+          })
+        : await serveFile(req, indexPath, "text/html; charset=utf-8"),
+      { "Cache-Control": "no-cache" },
+    );
   };
 }
 

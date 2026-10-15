@@ -24,7 +24,15 @@ import {
   ParticipantTokens,
 } from "@dembrane/conversations";
 import { reportRoutes as feedbackReportRoutes, responseRoutes } from "@dembrane/feedback";
-import { vertexCompleter, vertexEmbedder } from "@dembrane/llm";
+import {
+  completerConfigOf,
+  embedderConfigOf,
+  embeddingLocationOf,
+  embeddingModelOf,
+  searchGroundingOn,
+  vertexCompleter,
+  vertexEmbedder,
+} from "@dembrane/llm";
 import { MapStore, mapRoutes } from "@dembrane/map";
 import { notificationRoutes } from "@dembrane/notifications";
 import {
@@ -154,18 +162,8 @@ export function buildApp(deps: Deps) {
   app.route("/", notificationRoutes(deps));
   app.route("/", reportRoutes(deps));
   // One set of model calls for the analysis, map, canvas and popcorn routes.
-  const completer = vertexCompleter(deps.models, {
-    groups: {
-      text_fast: deps.config.llm.textFast,
-      multi_modal_fast: deps.config.llm.multiModalFast,
-      multi_modal_pro: deps.config.llm.multiModalPro,
-    },
-  });
-  const embedder = vertexEmbedder(deps.models, {
-    project: deps.config.llm.vertexProject,
-    location: deps.config.llm.embeddingLocation,
-    model: deps.config.llm.embeddingModel,
-  });
+  const completer = vertexCompleter(deps.models, completerConfigOf(deps.config.llm));
+  const embedder = vertexEmbedder(deps.models, embedderConfigOf(deps.config.llm));
   app.route(
     "/",
     analysisRoutes({
@@ -174,8 +172,8 @@ export function buildApp(deps: Deps) {
       completer,
       embedder,
       enablePresent: deps.config.analysis.enablePresent,
-      embeddingModel: deps.config.llm.embeddingModel,
-      embeddingLocation: deps.config.llm.embeddingLocation,
+      embeddingModel: embeddingModelOf(deps.config.llm),
+      embeddingLocation: embeddingLocationOf(deps.config.llm),
     }),
   );
   app.route(
@@ -185,8 +183,9 @@ export function buildApp(deps: Deps) {
       jobs: deps.queue,
       completer,
       embedder,
-      embeddingModel: deps.config.llm.embeddingModel,
-      embeddingLocation: deps.config.llm.embeddingLocation,
+      embeddingModel: embeddingModelOf(deps.config.llm),
+      embeddingLocation: embeddingLocationOf(deps.config.llm),
+      factCheck: searchGroundingOn(deps.config.llm),
       nodeLimitCeiling: deps.config.analysis.nodeLimitCeiling ?? null,
       edgeLimitCeiling: deps.config.analysis.edgeLimitCeiling ?? null,
       // The room shows the project's groups and follows its popcorn session's channel.
@@ -284,8 +283,8 @@ export function buildApp(deps: Deps) {
     embedder,
     jobs: deps.queue,
     config: {
-      embeddingModel: deps.config.llm.embeddingModel,
-      embeddingLocation: deps.config.llm.embeddingLocation,
+      embeddingModel: embeddingModelOf(deps.config.llm),
+      embeddingLocation: embeddingLocationOf(deps.config.llm),
     },
   });
   const popcorn = popcornDeps({

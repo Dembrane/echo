@@ -17,7 +17,13 @@ import type { Config } from "@dembrane/config";
 import { conversationWorker, liveRecordings, type PipelineDeps } from "@dembrane/conversations";
 import type { Db } from "@dembrane/db";
 import { supportForwardRegistration, supportInboxMessage, supportOutbox } from "@dembrane/feedback";
-import type { Completer, Embedder, Models } from "@dembrane/llm";
+import {
+  type Completer,
+  type Embedder,
+  embeddingLocationOf,
+  embeddingModelOf,
+  type Models,
+} from "@dembrane/llm";
 import type { Mailer } from "@dembrane/mail";
 import { mapWorker } from "@dembrane/map";
 import { audiences, Notifier } from "@dembrane/notifications";
@@ -142,8 +148,8 @@ export function registrations(deps: {
     completer: deps.completer,
     embedder: deps.embedder,
     config: {
-      embeddingModel: config.llm.embeddingModel,
-      embeddingLocation: config.llm.embeddingLocation,
+      embeddingModel: embeddingModelOf(config.llm),
+      embeddingLocation: embeddingLocationOf(config.llm),
     },
   };
   const popcornDeps: PopcornWorkerDeps = {
@@ -291,8 +297,8 @@ export function registrations(deps: {
       completer: deps.completer,
       embedder: deps.embedder,
       config: {
-        embeddingModel: config.llm.embeddingModel,
-        embeddingLocation: config.llm.embeddingLocation,
+        embeddingModel: embeddingModelOf(config.llm),
+        embeddingLocation: embeddingLocationOf(config.llm),
       },
       // A group landing wakes the room, which follows its popcorn session's channel.
       onGroupChanged: popcornProjectNudge(db, logger),

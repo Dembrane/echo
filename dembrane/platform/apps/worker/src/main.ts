@@ -5,8 +5,15 @@ import { describe, FIXED_CONNECTIONS, loadSections } from "@dembrane/config";
 import { AudioUrls } from "@dembrane/conversations";
 import { bootAssets } from "@dembrane/core";
 import { createDb, describeDbFailure, withDatabase } from "@dembrane/db";
-import { createModels, vertexCompleter, vertexEmbedder } from "@dembrane/llm";
-import { type Mailer, SendGridMailer } from "@dembrane/mail";
+import {
+  completerConfigOf,
+  createModels,
+  embedderConfigOf,
+  modelsConfigOf,
+  vertexCompleter,
+  vertexEmbedder,
+} from "@dembrane/llm";
+import { type Mailer, mailerFromSettings, missingMailKey } from "@dembrane/mail";
 import { modelCallRecorder, modelCallTable } from "@dembrane/metering";
 import { createLogger, initTracing } from "@dembrane/observability";
 import { Queue } from "@dembrane/queue";
@@ -67,18 +74,16 @@ const queue = new Queue(databaseUrl, logger, tracing.tracer, {
   release: config.app.release,
 });
 const database = createDb({ url: databaseUrl, poolMax: config.database.poolMax });
-// Without a SendGrid key (local, preview) mail is logged, never sent.
-const mailer: Mailer = config.mail.sendgridApiKey
-  ? new SendGridMailer({
-      apiKey: config.mail.sendgridApiKey,
-      fromEmail: config.mail.fromEmail,
-      fromName: config.mail.fromName,
-      region: config.mail.sendgridRegion,
-    })
-  : {
-      send: async (msg) =>
-        logger.warn({ subject: msg.subject, tags: msg.tags }, "mail not sent: no SendGrid key"),
-    };
+// Without a sender configured (local, preview) mail is logged, never sent.
+const mailer: Mailer = mailerFromSettings(config.mail) ?? {
+  send: async (msg) =>
+    logger.warn(
+      { subject: msg.subject, tags: msg.tags },
+      config.mail.provider === "scaleway"
+        ? `mail not sent: no ${missingMailKey(config.mail)}`
+        : "mail not sent: no SendGrid key",
+    ),
+};
 const billing = createBilling({
   db: database.db,
   mollie: config.billing.mollieApiKey
@@ -97,25 +102,11 @@ const billing = createBilling({
 // analysis, map, canvas and report jobs, which also embed, and the chat assistant.
 // Every model call is metered: one log line at once and one model_call row per batch.
 const metering = modelCallRecorder({ sink: modelCallTable(database.db), logger, service });
-const models = createModels(
-  {
-    vertexProject: config.llm.vertexProject,
-    vertexLocation: config.llm.vertexLocation,
-    groups: {
-      text_fast: config.llm.textFast,
-      multi_modal_fast: config.llm.multiModalFast,
-      multi_modal_pro: config.llm.multiModalPro,
-    },
-    embeddingModel: config.llm.embeddingModel,
-    embeddingLocation: config.llm.embeddingLocation,
-    embeddingDimensions: config.llm.embeddingDimensions,
-  },
-  {
-    observe: metering.observe,
-    onObserverFault: (err) =>
-      logger.warn({ err }, "model call metering failed; later faults are silent"),
-  },
-);
+const models = createModels(modelsConfigOf(config.llm), {
+  observe: metering.observe,
+  onObserverFault: (err) =>
+    logger.warn({ err }, "model call metering failed; later faults are silent"),
+});
 const audio = config.audio.s3Bucket
   ? new S3Storage({
       endpoint: config.audio.s3Endpoint ?? "",
@@ -148,18 +139,8 @@ const media = config.media.url
     })
   : new LocalMedia();
 
-const completer = vertexCompleter(models, {
-  groups: {
-    text_fast: config.llm.textFast,
-    multi_modal_fast: config.llm.multiModalFast,
-    multi_modal_pro: config.llm.multiModalPro,
-  },
-});
-const embedder = vertexEmbedder(models, {
-  project: config.llm.vertexProject,
-  location: config.llm.embeddingLocation,
-  model: config.llm.embeddingModel,
-});
+const completer = vertexCompleter(models, completerConfigOf(config.llm));
+const embedder = vertexEmbedder(models, embedderConfigOf(config.llm));
 const regs = registrations({
   logger,
   db: database.db,

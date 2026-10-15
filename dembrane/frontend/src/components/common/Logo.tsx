@@ -13,7 +13,7 @@ import dembraneLogomark from "@/assets/logomark-no-bg.svg";
 import dembraneLogomarkDark from "@/assets/logomark-no-bg-dark.svg";
 import { roles } from "@/colors";
 import { I18nLink } from "@/components/common/i18nLink";
-import { APP_ENVIRONMENT, PREVIEW_PR } from "@/config";
+import { APP_ENVIRONMENT, PREVIEW_PR, REGION } from "@/config";
 import { useWhitelabelLogo } from "@/hooks/useWhitelabelLogo";
 
 type LogoProps = {
@@ -34,7 +34,7 @@ const BADGE_CLASS =
 	"absolute -bottom-1 -right-[15px] -translate-x-1/2 pl-1 text-xs leading-none whitespace-nowrap";
 const BADGE_STYLE = { color: roles.action };
 
-/** The text under the logo: the PR on a PR preview, else the environment. */
+/** The text under the logo: the PR on a PR preview, then the environment, then EU on the EU deployment. */
 const EnvBadge = () => {
 	if (PREVIEW_PR) {
 		const number = PREVIEW_PR.number;
@@ -52,10 +52,12 @@ const EnvBadge = () => {
 		);
 	}
 	// Show an env badge everywhere except production.
-	if (APP_ENVIRONMENT === "production") return null;
+	if (APP_ENVIRONMENT === "production" && REGION !== "eu") return null;
 	return (
 		<span className={`pointer-events-none ${BADGE_CLASS}`} style={BADGE_STYLE}>
-			{APP_ENVIRONMENT.charAt(0).toUpperCase() + APP_ENVIRONMENT.slice(1)}
+			{APP_ENVIRONMENT === "production"
+				? "EU"
+				: APP_ENVIRONMENT.charAt(0).toUpperCase() + APP_ENVIRONMENT.slice(1)}
 		</span>
 	);
 };

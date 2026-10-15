@@ -5051,7 +5051,7 @@ msgid "dembrane at your event?"
 msgstr "dembrane bei Ihrem Event?"
 
 #. placeholder {0}: new Date().getFullYear()
-#: src/components/layout/Footer.tsx:38
+#: src/components/layout/Footer.tsx:39
 msgid "dembrane B.V. {0}, all rights reserved."
 msgstr "dembrane B.V. {0}, alle Rechte vorbehalten."
 
@@ -5385,7 +5385,7 @@ msgstr "Optionen für den Transkript-Download"
 #~ msgid "Download Transcript Options"
 #~ msgstr "Transkript-Download-Optionen"
 
-#: src/components/layout/Footer.tsx:34
+#: src/components/layout/Footer.tsx:35
 msgid "DPA"
 msgstr "AVV"
 
@@ -11406,7 +11406,7 @@ msgstr "Eingabetaste zum Hinzufügen drücken. Mehrere mit Kommas trennen."
 msgid "Preview"
 msgstr "Vorschau"
 
-#: src/components/layout/Footer.tsx:20
+#: src/components/layout/Footer.tsx:21
 msgid "Preview of PR #{number}"
 msgstr "Vorschau von PR #{number}"
 
@@ -11438,7 +11438,7 @@ msgstr "Preis"
 #~ msgid "Print report"
 #~ msgstr "Bericht drucken"
 
-#: src/components/layout/Footer.tsx:31
+#: src/components/layout/Footer.tsx:32
 msgid "Privacy"
 msgstr "Datenschutz"
 
@@ -11685,6 +11685,10 @@ msgstr "Anteilig für den Rest dieses Abrechnungszeitraums berechnet."
 #: src/components/release/releaseHistory.ts:519
 msgid "Protect sign-in with two-factor authentication."
 msgstr "Anmeldung mit Zwei-Faktor-Authentifizierung schützen."
+
+#: src/components/layout/Footer.tsx:45
+msgid "Proudly hosted in the EU"
+msgstr "Stolz in der EU gehostet"
 
 #: src/components/library/LibraryTemplatesMenu.tsx:24
 #~ msgid "Provide an overview of the main topics and recurring themes"
@@ -15009,7 +15013,7 @@ msgstr "Spannungen"
 msgid "Tensions tab"
 msgstr "Spannungsfelder-Tab"
 
-#: src/components/layout/Footer.tsx:28
+#: src/components/layout/Footer.tsx:29
 msgid "Terms"
 msgstr "AGB"
 
