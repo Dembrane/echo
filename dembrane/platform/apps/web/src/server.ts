@@ -19,10 +19,18 @@ export interface WebOptions {
 
 /** index.html without the Tally embed script, for deployments that switch analytics off. */
 export function withoutTally(html: string): string {
-  return html.replace(
-    /[ \t]*<script[^>]*src="https:\/\/tally\.so\/[^"]*"[^>]*><\/script>\r?\n?/g,
-    "",
-  );
+  // Line by line, not a regex: the page is ours and puts the embed on a line of its own.
+  return html
+    .split("\n")
+    .filter((line) => {
+      const t = line.trim();
+      return !(
+        t.startsWith("<script") &&
+        t.endsWith("</script>") &&
+        t.includes('src="https://tally.so/')
+      );
+    })
+    .join("\n");
 }
 
 /**

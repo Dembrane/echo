@@ -52,6 +52,13 @@ export const MAX_AUDIO_BYTES = 25 * 1024 * 1024;
 /** One transcription request may not hold a worker longer than this. */
 const TRANSCRIBE_TIMEOUT_MS = 180_000;
 
+/** A loop, not a regex: a regex over a configured URL is flagged as slow on many slashes. */
+function withoutTrailingSlashes(url: string): string {
+  let end = url.length;
+  while (end > 0 && url[end - 1] === "/") end--;
+  return url.slice(0, end);
+}
+
 /** Audio to text on the endpoint's `/audio/transcriptions`. */
 export async function transcribeAudio(
   ep: CompatEndpoint,
@@ -75,14 +82,17 @@ export async function transcribeAudio(
   if (language) form.set("language", language);
   if (prompt) form.set("prompt", prompt);
   form.set("file", new Blob([audio as never], { type: kind.type }), `audio.${kind.ext}`);
-  const res = await (ep.fetch ?? fetch)(`${ep.baseUrl.replace(/\/+$/, "")}/audio/transcriptions`, {
-    method: "POST",
-    headers: { authorization: `Bearer ${ep.apiKey}` },
-    body: form,
-    signal: signal
-      ? AbortSignal.any([signal, AbortSignal.timeout(TRANSCRIBE_TIMEOUT_MS)])
-      : AbortSignal.timeout(TRANSCRIBE_TIMEOUT_MS),
-  });
+  const res = await (ep.fetch ?? fetch)(
+    `${withoutTrailingSlashes(ep.baseUrl)}/audio/transcriptions`,
+    {
+      method: "POST",
+      headers: { authorization: `Bearer ${ep.apiKey}` },
+      body: form,
+      signal: signal
+        ? AbortSignal.any([signal, AbortSignal.timeout(TRANSCRIBE_TIMEOUT_MS)])
+        : AbortSignal.timeout(TRANSCRIBE_TIMEOUT_MS),
+    },
+  );
   if (!res.ok) {
     const err = new Error(`transcription ${res.status}: ${(await res.text()).slice(0, 300)}`);
     // Rate limits and server faults are worth another try; a bad request is not.
