@@ -4,15 +4,17 @@
 # Called by .github/workflows/platform.yml after the images are pushed.
 #
 #   gitops-bump.sh <echo-gitops checkout> <branch> prod <sha> <release tag>
+#   gitops-bump.sh <echo-gitops checkout> <branch> eu <sha>
 #
-# prod writes values-prod.yaml.
+# prod writes values-prod.yaml; eu writes values-eu-prod.yaml and has no release tag.
 #
 # The checkout must be on <branch>. A tag that is already set is left alone (a rerun commits
 # nothing). PUSH=0 commits locally and prints the commit instead of pushing it.
 set -euo pipefail
-dir=${1:?echo-gitops checkout} branch=${2:?branch} env=${3:?prod} sha=${4:?sha}
+dir=${1:?echo-gitops checkout} branch=${2:?branch} env=${3:?prod|eu} sha=${4:?sha}
 case "$env" in
   prod) file=helm/dembrane-web/values-prod.yaml label="${5:?release tag} ($sha)" ;;
+  eu) file=helm/dembrane-web/values-eu-prod.yaml label=$sha ;;
   *) echo "unknown environment: $env" >&2; exit 2 ;;
 esac
 values=$dir/$file
