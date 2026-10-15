@@ -108,6 +108,7 @@ test("with a speech-to-text model its words are the transcript and no chat model
           heard.push(o);
           return "Ik ben Jan en ik werk bij Dembrane.";
         },
+        transcribeSegments: async () => ({ text: "", segments: [], seconds: null }),
       },
     },
     logger,
@@ -132,7 +133,11 @@ test("with a speech-to-text model, redaction is one text-only pass with reasonin
     {
       model: () => model(['{"corrected_transcript": "Ik ben <redacted_name>", "note": "n"}'], seen),
       embedding: () => ({}) as never,
-      speechToText: { model: "whisper-fake", transcribe: async () => "Ik ben Jan" },
+      speechToText: {
+        model: "whisper-fake",
+        transcribe: async () => "Ik ben Jan",
+        transcribeSegments: async () => ({ text: "", segments: [], seconds: null }),
+      },
     },
     logger,
   );

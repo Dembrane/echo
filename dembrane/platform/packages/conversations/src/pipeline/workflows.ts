@@ -1,5 +1,12 @@
 import { type StepConfig, step } from "@dembrane/queue";
 import {
+  type FinalPart,
+  type FinalPlan,
+  planFinal,
+  storeFinal,
+  transcribeFinalPiece,
+} from "./final";
+import {
   claimFinalize,
   claimFinish,
   handOver,
@@ -143,6 +150,58 @@ export function pipelineWorkflows(d: PipelineDeps, retry: RetryPolicy = RETRIES)
       }
     },
 
+    /**
+     * conversations.final-transcript: merge, cut at pauses, transcribe each piece, keep the
+     * result beside the chunks and, when it is the record, summarise from it. Any failure
+     * leaves the live text as the transcript.
+     */
+    async finalTranscript(p: {
+      conversationId: string;
+      provider: "gemini" | "whisper";
+      record: boolean;
+      hash: string;
+    }): Promise<void> {
+      const final = d.final;
+      const transcriber = final?.transcribers[p.provider];
+      if (!final || !transcriber) return;
+      try {
+        const plan: FinalPlan | null = await step(
+          "final-plan",
+          () => planFinal(d, p.conversationId, p.hash, transcriber),
+          retry.media,
+        );
+        if (!plan) return;
+        const parts: FinalPart[] = [];
+        for (const piece of plan.pieces)
+          parts.push(
+            await step(
+              "final-transcribe",
+              () =>
+                transcribeFinalPiece(d, p.conversationId, piece, transcriber, (text, o) =>
+                  final.redact(text, o),
+                ),
+              retry.transcribe,
+            ),
+          );
+        const wrote = await step(
+          "final-store",
+          () => storeFinal(d, p.conversationId, p.hash, p.provider, p.record, plan, parts),
+          retry.db,
+        );
+        if (wrote && p.record) await summarizeWithWebhook(d, p.conversationId, retry, true, false);
+      } catch (err) {
+        d.logger.warn(
+          {
+            conversationId: p.conversationId,
+            provider: p.provider,
+            err: (err as Error).message,
+            signal: "conversation.final_transcript_gave_up",
+          },
+          "final transcript gave up; the live text stays",
+        );
+      }
+    },
+
     /** conversations.summarize: the catch-up for a summary that failed or was locked. */
     async summarize(p: { conversationId: string }): Promise<void> {
       await summarizeWithWebhook(d, p.conversationId, retry);
@@ -155,6 +214,7 @@ async function summarizeWithWebhook(
   conversationId: string,
   retry: RetryPolicy,
   fresh = false,
+  announce = true,
 ) {
   let wrote = false;
   try {
@@ -163,5 +223,6 @@ async function summarizeWithWebhook(
     // The summary catch-up picks it up again in five minutes.
     d.logger.warn({ conversationId, err: (err as Error).message }, "summary gave up");
   }
-  if (wrote) await step("summarized-webhook", () => summarizedWebhook(d, conversationId), retry.db);
+  if (wrote && announce)
+    await step("summarized-webhook", () => summarizedWebhook(d, conversationId), retry.db);
 }

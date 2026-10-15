@@ -202,6 +202,25 @@ export const schema = defineSchema({
       description:
         "Most answer tokens the OpenAI-compatible provider accepts per call (16384 for glm-5.3 on Scaleway). A call that asks for more is sent with this limit instead of being refused. Unset sends what the call asks for.",
     }),
+    finalTranscript: key(
+      "LLM_FINAL_TRANSCRIPT",
+      z
+        .union([
+          z.array(z.string()),
+          z.string().transform((v) =>
+            v
+              .split(",")
+              .map((x) => x.trim().toLowerCase())
+              .filter((x) => x && x !== "off"),
+          ),
+        ])
+        .pipe(z.array(z.enum(["gemini", "whisper"])).max(2))
+        .default([]),
+      {
+        description:
+          "Who transcribes a whole recording again when its conversation is finished: gemini, whisper, or both separated by a comma (the first is the transcript people read, the second is kept beside it). Empty or off keeps the live 30 second text. whisper needs LLM_BASE_URL and LLM_API_KEY, whatever LLM_PROVIDER is.",
+      },
+    ),
     searchGrounding: key("LLM_SEARCH_GROUNDING", bool.default(true), {
       description:
         "Lets the map fact-check ground claims with Google Search. Always off when LLM_PROVIDER is not vertex; with it off, fact-check requests are refused.",

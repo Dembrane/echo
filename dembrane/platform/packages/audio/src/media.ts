@@ -6,11 +6,13 @@ import {
   concatFiles,
   convertFile,
   cutFile,
+  detectSilences,
   durationOf,
   type ProbeResult,
   probeFile,
   probePlain,
   probeUrl,
+  type Silence,
 } from "./ffmpeg";
 import type { AudioFormat } from "./formats";
 
@@ -52,6 +54,12 @@ export interface Media {
     source: MediaSource;
     pieces: readonly { start: number; duration: number; target: MediaTarget }[];
   }): Promise<void>;
+  /** The pauses in a file, for cutting a long recording where nobody speaks. */
+  silences(req: {
+    source: MediaSource;
+    noiseDb?: number | undefined;
+    minSeconds?: number | undefined;
+  }): Promise<{ duration: number; silences: Silence[] }>;
   /**
    * Merges sources in order into one file: each is probed, converted when it is not
    * already in the output format, and skipped when it fails; all failing is an error.
@@ -142,6 +150,27 @@ export class LocalMedia implements Media {
     });
   }
 
+  silences(req: {
+    source: MediaSource;
+    noiseDb?: number | undefined;
+    minSeconds?: number | undefined;
+  }) {
+    return inTemp(async (dir) => {
+      const p = join(dir, `input.${req.source.format}`);
+      await download(req.source.url, p);
+      const duration = durationOf(await probeFile(p, req.source.format)) ?? 0;
+      const found = await detectSilences(p, {
+        ...(req.noiseDb !== undefined && { noiseDb: req.noiseDb }),
+        ...(req.minSeconds !== undefined && { minSeconds: req.minSeconds }),
+      });
+      // JSON cannot carry Infinity: a pause left open runs to the end of the file.
+      return {
+        duration,
+        silences: found.map((s) => ({ start: s.start, end: Math.min(s.end, duration) })),
+      };
+    });
+  }
+
   merge(req: {
     sources: readonly MediaSource[];
     target: MediaTarget;
@@ -227,6 +256,13 @@ export class HttpMedia implements Media {
     pieces: readonly { start: number; duration: number; target: MediaTarget }[];
   }) {
     await this.call("split", req);
+  }
+  silences(req: {
+    source: MediaSource;
+    noiseDb?: number | undefined;
+    minSeconds?: number | undefined;
+  }) {
+    return this.call<{ duration: number; silences: Silence[] }>("silences", req);
   }
   merge(req: {
     sources: readonly MediaSource[];

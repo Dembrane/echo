@@ -278,3 +278,57 @@ export async function concatFiles(
     );
   }
 }
+
+export interface Silence {
+  readonly start: number;
+  readonly end: number;
+}
+
+/**
+ * Pauses in a file: where ffmpeg's silencedetect hears nothing louder than `noiseDb` for
+ * at least `minSeconds`. A recording is cut at these, never in the middle of a word.
+ * A silence that runs to the end of the file has no end line; it ends at the duration.
+ */
+export async function detectSilences(
+  path: string,
+  opts: { noiseDb?: number; minSeconds?: number } = {},
+): Promise<Silence[]> {
+  const noise = opts.noiseDb ?? -35;
+  const min = opts.minSeconds ?? 0.3;
+  const r = await run([
+    "ffmpeg",
+    "-hide_banner",
+    "-nostats",
+    "-i",
+    path,
+    "-af",
+    `silencedetect=noise=${noise}dB:d=${min}`,
+    "-f",
+    "null",
+    "-",
+  ]);
+  if (r.code !== 0) {
+    if (r.signal)
+      throw new AudioError("transient", `ffmpeg silence detection killed (${r.signal})`);
+    throw new AudioError("ffmpeg", `silence detection failed: ${r.stderr.trim().slice(-300)}`);
+  }
+  return parseSilences(r.stderr);
+}
+
+/** The `silence_start` and `silence_end` lines of silencedetect, paired in order. */
+export function parseSilences(log: string): Silence[] {
+  const out: Silence[] = [];
+  let open: number | null = null;
+  for (const line of log.split("\n")) {
+    const s = /silence_start: (-?[\d.]+)/.exec(line);
+    if (s) open = Math.max(0, Number(s[1]));
+    const e = /silence_end: (-?[\d.]+)/.exec(line);
+    if (e && open !== null) {
+      out.push({ start: open, end: Number(e[1]) });
+      open = null;
+    }
+  }
+  // Left open: the file ends in silence; the caller closes it with the duration.
+  if (open !== null) out.push({ start: open, end: Number.POSITIVE_INFINITY });
+  return out;
+}

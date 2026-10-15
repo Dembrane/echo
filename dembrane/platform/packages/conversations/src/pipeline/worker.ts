@@ -2,6 +2,7 @@ import type { JobDefinition, Queue } from "@dembrane/queue";
 import {
   catchUpSummaries,
   finalizeConversation,
+  finalTranscript,
   finishConversation,
   finishIdleConversations,
   processChunk,
@@ -32,6 +33,7 @@ export function conversationWorker(
       processChunk,
       finishConversation,
       finalizeConversation,
+      finalTranscript,
       summarizeConversation,
       finishIdleConversations,
       catchUpSummaries,
@@ -44,6 +46,9 @@ export function conversationWorker(
       );
       await queue.workflow(finalizeConversation, { concurrency: conc("finalize", 10) }, (p, job) =>
         wf.finalize(p, job.id),
+      );
+      await queue.workflow(finalTranscript, { concurrency: conc("final", 4) }, (p) =>
+        wf.finalTranscript(p),
       );
       await queue.workflow(summarizeConversation, { concurrency: conc("summarize", 5) }, (p) =>
         wf.summarize(p),

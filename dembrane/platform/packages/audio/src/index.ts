@@ -8,12 +8,15 @@ export {
   concatFiles,
   convertFile,
   cutFile,
+  detectSilences,
   durationOf,
   type ProbeResult,
+  parseSilences,
   probeFile,
   probePlain,
   probeUrl,
   pyFloat,
+  type Silence,
 } from "./ffmpeg";
 export {
   ACCEPTED_AUDIO_FORMATS,
@@ -34,3 +37,4 @@ export {
   mediaAuth,
   metadataIdToken,
 } from "./media";
+export { type PlannedPiece, planPieces } from "./plan";

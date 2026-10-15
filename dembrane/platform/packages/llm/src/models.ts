@@ -6,7 +6,9 @@ import {
   CompatLanguageModel,
   echoOptions,
   languageHint,
+  type SpeechResult,
   transcribeAudio,
+  transcribeSegments,
 } from "./compat";
 import { type Deployment, FallbackModel, type FallbackOptions } from "./fallback";
 import { observedEmbedding, observeSafely } from "./observe";
@@ -54,6 +56,11 @@ export interface Models {
       audio: Uint8Array,
       opts?: { language?: string | null; prompt?: string; signal?: AbortSignal },
     ): Promise<string>;
+    /** The same, as sentences with their start and end in seconds. */
+    transcribeSegments(
+      audio: Uint8Array,
+      opts?: { language?: string | null; prompt?: string; signal?: AbortSignal },
+    ): Promise<SpeechResult>;
   };
 }
 
@@ -123,6 +130,8 @@ export function createModels(cfg: ModelsConfig, opts: Partial<FallbackOptions> =
         model: compat.transcriptionModel,
         transcribe: (audio, o = {}) =>
           transcribeAudio(compat, audio, languageHint(o.language), o.signal, o.prompt),
+        transcribeSegments: (audio, o = {}) =>
+          transcribeSegments(compat, audio, languageHint(o.language), o.signal, o.prompt),
       },
     }),
   };

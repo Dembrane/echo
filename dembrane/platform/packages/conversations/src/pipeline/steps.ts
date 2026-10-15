@@ -21,7 +21,8 @@ import { type ChunkRow, conversationStore, type Tx, transaction } from "../stora
 import { computeIsOverCap } from "../tiers";
 import { NO_TRANSCRIPT_SUMMARY, summarizeAndStore } from "../v1/summary";
 import { computeTokenCount } from "../v1/token-count";
-import { finalizeConversation, processChunk } from "./defs";
+import { finalizeConversation, finalTranscript, processChunk } from "./defs";
+import { chunkListHash, type FinalSettings } from "./final";
 
 const { conversation, conversation_chunk, processing_status, project, workspace, billing_account } =
   schema;
@@ -47,6 +48,8 @@ export interface PipelineDeps {
     projectId: string,
     conversationId: string,
   ) => Promise<void>;
+  /** The final pass over the whole recording; absent or empty means the live text is the record. */
+  readonly final?: FinalSettings;
   /** Files above this are split before transcription; tests lower it to split small files. */
   readonly maxChunkBytes?: number;
 }
@@ -552,15 +555,23 @@ export async function handOver(d: PipelineDeps, conversationId: string): Promise
     const [set] = await tx.sql<{ ids: string | null }[]>`
       select string_agg(id::text, ',' order by id) as ids from conversation_chunk
       where conversation_id = ${conversationId}`;
-    const state = new Bun.CryptoHasher("sha256")
-      .update(set?.ids ?? "")
-      .digest("hex")
-      .slice(0, 16);
+    const state = chunkListHash(set?.ids ?? null);
     await d.jobs.enqueue(
       finalizeConversation,
       { conversationId },
       { tx: tx.sql, workflowId: `conversations.finalize:${conversationId}:${state}` },
     );
+    // One run per provider and chunk list; the live text is never held for them.
+    const providers = d.final?.providers ?? [];
+    for (const [i, provider] of providers.entries())
+      await d.jobs.enqueue(
+        finalTranscript,
+        { conversationId, provider, record: i === 0, hash: state },
+        {
+          tx: tx.sql,
+          workflowId: `conversations.final-transcript:${conversationId}:${provider}:${state}`,
+        },
+      );
     return true;
   });
 }

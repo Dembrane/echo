@@ -18,6 +18,11 @@ const schemas = {
       .array(z.object({ start: z.number().min(0), duration: z.number().positive(), target }))
       .min(1),
   }),
+  silences: z.object({
+    source,
+    noiseDb: z.number().min(-80).max(-10).optional(),
+    minSeconds: z.number().min(0.05).max(5).optional(),
+  }),
   merge: z.object({ sources: z.array(source).min(1), target, outputFormat: output }),
 };
 
@@ -74,6 +79,8 @@ function dispatch(media: Media, op: keyof typeof schemas, body: unknown): Promis
       return media.convert(body as z.output<typeof schemas.convert>);
     case "split":
       return media.split(body as z.output<typeof schemas.split>);
+    case "silences":
+      return media.silences(body as z.output<typeof schemas.silences>);
     case "merge":
       return media.merge(body as z.output<typeof schemas.merge>);
   }

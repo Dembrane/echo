@@ -8,6 +8,8 @@ export interface LlmSettings {
   readonly transcriptionModel: string;
   readonly reasoningEffort?: string | undefined;
   readonly maxOutputTokens?: number | undefined;
+  /** Who transcribes the whole recording after the conversation; the first is the record. */
+  readonly finalTranscript?: readonly ("gemini" | "whisper")[] | undefined;
   readonly searchGrounding: boolean;
   readonly textFast: readonly string[];
   readonly multiModalFast: readonly string[];

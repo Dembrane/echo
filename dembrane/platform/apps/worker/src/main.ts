@@ -19,7 +19,12 @@ import { createLogger, initTracing } from "@dembrane/observability";
 import { Queue } from "@dembrane/queue";
 import { FilesystemStorage, requireBucket, S3Storage } from "@dembrane/storage";
 import { queueSink } from "@dembrane/tenancy";
-import { GeminiTranscriber } from "@dembrane/transcription";
+import {
+  type FinalTranscriber,
+  GeminiFinal,
+  GeminiTranscriber,
+  WhisperFinal,
+} from "@dembrane/transcription";
 import { WORKER_ASSETS } from "./assets";
 import { registrations } from "./jobs";
 
@@ -107,6 +112,26 @@ const models = createModels(modelsConfigOf(config.llm), {
   onObserverFault: (err) =>
     logger.warn({ err }, "model call metering failed; later faults are silent"),
 });
+// The final pass transcribes the whole recording again with the providers named in
+// LLM_FINAL_TRANSCRIPT, each on its own models whatever LLM_PROVIDER serves the live text:
+// the preview runs both on one conversation. The first one is the transcript people read.
+const transcriber = new GeminiTranscriber(models, logger);
+const finalTranscribers: Partial<Record<"gemini" | "whisper", FinalTranscriber>> = {};
+for (const provider of config.llm.finalTranscript) {
+  const own = createModels(
+    modelsConfigOf({
+      ...config.llm,
+      provider: provider === "whisper" ? "openai-compatible" : "vertex",
+    }),
+    {
+      observe: metering.observe,
+      onObserverFault: (err) =>
+        logger.warn({ err }, "model call metering failed; later faults are silent"),
+    },
+  );
+  finalTranscribers[provider] =
+    provider === "whisper" ? new WhisperFinal(own) : new GeminiFinal(own, logger);
+}
 const audio = config.audio.s3Bucket
   ? new S3Storage({
       endpoint: config.audio.s3Endpoint ?? "",
@@ -159,7 +184,24 @@ const regs = registrations({
       config.audio.s3Bucket ?? "local",
     ),
     media,
-    transcriber: new GeminiTranscriber(models, logger),
+    transcriber,
+    ...(config.llm.finalTranscript.length && {
+      final: {
+        providers: config.llm.finalTranscript,
+        transcribers: finalTranscribers,
+        redact: async (text, o) =>
+          (
+            await transcriber.redactText({
+              text,
+              language: o.language,
+              usePiiRedaction: true,
+              anonymizeTranscripts: true,
+              customGuidancePrompt: o.customGuidancePrompt,
+              hotwords: o.hotwords,
+            })
+          ).transcript,
+      },
+    }),
     models,
     jobs: queue,
     logger,

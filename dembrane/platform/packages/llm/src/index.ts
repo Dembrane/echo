@@ -5,7 +5,10 @@ export {
   compatCallOptions,
   echoOptions,
   languageHint,
+  type SpeechResult,
+  type SpeechSegment,
   transcribeAudio,
+  transcribeSegments,
 } from "./compat";
 export {
   type Completer,
