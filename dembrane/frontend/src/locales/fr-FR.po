@@ -1817,7 +1817,7 @@ msgstr "Avancé (astuces et bonnes pratiques)"
 #~ msgid "Advanced (Tips and best practices)"
 #~ msgstr "Avancé (Astuces et conseils)"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:545
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:537
 msgid "Advanced details"
 msgstr "Détails avancés"
 
@@ -1905,7 +1905,7 @@ msgstr "Toutes les conversations"
 #~ msgid "All Conversations"
 #~ msgstr "Toutes les conversations"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:486
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:478
 msgid "all eligible project conversations"
 msgstr "toutes les conversations éligibles du projet"
 
@@ -2110,11 +2110,11 @@ msgstr "Analyser"
 msgid "Analyse now"
 msgstr "Analyser maintenant"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:884
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:873
 msgid "Analysis"
 msgstr "Analyse"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:861
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:850
 msgid "Analysis | dembrane"
 msgstr "Analyse | dembrane"
 
@@ -3446,12 +3446,12 @@ msgstr "Vérification de votre session."
 msgid "Checking…"
 msgstr "Vérification…"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:564
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:774
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:556
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:766
 msgid "Checks"
 msgstr "Vérifications"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:518
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:510
 msgid "Choose a conversation"
 msgstr "Choisir une conversation"
 
@@ -3651,7 +3651,7 @@ msgstr "Cloner le projet"
 #~ msgstr "Cloner le projet"
 
 #: src/theme.tsx:317
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:790
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:782
 #: src/components/results/ResultRow.tsx:432
 #: src/components/results/ResultRow.tsx:435
 #: src/components/results/ResultItem.tsx:860
@@ -7470,11 +7470,11 @@ msgstr "Innovator ou supérieur"
 #~ msgid "Inputs"
 #~ msgstr "Sources"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:509
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:501
 msgid "Inputs and instructions"
 msgstr "Sources et instructions"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:756
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:748
 msgid "Inputs: {inputRevisions}"
 msgstr "Sources : {inputRevisions}"
 
@@ -9681,7 +9681,7 @@ msgstr "Pas encore de citations"
 msgid "No recent activity. Participants appear here when they scan the QR code, followed by their live recordings, transcription progress and errors."
 msgstr "Aucune activité récente. Les participants apparaissent ici lorsqu'ils scannent le QR code, suivis de leurs enregistrements en direct, de l'avancement de la transcription et des erreurs."
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:574
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:566
 msgid "No recipe checks declared."
 msgstr "Aucune vérification de recette déclarée."
 
@@ -9713,7 +9713,7 @@ msgstr "Aucun résultat"
 #~ msgid "No runs yet"
 #~ msgstr "Aucune exécution pour l'instant"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:825
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:817
 msgid "No runs yet. Preparation and updates will appear here."
 msgstr "Aucune exécution pour l'instant. La préparation et les mises à jour apparaîtront ici."
 
@@ -10619,7 +10619,7 @@ msgstr "Résultats"
 #~ msgid "Output objects"
 #~ msgstr "Objets générés"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:759
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:751
 msgid "Output objects: {outputObjects}"
 msgstr "Objets produits : {outputObjects}"
 
@@ -11326,7 +11326,7 @@ msgstr "Vous préférez parler ? Appuyez sur enregistrer et dites-le simplement.
 #~ msgid "Preparation and updates will appear here."
 #~ msgstr "La préparation et les mises à jour apparaîtront ici."
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:455
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:447
 msgid "Prepare"
 msgstr "Préparer"
 
@@ -11342,7 +11342,7 @@ msgstr "Préparé par une analyse"
 msgid "Prepared by an analysis run, {day}"
 msgstr "Préparé par une analyse, {day}"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:596
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:588
 msgid "Preparing"
 msgstr "Préparation en cours"
 
@@ -11848,7 +11848,7 @@ msgstr "Lisez les annonces du produit dans le tableau de bord."
 msgid "Read replies as they arrive."
 msgstr "Lisez les réponses dès leur arrivée."
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:887
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:876
 msgid "Read shared findings, inspect their evidence and see how they were produced."
 msgstr "Lisez les conclusions partagées, examinez leurs preuves et découvrez comment elles ont été produites."
 
@@ -11861,7 +11861,7 @@ msgstr "Consulter le guide de dépannage pour les transcriptions et résumés"
 msgid "Read-only"
 msgstr "Lecture seule"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:550
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:542
 msgid "Read-only steps"
 msgstr "Étapes en lecture seule"
 
@@ -11980,11 +11980,11 @@ msgstr "Recette : {recipe}"
 msgid "Recipe: not recorded"
 msgstr "Recette : non enregistrée"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:912
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:901
 msgid "Recipes"
 msgstr "Recettes"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:668
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:660
 msgid "Recipes could not be loaded."
 msgstr "Impossible de charger les recettes."
 
@@ -12145,7 +12145,7 @@ msgstr "Actualisation…"
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:460
 #: src/routes/project/chat/ProjectChatRoute.tsx:777
 #: src/routes/project/canvas/CanvasRoute.tsx:690
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:625
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:617
 #: src/components/popcorn/PopcornActions.tsx:66
 #: src/components/popcorn/PopcornActions.tsx:91
 #: src/components/map/MapPage.tsx:147
@@ -12747,7 +12747,7 @@ msgstr "Cette formulation est en cours de rétablissement."
 #~ msgid "Result type"
 #~ msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:909
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:898
 #: src/components/popcorn/PopcornLanguageSettings.tsx:131
 #: src/components/map/panels/ResultList.tsx:40
 msgid "Results"
@@ -12839,7 +12839,7 @@ msgstr "La rétranscrire a commencé. La nouvelle conversation sera disponible b
 msgid "Return home"
 msgstr "Retour à l'accueil"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:895
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:884
 msgid "Return to presentation"
 msgstr "Revenir à la présentation"
 
@@ -12983,12 +12983,12 @@ msgstr "Lignes par page"
 msgid "Run"
 msgstr "Lancer"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:607
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:599
 msgid "Run again from scratch"
 msgstr "Relancer depuis le début"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:723
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:729
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:715
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:721
 msgid "Run details could not be loaded."
 msgstr "Impossible de charger les détails de l'exécution."
 
@@ -12996,11 +12996,11 @@ msgstr "Impossible de charger les détails de l'exécution."
 #~ msgid "Run fresh generation"
 #~ msgstr "Lancer une nouvelle génération"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:806
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:798
 msgid "Run history could not be loaded."
 msgstr "Impossible de charger l'historique des exécutions."
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:612
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:604
 msgid "Run this recipe again for {scopeLabel}. Existing published results stay visible until the fresh generation is ready."
 msgstr "Relancez cette recette pour {scopeLabel}. Les résultats publiés existants restent visibles jusqu'à ce que la nouvelle génération soit prête."
 
@@ -13013,7 +13013,7 @@ msgstr "Relancer la transcription pour une conversation existante."
 msgid "Running"
 msgstr "En cours d'exécution"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:915
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:904
 msgid "Runs"
 msgstr "Exécutions"
 
@@ -14382,7 +14382,7 @@ msgstr "Source"
 msgid "Source {0}"
 msgstr "Source {0}"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:517
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:509
 msgid "Source conversation"
 msgstr "Conversation source"
 
@@ -14603,7 +14603,7 @@ msgstr "Reste à jour jusqu'à demain {0}"
 msgid "Step {0} of {STEP_COUNT}"
 msgstr "Étape {0} sur {STEP_COUNT}"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:764
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:756
 msgid "Steps and logs"
 msgstr "Étapes et journaux"
 
@@ -14650,12 +14650,12 @@ msgstr "Arrêter le direct"
 msgid "Stop recording and turn it into text"
 msgstr "Arrêter l'enregistrement et le transcrire en texte"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:739
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:786
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:730
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:778
 msgid "Stop run"
 msgstr "Arrêter l'exécution"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:737
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:732
 msgid "Stop run?"
 msgstr "Arrêter l'exécution ?"
 
@@ -15443,7 +15443,7 @@ msgstr "Les mots mêmes de la salle, les idées qui ont fait avancer la conversa
 msgid "The second line of this finding"
 msgstr "La deuxième ligne de ce résultat"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:485
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:477
 msgid "the selected conversation"
 msgstr "la conversation sélectionnée"
 
@@ -16460,7 +16460,7 @@ msgstr "Des difficultés pour vous connecter ? Contactez support@dembrane.com."
 #: src/routes/project/present/PresentResultsPanel.tsx:158
 #: src/routes/project/chat/ProjectChatRoute.tsx:868
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:165
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:457
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:449
 #: src/routes/invite/MyInvitesRoute.tsx:225
 #: src/routes/invite/AcceptInviteRoute.tsx:567
 #: src/components/results/resultEditing.tsx:555
@@ -16793,7 +16793,7 @@ msgstr "À venir"
 msgid "Update"
 msgstr "Mettre à jour"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:458
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:450
 msgid "Update results"
 msgstr "Mettre à jour les résultats"
 
@@ -17096,7 +17096,7 @@ msgstr "Paramètres utilisateur"
 msgid "Username"
 msgstr "Nom d'utilisateur"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:530
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:522
 msgid "Uses eligible conversations across this project."
 msgstr "Utilise les conversations éligibles de ce projet."
 
@@ -17266,7 +17266,7 @@ msgstr "Voir l'invitation"
 msgid "View recipes"
 msgstr "Voir les recettes"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:600
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:592
 msgid "View results"
 msgstr "Voir les résultats"
 

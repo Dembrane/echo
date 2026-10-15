@@ -1816,7 +1816,7 @@ msgstr "Pokročilé (tipy a osvědčené postupy)"
 #~ msgid "Advanced (Tips and best practices)"
 #~ msgstr "Advanced (Tips and best practices)"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:545
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:537
 msgid "Advanced details"
 msgstr "Podrobné informace"
 
@@ -1904,7 +1904,7 @@ msgstr "Všechny rozhovory"
 #~ msgid "All Conversations"
 #~ msgstr "All Conversations"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:486
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:478
 msgid "all eligible project conversations"
 msgstr "všechny způsobilé rozhovory projektu"
 
@@ -2109,11 +2109,11 @@ msgstr "Analyzovat"
 msgid "Analyse now"
 msgstr "Analyzovat hned"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:884
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:873
 msgid "Analysis"
 msgstr "Analýza"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:861
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:850
 msgid "Analysis | dembrane"
 msgstr "Analýza | dembrane"
 
@@ -3445,12 +3445,12 @@ msgstr "Checking your session."
 msgid "Checking…"
 msgstr "Kontrola…"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:564
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:774
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:556
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:766
 msgid "Checks"
 msgstr "Kontroly"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:518
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:510
 msgid "Choose a conversation"
 msgstr "Vyberte rozhovor"
 
@@ -3650,7 +3650,7 @@ msgstr "Clone project"
 #~ msgstr "Clone Project"
 
 #: src/theme.tsx:317
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:790
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:782
 #: src/components/results/ResultRow.tsx:432
 #: src/components/results/ResultRow.tsx:435
 #: src/components/results/ResultItem.tsx:860
@@ -7469,11 +7469,11 @@ msgstr "Innovator or higher"
 #~ msgid "Inputs"
 #~ msgstr "Vstupy"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:509
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:501
 msgid "Inputs and instructions"
 msgstr "Vstupy a pokyny"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:756
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:748
 msgid "Inputs: {inputRevisions}"
 msgstr "Vstupy: {inputRevisions}"
 
@@ -9680,7 +9680,7 @@ msgstr "Zatím žádné citace"
 msgid "No recent activity. Participants appear here when they scan the QR code, followed by their live recordings, transcription progress and errors."
 msgstr "Žádná nedávná aktivita. Účastníci se zde zobrazí, jakmile naskenují QR kód, a po nich jejich živé nahrávky, průběh přepisu a chyby."
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:574
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:566
 msgid "No recipe checks declared."
 msgstr "Nebyly deklarovány žádné kontroly postupu."
 
@@ -9712,7 +9712,7 @@ msgstr "No results"
 #~ msgid "No runs yet"
 #~ msgstr "Zatím žádná spuštění"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:825
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:817
 msgid "No runs yet. Preparation and updates will appear here."
 msgstr "Zatím žádné běhy. Zde se zobrazí příprava a aktualizace."
 
@@ -10618,7 +10618,7 @@ msgstr "Outcomes"
 #~ msgid "Output objects"
 #~ msgstr "Výstupní objekty"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:759
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:751
 msgid "Output objects: {outputObjects}"
 msgstr "Výstupní objekty: {outputObjects}"
 
@@ -11325,7 +11325,7 @@ msgstr "Raději mluvíte? Stiskněte nahrávání a jednoduše to řekněte."
 #~ msgid "Preparation and updates will appear here."
 #~ msgstr "Zde se zobrazí příprava a aktualizace."
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:455
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:447
 msgid "Prepare"
 msgstr "Připravit"
 
@@ -11341,7 +11341,7 @@ msgstr "Připraveno analýzou"
 msgid "Prepared by an analysis run, {day}"
 msgstr "Připraveno v rámci analýzy, {day}"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:596
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:588
 msgid "Preparing"
 msgstr "Připravuje se"
 
@@ -11847,7 +11847,7 @@ msgstr "Přečtěte si novinky o produktu na nástěnce."
 msgid "Read replies as they arrive."
 msgstr "Čtěte odpovědi hned, jak dorazí."
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:887
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:876
 msgid "Read shared findings, inspect their evidence and see how they were produced."
 msgstr "Přečtěte si sdílené poznatky, prozkoumejte jejich podklady a podívejte se, jak vznikly."
 
@@ -11860,7 +11860,7 @@ msgstr "Přečtěte si průvodce řešením problémů s přepisy a shrnutími"
 msgid "Read-only"
 msgstr "Read-only"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:550
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:542
 msgid "Read-only steps"
 msgstr "Kroky pouze pro čtení"
 
@@ -11979,11 +11979,11 @@ msgstr "Recept: {recipe}"
 msgid "Recipe: not recorded"
 msgstr "Recept: nezaznamenáno"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:912
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:901
 msgid "Recipes"
 msgstr "Recepty"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:668
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:660
 msgid "Recipes could not be loaded."
 msgstr "Recepty se nepodařilo načíst."
 
@@ -12144,7 +12144,7 @@ msgstr "Refreshing…"
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:460
 #: src/routes/project/chat/ProjectChatRoute.tsx:777
 #: src/routes/project/canvas/CanvasRoute.tsx:690
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:625
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:617
 #: src/components/popcorn/PopcornActions.tsx:66
 #: src/components/popcorn/PopcornActions.tsx:91
 #: src/components/map/MapPage.tsx:147
@@ -12746,7 +12746,7 @@ msgstr "Obnovujeme toto znění."
 #~ msgid "Result type"
 #~ msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:909
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:898
 #: src/components/popcorn/PopcornLanguageSettings.tsx:131
 #: src/components/map/panels/ResultList.tsx:40
 msgid "Results"
@@ -12838,7 +12838,7 @@ msgstr "Retranscription started. New conversation will be available soon."
 msgid "Return home"
 msgstr "Return home"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:895
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:884
 msgid "Return to presentation"
 msgstr "Zpět k prezentaci"
 
@@ -12982,12 +12982,12 @@ msgstr "Rows per page"
 msgid "Run"
 msgstr "Spustit"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:607
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:599
 msgid "Run again from scratch"
 msgstr "Spustit znovu od začátku"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:723
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:729
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:715
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:721
 msgid "Run details could not be loaded."
 msgstr "Podrobnosti o běhu se nepodařilo načíst."
 
@@ -12995,11 +12995,11 @@ msgstr "Podrobnosti o běhu se nepodařilo načíst."
 #~ msgid "Run fresh generation"
 #~ msgstr "Spustit nové generování"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:806
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:798
 msgid "Run history could not be loaded."
 msgstr "Historii běhů se nepodařilo načíst."
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:612
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:604
 msgid "Run this recipe again for {scopeLabel}. Existing published results stay visible until the fresh generation is ready."
 msgstr "Spustit tento postup znovu pro {scopeLabel}. Stávající zveřejněné výsledky zůstanou viditelné, dokud nebude nové generování hotové."
 
@@ -13012,7 +13012,7 @@ msgstr "Spustit přepis znovu pro existující rozhovor."
 msgid "Running"
 msgstr "Běží"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:915
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:904
 msgid "Runs"
 msgstr "Běhy"
 
@@ -14381,7 +14381,7 @@ msgstr "Zdroj"
 msgid "Source {0}"
 msgstr "Source {0}"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:517
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:509
 msgid "Source conversation"
 msgstr "Zdrojový rozhovor"
 
@@ -14602,7 +14602,7 @@ msgstr "Zůstává aktuální do zítřejších {0}"
 msgid "Step {0} of {STEP_COUNT}"
 msgstr "Krok {0} z {STEP_COUNT}"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:764
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:756
 msgid "Steps and logs"
 msgstr "Kroky a záznamy"
 
@@ -14649,12 +14649,12 @@ msgstr "Zastavit živý přenos"
 msgid "Stop recording and turn it into text"
 msgstr "Zastavit nahrávání a převést na text"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:739
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:786
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:730
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:778
 msgid "Stop run"
 msgstr "Zastavit běh"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:737
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:732
 msgid "Stop run?"
 msgstr "Zastavit běh?"
 
@@ -15441,7 +15441,7 @@ msgstr "Vlastní slova místnosti, myšlenky, které posunuly rozhovor."
 msgid "The second line of this finding"
 msgstr "Druhý řádek tohoto zjištění"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:485
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:477
 msgid "the selected conversation"
 msgstr "vybraný rozhovor"
 
@@ -16461,7 +16461,7 @@ msgstr "Trouble logging in? Contact support@dembrane.com."
 #: src/routes/project/present/PresentResultsPanel.tsx:158
 #: src/routes/project/chat/ProjectChatRoute.tsx:868
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:165
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:457
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:449
 #: src/routes/invite/MyInvitesRoute.tsx:225
 #: src/routes/invite/AcceptInviteRoute.tsx:567
 #: src/components/results/resultEditing.tsx:555
@@ -16794,7 +16794,7 @@ msgstr "Připravujeme"
 msgid "Update"
 msgstr "Update"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:458
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:450
 msgid "Update results"
 msgstr "Aktualizovat výsledky"
 
@@ -17097,7 +17097,7 @@ msgstr "Uživatelská nastavení"
 msgid "Username"
 msgstr "Username"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:530
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:522
 msgid "Uses eligible conversations across this project."
 msgstr "Využívá způsobilé rozhovory napříč tímto projektem."
 
@@ -17267,7 +17267,7 @@ msgstr "View invite"
 msgid "View recipes"
 msgstr "Zobrazit postupy"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:600
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:592
 msgid "View results"
 msgstr "Zobrazit výsledky"
 
