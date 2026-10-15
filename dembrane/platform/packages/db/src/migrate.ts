@@ -85,12 +85,15 @@ export async function migrate(url: string, opts: MigrateOptions): Promise<Migrat
   const sql = connect(url, { max: 1, onnotice: () => {} });
   try {
     await sql`select pg_advisory_lock(${LOCK_KEY})`;
+    // An empty database has no data a contract migration could drop, so a new environment
+    // (a new region, a new cluster) starts without an archive.
+    const empty = !(await one<boolean>(sql`select to_regclass('public.project') is not null as v`));
     const adoptedBaseline = await adoptBaseline(sql);
     const recorded = await recordedMigrations(sql);
     const pending = (await chain()).filter(
       (m) => !recorded.has(m.folderMillis) && !(opts.holdContract && isContract(m.tag)),
     );
-    if (!opts.holdContract && !ARCHIVE_EXEMPT_ENVS.includes(opts.appEnv ?? "")) {
+    if (!empty && !opts.holdContract && !ARCHIVE_EXEMPT_ENVS.includes(opts.appEnv ?? "")) {
       const unarchived = await unarchivedContracts(sql, pending);
       if (unarchived.length) throw new ContractArchiveMissing(unarchived, opts.appEnv);
     }
