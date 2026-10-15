@@ -20,6 +20,33 @@ test("sendgrid: text before html, EU host, categories from tags", async () => {
   expect(body.categories).toEqual(["invite"]);
 });
 
+test("sendgrid: an attachment goes as base64 with its name and type", async () => {
+  const calls: RequestInit[] = [];
+  const mailer = new SendGridMailer({
+    apiKey: "k",
+    fromEmail: "f@d.com",
+    fromName: "d",
+    region: "eu",
+    fetch: (async (_url: string, init: RequestInit) => {
+      calls.push(init);
+      return new Response(null, { status: 202 });
+    }) as unknown as typeof fetch,
+  });
+  await mailer.send({
+    to: "a@b.co",
+    subject: "s",
+    html: "h",
+    text: "h",
+    attachments: [
+      { filename: "signed.pdf", contentType: "application/pdf", content: new Uint8Array([37, 80]) },
+    ],
+  });
+  const body = JSON.parse(String(calls[0]?.body));
+  expect(body.attachments).toEqual([
+    { content: "JVA=", filename: "signed.pdf", type: "application/pdf", disposition: "attachment" },
+  ]);
+});
+
 test("sendgrid: a refused send throws so the job retries", async () => {
   const mailer = new SendGridMailer({
     apiKey: "k",

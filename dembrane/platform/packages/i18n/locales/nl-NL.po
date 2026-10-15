@@ -858,3 +858,59 @@ msgstr "De offerte is geldig tot {date}."
 #. js-lingui-explicit-id
 msgid "offer_email.closing"
 msgstr "Met vriendelijke groet,"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.subject"
+msgstr "{document_title} is ondertekend"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.preview"
+msgstr "{signer_name} heeft {document_title} ondertekend voor {org_name}. De gegevens van de ondertekening staan in deze e-mail."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.heading"
+msgstr "{document_title} is ondertekend"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.body"
+msgstr "{signer_name} heeft {document_title} ondertekend voor {org_name}. Deze e-mail is je bewijs van de ondertekening."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.attached"
+msgstr "De ondertekende pdf zit als bijlage bij deze e-mail. Bewaar hem bij je administratie."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.not_attached"
+msgstr "De ondertekende pdf is te groot voor een bijlage. Je kunt hem downloaden via je account."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.verify"
+msgstr "De SHA-256 is de vingerafdruk van de ondertekende pdf. Verandert het bestand, dan verandert ook de vingerafdruk."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.cta"
+msgstr "Ondertekende kopie openen"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.text_cta"
+msgstr "Ondertekende kopie openen:"
+
+#. js-lingui-explicit-id
+msgid "email.facts.document"
+msgstr "Document"
+
+#. js-lingui-explicit-id
+msgid "email.facts.signed_by"
+msgstr "Ondertekend door"
+
+#. js-lingui-explicit-id
+msgid "email.facts.signed_at"
+msgstr "Ondertekend op (UTC)"
+
+#. js-lingui-explicit-id
+msgid "email.facts.document_id"
+msgstr "Document-id"
+
+#. js-lingui-explicit-id
+msgid "email.facts.sha256"
+msgstr "SHA-256 van de ondertekende pdf"

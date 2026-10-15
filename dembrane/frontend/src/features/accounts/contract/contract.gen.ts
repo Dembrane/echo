@@ -220,7 +220,13 @@ export const LegalPin = z.object({
   kind: LegalKind,
   version: z.string(),
   effective_on: IsoDate.nullable(),
+  /** The page on dembrane.com, which shows the current version. */
   url: z.string(),
+  /**
+   * The text as this document pinned it (the version and hash named here), served by the
+   * API to the people who may read the document; null where no such route exists (staff).
+   */
+  text_url: z.string().nullable(),
   sha256: z.string(),
 });
 
@@ -1139,6 +1145,16 @@ export const ROUTES = {
   documentFile: {
     method: "GET",
     path: `${C}/documents/:docId/file`,
+    permission: "account:read",
+    signer: true,
+  },
+  /**
+   * The text of one of the legal documents the document incorporates, exactly as it was
+   * pinned when the document was sent (a LegalPin's text_url), as a page to read.
+   */
+  legalText: {
+    method: "GET",
+    path: `${C}/documents/:docId/legal/:kind`,
     permission: "account:read",
     signer: true,
   },

@@ -58,6 +58,8 @@ export interface AuditRecord {
   readonly signatureId: string;
   readonly method: string;
   readonly imageSha256: string;
+  /** The language the document was signed in. */
+  readonly language: "en" | "nl";
   readonly legal: readonly {
     kind: string;
     version: string;
@@ -602,6 +604,7 @@ function drawAudit(w: Writer, a: AuditRecord) {
             a.dpaAuthorised ? "yes" : "no, the DPA is signed separately",
           ],
         ] as [string, string][])),
+    ["Language signed in", a.language === "nl" ? "Dutch (nl)" : "English (en)"],
     ["Signature made", a.method],
     ["SHA-256 of the signature image", a.imageSha256],
     ["Signed at (UTC)", a.signedAt],

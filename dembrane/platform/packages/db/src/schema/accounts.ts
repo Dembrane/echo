@@ -213,6 +213,8 @@ export const account_signature = pgTable(
     confirmationText: text("confirmation_text").notNull(),
     signedPdfKey: text("signed_pdf_key").notNull(),
     signedPdfSha256: text("signed_pdf_sha256").notNull(),
+    /** The language the document was signed in (`en` or `nl`); null on rows from before it was kept. */
+    language: text("language"),
   },
   (t) => [
     unique("account_signature_document_id_unique").on(t.documentId),

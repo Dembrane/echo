@@ -86,7 +86,7 @@ export function facts(rows: readonly { label: string; value: string; strong?: bo
   const cells = shown
     .map(
       (r, i) =>
-        `<tr><td valign="baseline" style="padding:${space[3]}px 0; ${i ? `border-top:${RULE};` : ""} ${CAPTION} width:40%;">${esc(r.label)}</td><td valign="baseline" align="right" style="padding:${space[3]}px 0; ${i ? `border-top:${RULE};` : ""} ${BODY}${r.strong ? ` font-size:${px(type.screen.lead)};` : ""}">${esc(r.value)}</td></tr>`,
+        `<tr><td valign="baseline" style="padding:${space[3]}px 0; ${i ? `border-top:${RULE};` : ""} ${CAPTION} width:40%;">${esc(r.label)}</td><td valign="baseline" align="right" style="padding:${space[3]}px 0; ${i ? `border-top:${RULE};` : ""} ${BODY} overflow-wrap:anywhere; word-break:break-word;${r.strong ? ` font-size:${px(type.screen.lead)};` : ""}">${esc(r.value)}</td></tr>`,
     )
     .join("");
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 ${space[6]}px; border-top:${RULE}; border-bottom:${RULE};">${cells}</table>`;

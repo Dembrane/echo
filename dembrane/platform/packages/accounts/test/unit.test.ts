@@ -344,6 +344,7 @@ describe("the offer", () => {
         signatureId: "s",
         method: "drawn",
         imageSha256: "b".repeat(64),
+        language: "en",
         legal: [],
       },
     );

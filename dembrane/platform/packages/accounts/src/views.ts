@@ -145,13 +145,14 @@ export function confirmationText(doc: DocumentRow, f: ConfirmationFields): strin
 export const sameText = (a: string, b: string) =>
   a.replace(/\s+/g, " ").trim() === b.replace(/\s+/g, " ").trim();
 
-export function legalView(kind: string, row: LegalRow | null) {
+export function legalView(kind: string, row: LegalRow | null, textUrl: string | null = null) {
   return row
     ? {
         kind,
         version: row.version,
         effective_on: row.effectiveOn,
         url: row.sourceUrl,
+        text_url: textUrl,
         sha256: row.sha256,
       }
     : null;
