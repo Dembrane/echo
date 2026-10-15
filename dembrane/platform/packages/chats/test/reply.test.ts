@@ -6,8 +6,22 @@ import { fakeDeps, fakeModel, host, P1 } from "./fakes";
 const CHAT = "c3000000-0000-4000-8000-000000000001";
 const CONV = "c1000000-0000-4000-8000-000000000001";
 
+type Stored = { message_from: string; text: string | null };
+
+const HISTORY: Stored[] = [
+  { message_from: "user", text: "Earlier question" },
+  { message_from: "assistant", text: "Earlier answer" },
+  { message_from: "dembrane", text: "You added 1 conversation" },
+];
+
 function world(
-  opts: { name?: string | null; mode?: string | null; tier?: string; turns?: number } = {},
+  opts: {
+    name?: string | null;
+    mode?: string | null;
+    tier?: string;
+    turns?: number;
+    history?: Stored[];
+  } = {},
 ) {
   const created: Record<string, unknown>[] = [];
   const deleted: string[] = [];
@@ -32,27 +46,12 @@ function world(
       return v;
     },
     messages: async () => [
-      {
-        id: "m1",
-        message_from: "user",
-        text: "Earlier question",
+      ...(opts.history ?? HISTORY).map((m, i) => ({
+        id: `m${i + 1}`,
+        ...m,
         tokens_count: 5,
         used_conversations: [],
-      },
-      {
-        id: "m2",
-        message_from: "assistant",
-        text: "Earlier answer",
-        tokens_count: 5,
-        used_conversations: [],
-      },
-      {
-        id: "m3",
-        message_from: "dembrane",
-        text: "You added 1 conversation",
-        tokens_count: 5,
-        used_conversations: [],
-      },
+      })),
       ...created.map((c) => ({
         id: c.id,
         message_from: "user",
@@ -246,6 +245,68 @@ describe("chat reply stream", () => {
     await Bun.sleep(200);
     expect(w.deleted).toEqual([]);
     expect(captured.map((c) => c[1])).not.toContain("server_chat_error");
+  });
+
+  test("a stored empty answer is left out of the history, so the chat keeps answering", async () => {
+    const w = world({
+      history: [
+        { message_from: "user", text: "Earlier question" },
+        { message_from: "assistant", text: "" },
+        { message_from: "user", text: "Asked again" },
+        { message_from: "assistant", text: "  " },
+      ],
+    });
+    // Vertex refuses a turn with no text in it (400 INVALID_ARGUMENT).
+    const calls: LanguageModelV4CallOptions[] = [];
+    const strict = fakeModel({ chunks: ["Fine"], calls });
+    const inner = strict.doStream.bind(strict);
+    strict.doStream = async (o) => {
+      const blank = o.prompt.some(
+        (m) =>
+          m.role !== "system" && !m.content.some((p) => p.type === "text" && p.text.trim() !== ""),
+      );
+      if (blank)
+        throw Object.assign(new Error("contents.parts must not be empty"), { isRetryable: false });
+      return inner(o);
+    };
+    const d = fakeDeps({ store: w.store, reads: w.reads, model: strict });
+    const res = await reply(
+      d,
+      host,
+      CHAT,
+      { messages: [{ role: "user", content: "What now?" }], template_key: null },
+      "data",
+      "en",
+    );
+    expect(await body(res)).toBe('0:"Fine"\n');
+    expect(w.deleted).toEqual([]);
+    const turns = (calls[0]?.prompt ?? []).filter((m) => m.role !== "system");
+    expect(turns.map((m) => m.role)).toEqual(["user", "user", "user"]);
+  });
+
+  test("a reply with no text fails the turn instead of handing back an empty answer", async () => {
+    const w = world();
+    const captured: unknown[][] = [];
+    const d = fakeDeps({
+      store: w.store,
+      reads: w.reads,
+      captured,
+      model: fakeModel({ chunks: [] }),
+    });
+    const res = await reply(
+      d,
+      host,
+      CHAT,
+      { messages: [{ role: "user", content: "Hi" }], template_key: null },
+      "data",
+      "en",
+    );
+    // A code, so the dashboard can ask the host to reword instead of showing a generic error.
+    expect(await body(res)).toBe('3:"chat.no_answer"\n');
+    expect(w.deleted).toEqual([w.created[0]?.id as string]);
+    expect(captured).toHaveLength(1);
+    expect(captured[0]?.[1]).toBe("server_chat_error");
+    expect(captured[0]?.[2]).toMatchObject({ error_code: "NO_ANSWER" });
   });
 
   test("agentic chats and spent free-tier turns are refused before anything is stored", async () => {

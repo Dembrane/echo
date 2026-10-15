@@ -91,12 +91,14 @@ export async function reply(
         ? d.store.updateMessage(messageId, { template_key: body.template_key }, d.now())
         : null,
     ]);
+    // Blank turns are dropped: Vertex refuses a prompt with an empty message in it.
     let convo = history
       .filter((m) => m.message_from === "user" || m.message_from === "assistant")
       .map((m) => ({
         role: m.message_from as "user" | "assistant",
         content: (m.text as string | null) ?? "",
-      }));
+      }))
+      .filter((m) => m.content.trim() !== "");
     const n = convo.length;
     if (
       n >= 2 &&
@@ -132,6 +134,7 @@ export async function reply(
     async start(controller) {
       const send = (s: string) => controller.enqueue(enc.encode(s));
       let first = false;
+      let noAnswer = false;
       const timer =
         protocol === "data"
           ? setTimeout(() => {
@@ -154,6 +157,11 @@ export async function reply(
           first = true;
           send(protocol === "text" ? part.text : `0:${asciiJson(part.text)}\n`);
         }
+        // A reply with no text (a safety stop, say) would be saved as an empty answer.
+        if (!first) {
+          noAnswer = true;
+          throw new Error(`model returned no text (finish: ${await res.finishReason})`);
+        }
         await d.capture(distinctId, "server_chat_response_received", {
           chat_id: chatId,
           project_id: projectId,
@@ -165,16 +173,19 @@ export async function reply(
         await d.capture(distinctId, "server_chat_error", {
           chat_id: chatId,
           project_id: projectId,
-          error_code: "STREAM_ERROR",
+          error_code: noAnswer ? "NO_ANSWER" : "STREAM_ERROR",
           message: String((err as Error)?.message ?? err).slice(0, 300),
           mode: "context",
         });
         await d.store.deleteMessage(messageId).catch(() => {});
         first = true;
+        // The dashboard turns chat.no_answer into "try rewording it".
         send(
           protocol === "text"
             ? "Error: An error occurred while processing the chat response."
-            : '3:"An error occurred while processing the chat response."\n',
+            : noAnswer
+              ? '3:"chat.no_answer"\n'
+              : '3:"An error occurred while processing the chat response."\n',
         );
       } finally {
         clearTimeout(timer);
