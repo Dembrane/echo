@@ -117,15 +117,16 @@ test("the model hears text where the prompt had audio", async () => {
   expect(seen?.providerOptions).toEqual({ openaiCompatible: { reasoningEffort: "none" } });
 });
 
-test("embeddings are cut to the configured dimensions and scaled to unit length", async () => {
+test("embeddings ask for the configured dimensions, and a longer vector is cut to unit length", async () => {
+  const asked: unknown[] = [];
   const inner = {
     specificationVersion: "v4",
     provider: "p",
     modelId: "e",
     maxEmbeddingsPerCall: 1,
     supportsParallelCalls: true,
-    doEmbed: async (o: { providerOptions?: unknown }) => {
-      expect(o.providerOptions).toBeUndefined();
+    doEmbed: async (o: { providerOptions?: { openaiCompatible?: { dimensions?: number } } }) => {
+      asked.push(o.providerOptions?.openaiCompatible?.dimensions);
       return { embeddings: [[3, 4, 12, 9]] };
     },
   };
@@ -134,6 +135,7 @@ test("embeddings are cut to the configured dimensions and scaled to unit length"
   await expect(
     new CompatEmbeddingModel(inner as never, 8).doEmbed({ values: ["x"] }),
   ).rejects.toThrow();
+  expect(asked).toEqual([2, 8]);
 });
 
 const settings = (over: Partial<LlmSettings> = {}): LlmSettings => ({

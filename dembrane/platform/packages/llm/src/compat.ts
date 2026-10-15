@@ -209,9 +209,9 @@ export class CompatLanguageModel implements LanguageModelV4 {
 }
 
 /**
- * Vectors cut to the configured number of dimensions. The endpoint does not take a
- * `dimensions` option; the model is Matryoshka-trained, so the first values, scaled back to
- * unit length, are the shorter embedding.
+ * Vectors of the configured number of dimensions. The size is asked for with `dimensions`,
+ * and a longer vector from an endpoint that ignores it is cut here: the model is
+ * Matryoshka-trained, so the first values, scaled back to unit length, are the shorter embedding.
  */
 export class CompatEmbeddingModel implements EmbeddingModelV4 {
   readonly specificationVersion = "v4";
@@ -235,7 +235,14 @@ export class CompatEmbeddingModel implements EmbeddingModelV4 {
   }
 
   async doEmbed(options: Parameters<EmbeddingModelV4["doEmbed"]>[0]) {
-    const result = await this.inner.doEmbed(options);
+    const po = options.providerOptions ?? {};
+    const result = await this.inner.doEmbed({
+      ...options,
+      providerOptions: {
+        ...po,
+        openaiCompatible: { ...po.openaiCompatible, dimensions: this.dimensions },
+      },
+    });
     return {
       ...result,
       embeddings: result.embeddings.map((v) => {
