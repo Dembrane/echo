@@ -1816,7 +1816,7 @@ msgstr "Розширений (поради та найкращі практик�
 #~ msgid "Advanced (Tips and best practices)"
 #~ msgstr "Advanced (Tips and best practices)"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:545
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:537
 msgid "Advanced details"
 msgstr "Додаткові деталі"
 
@@ -1904,7 +1904,7 @@ msgstr "Усі розмови"
 #~ msgid "All Conversations"
 #~ msgstr "All Conversations"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:486
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:478
 msgid "all eligible project conversations"
 msgstr "усі відповідні розмови проєкту"
 
@@ -2109,11 +2109,11 @@ msgstr "Аналізувати"
 msgid "Analyse now"
 msgstr "Аналізувати зараз"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:884
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:873
 msgid "Analysis"
 msgstr "Аналіз"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:861
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:850
 msgid "Analysis | dembrane"
 msgstr "Аналіз | dembrane"
 
@@ -3445,12 +3445,12 @@ msgstr "Перевіряємо вашу сесію."
 msgid "Checking…"
 msgstr "Перевірка…"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:564
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:774
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:556
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:766
 msgid "Checks"
 msgstr "Перевірки"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:518
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:510
 msgid "Choose a conversation"
 msgstr "Виберіть розмову"
 
@@ -3650,7 +3650,7 @@ msgstr "Clone project"
 #~ msgstr "Clone Project"
 
 #: src/theme.tsx:317
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:790
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:782
 #: src/components/results/ResultRow.tsx:432
 #: src/components/results/ResultRow.tsx:435
 #: src/components/results/ResultItem.tsx:860
@@ -7469,11 +7469,11 @@ msgstr "Innovator або вище"
 #~ msgid "Inputs"
 #~ msgstr "Вхідні дані"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:509
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:501
 msgid "Inputs and instructions"
 msgstr "Вхідні дані та інструкції"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:756
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:748
 msgid "Inputs: {inputRevisions}"
 msgstr "Вхідні дані: {inputRevisions}"
 
@@ -9680,7 +9680,7 @@ msgstr "Цитат поки немає"
 msgid "No recent activity. Participants appear here when they scan the QR code, followed by their live recordings, transcription progress and errors."
 msgstr "Нещодавньої активності немає. Учасники з'являться тут, коли відсканують QR-код, а за ними їхні записи наживо, прогрес транскрипції та помилки."
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:574
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:566
 msgid "No recipe checks declared."
 msgstr "Перевірки рецептів не оголошено."
 
@@ -9712,7 +9712,7 @@ msgstr "No results"
 #~ msgid "No runs yet"
 #~ msgstr "Запусків ще не було"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:825
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:817
 msgid "No runs yet. Preparation and updates will appear here."
 msgstr "Запусків ще немає. Підготовка та оновлення з'являтимуться тут."
 
@@ -10618,7 +10618,7 @@ msgstr "Outcomes"
 #~ msgid "Output objects"
 #~ msgstr "Вихідні об'єкти"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:759
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:751
 msgid "Output objects: {outputObjects}"
 msgstr "Вихідні об'єкти: {outputObjects}"
 
@@ -11325,7 +11325,7 @@ msgstr "Зручніше говорити? Натисніть «записати
 #~ msgid "Preparation and updates will appear here."
 #~ msgstr "Підготовка та оновлення з'являтимуться тут."
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:455
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:447
 msgid "Prepare"
 msgstr "Підготувати"
 
@@ -11341,7 +11341,7 @@ msgstr "Підготовлено аналізом"
 msgid "Prepared by an analysis run, {day}"
 msgstr "Підготовлено в межах аналізу, {day}"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:596
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:588
 msgid "Preparing"
 msgstr "Підготовка"
 
@@ -11847,7 +11847,7 @@ msgstr "Читайте новини про продукт на інформац�
 msgid "Read replies as they arrive."
 msgstr "Читайте відповіді в міру їх надходження."
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:887
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:876
 msgid "Read shared findings, inspect their evidence and see how they were produced."
 msgstr "Переглядайте спільні висновки, вивчайте докази та дізнавайтеся, як вони були створені."
 
@@ -11860,7 +11860,7 @@ msgstr "Перегляньте посібник із вирішення проб
 msgid "Read-only"
 msgstr "Лише читання"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:550
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:542
 msgid "Read-only steps"
 msgstr "Кроки лише для читання"
 
@@ -11979,11 +11979,11 @@ msgstr "Рецепт: {recipe}"
 msgid "Recipe: not recorded"
 msgstr "Рецепт: не записано"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:912
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:901
 msgid "Recipes"
 msgstr "Рецепти"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:668
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:660
 msgid "Recipes could not be loaded."
 msgstr "Не вдалося завантажити рецепти."
 
@@ -12144,7 +12144,7 @@ msgstr "Оновлення…"
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:460
 #: src/routes/project/chat/ProjectChatRoute.tsx:777
 #: src/routes/project/canvas/CanvasRoute.tsx:690
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:625
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:617
 #: src/components/popcorn/PopcornActions.tsx:66
 #: src/components/popcorn/PopcornActions.tsx:91
 #: src/components/map/MapPage.tsx:147
@@ -12746,7 +12746,7 @@ msgstr "Відновлюємо це формулювання."
 #~ msgid "Result type"
 #~ msgstr ""
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:909
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:898
 #: src/components/popcorn/PopcornLanguageSettings.tsx:131
 #: src/components/map/panels/ResultList.tsx:40
 msgid "Results"
@@ -12838,7 +12838,7 @@ msgstr "Retranscription started. New conversation will be available soon."
 msgid "Return home"
 msgstr "Повернутися на головну"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:895
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:884
 msgid "Return to presentation"
 msgstr "Повернутися до презентації"
 
@@ -12982,12 +12982,12 @@ msgstr "Rows per page"
 msgid "Run"
 msgstr "Запустити"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:607
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:599
 msgid "Run again from scratch"
 msgstr "Запустити знову з нуля"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:723
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:729
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:715
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:721
 msgid "Run details could not be loaded."
 msgstr "Не вдалося завантажити деталі запуску."
 
@@ -12995,11 +12995,11 @@ msgstr "Не вдалося завантажити деталі запуску."
 #~ msgid "Run fresh generation"
 #~ msgstr "Запустити нову генерацію"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:806
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:798
 msgid "Run history could not be loaded."
 msgstr "Не вдалося завантажити історію запусків."
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:612
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:604
 msgid "Run this recipe again for {scopeLabel}. Existing published results stay visible until the fresh generation is ready."
 msgstr "Запустити цей рецепт знову для {scopeLabel}. Опубліковані результати залишатимуться видимими, доки не буде готова нова генерація."
 
@@ -13012,7 +13012,7 @@ msgstr "Запустити транскрибування знову для на
 msgid "Running"
 msgstr "Виконується"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:915
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:904
 msgid "Runs"
 msgstr "Запуски"
 
@@ -14381,7 +14381,7 @@ msgstr "Джерело"
 msgid "Source {0}"
 msgstr "Source {0}"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:517
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:509
 msgid "Source conversation"
 msgstr "Вихідна розмова"
 
@@ -14602,7 +14602,7 @@ msgstr "Оновлюється до завтра {0}"
 msgid "Step {0} of {STEP_COUNT}"
 msgstr "Крок {0} з {STEP_COUNT}"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:764
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:756
 msgid "Steps and logs"
 msgstr "Кроки та журнали"
 
@@ -14649,12 +14649,12 @@ msgstr "Зупинити трансляцію"
 msgid "Stop recording and turn it into text"
 msgstr "Зупинити запис і перетворити на текст"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:739
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:786
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:730
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:778
 msgid "Stop run"
 msgstr "Зупинити запуск"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:737
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:732
 msgid "Stop run?"
 msgstr "Зупинити запуск?"
 
@@ -15442,7 +15442,7 @@ msgstr "Власні слова зали, ідеї, що рухали розмо
 msgid "The second line of this finding"
 msgstr "Другий рядок цього висновку"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:485
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:477
 msgid "the selected conversation"
 msgstr "вибрана розмова"
 
@@ -16462,7 +16462,7 @@ msgstr "Не вдається увійти? Напишіть на support@dembra
 #: src/routes/project/present/PresentResultsPanel.tsx:158
 #: src/routes/project/chat/ProjectChatRoute.tsx:868
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:165
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:457
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:449
 #: src/routes/invite/MyInvitesRoute.tsx:225
 #: src/routes/invite/AcceptInviteRoute.tsx:567
 #: src/components/results/resultEditing.tsx:555
@@ -16795,7 +16795,7 @@ msgstr "Незабаром"
 msgid "Update"
 msgstr "Update"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:458
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:450
 msgid "Update results"
 msgstr "Оновити результати"
 
@@ -17098,7 +17098,7 @@ msgstr "Налаштування користувача"
 msgid "Username"
 msgstr "Username"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:530
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:522
 msgid "Uses eligible conversations across this project."
 msgstr "Використовує відповідні розмови в цьому проєкті."
 
@@ -17268,7 +17268,7 @@ msgstr "Переглянути запрошення"
 msgid "View recipes"
 msgstr "Переглянути шаблони"
 
-#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:600
+#: src/routes/project/analysis/ProjectAnalysisRoute.tsx:592
 msgid "View results"
 msgstr "Переглянути результати"
 
