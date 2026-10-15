@@ -60,7 +60,7 @@ msgid "{0} incl. VAT"
 msgstr "{0} TVA incluse"
 
 #. placeholder {0}: invite.data.document.title
-#: src/features/accounts/signing/SignGate.tsx:205
+#: src/features/accounts/signing/SignGate.tsx:207
 msgid "{0} is signed"
 msgstr "{0} est signé"
 
@@ -99,7 +99,7 @@ msgstr "{days, plural, one {# jour} other {# jours}}"
 msgid "{done} of {total} filled"
 msgstr "{done} sur {total} remplis"
 
-#: src/features/accounts/signing/SignGate.tsx:335
+#: src/features/accounts/signing/SignGate.tsx:342
 msgid "{inviter} from {org} invited you to sign"
 msgstr "{inviter} de {org} vous invite à signer"
 
@@ -110,7 +110,7 @@ msgstr "{label} est vide."
 #~ msgid "{mine, plural, one {One thing needs you.} other {# things need you.}}"
 #~ msgstr "{mine, plural, one {Une chose vous attend.} other {# choses vous attendent.}}"
 
-#: src/features/accounts/signing/SignGate.tsx:339
+#: src/features/accounts/signing/SignGate.tsx:346
 msgid "{org} invited you to sign"
 msgstr "{org} vous invite à signer"
 
@@ -134,7 +134,7 @@ msgstr "Un fichier"
 msgid "A KvK number has 8 digits."
 msgstr "Un numéro KvK compte 8 chiffres."
 
-#: src/features/accounts/signing/SignGate.tsx:186
+#: src/features/accounts/signing/SignGate.tsx:188
 msgid "A newer invitation may have replaced it. Ask the person who invited you to send it again."
 msgstr "Une invitation plus récente l'a peut-être remplacée. Demandez à la personne qui vous a invité de la renvoyer."
 
@@ -398,11 +398,11 @@ msgstr "Découvrez la démo que nous avons préparée pour vous"
 msgid "Check this. It should look like {example}."
 msgstr "Vérifiez ce champ. Il doit ressembler à {example}."
 
-#: src/features/accounts/signing/SignGate.tsx:191
+#: src/features/accounts/signing/SignGate.tsx:193
 msgid "Check your connection and try again."
 msgstr "Vérifiez votre connexion et réessayez."
 
-#: src/features/accounts/signing/SignGate.tsx:364
+#: src/features/accounts/signing/SignGate.tsx:371
 msgid "Check your name, and we'll email you a code to open the document. You don't need a password."
 msgstr "Vérifiez votre nom et nous vous enverrons par e-mail un code pour ouvrir le document. Aucun mot de passe n'est nécessaire."
 
@@ -758,7 +758,7 @@ msgstr "E-mail"
 msgid "Email for {who}"
 msgstr "E-mail pour {who}"
 
-#: src/features/accounts/signing/SignGate.tsx:403
+#: src/features/accounts/signing/SignGate.tsx:410
 msgid "Email me a code"
 msgstr "M'envoyer un code par e-mail"
 
@@ -779,7 +779,7 @@ msgstr "Activer le compte"
 msgid "Enable it to push offers and tasks. They get an Account page with a billing details step."
 msgstr "Activez-le pour envoyer des offres et des tâches. Une page Compte avec une étape pour les informations de facturation leur sera attribuée."
 
-#: src/features/accounts/signing/SignGate.tsx:409
+#: src/features/accounts/signing/SignGate.tsx:416
 msgid "Enter the six-digit code we sent to {email}."
 msgstr "Saisissez le code à six chiffres envoyé à {email}."
 
@@ -850,7 +850,7 @@ msgstr "Remplir ce qui manque"
 msgid "Fill in your address"
 msgstr "Indiquer votre adresse"
 
-#: src/features/accounts/signing/SignGate.tsx:239
+#: src/features/accounts/signing/SignGate.tsx:242
 msgid "Fill in your first name."
 msgstr "Saisissez votre prénom."
 
@@ -879,7 +879,7 @@ msgstr "Indiquer votre numéro de TVA"
 msgid "Fill this in."
 msgstr "Renseignez ce champ."
 
-#: src/features/accounts/signing/SignGate.tsx:372
+#: src/features/accounts/signing/SignGate.tsx:379
 msgid "First name"
 msgstr "Prénom"
 
@@ -941,7 +941,7 @@ msgstr "Masquer les tâches terminées"
 msgid "How do you want to get invoices?"
 msgstr "Comment souhaitez-vous recevoir les factures ?"
 
-#: src/features/accounts/signing/SignGate.tsx:452
+#: src/features/accounts/signing/SignGate.tsx:468
 msgid "How we handle your details"
 msgstr "Comment nous traitons vos données"
 
@@ -1122,7 +1122,7 @@ msgstr "Libellé"
 msgid "Language"
 msgstr "Langue"
 
-#: src/features/accounts/signing/SignGate.tsx:380
+#: src/features/accounts/signing/SignGate.tsx:387
 msgid "Last name"
 msgstr "Nom"
 
@@ -1161,11 +1161,11 @@ msgstr "en direct"
 msgid "Locked"
 msgstr "Verrouillé"
 
-#: src/features/accounts/signing/SignGate.tsx:468
+#: src/features/accounts/signing/SignGate.tsx:484
 msgid "Log in"
 msgstr "Se connecter"
 
-#: src/features/accounts/signing/SignGate.tsx:212
+#: src/features/accounts/signing/SignGate.tsx:214
 msgid "Log in to download the signed copy."
 msgstr "Connectez-vous pour télécharger l'exemplaire signé."
 
@@ -1438,7 +1438,7 @@ msgstr "Tâches ouvertes"
 msgid "Open the demo"
 msgstr "Ouvrir la démo"
 
-#: src/features/accounts/signing/SignGate.tsx:431
+#: src/features/accounts/signing/SignGate.tsx:438
 msgid "Open the document"
 msgstr "Ouvrir le document"
 
@@ -1869,9 +1869,14 @@ msgstr "Sélectionnez un champ pour définir son type, son libellé et s'il est 
 msgid "Send"
 msgstr "Envoyer"
 
-#: src/features/accounts/signing/SignGate.tsx:435
+#: src/features/accounts/signing/SignGate.tsx:450
 msgid "Send a new code"
 msgstr "Envoyer un nouveau code"
+
+#. placeholder {0}: resendCooldown.wait
+#: src/features/accounts/signing/SignGate.tsx:448
+msgid "Send a new code in {0}s"
+msgstr "Envoyer un nouveau code dans {0} s"
 
 #: src/features/accounts/staff/TaskModals.tsx:135
 #: src/features/accounts/staff/TaskModals.tsx:167
@@ -2007,11 +2012,11 @@ msgid "Sign {doc}"
 msgstr "Signer {doc}"
 
 #: src/features/accounts/signing/SignRoute.tsx:86
-#: src/features/accounts/signing/SignGate.tsx:165
+#: src/features/accounts/signing/SignGate.tsx:167
 msgid "Sign | dembrane"
 msgstr "Signer | dembrane"
 
-#: src/features/accounts/signing/SignGate.tsx:146
+#: src/features/accounts/signing/SignGate.tsx:148
 msgid "Sign out and continue"
 msgstr "Se déconnecter et continuer"
 
@@ -2085,8 +2090,8 @@ msgstr "Quelqu’un d’autre"
 msgid "Someone who may agree to data processing for your organisation signs it."
 msgstr "Une personne autorisée à accepter le traitement des données pour votre organisation le signe."
 
-#: src/features/accounts/signing/SignGate.tsx:288
-#: src/features/accounts/signing/SignGate.tsx:319
+#: src/features/accounts/signing/SignGate.tsx:295
+#: src/features/accounts/signing/SignGate.tsx:326
 msgid "Something went wrong"
 msgstr "Une erreur s'est produite"
 
@@ -2122,7 +2127,7 @@ msgid "Status"
 msgstr "Statut"
 
 #. placeholder {0}: me.data.email
-#: src/features/accounts/signing/SignGate.tsx:150
+#: src/features/accounts/signing/SignGate.tsx:152
 msgid "Stay signed in as {0}"
 msgstr "Rester connecté en tant que {0}"
 
@@ -2308,7 +2313,7 @@ msgstr "L'adresse e-mail est vide."
 msgid "The file for this document is missing on our side, so it cannot be signed yet. Tell us with a question on your account page and we will send it again."
 msgstr "Le fichier de ce document est manquant de notre côté, il ne peut donc pas encore être signé. Signalez-le-nous via une question sur la page de votre compte et nous vous le renverrons."
 
-#: src/features/accounts/signing/SignGate.tsx:391
+#: src/features/accounts/signing/SignGate.tsx:398
 msgid "The invitation was sent to"
 msgstr "L'invitation a été envoyée à"
 
@@ -2378,7 +2383,7 @@ msgstr "Ce document n'a pas de PDF."
 #~ msgid "This document is assigned to {name}, {jobTitle}"
 #~ msgstr "Ce document est attribué à {name}, {jobTitle}"
 
-#: src/features/accounts/signing/SignGate.tsx:207
+#: src/features/accounts/signing/SignGate.tsx:209
 msgid "This document is no longer open for signing"
 msgstr "Ce document n'est plus ouvert à la signature"
 
@@ -2398,11 +2403,11 @@ msgstr "Ce document a été refusé. Posez-nous une question sur la page de votr
 msgid "This document was sent. Its fields are fixed; send a new version to change them."
 msgstr "Ce document a été envoyé. Ses champs sont verrouillés ; envoyez une nouvelle version pour les modifier."
 
-#: src/features/accounts/signing/SignGate.tsx:181
+#: src/features/accounts/signing/SignGate.tsx:183
 msgid "This invitation could not be loaded"
 msgstr "Impossible de charger cette invitation"
 
-#: src/features/accounts/signing/SignGate.tsx:131
+#: src/features/accounts/signing/SignGate.tsx:133
 msgid "This invitation is for {invitee}"
 msgstr "Cette invitation est destinée à {invitee}"
 
@@ -2411,7 +2416,7 @@ msgstr "Cette invitation est destinée à {invitee}"
 msgid "This is not an email address."
 msgstr "Ce n'est pas une adresse e-mail."
 
-#: src/features/accounts/signing/SignGate.tsx:179
+#: src/features/accounts/signing/SignGate.tsx:181
 msgid "This link no longer works"
 msgstr "Ce lien ne fonctionne plus"
 
@@ -2709,6 +2714,10 @@ msgstr "Nous avons répondu"
 #~ msgid "We sent {0} a link to sign {1}. You'll see it signed on your account page."
 #~ msgstr "Nous avons envoyé à {0} un lien pour signer {1}. Vous le verrez signé sur la page de votre compte."
 
+#: src/features/accounts/signing/SignGate.tsx:254
+msgid "We sent a new code to {email}."
+msgstr "Nous avons envoyé un nouveau code à {email}."
+
 #: src/features/accounts/format.ts:189
 msgid "We walk through your demo with you and plan a first session."
 msgstr "Nous parcourons votre démo avec vous et planifions une première session."
@@ -2800,7 +2809,7 @@ msgstr "Oui, je le peux"
 msgid "You"
 msgstr "Vous"
 
-#: src/features/accounts/signing/SignGate.tsx:356
+#: src/features/accounts/signing/SignGate.tsx:363
 msgid "You already have a dembrane account with {email}. We'll email you a code to open the document."
 msgstr "Vous avez déjà un compte dembrane avec {email}. Nous vous enverrons par e-mail un code pour ouvrir le document."
 
@@ -2811,16 +2820,16 @@ msgstr "Vous avez déjà un compte dembrane avec {email}. Nous vous enverrons pa
 msgid "You can review and sign the offer now."
 msgstr "Vous pouvez maintenant relire et signer l’offre."
 
-#: src/features/accounts/signing/SignGate.tsx:442
+#: src/features/accounts/signing/SignGate.tsx:458
 msgid "You'll sign electronically. Your electronic signature is as binding as one made by hand."
 msgstr "Vous signerez électroniquement. Votre signature électronique engage autant qu'une signature manuscrite."
 
 #. placeholder {0}: me.data.email
-#: src/features/accounts/signing/SignGate.tsx:134
+#: src/features/accounts/signing/SignGate.tsx:136
 msgid "You're signed in as {0}. Sign out to open it as {invitee}."
 msgstr "Vous êtes connecté en tant que {0}. Déconnectez-vous pour l'ouvrir en tant que {invitee}."
 
-#: src/features/accounts/signing/SignGate.tsx:318
+#: src/features/accounts/signing/SignGate.tsx:325
 msgid "Your active devices changed. Choose a device again."
 msgstr "Vos appareils actifs ont changé. Choisissez à nouveau un appareil."
 

@@ -19,6 +19,7 @@ import { type ReactNode, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { useAuthenticated } from "@/components/auth/hooks";
 import { SignedInElsewhere } from "@/components/auth/SignedInElsewhere";
+import { useResendCooldown } from "@/components/auth/useResendCooldown";
 import {
 	authErrorCode,
 	describeAuthError,
@@ -27,6 +28,7 @@ import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { I18nLink } from "@/components/common/i18nLink";
 import { Logo } from "@/components/common/Logo";
 import { Protected } from "@/components/common/Protected";
+import { toast } from "@/components/common/Toaster";
 import { LEGAL_PRIVACY_URL } from "@/config";
 import { resetPromptSeen } from "@/features/accounts/help/tasksPromptState";
 import { useV2Me } from "@/hooks/useV2Me";
@@ -233,18 +235,23 @@ function OpenInvite({ invite, token }: { invite: Invite; token: string }) {
 		null,
 	);
 	const [replacementError, setReplacementError] = useState("");
+	const resendCooldown = useResendCooldown();
 
 	const sendCode = async () => {
 		if (!invite.has_account && !first.trim()) {
 			setError(t`Fill in your first name.`);
 			return;
 		}
+		const resend = step === "code";
+		if (busy || (resend && resendCooldown.wait > 0)) return;
 		setBusy(true);
 		setError("");
 		try {
 			await sendSignInCode(email);
 			setStep("code");
 			setCode("");
+			resendCooldown.start();
+			if (resend) toast.success(t`We sent a new code to ${email}.`);
 		} catch (e) {
 			setError(describeAuthError(e));
 		} finally {
@@ -431,8 +438,17 @@ function OpenInvite({ invite, token }: { invite: Invite; token: string }) {
 							<Trans>Open the document</Trans>
 						</Button>
 						<Group justify="center">
-							<Button variant="subtle" color="gray" onClick={sendCode}>
-								<Trans>Send a new code</Trans>
+							<Button
+								variant="subtle"
+								color="gray"
+								disabled={resendCooldown.wait > 0}
+								onClick={sendCode}
+							>
+								{resendCooldown.wait > 0 ? (
+									<Trans>Send a new code in {resendCooldown.wait}s</Trans>
+								) : (
+									<Trans>Send a new code</Trans>
+								)}
 							</Button>
 						</Group>
 					</Stack>

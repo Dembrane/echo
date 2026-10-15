@@ -2639,7 +2639,7 @@ msgstr "Audit logs exported to CSV"
 msgid "Audit logs exported to JSON"
 msgstr "Audit logs exported to JSON"
 
-#: src/routes/auth/Login.tsx:496
+#: src/routes/auth/Login.tsx:503
 #: src/components/settings/TwoFactorSettingsCard.tsx:224
 #: src/components/settings/TwoFactorSettingsCard.tsx:349
 msgid "Authenticator code"
@@ -4566,7 +4566,7 @@ msgid "Create account"
 msgstr "Створити акаунт"
 
 #: src/routes/auth/Register.tsx:129
-#: src/routes/auth/Login.tsx:644
+#: src/routes/auth/Login.tsx:662
 msgid "Create an account"
 msgstr "Створіть акаунт"
 
@@ -5658,9 +5658,9 @@ msgstr "Розділ редактора"
 
 #: src/routes/auth/RequestPasswordReset.tsx:51
 #: src/routes/auth/RequestPasswordReset.tsx:54
-#: src/routes/auth/Login.tsx:429
-#: src/routes/auth/Login.tsx:533
-#: src/routes/auth/Login.tsx:537
+#: src/routes/auth/Login.tsx:436
+#: src/routes/auth/Login.tsx:540
+#: src/routes/auth/Login.tsx:544
 #: src/components/settings/AccountSettingsCard.tsx:182
 #: src/components/participant/ParticipantShareModal.tsx:135
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:351
@@ -5677,11 +5677,11 @@ msgstr "Написати {name}"
 msgid "Email address"
 msgstr "Електронна пошта"
 
-#: src/routes/auth/Login.tsx:447
+#: src/routes/auth/Login.tsx:454
 msgid "Email me a code"
 msgstr "Надіслати код на пошту"
 
-#: src/routes/auth/Login.tsx:618
+#: src/routes/auth/Login.tsx:636
 msgid "Email me a sign-in code instead"
 msgstr "Надіслати код для входу на пошту"
 
@@ -5851,7 +5851,7 @@ msgstr "Enter filename (without extension)"
 msgid "Enter new password"
 msgstr "Enter new password"
 
-#: src/routes/auth/Login.tsx:293
+#: src/routes/auth/Login.tsx:296
 msgid "Enter the 6-digit code from your authenticator app."
 msgstr "Enter the 6-digit code from your authenticator app."
 
@@ -6671,7 +6671,7 @@ msgstr "Прогноз"
 msgid "Forgetting a saved memory"
 msgstr "Забуваємо збережений спогад"
 
-#: src/routes/auth/Login.tsx:628
+#: src/routes/auth/Login.tsx:646
 msgid "Forgot your password?"
 msgstr "Forgot your password?"
 
@@ -7535,7 +7535,7 @@ msgstr "Заголовок вступу"
 msgid "Invalid code. Please request a new one."
 msgstr "Invalid code. Please request a new one."
 
-#: src/routes/auth/Login.tsx:374
+#: src/routes/auth/Login.tsx:381
 msgid "Invalid credentials."
 msgstr "Invalid credentials."
 
@@ -8507,12 +8507,12 @@ msgstr "Зафіксовано відповідно до запрошення. �
 
 #: src/routes/invite/AcceptInviteRoute.tsx:285
 #: src/routes/auth/VerifyEmail.tsx:161
-#: src/routes/auth/Login.tsx:478
-#: src/routes/auth/Login.tsx:577
+#: src/routes/auth/Login.tsx:485
+#: src/routes/auth/Login.tsx:584
 msgid "Log in"
 msgstr "Увійти"
 
-#: src/routes/auth/Login.tsx:81
+#: src/routes/auth/Login.tsx:83
 msgid "Log in | dembrane"
 msgstr "Увійти | dembrane"
 
@@ -10412,7 +10412,7 @@ msgstr "Відкрити робочий простір"
 msgid "Open workspace actions"
 msgstr "Відкрити дії робочого простору"
 
-#: src/routes/auth/Login.tsx:524
+#: src/routes/auth/Login.tsx:531
 msgid "Open your authenticator app and enter the current six-digit code."
 msgstr "Open your authenticator app and enter the current six-digit code."
 
@@ -10464,7 +10464,7 @@ msgid "Options"
 msgstr "Options"
 
 #: src/routes/auth/Register.tsx:292
-#: src/routes/auth/Login.tsx:635
+#: src/routes/auth/Login.tsx:653
 msgid "or"
 msgstr "or"
 
@@ -10798,8 +10798,8 @@ msgid "Partner workspace, billed separately from the organisation."
 msgstr "Партнерський робочий простір, оплачується окремо від організації."
 
 #: src/routes/auth/Register.tsx:217
-#: src/routes/auth/Login.tsx:547
-#: src/routes/auth/Login.tsx:551
+#: src/routes/auth/Login.tsx:554
+#: src/routes/auth/Login.tsx:558
 msgid "Password"
 msgstr "Password"
 
@@ -11104,7 +11104,7 @@ msgstr "Please enable participation to enable sharing"
 msgid "Please enter a valid email."
 msgstr "Please enter a valid email."
 
-#: src/routes/auth/Login.tsx:419
+#: src/routes/auth/Login.tsx:426
 msgid "Please log in to continue."
 msgstr "Будь ласка, увійдіть, щоб продовжити."
 
@@ -13640,9 +13640,14 @@ msgstr "Send"
 msgid "Send {0} invites"
 msgstr "Надіслати {0} запрошень"
 
-#: src/routes/auth/Login.tsx:590
+#: src/routes/auth/Login.tsx:607
 msgid "Send a new code"
 msgstr "Надіслати новий код"
+
+#. placeholder {0}: resendCooldown.wait
+#: src/routes/auth/Login.tsx:605
+msgid "Send a new code in {0}s"
+msgstr "Надіслати новий код через {0} с"
 
 #: src/components/results/curate/RowTools.tsx:144
 #: src/components/feedback/ReportIssueModal.tsx:293
@@ -14275,8 +14280,8 @@ msgstr "Something is blocking your connection. Your audio will not be saved unle
 #: src/routes/project/report/ProjectReportRoute.tsx:848
 #: src/routes/project/report/ProjectReportRoute.tsx:1204
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:191
-#: src/routes/auth/Login.tsx:265
-#: src/routes/auth/Login.tsx:339
+#: src/routes/auth/Login.tsx:268
+#: src/routes/auth/Login.tsx:342
 #: src/components/project/ProjectAccessGuard.tsx:109
 #: src/components/error/ErrorPage.tsx:56
 #: src/components/error/ErrorBoundary.tsx:44
@@ -14346,7 +14351,7 @@ msgstr "Something went wrong. Please try again."
 msgid "error.fallback.unknown"
 msgstr "Щось пішло не так. Спробуйте ще раз і зверніться до підтримки, якщо проблема не зникає."
 
-#: src/components/auth/utils/errorUtils.ts:43
+#: src/components/auth/utils/errorUtils.ts:44
 msgid "Something went wrong. Try again, and contact support if it keeps happening."
 msgstr "Щось пішло не так. Спробуйте ще раз і зверніться до підтримки, якщо проблема не зникає."
 
@@ -15072,7 +15077,7 @@ msgstr "Дякуємо! Це дуже допомагає."
 msgid "That code did not work. Try again with a new code."
 msgstr "Цей код не підійшов. Спробуйте ще раз із новим кодом."
 
-#: src/routes/auth/Login.tsx:316
+#: src/routes/auth/Login.tsx:319
 msgid "That code didn't work. Try again with a fresh code from your authenticator app."
 msgstr "That code didn't work. Try again with a fresh code from your authenticator app."
 
@@ -15786,7 +15791,7 @@ msgstr "Це посилання вже використано. Ви увійшл
 msgid "This link is no longer valid"
 msgstr "Це посилання більше не дійсне"
 
-#: src/components/auth/utils/errorUtils.ts:34
+#: src/components/auth/utils/errorUtils.ts:35
 msgid "This link is not valid or has expired. Request a new one."
 msgstr "Це посилання недійсне або термін його дії минув. Запитайте нове."
 
@@ -15966,7 +15971,7 @@ msgstr "Роль цієї зацікавленої сторони"
 msgid "This title is shown to participants when they start a conversation"
 msgstr "This title is shown to participants when they start a conversation"
 
-#: src/components/auth/utils/errorUtils.ts:36
+#: src/components/auth/utils/errorUtils.ts:37
 msgid "This took too long. Try again."
 msgstr "Це зайняло забагато часу. Спробуйте ще раз."
 
@@ -16197,7 +16202,7 @@ msgstr "Забагато, щоб показати всі тут. Асистен�
 msgid "error.fallback.wait"
 msgstr "Забагато спроб за короткий час. Зачекайте хвилинку та спробуйте ще раз."
 
-#: src/components/auth/utils/errorUtils.ts:32
+#: src/components/auth/utils/errorUtils.ts:33
 msgid "Too many tries. Wait a moment, then request a new code."
 msgstr "Забагато спроб. Зачекайте хвилинку, а потім надішліть запит на новий код."
 
@@ -17039,7 +17044,7 @@ msgstr "Використовуйте італійську для чату, зв�
 msgid "Use latest results"
 msgstr "Використати останні результати"
 
-#: src/routes/auth/Login.tsx:601
+#: src/routes/auth/Login.tsx:619
 msgid "Use my password instead"
 msgstr "Натомість використати пароль"
 
@@ -17197,7 +17202,7 @@ msgstr "Verify"
 msgid "participant.echo.verify"
 msgstr "Verify"
 
-#: src/routes/auth/Login.tsx:575
+#: src/routes/auth/Login.tsx:582
 msgid "Verify code"
 msgstr "Verify code"
 
@@ -17385,7 +17390,7 @@ msgstr "We cannot hear you. Please try changing your microphone or get a little 
 msgid "error.fallback.network"
 msgstr "Не вдалося зв'язатися з dembrane. Перевірте інтернет-з'єднання та спробуйте ще раз."
 
-#: src/components/auth/utils/errorUtils.ts:42
+#: src/components/auth/utils/errorUtils.ts:43
 msgid "We could not reach dembrane. Check your internet connection and try again."
 msgstr "Не вдалося зв'язатися з dembrane. Перевірте інтернет-з'єднання та спробуйте ще раз."
 
@@ -17451,6 +17456,10 @@ msgstr "Не вдалося оновити ваш спосіб оплати. С�
 msgid "participant.modal.echo.info.reason"
 msgstr "We need a bit more context to help you use ECHO effectively. Please continue recording so we can provide better suggestions."
 
+#: src/routes/auth/Login.tsx:359
+msgid "We sent a new code to {codeEmail}."
+msgstr "Ми надіслали новий код на {codeEmail}."
+
 #: src/components/auth/ResendVerificationEmail.tsx:42
 msgid "We sent a new verification link."
 msgstr "Ми надіслали нове посилання для підтвердження."
@@ -17459,7 +17468,7 @@ msgstr "Ми надіслали нове посилання для підтве�
 msgid "We sent a new verification link. You can send another in {wait} seconds."
 msgstr "Ми надіслали нове посилання для підтвердження. Ви зможете надіслати ще одне через {wait} с."
 
-#: src/routes/auth/Login.tsx:455
+#: src/routes/auth/Login.tsx:462
 msgid "We sent a six-digit code to {codeEmail}."
 msgstr "Ми надіслали шестизначний код на {codeEmail}."
 
@@ -17544,13 +17553,13 @@ msgid "Webhooks come with a paid plan."
 msgstr "Вебхуки доступні на платному тарифі."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:129
-#: src/routes/auth/Login.tsx:407
+#: src/routes/auth/Login.tsx:414
 #: src/components/participant/ParticipantBody.tsx:115
 msgid "Welcome"
 msgstr "Welcome"
 
-#: src/routes/auth/Login.tsx:145
-#: src/routes/auth/Login.tsx:240
+#: src/routes/auth/Login.tsx:148
+#: src/routes/auth/Login.tsx:243
 msgid "Welcome back"
 msgstr "Welcome back"
 
@@ -17559,7 +17568,7 @@ msgid "Welcome back, {displayName}"
 msgstr "З поверненням, {displayName}"
 
 #: src/routes/onboarding/OnboardingRoute.tsx:595
-#: src/routes/auth/Login.tsx:145
+#: src/routes/auth/Login.tsx:148
 msgid "Welcome to dembrane"
 msgstr "Ласкаво просимо до dembrane"
 
@@ -18235,7 +18244,7 @@ msgstr "You haven't verified any outcomes yet. Would you like to verify before f
 msgid "You left the workspace"
 msgstr "Ви покинули робочий простір"
 
-#: src/routes/auth/Login.tsx:379
+#: src/routes/auth/Login.tsx:386
 msgid "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 msgstr "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 
@@ -18393,7 +18402,7 @@ msgstr "Ваш доступ до {0} завершився {1}."
 msgid "Your account can be signed in on up to two devices. Choose one to sign out so you can continue here."
 msgstr "У ваш обліковий запис можна ввійти щонайбільше на двох пристроях. Виберіть пристрій, на якому завершити сеанс, щоб продовжити тут."
 
-#: src/routes/auth/Login.tsx:264
+#: src/routes/auth/Login.tsx:267
 msgid "Your active devices changed. Choose a device again."
 msgstr "Ваші активні пристрої змінилися. Виберіть пристрій знову."
 
@@ -18452,7 +18461,7 @@ msgstr "Вашу електронну пошту вже підтверджено
 msgid "Your email is not verified yet. Check your inbox for the verification link."
 msgstr "Вашу електронну пошту ще не підтверджено. Перевірте вхідні та перейдіть за посиланням для підтвердження."
 
-#: src/routes/auth/Login.tsx:412
+#: src/routes/auth/Login.tsx:419
 msgid "Your email is verified. Log in to continue."
 msgstr "Вашу електронну пошту підтверджено. Увійдіть, щоб продовжити."
 
