@@ -14,7 +14,10 @@ import {
   index,
   integer,
   json,
+  jsonb,
   pgTable,
+  pgView,
+  primaryKey,
   real,
   serial,
   text,
@@ -1198,6 +1201,50 @@ export const conversation_chunk = pgTable(
     }).onDelete("cascade"),
   ],
 );
+
+/**
+ * The whole recording transcribed again once the conversation is finished, one row per
+ * provider that ran. The live chunk text stays in conversation_chunk; the row flagged
+ * `is_record` is what the dashboard, summaries and chat read. `chunk_hash` names the chunk
+ * list it was made from (sha256 of the sorted chunk ids, 16 hex), so a conversation that
+ * gains audio later never shows an outdated record. `sentences` carry start and end in
+ * seconds of the merged file for the player; an anonymised conversation keeps text only.
+ */
+export const conversation_final_transcript = pgTable(
+  "conversation_final_transcript",
+  {
+    conversation_id: uuid().notNull(),
+    provider: text().notNull(),
+    model: text(),
+    chunk_hash: text().notNull(),
+    is_record: boolean().default(false).notNull(),
+    text: text().notNull(),
+    sentences: jsonb(),
+    audio_seconds: real(),
+    usage: jsonb(),
+    created_at: timestamp({ withTimezone: true, mode: "string" }).defaultNow().notNull(),
+    updated_at: timestamp({ withTimezone: true, mode: "string" }).defaultNow().notNull(),
+  },
+  (table): PgTableExtraConfigValue[] => [
+    primaryKey({ columns: [table.conversation_id, table.provider] }),
+    foreignKey({
+      columns: [table.conversation_id],
+      foreignColumns: [conversation.id],
+      name: "conversation_final_transcript_conversation_id_foreign",
+    }).onDelete("cascade"),
+  ],
+);
+
+/** Created by migration 0023; see there. Read-only: written through conversation_final_transcript. */
+export const conversation_record_transcript = pgView("conversation_record_transcript", {
+  conversation_id: uuid().notNull(),
+  provider: text().notNull(),
+  model: text(),
+  text: text().notNull(),
+  sentences: jsonb(),
+  audio_seconds: real(),
+  updated_at: timestamp({ withTimezone: true, mode: "string" }).notNull(),
+}).existing();
 
 export const conversation_link = pgTable(
   "conversation_link",

@@ -21,6 +21,7 @@ import {
 } from "./storage";
 
 type Deps = Pick<ConversationsDeps, "db" | "access" | "now">;
+type AudioDeps = Deps & Pick<ConversationsDeps, "audio" | "audioUrls">;
 
 const csv = (v: string | null | undefined) =>
   (v ?? "")
@@ -372,4 +373,43 @@ export async function replaceTags(
   await store.deleteTagLinks(remove);
   for (const tagId of valid) if (!current.has(tagId)) await store.addTagLink(conversationId, tagId);
   return (await store.tagRows([conversationId])).map((t) => tagRow(t, true));
+}
+
+// A signed link outlives an hour of listening to the transcript.
+const PLAYER_URL_S = 3 * 3600;
+
+/**
+ * The final transcript for the dashboard: its text, its timed sentences and a link to the
+ * one merged file the player streams (range requests are the bucket's). Locked conversations
+ * get neither text nor audio, as their chunks do. An anonymised conversation gets text only:
+ * redaction ran on the text and the audio still holds the names.
+ */
+export async function finalTranscript(d: AudioDeps, who: Signed, conversationId: string) {
+  const a = await conversationForBff(d, who, conversationId);
+  const store = bffStore(d.db);
+  const { locked } = conversationLock(
+    a.conversation as unknown as Row,
+    a.project.tier,
+    await activeFor(store, a.project),
+  );
+  const record = await store.recordTranscript(conversationId);
+  if (!record) return { available: false as const };
+  if (locked) return { available: true as const, locked: true as const };
+  const anonymised = Boolean(a.conversation.is_anonymized);
+  const merged = a.conversation.merged_audio_path;
+  const playable =
+    !anonymised && Boolean(merged?.startsWith("http")) && Array.isArray(record.sentences);
+  return {
+    available: true as const,
+    locked: false as const,
+    provider: record.provider,
+    model: record.model,
+    text: record.text,
+    sentences: anonymised ? [] : (record.sentences ?? []),
+    audio_url: playable
+      ? d.audio.presignDownload(d.audioUrls.keyOf(merged as string), {
+          expiresInSeconds: PLAYER_URL_S,
+        })
+      : null,
+  };
 }

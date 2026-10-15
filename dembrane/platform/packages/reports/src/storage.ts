@@ -106,6 +106,9 @@ function queries(sql: Sql) {
 
     /** Directus get_items(conversation_chunk) with limit 1500 and sort timestamp, joined by newlines. */
     async transcript(conversationId: string): Promise<string> {
+      const [record] = await sql`
+        select text from conversation_record_transcript where conversation_id = ${conversationId}`;
+      if (record) return String(record.text);
       const rows = await sql`select transcript from conversation_chunk
         where conversation_id = ${conversationId} order by timestamp nulls last, id limit 1500`;
       return rows

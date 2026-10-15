@@ -9,6 +9,7 @@ const {
   conversation_chunk,
   conversation_artifact,
   conversation_project_tag,
+  conversation_record_transcript,
   conversation_reply,
   project,
   project_tag,
@@ -36,9 +37,19 @@ export function v1Store(db: Db) {
         .limit(100);
     },
 
-    /** The transcript route's chunks: by timestamp, at most 1500. */
+    /**
+     * The transcript route's chunks: by timestamp, at most 1500. A conversation with a
+     * final transcript answers it as one piece instead: summaries, token counts and the
+     * route then read the record, not the 30 second preview.
+     */
     async transcriptChunks(conversationId: string) {
       if (!isUuid(conversationId)) return [];
+      const [record] = await db
+        .select({ text: conversation_record_transcript.text })
+        .from(conversation_record_transcript)
+        .where(eq(conversation_record_transcript.conversation_id, conversationId))
+        .limit(1);
+      if (record) return [{ id: conversationId, transcript: record.text, error: null }];
       return db
         .select({
           id: conversation_chunk.id,

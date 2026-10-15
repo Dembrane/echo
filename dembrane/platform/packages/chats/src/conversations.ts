@@ -111,8 +111,12 @@ export function chatReads(db: Db) {
       return out;
     },
 
-    /** Chunks with text, in timestamp order, capped as the transcript route capped them. */
+    /** Chunks with text, in timestamp order, capped as the transcript route capped them; or the final transcript. */
     async transcriptChunks(conversationId: string): Promise<{ transcript: string | null }[]> {
+      // The final transcript, when the conversation has one, is the transcript as one piece.
+      const [record] = await sql`
+        select text from conversation_record_transcript where conversation_id = ${conversationId}`;
+      if (record) return [{ transcript: record.text as string }];
       const rows = await sql`
         select transcript from conversation_chunk where conversation_id = ${conversationId}
         order by timestamp limit 1500`;
