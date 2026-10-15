@@ -58,6 +58,8 @@ export async function transcribeAudio(
   audio: Uint8Array,
   language?: string,
   signal?: AbortSignal,
+  /** Words the speaker is likely to say (names, terms): Whisper spells them as given. */
+  prompt?: string,
 ): Promise<string> {
   if (audio.byteLength > MAX_AUDIO_BYTES) {
     const err = new Error(
@@ -71,6 +73,7 @@ export async function transcribeAudio(
   form.set("model", ep.transcriptionModel);
   form.set("response_format", "json");
   if (language) form.set("language", language);
+  if (prompt) form.set("prompt", prompt);
   form.set("file", new Blob([audio as never], { type: kind.type }), `audio.${kind.ext}`);
   const res = await (ep.fetch ?? fetch)(`${ep.baseUrl.replace(/\/+$/, "")}/audio/transcriptions`, {
     method: "POST",

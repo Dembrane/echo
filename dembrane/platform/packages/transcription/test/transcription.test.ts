@@ -95,6 +95,56 @@ test("redaction runs a second pass on the audio plus the first transcript", asyn
   expect(seen[0]?.responseFormat).toMatchObject({ type: "json" });
 });
 
+test("with a speech-to-text model its words are the transcript and no chat model runs", async () => {
+  const seen: LanguageModelV4CallOptions[] = [];
+  const heard: { language?: string | null; prompt?: string }[] = [];
+  const t = new GeminiTranscriber(
+    {
+      model: () => model([], seen),
+      embedding: () => ({}) as never,
+      speechToText: {
+        model: "whisper-fake",
+        transcribe: async (_audio, o = {}) => {
+          heard.push(o);
+          return "Ik ben Jan en ik werk bij Dembrane.";
+        },
+      },
+    },
+    logger,
+  );
+  const out = await t.transcribe({
+    audio: new Uint8Array([1]),
+    language: "nl",
+    hotwords: ["Dembrane"],
+  });
+  expect(out).toEqual({
+    transcript: "Ik ben Jan en ik werk bij Dembrane.",
+    note: "",
+    models: ["whisper-fake"],
+  });
+  expect(seen).toHaveLength(0);
+  expect(heard).toEqual([{ language: "nl", prompt: "Dembrane" }]);
+});
+
+test("with a speech-to-text model, redaction is one text-only pass with reasoning off", async () => {
+  const seen: LanguageModelV4CallOptions[] = [];
+  const t = new GeminiTranscriber(
+    {
+      model: () => model(['{"corrected_transcript": "Ik ben <redacted_name>", "note": "n"}'], seen),
+      embedding: () => ({}) as never,
+      speechToText: { model: "whisper-fake", transcribe: async () => "Ik ben Jan" },
+    },
+    logger,
+  );
+  const out = await t.transcribe({ audio: new Uint8Array([1]), usePiiRedaction: true });
+  expect(out.transcript).toBe("Ik ben <redacted_name>");
+  expect(out.models).toEqual(["whisper-fake", "gemini-fake"]);
+  expect(seen).toHaveLength(1);
+  const user = seen[0]?.prompt[1] as { content: { type: string; text?: string }[] };
+  expect(user.content).toEqual([{ type: "text", text: "Ik ben Jan" }]);
+  expect(seen[0]?.providerOptions?.openaiCompatible).toEqual({ reasoningEffort: "none" });
+});
+
 test("an empty transcript becomes the placeholder the dashboard shows", async () => {
   const t = new GeminiTranscriber(
     {

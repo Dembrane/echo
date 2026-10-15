@@ -1,7 +1,13 @@
 import { createVertex } from "@ai-sdk/google-vertex";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import type { EmbeddingModelV4, LanguageModelV4 } from "@ai-sdk/provider";
-import { CompatEmbeddingModel, CompatLanguageModel, echoOptions } from "./compat";
+import {
+  CompatEmbeddingModel,
+  CompatLanguageModel,
+  echoOptions,
+  languageHint,
+  transcribeAudio,
+} from "./compat";
 import { type Deployment, FallbackModel, type FallbackOptions } from "./fallback";
 import { observedEmbedding, observeSafely } from "./observe";
 
@@ -38,6 +44,17 @@ export interface Models {
   embedding(): { model: EmbeddingModelV4; dimensions: number };
   /** Per-call provider options naming the spoken language; only an OpenAI-compatible provider has any. */
   speechHint?(language: string | null | undefined): Record<string, Record<string, unknown>>;
+  /**
+   * Audio to text on a dedicated speech-to-text model, when the provider has one (the
+   * OpenAI-compatible provider). Its text is the transcript as heard, word for word.
+   */
+  speechToText?: {
+    readonly model: string;
+    transcribe(
+      audio: Uint8Array,
+      opts?: { language?: string | null; prompt?: string; signal?: AbortSignal },
+    ): Promise<string>;
+  };
 }
 
 /** The provider options that carry the spoken language, or none when the provider does not use them. */
@@ -100,7 +117,14 @@ export function createModels(cfg: ModelsConfig, opts: Partial<FallbackOptions> =
   return {
     model: (g) => built[g],
     embedding: () => ({ model: embedding, dimensions: cfg.embeddingDimensions }),
-    ...(compat && { speechHint: echoOptions }),
+    ...(compat && {
+      speechHint: echoOptions,
+      speechToText: {
+        model: compat.transcriptionModel,
+        transcribe: (audio, o = {}) =>
+          transcribeAudio(compat, audio, languageHint(o.language), o.signal, o.prompt),
+      },
+    }),
   };
 }
 
