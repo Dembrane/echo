@@ -198,6 +198,10 @@ export const schema = defineSchema({
           "Reasoning effort sent to the OpenAI-compatible provider when a call does not ask for its own. Unset leaves the model default. Calls that turn thinking off always send none.",
       },
     ),
+    maxOutputTokens: key("LLM_MAX_OUTPUT_TOKENS", int.min(1).optional(), {
+      description:
+        "Most answer tokens the OpenAI-compatible provider accepts per call (16384 for glm-5.3 on Scaleway). A call that asks for more is sent with this limit instead of being refused. Unset sends what the call asks for.",
+    }),
     searchGrounding: key("LLM_SEARCH_GROUNDING", bool.default(true), {
       description:
         "Lets the map fact-check ground claims with Google Search. Always off when LLM_PROVIDER is not vertex; with it off, fact-check requests are refused.",

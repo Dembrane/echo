@@ -14,6 +14,7 @@ export interface OpenAICompatibleConfig {
   readonly apiKey: string;
   readonly transcriptionModel: string;
   readonly reasoningEffort?: string | undefined;
+  readonly maxOutputTokens?: number | undefined;
   readonly fetch?: typeof fetch | undefined;
 }
 

@@ -7,6 +7,7 @@ export interface LlmSettings {
   readonly apiKey?: string | undefined;
   readonly transcriptionModel: string;
   readonly reasoningEffort?: string | undefined;
+  readonly maxOutputTokens?: number | undefined;
   readonly searchGrounding: boolean;
   readonly textFast: readonly string[];
   readonly multiModalFast: readonly string[];
@@ -63,6 +64,7 @@ export function modelsConfigOf(s: LlmSettings): ModelsConfig {
         apiKey: s.apiKey ?? "",
         transcriptionModel: s.transcriptionModel,
         reasoningEffort: s.reasoningEffort,
+        maxOutputTokens: s.maxOutputTokens,
       },
     }),
     vertexProject: s.vertexProject,

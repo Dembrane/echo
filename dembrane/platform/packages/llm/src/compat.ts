@@ -13,6 +13,8 @@ export interface CompatEndpoint {
   readonly transcriptionModel: string;
   /** Reasoning effort for calls that do not set their own; unset leaves the model default. */
   readonly reasoningEffort?: string | undefined;
+  /** The provider's answer-length ceiling; a call asking for more is sent with this. */
+  readonly maxOutputTokens?: number | undefined;
   /** Injected so tests can assert requests without the network. */
   readonly fetch?: typeof fetch | undefined;
 }
@@ -150,17 +152,24 @@ function effortFor(options: LanguageModelV4CallOptions, fallback: string | undef
 /**
  * What a call looks like to an OpenAI-compatible provider: the Vertex-only provider
  * options and the Google Search tool are dropped, and a thinking budget becomes a
- * reasoning effort. Audio parts are handled separately, by `audioToText`.
+ * reasoning effort. Audio parts are handled separately, by `audioToText`. The answer length
+ * is capped at the provider's ceiling: the limits were sized for Gemini, and Scaleway refuses
+ * a call that asks for more than the model allows instead of shortening it.
  */
 export function compatCallOptions(
   options: LanguageModelV4CallOptions,
   reasoningEffort: string | undefined,
+  maxOutputTokens?: number,
 ): LanguageModelV4CallOptions {
   const effort = effortFor(options, reasoningEffort);
   const tools = options.tools?.filter((t) => t.type !== "provider");
   const { providerOptions: _dropped, tools: _tools, ...rest } = options;
+  const asked = options.maxOutputTokens;
   return {
     ...rest,
+    ...(maxOutputTokens !== undefined && {
+      maxOutputTokens: asked === undefined ? maxOutputTokens : Math.min(asked, maxOutputTokens),
+    }),
     ...(tools?.length && { tools }),
     ...(effort && { providerOptions: { openaiCompatible: { reasoningEffort: effort } } }),
   };
@@ -192,7 +201,7 @@ export class CompatLanguageModel implements LanguageModelV4 {
     const language = languageHint(
       (options.providerOptions as { echo?: { language?: unknown } } | undefined)?.echo?.language,
     );
-    const mapped = compatCallOptions(options, this.ep.reasoningEffort);
+    const mapped = compatCallOptions(options, this.ep.reasoningEffort, this.ep.maxOutputTokens);
     return {
       ...mapped,
       prompt: await audioToText(this.ep, options.prompt, language, options.abortSignal),

@@ -49,6 +49,15 @@ test("a positive budget keeps the configured effort and no budget uses it too", 
   });
 });
 
+test("the answer length is capped at the provider ceiling, and only when one is set", () => {
+  const ask = (n?: number) => ({ prompt: [], ...(n !== undefined && { maxOutputTokens: n }) });
+  expect(compatCallOptions(ask(32_000), undefined, 16_384).maxOutputTokens).toBe(16_384);
+  expect(compatCallOptions(ask(2_000), undefined, 16_384).maxOutputTokens).toBe(2_000);
+  expect(compatCallOptions(ask(), undefined, 16_384).maxOutputTokens).toBe(16_384);
+  expect(compatCallOptions(ask(32_000), undefined).maxOutputTokens).toBe(32_000);
+  expect(compatCallOptions(ask(), undefined).maxOutputTokens).toBeUndefined();
+});
+
 test("language hints are reduced to two letters", () => {
   expect(languageHint("nl-NL")).toBe("nl");
   expect(languageHint("EN")).toBe("en");
