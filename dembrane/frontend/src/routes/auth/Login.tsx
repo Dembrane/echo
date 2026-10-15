@@ -41,8 +41,9 @@ import {
 } from "@/features/accounts/help/tasksSummary";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import {
+	type OtherDevice,
 	otherSessions,
-	replaceOtherSessions,
+	replaceOtherDevice,
 	sendSignInCode,
 	signOut,
 } from "@/lib/auth";
@@ -120,13 +121,13 @@ export const LoginRoute = () => {
 	const loginMutation = useLoginMutation();
 	const posthog = usePostHog();
 	const queryClient = useQueryClient();
-	// Set when the sign-in was right but the account is signed in on another browser: the
-	// person chooses here whether to replace that session.
+	// A third device needs an explicit choice of which active device to sign out.
 	const [elsewhere, setElsewhere] = useState<{
 		email: string;
-		since: string | null;
+		devices: OtherDevice[];
 	} | null>(null);
 	const [replacing, setReplacing] = useState(false);
+	const [replacementError, setReplacementError] = useState("");
 
 	// Where a signed-in person goes: onboarding if unfinished, else ?next when it is safe,
 	// else the home list. Shared by the password and the emailed-code sign-in.
@@ -231,31 +232,38 @@ export const LoginRoute = () => {
 		navigate("/o");
 	};
 
-	// Every sign-in passes here. One browser per account: when another is signed in, ask
-	// before going on.
+	// Every sign-in passes here. When both device slots are occupied, ask before going on.
 	const afterCredentials = async (email: string) => {
 		const state = await otherSessions();
 		if (state.held) {
 			// The same curtain as any sign-in; it opens onto the choice instead of the app.
 			await runTransition({ message: t`Welcome back` });
-			setElsewhere({ email, since: state.since });
+			setReplacementError("");
+			setElsewhere({ devices: state.devices, email });
 			return;
 		}
 		await afterSignIn(email);
 	};
 
-	const logInAnyway = async () => {
+	const logInOnThisDevice = async (sessionId: string) => {
 		if (!elsewhere || replacing) return;
 		setReplacing(true);
+		setReplacementError("");
 		try {
-			await replaceOtherSessions();
+			await replaceOtherDevice(sessionId);
 			await queryClient.invalidateQueries({ queryKey: ["auth", "session"] });
 			// /v2/me answered 401 while the sign-in was held.
 			await queryClient.invalidateQueries({ queryKey: ["v2", "me"] });
 			await afterSignIn(elsewhere.email, false);
-		} catch {
-			setElsewhere(null);
-			setError(t`Something went wrong`);
+		} catch (error) {
+			const state = await otherSessions().catch(() => null);
+			if (state?.held) setElsewhere({ ...elsewhere, devices: state.devices });
+			const code = authErrorCode(error);
+			setReplacementError(
+				code === "HTTP_409" || code === "CONFLICT"
+					? t`Your active devices changed. Choose a device again.`
+					: t`Something went wrong`,
+			);
 		} finally {
 			setReplacing(false);
 		}
@@ -386,9 +394,10 @@ export const LoginRoute = () => {
 		<div className="h-full w-full">
 			{elsewhere && (
 				<SignedInElsewhere
-					since={elsewhere.since}
+					devices={elsewhere.devices}
 					loading={replacing}
-					onConfirm={logInAnyway}
+					error={replacementError}
+					onConfirm={logInOnThisDevice}
 					onCancel={stayLoggedOut}
 				/>
 			)}

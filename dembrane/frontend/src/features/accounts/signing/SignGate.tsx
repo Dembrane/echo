@@ -19,7 +19,10 @@ import { type ReactNode, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { useAuthenticated } from "@/components/auth/hooks";
 import { SignedInElsewhere } from "@/components/auth/SignedInElsewhere";
-import { describeAuthError } from "@/components/auth/utils/errorUtils";
+import {
+	authErrorCode,
+	describeAuthError,
+} from "@/components/auth/utils/errorUtils";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { I18nLink } from "@/components/common/i18nLink";
 import { Logo } from "@/components/common/Logo";
@@ -28,8 +31,9 @@ import { LEGAL_PRIVACY_URL } from "@/config";
 import { resetPromptSeen } from "@/features/accounts/help/tasksPromptState";
 import { useV2Me } from "@/hooks/useV2Me";
 import {
+	type OtherDevice,
 	otherSessions,
-	replaceOtherSessions,
+	replaceOtherDevice,
 	sendSignInCode,
 	signInWithCode,
 	signOut,
@@ -219,9 +223,10 @@ function OpenInvite({ invite, token }: { invite: Invite; token: string }) {
 	const [code, setCode] = useState("");
 	const [busy, setBusy] = useState(false);
 	const [error, setError] = useState("");
-	const [elsewhere, setElsewhere] = useState<{ since: string | null } | null>(
+	const [elsewhere, setElsewhere] = useState<{ devices: OtherDevice[] } | null>(
 		null,
 	);
+	const [replacementError, setReplacementError] = useState("");
 
 	const sendCode = async () => {
 		if (!invite.has_account && !first.trim()) {
@@ -266,7 +271,8 @@ function OpenInvite({ invite, token }: { invite: Invite; token: string }) {
 			await signInWithCode(email, value);
 			const state = await otherSessions();
 			if (state.held) {
-				setElsewhere({ since: state.since });
+				setReplacementError("");
+				setElsewhere({ devices: state.devices });
 				return;
 			}
 			await enter();
@@ -288,16 +294,24 @@ function OpenInvite({ invite, token }: { invite: Invite; token: string }) {
 		<Frame>
 			{elsewhere && (
 				<SignedInElsewhere
-					since={elsewhere.since}
+					devices={elsewhere.devices}
 					loading={busy}
-					onConfirm={async () => {
+					error={replacementError}
+					onConfirm={async (sessionId) => {
 						setBusy(true);
+						setReplacementError("");
 						try {
-							await replaceOtherSessions();
+							await replaceOtherDevice(sessionId);
 							await enter();
-						} catch {
-							setElsewhere(null);
-							setError(t`Something went wrong`);
+						} catch (error) {
+							const state = await otherSessions().catch(() => null);
+							if (state?.held) setElsewhere({ devices: state.devices });
+							const code = authErrorCode(error);
+							setReplacementError(
+								code === "HTTP_409" || code === "CONFLICT"
+									? t`Your active devices changed. Choose a device again.`
+									: t`Something went wrong`,
+							);
 						} finally {
 							setBusy(false);
 						}

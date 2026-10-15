@@ -774,6 +774,10 @@ msgstr "{argumentCount, plural, one {# argument} other {# arguments}}"
 msgid "{argumentCount, plural, one {# argument} other {# arguments}} from {conversationCount, plural, one {# conversation} other {# conversations}}"
 msgstr "{argumentCount, plural, one {# argument} other {# arguments}} from {conversationCount, plural, one {# conversation} other {# conversations}}"
 
+#: src/components/auth/SignedInElsewhere.tsx:91
+msgid "{browser} on {platform}"
+msgstr "{browser} on {platform}"
+
 #: src/routes/project/present/PresentRoute.tsx:656
 msgid "{changes, plural, one {# change not shown yet} other {# changes not shown yet}}"
 msgstr "{changes, plural, one {# change not shown yet} other {# changes not shown yet}}"
@@ -2630,7 +2634,7 @@ msgstr "Audit logs exported to CSV"
 msgid "Audit logs exported to JSON"
 msgstr "Audit logs exported to JSON"
 
-#: src/routes/auth/Login.tsx:487
+#: src/routes/auth/Login.tsx:496
 #: src/components/settings/TwoFactorSettingsCard.tsx:224
 #: src/components/settings/TwoFactorSettingsCard.tsx:349
 msgid "Authenticator code"
@@ -2758,7 +2762,7 @@ msgid "Back to live"
 msgstr "Back to live"
 
 #: src/routes/auth/RequestPasswordReset.tsx:43
-#: src/components/auth/SignedInElsewhere.tsx:112
+#: src/components/auth/SignedInElsewhere.tsx:156
 msgid "Back to log in"
 msgstr "Back to log in"
 
@@ -3444,6 +3448,11 @@ msgstr "Checks"
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:518
 msgid "Choose a conversation"
 msgstr "Choose a conversation"
+
+#: src/components/auth/SignedInElsewhere.tsx:71
+#: src/components/auth/SignedInElsewhere.tsx:84
+msgid "Choose a device to sign out"
+msgstr "Choose a device to sign out"
 
 #: src/components/settings/WhitelabelLogoCard.tsx:167
 msgid "Choose a logo file"
@@ -4552,7 +4561,7 @@ msgid "Create account"
 msgstr "Create account"
 
 #: src/routes/auth/Register.tsx:129
-#: src/routes/auth/Login.tsx:635
+#: src/routes/auth/Login.tsx:644
 msgid "Create an account"
 msgstr "Create an account"
 
@@ -5644,9 +5653,9 @@ msgstr "Editor section"
 
 #: src/routes/auth/RequestPasswordReset.tsx:51
 #: src/routes/auth/RequestPasswordReset.tsx:54
-#: src/routes/auth/Login.tsx:420
-#: src/routes/auth/Login.tsx:524
-#: src/routes/auth/Login.tsx:528
+#: src/routes/auth/Login.tsx:429
+#: src/routes/auth/Login.tsx:533
+#: src/routes/auth/Login.tsx:537
 #: src/components/settings/AccountSettingsCard.tsx:182
 #: src/components/participant/ParticipantShareModal.tsx:135
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:351
@@ -5663,11 +5672,11 @@ msgstr "Email {name}"
 msgid "Email address"
 msgstr "Email address"
 
-#: src/routes/auth/Login.tsx:438
+#: src/routes/auth/Login.tsx:447
 msgid "Email me a code"
 msgstr "Email me a code"
 
-#: src/routes/auth/Login.tsx:609
+#: src/routes/auth/Login.tsx:618
 msgid "Email me a sign-in code instead"
 msgstr "Email me a sign-in code instead"
 
@@ -5837,7 +5846,7 @@ msgstr "Enter filename (without extension)"
 msgid "Enter new password"
 msgstr "Enter new password"
 
-#: src/routes/auth/Login.tsx:285
+#: src/routes/auth/Login.tsx:293
 msgid "Enter the 6-digit code from your authenticator app."
 msgstr "Enter the 6-digit code from your authenticator app."
 
@@ -6657,7 +6666,7 @@ msgstr "Forecast"
 msgid "Forgetting a saved memory"
 msgstr "Forgetting a saved memory"
 
-#: src/routes/auth/Login.tsx:619
+#: src/routes/auth/Login.tsx:628
 msgid "Forgot your password?"
 msgstr "Forgot your password?"
 
@@ -7521,7 +7530,7 @@ msgstr "Introduction title"
 msgid "Invalid code. Please request a new one."
 msgstr "Invalid code. Please request a new one."
 
-#: src/routes/auth/Login.tsx:366
+#: src/routes/auth/Login.tsx:374
 msgid "Invalid credentials."
 msgstr "Invalid credentials."
 
@@ -7679,8 +7688,8 @@ msgstr "Issue payment link"
 #~ msgstr "It has been logged in on another device since {elsewhereSince}. For security, an account can be logged in on one device at a time."
 
 #: src/components/auth/SignedInElsewhere.tsx:77
-msgid "It has been logged in on other devices since {elsewhereSince}. For security, an account can be logged in on up to two devices at a time."
-msgstr "It has been logged in on other devices since {elsewhereSince}. For security, an account can be logged in on up to two devices at a time."
+#~ msgid "It has been logged in on other devices since {elsewhereSince}. For security, an account can be logged in on up to two devices at a time."
+#~ msgstr "It has been logged in on other devices since {elsewhereSince}. For security, an account can be logged in on up to two devices at a time."
 
 #. placeholder {0}: settings.org_name
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:706
@@ -7696,8 +7705,8 @@ msgstr "It is asking to"
 #~ msgstr "It is logged in on another device. For security, an account can be logged in on one device at a time."
 
 #: src/components/auth/SignedInElsewhere.tsx:83
-msgid "It is logged in on two other devices. For security, an account can be logged in on up to two devices at a time."
-msgstr "It is logged in on two other devices. For security, an account can be logged in on up to two devices at a time."
+#~ msgid "It is logged in on two other devices. For security, an account can be logged in on up to two devices at a time."
+#~ msgstr "It is logged in on two other devices. For security, an account can be logged in on up to two devices at a time."
 
 #. js-lingui-explicit-id
 #: src/components/participant/ConversationErrorView.tsx:41
@@ -8009,6 +8018,10 @@ msgstr "Knowledge graph"
 #: src/components/language/LanguagePicker.tsx:124
 msgid "Language"
 msgstr "Language"
+
+#: src/components/auth/SignedInElsewhere.tsx:110
+msgid "Last active {lastActiveAt}"
+msgstr "Last active {lastActiveAt}"
 
 #: src/components/conversation/ConversationDrilldownModal.tsx:57
 msgid "Last audio"
@@ -8489,12 +8502,12 @@ msgstr "Locked to match the invite. To use a different address, ask the admin to
 
 #: src/routes/invite/AcceptInviteRoute.tsx:285
 #: src/routes/auth/VerifyEmail.tsx:161
-#: src/routes/auth/Login.tsx:469
-#: src/routes/auth/Login.tsx:568
+#: src/routes/auth/Login.tsx:478
+#: src/routes/auth/Login.tsx:577
 msgid "Log in"
 msgstr "Log in"
 
-#: src/routes/auth/Login.tsx:80
+#: src/routes/auth/Login.tsx:81
 msgid "Log in | dembrane"
 msgstr "Log in | dembrane"
 
@@ -8504,8 +8517,8 @@ msgid "error.action.sign_in"
 msgstr "Log in again"
 
 #: src/components/auth/SignedInElsewhere.tsx:99
-msgid "Log in anyway"
-msgstr "Log in anyway"
+#~ msgid "Log in anyway"
+#~ msgstr "Log in anyway"
 
 #: src/routes/invite/AcceptInviteRoute.tsx:273
 msgid "Log in to {resolvedWorkspaceName} to continue."
@@ -8524,8 +8537,8 @@ msgstr "Log out and use the invited email"
 #~ msgstr "Logging in here logs the other device out."
 
 #: src/components/auth/SignedInElsewhere.tsx:102
-msgid "Logging in here logs the other devices out."
-msgstr "Logging in here logs the other devices out."
+#~ msgid "Logging in here logs the other devices out."
+#~ msgstr "Logging in here logs the other devices out."
 
 #: src/components/chat/agenticToolActivity.ts:171
 msgid "Logging this with the dembrane team"
@@ -10394,7 +10407,7 @@ msgstr "Open workspace"
 msgid "Open workspace actions"
 msgstr "Open workspace actions"
 
-#: src/routes/auth/Login.tsx:515
+#: src/routes/auth/Login.tsx:524
 msgid "Open your authenticator app and enter the current six-digit code."
 msgstr "Open your authenticator app and enter the current six-digit code."
 
@@ -10446,7 +10459,7 @@ msgid "Options"
 msgstr "Options"
 
 #: src/routes/auth/Register.tsx:292
-#: src/routes/auth/Login.tsx:626
+#: src/routes/auth/Login.tsx:635
 msgid "or"
 msgstr "or"
 
@@ -10780,8 +10793,8 @@ msgid "Partner workspace, billed separately from the organisation."
 msgstr "Partner workspace, billed separately from the organisation."
 
 #: src/routes/auth/Register.tsx:217
-#: src/routes/auth/Login.tsx:538
-#: src/routes/auth/Login.tsx:542
+#: src/routes/auth/Login.tsx:547
+#: src/routes/auth/Login.tsx:551
 msgid "Password"
 msgstr "Password"
 
@@ -11086,7 +11099,7 @@ msgstr "Please enable participation to enable sharing"
 msgid "Please enter a valid email."
 msgstr "Please enter a valid email."
 
-#: src/routes/auth/Login.tsx:410
+#: src/routes/auth/Login.tsx:419
 msgid "Please log in to continue."
 msgstr "Please log in to continue."
 
@@ -13618,7 +13631,7 @@ msgstr "Send"
 msgid "Send {0} invites"
 msgstr "Send {0} invites"
 
-#: src/routes/auth/Login.tsx:581
+#: src/routes/auth/Login.tsx:590
 msgid "Send a new code"
 msgstr "Send a new code"
 
@@ -14147,6 +14160,10 @@ msgstr "Sidebar couldn't load."
 #~ msgid "Sign in"
 #~ msgstr "Sign in"
 
+#: src/components/auth/SignedInElsewhere.tsx:143
+msgid "Sign out selected device and continue"
+msgstr "Sign out selected device and continue"
+
 #: src/components/release/releaseHistory.ts:29
 msgid "Sign-in links check your access before opening an organisation or project."
 msgstr "Sign-in links check your access before opening an organisation or project."
@@ -14245,8 +14262,8 @@ msgstr "Something is blocking your connection. Your audio will not be saved unle
 #: src/routes/project/report/ProjectReportRoute.tsx:848
 #: src/routes/project/report/ProjectReportRoute.tsx:1204
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:191
-#: src/routes/auth/Login.tsx:258
-#: src/routes/auth/Login.tsx:331
+#: src/routes/auth/Login.tsx:265
+#: src/routes/auth/Login.tsx:339
 #: src/components/project/ProjectAccessGuard.tsx:109
 #: src/components/error/ErrorPage.tsx:56
 #: src/components/error/ErrorBoundary.tsx:44
@@ -15042,7 +15059,7 @@ msgstr "Thanks! That helps a lot."
 msgid "That code did not work. Try again with a new code."
 msgstr "That code did not work. Try again with a new code."
 
-#: src/routes/auth/Login.tsx:308
+#: src/routes/auth/Login.tsx:316
 msgid "That code didn't work. Try again with a fresh code from your authenticator app."
 msgstr "That code didn't work. Try again with a fresh code from your authenticator app."
 
@@ -15319,6 +15336,10 @@ msgstr "The organisation this invite was for has been deleted. There's nothing t
 msgid "The original statements are unavailable for this older result."
 msgstr "The original statements are unavailable for this older result."
 
+#: src/components/auth/SignedInElsewhere.tsx:146
+msgid "The other device will stay signed in."
+msgstr "The other device will stay signed in."
+
 #: src/components/results/ResultRow.tsx:230
 #: src/components/results/ResultItem.tsx:165
 #: src/components/results/curate/TensionsTab.tsx:122
@@ -15560,8 +15581,8 @@ msgid "This account has an active subscription. Ask the customer to cancel it fr
 msgstr "This account has an active subscription. Ask the customer to cancel it from their billing page before you change the tier."
 
 #: src/components/auth/SignedInElsewhere.tsx:73
-msgid "This account is logged in on two other devices"
-msgstr "This account is logged in on two other devices"
+#~ msgid "This account is logged in on two other devices"
+#~ msgstr "This account is logged in on two other devices"
 
 #: src/components/auth/SignedInElsewhere.tsx:73
 #~ msgid "This account is logged in somewhere else"
@@ -16612,6 +16633,10 @@ msgstr "Unknown"
 msgid "Unknown date"
 msgstr "Unknown date"
 
+#: src/components/auth/SignedInElsewhere.tsx:92
+msgid "Unknown device"
+msgstr "Unknown device"
+
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:922
 #: src/routes/organisation/OrganisationRoute.tsx:1892
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:99
@@ -17000,7 +17025,7 @@ msgstr "Use Italian for chat, reports, transcription and participant onboarding 
 msgid "Use latest results"
 msgstr "Use latest results"
 
-#: src/routes/auth/Login.tsx:592
+#: src/routes/auth/Login.tsx:601
 msgid "Use my password instead"
 msgstr "Use my password instead"
 
@@ -17158,7 +17183,7 @@ msgstr "Verify"
 msgid "participant.echo.verify"
 msgstr "Verify"
 
-#: src/routes/auth/Login.tsx:566
+#: src/routes/auth/Login.tsx:575
 msgid "Verify code"
 msgstr "Verify code"
 
@@ -17419,7 +17444,7 @@ msgstr "We sent a new verification link."
 msgid "We sent a new verification link. You can send another in {wait} seconds."
 msgstr "We sent a new verification link. You can send another in {wait} seconds."
 
-#: src/routes/auth/Login.tsx:446
+#: src/routes/auth/Login.tsx:455
 msgid "We sent a six-digit code to {codeEmail}."
 msgstr "We sent a six-digit code to {codeEmail}."
 
@@ -17504,12 +17529,12 @@ msgid "Webhooks come with a paid plan."
 msgstr "Webhooks come with a paid plan."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:129
-#: src/routes/auth/Login.tsx:398
+#: src/routes/auth/Login.tsx:407
 #: src/components/participant/ParticipantBody.tsx:115
 msgid "Welcome"
 msgstr "Welcome"
 
-#: src/routes/auth/Login.tsx:144
+#: src/routes/auth/Login.tsx:145
 #: src/routes/auth/Login.tsx:240
 msgid "Welcome back"
 msgstr "Welcome back"
@@ -17519,7 +17544,7 @@ msgid "Welcome back, {displayName}"
 msgstr "Welcome back, {displayName}"
 
 #: src/routes/onboarding/OnboardingRoute.tsx:595
-#: src/routes/auth/Login.tsx:144
+#: src/routes/auth/Login.tsx:145
 msgid "Welcome to dembrane"
 msgstr "Welcome to dembrane"
 
@@ -18195,7 +18220,7 @@ msgstr "You haven't verified any outcomes yet. Would you like to verify before f
 msgid "You left the workspace"
 msgstr "You left the workspace"
 
-#: src/routes/auth/Login.tsx:371
+#: src/routes/auth/Login.tsx:379
 msgid "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 msgstr "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 
@@ -18349,6 +18374,14 @@ msgstr "Your access"
 msgid "Your access to {0} ended on {1}."
 msgstr "Your access to {0} ended on {1}."
 
+#: src/components/auth/SignedInElsewhere.tsx:74
+msgid "Your account can be signed in on up to two devices. Choose one to sign out so you can continue here."
+msgstr "Your account can be signed in on up to two devices. Choose one to sign out so you can continue here."
+
+#: src/routes/auth/Login.tsx:264
+msgid "Your active devices changed. Choose a device again."
+msgstr "Your active devices changed. Choose a device again."
+
 #: src/components/agent-access/AgentAccessSection.tsx:184
 msgid "Your agent will open dembrane and ask your permission before it can read anything."
 msgstr "Your agent will open dembrane and ask your permission before it can read anything."
@@ -18404,7 +18437,7 @@ msgstr "Your email is already verified"
 msgid "Your email is not verified yet. Check your inbox for the verification link."
 msgstr "Your email is not verified yet. Check your inbox for the verification link."
 
-#: src/routes/auth/Login.tsx:403
+#: src/routes/auth/Login.tsx:412
 msgid "Your email is verified. Log in to continue."
 msgstr "Your email is verified. Log in to continue."
 

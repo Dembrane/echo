@@ -780,6 +780,10 @@ msgstr "{argumentCount, plural, one {# argumento} other {# argumentos}}"
 msgid "{argumentCount, plural, one {# argument} other {# arguments}} from {conversationCount, plural, one {# conversation} other {# conversations}}"
 msgstr "{argumentCount, plural, one {# argumento} other {# argumentos}} de {conversationCount, plural, one {# conversación} other {# conversaciones}}"
 
+#: src/components/auth/SignedInElsewhere.tsx:91
+msgid "{browser} on {platform}"
+msgstr "{browser} en {platform}"
+
 #: src/routes/project/present/PresentRoute.tsx:656
 msgid "{changes, plural, one {# change not shown yet} other {# changes not shown yet}}"
 msgstr "{changes, plural, one {# cambio aún no mostrado} other {# cambios aún no mostrados}}"
@@ -2636,7 +2640,7 @@ msgstr "Registros de auditoría exportados a CSV"
 msgid "Audit logs exported to JSON"
 msgstr "Registros de auditoría exportados a JSON"
 
-#: src/routes/auth/Login.tsx:487
+#: src/routes/auth/Login.tsx:496
 #: src/components/settings/TwoFactorSettingsCard.tsx:224
 #: src/components/settings/TwoFactorSettingsCard.tsx:349
 msgid "Authenticator code"
@@ -2764,7 +2768,7 @@ msgid "Back to live"
 msgstr "Volver al directo"
 
 #: src/routes/auth/RequestPasswordReset.tsx:43
-#: src/components/auth/SignedInElsewhere.tsx:112
+#: src/components/auth/SignedInElsewhere.tsx:156
 msgid "Back to log in"
 msgstr "Volver al inicio de sesión"
 
@@ -3450,6 +3454,11 @@ msgstr "Comprobaciones"
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:518
 msgid "Choose a conversation"
 msgstr "Elige una conversación"
+
+#: src/components/auth/SignedInElsewhere.tsx:71
+#: src/components/auth/SignedInElsewhere.tsx:84
+msgid "Choose a device to sign out"
+msgstr "Elige un dispositivo para cerrar su sesión"
 
 #: src/components/settings/WhitelabelLogoCard.tsx:167
 msgid "Choose a logo file"
@@ -4558,7 +4567,7 @@ msgid "Create account"
 msgstr "Crear cuenta"
 
 #: src/routes/auth/Register.tsx:129
-#: src/routes/auth/Login.tsx:635
+#: src/routes/auth/Login.tsx:644
 msgid "Create an account"
 msgstr "Crear una cuenta"
 
@@ -5650,9 +5659,9 @@ msgstr "Sección del editor"
 
 #: src/routes/auth/RequestPasswordReset.tsx:51
 #: src/routes/auth/RequestPasswordReset.tsx:54
-#: src/routes/auth/Login.tsx:420
-#: src/routes/auth/Login.tsx:524
-#: src/routes/auth/Login.tsx:528
+#: src/routes/auth/Login.tsx:429
+#: src/routes/auth/Login.tsx:533
+#: src/routes/auth/Login.tsx:537
 #: src/components/settings/AccountSettingsCard.tsx:182
 #: src/components/participant/ParticipantShareModal.tsx:135
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:351
@@ -5669,11 +5678,11 @@ msgstr "Enviar un correo a {name}"
 msgid "Email address"
 msgstr "Dirección de correo electrónico"
 
-#: src/routes/auth/Login.tsx:438
+#: src/routes/auth/Login.tsx:447
 msgid "Email me a code"
 msgstr "Enviarme un código por correo"
 
-#: src/routes/auth/Login.tsx:609
+#: src/routes/auth/Login.tsx:618
 msgid "Email me a sign-in code instead"
 msgstr "Enviarme un código de acceso por correo"
 
@@ -5843,7 +5852,7 @@ msgstr "Ingresa el nombre del archivo (sin extensión)"
 msgid "Enter new password"
 msgstr "Introduzca la nueva contraseña"
 
-#: src/routes/auth/Login.tsx:285
+#: src/routes/auth/Login.tsx:293
 msgid "Enter the 6-digit code from your authenticator app."
 msgstr "Ingresa el código de 6 dígitos de tu aplicación de autenticación."
 
@@ -6663,7 +6672,7 @@ msgstr "Previsión"
 msgid "Forgetting a saved memory"
 msgstr "Olvidando un recuerdo guardado"
 
-#: src/routes/auth/Login.tsx:619
+#: src/routes/auth/Login.tsx:628
 msgid "Forgot your password?"
 msgstr "¿Olvidaste tu contraseña?"
 
@@ -7527,7 +7536,7 @@ msgstr "Título de la introducción"
 msgid "Invalid code. Please request a new one."
 msgstr "Código inválido. Por favor solicita uno nuevo."
 
-#: src/routes/auth/Login.tsx:366
+#: src/routes/auth/Login.tsx:374
 msgid "Invalid credentials."
 msgstr "Credenciales inválidas."
 
@@ -7685,8 +7694,8 @@ msgstr "Generar enlace de pago"
 #~ msgstr "Tiene una sesión iniciada en otro dispositivo desde el {elsewhereSince}. Por seguridad, una cuenta solo puede tener la sesión iniciada en un dispositivo a la vez."
 
 #: src/components/auth/SignedInElsewhere.tsx:77
-msgid "It has been logged in on other devices since {elsewhereSince}. For security, an account can be logged in on up to two devices at a time."
-msgstr "Tiene la sesión iniciada en otros dispositivos desde el {elsewhereSince}. Por seguridad, una cuenta puede tener la sesión iniciada en un máximo de dos dispositivos a la vez."
+#~ msgid "It has been logged in on other devices since {elsewhereSince}. For security, an account can be logged in on up to two devices at a time."
+#~ msgstr "Tiene la sesión iniciada en otros dispositivos desde el {elsewhereSince}. Por seguridad, una cuenta puede tener la sesión iniciada en un máximo de dos dispositivos a la vez."
 
 #. placeholder {0}: settings.org_name
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:706
@@ -7702,8 +7711,8 @@ msgstr "Está solicitando"
 #~ msgstr "Tiene una sesión iniciada en otro dispositivo. Por seguridad, una cuenta solo puede tener la sesión iniciada en un dispositivo a la vez."
 
 #: src/components/auth/SignedInElsewhere.tsx:83
-msgid "It is logged in on two other devices. For security, an account can be logged in on up to two devices at a time."
-msgstr "Tiene la sesión iniciada en otros dos dispositivos. Por seguridad, una cuenta puede tener la sesión iniciada en un máximo de dos dispositivos a la vez."
+#~ msgid "It is logged in on two other devices. For security, an account can be logged in on up to two devices at a time."
+#~ msgstr "Tiene la sesión iniciada en otros dos dispositivos. Por seguridad, una cuenta puede tener la sesión iniciada en un máximo de dos dispositivos a la vez."
 
 #. js-lingui-explicit-id
 #: src/components/participant/ConversationErrorView.tsx:41
@@ -8015,6 +8024,10 @@ msgstr "Grafo de conocimiento"
 #: src/components/language/LanguagePicker.tsx:124
 msgid "Language"
 msgstr "Idioma"
+
+#: src/components/auth/SignedInElsewhere.tsx:110
+msgid "Last active {lastActiveAt}"
+msgstr "Última actividad: {lastActiveAt}"
 
 #: src/components/conversation/ConversationDrilldownModal.tsx:57
 msgid "Last audio"
@@ -8495,12 +8508,12 @@ msgstr "Bloqueado para coincidir con la invitación. Para usar otra dirección, 
 
 #: src/routes/invite/AcceptInviteRoute.tsx:285
 #: src/routes/auth/VerifyEmail.tsx:161
-#: src/routes/auth/Login.tsx:469
-#: src/routes/auth/Login.tsx:568
+#: src/routes/auth/Login.tsx:478
+#: src/routes/auth/Login.tsx:577
 msgid "Log in"
 msgstr "Iniciar sesión"
 
-#: src/routes/auth/Login.tsx:80
+#: src/routes/auth/Login.tsx:81
 msgid "Log in | dembrane"
 msgstr "Iniciar sesión | dembrane"
 
@@ -8510,8 +8523,8 @@ msgid "error.action.sign_in"
 msgstr "Iniciar sesión de nuevo"
 
 #: src/components/auth/SignedInElsewhere.tsx:99
-msgid "Log in anyway"
-msgstr "Iniciar sesión de todos modos"
+#~ msgid "Log in anyway"
+#~ msgstr "Iniciar sesión de todos modos"
 
 #: src/routes/invite/AcceptInviteRoute.tsx:273
 msgid "Log in to {resolvedWorkspaceName} to continue."
@@ -8530,8 +8543,8 @@ msgstr "Cerrar sesión y usar el correo invitado"
 #~ msgstr "Al iniciar sesión aquí se cierra la sesión en el otro dispositivo."
 
 #: src/components/auth/SignedInElsewhere.tsx:102
-msgid "Logging in here logs the other devices out."
-msgstr "Iniciar sesión aquí cierra la sesión en los otros dispositivos."
+#~ msgid "Logging in here logs the other devices out."
+#~ msgstr "Iniciar sesión aquí cierra la sesión en los otros dispositivos."
 
 #: src/components/chat/agenticToolActivity.ts:171
 msgid "Logging this with the dembrane team"
@@ -10400,7 +10413,7 @@ msgstr "Abrir espacio de trabajo"
 msgid "Open workspace actions"
 msgstr "Abrir acciones del espacio de trabajo"
 
-#: src/routes/auth/Login.tsx:515
+#: src/routes/auth/Login.tsx:524
 msgid "Open your authenticator app and enter the current six-digit code."
 msgstr "Abre tu aplicación de autenticación e ingresa el código actual de seis dígitos."
 
@@ -10452,7 +10465,7 @@ msgid "Options"
 msgstr "Opciones"
 
 #: src/routes/auth/Register.tsx:292
-#: src/routes/auth/Login.tsx:626
+#: src/routes/auth/Login.tsx:635
 msgid "or"
 msgstr "o"
 
@@ -10786,8 +10799,8 @@ msgid "Partner workspace, billed separately from the organisation."
 msgstr "Espacio de trabajo asociado, facturado por separado de la organización."
 
 #: src/routes/auth/Register.tsx:217
-#: src/routes/auth/Login.tsx:538
-#: src/routes/auth/Login.tsx:542
+#: src/routes/auth/Login.tsx:547
+#: src/routes/auth/Login.tsx:551
 msgid "Password"
 msgstr "Contraseña"
 
@@ -11092,7 +11105,7 @@ msgstr "Por favor, habilite la participación para habilitar el uso compartido"
 msgid "Please enter a valid email."
 msgstr "Por favor, ingrese un correo electrónico válido."
 
-#: src/routes/auth/Login.tsx:410
+#: src/routes/auth/Login.tsx:419
 msgid "Please log in to continue."
 msgstr "Inicia sesión para continuar."
 
@@ -13624,7 +13637,7 @@ msgstr "Enviar"
 msgid "Send {0} invites"
 msgstr "Enviar {0} invitaciones"
 
-#: src/routes/auth/Login.tsx:581
+#: src/routes/auth/Login.tsx:590
 msgid "Send a new code"
 msgstr "Enviar un nuevo código"
 
@@ -14153,6 +14166,10 @@ msgstr "No se pudo cargar la barra lateral."
 #~ msgid "Sign in"
 #~ msgstr "Iniciar sesión"
 
+#: src/components/auth/SignedInElsewhere.tsx:143
+msgid "Sign out selected device and continue"
+msgstr "Cerrar la sesión del dispositivo seleccionado y continuar"
+
 #: src/components/release/releaseHistory.ts:29
 msgid "Sign-in links check your access before opening an organisation or project."
 msgstr "Los enlaces de inicio de sesión verifican tu acceso antes de abrir una organización o proyecto."
@@ -14251,8 +14268,8 @@ msgstr "Algo está bloqueando tu conexión. Tu audio no se guardará a menos que
 #: src/routes/project/report/ProjectReportRoute.tsx:848
 #: src/routes/project/report/ProjectReportRoute.tsx:1204
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:191
-#: src/routes/auth/Login.tsx:258
-#: src/routes/auth/Login.tsx:331
+#: src/routes/auth/Login.tsx:265
+#: src/routes/auth/Login.tsx:339
 #: src/components/project/ProjectAccessGuard.tsx:109
 #: src/components/error/ErrorPage.tsx:56
 #: src/components/error/ErrorBoundary.tsx:44
@@ -15048,7 +15065,7 @@ msgstr "¡Gracias! Eso ayuda mucho."
 msgid "That code did not work. Try again with a new code."
 msgstr "Ese código no funcionó. Inténtalo de nuevo con uno nuevo."
 
-#: src/routes/auth/Login.tsx:308
+#: src/routes/auth/Login.tsx:316
 msgid "That code didn't work. Try again with a fresh code from your authenticator app."
 msgstr "Ese código no funcionó. Inténtalo de nuevo con un código nuevo de tu aplicación de autenticación."
 
@@ -15326,6 +15343,10 @@ msgstr "La organización a la que pertenecía esta invitación ha sido eliminada
 msgid "The original statements are unavailable for this older result."
 msgstr "Las declaraciones originales no están disponibles para este resultado anterior."
 
+#: src/components/auth/SignedInElsewhere.tsx:146
+msgid "The other device will stay signed in."
+msgstr "El otro dispositivo seguirá con la sesión iniciada."
+
 #: src/components/results/ResultRow.tsx:230
 #: src/components/results/ResultItem.tsx:165
 #: src/components/results/curate/TensionsTab.tsx:122
@@ -15567,8 +15588,8 @@ msgid "This account has an active subscription. Ask the customer to cancel it fr
 msgstr "Esta cuenta tiene una suscripción activa. Pídele al cliente que la cancele desde su página de facturación antes de cambiar de nivel."
 
 #: src/components/auth/SignedInElsewhere.tsx:73
-msgid "This account is logged in on two other devices"
-msgstr "Esta cuenta tiene la sesión iniciada en otros dos dispositivos"
+#~ msgid "This account is logged in on two other devices"
+#~ msgstr "Esta cuenta tiene la sesión iniciada en otros dos dispositivos"
 
 #: src/components/auth/SignedInElsewhere.tsx:73
 #~ msgid "This account is logged in somewhere else"
@@ -16619,6 +16640,10 @@ msgstr "Desconocido"
 msgid "Unknown date"
 msgstr "Fecha desconocida"
 
+#: src/components/auth/SignedInElsewhere.tsx:92
+msgid "Unknown device"
+msgstr "Dispositivo desconocido"
+
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:922
 #: src/routes/organisation/OrganisationRoute.tsx:1892
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:99
@@ -17007,7 +17032,7 @@ msgstr "Usa italiano para el chat, los informes, la transcripción y las tarjeta
 msgid "Use latest results"
 msgstr "Usar los últimos resultados"
 
-#: src/routes/auth/Login.tsx:592
+#: src/routes/auth/Login.tsx:601
 msgid "Use my password instead"
 msgstr "Usar mi contraseña en su lugar"
 
@@ -17165,7 +17190,7 @@ msgstr "Verificar"
 msgid "participant.echo.verify"
 msgstr "Verificar"
 
-#: src/routes/auth/Login.tsx:566
+#: src/routes/auth/Login.tsx:575
 msgid "Verify code"
 msgstr "Verificar código"
 
@@ -17427,7 +17452,7 @@ msgstr "Hemos enviado un nuevo enlace de verificación."
 msgid "We sent a new verification link. You can send another in {wait} seconds."
 msgstr "Hemos enviado un nuevo enlace de verificación. Puedes enviar otro en {wait} segundos."
 
-#: src/routes/auth/Login.tsx:446
+#: src/routes/auth/Login.tsx:455
 msgid "We sent a six-digit code to {codeEmail}."
 msgstr "Enviamos un código de seis dígitos a {codeEmail}."
 
@@ -17512,12 +17537,12 @@ msgid "Webhooks come with a paid plan."
 msgstr "Los webhooks están incluidos en un plan de pago."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:129
-#: src/routes/auth/Login.tsx:398
+#: src/routes/auth/Login.tsx:407
 #: src/components/participant/ParticipantBody.tsx:115
 msgid "Welcome"
 msgstr "Bienvenido"
 
-#: src/routes/auth/Login.tsx:144
+#: src/routes/auth/Login.tsx:145
 #: src/routes/auth/Login.tsx:240
 msgid "Welcome back"
 msgstr "Bienvenido de nuevo"
@@ -17527,7 +17552,7 @@ msgid "Welcome back, {displayName}"
 msgstr "¡Te damos la bienvenida de nuevo, {displayName}!"
 
 #: src/routes/onboarding/OnboardingRoute.tsx:595
-#: src/routes/auth/Login.tsx:144
+#: src/routes/auth/Login.tsx:145
 msgid "Welcome to dembrane"
 msgstr "Te damos la bienvenida a dembrane"
 
@@ -18203,7 +18228,7 @@ msgstr "Aún no has verificado ningún resultado. ¿Te gustaría verificar antes
 msgid "You left the workspace"
 msgstr "Has salido del espacio de trabajo"
 
-#: src/routes/auth/Login.tsx:371
+#: src/routes/auth/Login.tsx:379
 msgid "You must login with the same provider you used to sign up. If you face any issues, please contact support."
 msgstr "Debes iniciar sesión con el mismo proveedor con el que te registraste. Si encuentras algún problema, por favor contáctanos."
 
@@ -18357,6 +18382,14 @@ msgstr "Tu acceso"
 msgid "Your access to {0} ended on {1}."
 msgstr "Tu acceso a {0} terminó el {1}."
 
+#: src/components/auth/SignedInElsewhere.tsx:74
+msgid "Your account can be signed in on up to two devices. Choose one to sign out so you can continue here."
+msgstr "Tu cuenta puede tener la sesión iniciada en un máximo de dos dispositivos. Elige uno para cerrar su sesión y poder continuar aquí."
+
+#: src/routes/auth/Login.tsx:264
+msgid "Your active devices changed. Choose a device again."
+msgstr "Tus dispositivos activos han cambiado. Elige un dispositivo de nuevo."
+
 #: src/components/agent-access/AgentAccessSection.tsx:184
 msgid "Your agent will open dembrane and ask your permission before it can read anything."
 msgstr "Tu agente abrirá dembrane y pedirá tu permiso antes de poder leer nada."
@@ -18412,7 +18445,7 @@ msgstr "Tu correo ya está verificado"
 msgid "Your email is not verified yet. Check your inbox for the verification link."
 msgstr "Tu correo aún no está verificado. Revisa tu bandeja de entrada para ver el enlace de verificación."
 
-#: src/routes/auth/Login.tsx:403
+#: src/routes/auth/Login.tsx:412
 msgid "Your email is verified. Log in to continue."
 msgstr "Tu correo está verificado. Inicia sesión para continuar."
 
