@@ -42,6 +42,13 @@ export class ScalewayMailer implements Mailer {
           text: msg.text,
           html: msg.html,
           ...(replyTo && { additional_headers: [{ key: "Reply-To", value: replyTo }] }),
+          ...(msg.attachments?.length && {
+            attachments: msg.attachments.map((a) => ({
+              name: a.filename,
+              type: a.contentType,
+              content: Buffer.from(a.content).toString("base64"),
+            })),
+          }),
         }),
         signal: AbortSignal.timeout(30_000),
       },

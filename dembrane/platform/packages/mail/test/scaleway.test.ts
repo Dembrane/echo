@@ -49,6 +49,33 @@ test("scaleway posts one message with the token header and project", async () =>
   });
 });
 
+test("attachments travel base64 with their name and type", async () => {
+  let body: Record<string, unknown> = {};
+  const mailer = new ScalewayMailer({
+    secretKey: "k",
+    projectId: "p",
+    fromEmail: "f@x.nl",
+    fromName: "f",
+    region: "fr-par",
+    fetch: (async (_url: string, init: RequestInit) => {
+      body = JSON.parse(String(init.body));
+      return new Response("{}", { status: 200 });
+    }) as unknown as typeof fetch,
+  });
+  await mailer.send({
+    to: "a@x.nl",
+    subject: "s",
+    html: "h",
+    text: "t",
+    attachments: [
+      { filename: "signed.pdf", contentType: "application/pdf", content: new Uint8Array([1, 2]) },
+    ],
+  });
+  expect(body.attachments).toEqual([
+    { name: "signed.pdf", type: "application/pdf", content: "AQI=" },
+  ]);
+});
+
 test("a rejected scaleway send throws so the job retries", async () => {
   const mailer = new ScalewayMailer({
     secretKey: "k",
