@@ -45,12 +45,25 @@ function sniff(b: Uint8Array): Sniffed {
   return { ext: "mp3", type: "audio/mpeg" };
 }
 
+/** Largest file `/audio/transcriptions` takes on Scaleway Generative APIs (serverless). */
+export const MAX_AUDIO_BYTES = 25 * 1024 * 1024;
+/** One transcription request may not hold a worker longer than this. */
+const TRANSCRIBE_TIMEOUT_MS = 180_000;
+
 /** Audio to text on the endpoint's `/audio/transcriptions`. */
 export async function transcribeAudio(
   ep: CompatEndpoint,
   audio: Uint8Array,
   language?: string,
+  signal?: AbortSignal,
 ): Promise<string> {
+  if (audio.byteLength > MAX_AUDIO_BYTES) {
+    const err = new Error(
+      `audio is ${audio.byteLength} bytes, above the ${MAX_AUDIO_BYTES} the speech-to-text endpoint takes`,
+    );
+    (err as { isRetryable?: boolean }).isRetryable = false;
+    throw err;
+  }
   const kind = sniff(audio);
   const form = new FormData();
   form.set("model", ep.transcriptionModel);
@@ -61,11 +74,15 @@ export async function transcribeAudio(
     method: "POST",
     headers: { authorization: `Bearer ${ep.apiKey}` },
     body: form,
+    signal: signal
+      ? AbortSignal.any([signal, AbortSignal.timeout(TRANSCRIBE_TIMEOUT_MS)])
+      : AbortSignal.timeout(TRANSCRIBE_TIMEOUT_MS),
   });
   if (!res.ok) {
     const err = new Error(`transcription ${res.status}: ${(await res.text()).slice(0, 300)}`);
     // Rate limits and server faults are worth another try; a bad request is not.
-    (err as { isRetryable?: boolean }).isRetryable = res.status === 429 || res.status >= 500;
+    (err as { isRetryable?: boolean }).isRetryable =
+      res.status === 408 || res.status === 429 || res.status >= 500;
     throw err;
   }
   const body = (await res.json()) as { text?: unknown };
@@ -89,6 +106,7 @@ export async function audioToText(
   ep: CompatEndpoint,
   prompt: LanguageModelV4Prompt,
   language?: string,
+  signal?: AbortSignal,
 ): Promise<LanguageModelV4Prompt> {
   const out: LanguageModelV4Prompt = [];
   for (const message of prompt) {
@@ -102,7 +120,7 @@ export async function audioToText(
           if (part.type !== "file" || !part.mediaType?.startsWith("audio/")) return part;
           const bytes = audioBytes(part as { data: unknown });
           if (!bytes) return part;
-          const text = await transcribeAudio(ep, bytes, language);
+          const text = await transcribeAudio(ep, bytes, language, signal);
           return { type: "text", text: `Transcript of the audio: ${text || "(no speech heard)"}` };
         },
       ),
@@ -112,7 +130,11 @@ export async function audioToText(
   return out;
 }
 
-/** Vertex thinking budgets mapped to a reasoning effort: 0 is off, a small budget is low. */
+/**
+ * Vertex thinking budgets mapped to a reasoning effort: 0 is off. A positive budget has no
+ * exact counterpart (the efforts a model takes differ), so it keeps the configured effort,
+ * or the model default when none is set.
+ */
 function effortFor(options: LanguageModelV4CallOptions, fallback: string | undefined) {
   const po = (options.providerOptions ?? {}) as Record<string, Record<string, unknown> | undefined>;
   const direct = po.openaiCompatible?.reasoningEffort;
@@ -121,7 +143,7 @@ function effortFor(options: LanguageModelV4CallOptions, fallback: string | undef
     | { thinkingBudget?: number }
     | undefined;
   const budget = cfg?.thinkingBudget;
-  if (typeof budget === "number") return budget <= 0 ? "none" : "low";
+  if (typeof budget === "number" && budget <= 0) return "none";
   return fallback;
 }
 
@@ -171,7 +193,10 @@ export class CompatLanguageModel implements LanguageModelV4 {
       (options.providerOptions as { echo?: { language?: unknown } } | undefined)?.echo?.language,
     );
     const mapped = compatCallOptions(options, this.ep.reasoningEffort);
-    return { ...mapped, prompt: await audioToText(this.ep, options.prompt, language) };
+    return {
+      ...mapped,
+      prompt: await audioToText(this.ep, options.prompt, language, options.abortSignal),
+    };
   }
 
   async doGenerate(options: LanguageModelV4CallOptions) {
@@ -183,7 +208,11 @@ export class CompatLanguageModel implements LanguageModelV4 {
   }
 }
 
-/** Asks for the configured number of dimensions on every call. */
+/**
+ * Vectors cut to the configured number of dimensions. The endpoint does not take a
+ * `dimensions` option; the model is Matryoshka-trained, so the first values, scaled back to
+ * unit length, are the shorter embedding.
+ */
 export class CompatEmbeddingModel implements EmbeddingModelV4 {
   readonly specificationVersion = "v4";
 
@@ -205,13 +234,20 @@ export class CompatEmbeddingModel implements EmbeddingModelV4 {
     return this.inner.supportsParallelCalls;
   }
 
-  doEmbed(options: Parameters<EmbeddingModelV4["doEmbed"]>[0]) {
-    return this.inner.doEmbed({
-      ...options,
-      providerOptions: {
-        ...options.providerOptions,
-        openaiCompatible: { dimensions: this.dimensions },
-      },
-    });
+  async doEmbed(options: Parameters<EmbeddingModelV4["doEmbed"]>[0]) {
+    const result = await this.inner.doEmbed(options);
+    return {
+      ...result,
+      embeddings: result.embeddings.map((v) => {
+        if (v.length < this.dimensions)
+          throw new Error(
+            `embedding has ${v.length} values, fewer than the ${this.dimensions} asked for`,
+          );
+        if (v.length === this.dimensions) return v;
+        const head = v.slice(0, this.dimensions);
+        const norm = Math.hypot(...head) || 1;
+        return head.map((x) => x / norm);
+      }),
+    };
   }
 }

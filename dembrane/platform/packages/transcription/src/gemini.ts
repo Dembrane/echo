@@ -4,11 +4,11 @@ import type {
   LanguageModelV4Prompt,
 } from "@ai-sdk/provider";
 import {
-  echoOptions,
   FALL_BACK_ON_REFUSAL,
   isRetryable,
   ModelRefusalError,
   type Models,
+  speechHint,
 } from "@dembrane/llm";
 import type { Logger } from "@dembrane/observability";
 import { renderPrompt } from "@dembrane/prompts";
@@ -166,7 +166,7 @@ export class GeminiTranscriber implements Transcriber {
         r = await m.doGenerate({
           prompt,
           responseFormat: { type: "json", schema: SCHEMA as never },
-          providerOptions: { ...PROVIDER_OPTIONS, ...echoOptions(language) },
+          providerOptions: { ...PROVIDER_OPTIONS, ...speechHint(this.models, language) },
         });
       } catch (err) {
         if (err instanceof ModelRefusalError) throw new TranscriptRefusedError(err.finishReason);

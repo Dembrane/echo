@@ -1,5 +1,5 @@
 import { isoTimestamp } from "@dembrane/legacy-shape";
-import { echoOptions } from "@dembrane/llm";
+import { speechHint } from "@dembrane/llm";
 import { renderPrompt } from "@dembrane/prompts";
 import { pythonJson } from "@dembrane/webhooks";
 import { type FilePart, streamText, type TextPart } from "ai";
@@ -204,7 +204,7 @@ export async function* generateReply(
     maxRetries: 0,
     providerOptions: {
       google: { thinkingConfig: { thinkingBudget: 2048 } },
-      ...echoOptions(language),
+      ...speechHint(d.models, language),
     },
   });
   let answer = "";

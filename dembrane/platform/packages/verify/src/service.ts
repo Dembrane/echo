@@ -3,7 +3,7 @@ import { type ConversationsDeps, PARTICIPANT_TOKEN_HEADER } from "@dembrane/conv
 import { BadRequestError, ForbiddenError, NotFoundError, newId, StatusError } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { directusRow, isoTimestamp } from "@dembrane/legacy-shape";
-import { echoOptions } from "@dembrane/llm";
+import { speechHint } from "@dembrane/llm";
 import { renderPrompt } from "@dembrane/prompts";
 import { type FilePart, generateText, type TextPart } from "ai";
 import { type ArtifactRow, type VerifyStorage, verifyStorage } from "./storage";
@@ -345,7 +345,7 @@ async function complete(
       messages: [{ role: "user", content }],
       providerOptions: {
         vertex: { thinkingConfig: { thinkingBudget: 2048 } },
-        ...echoOptions(language),
+        ...speechHint(ctx.d.models, language),
       },
     });
     return text;

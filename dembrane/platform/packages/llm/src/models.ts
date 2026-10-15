@@ -1,7 +1,7 @@
 import { createVertex } from "@ai-sdk/google-vertex";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import type { EmbeddingModelV4, LanguageModelV4 } from "@ai-sdk/provider";
-import { CompatEmbeddingModel, CompatLanguageModel } from "./compat";
+import { CompatEmbeddingModel, CompatLanguageModel, echoOptions } from "./compat";
 import { type Deployment, FallbackModel, type FallbackOptions } from "./fallback";
 import { observedEmbedding, observeSafely } from "./observe";
 
@@ -35,7 +35,13 @@ export interface ModelsConfig {
 export interface Models {
   model(group: ModelGroup): LanguageModelV4;
   embedding(): { model: EmbeddingModelV4; dimensions: number };
+  /** Per-call provider options naming the spoken language; only an OpenAI-compatible provider has any. */
+  speechHint?(language: string | null | undefined): Record<string, Record<string, unknown>>;
 }
+
+/** The provider options that carry the spoken language, or none when the provider does not use them. */
+export const speechHint = (models: Models, language: string | null | undefined) =>
+  models.speechHint?.(language) ?? {};
 
 /**
  * Builds the groups from config. text_fast falls back to multi_modal_pro after its own
@@ -93,6 +99,7 @@ export function createModels(cfg: ModelsConfig, opts: Partial<FallbackOptions> =
   return {
     model: (g) => built[g],
     embedding: () => ({ model: embedding, dimensions: cfg.embeddingDimensions }),
+    ...(compat && { speechHint: echoOptions }),
   };
 }
 

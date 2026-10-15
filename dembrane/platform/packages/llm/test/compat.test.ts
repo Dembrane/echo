@@ -34,12 +34,15 @@ test("a thinking budget of zero turns reasoning off and Vertex-only options are 
   expect(out.tools).toBeUndefined();
 });
 
-test("a small budget is low effort and no budget uses the configured default", () => {
-  const low = compatCallOptions(
-    { prompt: [], providerOptions: { google: { thinkingConfig: { thinkingBudget: 2048 } } } },
-    undefined,
-  );
-  expect(low.providerOptions).toEqual({ openaiCompatible: { reasoningEffort: "low" } });
+test("a positive budget keeps the configured effort and no budget uses it too", () => {
+  const budget = {
+    prompt: [],
+    providerOptions: { google: { thinkingConfig: { thinkingBudget: 2048 } } },
+  };
+  expect(compatCallOptions(budget, undefined).providerOptions).toBeUndefined();
+  expect(compatCallOptions(budget, "high").providerOptions).toEqual({
+    openaiCompatible: { reasoningEffort: "high" },
+  });
   expect(compatCallOptions({ prompt: [] }, undefined).providerOptions).toBeUndefined();
   expect(compatCallOptions({ prompt: [] }, "medium").providerOptions).toEqual({
     openaiCompatible: { reasoningEffort: "medium" },
@@ -114,21 +117,23 @@ test("the model hears text where the prompt had audio", async () => {
   expect(seen?.providerOptions).toEqual({ openaiCompatible: { reasoningEffort: "none" } });
 });
 
-test("embeddings ask for the configured dimensions", async () => {
-  let opts: unknown;
+test("embeddings are cut to the configured dimensions and scaled to unit length", async () => {
   const inner = {
     specificationVersion: "v4",
     provider: "p",
     modelId: "e",
     maxEmbeddingsPerCall: 1,
     supportsParallelCalls: true,
-    doEmbed: async (o: unknown) => {
-      opts = o;
-      return { embeddings: [[0]] };
+    doEmbed: async (o: { providerOptions?: unknown }) => {
+      expect(o.providerOptions).toBeUndefined();
+      return { embeddings: [[3, 4, 12, 9]] };
     },
   };
-  await new CompatEmbeddingModel(inner as never, 768).doEmbed({ values: ["x"] });
-  expect(opts).toMatchObject({ providerOptions: { openaiCompatible: { dimensions: 768 } } });
+  const out = await new CompatEmbeddingModel(inner as never, 2).doEmbed({ values: ["x"] });
+  expect(out.embeddings).toEqual([[0.6, 0.8]]);
+  await expect(
+    new CompatEmbeddingModel(inner as never, 8).doEmbed({ values: ["x"] }),
+  ).rejects.toThrow();
 });
 
 const settings = (over: Partial<LlmSettings> = {}): LlmSettings => ({

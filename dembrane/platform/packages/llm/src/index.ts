@@ -34,6 +34,7 @@ export {
   type Models,
   type ModelsConfig,
   type OpenAICompatibleConfig,
+  speechHint,
 } from "./models";
 export {
   errorLabel,

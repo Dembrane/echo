@@ -179,7 +179,7 @@ export const schema = defineSchema({
       z.string().default("qwen3-embedding-8b"),
       {
         description:
-          "Embedding model on the OpenAI-compatible provider. Requests ask for EMBEDDING_DIMENSIONS values.",
+          "Embedding model on the OpenAI-compatible provider. Vectors are cut to EMBEDDING_DIMENSIONS values (the model keeps its best information first).",
       },
     ),
     transcriptionModel: key("LLM_TRANSCRIPTION_MODEL", z.string().default("whisper-large-v3"), {
@@ -188,7 +188,7 @@ export const schema = defineSchema({
     }),
     reasoningEffort: key(
       "LLM_REASONING_EFFORT",
-      z.enum(["none", "low", "medium", "high"]).optional(),
+      z.enum(["none", "low", "medium", "high", "max"]).optional(),
       {
         description:
           "Reasoning effort sent to the OpenAI-compatible provider when a call does not ask for its own. Unset leaves the model default. Calls that turn thinking off always send none.",
