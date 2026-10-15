@@ -3,6 +3,7 @@ import { useLingui } from "@lingui/react";
 import { Plural, Trans } from "@lingui/react/macro";
 import {
 	Alert,
+	Anchor,
 	Box,
 	Button,
 	Checkbox,
@@ -29,7 +30,13 @@ import { I18nLink } from "@/components/common/i18nLink";
 import { useV2Me } from "@/hooks/useV2Me";
 import { presentError } from "@/lib/errors/present";
 import { AccountsApiError, call } from "../api/client";
-import { accountKeys, useDocument, usePdfData, usePdfHref } from "../api/hooks";
+import {
+	accountKeys,
+	useDocument,
+	useLegalHref,
+	usePdfData,
+	usePdfHref,
+} from "../api/hooks";
 import type { DocumentDetailT, DocumentFieldT } from "../contract/contract.gen";
 import { DocumentPreview } from "../customer/DocumentPreview";
 import { mayRemind, RemindSigner } from "../customer/RemindSigner";
@@ -44,7 +51,10 @@ import {
 	confirmationTemplate,
 	fillConfirmation,
 	type Images,
+	documentDate,
+	inputDate,
 	isFilled,
+	localIsoDate,
 	nextStop,
 	orderFields,
 	previousField,
@@ -62,7 +72,7 @@ import { type CapturedImage, SignatureCapture } from "./SignatureCapture";
  * on a phone as well.
  */
 export const SignRoute = () => (
-	<AccountsI18n>
+	<AccountsI18n signing>
 		<SignScreen />
 	</AccountsI18n>
 );
@@ -483,6 +493,10 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 					signature={signature}
 					initials={initials}
 					nameForSignature={nameValue}
+					dateRange={{
+						max: localIsoDate(),
+						min: doc.sent_at ? localIsoDate(new Date(doc.sent_at)) : undefined,
+					}}
 					// Adopting a signature is the step's decision, so it also moves on.
 					onSignature={(img) => {
 						setSignature(img);
@@ -687,6 +701,7 @@ function FieldPanel({
 	signature,
 	initials,
 	nameForSignature,
+	dateRange,
 	onSignature,
 	onInitials,
 	onBack,
@@ -699,6 +714,8 @@ function FieldPanel({
 	signature: CapturedImage | null;
 	initials: CapturedImage | null;
 	nameForSignature: string;
+	/** The days a date field accepts: from the day the document was sent to today. */
+	dateRange: { min: string | undefined; max: string };
 	onSignature: (img: CapturedImage | null) => void;
 	onInitials: (img: CapturedImage | null) => void;
 	onBack: () => void;
@@ -817,6 +834,7 @@ function FieldPanel({
 		);
 	}
 
+	const isDate = field.kind === "date";
 	return (
 		<Stack gap="sm">
 			<TextInput
@@ -825,16 +843,22 @@ function FieldPanel({
 				label={label}
 				size="md"
 				autoFocus
-				value={typeof value === "string" ? value : ""}
+				// A date is picked, not typed; the document keeps it as day-month-year.
+				type={isDate ? "date" : undefined}
+				min={isDate ? dateRange.min : undefined}
+				max={isDate ? dateRange.max : undefined}
+				value={
+					typeof value === "string" ? (isDate ? inputDate(value) : value) : ""
+				}
 				onChange={(e) => {
-					onValue(e.currentTarget.value);
+					const v = e.currentTarget.value;
+					onValue(isDate ? documentDate(v) : v);
 					setTried(false);
 				}}
 				onKeyDown={(e) => {
 					if (e.key === "Enter") advance();
 				}}
 				error={tried && missing ? ask.empty : undefined}
-				placeholder={field.kind === "date" ? "dd-mm-yyyy" : undefined}
 				autoComplete={
 					field.kind === "name"
 						? "name"
@@ -893,6 +917,7 @@ function FinishStep({
 					<Trans>Some required fields are still empty.</Trans>
 				</Text>
 			)}
+			<LegalDocuments doc={doc} />
 			{asksDpa && (
 				<Radio.Group
 					value={dpa}
@@ -975,6 +1000,50 @@ function FinishStep({
 				}
 			/>
 		</Stack>
+	);
+}
+
+/** What the agreement includes, as each text stood when the document was sent. */
+const legalName = (kind: string) =>
+	kind === "terms"
+		? t`General terms and conditions`
+		: kind === "sla"
+			? t`Service level agreement`
+			: t`Data processing agreement`;
+
+/**
+ * The legal documents the agreement is made of, each opening the version this document
+ * pinned (the pages above are drawn on a canvas, so the links inside them do nothing). The
+ * DPA is its own document: its text is the page being signed.
+ */
+export function LegalDocuments({ doc }: { doc: DocumentDetailT }) {
+	const pins = doc.legal.filter((l) => l.text_url);
+	if (doc.kind === "dpa" || pins.length === 0) return null;
+	return (
+		<Stack gap={4} data-testid="sign-documents">
+			<Text size="sm">
+				<Trans>Documents that form the agreement</Trans>
+			</Text>
+			{pins.map((pin) => (
+				<LegalLink key={pin.kind} pin={pin} />
+			))}
+		</Stack>
+	);
+}
+
+function LegalLink({ pin }: { pin: DocumentDetailT["legal"][number] }) {
+	const href = useLegalHref(pin);
+	const name = legalName(pin.kind);
+	return (
+		<Anchor
+			href={href ?? undefined}
+			target="_blank"
+			rel="noreferrer"
+			size="sm"
+			data-testid={`sign-document-${pin.kind}`}
+		>
+			{name} ({pin.version})
+		</Anchor>
 	);
 }
 

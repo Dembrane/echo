@@ -16,6 +16,7 @@ import type { AccountsDeps, Tx } from "./deps";
 import { billingPayload, emit, orgPayload, taskPayload, ticketPayload } from "./events";
 import { signerInviteUrl } from "./invite";
 import { customerSignUrl, requestInvoices, staffDocumentUrl } from "./invoice";
+import { legalTextPage } from "./legal/page";
 import type { PricedLine } from "./money";
 import type { OfferContent } from "./offer";
 import { completeOnboarding, isOnboardingCode } from "./onboarding";
@@ -141,9 +142,22 @@ export async function documentDetail(
     page_count: doc.pageCount,
     fields: fields.map(fieldView),
     // The texts the document incorporates; an event offer has no SLA.
-    legal: [legalView("terms", terms), legalView("sla", sla), legalView("dpa", dpa)].filter(
-      (x) => x && (x.kind !== "sla" || !isEvent),
-    ),
+    legal: (
+      [
+        ["terms", terms],
+        ["sla", sla],
+        ["dpa", dpa],
+      ] as const
+    )
+      .map(([kind, row]) =>
+        legalView(
+          kind,
+          row,
+          // Staff read the live pages; the customer side serves the pinned text.
+          via === "staff" ? null : `${customerBase(doc.orgId)}/documents/${doc.id}/legal/${kind}`,
+        ),
+      )
+      .filter((x) => x && (x.kind !== "sla" || !isEvent)),
     signing_note: doc.requiresSignature ? signingNote(doc) : null,
     // The sentence the signer confirms; the page fills in the three values it asks for.
     confirmation: doc.requiresSignature
@@ -527,6 +541,26 @@ export async function customerFile(
     doc: a.doc,
     bytes: which === "file" ? await fileBytes(d, a.doc) : await signedBytes(d, a.doc),
   };
+}
+
+/**
+ * One of the legal documents a document incorporates, as a page to read: the version it
+ * pinned when it was sent, not the one on the website today. Open to everyone who may read
+ * the document, including the person named to sign it.
+ */
+export async function customerLegalText(
+  d: AccountsDeps,
+  who: Signed,
+  orgId: string,
+  docId: string,
+  kind: string,
+) {
+  const a = await documentFor(d, who, orgId, docId, "account:read");
+  const pinned = { terms: a.doc.termsTextId, sla: a.doc.slaTextId, dpa: a.doc.dpaTextId };
+  const id = kind === "terms" || kind === "sla" || kind === "dpa" ? pinned[kind] : null;
+  const row = id ? await store.legalById(d.db, id) : null;
+  if (!row) throw new NotFoundError("document.not_found");
+  return legalTextPage(row, a.doc.reference ?? a.doc.title, a.doc.language);
 }
 
 // ── billing details ─────────────────────────────────────────────────────

@@ -16,8 +16,15 @@ export interface AccountRecipient {
  * else in English. Every email the server sends about an account takes its recipients
  * from here, so they all reach the same people in the same language.
  */
-export async function accountRecipients(c: Conn, orgId: string): Promise<AccountRecipient[]> {
-  const people = (await store.accountPeople(c, orgId)).filter((p) => p.email);
+export async function accountRecipients(
+  c: Conn,
+  orgId: string,
+  /** Only members with one of these roles; all who run the account when absent. */
+  roles?: readonly string[],
+): Promise<AccountRecipient[]> {
+  const people = (await store.accountPeople(c, orgId)).filter(
+    (p) => p.email && (!roles || roles.includes(p.role)),
+  );
   if (!people.length) return [];
   const [newest] = await store.documents(c, orgId);
   const orgLanguage = languageOf(newest?.language);

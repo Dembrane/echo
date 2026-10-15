@@ -24,12 +24,17 @@ msgid "error.request.field_empty"
 msgstr "{field} non può essere vuoto. Compilalo o rimuovilo."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:58
+#: src/lib/errors/messages/document.ts:32
+msgid "error.document.field_date_invalid"
+msgstr "{label} deve essere una data reale, non futura e non precedente all'invio del documento."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:63
 msgid "error.document.image_too_large"
 msgstr "{what, select, initials {L'immagine delle tue iniziali} other {L'immagine della tua firma}} è troppo grande. Mantienila sotto i 512 KB."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:53
+#: src/lib/errors/messages/document.ts:58
 msgid "error.document.image_not_png"
 msgstr "{what, select, initials {Le tue iniziali devono} other {La tua firma deve}} essere un'immagine PNG."
 
@@ -184,7 +189,7 @@ msgid "error.field.invalid_url"
 msgstr "Inserisci un indirizzo web che inizi con http:// o https://."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:40
+#: src/lib/errors/messages/document.ts:45
 msgid "error.document.field_text_invalid"
 msgstr "Inserisci il testo per {label}."
 
@@ -199,7 +204,7 @@ msgid "error.request.field_required"
 msgstr "Compila {field}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:36
+#: src/lib/errors/messages/document.ts:41
 msgid "error.document.field_required"
 msgstr "Compila {label} per continuare."
 
@@ -264,7 +269,7 @@ msgid "error.document.decline_signer_only"
 msgstr "Solo {signer_email} può rifiutare questo documento."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:98
+#: src/lib/errors/messages/document.ts:103
 msgid "error.document.signer_only"
 msgstr "Solo {signer_email} può firmare questo documento. Chiedi a questa persona di firmare o contattaci per cambiare il firmatario."
 
@@ -589,7 +594,7 @@ msgid "error.map.selection_other_snapshot"
 msgstr "La mappa è stata aggiornata dopo la tua selezione. Ricarica la mappa e seleziona di nuovo."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:63
+#: src/lib/errors/messages/document.ts:68
 msgid "error.document.no_pdf"
 msgstr "Il PDF di questo documento non è disponibile. Contattaci e te lo invieremo di nuovo."
 
@@ -714,12 +719,12 @@ msgid "error.workspace.data_owner_is_member"
 msgstr "Questo proprietario dei dati fa già parte della tua organizzazione. Per un cliente esterno, indica qualcuno all'esterno, oppure crea uno spazio di lavoro interno."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:76
+#: src/lib/errors/messages/document.ts:81
 msgid "error.document.not_declinable"
 msgstr "Questo documento non può più essere rifiutato."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:103
+#: src/lib/errors/messages/document.ts:108
 msgid "error.document.signing_unavailable"
 msgstr "Questo documento non può essere firmato al momento. Abbiamo ricevuto la segnalazione e risolveremo il problema."
 
@@ -729,12 +734,12 @@ msgid "error.document.changed"
 msgstr "Questo documento è stato modificato dopo l'apertura. Ricarica la pagina e rileggilo prima di firmare."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:48
+#: src/lib/errors/messages/document.ts:53
 msgid "error.document.field_unknown"
 msgstr "Questo documento è stato modificato dopo l'apertura. Ricarica la pagina e riprova."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:68
+#: src/lib/errors/messages/document.ts:73
 msgid "error.document.no_signature_needed"
 msgstr "Questo documento non richiede una firma."
 
@@ -744,12 +749,12 @@ msgid "error.document.already_signed"
 msgstr "Questo documento è già firmato. Non c'è altro da fare."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:84
+#: src/lib/errors/messages/document.ts:89
 msgid "error.document.not_signed"
 msgstr "Questo documento non è ancora firmato, quindi non c'è una copia firmata da scaricare."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:72
+#: src/lib/errors/messages/document.ts:77
 msgid "error.document.not_awaiting_signature"
 msgstr "Questo documento non è più in attesa di firma."
 
@@ -759,7 +764,7 @@ msgid "error.document.declined"
 msgstr "Questo documento è stato rifiutato, quindi non può più essere firmato."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:112
+#: src/lib/errors/messages/document.ts:117
 msgid "error.document.withdrawn"
 msgstr "Questo documento è stato ritirato, quindi non può più essere firmato."
 
@@ -844,7 +849,7 @@ msgid "error.billing.tier_required"
 msgstr "È richiesto il piano {required}. Fai l'upgrade per usarlo."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:89
+#: src/lib/errors/messages/document.ts:94
 msgid "error.document.offer_expired"
 msgstr "Questa offerta è scaduta il {valid_until}. Contattaci per riceverne una nuova."
 
@@ -1074,12 +1079,12 @@ msgid "error.workspace.has_projects"
 msgstr "Questo spazio di lavoro contiene ancora {count, plural, one {# progetto} other {# progetti}}. Eliminali o spostali prima dalla pagina Progetti della tua organizzazione."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:32
+#: src/lib/errors/messages/document.ts:37
 msgid "error.document.field_must_tick"
 msgstr "Seleziona {label} per continuare."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:44
+#: src/lib/errors/messages/document.ts:49
 msgid "error.document.field_tick_invalid"
 msgstr "Seleziona o deseleziona {label}."
 
@@ -1089,7 +1094,7 @@ msgid "error.project.move_needs_admin"
 msgstr "Per spostare i progetti, devi essere un amministratore o proprietario dello spazio di lavoro {side}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:108
+#: src/lib/errors/messages/document.ts:113
 msgid "error.document.verified_email_required"
 msgstr "Per firmare, accedi con un indirizzo email verificato."
 
@@ -1219,7 +1224,7 @@ msgid "error.conversation.not_found"
 msgstr "Non siamo riusciti a trovare questa conversazione. Potrebbe essere stata eliminata."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:80
+#: src/lib/errors/messages/document.ts:85
 msgid "error.document.not_found"
 msgstr "Non siamo riusciti a trovare questo documento. Potrebbe essere stato revocato."
 
@@ -1394,7 +1399,7 @@ msgid "error.internal.unavailable"
 msgstr "Non siamo riusciti a raggiungere una parte di dembrane in questo momento. Riprova tra poco."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:93
+#: src/lib/errors/messages/document.ts:98
 msgid "error.document.signature_unreadable"
 msgstr "Non siamo riusciti a leggere la tua firma. Disegnala di nuovo e riprova."
 

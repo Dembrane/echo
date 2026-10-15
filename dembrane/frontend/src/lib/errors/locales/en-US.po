@@ -24,12 +24,17 @@ msgid "error.request.field_empty"
 msgstr "{field} cannot be empty. Fill it in or remove it."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:58
+#: src/lib/errors/messages/document.ts:32
+msgid "error.document.field_date_invalid"
+msgstr "{label} must be a real date, not in the future and not before the document was sent."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:63
 msgid "error.document.image_too_large"
 msgstr "{what, select, initials {Your initials image} other {Your signature image}} is too large. Keep it under 512 KB."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:53
+#: src/lib/errors/messages/document.ts:58
 msgid "error.document.image_not_png"
 msgstr "{what, select, initials {Your initials} other {Your signature}} must be a PNG image."
 
@@ -184,7 +189,7 @@ msgid "error.field.invalid_url"
 msgstr "Enter a web address that starts with http:// or https://."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:40
+#: src/lib/errors/messages/document.ts:45
 msgid "error.document.field_text_invalid"
 msgstr "Enter text for {label}."
 
@@ -199,7 +204,7 @@ msgid "error.request.field_required"
 msgstr "Fill in {field}."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:36
+#: src/lib/errors/messages/document.ts:41
 msgid "error.document.field_required"
 msgstr "Fill in {label} to continue."
 
@@ -264,7 +269,7 @@ msgid "error.document.decline_signer_only"
 msgstr "Only {signer_email} can decline this document."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:98
+#: src/lib/errors/messages/document.ts:103
 msgid "error.document.signer_only"
 msgstr "Only {signer_email} can sign this document. Ask them to sign it, or ask us to change the signer."
 
@@ -589,7 +594,7 @@ msgid "error.map.selection_other_snapshot"
 msgstr "The map was updated since you made this selection. Reload the map and select again."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:63
+#: src/lib/errors/messages/document.ts:68
 msgid "error.document.no_pdf"
 msgstr "The PDF of this document is not available. Contact us and we will send it again."
 
@@ -714,12 +719,12 @@ msgid "error.workspace.data_owner_is_member"
 msgstr "This data owner is already in your organisation. For an external client, name someone outside it, or create an internal workspace instead."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:76
+#: src/lib/errors/messages/document.ts:81
 msgid "error.document.not_declinable"
 msgstr "This document can no longer be declined."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:103
+#: src/lib/errors/messages/document.ts:108
 msgid "error.document.signing_unavailable"
 msgstr "This document cannot be signed right now. We have been told and will fix it."
 
@@ -729,12 +734,12 @@ msgid "error.document.changed"
 msgstr "This document changed since you opened it. Reload the page and read it again before you sign."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:48
+#: src/lib/errors/messages/document.ts:53
 msgid "error.document.field_unknown"
 msgstr "This document changed since you opened it. Reload the page and try again."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:68
+#: src/lib/errors/messages/document.ts:73
 msgid "error.document.no_signature_needed"
 msgstr "This document does not need a signature."
 
@@ -744,12 +749,12 @@ msgid "error.document.already_signed"
 msgstr "This document is already signed. There is nothing more to do."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:84
+#: src/lib/errors/messages/document.ts:89
 msgid "error.document.not_signed"
 msgstr "This document is not signed yet, so there is no signed copy to download."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:72
+#: src/lib/errors/messages/document.ts:77
 msgid "error.document.not_awaiting_signature"
 msgstr "This document is not waiting for a signature anymore."
 
@@ -759,7 +764,7 @@ msgid "error.document.declined"
 msgstr "This document was declined, so it can no longer be signed."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:112
+#: src/lib/errors/messages/document.ts:117
 msgid "error.document.withdrawn"
 msgstr "This document was withdrawn, so it can no longer be signed."
 
@@ -844,7 +849,7 @@ msgid "error.billing.tier_required"
 msgstr "This needs the {required} plan. Upgrade to use it."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:89
+#: src/lib/errors/messages/document.ts:94
 msgid "error.document.offer_expired"
 msgstr "This offer expired on {valid_until}. Contact us for a new one."
 
@@ -1074,12 +1079,12 @@ msgid "error.workspace.has_projects"
 msgstr "This workspace still has {count, plural, one {# project} other {# projects}}. Delete or move them first from your organisation's Projects page."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:32
+#: src/lib/errors/messages/document.ts:37
 msgid "error.document.field_must_tick"
 msgstr "Tick {label} to continue."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:44
+#: src/lib/errors/messages/document.ts:49
 msgid "error.document.field_tick_invalid"
 msgstr "Tick or untick {label}."
 
@@ -1089,7 +1094,7 @@ msgid "error.project.move_needs_admin"
 msgstr "To move projects, you need to be an admin or owner of the {side} workspace."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:108
+#: src/lib/errors/messages/document.ts:113
 msgid "error.document.verified_email_required"
 msgstr "To sign, sign in with a verified email address."
 
@@ -1219,7 +1224,7 @@ msgid "error.conversation.not_found"
 msgstr "We could not find this conversation. It may have been deleted."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:80
+#: src/lib/errors/messages/document.ts:85
 msgid "error.document.not_found"
 msgstr "We could not find this document. It may have been withdrawn."
 
@@ -1394,7 +1399,7 @@ msgid "error.internal.unavailable"
 msgstr "We could not reach part of dembrane just now. Try again in a moment."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:93
+#: src/lib/errors/messages/document.ts:98
 msgid "error.document.signature_unreadable"
 msgstr "We could not read your signature. Draw it again and try once more."
 

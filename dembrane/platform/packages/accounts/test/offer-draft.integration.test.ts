@@ -70,7 +70,8 @@ run("an offer draft, and the invoice request after the signature", () => {
     for (const f of detail.fields) {
       if (f.kind === "name") values[f.id] = "Anna de Vries";
       else if (f.kind === "role") values[f.id] = "Wethouder";
-      else if (f.kind === "date") values[f.id] = "28-09-2026";
+      else if (f.kind === "date")
+        values[f.id] = w.clock.now.toISOString().slice(0, 10).split("-").reverse().join("-");
       else if (f.kind === "checkbox") values[f.id] = true;
       else if (f.kind === "text") values[f.id] = f.key === "organisation" ? "Testdorp" : "n/a";
     }

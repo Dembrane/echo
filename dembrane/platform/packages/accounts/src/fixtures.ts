@@ -196,16 +196,19 @@ export const offerDetail: Out<typeof DocumentDetail> = {
     {
       kind: "terms",
       ...legal.terms,
+      text_url: `${C}/documents/${OFFER}/legal/terms`,
       sha256: "4e2d1c0b9a8f7e6d5c4b3a291807f6e5d4c3b2a1908f7e6d5c4b3a2918070f6e",
     },
     {
       kind: "sla",
       ...legal.sla,
+      text_url: `${C}/documents/${OFFER}/legal/sla`,
       sha256: "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90",
     },
     {
       kind: "dpa",
       ...legal.dpa,
+      text_url: `${C}/documents/${OFFER}/legal/dpa`,
       sha256: "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
     },
   ],
@@ -338,6 +341,7 @@ export const signedDpaDetail: Out<typeof DocumentDetail> = {
     {
       kind: "dpa",
       ...legal.dpa,
+      text_url: `${C}/documents/${DPA}/legal/dpa`,
       sha256: "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
     },
   ],

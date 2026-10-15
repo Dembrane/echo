@@ -113,7 +113,7 @@ export function registrations(deps: {
   embedder: Embedder;
   /** The model groups the chat assistant runs on. */
   models: Models;
-  /** Offer PDFs of demos made in echo. */
+  /** Offer PDFs of demos made in echo, and the signed copies emailed with their attachments. */
   files: ObjectStorage;
   /** Runtime database URL with DATABASE_NAME applied, for jobs that open their own connections. */
   databaseUrl: string;
@@ -223,7 +223,15 @@ export function registrations(deps: {
     {
       jobs: [sendEmail],
       async register(queue) {
-        await queue.work(sendEmail, { concurrency: 10 }, emailHandler(deps.mailer, logger));
+        const loadFile = async (key: string) => {
+          const blob = await deps.files.get(key);
+          return blob ? new Uint8Array(await blob.arrayBuffer()) : null;
+        };
+        await queue.work(
+          sendEmail,
+          { concurrency: 10 },
+          emailHandler(deps.mailer, logger, loadFile),
+        );
       },
     },
     tenancyWorker(deps),

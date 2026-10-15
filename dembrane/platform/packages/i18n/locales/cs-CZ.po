@@ -858,3 +858,59 @@ msgstr "Nabídka platí do {date}."
 #. js-lingui-explicit-id
 msgid "offer_email.closing"
 msgstr "S pozdravem"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.subject"
+msgstr "{document_title} je podepsáno"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.preview"
+msgstr "{signer_name} podepsal(a) {document_title} za organizaci {org_name}. Podrobnosti o podpisu najdete v tomto e-mailu."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.heading"
+msgstr "{document_title} je podepsáno"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.body"
+msgstr "{signer_name} podepsal(a) {document_title} za organizaci {org_name}. Tento e-mail je vaším záznamem o podpisu."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.attached"
+msgstr "Podepsané PDF je v příloze. Uložte si ho ke svým dokumentům."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.not_attached"
+msgstr "Podepsané PDF je příliš velké na přílohu. Můžete si ho stáhnout ve svém účtu."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.verify"
+msgstr "SHA-256 je otisk podepsaného PDF. Když se soubor změní, změní se i jeho otisk."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.cta"
+msgstr "Otevřít podepsanou kopii"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.text_cta"
+msgstr "Otevřít podepsanou kopii:"
+
+#. js-lingui-explicit-id
+msgid "email.facts.document"
+msgstr "Dokument"
+
+#. js-lingui-explicit-id
+msgid "email.facts.signed_by"
+msgstr "Podepsal(a)"
+
+#. js-lingui-explicit-id
+msgid "email.facts.signed_at"
+msgstr "Podepsáno (UTC)"
+
+#. js-lingui-explicit-id
+msgid "email.facts.document_id"
+msgstr "ID dokumentu"
+
+#. js-lingui-explicit-id
+msgid "email.facts.sha256"
+msgstr "SHA-256 podepsaného PDF"

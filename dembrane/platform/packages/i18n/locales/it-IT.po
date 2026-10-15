@@ -858,3 +858,59 @@ msgstr "L'offerta è valida fino al {date}."
 #. js-lingui-explicit-id
 msgid "offer_email.closing"
 msgstr "Cordiali saluti,"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.subject"
+msgstr "{document_title} è firmato"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.preview"
+msgstr "{signer_name} ha firmato {document_title} per {org_name}. I dettagli della firma sono in questa email."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.heading"
+msgstr "{document_title} è firmato"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.body"
+msgstr "{signer_name} ha firmato {document_title} per {org_name}. Questa email è la vostra prova della firma."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.attached"
+msgstr "Il PDF firmato è allegato. Conservatelo con i vostri documenti."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.not_attached"
+msgstr "Il PDF firmato è troppo grande per essere allegato. Potete scaricarlo dal vostro account."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.verify"
+msgstr "L'SHA-256 è l'impronta del PDF firmato. Se il file cambia, cambia anche la sua impronta."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.cta"
+msgstr "Apri la copia firmata"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.text_cta"
+msgstr "Apri la copia firmata:"
+
+#. js-lingui-explicit-id
+msgid "email.facts.document"
+msgstr "Documento"
+
+#. js-lingui-explicit-id
+msgid "email.facts.signed_by"
+msgstr "Firmato da"
+
+#. js-lingui-explicit-id
+msgid "email.facts.signed_at"
+msgstr "Firmato il (UTC)"
+
+#. js-lingui-explicit-id
+msgid "email.facts.document_id"
+msgstr "ID del documento"
+
+#. js-lingui-explicit-id
+msgid "email.facts.sha256"
+msgstr "SHA-256 del PDF firmato"

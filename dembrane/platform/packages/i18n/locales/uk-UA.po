@@ -858,3 +858,59 @@ msgstr "Пропозиція дійсна до {date}."
 #. js-lingui-explicit-id
 msgid "offer_email.closing"
 msgstr "З повагою,"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.subject"
+msgstr "{document_title} підписано"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.preview"
+msgstr "{signer_name} підписав(-ла) {document_title} від імені {org_name}. Подробиці підписання наведено в цьому листі."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.heading"
+msgstr "{document_title} підписано"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.body"
+msgstr "{signer_name} підписав(-ла) {document_title} від імені {org_name}. Цей лист підтверджує підписання."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.attached"
+msgstr "Підписаний PDF додано до листа. Збережіть його разом зі своїми документами."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.not_attached"
+msgstr "Підписаний PDF завеликий для вкладення. Його можна завантажити зі свого облікового запису."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.verify"
+msgstr "SHA-256 це відбиток підписаного PDF. Якщо файл змінити, його відбиток теж зміниться."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.cta"
+msgstr "Відкрити підписану копію"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.text_cta"
+msgstr "Відкрити підписану копію:"
+
+#. js-lingui-explicit-id
+msgid "email.facts.document"
+msgstr "Документ"
+
+#. js-lingui-explicit-id
+msgid "email.facts.signed_by"
+msgstr "Підписав(-ла)"
+
+#. js-lingui-explicit-id
+msgid "email.facts.signed_at"
+msgstr "Підписано (UTC)"
+
+#. js-lingui-explicit-id
+msgid "email.facts.document_id"
+msgstr "ID документа"
+
+#. js-lingui-explicit-id
+msgid "email.facts.sha256"
+msgstr "SHA-256 підписаного PDF"

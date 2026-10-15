@@ -305,7 +305,7 @@ export function WhoSigns({
 										setTried(false);
 									}}
 									label={t`Who signs the data processing agreement?`}
-									description={t`It is a separate document. Some organisations have it signed by someone else, such as their data protection officer.`}
+									description={t`It is a separate document. Some organisations have it signed by someone else, such as their legal representative.`}
 									error={tried && !dpaWho ? t`Choose one.` : undefined}
 								>
 									<Stack gap="xs" mt="xs">
