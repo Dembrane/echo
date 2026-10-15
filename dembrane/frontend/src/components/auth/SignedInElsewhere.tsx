@@ -76,6 +76,13 @@ export const SignedInElsewhere = ({
 									to sign out so you can continue here.
 								</Trans>
 							</Text>
+							<Text size="xs" c="dimmed" lh={1.6}>
+								<Trans>
+									Sharing this login with a colleague? An admin of your
+									organisation can invite them, so each of you has a login of
+									your own.
+								</Trans>
+							</Text>
 						</Stack>
 						<Stack gap="sm">
 							<Radio.Group

@@ -293,7 +293,7 @@ msgid "{0, plural, one {# conversation} other {# conversations}}"
 msgstr "{0, plural, one {# Gespräch} other {# Gespräche}}"
 
 #. placeholder {0}: list.activeFiltersCount
-#: src/components/conversation/ConversationsMiniList.tsx:219
+#: src/components/conversation/ConversationsMiniList.tsx:221
 msgid "{0, plural, one {# filter} other {# filters}}"
 msgstr "{0, plural, one {# Filter} other {# Filter}}"
 
@@ -417,7 +417,7 @@ msgid "{0, plural, one {and # more conversation} other {and # more conversations
 msgstr "{0, plural, one {und # weiteres Gespräch} other {und # weitere Gespräche}}"
 
 #. placeholder {0}: selection.length
-#: src/components/conversation/ConversationsMiniList.tsx:238
+#: src/components/conversation/ConversationsMiniList.tsx:240
 msgid "{0, plural, one {Ask about this} other {Ask about these (#)}}"
 msgstr "{0, plural, one {Dazu fragen} other {Zu diesen fragen (#)}}"
 
@@ -469,10 +469,10 @@ msgid "{0, plural, one {Using # conversation:} other {Using # conversations:}}"
 msgstr "{0, plural, one {# Gespräch wird verwendet:} other {# Gespräche werden verwendet:}}"
 
 #. placeholder {0}: isAssistantTyping ? "Assistant is typing..." : "Thinking..."
-#. placeholder {0}: formatDistanceToNowStrict(new Date(startedAt), { addSuffix: true, })
+#. placeholder {0}: formatDistanceToNowStrict(date, { addSuffix: true, })
 #. placeholder {0}: citation.reference_text
 #: src/routes/project/chat/ProjectChatRoute.tsx:799
-#: src/components/conversation/useConversationList.ts:42
+#: src/components/conversation/useConversationList.ts:47
 #: src/components/chat/References.tsx:41
 msgid "{0}"
 msgstr "{0}"
@@ -780,7 +780,7 @@ msgstr "{argumentCount, plural, one {# Argument} other {# Argumente}}"
 msgid "{argumentCount, plural, one {# argument} other {# arguments}} from {conversationCount, plural, one {# conversation} other {# conversations}}"
 msgstr "{argumentCount, plural, one {# Argument} other {# Argumente}} aus {conversationCount, plural, one {# Gespräch} other {# Gesprächen}}"
 
-#: src/components/auth/SignedInElsewhere.tsx:91
+#: src/components/auth/SignedInElsewhere.tsx:98
 msgid "{browser} on {platform}"
 msgstr "{browser} auf {platform}"
 
@@ -808,7 +808,7 @@ msgstr "{conversationCount, plural, one {# Gespräch} other {# Gespräche}}"
 #~ msgid "{conversationCount} Conversations • Edited {0}"
 #~ msgstr "{conversationCount} Gespräche • Bearbeitet {0}"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:771
+#: src/components/conversation/ProjectConversationsPanel.tsx:776
 msgid "{conversationCount} selected"
 msgstr "{conversationCount} ausgewählt"
 
@@ -1623,8 +1623,8 @@ msgstr "Tipp hinzufügen"
 msgid "Add to {0}?"
 msgstr "Zu {0} hinzufügen?"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:153
-#: src/components/conversation/ProjectConversationsPanel.tsx:175
+#: src/components/conversation/ProjectConversationsPanel.tsx:154
+#: src/components/conversation/ProjectConversationsPanel.tsx:176
 msgid "Add to chat"
 msgstr "Zum Chat hinzufügen"
 
@@ -1958,7 +1958,7 @@ msgstr "Alle Vorlagen"
 msgid "All tiers"
 msgstr "Alle Tarife"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:755
+#: src/components/conversation/ProjectConversationsPanel.tsx:760
 msgid "All visible conversations selected"
 msgstr "Alle sichtbaren Gespräche ausgewählt"
 
@@ -2020,7 +2020,7 @@ msgstr "Bereits eingeladen"
 msgid "Already invited. The project is shared once they join."
 msgstr "Bereits eingeladen. Das Projekt wird beim Beitritt geteilt."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:148
+#: src/components/conversation/ProjectConversationsPanel.tsx:149
 msgid "Already used in this chat"
 msgstr "In diesem Chat bereits verwendet"
 
@@ -2201,8 +2201,8 @@ msgstr "Anonymisierte Unterhaltung"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:238
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:243
-#: src/components/conversation/ProjectConversationsPanel.tsx:303
-#: src/components/conversation/ProjectConversationsPanel.tsx:308
+#: src/components/conversation/ProjectConversationsPanel.tsx:306
+#: src/components/conversation/ProjectConversationsPanel.tsx:311
 #: src/components/conversation/ConversationAccordion.tsx:589
 msgid "Anonymized conversation"
 msgstr "Anonymisierte Unterhaltung"
@@ -2227,8 +2227,8 @@ msgstr "Ein anderer Administrator oder Eigentümer muss Sie wiederherstellen."
 msgid "another reason"
 msgstr "ein anderer Grund"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:707
-#: src/components/conversation/ConversationsMiniList.tsx:188
+#: src/components/conversation/ProjectConversationsPanel.tsx:712
+#: src/components/conversation/ConversationsMiniList.tsx:190
 msgid "Any tag"
 msgstr "Beliebiger Tag"
 
@@ -2458,7 +2458,7 @@ msgstr "Bitte einen Workspace-Admin, diese Person einzuladen."
 msgid "Ask about the app."
 msgstr "Fragen zur App stellen."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:780
+#: src/components/conversation/ProjectConversationsPanel.tsx:785
 msgid "Ask about these"
 msgstr "Dazu fragen"
 
@@ -2768,7 +2768,7 @@ msgid "Back to live"
 msgstr "Zurück zu Live"
 
 #: src/routes/auth/RequestPasswordReset.tsx:43
-#: src/components/auth/SignedInElsewhere.tsx:156
+#: src/components/auth/SignedInElsewhere.tsx:163
 msgid "Back to log in"
 msgstr "Zurück zur Anmeldung"
 
@@ -3123,7 +3123,7 @@ msgstr "Anfrage abbrechen"
 msgid "Cancel schedule"
 msgstr "Planung abbrechen"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:801
+#: src/components/conversation/ProjectConversationsPanel.tsx:806
 msgid "Cancel selection"
 msgstr "Auswahl aufheben"
 
@@ -3146,7 +3146,7 @@ msgstr "Gekündigt"
 msgid "Cancelling stops your plan from renewing. You keep {0} until your current billing period ends, then you move to Free."
 msgstr "Durch die Kündigung verlängert sich Ihr Tarif nicht mehr. Sie behalten {0} bis zum Ende Ihres aktuellen Abrechnungszeitraums und wechseln dann zu Free."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:150
+#: src/components/conversation/ProjectConversationsPanel.tsx:151
 #: src/components/conversation/ConversationAccordion.tsx:161
 msgid "Cannot add empty conversation"
 msgstr "Leeres Gespräch kann nicht hinzugefügt werden"
@@ -3456,9 +3456,9 @@ msgid "Choose a conversation"
 msgstr "Gespräch auswählen"
 
 #: src/components/auth/SignedInElsewhere.tsx:71
-#: src/components/auth/SignedInElsewhere.tsx:84
+#: src/components/auth/SignedInElsewhere.tsx:91
 msgid "Choose a device to sign out"
-msgstr "Wähle ein Gerät zum Abmelden"
+msgstr "Wählen Sie ein Gerät zum Abmelden"
 
 #: src/components/settings/WhitelabelLogoCard.tsx:167
 msgid "Choose a logo file"
@@ -3537,8 +3537,8 @@ msgstr "Stadt"
 #~ msgstr ""
 
 #: src/components/results/curate/CurateTable.tsx:114
-#: src/components/conversation/ProjectConversationsPanel.tsx:789
-#: src/components/conversation/ConversationsMiniList.tsx:249
+#: src/components/conversation/ProjectConversationsPanel.tsx:794
+#: src/components/conversation/ConversationsMiniList.tsx:251
 msgid "Clear"
 msgstr "Zurücksetzen"
 
@@ -3546,8 +3546,8 @@ msgstr "Zurücksetzen"
 msgid "Clear all"
 msgstr "Alles löschen"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:830
-#: src/components/conversation/ConversationsMiniList.tsx:272
+#: src/components/conversation/ProjectConversationsPanel.tsx:835
+#: src/components/conversation/ConversationsMiniList.tsx:274
 msgid "Clear filters"
 msgstr "Filter zurücksetzen"
 
@@ -3556,7 +3556,7 @@ msgstr "Filter zurücksetzen"
 #: src/routes/project/chat/NewChatRoute.tsx:171
 #: src/features/sidebar/blocks/SearchBlock.tsx:168
 #: src/components/invite/WorkspaceSelectList.tsx:98
-#: src/components/conversation/ProjectConversationsPanel.tsx:683
+#: src/components/conversation/ProjectConversationsPanel.tsx:688
 #: src/components/chat/TemplatesModal.tsx:721
 msgid "Clear search"
 msgstr "Suche leeren"
@@ -4128,8 +4128,8 @@ msgstr "Gespräche"
 #: src/components/project/ProjectUsageAndSharing.tsx:471
 #: src/components/map/panels/MapSettingsMenu.tsx:308
 #: src/components/map/panels/ClusterSummary.tsx:155
-#: src/components/conversation/ProjectConversationsPanel.tsx:623
-#: src/components/conversation/ConversationsMiniList.tsx:149
+#: src/components/conversation/ProjectConversationsPanel.tsx:628
+#: src/components/conversation/ConversationsMiniList.tsx:151
 #: src/components/conversation/ConversationAccordion.tsx:1100
 msgid "Conversations"
 msgstr "Gespräche"
@@ -5303,7 +5303,7 @@ msgstr "Aktualisiert sich nicht von selbst. Aktualisiert vor {updatedAgo}."
 
 #: src/routes/onboarding/OnboardingRoute.tsx:533
 #: src/components/invite/InviteModal.tsx:809
-#: src/components/conversation/ConversationsMiniList.tsx:106
+#: src/components/conversation/ConversationsMiniList.tsx:108
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:642
 #: src/components/chat/AgenticPlanCard.tsx:34
 #: src/components/chat/AgenticChatPanel.tsx:431
@@ -5342,8 +5342,8 @@ msgstr "Herunterladen als"
 msgid "Download as PDF"
 msgstr "Als PDF herunterladen"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:350
-#: src/components/conversation/ProjectConversationsPanel.tsx:354
+#: src/components/conversation/ProjectConversationsPanel.tsx:355
+#: src/components/conversation/ProjectConversationsPanel.tsx:359
 #: src/components/conversation/ConversationDangerZone.tsx:79
 msgid "Download audio"
 msgstr "Audio herunterladen"
@@ -5732,7 +5732,7 @@ msgstr "Emoji, das neben dem Thema angezeigt wird, z.B. 💡 🔍 📊"
 msgid "emptied out"
 msgstr "geleert"
 
-#: src/components/conversation/ConversationsMiniList.tsx:82
+#: src/components/conversation/ConversationsMiniList.tsx:84
 #: src/components/conversation/ConversationTranscriptSection.tsx:116
 msgid "Empty"
 msgstr "Leer"
@@ -6190,7 +6190,7 @@ msgstr "Fehlgeschlagen"
 #~ msgid "Failed to add conversation to chat{0}"
 #~ msgstr "Fehler beim Hinzufügen des Gesprächs zum Chat{0}"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:609
+#: src/components/conversation/ProjectConversationsPanel.tsx:614
 #: src/components/conversation/ConversationAccordion.tsx:977
 #: src/components/conversation/ConversationAccordion.tsx:997
 msgid "Failed to add conversations to context"
@@ -6451,7 +6451,7 @@ msgstr "Dateiname aus hochgeladener Datei"
 msgid "Filter"
 msgstr "Filter"
 
-#: src/components/conversation/ConversationsMiniList.tsx:161
+#: src/components/conversation/ConversationsMiniList.tsx:163
 msgid "Filter and sort"
 msgstr "Filtern und sortieren"
 
@@ -7038,7 +7038,7 @@ msgid "Guided"
 msgstr "Angeleitet"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:226
-#: src/components/conversation/ProjectConversationsPanel.tsx:291
+#: src/components/conversation/ProjectConversationsPanel.tsx:294
 #: src/components/conversation/ConversationAccordion.tsx:575
 msgid "Has verified artifacts"
 msgstr "Hat verifizierte Artefakte"
@@ -8025,7 +8025,7 @@ msgstr "Wissensgraph"
 msgid "Language"
 msgstr "Sprache"
 
-#: src/components/auth/SignedInElsewhere.tsx:110
+#: src/components/auth/SignedInElsewhere.tsx:117
 msgid "Last active {lastActiveAt}"
 msgstr "Zuletzt aktiv: {lastActiveAt}"
 
@@ -8244,7 +8244,7 @@ msgstr "Dokumentationsseiten werden aufgelistet"
 #: src/components/sharing/StatusLine.tsx:103
 #: src/components/conversation/monitorGrouping.ts:72
 #: src/components/conversation/LiveFunnelSection.tsx:251
-#: src/components/conversation/ConversationsMiniList.tsx:68
+#: src/components/conversation/ConversationsMiniList.tsx:70
 msgid "Live"
 msgstr "Live"
 
@@ -8449,7 +8449,7 @@ msgstr "Arbeitsbereiche werden geladen…"
 #~ msgid "loading..."
 #~ msgstr "wird geladen..."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:129
+#: src/components/conversation/ProjectConversationsPanel.tsx:130
 #: src/components/conversation/ConversationAccordion.tsx:119
 #: src/components/conversation/hooks/index.ts:341
 msgid "Loading..."
@@ -8496,9 +8496,9 @@ msgstr "Parameter aus dem LocalMAP-Paper"
 msgid "Locked"
 msgstr "Gesperrt"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:441
+#: src/components/conversation/ProjectConversationsPanel.tsx:446
 #: src/components/conversation/LiveMonitorSection.tsx:323
-#: src/components/conversation/ConversationsMiniList.tsx:412
+#: src/components/conversation/ConversationsMiniList.tsx:419
 msgid "Locked conversation, upgrade to view"
 msgstr "Gesperrtes Gespräch, Tarif upgraden zum Anzeigen"
 
@@ -8577,7 +8577,7 @@ msgstr "Logo aktualisiert"
 #~ msgid "Logout"
 #~ msgstr "Abmelden"
 
-#: src/components/conversation/useConversationList.ts:26
+#: src/components/conversation/useConversationList.ts:27
 msgid "Longest first"
 msgstr "Längste zuerst"
 
@@ -8615,8 +8615,8 @@ msgstr "Auf privat stellen"
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:174
 #: src/components/training/StaffTrainingPanel.tsx:175
 #: src/components/project/ProjectSharingStrip.tsx:98
-#: src/components/conversation/ProjectConversationsPanel.tsx:369
-#: src/components/conversation/ProjectConversationsPanel.tsx:373
+#: src/components/conversation/ProjectConversationsPanel.tsx:374
+#: src/components/conversation/ProjectConversationsPanel.tsx:378
 #: src/components/billing/BillingManager.tsx:1555
 #: src/components/agent-access/YourOrganisations.tsx:85
 msgid "Manage"
@@ -9091,7 +9091,7 @@ msgstr "Meine Vorlagen"
 msgid "Name"
 msgstr "Name"
 
-#: src/components/conversation/useConversationList.ts:24
+#: src/components/conversation/useConversationList.ts:25
 #: src/components/conversation/ConversationAccordion.tsx:667
 msgid "Name A-Z"
 msgstr "Name A-Z"
@@ -9124,7 +9124,7 @@ msgstr "Benennen Sie Ihre Organisation. Danach können Sie Personen einladen ode
 msgid "Name your workspace."
 msgstr "Geben Sie Ihrem Arbeitsbereich einen Namen."
 
-#: src/components/conversation/useConversationList.ts:25
+#: src/components/conversation/useConversationList.ts:26
 #: src/components/conversation/ConversationAccordion.tsx:668
 msgid "Name Z-A"
 msgstr "Name Z-A"
@@ -9287,7 +9287,7 @@ msgstr "Neue Stufe"
 #~ msgid "New workspace"
 #~ msgstr "Neuer Arbeitsbereich"
 
-#: src/components/conversation/useConversationList.ts:22
+#: src/components/conversation/useConversationList.ts:23
 msgid "Newest first"
 msgstr "Neueste zuerst"
 
@@ -9432,8 +9432,8 @@ msgstr "Keine Gespräche gefunden."
 msgid "No conversations found. Start a conversation using the participation invite link from the <0><1>project overview.</1></0>"
 msgstr "Keine Gespräche gefunden. Starten Sie ein Gespräch über den Teilnahme-Einladungslink aus der <0><1>Projektübersicht.</1></0>"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:823
-#: src/components/conversation/ConversationsMiniList.tsx:265
+#: src/components/conversation/ProjectConversationsPanel.tsx:828
+#: src/components/conversation/ConversationsMiniList.tsx:267
 msgid "No conversations match these filters."
 msgstr "Keine Gespräche entsprechen diesen Filtern."
 
@@ -9442,8 +9442,8 @@ msgstr "Keine Gespräche entsprechen diesen Filtern."
 msgid "select.all.modal.no.conversations"
 msgstr "Es wurden keine Unterhaltungen verarbeitet. Dies kann passieren, wenn alle Unterhaltungen bereits im Kontext sind oder nicht den ausgewählten Filtern entsprechen."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:825
-#: src/components/conversation/ConversationsMiniList.tsx:267
+#: src/components/conversation/ProjectConversationsPanel.tsx:830
+#: src/components/conversation/ConversationsMiniList.tsx:269
 msgid "No conversations yet."
 msgstr "Noch keine Gespräche."
 
@@ -9542,8 +9542,8 @@ msgstr "Noch keine Methodiken."
 msgid "No microphone was available. Check that one is connected and not in use elsewhere."
 msgstr "Es war kein Mikrofon verfügbar. Prüfen Sie, ob eines angeschlossen ist und nicht anderweitig verwendet wird."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:224
-#: src/components/conversation/ProjectConversationsPanel.tsx:226
+#: src/components/conversation/ProjectConversationsPanel.tsx:225
+#: src/components/conversation/ProjectConversationsPanel.tsx:227
 msgid "No name"
 msgstr "Kein Name"
 
@@ -9717,7 +9717,7 @@ msgstr "Keine Ergebnisse"
 msgid "No runs yet. Preparation and updates will appear here."
 msgstr "Noch keine Durchläufe. Vorbereitung und Aktualisierungen erscheinen hier."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:757
+#: src/components/conversation/ProjectConversationsPanel.tsx:762
 msgid "No selectable conversations"
 msgstr "Keine auswählbaren Gespräche"
 
@@ -9733,7 +9733,7 @@ msgstr "Noch keine Stakeholder gespeichert."
 msgid "No stakeholders yet. They appear after the first analysis."
 msgstr "Noch keine Stakeholder vorhanden. Sie erscheinen nach der ersten Analyse."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:413
+#: src/components/conversation/ProjectConversationsPanel.tsx:418
 msgid "No summary yet"
 msgstr "Noch keine Zusammenfassung"
 
@@ -10082,7 +10082,7 @@ msgstr "passt nicht zu diesem Raum"
 msgid "Offline"
 msgstr "Offline"
 
-#: src/components/conversation/useConversationList.ts:23
+#: src/components/conversation/useConversationList.ts:24
 msgid "Oldest first"
 msgstr "Älteste zuerst"
 
@@ -10172,7 +10172,7 @@ msgstr "Ein Großbuchstabe"
 msgid "One-off"
 msgstr "Einmalig"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:332
+#: src/components/conversation/ProjectConversationsPanel.tsx:337
 msgid "Ongoing"
 msgstr "Laufend"
 
@@ -10264,8 +10264,8 @@ msgstr "Chat öffnen"
 msgid "Open chat documentation"
 msgstr "Chat-Dokumentation öffnen"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:384
-#: src/components/conversation/ProjectConversationsPanel.tsx:388
+#: src/components/conversation/ProjectConversationsPanel.tsx:389
+#: src/components/conversation/ProjectConversationsPanel.tsx:393
 #: src/components/conversation/ConversationDrilldownModal.tsx:238
 #: src/components/chat/ChatHistoryMessage.tsx:190
 msgid "Open conversation"
@@ -12284,8 +12284,8 @@ msgstr "E-Mail entfernen"
 msgid "Remove file"
 msgstr "Datei entfernen"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:152
-#: src/components/conversation/ProjectConversationsPanel.tsx:175
+#: src/components/conversation/ProjectConversationsPanel.tsx:153
+#: src/components/conversation/ProjectConversationsPanel.tsx:176
 msgid "Remove from chat"
 msgstr "Aus dem Chat entfernen"
 
@@ -12653,9 +12653,9 @@ msgstr "Bestätigungs-E-Mail erneut senden"
 msgid "Reset"
 msgstr "Zurücksetzen"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:724
-#: src/components/conversation/ProjectConversationsPanel.tsx:728
-#: src/components/conversation/ConversationsMiniList.tsx:210
+#: src/components/conversation/ProjectConversationsPanel.tsx:729
+#: src/components/conversation/ProjectConversationsPanel.tsx:733
+#: src/components/conversation/ConversationsMiniList.tsx:212
 msgid "Reset filters"
 msgstr "Filter zurücksetzen"
 
@@ -12884,7 +12884,7 @@ msgstr "Ergebnisse prüfen"
 #~ msgid "Review visible results"
 #~ msgstr ""
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:637
+#: src/components/conversation/ProjectConversationsPanel.tsx:642
 msgid "Review, edit, and open every conversation in this project."
 msgstr "Jedes Gespräch in diesem Projekt prüfen, bearbeiten und öffnen."
 
@@ -13215,9 +13215,9 @@ msgstr "Nach unten scrollen"
 #: src/features/sidebar/blocks/SearchBlock.tsx:116
 #: src/features/sidebar/blocks/SearchBlock.tsx:120
 #: src/components/results/ResultsList.tsx:288
-#: src/components/conversation/ProjectConversationsPanel.tsx:676
+#: src/components/conversation/ProjectConversationsPanel.tsx:681
 #: src/components/conversation/MoveConversationButton.tsx:155
-#: src/components/conversation/ConversationsMiniList.tsx:170
+#: src/components/conversation/ConversationsMiniList.tsx:172
 msgid "Search"
 msgstr "Suchen"
 
@@ -13234,7 +13234,7 @@ msgstr "Konto, Status, Beschreibung suchen"
 msgid "Search account, workspace, organisation, email, tier"
 msgstr "Konto, Arbeitsbereich, Organisation, E-Mail, Tarif suchen"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:633
+#: src/components/conversation/ProjectConversationsPanel.tsx:638
 msgid "Search and select the conversations for this chat."
 msgstr "Suche und wähle die Gespräche für diesen Chat aus."
 
@@ -13434,7 +13434,7 @@ msgstr "Auswählen"
 msgid "Select {0}"
 msgstr "{0} auswählen"
 
-#: src/components/conversation/ConversationsMiniList.tsx:401
+#: src/components/conversation/ConversationsMiniList.tsx:408
 msgid "Select {title}"
 msgstr "{title} auswählen"
 
@@ -13490,7 +13490,7 @@ msgstr "„Alle auswählen“ ist in „Fragen“ und neuen „Spezifische Detai
 msgid "select.all.modal.title.results"
 msgstr "Alle Ergebnisse auswählen"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:753
+#: src/components/conversation/ProjectConversationsPanel.tsx:758
 msgid "Select all visible ({remainingCount})"
 msgstr "Alle sichtbaren auswählen ({remainingCount})"
 
@@ -13510,7 +13510,7 @@ msgstr "Audiodateien auswählen"
 #~ msgid "Select Audio Files to Upload"
 #~ msgstr "Audio-Dateien auswählen"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:242
+#: src/components/conversation/ProjectConversationsPanel.tsx:245
 msgid "Select conversation"
 msgstr "Gespräch auswählen"
 
@@ -13521,7 +13521,7 @@ msgstr "Gespräch auswählen"
 #: src/routes/project/chat/NewChatRoute.tsx:624
 #: src/routes/project/chat/NewChatRoute.tsx:626
 #: src/routes/project/chat/NewChatRoute.tsx:733
-#: src/components/conversation/ProjectConversationsPanel.tsx:803
+#: src/components/conversation/ProjectConversationsPanel.tsx:808
 msgid "Select conversations"
 msgstr "Gespräche auswählen"
 
@@ -13912,11 +13912,15 @@ msgstr "Geteilt mit {0} und {overflow} weiteren"
 msgid "Sharing a private project with a non-member now offers an invitation instead of an error, granting access when they join the workspace."
 msgstr "Beim Teilen eines privaten Projekts mit einem Nichtmitglied wird jetzt eine Einladung statt eines Fehlers angeboten. Der Zugriff wird beim Beitritt zum Arbeitsbereich gewährt."
 
+#: src/components/auth/SignedInElsewhere.tsx:80
+msgid "Sharing this login with a colleague? An admin of your organisation can invite them, so each of you has a login of your own."
+msgstr "Teilen Sie diesen Login mit einer Kollegin oder einem Kollegen? Eine Admin-Person Ihrer Organisation kann sie einladen, damit jede Person einen eigenen Login hat."
+
 #: src/routes/project/present/PresentRoute.tsx:214
 msgid "Short phrases from the conversations"
 msgstr "Kurze Phrasen aus den Gesprächen"
 
-#: src/components/conversation/useConversationList.ts:27
+#: src/components/conversation/useConversationList.ts:28
 msgid "Shortest first"
 msgstr "Kürzeste zuerst"
 
@@ -14166,7 +14170,7 @@ msgstr "Die Seitenleiste konnte nicht geladen werden."
 #~ msgid "Sign in"
 #~ msgstr "Anmelden"
 
-#: src/components/auth/SignedInElsewhere.tsx:143
+#: src/components/auth/SignedInElsewhere.tsx:150
 msgid "Sign out selected device and continue"
 msgstr "Ausgewähltes Gerät abmelden und fortfahren"
 
@@ -14348,8 +14352,8 @@ msgstr "Etwas ist schiefgelaufen. Versuchen Sie es erneut und kontaktieren Sie d
 msgid "participant.go.deeper.content.policy.violation.error.message"
 msgstr "Der Inhalt verstößt gegen unsere Richtlinien. Änder den Text und versuch es nochmal."
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:696
-#: src/components/conversation/ConversationsMiniList.tsx:177
+#: src/components/conversation/ProjectConversationsPanel.tsx:701
+#: src/components/conversation/ConversationsMiniList.tsx:179
 #: src/components/conversation/ConversationAccordion.tsx:1206
 #: src/components/conversation/ConversationAccordion.tsx:1213
 msgid "Sort"
@@ -14894,8 +14898,8 @@ msgstr "Tag gelöscht"
 #: src/components/project/ProjectTagsInput.tsx:255
 #: src/components/participant/ParticipantInitiateForm.tsx:281
 #: src/components/map/panels/MapSettingsMenu.tsx:267
-#: src/components/conversation/ProjectConversationsPanel.tsx:706
-#: src/components/conversation/ConversationsMiniList.tsx:187
+#: src/components/conversation/ProjectConversationsPanel.tsx:711
+#: src/components/conversation/ConversationsMiniList.tsx:189
 #: src/components/conversation/ConversationEdit.tsx:424
 #: src/components/conversation/ConversationDrilldownModal.tsx:200
 #: src/components/conversation/ConversationAccordion.tsx:1275
@@ -15343,7 +15347,7 @@ msgstr "Die Organisation, für die diese Einladung bestimmt war, wurde gelöscht
 msgid "The original statements are unavailable for this older result."
 msgstr "Die ursprünglichen Aussagen sind für dieses ältere Ergebnis nicht verfügbar."
 
-#: src/components/auth/SignedInElsewhere.tsx:146
+#: src/components/auth/SignedInElsewhere.tsx:153
 msgid "The other device will stay signed in."
 msgstr "Das andere Gerät bleibt angemeldet."
 
@@ -16114,7 +16118,7 @@ msgstr "Titel"
 msgid "Title auto-generated"
 msgstr "Titel automatisch generiert"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:280
+#: src/components/conversation/ProjectConversationsPanel.tsx:283
 msgid "Title generated from the conversation"
 msgstr "Aus dem Gespräch generierter Titel"
 
@@ -16122,8 +16126,8 @@ msgstr "Aus dem Gespräch generierter Titel"
 msgid "Title guidance"
 msgstr "Hinweise zum Titel"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:677
-#: src/components/conversation/ConversationsMiniList.tsx:171
+#: src/components/conversation/ProjectConversationsPanel.tsx:682
+#: src/components/conversation/ConversationsMiniList.tsx:173
 msgid "Title or participant"
 msgstr "Titel oder Teilnehmer"
 
@@ -16296,7 +16300,7 @@ msgstr "Schulungen"
 msgid "Transcribe a conversation again"
 msgstr "Ein Gespräch erneut transkribieren"
 
-#: src/components/conversation/ConversationsMiniList.tsx:92
+#: src/components/conversation/ConversationsMiniList.tsx:94
 msgid "Transcribing"
 msgstr "Wird transkribiert"
 
@@ -16336,7 +16340,7 @@ msgstr "Das Abrufen von Transkripten und Gesprächszusammenfassungen wird abgesc
 msgid "Transcription done"
 msgstr "Transkription fertig"
 
-#: src/components/conversation/ConversationsMiniList.tsx:75
+#: src/components/conversation/ConversationsMiniList.tsx:77
 #: src/components/conversation/ConversationAccordion.tsx:429
 msgid "Transcription error"
 msgstr "Transkriptionsfehler"
@@ -16634,11 +16638,11 @@ msgid "Unknown"
 msgstr "Unbekannt"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2510
-#: src/components/conversation/useConversationList.ts:41
+#: src/components/conversation/useConversationList.ts:45
 msgid "Unknown date"
 msgstr "Unbekanntes Datum"
 
-#: src/components/auth/SignedInElsewhere.tsx:92
+#: src/components/auth/SignedInElsewhere.tsx:99
 msgid "Unknown device"
 msgstr "Unbekanntes Gerät"
 
@@ -16727,8 +16731,8 @@ msgstr "Unbenanntes Canvas"
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:108
 #: src/components/project/ProjectUsageAndSharing.tsx:509
 #: src/components/project/ProjectUsageAndSharing.tsx:544
-#: src/components/conversation/ProjectConversationsPanel.tsx:223
-#: src/components/conversation/ConversationsMiniList.tsx:339
+#: src/components/conversation/ProjectConversationsPanel.tsx:224
+#: src/components/conversation/ConversationsMiniList.tsx:341
 #: src/components/chat/References.tsx:63
 msgid "Untitled conversation"
 msgstr "Unbenanntes Gespräch"
@@ -16845,7 +16849,7 @@ msgstr "Gespeichertes Wissen wird aktualisiert"
 msgid "Updating project tags"
 msgstr "Projekt-Tags werden aktualisiert"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:146
+#: src/components/conversation/ProjectConversationsPanel.tsx:147
 #: src/components/conversation/ConversationAccordion.tsx:157
 msgid "Upgrade to add this to the chat"
 msgstr "Tarif hochstufen, um dies zum Chat hinzuzufügen"
@@ -16883,7 +16887,7 @@ msgstr "Stufen Sie Ihren Arbeitsbereich hoch, um Transkripte für neue Gespräch
 #: src/components/project/ProjectUploadSection.tsx:47
 #: src/components/dropzone/UploadConversationDropzone.tsx:531
 #: src/components/dropzone/UploadConversationDropzone.tsx:545
-#: src/components/conversation/ProjectConversationsPanel.tsx:651
+#: src/components/conversation/ProjectConversationsPanel.tsx:656
 #: src/components/conversation/ConversationAccordion.tsx:405
 #: src/components/conversation/ConversationAccordion.tsx:1113
 msgid "Upload"
@@ -16930,7 +16934,7 @@ msgstr "Dateien hochladen"
 msgid "Upload limit reached"
 msgstr "Upload-Limit erreicht"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:648
+#: src/components/conversation/ProjectConversationsPanel.tsx:653
 #: src/components/conversation/ConversationAccordion.tsx:1107
 msgid "Upload limit reached. Upgrade your workspace."
 msgstr "Upload-Limit erreicht. Stufen Sie Ihren Arbeitsbereich hoch."
@@ -17149,9 +17153,9 @@ msgstr "Verifiziert"
 msgid "select.all.modal.loading.verified"
 msgstr "Verifiziert"
 
-#: src/components/conversation/ProjectConversationsPanel.tsx:717
-#: src/components/conversation/ConversationsMiniList.tsx:100
-#: src/components/conversation/ConversationsMiniList.tsx:197
+#: src/components/conversation/ProjectConversationsPanel.tsx:722
+#: src/components/conversation/ConversationsMiniList.tsx:102
+#: src/components/conversation/ConversationsMiniList.tsx:199
 msgid "Verified"
 msgstr "Verifiziert"
 
@@ -17165,7 +17169,7 @@ msgid "verified artifacts"
 msgstr "verifizierte Artefakte"
 
 #: src/routes/project/conversation/ProjectConversationRoute.tsx:231
-#: src/components/conversation/ProjectConversationsPanel.tsx:296
+#: src/components/conversation/ProjectConversationsPanel.tsx:299
 msgid "Verified artifacts"
 msgstr "Verifizierte Artefakte"
 
@@ -18382,7 +18386,7 @@ msgstr "Ihr Zugriff auf {0} endete am {1}."
 
 #: src/components/auth/SignedInElsewhere.tsx:74
 msgid "Your account can be signed in on up to two devices. Choose one to sign out so you can continue here."
-msgstr "Dein Konto kann auf bis zu zwei Geräten gleichzeitig angemeldet sein. Wähle ein Gerät zum Abmelden, damit du hier fortfahren kannst."
+msgstr "Ihr Konto kann auf bis zu zwei Geräten gleichzeitig angemeldet sein. Wählen Sie ein Gerät zum Abmelden, damit Sie hier fortfahren können."
 
 #: src/routes/auth/Login.tsx:264
 msgid "Your active devices changed. Choose a device again."

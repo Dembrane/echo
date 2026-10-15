@@ -28,6 +28,7 @@ import {
 import { ParticipantPostConversation } from "./routes/participant/ParticipantPostConversation";
 import { ParticipantStartRoute } from "./routes/participant/ParticipantStart";
 import { ProjectConversationRoute } from "./routes/project/conversation/ProjectConversationRoute";
+import { LegacyProjectRedirect } from "./routes/project/LegacyProjectRedirect";
 import { ProjectHomeRoute } from "./routes/project/ProjectHomeRoute";
 import { ProjectMonitorRoute } from "./routes/project/ProjectMonitorRoute";
 // Tab-based routes - import directly for now to debug
@@ -608,6 +609,23 @@ export const mainRouter = createBrowserRouter([
 					</Protected>
 				),
 				path: "w/:workspaceId",
+			},
+			{
+				// Pre-v3 links (bookmarks, emails, ?next) open the project in its workspace.
+				element: (
+					<Protected>
+						<LegacyProjectRedirect />
+					</Protected>
+				),
+				path: "projects",
+			},
+			{
+				element: (
+					<Protected>
+						<LegacyProjectRedirect />
+					</Protected>
+				),
+				path: "projects/:projectId/*",
 			},
 			{
 				// Signing is one focused screen without the dashboard chrome: a person
