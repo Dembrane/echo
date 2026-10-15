@@ -1,5 +1,5 @@
 import type { Db } from "@dembrane/db";
-import { type Completer, type Embedder, vertexName } from "@dembrane/llm";
+import { type Completer, compatName, type Embedder, vertexName } from "@dembrane/llm";
 import type { Logger } from "@dembrane/observability";
 import { defineJob, type EnqueueOptions, type JobDefinition, type Payload } from "@dembrane/queue";
 import { publish } from "@dembrane/realtime";
@@ -55,6 +55,7 @@ export const mapChannel = (projectId: string) => `map:project:${projectId}`;
 export interface RuntimeConfig {
   /** EMBEDDING_MODEL (a Vertex model name such as text-embedding-004). */
   readonly embeddingModel: string;
+  /** A Vertex region, or the base URL of an OpenAI-compatible API (then embeddingModel is its model id). */
   readonly embeddingLocation: string;
 }
 
@@ -78,6 +79,7 @@ export interface AnalysisRuntime {
 
 export function analysisRuntime(d: RuntimeDeps): AnalysisRuntime {
   const sql = clientOf(d.db);
+  const compatEndpoint = d.config.embeddingLocation.startsWith("https://");
   const store = new AnalysisStore(sql);
   // Every transaction that appends an outbox event enqueues its dispatch with the same
   // commit, so "published, never dispatched" cannot happen.
@@ -101,8 +103,12 @@ export function analysisRuntime(d: RuntimeDeps): AnalysisRuntime {
         embedder: d.embedder,
         // The identity strings the Python settings carried, so pinned inputs and stored
         // vectors keep matching across the cutover.
-        embeddingModel: vertexName(d.config.embeddingModel),
-        embeddingBaseUrl: `https://${d.config.embeddingLocation}-aiplatform.googleapis.com`,
+        embeddingModel: compatEndpoint
+          ? compatName(d.config.embeddingModel)
+          : vertexName(d.config.embeddingModel),
+        embeddingBaseUrl: compatEndpoint
+          ? d.config.embeddingLocation
+          : `https://${d.config.embeddingLocation}-aiplatform.googleapis.com`,
       }),
       // A popcorn run requested outside a tick reads its session from the popcorn report.
       [POPCORN_SOURCES_KEY]: sessionSources(store),

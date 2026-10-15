@@ -568,8 +568,8 @@ msgstr "Il y a {0} j"
 msgid "{0} deleted"
 msgstr "{0} supprimé(s)"
 
-#. placeholder {0}: failures.length
-#: src/lib/api.ts:733
+#. placeholder {0}: failed.length
+#: src/lib/api.ts:622
 msgid "{0} file(s) failed to upload. Try those again."
 msgstr "Échec de l'importation de {0} fichier(s). Veuillez réessayer."
 
@@ -1880,7 +1880,7 @@ msgid "All"
 msgstr "Tout"
 
 #. placeholder {0}: payload.chunks.length
-#: src/lib/api.ts:737
+#: src/lib/api.ts:752
 msgid "All {0} file(s) uploaded successfully"
 msgstr "Les {0} fichier(s) ont bien été importés"
 
@@ -5051,7 +5051,7 @@ msgid "dembrane at your event?"
 msgstr "dembrane pour votre événement ?"
 
 #. placeholder {0}: new Date().getFullYear()
-#: src/components/layout/Footer.tsx:38
+#: src/components/layout/Footer.tsx:39
 msgid "dembrane B.V. {0}, all rights reserved."
 msgstr "dembrane B.V. {0}, tous droits réservés."
 
@@ -5385,7 +5385,7 @@ msgstr "Options de téléchargement de la transcription"
 #~ msgid "Download Transcript Options"
 #~ msgstr "Options de téléchargement de la transcription"
 
-#: src/components/layout/Footer.tsx:34
+#: src/components/layout/Footer.tsx:35
 msgid "DPA"
 msgstr "DPA"
 
@@ -11406,7 +11406,7 @@ msgstr "Appuyez sur Entrée pour ajouter. Séparez-en plusieurs par des virgules
 msgid "Preview"
 msgstr "Aperçu"
 
-#: src/components/layout/Footer.tsx:20
+#: src/components/layout/Footer.tsx:21
 msgid "Preview of PR #{number}"
 msgstr "Aperçu de la PR #{number}"
 
@@ -11438,7 +11438,7 @@ msgstr "Prix"
 #~ msgid "Print report"
 #~ msgstr "Imprimer le rapport"
 
-#: src/components/layout/Footer.tsx:31
+#: src/components/layout/Footer.tsx:32
 msgid "Privacy"
 msgstr "Confidentialité"
 
@@ -11685,6 +11685,10 @@ msgstr "Calculé au prorata pour le reste de cette période de facturation."
 #: src/components/release/releaseHistory.ts:519
 msgid "Protect sign-in with two-factor authentication."
 msgstr "Protégez la connexion avec l'authentification à deux facteurs."
+
+#: src/components/layout/Footer.tsx:45
+msgid "Proudly hosted in the EU"
+msgstr "Fièrement hébergé dans l'UE"
 
 #: src/components/library/LibraryTemplatesMenu.tsx:24
 #~ msgid "Provide an overview of the main topics and recurring themes"
@@ -15014,7 +15018,7 @@ msgstr "Tensions"
 msgid "Tensions tab"
 msgstr "Onglet Tensions"
 
-#: src/components/layout/Footer.tsx:28
+#: src/components/layout/Footer.tsx:29
 msgid "Terms"
 msgstr "Conditions"
 

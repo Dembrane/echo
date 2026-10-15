@@ -3,7 +3,13 @@ import type {
   LanguageModelV4GenerateResult,
   LanguageModelV4Prompt,
 } from "@ai-sdk/provider";
-import { FALL_BACK_ON_REFUSAL, isRetryable, ModelRefusalError, type Models } from "@dembrane/llm";
+import {
+  FALL_BACK_ON_REFUSAL,
+  isRetryable,
+  ModelRefusalError,
+  type Models,
+  speechHint,
+} from "@dembrane/llm";
 import type { Logger } from "@dembrane/observability";
 import { renderPrompt } from "@dembrane/prompts";
 import { TranscriptParseError, TranscriptRefusedError } from "./errors";
@@ -21,6 +27,9 @@ const SCHEMA = {
 
 // Filters off did not lower 3.8-flash refusals in replay; the fallback is what recovers them (ECHO-980).
 const PROVIDER_OPTIONS = { ...FALL_BACK_ON_REFUSAL, vertex: { threshold: "OFF" } };
+// The redaction pass copies a transcript with names masked; reasoning adds time and
+// answer tokens and nothing else. Read by the OpenAI-compatible provider only.
+const NO_REASONING = { openaiCompatible: { reasoningEffort: "none" } };
 
 // Gemini sometimes emits a literal backslash-u that is not a \uXXXX escape. The
 // lookbehind and the even-backslash group keep already-escaped backslashes intact.
@@ -79,6 +88,7 @@ export class GeminiTranscriber implements Transcriber {
   async transcribe(input: TranscribeInput): Promise<TranscribeResult> {
     const piiOn = Boolean(input.usePiiRedaction || input.anonymizeTranscripts);
     const hotwordsStr = input.hotwords?.length ? input.hotwords.join(", ") : "";
+    if (this.models.speechToText) return this.transcribeWithSpeechModel(input, piiOn, hotwordsStr);
     const prompt =
       input.promptOverride ||
       renderPrompt("transcript_from_audio_workflow", "en", {
@@ -87,10 +97,13 @@ export class GeminiTranscriber implements Transcriber {
         custom_guidance_prompt: input.customGuidancePrompt ?? null,
         language: input.language ?? null,
       });
-    const first = await this.complete([
-      { role: "system", content: prompt },
-      { role: "user", content: [audioPart(input.audio)] },
-    ]);
+    const first = await this.complete(
+      [
+        { role: "system", content: prompt },
+        { role: "user", content: [audioPart(input.audio)] },
+      ],
+      input.language,
+    );
     let transcript = first.json.corrected_transcript;
     let note = first.json.note;
     const models: (string | null)[] = [first.model];
@@ -106,13 +119,56 @@ export class GeminiTranscriber implements Transcriber {
         pii_redaction: true,
         custom_guidance_prompt: input.customGuidancePrompt ?? null,
       });
-      const second = await this.complete([
-        { role: "system", content: correction },
-        {
-          role: "user",
-          content: [{ type: "text", text: transcript }, audioPart(input.audio)],
-        },
-      ]);
+      const second = await this.complete(
+        [
+          { role: "system", content: correction },
+          {
+            role: "user",
+            content: [{ type: "text", text: transcript }, audioPart(input.audio)],
+          },
+        ],
+        input.language,
+      );
+      transcript = second.json.corrected_transcript;
+      note = second.json.note;
+      models.push(second.model);
+    }
+    return { transcript: transcript === "" ? "[Nothing to transcribe]" : transcript, note, models };
+  }
+
+  /**
+   * A provider with a speech-to-text model (Whisper on the OpenAI-compatible provider): its
+   * text is the transcript. A chat model asked to rewrite it paraphrases and, with reasoning
+   * on, ran out of answer tokens on long chunks. The chat model only does the redaction pass,
+   * on text, with reasoning off.
+   */
+  private async transcribeWithSpeechModel(
+    input: TranscribeInput,
+    piiOn: boolean,
+    hotwordsStr: string,
+  ): Promise<TranscribeResult> {
+    const stt = this.models.speechToText as NonNullable<Models["speechToText"]>;
+    let transcript = await stt.transcribe(input.audio, {
+      language: input.language ?? null,
+      ...(hotwordsStr && { prompt: hotwordsStr }),
+    });
+    let note = "";
+    const models: (string | null)[] = [stt.model];
+    if (input.anonymizeTranscripts) transcript = regexRedactPii(transcript);
+    if (piiOn && transcript !== "") {
+      const correction = renderPrompt("transcript_correction_workflow", "en", {
+        hotwords_str: hotwordsStr,
+        pii_redaction: true,
+        custom_guidance_prompt: input.customGuidancePrompt ?? null,
+      });
+      const second = await this.complete(
+        [
+          { role: "system", content: correction },
+          { role: "user", content: [{ type: "text", text: transcript }] },
+        ],
+        input.language,
+        NO_REASONING,
+      );
       transcript = second.json.corrected_transcript;
       note = second.json.note;
       models.push(second.model);
@@ -126,10 +182,12 @@ export class GeminiTranscriber implements Transcriber {
    */
   private async complete(
     prompt: LanguageModelV4Prompt,
+    language?: string | null,
+    extraOptions: Record<string, Record<string, unknown>> = {},
   ): Promise<{ json: Parsed; model: string | null }> {
     let last: TranscriptParseError | null = null;
     for (let attempt = 0; attempt < 2; attempt++) {
-      const { text, finishReason, model } = await this.call(prompt);
+      const { text, finishReason, model } = await this.call(prompt, language, extraOptions);
       this.logger.info({ model }, "transcript call answered");
       try {
         return { json: parseTranscriptJson(text, finishReason), model };
@@ -146,14 +204,22 @@ export class GeminiTranscriber implements Transcriber {
     throw last ?? new TranscriptParseError("transcript completion never ran");
   }
 
-  private async call(prompt: LanguageModelV4Prompt) {
+  private async call(
+    prompt: LanguageModelV4Prompt,
+    language: string | null | undefined,
+    extraOptions: Record<string, Record<string, unknown>>,
+  ) {
     const run = async (m: LanguageModelV4) => {
       let r: LanguageModelV4GenerateResult;
       try {
         r = await m.doGenerate({
           prompt,
           responseFormat: { type: "json", schema: SCHEMA as never },
-          providerOptions: PROVIDER_OPTIONS,
+          providerOptions: {
+            ...PROVIDER_OPTIONS,
+            ...speechHint(this.models, language),
+            ...extraOptions,
+          },
         });
       } catch (err) {
         if (err instanceof ModelRefusalError) throw new TranscriptRefusedError(err.finishReason);

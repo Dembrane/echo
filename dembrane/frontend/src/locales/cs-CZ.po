@@ -567,8 +567,8 @@ msgstr "před {0} d"
 msgid "{0} deleted"
 msgstr "{0} deleted"
 
-#. placeholder {0}: failures.length
-#: src/lib/api.ts:733
+#. placeholder {0}: failed.length
+#: src/lib/api.ts:622
 msgid "{0} file(s) failed to upload. Try those again."
 msgstr "{0} souborů se nepodařilo nahrát. Zkuste to znovu."
 
@@ -1879,7 +1879,7 @@ msgid "All"
 msgstr "All"
 
 #. placeholder {0}: payload.chunks.length
-#: src/lib/api.ts:737
+#: src/lib/api.ts:752
 msgid "All {0} file(s) uploaded successfully"
 msgstr "Všech {0} souborů bylo úspěšně nahráno"
 
@@ -5050,7 +5050,7 @@ msgid "dembrane at your event?"
 msgstr "dembrane na vaší akci?"
 
 #. placeholder {0}: new Date().getFullYear()
-#: src/components/layout/Footer.tsx:38
+#: src/components/layout/Footer.tsx:39
 msgid "dembrane B.V. {0}, all rights reserved."
 msgstr "dembrane B.V. {0}, všechna práva vyhrazena."
 
@@ -5384,7 +5384,7 @@ msgstr "Možnosti stažení přepisu"
 #~ msgid "Download Transcript Options"
 #~ msgstr "Download Transcript Options"
 
-#: src/components/layout/Footer.tsx:34
+#: src/components/layout/Footer.tsx:35
 msgid "DPA"
 msgstr "DPA"
 
@@ -11405,7 +11405,7 @@ msgstr "Stisknutím klávesy Enter položku přidáte. Více položek oddělte �
 msgid "Preview"
 msgstr "Náhled"
 
-#: src/components/layout/Footer.tsx:20
+#: src/components/layout/Footer.tsx:21
 msgid "Preview of PR #{number}"
 msgstr "Náhled PR #{number}"
 
@@ -11437,7 +11437,7 @@ msgstr "Price"
 #~ msgid "Print report"
 #~ msgstr "Print report"
 
-#: src/components/layout/Footer.tsx:31
+#: src/components/layout/Footer.tsx:32
 msgid "Privacy"
 msgstr "Soukromí"
 
@@ -11684,6 +11684,10 @@ msgstr "Poměrná částka do konce tohoto zúčtovacího období."
 #: src/components/release/releaseHistory.ts:519
 msgid "Protect sign-in with two-factor authentication."
 msgstr "Zabezpečte přihlášení pomocí dvoufaktorového ověření."
+
+#: src/components/layout/Footer.tsx:45
+msgid "Proudly hosted in the EU"
+msgstr "S hrdostí hostováno v EU"
 
 #: src/components/library/LibraryTemplatesMenu.tsx:24
 #~ msgid "Provide an overview of the main topics and recurring themes"
@@ -15013,7 +15017,7 @@ msgstr "Napětí"
 msgid "Tensions tab"
 msgstr "Záložka Tenze"
 
-#: src/components/layout/Footer.tsx:28
+#: src/components/layout/Footer.tsx:29
 msgid "Terms"
 msgstr "Podmínky"
 

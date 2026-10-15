@@ -34,7 +34,7 @@ Most namespaces use core, db, observability, http, access, queue, legacy-shape, 
 - **pricing** (in 2, out 8): The pricing configurator and the bookings it forwards. Used by api, worker. Uses storage.
 - **reports** (in 2, out 12): Report generation and the report timeline. Used by api, worker. Uses account, projects, notifications, webhooks, llm.
 - **tenancy** (in 2, out 12): Orgs and workspaces: members, settings, access requests, support access, project shares. Used by api, worker. Uses samples, billing, i18n, mail, storage.
-- **verify** (in 2, out 7): Verification topics and artifacts participants see in the portal. Used by api, migrate. Uses conversations, prompts.
+- **verify** (in 2, out 8): Verification topics and artifacts participants see in the portal. Used by api, migrate. Uses conversations, prompts, llm.
 - **agent-access** (in 1, out 11): Outside AI agents reaching dembrane: the MCP server, OAuth, and the tools it exposes. Used by api. Uses conversations, webhooks, analytics, realtime.
 - **staff** (in 1, out 11): The staff console: support tools, billing rollups, privacy exports and erasure. Used by api. Uses billing, i18n, mail, storage.
 - **stats** (in 1, out 4): Public usage numbers the website shows. Used by api. Uses only the common ones.
@@ -49,7 +49,7 @@ Most namespaces use core, db, observability, http, access, queue, legacy-shape, 
 - **access** (in 25, out 2): Who may do what: roles, policies and tiers resolved for an org, workspace or project. Used by http, billing, webhooks, analysis and 21 more. Uses core, db.
 - **queue** (in 20, out 2): Durable background jobs and workflows on Postgres (DBOS): define, enqueue, run. Used by billing, webhooks, analysis, samples and 16 more. Uses observability, db.
 - **legacy-shape** (in 19, out 2): Response shapes and number and time formats the Python API and Directus produced, kept byte for byte. Used by billing, webhooks, analysis, conversations and 15 more. Uses http, core.
-- **llm** (in 15, out 0): Language model and embedding calls on Vertex, with fallbacks and fakes for tests. Used by i18n, transcription, metering, analysis and 11 more. Uses nothing.
+- **llm** (in 16, out 0): Language model and embedding calls on Vertex, with fallbacks and fakes for tests. Used by i18n, transcription, metering, analysis and 12 more. Uses nothing.
 - **ratelimit** (in 15, out 2): Rate limits counted in Postgres or memory. Used by analysis, conversations, account, popcorn and 11 more. Uses core, db.
 - **config** (in 11, out 0): Typed configuration per environment, and the `bun run config` checks. Used by i18n, samples, account, popcorn and 7 more. Uses nothing.
 - **realtime** (in 10, out 2): Live updates: Postgres LISTEN fanned out to server-sent event streams. Used by analysis, conversations, projects, popcorn and 6 more. Uses observability, core.
