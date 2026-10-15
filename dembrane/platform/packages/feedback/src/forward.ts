@@ -43,6 +43,25 @@ export interface SupportRow {
 }
 
 /**
+ * What sam may learn of a request. full is the whole row; pointer is ids, times and a link
+ * to where the request is read, so an EU deployment's customer text never leaves it.
+ */
+export type SupportContent = { mode: "full" } | { mode: "pointer"; readUrl: string };
+
+/** Resolves the config pair; pointer mode without a read URL is a boot error, not a silent full send. */
+export function supportContent(
+  mode: "full" | "pointer",
+  readUrl: string | undefined,
+): SupportContent {
+  if (mode === "full") return { mode };
+  if (!readUrl?.includes("{id}"))
+    throw new Error(
+      "SUPPORT_FORWARD_CONTENT=pointer needs SUPPORT_READ_URL, a URL containing {id}",
+    );
+  return { mode, readUrl };
+}
+
+/**
  * The webhook payload, the contract sam's product-support recipe reads: id, environment
  * and message always; every other field omitted when empty, never sent as null. No
  * transcript content. Sam deduplicates on id, which makes redelivery safe.
@@ -51,16 +70,23 @@ export function supportPayload(
   row: SupportRow,
   environment: string,
   dashboardUrl: string,
+  content: SupportContent = { mode: "full" },
 ): Record<string, unknown> {
+  const pointer = content.mode === "pointer";
   const p: Record<string, unknown> = {
     id: String(row.id),
     environment,
     // sam requires a message; a placeholder keeps an empty row deliverable instead of
     // leaving it at the head of the outbox forever.
-    message: row.message || "(empty message)",
+    message: pointer ? "" : row.message || "(empty message)",
   };
+  if (pointer) {
+    const link = content.readUrl.replaceAll("{id}", encodeURIComponent(String(row.id)));
+    p.read_link = link;
+    p.message = `Support request ${row.id} in ${environment}. Its text stays in that environment; read it here: ${link}`;
+  }
   for (const k of [
-    "page_context",
+    ...(pointer ? [] : (["page_context"] as const)),
     "source",
     "created_at",
     "chat_id",
@@ -157,6 +183,8 @@ export interface SupportForwardDeps {
   readonly environment: string;
   /** Where origin_link points. */
   readonly dashboardUrl: string;
+  /** What sam is told; absent means full. */
+  readonly content?: SupportContent;
   readonly logger: Logger;
   readonly clock?: () => Date;
 }
@@ -175,7 +203,7 @@ export async function runForwardSupport(d: SupportForwardDeps): Promise<number> 
   for (const row of rows) {
     let res: { status: number; text: string };
     try {
-      res = await d.forwarder.post(supportPayload(row, d.environment, d.dashboardUrl));
+      res = await d.forwarder.post(supportPayload(row, d.environment, d.dashboardUrl, d.content));
     } catch (err) {
       d.logger.warn(
         { err, signal: "support.forward_failed" },

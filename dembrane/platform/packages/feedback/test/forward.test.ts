@@ -6,6 +6,7 @@ import {
   SUPPORT_INBOX_CODES,
   type SupportForwarder,
   type SupportRow,
+  supportContent,
   supportInboxMessage,
   supportPayload,
 } from "../src";
@@ -168,4 +169,47 @@ test("a source with no inbox code is never sent to sam and stays unstamped", asy
     "echo_support_mcp_issue_reported_v1",
   ]);
   expect(stamped).toEqual(["1", "4"]);
+});
+
+test("pointer payload: ids and a read link, never the message or page context", () => {
+  const secret = "my-distinctive-customer-sentence-7731";
+  const r = row("r9", {
+    message: secret,
+    page_context: "ctx-distinctive-4419",
+    chat_id: "c1",
+    project_id: "p1",
+    workspace_id: "w1",
+    app_user_id: "a1",
+    directus_user_id: "d1",
+    org_id: "o1",
+  });
+  const content = supportContent("pointer", "https://g.example/d?var-id={id}");
+  const payload = supportPayload(r, "eu", "https://dash.example/", content);
+  const json = JSON.stringify(payload);
+  expect(json).not.toContain(secret);
+  expect(json).not.toContain("ctx-distinctive-4419");
+  expect(payload.page_context).toBeUndefined();
+  expect(payload.read_link).toBe("https://g.example/d?var-id=r9");
+  expect(payload.message).toBe(
+    "Support request r9 in eu. Its text stays in that environment; read it here: https://g.example/d?var-id=r9",
+  );
+  expect(payload).toMatchObject({
+    id: "r9",
+    environment: "eu",
+    source: "agentic_chat",
+    created_at: "2026-09-28T10:00:00.000Z",
+    workspace_id: "w1",
+    project_id: "p1",
+    org_id: "o1",
+    chat_id: "c1",
+    origin_link: "https://dash.example/en-US/w/w1/projects/p1",
+  });
+});
+
+test("pointer mode without a read URL is a config error; full mode needs none", () => {
+  expect(() => supportContent("pointer", undefined)).toThrow("SUPPORT_READ_URL");
+  expect(() => supportContent("pointer", "https://g.example/no-placeholder")).toThrow(
+    "SUPPORT_READ_URL",
+  );
+  expect(supportContent("full", undefined)).toEqual({ mode: "full" });
 });
