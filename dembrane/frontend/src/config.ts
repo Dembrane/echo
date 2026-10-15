@@ -25,6 +25,8 @@ interface RuntimeConfig {
 	// Set on PR previews only: the pull request the preview was built from.
 	previewPr?: number;
 	previewRepo?: string;
+	// False on deployments that run without PostHog and Tally; absent otherwise.
+	analytics?: boolean;
 }
 const RUNTIME = (globalThis as { __ECHO_RUNTIME__?: RuntimeConfig })
 	.__ECHO_RUNTIME__;
@@ -144,7 +146,11 @@ export const POSTHOG_TOKEN = byEnv(
 	"phc_qMo8i67hwneqDG3x8NW4iTyUiqPMsR9pZ3H5QaJQ4zkM",
 );
 
-export const POSTHOG_CAPTURE = byEnv({ local: false, testing: false }, true);
+// A deployment can switch analytics off for every environment (WEB_ANALYTICS=false).
+export const ANALYTICS_ENABLED = RUNTIME?.analytics !== false;
+
+export const POSTHOG_CAPTURE =
+	ANALYTICS_ENABLED && byEnv({ local: false, testing: false }, true);
 
 export const SUPPORTED_LANGUAGES = [
 	"en-US",

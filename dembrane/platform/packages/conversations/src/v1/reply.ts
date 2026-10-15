@@ -1,4 +1,5 @@
 import { isoTimestamp } from "@dembrane/legacy-shape";
+import { echoOptions } from "@dembrane/llm";
 import { renderPrompt } from "@dembrane/prompts";
 import { pythonJson } from "@dembrane/webhooks";
 import { type FilePart, streamText, type TextPart } from "ai";
@@ -201,7 +202,10 @@ export async function* generateReply(
     model: d.models.model("multi_modal_pro"),
     messages: [{ role: "user", content }],
     maxRetries: 0,
-    providerOptions: { google: { thinkingConfig: { thinkingBudget: 2048 } } },
+    providerOptions: {
+      google: { thinkingConfig: { thinkingBudget: 2048 } },
+      ...echoOptions(language),
+    },
   });
   let answer = "";
   for await (const part of result.fullStream) {

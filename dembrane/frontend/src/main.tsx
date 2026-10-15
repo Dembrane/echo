@@ -7,6 +7,7 @@ import "./lib/tamper";
 import { PostHogProvider } from "@posthog/react";
 import posthog from "posthog-js";
 import {
+	ANALYTICS_ENABLED,
 	POSTHOG_CAPTURE,
 	POSTHOG_HOST,
 	POSTHOG_TOKEN,
@@ -48,6 +49,18 @@ posthog.init(POSTHOG_TOKEN, {
 	// api_host is our reverse proxy; ui_host must stay the real PostHog host so
 	// the toolbar and in-app links resolve (required when api_host is proxied).
 	ui_host: POSTHOG_UI_HOST,
+	// With analytics switched off nothing is fetched or stored: no config, scripts,
+	// replay, surveys or cookies.
+	...(!ANALYTICS_ENABLED && {
+		opt_out_capturing_by_default: true,
+		advanced_disable_flags: true,
+		autocapture: false,
+		capture_pageview: false,
+		disable_session_recording: true,
+		disable_surveys: true,
+		disable_external_dependency_loading: true,
+		persistence: "memory" as const,
+	}),
 });
 
 // Not calling preventDefault: cancelling makes Vite resolve the import to

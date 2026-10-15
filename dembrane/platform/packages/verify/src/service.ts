@@ -3,6 +3,7 @@ import { type ConversationsDeps, PARTICIPANT_TOKEN_HEADER } from "@dembrane/conv
 import { BadRequestError, ForbiddenError, NotFoundError, newId, StatusError } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { directusRow, isoTimestamp } from "@dembrane/legacy-shape";
+import { echoOptions } from "@dembrane/llm";
 import { renderPrompt } from "@dembrane/prompts";
 import { type FilePart, generateText, type TextPart } from "ai";
 import { type ArtifactRow, type VerifyStorage, verifyStorage } from "./storage";
@@ -335,13 +336,17 @@ async function complete(
   system: string,
   content: (TextPart | FilePart)[],
   failure: string,
+  language?: string,
 ) {
   try {
     const { text } = await generateText({
       model: ctx.d.models.model("multi_modal_pro"),
       system,
       messages: [{ role: "user", content }],
-      providerOptions: { vertex: { thinkingConfig: { thinkingBudget: 2048 } } },
+      providerOptions: {
+        vertex: { thinkingConfig: { thinkingBudget: 2048 } },
+        ...echoOptions(language),
+      },
     });
     return text;
   } catch (err) {
@@ -415,6 +420,7 @@ export async function generateArtifact(
     system,
     [{ type: "text", text: lines.join("\n") }, ...(await audioParts(ctx, audio))],
     "Failed to generate verification artifact",
+    project.language || "en",
   );
   const created = await ctx.store.createArtifact({
     id: newId(),
@@ -489,6 +495,7 @@ export async function updateArtifact(
         ...(await audioParts(ctx, audio)),
       ],
       "Failed to revise verification artifact",
+      project.language || "en",
     );
   } else if (body.content !== null) updates.content = body.content;
   if (!Object.keys(updates).length)

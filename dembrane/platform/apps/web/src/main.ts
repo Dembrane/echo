@@ -36,8 +36,10 @@ const handle = createHandler({
     dashboardUrl: config.http.dashboardUrl,
     portalUrl: config.http.portalUrl,
     release: config.app.release,
+    ...(config.web.analytics === false && { analytics: false }),
     ...previewRuntime(config.app.env, config.web),
   },
+  analytics: config.web.analytics !== false,
   headers: securityHeaders({
     own: [
       config.http.dashboardUrl,
@@ -45,7 +47,8 @@ const handle = createHandler({
       config.http.publicUrl,
       "https://*.dembrane.com",
     ],
-    storage: ["https://storage.googleapis.com", "https://ams3.digitaloceanspaces.com"],
+    storage: config.web.storageOrigins,
+    analytics: config.web.analytics !== false,
   }),
 });
 

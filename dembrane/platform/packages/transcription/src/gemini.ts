@@ -3,7 +3,13 @@ import type {
   LanguageModelV4GenerateResult,
   LanguageModelV4Prompt,
 } from "@ai-sdk/provider";
-import { FALL_BACK_ON_REFUSAL, isRetryable, ModelRefusalError, type Models } from "@dembrane/llm";
+import {
+  echoOptions,
+  FALL_BACK_ON_REFUSAL,
+  isRetryable,
+  ModelRefusalError,
+  type Models,
+} from "@dembrane/llm";
 import type { Logger } from "@dembrane/observability";
 import { renderPrompt } from "@dembrane/prompts";
 import { TranscriptParseError, TranscriptRefusedError } from "./errors";
@@ -87,10 +93,13 @@ export class GeminiTranscriber implements Transcriber {
         custom_guidance_prompt: input.customGuidancePrompt ?? null,
         language: input.language ?? null,
       });
-    const first = await this.complete([
-      { role: "system", content: prompt },
-      { role: "user", content: [audioPart(input.audio)] },
-    ]);
+    const first = await this.complete(
+      [
+        { role: "system", content: prompt },
+        { role: "user", content: [audioPart(input.audio)] },
+      ],
+      input.language,
+    );
     let transcript = first.json.corrected_transcript;
     let note = first.json.note;
     const models: (string | null)[] = [first.model];
@@ -106,13 +115,16 @@ export class GeminiTranscriber implements Transcriber {
         pii_redaction: true,
         custom_guidance_prompt: input.customGuidancePrompt ?? null,
       });
-      const second = await this.complete([
-        { role: "system", content: correction },
-        {
-          role: "user",
-          content: [{ type: "text", text: transcript }, audioPart(input.audio)],
-        },
-      ]);
+      const second = await this.complete(
+        [
+          { role: "system", content: correction },
+          {
+            role: "user",
+            content: [{ type: "text", text: transcript }, audioPart(input.audio)],
+          },
+        ],
+        input.language,
+      );
       transcript = second.json.corrected_transcript;
       note = second.json.note;
       models.push(second.model);
@@ -126,10 +138,11 @@ export class GeminiTranscriber implements Transcriber {
    */
   private async complete(
     prompt: LanguageModelV4Prompt,
+    language?: string | null,
   ): Promise<{ json: Parsed; model: string | null }> {
     let last: TranscriptParseError | null = null;
     for (let attempt = 0; attempt < 2; attempt++) {
-      const { text, finishReason, model } = await this.call(prompt);
+      const { text, finishReason, model } = await this.call(prompt, language);
       this.logger.info({ model }, "transcript call answered");
       try {
         return { json: parseTranscriptJson(text, finishReason), model };
@@ -146,14 +159,14 @@ export class GeminiTranscriber implements Transcriber {
     throw last ?? new TranscriptParseError("transcript completion never ran");
   }
 
-  private async call(prompt: LanguageModelV4Prompt) {
+  private async call(prompt: LanguageModelV4Prompt, language?: string | null) {
     const run = async (m: LanguageModelV4) => {
       let r: LanguageModelV4GenerateResult;
       try {
         r = await m.doGenerate({
           prompt,
           responseFormat: { type: "json", schema: SCHEMA as never },
-          providerOptions: PROVIDER_OPTIONS,
+          providerOptions: { ...PROVIDER_OPTIONS, ...echoOptions(language) },
         });
       } catch (err) {
         if (err instanceof ModelRefusalError) throw new TranscriptRefusedError(err.finishReason);

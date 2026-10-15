@@ -18,8 +18,8 @@ import { conversationApiJobs } from "@dembrane/conversations";
 import { bootAssets } from "@dembrane/core";
 import { connect, createDb, withDatabase } from "@dembrane/db";
 import { localeOfEmail } from "@dembrane/i18n";
-import { createModels } from "@dembrane/llm";
-import { type Mailer, MemoryMailer, SendGridMailer } from "@dembrane/mail";
+import { createModels, modelsConfigOf } from "@dembrane/llm";
+import { type Mailer, MemoryMailer, mailerFromSettings, missingMailKey } from "@dembrane/mail";
 import { mapJobs } from "@dembrane/map";
 import { modelCallRecorder, modelCallTable } from "@dembrane/metering";
 import { Notifier } from "@dembrane/notifications";
@@ -64,16 +64,9 @@ const databaseUrl = withDatabase(config.database.url, config.database.name);
 const database = createDb({ url: databaseUrl, poolMax: config.database.poolMax });
 
 // Auth emails go out inside the request: the person is waiting for the code or the link.
-const mailer: Mailer = config.mail.sendgridApiKey
-  ? new SendGridMailer({
-      apiKey: config.mail.sendgridApiKey,
-      fromEmail: config.mail.fromEmail,
-      fromName: config.mail.fromName,
-      region: config.mail.sendgridRegion,
-    })
-  : new MemoryMailer();
-if (!config.mail.sendgridApiKey)
-  logger.warn("no SENDGRID_API_KEY: emails are kept in memory, not sent");
+const mailer: Mailer = mailerFromSettings(config.mail) ?? new MemoryMailer();
+if (!mailerFromSettings(config.mail))
+  logger.warn(`no ${missingMailKey(config.mail)}: emails are kept in memory, not sent`);
 
 const auth = createAuth({
   db: database.db,
@@ -250,25 +243,11 @@ void (async () => {
 
 // Every model call is metered: one log line at once and one model_call row per batch.
 const metering = modelCallRecorder({ sink: modelCallTable(database.db), logger, service });
-const models = createModels(
-  {
-    vertexProject: config.llm.vertexProject,
-    vertexLocation: config.llm.vertexLocation,
-    groups: {
-      text_fast: config.llm.textFast,
-      multi_modal_fast: config.llm.multiModalFast,
-      multi_modal_pro: config.llm.multiModalPro,
-    },
-    embeddingModel: config.llm.embeddingModel,
-    embeddingLocation: config.llm.embeddingLocation,
-    embeddingDimensions: config.llm.embeddingDimensions,
-  },
-  {
-    observe: metering.observe,
-    onObserverFault: (err) =>
-      logger.warn({ err }, "model call metering failed; later faults are silent"),
-  },
-);
+const models = createModels(modelsConfigOf(config.llm), {
+  observe: metering.observe,
+  onObserverFault: (err) =>
+    logger.warn({ err }, "model call metering failed; later faults are silent"),
+});
 
 const app = buildApp({
   config,

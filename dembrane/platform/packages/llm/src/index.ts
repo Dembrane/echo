@@ -1,9 +1,20 @@
 export {
+  CompatEmbeddingModel,
+  type CompatEndpoint,
+  CompatLanguageModel,
+  compatCallOptions,
+  echoOptions,
+  languageHint,
+  transcribeAudio,
+} from "./compat";
+export {
   type Completer,
   type Completion,
   type CompletionRequest,
+  compatName,
   completeWith,
   type Embedder,
+  GroundingUnavailableError,
   vertexCompleter,
   vertexEmbedder,
   vertexName,
@@ -17,7 +28,13 @@ export {
   isRetryable,
   ModelRefusalError,
 } from "./fallback";
-export { createModels, type ModelGroup, type Models, type ModelsConfig } from "./models";
+export {
+  createModels,
+  type ModelGroup,
+  type Models,
+  type ModelsConfig,
+  type OpenAICompatibleConfig,
+} from "./models";
 export {
   errorLabel,
   type ModelCall,
@@ -25,6 +42,16 @@ export {
   observeSafely,
   resetObserverFaults,
 } from "./observe";
+export {
+  completerConfigOf,
+  embedderConfigOf,
+  embeddingLocationOf,
+  embeddingModelOf,
+  groupsOf,
+  type LlmSettings,
+  modelsConfigOf,
+  searchGroundingOn,
+} from "./settings";
 export {
   LANGUAGE_NAMES,
   TRANSLATION_SCHEMA,
