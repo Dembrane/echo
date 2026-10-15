@@ -37,6 +37,7 @@ const handle = createHandler({
     portalUrl: config.http.portalUrl,
     release: config.app.release,
     ...(config.web.analytics === false && { analytics: false }),
+    ...(config.web.region && { region: config.web.region }),
     ...previewRuntime(config.app.env, config.web),
   },
   analytics: config.web.analytics !== false,

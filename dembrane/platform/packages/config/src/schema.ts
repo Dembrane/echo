@@ -127,6 +127,10 @@ export const schema = defineSchema({
       description:
         "Set to false to switch off PostHog (events, session replay) and the Tally script in the browser, and drop their hosts from the content security policy. Unset keeps today's behaviour, which follows the environment.",
     }),
+    region: key("WEB_REGION", z.enum(["eu"]).optional(), {
+      description:
+        "Set to eu on the EU deployment: the logo shows EU and the sign-in footer says the app is proudly hosted in the EU.",
+    }),
     storageOrigins: key(
       "WEB_STORAGE_ORIGINS",
       list.default(["https://storage.googleapis.com", "https://ams3.digitaloceanspaces.com"]),

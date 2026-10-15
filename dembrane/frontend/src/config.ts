@@ -27,6 +27,8 @@ interface RuntimeConfig {
 	previewRepo?: string;
 	// False on deployments that run without PostHog and Tally; absent otherwise.
 	analytics?: boolean;
+	// Set on the EU deployment only: shows the EU marker under the logo and in the sign-in footer.
+	region?: "eu";
 }
 const RUNTIME = (globalThis as { __ECHO_RUNTIME__?: RuntimeConfig })
 	.__ECHO_RUNTIME__;
@@ -43,6 +45,9 @@ export const PREVIEW_PR: { number: number; url: string } | null =
 				url: `https://github.com/${RUNTIME.previewRepo ?? "Dembrane/echo"}/pull/${RUNTIME.previewPr}`,
 			}
 		: null;
+
+/** "eu" on the EU deployment (WEB_REGION=eu), undefined everywhere else. */
+export const REGION: "eu" | undefined = RUNTIME?.region;
 
 const ENV_HOSTNAMES: Record<"production" | "staging" | "testing", string[]> = {
 	staging: ["dashboard.staging.dembrane.com", "portal.staging.dembrane.com"],
