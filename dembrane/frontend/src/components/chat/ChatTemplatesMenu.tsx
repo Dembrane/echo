@@ -21,6 +21,7 @@ import {
 } from "@phosphor-icons/react";
 import posthog from "posthog-js";
 import {
+	type CSSProperties,
 	type ReactNode,
 	useCallback,
 	useEffect,
@@ -121,7 +122,7 @@ const TemplatePill = ({
 	onClick: () => void;
 	testIdSuffix: string;
 }) => {
-	// Suggestions read in the action blue, so they stand apart from templates.
+	// Suggestions are a secondary button: blue box and text, apart from templates.
 	const color = isSuggestion ? "var(--app-action)" : undefined;
 
 	return (
@@ -131,7 +132,12 @@ const TemplatePill = ({
 				data-selected={isSelected || undefined}
 				px={8}
 				py={4}
-				style={{ maxWidth: 200 }}
+				style={
+					{
+						maxWidth: 200,
+						...(isSuggestion && { "--app-rule-color": "var(--app-action)" }),
+					} as CSSProperties
+				}
 				onClick={onClick}
 				{...testId(`chat-template-${testIdSuffix}`)}
 			>

@@ -176,6 +176,8 @@ Only the primary button is pill-shaped. That shape is what marks the primary act
 - Hover: 10% Royal Blue opacity fill
 - Click: 20% Royal Blue opacity fill
 
+A Royal Blue outline with Royal Blue text can be used on anything pressable that needs to stand out (a chip, a suggestion, a card): it reads as a secondary button. The fill, not the outline, marks a selected item.
+
 ### Tertiary
 
 - Default: Text only, Royal Blue, no border, standard corners
