@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Json } from "../src/py";
 import { promptText } from "../src/tick/model";
-import { emptyCache, positionKey } from "../src/tick/scale";
+import { emptyCache, FOCAL_BATCH, positionKey } from "../src/tick/scale";
 import { QuoteBook } from "../src/tick/shapes";
 import {
   findCollisionsLarge,
@@ -282,56 +282,86 @@ test("a large session pairs no position with its own twin, and names a focal onc
     expect(new Set(p.named_by).size).toBe(p.named_by.length);
 });
 
-test("a large session works out a batch's nearest positions when its call starts, not all up front", async () => {
-  const texts = new Map(
-    Array.from({ length: 700 }, (_, i) => [`t${i}`, `Table ${i} says thing ${i}.`] as const),
-  );
-  let seed = 1;
-  const rand = () => {
-    seed = (seed * 16807) % 2147483647;
-    return seed / 2147483647 - 0.5;
-  };
-  const vectors = new Map<string, number[]>();
-  const similar = async (ts: readonly string[]) => {
-    for (const t of ts) if (!vectors.has(t)) vectors.set(t, Array.from({ length: 768 }, rand));
-    return new Map(ts.map((t) => [t, vectors.get(t) as number[]]));
-  };
-  // Every collisions call yields to the event loop, as a network call does.
-  const fires: number[] = [];
-  let sampling = false;
-  const sample = async () => {
-    while (sampling) {
-      fires.push(performance.now());
-      await Bun.sleep(2);
-    }
-  };
-  await runPipeline(texts, new QuoteBook(texts), {
-    generate: async (o) => {
-      const required = String(o.schema.required);
-      if (required === "positions") {
-        const n = o.user.match(/id: t(\d+)/)?.[1];
-        return {
-          positions: [
-            { position: `thing ${n}`, holder: "h", kind: "want", hedged: false, quote: "x" },
-          ],
-        };
-      }
-      if (required === "collisions" && !sampling) {
-        sampling = true;
-        void sample();
-      }
-      await Bun.sleep(1);
+for (const concurrency of [1, 4]) {
+  test(`a large session works out a batch's nearest positions only when its call starts (${concurrency} slots)`, async () => {
+    const batches = 6;
+    const dimensions = 3;
+    const positions = Array.from({ length: batches * FOCAL_BATCH }, (_, i) => ({
+      id: `P${i + 1}`,
+      transcript: `t${i}`,
+      position: `thing ${i}`,
+      quote: `quote ${i}`,
+    }));
+    let componentReads = 0;
+    let preparingPrompt = false;
+    const vectors = new Map(
+      positions.map((p, i) => {
+        const vector = [i + 1, 1, (i % 3) + 1];
+        // Observe the real cosine calculation without mocking the neighbour search or
+        // changing production code. Loading embeddings alone reads no components.
+        for (let j = 0; j < dimensions; j++) {
+          const value = vector[j];
+          Object.defineProperty(vector, j, {
+            get: () => {
+              if (!preparingPrompt)
+                throw new Error("Nearest positions were prepared outside the model-call slot");
+              componentReads++;
+              return value;
+            },
+          });
+        }
+        return [p.position, vector] as const;
+      }),
+    );
+    let promptsPrepared = 0;
+    let callsStarted = 0;
+    const judge = new Judge(async () => {
+      callsStarted++;
+      expect(promptsPrepared).toBe(callsStarted);
+      // Keep each slot occupied across a turn so the remaining batches really queue.
+      await Promise.resolve();
       return {};
-    },
-    prompts: Object.fromEntries(PROMPT_NAMES.map((n) => [n, n])),
-    concurrency: 4,
-    large: { cache: emptyCache(), texts, similar },
+    }, concurrency);
+    const call = judge.call.bind(judge);
+    judge.call = (system, user, schema, thinking, label) => {
+      expect(typeof user).toBe("function");
+      if (typeof user !== "function") throw new Error("Expected a deferred prompt");
+      return call(
+        system,
+        () => {
+          const before = componentReads;
+          preparingPrompt = true;
+          try {
+            const text = user();
+            // Exercise the real nearest-neighbour calculation, without pinning its exact
+            // arithmetic or speed. It may run only while this slot builds its prompt.
+            expect(componentReads).toBeGreaterThan(before);
+            promptsPrepared++;
+            return text;
+          } finally {
+            preparingPrompt = false;
+          }
+        },
+        schema,
+        thinking,
+        label,
+      );
+    };
+    const cache = emptyCache();
+    await findCollisionsLarge(judge, positions, {
+      prompt: "collisions-batch",
+      tables: positions.map((p) => p.transcript),
+      large: {
+        cache,
+        texts: new Map(positions.map((p) => [p.transcript, p.quote])),
+        similar: async () => vectors,
+      },
+    });
+    expect(callsStarted).toBe(batches);
+    expect(promptsPrepared).toBe(batches);
+    expect(cache.checked).toHaveLength(positions.length);
   });
-  sampling = false;
-  const gaps = fires.slice(1).map((t, i) => t - (fires[i] as number));
-  // One batch's work at a time (about 10 ms), never all sixty at once (about 430 ms).
-  expect(Math.max(...gaps)).toBeLessThan(100);
-});
+}
 
 test("a large session whose embeddings fail lists every position and says why", async () => {
   const texts = new Map(
