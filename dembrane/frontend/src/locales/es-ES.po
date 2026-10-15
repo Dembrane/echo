@@ -167,7 +167,7 @@ msgstr "Bienvenido de nuevo"
 #. js-lingui-explicit-id
 #: src/components/participant/ParticipantConversationText.tsx:206
 #~ msgid "participant.button.finish.yes.text.mode"
-#~ msgstr "Sí<<<<<<< HEAD"
+#~ msgstr "Sí"
 
 #: src/components/popcorn/PopcornStatus.tsx:49
 msgid " · {heldBack} held back"
@@ -434,18 +434,18 @@ msgstr "{0, plural, one {Mensaje de dembrane} other {Mensajes de dembrane}}"
 #. placeholder {0}: projectIds.length
 #: src/components/project/BulkMoveProjectsModal.tsx:83
 msgid "{0, plural, one {Move # project to another workspace.} other {Move # projects to another workspace.}}"
-msgstr "{0, plural, one {Mueve # proyecto a otro espacio de trabajo.} other {Mueve # proyectos a otro espacio de trabajo.}}<<<<<<< HEAD"
+msgstr "{0, plural, one {Mueve # proyecto a otro espacio de trabajo.} other {Mueve # proyectos a otro espacio de trabajo.}}"
 
 #. placeholder {0}: after.length
 #: src/components/popcorn/finishedRead.ts:11
 msgid "{0, plural, one {Read after a conversation finished} other {Read after # conversations finished}}"
-msgstr "{0, plural, one {Leído cuando terminó una conversación} other {Leído cuando terminaron # conversaciones}}======="
+msgstr "{0, plural, one {Leído cuando terminó una conversación} other {Leído cuando terminaron # conversaciones}}"
 
 #. placeholder {0}: counts.conversations
 #: src/features/processes/watchers.tsx:110
 #: src/components/popcorn/PopcornStatus.tsx:54
 msgid "{0, plural, one {Reading {reading} of # conversation…} other {Reading {reading} of # conversations…}}"
-msgstr "{0, plural, one {Leyendo {reading} de # conversación…} other {Leyendo {reading} de # conversaciones…}}>>>>>>> origin/main"
+msgstr "{0, plural, one {Leyendo {reading} de # conversación…} other {Leyendo {reading} de # conversaciones…}}"
 
 #. placeholder {0}: status.running
 #: src/features/processes/copy.ts:40
@@ -538,7 +538,7 @@ msgstr "{0} añadidos desde tu organización"
 #. placeholder {0}: org.calls_this_month
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:33
 msgid "{0} calls this month"
-msgstr "{0} llamadas este mes<<<<<<< HEAD"
+msgstr "{0} llamadas este mes"
 
 #: src/routes/project/popcorn/PopcornRoute.tsx:49
 #: src/routes/project/popcorn/PopcornRoute.tsx:44
@@ -548,11 +548,11 @@ msgstr "{0} llamadas este mes<<<<<<< HEAD"
 
 #: src/components/project/ProjectListItem.tsx:241
 #~ msgid "{0} Conversations"
-#~ msgstr "{0} Conversaciones<<<<<<< HEAD"
+#~ msgstr "{0} Conversaciones"
 
 #: src/components/popcorn/PopcornStatus.tsx:39
 #~ msgid "{0} conversations · {phrases} phrases · {validated} validated"
-#~ msgstr "{0} conversaciones · {phrases} frases · {validated} validadas>>>>>>> origin/main"
+#~ msgstr "{0} conversaciones · {phrases} frases · {validated} validadas"
 
 #: src/components/project/ProjectCard.tsx:46
 #~ msgid "{0} Conversations • Edited {1}"
@@ -913,7 +913,7 @@ msgstr "Extracto de la transcripción de {name}"
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:104
 msgid "{names} and {extra} more"
-msgstr "{names} y {extra} más<<<<<<< HEAD"
+msgstr "{names} y {extra} más"
 
 #: src/features/processes/watchers.tsx:181
 msgid "{newErrors, plural, one {# conversation could not be transcribed.} other {# conversations could not be transcribed.}}"
@@ -8044,7 +8044,7 @@ msgstr "Apellidos"
 
 #: src/theme.tsx:327
 msgid "Last page"
-msgstr "Última página<<<<<<< HEAD"
+msgstr "Última página"
 
 #: src/components/popcorn/PopcornStatus.tsx:70
 msgid "Last read {startedLabel}"
@@ -8338,7 +8338,7 @@ msgstr "en directo hasta el {0}, lee cada {every} min"
 #. placeholder {0}: popcorn.counts.phrases
 #: src/routes/project/library/LibraryRoute.tsx:85
 msgid "Live, {0} phrases so far"
-msgstr "En directo, {0} frases por ahora<<<<<<< HEAD"
+msgstr "En directo, {0} frases por ahora"
 
 #: src/routes/project/popcorn/PopcornRoute.tsx:63
 msgid "live, reads every {every} min"
@@ -10993,7 +10993,7 @@ msgstr "Elige una hora con {host}."
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2991
 msgid "Pick an account"
-msgstr "Elige una cuenta<<<<<<< HEAD"
+msgstr "Elige una cuenta"
 
 #: src/components/map/panels/KnowledgeGraph.tsx:562
 msgid "Pick an argument to go to it, or a quote to find it below."
@@ -11204,7 +11204,7 @@ msgstr "Popcorn"
 
 #: src/components/popcorn/PopcornLanguageSettings.tsx:68
 msgid "Popcorn also in"
-msgstr "Popcorn también en<<<<<<< HEAD"
+msgstr "Popcorn también en"
 
 #: src/routes/project/popcorn/PopcornRoute.tsx:183
 msgid "Popcorn could not be loaded"
@@ -11873,12 +11873,12 @@ msgstr "Leyendo el resumen de {0}"
 #. placeholder {0}: context.participantName
 #: src/components/chat/agenticToolActivity.ts:148
 msgid "Reading {0}'s transcript"
-msgstr "Leyendo la transcripción de {0}<<<<<<< HEAD"
+msgstr "Leyendo la transcripción de {0}"
 
 #: src/features/processes/watchers.tsx:100
 #: src/components/popcorn/PopcornStatus.tsx:45
 #~ msgid "Reading {reading} of {0} conversations…"
-#~ msgstr "Leyendo {reading} de {0} conversaciones…>>>>>>> origin/main"
+#~ msgstr "Leyendo {reading} de {0} conversaciones…"
 
 #: src/components/chat/agenticToolActivity.ts:144
 msgid "Reading a conversation summary"
@@ -17118,7 +17118,7 @@ msgstr "¿Usando webhooks? Nos encantaría escuchar de ti"
 #: src/components/map/attributes.ts:352
 #: src/components/map/panels/ClusterSummary.tsx:160
 msgid "Valence"
-msgstr "Valencia<<<<<<< HEAD"
+msgstr "Valencia"
 
 #: src/components/popcorn/PopcornStatus.tsx:64
 msgid "Validation progress"
