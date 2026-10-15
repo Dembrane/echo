@@ -858,3 +858,59 @@ msgstr "Das Angebot ist gültig bis {date}."
 #. js-lingui-explicit-id
 msgid "offer_email.closing"
 msgstr "Freundliche Grüße"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.subject"
+msgstr "{document_title} ist unterzeichnet"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.preview"
+msgstr "{signer_name} hat {document_title} für {org_name} unterzeichnet. Die Angaben zur Unterzeichnung stehen in dieser E-Mail."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.heading"
+msgstr "{document_title} ist unterzeichnet"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.body"
+msgstr "{signer_name} hat {document_title} für {org_name} unterzeichnet. Diese E-Mail ist Ihr Nachweis der Unterzeichnung."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.attached"
+msgstr "Das unterzeichnete PDF ist angehängt. Bewahren Sie es bei Ihren Unterlagen auf."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.not_attached"
+msgstr "Das unterzeichnete PDF ist zu groß für einen Anhang. Sie können es in Ihrem Konto herunterladen."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.verify"
+msgstr "Der SHA-256-Wert ist der Fingerabdruck des unterzeichneten PDFs. Ändert sich die Datei, ändert sich auch ihr Fingerabdruck."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.cta"
+msgstr "Unterzeichnete Kopie öffnen"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.text_cta"
+msgstr "Unterzeichnete Kopie öffnen:"
+
+#. js-lingui-explicit-id
+msgid "email.facts.document"
+msgstr "Dokument"
+
+#. js-lingui-explicit-id
+msgid "email.facts.signed_by"
+msgstr "Unterzeichnet von"
+
+#. js-lingui-explicit-id
+msgid "email.facts.signed_at"
+msgstr "Unterzeichnet am (UTC)"
+
+#. js-lingui-explicit-id
+msgid "email.facts.document_id"
+msgstr "Dokument-ID"
+
+#. js-lingui-explicit-id
+msgid "email.facts.sha256"
+msgstr "SHA-256 des unterzeichneten PDFs"

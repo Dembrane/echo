@@ -1,4 +1,10 @@
 /** One outgoing email, already rendered. Multipart: the text part goes first, then HTML. */
+export interface MailAttachment {
+  readonly filename: string;
+  readonly contentType: string;
+  readonly content: Uint8Array;
+}
+
 export interface MailMessage {
   readonly to: string | readonly string[];
   readonly subject: string;
@@ -8,6 +14,8 @@ export interface MailMessage {
   readonly tags?: readonly string[];
   /** Where a reply goes, when not to the sender: the person at dembrane who owns the account. */
   readonly replyTo?: { readonly email: string; readonly name?: string | null };
+  /** Files sent with the message (the signed copy of a document). */
+  readonly attachments?: readonly MailAttachment[];
 }
 
 /**

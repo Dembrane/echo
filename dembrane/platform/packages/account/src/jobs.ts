@@ -25,16 +25,33 @@ export const sendEmail = defineJob(
     language: z.string().optional(),
     /** Replies go here instead of the no-reply sender: the account's manager at dembrane. */
     replyTo: z.object({ email: z.string(), name: z.string().nullable() }).optional(),
+    /**
+     * Files kept in object storage that travel with the email (the signed copy of a
+     * document). The worker reads them when it sends, so the queue never carries file bytes.
+     */
+    attachments: z
+      .array(z.object({ key: z.string(), filename: z.string(), content_type: z.string() }))
+      .optional(),
   }),
   { retryLimit: 3, retryDelaySeconds: 30, expireInSeconds: 120 },
 );
 
-export function emailHandler(mailer: Mailer, logger: Logger) {
+/** Reads a stored file for an attachment; null when it is gone. */
+export type LoadFile = (key: string) => Promise<Uint8Array | null>;
+
+export function emailHandler(mailer: Mailer, logger: Logger, loadFile?: LoadFile) {
   return async (p: z.output<typeof sendEmail.schema>) => {
     const template = { template: p.template, data: p.data } as EmailTemplate;
     const { html, text } = render(template, p.language);
     const subject = p.language ? (subjectOf(template, p.language) ?? p.subject) : p.subject;
     try {
+      const attachments = await Promise.all(
+        (p.attachments ?? []).map(async (a) => {
+          const content = loadFile ? await loadFile(a.key) : null;
+          if (!content) throw new Error(`attachment ${a.key} is not available`);
+          return { filename: a.filename, contentType: a.content_type, content };
+        }),
+      );
       await mailer.send({
         to: p.to,
         subject,
@@ -42,6 +59,7 @@ export function emailHandler(mailer: Mailer, logger: Logger) {
         text,
         tags: [p.template],
         ...(p.replyTo && { replyTo: p.replyTo }),
+        ...(attachments.length && { attachments }),
       });
     } catch (err) {
       logger.error(

@@ -7,6 +7,7 @@ import {
   accountPage,
   answerWhoSigns,
   customerFile,
+  customerLegalText,
   customerReply,
   declineDocument,
   documentDetail,
@@ -163,6 +164,21 @@ export function accountsRoutes(d: AccountsDeps) {
   app.get(R.documentFile.path, async (c) => {
     const r = await customerFile(d, requireUser(c), p(c, "orgId"), p(c, "docId"), "file");
     return pdfResponse(c, r.bytes, r.doc.title);
+  });
+  app.get(R.legalText.path, async (c) => {
+    const page = await customerLegalText(
+      d,
+      requireUser(c),
+      p(c, "orgId"),
+      p(c, "docId"),
+      p(c, "kind"),
+    );
+    return c.body(page, 200, {
+      "content-type": "text/html; charset=utf-8",
+      "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'",
+      "x-content-type-options": "nosniff",
+      "cache-control": "private, no-store",
+    });
   });
   app.get(R.signedPdf.path, async (c) => {
     const r = await customerFile(d, requireUser(c), p(c, "orgId"), p(c, "docId"), "signed");

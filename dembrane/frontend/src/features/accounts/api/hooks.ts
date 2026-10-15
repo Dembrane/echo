@@ -119,6 +119,33 @@ export function usePdfHref(url: string | null | undefined): string | null {
 }
 
 /**
+ * An href for a legal text a document incorporates (a pin's text_url). Against the API it
+ * is the route itself; in fixture mode there is no server, so it is a small page built here.
+ */
+export function useLegalHref(pin: {
+	text_url: string | null;
+	version: string;
+	sha256: string;
+}): string | null {
+	const [blobHref, setBlobHref] = useState<string | null>(null);
+	useEffect(() => {
+		if (!FIXTURE_MODE || !pin.text_url) return;
+		const href = URL.createObjectURL(
+			new Blob(
+				[
+					`<!doctype html><meta charset="utf-8"><title>Version ${pin.version}</title><body style="font:16px/1.5 system-ui;max-width:42rem;margin:2rem auto;padding:0 1rem"><h1>Sample legal text</h1><p>Version ${pin.version}</p><p style="color:#666;word-break:break-all">SHA-256 of the text: ${pin.sha256}</p><p>This is the text as it was pinned when the document was sent.</p>`,
+				],
+				{ type: "text/html" },
+			),
+		);
+		setBlobHref(href);
+		return () => URL.revokeObjectURL(href);
+	}, [pin.text_url, pin.version, pin.sha256]);
+	if (!pin.text_url) return null;
+	return FIXTURE_MODE ? blobHref : apiUrl(pin.text_url);
+}
+
+/**
  * The bytes of a document's PDF for pdf.js. A document's file never changes once sent;
  * a draft's does when staff change it, so its sha256 goes in as `version`.
  */

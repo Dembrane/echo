@@ -858,3 +858,59 @@ msgstr "The offer is valid until {date}."
 #. js-lingui-explicit-id
 msgid "offer_email.closing"
 msgstr "Kind regards,"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.subject"
+msgstr "{document_title} is signed"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.preview"
+msgstr "{signer_name} signed {document_title} for {org_name}. The signing details are in this email."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.heading"
+msgstr "{document_title} is signed"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.body"
+msgstr "{signer_name} signed {document_title} for {org_name}. This email is your record of the signing."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.attached"
+msgstr "The signed PDF is attached. Keep it with your records."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.not_attached"
+msgstr "The signed PDF is too large to attach. You can download it from your account."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.verify"
+msgstr "The SHA-256 is the fingerprint of the signed PDF. If the file changes, its fingerprint changes too."
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.cta"
+msgstr "Open the signed copy"
+
+#. js-lingui-explicit-id
+msgid "email.account_signed_copy.text_cta"
+msgstr "Open the signed copy:"
+
+#. js-lingui-explicit-id
+msgid "email.facts.document"
+msgstr "Document"
+
+#. js-lingui-explicit-id
+msgid "email.facts.signed_by"
+msgstr "Signed by"
+
+#. js-lingui-explicit-id
+msgid "email.facts.signed_at"
+msgstr "Signed at (UTC)"
+
+#. js-lingui-explicit-id
+msgid "email.facts.document_id"
+msgstr "Document id"
+
+#. js-lingui-explicit-id
+msgid "email.facts.sha256"
+msgstr "SHA-256 of the signed PDF"

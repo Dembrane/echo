@@ -189,3 +189,19 @@ export const requestValues = (
 /** Dates on documents read day-month-year, as the templates print them. */
 export const todayForDocument = (date = new Date()): string =>
 	`${String(date.getDate()).padStart(2, "0")}-${String(date.getMonth() + 1).padStart(2, "0")}-${date.getFullYear()}`;
+
+/** A calendar day as the date input reads and writes it: "2026-09-28", in the signer's own time. */
+export const localIsoDate = (date = new Date()): string =>
+	`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
+/** The date input's value for a document date ("28-09-2026"); empty for anything else. */
+export const inputDate = (documentDate: string): string => {
+	const m = /^(\d{2})-(\d{2})-(\d{4})$/.exec(documentDate);
+	return m ? `${m[3]}-${m[2]}-${m[1]}` : "";
+};
+
+/** A document date ("28-09-2026") for the date input's value ("2026-09-28"). */
+export const documentDate = (inputValue: string): string => {
+	const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(inputValue);
+	return m ? `${m[3]}-${m[2]}-${m[1]}` : "";
+};

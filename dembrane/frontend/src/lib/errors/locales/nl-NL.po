@@ -24,12 +24,17 @@ msgid "error.request.field_empty"
 msgstr "{field} kan niet leeg zijn. Vul het in of verwijder het."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:58
+#: src/lib/errors/messages/document.ts:32
+msgid "error.document.field_date_invalid"
+msgstr "{label} moet een echte datum zijn, niet in de toekomst en niet van voor het versturen van het document."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/document.ts:63
 msgid "error.document.image_too_large"
 msgstr "{what, select, initials {De afbeelding van je paraaf} other {De afbeelding van je handtekening}} is te groot. Houd deze onder 512 KB."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:53
+#: src/lib/errors/messages/document.ts:58
 msgid "error.document.image_not_png"
 msgstr "{what, select, initials {Je paraaf} other {Je handtekening}} moet een PNG-afbeelding zijn."
 
@@ -184,7 +189,7 @@ msgid "error.field.invalid_url"
 msgstr "Voer een webadres in dat begint met http:// of https://."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:40
+#: src/lib/errors/messages/document.ts:45
 msgid "error.document.field_text_invalid"
 msgstr "Voer tekst in voor {label}."
 
@@ -199,7 +204,7 @@ msgid "error.request.field_required"
 msgstr "Vul {field} in."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:36
+#: src/lib/errors/messages/document.ts:41
 msgid "error.document.field_required"
 msgstr "Vul {label} in om door te gaan."
 
@@ -264,7 +269,7 @@ msgid "error.document.decline_signer_only"
 msgstr "Alleen {signer_email} kan dit document weigeren."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:98
+#: src/lib/errors/messages/document.ts:103
 msgid "error.document.signer_only"
 msgstr "Alleen {signer_email} kan dit document ondertekenen. Vraag diegene om te tekenen, of vraag ons om de ondertekenaar te wijzigen."
 
@@ -589,7 +594,7 @@ msgid "error.map.selection_other_snapshot"
 msgstr "De kaart is bijgewerkt sinds je deze selectie maakte. Vernieuw de kaart en selecteer opnieuw."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:63
+#: src/lib/errors/messages/document.ts:68
 msgid "error.document.no_pdf"
 msgstr "De pdf van dit document is niet beschikbaar. Neem contact met ons op, dan sturen we hem opnieuw."
 
@@ -714,12 +719,12 @@ msgid "error.workspace.data_owner_is_member"
 msgstr "Deze data-eigenaar zit al in je organisatie. Kies voor een externe klant iemand daarbuiten, of maak in plaats daarvan een interne werkruimte aan."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:76
+#: src/lib/errors/messages/document.ts:81
 msgid "error.document.not_declinable"
 msgstr "Dit document kan niet meer worden geweigerd."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:103
+#: src/lib/errors/messages/document.ts:108
 msgid "error.document.signing_unavailable"
 msgstr "Dit document kan op dit moment niet worden ondertekend. We zijn op de hoogte en lossen het op."
 
@@ -729,12 +734,12 @@ msgid "error.document.changed"
 msgstr "Dit document is gewijzigd sinds je het hebt geopend. Vernieuw de pagina en lees het opnieuw voordat je ondertekent."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:48
+#: src/lib/errors/messages/document.ts:53
 msgid "error.document.field_unknown"
 msgstr "Dit document is gewijzigd sinds je het hebt geopend. Vernieuw de pagina en probeer het opnieuw."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:68
+#: src/lib/errors/messages/document.ts:73
 msgid "error.document.no_signature_needed"
 msgstr "Dit document heeft geen handtekening nodig."
 
@@ -744,12 +749,12 @@ msgid "error.document.already_signed"
 msgstr "Dit document is al ondertekend. Er hoeft niets meer te gebeuren."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:84
+#: src/lib/errors/messages/document.ts:89
 msgid "error.document.not_signed"
 msgstr "Dit document is nog niet ondertekend, dus er is geen ondertekende kopie om te downloaden."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:72
+#: src/lib/errors/messages/document.ts:77
 msgid "error.document.not_awaiting_signature"
 msgstr "Dit document wacht niet meer op een handtekening."
 
@@ -759,7 +764,7 @@ msgid "error.document.declined"
 msgstr "Dit document is geweigerd en kan niet meer worden ondertekend."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:112
+#: src/lib/errors/messages/document.ts:117
 msgid "error.document.withdrawn"
 msgstr "Dit document is ingetrokken en kan niet meer worden ondertekend."
 
@@ -844,7 +849,7 @@ msgid "error.billing.tier_required"
 msgstr "Hiervoor is het {required}-abonnement nodig. Upgrade om het te gebruiken."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:89
+#: src/lib/errors/messages/document.ts:94
 msgid "error.document.offer_expired"
 msgstr "Deze aanbieding is verlopen op {valid_until}. Neem contact met ons op voor een nieuwe."
 
@@ -1074,12 +1079,12 @@ msgid "error.workspace.has_projects"
 msgstr "Deze werkruimte bevat nog {count, plural, one {# project} other {# projecten}}. Verwijder of verplaats ze eerst via de Projecten-pagina van je organisatie."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:32
+#: src/lib/errors/messages/document.ts:37
 msgid "error.document.field_must_tick"
 msgstr "Vink {label} aan om door te gaan."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:44
+#: src/lib/errors/messages/document.ts:49
 msgid "error.document.field_tick_invalid"
 msgstr "Vink {label} aan of uit."
 
@@ -1089,7 +1094,7 @@ msgid "error.project.move_needs_admin"
 msgstr "Om projecten te verplaatsen, moet je beheerder of eigenaar zijn van de {side} werkruimte."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:108
+#: src/lib/errors/messages/document.ts:113
 msgid "error.document.verified_email_required"
 msgstr "Log in met een geverifieerd e-mailadres om te ondertekenen."
 
@@ -1219,7 +1224,7 @@ msgid "error.conversation.not_found"
 msgstr "We konden dit gesprek niet vinden. Mogelijk is het verwijderd."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:80
+#: src/lib/errors/messages/document.ts:85
 msgid "error.document.not_found"
 msgstr "We konden dit document niet vinden. Mogelijk is het ingetrokken."
 
@@ -1394,7 +1399,7 @@ msgid "error.internal.unavailable"
 msgstr "We konden een deel van dembrane op dit moment niet bereiken. Probeer het zo opnieuw."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/document.ts:93
+#: src/lib/errors/messages/document.ts:98
 msgid "error.document.signature_unreadable"
 msgstr "We konden je handtekening niet lezen. Zet hem opnieuw en probeer het nog een keer."
 

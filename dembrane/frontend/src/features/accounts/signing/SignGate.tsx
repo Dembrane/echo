@@ -15,7 +15,7 @@ import {
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { useAuthenticated } from "@/components/auth/hooks";
 import { SignedInElsewhere } from "@/components/auth/SignedInElsewhere";
@@ -54,7 +54,7 @@ type Invite = ResponseOf<"signerInvite">;
  * someone else's signing. Without a token it is the plain sign route behind sign-in.
  */
 export const SignGate = () => (
-	<AccountsI18n>
+	<AccountsI18n signing>
 		<Gate />
 	</AccountsI18n>
 );
@@ -63,13 +63,19 @@ const Gate = () => {
 	const [searchParams] = useSearchParams();
 	const invite = searchParams.get("invite");
 	const { loading, isAuthenticated } = useAuthenticated(false);
+	// The loading screen is for the first answer only. The session is checked again when the
+	// tab regains focus (the signer leaves to read the code in their mail), and for a signer
+	// with no session yet that check counts as loading again: showing the loading screen then
+	// would unmount the invitation and lose the step and the code typed into it.
+	const answered = useRef(false);
+	if (!loading) answered.current = true;
 	if (!invite)
 		return (
 			<Protected>
 				<SignRoute />
 			</Protected>
 		);
-	if (loading) return <BeautifulLoading />;
+	if (loading && !answered.current) return <BeautifulLoading />;
 	return isAuthenticated ? (
 		<SignedInWithInvite token={invite} />
 	) : (
