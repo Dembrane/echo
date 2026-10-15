@@ -1005,7 +1005,7 @@ msgstr "{tag} (preselezionato)"
 msgid "{total, plural, one {{done} of # conversation} other {{done} of # conversations}}"
 msgstr "{total, plural, one {{done} su # conversazione} other {{done} su # conversazioni}}"
 
-#: src/components/conversation/hooks/index.ts:523
+#: src/components/conversation/hooks/index.ts:545
 msgid "{total, plural, one {Cleared {cleared} of # conversation} other {Cleared {cleared} of # conversations}}"
 msgstr "{total, plural, one {Cancellata {cleared} su # conversazione} other {Cancellate {cleared} su # conversazioni}}"
 
@@ -2593,7 +2593,7 @@ msgstr "Audio download not available for anonymized conversations"
 msgid "Audio is coming in"
 msgstr "Ricezione audio in corso"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:138
+#: src/components/conversation/ConversationTranscriptSection.tsx:163
 msgid "Audio playback not available for anonymized conversations"
 msgstr "Audio playback not available for anonymized conversations"
 
@@ -3589,6 +3589,10 @@ msgstr "Fai clic su un tag di conversazione per aggiungerlo ai filtri."
 msgid "Click a node in the tree or cluster map to spotlight it here."
 msgstr "Fai clic su un nodo nell'albero o nella mappa dei cluster per metterlo in evidenza qui."
 
+#: src/components/conversation/FinalTranscript.tsx:86
+msgid "Click a sentence to play from there."
+msgstr "Clicca su una frase per riprodurre da lì."
+
 #: src/components/map/panels/HistoryPanel.tsx:121
 #~ msgid "Click an argument, or rest the cursor on a cluster until the circle closes, and it is kept here."
 #~ msgstr "Fai clic su un argomento, o lascia il cursore su un gruppo finché il cerchio non si chiude, e viene conservato qui."
@@ -4041,7 +4045,7 @@ msgstr "Conversazione"
 msgid "Conversation {0}"
 msgstr "Conversazione {0}"
 
-#: src/components/conversation/hooks/index.ts:368
+#: src/components/conversation/hooks/index.ts:390
 msgid "Conversation added to chat"
 msgstr "Conversation added to chat"
 
@@ -4070,7 +4074,7 @@ msgstr "I nomi delle conversazioni compaiono nella Libreria e la schermata final
 msgid "Conversation pages and data loading are streamlined."
 msgstr "Le pagine delle conversazioni e il caricamento dei dati sono stati ottimizzati."
 
-#: src/components/conversation/hooks/index.ts:476
+#: src/components/conversation/hooks/index.ts:498
 msgid "Conversation removed from chat"
 msgstr "Conversation removed from chat"
 
@@ -4133,7 +4137,7 @@ msgstr "conversations"
 msgid "Conversations"
 msgstr "Conversations"
 
-#: src/components/conversation/hooks/index.ts:512
+#: src/components/conversation/hooks/index.ts:534
 msgid "Conversations cleared"
 msgstr "Conversazioni cancellate"
 
@@ -5732,7 +5736,7 @@ msgid "emptied out"
 msgstr "svuotato"
 
 #: src/components/conversation/ConversationsMiniList.tsx:84
-#: src/components/conversation/ConversationTranscriptSection.tsx:116
+#: src/components/conversation/ConversationTranscriptSection.tsx:132
 msgid "Empty"
 msgstr "Empty"
 
@@ -6199,8 +6203,8 @@ msgstr "Failed to add conversations to context"
 #~ msgid "Failed to approve outcome. Please try again."
 #~ msgstr "Failed to approve outcome. Please try again."
 
-#: src/components/conversation/hooks/index.ts:503
-#: src/components/conversation/hooks/index.ts:519
+#: src/components/conversation/hooks/index.ts:525
+#: src/components/conversation/hooks/index.ts:541
 msgid "Failed to clear conversations"
 msgstr "Impossibile cancellare le conversazioni"
 
@@ -6318,7 +6322,7 @@ msgstr "Failed to remove logo"
 msgid "Failed to reschedule. Please choose a time further in the future and try again."
 msgstr "Riprogrammazione non riuscita. Scegli un orario più avanti e riprova."
 
-#: src/components/conversation/hooks/index.ts:622
+#: src/components/conversation/hooks/index.ts:644
 msgid "Failed to retranscribe conversation. Please try again."
 msgstr "Failed to retranscribe conversation. Please try again."
 
@@ -8450,7 +8454,7 @@ msgstr "Caricamento degli spazi di lavoro…"
 
 #: src/components/conversation/ProjectConversationsPanel.tsx:130
 #: src/components/conversation/ConversationAccordion.tsx:119
-#: src/components/conversation/hooks/index.ts:341
+#: src/components/conversation/hooks/index.ts:363
 msgid "Loading..."
 msgstr "Loading..."
 
@@ -9776,7 +9780,7 @@ msgstr "Ancora nessuna formazione."
 #~ msgid "No Transcript Available"
 #~ msgstr "No Transcript Available"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:161
+#: src/components/conversation/ConversationTranscriptSection.tsx:198
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "No transcript exists for this conversation yet. Please check back later."
 
@@ -13987,7 +13991,7 @@ msgstr "Mostra tutti {total}"
 msgid "Show all conversations"
 msgstr "Mostra tutte le conversazioni"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:148
+#: src/components/conversation/ConversationTranscriptSection.tsx:173
 msgid "Show audio player"
 msgstr "Show audio player"
 
@@ -14024,6 +14028,10 @@ msgstr "Show IP addresses"
 #: src/components/announcement/AnnouncementItem.tsx:119
 msgid "Show less"
 msgstr "Show less"
+
+#: src/components/conversation/ConversationTranscriptSection.tsx:157
+msgid "Show live preview text"
+msgstr "Mostra l'anteprima del testo in tempo reale"
 
 #: src/features/sidebar/views/InboxView.tsx:565
 #: src/components/workspace/SupportAccessSection.tsx:262
@@ -16312,6 +16320,10 @@ msgstr "Formazioni"
 msgid "Transcribe a conversation again"
 msgstr "Trascrivi di nuovo una conversazione"
 
+#: src/components/conversation/ConversationTranscriptSection.tsx:186
+msgid "Transcribed again from the whole recording."
+msgstr "Trascritto di nuovo dall'intera registrazione."
+
 #: src/components/conversation/ConversationsMiniList.tsx:94
 msgid "Transcribing"
 msgstr "Trascrizione in corso"
@@ -16327,7 +16339,7 @@ msgstr "trascrizione"
 #: src/features/sidebar/hooks/useSearchHits.ts:237
 #: src/features/sidebar/hooks/useSearchHits.ts:238
 #: src/features/sidebar/hooks/useSearchHits.ts:246
-#: src/components/conversation/ConversationTranscriptSection.tsx:108
+#: src/components/conversation/ConversationTranscriptSection.tsx:124
 #: src/components/chat/ChatHistoryMessage.tsx:75
 msgid "Transcript"
 msgstr "Transcript"
