@@ -53,8 +53,10 @@ export interface FinalTranscriber {
 }
 
 // Scaleway takes 25 MB a request; keep a margin and keep one request well inside its 180 s
-// timeout. Whisper times its own segments, so it takes ten minutes at a time.
-export const WHISPER_LIMITS = { maxBytes: 20 * 1024 * 1024, maxSeconds: 10 * 60 } as const;
+// timeout. Whisper times its own segments, but over a five minute file they ran 2.7 seconds off
+// on median (6.8 at worst), over a piece of a minute 0.2 seconds (1.4 at worst), and the word
+// error rate was no worse.
+export const WHISPER_LIMITS = { maxBytes: 20 * 1024 * 1024, maxSeconds: 60 } as const;
 // Gemini takes 20 MB inline, but its clock is the limit: over a five minute file its
 // timestamps ran 10 to 50 percent fast with errors of 7 to 12 seconds, over one minute they
 // stay within 2 seconds after the piece's times are pulled back to its length. Pieces are cut
@@ -65,11 +67,15 @@ export const GEMINI_LIMITS = { maxBytes: 18 * 1024 * 1024, maxSeconds: 60 } as c
 /** Whisper: its segments are the sentences, timed by the model itself. */
 export class WhisperFinal implements FinalTranscriber {
   readonly provider = "whisper" as const;
-  readonly limits = WHISPER_LIMITS;
+  readonly limits: FinalTranscriber["limits"];
   readonly model: string;
   private readonly stt: NonNullable<Models["speechToText"]>;
 
-  constructor(models: Models) {
+  constructor(models: Models, opts: { maxSeconds?: number } = {}) {
+    this.limits = {
+      maxBytes: WHISPER_LIMITS.maxBytes,
+      maxSeconds: opts.maxSeconds ?? WHISPER_LIMITS.maxSeconds,
+    };
     if (!models.speechToText)
       throw new Error("the whisper final pass needs a speech-to-text model");
     this.stt = models.speechToText;
