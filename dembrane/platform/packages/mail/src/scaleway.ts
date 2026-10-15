@@ -43,6 +43,7 @@ export class ScalewayMailer implements Mailer {
           html: msg.html,
           ...(replyTo && { additional_headers: [{ key: "Reply-To", value: replyTo }] }),
         }),
+        signal: AbortSignal.timeout(30_000),
       },
     );
     if (res.status >= 400) {

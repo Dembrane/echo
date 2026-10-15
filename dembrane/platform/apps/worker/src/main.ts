@@ -79,7 +79,9 @@ const mailer: Mailer = mailerFromSettings(config.mail) ?? {
   send: async (msg) =>
     logger.warn(
       { subject: msg.subject, tags: msg.tags },
-      `mail not sent: no ${missingMailKey(config.mail)}`,
+      config.mail.provider === "scaleway"
+        ? `mail not sent: no ${missingMailKey(config.mail)}`
+        : "mail not sent: no SendGrid key",
     ),
 };
 const billing = createBilling({

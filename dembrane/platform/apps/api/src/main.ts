@@ -64,9 +64,9 @@ const databaseUrl = withDatabase(config.database.url, config.database.name);
 const database = createDb({ url: databaseUrl, poolMax: config.database.poolMax });
 
 // Auth emails go out inside the request: the person is waiting for the code or the link.
-const mailer: Mailer = mailerFromSettings(config.mail) ?? new MemoryMailer();
-if (!mailerFromSettings(config.mail))
-  logger.warn(`no ${missingMailKey(config.mail)}: emails are kept in memory, not sent`);
+const sender = mailerFromSettings(config.mail);
+const mailer: Mailer = sender ?? new MemoryMailer();
+if (!sender) logger.warn(`no ${missingMailKey(config.mail)}: emails are kept in memory, not sent`);
 
 const auth = createAuth({
   db: database.db,
