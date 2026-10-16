@@ -81,12 +81,12 @@ export const ConversationTranscriptSection = ({
 		finalQuery.data?.available && !finalQuery.data.locked
 			? finalQuery.data
 			: null;
-	// The 30 second preview text stays one switch away once the final transcript exists.
-	const [showLive, setShowLive] = useSessionStorageState<boolean>(
-		"conversation-transcript-show-live",
-		{ defaultValue: false },
-	);
-	const showFinal = finalTranscript !== null && !showLive;
+	const showFinal = finalTranscript !== null;
+	// A final transcript is on its way: say so in one line, and say nothing once it is here.
+	const isDraft =
+		!showFinal &&
+		finalQuery.data?.available === false &&
+		Boolean(finalQuery.data.expected);
 
 	const allChunks = (chunksData?.pages ?? []).flatMap((page) => page.chunks);
 	const highlightedChunkId = useChunkAnchorScroll({
@@ -150,14 +150,6 @@ export const ConversationTranscriptSection = ({
 				</Group>
 
 				<Group>
-					{finalTranscript && (
-						<Switch
-							checked={showLive}
-							onChange={(event) => setShowLive(event.currentTarget.checked)}
-							label={t`Show live preview text`}
-							{...testId("transcript-show-live-toggle")}
-						/>
-					)}
 					{!showFinal && (
 						<Tooltip
 							label={t`Audio playback not available for anonymized conversations`}
@@ -182,9 +174,6 @@ export const ConversationTranscriptSection = ({
 				<LockedTranscriptOverlay />
 			) : showFinal ? (
 				<Stack gap="xs" {...testId("transcript-final")}>
-					<Text size="xs" c="dimmed">
-						<Trans>Transcribed again from the whole recording.</Trans>
-					</Text>
 					<FinalTranscript
 						text={finalTranscript.text}
 						sentences={finalTranscript.sentences}
@@ -193,6 +182,11 @@ export const ConversationTranscriptSection = ({
 				</Stack>
 			) : (
 				<Stack className="relative">
+					{isDraft && allChunks.length > 0 && (
+						<Text size="xs" c="dimmed" {...testId("transcript-draft")}>
+							<Trans>Draft. It improves when the conversation ends.</Trans>
+						</Text>
+					)}
 					{allChunks.length === 0 ? (
 						<Text size="sm" c="dimmed" {...testId("transcript-empty-alert")}>
 							<Trans>

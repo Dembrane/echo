@@ -1,4 +1,3 @@
-import { Trans } from "@lingui/react/macro";
 import { Stack, Text } from "@mantine/core";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -82,9 +81,6 @@ export const FinalTranscript = ({
 					onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
 					onSeeked={(e) => setTime(e.currentTarget.currentTime)}
 				/>
-				<Text size="xs" c="dimmed" mt={4}>
-					<Trans>Click a sentence to play from there.</Trans>
-				</Text>
 			</div>
 		</Stack>
 	);

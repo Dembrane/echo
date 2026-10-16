@@ -2594,7 +2594,7 @@ msgstr "Audio-Download nicht verfügbar für anonymisierte Unterhaltungen"
 msgid "Audio is coming in"
 msgstr "Audiosignal empfangen"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:163
+#: src/components/conversation/ConversationTranscriptSection.tsx:155
 msgid "Audio playback not available for anonymized conversations"
 msgstr "Audio-Wiedergabe nicht verfügbar für anonymisierte Unterhaltungen"
 
@@ -3591,8 +3591,8 @@ msgid "Click a node in the tree or cluster map to spotlight it here."
 msgstr "Klicken Sie auf einen Knoten in der Baum- oder Cluster-Ansicht, um ihn hier hervorzuheben."
 
 #: src/components/conversation/FinalTranscript.tsx:86
-msgid "Click a sentence to play from there."
-msgstr "Klicken Sie auf einen Satz, um ab dort abzuspielen."
+#~ msgid "Click a sentence to play from there."
+#~ msgstr "Klicken Sie auf einen Satz, um ab dort abzuspielen."
 
 #: src/components/map/panels/HistoryPanel.tsx:121
 #~ msgid "Click an argument, or rest the cursor on a cluster until the circle closes, and it is kept here."
@@ -5396,6 +5396,10 @@ msgstr "AVV"
 #: src/components/chat/ChatModeSelector.tsx:56
 msgid "Draft next actions and organize them by priority"
 msgstr "Nächste Aktionen erstellen und nach Priorität organisieren"
+
+#: src/components/conversation/ConversationTranscriptSection.tsx:187
+msgid "Draft. It improves when the conversation ends."
+msgstr "Entwurf. Er wird verbessert, sobald das Gespräch endet."
 
 #: src/components/chat/agenticToolActivity.ts:160
 msgid "Drafting a note you can send to the dembrane team"
@@ -9781,7 +9785,7 @@ msgstr "Noch keine Schulungen."
 #~ msgid "No Transcript Available"
 #~ msgstr "Kein Transkript verfügbar"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:198
+#: src/components/conversation/ConversationTranscriptSection.tsx:192
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "Noch kein Transkript für dieses Gespräch vorhanden. Bitte später erneut prüfen."
 
@@ -13992,7 +13996,7 @@ msgstr "Alle {total} anzeigen"
 msgid "Show all conversations"
 msgstr "Alle Gespräche anzeigen"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:173
+#: src/components/conversation/ConversationTranscriptSection.tsx:165
 msgid "Show audio player"
 msgstr "Audio-Player anzeigen"
 
@@ -14031,8 +14035,8 @@ msgid "Show less"
 msgstr "Weniger anzeigen"
 
 #: src/components/conversation/ConversationTranscriptSection.tsx:157
-msgid "Show live preview text"
-msgstr "Live-Vorschautext anzeigen"
+#~ msgid "Show live preview text"
+#~ msgstr "Live-Vorschautext anzeigen"
 
 #: src/features/sidebar/views/InboxView.tsx:565
 #: src/components/workspace/SupportAccessSection.tsx:262
@@ -16322,8 +16326,8 @@ msgid "Transcribe a conversation again"
 msgstr "Ein Gespräch erneut transkribieren"
 
 #: src/components/conversation/ConversationTranscriptSection.tsx:186
-msgid "Transcribed again from the whole recording."
-msgstr "Aus der gesamten Aufnahme neu transkribiert."
+#~ msgid "Transcribed again from the whole recording."
+#~ msgstr "Aus der gesamten Aufnahme neu transkribiert."
 
 #: src/components/conversation/ConversationsMiniList.tsx:94
 msgid "Transcribing"

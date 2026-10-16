@@ -8,6 +8,7 @@ import {
   desc,
   eq,
   inArray,
+  isNotNull,
   isNull,
   max,
   notInArray,
@@ -444,6 +445,21 @@ export function bffStore(db: Db) {
         .where(eq(conversation_record_transcript.conversation_id, conversationId))
         .limit(1);
       return row ?? null;
+    },
+
+    /** Whether the conversation has any recorded audio: only those get a final transcript. */
+    async hasAudio(conversationId: string): Promise<boolean> {
+      const [row] = await db
+        .select({ id: conversation_chunk.id })
+        .from(conversation_chunk)
+        .where(
+          and(
+            eq(conversation_chunk.conversation_id, conversationId),
+            isNotNull(conversation_chunk.path),
+          ),
+        )
+        .limit(1);
+      return Boolean(row);
     },
 
     async chunkPage(

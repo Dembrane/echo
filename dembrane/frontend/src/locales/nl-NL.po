@@ -2591,7 +2591,7 @@ msgstr "Audio-download niet beschikbaar voor anonieme gesprekken"
 msgid "Audio is coming in"
 msgstr "Audio komt binnen"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:163
+#: src/components/conversation/ConversationTranscriptSection.tsx:155
 msgid "Audio playback not available for anonymized conversations"
 msgstr "Audio-afspelen niet beschikbaar voor anonieme gesprekken"
 
@@ -3588,8 +3588,8 @@ msgid "Click a node in the tree or cluster map to spotlight it here."
 msgstr "Klik op een knooppunt in de boom of clusterkaart om het hier uit te lichten."
 
 #: src/components/conversation/FinalTranscript.tsx:86
-msgid "Click a sentence to play from there."
-msgstr "Klik op een zin om vanaf daar af te spelen."
+#~ msgid "Click a sentence to play from there."
+#~ msgstr "Klik op een zin om vanaf daar af te spelen."
 
 #: src/components/map/panels/HistoryPanel.tsx:121
 #~ msgid "Click an argument, or rest the cursor on a cluster until the circle closes, and it is kept here."
@@ -5393,6 +5393,10 @@ msgstr "DPA"
 #: src/components/chat/ChatModeSelector.tsx:56
 msgid "Draft next actions and organize them by priority"
 msgstr "Ontwerp volgende acties en organiseer ze op basis van prioriteit"
+
+#: src/components/conversation/ConversationTranscriptSection.tsx:187
+msgid "Draft. It improves when the conversation ends."
+msgstr "Concept. Dit verbetert zodra het gesprek is afgelopen."
 
 #: src/components/chat/agenticToolActivity.ts:160
 msgid "Drafting a note you can send to the dembrane team"
@@ -9778,7 +9782,7 @@ msgstr "Nog geen trainingen."
 #~ msgid "No Transcript Available"
 #~ msgstr "Geen transcript beschikbaar"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:198
+#: src/components/conversation/ConversationTranscriptSection.tsx:192
 msgid "No transcript exists for this conversation yet. Please check back later."
 msgstr "Er is nog geen transcript beschikbaar voor dit gesprek. Controleer later opnieuw."
 
@@ -13989,7 +13993,7 @@ msgstr "Toon alle {total}"
 msgid "Show all conversations"
 msgstr "Alle gesprekken tonen"
 
-#: src/components/conversation/ConversationTranscriptSection.tsx:173
+#: src/components/conversation/ConversationTranscriptSection.tsx:165
 msgid "Show audio player"
 msgstr "Toon audiospeler"
 
@@ -14028,8 +14032,8 @@ msgid "Show less"
 msgstr "Minder tonen"
 
 #: src/components/conversation/ConversationTranscriptSection.tsx:157
-msgid "Show live preview text"
-msgstr "Live voorbeeldtekst tonen"
+#~ msgid "Show live preview text"
+#~ msgstr "Live voorbeeldtekst tonen"
 
 #: src/features/sidebar/views/InboxView.tsx:565
 #: src/components/workspace/SupportAccessSection.tsx:262
@@ -16318,8 +16322,8 @@ msgid "Transcribe a conversation again"
 msgstr "Een gesprek opnieuw transcriberen"
 
 #: src/components/conversation/ConversationTranscriptSection.tsx:186
-msgid "Transcribed again from the whole recording."
-msgstr "Opnieuw getranscribeerd op basis van de hele opname."
+#~ msgid "Transcribed again from the whole recording."
+#~ msgstr "Opnieuw getranscribeerd op basis van de hele opname."
 
 #: src/components/conversation/ConversationsMiniList.tsx:94
 msgid "Transcribing"

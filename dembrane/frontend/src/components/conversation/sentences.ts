@@ -1,7 +1,7 @@
 export type FinalSentence = { start: number; end: number; text: string };
 
 export type FinalTranscriptData =
-	| { available: false }
+	| { available: false; expected?: boolean }
 	| { available: true; locked: true }
 	| {
 			available: true;
